@@ -13,7 +13,7 @@
     { "id": "agents", "kind": "builtin", "root": "agent-status", "host": "host/index.mjs", "background": ["approvals", "opencode", "remote", "hotkeys"] },
     { "id": "session-ring", "kind": "builtin", "root": "session-ring", "host": "host/index.mjs", "background": [] },
     { "id": "claude-usage", "kind": "builtin", "root": "claude-usage", "host": "host/index.mjs", "background": ["poller"] },
-    { "id": "cc-connect", "kind": "builtin", "root": "cc-connect", "host": "host/index.mjs" },
+    { "id": "cc-connect", "kind": "builtin", "root": "cc-connect", "host": "host/index.mjs", "background": ["runner"] },
     { "id": "ssh-tunnel", "kind": "builtin", "root": "ssh-tunnel", "host": "host/index.mjs" },
     { "id": "local-api", "kind": "builtin", "root": "local-api", "host": "host/index.mjs" },
     { "id": "center-pattern", "kind": "builtin", "root": "center-pattern", "host": "host/index.mjs" },

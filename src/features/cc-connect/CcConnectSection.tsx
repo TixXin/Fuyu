@@ -6,19 +6,17 @@ import { installCcConnect, type CcConnectStatus } from "./api";
 import { chatsOf, InfoRow, projectLabel } from "./CcConnectInfo";
 import { CcConnectRemote } from "./CcConnectRemote";
 import { CcConnectSetup } from "./CcConnectSetup";
-import { useCcConnect } from "./useCcConnect";
+import type { useCcConnect } from "./useCcConnect";
 import { useRemoteCcConnect } from "./useRemoteCcConnect";
 
-export function CcConnectSection() {
+export function CcConnectSection({ cc }: { cc: ReturnType<typeof useCcConnect> }) {
   const t = useTranslation().settings.plugins.ccConnect;
-  const cc = useCcConnect();
   const errorText = useErrorText();
-  const { enabled, status, error, refresh } = cc;
+  const { status, error, refresh } = cc;
   const [host, setHost] = useState("");
-  const remote = useRemoteCcConnect(enabled && host !== "");
+  const remote = useRemoteCcConnect(host !== "");
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
-  if (!enabled) return null;
 
   const download = async () => {
     setDownloading(true);

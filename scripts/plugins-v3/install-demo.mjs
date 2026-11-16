@@ -30,7 +30,7 @@ export function installDemo(dir) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const { values } = parseArgs({ options: { dir: { type: "string" }, lane: { type: "string" } } });
-  const dir = values.dir ?? devPluginsDir({ lane: values.lane ?? process.env.FOCUSD_DEV_LANE ?? "1" });
+  const dir = values.dir ?? devPluginsDir({ lane: values.lane ?? process.env.FUYU_DEV_LANE ?? process.env.FOCUSD_DEV_LANE ?? "1" });
   const { added } = installDemo(dir);
   console.log(`[plugins-v3] the hello plugin is in ${dir}${added ? " and listed in plugins.yml" : " (already listed in plugins.yml)"}`);
   console.log("[plugins-v3] run the development build (it starts the plugin host unless FUYU_PLUGINS_V3=0) and open the island to see it");

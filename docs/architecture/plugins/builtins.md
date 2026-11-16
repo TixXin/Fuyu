@@ -47,7 +47,9 @@ AI Agent 开启时，在收起条上代替蓝色会话数，样式可选像素�
 - 打开主机或改端口时先用一条短 ssh 在服务器上跑 `ss -ltn`（没有时 `netstat -ltn`）看端口是否已被占用，占用时问「仍要搭建隧道吗？」：是就照样搭（等端口空出来），否就不打开；查不了时同样询问，并写出原因；岛屿启动或重连时不弹窗，转发被拒时显示「端口被占用，等待中」并继续重试。
 - 打开的主机下面有一行可复制的 `export http_proxy=… https_proxy=… HTTPS_PROXY=…`，在服务器上运行它。
 
-### cc-connect 手机连接（`focusd.cc-connect`，默认关闭）
+### cc-connect 手机连接（`focusd.cc-connect`，已迁走）
+
+2026-11-16 起（E36.3.41）cc-connect 是第 3 版的内置插件 `cc-connect`，不在这张表里了；开关、程序路径和「由岛启动」第一次启动新版本时迁进 `plugins-v3/plugins.yml`（第 2 版里没打开过的迁过来也是关的），设置在 设置 → AI Agent → 提醒 的「cc-connect 手机连接」一节，手机推送经窗口服务 `cc-connect/v1` 发送。下面是它的做法，迁走后没变（原来写「插件页」的地方现在是那一节）：
 
 让手机推送经 [cc-connect](https://github.com/chenhg5/cc-connect) 的机器人发到 Telegram、Discord、飞书，没装过 cc-connect 也能从零搭好。
 

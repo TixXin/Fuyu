@@ -4,12 +4,14 @@ import { debugBuildPids, devLane } from "../../scripts/stop-running-island.mjs";
 
 test("a development build is lane 1 unless it shares the installed app's identity, like the Rust side reads it", () => {
   assert.equal(devLane({}), 1);
-  assert.equal(devLane({ FOCUSD_DEV_LANE: "" }), 1);
-  assert.equal(devLane({ FOCUSD_DEV_LANE: "7" }), 7);
-  assert.equal(devLane({ FOCUSD_DEV_LANE: " 999 " }), 999);
-  for (const odd of ["0", "1000", "one", "1.5"]) assert.equal(devLane({ FOCUSD_DEV_LANE: odd }), 1, odd);
+  assert.equal(devLane({ FUYU_DEV_LANE: "" }), 1);
+  assert.equal(devLane({ FUYU_DEV_LANE: "7" }), 7);
+  assert.equal(devLane({ FUYU_DEV_LANE: " 999 " }), 999);
+  for (const odd of ["0", "1000", "one", "1.5"]) assert.equal(devLane({ FUYU_DEV_LANE: odd }), 1, odd);
+  assert.equal(devLane({ FOCUSD_DEV_LANE: "7" }), 7, "the name before the rename still counts");
+  assert.equal(devLane({ FUYU_DEV_LANE: "3", FOCUSD_DEV_LANE: "7" }), 3, "the new name wins");
   assert.equal(devLane({ FUYU_DEV_SHARED_IDENTITY: "1" }), null);
-  assert.equal(devLane({ FUYU_DEV_SHARED_IDENTITY: "1", FOCUSD_DEV_LANE: "7" }), null);
+  assert.equal(devLane({ FUYU_DEV_SHARED_IDENTITY: "1", FUYU_DEV_LANE: "7" }), null);
   assert.equal(devLane({ FUYU_DEV_SHARED_IDENTITY: "0" }), 1);
 });
 

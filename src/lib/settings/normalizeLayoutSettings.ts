@@ -10,6 +10,8 @@ import { hasThemeSets, THEME_COLOR_KEYS, THEME_COLORS, THEME_MODES, themeSetsFro
 import { oneOf } from "./settingsLimits.ts";
 import { ISLAND_MOTIONS } from "../theme/islandMotion.ts";
 import { normalizeGlassSettings } from "./glassSettings.ts";
+import { storedIslandForm } from "./islandFormMigration.ts";
+import { isMacOS } from "../platform.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
 export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | undefined) {
@@ -47,7 +49,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     expandedScale: clamp(Number(expandedScale), 0.75, 1.4),
     islandMonitor: settings?.islandMonitor === "cursor" || settings?.islandMonitor === "foreground" ? settings.islandMonitor : "primary",
     menuBarPlacement: settings?.menuBarPlacement === "below" ? "below" : "notch",
-    islandForm: oneOf(["top", "pill", "notch"] as const, settings?.islandForm, "top"),
+    islandForm: storedIslandForm(settings, isMacOS),
     ...normalizeGlassSettings(settings),
     marginY: clamp(
       Number(hasPreviousDefaultMargin ? DEFAULT_SETTINGS.marginY : marginY),

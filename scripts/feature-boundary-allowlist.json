@@ -1,14 +1,6 @@
 {
   "features": [
-    "src/features/agent-status/push/AgentPushSettings.tsx -> src/features/cc-connect/index.ts",
-    "src/features/agent-status/push/CcConnectPushTargets.tsx -> src/features/cc-connect/index.ts",
-    "src/features/agent-status/push/sendPush.ts -> src/features/cc-connect/index.ts",
-    "src/features/agent-status/push/useAgentPush.ts -> src/features/cc-connect/api.ts",
-    "src/features/agent-status/push/useAgentPush.ts -> src/features/plugins/useBuiltinPlugin.ts",
-    "src/features/cc-connect/useCcConnect.ts -> src/features/plugins/useBuiltinPlugin.ts",
-    "src/features/cc-connect/useRemoteCcConnect.ts -> src/features/agent-status/api.ts",
     "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts",
-    "src/features/plugins/PluginDetailPage.tsx -> src/features/cc-connect/index.ts",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/center-pattern/index.ts",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/ssh-tunnel/index.ts",
     "src/features/plugins/useBuiltinPlugin.ts -> src/features/plugin-views/api.ts",
@@ -49,12 +41,6 @@
     "src/lib/settings/useSettingPresets.ts -> src/features/todos/index.ts"
   ],
   "removedBy": {
-    "src/features/agent-status/push/AgentPushSettings.tsx -> src/features/cc-connect/index.ts": "E36.3.41",
-    "src/features/agent-status/push/CcConnectPushTargets.tsx -> src/features/cc-connect/index.ts": "E36.3.41",
-    "src/features/agent-status/push/sendPush.ts -> src/features/cc-connect/index.ts": "E36.3.41",
-    "src/features/agent-status/push/useAgentPush.ts -> src/features/cc-connect/api.ts": "E36.3.41",
-    "src/features/agent-status/push/useAgentPush.ts -> src/features/plugins/useBuiltinPlugin.ts": "E36.3.41",
-    "src/features/cc-connect/useRemoteCcConnect.ts -> src/features/agent-status/api.ts": "E36.3.41",
     "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts": "E36.3.45",
     "src/features/screenshot/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts": "E36.3.35",
     "src/features/session-ring/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts": "E36.3.40",

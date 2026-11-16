@@ -234,6 +234,12 @@ export type SettingsPluginsText = {
     preReleaseShort: (version: string) => string;
   };
   ccConnect: {
+    group: string;
+    groupHint: string;
+    path: string;
+    pathHint: string;
+    run: string;
+    runHint: string;
     title: string;
     hint: string;
     program: string;
@@ -605,8 +611,14 @@ export const zhCN: SettingsPluginsText = {
     preReleaseShort: (version: string) => `有预发布版 v${version}`,
   },
   ccConnect: {
+    group: "cc-connect 手机连接",
+    groupHint: "让手机推送经 cc-connect 的机器人发到 Telegram、Discord 或飞书：Agent 等你时把问题、计划或回复连同接管命令发到手机，在手机上回 /cd、/switch 就能接着这个会话答。没装 cc-connect 也行：这里可以下载它、一步步建好机器人，并由岛让它一直运行。在 设置 → 插件（第 3 版）里关掉内置插件「cc-connect 手机连接」，这一节和推送的 cc-connect 通道一起停用。",
+    path: "cc-connect 程序路径",
+    pathHint: "留空自动找：正在运行的 cc-connect、PATH（npm i -g cc-connect 装在这里）、这里下载的那份，再看 C、D 盘 Program Files 和 Program Files (x86) 下的 cc-connect 文件夹。不搜全盘。",
+    run: "由岛启动 cc-connect",
+    runHint: "岛开着时让 cc-connect 在后台一直运行（不弹窗口，退出岛时一起退出）。已经在别处运行的 cc-connect 不接管。",
     title: "找到的 cc-connect",
-    hint: "推送经下面列出的聊天发到手机：在 设置 → AI Agent → 提醒 → 手机推送 里把通道选成 cc-connect，再勾选聊天。",
+    hint: "推送经下面列出的聊天发到手机：在上面的「手机推送」里把通道选成 cc-connect，再勾选聊天。",
     program: "程序",
     notFound: "没找到 cc-connect。点下面的「下载 cc-connect」，或在上面填它的路径。",
     source: { setting: "插件设置", running: "正在运行", path: "PATH", downloaded: "岛下载的", installed: "安装目录" },
@@ -1015,8 +1027,14 @@ export const en: SettingsPluginsText = {
     preReleaseShort: (version: string) => `Pre-release ${version}`,
   },
   ccConnect: {
+    group: "cc-connect phone link",
+    groupHint: "Sends the phone push through cc-connect's bots on Telegram, Discord or Feishu: when an agent waits for you, its question, plan or reply goes to your phone with the commands to take the session over there (/cd, /switch). No cc-connect yet? Download it here, set a bot up step by step, and the island keeps it running. Switching off the built-in plugin \"cc-connect phone link\" under Settings → Plugins (v3) turns this section and the push's cc-connect channel off.",
+    path: "cc-connect program",
+    pathHint: "Leave empty to find it: the running cc-connect, PATH (where npm i -g cc-connect puts it), the one downloaded here, then a cc-connect folder in Program Files or Program Files (x86) on C: and D:. The disks are not searched.",
+    run: "Keep cc-connect running",
+    runHint: "While the island runs, cc-connect runs in the background too (no window, it ends with the island). A cc-connect started elsewhere is left alone.",
     title: "cc-connect found",
-    hint: "Pushes go to your phone through the chats below: under Settings → AI Agent → Alerts → Phone push, pick cc-connect as the channel and tick the chats.",
+    hint: "Pushes go to your phone through the chats below: under Phone push above, pick cc-connect as the channel and tick the chats.",
     program: "Program",
     notFound: "cc-connect was not found. Use Download cc-connect below, or enter its path above.",
     source: { setting: "plugin setting", running: "running", path: "PATH", downloaded: "downloaded here", installed: "install folder" },

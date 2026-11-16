@@ -34,20 +34,20 @@ fn migrates_once_into_plugins_yml() {
     let file = home.join("plugins-v3").join("plugins.yml");
     std::fs::write(home.join(V2_STATE), json!({ "plugins": { "focusd.timer": { "enabled": false, "settings": { "sound": false } } } }).to_string()).unwrap();
     migrate(&home, &file);
-    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: timer\n  disabled: true\n  config:\n    sound: false\n- id: claude-usage\n  disabled: true\n");
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: timer\n  disabled: true\n  config:\n    sound: false\n- id: claude-usage\n  disabled: true\n- id: cc-connect\n  disabled: true\n");
     std::fs::write(&file, "[]\n").unwrap();
     migrate(&home, &file);
     assert_eq!(std::fs::read_to_string(&file).unwrap(), "[]\n");
     let marker: Value = serde_json::from_str(&std::fs::read_to_string(home.join("plugins-v3").join(MARKER)).unwrap()).unwrap();
-    assert_eq!(marker, json!({ "format": 1, "migrated": ["focusd.claude-usage", "focusd.timer"] }));
+    assert_eq!(marker, json!({ "format": 1, "migrated": ["focusd.cc-connect", "focusd.claude-usage", "focusd.timer"] }));
 }
 
 #[test]
-fn without_old_settings_only_the_usage_rings_start_off() {
+fn without_old_settings_only_the_usage_rings_and_cc_connect_start_off() {
     let home = scratch("fresh");
     let file = home.join("plugins-v3").join("plugins.yml");
     migrate(&home, &file);
-    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: claude-usage\n  disabled: true\n");
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: claude-usage\n  disabled: true\n- id: cc-connect\n  disabled: true\n");
     assert!(home.join("plugins-v3").join(MARKER).exists());
 }
 
@@ -75,4 +75,17 @@ fn the_usage_rings_stay_off_when_they_were_never_switched_on() {
     let none = grants_of(json!({ "focusd.timer": { "enabled": true } }));
     assert_eq!(plan(claude_usage(), &none), Some(Plan { id: "claude-usage", disable: true, config: vec![] }));
     assert_eq!(plan(timer(), &grants_of(json!({}))), None);
+}
+
+fn cc_connect() -> &'static Migration {
+    MIGRATIONS.iter().find(|migration| migration.v3 == "cc-connect").unwrap()
+}
+
+#[test]
+fn cc_connect_carries_its_switch_program_and_runner() {
+    let on = grants_of(json!({ "focusd.cc-connect": { "enabled": true, "settings": { "path": "D:\\tools\\cc-connect.exe", "run": true, "other": 1 } } }));
+    assert_eq!(plan(cc_connect(), &on), Some(Plan { id: "cc-connect", disable: false, config: vec![("path", json!("D:\\tools\\cc-connect.exe")), ("run", json!(true))] }));
+    let blank = grants_of(json!({ "focusd.cc-connect": { "enabled": false, "settings": { "path": "  ", "run": "yes" } } }));
+    assert_eq!(plan(cc_connect(), &blank), Some(Plan { id: "cc-connect", disable: true, config: vec![] }));
+    assert_eq!(plan(cc_connect(), &grants_of(json!({}))), Some(Plan { id: "cc-connect", disable: true, config: vec![] }));
 }

@@ -45,6 +45,7 @@ import { useIslandNotice } from "./islandNotice";
 import { useIslandSide } from "./useIslandSide";
 import { IslandRunners } from "./IslandRunners";
 import { islandMarginY } from "./islandForm";
+import { useAutoIslandForm } from "./autoIslandForm";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
@@ -85,6 +86,7 @@ export function IslandApp() {
     demoActive: demo.active,
   });
   const notch = useIslandNotch();
+  const autoForm = useAutoIslandForm();
   const barText = settings.showCollapsedText && !notch;
   const { lines: contributedLines, alerts, popups, style, settled, hints, preview: contributedPreview } = useIslandContributed();
   usePluginKeybindings({ mode, page, hasActiveTodo: hints.has("todos.active") });
@@ -189,7 +191,7 @@ export function IslandApp() {
         nativeGlassState={nativeGlassState}
         glass={glass}
         isTucked={isTucked}
-        isDetached={isPositionDetached || islandMarginY(settings) > 0}
+        isDetached={isPositionDetached || islandMarginY(settings, autoForm) > 0}
         side={side}
         showTitle={settings.showTitle}
         showCollapsedText={barText}

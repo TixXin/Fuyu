@@ -7,7 +7,7 @@ export const MAX_AGE_DAYS = 3;
 export const KEEP = 3;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const OWN_UNIT = /^(fuyu|fuyu_lib|focusd_island|focusd_island_lib)-([0-9a-z]+)(?:\.|$)/;
+const OWN_UNIT = /^(fuyu|fuyu_lib)-([0-9a-z]+)(?:\.|$)/;
 const INCREMENTAL_UNIT = /^(.+)-([0-9a-z]+)$/;
 const TEMP_ARCHIVE = /^\.tmp.*\.temp-archive$/;
 const LANE_DIR = /^lane-(\d+|build)$/;

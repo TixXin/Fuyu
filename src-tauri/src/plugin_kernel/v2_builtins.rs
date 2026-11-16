@@ -49,9 +49,17 @@ fn claude_usage_config(grant: &Grant) -> Vec<(&'static str, Value)> {
     switches.chain(texts).chain(interval).collect()
 }
 
+fn cc_connect_config(grant: &Grant) -> Vec<(&'static str, Value)> {
+    let settings = &grant.settings;
+    let path = settings.get("path").filter(|value| value.as_str().is_some_and(|path| !path.trim().is_empty())).map(|value| ("path", value.clone()));
+    let run = settings.get("run").filter(|value| value.is_boolean()).map(|value| ("run", value.clone()));
+    path.into_iter().chain(run).collect()
+}
+
 pub(crate) const MIGRATIONS: &[Migration] = &[
     Migration { v2: "focusd.timer", v3: "timer", config: timer_config, off_without_grant: false },
     Migration { v2: "focusd.claude-usage", v3: "claude-usage", config: claude_usage_config, off_without_grant: true },
+    Migration { v2: "focusd.cc-connect", v3: "cc-connect", config: cc_connect_config, off_without_grant: true },
 ];
 
 #[derive(Debug, Default, Serialize, Deserialize)]

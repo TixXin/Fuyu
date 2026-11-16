@@ -19,7 +19,7 @@ src-tauri/src/
 ├── phone_push.rs            # 手机推送（Bark）：设备 Key 凭据存取、发送推送、锁屏与空闲时间查询命令
 ├── claude_usage/            # 用量环（内置插件 claude-usage）：可选的「直接向 Anthropic 查询」只读 Claude Code 凭据、经 http(s) 代理（插件配置 → HTTPS_PROXY → Windows 系统代理，从不直连）请求 oauth/usage，后台轮询与退避（background.rs 把轮询登记成插件的后台 poller，关掉插件就停）；结果由 agent_status 的 get_agent_usage 合并（source.rs 为取数与解析）；plan.rs 是 GLM、Kimi 的用量和 Key（命令 get_plan_usage、set_plan_key、has_plan_key）
 ├── ssh_tunnel/              # SSH 代理隧道（内置插件 focusd.ssh-proxy-tunnel）：ssh-tunnels.json（config.rs），每台主机一条常驻 ssh -R、作业对象、退避重连（tunnel.rs），服务器端口占用检查，本地代理端口自动检测（local_proxy.rs）
-├── cc_connect/              # cc-connect 手机连接（内置插件 focusd.cc-connect）：找程序（插件设置 → 正在运行 → PATH → 岛下载的 → C/D 盘 Program Files，locate.rs）、下载并核对发布包（install.rs）、只读会话列表（chats.rs）、检查机器人 token（bots.rs）、往 config.toml 追加项目（config_file.rs）、飞书扫码（feishu.rs）、看护岛启动的 cc-connect（runner.rs）、经 cc-connect send 发消息
+├── cc_connect/              # cc-connect 手机连接（第 3 版内置插件 cc-connect，background.rs 把看护线程登记成后台 runner，关掉插件就停）：找程序（插件设置 → 正在运行 → PATH → 岛下载的 → C/D 盘 Program Files，locate.rs）、下载并核对发布包（install.rs）、只读会话列表（chats.rs）、检查机器人 token（bots.rs）、往 config.toml 追加项目（config_file.rs）、飞书扫码（feishu.rs）、看护岛启动的 cc-connect（runner.rs）、经 cc-connect send 发消息
 ├── system/                  # 开机自启（注册表）、更新代理与配置、待办 Markdown 导出；update_runtime.rs 为跨窗口更新状态与互斥，update_notifications.rs 为更新系统通知与白名单诊断
 ├── rename_migration/        # 改名迁移（D17）：首次启动时把改名前的数据目录、凭据、开机自启、hook 迁移到 com.tixxin.fuyu，并静默卸载旧安装；各处旧名兼容的清单见 docs/architecture/contracts.md「改名兼容（D17）」
 ├── clipboard_history/
@@ -49,7 +49,7 @@ src-tauri/src/
 ├── shortcut_capture.rs      # 设置窗口录快捷键期间（命令 set_shortcut_capture）：浮屿自己的全局快捷键被按下不执行，改发 shortcut-captured 给录制按钮；Mac 在 macos/hotkeys.rs 的分发里拦，Windows 在各模块的 WM_HOTKEY 里拦
 ├── home_dir.rs              # 家目录（#50，D30）：浮屿的数据目录只从这里取 fuyu_home(app.path())，不要直接调 app_data_dir()；FUYU_HOME → home.json 指针 → ~/.fuyu；home_dir/migration.rs 为升级时复制旧数据、重装钩子、复制待办 Markdown，见 docs/features/data-home.md
 ├── fs_write.rs              # 整份替换应用数据目录里的文件：先写旁边的 .tmp 再改名；别的程序暂时占着（拒绝访问、共享冲突）时稍等重试
-├── dev_lane.rs              # 开发版的独立身份（F38、F39）：调试构建默认是 `com.tixxin.fuyu.lane-1`（`FOCUSD_DEV_LANE` 换编号，`FUYU_DEV_SHARED_IDENTITY=1` 用回正式身份），岛的默认位置，凭据服务名（`service`），不改用户的链接和自启，「安装/修复」装的是正式版的 hook（脚本进正式数据目录，审批用正式版的端口和 token，agent_approval 的 `hook_url`）；dev_lane/seed.rs 在启动时复制一次正式版的凭据和数据（记在 dev-copy.json），dev_lane/data_copy.rs 是复制数据的清单和设置里要关掉的提醒
+├── dev_lane.rs              # 开发版的独立身份（F38、F39）：调试构建默认是 `com.tixxin.fuyu.lane-1`（`FUYU_DEV_LANE` 换编号，`FUYU_DEV_SHARED_IDENTITY=1` 用回正式身份），岛的默认位置，凭据服务名（`service`），不改用户的链接和自启，「安装/修复」装的是正式版的 hook（脚本进正式数据目录，审批用正式版的端口和 token，agent_approval 的 `hook_url`）；dev_lane/seed.rs 在启动时复制一次正式版的凭据和数据（记在 dev-copy.json），dev_lane/data_copy.rs 是复制数据的清单和设置里要关掉的提醒
 ├── messenger_activation.rs
 ├── notification_diagnostics.rs
 ├── user_error.rs            # 用户看到的错误：错误码、文案参数和外部原话（D15），前端按界面语言显示；凭据管理器的通用错误；

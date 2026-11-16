@@ -110,7 +110,7 @@ mod tests {
             "x.com.tixxin.fuyu",
             "x.com.tixxin.fuyu.",
             "x.com.tixxin.fuyuu.bark",
-            "x.com.focusd.island.bark",
+            "x.com.example.island.bark",
             "git:https://github.com",
         ] {
             assert_eq!(lane_credential(other, 1), None, "{other}");
