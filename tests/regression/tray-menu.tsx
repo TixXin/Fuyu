@@ -17,6 +17,12 @@ const params = new URLSearchParams(location.search);
 const automated = params.has("test");
 const english = document.documentElement.dataset.lang === "en";
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
+const storedBefore = Object.entries(localStorage);
+function restoreStorage() {
+  localStorage.clear();
+  for (const [name, value] of storedBefore) localStorage.setItem(name, value);
+}
+window.addEventListener("pagehide", restoreStorage);
 localStorage.clear();
 localStorage.setItem(LOCALE_STORAGE_KEY, english ? "en" : "zh-CN");
 const realMatchMedia = window.matchMedia.bind(window);
@@ -165,9 +171,11 @@ async function runChecks() {
     await openCard();
     await settle();
 
+    restoreStorage();
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {
+    restoreStorage();
     results.textContent = `${messages.join("\n")}\nFAIL ${String(error)}`;
     results.dataset.result = "failed";
   }
