@@ -179,7 +179,7 @@
   color: var(--color-text);
   background: var(--island-fill, var(--island-background-color));
   cursor: default;
-  animation: island-side-bubble-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: island-side-bubble-in 260ms var(--motion-ease-out) both;
 }
 
 .island-side-bubble[role="button"] {

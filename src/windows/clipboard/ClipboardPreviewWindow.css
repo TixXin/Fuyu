@@ -21,7 +21,7 @@ body,
   transform-origin: var(--preview-origin);
   animation:
     clipboard-preview-fade 170ms ease-out,
-    clipboard-preview-slide 240ms cubic-bezier(0.16, 1, 0.3, 1);
+    clipboard-preview-slide var(--motion-medium) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .clipboard-preview-window--out .clipboard-preview {
