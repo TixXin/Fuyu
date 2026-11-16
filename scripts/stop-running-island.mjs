@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const WINDOWS_IMAGES = ["fuyu.exe", "focusd-island.exe", "fly-island.exe"];
+const WINDOWS_IMAGES = ["fuyu.exe"];
 const MAC_PATTERNS = ["\\.app/Contents/MacOS/fuyu$"];
 const EXIT_TIMEOUT_MS = 5_000;
 const POLL_INTERVAL_MS = 100;
@@ -10,7 +10,7 @@ const isMac = process.platform === "darwin";
 
 export function devLane(env = process.env) {
   if (env.FUYU_DEV_SHARED_IDENTITY === "1") return null;
-  const text = (env.FOCUSD_DEV_LANE ?? "").trim();
+  const text = (env.FUYU_DEV_LANE ?? env.FOCUSD_DEV_LANE ?? "").trim();
   const lane = Number(text);
   return /^\d+$/.test(text) && lane >= 1 && lane <= 999 ? lane : 1;
 }

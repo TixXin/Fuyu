@@ -1,4 +1,5 @@
 mod agents;
+mod background;
 mod bots;
 mod chats;
 mod config_file;
@@ -26,13 +27,12 @@ use std::{
 
 use tauri::{AppHandle, Manager};
 
-pub(crate) use local::{apply, stop};
-
 static APP_DIR: OnceLock<PathBuf> = OnceLock::new();
 
 pub fn init(app: &AppHandle) -> Result<(), String> {
     let dir = crate::home_dir::fuyu_home(app.path()).map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let _ = APP_DIR.set(dir);
+    background::init();
     Ok(())
 }
 

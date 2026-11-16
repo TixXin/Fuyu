@@ -1,29 +1,17 @@
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { NativeError } from "../../i18n/nativeError";
+import type { CcConnectProject } from "../../lib/cc-connect/service.ts";
+
+export type { CcConnectChat, CcConnectProject } from "../../lib/cc-connect/service.ts";
+export { CC_CONNECT_AGENT_LABELS, chatLabel } from "../../lib/cc-connect/labels.ts";
 
 export function openCcConnectLink(url: string) {
   return openUrl(url);
 }
 
-export const CC_CONNECT_PLUGIN_ID = "focusd.cc-connect";
-
-export type CcConnectChat = { key: string; platform: string; userName: string | null };
-
-export type CcConnectProject = { name: string; agent: string | null; chats: CcConnectChat[] };
-
 export const CC_CONNECT_SETUP_AGENTS = ["claudecode", "codex", "copilot", "opencode", "qoder", "kimi", "antigravity"] as const;
 export type CcConnectSetupAgent = (typeof CC_CONNECT_SETUP_AGENTS)[number];
-
-export const CC_CONNECT_AGENT_LABELS: Record<string, string> = {
-  claudecode: "Claude Code",
-  codex: "Codex",
-  copilot: "GitHub Copilot CLI",
-  opencode: "opencode",
-  qoder: "Qoder CLI",
-  kimi: "Kimi Code",
-  antigravity: "Antigravity",
-};
 
 export type CcConnectFoundAgent = { agent: CcConnectSetupAgent; label: string; path: string };
 
@@ -154,11 +142,6 @@ export function allowFromValid(allowFrom: string) {
   return ids.every((id) => /^[A-Za-z0-9_-]{1,64}$/.test(id));
 }
 
-export function programSetting(settings: Record<string, unknown>) {
+export function programSetting(settings: Readonly<Record<string, unknown>>) {
   return typeof settings.path === "string" ? settings.path : "";
-}
-
-export function chatLabel(chat: CcConnectChat, platforms: Record<string, string>) {
-  const platform = platforms[chat.platform] ?? chat.platform;
-  return chat.userName ? `${platform} · ${chat.userName}` : platform;
 }

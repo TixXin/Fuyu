@@ -6,13 +6,14 @@ import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useErrorText, useTranslation } from "../../../i18n";
-import { remotePath, sendCcConnectMessage, sendCcConnectRemoteMessage, useCcConnect, useRemoteCcConnect } from "../../cc-connect";
+import { ccConnectReason } from "../../../lib/cc-connect/service";
 import { deleteBarkKey, hasBarkKey, saveBarkKey, sendBarkPush } from "./api";
 import { CcConnectPushTargets } from "./CcConnectPushTargets";
-import { PUSH_GROUP } from "./sendPush";
+import { PUSH_GROUP, sendCcConnect } from "./sendPush";
 import { AGENT_PUSH_AWAY_MINUTES, AGENT_PUSH_CHANNELS, AGENT_PUSH_EVENTS, LOCAL_HOST, type AgentPushChannel } from "./storage";
 import { isMacOS } from "../../../lib/platform";
 import { useAgentPushSettings } from "./useAgentPushSettings";
+import { useCcConnectTargets } from "./useCcConnectTargets";
 
 export function AgentPushSettings() {
   const text = useTranslation().settings.agent.push;
@@ -22,9 +23,8 @@ export function AgentPushSettings() {
   const [keyInput, setKeyInput] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const cc = useCcConnect();
   const bark = settings.channel === "bark";
-  const remote = useRemoteCcConnect(settings.enabled && !bark && cc.enabled);
+  const targets = useCcConnectTargets(settings.enabled && !bark);
 
   useEffect(() => {
     void hasBarkKey().then(setKeySaved).catch(() => setKeySaved(false));
@@ -37,7 +37,7 @@ export function AgentPushSettings() {
       await action();
       setStatus(done);
     } catch (error) {
-      setStatus(errorText(error));
+      setStatus(errorText(ccConnectReason(error)));
     } finally {
       setBusy(false);
     }
@@ -63,14 +63,12 @@ export function AgentPushSettings() {
           ? sendBarkPush(settings.server, text.testTitle, text.testBody, PUSH_GROUP)
           : Promise.all(
               testChats.map(({ host, project, key }) =>
-                host === LOCAL_HOST
-                  ? sendCcConnectMessage(cc.path, project, key, text.ccConnect.testBody)
-                  : sendCcConnectRemoteMessage(host, remotePath(host), project, key, `${text.ccConnect.testBody} · ${host}`),
+                sendCcConnect(host, project, key, host === LOCAL_HOST ? text.ccConnect.testBody : `${text.ccConnect.testBody} · ${host}`),
               ),
             ),
       text.testSent,
     );
-  const canTest = bark ? keySaved === true : cc.enabled && testChats.length > 0;
+  const canTest = bark ? keySaved === true : targets.on && testChats.length > 0;
 
   const awayOptions = AGENT_PUSH_AWAY_MINUTES.map((minutes) => ({ value: String(minutes), label: text.awayValue(minutes) }));
   const channelOptions = AGENT_PUSH_CHANNELS.map((channel) => ({ value: channel, label: text.channels[channel] }));
@@ -92,9 +90,9 @@ export function AgentPushSettings() {
               />
             }
           />
-          {!bark && !cc.enabled ? <SettingsRow indent title={text.ccConnect.off} description={text.ccConnect.offHint} /> : null}
-          {!bark || remote.hosts.length > 0 ? (
-            <CcConnectPushTargets settings={settings} onChange={setSettings} cc={cc} remote={remote} targets={!bark && cc.enabled} />
+          {!bark && !targets.on ? <SettingsRow indent title={text.ccConnect.off} description={text.ccConnect.offHint} /> : null}
+          {!bark || targets.hosts.length > 0 ? (
+            <CcConnectPushTargets settings={settings} onChange={setSettings} targets={targets} picking={!bark && targets.on} />
           ) : null}
           {bark && (
             <>

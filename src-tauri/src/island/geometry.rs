@@ -87,6 +87,7 @@ pub(crate) fn apply_stage_geometry(
         .or_else(|| primary_monitor.or(current_monitor))
         .ok_or_else(|| "No monitor is available for island positioning.".to_string())?;
 
+    let state = super::notch::resolve(window, &monitor, state);
     let scale = screen::monitor_scale(&monitor);
     let monitor_position = screen::monitor_origin(&monitor);
     let monitor_size = screen::monitor_size(&monitor);

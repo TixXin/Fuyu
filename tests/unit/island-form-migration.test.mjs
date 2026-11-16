@@ -1,34 +1,43 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { legacyIslandForm, needsIslandFormMigration } from "../../src/lib/settings/islandFormMigration.ts";
+import { storedIslandForm } from "../../src/lib/settings/islandFormMigration.ts";
 import { normalizeSettings } from "../../src/lib/settings/settings.ts";
+import { islandFormLayout, islandMarginY, shownIslandForm } from "../../src/windows/island/islandForm.ts";
 
-const legacy = JSON.stringify({ menuBarPlacement: "notch", marginY: 0, opacity: 80 });
-const mac = (notch) => ({ mac: true, notch });
+const legacy = { menuBarPlacement: "notch", marginY: 0, opacity: 80 };
 
-test("old Mac settings on a screen with a real notch become the notch form", () => {
-  assert.equal(legacyIslandForm(legacy, mac(true)), "notch");
-  assert.equal(normalizeSettings({ ...JSON.parse(legacy), islandForm: "notch" }).islandForm, "notch");
+test("Mac settings without a form, and new Mac installs, become the automatic form", () => {
+  assert.equal(storedIslandForm(legacy, true), "auto");
+  assert.equal(storedIslandForm({ opacity: 90 }, true), "auto");
+  assert.equal(storedIslandForm(null, true), "auto");
+  assert.equal(storedIslandForm({ islandForm: "sideways" }, true), "auto");
 });
 
-test("old Mac settings without a real notch become the top form", () => {
-  assert.equal(legacyIslandForm(legacy, mac(false)), "top");
+test("Mac settings that asked to stay under the menu bar keep the top form", () => {
+  assert.equal(storedIslandForm({ menuBarPlacement: "below" }, true), "top");
 });
 
-test("old Windows settings are left alone and still read as the top form", () => {
-  assert.equal(needsIslandFormMigration(legacy, false), false);
-  assert.equal(legacyIslandForm(legacy, { mac: false, notch: false }), null);
-  assert.equal(normalizeSettings(JSON.parse(legacy)).islandForm, "top");
+test("a form the user already chose is kept on either system", () => {
+  for (const form of ["auto", "top", "pill", "notch"]) {
+    assert.equal(storedIslandForm({ ...legacy, islandForm: form }, true), form);
+    assert.equal(storedIslandForm({ ...legacy, islandForm: form }, false), form);
+  }
 });
 
-test("settings with a form, under the menu bar, or unreadable are left alone", () => {
-  assert.equal(legacyIslandForm(JSON.stringify({ islandForm: "pill" }), mac(true)), null);
-  assert.equal(legacyIslandForm(JSON.stringify({ menuBarPlacement: "below" }), mac(true)), null);
-  assert.equal(legacyIslandForm(null, mac(true)), null);
-  assert.equal(legacyIslandForm("not json", mac(true)), null);
-  assert.equal(legacyIslandForm("[]", mac(true)), null);
+test("Windows settings without a form stay on the top form", () => {
+  assert.equal(storedIslandForm(legacy, false), "top");
+  assert.equal(storedIslandForm(null, false), "top");
+  assert.equal(normalizeSettings(legacy).islandForm, "top");
+  assert.equal(normalizeSettings({ ...legacy, islandForm: "notch" }).islandForm, "notch");
 });
 
-test("settings saved before the menu bar option existed count as over the menu bar", () => {
-  assert.equal(legacyIslandForm(JSON.stringify({ opacity: 90 }), mac(true)), "notch");
+test("the automatic form is laid out as top until the island learns its screen", () => {
+  const auto = { islandForm: "auto", marginY: 12, menuBarPlacement: "below" };
+  assert.deepEqual(islandFormLayout(auto), { marginY: 12, underMenuBar: true, fitNotch: false, autoForm: true });
+  assert.equal(islandFormLayout({ ...auto, islandForm: "notch" }).autoForm, false);
+  assert.equal(shownIslandForm("auto", null), "top");
+  assert.equal(shownIslandForm("auto", "notch"), "notch");
+  assert.equal(shownIslandForm("pill", "notch"), "pill");
+  assert.equal(islandMarginY(auto, "notch"), 0);
+  assert.equal(islandMarginY(auto, "top"), 12);
 });

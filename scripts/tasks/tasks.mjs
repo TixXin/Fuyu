@@ -50,7 +50,7 @@ function commitTasks(paths, message, options) {
 }
 
 function sessionName(options) {
-  return options.as || process.env.FOCUSD_SESSION_NAME || "";
+  return options.as || process.env.FUYU_SESSION_NAME || process.env.FOCUSD_SESSION_NAME || "";
 }
 
 function me(options) {

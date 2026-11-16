@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
 import * as islandApi from "./api";
-import { islandFormLayout } from "./islandForm";
+import { useAutoIslandForm } from "./autoIslandForm";
+import { islandFormLayout, shownIslandForm } from "./islandForm";
 import { useIslandForm } from "./useIslandForm";
 
 function formMotion(settings: IslandSettings) {
@@ -21,7 +22,7 @@ export function useNativeLayout(settings: IslandSettings) {
     active: settings,
   });
   const syncedForm = useRef(settings.islandForm);
-  useIslandForm(settings.islandForm);
+  useIslandForm(shownIslandForm(settings.islandForm, useAutoIslandForm()));
 
   const syncNativeLayout = useCallback(async (nextSettings: IslandSettings) => {
     const animate = syncedForm.current !== nextSettings.islandForm && formMotion(nextSettings);

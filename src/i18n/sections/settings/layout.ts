@@ -10,7 +10,7 @@ export type SettingsLayoutText = {
   cornersTitle: string;
   formTitle: string;
   form: string;
-  formOptions: Record<"top" | "pill" | "notch", string>;
+  formOptions: Record<"auto" | "top" | "pill" | "notch", string>;
   formHint: string;
   formHintMac: string;
   formOffTopHint: string;
@@ -74,9 +74,9 @@ export const zhCN: SettingsLayoutText = {
   cornersTitle: "圆角",
   formTitle: "形态",
   form: "岛的形态",
-  formOptions: { top: "贴顶", pill: "悬空药丸", notch: "刘海" },
+  formOptions: { auto: "自动", top: "贴顶", pill: "悬空药丸", notch: "刘海" },
   formHint: "药丸离顶 10px，带投影；刘海是顶部正中 240×32 的黑色刘海，折叠时两边放图标。",
-  formHintMac: "药丸从菜单栏下沿离开 10px；刘海在有刘海的屏幕上贴合刘海。有刘海时选贴顶或药丸，岛会让到菜单栏下面。",
+  formHintMac: "自动：有刘海的屏幕用刘海，其他屏幕贴顶。药丸从菜单栏下沿离开 10px；刘海在有刘海的屏幕上贴合刘海。有刘海时选贴顶或药丸，岛会让到菜单栏下面。",
   formOffTopHint: "吸在底边或侧边时不生效，回到顶边后照这里的形态。",
   dragTitle: "拖动",
   dragGrid: "拖动时显示中线辅助线",
@@ -142,9 +142,9 @@ export const en: SettingsLayoutText = {
   cornersTitle: "Corners",
   formTitle: "Form",
   form: "Island form",
-  formOptions: { top: "Top", pill: "Floating pill", notch: "Notch" },
+  formOptions: { auto: "Auto", top: "Top", pill: "Floating pill", notch: "Notch" },
   formHint: "The pill floats 10px below the top with a shadow; the notch is a 240×32 black notch at the top centre with icons on both sides when collapsed.",
-  formHintMac: "The pill floats 10px below the menu bar; the notch hugs the camera notch on screens that have one. On a notched screen, Top and Pill move below the menu bar.",
+  formHintMac: "Auto uses the notch on screens that have one and Top on other screens. The pill floats 10px below the menu bar; the notch hugs the camera notch on screens that have one. On a notched screen, Top and Pill move below the menu bar.",
   formOffTopHint: "Has no effect while the island is docked to the bottom or a side; it applies again once back at the top.",
   dragTitle: "Dragging",
   dragGrid: "Show centre lines while dragging",

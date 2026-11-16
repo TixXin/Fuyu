@@ -2,7 +2,7 @@ use serde_json::{Map, Value};
 
 use super::manifest::{parse_builtin_manifest, LocalizedText, PluginManifest};
 use super::settings::InfoItem;
-use crate::{cc_connect, local_api, ssh_tunnel};
+use crate::{local_api, ssh_tunnel};
 
 pub(super) const LOCAL_API_ID: &str = "focusd.local-api";
 pub(super) const LOCAL_API_ALLOW_WRITE: &str = "allowWrite";
@@ -170,51 +170,11 @@ const SSH_TUNNEL_MANIFEST: &str = r#"{
   }
 }"#;
 
-pub(super) const CC_CONNECT_ID: &str = "focusd.cc-connect";
-
-const CC_CONNECT_MANIFEST: &str = r#"{
-  "id": "focusd.cc-connect",
-  "name": { "zh-CN": "cc-connect 手机连接", "en": "cc-connect phone link" },
-  "description": {
-    "zh-CN": "让手机推送经 cc-connect 的机器人发到 Telegram、Discord 或飞书：Agent 等你时把问题、计划或回复连同接管命令发到手机，在手机上回 /cd、/switch 就能接着这个会话答。没装 cc-connect 也行：插件页可以下载它、一步步建好机器人，并由岛让它一直运行。",
-    "en": "Sends the phone push through cc-connect's bots on Telegram, Discord or Feishu: when an agent waits for you, its question, plan or reply goes to your phone with the commands to take the session over there (/cd, /switch). No cc-connect yet? The plugin page downloads it, sets a bot up step by step, and the island keeps it running."
-  },
-  "version": "1.0.0",
-  "apiVersion": 1,
-  "author": "ShengLin1001",
-  "runtime": { "type": "builtin" },
-  "contributes": {
-    "settings": [
-      {
-        "key": "path",
-        "type": "string",
-        "title": { "zh-CN": "cc-connect 程序路径", "en": "cc-connect program" },
-        "description": {
-          "zh-CN": "留空自动找：正在运行的 cc-connect、PATH（npm i -g cc-connect 装在这里）、插件页下载的那份，再看 C、D 盘 Program Files 和 Program Files (x86) 下的 cc-connect 文件夹。不搜全盘。",
-          "en": "Leave empty to find it: the running cc-connect, PATH (where npm i -g cc-connect puts it), the one downloaded on this page, then a cc-connect folder in Program Files or Program Files (x86) on C: and D:. The disks are not searched."
-        },
-        "default": ""
-      },
-      {
-        "key": "run",
-        "type": "boolean",
-        "title": { "zh-CN": "由岛启动 cc-connect", "en": "Keep cc-connect running" },
-        "description": {
-          "zh-CN": "岛开着时让 cc-connect 在后台一直运行（不弹窗口，退出岛时一起退出）。已经在别处运行的 cc-connect 不接管。",
-          "en": "While the island runs, cc-connect runs in the background too (no window, it ends with the island). A cc-connect started elsewhere is left alone."
-        },
-        "default": false
-      }
-    ]
-  }
-}"#;
-
 pub(super) const BUILTINS: &[(&str, &str, bool)] = &[
     (LOCAL_API_ID, LOCAL_API_MANIFEST, true),
     ("focusd.center-pattern", CENTER_PATTERN_MANIFEST, false),
     ("focusd.session-ring", SESSION_RING_MANIFEST, false),
     (SSH_TUNNEL_ID, SSH_TUNNEL_MANIFEST, true),
-    (CC_CONNECT_ID, CC_CONNECT_MANIFEST, true),
 ];
 
 pub(super) fn manifests(app_version: &str) -> Vec<(&'static str, Result<PluginManifest, String>)> {
@@ -252,7 +212,6 @@ pub(super) fn start(id: &str, settings: &Map<String, Value>) -> Result<Vec<InfoI
     match id {
         LOCAL_API_ID => local_api::start(allow_write(settings)).map(local_api_info),
         SSH_TUNNEL_ID => ssh_tunnel::start(settings).map(|()| Vec::new()),
-        CC_CONNECT_ID => cc_connect::apply(settings).map(|()| Vec::new()),
         _ => Err(format!("Built-in plugin {id} is marked native but has no start.")),
     }
 }
@@ -267,10 +226,6 @@ pub(super) fn stop(id: &str) -> Result<(), String> {
             ssh_tunnel::stop();
             Ok(())
         }
-        CC_CONNECT_ID => {
-            cc_connect::stop();
-            Ok(())
-        }
         _ => Ok(()),
     }
 }
@@ -279,7 +234,6 @@ pub(super) fn settings_changed(id: &str, settings: &Map<String, Value>) -> Resul
     match id {
         LOCAL_API_ID => local_api::set_allow_write(allow_write(settings)),
         SSH_TUNNEL_ID => ssh_tunnel::start(settings),
-        CC_CONNECT_ID => cc_connect::apply(settings),
         _ => Ok(()),
     }
 }

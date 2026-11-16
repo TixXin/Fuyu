@@ -1,4 +1,4 @@
-import { CC_CONNECT_AGENT_LABELS } from "../../../features/cc-connect";
+import { CC_CONNECT_AGENT_LABELS } from "../../../lib/cc-connect/labels";
 import { useTranslation } from "../../../i18n";
 import { nameProblem, readyTargets, type PlannedProject, type TargetEntry } from "./plan";
 

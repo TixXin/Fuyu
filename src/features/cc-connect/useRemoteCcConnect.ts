@@ -1,10 +1,13 @@
+import { agentsV1 } from "@fuyu/plugin-services";
 import { useCallback, useEffect, useState } from "react";
 import { useErrorText } from "../../i18n";
-import { getAgentRemoteHosts } from "../agent-status/api";
+import { windowServices } from "../plugin-kernel/services";
 import { getCcConnectRemoteStatus, type CcConnectRemoteStatus } from "./api";
 import { remotePath } from "./remotePaths";
 
 export type RemoteCcConnect = { status: CcConnectRemoteStatus | null; error: string | null; reading: boolean };
+
+const agents = windowServices.get(agentsV1);
 
 export function useRemoteCcConnect(active: boolean) {
   const errorText = useErrorText();
@@ -25,9 +28,18 @@ export function useRemoteCcConnect(active: boolean) {
   );
 
   useEffect(() => {
-    void getAgentRemoteHosts()
-      .then((list) => setHosts(list.map((entry) => entry.host)))
-      .catch(() => setHosts([]));
+    let cancelled = false;
+    void agents
+      .remoteHosts()
+      .then(({ hosts: list }) => {
+        if (!cancelled) setHosts(list.map((entry) => entry.host));
+      })
+      .catch(() => {
+        if (!cancelled) setHosts([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {

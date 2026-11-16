@@ -21,7 +21,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   marginY: 0,
   islandMonitor: "primary",
   menuBarPlacement: "notch",
-  islandForm: "top",
+  islandForm: isMacOS ? "auto" : "top",
   topFilletRadius: 8,
   islandCornerRadius: DEFAULT_ISLAND_CORNER_RADIUS,
   islandCornerShape: "squircle",

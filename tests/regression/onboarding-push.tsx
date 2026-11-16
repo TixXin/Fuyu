@@ -15,7 +15,7 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated }
 
 const QR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 const commands: { command: string; args: Record<string, unknown> }[] = [];
-const plugin = { id: "focusd.cc-connect", builtin: true, enabled: false, status: "stopped", settings: {} as Record<string, unknown> };
+const plugin = { id: "cc-connect", kind: "builtin", enabled: false, background: [], config: {} as Record<string, unknown> };
 const tunnelPlugin = { id: "focusd.ssh-proxy-tunnel", builtin: true, enabled: false, status: "stopped", settings: {} as Record<string, unknown> };
 const tunnel = { host: "devbox", enabled: false, remotePort: null as number | null, state: "off", error: null };
 const remote = { exe: null as string | null, running: false, projects: [] as typeof local.projects };
@@ -40,7 +40,15 @@ mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   commands.push({ command, args });
   switch (command) {
-    case "list_plugins": return { plugins: [plugin, tunnelPlugin] };
+    case "list_plugins": return { plugins: [tunnelPlugin] };
+    case "get_builtin_plugins": return [plugin];
+    case "set_builtin_plugin_enabled":
+      plugin.enabled = Boolean(args.enabled);
+      return [plugin];
+    case "set_builtin_plugin_config":
+      plugin.config = { ...plugin.config, [String(args.key)]: args.value };
+      if (args.key === "run") local.running = true;
+      return [plugin];
     case "get_agent_remote_hosts": return [{ host: "devbox", fetchedAt: 1, error: null, fetching: false }];
     case "get_cc_connect_status": return local;
     case "get_cc_connect_remote_status": return remote;
@@ -61,16 +69,10 @@ mockIPC((command, payload) => {
       local.exe = "C:\\Users\\me\\Fuyu\\cc-connect\\cc-connect.exe";
       local.exeSource = "downloaded";
       return local.exe;
-    case "set_plugin_enabled": {
-      const changed = args.id === tunnelPlugin.id ? tunnelPlugin : plugin;
-      changed.enabled = Boolean(args.enabled);
-      changed.status = "running";
-      return { plugins: [plugin, tunnelPlugin] };
-    }
-    case "set_plugin_setting":
-      plugin.settings = { ...plugin.settings, [String(args.key)]: args.value };
-      if (args.key === "run") local.running = true;
-      return { plugins: [plugin, tunnelPlugin] };
+    case "set_plugin_enabled":
+      tunnelPlugin.enabled = Boolean(args.enabled);
+      tunnelPlugin.status = "running";
+      return { plugins: [tunnelPlugin] };
     case "check_cc_connect_bot": return { name: "fuyu_bot", inviteUrl: null, senders: [{ id: "4242", name: "Me" }] };
     case "add_cc_connect_project":
       local.configProjects = [...local.configProjects, String(args.project)];
@@ -183,7 +185,7 @@ if (!automated) {
     check(active() === "接机器人" && document.querySelectorAll(".push-act__row--connect").length === 2, "Step four has a row per project");
     const claude = () => rowOf('[data-project="local-claudecode"]')!;
     await press(claude().querySelector<HTMLButtonElement>(".onboarding__button--primary") ?? undefined, "scan");
-    check(plugin.enabled && plugin.settings.run === true, "Connecting the first bot turns cc-connect on and lets the island run it");
+    check(plugin.enabled && plugin.config.run === true, "Connecting the first bot turns cc-connect on and lets the island run it");
     const added = called("add_cc_connect_project")[0]?.args;
     check(added?.project === "local-claudecode" && added.platform === "feishu" && added.agent === "claudecode" && added.workDir === local.defaultWorkDir, "Scanning adds the project for Feishu");
     check(claude().querySelector("img") && rowOf('[data-project="my-codex"]')!.querySelector<HTMLButtonElement>(".onboarding__button--primary")?.disabled,
