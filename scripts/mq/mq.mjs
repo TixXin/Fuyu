@@ -9,15 +9,13 @@ import { sync } from "./sync.mjs";
 import { tryCi } from "./try.mjs";
 import { waitCommand } from "./wait.mjs";
 
-const BATCH_COMMITS = 5;
-const BATCH_HOURS = 6;
+const BATCH_COMMITS = 10;
 
 export function batchAdvice(commits, now = Date.now()) {
   if (!commits.length) return { due: false, reason: "没有没推的提交" };
-  const hours = (now - Math.min(...commits.map((commit) => commit.at))) / 3_600_000;
   if (commits.length >= BATCH_COMMITS) return { due: true, reason: `攒了 ${commits.length} 个提交` };
-  if (hours >= BATCH_HOURS) return { due: true, reason: `最早的提交已经 ${Math.floor(hours)} 小时没推` };
-  return { due: false, reason: `${commits.length} 个提交没推，最早的 ${Math.max(0, Math.round(hours * 60))} 分钟前` };
+  const minutes = (now - Math.min(...commits.map((commit) => commit.at))) / 60_000;
+  return { due: false, reason: `${commits.length} 个提交没推，最早的 ${Math.max(0, Math.round(minutes))} 分钟前` };
 }
 
 function pending() {
@@ -25,7 +23,7 @@ function pending() {
   const commits = pendingCommits();
   for (const { subject } of commits) console.log(`  ${subject}`);
   const { due, reason } = batchAdvice(commits);
-  console.log(due ? `[pending] ${reason}，该提 PR 了：pnpm mq:land --yes --body <文件>` : `[pending] ${reason}；一个功能做完、要给另一台机器用或发版前再提 PR`);
+  console.log(due ? `[pending] ${reason}，该提 PR 了：pnpm mq:land --yes --body <文件>` : `[pending] ${reason}；一个任务做完、要给另一台机器用或发版前再提 PR`);
   return 0;
 }
 
