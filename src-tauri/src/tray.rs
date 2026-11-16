@@ -89,18 +89,7 @@ pub(crate) fn toggle_island(app: &AppHandle) {
     refresh(app, None);
 }
 
-#[cfg(target_os = "macos")]
-fn wants_native_menu() -> bool {
-    crate::macos::input::is_control_key_down()
-}
-
-#[cfg(not(target_os = "macos"))]
-fn wants_native_menu() -> bool {
-    false
-}
-
-fn pop_up_native_menu(app: &AppHandle) {
-    crate::tray_menu::hide(app);
+pub(crate) fn pop_up_native_menu(app: &AppHandle) {
     let Some(menu) = app.try_state::<TrayMenu>() else { return };
     let Ok(window) = island::main_window(app) else { return };
     if let Err(error) = menu.menu.popup(window.as_ref().window()) {
@@ -119,12 +108,10 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
     let settings = MenuItem::with_id(app, "settings", settings_text, true, None::<&str>)?;
     let quit = MenuItem::with_id(app, "quit", quit_text, true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&toggle, &settings, &quit])?;
-    app.manage(TrayMenu { menu: menu.clone(), toggle, settings, quit, shown: Mutex::new((TrayLanguage::Chinese, true)) });
+    app.manage(TrayMenu { menu, toggle, settings, quit, shown: Mutex::new((TrayLanguage::Chinese, true)) });
 
     let mut tray = TrayIconBuilder::with_id(TRAY_ID)
         .tooltip(tooltip(TrayLanguage::Chinese, crate::dev_lane::lane().is_some()))
-        .menu(&menu)
-        .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "toggle" => toggle_island(app),
             "settings" => {
@@ -140,14 +127,9 @@ pub(crate) fn build_tray(app: &App) -> tauri::Result<()> {
         })
         .on_tray_icon_event(|tray, event| match event {
             TrayIconEvent::Enter { .. } | TrayIconEvent::Move { .. } => refresh(tray.app_handle(), None),
-            TrayIconEvent::Click { button: MouseButton::Right, button_state: MouseButtonState::Down, .. } => crate::tray_menu::hide(tray.app_handle()),
-            TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, rect, .. } => {
+            TrayIconEvent::Click { button: MouseButton::Left | MouseButton::Right, button_state: MouseButtonState::Up, rect, .. } => {
                 refresh(tray.app_handle(), None);
-                if wants_native_menu() {
-                    pop_up_native_menu(tray.app_handle());
-                } else {
-                    crate::tray_menu::toggle(tray.app_handle(), Some(&rect));
-                }
+                crate::tray_menu::toggle(tray.app_handle(), Some(&rect));
             }
             _ => {}
         });

@@ -127,6 +127,7 @@ pub(crate) fn toggle(app: &AppHandle, icon: Option<&tauri::Rect>) {
     let queued = app.run_on_main_thread(move || {
         if let Err(error) = open(&handle, icon_anchor(&handle, icon.as_ref())) {
             eprintln!("failed to open the tray card: {error}");
+            crate::tray::pop_up_native_menu(&handle);
         }
     });
     if let Err(error) = queued {
