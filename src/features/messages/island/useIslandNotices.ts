@@ -1,7 +1,7 @@
-import { useQQNotifications } from "../../features/messages/qq-notifications/QQNotifications";
-import { useWeChatReminders } from "../../features/messages/wechat/WeChatReminders";
-import { useMail } from "../../features/messages/mail/MailPanel";
-import { usePluginNotifications } from "../../features/plugins/usePluginNotifications";
+import { useQQNotifications } from "../qq-notifications/QQNotifications";
+import { useWeChatReminders } from "../wechat/WeChatReminders";
+import { useMail } from "../mail/MailPanel";
+import { usePluginNotifications } from "../../plugins/usePluginNotifications";
 import { useState } from "react";
 import { useLatestMessagePreview } from "./useLatestMessagePreview";
 

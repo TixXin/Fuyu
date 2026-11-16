@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { hasNewUnreadMail, hasUnreadMessages, holdsTuck, mailSeen, nextMailBaselines } from "../../src/windows/island/tuckHold.ts";
+import { hasNewUnreadMail, hasUnreadMessages, holdsTuck, mailSeen, nextMailBaselines } from "../../src/features/messages/island/tuckHold.ts";
 import { normalizeSettings } from "../../src/lib/settings/settings.ts";
 
 const idle = { todoInProgress: false, agentWaiting: false, musicPlaying: false, messagesUnread: false };

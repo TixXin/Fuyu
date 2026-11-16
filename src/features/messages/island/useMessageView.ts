@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import type { MessageView } from "../../features/messages/Messages";
-import type { MessageSource } from "../../features/messages/messagePreview";
+import type { MessageView } from "../Messages";
+import type { MessageSource } from "../messagePreview";
 
 export function useMessageView(closeMailReader: () => void, openIslandPage: (page: "qq") => void) {
   const [messageSource, setMessageSource] = useState<MessageView>("qq");

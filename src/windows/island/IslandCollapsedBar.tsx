@@ -21,7 +21,7 @@ import type { CollapsedSlots, IslandPage } from "./types";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { hasNotchDrop, useIslandNotch } from "./notch";
 import { AlertPopup, NotchAlertLeading, NotchAlertTrailing, useActiveAlert } from "./NotchAlert";
-import { NotchMessageLeading, NotchMessageTrailing } from "./NotchMessage";
+import { NotchMessageLeading, NotchMessageTrailing } from "../../features/messages/island/NotchMessage";
 import { DevWatermark } from "../../components/DevWatermark";
 import "./IslandCollapsedBar.css";
 

@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { addArrival, removeArrival, arrivalKey, type ArrivalMessage } from "../../features/messages/arrivals/messageArrivals";
-import type { MailMessage } from "../../features/messages/mail/api";
-import type { MessageSource } from "../../features/messages/messagePreview";
-import { runPluginNotificationAction } from "../../features/plugins/api";
+import { addArrival, removeArrival, arrivalKey, type ArrivalMessage } from "../arrivals/messageArrivals";
+import type { MailMessage } from "../mail/api";
+import type { MessageSource } from "../messagePreview";
+import { runPluginNotificationAction } from "../../plugins/api";
 import type { useIslandNotices } from "./useIslandNotices";
-import { HOVER_HOLD_RETRY_MS } from "../../features/plugin-kernel/hoverHold";
-import { useHoverHold } from "../../features/plugin-kernel/useHoverHold";
-import { useOutsideClick } from "../../features/plugin-kernel/useOutsideClick";
-import type { IslandHost } from "../../features/plugin-kernel/islandHost";
+import { HOVER_HOLD_RETRY_MS } from "../../plugin-kernel/hoverHold";
+import { useHoverHold } from "../../plugin-kernel/useHoverHold";
+import { useOutsideClick } from "../../plugin-kernel/useOutsideClick";
+import type { IslandHost } from "../../plugin-kernel/islandHost";
 
 export type PanelArrival = ArrivalMessage & { mail?: { message: MailMessage; account: string | null }; pluginId?: string };
 

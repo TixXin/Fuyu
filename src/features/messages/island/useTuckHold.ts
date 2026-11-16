@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { IslandSettings } from "../../lib/settings/types";
+import type { IslandSettings } from "../../../lib/settings/types";
 import { hasNewUnreadMail, hasUnreadMessages, holdsTuck, mailSeen, nextMailBaselines, sameBaselines, type MailBaselines } from "./tuckHold";
 import type { useIslandNotices } from "./useIslandNotices";
 

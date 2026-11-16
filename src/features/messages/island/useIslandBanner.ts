@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { MessageNotice } from "../../lib/settings/types";
-import { BANNER_MS, type BannerMessage } from "../../features/messages/banner/bannerMessages";
-import { useMessageBanner } from "../../features/messages/banner/useMessageBanner";
-import type { MailMessage } from "../../features/messages/mail/api";
-import type { MessagePreview, MessageSource } from "../../features/messages/messagePreview";
-import type { IslandHost } from "../../features/plugin-kernel/islandHost";
-import { runPluginNotificationAction } from "../../features/plugins/api";
+import type { MessageNotice } from "../../../lib/settings/types";
+import { BANNER_MS, type BannerMessage } from "../banner/bannerMessages";
+import { useMessageBanner } from "../banner/useMessageBanner";
+import type { MailMessage } from "../mail/api";
+import type { MessagePreview, MessageSource } from "../messagePreview";
+import type { IslandHost } from "../../plugin-kernel/islandHost";
+import { runPluginNotificationAction } from "../../plugins/api";
 import type { useIslandNotices } from "./useIslandNotices";
 
 type IslandBannerMessage = BannerMessage & { mail?: { message: MailMessage; account: string | null }; pluginId?: string };

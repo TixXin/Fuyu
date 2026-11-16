@@ -4,7 +4,7 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
-import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
+import { useLatestMessagePreview } from "../../src/features/messages/island/useLatestMessagePreview";
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
 
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
