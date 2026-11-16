@@ -10,6 +10,7 @@ pub(crate) mod local;
 #[cfg(windows)]
 mod locate;
 pub(crate) mod remote;
+pub(crate) mod remote_feishu;
 mod remote_install;
 mod remote_project;
 mod remote_run;
@@ -85,6 +86,9 @@ macro_rules! tauri_commands {
             crate::cc_connect::remote::install_cc_connect_remote,
             crate::cc_connect::remote::add_cc_connect_remote_project,
             crate::cc_connect::remote::restart_cc_connect_remote,
+            crate::cc_connect::remote_feishu::start_cc_connect_remote_feishu_setup,
+            crate::cc_connect::remote_feishu::get_cc_connect_remote_feishu_setup,
+            crate::cc_connect::remote_feishu::cancel_cc_connect_remote_feishu_setup,
         ] $($rest)*)
     };
 }
