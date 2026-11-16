@@ -1,6 +1,5 @@
 import { Minus, RotateCcw, Settings } from "lucide-react";
 import { shortcutLabel } from "../../../lib/shortcut/shortcut";
-import type { MessageSource } from "../../../features/messages/messagePreview";
 import { defineSlot, type IslandHeaderMeta } from "../../../features/plugin-kernel/slots";
 import { useUpdateReminder } from "../../../features/updater/useBackgroundUpdateCheck";
 import { useTranslation } from "../../../i18n";
@@ -12,10 +11,7 @@ export type IslandHeaderContext = {
   page: IslandPage;
   features: IslandFeatures;
   isDetached: boolean;
-  qqNotificationCount: number;
-  wechatPending: boolean;
   onOpenSettings: (section?: "updates") => void;
-  onOpenMessages: (source: MessageSource) => void;
   onOpenTranslator: (() => void) | null;
   hints: ReadonlySet<string>;
   onResetPosition: () => void;

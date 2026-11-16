@@ -16,11 +16,11 @@ import { AgentSettingsPage } from "../AgentSettingsPage";
 import { AgentApprovalSettings } from "../approvals/AgentApprovalSettings";
 import { SoundSettingsSection } from "../sounds/SoundSettingsSection";
 import type { IslandSettings } from "../../../lib/settings/types";
+import { OWNER } from "./owner.ts";
 
 type PageProps = {
   settings: IslandSettings;
   onSettingsChange(settings: IslandSettings): void;
-  onShowPage(page: string): void;
 };
 
 function ApprovalShortcutOwners() {
@@ -32,7 +32,7 @@ function ApprovalShortcutOwners() {
   return null;
 }
 
-settingsRunners.add({ id: "agent-status.shortcut-owners", component: ApprovalShortcutOwners });
+settingsRunners.add({ id: "agent-status.shortcut-owners", component: ApprovalShortcutOwners }, OWNER);
 
 function ApprovalReference({ onOpenPage }: ShortcutsSectionProps) {
   const t = useTranslation();
@@ -47,12 +47,12 @@ function ApprovalReference({ onOpenPage }: ShortcutsSectionProps) {
   );
 }
 
-shortcutReferences.add({ id: "shortcutsReference.approvals", category: "shortcutsReference", order: 30, component: ApprovalReference });
+shortcutReferences.add({ id: "shortcutsReference.approvals", category: "shortcutsReference", order: 30, component: ApprovalReference }, OWNER);
 
-addSettingsCategory("agents", ({ settings, onSettingsChange, onShowPage }: PageProps) => <AgentSettingsPage settings={settings} onSettingsChange={onSettingsChange} onOpenConnect={() => onShowPage("agentConnect")} />);
-addSettingsCategory("agentSessions", ({ settings, onSettingsChange }: PageProps) => <AgentSessionsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />);
-addSettingsCategory("agentAlerts", ({ settings, onSettingsChange }: PageProps) => <AgentAlertsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />);
-addSettingsCategory("sounds", () => <SoundSettingsSection />);
-addSettingsCategory("agentApprovals", () => <AgentApprovalSettings />);
-addSettingsCategory("agentConnect", () => <AgentConnectSettingsPage />);
-addSettingsCategory("agentRemote", () => <AgentRemoteHostsSettings />);
+addSettingsCategory("agents", ({ settings, onSettingsChange }: PageProps) => <AgentSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
+addSettingsCategory("agentSessions", ({ settings, onSettingsChange }: PageProps) => <AgentSessionsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
+addSettingsCategory("agentAlerts", ({ settings, onSettingsChange }: PageProps) => <AgentAlertsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
+addSettingsCategory("sounds", () => <SoundSettingsSection />, OWNER);
+addSettingsCategory("agentApprovals", () => <AgentApprovalSettings />, OWNER);
+addSettingsCategory("agentConnect", () => <AgentConnectSettingsPage />, OWNER);
+addSettingsCategory("agentRemote", () => <AgentRemoteHostsSettings />, OWNER);

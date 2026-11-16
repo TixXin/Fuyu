@@ -1,6 +1,6 @@
-import { MessageSourceIcon } from "../../features/messages/MessageSourceIcon";
-import type { MessagePreview } from "../../features/messages/messagePreview";
-import { useTranslation } from "../../i18n";
+import { MessageSourceIcon } from "../MessageSourceIcon";
+import type { MessagePreview } from "../messagePreview";
+import { useTranslation } from "../../../i18n";
 
 export function NotchMessageLeading({ preview }: { preview: MessagePreview }) {
   return (

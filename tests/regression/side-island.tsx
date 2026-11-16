@@ -58,15 +58,15 @@ function Fixture() {
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const gauges = Array.from({ length: state.gauges }, (_, index) => ({ id: `gauge-${index}`, node: <span className="gauge-dot">{index}</span> }));
-  useFixtureLines({ agents: state.full ? 3 : 0, status: { state: state.full ? "running" : "idle", label: "AI Agent" }, todoCount: state.full ? 5 : null, levelPopup: state.level, deviceUse: state.full ? FULL_DEVICES : NO_DEVICES, media: state.full ? PLAYING : MEDIA, sideCover: state.cover });
+  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: state.preview }, agents: state.full ? 3 : 0, status: { state: state.full ? "running" : "idle", label: "AI Agent" }, todoCount: state.full ? 5 : null, levelPopup: state.level, deviceUse: state.full ? FULL_DEVICES : NO_DEVICES, media: state.full ? PLAYING : MEDIA, sideCover: state.cover });
   return <div className="stage" style={{ "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8 } as CSSProperties}>
-    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
+    <IslandShell
       mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached side={state.side} showTitle={false}
       showCollapsedText appearanceMode="classic" nativeGlassState="disabled"
       collapsedSlots={{ gauges }}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       shelfCount={state.full ? 2 : null}
-      onOpenPage={() => {}} onOpenMessages={() => {}}
+      onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>

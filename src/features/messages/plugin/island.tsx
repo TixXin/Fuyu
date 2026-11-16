@@ -5,10 +5,10 @@ import { defineSlot, type IslandCollapsedMeta, type IslandHeaderMeta, type Islan
 import { runIslandAction, useIslandContributed } from "../../plugin-kernel/useIslandContributions";
 import type { Translations } from "../../../i18n";
 import { MessageSourceIcon } from "../MessageSourceIcon";
-import type { MailController } from "../mail/MailPanel";
 import { MessageArrivalsPanel } from "../arrivals/MessageArrivalsPanel";
 import { MessagesPanel } from "../Messages";
 import { islandPage } from "./page.ts";
+import { messagesIsland } from "./islandState";
 
 type Panel = ComponentProps<typeof MessagesPanel>;
 type Arrivals = ComponentProps<typeof MessageArrivalsPanel>;
@@ -35,9 +35,6 @@ type HeaderContext = {
   page: string;
   withShortcut: (label: string, target: "qq") => string;
   isPageEnabled: (target: "qq") => boolean;
-  qqNotificationCount: number;
-  wechatPending: boolean;
-  onOpenMessages: (source: "qq" | "wechat") => void;
 };
 
 const pageSlot = defineSlot<MessagesPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");
@@ -60,10 +57,13 @@ function MessagesPage({ features, qqMail, qqNotifications, wechatReminders, mess
 
 const headerSlot = defineSlot<HeaderContext, IslandHeaderMeta<HeaderContext>>("island.header/v1");
 
-function MessagesButton({ page, withShortcut, qqNotificationCount, wechatPending, onOpenMessages }: HeaderContext) {
+function MessagesButton({ page, withShortcut }: HeaderContext) {
   const t = useTranslation();
+  const messages = messagesIsland.use();
+  const qqNotificationCount = messages?.qq.snapshot.items.length ?? 0;
+  const wechatPending = messages?.wechat.snapshot.pending ?? false;
   const messageBadgeLabel = t.messages.badge(qqNotificationCount, wechatPending);
-  return <button className={`icon-button island-message-button${page === "qq" ? " island-message-button--active" : ""}`} type="button" aria-label={withShortcut(t.messages.label(messageBadgeLabel), "qq")} aria-pressed={page === "qq"} onClick={() => onOpenMessages(wechatPending ? "wechat" : "qq")}>
+  return <button className={`icon-button island-message-button${page === "qq" ? " island-message-button--active" : ""}`} type="button" aria-label={withShortcut(t.messages.label(messageBadgeLabel), "qq")} aria-pressed={page === "qq"} onClick={() => messages?.open(wechatPending ? "wechat" : "qq")}>
     <Bell size={16} strokeWidth={1.5} absoluteStrokeWidth />
     {(qqNotificationCount > 0 || wechatPending) && <span className="island-message-button__dot" aria-hidden="true" />}
   </button>;
@@ -74,19 +74,19 @@ headerSlot.add({ id: "messages", order: 20, enabled: ({ isPageEnabled }) => isPa
 
 type CollapsedContext = {
   t: Translations;
-  qqMail: MailController;
-  onOpenMessages: (source: "qqMail") => void;
+  hints: ReadonlySet<string>;
 };
 
 const collapsedSlot = defineSlot<CollapsedContext, IslandCollapsedMeta<CollapsedContext>>("island.collapsed/v1");
 
-function MailItem({ t, qqMail, onOpenMessages }: CollapsedContext) {
+function MailItem({ t }: CollapsedContext) {
+  const messages = messagesIsland.use();
   return (
-    <button className="island-message-button island-message-button--compact qq-mail-badge" type="button" aria-label={t.messages.newMailLabel} onClick={() => onOpenMessages("qqMail")}>
-      <MessageSourceIcon source="qqMail" size={16} account={qqMail.previewAccount} />
+    <button className="island-message-button island-message-button--compact qq-mail-badge" type="button" aria-label={t.messages.newMailLabel} onClick={() => messages?.open("qqMail")}>
+      <MessageSourceIcon source="qqMail" size={16} account={messages?.mail.previewAccount} />
       <span className="island-message-button__dot" aria-hidden="true" />
     </button>
   );
 }
 
-collapsedSlot.add({ id: "mail", order: 20, shown: ({ qqMail }) => qqMail.preview !== null, component: MailItem });
+collapsedSlot.add({ id: "mail", order: 20, shown: ({ hints }) => hints.has("messages.mail"), component: MailItem });

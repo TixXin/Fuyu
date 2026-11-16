@@ -1,4 +1,8 @@
 export const RUST_METHODS = Object.freeze([
+  "agents.focus",
+  "agents.remoteHosts",
+  "agents.sessions",
+  "agents.usage",
   "app.echo",
   "app.platformSupport",
   "app.version",

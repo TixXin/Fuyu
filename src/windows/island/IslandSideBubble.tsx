@@ -1,17 +1,17 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { isTauri } from "@tauri-apps/api/core";
-import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
-import type { MessagePreview } from "../../features/messages/messagePreview";
 import { setIslandSideBubbleRect } from "./api";
+import { IslandSummary } from "./IslandSummary";
 
 type IslandSideBubbleProps = {
   top: number;
-  preview: MessagePreview | null;
+  summary: string | null;
+  previewing: boolean;
   alert: ReactNode;
   onOpenPreview: () => void;
 };
 
-export function IslandSideBubble({ top, preview, alert, onOpenPreview }: IslandSideBubbleProps) {
+export function IslandSideBubble({ top, summary, previewing, alert, onOpenPreview }: IslandSideBubbleProps) {
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -35,17 +35,17 @@ export function IslandSideBubble({ top, preview, alert, onOpenPreview }: IslandS
       ref={ref}
       className="island-side-bubble"
       style={{ "--island-side-bubble-top": `${top}px` } as CSSProperties}
-      role={preview ? "button" : "status"}
-      tabIndex={preview ? 0 : undefined}
+      role={previewing ? "button" : "status"}
+      tabIndex={previewing ? 0 : undefined}
       onClick={(event) => {
         event.stopPropagation();
-        if (preview) onOpenPreview();
+        if (previewing) onOpenPreview();
       }}
     >
       <span className="island-side-bubble__content">
-        <CollapsedMessageContent preview={preview} enabled>
+        <IslandSummary item={summary} enabled>
           {alert}
-        </CollapsedMessageContent>
+        </IslandSummary>
       </span>
     </div>
   );

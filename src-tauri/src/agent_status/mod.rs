@@ -1,5 +1,6 @@
 #[cfg_attr(target_os = "macos", path = "approval_hotkeys_macos.rs")]
 pub(crate) mod approval_hotkeys;
+mod background;
 mod background_tasks;
 mod claude_code;
 mod claude_desktop;
@@ -12,6 +13,7 @@ mod editor_terminal;
 mod external;
 mod harness;
 mod hooks_state;
+mod host;
 pub(crate) mod host_icon;
 mod codex_usage;
 mod codex_version;
@@ -236,7 +238,10 @@ pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatu
     ))
 }
 
+pub(crate) const PLUGIN_ID: &str = "agents";
+
 pub fn init() {
+    background::register();
     if may_change_hook_files() {
         std::thread::spawn(reply_marker::upgrade_installed);
     }
@@ -269,8 +274,7 @@ pub async fn install_agent_status_hooks(app: AppHandle) -> Result<AgentHooksInst
 }
 
 fn install_agent_status_hooks_now(app: &AppHandle) -> Result<AgentHooksInstallResult, String> {
-    crate::dev_lane::refuse_in_preview("install the AI agents' status hooks")?;
-    let app_dir = crate::home_dir::fuyu_home(app.path())
+    let app_dir = crate::home_dir::agent_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     fs::create_dir_all(&app_dir)
         .map_err(|error| format!("Failed to create app data directory: {error}"))?;
@@ -360,13 +364,8 @@ pub async fn list_agent_sessions(
     let agent_dir = crate::home_dir::agent_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     tauri::async_runtime::spawn_blocking(move || {
-        let waiting = notifications::waiting_notifications(&agent_dir);
         windows_home_dir().map(|home_dir| {
-            let mut sessions = session_scan::list_sessions(&home_dir, Some(&agent_dir), &waiting, window_ms);
-            session_host::attach_hosts(&home_dir, Some(&agent_dir), &mut sessions);
-            sessions.extend(remote_sessions::sessions(&app_dir, window_ms));
-            let is_active = |phase: &str| matches!(phase, "running" | "waiting");
-            sessions.sort_by_key(|session| (!is_active(session.phase), -session.updated_at));
+            let sessions = host::local_and_remote(&home_dir, &app_dir, &agent_dir, window_ms);
             subagents::with_subagents(&home_dir, sessions, snapshot::current_unix_millis())
         })
     })

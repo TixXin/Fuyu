@@ -10,6 +10,7 @@ import {
 import { thisMachine } from "../machine-name.mjs";
 import { dirtyLines, dirtyReport, readDirty } from "./taskDirty.mjs";
 import { closeReminder } from "./taskIssues.mjs";
+import { nextId, usedIds } from "./taskIds.mjs";
 import { hostReminders, landingProblems } from "./taskLanding.mjs";
 import {
   checkTasks, findTask, git, load, nowText, readAll, readGroups, save, staleOf, taskOnMain, taskPath, todayText, tryGit,
@@ -105,19 +106,35 @@ async function claim(root, options, added = []) {
   return commitTasks(taking.map((id) => taskPath(id, false)), `docs(tasks): ${owner} ${verb} ${taking.join(", ")}`, options);
 }
 
-function add(root, options) {
-  const [id] = options._;
-  if (!isTaskId(id ?? "") || !options.title) throw new Error("用法：pnpm tasks add <编号> --title .. [--parent ..] [--depends a,b] [--needs user] [--issue 13] [--body ..] [--claim]");
-  if (findTask(root, id)) throw new Error(`${id} 已经存在`);
+function checkPrefix(root, prefix) {
   const codes = readGroups(root).map((group) => group.code);
-  if (!codes.includes(id[0])) throw new Error(`编号的首字母是分组，只能是 ${codes.join(" / ")}（见 docs/tasks/README.md）`);
+  if (!codes.includes(prefix[0])) throw new Error(`编号的首字母是分组，只能是 ${codes.join(" / ")}（见 docs/tasks/README.md）`);
+}
+
+async function pickId(root, options) {
+  const [prefix = ""] = options._;
+  if (!isTaskId(prefix) && !/^[A-Z]$/.test(prefix)) throw new Error("用法：pnpm tasks id <分组字母 | 父编号>，例如 pnpm tasks id B、pnpm tasks id B6.2");
+  checkPrefix(root, prefix);
+  const used = await usedIds(root);
+  if (prefix.length > 1 && !used.has(prefix)) throw new Error(`没有任务 ${prefix}，不能给它挑子任务编号`);
+  console.log(nextId(prefix, used));
+  return 0;
+}
+
+async function add(root, options) {
+  let [id = ""] = options._;
+  if (!(isTaskId(id) || /^[A-Z]$/.test(id)) || !options.title) throw new Error("用法：pnpm tasks add <编号 | 分组字母> --title .. [--parent ..] [--depends a,b] [--needs user] [--issue 13] [--body ..] [--claim]");
+  if (findTask(root, id)) throw new Error(`${id} 已经存在`);
+  checkPrefix(root, id);
+  const used = await usedIds(root, { skipIssue: Number(options.issue) || undefined });
+  if (id.length === 1) id = nextId(id, used);
+  else if (used.has(id)) throw new Error(`${id} 已经在 ${used.get(id)} 用掉了；换一个：pnpm tasks id ${id[0]}`);
   if (options.parent && !findTask(root, options.parent)) throw new Error(`没有父任务 ${options.parent}`);
   const depends = splitList(options.depends);
   for (const other of depends) if (!findTask(root, other)) throw new Error(`没有任务 ${other}`);
   const status = options.status ?? "待做";
   if (!OPEN_STATUSES.includes(status)) throw new Error(`新任务的状态只能是 ${OPEN_STATUSES.join(" / ")}`);
   const fields = { id, title: options.title, status, scope: [], depends, parent: options.parent, needs: options.needs, issue: options.issue };
-  if (options.claim) fetchMain();
   save(root, { fields, body: options.body ? `## 说明\n\n${options.body}` : "" });
   if (options.claim) return claim(root, { ...options, _: [id] }, [id]);
   console.log(`已建 ${taskPath(id, false)}；和其他改动一起提交（马上要做就用 --claim，建好、认领并提交）`);
@@ -222,6 +239,8 @@ async function main(argv) {
       return claim(root, options);
     case "add":
       return add(root, options);
+    case "id":
+      return pickId(root, options);
     case "done":
       return close(root, options, "已完成");
     case "drop":

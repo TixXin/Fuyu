@@ -4,7 +4,7 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
-import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
+import { useLatestMessagePreview } from "../../src/features/messages/island/useLatestMessagePreview";
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
 
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
@@ -87,14 +87,14 @@ function Fixture({ all = false }: { all?: boolean }) {
   const preview = useLatestMessagePreview(qq, wechat, qqMail, NO_PLUGIN_NOTIFICATIONS);
   const providers = all ? USAGE_PROVIDERS : USAGE_PROVIDERS.slice(0, 1);
   const sideWidth = providers.length * CLAUDE_USAGE_GAUGE_WIDTH;
-  useFixtureLines({ agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
+  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: preview }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className={`stage${all ? " stage--all" : ""}`} style={{ "--collapsed-island-width": `${280 + sideWidth}px` } as CSSProperties}>
-    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: false, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} collapsedSlots={{ gauges: providers.map((provider) => ({ id: `usage:${provider.id}`, node: <ClaudeUsageGauge key={provider.id} provider={provider} /> })), sideWidth }}
-      onOpenPage={() => {}} onOpenMessages={() => {}}
+      onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>

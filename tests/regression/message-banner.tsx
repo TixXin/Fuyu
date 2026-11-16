@@ -5,8 +5,9 @@ import { emit } from "@tauri-apps/api/event";
 import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
-import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessagePreview";
-import { useIslandBanner } from "../../src/windows/island/useIslandBanner";
+import { useLatestMessagePreview } from "../../src/features/messages/island/useLatestMessagePreview";
+import { useIslandBanner } from "../../src/features/messages/island/useIslandBanner";
+import { islandHost } from "../../src/windows/island/islandHost";
 import { MessageBanner } from "../../src/features/messages/banner/MessageBanner";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
@@ -62,15 +63,16 @@ function Fixture() {
     notices: { preview, hasMessagePreview, qqNotifications: qq, wechatReminders: wechat, qqMail, pluginNotifications: plugins },
     mode: "collapsed", isTucked: false, quiet: false,
     onOpenMessages: (source) => { openedSource = source; },
+    host: islandHost,
   });
-  useFixtureLines({ agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
+  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: plugins, preview: banner.barPreview, open: (source) => { openedSource = source; } }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className="stage" style={{ "--collapsed-island-width": "300px" } as CSSProperties}>
-    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={plugins} preview={banner.barPreview}
+    <IslandShell
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: false, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null}
-      onOpenPage={() => {}} onOpenMessages={(source) => { openedSource = source; }}
+      onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>

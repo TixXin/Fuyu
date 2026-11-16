@@ -18,7 +18,6 @@
 | 什么 | 在哪 | 怎么改 |
 |---|---|---|
 | 消息窗口的类名和标题 `FocuSD…` | `agent_status/approval_hotkeys.rs`、`clipboard_history/listener.rs`、`translation/hotkey.rs`、`wechat_reminders/source.rs`、`win32/session_notifications.rs`、`win32/message_window.rs`（测试） | 改成 `Fuyu…`；开工时确认没有别的进程按类名找这些窗口 |
-| 用户看得到的诊断通知标题「FocuSD QQ 通知诊断」 | `qq_notifications/listener.rs`、`examples/probes/qq_notification.rs` | 改成「浮屿 QQ 通知诊断」/ `Fuyu QQ notification diagnostic`，两处同步 |
 | `FocuSD activation test` | `messenger_activation.rs` | 改名 |
 | 发给远端的脚本里的内部标记 | `agent_status/remote_fetch.rs`（`FOCUSD_READY`、`FOCUSD_KNOWN`）、`agent_status/remote_setup.rs`（`FOCUSD_ISLAND_END_OF_TEXT`、`.focusd-tmp`）、`ssh_tunnel/tunnel.rs`（`FOCUSD_NO_PORT_TOOL`） | 每次连接都由本程序现发，两端同时换，改成 `FUYU_*` |
 | cc-connect 配置的备份和临时文件后缀 `.bak-focusd-`、`.focusd.tmp` | `cc_connect/config_file.rs` | 改成 `fuyu`；已有的旧备份不动 |
@@ -76,6 +75,7 @@
 | 旧设置备份和主题文件 `"app": "fly-island"` | `system/settings_backup.rs`、`src/lib/settings-backup/backup.ts`、`src/lib/theme/theme.ts` | 改名前导出的备份导不回来 |
 | 待办迁移命令的旧 key 名 | `todos/migration.rs`、`src/features/todos/{api,normalize,storage}.ts` | `migrate_todos` 的参数就是这几个名字；E36.3.38 正在改待办，等它合入后再看能不能顺手收进新的服务里 |
 | 待办旧默认目录 `Documents\FocuSD` | `home_dir/migration.rs`、`system/todo_export.rs` | 老用户的 Markdown 待办迁不进家目录 |
+| 旧版 QQ 诊断通知的标题 `FocuSD QQ 通知诊断` / `FocuSD QQ notification diagnostic` | `qq_notifications/listener.rs`、`examples/probes/qq_notification.rs` | 这里是认出诊断通知好过滤掉，不是显示；发出的通知（`repair-qq-notification-registration.ps1`）早就叫 Fuyu。删了旧版留下的诊断通知会被当成 QQ 消息（D81.1 原计划放在 A 类，改错后在 a39da7fa 恢复） |
 | 开发版找旧快捷方式 | `scripts/build-exe.mjs` | 只在开发机上用，影响很小，也可以现在删 |
 | 插件审核器认旧数据目录 | `packages/plugin-review/src/scan.mjs` | 检查插件有没有偷读本应用数据时漏掉旧目录；建议一直留 |
 
