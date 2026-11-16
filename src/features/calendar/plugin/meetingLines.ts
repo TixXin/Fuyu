@@ -2,13 +2,10 @@ import { LINE_PRIORITY, type IslandContribution } from "../../plugin-kernel/isla
 import { useLineBelow } from "../../plugin-kernel/useIslandContributions";
 import type { CollapsedMeeting } from "../upcoming";
 import { useMeetingBeat } from "../useMeetingBeat";
+import { meetingLineContributions, meetingSharesBar } from "./meetingLine";
 
 export function useMeetingContributions(meeting: CollapsedMeeting | null, barText: boolean): IslandContribution[] {
-  const sharing = useLineBelow(LINE_PRIORITY.meeting)?.shareable === true;
+  const sharing = meetingSharesBar(useLineBelow(LINE_PRIORITY.meeting));
   const beat = useMeetingBeat(barText && sharing ? meeting?.upcoming ?? null : null);
-  if (!barText || meeting === null) return [];
-  const list: IslandContribution[] = [];
-  if (!sharing || beat) list.push({ kind: "line", item: "calendar.meeting", priority: LINE_PRIORITY.meeting, page: "calendar", bare: true });
-  list.push({ kind: "trail", item: "calendar.join" });
-  return list;
+  return meetingLineContributions(meeting !== null, barText, sharing, beat);
 }
