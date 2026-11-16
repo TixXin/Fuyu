@@ -22,7 +22,7 @@ export function MailAccountTabs({ mailboxes, selected, busy, onSelect, onAdd }: 
           const unread = mailbox.enabled ? mailbox.unreadCount ?? 0 : 0;
           return (
             <button key={email} type="button" role="tab" className="qq-mail-account" aria-selected={email === selected} onClick={() => onSelect(email)}>
-              <span className="message-status" data-state={mailbox.status} aria-label={t.mail.status[mailbox.status]} />
+              {mailbox.status !== "connected" && <span className="message-status" data-state={mailbox.status} aria-label={t.mail.status[mailbox.status]} />}
               <MessageSourceIcon source="qqMail" size={14} account={email} />
               <span className="qq-mail-account__email">{email}</span>
               {unread > 0 && <span className="message-source-count">{mailBadgeCount(unread)}</span>}

@@ -31,7 +31,7 @@ export function WeChatReminderPanel({ controller, navigation }: { controller: We
     <section className="qq-panel" aria-label={t.messages.wechatReminders}>
       <header className="qq-panel__header">
         {navigation}
-        <div className="qq-panel__toolbar"><WeChatReminderControls controller={controller} compact /><button className="icon-button" type="button" aria-label={t.wechat.open} disabled={busy} onClick={() => void openWeChat()}><ArrowUpRight size={16} strokeWidth={1.8} /></button><button className="icon-button" type="button" aria-label={t.wechat.clear} disabled={busy || snapshot.items.length === 0} onClick={() => void clear()}><Trash2 size={16} strokeWidth={1.8} /></button></div>
+        <div className="qq-panel__toolbar"><WeChatReminderControls controller={controller} compact /><button className="icon-button" type="button" aria-label={t.wechat.open} disabled={busy} onClick={() => void openWeChat()}><ArrowUpRight size={16} strokeWidth={1.8} /></button><button className="icon-button" type="button" aria-label={t.wechat.clear} disabled={busy || (snapshot.items.length === 0 && !snapshot.pending)} onClick={() => void clear()}><Trash2 size={16} strokeWidth={1.8} /></button></div>
       </header>
       {(actionError || snapshot.error) && <p className="qq-panel__error" role="alert">{actionError || snapshot.error}</p>}
       {snapshot.items.length === 0 ? (
