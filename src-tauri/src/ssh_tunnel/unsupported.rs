@@ -11,6 +11,10 @@ pub(crate) fn start(_settings: &Map<String, Value>) -> Result<(), String> {
 
 pub(crate) fn stop() {}
 
+pub(crate) fn remote_proxy(_host: &str) -> Option<String> {
+    None
+}
+
 crate::user_error::unsupported_commands!(
     get_ssh_tunnels,
     get_ssh_tunnel_proxy,

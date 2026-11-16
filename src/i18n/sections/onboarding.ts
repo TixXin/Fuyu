@@ -56,6 +56,18 @@ export type OnboardingText = {
     later: string;
   };
   push: OnboardingPushText;
+  agentCards: {
+    title: string;
+    lead: string;
+    recommended: (label: string) => string;
+  };
+  agentConnect: {
+    title: string;
+    lead: string;
+    remote: string;
+    agents: string;
+    marker: string;
+  };
   release: {
     title: string;
     lead: string;
@@ -154,6 +166,18 @@ export const zhCN: OnboardingText = {
     later: "现在不开也行，以后在「设置 → 通用 → 系统权限」里也能开；没开的功能用到时会提醒你。",
   },
   push: pushZhCN,
+  agentCards: {
+    title: "AI 代理的会话卡片",
+    lead: "Agent 页里每个会话怎么显示。标了「推荐」的是默认选择，以后在设置 → AI Agent → 会话列表里还能改。",
+    recommended: (label) => `${label}（推荐）`,
+  },
+  agentConnect: {
+    title: "连上你的 AI 代理",
+    lead: "三步：有 SSH 远程电脑就先加上（没有可跳过）；打开你在用的 AI 代理，点「安装/修复」装上状态钩子；再打开回复状态标记。以后在设置 → AI Agent 里都能改。",
+    remote: "1. SSH 远程电脑（可跳过）",
+    agents: "2. 选 AI 代理，点「安装/修复」",
+    marker: "3. 回复状态标记（推荐打开）",
+  },
   release: {
     title: "准备好了",
     lead: "演示的内容会在引导结束时消失，岛会留在原地。",
@@ -255,6 +279,18 @@ export const en: OnboardingText = {
     later: "You can also do this later in Settings > General > System permissions; a feature that needs one tells you when you use it.",
   },
   push: pushEn,
+  agentCards: {
+    title: "Agent session cards",
+    lead: "How each session shows on the Agent page. The ones marked recommended are the defaults; change them later in Settings → AI Agent → Session list.",
+    recommended: (label) => `${label} (recommended)`,
+  },
+  agentConnect: {
+    title: "Connect your AI agents",
+    lead: "Three steps: add your SSH remote computers if you have any (or skip); switch on the agents you use and click Install/repair to set up the status hooks; then switch on the reply status marker. All of it stays in Settings → AI Agent.",
+    remote: "1. SSH remote computers (optional)",
+    agents: "2. Pick your agents, click Install/repair",
+    marker: "3. Reply status marker (recommended)",
+  },
   release: {
     title: "You're all set",
     lead: "The demo content goes away when the guide ends; the island stays where it is.",

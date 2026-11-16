@@ -33,3 +33,19 @@ export function dockIslandTo(edge: Exclude<IslandDockEdge, "top">) {
 export function primaryScreenHasNotch() {
   return invoke<boolean>("primary_screen_has_notch");
 }
+
+export type WallpaperFit = "fill" | "fit" | "stretch" | "center" | "tile" | "span";
+
+export type MonitorWallpaper = { x: number; y: number; width: number; height: number; image: string | null };
+
+export type Wallpapers = { fit: WallpaperFit; color: string; monitors: MonitorWallpaper[] };
+
+const WALLPAPER_CHANGED_EVENT = "wallpaper-changed";
+
+export function getWallpapers() {
+  return invoke<Wallpapers | null>("get_wallpapers");
+}
+
+export function listenWallpaperChanged(handler: () => void): Promise<UnlistenFn> {
+  return listen(WALLPAPER_CHANGED_EVENT, () => handler());
+}

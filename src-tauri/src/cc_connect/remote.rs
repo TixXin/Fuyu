@@ -115,8 +115,9 @@ pub async fn add_cc_connect_remote_project(
 #[tauri::command]
 pub async fn restart_cc_connect_remote(host: String, path: Option<String>) -> Result<(), UserError> {
     let target = target(&host, path.as_deref())?;
+    let proxy = crate::ssh_tunnel::remote_proxy(&host);
     tauri::async_runtime::spawn_blocking(move || {
-        let output = run_ssh(&target, &remote_run::restart_script(path.as_deref())).map_err(|error| ssh_error(&host, error))?;
+        let output = run_ssh(&target, &remote_run::restart_script(path.as_deref(), proxy.as_deref())).map_err(|error| ssh_error(&host, error))?;
         remote_run::parse_restart(&host, &String::from_utf8_lossy(&output))
     })
     .await
