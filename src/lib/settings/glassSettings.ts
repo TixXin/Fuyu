@@ -6,11 +6,13 @@ export const GLASS_STYLES = ["static", "flow", "aurora", "shader"] as const;
 export const GLASS_COLOR_SOURCES = ["accent", "cover", "custom"] as const;
 export const GLASS_FLOW_WHEN = ["always", "expanded"] as const;
 export const GLASS_MORPHS = ["smooth", "soft", "liquid"] as const;
+export const GLASS_BACKDROPS = ["none", "wallpaper"] as const;
 
 export type GlassStyle = (typeof GLASS_STYLES)[number];
 export type GlassColorSource = (typeof GLASS_COLOR_SOURCES)[number];
 export type GlassFlowWhen = (typeof GLASS_FLOW_WHEN)[number];
 export type GlassMorph = (typeof GLASS_MORPHS)[number];
+export type GlassBackdrop = (typeof GLASS_BACKDROPS)[number];
 
 export type GlassSettingValues = {
   glassStyle: GlassStyle;
@@ -28,6 +30,10 @@ export type GlassSettingValues = {
   glassSpecular: boolean;
   glassMorph: GlassMorph;
   glassContrastGuard: boolean;
+  glassBackdrop: GlassBackdrop;
+  glassBlur: number;
+  glassSaturation: number;
+  glassNoise: number;
 };
 
 export const GLASS_SETTING_KEYS = [
@@ -46,6 +52,10 @@ export const GLASS_SETTING_KEYS = [
   "glassSpecular",
   "glassMorph",
   "glassContrastGuard",
+  "glassBackdrop",
+  "glassBlur",
+  "glassSaturation",
+  "glassNoise",
 ] as const satisfies readonly (keyof GlassSettingValues)[];
 
 export const DEFAULT_GLASS_SETTINGS: GlassSettingValues = {
@@ -54,7 +64,7 @@ export const DEFAULT_GLASS_SETTINGS: GlassSettingValues = {
   glassColor1: "",
   glassColor2: "",
   glassColor3: "",
-  glassColorStrength: 70,
+  glassColorStrength: 30,
   glassFlowSpeed: 100,
   glassBlobScale: 100,
   glassFlowWhen: "always",
@@ -64,6 +74,10 @@ export const DEFAULT_GLASS_SETTINGS: GlassSettingValues = {
   glassSpecular: true,
   glassMorph: "smooth",
   glassContrastGuard: true,
+  glassBackdrop: "wallpaper",
+  glassBlur: 24,
+  glassSaturation: 180,
+  glassNoise: 3,
 };
 
 function percent(value: unknown, min: number, max: number, fallback: number) {
@@ -95,5 +109,9 @@ export function normalizeGlassSettings(saved: Partial<Record<keyof GlassSettingV
     glassSpecular: saved?.glassSpecular !== false,
     glassMorph: oneOf(GLASS_MORPHS, saved?.glassMorph, defaults.glassMorph),
     glassContrastGuard: saved?.glassContrastGuard !== false,
+    glassBackdrop: oneOf(GLASS_BACKDROPS, saved?.glassBackdrop, defaults.glassBackdrop),
+    glassBlur: percent(saved?.glassBlur, 0, 60, defaults.glassBlur),
+    glassSaturation: percent(saved?.glassSaturation, 100, 250, defaults.glassSaturation),
+    glassNoise: percent(saved?.glassNoise, 0, 12, defaults.glassNoise),
   };
 }
