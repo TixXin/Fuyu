@@ -105,6 +105,24 @@
         "shadow": false,
         "alwaysOnTop": true,
         "skipTaskbar": true
+      },
+      {
+        "label": "tray-menu",
+        "create": false,
+        "title": "Fuyu",
+        "url": "index.html?window=tray-menu",
+        "width": 320,
+        "height": 420,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "acceptFirstMouse": true,
+        "visible": false
       }
     ],
     "security": {

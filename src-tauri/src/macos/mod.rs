@@ -34,3 +34,4 @@ pub(crate) mod session;
 pub(crate) mod sibling_island;
 pub(crate) mod terminal_tabs;
 pub(crate) mod top_space;
+pub(crate) mod tray_panel;

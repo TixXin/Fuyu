@@ -45,6 +45,7 @@ mod timer;
 mod todos;
 mod translation;
 mod tray;
+mod tray_menu;
 #[cfg(target_os = "macos")]
 mod tray_mark;
 mod tray_visibility;
@@ -290,6 +291,7 @@ pub fn run() {
             pets;
             platform_support;
             tray;
+            tray_menu;
             tray_visibility
         ))
         .build(context)

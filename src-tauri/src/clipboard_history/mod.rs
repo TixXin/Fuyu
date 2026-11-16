@@ -566,6 +566,12 @@ pub(crate) fn popup_pinned() -> bool {
     service().and_then(|service| service.snapshot()).map(|snapshot| snapshot.settings.popup_pinned).unwrap_or(false)
 }
 
+pub(crate) fn open_from_tray() {
+    if let Ok(service) = service() {
+        service.emit_shortcut();
+    }
+}
+
 pub(crate) fn refocus_popup(app: &AppHandle) {
     if let Some(window) = app.get_webview_window(popup::WINDOW_LABEL) {
         let hidden = service().and_then(|service| service.snapshot()).map(|snapshot| snapshot.settings.hide_from_capture).unwrap_or(true);
