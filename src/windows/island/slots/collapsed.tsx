@@ -8,7 +8,6 @@ import type { CollapsedSlots, IslandPage } from "../types";
 
 export type CollapsedBarContext = {
   t: Translations;
-  updateVersion: string | null;
   statusLight: ReactNode;
   shelfCount: number | null;
   hints: ReadonlySet<string>;
