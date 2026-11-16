@@ -92,7 +92,7 @@
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
-  animation: taskFlowIn var(--line-enter-duration, 420ms) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
+  animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
 }
 
 .island__agent-session {
@@ -105,11 +105,11 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 1.2;
-  animation: taskFlowIn var(--line-enter-duration, 420ms) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
+  animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
 }
 
 .island__summary-row > .island-meeting {
-  animation: taskFlowIn var(--line-enter-duration, 420ms) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
+  animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
 }
 
 .island__summary-layer--incoming {

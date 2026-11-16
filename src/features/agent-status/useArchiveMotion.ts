@@ -5,14 +5,15 @@ import type { SessionRemoval } from "./useHiddenSessions";
 import { MOTION_ARCHIVING } from "./useListMotion";
 import "./ArchiveDissolve.css";
 import type { AgentArchiveMotion } from "./agentSettings";
+import { MOTION_BASE_MS, MOTION_MEDIUM_MS } from "../../lib/theme/motionTokens";
 
 const LEAVE_MS = 260;
-const RETURN_MS = 240;
+const RETURN_MS = MOTION_MEDIUM_MS;
 const EASING = "cubic-bezier(0.2, 0.7, 0.3, 1)";
 const SLIDE_PX = 18;
 
 export const DISSOLVE_MS = 480;
-const FOLD_MS = 160;
+const FOLD_MS = MOTION_BASE_MS;
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
