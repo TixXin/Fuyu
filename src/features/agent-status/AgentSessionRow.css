@@ -10,8 +10,8 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   transition:
-    background 140ms ease,
-    box-shadow 140ms ease;
+    background var(--motion-base) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease);
 }
 
 .agent-session--full {
@@ -49,9 +49,9 @@
   border-radius: var(--radius-sm, 6px);
   cursor: pointer;
   transition:
-    color 140ms ease,
-    background 140ms ease,
-    opacity 140ms ease;
+    color var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease),
+    opacity var(--motion-base) var(--motion-ease);
 }
 
 .agent-sessions__list > li:hover .agent-session__archive {
@@ -411,7 +411,7 @@
 }
 
 .agent-sessions__list--menu :is(.agent-session__agent, .agent-session__time, .agent-session__age) {
-  transition: opacity 140ms ease;
+  transition: opacity var(--motion-base) var(--motion-ease);
 }
 
 .agent-sessions__list--archivable.agent-sessions__list--menu > li:is(:hover, :focus-within, :has([aria-expanded="true"])) .agent-session__agent,
@@ -424,7 +424,7 @@
   top: 8px;
   right: 3px;
   opacity: 0;
-  transition: opacity 140ms ease;
+  transition: opacity var(--motion-base) var(--motion-ease);
 }
 
 .agent-sessions__list--archivable:not(.agent-sessions__list--cards, .agent-sessions__list--compact) .agent-session__more {
@@ -458,8 +458,8 @@
   border-radius: var(--radius-sm, 6px);
   cursor: pointer;
   transition:
-    color 140ms ease,
-    background 140ms ease;
+    color var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease);
 }
 
 .agent-session__more .island-list-icon-button:is(:hover, :focus-visible, [aria-expanded="true"]) {

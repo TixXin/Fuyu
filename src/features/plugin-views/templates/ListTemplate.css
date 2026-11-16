@@ -258,7 +258,7 @@ button.plugin-list__main:hover .plugin-list__title {
   min-height: 44px;
   padding: 4px 8px;
   background: none;
-  transition: background 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease);
 }
 
 .plugin-view--list .plugin-list__item:hover {
@@ -296,7 +296,7 @@ button.plugin-list__main:hover .plugin-list__title {
 
 .plugin-view--list .plugin-list__link {
   opacity: 0;
-  transition: opacity 140ms ease;
+  transition: opacity var(--motion-base) var(--motion-ease);
 }
 
 .plugin-view--list .plugin-list__item:hover .plugin-list__link,

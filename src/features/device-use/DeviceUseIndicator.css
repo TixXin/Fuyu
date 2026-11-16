@@ -14,7 +14,7 @@
   border: 0;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease);
 }
 
 .device-use__button--camera {

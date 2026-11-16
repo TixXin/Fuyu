@@ -12,7 +12,7 @@ import { useAgentInterjection } from "../../src/features/agent-status/useAgentIn
 import type { QQNotificationsController } from "../../src/features/messages/qq-notifications/QQNotifications";
 import type { WeChatRemindersController } from "../../src/features/messages/wechat/WeChatReminders";
 import type { MailController } from "../../src/features/messages/mail/MailPanel";
-import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 import { useFixtureLines } from "./islandLines";
 
 type Check = (condition: unknown, label: string) => void;

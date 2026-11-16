@@ -1,12 +1,13 @@
 import { useLayoutEffect, useRef } from "react";
 import type { SessionLight } from "./sessionLight";
 import "./AgentListMotion.css";
+import { MOTION_BASE_MS, MOTION_EASE, MOTION_MEDIUM_MS } from "../../lib/theme/motionTokens";
 
-const MOVE_MS = 200;
-const ENTER_MS = 200;
-const LEAVE_MS = 180;
+const MOVE_MS = MOTION_MEDIUM_MS;
+const ENTER_MS = MOTION_MEDIUM_MS;
+const LEAVE_MS = MOTION_BASE_MS;
 const PULSE_FALLBACK_MS = 1000;
-const EASING = "cubic-bezier(0.2, 0.7, 0.3, 1)";
+const EASING = MOTION_EASE;
 const SHIFT = "translateY(-6px)";
 const CALLING: ReadonlySet<string> = new Set<SessionLight>(["needs", "yourTurn"]);
 

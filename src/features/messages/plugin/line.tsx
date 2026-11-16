@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { defineSlot } from "../../plugin-kernel/slots";
-import { PluginNotificationActions } from "../../plugins/PluginNotificationActions";
+import { PluginNotificationActions } from "../island/PluginNotificationActions";
 import { CollapsedMessageContent } from "../CollapsedMessageContent";
 import { NotchMessageLeading, NotchMessageTrailing } from "../island/NotchMessage";
 import { messagesIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type SummaryContext = { enabled: boolean; bodyOnly: boolean; children: ReactNode };
 
@@ -31,7 +32,7 @@ function MessageActions() {
   return notification && messages ? <PluginNotificationActions actions={notification.actions} onAction={messages.plugin.runAction} /> : null;
 }
 
-summarySlot.add({ id: "messages.summary", component: MessageSummary });
-lineSlot.add({ id: "messages.leading", component: MessageLeading });
-lineSlot.add({ id: "messages.trailing", component: MessageTrailing });
-lineSlot.add({ id: "messages.actions", component: MessageActions });
+summarySlot.add({ id: "messages.summary", component: MessageSummary }, OWNER);
+lineSlot.add({ id: "messages.leading", component: MessageLeading }, OWNER);
+lineSlot.add({ id: "messages.trailing", component: MessageTrailing }, OWNER);
+lineSlot.add({ id: "messages.actions", component: MessageActions }, OWNER);

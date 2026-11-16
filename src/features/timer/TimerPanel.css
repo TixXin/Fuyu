@@ -46,7 +46,7 @@
   border: 0;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
 }
 
 .timer-panel__button:hover,

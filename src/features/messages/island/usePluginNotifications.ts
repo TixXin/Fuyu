@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { listenPluginNotifications, runPluginNotificationAction, type PluginNotification } from "./api";
+import type { IslandNotice } from "../../../lib/island-notices/service";
+import { onNotice, runNoticeAction } from "../plugin/notices";
 
-export type ShownPluginNotification = PluginNotification & { receivedAt: number };
+export type ShownPluginNotification = IslandNotice & { receivedAt: number };
 
 export type PluginNotificationsController = {
   notification: ShownPluginNotification | null;
   dismiss: () => void;
   runAction: (action: string) => void;
-  post: (notification: PluginNotification) => void;
+  post: (notification: IslandNotice) => void;
 };
 
 export function usePluginNotifications(enabled: boolean): PluginNotificationsController {
@@ -19,22 +20,11 @@ export function usePluginNotifications(enabled: boolean): PluginNotificationsCon
     if (!enabled) setNotification(null);
   }, [enabled]);
 
-  useEffect(() => {
-    let cancelled = false;
-    let unlisten: (() => void) | undefined;
-    void listenPluginNotifications((next) => {
-      if (enabledRef.current) setNotification({ ...next, receivedAt: Date.now() });
-    })
-      .then((stop) => {
-        if (cancelled) stop();
-        else unlisten = stop;
-      })
-      .catch((error: unknown) => console.error("Failed to listen for plugin notifications", error));
-    return () => {
-      cancelled = true;
-      unlisten?.();
-    };
-  }, []);
+  useEffect(() => onNotice((next) => {
+    if (!enabledRef.current) return false;
+    setNotification({ ...next, receivedAt: Date.now() });
+    return true;
+  }), []);
 
   useEffect(() => {
     if (!notification) return;
@@ -50,14 +40,12 @@ export function usePluginNotifications(enabled: boolean): PluginNotificationsCon
     (action: string) => {
       if (!notification) return;
       setNotification(null);
-      void runPluginNotificationAction(notification.pluginId, action).catch((error: unknown) =>
-        console.error("Failed to run a plugin notification action", error),
-      );
+      runNoticeAction(notification.pluginId, action);
     },
     [notification],
   );
 
-  const post = useCallback((next: PluginNotification) => {
+  const post = useCallback((next: IslandNotice) => {
     if (enabledRef.current) setNotification({ ...next, receivedAt: Date.now() });
   }, []);
 

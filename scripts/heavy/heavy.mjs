@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { backgroundBuildEnv } from "../build-load.mjs";
+import { pruneMainTarget } from "../prune-build-cache.mjs";
 import { acquire, HEAVY_ENV, laneOf } from "./queue.mjs";
 
 export function parseArgs(argv) {
@@ -16,7 +17,7 @@ export function parseArgs(argv) {
   return { label: label ?? command.join(" ").slice(0, 60), lane, command };
 }
 
-export function run(argv, env = process.env) {
+export function run(argv, env = process.env, { afterJob = () => pruneMainTarget({ quiet: true }) } = {}) {
   const { label, lane, command } = parseArgs(argv);
   if (!command.length) {
     console.error("用法：pnpm heavy [--label <名字>] [--lane <构建目录>] -- <命令…>");
@@ -31,6 +32,7 @@ export function run(argv, env = process.env) {
     return result.status ?? 1;
   } finally {
     release();
+    afterJob();
   }
 }
 

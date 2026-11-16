@@ -117,6 +117,7 @@ function startDiagnostics() {
 
 if (typeof window !== "undefined") {
   for (const registry of Object.values(registries)) followBuiltinSwitches(registry);
+  // eslint-disable-next-line no-restricted-syntax
   if (import.meta.env.DEV) {
     try {
       startDiagnostics();

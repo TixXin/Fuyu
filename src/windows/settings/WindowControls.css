@@ -22,7 +22,7 @@
   border: 0;
   border-radius: 50%;
   cursor: pointer;
-  transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+  transition: background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
 }
 
 .window-controls__dots:is(:hover, :focus-within) .window-controls__dot {
@@ -70,7 +70,7 @@
   background: transparent;
   border: 0;
   cursor: pointer;
-  transition: background 100ms ease, color 100ms ease;
+  transition: background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
 }
 
 .window-buttons__button:hover {

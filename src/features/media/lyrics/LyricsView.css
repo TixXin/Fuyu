@@ -40,7 +40,7 @@
   color: var(--text-1);
   font-size: 15px;
   font-weight: 700;
-  animation: lyrics-line-in 220ms ease-out;
+  animation: lyrics-line-in var(--motion-medium) var(--motion-ease);
 }
 
 @keyframes lyrics-line-in {

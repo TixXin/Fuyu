@@ -4,6 +4,8 @@
 
 ## 结论
 
+> 2026-11-16 已按下面的建议改了 `scripts/prune-build-cache.mjs` 和 `pnpm heavy`（规则见 `docs/architecture/workflow.md`「Rust 构建」）：上限按磁盘剩余空间算，没有按目录大小算，量目录大小要遍历十几万个文件，每个任务后都量太慢。
+
 - **Cargo 自己还不会清 `target/`**。它从 1.88 起会自动清 `~/.cargo` 里的下载缓存，但构建目录的清理还在讨论：issue [#13136](https://github.com/rust-lang/cargo/issues/13136) 开着；PR [#17524](https://github.com/rust-lang/cargo/pull/17524) 要加 `cargo clean gc --max-target-age`，按整个构建目录多久没用来删，2026-11-16 查时还没合入。就算合入也帮不了我们：我们的目录天天在用，涨的是里面的旧版本。
 - **别人的做法分三类**：
   1. 整个删：`cargo clean`、cargo-clean-all、kondo，按项目找 `target/` 一把删，适合一堆不常碰的项目，不适合天天编的这一个。

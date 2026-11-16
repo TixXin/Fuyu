@@ -15,8 +15,8 @@
   cursor: pointer;
   box-shadow: none;
   transition:
-    color 140ms ease,
-    opacity 140ms ease;
+    color var(--motion-base) var(--motion-ease),
+    opacity var(--motion-base) var(--motion-ease);
 }
 
 .music-wave-button span {
@@ -29,8 +29,8 @@
   transform: scaleY(var(--wave-scale, 0.35));
   transform-origin: 50% 50%;
   transition:
-    opacity 100ms linear,
-    transform 100ms linear;
+    opacity var(--motion-fast) linear,
+    transform var(--motion-fast) linear;
 }
 
 .island--appearance-liquidGlass .music-wave-button {

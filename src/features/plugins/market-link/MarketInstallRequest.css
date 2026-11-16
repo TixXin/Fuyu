@@ -6,7 +6,7 @@
   border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-  animation: market-request-glow 2.4s ease-in-out 3;
+  animation: market-request-glow 2.4s var(--motion-ease-in-out) 3;
 }
 
 .market-request--missing,

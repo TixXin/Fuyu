@@ -1,11 +1,11 @@
-import type { PluginNotification } from "./api";
+import type { IslandNotice } from "../../../lib/island-notices/service";
 import "./PluginNotificationActions.css";
 
 export function PluginNotificationActions({
   actions,
   onAction,
 }: {
-  actions: PluginNotification["actions"];
+  actions: IslandNotice["actions"];
   onAction: (id: string) => void;
 }) {
   return (

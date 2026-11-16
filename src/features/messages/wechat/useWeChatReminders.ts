@@ -1,11 +1,9 @@
 import { useErrorText, useTranslation } from "../../../i18n";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
-import { clearWeChatReminders, launchWeChat, listenWeChatReminderChanged, setWeChatExposeUi, setWeChatHideTaskbarButton, setWeChatRemindersEnabled, type ChatMessage, type ReminderSnapshot } from "./api";
-import {
-  isWeChatExposeUiEnabled, isWeChatHideTaskbarButtonEnabled, isWeChatRemindersEnabled,
-  saveWeChatExposeUiEnabled, saveWeChatHideTaskbarButtonEnabled, saveWeChatRemindersEnabled,
-} from "./storage";
+import { setSourceEnabled } from "../plugin/useSourceSwitches";
+import { clearWeChatReminders, launchWeChat, listenWeChatReminderChanged, setWeChatExposeUi, setWeChatHideTaskbarButton, type ChatMessage, type ReminderSnapshot } from "./api";
+import { isWeChatExposeUiEnabled, isWeChatHideTaskbarButtonEnabled, saveWeChatExposeUiEnabled, saveWeChatHideTaskbarButtonEnabled } from "./storage";
 import { useWeChatAutoClear } from "./useWeChatAutoClear";
 
 const EMPTY_SNAPSHOT: ReminderSnapshot = {
@@ -68,12 +66,10 @@ export function useWeChatReminders(canPreview: boolean) {
         }
       });
       if (cancelled) { unlisten(); return; }
-      const next = await setWeChatRemindersEnabled(
-        isWeChatRemindersEnabled(),
-      );
+      const next = await setWeChatExposeUi(isWeChatExposeUiEnabled());
       if (!cancelled) acceptSnapshot(next);
-      await setWeChatExposeUi(isWeChatExposeUiEnabled());
-      await setWeChatHideTaskbarButton(isWeChatHideTaskbarButtonEnabled());
+      const hidden = await setWeChatHideTaskbarButton(isWeChatHideTaskbarButtonEnabled());
+      if (!cancelled) acceptSnapshot(hidden);
     })().catch((error: unknown) => {
       if (!cancelled) setActionError(errorTextRef.current(error));
     }).finally(() => {
@@ -111,10 +107,9 @@ export function useWeChatReminders(canPreview: boolean) {
   }, [errorText, t]);
 
   const setEnabled = useCallback((enabled: boolean) => run(async () => {
-    acceptSnapshot(await setWeChatRemindersEnabled(enabled));
-    saveWeChatRemindersEnabled(enabled);
+    await setSourceEnabled("wechat", enabled);
     if (!enabled) setPreviewReceivedAt(null);
-  }), [acceptSnapshot, run]);
+  }), [run]);
 
   const setExposeUi = useCallback((enabled: boolean) => run(async () => {
     acceptSnapshot(await setWeChatExposeUi(enabled));

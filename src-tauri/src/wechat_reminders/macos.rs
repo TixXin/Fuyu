@@ -4,8 +4,7 @@ mod plugin_view;
 use serde::Serialize;
 use std::{
     sync::{Arc, Mutex, OnceLock},
-    thread,
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{SystemTime, UNIX_EPOCH},
 };
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -13,6 +12,9 @@ use crate::macos::{
     apps,
     dock_badges::{self, Badge},
 };
+
+use crate::messages_plugin::{self, SourceWorker};
+use crate::plugin_kernel::worker::{Stop, Worker};
 
 pub(crate) use plugin_view::plugin_messages;
 
@@ -150,35 +152,12 @@ fn in_front() -> bool {
     apps::path_for_bundle_id(BUNDLE_ID).is_some_and(|path| path.trim_end_matches('/') == front.trim_end_matches('/'))
 }
 
-fn watch_front(service: Arc<ReminderService>) -> Result<(), String> {
-    thread::Builder::new()
-        .name("wechat-seen".into())
-        .spawn(move || {
-            let mut was_front = false;
-            loop {
-                let watching = service.state.lock().is_ok_and(|state| state.snapshot.enabled && state.auto_clear);
-                let front = watching && in_front();
-                if front && !was_front {
-                    let _ = update(|state| state.forget_seen(now_ms()));
-                }
-                was_front = front;
-                thread::sleep(Duration::from_secs(1));
-            }
-        })
-        .map(|_| ())
-        .map_err(|error| error.to_string())
-}
-
-pub fn init(app: &AppHandle) -> Result<(), String> {
-    let service = Arc::new(ReminderService { app: app.clone(), state: Mutex::new(ReminderState::default()) });
-    SERVICE.set(service.clone()).map_err(|_| "The WeChat reminder service is already running.".to_string())?;
-    watch_front(service.clone())?;
-    let wanted = service.clone();
+fn watch(service: &Arc<ReminderService>, stop: &Stop) {
+    let mut was_front = false;
     dock_badges::watch(
-        "wechat-reminders",
         BUNDLE_ID,
-        move || wanted.state.lock().is_ok_and(|state| state.snapshot.enabled),
-        move |reading| {
+        |wait| stop.wait(wait),
+        |reading| {
             let snapshot = {
                 let Ok(mut state) = service.state.lock() else { return };
                 if !apply(&mut state, reading, now_ms()) {
@@ -186,9 +165,37 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
                 }
                 state.snapshot.clone()
             };
-            publish(&service, snapshot);
+            publish(service, snapshot);
         },
-    )
+        || {
+            let watching = service.state.lock().is_ok_and(|state| state.snapshot.enabled && state.auto_clear);
+            let front = watching && in_front();
+            if front && !was_front {
+                let _ = update(|state| state.forget_seen(now_ms()));
+            }
+            was_front = front;
+        },
+    );
+}
+
+fn set_enabled(enabled: bool) {
+    let _ = update(|state| {
+        if state.snapshot.enabled == enabled {
+            return false;
+        }
+        *state = ReminderState { auto_clear: state.auto_clear, ..ReminderState::default() };
+        state.snapshot.enabled = enabled;
+        state.snapshot.status = if enabled { "waiting" } else { "disabled" };
+        true
+    });
+}
+
+pub fn init(app: &AppHandle) -> Result<(), String> {
+    let service = Arc::new(ReminderService { app: app.clone(), state: Mutex::new(ReminderState::default()) });
+    SERVICE.set(service.clone()).map_err(|_| "The WeChat reminder service is already running.".to_string())?;
+    let worker = Worker::new("wechat-reminders", move |stop| watch(&service, &stop));
+    messages_plugin::register(messages_plugin::WECHAT, SourceWorker::new(messages_plugin::WECHAT, worker, set_enabled));
+    Ok(())
 }
 
 pub(crate) fn diagnostic_state() -> Result<serde_json::Value, String> {
@@ -216,19 +223,6 @@ fn update(change: impl FnOnce(&mut ReminderState) -> bool) -> Result<ReminderSna
         publish(service, snapshot.clone());
     }
     Ok(snapshot)
-}
-
-#[tauri::command]
-pub fn set_wechat_reminders_enabled(enabled: bool) -> Result<ReminderSnapshot, String> {
-    update(|state| {
-        if state.snapshot.enabled == enabled {
-            return false;
-        }
-        *state = ReminderState { auto_clear: state.auto_clear, ..ReminderState::default() };
-        state.snapshot.enabled = enabled;
-        state.snapshot.status = if enabled { "waiting" } else { "disabled" };
-        true
-    })
 }
 
 #[tauri::command]
@@ -277,7 +271,6 @@ pub(crate) fn shutdown() {}
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
-            crate::wechat_reminders::set_wechat_reminders_enabled,
             crate::wechat_reminders::open_wechat,
             crate::wechat_reminders::set_wechat_expose_ui,
             crate::wechat_reminders::set_wechat_hide_taskbar_button,

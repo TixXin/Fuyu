@@ -16,7 +16,7 @@
   border-radius: 12px;
   box-shadow: 0 10px 28px var(--long-shot-shadow, rgba(0, 0, 0, 0.45));
   cursor: default;
-  animation: long-shot-bar-in 180ms var(--motion-ease) both;
+  animation: long-shot-bar-in var(--motion-base) var(--motion-ease) both;
 }
 
 @keyframes long-shot-bar-in {
@@ -66,7 +66,7 @@
   object-fit: cover;
   object-position: bottom;
   border-radius: 4px;
-  transition: opacity var(--motion-base) ease;
+  transition: opacity var(--motion-base) var(--motion-ease);
 }
 
 .long-shot-bar__film-empty {
@@ -97,7 +97,7 @@
   height: 100%;
   background: var(--long-accent);
   transform-origin: left;
-  transition: transform 200ms ease;
+  transition: transform var(--motion-medium) var(--motion-ease);
 }
 
 .long-shot-bar--full .long-shot-bar__meter span {
@@ -156,7 +156,7 @@
 }
 
 .long-shot-bar--end .long-shot-bar__button--primary {
-  animation: long-shot-done 1.4s ease-in-out infinite;
+  animation: long-shot-done 1.4s var(--motion-ease-in-out) infinite;
 }
 
 @keyframes long-shot-done {

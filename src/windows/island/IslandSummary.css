@@ -1,8 +1,8 @@
 .island__summary {
   --summary-travel: 3px;
-  --summary-enter-duration: 560ms;
-  --summary-exit-duration: 200ms;
-  --summary-spring: cubic-bezier(.2, .85, .2, 1);
+  --summary-enter-duration: var(--motion-slow);
+  --summary-exit-duration: var(--motion-medium);
+  --summary-spring: var(--motion-ease);
   position: relative;
   display: block;
   flex: 1;

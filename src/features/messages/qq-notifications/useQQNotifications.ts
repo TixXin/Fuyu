@@ -2,8 +2,9 @@ import { useErrorText, useTranslation } from "../../../i18n";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { nextQQPreview, type QQPreviewTiming } from "../qqNotificationTiming";
-import { clearQQNotifications, getQQNotificationState, launchQQ, listenQQNotificationsChanged, openQQNotificationSettings, requestQQNotificationAccess, setQQNotificationsEnabled, type QQNotificationSnapshot } from "./api";
-import { hasRequestedQQNotificationAccess, isQQNotificationsEnabled, markQQNotificationAccessRequested, saveQQNotificationsEnabled } from "./storage";
+import { setSourceEnabled } from "../plugin/useSourceSwitches";
+import { clearQQNotifications, getQQNotificationState, launchQQ, listenQQNotificationsChanged, openQQNotificationSettings, requestQQNotificationAccess, type QQNotificationSnapshot } from "./api";
+import { hasRequestedQQNotificationAccess, markQQNotificationAccessRequested } from "./storage";
 import { useQQAutoClear } from "./useQQAutoClear";
 
 const EMPTY_SNAPSHOT: QQNotificationSnapshot = {
@@ -64,14 +65,8 @@ export function useQQNotifications(canPreview: boolean) {
         }
       });
       if (cancelled) { unlisten(); return; }
-      const next = await setQQNotificationsEnabled(
-        isQQNotificationsEnabled(),
-      );
+      const next = await getQQNotificationState();
       if (!cancelled) acceptSnapshot(next);
-      if (!cancelled && next.enabled && !hasRequestedQQNotificationAccess()) {
-        markQQNotificationAccessRequested();
-        await requestQQNotificationAccess();
-      }
     })().catch((error: unknown) => {
       if (!cancelled) setActionError(errorTextRef.current(error));
     }).finally(() => {
@@ -79,6 +74,12 @@ export function useQQNotifications(canPreview: boolean) {
     });
     return () => { cancelled = true; unlisten?.(); };
   }, [acceptSnapshot]);
+
+  useEffect(() => {
+    if (!snapshot.enabled || hasRequestedQQNotificationAccess()) return;
+    markQQNotificationAccessRequested();
+    void requestQQNotificationAccess().catch((error: unknown) => setActionError(errorTextRef.current(error)));
+  }, [snapshot.enabled]);
 
   useEffect(() => {
     if (!previewWindow) return;
@@ -108,14 +109,11 @@ export function useQQNotifications(canPreview: boolean) {
   }, [errorText, t]);
 
   const setEnabled = useCallback((enabled: boolean) => run(async () => {
-    acceptSnapshot(await setQQNotificationsEnabled(enabled));
-    saveQQNotificationsEnabled(enabled);
+    if (enabled) markQQNotificationAccessRequested();
+    await setSourceEnabled("qq", enabled);
     if (!enabled) { timingRef.current = null; setPreviewWindow(null); }
-    if (enabled) {
-      markQQNotificationAccessRequested();
-      await requestQQNotificationAccess();
-    }
-  }), [acceptSnapshot, run]);
+    if (enabled) await requestQQNotificationAccess();
+  }), [run]);
 
   const requestAccess = useCallback(() => run(async () => {
     markQQNotificationAccessRequested();

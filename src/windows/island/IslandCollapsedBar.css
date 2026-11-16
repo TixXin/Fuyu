@@ -92,7 +92,7 @@
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
-  animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
+  animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, var(--motion-ease)) backwards;
 }
 
 .island__agent-session {
@@ -105,11 +105,11 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 1.2;
-  animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
+  animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, var(--motion-ease)) backwards;
 }
 
 .island__summary-row > .island-meeting {
-  animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, cubic-bezier(.2, .85, .2, 1)) backwards;
+  animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, var(--motion-ease)) backwards;
 }
 
 .island__summary-layer--incoming {
@@ -179,9 +179,9 @@
     inset 0 1px 0 var(--color-white-a18),
     0 0 12px var(--color-white-a08);
   transition:
-    background 140ms ease,
-    border-color 140ms ease,
-    transform 140ms ease;
+    background var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease),
+    transform var(--motion-base) var(--motion-ease);
 }
 
 .island__quiet-button::before {
@@ -203,7 +203,7 @@
 
 .island-update-badge {
   color: var(--color-accent);
-  animation: island-update-appear 180ms ease-out;
+  animation: island-update-appear var(--motion-base) var(--motion-ease);
 }
 
 .island-update-badge__dot {
@@ -235,7 +235,7 @@
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
 }
 
 .island-agent-count {
@@ -255,7 +255,7 @@
   font-variant-numeric: tabular-nums;
   line-height: 1;
   cursor: pointer;
-  transition: background 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease);
 }
 
 .island-agent-count:hover {
