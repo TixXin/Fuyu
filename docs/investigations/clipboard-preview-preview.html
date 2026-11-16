@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>剪贴板预览 · 方案挑选</title>
+<style>
+:root{--bg:#f4f4f6;--card:#fff;--ink:#1c1c22;--mute:#6b6b78;--line:#e2e2e8;--accent:#4f6bff;--accent-soft:#e8ecff;--warn:#b25b00;--warn-soft:#fff3e2;--ok:#16794a;--ok-soft:#e3f6ec;--island:#1d1d22;--island-ink:#f1f1f4;--island-mute:#9a9aa6}
+@media (prefers-color-scheme:dark){:root{--bg:#141418;--card:#1e1e24;--ink:#ececf1;--mute:#9b9ba8;--line:#2e2e36;--accent:#8196ff;--accent-soft:#252a45;--warn:#ffb15c;--warn-soft:#3a2a17;--ok:#5fd39a;--ok-soft:#173326;--island:#0d0d10}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 64px}
+h1{font-size:22px;margin:0 0 6px}
+h2{font-size:17px;margin:40px 0 4px;display:flex;gap:10px;align-items:baseline}
+h2 small{font-weight:400;color:var(--mute);font-size:13px}
+.lead{color:var(--mute);margin:0 0 8px}
+.now{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:18px 0}
+.now h3{margin:0 0 6px;font-size:14px}
+.now ul{margin:0;padding-left:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:12px}
+.opt{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;display:flex;flex-direction:column;gap:8px}
+.opt.rec{border:2px solid var(--accent)}
+.badge{position:absolute;top:-10px;right:12px;background:var(--accent);color:#fff;font-size:12px;padding:1px 10px;border-radius:99px}
+.opt h3{margin:0;font-size:15px}
+.opt p{margin:0}
+.cost{background:var(--warn-soft);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px}
+.cost b{color:var(--warn)}
+.plat{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:13px}
+.plat span:nth-child(odd){color:var(--mute);white-space:nowrap}
+kbd{font:12px ui-monospace,Menlo,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--bg)}
+.stage{background:var(--bg);border-radius:8px;height:150px;position:relative;overflow:hidden;border:1px dashed var(--line)}
+.win{position:absolute;background:var(--island);color:var(--island-ink);border-radius:8px;font-size:10px;padding:5px 6px;box-shadow:0 4px 14px #0004}
+.win i{display:block;height:5px;border-radius:3px;background:#ffffff26;margin:4px 0}
+.win i.sel{background:var(--accent)}
+.win .t{color:var(--island-mute)}
+.focus{outline:2px solid #3ccf8e;outline-offset:2px}
+.cursor{position:absolute;font-size:16px}
+.tip{position:absolute;bottom:4px;left:6px;right:6px;font-size:11px;color:var(--mute)}
+.bar{display:flex;gap:4px;justify-content:flex-end}
+.bar b{font-weight:400;background:#ffffff1f;border-radius:4px;padding:0 4px}
+.zoombar{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;gap:6px;background:#000a;border-radius:99px;padding:2px 8px}
+.img{position:absolute;inset:18px 8px 26px;background:linear-gradient(135deg,#ff9a7a,#7a8cff);border-radius:4px}
+.sum{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-top:40px}
+.sum table{width:100%;border-collapse:collapse;font-size:13px}
+.sum td,.sum th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.ok{color:var(--ok)}
+</style>
+</head>
+<body>
+<main>
+<h1>剪贴板预览：要你定的 5 件事</h1>
+<p class="lead">用户原话：按住空格打开预览后，鼠标移到预览窗口，松开空格应该预览继续显示；预览要能放大缩小图片、窗口放大（中等、全屏），支持修改。每件事 2–3 个方案，蓝框是组长推荐。2026-11-15，[任务] 剪贴板预览。</p>
+
+<div class="now" style="border:2px solid var(--ok)"><h3 class="ok">用户已定（2026-11-15）</h3><p style="margin:0">① A+B+C 都要 · ② A · ③ A+C · ④ A · ⑤ A，类型 1（先文字，图片第二批）。计划见 docs/architecture/clipboard-preview-plan.md。</p></div>
+<div class="now">
+<h3>现在是怎么工作的</h3>
+<ul>
+<li>标准宽度、搜索框为空时按空格：剪贴板窗口旁边弹出 <code>clipboard-preview</code> 窗口（宽 420，与剪贴板窗口同高，右边放不下放左边）。点按空格 = 一直开着，再按空格或 Esc 关；<b>按住超过 350ms 再松开 = 关</b>（<code>useSpacePeek.ts</code>）。</li>
+<li>预览窗口<b>从不拿焦点</b>：Windows 是 <code>WS_EX_NOACTIVATE</code> + <code>SW_SHOWNOACTIVATE</code>；Mac 是一种不能成为 key window 的 NSPanel（<code>PreviewPanel</code>，G1.18 修过：以前一出来剪贴板窗口就失焦关掉）。</li>
+<li>所以键盘始终在剪贴板窗口里，↑↓ 换条时预览跟着换；鼠标点预览里的链接、颜色照常能粘贴（点击不需要焦点）。</li>
+<li>剪贴板窗口<b>失焦就关</b>（除非「固定」），预览跟着关。已有「编辑后粘贴」Ctrl+E：在剪贴板窗口里编辑，Ctrl+Enter 只粘贴这次，Ctrl+S 另存新记录，原记录不变。没有「改原记录」的命令。</li>
+</ul>
+</div>
+
+<!-- 1 -->
+<h2>① 松开空格后预览怎么留住、怎么关 <small>按住时剪贴板窗口仍有焦点，所以松开的按键它收得到</small></h2>
+<div class="grid">
+<div class="opt rec"><span class="badge">推荐</span>
+<h3>A. 松开时鼠标在预览上 → 留住</h3>
+<div class="stage">
+<div class="win focus" style="left:14px;top:14px;width:110px;height:110px"><span class="t">剪贴板</span><i></i><i class="sel"></i><i></i><i></i></div>
+<div class="win" style="left:132px;top:14px;width:150px;height:110px"><div class="bar"><b>留住了</b><b>×</b></div><i></i><i></i></div>
+<span class="cursor" style="left:200px;top:70px">🖱️</span>
+<span class="tip">松开空格时指针在预览里：变成和「点按空格」一样的常开状态</span>
+</div>
+<p>预览窗口把鼠标进出（pointerenter / leave）发给剪贴板窗口；松开空格时看最后一次状态。之后再按空格、Esc、点右上角 × 关，剪贴板窗口关时一起关。鼠标不在预览上时松开照旧关，按住看一眼的习惯不变。</p>
+<div class="cost"><b>代价</b>：小。纯前端加两个事件。提示文字「松开即关」在鼠标进入后改成「松开后留住」。</div>
+<div class="plat"><span>Windows</span><span>无激活窗口照样收 pointer 事件</span><span>Mac</span><span>非 key 面板里 WebView 的鼠标进出要实测（可能要开 tracking area 的 activeAlways）</span></div>
+</div>
+<div class="opt">
+<h3>B. 按住期间鼠标进过预览 → 留住</h3>
+<p>只要按住时指针进过预览，哪怕又移出来再松开，也留住。</p>
+<div class="cost"><b>代价</b>：和 A 一样小。容易「误留」：鼠标只是路过也会留住，用户得多按一次关。</div>
+</div>
+<div class="opt">
+<h3>C. 预览上加一个图钉</h3>
+<p>松开空格照关；想留住就在按住时点预览右上角的图钉。</p>
+<div class="cost"><b>代价</b>：最小，但不符合用户原话（他要的是「移过去松开就留着」）。</div>
+</div>
+</div>
+
+<!-- 2 -->
+<h2>② 鼠标移进预览后，焦点怎么交接 <small>绿框 = 有键盘焦点的窗口</small></h2>
+<div class="grid">
+<div class="opt rec"><span class="badge">推荐</span>
+<h3>A. 平时不拿，进入编辑才拿</h3>
+<div class="stage">
+<div class="win focus" style="left:14px;top:14px;width:110px;height:110px"><span class="t">剪贴板</span><i></i><i class="sel"></i><i></i></div>
+<div class="win" style="left:132px;top:14px;width:150px;height:110px"><span class="t">滚轮缩放 · 拖动 · 按钮</span><i></i><i></i></div>
+<span class="tip">看、缩放、换尺寸都不要焦点；点「编辑」时预览才拿焦点，Esc / 保存后还给剪贴板窗口</span>
+</div>
+<p>点击、滚轮、拖动在两个平台的无激活窗口里都能用，所以浏览阶段保持现状：↑↓ 照常换条，缩放的键盘快捷键（<kbd>+</kbd><kbd>-</kbd><kbd>0</kbd>）由剪贴板窗口转发。只有编辑文字时预览拿焦点，这段时间剪贴板窗口失焦不关。</p>
+<div class="cost"><b>代价</b>：中。失焦就关的逻辑加一个「焦点给了自己的预览」例外；两个平台各写一段「临时可激活」。自动粘贴的目标窗口不受影响（弹出前记下的）。</div>
+<div class="plat"><span>Windows</span><span>已有 <code>set_no_activate(hwnd, bool)</code>，编辑时关掉再 <code>SetForegroundWindow</code>；本进程已在前台，前台锁一般不拦</span><span>Mac</span><span><code>PreviewPanel</code> 现在写死不能成为 key，要换成能切换的（编辑时允许 + <code>makeKeyAndOrderFront</code>），不能回到 G1.18 以前的样子</span></div>
+</div>
+<div class="opt">
+<h3>B. 鼠标移进就拿焦点</h3>
+<p>指针进预览，焦点跟过去；移出还给剪贴板窗口。预览里能直接用键盘（选文字 ⌘C、方向键平移图片）。</p>
+<div class="cost"><b>代价</b>：大。焦点来回跳，剪贴板窗口的 ↑↓、搜索框输入会被鼠标位置打断；Windows 频繁抢前台可能闪任务栏；Mac 每次 key 切换都要绕开 G1.18 的坑。两个平台行为最难做成一样。</div>
+</div>
+<div class="opt">
+<h3>C. 永远不拿，编辑放回剪贴板窗口</h3>
+<p>预览里点「编辑」= 剪贴板窗口打开已有的编辑器（Ctrl+E 那个），预览只负责看。</p>
+<div class="cost"><b>代价</b>：最小，零焦点代码。但编辑框挤在 380 宽的窗口里，旁边大预览却不能改，和「预览支持修改」对不上；全屏预览时编辑不方便。</div>
+</div>
+</div>
+
+<!-- 3 -->
+<h2>③ 中等 / 全屏两档怎么切、放在哪</h2>
+<div class="grid">
+<div class="opt rec"><span class="badge">推荐</span>
+<h3>A. 三档按钮 + 一个键循环</h3>
+<div class="stage">
+<div class="win" style="left:8px;top:8px;width:284px;height:126px"><div class="bar"><b>标准</b><b style="background:var(--accent)">中等</b><b>全屏</b><b>×</b></div><i></i><i></i></div>
+<div class="win focus" style="left:16px;top:30px;width:70px;height:90px"><span class="t">剪贴板</span><i></i><i class="sel"></i></div>
+<span class="tip">全屏时剪贴板窗口叠在预览上面，键盘还在它那，↑↓ 换条照常</span>
+</div>
+<p>预览顶上三个按钮：标准（现在的 420 宽）、中等（剪贴板窗口所在屏幕工作区的约 60%×75%，靠剪贴板窗口一侧摆）、全屏（那块屏幕的整个工作区，不盖任务栏 / 菜单栏）。剪贴板窗口里 <kbd>F</kbd> 循环三档（搜索框为空时，和空格同样的条件）。剪贴板窗口始终在预览上层。</p>
+<p><b>多显示器</b>：跟着剪贴板窗口所在的那块屏幕。<b>记不记</b>：每次打开从标准开始（不加新的存储 key）。</p>
+<div class="cost"><b>代价</b>：中。Rust 加尺寸档位和摆放函数（可单测）；层级要让剪贴板窗口压在预览上：Windows 两个都置顶，按 z 序插入；Mac 预览面板的 level 比剪贴板窗口低一级。</div>
+</div>
+<div class="opt">
+<h3>B. 中等贴边长大，全屏时剪贴板窗口隐身</h3>
+<p>中等：预览朝远离剪贴板窗口的方向变宽变高，两个窗口并排。全屏：预览铺满，剪贴板窗口隐到后面但保留焦点，↑↓ 盲换。</p>
+<div class="cost"><b>代价</b>：中。全屏时看不到列表、不知道选的是哪条；Windows 上「隐藏但保留焦点」做不到（隐藏的窗口会丢焦点），只能挪到屏幕外，Mac 可以 alpha 0。</div>
+</div>
+<div class="opt">
+<h3>C. 拖边自由缩放 + 记住尺寸</h3>
+<p>预览可以拖边改大小，双击顶栏在「全屏 / 上次大小」切换，尺寸存进设置。</p>
+<div class="cost"><b>代价</b>：大。无激活窗口在 Windows 上拖边改大小会激活它（要自己画拖拽区）；Mac 非 key 面板拖边也得自己处理；要新存储项（对外契约）。</div>
+</div>
+</div>
+
+<!-- 4 -->
+<h2>④ 图片缩放的操作</h2>
+<div class="grid">
+<div class="opt rec"><span class="badge">推荐</span>
+<h3>A. 滚轮缩放 + 拖动 + 缩放条</h3>
+<div class="stage" style="background:var(--island)">
+<div class="img"></div>
+<div class="zoombar win" style="position:absolute"><b>−</b><b>135%</b><b>+</b><b>适应</b><b>1:1</b></div>
+</div>
+<p>滚轮以指针为中心缩放（触控板双指捏合在 WebView 里也是 Ctrl+滚轮，一并支持），放大后拖动平移，双击在「适应窗口 / 100%」之间切。底部悬停出现缩放条。键盘 <kbd>+</kbd><kbd>-</kbd><kbd>0</kbd> 由剪贴板窗口转发。换条时回到「适应」。</p>
+<div class="cost"><b>代价</b>：小，纯前端组件。长截图要先放大才能看下半截。</div>
+</div>
+<div class="opt">
+<h3>B. Ctrl+滚轮缩放，滚轮滚动</h3>
+<p>像浏览器看图：普通滚轮上下滚（长截图友好），按住 Ctrl / ⌘ 再滚才缩放。</p>
+<div class="cost"><b>代价</b>：小。但键盘焦点在剪贴板窗口，预览收到的滚轮事件里 Ctrl 状态在 Windows 上是准的，Mac 非 key 窗口里 ⌘ 修饰要实测。</div>
+</div>
+<div class="opt">
+<h3>C. 只有档位按钮</h3>
+<p>适应 / 100% / 200% 三个按钮，没有滚轮和拖动。</p>
+<div class="cost"><b>代价</b>：最小，但不能看局部细节，用户说的「放大缩小」做得很弱。</div>
+</div>
+</div>
+
+<!-- 5 -->
+<h2>⑤ 编辑：改这条还是另存，编辑哪些类型</h2>
+<div class="grid">
+<div class="opt rec"><span class="badge">推荐</span>
+<h3>A. 两个都给：保存 = 改这条，另存 = 新一条</h3>
+<p>预览里点「编辑」（或剪贴板窗口 <kbd>Ctrl</kbd><kbd>E</kbd>），内容区变成编辑框。<kbd>Ctrl</kbd><kbd>S</kbd> 改这条：来源、复制时间、收藏、标签、固定键都保留，第二行多一个「已编辑」，底栏「已保存 · Ctrl+Z 撤销」6 秒（和删除一样）。<kbd>Ctrl</kbd><kbd>⇧</kbd><kbd>S</kbd> 另存一条放最上面。<kbd>Ctrl</kbd><kbd>Enter</kbd> 只粘贴这次。</p>
+<div class="cost"><b>代价</b>：中。Rust 新增「改记录文字」命令（重算预览文字、类型识别、打码判断，带 HTML 的条目改完变纯文字）。<b>要改一条已确认的设计</b>：现在编辑器里 Ctrl+S 是「另存」，统一后变成「改这条」，剪贴板窗口里的 Ctrl+E 编辑器同步改。</div>
+</div>
+<div class="opt">
+<h3>B. 只改这条</h3>
+<p>编辑就是改原记录，带撤销。不提供另存。</p>
+<div class="cost"><b>代价</b>：和 A 差不多，少一个按钮；想保留原文的人只能先复制一份。和现有 Ctrl+S 冲突同 A。</div>
+</div>
+<div class="opt">
+<h3>C. 只另存（和现在一样）</h3>
+<p>编辑后存成新记录，原记录永远不动。</p>
+<div class="cost"><b>代价</b>：最小，不改已确认的设计。历史里会堆出很多相似的条目。</div>
+</div>
+</div>
+<div class="grid">
+<div class="opt rec"><span class="badge">推荐</span>
+<h3>类型 1：先做文字，图片编辑第二批</h3>
+<p>第一批：文字（含链接、JSON、颜色这类识别出来的文字；JSON 打开编辑时先格式化）。打码的条目要先点「显示原文」才能编辑。文件列表不编辑。第二批：图片的裁剪、旋转、标注（标注复用截图的标注绘制代码，先评估能不能直接用），改这条 = 替换图片文件、重做缩略图和文字识别。</p>
+<div class="cost"><b>代价</b>：分两批，第一批就能用；图片那批 Rust 量大（图片文件替换、OCR 重跑、撤销要留旧文件）。</div>
+</div>
+<div class="opt">
+<h3>类型 2：文字 + 图片一次做完</h3>
+<div class="cost"><b>代价</b>：一批里同时改文字和图片的存储，任务会话要编译的时间长，晚很多才能用上。</div>
+</div>
+<div class="opt">
+<h3>类型 3：只做文字</h3>
+<div class="cost"><b>代价</b>：最省；图片只能看和缩放，标注还得去截图里做。</div>
+</div>
+</div>
+
+<div class="sum">
+<h3 style="margin:0 0 8px">推荐组合一览</h3>
+<table>
+<tr><th>事</th><th>推荐</th><th>两个平台的差别</th></tr>
+<tr><td>① 留住</td><td>松开时鼠标在预览上 → 留住；空格 / Esc / × 关</td><td>Mac 非 key 面板的鼠标进出要实测</td></tr>
+<tr><td>② 焦点</td><td>平时不拿，编辑时才拿，剪贴板窗口那段时间失焦不关</td><td>Win 用 <code>set_no_activate</code> 切换；Mac 换成可切换的 panel 类</td></tr>
+<tr><td>③ 尺寸</td><td>标准 / 中等 / 全屏三按钮 + F 循环，跟剪贴板窗口所在屏幕，剪贴板窗口在上层，不记忆</td><td>Win z 序；Mac panel level</td></tr>
+<tr><td>④ 缩放</td><td>滚轮缩放、拖动、双击切换、缩放条、+ - 0</td><td>触控板捏合 Mac 实测</td></tr>
+<tr><td>⑤ 编辑</td><td>Ctrl+S 改这条（带撤销）、Ctrl+⇧S 另存；先文字，图片第二批</td><td>无平台差别（焦点部分归 ②）</td></tr>
+</table>
+<p class="ok" style="margin:10px 0 0">回复里写「都按推荐」或者逐条写字母（例如「① A ② A ③ B ④ A ⑤ A，类型 3」）就行。</p>
+</div>
+</main>
+</body>
+</html>
