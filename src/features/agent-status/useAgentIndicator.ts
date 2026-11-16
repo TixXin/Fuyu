@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { AGENT_PROVIDERS, getAgentStatusLabel, getAgentVisualState, withoutHiddenProviders } from "../../features/agent-status/status";
-import type { AgentStatusSnapshot } from "../../features/agent-status/api";
-import type { SessionFilter } from "../../features/agent-status/sessionList";
+import { AGENT_PROVIDERS, getAgentStatusLabel, getAgentVisualState, withoutHiddenProviders } from "./status";
+import type { AgentStatusSnapshot } from "./api";
+import type { SessionFilter } from "./sessionList";
 import type { IslandSettings } from "../../lib/settings/types";
 import type { useTranslation } from "../../i18n";
 

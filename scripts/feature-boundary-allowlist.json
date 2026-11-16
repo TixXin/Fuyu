@@ -1,5 +1,6 @@
 {
   "features": [
+    "src/features/agent-status/plugin/runners.tsx -> src/features/plugins/useHostChangeEvent.ts",
     "src/features/agent-status/push/AgentPushSettings.tsx -> src/features/cc-connect/index.ts",
     "src/features/agent-status/push/CcConnectPushTargets.tsx -> src/features/cc-connect/index.ts",
     "src/features/agent-status/push/sendPush.ts -> src/features/cc-connect/index.ts",
@@ -18,6 +19,7 @@
     "src/features/plugins/PluginDetailPage.tsx -> src/features/claude-usage/PlanKeyFields.tsx",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/ssh-tunnel/index.ts",
     "src/features/plugins/useBuiltinPlugin.ts -> src/features/plugin-views/api.ts",
+    "src/features/screenshot/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts",
     "src/features/screenshot/useRecording.ts -> src/features/file-shelf/api.ts",
     "src/features/screenshot/useScreenshotNotice.ts -> src/features/agent-status/api.ts",
     "src/features/screenshot/useScreenshotNotice.ts -> src/features/file-shelf/api.ts",
@@ -52,8 +54,10 @@
     "src/lib/settings/useSettingPresets.ts -> src/features/todos/index.ts"
   ],
   "removedBy": {
+    "src/features/agent-status/plugin/runners.tsx -> src/features/plugins/useHostChangeEvent.ts": "E36.3.37",
     "src/features/calendar/plugin/island.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.38",
     "src/features/calendar/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.38",
+    "src/features/screenshot/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts": "E36.3.35",
     "src/features/todos/plugin/runners.tsx -> src/features/local-api/useLocalApiBridge.ts": "E36.3.38",
     "src/features/todos/plugin/runners.tsx -> src/features/plugins/useHostChangeEvent.ts": "E36.3.38",
     "src/features/voice-input/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.36",

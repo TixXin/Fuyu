@@ -1,4 +1,5 @@
 import type { QuotaAlert } from "../../src/features/agent-status/quotaAlerts";
+import { quotaAlertState } from "../../src/features/agent-status/plugin/islandState";
 import type { AgentSession } from "../../src/features/agent-status/session";
 import type { CollapsedMeeting } from "../../src/features/calendar/upcoming";
 import { meetingState } from "../../src/features/calendar/plugin/islandState";
@@ -22,7 +23,6 @@ import { levelState } from "../../src/features/system-levels/plugin/islandState"
 import { todoLine } from "../../src/features/todos/plugin/islandState";
 import { todoLineContributions } from "../../src/features/todos/plugin/todoLines";
 import { translationPeekState } from "../../src/features/translation/plugin/islandState";
-import { useLegacyAlerts } from "../../src/windows/island/legacyAlerts";
 import { useLegacyLines } from "../../src/windows/island/legacyLines";
 
 type FixtureLines = {
@@ -40,13 +40,16 @@ type FixtureLines = {
   deviceUse?: DeviceUse;
   media?: MediaState | null;
   sideCover?: boolean;
+  status?: { state: string; label: string };
 };
 
 const NO_DEVICES: DeviceUse = { camera: [], microphone: [] };
+const IDLE = { state: "idle", label: "" };
 
-export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false }: FixtureLines) {
+export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false, status = IDLE }: FixtureLines) {
   const t = useTranslation();
-  useLegacyAlerts({ quotaAlert });
+  quotaAlertState.useProvide(quotaAlert);
+  useIslandContributions("builtin", "fixture.agents", [{ kind: "status", state: status.state, label: status.label }, ...(quotaAlert ? [{ kind: "alert", item: "quota" } as const] : [])]);
   deviceAlertState.useProvide(deviceAlert);
   levelState.useProvide(levelPopup);
   const alerts: IslandContribution[] = [];
@@ -75,6 +78,5 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
     agentSession,
     interjecting: false,
     agentIconWidth,
-    screenshotPeek: null,
   });
 }

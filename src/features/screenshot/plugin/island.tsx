@@ -1,12 +1,12 @@
 import { Scissors } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot, type IslandHeaderMeta, type IslandNoticeMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
+import { runIslandAction } from "../../plugin-kernel/useIslandContributions";
 import { RecordingNotice, RecordingNoticeActions } from "../RecordingNotice";
 import { ScreenshotNotice, ScreenshotNoticeActions } from "../ScreenshotNotice";
-import type { RecordingNoticeState } from "../useRecording";
-import type { ScreenshotNoticeState } from "../useScreenshotNotice";
 import { ScreenshotHistoryPanel } from "../ScreenshotHistoryPanel";
 import { islandPage } from "./page.ts";
+import { screenshotIsland } from "./islandState";
 
 type ScreenshotsPageProps = { embedded?: boolean };
 
@@ -16,11 +16,11 @@ function ScreenshotsPage({ embedded }: ScreenshotsPageProps) {
   return embedded ? <ScreenshotHistoryPanel embedded /> : <ScreenshotHistoryPanel />;
 }
 
-type HeaderContext = { onScreenshot: (() => void) | null };
+type HeaderContext = { hints: ReadonlySet<string> };
 
 const headerSlot = defineSlot<HeaderContext, IslandHeaderMeta<HeaderContext>>("island.header/v1");
 
-function ScreenshotButton({ onScreenshot }: HeaderContext) {
+function ScreenshotButton() {
   const t = useTranslation();
   return (
     <button
@@ -29,7 +29,7 @@ function ScreenshotButton({ onScreenshot }: HeaderContext) {
       aria-label={t.island.screenshot}
       onClick={(event) => {
         event.stopPropagation();
-        onScreenshot?.();
+        runIslandAction("screenshot.start");
       }}
     >
       <Scissors size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
@@ -38,27 +38,31 @@ function ScreenshotButton({ onScreenshot }: HeaderContext) {
 }
 
 pageSlot.add({ ...islandPage, component: ScreenshotsPage });
-headerSlot.add({ id: "screenshot", order: 40, enabled: ({ onScreenshot }) => Boolean(onScreenshot), component: ScreenshotButton });
+headerSlot.add({ id: "screenshot", order: 40, enabled: ({ hints }) => hints.has("screenshot.start"), component: ScreenshotButton });
 
-type NoticeSources = { recording: RecordingNoticeState; screenshotNotice: ScreenshotNoticeState };
+type NoticeSources = object;
 
 const noticeSlot = defineSlot<NoticeSources, IslandNoticeMeta<NoticeSources>>("island.notice/v1");
 
-function RecordingContent({ recording }: NoticeSources) {
-  return <RecordingNotice recording={recording} />;
+function RecordingContent() {
+  const { recording } = screenshotIsland.use();
+  return recording && <RecordingNotice recording={recording} />;
 }
 
-function RecordingActions({ recording }: NoticeSources) {
-  return <RecordingNoticeActions recording={recording} />;
+function RecordingActions() {
+  const { recording } = screenshotIsland.use();
+  return recording && <RecordingNoticeActions recording={recording} />;
 }
 
-function ScreenshotContent({ screenshotNotice }: NoticeSources) {
-  return <ScreenshotNotice key={screenshotNotice.taken?.path} notice={screenshotNotice} />;
+function ScreenshotContent() {
+  const { notice } = screenshotIsland.use();
+  return notice && <ScreenshotNotice key={notice.taken?.path} notice={notice} />;
 }
 
-function ScreenshotActions({ screenshotNotice }: NoticeSources) {
-  return <ScreenshotNoticeActions notice={screenshotNotice} />;
+function ScreenshotActions() {
+  const { notice } = screenshotIsland.use();
+  return notice && <ScreenshotNoticeActions notice={notice} />;
 }
 
-noticeSlot.add({ id: "recording", order: 10, active: ({ recording }) => recording.shown, component: RecordingContent, actions: RecordingActions });
-noticeSlot.add({ id: "screenshot", order: 40, active: ({ screenshotNotice }) => Boolean(screenshotNotice.taken), component: ScreenshotContent, actions: ScreenshotActions });
+noticeSlot.add({ id: "recording", order: 10, component: RecordingContent, actions: RecordingActions });
+noticeSlot.add({ id: "screenshot", order: 40, component: ScreenshotContent, actions: ScreenshotActions });

@@ -1,10 +1,23 @@
+use serde::Serialize;
 use serde_json::{json, Value};
 
 use super::{service, ClipboardHistoryItem, ClipboardHistoryItemKind};
 
-const DEFAULT_LIMIT: usize = 20;
-const MAX_LIMIT: usize = 50;
+pub(super) const DEFAULT_LIMIT: usize = 20;
+pub(super) const MAX_LIMIT: usize = 50;
 const MAX_TEXT_CHARS: usize = 4000;
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ClipboardText {
+    id: String,
+    text: String,
+    truncated: bool,
+    #[cfg_attr(test, ts(type = "number"))]
+    copied_at: i64,
+    favorite: bool,
+}
 
 pub(crate) fn plugin_history(params: &Value) -> Result<Value, (u16, String)> {
     let limit = match params.get("limit") {
@@ -34,23 +47,23 @@ pub(crate) fn local_api_history(params: &Value) -> Result<Value, (u16, String)> 
     Ok(json!({ "items": text_items(&snapshot.items, limit, true) }))
 }
 
-fn format_text_item(item: &ClipboardHistoryItem, hide_masked: bool) -> Value {
+fn format_text_item(item: &ClipboardHistoryItem, hide_masked: bool) -> ClipboardText {
     let text = if hide_masked && item.masked {
         item.preview.as_str()
     } else {
         item.text.as_deref().unwrap_or_default()
     };
     let truncated = text.chars().count() > MAX_TEXT_CHARS;
-    json!({
-        "id": item.id,
-        "text": if truncated { text.chars().take(MAX_TEXT_CHARS).collect::<String>() } else { text.to_string() },
-        "truncated": truncated,
-        "copiedAt": item.copied_at,
-        "favorite": item.favorite,
-    })
+    ClipboardText {
+        id: item.id.clone(),
+        text: if truncated { text.chars().take(MAX_TEXT_CHARS).collect::<String>() } else { text.to_string() },
+        truncated,
+        copied_at: item.copied_at,
+        favorite: item.favorite,
+    }
 }
 
-pub(super) fn text_items(items: &[ClipboardHistoryItem], limit: usize, hide_masked: bool) -> Vec<Value> {
+pub(super) fn text_items(items: &[ClipboardHistoryItem], limit: usize, hide_masked: bool) -> Vec<ClipboardText> {
     let mut texts: Vec<&ClipboardHistoryItem> = items
         .iter()
         .filter(|item| item.kind == ClipboardHistoryItemKind::Text && item.text.is_some())
@@ -73,6 +86,7 @@ pub(crate) fn plugin_item(id: &str) -> Option<Value> {
         .iter()
         .find(|item| item.id == id && item.kind == ClipboardHistoryItemKind::Text && item.text.is_some())
         .map(|item| format_text_item(item, false))
+        .and_then(|item| serde_json::to_value(item).ok())
 }
 
 pub(super) fn publish_changed(enabled: bool) {
@@ -103,10 +117,10 @@ mod tests {
             item("new", "text", 5, Some("x".repeat(MAX_TEXT_CHARS + 10))),
         ];
         let seen = text_items(&items, 10, false);
-        assert_eq!(seen.iter().map(|item| item["id"].as_str().unwrap_or("")).collect::<Vec<_>>(), vec!["new", "old"]);
-        assert_eq!(seen[0]["truncated"], true);
-        assert_eq!(seen[0]["text"].as_str().map(|text| text.chars().count()), Some(MAX_TEXT_CHARS));
-        assert_eq!(seen[1]["truncated"], false);
+        assert_eq!(seen.iter().map(|item| item.id.as_str()).collect::<Vec<_>>(), vec!["new", "old"]);
+        assert!(seen[0].truncated);
+        assert_eq!(seen[0].text.chars().count(), MAX_TEXT_CHARS);
+        assert!(!seen[1].truncated);
         assert_eq!(text_items(&items, 1, false).len(), 1);
     }
 }

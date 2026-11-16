@@ -5,7 +5,7 @@ import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
-import { getAgentPageExpandedHeight } from "../../src/windows/island/layout";
+import { getAgentPageExpandedHeight } from "../../src/features/agent-status/islandLayout";
 import { checkNarrow, renderShowcase } from "./agent-sessions-showcase";
 import { checkUsage } from "./agent-sessions-usage";
 import { checkSubagents } from "./agent-sessions-subagents";

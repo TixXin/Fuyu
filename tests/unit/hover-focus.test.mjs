@@ -3,7 +3,7 @@ import test from "node:test";
 import { hoverFocusAction } from "../../src/windows/island/hoverFocus.ts";
 import { CLICK_EXPAND_WINDOW_MS, expandedByClick } from "../../src/windows/island/clickFocus.ts";
 import { gameModeEffects } from "../../src/windows/island/gameMode.ts";
-import { holdsOpen, MAX_HOVER_HOLD_MS } from "../../src/windows/island/hoverHold.ts";
+import { holdsOpen, MAX_HOVER_HOLD_MS } from "../../src/features/plugin-kernel/hoverHold.ts";
 
 const state = (overrides) => ({ expanded: true, hovering: true, editing: false, blocked: false, ...overrides });
 

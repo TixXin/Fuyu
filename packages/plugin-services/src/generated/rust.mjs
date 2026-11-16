@@ -4,6 +4,7 @@ export const RUST_METHODS = Object.freeze([
   "app.version",
   "calendar.events",
   "calendar.sources",
+  "clipboard.history",
   "fileShelf.add",
   "fileShelf.list",
   "media.next",

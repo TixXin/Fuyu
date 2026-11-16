@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
-import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
+import { switchBuiltinPlugin } from "../../features/plugin-kernel/builtinSwitches";
+import { useBuiltinEnabled } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { useVoiceInputSettings } from "../../features/voice-input/useVoiceInputSettings";
 import { pagesOfFeaturesOff, type SettingsCategory, type SettingsFeature } from "./categories";
 
@@ -24,7 +25,7 @@ export function useFeatureSwitches(
   settings: IslandSettings,
   onSettingsChange: (update: (current: IslandSettings) => IslandSettings) => void,
 ): { switches: FeatureSwitches; hiddenPages: ReadonlySet<SettingsCategory> } {
-  const [clipboard, updateClipboard] = useClipboardSettings();
+  const clipboard = useBuiltinEnabled("clipboard");
   const [voice, updateVoice] = useVoiceInputSettings();
   return useMemo(() => {
     const flag = (key: FlagKey): FeatureSwitch => ({
@@ -36,7 +37,7 @@ export function useFeatureSwitches(
       calendar: flag(FLAGS.calendar),
       music: flag(FLAGS.music),
       translation: flag(FLAGS.translation),
-      clipboard: { on: clipboard.enabled, set: (enabled) => void updateClipboard({ ...clipboard, enabled }) },
+      clipboard: { on: clipboard, set: (enabled) => void switchBuiltinPlugin("clipboard", enabled).catch((error: unknown) => console.error("Could not switch the clipboard plugin", error)) },
       shelf: flag(FLAGS.shelf),
       screenshot: flag(FLAGS.screenshot),
       voiceInput: { on: voice.enabled, set: (enabled) => updateVoice({ ...voice, enabled }) },
@@ -44,5 +45,5 @@ export function useFeatureSwitches(
     };
     const on = Object.fromEntries(Object.entries(switches).map(([feature, value]) => [feature, value.on])) as Record<SettingsFeature, boolean>;
     return { switches, hiddenPages: pagesOfFeaturesOff(on) };
-  }, [settings, clipboard, voice, onSettingsChange, updateClipboard, updateVoice]);
+  }, [settings, clipboard, voice, onSettingsChange, updateVoice]);
 }
