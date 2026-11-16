@@ -110,7 +110,7 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 - 岛屿有深色和浅色（`.island-light`，在 `tokens.css`）。文字、底色、边框的颜色不写死：中性色写 `rgba(var(--overlay-rgb, 255, 255, 255), a)`，状态色写 `var(--error-text, 原值)`、`--warning-text`、`--mint-text`、`--info-text`，深色岛保持原值，浅色岛用 `tokens.css` 里的值；只适合某一种底色的颜色写在 `.island-light` 规则里。`pnpm check:colors` 拦新增的写死颜色；`pnpm test:regression` 把每个回归页切成浅色岛量文字对比度（`scripts/regression-contrast.mjs`），确有理由的例外记在 `tests/regression/contrast-allowlist.json`。
 - 保持现有视觉语言：悬浮岛、紧凑面板、透明背景、清晰的控件状态。界面方向以 `docs/design/README.md` 为准。
 - 图标使用 lucide-react，不手写图标库已有的 SVG。
-- 无障碍：能用键盘到达的控件要有 `:focus-visible` 样式（鼠标操作时 `base.css` 会隐藏按钮的焦点框）；只有图标的按钮写 `aria-label`。新的 `animation` 要在同一个文件里加 `@media (prefers-reduced-motion: reduce)` 停掉或改成不动的形式（`tests/unit/reduced-motion.test.mjs` 会检查）；`transition` 已由 `base.css` 统一处理。
+- 无障碍：能用键盘到达的控件要有 `:focus-visible` 样式（鼠标操作时 `base.css` 会隐藏按钮的焦点框）；只有图标的按钮写 `aria-label`。新的 `animation` 要在同一个文件里加 `@media (prefers-reduced-motion: reduce)` 停掉或改成不动的形式（`tests/unit/reduced-motion.test.mjs` 会检查）；`transition` 已由 `base.css` 统一处理。曲线、时长档位和减少动画的目标见 `docs/design/motion.md`，加或改动画前加载 `fuyu-motion` skill。
 
 ## 多语言
 
