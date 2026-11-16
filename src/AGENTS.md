@@ -33,7 +33,7 @@ src/
 │   ├── messages/            # 消息导航与预览；mail/、qq-notifications/、wechat/ 子目录；banner/ 为岛下方的新消息横幅（分组与计时）；arrivals/ 为新消息自动展开的面板（只列这次到达的消息）；island/ 是它们在岛上的接线：读 QQ、微信、邮箱和插件通知（useIslandNotices）、收起条预览、横幅（useIslandBanner）、到达面板（useIslandMessagePanel）、未读时的贴边保持
 │   ├── agent-status/        # AI 代理状态；sounds/ 为 Agent 音效：内置音效播放、设置 → 声音页、导入音效包；push/ 为手机推送（Bark 或 cc-connect，排队到离开电脑再发）
 │   ├── cc-connect/          # 内置插件 focusd.cc-connect 的插件页部分：找到的程序（找不到时下载）、是否在运行、各项目聊过的会话（手机推送的 cc-connect 通道从这里选目标）；CcConnectSetup.tsx 为新建机器人向导，FeishuSetup.tsx 为飞书扫码
-│   ├── claude-usage/        # 收起条上的 Claude 用量双环（内置插件 focusd.claude-usage）：读 agent-status 的用量（claude-hud 快照或直接查询的结果），阈值配色与悬停卡片文案（usageRing.ts），刷新命令封装（api.ts）
+│   ├── claude-usage/        # 收起条上的 Agent 用量双环（内置插件 claude-usage）：Claude Code、Codex 的用量经 agents/v1 取，GLM、Kimi 的用量和 Key 是自己的命令（api.ts）；阈值配色与悬停卡片文案（usageRing.ts），配置在 plugins.yml（usageConfig.ts、useUsageConfig.ts），设置在 AI Agent 页的「用量环」分组；用量的共用类型和工具在 lib/agent-usage/
 │   ├── session-ring/        # 收起条上的 Agent 会话环（内置插件 focusd.session-ring）：按状态分段计数与悬停卡片文案（ringCounts.ts），数据来自 agent-status 的会话列表
 │   ├── ssh-tunnel/          # 内置插件 focusd.ssh-proxy-tunnel 的插件页部分：主机列表、服务器端口、占用确认、隧道状态与 export 行、运行信息里的本地代理（useSshTunnelProxy.ts）（tunnelPort.ts 为端口校验）
 │   ├── theme-market/        # 设置 → 主题市场：从 TixXin/fuyu-plugins 读取 themes.json，预览并应用或保存为预设

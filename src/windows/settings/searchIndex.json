@@ -2896,6 +2896,88 @@
       }
     },
     {
+      "page": "agents",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "Claude Code"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Claude Code"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "Codex",
+        "description": "读本机 Codex 会话记录里的额度（CODEX_HOME 或 ~/.codex 下的 sessions），不联网。Codex 跑过一轮后才有数据。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Codex",
+        "description": "Reads the limits in Codex's session logs on this computer (sessions under CODEX_HOME or ~/.codex), with no network access. Numbers appear after Codex has run a turn."
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "GLM",
+        "description": "用下面保存的智谱开放平台 API Key，每分钟最多一次直连 open.bigmodel.cn 查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Key 存在 Windows 凭据管理器里，只发给智谱。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "GLM",
+        "description": "Asks open.bigmodel.cn directly, at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits with the Zhipu open platform API key saved below. The key lives in the Windows Credential Manager and goes to Zhipu only."
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "Kimi",
+        "description": "用下面保存的 Kimi Code API Key，每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Key 存在 Windows 凭据管理器里，只发给 Kimi。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Kimi",
+        "description": "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits with the Kimi Code API key saved below. The key lives in the Windows Credential Manager and goes to Kimi only."
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "环和悬停卡片显示",
+        "options": [
+          "已用",
+          "剩余"
+        ]
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Rings and card show",
+        "options": [
+          "Used",
+          "Left"
+        ]
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "Claude Code：直接向 Anthropic 查询",
+        "description": "打开后读取本机 Claude Code 保存的登录令牌（~/.claude/.credentials.json，只读，不刷新、不改写，也不会发给 Anthropic 以外的地方），按下面的间隔经代理请求 api.anthropic.com 的用量接口。这个接口没有公开文档，可能随时失效，失效时退回 claude-hud 的快照。Agent 页顶部的用量也会用这份数据。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Claude Code: ask Anthropic directly",
+        "description": "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too."
+      }
+    },
+    {
       "page": "agentSessions",
       "zh-CN": {
         "group": "会话列表",

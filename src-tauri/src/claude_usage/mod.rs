@@ -1,8 +1,10 @@
+mod background;
 mod plan;
 mod source;
 #[cfg(test)]
 mod tests;
 
+pub(crate) use background::init;
 use serde::Serialize;
 use source::{FetchError, Limits};
 use std::{

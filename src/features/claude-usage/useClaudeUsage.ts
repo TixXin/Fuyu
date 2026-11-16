@@ -1,22 +1,41 @@
+import { agentsV1 } from "@fuyu/plugin-services";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getAgentUsage, getCodexUsage, type AgentUsage } from "../agent-status/api";
+import type { AgentUsage } from "../../lib/agent-usage/types";
+import { windowServices } from "../plugin-kernel/services";
 import { getPlanUsage, refreshClaudeUsage } from "./api";
+import { isServiceOff, usageFromReport } from "./agentUsage.ts";
 import type { UsageProviderId } from "./usageRing";
 
 const REFRESH_MS = 30_000;
 
-const READERS: Record<UsageProviderId, (refresh: boolean) => Promise<AgentUsage | null>> = {
+const agents = windowServices.get(agentsV1);
+
+type Reading = { usage: AgentUsage | null; agentsOff: boolean };
+
+const fromAgents = (pick: "claude" | "codex") => async (): Promise<Reading> => {
+  try {
+    const usages = await agents.usage();
+    return { usage: usageFromReport(usages[pick]), agentsOff: false };
+  } catch (error) {
+    if (isServiceOff(error)) return { usage: null, agentsOff: true };
+    throw error;
+  }
+};
+
+const fromPlan = (provider: "glm" | "kimi") => async (refresh: boolean): Promise<Reading> => ({ usage: await getPlanUsage(provider, refresh), agentsOff: false });
+
+const READERS: Record<UsageProviderId, (refresh: boolean) => Promise<Reading>> = {
   claudeCode: async (refresh) => {
     if (refresh) await refreshClaudeUsage().catch((error: unknown) => console.error("Failed to refresh Claude usage", error));
-    return getAgentUsage();
+    return fromAgents("claude")();
   },
-  codex: () => getCodexUsage(),
-  glm: (refresh) => getPlanUsage("glm", refresh),
-  kimi: (refresh) => getPlanUsage("kimi", refresh),
+  codex: fromAgents("codex"),
+  glm: fromPlan("glm"),
+  kimi: fromPlan("kimi"),
 };
 
 export function useClaudeUsage(provider: UsageProviderId = "claudeCode", enabled = true) {
-  const [usage, setUsage] = useState<AgentUsage | null>(null);
+  const [reading, setReading] = useState<Reading>({ usage: null, agentsOff: false });
   const [now, setNow] = useState(() => Date.now());
   const [nonce, setNonce] = useState(0);
   const refreshNext = useRef(false);
@@ -28,7 +47,7 @@ export function useClaudeUsage(provider: UsageProviderId = "claudeCode", enabled
       void READERS[provider](refresh)
         .then((next) => {
           if (!cancelled) {
-            setUsage(next);
+            setReading(next);
             setNow(Date.now());
           }
         })
@@ -37,9 +56,11 @@ export function useClaudeUsage(provider: UsageProviderId = "claudeCode", enabled
     read(refreshNext.current);
     refreshNext.current = false;
     const timer = window.setInterval(() => read(false), REFRESH_MS);
+    const unwatch = windowServices.watch(() => read(false));
     return () => {
       cancelled = true;
       window.clearInterval(timer);
+      unwatch();
     };
   }, [provider, enabled, nonce]);
 
@@ -48,5 +69,5 @@ export function useClaudeUsage(provider: UsageProviderId = "claudeCode", enabled
     setNonce((value) => value + 1);
   }, []);
 
-  return { usage, now, refresh };
+  return { usage: reading.usage, agentsOff: reading.agentsOff, now, refresh };
 }

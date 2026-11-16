@@ -9,10 +9,8 @@ import type { PluginNotificationsController } from "../../src/features/messages/
 
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 import { ClaudeUsageGauge } from "../../src/features/claude-usage/ClaudeUsageGauge";
-import { PlanKeyFields } from "../../src/features/claude-usage/PlanKeyFields";
-import "../../src/features/plugins/PluginCard.css";
-import "../../src/features/plugins/PluginDetailPage.css";
-import "../../src/features/plugins/PluginsSettingsSection.css";
+import { isPlan, PlanKeyField } from "../../src/features/claude-usage/PlanKeyFields";
+import "../../src/features/agent-status/plugin/services.ts";
 import "../../src/windows/settings/LayoutEditor.css";
 import type { AgentUsage } from "../../src/features/agent-status/api";
 import { CLAUDE_USAGE_GAUGE_WIDTH, USAGE_COLORS, USAGE_PROVIDERS } from "../../src/features/claude-usage/usageRing";
@@ -185,7 +183,7 @@ async function runChecks() {
     await push(null);
     check(button().querySelectorAll(".mini-ring__arc").length === 0 && button().querySelectorAll(".mini-ring__track").length === 2, "没有 claude-hud 快照时只显示灰色底轨");
     await hover();
-    check(cardLines().join("|") === "Claude Code|暂无 Claude 用量（需要本机的 magpie 网关、claude-hud 的用量快照，或在插件设置里打开「直接向 Anthropic 查询」）", "卡片说明数据从哪来");
+    check(cardLines().join("|") === "Claude Code|暂无 Claude 用量（需要本机的 magpie 网关、claude-hud 的用量快照，或在设置 → AI Agent 的用量环里打开「直接向 Anthropic 查询」）", "卡片说明数据从哪来");
     await leave();
 
     const before = { reads, refreshes };
@@ -213,21 +211,23 @@ async function runChecks() {
     check(cardLines().join(" / ") === "GLM · GLM Coding Pro / 5 小时 35% · 1 小时 31 分后重置 / 7 天 52% · 2 天 18 小时后重置 / MCP 本月 8% / 2 分钟前更新 · 来自智谱开放平台", `GLM 卡片：${cardLines().join(" / ")}`);
     await act(async () => { glmAnchor.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body })); });
 
-    const fields = [...document.querySelectorAll<HTMLElement>("#plan-keys [data-plan-key]")];
-    check(fields.map((field) => field.dataset.planKey).join() === "glm", "只为打开的 GLM 显示 API Key 输入框");
-    const input = fields[0].querySelector("input")!;
-    const hint = () => fields[0].querySelector(".plan-key__status")!.textContent;
-    const buttons = () => [...fields[0].querySelectorAll("button")].map((button) => button.textContent);
+    const inputs = [...document.querySelectorAll<HTMLInputElement>("#plan-keys input[data-plan-key]")];
+    check(inputs.map((field) => field.dataset.planKey).join() === "glm", "只为打开的 GLM 显示 API Key 输入框");
+    const input = inputs[0];
+    const row = input.closest<HTMLElement>(".settings-row")!;
+    await until(() => row.querySelector("[data-plan-key-status]"));
+    const hint = () => row.querySelector("[data-plan-key-status]")?.textContent;
+    const buttons = () => [...row.querySelectorAll("button")].map((button) => button.textContent);
     check(input.type === "password" && input.autocomplete === "off" && hint() === "未保存" && buttons().join() === "保存", "密码框，未保存时只有保存按钮");
     await act(async () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "sk-secret-123");
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
-    await act(async () => fields[0].querySelector("button")!.click());
+    await act(async () => row.querySelector("button")!.click());
     await until(() => hint() === "已保存");
     check(keyWrites.join() === "glm:sk-secret-123" && input.value === "" && hint() === "已保存" && buttons().join() === "保存,删除", "保存后清空输入框，显示已保存和删除按钮");
     check(!document.body.innerHTML.includes("sk-secret-123") && input.placeholder === "已保存，粘贴新的 Key 可替换", "保存后页面里不再有这个 Key");
-    await act(async () => fields[0].querySelectorAll("button")[1].click());
+    await act(async () => row.querySelectorAll("button")[1].click());
     await until(() => hint() === "未保存");
     check(keyWrites[keyWrites.length - 1] === "glm:" && hint() === "未保存", "删除时传空 Key，回到未保存");
 
@@ -243,7 +243,8 @@ async function runChecks() {
 await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><Fixture /><Fixture all /></StrictMode>); });
 const keysHost = Object.assign(document.createElement("div"), { id: "plan-keys" });
 document.getElementById("fixture")!.after(keysHost);
-await act(async () => { createRoot(keysHost).render(<PlanKeyFields settings={{ glm: true, kimi: !automated }} disabled={false} />); });
+const keyProviders = USAGE_PROVIDERS.filter(isPlan).filter((provider) => provider.id === "glm" || !automated);
+await act(async () => { createRoot(keysHost).render(<>{keyProviders.map((provider) => <PlanKeyField key={provider.id} provider={provider} />)}</>); });
 if (automated) await runChecks();
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
