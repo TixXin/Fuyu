@@ -69,6 +69,14 @@
   --space-lg: 10px;
   --space-xl: 12px;
   --space-2xl: 14px;
+
+  --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-medium: 240ms;
+  --motion-slow: 420ms;
 }
 
 .island-light {
