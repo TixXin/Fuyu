@@ -21,6 +21,8 @@ mod file_image;
 pub(crate) mod image_protocol;
 #[cfg_attr(target_os = "macos", path = "listener_macos.rs")]
 mod listener;
+#[cfg(windows)]
+mod open_trace;
 pub(crate) mod pins;
 mod plugin_view;
 #[cfg_attr(target_os = "macos", path = "popup_macos.rs")]

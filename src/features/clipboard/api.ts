@@ -235,8 +235,8 @@ export function listenClipboardPopupMoved(handler: () => void) {
   return getCurrentWindow().onMoved(() => handler());
 }
 
-export function listenClipboardPopupOpened(handler: () => void) {
-  return listen(CLIPBOARD_POPUP_OPENED_EVENT, () => handler());
+export function listenClipboardPopupOpened(handler: (trace: boolean) => void) {
+  return listen<{ trace?: boolean } | null>(CLIPBOARD_POPUP_OPENED_EVENT, ({ payload }) => handler(payload?.trace === true));
 }
 
 export function listenClipboardPopupBlur(handler: () => void) {

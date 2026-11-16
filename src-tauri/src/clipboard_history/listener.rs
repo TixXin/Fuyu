@@ -136,6 +136,7 @@ impl WindowMessages for ClipboardWindow {
         }
 
         if (message == WM_HOTKEY && wparam.0 == HOTKEY_ID as usize) || message == WIN_V_MESSAGE {
+            super::open_trace::message_arrived();
             if let Ok(service) = service() {
                 service.emit_shortcut();
             }
