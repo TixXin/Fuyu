@@ -21,6 +21,8 @@ async function inTempRepo(prefix, work) {
   try {
     git(["init", "-q", "--bare", "-b", "main", remote], root);
     git(["clone", "-q", remote, main], root);
+    git(["config", "user.email", "t@t"], main);
+    git(["config", "user.name", "t"], main);
     assert.ok(path.resolve(main, git(["rev-parse", "--git-dir"], main)).startsWith(root + path.sep), "git must run in the temp repo");
     commit(main, "a.txt", "one");
     git(["push", "-q", "origin", "main"], main);
@@ -93,7 +95,7 @@ test("land closes this machine's older land PRs whose commits the new PR already
     },
   };
 
-  assert.equal(await land({ github, host: "Test-PC", aliases: ["old-mac"] }), 0);
+  assert.equal(await land({ github, host: "Test-PC", aliases: ["old-mac"] }), 0, said());
   assert.equal(calls.created.length, 1);
   assert.deepEqual(calls.closed.map(({ number }) => number), [3, 4], "only this machine's PRs (also under its earlier name) whose commits are all in the new one, an earlier in-repo merge of main included");
   assert.match(calls.closed[0].comment, /#9/);
