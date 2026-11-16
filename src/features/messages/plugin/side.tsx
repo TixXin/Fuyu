@@ -1,18 +1,18 @@
 import { Mail, MessageCircle } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
-import type { MessageSource } from "../messagePreview";
+import { messagesIsland } from "./islandState";
 
 type SideContext = {
-  unreadCount: number;
   onOpenPage: (page: "qq") => void;
-  onOpenMessages: (source: MessageSource) => void;
 };
 
 const sideSlot = defineSlot<SideContext>("island.side/v1");
 
-function UnreadRow({ unreadCount, onOpenPage }: SideContext) {
+function UnreadRow({ onOpenPage }: SideContext) {
   const t = useTranslation();
+  const messages = messagesIsland.use();
+  const unreadCount = (messages?.qq.snapshot.items.length ?? 0) + Number(messages?.wechat.snapshot.pending ?? false);
   return (
     <button
       type="button"
@@ -29,8 +29,9 @@ function UnreadRow({ unreadCount, onOpenPage }: SideContext) {
   );
 }
 
-function MailRow({ onOpenMessages }: SideContext) {
+function MailRow() {
   const t = useTranslation();
+  const messages = messagesIsland.use();
   return (
     <button
       type="button"
@@ -38,7 +39,7 @@ function MailRow({ onOpenMessages }: SideContext) {
       aria-label={t.messages.newMailLabel}
       onClick={(event) => {
         event.stopPropagation();
-        onOpenMessages("qqMail");
+        messages?.open("qqMail");
       }}
     >
       <Mail size={16} strokeWidth={1.6} aria-hidden="true" />

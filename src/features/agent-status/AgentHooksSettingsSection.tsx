@@ -25,9 +25,7 @@ export function AgentHooksSettingsSection({ agentStatus, clearingAgentProvider, 
   const hooksNotice = getAgentHooksNotice(agentHooksState);
   const installLabel = agentHooksInstallState === "installing" ? text.installing : agentHooksInstallState === "installed" ? text.installed : text.install;
 
-  const footer = devBuild ? (
-    <span className="agent-hooks-message" role="status">{text.hooksDevBuild}</span>
-  ) : agentHooksInstallState === "error" ? (
+  const footer = agentHooksInstallState === "error" ? (
     <span className="agent-hooks-message agent-hooks-message--error" role="alert">{agentHooksInstallError}</span>
   ) : hooksNotice ? (
     <span className="agent-hooks-message agent-hooks-message--attention" role="status">
@@ -46,13 +44,15 @@ export function AgentHooksSettingsSection({ agentStatus, clearingAgentProvider, 
         </span>
       )}
     </span>
+  ) : devBuild ? (
+    <span className="agent-hooks-message" role="status">{text.hooksDevBuild}</span>
   ) : undefined;
 
   return (
     <SettingsGroup
       title={text.title}
       action={
-        devBuild ? undefined : <SettingsLinkButton disabled={agentHooksInstallState === "installing"} onClick={onInstallAgentHooks}>
+        <SettingsLinkButton disabled={agentHooksInstallState === "installing"} onClick={onInstallAgentHooks}>
           {installLabel}
         </SettingsLinkButton>
       }

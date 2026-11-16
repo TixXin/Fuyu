@@ -1,4 +1,4 @@
-import type { IslandSettings } from "../../lib/settings/types";
+import type { IslandSettings } from "../../../lib/settings/types";
 
 export type TuckHoldState = {
   todoInProgress: boolean;

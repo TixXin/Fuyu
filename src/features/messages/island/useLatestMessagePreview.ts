@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { latestMessagePreview } from "../../features/messages/messagePreview";
-import type { MailController } from "../../features/messages/mail/MailPanel";
-import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
-import type { WeChatRemindersController } from "../../features/messages/wechat/WeChatReminders";
-import type { PluginNotificationsController } from "../../features/plugins/usePluginNotifications";
-import { useTranslation } from "../../i18n";
+import { latestMessagePreview } from "../messagePreview";
+import type { MailController } from "../mail/MailPanel";
+import type { QQNotificationsController } from "../qq-notifications/QQNotifications";
+import type { WeChatRemindersController } from "../wechat/WeChatReminders";
+import type { PluginNotificationsController } from "../../plugins/usePluginNotifications";
+import { useTranslation } from "../../../i18n";
 export function useLatestMessagePreview(
   qqNotifications: QQNotificationsController,
   wechatReminders: WeChatRemindersController,

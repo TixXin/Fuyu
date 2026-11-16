@@ -2,8 +2,9 @@ import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
-import { AgentHooksNotice } from "./AgentHooksNotice";
+import { AgentHooksSettingsSection } from "./AgentHooksSettingsSection";
 import { AgentProviderSwitches } from "./AgentProviderSwitches";
+import { useAgentStatusSettings } from "./useAgentStatusSettings";
 import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "../../components/settings/FeatureHeader";
@@ -14,7 +15,6 @@ import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 type AgentSectionProps = {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
-  onOpenConnect: () => void;
 };
 
 function SessionTitleSection({ settings, onSettingsChange }: AgentSectionProps) {
@@ -65,9 +65,14 @@ function SessionTitleSection({ settings, onSettingsChange }: AgentSectionProps) 
   );
 }
 
+function HooksSection() {
+  const agentStatus = useAgentStatusSettings();
+  return <AgentHooksSettingsSection {...agentStatus} />;
+}
+
 const sections = settingsSections<AgentSectionProps, "agents">();
 
-sections.add({ id: "agents.hooks-notice", category: "agents", order: 10, component: AgentHooksNotice });
+sections.add({ id: "agents.hooks", category: "agents", order: 10, component: HooksSection });
 sections.add({ id: "agents.session-title", category: "agents", order: 20, component: SessionTitleSection });
 sections.add({ id: "agents.providers", category: "agents", order: 30, component: AgentProviderSwitches });
 

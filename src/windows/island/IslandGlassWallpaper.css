@@ -1,0 +1,61 @@
+.stage .island.island--appearance-liquidGlass[data-glass-wallpaper] {
+  --glass-frost-alpha: min(0.95, calc(var(--glass-intensity, 0.25) + var(--glass-backdrop-boost, 0)));
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--island-background-color) calc(var(--glass-frost-alpha) * 100%), transparent),
+      color-mix(in srgb, var(--island-background-color) calc(var(--glass-frost-alpha) * 100%), transparent)
+    ) 0 0 / 100% 100% no-repeat,
+    var(--glass-wallpaper) var(--glass-wallpaper-x) var(--glass-wallpaper-y) / var(--glass-wallpaper-size) no-repeat,
+    var(--glass-wallpaper-color);
+}
+
+.stage .island.island--appearance-liquidGlass[data-glass-wallpaper]::before {
+  background-position:
+    0 0,
+    calc(var(--glass-wallpaper-x) + var(--island-top-fillet)) var(--glass-wallpaper-y);
+}
+
+.stage .island.island--appearance-liquidGlass[data-glass-wallpaper] .editor-panel {
+  background:
+    radial-gradient(
+      circle at var(--glass-pointer-x) var(--glass-pointer-y),
+      color-mix(in srgb, var(--glass-page-accent) calc(var(--glass-panel-accent-alpha) * 100%), transparent),
+      transparent 36%
+    ),
+    color-mix(in srgb, var(--island-background-color) 16%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.island__glass-noise {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  corner-shape: var(--island-corner-shape, round);
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  opacity: var(--glass-noise, 0.03);
+}
+
+.island.island--glass-rim {
+  --island-top-fillet-rim: color-mix(in srgb, var(--glass-c1) 85%, transparent);
+  --island-top-fillet-rim-glow: color-mix(in srgb, var(--glass-c2) 40%, transparent);
+  --island-top-fillet-rim-inset: 0px;
+  --island-top-fillet-rim-width: var(--glass-rim-width, 1.5px);
+}
+
+:root[data-island-top-edge="attached"] .island--glass-rim .island__glass-rim,
+:root:not([data-island-top-edge]) .island--docked.island--glass-rim .island__glass-rim {
+  clip-path: inset(var(--glass-rim-width, 1.5px) 0 0 0);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .stage .island.island--appearance-liquidGlass[data-glass-wallpaper] {
+    background: var(--glass-tint-color);
+  }
+
+  .island__glass-noise {
+    display: none;
+  }
+}

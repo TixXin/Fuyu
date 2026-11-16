@@ -29,5 +29,5 @@ export function useIslandAgents(settings: IslandSettings, demoSessions: AgentSes
 
   const agentUsages = useAgentUsages(settings.agentStatusEnabled && (settings.agentShowUsage || settings.agentQuotaAlertPercent > 0));
 
-  return { agentStatus, ...sessions, agentSession, agentInterjection, agentActivity, agentUsages };
+  return { agentStatus, ...sessions, agentSession, agentInterjection, agentActivity, agentOthers: others, agentUsages };
 }

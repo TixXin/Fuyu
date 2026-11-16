@@ -8,7 +8,7 @@ import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/features/agent-status/islandLayout";
 import { checkNarrow, renderShowcase } from "./agent-sessions-showcase";
 import { checkUsage } from "./agent-sessions-usage";
-import { checkSubagents } from "./agent-sessions-subagents";
+import { checkSubagentCards, checkSubagents } from "./agent-sessions-subagents";
 import { checkChildSessions } from "./agent-sessions-children";
 import { checkAgeColumns, renderAgeColumns } from "./agent-sessions-age";
 import type { AgentCardEffects, AgentHostDisplay, AgentSessionView } from "../../src/features/agent-status/agentSettings";
@@ -352,6 +352,7 @@ async function runChecks() {
     check(document.querySelectorAll(".agent-card--sparkle > .agent-card__band").length === 3
       && [...document.querySelectorAll<HTMLElement>(".agent-card--sparkle")].every((card) => card.offsetHeight === 62),"粒子流苏给每张卡片加一条流苏，不改变卡片高度");
     await checkAgeColumns({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT }, check);
+    await checkSubagentCards({ root, sessions, check });
     await checkNarrow({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT }, check);
     await renderShowcase({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT });
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;

@@ -24,6 +24,7 @@ import { levelState } from "../../src/features/system-levels/plugin/islandState"
 import { todoLine } from "../../src/features/todos/plugin/islandState";
 import { todoLineContributions } from "../../src/features/todos/plugin/todoLines";
 import { translationPeekState } from "../../src/features/translation/plugin/islandState";
+import { useFixtureMessages, type FixtureMessages } from "./islandMessages";
 
 type FixtureLines = {
   barText?: boolean;
@@ -42,13 +43,15 @@ type FixtureLines = {
   sideCover?: boolean;
   status?: { state: string; label: string };
   agents?: number | null;
+  messages?: FixtureMessages | null;
 };
 
 const NO_DEVICES: DeviceUse = { camera: [], microphone: [] };
 const IDLE = { state: "idle", label: "" };
 
-export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false, status = IDLE, agents = null }: FixtureLines) {
+export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false, status = IDLE, agents = null, messages = null }: FixtureLines) {
   const t = useTranslation();
+  useFixtureMessages(messages);
   quotaAlertState.useProvide(quotaAlert);
   agentLine.useProvide(agentSession);
   agentShell.useProvide(useMemo(() => ({ ...agentShell.get(), activeCount: agents ?? 0 }), [agents]));

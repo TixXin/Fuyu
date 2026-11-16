@@ -2,12 +2,13 @@ use serde::Deserialize;
 use serde_json::json;
 use std::{
     sync::{Mutex, MutexGuard, OnceLock, PoisonError},
-    thread,
+    thread::{self, JoinHandle},
+    time::{Duration, Instant},
 };
 use tauri::{AppHandle, Emitter};
 use windows::Win32::{
     Foundation::{HWND, LPARAM, LRESULT, WPARAM},
-    UI::WindowsAndMessaging::{WM_APP, WM_HOTKEY},
+    UI::WindowsAndMessaging::{WM_APP, WM_HOTKEY, WM_QUIT},
 };
 
 use crate::{
@@ -22,7 +23,8 @@ use crate::{
 const HOTKEY_EVENT: &str = "agent-approval-hotkey";
 const REFRESH_MESSAGE: u32 = WM_APP + 0x63;
 const FIRST_HOTKEY_ID: i32 = 0x5300;
-const CLASS_NAME: &str = "FocuSDAgentApprovalHotkeys";
+const CLASS_NAME: &str = "FuyuAgentApprovalHotkeys";
+const READY_WAIT: Duration = Duration::from_secs(2);
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct ApprovalHotkey {
@@ -34,7 +36,7 @@ pub struct ApprovalHotkey {
 struct State {
     app: Option<AppHandle>,
     window: Option<isize>,
-    started: bool,
+    thread: Option<JoinHandle<()>>,
     wanted: Vec<ApprovalHotkey>,
     registered: Vec<String>,
 }
@@ -46,22 +48,60 @@ fn state() -> MutexGuard<'static, State> {
 
 #[tauri::command]
 pub fn set_agent_approval_hotkeys(app: AppHandle, hotkeys: Vec<ApprovalHotkey>) {
-    let (window, start) = {
+    let window = {
         let mut state = state();
         if state.wanted == hotkeys {
             return;
         }
         state.wanted = hotkeys;
         state.app.get_or_insert(app);
-        let start = !state.started && !state.wanted.is_empty();
-        state.started |= start;
-        (state.window, start)
+        state.window
     };
-    if start {
-        let _ = thread::Builder::new().name("agent-approval-hotkeys".into()).spawn(run_window);
-    } else if let Some(window) = window {
-        let _ = message_window::post_message(HWND(window as *mut _), REFRESH_MESSAGE);
+    if !super::background::switched_on() {
+        return;
     }
+    match window {
+        Some(window) => {
+            let _ = message_window::post_message(HWND(window as *mut _), REFRESH_MESSAGE);
+        }
+        None => start(),
+    }
+}
+
+pub(super) fn start() {
+    let mut state = state();
+    if state.wanted.is_empty() || state.thread.as_ref().is_some_and(|thread| !thread.is_finished()) {
+        return;
+    }
+    if let Some(finished) = state.thread.take() {
+        let _ = finished.join();
+    }
+    match thread::Builder::new().name("agent-approval-hotkeys".into()).spawn(run_window) {
+        Ok(thread) => state.thread = Some(thread),
+        Err(error) => eprintln!("could not start the agent approval shortcuts: {error}"),
+    }
+}
+
+pub(super) fn stop() {
+    let Some(thread) = state().thread.take() else { return };
+    let asked = Instant::now();
+    while !thread.is_finished() {
+        let window = state().window;
+        if let Some(window) = window {
+            let _ = message_window::post_message(HWND(window as *mut _), WM_QUIT);
+            break;
+        }
+        if asked.elapsed() >= READY_WAIT {
+            eprintln!("the agent approval shortcut thread did not get ready, so it is left to finish on its own");
+            return;
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+    let _ = thread.join();
+}
+
+pub(super) fn running() -> bool {
+    state().thread.as_ref().is_some_and(|thread| !thread.is_finished())
 }
 
 pub(crate) fn coexist_refresh() {
@@ -76,12 +116,23 @@ fn run_window() {
     if message_window::register_class::<ApprovalHotkeyWindow>(instance, CLASS_NAME).is_err() {
         return;
     }
-    let Ok(window) = message_window::create_message_only_window(instance, CLASS_NAME, "FocuSD Agent Approval Hotkeys") else {
+    let Ok(window) = message_window::create_message_only_window(instance, CLASS_NAME, "Fuyu Agent Approval Hotkeys") else {
+        let _ = message_window::unregister_class(instance, CLASS_NAME);
         return;
     };
     state().window = Some(window.0 as isize);
     apply(window);
     message_window::run_message_loop();
+    {
+        let mut state = state();
+        state.window = None;
+        for index in 0..state.registered.len() {
+            let _ = win32::hotkey::unregister(window, FIRST_HOTKEY_ID + index as i32);
+        }
+        state.registered.clear();
+    }
+    let _ = message_window::destroy_window(window);
+    let _ = message_window::unregister_class(instance, CLASS_NAME);
 }
 
 fn apply(window: HWND) {

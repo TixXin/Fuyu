@@ -1,13 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { AppearanceMode } from "../../lib/settings/types";
-import type { MessagePreview, MessageSource } from "../../features/messages/messagePreview";
-import type { MailController } from "../../features/messages/mail/MailPanel";
-import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
-import type { WeChatRemindersController } from "../../features/messages/wechat/WeChatReminders";
-import type { PluginNotificationsController } from "../../features/plugins/usePluginNotifications";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
-import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
+import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 import { isPluginPage, type IslandFeatures } from "./features";
 import { IslandCollapsedBar } from "./IslandCollapsedBar";
 import { useIslandNotch } from "./notch";
@@ -34,12 +29,6 @@ import { sideBubbleTop } from "./sideColumn";
 import type { IslandSide } from "./useIslandSide";
 
 type IslandShellProps = {
-  qqMail: MailController;
-  qqNotifications: QQNotificationsController;
-  wechatReminders: WeChatRemindersController;
-  pluginNotifications: PluginNotificationsController;
-  preview: MessagePreview | null;
-  onOpenMessages: (source: MessageSource) => void;
   mode: IslandMode;
   page: IslandPage;
   popup?: boolean;
@@ -80,12 +69,6 @@ type IslandShellProps = {
 const NO_SOURCES = {};
 
 export function IslandShell({
-  qqMail,
-  qqNotifications,
-  wechatReminders,
-  pluginNotifications,
-  preview,
-  onOpenMessages,
   mode,
   page,
   popup = false,
@@ -129,22 +112,16 @@ export function IslandShell({
   const { handleGlassPointerMove, resetGlassPointer } = useGlassPointer(isLiquidGlass && glass?.specular !== false);
   const isPreparing = useIslandPreparing(isExpanded);
   const contentRef = usePageFadeIn<HTMLDivElement>(page, mode);
-  const qqNotificationCount = qqNotifications.snapshot.items.length;
-  const wechatPending = wechatReminders.snapshot.pending;
-  const unreadCount = qqNotificationCount + Number(wechatPending);
-  const { status } = useIslandContributed();
+  const contributed = useIslandContributed();
+  const { status } = contributed;
   const agentVisualState = status?.state ?? "idle";
   const agentStatusLabel = status?.label ?? "";
-  const sideSources = {
-    unreadCount,
-    shelfCount,
-    };
-  useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null });
-  const sideLayout = useSideColumnRows({ ...sideSources, onOpenPage, onOpenMessages }, collapsedSlots?.gauges ?? []);
-  const sideHot = preview ? (preview.source === "qqMail" ? "mail" : "unread") : null;
+  useLegacySide({ shelfCount });
+  const sideLayout = useSideColumnRows({ shelfCount, onOpenPage }, collapsedSlots?.gauges ?? []);
+  const sideHot = contributed.preview?.hot ?? null;
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
   const activeAlert = useActiveAlert();
-  const sideBubble = side && !isExpanded && !isTucked && Boolean(preview || activeAlert);
+  const sideBubble = side && !isExpanded && !isTucked && Boolean(contributed.preview || activeAlert);
   const className = [
     "island",
     `island--${mode}`,
@@ -161,7 +138,7 @@ export function IslandShell({
   ]
     .filter(Boolean)
     .join(" ");
-  const { lines } = useIslandContributed();
+  const { lines } = contributed;
   const collapsedLabel = (showCollapsedText ? labelLine(lines)?.label : null) ?? t.island.appName;
   const lead = leadLine(lines);
   const leadPage = (lead?.page ?? page) as IslandPage;
@@ -190,7 +167,7 @@ export function IslandShell({
           <IslandSideHandle
             label={collapsedLabel}
             agentVisualState={agentVisualState}
-            unreadCount={unreadCount}
+            badge={contributed.hints.has("side.badge")}
             onOpen={() => onOpenPage(lead?.handle ? leadPage : page)}
             onWindowDragStart={onWindowDragStart}
           />
@@ -205,14 +182,9 @@ export function IslandShell({
           />
         )}
         <IslandCollapsedBar
-          qqMail={qqMail}
-          qqNotifications={qqNotifications}
-          wechatReminders={wechatReminders}
-          pluginNotifications={pluginNotifications}
           pluginViews={pluginViews}
           onOpenPluginPage={onOpenPluginPage}
           slots={collapsedSlots}
-          preview={preview}
           page={page}
           isExpanded={isExpanded}
           isTucked={isTucked}
@@ -222,7 +194,6 @@ export function IslandShell({
           shelfCount={shelfCount}
           agentVisualState={agentVisualState}
           onOpenPage={onOpenPage}
-          onOpenMessages={onOpenMessages}
           notice={notice}
           onWindowDragStart={onWindowDragStart}
           onTuck={onTuck}
@@ -243,12 +214,9 @@ export function IslandShell({
             isDetached={isDetached}
             agentVisualState={agentVisualState}
             agentStatusLabel={agentStatusLabel}
-            qqNotificationCount={qqNotificationCount}
-            wechatPending={wechatPending}
             onPageChange={onPageChange}
             onCollapse={onCollapse}
             onOpenSettings={onOpenSettings}
-            onOpenMessages={onOpenMessages}
             onOpenTranslator={onOpenTranslator}
             onResetPosition={onResetPosition}
             minimizesToTray={minimizesToTray}
@@ -265,9 +233,10 @@ export function IslandShell({
       {sideBubble && (
         <IslandSideBubble
           top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}
-          preview={preview}
+          summary={contributed.summary}
+          previewing={contributed.preview !== null}
           alert={activeAlert && <AlertPopup alert={activeAlert} sources={NO_SOURCES} />}
-          onOpenPreview={() => (preview && preview.source !== "plugin" ? onOpenMessages(preview.source) : onOpenPage(page))}
+          onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(page))}
         />
       )}
       <IslandDragHint />

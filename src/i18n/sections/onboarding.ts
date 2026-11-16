@@ -20,6 +20,9 @@ export type OnboardingText = {
     title: string;
     lead: string;
     theme: string;
+    look: string;
+    solid: string;
+    glassHint: string;
   };
   outfit: {
     title: string;
@@ -112,6 +115,9 @@ export const zhCN: OnboardingText = {
     title: "把它捏成你喜欢的样子",
     lead: "改动马上出现在真正的岛上。圆角、动画这些细节以后在设置里调。",
     theme: "深色还是浅色",
+    look: "质感",
+    solid: "纯色",
+    glassHint: "透出桌面壁纸的毛玻璃。颜色、流动和模糊在「设置 → 外观 → 样式」里调。系统关掉「透明效果」或读不到壁纸（目前 Mac 上）时显示为纯色玻璃。",
   },
   outfit: {
     title: "留下你用得上的功能",
@@ -225,6 +231,9 @@ export const en: OnboardingText = {
     title: "Shape it your way",
     lead: "Changes show on the real island at once. Corners, motion and other details are in Settings later.",
     theme: "Dark or light",
+    look: "Look",
+    solid: "Solid",
+    glassHint: "Frosted glass showing your desktop wallpaper. Colors, flow and blur are in Settings → Appearance → Style. With Transparency effects off, or no wallpaper to read (on Mac for now), the glass stays solid.",
   },
   outfit: {
     title: "Keep the features you'll use",

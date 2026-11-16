@@ -13,6 +13,7 @@ test("SERVICES names every built-in service the package defines, with its versio
   assert.ok(services.SERVICES.includes("file-shelf/v1"));
   assert.ok(services.SERVICES.includes("media/v1"));
   assert.ok(services.SERVICES.includes("clipboard/v1"));
+  assert.ok(services.SERVICES.includes("agents/v1"));
   for (const name of services.SERVICES) assert.match(name, services.SERVICE_NAME);
   assert.ok(Object.isFrozen(services.SERVICES));
 });

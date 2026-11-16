@@ -9,6 +9,7 @@ import { QuotaAlertPopup } from "../QuotaAlertPopup";
 import { AgentSessionsPanel } from "../AgentSessionsPanel";
 import { agentArrange, agentPage, agentShell, quotaAlertState } from "./islandState";
 import { islandPage } from "./page.ts";
+import { OWNER } from "./owner.ts";
 
 type Panel = ComponentProps<typeof AgentSessionsPanel>;
 
@@ -35,7 +36,7 @@ function AgentsPage({ settings }: AgentsPageProps) {
   return <AgentSessionsPanel sessions={agents.sessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} unseen={agents.unseen} removal={agents.removal} reveal={agents.alerted} showUsage={settings.agentShowUsage} usages={agents.usages} approvals={agents.approvals} />;
 }
 
-pageSlot.add({ ...islandPage, component: AgentsPage });
+pageSlot.add({ ...islandPage, component: AgentsPage }, OWNER);
 
 type CollapsedContext = {
   t: Translations;
@@ -69,7 +70,7 @@ collapsedSlot.add({
   order: 80,
   shown: ({ hints, slots }) => hints.has("agents.count") && (Boolean(slots.agentCount) || hints.has("agent")),
   component: SessionCountItem,
-});
+}, OWNER);
 
 const alertSlot = defineSlot<object, IslandAlertMeta<object>>("island.alert/v1");
 
@@ -105,7 +106,7 @@ function QuotaAlertBody() {
   return quotaAlert ? <QuotaAlertPopup alert={quotaAlert} /> : null;
 }
 
-alertSlot.add({ id: "quota", order: 20, component: QuotaAlertLeading, trailing: QuotaAlertTrailing, popup: QuotaAlertBody });
+alertSlot.add({ id: "quota", order: 20, component: QuotaAlertLeading, trailing: QuotaAlertTrailing, popup: QuotaAlertBody }, OWNER);
 
 type HeaderContext = { page: string };
 
@@ -116,4 +117,4 @@ function ArrangeButton() {
   return arrange && <AgentArrangeButton sort={arrange.sort} group={arrange.group} onChange={arrange.onChange} />;
 }
 
-headerSlot.add({ id: "agent-arrange", order: 0, enabled: ({ page }) => page === "agents", component: ArrangeButton });
+headerSlot.add({ id: "agent-arrange", order: 0, enabled: ({ page }) => page === "agents", component: ArrangeButton }, OWNER);

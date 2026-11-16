@@ -7,4 +7,11 @@ export type CollapsedLineContext = {
   agentIcon: ReactNode | null;
 };
 
+export type IslandSummaryContext = {
+  enabled: boolean;
+  bodyOnly: boolean;
+  children: ReactNode;
+};
+
 export const lineSlot = defineSlot<CollapsedLineContext>("island.line/v1");
+export const summarySlot = defineSlot<IslandSummaryContext>("island.line/v1");

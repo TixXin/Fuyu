@@ -14,7 +14,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   topEdgeLayoutVersion: 1,
   appearanceMode: "classic",
   fontFamily: "system",
-  glassIntensity: 72,
+  glassIntensity: 25,
   opacity: 100,
   collapsedScale: 1,
   expandedScale: 1,

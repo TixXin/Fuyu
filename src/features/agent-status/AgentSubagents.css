@@ -7,6 +7,23 @@
   padding-right: 6px;
 }
 
+.agent-sessions__list:is(.agent-sessions__list--cards, .agent-sessions__list--compact) .agent-subagents {
+  margin: 4px 0 0;
+  padding: 0 0 0 12px;
+}
+
+.agent-sessions__list--compact .agent-subagents {
+  padding-left: 10px;
+}
+
+.agent-sessions__list--cards > li:has(> .agent-subagents) :is(.agent-session__archive, .agent-session__more) {
+  top: 31px;
+}
+
+.agent-sessions__list--compact > li:has(> .agent-subagents) :is(.agent-session__archive, .agent-session__more) {
+  top: 17px;
+}
+
 .agent-subagents__toggle {
   height: 20px;
   display: inline-flex;

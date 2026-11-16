@@ -41,10 +41,41 @@ pub fn set_agent_approval_hotkeys(app: AppHandle, hotkeys: Vec<ApprovalHotkey>) 
         state.wanted = hotkeys;
         state.app.get_or_insert(app.clone());
     }
-    let _ = app.run_on_main_thread(apply);
+    if super::background::switched_on() {
+        let _ = app.run_on_main_thread(apply);
+    }
+}
+
+pub(super) fn start() {
+    let app = state().app.clone();
+    if let Some(app) = app {
+        let _ = app.run_on_main_thread(apply);
+    }
+}
+
+pub(super) fn stop() {
+    let app = state().app.clone();
+    if let Some(app) = app {
+        let _ = app.run_on_main_thread(release);
+    }
+}
+
+pub(super) fn running() -> bool {
+    !state().registered.is_empty()
+}
+
+fn release() {
+    let old = std::mem::take(&mut state().registered);
+    for hotkey in old {
+        hotkeys::unregister(hotkey);
+    }
 }
 
 fn apply() {
+    if !super::background::switched_on() {
+        release();
+        return;
+    }
     let (old, wanted, app) = {
         let mut state = state();
         (std::mem::take(&mut state.registered), state.wanted.clone(), state.app.clone())

@@ -114,8 +114,8 @@ land 时会自动检查（`scripts/land-check.mjs` 调 `pnpm tasks landing`）�
 
 会话自己发现、自己要记的任务也要有 issue（用户 2026-11-13 定），这样每项工作在 GitHub 上都看得到、能讨论。
 
-1. **先提 issue**：`gh issue create --repo TixXin/fuyu`，标题写 `[<编号>] <任务标题>`，正文写清要做什么、为什么、怎样算做完，和任务文件的「说明」「验收」一致，并给出任务文档的链接。语言、署名和最后一行同上。
-2. **再建任务**：`pnpm tasks add <编号> --title .. --issue <N>`。
+1. **先提 issue**：编号用 `pnpm tasks id <分组字母>`（子任务用 `pnpm tasks id <父编号>`）挑，不按本地看板自己数：它先 `git fetch --prune origin`，把本地、`origin/main`、所有 `origin/land/*` 上的任务文件（含 `0-archive/`），以及开着的 issue 和最近 200 个已关闭 issue 标题里的 `[X数字]` 都算作已用，取最大的加一；联网失败只警告，按本地能看到的挑。两台机器只通过这些地方看到对方，所以挑好马上提 issue。`gh issue create --repo TixXin/fuyu`，标题写 `[<编号>] <任务标题>`，正文写清要做什么、为什么、怎样算做完，和任务文件的「说明」「验收」一致，并给出任务文档的链接。语言、署名和最后一行同上。
+2. **再建任务**：`pnpm tasks add <编号> --title .. --issue <N>`。它按同一份清单再查一遍，编号已经被别处用掉就拒绝（`--issue` 那个 issue 自己的标题不算）；不提 issue 的任务可以写分组字母（`pnpm tasks add D --title ..`），让它直接挑。
 3. **认领时先在 issue 下回复**（用户 2026-11-14 定）：认领任务的会话动手前回复一条，说明谁接手、核实的结果和打算怎么改，链接任务文档；提 issue 时已经写了判断的，这条回复写核实结果和具体改法。有人在 issue 里评论时照常回复。
 4. **做完回复、关闭**：和上面的第 4、5 步一样。决定不做时回复原因，`gh issue close <N> --reason "not planned"`，任务 `drop`。
 
