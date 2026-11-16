@@ -284,3 +284,11 @@ fn the_control_bar_catches_the_pointer_and_scrolling_speeds_up_when_steps_are_sm
     assert_eq!(next_notches(3, 300, 600), 3);
     assert_eq!(next_notches(8, 10, 600), 8);
 }
+
+#[test]
+fn the_shortcuts_and_windows_are_the_background_listed_for_screenshot() {
+    let catalog = crate::plugin_kernel::builtins::catalog();
+    let screenshot = catalog.iter().find(|plugin| plugin.id == super::PLUGIN_ID).expect("screenshot is a built-in plugin");
+    let names = [super::background::SHORTCUTS.to_owned(), super::background::WINDOWS.to_owned()];
+    assert_eq!(screenshot.background.as_deref(), Some(&names[..]));
+}

@@ -2711,6 +2711,19 @@
     {
       "page": "agents",
       "zh-CN": {
+        "group": "Agent 页",
+        "title": "子 Agent / 子会话默认展开",
+        "description": "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。"
+      },
+      "en": {
+        "group": "Agent page",
+        "title": "Expand subagents and child sessions",
+        "description": "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them."
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Codex"
       },

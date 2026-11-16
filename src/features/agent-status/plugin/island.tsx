@@ -25,6 +25,7 @@ type AgentsPageProps = {
     agentShowModel: Panel["showModel"];
     agentShowActivity: Panel["showActivity"];
     agentShowUsage: Panel["showUsage"];
+    agentExpandChildren: Panel["expandChildren"];
   };
 };
 
@@ -33,7 +34,7 @@ const pageSlot = defineSlot<AgentsPageProps, IslandPageMeta<Readonly<Record<stri
 function AgentsPage({ settings }: AgentsPageProps) {
   const agents = agentPage.use();
   if (!agents) return null;
-  return <AgentSessionsPanel sessions={agents.sessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} unseen={agents.unseen} removal={agents.removal} reveal={agents.alerted} showUsage={settings.agentShowUsage} usages={agents.usages} approvals={agents.approvals} />;
+  return <AgentSessionsPanel sessions={agents.sessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} expandChildren={settings.agentExpandChildren} unseen={agents.unseen} removal={agents.removal} reveal={agents.alerted} showUsage={settings.agentShowUsage} usages={agents.usages} approvals={agents.approvals} />;
 }
 
 pageSlot.add({ ...islandPage, component: AgentsPage }, OWNER);
