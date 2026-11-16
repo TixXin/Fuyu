@@ -7,7 +7,7 @@ import {
   markFirstHintShown,
   nextFirstHint,
   normalizeFirstHints,
-} from "../../src/features/first-hints/hints.ts";
+} from "../../src/windows/island/first-hints/hints.ts";
 
 const day = (d, h = 10) => new Date(2026, 10, d, h).getTime();
 

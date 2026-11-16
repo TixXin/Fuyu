@@ -4,7 +4,7 @@ import {
   checkUpdate, downloadAndInstallUpdate, downloadUpdate, getAppVersion, getNativeUpdateState, isNetworkMetered,
   isUpdaterConfigured, listenUpdateState, notifyUpdate, type UpdateSnapshot,
 } from "./api";
-import { backupBeforeUpdate } from "../settings-backup/api";
+import { backupBeforeUpdate } from "../../lib/settings-backup/api";
 import { nextUpdateCheckAt } from "./checkSchedule";
 import {
   CHANNEL_KEY, UPDATE_PREFERENCES_KEY, loadUpdateChannel, loadUpdatePreferences,

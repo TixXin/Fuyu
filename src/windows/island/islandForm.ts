@@ -1,4 +1,4 @@
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 
 export const PILL_TOP_GAP = 10;
 

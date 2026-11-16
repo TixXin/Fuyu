@@ -1,8 +1,8 @@
-import { ExpandSettingsSection } from "../../features/appearance/ExpandSettingsSection";
-import { GameModeSettingsSection } from "../../features/appearance/GameModeSettingsSection";
-import { TuckSettingsSection } from "../../features/appearance/TuckSettingsSection";
+import { ExpandSettingsSection } from "./sections/ExpandSettingsSection";
+import { GameModeSettingsSection } from "./sections/GameModeSettingsSection";
+import { TuckSettingsSection } from "./sections/TuckSettingsSection";
 import { BreakRemindersGroup } from "../../features/timer/BreakRemindersGroup";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";

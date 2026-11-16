@@ -4,11 +4,11 @@ import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
-import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
-import { useShortcutCapture } from "../clipboard/useShortcutCapture";
+import { buildShortcutFromEvent, shortcutLabel } from "../../lib/shortcut/shortcut";
+import { useShortcutCapture } from "../../lib/shortcut/useShortcutCapture";
 import { DEFAULT_VOICE_SHORTCUT } from "./settings";
 import { useVoiceShortcutProblem } from "./useVoiceShortcutProblem";
-import "../clipboard/ClipboardSettingsSection.css";
+import "../../components/controls/ShortcutControl.css";
 
 export function VoiceShortcutRow({ shortcut, onChange, takenBy }: {
   shortcut: string;

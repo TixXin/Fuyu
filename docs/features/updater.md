@@ -54,7 +54,7 @@
 
 ## 升级前的备份（D58，2026-11-15 起）
 
-`installUpdate`（设置里点「安装」和岛上空闲时自动安装都走它）在调 `updater_install` 之前先调 `update_backup_create`：前端交上 `localStorage` 里全部 `fuyu-*` key（去掉几个一次性的跨窗口请求，见 `features/settings-backup/localSnapshot.ts`），原生侧连同家目录里的设置和数据文件拷到 `<家目录>/backups/pre-update-<当前版本>-<时间>/`，每个文件写完回读核对 sha256，全部对上才把临时目录改成正式名字，再删掉最旧的，只留 3 份。拷哪些文件见 [data-storage.md](../architecture/data-storage.md)「升级前的备份」一行；凭据管理器 / 钥匙串从不读取。
+`installUpdate`（设置里点「安装」和岛上空闲时自动安装都走它）在调 `updater_install` 之前先调 `update_backup_create`：前端交上 `localStorage` 里全部 `fuyu-*` key（去掉几个一次性的跨窗口请求，见 `lib/settings-backup/localSnapshot.ts`），原生侧连同家目录里的设置和数据文件拷到 `<家目录>/backups/pre-update-<当前版本>-<时间>/`，每个文件写完回读核对 sha256，全部对上才把临时目录改成正式名字，再删掉最旧的，只留 3 份。拷哪些文件见 [data-storage.md](../architecture/data-storage.md)「升级前的备份」一行；凭据管理器 / 钥匙串从不读取。
 
 - 备份失败就不装，`commandError` 是 `updateBackup.failed`（带原因）。设置 → 关于的更新面板下面出现「不备份，仍然安装」；自动安装对这个版本不再重试，等用户手动处理。
 - 设置 → 通用 → 「升级前的备份」列出每一份（从哪个版本升到哪个、时间、大小、文件数），点「恢复…」确认后：`update_backup_restore` 再核对一遍 sha256，在 `backups/restore-pending.json` 记下要恢复哪一份，把 `localStorage` 快照交回前端；前端写回快照（快照里没有的 `fuyu-*` key 删掉，一次性请求 key 不动），然后 `restart_island`。新进程在 `setup` 一开始、各服务启动前把文件放回家目录（`system::update_backup::apply_pending_restore`），删掉标记。备份里没有的文件不删。

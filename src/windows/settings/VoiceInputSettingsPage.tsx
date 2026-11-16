@@ -1,4 +1,4 @@
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import type { TodoItem } from "../../features/todos/types";
 import { useTranslation } from "../../i18n";
 import { useTodoRotation } from "./useIslandAutomation";

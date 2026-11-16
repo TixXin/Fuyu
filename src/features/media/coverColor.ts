@@ -1,5 +1,5 @@
 import { isLightIsland, relativeLuminance } from "../../utils/color.ts";
-import { THEME_COLORS } from "../appearance/themeMode.ts";
+import { THEME_COLORS } from "../../lib/theme/themeMode.ts";
 
 export const COVER_MIN_CONTRAST = 3;
 export const COVER_SAMPLE_SIZE = 32;

@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { resolveThemeColors, surfaceThemeColors, surfaceTone, THEME_COLORS, themeColors, withThemeColors } from "../../src/features/appearance/themeMode.ts";
-import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/features/appearance/settings.ts";
-import { parseTheme } from "../../src/features/appearance/theme.ts";
+import { resolveThemeColors, surfaceThemeColors, surfaceTone, THEME_COLORS, themeColors, withThemeColors } from "../../src/lib/theme/themeMode.ts";
+import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/lib/settings/settings.ts";
+import { parseTheme } from "../../src/lib/theme/theme.ts";
 import { isLightIsland } from "../../src/utils/color.ts";
 
 test("the island uses the dark or light set, or the system's (C31, C33.3)", () => {
@@ -66,7 +66,7 @@ test("the panel and the other windows can each stay dark too, on their own", () 
 });
 
 test("the accent ships as it was, and can follow Windows or be picked (C33.5)", async () => {
-  const { accentVariables } = await import("../../src/features/appearance/themeMode.ts");
+  const { accentVariables } = await import("../../src/lib/theme/themeMode.ts");
   assert.equal(DEFAULT_SETTINGS.accentMode, "default");
   assert.equal(normalizeSettings({}).accentMode, "default");
   assert.equal(normalizeSettings({ accentMode: "windows" }).accentMode, "windows");

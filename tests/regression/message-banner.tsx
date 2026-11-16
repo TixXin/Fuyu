@@ -13,7 +13,7 @@ import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatRem
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
 import { usePluginNotifications } from "../../src/features/plugins/usePluginNotifications";
-import type { MessageNotice } from "../../src/features/appearance/types";
+import type { MessageNotice } from "../../src/lib/settings/types";
 import type { MediaState } from "../../src/features/media/api";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });

@@ -4,11 +4,11 @@ import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
-import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
-import { useShortcutCapture } from "../clipboard/useShortcutCapture";
+import { buildShortcutFromEvent, shortcutLabel } from "../../lib/shortcut/shortcut";
+import { useShortcutCapture } from "../../lib/shortcut/useShortcutCapture";
 import { DEFAULT_SHORTCUTS, SHORTCUT_ACTIONS, type ScreenshotSettings, type ShortcutAction } from "./settings";
 import { useShortcutStatus } from "./useShortcutStatus";
-import "../clipboard/ClipboardSettingsSection.css";
+import "../../components/controls/ShortcutControl.css";
 import "./ScreenshotShortcutRows.css";
 
 export function ScreenshotShortcutRows({ settings, onSettingsChange, takenBy }: {

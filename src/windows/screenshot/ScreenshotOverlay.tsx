@@ -19,7 +19,7 @@ import {
   type Size,
 } from "../../features/screenshot/selection";
 import { layersAt, layersKey, stepLayer } from "../../features/screenshot/targets";
-import { loadSettings } from "../../features/appearance/storage";
+import { loadSettings } from "../../lib/settings/storage";
 import { saveFolderOf } from "../../features/screenshot/settings";
 import { loadScreenshotSettings } from "../../features/screenshot/storage";
 import { useErrorText, useTranslation } from "../../i18n";

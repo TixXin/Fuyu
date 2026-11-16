@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { matchesClipboardShortcut } from "../../features/clipboard/shortcut";
 import { togglePins } from "../../features/screenshot/api";
-import { pageCycleDirection, pageDigitFromEvent } from "../../features/appearance/pageShortcuts";
+import { pageCycleDirection, pageDigitFromEvent } from "../../lib/settings/pageShortcuts";
 import { cycleShortcutPage, pageForAltDigit, type IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
 

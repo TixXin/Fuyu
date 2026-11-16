@@ -1,7 +1,8 @@
 import type { AgentSessionSummary, ReplyMarker } from "./api";
-import type { AgentAlertStarted, IslandSettings } from "../appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { sessionKey } from "./unseen.ts";
 import { rememberedPhase, replyEnding } from "./sessionLight.ts";
+import type { AgentAlertStarted } from "./agentSettings";
 
 export type AgentAlertKind = "started" | "completed" | "failed" | "waiting";
 

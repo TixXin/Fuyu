@@ -10,7 +10,7 @@ import type { useTodos } from "../../features/todos/useTodos";
 import type { AgentSessionSummary } from "../../features/agent-status/api";
 import type { UnseenSessions } from "../../features/agent-status/useUnseenSessions";
 import type { AgentUsages } from "../../features/agent-status/usage";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import type { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import type { useMediaState } from "../../features/media/useMediaState";
 import type { PlayingLyrics } from "../../features/media/lyrics/usePlayingLyrics";

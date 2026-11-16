@@ -27,8 +27,8 @@ import type { WeChatRemindersController } from "../../features/messages/wechat/W
 import { PluginNotificationActions } from "../../features/plugins/PluginNotificationActions";
 import type { PluginNotificationsController } from "../../features/plugins/usePluginNotifications";
 import { useUpdateReminder } from "../../features/updater/useBackgroundUpdateCheck";
-import { arrangeCollapsedItems, zoneIds, type CollapsedZone } from "../../features/appearance/collapsedItems";
-import { useCollapsedPlacements } from "../../features/appearance/useCollapsedPlacements";
+import { arrangeCollapsedItems, zoneIds, type CollapsedZone } from "../../lib/settings/collapsedItems";
+import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import type { PluginViewEntry } from "../../features/plugin-views/api";
 import { usePluginStatusItems } from "../../features/plugin-views/usePluginStatusItems";
 import { useTranslation } from "../../i18n";

@@ -16,7 +16,7 @@ import { popupFilterLabel } from "./popupFilterLabel";
 import { filterPopupItems, nextPopupFilter, popupFilters, popupTags, type PopupFilter } from "./popupFilters";
 import { popupIndexAfterKey, toggleQueued } from "./popupKeys";
 import { loadPinyin, parsePopupQuery } from "./popupQuery";
-import { isPrimaryKey } from "./shortcut";
+import { isPrimaryKey } from "../../lib/shortcut/shortcut";
 import { usePopupHandlers } from "./usePopupHandlers";
 import { usePopupPins } from "./usePopupPins";
 import { useSpacePeek } from "./useSpacePeek";

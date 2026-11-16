@@ -7,7 +7,7 @@ import type { VoiceInputSettings } from "./settings";
 import { downloadPercent, formatMegabytes } from "./settings";
 import { useVoiceModel } from "./useVoiceModel";
 import { VoiceShortcutRow } from "./VoiceShortcutRow";
-import "../clipboard/ClipboardSettingsSection.css";
+import "../../components/controls/ShortcutControl.css";
 import "./VoiceInputSettingsSection.css";
 
 function ModelRow() {

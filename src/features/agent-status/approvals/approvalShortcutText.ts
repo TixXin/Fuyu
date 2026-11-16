@@ -1,5 +1,5 @@
 import { isMacOS } from "../../../lib/platform.ts";
-import { shortcutLabel } from "../../clipboard/shortcut.ts";
+import { shortcutLabel } from "../../../lib/shortcut/shortcut.ts";
 
 const ARIA_NAMES: Readonly<Record<string, string>> = { Ctrl: "Control", Win: "Meta" };
 

@@ -1,5 +1,5 @@
 import { useFileShelf } from "../../features/file-shelf/useFileShelf";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useFileShelfDrop } from "./useFileShelfDrop";
 import type { useIslandNavigation } from "./useIslandNavigation";
 

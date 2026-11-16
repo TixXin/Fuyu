@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { karaokeWords } from "../../src/features/media/lyrics/lrc.ts";
 import { karaokeLook } from "../../src/features/media/lyrics/lyricsSettings.ts";
-import { normalizeSettings } from "../../src/features/appearance/settings.ts";
+import { normalizeSettings } from "../../src/lib/settings/settings.ts";
 
 test("a line's own word times are used as they are", () => {
   const words = [{ startMs: 1_000, endMs: 1_300, text: "Oh " }, { startMs: 1_300, endMs: 2_000, text: "I" }];

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/features/appearance/settings.ts";
+import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/lib/settings/settings.ts";
 
 test("every agent is shown until the user switches one off", () => {
   assert.deepEqual(DEFAULT_SETTINGS.agentHiddenProviders, []);

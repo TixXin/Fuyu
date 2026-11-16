@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useIdleTuck, useRevealOnMessage, useRevealOnRequest } from "./useIslandAutomation";
 import type { useIslandNavigation } from "./useIslandNavigation";
 import { useTuckPeek } from "./useTuckPeek";

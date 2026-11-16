@@ -5,8 +5,8 @@ import {
   clipboardImageUrl, listenClipboardPreviewClosing, pasteClipboardText, listenClipboardPreviewItem, listenClipboardPreviewOpened,
   type ClipboardPreviewPayload, type ClipboardPreviewSide,
 } from "../../features/clipboard/api";
-import { useWindowLight } from "../../features/appearance/useWindowLight";
-import { useWindowAccent } from "../../features/appearance/useWindowAccent";
+import { useWindowLight } from "../../lib/theme/useWindowLight";
+import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import "../../features/clipboard/ClipboardPopup.css";
 import "./ClipboardPreviewWindow.css";
 

@@ -2,8 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   MAX_COLLAPSED_WIDTH_EXTRA, MAX_MAX_PANEL_HEIGHT, MAX_PANEL_WIDTH, MIN_COLLAPSED_WIDTH_EXTRA, MIN_MAX_PANEL_HEIGHT,
   MIN_PANEL_WIDTH,
-} from "../../features/appearance/settings";
-import type { IslandSettings } from "../../features/appearance/types";
+} from "../../lib/settings/settings";
+import type { IslandSettings } from "../../lib/settings/types";
 import { clamp } from "../../utils/number.ts";
 import { listenIslandResize, setIslandPanelResizable } from "./api";
 import { maxExpandedIslandWidth } from "./layout";

@@ -1,5 +1,4 @@
 import { useTranslation } from "../../i18n";
-import type { AgentCardEffects, AgentHostDisplay } from "../appearance/types";
 import { AgentProviderIcon } from "./AgentProviderIcon";
 import type { AgentSessionSummary } from "./api";
 import { formatTokens, isActivePhase, sessionAge, sessionProject } from "./sessionList";
@@ -9,6 +8,7 @@ import { sessionLight, type SessionLight } from "./sessionLight";
 import { AGENT_PROVIDER_LABELS, getAgentPhaseLabel } from "./status";
 import "./AgentSessionCard.css";
 import "./AgentCardEffects.css";
+import type { AgentCardEffects, AgentHostDisplay } from "./agentSettings";
 
 const LIVELY: ReadonlySet<SessionLight> = new Set(["needs", "yourTurn", "working", "failed"]);
 

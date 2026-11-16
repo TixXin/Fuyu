@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { CSSProperties } from "react";
-import { glassClassNames, glassPalette, glassPaused, glassVariables, type GlassPalette } from "../../features/appearance/glassPalette";
-import type { IslandSettings } from "../../features/appearance/types";
+import { glassClassNames, glassPalette, glassPaused, glassVariables, type GlassPalette } from "../../lib/theme/glassPalette";
+import type { IslandSettings } from "../../lib/settings/types";
 import { usePageHidden } from "../../features/center-pattern/usePageHidden";
 import type { IslandMode } from "./types";
 

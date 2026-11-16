@@ -1,0 +1,124 @@
+import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { ShortcutKeys } from "../../../components/controls/ShortcutKeys";
+import { ShortcutResetButton } from "../../../components/controls/ShortcutResetButton";
+import { SettingsGroup } from "../../../components/settings/SettingsGroup";
+import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
+import { useTranslation } from "../../../i18n";
+import { buildShortcutFromEvent, shortcutLabel } from "../../../lib/shortcut/shortcut.ts";
+import { useShortcutCapture } from "../../../lib/shortcut/useShortcutCapture";
+import "../../../components/controls/ShortcutControl.css";
+import {
+  digitModifiersFromEvent,
+  normalizePageCycleShortcut,
+  normalizePageDigitModifiers,
+  recordedPageCycleShortcut,
+  DEFAULT_PAGE_DIGIT_MODIFIERS,
+  DEFAULT_PAGE_NEXT_SHORTCUT,
+  DEFAULT_PAGE_PREVIOUS_SHORTCUT,
+} from "../../../lib/settings/pageShortcuts.ts";
+import type { IslandSettings } from "../../../lib/settings/types";
+import { isMacOS } from "../../../lib/platform";
+
+type Recording = "digit" | "next" | "previous";
+
+export function PageShortcutSection({
+  settings,
+  onSettingsChange,
+  takenBy,
+  action,
+}: {
+  settings: IslandSettings;
+  onSettingsChange: (settings: IslandSettings) => void;
+  takenBy: (shortcut: string, selfId: Recording) => string | null;
+  action?: ReactNode;
+}) {
+  const t = useTranslation();
+  const [recording, setRecording] = useState<Recording | null>(null);
+  const [conflict, setConflict] = useState("");
+  const digitModifiers = normalizePageDigitModifiers(settings.pageDigitModifiers);
+  const nextLabel = normalizePageCycleShortcut(settings.pageNextShortcut, DEFAULT_PAGE_NEXT_SHORTCUT);
+  const previousLabel = normalizePageCycleShortcut(settings.pagePreviousShortcut, DEFAULT_PAGE_PREVIOUS_SHORTCUT);
+
+  const apply = (field: Recording, value: string) => {
+    const tried = field === "digit" ? Array.from({ length: 9 }, (_, index) => `${value}+${index + 1}`) : [value];
+    const taken = tried.map((shortcut) => [shortcut, takenBy(shortcut, field)] as const).find(([, owner]) => owner);
+    setConflict(taken?.[1] ? t.settings.shortcuts.taken(shortcutLabel(taken[0]), taken[1]) : "");
+    if (taken) return;
+    if (field === "digit") onSettingsChange({ ...settings, pageDigitModifiers: value });
+    else onSettingsChange({ ...settings, ...(field === "next" ? { pageNextShortcut: value } : { pagePreviousShortcut: value }) });
+  };
+
+  useShortcutCapture(recording !== null, (shortcut) => {
+    if (!recording) return;
+    const parts = shortcut.split("+");
+    const key = parts.pop() ?? "";
+    const value = recording === "digit"
+      ? (/^[1-9]$/.test(key) && !parts.includes("Win") && parts.join("+")) || null
+      : recordedPageCycleShortcut(shortcut);
+    if (!value) return;
+    setRecording(null);
+    apply(recording, value);
+  });
+
+  const handleKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (!recording) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.key === "Escape") {
+      setRecording(null);
+      return;
+    }
+
+    const value = recording === "digit"
+      ? digitModifiersFromEvent(event.nativeEvent)
+      : recordedPageCycleShortcut(buildShortcutFromEvent(event.nativeEvent) ?? undefined);
+    if (!value) return;
+    setRecording(null);
+    apply(recording, value);
+  };
+
+  const rows: [Recording, string, string, string, string][] = [
+    ["digit", t.settings.pageShortcuts.digitModifiers, `${digitModifiers}+1–9`, digitModifiers, DEFAULT_PAGE_DIGIT_MODIFIERS],
+    ["next", t.settings.pageShortcuts.nextPage, nextLabel, nextLabel, DEFAULT_PAGE_NEXT_SHORTCUT],
+    ["previous", t.settings.pageShortcuts.previousPage, previousLabel, previousLabel, DEFAULT_PAGE_PREVIOUS_SHORTCUT],
+  ];
+
+  return (
+    <SettingsGroup
+      title={t.settings.pageShortcuts.title}
+      action={action}
+      footer={conflict ? <span className="shortcut-control__error" role="alert">{conflict}</span> : isMacOS ? t.settings.pageShortcuts.hintMac : t.settings.pageShortcuts.hint}
+    >
+      {rows.map(([field, label, display, value, fallback]) => (
+        <div className="shortcut-control" key={field}>
+          <div className="shortcut-control__meta">
+            <span>{label}</span>
+            <strong>{shortcutLabel(display)}</strong>
+          </div>
+          <div className="shortcut-control__actions">
+            <ShortcutResetButton
+              label={t.settings.shortcuts.reset(shortcutLabel(field === "digit" ? `${fallback}+1–9` : fallback))}
+              isDefault={value === fallback}
+              onReset={() => apply(field, fallback)}
+            />
+            <button
+              className={["shortcut-record-button", recording === field ? "shortcut-record-button--recording" : ""].filter(Boolean).join(" ")}
+              type="button"
+              onClick={(event) => { event.currentTarget.focus(); setRecording(field); }}
+              onKeyDown={handleKeyDown}
+              onBlur={() => setRecording((current) => (current === field ? null : current))}
+            >
+              <ShortcutKeys prompt={recording === field ? (field === "digit" ? t.settings.pageShortcuts.pressDigit : t.settings.pageShortcuts.pressKeys) : null} label={shortcutLabel(display)} />
+            </button>
+          </div>
+        </div>
+      ))}
+      <SettingsToggleRow
+        title={t.settings.pageShortcuts.hoverKeyboard}
+        description={t.settings.pageShortcuts.hoverKeyboardHint}
+        checked={settings.hoverTakesKeyboard}
+        onChange={(hoverTakesKeyboard) => onSettingsChange({ ...settings, hoverTakesKeyboard })}
+      />
+    </SettingsGroup>
+  );
+}

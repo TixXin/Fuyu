@@ -1,5 +1,5 @@
 import { readJson, writeJson } from "../../../lib/storage.ts";
-import { islandRanBefore } from "../../appearance/installState.ts";
+import { islandRanBefore } from "../../../lib/settings/installState.ts";
 
 export const AGENT_APPROVAL_STORAGE_KEY = "fuyu-agent-approval";
 

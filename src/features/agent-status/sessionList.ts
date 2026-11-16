@@ -1,8 +1,8 @@
-import type { AgentSessionGroup, AgentSessionSort } from "../appearance/types";
 import type { AgentSessionSummary, SessionProvider } from "./api";
 import { sessionLight, type SessionLight } from "./sessionLight.ts";
 import { sessionKey } from "./unseen.ts";
 import { formatAge, type AgeText } from "../../components/list/formatAgo.ts";
+import type { AgentSessionGroup, AgentSessionSort } from "./agentSettings";
 
 const SHOWN_FIELDS = ["provider", "sessionId", "cwd", "title", "model", "effort", "phase", "lastMessage", "turnStartedAt", "lastPrompt", "permissionMode", "subagents", "replyMarker", "replyAsks", "backgroundTasks", "compacting", "closed", "contextTokens"] as const;
 

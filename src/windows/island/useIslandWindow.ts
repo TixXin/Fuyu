@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DEFAULT_SETTINGS } from "../../features/appearance/settings";
-import type { IslandSettings } from "../../features/appearance/types";
+import { DEFAULT_SETTINGS } from "../../lib/settings/settings";
+import type { IslandSettings } from "../../lib/settings/types";
 import * as islandApi from "./api";
 import { clearIslandPosition } from "./storage";
 import { useIslandPosition } from "./useIslandPosition";

@@ -1,5 +1,5 @@
 import { readJson, writeJson } from "../../../lib/storage.ts";
-import { islandRanBefore } from "../../appearance/installState.ts";
+import { islandRanBefore } from "../../../lib/settings/installState.ts";
 import { AGENT_SOUND_EVENTS, type AgentSoundEvent } from "./events.ts";
 
 export const AGENT_SOUNDS_STORAGE_KEY = "fuyu-agent-sounds";

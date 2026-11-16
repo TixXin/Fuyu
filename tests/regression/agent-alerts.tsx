@@ -2,9 +2,9 @@ import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
-import type { AgentAlertStarted } from "../../src/features/appearance/types";
 import { useAgentAlerts, type AlertedSession } from "../../src/features/agent-status/useAgentAlerts";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
+import type { AgentAlertStarted } from "../../src/features/agent-status/agentSettings";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const DURATION_MS = 300;

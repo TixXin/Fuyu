@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEFAULT_SETTINGS, THEME_SETTING_KEYS } from "../../src/features/appearance/settings.ts";
-import { buildTheme, parseTheme, themeFileName } from "../../src/features/appearance/theme.ts";
+import { DEFAULT_SETTINGS, THEME_SETTING_KEYS } from "../../src/lib/settings/settings.ts";
+import { buildTheme, parseTheme, themeFileName } from "../../src/lib/theme/theme.ts";
 
 const current = { ...DEFAULT_SETTINGS, opacity: 80, pulseColor: "#112233" };
 

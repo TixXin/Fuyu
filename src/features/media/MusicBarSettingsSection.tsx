@@ -1,7 +1,7 @@
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
-import { arrangeCollapsedItems, isCollapsedItemHidden, setCollapsedItemHidden } from "../appearance/collapsedItems";
-import { useCollapsedPlacements } from "../appearance/useCollapsedPlacements";
+import { arrangeCollapsedItems, isCollapsedItemHidden, setCollapsedItemHidden } from "../../lib/settings/collapsedItems";
+import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import { useTranslation } from "../../i18n";
 
 const MUSIC_ITEM = "music";

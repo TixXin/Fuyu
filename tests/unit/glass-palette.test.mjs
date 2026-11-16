@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { relativeLuminance } from "../../src/utils/color.ts";
-import { DEFAULT_GLASS_SETTINGS, normalizeGlassSettings } from "../../src/features/appearance/glassSettings.ts";
+import { DEFAULT_GLASS_SETTINGS, normalizeGlassSettings } from "../../src/lib/settings/glassSettings.ts";
 import {
   GLASS_DARK_MAX_LUMINANCE,
   GLASS_LIGHT_MIN_LUMINANCE,
@@ -10,7 +10,7 @@ import {
   glassPaused,
   glassVariables,
   guardColor,
-} from "../../src/features/appearance/glassPalette.ts";
+} from "../../src/lib/theme/glassPalette.ts";
 
 const contrast = (a, b) => {
   const [x, y] = [relativeLuminance(a), relativeLuminance(b)].sort((p, q) => q - p);

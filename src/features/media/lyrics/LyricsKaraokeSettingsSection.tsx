@@ -7,7 +7,7 @@ import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
-import type { IslandSettings } from "../../appearance/types";
+import type { IslandSettings } from "../../../lib/settings/types";
 import { KaraokeText } from "./KaraokeText";
 import { karaokeWords } from "./lrc";
 import { karaokeLook, LYRICS_KARAOKE_DIM, type LyricsKaraokeColor, type LyricsKaraokeFallback, type LyricsKaraokeFill } from "./lyricsSettings";

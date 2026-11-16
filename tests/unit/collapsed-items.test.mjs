@@ -7,7 +7,7 @@ import {
   setCollapsedItemHidden,
   setCollapsedItemZone,
   zoneIds,
-} from "../../src/features/appearance/collapsedItems.ts";
+} from "../../src/lib/settings/collapsedItems.ts";
 
 const offered = ["status-light", "mail", "update", "plugin:dev.a/clock", "device-use", "shelf", "music", "usage:claudeCode", "usage:codex", "session-count"];
 const ids = (placements) => placements.map(({ id, zone }) => `${zone[0]}:${id}`);

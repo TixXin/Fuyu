@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEFAULT_SETTINGS } from "../../src/features/appearance/settings.ts";
+import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings.ts";
 import { isThemeInUse, readMarketThemes, withMarketTheme } from "../../src/features/theme-market/model.ts";
 
 const midnight = { id: "focusd.midnight", name: { "zh-CN": "午夜蓝", en: "Midnight" }, author: "TixXin", appearance: { islandBackgroundColor: "#0f1a2e", islandCornerRadius: 28 } };

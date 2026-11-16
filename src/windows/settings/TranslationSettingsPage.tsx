@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { IslandSettings, TranslationTarget } from "../../features/appearance/types";
+import type { IslandSettings, TranslationTarget } from "../../lib/settings/types";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import type { TranslationSettings } from "../../features/translation/storage";
 import { TranslationSettingsSection } from "../../features/translation/TranslationSettingsSection";
@@ -12,7 +12,7 @@ import { useShortcutOwners } from "./useShortcutOwners";
 import { AppWindow } from "lucide-react";
 import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
-import { IslandGlyph } from "../../features/appearance/IslandGlyph";
+import { IslandGlyph } from "./sections/IslandGlyph";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";

@@ -1,9 +1,9 @@
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { AccentSettingsRow } from "../../features/appearance/AccentSettingsRow";
-import { THEME_MODES } from "../../features/appearance/themeMode";
-import type { IslandSettings, ThemeMode } from "../../features/appearance/types";
+import { AccentSettingsRow } from "../settings/sections/AccentSettingsRow";
+import { THEME_MODES } from "../../lib/theme/themeMode";
+import type { IslandSettings, ThemeMode } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
 

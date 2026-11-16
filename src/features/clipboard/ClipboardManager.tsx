@@ -6,7 +6,7 @@ import { ClipboardManageRow, MANAGE_ROW_HEIGHT } from "./ClipboardManageRow";
 import { ClipboardPopupPreview } from "./ClipboardPopupPreview";
 import { deletedLabel } from "./pendingItems";
 import { popupFilterLabel } from "./popupFilterLabel";
-import { isPrimaryKey, PRIMARY_KEY } from "./shortcut";
+import { isPrimaryKey, PRIMARY_KEY } from "../../lib/shortcut/shortcut";
 import { useClipboardManager } from "./useClipboardManager";
 import { useVirtualRows } from "./useVirtualRows";
 import "./ClipboardPopup.css";

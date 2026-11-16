@@ -1,6 +1,6 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { PageShortcutSection } from "../../features/appearance/PageShortcutSection";
-import type { IslandSettings } from "../../features/appearance/types";
+import { PageShortcutSection } from "./sections/PageShortcutSection";
+import type { IslandSettings } from "../../lib/settings/types";
 import { APPROVAL_HOTKEYS, type AgentApprovalDecision } from "../../features/agent-status/approvals/api";
 import type { ClipboardHistorySettings } from "../../features/clipboard/api";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
@@ -24,7 +24,7 @@ import { ClipboardShortcutGroup, ScreenshotShortcutGroup, TranslationShortcutGro
 import type { ShortcutOwner } from "./shortcutConflicts";
 import { useShortcutOwners } from "./useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
-import { shortcutLabel } from "../../features/clipboard/shortcut";
+import { shortcutLabel } from "../../lib/shortcut/shortcut";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";
 

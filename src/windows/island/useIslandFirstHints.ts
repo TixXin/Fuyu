@@ -1,4 +1,4 @@
-import { useFirstHints } from "../../features/first-hints/useFirstHints";
+import { useFirstHints } from "./first-hints/useFirstHints";
 import type { IslandMode } from "./types";
 
 export function useIslandFirstHints({

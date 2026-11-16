@@ -324,16 +324,6 @@ export function listenClipboardShortcutStatus(handler: (error: string | null) =>
   return listen<string | null>(CLIPBOARD_SHORTCUT_STATUS_EVENT, (event) => handler(event.payload));
 }
 
-export const SHORTCUT_CAPTURED_EVENT = "shortcut-captured";
-
-export function setShortcutCapture(enabled: boolean) {
-  return invoke<void>("set_shortcut_capture", { enabled });
-}
-
-export function listenShortcutCaptured(handler: (shortcut: string) => void) {
-  return listen<string>(SHORTCUT_CAPTURED_EVENT, ({ payload }) => handler(payload));
-}
-
 export const CLIPBOARD_PREVIEW_WINDOW = "clipboard-preview";
 const ITEM_EVENT = "clipboard-preview-item";
 const OPENED_EVENT = "clipboard-preview-opened";

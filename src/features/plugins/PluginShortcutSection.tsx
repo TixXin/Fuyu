@@ -5,11 +5,11 @@ import { ShortcutResetButton } from "../../components/controls/ShortcutResetButt
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
-import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
-import { useShortcutCapture } from "../clipboard/useShortcutCapture";
+import { buildShortcutFromEvent, shortcutLabel } from "../../lib/shortcut/shortcut";
+import { useShortcutCapture } from "../../lib/shortcut/useShortcutCapture";
 import { listPlugins, setPluginKeybinding, type PluginsSnapshot } from "./api";
 import { pluginShortcutRows, type PluginShortcutRow } from "./pluginShortcuts";
-import "../clipboard/ClipboardSettingsSection.css";
+import "../../components/controls/ShortcutControl.css";
 
 const RECHECK_MS = 600;
 

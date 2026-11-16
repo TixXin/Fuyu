@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { TRANSLATIONS } from "../../src/i18n/index.ts";
-import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/features/appearance/settings.ts";
+import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/lib/settings/settings.ts";
 
 test("the volume and brightness popup is on by default and only an explicit false turns it off", () => {
   assert.equal(DEFAULT_SETTINGS.levelPopup, true);

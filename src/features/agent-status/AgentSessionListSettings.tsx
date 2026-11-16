@@ -8,10 +8,11 @@ import {
   AGENT_CARD_EFFECTS,
   AGENT_SESSION_HOURS,
   AGENT_SESSION_VIEWS,
-} from "../appearance/settings";
-import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionView, IslandSettings } from "../appearance/types";
+} from "./agentSettings";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
+import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionView } from "./agentSettings";
 
 export function AgentSessionListSettings({
   settings,

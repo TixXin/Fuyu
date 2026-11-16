@@ -1,4 +1,4 @@
-import type { GlassPalette } from "../../features/appearance/glassPalette";
+import type { GlassPalette } from "../../lib/theme/glassPalette";
 
 const VERTEX = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
 const FRAGMENT = `precision mediump float;uniform vec2 res;uniform float t;uniform vec3 c1,c2,c3;uniform float op;

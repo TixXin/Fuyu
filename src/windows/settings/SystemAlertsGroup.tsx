@@ -2,7 +2,7 @@ import { BatteryCharging, Camera, Volume2 } from "lucide-react";
 import { SettingsIconTitle } from "../../components/settings/SettingsIconTitle";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 

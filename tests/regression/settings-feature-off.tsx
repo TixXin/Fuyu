@@ -4,7 +4,7 @@ import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
 import { SettingsWindow } from "../../src/windows/settings/SettingsWindow";
-import { DEFAULT_SETTINGS } from "../../src/features/appearance/settings";
+import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings";
 import { FEATURE_PAGES, entryOf, sidebarItemOf, type SettingsCategory } from "../../src/windows/settings/categories";
 import { SETTINGS_FOCUS_STORAGE_KEY, requestSettingsFocus } from "../../src/windows/settings/storage";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
