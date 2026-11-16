@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useErrorText, useTranslation } from "../../i18n";
 import { hasTranslationSecret, listenTranslationSelection, translateText } from "./api";
-import { loadSettings, saveTranslationHandoff } from "./storage";
+import { loadSettings } from "./storage";
+import { saveTranslationHandoff } from "../../lib/translation-handoff/storage";
 
 const PEEK_MS = 8_000;
 

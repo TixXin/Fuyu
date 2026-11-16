@@ -1,12 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  DEFAULT_SETTINGS,
-  normalizeTranslationSettings,
-  requestTranslationHandoffOpen,
-  saveTranslationHandoff,
-  takeTranslationHandoff,
-} from "../../src/features/translation/storage.ts";
+import { DEFAULT_SETTINGS, normalizeTranslationSettings } from "../../src/features/translation/storage.ts";
+import { requestTranslationHandoffOpen, saveTranslationHandoff, takeTranslationHandoff } from "../../src/lib/translation-handoff/storage.ts";
 
 test("settings saved before providers existed keep DeepSeek and their shortcut and direction", () => {
   assert.deepEqual(normalizeTranslationSettings({ shortcut: "Ctrl+Q", direction: "en-zh" }), {

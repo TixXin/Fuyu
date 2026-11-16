@@ -21,7 +21,6 @@
     "src/features/screenshot/useRecording.ts -> src/features/file-shelf/api.ts",
     "src/features/screenshot/useScreenshotNotice.ts -> src/features/agent-status/api.ts",
     "src/features/screenshot/useScreenshotNotice.ts -> src/features/file-shelf/api.ts",
-    "src/features/screenshot/useScreenshotText.ts -> src/features/translation/storage.ts",
     "src/features/session-ring/SessionRing.tsx -> src/features/agent-status/api.ts",
     "src/features/session-ring/ringCounts.ts -> src/features/agent-status/api.ts",
     "src/features/session-ring/ringCounts.ts -> src/features/agent-status/sessionLight.ts",

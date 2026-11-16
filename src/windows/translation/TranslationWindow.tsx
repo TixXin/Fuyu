@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent } from "rea
 import { ArrowRight, Check, Clipboard, Copy, Grip, Languages, LoaderCircle, Settings2, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { hasTranslationSecret, hideTranslationWindow, listenTranslationWindowOpened, readTranslationClipboard, setTranslationShortcut } from "../../features/translation/api";
-import { takeTranslationHandoff, type Direction } from "../../features/translation/storage";
+import { type Direction } from "../../features/translation/storage";
+import { takeTranslationHandoff } from "../../lib/translation-handoff/storage";
 import { DEFAULT_PROVIDER_MODELS } from "../../features/translation/providers";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
