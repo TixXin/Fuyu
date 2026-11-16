@@ -233,7 +233,7 @@ async function runChecks() {
     await render("list");
     await wait(30);
     const narrow = items()[0];
-    const more = narrow.querySelector<HTMLElement>(".agent-session__more")!.getBoundingClientRect();
+    const more = narrow.querySelector<HTMLElement>(".agent-session__more button")!.getBoundingClientRect();
     const archive = narrow.querySelector<HTMLElement>(".agent-session__archive")!.getBoundingClientRect();
     const agent = narrow.querySelector<HTMLElement>(".agent-session__agent")!;
     const icon = agent.getBoundingClientRect();

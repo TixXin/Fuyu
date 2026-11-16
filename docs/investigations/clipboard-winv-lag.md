@@ -104,3 +104,58 @@ D79、D78 的提交交给 `Fuyu-[总控] 全局` 整批合入；合入后请用�
 6. 强调色设成「跟随 Windows」，改一下系统强调色再唤起，颜色应该跟上。
 7. 不设环境变量再启动一次：不会生成这个日志；跟随指针、居中、固定位置、粘贴回原窗口都和以前一样。
 8. 主观感受：还卡吗？把 `clipboard-open-trace.log` 发给我们。如果 `since-show` 还有几百毫秒，再按「第二阶段」开排查会话。
+
+## 设置窗口和托盘卡片打开也慢（2026-11-16 追加）
+
+用户原话：「设置菜单窗口和托盘菜单打开也卡顿 慢」。和剪贴板是同一类问题：在 Windows 上，窗口要等 WebView2 准备好才显示。下面是排查结论，还没改代码。
+
+### 设置窗口
+
+- **每次打开都新建一个 WebView2**：`settings` 窗口是 `create: false`，关掉就销毁。`settings_window::open`（`src-tauri/src/settings_window/mod.rs:16`）每次都新建窗口，重新加载整套前端，再渲染设置页。这是 Windows 上最贵的一步，WebView2 启动比 Mac 的 WKWebView 慢得多。
+- **等前端说「好了」才显示**：窗口建好时是隐藏的。前端在 `SettingsWindow.tsx:60` 等两次 `requestAnimationFrame` 后才调用 `show_settings_window`；一直没调用的话，Rust 侧 2 秒后兜底显示。WebView2 在窗口隐藏时可能不跑 `requestAnimationFrame`，那样每次都要等满 2 秒兜底。要打点确认：如果每次都正好约 2 秒，就是这个原因。
+
+### 托盘卡片
+
+- **第一次点托盘才建窗口**：`tray-menu` 也是 `create: false`，第一次点击时才在 `tray_menu/window.rs:84` 新建，所以第一次特别慢；之后隐藏常驻。
+- **每次打开都等最慢的那份数据**：Rust 发 `tray-menu-open` → 前端 `TrayMenuWindow.tsx:42` 的 `open()` 用 `Promise.all` 等四样：托盘状态、内置插件、快捷键，布局是「状态」时还有媒体、会议、Agent 的 `refresh()`。四样都回来后才量尺寸、调 `resize_tray_menu`，Rust 收到尺寸后才显示（`window.rs` 的 `resize` → `reveal`），兜底 700 毫秒。所以最慢的那一项决定窗口什么时候出来。
+- 隐藏期间 WebView2 会被节流，`tray-menu-open` 事件本身也可能晚到。
+
+### 怎么测
+
+先粗测，不用改代码：
+
+1. 设置窗口连着开几次（开、关、再开）：是不是每次都要差不多 2 秒才出来？
+2. 托盘卡片：开机后第一次点，和之后再点，哪次慢？之后再点也要半秒以上吗？
+3. 设置 → 托盘卡片，把布局从「状态」换成别的，再点托盘：变快了吗？变快就说明 `refresh()` 慢。
+
+任务里会加打点：设 `FUYU_WINDOW_TRACE=1` 时，把「请求打开 → 窗口建好 → 前端准备好 → 显示」各段的毫秒数写进数据目录的 `window-open-trace.log`，改完前后对比。
+
+### 计划
+
+两个任务，文件不重叠，可以并行。两个都要编译 Rust，正好是同时编译的上限 2 个。挂在一个新 issue 下。两个任务各自在自己的模块里打点，共用同一个环境变量和日志文件；日志格式写在 D82 的任务里，D83 照着用。
+
+**D82 设置窗口打开变快（Windows）**
+
+1. 打点（见上）。
+2. 关设置窗口时改成隐藏、不销毁；再次打开直接显示，前端重新读一次设置、回到该去的页。退出岛、更新重启这些真正退出的路径照常关。
+3. 显示时机：窗口隐藏时 `requestAnimationFrame` 靠不住，改成前端第一次渲染完（`useEffect` 里）就请求显示；Rust 的兜底从 2 秒降到 600 毫秒左右。
+4. 可选，看你定：岛启动后空闲时（例如 10 秒后）在后台预先建好隐藏的设置窗口，第一次打开也快。
+- `--scope`：`src-tauri/src/settings_window/`、`src/windows/settings/SettingsWindow.tsx`、`src/windows/settings/api.ts`、`src/windows/settings/WindowControls.tsx`、`docs/architecture/contracts.md`
+- 验证：Rust 单元测试（`pnpm heavy --` 排队）、`pnpm build:exe`、`pnpm check`、`pnpm build`、`pnpm test:regression settings`；真机实测清单写进任务。
+
+**D83 托盘卡片打开变快（Windows）**
+
+1. 打点（见上）。
+2. 收到打开事件后，先用上一次的数据量尺寸、显示，四样数据在显示后再刷新（尺寸变了照常 `resize`）。只有第一次打开、还没有旧数据时才等。
+3. 岛启动后空闲时预先建好隐藏的托盘卡片窗口，第一次点击不用现建。
+4. `resize` 之后的显示不再另排一次 `run_on_main_thread`，少排一次队。
+- `--scope`：`src-tauri/src/tray_menu/window.rs`、`src-tauri/src/tray_menu/mod.rs`、`src-tauri/src/lib.rs`（只加预建的调用）、`src/windows/tray-menu/TrayMenuWindow.tsx`、`src/windows/tray-menu/useTrayMenuSize.ts`
+- 验证：Rust 单元测试（`pnpm heavy --` 排队）、`pnpm build:exe`、`pnpm check`、`pnpm build`、`pnpm test:regression tray`；真机实测清单写进任务。
+
+### 用户定的（2026-11-16，按推荐）
+
+1. 设置窗口关掉后常驻（隐藏，不销毁）：再开很快，但多占一个 WebView2 的内存，大约 80–150 MB。可以吗？
+2. 岛启动后空闲时预建：托盘卡片预建（推荐，它小）可以吗？设置窗口要不要也预建（第一次打开也快，但这块内存从开机就占着）？
+3. 托盘卡片先用上一次的数据显示、再刷新：媒体、会议这些可能先显示一瞬间旧的再更新。可以接受吗？
+
+用户同意派会话，没有逐条回答，按推荐：设置窗口关掉后常驻；托盘卡片启动后预建，设置窗口不预建；托盘卡片先用旧数据显示再刷新。issue #696。
