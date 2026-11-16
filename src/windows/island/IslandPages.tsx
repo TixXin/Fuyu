@@ -3,34 +3,21 @@ import { useTranslation } from "../../i18n";
 import { PluginViewPage } from "../../features/plugin-views/PluginViewPage";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
-import type { useIslandMessagePanel } from "../../features/messages/island/useIslandMessagePanel";
-import type { useQQNotifications } from "../../features/messages/qq-notifications/QQNotifications";
-import type { useWeChatReminders } from "../../features/messages/wechat/WeChatReminders";
-import type { useMail } from "../../features/messages/mail/MailPanel";
 import type { IslandSettings } from "../../lib/settings/types";
 import type { useFileShelf } from "../../features/file-shelf/useFileShelf";
 import type { useIslandFeatures } from "./useIslandFeatures";
 import type { useIslandNavigation } from "./useIslandNavigation";
-import type { useMessageView } from "../../features/messages/island/useMessageView";
 import type { usePluginPages } from "./usePluginPages";
 import { openSettingsWindow } from "../settings/api";
 import { getTodoScrollStartRows } from "./layout";
 import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
 
-type MessageView = ReturnType<typeof useMessageView>;
-
 export type IslandPagesProps = {
   page: ReturnType<typeof useIslandNavigation>["page"];
   mode: ReturnType<typeof useIslandNavigation>["mode"];
   settings: IslandSettings;
   features: ReturnType<typeof useIslandFeatures>["features"];
-  qqMail: ReturnType<typeof useMail>;
-  qqNotifications: ReturnType<typeof useQQNotifications>;
-  wechatReminders: ReturnType<typeof useWeChatReminders>;
-  messageSource: MessageView["messageSource"];
-  messagePanel?: ReturnType<typeof useIslandMessagePanel>;
-  openMessages: MessageView["openMessages"];
   pluginPages: ReturnType<typeof usePluginPages>;
   fileShelf: ReturnType<typeof useFileShelf>;
   isShelfDropping: boolean;

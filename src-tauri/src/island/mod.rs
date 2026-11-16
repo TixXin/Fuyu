@@ -218,7 +218,7 @@ fn drag_modifier_down() -> bool {
 
 #[cfg(target_os = "macos")]
 fn drag_modifier_down() -> bool {
-    crate::macos::input::is_control_key_down()
+    crate::macos::input::is_only_control_key_down()
 }
 
 #[cfg(windows)]

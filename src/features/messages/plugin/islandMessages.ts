@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { useTranslation, type Translations } from "../../../i18n";
 import { ISLAND_SIDE_ROW_HEIGHT, type IslandContribution } from "../../plugin-kernel/islandContributions";
 import { useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import type { PluginNotification } from "../../plugins/api";
 import { messagePreviewText } from "../messagePreview";
 import { messagesIsland, type MessagesIsland } from "./islandState";
 
@@ -12,6 +13,7 @@ export type MessagesIslandFlags = {
   hold: boolean;
   arrivalsHeight: number | null;
   maxPanelHeight: number;
+  pages: { qq: boolean; wechat: boolean };
 };
 
 export function messageArrivalsPanelHeight(listHeight: number, maxPanelHeight: number) {
@@ -37,6 +39,7 @@ export function messagesContributions(state: MessagesIsland, flags: MessagesIsla
   if (mail.preview !== null) list.push({ kind: "side", item: "mail", height: ISLAND_SIDE_ROW_HEIGHT }, { kind: "hint", key: "messages.mail" });
   if (flags.hold) list.push({ kind: "hold", reason: "messages" });
   if (flags.arrivalsHeight !== null) list.push({ kind: "popup", page: "qq", height: messageArrivalsPanelHeight(flags.arrivalsHeight, flags.maxPanelHeight), open: true });
+  list.push({ kind: "page", page: "qq", enabled: flags.pages.qq }, { kind: "page", page: "wechat", enabled: flags.pages.wechat });
   return list;
 }
 
@@ -58,6 +61,10 @@ function openPreview({ preview, plugin, mail, qq, wechat, open }: MessagesIsland
   });
 }
 
+function isPluginNotification(value: unknown): value is PluginNotification {
+  return typeof value === "object" && value !== null && typeof (value as { pluginId?: unknown }).pluginId === "string";
+}
+
 export function useMessagesIsland(state: MessagesIsland | null, flags: MessagesIslandFlags) {
   const t = useTranslation();
   messagesIsland.useProvide(state);
@@ -69,6 +76,9 @@ export function useMessagesIsland(state: MessagesIsland | null, flags: MessagesI
   useIslandAction("messages.open-preview", state && (() => {
     const preview = latest.current?.preview;
     if (preview && preview.source !== "plugin") latest.current?.open(preview.source);
+  }));
+  useIslandAction("notify", state && ((payload) => {
+    if (isPluginNotification(payload)) latest.current?.plugin.post(payload);
   }));
   useIslandContributions("builtin", "messages.island", state ? messagesContributions(state, flags, t) : []);
 }

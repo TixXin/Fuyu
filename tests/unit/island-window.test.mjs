@@ -80,7 +80,8 @@ test("a stored island position is rounded and invalid data is ignored", () => {
 });
 
 test("pages and message sources that are switched off fall back to ones still on", async () => {
-  const { isPageEnabled, resolveIslandPage, resolveMessageSource } = await import("../../src/windows/island/features.ts");
+  const { isPageEnabled, resolveIslandPage } = await import("../../src/windows/island/features.ts");
+  const { resolveMessageSource } = await import("../../src/features/messages/island/messageSource.ts");
   const all = { todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true };
   assert.equal(resolveIslandPage("music", all), "music");
   assert.equal(resolveIslandPage("todo", { ...all, todo: false }), "music");

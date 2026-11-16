@@ -4,7 +4,7 @@ import { createIslandContributions, lineBelow, type IslandContributed, type Isla
 
 export const islandContributions = createIslandContributions();
 
-const actions = new Map<string, () => void>();
+const actions = new Map<string, (payload?: unknown) => void>();
 
 if (typeof window !== "undefined") {
   subscribeBuiltinPlugins((plugins) => islandContributions.setDisabledOwners(disabledBuiltinIds(plugins)));
@@ -33,13 +33,13 @@ export function useLineBelow(priority: number): IslandLineContribution | null {
   return useMemo(() => lineBelow(lines, priority), [lines, priority]);
 }
 
-export function useIslandAction(id: string, run: (() => void) | null) {
+export function useIslandAction(id: string, run: ((payload?: unknown) => void) | null) {
   const latest = useRef(run);
   latest.current = run;
   const present = run !== null;
   useLayoutEffect(() => {
     if (!present) return;
-    const call = () => latest.current?.();
+    const call = (payload?: unknown) => latest.current?.(payload);
     actions.set(id, call);
     return () => {
       if (actions.get(id) === call) actions.delete(id);
@@ -47,9 +47,9 @@ export function useIslandAction(id: string, run: (() => void) | null) {
   }, [id, present]);
 }
 
-export function runIslandAction(id: string): boolean {
+export function runIslandAction(id: string, payload?: unknown): boolean {
   const action = actions.get(id);
   if (!action) return false;
-  action();
+  action(payload);
   return true;
 }

@@ -17,8 +17,8 @@ export type SettingsPositionText = {
 
 export const zhCN: SettingsPositionText = {
   title: "位置",
-  moveHint: "按住 Ctrl 键，用鼠标左键拖动灵动岛的任意位置即可移动它，展开时也可以；收起时直接拖动也行。拖到屏幕顶部、底部或左右两侧附近会自动贴齐。",
-  moveHintMac: "按住 Option 键，用鼠标拖动灵动岛的任意位置即可移动它，展开时也可以；收起时直接拖动也行。拖到屏幕顶部、底部或左右两侧附近会自动贴齐。",
+  moveHint: "按住 Alt 键，用鼠标左键拖动灵动岛的任意位置即可移动它，展开时也可以；收起时直接拖动也行。拖到屏幕顶部、底部或左右两侧附近会自动贴齐。",
+  moveHintMac: "按住 Control 键，用鼠标拖动灵动岛的任意位置即可移动它，展开时也可以；收起时直接拖动也行。拖到屏幕顶部、底部或左右两侧附近会自动贴齐。",
   resetRow: "回到默认位置",
   reset: "复位",
   resetDone: "已复位",
@@ -34,8 +34,8 @@ export const zhCN: SettingsPositionText = {
 
 export const en: SettingsPositionText = {
   title: "Position",
-  moveHint: "Hold Ctrl and drag any part of the island with the left mouse button to move it, even while it is open. When collapsed, a plain drag works too. Drop it near the top, bottom or either side of the screen to snap flush.",
-  moveHintMac: "Hold Option and drag any part of the island to move it, even while it is open. When collapsed, a plain drag works too. Drop it near the top, bottom or either side of the screen to snap flush.",
+  moveHint: "Hold Alt and drag any part of the island with the left mouse button to move it, even while it is open. When collapsed, a plain drag works too. Drop it near the top, bottom or either side of the screen to snap flush.",
+  moveHintMac: "Hold Control and drag any part of the island to move it, even while it is open. When collapsed, a plain drag works too. Drop it near the top, bottom or either side of the screen to snap flush.",
   resetRow: "Back to the default position",
   reset: "Reset",
   resetDone: "Done",

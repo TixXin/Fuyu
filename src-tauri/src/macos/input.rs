@@ -5,8 +5,15 @@ use objc2_core_graphics::{
     CGPreflightPostEventAccess, CGRequestPostEventAccess, CGScrollEventUnit, CGWarpMouseCursorPosition,
 };
 
-pub(crate) fn is_control_key_down() -> bool {
-    NSEvent::modifierFlags_class().contains(NSEventModifierFlags::Control)
+pub(crate) fn is_only_control_key_down() -> bool {
+    only_control(NSEvent::modifierFlags_class())
+}
+
+fn only_control(flags: NSEventModifierFlags) -> bool {
+    flags.contains(NSEventModifierFlags::Control)
+        && !flags.contains(NSEventModifierFlags::Shift)
+        && !flags.contains(NSEventModifierFlags::Option)
+        && !flags.contains(NSEventModifierFlags::Command)
 }
 
 pub(crate) fn is_left_button_down() -> bool {
@@ -83,4 +90,19 @@ pub(crate) fn send_paste_shortcut() {
 
 pub(crate) fn send_enter() {
     tap_key(KEY_RETURN, CGEventFlags::empty());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_control_rejects_other_modifiers() {
+        assert!(only_control(NSEventModifierFlags::Control));
+        assert!(only_control(NSEventModifierFlags::Control | NSEventModifierFlags::CapsLock));
+        assert!(!only_control(NSEventModifierFlags::empty()));
+        assert!(!only_control(NSEventModifierFlags::Control | NSEventModifierFlags::Shift));
+        assert!(!only_control(NSEventModifierFlags::Control | NSEventModifierFlags::Option));
+        assert!(!only_control(NSEventModifierFlags::Control | NSEventModifierFlags::Command));
+    }
 }
