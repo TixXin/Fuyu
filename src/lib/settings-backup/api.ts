@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { takeSnapshot } from "./localSnapshot.ts";
 
@@ -16,6 +17,14 @@ export function readSettingsFile() {
 
 export function writeSettingsFile(text: string) {
   return invoke<void>("write_settings_file", { text });
+}
+
+export const SETTINGS_SYNC_APPLIED_EVENT = "settings-sync-applied";
+
+export type SettingsSyncApplied = { keys: Record<string, unknown> };
+
+export function onSettingsSyncApplied(handler: (applied: SettingsSyncApplied) => void): Promise<UnlistenFn> {
+  return listen<SettingsSyncApplied>(SETTINGS_SYNC_APPLIED_EVENT, (event) => handler(event.payload));
 }
 
 export type DataHomeSource = "env" | "pointer" | "default" | "appData";

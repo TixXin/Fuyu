@@ -52,6 +52,18 @@ pub async fn update_backup_restore(app: AppHandle, id: String) -> Result<BTreeMa
     blocking(move || store::prepare_restore(&home, &id)).await
 }
 
+pub(crate) fn create_before_sync(home: &std::path::Path, app_version: &str) -> Result<(), String> {
+    let keys = std::fs::read_to_string(home.join(crate::settings_file::FILE_NAME))
+        .ok()
+        .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+        .and_then(|file| file.get("keys").cloned())
+        .unwrap_or_else(|| serde_json::json!({}));
+    let now = chrono::Local::now();
+    let stamp = now.format("%Y%m%d-%H%M%S").to_string();
+    let request = store::Request { from_version: app_version, to_version: "sync", snapshot: &keys.to_string(), now_millis: now.timestamp_millis(), stamp: &stamp };
+    store::create(home, &request).map(|_| ()).map_err(|error| format!("Could not back up before the first sync: {error}"))
+}
+
 pub(crate) fn apply_pending_restore() {
     let Some(home) = crate::home_dir::current() else { return };
     match store::apply_pending(home) {

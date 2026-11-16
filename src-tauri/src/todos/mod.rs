@@ -11,7 +11,7 @@ mod tests;
 pub use migration::{LocalTodoKeys, TodosSnapshot};
 pub use model::TodosData;
 pub use service::{AppliedTodosChange, TodosChange};
-pub(crate) use service::{call, init, wait_until_decided};
+pub(crate) use service::{call, for_sync, init, replace_from_sync, wait_until_decided};
 
 #[tauri::command]
 pub async fn migrate_todos(app: tauri::AppHandle, keys: LocalTodoKeys, normalized: TodosData) -> Result<TodosSnapshot, String> {

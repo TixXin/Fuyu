@@ -251,6 +251,7 @@ pub(crate) fn apply(change: &TodosChange) -> Result<AppliedTodosChange, String> 
         store::save(&host.dir.join(FILE_NAME), &next)?;
         let old = std::mem::replace(&mut loaded.file, next);
         publish_plugin_events(&old.data, &loaded.file.data);
+        crate::sync::notify_local_change();
     }
     let data = (!conflicts.is_empty()).then(|| loaded.file.data.clone());
     Ok(AppliedTodosChange { revision: loaded.file.revision, conflicts, data })
@@ -274,6 +275,12 @@ fn call_loaded(host: &TodosHost, loaded: &mut Loaded, method: &str, params: &Val
     };
     let next = TodosFile { revision: loaded.file.revision + 1, data, ..loaded.file.clone() };
     store::save(&host.dir.join(FILE_NAME), &next).map_err(|error| (500, error))?;
+    announce_outside_change(host, loaded, next);
+    crate::sync::notify_local_change();
+    Ok(outcome.result)
+}
+
+fn announce_outside_change(host: &TodosHost, loaded: &mut Loaded, next: TodosFile) {
     let old = std::mem::replace(&mut loaded.file, next);
     let fields = changed_fields(&old.data, &loaded.file.data);
     loaded.outside.record(&fields, loaded.file.revision);
@@ -284,7 +291,32 @@ fn call_loaded(host: &TodosHost, loaded: &mut Loaded, method: &str, params: &Val
         json!({ "revision": loaded.file.revision, "data": loaded.file.data, "fields": fields, "reason": reason }),
     );
     publish_plugin_events(&old.data, &loaded.file.data);
-    Ok(outcome.result)
+}
+
+pub(crate) fn for_sync() -> Option<(u64, TodosData)> {
+    match &*lock(&host().ok()?.source) {
+        Source::File(loaded) => Some((loaded.file.revision, loaded.file.data.clone())),
+        _ => None,
+    }
+}
+
+pub(crate) fn replace_from_sync(revision: u64, data: TodosData) -> Result<(), String> {
+    let host = host()?;
+    let mut source = lock(&host.source);
+    let Source::File(loaded) = &mut *source else {
+        return Err("The todos are not kept in todos.json right now.".into());
+    };
+    if loaded.file.revision != revision {
+        return Err("The todos changed while syncing; trying again later.".into());
+    }
+    if data == loaded.file.data {
+        return Ok(());
+    }
+    clock::observe(stamps::all(&data));
+    let next = TodosFile { revision: loaded.file.revision + 1, data, ..loaded.file.clone() };
+    store::save(&host.dir.join(FILE_NAME), &next)?;
+    announce_outside_change(host, loaded, next);
+    Ok(())
 }
 
 fn publish_plugin_events(old: &TodosData, new: &TodosData) {

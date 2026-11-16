@@ -10,7 +10,7 @@ import { BACKUP_KEYS } from "../../src/lib/settings-backup/backup.ts";
 import { DEFAULT_SETTINGS as DEFAULT_TRANSLATION_SETTINGS } from "../../src/features/translation/storage.ts";
 
 const whitelist = JSON.parse(readFileSync(new URL("../../src-tauri/src/sync/settings_whitelist.json", import.meta.url), "utf8"));
-const MODES = new Set(["sync", "local", "firstMergeOnly", "byId"]);
+const MODES = new Set(["sync", "local", "firstMergeOnly", "byId", "optional"]);
 
 const OBJECT_SETTINGS = {
   "fuyu-settings": DEFAULT_SETTINGS,
@@ -59,4 +59,23 @@ test("the user's choices hold: screen sizes and shortcuts stay local, module swi
   for (const key of ["fuyu-qq-notifications-enabled", "fuyu-wechat-reminders-enabled", "fuyu-wechat-expose-ui", "fuyu-wechat-hide-taskbar-button"]) {
     assert.equal(whitelist.keys[key], "local", key);
   }
+});
+
+const OPTIONAL_GROUPS = ["agentPushDelivery", "agentSoundOutput", "collapsedItems", "pluginPages", "qqMail", "screenshotCapture", "translationProvider", "updateChannel"];
+
+const modeOf = (member) => {
+  const [key, field] = member.split("/");
+  const rule = whitelist.keys[key];
+  return field === undefined ? rule : rule?.fields?.[field];
+};
+
+test("every optional setting belongs to exactly one optional group", () => {
+  assert.deepEqual(sorted(Object.keys(whitelist.optionalGroups)), OPTIONAL_GROUPS, "keep src/features/sync/api.ts OPTIONAL_SYNC_GROUPS in step");
+  const members = Object.values(whitelist.optionalGroups).flat();
+  for (const member of members) assert.equal(modeOf(member), "optional", `${member} is in a group but not optional`);
+  assert.equal(new Set(members).size, members.length, "a setting is in two groups");
+  const optional = Object.entries(whitelist.keys).flatMap(([key, rule]) =>
+    typeof rule === "string" ? (rule === "optional" ? [key] : []) : Object.entries(rule.fields).filter(([, mode]) => mode === "optional").map(([field]) => `${key}/${field}`),
+  );
+  assert.deepEqual(sorted(optional), sorted(members), "every optional setting needs a group");
 });
