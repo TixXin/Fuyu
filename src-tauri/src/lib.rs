@@ -277,6 +277,7 @@ pub fn run() {
             voice_input;
             settings_window;
             settings_file;
+            sync;
             shortcut_capture;
             home_dir;
             onboarding_window;
