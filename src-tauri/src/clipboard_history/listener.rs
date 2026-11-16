@@ -24,7 +24,7 @@ use crate::win32::{
 
 const POLL_INTERVAL: Duration = Duration::from_secs(2);
 const READY_WAIT: Duration = Duration::from_secs(2);
-const CLASS_NAME: &str = "FocuSDClipboardHistoryListener";
+const CLASS_NAME: &str = "FuyuClipboardHistoryListener";
 
 struct Listener {
     fallback: Sender<()>,
@@ -96,7 +96,7 @@ fn run_windows_clipboard_listener() -> Result<(), String> {
         return Err("Failed to register clipboard listener window class.".to_string());
     }
 
-    let hwnd = match message_window::create_message_only_window(instance, CLASS_NAME, "FocuSD Clipboard History Listener") {
+    let hwnd = match message_window::create_message_only_window(instance, CLASS_NAME, "Fuyu Clipboard History Listener") {
         Ok(hwnd) => hwnd,
         Err(error) => {
             let _ = message_window::unregister_class(instance, CLASS_NAME);

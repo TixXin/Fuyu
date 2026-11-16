@@ -78,10 +78,10 @@ impl Drop for Registrations {
 
 pub(crate) fn watch(on_change: fn(SessionChange)) -> Result<(), String> {
     ON_CHANGE.set(on_change).map_err(|_| "Session changes are already watched.".to_string())?;
-    const CLASS_NAME: &str = "FocuSDSessionNotifications";
+    const CLASS_NAME: &str = "FuyuSessionNotifications";
     let instance = message_window::module_instance().map_err(|error| error.to_string())?;
     message_window::register_class::<SessionWindow>(instance, CLASS_NAME).map_err(|error| error.to_string())?;
-    let window = message_window::create_message_only_window(instance, CLASS_NAME, "FocuSD Session")
+    let window = message_window::create_message_only_window(instance, CLASS_NAME, "Fuyu Session")
         .map_err(|error| error.to_string())?;
     let session = unsafe { WTSRegisterSessionNotification(window, NOTIFY_FOR_THIS_SESSION) }.is_ok();
     let power = unsafe { RegisterSuspendResumeNotification(HANDLE(window.0), DEVICE_NOTIFY_WINDOW_HANDLE) }.ok();

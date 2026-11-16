@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn the_exe_in_the_folder_else_the_newest_version_folder() {
-        let folder = std::env::temp_dir().join(format!("focusd-cc-connect-locate-{}", std::process::id()));
+        let folder = std::env::temp_dir().join(format!("fuyu-cc-connect-locate-{}", std::process::id()));
         let _ = fs::remove_dir_all(&folder);
         assert_eq!(in_folder(&folder), None);
         for version in ["v1.4.0", "v1.5.0"] {

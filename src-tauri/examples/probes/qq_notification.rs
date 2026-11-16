@@ -179,13 +179,13 @@ fn read_qq_notifications(listener: &UserNotificationListener) -> Result<Observat
         }
         let diagnostic = parts
             .first()
-            .is_some_and(|title| title == "FocuSD QQ 通知诊断")
+            .is_some_and(|title| title == "浮屿 QQ 通知诊断")
             && parts
                 .iter()
                 .any(|body| body == "这是本机通道测试，不是聊天消息。")
             || parts.first().is_some_and(|title| {
                 title == "Fuyu QQ notification diagnostic"
-                    || title == "FocuSD QQ notification diagnostic"
+                    || title == "Fuyu QQ notification diagnostic"
             })
                 && parts
                     .iter()

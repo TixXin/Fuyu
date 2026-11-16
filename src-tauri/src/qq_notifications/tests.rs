@@ -329,8 +329,8 @@ fn the_repair_test_toast_is_skipped_under_its_new_and_old_titles() {
     let toast = |title: &str, body: &str| vec![title.to_string(), body.to_string()];
     let english = "Local channel test; this is not a chat message.";
     assert!(is_diagnostic(&toast("Fuyu QQ notification diagnostic", english)));
-    assert!(is_diagnostic(&toast("FocuSD QQ notification diagnostic", english)));
-    assert!(is_diagnostic(&toast("FocuSD QQ 通知诊断", "这是本机通道测试，不是聊天消息。")));
+    assert!(is_diagnostic(&toast("Fuyu QQ notification diagnostic", english)));
+    assert!(is_diagnostic(&toast("浮屿 QQ 通知诊断", "这是本机通道测试，不是聊天消息。")));
     assert!(!is_diagnostic(&toast("Fuyu QQ notification diagnostic", "hi")));
     assert!(!is_diagnostic(&toast("Alice", english)));
     assert!(!is_diagnostic(&[]));
