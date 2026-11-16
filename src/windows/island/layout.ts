@@ -1,5 +1,6 @@
 import { clamp } from "../../utils/number.ts";
 import { getCollapsedTextUnits } from "../../utils/text.ts";
+import { MAX_TOP_FILLET_RADIUS } from "../../lib/settings/settingsLimits.ts";
 
 export const MIN_COLLAPSED_ISLAND_WIDTH = 280;
 export const MAX_COLLAPSED_ISLAND_WIDTH = 340;
@@ -11,7 +12,7 @@ export const POPUP_ISLAND_WIDTH = 400;
 const STAGE_WINDOW_WIDTH = 820;
 
 export function maxExpandedIslandWidth(scale: number) {
-  return Math.max(EXPANDED_ISLAND_WIDTH, Math.floor((STAGE_WINDOW_WIDTH - 4) / scale));
+  return Math.max(EXPANDED_ISLAND_WIDTH, Math.floor((STAGE_WINDOW_WIDTH - 4) / scale) - 2 * MAX_TOP_FILLET_RADIUS);
 }
 
 export function panelIslandWidth(panelWidth: number, scale: number) {
