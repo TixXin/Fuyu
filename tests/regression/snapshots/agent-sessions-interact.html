@@ -1,7 +1,7 @@
 <body>
   <div id="fixture" style="width: 400px">
     <section aria-label="Agent 会话" class="agent-sessions">
-      <ul class="agent-sessions__list agent-sessions__list--archivable agent-sessions__list--menu" style="--agent-age-width: 24px">
+      <ul class="agent-sessions__list agent-sessions__list--archivable agent-sessions__list--menu">
         <li data-session-key="claudeCode:a">
           <span class="island-hover-card__anchor agent-session__hover">
             <button class="agent-session agent-session--running agent-session--light-working agent-session--full" type="button">
@@ -28,6 +28,7 @@
                   <span class="agent-session__agent">
                     <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
                   </span>
+                  <span class="agent-session__time"></span>
                 </span>
                 <span class="agent-session__prompt">
                   你：给 Agent 页的会话行加上右键菜单和键盘操作
@@ -71,12 +72,14 @@
                   <span class="agent-session__agent">
                     <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--codex" draggable="false" height="14" src="/src/assets/brands/codex.webp" width="14">
                   </span>
+                  <span class="agent-session__time">
+                    <span class="agent-session__age">
+                      14m
+                    </span>
+                  </span>
                 </span>
               </span>
             </button>
-          </span>
-          <span class="agent-session__age">
-            14m
           </span>
           <span class="agent-session__more">
             <button aria-expanded="false" aria-haspopup="menu" aria-label="「恢复发布机环境」的更多操作" class="island-list-icon-button" title="「恢复发布机环境」的更多操作" type="button">
@@ -111,12 +114,14 @@
                   <span class="agent-session__agent">
                     <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
                   </span>
+                  <span class="agent-session__time">
+                    <span class="agent-session__age">
+                      1h
+                    </span>
+                  </span>
                 </span>
               </span>
             </button>
-          </span>
-          <span class="agent-session__age">
-            1h
           </span>
           <span class="agent-session__more">
             <button aria-expanded="false" aria-haspopup="menu" aria-label="「远程主机上的会话」的更多操作" class="island-list-icon-button" title="「远程主机上的会话」的更多操作" type="button">

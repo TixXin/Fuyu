@@ -78,7 +78,7 @@
           </div>
         </span>
       </div>
-      <ul class="agent-sessions__list agent-sessions__list--archivable agent-sessions__list--menu" style="--agent-age-width: 24px">
+      <ul class="agent-sessions__list agent-sessions__list--archivable agent-sessions__list--menu">
         <li data-session-key="claudeCode:a">
           <span class="island-hover-card__anchor agent-session__hover">
             <button class="agent-session agent-session--running agent-session--light-working agent-session--full" type="button">
@@ -119,6 +119,7 @@
                     <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
                     <img alt="在 Orca 里运行" class="agent-session__host-badge" draggable="false" height="10" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Crect%20width%3D%2216%22%20height%3D%2216%22%20rx%3D%223%22%20fill%3D%22%232b2f3a%22%2F%3E%3Cpath%20d%3D%22M4%205l3%203-3%203M8.5%2011H12%22%20stroke%3D%22%237ee787%22%20stroke-width%3D%221.6%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E" title="在 Orca 里运行" width="10">
                   </span>
+                  <span class="agent-session__time"></span>
                 </span>
                 <span class="agent-session__prompt">
                   你：把 Agent 页的右侧胶囊和用量行排一下
@@ -188,6 +189,11 @@
                   <span class="agent-session__agent">
                     <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--codex" draggable="false" height="14" src="/src/assets/brands/codex.webp" width="14">
                   </span>
+                  <span class="agent-session__time">
+                    <span class="agent-session__age">
+                      14m
+                    </span>
+                  </span>
                 </span>
                 <span class="agent-session__prompt">
                   你：恢复发布机环境
@@ -197,9 +203,6 @@
                 </span>
               </span>
             </button>
-          </span>
-          <span class="agent-session__age">
-            14m
           </span>
           <span class="agent-session__more">
             <button aria-expanded="false" aria-haspopup="menu" aria-label="「恢复 Windows 发布机环境，顺便把代理配置也整理一遍」的更多操作" class="island-list-icon-button" title="「恢复 Windows 发布机环境，顺便把代理配置也整理一遍」的更多操作" type="button">
@@ -239,12 +242,14 @@
                   <span class="agent-session__agent">
                     <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
                   </span>
+                  <span class="agent-session__time">
+                    <span class="agent-session__age">
+                      1h
+                    </span>
+                  </span>
                 </span>
               </span>
             </button>
-          </span>
-          <span class="agent-session__age">
-            1h
           </span>
           <span class="agent-session__more">
             <button aria-expanded="false" aria-haspopup="menu" aria-label="「Nexus 紧凑视口密度变量」的更多操作" class="island-list-icon-button" title="「Nexus 紧凑视口密度变量」的更多操作" type="button">

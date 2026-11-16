@@ -1,23 +1,39 @@
 mod bounds;
 #[cfg(target_os = "macos")]
 mod mac_chrome;
+pub(crate) mod open_trace;
 mod sizing;
 
+use open_trace::WindowTrace;
 use sizing::Size;
-use std::{thread, time::Duration};
+use std::{
+    sync::{Mutex, PoisonError},
+    thread,
+    time::Duration,
+};
 use tauri::{
-    AppHandle, Manager, Monitor, PhysicalPosition, WebviewWindow, WebviewWindowBuilder, WindowEvent,
+    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, WebviewWindow, WebviewWindowBuilder,
+    WindowEvent,
 };
 
 pub const WINDOW_LABEL: &str = "settings";
+const REOPENED_EVENT: &str = "settings-window-reopened";
 
-const SHOW_FALLBACK_DELAY: Duration = Duration::from_secs(2);
+const SHOW_FALLBACK_DELAY: Duration = Duration::from_millis(600);
+
+static PENDING_TRACE: Mutex<Option<WindowTrace>> = Mutex::new(None);
 
 pub fn open(app: &AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window(WINDOW_LABEL) {
+        let mut trace = WindowTrace::begin(WINDOW_LABEL, "reuse");
         let _ = window.unminimize();
-        return reveal(&window);
+        let _ = window.emit_to(WINDOW_LABEL, REOPENED_EVENT, ());
+        let shown = reveal(&window);
+        trace.mark("show");
+        trace.finish(app, None);
+        return shown;
     }
+    let mut trace = WindowTrace::begin(WINDOW_LABEL, "create");
 
     let config = app
         .config()
@@ -70,18 +86,43 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
     }
     let closing = window.clone();
     window.on_window_event(move |event| {
-        if matches!(event, WindowEvent::CloseRequested { .. }) {
+        if let WindowEvent::CloseRequested { api, .. } = event {
             bounds::save(&closing);
+            if !closing.is_fullscreen().unwrap_or(false) {
+                api.prevent_close();
+                let _ = closing.hide();
+            }
         }
     });
+    trace.mark("built");
+    *lock_pending() = Some(trace);
 
+    let app = app.clone();
     thread::spawn(move || {
         thread::sleep(SHOW_FALLBACK_DELAY);
         if !window.is_visible().unwrap_or(true) {
-            let _ = reveal(&window);
+            reveal_traced(&app, &window, "fallback")
+                .unwrap_or_else(|error| eprintln!("could not show the settings window: {error}"));
         }
     });
     Ok(())
+}
+
+fn lock_pending() -> std::sync::MutexGuard<'static, Option<WindowTrace>> {
+    PENDING_TRACE.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+fn reveal_traced(app: &AppHandle, window: &WebviewWindow, via: &str) -> Result<(), String> {
+    let mut trace = lock_pending().take();
+    if let Some(trace) = trace.as_mut() {
+        trace.mark("ready");
+    }
+    let shown = reveal(window);
+    if let Some(mut trace) = trace {
+        trace.mark("show");
+        trace.finish(app, Some(via));
+    }
+    shown
 }
 
 pub(crate) fn island_screen(app: &AppHandle) -> Option<Monitor> {
@@ -137,7 +178,7 @@ pub async fn show_settings_window(app: AppHandle) -> Result<(), String> {
     let window = app
         .get_webview_window(WINDOW_LABEL)
         .ok_or_else(|| "Settings window was not found.".to_string())?;
-    reveal(&window)
+    reveal_traced(&app, &window, "frontend")
 }
 
 macro_rules! tauri_commands {
