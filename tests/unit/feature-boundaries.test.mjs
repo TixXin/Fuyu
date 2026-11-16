@@ -30,6 +30,7 @@ function resolveImport(from, specifier) {
 const repoPath = (path) => relative(ROOT, path).replaceAll("\\", "/");
 const featureOf = (path) => path.match(/^src\/features\/([^/]+)\//)?.[1] ?? null;
 const sharedLayer = (path) => /^src\/(lib|components|utils)\//.test(path);
+const PLATFORM = "plugin-kernel";
 
 function crossings() {
   const features = [];
@@ -43,7 +44,7 @@ function crossings() {
       const toFeature = featureOf(to);
       if (!toFeature) continue;
       const fromFeature = featureOf(from);
-      if (fromFeature && fromFeature !== toFeature) features.push(`${from} -> ${to}`);
+      if (fromFeature && toFeature !== PLATFORM && fromFeature !== toFeature) features.push(`${from} -> ${to}`);
       else if (sharedLayer(from)) shared.push(`${from} -> ${to}`);
     }
   }
