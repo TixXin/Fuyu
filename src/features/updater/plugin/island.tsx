@@ -1,16 +1,19 @@
 import { CircleArrowUp } from "lucide-react";
 import type { Translations } from "../../../i18n";
 import { defineSlot, type IslandCollapsedMeta } from "../../plugin-kernel/slots";
+import { useUpdateReminder } from "../useBackgroundUpdateCheck";
+import { UPDATE_REMINDER_HINT } from "./updateIsland";
 
 type CollapsedContext = {
   t: Translations;
-  updateVersion: string | null;
+  hints: ReadonlySet<string>;
   onOpenSettings: (section: "updates") => void;
 };
 
 const collapsedSlot = defineSlot<CollapsedContext, IslandCollapsedMeta<CollapsedContext>>("island.collapsed/v1");
 
-function UpdateItem({ t, updateVersion, onOpenSettings }: CollapsedContext) {
+function UpdateItem({ t, onOpenSettings }: CollapsedContext) {
+  const updateVersion = useUpdateReminder();
   return (
     <button
       className="island-message-button island-message-button--compact island-update-badge"
@@ -27,4 +30,4 @@ function UpdateItem({ t, updateVersion, onOpenSettings }: CollapsedContext) {
   );
 }
 
-collapsedSlot.add({ id: "update", order: 30, shown: ({ updateVersion }) => Boolean(updateVersion), component: UpdateItem });
+collapsedSlot.add({ id: "update", order: 30, shown: ({ hints }) => hints.has(UPDATE_REMINDER_HINT), component: UpdateItem });

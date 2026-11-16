@@ -22,7 +22,7 @@ description: >
 
 1. **看任务，先查重**：`pnpm tasks show <编号>` 读全文和「交接」，带 issue 的再 `pnpm issue <N>` 读全部回复。
    - 还没有任务的事，先在 `pnpm issue` 和 `pnpm tasks` 的列表里找同一件事，免得两个会话各做一遍。
-   - 确实没有才新建，先 issue 后任务：自己发现的照 README「自己新建的任务」，别人提的 issue 照 README「GitHub issue」（先核实、先回复，再 `pnpm tasks add <编号> --title .. --issue <N> --claim --as <会话名> --scope ..`）。
+   - 确实没有才新建，编号用 `pnpm tasks id <分组>` 挑（按本地看板数会和另一台机器撞号），先 issue 后任务：自己发现的照 README「自己新建的任务」，别人提的 issue 照 README「GitHub issue」（先核实、先回复，再 `pnpm tasks add <编号> --title .. --issue <N> --claim --as <会话名> --scope ..`）。
 2. **认领，`--scope` 写全**：`pnpm task:claim <编号> --as <会话名> --scope "<目录/>,<文件>"`。会话名用简报给的，没有就用 ListAgents 里自己的名字。命令自己会做一个只含任务文件的提交，不用再提交它。
    - 目录以 `/` 结尾；文档、测试、顺带要改的文件都写上。漏写的文件在 `pnpm tasks dirty` 里没人认领，别的会话也查不出和你撞。
    - 中途多改了文件，直接改任务文件头部的 `scope`：再跑一次认领只会说「已经是你的」，不更新范围。

@@ -21,7 +21,7 @@ body:has(.pin-window) {
   cursor: move;
   box-shadow: 0 0 0 2px rgba(116, 214, 255, 0.95), 0 0 0 rgba(0, 0, 0, 0);
   transform-origin: center;
-  transition: box-shadow 280ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 140ms ease, transform 140ms ease;
+  transition: box-shadow 280ms var(--motion-ease), opacity 140ms ease, transform 140ms ease;
 }
 
 .pin-window--shown .pin-window__frame,

@@ -29,7 +29,7 @@
 | `screenshot-<n>` | `?window=screenshot` | 截图的选区窗口，每个显示器一个；打开截图模块时创建，平时隐藏 |
 | `pin-<n>` | `?window=pin` | 贴到屏幕上的截图，每张一个，按需创建 |
 | `drag-grid` | `?window=drag-grid` | 拖岛时的中线辅助线（横竖两条，分成四格），`create: false`；第一次拖岛时创建，之后隐藏常驻；透明、鼠标穿透、不抢焦点、压在岛下面，铺满岛所在屏幕的工作区 |
-| `tray-menu` | `?window=tray-menu` | 托盘卡片，`create: false`；第一次点托盘 / 菜单栏图标时创建，之后隐藏常驻，失焦就关 |
+| `tray-menu` | `?window=tray-menu` | 托盘卡片，`create: false`；Windows 上岛启动 5 秒后预建，Mac 上第一次点菜单栏图标时创建；之后隐藏常驻，失焦就关 |
 
 **结构重构已完成（Phase 0–6，收尾与待人工验收项见 [refactor-plan.md](docs/architecture/history/refactor-plan.md)）。** 代码已按 [overview.md](docs/architecture/overview.md) 的目标结构组织：Rust 侧的 `unsafe` 只在平台层 `src-tauri/src/win32/`、`src-tauri/src/macos/` 中，生产代码不用 `unwrap` / `expect`，clippy 与 ESLint 均为 0 告警。新代码沿用这套结构与子目录规则。
 
@@ -92,7 +92,7 @@
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
 | 查 GitHub issue | `pnpm issue [<编号…>]`（正文、回复和对应任务；不带编号是列表，参数见 workflow.md「任务认领」） |
-| 合入 main | `pnpm mq:pending`（该不该提 PR）、`pnpm mq:land --yes --body <中文 PR 正文文件>`（开 PR 合入）、`pnpm mq:wait`（后台等合入）、`pnpm mq:try`（先跑 CI）、`pnpm mq:sync`（跟上 `origin/main`）；用法和 `--upto` / `--only` 见 workflow.md「现在怎么做」 |
+| 合入 main | `pnpm mq:pending`（该不该提 PR）、`pnpm mq:land --yes --body <中文 PR 正文文件>`（开 PR 合入）、`pnpm mq:wait`（后台等合入）、`pnpm mq:try`（先跑 CI，`--clean` 删跑完的）、`pnpm mq:sync`（跟上 `origin/main`）；用法和 `--upto` / `--only` 见 workflow.md「现在怎么做」 |
 | 同一个文件里只提交自己的改动 | `pnpm mq:commit-part`（见 workflow.md「同一个文件里只提交自己的改动」） |
 | 进度汇总 | `pnpm progress [--no-github] [--json]`（一屏：进行中的任务和负责的会话、没提交的文件、没推的提交和落后多少、开着的 PR、任务已完成而 issue 还开着的） |
 
@@ -162,6 +162,7 @@
 | 发布相关 | 完整的 `pnpm tauri build` |
 
 - 改动岛屿、消息、设置窗口等界面组件或它们的 `api.ts` 类型时，再运行 `pnpm test:regression`；回归页的 mock 落后于代码时页面会失败，要同步更新。其余界面或窗口行为在风险需要时用 `pnpm tauri dev` 手动检查。
+- 这张表只管跑什么。写或改测试、要用 `--update-snapshots`、测试失败或时好时坏时，先加载 `fuyu-testing` skill（要不要写、放哪一层、失败怎么分诊）。
 - 不得因为构建耗时而跳过必要验证。必要构建失败或受环境阻塞时，必须明确报告原因，不得把未完成的验证描述为已验证。
 
 ## 本机更新与桌面快捷方式

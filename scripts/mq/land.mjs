@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { machineName } from "../machine-name.mjs";
+import { thisMachine } from "../machine-name.mjs";
+import { closeSuperseded, remoteGit } from "./cleanup.mjs";
 import { github as realGitHub, landBranchName, prText } from "./github.mjs";
 import { pickOnto } from "./pick.mjs";
 import { mergedWith, uptoRev } from "./upto.mjs";
@@ -125,7 +126,8 @@ function finish({ code, pr }, { wait, github, waitOptions }) {
 
 async function landOnce(options) {
   const fail = { code: 1 };
-  const { github = realGitHub, host = machineName(), wait = false, bodyFile = null, title = null, only = null, upto = null } = options;
+  const { github = realGitHub, git: remote = remoteGit, wait = false, bodyFile = null, title = null, only = null, upto = null } = options;
+  const { host, aliases } = options.host ? { host: options.host, aliases: options.aliases ?? [] } : thisMachine();
   const branch = tryGit(["rev-parse", "--abbrev-ref", "HEAD"]).out.trim();
   const refusal = landRefusal(branch);
   if (refusal) {
@@ -148,7 +150,8 @@ async function landOnce(options) {
     console.error(`[land] ${branch} 上没有 origin/${INTEGRATION_BRANCH} 之外的提交，没有要合入的。`);
     return fail;
   }
-  const remoteBranch = `${landBranchName(github.login(), host, branch)}${chosen?.suffix ?? ""}`;
+  const login = github.login();
+  const remoteBranch = `${landBranchName(login, host, branch)}${chosen?.suffix ?? ""}`;
   if (!pushBranch(remoteBranch, rev)) {
     console.error(`\n[land] 推送 ${remoteBranch} 失败，见上面的输出。修好后重新 pnpm mq:land --yes。`);
     return fail;
@@ -163,6 +166,8 @@ async function landOnce(options) {
     console.log(`[land] 开了 PR #${pr.number}：${pr.url}`);
     if (!body) console.log("  没给 --body，正文是从提交自动生成的骨架；补中文说明：写好文件后 pnpm mq:land --yes --body <文件>");
   }
+  const mine = { login, hosts: [host, ...aliases], branch };
+  closeSuperseded({ github, git: remote, pr: pr.number, head: rev, mine });
   try {
     github.autoMerge(pr.number);
   } catch (error) {

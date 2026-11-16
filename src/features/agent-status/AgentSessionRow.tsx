@@ -68,7 +68,6 @@ export function AgentSessionRow({
   const phaseLabel = session.compacting ? t.agent.sessions.compacting : yourTurn ? t.agent.sessions.yourTurn : getAgentPhaseLabel(session.phase, t);
   const showPhase = session.compacting || yourTurn || (session.phase !== "running" && session.phase !== "completed");
   const elapsed = showElapsed && session.turnStartedAt !== null;
-  const ageInSlot = Boolean(archive) && showAge;
   const lightText = t.agent.sessions.lights[light];
   const pill = pillParts(active && showModel ? model : null, session.model);
   const pillMode = active ? mode : null;
@@ -116,7 +115,7 @@ export function AgentSessionRow({
             <AgentProviderIcon provider={session.provider} size={14} />
             {session.host && <SessionHostLabel host={session.host} display={hostDisplay} badge />}
           </span>
-          {showAge && !ageInSlot && <span className="agent-session__time">{age}</span>}
+          <span className="agent-session__time">{showAge && <span className="agent-session__age">{age}</span>}</span>
         </span>
         {cardReply ? (
           <span className="agent-session__message agent-session__message--card">{cardReply}</span>
@@ -139,7 +138,6 @@ export function AgentSessionRow({
         </AgentSessionHoverCard>
       ) : button}
       {subagents}
-      {ageInSlot && <span className="agent-session__age">{age}</span>}
       {menu}
       {archive}
     </li>

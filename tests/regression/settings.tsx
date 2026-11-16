@@ -336,11 +336,9 @@ if (!automated) {
       && element(".settings-sidebar__item--active").dataset.category === "agents",
       "AI Agent is one sidebar item whose page has tabs for on the island, session list, alerts, sounds, approvals, connection and SSH remote");
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
-    check(agentPolls() > pollsAway, "The connection page reads the agents' state");
     const connectGroups = [...document.querySelectorAll<HTMLElement>(".settings-group")];
     const markerGroup = connectGroups.find((group) => group.textContent?.includes("回复状态标记"));
-    check(markerGroup && connectGroups[connectGroups.indexOf(markerGroup) - 1]?.textContent?.includes("安装/修复") && markerGroup.textContent!.includes("推荐打开"),
-      "The reply status marker follows the hooks on the connection page and is marked as recommended");
+    check(markerGroup && connectGroups.indexOf(markerGroup) === 0 && markerGroup.textContent!.includes("推荐打开") && !connectGroups.some((group) => group.textContent?.includes("安装/修复")), "The connection page opens with the reply status marker, marked as recommended, and no longer has the hooks card");
     const markerSwitch = markerGroup?.querySelector<HTMLInputElement>("[role='switch']");
     check(markerSwitch && !markerSwitch.checked && markerGroup!.textContent!.includes(REPLY_MARKER.path) && markerGroup!.querySelector("pre")?.textContent === REPLY_MARKER.content && markerGroup!.textContent!.includes(`软链，写在 ${REPLY_MARKER.target}`) && markerGroup!.querySelector(".agent-reply-marker__file--error")?.textContent?.includes(REPLY_MARKER.dangling),
       "The reply status marker is off by default and shows each agent's prompt file (a link names its target, a dangling one its error) and the text it would write");
@@ -351,10 +349,12 @@ if (!automated) {
     await openPage("agentRemote"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     check(/devbox.*nas/s.test(element(".editor-panel").textContent ?? ""), "The remote computers page lists the SSH hosts to read sessions from");
     await openPage("agents"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
-    const hooksLink = [...document.querySelectorAll<HTMLButtonElement>(".editor-panel .settings-link-button")].find((button) => button.textContent === "安装/修复");
-    check(hooksLink, "Without hooks, the on-the-island page says so with a way to install them");
-    await act(async () => { hooksLink!.click(); });
-    check(element(".settings-tabs__tab--active").dataset.tab === "agentConnect", "The hooks notice on the on-the-island page opens the connection page");
+    check(agentPolls() > pollsAway, "The on-the-island page reads the agents' state");
+    const agentGroups = [...document.querySelectorAll<HTMLElement>(".editor-panel .settings-group")], hooksGroup = agentGroups.find((group) => group.textContent?.includes("AI Agent 状态灯"));
+    const hooksLink = [...(hooksGroup?.querySelectorAll<HTMLButtonElement>(".settings-link-button") ?? [])].find((button) => button.textContent === "安装/修复");
+    check(hooksLink && agentGroups.indexOf(hooksGroup!) <= 1 && hooksGroup!.querySelector(".agent-hooks-message--attention"), "The on-the-island page opens with the status light card, which says the hooks are missing and has Install/repair");
+    await act(async () => { hooksLink!.click(); await new Promise(resolve => setTimeout(resolve, 20)); });
+    check(commands.includes("install_agent_status_hooks") && element(".settings-tabs__tab--active").dataset.tab === "agents", "Install/repair on the on-the-island page installs the hooks there");
     localStorage.removeItem("fuyu-agent-session-filters");
     await openPage("agentSessions");
     const filterGroup = () => [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.includes("隐藏会话"))!;

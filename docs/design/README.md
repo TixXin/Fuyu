@@ -31,6 +31,7 @@
 
 - [翻译界面](translation.md)
 - [灵动岛：顶边贴合与视觉规范](island.md)
+- [动效约定：曲线、时长和减少动画](motion.md)
 - [收起条：插件槽位与中心图案](collapsed-bar.md)
 - [设置窗口与插件市场页](settings.md)
 - [AI Agent：会话标题与 Agent 页](agent.md)

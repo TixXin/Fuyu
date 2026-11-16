@@ -24,6 +24,8 @@ import { levelState } from "../../src/features/system-levels/plugin/islandState"
 import { todoLine } from "../../src/features/todos/plugin/islandState";
 import { todoLineContributions } from "../../src/features/todos/plugin/todoLines";
 import { translationPeekState } from "../../src/features/translation/plugin/islandState";
+import { shelfContributions, shelfIsland } from "../../src/features/file-shelf/plugin/islandState";
+import { useFixtureMessages, type FixtureMessages } from "./islandMessages";
 
 type FixtureLines = {
   barText?: boolean;
@@ -42,13 +44,16 @@ type FixtureLines = {
   sideCover?: boolean;
   status?: { state: string; label: string };
   agents?: number | null;
+  messages?: FixtureMessages | null;
+  shelfCount?: number | null;
 };
 
 const NO_DEVICES: DeviceUse = { camera: [], microphone: [] };
 const IDLE = { state: "idle", label: "" };
 
-export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false, status = IDLE, agents = null }: FixtureLines) {
+export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false, status = IDLE, agents = null, messages = null, shelfCount = null }: FixtureLines) {
   const t = useTranslation();
+  useFixtureMessages(messages);
   quotaAlertState.useProvide(quotaAlert);
   agentLine.useProvide(agentSession);
   agentShell.useProvide(useMemo(() => ({ ...agentShell.get(), activeCount: agents ?? 0 }), [agents]));
@@ -83,4 +88,6 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
   useIslandContributions("builtin", "fixture.todos", todoLineContributions(todo, t));
   meetingState.useProvide(meeting);
   useIslandContributions("calendar", "fixture.meeting", useMeetingContributions(meeting, barText));
+  shelfIsland.useProvide(useMemo(() => ({ shelf: null, dropping: false, count: shelfCount }), [shelfCount]));
+  useIslandContributions("file-shelf", "fixture.shelf", shelfContributions(shelfCount));
 }

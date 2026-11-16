@@ -52,14 +52,13 @@ function GlassIsland({ background, light }: { background: string; light: boolean
     ...(light ? { "--island-ink-rgb": "24, 24, 30", "--task-text-color": "#1c1c1f" } : {}),
     ...glassStyle,
   } as CSSProperties;
-  useFixtureLines({ agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "整理周报" });
+  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: null }, agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "整理周报" });
   return <div className={`stage${light ? " island-light" : ""}`} data-tone={light ? "light" : "dark"} style={stageStyle}>
-    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
+    <IslandShell
       mode={mode} page="todo" isTucked={false} isDetached={false} showTitle={false}
       showCollapsedText appearanceMode="liquidGlass" nativeGlassState="css-fallback" glass={glass}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
-      shelfCount={null}
-      onOpenPage={() => {}} onOpenMessages={() => {}}
+      onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>

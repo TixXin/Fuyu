@@ -21,7 +21,8 @@ export type IslandTrailContribution = { kind: "trail"; item: string };
 
 export type IslandAlertContribution = { kind: "alert"; item: string };
 export type IslandNoticeContribution = { kind: "notice"; item: string; measure?: string };
-export type IslandPreviewContribution = { kind: "preview"; item: string; hot?: string; action?: string };
+export type IslandPreviewContribution = { kind: "preview"; item: string; key?: string; label?: string; hot?: string; action?: string; open?: string };
+export type IslandSummaryContribution = { kind: "summary"; item: string };
 export type IslandRevealContribution = { kind: "reveal"; reveal?: "always" | "allowed"; pauseIdle?: boolean; pauseHover?: boolean };
 export type IslandHoldContribution = { kind: "hold"; reason: string };
 export type IslandSideContribution = { kind: "side"; item: string; height: number };
@@ -31,6 +32,7 @@ export type IslandStyleContribution = { kind: "style"; vars?: Readonly<Record<st
 export type IslandBusyContribution = { kind: "busy" };
 export type IslandHintContribution = { kind: "hint"; key: string };
 export type IslandPageContribution = { kind: "page"; page: string; enabled: boolean };
+export type IslandBadgeContribution = { kind: "badge"; target: string; label: string; action?: string };
 
 export type IslandContribution =
   | IslandLineContribution
@@ -38,6 +40,7 @@ export type IslandContribution =
   | IslandAlertContribution
   | IslandNoticeContribution
   | IslandPreviewContribution
+  | IslandSummaryContribution
   | IslandRevealContribution
   | IslandHoldContribution
   | IslandSideContribution
@@ -46,7 +49,8 @@ export type IslandContribution =
   | IslandStyleContribution
   | IslandBusyContribution
   | IslandHintContribution
-  | IslandPageContribution;
+  | IslandPageContribution
+  | IslandBadgeContribution;
 
 export type IslandContributed = {
   lines: readonly IslandLineContribution[];
@@ -54,6 +58,7 @@ export type IslandContributed = {
   alerts: ReadonlySet<string>;
   notices: ReadonlyMap<string, IslandNoticeContribution>;
   preview: IslandPreviewContribution | null;
+  summary: string | null;
   reveal: { always: boolean; allowed: boolean; pauseIdle: boolean; pauseHover: boolean };
   hold: boolean;
   side: ReadonlyMap<string, IslandSideContribution>;
@@ -63,6 +68,7 @@ export type IslandContributed = {
   busy: boolean;
   hints: ReadonlySet<string>;
   pages: Readonly<Record<string, boolean>>;
+  badges: ReadonlyMap<string, IslandBadgeContribution>;
   settled: boolean;
 };
 
@@ -101,11 +107,13 @@ export function aggregateContributions(lists: readonly (readonly IslandContribut
   const notices = new Map<string, IslandNoticeContribution>();
   const side = new Map<string, IslandSideContribution>();
   const popups = new Map<string, IslandPopupContribution>();
+  const badges = new Map<string, IslandBadgeContribution>();
   const pages: Record<string, boolean> = {};
   const vars: Record<string, string> = {};
   const classNames: string[] = [];
   const reveal = { always: false, allowed: false, pauseIdle: false, pauseHover: false };
   let preview: IslandPreviewContribution | null = null;
+  let summary: string | null = null;
   let status: IslandStatusContribution | null = null;
   let tint: string | null = null;
   let hold = false;
@@ -118,6 +126,7 @@ export function aggregateContributions(lists: readonly (readonly IslandContribut
         case "alert": alerts.add(item.item); break;
         case "notice": notices.set(item.item, item); break;
         case "preview": preview ??= item; break;
+        case "summary": summary ??= item.item; break;
         case "reveal":
           if (item.reveal === "always") reveal.always = true;
           if (item.reveal === "allowed") reveal.allowed = true;
@@ -136,11 +145,12 @@ export function aggregateContributions(lists: readonly (readonly IslandContribut
         case "busy": busy = true; break;
         case "hint": hints.add(item.key); break;
         case "page": pages[item.page] = item.enabled; break;
+        case "badge": if (!badges.has(item.target)) badges.set(item.target, item); break;
       }
     }
   }
   lines.sort((a, b) => b.priority - a.priority);
-  return { lines, trails, alerts, notices, preview, reveal, hold, side, status, popups, style: { vars, classNames, tint }, busy, hints, pages, settled };
+  return { lines, trails, alerts, notices, preview, summary, reveal, hold, side, status, popups, style: { vars, classNames, tint }, busy, hints, pages, badges, settled };
 }
 
 export function topLine(lines: readonly IslandLineContribution[]): IslandLineContribution | null {

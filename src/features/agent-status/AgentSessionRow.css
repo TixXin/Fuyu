@@ -34,10 +34,6 @@
   position: relative;
 }
 
-.agent-sessions__list--archivable .agent-session {
-  padding-right: calc(max(24px, var(--agent-age-width, 0px)) + 8px);
-}
-
 .agent-session__archive {
   position: absolute;
   top: 8px;
@@ -69,27 +65,11 @@
   outline: none;
 }
 
-.agent-session__age {
-  position: absolute;
-  top: 8px;
-  right: 6px;
-  width: max(24px, var(--agent-age-width, 44px));
-  height: 20px;
-  color: var(--text-3);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  line-height: 20px;
-  text-align: right;
-  white-space: nowrap;
-  pointer-events: none;
-  transition: opacity 140ms ease;
-}
-
 .agent-sessions__list > li:has(.agent-session__age) .agent-session__archive {
   opacity: 0;
 }
 
-.agent-sessions__list > li:is(:hover, :focus-within) .agent-session__age {
+.agent-sessions__list--archivable > li:is(:hover, :focus-within) .agent-session__age {
   opacity: 0;
 }
 
@@ -375,12 +355,23 @@
 
 .agent-session__time {
   flex: none;
-  min-width: 44px;
+  display: inline-grid;
+  justify-items: end;
   color: var(--text-3);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  text-align: right;
   white-space: nowrap;
+}
+
+.agent-session__time::before,
+.agent-session__age {
+  grid-area: 1 / 1;
+}
+
+.agent-session__time::before,
+.agent-sessions__list--archivable:not(.agent-sessions__list--cards, .agent-sessions__list--compact) .agent-session__more::after {
+  content: "99m";
+  visibility: hidden;
 }
 
 .agent-session__host {
@@ -419,7 +410,7 @@
   width: 100%;
 }
 
-.agent-sessions__list--menu :is(.agent-session__agent, .agent-session__time) {
+.agent-sessions__list--menu :is(.agent-session__agent, .agent-session__time, .agent-session__age) {
   transition: opacity 140ms ease;
 }
 
@@ -436,8 +427,18 @@
   transition: opacity 140ms ease;
 }
 
-.agent-sessions__list--archivable .agent-session__more {
-  right: calc(max(24px, var(--agent-age-width, 0px)) + 5px);
+.agent-sessions__list--archivable:not(.agent-sessions__list--cards, .agent-sessions__list--compact) .agent-session__more {
+  right: 6px;
+  display: flex;
+  gap: 3px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  pointer-events: none;
+}
+
+.agent-sessions__list--archivable:not(.agent-sessions__list--cards, .agent-sessions__list--compact) .agent-session__more > * {
+  pointer-events: auto;
 }
 
 .agent-sessions__list > li:is(:hover, :focus-within) .agent-session__more,
@@ -486,7 +487,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .agent-session__more,
-  .agent-sessions__list--menu :is(.agent-session__agent, .agent-session__time) {
+  .agent-sessions__list--menu :is(.agent-session__agent, .agent-session__time, .agent-session__age) {
     transition: none;
   }
 }

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { useIslandNotices } from "./useIslandNotices";
 import { PluginPermissionPrompt } from "../../features/plugins/PluginPermissionPrompt";
+import { usePluginPermissionPrompts } from "../../features/plugins/usePluginPermissionPrompts";
 import { PluginContextMenus } from "../../features/plugins/PluginContextMenu";
 import { IslandPages } from "./IslandPages";
 import { useTranslation } from "../../i18n";
@@ -10,7 +10,6 @@ import { islandHost } from "./islandHost";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { IslandShell } from "./IslandShell";
-import { useBackgroundUpdateCheck } from "../../features/updater/useBackgroundUpdateCheck";
 import { useIslandWindow } from "./useIslandWindow";
 import { getExpandedIslandHeight } from "./expandedHeight";
 import { getIslandStageStyle } from "./stageStyle";
@@ -18,18 +17,12 @@ import { useDevicePixelRatio } from "./useDevicePixelRatio";
 import { useGameMode } from "./useGameMode";
 import { useIslandKeyboard } from "./useIslandKeyboard";
 import { useIslandFeatures } from "./useIslandFeatures";
-import { useIslandAutoUpdate } from "./useIslandAutoUpdate";
 import { useIslandNavigation } from "./useIslandNavigation";
 import { usePluginHostEvents } from "./usePluginHostEvents";
 import { usePluginKeybindings } from "./usePluginKeybindings";
 import { useIslandTucking } from "./useIslandTucking";
-import { useTuckHold } from "./useTuckHold";
-import { useIslandShelf } from "./useIslandShelf";
 import { useIslandHover } from "./useIslandHover";
 import { usePluginPages } from "./usePluginPages";
-import { useMessageView } from "./useMessageView";
-import { useIslandBanner } from "./useIslandBanner";
-import { useIslandMessagePanel } from "./useIslandMessagePanel";
 import { useIslandPopup } from "./useIslandPopup";
 import { panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
@@ -60,15 +53,11 @@ import { runIslandAction, useIslandContributed, useSettleIslandContributions } f
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { overlaySlot } from "./slots/overlay";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { useLegacyPopups } from "./legacyPopups";
 import { useLegacyStates } from "./legacyStates";
 import type { IslandPage } from "./types";
 
 const openTranslator = () => {
   runIslandAction("translation.open");
-};
-const openUpdateSettings = () => {
-  openSettingsWindow("updates");
 };
 
 export function IslandApp() {
@@ -82,17 +71,12 @@ export function IslandApp() {
   const [storedSettings, setSettings] = useLegacySwitches(useIslandSettings(), { reconcile: true });
   const settings = useResolvedTheme(storedSettings);
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
-  const notices = useIslandNotices(settings, { mode, isTucked, quiet: game.quiet });
-  const { qqNotifications, wechatReminders, qqMail, pluginNotifications, permissionPrompts, hasMessagePreview } = notices;
-  useFirstRunGuide(pluginNotifications);
+  const permissionPrompts = usePluginPermissionPrompts();
+  useFirstRunGuide();
   const demo = useOnboardingDemo();
-  const { messageSource, setMessageSource, openMessages } = useMessageView(qqMail.closeReader, openIslandPage);
-  const banner = useIslandBanner({ messageNotice: settings.messageNotice, notices, mode, isTucked, quiet: game.quiet, onOpenMessages: openMessages });
-  const showsMessage = hasMessagePreview || banner.showing;
   const decor = useIslandDecor();
   const gauges = useCollapsedGauges(mode !== "collapsed" || isTucked || game.quiet);
   const collapsedSlots = useMemo(() => mergeIslandDecor([decor, gauges]), [decor, gauges]);
-  useBackgroundUpdateCheck(openUpdateSettings);
   usePluginHostEvents({ mode });
 
   const firstHints = useIslandFirstHints({
@@ -103,45 +87,28 @@ export function IslandApp() {
   });
   const notch = useIslandNotch();
   const barText = settings.showCollapsedText && !notch;
-  const { lines: contributedLines, alerts, popups, style, settled, hints } = useIslandContributed();
+  const { lines: contributedLines, alerts, popups, style, settled, hints, preview: contributedPreview } = useIslandContributed();
   usePluginKeybindings({ mode, page, hasActiveTodo: hints.has("todos.active") });
-  useIslandAutoUpdate({ mode, agentsBusy: hints.has("agents.busy") });
   const textWidth = useCollapsedWidth({
     barText,
     noticeText: firstHints.current ? t.island.firstHint[firstHints.current] : null,
     showTitle: settings.showTitle,
     widthExtra: settings.collapsedWidthExtra,
-    peeking: banner.hasLinePreview || contributedLines.some((line) => line.drop === true),
+    peeking: contributedPreview !== null || contributedLines.some((line) => line.drop === true),
     slots: collapsedSlots,
   });
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
-  useLegacyStates({
-    showsMessage,
-    linePreview: banner.hasLinePreview,
-    prompting: permissionPrompts.current !== null,
-    hold: useTuckHold(settings, { messagesOpen: mode === "expanded" && page === "qq", notices }),
-  });
+  useLegacyStates({ prompting: permissionPrompts.current !== null });
   useIslandTucking({ settings, navigation });
 
 
   const { features, openEnabledPage } = useIslandFeatures({
     settings,
-    qqEnabled: qqNotifications.snapshot.enabled,
-    wechatEnabled: wechatReminders.snapshot.enabled,
-    qqMail,
     page,
-    messageSource,
     setPage,
-    setMessageSource,
     openIslandPage,
     pluginPages: pluginPages.pageIds,
   });
-  const messagePanel = useIslandMessagePanel({
-    enabled: settings.messageNotice === "panel" && !game.quiet,
-    durationMs: settings.messagePanelSeconds * 1000,
-    notices, mode, page, openIslandPage, collapseIsland, onOpenMessages: openMessages,
-  });
-  useLegacyPopups({ maxPanelHeight: settings.maxPanelHeight, arrivalsHeight: messagePanel.arrivals ? messagePanel.height : null });
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
     [...popups.values()].some((entry) => entry.open === true),
@@ -167,8 +134,6 @@ export function IslandApp() {
     [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, style.vars, glassStyle],
   );
 
-  const { fileShelf, isShelfDropping } = useIslandShelf(settings, navigation);
-
   const {
     isPositionDetached,
     nativeGlassState,
@@ -189,7 +154,7 @@ export function IslandApp() {
 
   const islandNotice = useIslandNotice({ firstHints });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: banner.barPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
+    preview: contributedPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
   }));
   const hoverTucked = useIslandHover({
     settings,
@@ -215,14 +180,8 @@ export function IslandApp() {
 
   return (
     <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
-      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
+      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} setPage={setPage} isPeeking={navigation.isPeeking} minimizeToEdge={minimizeToEdge} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       <IslandShell
-        qqMail={qqMail}
-        qqNotifications={qqNotifications}
-        wechatReminders={wechatReminders}
-        pluginNotifications={pluginNotifications}
-        preview={banner.barPreview}
-        onOpenMessages={openMessages}
         mode={mode}
         page={page}
         popup={popup}
@@ -236,7 +195,6 @@ export function IslandApp() {
         showTitle={settings.showTitle}
         showCollapsedText={barText}
         features={features}
-        shelfCount={settings.shelfEnabled && settings.shelfShowCount ? fileShelf.items.length : null}
         onOpenPage={openEnabledPage}
         onWindowDragStart={startIslandDrag}
         onCollapse={collapseIsland}
@@ -264,18 +222,10 @@ export function IslandApp() {
           mode={mode}
           settings={settings}
           features={features}
-          qqMail={qqMail}
-          qqNotifications={qqNotifications}
-          wechatReminders={wechatReminders}
-          messageSource={messageSource}
-          messagePanel={messagePanel}
-          openMessages={openMessages}
           pluginPages={pluginPages}
-          fileShelf={fileShelf}
-          isShelfDropping={isShelfDropping}
         />
       </IslandShell>
-      <SlotView slot={overlaySlot} props={{ messageBanner: banner.banner && { banner: banner.banner, bannerRef: banner.bannerRef, onOpen: banner.open, onClose: banner.close, onAction: banner.runAction } }} />
+      <SlotView slot={overlaySlot} props={{}} />
       <PluginContextMenus />
     </main>
   );

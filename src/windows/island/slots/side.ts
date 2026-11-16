@@ -1,15 +1,8 @@
-import type { MessageSource } from "../../../features/messages/messagePreview";
 import { defineSlot } from "../../../features/plugin-kernel/slots";
 import type { IslandPage } from "../types";
 
-export type SideRowSources = {
-  unreadCount: number;
-  shelfCount: number | null;
-};
-
-export type SideRowContext = SideRowSources & {
+export type SideRowContext = {
   onOpenPage: (page: IslandPage) => void;
-  onOpenMessages: (source: MessageSource) => void;
 };
 
 export const SIDE_GAUGES_ORDER = 60;

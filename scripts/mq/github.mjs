@@ -25,6 +25,11 @@ export const github = {
   openPrs: () => JSON.parse(gh(["pr", "list", "--state", "open", "--limit", "100", "--json", "number,url,isDraft,autoMergeRequest,mergeable,headRefOid,statusCheckRollup"])),
   mainSha: (branch) => gh(["api", `repos/{owner}/{repo}/commits/${branch}`, "-q", ".sha"]),
   behindBy: (baseSha, headSha) => Number(gh(["api", `repos/{owner}/{repo}/compare/${baseSha}...${headSha}`, "-q", ".behind_by"])),
+  openPrHeads: () => JSON.parse(gh(["pr", "list", "--state", "open", "--limit", "100", "--json", "number,url,headRefName,headRefOid"])),
+  closePr: (number, comment) => gh(["pr", "close", String(number), "--delete-branch", "--comment", comment]),
+  prBody: (number) => gh(["pr", "view", String(number), "--json", "body", "-q", ".body"]),
+  setBody: (number, body) => gh(["pr", "edit", String(number), "--body-file", "-"], body),
+  runs: (branch) => JSON.parse(gh(["run", "list", "--branch", branch, "--limit", "20", "--json", "databaseId,headSha,status,conclusion,url"])),
 };
 
 function slug(text) {

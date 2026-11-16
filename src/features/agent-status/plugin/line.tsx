@@ -3,6 +3,7 @@ import { Bot } from "lucide-react";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { AgentProviderIcon } from "../AgentProviderIcon";
 import { agentLine } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type LineContext = {
   showTitle: boolean;
@@ -27,4 +28,4 @@ function AgentSessionLine({ showTitle, agentIcon }: LineContext) {
   );
 }
 
-lineSlot.add({ id: "agent-status.session", component: AgentSessionLine });
+lineSlot.add({ id: "agent-status.session", component: AgentSessionLine }, OWNER);

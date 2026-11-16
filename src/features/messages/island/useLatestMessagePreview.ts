@@ -1,0 +1,34 @@
+import { useState } from "react";
+import { latestMessagePreview } from "../messagePreview";
+import type { MailController } from "../mail/MailPanel";
+import type { QQNotificationsController } from "../qq-notifications/QQNotifications";
+import type { WeChatRemindersController } from "../wechat/WeChatReminders";
+import type { PluginNotificationsController } from "../../plugins/usePluginNotifications";
+import { useTranslation } from "../../../i18n";
+export function useLatestMessagePreview(
+  qqNotifications: QQNotificationsController,
+  wechatReminders: WeChatRemindersController,
+  qqMail: MailController,
+  pluginNotifications: PluginNotificationsController,
+) {
+  const t = useTranslation();
+  const qqPreview = qqNotifications.preview;
+  const wechatPreviewAt = wechatReminders.previewReceivedAt;
+  const wechatMessage = wechatReminders.previewMessage;
+  const wechatUnread = wechatReminders.snapshot.items[0]?.unread ?? null;
+  const pluginNotification = pluginNotifications.notification;
+  const [latestPreviewAt, setLatestPreviewAt] = useState(0);
+  const preview = latestMessagePreview([
+    qqPreview ? { ...qqPreview, body: qqPreview.unread ? t.messages.unreadCount(qqPreview.unread) : qqPreview.body, source: "qq", receivedAt: qqNotifications.previewReceivedAt ?? 0 } : null,
+    wechatPreviewAt === null ? null
+      : wechatMessage ? { source: "wechat", title: wechatMessage.contact, body: wechatMessage.preview, receivedAt: wechatPreviewAt, chat: wechatMessage.chat }
+        : { source: "wechat", title: t.messages.wechat, body: wechatUnread ? t.messages.unreadCount(wechatUnread) : t.messages.newReminder, receivedAt: wechatPreviewAt },
+    qqMail.preview ? { source: "qqMail", title: qqMail.preview.sender, body: qqMail.preview.subject, receivedAt: qqMail.previewReceivedAt ?? 0, account: qqMail.previewAccount } : null,
+    pluginNotification ? {
+      source: "plugin", title: pluginNotification.title, body: pluginNotification.body, receivedAt: pluginNotification.receivedAt,
+      iconUrl: pluginNotification.iconUrl ?? null, inline: pluginNotification.layout === "inline", mediaControls: pluginNotification.controls === "media",
+    } : null,
+  ], latestPreviewAt);
+  if (preview && preview.receivedAt > latestPreviewAt) setLatestPreviewAt(preview.receivedAt);
+  return preview;
+}

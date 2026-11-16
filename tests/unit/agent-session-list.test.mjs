@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import "./islandPageSlot.mjs";
 import {
-  ageSlotWidth,
   countActiveSessions,
   filterSessions,
   sessionAge,
@@ -155,11 +154,4 @@ test("the provider filter hides Codex or Claude Code but always shows WorkBuddy,
   assert.deepEqual(ids({ claudeCode: true, codex: false }), ["s1", "w", "a", "d"]);
   assert.equal(shownEffort("workbuddy", "high", { claudeCode: { high: "max" } }), "high");
   assert.equal(shownEffort("dsh", "high", { claudeCode: { high: "max" } }), "high");
-});
-
-test("the age column is as wide as its longest label", () => {
-  assert.equal(ageSlotWidth([]), 0);
-  assert.ok(ageSlotWidth(["1m"]) < ageSlotWidth(["12m"]));
-  assert.ok(ageSlotWidth(["1h"]) < ageSlotWidth(["12m"]));
-  assert.equal(ageSlotWidth(["1m", "12m", "3h"]), ageSlotWidth(["12m"]));
 });

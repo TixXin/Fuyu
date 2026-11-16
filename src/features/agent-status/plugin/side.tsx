@@ -2,6 +2,7 @@ import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandContributed } from "../../plugin-kernel/useIslandContributions";
 import { agentShell } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type SideContext = {
   onOpenPage: (page: "agents") => void;
@@ -28,4 +29,4 @@ function AgentRing({ onOpenPage }: SideContext) {
   );
 }
 
-sideSlot.add({ id: "agent", order: 10, component: AgentRing });
+sideSlot.add({ id: "agent", order: 10, component: AgentRing }, OWNER);

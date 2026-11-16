@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Bot } from "lucide-react";
-import type { MessageSource } from "../../features/messages/messagePreview";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
@@ -20,12 +19,9 @@ type IslandHeaderProps = {
   isDetached: boolean;
   agentVisualState: string;
   agentStatusLabel: string;
-  qqNotificationCount: number;
-  wechatPending: boolean;
   onPageChange: (page: IslandPage) => void;
   onCollapse: () => void;
   onOpenSettings: (section?: "updates") => void;
-  onOpenMessages: (source: MessageSource) => void;
   onOpenTranslator: (() => void) | null;
   onResetPosition: () => void;
   minimizesToTray: boolean;
@@ -43,12 +39,9 @@ export function IslandHeader({
   isDetached,
   agentVisualState,
   agentStatusLabel,
-  qqNotificationCount,
-  wechatPending,
   onPageChange,
   onCollapse,
   onOpenSettings,
-  onOpenMessages,
   onOpenTranslator,
   onResetPosition,
   minimizesToTray,
@@ -67,10 +60,7 @@ export function IslandHeader({
     page,
     features,
     isDetached,
-    qqNotificationCount,
-    wechatPending,
     onOpenSettings,
-    onOpenMessages,
     onOpenTranslator,
     hints,
     onResetPosition,

@@ -1,7 +1,5 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { CollapsedCenter } from "../../../features/center-pattern";
-import type { MailController } from "../../../features/messages/mail/MailPanel";
-import type { MessageSource } from "../../../features/messages/messagePreview";
 import { defineSlot, type IslandCollapsedCenterMeta, type IslandCollapsedMeta, type SlotWidth } from "../../../features/plugin-kernel/slots";
 import type { Translations } from "../../../i18n";
 import type { openSettingsWindow } from "../../settings/api";
@@ -10,14 +8,10 @@ import type { CollapsedSlots, IslandPage } from "../types";
 
 export type CollapsedBarContext = {
   t: Translations;
-  qqMail: MailController;
-  updateVersion: string | null;
   statusLight: ReactNode;
-  shelfCount: number | null;
   hints: ReadonlySet<string>;
   slots: CollapsedSlots;
   onOpenPage: (page: IslandPage) => void;
-  onOpenMessages: (source: MessageSource) => void;
   onOpenSettings: typeof openSettingsWindow;
 };
 

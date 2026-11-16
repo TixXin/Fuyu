@@ -25,6 +25,7 @@ pub(super) fn install_claude_code_status_hooks(
     running_script_path: &Path,
     status_script_path: &Path,
     approval: Option<&ApprovalHook>,
+    keep_approval: bool,
 ) -> Result<(), String> {
     let mut config = match fs::read_to_string(config_path) {
         Ok(content) if !content.trim().is_empty() => serde_json::from_str::<Value>(&content)
@@ -46,9 +47,10 @@ pub(super) fn install_claude_code_status_hooks(
         .as_object_mut()
         .ok_or_else(|| "Failed to prepare Claude Code hooks object.".to_string())?;
 
-    install_claude_code_hook_events(
+    install_hook_events(
         hooks,
         claude_code_installed_entries(running_script_path, status_script_path, approval),
+        keep_approval,
     );
 
     let json = serde_json::to_string_pretty(&config)
@@ -207,11 +209,15 @@ pub(super) fn install_claude_code_hook_events(
     hooks: &mut Map<String, Value>,
     entries: Vec<(&'static str, Value)>,
 ) {
+    install_hook_events(hooks, entries, false);
+}
+
+fn install_hook_events(hooks: &mut Map<String, Value>, entries: Vec<(&'static str, Value)>, keep_approval: bool) {
     let mut cleared: Vec<&str> = Vec::new();
     for (event_name, entry) in entries {
         if !cleared.contains(&event_name) {
             cleared.push(event_name);
-            let kept = unmanaged_entries(hooks, event_name);
+            let kept = unmanaged_entries(hooks, event_name, keep_approval);
             hooks.insert(event_name.to_string(), Value::Array(kept));
         }
         if let Some(Value::Array(list)) = hooks.get_mut(event_name) {
@@ -223,14 +229,14 @@ pub(super) fn install_claude_code_hook_events(
         if !matches!(hooks.get(&event_name), Some(Value::Array(list)) if list.iter().any(value_contains_focusd_hook_signature)) {
             continue;
         }
-        let kept = unmanaged_entries(hooks, &event_name);
+        let kept = unmanaged_entries(hooks, &event_name, keep_approval);
         if !kept.is_empty() {
             hooks.insert(event_name, Value::Array(kept));
         }
     }
 }
 
-fn unmanaged_entries(hooks: &mut Map<String, Value>, event_name: &str) -> Vec<Value> {
+fn unmanaged_entries(hooks: &mut Map<String, Value>, event_name: &str, keep_approval: bool) -> Vec<Value> {
     hooks
         .remove(event_name)
         .and_then(|value| match value {
@@ -239,11 +245,15 @@ fn unmanaged_entries(hooks: &mut Map<String, Value>, event_name: &str) -> Vec<Va
         })
         .unwrap_or_default()
         .into_iter()
-        .filter_map(remove_managed_claude_code_hooks)
+        .filter_map(|entry| remove_managed(entry, keep_approval))
         .collect()
 }
 
-pub(super) fn remove_managed_claude_code_hooks(mut entry: Value) -> Option<Value> {
+fn is_approval_hook(hook: &Value) -> bool {
+    hook.to_string().contains(APPROVAL_HOOK_MARKER_HEADER)
+}
+
+fn remove_managed(mut entry: Value, keep_approval: bool) -> Option<Value> {
     let Value::Object(entry_object) = &mut entry else {
         return Some(entry);
     };
@@ -256,7 +266,7 @@ pub(super) fn remove_managed_claude_code_hooks(mut entry: Value) -> Option<Value
         return Some(entry);
     };
 
-    hooks.retain(|hook| !value_contains_focusd_hook_signature(hook));
+    hooks.retain(|hook| !value_contains_focusd_hook_signature(hook) || (keep_approval && is_approval_hook(hook)));
     if hooks.is_empty() {
         None
     } else {

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { HIDE_TOOLTIP_EVENT } from "../../components/IconButtonTooltip";
 import { isMacOS } from "../../lib/platform";
 import * as islandApi from "./api";
 import "./ModifierWindowDrag.css";
@@ -48,6 +49,33 @@ export function useModifierWindowDrag(onDragStart: () => void) {
       unlisten?.();
       document.documentElement.classList.remove(MOVE_ARMED_CLASS);
       delete document.documentElement.dataset[DRAG_KIND_ATTRIBUTE];
+    };
+  }, []);
+
+  useEffect(() => {
+    let didCancel = false;
+    let unlisten: (() => void) | null = null;
+
+    void islandApi.listenIslandHideHints(() => {
+      isArmedRef.current = false;
+      document.documentElement.classList.remove(MOVE_ARMED_CLASS);
+      document.documentElement.dataset[DRAG_KIND_ATTRIBUTE] = "none";
+      window.dispatchEvent(new Event(HIDE_TOOLTIP_EVENT));
+    })
+      .then((nextUnlisten) => {
+        if (didCancel) {
+          nextUnlisten();
+        } else {
+          unlisten = nextUnlisten;
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to listen for island hint hiding", error);
+      });
+
+    return () => {
+      didCancel = true;
+      unlisten?.();
     };
   }, []);
 

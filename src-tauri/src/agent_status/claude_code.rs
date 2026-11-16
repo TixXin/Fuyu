@@ -54,6 +54,7 @@ fn install(env: &HookEnv) -> Result<(), String> {
         env.running_script,
         env.status_script,
         approval_hook().as_ref(),
+        crate::agent_approval::hook_endpoint_unknown(),
     )
 }
 
@@ -67,11 +68,11 @@ fn hooks_state(env: &HookEnv) -> HookInstallState {
 }
 
 fn approval_hook() -> Option<ApprovalHook> {
-    use crate::agent_approval::{activity_hook_url, endpoint, hook_url, question_hook_url, Agent};
+    use crate::agent_approval::{activity_hook_url, hook_token, hook_url, question_hook_url, Agent};
     Some(ApprovalHook {
         url: hook_url(Agent::ClaudeCode)?,
         question_url: question_hook_url(),
         activity_url: activity_hook_url(),
-        token: endpoint()?.token,
+        token: hook_token()?,
     })
 }

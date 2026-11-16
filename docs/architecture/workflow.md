@@ -30,7 +30,8 @@ land 会推送、开 PR 并开启自动合并，所以要写 `--yes` 才执行�
 1. `git fetch origin main`；本地还没包含 `origin/main` 时，在仓库内部把它合进来（`git merge-tree` 加 `git commit-tree`），把这个合并提交推上去；工作区、索引和本地 `main` 都不动，本地 `main` 等 PR 合入后由 `mq:wait` / `mq:sync` 跟上（F34、F58）。**用 merge，不用 rebase**：rebase 要求工作区干净，而且会改写别的会话已经看到的提交。**共用工作区里不跑普通的 `git merge`**（F58）：工作区有没提交的改动时，它先 `stash create` 存一份，合并失败就 `reset --hard` 再 `stash apply`；这一步撞上别的会话占着的 `index.lock`，改动就放不回来（2026-11-16 冲掉过 49 个文件，#688）。两边的提交真的冲突时什么都不动、停下，列出冲突的文件。
 2. 把 `HEAD` 推到 `land/<GitHub 用户名>/<机器名>-<分支名>`（在 `main` 上就是 `…-main`），pre-push 钩子跑 `scripts/land-check.mjs --light`：Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查。工作区里没提交的文件不会被推上去，land 会提一句有几个。
 3. 没有开着的 PR 就开一个，有就沿用（上一批还没合入时，新提交跟着进同一个 PR）；开启自动合并（`--merge`，提交号不变）。
-4. `--wait` 时在前台等合入，否则提示后台跑 `pnpm mq:wait`。
+4. 看别的开着的 land PR（F59）：分支是本机的（`land/<用户名>/<本机名或别名>-<分支名>`，或者后面带 `-upto-` / `-only-` 的；按整名比，不按前缀）、而且旧 PR 的提交都已经在新 head 里（旧 head 是新 head 的祖先，或者多出来的只有合并提交：`origin/main` 前进过时 land 推的是在仓库内部现做的合并，它不会进本地 `main`）的，`gh pr close --delete-branch` 关掉，新 PR 正文末尾写「取代 #N」。旧 PR 有新 PR 没有的提交、别的机器的、别的账号的都不动，只打印一行。
+5. `--wait` 时在前台等合入，否则提示后台跑 `pnpm mq:wait`。
 
 合入用 merge commit，所以合完以后本地 `main` 一般能直接快进；land 之后又有了新提交时，`mq:wait` / `pnpm mq:sync` 在仓库内部把 `origin/main` 合进来（不改写本地提交，也不跑 `git merge`）。快进只在快进会改到的文件（rename 的两边都算）都没有没提交的改动时才用 `git merge --ff-only`，否则也走下面的做法。动索引前先等别的进程放开 `index.lock`（最多约 30 秒，等不到就什么都不动、停下）。
 
@@ -56,7 +57,7 @@ land 会推送、开 PR 并开启自动合并，所以要写 `--yes` 才执行�
 
 ### 提前看 CI：`pnpm mq:try [--wait]`
 
-大家都在 Mac 上验证，Windows 才有的问题（路径短名、计时秒数）要到 PR 的 CI 才暴露。`mq:try` 把本地 `main`（在仓库内部合上 `origin/main`）推到 `try/<GitHub 用户名>/<机器名>-<分支名>`，CI 在 `try/**` 的推送上照样跑全套检查，不开 PR，不会合入；同一台机器再推一次会取消上一轮。`--wait` 在前台等结果。一个任务做完、准备 land 一大批之前跑一次（F51）。
+大家都在 Mac 上验证，Windows 才有的问题（路径短名、计时秒数）要到 PR 的 CI 才暴露。`mq:try` 把本地 `main`（在仓库内部合上 `origin/main`）推到 `try/<GitHub 用户名>/<机器名>-<分支名>`，CI 在 `try/**` 的推送上照样跑全套检查，不开 PR，不会合入；同一台机器再推一次会取消上一轮。`--wait` 在前台等结果，拿到结果后删掉这个 try 分支（run 的记录还在，`gh run list --branch` 照样查得到）。不带 `--wait` 推的，跑完后 `pnpm mq:try --clean` 删：只删本机名或别名下、这次推送的 CI 已经跑完的 `try/` 分支，还在跑的、找不到 CI 记录的、别的机器的、手推的 `try/<名字>` 只列出来（F59）。一个任务做完、准备 land 一大批之前跑一次（F51）。
 
 **改 Rust 的任务，报验前先在这里把 Windows 的 `rust` 跑过**，报验时附上这次 run 的链接（2026-11-16 起，用户定）；新加 `host_service`、Tauri 命令、窗口的尤其要做。Mac 本地的 Rust 测试和 Windows 交叉 clippy 都查不出 Windows 链接期、运行期的问题：11-16 两次 Rust 测试程序一启动就报 0xc0000139，是 `host_service` 的方法体碰了 `AppHandle`（见 [v3-services.md](plugins/v3-services.md)），都到整批 PR 的 CI 才暴露，把整批卡住。`mq:try` 推的是整个本地 `main`，失败的不一定是自己的提交，看清失败的测试属于谁再报。run 的链接用 `gh run list --branch <try 分支> --limit 1 --json url -q '.[0].url'` 拿。
 
@@ -250,7 +251,7 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 - 启动前只停本仓库 `src-tauri/target/debug/` 里的 `fuyu.exe`（`scripts/stop-running-island.mjs` 按可执行文件路径判断），安装的正式版和别处的岛屿不动。
 - 岛默认放在中间；只有正式版在跑、并且开发版放中间会和正式版的岛撞上时，才让到屏幕左侧四分之一处（F39.6，`src-tauri/src/dev_lane/beside.rs`）。正式版在不在跑看它的单实例锁：Windows 查命名 mutex `com.tixxin.fuyu-sim`；Mac 的锁是 `/tmp/com_tixxin_fuyu_si.sock`，连上去会让正式版把岛弹出来，所以只看这个文件在不在，再加上正式数据目录的 `fuyu.lock` 是本机、心跳没过期。正式版的岛在哪：用 `fuyu.lock` 里的 pid 找它宽 820 的舞台窗口。正式版在跑但找不到窗口（例如收进了托盘）时照旧让开。开发版每 3 秒看一次，结果变了就滑到新位置。设 `FOCUSD_DEV_LANE_CENTER=1` 则始终放中间。
 - 想再开一个互不相干的开发版，设 `FOCUSD_DEV_LANE=<2–999>`。
-- 要用正式身份和正式数据跑调试版（调数据迁移、安装 Agent 钩子、开机自启这类只有正式身份才做的事），设 `FUYU_DEV_SHARED_IDENTITY=1` 再 `pnpm tauri dev`。这时和 F38 之前一样：启动前停掉所有岛屿，不能和正式版同时开。两个变量 `stop-running-island.mjs`、`pnpm lab` 和 Rust 读的是同一套规则。
+- 要用正式身份和正式数据跑调试版（调数据迁移、开机自启这类只有正式身份才做的事），设 `FUYU_DEV_SHARED_IDENTITY=1` 再 `pnpm tauri dev`。这时和 F38 之前一样：启动前停掉所有岛屿，不能和正式版同时开。两个变量 `stop-running-island.mjs`、`pnpm lab` 和 Rust 读的是同一套规则。
 - `cargo test`、release 构建和通知验证（`FOCUSD_VERIFY_NOTIFICATIONS`）不受影响；`tauri build --debug` 出的调试版也是独立身份。
 
 数据是正式数据的一份副本（F39.3）：开发版第一次启动时把正式数据目录（`FUYU_HOME` → `home.json` 指针 → `~/.fuyu`）复制到 `%APPDATA%\com.tixxin.fuyu.lane-<n>`，之后各改各的，不同步。
@@ -262,7 +263,7 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 
 凭据是分开的（F39.2）：开发版的邮箱、日历、翻译、套餐用量、Bark 和插件凭据存在带 `lane-<n>` 的服务名下，第一次启动时从正式版复制一份，之后在开发版里删改不影响正式版；正式版后来新加的账号不会自动过来（把 `dev-copy.json` 里的 `credentials` 改成 `false` 再启动会补上没有的）。Mac 上不复制，要重新输入。
 
-Agent 状态从正式数据目录只读地读（F39.3）：钩子脚本把状态写在自己所在的目录，也就是正式数据目录；开发版读那里的 `agent-status.json`、运行标记、通知和会话记录，所以看得到「运行中」「等你确认」，但不在那里建目录、不删文件。开发版里「清除状态」、安装钩子、改开机自启、搬数据目录都会拒绝，也不注册 `fuyu://` 链接，启动时不自动升级 `~/.claude` 里已装的回复标记规则（在设置里手动开关回复标记仍然会改那份文件）。开发版自己记的东西（见过的会话、定位日志、远程主机）在它自己的目录。
+Agent 状态从正式数据目录只读地读（F39.3）：钩子脚本把状态写在自己所在的目录，也就是正式数据目录；开发版读那里的 `agent-status.json`、运行标记、通知和会话记录，所以看得到「运行中」「等你确认」，但不在那里建目录、不删文件。开发版里「清除状态」、改开机自启、搬数据目录都会拒绝。「安装/修复」可以点（B65，2026-11-16 起，用户要求）：装的是正式版的钩子，脚本写进正式数据目录，Claude Code 审批钩子用正式版 `agent-approval.json` 的端口和 token，和正式版自己点的结果一字不差，开发版关掉后钩子照样能用。开发版也不注册 `fuyu://` 链接，启动时不自动升级 `~/.claude` 里已装的回复标记规则（在设置里手动开关回复标记仍然会改那份文件）。开发版自己记的东西（见过的会话、定位日志、远程主机）在它自己的目录。
 
 怎么认出开发版（F39.1）：收起的岛左上角、展开面板顶部中间、设置窗口顶部各有一个灰色的「DEV」，托盘提示是「Fuyu 开发版」。贴边收成细条时没有地方放字，看托盘。开发版不检查也不安装更新（装的会是正式版的安装包），开机自启的开关是禁用的。
 
@@ -303,8 +304,9 @@ Agent 状态从正式数据目录只读地读（F39.3）：钩子脚本把状态
 
 ## 排障
 
+- 手动关 land PR（被新 PR 取代了、不要了）用 `gh pr close <n> --delete-branch`，不然分支一直留在远程；land 只自动关本机的、提交都已经在新 PR 里的那些（F59）。
 - PR 落后于 `main`：工作流 `.github/workflows/update-behind-prs.yml`（`scripts/mq/updateBehind.mjs`）按开启自动合并的先后，只更新排在最前、能合入的那个 PR；它出问题时 `pnpm mq:wait --update` 自己更新。它用仓库 secret `PR_UPDATER_TOKEN`，过期时 PR 会停在落后状态。
 - `mq:wait` 报告合入了，但本地 `main` 没跟上：`mq:sync` 会列出挡路的文件和原因（没提交的改动和 `origin/main` 改了同一处这类），等那些文件提交后再 `pnpm mq:sync`。land 说「改在仓库内部合并」之后也是这种情况。
 - land 说「本地的提交和 origin/main 冲突，什么都没动」：两边的提交真的有内容冲突，land 列出冲突的文件。`git status` 里没有别人没提交的已跟踪文件时，才能自己 `git merge origin/main` 解决、提交，再 land；有的话不要 `git merge`（F58），先找改那些文件的会话或全局总控。
 - 一批里别人的提交让 PR 的 CI 没过（常见的是 Windows 上写的 Rust 在 `rust-macos` 上编译不过，本机查不出来）：先用 SendMessage 把失败的 job 和报错发给提交它的会话，并订阅它空闲。它空闲后那些文件仍没有改动、也没有回复时，被挡住的会话可以自己做最小的修复（只让检查通过，不改逻辑），单独提交、标题写清补的是哪个提交，再发消息告知对方；动手前先看那些文件有没有没提交的改动，有就不动。
-- `tests/scripts/mq.test.mjs` 在临时仓库里真的 land 一次（合并 main、不改写本地提交、不带走没提交的文件、只开一个 PR、没提交的文件挡住合并时照样推出去、冲突时撤回并列出文件；`--only` 只带选中的提交、缺依赖时拒绝、合入后不再列出），用假的 `gh` 代替 GitHub。
+- `tests/scripts/mq.test.mjs` 在临时仓库里真的 land 一次（合并 main、不改写本地提交、不带走没提交的文件、只开一个 PR、没提交的文件挡住合并时照样推出去、冲突时撤回并列出文件；`--only` 只带选中的提交、缺依赖时拒绝、合入后不再列出），用假的 `gh` 代替 GitHub；`tests/scripts/mq-cleanup.test.mjs` 同样在临时仓库加本地 bare remote 里测关被取代的 land PR 和删 try 分支。

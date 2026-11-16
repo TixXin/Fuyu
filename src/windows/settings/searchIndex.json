@@ -2480,6 +2480,182 @@
     {
       "page": "agents",
       "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "当前状态"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Status"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Codex"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Codex"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Claude Code"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Claude Code"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "WorkBuddy"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "WorkBuddy"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Antigravity"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Antigravity"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "DeepSeek Harness"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "DeepSeek Harness"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Qoder"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Qoder"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "CodeBuddy"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "CodeBuddy"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Qwen Code"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Qwen Code"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "TRAE"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "TRAE"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "TRAE CN"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "TRAE CN"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "ZCode"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "ZCode"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Kimi Code"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Kimi Code"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Grok CLI"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Grok CLI"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "GitHub Copilot CLI"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "GitHub Copilot CLI"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "Droid"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "Droid"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
         "group": "小岛显示",
         "title": "在小岛显示会话标题",
         "description": "在待办的位置显示 Agent 图标和会话标题。标题直接读取 Claude Code 和 Codex 的会话记录，不需要安装钩子。"
@@ -3294,182 +3470,6 @@
         "group": "Approve on the island",
         "title": "Also while the terminal is in front",
         "description": "Off, a request from a session whose terminal or editor window is in front is approved in that terminal."
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "当前状态"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Status"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Codex"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Codex"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Claude Code"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Claude Code"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "WorkBuddy"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "WorkBuddy"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Antigravity"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Antigravity"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "DeepSeek Harness"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "DeepSeek Harness"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Qoder"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Qoder"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "CodeBuddy"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "CodeBuddy"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Qwen Code"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Qwen Code"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "TRAE"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "TRAE"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "TRAE CN"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "TRAE CN"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "ZCode"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "ZCode"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Kimi Code"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Kimi Code"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Grok CLI"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Grok CLI"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "GitHub Copilot CLI"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "GitHub Copilot CLI"
-      }
-    },
-    {
-      "page": "agentConnect",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Droid"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Droid"
       }
     },
     {

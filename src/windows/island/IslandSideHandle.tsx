@@ -4,12 +4,12 @@ import "./IslandSideEdge.css";
 type IslandSideHandleProps = {
   label: string;
   agentVisualState: string;
-  unreadCount: number;
+  badge: boolean;
   onOpen: () => void;
   onWindowDragStart: () => void;
 };
 
-export function IslandSideHandle({ label, agentVisualState, unreadCount, onOpen, onWindowDragStart }: IslandSideHandleProps) {
+export function IslandSideHandle({ label, agentVisualState, badge, onOpen, onWindowDragStart }: IslandSideHandleProps) {
   const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } =
     useWindowDragGesture(false, onWindowDragStart);
 
@@ -36,7 +36,7 @@ export function IslandSideHandle({ label, agentVisualState, unreadCount, onOpen,
       }}
     >
       <span className={`island__side-handle-dot island__pulse--agent-${agentVisualState}`} aria-hidden="true" />
-      {unreadCount > 0 && <span className="island__side-handle-badge" aria-hidden="true" />}
+      {badge && <span className="island__side-handle-badge" aria-hidden="true" />}
     </div>
   );
 }

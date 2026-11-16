@@ -1,0 +1,181 @@
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { addArrival, removeArrival, arrivalKey, type ArrivalMessage } from "../arrivals/messageArrivals";
+import type { MailMessage } from "../mail/api";
+import type { MessageSource } from "../messagePreview";
+import { runPluginNotificationAction } from "../../plugins/api";
+import type { useIslandNotices } from "./useIslandNotices";
+import { HOVER_HOLD_RETRY_MS } from "../../plugin-kernel/hoverHold";
+import { useHoverHold } from "../../plugin-kernel/useHoverHold";
+import { useOutsideClick } from "../../plugin-kernel/useOutsideClick";
+import type { IslandHost } from "../../plugin-kernel/islandHost";
+
+export type PanelArrival = ArrivalMessage & { mail?: { message: MailMessage; account: string | null }; pluginId?: string };
+
+type PanelNotices = Pick<ReturnType<typeof useIslandNotices>, "preview" | "qqNotifications" | "wechatReminders" | "qqMail" | "pluginNotifications" | "setMessagePanelOpen">;
+
+type MessagePanelOptions = {
+  enabled: boolean;
+  durationMs: number;
+  notices: PanelNotices;
+  mode: string;
+  page: string;
+  openIslandPage: (page: "qq") => void;
+  collapseIsland: () => void;
+  onOpenMessages: (source: MessageSource) => void;
+  host: IslandHost;
+};
+
+export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page, openIslandPage, collapseIsland, onOpenMessages, host }: MessagePanelOptions) {
+  const { preview, qqNotifications, wechatReminders, qqMail, pluginNotifications, setMessagePanelOpen } = notices;
+  const [arrivals, setArrivals] = useState<PanelArrival[] | null>(null);
+  const [height, setHeight] = useState(0);
+  const autoOpenedRef = useRef(false);
+  const closeTimerRef = useRef<number | undefined>(undefined);
+  const handledKeyRef = useRef<string | null>(null);
+  const isOnMessages = mode === "expanded" && page === "qq";
+  const holdsOpen = useHoverHold(host);
+  const latest = useRef({ mode, isOnMessages, durationMs, collapseIsland, openIslandPage, holdsOpen });
+  useLayoutEffect(() => {
+    latest.current = { mode, isOnMessages, durationMs, collapseIsland, openIslandPage, holdsOpen };
+  });
+
+  const end = useCallback(() => {
+    autoOpenedRef.current = false;
+    window.clearTimeout(closeTimerRef.current);
+    setArrivals(null);
+    setMessagePanelOpen(false);
+  }, [setMessagePanelOpen]);
+
+  const close = useCallback(() => {
+    const wasOpen = latest.current.isOnMessages;
+    end();
+    if (wasOpen) latest.current.collapseIsland();
+  }, [end]);
+
+  const incoming = enabled && preview ? toArrival(preview, notices) : null;
+  const incomingKey = incoming ? `${arrivalKey(incoming)}:${incoming.receivedAt}` : null;
+  const incomingRef = useRef(incoming);
+  incomingRef.current = incoming;
+  useEffect(() => {
+    const message = incomingRef.current;
+    if (!message || !incomingKey || handledKeyRef.current === incomingKey) return;
+    handledKeyRef.current = incomingKey;
+    const current = latest.current;
+    if (current.mode !== "collapsed" && !autoOpenedRef.current) return;
+    setArrivals((list) => addArrival((list ?? []).filter((item) => !(message.mediaControls && item.mediaControls && item.pluginId === message.pluginId)), message));
+    setMessagePanelOpen(true);
+    autoOpenedRef.current = true;
+    if (current.mode === "collapsed") current.openIslandPage("qq");
+    const closeLater = (heldSince: number) => {
+      if (!autoOpenedRef.current) return;
+      if (latest.current.holdsOpen(heldSince)) {
+        closeTimerRef.current = window.setTimeout(() => closeLater(heldSince), HOVER_HOLD_RETRY_MS);
+        return;
+      }
+      close();
+    };
+    window.clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = window.setTimeout(() => closeLater(Date.now()), current.durationMs);
+  }, [incomingKey, close, setMessagePanelOpen]);
+
+  const showing = arrivals !== null;
+  const showAll = useCallback(() => {
+    autoOpenedRef.current = false;
+    window.clearTimeout(closeTimerRef.current);
+    setArrivals(null);
+    setMessagePanelOpen(false);
+  }, [setMessagePanelOpen]);
+  useEffect(() => {
+    if (!showing) return;
+    const takeOver = (event: PointerEvent) => {
+      if (event.target instanceof Element && event.target.closest(".message-arrivals__media, .message-arrivals__clear")) return;
+      autoOpenedRef.current = false;
+      window.clearTimeout(closeTimerRef.current);
+      if (!(event.target instanceof Element && event.target.closest(".message-arrivals__list"))) showAll();
+    };
+    window.addEventListener("pointerdown", takeOver, true);
+    return () => window.removeEventListener("pointerdown", takeOver, true);
+  }, [showing, showAll]);
+
+  const wasExpandedRef = useRef(mode === "expanded");
+  useEffect(() => {
+    const collapsedNow = mode === "collapsed" && wasExpandedRef.current;
+    wasExpandedRef.current = mode === "expanded";
+    if (showing && (collapsedNow || (mode === "expanded" && page !== "qq"))) end();
+  }, [mode, page, showing, end]);
+  useEffect(() => {
+    if (!enabled && showing) close();
+  }, [enabled, showing, close]);
+  useEffect(() => () => window.clearTimeout(closeTimerRef.current), []);
+
+  useOutsideClick(showing && isOnMessages, close, host);
+
+  const open = useCallback((message: PanelArrival) => {
+    if (message.source === "plugin") {
+      pluginNotifications.dismiss();
+      const rest = removeArrival(arrivals ?? [], arrivalKey(message));
+      if (rest.length === 0) close();
+      else setArrivals(rest);
+      return;
+    }
+    end();
+    if (message.source === "qqMail" && message.mail) {
+      onOpenMessages("qqMail");
+      void qqMail.readMail(message.mail.message, message.mail.account);
+      return;
+    }
+    const source = message.source;
+    const launch = source === "qq" ? qqNotifications.openQQ() : wechatReminders.openWeChat(message.chat);
+    void launch.then((opened) => {
+      if (opened === false) onOpenMessages(source);
+      else latest.current.collapseIsland();
+    });
+  }, [arrivals, close, end, onOpenMessages, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
+
+  const runAction = useCallback((message: PanelArrival, action: string) => {
+    if (message.pluginId) {
+      void runPluginNotificationAction(message.pluginId, action).catch((error: unknown) =>
+        console.error("Failed to run a plugin notification action", error),
+      );
+    }
+    pluginNotifications.dismiss();
+    const rest = removeArrival(arrivals ?? [], arrivalKey(message));
+    if (rest.length === 0) close();
+    else setArrivals(rest);
+  }, [arrivals, close, pluginNotifications]);
+
+  const clearAll = useCallback(() => {
+    const mails = (arrivals ?? []).flatMap((item) => item.mail?.account && item.mail.message.unread ? [{ account: item.mail.account, id: item.mail.message.id }] : []);
+    void (async () => { for (const mail of mails) await qqMail.markRead(mail.account, mail.id); })();
+    void qqNotifications.clear();
+    void wechatReminders.clear();
+    qqNotifications.dismissPreview();
+    wechatReminders.dismissPreview();
+    qqMail.dismissPreview();
+    pluginNotifications.dismiss();
+    close();
+  }, [arrivals, close, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
+
+  return {
+    clearAll,
+    arrivals: showing && page === "qq" ? arrivals : null,
+    height,
+    measure: setHeight,
+    open,
+    runAction,
+    showAll,
+  };
+}
+
+function toArrival(preview: NonNullable<PanelNotices["preview"]>, notices: PanelNotices): PanelArrival {
+  const base: PanelArrival = { ...preview, actions: [] };
+  const { qqMail, pluginNotifications } = notices;
+  if (preview.source === "qqMail" && qqMail.preview) {
+    return { ...base, mail: { message: qqMail.preview, account: qqMail.previewAccount } };
+  }
+  const notification = pluginNotifications.notification;
+  if (preview.source === "plugin" && notification) {
+    return { ...base, actions: notification.actions, pluginId: notification.pluginId };
+  }
+  return base;
+}

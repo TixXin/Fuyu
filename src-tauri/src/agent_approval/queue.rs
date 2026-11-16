@@ -169,6 +169,10 @@ impl Queue {
         self.shutting_down = true;
     }
 
+    pub fn reopen(&mut self) {
+        self.shutting_down = false;
+    }
+
     pub fn is_shutting_down(&self) -> bool {
         self.shutting_down
     }
