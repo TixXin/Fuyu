@@ -11,23 +11,9 @@ import { islandPage } from "./page.ts";
 import { messagesIsland } from "./islandState";
 
 type Panel = ComponentProps<typeof MessagesPanel>;
-type Arrivals = ComponentProps<typeof MessageArrivalsPanel>;
 
 type MessagesPageProps = {
   features: Panel["enabledSources"];
-  qqMail: Panel["qqMail"];
-  qqNotifications: Panel["qqNotifications"];
-  wechatReminders: Panel["wechatReminders"];
-  messageSource: Panel["source"];
-  messagePanel?: {
-    arrivals: Arrivals["arrivals"] | null;
-    open: Arrivals["onOpen"];
-    runAction: Arrivals["onAction"];
-    measure: Arrivals["onMeasure"];
-    showAll: Arrivals["onShowAll"];
-    clearAll: Arrivals["onClearAll"];
-  };
-  openMessages: Panel["onSourceChange"];
   onOpenSettings: (section: "mail") => void;
 };
 
@@ -39,8 +25,11 @@ type HeaderContext = {
 
 const pageSlot = defineSlot<MessagesPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");
 
-function MessagesPage({ features, qqMail, qqNotifications, wechatReminders, messageSource, messagePanel, openMessages, onOpenSettings }: MessagesPageProps) {
+function MessagesPage({ features, onOpenSettings }: MessagesPageProps) {
   const playing = useIslandContributed().hints.has("media.playing");
+  const messages = messagesIsland.use();
+  if (!messages) return null;
+  const { mail: qqMail, qq: qqNotifications, wechat: wechatReminders, source: messageSource, panel: messagePanel, open: openMessages } = messages;
   return (
     <div className="message-panel">
       {messagePanel?.arrivals ? (
