@@ -12,6 +12,10 @@ export type CalendarSourceInfo = { id: string, kind: string, name: string, host:
 
 export type CalendarSources = { sources: Array<CalendarSourceInfo>, };
 
+export type ClipboardText = { id: string, text: string, truncated: boolean, copiedAt: number, favorite: boolean, };
+
+export type ClipboardTexts = { items: Array<ClipboardText>, };
+
 export type EngineSecret = { engine: string, hasSecret: boolean, };
 
 export type FileShelfEntry = { missing: boolean, unreachable: boolean, id: string, path: string, name: string, isDir: boolean, size: number, addedAt: number, pinned: boolean, };
@@ -34,6 +38,7 @@ export type RustMethods = {
   "app.version": { params: Record<string, never> | null; result: AppVersion };
   "calendar.events": { params: { refresh?: boolean | null }; result: CalendarEvents };
   "calendar.sources": { params: Record<string, never> | null; result: CalendarSources };
+  "clipboard.history": { params: { limit?: number | null }; result: ClipboardTexts };
   "fileShelf.add": { params: { paths: Array<string> }; result: FileShelfSnapshot };
   "fileShelf.list": { params: Record<string, never> | null; result: FileShelfSnapshot };
   "media.next": { params: Record<string, never> | null; result: NowPlaying };
@@ -46,4 +51,4 @@ export type RustMethods = {
   "translator.translate": { params: { text: string; direction: string; provider?: string | null; model?: string | null }; result: Translated };
 };
 
-export declare const RUST_METHODS: readonly ["app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "fileShelf.add", "fileShelf.list", "media.next", "media.nowPlaying", "media.playPause", "media.previous", "media.seek", "translator.engines", "translator.rewrite", "translator.translate"];
+export declare const RUST_METHODS: readonly ["app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "clipboard.history", "fileShelf.add", "fileShelf.list", "media.next", "media.nowPlaying", "media.playPause", "media.previous", "media.seek", "translator.engines", "translator.rewrite", "translator.translate"];

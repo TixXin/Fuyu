@@ -42,7 +42,7 @@ fn refresh() {
     }
 
     let snapshot = service().ok().and_then(|service| service.snapshot().ok());
-    if snapshot.as_ref().is_some_and(|snapshot| !snapshot.settings.enabled || !snapshot.settings.shortcut_enabled) {
+    if !super::switched_on() || snapshot.as_ref().is_some_and(|snapshot| !snapshot.settings.enabled || !snapshot.settings.shortcut_enabled) {
         report_hotkey_error(None);
         return;
     }

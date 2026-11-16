@@ -296,6 +296,11 @@ pub(crate) fn editing() -> bool {
     EDITING.load(Ordering::SeqCst)
 }
 
+pub(super) fn forget() {
+    EDITING.store(false, Ordering::SeqCst);
+    *DRAG.lock().unwrap_or_else(PoisonError::into_inner) = None;
+}
+
 #[cfg(windows)]
 fn take_keys(window: &WebviewWindow, on: bool) {
     let _ = window.set_focusable(on);

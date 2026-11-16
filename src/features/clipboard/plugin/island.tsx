@@ -4,6 +4,7 @@ import { ClipboardCopyNotice, ClipboardCopyNoticeActions } from "../ClipboardCop
 import type { ClipboardCopyCardState } from "../useClipboardCopyCard";
 import { ClipboardHistoryPanel } from "../ClipboardHistoryPanel";
 import type { useClipboardHistory } from "../useClipboardHistory";
+import { OWNER } from "./owner.ts";
 import { islandPage } from "./page.ts";
 
 type ClipboardPageProps = {
@@ -35,7 +36,7 @@ function ClipboardPage({ clipboard, extraView }: ClipboardPageProps) {
   );
 }
 
-pageSlot.add({ ...islandPage, component: ClipboardPage });
+pageSlot.add({ ...islandPage, component: ClipboardPage }, OWNER);
 
 type NoticeSources = { copyCard: ClipboardCopyCardState };
 
@@ -49,4 +50,4 @@ function CopyActions({ copyCard }: NoticeSources) {
   return <ClipboardCopyNoticeActions card={copyCard} />;
 }
 
-noticeSlot.add({ id: "copy", order: 50, active: ({ copyCard }) => Boolean(copyCard.current), component: CopyContent, actions: CopyActions });
+noticeSlot.add({ id: "copy", order: 50, active: ({ copyCard }) => Boolean(copyCard.current), component: CopyContent, actions: CopyActions }, OWNER);

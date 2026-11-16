@@ -1,6 +1,11 @@
 use serde::{Deserialize, Serialize};
-use std::{thread, time::Duration};
+use std::{
+    sync::{Mutex, PoisonError},
+    thread,
+    time::Duration,
+};
 
+use super::workers::Ticker;
 use super::{current_unix_millis, ClipboardHistoryItem, ClipboardHistoryService, ClipboardSource};
 
 pub(super) const FORGET_WINDOW_MS: i64 = 2 * 60 * 1000;
@@ -101,13 +106,33 @@ pub(super) fn cap_text(mut text: String, html: Option<String>, limit: usize) -> 
     (text, None, true)
 }
 
-pub(super) fn start_secret_sweeper() {
-    thread::spawn(|| loop {
-        thread::sleep(SWEEP_INTERVAL);
-        if let Ok(service) = super::service() {
-            service.expire_secrets(current_unix_millis());
-        }
-    });
+static SWEEPER: Mutex<Option<Ticker>> = Mutex::new(None);
+
+fn sweep() {
+    if let Ok(service) = super::service() {
+        service.expire_secrets(current_unix_millis());
+    }
+}
+
+pub(super) fn start_secret_sweeper() -> Result<(), String> {
+    let mut slot = SWEEPER.lock().unwrap_or_else(PoisonError::into_inner);
+    if slot.as_ref().is_some_and(Ticker::alive) {
+        return Ok(());
+    }
+    sweep();
+    *slot = Some(Ticker::spawn("clipboard-secret-sweeper", SWEEP_INTERVAL, sweep)?);
+    Ok(())
+}
+
+pub(super) fn stop_secret_sweeper() {
+    let sweeper = SWEEPER.lock().unwrap_or_else(PoisonError::into_inner).take();
+    if let Some(sweeper) = sweeper {
+        sweeper.stop();
+    }
+}
+
+pub(super) fn sweeper_running() -> bool {
+    SWEEPER.lock().unwrap_or_else(PoisonError::into_inner).as_ref().is_some_and(Ticker::alive)
 }
 
 impl ClipboardHistoryService {
