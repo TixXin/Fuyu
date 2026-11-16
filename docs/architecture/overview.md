@@ -53,6 +53,32 @@
 main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、styles/
 ```
 
+## 仓库目录
+
+根 [AGENTS.md](../../AGENTS.md)「目录总览」每个目录只写一行用途，下面是其中几个目录的细节。
+
+- `vendor/`：拷进仓库的第三方代码。`cordis/` 是插件平台第 3 版的内核（Cordis 的 6 个包，npm 构建产物）。不受行数和「不写注释」的约束；版本、上游提交和本地改动记在 [vendor/README.md](../../vendor/README.md)。
+- `packages/`：不进入岛屿的发布产物。
+  - `plugin-base`：插件平台第 3 版的基座（宿主、插件接口、协议）；不能 import `src/`，有测试检查。
+  - 插件开发者工具（pnpm workspace）：`fuyu-plugin`（Node SDK、CLI、模拟宿主）、`create-fuyu-plugin`（脚手架）、`powershell/Fuyu.Plugin`。
+  - `vscode-extension`：切到会话终端的 VS Code 扩展，不在 workspace 里，`pnpm dlx @vscode/vsce package --no-dependencies` 打包。
+- `plugins/`：插件市场，不进入发布产物。
+  - `examples/` 示例插件源码（PowerShell，含 `lib/focusd.ps1`）。
+  - `drafts/` 写好了、还没打包签名的官方插件（签名私钥只在 Windows 那台机器上，说明见 [plugins/drafts/README.md](../../plugins/drafts/README.md)）。
+  - `schema/` 协议描述；`market/` 每个市场插件的元数据（发布者、分类，生成索引用）；`sdk/` 单文件 SDK（`pnpm sdk:build` 从 `packages/` 生成）；`packages/` 打包好的 zip。
+  - `index.json` 与 `index.json.sig`：给切换前的旧版岛屿的市场索引（`pnpm plugins:index` 生成；新版岛屿读 `TixXin/fuyu-plugins`）。
+  - `signing-keys.json` 可信公钥（编译进岛屿），`revoked.json` 与 `revoked.json.sig` 撤销名单，`author-key.json` 官方作者签名公钥。
+- `scripts/`：
+  - `release/` 发布、签名与 `latest.json` 生成；`readme/` 生成仓库首页 README 用的 SVG；`plugins/` 插件索引、签名与 SDK 生成。
+  - `mq/` 攒批开 PR 合入（`pnpm mq:*` 和 pre-push 检查）；`island-lab/` 岛屿实验台（`pnpm lab`）；`progress/` 进度汇总（`pnpm progress`）。
+  - 根目录放开发流程脚本：合并队列的检查（`land-check.mjs`）、门禁钩子（`gate/`，Claude Code 的 PreToolUse 钩子，登记在 `.claude/settings.json`：第一次改 `src/`、`src-tauri/`、各家 AI 代理的接入点等之前拦一次，要求先读规则文件或加载 skill，见 [workflow.md](workflow.md)「门禁钩子」）、行数检查、浏览器回归页运行器（`run-regression.mjs`）、dev 前停止运行中的岛屿。
+- `video/`：宣传视频。真的前端加假后端在浏览器里跑，按时间表逐帧渲染成 MP4；自带 `package.json`，不在 workspace 里（用法见 [video/README.md](../../video/README.md)）；成片不进仓库。
+- `.githooks/`（`core.hooksPath` 指向这里）：
+  - `pre-push`：合并队列的推送保护与检查。
+  - `pre-commit`：在 `main` 上提交必须写文件名（`git commit -- <文件>`），免得带走别的会话暂存的改动。
+  - `commit-msg`：拒绝 Claude 署名行（只管本仓库自己的提交，合入的外部 PR 可以带）。
+- `docs/`：按文档性质分目录，索引和各目录放什么见 [docs/README.md](../README.md)。`features/` 功能说明，`architecture/` 架构与契约（`agent/`、`plugins/` 内部设计，`history/` 做完的计划），`design/` 界面约定，`plugins/` 插件开发，`investigations/` 自己应用的排查与验收，`research/` 外部调研，`reviews/` PR 评审，`releases/` 发布说明，`assets/` 演示视频与图片，`tasks/` 任务（`README.md` 是规则，按编号首字母分文件夹，`0-archive/` 放已结束的）。
+
 ## 其他文档
 
 - [data-storage.md](data-storage.md)：每项数据存在哪里、由哪个模块负责

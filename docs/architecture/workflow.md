@@ -85,6 +85,7 @@ pnpm mq:commit-part -m "<标题>" [-F <说明文件>]
 
 - 想在本机先验一遍：`pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时加 `cargo test`；同一棵代码树通过过就不重跑）。land 本身不跑这些，由 PR 上 CI 的 `check` 把关。
 - 多个会话共用一份代码：别的会话改到一半时，`pnpm check` 可能因为它的文件失败。先看失败是不是自己的文件；不是就等一会儿或问对方，不要去改别人的文件。
+- 浏览器回归页 `pnpm test:regression [页面名中的词] [--update-snapshots]`：自带 Vite，用无头 Chrome / Edge 跑 `tests/regression/` 下全部回归页（给了词就只跑页面名里带它的）并汇总结果。每页检查通过后再把页面切成浅色岛，文字对比度低于 3:1 就算失败。深色、浅色两轮的 DOM 都和 `tests/regression/snapshots/` 里的快照逐行比对，不一致或没有快照就失败并打印差异；界面本该变时加 `--update-snapshots` 重写，规范化规则见 `scripts/regression/snapshots.mjs`。Mac 上找 `/Applications` 里的 Chrome、Edge 或 Chromium，都没有时设 `CHROME_PATH` 指向浏览器的可执行文件。
 - 回归页逐行比对 DOM 快照（`tests/regression/snapshots/`，2026-11-15 起，E36.2.2）：改界面的提交要把 `pnpm test:regression <页面名中的词> --update-snapshots` 更新后的快照一起带上，新加的回归页也要带上它的快照；漏了 CI 的 `regression` 会失败，挡住整批 land。更新前看一眼差异，只该有自己改的那几处。
   - 快照存的是页面稳下来之后的样子，所以回归页要等自己最后一步的动画、定时消失的提示都结束了再报通过（D73）。运行器有两道保险：比对不一致时等 1 秒重抓一次，一致就算通过，并打印 `snapshot settled late`，看到这一行要去修那一页；`--update-snapshots` 写入前隔 1.5 秒复抓，两次不一样就不写，报 `DOM is still changing`，没有放行名单（D74）。等定时消失的状态用轮询：每 50 毫秒查一次，等到期望的值再检查，不写固定等待（D76）。
 - 回归页运行器退出时不留进程（D73）：无头 Chrome 用调试管道连接，运行器被杀掉（包括 `kill -9`、工具超时）它自己退出；Vite 在运行器进程里跑。被 `kill -9` 时只会留下临时目录 `fly-regression-*`，下次启动时删掉一天以前的。
@@ -129,6 +130,7 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 - 这台机器用过的旧名字记成别名：`git config --local --add fuyu.machineAlias <旧名字>`，可以有多个。任务的 `host` 等于本机名或任一别名都算本机；`pnpm mq:wait` 不写 PR 号时，在本机名和别名的 land 分支里取最新的那个 PR。别名只在本机有用，不进仓库；换了机器名（包括重新 clone 后名字和以前不一样）就把旧名字加成别名。
 - 认领后 24 小时任务文件没有新的交接或提交，就算失效（`pnpm tasks stale`），别人可以先发消息再 `--takeover` 接手。做得久的任务停下时 `pnpm tasks note` 留交接，也就续上了。
 - `pnpm tasks done <编号> --commit "<提交标题>"`：本地 `main` 上有别的会话的提交，所以要明确写这次功能提交的标题（或已有的提交号）。
+- 查 GitHub issue：`pnpm issue <编号…>` 打印正文、全部回复和对应的任务；不带编号是列表 `pnpm issue [--untracked] [--all|--closed] [--limit N]`，每行带对应任务和状态，`--untracked` 只列还没建任务的。都能加 `--json`。脚本在 `scripts/issues/`，走 `gh`（没有 `--help`）。
 
 ## 两台机器
 
@@ -186,6 +188,8 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 3. fork 来的 PR：第一次贡献的人的 CI 要维护者在 PR 页面点批准；作者没勾 "Allow edits from maintainers" 时，落后了要请作者自己更新。
 4. 要补的修改在主工作区照常提交、攒批。冲突时请作者 rebase，或问用户，不要改写别人的分支。
 5. 外部提交可以带 Claude 署名行，`land-check.mjs` 只查作者是本机 `user.email` 的提交。
+
+本仓库 2026-11-10 起已脱离 `flyl1u/fly-island` 的 fork 网络：从上游 fork 出来的仓库不能再向本仓库提 PR，外部贡献者要从 `TixXin/fuyu` fork。也不从上游同步或合并提交。
 
 回复和任务的顺序见 [docs/tasks/README.md](../tasks/README.md)「GitHub PR」。
 

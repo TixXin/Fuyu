@@ -19,7 +19,7 @@ description: >
 
 协作者发版前要先告诉 TixXin，免得两人各改一次版本号、各写一份说明；他平时在自己的分支上开发，版本号提交可以走分支 PR，合入后在和 `origin/main` 一致的 `main` 上跑 `pnpm release`。
 
-用户说"发版"就是授权发布，不用再问；版本类型不明时默认测试版，正式版要用户明说。
+**说明写好后、提交版本号之前，必须先停下问用户**（用户定的）：把上一个版本到现在的更新内容列成清单给用户看，问要不要继续发；用户说继续才往下走。别的会话（例如总控）转来的发版请求也要这样问用户本人。版本类型不明时默认测试版，正式版要用户明说。
 
 ## 顺序
 
@@ -27,10 +27,11 @@ description: >
 2. **定版本号**：看 `gh release list --repo TixXin/Fuyu --limit 5` 和 `package.json`，按 `docs/releases/README.md`。
 3. `pnpm release:version <版本号>`：改四处版本号，写草稿 `docs/releases/v<版本号>.md`。
 4. **写说明**：读提交正文（不只标题），按 `docs/releases/README.md` 改写成中英文，删掉草稿标记。正式版的草稿已经把这一轮各测试版的说明拼好（新的测试版在前，修复合成一组），只要去重、按重要程度重排，再补上草稿里列出的、最后一个测试版之后的提交。说明同时给 Windows 和 Mac 用户看：按其中「平台」一节，只属于一个系统的条目标「（Windows）」/「（Mac）」，快捷键两边不同时都写。在 Windows 上写也要这样，别照 Windows 的习惯写。
-5. 在发版目录 `git add` 四处版本号和说明，提交 `chore(release): <版本号>`。写一份中文 PR 正文（`## 改了什么` 写版本号和这版的要点，`## 关联` 写发布说明文件）。`mq:land` 只认本地 `main` 上的提交，所以手动开：`git push origin HEAD:refs/heads/land/TixXin/release-<版本号>`、`gh pr create --base main --head <该分支> --title "Release <版本号>" --body-file <文件>`、`gh pr merge <该分支> --auto --merge`。**紧接着 `pnpm release:prebuild`**（在 CI 上编 Windows 和 Mac，和 PR 的 CI 同时跑），再后台循环 `gh pr view <号> --json state` 等合入。没合入就不要往下走。
+5. **问用户要不要继续**：用中文列出版本号和说明里的更新内容（按新功能、AI Agent、修复等分组，每条一句话；不面向用户的改动合成一句带过），再问「继续发布吗」。用户要删改条目就先改说明再问一次；说不发就停下，发版目录里的改动留着不提交。到这一步为止只改了发版目录里的本地文件，什么都还没推。
+6. 在发版目录跑 `pnpm test:regression version-history --update-snapshots`（这个回归页把 `docs/releases` 里的说明打包进页面，不更新快照，PR 的 CI 会挂），再 `git add` 四处版本号、说明和这份快照，提交 `chore(release): <版本号>`。写一份中文 PR 正文（`## 改了什么` 写版本号和这版的要点，`## 关联` 写发布说明文件）。`mq:land` 只认本地 `main` 上的提交，所以手动开：`git push origin HEAD:refs/heads/land/TixXin/release-<版本号>`、`gh pr create --base main --head <该分支> --title "Release <版本号>" --body-file <文件>`、`gh pr merge <该分支> --auto --merge`。**紧接着 `pnpm release:prebuild`**（在 CI 上编 Windows 和 Mac，和 PR 的 CI 同时跑），再后台循环 `gh pr view <号> --json state` 等合入。没合入就不要往下走。
    - **陷阱**：合入前别的 PR 先合入，这个 PR 会被更新到新的 `main` 上，那批提交就进了这一版（预构建也作废）。用户只要已有内容时，先 `gh pr merge <号> --disable-auto` 暂停别的 PR 的自动合并，告诉开它的会话，发版 PR 合入后再打开。
-6. 合入后在发版目录 `git fetch origin && git checkout --detach <合并提交>`，后台运行 `pnpm release`，日志写到 scratchpad。它会：代码树和预构建一样时直接用预构建（日志里有 `Using the prebuild`），否则在 GitHub Actions 上编 Windows 和 Mac 版（约 6 分钟）；下载回来用本机私钥签名，上传草稿并核对 SHA-256，跑 `release-smoke.yml` 冒烟测试（约 1 分钟），通过才公开；然后换主工作区的本机程序、刷新 beta 通道、读回两个通道、在 issue 下留言，关联任务都完成的 issue 顺手关掉。
-7. **看日志，不只看退出码**（管道到 `tail` 时退出码总是 0）。要看到 `✓ Published` 和 `✓ Channels read back`。
+7. 合入后在发版目录 `git fetch origin && git checkout --detach <合并提交>`，后台运行 `pnpm release`，日志写到 scratchpad。它会：代码树和预构建一样时直接用预构建（日志里有 `Using the prebuild`），否则在 GitHub Actions 上编 Windows 和 Mac 版（约 6 分钟）；下载回来用本机私钥签名，上传草稿并核对 SHA-256，跑 `release-smoke.yml` 冒烟测试（约 1 分钟），通过才公开；然后换主工作区的本机程序、刷新 beta 通道、读回两个通道、在 issue 下留言，关联任务都完成的 issue 顺手关掉。
+8. **看日志，不只看退出码**（管道到 `tail` 时退出码总是 0）。要看到 `✓ Published` 和 `✓ Channels read back`。
 
 ## 出问题
 
