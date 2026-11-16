@@ -158,7 +158,7 @@ mod tests {
     #[test]
     fn posted_messages_reach_the_handler_until_quit() {
         std::thread::spawn(|| {
-            let class = "FocuSDMessageWindowTest";
+            let class = "FuyuMessageWindowTest";
             let instance = module_instance().unwrap();
             register_class::<Counter>(instance, class).unwrap();
             let window = create_message_only_window(instance, class, "").unwrap();
@@ -182,7 +182,7 @@ mod tests {
     #[test]
     fn tool_popups_can_be_created_drained_destroyed_and_unregistered() {
         std::thread::spawn(|| {
-            let class = "FocuSDToolPopupTest";
+            let class = "FuyuToolPopupTest";
             let instance = module_instance().unwrap();
             register_class::<Silent>(instance, class).unwrap();
             let window = create_tool_popup_window(instance, class, "").unwrap();

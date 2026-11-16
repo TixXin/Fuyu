@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import type { AgentSessionSummary } from "../../features/agent-status/api";
 import { getUserIdleSeconds, isSessionLocked } from "../../features/agent-status/push/api";
 import {
   downloadInBackground, getUpdateState, installUpdate, subscribeToUpdate,
@@ -10,9 +9,9 @@ import type { IslandMode } from "./types";
 const IDLE_SECONDS = 10 * 60;
 const IDLE_CHECK_MS = 30_000;
 
-export function useIslandAutoUpdate({ mode, sessions }: { mode: IslandMode; sessions: AgentSessionSummary[] }) {
-  const latest = useRef({ mode, sessions });
-  latest.current = { mode, sessions };
+export function useIslandAutoUpdate({ mode, agentsBusy }: { mode: IslandMode; agentsBusy: boolean }) {
+  const latest = useRef({ mode, agentsBusy });
+  latest.current = { mode, agentsBusy };
 
   useEffect(() => {
     const download = () => {
@@ -28,8 +27,8 @@ export function useIslandAutoUpdate({ mode, sessions }: { mode: IslandMode; sess
       const state = getUpdateState();
       if (running || state.stage !== "ready" || state.autoUpdate !== "install" || state.nextVersion === state.skippedVersion) return;
       if (state.backupFailed === state.nextVersion) return;
-      const { mode: islandMode, sessions: agentSessions } = latest.current;
-      if (islandMode === "expanded" || agentSessions.some((session) => session.phase === "running" || session.phase === "waiting")) return;
+      const { mode: islandMode, agentsBusy: busy } = latest.current;
+      if (islandMode === "expanded" || busy) return;
       running = true;
       try {
         const [locked, idle] = await Promise.all([isSessionLocked().catch(() => false), getUserIdleSeconds().catch(() => null)]);

@@ -7,7 +7,8 @@ use super::{
     ClipboardHistoryService,
 };
 
-const APP: &str = "fly-island-clipboard";
+const APP: &str = "fuyu-clipboard";
+const LEGACY_APPS: [&str; 1] = ["fly-island-clipboard"];
 const VERSION: u32 = 1;
 const MAX_IMPORT_BYTES: usize = 512 * 1024 * 1024;
 
@@ -46,6 +47,15 @@ fn free_path(dir: &std::path::Path, stamp: &str) -> PathBuf {
         .unwrap_or_else(|| dir.join(format!("{base}.json")))
 }
 
+fn parse_export(content: &str) -> Result<ExportFile, String> {
+    let file: ExportFile = serde_json::from_str(content).map_err(|_| "这不是岛屿导出的剪贴板文件。".to_string())?;
+    let known = file.app == APP || LEGACY_APPS.contains(&file.app.as_str());
+    if !known || file.version > VERSION {
+        return Err("这不是岛屿导出的剪贴板文件，或者来自更新的版本。".into());
+    }
+    Ok(file)
+}
+
 impl ClipboardHistoryService {
     pub(super) fn export(&self) -> Result<String, String> {
         let (items, snippets) = {
@@ -76,10 +86,7 @@ impl ClipboardHistoryService {
         if content.len() > MAX_IMPORT_BYTES {
             return Err("The file is too large.".into());
         }
-        let file: ExportFile = serde_json::from_str(content).map_err(|_| "这不是岛屿导出的剪贴板文件。".to_string())?;
-        if file.app != APP || file.version > VERSION {
-            return Err("这不是岛屿导出的剪贴板文件，或者来自更新的版本。".into());
-        }
+        let file = parse_export(content)?;
         let mut seen: HashSet<String> = self
             .state
             .lock()
@@ -132,16 +139,33 @@ impl ClipboardHistoryService {
 
 #[cfg(test)]
 mod tests {
-    use super::free_path;
+    use super::{free_path, parse_export};
 
     #[test]
     fn export_names_do_not_overwrite() {
-        let dir = std::env::temp_dir().join(format!("fly-island-export-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fuyu-export-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("temp dir");
         let first = free_path(&dir, "2026-11-09-1430");
-        assert!(first.ends_with("fly-island-clipboard-2026-11-09-1430.json"));
+        assert!(first.ends_with("fuyu-clipboard-2026-11-09-1430.json"));
         std::fs::write(&first, "{}").expect("write");
-        assert!(free_path(&dir, "2026-11-09-1430").ends_with("fly-island-clipboard-2026-11-09-1430 (2).json"));
+        assert!(free_path(&dir, "2026-11-09-1430").ends_with("fuyu-clipboard-2026-11-09-1430 (2).json"));
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    fn file(app: &str, version: u32) -> String {
+        format!(r#"{{"app":"{app}","version":{version},"exportedAt":0,"items":[]}}"#)
+    }
+
+    #[test]
+    fn imports_new_and_legacy_files() {
+        assert!(parse_export(&file("fuyu-clipboard", 1)).is_ok());
+        assert!(parse_export(&file("fly-island-clipboard", 1)).is_ok());
+    }
+
+    #[test]
+    fn rejects_unknown_apps_and_newer_versions() {
+        assert!(parse_export(&file("other-clipboard", 1)).is_err());
+        assert!(parse_export(&file("fuyu-clipboard", 2)).is_err());
+        assert!(parse_export("not json").is_err());
     }
 }

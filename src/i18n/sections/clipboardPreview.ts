@@ -18,6 +18,18 @@ export type ClipboardPreviewText = {
     actualHint: string;
     level: (percent: number) => string;
   };
+  image: {
+    edit: string;
+    toolbar: string;
+    crop: string;
+    applyCrop: string;
+    cropHint: string;
+    rotateLeft: string;
+    rotateRight: string;
+    saving: string;
+    failed: string;
+    unreadable: string;
+  };
 };
 
 export const zhCN: ClipboardPreviewText = {
@@ -40,6 +52,18 @@ export const zhCN: ClipboardPreviewText = {
     actualHint: "原始大小",
     level: (percent) => `${percent}%`,
   },
+  image: {
+    edit: "编辑图片",
+    toolbar: "图片编辑工具",
+    crop: "裁剪",
+    applyCrop: "应用裁剪",
+    cropHint: "拖出要留下的部分，回车应用",
+    rotateLeft: "向左转",
+    rotateRight: "向右转",
+    saving: "正在保存…",
+    failed: "没保存上，再试一次或另存一条",
+    unreadable: "这张图片读不出来，没法编辑",
+  },
 };
 
 export const en: ClipboardPreviewText = {
@@ -61,5 +85,17 @@ export const en: ClipboardPreviewText = {
     actual: "1:1",
     actualHint: "Actual size",
     level: (percent) => `${percent}%`,
+  },
+  image: {
+    edit: "Edit image",
+    toolbar: "Image editing tools",
+    crop: "Crop",
+    applyCrop: "Apply crop",
+    cropHint: "Drag over the part to keep, then press Enter",
+    rotateLeft: "Rotate left",
+    rotateRight: "Rotate right",
+    saving: "Saving…",
+    failed: "Couldn't save. Try again or save as a new entry.",
+    unreadable: "This image can't be read, so it can't be edited.",
   },
 };

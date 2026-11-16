@@ -3,6 +3,7 @@ import { defineSlot, type IslandAlertMeta } from "../../plugin-kernel/slots";
 import type { LevelChange } from "../api";
 import { LevelPopup } from "../LevelPopup";
 import { levelState } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 const alertSlot = defineSlot<object, IslandAlertMeta<object>>("island.alert/v1");
 
@@ -32,4 +33,4 @@ function LevelAlertBody() {
   return levelPopup ? <LevelPopup change={levelPopup} /> : null;
 }
 
-alertSlot.add({ id: "level", order: 30, component: LevelAlertLeading, trailing: LevelAlertTrailing, popup: LevelAlertBody });
+alertSlot.add({ id: "level", order: 30, component: LevelAlertLeading, trailing: LevelAlertTrailing, popup: LevelAlertBody }, OWNER);

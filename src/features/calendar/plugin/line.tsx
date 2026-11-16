@@ -2,21 +2,19 @@ import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { openMeetingLink } from "../api";
 import { MeetingLine } from "../MeetingLine";
-import type { CollapsedMeeting } from "../upcoming";
+import { meetingState } from "./islandState";
 import { OWNER } from "./owner.ts";
 
-type LineContext = {
-  meeting: CollapsedMeeting | null;
-};
+const lineSlot = defineSlot<object>("island.line/v1");
 
-const lineSlot = defineSlot<LineContext>("island.line/v1");
-
-function UpcomingMeetingLine({ meeting }: LineContext) {
+function UpcomingMeetingLine() {
+  const meeting = meetingState.use();
   return meeting ? <MeetingLine meeting={meeting.upcoming} showTitle={meeting.showTitle} /> : null;
 }
 
-function JoinMeetingButton({ meeting }: LineContext) {
+function JoinMeetingButton() {
   const t = useTranslation();
+  const meeting = meetingState.use();
   const link = meeting?.upcoming.event.meetingLink;
   if (!link) return null;
   return (

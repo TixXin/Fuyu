@@ -34,7 +34,7 @@ mod tests {
             let window = CreateWindowExW(
                 WINDOW_EX_STYLE::default(),
                 w!("STATIC"),
-                w!("FocuSD activation test"),
+                w!("Fuyu activation test"),
                 WS_POPUP,
                 0,
                 0,

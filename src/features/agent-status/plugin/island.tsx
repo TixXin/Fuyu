@@ -3,16 +3,16 @@ import type { ReactNode } from "react";
 import type { Translations } from "../../../i18n";
 import { Gauge, RotateCcw } from "lucide-react";
 import { useTranslation } from "../../../i18n";
-import { defineSlot, type IslandAlertMeta, type IslandCollapsedMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
-import type { QuotaAlert } from "../quotaAlerts";
+import { defineSlot, type IslandAlertMeta, type IslandCollapsedMeta, type IslandHeaderMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
+import { AgentArrangeButton } from "../AgentArrangeButton";
 import { QuotaAlertPopup } from "../QuotaAlertPopup";
 import { AgentSessionsPanel } from "../AgentSessionsPanel";
+import { agentArrange, agentPage, agentShell, quotaAlertState } from "./islandState";
 import { islandPage } from "./page.ts";
 
 type Panel = ComponentProps<typeof AgentSessionsPanel>;
 
 type AgentsPageProps = {
-  agentSessions: Panel["sessions"];
   settings: {
     agentSessionView: Panel["view"];
     agentSessionSort: Panel["sort"];
@@ -25,37 +25,35 @@ type AgentsPageProps = {
     agentShowActivity: Panel["showActivity"];
     agentShowUsage: Panel["showUsage"];
   };
-  unseenAgentSessions: Panel["unseen"];
-  agentRemoval: Panel["removal"];
-  alertedSession: Panel["reveal"];
-  agentUsages: Panel["usages"];
-  agentApprovals: Panel["approvals"];
 };
 
 const pageSlot = defineSlot<AgentsPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");
 
-function AgentsPage({ agentSessions, settings, unseenAgentSessions, agentRemoval, alertedSession, agentUsages, agentApprovals }: AgentsPageProps) {
-  return <AgentSessionsPanel sessions={agentSessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} unseen={unseenAgentSessions} removal={agentRemoval} reveal={alertedSession} showUsage={settings.agentShowUsage} usages={agentUsages} approvals={agentApprovals} />;
+function AgentsPage({ settings }: AgentsPageProps) {
+  const agents = agentPage.use();
+  if (!agents) return null;
+  return <AgentSessionsPanel sessions={agents.sessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} unseen={agents.unseen} removal={agents.removal} reveal={agents.alerted} showUsage={settings.agentShowUsage} usages={agents.usages} approvals={agents.approvals} />;
 }
 
 pageSlot.add({ ...islandPage, component: AgentsPage });
 
 type CollapsedContext = {
   t: Translations;
-  agentSessionCount: number | null;
+  hints: ReadonlySet<string>;
   slots: { agentCount?: ReactNode };
   onOpenPage: (page: "agents") => void;
 };
 
 const collapsedSlot = defineSlot<CollapsedContext, IslandCollapsedMeta<CollapsedContext>>("island.collapsed/v1");
 
-function SessionCountItem({ t, agentSessionCount, slots, onOpenPage }: CollapsedContext) {
+function SessionCountItem({ t, slots, onOpenPage }: CollapsedContext) {
+  const agentSessionCount = agentShell.use().activeCount;
   if (slots.agentCount) return slots.agentCount;
   return (
     <button
       className="island-agent-count"
       type="button"
-      aria-label={t.agent.sessions.activeCount(agentSessionCount ?? 0)}
+      aria-label={t.agent.sessions.activeCount(agentSessionCount)}
       onClick={(event) => {
         event.stopPropagation();
         onOpenPage("agents");
@@ -69,15 +67,14 @@ function SessionCountItem({ t, agentSessionCount, slots, onOpenPage }: Collapsed
 collapsedSlot.add({
   id: "session-count",
   order: 80,
-  shown: ({ agentSessionCount, slots }) => agentSessionCount !== null && (Boolean(slots.agentCount) || agentSessionCount > 0),
+  shown: ({ hints, slots }) => hints.has("agents.count") && (Boolean(slots.agentCount) || hints.has("agent")),
   component: SessionCountItem,
 });
 
-type AlertSources = { quotaAlert: QuotaAlert | null };
+const alertSlot = defineSlot<object, IslandAlertMeta<object>>("island.alert/v1");
 
-const alertSlot = defineSlot<AlertSources, IslandAlertMeta<AlertSources>>("island.alert/v1");
-
-function QuotaAlertLeading({ quotaAlert }: AlertSources) {
+function QuotaAlertLeading() {
+  const quotaAlert = quotaAlertState.use();
   if (!quotaAlert) return null;
   const Icon = quotaAlert.kind === "low" ? Gauge : RotateCcw;
   return (
@@ -87,8 +84,9 @@ function QuotaAlertLeading({ quotaAlert }: AlertSources) {
   );
 }
 
-function QuotaAlertTrailing({ quotaAlert }: AlertSources) {
+function QuotaAlertTrailing() {
   const t = useTranslation();
+  const quotaAlert = quotaAlertState.use();
   if (!quotaAlert) return null;
   const text = t.agent.quota;
   const agent = quotaAlert.agent === "claude" ? "Claude" : "Codex";
@@ -102,8 +100,20 @@ function QuotaAlertTrailing({ quotaAlert }: AlertSources) {
   );
 }
 
-function QuotaAlertBody({ quotaAlert }: AlertSources) {
+function QuotaAlertBody() {
+  const quotaAlert = quotaAlertState.use();
   return quotaAlert ? <QuotaAlertPopup alert={quotaAlert} /> : null;
 }
 
 alertSlot.add({ id: "quota", order: 20, component: QuotaAlertLeading, trailing: QuotaAlertTrailing, popup: QuotaAlertBody });
+
+type HeaderContext = { page: string };
+
+const headerSlot = defineSlot<HeaderContext, IslandHeaderMeta<HeaderContext>>("island.header/v1");
+
+function ArrangeButton() {
+  const arrange = agentArrange.use();
+  return arrange && <AgentArrangeButton sort={arrange.sort} group={arrange.group} onChange={arrange.onChange} />;
+}
+
+headerSlot.add({ id: "agent-arrange", order: 0, enabled: ({ page }) => page === "agents", component: ArrangeButton });

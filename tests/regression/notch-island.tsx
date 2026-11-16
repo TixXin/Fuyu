@@ -10,7 +10,6 @@ import type { PluginNotificationsController } from "../../src/features/plugins/u
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
-import type { MediaState } from "../../src/features/media/api";
 import type { LevelChange } from "../../src/features/system-levels/api";
 import type { DeviceAlert } from "../../src/features/device-events/api";
 import type { MessagePreview } from "../../src/features/messages/messagePreview";
@@ -19,13 +18,6 @@ import { useFixtureLines } from "./islandLines";
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
-const UNAVAILABLE_MEDIA: MediaState = {
-  available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
-  title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
-  canSeek: false, canNext: false, canPrevious: false, shuffleActive: null, canShuffle: false,
-  repeatMode: "unknown", canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null,
-  sessions: [], updatedAt: 0,
-};
 const NOTCH: IslandNotch = { width: 200, height: 32 };
 mockIPC((command) => {
   if (command === "list_plugin_views") return { views: [], status: [] };
@@ -42,12 +34,11 @@ function Fixture() {
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const width = notchFittedWidth(300, state.notch, 1, Boolean(state.level || state.device));
+  useFixtureLines({ agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, barText: !state.notch, todoTitle: "写周报和整理会议记录", translationPeek: state.peek, levelPopup: state.level, deviceAlert: state.device });
   return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${state.popup ? notchPanelWidth(400, state.notch, 1, true) : notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ barText: !state.notch, todoTitle: "写周报和整理会议记录", translationPeek: state.peek, levelPopup: state.level, deviceAlert: state.device })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
+    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
       mode={state.expanded ? "expanded" : "collapsed"} page={state.popup ? "agents" : "todo"} popup={state.popup} isTucked={state.tucked} isDetached={false} showTitle={false}
-      showCollapsedText={!state.notch} activeAgentSessionCount={0}
-      appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
-      mediaState={UNAVAILABLE_MEDIA}
+      showCollapsedText={!state.notch} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       shelfCount={null}
       onOpenPage={() => {}} onOpenMessages={() => {}}

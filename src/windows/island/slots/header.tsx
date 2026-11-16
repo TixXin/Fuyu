@@ -17,7 +17,7 @@ export type IslandHeaderContext = {
   onOpenSettings: (section?: "updates") => void;
   onOpenMessages: (source: MessageSource) => void;
   onOpenTranslator: (() => void) | null;
-  onScreenshot: (() => void) | null;
+  hints: ReadonlySet<string>;
   onResetPosition: () => void;
   minimizesToTray: boolean;
   onMinimize: () => void;

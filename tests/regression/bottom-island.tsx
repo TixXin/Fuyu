@@ -9,19 +9,11 @@ import type { PluginNotificationsController } from "../../src/features/plugins/u
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
-import type { MediaState } from "../../src/features/media/api";
 import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
-const UNAVAILABLE_MEDIA: MediaState = {
-  available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
-  title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
-  canSeek: false, canNext: false, canPrevious: false, shuffleActive: null, canShuffle: false,
-  repeatMode: "unknown", canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null,
-  sessions: [], updatedAt: 0,
-};
 mockIPC((command) => {
   if (command === "list_plugin_views") return { views: [], status: [] };
   if (command === "get_qq_mail_state") return [];
@@ -36,12 +28,11 @@ function Fixture() {
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
+  useFixtureLines({ agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "写周报和整理会议记录" });
   return <div className="stage" style={{ "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8 } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoTitle: "写周报和整理会议记录" })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
+    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
       mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={false} isDetached showTitle={false}
-      showCollapsedText activeAgentSessionCount={0}
-      appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
-      mediaState={UNAVAILABLE_MEDIA}
+      showCollapsedText appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       shelfCount={null}
       onOpenPage={() => {}} onOpenMessages={() => {}}

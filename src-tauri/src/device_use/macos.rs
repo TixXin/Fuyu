@@ -82,6 +82,13 @@ mod tests {
     }
 
     #[test]
+    fn device_use_has_no_background_of_its_own() {
+        let catalog = crate::plugin_kernel::builtins::catalog();
+        let plugin = catalog.iter().find(|plugin| plugin.id == "device-use").expect("device-use is a built-in plugin");
+        assert_eq!(plugin.background.as_deref(), Some(&[][..]));
+    }
+
+    #[test]
     #[ignore = "reads the real devices of the computer it runs on"]
     fn probe_this_computer() {
         println!("recording pids: {:?}", audio_devices::recording_pids());

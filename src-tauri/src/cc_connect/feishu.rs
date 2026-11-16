@@ -175,7 +175,7 @@ mod tests {
 
     #[test]
     fn a_cancel_keeps_an_app_already_made_and_otherwise_puts_the_old_config_back() {
-        let dir = std::env::temp_dir().join(format!("focusd-cc-connect-feishu-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fuyu-cc-connect-feishu-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let config = dir.join("config.toml");
         let begin = |program: &str, args: &[&str], said: &[&str]| {

@@ -4,8 +4,10 @@ mod adapter_macos;
 mod applescript_macos;
 #[cfg(windows)]
 mod audio;
+mod background;
 #[cfg_attr(target_os = "macos", path = "events_macos.rs")]
 mod events;
+mod host;
 mod plugin_view;
 #[cfg_attr(target_os = "macos", path = "service_macos.rs")]
 mod service;
@@ -17,11 +19,31 @@ mod state;
 mod timeline_clock;
 
 pub(crate) use plugin_view::{now_playing_key, plugin_cover, plugin_media_command, plugin_now_playing};
-pub(crate) use events::start as start_session_events;
 pub(crate) use source_icon::current_source_icon;
+
+pub(crate) const PLUGIN_ID: &str = "music";
+
+pub(crate) fn is_enabled() -> bool {
+    crate::plugin_kernel::builtins::is_enabled(PLUGIN_ID)
+}
+
+pub(crate) fn init(app: &tauri::AppHandle) {
+    background::register(app);
+}
+
+fn switched_on() -> Result<(), String> {
+    if is_enabled() {
+        Ok(())
+    } else {
+        Err("Music is switched off in Fuyu.".to_string())
+    }
+}
 
 #[tauri::command]
 pub async fn get_media_state(target: Option<String>) -> Result<service::MediaState, String> {
+    if !is_enabled() {
+        return Ok(service::MediaState::empty());
+    }
     tauri::async_runtime::spawn_blocking(move || service::get_state(target))
         .await
         .map_err(|error| format!("Failed to join the media state task: {error}"))?
@@ -29,6 +51,9 @@ pub async fn get_media_state(target: Option<String>) -> Result<service::MediaSta
 
 #[tauri::command]
 pub async fn get_audio_level() -> Result<service::AudioLevel, String> {
+    if !is_enabled() {
+        return Ok(service::AudioLevel::silent());
+    }
     tauri::async_runtime::spawn_blocking(service::get_audio_level)
         .await
         .map_err(|error| format!("Failed to join the audio level task: {error}"))?
@@ -64,6 +89,7 @@ pub async fn media_seek(
     position_ms: i64,
     target: Option<String>,
 ) -> Result<service::MediaState, String> {
+    switched_on()?;
     tauri::async_runtime::spawn_blocking(move || service::seek(position_ms, target))
         .await
         .map_err(|error| format!("Failed to join the media seek task: {error}"))?
@@ -71,6 +97,7 @@ pub async fn media_seek(
 
 #[tauri::command]
 pub async fn media_set_volume(level: f32) -> Result<service::MediaState, String> {
+    switched_on()?;
     tauri::async_runtime::spawn_blocking(move || service::set_volume(level))
         .await
         .map_err(|error| format!("Failed to join the media volume task: {error}"))?
@@ -80,6 +107,7 @@ async fn run_media_command(
     command: service::MediaCommand,
     target: Option<String>,
 ) -> Result<service::MediaState, String> {
+    switched_on()?;
     tauri::async_runtime::spawn_blocking(move || service::run_command(command, target))
         .await
         .map_err(|error| format!("Failed to join the media command task: {error}"))?

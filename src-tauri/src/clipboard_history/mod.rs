@@ -1,14 +1,17 @@
 pub(crate) mod actions;
+mod background;
 mod capture_pause;
 mod clipboard_io;
 mod command_text;
 mod copy_notice;
 pub(crate) mod deletion;
 pub(crate) mod edit;
+pub(crate) mod edit_image;
 pub(crate) mod expand;
 pub(crate) mod drag;
 #[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
 mod hotkey;
+pub(crate) mod host;
 mod link_guard;
 pub(crate) mod links;
 mod links_order;
@@ -18,6 +21,8 @@ mod file_image;
 pub(crate) mod image_protocol;
 #[cfg_attr(target_os = "macos", path = "listener_macos.rs")]
 mod listener;
+#[cfg(windows)]
+mod open_trace;
 pub(crate) mod pins;
 mod plugin_view;
 #[cfg_attr(target_os = "macos", path = "popup_macos.rs")]
@@ -39,6 +44,7 @@ mod store;
 #[cfg_attr(target_os = "macos", path = "system_macos.rs")]
 mod system;
 mod transfer;
+mod workers;
 
 use serde::{Deserialize, Serialize};
 use std::{
@@ -49,7 +55,6 @@ use std::{
 };
 use tauri::{AppHandle, Manager};
 
-use listener::{notify_clipboard_changed, start_workers};
 use store::{load_history, HISTORY_FILE_NAME, IMAGE_DIRECTORY_NAME};
 
 pub(crate) use shortcut::{parse_shortcut_binding, ShortcutBinding};
@@ -61,6 +66,8 @@ pub(crate) use links::{links_for_sync, replace_links_from_sync};
 pub(crate) use links_order::key_between as link_key_between;
 pub(crate) use snippets::{replace_snippets_from_sync, snippets_for_sync};
 pub(crate) use popup::WINDOW_LABEL as POPUP_WINDOW_LABEL;
+
+pub(crate) const PLUGIN_ID: &str = "clipboard";
 
 const HISTORY_CHANGED_EVENT: &str = "clipboard-history-changed";
 
@@ -474,7 +481,10 @@ pub fn get_clipboard_shortcut_error() -> Option<String> {
 pub fn set_clipboard_history_settings(
     settings: ClipboardHistorySettings,
 ) -> Result<ClipboardHistorySnapshot, String> {
-    service()?.set_settings(settings)
+    let enabled = settings.enabled;
+    let snapshot = service()?.set_settings(settings)?;
+    background::follow_setting(enabled);
+    Ok(snapshot)
 }
 
 #[tauri::command]
@@ -580,6 +590,9 @@ pub(crate) fn popup_pinned() -> bool {
 }
 
 pub(crate) fn open_from_tray() {
+    if !switched_on() {
+        return;
+    }
     if let Ok(service) = service() {
         service.emit_shortcut();
     }
@@ -647,6 +660,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         .map_err(|error| format!("Failed to create clipboard history directory: {error}"))?;
 
     let persisted = load_history(&history_path);
+    let stored_enabled = persisted.settings.enabled;
     if !persisted.items.is_empty() {
         let (dir, items) = (image_dir.clone(), persisted.items.clone());
         std::thread::spawn(move || service::remove_unreferenced_images(&dir, &items));
@@ -667,10 +681,16 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
 
     let _ = CLIPBOARD_HISTORY.set(service);
     service::fill_file_images(None);
-    start_workers();
-    privacy::start_secret_sweeper();
-    notify_clipboard_changed();
+    background::migrate_switch(stored_enabled);
+    if !switched_on() {
+        background::mirror(false);
+    }
+    background::register(app);
     Ok(())
+}
+
+pub(crate) fn switched_on() -> bool {
+    crate::plugin_kernel::builtins::is_enabled(PLUGIN_ID)
 }
 
 fn service() -> Result<&'static ClipboardHistoryService, String> {
@@ -697,6 +717,7 @@ macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::clipboard_history::get_clipboard_history,
+            crate::clipboard_history::host::get_clipboard_texts,
             crate::clipboard_history::set_clipboard_history_settings,
             crate::clipboard_history::get_clipboard_shortcut_error,
             crate::clipboard_history::copy_clipboard_history_item,
@@ -719,6 +740,8 @@ macro_rules! tauri_commands {
             crate::clipboard_history::deletion::restore_clipboard_history_items,
             crate::clipboard_history::edit::edit_clipboard_history_text,
             crate::clipboard_history::edit::undo_clipboard_history_edit,
+            crate::clipboard_history::edit_image::save_clipboard_history_image,
+            crate::clipboard_history::edit_image::read_clipboard_history_image,
             crate::clipboard_history::pins::set_clipboard_pin_key,
             crate::clipboard_history::pins::set_clipboard_pin_order,
             crate::clipboard_history::expand::set_clipboard_popup_expanded,

@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn sources_are_saved_without_secrets() {
-        let dir = std::env::temp_dir().join(format!("focusd-calendar-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fuyu-calendar-{}", std::process::id()));
         assert!(read(&dir).is_empty());
         let source = CalendarSource {
             id: "c1".into(),

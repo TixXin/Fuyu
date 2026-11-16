@@ -3,8 +3,8 @@
   "plugins": [
     { "id": "todos", "kind": "builtin", "root": "todos", "host": "host/index.mjs", "background": [] },
     { "id": "calendar", "kind": "builtin", "root": "calendar", "host": "host/index.mjs", "background": [] },
-    { "id": "music", "kind": "builtin", "root": "media", "host": "host/index.mjs" },
-    { "id": "clipboard", "kind": "builtin", "root": "clipboard", "host": "host/index.mjs" },
+    { "id": "music", "kind": "builtin", "root": "media", "host": "host/index.mjs", "background": ["session"] },
+    { "id": "clipboard", "kind": "builtin", "root": "clipboard", "host": "host/index.mjs", "background": ["listener", "windows"] },
     { "id": "screenshot", "kind": "builtin", "root": "screenshot", "host": "host/index.mjs" },
     { "id": "file-shelf", "kind": "builtin", "root": "file-shelf", "host": "host/index.mjs", "background": [] },
     { "id": "translation", "kind": "builtin", "root": "translation", "host": "host/index.mjs", "background": ["shortcuts", "window"] },
@@ -18,8 +18,8 @@
     { "id": "local-api", "kind": "builtin", "root": "local-api", "host": "host/index.mjs" },
     { "id": "center-pattern", "kind": "builtin", "root": "center-pattern", "host": "host/index.mjs" },
     { "id": "messages", "kind": "builtin", "root": "messages", "host": "host/index.mjs" },
-    { "id": "device-events", "kind": "builtin", "root": "device-events", "host": "host/index.mjs" },
-    { "id": "system-levels", "kind": "builtin", "root": "system-levels", "host": "host/index.mjs" },
+    { "id": "device-events", "kind": "builtin", "root": "device-events", "host": "host/index.mjs", "background": ["watcher"] },
+    { "id": "system-levels", "kind": "builtin", "root": "system-levels", "host": "host/index.mjs", "background": ["watcher"] },
     { "id": "device-use", "kind": "builtin", "root": "device-use", "host": "host/index.mjs", "background": [] },
     { "id": "theme-market", "kind": "builtin", "root": "theme-market", "host": "host/index.mjs", "background": [] },
     { "id": "updater", "kind": "essential", "root": "updater", "host": "host/index.mjs", "background": [] }

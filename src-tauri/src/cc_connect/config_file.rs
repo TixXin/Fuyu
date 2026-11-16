@@ -162,7 +162,7 @@ pub(super) fn add_project(path: &Path, project: &NewProject, today: &str, stamp:
     check(project, &original.as_deref().map(project_names).unwrap_or_default())?;
     let mut text = match &original {
         Some(text) => {
-            let backup = path.with_file_name(format!("{FILE_NAME}.bak-focusd-{stamp}"));
+            let backup = path.with_file_name(format!("{FILE_NAME}.bak-fuyu-{stamp}"));
             fs::write(&backup, text).map_err(|error| UserError::new("file.backup", format!("Could not back up {}.", path.display())).arg("path", path.display().to_string()).detail(error))?;
             text.trim_end().to_string()
         }
@@ -187,7 +187,7 @@ pub(super) fn restore(path: &Path, original: Option<&str>) -> Result<(), UserErr
 
 #[cfg(any(windows, test))]
 fn write(path: &Path, text: &str) -> Result<(), UserError> {
-    let temp = path.with_file_name(format!("{FILE_NAME}.focusd.tmp"));
+    let temp = path.with_file_name(format!("{FILE_NAME}.fuyu.tmp"));
     fs::write(&temp, text).map_err(|error| UserError::new("file.write", format!("Could not write {}.", temp.display())).arg("path", temp.display().to_string()).detail(error))?;
     fs::rename(&temp, path).map_err(|error| UserError::new("file.write", format!("Could not write {}.", path.display())).arg("path", path.display().to_string()).detail(error))
 }
@@ -262,7 +262,7 @@ mod tests {
 
     #[test]
     fn adding_keeps_the_old_text_backs_it_up_and_can_be_undone() {
-        let dir = std::env::temp_dir().join(format!("focusd-cc-connect-config-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fuyu-cc-connect-config-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let path = dir.join("config.toml");
         let work = std::env::temp_dir();
@@ -275,7 +275,7 @@ mod tests {
 
         let had = add_project(&path, &telegram("b", work, "1"), "2026-11-09", "2").unwrap();
         assert_eq!(had.as_deref(), Some(first.as_str()));
-        assert_eq!(fs::read_to_string(dir.join("config.toml.bak-focusd-2")).unwrap(), first);
+        assert_eq!(fs::read_to_string(dir.join("config.toml.bak-fuyu-2")).unwrap(), first);
         let both = fs::read_to_string(&path).unwrap();
         assert!(both.starts_with(first.trim_end()));
         assert_eq!(project_names(&both), ["a", "b"]);

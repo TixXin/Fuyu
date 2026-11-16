@@ -202,7 +202,7 @@ export function AgentSessionsPanel({
     );
   }
 
-  const ageOf = (session: AgentSessionSummary) => sessionAge(session.updatedAt, now, { justNow: t.agent.sessions.justNow, ...t.agent.sessions.age });
+  const ageOf = (session: AgentSessionSummary) => sessionAge(session.updatedAt, now);
   const showsAge = (session: AgentSessionSummary) => session.phase !== "running" || !(showElapsed && session.turnStartedAt !== null);
   const archivable = Boolean(removal) && !reveal;
   const ageWidth = archivable && view === "list" ? ageSlotWidth(sessions.filter(showsAge).map(ageOf)) : 0;

@@ -1,17 +1,10 @@
-import type { AgentVisualState } from "../../../features/agent-status/status";
-import type { MediaState } from "../../../features/media/api";
 import type { MessageSource } from "../../../features/messages/messagePreview";
 import { defineSlot } from "../../../features/plugin-kernel/slots";
 import type { IslandPage } from "../types";
 
 export type SideRowSources = {
-  agentVisualState: AgentVisualState;
-  agentSessionCount: number | null;
   unreadCount: number;
-  todoCount: number | null;
   shelfCount: number | null;
-  showCover: boolean;
-  mediaState: MediaState;
 };
 
 export type SideRowContext = SideRowSources & {

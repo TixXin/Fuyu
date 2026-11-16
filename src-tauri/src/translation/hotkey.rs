@@ -24,7 +24,7 @@ const SELECTION_HOTKEY_ID: i32 = 0x4655;
 const CHANGE_HOTKEY_MESSAGE: u32 = WM_APP + 0x52;
 const CHANGE_SELECTION_HOTKEY_MESSAGE: u32 = WM_APP + 0x53;
 const COEXIST_MESSAGE: u32 = WM_APP + 0x54;
-const CLASS_NAME: &str = "FocuSDTranslationHotkey";
+const CLASS_NAME: &str = "FuyuTranslationHotkey";
 const READY_WAIT: Duration = Duration::from_secs(2);
 
 static HOTKEY_WINDOW: Mutex<Option<isize>> = Mutex::new(None);
@@ -164,7 +164,7 @@ fn run_hotkey_loop() -> Result<(), String> {
     if message_window::register_class::<TranslationHotkeyWindow>(instance, CLASS_NAME).is_err() {
         return Err("Could not register the translation shortcut window.".to_string());
     }
-    let hwnd = match message_window::create_message_only_window(instance, CLASS_NAME, "FocuSD Translation Hotkey") {
+    let hwnd = match message_window::create_message_only_window(instance, CLASS_NAME, "Fuyu Translation Hotkey") {
         Ok(hwnd) => hwnd,
         Err(error) => {
             let _ = message_window::unregister_class(instance, CLASS_NAME);

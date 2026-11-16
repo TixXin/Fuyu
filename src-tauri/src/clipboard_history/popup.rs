@@ -6,6 +6,7 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, Position, Size, WebviewWindow};
 use windows::Win32::Foundation::HWND;
 
+use super::open_trace::Trace;
 use super::popup_place::{is_terminal_process, place_by_pointer, popup_size, OPENED_EVENT, POINTER_GAP};
 pub(crate) use super::popup_place::WINDOW_LABEL;
 pub(super) use super::popup_place::PasteOptions;
@@ -23,25 +24,67 @@ fn popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 }
 
 pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Result<(), String> {
-    let (position, layout) = (settings.popup_position, settings.popup_layout);
+    let mut trace = Trace::begin(app);
+    let foreground = win32::window::foreground_window().0 as isize;
+    let pointer = win32::window::cursor_position().map(|point| (point.x, point.y));
+    let settings = settings.clone();
+    let handle = app.clone();
+    app.run_on_main_thread(move || {
+        trace.mark("queued");
+        if let Err(error) = toggle_on_main(&handle, &settings, foreground, pointer, &mut trace) {
+            eprintln!("failed to open the clipboard window: {error}");
+        }
+        trace.finish(&handle);
+    })
+    .map_err(|error| error.to_string())
+}
+
+fn toggle_on_main(
+    app: &AppHandle,
+    settings: &ClipboardHistorySettings,
+    foreground: isize,
+    pointer: Option<(i32, i32)>,
+    trace: &mut Trace,
+) -> Result<(), String> {
     let window = popup_window(app)?;
     if window.is_visible().unwrap_or(false) {
-        return hide(app);
+        trace.hiding();
+        let hidden = hide(app);
+        trace.mark("hide");
+        return hidden;
     }
     let _ = window.set_content_protected(settings.hide_from_capture);
     super::sequence::stop();
-    let foreground = win32::window::foreground_window();
     let own = window.hwnd().map(|hwnd| hwnd.0 as isize).unwrap_or_default();
     if let Ok(mut target) = TARGET_WINDOW.lock() {
-        *target = (!foreground.is_invalid() && foreground.0 as isize != own).then_some(foreground.0 as isize);
+        *target = (foreground != 0 && foreground != own).then_some(foreground);
     }
+    trace.mark("prepare");
+    place(app, &window, settings, pointer);
+    trace.mark("place");
+    let _ = window.emit_to(WINDOW_LABEL, OPENED_EVENT, trace.opened_payload());
+    let _ = window.emit_to(crate::onboarding_window::WINDOW_LABEL, OPENED_EVENT, trace.opened_payload());
+    trace.mark("emit");
+    crate::webview_memory::showing(&window);
+    window.show().map_err(|error| error.to_string())?;
+    trace.shown();
+    trace.mark("show");
+    let _ = window.set_focus();
+    trace.mark("focus");
+    if let Ok(hwnd) = window.hwnd() {
+        let _ = win32::window::activate_from_background(hwnd);
+    }
+    trace.mark("activate");
+    Ok(())
+}
 
+fn place(app: &AppHandle, window: &WebviewWindow, settings: &ClipboardHistorySettings, pointer: Option<(i32, i32)>) {
+    let (position, layout) = (settings.popup_position, settings.popup_layout);
     let pinned_at = settings
         .popup_pinned
         .then_some((settings.popup_pin_x, settings.popup_pin_y))
         .and_then(|(x, y)| Some((x?, y?)))
         .filter(|(x, y)| app.monitor_from_point(f64::from(*x) + 24.0, f64::from(*y) + 24.0).ok().flatten().is_some());
-    let pointer = win32::window::cursor_position().map(|point| (point.x, point.y));
     let monitor = match pointer {
         Some((x, y)) => app.monitor_from_point(f64::from(x), f64::from(y)).ok().flatten(),
         None => None,
@@ -66,15 +109,6 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
         };
         let _ = window.set_position(Position::Physical(PhysicalPosition::new(x, y)));
     }
-    let _ = window.emit_to(WINDOW_LABEL, OPENED_EVENT, ());
-    let _ = window.emit_to(crate::onboarding_window::WINDOW_LABEL, OPENED_EVENT, ());
-    crate::webview_memory::showing(&window);
-    window.show().map_err(|error| error.to_string())?;
-    let _ = window.set_focus();
-    if let Ok(hwnd) = window.hwnd() {
-        let _ = win32::window::activate_from_background(hwnd);
-    }
-    Ok(())
 }
 
 pub(super) fn hide(app: &AppHandle) -> Result<(), String> {

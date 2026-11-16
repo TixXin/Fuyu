@@ -159,9 +159,9 @@ mod tests {
 
     #[test]
     fn long_text_is_cut_and_the_group_kept() {
-        let body = push_body("k", &"标".repeat(500), "b", "fly-island");
+        let body = push_body("k", &"标".repeat(500), "b", "fuyu");
         assert_eq!(body["title"].as_str().unwrap().chars().count(), MAX_FIELD_CHARS);
         assert_eq!(body["device_key"], "k");
-        assert_eq!(body["group"], "fly-island");
+        assert_eq!(body["group"], "fuyu");
     }
 }

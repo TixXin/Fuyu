@@ -1,16 +1,11 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
-import type { TodoItem } from "../../features/todos/types";
 import { hasNewUnreadMail, hasUnreadMessages, holdsTuck, mailSeen, nextMailBaselines, sameBaselines, type MailBaselines } from "./tuckHold";
 import type { useIslandNotices } from "./useIslandNotices";
 
 type Notices = Pick<ReturnType<typeof useIslandNotices>, "qqNotifications" | "wechatReminders" | "qqMail" | "preview">;
 
-export function useTuckHold(settings: IslandSettings, { todos, activeTodoId, agentSessions, playing, messagesOpen, notices }: {
-  todos: TodoItem[];
-  activeTodoId: string | null;
-  agentSessions: readonly { phase: string }[];
-  playing: boolean;
+export function useTuckHold(settings: IslandSettings, { messagesOpen, notices }: {
   messagesOpen: boolean;
   notices: Notices;
 }): boolean {
@@ -23,10 +18,5 @@ export function useTuckHold(settings: IslandSettings, { todos, activeTodoId, age
     wechat: { enabled: wechat.snapshot.enabled, pending: wechat.snapshot.pending },
     mail: { enabled: settings.mailEnabled, newUnread: hasNewUnreadMail(baselines, mail.mailboxes) },
   });
-  const todoInProgress = useMemo(
-    () => activeTodoId !== null && todos.some((todo) => todo.id === activeTodoId && !todo.completed),
-    [activeTodoId, todos],
-  );
-  const agentWaiting = agentSessions.some((session) => session.phase === "waiting");
-  return holdsTuck(settings, { todoInProgress, agentWaiting, musicPlaying: playing, messagesUnread });
+  return holdsTuck(settings, { todoInProgress: false, agentWaiting: false, musicPlaying: false, messagesUnread });
 }

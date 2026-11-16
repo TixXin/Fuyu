@@ -32,6 +32,29 @@ tauri_panel! {
     })
 }
 
+static HOVER_KEY_LOOK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+objc2::define_class!(
+    #[unsafe(super(RawIslandPanel, objc2_app_kit::NSPanel, objc2_app_kit::NSWindow, objc2_app_kit::NSResponder, objc2_foundation::NSObject))]
+    #[name = "FuyuHoveredIslandPanel"]
+    struct HoveredIslandPanel;
+
+    unsafe impl NSObjectProtocol for HoveredIslandPanel {}
+
+    impl HoveredIslandPanel {
+        #[unsafe(method(isKeyWindow))]
+        fn is_key_window(&self) -> bool {
+            let real: bool = unsafe { objc2::msg_send![super(self), isKeyWindow] };
+            real || HOVER_KEY_LOOK.load(std::sync::atomic::Ordering::SeqCst)
+        }
+
+        #[unsafe(method(fuyuHasRealKey))]
+        fn has_real_key(&self) -> bool {
+            unsafe { objc2::msg_send![super(self), isKeyWindow] }
+        }
+    }
+);
+
 const LEVELS_ABOVE_MENU_BAR: i64 = 3;
 const TOP_SPACE_CHECK: std::time::Duration = std::time::Duration::from_secs(2);
 const OVERLAY_ABOVE_ISLAND: i64 = 1;
@@ -112,7 +135,56 @@ pub(crate) fn make_panel(window: &WebviewWindow) -> Result<(), String> {
     panel.set_has_shadow(false);
     panel
         .add_style_mask(StyleMask::empty().nonactivating_panel().into())
-        .map_err(|error| format!("Could not make the island a non-activating panel: {error:?}"))
+        .map_err(|error| format!("Could not make the island a non-activating panel: {error:?}"))?;
+    if let Err(error) = look_key_while_hovered(panel.as_panel()) {
+        eprintln!("{error}");
+    }
+    Ok(())
+}
+
+fn look_key_while_hovered(panel: &objc2_app_kit::NSPanel) -> Result<(), String> {
+    let object: &objc2::runtime::AnyObject = panel.as_ref();
+    let from = <RawIslandPanel as objc2::ClassType>::class();
+    let to = <HoveredIslandPanel as objc2::ClassType>::class();
+    if !std::ptr::eq(object.class(), from) {
+        return Err(format!("The island panel is a {}, so hover styles will need a click.", object.class().name().to_string_lossy()));
+    }
+    if from.instance_size() != to.instance_size() {
+        return Err("The hovered island panel class has a different size, so hover styles will need a click.".to_string());
+    }
+    unsafe { objc2::runtime::AnyObject::set_class(object, to) };
+    Ok(())
+}
+
+pub(crate) fn set_hover_key_look<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str, on: bool) {
+    if HOVER_KEY_LOOK.swap(on, std::sync::atomic::Ordering::SeqCst) == on || !on {
+        return;
+    }
+    let handle = app.clone();
+    let label = label.to_string();
+    let _ = app.run_on_main_thread(move || {
+        if island_has_real_key(&handle, &label) {
+            return;
+        }
+        let Ok(panel) = handle.get_webview_panel(&label) else {
+            return;
+        };
+        let center = objc2_foundation::NSNotificationCenter::defaultCenter();
+        unsafe { center.postNotificationName_object(objc2_app_kit::NSWindowDidBecomeKeyNotification, Some(panel.as_panel())) };
+    });
+}
+
+pub(crate) fn island_has_real_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> bool {
+    let Ok(panel) = app.get_webview_panel(label) else {
+        return false;
+    };
+    let window = panel.as_panel();
+    let hovered: bool = unsafe { objc2::msg_send![window, respondsToSelector: objc2::sel!(fuyuHasRealKey)] };
+    if hovered {
+        unsafe { objc2::msg_send![window, fuyuHasRealKey] }
+    } else {
+        window.isKeyWindow()
+    }
 }
 
 pub(crate) fn keep_in_top_space(window: WebviewWindow) {

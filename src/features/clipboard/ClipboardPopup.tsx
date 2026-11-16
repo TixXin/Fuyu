@@ -58,6 +58,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const [pinyinReady, setPinyinReady] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
+  const scrollRef = useRef<((index: number) => void) | null>(null);
   const rootRef = useRef<HTMLElement | null>(null);
   const pointerPickRef = useRef(false);
   const { handlers, notice, deletion, edits, saveNote, saveAsNew, pasteText, setPinKey } = usePopupHandlers({ onPaste, onToggleFavorite, onEdit: () => setMode("edit") });
@@ -68,16 +69,28 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
     setFilter("all");
     setQuery("");
     setSelected(-1);
-    setQueue([]);
+    setQueue((current) => (current.length === 0 ? current : []));
     setMode("list");
     setNow(Date.now());
     inputRef.current?.focus();
   }, [openCount, flush]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), CLOCK_MS);
+    let timer: number | undefined;
+    const sync = () => {
+      window.clearInterval(timer);
+      timer = document.visibilityState === "hidden" ? undefined : window.setInterval(() => setNow(Date.now()), CLOCK_MS);
+    };
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, []);
+
+  useEffect(() => {
     void loadPinyin().then((pinyin) => setPinyinReady(pinyin !== null));
-    return () => window.clearInterval(timer);
   }, []);
 
   const pending = deletion.pending;
@@ -88,9 +101,9 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const parsed = useMemo(() => parsePopupQuery(query), [query]);
   const needle = query.trim().toLowerCase();
   const filteredItems = useMemo(
-    () => (onSnippets ? [] : filterPopupItems(visible, filter, parsed, now)),
+    () => (onSnippets ? [] : filterPopupItems(visible, filter, parsed)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [visible, filter, parsed, now, onSnippets, pinyinReady],
+    [visible, filter, parsed, onSnippets, pinyinReady],
   );
   const pins = usePopupPins({ items: filteredItems, all: visible, active: filter === "all" && query === "", enabled: pinFavorites, listRef, onPaste: (id, plain) => onPaste(id, plain), onSelect: setSelected });
   const shownItems = pins.items;
@@ -99,7 +112,8 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
     : snippets;
   const count = onSnippets ? shownSnippets.length : shownItems.length;
   const current = Math.min(selected < 0 ? pins.pinned : selected, Math.max(0, count - 1));
-  const groupStarts = useMemo(() => (wide && !onSnippets ? dayGroupStarts(shownItems.slice(pins.pinned).map((entry) => entry.copiedAt), now) : []), [wide, onSnippets, shownItems, pins.pinned, now]);
+  const dayGroupLabels = text.dayGroups;
+  const dayGroups = useMemo(() => (wide && !onSnippets ? dayGroupStarts(shownItems.slice(pins.pinned).map((entry) => entry.copiedAt), now).map((start) => (start ? dayGroupLabels[start] : null)) : []), [wide, onSnippets, shownItems, pins.pinned, now, dayGroupLabels]);
   const item = onSnippets ? undefined : shownItems[current];
   const isText = item?.kind === "text";
   const { removeMany } = deletion;
@@ -111,7 +125,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
       pointerPickRef.current = false;
       return;
     }
-    listRef.current?.querySelector<HTMLElement>(`[data-index="${current}"]`)?.scrollIntoView({ block: "nearest" });
+    scrollRef.current?.(current);
   }, [current, filter]);
 
   const selectByPointer = (index: number) => {
@@ -298,6 +312,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
         ) : (
           <ClipboardPopupList
             listRef={listRef}
+            scrollRef={scrollRef}
             label={chipLabel(filter)}
             snippetsLabel={onSnippets ? text.snippetsLabel : null}
             snippets={onSnippets ? shownSnippets : null}
@@ -305,7 +320,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
             current={current}
             now={now}
             queue={queue}
-            dayGroups={wide ? groupStarts.map((start) => (start ? text.dayGroups[start] : null)) : []}
+            dayGroups={dayGroups}
             pins={pins}
             linkPreview={linkPreview}
             onHover={(index) => mode === "list" && selectByPointer(index)}

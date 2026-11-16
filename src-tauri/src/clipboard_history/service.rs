@@ -551,7 +551,7 @@ impl ClipboardHistoryService {
 }
 
 
-fn read_image_text(path: &str) -> Option<String> {
+pub(super) fn read_image_text(path: &str) -> Option<String> {
     const OCR_MAX_SIDE: u32 = 2600;
     let image = image::open(path).ok()?;
     let image = if image.width() > OCR_MAX_SIDE || image.height() > OCR_MAX_SIDE {

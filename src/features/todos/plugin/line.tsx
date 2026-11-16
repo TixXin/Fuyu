@@ -1,17 +1,18 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
+import { todoLine } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type LineContext = {
   showTitle: boolean;
   center: ReactNode | null;
-  todoTitle: string | null;
-  todoCount: number | null;
 };
 
 const lineSlot = defineSlot<LineContext>("island.line/v1");
 
-function TodoTitleLine({ showTitle, todoTitle }: LineContext) {
+function TodoTitleLine({ showTitle }: LineContext) {
+  const todoTitle = todoLine.use().title;
   if (!todoTitle) return null;
   return (
     <span className="island__active-task" key={todoTitle}>
@@ -21,8 +22,9 @@ function TodoTitleLine({ showTitle, todoTitle }: LineContext) {
   );
 }
 
-function TodoCountLine({ showTitle, center, todoCount }: LineContext) {
+function TodoCountLine({ showTitle, center }: LineContext) {
   const t = useTranslation();
+  const todoCount = todoLine.use().count;
   if (todoCount === null) return null;
   return (
     <span className="island__todo-count">
@@ -33,5 +35,5 @@ function TodoCountLine({ showTitle, center, todoCount }: LineContext) {
   );
 }
 
-lineSlot.add({ id: "todos.title", component: TodoTitleLine });
-lineSlot.add({ id: "todos.count", component: TodoCountLine });
+lineSlot.add({ id: "todos.title", component: TodoTitleLine }, OWNER);
+lineSlot.add({ id: "todos.count", component: TodoCountLine }, OWNER);

@@ -1,8 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
-import type { AgentVisualState } from "../../features/agent-status/status";
 import type { AppearanceMode } from "../../lib/settings/types";
-import type { MediaState } from "../../features/media/api";
 import type { MessagePreview, MessageSource } from "../../features/messages/messagePreview";
 import type { MailController } from "../../features/messages/mail/MailPanel";
 import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
@@ -11,7 +8,6 @@ import type { PluginNotificationsController } from "../../features/plugins/usePl
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
 import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
-import type { CollapsedLineSources } from "./slots/line";
 import { isPluginPage, type IslandFeatures } from "./features";
 import { IslandCollapsedBar } from "./IslandCollapsedBar";
 import { useIslandNotch } from "./notch";
@@ -54,17 +50,10 @@ type IslandShellProps = {
   isTucked: boolean;
   isDetached: boolean;
   side?: IslandSide | null;
-  sideCover?: boolean;
   showTitle: boolean;
   showCollapsedText: boolean;
-  lineSources: CollapsedLineSources;
-  activeAgentSessionCount: number;
-  mediaState: MediaState;
-  agentVisualState: AgentVisualState;
-  agentStatusLabel: string;
   features: IslandFeatures;
   shelfCount: number | null;
-  quotaAlert?: QuotaAlert | null;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
   onCollapse: () => void;
@@ -72,7 +61,6 @@ type IslandShellProps = {
   minimizesToTray: boolean;
   onMinimize: () => void;
   onOpenTranslator: (() => void) | null;
-  onScreenshot?: (() => void) | null;
   notice?: { content: ReactNode; actions: ReactNode } | null;
   onOpenSettings: (section?: "updates") => void;
   onTuck: () => void;
@@ -83,12 +71,13 @@ type IslandShellProps = {
   hoverSwitchDelayMs: number;
   overlay?: ReactNode;
   pluginPageButtons?: ReactNode;
-  pageActions?: ReactNode;
   pluginViews?: readonly PluginViewEntry[];
   onOpenPluginPage?: (page: `plugin:${string}`) => void;
   collapsedSlots?: CollapsedSlots;
   children: ReactNode;
 };
+
+const NO_SOURCES = {};
 
 export function IslandShell({
   qqMail,
@@ -107,17 +96,10 @@ export function IslandShell({
   isTucked,
   isDetached,
   side = null,
-  sideCover = false,
   showTitle,
   showCollapsedText,
-  lineSources,
-  activeAgentSessionCount,
-  mediaState,
-  agentVisualState,
-  agentStatusLabel,
   features,
   shelfCount,
-  quotaAlert = null,
   onOpenPage,
   onWindowDragStart,
   onCollapse,
@@ -125,7 +107,6 @@ export function IslandShell({
   minimizesToTray,
   onMinimize,
   onOpenTranslator,
-  onScreenshot,
   notice,
   onOpenSettings,
   onTuck,
@@ -136,7 +117,6 @@ export function IslandShell({
   hoverSwitchDelayMs,
   overlay,
   pluginPageButtons,
-  pageActions,
   pluginViews,
   onOpenPluginPage,
   collapsedSlots,
@@ -152,16 +132,14 @@ export function IslandShell({
   const qqNotificationCount = qqNotifications.snapshot.items.length;
   const wechatPending = wechatReminders.snapshot.pending;
   const unreadCount = qqNotificationCount + Number(wechatPending);
+  const { status } = useIslandContributed();
+  const agentVisualState = status?.state ?? "idle";
+  const agentStatusLabel = status?.label ?? "";
   const sideSources = {
-    agentVisualState,
-    agentSessionCount: features.agents ? activeAgentSessionCount : null,
     unreadCount,
-    todoCount: lineSources.todoCount,
     shelfCount,
-    showCover: sideCover,
-    mediaState,
     };
-  useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null, showMusic: features.music === true });
+  useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null });
   const sideLayout = useSideColumnRows({ ...sideSources, onOpenPage, onOpenMessages }, collapsedSlots?.gauges ?? []);
   const sideHot = preview ? (preview.source === "qqMail" ? "mail" : "unread") : null;
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
@@ -241,12 +219,7 @@ export function IslandShell({
           showTitle={showTitle}
           showCollapsedText={showCollapsedText}
           collapsedLabel={collapsedLabel}
-          lineSources={lineSources}
-          agentSessionCount={features.agents ? activeAgentSessionCount : null}
-          mediaState={mediaState}
-          showMusic={features.music}
           shelfCount={shelfCount}
-          quotaAlert={quotaAlert}
           agentVisualState={agentVisualState}
           onOpenPage={onOpenPage}
           onOpenMessages={onOpenMessages}
@@ -277,7 +250,6 @@ export function IslandShell({
             onOpenSettings={onOpenSettings}
             onOpenMessages={onOpenMessages}
             onOpenTranslator={onOpenTranslator}
-            onScreenshot={onScreenshot}
             onResetPosition={onResetPosition}
             minimizesToTray={minimizesToTray}
             onMinimize={onMinimize}
@@ -285,7 +257,6 @@ export function IslandShell({
             hoverSwitchPage={hoverSwitchPage}
             hoverSwitchDelayMs={hoverSwitchDelayMs}
             pluginPageButtons={pluginPageButtons}
-            pageActions={pageActions}
           />
           <div ref={contentRef} className="island__content">{children}</div>
         </div>
@@ -295,7 +266,7 @@ export function IslandShell({
         <IslandSideBubble
           top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}
           preview={preview}
-          alert={activeAlert && <AlertPopup alert={activeAlert} sources={{ quotaAlert }} />}
+          alert={activeAlert && <AlertPopup alert={activeAlert} sources={NO_SOURCES} />}
           onOpenPreview={() => (preview && preview.source !== "plugin" ? onOpenMessages(preview.source) : onOpenPage(page))}
         />
       )}

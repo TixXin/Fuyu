@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { Bot } from "lucide-react";
-import type { AgentVisualState } from "../../features/agent-status/status";
 import type { MessageSource } from "../../features/messages/messagePreview";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
+import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 import { useTranslation } from "../../i18n";
 import { headerDotPages, isPageEnabled, type IslandFeatures } from "./features";
 import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/header";
@@ -18,7 +18,7 @@ type IslandHeaderProps = {
   features: IslandFeatures;
   showTitle: boolean;
   isDetached: boolean;
-  agentVisualState: AgentVisualState;
+  agentVisualState: string;
   agentStatusLabel: string;
   qqNotificationCount: number;
   wechatPending: boolean;
@@ -27,7 +27,6 @@ type IslandHeaderProps = {
   onOpenSettings: (section?: "updates") => void;
   onOpenMessages: (source: MessageSource) => void;
   onOpenTranslator: (() => void) | null;
-  onScreenshot?: (() => void) | null;
   onResetPosition: () => void;
   minimizesToTray: boolean;
   onMinimize: () => void;
@@ -35,7 +34,6 @@ type IslandHeaderProps = {
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
   pluginPageButtons?: ReactNode;
-  pageActions?: ReactNode;
 };
 
 export function IslandHeader({
@@ -52,7 +50,6 @@ export function IslandHeader({
   onOpenSettings,
   onOpenMessages,
   onOpenTranslator,
-  onScreenshot = null,
   onResetPosition,
   minimizesToTray,
   onMinimize,
@@ -60,9 +57,9 @@ export function IslandHeader({
   hoverSwitchPage,
   hoverSwitchDelayMs,
   pluginPageButtons,
-  pageActions,
 }: IslandHeaderProps) {
   const t = useTranslation();
+  const { hints } = useIslandContributed();
   const hoverSwitch = usePageHoverSwitch(hoverSwitchPage, hoverSwitchDelayMs, page, onPageChange);
   const pages = useSlotEntries(pageSlot);
   const dots = headerDotPages(pages, features);
@@ -75,7 +72,7 @@ export function IslandHeader({
     onOpenSettings,
     onOpenMessages,
     onOpenTranslator,
-    onScreenshot,
+    hints,
     onResetPosition,
     minimizesToTray,
     onMinimize,
@@ -162,7 +159,6 @@ export function IslandHeader({
       />
 
       <div className="window-actions">
-        {pageActions}
         <SlotView slot={headerSlot} props={buttons} select={(items) => items.filter((item) => item.enabled?.(buttons) ?? true)} />
       </div>
     </header>

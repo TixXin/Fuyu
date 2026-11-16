@@ -1,18 +1,18 @@
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
-import type { AgentVisualState } from "../status";
+import { useIslandContributed } from "../../plugin-kernel/useIslandContributions";
+import { agentShell } from "./islandState";
 
 type SideContext = {
-  agentVisualState: AgentVisualState;
-  agentSessionCount: number | null;
   onOpenPage: (page: "agents") => void;
 };
 
 const sideSlot = defineSlot<SideContext>("island.side/v1");
 
-function AgentRing({ agentVisualState, agentSessionCount, onOpenPage }: SideContext) {
+function AgentRing({ onOpenPage }: SideContext) {
   const t = useTranslation();
-  const count = agentSessionCount ?? 0;
+  const agentVisualState = useIslandContributed().status?.state ?? "idle";
+  const count = agentShell.use().activeCount;
   return (
     <button
       type="button"

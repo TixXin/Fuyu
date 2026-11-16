@@ -42,7 +42,7 @@ impl<T: SetReadTimeout> SetReadTimeout for SharedStream<T> {
 }
 
 const ID_COMMAND: &[u8] =
-    b"fly0 ID (\"name\" \"fly-island\" \"version\" \"1.0\" \"vendor\" \"fly-island\")\r\n";
+    b"fly0 ID (\"name\" \"fuyu\" \"version\" \"1.0\" \"vendor\" \"fuyu\")\r\n";
 const MAX_LINE: usize = 8_192;
 
 pub(super) fn send_client_id<T: Read + Write>(stream: &Mutex<T>) -> std::io::Result<()> {

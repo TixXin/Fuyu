@@ -88,7 +88,7 @@ export function notchLook(settings: IslandSettings): IslandSettings {
 export type NotchDropSources = {
   preview: unknown;
   notice: unknown;
-  translationPeek: unknown;
+  peek: unknown;
 };
 
 export function hasNotchDrop(sources: NotchDropSources) {

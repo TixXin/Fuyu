@@ -6,6 +6,7 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useState } from "react";
 import { exitPluginSafeMode } from "../../features/plugin-kernel/api";
 import { BuiltinPluginsGroup } from "./BuiltinPluginsGroup";
+import { PluginHostNodeRow } from "./PluginHostNodeRow";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginStatusV3 } from "./usePluginHostStatus";
 import "./PluginsV3SettingsPage.css";
 
@@ -115,6 +116,7 @@ export function PluginsV3View({ view, now = Date.now() }: { view: PluginHostView
           title={<span className={`plugins-v3__connection plugins-v3__connection--${connection}`} data-connection={connection}>{text.connection[connection]}</span>}
           description={open && host ? text.hostDetail(host.pid, host.node) : undefined}
         />
+        <PluginHostNodeRow watching={!open} />
         {open && host ? (
           <>
             <SettingsRow

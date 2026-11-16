@@ -8,7 +8,7 @@ import { DEFAULT_MEDIA_STATE } from "../../src/features/media/mediaState";
 import { MusicPlayerPanel } from "../../src/features/media/MusicPlayerPanel";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults";
 import type { LyricsIntro } from "../../src/features/media/lyrics/lyricsSettings";
-import { useIslandLyrics } from "../../src/windows/island/useIslandLyrics";
+import { useIslandLyrics } from "../../src/features/media/useIslandLyrics";
 import { MediaWaveform } from "../../src/features/media/MediaWaveform";
 import { coverAccentVariables, useCoverColor } from "../../src/features/media/useCoverColor";
 import { contrastRatio, rgbToHex } from "../../src/features/media/coverColor";

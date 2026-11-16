@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{bisect, containment, safe_mode::{self, Cause, Tracker}, enabled, host_args, host_env, host_files, host_origins, host_script, memory_of, window_origins, HostFiles, HostMode, MEMORY_MEASURE};
+use super::{bisect, containment, node_status::{NodeGate, NodeStatus}, safe_mode::{self, Cause, Tracker}, enabled, host_args, is_prerelease, on_by_default, host_env, host_files, host_origins, host_script, memory_of, window_origins, HostFiles, HostMode, MEMORY_MEASURE};
 
 #[test]
 fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
@@ -31,6 +31,63 @@ fn a_release_build_starts_the_host_only_when_the_switch_is_exactly_1() {
     for off in [None, Some(""), Some("0"), Some("true"), Some(" 1"), Some("yes")] {
         assert!(!enabled(false, off), "{off:?}");
     }
+}
+
+#[test]
+fn a_prerelease_is_what_the_release_script_publishes_as_one() {
+    for (version, prerelease) in [("0.3.10", false), ("0.3.10-beta.2", true), ("0.3.10-rc.1", true), ("1.0.0", false), ("1.2-beta", false), ("v0.3.10-beta.1", false), ("0.3.x-beta", false)] {
+        assert_eq!(is_prerelease(version), prerelease, "{version}");
+    }
+}
+
+#[test]
+fn development_and_beta_builds_start_the_host_by_default_and_stable_ones_do_not() {
+    assert!(on_by_default(true, "0.3.10"));
+    assert!(on_by_default(false, "0.3.10-beta.2"));
+    assert!(on_by_default(false, "0.4.0-rc.1"));
+    assert!(!on_by_default(false, "0.3.10"));
+    assert!(enabled(on_by_default(false, "0.3.10-beta.2"), None));
+    assert!(!enabled(on_by_default(false, "0.3.10-beta.2"), Some("0")), "0 turns it off on the beta channel too");
+    assert!(!enabled(on_by_default(false, "0.3.10"), None), "stable versions still need FUYU_PLUGINS_V3=1");
+}
+
+#[test]
+fn node_status_serializes_with_a_state_tag_for_the_window() {
+    let downloading = serde_json::to_value(NodeStatus::Downloading { downloaded: 5, total: Some(9) }).unwrap();
+    assert_eq!(downloading, serde_json::json!({ "state": "downloading", "downloaded": 5, "total": 9 }));
+    let failed = serde_json::to_value(NodeStatus::Failed { error: "offline".into() }).unwrap();
+    assert_eq!(failed, serde_json::json!({ "state": "failed", "error": "offline" }));
+    assert_eq!(serde_json::to_value(NodeStatus::Checking).unwrap(), serde_json::json!({ "state": "checking" }));
+}
+
+#[test]
+fn a_retry_only_counts_after_a_failure_and_wakes_the_waiting_start() {
+    let gate = std::sync::Arc::new(NodeGate::default());
+    assert!(!gate.retry(), "nothing to retry while Node is still being looked for");
+    gate.set(NodeStatus::Failed { error: "offline".into() });
+    let waiting = {
+        let gate = gate.clone();
+        std::thread::spawn(move || gate.wait_for_retry())
+    };
+    std::thread::sleep(Duration::from_millis(20));
+    assert!(gate.retry());
+    assert_eq!(gate.current(), NodeStatus::Checking);
+    assert!(!gate.retry(), "a second click while checking does nothing");
+    assert!(waiting.join().unwrap(), "the start thread wakes up to try again");
+}
+
+#[test]
+fn stopping_releases_a_start_that_waits_for_a_retry() {
+    let gate = std::sync::Arc::new(NodeGate::default());
+    gate.set(NodeStatus::Failed { error: "offline".into() });
+    let waiting = {
+        let gate = gate.clone();
+        std::thread::spawn(move || gate.wait_for_retry())
+    };
+    std::thread::sleep(Duration::from_millis(20));
+    gate.stop();
+    assert!(!waiting.join().unwrap(), "the start thread gives up when Fuyu quits");
+    assert!(!gate.retry(), "no retry after quitting");
 }
 
 #[test]

@@ -1,16 +1,17 @@
 import { Music2 } from "lucide-react";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { KaraokeText } from "../lyrics/KaraokeText";
-import type { CurrentLyric } from "../lyrics/useCurrentLyric";
+import { mediaIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type LineContext = {
   showTitle: boolean;
-  lyricLine: CurrentLyric | null;
 };
 
 const lineSlot = defineSlot<LineContext>("island.line/v1");
 
-function LyricLine({ showTitle, lyricLine: lyric }: LineContext) {
+function LyricLine({ showTitle }: LineContext) {
+  const lyric = mediaIsland.use()?.lyricLine;
   if (!lyric?.text) return null;
   return (
     <span className="island__agent-session island__lyric" key={`lyric:${lyric.index}`}>
@@ -25,4 +26,4 @@ function LyricLine({ showTitle, lyricLine: lyric }: LineContext) {
   );
 }
 
-lineSlot.add({ id: "media.lyric", component: LyricLine });
+lineSlot.add({ id: "media.lyric", component: LyricLine }, OWNER);

@@ -1,10 +1,34 @@
-use std::sync::atomic::{AtomicI32, Ordering};
-use tauri::{AppHandle, Manager, WebviewWindow};
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
+use std::sync::Once;
+use tauri::{AppHandle, Listener, Manager, WebviewWindow};
 
+use super::banner_hit::ISLAND_BANNER_HOVER_CHANGED_EVENT;
 use super::{main_window, WINDOW_LABEL};
 use crate::macos::{apps, input, island_panel};
 
+const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
+
 static PREVIOUS_APP: AtomicI32 = AtomicI32::new(0);
+static ON_ISLAND: AtomicBool = AtomicBool::new(false);
+static ON_BANNER: AtomicBool = AtomicBool::new(false);
+static FOLLOW_HOVER: Once = Once::new();
+
+fn follow_hover(app: &AppHandle) {
+    FOLLOW_HOVER.call_once(|| {
+        for (event, flag) in [(ISLAND_HOVER_CHANGED_EVENT, &ON_ISLAND), (ISLAND_BANNER_HOVER_CHANGED_EVENT, &ON_BANNER)] {
+            let handle = app.clone();
+            app.listen_any(event, move |event| {
+                flag.store(event.payload() == "true", Ordering::SeqCst);
+                let hovered = ON_ISLAND.load(Ordering::SeqCst) || ON_BANNER.load(Ordering::SeqCst);
+                island_panel::set_hover_key_look(&handle, WINDOW_LABEL, hovered);
+            });
+        }
+    });
+}
+
+fn island_has_real_key(app: &AppHandle) -> bool {
+    island_panel::island_has_real_key(app, WINDOW_LABEL)
+}
 
 fn other_frontmost_app() -> Option<i32> {
     let own = i32::try_from(std::process::id()).ok();
@@ -16,7 +40,7 @@ pub fn take_island_hover_focus(app: AppHandle) -> Result<bool, String> {
     if input::is_left_button_down() {
         return Ok(false);
     }
-    if main_window(&app)?.is_focused().unwrap_or(false) {
+    if island_has_real_key(&app) {
         return Ok(true);
     }
     if let Some(pid) = other_frontmost_app() {
@@ -38,7 +62,7 @@ pub fn release_island_hover_focus(app: AppHandle) -> Result<bool, String> {
         return Ok(false);
     }
     let previous = PREVIOUS_APP.swap(0, Ordering::SeqCst);
-    if previous == 0 || !main_window(&app)?.is_focused().unwrap_or(false) {
+    if previous == 0 || !island_has_real_key(&app) {
         return Ok(true);
     }
     let handle = app.clone();
@@ -63,6 +87,7 @@ pub(crate) fn island_mode_synced(_window: &WebviewWindow, _expanded: bool) {}
 
 pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), String> {
     let app = window.app_handle().clone();
+    follow_hover(&app);
     let fallback = window.clone();
     window
         .run_on_main_thread(move || {

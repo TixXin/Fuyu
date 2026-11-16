@@ -27,11 +27,21 @@ pub(crate) fn now_playing_key(value: &Value) -> Value {
     json!([value["status"], value["title"], value["artist"], value["album"], value["sourceApp"]])
 }
 
+fn switched_on() -> Result<(), (u16, String)> {
+    if super::is_enabled() {
+        Ok(())
+    } else {
+        Err((503, "Music is switched off in Fuyu.".to_string()))
+    }
+}
+
 pub(crate) fn plugin_now_playing() -> Result<Value, (u16, String)> {
+    switched_on()?;
     service::get_state(None).map(|state| now_playing_value(&state)).map_err(|error| (500, error))
 }
 
 pub(crate) fn plugin_cover() -> Result<Value, (u16, String)> {
+    switched_on()?;
     let state = service::get_state(None).map_err(|error| (500, error))?;
     Ok(json!({ "cover": cover_for_plugins(state.thumbnail) }))
 }
@@ -41,6 +51,7 @@ pub(crate) fn cover_for_plugins(cover: Option<String>) -> Option<String> {
 }
 
 pub(crate) fn plugin_media_command(method: &str, params: &Value) -> Result<Value, (u16, String)> {
+    switched_on()?;
     let state = match method {
         "media.seek" => {
             let position = params

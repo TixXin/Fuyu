@@ -1,5 +1,6 @@
 {
   "features": [
+    "src/features/agent-status/plugin/runners.tsx -> src/features/plugins/useHostChangeEvent.ts",
     "src/features/agent-status/push/AgentPushSettings.tsx -> src/features/cc-connect/index.ts",
     "src/features/agent-status/push/CcConnectPushTargets.tsx -> src/features/cc-connect/index.ts",
     "src/features/agent-status/push/sendPush.ts -> src/features/cc-connect/index.ts",
@@ -7,6 +8,8 @@
     "src/features/agent-status/push/useAgentPush.ts -> src/features/plugins/useBuiltinPlugin.ts",
     "src/features/cc-connect/useCcConnect.ts -> src/features/plugins/useBuiltinPlugin.ts",
     "src/features/cc-connect/useRemoteCcConnect.ts -> src/features/agent-status/api.ts",
+    "src/features/center-pattern/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts",
+    "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts",
     "src/features/claude-usage/PlanKeyFields.tsx -> src/features/agent-status/api.ts",
     "src/features/claude-usage/usageRing.ts -> src/features/agent-status/api.ts",
     "src/features/claude-usage/usageRing.ts -> src/features/agent-status/usage.ts",
@@ -16,18 +19,25 @@
     "src/features/plugins/PluginDetailPage.tsx -> src/features/claude-usage/PlanKeyFields.tsx",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/ssh-tunnel/index.ts",
     "src/features/plugins/useBuiltinPlugin.ts -> src/features/plugin-views/api.ts",
+    "src/features/screenshot/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts",
     "src/features/screenshot/useRecording.ts -> src/features/file-shelf/api.ts",
     "src/features/screenshot/useScreenshotNotice.ts -> src/features/agent-status/api.ts",
     "src/features/screenshot/useScreenshotNotice.ts -> src/features/file-shelf/api.ts",
     "src/features/session-ring/SessionRing.tsx -> src/features/agent-status/api.ts",
+    "src/features/session-ring/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts",
     "src/features/session-ring/ringCounts.ts -> src/features/agent-status/api.ts",
     "src/features/session-ring/ringCounts.ts -> src/features/agent-status/sessionLight.ts",
     "src/features/session-ring/ringCounts.ts -> src/features/agent-status/sessionList.ts",
     "src/features/session-ring/ringCounts.ts -> src/features/agent-status/unseen.ts",
+    "src/features/session-ring/useSessionRingDecor.tsx -> src/features/agent-status/api.ts",
+    "src/features/session-ring/useSessionRingDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts",
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginCard.css",
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginMarketSection.css",
     "src/features/timer/ReminderNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
-    "src/features/timer/TimerNotice.tsx -> src/features/screenshot/ScreenshotNotice.css"
+    "src/features/timer/TimerNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
+    "src/features/voice-input/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts",
+    "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/device-use/api.ts",
+    "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/todos/plugin/islandState.ts"
   ],
   "shared": [
     "src/lib/settings/normalizeBehaviorSettings.ts -> src/features/calendar/calendarSettings.ts",
@@ -43,5 +53,17 @@
     "src/lib/settings/types.ts -> src/features/media/lyrics/lyricsSettings.ts",
     "src/lib/settings/types.ts -> src/features/todos/types.ts",
     "src/lib/settings/useSettingPresets.ts -> src/features/todos/index.ts"
-  ]
+  ],
+  "removedBy": {
+    "src/features/agent-status/plugin/runners.tsx -> src/features/plugins/useHostChangeEvent.ts": "E36.3.37",
+    "src/features/center-pattern/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts": "E36.3.37",
+    "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts": "E36.3.45",
+    "src/features/screenshot/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts": "E36.3.35",
+    "src/features/session-ring/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts": "E36.3.40",
+    "src/features/session-ring/useSessionRingDecor.tsx -> src/features/agent-status/api.ts": "E36.3.40",
+    "src/features/session-ring/useSessionRingDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts": "E36.3.40",
+    "src/features/voice-input/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.36",
+    "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/device-use/api.ts": "E36.3.36",
+    "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.36"
+  }
 }

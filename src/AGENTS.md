@@ -28,7 +28,7 @@ src/
 │   ├── local-api/           # 本地接口的前端一侧：转发请求的分发与桥接 hook（待办部分在 todos/apiCommands.ts；开关与设置在内置插件页）
 │   ├── plugins/             # 设置 → 插件扩展页与插件市场页：已安装插件、启用与授权、从市场安装
 │   ├── plugin-dev/          # 设置 → 插件扩展 → 开发者：开发模式开关、从文件夹加载插件、JSON-RPC 收发记录、手动发送事件
-│   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧（E36.1，开发中）：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件（runtime.ts，宿主启动了才工作：开发版默认启动，正式版要设 FUYU_PLUGINS_V3=1）；插槽：每个窗口一份注册表和各插槽的类型化句柄（slots.ts，名单和规则在 @fuyu/plugin-base/protocol 的 SLOTS）、渲染（SlotView.tsx）、订阅（useSlotEntries.ts），内置功能不设那个环境变量也经它们注册和渲染
+│   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧（E36.1，开发中）：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件（runtime.ts，宿主启动了才工作：测试版和开发版默认启动，正式版要设 FUYU_PLUGINS_V3=1）；插槽：每个窗口一份注册表和各插槽的类型化句柄（slots.ts，名单和规则在 @fuyu/plugin-base/protocol 的 SLOTS）、渲染（SlotView.tsx）、订阅（useSlotEntries.ts），内置功能不设那个环境变量也经它们注册和渲染
 │   ├── plugin-views/        # 插件在岛上的页面与折叠条状态：模板（list / detail / form / status）、插件数据的规范化、页面顺序与隐藏
 │   ├── messages/            # 消息导航与预览；mail/、qq-notifications/、wechat/ 子目录；banner/ 为岛下方的新消息横幅（分组与计时，接线在 windows/island/useIslandBanner.ts）；arrivals/ 为新消息自动展开的面板（只列这次到达的消息，接线在 windows/island/useIslandMessagePanel.ts）
 │   ├── agent-status/        # AI 代理状态；sounds/ 为 Agent 音效：内置音效播放、设置 → 声音页、导入音效包；push/ 为手机推送（Bark 或 cc-connect，排队到离开电脑再发）

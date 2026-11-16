@@ -1,13 +1,11 @@
 import { defineSlot } from "../../plugin-kernel/slots";
+import { screenshotIsland } from "./islandState";
 
-type LineContext = {
-  screenshotPeek: string | null;
-};
+const lineSlot = defineSlot<object>("island.line/v1");
 
-const lineSlot = defineSlot<LineContext>("island.line/v1");
-
-function TextPeekLine({ screenshotPeek }: LineContext) {
-  return screenshotPeek ? <span className="island__active-task" key={screenshotPeek}>{screenshotPeek}</span> : null;
+function TextPeekLine() {
+  const { peek } = screenshotIsland.use();
+  return peek ? <span className="island__active-task" key={peek}>{peek}</span> : null;
 }
 
 lineSlot.add({ id: "screenshot.text", component: TextPeekLine });

@@ -2,9 +2,14 @@ import type { IslandSettings } from "../../lib/settings/types";
 import type { BuiltinPlugin } from "./api.ts";
 
 export const LEGACY_SWITCHES = {
+  todoEnabled: "todos",
   translationEnabled: "translation",
   calendarEnabled: "calendar",
   shelfEnabled: "file-shelf",
+  musicEnabled: "music",
+  deviceAlerts: "device-events",
+  levelPopup: "system-levels",
+  deviceUseIndicator: "device-use",
 } as const satisfies Partial<Record<keyof IslandSettings, string>>;
 
 export type LegacySwitch = keyof typeof LEGACY_SWITCHES;

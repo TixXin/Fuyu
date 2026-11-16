@@ -41,6 +41,7 @@ description: >
    - `cargo`、`tauri build` 写成 `pnpm heavy -- <命令>`，用共用的 `src-tauri/target/agents`，不跑 `pnpm tauri dev`（workflow.md「Rust 构建」）；没排队的会被钩子拦下。
    - 构建、`cargo test` 这类长命令放后台跑，前台的工具结束前读不到别的会话发来的消息。
    - `pnpm check` 是一串 `&&`，一步失败后面的都不跑。失败的是别人没提交的文件时不去改它，记下文件和哪一步，再把后面的步骤单独跑完（顺序看 `package.json` 的 `check`，例如 `pnpm run check:colors`、`pnpm test`），汇报里写明哪些失败不是自己造成的。
+   - 改了 Rust 的，报验前先后台跑 `pnpm mq:try --wait`，Windows CI 的 `rust` 过了再报，报验附 run 链接；新加 `host_service`、命令、窗口的尤其要跑。Mac 本地测试和交叉 clippy 查不出 Windows 链接期、运行期的问题，漏到整批 PR 才暴露会卡住所有人（workflow.md「提前看 CI」）。
    - 本机测不了的（另一个平台、真机、要用户的账号）当场记：`pnpm tasks note <编号> "实测清单（为什么本机测不了）：1) … 2) …"`，随第 7 步的提交带上（README「实测清单」）。
 7. **标完成，进同一个提交**：对着任务文件的「验收」逐条核对过，先定好提交标题，`pnpm tasks done <编号> --commit "<标题>"`，再用一字不差的标题提交；差一个字，land 的检查就过不了。
    - 任务文件是挪进 `0-archive/` 的，新旧两个路径都要带：`git add docs/tasks/0-archive/<分组>/<编号>.md`，然后 `git commit -m "<标题>" -- <功能文件…> docs/tasks/<分组>/<编号>.md docs/tasks/0-archive/<分组>/<编号>.md`。
@@ -66,5 +67,5 @@ description: >
 
 - 任务编号、`--scope`、怎样算做完、跑哪些验证听简报的；简报没写的照上面做。
 - 不自己 `pnpm mq:land`：整批由主 agent 发起，各自 land 会把别人没验完的提交一起推上去。
-- 第 7 步提交后向主 agent 汇报，第一句写提交号，再写验证结果、实测清单、不是自己造成的检查失败和还没提交的文件，然后停下。这时任务已归档而 issue 还开着，`pnpm progress` 把它列成「还没合入」是对的。
+- 第 7 步提交后向主 agent 汇报，第一句写提交号，再写验证结果（改了 Rust 的附 Windows CI 的 run 链接）、实测清单、不是自己造成的检查失败和还没提交的文件，然后停下。这时任务已归档而 issue 还开着，`pnpm progress` 把它列成「还没合入」是对的。
 - 第 9 步等主 agent 通知已合入再做。回复和关闭仍是你的事，主 agent 只在收口时补漏。

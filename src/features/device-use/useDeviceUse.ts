@@ -6,14 +6,10 @@ const POLL_MS = 2000;
 
 export const NO_DEVICE_USE: DeviceUse = { camera: [], microphone: [] };
 
-export function useDeviceUse(enabled: boolean): DeviceUse {
+export function useDeviceUse(): DeviceUse {
   const [deviceUse, setDeviceUse] = useState<DeviceUse>(NO_DEVICE_USE);
 
   useEffect(() => {
-    if (!enabled) {
-      setDeviceUse(NO_DEVICE_USE);
-      return;
-    }
     let cancelled = false;
     const refresh = async () => {
       try {
@@ -30,7 +26,7 @@ export function useDeviceUse(enabled: boolean): DeviceUse {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [enabled]);
+  }, []);
 
   return deviceUse;
 }

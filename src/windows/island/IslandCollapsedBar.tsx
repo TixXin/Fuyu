@@ -1,8 +1,4 @@
 import { Fragment, type ReactNode } from "react";
-import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
-import type { AgentVisualState } from "../../features/agent-status/status";
-import type { MediaState } from "../../features/media/api";
-import { useAudible } from "../../features/media/useAudible";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
 import { messagePreviewText, type MessagePreview, type MessageSource } from "../../features/messages/messagePreview";
@@ -20,7 +16,7 @@ import { useTranslation } from "../../i18n";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { leadLine, shownLine, visibleLines } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
-import { lineSlot, type CollapsedLineContext, type CollapsedLineSources } from "./slots/line";
+import { lineSlot, type CollapsedLineContext } from "./slots/line";
 import type { CollapsedSlots, IslandPage } from "./types";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { hasNotchDrop, useIslandNotch } from "./notch";
@@ -41,13 +37,8 @@ type IslandCollapsedBarProps = {
   showTitle: boolean;
   showCollapsedText: boolean;
   collapsedLabel: string;
-  lineSources: CollapsedLineSources;
-  agentSessionCount: number | null;
-  mediaState: MediaState;
-  showMusic: boolean;
   shelfCount: number | null;
-  quotaAlert?: QuotaAlert | null;
-  agentVisualState: AgentVisualState;
+  agentVisualState: string;
   onOpenPage: (page: IslandPage) => void;
   onOpenMessages: (source: MessageSource) => void;
   notice?: { content: ReactNode; actions: ReactNode } | null;
@@ -59,6 +50,7 @@ type IslandCollapsedBarProps = {
 };
 
 const NO_SLOTS: CollapsedSlots = {};
+const NO_SOURCES = {};
 const NO_VIEWS: readonly PluginViewEntry[] = [];
 const ignorePage = () => {};
 const OPENS_BAR = "data-opens-bar";
@@ -90,12 +82,7 @@ export function IslandCollapsedBar({
   showTitle,
   showCollapsedText,
   collapsedLabel,
-  lineSources,
-  agentSessionCount,
-  mediaState,
-  showMusic,
   shelfCount,
-  quotaAlert = null,
   agentVisualState,
   onOpenPage,
   onOpenMessages,
@@ -109,7 +96,6 @@ export function IslandCollapsedBar({
   const t = useTranslation();
   const notch = useIslandNotch();
   const updateVersion = useUpdateReminder();
-  const audible = useAudible(mediaState.audioActive);
   const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } =
     useWindowDragGesture(isTucked, onWindowDragStart);
   const pulseClassName = [
@@ -118,7 +104,7 @@ export function IslandCollapsedBar({
   ].join(" ");
   const contributed = useIslandContributed();
   const activeAlert = useActiveAlert();
-  const alertSources = { quotaAlert };
+  const alertSources = NO_SOURCES;
   const lines = visibleLines(contributed.lines, showCollapsedText);
   const line = shownLine(lines);
   const peekLine = line?.drop ? line : null;
@@ -126,7 +112,7 @@ export function IslandCollapsedBar({
   const openPeek = () => {
     if (peekLine?.action) runIslandAction(peekLine.action);
   };
-  const lineContext: CollapsedLineContext = { ...lineSources, showTitle, center: slots.center ?? null, agentIcon: slots.agentIcon ?? null };
+  const lineContext: CollapsedLineContext = { showTitle, center: slots.center ?? null, agentIcon: slots.agentIcon ?? null };
   const lineView = (id: string) => <SlotView key={id} slot={lineSlot} props={lineContext} select={(items) => items.filter((item) => item.id === id)} />;
   const showCenter = Boolean(slots.center) && !preview && !peekLine && !notice
     && !(showCollapsedText && (showTitle || lines.some((candidate) => candidate.reserve !== true && candidate.measure !== undefined)));
@@ -140,9 +126,7 @@ export function IslandCollapsedBar({
     qqMail,
     updateVersion,
       shelfCount,
-    showMusic: showMusic && audible,
-    mediaState,
-    agentSessionCount,
+    hints: contributed.hints,
     slots,
     onOpenPage,
     onOpenMessages,
@@ -215,7 +199,7 @@ export function IslandCollapsedBar({
   const right = (
     <>
         {renderZone(zone("right"))}
-        {agentSessionCount === null && (
+        {!contributed.hints.has("agents.count") && (
           <button
             className="island__quiet-button"
             type="button"
@@ -230,7 +214,7 @@ export function IslandCollapsedBar({
     </>
   );
   const alerted = notch !== null && activeAlert !== null;
-  const dropped = notch !== null && hasNotchDrop({ preview, notice, translationPeek: peekLine });
+  const dropped = notch !== null && hasNotchDrop({ preview, notice, peek: peekLine });
   const messaged = notch !== null && !alerted && !notice && preview !== null;
   const wings = alerted ? "alert" : messaged ? `message:${preview?.source}:${preview?.receivedAt}` : dropped ? "dropped" : "idle";
 
