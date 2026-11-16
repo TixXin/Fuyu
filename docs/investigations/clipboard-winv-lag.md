@@ -1,0 +1,89 @@
+# 剪贴板 Win+V 唤起卡顿（只在 Windows 上）
+
+用户原话：「剪贴板的 win+V 唤起界面很慢很卡顿，mac 那边倒是正常」。组长：`[任务] 剪贴板 Win+V 唤起卡顿`（2026-11-16）。本文是排查结论和派工计划，派出去的任务会话先读这一份。
+
+## 唤起链路（Windows）
+
+1. 键盘钩子线程 `fuyu-keyboard-hook`（`src-tauri/src/win32/win_key_hook.rs` 的 `keyboard_proc`）：认出 Win+V 后发一次掩码键，再 `PostMessageW` 给剪贴板监听窗口。**这里很轻，不是瓶颈。**
+2. 剪贴板监听线程的消息循环（`clipboard_history/listener.rs:107`）收到 `WIN_V_MESSAGE` → `service.emit_shortcut()`（`service.rs:543`）→ `popup::toggle`（`popup.rs:27`）。**`toggle` 跑在监听线程上，不在主线程。**
+3. `toggle` 里依次调用：`is_visible`、`set_content_protected`、`hwnd`、`monitor_from_point`（固定位置的检查一次、指针位置再一次）、`primary_monitor`、`set_size`、`set_position`、两次 `emit_to`、`webview_memory::showing`、`show`、`set_focus`，最后 `activate_from_background`（`AttachThreadInput` + `SetForegroundWindow`）。在 Tauri 里，非主线程调用这些 getter 都要发到主线程、**同步等它回话**；主线程正忙（岛的动画、别的窗口在重绘）时，每一次都要排队等。尺寸和位置也分了两次设置。
+4. 前端（`src/windows/clipboard/ClipboardWindow.tsx:35`）收到 `clipboard-popup-opened` → `openCount + 1` → `ClipboardPopup.tsx:66-75` 依次执行 `flush()`、6 个 setState，其中 `setNow(Date.now())` 每次都会变 → `filterPopupItems`、按天分组、最近统计全部重算 → **整张列表重新渲染**。
+5. 列表（`ClipboardPopupList.tsx:48`）**没有虚拟化，行组件也没有 memo**：历史上限 500 条，默认 30 条。每行算 `formatAgo`、`contentKind`，挂 `useLinkPreview`；图片和文件行的缩略图是内联的 base64 data URL（`api.ts:66、73`）。
+6. 窗口隐藏期间每复制一次，`useClipboardHistory.ts:77-79` 都会重新拉整份历史（缩略图都内联在里面），再整表 setState。被藏起来的 WebView2 会被节流，这些更新可能积压到唤起那一刻才一起执行。
+7. Windows 独有：`useAccentColor.ts:22` 每次 `visibilitychange` 都会 invoke `getWindowsAccentColor`，颜色变了还会重写根元素的 CSS 变量。
+
+## 和 Mac 的差别
+
+- Mac 的 `popup_macos.rs:55` 结构几乎一样，但定位用逻辑坐标，聚焦用 `run_on_main_thread` 做一次 `make_panel_key`；没有 `AttachThreadInput`。
+- 前端代码两边相同。WKWebView 唤醒隐藏的页面、重渲染一整张不虚拟化的列表，都比被藏起来的 WebView2 快。所以同一份前端，Windows 上更容易卡。
+- 剪贴板窗口 `transparent: true`、`shadow: false`。透明的 WebView2 窗口第一次出帧要走 DirectComposition，比 Mac 慢，这一点无法完全消除。
+
+## D48 / D51 有没有拖慢
+
+- **D48**（#256，进行中，Mac 那台）：已提交 `d8e8b70c`，在 `toggle` / `hide` 里调用 `webview_memory::showing` / `hidden`，**但只有设了环境变量 `FUYU_WEBVIEW_LOW_MEMORY=1` 才生效**，默认什么都不做；也没有用 `TrySuspend`。所以默认情况下 D48 不是原因。要请用户确认一下自己的环境里没设这个变量。
+- **D51**（#259，待做）：还没有提交。剪贴板窗口里 30 秒一次的 `setNow` 在隐藏时照样跑，属于 D51 的范围，和这里的卡顿关系不大。
+- `clipboard-preview` 窗口：唤起时不会联动，只有按空格进入预览才会 show。和卡顿无关。
+
+## 怀疑的原因（按可能性排序）
+
+| # | 原因 | 在哪 | 怎么测 |
+|---|---|---|---|
+| R1 | 唤起时整张列表重新过滤、重新渲染（没有虚拟化，没有 memo，`setNow` 让每次都重算），数据有图片缩略图时更慢 | 前端 | 打点：收到 opened 事件 → 两次 rAF 后第一帧画出来；分别用 30 条和 500 条测 |
+| R2 | `toggle` 在监听线程上，好几次同步往返主线程；尺寸、位置分两次设 | Rust | 打点：消息到达 → toggle 每一段 → show → 拿到焦点 |
+| R3 | 被藏起来的 WebView2 被节流，积压的历史更新和缩略图解码集中在唤起时执行 | 两边 | 隐藏时连续复制十几张图后再唤起，和没复制时比较 |
+| R4 | 透明窗口第一次出帧慢（WebView2 的合成） | 系统 | 打点里 show 到第一帧的时间；R1–R3 修完还慢，再查这一条 |
+| R5 | `getWindowsAccentColor` 在显示时 invoke 并重写 CSS 变量 | 前端 | 打点；把强调色改成非「跟随 Windows」后对比 |
+
+## 不改代码，用户先测几样（可选，几分钟）
+
+在 Windows 上：
+
+1. **换快捷键对比**：用默认的 `Shift+Win+V`（不走 Win+V 接管）唤起几次，和 `Win+V` 一样卡吗？一样卡，说明问题在窗口和页面，跟键盘钩子无关（我们预计是这样）。
+2. **历史条数**：设置 → 剪贴板，把保留条数从当前值改成 30，再唤起几次，有没有明显变快？变快就是 R1。
+3. **第一次和连着几次**：隔几分钟没用后第一次唤起，和紧接着第二次、第三次唤起，哪个更卡？只有第一次卡，偏向 R3 / R4。
+4. 在 PowerShell 里运行 `echo $env:FUYU_WEBVIEW_LOW_MEMORY`，告诉我们有没有输出（排除 D48）。
+
+不测也可以直接按下面的计划做：D77 会加打点，做完后用打点的数字对比。
+
+## 计划
+
+两个任务互不改同一个文件，可以并行（一个 Rust、一个前端，同时最多 1 个要 cargo 编译）。
+
+### D77 剪贴板窗口唤起：打点，并去掉主线程的来回（Rust，Windows）
+
+- issue：#659（https://github.com/TixXin/fuyu/issues/659），D77、D78 都挂在这个 issue 下。
+- 做什么：
+  1. 打点：设环境变量 `FUYU_CLIPBOARD_TRACE=1` 时，把「钩子消息到达 → toggle 各段 → show → set_focus → 前端回报第一帧」的毫秒数追加写到应用数据目录下的 `clipboard-open-trace.log`；不设时不做任何事。前端那一段由 D78 在第一帧画出来后 `emit` 一个事件回来，Rust 这边监听并写入（事件名两边在任务文件里约好，写进 `contracts.md`）。
+  2. 把 `toggle` 里要用主线程的部分合成一次 `run_on_main_thread` 执行（取前台窗口、取显示器、定位、显示、聚焦都在里面），不再从监听线程一次次同步等主线程；尺寸和位置合成一次 `set_bounds` / 一次 `SetWindowPos`。
+  3. 先 emit `clipboard-popup-opened`，再 show 的顺序保留（让页面先开始准备），其余行为不变：固定位置、跟随指针、居中、内容保护、取消序列粘贴、记下粘贴目标窗口都照旧。
+- `--scope`：`src-tauri/src/clipboard_history/popup.rs`、`src-tauri/src/clipboard_history/service.rs`、`src-tauri/src/clipboard_history/listener.rs`、新文件 `src-tauri/src/clipboard_history/open_trace.rs`、`src-tauri/src/clipboard_history/mod.rs`、`docs/architecture/contracts.md`
+- **和 D48 冲突**：D48（进行中，Mac 那台，owner `d48`）的 scope 里也有 `popup.rs`。D77 只动 `toggle` 的定位和显示部分，`webview_memory::showing` / `hidden` 两行原样保留。开工前先 `pnpm tasks conflicts`，并 SendMessage 告诉 D48 的会话。
+- 做完：`cargo test --manifest-path src-tauri/Cargo.toml`（用 `pnpm heavy --`）、`pnpm build:exe`；在任务里写实测清单（Windows 真机：设 `FUYU_CLIPBOARD_TRACE=1` 后唤起 10 次，记下各段耗时；分别用 30 条和 500 条历史测）。
+
+### D78 剪贴板窗口唤起时不整表重渲染（前端）
+
+- 同一个 issue。
+- 做什么：
+  1. 唤起时不再因为 `setNow` 重新过滤整张列表：`now` 只给显示相对时间用，不放进 `filterPopupItems` 的依赖；6 个 setState 值没变时不触发（或合成一次）。
+  2. 行组件 `memo`；列表改用已有的 `useVirtualRows`（`ClipboardManager` 在用），只渲染看得见的几十行。键盘上下选择、Alt+字母钉选、拖动排序、按天分组的分隔线、收藏置顶分隔线都要照常工作。
+  3. 缩略图 `<img>` 加 `decoding="async"`、`loading="lazy"`。
+  4. 窗口隐藏时收到 `clipboard-history-changed` 只记一笔「有更新」，显示时（opened 事件）再拉一次；显示中照旧实时拉。不能出现先显示旧数据再跳变的情况：拉取在 opened 事件里就开始，比 show 更早。
+  5. `useAccentColor` 在 Windows 上 `visibilitychange` 时的 invoke，改到 opened 事件之后再做，不挡第一帧（只改剪贴板窗口用到的路径，不改全局行为的，就不动 `src/lib/theme/`）。
+  6. 打点：设了 trace 时，第一帧画出来后把耗时 emit 给 Rust（事件名和 D77 一致）。
+- `--scope`：`src/features/clipboard/ClipboardPopup.tsx`、`ClipboardPopupList.tsx`、`ClipboardPopupRow.tsx`、`ClipboardRowLead.tsx`、`useClipboardHistory.ts`、`src/windows/clipboard/`，以及 `tests/regression/` 里剪贴板弹窗的回归页
+- 做完：`pnpm check`、`pnpm build`、`pnpm test:regression clipboard`（界面不该变，快照只在虚拟化后 DOM 结构确实变化时更新，并在提交说明里写清）。
+- 和 D51 的关系：剪贴板窗口里的 `setInterval` 顺手在隐藏时停掉，D78 做完后在 D51 的任务文件里记一笔「剪贴板窗口已由 D78 处理」。
+
+### 第二阶段（只在需要时）
+
+D77、D78 合入后，请用户在 Windows 真机上按 D77 的实测清单测一轮。如果 show 到第一帧还是要几百毫秒（R4），再开一个 `[排查]` 会话，研究让隐藏的 WebView2 保持「可见」状态的办法（例如放到屏幕外而不是 hide，或者关掉 WebView2 的遮挡检测），先出数字再决定改不改。现在不建这个任务。
+
+## 需要用户定的
+
+1. 可以先做上面「用户先测」的 4 样吗？还是直接派会话？（不影响派工，测了能更早确认方向。）
+2. 隐藏时不再实时拉历史，改成唤起时再拉（D78 第 4 条）：唤起那一刻会多一次 invoke，但隐藏时省掉每次复制的整表更新。可以吗？
+3. D77 会碰 D48 正在做的 `popup.rs`：可以和 D48 并行，D77 只动定位和显示（推荐）；或者等 D48 收尾后再做 D77。
+
+## 收口
+
+D77、D78 的提交交给 `Fuyu-[总控] 全局` 整批合入；合入后请用户真机实测，再关 issue。进度更新在本文末尾。
