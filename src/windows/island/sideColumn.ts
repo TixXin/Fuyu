@@ -1,6 +1,8 @@
+import { ISLAND_SIDE_COVER_HEIGHT, ISLAND_SIDE_ROW_HEIGHT } from "../../features/plugin-kernel/islandContributions.ts";
+
 export const SIDE_COLUMN_WIDTH = 44;
-export const SIDE_ROW_HEIGHT = 28;
-export const SIDE_COVER_HEIGHT = 40;
+export const SIDE_ROW_HEIGHT = ISLAND_SIDE_ROW_HEIGHT;
+export const SIDE_COVER_HEIGHT = ISLAND_SIDE_COVER_HEIGHT;
 export const SIDE_ROW_GAP = 6;
 export const SIDE_COLUMN_PADDING = 10;
 export const SIDE_COLUMN_MAX_HEIGHT = 300;

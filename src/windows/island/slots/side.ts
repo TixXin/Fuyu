@@ -1,5 +1,4 @@
 import type { AgentVisualState } from "../../../features/agent-status/status";
-import type { DeviceUse } from "../../../features/device-use/api";
 import type { MediaState } from "../../../features/media/api";
 import type { MessageSource } from "../../../features/messages/messagePreview";
 import { defineSlot } from "../../../features/plugin-kernel/slots";
@@ -13,7 +12,6 @@ export type SideRowSources = {
   shelfCount: number | null;
   showCover: boolean;
   mediaState: MediaState;
-  deviceUse: DeviceUse;
 };
 
 export type SideRowContext = SideRowSources & {

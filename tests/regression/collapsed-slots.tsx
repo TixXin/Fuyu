@@ -66,7 +66,7 @@ function Fixture() {
   const qqMail = useMail(true);
   const preview = useLatestMessagePreview(qq, wechat, qqMail, NO_PLUGIN_NOTIFICATIONS);
   return <div className="stage" style={{ "--collapsed-island-width": "300px" } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoTitle: state.task, todoCount: state.todoCount ?? null, agentSession: state.agentTitle ? { provider: "codex", label: "Codex", title: state.agentTitle } : null, lyricLine: state.lyric ? { text: state.lyric, index: 3, longest: state.lyric, ...(state.karaoke && { karaoke: state.karaoke }) } : null })} deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell lineSources={useFixtureLines({ todoTitle: state.task, todoCount: state.todoCount ?? null, agentSession: state.agentTitle ? { provider: "codex", label: "Codex", title: state.agentTitle } : null, lyricLine: state.lyric ? { text: state.lyric, index: 3, longest: state.lyric, ...(state.karaoke && { karaoke: state.karaoke }) } : null })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} activeAgentSessionCount={state.count}
      

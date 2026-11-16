@@ -1,6 +1,5 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { CollapsedCenter } from "../../../features/center-pattern";
-import type { DeviceUse } from "../../../features/device-use/api";
 import type { MediaState } from "../../../features/media/api";
 import type { MailController } from "../../../features/messages/mail/MailPanel";
 import type { MessageSource } from "../../../features/messages/messagePreview";
@@ -15,7 +14,6 @@ export type CollapsedBarContext = {
   qqMail: MailController;
   updateVersion: string | null;
   statusLight: ReactNode;
-  deviceUse: DeviceUse;
   shelfCount: number | null;
   showMusic: boolean;
   mediaState: MediaState;

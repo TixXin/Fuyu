@@ -1,15 +1,14 @@
 import { useTranslation } from "../../../i18n";
 import { defineSlot, type IslandAlertMeta } from "../../plugin-kernel/slots";
-import type { DeviceAlert } from "../api";
 import { deviceAlertLook } from "../deviceAlertLook";
 import { DeviceAlertPopup } from "../DeviceAlertPopup";
+import { deviceAlertState } from "./islandState";
 
-type AlertSources = { deviceAlert: DeviceAlert | null };
+const alertSlot = defineSlot<object, IslandAlertMeta<object>>("island.alert/v1");
 
-const alertSlot = defineSlot<AlertSources, IslandAlertMeta<AlertSources>>("island.alert/v1");
-
-function DeviceAlertLeading({ deviceAlert }: AlertSources) {
+function DeviceAlertLeading() {
   const t = useTranslation();
+  const deviceAlert = deviceAlertState.use();
   if (!deviceAlert) return null;
   const { Icon, tone } = deviceAlertLook(deviceAlert, t.island.deviceAlert);
   return (
@@ -19,8 +18,9 @@ function DeviceAlertLeading({ deviceAlert }: AlertSources) {
   );
 }
 
-function DeviceAlertTrailing({ deviceAlert }: AlertSources) {
+function DeviceAlertTrailing() {
   const t = useTranslation();
+  const deviceAlert = deviceAlertState.use();
   if (!deviceAlert) return null;
   const { tone, battery, label } = deviceAlertLook(deviceAlert, t.island.deviceAlert);
   return (
@@ -32,7 +32,8 @@ function DeviceAlertTrailing({ deviceAlert }: AlertSources) {
   );
 }
 
-function DeviceAlertBody({ deviceAlert }: AlertSources) {
+function DeviceAlertBody() {
+  const deviceAlert = deviceAlertState.use();
   return deviceAlert ? <DeviceAlertPopup alert={deviceAlert} /> : null;
 }
 

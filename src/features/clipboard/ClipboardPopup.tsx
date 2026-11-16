@@ -60,7 +60,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const listRef = useRef<HTMLUListElement | null>(null);
   const rootRef = useRef<HTMLElement | null>(null);
   const pointerPickRef = useRef(false);
-  const { handlers, notice, deletion, saveNote, saveAsNew, pasteText, setPinKey } = usePopupHandlers({ onPaste, onToggleFavorite, onEdit: () => setMode("edit") });
+  const { handlers, notice, deletion, edits, saveNote, saveAsNew, pasteText, setPinKey } = usePopupHandlers({ onPaste, onToggleFavorite, onEdit: () => setMode("edit") });
   const { flush } = deletion;
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
     const merged = mergedText(picked, separator);
     if (merged) pasteText(merged);
   };
-  const peek = useSpacePeek(() => setMode((current) => (current === "look" ? "list" : current)), Boolean(onPeek));
+  const peek = useSpacePeek(() => setMode((current) => (current === "look" ? "list" : current)), Boolean(onPeek), edits.mark);
   const { cancel: cancelPeek } = peek;
   useEffect(() => {
     if (mode !== "look") cancelPeek();
@@ -206,9 +206,10 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
     } else if (ctrl && key.toLowerCase() === "s" && item) {
       handled();
       onToggleFavorite(item.id);
-    } else if (ctrl && key.toLowerCase() === "z" && deletion.pending) {
+    } else if (ctrl && key.toLowerCase() === "z" && (deletion.pending || edits.pending)) {
       handled();
-      deletion.undo();
+      if (deletion.pending) deletion.undo();
+      else edits.undo();
     } else if (ctrl && key === " " && item) {
       handled();
       setQueue(toggleQueued(queue, item.id));
@@ -243,6 +244,12 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const chipLabel = (chip: PopupFilter) => popupFilterLabel(chip, t.clipboard);
   const empty = needle ? null : onSnippets ? text.noSnippets : text.empty;
   const editing = mode === "edit" && item && isText;
+  const editorActions = {
+    onPasteOnce: (value: string) => pasteText(value),
+    onSaveInPlace: (value: string) => { if (item) edits.save(item.id, value); backToList(); },
+    onSaveAsNew: (value: string) => { saveAsNew(value); backToList(); },
+    onCancel: backToList,
+  };
 
   return (
     <section ref={rootRef} className={`clipboard-popup${wide ? " clipboard-popup--wide" : ""}`} aria-label={text.title} onKeyDown={onKeyDown} onKeyUp={peek.keyUp}>
@@ -317,12 +324,12 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
           />
         )}
         {wide && (editing ? (
-          <ClipboardEditor key={item.id} item={item} overlay={false} onPasteOnce={(value) => pasteText(value)} onSaveAsNew={(value) => { saveAsNew(value); backToList(); }} onCancel={backToList} />
+          <ClipboardEditor key={item.id} item={item} overlay={false} {...editorActions} />
         ) : (
           <ClipboardPopupPreview entry={item} snippet={onSnippets ? shownSnippets[current] : undefined} linkPreview={linkPreview} onPasteText={pasteText} />
         ))}
         {!wide && editing && (
-          <ClipboardEditor key={item.id} item={item} overlay onPasteOnce={(value) => pasteText(value)} onSaveAsNew={(value) => { saveAsNew(value); backToList(); }} onCancel={backToList} />
+          <ClipboardEditor key={item.id} item={item} overlay {...editorActions} />
         )}
         {mode === "look" && item && !onPeek && (
           <div className="clipboard-look" role="dialog" aria-label={text.preview.label}>
@@ -353,7 +360,8 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
         separator={separator}
         onSeparator={setSeparator}
         deleted={deletion.pending ? deletedLabel(deletion.pending, t.clipboard) : null}
-        onUndo={deletion.undo}
+        edited={edits.pending !== null}
+        onUndo={deletion.pending ? deletion.undo : edits.undo}
         notice={notice}
         capture={capture}
         now={now}

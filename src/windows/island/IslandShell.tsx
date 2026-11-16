@@ -1,6 +1,3 @@
-import type { DeviceUse } from "../../features/device-use/api";
-import type { LevelChange } from "../../features/system-levels/api";
-import type { DeviceAlert } from "../../features/device-events/api";
 import type { CSSProperties, ReactNode } from "react";
 import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
 import type { AgentVisualState } from "../../features/agent-status/status";
@@ -67,9 +64,6 @@ type IslandShellProps = {
   agentStatusLabel: string;
   features: IslandFeatures;
   shelfCount: number | null;
-  deviceUse: DeviceUse;
-  levelPopup?: LevelChange | null;
-  deviceAlert?: DeviceAlert | null;
   quotaAlert?: QuotaAlert | null;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
@@ -123,9 +117,6 @@ export function IslandShell({
   agentStatusLabel,
   features,
   shelfCount,
-  deviceUse,
-  levelPopup = null,
-  deviceAlert = null,
   quotaAlert = null,
   onOpenPage,
   onWindowDragStart,
@@ -169,8 +160,7 @@ export function IslandShell({
     shelfCount,
     showCover: sideCover,
     mediaState,
-    deviceUse,
-  };
+    };
   useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null, showMusic: features.music === true });
   const sideLayout = useSideColumnRows({ ...sideSources, onOpenPage, onOpenMessages }, collapsedSlots?.gauges ?? []);
   const sideHot = preview ? (preview.source === "qqMail" ? "mail" : "unread") : null;
@@ -256,9 +246,6 @@ export function IslandShell({
           mediaState={mediaState}
           showMusic={features.music}
           shelfCount={shelfCount}
-          deviceUse={deviceUse}
-          levelPopup={levelPopup}
-          deviceAlert={deviceAlert}
           quotaAlert={quotaAlert}
           agentVisualState={agentVisualState}
           onOpenPage={onOpenPage}
@@ -308,7 +295,7 @@ export function IslandShell({
         <IslandSideBubble
           top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}
           preview={preview}
-          alert={activeAlert && <AlertPopup alert={activeAlert} sources={{ deviceAlert, quotaAlert, levelPopup }} />}
+          alert={activeAlert && <AlertPopup alert={activeAlert} sources={{ quotaAlert }} />}
           onOpenPreview={() => (preview && preview.source !== "plugin" ? onOpenMessages(preview.source) : onOpenPage(page))}
         />
       )}

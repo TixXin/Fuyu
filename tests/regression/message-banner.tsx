@@ -72,7 +72,7 @@ function Fixture() {
     onOpenMessages: (source) => { openedSource = source; },
   });
   return <div className="stage" style={{ "--collapsed-island-width": "300px" } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办" })} deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={plugins} preview={banner.barPreview}
+    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办" })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={plugins} preview={banner.barPreview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} activeAgentSessionCount={0}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"

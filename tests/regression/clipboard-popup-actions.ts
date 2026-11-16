@@ -60,7 +60,16 @@ export async function checkSecondRound(check: Check, calls: string[]) {
   await setValue(editor, "edited text");
   await keyOn(editor, { key: "s", ctrlKey: true });
   await settle();
-  check(calls.some((call) => call.startsWith("ipc:add_clipboard_history_text:") && call.includes("edited text")) && !$("dark", ".clipboard-editor"), "Ctrl+E 编辑，Ctrl+S 另存为新记录");
+  check(calls.some((call) => call.startsWith("ipc:edit_clipboard_history_text:") && call.includes("edited text")) && !calls.some((call) => call.startsWith("ipc:add_clipboard_history_text:")) && !$("dark", ".clipboard-editor"), "Ctrl+E 编辑，Ctrl+S 改这条");
+  check($("dark", ".clipboard-popup__hint--toast")?.textContent?.includes("已改这条"), "改完底栏显示「已改这条」和撤销");
+  await key("dark", { key: "z", ctrlKey: true });
+  check(calls.some((call) => call.startsWith("ipc:undo_clipboard_history_edit:")) && !$("dark", ".clipboard-popup__hint--toast"), "Ctrl+Z 撤销刚才的改动");
+  await key("dark", { key: "e", ctrlKey: true });
+  const again = $<HTMLTextAreaElement>("dark", ".clipboard-editor textarea");
+  await setValue(again, "edited text");
+  await keyOn(again, { key: "S", ctrlKey: true, shiftKey: true });
+  await settle();
+  check(calls.some((call) => call.startsWith("ipc:add_clipboard_history_text:") && call.includes("edited text")) && !$("dark", ".clipboard-editor"), "Ctrl+Shift+S 另存一条");
 
   await key("dark", { key: "End" });
   await key("dark", { key: "Delete" });

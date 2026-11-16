@@ -6,13 +6,15 @@ import type { PopupKeyEvent } from "./useStrayKeys";
 
 const reportError = (action: string) => (error: unknown) => console.error(`Failed to ${action}`, error);
 
-export function useSpacePeek(onClose: () => void, windowed = false) {
+export function useSpacePeek(onClose: () => void, windowed = false, onEdited?: (id: string) => void) {
   const downAt = useRef<number | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const visitedRef = useRef(false);
   const pinnedRef = useRef(false);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  const editedRef = useRef(onEdited);
+  editedRef.current = onEdited;
   const [holding, setHolding] = useState(false);
   const [visited, setVisited] = useState(false);
 
@@ -77,6 +79,7 @@ export function useSpacePeek(onClose: () => void, windowed = false) {
     void listenClipboardPreviewReport((report) => {
       if (report.type === "close") closeRef.current();
       else if (report.type === "pinned") pinnedRef.current = report.pinned;
+      else if (report.type === "edited") editedRef.current?.(report.id);
       else if (report.inside && downAt.current !== null) setVisited((visitedRef.current = true));
     }).then((unlisten) => (cancelled ? unlisten() : (stop = unlisten)));
     return () => {

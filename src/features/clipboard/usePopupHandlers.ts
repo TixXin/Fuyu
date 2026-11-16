@@ -6,6 +6,7 @@ import {
 } from "./api";
 import type { PopupActionHandlers } from "./popupActions";
 import { usePendingDelete } from "./usePendingDelete";
+import { usePendingEdit } from "./usePendingEdit";
 
 const NOTICE_MS = 2_500;
 
@@ -35,6 +36,7 @@ export function usePopupHandlers({ onPaste, onToggleFavorite, onEdit }: {
     (ids) => attempt("delete clipboard entries", deleteClipboardItems(ids)),
     (ids) => attempt("restore clipboard entries", restoreClipboardItems(ids)),
   );
+  const edits = usePendingEdit(attempt);
   const editRef = useRef(onEdit);
   editRef.current = onEdit;
 
@@ -63,5 +65,5 @@ export function usePopupHandlers({ onPaste, onToggleFavorite, onEdit }: {
 
   const setPinKey = useCallback((id: string, key: string | null) => attempt("set a pin key", setClipboardPinKey(id, key)), [attempt]);
 
-  return { handlers, notice, deletion, saveNote, saveAsNew, pasteText, setPinKey };
+  return { handlers, notice, deletion, edits, saveNote, saveAsNew, pasteText, setPinKey };
 }
