@@ -23,6 +23,7 @@ void calendar.events({}).then((result) => result.events.map((event) => event.mee
 void calendar.events({ refresh: true }).then((result) => result.problems.map((problem) => problem.reason));
 // @ts-expect-error refresh is a boolean
 void calendar.events({ refresh: "yes" });
+void calendar.sources().then((result) => result.sources.map((source) => (source.kind === "caldav" ? source.host : source.name)));
 
 declare const translator: ServiceClient<typeof translatorV1>;
 void translator.rewrite({ text: "hi", task: "polish" }, { onProgress: (chunk) => chunk.piece.length });

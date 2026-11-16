@@ -4,6 +4,7 @@ mod meeting_link;
 mod sources;
 
 use crate::user_error::UserError;
+use plugin_base::host_service;
 use std::{
     sync::{Mutex, PoisonError},
     time::{Duration, Instant},
@@ -35,6 +36,55 @@ pub struct CalendarSnapshot {
     from_ms: i64,
     to_ms: i64,
     source_count: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct CalendarProblem {
+    source_id: String,
+    reason: String,
+    message: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct CalendarEvents {
+    events: Vec<CalendarEvent>,
+    problems: Vec<CalendarProblem>,
+    #[cfg_attr(test, ts(type = "number"))]
+    fetched_at: i64,
+    #[cfg_attr(test, ts(type = "number"))]
+    from_ms: i64,
+    #[cfg_attr(test, ts(type = "number"))]
+    to_ms: i64,
+    source_count: usize,
+}
+
+impl From<CalendarSnapshot> for CalendarEvents {
+    fn from(snapshot: CalendarSnapshot) -> Self {
+        let problems = snapshot
+            .problems
+            .into_iter()
+            .map(|problem| CalendarProblem { reason: reason_of(&problem.message), message: problem.message.to_string(), source_id: problem.source_id })
+            .collect();
+        Self {
+            events: snapshot.events,
+            problems,
+            fetched_at: snapshot.fetched_at,
+            from_ms: snapshot.from_ms,
+            to_ms: snapshot.to_ms,
+            source_count: snapshot.source_count,
+        }
+    }
+}
+
+fn reason_of(error: &UserError) -> String {
+    serde_json::to_value(error)
+        .ok()
+        .and_then(|value| value.get("code").and_then(serde_json::Value::as_str).map(str::to_owned))
+        .unwrap_or_else(|| "failed".to_owned())
 }
 
 struct Cached {
@@ -148,7 +198,16 @@ async fn read_all(sources: &[CalendarSource]) -> CalendarSnapshot {
 
 #[tauri::command]
 pub async fn get_calendar_events(app: AppHandle, refresh: bool) -> Result<CalendarSnapshot, UserError> {
-    let sources = sources::read(&app_dir(&app)?);
+    read_events(&app, refresh).await
+}
+
+#[host_service("calendar.events", timeout_ms = 60_000, inject(app))]
+async fn events_for_host(app: AppHandle, refresh: Option<bool>) -> Result<CalendarEvents, UserError> {
+    read_events(&app, refresh.unwrap_or(false)).await.map(CalendarEvents::from)
+}
+
+async fn read_events(app: &AppHandle, refresh: bool) -> Result<CalendarSnapshot, UserError> {
+    let sources = sources::read(&app_dir(app)?);
     if sources.is_empty() {
         return Ok(CalendarSnapshot::default());
     }
@@ -166,6 +225,44 @@ pub async fn get_calendar_events(app: AppHandle, refresh: bool) -> Result<Calend
 #[tauri::command]
 pub fn list_calendar_sources(app: AppHandle) -> Result<Vec<CalendarSource>, UserError> {
     Ok(sources::read(&app_dir(&app)?))
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
+pub(crate) struct CalendarSourceInfo {
+    id: String,
+    kind: &'static str,
+    name: String,
+    host: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
+pub(crate) struct CalendarSources {
+    sources: Vec<CalendarSourceInfo>,
+}
+
+impl From<Vec<CalendarSource>> for CalendarSources {
+    fn from(saved: Vec<CalendarSource>) -> Self {
+        let sources = saved
+            .into_iter()
+            .map(|source| CalendarSourceInfo {
+                kind: match source.kind {
+                    SourceKind::Ics => "ics",
+                    SourceKind::Caldav => "caldav",
+                },
+                id: source.id,
+                name: source.name,
+                host: source.host,
+            })
+            .collect();
+        Self { sources }
+    }
+}
+
+#[host_service("calendar.sources", inject(app))]
+fn sources_for_host(app: AppHandle) -> Result<CalendarSources, UserError> {
+    Ok(sources::read(&app_dir(&app)?).into())
 }
 
 #[tauri::command]
@@ -265,6 +362,40 @@ mod tests {
         let link = "https://example.com/private-s3cr3t/basic.ics";
         let error = UserError::new("calendar.read", "Could not read.").detail(format!("for url ({link})")).redact(link);
         assert!(!serde_json::to_string(&error).unwrap().contains("s3cr3t"));
+    }
+
+    #[test]
+    fn the_host_reads_each_problem_as_its_reason_and_message() {
+        let snapshot = CalendarSnapshot {
+            problems: vec![SourceProblem { source_id: "cal-1".into(), message: UserError::new("calendar.linkExpired", "The link has expired.") }],
+            fetched_at: 5,
+            source_count: 1,
+            ..CalendarSnapshot::default()
+        };
+        let events = serde_json::to_value(CalendarEvents::from(snapshot)).unwrap();
+        assert_eq!(events["problems"], serde_json::json!([{ "sourceId": "cal-1", "reason": "calendar.linkExpired", "message": "The link has expired." }]));
+        assert_eq!((events["fetchedAt"].as_i64(), events["sourceCount"].as_u64()), (Some(5), Some(1)));
+    }
+
+    #[test]
+    fn the_host_sees_each_calendar_without_its_account_or_address() {
+        let saved = CalendarSource {
+            id: "cal-1".into(),
+            kind: SourceKind::Caldav,
+            name: "Work".into(),
+            url: "https://dav.example/me/".into(),
+            host: "dav.example".into(),
+            username: "me@example.com".into(),
+        };
+        let shown = serde_json::to_value(CalendarSources::from(vec![saved])).unwrap();
+        assert_eq!(shown, serde_json::json!({ "sources": [{ "id": "cal-1", "kind": "caldav", "name": "Work", "host": "dav.example" }] }));
+    }
+
+    #[test]
+    fn the_calendar_has_no_background_in_rust() {
+        let catalog = crate::plugin_kernel::builtins::catalog();
+        let calendar = catalog.iter().find(|plugin| plugin.id == "calendar").expect("calendar is a built-in plugin");
+        assert_eq!(calendar.background.as_deref(), Some(&[][..]));
     }
 
     #[test]

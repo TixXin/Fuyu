@@ -26,8 +26,16 @@ export type CalendarEvents = {
   sourceCount: number;
 };
 
+export type CalendarSource = {
+  id: string;
+  kind: "ics" | "caldav";
+  name: string;
+  host: string;
+};
+
 export type CalendarMethods = {
   events(params: { refresh?: boolean }): CalendarEvents;
+  sources(): { sources: CalendarSource[] };
 };
 
 export const calendarV1: ServiceDefinition<CalendarMethods, {}, {}>;
