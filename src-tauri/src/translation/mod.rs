@@ -1,3 +1,4 @@
+mod background;
 #[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
 mod hotkey;
 #[cfg_attr(target_os = "macos", path = "placement_macos.rs")]
@@ -30,6 +31,7 @@ use tauri::{AppHandle, Emitter, Manager};
 use hotkey::{change_hotkey, change_selection_hotkey};
 
 pub(crate) const WINDOW_LABEL: &str = "translation";
+pub(crate) const PLUGIN_ID: &str = "translation";
 const DEFAULT_SHORTCUT: &str = "Ctrl+Shift+F";
 const DEFAULT_SELECTION_SHORTCUT: &str = "Ctrl+Alt+T";
 const TRANSLATION_WINDOW_OPENED_EVENT: &str = "translation-window-opened";
@@ -39,7 +41,6 @@ const MAX_CHARACTERS: usize = 5_000;
 
 static APP: OnceLock<AppHandle> = OnceLock::new();
 static HAS_POSITIONED_WINDOW: AtomicBool = AtomicBool::new(false);
-static ENABLED: AtomicBool = AtomicBool::new(true);
 static OPENS_IN_ISLAND: AtomicBool = AtomicBool::new(false);
 
 #[cfg_attr(not(windows), allow(dead_code))]
@@ -49,12 +50,12 @@ pub(crate) fn translate_text_from_elsewhere(app: &AppHandle, text: String) {
 
 pub fn init(app: &AppHandle) {
     if APP.set(app.clone()).is_ok() {
-        hotkey::start(app);
+        background::register(app);
     }
 }
 
 fn capture_and_emit_selection() {
-    if let Some(app) = APP.get().cloned().filter(|_| ENABLED.load(Ordering::SeqCst)) {
+    if let Some(app) = APP.get().cloned().filter(|_| is_enabled()) {
         thread::spawn(move || {
             let text = selection::capture_selection_text().unwrap_or_default();
             let _ = app.emit(TRANSLATION_SELECTION_EVENT, text);
@@ -272,27 +273,14 @@ pub(crate) async fn translate(
 pub async fn set_translation_shortcut(shortcut: String) -> Result<String, UserError> {
     let binding = parse_shortcut_binding(&shortcut)
         .ok_or_else(|| UserError::new("shortcut.invalid", "That shortcut is not valid; use at least one modifier key."))?;
-    if !ENABLED.load(Ordering::SeqCst) {
-        return Ok(binding.label);
+    if !hotkey::running() {
+        let label = binding.label.clone();
+        hotkey::want(binding);
+        return Ok(label);
     }
     tauri::async_runtime::spawn_blocking(move || change_hotkey(Some(binding)))
         .await
         .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
-}
-
-#[tauri::command]
-pub async fn set_translation_enabled(enabled: bool) -> Result<(), UserError> {
-    ENABLED.store(enabled, Ordering::SeqCst);
-    if !enabled {
-        tauri::async_runtime::spawn_blocking(|| {
-            let window = change_hotkey(None);
-            let selection = change_selection_hotkey(None);
-            window.and(selection).map(|_| ())
-        })
-        .await
-        .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))??;
-    }
-    Ok(())
 }
 
 #[tauri::command]
@@ -304,8 +292,10 @@ pub fn set_translation_target(island: bool) {
 pub async fn set_translation_selection_shortcut(shortcut: String) -> Result<String, UserError> {
     let binding = parse_shortcut_binding(&shortcut)
         .ok_or_else(|| UserError::new("shortcut.invalid", "That shortcut is not valid; use at least one modifier key."))?;
-    if !ENABLED.load(Ordering::SeqCst) {
-        return Ok(binding.label);
+    if !hotkey::running() {
+        let label = binding.label.clone();
+        hotkey::want_selection(binding);
+        return Ok(label);
     }
     tauri::async_runtime::spawn_blocking(move || change_selection_hotkey(Some(binding)))
         .await
@@ -313,7 +303,7 @@ pub async fn set_translation_selection_shortcut(shortcut: String) -> Result<Stri
 }
 
 pub(crate) fn is_enabled() -> bool {
-    ENABLED.load(Ordering::SeqCst)
+    crate::plugin_kernel::builtins::is_enabled(PLUGIN_ID)
 }
 
 pub(crate) fn open_translator(app: &AppHandle) {
@@ -350,7 +340,6 @@ macro_rules! tauri_commands {
             crate::translation::rewrite::rewrite_text,
             crate::translation::set_translation_shortcut,
             crate::translation::set_translation_selection_shortcut,
-            crate::translation::set_translation_enabled,
             crate::translation::present_translation_window,
             crate::translation::set_translation_target,
         ] $($rest)*)

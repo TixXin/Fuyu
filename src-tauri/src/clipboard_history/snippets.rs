@@ -121,6 +121,7 @@ impl ClipboardHistoryService {
         let snapshot = Self::snapshot_locked(&state);
         drop(state);
         self.emit_changed();
+        crate::sync::notify_local_change();
         Ok(snapshot)
     }
 
@@ -129,6 +130,7 @@ impl ClipboardHistoryService {
         let state_ref = &mut *state;
         if clock::with(|clock, wall| remove(&mut state_ref.snippets, &mut state_ref.snippet_tombstones, id, clock, wall)) {
             self.persist_locked(&state)?;
+            crate::sync::notify_local_change();
         }
         let snapshot = Self::snapshot_locked(&state);
         drop(state);
@@ -149,6 +151,37 @@ impl ClipboardHistoryService {
         let clipboard = if text.contains("{clipboard}") { arboard::Clipboard::new().ok().and_then(|mut board| board.get_text().ok()) } else { None };
         Ok(expand_snippet(&text, Local::now(), clipboard.as_deref()))
     }
+}
+
+pub(crate) fn snippets_for_sync() -> Result<Option<crate::sync::SyncRecords>, String> {
+    let Ok(service) = super::service() else { return Ok(None) };
+    let state = service.state.lock().map_err(|error| error.to_string())?;
+    let snippets = state.snippets.iter().map(serde_json::to_value).collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
+    Ok(Some((snippets, state.snippet_tombstones.clone())))
+}
+
+pub(crate) fn replace_snippets_from_sync(
+    expected: (&[serde_json::Value], &[Tombstone]),
+    snippets: Vec<serde_json::Value>,
+    tombstones: Vec<Tombstone>,
+) -> Result<(), String> {
+    let service = super::service()?;
+    let snippets: Vec<ClipboardSnippet> = snippets.into_iter().filter_map(|snippet| serde_json::from_value(snippet).ok()).collect();
+    let mut state = service.state.lock().map_err(|error| error.to_string())?;
+    let current = state.snippets.iter().map(serde_json::to_value).collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
+    if current != expected.0 || state.snippet_tombstones != expected.1 {
+        return Err("The snippets changed while syncing; trying again later.".into());
+    }
+    if state.snippets == snippets && state.snippet_tombstones == tombstones {
+        return Ok(());
+    }
+    clock::observe(all_stamps(&snippets, &tombstones));
+    state.snippets = snippets;
+    state.snippet_tombstones = tombstones;
+    service.persist_locked(&state)?;
+    drop(state);
+    service.emit_changed();
+    Ok(())
 }
 
 #[cfg(test)]

@@ -1,10 +1,11 @@
 use std::{
-    collections::BTreeSet,
+    collections::{BTreeMap, BTreeSet},
     path::{Path, PathBuf},
     sync::{Arc, Mutex, OnceLock, PoisonError},
 };
 
 use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 use tauri::{AppHandle, Emitter};
 
 use super::builtins_file;
@@ -13,6 +14,7 @@ use crate::user_error::UserError;
 pub(crate) const CHANGED_EVENT: &str = "builtin-plugins-changed";
 const CATALOG: &str = include_str!("../../../src/features/builtins.json");
 const CATALOG_FORMAT: u32 = 1;
+const DIR: &str = "plugins-v3";
 const FILE: &str = "plugins.yml";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -63,6 +65,7 @@ pub(crate) trait Background: Send + Sync {
     fn start(&self) -> Result<(), String>;
     fn stop(&self);
     fn running(&self) -> bool;
+    fn configure(&self, _config: &Map<String, Value>) {}
 }
 
 struct Registered {
@@ -124,18 +127,71 @@ pub(crate) struct BuiltinPlugin {
     kind: Kind,
     enabled: bool,
     background: Vec<BackgroundStatus>,
+    config: Map<String, Value>,
+}
+
+pub(crate) struct Reconfigure {
+    config: Map<String, Value>,
+    backgrounds: Vec<Arc<dyn Background>>,
+}
+
+impl std::fmt::Debug for Reconfigure {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "configure {} background with {:?}", self.backgrounds.len(), self.config)
+    }
+}
+
+impl Reconfigure {
+    pub(crate) fn run(self) {
+        for background in self.backgrounds {
+            background.configure(&self.config);
+        }
+    }
 }
 
 pub(crate) struct Table {
     catalog: Vec<Builtin>,
     disabled: BTreeSet<String>,
+    config: BTreeMap<String, Map<String, Value>>,
     registered: Vec<Registered>,
 }
 
 impl Table {
     pub(crate) fn new(catalog: Vec<Builtin>, disabled: BTreeSet<String>) -> Self {
         let disabled = disabled.into_iter().filter(|id| catalog.iter().any(|plugin| &plugin.id == id && plugin.kind != Kind::Essential)).collect();
-        Self { catalog, disabled, registered: Vec::new() }
+        Self { catalog, disabled, config: BTreeMap::new(), registered: Vec::new() }
+    }
+
+    pub(crate) fn with_config(mut self, config: BTreeMap<String, Map<String, Value>>) -> Self {
+        self.config = config.into_iter().filter(|(id, values)| !values.is_empty() && self.catalog.iter().any(|plugin| &plugin.id == id)).collect();
+        self
+    }
+
+    pub(crate) fn config(&self, id: &str) -> Map<String, Value> {
+        self.config.get(id).cloned().unwrap_or_default()
+    }
+
+    pub(crate) fn set_config(&mut self, id: &str, key: &str, value: Option<Value>) -> Result<Option<Reconfigure>, UserError> {
+        self.find(id)?;
+        if !builtins_file::valid_key(key) {
+            return Err(UserError::new("pluginsV3.builtinConfigKey", format!("{key} cannot be a config key of {id}.")).arg("id", id).arg("key", key));
+        }
+        if let Some(value) = &value {
+            builtins_file::format_scalar(value).map_err(|detail| UserError::new("pluginsV3.builtinConfigValue", format!("The config value for {key} of {id} must be true, false, a number or a string.")).arg("id", id).arg("key", key).detail(detail))?;
+        }
+        let values = self.config.entry(id.to_owned()).or_default();
+        let changed = match value {
+            Some(value) => values.insert(key.to_owned(), value.clone()).as_ref() != Some(&value),
+            None => values.remove(key).is_some(),
+        };
+        if values.is_empty() {
+            self.config.remove(id);
+        }
+        if !changed {
+            return Ok(None);
+        }
+        let backgrounds = self.registered.iter().filter(|item| item.plugin == id).map(|item| item.background.clone()).collect();
+        Ok(Some(Reconfigure { config: self.config(id), backgrounds }))
     }
 
     fn find(&self, id: &str) -> Result<&Builtin, UserError> {
@@ -193,36 +249,43 @@ impl Table {
                         background.push(BackgroundStatus { name: name.clone(), registered: false, running: false });
                     }
                 }
-                BuiltinPlugin { id: plugin.id.clone(), kind: plugin.kind, enabled: self.enabled(&plugin.id), background }
+                BuiltinPlugin { id: plugin.id.clone(), kind: plugin.kind, enabled: self.enabled(&plugin.id), background, config: self.config(&plugin.id) }
             })
             .collect()
     }
 }
 
-pub(crate) fn read_disabled(file: &Path) -> BTreeSet<String> {
+fn read_text(file: &Path) -> String {
     match std::fs::read_to_string(file) {
         Ok(text) => {
             if builtins_file::shape(&text) == builtins_file::Shape::Other {
-                eprintln!("[plugins-v3] {} is not a plain list of entries; every built-in plugin stays on", file.display());
+                eprintln!("[plugins-v3] {} is not a plain list of entries; every built-in plugin stays on with its default config", file.display());
             }
-            builtins_file::disabled_ids(&text)
+            text
         }
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => BTreeSet::new(),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
         Err(error) => {
-            eprintln!("[plugins-v3] could not read {}: {error}; every built-in plugin stays on", file.display());
-            BTreeSet::new()
+            eprintln!("[plugins-v3] could not read {}: {error}; every built-in plugin stays on with its default config", file.display());
+            String::new()
         }
     }
 }
 
-pub(crate) fn write_switch(file: &Path, id: &str, enabled: bool) -> Result<(), UserError> {
-    let failed = |detail: String| UserError::new("pluginsV3.builtinSave", format!("Could not save the switch for {id}.")).arg("id", id).detail(detail);
+pub(crate) fn read_disabled(file: &Path) -> BTreeSet<String> {
+    builtins_file::disabled_ids(&read_text(file))
+}
+
+pub(crate) fn read_config(file: &Path) -> BTreeMap<String, Map<String, Value>> {
+    builtins_file::configs(&read_text(file))
+}
+
+fn rewrite(file: &Path, failed: impl Fn(String) -> UserError, edit: impl FnOnce(&str) -> Result<String, String>) -> Result<(), UserError> {
     let text = match std::fs::read_to_string(file) {
         Ok(text) => text,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => String::new(),
         Err(error) => return Err(failed(format!("{}: {error}", file.display()))),
     };
-    let next = builtins_file::set_disabled(&text, id, !enabled).map_err(failed)?;
+    let next = edit(&text).map_err(&failed)?;
     if next == text {
         return Ok(());
     }
@@ -230,6 +293,16 @@ pub(crate) fn write_switch(file: &Path, id: &str, enabled: bool) -> Result<(), U
         std::fs::create_dir_all(dir).map_err(|error| failed(format!("{}: {error}", dir.display())))?;
     }
     crate::fs_write::replace_file(file, next.as_bytes()).map_err(|error| failed(format!("{}: {error}", file.display())))
+}
+
+pub(crate) fn write_switch(file: &Path, id: &str, enabled: bool) -> Result<(), UserError> {
+    let failed = |detail: String| UserError::new("pluginsV3.builtinSave", format!("Could not save the switch for {id}.")).arg("id", id).detail(detail);
+    rewrite(file, failed, |text| builtins_file::set_disabled(text, id, !enabled))
+}
+
+pub(crate) fn write_config(file: &Path, id: &str, key: &str, value: Option<&Value>) -> Result<(), UserError> {
+    let failed = |detail: String| UserError::new("pluginsV3.builtinConfigSave", format!("Could not save the config of {id}.")).arg("id", id).detail(detail);
+    rewrite(file, failed, |text| builtins_file::set_config(text, id, key, value))
 }
 
 struct Switches {
@@ -245,9 +318,9 @@ fn switches() -> &'static Mutex<Switches> {
     SWITCHES.get_or_init(|| Mutex::new(Switches { table: Table::new(catalog(), BTreeSet::new()), file: None, ready: false }))
 }
 
-fn config_file(app: &AppHandle) -> Option<PathBuf> {
+fn fuyu_home(app: &AppHandle) -> Option<PathBuf> {
     match crate::home_dir::fuyu_home(tauri::Manager::path(app)) {
-        Ok(home) => Some(home.join("plugins-v3").join(FILE)),
+        Ok(home) => Some(home),
         Err(error) => {
             eprintln!("[plugins-v3] could not find the data folder, so built-in plugin switches are not saved: {error}");
             None
@@ -257,11 +330,16 @@ fn config_file(app: &AppHandle) -> Option<PathBuf> {
 
 pub(crate) fn init(app: &AppHandle) {
     let _ = APP.set(app.clone());
-    let file = config_file(app);
+    let home = fuyu_home(app);
+    let file = home.as_deref().map(|home| home.join(DIR).join(FILE));
+    if let (Some(home), Some(file)) = (home.as_deref(), file.as_deref()) {
+        super::v2_builtins::migrate(home, file);
+    }
     let disabled = file.as_deref().map(read_disabled).unwrap_or_default();
+    let config = file.as_deref().map(read_config).unwrap_or_default();
     let actions = {
         let mut slot = switches().lock().unwrap_or_else(PoisonError::into_inner);
-        let mut table = Table::new(catalog(), disabled);
+        let mut table = Table::new(catalog(), disabled).with_config(config);
         let mut actions = Vec::new();
         for item in std::mem::take(&mut slot.table.registered) {
             if let Ok(Some(action)) = table.register(&item.plugin, &item.name, item.background) {
@@ -274,7 +352,6 @@ pub(crate) fn init(app: &AppHandle) {
     run_all(actions);
 }
 
-#[expect(dead_code, reason = "the built-in plugin tasks from E36.3.28 on register their background here")]
 pub(crate) fn register(plugin: &str, name: &str, background: Arc<dyn Background>) -> Result<(), String> {
     let action = {
         let mut slot = switches().lock().unwrap_or_else(PoisonError::into_inner);
@@ -287,9 +364,12 @@ pub(crate) fn register(plugin: &str, name: &str, background: Arc<dyn Background>
     Ok(())
 }
 
-#[expect(dead_code, reason = "the built-in plugin tasks from E36.3.28 on read their switch here")]
 pub(crate) fn is_enabled(id: &str) -> bool {
     switches().lock().unwrap_or_else(PoisonError::into_inner).table.enabled(id)
+}
+
+pub(crate) fn config(id: &str) -> Map<String, Value> {
+    switches().lock().unwrap_or_else(PoisonError::into_inner).table.config(id)
 }
 
 fn list() -> Vec<BuiltinPlugin> {
@@ -318,6 +398,32 @@ pub(crate) async fn set_builtin_plugin_enabled(id: String, enabled: bool) -> Res
         actions
     };
     run_all(actions);
+    let plugins = list();
+    if let Some(app) = APP.get() {
+        let _ = app.emit(CHANGED_EVENT, &plugins);
+    }
+    Ok(plugins)
+}
+
+#[tauri::command]
+pub(crate) async fn set_builtin_plugin_config(id: String, key: String, value: Option<Value>) -> Result<Vec<BuiltinPlugin>, UserError> {
+    let reconfigure = {
+        let mut slot = switches().lock().unwrap_or_else(PoisonError::into_inner);
+        let before = slot.table.config(&id).get(&key).cloned();
+        let reconfigure = slot.table.set_config(&id, &key, value.clone())?;
+        if reconfigure.is_some() {
+            if let Some(file) = slot.file.clone() {
+                if let Err(error) = write_config(&file, &id, &key, value.as_ref()) {
+                    let _ = slot.table.set_config(&id, &key, before);
+                    return Err(error);
+                }
+            }
+        }
+        reconfigure
+    };
+    if let Some(reconfigure) = reconfigure {
+        reconfigure.run();
+    }
     let plugins = list();
     if let Some(app) = APP.get() {
         let _ = app.emit(CHANGED_EVENT, &plugins);

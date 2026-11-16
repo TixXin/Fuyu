@@ -50,9 +50,10 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 | 想做的事 | `plugins.yml` 里写 |
 |---|---|
 | 关掉内置的计时器 | `- id: timer`<br>`  disabled: true` |
-| 给它配置 | `- id: timer`<br>`  config: { … }` |
+| 给它配置 | `- id: timer`<br>`  config:`<br>`    sound: false`<br>`    shortcut: "Ctrl+Alt+T"` |
 | 恢复默认 | 删掉这一条 |
 
+- 设置窗口改配置走 Rust 的 `set_builtin_plugin_config`（2026-11-15 起，E36.3.28）：只写 `config:` 下每项一行的块写法，字符串写成 JSON 的双引号字符串；用户手写成 `config: { … }` 的条目它不改，报错。新配置交给这个插件在 Rust 里登记的后台（`Background::configure`），前端从 `get_builtin_plugins` 的 `config` 读。第 2 版内置插件的开关和设置第一次启动时迁进来一次（`plugin_kernel/v2_builtins.rs`，见 [contracts.md](../contracts.md)「内置插件的配置」）。
 - 改了 `plugins.yml` 后照旧重读（`--watch`），关掉的内置插件撤掉它的全部副作用：服务、受管定时器、监听器、界面文件（测试「plugins.yml switches a built-in plugin off」逐项核对）。
 - 运行时经加载器改条目（以后设置窗口的开关）时，include 照旧把差异写回文件：内置插件写回的只有 `id` 加改过的键，正好是上面这种开关条目。
 - **没带 `--builtins` 时清单是空的**，所有插件都是 `third-party`：`plugins.yml` 写 `kind: builtin` 或 `essential` 从来不算数。[边界](v3-boundary.md)「插件状态」里「`kind` 来自 `plugins.yml` 条目」那一句要改成「来自内置插件清单」，那一页由第 3 阶段主 agent 收尾时改。
@@ -66,6 +67,18 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 - 有后台的模块在自己的 `init` 里调 `plugin_kernel::builtins::register(<插件 id>, <名字>, Arc<dyn Background>)`，`Background` 有 `start` / `stop` / `running`；名字要写进清单这个插件的 `background`。开关表在启动时和开关变化时调它们（锁外调，`start` 里可以再读开关）。`builtins::init` 在 `lib.rs` 的 setup 最前面，早于各模块的 `init`；之前登记的先记着，`init` 读完文件再起。
 - 窗口用 `get_builtin_plugins` 读、听 `builtin-plugins-changed`（`features/plugin-kernel/builtinSwitches.ts`、`useBuiltinPlugins.ts`）；岛和设置窗口的插槽注册表按它调 `setDisabledOwners`，关掉的插件拥有的项不出现。设置 → 插件（第 3 版）列出全部内置插件、能开关；这一页在开发版里总会出现，正式版要设 `FUYU_PLUGINS_V3=1`。
 - 通用测试：Rust 的 `builtins_tests.rs` 按清单逐个关、逐个开，核对登记的后台都停了、又起来了；`tests/unit/builtin-switches.test.mjs` 用 Rust 写的格式让宿主逐个关掉计时器和翻译再打开。
+
+### 旧开关（`fuyu-settings` 里的字段，E36.3.29）
+
+第 1 版用 `fuyu-settings` 的布尔字段当功能开关（翻译的 `translationEnabled`），备份、同步、概览卡片都读它。开关迁进 `plugins.yml` 后，这些字段留作镜像，到 E36.3.50 收口时去掉：
+
+- 每个功能任务只在 `features/plugin-kernel/legacySwitches.ts` 的 `LEGACY_SWITCHES` 加一行（字段名 → 插件 id），别的不用改。
+- 岛、设置窗口、引导页都用 `useLegacySwitches(...)` 包一层：读的时候字段换成开关表的值（开关表还没到时用存的值）；写字段时换成 `set_builtin_plugin_enabled`。
+- 只有岛做对账（`reconcile`，纯函数）：
+  - 第一次见到某个字段时，存的是关、开关是开，就把插件关掉（升级前关了的升级后还是关的）；然后记进 `fuyu-legacy-switches`，以后不再迁。
+  - 以后存的值变了（恢复备份、同步、别的窗口写的）而和开关不同，就照存的值开关插件；没变则把开关的值镜像进存的设置。
+  - 只在两边不同时才写，写一次之后再看就一致了，不会来回打架（`tests/unit/legacy-switches.test.mjs` 逐条核对：启动时旧值是关的、恢复备份、两个窗口同时改、开关表还没到、不循环）。
+- 各自存储里的开关（剪贴板、语音、QQ、微信）和第 2 版 `plugins.json` 的启用状态不走这张表，各任务自己在 Rust 里一次性迁移。
 
 ## 关掉后不留界面、不跑后台：三层检查（E36.3.27）
 
@@ -88,7 +101,7 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 - Rust 的 `plugin_kernel/diagnostics.rs`（只在开发版编译）向各窗口发 `builtin-diagnostics-request`，窗口用 `features/plugin-kernel/diagnostics.ts` 回 `builtin-diagnostics-report`（每个插件：拥有的插槽项、在听的事件、调过的命令、提供的服务），再加上宿主的 `status` 和开关表，一起给实验台的 `GET /v1/dev/builtins`。窗口的记账在 `slots.ts` 里随开发版启动装上。
 - `pnpm lab` 的「逐个关掉内置插件并核对」按钮：逐个关掉、等一会、核对上面三处有没有残留和关掉后还在调的命令，再打开；线程数一并列出（见 [实验台](../../features/island-lab.md)）。
 
-E36.3.27 用计时器和翻译做样板，`?only=timer,translation` 查出的残留：翻译的岛页还渲染 `.translation-panel*`，关掉后还在调 `has_translation_secret`、`set_translation_shortcut`、`set_translation_selection_shortcut`、`read_translation_clipboard`，还在听 `translation-selection`、`translation-island-shortcut`；计时器的岛页还渲染 `.timer-panel*`。宿主层两个都过（内核替它们收拾了）。修它们是 E36.3.28 / E36.3.29 的事。
+E36.3.27 用计时器和翻译做样板，`?only=timer,translation` 查出的残留：翻译的岛页还渲染 `.translation-panel*`，关掉后还在调 `has_translation_secret`、`set_translation_shortcut`、`set_translation_selection_shortcut`、`read_translation_clipboard`，还在听 `translation-selection`、`translation-island-shortcut`；计时器的岛页还渲染 `.timer-panel*`。宿主层两个都过（内核替它们收拾了）。修它们是 E36.3.28 / E36.3.29 的事。E36.3.28 之后计时器的页面、收起条、提醒、设置和快捷键都挂在拥有者 `timer` 名下，`?only=timer` 通过。
 
 ## 内置插件的宿主部分怎么写
 

@@ -1,5 +1,15 @@
 {
   "version": 1,
+  "optionalGroups": {
+    "translationProvider": ["fuyu-translation-settings/provider", "fuyu-translation-settings/models", "fuyu-translation-settings/customBaseUrl"],
+    "screenshotCapture": ["fuyu-screenshot-settings/printScreen", "fuyu-screenshot-settings/record"],
+    "agentSoundOutput": ["fuyu-agent-sounds/volume", "fuyu-agent-sounds/pack"],
+    "agentPushDelivery": ["fuyu-agent-push/enabled", "fuyu-agent-push/channel"],
+    "qqMail": ["fuyu-qq-mail-settings"],
+    "collapsedItems": ["fuyu-collapsed-items"],
+    "pluginPages": ["fuyu-plugin-pages"],
+    "updateChannel": ["fuyu-update-channel"]
+  },
   "keys": {
     "fuyu-settings": {
       "fields": {
@@ -159,9 +169,9 @@
         "shortcut": "local",
         "selectionShortcut": "local",
         "direction": "sync",
-        "provider": "local",
-        "customBaseUrl": "local",
-        "models": "local",
+        "provider": "optional",
+        "customBaseUrl": "optional",
+        "models": "optional",
         "pasteClipboardOnOpen": "sync",
         "autoTranslate": "sync"
       }
@@ -171,31 +181,31 @@
     "fuyu-wechat-reminders-enabled": "local",
     "fuyu-wechat-expose-ui": "local",
     "fuyu-wechat-hide-taskbar-button": "local",
-    "fuyu-qq-mail-settings": "local",
+    "fuyu-qq-mail-settings": "optional",
     "fuyu-qq-mail-remote-images": "sync",
-    "fuyu-collapsed-items": "local",
-    "fuyu-plugin-pages": "local",
+    "fuyu-collapsed-items": "optional",
+    "fuyu-plugin-pages": "optional",
     "fuyu-plugin-market-favorites": "sync",
     "fuyu-screenshot-annotation": "sync",
     "fuyu-screenshot-settings": {
       "fields": {
         "shortcuts": "local",
-        "printScreen": "local",
+        "printScreen": "optional",
         "saveFolder": "local",
         "cardSeconds": "sync",
         "historyDays": "sync",
-        "record": "local",
+        "record": "optional",
         "version": "local"
       }
     },
     "fuyu-save-directory": "local",
-    "fuyu-update-channel": "local",
+    "fuyu-update-channel": "optional",
     "fuyu-update-preferences": "local",
     "fuyu-agent-sounds": {
       "fields": {
         "enabled": "firstMergeOnly",
-        "volume": "local",
-        "pack": "local",
+        "volume": "optional",
+        "pack": "optional",
         "events": "sync",
         "quietWhenInFront": "sync",
         "quietHours": "sync"
@@ -210,11 +220,11 @@
     },
     "fuyu-agent-push": {
       "fields": {
-        "enabled": "local",
+        "enabled": "optional",
         "server": "local",
         "events": "sync",
         "awayMinutes": "sync",
-        "channel": "local",
+        "channel": "optional",
         "mutedHosts": "local",
         "ccConnect": "local"
       }

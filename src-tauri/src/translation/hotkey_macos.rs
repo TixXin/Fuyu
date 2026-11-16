@@ -1,5 +1,8 @@
 use std::{
-    sync::{atomic::Ordering, mpsc, Mutex, PoisonError},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        mpsc, Mutex, PoisonError,
+    },
     time::Duration,
 };
 
@@ -10,8 +13,9 @@ use crate::clipboard_history::{mac_label, parse_shortcut_binding, to_hotkey, Sho
 use crate::macos::hotkeys;
 use crate::user_error::UserError;
 
-use super::{capture_and_emit_selection, open_translator, APP, DEFAULT_SELECTION_SHORTCUT, DEFAULT_SHORTCUT, ENABLED};
+use super::{capture_and_emit_selection, open_translator, APP, DEFAULT_SELECTION_SHORTCUT, DEFAULT_SHORTCUT};
 
+static STARTED: AtomicBool = AtomicBool::new(false);
 static WINDOW_HOTKEY: Mutex<Option<HotKey>> = Mutex::new(None);
 static SELECTION_HOTKEY: Mutex<Option<HotKey>> = Mutex::new(None);
 
@@ -99,14 +103,47 @@ fn apply_and_remember(slot: Slot, binding: Option<ShortcutBinding>) -> Result<St
     result
 }
 
-pub(super) fn start(app: &AppHandle) {
-    let _ = app.run_on_main_thread(|| {
+pub(super) fn start(app: &AppHandle) -> Result<(), String> {
+    STARTED.store(true, Ordering::SeqCst);
+    app.run_on_main_thread(|| {
+        if !STARTED.load(Ordering::SeqCst) {
+            return;
+        }
         for (slot, shortcut) in [(Slot::Window, DEFAULT_SHORTCUT), (Slot::Selection, DEFAULT_SELECTION_SHORTCUT)] {
-            if let Some(binding) = parse_shortcut_binding(shortcut).filter(|_| ENABLED.load(Ordering::SeqCst)) {
+            let wanted = binding_slot(slot).lock().unwrap_or_else(PoisonError::into_inner).clone();
+            if let Some(binding) = wanted.or_else(|| parse_shortcut_binding(shortcut)) {
                 let _ = apply_and_remember(slot, Some(binding));
             }
         }
-    });
+    })
+    .map_err(|error| format!("Could not start the translation shortcuts: {error}"))
+}
+
+fn release_all() {
+    for slot in [Slot::Window, Slot::Selection] {
+        if let Some(hotkey) = slot.current().lock().unwrap_or_else(PoisonError::into_inner).take() {
+            hotkeys::unregister(hotkey);
+        }
+    }
+}
+
+pub(super) fn stop() {
+    STARTED.store(false, Ordering::SeqCst);
+    if let Some(app) = APP.get() {
+        let _ = app.run_on_main_thread(release_all);
+    }
+}
+
+pub(super) fn running() -> bool {
+    STARTED.load(Ordering::SeqCst)
+}
+
+pub(super) fn want(binding: ShortcutBinding) {
+    *binding_slot(Slot::Window).lock().unwrap_or_else(PoisonError::into_inner) = Some(binding);
+}
+
+pub(super) fn want_selection(binding: ShortcutBinding) {
+    *binding_slot(Slot::Selection).lock().unwrap_or_else(PoisonError::into_inner) = Some(binding);
 }
 
 fn on_main_thread(slot: Slot, binding: Option<ShortcutBinding>) -> Result<String, UserError> {

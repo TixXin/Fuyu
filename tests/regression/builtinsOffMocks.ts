@@ -13,7 +13,7 @@ let revision = 0;
 
 export function switchList(): BuiltinPlugin[] {
   const ids = [...BUILTINS.map((plugin) => plugin.id), ...(withFake ? [FAKE] : [])];
-  return ids.map((id) => ({ id, kind: id === "updater" ? "essential" : "builtin", enabled: !off.has(id), background: [] }));
+  return ids.map((id) => ({ id, kind: id === "updater" ? "essential" : "builtin", enabled: !off.has(id), background: [], config: {} }));
 }
 
 export async function switchOff(ids: readonly string[], fake = false) {
@@ -28,19 +28,7 @@ const MEDIA = {
   canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null, sessions: [], updatedAt: 0,
 };
 
-const PLUGIN_V2_BASE = {
-  dev: false, platforms: [], webview: false, notificationsMuted: false, windowRules: {}, keybindingConflicts: [], keybindings: {}, optionalPermissions: [], calls: [], sensitive: {},
-  activation: "startup", activationEvents: [], startupMs: null, resources: null, keepAlive: null, revoked: null, updateAvailable: null, autoUpdated: null, updateFailed: null,
-  preRelease: false, preReleaseAvailable: null, memoryLimitMb: 512, signingKeyChanged: false, authorKey: null,
-};
-const PLUGINS_V2 = {
-  allowThirdParty: true, nodeAvailable: false, powershellAvailable: true, autoUpdate: false,
-  plugins: [{
-    ...PLUGIN_V2_BASE, id: "focusd.timer", builtin: true, invalidReason: null, name: { "zh-CN": "计时器", en: "Timer" }, description: { "zh-CN": "计时器", en: "Timer" },
-    version: "1.0.0", author: "FocuSD", homepage: "", permissions: [], commands: [], runtime: "builtin", hasProcess: false, enabled: true, needsApproval: false,
-    status: "running", error: null, log: [], settingsSchema: [], settings: {}, info: [],
-  }],
-};
+const PLUGINS_V2 = { allowThirdParty: true, nodeAvailable: false, powershellAvailable: true, autoUpdate: false, plugins: [] };
 
 mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;

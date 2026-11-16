@@ -48,7 +48,10 @@ export interface BuiltinPlugin {
   kind: BuiltinPluginKind;
   enabled: boolean;
   background: BackgroundStatus[];
+  config: Readonly<Record<string, unknown>>;
 }
+
+export type BuiltinConfigValue = boolean | number | string;
 
 export const BUILTIN_PLUGINS_CHANGED = "builtin-plugins-changed";
 
@@ -58,6 +61,10 @@ export function getBuiltinPlugins(): Promise<BuiltinPlugin[]> {
 
 export function setBuiltinPluginEnabled(id: string, enabled: boolean): Promise<BuiltinPlugin[]> {
   return invoke<BuiltinPlugin[]>("set_builtin_plugin_enabled", { id, enabled });
+}
+
+export function setBuiltinPluginConfig(id: string, key: string, value: BuiltinConfigValue | null): Promise<BuiltinPlugin[]> {
+  return invoke<BuiltinPlugin[]>("set_builtin_plugin_config", { id, key, value });
 }
 
 export function onBuiltinPluginsChanged(handler: (plugins: unknown) => void): Promise<UnlistenFn> {

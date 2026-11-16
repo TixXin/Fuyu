@@ -255,7 +255,43 @@ where
     *state = next.clone();
     drop(state);
     let _ = app.emit(CHANGED_EVENT, &next);
+    crate::sync::notify_local_change();
     Ok(next)
+}
+
+fn link_values(links: &[ClipboardLink]) -> Result<Vec<serde_json::Value>, String> {
+    links.iter().map(serde_json::to_value).collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())
+}
+
+pub(crate) fn links_for_sync(app: &AppHandle) -> Result<crate::sync::SyncRecords, String> {
+    let store = store(app)?;
+    let state = store.state.lock().map_err(|error| error.to_string())?;
+    Ok((link_values(&state.links)?, state.tombstones.clone()))
+}
+
+pub(crate) fn replace_links_from_sync(
+    app: &AppHandle,
+    expected: (&[serde_json::Value], &[Tombstone]),
+    links: Vec<serde_json::Value>,
+    tombstones: Vec<Tombstone>,
+) -> Result<(), String> {
+    let store = store(app)?;
+    let mut links: Vec<ClipboardLink> = links.into_iter().filter_map(|link| serde_json::from_value(link).ok()).collect();
+    links.sort_by(|left, right| (&left.sort_key, &left.id).cmp(&(&right.sort_key, &right.id)));
+    let mut state = store.state.lock().map_err(|error| error.to_string())?;
+    if link_values(&state.links)? != expected.0 || state.tombstones != expected.1 {
+        return Err("The bookmarks changed while syncing; trying again later.".into());
+    }
+    let next = normalized(ClipboardLinks { version: VERSION, settings: state.settings.clone(), links, tombstones });
+    if next == *state {
+        return Ok(());
+    }
+    clock::observe(all_stamps(&next));
+    save(&store.path, &next)?;
+    *state = next.clone();
+    drop(state);
+    let _ = app.emit(CHANGED_EVENT, &next);
+    Ok(())
 }
 
 pub(super) fn add_links(links: &mut ClipboardLinks, entries: impl IntoIterator<Item = (String, String)>) -> usize {

@@ -32,7 +32,7 @@ fn midpoint(low: &[u8], high: Option<&[u8]>) -> Vec<u8> {
     }
 }
 
-pub(super) fn key_between(low: Option<&str>, high: Option<&str>) -> String {
+pub(crate) fn key_between(low: Option<&str>, high: Option<&str>) -> String {
     let low = low.unwrap_or_default();
     let high = high.filter(|high| *high > low);
     String::from_utf8_lossy(&midpoint(low.as_bytes(), high.map(str::as_bytes))).into_owned()

@@ -1,13 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useBuiltinPlugin } from "../plugins/useBuiltinPlugin";
-import { configureTimers, TIMER_PLUGIN_ID, useTimers } from "./store";
-
-export function useTimerPlugin(): boolean {
-  const plugin = useBuiltinPlugin(TIMER_PLUGIN_ID);
-  const sound = plugin.settings.sound !== false;
-  useEffect(() => configureTimers(plugin.enabled, sound), [plugin.enabled, sound]);
-  return plugin.enabled;
-}
+import { useTimers } from "./store";
 
 export function useIslandTimer(enabled: boolean, openPage: (page: "timer") => void) {
   const { timers, openRequest } = useTimers();

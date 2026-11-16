@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { presentTranslationWindow, toggleTranslationWindow } from "../../features/translation/api";
-import { requestTranslationHandoffOpen } from "../../features/translation/storage";
+import { requestTranslationHandoffOpen } from "../../lib/translation-handoff/storage";
 import type { IslandPage } from "./types";
 
 function reportOpenFailure(error: unknown) {

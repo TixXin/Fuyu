@@ -1,0 +1,119 @@
+use std::{collections::BTreeSet, path::Path};
+
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
+
+use super::builtins::{write_config, write_switch};
+
+const V2_STATE: &str = "plugins.json";
+const MARKER: &str = "v2-migrated.json";
+const MARKER_FORMAT: u32 = 1;
+
+#[derive(Debug, Default, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct Grant {
+    #[serde(default)]
+    pub(crate) enabled: bool,
+    #[serde(default)]
+    pub(crate) settings: Map<String, Value>,
+    #[serde(default)]
+    pub(crate) keybindings: Map<String, Value>,
+}
+
+pub(crate) struct Migration {
+    pub(crate) v2: &'static str,
+    pub(crate) v3: &'static str,
+    pub(crate) config: fn(&Grant) -> Vec<(&'static str, Value)>,
+}
+
+fn timer_config(grant: &Grant) -> Vec<(&'static str, Value)> {
+    let mut config = Vec::new();
+    if let Some(sound) = grant.settings.get("sound").filter(|value| value.is_boolean()) {
+        config.push(("sound", sound.clone()));
+    }
+    if let Some(shortcut) = grant.keybindings.get("new").filter(|value| value.is_string()) {
+        config.push(("shortcut", shortcut.clone()));
+    }
+    config
+}
+
+pub(crate) const MIGRATIONS: &[Migration] = &[Migration { v2: "focusd.timer", v3: "timer", config: timer_config }];
+
+#[derive(Debug, Default, Serialize, Deserialize)]
+struct Marker {
+    format: u32,
+    #[serde(default)]
+    migrated: BTreeSet<String>,
+}
+
+pub(crate) fn grants(text: &str) -> Map<String, Value> {
+    serde_json::from_str::<Value>(text)
+        .ok()
+        .and_then(|state| state.get("plugins").and_then(Value::as_object).cloned())
+        .unwrap_or_default()
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) struct Plan {
+    pub(crate) id: &'static str,
+    pub(crate) disable: bool,
+    pub(crate) config: Vec<(&'static str, Value)>,
+}
+
+pub(crate) fn plan(migration: &Migration, grants: &Map<String, Value>) -> Option<Plan> {
+    let grant: Grant = serde_json::from_value(grants.get(migration.v2)?.clone()).ok()?;
+    Some(Plan { id: migration.v3, disable: !grant.enabled, config: (migration.config)(&grant) })
+}
+
+fn read_marker(file: &Path) -> Marker {
+    std::fs::read_to_string(file).ok().and_then(|text| serde_json::from_str::<Marker>(&text).ok()).filter(|marker| marker.format == MARKER_FORMAT).unwrap_or(Marker { format: MARKER_FORMAT, migrated: BTreeSet::new() })
+}
+
+fn apply(plan: &Plan, plugins_file: &Path) -> Result<(), String> {
+    if plan.disable {
+        write_switch(plugins_file, plan.id, false).map_err(|error| error.to_string())?;
+    }
+    for (key, value) in &plan.config {
+        write_config(plugins_file, plan.id, key, Some(value)).map_err(|error| error.to_string())?;
+    }
+    Ok(())
+}
+
+pub(crate) fn migrate(home: &Path, plugins_file: &Path) {
+    let Some(dir) = plugins_file.parent() else { return };
+    let marker_file = dir.join(MARKER);
+    let mut marker = read_marker(&marker_file);
+    let pending: Vec<&Migration> = MIGRATIONS.iter().filter(|migration| !marker.migrated.contains(migration.v2)).collect();
+    if pending.is_empty() {
+        return;
+    }
+    let state = home.join(V2_STATE);
+    let grants = match std::fs::read_to_string(&state) {
+        Ok(text) => grants(&text),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Map::new(),
+        Err(error) => {
+            eprintln!("[plugins-v3] could not read {}, so the old built-in plugins are carried over next time: {error}", state.display());
+            return;
+        }
+    };
+    for migration in pending {
+        if let Some(plan) = plan(migration, &grants) {
+            if let Err(error) = apply(&plan, plugins_file) {
+                eprintln!("[plugins-v3] could not carry {} over from the old plugin settings: {error}", migration.v2);
+                continue;
+            }
+        }
+        marker.migrated.insert(migration.v2.to_owned());
+    }
+    let saved = serde_json::to_vec_pretty(&marker).map_err(|error| error.to_string()).and_then(|bytes| {
+        std::fs::create_dir_all(dir).map_err(|error| error.to_string())?;
+        crate::fs_write::replace_file(&marker_file, &bytes).map_err(|error| error.to_string())
+    });
+    if let Err(error) = saved {
+        eprintln!("[plugins-v3] could not note which old built-in plugins were carried over in {}: {error}", marker_file.display());
+    }
+}
+
+#[cfg(test)]
+#[path = "v2_builtins_tests.rs"]
+mod tests;

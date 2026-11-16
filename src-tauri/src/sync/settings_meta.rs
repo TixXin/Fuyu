@@ -20,11 +20,12 @@ pub(crate) enum Mode {
     Local,
     FirstMergeOnly,
     ById,
+    Optional,
 }
 
 impl Mode {
     fn stamped(self) -> bool {
-        matches!(self, Self::Sync | Self::FirstMergeOnly)
+        matches!(self, Self::Sync | Self::FirstMergeOnly | Self::Optional)
     }
 }
 
@@ -36,13 +37,20 @@ pub(crate) enum Rule {
 }
 
 #[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct Whitelist {
     pub(crate) keys: BTreeMap<String, Rule>,
+    #[serde(default)]
+    pub(crate) optional_groups: BTreeMap<String, Vec<String>>,
 }
 
 impl Whitelist {
     pub(crate) fn parse(text: &str) -> Result<Self, String> {
         serde_json::from_str(text).map_err(|error| format!("Bad settings sync whitelist: {error}"))
+    }
+
+    pub(crate) fn group_of(&self, member: &str) -> Option<&str> {
+        self.optional_groups.iter().find(|(_, members)| members.iter().any(|kept| kept == member)).map(|(group, _)| group.as_str())
     }
 
     pub(crate) fn field_mode(&self, key: &str, field: &str) -> Mode {

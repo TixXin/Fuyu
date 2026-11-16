@@ -133,14 +133,16 @@
 
 ### 每个功能任务都按这个标准算做完
 
-1. `builtins.json` 里有它（第 0 批已经列全），宿主部分能起；通用检查的宿主、Rust、窗口三层都过。
-2. 它的插槽项（岛、设置、提示、接线）都在 `src/features/<领域>/plugin/`，拥有者是它的 id。
-3. 有后台的都登记进开关表（`builtins::register(id, 名字, Arc<dyn Background>)`），关掉就真停；开着时行为和以前一样。在 `builtins.json` 里自己那一行写上 `background`，列出登记的后台名字：没写这个字段，通用测试当作还没迁完，不会检查。每个任务只改自己那一行。
-4. 旧开关迁进 `plugins.yml`，兼容读旧值；`contracts.md`、`data-storage.md` 记上；备份带上。
+1. `builtins.json` 里有它（第 0 批已经列全），宿主部分能起；通用检查的宿主、Rust、窗口三层都过。通用的 Rust 测试用的是假后台，所以每个任务再加一条测试，核对 `builtins.json` 的 `background` 和 Rust 里登记的名字一致。
+2. 它的插槽项（岛、设置、提示、接线）都在 `src/features/<领域>/plugin/`，拥有者是它的 id。拥有者一改，回归页 `builtins-off` 就开始查这个插件，所以这一条做完马上跑一次。
+3. 有后台的都登记进开关表（`builtins::register(id, 名字, Arc<dyn Background>)`），关掉就真停；开着时行为和以前一样。关着时改了它的设置（例如快捷键），只记下来、不报错，下次开的时候生效。在 `builtins.json` 里自己那一行写上 `background`，列出登记的后台名字：没写这个字段，通用测试当作还没迁完，不会检查。每个任务只改自己那一行。
+4. 旧开关迁进 `plugins.yml`，兼容读旧值；`contracts.md`、`data-storage.md` 记上；备份带上。`fuyu-settings` 里的开关在 `LEGACY_SWITCHES` 加一行就够，镜像会让备份自动带上；存在各自存储里的开关（例如第 2 版 `plugins.json`）要另写迁移并核对备份。
 5. 不 import 别的功能，边界白名单里删掉它的条目；要调别的功能的，走服务。
 6. 回归页的 DOM 快照不变。确实该变时（比如关掉的项不再渲染）用 `--update-snapshots`，提交说明写清楚是哪些快照、为什么变。
 7. 设置的插件页里有它，能开关；`v3-services.md` 的服务清单补上它的服务；`platforms.md` 核对一次。
 8. 「待人工验收」加上它的行（两个系统各一行）；只有 Windows 的模块（cc-connect、SSH 隧道、录屏、QQ、微信的监听）在 Mac 上测不了，写实测清单。
+
+各部分放在哪、怎么写，照 E36.3.29（翻译）的样板：任务文件 `docs/tasks/0-archive/E/E36.3.29.md`「备注」有完整的表。
 
 验证：`pnpm check` + `pnpm build` + `pnpm test:regression`；改了 Rust 的再加 `pnpm heavy -- cargo test --manifest-path src-tauri/Cargo.toml`、Windows 交叉 clippy、`pnpm build:exe`。
 

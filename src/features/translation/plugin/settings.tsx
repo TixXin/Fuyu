@@ -9,6 +9,7 @@ import { shortcutReferences, shortcutSections, type ShortcutsSectionProps } from
 import { TranslationSettingsPage } from "../TranslationSettingsPage";
 import { TranslationShortcutGroup } from "../TranslationShortcutGroup";
 import type { IslandSettings } from "../../../lib/settings/types";
+import { OWNER } from "./owner.ts";
 
 type PageProps = {
   settings: IslandSettings;
@@ -26,7 +27,7 @@ function TranslationShortcutOwners({ settings }: SettingsRunnerProps) {
   return null;
 }
 
-settingsRunners.add({ id: "translation.shortcut-owners", component: TranslationShortcutOwners });
+settingsRunners.add({ id: "translation.shortcut-owners", component: TranslationShortcutOwners }, OWNER);
 
 function TranslationShortcutsSection({ settings, onSettingsChange, onOpenPage, takenBy }: ShortcutsSectionProps) {
   const t = useTranslation();
@@ -50,7 +51,7 @@ function TranslationInputReference({ settings }: ShortcutsSectionProps) {
   return <ShortcutReferenceGroup title={text.inputTitle} rows={[[text.translate, "Enter"], [text.newLine, "Shift + Enter"], [text.pasteClipboard, "Tab"]]} />;
 }
 
-shortcutSections.add({ id: "shortcuts.translation", category: "shortcuts", order: 10, component: TranslationShortcutsSection });
-shortcutReferences.add({ id: "shortcutsReference.input", category: "shortcutsReference", order: 20, component: TranslationInputReference });
+shortcutSections.add({ id: "shortcuts.translation", category: "shortcuts", order: 10, component: TranslationShortcutsSection }, OWNER);
+shortcutReferences.add({ id: "shortcutsReference.input", category: "shortcutsReference", order: 20, component: TranslationInputReference }, OWNER);
 
-addSettingsCategory("translation", ({ settings, onSettingsChange, onOpenShortcuts }: PageProps) => <TranslationSettingsPage settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />);
+addSettingsCategory("translation", ({ settings, onSettingsChange, onOpenShortcuts }: PageProps) => <TranslationSettingsPage settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />, OWNER);

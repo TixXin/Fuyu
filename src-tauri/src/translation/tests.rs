@@ -206,3 +206,11 @@ fn the_host_cannot_choose_where_a_secret_goes() {
     assert_eq!(entries.len(), 3, "{declarations}");
     assert!(entries.iter().all(|line| !line.contains("baseUrl")), "{entries:?}");
 }
+
+#[test]
+fn the_shortcuts_and_window_are_the_background_listed_for_translation() {
+    let catalog = crate::plugin_kernel::builtins::catalog();
+    let translation = catalog.iter().find(|plugin| plugin.id == super::PLUGIN_ID).expect("translation is a built-in plugin");
+    let names = [super::background::SHORTCUTS.to_owned(), super::background::WINDOW.to_owned()];
+    assert_eq!(translation.background.as_deref(), Some(&names[..]));
+}

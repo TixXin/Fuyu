@@ -16,6 +16,7 @@ import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { ResetAppearanceButton } from "./sections/ResetAppearanceButton";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useSettingPresets } from "../../lib/settings/useSettingPresets";
+import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import { useMarketInstallRequest } from "../../features/plugins/market-link/useMarketInstallRequest";
 import { useLocale, useTranslation } from "../../i18n";
@@ -34,7 +35,8 @@ const SETTINGS_LIGHT_FILL = "#eceef2";
 export function SettingsWindow() {
   const t = useTranslation();
   const { locale, setLocale } = useLocale();
-  const [settings, setSettings] = useState<IslandSettings>(loadSettings);
+  const [storedSettings, setStoredSettings] = useState<IslandSettings>(loadSettings);
+  const [settings, setSettings] = useLegacySwitches([storedSettings, setStoredSettings]);
   useWindowAccent(settings);
   const systemDark = useSystemDark();
   const presets = useSettingPresets(settings, setSettings);
@@ -85,8 +87,8 @@ export function SettingsWindow() {
   }, [t]);
 
   useEffect(() => {
-    saveSettings(settings);
-  }, [settings]);
+    saveSettings(storedSettings);
+  }, [storedSettings]);
 
   useEffect(() => {
     focusRequestedSection();
@@ -94,7 +96,7 @@ export function SettingsWindow() {
     const syncFromIsland = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY) {
         const nextSettings = loadSettings();
-        setSettings((current) =>
+        setStoredSettings((current) =>
           isSameSettings(current, nextSettings) ? current : nextSettings,
         );
       }
@@ -110,7 +112,7 @@ export function SettingsWindow() {
 
   const resetAppearance = useCallback(() => {
     setSettings((current) => withThemeFrom(current, DEFAULT_SETTINGS));
-  }, []);
+  }, [setSettings]);
 
   const openShortcuts = () => setCategory("shortcuts");
   const [managedPluginId, setManagedPluginId] = useState<string | null>(null);

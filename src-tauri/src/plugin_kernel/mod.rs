@@ -7,6 +7,7 @@ pub(crate) mod diagnostics;
 mod methods;
 pub(crate) mod protocol;
 mod safe_mode;
+mod v2_builtins;
 
 use std::{
     path::PathBuf,
@@ -398,6 +399,7 @@ macro_rules! tauri_commands {
             crate::plugin_kernel::exit_plugin_safe_mode,
             crate::plugin_kernel::builtins::get_builtin_plugins,
             crate::plugin_kernel::builtins::set_builtin_plugin_enabled,
+            crate::plugin_kernel::builtins::set_builtin_plugin_config,
         ] $($rest)*)
     };
 }

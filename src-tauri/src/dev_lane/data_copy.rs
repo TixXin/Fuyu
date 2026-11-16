@@ -41,6 +41,7 @@ const RENAME_PAUSE: Duration = Duration::from_millis(200);
 pub(super) fn carried(name: &str) -> bool {
     let name = name.to_ascii_lowercase();
     !(LEFT_OUT.contains(&name.as_str())
+        || crate::sync::LOCAL_FILES.contains(&name.as_str())
         || LEFT_OUT_PREFIXES.iter().any(|prefix| name.starts_with(prefix))
         || LEFT_OUT_SUFFIXES.iter().any(|suffix| name.ends_with(suffix)))
 }
@@ -163,12 +164,14 @@ mod tests {
             "agent-remote-hosts.json", "agent-sessions-seen.json", "agent-notifications", "agent-sessions", "agent-terminals",
             "fuyu-agent-status.ps1", "fuyu-agent-running.cmd", "focusd-agent-status.ps1", "ssh-tunnels.json", "ssh", "remote-sessions", "wechat-gate",
             "clipboard-history.json", "clipboard-images", "screenshots", "lyrics-cache", "todos.json.tmp", "x.migrating", "Fuyu.Lock",
+            "sync-device.json", "sync-config.json", "sync-state",
         ] {
             assert!(!carried(name), "{name}");
         }
         for name in [
             "todos.json", "settings.json", "settings-window.json", "plugins", "plugins-data", "plugins.json", "dev-plugins.json", "sound-packs", "todo",
             "calendar-sources.json", "file-shelf.json", "todos-migration-backup.json", "todos.before-reimport-1794320134552.json",
+            "settings-sync-meta.json",
         ] {
             assert!(carried(name), "{name}");
         }

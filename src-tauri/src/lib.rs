@@ -41,6 +41,7 @@ mod ssh_tunnel;
 mod sync;
 mod system;
 mod system_levels;
+mod timer;
 mod todos;
 mod translation;
 mod tray;
@@ -161,6 +162,7 @@ pub fn run() {
             translation::init(app.handle());
             screenshot::init(app.handle());
             voice_input::init(app.handle());
+            timer::init(app.handle());
             if let Err(error) = file_shelf::init(app.handle()) {
                 eprintln!("failed to initialize the file shelf: {error}");
             }
@@ -209,7 +211,7 @@ pub fn run() {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
             #[cfg(target_os = "macos")]
-            for label in [clipboard_history::POPUP_WINDOW_LABEL, clipboard_history::preview_window::WINDOW_LABEL, translation::WINDOW_LABEL] {
+            for label in [clipboard_history::POPUP_WINDOW_LABEL, clipboard_history::preview_window::WINDOW_LABEL] {
                 if let Some(window) = app.get_webview_window(label) {
                     let made = if label == clipboard_history::preview_window::WINDOW_LABEL {
                         macos::island_panel::make_preview_panel(&window)
@@ -275,8 +277,10 @@ pub fn run() {
             screenshot;
             recording;
             voice_input;
+            timer;
             settings_window;
             settings_file;
+            sync;
             shortcut_capture;
             home_dir;
             onboarding_window;

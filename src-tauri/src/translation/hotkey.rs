@@ -1,13 +1,13 @@
 use std::{
-    sync::{atomic::Ordering, mpsc, Mutex},
-    thread,
+    sync::{mpsc, Mutex, PoisonError},
+    thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
 
 use tauri::AppHandle;
 use windows::Win32::{
     Foundation::{HWND, LPARAM, LRESULT, WPARAM},
-    UI::WindowsAndMessaging::{WM_APP, WM_HOTKEY},
+    UI::WindowsAndMessaging::{WM_APP, WM_HOTKEY, WM_QUIT},
 };
 
 use crate::clipboard_history::{parse_shortcut_binding, ShortcutBinding};
@@ -17,15 +17,18 @@ use crate::win32::{
     message_window::{self, WindowMessages},
 };
 
-use super::{capture_and_emit_selection, open_translator, APP, DEFAULT_SELECTION_SHORTCUT, DEFAULT_SHORTCUT, ENABLED};
+use super::{capture_and_emit_selection, open_translator, APP, DEFAULT_SELECTION_SHORTCUT, DEFAULT_SHORTCUT};
 
 const HOTKEY_ID: i32 = 0x4654;
 const SELECTION_HOTKEY_ID: i32 = 0x4655;
 const CHANGE_HOTKEY_MESSAGE: u32 = WM_APP + 0x52;
 const CHANGE_SELECTION_HOTKEY_MESSAGE: u32 = WM_APP + 0x53;
 const COEXIST_MESSAGE: u32 = WM_APP + 0x54;
+const CLASS_NAME: &str = "FocuSDTranslationHotkey";
+const READY_WAIT: Duration = Duration::from_secs(2);
 
 static HOTKEY_WINDOW: Mutex<Option<isize>> = Mutex::new(None);
+static HOTKEY_THREAD: Mutex<Option<JoinHandle<()>>> = Mutex::new(None);
 static ACTIVE_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
 static SELECTION_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
 static WANTED_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
@@ -35,12 +38,53 @@ type PendingBinding = (Option<ShortcutBinding>, mpsc::Sender<Result<String, User
 static PENDING_BINDING: Mutex<Option<PendingBinding>> = Mutex::new(None);
 static PENDING_SELECTION_BINDING: Mutex<Option<PendingBinding>> = Mutex::new(None);
 
-pub(super) fn start(_app: &AppHandle) {
-    thread::spawn(|| {
-        if let Err(error) = run_hotkey_loop() {
-            eprintln!("failed to initialize translation shortcut: {error}");
+pub(super) fn start(_app: &AppHandle) -> Result<(), String> {
+    let mut slot = HOTKEY_THREAD.lock().unwrap_or_else(PoisonError::into_inner);
+    if slot.as_ref().is_some_and(|handle| !handle.is_finished()) {
+        return Ok(());
+    }
+    let handle = thread::Builder::new()
+        .name("translation-hotkeys".into())
+        .spawn(|| {
+            if let Err(error) = run_hotkey_loop() {
+                eprintln!("failed to initialize translation shortcut: {error}");
+            }
+        })
+        .map_err(|error| format!("Could not start the translation shortcuts: {error}"))?;
+    *slot = Some(handle);
+    Ok(())
+}
+
+pub(super) fn stop() {
+    let Some(handle) = HOTKEY_THREAD.lock().unwrap_or_else(PoisonError::into_inner).take() else {
+        return;
+    };
+    let started = Instant::now();
+    while !handle.is_finished() {
+        let window = *HOTKEY_WINDOW.lock().unwrap_or_else(PoisonError::into_inner);
+        if let Some(window) = window {
+            let _ = message_window::post_message(HWND(window as *mut _), WM_QUIT);
+            break;
         }
-    });
+        if started.elapsed() >= READY_WAIT {
+            eprintln!("the translation shortcut thread did not get ready, so it is left to finish on its own");
+            return;
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+    let _ = handle.join();
+}
+
+pub(super) fn running() -> bool {
+    HOTKEY_THREAD.lock().unwrap_or_else(PoisonError::into_inner).as_ref().is_some_and(|handle| !handle.is_finished())
+}
+
+pub(super) fn want(binding: ShortcutBinding) {
+    remember(&WANTED_BINDING, Some(binding));
+}
+
+pub(super) fn want_selection(binding: ShortcutBinding) {
+    remember(&WANTED_SELECTION_BINDING, Some(binding));
 }
 
 pub(super) fn coexist_refresh() {
@@ -93,7 +137,7 @@ fn post_binding(
         if let Some(hwnd) = *HOTKEY_WINDOW.lock().map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))? {
             break hwnd;
         }
-        if started.elapsed() >= Duration::from_secs(2) {
+        if started.elapsed() >= READY_WAIT {
             return Err(UserError::new("shortcut.notReady", "The shortcut service is not ready yet."));
         }
         thread::sleep(Duration::from_millis(25));
@@ -116,23 +160,35 @@ fn post_binding(
 }
 
 fn run_hotkey_loop() -> Result<(), String> {
-    let class_name = "FocuSDTranslationHotkey";
     let instance = message_window::module_instance().map_err(|error| error.to_string())?;
-    if message_window::register_class::<TranslationHotkeyWindow>(instance, class_name).is_err() {
+    if message_window::register_class::<TranslationHotkeyWindow>(instance, CLASS_NAME).is_err() {
         return Err("Could not register the translation shortcut window.".to_string());
     }
-    let hwnd = message_window::create_message_only_window(
-        instance,
-        class_name,
-        "FocuSD Translation Hotkey",
-    )
-    .map_err(|error| error.to_string())?;
-    register_default(hwnd, DEFAULT_SHORTCUT, HOTKEY_ID, &ACTIVE_BINDING, &WANTED_BINDING)?;
-    register_default(hwnd, DEFAULT_SELECTION_SHORTCUT, SELECTION_HOTKEY_ID, &SELECTION_BINDING, &WANTED_SELECTION_BINDING)?;
-    *HOTKEY_WINDOW.lock().map_err(|error| error.to_string())? = Some(hwnd.0 as isize);
+    let hwnd = match message_window::create_message_only_window(instance, CLASS_NAME, "FocuSD Translation Hotkey") {
+        Ok(hwnd) => hwnd,
+        Err(error) => {
+            let _ = message_window::unregister_class(instance, CLASS_NAME);
+            return Err(error.to_string());
+        }
+    };
+    register_default(hwnd, DEFAULT_SHORTCUT, HOTKEY_ID, &ACTIVE_BINDING, &WANTED_BINDING);
+    register_default(hwnd, DEFAULT_SELECTION_SHORTCUT, SELECTION_HOTKEY_ID, &SELECTION_BINDING, &WANTED_SELECTION_BINDING);
+    *HOTKEY_WINDOW.lock().unwrap_or_else(PoisonError::into_inner) = Some(hwnd.0 as isize);
     message_window::run_message_loop();
-    let _ = win32::hotkey::unregister(hwnd, HOTKEY_ID);
-    let _ = win32::hotkey::unregister(hwnd, SELECTION_HOTKEY_ID);
+    *HOTKEY_WINDOW.lock().unwrap_or_else(PoisonError::into_inner) = None;
+    for (id, slot) in [(HOTKEY_ID, &ACTIVE_BINDING), (SELECTION_HOTKEY_ID, &SELECTION_BINDING)] {
+        if slot.lock().unwrap_or_else(PoisonError::into_inner).take().is_some() {
+            let _ = win32::hotkey::unregister(hwnd, id);
+        }
+    }
+    for slot in [&PENDING_BINDING, &PENDING_SELECTION_BINDING] {
+        if let Some((binding, sender)) = slot.lock().unwrap_or_else(PoisonError::into_inner).take() {
+            let label = binding.map(|binding| binding.label).unwrap_or_default();
+            let _ = sender.send(Ok(label));
+        }
+    }
+    let _ = message_window::destroy_window(hwnd);
+    let _ = message_window::unregister_class(instance, CLASS_NAME);
     Ok(())
 }
 
@@ -142,16 +198,16 @@ fn register_default(
     id: i32,
     slot: &Mutex<Option<ShortcutBinding>>,
     wanted_slot: &Mutex<Option<ShortcutBinding>>,
-) -> Result<(), String> {
-    if let Some(binding) = parse_shortcut_binding(shortcut).filter(|_| ENABLED.load(Ordering::SeqCst)) {
+) {
+    let wanted = wanted_slot.lock().unwrap_or_else(PoisonError::into_inner).clone();
+    if let Some(binding) = wanted.or_else(|| parse_shortcut_binding(shortcut)) {
         if crate::coexist::yielding() {
             remember(wanted_slot, Some(binding));
         } else if register_binding(hwnd, id, &binding).is_ok() {
             remember(wanted_slot, Some(binding.clone()));
-            *slot.lock().map_err(|error| error.to_string())? = Some(binding);
+            *slot.lock().unwrap_or_else(PoisonError::into_inner) = Some(binding);
         }
     }
-    Ok(())
 }
 
 fn register_binding(hwnd: HWND, id: i32, binding: &ShortcutBinding) -> Result<(), UserError> {

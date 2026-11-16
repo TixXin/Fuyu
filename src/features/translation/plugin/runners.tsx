@@ -1,6 +1,7 @@
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useTranslationEnabled } from "../useTranslationEnabled";
 import { useTranslationIslandShortcut } from "../useTranslationIslandShortcut";
+import { OWNER } from "./owner.ts";
 
 type RunnerProps = {
   mode: string;
@@ -24,4 +25,4 @@ function TranslationWiring({ mode, page, settings, features, openIslandPage, col
   return null;
 }
 
-runnerSlot.add({ id: "translation.wiring", component: TranslationWiring });
+runnerSlot.add({ id: "translation.wiring", component: TranslationWiring }, OWNER);

@@ -22,6 +22,7 @@ export type ClipboardActionsText = {
   aiHint: string;
   aiService: string;
   aiLoading: string;
+  aiOff: string;
   aiPasteAgain: string;
   aiOwn: string;
   aiOwnHint: string;
@@ -96,6 +97,7 @@ export const zhCN: ClipboardActionsText = {
   aiHint: "按 Enter 把这条发给快捷翻译设置的服务（用它的 Key 和模型），结果出来后再按 Enter 粘贴。",
   aiService: "用快捷翻译的服务",
   aiLoading: "正在请求…",
+  aiOff: "快捷翻译已关闭，打开后才能用 AI 改写。",
   aiPasteAgain: "再按 Enter 粘贴",
   aiOwn: "自己的提示词",
   aiOwnHint: "在 设置 → 剪贴板 → AI 提示词 里添加自己的",
@@ -198,6 +200,7 @@ export const en: ClipboardActionsText = {
   aiHint: "Enter sends this entry to the service set up for quick translation (its key and model); Enter again pastes the answer.",
   aiService: "Uses the quick translation's service",
   aiLoading: "Asking…",
+  aiOff: "Quick translation is off. Turn it on to rewrite with AI.",
   aiPasteAgain: "Enter again pastes",
   aiOwn: "Your prompts",
   aiOwnHint: "Add your own in Settings → Clipboard → AI prompts",

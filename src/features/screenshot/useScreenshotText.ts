@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "../../i18n";
-import { saveTranslationHandoff } from "../translation/storage";
+import { saveTranslationHandoff } from "../../lib/translation-handoff/storage";
 import { listenScreenshotText } from "./api";
 
 const PEEK_MS = 8_000;

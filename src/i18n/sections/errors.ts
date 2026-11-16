@@ -142,6 +142,9 @@ export type ErrorCode =
   | "pluginsV3.builtinUnknown"
   | "pluginsV3.builtinEssential"
   | "pluginsV3.builtinSave"
+  | "pluginsV3.builtinConfigKey"
+  | "pluginsV3.builtinConfigValue"
+  | "pluginsV3.builtinConfigSave"
   | "translation.urlQuery"
   | "translation.modelLong"
   | "translation.noModel"
@@ -384,6 +387,9 @@ export const zhCN: ErrorsText = {
     "pluginsV3.builtinUnknown": ({ id }) => `没有叫 ${id} 的内置插件。`,
     "pluginsV3.builtinEssential": ({ id }) => `${id} 是浮屿必需的，不能关掉。`,
     "pluginsV3.builtinSave": ({ id }) => `没能保存 ${id} 的开关。`,
+    "pluginsV3.builtinConfigKey": ({ id, key }) => `${key} 不能用作 ${id} 的设置名。`,
+    "pluginsV3.builtinConfigValue": ({ id, key }) => `${id} 的设置 ${key} 只能是开关、数字或文字。`,
+    "pluginsV3.builtinConfigSave": ({ id }) => `没能保存 ${id} 的设置。`,
     "translation.urlQuery": "接口地址不能带查询参数。",
     "translation.modelLong": "模型名称过长。",
     "translation.noModel": ({ service }) => `请先在翻译设置中填写${service}的模型名称。`,
@@ -623,6 +629,9 @@ export const en: ErrorsText = {
     "pluginsV3.builtinUnknown": ({ id }) => `There is no built-in plugin ${id}.`,
     "pluginsV3.builtinEssential": ({ id }) => `${id} is essential to Fuyu and cannot be switched off.`,
     "pluginsV3.builtinSave": ({ id }) => `Could not save the switch for ${id}.`,
+    "pluginsV3.builtinConfigKey": ({ id, key }) => `${key} cannot be a setting of ${id}.`,
+    "pluginsV3.builtinConfigValue": ({ id, key }) => `The setting ${key} of ${id} must be on or off, a number or text.`,
+    "pluginsV3.builtinConfigSave": ({ id }) => `Could not save the settings of ${id}.`,
     "translation.urlQuery": "The service address cannot have query parameters.",
     "translation.modelLong": "The model name is too long.",
     "translation.noModel": ({ service }) => `Fill in the model name for ${service} in the translation settings first.`,

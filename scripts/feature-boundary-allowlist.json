@@ -11,8 +11,6 @@
     "src/features/claude-usage/usageRing.ts -> src/features/agent-status/api.ts",
     "src/features/claude-usage/usageRing.ts -> src/features/agent-status/usage.ts",
     "src/features/claude-usage/useClaudeUsage.ts -> src/features/agent-status/api.ts",
-    "src/features/clipboard/ClipboardAiList.tsx -> src/features/translation/api.ts",
-    "src/features/clipboard/ClipboardAiList.tsx -> src/features/translation/storage.ts",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/cc-connect/index.ts",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/center-pattern/index.ts",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/claude-usage/PlanKeyFields.tsx",
@@ -21,7 +19,6 @@
     "src/features/screenshot/useRecording.ts -> src/features/file-shelf/api.ts",
     "src/features/screenshot/useScreenshotNotice.ts -> src/features/agent-status/api.ts",
     "src/features/screenshot/useScreenshotNotice.ts -> src/features/file-shelf/api.ts",
-    "src/features/screenshot/useScreenshotText.ts -> src/features/translation/storage.ts",
     "src/features/session-ring/SessionRing.tsx -> src/features/agent-status/api.ts",
     "src/features/session-ring/ringCounts.ts -> src/features/agent-status/api.ts",
     "src/features/session-ring/ringCounts.ts -> src/features/agent-status/sessionLight.ts",
@@ -30,9 +27,7 @@
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginCard.css",
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginMarketSection.css",
     "src/features/timer/ReminderNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
-    "src/features/timer/TimerNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
-    "src/features/timer/useIslandTimer.ts -> src/features/plugins/useBuiltinPlugin.ts",
-    "src/features/todos/useScheduledTodos.ts -> src/features/timer/index.ts"
+    "src/features/timer/TimerNotice.tsx -> src/features/screenshot/ScreenshotNotice.css"
   ],
   "shared": [
     "src/lib/settings/normalizeBehaviorSettings.ts -> src/features/calendar/calendarSettings.ts",

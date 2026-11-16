@@ -17,10 +17,6 @@ export function hasTranslationSecret(provider: TranslationProvider) {
   return invoke<boolean>("has_translation_secret", { provider });
 }
 
-export function setTranslationEnabled(enabled: boolean) {
-  return invoke("set_translation_enabled", { enabled });
-}
-
 export function setTranslationTarget(island: boolean) {
   return invoke("set_translation_target", { island });
 }

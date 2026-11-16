@@ -17,6 +17,20 @@ export type TimerText = {
   moreUp: (count: number) => string;
   chip: string;
   breaks: BreakText;
+  settings: TimerSettingsText;
+};
+
+export type TimerSettingsText = {
+  title: string;
+  sound: string;
+  soundHint: string;
+  shortcut: string;
+  shortcutHint: string;
+  shortcutOff: string;
+  setShortcut: string;
+  turnOffShortcut: string;
+  shortcutProblem: Record<"invalid" | "taken", string>;
+  shortcutInvalidMac: string;
 };
 
 type BreakIconText = Record<"stand" | "eye" | "water" | "stretch" | "coffee" | "bell", string>;
@@ -89,6 +103,18 @@ export const zhCN: TimerText = {
     skip: "跳过",
     more: (count) => `还有 ${count} 条`,
   },
+  settings: {
+    title: "计时器",
+    sound: "到点响一声",
+    soundHint: "倒计时到点时，除了岛上的提醒再响一声",
+    shortcut: "打开计时器",
+    shortcutHint: "在任何地方按下都会展开岛并打开计时器页，光标落在时长输入框里。",
+    shortcutOff: "未设置",
+    setShortcut: "设置快捷键",
+    turnOffShortcut: "关闭快捷键",
+    shortcutProblem: { invalid: "这个快捷键用不了，换一个带修饰键的组合。", taken: "这个快捷键被别的程序占用了，换一个。" },
+    shortcutInvalidMac: "这个快捷键在 Mac 上用不了，换一个带 Control、Option 或 Command 的组合。",
+  },
 };
 
 export const en: TimerText = {
@@ -136,5 +162,17 @@ export const en: TimerText = {
     snooze: "Remind me in 5 minutes",
     skip: "Skip",
     more: (count) => `${count} more`,
+  },
+  settings: {
+    title: "Timer",
+    sound: "Play a sound when time is up",
+    soundHint: "When a countdown ends, a sound plays as well as the reminder on the island",
+    shortcut: "Open the timer",
+    shortcutHint: "Pressed anywhere, it expands the island on the Timer page with the cursor in the length box.",
+    shortcutOff: "Not set",
+    setShortcut: "Set shortcut",
+    turnOffShortcut: "Turn off the shortcut",
+    shortcutProblem: { invalid: "This shortcut cannot be used; pick one with a modifier key.", taken: "Another app is using this shortcut; pick another." },
+    shortcutInvalidMac: "This shortcut cannot be used on a Mac; pick one with Control, Option or Command.",
   },
 };

@@ -48,16 +48,16 @@ test("the switch list from Rust is checked before the window uses it", () => {
   assert.equal(normalizeBuiltinPlugins(null), null);
   assert.equal(normalizeBuiltinPlugins({}), null);
   const plugins = normalizeBuiltinPlugins([
-    { id: "timer", kind: "builtin", enabled: false, background: [{ name: "ticker", registered: true, running: false }, { bad: 1 }] },
-    { id: "updater", kind: "essential", enabled: true },
+    { id: "timer", kind: "builtin", enabled: false, background: [{ name: "ticker", registered: true, running: false }, { bad: 1 }], config: { sound: false } },
+    { id: "updater", kind: "essential", enabled: true, config: [1] },
     { id: 3, enabled: true },
     null,
     { id: "odd", kind: "weird", enabled: true, background: "no" },
   ]);
   assert.deepEqual(plugins, [
-    { id: "timer", kind: "builtin", enabled: false, background: [{ name: "ticker", registered: true, running: false }] },
-    { id: "updater", kind: "essential", enabled: true, background: [] },
-    { id: "odd", kind: "builtin", enabled: true, background: [] },
+    { id: "timer", kind: "builtin", enabled: false, background: [{ name: "ticker", registered: true, running: false }], config: { sound: false } },
+    { id: "updater", kind: "essential", enabled: true, background: [], config: {} },
+    { id: "odd", kind: "builtin", enabled: true, background: [], config: {} },
   ]);
   assert.deepEqual(disabledBuiltinIds(plugins), ["timer"]);
   assert.deepEqual(disabledBuiltinIds(null), []);

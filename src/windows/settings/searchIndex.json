@@ -413,6 +413,19 @@
     {
       "page": "behaviorAlerts",
       "zh-CN": {
+        "group": "计时器",
+        "title": "到点响一声",
+        "description": "倒计时到点时，除了岛上的提醒再响一声"
+      },
+      "en": {
+        "group": "Timer",
+        "title": "Play a sound when time is up",
+        "description": "When a countdown ends, a sound plays as well as the reminder on the island"
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
         "group": "休息提醒",
         "title": "休息提醒",
         "description": "按间隔在岛上提醒起身、远眺。锁屏或离开 5 分钟以上时不计时，全屏时等退出再提醒"

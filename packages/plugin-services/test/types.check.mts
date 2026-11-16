@@ -1,4 +1,4 @@
-import { RUST_METHODS, defineService, timersV1, translatorV1, type PlatformSupport, type RustMethods, type ServiceClient, type ServiceImpl, type ServiceProvider, type Timer } from "@fuyu/plugin-services";
+import { RUST_METHODS, defineService, remindersV1, timersV1, translatorV1, type PlatformSupport, type RustMethods, type ServiceClient, type ServiceImpl, type ServiceProvider, type Timer } from "@fuyu/plugin-services";
 
 declare const timers: ServiceClient<typeof timersV1>;
 const listed: Promise<{ timers: Timer[]; at: number }> = timers.list();
@@ -12,6 +12,11 @@ void timers.pause();
 void timers.on("due", (data) => data.timer.id.length);
 // @ts-expect-error the service declares no such event
 void timers.on("tick", () => {});
+
+declare const reminders: ServiceClient<typeof remindersV1>;
+void reminders.push({ id: "due-1", source: "todos.due", icon: "flag", title: "Due today", detail: "Ship it" }).then((result) => result.shown);
+// @ts-expect-error a reminder needs an icon the island knows
+void reminders.push({ id: "x", source: "y", icon: "rocket", title: "z" });
 
 declare const translator: ServiceClient<typeof translatorV1>;
 void translator.rewrite({ text: "hi", task: "polish" }, { onProgress: (chunk) => chunk.piece.length });

@@ -1,4 +1,4 @@
-import { getBuiltinPlugins, onBuiltinPluginsChanged, setBuiltinPluginEnabled, type BuiltinPlugin } from "./api.ts";
+import { getBuiltinPlugins, onBuiltinPluginsChanged, setBuiltinPluginConfig, setBuiltinPluginEnabled, type BuiltinConfigValue, type BuiltinPlugin } from "./api.ts";
 
 type Listener = (plugins: readonly BuiltinPlugin[] | null) => void;
 
@@ -12,7 +12,7 @@ export function normalizeBuiltinPlugins(value: unknown): BuiltinPlugin[] | null 
   const plugins: BuiltinPlugin[] = [];
   for (const item of value as unknown[]) {
     if (typeof item !== "object" || item === null) continue;
-    const { id, kind, enabled, background } = item as Record<string, unknown>;
+    const { id, kind, enabled, background, config } = item as Record<string, unknown>;
     if (typeof id !== "string" || typeof enabled !== "boolean") continue;
     plugins.push({
       id,
@@ -24,6 +24,7 @@ export function normalizeBuiltinPlugins(value: unknown): BuiltinPlugin[] | null 
             return typeof name === "string" ? [{ name, registered: registered === true, running: running === true }] : [];
           })
         : [],
+      config: typeof config === "object" && config !== null && !Array.isArray(config) ? { ...(config as Record<string, unknown>) } : {},
     });
   }
   return plugins;
@@ -67,4 +68,8 @@ export function subscribeBuiltinPlugins(listener: Listener): () => void {
 
 export async function switchBuiltinPlugin(id: string, enabled: boolean): Promise<void> {
   publish(await setBuiltinPluginEnabled(id, enabled));
+}
+
+export async function setBuiltinConfig(id: string, key: string, value: BuiltinConfigValue | null): Promise<void> {
+  publish(await setBuiltinPluginConfig(id, key, value));
 }
