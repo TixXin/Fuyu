@@ -169,6 +169,7 @@
 
 - E36.3.51 不挡三个样板。
 - **E36.3.51 的方案（2026-11-16 组长批）**：见 [island-shell-contributions.md](../../investigations/island-shell-contributions.md)。功能在 runner 里跑 hook、写自己的 store，外壳只读 plugin-kernel 里的贡献表；新插槽 `island.line/v1`、`island.side/v1`、`island.overlay/v1`、`island.decor/v1`。功能之间的数据先暂记进功能边界白名单（约 8 条，这是「只减不增」的一次例外），由 E36.3.36、E36.3.37、E36.3.38 的服务去掉，三个任务的验收已写上。第 2 版插件系统（`plugins`、`plugin-views`）的 import 留在 `island` 白名单里算清零，第 6 阶段随第 2 版删。它第 5 步每做完一个功能就告诉组长，那个功能的迁移任务（E36.3.31、.33、.37、.38、.44）就能开工，不用等整个 E36.3.51；file-shelf 那两个 hook 等 E36.3.32 提交后由 E36.3.51 挪。
+- **E36.3.22 做完（2026-11-16）**：`fuyu-plugin://` 只放行 `__shared/`、`packages/**` 和宿主经协议 2 通知 `clients` 报上来的界面目录，`data/`、`plugins.yml*`、状态文件一律 404。`Access-Control-Allow-Origin: *` 这次不收窄（评估在归档后的 E36.3.22 备注里）：自定义协议只在浮屿自己的 WebView 里用，收窄的收益小，写错源字符串所有插件界面都会挂，只能真机验。留到做 `dev/<id>/`、`builtin/<id>/` 映射或第 5 阶段之前一起收窄，两个系统实测。
 - 第 2 批里在外壳布局里有份的功能要等它：E36.3.31、E36.3.33、E36.3.37、E36.3.38、E36.3.44；E36.3.39 经 E36.3.37 间接等它。
 - 功能边界测试把 `src/features/plugin-kernel` 当平台层放行，和 `lib` 一样。
 

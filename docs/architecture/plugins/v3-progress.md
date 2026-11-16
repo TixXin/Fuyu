@@ -169,6 +169,8 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 3 | E36.3.29：同上前四项（快捷键是 ⌃⇧F、⌃⌥T）；重建的翻译窗口仍是不抢焦点的面板，全屏应用里也能弹出，反复开关十次不崩；翻译关着时，截图里点「翻译」没反应、不报错 | macOS | | |
 | 3 | E36.3.30：插件页关掉日历后，日历按钮和日历页、设置里的日历分类、收起态的倒计时都不见，打开后都回来；旧版里关了日历的，升级后仍是关的；设 `FUYU_PLUGINS_V3=1` 时 `calendar/v1` 返回的日程和日历页一致，来源里没有账号和链接，关掉日历时回 not-ready | Windows | | |
 | 3 | E36.3.30：同上，另看关掉再打开日历后节假日的「休 / 班」标记仍在 | macOS | | |
+| 3 | E36.3.22：`install-demo` 后开开发版，hello 演示照常出现；岛的开发者工具里 `fetch('http://fuyu-plugin.localhost/plugins.yml')`、`/data/…`、`/safe-mode.json` 都是 404，`/hello/island.js` 是 200；宿主重启后演示插件的界面照常加载 | Windows | | |
+| 3 | 同上，地址换成 `fuyu-plugin://localhost/…` | macOS | | |
 
 ## 等你定的事
 
