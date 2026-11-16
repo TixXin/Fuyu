@@ -8,6 +8,8 @@ mod follow;
 #[cfg(any(windows, target_os = "macos"))]
 #[cfg_attr(target_os = "macos", path = "follow_point_macos.rs")]
 mod follow_point;
+#[cfg_attr(target_os = "macos", path = "drag_follow_macos.rs")]
+mod drag_follow;
 mod drag_hint;
 mod edge;
 mod geometry;
@@ -240,19 +242,23 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
     }
 
     focus::set_click_activation(&window, true);
-    if let Err(error) = window.start_dragging() {
-        mutate_window_state(|state| {
-            state.is_dragging = false;
-            state.custom_position = current_state.custom_position;
-            *state
-        });
-        focus::set_click_activation(&window, matches!(current_state.mode, IslandMode::Expanded));
-        return Err(error.to_string());
-    }
+    let mut follow = match drag_follow::DragFollow::start(&window) {
+        Ok(follow) => follow,
+        Err(error) => {
+            mutate_window_state(|state| {
+                state.is_dragging = false;
+                state.custom_position = current_state.custom_position;
+                *state
+            });
+            focus::set_click_activation(&window, matches!(current_state.mode, IslandMode::Expanded));
+            return Err(error);
+        }
+    };
 
     thread::spawn(move || {
         let mut hints = drag_hint::DragHints::new();
         while left_button_down() {
+            follow.poll(&window);
             hints.poll(&window);
             thread::sleep(Duration::from_millis(8));
         }
