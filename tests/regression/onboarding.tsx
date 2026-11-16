@@ -118,8 +118,14 @@ if (!automated) {
 
     await press("下一步");
     check(title() === "把它捏成你喜欢的样子", "Act 2 shapes the island");
-    check(!button("圆角") && !document.querySelector("input[type='range']") && document.querySelectorAll(".onboarding__body .settings-row").length === 2,
-      "Act 2 only asks for dark or light and the accent; corners and motion are left to Settings");
+    check(!button("圆角") && !document.querySelector("input[type='range']") && document.querySelectorAll(".onboarding__body .settings-row").length === 3,
+      "Act 2 only asks for dark or light, solid or liquid glass, and the accent; corners and motion are left to Settings");
+    check(stored().appearanceMode !== "liquidGlass" && !document.body.textContent?.includes("透出桌面壁纸"), "The island starts solid and the glass note stays hidden");
+    await press("液态玻璃");
+    check(stored().appearanceMode === "liquidGlass" && document.body.textContent?.includes("「设置 → 外观 → 样式」") && document.body.textContent?.includes("纯色玻璃"),
+      "Picking liquid glass saves it for the real island and says where to tune it and when it stays solid");
+    await press("纯色");
+    check(stored().appearanceMode === "classic", "Going back to solid saves it for the real island");
     await press("浅色");
     check(stored().themeMode === "light" && document.querySelector(".onboarding--light"), "Picking light saves it for the real island and turns the card light");
 

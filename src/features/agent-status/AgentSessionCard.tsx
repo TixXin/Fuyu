@@ -25,6 +25,7 @@ export function AgentSessionCard({
   notFound,
   cardReply,
   effects = "off",
+  subagentsListed = false,
   onOpen,
 }: {
   session: AgentSessionSummary;
@@ -39,6 +40,7 @@ export function AgentSessionCard({
   notFound: string | null;
   cardReply: string | null;
   effects?: AgentCardEffects;
+  subagentsListed?: boolean;
   onOpen: () => void;
 }) {
   const t = useTranslation();
@@ -66,7 +68,7 @@ export function AgentSessionCard({
   ) : null;
   const status = [
     <span key="state" className="agent-card__state">{state}</span>,
-    active && session.subagents ? <span key="subagents" className="agent-card__fixed">{text.subagents(session.subagents)}</span> : null,
+    active && session.subagents && !subagentsListed ? <span key="subagents" className="agent-card__fixed">{text.subagents(session.subagents)}</span> : null,
     session.todos ? (
       <span key="todos" className="agent-card__fixed" title={session.todos.current ? text.todosCurrent(session.todos.current) : undefined}>
         {text.todos(session.todos.done, session.todos.total)}
