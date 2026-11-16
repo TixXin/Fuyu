@@ -13,11 +13,11 @@ impl DragFollow {
         Ok(Self { grab: grab_offset(cursor, position), last: position })
     }
 
-    pub(super) fn poll(&mut self, window: &WebviewWindow) {
+    pub(super) fn poll(&mut self, window: &WebviewWindow, align: impl Fn(PhysicalPosition<i32>) -> PhysicalPosition<i32>) {
         let Some(cursor) = screen::cursor_position() else {
             return;
         };
-        let next = follow_cursor(cursor, self.grab);
+        let next = align(follow_cursor(cursor, self.grab));
         if next != self.last && screen::set_window_position(window, next).is_ok() {
             self.last = next;
         }

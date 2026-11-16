@@ -14,6 +14,9 @@ export type SettingsLayoutText = {
   formHint: string;
   formHintMac: string;
   formOffTopHint: string;
+  dragTitle: string;
+  dragGrid: string;
+  dragGridHint: string;
   opacity: string;
   marginY: string;
   topFilletRadius: string;
@@ -75,6 +78,9 @@ export const zhCN: SettingsLayoutText = {
   formHint: "药丸离顶 10px，带投影；刘海是顶部正中 240×32 的黑色刘海，折叠时两边放图标。",
   formHintMac: "药丸从菜单栏下沿离开 10px；刘海在有刘海的屏幕上贴合刘海。有刘海时选贴顶或药丸，岛会让到菜单栏下面。",
   formOffTopHint: "吸在底边或侧边时不生效，回到顶边后照这里的形态。",
+  dragTitle: "拖动",
+  dragGrid: "拖动时显示九宫格辅助线",
+  dragGridHint: "拖岛时在当前屏幕上画出三等分虚线。贴着上下左右四条边的正中时会轻轻吸住，方便居中放下，这一点不受开关影响。",
   opacity: "不透明度",
   marginY: "顶部距离",
   topFilletRadius: "贴边圆角",
@@ -140,6 +146,9 @@ export const en: SettingsLayoutText = {
   formHint: "The pill floats 10px below the top with a shadow; the notch is a 240×32 black notch at the top centre with icons on both sides when collapsed.",
   formHintMac: "The pill floats 10px below the menu bar; the notch hugs the camera notch on screens that have one. On a notched screen, Top and Pill move below the menu bar.",
   formOffTopHint: "Has no effect while the island is docked to the bottom or a side; it applies again once back at the top.",
+  dragTitle: "Dragging",
+  dragGrid: "Show a 3×3 grid while dragging",
+  dragGridHint: "Draws dashed lines in thirds across the current screen while you drag the island. Near the middle of any screen edge the island gently snaps to centre; that works with the grid off too.",
   opacity: "Opacity",
   marginY: "Top margin",
   topFilletRadius: "Docked corner radius",

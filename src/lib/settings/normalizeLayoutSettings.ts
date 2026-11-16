@@ -71,6 +71,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
     collapsedWidthExtra: typeof settings?.collapsedWidthExtra === "number" && Number.isFinite(settings.collapsedWidthExtra)
       ? clamp(Math.round(settings.collapsedWidthExtra), MIN_COLLAPSED_WIDTH_EXTRA, MAX_COLLAPSED_WIDTH_EXTRA)
       : DEFAULT_SETTINGS.collapsedWidthExtra,
+    dragGrid: typeof settings?.dragGrid === "boolean" ? settings.dragGrid : DEFAULT_SETTINGS.dragGrid,
     taskTextColor,
     pulseColor: getColorSetting(
       settings?.pulseColor,

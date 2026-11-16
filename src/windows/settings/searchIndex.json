@@ -426,19 +426,6 @@
     {
       "page": "behaviorAlerts",
       "zh-CN": {
-        "group": "计时器",
-        "title": "到点响一声",
-        "description": "倒计时到点时，除了岛上的提醒再响一声"
-      },
-      "en": {
-        "group": "Timer",
-        "title": "Play a sound when time is up",
-        "description": "When a countdown ends, a sound plays as well as the reminder on the island"
-      }
-    },
-    {
-      "page": "behaviorAlerts",
-      "zh-CN": {
         "group": "休息提醒",
         "title": "休息提醒",
         "description": "按间隔在岛上提醒起身、远眺。锁屏或离开 5 分钟以上时不计时，全屏时等退出再提醒"
@@ -447,6 +434,19 @@
         "group": "Break reminders",
         "title": "Break reminders",
         "description": "Reminds you on the island to get up or look away. Doesn't count while the screen is locked or you've been away 5+ minutes, and waits until you leave full screen"
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "计时器",
+        "title": "到点响一声",
+        "description": "倒计时到点时，除了岛上的提醒再响一声"
+      },
+      "en": {
+        "group": "Timer",
+        "title": "Play a sound when time is up",
+        "description": "When a countdown ends, a sound plays as well as the reminder on the island"
       }
     },
     {
@@ -985,6 +985,19 @@
       "en": {
         "group": "Open panel",
         "title": "Panel height"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "拖动",
+        "title": "拖动时显示九宫格辅助线",
+        "description": "拖岛时在当前屏幕上画出三等分虚线。贴着上下左右四条边的正中时会轻轻吸住，方便居中放下，这一点不受开关影响。"
+      },
+      "en": {
+        "group": "Dragging",
+        "title": "Show a 3×3 grid while dragging",
+        "description": "Draws dashed lines in thirds across the current screen while you drag the island. Near the middle of any screen edge the island gently snaps to centre; that works with the grid off too."
       }
     },
     {

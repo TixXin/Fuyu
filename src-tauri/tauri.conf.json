@@ -123,6 +123,25 @@
         "skipTaskbar": true,
         "acceptFirstMouse": true,
         "visible": false
+      },
+      {
+        "label": "drag-grid",
+        "create": false,
+        "title": "Fuyu",
+        "url": "index.html?window=drag-grid",
+        "width": 800,
+        "height": 600,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focus": false,
+        "focusable": false,
+        "visible": false
       }
     ],
     "security": {

@@ -1,4 +1,4 @@
-use tauri::WebviewWindow;
+use tauri::{PhysicalPosition, WebviewWindow};
 
 pub(super) struct DragFollow;
 
@@ -8,5 +8,5 @@ impl DragFollow {
         Ok(Self)
     }
 
-    pub(super) fn poll(&mut self, _window: &WebviewWindow) {}
+    pub(super) fn poll(&mut self, _window: &WebviewWindow, _align: impl Fn(PhysicalPosition<i32>) -> PhysicalPosition<i32>) {}
 }

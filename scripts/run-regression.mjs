@@ -23,6 +23,7 @@ export const PAGES = [
   "collapsed-message-animation.html?test=1",
   "collapsed-slots.html?test=1",
   "dev-build.html",
+  "drag-grid.html?test=1",
   "notch-island.html?test=1",
   "island-forms.html?test=1",
   "bottom-island.html?test=1",

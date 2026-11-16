@@ -2,6 +2,7 @@ import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
+import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../../i18n";
 import { isMacOS } from "../../../lib/platform";
 import { DEFAULT_SETTINGS, MAX_COLLAPSED_WIDTH_EXTRA, MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_PANEL_WIDTH, MAX_TOP_FILLET_RADIUS, MIN_COLLAPSED_WIDTH_EXTRA, MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_PANEL_WIDTH, MIN_TOP_FILLET_RADIUS } from "../../../lib/settings/settings";
@@ -94,6 +95,14 @@ export function SizeSettingsSection(props: LayoutSectionProps) {
           defaultValue={DEFAULT_SETTINGS.maxPanelHeight}
           resetLabel={text.resetToDefault}
           onChange={(maxPanelHeight) => change({ ...settings, maxPanelHeight }, true)}
+        />
+      </SettingsGroup>
+      <SettingsGroup title={text.dragTitle}>
+        <SettingsToggleRow
+          title={text.dragGrid}
+          description={text.dragGridHint}
+          checked={settings.dragGrid}
+          onChange={(dragGrid) => change({ ...settings, dragGrid })}
         />
       </SettingsGroup>
       </>

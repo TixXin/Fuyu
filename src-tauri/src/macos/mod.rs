@@ -9,6 +9,7 @@ pub(crate) mod camera;
 pub(crate) mod capture_targets;
 pub(crate) mod desktop;
 pub(crate) mod dock_badges;
+pub(crate) mod drag_grid;
 pub(crate) mod fullscreen;
 pub(crate) mod hotkeys;
 pub(crate) mod icon;

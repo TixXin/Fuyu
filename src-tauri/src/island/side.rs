@@ -109,6 +109,7 @@ pub(super) fn full_rect(monitor: &Monitor) -> Rect {
 }
 
 pub(super) fn snap_after_drag(window: &WebviewWindow, position: IslandPosition, state: IslandWindowState) -> IslandPosition {
+    let position = super::drag_grid::align_on_drop(window, position, state);
     if matches!(state.mode, IslandMode::Collapsed) {
         if let Some(snapped) = snap_to_side(window, position, state) {
             return snapped;
