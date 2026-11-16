@@ -80,7 +80,8 @@ test("variables and class names follow the settings", () => {
   assert.equal(vars["--glass-c2"], "#000002");
   assert.equal(vars["--glass-flow-duration"], "11.50s");
   assert.equal(vars["--glass-blob-scale"], "0.6");
-  assert.equal(vars["--glass-color-strength"], "0.7");
+  assert.equal(vars["--glass-color-strength"], "0.3");
+  assert.equal(vars["--glass-blur"], "24px");
   const names = glassClassNames({ ...DEFAULT_GLASS_SETTINGS, glassRim: true }, true).split(" ");
   assert.deepEqual(names.sort(), [
     "island--glass-morph-smooth",

@@ -10,6 +10,7 @@ import { useTranslation } from "../../../i18n";
 import { GLASS_STYLE_PRESETS, glassPalette } from "../../../lib/theme/glassPalette";
 import {
   DEFAULT_GLASS_SETTINGS,
+  GLASS_BACKDROPS,
   GLASS_COLOR_SOURCES,
   GLASS_FLOW_WHEN,
   GLASS_MORPHS,
@@ -75,6 +76,58 @@ export function GlassSettingsSection({
         resetLabel={resetLabel}
         onChange={(glassIntensity) => set({ glassIntensity })}
       />
+      <SettingsRow
+        title={text.backdrop}
+        description={settings.glassBackdrop === "wallpaper" ? text.backdropHint : undefined}
+        control={
+          <SettingsChoice
+            value={settings.glassBackdrop}
+            options={GLASS_BACKDROPS.map((value) => ({ value, label: text.backdrops[value] }))}
+            ariaLabel={text.backdrop}
+            onChange={(glassBackdrop) => set(glassBackdrop === "wallpaper" ? { glassBackdrop, glassIntensity: Math.min(settings.glassIntensity, 40) } : { glassBackdrop })}
+          />
+        }
+      />
+      {settings.glassBackdrop === "wallpaper" && (
+        <>
+          <SettingsSliderRow
+            title={text.blur}
+            value={settings.glassBlur}
+            min={0}
+            max={60}
+            step={1}
+            format={(value) => `${value} px`}
+            defaultValue={DEFAULT_GLASS_SETTINGS.glassBlur}
+            resetLabel={resetLabel}
+            indent
+            onChange={(glassBlur) => set({ glassBlur })}
+          />
+          <SettingsSliderRow
+            title={text.saturation}
+            value={settings.glassSaturation}
+            min={100}
+            max={250}
+            step={5}
+            format={percent}
+            defaultValue={DEFAULT_GLASS_SETTINGS.glassSaturation}
+            resetLabel={resetLabel}
+            indent
+            onChange={(glassSaturation) => set({ glassSaturation })}
+          />
+          <SettingsSliderRow
+            title={text.noise}
+            value={settings.glassNoise}
+            min={0}
+            max={12}
+            step={1}
+            format={percent}
+            defaultValue={DEFAULT_GLASS_SETTINGS.glassNoise}
+            resetLabel={resetLabel}
+            indent
+            onChange={(glassNoise) => set({ glassNoise })}
+          />
+        </>
+      )}
       <SettingsRow
         title={text.colorSource}
         description={settings.glassColorSource === "cover" ? text.coverHint : undefined}

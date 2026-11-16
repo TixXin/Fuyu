@@ -100,7 +100,7 @@ export function glassPalette({ settings, accent, cover, background, backgroundLu
 }
 
 export function glassVariables(
-  settings: Pick<GlassSettingValues, "glassColorStrength" | "glassFlowSpeed" | "glassBlobScale" | "glassRimWidth">,
+  settings: Pick<GlassSettingValues, "glassColorStrength" | "glassFlowSpeed" | "glassBlobScale" | "glassRimWidth" | "glassBlur" | "glassSaturation" | "glassNoise">,
   palette: GlassPalette,
 ): Record<string, string> {
   const speed = Math.max(settings.glassFlowSpeed, 1) / 100;
@@ -112,6 +112,9 @@ export function glassVariables(
     "--glass-flow-duration": `${(BASE_FLOW_SECONDS / speed).toFixed(2)}s`,
     "--glass-blob-scale": String(settings.glassBlobScale / 100),
     "--glass-rim-width": `${settings.glassRimWidth}px`,
+    "--glass-blur": `${settings.glassBlur}px`,
+    "--glass-saturation": String(settings.glassSaturation / 100),
+    "--glass-noise": String(settings.glassNoise / 100),
   };
 }
 

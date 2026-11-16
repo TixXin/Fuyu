@@ -1,8 +1,9 @@
 import { act, StrictMode, useState, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
-import { mockIPC } from "@tauri-apps/api/mocks";
+import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
+import "../../src/windows/island/IslandTopEdge.css";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useIslandGlass } from "../../src/windows/island/useIslandGlass";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults";
@@ -16,16 +17,27 @@ import { useFixtureLines } from "./islandLines";
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
+const whiteWallpaper = (() => {
+  const canvas = Object.assign(document.createElement("canvas"), { width: 32, height: 18 });
+  const context = canvas.getContext("2d")!;
+  context.fillStyle = "white";
+  context.fillRect(0, 0, 32, 18);
+  return canvas.toDataURL("image/png");
+})();
+let demoWallpaper: string | null = null;
 mockIPC((command) => {
   if (command === "list_plugin_views") return { views: [], status: [] };
+  if (command === "get_wallpapers") return { fit: "fill", color: "#000000", monitors: [{ x: 0, y: 0, width: demoWallpaper ? innerWidth * devicePixelRatio : 3840, height: demoWallpaper ? innerHeight * devicePixelRatio : 2160, image: demoWallpaper ?? whiteWallpaper }] };
+  if (command === "plugin:window|inner_position") return { x: 0, y: 0 };
   if (command === "get_qq_mail_state") return [];
 }, { shouldMockEvents: true });
+mockWindows("main");
 
 type State = { expanded: boolean; tucked: boolean; quiet: boolean; settings: Partial<IslandSettings> };
 const changes: ((next: Partial<State>) => void)[] = [];
 
 function GlassIsland({ background, light }: { background: string; light: boolean }) {
-  const [state, setState] = useState<State>({ expanded: false, tucked: false, quiet: false, settings: {} });
+  const [state, setState] = useState<State>({ expanded: false, tucked: false, quiet: false, settings: { glassBackdrop: "none" } });
   changes.push((next) => setState((current) => ({ ...current, ...next })));
   const settings: IslandSettings = { ...DEFAULT_SETTINGS, appearanceMode: "liquidGlass", islandBackgroundColor: background, ...state.settings };
   const mode = state.expanded ? "expanded" : "collapsed";
@@ -36,7 +48,7 @@ function GlassIsland({ background, light }: { background: string; light: boolean
   const stageStyle = {
     "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1,
     "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8,
-    "--glass-intensity": 0.72, "--glass-tint-color": background, "--glass-collapsed-tint-color": background,
+    "--glass-intensity": settings.glassIntensity / 100, "--island-background-color": background, "--glass-tint-color": background, "--glass-collapsed-tint-color": background,
     ...(light ? { "--island-ink-rgb": "24, 24, 30", "--task-text-color": "#1c1c1f" } : {}),
     ...glassStyle,
   } as CSSProperties;
@@ -120,6 +132,20 @@ async function runChecks() {
     await set({ settings: { glassStyle: "static" } });
     check(islands().every((island) => playState(island) === "paused"), "静态风格不动");
 
+    await set({ settings: { glassBackdrop: "wallpaper", glassBlur: 20, glassSaturation: 150 } });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 500)); });
+    for (const island of islands()) {
+      const tone = island.closest<HTMLElement>(".stage")!.dataset.tone;
+      check(island.style.getPropertyValue("--glass-wallpaper").startsWith('url("data:image/jpeg'), `${tone}：选了壁纸后岛的底子换成磨砂过的壁纸`);
+      check(getComputedStyle(island).backgroundImage.includes("data:image/jpeg"), `${tone}：岛本体（含贴顶圆角继承的背景）画出壁纸`);
+      check(island.querySelector(".island__glass-noise"), `${tone}：加了噪点层`);
+      check(getComputedStyle(island, "::before").backgroundImage.includes("data:image/jpeg"), `${tone}：贴顶圆角继承同一块磨砂壁纸`);
+      const boost = Number(island.style.getPropertyValue("--glass-backdrop-boost"));
+      check(tone === "dark" ? boost > 0 : boost === 0, `${tone}：白壁纸上${tone === "dark" ? "加深" : "不加深"}底色（${boost}）`);
+    }
+    await set({ settings: { glassStyle: "static", glassBackdrop: "none" } });
+    check(islands().every((island) => !("glassWallpaper" in island.dataset) && !island.style.getPropertyValue("--glass-wallpaper")), "关掉后退回纯色玻璃");
+
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {
@@ -138,5 +164,8 @@ await act(async () => {
 if (automated) await runChecks();
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
-  results.textContent = "演示：深色和浅色的液态玻璃岛。加 ?test=1 运行检查。";
+  results.textContent = "演示：深色和浅色的液态玻璃岛，右边选壁纸、调参数。加 ?test=1 运行检查。";
+  const { mountPlayground } = await import("./glassPlayground");
+  mountPlayground({ apply: (settings) => changes.forEach((change) => change({ settings })), setWallpaper: (url) => { demoWallpaper = url; } });
+  if (new URLSearchParams(location.search).has("expanded")) changes.forEach((change) => change({ expanded: true }));
 }
