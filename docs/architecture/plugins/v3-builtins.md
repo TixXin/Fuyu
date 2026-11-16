@@ -68,6 +68,18 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 - 窗口用 `get_builtin_plugins` 读、听 `builtin-plugins-changed`（`features/plugin-kernel/builtinSwitches.ts`、`useBuiltinPlugins.ts`）；岛和设置窗口的插槽注册表按它调 `setDisabledOwners`，关掉的插件拥有的项不出现。设置 → 插件（第 3 版）列出全部内置插件、能开关；这一页在开发版里总会出现，正式版要设 `FUYU_PLUGINS_V3=1`。
 - 通用测试：Rust 的 `builtins_tests.rs` 按清单逐个关、逐个开，核对登记的后台都停了、又起来了；`tests/unit/builtin-switches.test.mjs` 用 Rust 写的格式让宿主逐个关掉计时器和翻译再打开。
 
+### 旧开关（`fuyu-settings` 里的字段，E36.3.29）
+
+第 1 版用 `fuyu-settings` 的布尔字段当功能开关（翻译的 `translationEnabled`），备份、同步、概览卡片都读它。开关迁进 `plugins.yml` 后，这些字段留作镜像，到 E36.3.50 收口时去掉：
+
+- 每个功能任务只在 `features/plugin-kernel/legacySwitches.ts` 的 `LEGACY_SWITCHES` 加一行（字段名 → 插件 id），别的不用改。
+- 岛、设置窗口、引导页都用 `useLegacySwitches(...)` 包一层：读的时候字段换成开关表的值（开关表还没到时用存的值）；写字段时换成 `set_builtin_plugin_enabled`。
+- 只有岛做对账（`reconcile`，纯函数）：
+  - 第一次见到某个字段时，存的是关、开关是开，就把插件关掉（升级前关了的升级后还是关的）；然后记进 `fuyu-legacy-switches`，以后不再迁。
+  - 以后存的值变了（恢复备份、同步、别的窗口写的）而和开关不同，就照存的值开关插件；没变则把开关的值镜像进存的设置。
+  - 只在两边不同时才写，写一次之后再看就一致了，不会来回打架（`tests/unit/legacy-switches.test.mjs` 逐条核对：启动时旧值是关的、恢复备份、两个窗口同时改、开关表还没到、不循环）。
+- 各自存储里的开关（剪贴板、语音、QQ、微信）和第 2 版 `plugins.json` 的启用状态不走这张表，各任务自己在 Rust 里一次性迁移。
+
 ## 关掉后不留界面、不跑后台：三层检查（E36.3.27）
 
 计划「关键设计」第 6 条。每迁完一个功能，这三层都要过；新功能迁完不用另写检查，清单里有它就会被查到。

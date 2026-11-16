@@ -37,3 +37,34 @@ test("a stored value changed while running (restore, sync, another window) wins 
   const flipped = reconcile({ translationEnabled: true }, list(false), seen, done);
   assert.deepEqual([flipped.switch, flipped.mirror], [[], { translationEnabled: false }]);
 });
+
+test("before the switch table arrives nothing is switched, mirrored or marked moved", () => {
+  const result = reconcile({ translationEnabled: false }, [], null, fresh);
+  assert.deepEqual([result.switch, result.mirror, result.migrated], [[], {}, []]);
+});
+
+test("a mirror or a switch settles after one more look, so the two sides never fight", () => {
+  let settings = { translationEnabled: true };
+  let enabled = false;
+  let seen = null;
+  const writes = [];
+  for (let round = 0; round < 4; round += 1) {
+    const result = reconcile(settings, list(enabled), seen, done);
+    seen = result.seen;
+    for (const [, on] of result.switch) { enabled = on; writes.push(`switch ${on}`); }
+    if (Object.keys(result.mirror).length) { settings = { ...settings, ...result.mirror }; writes.push(`mirror ${settings.translationEnabled}`); }
+  }
+  assert.deepEqual(writes, ["mirror false"]);
+  assert.deepEqual([settings.translationEnabled, enabled], [false, false]);
+});
+
+test("the settings window flips the switch and the island, seeing the stored value change, agrees without writing back", () => {
+  let seen = reconcile({ translationEnabled: true }, list(true), null, done).seen;
+  const changes = switchChanges({ translationEnabled: true }, { translationEnabled: false });
+  assert.deepEqual(changes, [["translation", false]]);
+  const beforeSwitch = reconcile({ translationEnabled: false }, list(true), seen, done);
+  assert.deepEqual(beforeSwitch.switch, [["translation", false]]);
+  seen = beforeSwitch.seen;
+  const afterSwitch = reconcile({ translationEnabled: false }, list(false), seen, done);
+  assert.deepEqual([afterSwitch.switch, afterSwitch.mirror], [[], {}]);
+});
