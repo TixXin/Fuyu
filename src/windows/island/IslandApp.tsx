@@ -7,11 +7,7 @@ import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
 import { takeIslandClickFocus } from "./api";
 import { islandHost } from "./islandHost";
-import { useScreenshotText } from "../../features/screenshot/useScreenshotText";
-import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
-import { useScreenshotNotice } from "../../features/screenshot/useScreenshotNotice";
 import { useClipboardCopyCard } from "../../features/clipboard/useClipboardCopyCard";
-import { useRecording } from "../../features/screenshot/useRecording";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
@@ -33,7 +29,6 @@ import { usePluginKeybindings } from "./usePluginKeybindings";
 import { useIslandTucking } from "./useIslandTucking";
 import { useTuckHold } from "./useTuckHold";
 import { useIslandShelf } from "./useIslandShelf";
-import { useIslandScreenshot } from "./useIslandScreenshot";
 import { useIslandHover } from "./useIslandHover";
 import { usePluginPages } from "./usePluginPages";
 import { useMessageView } from "./useMessageView";
@@ -112,12 +107,7 @@ export function IslandApp() {
   useBackgroundUpdateCheck(openUpdateSettings);
   usePluginHostEvents({ mode });
 
-  const screenshotText = useScreenshotText();
-  const screenshot = useIslandScreenshot(settings.screenshotEnabled, collapseIsland);
-  const screenshotCard = useScreenshotCard(screenshot.settings.cardSeconds);
-  const screenshotNotice = useScreenshotNotice(screenshotCard, agents.sessions);
   const copyCard = useClipboardCopyCard(!game.quiet);
-  const recording = useRecording();
   const firstHints = useIslandFirstHints({
     mode,
     isTucked,
@@ -133,7 +123,6 @@ export function IslandApp() {
     agentSession,
     interjecting: agentSession !== null && agentSession === agents.interjection,
     agentIconWidth: collapsedSlots.agentIconWidth ?? 0,
-    screenshotPeek: screenshotText,
   });
   const { lines: contributedLines, alerts, popups, style, settled, hints } = useIslandContributed();
   usePluginKeybindings({ mode, page, hasActiveTodo: hints.has("todos.active") });
@@ -150,9 +139,7 @@ export function IslandApp() {
   useLegacyStates({
     showsMessage,
     linePreview: banner.hasLinePreview,
-    prompting: permissionPrompts.current !== null || screenshotCard.current !== null,
-    peeking: Boolean(screenshotText),
-    recording: recording.shown,
+    prompting: permissionPrompts.current !== null,
     hold: useTuckHold(settings, { messagesOpen: mode === "expanded" && page === "qq", notices }),
   });
   useIslandTucking({ settings, navigation });
@@ -225,7 +212,7 @@ export function IslandApp() {
     onCollapse: collapseIsland,
   });
 
-  const islandNotice = useIslandNotice({ recording, screenshotNotice, copyCard, firstHints });
+  const islandNotice = useIslandNotice({ copyCard, firstHints });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
     preview: banner.barPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
   }));
@@ -287,7 +274,6 @@ export function IslandApp() {
         minimizesToTray={settings.minimizeAction === "tray"}
         onMinimize={settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge}
         onOpenTranslator={settings.translationEnabled && settings.translationTarget === "island" ? openTranslator : null}
-        onScreenshot={screenshot.start}
         onOpenSettings={openSettingsWindow}
         onTuck={tuckIsland}
         onReveal={hoverTucked}

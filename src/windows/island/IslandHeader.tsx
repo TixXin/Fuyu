@@ -3,6 +3,7 @@ import { Bot } from "lucide-react";
 import type { MessageSource } from "../../features/messages/messagePreview";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
+import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 import { useTranslation } from "../../i18n";
 import { headerDotPages, isPageEnabled, type IslandFeatures } from "./features";
 import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/header";
@@ -26,7 +27,6 @@ type IslandHeaderProps = {
   onOpenSettings: (section?: "updates") => void;
   onOpenMessages: (source: MessageSource) => void;
   onOpenTranslator: (() => void) | null;
-  onScreenshot?: (() => void) | null;
   onResetPosition: () => void;
   minimizesToTray: boolean;
   onMinimize: () => void;
@@ -51,7 +51,6 @@ export function IslandHeader({
   onOpenSettings,
   onOpenMessages,
   onOpenTranslator,
-  onScreenshot = null,
   onResetPosition,
   minimizesToTray,
   onMinimize,
@@ -62,6 +61,7 @@ export function IslandHeader({
   pageActions,
 }: IslandHeaderProps) {
   const t = useTranslation();
+  const { hints } = useIslandContributed();
   const hoverSwitch = usePageHoverSwitch(hoverSwitchPage, hoverSwitchDelayMs, page, onPageChange);
   const pages = useSlotEntries(pageSlot);
   const dots = headerDotPages(pages, features);
@@ -74,7 +74,7 @@ export function IslandHeader({
     onOpenSettings,
     onOpenMessages,
     onOpenTranslator,
-    onScreenshot,
+    hints,
     onResetPosition,
     minimizesToTray,
     onMinimize,

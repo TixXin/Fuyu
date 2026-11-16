@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
-import { configureScreenshot, startScreenshot } from "../../features/screenshot/api";
-import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
+import { configureScreenshot, startScreenshot } from "./api";
+import { useScreenshotSettings } from "./useScreenshotSettings";
 import { getErrorMessage } from "../../utils/error";
 
 const COLLAPSE_MS = 260;

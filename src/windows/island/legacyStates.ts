@@ -5,18 +5,14 @@ type LegacyStateInput = {
   showsMessage: boolean;
   linePreview: boolean;
   prompting: boolean;
-  peeking: boolean;
-  recording: boolean;
   hold: boolean;
 };
 
-export function useLegacyStates({ showsMessage, linePreview, prompting, peeking, recording, hold }: LegacyStateInput) {
+export function useLegacyStates({ showsMessage, linePreview, prompting, hold }: LegacyStateInput) {
   const list: IslandContribution[] = [];
   if (showsMessage) list.push({ kind: "reveal", reveal: "always", pauseIdle: true, pauseHover: true }, { kind: "busy" }, { kind: "hint", key: "message" });
   if (linePreview) list.push({ kind: "preview", item: "messages.line" });
   if (prompting) list.push({ kind: "reveal", reveal: "always" }, { kind: "busy" });
-  if (peeking) list.push({ kind: "reveal", reveal: "allowed", pauseIdle: true }, { kind: "busy" });
-  if (recording) list.push({ kind: "busy" });
   if (hold) list.push({ kind: "hold", reason: "legacy" });
   useIslandContributions("builtin", "legacy.states", list);
 }

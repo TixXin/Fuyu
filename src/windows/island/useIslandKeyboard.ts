@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { matchesClipboardShortcut } from "../../features/clipboard/shortcut";
-import { togglePins } from "../../features/screenshot/api";
 import { pageCycleDirection, pageDigitFromEvent } from "../../lib/settings/pageShortcuts";
 import { cycleShortcutPage, pageForAltDigit, type IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
@@ -47,14 +46,7 @@ export function useIslandKeyboard(
         return;
       }
 
-      if (event.key === "Escape") {
-        onCollapse();
-        return;
-      }
-
-      if (event.key.toLowerCase() === "t" && !event.ctrlKey && !event.altKey && !event.metaKey && !isTyping(event.target)) {
-        void togglePins();
-      }
+      if (event.key === "Escape") onCollapse();
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -72,8 +64,4 @@ export function useIslandKeyboard(
     pageNextShortcut,
     pagePreviousShortcut,
   ]);
-}
-
-function isTyping(target: EventTarget | null) {
-  return target instanceof HTMLElement && (target.isContentEditable || target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement);
 }
