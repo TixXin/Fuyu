@@ -50,7 +50,7 @@
   background: var(--stage-dot);
   border-radius: var(--radius-circle);
   box-shadow: 0 0 9px var(--stage-dot);
-  animation: overview-stage-pulse 2.4s ease-in-out infinite;
+  animation: overview-stage-pulse 2.4s var(--motion-ease-in-out) infinite;
 }
 
 .overview-stage__demo {
@@ -60,7 +60,7 @@
   gap: 8px;
   font-size: 13px;
   font-weight: 500;
-  animation: overview-stage-in 360ms var(--motion-ease) both;
+  animation: overview-stage-in var(--motion-slow) var(--motion-ease) both;
 }
 
 .overview-stage__demo svg {

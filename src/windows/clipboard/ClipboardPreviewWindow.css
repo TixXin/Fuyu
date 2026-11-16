@@ -20,12 +20,12 @@ body,
   position: relative;
   transform-origin: var(--preview-origin);
   animation:
-    clipboard-preview-fade 170ms ease-out,
-    clipboard-preview-slide var(--motion-medium) cubic-bezier(0.16, 1, 0.3, 1);
+    clipboard-preview-fade var(--motion-base) var(--motion-ease),
+    clipboard-preview-slide var(--motion-medium) var(--motion-ease-out);
 }
 
 .clipboard-preview-window--out .clipboard-preview {
-  animation: clipboard-preview-leave 140ms ease-in forwards;
+  animation: clipboard-preview-leave var(--motion-fast) var(--motion-ease-in-out) forwards;
 }
 
 @keyframes clipboard-preview-fade {
@@ -170,7 +170,7 @@ body,
   flex: 1;
   min-height: 0;
   display: flex;
-  animation: clipboard-preview-swap 150ms ease-out;
+  animation: clipboard-preview-swap var(--motion-base) var(--motion-ease);
 }
 
 .clipboard-preview__content .clipboard-popup__pane {
@@ -186,11 +186,11 @@ body,
 
 @media (prefers-reduced-motion: reduce) {
   .clipboard-preview {
-    animation: clipboard-preview-fade 100ms linear;
+    animation: clipboard-preview-fade var(--motion-fast) linear;
   }
 
   .clipboard-preview-window--out .clipboard-preview {
-    animation: clipboard-preview-fade 100ms linear reverse forwards;
+    animation: clipboard-preview-fade var(--motion-fast) linear reverse forwards;
   }
 
   .clipboard-preview__content {

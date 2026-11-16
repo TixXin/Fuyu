@@ -84,7 +84,7 @@ label.settings-overview__tile-label {
   background: var(--color-white-a04);
   border: 1px solid var(--color-white-a06);
   border-radius: var(--radius-xl);
-  transition: border-color var(--motion-base) ease, background var(--motion-base) ease, transform var(--motion-base) ease;
+  transition: border-color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease);
 }
 
 .settings-overview__feature--on,
@@ -106,7 +106,7 @@ label.settings-overview__tile-label {
   color: var(--color-text-subtle);
   background: var(--color-white-a06);
   border-radius: var(--radius-lg);
-  transition: color var(--motion-base) ease, background var(--motion-base) ease;
+  transition: color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
 }
 
 .settings-overview__feature--on .settings-overview__feature-icon {
@@ -195,7 +195,7 @@ label.settings-overview__feature-name {
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background var(--motion-base) ease, border-color var(--motion-base) ease, transform var(--motion-base) ease;
+  transition: background var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease);
 }
 
 .settings-overview__next-tile:hover {
@@ -243,7 +243,7 @@ label.settings-overview__feature-name {
   top: 12px;
   right: 12px;
   color: var(--color-text-subtle);
-  transition: transform var(--motion-base) ease, color var(--motion-base) ease;
+  transition: transform var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
 }
 
 .settings-overview__next-tile:hover .settings-overview__next-arrow {

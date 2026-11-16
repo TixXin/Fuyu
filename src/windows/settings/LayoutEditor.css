@@ -144,7 +144,7 @@
 }
 
 .editor-panel > * {
-  animation: settings-page-enter 220ms var(--motion-ease) backwards;
+  animation: settings-page-enter var(--motion-medium) var(--motion-ease) backwards;
 }
 
 .editor-panel > :nth-child(2) {

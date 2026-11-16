@@ -2,8 +2,8 @@
   flex: 0 0 auto;
   filter: brightness(var(--island-pulse-brightness));
   transition:
-    color var(--motion-base) ease,
-    filter var(--motion-base) ease;
+    color var(--motion-base) var(--motion-ease),
+    filter var(--motion-base) var(--motion-ease);
 }
 
 .island__agent-status-icon--idle {
@@ -107,8 +107,8 @@
   outline: none;
   cursor: pointer;
   transition:
-    color 140ms ease,
-    background 140ms ease;
+    color var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease);
 }
 
 .dot-button:hover {
@@ -149,7 +149,7 @@
   border: 0;
   border-radius: var(--radius-pill);
   cursor: pointer;
-  transition: background 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease);
 }
 
 .island__agent-button:hover,

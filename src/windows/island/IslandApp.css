@@ -67,9 +67,9 @@
   outline: none;
   cursor: pointer;
   transition:
-    color 140ms ease,
-    background 140ms ease,
-    transform 140ms ease;
+    color var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease),
+    transform var(--motion-base) var(--motion-ease);
 }
 
 .icon-button.island-reset-button--available {
@@ -125,7 +125,7 @@
 
 .save-check-icon {
   flex: 0 0 auto;
-  animation: saveCheckPop var(--motion-slow) ease both;
+  animation: saveCheckPop var(--motion-slow) var(--motion-ease) both;
 }
 
 .save-check-icon path,
@@ -133,7 +133,7 @@
 .save-check-icon line {
   stroke-dasharray: 24;
   stroke-dashoffset: 24;
-  animation: saveCheckDraw var(--motion-slow) ease forwards;
+  animation: saveCheckDraw var(--motion-slow) var(--motion-ease) forwards;
 }
 
 @keyframes saveButtonPop {

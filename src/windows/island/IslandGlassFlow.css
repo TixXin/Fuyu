@@ -24,9 +24,9 @@
 
 .island__glass {
   transition:
-    --glass-c1 1200ms ease,
-    --glass-c2 1200ms ease,
-    --glass-c3 1200ms ease;
+    --glass-c1 1200ms var(--motion-ease),
+    --glass-c2 1200ms var(--motion-ease),
+    --glass-c3 1200ms var(--motion-ease);
 }
 
 .island__glass-backdrop,
