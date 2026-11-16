@@ -3318,6 +3318,32 @@
       }
     },
     {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "cc-connect 手机连接",
+        "title": "cc-connect 程序路径",
+        "description": "留空自动找：正在运行的 cc-connect、PATH（npm i -g cc-connect 装在这里）、这里下载的那份，再看 C、D 盘 Program Files 和 Program Files (x86) 下的 cc-connect 文件夹。不搜全盘。"
+      },
+      "en": {
+        "group": "cc-connect phone link",
+        "title": "cc-connect program",
+        "description": "Leave empty to find it: the running cc-connect, PATH (where npm i -g cc-connect puts it), the one downloaded here, then a cc-connect folder in Program Files or Program Files (x86) on C: and D:. The disks are not searched."
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "cc-connect 手机连接",
+        "title": "由岛启动 cc-connect",
+        "description": "岛开着时让 cc-connect 在后台一直运行（不弹窗口，退出岛时一起退出）。已经在别处运行的 cc-connect 不接管。"
+      },
+      "en": {
+        "group": "cc-connect phone link",
+        "title": "Keep cc-connect running",
+        "description": "While the island runs, cc-connect runs in the background too (no window, it ends with the island). A cc-connect started elsewhere is left alone."
+      }
+    },
+    {
       "page": "sounds",
       "zh-CN": {
         "group": "音效",
