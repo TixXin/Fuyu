@@ -4,6 +4,7 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { AgentEffortLabels } from "./effortLabels";
 
 import type { AgentProvider, RemoteProvider, SessionProvider } from "./agents.ts";
+import type { AgentUsage } from "../../lib/agent-usage/types";
 
 export type { AgentProvider, RemoteProvider, SessionProvider } from "./agents.ts";
 export type AgentTaskPhase = "idle" | "running" | "waiting" | "completed" | "failed" | "stale";
@@ -218,34 +219,7 @@ export function agentSessionsInFront(sessions: Pick<AgentSessionSummary, "provid
   });
 }
 
-export type UsageWindow = {
-  name: string;
-  used: number;
-  resetsAt: number | null;
-};
-
-export type AgentUsage = {
-  updatedAt: number | null;
-  fiveHour: UsageWindow | null;
-  sevenDay: UsageWindow | null;
-  models: UsageWindow[];
-  plan: string | null;
-  source?: "hud" | "api" | "magpie" | "codex" | "glm" | "kimi";
-  error?: AgentUsageError | null;
-};
-
-export type AgentUsageErrorKind =
-  | "noCredentials"
-  | "tokenExpired"
-  | "loginRequired"
-  | "forbidden"
-  | "rateLimited"
-  | "noProxy"
-  | "network"
-  | "http"
-  | "invalidResponse";
-
-export type AgentUsageError = { kind: AgentUsageErrorKind; message: string };
+export type { AgentUsage, AgentUsageError, AgentUsageErrorKind, UsageWindow } from "../../lib/agent-usage/types";
 
 export function getAgentUsage() {
   return invoke<AgentUsage | null>("get_agent_usage");
@@ -253,20 +227,6 @@ export function getAgentUsage() {
 
 export function getCodexUsage() {
   return invoke<AgentUsage | null>("get_codex_usage");
-}
-
-export type PlanProvider = "glm" | "kimi";
-
-export function getPlanUsage(provider: PlanProvider, refresh = false) {
-  return invoke<AgentUsage>("get_plan_usage", { provider, refresh });
-}
-
-export function setPlanKey(provider: PlanProvider, key: string) {
-  return invoke<boolean>("set_plan_key", { provider, key });
-}
-
-export function hasPlanKey(provider: PlanProvider) {
-  return invoke<boolean>("has_plan_key", { provider });
 }
 
 export function getAgentHooksState() {

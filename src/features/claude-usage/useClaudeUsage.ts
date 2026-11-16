@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getAgentUsage, getCodexUsage, getPlanUsage, type AgentUsage } from "../agent-status/api";
-import { refreshClaudeUsage } from "./api";
+import { getAgentUsage, getCodexUsage, type AgentUsage } from "../agent-status/api";
+import { getPlanUsage, refreshClaudeUsage } from "./api";
 import type { UsageProviderId } from "./usageRing";
 
 const REFRESH_MS = 30_000;

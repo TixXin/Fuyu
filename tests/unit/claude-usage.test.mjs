@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { USAGE_STALE_MS } from "../../src/features/agent-status/usage.ts";
+import { USAGE_STALE_MS } from "../../src/lib/agent-usage/usage.ts";
 import { USAGE_COLORS, USAGE_PROVIDERS, isUsageStale, shownUsageProviders, usageCardLines, usageColor, usageRings } from "../../src/features/claude-usage/usageRing.ts";
 import { en, zhCN } from "../../src/i18n/sections/claudeUsage.ts";
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Check, Trash2 } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
-import { hasPlanKey, setPlanKey, type PlanProvider } from "../agent-status/api";
+import { hasPlanKey, setPlanKey, type PlanProvider } from "./api";
 import { shownUsageProviders, type UsageProvider } from "./usageRing";
 import "./PlanKeyFields.css";
 import { isMacOS } from "../../lib/platform";

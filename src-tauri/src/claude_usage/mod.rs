@@ -1,3 +1,4 @@
+mod plan;
 mod source;
 #[cfg(test)]
 mod tests;
@@ -232,10 +233,35 @@ pub async fn refresh_claude_usage() -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+pub async fn get_plan_usage(provider: String, refresh: bool) -> Result<crate::agent_status::usage::AgentUsage, String> {
+    let provider = plan::PlanProvider::parse(&provider)?;
+    Ok(plan::read(provider, refresh).await)
+}
+
+#[tauri::command]
+pub async fn set_plan_key(provider: String, key: String) -> Result<bool, crate::user_error::UserError> {
+    let provider = plan::PlanProvider::parse(&provider)?;
+    tauri::async_runtime::spawn_blocking(move || plan::save_key(provider, &key))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub async fn has_plan_key(provider: String) -> Result<bool, crate::user_error::UserError> {
+    let provider = plan::PlanProvider::parse(&provider)?;
+    tauri::async_runtime::spawn_blocking(move || plan::has_key(provider))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::claude_usage::refresh_claude_usage,
+            crate::claude_usage::get_plan_usage,
+            crate::claude_usage::set_plan_key,
+            crate::claude_usage::has_plan_key,
         ] $($rest)*)
     };
 }

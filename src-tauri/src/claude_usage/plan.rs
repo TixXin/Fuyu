@@ -8,9 +8,9 @@ use std::{
 use keyring::{Entry, Error as KeyringError};
 use serde_json::Value;
 
-use super::sessions::parse_timestamp_ms;
-use super::usage::{AgentUsage, UsageSource, UsageWindow};
-use crate::claude_usage::{UsageError, UsageErrorKind};
+use super::{UsageError, UsageErrorKind};
+use crate::agent_status::parse_timestamp_ms;
+use crate::agent_status::usage::{AgentUsage, UsageSource, UsageWindow};
 
 const CREDENTIAL_SERVICE: &str = "com.tixxin.fuyu.plan-usage";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
