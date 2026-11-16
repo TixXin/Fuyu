@@ -19,19 +19,17 @@ type LegacyLineInput = {
   todoTitle: string | null;
   todoCount: number | null;
   meeting: CollapsedMeeting | null;
-  translationPeek: string | null;
   screenshotPeek: string | null;
 };
 
 export function useLegacyLines(input: LegacyLineInput): CollapsedLineSources {
   const t = useTranslation();
-  const { barText, agentSession, lyricLine, todoTitle, todoCount, meeting, translationPeek, screenshotPeek } = input;
+  const { barText, agentSession, lyricLine, todoTitle, todoCount, meeting, screenshotPeek } = input;
   const meetingBeat = useMeetingBeat(barText && lyricLine ? meeting?.upcoming ?? null : null);
   const meetingDue = barText && meeting !== null;
   const list: IslandContribution[] = [];
-  const peek = translationPeek ?? screenshotPeek;
-  if (peek !== null) {
-    list.push({ kind: "line", item: translationPeek !== null ? "translation.peek" : "screenshot.text", priority: LINE_PRIORITY.peek, always: true, bare: true, drop: true, action: "translation.open-peek", label: t.translator.peekLabel(peek) });
+  if (screenshotPeek !== null) {
+    list.push({ kind: "line", item: "screenshot.text", priority: LINE_PRIORITY.screenshotPeek, always: true, bare: true, drop: true, action: "translation.open-peek", label: t.translator.peekLabel(screenshotPeek) });
   }
   if (meetingDue) {
     if (lyricLine === null || meetingBeat) list.push({ kind: "line", item: "calendar.meeting", priority: LINE_PRIORITY.meeting, page: "calendar", bare: true });
@@ -60,5 +58,5 @@ export function useLegacyLines(input: LegacyLineInput): CollapsedLineSources {
   if (todoTitle !== null) list.push({ kind: "line", item: "todos.title", priority: LINE_PRIORITY.todoTitle, measure: todoTitle, label: t.messages.collapsedTask(todoTitle) });
   if (todoCount !== null) list.push({ kind: "line", item: "todos.count", priority: LINE_PRIORITY.todoCount, measure: t.island.pendingTodos(todoCount), center: true, label: t.island.pendingTodos(todoCount) });
   useIslandContributions("builtin", "legacy.lines", list);
-  return { agentSession, lyricLine, meeting, todoTitle, todoCount, translationPeek, screenshotPeek };
+  return { agentSession, lyricLine, meeting, todoTitle, todoCount, screenshotPeek };
 }

@@ -100,9 +100,12 @@ test("commits already in an open PR are counted apart from the ones not pushed, 
   assert.equal(waiting[at], "没推的提交 2 个，最早的 2 小时前，还不用提 PR；另有 1 个在 #498 里等合入");
   assert.deepEqual(waiting.slice(at + 1, at + 4), ["  feat: three", "  feat: two", "本地 main 落后 origin/main 61 个提交（pnpm mq:sync）"]);
 
-  const due = report({ commits });
-  assert.match(due.find((line) => line.startsWith("没推的提交")), /^没推的提交 3 个，最早的 7 小时前，该提 PR 了（pnpm mq:land/);
-  assert.ok(!due.some((line) => line.includes("落后")));
+  const old = report({ commits });
+  assert.match(old.find((line) => line.startsWith("没推的提交")), /^没推的提交 3 个，最早的 7 小时前，还不用提 PR$/);
+  assert.ok(!old.some((line) => line.includes("落后")));
+
+  const ten = Array.from({ length: 10 }, (_, i) => ({ sha: `t${i}`, subject: `feat: ${i}`, at: NOW - (i + 1) * HOUR / 4 }));
+  assert.match(report({ commits: ten }).find((line) => line.startsWith("没推的提交")), /^没推的提交 10 个，最早的 2 小时前，该提 PR 了（pnpm mq:land/);
 
   const summary = summarize(facts({ commits, behind: 61, ahead: 16, prShas: new Map([[498, new Set(["a"])]]) }));
   assert.deepEqual(summary.commits.inPr, [{ number: 498, count: 1 }]);

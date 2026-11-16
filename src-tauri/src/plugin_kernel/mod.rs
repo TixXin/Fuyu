@@ -5,6 +5,7 @@ mod containment;
 #[cfg(debug_assertions)]
 pub(crate) mod diagnostics;
 mod methods;
+mod node_status;
 pub(crate) mod protocol;
 mod safe_mode;
 mod v2_builtins;
@@ -28,12 +29,27 @@ static PLUGINS_DIR: OnceLock<PathBuf> = OnceLock::new();
 static TRACKER: OnceLock<Mutex<safe_mode::Tracker>> = OnceLock::new();
 static STOPPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-fn enabled(development: bool, switch: Option<&str>) -> bool {
-    if development {
+fn is_prerelease(version: &str) -> bool {
+    version.split_once('-').is_some_and(|(core, _)| {
+        let parts: Vec<&str> = core.split('.').collect();
+        parts.len() == 3 && parts.iter().all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+    })
+}
+
+fn on_by_default(development: bool, version: &str) -> bool {
+    development || is_prerelease(version)
+}
+
+fn enabled(default_on: bool, switch: Option<&str>) -> bool {
+    if default_on {
         switch != Some("0")
     } else {
         switch == Some("1")
     }
+}
+
+fn switched_on() -> bool {
+    enabled(on_by_default(cfg!(debug_assertions), env!("CARGO_PKG_VERSION")), std::env::var(SWITCH).ok().as_deref())
 }
 
 fn host_script() -> PathBuf {
@@ -154,6 +170,7 @@ fn report(event: Event) {
 fn progress_reporter() -> impl FnMut(Progress) {
     let mut last: Option<(String, u64)> = None;
     move |progress: Progress| {
+        node_status::gate().set(node_status::NodeStatus::Downloading { downloaded: progress.downloaded, total: progress.total });
         let step = progress.total.map(|total| (progress.downloaded * 10 / total.max(1)).min(10)).unwrap_or(progress.downloaded >> 24);
         if last.as_ref().is_some_and(|(url, seen)| url == progress.url && *seen == step) {
             return;
@@ -167,6 +184,7 @@ fn progress_reporter() -> impl FnMut(Progress) {
 }
 
 fn choose_node(data_dir: &std::path::Path) -> Result<ChosenNode, String> {
+    node_status::gate().set(node_status::NodeStatus::Checking);
     let download = official_download(crate::system::updater::get_updater_proxy());
     let chosen = node_for_host(&NodeSearch::from_env(), MINIMUM_NODE, data_dir, download, &mut progress_reporter())?;
     let source = match chosen.source {
@@ -174,6 +192,7 @@ fn choose_node(data_dir: &std::path::Path) -> Result<ChosenNode, String> {
         NodeSource::Downloaded => "downloaded by Fuyu",
     };
     eprintln!("[plugins-v3] using Node {} ({source}) at {}", chosen.version, chosen.path.display());
+    node_status::gate().set(node_status::NodeStatus::Ready);
     Ok(chosen)
 }
 
@@ -273,7 +292,18 @@ pub(crate) fn set_plugin_bisect(next: Option<&bisect::Bisect>) -> Result<bisect:
 
 fn start(home: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>, development: bool, serve: plugin_base::Serve) -> Result<(), String> {
     let serve = std::sync::Arc::new(serve);
-    let node = choose_node(&home)?;
+    let node = loop {
+        match choose_node(&home) {
+            Ok(node) => break node,
+            Err(error) => {
+                eprintln!("[plugins-v3] no Node for the plugin host: {error}");
+                node_status::gate().set(node_status::NodeStatus::Failed { error });
+                if !node_status::gate().wait_for_retry() {
+                    return Ok(());
+                }
+            }
+        }
+    };
     let supervisor = Supervisor::start_serving(spec_for(node.path, dir, files, origins, development), containment::shared(), Timing::default(), Some(serve), |event| {
         protocol::observe(&event);
         track(&event);
@@ -290,12 +320,13 @@ fn start(home: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>, de
 }
 
 pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
-    if !enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()) {
+    if !switched_on() {
         return Ok(());
     }
     if !cfg!(debug_assertions) {
-        eprintln!("[plugins-v3] release build: starting the plugin host because {SWITCH}=1");
+        eprintln!("[plugins-v3] release build {}: starting the plugin host", env!("CARGO_PKG_VERSION"));
     }
+    let _ = node_status::gate();
     let home = crate::home_dir::fuyu_home(tauri::Manager::path(app)).map_err(|error| error.to_string())?;
     let dir = plugins_dir(app)?;
     let _ = PLUGINS_DIR.set(dir.clone());
@@ -326,6 +357,7 @@ pub(crate) struct HostConnection {
     token: Option<String>,
     generation: Option<u32>,
     safe_mode: Option<safe_mode::SafeMode>,
+    node: Option<node_status::NodeStatus>,
 }
 
 fn connection_from(enabled: bool, state: Option<&HostState>) -> HostConnection {
@@ -337,6 +369,7 @@ fn connection_from(enabled: bool, state: Option<&HostState>) -> HostConnection {
             token: ready["windows"]["token"].as_str().map(str::to_owned),
             generation: Some(*generation),
             safe_mode: None,
+            node: None,
         },
         Some(_) => HostConnection { enabled: true, ..HostConnection::default() },
     }
@@ -350,8 +383,13 @@ fn connection_now(switched_on: bool, slot: Option<&Mutex<Option<Arc<Supervisor>>
 
 #[tauri::command]
 pub(crate) fn get_plugin_host_connection() -> HostConnection {
-    let connection = connection_now(enabled(cfg!(debug_assertions), std::env::var(SWITCH).ok().as_deref()), SUPERVISOR.get());
-    HostConnection { safe_mode: tracker().and_then(|tracker| tracker.current()), ..connection }
+    let connection = connection_now(switched_on(), SUPERVISOR.get());
+    HostConnection { safe_mode: tracker().and_then(|tracker| tracker.current()), node: node_status::current(), ..connection }
+}
+
+#[tauri::command]
+pub(crate) fn retry_plugin_host_node() -> bool {
+    node_status::gate().retry()
 }
 
 #[tauri::command]
@@ -402,6 +440,7 @@ macro_rules! tauri_commands {
             crate::plugin_kernel::get_plugin_host_connection,
             crate::plugin_kernel::get_plugin_host_memory,
             crate::plugin_kernel::exit_plugin_safe_mode,
+            crate::plugin_kernel::retry_plugin_host_node,
             crate::plugin_kernel::builtins::get_builtin_plugins,
             crate::plugin_kernel::builtins::set_builtin_plugin_enabled,
             crate::plugin_kernel::builtins::set_builtin_plugin_config,
@@ -412,6 +451,7 @@ pub(crate) use tauri_commands;
 
 pub(crate) fn shutdown() {
     STOPPING.store(true, std::sync::atomic::Ordering::SeqCst);
+    node_status::gate().stop();
     let supervisor = SUPERVISOR.get().and_then(|slot| slot.lock().ok()?.take());
     if let Some(supervisor) = supervisor {
         supervisor.stop();

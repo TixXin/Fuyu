@@ -11,6 +11,7 @@ import { deviceUseState } from "../../src/features/device-use/plugin/islandState
 import type { IslandContribution } from "../../src/features/plugin-kernel/islandContributions";
 import { useIslandContributions } from "../../src/features/plugin-kernel/useIslandContributions";
 import { levelState } from "../../src/features/system-levels/plugin/islandState";
+import { translationPeekState } from "../../src/features/translation/plugin/islandState";
 import { useLegacyAlerts } from "../../src/windows/island/legacyAlerts";
 import { useLegacyLines } from "../../src/windows/island/legacyLines";
 
@@ -41,6 +42,8 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
   for (const device of devicesInUse(deviceUse)) alerts.push({ kind: "side", item: `device-${device}`, height: 28 });
   useIslandContributions("builtin", "fixture.features", alerts);
   deviceUseState.useProvide(deviceUse);
+  translationPeekState.useProvide(translationPeek);
+  useIslandContributions("translation", "fixture.peek", translationPeek === null ? [] : [{ kind: "line", item: "translation.peek", priority: 70, always: true, bare: true, drop: true, action: "translation.open-peek", label: translationPeek }]);
   return useLegacyLines({
     barText,
     agentSession,
@@ -51,7 +54,6 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
     todoTitle,
     todoCount,
     meeting,
-    translationPeek,
     screenshotPeek: null,
   });
 }

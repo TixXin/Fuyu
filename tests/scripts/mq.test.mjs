@@ -67,13 +67,17 @@ test("land runs from local main or any branch, and leaves uncommitted files to w
   assert.equal(uncommittedNote(["?? scratch.txt", ""]), null);
 });
 
-test("a batch is due after five commits or six hours, not after each small change", () => {
+test("a batch is due after ten commits, not after each small change and not by age", () => {
   const now = Date.parse("2026-11-13T12:00:00Z");
   const at = (hours) => now - hours * 3_600_000;
+  const commits = (count, hours) => Array.from({ length: count }, () => ({ subject: "x", at: at(hours) }));
   assert.equal(batchAdvice([], now).due, false);
   assert.equal(batchAdvice([{ subject: "fix: typo", at: at(1) }], now).due, false);
-  assert.match(batchAdvice([1, 2, 3, 4, 5].map(() => ({ subject: "x", at: at(1) })), now).reason, /攒了 5 个提交/);
-  assert.match(batchAdvice([{ subject: "x", at: at(7) }], now).reason, /7 小时没推/);
+  assert.equal(batchAdvice(commits(9, 1), now).due, false);
+  assert.match(batchAdvice(commits(10, 1), now).reason, /攒了 10 个提交/);
+  const old = batchAdvice(commits(3, 7), now);
+  assert.equal(old.due, false);
+  assert.match(old.reason, /3 个提交没推，最早的 420 分钟前/);
 });
 
 test("dependencies are reinstalled only for a lockfile change, and never over a removed package", () => {

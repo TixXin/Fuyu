@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import { I18nProvider, LOCALE_STORAGE_KEY, TRANSLATIONS } from "../../src/i18n";
+import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { HostInfoV3, PluginHostConnector, PluginHostHandlers, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
 
 const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
@@ -20,6 +21,8 @@ let memoryReply: { pid: number; bytes: number; measure: "private-working-set" | 
 
 let safeReply: { mode: "third-party" | "minimal"; cause: "variable" | "shift" | "failures"; failures: number } | null = { mode: "third-party", cause: "failures", failures: 2 };
 let leaveCalls = 0;
+let nodeReply: HostNodeStatus | null = null;
+let retryCalls = 0;
 const catalog = (await import("../../src/features/builtins.json")).default as { plugins: { id: string; kind: "builtin" | "essential" }[] };
 let builtins = catalog.plugins.map(({ id, kind }) => ({ id, kind, enabled: id !== "clipboard", background: [] as { name: string; registered: boolean; running: boolean }[], config: {} }));
 const switchCalls: { id: string; enabled: boolean }[] = [];
@@ -34,7 +37,8 @@ mockIPC((command, payload) => {
   }
   if (command === "get_plugin_host_memory") return memoryReply;
   if (command === "exit_plugin_safe_mode") return (leaveCalls += 1, true);
-  if (command === "get_plugin_host_connection") return { enabled: true, port: 1, token: "t", generation: 1, safeMode: safeReply };
+  if (command === "get_plugin_host_connection") return { enabled: true, port: 1, token: "t", generation: 1, safeMode: safeReply, node: nodeReply };
+  if (command === "retry_plugin_host_node") return (retryCalls += 1, nodeReply = { state: "checking" }, true);
   if (command === "get_platform_support") return { os: "windows", unsupported: [], devBuild: true };
   return null;
 });
@@ -43,6 +47,7 @@ const { SettingsSidebar } = await import("../../src/windows/settings/SettingsSid
 await import("../../src/windows/settings/slots/categories");
 const { PluginsV3SettingsPage } = await import("../../src/windows/settings/PluginsV3SettingsPage");
 const { windowSlots } = await import("../../src/features/plugin-kernel/slots");
+const { NODE_EVERY_MS } = await import("../../src/windows/settings/usePluginHostNode");
 
 const text = TRANSLATIONS[locale].settings.pluginsV3;
 const usage = (more: Partial<NonNullable<PluginStatusV3["usage"]>> = {}) => ({ cpuMs: 0, calls: 0, applyMs: 0.4, timers: 0, listeners: 0, services: 0, clients: 0, errors: 0, ...more });
@@ -76,6 +81,7 @@ const check = (condition: unknown, message: string) => {
 };
 const results = document.getElementById("results")!;
 const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 60)); });
+const nextNodeRead = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, NODE_EVERY_MS + 100)); });
 const page = document.getElementById("page")!;
 const card = (id: string) => page.querySelector<HTMLElement>(`.plugins-v3__plugin[data-plugin='${id}']`);
 const stateText = (id: string) => card(id)?.querySelector(".plugins-v3__state")?.textContent;
@@ -110,12 +116,27 @@ try {
   check(builtinSwitch("timer")?.checked === true && windowSlots("island").disabledOwners().join() === "clipboard", "Switching it back on brings them back");
   check(page.querySelector("[data-connection='connecting']")?.textContent === text.connection.connecting, "Before the host answers the page says it is connecting");
   check(page.textContent?.includes(text.waitingHost), "and that plugins show up once it is connected");
+  const nodeRow = () => page.querySelector<HTMLElement>(".plugins-v3__node");
+  check(!nodeRow(), "With Node found there is no download row");
+  nodeReply = { state: "downloading", downloaded: 12 * MB, total: 30 * MB };
+  await nextNodeRead();
+  check(nodeRow()?.querySelector("[data-node='downloading']")?.textContent === text.node.downloading && nodeRow()!.textContent!.includes(text.node.progress("12.0", "30.0")), "Without Node on the computer the host group shows the download and how far it got");
+  nodeReply = { state: "failed", error: "Node 22.15 or newer was not found; all 3 download sources failed" };
+  await nextNodeRead();
+  const retryButton = () => nodeRow()?.querySelector<HTMLButtonElement>(".plugins-v3__retry");
+  check(nodeRow()?.querySelector("[data-node='failed']")?.textContent === text.node.failed && nodeRow()!.textContent!.includes("all 3 download sources failed") && retryButton()?.textContent === text.node.retry, "A failed download says why and offers to retry");
+  await act(async () => retryButton()!.click());
+  await settle();
+  check(retryCalls === 1 && !nodeRow(), "Retrying asks Fuyu once and the failure goes away while it looks again");
+  HOST.startedAt = Date.now() - 65_000;
 
   await send((given) => {
     given.onState("open");
     given.onSnapshot({ plugins: PLUGINS, host: HOST });
   });
   check(page.querySelector("[data-connection='open']")?.textContent === text.connection.open, "Once connected it says so");
+  nodeReply = { state: "ready" };
+  check(!nodeRow(), "and the download row is gone");
   await settle();
   const memoryValue = () => page.querySelector<HTMLElement>(".plugins-v3__value[data-measure]");
   check(page.textContent?.includes(text.hostDetail(4242, "26.12.0")), "The host row shows its process and Node version");

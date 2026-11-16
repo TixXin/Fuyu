@@ -230,7 +230,7 @@ export function IslandCollapsedBar({
     </>
   );
   const alerted = notch !== null && activeAlert !== null;
-  const dropped = notch !== null && hasNotchDrop({ preview, notice, translationPeek: peekLine });
+  const dropped = notch !== null && hasNotchDrop({ preview, notice, peek: peekLine });
   const messaged = notch !== null && !alerted && !notice && preview !== null;
   const wings = alerted ? "alert" : messaged ? `message:${preview?.source}:${preview?.receivedAt}` : dropped ? "dropped" : "idle";
 

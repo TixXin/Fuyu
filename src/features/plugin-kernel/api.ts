@@ -7,7 +7,14 @@ export interface HostConnection {
   token: string | null;
   generation: number | null;
   safeMode?: HostSafeMode | null;
+  node?: HostNodeStatus | null;
 }
+
+export type HostNodeStatus =
+  | { state: "checking" }
+  | { state: "downloading"; downloaded: number; total: number | null }
+  | { state: "failed"; error: string }
+  | { state: "ready" };
 
 export interface HostSafeMode {
   mode: "third-party" | "minimal";
@@ -33,6 +40,10 @@ export function getPluginHostMemory(): Promise<HostMemory | null> {
 
 export function exitPluginSafeMode(): Promise<boolean> {
   return invoke<boolean>("exit_plugin_safe_mode");
+}
+
+export function retryPluginHostNode(): Promise<boolean> {
+  return invoke<boolean>("retry_plugin_host_node");
 }
 
 export type BuiltinPluginKind = "essential" | "builtin";

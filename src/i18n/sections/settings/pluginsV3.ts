@@ -37,6 +37,15 @@ export type SettingsPluginsV3Text = {
   essentialNote: string;
   hostOff: string;
   hostOffNote: string;
+  node: {
+    downloading: string;
+    downloadingNote: string;
+    progress: (downloaded: string, total: string) => string;
+    progressUnknown: (downloaded: string) => string;
+    failed: string;
+    failedNote: string;
+    retry: string;
+  };
   host: string;
   connection: Record<PluginV3Connection, string>;
   hostDetail: (pid: number, node: string) => string;
@@ -100,7 +109,16 @@ export const zhCN: SettingsPluginsV3Text = {
   },
   essentialNote: "浮屿必需，不能关",
   hostOff: "宿主没开",
-  hostOffNote: "正式版设了 FUYU_PLUGINS_V3=1 才启动宿主，开发版默认启动、设成 0 就关掉；内置插件的开关照样生效。",
+  hostOffNote: "测试版和开发版默认启动宿主，设 FUYU_PLUGINS_V3=0 就关掉；正式版设了 FUYU_PLUGINS_V3=1 才启动。内置插件的开关照样生效。",
+  node: {
+    downloading: "正在下载 Node",
+    downloadingNote: "插件宿主要用 Node，这台电脑上没找到合适的版本。浮屿把它下载到自己的数据目录，只下一次。",
+    progress: (downloaded, total) => `${downloaded} / ${total} MB`,
+    progressUnknown: (downloaded) => `${downloaded} MB`,
+    failed: "没能下载 Node",
+    failedNote: "下载走系统代理。网络好了点「重试」，不用重启浮屿。",
+    retry: "重试",
+  },
   host: "宿主",
   connection: {
     connecting: "正在连接",
@@ -188,7 +206,16 @@ export const en: SettingsPluginsV3Text = {
   },
   essentialNote: "Fuyu needs it; always on",
   hostOff: "Host not running",
-  hostOffNote: "Release builds start the host only with FUYU_PLUGINS_V3=1; dev builds start it unless it is set to 0. Built-in plugin switches work either way.",
+  hostOffNote: "Beta and dev builds start the host unless FUYU_PLUGINS_V3=0; stable releases start it only with FUYU_PLUGINS_V3=1. Built-in plugin switches work either way.",
+  node: {
+    downloading: "Downloading Node",
+    downloadingNote: "The plugin host needs Node, and no suitable version was found on this computer. Fuyu downloads it once into its own data folder.",
+    progress: (downloaded, total) => `${downloaded} / ${total} MB`,
+    progressUnknown: (downloaded) => `${downloaded} MB`,
+    failed: "Could not download Node",
+    failedNote: "The download uses the system proxy. Once the network is back, click Retry; no need to restart Fuyu.",
+    retry: "Retry",
+  },
   host: "Host",
   connection: {
     connecting: "Connecting",
