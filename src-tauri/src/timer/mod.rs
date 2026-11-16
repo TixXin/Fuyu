@@ -9,7 +9,7 @@ use tauri::{AppHandle, Emitter};
 use crate::plugin_kernel::builtins::{self, Background};
 
 const PLUGIN_ID: &str = "timer";
-const SHORTCUT_BACKGROUND: &str = "shortcut";
+const SHORTCUT_BACKGROUND: &str = "shortcuts";
 const SHORTCUT_KEY: &str = "shortcut";
 const DEFAULT_SHORTCUT: &str = "Ctrl+Alt+K";
 const SHORTCUT_EVENT: &str = "timer-shortcut";
@@ -104,5 +104,12 @@ mod tests {
         assert_eq!(shortcut_of(&config(json!({ "shortcut": " Ctrl+Shift+T " }))).as_deref(), Some("Ctrl+Shift+T"));
         assert_eq!(shortcut_of(&config(json!({ "shortcut": "" }))), None);
         assert_eq!(shortcut_of(&config(json!({ "shortcut": 3 }))).as_deref(), Some("Ctrl+Alt+K"));
+    }
+
+    #[test]
+    fn the_shortcut_is_the_background_listed_for_the_timer() {
+        let catalog = crate::plugin_kernel::builtins::catalog();
+        let timer = catalog.iter().find(|plugin| plugin.id == PLUGIN_ID).expect("the timer is a built-in plugin");
+        assert_eq!(timer.background.as_deref(), Some(&[SHORTCUT_BACKGROUND.to_owned()][..]));
     }
 }

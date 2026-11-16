@@ -24,4 +24,4 @@
 
 ## 数据
 
-计时存在 `localStorage` 的 `fuyu-timers`（只在本机，不进设置备份）。逻辑在 `src/features/timer/timers.ts`（纯函数，单元测试 `tests/unit/timer.test.mjs`），状态和提醒在 `store.ts`，回归页 `tests/regression/timer.tsx`。插件的部分在 `src/features/timer/plugin/`（岛页、收起条、提示、设置、`island.runner/v1` 和窗口服务 `reminders/v1`，拥有者 `OWNER = "timer"`），关掉后的残留由回归页 `builtins-off?only=timer` 查。
+计时存在 `localStorage` 的 `fuyu-timers`（只在本机，不进设置备份）。逻辑在 `src/features/timer/timers.ts`（纯函数，单元测试 `tests/unit/timer.test.mjs`），状态和提醒在 `store.ts`，回归页 `tests/regression/timer.tsx`。插件的部分在 `src/features/timer/plugin/`（岛页、收起条、提示、设置、`island.runner/v1`，`services.ts` 里的窗口服务 `reminders/v1`，拥有者 `OWNER = "timer"`），关掉后的残留由回归页 `builtins-off?only=timer` 查。

@@ -208,7 +208,7 @@ export async function apply(ctx) {
 
 | 服务 | 方法 | 事件 | 说明 |
 |---|---|---|---|
-| `reminders/v1` | `push({ id, source, icon, title, detail?, snoozable? })` → `{ shown }` | 无 | 只在主窗口的服务表里（窗口服务，2026-11-15 起，E36.3.28）：计时器插件在 `src/features/timer/plugin/runners.tsx` 提供（拥有者 `timer`），把提醒放进岛上的提醒队列；`icon` 只收 `todo`、`break`、`timer`。待办的到期提醒调它，计时器关掉时拿到 `not-ready`，提醒不显示 |
+| `reminders/v1` | `push({ id, source, icon, title, detail?, snoozable? })` → `{ shown }` | 无 | 只在主窗口的服务表里（窗口服务，2026-11-15 起，E36.3.28）：计时器插件在 `src/features/timer/plugin/services.ts` 提供（拥有者 `timer`，`main.tsx` 的 glob 收集，只在没有 `?window=` 的岛窗口登记），把提醒放进岛上的提醒队列；`icon` 只收 `stand`、`eye`、`water`、`stretch`、`coffee`、`bell`、`flag`。待办的到期提醒调它，计时器关掉时拿到 `not-ready`，提醒不显示 |
 | `timers/v1` | `list`、`start`、`pause`、`resume`、`extend`、`remove`、`dismissRinging` | `changed`（全部计时器和宿主当前时间）、`due`（到点的那个） | 计时规则用 `src/features/timer/timers.ts` 的纯函数（E36.3.5）。`Timer` 的形状和 `timers.ts` 一致；类型包不能 import `src/`，E36.3.5 加一条类型测试核对两边相同。超过 12 个回 `limit`，找不到 id 回 `not-found` |
 | `translator/v1` | `translate`（60 秒）、`rewrite`（120 秒，流式，片段 `{ piece }`）、`engines` | 无 | **接口里没有密钥**：没有存、取密钥的方法，`engines` 只回每个引擎 `hasSecret` 的布尔值；保存密钥照旧走窗口的 `invoke("save_translation_secret")`（只进不出），翻译时 Rust 自己读（E36.3.7、E36.3.8）。`engine` 可选，只收 `{ engine, model }`，多给的字段回 `bad-params`；不传时现在用 DeepSeek（设置里选的引擎存在窗口里，宿主还读不到）。**自定义接口暂不开放**（E36.3.18）：它的地址只存在窗口的设置里，经服务传地址就等于让调用方决定 Rust 把密钥发到哪里（[v3-secrets.md](v3-secrets.md) 原则 7），所以 Rust 给宿主的入口没有地址参数，`engine: "custom"` 回 `bad-params`（`data.reason` 是 `translation.customUnavailable`），等自定义地址存进 Rust 后再开放。没配密钥回 `no-secret`。**窗口里也提供**（2026-11-15 起，E36.3.29）：`src/features/translation/plugin/services.ts` 往每个窗口的服务表里放一份（拥有者 `translation`），用户设置里选的引擎、模型和自定义地址照常生效，宿主没开也能用；翻译插件关掉时调用方拿到 `not-ready`。剪贴板的 AI 改写调的是这一份 |
 
