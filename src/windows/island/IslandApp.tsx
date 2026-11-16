@@ -162,7 +162,7 @@ export function IslandApp() {
     meeting: calendar.upcoming && settings.calendarEnabled ? { upcoming: calendar.upcoming, showTitle: settings.calendarShowTitle } : null,
     translationPeek: quickPeek, screenshotPeek: quickPeek === null ? screenshotText : null,
   });
-  useLegacyAlerts({ deviceAlert: notices.deviceAlert, quotaAlert, levelPopup: notices.levelPopup });
+  useLegacyAlerts({ quotaAlert });
   const { lines: contributedLines, alerts, popups, style, settled } = useIslandContributed();
   const textWidth = useCollapsedWidth({
     barText,
@@ -300,7 +300,7 @@ export function IslandApp() {
 
   return (
     <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
-      <IslandRunners mode={mode} page={page} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
+      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       <IslandShell
         qqMail={qqMail}
         qqNotifications={qqNotifications}
@@ -328,8 +328,6 @@ export function IslandApp() {
         features={features}
         shelfCount={settings.shelfEnabled && settings.shelfShowCount ? fileShelf.items.length : null}
         deviceUse={notices.deviceUse}
-        levelPopup={notices.levelPopup}
-        deviceAlert={notices.deviceAlert}
         quotaAlert={quotaAlert}
         onOpenPage={openEnabledPage}
         onWindowDragStart={startIslandDrag}

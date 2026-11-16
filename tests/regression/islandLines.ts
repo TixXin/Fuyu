@@ -4,6 +4,10 @@ import type { CollapsedMeeting } from "../../src/features/calendar/upcoming";
 import type { DeviceAlert } from "../../src/features/device-events/api";
 import type { CurrentLyric } from "../../src/features/media/lyrics/useCurrentLyric";
 import type { LevelChange } from "../../src/features/system-levels/api";
+import { deviceAlertState } from "../../src/features/device-events/plugin/islandState";
+import type { IslandContribution } from "../../src/features/plugin-kernel/islandContributions";
+import { useIslandContributions } from "../../src/features/plugin-kernel/useIslandContributions";
+import { levelState } from "../../src/features/system-levels/plugin/islandState";
 import { useLegacyAlerts } from "../../src/windows/island/legacyAlerts";
 import { useLegacyLines } from "../../src/windows/island/legacyLines";
 
@@ -22,7 +26,13 @@ type FixtureLines = {
 };
 
 export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null }: FixtureLines) {
-  useLegacyAlerts({ deviceAlert, quotaAlert, levelPopup });
+  useLegacyAlerts({ quotaAlert });
+  deviceAlertState.useProvide(deviceAlert);
+  levelState.useProvide(levelPopup);
+  const alerts: IslandContribution[] = [];
+  if (deviceAlert) alerts.push({ kind: "alert", item: "device" });
+  if (levelPopup) alerts.push({ kind: "alert", item: "level" });
+  useIslandContributions("builtin", "fixture.alerts", alerts);
   return useLegacyLines({
     barText,
     agentSession,

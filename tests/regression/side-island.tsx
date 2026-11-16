@@ -60,7 +60,7 @@ function Fixture() {
       mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached side={state.side} sideCover={state.cover} showTitle={false}
       showCollapsedText activeAgentSessionCount={state.full ? 3 : 0}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState={state.full ? "running" : "idle"} agentStatusLabel="AI Agent"
-      mediaState={state.full ? PLAYING : MEDIA} levelPopup={state.level} collapsedSlots={{ gauges }}
+      mediaState={state.full ? PLAYING : MEDIA} collapsedSlots={{ gauges }}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       shelfCount={state.full ? 2 : null}
       onOpenPage={() => {}} onOpenMessages={() => {}}
