@@ -4,6 +4,8 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity 120ms ease-out;
+  --drag-grid-dash: 12px;
+  --drag-grid-gap: 8px;
 }
 
 .drag-grid--visible {
@@ -12,53 +14,38 @@
 
 .drag-grid__line {
   position: absolute;
-  opacity: 0.6;
-  border: 0 dashed var(--color-accent, #74d6ff);
-  filter: drop-shadow(0 0 1px var(--drag-grid-halo, rgba(0, 0, 0, 0.45)));
+  opacity: 0.85;
+  filter: drop-shadow(0 0 1px var(--drag-grid-halo, rgba(0, 0, 0, 0.55)));
 }
 
-.drag-grid__line--v1,
-.drag-grid__line--v2 {
+.drag-grid__line--v {
   top: 0;
   bottom: 0;
-  border-left-width: 1px;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: repeating-linear-gradient(to bottom, var(--color-accent, #74d6ff) 0 var(--drag-grid-dash), transparent var(--drag-grid-dash) calc(var(--drag-grid-dash) + var(--drag-grid-gap)));
 }
 
-.drag-grid__line--h1,
-.drag-grid__line--h2 {
+.drag-grid__line--h {
   left: 0;
   right: 0;
-  border-top-width: 1px;
-}
-
-.drag-grid__line--v1 {
-  left: calc(100% / 3);
-}
-
-.drag-grid__line--v2 {
-  left: calc(200% / 3);
-}
-
-.drag-grid__line--h1 {
-  top: calc(100% / 3);
-}
-
-.drag-grid__line--h2 {
-  top: calc(200% / 3);
+  top: calc(50% - 1px);
+  height: 2px;
+  background: repeating-linear-gradient(to right, var(--color-accent, #74d6ff) 0 var(--drag-grid-dash), transparent var(--drag-grid-dash) calc(var(--drag-grid-dash) + var(--drag-grid-gap)));
 }
 
 .drag-grid__snap {
   position: absolute;
-  border-radius: 2px;
+  border-radius: 3px;
   background: var(--color-accent, #74d6ff);
-  box-shadow: 0 0 8px var(--color-accent, #74d6ff), 0 0 1px var(--drag-grid-halo, rgba(0, 0, 0, 0.45));
+  box-shadow: 0 0 12px 2px var(--color-accent, #74d6ff), 0 0 1px var(--drag-grid-halo, rgba(0, 0, 0, 0.55));
 }
 
 .drag-grid__snap--top,
 .drag-grid__snap--bottom {
-  left: calc(50% - 1px);
-  width: 2px;
-  height: 72px;
+  left: calc(50% - 3px);
+  width: 6px;
+  height: 120px;
 }
 
 .drag-grid__snap--top {
@@ -71,9 +58,9 @@
 
 .drag-grid__snap--left,
 .drag-grid__snap--right {
-  top: calc(50% - 1px);
-  width: 72px;
-  height: 2px;
+  top: calc(50% - 3px);
+  width: 120px;
+  height: 6px;
 }
 
 .drag-grid__snap--left {
@@ -85,5 +72,5 @@
 }
 
 .island-light .drag-grid {
-  --drag-grid-halo: rgba(255, 255, 255, 0.8);
+  --drag-grid-halo: rgba(255, 255, 255, 0.85);
 }

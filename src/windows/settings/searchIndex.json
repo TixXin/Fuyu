@@ -991,13 +991,13 @@
       "page": "appearance",
       "zh-CN": {
         "group": "拖动",
-        "title": "拖动时显示九宫格辅助线",
-        "description": "拖岛时在当前屏幕上画出三等分虚线。贴着上下左右四条边的正中时会轻轻吸住，方便居中放下，这一点不受开关影响。"
+        "title": "拖动时显示中线辅助线",
+        "description": "拖岛时在当前屏幕上画出横竖两条中线，把屏幕分成四格。贴着上下左右四条边的正中时会轻轻吸住，方便居中放下，这一点不受开关影响。"
       },
       "en": {
         "group": "Dragging",
-        "title": "Show a 3×3 grid while dragging",
-        "description": "Draws dashed lines in thirds across the current screen while you drag the island. Near the middle of any screen edge the island gently snaps to centre; that works with the grid off too."
+        "title": "Show centre lines while dragging",
+        "description": "Draws dashed horizontal and vertical centre lines across the current screen while you drag the island, splitting it into quarters. Near the middle of any screen edge the island gently snaps to centre; that works with the lines off too."
       }
     },
     {
