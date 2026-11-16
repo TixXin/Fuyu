@@ -9,6 +9,7 @@ const ICON = { size: 8, strokeWidth: 3, "aria-hidden": true } as const;
 export function WindowControls({ style }: { style: "windows" | "mac" }) {
   const text = useTranslation().settings.windowControls;
   const [maximized, setMaximized] = useState(false);
+  const [resting, setResting] = useState(false);
 
   useEffect(() => {
     const window = getCurrentWindow();
@@ -29,12 +30,18 @@ export function WindowControls({ style }: { style: "windows" | "mac" }) {
 
   const minimize = run((window) => window.minimize());
   const toggleMaximize = run((window) => window.toggleMaximize());
-  const close = run((window) => window.close());
+  const closeWindow = run((window) => window.close());
+  const close = () => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    setResting(true);
+    closeWindow();
+  };
+  const wake = resting ? () => setResting(false) : undefined;
   const maximizeLabel = maximized ? text.restore : text.maximize;
 
   if (style === "windows") {
     return (
-      <div className="window-buttons">
+      <div className={`window-buttons${resting ? " window-buttons--resting" : ""}`} onPointerMove={wake}>
         <button className="window-buttons__button" type="button" aria-label={text.minimize} onClick={minimize}>
           <Minus size={14} strokeWidth={1.4} aria-hidden="true" />
         </button>
@@ -49,7 +56,7 @@ export function WindowControls({ style }: { style: "windows" | "mac" }) {
   }
 
   return (
-    <div className="window-controls" data-tauri-drag-region>
+    <div className={`window-controls${resting ? " window-controls--resting" : ""}`} onPointerMove={wake} data-tauri-drag-region>
       <div className="window-controls__dots">
         <button className="window-controls__dot window-controls__dot--close" type="button" aria-label={text.close} onClick={close}>
           <X {...ICON} />
