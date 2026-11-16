@@ -8,7 +8,6 @@ import type { useQQNotifications } from "../../features/messages/qq-notification
 import type { useWeChatReminders } from "../../features/messages/wechat/WeChatReminders";
 import type { useMail } from "../../features/messages/mail/MailPanel";
 import type { IslandSettings } from "../../lib/settings/types";
-import type { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import type { useFileShelf } from "../../features/file-shelf/useFileShelf";
 import type { useIslandFeatures } from "./useIslandFeatures";
 import type { useIslandNavigation } from "./useIslandNavigation";
@@ -32,7 +31,6 @@ export type IslandPagesProps = {
   messageSource: MessageView["messageSource"];
   messagePanel?: ReturnType<typeof useIslandMessagePanel>;
   openMessages: MessageView["openMessages"];
-  clipboard: ReturnType<typeof useClipboardHistory>;
   pluginPages: ReturnType<typeof usePluginPages>;
   fileShelf: ReturnType<typeof useFileShelf>;
   isShelfDropping: boolean;

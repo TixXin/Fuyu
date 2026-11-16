@@ -7,10 +7,8 @@ import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
 import { takeIslandClickFocus } from "./api";
 import { islandHost } from "./islandHost";
-import { useClipboardCopyCard } from "../../features/clipboard/useClipboardCopyCard";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
-import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import { IslandShell } from "./IslandShell";
 import { useBackgroundUpdateCheck } from "../../features/updater/useBackgroundUpdateCheck";
 import { useIslandWindow } from "./useIslandWindow";
@@ -80,7 +78,7 @@ export function IslandApp() {
   useTrayLanguage();
   useSettingsFileSync();
   const navigation = useIslandNavigation();
-  const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage, toggleClipboardHistory } = navigation;
+  const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage } = navigation;
   const pluginPages = usePluginPages(page);
   const side = useIslandSide();
   const [storedSettings, setSettings] = useLegacySwitches(useIslandSettings(), { reconcile: true });
@@ -107,7 +105,6 @@ export function IslandApp() {
   useBackgroundUpdateCheck(openUpdateSettings);
   usePluginHostEvents({ mode });
 
-  const copyCard = useClipboardCopyCard(!game.quiet);
   const firstHints = useIslandFirstHints({
     mode,
     isTucked,
@@ -145,12 +142,8 @@ export function IslandApp() {
   useIslandTucking({ settings, navigation });
 
 
-  const clipboard = useClipboardHistory(toggleClipboardHistory);
-  const { clipboardHistory } = clipboard;
-
   const { features, openEnabledPage } = useIslandFeatures({
     settings,
-    clipboardEnabled: clipboardHistory.settings.enabled,
     qqEnabled: qqNotifications.snapshot.enabled,
     wechatEnabled: wechatReminders.snapshot.enabled,
     qqMail,
@@ -212,7 +205,7 @@ export function IslandApp() {
     onCollapse: collapseIsland,
   });
 
-  const islandNotice = useIslandNotice({ copyCard, firstHints });
+  const islandNotice = useIslandNotice({ firstHints });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
     preview: banner.barPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
   }));
@@ -225,9 +218,6 @@ export function IslandApp() {
   });
 
   useIslandKeyboard(
-    clipboardHistory.settings.enabled && clipboardHistory.settings.shortcutEnabled,
-    clipboardHistory.settings.shortcut,
-    toggleClipboardHistory,
     collapseIsland,
     mode,
     features,
@@ -303,7 +293,6 @@ export function IslandApp() {
           messageSource={messageSource}
           messagePanel={messagePanel}
           openMessages={openMessages}
-          clipboard={clipboard}
           pluginPages={pluginPages}
           fileShelf={fileShelf}
           isShelfDropping={isShelfDropping}

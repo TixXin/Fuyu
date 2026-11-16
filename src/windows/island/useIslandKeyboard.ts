@@ -1,13 +1,9 @@
 import { useEffect } from "react";
-import { matchesClipboardShortcut } from "../../features/clipboard/shortcut";
 import { pageCycleDirection, pageDigitFromEvent } from "../../lib/settings/pageShortcuts";
 import { cycleShortcutPage, pageForAltDigit, type IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
 
 export function useIslandKeyboard(
-  clipboardShortcutEnabled: boolean,
-  clipboardShortcut: string,
-  onToggleClipboardHistory: () => void,
   onCollapse: () => void,
   mode: IslandMode,
   features: IslandFeatures,
@@ -19,15 +15,6 @@ export function useIslandKeyboard(
 ) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        clipboardShortcutEnabled &&
-        matchesClipboardShortcut(event, clipboardShortcut)
-      ) {
-        event.preventDefault();
-        onToggleClipboardHistory();
-        return;
-      }
-
       const digit = pageDigitFromEvent(event, pageDigitModifiers);
       if (digit !== null && mode === "expanded") {
         const target = pageForAltDigit(features, digit);
@@ -52,13 +39,10 @@ export function useIslandKeyboard(
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
-    clipboardShortcut,
-    clipboardShortcutEnabled,
     features,
     mode,
     onCollapse,
     onPageChange,
-    onToggleClipboardHistory,
     page,
     pageDigitModifiers,
     pageNextShortcut,

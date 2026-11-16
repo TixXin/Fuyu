@@ -12,7 +12,6 @@ const NO_PLUGIN_PAGES: readonly PluginPageId[] = [];
 
 type IslandFeatureOptions = {
   settings: IslandSettings;
-  clipboardEnabled: boolean;
   qqEnabled: boolean;
   wechatEnabled: boolean;
   qqMail: MailController;
@@ -26,7 +25,6 @@ type IslandFeatureOptions = {
 
 export function useIslandFeatures({
   settings,
-  clipboardEnabled,
   qqEnabled,
   wechatEnabled,
   qqMail,
@@ -39,6 +37,7 @@ export function useIslandFeatures({
 }: IslandFeatureOptions) {
   const unsupported = useUnsupportedFeatures();
   const timer = useBuiltinEnabled("timer");
+  const clipboardEnabled = useBuiltinEnabled("clipboard");
   const features = useMemo<IslandFeatures>(() => foldScreenshotsIntoClipboard(withoutUnsupported({
     todo: settings.todoEnabled,
     calendar: settings.calendarEnabled,
