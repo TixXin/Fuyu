@@ -319,10 +319,13 @@ fn popup_width_narrows_the_expanded_hit_area() {
 
 #[test]
 fn a_wide_plugin_page_fits_the_island_window_at_any_scale() {
-    assert_eq!(max_expanded_width(1.0), 816.0);
-    assert_eq!(max_expanded_width(0.91), 896.0);
-    assert_eq!(max_expanded_width(1.4), 582.0);
-    assert!(max_expanded_width(1.4) * 1.4 <= STAGE_WINDOW_WIDTH);
+    assert_eq!(max_expanded_width(1.0), 792.0);
+    assert_eq!(max_expanded_width(0.91), 872.0);
+    assert_eq!(max_expanded_width(1.4), 560.0);
+    for scale in [0.91, 1.0, 1.15, 1.4] {
+        let side_room = (STAGE_WINDOW_WIDTH - max_expanded_width(scale) * scale) / 2.0;
+        assert!(side_room >= 12.0 * scale, "scale {scale}: {side_room}");
+    }
 }
 
 #[test]
