@@ -21,7 +21,7 @@ export type IslandTrailContribution = { kind: "trail"; item: string };
 
 export type IslandAlertContribution = { kind: "alert"; item: string };
 export type IslandNoticeContribution = { kind: "notice"; item: string; measure?: string };
-export type IslandPreviewContribution = { kind: "preview"; item: string; hot?: string; action?: string };
+export type IslandPreviewContribution = { kind: "preview"; item: string; key?: string; label?: string; hot?: string; action?: string; open?: string };
 export type IslandRevealContribution = { kind: "reveal"; reveal?: "always" | "allowed"; pauseIdle?: boolean; pauseHover?: boolean };
 export type IslandHoldContribution = { kind: "hold"; reason: string };
 export type IslandSideContribution = { kind: "side"; item: string; height: number };

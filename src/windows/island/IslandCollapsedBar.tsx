@@ -1,10 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
-import { messagePreviewText, type MessagePreview, type MessageSource } from "../../features/messages/messagePreview";
-import type { MailController } from "../../features/messages/mail/MailPanel";
-import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
-import type { WeChatRemindersController } from "../../features/messages/wechat/WeChatReminders";
+import { messagePreviewText, type MessagePreview } from "../../features/messages/messagePreview";
 import { PluginNotificationActions } from "../../features/plugins/PluginNotificationActions";
 import type { PluginNotificationsController } from "../../features/plugins/usePluginNotifications";
 import { useUpdateReminder } from "../../features/updater/useBackgroundUpdateCheck";
@@ -26,9 +23,6 @@ import { DevWatermark } from "../../components/DevWatermark";
 import "./IslandCollapsedBar.css";
 
 type IslandCollapsedBarProps = {
-  qqMail: MailController;
-  qqNotifications: QQNotificationsController;
-  wechatReminders: WeChatRemindersController;
   pluginNotifications: PluginNotificationsController;
   preview: MessagePreview | null;
   page: IslandPage;
@@ -40,7 +34,6 @@ type IslandCollapsedBarProps = {
   shelfCount: number | null;
   agentVisualState: string;
   onOpenPage: (page: IslandPage) => void;
-  onOpenMessages: (source: MessageSource) => void;
   notice?: { content: ReactNode; actions: ReactNode } | null;
   onWindowDragStart: () => void;
   onTuck: () => void;
@@ -71,9 +64,6 @@ function renderZone(items: readonly CollapsedBarItem[]) {
 }
 
 export function IslandCollapsedBar({
-  qqMail,
-  qqNotifications,
-  wechatReminders,
   pluginNotifications,
   preview,
   page,
@@ -85,7 +75,6 @@ export function IslandCollapsedBar({
   shelfCount,
   agentVisualState,
   onOpenPage,
-  onOpenMessages,
   notice = null,
   onWindowDragStart,
   onTuck,
@@ -123,13 +112,11 @@ export function IslandCollapsedBar({
     statusLight: slots.statusLight
       ? <span className="island__mark-light" {...{ [OPENS_BAR]: "" }}>{slots.statusLight}</span>
       : <span className={pulseClassName} {...{ [OPENS_BAR]: "" }} />,
-    qqMail,
     updateVersion,
       shelfCount,
     hints: contributed.hints,
     slots,
     onOpenPage,
-    onOpenMessages,
   }, showCollapsedText && !preview && !notice && !peekLine && !activeAlert ? pluginStatus : []);
   const offered = items.map(({ id }) => id);
   const placements = arrangeCollapsedItems(offered, saved);
@@ -155,20 +142,7 @@ export function IslandCollapsedBar({
           onClick={(event) => {
             if (event.detail === 0 || !didDragRef.current) {
               if (preview) {
-                const source = preview.source;
-                if (source === "plugin") {
-                  pluginNotifications.dismiss();
-                  return;
-                }
-                if (source === "qqMail" && qqMail.preview) {
-                  onOpenMessages("qqMail");
-                  void qqMail.readMail(qqMail.preview, qqMail.previewAccount);
-                  return;
-                }
-                const open = source === "qq" ? qqNotifications.openQQ() : wechatReminders.openWeChat(preview.chat);
-                void open.then((opened) => {
-                  if (opened === false) onOpenMessages(source);
-                });
+                if (contributed.preview?.action) runIslandAction(contributed.preview.action);
               } else if (peekLine) {
                 openPeek();
               } else {

@@ -34,13 +34,13 @@ function Stage({ media }: { media: MediaState }) {
   const [lyric, changeLyric] = useState<CurrentLyric | null>(null);
   const [meeting, changeMeeting] = useState<CollapsedMeeting | null>(null);
   setPreview = changePreview; setLyric = changeLyric; setMeeting = changeMeeting;
-  useFixtureLines({ agents: 0, status: { state: "idle", label: "" }, todoTitle: "剩余3个待办", lyricLine: lyric, meeting: meeting, media });
+  useFixtureLines({ messages: { qq: QQ, wechat: WECHAT, mail: MAIL, plugin: PLUGINS, preview: preview }, agents: 0, status: { state: "idle", label: "" }, todoTitle: "剩余3个待办", lyricLine: lyric, meeting: meeting, media });
   return <div className="stage" style={{ "--collapsed-island-width": "320px" } as CSSProperties}>
-    <IslandShell qqNotifications={QQ} wechatReminders={WECHAT} qqMail={MAIL} pluginNotifications={PLUGINS} preview={preview}
+    <IslandShell pluginNotifications={PLUGINS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached showTitle={false} showCollapsedText
       appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: false, shelf: false, qq: true, wechat: true, qqMail: true, agents: true, translation: false, calendar: false, screenshots: false, timer: false }}
-      shelfCount={null} onOpenPage={() => {}} onOpenMessages={() => {}} onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
+      shelfCount={null} onOpenPage={() => {}} onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}}
       onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>

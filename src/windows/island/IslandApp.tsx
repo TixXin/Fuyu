@@ -61,7 +61,7 @@ import { runIslandAction, useIslandContributed, useSettleIslandContributions } f
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { overlaySlot } from "./slots/overlay";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { useLegacyPopups } from "./legacyPopups";
+import { useMessagesIsland } from "../../features/messages/plugin/islandMessages";
 import { useLegacyStates } from "./legacyStates";
 import type { IslandPage } from "./types";
 
@@ -90,7 +90,6 @@ export function IslandApp() {
   const demo = useOnboardingDemo();
   const { messageSource, setMessageSource, openMessages } = useMessageView(qqMail.closeReader, openIslandPage);
   const banner = useIslandBanner({ messageNotice: settings.messageNotice, notices, mode, isTucked, quiet: game.quiet, onOpenMessages: openMessages, host: islandHost });
-  const showsMessage = hasMessagePreview || banner.showing;
   const decor = useIslandDecor();
   const gauges = useCollapsedGauges(mode !== "collapsed" || isTucked || game.quiet);
   const collapsedSlots = useMemo(() => mergeIslandDecor([decor, gauges]), [decor, gauges]);
@@ -105,7 +104,7 @@ export function IslandApp() {
   });
   const notch = useIslandNotch();
   const barText = settings.showCollapsedText && !notch;
-  const { lines: contributedLines, alerts, popups, style, settled, hints } = useIslandContributed();
+  const { lines: contributedLines, alerts, popups, style, settled, hints, preview: contributedPreview } = useIslandContributed();
   usePluginKeybindings({ mode, page, hasActiveTodo: hints.has("todos.active") });
   useIslandAutoUpdate({ mode, agentsBusy: hints.has("agents.busy") });
   const textWidth = useCollapsedWidth({
@@ -113,16 +112,12 @@ export function IslandApp() {
     noticeText: firstHints.current ? t.island.firstHint[firstHints.current] : null,
     showTitle: settings.showTitle,
     widthExtra: settings.collapsedWidthExtra,
-    peeking: banner.hasLinePreview || contributedLines.some((line) => line.drop === true),
+    peeking: contributedPreview !== null || contributedLines.some((line) => line.drop === true),
     slots: collapsedSlots,
   });
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
-  useLegacyStates({
-    showsMessage,
-    linePreview: banner.hasLinePreview,
-    prompting: permissionPrompts.current !== null,
-    hold: useTuckHold(settings, { messagesOpen: mode === "expanded" && page === "qq", notices }),
-  });
+  useLegacyStates({ prompting: permissionPrompts.current !== null });
+  const messagesHold = useTuckHold(settings, { messagesOpen: mode === "expanded" && page === "qq", notices });
   useIslandTucking({ settings, navigation });
 
 
@@ -143,7 +138,24 @@ export function IslandApp() {
     durationMs: settings.messagePanelSeconds * 1000,
     notices, mode, page, openIslandPage, collapseIsland, onOpenMessages: openMessages, host: islandHost,
   });
-  useLegacyPopups({ maxPanelHeight: settings.maxPanelHeight, arrivalsHeight: messagePanel.arrivals ? messagePanel.height : null });
+  const { banner: shownBanner, bannerRef, open: openBanner, close: closeBanner, runAction: runBannerAction } = banner;
+  const bannerView = useMemo(() => shownBanner && { banner: shownBanner, bannerRef, onOpen: openBanner, onClose: closeBanner, onAction: runBannerAction }, [shownBanner, bannerRef, openBanner, closeBanner, runBannerAction]);
+  useMessagesIsland({
+    qq: qqNotifications,
+    wechat: wechatReminders,
+    mail: qqMail,
+    plugin: pluginNotifications,
+    preview: banner.barPreview,
+    source: messageSource,
+    open: openMessages,
+    panel: messagePanel,
+    banner: bannerView,
+  }, {
+    showsMessage: hasMessagePreview || banner.showing,
+    hold: messagesHold,
+    arrivalsHeight: messagePanel.arrivals ? messagePanel.height : null,
+    maxPanelHeight: settings.maxPanelHeight,
+  });
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
     [...popups.values()].some((entry) => entry.open === true),
@@ -191,7 +203,7 @@ export function IslandApp() {
 
   const islandNotice = useIslandNotice({ firstHints });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: banner.barPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
+    preview: contributedPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
   }));
   const hoverTucked = useIslandHover({
     settings,
@@ -219,12 +231,8 @@ export function IslandApp() {
     <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
       <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       <IslandShell
-        qqMail={qqMail}
-        qqNotifications={qqNotifications}
-        wechatReminders={wechatReminders}
         pluginNotifications={pluginNotifications}
         preview={banner.barPreview}
-        onOpenMessages={openMessages}
         mode={mode}
         page={page}
         popup={popup}
@@ -277,7 +285,7 @@ export function IslandApp() {
           isShelfDropping={isShelfDropping}
         />
       </IslandShell>
-      <SlotView slot={overlaySlot} props={{ messageBanner: banner.banner && { banner: banner.banner, bannerRef: banner.bannerRef, onOpen: banner.open, onClose: banner.close, onAction: banner.runAction } }} />
+      <SlotView slot={overlaySlot} props={{ messageBanner: bannerView }} />
       <PluginContextMenus />
     </main>
   );

@@ -57,14 +57,14 @@ function Fixture() {
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const preview = useLatestMessagePreview(qq, wechat, qqMail, NO_PLUGIN_NOTIFICATIONS);
-  useFixtureLines({ agents: state.agents ? state.count : null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: state.task, todoCount: state.todoCount ?? null, agentSession: state.agentTitle ? { provider: "codex", label: "Codex", title: state.agentTitle } : null, lyricLine: state.lyric ? { text: state.lyric, index: 3, longest: state.lyric, ...(state.karaoke && { karaoke: state.karaoke }) } : null });
+  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: preview }, agents: state.agents ? state.count : null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: state.task, todoCount: state.todoCount ?? null, agentSession: state.agentTitle ? { provider: "codex", label: "Codex", title: state.agentTitle } : null, lyricLine: state.lyric ? { text: state.lyric, index: 3, longest: state.lyric, ...(state.karaoke && { karaoke: state.karaoke }) } : null });
   return <div className="stage" style={{ "--collapsed-island-width": "300px" } as CSSProperties}>
-    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: state.agents, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} collapsedSlots={state.slots}
-      onOpenPage={(page) => { openedPage = page; }} onOpenMessages={() => {}}
+      onOpenPage={(page) => { openedPage = page; }}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>

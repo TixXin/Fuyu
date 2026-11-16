@@ -10,7 +10,7 @@ import { useIslandMessagePanel } from "../../src/features/messages/island/useIsl
 import { islandHost } from "../../src/windows/island/islandHost";
 import { useIslandPopup } from "../../src/windows/island/useIslandPopup";
 import { getExpandedIslandHeight } from "../../src/windows/island/expandedHeight";
-import { messageArrivalsPanelHeight } from "../../src/windows/island/legacyPopups";
+import { messageArrivalsPanelHeight } from "../../src/features/messages/plugin/islandMessages";
 import type { IslandMode, IslandPage } from "../../src/windows/island/types";
 import { MessageArrivalsPanel } from "../../src/features/messages/arrivals/MessageArrivalsPanel";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
@@ -97,14 +97,14 @@ function Fixture() {
     panel: page === "qq" && panel.arrivals ? { height: messageArrivalsPanelHeight(panel.height, 490) } : undefined,
     popup,
   });
-  useFixtureLines({ agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
+  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: plugins, preview: null, open: (source) => { openedSource = source; openIslandPage("qq"); } }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className="stage" style={{ "--collapsed-island-width": "300px", "--expanded-island-height": `${height}px`, "--expanded-island-width": `${expandedIslandWidth}px` } as CSSProperties}>
-    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={plugins} preview={null}
+    <IslandShell pluginNotifications={plugins} preview={null}
       mode={mode} page={page} popup={popup} isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: false, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null}
-      onOpenPage={openIslandPage} onOpenMessages={(source) => { openedSource = source; openIslandPage("qq"); }}
+      onOpenPage={openIslandPage}
       onPageChange={setPage} onWindowDragStart={() => {}} onCollapse={collapseIsland}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       {page === "qq" && (
