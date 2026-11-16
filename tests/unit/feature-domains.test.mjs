@@ -41,6 +41,7 @@ test("the ledger counts commands and the listeners still alive", async () => {
   let next = 0;
   const internals = { invoke: async (command, args) => (command === "plugin:event|listen" ? ++next : args ?? null) };
   const ledger = installIpcLedger(internals);
+  assert.equal(ledger.recording, true);
   await internals.invoke("translate_text", { text: "a" });
   await internals.invoke("translate_text");
   const first = await internals.invoke("plugin:event|listen", { event: "x", handler: 1 });
@@ -53,6 +54,34 @@ test("the ledger counts commands and the listeners still alive", async () => {
   ledger.stop();
   await internals.invoke("translate_text");
   assert.equal(ledger.calls("translate_text"), 2);
+});
+
+test("a read-only invoke, as in the Mac webview, leaves the window running and the ledger empty", async () => {
+  const internals = {};
+  const invoke = async (command) => command;
+  Object.defineProperty(internals, "invoke", { value: invoke, writable: false, configurable: false, enumerable: true });
+  const ledger = installIpcLedger(internals);
+  assert.equal(ledger.recording, false);
+  assert.equal(internals.invoke, invoke);
+  assert.equal(await internals.invoke("translate_text"), "translate_text");
+  assert.equal(ledger.calls("translate_text"), 0);
+  assert.deepEqual(ledger.snapshot(), { calls: {}, listening: {} });
+  assert.doesNotThrow(() => ledger.stop());
+  assert.equal(internals.invoke, invoke);
+});
+
+test("a configurable but read-only invoke is swapped in place and put back on stop", async () => {
+  const internals = {};
+  const invoke = async (command) => command;
+  Object.defineProperty(internals, "invoke", { value: invoke, writable: false, configurable: true, enumerable: false });
+  const ledger = installIpcLedger(internals);
+  assert.equal(ledger.recording, true);
+  assert.notEqual(internals.invoke, invoke);
+  await internals.invoke("translate_text");
+  assert.equal(ledger.calls("translate_text"), 1);
+  ledger.stop();
+  assert.equal(internals.invoke, invoke);
+  assert.deepEqual(Object.getOwnPropertyDescriptor(internals, "invoke"), { value: invoke, writable: false, configurable: true, enumerable: false });
 });
 
 test("a class belongs to the built-in plugin whose CSS alone defines it", () => {
