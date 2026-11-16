@@ -1,6 +1,6 @@
-import { agentShell } from "../../agent-status/plugin/islandState";
 import { useProvideIslandDecor } from "../../plugin-kernel/islandDecor";
 import { defineSlot } from "../../plugin-kernel/slots";
+import { useAgentActivity } from "../useAgentActivity";
 import { useCenterDecor } from "../useCenterDecor";
 
 type RunnerProps = {
@@ -13,7 +13,8 @@ type RunnerProps = {
 const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
 
 function CenterPatternRunner({ mode, isTucked, quiet, settings }: RunnerProps) {
-  const decor = useCenterDecor({ paused: mode !== "collapsed" || isTucked || quiet, agents: agentShell.use().activity, markLight: settings.agentLightStyle === "mark" });
+  const agents = useAgentActivity();
+  const decor = useCenterDecor({ paused: mode !== "collapsed" || isTucked || quiet, agents, markLight: settings.agentLightStyle === "mark" });
   useProvideIslandDecor("center-pattern", decor);
   return null;
 }

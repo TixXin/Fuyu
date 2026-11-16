@@ -94,6 +94,10 @@ impl Shared {
         }
     }
 
+    pub fn reopen(&self) {
+        self.queue().reopen();
+    }
+
     pub fn shut_down(&self) {
         self.queue().shut_down();
         self.changed.notify_all();

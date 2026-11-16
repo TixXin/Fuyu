@@ -16,9 +16,9 @@ const MAX_CWD_CHARS: usize = 260;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExternalAgentStatus {
-    id: String,
-    name: String,
-    phase: String,
+    pub(super) id: String,
+    pub(super) name: String,
+    pub(super) phase: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     task_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -29,7 +29,7 @@ pub struct ExternalAgentStatus {
     agent: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     cwd: Option<String>,
-    updated_at: i64,
+    pub(super) updated_at: i64,
     #[serde(skip)]
     owner: String,
 }

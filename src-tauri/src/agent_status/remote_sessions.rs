@@ -41,10 +41,12 @@ struct MirroredFile {
 static HOSTS: Mutex<Option<HashMap<String, HostState>>> = Mutex::new(None);
 static CONNECTIONS: Mutex<Option<HashMap<String, Connection>>> = Mutex::new(None);
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[cfg_attr(test, derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct RemoteHostStatus {
     host: String,
+    #[cfg_attr(test, ts(type = "number | null"))]
     fetched_at: Option<i64>,
     error: Option<String>,
     fetching: bool,
@@ -53,6 +55,9 @@ pub struct RemoteHostStatus {
 }
 
 pub(super) fn sessions(app_dir: &Path, window_ms: i64) -> Vec<AgentSessionSummary> {
+    if !super::background::switched_on() {
+        return Vec::new();
+    }
     let targets = remote_hosts::chosen_targets(app_dir);
     let hosts: Vec<String> = targets.iter().map(|(host, _)| host.clone()).collect();
     let now = current_unix_millis();
@@ -131,6 +136,19 @@ pub(super) fn refresh_soon() {
     }
 }
 
+pub(super) fn close_all() {
+    CONNECTIONS.lock().unwrap_or_else(PoisonError::into_inner).take();
+    if let Some(states) = HOSTS.lock().unwrap_or_else(PoisonError::into_inner).as_mut() {
+        for state in states.values_mut() {
+            state.attempted_at = 0;
+        }
+    }
+}
+
+pub(super) fn connected() -> bool {
+    CONNECTIONS.lock().unwrap_or_else(PoisonError::into_inner).as_ref().is_some_and(|connections| !connections.is_empty())
+}
+
 fn mirror_root(app_dir: &Path, host: &str) -> PathBuf {
     app_dir.join(MIRROR_DIR).join(host)
 }
@@ -158,7 +176,9 @@ fn fetch(host: &str, target: &SshTarget, app_dir: &Path, window_ms: i64) {
     });
     let result = result.map(|(connection, replies)| {
         approval_error = approval_error.take().or_else(|| connection.forward_error());
-        CONNECTIONS.lock().unwrap_or_else(PoisonError::into_inner).get_or_insert_with(HashMap::new).insert(host.to_string(), connection);
+        if super::background::switched_on() {
+            CONNECTIONS.lock().unwrap_or_else(PoisonError::into_inner).get_or_insert_with(HashMap::new).insert(host.to_string(), connection);
+        }
         apply(&mirror_root(app_dir, host), host, replies)
     });
 

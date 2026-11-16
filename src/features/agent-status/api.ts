@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { AgentEffortLabels } from "./effortLabels";
 
@@ -181,7 +181,7 @@ export function setAgentRemoteHosts(hosts: string[]) {
   return invoke<string[]>("set_agent_remote_hosts", { hosts });
 }
 
-export function focusAgentWindow(provider: SessionProvider, cwd: string | null, title: string | null, sessionId: string) {
+export function focusAgentWindow(provider: SessionProvider, cwd: string | null, title: string | null, sessionId: string | null) {
   return invoke<boolean>("focus_agent_window", { provider, cwd, title, sessionId });
 }
 
@@ -287,4 +287,10 @@ export function installAgentStatusHooks() {
 
 export function listAgentEffortLabels() {
   return invoke<AgentEffortLabels>("list_agent_effort_labels");
+}
+
+const PLUGIN_HOST_EVENT = "plugin-host-event";
+
+export function emitAgentStatusHostEvent(payload: Record<string, unknown>) {
+  return emit(PLUGIN_HOST_EVENT, { name: "agentStatus.changed", payload });
 }

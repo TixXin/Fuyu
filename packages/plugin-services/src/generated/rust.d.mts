@@ -1,3 +1,19 @@
+export type AgentFocus = { found: boolean, };
+
+export type AgentRemoteHosts = { hosts: Array<RemoteHostStatus>, };
+
+export type AgentReportEntry = { id: string, name: string, phase: string, updatedAt: number, };
+
+export type AgentSessionEntry = { key: string, provider: string, sessionId: string, title: string | null, cwd: string | null, phase: string, updatedAt: number, remoteHost: string | null, listed: boolean, unseen: boolean, };
+
+export type AgentSessions = { sessions: Array<AgentSessionEntry>, others: Array<AgentReportEntry>, };
+
+export type AgentUsageReport = { updatedAt: number | null, fiveHour: AgentUsageWindow | null, sevenDay: AgentUsageWindow | null, models: Array<AgentUsageWindow>, plan: string | null, source: string, error: string | null, };
+
+export type AgentUsageWindow = { name: string, used: number, resetsAt: number | null, };
+
+export type AgentUsages = { claude: AgentUsageReport | null, codex: AgentUsageReport | null, };
+
 export type AppEcho = { echo: JsonValue, };
 
 export type AppVersion = { version: string, platform: string, };
@@ -28,11 +44,17 @@ export type NowPlaying = { available: boolean, playing: boolean, audible: boolea
 
 export type PlatformSupport = { os: string, unsupported: Array<string>, devBuild: boolean, };
 
+export type RemoteHostStatus = { host: string, fetchedAt: number | null, error: string | null, fetching: boolean, sessions: number, approvalError: string | null, };
+
 export type Translated = { text: string, engine: string, };
 
 export type TranslatorEngines = { engines: Array<EngineSecret>, };
 
 export type RustMethods = {
+  "agents.focus": { params: { provider: string; sessionId?: string | null; cwd?: string | null; title?: string | null }; result: AgentFocus };
+  "agents.remoteHosts": { params: Record<string, never> | null; result: AgentRemoteHosts };
+  "agents.sessions": { params: Record<string, never> | null; result: AgentSessions };
+  "agents.usage": { params: Record<string, never> | null; result: AgentUsages };
   "app.echo": { params: { value: JsonValue }; result: AppEcho };
   "app.platformSupport": { params: Record<string, never> | null; result: PlatformSupport };
   "app.version": { params: Record<string, never> | null; result: AppVersion };
@@ -58,4 +80,4 @@ export type RustMethods = {
   "translator.translate": { params: { text: string; direction: string; provider?: string | null; model?: string | null }; result: Translated };
 };
 
-export declare const RUST_METHODS: readonly ["app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "clipboard.history", "fileShelf.add", "fileShelf.list", "media.next", "media.nowPlaying", "media.playPause", "media.previous", "media.seek", "todos.add", "todos.days", "todos.list", "todos.note", "todos.remove", "todos.setNote", "todos.update", "translator.engines", "translator.rewrite", "translator.translate"];
+export declare const RUST_METHODS: readonly ["agents.focus", "agents.remoteHosts", "agents.sessions", "agents.usage", "app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "clipboard.history", "fileShelf.add", "fileShelf.list", "media.next", "media.nowPlaying", "media.playPause", "media.previous", "media.seek", "todos.add", "todos.days", "todos.list", "todos.note", "todos.remove", "todos.setNote", "todos.update", "translator.engines", "translator.rewrite", "translator.translate"];

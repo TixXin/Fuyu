@@ -7,7 +7,6 @@ use std::{
     net::{SocketAddr, TcpStream, ToSocketAddrs},
     path::{Path, PathBuf},
     sync::Arc,
-    thread,
     time::Duration,
 };
 
@@ -16,6 +15,7 @@ use serde_json::{json, Map, Value};
 
 use super::decision::{Agent, Decision, HookInput};
 use super::external::{self, ExternalRequest};
+use crate::plugin_kernel::worker::{Stop, Worker};
 
 const USERNAME: &str = "opencode";
 const CONNECT_TIMEOUT: Duration = Duration::from_millis(400);
@@ -317,39 +317,47 @@ fn external_requests(open: &[Permission]) -> Vec<ExternalRequest> {
         .collect()
 }
 
-pub(super) fn watch(app_dir: PathBuf, home_dir: PathBuf) {
-    let spawned = thread::Builder::new().name("opencode-permissions".into()).spawn(move || {
-        let env = |name: &str| std::env::var_os(name);
-        let mut open: Vec<Permission> = Vec::new();
-        let mut misses = 0;
-        loop {
-            let Some(endpoint) = endpoint(&home_dir, env) else {
+pub(super) fn worker(app_dir: PathBuf, home_dir: PathBuf) -> Worker {
+    Worker::new("opencode-permissions", move |stop| watch(&app_dir, &home_dir, &stop))
+}
+
+fn watch(app_dir: &Path, home_dir: &Path, stop: &Stop) {
+    let env = |name: &str| std::env::var_os(name);
+    let mut open: Vec<Permission> = Vec::new();
+    let mut misses = 0;
+    loop {
+        let pause = match endpoint(home_dir, env) {
+            None => {
                 if !open.is_empty() {
                     open.clear();
-                    publish(&app_dir, &open, None);
+                    publish(app_dir, &open, None);
                 }
-                thread::sleep(POLL_IDLE);
-                continue;
-            };
-            match pending(&endpoint) {
-                Ok(now) => {
-                    misses = 0;
-                    open = now;
-                    publish(&app_dir, &open, Some(endpoint));
-                }
-                Err(_) => {
-                    misses += 1;
-                    if misses >= MISSES_BEFORE_CLEARING && !open.is_empty() {
-                        open.clear();
-                        publish(&app_dir, &open, None);
+                POLL_IDLE
+            }
+            Some(endpoint) => {
+                match pending(&endpoint) {
+                    Ok(now) => {
+                        misses = 0;
+                        open = now;
+                        publish(app_dir, &open, Some(endpoint));
+                    }
+                    Err(_) => {
+                        misses += 1;
+                        if misses >= MISSES_BEFORE_CLEARING && !open.is_empty() {
+                            open.clear();
+                            publish(app_dir, &open, None);
+                        }
                     }
                 }
+                POLL_RUNNING
             }
-            thread::sleep(POLL_RUNNING);
+        };
+        if stop.wait(pause) {
+            break;
         }
-    });
-    if let Err(error) = spawned {
-        eprintln!("could not watch opencode permission requests: {error}");
+    }
+    if !open.is_empty() {
+        publish(app_dir, &[], None);
     }
 }
 

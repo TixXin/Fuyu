@@ -1,3 +1,4 @@
+pub(crate) mod background;
 mod config;
 mod decision;
 mod external;
@@ -84,15 +85,10 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         };
     });
     let shared = server::new_shared(WAIT_LIMIT, notify);
-    if let (Ok(agent_dir), Ok(home_dir)) = (crate::home_dir::agent_home(app.path()), crate::system::windows_home_dir()) {
-        opencode::watch(agent_dir, home_dir);
-    }
-    let stays_quiet = crate::dev_lane::lane().is_none() && crate::coexist::yielding();
-    let own = if stays_quiet { None } else { Some(server::serve(&shared, saved.port, true, &saved.token)?) };
-    if let Some(port) = own.as_ref().map(server::Listener::port).filter(|port| *port != saved.port) {
-        saved.port = port;
-        changed = true;
-    }
+    let opencode = match (crate::home_dir::agent_home(app.path()), crate::system::windows_home_dir()) {
+        (Ok(agent_dir), Ok(home_dir)) => Some(opencode::worker(agent_dir, home_dir)),
+        _ => None,
+    };
     if changed {
         config::save_config(&path, &saved)?;
     }
@@ -101,10 +97,60 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         port: AtomicU16::new(saved.port),
         token: saved.token,
         path,
-        own: Mutex::new(own),
+        own: Mutex::new(None),
         borrowed: Mutex::new(None),
     });
+    background::register(opencode);
     Ok(())
+}
+
+fn switched_on() -> bool {
+    crate::plugin_kernel::builtins::is_enabled(crate::agent_status::PLUGIN_ID)
+}
+
+fn stays_quiet() -> bool {
+    crate::dev_lane::lane().is_none() && crate::coexist::yielding()
+}
+
+fn listen_on(service: &Service, listener: server::Listener) -> server::Listener {
+    if listener.port() != service.port.load(Ordering::SeqCst) {
+        service.port.store(listener.port(), Ordering::SeqCst);
+        let moved = config::ApprovalConfig { port: listener.port(), token: service.token.clone() };
+        if let Err(error) = config::save_config(&service.path, &moved) {
+            eprintln!("{error}");
+        }
+    }
+    listener
+}
+
+fn start_serving() -> Result<(), String> {
+    let service = service()?;
+    service.shared.reopen();
+    if stays_quiet() {
+        return Ok(());
+    }
+    let mut own = service.own.lock().unwrap_or_else(PoisonError::into_inner);
+    if own.is_none() {
+        let listener = server::serve(&service.shared, service.port.load(Ordering::SeqCst), true, &service.token)?;
+        *own = Some(listen_on(service, listener));
+    }
+    Ok(())
+}
+
+fn stop_serving() {
+    let Some(service) = SERVICE.get() else { return };
+    service.shared.shut_down();
+    let own = service.own.lock().unwrap_or_else(PoisonError::into_inner).take();
+    let borrowed = service.borrowed.lock().unwrap_or_else(PoisonError::into_inner).take();
+    for listener in own.into_iter().chain(borrowed) {
+        listener.stop();
+    }
+}
+
+fn serving() -> bool {
+    SERVICE.get().is_some_and(|service| {
+        service.own.lock().unwrap_or_else(PoisonError::into_inner).is_some() || service.borrowed.lock().unwrap_or_else(PoisonError::into_inner).is_some()
+    })
 }
 
 #[cfg_attr(not(windows), allow(dead_code))]
@@ -119,6 +165,9 @@ pub(crate) fn pause() {
 #[cfg_attr(not(windows), allow(dead_code))]
 pub(crate) fn resume() {
     let Some(service) = SERVICE.get() else { return };
+    if !switched_on() {
+        return;
+    }
     let mut own = service.own.lock().unwrap_or_else(PoisonError::into_inner);
     if own.is_some() {
         return;
@@ -136,14 +185,7 @@ pub(crate) fn resume() {
         eprintln!("could not start the agent approval endpoint again");
         return;
     };
-    if listener.port() != port {
-        service.port.store(listener.port(), Ordering::SeqCst);
-        let moved = config::ApprovalConfig { port: listener.port(), token: service.token.clone() };
-        if let Err(error) = config::save_config(&service.path, &moved) {
-            eprintln!("{error}");
-        }
-    }
-    *own = Some(listener);
+    *own = Some(listen_on(service, listener));
 }
 
 #[cfg_attr(not(windows), allow(dead_code))]
@@ -156,7 +198,7 @@ pub(crate) fn serve_for_release(wanted: bool) {
         }
         return;
     }
-    if borrowed.is_some() {
+    if borrowed.is_some() || !switched_on() {
         return;
     }
     let Some(real) = crate::home_dir::real_home().and_then(|home| config::read_config(&home.join(config::CONFIG_FILE_NAME))) else {

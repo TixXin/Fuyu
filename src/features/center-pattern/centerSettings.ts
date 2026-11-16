@@ -1,3 +1,4 @@
+import type { AgentSessions } from "@fuyu/plugin-services";
 import type { PetInfo } from "./api";
 import { CENTER_PATTERNS, type CenterPatternId, type PetMood } from "./patterns.ts";
 
@@ -20,6 +21,10 @@ export function centerPatternSize(settings: Record<string, unknown>): number {
 }
 
 export type AgentActivity = { phase: string; updatedAt: number };
+
+export function activityOf(answer: AgentSessions): AgentActivity[] {
+  return [...answer.sessions, ...answer.others].map(({ phase, updatedAt }) => ({ phase, updatedAt }));
+}
 
 export function petMoodFor(agents: readonly AgentActivity[], now: number): PetMood {
   const phases = new Set(agents.map((agent) => agent.phase));
