@@ -7,7 +7,6 @@ export type SideRowSources = {
   agentVisualState: AgentVisualState;
   agentSessionCount: number | null;
   unreadCount: number;
-  todoCount: number | null;
   shelfCount: number | null;
 };
 

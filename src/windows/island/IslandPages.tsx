@@ -8,13 +8,11 @@ import type { useIslandMessagePanel } from "./useIslandMessagePanel";
 import type { useQQNotifications } from "../../features/messages/qq-notifications/QQNotifications";
 import type { useWeChatReminders } from "../../features/messages/wechat/WeChatReminders";
 import type { useMail } from "../../features/messages/mail/MailPanel";
-import type { useTodos } from "../../features/todos/useTodos";
 import type { AgentSessionSummary } from "../../features/agent-status/api";
 import type { UnseenSessions } from "../../features/agent-status/useUnseenSessions";
 import type { AgentUsages } from "../../features/agent-status/usage";
 import type { IslandSettings } from "../../lib/settings/types";
 import type { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
-import type { CalendarState } from "../../features/calendar/useCalendar";
 import type { useFileShelf } from "../../features/file-shelf/useFileShelf";
 import type { useIslandAgentAlerts } from "./useIslandAgentAlerts";
 import type { useIslandFeatures } from "./useIslandFeatures";
@@ -50,9 +48,6 @@ export type IslandPagesProps = {
   pluginPages: ReturnType<typeof usePluginPages>;
   fileShelf: ReturnType<typeof useFileShelf>;
   isShelfDropping: boolean;
-  notebookProps: ReturnType<typeof useTodos>["notebookProps"];
-  addTodoOn?: ReturnType<typeof useTodos>["addTodoOn"];
-  calendar: CalendarState;
 };
 
 export type IslandPageProps = IslandPagesProps & {

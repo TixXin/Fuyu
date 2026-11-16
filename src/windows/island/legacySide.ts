@@ -8,11 +8,10 @@ type LegacySideInput = SideRowSources & {
 };
 
 export function useLegacySide(input: LegacySideInput) {
-  const { unreadCount, hasMail, todoCount, shelfCount } = input;
+  const { unreadCount, hasMail, shelfCount } = input;
   const list: IslandContribution[] = [{ kind: "side", item: "agent", height: SIDE_ROW_HEIGHT }];
   if (unreadCount > 0) list.push({ kind: "side", item: "unread", height: SIDE_ROW_HEIGHT });
   if (hasMail) list.push({ kind: "side", item: "mail", height: SIDE_ROW_HEIGHT });
-  if (todoCount !== null && todoCount > 0) list.push({ kind: "side", item: "todo", height: SIDE_ROW_HEIGHT });
   if (shelfCount !== null && shelfCount > 0) list.push({ kind: "side", item: "shelf", height: SIDE_ROW_HEIGHT });
   useIslandContributions("builtin", "legacy.side", list);
 }

@@ -2,11 +2,10 @@ import { useCallback, useMemo } from "react";
 import { useIslandNotices } from "./useIslandNotices";
 import { PluginPermissionPrompt } from "../../features/plugins/PluginPermissionPrompt";
 import { PluginContextMenus } from "../../features/plugins/PluginContextMenu";
-import { useCalendar } from "../../features/calendar/useCalendar";
-import { todoEvents } from "../../features/calendar/todoEvents";
 import { IslandPages } from "./IslandPages";
 import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
+import { takeIslandClickFocus } from "./api";
 import { useScreenshotText } from "../../features/screenshot/useScreenshotText";
 import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
 import { useScreenshotNotice } from "../../features/screenshot/useScreenshotNotice";
@@ -16,12 +15,11 @@ import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import { IslandShell } from "./IslandShell";
-import type { TodoItem } from "../../features/todos/types";
+import { useBackgroundUpdateCheck } from "../../features/updater/useBackgroundUpdateCheck";
 import { useIslandWindow } from "./useIslandWindow";
 import { getExpandedIslandHeight } from "./expandedHeight";
 import { getIslandStageStyle } from "./stageStyle";
 import { useDevicePixelRatio } from "./useDevicePixelRatio";
-import { useCollapsedTodo } from "./useCollapsedTodo";
 import { useGameMode } from "./useGameMode";
 import { useIslandKeyboard } from "./useIslandKeyboard";
 import { useIslandFeatures } from "./useIslandFeatures";
@@ -32,7 +30,8 @@ import { useQuotaAlert } from "../../features/agent-status/useQuotaAlert";
 import { AgentArrangeButton } from "../../features/agent-status/AgentArrangeButton";
 import { useAgentIndicator } from "./useAgentIndicator";
 import { useIslandNavigation } from "./useIslandNavigation";
-import { useIslandTodos } from "./useIslandTodos";
+import { usePluginHostEvents } from "./usePluginHostEvents";
+import { usePluginKeybindings } from "./usePluginKeybindings";
 import { useIslandTucking } from "./useIslandTucking";
 import { useTuckHold } from "./useTuckHold";
 import { useIslandShelf } from "./useIslandShelf";
@@ -60,7 +59,6 @@ import { useSettingsFileSync } from "../../lib/settings-backup/useSettingsFileSy
 import { useOnboardingDemo } from "./useOnboardingDemo";
 import { useIslandFirstHints } from "./useIslandFirstHints";
 import { useIslandNotice } from "./islandNotice";
-import { useIslandVoiceInput } from "./useIslandVoiceInput";
 import { useIslandSide } from "./useIslandSide";
 import { IslandRunners } from "./IslandRunners";
 import { islandMarginY } from "./islandForm";
@@ -78,9 +76,11 @@ import { useLegacyPopups } from "./legacyPopups";
 import { useLegacyStates } from "./legacyStates";
 import type { IslandPage } from "./types";
 
-const NO_TODOS: TodoItem[] = [];
 const openTranslator = () => {
   runIslandAction("translation.open");
+};
+const openUpdateSettings = () => {
+  openSettingsWindow("updates");
 };
 
 export function IslandApp() {
@@ -118,7 +118,8 @@ export function IslandApp() {
     onOpenAgents: openAgentsPage,
     markLight: settings.agentLightStyle === "mark",
   });
-  const { todos, activeTodoId, notebookProps, addTodoOn } = useIslandTodos({ settings, setSettings, mode, page, agentStatus, collapseIsland });
+  useBackgroundUpdateCheck(openUpdateSettings);
+  usePluginHostEvents({ agentStatus, mode });
 
   const screenshotText = useScreenshotText();
   const screenshot = useIslandScreenshot(settings.screenshotEnabled, collapseIsland);
@@ -137,23 +138,15 @@ export function IslandApp() {
   const below = useLineBelow(LINE_PRIORITY.agentInterjection);
   const lyricsAhead = below?.shareable === true && below.priority > LINE_PRIORITY.agentTitle;
   const agentSession = settings.agentTitleMode === "changes" || lyricsAhead ? agentInterjection : namedAgent;
-  const { collapsedTaskTitle, collapsedTodoCount } = useCollapsedTodo(
-    settings.todoEnabled ? todos : NO_TODOS,
-    settings.todoEnabled ? activeTodoId : null,
-    settings.todoEnabled ? settings : { ...settings, showIdleTodoCount: false },
-    mode !== "collapsed" || isTucked || !barText || banner.hasLinePreview,
-  );
-  const timedTodos = useMemo(() => (settings.todoEnabled ? todoEvents(todos, Date.now(), t.island.todoList) : []), [settings.todoEnabled, t, todos]);
-  const calendar = useCalendar(settings.calendarEnabled, settings.calendarRemindMinutes, timedTodos);
   const lineSources = useLegacyLines({
-    barText, agentSession, todoTitle: collapsedTaskTitle, todoCount: collapsedTodoCount,
+    agentSession,
     interjecting: agentSession !== null && agentSession === agentInterjection,
     agentIconWidth: collapsedSlots.agentIconWidth ?? 0,
-    meeting: calendar.upcoming && settings.calendarEnabled ? { upcoming: calendar.upcoming, showTitle: settings.calendarShowTitle } : null,
     screenshotPeek: screenshotText,
   });
   useLegacyAlerts({ quotaAlert });
-  const { lines: contributedLines, alerts, popups, style, settled } = useIslandContributed();
+  const { lines: contributedLines, alerts, popups, style, settled, hints } = useIslandContributed();
+  usePluginKeybindings({ mode, page, hasActiveTodo: hints.has("todos.active") });
   const textWidth = useCollapsedWidth({
     barText,
     noticeText: firstHints.current ? t.island.firstHint[firstHints.current] : null,
@@ -165,10 +158,11 @@ export function IslandApp() {
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
   useLegacyStates({
     showsMessage,
+    linePreview: banner.hasLinePreview,
     prompting: permissionPrompts.current !== null || screenshotCard.current !== null,
     peeking: Boolean(screenshotText),
     recording: recording.shown,
-    hold: useTuckHold(settings, { todos, activeTodoId, agentSessions, messagesOpen: mode === "expanded" && page === "qq", notices }),
+    hold: useTuckHold(settings, { agentSessions, messagesOpen: mode === "expanded" && page === "qq", notices }),
     agentsActive: settings.agentStatusEnabled && activeAgentSessionCount > 0,
   });
   useIslandTucking({ settings, navigation });
@@ -251,8 +245,7 @@ export function IslandApp() {
     onCollapse: collapseIsland,
   });
 
-  const voice = useIslandVoiceInput(addTodoOn, notebookProps);
-  const islandNotice = useIslandNotice({ recording, voice, screenshotNotice, copyCard, firstHints });
+  const islandNotice = useIslandNotice({ recording, screenshotNotice, copyCard, firstHints });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
     preview: banner.barPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
   }));
@@ -284,7 +277,7 @@ export function IslandApp() {
 
   return (
     <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
-      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
+      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       <IslandShell
         qqMail={qqMail}
         qqNotifications={qqNotifications}
@@ -358,9 +351,6 @@ export function IslandApp() {
           pluginPages={pluginPages}
           fileShelf={fileShelf}
           isShelfDropping={isShelfDropping}
-          notebookProps={notebookProps}
-          addTodoOn={settings.todoEnabled ? addTodoOn : undefined}
-          calendar={calendar}
         />
       </IslandShell>
       <SlotView slot={overlaySlot} props={{ messageBanner: banner.banner && { banner: banner.banner, bannerRef: banner.bannerRef, onOpen: banner.open, onClose: banner.close, onAction: banner.runAction } }} />

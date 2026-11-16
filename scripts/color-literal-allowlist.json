@@ -14,7 +14,7 @@
     "src/features/cc-connect/CcConnectSetup.css": 3,
     "src/features/center-pattern/CenterPattern.css": 1,
     "src/features/clipboard/ClipboardPopup.css": 1,
-    "src/features/clipboard/ClipboardPopupPanels.css": 10,
+    "src/features/clipboard/ClipboardPopupPanels.css": 9,
     "src/features/device-use/DeviceUseIndicator.css": 6,
     "src/features/file-shelf/FileShelfPanel.css": 6,
     "src/features/media/lyrics/LyricsSettingsSection.css": 1,

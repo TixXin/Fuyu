@@ -156,14 +156,42 @@ fn client(download: &NodeDownload) -> Result<reqwest::blocking::Client, Download
         .timeout(download.read_timeout)
         .user_agent(concat!("Fuyu-plugin-base/", env!("CARGO_PKG_VERSION")));
     if let Some(proxy) = &download.proxy {
-        let proxy = reqwest::Proxy::all(proxy).map_err(|error| DownloadError::Sources(vec![Attempt { url: proxy.clone(), reason: format!("not a usable proxy: {error}") }]))?;
-        builder = builder.proxy(proxy);
+        let usable = reqwest::Proxy::all(proxy).map_err(|error| DownloadError::Sources(vec![Attempt { url: redact_proxy(proxy), reason: scrub(&format!("not a usable proxy: {}", error.without_url()), Some(proxy)) }]))?;
+        builder = builder.proxy(usable);
     }
-    builder.build().map_err(|error| DownloadError::Sources(vec![Attempt { url: String::new(), reason: format!("could not set up HTTP: {error}") }]))
+    builder.build().map_err(|error| DownloadError::Sources(vec![Attempt { url: String::new(), reason: scrub(&format!("could not set up HTTP: {error}"), download.proxy.as_deref()) }]))
+}
+
+fn userinfo(proxy: &str) -> Option<(usize, usize)> {
+    let start = proxy.find("://").map_or(0, |at| at + 3);
+    let rest = &proxy[start..];
+    let authority = &rest[..rest.find(['/', '?', '#']).unwrap_or(rest.len())];
+    authority.rfind('@').map(|at| (start, start + at))
+}
+
+fn redact_proxy(proxy: &str) -> String {
+    match userinfo(proxy) {
+        Some((start, end)) => format!("{}***{}", &proxy[..start], &proxy[end..]),
+        None => proxy.to_owned(),
+    }
+}
+
+fn scrub(text: &str, proxy: Option<&str>) -> String {
+    let Some(proxy) = proxy else { return text.to_owned() };
+    let Some((start, end)) = userinfo(proxy) else { return text.to_owned() };
+    let secret = &proxy[start..end];
+    let mut scrubbed = text.replace(proxy, &redact_proxy(proxy));
+    if !secret.is_empty() {
+        scrubbed = scrubbed.replace(secret, "***");
+        if let Some((_, password)) = secret.split_once(':').filter(|(_, password)| !password.is_empty()) {
+            scrubbed = scrubbed.replace(password, "***");
+        }
+    }
+    scrubbed
 }
 
 fn fetch(client: &reqwest::blocking::Client, url: &str, archive: &Path, download: &NodeDownload, progress: &mut dyn FnMut(Progress)) -> Result<(), String> {
-    let mut response = client.get(url).send().map_err(|error| describe_http(&error))?;
+    let mut response = client.get(url).send().map_err(|error| scrub(&describe_http(&error), download.proxy.as_deref()))?;
     if !response.status().is_success() {
         return Err(format!("answered HTTP {}", response.status().as_u16()));
     }
@@ -252,4 +280,22 @@ fn remove_other_versions(runtime: &Path, keep: &Path) {
 
 fn disk(action: &'static str, path: &Path, error: std::io::Error) -> DownloadError {
     DownloadError::Disk { action, path: path.to_path_buf(), error: error.to_string() }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{redact_proxy, scrub};
+
+    #[test]
+    fn a_proxy_never_shows_its_user_or_password() {
+        assert_eq!(redact_proxy("http://alice:s3cret@127.0.0.1:7890"), "http://***@127.0.0.1:7890");
+        assert_eq!(redact_proxy("alice:s3cret@proxy.example:8080/path@x"), "***@proxy.example:8080/path@x");
+        assert_eq!(redact_proxy("http://127.0.0.1:7890"), "http://127.0.0.1:7890");
+        let text = "error sending request: tunnel to http://alice:s3cret@127.0.0.1:7890 failed for alice:s3cret, password s3cret";
+        let scrubbed = scrub(text, Some("http://alice:s3cret@127.0.0.1:7890"));
+        assert!(!scrubbed.contains("alice") && !scrubbed.contains("s3cret"), "{scrubbed}");
+        assert!(scrubbed.contains("127.0.0.1:7890"), "the host stays, it helps to see which proxy failed");
+        assert_eq!(scrub("plain", None), "plain");
+        assert_eq!(scrub("http://127.0.0.1:7890 refused", Some("http://127.0.0.1:7890")), "http://127.0.0.1:7890 refused");
+    }
 }
