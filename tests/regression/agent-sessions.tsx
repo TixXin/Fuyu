@@ -4,13 +4,13 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
-import type { AgentCardEffects, AgentHostDisplay, AgentSessionView } from "../../src/lib/settings/types";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/windows/island/layout";
 import { checkNarrow, renderShowcase } from "./agent-sessions-showcase";
 import { checkUsage } from "./agent-sessions-usage";
 import { checkSubagents } from "./agent-sessions-subagents";
 import { checkChildSessions } from "./agent-sessions-children";
+import type { AgentCardEffects, AgentHostDisplay, AgentSessionView } from "../../src/features/agent-status/agentSettings";
 
 const ISLAND_CHROME_HEIGHT = 86;
 const fixture = document.getElementById("fixture")!;

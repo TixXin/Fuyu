@@ -41,6 +41,7 @@
 |---|---|
 | `features/appearance/` 的设置模型：`types`、`settings`、`settingsDefaults`、`settingsLimits`、`normalize*Settings`、`storage`、`installState`、`useIslandSettings`、`useSettingPresets`、`collapsedItems`、`useCollapsedPlacements`、`pageShortcuts`、`glassSettings`、`api` | `lib/settings/` |
 | `features/appearance/` 的主题和动效：`theme`、`themeMode`、`builtinThemes`、`glassPalette`、`islandMotion`、`motionCurves`、`useAccentColor`、`useWindowAccent`、`useWindowLight`、`useResolvedTheme`；`features/center-pattern/useReducedMotion.ts` | `lib/theme/` |
+| `features/appearance/normalizeAgentSettings.ts`，以及 `types.ts`、`settingsLimits.ts`、`settingsDefaults.ts` 里 Agent 会话列表和提醒的类型、范围、默认值 | `features/agent-status/agentSettings.ts`（`lib/settings/` 汇总；`AGENT_ALERT_SECONDS` 和消息面板共用，留在 `settingsLimits.ts`） |
 | `features/appearance/IslandPreview`、`AgentPagePreview` | `components/island-preview/` |
 | `features/appearance/` 的设置分节（`*Section`、`AccentSettingsRow`、`InkColorRows`、`IslandGlyph`、`IslandMotionRow`、`PositionDiagram`、`ResetAppearanceButton`、`useIslandDockEdge`）；`features/settings-backup/` 的 `DataHomeSection`、`DataSettingsSection`、`SettingsBackupSection`、`UpdateBackupsSection`；`features/system-permissions/SystemPermissionsSection` | `windows/settings/sections/` |
 | `features/settings-backup/` 的其余文件 | `lib/settings-backup/` |

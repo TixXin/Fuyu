@@ -1,6 +1,6 @@
-import type { AgentSessionView } from "../../lib/settings/types";
 import { clamp } from "../../utils/number.ts";
 import { getCollapsedTextUnits } from "../../utils/text.ts";
+import type { AgentSessionView } from "../../features/agent-status/agentSettings";
 
 export const MIN_COLLAPSED_ISLAND_WIDTH = 280;
 export const MAX_COLLAPSED_ISLAND_WIDTH = 340;

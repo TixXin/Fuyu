@@ -3,8 +3,10 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
-import { AGENT_ALERT_SECONDS, AGENT_QUOTA_ALERT_PERCENTS, AGENT_REMIND_SECONDS } from "../../lib/settings/settings";
-import type { AgentAlertStarted, IslandSettings } from "../../lib/settings/types";
+import { AGENT_ALERT_SECONDS } from "../../lib/settings/settings";
+import type { IslandSettings } from "../../lib/settings/types";
+import { AGENT_QUOTA_ALERT_PERCENTS, AGENT_REMIND_SECONDS } from "./agentSettings";
+import type { AgentAlertStarted } from "./agentSettings";
 
 export function AgentAlertSettings({
   settings,

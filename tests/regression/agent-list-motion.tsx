@@ -4,10 +4,10 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
-import type { AgentSessionGroup, AgentSessionView } from "../../src/lib/settings/types";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import type { AlertedSession } from "../../src/features/agent-status/useAgentAlerts";
 import type { SessionRemoval } from "../../src/features/agent-status/useHiddenSessions";
+import type { AgentSessionGroup, AgentSessionView } from "../../src/features/agent-status/agentSettings";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 mockIPC((command) => {

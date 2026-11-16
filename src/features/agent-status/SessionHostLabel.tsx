@@ -1,7 +1,7 @@
 import { useTranslation } from "../../i18n";
-import type { AgentHostDisplay } from "../../lib/settings/types";
 import type { SessionHost } from "./api";
 import { useHostIcon } from "./useHostIcon";
+import type { AgentHostDisplay } from "./agentSettings";
 
 export function SessionHostLabel({ host, display, badge = false }: { host: SessionHost; display: AgentHostDisplay; badge?: boolean }) {
   const t = useTranslation();

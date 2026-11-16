@@ -1,3 +1,4 @@
+import type { AgentSettingValues } from "../../features/agent-status/agentSettings";
 import type { CalendarSettingValues } from "../../features/calendar/calendarSettings";
 import type { GlassSettingValues } from "./glassSettings";
 import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../../features/media/lyrics/lyricsSettings";
@@ -21,17 +22,10 @@ export type MinimizeAction = "tray" | "tuck";
 export type TuckedHoverAction = "reveal" | "expand";
 
 export type MessageNotice = "line" | "banner" | "panel";
-export type AgentHostDisplay = "both" | "icon" | "name" | "off";
-export type AgentSessionView = "list" | "cards" | "compact";
-export type AgentSessionSort = "status" | "recent" | "firstSeen";
-export type AgentSessionGroup = "computer" | "project" | "none";
-export type AgentArchiveMotion = "slide" | "dissolve";
-export type AgentCardEffects = "off" | "sparkle" | "gradient";
-export type AgentAlertStarted = "everyTurn" | "newSession" | "off";
 export type IslandMotion = "spring" | "smooth" | "fast" | "bouncy" | "none";
 export type ShelfDoubleClick = "open" | "reveal";
 
-export type IslandSettings = CalendarSettingValues & GlassSettingValues & {
+export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentSettingValues & {
   topEdgeLayoutVersion: 1;
   appearanceMode: AppearanceMode;
   fontFamily: IslandFont;
@@ -65,27 +59,6 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & {
   maxPanelHeight: number;
   panelWidth: number;
   collapsedWidthExtra: number;
-  agentHostDisplay: AgentHostDisplay;
-  agentSessionView: AgentSessionView;
-  agentSessionSort: AgentSessionSort;
-  agentSessionGroup: AgentSessionGroup;
-  agentArchiveMotion: AgentArchiveMotion;
-  agentCardEffects: AgentCardEffects;
-  agentSessionHours: number;
-  agentHiddenProviders: string[];
-  agentHideFinished: boolean;
-  agentHideClosed: boolean;
-  agentShowElapsed: boolean;
-  agentShowModel: boolean;
-  agentShowActivity: boolean;
-  agentShowUsage: boolean;
-  agentAlertCompleted: boolean;
-  agentAlertFailed: boolean;
-  agentAlertWaiting: boolean;
-  agentAlertStarted: AgentAlertStarted;
-  agentAlertSeconds: number;
-  agentRemindSeconds: number;
-  agentQuotaAlertPercent: number;
   taskTextColor: string;
   pulseColor: string;
   pulseBrightness: number;

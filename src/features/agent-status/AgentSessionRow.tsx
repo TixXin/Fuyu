@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode, Ref } from "react";
 import { useTranslation } from "../../i18n";
-import type { AgentHostDisplay } from "../../lib/settings/types";
 import { AgentProviderIcon } from "./AgentProviderIcon";
 import { AgentSessionHoverCard } from "./AgentSessionHoverCard";
 import type { AgentSessionSummary } from "./api";
@@ -14,6 +13,7 @@ import { sessionLight } from "./sessionLight";
 import { pillParts } from "./sessionPill";
 import type { UnseenSessions } from "./useUnseenSessions";
 import "./AgentSessionRow.css";
+import type { AgentHostDisplay } from "./agentSettings";
 
 export function AgentSessionRow({
   session,

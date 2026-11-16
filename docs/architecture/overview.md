@@ -53,7 +53,7 @@
 main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、styles/
 ```
 
-功能之间不直接 import（插件平台第 3 版的要求，见 [v3-phase3-plan.md](plugins/v3-phase3-plan.md)「关键设计」第 4 条）。不属于任何一个功能的共享代码在 E36.3.24 上提了：岛屿设置的模型在 `lib/settings/`，主题、强调色和动效在 `lib/theme/`，快捷键工具在 `lib/shortcut/`，设置文件和备份在 `lib/settings-backup/`，系统权限在 `lib/system-permissions/`，设置页共用的分节在 `windows/settings/sections/`，岛的「第一次」提示在 `windows/island/first-hints/`；原来的 `features/appearance`、`settings-backup`、`system-permissions`、`first-hints` 不再存在。`lib/settings/` 是唯一反过来 import 功能的地方：日历、歌词、待办项目那一份设置留在功能里，由它汇总成 `IslandSettings`。还剩的跨功能 import 记在 `scripts/feature-boundary-allowlist.json`，由 `tests/unit/feature-boundaries.test.mjs` 检查，只减不增，第 3 阶段结束时清零。
+功能之间不直接 import（插件平台第 3 版的要求，见 [v3-phase3-plan.md](plugins/v3-phase3-plan.md)「关键设计」第 4 条）。不属于任何一个功能的共享代码在 E36.3.24 上提了：岛屿设置的模型在 `lib/settings/`，主题、强调色和动效在 `lib/theme/`，快捷键工具在 `lib/shortcut/`，设置文件和备份在 `lib/settings-backup/`，系统权限在 `lib/system-permissions/`，设置页共用的分节在 `windows/settings/sections/`，岛的「第一次」提示在 `windows/island/first-hints/`；原来的 `features/appearance`、`settings-backup`、`system-permissions`、`first-hints` 不再存在。`lib/settings/` 是唯一反过来 import 功能的地方：日历、歌词、待办项目、Agent（`features/agent-status/agentSettings.ts`）那一份设置留在功能里，由它汇总成 `IslandSettings`。还剩的跨功能 import 记在 `scripts/feature-boundary-allowlist.json`，由 `tests/unit/feature-boundaries.test.mjs` 检查，只减不增，第 3 阶段结束时清零。
 
 ## 仓库目录
 

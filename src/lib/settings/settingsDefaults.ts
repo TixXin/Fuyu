@@ -1,3 +1,4 @@
+import { DEFAULT_AGENT_SETTINGS, LEGACY_AGENT_FALLBACKS } from "../../features/agent-status/agentSettings.ts";
 import { DEFAULT_LYRICS_SETTINGS } from "../../features/media/lyrics/lyricsSettings.ts";
 import { DEFAULT_CALENDAR_SETTINGS } from "../../features/calendar/calendarSettings.ts";
 import { DEFAULT_GLASS_SETTINGS } from "./glassSettings.ts";
@@ -28,27 +29,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   maxPanelHeight: DEFAULT_MAX_PANEL_HEIGHT,
   panelWidth: DEFAULT_PANEL_WIDTH,
   collapsedWidthExtra: 0,
-  agentHostDisplay: "icon",
-  agentSessionView: "list",
-  agentSessionSort: "status",
-  agentSessionGroup: "computer",
-  agentArchiveMotion: "slide",
-  agentCardEffects: "off",
-  agentSessionHours: 24,
-  agentHiddenProviders: [],
-  agentHideFinished: false,
-  agentHideClosed: true,
-  agentShowElapsed: false,
-  agentShowModel: true,
-  agentShowActivity: true,
-  agentShowUsage: true,
-  agentAlertCompleted: true,
-  agentAlertFailed: true,
-  agentAlertWaiting: true,
-  agentAlertStarted: "everyTurn",
-  agentAlertSeconds: 3,
-  agentRemindSeconds: 0,
-  agentQuotaAlertPercent: 80,
+  ...DEFAULT_AGENT_SETTINGS,
   taskTextColor: DEFAULT_TASK_TEXT_COLOR,
   pulseColor: "#3ae489",
   pulseBrightness: 160,
@@ -140,6 +121,5 @@ export const LEGACY_FALLBACKS = {
   carryOverIncompleteTodos: true,
   autoTuckSeconds: 30,
   messageNotice: "line",
-  agentAlertSeconds: 5,
-  agentRemindSeconds: 60,
+  ...LEGACY_AGENT_FALLBACKS,
 } as const satisfies Partial<IslandSettings>;

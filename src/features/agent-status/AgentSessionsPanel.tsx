@@ -7,7 +7,6 @@ import { useArchiveMotion } from "./useArchiveMotion";
 import { useListMotion } from "./useListMotion";
 import { sessionLight } from "./sessionLight";
 import { useTranslation } from "../../i18n";
-import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionGroup, AgentSessionSort, AgentSessionView } from "../../lib/settings/types";
 import { AgentSessionCard } from "./AgentSessionCard";
 import { AgentUsageBar } from "./AgentUsageBar";
 import type { AgentUsages } from "./usage";
@@ -32,6 +31,7 @@ import { AgentSubagents, listedSubagents } from "./AgentSubagents";
 import { AgentSessionChildren } from "./AgentSessionChildren";
 import { nestSessions, type NestedSessions } from "./sessionChildren";
 import "./AgentSessionsPanel.css";
+import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionGroup, AgentSessionSort, AgentSessionView } from "./agentSettings";
 
 const NOT_FOUND_NOTICE_MS = 3000;
 const MAX_CHILD_DEPTH = 3;
