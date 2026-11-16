@@ -33,7 +33,7 @@ fn sheet_webp() -> Vec<u8> {
 fn temp_roots() -> (PathBuf, Vec<(PetSource, PathBuf)>) {
     static COUNTER: AtomicUsize = AtomicUsize::new(0);
     let base = std::env::temp_dir().join(format!(
-        "focusd-pets-test-{}-{}",
+        "fuyu-pets-test-{}-{}",
         std::process::id(),
         COUNTER.fetch_add(1, Ordering::Relaxed)
     ));

@@ -7,7 +7,7 @@ use super::local_proxy::{choice, loopback_port, pick, v2rayn_config_port, yaml_p
 use super::tunnel::{backoff, hear, port_listening, ssh_args, Heard};
 
 fn temp_dir(tag: &str) -> std::path::PathBuf {
-    std::env::temp_dir().join(format!("focusd-ssh-tunnels-{tag}-{}", std::process::id()))
+    std::env::temp_dir().join(format!("fuyu-ssh-tunnels-{tag}-{}", std::process::id()))
 }
 
 fn cleanup(dir: &Path) {
@@ -146,7 +146,7 @@ fn listening_ports_are_read_from_netstat_and_ss() {
     assert_eq!(port_listening(ss, 10_089), Ok(true));
     assert_eq!(port_listening(ss, 20_089), Ok(true));
     assert_eq!(port_listening(ss, 128), Ok(false));
-    assert!(port_listening("FOCUSD_NO_PORT_TOOL\n", 10_089).is_err());
+    assert!(port_listening("FUYU_NO_PORT_TOOL\n", 10_089).is_err());
 }
 
 #[test]

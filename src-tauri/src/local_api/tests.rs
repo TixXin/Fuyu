@@ -81,7 +81,7 @@ fn routes_reject_bad_requests() {
 
 #[test]
 fn config_fills_in_a_token_and_keeps_saved_values() {
-    let dir = std::env::temp_dir().join(format!("focusd-local-api-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("fuyu-local-api-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("temp dir");
     let path = dir.join("local-api.json");
 

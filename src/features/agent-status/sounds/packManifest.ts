@@ -1,6 +1,7 @@
 import { AGENT_SOUND_EVENTS, isAgentSoundEvent, type AgentSoundEvent } from "./events.ts";
 
-export const PACK_MANIFEST_NAME = "focusd-sound-pack.json";
+export const PACK_MANIFEST_NAME = "fuyu-sound-pack.json";
+export const LEGACY_PACK_MANIFEST_NAMES = ["focusd-sound-pack.json"] as const;
 
 export const SOUND_FILE_EXTENSIONS = ["wav", "mp3", "ogg", "m4a", "flac"] as const;
 
@@ -80,7 +81,9 @@ export function planSoundPack(folderName: string, paths: string[], jsonFiles: Js
   const soundFiles = paths.filter(isSoundFile);
   const plan: SoundPackPlan = { name: folderName.trim() || "Sound pack", author: "", license: "", sounds: {} };
 
-  const own = jsonFiles.find((file) => baseName(file.path).toLowerCase() === PACK_MANIFEST_NAME);
+  const own = [PACK_MANIFEST_NAME, ...LEGACY_PACK_MANIFEST_NAMES]
+    .map((name) => jsonFiles.find((file) => baseName(file.path).toLowerCase() === name))
+    .find((file) => file !== undefined);
   const ownJson = own ? parseJson(own.text) : undefined;
   if (own && ownJson && typeof ownJson === "object" && !Array.isArray(ownJson)) {
     const manifest = ownJson as Record<string, unknown>;

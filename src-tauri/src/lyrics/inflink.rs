@@ -267,7 +267,7 @@ mod tests {
 
     #[test]
     fn the_installed_package_is_found_by_its_manifest() {
-        let dir = std::env::temp_dir().join(format!("focusd-inflink-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fuyu-inflink-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         assert_eq!(installed_package(&dir), None);

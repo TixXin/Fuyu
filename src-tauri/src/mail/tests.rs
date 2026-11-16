@@ -116,7 +116,7 @@ fn client_id_consumes_only_its_own_reply() {
         output: output.clone(),
     });
     send_client_id(&stream).unwrap();
-    assert!(String::from_utf8_lossy(&output.lock().unwrap()).starts_with("fly0 ID (\"name\" \"fly-island\""));
+    assert!(String::from_utf8_lossy(&output.lock().unwrap()).starts_with("fly0 ID (\"name\" \"fuyu\""));
     let mut rest = String::new();
     stream.into_inner().unwrap().input.read_to_string(&mut rest).unwrap();
     assert_eq!(rest, "a2 OK next\r\n");

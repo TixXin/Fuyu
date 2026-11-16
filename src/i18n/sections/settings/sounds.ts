@@ -77,8 +77,8 @@ export const zhCN: SettingsSoundsText = {
   openFolderMac: "在访达中打开",
   fromPlugin: "来自插件，在插件页关闭或卸载",
   confirmRemove: (name) => `删除音效包「${name}」？`,
-  noSounds: "这个文件夹里没有认得出的音效。音效包需要 focusd-sound-pack.json，或者文件名里带事件名（如 task-complete.wav）。",
-  packsFooter: "音效包是一个文件夹，里面放音效文件和 focusd-sound-pack.json（写明名称、作者、许可和每个事件对应的文件）；也认 CESP 格式的音效包。导入时会复制一份到岛屿的数据目录。音效包里缺的事件用内置音效。别人的音效请确认许可再分享。",
+  noSounds: "这个文件夹里没有认得出的音效。音效包需要 fuyu-sound-pack.json，或者文件名里带事件名（如 task-complete.wav）。",
+  packsFooter: "音效包是一个文件夹，里面放音效文件和 fuyu-sound-pack.json（写明名称、作者、许可和每个事件对应的文件）；也认 CESP 格式的音效包。导入时会复制一份到岛屿的数据目录。音效包里缺的事件用内置音效。别人的音效请确认许可再分享。",
 };
 
 export const en: SettingsSoundsText = {
@@ -123,6 +123,6 @@ export const en: SettingsSoundsText = {
   openFolderMac: "Open in Finder",
   fromPlugin: "From a plugin; switch it off or uninstall it on the Plugins page",
   confirmRemove: (name) => `Remove the sound pack "${name}"?`,
-  noSounds: "No sounds found in this folder. A pack needs a focusd-sound-pack.json, or event names in its file names (such as task-complete.wav).",
-  packsFooter: "A sound pack is a folder of sound files with a focusd-sound-pack.json naming the pack, its author and license, and the file for each event; CESP packs work too. Importing copies it into the island's data folder. Events a pack leaves out use the built-in sounds. Check the license before sharing someone else's sounds.",
+  noSounds: "No sounds found in this folder. A pack needs a fuyu-sound-pack.json, or event names in its file names (such as task-complete.wav).",
+  packsFooter: "A sound pack is a folder of sound files with a fuyu-sound-pack.json naming the pack, its author and license, and the file for each event; CESP packs work too. Importing copies it into the island's data folder. Events a pack leaves out use the built-in sounds. Check the license before sharing someone else's sounds.",
 };

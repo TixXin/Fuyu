@@ -236,7 +236,7 @@ mod tests {
 
     #[test]
     fn the_reason_is_the_log_s_last_line() {
-        let log = std::env::temp_dir().join(format!("focusd-cc-connect-log-{}.log", std::process::id()));
+        let log = std::env::temp_dir().join(format!("fuyu-cc-connect-log-{}.log", std::process::id()));
         fs::write(&log, "starting\nlevel=ERROR msg=\"telegram: Unauthorized\"\n\n").unwrap();
         assert_eq!(last_line(&log).as_deref(), Some("level=ERROR msg=\"telegram: Unauthorized\""));
         fs::write(&log, "").unwrap();

@@ -29,7 +29,7 @@
 ## 什么时候打开
 
 - `windows/island/useFirstRunGuide.ts` 在岛第一次渲染时读 `islandRanBefore()`（有没有 `fuyu-settings`），没有才打开。岛的第一次渲染之后就会保存设置，所以只打开一次，不另存「看过了」的标记。
-- 升级上来的用户已经有 `fuyu-settings`（改名前的 `focusd-island-settings` 会先被复制过来），不会看到。
+- 升级上来的用户已经有 `fuyu-settings`（改名前的设置会先被复制过来，见 [改名兼容](../architecture/contracts.md#改名兼容d17)），不会看到。
 - 设置 → 关于 →「新手引导」可以再打开。
 - 开发时看：主工作区 `pnpm tauri dev` 后用「关于」里的按钮打开；只看卡片的样子用回归页（见下）。
 

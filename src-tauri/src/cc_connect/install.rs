@@ -162,7 +162,7 @@ mod tests {
     #[ignore = "downloads cc-connect from GitHub"]
     fn downloads_the_latest_release_and_it_runs() {
         use super::install;
-        let dir = std::env::temp_dir().join(format!("focusd-cc-connect-install-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fuyu-cc-connect-install-{}", std::process::id()));
         let exe = tauri::async_runtime::block_on(install(dir.clone())).unwrap();
         let version = std::process::Command::new(&exe).arg("--version").output().unwrap();
         assert!(String::from_utf8_lossy(&version.stdout).contains("cc-connect"), "{version:?}");
@@ -198,7 +198,7 @@ mod tests {
         zip.start_file("cc-connect-v1.5.0-windows-amd64.exe", zip::write::SimpleFileOptions::default()).unwrap();
         zip.write_all(b"MZ program").unwrap();
         let bytes = zip.finish().unwrap().into_inner();
-        let dir = std::env::temp_dir().join(format!("focusd-cc-connect-unpack-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fuyu-cc-connect-unpack-{}", std::process::id()));
         let exe = dir.join("cc-connect.exe");
         unpack(&bytes, &dir, &exe).unwrap();
         assert_eq!(fs::read(&exe).unwrap(), b"MZ program");

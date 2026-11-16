@@ -94,8 +94,8 @@ mod tests {
         assert!(looks_like_secret("Q3x9Lm2Pz7Rt5Wv8Ny4Bk6Hj1Df0Gs3Ac"));
         assert!(!looks_like_secret("hello world"));
         assert!(!looks_like_secret("my key is sk-ant-api03-AbCdEfGhIjKlMnOpQrStUvWxYz0123456789"));
-        assert!(!looks_like_secret("https://github.com/TixXin/fly-island/blob/main/README.md"));
-        assert!(!looks_like_secret("C:/Users/tixxin/Projects/fly-island/src-tauri/src/main.rs"));
+        assert!(!looks_like_secret("https://github.com/TixXin/fuyu/blob/main/README.md"));
+        assert!(!looks_like_secret("C:/Users/tixxin/Projects/Fuyu/src-tauri/src/main.rs"));
         assert!(!looks_like_secret("0f22a9b6c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6"));
         assert!(!looks_like_secret("sk-short"));
     }

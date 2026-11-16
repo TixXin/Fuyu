@@ -49,6 +49,7 @@ mod wezterm;
 mod window_focus;
 mod workbuddy;
 mod antigravity;
+mod antigravity_focus;
 mod antigravity_remote;
 mod dsh;
 mod dsh_hooks;

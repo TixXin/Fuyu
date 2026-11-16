@@ -20,6 +20,9 @@ const EDITORS: &[&str] = &[
     "trae",
     "kiro",
     "vscodium",
+    "antigravity",
+    "antigravity ide",
+    "antigravity-ide",
 ];
 const TERMINALS: &[&str] = &[
     "terminal",
@@ -103,6 +106,14 @@ pub(super) fn best_window(candidates: &[WindowCandidate], hints: &SessionHints) 
     best.map(|(index, _)| index)
 }
 
+pub(super) fn preferred_window(candidates: &[WindowCandidate], hints: &SessionHints, prefer_apps: &[String]) -> Option<usize> {
+    prefer_apps.iter().find_map(|app| {
+        let preferred: Vec<usize> = (0..candidates.len()).filter(|&i| candidates[i].app == *app).collect();
+        let subset: Vec<WindowCandidate> = preferred.iter().map(|&i| candidates[i].clone()).collect();
+        best_window(&subset, hints).map(|i| preferred[i]).or_else(|| preferred.first().copied())
+    })
+}
+
 pub(super) fn bare_segment(segment: &str) -> &str {
     let mut text = segment.trim().trim_start_matches(['●', '•', '*']).trim();
     let remote = text.rsplit_once(" [").filter(|(_, label)| label.ends_with(']') && label.contains(": "));
@@ -181,14 +192,14 @@ pub(super) struct FocusedWindow {
 pub(super) fn focus_session_window(
     hints: &SessionHints,
     chain: &[u32],
-    prefer_app: Option<&str>,
+    prefer_apps: &[String],
 ) -> Option<FocusedWindow> {
     use crate::macos::apps;
     let apps_running = apps::regular_apps();
     let owner = chain
         .iter()
         .find_map(|pid| apps_running.iter().find(|(owner, path)| owner == pid && !NOT_SESSION_HOSTS.contains(&app_name(path).as_str())))
-        .or_else(|| prefer_app.and_then(|wanted| apps_running.iter().find(|(_, path)| app_name(path) == wanted)))
+        .or_else(|| prefer_apps.iter().find_map(|wanted| apps_running.iter().find(|(_, path)| app_name(path) == *wanted)))
         .or_else(|| {
             let candidates: Vec<WindowCandidate> = apps_running.iter().map(|(_, path)| WindowCandidate { title: String::new(), app: app_name(path) }).collect();
             best_window(&candidates, hints).and_then(|index| apps_running.get(index))
@@ -240,7 +251,7 @@ pub(super) struct FocusedWindow {
 pub(super) fn focus_session_window(
     hints: &SessionHints,
     chain: &[u32],
-    prefer_app: Option<&str>,
+    prefer_apps: &[String],
 ) -> Option<FocusedWindow> {
     let mut windows = Vec::new();
     let mut candidates = Vec::new();
@@ -268,12 +279,7 @@ pub(super) fn focus_session_window(
 
     let owners: Vec<u32> = windows.iter().map(|&(_, process_id)| process_id).collect();
     let index = window_of_process_chain(&candidates, &owners, chain, hints)
-        .or_else(|| {
-            let app = prefer_app?;
-            let preferred: Vec<usize> = (0..candidates.len()).filter(|&i| candidates[i].app == app).collect();
-            let subset: Vec<WindowCandidate> = preferred.iter().map(|&i| candidates[i].clone()).collect();
-            best_window(&subset, hints).map(|i| preferred[i]).or_else(|| preferred.first().copied())
-        })
+        .or_else(|| preferred_window(&candidates, hints, prefer_apps))
         .or_else(|| best_window(&candidates, hints))?;
     let &(window, process_id) = windows.get(index)?;
     win32::window::allow_set_foreground_window(process_id);

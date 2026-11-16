@@ -14,7 +14,7 @@
 
 ## 项目概览
 
-浮屿 / Fuyu（仓库 `TixXin/fuyu`，改名前叫 FocuSD Island，仓库名 fly-island）是 Windows 优先的桌面效率工具，以透明、无边框、始终置顶的 Tauri 悬浮岛形式运行。主要功能：待办、每日笔记与归档，日历与会议提醒，外观设置、预设与主题市场，媒体控制与同步歌词，剪贴板历史与文件中转，快捷翻译，截图与贴图，QQ 通知、多邮箱和微信提醒，音量亮度与摄像头麦克风提示，手机推送，AI 代理状态，以及自动更新。
+浮屿 / Fuyu（仓库 `TixXin/fuyu`，2026-11 改过名，见下面「对外契约」）是 Windows 优先的桌面效率工具，以透明、无边框、始终置顶的 Tauri 悬浮岛形式运行。主要功能：待办、每日笔记与归档，日历与会议提醒，外观设置、预设与主题市场，媒体控制与同步歌词，剪贴板历史与文件中转，快捷翻译，截图与贴图，QQ 通知、多邮箱和微信提醒，音量亮度与摄像头麦克风提示，手机推送，AI 代理状态，以及自动更新。
 
 应用有八个窗口，外加截图时每个显示器一个选区窗口、每张贴图一个窗口，前端通过同一入口的 `?window=` 参数分发：
 
@@ -119,11 +119,12 @@
 
 下列标识会被已安装用户的数据、配置或外部程序引用。纯重构提交中**一律不得改变**：
 
-- `localStorage` key（`fuyu-*`，改名前是 `focusd-island-*`，完整清单见 [contracts.md](docs/architecture/contracts.md)）及其存储的数据格式
+- `localStorage` key（`fuyu-*`，完整清单见 [contracts.md](docs/architecture/contracts.md)）及其存储的数据格式
 - Tauri 命令名（即 Rust 函数名）、参数名，以及事件名
 - 窗口 label（`main` / `translation` / `clipboard` / `settings`）和 `?window=` 参数值
-- 应用标识 `com.tixxin.fuyu`、开机自启注册表值 `Fuyu`（改名前是 `com.focusd.island`、`FocuSD Island`，D17）、凭据管理器条目、应用数据目录下的文件名（如 `agent-status.json`）
+- 应用标识 `com.tixxin.fuyu`、开机自启注册表值 `Fuyu`、凭据管理器条目、应用数据目录下的文件名（如 `agent-status.json`）
 - 更新端点和 `latest.json` 格式
+- 读改名前旧名字（FocuSD / fly-island）的兼容代码：清单和删除时间见 [contracts.md](docs/architecture/contracts.md)「改名兼容（D17）」，到时间前不删；新代码和文档只用新名字
 
 确实需要变更时，必须在同一个提交里同步修改前后端，提供旧数据的迁移或兼容读取，并在提交说明中写明。
 
@@ -166,7 +167,7 @@
 ## 本机更新与桌面快捷方式
 
 - 每次完成应用更新后运行 `pnpm build:exe`，在主工作区的 `src-tauri/target/release/fuyu.exe` 生成最新程序；仅文档改动不需要重新构建。`pnpm release` 发布成功后也会把刚发布的 exe 复制到这里，发布之后不用再跑 `build:exe`。
-- **不改桌面快捷方式**（2026-11-13 起，用户定）：用户桌面上的快捷方式指向安装的正式版，`build:exe` 和 `pnpm release` 默认都不碰它。只有用户明确要求时，才设环境变量 `FUYU_SYNC_SHORTCUT=1` 再跑，把名字含 FocuSD / fly-island / Fuyu、或目标是 `fuyu.exe` 的快捷方式指向本次构建（都没有时新建 `浮屿.lnk`），并重新读取确认。
+- **不改桌面快捷方式**（2026-11-13 起，用户定）：用户桌面上的快捷方式指向安装的正式版，`build:exe` 和 `pnpm release` 默认都不碰它。只有用户明确要求时，才设环境变量 `FUYU_SYNC_SHORTCUT=1` 再跑，把名字含 Fuyu 或旧名、或目标是 `fuyu.exe` 的快捷方式指向本次构建（都没有时新建 `浮屿.lnk`），并重新读取确认。
 - Mac 上 `pnpm build:exe` 打出 `src-tauri/target/release/bundle/macos/Fuyu.app`，默认不碰 `~/Applications`（那里是安装的正式版）；用户明确要求时设 `FUYU_SYNC_SHORTCUT=1`，先复制成 `~/Applications/Fuyu.app.new` 再换掉旧的 `Fuyu.app`。正在运行的岛屿不受影响，下次启动用新版。
 
 ## Git 与协作
