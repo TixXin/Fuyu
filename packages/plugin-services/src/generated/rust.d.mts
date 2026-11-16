@@ -20,6 +20,8 @@ export type FileShelfSnapshot = { items: Array<FileShelfEntry>, };
 
 export type JsonValue = number | string | boolean | Array<JsonValue> | { [key in string]: JsonValue } | null;
 
+export type NowPlaying = { available: boolean, playing: boolean, audible: boolean, title: string | null, artist: string | null, album: string | null, sourceApp: string | null, positionMs: number, durationMs: number, canSeek: boolean, canNext: boolean, canPrevious: boolean, updatedAt: number, };
+
 export type PlatformSupport = { os: string, unsupported: Array<string>, devBuild: boolean, };
 
 export type Translated = { text: string, engine: string, };
@@ -34,9 +36,14 @@ export type RustMethods = {
   "calendar.sources": { params: Record<string, never> | null; result: CalendarSources };
   "fileShelf.add": { params: { paths: Array<string> }; result: FileShelfSnapshot };
   "fileShelf.list": { params: Record<string, never> | null; result: FileShelfSnapshot };
+  "media.next": { params: Record<string, never> | null; result: NowPlaying };
+  "media.nowPlaying": { params: Record<string, never> | null; result: NowPlaying };
+  "media.playPause": { params: Record<string, never> | null; result: NowPlaying };
+  "media.previous": { params: Record<string, never> | null; result: NowPlaying };
+  "media.seek": { params: { positionMs: number }; result: NowPlaying };
   "translator.engines": { params: Record<string, never> | null; result: TranslatorEngines };
   "translator.rewrite": { params: { text: string; task: string; prompt?: string | null; provider?: string | null; model?: string | null }; result: Translated };
   "translator.translate": { params: { text: string; direction: string; provider?: string | null; model?: string | null }; result: Translated };
 };
 
-export declare const RUST_METHODS: readonly ["app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "fileShelf.add", "fileShelf.list", "translator.engines", "translator.rewrite", "translator.translate"];
+export declare const RUST_METHODS: readonly ["app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "fileShelf.add", "fileShelf.list", "media.next", "media.nowPlaying", "media.playPause", "media.previous", "media.seek", "translator.engines", "translator.rewrite", "translator.translate"];

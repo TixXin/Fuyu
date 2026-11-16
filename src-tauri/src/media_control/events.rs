@@ -1,8 +1,11 @@
 use serde::Serialize;
 use std::{
     collections::HashMap,
-    sync::mpsc::{self, Sender},
-    thread,
+    sync::{
+        mpsc::{self, Receiver, Sender},
+        Mutex, PoisonError,
+    },
+    thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
 use tauri::{AppHandle, Emitter};
@@ -33,6 +36,7 @@ struct SessionChange {
 }
 
 enum Signal {
+    Stop,
     Sessions,
     Track(Option<String>, i64),
     Playback(Option<String>, i64),
@@ -45,22 +49,51 @@ struct Watched {
     playback_token: i64,
 }
 
-pub(crate) fn start(app: &AppHandle) {
-    let app = app.clone();
-    thread::spawn(move || {
-        if let Err(error) = watch(&app) {
-            eprintln!("media session events are off, the 1.5 s poll stays: {error}");
-        }
-    });
+struct Running {
+    stop: Sender<Signal>,
+    thread: JoinHandle<()>,
 }
 
-fn watch(app: &AppHandle) -> Result<(), String> {
+static RUNNING: Mutex<Option<Running>> = Mutex::new(None);
+
+pub(super) fn start(app: &AppHandle) -> Result<(), String> {
+    let mut slot = RUNNING.lock().unwrap_or_else(PoisonError::into_inner);
+    if slot.as_ref().is_some_and(|running| !running.thread.is_finished()) {
+        return Ok(());
+    }
+    let app = app.clone();
+    let (sender, signals) = mpsc::channel();
+    let to_thread = sender.clone();
+    let thread = thread::Builder::new()
+        .name("media-session-events".into())
+        .spawn(move || {
+            if let Err(error) = watch(&app, to_thread, signals) {
+                eprintln!("media session events are off, the 1.5 s poll stays: {error}");
+            }
+        })
+        .map_err(|error| format!("Could not start the media session events: {error}"))?;
+    *slot = Some(Running { stop: sender, thread });
+    Ok(())
+}
+
+pub(super) fn stop() {
+    let running = RUNNING.lock().unwrap_or_else(PoisonError::into_inner).take();
+    if let Some(running) = running {
+        let _ = running.stop.send(Signal::Stop);
+        let _ = running.thread.join();
+    }
+}
+
+pub(super) fn running() -> bool {
+    RUNNING.lock().unwrap_or_else(PoisonError::into_inner).as_ref().is_some_and(|running| !running.thread.is_finished())
+}
+
+fn watch(app: &AppHandle, sender: Sender<Signal>, signals: Receiver<Signal>) -> Result<(), String> {
     let _apartment = win32::com::ComApartment::multithreaded()
         .map_err(|error| media_error("Failed to initialize the media events thread", error))?;
     let manager = request_manager()?;
-    let (sender, signals) = mpsc::channel();
     let to_thread = sender.clone();
-    manager
+    let sessions_token = manager
         .SessionsChanged(&TypedEventHandler::new(move |_, _| {
             let _ = to_thread.send(Signal::Sessions);
             Ok(())
@@ -79,10 +112,13 @@ fn watch(app: &AppHandle) -> Result<(), String> {
                 songs.entry(entry.id.clone()).or_insert_with(|| song(&entry.session));
             }
         }
-        let Ok(signal) = signals.recv() else {
-            return Ok(());
-        };
+        let signal = signals.recv().unwrap_or(Signal::Stop);
         match signal {
+            Signal::Stop => {
+                unsubscribe(&watched);
+                let _ = manager.RemoveSessionsChanged(sessions_token);
+                return Ok(());
+            }
             Signal::Sessions => resubscribe = true,
             Signal::Playback(id, at) => emit(app, "playback", at, id),
             Signal::Track(id, at) => {

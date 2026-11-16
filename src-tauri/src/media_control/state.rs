@@ -84,6 +84,12 @@ impl MediaState {
     }
 }
 
+impl AudioLevel {
+    pub(super) fn silent() -> Self {
+        AudioLevel { active: false, peak: 0.0, updated_at: current_unix_millis() }
+    }
+}
+
 pub(super) fn current_unix_millis() -> i64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)

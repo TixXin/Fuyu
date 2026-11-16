@@ -3,6 +3,7 @@ import { defineSlot, type IslandAlertMeta } from "../../plugin-kernel/slots";
 import { deviceAlertLook } from "../deviceAlertLook";
 import { DeviceAlertPopup } from "../DeviceAlertPopup";
 import { deviceAlertState } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 const alertSlot = defineSlot<object, IslandAlertMeta<object>>("island.alert/v1");
 
@@ -37,4 +38,4 @@ function DeviceAlertBody() {
   return deviceAlert ? <DeviceAlertPopup alert={deviceAlert} /> : null;
 }
 
-alertSlot.add({ id: "device", order: 10, component: DeviceAlertLeading, trailing: DeviceAlertTrailing, popup: DeviceAlertBody });
+alertSlot.add({ id: "device", order: 10, component: DeviceAlertLeading, trailing: DeviceAlertTrailing, popup: DeviceAlertBody }, OWNER);

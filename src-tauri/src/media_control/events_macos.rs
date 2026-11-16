@@ -14,7 +14,7 @@ struct SessionChange {
     session_id: Option<String>,
 }
 
-pub(crate) fn start(app: &AppHandle) {
+pub(super) fn start(app: &AppHandle) -> Result<(), String> {
     let events = app.clone();
     adapter::start(app, move |change| {
         let kind = match change {
@@ -22,5 +22,13 @@ pub(crate) fn start(app: &AppHandle) {
             Change::Playback | Change::Other => "playback",
         };
         let _ = events.emit(MEDIA_SESSION_CHANGED_EVENT, SessionChange { kind, at: current_unix_millis(), session_id: None });
-    });
+    })
+}
+
+pub(super) fn stop() {
+    adapter::stop();
+}
+
+pub(super) fn running() -> bool {
+    adapter::running()
 }

@@ -238,6 +238,11 @@
   - `fuyu-settings` 的 `deviceAlerts`、`levelPopup`、`deviceUseIndicator` 和 `translationEnabled` 一样分别改成开关表里 `device-events`、`system-levels`、`device-use` 的镜像（`LEGACY_SWITCHES` 多三行），读写和对账同上；第一次迁时存的是 `false` 就关掉对应的插件。
   - Tauri 命令 `set_device_alerts_enabled`、`set_level_popup_enabled` 删掉。设备提示和音量亮度的读数线程由开关表起停：`builtins.json` 里 `device-events`、`system-levels` 的 `background` 都是 `["watcher"]`，开着时起线程，关掉时线程退出；开着时事件 `device-alert`、`system-level-changed` 照旧发给主窗口，不再等窗口先打开开关。
   - 设备占用在 Rust 里没有后台：`builtins.json` 里 `device-use` 的 `background` 是 `[]`。关掉后岛不再每 2 秒调 `get_device_use`；Tauri 命令本身照旧在。
+- 内置插件迁移，音乐（E36.3.33，2026-11-16 起）：
+  - `fuyu-settings` 的 `musicEnabled` 和 `translationEnabled` 一样改成开关表里 `music` 的镜像（`LEGACY_SWITCHES` 多一行），读写和对账同上；第一次迁时存的是 `false` 就关掉 `music`。
+  - 媒体会话的监听由开关表起停：`builtins.json` 里 `music` 的 `background` 是 `["session"]`。开着时 Windows 起 WinRT 会话事件线程、Mac 起常驻的 `/usr/bin/perl … stream` 子进程，事件 `media-session-changed` 照旧；关掉时 Windows 撤订阅、线程退出，Mac 结束子进程和读取线程。以前两者开机就起、关不掉。
+  - 音乐关着时 Tauri 命令照旧在，但不碰播放器：`get_media_state` 回 `available: false` 的空状态，`get_audio_level` 回静音，`media_play_pause`、`media_next`、`media_previous`、`media_toggle_shuffle`、`media_cycle_repeat`、`media_seek`、`media_set_volume` 回错误「Music is switched off in Fuyu.」；托盘卡片因此不显示播放器。第 2 版插件的 `media.nowPlaying`、`media.cover` 和各控制方法回 503（`media.changed` 事件因此不再推）。
+  - 新服务 `media/v1`（`@fuyu/plugin-services` 导出 `mediaV1`）：方法 `nowPlaying()`、`playPause()`、`next()`、`previous()`、`seek({ positionMs })`，都返回 `{ available, playing, audible, title, artist, album, sourceApp, positionMs, durationMs, canSeek, canNext, canPrevious, updatedAt }`；`positionMs` 不是从 0 起的整数或多给字段回 `bad-params`。宿主里由 Rust 方法 `media.nowPlaying`、`media.playPause`、`media.next`、`media.previous`、`media.seek`（参数 `{ positionMs }`）提供，音乐关着时回 `inactive`；窗口里由 `src/features/media/plugin/services.ts` 提供；音乐关掉时回 `not-ready`。
 - 翻译「自定义接口」的地址交给 Rust（E36.3.20，2026-11-15 起）：
   - 新 Tauri 命令 `save_translation_custom_address`（参数 `address`，去掉首尾空白后存进凭据 `com.tixxin.fuyu.translation` / 用户名 `custom-address`；空串是删掉；超过 500 字节回 `translation.urlLong`；不检查格式，用的时候才查），没有读回的命令。
   - 用 `useTranslationSettings` 的窗口在打开时交一次 `fuyu-translation-settings` 的 `customBaseUrl`，改了再交（停 0.4 秒），所以旧版本填过的地址不用重填；localStorage 里的值照旧，翻译窗口自己请求时还传它。

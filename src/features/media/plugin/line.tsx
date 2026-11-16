@@ -2,6 +2,7 @@ import { Music2 } from "lucide-react";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { KaraokeText } from "../lyrics/KaraokeText";
 import { mediaIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type LineContext = {
   showTitle: boolean;
@@ -25,4 +26,4 @@ function LyricLine({ showTitle }: LineContext) {
   );
 }
 
-lineSlot.add({ id: "media.lyric", component: LyricLine });
+lineSlot.add({ id: "media.lyric", component: LyricLine }, OWNER);

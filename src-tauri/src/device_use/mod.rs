@@ -97,6 +97,13 @@ mod tests {
     }
 
     #[test]
+    fn device_use_has_no_background_of_its_own() {
+        let catalog = crate::plugin_kernel::builtins::catalog();
+        let plugin = catalog.iter().find(|plugin| plugin.id == "device-use").expect("device-use is a built-in plugin");
+        assert_eq!(plugin.background.as_deref(), Some(&[][..]));
+    }
+
+    #[test]
     fn reading_the_consent_store_gives_sorted_lists_without_repeats() {
         let now = get_device_use();
         for list in [&now.camera, &now.microphone] {

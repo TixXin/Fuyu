@@ -4,9 +4,10 @@ use std::{
     process::{Child, Command, Stdio},
     sync::{
         atomic::{AtomicBool, Ordering},
+        mpsc::{self, Receiver, RecvTimeoutError, Sender, TryRecvError},
         Mutex, OnceLock, PoisonError,
     },
-    thread,
+    thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
 
@@ -41,9 +42,16 @@ pub(super) enum Change {
     Other,
 }
 
+struct Running {
+    stop: Sender<()>,
+    thread: JoinHandle<()>,
+}
+
 static PATHS: OnceLock<Paths> = OnceLock::new();
 static SNAPSHOT: Mutex<Option<Snapshot>> = Mutex::new(None);
 static BROKEN: AtomicBool = AtomicBool::new(false);
+static RUNNING: Mutex<Option<Running>> = Mutex::new(None);
+static CHILD: Mutex<Option<Child>> = Mutex::new(None);
 
 pub(super) fn locate(app: &AppHandle) -> Option<Paths> {
     let in_framework = |framework: PathBuf| Paths { script: framework.join("Resources").join(SCRIPT), framework };
@@ -103,56 +111,113 @@ fn store(info: Map<String, Value>) {
     *SNAPSHOT.lock().unwrap_or_else(PoisonError::into_inner) = Some(Snapshot { info, received_ms: super::state::current_unix_millis() });
 }
 
-pub(super) fn start(app: &AppHandle, on_change: impl Fn(Change) + Send + 'static) {
+pub(super) fn start(app: &AppHandle, on_change: impl Fn(Change) + Send + 'static) -> Result<(), String> {
+    let mut slot = RUNNING.lock().unwrap_or_else(PoisonError::into_inner);
+    if slot.as_ref().is_some_and(|running| !running.thread.is_finished()) {
+        return Ok(());
+    }
     let Some(paths) = locate(app) else {
         eprintln!("media: the MediaRemote adapter is not bundled; now playing is off");
         BROKEN.store(true, Ordering::SeqCst);
-        return;
+        return Ok(());
     };
     let _ = PATHS.set(paths.clone());
-    let _ = thread::Builder::new().name("media-adapter".into()).spawn(move || {
-        let mut retry = FIRST_RETRY;
-        let mut quick_exits = 0;
-        loop {
-            let started = Instant::now();
-            let mut received = false;
-            match spawn_stream(&paths) {
-                Ok(mut child) => {
-                    if let Some(stdout) = child.stdout.take() {
-                        let mut info = Map::new();
-                        for line in BufReader::new(stdout).lines() {
-                            let Ok(line) = line else { break };
-                            if let Some(change) = merge(&mut info, &line) {
-                                received = true;
-                                store(info.clone());
-                                if change != Change::Other {
-                                    on_change(change);
-                                }
+    BROKEN.store(false, Ordering::SeqCst);
+    let (stop, stopped) = mpsc::channel();
+    let thread = thread::Builder::new()
+        .name("media-adapter".into())
+        .spawn(move || stream(&paths, &stopped, on_change))
+        .map_err(|error| format!("Could not start the MediaRemote adapter thread: {error}"))?;
+    *slot = Some(Running { stop, thread });
+    Ok(())
+}
+
+pub(super) fn stop() {
+    let running = RUNNING.lock().unwrap_or_else(PoisonError::into_inner).take();
+    let Some(running) = running else { return };
+    drop(running.stop);
+    end_child();
+    let _ = running.thread.join();
+    *SNAPSHOT.lock().unwrap_or_else(PoisonError::into_inner) = None;
+}
+
+pub(super) fn running() -> bool {
+    RUNNING.lock().unwrap_or_else(PoisonError::into_inner).as_ref().is_some_and(|running| !running.thread.is_finished())
+}
+
+fn stopping(stopped: &Receiver<()>) -> bool {
+    !matches!(stopped.try_recv(), Err(TryRecvError::Empty))
+}
+
+fn keep(mut child: Child, stopped: &Receiver<()>) -> bool {
+    let mut slot = CHILD.lock().unwrap_or_else(PoisonError::into_inner);
+    if stopping(stopped) {
+        let _ = child.kill();
+        let _ = child.wait();
+        return false;
+    }
+    *slot = Some(child);
+    true
+}
+
+fn end_child() {
+    let child = CHILD.lock().unwrap_or_else(PoisonError::into_inner).take();
+    if let Some(mut child) = child {
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+}
+
+fn stream(paths: &Paths, stopped: &Receiver<()>, on_change: impl Fn(Change)) {
+    let mut retry = FIRST_RETRY;
+    let mut quick_exits = 0;
+    loop {
+        let started = Instant::now();
+        let mut received = false;
+        match spawn_stream(paths) {
+            Ok(mut child) => {
+                let stdout = child.stdout.take();
+                if !keep(child, stopped) {
+                    return;
+                }
+                if let Some(stdout) = stdout {
+                    let mut info = Map::new();
+                    for line in BufReader::new(stdout).lines() {
+                        let Ok(line) = line else { break };
+                        if let Some(change) = merge(&mut info, &line) {
+                            received = true;
+                            store(info.clone());
+                            if change != Change::Other {
+                                on_change(change);
                             }
                         }
                     }
-                    let _ = child.kill();
-                    let _ = child.wait();
                 }
-                Err(error) => eprintln!("media: could not start the MediaRemote adapter: {error}"),
+                end_child();
             }
-            *SNAPSHOT.lock().unwrap_or_else(PoisonError::into_inner) = None;
-            on_change(Change::Track);
-            if !received && started.elapsed() < QUICK_EXIT {
-                quick_exits += 1;
-                if quick_exits >= GIVE_UP_AFTER {
-                    eprintln!("media: the MediaRemote adapter keeps failing; falling back to AppleScript");
-                    BROKEN.store(true, Ordering::SeqCst);
-                    return;
-                }
-            } else {
-                quick_exits = 0;
-                retry = FIRST_RETRY;
-            }
-            thread::sleep(retry);
-            retry = (retry * 2).min(LAST_RETRY);
+            Err(error) => eprintln!("media: could not start the MediaRemote adapter: {error}"),
         }
-    });
+        if stopping(stopped) {
+            return;
+        }
+        *SNAPSHOT.lock().unwrap_or_else(PoisonError::into_inner) = None;
+        on_change(Change::Track);
+        if !received && started.elapsed() < QUICK_EXIT {
+            quick_exits += 1;
+            if quick_exits >= GIVE_UP_AFTER {
+                eprintln!("media: the MediaRemote adapter keeps failing; falling back to AppleScript");
+                BROKEN.store(true, Ordering::SeqCst);
+                return;
+            }
+        } else {
+            quick_exits = 0;
+            retry = FIRST_RETRY;
+        }
+        if !matches!(stopped.recv_timeout(retry), Err(RecvTimeoutError::Timeout)) {
+            return;
+        }
+        retry = (retry * 2).min(LAST_RETRY);
+    }
 }
 
 pub(super) fn run(args: &[String]) -> Result<(), String> {

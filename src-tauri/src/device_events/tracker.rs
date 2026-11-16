@@ -70,10 +70,6 @@ impl OutputTracker {
         !self.waiting.is_empty()
     }
 
-    pub(crate) fn reset(&mut self) {
-        *self = Self::default();
-    }
-
     pub(crate) fn update(&mut self, outputs: Vec<Output>, batteries: &HashMap<String, u8>) -> Vec<DeviceAlert> {
         let mut alerts = Vec::new();
         let Some(known) = self.known.replace(outputs.clone()) else {
@@ -163,10 +159,6 @@ pub(crate) struct PowerTracker {
 }
 
 impl PowerTracker {
-    pub(crate) fn reset(&mut self) {
-        self.plugged_in = None;
-    }
-
     pub(crate) fn update(&mut self, plugged_in: Option<bool>, battery: Option<u8>) -> Option<DeviceAlert> {
         let now = plugged_in?;
         let before = self.plugged_in.replace(now)?;
