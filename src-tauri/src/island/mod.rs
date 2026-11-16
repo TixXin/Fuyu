@@ -83,6 +83,8 @@ pub struct IslandLayout {
     #[serde(default)]
     fit_notch: bool,
     #[serde(default)]
+    auto_form: bool,
+    #[serde(default)]
     animate: bool,
     #[serde(default)]
     drag_grid: Option<bool>,
@@ -100,6 +102,7 @@ pub fn set_island_layout(app: AppHandle, layout: IslandLayout) -> Result<(), Str
         state.margin_y = layout.margin_y.clamp(0.0, 160.0);
         state.under_menu_bar = layout.under_menu_bar;
         state.fit_notch = layout.fit_notch;
+        state.auto_form = layout.auto_form;
         *state
     });
     apply_stage_geometry(&window, state, layout.animate)
@@ -393,7 +396,7 @@ macro_rules! tauri_commands {
             crate::island::side::set_island_side_column,
             crate::island::banner_hit::set_island_side_bubble_rect,
             crate::island::notch::get_island_notch,
-            crate::island::notch::primary_screen_has_notch,
+            crate::island::notch::get_island_auto_form,
             crate::island::notch::set_island_notch_drop,
             crate::island::show_ready_island,
             crate::island::minimize_island,

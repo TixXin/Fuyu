@@ -11,6 +11,7 @@ import { I18nProvider } from "./i18n";
 import { loadSettingsFile } from "./lib/settings-backup/loadSettingsFile";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
 import { trackIslandNotch } from "./windows/island/notch";
+import { trackAutoIslandForm } from "./windows/island/autoIslandForm";
 
 blockBrowserDefaults({ mac: isMacOS, dev: import.meta.env.DEV });
 import.meta.glob("./features/*/plugin/services.ts", { eager: true });
@@ -20,6 +21,7 @@ const windowKind = new URLSearchParams(window.location.search).get("window");
 if (windowKind === null) {
   trackIslandTopEdge();
   trackIslandNotch();
+  trackAutoIslandForm();
 }
 
 window.addEventListener(

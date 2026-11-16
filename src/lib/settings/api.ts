@@ -30,10 +30,6 @@ export function dockIslandTo(edge: Exclude<IslandDockEdge, "top">) {
   return invoke<void>("set_island_edge", { edge });
 }
 
-export function primaryScreenHasNotch() {
-  return invoke<boolean>("primary_screen_has_notch");
-}
-
 export type WallpaperFit = "fill" | "fit" | "stretch" | "center" | "tile" | "span";
 
 export type MonitorWallpaper = { x: number; y: number; width: number; height: number; image: string | null };
