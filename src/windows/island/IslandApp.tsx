@@ -68,7 +68,7 @@ import { useIslandFirstHints } from "./useIslandFirstHints";
 import { useIslandNotice } from "./islandNotice";
 import { useIslandVoiceInput } from "./useIslandVoiceInput";
 import { useIslandSide } from "./useIslandSide";
-import { useDevIslandActions } from "./useDevIslandActions";
+import { IslandRunners } from "./IslandRunners";
 import { hasNotchAlert } from "./NotchAlert";
 import { islandMarginY } from "./islandForm";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
@@ -255,7 +255,6 @@ export function IslandApp() {
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
     preview: banner.barPreview, notice: islandNotice !== null, translationPeek,
   }));
-  useDevIslandActions({ openPage: openEnabledPage, collapse: collapseIsland, tuck: tuckIsland, reveal: revealIsland });
   const hoverTucked = useIslandHover({
     settings,
     navigation,
@@ -281,17 +280,11 @@ export function IslandApp() {
 
   const { agentVisualState, agentStatusLabel } = useAgentIndicator(agentStatus, settings, activeAgentSessionCount, t);
 
-  const { openTranslator, openTranslationPeek } = useIslandTranslation(
-    settings.translationEnabled,
-    features.translation,
-    mode,
-    page,
-    openIslandPage,
-    collapseIsland,
-  );
+  const { openTranslator, openTranslationPeek } = useIslandTranslation(features.translation, openIslandPage);
 
   return (
     <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${coverOn ? " cover-color" : ""}`} style={stageStyle}>
+      <IslandRunners mode={mode} page={page} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       <IslandShell
         qqMail={qqMail}
         qqNotifications={qqNotifications}

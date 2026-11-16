@@ -1,7 +1,7 @@
 import type { MessageSource } from "../../features/messages/messagePreview";
 import type { PlatformFeature } from "../../lib/platform.ts";
-import { pageSlot, type HeaderDotPage } from "./slots/pageSlot.ts";
-import type { BuiltinPage, IslandPage, PluginPageId } from "./types";
+import { pageSlot } from "./slots/pageSlot.ts";
+import type { BuiltinPage, HeaderDotPage, IslandPage, PluginPageId } from "./types";
 
 export type { HeaderDotPage };
 

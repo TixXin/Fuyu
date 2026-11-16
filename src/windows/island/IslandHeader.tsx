@@ -5,10 +5,11 @@ import type { MessageSource } from "../../features/messages/messagePreview";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { useTranslation } from "../../i18n";
-import { headerDotPages, type HeaderDotPage, type IslandFeatures } from "./features";
+import { headerDotPages, isPageEnabled, type IslandFeatures } from "./features";
 import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/header";
 import { pageSlot } from "./slots/pageSlot";
-import type { IslandPage } from "./types";
+import "./slots/builtins";
+import type { HeaderDotPage, IslandPage } from "./types";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import "./IslandHeader.css";
 
@@ -79,6 +80,8 @@ export function IslandHeader({
     minimizesToTray,
     onMinimize,
     pageDigitModifiers,
+    withShortcut: (label, target) => withShortcut({ features, pageDigitModifiers }, label, target),
+    isPageEnabled: (target) => isPageEnabled(target, features),
   };
   const pageLabel = (target: HeaderDotPage) => ({
     todo: t.island.todoList,

@@ -1,16 +1,15 @@
 import { useEffect, useRef } from "react";
-import { listenDevIslandActions, type DevIslandAction } from "../../features/local-api/api";
-import type { IslandPage } from "./types";
+import { listenDevIslandActions, type DevIslandAction } from "./api";
 
 type Handlers = {
-  openPage: (page: IslandPage) => void;
+  openPage: (page: string) => void;
   collapse: () => void;
   tuck: () => void;
   reveal: () => void;
 };
 
 function run(handlers: Handlers, action: DevIslandAction) {
-  if (action.action === "open") handlers.openPage(action.page as IslandPage);
+  if (action.action === "open") handlers.openPage(action.page);
   else if (action.action === "collapse") handlers.collapse();
   else if (action.action === "tuck") handlers.tuck();
   else handlers.reveal();

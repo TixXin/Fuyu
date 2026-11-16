@@ -60,6 +60,17 @@
 | `features/clipboard/shortcut.ts` 的通用部分、`useShortcutCapture.ts`，`clipboard/api.ts` 里的 `setShortcutCapture`、`listenShortcutCaptured` | `lib/shortcut/`（剪贴板专用的 `DEFAULT_CLIPBOARD_SHORTCUT`、`openShortcutLabel`、`normalizeClipboardShortcut`、`matchesClipboardShortcut` 留在 `features/clipboard/shortcut.ts`） |
 | `features/clipboard/ClipboardSettingsSection.css`（快捷键录制控件的样式） | `components/controls/ShortcutControl.css` |
 
+### 插件平台第 3 版：岛的注册搬进功能（E36.3.25）
+
+| 原位置 | 现在的位置 |
+|---|---|
+| `windows/island/slots/pages.tsx` 的各展开页、`slots/pageSlot.ts` 的 `BUILTIN_PAGES` | 各功能的 `plugin/island.tsx`（组件）和 `plugin/page.ts`（`islandPage` 元数据，单元测试 `tests/unit/islandPageSlot.mjs` 按目录读）；`HeaderDotPage` → `windows/island/types.ts` |
+| `slots/header.tsx` 的消息、翻译、截图按钮 | `messages`、`translation`、`screenshot` 的 `plugin/island.tsx`；设置、重置位置、最小化留在外壳 |
+| `slots/collapsed.tsx` 的邮件、更新、设备占用、文件中转、音乐、用量环、计时、会话数、中心图案 | 各自功能的 `plugin/island.tsx`；状态灯和上下文类型留在外壳 |
+| `slots/alerts.tsx` 的设备、额度、音量亮度提醒 | `device-events`、`agent-status`、`system-levels` 的 `plugin/island.tsx`；`NotchAlertSources` 留在外壳 |
+| `islandNotice.tsx` 的录屏、语音、计时响铃、截图、复制、提醒卡片 | 插槽 `island.notice/v1`，项在各功能的 `plugin/island.tsx`；第一次提示留在外壳 |
+| `IslandApp.tsx` 里的 `useBreakReminders`、`useDevIslandActions`，`useIslandTranslation` 里的 `useTranslationEnabled`、`useTranslationIslandShortcut` | 插槽 `island.runner/v1`：`timer`、`local-api`、`translation` 的 `plugin/runners.tsx`；`windows/island/useDevIslandActions.ts` → `features/local-api/useDevIslandActions.ts` |
+
 ## 迁移映射：Rust
 
 | 现有位置 | 目标位置 |

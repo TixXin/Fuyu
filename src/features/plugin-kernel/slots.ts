@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { BUILTIN, createSlots, SlotError, slotWindow, type SlotItem, type SlotRegistry, type SlotRule } from "@fuyu/plugin-base/client/slots";
 import { SLOTS, type SlotName } from "@fuyu/plugin-base/protocol";
+import type { Translations } from "../../i18n";
 import { disabledBuiltinIds, subscribeBuiltinPlugins } from "./builtinSwitches.ts";
 import { installIpcLedger, type IpcInternals } from "./ipcLedger.ts";
 
@@ -37,6 +38,13 @@ export interface IslandPageMeta<Features = unknown, Page extends string = string
   headerDot?: boolean;
   enabled?: (features: Features) => boolean;
   fallback?: (features: Features) => Page | null;
+  fold?: IslandPageFold<Features, Page>;
+}
+
+export interface IslandPageFold<Features = unknown, Page extends string = string> {
+  into: Page;
+  when: (features: Features) => boolean;
+  label: (t: Translations) => string;
 }
 
 export interface IslandHeaderMeta<Features = unknown> {
@@ -58,6 +66,11 @@ export interface IslandCollapsedCenterMeta<Context = unknown> {
 export interface IslandAlertMeta<Sources = unknown> {
   active: (sources: Sources) => boolean;
   trailing?: ComponentType<Sources>;
+}
+
+export interface IslandNoticeMeta<Sources = unknown> {
+  active: (sources: Sources) => boolean;
+  actions: ComponentType<Sources>;
 }
 
 export interface SettingsCategoryMeta<Context = unknown, Group extends string = string, Category extends string = string> {

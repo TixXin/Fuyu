@@ -26,6 +26,8 @@ import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { TIMER_PLUGIN_ID, useTimers } from "../../features/timer/store";
 import { hasChip } from "../../features/timer/TimerChip";
 import type { CollapsedSlots } from "./types";
+import "./slots/builtins";
+import { listenIslandHover } from "./api";
 import { collapsedCenterSlot, collapsedGaugeSlot, slotWidth, type CollapsedCenterContext, type CollapsedGaugeContext } from "./slots/collapsed";
 
 const EMPTY: CollapsedSlots = {};
@@ -64,7 +66,7 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
   const entries = useSlotEntries(collapsedGaugeSlot);
   const [centerEntry] = useSlotEntries(collapsedCenterSlot);
   const gaugeContext = useMemo<CollapsedGaugeContext>(
-    () => ({ paused: still, usage: { enabled: usage.enabled, settings: usage.settings, showRemaining }, timer: { enabled: timerPlugin.enabled, running: timerRunning } }),
+    () => ({ paused: still, usage: { enabled: usage.enabled, settings: usage.settings, showRemaining }, timer: { enabled: timerPlugin.enabled, running: timerRunning }, listenIslandHover }),
     [still, usage.enabled, usage.settings, showRemaining, timerPlugin.enabled, timerRunning],
   );
   const gauges = useMemo(
