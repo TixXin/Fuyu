@@ -7,7 +7,7 @@ import type { AgentSession } from "../../features/agent-status/session";
 import type { CurrentLyric } from "../../features/media/lyrics/useCurrentLyric";
 import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
 import type { AgentVisualState } from "../../features/agent-status/status";
-import type { AppearanceMode } from "../../features/appearance/types";
+import type { AppearanceMode } from "../../lib/settings/types";
 import type { MediaState } from "../../features/media/api";
 import type { MessagePreview, MessageSource } from "../../features/messages/messagePreview";
 import type { MailController } from "../../features/messages/mail/MailPanel";

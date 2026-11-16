@@ -3,8 +3,8 @@ import { ArrowUpRight, ChevronRight, Keyboard, Languages, Palette, Power, Slider
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
-import { THEME_MODES } from "../../features/appearance/themeMode";
-import type { IslandSettings, ThemeMode } from "../../features/appearance/types";
+import { THEME_MODES } from "../../lib/theme/themeMode";
+import type { IslandSettings, ThemeMode } from "../../lib/settings/types";
 import { LOCALE_CODES, TRANSLATIONS, isLocaleCode, useTranslation, type LocaleCode } from "../../i18n";
 import { isMacOS, useDevBuild, type PlatformFeature } from "../../lib/platform";
 import { openOnboardingWindow } from "../onboarding/api";

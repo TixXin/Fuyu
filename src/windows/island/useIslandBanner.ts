@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { MessageNotice } from "../../features/appearance/types";
+import type { MessageNotice } from "../../lib/settings/types";
 import { BANNER_MS, type BannerMessage } from "../../features/messages/banner/bannerMessages";
 import { useMessageBanner } from "../../features/messages/banner/useMessageBanner";
 import type { MailMessage } from "../../features/messages/mail/api";

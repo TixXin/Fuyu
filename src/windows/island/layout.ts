@@ -1,4 +1,4 @@
-import type { AgentSessionView } from "../../features/appearance/types";
+import type { AgentSessionView } from "../../lib/settings/types";
 import { clamp } from "../../utils/number.ts";
 import { getCollapsedTextUnits } from "../../utils/text.ts";
 

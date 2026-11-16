@@ -1,7 +1,7 @@
 import type { ClipboardActionsText } from "../../i18n/sections/clipboardActions";
 import type { ClipboardCaptureStatus, ClipboardCopyAs, ClipboardHistoryItem } from "./api";
 import { colorFormats, contentKind } from "./contentKind.ts";
-import { PRIMARY_KEY } from "./shortcut.ts";
+import { PRIMARY_KEY } from "../../lib/shortcut/shortcut.ts";
 
 export type PopupAction = {
   id: string;

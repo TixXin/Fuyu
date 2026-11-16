@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { acquireIslandCursor, canTrackIslandCursor, listenIslandCursor, releaseIslandCursor, type CursorPoint } from "./api";
 import { gazeOffset } from "./patterns";
-import { useReducedMotion } from "./useReducedMotion";
+import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 
 const MAX_PUPIL_OFFSET = 2.6;
 const WANDER_AFTER_MS = 4000;

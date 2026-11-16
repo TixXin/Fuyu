@@ -38,7 +38,7 @@ mockIPC((command, payload) => {
 }, { shouldMockEvents: true });
 
 const { DevWatermark } = await import("../../src/components/DevWatermark");
-const { BehaviorSettingsSection } = await import("../../src/features/appearance/BehaviorSettingsSection");
+const { BehaviorSettingsSection } = await import("../../src/windows/settings/sections/BehaviorSettingsSection");
 const { UpdatePanel } = await import("../../src/features/updater/UpdatePanel");
 const { DevBar } = await import("../../src/windows/settings/DevBar");
 

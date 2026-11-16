@@ -1,6 +1,6 @@
-import { TodoProjectsSection } from "../../features/appearance/TodoProjectsSection";
-import { TodoSettingsSection } from "../../features/appearance/TodoSettingsSection";
-import type { IslandSettings } from "../../features/appearance/types";
+import { TodoProjectsSection } from "./sections/TodoProjectsSection";
+import { TodoSettingsSection } from "./sections/TodoSettingsSection";
+import type { IslandSettings } from "../../lib/settings/types";
 import { SavePathSettingsSection } from "../../features/todos/SavePathSettingsSection";
 import type { useSaveDirectorySetting } from "../../features/todos/useSaveDirectorySetting";
 import { FeatureHeader } from "./FeatureHeader";

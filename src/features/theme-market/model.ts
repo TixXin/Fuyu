@@ -1,6 +1,6 @@
-import { THEME_SETTING_KEYS, normalizeSettings, withThemeFrom } from "../appearance/settings.ts";
-import { hasThemeSets, themeSetsFromSingleColors } from "../appearance/themeMode.ts";
-import type { IslandSettings } from "../appearance/types";
+import { THEME_SETTING_KEYS, normalizeSettings, withThemeFrom } from "../../lib/settings/settings.ts";
+import { hasThemeSets, themeSetsFromSingleColors } from "../../lib/theme/themeMode.ts";
+import type { IslandSettings } from "../../lib/settings/types";
 
 type Text = { "zh-CN": string; en: string };
 

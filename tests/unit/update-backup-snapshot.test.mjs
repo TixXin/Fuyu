@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { applySnapshot, settingsUnreadable, takeSnapshot } from "../../src/features/settings-backup/localSnapshot.ts";
+import { applySnapshot, settingsUnreadable, takeSnapshot } from "../../src/lib/settings-backup/localSnapshot.ts";
 
 function memoryStorage(entries) {
   const map = new Map(Object.entries(entries));

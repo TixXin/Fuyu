@@ -84,7 +84,7 @@ export function runtime({ check = async () => null, install = async () => {}, no
         saveUpdatePreferences: (patch) => { prefs = { ...prefs, ...patch }; sync(); return prefs; },
       },
       "./checkSchedule": { nextUpdateCheckAt },
-      "../settings-backup/api": { backupBeforeUpdate: async (toVersion) => {
+      "../../lib/settings-backup/api": { backupBeforeUpdate: async (toVersion) => {
         calls.push({ command: "update_backup_create", args: { toVersion } });
         return backup(toVersion);
       } },

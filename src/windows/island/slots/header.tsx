@@ -1,5 +1,5 @@
 import { Bell, Languages, Minus, RotateCcw, Scissors, Settings } from "lucide-react";
-import { shortcutLabel } from "../../../features/clipboard/shortcut";
+import { shortcutLabel } from "../../../lib/shortcut/shortcut";
 import type { MessageSource } from "../../../features/messages/messagePreview";
 import { defineSlot, type IslandHeaderMeta } from "../../../features/plugin-kernel/slots";
 import { useUpdateReminder } from "../../../features/updater/useBackgroundUpdateCheck";

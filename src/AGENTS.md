@@ -8,10 +8,10 @@
 src/
 ├── main.tsx                 # 唯一入口：按 ?window= 动态加载 windows/ 下对应的根组件，每个窗口只加载自己的代码（不要改回静态导入）
 ├── windows/                 # 每个 Tauri 窗口一个目录，只负责组合与窗口级行为
-│   ├── island/              # 主窗口：IslandApp（只做组装）、IslandShell、展开后的页面面板（IslandPages）、按职责的接线 hook（useIslandNotices / Todos / Tucking / Shelf / Hover、useAgentIndicator；新功能的接线加在这里，不加进 IslandApp）、窗口尺寸/拖拽/贴边 hook、自动化 hook；slots/ 是展开页、页头按钮、收起条、刘海提醒的插槽注册，新加一页或一个按钮在这里注册，不往列表里写死
+│   ├── island/              # 主窗口：IslandApp（只做组装）、IslandShell、展开后的页面面板（IslandPages）、按职责的接线 hook（useIslandNotices / Todos / Tucking / Shelf / Hover、useAgentIndicator；新功能的接线加在这里，不加进 IslandApp）、窗口尺寸/拖拽/贴边 hook、自动化 hook；slots/ 是展开页、页头按钮、收起条、刘海提醒的插槽注册，新加一页或一个按钮在这里注册，不往列表里写死；first-hints/ 是岛上的「第一次」提示
 │   ├── clipboard/           # 剪贴板独立窗口（列表在 features/clipboard/ClipboardPopup.tsx，弹出、定位和粘贴在 src-tauri/src/clipboard_history/popup.rs）
 │   ├── screenshot/          # 截图的选区窗口（?window=screenshot，每个显示器一个）：冻结画面、选区拖动（useSelection.ts）、工具栏和放大镜
-│   ├── settings/            # 设置窗口；slots/ 是分类的插槽注册（categorySlot.ts 元数据、categories.tsx 页面）和分节的句柄（sectionSlot.ts），各设置页在自己的文件里注册分节
+│   ├── settings/            # 设置窗口；slots/ 是分类的插槽注册（categorySlot.ts 元数据、categories.tsx 页面）和分节的句柄（sectionSlot.ts），各设置页在自己的文件里注册分节；sections/ 是设置页共用的分节组件（外观、行为、主题、预设、快捷键、待办、数据与备份、系统权限）
 │   ├── onboarding/          # 新手引导（?window=onboarding）：透明遮罩压暗屏幕、照亮真岛，旁边的卡片分五幕（语言、外观、功能、在真岛上练习、开机启动）；新装第一次启动时由 island/useFirstRunGuide.ts 打开，设置 → 关于里能再打开；引导开着时岛放演示内容（island/useOnboardingDemo.ts）
 │   └── translation/         # 快捷翻译窗口
 ├── features/                # 业务领域，每个领域自包含
@@ -36,13 +36,11 @@ src/
 │   ├── claude-usage/        # 收起条上的 Claude 用量双环（内置插件 focusd.claude-usage）：读 agent-status 的用量（claude-hud 快照或直接查询的结果），阈值配色与悬停卡片文案（usageRing.ts），刷新命令封装（api.ts）
 │   ├── session-ring/        # 收起条上的 Agent 会话环（内置插件 focusd.session-ring）：按状态分段计数与悬停卡片文案（ringCounts.ts），数据来自 agent-status 的会话列表
 │   ├── ssh-tunnel/          # 内置插件 focusd.ssh-proxy-tunnel 的插件页部分：主机列表、服务器端口、占用确认、隧道状态与 export 行、运行信息里的本地代理（useSshTunnelProxy.ts）（tunnelPort.ts 为端口校验）
-│   ├── appearance/          # 外观设置、布局编辑器、预设；岛屿设置（fuyu-settings）的范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayout / Agent / BehaviorSettings.ts，新设置加在这几个文件里，settings.ts 只做入口
 │   ├── theme-market/        # 设置 → 主题市场：从 TixXin/fuyu-plugins 读取 themes.json，预览并应用或保存为预设
 │   ├── translation/         # 快捷翻译：服务与模型设置、凭据、快捷键的类型化封装，请求与自动翻译 hook，岛内翻译页
-│   ├── settings-backup/     # 设置 → 通用 → 备份与恢复：导出到「下载」文件夹的 JSON、从文件恢复（只含 BACKUP_KEYS 列出的设置 key）
 │   └── updater/             # 自动更新
-├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML）
-├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写
+├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览）
+├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写；settings/ 是岛屿设置（fuyu-settings）的模型：范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayout / Agent / BehaviorSettings.ts，新设置加在这几个文件里，settings.ts 只做入口，各功能自己那一份（日历、歌词、待办项目）留在功能里由这里汇总；theme/ 是主题、强调色、玻璃配色和动效（含 useReducedMotion）；shortcut/ 是快捷键的通用工具和录制（剪贴板专用的在 features/clipboard/shortcut.ts）；settings-backup/ 是设置文件、导出和恢复（只含 BACKUP_KEYS 列出的设置 key）、升级前的备份；system-permissions/ 是系统权限的查询
 ├── utils/                   # 无副作用的纯函数（文本测量、颜色、日期、数值）
 ├── i18n/                    # 类型化多语言字典与 Provider；sections/ 按分区放文案（settings/ 再按设置页分），types.ts 与 locales/ 只做汇总
 ├── styles/                  # 全局 CSS：变量、基础样式、字体
@@ -73,7 +71,7 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 
 - 只能向右（向下）依赖，下层不得 import 上层。`components/`、`utils/` 不得依赖任何 feature。
 - `utils/` 只放纯函数，不依赖 React、Tauri、DOM 和 `localStorage`。
-- feature 之间尽量不直接依赖。确需共享的类型或函数，上提到 `utils/`、`components/`，或通过对方目录的 `index.ts` 公开导出后引用，不得深入引用对方的内部文件。
+- feature 之间不直接 import：共享的类型、函数和样式上提到 `lib/`、`components/`、`utils/`，运行时要调别的功能走服务（插件平台第 3 版，见 `docs/architecture/plugins/v3-phase3-plan.md`「关键设计」第 4 条）。`tests/unit/feature-boundaries.test.mjs` 检查 feature 之间、以及 `lib/`、`components/`、`utils/` 到 feature 的 import，现有的记在 `scripts/feature-boundary-allowlist.json`，只减不增；去掉一条后把它从白名单删掉，测试会提醒。
 - `windows/` 负责组合 feature、处理窗口级状态（折叠/展开、尺寸、面板切换），不写领域逻辑。
 
 ## 边界收口

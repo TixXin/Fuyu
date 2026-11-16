@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { IslandSettings } from "../appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import type { AgentSessionSummary, ExternalAgentStatus } from "./api";
 import { remoteSessions, withRemoteSessions } from "./remoteSessions";
 import { countActiveSessions, isActivePhase } from "./sessionList";

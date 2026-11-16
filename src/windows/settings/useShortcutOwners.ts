@@ -4,8 +4,8 @@ import {
   DEFAULT_PAGE_PREVIOUS_SHORTCUT,
   normalizePageCycleShortcut,
   normalizePageDigitModifiers,
-} from "../../features/appearance/pageShortcuts";
-import type { IslandSettings } from "../../features/appearance/types";
+} from "../../lib/settings/pageShortcuts";
+import type { IslandSettings } from "../../lib/settings/types";
 import type { ClipboardHistorySettings } from "../../features/clipboard/api";
 import { normalizeClipboardShortcut } from "../../features/clipboard/shortcut";
 import { listPlugins } from "../../features/plugins/api";

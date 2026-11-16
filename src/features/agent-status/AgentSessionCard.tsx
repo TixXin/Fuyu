@@ -1,5 +1,5 @@
 import { useTranslation } from "../../i18n";
-import type { AgentCardEffects, AgentHostDisplay } from "../appearance/types";
+import type { AgentCardEffects, AgentHostDisplay } from "../../lib/settings/types";
 import { AgentProviderIcon } from "./AgentProviderIcon";
 import type { AgentSessionSummary } from "./api";
 import { formatTokens, isActivePhase, sessionAge, sessionProject } from "./sessionList";

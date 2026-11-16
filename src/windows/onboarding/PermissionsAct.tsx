@@ -1,7 +1,7 @@
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
-import type { SystemPermissionKind } from "../../features/system-permissions/api";
-import { PermissionRows } from "../../features/system-permissions/PermissionRows";
-import { useSystemPermissions } from "../../features/system-permissions/useSystemPermissions";
+import type { SystemPermissionKind } from "../../lib/system-permissions/api";
+import { PermissionRows } from "../../components/settings/PermissionRows";
+import { useSystemPermissions } from "../../lib/system-permissions/useSystemPermissions";
 import { useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
 import type { OnboardingModule } from "./personas";

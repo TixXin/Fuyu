@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ISLAND_MOTIONS, islandMotionTiming, islandMotionVariables } from "../../src/features/appearance/islandMotion.ts";
-import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/features/appearance/settings.ts";
+import { ISLAND_MOTIONS, islandMotionTiming, islandMotionVariables } from "../../src/lib/theme/islandMotion.ts";
+import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/lib/settings/settings.ts";
 
 test("every preset ends its height before the native side shrinks the window (600ms)", () => {
   for (const motion of ISLAND_MOTIONS) {

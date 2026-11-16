@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
-import type { ExpandTrigger, IslandSettings } from "../../features/appearance/types";
+import type { ExpandTrigger, IslandSettings } from "../../lib/settings/types";
 import { listenClipboardPopupOpened, type ClipboardHistorySettings } from "../../features/clipboard/api";
 import { getFileShelf, type FileShelfItem } from "../../features/file-shelf/api";
 import { useTranslation } from "../../i18n";

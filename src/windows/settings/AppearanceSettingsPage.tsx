@@ -1,8 +1,8 @@
-import { CollapsedItemsSection } from "../../features/appearance/CollapsedItemsSection";
-import { DisplaySettingsSection } from "../../features/appearance/DisplaySettingsSection";
-import { IslandPreview } from "../../features/appearance/IslandPreview";
-import { SizeSettingsSection } from "../../features/appearance/LayoutSettingsSection";
-import type { IslandSettings } from "../../features/appearance/types";
+import { CollapsedItemsSection } from "./sections/CollapsedItemsSection";
+import { DisplaySettingsSection } from "./sections/DisplaySettingsSection";
+import { IslandPreview } from "../../components/island-preview/IslandPreview";
+import { SizeSettingsSection } from "./sections/LayoutSettingsSection";
+import type { IslandSettings } from "../../lib/settings/types";
 import { requestPanelPreview } from "./storage";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";

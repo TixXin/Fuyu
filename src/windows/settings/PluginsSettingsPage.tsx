@@ -1,4 +1,4 @@
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { PluginDevSection } from "../../features/plugin-dev/PluginDevSection";
 import { PluginIslandPagesSection } from "../../features/plugin-views/PluginIslandPagesSection";

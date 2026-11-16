@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import * as islandApi from "./api";
 import { islandFormLayout } from "./islandForm";
 import { useIslandForm } from "./useIslandForm";

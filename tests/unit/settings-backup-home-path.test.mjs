@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { expandHome, shortenHome, userHomeOf } from "../../src/features/settings-backup/homePath.ts";
+import { expandHome, shortenHome, userHomeOf } from "../../src/lib/settings-backup/homePath.ts";
 
 test("the data folder is shown under ~ on macOS and expanded again before it is saved", () => {
   const home = userHomeOf("/Users/demo/.fuyu");

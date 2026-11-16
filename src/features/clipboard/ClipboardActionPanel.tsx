@@ -10,7 +10,7 @@ import { ClipboardPinKeyPage } from "./ClipboardPinKeyPage";
 import { pinKeyFromCode } from "./pins";
 import { ClipboardTransformList } from "./ClipboardTransformList";
 import { filterActions, type ActionIcon, type PopupAction } from "./popupActions";
-import { isPrimaryKey } from "./shortcut";
+import { isPrimaryKey } from "../../lib/shortcut/shortcut";
 
 const ICONS: Record<ActionIcon, LucideIcon> = {
   paste: ClipboardPaste, plain: Type, enter: CornerDownLeft, edit: Pencil, wand: WandSparkles, file: FileText, image: ImageIcon,

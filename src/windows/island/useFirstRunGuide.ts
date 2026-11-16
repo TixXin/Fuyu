@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { islandRanBefore } from "../../features/appearance/installState";
+import { islandRanBefore } from "../../lib/settings/installState";
 import type { PluginNotificationsController } from "../../features/plugins/usePluginNotifications";
 import { useTranslation } from "../../i18n";
 import { openFirstRunOnboardingWindow } from "../onboarding/api";

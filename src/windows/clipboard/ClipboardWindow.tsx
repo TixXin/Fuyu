@@ -7,8 +7,8 @@ import {
 } from "../../features/clipboard/api";
 import { ClipboardTitleBar } from "./ClipboardTitleBar";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
-import { useWindowLight } from "../../features/appearance/useWindowLight";
-import { useWindowAccent } from "../../features/appearance/useWindowAccent";
+import { useWindowLight } from "../../lib/theme/useWindowLight";
+import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import "./ClipboardWindow.css";
 

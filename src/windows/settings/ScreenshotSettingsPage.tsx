@@ -4,7 +4,7 @@ import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { ScreenshotShortcutRows } from "../../features/screenshot/ScreenshotShortcutRows";
 import { CARD_SECONDS, HISTORY_DAYS, type CardSeconds, type HistoryDays, type ScreenshotSettings } from "../../features/screenshot/settings";

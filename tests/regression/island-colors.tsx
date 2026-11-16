@@ -4,10 +4,10 @@ import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
 import { I18nProvider } from "../../src/i18n";
-import { IslandPreview } from "../../src/features/appearance/IslandPreview";
-import { BUILTIN_THEME_IDS, BUILTIN_THEMES, builtinThemeInUse, withBuiltinTheme, type BuiltinThemeId } from "../../src/features/appearance/builtinThemes";
-import { DEFAULT_SETTINGS, hexToRgba, normalizeSettings } from "../../src/features/appearance/settings";
-import { inkVariables, resolveThemeColors, type ThemeTone } from "../../src/features/appearance/themeMode";
+import { IslandPreview } from "../../src/components/island-preview/IslandPreview";
+import { BUILTIN_THEME_IDS, BUILTIN_THEMES, builtinThemeInUse, withBuiltinTheme, type BuiltinThemeId } from "../../src/lib/theme/builtinThemes";
+import { DEFAULT_SETTINGS, hexToRgba, normalizeSettings } from "../../src/lib/settings/settings";
+import { inkVariables, resolveThemeColors, type ThemeTone } from "../../src/lib/theme/themeMode";
 import { isLightIsland } from "../../src/utils/color";
 
 const query = new URLSearchParams(location.search);

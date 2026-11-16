@@ -4,7 +4,7 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
-import type { AgentCardEffects, AgentHostDisplay, AgentSessionView } from "../../src/features/appearance/types";
+import type { AgentCardEffects, AgentHostDisplay, AgentSessionView } from "../../src/lib/settings/types";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { getAgentPageExpandedHeight } from "../../src/windows/island/layout";
 import { checkNarrow, renderShowcase } from "./agent-sessions-showcase";

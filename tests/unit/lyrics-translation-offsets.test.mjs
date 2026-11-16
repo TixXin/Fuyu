@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseLrc, withTranslations } from "../../src/features/media/lyrics/lrc.ts";
 import { MAX_SONG_OFFSETS, normalizeSongOffsets, setSongOffset } from "../../src/features/media/lyrics/songOffsets.ts";
-import { normalizeSettings } from "../../src/features/appearance/settings.ts";
+import { normalizeSettings } from "../../src/lib/settings/settings.ts";
 import { chineseLyricsByDefault, DEFAULT_LYRICS_SETTINGS } from "../../src/features/media/lyrics/lyricsSettings.ts";
 
 test("each line takes the translation that starts with it", () => {

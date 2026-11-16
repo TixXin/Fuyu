@@ -1,7 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { useEffect, useSyncExternalStore } from "react";
-import type { IslandSettings } from "../../features/appearance/types";
-import { themeColors } from "../../features/appearance/themeMode";
+import type { IslandSettings } from "../../lib/settings/types";
+import { themeColors } from "../../lib/theme/themeMode";
 import { getIslandNotch, listenIslandNotch, setIslandNotchDrop, type IslandNotch } from "./api.ts";
 import { MIN_COLLAPSED_ISLAND_WIDTH } from "./layout.ts";
 import "./IslandNotch.css";

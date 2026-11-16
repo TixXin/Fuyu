@@ -1,7 +1,7 @@
 import { useState, type KeyboardEvent } from "react";
 import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
-import { buildShortcutFromEvent, shortcutLabel } from "../../features/clipboard/shortcut";
-import { useShortcutCapture } from "../../features/clipboard/useShortcutCapture";
+import { buildShortcutFromEvent, shortcutLabel } from "../../lib/shortcut/shortcut";
+import { useShortcutCapture } from "../../lib/shortcut/useShortcutCapture";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";

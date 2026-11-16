@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  DEFAULT_CLIPBOARD_SHORTCUT,
   buildShortcutFromEvent,
   isPrimaryKey,
+  normalizeShortcutKeyLabel,
+} from "../../src/lib/shortcut/shortcut.ts";
+import {
+  DEFAULT_CLIPBOARD_SHORTCUT,
   matchesClipboardShortcut,
   normalizeClipboardShortcut,
-  normalizeShortcutKeyLabel,
   openShortcutLabel,
 } from "../../src/features/clipboard/shortcut.ts";
 import { DEFAULT_CLIPBOARD_HISTORY, normalizeClipboardSettings } from "../../src/features/clipboard/settings.ts";

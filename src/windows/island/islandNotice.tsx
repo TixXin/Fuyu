@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { ClipboardCopyNotice, ClipboardCopyNoticeActions } from "../../features/clipboard/ClipboardCopyNotice";
 import type { ClipboardCopyCardState } from "../../features/clipboard/useClipboardCopyCard";
-import { FirstHintActions, FirstHintNotice } from "../../features/first-hints/FirstHintNotice";
-import type { FirstHintsController } from "../../features/first-hints/useFirstHints";
+import { FirstHintActions, FirstHintNotice } from "./first-hints/FirstHintNotice";
+import type { FirstHintsController } from "./first-hints/useFirstHints";
 import { RecordingNotice, RecordingNoticeActions } from "../../features/screenshot/RecordingNotice";
 import { ScreenshotNotice, ScreenshotNoticeActions } from "../../features/screenshot/ScreenshotNotice";
 import type { RecordingNoticeState } from "../../features/screenshot/useRecording";

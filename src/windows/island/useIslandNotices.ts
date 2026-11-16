@@ -6,7 +6,7 @@ import { useDeviceUse } from "../../features/device-use/useDeviceUse";
 import { useLevelPopup } from "../../features/system-levels/useLevelPopup";
 import { useDeviceAlert } from "../../features/device-events/useDeviceAlert";
 import { usePluginPermissionPrompts } from "../../features/plugins/usePluginPermissionPrompts";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useState } from "react";
 import { useLatestMessagePreview } from "./useLatestMessagePreview";
 import type { IslandMode } from "./types";

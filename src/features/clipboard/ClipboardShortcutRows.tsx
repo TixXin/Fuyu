@@ -5,9 +5,10 @@ import { ShortcutResetButton } from "../../components/controls/ShortcutResetButt
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { getClipboardShortcutError, listenClipboardShortcutStatus, type ClipboardHistorySettings } from "./api";
 import { isMacOS } from "../../lib/platform";
-import { buildShortcutFromEvent, DEFAULT_CLIPBOARD_SHORTCUT, normalizeClipboardShortcut, shortcutLabel } from "./shortcut";
-import { useShortcutCapture } from "./useShortcutCapture";
-import "./ClipboardSettingsSection.css";
+import { buildShortcutFromEvent, shortcutLabel } from "../../lib/shortcut/shortcut";
+import { DEFAULT_CLIPBOARD_SHORTCUT, normalizeClipboardShortcut } from "./shortcut";
+import { useShortcutCapture } from "../../lib/shortcut/useShortcutCapture";
+import "../../components/controls/ShortcutControl.css";
 
 export function ClipboardShortcutRows({ clipboardSettings, onClipboardSettingsChange, takenBy }: {
   clipboardSettings: ClipboardHistorySettings;

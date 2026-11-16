@@ -4,7 +4,7 @@ import { useTodos } from "../../features/todos/useTodos";
 import { useLocalApiBridge } from "../../features/local-api/useLocalApiBridge";
 import { useBackgroundUpdateCheck } from "../../features/updater/useBackgroundUpdateCheck";
 import type { AgentStatusSnapshot } from "../../features/agent-status/api";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { usePluginHostEvents } from "./usePluginHostEvents";
 import { usePluginKeybindings } from "./usePluginKeybindings";
 import type { IslandMode, IslandPage } from "./types";

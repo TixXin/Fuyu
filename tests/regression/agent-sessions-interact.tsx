@@ -4,7 +4,7 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
-import type { AgentSessionView } from "../../src/features/appearance/types";
+import type { AgentSessionView } from "../../src/lib/settings/types";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import type { SessionRemoval } from "../../src/features/agent-status/useHiddenSessions";
 import type { AlertedSession } from "../../src/features/agent-status/useAgentAlerts";

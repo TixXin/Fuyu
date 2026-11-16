@@ -3,7 +3,7 @@ import test from "node:test";
 import "./settingsCategorySlot.mjs";
 import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, entryOf, entryPages, isCategoryAvailable, pagesOfFeaturesOff, searchCategories, settingsCategories, settingsCategoryFor, settingsGroups, sidebarItemOf } from "../../src/windows/settings/categories.ts";
 import { categorySlot } from "../../src/windows/settings/slots/categorySlot.ts";
-import { shortcutLabel } from "../../src/features/clipboard/shortcut.ts";
+import { shortcutLabel } from "../../src/lib/shortcut/shortcut.ts";
 import { isTitleHit, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
 import { mergeStates, pairLocales } from "../../scripts/settings-search-index.mjs";
 

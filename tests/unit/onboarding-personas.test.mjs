@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { DEFAULT_SETTINGS } from "../../src/features/appearance/settings.ts";
+import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings.ts";
 import { MODULES, NO_ANSWER, PERSONAS, enabledModules, modulesFor, personaModules, takenOff, togglePersona, withModules } from "../../src/windows/onboarding/personas.ts";
 
 test("each answer picks its own set, and several answers take every module any of them uses", () => {

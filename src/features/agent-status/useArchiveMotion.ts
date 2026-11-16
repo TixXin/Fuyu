@@ -2,7 +2,7 @@ import { useLayoutEffect, useState } from "react";
 import type { AgentSessionSummary } from "./api";
 import { sessionKey } from "./unseen";
 import type { SessionRemoval } from "./useHiddenSessions";
-import type { AgentArchiveMotion } from "../appearance/types";
+import type { AgentArchiveMotion } from "../../lib/settings/types";
 import { MOTION_ARCHIVING } from "./useListMotion";
 import "./ArchiveDissolve.css";
 

@@ -2,7 +2,7 @@ import { CornerDownLeft, Pause } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import type { ClipboardCaptureStatus } from "./api";
-import { PRIMARY_KEY } from "./shortcut";
+import { PRIMARY_KEY } from "../../lib/shortcut/shortcut";
 
 export type MergeSeparator = "newline" | "space" | "comma";
 const SEPARATORS: readonly MergeSeparator[] = ["newline", "space", "comma"];

@@ -10,14 +10,14 @@ import {
   normalizeSettings,
   withLayoutFrom,
   withThemeFrom,
-} from "../../src/features/appearance/settings.ts";
+} from "../../src/lib/settings/settings.ts";
 import {
   COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY,
   SETTINGS_PRESETS_STORAGE_KEY,
   STORAGE_KEY,
   loadSettingPresets,
   loadSettings,
-} from "../../src/features/appearance/storage.ts";
+} from "../../src/lib/settings/storage.ts";
 
 function withStorage(entries, run) {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis, "window");

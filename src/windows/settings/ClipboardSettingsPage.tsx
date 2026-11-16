@@ -1,4 +1,4 @@
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import type { ClipboardHistorySettings } from "../../features/clipboard/api";
 import { ClipboardAiPromptSettings } from "../../features/clipboard/ClipboardAiPromptSettings";
 import { ClipboardLinkSettings } from "../../features/clipboard/ClipboardLinkSettings";

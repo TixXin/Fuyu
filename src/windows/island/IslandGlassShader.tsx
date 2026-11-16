@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { GlassPalette } from "../../features/appearance/glassPalette";
+import type { GlassPalette } from "../../lib/theme/glassPalette";
 import { createGlassShader, type GlassShader } from "./glassShader";
 
 const FRAME_MS = 1000 / 30;

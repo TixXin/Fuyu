@@ -8,7 +8,7 @@
 
 | 现有位置 | 目标位置 |
 |---|---|
-| `App.tsx`：`App`、`IslandApp`、`IslandShell` | `windows/island/IslandApp.tsx`（`App` 包装已去掉，`main.tsx` 直接渲染 `IslandApp`）、`IslandShell.tsx`；外壳拆出 `IslandCollapsedBar.tsx`、`IslandHeader.tsx` 与 `useGlassPointer.ts`、`useIslandPreparing.ts`、`useWindowDragGesture.ts`。展开后各页面的面板在 `IslandPages.tsx`。`IslandApp` 的导航、快捷键、折叠态待办摘要、展开高度、舞台样式分别在 `useIslandNavigation.ts`、`useIslandKeyboard.ts`、`useCollapsedTodo.ts`、`expandedHeight.ts`、`stageStyle.ts`；外观设置的持久化与同步在 `features/appearance/useIslandSettings.ts` |
+| `App.tsx`：`App`、`IslandApp`、`IslandShell` | `windows/island/IslandApp.tsx`（`App` 包装已去掉，`main.tsx` 直接渲染 `IslandApp`）、`IslandShell.tsx`；外壳拆出 `IslandCollapsedBar.tsx`、`IslandHeader.tsx` 与 `useGlassPointer.ts`、`useIslandPreparing.ts`、`useWindowDragGesture.ts`。展开后各页面的面板在 `IslandPages.tsx`。`IslandApp` 的导航、快捷键、折叠态待办摘要、展开高度、舞台样式分别在 `useIslandNavigation.ts`、`useIslandKeyboard.ts`、`useCollapsedTodo.ts`、`expandedHeight.ts`、`stageStyle.ts`；外观设置的持久化与同步在 `lib/settings/useIslandSettings.ts` |
 | `App.tsx`：窗口尺寸、展开高度、拖拽、位置、贴边相关的 state 与 effect | `windows/island/useIslandWindow.ts`（组合原生同步）、`useNativeLayout.ts`（缩放与边距，每帧至多一次调用）、`useIslandPosition.ts`（拖拽位置）、`api.ts`。展开高度仍由 `IslandApp` 按页面内容算好后传入；贴边收起的 mode 状态在 `useIslandNavigation.ts`。`topEdge.ts` 把原生顶边贴合写到根元素 `data-island-top-edge`，`IslandTopEdge.css` 据此绘制平顶与反向圆角 |
 | `App.tsx`：`openSettingsWindow` 与设置区块跳转 | `windows/settings/api.ts` |
 | `App.tsx`：`TodoNotebook`、`ArchiveBrowser` | `features/todos/` |
@@ -34,6 +34,20 @@
 | `SettingsWindow.tsx/.css` | `windows/settings/` |
 | `TranslationWindow.tsx/.css` | `windows/translation/`（翻译的 `api.ts`、`storage.ts`、`providers.ts` 在 `features/translation/`） |
 | `utils/text.ts`、`i18n/`、`assets/` | 保持不动 |
+
+### 插件平台第 3 版：共享代码上提（E36.3.24）
+
+| 原位置 | 现在的位置 |
+|---|---|
+| `features/appearance/` 的设置模型：`types`、`settings`、`settingsDefaults`、`settingsLimits`、`normalize*Settings`、`storage`、`installState`、`useIslandSettings`、`useSettingPresets`、`collapsedItems`、`useCollapsedPlacements`、`pageShortcuts`、`glassSettings`、`api` | `lib/settings/` |
+| `features/appearance/` 的主题和动效：`theme`、`themeMode`、`builtinThemes`、`glassPalette`、`islandMotion`、`motionCurves`、`useAccentColor`、`useWindowAccent`、`useWindowLight`、`useResolvedTheme`；`features/center-pattern/useReducedMotion.ts` | `lib/theme/` |
+| `features/appearance/IslandPreview`、`AgentPagePreview` | `components/island-preview/` |
+| `features/appearance/` 的设置分节（`*Section`、`AccentSettingsRow`、`InkColorRows`、`IslandGlyph`、`IslandMotionRow`、`PositionDiagram`、`ResetAppearanceButton`、`useIslandDockEdge`）；`features/settings-backup/` 的 `DataHomeSection`、`DataSettingsSection`、`SettingsBackupSection`、`UpdateBackupsSection`；`features/system-permissions/SystemPermissionsSection` | `windows/settings/sections/` |
+| `features/settings-backup/` 的其余文件 | `lib/settings-backup/` |
+| `features/system-permissions/api`、`useSystemPermissions` | `lib/system-permissions/`；`PermissionRows` → `components/settings/` |
+| `features/first-hints/` | `windows/island/first-hints/` |
+| `features/clipboard/shortcut.ts` 的通用部分、`useShortcutCapture.ts`，`clipboard/api.ts` 里的 `setShortcutCapture`、`listenShortcutCaptured` | `lib/shortcut/`（剪贴板专用的 `DEFAULT_CLIPBOARD_SHORTCUT`、`openShortcutLabel`、`normalizeClipboardShortcut`、`matchesClipboardShortcut` 留在 `features/clipboard/shortcut.ts`） |
+| `features/clipboard/ClipboardSettingsSection.css`（快捷键录制控件的样式） | `components/controls/ShortcutControl.css` |
 
 ## 迁移映射：Rust
 

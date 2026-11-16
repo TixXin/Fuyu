@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { normalizeSettings } from "../../src/features/appearance/settings.ts";
+import { normalizeSettings } from "../../src/lib/settings/settings.ts";
 import { introLine } from "../../src/features/media/lyrics/songLine.ts";
 
 test("what shows before the first line defaults to the todo and old settings keep it", () => {

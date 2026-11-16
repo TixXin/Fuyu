@@ -1,6 +1,6 @@
 import { AgentAlertSettings } from "../../features/agent-status/AgentAlertSettings";
 import { AgentPushSettings } from "../../features/agent-status/push/AgentPushSettings";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";
 

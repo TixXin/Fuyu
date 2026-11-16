@@ -1,8 +1,8 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { useReducedMotion } from "../../features/center-pattern/useReducedMotion";
-import { resolveThemeColors, surfaceThemeColors } from "../../features/appearance/themeMode";
-import type { IslandSettings } from "../../features/appearance/types";
-import { useSystemDark } from "../../features/appearance/useResolvedTheme";
+import { useReducedMotion } from "../../lib/theme/useReducedMotion";
+import { resolveThemeColors, surfaceThemeColors } from "../../lib/theme/themeMode";
+import type { IslandSettings } from "../../lib/settings/types";
+import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import { useTranslation } from "../../i18n";
 import { dayPeriod } from "../../utils/dayPeriod";
 import { FEATURE_PAGES, type SettingsFeature } from "./categories";

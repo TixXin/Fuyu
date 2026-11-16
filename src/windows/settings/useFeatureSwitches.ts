@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { useVoiceInputSettings } from "../../features/voice-input/useVoiceInputSettings";
 import { pagesOfFeaturesOff, type SettingsCategory, type SettingsFeature } from "./categories";

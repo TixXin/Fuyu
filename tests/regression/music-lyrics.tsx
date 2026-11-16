@@ -6,7 +6,7 @@ import { I18nProvider } from "../../src/i18n";
 import type { MediaState } from "../../src/features/media/api";
 import { DEFAULT_MEDIA_STATE } from "../../src/features/media/mediaState";
 import { MusicPlayerPanel } from "../../src/features/media/MusicPlayerPanel";
-import { DEFAULT_SETTINGS } from "../../src/features/appearance/settingsDefaults";
+import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults";
 import type { LyricsIntro } from "../../src/features/media/lyrics/lyricsSettings";
 import { useIslandLyrics } from "../../src/windows/island/useIslandLyrics";
 import { MediaWaveform } from "../../src/features/media/MediaWaveform";

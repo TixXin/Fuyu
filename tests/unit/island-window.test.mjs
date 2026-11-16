@@ -97,7 +97,7 @@ test("pages and message sources that are switched off fall back to ones still on
 
 test("Alt+number follows the header from left to right and skips modules that are off", async () => {
   const { pageForAltDigit, pageShortcutLabel, cycleShortcutPage } = await import("../../src/windows/island/features.ts");
-  const { pageDigitFromEvent, pageCycleDirection, normalizePageDigitModifiers, normalizePageCycleShortcut } = await import("../../src/features/appearance/pageShortcuts.ts");
+  const { pageDigitFromEvent, pageCycleDirection, normalizePageDigitModifiers, normalizePageCycleShortcut } = await import("../../src/lib/settings/pageShortcuts.ts");
   const all = { agents: true, todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: false, qqMail: false };
   assert.equal(pageForAltDigit(all, 1), "agents");
   assert.equal(pageForAltDigit(all, 2), "todo");

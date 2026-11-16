@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BACKUP_KEYS, backupFileName, buildBackup, parseBackup } from "../../src/features/settings-backup/backup.ts";
+import { BACKUP_KEYS, backupFileName, buildBackup, parseBackup } from "../../src/lib/settings-backup/backup.ts";
 
 test("a backup holds the set settings keys and nothing else", () => {
   const stored = {

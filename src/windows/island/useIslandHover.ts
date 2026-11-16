@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useHoverExpand } from "./useHoverExpand";
 import { useHoverFocus } from "./useHoverFocus";
 import type { useIslandNavigation } from "./useIslandNavigation";

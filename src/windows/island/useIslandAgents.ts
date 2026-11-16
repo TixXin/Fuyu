@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useAgentStatus } from "../../features/agent-status/useAgentStatus";
 import { useAgentSession } from "../../features/agent-status/useAgentSession";
 import { useAgentInterjection } from "../../features/agent-status/useAgentInterjection";

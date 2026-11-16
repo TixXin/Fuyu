@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { currentKeys, fileKeys, fingerprint, settingsFileText, settingsToApply } from "../../src/features/settings-backup/settingsFile.ts";
+import { currentKeys, fileKeys, fingerprint, settingsFileText, settingsToApply } from "../../src/lib/settings-backup/settingsFile.ts";
 
 const keys = { "fuyu-locale": "en", "fuyu-settings": "{\"opacity\":60}" };
 

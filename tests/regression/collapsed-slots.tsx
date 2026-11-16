@@ -19,7 +19,7 @@ import type { MediaState } from "../../src/features/media/api";
 import type { KaraokeLine } from "../../src/features/media/lyrics/useCurrentLyric";
 import { karaokeWords } from "../../src/features/media/lyrics/lrc";
 import { karaokeLook } from "../../src/features/media/lyrics/lyricsSettings";
-import { normalizeSettings } from "../../src/features/appearance/settings";
+import { normalizeSettings } from "../../src/lib/settings/settings";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");

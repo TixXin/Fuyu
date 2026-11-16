@@ -116,7 +116,7 @@ Agent hook（UserPromptSubmit）
 | `src/features/agent-status/api.ts`、`status.ts` | `title` 类型；选出当前要显示的 Agent 与标题，含完成后 3 秒保留 |
 | `src/windows/island/IslandCollapsedBar.tsx/.css` | 图标 + 标题行，优先级在消息预览之后、待办之前 |
 | `src/features/agent-status/AgentHooksSettingsSection.tsx` 或 `AgentSettingsPage.tsx` | 显示标题开关 |
-| `src/features/appearance/settings.ts`、`types.ts` | `agentTitleEnabled` 默认值与 normalize |
+| `src/lib/settings/settings.ts`、`types.ts` | `agentTitleEnabled` 默认值与 normalize |
 | `src/i18n/types.ts`、`zh-CN.ts`、`en.ts` | 开关文案 |
 | `src/assets/brands/` | Claude Code、Codex 图标 |
 

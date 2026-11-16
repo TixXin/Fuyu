@@ -7,7 +7,7 @@ import { useArchiveMotion } from "./useArchiveMotion";
 import { useListMotion } from "./useListMotion";
 import { sessionLight } from "./sessionLight";
 import { useTranslation } from "../../i18n";
-import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionGroup, AgentSessionSort, AgentSessionView } from "../appearance/types";
+import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionGroup, AgentSessionSort, AgentSessionView } from "../../lib/settings/types";
 import { AgentSessionCard } from "./AgentSessionCard";
 import { AgentUsageBar } from "./AgentUsageBar";
 import type { AgentUsages } from "./usage";

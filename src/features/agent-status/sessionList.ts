@@ -1,4 +1,4 @@
-import type { AgentSessionGroup, AgentSessionSort } from "../appearance/types";
+import type { AgentSessionGroup, AgentSessionSort } from "../../lib/settings/types";
 import type { AgentSessionSummary, SessionProvider } from "./api";
 import { sessionLight, type SessionLight } from "./sessionLight.ts";
 import { sessionKey } from "./unseen.ts";

@@ -7,7 +7,7 @@ import { ProjectLink } from "./ProjectLink";
 import { websitePage } from "./projectLinks";
 import { UpdateNotes } from "./UpdateNotes";
 import { useRestartStalled } from "./useRestartStalled";
-import { restartIsland } from "../settings-backup/api";
+import { restartIsland } from "../../lib/settings-backup/api";
 import { useDownloadSource } from "./useDownloadSource";
 import {
   checkForUpdate,

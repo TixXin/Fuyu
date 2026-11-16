@@ -6,12 +6,12 @@ import { hasTranslationSecret, hideTranslationWindow, listenTranslationWindowOpe
 import { takeTranslationHandoff, type Direction } from "../../features/translation/storage";
 import { DEFAULT_PROVIDER_MODELS } from "../../features/translation/providers";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
-import { useWindowAccent } from "../../features/appearance/useWindowAccent";
-import { useWindowLight } from "../../features/appearance/useWindowLight";
+import { useWindowAccent } from "../../lib/theme/useWindowAccent";
+import { useWindowLight } from "../../lib/theme/useWindowLight";
 import { openSettingsWindow } from "../settings/api";
 import { useAutoTranslate } from "../../features/translation/useAutoTranslate";
 import { useTranslationRequest } from "../../features/translation/useTranslationRequest";
-import { shortcutLabel } from "../../features/clipboard/shortcut";
+import { shortcutLabel } from "../../lib/shortcut/shortcut";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import "./TranslationWindow.css";
 

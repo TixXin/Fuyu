@@ -8,7 +8,7 @@ import "./styles/tokens.css";
 import "./styles/fonts.css";
 import "./styles/base.css";
 import { I18nProvider } from "./i18n";
-import { loadSettingsFile } from "./features/settings-backup/loadSettingsFile";
+import { loadSettingsFile } from "./lib/settings-backup/loadSettingsFile";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
 import { trackIslandNotch } from "./windows/island/notch";
 

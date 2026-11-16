@@ -6,7 +6,7 @@ import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { applyIslandNotch, notchExpandedExtra, notchFittedWidth, notchPanelWidth } from "../../src/windows/island/notch";
 import { islandFormLayout, PILL_TOP_GAP } from "../../src/windows/island/islandForm";
-import type { IslandForm } from "../../src/features/appearance/types";
+import type { IslandForm } from "../../src/lib/settings/types";
 import type { IslandNotch } from "../../src/windows/island/api";
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";

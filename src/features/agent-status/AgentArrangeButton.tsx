@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowDownUp } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import { AGENT_SESSION_GROUPS, AGENT_SESSION_SORTS } from "../appearance/settings";
-import type { AgentSessionGroup, AgentSessionSort } from "../appearance/types";
+import { AGENT_SESSION_GROUPS, AGENT_SESSION_SORTS } from "../../lib/settings/settings";
+import type { AgentSessionGroup, AgentSessionSort } from "../../lib/settings/types";
 import "./AgentArrangeButton.css";
 
 export function AgentArrangeButton({

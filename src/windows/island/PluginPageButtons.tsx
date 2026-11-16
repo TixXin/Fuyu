@@ -6,7 +6,7 @@ import { pageShortcutLabel, type IslandFeatures } from "./features";
 import type { IslandPage } from "./types";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
 import "./PluginPageButtons.css";
-import { shortcutLabel } from "../../features/clipboard/shortcut";
+import { shortcutLabel } from "../../lib/shortcut/shortcut";
 
 export function PluginPageButtons({
   views,

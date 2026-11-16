@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BadgeCheck, Check, RefreshCcw } from "lucide-react";
-import { IslandPreview } from "../appearance/IslandPreview";
-import type { IslandSettings } from "../appearance/types";
+import { IslandPreview } from "../../components/island-preview/IslandPreview";
+import type { IslandSettings } from "../../lib/settings/types";
 import { useLocale, useTranslation } from "../../i18n";
 import { getThemeMarket } from "./api";
 import { isThemeInUse, readMarketThemes, withMarketTheme, type MarketTheme } from "./model";

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
-import { hexToRgba } from "../../features/appearance/settings";
-import type { IslandSettings } from "../../features/appearance/types";
-import { accentVariables, inkVariables } from "../../features/appearance/themeMode";
+import { hexToRgba } from "../../lib/settings/settings";
+import type { IslandSettings } from "../../lib/settings/types";
+import { accentVariables, inkVariables } from "../../lib/theme/themeMode";
 import type { IslandMode } from "./types";
 
 export function getIslandStageStyle(

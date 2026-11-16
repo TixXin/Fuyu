@@ -7,7 +7,7 @@ import { AgentProviderIcon } from "../../features/agent-status/AgentProviderIcon
 import type { SessionProvider } from "../../features/agent-status/api";
 import { AGENT_PROVIDER_LABELS } from "../../features/agent-status/status";
 import "../../features/agent-status/AgentHooksSettingsSection.css";
-import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../features/appearance/types";
+import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { FeatureHeader } from "./FeatureHeader";
 import { SlotView } from "../../features/plugin-kernel/SlotView";

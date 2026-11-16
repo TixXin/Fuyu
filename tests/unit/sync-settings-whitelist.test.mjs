@@ -4,9 +4,9 @@ import test from "node:test";
 import { DEFAULT_AGENT_APPROVAL_SETTINGS } from "../../src/features/agent-status/approvals/storage.ts";
 import { DEFAULT_AGENT_PUSH_SETTINGS } from "../../src/features/agent-status/push/storage.ts";
 import { DEFAULT_AGENT_SOUND_SETTINGS } from "../../src/features/agent-status/sounds/storage.ts";
-import { DEFAULT_SETTINGS } from "../../src/features/appearance/settingsDefaults.ts";
+import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults.ts";
 import { normalizeScreenshotSettings } from "../../src/features/screenshot/settings.ts";
-import { BACKUP_KEYS } from "../../src/features/settings-backup/backup.ts";
+import { BACKUP_KEYS } from "../../src/lib/settings-backup/backup.ts";
 import { DEFAULT_SETTINGS as DEFAULT_TRANSLATION_SETTINGS } from "../../src/features/translation/storage.ts";
 
 const whitelist = JSON.parse(readFileSync(new URL("../../src-tauri/src/sync/settings_whitelist.json", import.meta.url), "utf8"));

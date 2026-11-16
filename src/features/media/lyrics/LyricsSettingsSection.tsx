@@ -8,7 +8,7 @@ import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRo
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { InflinkRow } from "./InflinkRow";
 import type { LyricsIntro, LyricsIslandPriority } from "./lyricsSettings";
-import type { IslandSettings } from "../../appearance/types";
+import type { IslandSettings } from "../../../lib/settings/types";
 import "./LyricsSettingsSection.css";
 
 export function LyricsSettingsSection({

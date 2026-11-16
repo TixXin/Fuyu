@@ -2,11 +2,11 @@ import { useEffect, useState, type Dispatch, type KeyboardEvent, type SetStateAc
 import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { useErrorText, useTranslation } from "../../i18n";
-import { buildShortcutFromEvent, shortcutLabel } from "../clipboard/shortcut";
-import { useShortcutCapture } from "../clipboard/useShortcutCapture";
+import { buildShortcutFromEvent, shortcutLabel } from "../../lib/shortcut/shortcut";
+import { useShortcutCapture } from "../../lib/shortcut/useShortcutCapture";
 import { setTranslationSelectionShortcut, setTranslationShortcut } from "./api";
 import { DEFAULT_SETTINGS, type TranslationSettings } from "./storage";
-import "../clipboard/ClipboardSettingsSection.css";
+import "../../components/controls/ShortcutControl.css";
 
 export type TranslationShortcutTarget = "window" | "selection";
 

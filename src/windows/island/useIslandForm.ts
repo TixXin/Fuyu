@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { IslandForm } from "../../features/appearance/types";
+import type { IslandForm } from "../../lib/settings/types";
 import "./IslandPill.css";
 
 export function useIslandForm(form: IslandForm) {

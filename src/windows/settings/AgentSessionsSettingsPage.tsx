@@ -1,6 +1,6 @@
 import { AgentSessionFilterSettings } from "../../features/agent-status/AgentSessionFilterSettings";
 import { AgentSessionListSettings } from "../../features/agent-status/AgentSessionListSettings";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";
 

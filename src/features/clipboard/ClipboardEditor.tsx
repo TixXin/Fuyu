@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "../../i18n";
 import type { ClipboardHistoryItem } from "./api";
-import { isPrimaryKey, PRIMARY_KEY } from "./shortcut";
+import { isPrimaryKey, PRIMARY_KEY } from "../../lib/shortcut/shortcut";
 
 export function ClipboardEditor({ item, overlay, onPasteOnce, onSaveAsNew, onCancel }: {
   item: ClipboardHistoryItem;

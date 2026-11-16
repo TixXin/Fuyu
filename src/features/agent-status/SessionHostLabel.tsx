@@ -1,5 +1,5 @@
 import { useTranslation } from "../../i18n";
-import type { AgentHostDisplay } from "../appearance/types";
+import type { AgentHostDisplay } from "../../lib/settings/types";
 import type { SessionHost } from "./api";
 import { useHostIcon } from "./useHostIcon";
 

@@ -9,7 +9,7 @@ import { useAgentPush } from "../../features/agent-status/push/useAgentPush";
 import { reminderSound } from "../../features/agent-status/sounds/events";
 import { playAgentSound } from "../../features/agent-status/sounds/player";
 import { useAgentSoundSettings } from "../../features/agent-status/sounds/useAgentSoundSettings";
-import type { IslandSettings } from "../../features/appearance/types";
+import type { IslandSettings } from "../../lib/settings/types";
 import type { IslandMode, IslandPage } from "./types";
 import { useHoverHold } from "./useHoverHold";
 import { useOutsideClick } from "./useOutsideClick";

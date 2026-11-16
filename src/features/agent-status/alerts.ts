@@ -1,5 +1,5 @@
 import type { AgentSessionSummary, ReplyMarker } from "./api";
-import type { AgentAlertStarted, IslandSettings } from "../appearance/types";
+import type { AgentAlertStarted, IslandSettings } from "../../lib/settings/types";
 import { sessionKey } from "./unseen.ts";
 import { rememberedPhase, replyEnding } from "./sessionLight.ts";
 

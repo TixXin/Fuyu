@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BUILTIN_THEME_IDS, BUILTIN_THEMES, builtinThemeInUse, withBuiltinTheme } from "../../src/features/appearance/builtinThemes.ts";
-import { DEFAULT_SETTINGS, normalizeSettings, THEME_SETTING_KEYS } from "../../src/features/appearance/settings.ts";
-import { buildTheme, parseTheme } from "../../src/features/appearance/theme.ts";
-import { autoInkHex, inkVariables, resolveThemeColors, surfaceThemeColors } from "../../src/features/appearance/themeMode.ts";
+import { BUILTIN_THEME_IDS, BUILTIN_THEMES, builtinThemeInUse, withBuiltinTheme } from "../../src/lib/theme/builtinThemes.ts";
+import { DEFAULT_SETTINGS, normalizeSettings, THEME_SETTING_KEYS } from "../../src/lib/settings/settings.ts";
+import { buildTheme, parseTheme } from "../../src/lib/theme/theme.ts";
+import { autoInkHex, inkVariables, resolveThemeColors, surfaceThemeColors } from "../../src/lib/theme/themeMode.ts";
 
 test("auto ink keeps the old black-or-white text (C33.9)", () => {
   assert.deepEqual(inkVariables({ islandBackgroundColor: "#030303", inkColor: "" }), { "--island-ink-rgb": "241, 240, 246" });

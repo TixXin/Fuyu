@@ -1,6 +1,6 @@
 import { AGENT_APPROVAL_STORAGE_KEY, DEFAULT_AGENT_APPROVAL_SETTINGS } from "../../../src/features/agent-status/approvals/storage";
-import { ISLAND_SETTINGS_KEY } from "../../../src/features/appearance/installState";
-import { DEFAULT_SETTINGS } from "../../../src/features/appearance/settingsDefaults";
+import { ISLAND_SETTINGS_KEY } from "../../../src/lib/settings/installState";
+import { DEFAULT_SETTINGS } from "../../../src/lib/settings/settingsDefaults";
 import { LOCALE_STORAGE_KEY } from "../../../src/i18n";
 import { installBackend } from "./backend";
 import { createWorld, type World } from "./world";

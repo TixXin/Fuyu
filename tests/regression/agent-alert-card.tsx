@@ -5,8 +5,8 @@ import { mockIPC } from "@tauri-apps/api/mocks";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import type { AgentApprovalRequest } from "../../src/features/agent-status/approvals/api";
 import { AGENT_APPROVAL_STORAGE_KEY } from "../../src/features/agent-status/approvals/storage";
-import { DEFAULT_SETTINGS } from "../../src/features/appearance/settings";
-import type { IslandSettings } from "../../src/features/appearance/types";
+import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings";
+import type { IslandSettings } from "../../src/lib/settings/types";
 import { useIslandAgentAlerts } from "../../src/windows/island/useIslandAgentAlerts";
 import type { IslandPage } from "../../src/windows/island/types";
 
