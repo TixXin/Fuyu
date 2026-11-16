@@ -1,6 +1,6 @@
 # 插件平台第 3 版：市场 CI（逐版审核和市场构建）
 
-> 状态：在 `TixXin/fuyu-plugins` 的草稿 PR [#25](https://github.com/TixXin/fuyu-plugins/pull/25) 上（E36.5.5，#484），还没合入。代码在那个仓库的 `scripts/v3/`、`.github/workflows/`，本文只记流程、工作流、密钥和规则集。
+> 状态：2026-11-15 经 `TixXin/fuyu-plugins` 的 PR [#25](https://github.com/TixXin/fuyu-plugins/pull/25) 合入（E36.5.5，#484），合入后 `Publish v3` 第一次签名并推上 `main`；`main` 的规则集已加。代码在那个仓库的 `scripts/v3/`、`.github/workflows/`，本文只记流程、工作流、密钥和规则集。
 
 索引和撤销名单的格式见 [v3-market.md](v3-market.md)，审核分档见 `packages/plugin-review`，命令行见 [v3-cli.md](v3-cli.md)。定下这些做法的决定见 [第 5 阶段地基的计划](v3-phase5-foundation-plan.md) Q6（官方插件靠受保护的 `main`）、Q7（市场仓库加规则集）、Q8（作者签提交号）、Q9（单独的撤销密钥）。第 2 版的做法见 [market-ops.md](market-ops.md)。
 
@@ -106,7 +106,7 @@
 
 ## 规则集
 
-`main` 的规则集（Q7 第二段，等草稿 PR 合入后由用户加）：
+`main` 的规则集 `main protection`（Q7 第二段，2026-11-15 加，id 27350247；加完手动跑的 `Publish v3` 用部署密钥照常推上了 `main`）：
 
 - 必须经 PR，一个批准；禁止强推和删除。
 - **要求的检查：`check`、`v3-report`**（`Check submission` 的两个 job 名）。`v3-report` 总会运行（`if: always()`），没有第 3 版改动时也报告成功。
