@@ -10,6 +10,8 @@ import { useMailSwitch, useSourceFallback } from "../island/useMessageSwitches";
 import { useMessageView } from "../island/useMessageView";
 import { useTuckHold } from "../island/useTuckHold";
 import { useMessagesIsland } from "./islandMessages";
+import { OWNER } from "./owner.ts";
+import { useSourceReconcile } from "./useSourceSwitches";
 
 type RunnerProps = {
   settings: IslandSettings;
@@ -36,6 +38,7 @@ function MessagesRunner({ settings, mode, page, isTucked, quiet, host, openIslan
     notices, mode, page, openIslandPage, collapseIsland, onOpenMessages: openMessages, host,
   });
   const hold = useTuckHold(settings, { messagesOpen: mode === "expanded" && page === "qq", notices });
+  useSourceReconcile();
   useMailSwitch(settings.mailEnabled, qqMail);
   const qq = qqNotifications.snapshot.enabled && !unsupported.has("qq");
   const wechat = wechatReminders.snapshot.enabled && !unsupported.has("wechat");
@@ -62,4 +65,4 @@ function MessagesRunner({ settings, mode, page, isTucked, quiet, host, openIslan
   return null;
 }
 
-runnerSlot.add({ id: "messages.runner", component: MessagesRunner });
+runnerSlot.add({ id: "messages.runner", component: MessagesRunner }, OWNER);

@@ -2,6 +2,7 @@ import { Mail, MessageCircle } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { messagesIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type SideContext = {
   onOpenPage: (page: "qq") => void;
@@ -48,5 +49,5 @@ function MailRow() {
   );
 }
 
-sideSlot.add({ id: "unread", order: 20, component: UnreadRow });
-sideSlot.add({ id: "mail", order: 30, component: MailRow });
+sideSlot.add({ id: "unread", order: 20, component: UnreadRow }, OWNER);
+sideSlot.add({ id: "mail", order: 30, component: MailRow }, OWNER);

@@ -29,10 +29,6 @@ export function getQQNotificationState() {
   return invoke<QQNotificationSnapshot>("get_qq_notification_state");
 }
 
-export function setQQNotificationsEnabled(enabled: boolean) {
-  return invoke<QQNotificationSnapshot>("set_qq_notifications_enabled", { enabled });
-}
-
 export function requestQQNotificationAccess() {
   return invoke<string>("request_qq_notification_access");
 }

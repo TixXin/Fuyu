@@ -103,7 +103,7 @@
   background: var(--color-white-a04);
   border: 1px solid var(--color-white-a08);
   border-radius: var(--radius-xl);
-  transition: border-color var(--motion-base) ease, transform var(--motion-base) ease, box-shadow var(--motion-base) ease;
+  transition: border-color var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease);
 }
 
 .plugin-market__item:hover,
@@ -334,7 +334,7 @@
 
 .plugin-market__placeholder {
   min-height: 76px;
-  animation: plugin-market-pulse 1.4s ease-in-out infinite;
+  animation: plugin-market-pulse 1.4s var(--motion-ease-in-out) infinite;
 }
 
 .plugin-market__spin {

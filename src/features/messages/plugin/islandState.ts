@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { createRunnerStore } from "../../plugin-kernel/runnerStore";
-import type { PluginNotificationsController } from "../../plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../island/usePluginNotifications";
 import type { MessageBanner } from "../banner/MessageBanner";
 import type { useIslandMessagePanel } from "../island/useIslandMessagePanel";
 import type { MailController } from "../mail/MailPanel";

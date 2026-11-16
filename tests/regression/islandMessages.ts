@@ -6,7 +6,7 @@ import type { MessagePreview, MessageSource } from "../../src/features/messages/
 import { useMessagesIsland } from "../../src/features/messages/plugin/islandMessages";
 import type { QQNotificationsController } from "../../src/features/messages/qq-notifications/QQNotifications";
 import type { WeChatRemindersController } from "../../src/features/messages/wechat/WeChatReminders";
-import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 
 export type FixtureMessages = {
   qq: QQNotificationsController;

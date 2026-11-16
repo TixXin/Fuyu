@@ -41,20 +41,23 @@
   .side.old .dot { color: var(--old); }
   .side.new .dot { color: var(--new); }
   svg.curve { width: 100%; height: 56px; display: block; margin-top: 8px; }
+  h2.group { font-size: 17px; margin: 28px 0 12px; }
   .note { font-size: 13px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 10px; margin: 18px 0; }
 </style>
 </head>
 <body>
 <main>
-  <h1>动效档位前后对比（D85.4 第一段：src/windows/）</h1>
+  <h1>动效档位前后对比（D85.4）</h1>
   <p class="lead">每一行左边是现在写死的曲线和时长，右边是并进档位后的样子，两边同时开始。点「全部重播」或单行的「重播」反复看，「慢放 4 倍」看清曲线差别。档位：曲线 <b>--motion-ease</b> (0.2, 0.8, 0.2, 1)、<b>--motion-ease-out</b> (0.22, 1, 0.36, 1)、<b>--motion-ease-in-out</b> (0.45, 0, 0.55, 1)；时长 120 / 160 / 240 / 420ms。</p>
   <div class="bar">
     <button class="primary" id="all">全部重播</button>
     <label><input type="checkbox" id="slow"> 慢放 4 倍</label>
     <label><input type="checkbox" id="loop"> 自动循环</label>
   </div>
+  <h2 class="group" style="margin-top:0">第 1 段：src/windows/（已提交 47b615a1）</h2>
   <div id="rows"></div>
-  <p class="note">这一段共 35 个 CSS 文件、2 个 TS 文件。没动的：岛外壳开合（<code>--island-motion-*</code>，含玻璃的 bloom 和液态展开、侧栏淡出）、1s 以上的循环（呼吸、玻璃色块漂移）只换了曲线不换时长、匀速的 <code>linear</code>、新手引导里星星的回弹 <code>(0.2, 0.9, 0.3, 1.5)</code>（没有文字的装饰，留着并记进门禁白名单；要去掉回弹就说）。剪贴板预览的退场本来要并进 160ms，但 Rust 侧固定等 150ms 就隐藏窗口，所以落在 120ms。</p>
+  <p class="note">第 1 段：34 个 CSS 文件、2 个 TS 文件。没动的：岛外壳开合（<code>--island-motion-*</code>，含玻璃的 bloom 和液态展开、侧栏淡出）、1s 以上的循环（呼吸、玻璃色块漂移）只换了曲线不换时长、匀速的 <code>linear</code>、新手引导里星星的回弹 <code>(0.2, 0.9, 0.3, 1.5)</code>（没有文字的装饰，留着并记进门禁白名单；要去掉回弹就说）。剪贴板预览的退场本来要并进 160ms，但 Rust 侧固定等 150ms 就隐藏窗口，所以落在 120ms。</p>
+  <p class="note">第 2 段：63 个 CSS 文件、2 个 TS 文件（useListMotion.ts、useArchiveMotion.ts）。没动的：1s 以上的循环（呼吸、闪烁、漂移）只换曲线；匀速的 <code>linear</code> 里歌曲进度条留 500ms（跟每 500ms 一次的进度刷新对齐）；600–999ms 的一次性提醒（Agent 卡片闪一下 640ms、快捷键保存 760ms、关于页波纹 900ms）留着进白名单；带回弹的装饰（插件坞图标、关于页小人跳一下）留着进白名单；减少动画里的 1ms 不动；<code>PluginNotificationActions.css</code> 别的会话在搬，没动。</p>
 </main>
 <script>
 const EASE = {
@@ -90,6 +93,14 @@ const ROWS = [
   { title: "第一次提示气泡", where: "first-hints/FirstHintNotice.css:8", why: "260ms ease-out → 240ms --motion-ease。", el: "card", text: "试试把文件拖到岛上", frames: "rise", old: [260, "ease-out"], next: [240, "--motion-ease"] },
   { title: "新手引导卡片进场", where: "onboarding/OnboardingWindow.css:19", why: "带文字的卡片原来有一点回弹 (0.2, 0.9, 0.3, 1.1)，按规矩换成不回弹的 --motion-ease-out，时长不变。", el: "card", text: "这是浮屿，点一下展开", frames: "pop", old: [420, "cubic-bezier(0.2, 0.9, 0.3, 1.1)"], next: [420, "--motion-ease-out"] },
   { title: "新手引导聚光灯进场", where: "onboarding/Spotlight.css:7", why: "500ms ease-out → 420ms --motion-ease；跟随移动 220 → 240ms。", el: "card", text: "聚光灯", frames: "fadeIn", old: [500, "ease-out"], next: [420, "--motion-ease"] },
+  { group: "第 2 段：src/features/、src/components/（还没提交）", title: "新消息横幅进场", where: "messages/banner/MessageBanner.css", why: "220ms (0.23, 1, 0.32, 1) → 240ms --motion-ease-out；到达面板（MessageArrivalsPanel.css）同样。", el: "card", text: "微信 · 张三：今晚吃什么", frames: "rise", old: [220, "cubic-bezier(0.23, 1, 0.32, 1)"], next: [240, "--motion-ease-out"] },
+  { title: "折叠条新消息文字进场", where: "messages/CollapsedMessageContent.css", why: "460ms (.2, .75, .25, 1) → 420ms --motion-ease（图标 560 → 420ms，弹簧曲线不变；旧摘要退场 (.4, 0, .6, 1) → --motion-ease-in-out）。", el: "pill", text: "QQ · 收到 2 条消息", frames: "rise", old: [460, "cubic-bezier(0.2, 0.75, 0.25, 1)"], next: [420, "--motion-ease"] },
+  { title: "设置里的开关", where: "components/settings/SettingsSwitch.css（下拉、数字框、选择卡片等控件同样）", why: "140ms ease → 160ms --motion-ease。", el: "dot", frames: "slide", old: [140, "ease"], next: [160, "--motion-ease"] },
+  { title: "Agent 列表重排、进出", where: "agent-status/useListMotion.ts", why: "TS 里的动画：移动和进场 200ms、退场 180ms，曲线 (0.2, 0.7, 0.3, 1) → 240ms / 160ms --motion-ease。", el: "dot", frames: "slide", old: [200, "cubic-bezier(0.2, 0.7, 0.3, 1)"], next: [240, "--motion-ease"] },
+  { title: "Agent 归档化成灰", where: "agent-status/ArchiveDissolve.css · useArchiveMotion.ts", why: "480ms → 420ms（定时器 DISSOLVE_MS 跟着改）；漂移 ease-out → --motion-ease，扫过的 linear 不变。", el: "card", text: "Claude Code · fuyu", frames: "fadeOut", old: [480, "ease-out"], next: [420, "--motion-ease"] },
+  { title: "歌词换行", where: "media/lyrics/LyricsView.css", why: "220ms ease-out → 240ms --motion-ease。", el: "card", text: "下一句歌词", frames: "rise", old: [220, "ease-out"], next: [240, "--motion-ease"] },
+  { title: "中心图案的眼睛转向", where: "center-pattern/CenterPattern.css", why: "520ms (0.77, 0, 0.175, 1) → 420ms --motion-ease-in-out。", el: "dot", frames: "slide", old: [520, "cubic-bezier(0.77, 0, 0.175, 1)"], next: [420, "--motion-ease-in-out"] },
+  { title: "会话环、状态条的变化", where: "session-ring/SessionRing.css · plugin-views/templates/StatusTemplate.css", why: "200ms / 300ms ease → 240ms --motion-ease。", el: "chip", text: "3 个会话", frames: "hover", old: [300, "ease"], next: [240, "--motion-ease"] },
 ];
 
 function plot(easing, color) {
@@ -110,7 +121,9 @@ function side(kind, [ms, name], row) {
 
 const host = document.getElementById("rows");
 ROWS.forEach((row, i) => {
+  if (row.group) { const h = document.createElement("h2"); h.className = "group"; h.textContent = row.group; host.appendChild(h); }
   const el = document.createElement("section");
+  el.dataset.row = i;
   el.className = "row";
   el.innerHTML = `<header><h2>${row.title}</h2><button data-i="${i}">重播</button></header><div class="where">${row.where}</div><p>${row.why}</p><div class="pair">${side("old", row.old, row)}${side("new", row.next, row)}</div>`;
   host.appendChild(el);
@@ -119,7 +132,7 @@ ROWS.forEach((row, i) => {
 function play(i) {
   const row = ROWS[i];
   const k = document.getElementById("slow").checked ? 4 : 1;
-  const section = host.children[i];
+  const section = host.querySelector(`[data-row="${i}"]`);
   const targets = section.querySelectorAll(".stage > *");
   [row.old, row.next].forEach(([ms, name], j) => {
     const t = targets[j];

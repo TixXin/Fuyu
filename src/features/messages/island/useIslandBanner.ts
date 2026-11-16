@@ -5,7 +5,7 @@ import { useMessageBanner } from "../banner/useMessageBanner";
 import type { MailMessage } from "../mail/api";
 import type { MessagePreview, MessageSource } from "../messagePreview";
 import type { IslandHost } from "../../plugin-kernel/islandHost";
-import { runPluginNotificationAction } from "../../plugins/api";
+import { runNoticeAction } from "../plugin/notices";
 import type { useIslandNotices } from "./useIslandNotices";
 
 type IslandBannerMessage = BannerMessage & { mail?: { message: MailMessage; account: string | null }; pluginId?: string };
@@ -88,10 +88,7 @@ export function useIslandBanner({ messageNotice, notices, mode, isTucked, quiet,
     const pluginId = banner?.message.pluginId;
     close();
     pluginNotifications.dismiss();
-    if (!pluginId) return;
-    void runPluginNotificationAction(pluginId, action).catch((error: unknown) =>
-      console.error("Failed to run a plugin notification action", error),
-    );
+    if (pluginId) runNoticeAction(pluginId, action);
   }, [banner, close, pluginNotifications]);
 
   return {

@@ -12,7 +12,7 @@ import { I18nProvider } from "../../src/i18n";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
-import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 import { checkForUpdate, getUpdateState, installUpdate, reloadPreferences, setAutoCheck, setCheckInterval, setReminderMode, skipVersion } from "../../src/features/updater/updaterController";
 import { UPDATE_PREFERENCES_KEY } from "../../src/features/updater/storage";
 import { failNextUpdaterCall } from "./updateRuntimeMock";

@@ -22,7 +22,7 @@ function BuiltinPluginRow({ plugin }: { plugin: BuiltinPlugin }) {
       .catch((failure: unknown) => setError(errorText(failure)))
       .finally(() => setBusy(false));
   };
-  const note = error ?? (essential ? text.essentialNote : null);
+  const note = error ?? (essential ? text.essentialNote : text.builtinNotes[plugin.id as BuiltinPluginName] ?? null);
   return (
     <div className="plugins-v3__builtin" data-builtin={plugin.id} data-enabled={plugin.enabled}>
       <SettingsToggleRow

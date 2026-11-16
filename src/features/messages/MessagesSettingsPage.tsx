@@ -26,6 +26,7 @@ import "./MessagesSettingsPage.css";
 import { SlotView } from "../plugin-kernel/SlotView";
 import { settingsSections } from "../plugin-kernel/settingsSlots";
 import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
+import { OWNER } from "./plugin/owner.ts";
 
 type MessagesSectionProps = {
   settings: IslandSettings;
@@ -123,10 +124,10 @@ function WeChatSection({ wechatReminders, unsupported }: MessagesSectionProps) {
 
 const sections = settingsSections<MessagesSectionProps, "messages">();
 
-sections.add({ id: "messages.notice", category: "messages", order: 10, component: NoticeSection });
-sections.add({ id: "messages.qq", category: "messages", order: 20, component: QQSection });
-sections.add({ id: "messages.wechat", category: "messages", order: 30, component: WeChatSection });
-sections.add({ id: "messages.mail", category: "messages", order: 40, component: MailGroups });
+sections.add({ id: "messages.notice", category: "messages", order: 10, component: NoticeSection }, OWNER);
+sections.add({ id: "messages.qq", category: "messages", order: 20, component: QQSection }, OWNER);
+sections.add({ id: "messages.wechat", category: "messages", order: 30, component: WeChatSection }, OWNER);
+sections.add({ id: "messages.mail", category: "messages", order: 40, component: MailGroups }, OWNER);
 
 export function MessagesSettingsPage(page: Omit<MessagesSectionProps, "qqNotifications" | "wechatReminders">) {
   const controllers = useMessageControllers();

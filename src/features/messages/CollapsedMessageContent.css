@@ -4,7 +4,7 @@
 
 .island__summary-layer--outgoing {
   transform-origin: left center;
-  animation: islandSummaryExit var(--summary-exit-duration) cubic-bezier(.4, 0, .6, 1) both;
+  animation: islandSummaryExit var(--summary-exit-duration) var(--motion-ease-in-out) both;
 }
 
 .island-message-preview {
@@ -22,12 +22,12 @@
 
 .island__summary-row--animated.island-message-preview > .message-brand-icon {
   transform-origin: center;
-  animation: islandMessageIconEnter 560ms var(--summary-spring) backwards;
+  animation: islandMessageIconEnter var(--motion-slow) var(--summary-spring) backwards;
 }
 
 .island__summary-row--animated > .island-message-preview__text,
 .island__summary-row--animated > .island-message-preview__body {
-  animation: islandMessageTextEnter 460ms cubic-bezier(.2, .75, .25, 1) 100ms backwards;
+  animation: islandMessageTextEnter var(--motion-slow) var(--motion-ease) 100ms backwards;
 }
 
 .island-message-preview__text {

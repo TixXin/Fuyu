@@ -53,7 +53,7 @@ test("a target folder loses old caches, old builds of the app and leftover lane 
       touch(at("debug", "deps", `fuyu_lib-${hash}.rlib`), days);
       touch(at("debug", "deps", `fuyu_lib-${hash}.d`), days);
     }
-    touch(at("debug", "deps", "focusd_island_lib-0009.rlib"), 40);
+    touch(at("debug", "deps", "fuyu-0009.d"), 40);
     touch(at("debug", "deps", "serde-0010.rlib"), 90, "a dependency");
     touch(at("debug", "deps", ".tmpAbC.temp-archive"), 5);
     touch(at("agents", "debug", "deps", "fuyu_lib-0005.rlib"), 1);
@@ -62,7 +62,7 @@ test("a target folder loses old caches, old builds of the app and leftover lane 
     touch(at("agents-d16", "debug", "deps", "x.rlib"), 6);
     age(at("agents-d16"), 6);
 
-    const options = { now: NOW };
+    const options = { now: NOW, pressure: false };
     const planned = plan(target, options).items.map((item) => path.relative(target, item.path)).sort();
     assert.deepEqual(planned, [
       path.join("debug", "deps", ".tmpAbC.temp-archive"),
@@ -73,7 +73,7 @@ test("a target folder loses old caches, old builds of the app and leftover lane 
       "lane-7",
       "lane-build",
     ]);
-    assert.ok(planned.every((item) => !item.includes("focusd")), "a crate's only build is its newest, so it stays");
+    assert.ok(planned.every((item) => !item.includes("fuyu-0009")), "a crate's only build is its newest, so it stays");
 
     const dry = prune(target, { ...options, dryRun: true });
     assert.equal(dry.bytes, 7, "one byte in each of the seven planned files");
@@ -91,6 +91,58 @@ test("a target folder loses old caches, old builds of the app and leftover lane 
     assert.deepEqual(result.unknown, [{ name: "agents-d16", days: 6 }]);
     assert.match(summary(result), /^freed 0\.0 GB: .*not managed here: agents-d16 \(unused 6 d\)$/);
     assert.equal(summary(prune(target, options)).startsWith("nothing to delete"), true);
+  } finally {
+    rmSync(target, { recursive: true, force: true });
+  }
+});
+
+const HOUR = 60 * 60 * 1000;
+
+function busyTarget() {
+  const target = mkdtempSync(path.join(tmpdir(), "prune-busy-"));
+  const deps = path.join(target, "agents", "debug", "deps");
+  const hoursAgo = [0.2, 0.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+  hoursAgo.forEach((hours, index) => {
+    const file = path.join(deps, `fuyu_lib-${String(index).padStart(4, "0")}.rlib`);
+    mkdirSync(deps, { recursive: true });
+    writeFileSync(file, "x");
+    const time = new Date(NOW - hours * HOUR);
+    utimesSync(file, time, time);
+  });
+  for (const [name, days] of [["plugin_base-00aa.rlib", 0], ["plugin_base-00bb.rlib", 10], ["plugin_base-00bc.rlib", 11], ["plugin_base-00bd.rlib", 12], ["plugin_base-00be.rlib", 13], ["serde-00cc.rlib", 10], ["serde-00dd.rlib", 20], ["serde-00de.rlib", 21], ["serde-00df.rlib", 22]]) {
+    const time = new Date(NOW - days * DAY);
+    writeFileSync(path.join(deps, name), "x");
+    utimesSync(path.join(deps, name), time, time);
+  }
+  const planned = (pressure) => plan(target, { now: NOW, pressure }).items.map((item) => path.basename(item.path)).sort();
+  return { target, planned };
+}
+
+test("builds that pile up within a day are cut to the newest eight, and to three when the disk is low", () => {
+  const { target, planned } = busyTarget();
+  try {
+    assert.deepEqual(planned(false), ["fuyu_lib-0008.rlib", "fuyu_lib-0009.rlib", "fuyu_lib-0010.rlib", "fuyu_lib-0011.rlib", "plugin_base-00bd.rlib", "plugin_base-00be.rlib"]);
+    const low = planned(true);
+    assert.deepEqual(low.filter((name) => name.startsWith("fuyu_lib")), ["fuyu_lib-0003", "fuyu_lib-0004", "fuyu_lib-0005", "fuyu_lib-0006", "fuyu_lib-0007", "fuyu_lib-0008", "fuyu_lib-0009", "fuyu_lib-0010", "fuyu_lib-0011"].map((name) => `${name}.rlib`));
+    assert.ok(!low.some((name) => name.startsWith("serde")), "dependencies are never touched");
+  } finally {
+    rmSync(target, { recursive: true, force: true });
+  }
+});
+
+test("anything built in the last hour stays, however many newer builds there are", () => {
+  const { target } = busyTarget();
+  const deps = path.join(target, "agents", "debug", "deps");
+  try {
+    for (let index = 20; index < 30; index += 1) {
+      const file = path.join(deps, `fuyu_lib-${String(index).padStart(4, "0")}.rlib`);
+      writeFileSync(file, "x");
+      const time = new Date(NOW - 0.1 * HOUR);
+      utimesSync(file, time, time);
+    }
+    const planned = plan(target, { now: NOW, pressure: true }).items.map((item) => path.basename(item.path));
+    assert.ok(!planned.includes("fuyu_lib-0000.rlib") && !planned.includes("fuyu_lib-0001.rlib"), "12 and 30 minutes old stay");
+    assert.ok(planned.includes("fuyu_lib-0002.rlib"), "two hours old goes once newer builds outnumber it");
   } finally {
     rmSync(target, { recursive: true, force: true });
   }

@@ -131,7 +131,7 @@
   background: rgba(var(--tp-ink), 0.06);
   border-radius: 14px;
   corner-shape: var(--island-corner-shape, round);
-  transition: box-shadow 140ms ease, background 140ms ease;
+  transition: box-shadow var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
 }
 
 .translation-panel__pane--source:focus-within {

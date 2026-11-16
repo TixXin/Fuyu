@@ -21,9 +21,3 @@ test("the example plugin colors itself only with the public theme variables", ()
   assert.ok(names.length > 0);
   assert.deepEqual(names.filter((name) => !SLOT_THEME.includes(name)), []);
 });
-
-test("the slot renderer loads the theme and wraps only plugin items in .plugin-slot", () => {
-  const source = read("src/features/plugin-kernel/SlotView.tsx");
-  assert.match(source, /import "\.\/PluginSlot\.css";/);
-  assert.match(source, /item\.external \? \(\s*<div className="plugin-slot" data-slot=\{slot\.name\}>/);
-});

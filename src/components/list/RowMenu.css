@@ -14,7 +14,7 @@
     inset 0 0 0 1px rgba(var(--row-ink), 0.12);
   font-family: var(--font-ui);
   font-size: 12.5px;
-  animation: rowMenuIn var(--motion-fast) ease both;
+  animation: rowMenuIn var(--motion-fast) var(--motion-ease) both;
 }
 
 .row-menu__item {

@@ -34,6 +34,7 @@ export type SettingsPluginsV3Text = {
   builtinsNote: string;
   builtinsLoading: string;
   builtinNames: Record<BuiltinPluginName, string>;
+  builtinNotes: Partial<Record<BuiltinPluginName, string>>;
   essentialNote: string;
   hostOff: string;
   hostOffNote: string;
@@ -107,6 +108,7 @@ export const zhCN: SettingsPluginsV3Text = {
     "theme-market": "主题市场",
     updater: "自动更新",
   },
+  builtinNotes: { messages: "关掉后，第 2 版插件在岛上的通知也不显示" },
   essentialNote: "浮屿必需，不能关",
   hostOff: "宿主没开",
   hostOffNote: "测试版和开发版默认启动宿主，设 FUYU_PLUGINS_V3=0 就关掉；正式版设了 FUYU_PLUGINS_V3=1 才启动。内置插件的开关照样生效。",
@@ -204,6 +206,7 @@ export const en: SettingsPluginsV3Text = {
     "theme-market": "Theme market",
     updater: "Updates",
   },
+  builtinNotes: { messages: "Off also hides version 2 plugins' island notices" },
   essentialNote: "Fuyu needs it; always on",
   hostOff: "Host not running",
   hostOffNote: "Beta and dev builds start the host unless FUYU_PLUGINS_V3=0; stable releases start it only with FUYU_PLUGINS_V3=1. Built-in plugin switches work either way.",

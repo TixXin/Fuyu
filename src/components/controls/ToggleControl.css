@@ -26,8 +26,8 @@
   border-radius: var(--radius-pill);
   cursor: pointer;
   transition:
-    background 140ms ease,
-    border-color 140ms ease;
+    background var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease);
 }
 
 .toggle-control__switch::after {
@@ -40,7 +40,7 @@
   background: var(--color-white);
   border-radius: var(--radius-pill);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
-  transition: transform 140ms ease;
+  transition: transform var(--motion-base) var(--motion-ease);
 }
 
 .toggle-control input:checked + .toggle-control__switch {

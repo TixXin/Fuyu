@@ -38,10 +38,10 @@
 }
 
 .center-eyes-pupil {
-  transition: transform 140ms var(--center-pattern-ease);
+  transition: transform var(--motion-base) var(--center-pattern-ease);
 }
 .center-eyes[data-gaze="wander"] .center-eyes-pupil {
-  transition: transform 520ms cubic-bezier(0.77, 0, 0.175, 1);
+  transition: transform var(--motion-slow) var(--motion-ease-in-out);
 }
 
 @keyframes center-eyes-blink {
@@ -70,7 +70,7 @@
 }
 .center-bird-wing {
   transform-origin: 11px 12.4px;
-  animation: center-bird-flap 8s ease-in-out infinite;
+  animation: center-bird-flap 8s var(--motion-ease-in-out) infinite;
 }
 
 @keyframes center-bird-tilt {
@@ -97,10 +97,10 @@
   transform-origin: 11px 11px;
 }
 .center-orb-halo {
-  animation: center-orb-breathe-halo 4.4s ease-in-out infinite;
+  animation: center-orb-breathe-halo 4.4s var(--motion-ease-in-out) infinite;
 }
 .center-orb-core {
-  animation: center-orb-breathe-core 4.4s ease-in-out infinite;
+  animation: center-orb-breathe-core 4.4s var(--motion-ease-in-out) infinite;
 }
 
 @keyframes center-orb-breathe-halo {
@@ -130,11 +130,11 @@
 }
 .center-cat-eye {
   transform-origin: 15px 12.6px;
-  animation: center-cat-blink 9s ease-in-out infinite;
+  animation: center-cat-blink 9s var(--motion-ease-in-out) infinite;
 }
 .center-cat-ear {
   transform-origin: 22px 9px;
-  animation: center-cat-ear 9s ease-out infinite;
+  animation: center-cat-ear 9s var(--motion-ease) infinite;
 }
 
 @keyframes center-cat-blink {
@@ -172,7 +172,7 @@
 .center-mark-check { transform-origin: 22.2px 11.4px; }
 
 .center-mark-light circle {
-  animation: center-mark-breathe 3.6s ease-in-out infinite;
+  animation: center-mark-breathe 3.6s var(--motion-ease-in-out) infinite;
 }
 .center-mark[data-mood="idle"] .center-mark-pill {
   animation: center-mark-open 10s infinite;
@@ -184,14 +184,14 @@
   animation: center-mark-spread-right 10s infinite;
 }
 .center-mark[data-mood="waiting"] .center-mark-light circle {
-  animation: center-mark-blink 1.1s ease-in-out infinite;
+  animation: center-mark-blink 1.1s var(--motion-ease-in-out) infinite;
 }
 .center-mark[data-mood="failed"] .center-mark-light circle {
   animation: none;
 }
 .center-mark-typing circle {
   transform-origin: 22.4px 11px;
-  animation: center-mark-typing 1.2s ease-in-out infinite;
+  animation: center-mark-typing 1.2s var(--motion-ease-in-out) infinite;
 }
 .center-mark-typing circle:nth-child(2) { animation-delay: 0.15s; }
 .center-mark-typing circle:nth-child(3) { animation-delay: 0.3s; }
@@ -205,9 +205,9 @@
 }
 
 @keyframes center-mark-open {
-  0%, 86%, 100% { transform: scale(1, 1); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
-  89.5% { transform: scale(1.14, 1.06); animation-timing-function: ease-in-out; }
-  93% { transform: scale(0.98, 1); animation-timing-function: ease-out; }
+  0%, 86%, 100% { transform: scale(1, 1); animation-timing-function: var(--motion-ease-out); }
+  89.5% { transform: scale(1.14, 1.06); animation-timing-function: var(--motion-ease-in-out); }
+  93% { transform: scale(0.98, 1); animation-timing-function: var(--motion-ease); }
   96% { transform: scale(1, 1); }
 }
 @keyframes center-mark-spread-left {

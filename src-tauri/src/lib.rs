@@ -17,6 +17,7 @@ mod island;
 mod local_api;
 mod lyrics;
 mod media_control;
+mod messages_plugin;
 #[cfg(windows)]
 mod messenger_activation;
 mod notification_diagnostics;
