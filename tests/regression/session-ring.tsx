@@ -8,7 +8,10 @@ import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessa
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
 
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
-import { useCollapsedSlots } from "../../src/windows/island/useCollapsedSlots";
+import { useCollapsedGauges } from "../../src/windows/island/useCollapsedGauges";
+import { useCenterDecor } from "../../src/features/center-pattern/useCenterDecor";
+import { useSessionRingDecor } from "../../src/features/session-ring/useSessionRingDecor";
+import { mergeIslandDecor } from "../../src/features/plugin-kernel/islandDecor";
 import type { CollapsedSlots } from "../../src/windows/island/types";
 import type { AgentActivity } from "../../src/features/center-pattern";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
@@ -63,17 +66,17 @@ const NO_AGENTS: AgentActivity[] = [];
 let corners: CSSProperties = {};
 
 function Island({ agents, count, list, report, look }: { agents: boolean; count: number; list: AgentSessionSummary[]; report: (slots: CollapsedSlots) => void; look: CSSProperties }) {
-  const slots = useCollapsedSlots({ paused: true, agents: NO_AGENTS, sessions: list, unseen: UNSEEN, agentsOn: agents, onOpenAgents: OPEN_AGENTS, markLight: false });
+  const slots: CollapsedSlots = mergeIslandDecor([useCenterDecor({ paused: true, agents: NO_AGENTS, markLight: false }), useSessionRingDecor({ paused: true, sessions: list, unseen: UNSEEN, agentsOn: agents, onOpenAgents: OPEN_AGENTS }), useCollapsedGauges(true)]);
   report(slots);
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const preview = useLatestMessagePreview(qq, wechat, qqMail, NO_PLUGIN_NOTIFICATIONS);
+  useFixtureLines({ agents: agents ? count : null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className="stage" style={{ "--collapsed-island-width": "300px", ...look } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
-      showCollapsedText={true} activeAgentSessionCount={count}
-      appearanceMode="classic" nativeGlassState="disabled"
+      showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} collapsedSlots={slots}
       onOpenPage={(page) => { openedPage = page; }} onOpenMessages={() => {}}

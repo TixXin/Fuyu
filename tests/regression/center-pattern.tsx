@@ -8,8 +8,8 @@ import { PetSprite } from "../../src/features/center-pattern/PetSprite";
 import { ISLAND_CURSOR_MOVED_EVENT } from "../../src/features/center-pattern/api";
 import { CENTER_PATTERNS, type CenterPatternId, type PetMood } from "../../src/features/center-pattern/patterns";
 import type { AgentActivity } from "../../src/features/center-pattern";
-import type { AgentSessionSummary } from "../../src/features/agent-status/api";
-import { useCollapsedSlots } from "../../src/windows/island/useCollapsedSlots";
+import { useCenterDecor } from "../../src/features/center-pattern/useCenterDecor";
+import "../../src/features/center-pattern/plugin/island";
 import "../../src/windows/island/IslandCollapsedBar.css";
 
 const MOODS: PetMood[] = ["idle", "running", "waiting", "failed", "done"];
@@ -60,12 +60,8 @@ const results = document.getElementById("results")!;
 const messages: string[] = [];
 const root = createRoot(fixture);
 
-const NO_SESSIONS: AgentSessionSummary[] = [];
-const NO_UNSEEN: ReadonlySet<string> = new Set();
-const NO_OP = () => {};
-
 function Slot({ agents = [], paused = false, markLight = false }: { agents?: AgentActivity[]; paused?: boolean; markLight?: boolean }) {
-  const slots = useCollapsedSlots({ paused, agents, sessions: NO_SESSIONS, unseen: NO_UNSEEN, agentsOn: false, onOpenAgents: NO_OP, markLight });
+  const slots = useCenterDecor({ paused, agents, markLight });
   return <div className="cp-island cp-slot">
     {slots.statusLight ? <span className="cp-light">{slots.statusLight}</span> : null}
     {slots.center ? <span className="island__center-slot">{slots.center}</span> : null}

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { useIslandNotices } from "./useIslandNotices";
 import { PluginPermissionPrompt } from "../../features/plugins/PluginPermissionPrompt";
 import { PluginContextMenus } from "../../features/plugins/PluginContextMenu";
@@ -21,8 +21,6 @@ import { useGameMode } from "./useGameMode";
 import { useIslandKeyboard } from "./useIslandKeyboard";
 import { useIslandFeatures } from "./useIslandFeatures";
 import { useIslandAutoUpdate } from "./useIslandAutoUpdate";
-import { agentShell } from "../../features/agent-status/plugin/islandState";
-import { AgentArrangeButton } from "../../features/agent-status/AgentArrangeButton";
 import { useIslandNavigation } from "./useIslandNavigation";
 import { usePluginHostEvents } from "./usePluginHostEvents";
 import { usePluginKeybindings } from "./usePluginKeybindings";
@@ -45,7 +43,8 @@ import { useIslandGlass } from "./useIslandGlass";
 import { useAccentColor } from "../../lib/theme/useAccentColor";
 import { isLightIsland } from "../../utils/color";
 import { PluginPageButtons } from "./PluginPageButtons";
-import { useCollapsedSlots } from "./useCollapsedSlots";
+import { useCollapsedGauges } from "./useCollapsedGauges";
+import { mergeIslandDecor, useIslandDecor } from "../../features/plugin-kernel/islandDecor";
 import { useTrayLanguage } from "./useTrayLanguage";
 import { useFirstRunGuide } from "./useFirstRunGuide";
 import { useSettingsFileSync } from "../../lib/settings-backup/useSettingsFileSync";
@@ -58,10 +57,9 @@ import { islandMarginY } from "./islandForm";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
-import { LINE_PRIORITY, leadLine } from "../../features/plugin-kernel/islandContributions";
-import { runIslandAction, useIslandContributed, useLineBelow, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
+import { leadLine } from "../../features/plugin-kernel/islandContributions";
+import { runIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
 import { useCollapsedWidth } from "./useCollapsedWidth";
-import { useLegacyLines } from "./legacyLines";
 import { overlaySlot } from "./slots/overlay";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useLegacyPopups } from "./legacyPopups";
@@ -93,17 +91,9 @@ export function IslandApp() {
   const { messageSource, setMessageSource, openMessages } = useMessageView(qqMail.closeReader, openIslandPage);
   const banner = useIslandBanner({ messageNotice: settings.messageNotice, notices, mode, isTucked, quiet: game.quiet, onOpenMessages: openMessages });
   const showsMessage = hasMessagePreview || banner.showing;
-  const agents = agentShell.use();
-  const openAgentsPage = useCallback(() => openIslandPage("agents"), [openIslandPage]);
-  const collapsedSlots = useCollapsedSlots({
-    paused: mode !== "collapsed" || isTucked || game.quiet,
-    agents: agents.activity,
-    sessions: agents.listed,
-    unseen: agents.unseenKeys,
-    agentsOn: settings.agentStatusEnabled,
-    onOpenAgents: openAgentsPage,
-    markLight: settings.agentLightStyle === "mark",
-  });
+  const decor = useIslandDecor();
+  const gauges = useCollapsedGauges(mode !== "collapsed" || isTucked || game.quiet);
+  const collapsedSlots = useMemo(() => mergeIslandDecor([decor, gauges]), [decor, gauges]);
   useBackgroundUpdateCheck(openUpdateSettings);
   usePluginHostEvents({ mode });
 
@@ -116,14 +106,6 @@ export function IslandApp() {
   });
   const notch = useIslandNotch();
   const barText = settings.showCollapsedText && !notch;
-  const below = useLineBelow(LINE_PRIORITY.agentInterjection);
-  const lyricsAhead = below?.shareable === true && below.priority > LINE_PRIORITY.agentTitle;
-  const agentSession = settings.agentTitleMode === "changes" || lyricsAhead ? agents.interjection : agents.named;
-  const lineSources = useLegacyLines({
-    agentSession,
-    interjecting: agentSession !== null && agentSession === agents.interjection,
-    agentIconWidth: collapsedSlots.agentIconWidth ?? 0,
-  });
   const { lines: contributedLines, alerts, popups, style, settled, hints } = useIslandContributed();
   usePluginKeybindings({ mode, page, hasActiveTodo: hints.has("todos.active") });
   useIslandAutoUpdate({ mode, agentsBusy: hints.has("agents.busy") });
@@ -263,8 +245,6 @@ export function IslandApp() {
         side={side}
         showTitle={settings.showTitle}
         showCollapsedText={barText}
-        lineSources={lineSources}
-        activeAgentSessionCount={agents.activeCount}
         features={features}
         shelfCount={settings.shelfEnabled && settings.shelfShowCount ? fileShelf.items.length : null}
         onOpenPage={openEnabledPage}
@@ -286,9 +266,6 @@ export function IslandApp() {
         pluginViews={pluginPages.views}
         onOpenPluginPage={openEnabledPage}
         collapsedSlots={collapsedSlots}
-        pageActions={page === "agents" && (
-          <AgentArrangeButton sort={settings.agentSessionSort} group={settings.agentSessionGroup} onChange={(patch) => setSettings({ ...settings, ...patch })} />
-        )}
         pluginPageButtons={<PluginPageButtons views={pluginPages.views} page={page} features={features} modifiers={settings.pageDigitModifiers} hoverSwitchPage={settings.hoverSwitchPage} hoverSwitchDelayMs={settings.hoverSwitchDelayMs} onOpen={setPage} />}
       >
         <PluginSlot window="island" name="island.dev/v1" />

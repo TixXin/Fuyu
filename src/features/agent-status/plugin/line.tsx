@@ -2,17 +2,17 @@ import type { ReactNode } from "react";
 import { Bot } from "lucide-react";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { AgentProviderIcon } from "../AgentProviderIcon";
-import type { AgentSession } from "../session";
+import { agentLine } from "./islandState";
 
 type LineContext = {
   showTitle: boolean;
   agentIcon: ReactNode | null;
-  agentSession: AgentSession | null;
 };
 
 const lineSlot = defineSlot<LineContext>("island.line/v1");
 
-function AgentSessionLine({ showTitle, agentIcon, agentSession }: LineContext) {
+function AgentSessionLine({ showTitle, agentIcon }: LineContext) {
+  const agentSession = agentLine.use();
   if (!agentSession) return null;
   return (
     <span className="island__agent-session" key={`${agentSession.label}:${agentSession.title}`}>

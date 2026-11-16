@@ -8,7 +8,6 @@ import type { PluginNotificationsController } from "../../features/plugins/usePl
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
 import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
-import type { CollapsedLineSources } from "./slots/line";
 import { isPluginPage, type IslandFeatures } from "./features";
 import { IslandCollapsedBar } from "./IslandCollapsedBar";
 import { useIslandNotch } from "./notch";
@@ -53,8 +52,6 @@ type IslandShellProps = {
   side?: IslandSide | null;
   showTitle: boolean;
   showCollapsedText: boolean;
-  lineSources: CollapsedLineSources;
-  activeAgentSessionCount: number;
   features: IslandFeatures;
   shelfCount: number | null;
   onOpenPage: (page: IslandPage) => void;
@@ -74,7 +71,6 @@ type IslandShellProps = {
   hoverSwitchDelayMs: number;
   overlay?: ReactNode;
   pluginPageButtons?: ReactNode;
-  pageActions?: ReactNode;
   pluginViews?: readonly PluginViewEntry[];
   onOpenPluginPage?: (page: `plugin:${string}`) => void;
   collapsedSlots?: CollapsedSlots;
@@ -102,8 +98,6 @@ export function IslandShell({
   side = null,
   showTitle,
   showCollapsedText,
-  lineSources,
-  activeAgentSessionCount,
   features,
   shelfCount,
   onOpenPage,
@@ -123,7 +117,6 @@ export function IslandShell({
   hoverSwitchDelayMs,
   overlay,
   pluginPageButtons,
-  pageActions,
   pluginViews,
   onOpenPluginPage,
   collapsedSlots,
@@ -143,7 +136,6 @@ export function IslandShell({
   const agentVisualState = status?.state ?? "idle";
   const agentStatusLabel = status?.label ?? "";
   const sideSources = {
-    agentSessionCount: features.agents ? activeAgentSessionCount : null,
     unreadCount,
     shelfCount,
     };
@@ -227,8 +219,6 @@ export function IslandShell({
           showTitle={showTitle}
           showCollapsedText={showCollapsedText}
           collapsedLabel={collapsedLabel}
-          lineSources={lineSources}
-          agentSessionCount={features.agents ? activeAgentSessionCount : null}
           shelfCount={shelfCount}
           agentVisualState={agentVisualState}
           onOpenPage={onOpenPage}
@@ -267,7 +257,6 @@ export function IslandShell({
             hoverSwitchPage={hoverSwitchPage}
             hoverSwitchDelayMs={hoverSwitchDelayMs}
             pluginPageButtons={pluginPageButtons}
-            pageActions={pageActions}
           />
           <div ref={contentRef} className="island__content">{children}</div>
         </div>
