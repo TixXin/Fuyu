@@ -1,11 +1,7 @@
 import { defineSlot } from "../../../features/plugin-kernel/slots";
 import type { IslandPage } from "../types";
 
-export type SideRowSources = {
-  shelfCount: number | null;
-};
-
-export type SideRowContext = SideRowSources & {
+export type SideRowContext = {
   onOpenPage: (page: IslandPage) => void;
 };
 

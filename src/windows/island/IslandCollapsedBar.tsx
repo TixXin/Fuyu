@@ -24,7 +24,6 @@ type IslandCollapsedBarProps = {
   showTitle: boolean;
   showCollapsedText: boolean;
   collapsedLabel: string;
-  shelfCount: number | null;
   agentVisualState: string;
   onOpenPage: (page: IslandPage) => void;
   notice?: { content: ReactNode; actions: ReactNode } | null;
@@ -63,7 +62,6 @@ export function IslandCollapsedBar({
   showTitle,
   showCollapsedText,
   collapsedLabel,
-  shelfCount,
   agentVisualState,
   onOpenPage,
   notice = null,
@@ -103,7 +101,6 @@ export function IslandCollapsedBar({
     statusLight: slots.statusLight
       ? <span className="island__mark-light" {...{ [OPENS_BAR]: "" }}>{slots.statusLight}</span>
       : <span className={pulseClassName} {...{ [OPENS_BAR]: "" }} />,
-      shelfCount,
     hints: contributed.hints,
     slots,
     onOpenPage,

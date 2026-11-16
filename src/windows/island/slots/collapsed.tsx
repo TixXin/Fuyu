@@ -9,7 +9,6 @@ import type { CollapsedSlots, IslandPage } from "../types";
 export type CollapsedBarContext = {
   t: Translations;
   statusLight: ReactNode;
-  shelfCount: number | null;
   hints: ReadonlySet<string>;
   slots: CollapsedSlots;
   onOpenPage: (page: IslandPage) => void;

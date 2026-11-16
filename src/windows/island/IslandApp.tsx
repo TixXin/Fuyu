@@ -21,7 +21,6 @@ import { useIslandNavigation } from "./useIslandNavigation";
 import { usePluginHostEvents } from "./usePluginHostEvents";
 import { usePluginKeybindings } from "./usePluginKeybindings";
 import { useIslandTucking } from "./useIslandTucking";
-import { useIslandShelf } from "./useIslandShelf";
 import { useIslandHover } from "./useIslandHover";
 import { usePluginPages } from "./usePluginPages";
 import { useIslandPopup } from "./useIslandPopup";
@@ -135,8 +134,6 @@ export function IslandApp() {
     [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, style.vars, glassStyle],
   );
 
-  const { fileShelf, isShelfDropping } = useIslandShelf(settings, navigation);
-
   const {
     isPositionDetached,
     nativeGlassState,
@@ -183,7 +180,7 @@ export function IslandApp() {
 
   return (
     <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
-      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
+      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} setSettings={setSettings} openSettings={openSettingsWindow} takeClickFocus={takeIslandClickFocus} host={islandHost} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} setPage={setPage} isPeeking={navigation.isPeeking} minimizeToEdge={minimizeToEdge} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       <IslandShell
         mode={mode}
         page={page}
@@ -198,7 +195,6 @@ export function IslandApp() {
         showTitle={settings.showTitle}
         showCollapsedText={barText}
         features={features}
-        shelfCount={settings.shelfEnabled && settings.shelfShowCount ? fileShelf.items.length : null}
         onOpenPage={openEnabledPage}
         onWindowDragStart={startIslandDrag}
         onCollapse={collapseIsland}
@@ -227,8 +223,6 @@ export function IslandApp() {
           settings={settings}
           features={features}
           pluginPages={pluginPages}
-          fileShelf={fileShelf}
-          isShelfDropping={isShelfDropping}
         />
       </IslandShell>
       <SlotView slot={overlaySlot} props={{}} />
