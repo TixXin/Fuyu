@@ -1,20 +1,20 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { IslandSettings, TranslationTarget } from "../../lib/settings/types";
-import type { TranslationSettings } from "../../features/translation/storage";
-import { TranslationSettingsSection } from "../../features/translation/TranslationSettingsSection";
-import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
+import type { TranslationSettings } from "./storage";
+import { TranslationSettingsSection } from "./TranslationSettingsSection";
+import { useTranslationSettings } from "./useTranslationSettings";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "./FeatureHeader";
-import { TranslationShortcutGroup } from "./ShortcutGroups";
-import { AllShortcutsLink } from "./ShortcutsSettingsPage";
-import { useShortcutOwners } from "./useShortcutOwners";
+import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { TranslationShortcutGroup } from "./TranslationShortcutGroup";
+import { AllShortcutsLink } from "../../windows/settings/ShortcutsSettingsPage";
+import { useShortcutOwners } from "../../windows/settings/useShortcutOwners";
 import { AppWindow } from "lucide-react";
 import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
-import { IslandGlyph } from "./sections/IslandGlyph";
+import { IslandGlyph } from "../../windows/settings/sections/IslandGlyph";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../../windows/settings/slots/sectionSlot";
 
 type TranslationSectionProps = {
   settings: IslandSettings;

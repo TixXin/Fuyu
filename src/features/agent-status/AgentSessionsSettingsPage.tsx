@@ -1,8 +1,8 @@
-import { AgentSessionFilterSettings } from "../../features/agent-status/AgentSessionFilterSettings";
-import { AgentSessionListSettings } from "../../features/agent-status/AgentSessionListSettings";
+import { AgentSessionFilterSettings } from "./AgentSessionFilterSettings";
+import { AgentSessionListSettings } from "./AgentSessionListSettings";
 import type { IslandSettings } from "../../lib/settings/types";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../../windows/settings/slots/sectionSlot";
 
 type AgentSessionsSectionProps = {
   settings: IslandSettings;

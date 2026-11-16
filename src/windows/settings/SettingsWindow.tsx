@@ -7,7 +7,6 @@ import { useMacWindowKeys } from "./useMacWindowKeys";
 import { useFeatureSwitches } from "./useFeatureSwitches";
 import { LayoutEditor } from "./LayoutEditor";
 import "./slots/categories";
-import "./slots/featureSettings";
 import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
 import { showSettingsWindow } from "./api";
 import { DEFAULT_SETTINGS, isSameSettings, withLayoutFrom, withThemeFrom } from "../../lib/settings/settings";

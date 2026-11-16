@@ -1,7 +1,6 @@
 import { ExpandSettingsSection } from "./sections/ExpandSettingsSection";
 import { GameModeSettingsSection } from "./sections/GameModeSettingsSection";
 import { TuckSettingsSection } from "./sections/TuckSettingsSection";
-import { BreakRemindersGroup } from "../../features/timer/BreakRemindersGroup";
 import type { IslandSettings } from "../../lib/settings/types";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
@@ -40,7 +39,6 @@ sections.add({ id: "behavior.page-keys", category: "behavior", order: 20, compon
 sections.add({ id: "behaviorTuck.tuck", category: "behaviorTuck", order: 10, component: TuckSettingsSection });
 sections.add({ id: "behaviorTuck.game-mode", category: "behaviorTuck", order: 20, component: GameModeSettingsSection });
 sections.add({ id: "behaviorAlerts.system", category: "behaviorAlerts", order: 10, component: SystemAlertsGroup });
-sections.add({ id: "behaviorAlerts.breaks", category: "behaviorAlerts", order: 20, component: BreakRemindersGroup });
 
 export function BehaviorSettingsPage({ tab, ...props }: BehaviorSectionProps & { tab: BehaviorTab }) {
   return <SlotView slot={sections} group={tab} props={props} />;

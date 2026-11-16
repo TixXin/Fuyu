@@ -3,12 +3,12 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
-import { CalendarSourcesSection } from "../../features/calendar/CalendarSourcesSection";
-import { CALENDAR_REMIND_MINUTES, type CalendarRemindMinutes } from "../../features/calendar/calendarSettings";
+import { CalendarSourcesSection } from "./CalendarSourcesSection";
+import { CALENDAR_REMIND_MINUTES, type CalendarRemindMinutes } from "./calendarSettings";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "./FeatureHeader";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
+import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../../windows/settings/slots/sectionSlot";
 
 type CalendarSectionProps = {
   settings: IslandSettings;

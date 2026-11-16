@@ -11,7 +11,7 @@ import {
   type RecordQuality,
   type RecordSettings,
   type ScreenshotSettings,
-} from "../../features/screenshot/settings";
+} from "./settings";
 import { useTranslation } from "../../i18n";
 
 export function RecordSettingsGroup({ screenshot, onChange }: { screenshot: ScreenshotSettings; onChange: (settings: ScreenshotSettings) => void }) {

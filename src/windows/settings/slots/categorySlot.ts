@@ -1,7 +1,12 @@
+import type { ComponentType, Dispatch, SetStateAction } from "react";
 import { Bell, Bot, Brush, CalendarDays, ClipboardList, Compass, Crop, FlaskConical, Inbox, Info, Keyboard, Languages, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Puzzle, Server, ShieldCheck, SlidersHorizontal, Store, Volume2 } from "lucide-react";
 import { defineSlot, type SettingsCategoryMeta } from "../../../features/plugin-kernel/slots.ts";
 import type { PlatformFeature } from "../../../lib/platform.ts";
-import type { SettingsPageProps } from "./categories";
+import type { IslandSettings } from "../../../lib/settings/types.ts";
+import type { useSettingPresets } from "../../../lib/settings/useSettingPresets.ts";
+import type { useMarketInstallRequest } from "../../../features/plugins/market-link/useMarketInstallRequest.ts";
+import type { LocaleCode } from "../../../i18n/index.ts";
+import type { FeatureSwitches } from "../useFeatureSwitches.ts";
 
 export type SettingsGroup = "basics" | "features" | "agents" | "extensions";
 
@@ -12,6 +17,22 @@ export interface CategoryContext {
 }
 
 type BuiltinCategory = SettingsCategoryMeta<CategoryContext, SettingsGroup> & { id: string };
+
+export interface SettingsPageProps {
+  settings: IslandSettings;
+  locale: LocaleCode;
+  unsupported: ReadonlySet<PlatformFeature>;
+  features: FeatureSwitches;
+  presets: ReturnType<typeof useSettingPresets>;
+  managedPluginId: string | null;
+  marketRequest: ReturnType<typeof useMarketInstallRequest>;
+  onLocaleChange: (locale: LocaleCode) => void;
+  onSettingsChange: Dispatch<SetStateAction<IslandSettings>>;
+  onOpenPage: (page: SettingsCategory) => void;
+  onShowPage: (page: SettingsCategory) => void;
+  onOpenShortcuts: () => void;
+  onManagePlugin: (id: string) => void;
+}
 
 const supports = (feature: PlatformFeature) => ({ unsupported }: CategoryContext) => !unsupported.has(feature);
 
@@ -68,3 +89,8 @@ export type SettingsFeature = Extract<Builtin, { feature: string }>["feature"];
 export type CategoryMeta = SettingsCategoryMeta<CategoryContext, SettingsGroup, SettingsCategory>;
 
 export const categorySlot = defineSlot<SettingsPageProps, CategoryMeta>("settings.category/v1");
+
+export function addSettingsCategory(id: SettingsCategory, component: ComponentType<SettingsPageProps>, owner?: string): () => void {
+  const index = BUILTIN_CATEGORIES.findIndex((category) => category.id === id);
+  return categorySlot.add({ ...BUILTIN_CATEGORIES[index], order: index - BUILTIN_CATEGORIES.length, component }, owner);
+}

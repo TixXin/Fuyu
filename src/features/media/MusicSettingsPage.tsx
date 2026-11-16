@@ -2,14 +2,14 @@ import type { IslandSettings } from "../../lib/settings/types";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
-import { MusicSourceSettingsSection } from "../../features/media/MusicSourceSettingsSection";
-import { MusicBarSettingsSection } from "../../features/media/MusicBarSettingsSection";
-import { LyricsSettingsSection } from "../../features/media/lyrics/LyricsSettingsSection";
-import { LyricsKaraokeSettingsSection } from "../../features/media/lyrics/LyricsKaraokeSettingsSection";
+import { MusicSourceSettingsSection } from "./MusicSourceSettingsSection";
+import { MusicBarSettingsSection } from "./MusicBarSettingsSection";
+import { LyricsSettingsSection } from "./lyrics/LyricsSettingsSection";
+import { LyricsKaraokeSettingsSection } from "./lyrics/LyricsKaraokeSettingsSection";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "./FeatureHeader";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
+import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../../windows/settings/slots/sectionSlot";
 
 type MusicSectionProps = {
   settings: IslandSettings;

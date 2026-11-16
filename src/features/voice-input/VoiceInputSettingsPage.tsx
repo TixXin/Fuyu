@@ -1,8 +1,8 @@
 import type { IslandSettings } from "../../lib/settings/types";
-import { VoiceInputSettingsSection } from "../../features/voice-input/VoiceInputSettingsSection";
-import { useVoiceInputSettings } from "../../features/voice-input/useVoiceInputSettings";
-import { FeatureHeader } from "./FeatureHeader";
-import { useShortcutOwners } from "./useShortcutOwners";
+import { VoiceInputSettingsSection } from "./VoiceInputSettingsSection";
+import { useVoiceInputSettings } from "./useVoiceInputSettings";
+import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { useShortcutOwners } from "../../windows/settings/useShortcutOwners";
 
 export function VoiceInputSettingsPage({ settings }: { settings: IslandSettings }) {
   const [voice, setVoice] = useVoiceInputSettings();

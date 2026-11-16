@@ -1,55 +1,19 @@
-import type { ComponentProps, ComponentType, Dispatch, SetStateAction } from "react";
+import type { ComponentProps, ComponentType } from "react";
 import { AppearanceSettingsPage } from "../AppearanceSettingsPage";
 import { BehaviorSettingsPage } from "../BehaviorSettingsPage";
 import { ThemeSettingsPage } from "../ThemeSettingsPage";
-import { ThemeMarketPage } from "../../../features/theme-market/ThemeMarketPage";
-import { buildTheme } from "../../../lib/theme/theme";
 import { GeneralSettingsPage } from "../GeneralSettingsPage";
 import { OverviewSettingsPage } from "../OverviewSettingsPage";
-import type { FeatureSwitches } from "../useFeatureSwitches";
-import { AgentSettingsPage } from "../AgentSettingsPage";
-import { AgentAlertsSettingsPage } from "../AgentAlertsSettingsPage";
-import { AgentSessionsSettingsPage } from "../AgentSessionsSettingsPage";
-import { AgentConnectSettingsPage } from "../AgentConnectSettingsPage";
-import { AgentRemoteHostsSettings } from "../../../features/agent-status/AgentRemoteHostsSettings";
-import { AgentApprovalSettings } from "../../../features/agent-status/approvals/AgentApprovalSettings";
-import { SoundSettingsSection } from "../../../features/agent-status/sounds/SoundSettingsSection";
-import { ClipboardSettingsPage } from "../ClipboardSettingsPage";
-import { MusicSettingsPage } from "../MusicSettingsPage";
-import { CalendarSettingsPage } from "../CalendarSettingsPage";
-import { ShelfSettingsPage } from "../ShelfSettingsPage";
-import { ScreenshotSettingsPage } from "../ScreenshotSettingsPage";
 import { ShortcutsSettingsPage } from "../ShortcutsSettingsPage";
-import { MessagesSettingsPage } from "../MessagesSettingsPage";
 import { TodosSettingsPage } from "../TodosSettingsPage";
-import { TranslationSettingsPage } from "../TranslationSettingsPage";
-import { VoiceInputSettingsPage } from "../VoiceInputSettingsPage";
-import type { IslandSettings } from "../../../lib/settings/types";
-import type { useSettingPresets } from "../../../lib/settings/useSettingPresets";
 import { AboutSettingsPage } from "../AboutSettingsPage";
 import { PluginsSettingsPage } from "../PluginsSettingsPage";
 import { PluginsV3SettingsPage } from "../PluginsV3SettingsPage";
 import { PluginMarketSection } from "../../../features/plugins/PluginMarketSection";
-import type { useMarketInstallRequest } from "../../../features/plugins/market-link/useMarketInstallRequest";
-import type { LocaleCode } from "../../../i18n";
-import type { PlatformFeature } from "../../../lib/platform";
-import { BUILTIN_CATEGORIES, categorySlot, type SettingsCategory } from "./categorySlot";
+import { addSettingsCategory, type SettingsCategory, type SettingsPageProps } from "./categorySlot";
+import "./featureSettings";
 
-export interface SettingsPageProps {
-  settings: IslandSettings;
-  locale: LocaleCode;
-  unsupported: ReadonlySet<PlatformFeature>;
-  features: FeatureSwitches;
-  presets: ReturnType<typeof useSettingPresets>;
-  managedPluginId: string | null;
-  marketRequest: ReturnType<typeof useMarketInstallRequest>;
-  onLocaleChange: (locale: LocaleCode) => void;
-  onSettingsChange: Dispatch<SetStateAction<IslandSettings>>;
-  onOpenPage: (page: SettingsCategory) => void;
-  onShowPage: (page: SettingsCategory) => void;
-  onOpenShortcuts: () => void;
-  onManagePlugin: (id: string) => void;
-}
+export type { SettingsPageProps };
 
 type Page = ComponentType<SettingsPageProps>;
 
@@ -63,27 +27,12 @@ const shortcuts = (tab: ComponentProps<typeof ShortcutsSettingsPage>["tab"]): Pa
     return <ShortcutsSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenPage={onOpenPage} />;
   };
 
-const clipboard = (tab: ComponentProps<typeof ClipboardSettingsPage>["tab"]): Page =>
-  function ClipboardPage({ settings, onOpenShortcuts }) {
-    return <ClipboardSettingsPage tab={tab} settings={settings} onOpenShortcuts={onOpenShortcuts} />;
-  };
-
-const music = (tab: ComponentProps<typeof MusicSettingsPage>["tab"]): Page =>
-  function MusicPage({ settings, onSettingsChange }) {
-    return <MusicSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
-  };
-
-const screenshot = (tab: ComponentProps<typeof ScreenshotSettingsPage>["tab"]): Page =>
-  function ScreenshotPage({ settings, onSettingsChange, onOpenShortcuts }) {
-    return <ScreenshotSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />;
-  };
-
 const plugins = (tab: ComponentProps<typeof PluginsSettingsPage>["tab"]): Page =>
   function PluginsPage({ settings, managedPluginId, onOpenShortcuts }) {
     return <PluginsSettingsPage tab={tab} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={onOpenShortcuts} />;
   };
 
-const PAGES: Record<SettingsCategory, Page> = {
+const PAGES: Partial<Record<SettingsCategory, Page>> = {
   overview: ({ settings, locale, features, unsupported, onLocaleChange, onSettingsChange, onOpenPage }) => (
     <OverviewSettingsPage
       settings={settings}
@@ -108,37 +57,9 @@ const PAGES: Record<SettingsCategory, Page> = {
   behaviorAlerts: behavior("behaviorAlerts"),
   appearance: ({ settings, onSettingsChange }) => <AppearanceSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
   theme: ({ settings, presets, onSettingsChange }) => <ThemeSettingsPage settings={settings} presets={presets} onSettingsChange={onSettingsChange} />,
-  themeMarket: ({ settings, locale, presets, onSettingsChange }) => (
-    <ThemeMarketPage
-      settings={settings}
-      onSettingsChange={onSettingsChange}
-      onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
-    />
-  ),
   shortcuts: shortcuts("shortcuts"),
   shortcutsIsland: shortcuts("shortcutsIsland"),
   todos: ({ settings, onSettingsChange }) => <TodosSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
-  calendar: ({ settings, onSettingsChange }) => <CalendarSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
-  music: music("music"),
-  musicLyrics: music("musicLyrics"),
-  musicLyricsStyle: music("musicLyricsStyle"),
-  translation: ({ settings, onSettingsChange, onOpenShortcuts }) => <TranslationSettingsPage settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />,
-  clipboard: clipboard("clipboard"),
-  clipboardHistory: clipboard("clipboardHistory"),
-  clipboardSnippets: clipboard("clipboardSnippets"),
-  clipboardData: clipboard("clipboardData"),
-  shelf: ({ settings, onSettingsChange }) => <ShelfSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
-  screenshot: screenshot("screenshot"),
-  screenshotRecord: screenshot("screenshotRecord"),
-  voiceInput: ({ settings }) => <VoiceInputSettingsPage settings={settings} />,
-  messages: ({ settings, unsupported, onSettingsChange }) => <MessagesSettingsPage settings={settings} unsupported={unsupported} onSettingsChange={onSettingsChange} />,
-  agents: ({ settings, onSettingsChange, onShowPage }) => <AgentSettingsPage settings={settings} onSettingsChange={onSettingsChange} onOpenConnect={() => onShowPage("agentConnect")} />,
-  agentSessions: ({ settings, onSettingsChange }) => <AgentSessionsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
-  agentAlerts: ({ settings, onSettingsChange }) => <AgentAlertsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
-  sounds: () => <SoundSettingsSection />,
-  agentApprovals: () => <AgentApprovalSettings />,
-  agentConnect: () => <AgentConnectSettingsPage />,
-  agentRemote: () => <AgentRemoteHostsSettings />,
   plugins: plugins("plugins"),
   pluginsPages: plugins("pluginsPages"),
   pluginsUpdates: plugins("pluginsUpdates"),
@@ -150,4 +71,4 @@ const PAGES: Record<SettingsCategory, Page> = {
   about: ({ onSettingsChange }) => <AboutSettingsPage onSettingsChange={onSettingsChange} />,
 };
 
-for (const category of BUILTIN_CATEGORIES) categorySlot.add({ ...category, component: PAGES[category.id] });
+for (const [id, page] of Object.entries(PAGES)) addSettingsCategory(id as SettingsCategory, page);

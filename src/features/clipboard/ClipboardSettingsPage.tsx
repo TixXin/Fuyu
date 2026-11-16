@@ -1,20 +1,20 @@
 import type { IslandSettings } from "../../lib/settings/types";
-import type { ClipboardHistorySettings } from "../../features/clipboard/api";
-import { ClipboardAiPromptSettings } from "../../features/clipboard/ClipboardAiPromptSettings";
-import { ClipboardLinkSettings } from "../../features/clipboard/ClipboardLinkSettings";
-import { ClipboardRecordSettings } from "../../features/clipboard/ClipboardRecordSettings";
-import { ClipboardSettingsSection } from "../../features/clipboard/ClipboardSettingsSection";
-import { ClipboardSnippetSettings } from "../../features/clipboard/ClipboardSnippetSettings";
-import { ClipboardTransferSettings } from "../../features/clipboard/ClipboardTransferSettings";
-import { openShortcutLabel } from "../../features/clipboard/shortcut";
-import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
+import type { ClipboardHistorySettings } from "./api";
+import { ClipboardAiPromptSettings } from "./ClipboardAiPromptSettings";
+import { ClipboardLinkSettings } from "./ClipboardLinkSettings";
+import { ClipboardRecordSettings } from "./ClipboardRecordSettings";
+import { ClipboardSettingsSection } from "./ClipboardSettingsSection";
+import { ClipboardSnippetSettings } from "./ClipboardSnippetSettings";
+import { ClipboardTransferSettings } from "./ClipboardTransferSettings";
+import { openShortcutLabel } from "./shortcut";
+import { useClipboardSettings } from "./useClipboardSettings";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "./FeatureHeader";
-import { ClipboardShortcutGroup } from "./ShortcutGroups";
-import { AllShortcutsLink } from "./ShortcutsSettingsPage";
-import { useShortcutOwners } from "./useShortcutOwners";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
+import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { ClipboardShortcutGroup } from "./ClipboardShortcutGroup";
+import { AllShortcutsLink } from "../../windows/settings/ShortcutsSettingsPage";
+import { useShortcutOwners } from "../../windows/settings/useShortcutOwners";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../../windows/settings/slots/sectionSlot";
 
 type ClipboardSectionProps = {
   onOpenShortcuts: () => void;

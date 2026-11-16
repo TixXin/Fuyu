@@ -1,9 +1,9 @@
-import { AgentEditorExtensionSettings } from "../../features/agent-status/AgentEditorExtensionSettings";
-import { AgentHooksSettingsSection } from "../../features/agent-status/AgentHooksSettingsSection";
-import { AgentReplyMarkerSettings } from "../../features/agent-status/AgentReplyMarkerSettings";
-import { useAgentStatusSettings } from "../../features/agent-status/useAgentStatusSettings";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
+import { AgentEditorExtensionSettings } from "./AgentEditorExtensionSettings";
+import { AgentHooksSettingsSection } from "./AgentHooksSettingsSection";
+import { AgentReplyMarkerSettings } from "./AgentReplyMarkerSettings";
+import { useAgentStatusSettings } from "./useAgentStatusSettings";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../../windows/settings/slots/sectionSlot";
 
 function HooksSection() {
   const agentStatus = useAgentStatusSettings();

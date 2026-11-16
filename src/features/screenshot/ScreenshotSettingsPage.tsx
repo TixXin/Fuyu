@@ -5,17 +5,17 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../../lib/settings/types";
-import { ScreenshotShortcutRows } from "../../features/screenshot/ScreenshotShortcutRows";
-import { CARD_SECONDS, HISTORY_DAYS, type CardSeconds, type HistoryDays, type ScreenshotSettings } from "../../features/screenshot/settings";
+import { ScreenshotShortcutRows } from "./ScreenshotShortcutRows";
+import { CARD_SECONDS, HISTORY_DAYS, type CardSeconds, type HistoryDays, type ScreenshotSettings } from "./settings";
 import { RecordSettingsGroup } from "./RecordSettingsGroup";
-import { useScreenshotSettings } from "../../features/screenshot/useScreenshotSettings";
+import { useScreenshotSettings } from "./useScreenshotSettings";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
-import { FeatureHeader } from "./FeatureHeader";
-import { AllShortcutsLink } from "./ShortcutsSettingsPage";
-import { useShortcutOwners } from "./useShortcutOwners";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
+import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { AllShortcutsLink } from "../../windows/settings/ShortcutsSettingsPage";
+import { useShortcutOwners } from "../../windows/settings/useShortcutOwners";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../../windows/settings/slots/sectionSlot";
 
 type ScreenshotSectionProps = {
   settings: IslandSettings;

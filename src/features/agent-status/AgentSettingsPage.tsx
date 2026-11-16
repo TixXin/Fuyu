@@ -2,16 +2,16 @@ import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
-import { AgentHooksNotice } from "../../features/agent-status/AgentHooksNotice";
-import { AgentProviderIcon } from "../../features/agent-status/AgentProviderIcon";
-import type { SessionProvider } from "../../features/agent-status/api";
-import { AGENT_PROVIDER_LABELS } from "../../features/agent-status/status";
-import "../../features/agent-status/AgentHooksSettingsSection.css";
+import { AgentHooksNotice } from "./AgentHooksNotice";
+import { AgentProviderIcon } from "./AgentProviderIcon";
+import type { SessionProvider } from "./api";
+import { AGENT_PROVIDER_LABELS } from "./status";
+import "./AgentHooksSettingsSection.css";
 import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "./FeatureHeader";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
+import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../../windows/settings/slots/sectionSlot";
 
 const SHOWN_PROVIDERS = Object.keys(AGENT_PROVIDER_LABELS) as SessionProvider[];
 

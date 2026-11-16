@@ -35,6 +35,16 @@
 | `TranslationWindow.tsx/.css` | `windows/translation/`（翻译的 `api.ts`、`storage.ts`、`providers.ts` 在 `features/translation/`） |
 | `utils/text.ts`、`i18n/`、`assets/` | 保持不动 |
 
+### 插件平台第 3 版：设置窗口的注册搬进功能（E36.3.26）
+
+| 原位置 | 现在的位置 |
+|---|---|
+| `windows/settings/` 的 `CalendarSettingsPage`、`MusicSettingsPage`、`TranslationSettingsPage`、`ClipboardSettingsPage`、`ShelfSettingsPage`、`ScreenshotSettingsPage`、`RecordSettingsGroup`、`VoiceInputSettingsPage`、`MessagesSettingsPage(.css)`、`Agent*SettingsPage` | 各自功能的根目录（`media`、`file-shelf`、`agent-status` 对应音乐、文件中转、Agent） |
+| `slots/categories.tsx` 里各功能的分类、`BehaviorSettingsPage` 的休息提醒分节 | 各功能的 `plugin/settings.tsx`（`addSettingsCategory`，顺序仍按 `categorySlot.ts` 的 `BUILTIN_CATEGORIES`）；窗口自己的页面留在 `categories.tsx` |
+| `ShortcutGroups.tsx` | `translation/TranslationShortcutGroup`、`clipboard/ClipboardShortcutGroup`、`screenshot/ScreenshotShortcutGroup`；共用的 `FeatureOffRow` → `windows/settings/ShortcutFeatureOffRow.tsx` |
+| `ShortcutsSettingsPage` 里各功能的快捷键分节、速查表的输入和审批两块 | 各功能的 `plugin/settings.tsx`（`slots/shortcutSlots.ts` 的 `shortcutSections`、`shortcutReferences`） |
+| `SettingsWindow.tsx` 的 `useQQNotifications`、`useWeChatReminders`、`useSaveDirectorySetting`，`useShortcutOwners` 里各功能的快捷键 | 插槽 `settings.runner/v1`：`messages`、`todos` 的 runner 经 `messages/settingsControllers.ts`、`todos/saveDirectoryStore.ts` 交给设置页；各功能的 runner 用 `useReportShortcutOwners` 报到 `windows/settings/shortcutOwnerStore.ts` |
+
 ### 插件平台第 3 版：共享代码上提（E36.3.24）
 
 | 原位置 | 现在的位置 |

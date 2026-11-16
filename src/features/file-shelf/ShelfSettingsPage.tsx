@@ -6,9 +6,9 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { MAX_SHELF_ITEMS, MIN_SHELF_ITEMS, SHELF_CLEANUP_DAYS } from "../../lib/settings/settings";
 import type { IslandSettings, ShelfDoubleClick } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "./FeatureHeader";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
+import { FeatureHeader } from "../../windows/settings/FeatureHeader";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../../windows/settings/slots/sectionSlot";
 
 type ShelfSectionProps = {
   settings: IslandSettings;

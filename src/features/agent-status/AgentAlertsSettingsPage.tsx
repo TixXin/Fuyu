@@ -1,8 +1,8 @@
-import { AgentAlertSettings } from "../../features/agent-status/AgentAlertSettings";
-import { AgentPushSettings } from "../../features/agent-status/push/AgentPushSettings";
+import { AgentAlertSettings } from "./AgentAlertSettings";
+import { AgentPushSettings } from "./push/AgentPushSettings";
 import type { IslandSettings } from "../../lib/settings/types";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../../windows/settings/slots/sectionSlot";
 
 type AgentAlertsSectionProps = {
   settings: IslandSettings;
