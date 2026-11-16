@@ -2,6 +2,7 @@ import { ListTodo } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { todoLine } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type SideContext = {
   onOpenPage: (page: "todo") => void;
@@ -28,4 +29,4 @@ function TodoRow({ onOpenPage }: SideContext) {
   );
 }
 
-sideSlot.add({ id: "todo", order: 50, component: TodoRow });
+sideSlot.add({ id: "todo", order: 50, component: TodoRow }, OWNER);

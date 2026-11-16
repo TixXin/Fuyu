@@ -1,15 +1,16 @@
-import { useCallback, useMemo, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "../../../i18n";
 import type { IslandSettings } from "../../../lib/settings/types";
-import { useLocalApiBridge } from "../../local-api/useLocalApiBridge";
-import { useHostChangeEvent } from "../../plugins/useHostChangeEvent";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandContributed, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { todoFileData } from "../todoStore";
 import type { TodoItem } from "../types";
 import { useCollapsedTodo } from "../useCollapsedTodo";
+import { useTodoHostEvent } from "../useTodoHostEvent";
 import { useTodos } from "../useTodos";
 import { todoLine, todosIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
+import { announceTodosChanged, todoApi } from "./todoApi";
 import { todoLineContributions } from "./todoLines";
 
 type RunnerProps = {
@@ -38,11 +39,12 @@ function TodosRunner({ mode, isTucked, barText, settings, setSettings, collapseI
     onStartTodo: collapseIsland,
     onMissingSaveDirectory: openSavePathSettings,
   });
-  useLocalApiBridge(apiHandlers);
+  todoApi.useProvide(apiHandlers);
   const date = notebookProps.currentDate;
   const fromRust = todoFileData() !== null;
-  useHostChangeEvent("todos.changed", [date, todos, notebookProps.scheduledTodos, activeTodoId], () => ({ date }), fromRust);
-  useHostChangeEvent("note.changed", [date, notebookProps.dailyNote], () => ({ date }), fromRust);
+  useTodoHostEvent("todos.changed", [date, todos, notebookProps.scheduledTodos, activeTodoId], date, fromRust);
+  useTodoHostEvent("note.changed", [date, notebookProps.dailyNote], date, fromRust);
+  useEffect(() => announceTodosChanged(date), [date, todos, notebookProps.scheduledTodos, activeTodoId, notebookProps.dailyNote]);
   todosIsland.useProvide(useMemo(() => ({ todos, activeTodoId, notebookProps, addTodoOn }), [todos, activeTodoId, notebookProps, addTodoOn]));
   const previewing = useIslandContributed().preview !== null;
   const on = settings.todoEnabled;
@@ -58,8 +60,8 @@ function TodosRunner({ mode, isTucked, barText, settings, setSettings, collapseI
   const list = todoLineContributions(line, t);
   if (settings.autoTuckHoldTodo && on && inProgress) list.push({ kind: "hold", reason: "todos.active" });
   if (activeTodoId !== null) list.push({ kind: "hint", key: "todos.active" });
-  useIslandContributions("builtin", "todos.island", list);
+  useIslandContributions(OWNER, "todos.island", list);
   return null;
 }
 
-runnerSlot.add({ id: "todos.runner", component: TodosRunner });
+runnerSlot.add({ id: "todos.runner", component: TodosRunner }, OWNER);

@@ -4,6 +4,7 @@ use super::history;
 use super::model::{is_date, latest_started, ScheduledTodo, TodoItem, TodosData};
 
 const MAX_TITLE_LENGTH: usize = 500;
+const MAX_PROJECT_LENGTH: usize = 20;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct CallOutcome {
@@ -23,6 +24,17 @@ fn bad(message: impl Into<String>) -> CallError {
 
 fn title_error() -> CallError {
     bad(format!("\"title\" must be a non-empty string of at most {MAX_TITLE_LENGTH} characters."))
+}
+
+fn read_project(value: Option<&Value>) -> Result<Option<String>, CallError> {
+    match value {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(name)) => {
+            let name: String = name.trim().chars().take(MAX_PROJECT_LENGTH).collect();
+            Ok((!name.is_empty()).then_some(name))
+        }
+        Some(_) => Err(bad("\"project\" must be a string.")),
+    }
 }
 
 fn read_title(value: Option<&Value>) -> Option<String> {
@@ -50,6 +62,7 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
         })),
         "todos.add" => {
             let title = read_title(input.get("title")).ok_or_else(title_error)?;
+            let project = read_project(input.get("project"))?;
             let date = match input.get("date") {
                 None => None,
                 Some(Value::String(date)) if is_date(date) => Some(date.clone()),
@@ -59,13 +72,13 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
             match date {
                 Some(date) if date < data.date => Err(bad(format!("\"date\" cannot be before the list's day ({}).", data.date))),
                 Some(date) if date > data.date => {
-                    let todo = ScheduledTodo { id: id.to_string(), title, date, created_at: Number::from(now), project: None, priority: None, color: None, updated_at: None, device_id: None };
+                    let todo = ScheduledTodo { id: id.to_string(), title, date, created_at: Number::from(now), project, priority: None, color: None, updated_at: None, device_id: None };
                     next.scheduled.push(todo.clone());
                     sort_scheduled(&mut next.scheduled);
                     changed(json!(todo), next)
                 }
                 _ => {
-                    let todo = TodoItem { id: id.to_string(), title, completed: false, created_at: Number::from(now), project: None, started_at: None, priority: None, color: None, updated_at: None, device_id: None };
+                    let todo = TodoItem { id: id.to_string(), title, completed: false, created_at: Number::from(now), project, started_at: None, priority: None, color: None, updated_at: None, device_id: None };
                     next.todos.insert(0, todo.clone());
                     changed(json!(todo), next)
                 }

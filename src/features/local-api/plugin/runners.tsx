@@ -1,5 +1,7 @@
 import { defineSlot } from "../../plugin-kernel/slots";
+import { todoHandlers } from "../todoHandlers";
 import { useDevIslandActions } from "../useDevIslandActions";
+import { useLocalApiBridge } from "../useLocalApiBridge";
 
 type RunnerProps = {
   openEnabledPage: (page: string) => void;
@@ -15,4 +17,12 @@ function DevIslandActions({ openEnabledPage, collapseIsland, tuckIsland, revealI
   return null;
 }
 
+const handlers = todoHandlers();
+
+function LocalApiBridge() {
+  useLocalApiBridge(handlers);
+  return null;
+}
+
 runnerSlot.add({ id: "local-api.dev-island-actions", component: DevIslandActions });
+runnerSlot.add({ id: "local-api.bridge", component: LocalApiBridge });

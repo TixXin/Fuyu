@@ -19,6 +19,14 @@ use crate::{island, plugin_host, sync::clock};
 
 const CHANGED_EVENT: &str = "todos-changed";
 
+type Announce = Box<dyn Fn(Value) + Send + Sync>;
+
+type Publish = Box<dyn Fn(&'static str, Value) + Send + Sync>;
+
+static ANNOUNCE: OnceLock<Announce> = OnceLock::new();
+
+static PUBLISH: OnceLock<Publish> = OnceLock::new();
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub(crate) struct OutsideChanges {
     pub todos: u64,
@@ -67,7 +75,6 @@ enum Source {
 }
 
 struct TodosHost {
-    app: AppHandle,
     dir: PathBuf,
     app_version: String,
     source: Mutex<Source>,
@@ -79,8 +86,12 @@ static HOST: OnceLock<TodosHost> = OnceLock::new();
 pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     let dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
+    let handle = app.clone();
+    let _ = ANNOUNCE.set(Box::new(move |payload| {
+        let _ = handle.emit_to(island::WINDOW_LABEL, CHANGED_EVENT, payload);
+    }));
+    let _ = PUBLISH.set(Box::new(plugin_host::publish_event));
     HOST.get_or_init(|| TodosHost {
-        app: app.clone(),
         dir,
         app_version: app.package_info().version.to_string(),
         source: Mutex::new(Source::Pending),
@@ -275,21 +286,19 @@ fn call_loaded(host: &TodosHost, loaded: &mut Loaded, method: &str, params: &Val
     };
     let next = TodosFile { revision: loaded.file.revision + 1, data, ..loaded.file.clone() };
     store::save(&host.dir.join(FILE_NAME), &next).map_err(|error| (500, error))?;
-    announce_outside_change(host, loaded, next);
+    announce_outside_change(loaded, next);
     crate::sync::notify_local_change();
     Ok(outcome.result)
 }
 
-fn announce_outside_change(host: &TodosHost, loaded: &mut Loaded, next: TodosFile) {
+fn announce_outside_change(loaded: &mut Loaded, next: TodosFile) {
     let old = std::mem::replace(&mut loaded.file, next);
     let fields = changed_fields(&old.data, &loaded.file.data);
     loaded.outside.record(&fields, loaded.file.revision);
     let reason = todos_reason(&old.data, &loaded.file.data);
-    let _ = host.app.emit_to(
-        island::WINDOW_LABEL,
-        CHANGED_EVENT,
-        json!({ "revision": loaded.file.revision, "data": loaded.file.data, "fields": fields, "reason": reason }),
-    );
+    if let Some(announce) = ANNOUNCE.get() {
+        announce(json!({ "revision": loaded.file.revision, "data": loaded.file.data, "fields": fields, "reason": reason }));
+    }
     publish_plugin_events(&old.data, &loaded.file.data);
 }
 
@@ -315,16 +324,17 @@ pub(crate) fn replace_from_sync(revision: u64, data: TodosData) -> Result<(), St
     clock::observe(stamps::all(&data));
     let next = TodosFile { revision: loaded.file.revision + 1, data, ..loaded.file.clone() };
     store::save(&host.dir.join(FILE_NAME), &next)?;
-    announce_outside_change(host, loaded, next);
+    announce_outside_change(loaded, next);
     Ok(())
 }
 
 fn publish_plugin_events(old: &TodosData, new: &TodosData) {
+    let Some(publish) = PUBLISH.get() else { return };
     if let Some(reason) = todos_reason(old, new) {
-        plugin_host::publish_event("todos.changed", json!({ "date": new.date, "reason": reason }));
+        publish("todos.changed", json!({ "date": new.date, "reason": reason }));
     }
     if old.daily_note != new.daily_note || old.date != new.date {
-        plugin_host::publish_event("note.changed", json!({ "date": new.date }));
+        publish("note.changed", json!({ "date": new.date }));
     }
 }
 
