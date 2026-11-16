@@ -182,6 +182,8 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 3 | 同上 | macOS | | |
 | 3 | E36.3.47：内存和冷启动按「基线和实测」里「第 3 阶段后」的说明量，填进那两张表 | Windows | | |
 | 3 | 同上 | macOS | | |
+| 3 | E36.3.33：插件页关掉音乐后，岛上的音乐按钮和音乐页、收起条音乐项、侧栏音乐行、歌词行、封面取色都消失，设置里「音乐」「歌词」「歌词样式」也消失；托盘卡片不显示播放器；进程里少一个 media-session-events 线程。再打开全部回来，切歌时歌词马上跟上。关着音乐重启：开机不起这个线程，岛也不轮询 `get_media_state`。旧版里关了音乐的，升级后仍是关的，插件页和概览卡片一致。开着时，消息浮层的播放按钮、放音乐时收起保持照常。宿主开着时，经 `media/v1` 的 `nowPlaying` 读到的和音乐页一样，`playPause` / `next` / `previous` / `seek` 能控制播放器，关掉音乐后回 not-ready；第 2 版插件的 `media.nowPlaying` 关着时回 503 | Windows | | |
+| 3 | E36.3.33：同上；另外关掉音乐后 `pgrep -fl mediaremote-adapter` 查不到 perl，再打开只有一个；反复开关十次不留多个 perl、不崩 | macOS | | |
 
 ## 等你定的事
 
