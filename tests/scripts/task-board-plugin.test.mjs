@@ -31,7 +31,7 @@ function fixture() {
   cpSync(path.join(ROOT, "scripts"), path.join(repo, "scripts"), { recursive: true });
   cpSync(path.join(ROOT, "docs/tasks/README.md"), path.join(repo, "docs/tasks/README.md"));
   const tasks = path.join(repo, "docs/tasks");
-  task(path.join(tasks, "C"), "C1", { title: "日历第二步", status: "进行中", owner: "fly-island-aa", host: "test-pc", claimed: `${earlier} 00:00`, issue: "17" });
+  task(path.join(tasks, "C"), "C1", { title: "日历第二步", status: "进行中", owner: "fuyu-aa", host: "test-pc", claimed: `${earlier} 00:00`, issue: "17" });
   task(path.join(tasks, "C"), "C2", { title: "等第一步", status: "待做", depends: "C1" });
   task(path.join(tasks, "D"), "D1", { title: "换电脑实测", status: "待做", needs: "user" });
   task(path.join(tasks, "0-archive/D"), "D2", { title: "今天修好的", status: "已完成", done: day }, "## 提交\n\n- `fix: x`\n");
@@ -51,7 +51,7 @@ test("the board groups the tasks, marks each group with an icon and keeps the ti
     assert.match(needs.subtitle, /^D1 · 需要你本人$/);
     assert.equal(stale.title, "日历第二步", "the title stands alone, the id moves to the line under it");
     assert.equal(stale.icon, "flame");
-    assert.match(stale.subtitle, /^C1 · fly-island-aa · test-pc · \d+-\d+ · 认领后超过 24 小时没有动静/);
+    assert.match(stale.subtitle, /^C1 · fuyu-aa · test-pc · \d+-\d+ · 认领后超过 24 小时没有动静/);
     assert.equal(stale.note, "#17");
     assert.equal(todo.icon, "clock", "a task that waits on another shows a clock");
     assert.match(todo.subtitle, /等 C1/);
