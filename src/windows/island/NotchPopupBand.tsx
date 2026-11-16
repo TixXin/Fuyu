@@ -1,11 +1,10 @@
 import { Bot, MessageCircle, X } from "lucide-react";
-import type { AgentVisualState } from "../../features/agent-status/status";
 import { useTranslation } from "../../i18n";
 import type { IslandPage } from "./types";
 
 export function NotchPopupBand({ page, agentVisualState, onCollapse }: {
   page: IslandPage;
-  agentVisualState: AgentVisualState;
+  agentVisualState: string;
   onCollapse: () => void;
 }) {
   const t = useTranslation();

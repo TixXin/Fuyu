@@ -1,12 +1,11 @@
 {
   "features": [
+    "src/features/agent-status/plugin/runners.tsx -> src/features/plugins/useHostChangeEvent.ts",
     "src/features/agent-status/push/AgentPushSettings.tsx -> src/features/cc-connect/index.ts",
     "src/features/agent-status/push/CcConnectPushTargets.tsx -> src/features/cc-connect/index.ts",
     "src/features/agent-status/push/sendPush.ts -> src/features/cc-connect/index.ts",
     "src/features/agent-status/push/useAgentPush.ts -> src/features/cc-connect/api.ts",
     "src/features/agent-status/push/useAgentPush.ts -> src/features/plugins/useBuiltinPlugin.ts",
-    "src/features/calendar/plugin/island.tsx -> src/features/todos/plugin/islandState.ts",
-    "src/features/calendar/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts",
     "src/features/cc-connect/useCcConnect.ts -> src/features/plugins/useBuiltinPlugin.ts",
     "src/features/cc-connect/useRemoteCcConnect.ts -> src/features/agent-status/api.ts",
     "src/features/claude-usage/PlanKeyFields.tsx -> src/features/agent-status/api.ts",
@@ -30,8 +29,6 @@
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginMarketSection.css",
     "src/features/timer/ReminderNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
     "src/features/timer/TimerNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
-    "src/features/todos/plugin/runners.tsx -> src/features/local-api/useLocalApiBridge.ts",
-    "src/features/todos/plugin/runners.tsx -> src/features/plugins/useHostChangeEvent.ts",
     "src/features/voice-input/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts",
     "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/device-use/api.ts",
     "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/todos/plugin/islandState.ts"
@@ -52,10 +49,7 @@
     "src/lib/settings/useSettingPresets.ts -> src/features/todos/index.ts"
   ],
   "removedBy": {
-    "src/features/calendar/plugin/island.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.38",
-    "src/features/calendar/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.38",
-    "src/features/todos/plugin/runners.tsx -> src/features/local-api/useLocalApiBridge.ts": "E36.3.38",
-    "src/features/todos/plugin/runners.tsx -> src/features/plugins/useHostChangeEvent.ts": "E36.3.38",
+    "src/features/agent-status/plugin/runners.tsx -> src/features/plugins/useHostChangeEvent.ts": "E36.3.37",
     "src/features/voice-input/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.36",
     "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/device-use/api.ts": "E36.3.36",
     "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.36"

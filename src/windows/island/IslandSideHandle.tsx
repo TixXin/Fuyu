@@ -1,10 +1,9 @@
-import type { AgentVisualState } from "../../features/agent-status/status";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import "./IslandSideEdge.css";
 
 type IslandSideHandleProps = {
   label: string;
-  agentVisualState: AgentVisualState;
+  agentVisualState: string;
   unreadCount: number;
   onOpen: () => void;
   onWindowDragStart: () => void;

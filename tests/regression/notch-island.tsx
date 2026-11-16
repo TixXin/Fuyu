@@ -35,10 +35,10 @@ function Fixture() {
   const qqMail = useMail(true);
   const width = notchFittedWidth(300, state.notch, 1, Boolean(state.level || state.device));
   return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${state.popup ? notchPanelWidth(400, state.notch, 1, true) : notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ barText: !state.notch, todoTitle: "写周报和整理会议记录", translationPeek: state.peek, levelPopup: state.level, deviceAlert: state.device })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
+    <IslandShell lineSources={useFixtureLines({ status: { state: "idle", label: "AI Agent 空闲或已完成" }, barText: !state.notch, todoTitle: "写周报和整理会议记录", translationPeek: state.peek, levelPopup: state.level, deviceAlert: state.device })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
       mode={state.expanded ? "expanded" : "collapsed"} page={state.popup ? "agents" : "todo"} popup={state.popup} isTucked={state.tucked} isDetached={false} showTitle={false}
       showCollapsedText={!state.notch} activeAgentSessionCount={0}
-      appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
+      appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       shelfCount={null}
       onOpenPage={() => {}} onOpenMessages={() => {}}

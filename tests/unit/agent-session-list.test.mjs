@@ -75,7 +75,7 @@ test("the Agent page follows the AI Agent switch", () => {
 });
 
 test("Agent page rows and the Agent settings", async () => {
-  const { getAgentPageExpandedHeight } = await import("../../src/windows/island/layout.ts");
+  const { getAgentPageExpandedHeight } = await import("../../src/features/agent-status/islandLayout.ts");
   const { normalizeSettings, DEFAULT_SETTINGS } = await import("../../src/lib/settings/settings.ts");
   assert.equal(getAgentPageExpandedHeight(3), 316);
   assert.equal(getAgentPageExpandedHeight(4) - getAgentPageExpandedHeight(3), 80);

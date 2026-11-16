@@ -1,6 +1,4 @@
 import { Fragment, type ReactNode } from "react";
-import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
-import type { AgentVisualState } from "../../features/agent-status/status";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
 import { messagePreviewText, type MessagePreview, type MessageSource } from "../../features/messages/messagePreview";
@@ -42,8 +40,7 @@ type IslandCollapsedBarProps = {
   lineSources: CollapsedLineSources;
   agentSessionCount: number | null;
   shelfCount: number | null;
-  quotaAlert?: QuotaAlert | null;
-  agentVisualState: AgentVisualState;
+  agentVisualState: string;
   onOpenPage: (page: IslandPage) => void;
   onOpenMessages: (source: MessageSource) => void;
   notice?: { content: ReactNode; actions: ReactNode } | null;
@@ -55,6 +52,7 @@ type IslandCollapsedBarProps = {
 };
 
 const NO_SLOTS: CollapsedSlots = {};
+const NO_SOURCES = {};
 const NO_VIEWS: readonly PluginViewEntry[] = [];
 const ignorePage = () => {};
 const OPENS_BAR = "data-opens-bar";
@@ -89,7 +87,6 @@ export function IslandCollapsedBar({
   lineSources,
   agentSessionCount,
   shelfCount,
-  quotaAlert = null,
   agentVisualState,
   onOpenPage,
   onOpenMessages,
@@ -111,7 +108,7 @@ export function IslandCollapsedBar({
   ].join(" ");
   const contributed = useIslandContributed();
   const activeAlert = useActiveAlert();
-  const alertSources = { quotaAlert };
+  const alertSources = NO_SOURCES;
   const lines = visibleLines(contributed.lines, showCollapsedText);
   const line = shownLine(lines);
   const peekLine = line?.drop ? line : null;

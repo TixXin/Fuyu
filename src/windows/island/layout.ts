@@ -1,6 +1,5 @@
 import { clamp } from "../../utils/number.ts";
 import { getCollapsedTextUnits } from "../../utils/text.ts";
-import type { AgentSessionView } from "../../features/agent-status/agentSettings";
 
 export const MIN_COLLAPSED_ISLAND_WIDTH = 280;
 export const MAX_COLLAPSED_ISLAND_WIDTH = 340;
@@ -19,7 +18,6 @@ export function panelIslandWidth(panelWidth: number, scale: number) {
   return Math.min(panelWidth, maxExpandedIslandWidth(scale));
 }
 export const POPUP_HEADER_SAVING = 58;
-export const AGENT_POPUP_LIST_SAVING = 4;
 export const TODO_ROW_HEIGHT = 34;
 export const TODO_GROW_START_ROWS = 2;
 export function getCollapsedIslandWidth(text: string, extraWidth = 0, widthExtra = 0) {
@@ -85,21 +83,3 @@ export function getTodoScrollStartRows(maxPanelHeight: number) {
     Math.max(0, Math.floor((maxPanelHeight - BASE_EXPANDED_ISLAND_HEIGHT) / TODO_ROW_HEIGHT))
   );
 }
-
-const AGENT_PAGE_CHROME_HEIGHT = 78;
-const AGENT_ROWS: Record<AgentSessionView, { height: number; gap: number }> = {
-  list: { height: 78, gap: 2 },
-  cards: { height: 62, gap: 6 },
-  compact: { height: 34, gap: 4 },
-};
-const AGENT_USAGE_HEIGHT = 28;
-
-export function getAgentPageExpandedHeight(rows: number, usageLines: number | boolean = 0, view: AgentSessionView = "list") {
-  const { height, gap } = AGENT_ROWS[view];
-  return AGENT_PAGE_CHROME_HEIGHT + Number(usageLines) * AGENT_USAGE_HEIGHT + rows * (height + gap) - gap;
-}
-
-export function getAgentAlertExpandedHeight(rowHeight: number) {
-  return AGENT_PAGE_CHROME_HEIGHT + rowHeight;
-}
-

@@ -7,7 +7,8 @@ import type { AgentApprovalRequest } from "../../src/features/agent-status/appro
 import { AGENT_APPROVAL_STORAGE_KEY } from "../../src/features/agent-status/approvals/storage";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings";
 import type { IslandSettings } from "../../src/lib/settings/types";
-import { useIslandAgentAlerts } from "../../src/windows/island/useIslandAgentAlerts";
+import { useIslandAgentAlerts } from "../../src/features/agent-status/useIslandAgentAlerts";
+import { islandHost } from "../../src/windows/island/islandHost";
 import type { IslandPage } from "../../src/windows/island/types";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -53,7 +54,8 @@ function Harness() {
     enabled: true,
     mode: state.mode,
     page: state.page,
-    openIslandPage: (page) => changeIsland({ mode: "expanded", page }),
+    host: islandHost,
+    openIslandPage: (page: "agents") => changeIsland({ mode: "expanded", page }),
     collapseIsland: () => changeIsland((current) => ({ ...current, mode: "collapsed" })),
   });
   decide = approvals.current ? approvals.decide : null;

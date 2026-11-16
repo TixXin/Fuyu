@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
-import { useAgentStatus } from "../../features/agent-status/useAgentStatus";
-import { useAgentSession } from "../../features/agent-status/useAgentSession";
-import { useAgentInterjection } from "../../features/agent-status/useAgentInterjection";
-import { useIslandAgentSessions } from "../../features/agent-status/useIslandAgentSessions";
-import { isRemoteSessionReport } from "../../features/agent-status/remoteSessions";
-import { useAgentUsages } from "../../features/agent-status/useAgentUsages";
-import type { AgentSessionSummary } from "../../features/agent-status/api";
+import { useAgentStatus } from "./useAgentStatus";
+import { useAgentSession } from "./useAgentSession";
+import { useAgentInterjection } from "./useAgentInterjection";
+import { useIslandAgentSessions } from "./useIslandAgentSessions";
+import { isRemoteSessionReport } from "./remoteSessions";
+import { useAgentUsages } from "./useAgentUsages";
+import type { AgentSessionSummary } from "./api";
 
 const NO_SESSIONS: AgentSessionSummary[] = [];
 

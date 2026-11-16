@@ -1,3 +1,5 @@
+import { memo } from "react";
+import type { IslandHost } from "../../features/plugin-kernel/islandHost";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { defineSlot } from "../../features/plugin-kernel/slots";
 import type { Dispatch, SetStateAction } from "react";
@@ -22,6 +24,7 @@ export type IslandRunnerProps = {
   setSettings: Dispatch<SetStateAction<IslandSettings>>;
   openSettings: typeof openSettingsWindow;
   takeClickFocus: typeof takeIslandClickFocus;
+  host: IslandHost;
   features: IslandFeatures;
   openIslandPage: (page: IslandPage) => void;
   openEnabledPage: (page: IslandPage) => void;
@@ -32,7 +35,7 @@ export type IslandRunnerProps = {
 
 const runnerSlot = defineSlot<IslandRunnerProps>("island.runner/v1");
 
-export function IslandRunners(props: IslandRunnerProps) {
+export const IslandRunners = memo(function IslandRunners(props: IslandRunnerProps) {
   useTrayMenuOpenPage(props.openEnabledPage);
   return <SlotView slot={runnerSlot} props={props} />;
-}
+});

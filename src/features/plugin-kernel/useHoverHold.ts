@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef } from "react";
-import { listenIslandHover } from "./api";
 import { holdsOpen, type HoldsOpen } from "./hoverHold";
+import type { IslandHost } from "./islandHost";
 
-export function useHoverHold(): HoldsOpen {
+export function useHoverHold(host: Pick<IslandHost, "listenHover">): HoldsOpen {
   const hoveredRef = useRef(false);
 
   useEffect(() => {
     let didCancel = false;
     let unlisten: (() => void) | null = null;
-    void listenIslandHover((inside) => {
+    void host.listenHover((inside) => {
       hoveredRef.current = inside;
     })
       .then((nextUnlisten) => {
@@ -20,7 +20,7 @@ export function useHoverHold(): HoldsOpen {
       didCancel = true;
       unlisten?.();
     };
-  }, []);
+  }, [host]);
 
   return useCallback((heldSince: number) => holdsOpen(hoveredRef.current, heldSince, Date.now()), []);
 }
