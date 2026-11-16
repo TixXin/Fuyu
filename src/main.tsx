@@ -13,6 +13,7 @@ import { trackIslandTopEdge } from "./windows/island/topEdge";
 import { trackIslandNotch } from "./windows/island/notch";
 
 blockBrowserDefaults({ mac: isMacOS, dev: import.meta.env.DEV });
+import.meta.glob("./features/*/plugin/services.ts", { eager: true });
 
 const windowKind = new URLSearchParams(window.location.search).get("window");
 

@@ -1,21 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, SquarePen } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
-import { rewriteText, type RewriteTask } from "../translation/api";
-import { loadSettings } from "../translation/storage";
+import { translatorV1, type RewriteTask } from "@fuyu/plugin-services";
+import { windowServices } from "../plugin-kernel/services";
 import type { ClipboardAiPrompt, ClipboardHistoryItem } from "./api";
 
 const TASKS = ["summarize", "polish", "grammar", "translate"] as const satisfies readonly RewriteTask[];
+const translator = windowServices.get(translatorV1);
 
 type Choice = { key: string; task: RewriteTask; prompt?: string; label: string; own: boolean };
 
-function translationService() {
-  const settings = loadSettings();
-  return {
-    provider: settings.provider,
-    baseUrl: settings.provider === "custom" ? settings.customBaseUrl.trim() || null : null,
-    model: settings.models[settings.provider]?.trim() || null,
-  };
+function reasonOf(error: unknown): unknown {
+  const { code, message, data } = (error ?? {}) as { code?: unknown; message?: unknown; data?: { reason?: unknown; args?: unknown; detail?: unknown } };
+  if (typeof data?.reason !== "string" || data.reason === "failed") return error;
+  return { code: data.reason, message: typeof message === "string" ? message : String(code), args: data.args, detail: data.detail };
 }
 
 type Result =
@@ -51,9 +49,13 @@ export function ClipboardAiList({ item, prompts = [], copy = false, onPaste }: {
     const onChunk = (piece: string) => {
       if (id === request.current) setResult((current) => (current?.state === "loading" ? { ...current, text: current.text + piece } : current));
     };
-    rewriteText(item.text ?? item.preview, choice.task, translationService(), { prompt: choice.prompt, onChunk }).then(
-      (answer) => { if (id === request.current) setResult({ key: choice.key, state: "done", text: answer }); },
-      (error: unknown) => { if (id === request.current) setResult({ key: choice.key, state: "failed", error: errorText(error) }); },
+    translator.rewrite({ text: item.text ?? item.preview, task: choice.task, ...(choice.prompt ? { prompt: choice.prompt } : {}) }, { onProgress: ({ piece }) => onChunk(piece) }).then(
+      (answer) => { if (id === request.current) setResult({ key: choice.key, state: "done", text: answer.text }); },
+      (error: unknown) => {
+        if (id !== request.current) return;
+        const off = (error as { code?: unknown } | null)?.code === "not-ready";
+        setResult({ key: choice.key, state: "failed", error: off ? text.aiOff : errorText(reasonOf(error)) });
+      },
     );
   };
 

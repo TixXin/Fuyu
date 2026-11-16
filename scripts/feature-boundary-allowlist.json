@@ -11,8 +11,6 @@
     "src/features/claude-usage/usageRing.ts -> src/features/agent-status/api.ts",
     "src/features/claude-usage/usageRing.ts -> src/features/agent-status/usage.ts",
     "src/features/claude-usage/useClaudeUsage.ts -> src/features/agent-status/api.ts",
-    "src/features/clipboard/ClipboardAiList.tsx -> src/features/translation/api.ts",
-    "src/features/clipboard/ClipboardAiList.tsx -> src/features/translation/storage.ts",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/cc-connect/index.ts",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/center-pattern/index.ts",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/claude-usage/PlanKeyFields.tsx",

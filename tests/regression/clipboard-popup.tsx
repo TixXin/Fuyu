@@ -5,6 +5,7 @@ import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { ClipboardPopup } from "../../src/features/clipboard/ClipboardPopup";
+import "../../src/features/translation/plugin/services";
 import type { ClipboardHistoryItem, ClipboardSnippet } from "../../src/features/clipboard/api";
 import { checkSecondRound } from "./clipboard-popup-actions";
 import { checkManager, renderManageFrames } from "./clipboard-popup-manage";
