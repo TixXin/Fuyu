@@ -60,7 +60,7 @@ mockIPC((command, payload) => {
       sources = { ...sources, [String(args.key)]: args.value };
       if (args.key === "wechat") void emit("wechat-reminder-changed", { snapshot: wechatSnapshot(), windowVisible: false });
       return plugins();
-    case "clear_wechat_reminders": return { revision: ++revision, enabled: true, status: "listening", pending: true, lastAttentionAt: now, error: null, message: null, items: [] };
+    case "clear_wechat_reminders": return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: now, error: null, message: null, items: [] };
     default: return null;
   }
 }, { shouldMockEvents: true });
@@ -118,8 +118,10 @@ try {
     check(wechatRows()[1].textContent?.includes("有新提醒") && wechatRows()[1].textContent?.includes("托盘"), "没读到内容的提醒也占一行，并写明原因");
     await click("打开微信：小林");
     check(calls.some(call => call.command === "open_wechat" && call.args.chat === "session_item_lin"), "点一行打开那个聊天");
+    check(document.querySelector(".message-sources .message-source-dot"), "有新提醒时「微信」标签上有点");
     await click("清空微信提醒");
-    check(calls.some(call => call.command === "clear_wechat_reminders") && wechatRows().length === 0 && document.querySelector('.wechat-reminder-state--pending'), "清空后回到提醒状态");
+    check(calls.some(call => call.command === "clear_wechat_reminders") && wechatRows().length === 0 && !document.querySelector('.wechat-reminder-state--pending')
+      && !document.querySelector(".message-sources .message-source-dot"), "清空后提醒列表、提醒状态和「微信」标签上的点都没了");
     await click("接收微信提醒");
     await until(() => button("接收微信提醒").getAttribute("aria-checked") === "false");
     check(document.querySelector('.qq-panel__empty')?.textContent?.includes("已暂停") && document.querySelector('button[aria-label="接收微信提醒"]')?.getAttribute("aria-checked") === "false", "暂停微信提醒后保持正确状态");

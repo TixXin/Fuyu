@@ -701,6 +701,17 @@
       "page": "theme",
       "zh-CN": {
         "group": "液态玻璃",
+        "title": "预设"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Preset"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
         "title": "风格"
       },
       "en": {

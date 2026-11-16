@@ -39,7 +39,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
         : "classic",
     glassIntensity: clamp(
       Number(settings?.glassIntensity ?? DEFAULT_SETTINGS.glassIntensity),
-      25,
+      0,
       100,
     ),
     opacity: clamp(Number(settings?.opacity ?? DEFAULT_SETTINGS.opacity), 50, 100),

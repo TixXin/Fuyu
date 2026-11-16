@@ -11,6 +11,8 @@ export type SettingsAppearanceText = {
   glass: {
     title: string;
     reset: string;
+    look: string;
+    looks: { clear: string; tinted: string; flow: string; material: string; mica: string; custom: string };
     style: string;
     styles: { static: string; flow: string; aurora: string; shader: string };
     shaderHint: string;
@@ -67,6 +69,8 @@ export const zhCN: SettingsAppearanceText = {
   glass: {
     title: "液态玻璃",
     reset: "恢复液态玻璃默认",
+    look: "预设",
+    looks: { clear: "iOS 26 透明", tinted: "iOS 26 着色", flow: "流彩毛玻璃", material: "iOS 18 毛玻璃", mica: "Win11 Mica", custom: "自定义" },
     style: "风格",
     styles: { static: "静态", flow: "慢流动", aurora: "极光", shader: "着色器（实验）" },
     shaderHint: "用 WebGL 画流体，效果最细，但显卡一直在工作；不支持时自动换回慢流动。",
@@ -123,6 +127,8 @@ export const en: SettingsAppearanceText = {
   glass: {
     title: "Liquid glass",
     reset: "Restore liquid glass defaults",
+    look: "Preset",
+    looks: { clear: "iOS 26 clear", tinted: "iOS 26 tinted", flow: "Frosted flow", material: "iOS 18 frosted", mica: "Windows 11 Mica", custom: "Custom" },
     style: "Style",
     styles: { static: "Still", flow: "Slow flow", aurora: "Aurora", shader: "Shader (experimental)" },
     shaderHint: "Draws a fluid with WebGL. Finest detail, but keeps the GPU busy; falls back to slow flow when unsupported.",

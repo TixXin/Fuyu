@@ -50,7 +50,7 @@ mockIPC((command, payload) => {
   if (command === "set_wechat_expose_ui" || command === "set_wechat_hide_taskbar_button") return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
   if (command === "get_qq_mail_state") return [mail];
   if (command === "clear_qq_notifications") return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
-  if (command === "clear_wechat_reminders") return { revision: ++revision, enabled: true, status: "listening", pending: true, lastAttentionAt: revision, error: null, items: [] };
+  if (command === "clear_wechat_reminders") return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: revision, error: null, items: [] };
   if (command === "mark_qq_mail_read") {
     mail = { ...mail, revision: ++revision, unreadCount: 0, items: mail.items.map((item) => item.id === args.messageId ? { ...item, unread: false } : item) };
     return mail;

@@ -131,7 +131,7 @@ fn apply(state: &mut ReminderState, reading: Badge, now: u64) -> bool {
         Badge::Label(Some(label)) => {
             let unread = dock_badges::unread(&label);
             state.snapshot.status = "listening";
-            state.snapshot.pending = true;
+            state.snapshot.pending |= unread > state.unread;
             if unread > state.unread {
                 state.snapshot.last_attention_at = Some(now);
                 state.snapshot.items.insert(0, ReminderItem { at: now, message: None, reason: Some("unread"), unread: Some(unread) });
@@ -248,8 +248,9 @@ pub fn set_wechat_auto_clear(enabled: bool) -> Result<ReminderSnapshot, String> 
 #[tauri::command]
 pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, String> {
     update(|state| {
-        let had = !state.snapshot.items.is_empty();
+        let had = !state.snapshot.items.is_empty() || state.snapshot.pending;
         state.snapshot.items.clear();
+        state.snapshot.pending = false;
         had
     })
 }
@@ -307,6 +308,18 @@ mod tests {
         assert!(apply(&mut state, Badge::NotAllowed, 50));
         assert_eq!(state.snapshot.status, "permissionRequired");
         assert!(!apply(&mut state, Badge::NotAllowed, 60));
+    }
+
+    #[test]
+    fn clearing_the_list_keeps_the_dot_off_until_more_messages_arrive() {
+        let mut state = enabled();
+        assert!(apply(&mut state, Badge::Label(Some("2".into())), 10));
+        state.snapshot.items.clear();
+        state.snapshot.pending = false;
+        assert!(!apply(&mut state, Badge::Label(Some("2".into())), 20), "the same badge after clearing is not news");
+        assert!(!state.snapshot.pending);
+        assert!(apply(&mut state, Badge::Label(Some("3".into())), 30));
+        assert!(state.snapshot.pending);
     }
 
     #[test]

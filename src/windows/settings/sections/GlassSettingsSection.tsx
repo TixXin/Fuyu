@@ -8,6 +8,7 @@ import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRo
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../../i18n";
 import { GLASS_STYLE_PRESETS, glassPalette } from "../../../lib/theme/glassPalette";
+import { GLASS_LOOK_VALUES, GLASS_LOOKS, glassLookOf, type GlassLookId } from "../../../lib/theme/glassLooks";
 import {
   DEFAULT_GLASS_SETTINGS,
   GLASS_BACKDROPS,
@@ -43,6 +44,9 @@ export function GlassSettingsSection({
     background: settings.islandBackgroundColor,
   });
 
+  const look = glassLookOf(settings) ?? "custom";
+  const lookOptions = [...GLASS_LOOKS, ...(look === "custom" ? ["custom" as const] : [])].map((value) => ({ value, label: text.looks[value] }));
+
   return (
     <SettingsGroup
       title={text.title}
@@ -53,6 +57,17 @@ export function GlassSettingsSection({
         </SettingsLinkButton>
       }
     >
+      <SettingsRow
+        title={text.look}
+        control={
+          <SettingsSelect<GlassLookId | "custom">
+            value={look}
+            options={lookOptions}
+            ariaLabel={text.look}
+            onChange={(next) => { if (next !== "custom") set(GLASS_LOOK_VALUES[next]); }}
+          />
+        }
+      />
       <SettingsRow
         title={text.style}
         description={settings.glassStyle === "shader" ? text.shaderHint : undefined}
@@ -68,7 +83,7 @@ export function GlassSettingsSection({
       <SettingsSliderRow
         title={t.settings.appearance.glassStrength}
         value={settings.glassIntensity}
-        min={25}
+        min={0}
         max={100}
         step={1}
         format={percent}

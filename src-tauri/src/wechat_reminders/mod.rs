@@ -157,6 +157,16 @@ impl ReminderState {
         true
     }
 
+    fn clear(&mut self) -> bool {
+        if self.snapshot.items.is_empty() && !self.snapshot.pending {
+            return false;
+        }
+        self.snapshot.items.clear();
+        self.snapshot.pending = false;
+        self.snapshot.revision += 1;
+        true
+    }
+
     fn forget_before(&mut self, at: u64) -> bool {
         let before = self.snapshot.items.len();
         self.snapshot.items.retain(|item| item.at > at);
@@ -334,11 +344,9 @@ pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, String> {
     let service = service()?;
     let snapshot = {
         let mut state = service.state.lock().map_err(|_| "微信提醒状态不可用。")?;
-        if state.snapshot.items.is_empty() {
+        if !state.clear() {
             return Ok(state.snapshot.clone());
         }
-        state.snapshot.items.clear();
-        state.snapshot.revision += 1;
         state.snapshot.clone()
     };
     publish(service, snapshot.clone());
