@@ -171,6 +171,8 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 3 | E36.3.30：同上，另看关掉再打开日历后节假日的「休 / 班」标记仍在 | macOS | | |
 | 3 | E36.3.22：`install-demo` 后开开发版，hello 演示照常出现；岛的开发者工具里 `fetch('http://fuyu-plugin.localhost/plugins.yml')`、`/data/…`、`/safe-mode.json` 都是 404，`/hello/island.js` 是 200；宿主重启后演示插件的界面照常加载 | Windows | | |
 | 3 | 同上，地址换成 `fuyu-plugin://localhost/…` | macOS | | |
+| 3 | E36.3.32：插件页关掉文件中转后，顶部按钮和页面、收起条和侧栏的数量、设置里的分类都消失，拖文件不再收进中转；再打开后都回来，列表还在。旧版里关了文件中转的，升级后仍是关的，插件页和概览卡片一致。设 `FUYU_PLUGINS_V3=1` 时经 `file-shelf/v1` 的 `add` 加文件，岛上马上多一项；`list` 和岛上一致；关掉后回 not-ready。关着时第 2 版插件的 `shelf.add` 回 503 | Windows | | |
+| 3 | E36.3.32：同上，另看关掉再打开后，从中转拖到 Finder 照常，拖出后按设置移除 | macOS | | |
 
 ## 等你定的事
 
