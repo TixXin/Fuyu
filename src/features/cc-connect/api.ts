@@ -128,6 +128,20 @@ export function restartCcConnectRemote(host: string, path: string) {
   return invoke<void>("restart_cc_connect_remote", { host, path: path.trim() || null });
 }
 
+export type CcConnectRemoteFeishuProject = Pick<CcConnectNewProject, "project" | "agent" | "workDir">;
+
+export function startCcConnectRemoteFeishuSetup(host: string, path: string, project: CcConnectRemoteFeishuProject) {
+  return invoke<void>("start_cc_connect_remote_feishu_setup", { host, path: path.trim() || null, ...project });
+}
+
+export function getCcConnectRemoteFeishuSetup() {
+  return invoke<CcConnectFeishuSetup>("get_cc_connect_remote_feishu_setup");
+}
+
+export function cancelCcConnectRemoteFeishuSetup() {
+  return invoke<void>("cancel_cc_connect_remote_feishu_setup");
+}
+
 export function freeProjectName(taken: string[], base = "phone") {
   for (let index = 1; ; index += 1) {
     const name = index === 1 ? base : `${base}-${index}`;

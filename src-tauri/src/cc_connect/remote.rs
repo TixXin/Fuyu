@@ -123,7 +123,7 @@ pub async fn restart_cc_connect_remote(host: String, path: Option<String>) -> Re
     .map_err(join_error)?
 }
 
-fn target(host: &str, path: Option<&str>) -> Result<remote_hosts::SshTarget, UserError> {
+pub(super) fn target(host: &str, path: Option<&str>) -> Result<remote_hosts::SshTarget, UserError> {
     if !remote_hosts::is_valid_alias(host) {
         return Err(UserError::new("ccConnect.host", format!("\"{host}\" is not an SSH host name.")).arg("host", host));
     }
@@ -134,7 +134,7 @@ fn target(host: &str, path: Option<&str>) -> Result<remote_hosts::SshTarget, Use
     Ok(remote_hosts::target(app_dir, host))
 }
 
-fn ssh_error(host: &str, error: String) -> UserError {
+pub(super) fn ssh_error(host: &str, error: String) -> UserError {
     UserError::new("ccConnect.remoteFailed", format!("cc-connect on {host} could not be reached.")).arg("host", host).detail(error)
 }
 

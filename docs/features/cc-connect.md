@@ -9,7 +9,7 @@
 | 本机：找程序、下载 Windows 版、岛托管运行、加项目、飞书扫码、读状态、发消息 | `local.rs`、`locate.rs`、`install.rs`、`runner.rs`、`feishu.rs` | ✓ | 不支持（`local_unsupported.rs`，G1.28 做） |
 | 机器人 token 检查（`check_cc_connect_bot`） | `bots.rs` | ✓ | ✓ |
 | 检测代理（`detect_cc_connect_agents`） | `agents.rs` | ✓ | ✓ |
-| 远程：读状态、发消息、安装、加项目、启动重启 | `remote.rs`、`remote_install.rs`、`remote_project.rs`、`remote_run.rs`、`script.rs` | ✓ | ✓ |
+| 远程：读状态、发消息、安装、加项目、飞书扫码、启动重启 | `remote.rs`、`remote_install.rs`、`remote_project.rs`、`remote_feishu.rs`、`remote_run.rs`、`script.rs` | ✓ | ✓ |
 
 远程命令都经 `agent_status::remote_fetch::run_ssh`：脚本从 ssh 的 stdin 传给远端的 `sh -s`，命令行里只有主机名。要传的文本（消息、配置块、安装包）都先 base64 编码，放进脚本里再在远端解码，不拼进 shell 语句。
 
@@ -44,9 +44,21 @@ cc-connect 另有 cursor、gemini、iflow、pi、devin 等适配器，岛不认�
 1. 先读一次：展开工作文件夹里的 `~`、确认它存在，取回 `~/.cc-connect/config.toml` 的 `cksum` 和全文。
 2. 岛上检查项目名、重名、代理、平台、token 和 `allow_from`（和本机同一套规则），用远端展开后的文件夹拼项目块；远程不写本机的代理地址。
 3. 再写一次：`cksum` 和第一次读到的不同就报 `ccConnect.remoteChanged`，什么都不写；否则先复制成 `config.toml.bak-fuyu-<时间>`，新内容写进 `config.toml.fuyu.tmp`，确认里面有这个项目名后改名替换。任何一步失败都用备份还原（原来没有配置文件的就删掉），报 `ccConnect.remoteWrite`。
-4. 飞书在远程要扫码建机器人（B59.3），这个命令收到 `feishu` 报 `ccConnect.remoteFeishu`。
+4. 飞书在远程要扫码建机器人，见下一节；这个命令收到 `feishu` 报 `ccConnect.remoteFeishu`。
 
 加完项目不会自动重启，前端加完一台电脑的全部项目后再调一次重启。
+
+## 远程飞书扫码（`start_cc_connect_remote_feishu_setup`）
+
+飞书机器人在远程也靠扫码建：`startCcConnectRemoteFeishuSetup(host, path, { project, agent, workDir })` 开始，前端每秒左右调 `getCcConnectRemoteFeishuSetup()`，返回形状和本机的 `CcConnectFeishuSetup` 一样；`cancelCcConnectRemoteFeishuSetup()` 取消。同一时间只有一个远程扫码，再开报 `ccConnect.feishuRunning`；上一次的结果（成功或失败）一直留着，直到取消或开始下一次。
+
+1. 先照「远程加项目」读一次配置，检查项目名、重名、代理和工作文件夹，拼一个只有 `type = "feishu"`、不带 token 的项目块。这些检查不过的，开始命令直接报错。
+2. 后台线程开一条长 SSH 会话（`run_ssh` 要等远端脚本结束才返回）：照「远程加项目」第 3 步核对校验和、备份、写入，然后在 `~/.cc-connect/fuyu-feishu-<时间>-<序号>/` 下跑 `cc-connect feishu new --config ~/.cc-connect/config.toml --project <名字> --qr-image <目录>/qr.png --set-allow-from-empty`，输出写进同一目录的 `out.log`，进程号写进 `pid`，等它结束。退出码是 0、输出里有 `✅` 就算成功；否则在远端用备份还原配置（原来没有配置的删掉）。最后删掉这个目录。
+3. 等待期间每 1.5 秒另开一次短的 `run_ssh`：还没拿到二维码时取回 `qr.png`（base64，不超过 1 MB，PNG 头尾完整才收），每次都取回 `out.log` 的最后 16 KB，去掉空行和终端画的二维码后按行解析 `URL:`、`allow_from:`。
+4. 成功后用「远程启动和重启」的脚本重启远程的 cc-connect，`done` 为 `true`；重启失败时 `error` 是重启的错误（`ccConnect.remoteStopped` 等），机器人和项目已经建好，前端可以让用户再点重启。失败时 `done` 为 `false`，`error` 是 `ccConnect.feishuUnfinished`（详情是 cc-connect 最后一行 `Error…`）、`ccConnect.remoteChanged`、`ccConnect.remoteWrite`、`ccConnect.remoteNotFound` 或 `ccConnect.remoteFailed`。
+5. 取消：结束远端的 `cc-connect feishu new`，长会话随即还原配置并删目录；最多等 5 秒，目录还在（长会话已经断了）就由取消这一步自己还原，`out.log` 里已经有 `✅` 的不还原。长会话因 SSH 断开而失败时也跑这一步。
+
+岛退出时不结束远端的扫码：远端脚本结束时自己还原或保留配置。
 
 ## 远程启动和重启（`restart_cc_connect_remote`）
 
