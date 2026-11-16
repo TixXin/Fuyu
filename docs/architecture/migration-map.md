@@ -35,6 +35,19 @@
 | `TranslationWindow.tsx/.css` | `windows/translation/`（翻译的 `api.ts`、`storage.ts`、`providers.ts` 在 `features/translation/`） |
 | `utils/text.ts`、`i18n/`、`assets/` | 保持不动 |
 
+### 插件平台第 3 版：设置窗口的注册搬进功能（E36.3.26）
+
+| 原位置 | 现在的位置 |
+|---|---|
+| `windows/settings/` 的 `CalendarSettingsPage`、`MusicSettingsPage`、`TranslationSettingsPage`、`ClipboardSettingsPage`、`ShelfSettingsPage`、`ScreenshotSettingsPage`、`RecordSettingsGroup`、`VoiceInputSettingsPage`、`MessagesSettingsPage(.css)`、`Agent*SettingsPage` | 各自功能的根目录（`media`、`file-shelf`、`agent-status` 对应音乐、文件中转、Agent） |
+| `slots/categories.tsx` 里各功能的分类、`BehaviorSettingsPage` 的休息提醒分节 | 各功能的 `plugin/settings.tsx`（`addSettingsCategory`）；窗口自己的页面留在 `categories.tsx` |
+| `slots/categorySlot.ts` 的 `BUILTIN_CATEGORIES` 和分类类型、`slots/runnerSlot.ts`、`slots/shortcutSlots.ts`、`sectionSlot.ts` 的句柄 | `features/plugin-kernel/settingsCategories.ts`（加 `addSettingsCategory`、`settingsCategoryIcon`）、`features/plugin-kernel/settingsSlots.ts`（`settingsSections`、`settingsRunners`、`shortcutSections`、`shortcutReferences`）；`categorySlot.ts` 只留 `SettingsPageProps` 和窗口的句柄 |
+| `FeatureHeader(.css)`（改成传 `icon`）、`FeaturePageLink`、`ShortcutFeatureOffRow`、`ShortcutReferenceGroup`、`ShortcutsSettingsPage` 里的 `AllShortcutsLink`、`sections/IslandGlyph(.css)` | `components/settings/` |
+| `shortcutConflicts.ts`、`shortcutOwnerStore.ts`、`useReportShortcutOwners.ts`、`useShortcutOwners.ts`、`sectionFocus.ts` | `lib/shortcut/conflicts.ts`、`ownerStore.ts`、`useReportShortcutOwners.ts`、`useShortcutOwners.ts`，`lib/settings/sectionFocus.ts`；第 2 版插件的快捷键改由 `windows/settings/PluginShortcutOwners.tsx`（`slots/runners.ts` 登记）报上来 |
+| `ShortcutGroups.tsx` | `translation/TranslationShortcutGroup`、`clipboard/ClipboardShortcutGroup`、`screenshot/ScreenshotShortcutGroup`；共用的 `FeatureOffRow` → `components/settings/ShortcutFeatureOffRow.tsx` |
+| `ShortcutsSettingsPage` 里各功能的快捷键分节、速查表的输入和审批两块 | 各功能的 `plugin/settings.tsx`（`shortcutSections`、`shortcutReferences`） |
+| `SettingsWindow.tsx` 的 `useQQNotifications`、`useWeChatReminders`、`useSaveDirectorySetting`，`useShortcutOwners` 里各功能的快捷键 | 插槽 `settings.runner/v1`：`messages`、`todos` 的 runner 经 `messages/settingsControllers.ts`、`todos/saveDirectoryStore.ts` 交给设置页；各功能的 runner 用 `useReportShortcutOwners` 报到快捷键的登记表 |
+
 ### 插件平台第 3 版：共享代码上提（E36.3.24）
 
 | 原位置 | 现在的位置 |
@@ -49,6 +62,17 @@
 | `features/first-hints/` | `windows/island/first-hints/` |
 | `features/clipboard/shortcut.ts` 的通用部分、`useShortcutCapture.ts`，`clipboard/api.ts` 里的 `setShortcutCapture`、`listenShortcutCaptured` | `lib/shortcut/`（剪贴板专用的 `DEFAULT_CLIPBOARD_SHORTCUT`、`openShortcutLabel`、`normalizeClipboardShortcut`、`matchesClipboardShortcut` 留在 `features/clipboard/shortcut.ts`） |
 | `features/clipboard/ClipboardSettingsSection.css`（快捷键录制控件的样式） | `components/controls/ShortcutControl.css` |
+
+### 插件平台第 3 版：岛的注册搬进功能（E36.3.25）
+
+| 原位置 | 现在的位置 |
+|---|---|
+| `windows/island/slots/pages.tsx` 的各展开页、`slots/pageSlot.ts` 的 `BUILTIN_PAGES` | 各功能的 `plugin/island.tsx`（组件）和 `plugin/page.ts`（`islandPage` 元数据，单元测试 `tests/unit/islandPageSlot.mjs` 按目录读）；`HeaderDotPage` → `windows/island/types.ts` |
+| `slots/header.tsx` 的消息、翻译、截图按钮 | `messages`、`translation`、`screenshot` 的 `plugin/island.tsx`；设置、重置位置、最小化留在外壳 |
+| `slots/collapsed.tsx` 的邮件、更新、设备占用、文件中转、音乐、用量环、计时、会话数、中心图案 | 各自功能的 `plugin/island.tsx`；状态灯和上下文类型留在外壳 |
+| `slots/alerts.tsx` 的设备、额度、音量亮度提醒 | `device-events`、`agent-status`、`system-levels` 的 `plugin/island.tsx`；`NotchAlertSources` 留在外壳 |
+| `islandNotice.tsx` 的录屏、语音、计时响铃、截图、复制、提醒卡片 | 插槽 `island.notice/v1`，项在各功能的 `plugin/island.tsx`；第一次提示留在外壳 |
+| `IslandApp.tsx` 里的 `useBreakReminders`、`useDevIslandActions`，`useIslandTranslation` 里的 `useTranslationEnabled`、`useTranslationIslandShortcut` | 插槽 `island.runner/v1`：`timer`、`local-api`、`translation` 的 `plugin/runners.tsx`；`windows/island/useDevIslandActions.ts` → `features/local-api/useDevIslandActions.ts` |
 
 ## 迁移映射：Rust
 

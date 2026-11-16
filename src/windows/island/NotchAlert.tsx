@@ -1,6 +1,7 @@
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import type { IslandAlertMeta, SlotEntry } from "../../features/plugin-kernel/slots";
 import { alertSlot, type NotchAlertSources } from "./slots/alerts";
+import "./slots/builtins";
 
 export type { NotchAlertSources };
 

@@ -7,7 +7,7 @@ import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, MAX_AUTO_TUCK_RETRACT_DELAY_MS, MIN_AUTO_TUCK_RETRACT_DELAY_MS } from "../../../lib/settings/settings";
-import { IslandGlyph } from "./IslandGlyph";
+import { IslandGlyph } from "../../../components/settings/IslandGlyph";
 import type { IslandSettings, MinimizeAction, TuckedHoverAction } from "../../../lib/settings/types";
 import "./TuckSettingsSection.css";
 

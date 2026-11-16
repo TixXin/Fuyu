@@ -2,6 +2,7 @@ import type { Translations } from "../../i18n";
 import { createTodoId } from "../../features/todos/index.ts";
 import { DEFAULT_SETTINGS, getDefaultSettingPresets, mergeWithDefaultSettingPresets, normalizeSettings } from "./settings.ts";
 import { ISLAND_SETTINGS_KEY } from "./installState.ts";
+import { readString } from "../storage.ts";
 import type { IslandPreset, IslandSettings } from "./types";
 
 export const STORAGE_KEY = ISLAND_SETTINGS_KEY;
@@ -72,6 +73,10 @@ export function loadSettingPresets(t: Translations): IslandPreset[] {
   } catch {
     return getDefaultSettingPresets();
   }
+}
+
+export function readSettingsText() {
+  return readString(STORAGE_KEY);
 }
 
 export function saveSettings(settings: IslandSettings) {

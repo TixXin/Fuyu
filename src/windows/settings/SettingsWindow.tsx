@@ -7,6 +7,7 @@ import { useMacWindowKeys } from "./useMacWindowKeys";
 import { useFeatureSwitches } from "./useFeatureSwitches";
 import { LayoutEditor } from "./LayoutEditor";
 import "./slots/categories";
+import "./slots/runners";
 import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
 import { showSettingsWindow } from "./api";
 import { DEFAULT_SETTINGS, isSameSettings, withLayoutFrom, withThemeFrom } from "../../lib/settings/settings";
@@ -15,9 +16,6 @@ import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { ResetAppearanceButton } from "./sections/ResetAppearanceButton";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useSettingPresets } from "../../lib/settings/useSettingPresets";
-import { useQQNotifications } from "../../features/messages/qq-notifications/QQNotifications";
-import { useWeChatReminders } from "../../features/messages/wechat/WeChatReminders";
-import { useSaveDirectorySetting } from "../../features/todos/useSaveDirectorySetting";
 import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import { useMarketInstallRequest } from "../../features/plugins/market-link/useMarketInstallRequest";
 import { useLocale, useTranslation } from "../../i18n";
@@ -26,6 +24,8 @@ import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { categorySlot } from "./slots/categorySlot";
+import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
+import { focusSection } from "../../lib/settings/sectionFocus";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -34,32 +34,27 @@ const SETTINGS_LIGHT_FILL = "#eceef2";
 export function SettingsWindow() {
   const t = useTranslation();
   const { locale, setLocale } = useLocale();
-  const qqNotifications = useQQNotifications(false);
-  const wechatReminders = useWeChatReminders(false);
   const [settings, setSettings] = useState<IslandSettings>(loadSettings);
   useWindowAccent(settings);
   const systemDark = useSystemDark();
   const presets = useSettingPresets(settings, setSettings);
-  const saveDirectory = useSaveDirectorySetting();
   const [chosenCategory, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
   const unsupported = useUnsupportedFeatures();
   const pluginsV3 = usePluginsV3Enabled();
   const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS, pluginsV3) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
-  const highlightSaveDirectory = saveDirectory.highlight;
   const features = useFeatureSwitches(settings, setSettings);
   const offFeature = features.hiddenPages.has(category) ? featureOf(category) : undefined;
   const page = offFeature ? null : category;
 
-  const focusSavePath = useCallback(() => {
-    setCategory("todos");
-    highlightSaveDirectory();
-  }, [highlightSaveDirectory]);
   const focusRequestedSection = useCallback(() => {
     const section = takeFocusRequest();
-    if (section === "savePath") focusSavePath();
+    if (section === "savePath") {
+      setCategory("todos");
+      focusSection(section);
+    }
     const target = section && settingsCategoryFor(section);
     if (target) setCategory(target);
-  }, [focusSavePath]);
+  }, []);
 
   useEffect(() => {
     const show = () => {
@@ -142,6 +137,7 @@ export function SettingsWindow() {
   return (
     <main className={`settings-stage stage--font-${settings.fontFamily}${isMacOS ? " settings-stage--mac" : ""}${light ? " island-light settings-stage--light" : ""}`}>
       <IconButtonTooltip scope="body" />
+      <SlotView slot={settingsRunners} props={{ settings }} />
       <LayoutEditor
         category={category}
         hidden={features.hiddenPages}
@@ -161,9 +157,6 @@ export function SettingsWindow() {
             unsupported,
             features: features.switches,
             presets,
-            saveDirectory,
-            qqNotifications,
-            wechatReminders,
             managedPluginId,
             marketRequest,
             onLocaleChange: setLocale,

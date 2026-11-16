@@ -31,6 +31,8 @@ export type SlotName =
   | "island.collapsed/v1"
   | "island.collapsed-center/v1"
   | "island.alert/v1"
+  | "island.notice/v1"
+  | "island.runner/v1"
   | "island.dev/v1"
   | "settings.category/v1"
   | "settings.section/v1"

@@ -128,6 +128,15 @@ pub(super) fn settle(window: &WebviewWindow, monitor: &Monitor, state: IslandWin
 }
 
 #[tauri::command]
+pub fn primary_screen_has_notch(app: tauri::AppHandle) -> Result<bool, String> {
+    let window = super::main_window(&app)?;
+    let Some(monitor) = window.primary_monitor().map_err(|error| error.to_string())? else {
+        return Ok(false);
+    };
+    Ok(dev_notch().or_else(|| notch_for(&window, &monitor)).is_some())
+}
+
+#[tauri::command]
 pub fn get_island_notch() -> Option<Notch> {
     read_window_state().notch
 }

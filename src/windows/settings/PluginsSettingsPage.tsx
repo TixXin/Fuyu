@@ -1,13 +1,11 @@
 import type { IslandSettings } from "../../lib/settings/types";
-import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
 import { PluginDevSection } from "../../features/plugin-dev/PluginDevSection";
 import { PluginIslandPagesSection } from "../../features/plugin-views/PluginIslandPagesSection";
 import { PluginShortcutSection } from "../../features/plugins/PluginShortcutSection";
 import { PluginUpdatesTab } from "../../features/plugins/PluginUpdatesTab";
 import { PluginsSettingsSection } from "../../features/plugins/PluginsSettingsSection";
-import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
-import { AllShortcutsLink } from "./ShortcutsSettingsPage";
-import { useShortcutOwners } from "./useShortcutOwners";
+import { AllShortcutsLink } from "../../components/settings/AllShortcutsLink";
+import { useShortcutOwners } from "../../lib/shortcut/useShortcutOwners";
 import "./ShortcutsSettingsPage.css";
 
 export function PluginsSettingsPage({
@@ -21,9 +19,7 @@ export function PluginsSettingsPage({
   managedPluginId: string | null;
   onOpenShortcuts: () => void;
 }) {
-  const [clipboardSettings] = useClipboardSettings();
-  const [translationSettings] = useTranslationSettings();
-  const { takenBy, refreshPlugins } = useShortcutOwners({ settings, clipboard: clipboardSettings, translation: translationSettings });
+  const { takenBy, refreshPlugins } = useShortcutOwners(settings);
   if (tab === "pluginsDev") return <PluginDevSection />;
   if (tab === "pluginsUpdates") return <PluginUpdatesTab />;
   if (tab === "pluginsPages") {

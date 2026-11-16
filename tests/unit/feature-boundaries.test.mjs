@@ -35,12 +35,14 @@ const PLATFORM = "plugin-kernel";
 function crossings() {
   const features = [];
   const shared = [];
+  const windows = [];
   for (const file of sourceFiles(join(ROOT, "src"))) {
     const from = repoPath(file);
     for (const match of readFileSync(file, "utf8").matchAll(IMPORT)) {
       const target = resolveImport(file, match[2]);
       if (!target) continue;
       const to = repoPath(target);
+      if (featureOf(from) && to.startsWith("src/windows/")) windows.push(`${from} -> ${to}`);
       const toFeature = featureOf(to);
       if (!toFeature) continue;
       const fromFeature = featureOf(from);
@@ -48,7 +50,7 @@ function crossings() {
       else if (sharedLayer(from)) shared.push(`${from} -> ${to}`);
     }
   }
-  return { features: [...new Set(features)].sort(), shared: [...new Set(shared)].sort() };
+  return { features: [...new Set(features)].sort(), shared: [...new Set(shared)].sort(), windows: [...new Set(windows)].sort() };
 }
 
 function compare(kind, found, allowed) {
@@ -64,6 +66,10 @@ test("a feature does not import another feature, except what the allowlist still
 
 test("src/lib, src/components and src/utils do not import features, except what the allowlist still holds", () => {
   compare("shared", crossings().shared, ALLOWLIST.shared);
+});
+
+test("a feature does not import a window", () => {
+  assert.deepEqual(crossings().windows, [], "Features sit below the windows: take slot handles from src/features/plugin-kernel, and move what a window shares into src/lib or src/components.");
 });
 
 test("the allowlist is sorted and has no duplicates", () => {

@@ -370,6 +370,7 @@ macro_rules! tauri_commands {
             crate::island::side::set_island_side_column,
             crate::island::banner_hit::set_island_side_bubble_rect,
             crate::island::notch::get_island_notch,
+            crate::island::notch::primary_screen_has_notch,
             crate::island::notch::set_island_notch_drop,
             crate::island::show_ready_island,
             crate::island::minimize_island,

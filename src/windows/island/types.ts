@@ -4,6 +4,8 @@ export type IslandMode = "collapsed" | "expanded";
 
 export type BuiltinPage = "todo" | "calendar" | "music" | "clipboard" | "shelf" | "screenshots" | "timer" | "qq" | "agents" | "translation";
 
+export type HeaderDotPage = Extract<BuiltinPage, "todo" | "calendar" | "music" | "clipboard" | "shelf" | "screenshots" | "timer">;
+
 export type PluginPageId = `plugin:${string}`;
 
 export type IslandPage = BuiltinPage | PluginPageId;

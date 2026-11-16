@@ -4,7 +4,7 @@ import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsMultiChoice } from "../../../components/settings/SettingsMultiChoice";
 import { useTranslation } from "../../../i18n";
 import { AccentSettingsRow } from "./AccentSettingsRow";
-import { IslandGlyph } from "./IslandGlyph";
+import { IslandGlyph } from "../../../components/settings/IslandGlyph";
 import { activeTone, DARK_SURFACE_KEYS, DARK_SURFACES, THEME_MODES, type ThemeTone } from "../../../lib/theme/themeMode";
 import { useSystemDark } from "../../../lib/theme/useResolvedTheme";
 import type { IslandSettings, ThemeMode } from "../../../lib/settings/types";
