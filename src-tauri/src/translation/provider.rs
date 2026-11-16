@@ -65,7 +65,7 @@ impl Provider {
     }
 }
 
-const MAX_BASE_URL_LENGTH: usize = 500;
+pub(super) const MAX_BASE_URL_LENGTH: usize = 500;
 const MAX_MODEL_LENGTH: usize = 200;
 
 pub(super) fn find_provider(id: Option<&str>) -> Result<&'static Provider, UserError> {

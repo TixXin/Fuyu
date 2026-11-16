@@ -3,8 +3,8 @@ import { translatorV1 } from "@fuyu/plugin-services";
 export const name = "translation";
 
 const PASSED = new Set(["bad-params", "timeout", "peer-gone"]);
-const RENAMED = { inactive: "peer-gone", "translation.noKey": "no-secret", "translation.empty": "empty-text" };
-const CALLER_MISTAKES = /^translation\.(tooLong|direction|provider|customUnavailable|url[A-Za-z]*|modelLong|noModel)$/;
+const RENAMED = { inactive: "peer-gone", "translation.noKey": "no-secret", "translation.noAddress": "no-address", "translation.empty": "empty-text" };
+const CALLER_MISTAKES = /^translation\.(tooLong|direction|provider|url[A-Za-z]*|modelLong|noModel)$/;
 const ENGINE_FIELDS = new Set(["engine", "model"]);
 
 const isObject = (value) => typeof value === "object" && value !== null && !Array.isArray(value);

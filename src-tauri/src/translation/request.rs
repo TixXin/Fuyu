@@ -3,7 +3,7 @@ use serde::Serialize;
 use std::time::Duration;
 
 use super::provider::{completions_url, find_provider, parse_completion, resolve_model, Provider};
-use super::{read_secret, stream};
+use super::{address, read_secret, stream};
 use crate::user_error::UserError;
 
 pub(super) type Pieces<'a> = &'a (dyn Fn(String) -> bool + Send + Sync);
@@ -24,7 +24,8 @@ pub(super) async fn complete(
     on_chunk: Option<Pieces<'_>>,
 ) -> Result<Translated, UserError> {
     let provider = find_provider(provider)?;
-    let endpoint = completions_url(provider, base_url)?;
+    let base_url = address::stored_or(provider, base_url, address::read)?;
+    let endpoint = completions_url(provider, base_url.as_deref())?;
     let model = resolve_model(provider, model)?;
     let name = provider.name;
     let secret = read_secret(provider)?.ok_or_else(|| UserError::new("translation.noKey", format!("Set up the API key for {name} first.")).arg("service", name))?;

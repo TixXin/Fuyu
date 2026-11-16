@@ -41,6 +41,10 @@ export function saveTranslationSecret(secret: string, provider: TranslationProvi
   return invoke("save_translation_secret", { secret, provider });
 }
 
+export function saveTranslationCustomAddress(address: string) {
+  return invoke("save_translation_custom_address", { address });
+}
+
 export function deleteTranslationSecret(provider: TranslationProvider) {
   return invoke("delete_translation_secret", { provider });
 }
