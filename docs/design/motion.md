@@ -2,7 +2,7 @@
 
 全局方向见 [README.md](README.md)。这里是所有窗口通用的动效规矩：哪里可以动、用哪条曲线和多长、减少动画时怎么办。岛自己特有的（开合预设、Q 弹的合格标准、外壳的注册变量、内容层整像素）在 [island.md](island.md)，这里只链过去。
 
-更新：2026-11-16（D83.1）。档位和减少动画的目标是用户按组长给的默认值同意的（2026-11-16）；token 还没进代码，由 D83.2–D83.4 搬迁和合并，之前写死的值照旧存在。
+更新：2026-11-16（D85.1）。档位和减少动画的目标是用户按组长给的默认值同意的（2026-11-16）；token 还没进代码，由 D85.2–D85.4 搬迁和合并，之前写死的值照旧存在。
 
 ## 哪里可以动
 
@@ -36,7 +36,7 @@
 | `--motion-ease-out` | `cubic-bezier(0.22, 1, 0.36, 1)` | 进场：面板、气泡、横幅等从无到有的东西 | `(0.23, 1, 0.32, 1)`、expo 曲线 `(0.16, 1, 0.3, 1)` |
 | `--motion-ease-in-out` | `cubic-bezier(0.45, 0, 0.55, 1)` | 来回的循环：呼吸、等待指示 | 关键字 `ease-in-out` |
 
-- TS 里用到曲线的地方（Agent 列表的排序和归档、切页淡入、剪贴板列表）改读 `src/lib/theme/motionTokens.ts`，单元测试保证它和 `tokens.css` 一致（D83.2 加）。（Agent 推断）
+- TS 里用到曲线的地方（Agent 列表的排序和归档、切页淡入、剪贴板列表）改读 `src/lib/theme/motionTokens.ts`，单元测试保证它和 `tokens.css` 一致（D85.2 加）。（Agent 推断）
 - 现在只出现一两次的其他曲线，合并时按「用在哪」归到最近的一条。（Agent 推断）
 - 适用：除岛外壳开合以外的所有过渡和动画。
 - 不适用：岛外壳的开合曲线（`src/lib/theme/islandMotion.ts` 的预设、`motionCurves.ts` 算出的弹簧 `linear()`），它们是「开合动画」设置的实现，不并入档位。
@@ -62,7 +62,7 @@
 | `--motion-medium` | 240ms | 面板里的大块、气泡、横幅、列表重排 | 200、220、240、260、280ms |
 | `--motion-slow` | 420ms | 跨大距离、窗口级的进出 | 360、420、500、560ms |
 
-- 现在最常见的是 140ms（约 95 处），并进 160ms 后这些会慢 20ms，D83.4 合并时出前后对比页。（Agent 推断）
+- 现在最常见的是 140ms（约 95 处），并进 160ms 后这些会慢 20ms，D85.4 合并时出前后对比页。（Agent 推断）
 - 1s 以上的循环动画不进档位，但要守底线第 4 条：只给状态指示用。（Agent 推断）
 - 适用：所有 `transition-duration`、`animation-duration`，以及 TS 里等动画结束的定时器（定时器用和 CSS 同一档）。
 - 不适用：岛外壳开合（由「开合动画」预设管，见下面「和原生窗口改尺寸的配合」）；拖岛时中线辅助线这类跟着交互节奏定的延迟（如松手后 120ms 淡出，正好落在 `--motion-fast`）。
@@ -72,7 +72,7 @@
 系统开了「减少动画 / 减少动态效果」（`prefers-reduced-motion: reduce`）时：
 
 - **目标**（用户按默认值同意，2026-11-16）：保留短的淡入淡出（不超过 `--motion-base`），去掉位移、缩放和回弹。岛外壳开合换成不回弹的 ease-out、时长缩短；循环的状态动画停下或换成不动的样子（例如常亮的点代替呼吸）。
-- **现状**（读代码得出，2026-11-16，没在真机上开减少动画实测）：`src/styles/base.css` 把所有元素的 `transition-duration` 和 `transition-delay` 设成 `0s !important`，所以淡入淡出也没了，岛开合直接跳到终点；`src/lib/theme/islandMotion.ts` 里 `reducedMotion` 去掉回弹的分支因此不起作用。改成目标的是 D83.6。
+- **现状**（读代码得出，2026-11-16，没在真机上开减少动画实测）：`src/styles/base.css` 把所有元素的 `transition-duration` 和 `transition-delay` 设成 `0s !important`，所以淡入淡出也没了，岛开合直接跳到终点；`src/lib/theme/islandMotion.ts` 里 `reducedMotion` 去掉回弹的分支因此不起作用。改成目标的是 D85.6。
 - 新写的 `animation`：在同一个文件里加 `@media (prefers-reduced-motion: reduce)`，停掉或改成不动的形式（`src/AGENTS.md`，`tests/unit/reduced-motion.test.mjs` 检查）。
 - 适用：所有窗口。
 - 不适用：用户主动的跟手操作（拖动、滚动）本来就没有过渡；「开合动画」选「无动画」时外壳本来就直接跳。
