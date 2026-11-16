@@ -11,6 +11,7 @@ use crate::user_error::UserError;
 
 const MAX_PROGRAM: u64 = 300 << 20;
 const END: &str = "FUYU_PACKAGE_END";
+const LINES_PER_PIECE: usize = 1000;
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -90,17 +91,21 @@ pub(super) fn program_in(package: &[u8]) -> Result<String, UserError> {
 pub(super) fn upload_script(package: &install::Package, program: &str) -> String {
     let sum = sh_quote(&package.sha256);
     let mut script = format!(
-        "d=\"{INSTALL_DIR}\"\nt=$(mktemp -d 2>/dev/null) || {{ echo 'FAILED mktemp'; exit 0; }}\ntrap 'rm -rf \"$t\"' EXIT\nbase64 -d > \"$t/p.tgz\" <<'{END}'\n"
+        "d=\"{INSTALL_DIR}\"\nt=$(mktemp -d 2>/dev/null) || {{ echo 'FAILED mktemp'; exit 0; }}\ntrap 'rm -rf \"$t\"' EXIT\n"
     );
     let encoded = STANDARD.encode(&package.bytes);
-    for line in encoded.as_bytes().chunks(76) {
-        script.push_str(&String::from_utf8_lossy(line));
+    for piece in encoded.as_bytes().chunks(76 * LINES_PER_PIECE) {
+        script.push_str(&format!("cat >> \"$t/p.b64\" <<'{END}'\n"));
+        for line in piece.chunks(76) {
+            script.push_str(&String::from_utf8_lossy(line));
+            script.push('\n');
+        }
+        script.push_str(END);
         script.push('\n');
     }
-    script.push_str(END);
-    script.push('\n');
     script.push_str(&format!(
-        r#"if command -v sha256sum >/dev/null 2>&1; then s=$(sha256sum "$t/p.tgz" | cut -d' ' -f1)
+        r#"base64 -d < "$t/p.b64" > "$t/p.tgz" || {{ echo 'FAILED base64'; exit 0; }}
+if command -v sha256sum >/dev/null 2>&1; then s=$(sha256sum "$t/p.tgz" | cut -d' ' -f1)
 elif command -v shasum >/dev/null 2>&1; then s=$(shasum -a 256 "$t/p.tgz" | cut -d' ' -f1)
 else s={sum}; fi
 [ "$s" = {sum} ] || {{ echo SUMBAD; exit 0; }}
@@ -180,9 +185,11 @@ mod tests {
         let pkg = Package { sha256: "ab".repeat(32), bytes: bytes.clone() };
         let script = upload_script(&pkg, "cc-connect-v1.5.0-linux-amd64");
         assert!(script.starts_with("d=\"$HOME/.local/bin\"\n"));
-        assert!(script.contains(&format!("base64 -d > \"$t/p.tgz\" <<'{END}'\n")));
-        let body: String = script.split(&format!("<<'{END}'\n")).nth(1).unwrap().split(&format!("\n{END}\n")).next().unwrap().lines().collect();
+        let opener = format!("cat >> \"$t/p.b64\" <<'{END}'\n");
+        let body: String = script.split(&opener).skip(1).flat_map(|piece| piece.split(&format!("\n{END}\n")).next().unwrap().lines()).collect();
         assert_eq!(base64::Engine::decode(&base64::engine::general_purpose::STANDARD, body).unwrap(), bytes);
+        let big = Package { sha256: String::new(), bytes: vec![7; 57 * 2500] };
+        assert_eq!(upload_script(&big, "x").matches(&opener).count(), 3, "a large package goes up in pieces; one big heredoc takes bash hours");
         assert!(script.lines().all(|line| line.len() <= 400));
         assert!(script.contains(&format!("[ \"$s\" = '{}' ] || {{ echo SUMBAD; exit 0; }}", "ab".repeat(32))));
         assert!(script.contains("tar -xzOf \"$t/p.tgz\" 'cc-connect-v1.5.0-linux-amd64' > \"$d/cc-connect.part\""));

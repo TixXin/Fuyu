@@ -49,6 +49,11 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+pub(crate) fn remote_proxy(host: &str) -> Option<String> {
+    let dir = app_dir().ok()?;
+    config::read(&dir).into_iter().find(|tunnel| tunnel.enabled && tunnel.host == host).map(|tunnel| format!("http://127.0.0.1:{}", tunnel.remote_port))
+}
+
 fn app_dir() -> Result<PathBuf, String> {
     APP_DIR.get().cloned().ok_or_else(|| "The SSH proxy tunnel is not set up yet".to_string())
 }

@@ -45,11 +45,11 @@ export type AgentSettingValues = {
 
 export const DEFAULT_AGENT_SETTINGS: AgentSettingValues = {
   agentHostDisplay: "icon",
-  agentSessionView: "list",
+  agentSessionView: "cards",
   agentSessionSort: "status",
   agentSessionGroup: "computer",
-  agentArchiveMotion: "slide",
-  agentCardEffects: "off",
+  agentArchiveMotion: "dissolve",
+  agentCardEffects: "sparkle",
   agentSessionHours: 24,
   agentHiddenProviders: [],
   agentHideFinished: false,

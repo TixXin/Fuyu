@@ -348,7 +348,7 @@ export const zhCN: SettingsAgentText = {
   },
   replyMarker: {
     title: "回复状态标记",
-    toggle: "让 Claude 在回复末尾标出在等什么（推荐打开）",
+    toggle: "让 AI 代理在回复末尾标出在等什么（推荐打开）",
     hint: "打开后，会在各家 AI 代理的全局提示词文件末尾追加一段说明（Claude Code 的 CLAUDE.md，Codex、opencode 和 DeepSeek Harness 的 AGENTS.md，Antigravity 的 GEMINI.md，WorkBuddy 和 CodeBuddy 的 CODEBUDDY.md，Qoder 的 AGENTS.md，Qwen Code 的 QWEN.md，Kimi Code 的 ~/.kimi-code/AGENTS.md，GitHub Copilot CLI 的 ~/.copilot/copilot-instructions.md，Droid 的 ~/.factory/AGENTS.md；只动这一段，文件其他内容不动），让它每次回复的最后一行写一个符号：↩ 等你回复、⋯ 在等它自己启动的后台任务、✓ 做完了。岛屿据此区分“等你回复”和“做完了”：Agent 页、会话环，以及提醒和音效（等你回复按“等你确认或回答”弹出、用提问音效；等后台任务时不弹不响）。这一行会出现在回复里。文件是软链时写在它指向的文件里，几家指向同一份文件时只写一段。SSH 远程页里打开的电脑也会写上。只对之后开始的会话生效；关掉时删掉这一段。本机写到的文件：",
     linked: (target) => `软链，写在 ${target}`,
     noFiles: "本机没有找到这几家 AI 代理。",
@@ -535,7 +535,7 @@ export const en: SettingsAgentText = {
   },
   replyMarker: {
     title: "Reply status marker",
-    toggle: "Have Claude mark what it waits for at the end of each reply (recommended)",
+    toggle: "Have the agents mark what they wait for at the end of each reply (recommended)",
     hint: "When on, the island appends a section to the end of each AI agent's global prompt file (CLAUDE.md for Claude Code, AGENTS.md for Codex, opencode and DeepSeek Harness, GEMINI.md for Antigravity, CODEBUDDY.md for WorkBuddy and CodeBuddy, AGENTS.md for Qoder, QWEN.md for Qwen Code, ~/.kimi-code/AGENTS.md for Kimi Code, ~/.copilot/copilot-instructions.md for GitHub Copilot CLI, ~/.factory/AGENTS.md for Droid; only that section changes, the rest of the file stays as it is), asking the agent to end every reply with one symbol on its own line: ↩ your turn, ⋯ waiting on a background task it started, ✓ done. The island uses it to tell \"your turn\" from \"done\": on the Agent page, the session ring, and in alerts and sounds (your turn pops up as waiting for you, with the question sound; waiting on a background task neither pops up nor sounds). The line shows in the replies. When a file is a link, the section goes into the file it points to, and agents sharing one file get one section. Computers switched on under SSH remote get it too. It applies to sessions started from then on; switching off removes the section. Files on this computer:",
     linked: (target) => `a link; written in ${target}`,
     noFiles: "None of these AI agents was found on this computer.",

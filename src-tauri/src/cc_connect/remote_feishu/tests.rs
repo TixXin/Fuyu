@@ -24,11 +24,12 @@ fn the_block_is_a_feishu_project_without_secrets_in_the_folder_found_there() {
 
 #[test]
 fn the_run_writes_first_then_scans_and_puts_the_config_back_unless_it_worked() {
-    let script = run_script(Some("/opt/cc-connect"), &seen(Some("old")), "pc", "\nblock\n", "20261115-1");
+    let script = run_script(Some("/opt/cc-connect"), Some("http://127.0.0.1:37897"), &seen(Some("old")), "pc", "\nblock\n", "20261115-1");
     assert!(script.starts_with("exe='/opt/cc-connect'\n"));
     let write = script.find("grep -qx OK").unwrap();
     let scan = script.find("\"$exe\" feishu new --config \"$c\" --project 'pc' --qr-image \"$d/qr.png\" --set-allow-from-empty >\"$d/out.log\" 2>&1 </dev/null &").unwrap();
     assert!(write < scan);
+    assert!(script.find("export http_proxy=\"$p\"").unwrap() < scan, "feishu new reaches Feishu through the tunnel's proxy");
     assert!(script.contains("d=\"$HOME/.cc-connect/fuyu-feishu-\"'20261115-1'"));
     assert!(script.contains("if [ \"$code\" = 0 ] && grep -q '✅' \"$d/out.log\"; then echo DONE; else put_back; echo UNDONE; fi"));
 }
@@ -37,6 +38,7 @@ fn the_run_writes_first_then_scans_and_puts_the_config_back_unless_it_worked() {
 fn a_peek_asks_for_the_code_only_until_it_has_one() {
     assert!(peek_script("1", true).contains("printf 'Q %s\\n'"));
     assert!(!peek_script("1", false).contains("printf 'Q %s\\n'"));
+    assert!(cleanup_script("1").starts_with("case $- in *H*) set +H ;; esac\n"), "a shell with history expansion on still reads [!0-9]");
     assert!(cleanup_script("1").contains("case $p in ''|*[!0-9]*) ;; *) kill \"$p\" 2>/dev/null ;; esac"));
 }
 
@@ -126,7 +128,7 @@ esac
         fn scan(&self, name: &str, stamp: &str) -> String {
             let seen = parse_read(&self.run(&read_script("~/work"), ""));
             let block = block_for(&seen, name, "codex", "~/work", "d").unwrap();
-            run_script(Some(&self.fake), &seen, name, &block, stamp)
+            run_script(Some(&self.fake), None, &seen, name, &block, stamp)
         }
 
         fn run_dir(&self, stamp: &str) -> PathBuf {

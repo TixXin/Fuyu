@@ -177,6 +177,12 @@
   outline-offset: 2px;
 }
 
+.onboarding__step {
+  margin: var(--space-xl) 0 var(--space-sm);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .onboarding-release__later {
   margin: var(--space-2xl) 0 var(--space-md);
   color: var(--color-text-muted);
