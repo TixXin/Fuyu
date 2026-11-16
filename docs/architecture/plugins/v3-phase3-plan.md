@@ -204,7 +204,7 @@
   - `ServiceClient` 不支持可选参数，参数写成对象，调用时传 `{}`。
   - 宿主和窗口各有一份服务实现时，两边都经 `host/index.mjs` 里同一个规整函数出结果，回答才一致。
   - 服务标记不写 `inject(app)`：它把 `AppHandle` 留进静态登记，Windows 上没有 manifest 的 Rust 测试程序一启动就报 0xc0000139，Mac 上看不出来（PR #640，c811bcbf 修）。数据目录用 `crate::home_dir::current()`，Tauri 命令照旧用 `AppHandle` 求目录，再交给同一个函数。
-  - 不只是 `inject(app)`：静态登记的方法体里只要调了 `AppHandle` 的方法（例如 `emit_to`），都会把 wry 留进测试程序。要发事件，就在 `init` 里登记一个 `Box<dyn Fn()>`，方法里只调它；改了这类服务要过一次 Windows CI（`pnpm mq:try`）。
+  - 不只是 `inject(app)`：静态登记的方法体里只要调了 `AppHandle` 的方法（例如 `emit_to`），都会把 wry 留进测试程序；间接走到的也算，例如经 `plugin_host::publish_event` 走到 `sensitive::check(&app, …)`（E36.3.32 的 dbe0cc6e）。要发事件，就在 `init` 里登记一个 `Box<dyn Fn()>`，方法里只调它；改了这类服务要过一次 Windows CI（`pnpm mq:try`）。
 - **基座的接口**：三个样板都没改 `@fuyu/plugin-base` 的接口，只新加了窗口服务和旧开关的镜像。基座公开发布要求的「三个样板按同一套写法迁完」满足了，E36.3.49 核对条件时记上。
 - **标准不改**：只在第 1、2、3、4 条里补充了说明（上面已改）。
 - **第 2 批**：E36.3.31、E36.3.33、E36.3.37、E36.3.38、E36.3.44 要等 E36.3.51；E36.3.34 等剪贴板预览 C101.1–C101.3。现在能开工的有 E36.3.51、E36.3.32、E36.3.42、E36.3.45、E36.3.46、E36.3.49。E36.3.47（测试通道默认打开）只差 E36.3.22。
