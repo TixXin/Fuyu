@@ -163,13 +163,21 @@ export async function apply(ctx) {
   |---|---|
   | 普通参数 | 从调用的 JSON 对象里按 camelCase 名字取（`right_side` → `rightSide`），`Option` 的可以不传，多出的字段不管；类型不对回 `bad-params`，`message` 写明方法和字段，`data` 是 `{ method, field }`。参数必须是自己拥有的类型（`String` 而不是 `&str`） |
   | `inject(<参数>, …)` 列出的参数 | 不从 JSON 取，从 `Serve::manage` 放进去的状态里取一份克隆；没放的类型回 `failed` 并写明缺哪个类型 |
-  | `AppHandle` | **编译不过**（E36.3.53）：`inject(app)`、或任何类型名是 `AppHandle` 的参数（注入的、从 JSON 取的、`&AppHandle` 都算），宏都用 `compile_error!` 拒绝。登记是静态的，链接器会把方法连同 `AppHandle` 一起留进 Rust 测试程序，链进 tauri 运行时以后，Windows 上没有 manifest 的测试程序起不来（`0xc0000139`，一个测试都不跑，Mac 上照常，E36.3.30）。要数据目录用 `crate::home_dir::current()`（返回 `Option<&Path>`，宿主起来前浮屿已经设好），例子是 `calendar/mod.rs` 的 `home_for_host`；要别的应用状态，放进不依赖 tauri 的类型里再 `Serve::manage`。宏只看得见参数：方法体里直接或间接调了 `AppHandle` 的方法（`emit_to`，或经 `plugin_host::publish_event` 走到 `sensitive::check(&app, …)`，E36.3.32 的 dbe0cc6e）一样起不来，它查不出；要发事件就在 `init` 里登记一个 `Box<dyn Fn()>`、方法里只调它，改了这类服务过一次 `pnpm mq:try` |
+  | `AppHandle` | **编译不过**（E36.3.53）：`inject(app)`、或任何类型名是 `AppHandle` 的参数（注入的、从 JSON 取的、`&AppHandle` 都算），宏都用 `compile_error!` 拒绝。登记是静态的，链接器会把方法连同 `AppHandle` 一起留进 Rust 测试程序，链进 tauri 运行时以后，Windows 上没有 manifest 的测试程序起不来（`0xc0000139`，一个测试都不跑，Mac 上照常，E36.3.30）。要数据目录用 `crate::home_dir::current()`（返回 `Option<&Path>`，宿主起来前浮屿已经设好），例子是 `calendar/mod.rs` 的 `home_for_host`；要别的应用状态，放进不依赖 tauri 的类型里再 `Serve::manage`。宏只看得见参数，方法体里走到的 `AppHandle` 见下一条 |
   | `call: &Call` 参数 | 这次调用本身：`call.progress(片段)` 推流式片段，`call.cancelled()` 看宿主是否已经不等了 |
   | 返回 `T` | `T` 编码成 JSON 回答；不能编码回 `bad-result`。不写返回值回 `null` |
   | 返回 `Result<T, E>` | `E` 要实现 `plugin_base::ServiceFailure`：`String`、`&str` 回 `failed`，`ServeError` 和自己实现了它的错误类型保留自己的码和 `data`（例如翻译的 `no-secret`）。`Result` 要写全两个类型参数，别名认不出来 |
   | `async fn` | 在工作线程上用应用给的运行时跑完（`Serve::block_on_with`，浮屿给的是 Tauri 的 `block_on`，没给时用 `pollster`）。超时、取消、panic 和同步的一样 |
   | `timeout_ms = …` | 这个方法的超时，默认 30 秒 |
 
+- **静态登记的方法走到的代码里不能有 `AppHandle`**（E36.3.30、E36.3.32）：`inventory` 登记让每个被标记的方法都留在 Rust 测试程序里，连同它直接或间接调到的一切。只要其中有 `AppHandle` 的方法，tauri 运行时和 wry 就链了进来，Windows 上没有 manifest 的测试程序一启动就报 `0xc0000139`，一个测试都不跑；Mac 上照常，本机的 Rust 测试和交叉 clippy 都看不出。踩过的三处：
+  - 参数：`inject(app)`（日历，c811bcbf 修）。这一种宏现在直接编译不过（E36.3.53）。
+  - 方法体直接调：`service.app.emit_to(…)`（文件中转，dbe0cc6e 修）。
+  - 方法体间接调：经第 2 版的 `plugin_host::publish_event` 走到 `sensitive::check(&app, …)`（同上）。
+
+  写法：要数据目录用 `crate::home_dir::current()`；要发事件或调别的要 `AppHandle` 的代码，在模块的 `init(app)` 里登记一个 `OnceLock<Box<dyn Fn(…) + Send + Sync>>`，闭包里拿着 `app.clone()`，方法里只调这个闭包（例子是 `file_shelf/mod.rs` 的 `notify_island`、`announce_change`）。闭包是运行时才放进去的，测试程序里没有它，链接器也就不会留下 `AppHandle` 的代码。服务的状态结构体里也不要放 `AppHandle`。
+
+  这一条宏只管得了参数，方法体里的只能靠 Windows CI 兜底：新加或改了 `host_service` 的任务，报验前跑一次 `pnpm mq:try`，看 Windows 的 `rust` 过了（workflow.md「提前看 CI」）。本机查不出（E36.3.53 试过）：起不来是因为测试程序导入了 comctl32 v6 才有的 `TaskDialogIndirect`，而没有 manifest 的程序加载的是 v5；在 Mac 上交叉链接出的 `x86_64-pc-windows-gnu` 测试程序（`--no-run`，编译约 2.5 分钟）在没问题的时候也导入它，MSVC 链接器才会把用不到的去掉，所以看导入表只会误报，在 Mac 上又链接不了 MSVC 的程序。
 - **登记和重名**：每个标记生成一条 `inventory` 登记，`Serve::registered()` 读出全部；两个函数用了同一个方法名时它返回错误，写明两边的函数路径和文件行号，`plugin_kernel` 启动时就报出来，插件内核不启动。浮屿自己的方法表就是 `Serve::registered()` 加上 Tauri 的 `block_on`（`plugin_kernel/methods.rs`；那里还 `manage` 了 `AppHandle`，但宏不让任何方法取它）。
 - **生成的类型**：被标记函数的参数和返回值的类型在测试构建里派生 `ts_rs::TS`（`#[cfg_attr(test, derive(ts_rs::TS))]`，正式版不编译 `ts-rs`）。Rust 单元测试 `plugin_kernel::tests::the_generated_typescript_for_rust_methods_is_up_to_date` 把它们和方法表生成出来，和 `packages/plugin-services/src/generated/rust.d.mts`、`rust.mjs` 比对，不一致就失败；`pnpm gen:rust-types` 重写这两个文件。`rust.d.mts` 里是每个类型的声明和 `RustMethods`（`{ "<方法>": { params, result } }`），`rust.mjs` 是方法名清单 `RUST_METHODS`，都从 `@fuyu/plugin-services` 导出。`pnpm check` 里的 `check:rust-types` 不编译，只核对源码里标记的方法名和清单一致、生成的文本字段没有像密钥的名字（规则同 `check:secrets`，[v3-secrets.md](v3-secrets.md)）。
 - **Rust 调服务**（例如以后托盘菜单要调 `timers/v1`）：Rust 发给宿主的请求里留一个方法名 `service.call`，参数和窗口的一样（`{ service, method, params }`），错误码一样。要不要做、什么时候做由 E36.3.3 或托盘菜单的子任务定；同步等待不能成环（边界规则 5），所以宿主在处理 Rust 的 `service.call` 时，提供者不能再同步等 Rust 的回答。
