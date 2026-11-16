@@ -157,6 +157,8 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 3 | E36.3.15（下次发版后）：CI 打的安装包装好后，安装目录里有 `plugins-v3/host/main.mjs` 和 `plugins-v3/builtins/builtins.json`；设 `FUYU_PLUGINS_V3=1` 启动，插件页宿主「已连接」，`timer`、`translation` 是运行中，装一个第三方插件也是运行中；仓库不在这台电脑上也能跑 | Windows | | |
 | 3 | E36.3.15（下次发版后）：电脑上没有合适的 Node 时（`PATH` 里去掉 Node），装好的 app 设 `FUYU_PLUGINS_V3=1` 启动，会把 Node 下载到数据目录的 `runtime/` 并起宿主，插件页宿主「已连接」 | Windows | | |
 | 3 | 同上，用 CI 签名公证的 Fuyu.app | macOS | | |
+| 3 | E36.3.23：开发版不设 `FUYU_PLUGINS_V3` 时，设置 → 插件（第 3 版）出现，列出 22 个内置插件，宿主一组写「宿主没开」；关掉计时器后数据目录 `plugins-v3/plugins.yml` 多一条 `- id: timer` / `disabled: true`，重启浮屿后仍是关的，打开后这一条消失；自动更新的开关是灰的、不能关；设 `FUYU_PLUGINS_V3=1` 再关计时器，一秒内宿主列表里 timer 变「已停用」，打开回「运行中」；岛上暂时看不出变化（拥有者还是 `builtin`，要等 E36.3.28 起）；`plugins.yml` 原来是 CRLF 换行时写回后不乱 | Windows | | |
+| 3 | 同上（不看 CRLF） | macOS | | |
 
 ## 等你定的事
 
