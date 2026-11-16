@@ -250,6 +250,9 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 | `island.collapsed-center/v1` | 收起条的中心图案 | single | 1 | 1 | `width`、`shown(context)` |
 | `island.alert/v1` | 刘海提醒 | list | 1 | 窗口只显示排在最前、`active(sources)` 为真的一项 | `active(sources)`、`trailing`（右半边的组件） |
 | `island.notice/v1` | 岛上的提示（录屏、计时响铃、截图卡片、复制卡片、提醒、语音输入、第一次提示这类，占收起条的位置，带一排操作按钮） | list | 1 | 窗口只显示排在最前、`active(sources)` 为真的一项 | `active(sources)`、`actions`（操作按钮的组件，和 `component` 拿同一包 props） |
+| `island.line/v1` | 收起条主行和它右边的尾巴（会议、Agent 会话、歌词、待办、翻译速览、截图识字、消息预览的前后几块） | list | 2 | 显示哪一项看 `line` / `trail` / `summary` 贡献 | 无 |
+| `island.side/v1` | 侧边岛的行 | list | 2 | 显示哪几行、多高看 `side` 贡献 | 无 |
+| `island.overlay/v1` | 舞台上不归岛体管的浮层（消息横幅） | list | 1 | 不限 | 无 |
 | `island.runner/v1` | 岛上不画界面的组件：挂着就运行（接线 hook：提醒的计时、翻译的快捷键、开发版的实验台动作这类），卸下就停 | list | 1 | 不限 | 无 |
 | `island.dev/v1` | 第 1 阶段的开发插槽 | list | 1 | 3 | 无 |
 | `settings.category/v1` | 设置窗口的分类 | list | 2 | 不限 | `group`（侧栏分组）、`icon`、`tabs`（子页）、`available(...)`（平台是否支持）、`feature`（所属功能开关）、`aliases`（合并进来的旧分类名） |
@@ -271,6 +274,36 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 | 出错隔离 | 一项渲染出错只撤这一项，其他照常（内置项以前会让整个岛白屏）；`console.error` 和 `onError` 带插槽名、`id`、`owner`、是不是第三方 |
 
 **组件拿到的 props 在第 2 阶段是实验接口**：窗口把现有组件要的那包 props 整体传进去，只给内置项用，第三方插件在第 5 阶段之前不承诺；`island.dev/v1` 不传 props。
+
+### 岛的贡献表
+
+（2026-11-16 起，E36.3.51）功能怎么影响岛的形状：功能在自己的 `island.runner/v1` 项里跑 hook，用 `useIslandContributions(<拥有者>, <id>, <列表>)` 往贡献表里写一张清单，外壳（`src/windows/island/`）只读汇总后的结果（`useIslandContributed()`），不 import 功能。表和汇总在 `src/features/plugin-kernel/islandContributions.ts`，React 的接口在 `useIslandContributions.ts`。**第 5 阶段之前这些形状还会改**，现在只给内置功能用，不对第三方承诺。
+
+- **拥有者**是内置插件的 id（`features/<领域>/plugin/owner.ts`）。插件关掉后它写的不再计入汇总；表里原样留着，`builtins-off` 回归页拿它查「关掉的插件还在写」。外壳自己的状态用 `shell`。
+- **同一张清单再写一遍不通知**（按 JSON 比较），runner 每次渲染都可以写。
+- **功能的状态**放在功能自己的 store（`createRunnerStore`，`runnerStore.ts`）：runner `useProvide`，自己的插槽项 `use()`。外壳不订阅这些 store。
+- **点了之后做什么**用 action：功能 `useIslandAction(<id>, <函数>)` 登记，外壳和别的项 `runIslandAction(<id>, <参数>)` 调用。
+- **`settled`**：外壳第一次渲染完才置上，页面回退之类要等功能交齐的判断看它。
+
+| `kind` | 字段 | 外壳拿它做什么 |
+|---|---|---|
+| `line` | `item`（`island.line/v1` 项的 id）、`priority`（`LINE_PRIORITY`，大的先）、`measure`（量宽用的文字）、`extra`（额外宽度）、`page`、`lead`（悬停时领头切到 `page`）、`handle`（侧边把手点了去 `page`）、`action`（点它调的 action）、`label`（读屏文字）、`center`（中心图案嵌在这一行）、`shareable`（上面的行可以和它轮流）、`drop`（速览，盖住别的行，点了调 `action`）、`always`（收起条不显示文字时也显示）、`bare`（不套外壳的文字容器）、`reserve`（占着宽度先不显示） | 收起条主行取 `priority` 最高的一条；收起宽度、点击和悬停的去向跟着它 |
+| `trail` | `item` | 主行右边的尾巴（会议的加入按钮），没有提示和预览时显示 |
+| `summary` | `item` | 消息预览那一行由哪个 `island.line/v1` 项来画，外壳只管过渡的外层 |
+| `preview` | `item`、`key`、`label`、`hot`（侧边岛标热哪一行）、`action`（点它）、`open`（点侧边气泡） | 收起条上的消息预览，盖在主行上 |
+| `alert` / `notice` | `item`（`island.alert/v1` / `island.notice/v1` 项的 id）、`measure` | 提醒和提示：按插槽的 `order` 取第一个有贡献的项 |
+| `reveal` | `reveal`（`always` / `allowed`）、`pauseIdle`、`pauseHover` | 贴边时探出来、暂停闲置收起和悬停展开 |
+| `hold` | `reason`（只给诊断看） | 贴边收起时保持露出 |
+| `side` | `item`（`island.side/v1` 项的 id）、`height` | 侧边岛的行：按插槽 `order` 排，按 `height` 算放得下几行 |
+| `status` | `state`、`label` | 状态灯 |
+| `popup` | `page`、`height`、`saving`、`open` | 弹出态和展开高度 |
+| `style` | `vars`、`className`、`tint` | 合进舞台的 CSS 变量、class 和玻璃取色 |
+| `busy` | 无 | 收起条被占着，第一次提示让路 |
+| `hint` | `key` | 一个开关量，外壳和别的插槽项的 `shown` / `enabled` 读它（`agents.busy`、`update.reminder`、`shelf.count`、`timer.chip` 这类） |
+| `page` | `page`、`enabled` | 这一页现在开不开（消息按 QQ、微信开关） |
+| `badge` | `target`（现在只有 `settings`）、`label`、`action` | 外壳自己的按钮上挂圆点、换读屏文字，点了调 `action`（更新提示挂在设置按钮上） |
+
+外壳只能 import `plugin-kernel` 和第 2 版插件系统（`plugins`、`plugin-views`）这几个功能目录，`tests/unit/feature-boundaries.test.mjs` 检查；第 2 版那两个随第 6 阶段删掉时从检查的名单里去掉。
 
 ### 插槽的主题变量
 
