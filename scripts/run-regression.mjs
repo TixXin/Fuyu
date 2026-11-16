@@ -56,6 +56,8 @@ export const PAGES = [
   "list-pages.html?test=1",
   "clipboard-popup.html?test=1",
   "clipboard-preview.html?test=1",
+  "tray-menu.html?test=1",
+  "tray-menu-en.html?test=1",
   "screenshot-overlay.html",
   "screenshot-pin.html",
   "screenshot-card.html",

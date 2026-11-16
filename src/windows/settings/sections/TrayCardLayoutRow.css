@@ -1,0 +1,66 @@
+.tray-card-layout {
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.tray-card-layout:disabled {
+  opacity: 0.45;
+}
+
+.tray-card-layout:disabled .settings-cards__card {
+  cursor: default;
+}
+
+.tray-card-glyph {
+  width: 46px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px;
+  border-radius: 6px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
+  border: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), 0.14);
+}
+
+.tray-card-glyph > span {
+  display: block;
+  border-radius: 2px;
+  background: rgba(var(--overlay-rgb, 255, 255, 255), 0.22);
+}
+
+.tray-card-glyph__head {
+  height: 3px;
+  width: 55%;
+}
+
+.tray-card-glyph__tiles {
+  height: 9px;
+  background: linear-gradient(90deg, var(--color-accent, #74d6ff) 0 34%, transparent 34% 38%, rgba(var(--overlay-rgb, 255, 255, 255), 0.22) 38%) !important;
+}
+
+.tray-card-glyph__strip,
+.tray-card-glyph__pills {
+  height: 4px;
+}
+
+.tray-card-glyph__pills {
+  background: var(--color-accent, #74d6ff) !important;
+  opacity: 0.8;
+}
+
+.tray-card-glyph__block {
+  height: 7px;
+}
+
+.tray-card-glyph__line {
+  height: 3px;
+  width: 80%;
+}
+
+.tray-card-glyph__foot {
+  height: 2px;
+  width: 40%;
+  align-self: flex-end;
+}

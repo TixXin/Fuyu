@@ -226,3 +226,9 @@ export function setIslandSideBubbleRect(rect: IslandBannerRect | null) {
 export function listenIslandDragEdgeHint(handler: (hint: DragEdgeHint | null) => void): Promise<UnlistenFn> {
   return listen<DragEdgeHint | null>(ISLAND_DRAG_EDGE_HINT_EVENT, ({ payload }) => handler(payload));
 }
+
+export const TRAY_MENU_OPEN_PAGE_EVENT = "tray-menu-open-page";
+
+export function listenTrayMenuOpenPage(handler: (page: string) => void) {
+  return listen<string>(TRAY_MENU_OPEN_PAGE_EVENT, ({ payload }) => handler(payload));
+}

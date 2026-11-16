@@ -3,6 +3,7 @@ import { defineSlot } from "../../features/plugin-kernel/slots";
 import type { IslandSettings } from "../../lib/settings/types";
 import type { IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
+import { useTrayMenuOpenPage } from "./useTrayMenuOpenPage";
 import "./slots/builtins";
 
 export type IslandRunnerProps = {
@@ -20,5 +21,6 @@ export type IslandRunnerProps = {
 const runnerSlot = defineSlot<IslandRunnerProps>("island.runner/v1");
 
 export function IslandRunners(props: IslandRunnerProps) {
+  useTrayMenuOpenPage(props.openEnabledPage);
   return <SlotView slot={runnerSlot} props={props} />;
 }

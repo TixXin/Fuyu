@@ -29,6 +29,19 @@
       "page": "general",
       "zh-CN": {
         "group": "启动与语言",
+        "title": "托盘卡片样式",
+        "description": "托盘图标隐藏时用不到卡片。"
+      },
+      "en": {
+        "group": "Startup and language",
+        "title": "Tray card style",
+        "description": "The card isn't available while the tray icon is hidden."
+      }
+    },
+    {
+      "page": "general",
+      "zh-CN": {
+        "group": "启动与语言",
         "title": "界面语言"
       },
       "en": {

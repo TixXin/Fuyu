@@ -34,6 +34,13 @@ export type SettingsLayoutText = {
   trayIconMac: string;
   trayIconHiddenHint: string;
   trayIconHiddenHintMac: string;
+  trayCard: string;
+  trayCardMac: string;
+  trayCardHint: string;
+  trayCardHintMac: string;
+  trayCardOffHint: string;
+  trayCardOffHintMac: string;
+  trayCardLayouts: Record<"entry" | "status" | "compact", { label: string; hint: string }>;
   showTitle: string;
   displayTitle: string;
   minimizeAction: string;
@@ -88,6 +95,17 @@ export const zhCN: SettingsLayoutText = {
   trayIconMac: "在菜单栏显示图标",
   trayIconHiddenHint: "图标隐藏后，从开始菜单或桌面快捷方式再次打开浮屿，会弹出这一页。",
   trayIconHiddenHintMac: "图标隐藏后，从「应用程序」文件夹、启动台或 Spotlight 再次打开浮屿，会弹出这一页。",
+  trayCard: "托盘卡片样式",
+  trayCardMac: "菜单栏卡片样式",
+  trayCardHint: "左键点托盘图标弹出的卡片；右键仍是原生菜单。",
+  trayCardHintMac: "点菜单栏图标弹出的卡片；按住 Control 点按或右键仍是原生菜单。",
+  trayCardOffHint: "托盘图标隐藏时用不到卡片。",
+  trayCardOffHintMac: "菜单栏图标隐藏时用不到卡片。",
+  trayCardLayouts: {
+    entry: { label: "入口型", hint: "常用功能一眼都在" },
+    status: { label: "状态型", hint: "看歌、会议和 Agent" },
+    compact: { label: "精简型", hint: "最小最快" },
+  },
   showTitle: "显示岛屿名称",
   displayTitle: "显示内容",
   minimizeAction: "最小化按钮",
@@ -142,6 +160,17 @@ export const en: SettingsLayoutText = {
   trayIconMac: "Show icon in the menu bar",
   trayIconHiddenHint: "While the icon is hidden, opening Fuyu again from the Start menu or a desktop shortcut brings up this page.",
   trayIconHiddenHintMac: "While the icon is hidden, opening Fuyu again from Applications, Launchpad or Spotlight brings up this page.",
+  trayCard: "Tray card style",
+  trayCardMac: "Menu bar card style",
+  trayCardHint: "The card that opens when you click the tray icon. Right-click still opens the native menu.",
+  trayCardHintMac: "The card that opens when you click the menu bar icon. Control-click or right-click still opens the native menu.",
+  trayCardOffHint: "The card isn't available while the tray icon is hidden.",
+  trayCardOffHintMac: "The card isn't available while the menu bar icon is hidden.",
+  trayCardLayouts: {
+    entry: { label: "Shortcuts", hint: "Everyday features at a glance" },
+    status: { label: "Status", hint: "Music, meetings and agents" },
+    compact: { label: "Compact", hint: "Smallest and quickest" },
+  },
   showTitle: "Show island name",
   displayTitle: "Display",
   minimizeAction: "Minimize button",

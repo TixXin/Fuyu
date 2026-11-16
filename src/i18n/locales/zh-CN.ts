@@ -26,6 +26,7 @@ import * as settings from "../sections/settings/index.ts";
 import * as onboarding from "../sections/onboarding.ts";
 import * as errors from "../sections/errors.ts";
 import * as voiceInput from "../sections/voiceInput.ts";
+import * as trayMenu from "../sections/trayMenu.ts";
 
 const zhCN: Translations = {
   localeLabel: "简体中文",
@@ -67,6 +68,7 @@ const zhCN: Translations = {
   onboarding: onboarding.zhCN,
   errors: errors.zhCN,
   voiceInput: voiceInput.zhCN,
+  trayMenu: trayMenu.zhCN,
 };
 
 export default zhCN;

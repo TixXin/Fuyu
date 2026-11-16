@@ -4,6 +4,7 @@ import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
+import { TrayCardLayoutRow } from "./TrayCardLayoutRow";
 
 const LOCALE_OPTIONS = LOCALE_CODES.map((code) => ({ value: code, label: TRANSLATIONS[code].localeLabel }));
 
@@ -39,6 +40,7 @@ export function BehaviorSettingsSection({
         checked={trayIconVisible}
         onChange={onTrayIconVisibleChange}
       />
+      <TrayCardLayoutRow trayIconVisible={trayIconVisible} />
       <SettingsRow
         title={t.settings.language.label}
         control={

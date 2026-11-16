@@ -229,6 +229,7 @@
         "ccConnect": "local"
       }
     },
-    "fuyu-lyrics-offsets": "sync"
+    "fuyu-lyrics-offsets": "sync",
+    "fuyu-tray-menu-layout": "sync"
   }
 }

@@ -1,0 +1,8 @@
+.tray-menu-window {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.tray-menu-window .tray-card {
+  box-shadow: none;
+}
