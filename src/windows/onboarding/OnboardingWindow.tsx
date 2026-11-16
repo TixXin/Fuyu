@@ -12,6 +12,8 @@ import { useTranslation } from "../../i18n";
 import { settingsWindowOpening } from "../settings/api";
 import type { SettingsFocusSection } from "../settings/storage";
 import { useLaunchAtStartup } from "../settings/useLaunchAtStartup";
+import { AgentCardsAct } from "./AgentCardsAct";
+import { AgentConnectAct } from "./AgentConnectAct";
 import { showOnboardingWindow } from "./api";
 import { HelloAct } from "./HelloAct";
 import { OutfitAct } from "./OutfitAct";
@@ -31,7 +33,8 @@ import { useIslandSpot } from "./useIslandSpot";
 import "./OnboardingWindow.css";
 import { isMacOS } from "../../lib/platform";
 
-const ACTS = ["hello", "shape", "outfit", "play", "permissions", "push", "release"] as const;
+const ACTS = ["hello", "shape", "outfit", "play", "permissions", "agentCards", "agentConnect", "push", "release"] as const;
+const AGENT_ACTS: readonly string[] = ["agentCards", "agentConnect", "push"];
 type Act = (typeof ACTS)[number];
 
 let greeted = false;
@@ -81,7 +84,7 @@ export function OnboardingWindow() {
   const light = activeTone(settings.themeMode, useSystemDark()) === "light";
   const modules = enabledModules(settings, clipboard.enabled);
   const permissionKinds = isMacOS ? neededPermissions(modules) : [];
-  const acts: readonly Act[] = ACTS.filter((name) => (name !== "permissions" || permissionKinds.length > 0) && (name !== "push" || modules.has("agents")));
+  const acts: readonly Act[] = ACTS.filter((name) => (name !== "permissions" || permissionKinds.length > 0) && (!AGENT_ACTS.includes(name) || modules.has("agents")));
   const act = acts[Math.min(index, acts.length - 1)];
   const last = act === "release";
   const spot = useIslandSpot();
@@ -155,6 +158,8 @@ export function OnboardingWindow() {
             />
           )}
           {act === "permissions" && <PermissionsAct kinds={permissionKinds} />}
+          {act === "agentCards" && <AgentCardsAct settings={settings} onSettingsChange={setSettings} />}
+          {act === "agentConnect" && <AgentConnectAct settings={settings} onSettingsChange={setSettings} />}
           {act === "push" && <PushAct step={pushStep} onSkip={() => setIndex(index + 1)} />}
           {act === "release" && (
             <ReleaseAct

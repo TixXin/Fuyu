@@ -413,19 +413,6 @@
     {
       "page": "behaviorAlerts",
       "zh-CN": {
-        "group": "计时器",
-        "title": "到点响一声",
-        "description": "倒计时到点时，除了岛上的提醒再响一声"
-      },
-      "en": {
-        "group": "Timer",
-        "title": "Play a sound when time is up",
-        "description": "When a countdown ends, a sound plays as well as the reminder on the island"
-      }
-    },
-    {
-      "page": "behaviorAlerts",
-      "zh-CN": {
         "group": "休息提醒",
         "title": "休息提醒",
         "description": "按间隔在岛上提醒起身、远眺。锁屏或离开 5 分钟以上时不计时，全屏时等退出再提醒"
@@ -434,6 +421,19 @@
         "group": "Break reminders",
         "title": "Break reminders",
         "description": "Reminds you on the island to get up or look away. Doesn't count while the screen is locked or you've been away 5+ minutes, and waits until you leave full screen"
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "计时器",
+        "title": "到点响一声",
+        "description": "倒计时到点时，除了岛上的提醒再响一声"
+      },
+      "en": {
+        "group": "Timer",
+        "title": "Play a sound when time is up",
+        "description": "When a countdown ends, a sound plays as well as the reminder on the island"
       }
     },
     {
@@ -3385,11 +3385,11 @@
       "page": "agentConnect",
       "zh-CN": {
         "group": "回复状态标记",
-        "title": "让 Claude 在回复末尾标出在等什么（推荐打开）"
+        "title": "让 AI 代理在回复末尾标出在等什么（推荐打开）"
       },
       "en": {
         "group": "Reply status marker",
-        "title": "Have Claude mark what it waits for at the end of each reply (recommended)"
+        "title": "Have the agents mark what they wait for at the end of each reply (recommended)"
       }
     },
     {

@@ -2,7 +2,7 @@
 
 新装的浮屿第一次启动时，岛先出现，约 1.2 秒后打开新手引导：一个透明的遮罩（label `onboarding`，`?window=onboarding`），铺满岛所在屏幕的工作区，把屏幕压暗，只留真岛周围一圈亮着，岛下方是一张卡片。用户在卡片上做选择，效果直接出现在真岛上；练习也在真岛上做。设计来由和参考见 [调研](../research/onboarding-design.md)。
 
-## 五幕
+## 各幕
 
 | 幕 | 卡片上 | 真岛上 | 改的设置 |
 |---|---|---|---|
@@ -11,6 +11,8 @@
 | 3 装岛 | 「你平时主要用电脑做什么」（写代码 / 办公 / 学习 / 娱乐，可多选）和 8 张功能贴纸。新装的岛除了截图都开着，所以选身份是「只留下这一组」：每张身份卡列出它留下的全部功能，选了以后卡片写出卸下了哪些 | 岛上对应的入口当场出现或消失 | `todoEnabled` 等 7 个开关；剪贴板历史写 `clipboard-history.json` 的 `enabled`。身份和功能的对应在 `windows/onboarding/personas.ts` |
 | 4 练习 | 三个小任务，每完成一个亮一颗星；卡片挪到屏幕底部，给展开的岛让位置。导语只提已经装上的演示内容（音乐、Agent） | 用户自己让岛展开（顺带选悬停还是点击）、拖一个真文件到岛上（文件中转开着时才有）、按一次剪贴板快捷键（剪贴板开着时才有，顺带问要不要 Win+V） | `expandTrigger`、剪贴板 `winV` |
 | Mac 权限（只在 macOS 上、且选的功能要用到时） | 「给浮屿开几个权限」：按第 3 幕留下的功能列出要开的权限（剪贴板、翻译 → 辅助功能；截图 → 屏幕录制），每项显示是否已允许，每 1.5 秒和切回窗口时重新检查。「去允许」先让 macOS 弹它自己的提示（这样浮屿会出现在系统设置的列表里），没允许就打开对应的隐私页；屏幕录制点过以后按钮变成「重开浮屿」，因为它要重开才生效。可以不开直接下一步 | — | 系统的隐私授权（用户自己在系统设置里打开） |
+| Agent 会话卡片（AI Agent 开着时才有，B61） | 显示方式、归档动画、卡片光效三项，推荐项后面标「（推荐）」：卡片、粒子消散、粒子流苏（用户要求 2026-11-15，这三个同时成了新装的默认值）。卡片光效只在卡片和紧凑下生效，选列表时不显示；归档动画三种显示方式都有效 | — | `agentSessionView`、`agentArchiveMotion`、`agentCardEffects` |
+| 连接 AI 代理（AI Agent 开着时才有，B61） | 三步，组件和设置页同一份：1. SSH 远程电脑（可跳过，`AgentRemoteHostsSettings`）；2. 显示哪些 Agent 的开关（`AgentProviderSwitches`）和状态灯的「安装/修复」（`AgentHooksSettingsSection`）；3. 回复状态标记（推荐打开，`AgentReplyMarkerSettings`，写进本机和打开的远程电脑上各家代理的提示词文件） | — | `agentHiddenProviders`、`agent-remote-hosts.json`、各家代理的钩子和提示词文件 |
 | 5 完成 | 开机启动；去设置连接 AI 编程工具、添加邮箱（点了就结束引导并打开设置）；一句话说明以后从托盘图标进设置 | 点「开始使用」，遮罩消失，岛弹出「浮屿已就绪」 | 注册表的开机自启 |
 
 - **演示模式**：引导开着的时候，岛上放一首演示歌曲「海边的风」，还有一个正在干活的演示 Claude Code 会话，这样刚装好的岛也能展示音乐和 Agent。真的有歌在放时用真的。引导关掉时演示马上消失；引导意外退出的话，最多 7 秒后也会消失。
@@ -33,7 +35,7 @@
 
 ## 代码
 
-- 前端：`src/windows/onboarding/`。`OnboardingWindow.tsx` 串起五幕，每幕一个 `*Act.tsx`；`Spotlight` 是压暗和亮圈；`placement.ts` 算卡片放哪（纯函数，`tests/unit/onboarding-placement.test.mjs`）；`useIslandSpot` 收真岛的位置，`useCardRect` 把卡片的矩形交给 Rust，`useDemoHeartbeat` 让演示模式续命；`personas.ts` 是身份和功能的对应，以及回答的记忆和撤回（`togglePersona`、`takenOff`；`tests/unit/onboarding-personas.test.mjs`）；`storage.ts` 是给真岛的两个跨窗口请求。文案在 `src/i18n/sections/onboarding.ts`。
+- 前端：`src/windows/onboarding/`。`OnboardingWindow.tsx` 串起各幕，每幕一个 `*Act.tsx`；`Spotlight` 是压暗和亮圈；`placement.ts` 算卡片放哪（纯函数，`tests/unit/onboarding-placement.test.mjs`）；`useIslandSpot` 收真岛的位置，`useCardRect` 把卡片的矩形交给 Rust，`useDemoHeartbeat` 让演示模式续命；`personas.ts` 是身份和功能的对应，以及回答的记忆和撤回（`togglePersona`、`takenOff`；`tests/unit/onboarding-personas.test.mjs`）；`storage.ts` 是给真岛的两个跨窗口请求。文案在 `src/i18n/sections/onboarding.ts`。
 - 真岛那边：`windows/island/useFirstRunGuide.ts`（打开引导、在消息面板里打招呼，借用插件通知的显示方式）、`windows/island/useOnboardingDemo.ts`（演示歌曲和会话）。
 - Rust：`src-tauri/src/onboarding_window/`。`mod.rs` 按需创建遮罩，铺满岛所在屏幕的**工作区**（不是整个屏幕，免得被当成全屏程序触发游戏模式）；`overlay.rs` 每 30ms 算一次岛在遮罩上的位置（`island/passthrough.rs` 的 `island_on_screen`），变了就发 `onboarding-island`，并按鼠标在不在卡片上切换遮罩的鼠标穿透。剪贴板弹出时 `clipboard_history/popup.rs` 把 `clipboard-popup-opened` 也发给引导。
 - 回归页：`tests/regression/onboarding.html`（`?act=1-5`、`?locale=en`、`?light=1`、`?open=1` 用来看界面，`?test=1` 跑检查）。回归页里没有真岛，亮圈里只是背景。

@@ -15,6 +15,7 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated }
 const commands: { command: string; args: Record<string, unknown> }[] = [];
 let clipboard: Record<string, unknown> = { enabled: true, winV: false, shortcut: "Ctrl+Shift+W", shortcutEnabled: true };
 let launchAtStartup = false;
+let marker = false;
 let shelfItems: { id: string; addedAt: number }[] = [{ id: "earlier", addedAt: 1 }];
 mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
@@ -27,6 +28,12 @@ mockIPC((command, payload) => {
     case "get_launch_at_startup": return launchAtStartup;
     case "set_launch_at_startup": launchAtStartup = Boolean(args.enabled); return null;
     case "get_file_shelf": return { items: shelfItems };
+    case "get_agent_status": return { codex: { phase: "idle", updatedAt: 0 }, claudeCode: { phase: "idle", updatedAt: 0 }, updatedAt: 0, statusPath: "" };
+    case "get_agent_remote_hosts": case "list_ssh_hosts": case "get_agent_custom_hosts": return [];
+    case "get_reply_marker_state":
+    case "set_reply_marker":
+      if (command === "set_reply_marker") marker = Boolean(args.enabled);
+      return { installed: marker, outdated: false, files: [], oldRules: [], content: "", remotes: [] };
     default: return null;
   }
 }, { shouldMockEvents: true });
@@ -104,7 +111,7 @@ if (!automated) {
     check(commands.some(({ command, args }) => command === "set_onboarding_card_rects" && Array.isArray(args.rects) && args.rects.length === 1),
       "The card's rectangle goes to the native side, so only the card takes the pointer");
     check(title() === "你好，这就是浮屿" && !button("上一步") && button("跳过"), "Act 1 says hello, with Skip and no Back");
-    check(document.querySelectorAll(".onboarding__dot").length === 6, "The progress shows six acts, push included while AI Agent is on");
+    check(document.querySelectorAll(".onboarding__dot").length === 8, "The progress shows eight acts, the agent acts and push included while AI Agent is on");
     await press("English");
     check(title() === "Hi, this is Fuyu", "Picking English switches the guide at once");
     await press("简体中文");
@@ -166,6 +173,22 @@ if (!automated) {
     await wait(10);
     check(clipboard.winV === true, "Win+V is saved in the clipboard settings");
     await placeIsland(closed);
+
+    await press("下一步");
+    const choice = (label: string) => document.querySelector<HTMLButtonElement>(`.onboarding__body button[aria-label='${label}']`)?.textContent;
+    check(title() === "AI 代理的会话卡片", "With AI Agent on, the session cards act comes after the practice");
+    check(choice("显示方式") === "卡片（推荐）" && choice("归档动画") === "粒子消散（推荐）" && choice("卡片光效") === "粒子流苏（推荐）",
+      "The session cards start on the recommended choices, marked as such");
+    await act(async () => { document.querySelector<HTMLButtonElement>(".onboarding__body button[aria-label='显示方式']")!.click(); });
+    await act(async () => { document.querySelector<HTMLElement>(".select-control__option[data-value='list']")!.click(); });
+    await wait(10);
+    check(stored().agentSessionView === "list" && !choice("卡片光效") && choice("归档动画"),
+      "Card glow only shows for the card and compact layouts; the archive motion stays for every layout");
+
+    await press("下一步");
+    check(title() === "连上你的 AI 代理" && [...document.querySelectorAll(".onboarding__step")].map((step) => step.textContent?.slice(0, 2)).join("") === "1.2.3.",
+      "The connect act walks through SSH remotes, agents with Install/repair, then the reply marker");
+    check(document.querySelector(".agent-remote__intro") && document.body.textContent?.includes("让 AI 代理在回复末尾标出在等什么"), "The act reuses the settings for remotes and the reply marker");
 
     await press("下一步");
     check(title() === "推送到手机" && document.querySelector(".push-act__step--active")?.textContent === "安装", "AI Agent being on adds the push act before the last one");
