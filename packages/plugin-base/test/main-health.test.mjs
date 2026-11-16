@@ -157,9 +157,11 @@ test("with --dev the host swaps in a plugin's new code when its file changes", a
   const { space, next, stderr } = launch({ "live.mjs": plugin(1) }, [{ id: "live", name: "./live.mjs" }], ["--dev"], ["--expose-internals"]);
   await next((message) => message.method === "ready");
   assert.match(stderr(), /live version 1/);
-  await sleep(300);
-  space.write({ "live.mjs": plugin(2) });
   const deadline = Date.now() + 8000;
-  while (!/live version 2/.test(stderr()) && Date.now() < deadline) await sleep(20);
+  while (!/live version 2/.test(stderr()) && Date.now() < deadline) {
+    space.write({ "live.mjs": plugin(2) });
+    const wrote = Date.now();
+    while (!/live version 2/.test(stderr()) && Date.now() - wrote < 500) await sleep(20);
+  }
   assert.match(stderr(), /live version 2/);
 });

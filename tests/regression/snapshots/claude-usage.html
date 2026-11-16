@@ -18,8 +18,8 @@
             </button>
             <div class="island__gauge-slot">
               <span class="island-hover-card__anchor">
-                <button aria-label="用量：Claude Code; 暂无 Claude 用量（需要本机的 magpie 网关、claude-hud 的用量快照，或在插件设置里打开「直接向 Anthropic 查询」）。点击刷新" class="claude-usage-gauge" data-provider="claudeCode" type="button">
-                  <span aria-label="用量：Claude Code; 暂无 Claude 用量（需要本机的 magpie 网关、claude-hud 的用量快照，或在插件设置里打开「直接向 Anthropic 查询」）。点击刷新" class="mini-ring" role="img" style="--mini-ring-size: 24px">
+                <button aria-label="用量：Claude Code; 暂无 Claude 用量（需要本机的 magpie 网关、claude-hud 的用量快照，或在设置 → AI Agent 的用量环里打开「直接向 Anthropic 查询」）。点击刷新" class="claude-usage-gauge" data-provider="claudeCode" type="button">
+                  <span aria-label="用量：Claude Code; 暂无 Claude 用量（需要本机的 magpie 网关、claude-hud 的用量快照，或在设置 → AI Agent 的用量环里打开「直接向 Anthropic 查询」）。点击刷新" class="mini-ring" role="img" style="--mini-ring-size: 24px">
                     <svg aria-hidden="true" height="24" viewBox="0 0 24 24" width="24">
                       <g transform="rotate(-90 12 12)">
                         <circle class="mini-ring__track" cx="12" cy="12" r="10.75" stroke-width="2.5" style="stroke: rgba(var(--island-ink-rgb, 241, 240, 246), 0.12)"></circle>
@@ -284,38 +284,25 @@
     </div>
   </div>
   <div id="plan-keys">
-    <section class="settings-section plugins-panel">
-      <div class="settings-section__header">
-        <span>
-          API Key
-        </span>
-      </div>
-      <p class="settings-section__hint">
-        GLM 填智谱开放平台（open.bigmodel.cn）的 API Key，Kimi 填 Kimi Code 控制台的 API Key。保存在 Windows 凭据管理器里，不写进设置文件，页面也不会再显示它。
-      </p>
-      <div class="plugin-setting" data-plan-key="glm">
-        <label class="plugin-setting__row">
-          <span>
+    <div class="settings-row settings-row--indent" data-search="off">
+      <div class="settings-row__main">
+        <div class="settings-row__text">
+          <span class="settings-row__title">
             GLM API Key
           </span>
-          <input aria-label="GLM API Key" autocomplete="off" class="plugin-setting__input" placeholder="粘贴 API Key" spellcheck="false" type="password" value="">
-        </label>
-        <div class="plan-key__actions">
-          <p class="plan-key__status settings-section__hint">
-            未保存
-          </p>
-          <div class="plugin-card__actions">
-            <button class="plugin-card__button" disabled="" type="button">
-              <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 6 9 17l-5-5"></path>
-              </svg>
-              <span>
-                保存
-              </span>
-            </button>
-          </div>
+          <span class="settings-row__description">
+            <span data-plan-key-status="glm" role="status">
+              未保存
+            </span>
+          </span>
+        </div>
+        <div class="settings-row__control">
+          <button class="settings-link-button" disabled="" type="button">
+            保存
+          </button>
         </div>
       </div>
-    </section>
+      <input aria-label="GLM API Key" autocomplete="off" class="settings-input" data-plan-key="glm" placeholder="粘贴 API Key" spellcheck="false" type="password" value="">
+    </div>
   </div>
 </body>

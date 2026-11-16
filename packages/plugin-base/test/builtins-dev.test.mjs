@@ -72,8 +72,12 @@ test("with --dev a built-in plugin reloads when its source changes, and files un
     ],
   );
   assert.ok(await heard(/clock version 1/, 2000));
-  await sleep(400);
-  space.write({ "app/clock/label.mjs": 'export const label = "2";\n', "data/data/stash/plugin.mjs": version("stash", "2") });
-  assert.ok(await heard(/clock version 2/, 8000), "the built-in plugin did not reload");
+  const deadline = Date.now() + 8000;
+  let reloaded = false;
+  while (!reloaded && Date.now() < deadline) {
+    space.write({ "app/clock/label.mjs": 'export const label = "2";\n', "data/data/stash/plugin.mjs": version("stash", "2") });
+    reloaded = await heard(/clock version 2/, 500);
+  }
+  assert.ok(reloaded, "the built-in plugin did not reload");
   assert.equal(await heard(/stash version 2/, 1000), false, "a file under data/ was hot reloaded");
 });

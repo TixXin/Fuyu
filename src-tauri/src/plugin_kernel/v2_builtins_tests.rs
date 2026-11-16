@@ -34,19 +34,45 @@ fn migrates_once_into_plugins_yml() {
     let file = home.join("plugins-v3").join("plugins.yml");
     std::fs::write(home.join(V2_STATE), json!({ "plugins": { "focusd.timer": { "enabled": false, "settings": { "sound": false } } } }).to_string()).unwrap();
     migrate(&home, &file);
-    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: timer\n  disabled: true\n  config:\n    sound: false\n");
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: timer\n  disabled: true\n  config:\n    sound: false\n- id: claude-usage\n  disabled: true\n");
     std::fs::write(&file, "[]\n").unwrap();
     migrate(&home, &file);
     assert_eq!(std::fs::read_to_string(&file).unwrap(), "[]\n");
     let marker: Value = serde_json::from_str(&std::fs::read_to_string(home.join("plugins-v3").join(MARKER)).unwrap()).unwrap();
-    assert_eq!(marker, json!({ "format": 1, "migrated": ["focusd.timer"] }));
+    assert_eq!(marker, json!({ "format": 1, "migrated": ["focusd.claude-usage", "focusd.timer"] }));
 }
 
 #[test]
-fn without_old_settings_the_default_stays() {
+fn without_old_settings_only_the_usage_rings_start_off() {
     let home = scratch("fresh");
     let file = home.join("plugins-v3").join("plugins.yml");
     migrate(&home, &file);
-    assert!(!file.exists());
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: claude-usage\n  disabled: true\n");
     assert!(home.join("plugins-v3").join(MARKER).exists());
+}
+
+fn claude_usage() -> &'static Migration {
+    MIGRATIONS.iter().find(|migration| migration.v3 == "claude-usage").unwrap()
+}
+
+#[test]
+fn the_usage_rings_carry_their_switch_and_settings() {
+    let on = grants_of(json!({ "focusd.claude-usage": { "enabled": true, "settings": { "codex": true, "claudeCode": false, "show": "remaining", "askAnthropic": true, "proxy": "http://127.0.0.1:7890", "intervalMinutes": 15, "glm": "yes", "other": 1 } } }));
+    assert_eq!(
+        plan(claude_usage(), &on),
+        Some(Plan {
+            id: "claude-usage",
+            disable: false,
+            config: vec![("claudeCode", json!(false)), ("codex", json!(true)), ("askAnthropic", json!(true)), ("show", json!("remaining")), ("proxy", json!("http://127.0.0.1:7890")), ("intervalMinutes", json!(15))],
+        })
+    );
+    let off = grants_of(json!({ "focusd.claude-usage": { "enabled": false, "settings": { "kimi": true } } }));
+    assert_eq!(plan(claude_usage(), &off), Some(Plan { id: "claude-usage", disable: true, config: vec![("kimi", json!(true))] }));
+}
+
+#[test]
+fn the_usage_rings_stay_off_when_they_were_never_switched_on() {
+    let none = grants_of(json!({ "focusd.timer": { "enabled": true } }));
+    assert_eq!(plan(claude_usage(), &none), Some(Plan { id: "claude-usage", disable: true, config: vec![] }));
+    assert_eq!(plan(timer(), &grants_of(json!({}))), None);
 }

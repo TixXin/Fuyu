@@ -360,3 +360,23 @@ fn live_usage_endpoint() {
     );
     assert!(limits.five_hour.is_some() || limits.seven_day.is_some());
 }
+
+#[test]
+fn the_poller_asks_anthropic_only_when_switched_on() {
+    use super::background::usage_config;
+    let config = |value: serde_json::Value| value.as_object().cloned().unwrap();
+    assert_eq!(usage_config(&serde_json::Map::new()), None);
+    assert_eq!(usage_config(&config(serde_json::json!({ "askAnthropic": false, "proxy": "http://x" }))), None);
+    let on = usage_config(&config(serde_json::json!({ "askAnthropic": true, "proxy": " http://10.0.0.1:8080 ", "intervalMinutes": 30 }))).unwrap();
+    assert_eq!((on.proxy.as_deref(), on.interval_minutes), (Some("http://10.0.0.1:8080"), 30));
+    let blank = usage_config(&config(serde_json::json!({ "askAnthropic": true, "proxy": "  ", "intervalMinutes": "soon" }))).unwrap();
+    assert_eq!((blank.proxy, blank.interval_minutes), (None, 5));
+}
+
+#[test]
+fn the_poller_is_the_background_listed_for_claude_usage() {
+    use super::background::{PLUGIN_ID, POLLER};
+    let catalog = crate::plugin_kernel::builtins::catalog();
+    let usage = catalog.iter().find(|plugin| plugin.id == PLUGIN_ID).expect("claude-usage is a built-in plugin");
+    assert_eq!(usage.background.as_deref(), Some(&[POLLER.to_owned()][..]));
+}

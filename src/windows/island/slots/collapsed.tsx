@@ -16,7 +16,6 @@ export type CollapsedBarContext = {
 
 export type CollapsedGaugeContext = {
   paused: boolean;
-  usage: { enabled: boolean; settings: Record<string, unknown>; showRemaining: boolean };
   hints: ReadonlySet<string>;
   listenIslandHover: typeof listenIslandHover;
 };

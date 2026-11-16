@@ -16,6 +16,12 @@ Object.defineProperty(globalThis, "window", {
   value: { crypto: globalThis.crypto, setTimeout: globalThis.setTimeout },
 });
 
+async function until(check, ms = 5000) {
+  const deadline = Date.now() + ms;
+  while (!check() && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 50));
+  return check();
+}
+
 const keys = (values) => ({
   "focusd-island-todos": null,
   "focusd-island-archives": null,
@@ -166,7 +172,7 @@ test("queued saves skip unchanged fields, merge while writing and retry failures
   release();
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.deepEqual(writes[1], { dailyNote: "ab", date: "2026-11-06", baseRevision: 1 }, "changes made while writing go out together");
-  await new Promise((resolve) => setTimeout(resolve, 2100));
+  assert.ok(await until(() => writes.length === 3), "the failed write was not retried");
   assert.deepEqual(writes[2], { dailyNote: "ab", date: "2026-11-06", baseRevision: 1 }, "a failed write is retried");
   assert.equal(todoFileData().dailyNote, "ab");
 

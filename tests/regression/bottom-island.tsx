@@ -10,6 +10,7 @@ import { useQQNotifications } from "../../src/features/messages/qq-notifications
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import { useFixtureLines } from "./islandLines";
+import { animationsDone, until } from "./pollUntil";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
@@ -56,15 +57,13 @@ const dockTo = (edge: "top" | "bottom") => {
   document.documentElement.dataset.islandTopEdge = edge === "top" ? "attached" : "detached";
 };
 const set = (next: Partial<State>) => act(async () => { change(next); });
-async function settleTransitions() {
-  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 900)); });
-}
+const settled = (ready: () => boolean) => until(() => animationsDone(stage()) && ready());
 const results = document.getElementById("results")!;
 
 async function runChecks() {
   try {
     dockTo("bottom");
-    await settleTransitions();
+    await settled(() => near(island().getBoundingClientRect().bottom, stage().getBoundingClientRect().bottom));
     const shell = island().getBoundingClientRect();
     check(near(shell.bottom, stage().getBoundingClientRect().bottom), "收起的岛贴在舞台底部");
     check(near(shell.height, 38), "收起的岛还是 38 高的横向胶囊");
@@ -76,7 +75,7 @@ async function runChecks() {
     check(near(box(".island__collapsed").bottom, shell.bottom), "收起层贴着岛的下沿");
 
     await set({ expanded: true });
-    await settleTransitions();
+    await settled(() => near(island().getBoundingClientRect().height, 306));
     const panel = island().getBoundingClientRect();
     check(near(panel.bottom, stage().getBoundingClientRect().bottom) && near(panel.height, 306), "面板往上展开，下沿不动");
     check(near(box(".island__expanded").bottom, panel.bottom) && near(box(".island__expanded").top, panel.top), "展开层贴着岛的下沿，填满面板");
@@ -87,11 +86,11 @@ async function runChecks() {
     check(!label, "没在拖动时不显示尺寸");
 
     dockTo("top");
-    await settleTransitions();
+    await settled(() => near(island().getBoundingClientRect().top, stage().getBoundingClientRect().top));
     check(near(island().getBoundingClientRect().top, stage().getBoundingClientRect().top), "换回顶边时面板从顶部往下展开");
     check(getComputedStyle(document.querySelector(".island-resize-hint--bottom")!).maskPosition.split(" ").pop() !== "0%", "顶边时提示线回到下边");
     await set({ expanded: false });
-    await settleTransitions();
+    await settled(() => near(island().getBoundingClientRect().height, 38));
     check(parseFloat(getComputedStyle(island()).borderTopLeftRadius) === 0 && parseFloat(getComputedStyle(island()).borderBottomLeftRadius) > 0, "顶边的造型不变：上直下圆");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;

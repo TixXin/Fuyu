@@ -17,7 +17,7 @@ src-tauri/src/
 ├── agent_status/            # AI 代理状态：快照、运行标记、Codex / Claude Code hook 安装；hooks/ 为编入二进制的 hook 脚本；sound_packs.rs 为导入的音效包（应用数据目录的 sound-packs/）
 │                            #   reply_marker.rs：可选的回复状态标记（B9），增删 CLAUDE.md 里岛屿自己的那段说明、识别回复末行的标记
 ├── phone_push.rs            # 手机推送（Bark）：设备 Key 凭据存取、发送推送、锁屏与空闲时间查询命令
-├── claude_usage/            # 用量环可选的「直接向 Anthropic 查询」：只读 Claude Code 凭据、经 http(s) 代理（插件设置 → HTTPS_PROXY → Windows 系统代理，从不直连）请求 oauth/usage，后台轮询与退避；结果由 agent_status 的 get_agent_usage 合并（source.rs 为取数与解析）
+├── claude_usage/            # 用量环（内置插件 claude-usage）：可选的「直接向 Anthropic 查询」只读 Claude Code 凭据、经 http(s) 代理（插件配置 → HTTPS_PROXY → Windows 系统代理，从不直连）请求 oauth/usage，后台轮询与退避（background.rs 把轮询登记成插件的后台 poller，关掉插件就停）；结果由 agent_status 的 get_agent_usage 合并（source.rs 为取数与解析）；plan.rs 是 GLM、Kimi 的用量和 Key（命令 get_plan_usage、set_plan_key、has_plan_key）
 ├── ssh_tunnel/              # SSH 代理隧道（内置插件 focusd.ssh-proxy-tunnel）：ssh-tunnels.json（config.rs），每台主机一条常驻 ssh -R、作业对象、退避重连（tunnel.rs），服务器端口占用检查，本地代理端口自动检测（local_proxy.rs）
 ├── cc_connect/              # cc-connect 手机连接（内置插件 focusd.cc-connect）：找程序（插件设置 → 正在运行 → PATH → 岛下载的 → C/D 盘 Program Files，locate.rs）、下载并核对发布包（install.rs）、只读会话列表（chats.rs）、检查机器人 token（bots.rs）、往 config.toml 追加项目（config_file.rs）、飞书扫码（feishu.rs）、看护岛启动的 cc-connect（runner.rs）、经 cc-connect send 发消息
 ├── system/                  # 开机自启（注册表）、更新代理与配置、待办 Markdown 导出；update_runtime.rs 为跨窗口更新状态与互斥，update_notifications.rs 为更新系统通知与白名单诊断
