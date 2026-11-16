@@ -20,7 +20,7 @@ export function messageArrivalsPanelHeight(listHeight: number, maxPanelHeight: n
 
 export function messagesContributions(state: MessagesIsland, flags: MessagesIslandFlags, t: Translations): IslandContribution[] {
   const { qq, wechat, mail, preview } = state;
-  const list: IslandContribution[] = [];
+  const list: IslandContribution[] = [{ kind: "summary", item: "messages.summary" }];
   if (flags.showsMessage) list.push({ kind: "reveal", reveal: "always", pauseIdle: true, pauseHover: true }, { kind: "busy" }, { kind: "hint", key: "message" });
   if (preview) {
     list.push({

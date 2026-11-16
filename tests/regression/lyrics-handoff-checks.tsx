@@ -36,7 +36,7 @@ function Stage({ media }: { media: MediaState }) {
   setPreview = changePreview; setLyric = changeLyric; setMeeting = changeMeeting;
   useFixtureLines({ messages: { qq: QQ, wechat: WECHAT, mail: MAIL, plugin: PLUGINS, preview: preview }, agents: 0, status: { state: "idle", label: "" }, todoTitle: "剩余3个待办", lyricLine: lyric, meeting: meeting, media });
   return <div className="stage" style={{ "--collapsed-island-width": "320px" } as CSSProperties}>
-    <IslandShell pluginNotifications={PLUGINS} preview={preview}
+    <IslandShell
       mode="collapsed" page="todo" isTucked={false} isDetached showTitle={false} showCollapsedText
       appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: false, shelf: false, qq: true, wechat: true, qqMail: true, agents: true, translation: false, calendar: false, screenshots: false, timer: false }}

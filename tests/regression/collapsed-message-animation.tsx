@@ -101,7 +101,7 @@ function Fixture() {
   changeWidth = setWidth; changeTitle = setTitle; changeFont = setPixel; changeAgent = setAgent;
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: preview, open: (source) => { openedPage = source; } }, agents: agentsEnabled ? agentCount : null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: task ?? `剩余${count}个待办`, agentSession: agent, meeting: meeting, levelPopup: level, deviceAlert, deviceUse });
   return <div className={`stage${pixel ? " stage--font-pixel" : ""}`} style={{ "--collapsed-island-width": `${width}px` } as CSSProperties}>
-    <IslandShell pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell
       mode={mode} page="todo" isTucked={tucked} isDetached={true} showTitle={title}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: agentsEnabled, translation: false, calendar: false, screenshots: false, timer: false }}

@@ -1,7 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { AppearanceMode } from "../../lib/settings/types";
-import type { MessagePreview } from "../../features/messages/messagePreview";
-import type { PluginNotificationsController } from "../../features/plugins/usePluginNotifications";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
@@ -31,8 +29,6 @@ import { sideBubbleTop } from "./sideColumn";
 import type { IslandSide } from "./useIslandSide";
 
 type IslandShellProps = {
-  pluginNotifications: PluginNotificationsController;
-  preview: MessagePreview | null;
   mode: IslandMode;
   page: IslandPage;
   popup?: boolean;
@@ -73,8 +69,6 @@ type IslandShellProps = {
 const NO_SOURCES = {};
 
 export function IslandShell({
-  pluginNotifications,
-  preview,
   mode,
   page,
   popup = false,
@@ -127,7 +121,7 @@ export function IslandShell({
   const sideHot = contributed.preview?.hot ?? null;
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
   const activeAlert = useActiveAlert();
-  const sideBubble = side && !isExpanded && !isTucked && Boolean(preview || activeAlert);
+  const sideBubble = side && !isExpanded && !isTucked && Boolean(contributed.preview || activeAlert);
   const className = [
     "island",
     `island--${mode}`,
@@ -188,11 +182,9 @@ export function IslandShell({
           />
         )}
         <IslandCollapsedBar
-          pluginNotifications={pluginNotifications}
           pluginViews={pluginViews}
           onOpenPluginPage={onOpenPluginPage}
           slots={collapsedSlots}
-          preview={preview}
           page={page}
           isExpanded={isExpanded}
           isTucked={isTucked}
@@ -241,7 +233,8 @@ export function IslandShell({
       {sideBubble && (
         <IslandSideBubble
           top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}
-          preview={preview}
+          summary={contributed.summary}
+          previewing={contributed.preview !== null}
           alert={activeAlert && <AlertPopup alert={activeAlert} sources={NO_SOURCES} />}
           onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(page))}
         />

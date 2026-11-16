@@ -42,7 +42,7 @@ function GlassIsland({ background, light }: { background: string; light: boolean
   } as CSSProperties;
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: null }, agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "整理周报" });
   return <div className={`stage${light ? " island-light" : ""}`} data-tone={light ? "light" : "dark"} style={stageStyle}>
-    <IslandShell pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
+    <IslandShell
       mode={mode} page="todo" isTucked={false} isDetached={false} showTitle={false}
       showCollapsedText appearanceMode="liquidGlass" nativeGlassState="css-fallback" glass={glass}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}

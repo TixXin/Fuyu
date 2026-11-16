@@ -30,7 +30,7 @@ function Fixture() {
   const qqMail = useMail(true);
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: null }, agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "写周报和整理会议记录" });
   return <div className="stage" style={{ "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8 } as CSSProperties}>
-    <IslandShell pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
+    <IslandShell
       mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={false} isDetached showTitle={false}
       showCollapsedText appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}

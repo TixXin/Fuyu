@@ -1,9 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
-import { messagePreviewText, type MessagePreview } from "../../features/messages/messagePreview";
-import { PluginNotificationActions } from "../../features/plugins/PluginNotificationActions";
-import type { PluginNotificationsController } from "../../features/plugins/usePluginNotifications";
 import { useUpdateReminder } from "../../features/updater/useBackgroundUpdateCheck";
 import { arrangeCollapsedItems, zoneIds, type CollapsedZone } from "../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
@@ -18,13 +14,11 @@ import type { CollapsedSlots, IslandPage } from "./types";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { hasNotchDrop, useIslandNotch } from "./notch";
 import { AlertPopup, NotchAlertLeading, NotchAlertTrailing, useActiveAlert } from "./NotchAlert";
-import { NotchMessageLeading, NotchMessageTrailing } from "../../features/messages/island/NotchMessage";
+import { IslandSummary } from "./IslandSummary";
 import { DevWatermark } from "../../components/DevWatermark";
 import "./IslandCollapsedBar.css";
 
 type IslandCollapsedBarProps = {
-  pluginNotifications: PluginNotificationsController;
-  preview: MessagePreview | null;
   page: IslandPage;
   isExpanded: boolean;
   isTucked: boolean;
@@ -64,8 +58,6 @@ function renderZone(items: readonly CollapsedBarItem[]) {
 }
 
 export function IslandCollapsedBar({
-  pluginNotifications,
-  preview,
   page,
   isExpanded,
   isTucked,
@@ -92,6 +84,7 @@ export function IslandCollapsedBar({
     `island__pulse--agent-${agentVisualState}`,
   ].join(" ");
   const contributed = useIslandContributed();
+  const preview = contributed.preview;
   const activeAlert = useActiveAlert();
   const alertSources = NO_SOURCES;
   const lines = visibleLines(contributed.lines, showCollapsedText);
@@ -129,8 +122,8 @@ export function IslandCollapsedBar({
         <button
           className={`island__open-button${showCenter ? " island__open-button--center" : ""}`}
           type="button"
-          aria-label={preview
-            ? t.messages.openPreview(messagePreviewText(preview, t.messages), t.messages.sourceLabels[preview.source])
+          aria-label={preview?.label !== undefined
+            ? preview.label
             : peekLine ? peekLine.label : t.messages.expand(collapsedLabel)}
           data-tooltip=""
           aria-expanded={preview || peekLine ? undefined : isExpanded}
@@ -142,7 +135,7 @@ export function IslandCollapsedBar({
           onClick={(event) => {
             if (event.detail === 0 || !didDragRef.current) {
               if (preview) {
-                if (contributed.preview?.action) runIslandAction(contributed.preview.action);
+                if (preview.action) runIslandAction(preview.action);
               } else if (peekLine) {
                 openPeek();
               } else {
@@ -151,7 +144,7 @@ export function IslandCollapsedBar({
             }
           }}
         >
-          <CollapsedMessageContent preview={preview} enabled={!isExpanded && !isTucked} bodyOnly={notch !== null}>
+          <IslandSummary item={contributed.summary} enabled={!isExpanded && !isTucked} bodyOnly={notch !== null}>
             {notice ? notice.content : activeAlert ? (
               <AlertPopup alert={activeAlert} sources={alertSources} />
             ) : line?.bare ? lineView(line.item) : <>
@@ -160,14 +153,12 @@ export function IslandCollapsedBar({
             )}
             {line && lineView(line.item)}
             </>}
-          </CollapsedMessageContent>
+          </IslandSummary>
           {showCenter && <span className="island__center-slot">{slots.center}</span>}
         </button>
         {notice && !preview && notice.actions}
         {!preview && !notice && !activeAlert && !peekLine && contributed.trails.map(lineView)}
-        {preview?.source === "plugin" && pluginNotifications.notification && (
-          <PluginNotificationActions actions={pluginNotifications.notification.actions} onAction={pluginNotifications.runAction} />
-        )}
+        {preview && lineView(`${preview.item}.actions`)}
     </>
   );
   const right = (
@@ -190,7 +181,7 @@ export function IslandCollapsedBar({
   const alerted = notch !== null && activeAlert !== null;
   const dropped = notch !== null && hasNotchDrop({ preview, notice, peek: peekLine });
   const messaged = notch !== null && !alerted && !notice && preview !== null;
-  const wings = alerted ? "alert" : messaged ? `message:${preview?.source}:${preview?.receivedAt}` : dropped ? "dropped" : "idle";
+  const wings = alerted ? "alert" : messaged ? `message:${preview?.key}` : dropped ? "dropped" : "idle";
 
   return (
     <div
@@ -208,9 +199,9 @@ export function IslandCollapsedBar({
       {notch ? (
         <>
           <div className="island__notch-row">
-            <div key={`left:${wings}`} className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{alerted && activeAlert ? <NotchAlertLeading alert={activeAlert} sources={alertSources} /> : messaged ? <NotchMessageLeading preview={preview} /> : left}</div>
+            <div key={`left:${wings}`} className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{alerted && activeAlert ? <NotchAlertLeading alert={activeAlert} sources={alertSources} /> : messaged && preview ? lineView(`${preview.item}.leading`) : left}</div>
             <span className="island__notch-gap" aria-hidden="true" {...{ [OPENS_BAR]: "" }} />
-            <div key={`right:${wings}`} className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{alerted && activeAlert ? <NotchAlertTrailing alert={activeAlert} sources={alertSources} /> : messaged ? <NotchMessageTrailing preview={preview} /> : dropped ? right : <>{message}{right}</>}</div>
+            <div key={`right:${wings}`} className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{alerted && activeAlert ? <NotchAlertTrailing alert={activeAlert} sources={alertSources} /> : messaged && preview ? lineView(`${preview.item}.trailing`) : dropped ? right : <>{message}{right}</>}</div>
           </div>
           {dropped && <div className="island__notch-drop">{message}</div>}
         </>
