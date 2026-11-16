@@ -12,7 +12,7 @@ use windows::{
                 FLASHWINFO, FLASHW_ALL, FLASHW_TIMERNOFG, GetClassNameW, GetCursorPos,
                 GetForegroundWindow, GetWindow, GetWindowLongPtrW, GetWindowPlacement,
                 GetWindowRect, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindowVisible, SendMessageTimeoutW,
-                SetForegroundWindow, SetWindowDisplayAffinity, SetWindowLongPtrW, ShowWindow, GWL_EXSTYLE, WDA_EXCLUDEFROMCAPTURE, WDA_NONE, GW_OWNER, SMTO_ABORTIFHUNG,
+                SetForegroundWindow, SetWindowDisplayAffinity, SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, WDA_EXCLUDEFROMCAPTURE, WDA_NONE, GW_OWNER, SMTO_ABORTIFHUNG,
                 SMTO_BLOCK, SMTO_ERRORONEXIT, SW_HIDE, SW_RESTORE, SW_SHOWNOACTIVATE, WINDOWPLACEMENT, WM_NULL,
                 WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
             },
@@ -178,6 +178,10 @@ pub(crate) fn activate_from_background(window: HWND) -> bool {
 
 pub(crate) fn show_without_activating(window: HWND) {
     let _ = unsafe { ShowWindow(window, SW_SHOWNOACTIVATE) };
+}
+
+pub(crate) fn place_below(window: HWND, above: HWND) {
+    let _ = unsafe { SetWindowPos(window, Some(above), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE) };
 }
 
 pub(crate) fn hide_window(window: HWND) {

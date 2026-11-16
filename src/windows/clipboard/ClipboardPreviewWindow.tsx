@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "../../i18n";
 import { ClipboardPopupPreview } from "../../features/clipboard/ClipboardPopupPreview";
 import {
-  clipboardImageUrl, listenClipboardPreviewClosing, pasteClipboardText, listenClipboardPreviewItem, listenClipboardPreviewOpened,
-  type ClipboardPreviewPayload, type ClipboardPreviewSide,
+  clipboardImageUrl, listenClipboardPreviewClosing, pasteClipboardText, listenClipboardPreviewItem, listenClipboardPreviewLayout, listenClipboardPreviewOpened,
+  reportClipboardPreview, setClipboardPreviewSize, type ClipboardPreviewPayload, type ClipboardPreviewSide,
 } from "../../features/clipboard/api";
+import type { ClipboardPreviewReport, ClipboardPreviewSize, ClipboardPreviewSizeRequest } from "../../features/clipboard/previewCommands";
 import { useWindowLight } from "../../lib/theme/useWindowLight";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
+import { ClipboardPreviewBar } from "./ClipboardPreviewBar";
+import { ClipboardPreviewEdges } from "./ClipboardPreviewEdges";
 import "../../features/clipboard/ClipboardPopup.css";
 import "./ClipboardPreviewWindow.css";
 
@@ -22,6 +25,8 @@ function prefetch(ids: readonly string[]) {
   }
 }
 
+const report = (message: ClipboardPreviewReport) => void reportClipboardPreview(message).catch((error: unknown) => console.error("Failed to report to the clipboard window", error));
+
 export function ClipboardPreviewWindow() {
   const t = useTranslation();
   const text = t.clipboard.popup.actions;
@@ -29,6 +34,8 @@ export function ClipboardPreviewWindow() {
   useWindowAccent();
   const [payload, setPayload] = useState<ClipboardPreviewPayload | null>(null);
   const [side, setSide] = useState<ClipboardPreviewSide>("right");
+  const [size, setSize] = useState<ClipboardPreviewSize>("standard");
+  const [pinned, setPinned] = useState(false);
   const [opened, setOpened] = useState(0);
   const [closing, setClosing] = useState(false);
 
@@ -43,7 +50,12 @@ export function ClipboardPreviewWindow() {
     void listenClipboardPreviewOpened((next) => {
       setSide(next);
       setClosing(false);
+      setPinned(false);
       setOpened((count) => count + 1);
+    }).then(keep);
+    void listenClipboardPreviewLayout((layout) => {
+      setSide(layout.side);
+      setSize(layout.size);
     }).then(keep);
     void listenClipboardPreviewClosing(() => setClosing(true)).then(keep);
     return () => {
@@ -52,14 +64,29 @@ export function ClipboardPreviewWindow() {
     };
   }, []);
 
+  const changeSize = useCallback((next: ClipboardPreviewSizeRequest) => {
+    void setClipboardPreviewSize(next).catch((error: unknown) => console.error("Failed to resize the clipboard preview", error));
+  }, []);
+
+  const togglePin = () => {
+    const next = !pinned;
+    setPinned(next);
+    report({ type: "pinned", pinned: next });
+  };
+
+  const words = t.clipboard.previewWindow;
+  const hint = pinned
+    ? { key: "Esc", text: words.pinnedHint }
+    : { key: text.spaceKey, text: payload?.holding ? (payload.stay ? words.releaseToKeep : text.releaseToClose) : text.closePreview };
   const item = payload?.item;
   return (
-    <div className={`clipboard-preview-window clipboard-preview-window--${side}${closing ? " clipboard-preview-window--out" : ""}${light ? " island-light" : ""}`}>
+    <div
+      className={`clipboard-preview-window clipboard-preview-window--${side} clipboard-preview-window--${size}${closing ? " clipboard-preview-window--out" : ""}${light ? " island-light" : ""}`}
+      onPointerEnter={() => report({ type: "pointer", inside: true })}
+      onPointerLeave={() => report({ type: "pointer", inside: false })}
+    >
       <section key={opened} className="clipboard-popup clipboard-preview" aria-label={t.clipboard.popup.preview.label}>
-        <span className="clipboard-preview__close">
-          <kbd>{text.spaceKey}</kbd>
-          {payload?.holding ? text.releaseToClose : text.closePreview}
-        </span>
+        <ClipboardPreviewBar hint={hint} size={size} pinned={pinned} onSize={changeSize} onTogglePin={togglePin} onClose={() => report({ type: "close" })} />
         {item && (
           <div key={item.id} className="clipboard-preview__content">
             <ClipboardPopupPreview
@@ -70,6 +97,7 @@ export function ClipboardPreviewWindow() {
           </div>
         )}
       </section>
+      <ClipboardPreviewEdges />
     </div>
   );
 }
