@@ -202,7 +202,7 @@ E36.3.21（111b02d5）的 lint 禁止宿主部分 import 任何 `lib/`、`compon
 | E36.3.31 | device-events、system-levels、device-use | 三个小插件放在一个会话里做：两个常驻线程改成真停；设备占用的轮询改成跟着插件开关 | 第 1 批 |
 | E36.3.32 | file-shelf | `fileShelf/v1`（截图、录屏要用的「加进中转」） | 第 1 批 |
 | E36.3.33 | music（媒体加歌词） | 媒体会话（Mac 上的 perl 子进程）改成真停；`media/v1`（第 4 阶段的歌词来源建在它上面；收起保持、Agent 读「在放音乐」改走它） | 第 1 批 |
-| E36.3.34 | clipboard | 两个窗口改成开着才建；监听线程和 Mac 上的轮询真停；`clipboard/v1`；第 2 版插件读剪贴板的那条路保留到第 6 阶段 | E36.3.29 |
+| E36.3.34 | clipboard | 两个窗口改成开着才建；监听线程和 Mac 上的轮询真停；`clipboard/v1`；第 2 版插件读剪贴板的那条路保留到第 6 阶段 | E36.3.29；剪贴板预览（[clipboard-preview-plan.md](../clipboard-preview-plan.md)）的 P1–P3 合入后再开工 |
 | E36.3.35 | screenshot（含录屏） | 快捷键线程真停；调文件中转、翻译、Agent 改走服务 | E36.3.32、E36.3.34、E36.3.37 |
 | E36.3.36 | voice-input | 快捷键线程真停；写待办、笔记改走 `todos/v1` | E36.3.38 |
 | E36.3.37 | agents | 审批 HTTP 服务、OpenCode 轮询、远程 SSH 连接真停；`agents/v1`（会话列表、用量、聚焦窗口），给会话环、用量环、截图、本机接口用；推送和 cc-connect 的双向 import 拆开 | 第 1 批 |
