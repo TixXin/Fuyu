@@ -17,7 +17,7 @@ pub(super) const WIN_V_MESSAGE: u32 = WM_APP + 0x52;
 
 pub(super) const PASTED_MESSAGE: u32 = WM_APP + 0x53;
 
-pub(super) static CLIPBOARD_HOTKEY_WINDOW: OnceLock<Mutex<Option<isize>>> = OnceLock::new();
+pub(super) static CLIPBOARD_HOTKEY_WINDOW: Mutex<Option<isize>> = Mutex::new(None);
 
 static CLIPBOARD_HOTKEY_REGISTERED: OnceLock<Mutex<bool>> = OnceLock::new();
 
@@ -41,8 +41,8 @@ fn report_hotkey_error(error: Option<String>) {
 
 pub(super) fn request_hotkey_refresh() {
     let hwnd = CLIPBOARD_HOTKEY_WINDOW
-        .get()
-        .and_then(|window| window.lock().ok())
+        .lock()
+        .ok()
         .and_then(|window| *window)
         .map(|window| HWND(window as *mut core::ffi::c_void));
 
@@ -62,15 +62,16 @@ pub(super) fn refresh_registered_hotkey(hwnd: HWND) {
 
     let win_v = snapshot
         .as_ref()
-        .is_some_and(|snapshot| snapshot.settings.enabled && snapshot.settings.win_v);
+        .is_some_and(|snapshot| super::switched_on() && snapshot.settings.enabled && snapshot.settings.win_v);
     let sequence = super::sequence::is_running();
     if let Err(error) = win32::win_key_hook::set(win_v.then_some((hwnd, WIN_V_MESSAGE)), sequence.then_some((hwnd, PASTED_MESSAGE))) {
         eprintln!("failed to take Win+V: {error}");
     }
 
-    if snapshot
-        .as_ref()
-        .is_some_and(|snapshot| !snapshot.settings.enabled || !snapshot.settings.shortcut_enabled)
+    if !super::switched_on()
+        || snapshot
+            .as_ref()
+            .is_some_and(|snapshot| !snapshot.settings.enabled || !snapshot.settings.shortcut_enabled)
     {
         report_hotkey_error(None);
         return;

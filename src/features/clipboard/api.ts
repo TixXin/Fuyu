@@ -397,3 +397,4 @@ export const sendClipboardPreviewCommand = (command: ClipboardPreviewCommand) =>
 export const listenClipboardPreviewCommand = (handler: (command: ClipboardPreviewCommand) => void) => listen<ClipboardPreviewCommand>(COMMAND_EVENT, ({ payload }) => handler(payload));
 export const reportClipboardPreview = (report: ClipboardPreviewReport) => emitTo("clipboard", REPORT_EVENT, report);
 export const listenClipboardPreviewReport = (handler: (report: ClipboardPreviewReport) => void) => listen<ClipboardPreviewReport>(REPORT_EVENT, ({ payload }) => handler(payload));
+export const getClipboardTexts = (limit: number | undefined) => invoke<unknown>("get_clipboard_texts", { limit: limit ?? null });

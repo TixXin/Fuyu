@@ -10,6 +10,7 @@ import { shortcutSections, type ShortcutsSectionProps } from "../../plugin-kerne
 import { ClipboardSettingsPage } from "../ClipboardSettingsPage";
 import { ClipboardShortcutGroup } from "../ClipboardShortcutGroup";
 import type { IslandSettings } from "../../../lib/settings/types";
+import { OWNER } from "./owner.ts";
 
 type PageProps = {
   settings: IslandSettings;
@@ -25,7 +26,7 @@ function ClipboardShortcutOwners() {
   return null;
 }
 
-settingsRunners.add({ id: "clipboard.shortcut-owners", component: ClipboardShortcutOwners });
+settingsRunners.add({ id: "clipboard.shortcut-owners", component: ClipboardShortcutOwners }, OWNER);
 
 function ClipboardShortcutsSection({ onOpenPage, takenBy }: ShortcutsSectionProps) {
   const t = useTranslation();
@@ -42,14 +43,14 @@ function ClipboardShortcutsSection({ onOpenPage, takenBy }: ShortcutsSectionProp
   );
 }
 
-shortcutSections.add({ id: "shortcuts.clipboard", category: "shortcuts", order: 20, component: ClipboardShortcutsSection });
+shortcutSections.add({ id: "shortcuts.clipboard", category: "shortcuts", order: 20, component: ClipboardShortcutsSection }, OWNER);
 
 const clipboardPage = (tab: ComponentProps<typeof ClipboardSettingsPage>["tab"]): ComponentType<PageProps> =>
   function ClipboardPage({ settings, onOpenShortcuts }) {
     return <ClipboardSettingsPage tab={tab} settings={settings} onOpenShortcuts={onOpenShortcuts} />;
   };
 
-addSettingsCategory("clipboard", clipboardPage("clipboard"));
-addSettingsCategory("clipboardHistory", clipboardPage("clipboardHistory"));
-addSettingsCategory("clipboardSnippets", clipboardPage("clipboardSnippets"));
-addSettingsCategory("clipboardData", clipboardPage("clipboardData"));
+addSettingsCategory("clipboard", clipboardPage("clipboard"), OWNER);
+addSettingsCategory("clipboardHistory", clipboardPage("clipboardHistory"), OWNER);
+addSettingsCategory("clipboardSnippets", clipboardPage("clipboardSnippets"), OWNER);
+addSettingsCategory("clipboardData", clipboardPage("clipboardData"), OWNER);

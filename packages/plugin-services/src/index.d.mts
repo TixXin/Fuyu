@@ -1,9 +1,10 @@
 export * from "./define.mjs";
 export * from "./services/calendar.mjs";
+export * from "./services/clipboard.mjs";
 export * from "./services/fileShelf.mjs";
 export * from "./services/media.mjs";
 export * from "./services/reminders.mjs";
 export * from "./services/timers.mjs";
 export * from "./services/translator.mjs";
 export * from "./generated/rust.mjs";
-export declare const SERVICES: readonly ["calendar/v1", "file-shelf/v1", "media/v1", "reminders/v1", "timers/v1", "translator/v1"];
+export declare const SERVICES: readonly ["calendar/v1", "clipboard/v1", "file-shelf/v1", "media/v1", "reminders/v1", "timers/v1", "translator/v1"];
