@@ -1,4 +1,6 @@
 import type { QuotaAlert } from "../../src/features/agent-status/quotaAlerts";
+import { agentLine, agentShell, quotaAlertState } from "../../src/features/agent-status/plugin/islandState";
+import { agentLineContribution } from "../../src/features/agent-status/plugin/agentLine";
 import type { AgentSession } from "../../src/features/agent-status/session";
 import type { CollapsedMeeting } from "../../src/features/calendar/upcoming";
 import { meetingState } from "../../src/features/calendar/plugin/islandState";
@@ -22,8 +24,6 @@ import { levelState } from "../../src/features/system-levels/plugin/islandState"
 import { todoLine } from "../../src/features/todos/plugin/islandState";
 import { todoLineContributions } from "../../src/features/todos/plugin/todoLines";
 import { translationPeekState } from "../../src/features/translation/plugin/islandState";
-import { useLegacyAlerts } from "../../src/windows/island/legacyAlerts";
-import { useLegacyLines } from "../../src/windows/island/legacyLines";
 
 type FixtureLines = {
   barText?: boolean;
@@ -40,13 +40,25 @@ type FixtureLines = {
   deviceUse?: DeviceUse;
   media?: MediaState | null;
   sideCover?: boolean;
+  status?: { state: string; label: string };
+  agents?: number | null;
 };
 
 const NO_DEVICES: DeviceUse = { camera: [], microphone: [] };
+const IDLE = { state: "idle", label: "" };
 
-export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false }: FixtureLines) {
+export function useFixtureLines({ barText = true, agentSession = null, lyricLine = null, todoTitle = null, todoCount = null, meeting = null, translationPeek = null, agentIconWidth = 0, deviceAlert = null, quotaAlert = null, levelPopup = null, deviceUse = NO_DEVICES, media = null, sideCover = false, status = IDLE, agents = null }: FixtureLines) {
   const t = useTranslation();
-  useLegacyAlerts({ quotaAlert });
+  quotaAlertState.useProvide(quotaAlert);
+  agentLine.useProvide(agentSession);
+  agentShell.useProvide(useMemo(() => ({ ...agentShell.get(), activeCount: agents ?? 0 }), [agents]));
+  const agentList: IslandContribution[] = [{ kind: "status", state: status.state, label: status.label }, { kind: "side", item: "agent", height: 28 }];
+  const agentLineItem = agentLineContribution(agentSession, false, agentIconWidth, agentSession ? t.island.agentSession(agentSession.label, agentSession.title) : "");
+  if (agentLineItem) agentList.push(agentLineItem);
+  if (agents !== null) agentList.push({ kind: "hint", key: "agents.count" });
+  if (agents !== null && agents > 0) agentList.push({ kind: "hint", key: "agent" });
+  if (quotaAlert) agentList.push({ kind: "alert", item: "quota" });
+  useIslandContributions("builtin", "fixture.agents", agentList);
   deviceAlertState.useProvide(deviceAlert);
   levelState.useProvide(levelPopup);
   const alerts: IslandContribution[] = [];
@@ -71,10 +83,4 @@ export function useFixtureLines({ barText = true, agentSession = null, lyricLine
   useIslandContributions("builtin", "fixture.todos", todoLineContributions(todo, t));
   meetingState.useProvide(meeting);
   useIslandContributions("calendar", "fixture.meeting", useMeetingContributions(meeting, barText));
-  return useLegacyLines({
-    agentSession,
-    interjecting: false,
-    agentIconWidth,
-    screenshotPeek: null,
-  });
 }

@@ -1,5 +1,6 @@
 mod calls;
 mod history;
+mod host;
 mod migration;
 mod model;
 mod service;

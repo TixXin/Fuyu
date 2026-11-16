@@ -5,8 +5,7 @@ import type { useIslandNotices } from "./useIslandNotices";
 
 type Notices = Pick<ReturnType<typeof useIslandNotices>, "qqNotifications" | "wechatReminders" | "qqMail" | "preview">;
 
-export function useTuckHold(settings: IslandSettings, { agentSessions, messagesOpen, notices }: {
-  agentSessions: readonly { phase: string }[];
+export function useTuckHold(settings: IslandSettings, { messagesOpen, notices }: {
   messagesOpen: boolean;
   notices: Notices;
 }): boolean {
@@ -19,6 +18,5 @@ export function useTuckHold(settings: IslandSettings, { agentSessions, messagesO
     wechat: { enabled: wechat.snapshot.enabled, pending: wechat.snapshot.pending },
     mail: { enabled: settings.mailEnabled, newUnread: hasNewUnreadMail(baselines, mail.mailboxes) },
   });
-  const agentWaiting = agentSessions.some((session) => session.phase === "waiting");
-  return holdsTuck(settings, { todoInProgress: false, agentWaiting, musicPlaying: false, messagesUnread });
+  return holdsTuck(settings, { todoInProgress: false, agentWaiting: false, musicPlaying: false, messagesUnread });
 }

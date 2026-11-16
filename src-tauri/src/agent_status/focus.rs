@@ -8,7 +8,7 @@ use super::session_process::{ancestor_chain, session_process_chain};
 use super::session_records::{self, SessionRecord};
 use super::wezterm::{self, WEZTERM_APP};
 use super::window_focus::{self, app_name, SessionHints};
-use super::{antigravity, dsh, opencode, trae, workbuddy};
+use super::{antigravity, antigravity_focus, dsh, opencode, trae, workbuddy};
 use crate::system::windows_home_dir;
 use crate::platform;
 
@@ -116,6 +116,28 @@ fn orca_handle(lookup: &Lookup, chain: &[u32], seen: Option<&SeenSession>, log: 
     found("orca-folder", by_folder, log)
 }
 
+fn provider_apps(provider: &str, app_dir: Option<&Path>, session_id: Option<&str>, log: &mut Attempt) -> Vec<String> {
+    match provider {
+        antigravity::PROVIDER => {
+            let product = app_dir.zip(session_id).and_then(|(dir, id)| antigravity_focus::session_product(dir, id));
+            if let Some(product) = product {
+                log.note(format!("product={}", product.label()));
+            }
+            antigravity_focus::apps_for(product)
+        }
+        _ => match provider {
+            workbuddy::PROVIDER => workbuddy::running_app(),
+            dsh::PROVIDER => dsh::running_app(),
+            opencode::PROVIDER => opencode::running_app(),
+            trae::PROVIDER => Some(trae::APP.to_string()),
+            trae::CN_PROVIDER => Some(trae::CN_APP.to_string()),
+            _ => None,
+        }
+        .into_iter()
+        .collect(),
+    }
+}
+
 pub(super) struct Focused {
     pub(super) found: bool,
     pub(super) missing_extension: Option<String>,
@@ -141,25 +163,19 @@ pub(super) fn focus_session(
     let handle = orca_handle(&lookup, &chain, seen.as_ref(), &mut log);
 
     let remembered_app = seen.as_ref().and_then(|seen| seen.host_exe.as_deref()).map(app_name);
-    let prefer_app = if handle.is_some() { Some(orca::ORCA_APP.to_string()) } else { remembered_app }
-        .or_else(|| match provider {
-            workbuddy::PROVIDER => workbuddy::running_app(),
-            antigravity::PROVIDER => Some(antigravity::APP.to_string()),
-            dsh::PROVIDER => dsh::running_app(),
-            opencode::PROVIDER => opencode::running_app(),
-            trae::PROVIDER => Some(trae::APP.to_string()),
-            trae::CN_PROVIDER => Some(trae::CN_APP.to_string()),
-            _ => None,
-        });
-    if let Some(app) = &prefer_app {
-        log.note(format!("prefer={app}"));
+    let prefer_apps: Vec<String> = match if handle.is_some() { Some(orca::ORCA_APP.to_string()) } else { remembered_app } {
+        Some(app) => vec![app],
+        None => provider_apps(provider, app_dir, session_id, &mut log),
+    };
+    if !prefer_apps.is_empty() {
+        log.note(format!("prefer={}", prefer_apps.join("|")));
     }
     let (folder, ancestors) = cwd.map(folder_names).unwrap_or_default();
     let hints = SessionHints { folder: folder.as_deref(), ancestors: &ancestors, title, is_codex };
     let mut wezterm_tab = false;
-    let focused = window_focus::focus_session_window(&hints, &chain, prefer_app.as_deref()).or_else(|| {
+    let focused = window_focus::focus_session_window(&hints, &chain, &prefer_apps).or_else(|| {
         wezterm_tab = wezterm::activate_tab_titled(None, title?);
-        wezterm_tab.then(|| window_focus::focus_session_window(&hints, &chain, Some(WEZTERM_APP)))?
+        wezterm_tab.then(|| window_focus::focus_session_window(&hints, &chain, &[WEZTERM_APP.to_string()]))?
     });
     if wezterm_tab {
         log.note("wezterm-tab=selected");

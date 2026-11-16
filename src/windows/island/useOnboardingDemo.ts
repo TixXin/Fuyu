@@ -1,18 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { AgentSessionSummary } from "../../features/agent-status/api";
-import { useTranslation } from "../../i18n";
 import { ONBOARDING_DEMO_STORAGE_KEY, islandDemoUntil } from "../onboarding/storage";
 
 export type OnboardingDemo = {
   active: boolean;
   startedAt: number;
-  sessions: AgentSessionSummary[];
 };
 
-const OFF: OnboardingDemo = { active: false, startedAt: 0, sessions: [] };
+const OFF: OnboardingDemo = { active: false, startedAt: 0 };
 
 export function useOnboardingDemo(): OnboardingDemo {
-  const text = useTranslation().onboarding.demo;
   const [until, setUntil] = useState(() => islandDemoUntil());
   const [now, setNow] = useState(() => Date.now());
   const [startedAt, setStartedAt] = useState(() => Date.now());
@@ -44,20 +40,6 @@ export function useOnboardingDemo(): OnboardingDemo {
     return {
       active,
       startedAt,
-      sessions: [{
-        provider: "claudeCode",
-        sessionId: "fuyu-onboarding-demo",
-        cwd: null,
-        title: text.agentTitle,
-        model: "Opus 5.5",
-        effort: null,
-        phase: "running",
-        lastMessage: null,
-        updatedAt: startedAt,
-        host: null,
-        turnStartedAt: startedAt,
-        lastPrompt: text.agentPrompt,
-      }],
     };
-  }, [active, startedAt, text]);
+  }, [active, startedAt]);
 }

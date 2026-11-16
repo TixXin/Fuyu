@@ -1,14 +1,9 @@
 import { useEffect } from "react";
-import { matchesClipboardShortcut } from "../../features/clipboard/shortcut";
-import { togglePins } from "../../features/screenshot/api";
 import { pageCycleDirection, pageDigitFromEvent } from "../../lib/settings/pageShortcuts";
 import { cycleShortcutPage, pageForAltDigit, type IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
 
 export function useIslandKeyboard(
-  clipboardShortcutEnabled: boolean,
-  clipboardShortcut: string,
-  onToggleClipboardHistory: () => void,
   onCollapse: () => void,
   mode: IslandMode,
   features: IslandFeatures,
@@ -20,15 +15,6 @@ export function useIslandKeyboard(
 ) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        clipboardShortcutEnabled &&
-        matchesClipboardShortcut(event, clipboardShortcut)
-      ) {
-        event.preventDefault();
-        onToggleClipboardHistory();
-        return;
-      }
-
       const digit = pageDigitFromEvent(event, pageDigitModifiers);
       if (digit !== null && mode === "expanded") {
         const target = pageForAltDigit(features, digit);
@@ -47,33 +33,19 @@ export function useIslandKeyboard(
         return;
       }
 
-      if (event.key === "Escape") {
-        onCollapse();
-        return;
-      }
-
-      if (event.key.toLowerCase() === "t" && !event.ctrlKey && !event.altKey && !event.metaKey && !isTyping(event.target)) {
-        void togglePins();
-      }
+      if (event.key === "Escape") onCollapse();
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
-    clipboardShortcut,
-    clipboardShortcutEnabled,
     features,
     mode,
     onCollapse,
     onPageChange,
-    onToggleClipboardHistory,
     page,
     pageDigitModifiers,
     pageNextShortcut,
     pagePreviousShortcut,
   ]);
-}
-
-function isTyping(target: EventTarget | null) {
-  return target instanceof HTMLElement && (target.isContentEditable || target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement);
 }

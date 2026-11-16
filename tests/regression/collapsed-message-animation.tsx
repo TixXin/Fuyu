@@ -99,11 +99,11 @@ function Fixture() {
   const preview = useLatestMessagePreview(qq, wechat, qqMail, NO_PLUGIN_NOTIFICATIONS);
   changeMode = setMode; changeTucked = setTucked; changeCount = setCount; changeTask = setTask;
   changeWidth = setWidth; changeTitle = setTitle; changeFont = setPixel; changeAgent = setAgent;
+  useFixtureLines({ agents: agentsEnabled ? agentCount : null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: task ?? `剩余${count}个待办`, agentSession: agent, meeting: meeting, levelPopup: level, deviceAlert, deviceUse });
   return <div className={`stage${pixel ? " stage--font-pixel" : ""}`} style={{ "--collapsed-island-width": `${width}px` } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoTitle: task ?? `剩余${count}个待办`, agentSession: agent, meeting: meeting, levelPopup: level, deviceAlert, deviceUse })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode={mode} page="todo" isTucked={tucked} isDetached={true} showTitle={title}
-      showCollapsedText={true} activeAgentSessionCount={agentCount}
-      appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
+      showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: agentsEnabled, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null}
       onOpenPage={(page) => { openedPage = page; }} onOpenMessages={(source) => { openedPage = source; }}

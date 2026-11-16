@@ -95,12 +95,12 @@ node scripts/release/make-latest-json.mjs --base-url "https://ghfast.top/https:/
 
 ```powershell
 # 只需在第一次启用应用内更新前生成一次
-pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
+pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fuyu\updater.key
 ```
 
-生成后同目录会有 `fly-island.key`（私钥）和 `fly-island.key.pub`（公钥）：
+生成后同目录会有 `updater.key`（私钥）和 `updater.key.pub`（公钥）：
 
-- 私钥：自己保管，放在密码管理器或发布机器的 `%USERPROFILE%\.tauri\` 下，不要提交、不要外传。
+- 私钥：自己保管，放在密码管理器或发布机器的 `%USERPROFILE%\.tauri\fuyu\` 下，不要提交、不要外传。
 - 公钥：写进 `tauri.conf.json` 的 `plugins.updater.pubkey`，发布构建时也通过 `TAURI_UPDATER_PUBKEY` 传入并核对。
 
 **私钥一旦丢失，已装上的旧版本就收不到更新**，只能让用户手动重装；换新密钥同样会让旧客户端拒绝新包。所以第一条发布线尽量只生成一次密钥，换机器时把私钥文件拷过去，不要重新生成。
@@ -109,7 +109,7 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
 
 ### Windows 本机自动读取
 
-已配置的发布机器运行 `pnpm release` 即可，无需每次复制密钥内容或设置环境变量。本机配置路径为 `%USERPROFILE%\.tauri\fuyu\release.json`（这个目录不存在而改名前的 `%USERPROFILE%\.tauri\fly-island\` 存在时读旧目录，两个插件签名私钥也一样），格式如下（路径应为实际绝对路径）：
+已配置的发布机器运行 `pnpm release` 即可，无需每次复制密钥内容或设置环境变量。本机配置路径为 `%USERPROFILE%\.tauri\fuyu\release.json`（这个目录不存在时读改名前的旧目录，两个插件签名私钥也一样，见 [改名兼容](../architecture/contracts.md#改名兼容d17)），格式如下（路径应为实际绝对路径）：
 
 ```json
 {
@@ -120,7 +120,7 @@ pnpm tauri signer generate -w $env:USERPROFILE\.tauri\fly-island.key
 }
 ```
 
-私钥本身带密码；`password.dpapi` 是通过 `ConvertFrom-SecureString` 生成的 Windows 当前用户加密密码。密钥目录应只授予维护者账号访问。文件均位于仓库外，不能提交到 Git。可用 `FUYU_SIGNING_CONFIG` 指定其他本机配置路径（改名前的 `FOCUSD_SIGNING_CONFIG` 也认）。把旧目录整个改名成 `fuyu` 时，同时改 `release.json` 里的三个路径；`password.dpapi` 只认 Windows 账户，不认路径，挪过去照样能解开。
+私钥本身带密码；`password.dpapi` 是通过 `ConvertFrom-SecureString` 生成的 Windows 当前用户加密密码。密钥目录应只授予维护者账号访问。文件均位于仓库外，不能提交到 Git。可用 `FUYU_SIGNING_CONFIG` 指定其他本机配置路径（改名前的旧变量名也认）。把改名前的旧目录整个改名成 `fuyu` 时，同时改 `release.json` 里的三个路径；`password.dpapi` 只认 Windows 账户，不认路径，挪过去照样能解开。
 
 更换 Windows 用户或重装系统后，原 DPAPI 密码文件无法解密。恢复时使用受保护备份中的私钥及恢复密码重新创建 DPAPI 密码文件；同一条发布线继续使用原密钥，不重新生成。恢复密码与私钥都属于敏感文件。
 
@@ -154,8 +154,8 @@ Mac 上的 `~/.tauri/fuyu/release.json` 不写 `passwordFile`，改写 `keychain
 3. Windows 发布机器配置一次上述本机凭据即可；其他机器或 CI 设置发布环境变量：
 
    ```powershell
-   $env:TAURI_UPDATER_PUBKEY = Get-Content -Raw $env:USERPROFILE\.tauri\fly-island.key.pub
-   $env:TAURI_SIGNING_PRIVATE_KEY = Get-Content -Raw $env:USERPROFILE\.tauri\fly-island.key
+   $env:TAURI_UPDATER_PUBKEY = Get-Content -Raw $env:USERPROFILE\.tauri\fuyu\updater.key.pub
+   $env:TAURI_SIGNING_PRIVATE_KEY = Get-Content -Raw $env:USERPROFILE\.tauri\fuyu\updater.key
    $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
    ```
 

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { todoLine } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type LineContext = {
   showTitle: boolean;
@@ -34,5 +35,5 @@ function TodoCountLine({ showTitle, center }: LineContext) {
   );
 }
 
-lineSlot.add({ id: "todos.title", component: TodoTitleLine });
-lineSlot.add({ id: "todos.count", component: TodoCountLine });
+lineSlot.add({ id: "todos.title", component: TodoTitleLine }, OWNER);
+lineSlot.add({ id: "todos.count", component: TodoCountLine }, OWNER);

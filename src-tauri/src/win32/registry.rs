@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn missing_keys_and_values_read_as_none() {
-        let missing_key = r"Software\FocuSD\NoSuchKey";
+        let missing_key = r"Software\Fuyu\NoSuchKey";
         assert_eq!(read_string(HKEY_CURRENT_USER, missing_key, "Value"), None);
         assert_eq!(
             read_string(HKEY_LOCAL_MACHINE, CURRENT_VERSION, "NoSuchValue"),
@@ -112,7 +112,7 @@ mod tests {
     fn subkeys_and_qword_values_are_read() {
         let names = subkey_names(HKEY_LOCAL_MACHINE, r"SOFTWARE\Microsoft\Windows NT");
         assert!(names.iter().any(|name| name == "CurrentVersion"));
-        assert!(subkey_names(HKEY_CURRENT_USER, r"Software\FocuSD\NoSuchKey").is_empty());
+        assert!(subkey_names(HKEY_CURRENT_USER, r"Software\Fuyu\NoSuchKey").is_empty());
         assert!(read_u64(HKEY_LOCAL_MACHINE, CURRENT_VERSION, "InstallTime").is_some_and(|time| time > 0));
         assert_eq!(read_u64(HKEY_LOCAL_MACHINE, CURRENT_VERSION, "ProductName"), None);
     }

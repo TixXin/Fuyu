@@ -1,31 +1,32 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import type { AgentSessionSummary } from "../../features/agent-status/api";
-import { sessionKey } from "../../features/agent-status/unseen";
-import { useAgentApprovals } from "../../features/agent-status/approvals/useAgentApprovals";
-import { useAgentApprovalSettings } from "../../features/agent-status/approvals/useAgentApprovalSettings";
-import { alertKindsOf, useAgentAlerts } from "../../features/agent-status/useAgentAlerts";
-import { useAgentSounds } from "../../features/agent-status/sounds/useAgentSounds";
-import { useAgentPush } from "../../features/agent-status/push/useAgentPush";
-import { reminderSound } from "../../features/agent-status/sounds/events";
-import { playAgentSound } from "../../features/agent-status/sounds/player";
-import { useAgentSoundSettings } from "../../features/agent-status/sounds/useAgentSoundSettings";
+import type { AgentSessionSummary } from "./api";
+import { sessionKey } from "./unseen";
+import { useAgentApprovals } from "./approvals/useAgentApprovals";
+import { useAgentApprovalSettings } from "./approvals/useAgentApprovalSettings";
+import { alertKindsOf, useAgentAlerts } from "./useAgentAlerts";
+import { useAgentSounds } from "./sounds/useAgentSounds";
+import { useAgentPush } from "./push/useAgentPush";
+import { reminderSound } from "./sounds/events";
+import { playAgentSound } from "./sounds/player";
+import { useAgentSoundSettings } from "./sounds/useAgentSoundSettings";
 import type { IslandSettings } from "../../lib/settings/types";
-import type { IslandMode, IslandPage } from "./types";
-import { useHoverHold } from "./useHoverHold";
-import { useOutsideClick } from "./useOutsideClick";
+import type { IslandHost } from "../plugin-kernel/islandHost";
+import { useHoverHold } from "../plugin-kernel/useHoverHold";
+import { useOutsideClick } from "../plugin-kernel/useOutsideClick";
 
 type IslandAgentAlertsOptions = {
   sessions: AgentSessionSummary[];
   unseen: ReadonlySet<string>;
   settings: IslandSettings;
   enabled: boolean;
-  mode: IslandMode;
-  page: IslandPage;
-  openIslandPage: (page: IslandPage) => void;
+  mode: string;
+  page: string;
+  openIslandPage: (page: "agents") => void;
   collapseIsland: () => void;
+  host: IslandHost;
 };
 
-export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode, page, openIslandPage, collapseIsland }: IslandAgentAlertsOptions) {
+export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode, page, openIslandPage, collapseIsland, host }: IslandAgentAlertsOptions) {
   const isOpenOnAgents = mode === "expanded" && page === "agents";
   const autoOpenedRef = useRef(false);
   const onOpen = () => {
@@ -66,7 +67,7 @@ export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode
 
   useAgentSounds(sessions, enabled, unseen);
   useAgentPush(sessions, settings.agentStatusEnabled, unseen);
-  const holdsOpen = useHoverHold();
+  const holdsOpen = useHoverHold(host);
   const [soundSettings] = useAgentSoundSettings();
   const remind = (reminded: AgentSessionSummary[]) => {
     const event = reminderSound(reminded[reminded.length - 1]);
@@ -88,7 +89,7 @@ export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode
     looked: (session) => !unseen.has(sessionKey(session)),
     holdsOpen,
   });
-  useOutsideClick(alertedSession !== null && !waiting && isOpenOnAgents, collapseIsland);
+  useOutsideClick(alertedSession !== null && !waiting && isOpenOnAgents, collapseIsland, host);
   const agentCardHeight = approvals.current ? approvals.cardHeight : alertedSession?.rowHeight;
   const alertPopup = alertedSession !== null && !approvals.current && isOpenOnAgents;
   return { alertedSession, approvals, agentCardHeight, alertPopup };

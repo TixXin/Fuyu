@@ -83,10 +83,10 @@ pub(super) fn hear(line: &str) -> Heard {
 }
 
 pub(super) const PORT_CHECK_SCRIPT: &str =
-    "PATH=\"$PATH:/usr/sbin:/sbin\"\nss -ltn 2>/dev/null || netstat -ltn 2>/dev/null || echo FOCUSD_NO_PORT_TOOL\n";
+    "PATH=\"$PATH:/usr/sbin:/sbin\"\nss -ltn 2>/dev/null || netstat -ltn 2>/dev/null || echo FUYU_NO_PORT_TOOL\n";
 
 pub(super) fn port_listening(output: &str, port: u16) -> Result<bool, String> {
-    if output.contains("FOCUSD_NO_PORT_TOOL") {
+    if output.contains("FUYU_NO_PORT_TOOL") {
         return Err("Neither ss nor netstat runs on the server".into());
     }
     let suffix = format!(":{port}");

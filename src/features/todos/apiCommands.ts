@@ -1,3 +1,4 @@
+import { readProject } from "../../lib/todo-projects/prefix.ts";
 import { daysBetween, listDay, noteOfDay } from "./todoHistory.ts";
 import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
 
@@ -17,7 +18,7 @@ export type TodoApiState = {
 export type TodoApiChange = {
   todos?: TodoItem[];
   dailyNote?: string;
-  schedule?: { title: string; date: string };
+  schedule?: { title: string; date: string; project?: string };
 };
 
 export type TodoApiOutcome = { result: TodoApiResult; change?: TodoApiChange };
@@ -85,6 +86,10 @@ export function runTodoApiCall(
       if (!title) {
         return fail(400, `"title" must be a non-empty string of at most ${MAX_TITLE_LENGTH} characters.`);
       }
+      if (input.project !== undefined && input.project !== null && typeof input.project !== "string") {
+        return fail(400, `"project" must be a string.`);
+      }
+      const project = readProject(input.project);
       const date = input.date;
       if (date !== undefined && (typeof date !== "string" || !DATE_PATTERN.test(date))) {
         return fail(400, `"date" must look like YYYY-MM-DD.`);
@@ -93,9 +98,9 @@ export function runTodoApiCall(
         return fail(400, `"date" cannot be before the list's day (${state.date}).`);
       }
       if (typeof date === "string" && date > state.date) {
-        return { result: ok({ title, date, scheduled: true }), change: { schedule: { title, date } } };
+        return { result: ok({ title, date, scheduled: true }), change: { schedule: { title, date, ...(project ? { project } : {}) } } };
       }
-      const todo: TodoItem = { id: create.id, title, completed: false, createdAt: create.now };
+      const todo: TodoItem = { id: create.id, title, completed: false, createdAt: create.now, ...(project ? { project } : {}) };
       return { result: ok(todo), change: { todos: [todo, ...state.todos] } };
     }
 

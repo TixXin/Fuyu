@@ -164,7 +164,7 @@ fn unreadable_files_read_as_an_empty_shelf() {
 
 #[test]
 fn saved_items_load_back_unchanged() {
-    let directory = std::env::temp_dir().join(format!("fly-island-shelf-test-{}", std::process::id()));
+    let directory = std::env::temp_dir().join(format!("fuyu-shelf-test-{}", std::process::id()));
     let path = directory.join(FILE_SHELF_FILE_NAME);
     let items = vec![item("a", r"C:\a.txt"), item("b", r"D:\folder")];
 

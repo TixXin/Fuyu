@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn replaces_the_file_and_leaves_no_temporary_behind() {
-        let dir = std::env::temp_dir().join(format!("focusd-fs-write-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fuyu-fs-write-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("history.json");
         fs::write(&path, b"old").unwrap();
@@ -50,7 +50,7 @@ mod tests {
     #[test]
     fn waits_out_a_program_that_holds_the_file_for_a_moment() {
         use std::os::windows::fs::OpenOptionsExt;
-        let dir = std::env::temp_dir().join(format!("focusd-fs-write-held-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fuyu-fs-write-held-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let path = dir.join("history.json");
         fs::write(&path, b"old").unwrap();

@@ -2,10 +2,10 @@ import { useMemo } from "react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandContributions } from "../../plugin-kernel/useIslandContributions";
-import { todosIsland } from "../../todos/plugin/islandState";
 import { todoEvents } from "../todoEvents";
 import { useCalendar } from "../useCalendar";
-import { calendarState, meetingState } from "./islandState";
+import { useTodoLink } from "../useTodoLink";
+import { calendarState, meetingState, todoLinkState } from "./islandState";
 import { useMeetingContributions } from "./meetingLines";
 import { OWNER } from "./owner.ts";
 
@@ -18,8 +18,10 @@ const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
 
 function CalendarRunner({ barText, settings }: RunnerProps) {
   const t = useTranslation();
-  const todos = todosIsland.use()?.todos;
-  const timedTodos = useMemo(() => (settings.todoEnabled && todos ? todoEvents(todos, Date.now(), t.island.todoList) : []), [settings.todoEnabled, t, todos]);
+  const link = useTodoLink(settings.todoEnabled);
+  todoLinkState.useProvide(link);
+  const todos = link?.todos;
+  const timedTodos = useMemo(() => (todos ? todoEvents(todos, Date.now(), t.island.todoList) : []), [t, todos]);
   const calendar = useCalendar(settings.calendarEnabled, settings.calendarRemindMinutes, timedTodos);
   calendarState.useProvide(calendar);
   const { upcoming } = calendar;

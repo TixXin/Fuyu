@@ -368,6 +368,17 @@ mod call_tests {
     }
 
     #[test]
+    fn add_takes_an_optional_project() {
+        let (todo, _) = call("todos.add", json!({ "title": "x", "project": "  工作  " })).expect("project");
+        assert_eq!(todo["project"], "工作");
+        let (later, _) = call("todos.add", json!({ "title": "x", "date": "2026-11-10", "project": "a".repeat(30) })).expect("later");
+        assert_eq!(later["project"], "a".repeat(20));
+        let (blank, _) = call("todos.add", json!({ "title": "x", "project": "  " })).expect("blank");
+        assert!(blank.get("project").is_none());
+        assert_eq!(call("todos.add", json!({ "title": "x", "project": 3 })).expect_err("number").0, 400);
+    }
+
+    #[test]
     fn add_refuses_bad_titles_and_dates() {
         for params in [json!({}), json!({ "title": "   " }), json!({ "title": 5 }), json!({ "title": "x".repeat(501) })] {
             assert!(call("todos.add", params).expect_err("title").1.contains("title"));
@@ -741,5 +752,24 @@ mod stamp_tests {
         data.todos[0].updated_at = None;
         fill_missing(&mut data, "dev2");
         assert_eq!(data.todos[0].updated_at, Some(stamp(1_762_300_000_000, "dev2")));
+    }
+}
+
+mod host_tests {
+    use super::super::host::error_code;
+
+    #[test]
+    fn host_errors_use_the_service_codes() {
+        assert_eq!(error_code(400), "bad-params");
+        assert_eq!(error_code(404), "not-found");
+        assert_eq!(error_code(503), "inactive");
+        assert_eq!(error_code(500), "failed");
+    }
+
+    #[test]
+    fn todos_have_no_background_in_rust() {
+        let catalog = crate::plugin_kernel::builtins::catalog();
+        let todos = catalog.iter().find(|plugin| plugin.id == "todos").expect("todos is a built-in plugin");
+        assert_eq!(todos.background.as_deref(), Some(&[][..]));
     }
 }

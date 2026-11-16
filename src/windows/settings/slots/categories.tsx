@@ -10,6 +10,7 @@ import { AboutSettingsPage } from "../AboutSettingsPage";
 import { PluginsSettingsPage } from "../PluginsSettingsPage";
 import { PluginsV3SettingsPage } from "../PluginsV3SettingsPage";
 import { PluginMarketSection } from "../../../features/plugins/PluginMarketSection";
+import { OWNER as TODOS } from "../../../features/todos/plugin/owner.ts";
 import { addSettingsCategory, type SettingsCategory, type SettingsPageProps } from "./categorySlot";
 import "./featureSettings";
 
@@ -71,4 +72,6 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   about: ({ onSettingsChange }) => <AboutSettingsPage onSettingsChange={onSettingsChange} />,
 };
 
-for (const [id, page] of Object.entries(PAGES)) addSettingsCategory(id as SettingsCategory, page);
+const OWNERS: Partial<Record<SettingsCategory, string>> = { todos: TODOS };
+
+for (const [id, page] of Object.entries(PAGES)) addSettingsCategory(id as SettingsCategory, page, OWNERS[id as SettingsCategory]);

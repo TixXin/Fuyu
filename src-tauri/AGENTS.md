@@ -21,7 +21,7 @@ src-tauri/src/
 ├── ssh_tunnel/              # SSH 代理隧道（内置插件 focusd.ssh-proxy-tunnel）：ssh-tunnels.json（config.rs），每台主机一条常驻 ssh -R、作业对象、退避重连（tunnel.rs），服务器端口占用检查，本地代理端口自动检测（local_proxy.rs）
 ├── cc_connect/              # cc-connect 手机连接（内置插件 focusd.cc-connect）：找程序（插件设置 → 正在运行 → PATH → 岛下载的 → C/D 盘 Program Files，locate.rs）、下载并核对发布包（install.rs）、只读会话列表（chats.rs）、检查机器人 token（bots.rs）、往 config.toml 追加项目（config_file.rs）、飞书扫码（feishu.rs）、看护岛启动的 cc-connect（runner.rs）、经 cc-connect send 发消息
 ├── system/                  # 开机自启（注册表）、更新代理与配置、待办 Markdown 导出；update_runtime.rs 为跨窗口更新状态与互斥，update_notifications.rs 为更新系统通知与白名单诊断
-├── rename_migration/        # 改名迁移（D17）：首次启动时把 com.focusd.island 的数据目录、凭据、开机自启、hook 迁移到 com.tixxin.fuyu，并静默卸载旧安装
+├── rename_migration/        # 改名迁移（D17）：首次启动时把改名前的数据目录、凭据、开机自启、hook 迁移到 com.tixxin.fuyu，并静默卸载旧安装；各处旧名兼容的清单见 docs/architecture/contracts.md「改名兼容（D17）」
 ├── clipboard_history/
 ├── coexist/                 # 开发版和正式版抢系统资源时谁让谁（F39.4）：state.rs 纯判断，mod.rs 轮询对方在不在（开发版探测单实例互斥量，正式版探测开发版持有的 dev-first 互斥量，放手后持有 release-yielded；正式版只在本机有开发版数据目录时才起线程）、`yielding()`、命令 get_dev_priority / set_dev_priority、状态翻转时让五处快捷键重新注册、让审批服务停下或接管（F39.5）；让出时提醒不弹横幅（`banner_visible`）；Mac 上是 unsupported.rs
 ├── file_shelf/              # 文件中转：路径列表（file-shelf.json）与命令；拖出调用 win32/ole.rs

@@ -1,5 +1,5 @@
 import { act, StrictMode, type CSSProperties } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
@@ -8,7 +8,10 @@ import { useLatestMessagePreview } from "../../src/windows/island/useLatestMessa
 import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
 
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
-import { useCollapsedSlots } from "../../src/windows/island/useCollapsedSlots";
+import { useCollapsedGauges } from "../../src/windows/island/useCollapsedGauges";
+import { useCenterDecor } from "../../src/features/center-pattern/useCenterDecor";
+import { useSessionRingDecor } from "../../src/features/session-ring/useSessionRingDecor";
+import { mergeIslandDecor } from "../../src/features/plugin-kernel/islandDecor";
 import type { CollapsedSlots } from "../../src/windows/island/types";
 import type { AgentActivity } from "../../src/features/center-pattern";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
@@ -63,17 +66,17 @@ const NO_AGENTS: AgentActivity[] = [];
 let corners: CSSProperties = {};
 
 function Island({ agents, count, list, report, look }: { agents: boolean; count: number; list: AgentSessionSummary[]; report: (slots: CollapsedSlots) => void; look: CSSProperties }) {
-  const slots = useCollapsedSlots({ paused: true, agents: NO_AGENTS, sessions: list, unseen: UNSEEN, agentsOn: agents, onOpenAgents: OPEN_AGENTS, markLight: false });
+  const slots: CollapsedSlots = mergeIslandDecor([useCenterDecor({ paused: true, agents: NO_AGENTS, markLight: false }), useSessionRingDecor({ paused: true, sessions: list, unseen: UNSEEN, agentsOn: agents, onOpenAgents: OPEN_AGENTS }), useCollapsedGauges(true)]);
   report(slots);
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const preview = useLatestMessagePreview(qq, wechat, qqMail, NO_PLUGIN_NOTIFICATIONS);
+  useFixtureLines({ agents: agents ? count : null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className="stage" style={{ "--collapsed-island-width": "300px", ...look } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办" })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
-      showCollapsedText={true} activeAgentSessionCount={count}
-      appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
+      showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} collapsedSlots={slots}
       onOpenPage={(page) => { openedPage = page; }} onOpenMessages={() => {}}
@@ -92,7 +95,20 @@ function check(condition: unknown, label: string) {
   messages.push(`PASS ${label}`);
 }
 
+let live: { root: Root; box: HTMLElement } | null = null;
+
+async function freezeLive() {
+  if (!live) return;
+  const { root, box } = live;
+  for (let tries = 0; tries < 50 && box.querySelector(".island--preparing"); tries += 1) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+  const html = box.innerHTML;
+  await act(async () => root.unmount());
+  box.innerHTML = html;
+  live = null;
+}
+
 async function mount(caption: string, agents: boolean, count = 2) {
+  await freezeLive();
   let slots: CollapsedSlots = {};
   const box = document.createElement("div");
   box.className = "fixture";
@@ -100,8 +116,10 @@ async function mount(caption: string, agents: boolean, count = 2) {
   label.className = "caption";
   label.textContent = caption;
   fixtures.append(box, label);
+  const root = createRoot(box);
+  live = { root, box };
   await act(async () => {
-    createRoot(box).render(<StrictMode><Island agents={agents} count={count} list={sessions} report={(next) => { slots = next; }} look={corners} /></StrictMode>);
+    root.render(<StrictMode><Island agents={agents} count={count} list={sessions} report={(next) => { slots = next; }} look={corners} /></StrictMode>);
   });
   for (let frame = 0; frame < 10; frame += 1) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 16)); });
   return [box.querySelector<HTMLElement>(".island__collapsed")!, slots] as const;
@@ -161,11 +179,12 @@ async function runChecks() {
       && box16.bottom === columns[0].getBoundingClientRect().bottom && !bars(3)[1].dataset.state,
     "横条 6×3px、状态色，每根柱子 5 格一样高，从下往上亮，没亮的是暗格");
     const radius16 = parseFloat(getComputedStyle(bars(0)[0]).borderTopLeftRadius);
+    const shape16 = getComputedStyle(bars(0)[0]).getPropertyValue("corner-shape");
     corners = { "--island-corner-radius-size": 40, "--island-corner-shape": "round" } as CSSProperties;
     [bar] = await mount("信号格：岛屿圆角 40、圆角样式「圆角」", true);
     const round = bar.querySelector<HTMLElement>(".session-signal__bar")!;
     check(Math.abs(radius16 - (16 * 22 / 30) * 3 / 38) < 0.01 && getComputedStyle(round).borderTopLeftRadius === "1.5px"
-      && getComputedStyle(round).getPropertyValue("corner-shape") !== getComputedStyle(bars(0)[0]).getPropertyValue("corner-shape"),
+      && getComputedStyle(round).getPropertyValue("corner-shape") !== shape16,
     "横条圆角跟外观的岛屿圆角等比缩放（最大半个条高），圆角样式（方圆 / 圆角）跟着变");
     corners = {};
     sessions = CROWD;

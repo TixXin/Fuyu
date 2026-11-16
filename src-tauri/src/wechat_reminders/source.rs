@@ -9,7 +9,7 @@ use windows::Win32::{
     UI::WindowsAndMessaging::{HSHELL_REDRAW, HSHELL_WINDOWACTIVATED, HSHELL_WINDOWCREATED},
 };
 
-const CLASS_NAME: &str = "FocuSDWeChatReminderSource";
+const CLASS_NAME: &str = "FuyuWeChatReminderSource";
 const HSHELL_FLASH: u32 = HSHELL_REDRAW | 0x8000;
 const HSHELL_RUDEAPPACTIVATED: u32 = HSHELL_WINDOWACTIVATED | 0x8000;
 

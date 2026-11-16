@@ -40,11 +40,11 @@ function GlassIsland({ background, light }: { background: string; light: boolean
     ...(light ? { "--island-ink-rgb": "24, 24, 30", "--task-text-color": "#1c1c1f" } : {}),
     ...glassStyle,
   } as CSSProperties;
+  useFixtureLines({ agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "整理周报" });
   return <div className={`stage${light ? " island-light" : ""}`} data-tone={light ? "light" : "dark"} style={stageStyle}>
-    <IslandShell lineSources={useFixtureLines({ todoTitle: "整理周报" })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
+    <IslandShell qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={null}
       mode={mode} page="todo" isTucked={false} isDetached={false} showTitle={false}
-      showCollapsedText activeAgentSessionCount={0}
-      appearanceMode="liquidGlass" nativeGlassState="css-fallback" glass={glass} agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
+      showCollapsedText appearanceMode="liquidGlass" nativeGlassState="css-fallback" glass={glass}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       shelfCount={null}
       onOpenPage={() => {}} onOpenMessages={() => {}}

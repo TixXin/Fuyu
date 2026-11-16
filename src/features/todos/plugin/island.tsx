@@ -2,6 +2,7 @@ import { defineSlot, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { TodoIslandPage } from "../island/TodoIslandPage";
 import { todosIsland } from "./islandState";
 import { islandPage } from "./page.ts";
+import { OWNER } from "./owner.ts";
 
 type TodoPageProps = {
   settings: { enableTodoReorder: boolean };
@@ -22,4 +23,4 @@ function TodoPage({ settings, todoScrollStartRows }: TodoPageProps) {
   );
 }
 
-pageSlot.add({ ...islandPage, component: TodoPage });
+pageSlot.add({ ...islandPage, component: TodoPage }, OWNER);
