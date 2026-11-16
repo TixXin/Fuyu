@@ -10,7 +10,6 @@ export type CollapsedLineSources = {
   meeting: CollapsedMeeting | null;
   todoTitle: string | null;
   todoCount: number | null;
-  translationPeek: string | null;
   screenshotPeek: string | null;
 };
 

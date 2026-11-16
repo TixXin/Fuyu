@@ -7,7 +7,6 @@ import { todoEvents } from "../../features/calendar/todoEvents";
 import { IslandPages } from "./IslandPages";
 import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
-import { useQuickTranslation } from "../../features/translation/useQuickTranslation";
 import { useScreenshotText } from "../../features/screenshot/useScreenshotText";
 import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
 import { useScreenshotNotice } from "../../features/screenshot/useScreenshotNotice";
@@ -40,7 +39,6 @@ import { useTuckHold } from "./useTuckHold";
 import { useIslandShelf } from "./useIslandShelf";
 import { useIslandScreenshot } from "./useIslandScreenshot";
 import { useIslandHover } from "./useIslandHover";
-import { useIslandTranslation } from "./useIslandTranslation";
 import { usePluginPages } from "./usePluginPages";
 import { useMessageView } from "./useMessageView";
 import { useIslandBanner } from "./useIslandBanner";
@@ -73,7 +71,7 @@ import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPan
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
 import { leadLine } from "../../features/plugin-kernel/islandContributions";
-import { useIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
+import { runIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { useLegacyAlerts } from "./legacyAlerts";
 import { useLegacyLines } from "./legacyLines";
@@ -85,6 +83,9 @@ import { useLegacyStyle } from "./legacyStyle";
 import type { IslandPage } from "./types";
 
 const NO_TODOS: TodoItem[] = [];
+const openTranslator = () => {
+  runIslandAction("translation.open");
+};
 
 export function IslandApp() {
   const t = useTranslation();
@@ -130,8 +131,6 @@ export function IslandApp() {
   const screenshotNotice = useScreenshotNotice(screenshotCard, agentSessions);
   const copyCard = useClipboardCopyCard(!game.quiet);
   const recording = useRecording();
-  const quickPeek = useQuickTranslation(settings.translationEnabled);
-  const translationPeek = quickPeek ?? screenshotText;
   const firstHints = useIslandFirstHints({
     mode,
     isTucked,
@@ -160,7 +159,7 @@ export function IslandApp() {
     agentIconWidth: collapsedSlots.agentIconWidth ?? 0,
     lyricsFirst: settings.lyricsIslandPriority === "lyrics",
     meeting: calendar.upcoming && settings.calendarEnabled ? { upcoming: calendar.upcoming, showTitle: settings.calendarShowTitle } : null,
-    translationPeek: quickPeek, screenshotPeek: quickPeek === null ? screenshotText : null,
+    screenshotPeek: screenshotText,
   });
   useLegacyAlerts({ quotaAlert });
   const { lines: contributedLines, alerts, popups, style, settled } = useIslandContributed();
@@ -169,14 +168,14 @@ export function IslandApp() {
     noticeText: firstHints.current ? t.island.firstHint[firstHints.current] : null,
     showTitle: settings.showTitle,
     widthExtra: settings.collapsedWidthExtra,
-    peeking: banner.hasLinePreview || translationPeek !== null,
+    peeking: banner.hasLinePreview || contributedLines.some((line) => line.drop === true),
     slots: collapsedSlots,
   });
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
   useLegacyStates({
     showsMessage,
     prompting: permissionPrompts.current !== null || screenshotCard.current !== null,
-    peeking: Boolean(translationPeek),
+    peeking: Boolean(screenshotText),
     recording: recording.shown,
     hold: useTuckHold(settings, { todos, activeTodoId, agentSessions, playing: media.mediaState.playbackStatus === "playing", messagesOpen: mode === "expanded" && page === "qq", notices }),
     agentsActive: settings.agentStatusEnabled && activeAgentSessionCount > 0,
@@ -268,7 +267,7 @@ export function IslandApp() {
   const voice = useIslandVoiceInput(addTodoOn, notebookProps);
   const islandNotice = useIslandNotice({ recording, voice, screenshotNotice, copyCard, firstHints });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: banner.barPreview, notice: islandNotice !== null, translationPeek,
+    preview: banner.barPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
   }));
   const hoverTucked = useIslandHover({
     settings,
@@ -294,8 +293,6 @@ export function IslandApp() {
 
   const { agentVisualState, agentStatusLabel } = useAgentIndicator(agentStatus, settings, activeAgentSessionCount, t);
 
-  const { openTranslator, openTranslationPeek } = useIslandTranslation(features.translation, openIslandPage);
-  useIslandAction("translation.open-peek", openTranslationPeek);
   useSettleIslandContributions();
 
   return (
