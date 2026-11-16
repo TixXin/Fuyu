@@ -1,14 +1,15 @@
 import { useTranslation } from "../../i18n";
 import type { ClipboardHistoryItem, ClipboardSnippet } from "./api";
+import { ClipboardImageViewer } from "./ClipboardImageViewer";
 import { ClipboardKindPane } from "./ClipboardKindPane";
-import { ClipboardPreviewImage } from "./ClipboardPreviewImage";
 import { contentKind } from "./contentKind";
 import { sourceName } from "./fileEntry";
 
-export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onPasteText }: {
+export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, imageZoom = false, onPasteText }: {
   entry?: ClipboardHistoryItem;
   snippet?: ClipboardSnippet;
   linkPreview?: boolean;
+  imageZoom?: boolean;
   onPasteText?: (text: string) => void;
 }) {
   const t = useTranslation();
@@ -40,7 +41,7 @@ export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, onP
       <span className="clipboard-popup__pane-head">{head}</span>
       {image ? (
         <div className="clipboard-popup__pane-image">
-          <ClipboardPreviewImage id={item.id} thumbnail={image.thumbnailDataUrl} />
+          <ClipboardImageViewer id={item.id} thumbnail={image.thumbnailDataUrl} width={image.width} height={image.height} controls={imageZoom} />
           {item.kind === "files" && <p className="clipboard-popup__pane-files">{item.files?.[0]}</p>}
           {item.ocrText && <p><b>{text.ocr}</b>{item.ocrText}</p>}
         </div>

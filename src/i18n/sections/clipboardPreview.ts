@@ -9,6 +9,15 @@ export type ClipboardPreviewText = {
   releaseToKeep: string;
   pinnedHint: string;
   toggleFull: string;
+  zoom: {
+    bar: string;
+    zoomIn: string;
+    zoomOut: string;
+    fit: string;
+    actual: string;
+    actualHint: string;
+    level: (percent: number) => string;
+  };
 };
 
 export const zhCN: ClipboardPreviewText = {
@@ -22,6 +31,15 @@ export const zhCN: ClipboardPreviewText = {
   releaseToKeep: "松开后保留",
   pinnedHint: "已钉住",
   toggleFull: "双击切换全屏",
+  zoom: {
+    bar: "图片缩放",
+    zoomIn: "放大",
+    zoomOut: "缩小",
+    fit: "适应",
+    actual: "1:1",
+    actualHint: "原始大小",
+    level: (percent) => `${percent}%`,
+  },
 };
 
 export const en: ClipboardPreviewText = {
@@ -35,4 +53,13 @@ export const en: ClipboardPreviewText = {
   releaseToKeep: "Release to keep",
   pinnedHint: "Pinned",
   toggleFull: "Double-click to toggle full screen",
+  zoom: {
+    bar: "Image zoom",
+    zoomIn: "Zoom in",
+    zoomOut: "Zoom out",
+    fit: "Fit",
+    actual: "1:1",
+    actualHint: "Actual size",
+    level: (percent) => `${percent}%`,
+  },
 };
