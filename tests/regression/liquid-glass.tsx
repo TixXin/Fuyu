@@ -6,6 +6,7 @@ import "../../src/windows/island/IslandApp";
 import "../../src/windows/island/IslandTopEdge.css";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useIslandGlass } from "../../src/windows/island/useIslandGlass";
+import { maxExpandedIslandWidth } from "../../src/windows/island/layout";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults";
 import type { IslandSettings } from "../../src/lib/settings/types";
 import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
@@ -119,6 +120,21 @@ async function runChecks() {
     check(islands().every((island) => playState(island) === "paused"), "「只在展开时」下折叠岛不动");
     await set({ expanded: true });
     check(islands().every((island) => playState(island) === "running"), "展开后流动");
+
+    const scale = 1.15;
+    for (const island of islands()) {
+      const stage = island.closest<HTMLElement>(".stage")!;
+      const tone = stage.dataset.tone;
+      const saved = stage.getAttribute("style") ?? "";
+      Object.assign(stage.style, { width: "820px", margin: "0 auto" });
+      for (const [name, value] of [["--island-scale", scale], ["--island-expanded-scale", scale], ["--expanded-island-width", `${maxExpandedIslandWidth(scale)}px`]] as const) stage.style.setProperty(name, String(value));
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 900)); });
+      const box = island.getBoundingClientRect();
+      const room = stage.getBoundingClientRect();
+      const fillet = (parseFloat(getComputedStyle(island, "::before").width) - box.width) / 2;
+      check(fillet > 8 && box.left - fillet >= room.left - 0.5 && box.right + fillet <= room.right + 0.5, `${tone}：缩放 ${scale} 下最宽的展开岛两侧倒角（${fillet.toFixed(1)}px）还在 820px 窗口里（左 ${(box.left - room.left).toFixed(1)}px，右 ${(room.right - box.right).toFixed(1)}px）`);
+      stage.setAttribute("style", saved);
+    }
 
     await set({ settings: { glassRim: true, glassSheen: true, glassSpecular: false, glassMorph: "liquid" } });
     for (const island of islands()) {

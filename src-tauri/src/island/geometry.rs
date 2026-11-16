@@ -31,8 +31,10 @@ pub(super) const SIDE_COLUMN_WIDTH: f64 = 44.0;
 pub(super) const SIDE_COLUMN_MIN_HEIGHT: f64 = 48.0;
 pub(super) const SIDE_COLUMN_MAX_HEIGHT: f64 = 300.0;
 
+const MAX_TOP_FILLET_RADIUS: f64 = 12.0;
+
 pub(super) fn max_expanded_width(scale: f64) -> f64 {
-    ((STAGE_WINDOW_WIDTH - 4.0) / scale).floor().max(EXPANDED_ISLAND_WIDTH)
+    (((STAGE_WINDOW_WIDTH - 4.0) / scale).floor() - 2.0 * MAX_TOP_FILLET_RADIUS).max(EXPANDED_ISLAND_WIDTH)
 }
 pub(super) const DEFAULT_EXPANDED_ISLAND_HEIGHT: f64 = 306.0;
 pub(super) const MIN_EXPANDED_ISLAND_HEIGHT: f64 = 72.0;

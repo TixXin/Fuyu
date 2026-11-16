@@ -86,3 +86,9 @@ test("every page, plugin pages too, has the panel width, as far as it fits (C25,
   assert.equal(panelIslandWidth(800, 1.4), maxExpandedIslandWidth(1.4));
   assert.ok(maxExpandedIslandWidth(1.4) * 1.4 <= 820);
 });
+
+test("the widest expanded island leaves room for the top fillets on both sides (C105)", () => {
+  for (const scale of [0.91, 1, 1.15, 1.4]) {
+    assert.ok((820 - maxExpandedIslandWidth(scale) * scale) / 2 >= 12 * scale, `scale ${scale}`);
+  }
+});
