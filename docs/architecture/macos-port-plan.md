@@ -137,6 +137,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 | 2026-11-13 | G1.6 截图与识字 | 48d26bb8、75bbc594、77efc7e6（搬迁），（本次提交） | 截图的剪贴板、快捷键类型、平台调用先搬到可替换的文件（Windows 零行为变化）；Mac 上截屏（ScreenCaptureKit）、选区窗口（NSPanel）、复制 / 保存 / 贴图 / 拖出 / 长截图 / 历史、窗口吸附、快捷键；识字（Vision）同时给截图和剪贴板图片用 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（519 过）；Vision 识别 README 截图实测中英文都对、词框位置对；截屏在没授权的终端里返回失败、不崩；Windows：交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过 |
 | 2026-11-13 | G1.11 刘海形态 | （本次提交） | 读刘海几何（`macos/notch.rs`）；菜单栏选项新增「贴合刘海」并设为默认；折叠态纯黑、高度等于刘海、中间让开刘海分成左右两翼；贴边收起时缩进刘海、窗口不动；每 2 秒检查一次屏幕变化 | Mac：clippy、`cargo test`、`pnpm check`、`pnpm build`、回归页；没在真机上看效果（见待人工验收） |
 | 2026-11-15 | G1.23 拖动与贴顶 | 48ac0bdf | 拖动中 `apply_stage_geometry` 只改大小不摆位置（两个平台），Mac 上不记 `WindowEvent::Moved` 的物理像素，Retina 屏拖动中不再跳；顶边抽成 `top_edge::TopEdge`，`geometry.rs`、`snap_to_top`、`drag_hint.rs` 共用，压菜单栏时吸到屏幕上沿；只在 Mac：默认位置所在屏上拖回顶部正中 ±40pt 清掉自定义位置、发 `island-position-cleared`，有刘海时回刘海 | Mac：`cargo test`、clippy、`pnpm build:exe`；Windows：交叉 clippy；没在真机上拖（见待人工验收） |
+| 2026-11-15 | G1.29 吸顶与老设置迁移（#615） | a86d8604、（本次提交） | 松手时顶边以上（菜单栏里、屏幕上沿外）一律吸回顶边，提示线同步；岛整个在屏幕外时归正下方最近的屏；新命令 `primary_screen_has_notch`，启动时把没有形态的老设置迁成刘海（主屏有真刘海）或贴顶，Windows 不迁 | Mac：`cargo test`、clippy、`pnpm build:exe`、`pnpm check`、`pnpm build`、回归页；Windows：交叉 clippy；没在真机上拖（见待人工验收） |
 | 2026-11-15 | G1.24 多显示器跟随与屏幕变化 | c612de0a | 「显示在：跟随鼠标 / 跟随前台窗口」Mac 上生效（光标、最前面的别家窗口，坐标走 `island::screen`）；贴底、贴侧边换屏保持边和比例；屏幕监听（`island/screen_watch.rs`）从只比较刘海改成比较全部屏幕的 frame、visibleFrame、缩放和刘海，插拔显示器、改分辨率、Dock 换位置或自动隐藏后 2 秒内重摆 | Mac：`cargo test`、clippy、`pnpm build:exe`；Windows：交叉 clippy；本机只有一块屏，多屏、插拔没在真机上看 |
 | 2026-11-13 | G1.2（Rust 部分） | （本次提交） | Windows 依赖只在 Windows 上编译；`macos/` 平台层与 `platform.rs`；Mac 上暂不支持的模块用 unsupported 空实现；CI 加 `rust-macos`；迁移表 | Mac：`cargo clippy --all-targets -D warnings`、`cargo test`（421 过）、`pnpm dev:lane` 起窗口；Windows：在 Mac 上交叉 `clippy --target x86_64-pc-windows-gnu --all-targets` 通过，测试看 CI |
 
@@ -156,6 +157,10 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 
 - [ ] 拖动与贴顶（G1.23）：Retina 屏上拖岛 5 秒中途不跳；「压在菜单栏上」时拖回顶部正中回到默认位置（有刘海时回刘海），重启后仍是默认位置；偏离正中 40pt 以上时贴屏幕最上沿、位置记住；离菜单栏下沿 20pt 以外松手不吸；「放在菜单栏下面」时贴菜单栏下沿；两种设置下顶边提示线 = 松手后吸到的位置。问题和清单见 [macos-island-docking.md](../investigations/macos-island-docking.md)
 - [ ] 外接屏（G1.23）：副屏顶部正中松手只记住位置、不回主屏
+- [ ] 老设置迁移（G1.29，#615）：用 C65 之前的设置（没有「形态」）启动，有刘海的屏上岛是刘海形态，设置 → 外观 → 形态显示「刘海」；没有刘海的 Mac（或只用外接屏当主屏）上是「贴顶」
+- [ ] 三种形态（G1.29）：刘海——拖走后偏离正中松在顶部贴屏幕最上沿、记住位置，拖回正中 ±40pt 回刘海，重启仍是刘海；贴顶（刘海屏）——贴菜单栏下沿，拖到菜单栏里或更高处松手吸回菜单栏下沿；药丸——离菜单栏下沿 10px
+- [ ] 拖出屏幕（G1.29）：任何形态下把岛往屏幕上沿外拖再松手，都回到顶边，不留在屏幕外或菜单栏里；拖动中提示线和松手吸到的位置一致
+- [ ] 外接屏（G1.29）：副屏上方超出松手吸回副屏顶边，不跳到别的屏；两块屏上下排列时，上面那块屏的岛不会被吸到下面那块
 - [ ] 外接屏（G1.24）：「跟随鼠标」「跟随前台窗口」换屏（点岛和设置窗口不触发，展开和拖动中不换）；贴底、贴侧边的岛换屏后贴同一条边；两块屏缩放不同、外接屏在上方或左边时也对；岛在外接屏上时拔掉回内屏、插回回原位
 - [ ] 屏幕变化（G1.24）：Dock 换到左右或自动隐藏、改分辨率、合盖开盖后 2 秒内回到正确位置；菜单栏自动隐藏时「放在菜单栏下面」跟着调
 - [ ] 贴底、贴侧边（C54.3、C54.1）：贴底时和 Dock（含自动隐藏时鼠标移到下沿）谁挡谁；台前调度开着时左侧竖向岛和应用缩略图条；全屏应用、切换 Space、Mission Control 下贴底和贴侧边的岛

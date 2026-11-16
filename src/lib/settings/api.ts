@@ -29,3 +29,7 @@ export function listenIslandDockEdge(handler: (edge: IslandDockEdge | null) => v
 export function dockIslandTo(edge: Exclude<IslandDockEdge, "top">) {
   return invoke<void>("set_island_edge", { edge });
 }
+
+export function primaryScreenHasNotch() {
+  return invoke<boolean>("primary_screen_has_notch");
+}
