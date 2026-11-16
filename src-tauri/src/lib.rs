@@ -41,6 +41,7 @@ mod ssh_tunnel;
 mod sync;
 mod system;
 mod system_levels;
+mod timer;
 mod todos;
 mod translation;
 mod tray;
@@ -161,6 +162,7 @@ pub fn run() {
             translation::init(app.handle());
             screenshot::init(app.handle());
             voice_input::init(app.handle());
+            timer::init(app.handle());
             if let Err(error) = file_shelf::init(app.handle()) {
                 eprintln!("failed to initialize the file shelf: {error}");
             }
@@ -275,6 +277,7 @@ pub fn run() {
             screenshot;
             recording;
             voice_input;
+            timer;
             settings_window;
             settings_file;
             sync;

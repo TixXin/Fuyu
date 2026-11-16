@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "../../i18n";
 import { getLocalDateString } from "../../utils/date";
-import { pushIslandReminder } from "../timer";
+import { remindersV1 } from "@fuyu/plugin-services";
+import { windowServices } from "../plugin-kernel/services";
 import { DUE_REMINDER_SOURCE, dueReminderId, pickDueReminders } from "./dueReminders";
 import { sortScheduledTodos, splitDueTodos, toTodoItems } from "./schedule";
 import { createTodoId, loadScheduledTodos, saveScheduledTodos } from "./storage";
@@ -40,7 +41,7 @@ export function useScheduledTodos(
       ...currentTodos,
     ]);
     for (const todo of pickDueReminders(due, remindedDue)) {
-      pushIslandReminder({ id: dueReminderId(todo), source: DUE_REMINDER_SOURCE, icon: "flag", title: dueTitle, detail: todo.title });
+      void windowServices.get(remindersV1).push({ id: dueReminderId(todo), source: DUE_REMINDER_SOURCE, icon: "flag", title: dueTitle, detail: todo.title }).catch(() => undefined);
     }
   }, [currentTodoDate, dueTitle, scheduledTodos, setTodos]);
 

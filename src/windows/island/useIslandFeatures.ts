@@ -6,7 +6,7 @@ import { useUnsupportedFeatures } from "../../lib/platform";
 import { foldScreenshotsIntoClipboard, resolveIslandPage, resolveMessageSource, withoutUnsupported, type IslandFeatures } from "./features";
 import type { IslandPage, PluginPageId } from "./types";
 import { usePluginOpenView } from "./usePluginOpenView";
-import { useTimerPlugin } from "../../features/timer/useIslandTimer";
+import { useBuiltinEnabled } from "../../features/plugin-kernel/useBuiltinPlugins";
 
 const NO_PLUGIN_PAGES: readonly PluginPageId[] = [];
 
@@ -38,7 +38,7 @@ export function useIslandFeatures({
   pluginPages,
 }: IslandFeatureOptions) {
   const unsupported = useUnsupportedFeatures();
-  const timer = useTimerPlugin();
+  const timer = useBuiltinEnabled("timer");
   const features = useMemo<IslandFeatures>(() => foldScreenshotsIntoClipboard(withoutUnsupported({
     todo: settings.todoEnabled,
     calendar: settings.calendarEnabled,

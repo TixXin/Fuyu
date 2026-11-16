@@ -23,7 +23,8 @@ import { isCollapsedItemHidden } from "../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
-import { TIMER_PLUGIN_ID, useTimers } from "../../features/timer/store";
+import { useTimers } from "../../features/timer/store";
+import { useBuiltinEnabled } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { hasChip } from "../../features/timer/TimerChip";
 import type { CollapsedSlots } from "./types";
 import "./slots/builtins";
@@ -50,7 +51,7 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
   const center = useBuiltinPlugin(CENTER_PATTERN_PLUGIN_ID);
   const usage = useBuiltinPlugin(CLAUDE_USAGE_PLUGIN_ID);
   const sessionRing = useBuiltinPlugin(SESSION_RING_PLUGIN_ID);
-  const timerPlugin = useBuiltinPlugin(TIMER_PLUGIN_ID);
+  const timerOn = useBuiltinEnabled("timer");
   const timerRunning = hasChip(useTimers().timers);
   const showRemaining = usage.settings.show === "remaining";
   const ringStyle = SESSION_RING_STYLES.find((known) => known === sessionRing.settings.style) ?? ("grid" satisfies SessionRingStyle);
@@ -66,8 +67,8 @@ export function useCollapsedSlots({ paused, agents, sessions, unseen, agentsOn, 
   const entries = useSlotEntries(collapsedGaugeSlot);
   const [centerEntry] = useSlotEntries(collapsedCenterSlot);
   const gaugeContext = useMemo<CollapsedGaugeContext>(
-    () => ({ paused: still, usage: { enabled: usage.enabled, settings: usage.settings, showRemaining }, timer: { enabled: timerPlugin.enabled, running: timerRunning }, listenIslandHover }),
-    [still, usage.enabled, usage.settings, showRemaining, timerPlugin.enabled, timerRunning],
+    () => ({ paused: still, usage: { enabled: usage.enabled, settings: usage.settings, showRemaining }, timer: { enabled: timerOn, running: timerRunning }, listenIslandHover }),
+    [still, usage.enabled, usage.settings, showRemaining, timerOn, timerRunning],
   );
   const gauges = useMemo(
     () => entries.filter((entry) => entry.group === "gauges" && !(entry.hideable && isCollapsedItemHidden(placements, entry.id)) && (entry.shown?.(gaugeContext) ?? true)),

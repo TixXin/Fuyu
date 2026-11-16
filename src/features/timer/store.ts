@@ -14,7 +14,6 @@ import {
 } from "./timers";
 
 export const TIMERS_KEY = "fuyu-timers";
-export const TIMER_PLUGIN_ID = "focusd.timer";
 const MAX_WAIT = 2 ** 31 - 1;
 
 type Snapshot = { timers: readonly Timer[]; openRequest: { at: number; focus: boolean } | null };

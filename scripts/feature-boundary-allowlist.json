@@ -27,9 +27,7 @@
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginCard.css",
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginMarketSection.css",
     "src/features/timer/ReminderNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
-    "src/features/timer/TimerNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
-    "src/features/timer/useIslandTimer.ts -> src/features/plugins/useBuiltinPlugin.ts",
-    "src/features/todos/useScheduledTodos.ts -> src/features/timer/index.ts"
+    "src/features/timer/TimerNotice.tsx -> src/features/screenshot/ScreenshotNotice.css"
   ],
   "shared": [
     "src/lib/settings/normalizeBehaviorSettings.ts -> src/features/calendar/calendarSettings.ts",

@@ -8,6 +8,7 @@ test("SERVICES names every built-in service the package defines, with its versio
   assert.deepEqual([...services.SERVICES].sort(), definitions.map((definition) => definition.name).sort());
   assert.ok(services.SERVICES.includes("timers/v1"));
   assert.ok(services.SERVICES.includes("translator/v1"));
+  assert.ok(services.SERVICES.includes("reminders/v1"));
   for (const name of services.SERVICES) assert.match(name, services.SERVICE_NAME);
   assert.ok(Object.isFrozen(services.SERVICES));
 });

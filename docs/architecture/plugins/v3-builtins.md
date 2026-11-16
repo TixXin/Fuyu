@@ -101,7 +101,7 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 - Rust 的 `plugin_kernel/diagnostics.rs`（只在开发版编译）向各窗口发 `builtin-diagnostics-request`，窗口用 `features/plugin-kernel/diagnostics.ts` 回 `builtin-diagnostics-report`（每个插件：拥有的插槽项、在听的事件、调过的命令、提供的服务），再加上宿主的 `status` 和开关表，一起给实验台的 `GET /v1/dev/builtins`。窗口的记账在 `slots.ts` 里随开发版启动装上。
 - `pnpm lab` 的「逐个关掉内置插件并核对」按钮：逐个关掉、等一会、核对上面三处有没有残留和关掉后还在调的命令，再打开；线程数一并列出（见 [实验台](../../features/island-lab.md)）。
 
-E36.3.27 用计时器和翻译做样板，`?only=timer,translation` 查出的残留：翻译的岛页还渲染 `.translation-panel*`，关掉后还在调 `has_translation_secret`、`set_translation_shortcut`、`set_translation_selection_shortcut`、`read_translation_clipboard`，还在听 `translation-selection`、`translation-island-shortcut`；计时器的岛页还渲染 `.timer-panel*`。宿主层两个都过（内核替它们收拾了）。修它们是 E36.3.28 / E36.3.29 的事。
+E36.3.27 用计时器和翻译做样板，`?only=timer,translation` 查出的残留：翻译的岛页还渲染 `.translation-panel*`，关掉后还在调 `has_translation_secret`、`set_translation_shortcut`、`set_translation_selection_shortcut`、`read_translation_clipboard`，还在听 `translation-selection`、`translation-island-shortcut`；计时器的岛页还渲染 `.timer-panel*`。宿主层两个都过（内核替它们收拾了）。修它们是 E36.3.28 / E36.3.29 的事。E36.3.28 之后计时器的页面、收起条、提醒、设置和快捷键都挂在拥有者 `timer` 名下，`?only=timer` 通过。
 
 ## 内置插件的宿主部分怎么写
 

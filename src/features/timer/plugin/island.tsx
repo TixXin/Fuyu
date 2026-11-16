@@ -6,6 +6,7 @@ import type { ShownReminder } from "../useIslandReminder";
 import { TIMER_CHIP_WIDTH, TimerChip } from "../TimerChip";
 import { TimerPanel } from "../TimerPanel";
 import { islandPage } from "./page.ts";
+import { OWNER } from "./owner.ts";
 
 type TimerPageProps = { mode: string };
 
@@ -15,13 +16,13 @@ function TimerPage({ mode }: TimerPageProps) {
   return <TimerPanel isOpen={mode === "expanded"} />;
 }
 
-pageSlot.add({ ...islandPage, component: TimerPage });
+pageSlot.add({ ...islandPage, component: TimerPage }, OWNER);
 
 type GaugeContext = { paused: boolean; timer: { enabled: boolean; running: boolean } };
 
 const gaugeSlot = defineSlot<GaugeContext, IslandCollapsedMeta<GaugeContext>>("island.collapsed/v1");
 
-gaugeSlot.add({ id: "timer", order: 70, group: "gauges", width: TIMER_CHIP_WIDTH, hideable: true, shown: ({ timer }) => timer.enabled && timer.running, component: TimerChip });
+gaugeSlot.add({ id: "timer", order: 70, group: "gauges", width: TIMER_CHIP_WIDTH, hideable: true, shown: ({ timer }) => timer.enabled && timer.running, component: TimerChip }, OWNER);
 
 type NoticeSources = { ringing: readonly Timer[]; reminder: ShownReminder | null };
 
@@ -39,5 +40,5 @@ function ReminderActions({ reminder }: NoticeSources) {
   return reminder && <ReminderNoticeActions reminder={reminder} />;
 }
 
-noticeSlot.add({ id: "timer", order: 30, active: ({ ringing }) => ringing.length > 0, component: RingingContent, actions: TimerNoticeActions });
-noticeSlot.add({ id: "reminder", order: 60, active: ({ reminder }) => Boolean(reminder), component: ReminderContent, actions: ReminderActions });
+noticeSlot.add({ id: "timer", order: 30, active: ({ ringing }) => ringing.length > 0, component: RingingContent, actions: TimerNoticeActions }, OWNER);
+noticeSlot.add({ id: "reminder", order: 60, active: ({ reminder }) => Boolean(reminder), component: ReminderContent, actions: ReminderActions }, OWNER);
