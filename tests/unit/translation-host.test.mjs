@@ -123,7 +123,7 @@ test("Rust's error codes become translator/v1 codes and keep the original in dat
     refused: ["translation.status", { args: { service: "DeepSeek", status: 401 } }],
     offline: ["net.unreachable", { args: { service: "DeepSeek" }, detail: "connection refused" }],
     long: ["translation.tooLong", { args: { max: 5000 } }],
-    custom: ["translation.customUnavailable"],
+    custom: ["translation.noAddress", { args: { service: "自定义接口" } }],
     shape: ["bad-params"],
     crash: ["panic"],
   };
@@ -139,7 +139,7 @@ test("Rust's error codes become translator/v1 codes and keep the original in dat
   assert.deepEqual(await failed("refused"), { code: "engine-failed", data: { reason: "translation.status", args: { service: "DeepSeek", status: 401 } } });
   assert.deepEqual(await failed("offline"), { code: "engine-failed", data: { reason: "net.unreachable", args: { service: "DeepSeek" }, detail: "connection refused" } });
   assert.deepEqual(await failed("long"), { code: "bad-params", data: { reason: "translation.tooLong", args: { max: 5000 } } });
-  assert.deepEqual(await failed("custom"), { code: "bad-params", data: { reason: "translation.customUnavailable" } });
+  assert.deepEqual(await failed("custom"), { code: "no-address", data: { reason: "translation.noAddress", args: { service: "自定义接口" } } });
   assert.deepEqual(await failed("shape"), { code: "bad-params", data: { reason: "bad-params" } });
   assert.deepEqual(await failed("crash"), { code: "failed", data: { reason: "panic" } });
   await assert.rejects(translator.translate({ text: "x", direction: "auto", engine: "deepseek" }), { code: "bad-params" });
@@ -153,7 +153,7 @@ test("the error mapping covers each kind of Rust code", () => {
   assert.equal(serviceCode("inactive"), "peer-gone");
   assert.equal(serviceCode("translation.provider"), "bad-params");
   assert.equal(serviceCode("translation.urlScheme"), "bad-params");
-  assert.equal(serviceCode("translation.customUnavailable"), "bad-params");
+  assert.equal(serviceCode("translation.noAddress"), "no-address");
   assert.equal(serviceCode("translation.cutOff"), "engine-failed");
   assert.equal(serviceCode("credential.read"), "engine-failed");
   assert.equal(serviceCode("no-method"), "failed");

@@ -3,6 +3,7 @@ import { defineSlot, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { CalendarPanel } from "../CalendarPanel";
 import type { CalendarState } from "../useCalendar";
 import { islandPage } from "./page.ts";
+import { OWNER } from "./owner.ts";
 
 type TodoLink = NonNullable<ComponentProps<typeof CalendarPanel>["todos"]>;
 
@@ -22,4 +23,4 @@ function CalendarPage({ calendar, addTodoOn, notebookProps, onOpenSettings }: Ca
   );
 }
 
-pageSlot.add({ ...islandPage, component: CalendarPage });
+pageSlot.add({ ...islandPage, component: CalendarPage }, OWNER);

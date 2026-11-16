@@ -2,6 +2,7 @@ import * as actions from "./clipboardActions.ts";
 import * as manage from "./clipboardManage.ts";
 import * as notice from "./clipboardNotice.ts";
 import * as links from "./clipboardLinks.ts";
+import * as previewWindow from "./clipboardPreview.ts";
 
 export type ClipboardText = {
   title: string;
@@ -9,6 +10,7 @@ export type ClipboardText = {
   manage: manage.ClipboardManageText;
   notice: notice.ClipboardNoticeText;
   links: links.ClipboardLinksText;
+  previewWindow: previewWindow.ClipboardPreviewText;
   favoriteCount: (count: number) => string;
   expandShortcut: string;
   clear: string;
@@ -97,6 +99,7 @@ export const zhCN: ClipboardText = {
   manage: manage.zhCN,
   notice: notice.zhCN,
   links: links.zhCN,
+  previewWindow: previewWindow.zhCN,
   favoriteCount: (count) => `${count} 条收藏`,
   expandShortcut: "打开剪贴板的快捷键",
   clear: "清空",
@@ -185,6 +188,7 @@ export const en: ClipboardText = {
   manage: manage.en,
   notice: notice.en,
   links: links.en,
+  previewWindow: previewWindow.en,
   favoriteCount: (count) => (count === 1 ? "1 favorite" : `${count} favorites`),
   expandShortcut: "Shortcut that opens the clipboard",
   clear: "Clear",

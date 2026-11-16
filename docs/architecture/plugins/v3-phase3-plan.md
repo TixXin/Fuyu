@@ -168,6 +168,8 @@
 **2026-11-15 调整（E36.3.25 摸底后）**：岛的外壳有 51 个文件、247 处 import 功能。其中一部分是外壳拿各功能的状态算布局：收起条文字、收起宽度、贴边时保持展开、刘海和侧边气泡的弹窗、封面取色、悬停时先切到哪一页、弹出高度。要去掉这些 import 就得改外壳的数据流，不再是纯搬迁。所以 E36.3.25 只做纯搬迁（插槽注册搬进 `features/<领域>/plugin/`，加 `island.notice/v1`、`island.runner/v1`，自成一体的接线 hook 改成插槽项，页面之间的交叉改成插槽元数据）；布局这部分拆成 **E36.3.51**（#619）：定一套通用的贡献元数据，各功能经 runner 交结果，外壳只认元数据。
 
 - E36.3.51 不挡三个样板。
+- **E36.3.51 的方案（2026-11-16 组长批）**：见 [island-shell-contributions.md](../../investigations/island-shell-contributions.md)。功能在 runner 里跑 hook、写自己的 store，外壳只读 plugin-kernel 里的贡献表；新插槽 `island.line/v1`、`island.side/v1`、`island.overlay/v1`、`island.decor/v1`。功能之间的数据先暂记进功能边界白名单（约 8 条，这是「只减不增」的一次例外），由 E36.3.36、E36.3.37、E36.3.38 的服务去掉，三个任务的验收已写上。第 2 版插件系统（`plugins`、`plugin-views`）的 import 留在 `island` 白名单里算清零，第 6 阶段随第 2 版删。它第 5 步每做完一个功能就告诉组长，那个功能的迁移任务（E36.3.31、.33、.37、.38、.44）就能开工，不用等整个 E36.3.51；file-shelf 那两个 hook 等 E36.3.32 提交后由 E36.3.51 挪。
+- **E36.3.22 做完（2026-11-16）**：`fuyu-plugin://` 只放行 `__shared/`、`packages/**` 和宿主经协议 2 通知 `clients` 报上来的界面目录，`data/`、`plugins.yml*`、状态文件一律 404。`Access-Control-Allow-Origin: *` 这次不收窄（评估在归档后的 E36.3.22 备注里）：自定义协议只在浮屿自己的 WebView 里用，收窄的收益小，写错源字符串所有插件界面都会挂，只能真机验。留到做 `dev/<id>/`、`builtin/<id>/` 映射或第 5 阶段之前一起收窄，两个系统实测。
 - 第 2 批里在外壳布局里有份的功能要等它：E36.3.31、E36.3.33、E36.3.37、E36.3.38、E36.3.44；E36.3.39 经 E36.3.37 间接等它。
 - 功能边界测试把 `src/features/plugin-kernel` 当平台层放行，和 `lib` 一样。
 
@@ -193,6 +195,20 @@
 - **窗口服务**写在 `src/features/<领域>/plugin/services.ts`，`src/main.tsx` 用 glob 收集，每个窗口都注册一遍，所以宿主没开也能用。
 - **两个功能之间只是交接数据的**（例如截图转翻译存的 `fuyu-translation-handoff`），读写函数上提到 `src/lib/`，算共享代码，不为它加服务方法。
 
+**三个样板做完后的回看（2026-11-16，组长）**：计时器（E36.3.28）、翻译（E36.3.29）、日历（E36.3.30）都已做完，回归页 `builtins-off` 查这三个插件，关掉后都没有残留。
+
+- **迁移的写法**：照翻译样板的表，写在 `docs/tasks/0-archive/E/E36.3.29.md`「备注」。日历样板补了几条坑，写在 `docs/tasks/0-archive/E/E36.3.30.md`「备注」：
+  - 服务的 `.d.mts` 不要重新声明 `gen:rust-types` 已经生成的同名类型，否则报 TS2308；直接 `export type {…} from "../generated/rust.mjs"`。
+  - ts-rs 把 `i64` 生成成 `bigint`，时间戳要加 `#[cfg_attr(test, ts(type = "number"))]`。
+  - `UserError::code()` 只在测试构建里有。release 代码要用错误码时从序列化结果里读，否则 Rust 单元测试能过、`build:exe` 会挂。所以 `build:exe` 必须跑。
+  - `ServiceClient` 不支持可选参数，参数写成对象，调用时传 `{}`。
+  - 宿主和窗口各有一份服务实现时，两边都经 `host/index.mjs` 里同一个规整函数出结果，回答才一致。
+  - 服务标记不写 `inject(app)`：它把 `AppHandle` 留进静态登记，Windows 上没有 manifest 的 Rust 测试程序一启动就报 0xc0000139，Mac 上看不出来（PR #640，c811bcbf 修）。数据目录用 `crate::home_dir::current()`，Tauri 命令照旧用 `AppHandle` 求目录，再交给同一个函数。
+  - 不只是 `inject(app)`：静态登记的方法体里只要调了 `AppHandle` 的方法（例如 `emit_to`），都会把 wry 留进测试程序；间接走到的也算，例如经 `plugin_host::publish_event` 走到 `sensitive::check(&app, …)`（E36.3.32 的 dbe0cc6e）。要发事件，就在 `init` 里登记一个 `Box<dyn Fn()>`，方法里只调它；改了这类服务要过一次 Windows CI（`pnpm mq:try`）。
+- **基座的接口**：三个样板都没改 `@fuyu/plugin-base` 的接口，只新加了窗口服务和旧开关的镜像。基座公开发布要求的「三个样板按同一套写法迁完」满足了，E36.3.49 核对条件时记上。
+- **标准不改**：只在第 1、2、3、4 条里补充了说明（上面已改）。
+- **第 2 批**：E36.3.31、E36.3.33、E36.3.37、E36.3.38、E36.3.44 要等 E36.3.51；E36.3.34 等剪贴板预览 C101.1–C101.3。现在能开工的有 E36.3.51、E36.3.32、E36.3.42、E36.3.45、E36.3.46、E36.3.49。E36.3.47（测试通道默认打开）只差 E36.3.22。
+
 E36.3.21（111b02d5）的 lint 禁止宿主部分 import 任何 `lib/`、`components/`、`windows/`、`client/` 下的模块。E36.3.24 把共享代码搬进 `src/lib/` 之后，宿主部分要用里面的纯函数（例如设置的类型和默认值）时，在 `eslint.config.js` 的宿主规则里给那个子目录开例外，不要把纯函数复制一份。
 
 ### 第 2 批起：其余功能（同时最多 2 个要编译的会话）
@@ -202,7 +218,7 @@ E36.3.21（111b02d5）的 lint 禁止宿主部分 import 任何 `lib/`、`compon
 | E36.3.31 | device-events、system-levels、device-use | 三个小插件放在一个会话里做：两个常驻线程改成真停；设备占用的轮询改成跟着插件开关 | 第 1 批 |
 | E36.3.32 | file-shelf | `fileShelf/v1`（截图、录屏要用的「加进中转」） | 第 1 批 |
 | E36.3.33 | music（媒体加歌词） | 媒体会话（Mac 上的 perl 子进程）改成真停；`media/v1`（第 4 阶段的歌词来源建在它上面；收起保持、Agent 读「在放音乐」改走它） | 第 1 批 |
-| E36.3.34 | clipboard | 两个窗口改成开着才建；监听线程和 Mac 上的轮询真停；`clipboard/v1`；第 2 版插件读剪贴板的那条路保留到第 6 阶段 | E36.3.29 |
+| E36.3.34 | clipboard | 两个窗口改成开着才建；监听线程和 Mac 上的轮询真停；`clipboard/v1`；第 2 版插件读剪贴板的那条路保留到第 6 阶段 | E36.3.29；剪贴板预览（[clipboard-preview-plan.md](../clipboard-preview-plan.md)）的 P1–P3 合入后再开工 |
 | E36.3.35 | screenshot（含录屏） | 快捷键线程真停；调文件中转、翻译、Agent 改走服务 | E36.3.32、E36.3.34、E36.3.37 |
 | E36.3.36 | voice-input | 快捷键线程真停；写待办、笔记改走 `todos/v1` | E36.3.38 |
 | E36.3.37 | agents | 审批 HTTP 服务、OpenCode 轮询、远程 SSH 连接真停；`agents/v1`（会话列表、用量、聚焦窗口），给会话环、用量环、截图、本机接口用；推送和 cc-connect 的双向 import 拆开 | 第 1 批 |
@@ -267,6 +283,10 @@ E36.3.27 的回归页 `builtins-off` 默认只查「迁完了」的插件，即�
 | system-levels | 听 `system-level-changed` |
 | device-use | 调 `get_device_use` |
 | theme-market | 设置 → 主题市场 `.theme-market__grid`；调 `get_theme_market` |
+
+**回归页查不到的残留（2026-11-16，E36.3.32 发现）**：两类东西不归哪个功能的插槽项，`builtins-off` 看不到，功能关掉后还在。
+- 设置 → 收起条项目里列出的各功能项目，例如「文件中转数量」、日历的倒计时：列表要按开关表的关掉名单过滤，所有功能共用一处，由 E36.3.50 收口时统一做。如果哪个功能任务顺手做了，在这里划掉。
+- 托盘卡片（C99.3）里的功能入口，例如「文件中转」：托盘卡片是新窗口，要从开关表读关掉名单。由托盘卡片那边的任务做，组长已转告。
 
 ## 不在这一阶段做的
 

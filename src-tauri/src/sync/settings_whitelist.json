@@ -31,6 +31,7 @@
         "maxPanelHeight": "local",
         "panelWidth": "local",
         "collapsedWidthExtra": "local",
+        "dragGrid": "sync",
         "agentHostDisplay": "sync",
         "agentSessionView": "sync",
         "agentSessionSort": "sync",
@@ -229,6 +230,7 @@
         "ccConnect": "local"
       }
     },
-    "fuyu-lyrics-offsets": "sync"
+    "fuyu-lyrics-offsets": "sync",
+    "fuyu-tray-menu-layout": "sync"
   }
 }

@@ -2,6 +2,7 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
+import type { ClipboardPreviewCommand, ClipboardPreviewDragPhase, ClipboardPreviewEdge, ClipboardPreviewReport, ClipboardPreviewSize, ClipboardPreviewSizeRequest } from "./previewCommands";
 
 export type ClipboardHistorySettings = {
   enabled: boolean;
@@ -32,6 +33,9 @@ export type ClipboardHistorySettings = {
   popupPinY?: number | null;
   copyCardSeconds?: number;
   pinFavorites?: boolean;
+  previewSize?: ClipboardPreviewSize;
+  previewWidth?: number;
+  previewHeight?: number;
 } & ClipboardPrivacySettings;
 
 export type ClipboardPrivacySettings = {
@@ -328,6 +332,9 @@ export const CLIPBOARD_PREVIEW_WINDOW = "clipboard-preview";
 const ITEM_EVENT = "clipboard-preview-item";
 const OPENED_EVENT = "clipboard-preview-opened";
 const CLOSING_EVENT = "clipboard-preview-closing";
+const LAYOUT_EVENT = "clipboard-preview-layout";
+const COMMAND_EVENT = "clipboard-preview-command";
+const REPORT_EVENT = "clipboard-preview-report";
 const IMAGE_SCHEME = "fuyu-clip";
 
 export type ClipboardPreviewSide = "left" | "right";
@@ -337,9 +344,11 @@ export type ClipboardPreviewPayload = {
   holding: boolean;
   linkPreview: boolean;
   prefetch: string[];
+  stay?: boolean;
 };
 
-export type ClipboardPeek = { item: ClipboardHistoryItem; holding: boolean; prefetch: string[] };
+export type ClipboardPeek = { item: ClipboardHistoryItem; holding: boolean; prefetch: string[]; stay?: boolean };
+export type ClipboardPreviewLayout = { side: ClipboardPreviewSide; size: ClipboardPreviewSize };
 
 export function clipboardImageUrl(id: string) {
   return convertFileSrc(id, IMAGE_SCHEME);
@@ -368,3 +377,12 @@ export function listenClipboardPreviewOpened(handler: (side: ClipboardPreviewSid
 export function listenClipboardPreviewClosing(handler: () => void) {
   return listen(CLOSING_EVENT, () => handler());
 }
+
+export const listenClipboardPreviewLayout = (handler: (layout: ClipboardPreviewLayout) => void) => listen<ClipboardPreviewLayout>(LAYOUT_EVENT, ({ payload }) => handler(payload));
+export const setClipboardPreviewSize = (size: ClipboardPreviewSizeRequest) => invoke<ClipboardPreviewLayout>("set_clipboard_preview_size", { size });
+export const resizeClipboardPreview = (edge: ClipboardPreviewEdge, dx: number, dy: number, phase: ClipboardPreviewDragPhase) => invoke<void>("resize_clipboard_preview", { edge, dx, dy, phase });
+export const clipboardPreviewHasPointer = () => invoke<boolean>("clipboard_preview_has_pointer");
+export const sendClipboardPreviewCommand = (command: ClipboardPreviewCommand) => emitTo(CLIPBOARD_PREVIEW_WINDOW, COMMAND_EVENT, command);
+export const listenClipboardPreviewCommand = (handler: (command: ClipboardPreviewCommand) => void) => listen<ClipboardPreviewCommand>(COMMAND_EVENT, ({ payload }) => handler(payload));
+export const reportClipboardPreview = (report: ClipboardPreviewReport) => emitTo("clipboard", REPORT_EVENT, report);
+export const listenClipboardPreviewReport = (handler: (report: ClipboardPreviewReport) => void) => listen<ClipboardPreviewReport>(REPORT_EVENT, ({ payload }) => handler(payload));

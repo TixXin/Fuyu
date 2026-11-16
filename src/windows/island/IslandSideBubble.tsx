@@ -1,29 +1,17 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { isTauri } from "@tauri-apps/api/core";
-import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
-import { QuotaAlertPopup } from "../../features/agent-status/QuotaAlertPopup";
-import type { DeviceAlert } from "../../features/device-events/api";
-import { DeviceAlertPopup } from "../../features/device-events/DeviceAlertPopup";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
 import type { MessagePreview } from "../../features/messages/messagePreview";
-import type { LevelChange } from "../../features/system-levels/api";
-import { LevelPopup } from "../../features/system-levels/LevelPopup";
 import { setIslandSideBubbleRect } from "./api";
 
 type IslandSideBubbleProps = {
   top: number;
   preview: MessagePreview | null;
-  deviceAlert: DeviceAlert | null;
-  quotaAlert: QuotaAlert | null;
-  levelPopup: LevelChange | null;
+  alert: ReactNode;
   onOpenPreview: () => void;
 };
 
-export function sideBubbleShown({ preview, deviceAlert, quotaAlert, levelPopup }: Pick<IslandSideBubbleProps, "preview" | "deviceAlert" | "quotaAlert" | "levelPopup">) {
-  return Boolean(preview || deviceAlert || quotaAlert || levelPopup);
-}
-
-export function IslandSideBubble({ top, preview, deviceAlert, quotaAlert, levelPopup, onOpenPreview }: IslandSideBubbleProps) {
+export function IslandSideBubble({ top, preview, alert, onOpenPreview }: IslandSideBubbleProps) {
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -56,7 +44,7 @@ export function IslandSideBubble({ top, preview, deviceAlert, quotaAlert, levelP
     >
       <span className="island-side-bubble__content">
         <CollapsedMessageContent preview={preview} enabled>
-          {deviceAlert ? <DeviceAlertPopup alert={deviceAlert} /> : quotaAlert ? <QuotaAlertPopup alert={quotaAlert} /> : levelPopup ? <LevelPopup change={levelPopup} /> : null}
+          {alert}
         </CollapsedMessageContent>
       </span>
     </div>

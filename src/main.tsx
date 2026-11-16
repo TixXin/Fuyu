@@ -66,6 +66,14 @@ async function loadWindow(): Promise<ReactNode> {
       const { PinWindow } = await import("./windows/screenshot/PinWindow");
       return <PinWindow />;
     }
+    case "tray-menu": {
+      const { TrayMenuWindow } = await import("./windows/tray-menu/TrayMenuWindow");
+      return <TrayMenuWindow />;
+    }
+    case "drag-grid": {
+      const { DragGridWindow } = await import("./windows/drag-grid/DragGridWindow");
+      return <DragGridWindow />;
+    }
     case "onboarding": {
       const { OnboardingWindow } = await import("./windows/onboarding/OnboardingWindow");
       return <OnboardingWindow />;

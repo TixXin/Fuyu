@@ -1,5 +1,5 @@
 use std::sync::atomic::{AtomicI32, Ordering};
-use tauri::{AppHandle, WebviewWindow};
+use tauri::{AppHandle, Manager, WebviewWindow};
 
 use super::{main_window, WINDOW_LABEL};
 use crate::macos::{apps, input, island_panel};
@@ -62,8 +62,17 @@ pub(crate) fn set_click_activation(_window: &WebviewWindow, _activates: bool) {}
 pub(crate) fn island_mode_synced(_window: &WebviewWindow, _expanded: bool) {}
 
 pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), String> {
-    window.show().map_err(|error| error.to_string())?;
-    window.set_focus().map_err(|error| error.to_string())
+    let app = window.app_handle().clone();
+    let fallback = window.clone();
+    window
+        .run_on_main_thread(move || {
+            if !island_panel::show_panel_without_key(&app, WINDOW_LABEL) {
+                if let Err(error) = fallback.show() {
+                    eprintln!("could not show the island at startup: {error}");
+                }
+            }
+        })
+        .map_err(|error| error.to_string())
 }
 
 pub(crate) fn focus_island_for_shortcut(window: &WebviewWindow) {

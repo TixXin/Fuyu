@@ -8,6 +8,10 @@ mod follow;
 #[cfg(any(windows, target_os = "macos"))]
 #[cfg_attr(target_os = "macos", path = "follow_point_macos.rs")]
 mod follow_point;
+#[cfg_attr(target_os = "macos", path = "drag_follow_macos.rs")]
+mod drag_follow;
+mod drag_grid;
+pub(crate) mod drag_grid_window;
 mod drag_hint;
 mod edge;
 mod geometry;
@@ -73,11 +77,16 @@ pub struct IslandLayout {
     fit_notch: bool,
     #[serde(default)]
     animate: bool,
+    #[serde(default)]
+    drag_grid: Option<bool>,
 }
 
 #[tauri::command]
 pub fn set_island_layout(app: AppHandle, layout: IslandLayout) -> Result<(), String> {
     let window = main_window(&app)?;
+    if let Some(drag_grid) = layout.drag_grid {
+        drag_grid_window::set_lines(drag_grid);
+    }
     let state = mutate_window_state(|state| {
         state.collapsed_scale = layout.collapsed_scale.clamp(0.75, 1.4);
         state.expanded_scale = layout.expanded_scale.clamp(0.75, 1.4);
@@ -192,7 +201,7 @@ pub fn start_island_drag(app: AppHandle) -> Result<(), String> {
 pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {
     let window = main_window(&app)?;
 
-    if !alt_key_down() {
+    if !drag_modifier_down() {
         return Ok(());
     }
     if modifier::start_resize(&window) {
@@ -203,13 +212,13 @@ pub fn start_island_modifier_drag(app: AppHandle) -> Result<(), String> {
 }
 
 #[cfg(windows)]
-fn alt_key_down() -> bool {
+fn drag_modifier_down() -> bool {
     win32::input::is_alt_key_down()
 }
 
 #[cfg(target_os = "macos")]
-fn alt_key_down() -> bool {
-    crate::macos::input::is_option_key_down()
+fn drag_modifier_down() -> bool {
+    crate::macos::input::is_control_key_down()
 }
 
 #[cfg(windows)]
@@ -240,23 +249,30 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
     }
 
     focus::set_click_activation(&window, true);
-    if let Err(error) = window.start_dragging() {
-        mutate_window_state(|state| {
-            state.is_dragging = false;
-            state.custom_position = current_state.custom_position;
-            *state
-        });
-        focus::set_click_activation(&window, matches!(current_state.mode, IslandMode::Expanded));
-        return Err(error.to_string());
-    }
+    let mut follow = match drag_follow::DragFollow::start(&window) {
+        Ok(follow) => follow,
+        Err(error) => {
+            mutate_window_state(|state| {
+                state.is_dragging = false;
+                state.custom_position = current_state.custom_position;
+                *state
+            });
+            focus::set_click_activation(&window, matches!(current_state.mode, IslandMode::Expanded));
+            return Err(error);
+        }
+    };
 
     thread::spawn(move || {
         let mut hints = drag_hint::DragHints::new();
+        let mut grid = drag_grid::DragGrid::start(&window, read_window_state());
         while left_button_down() {
+            follow.poll(&window, |next| grid.align(next));
             hints.poll(&window);
+            grid.poll(&window);
             thread::sleep(Duration::from_millis(8));
         }
         hints.finish(&window);
+        grid.finish();
         thread::sleep(Duration::from_millis(8));
 
         let final_position = screen::window_position(&window).ok().map(|position| {
@@ -382,6 +398,7 @@ macro_rules! tauri_commands {
             crate::island::modifier::set_island_panel_resizable,
             crate::island::banner_hit::set_island_banner_rect,
             crate::island::outside_click::set_island_outside_click_watch,
+            crate::island::drag_grid_window::get_drag_grid_state,
         ] $($rest)*)
     };
 }

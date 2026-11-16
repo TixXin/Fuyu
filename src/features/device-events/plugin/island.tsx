@@ -2,6 +2,7 @@ import { useTranslation } from "../../../i18n";
 import { defineSlot, type IslandAlertMeta } from "../../plugin-kernel/slots";
 import type { DeviceAlert } from "../api";
 import { deviceAlertLook } from "../deviceAlertLook";
+import { DeviceAlertPopup } from "../DeviceAlertPopup";
 
 type AlertSources = { deviceAlert: DeviceAlert | null };
 
@@ -31,4 +32,8 @@ function DeviceAlertTrailing({ deviceAlert }: AlertSources) {
   );
 }
 
-alertSlot.add({ id: "device", order: 10, active: ({ deviceAlert }) => Boolean(deviceAlert), component: DeviceAlertLeading, trailing: DeviceAlertTrailing });
+function DeviceAlertBody({ deviceAlert }: AlertSources) {
+  return deviceAlert ? <DeviceAlertPopup alert={deviceAlert} /> : null;
+}
+
+alertSlot.add({ id: "device", order: 10, component: DeviceAlertLeading, trailing: DeviceAlertTrailing, popup: DeviceAlertBody });

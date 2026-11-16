@@ -101,10 +101,15 @@ try {
   });
   host.watchStatus((plugins) => windows.publish("plugins", plugins), USAGE_TICK_MS);
   setInterval(() => windows.publish("host", host.info()), HOST_TICK_MS).unref();
-  host.watchClients((clients) => windows.publish("clients", clients));
+  const tellRust = (clients) => rpc.notify("clients", { paths: [...new Set(clients.map((entry) => entry.path))] });
+  host.watchClients((clients) => {
+    tellRust(clients);
+    windows.publish("clients", clients);
+  });
   host.watchServices((services) => windows.publish("services", services));
   host.serviceHub.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
   host.ctx.clients.onMessage((message) => windows.publish("plugin", message));
+  tellRust(host.clients());
   rpc.notify("ready", {
     protocol: HOST_PROTOCOL,
     pid: process.pid,

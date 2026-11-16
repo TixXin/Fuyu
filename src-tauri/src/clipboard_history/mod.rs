@@ -23,6 +23,7 @@ mod plugin_view;
 mod popup;
 mod popup_place;
 pub(crate) mod preview_window;
+pub(crate) mod preview_size;
 mod privacy;
 mod secrets;
 mod sequence;
@@ -169,6 +170,8 @@ pub struct ClipboardHistorySettings {
     pin_favorites: bool,
     #[serde(flatten, default)]
     privacy: privacy::PrivacySettings,
+    #[serde(flatten, default)]
+    preview: preview_size::PreviewSettings,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -285,6 +288,7 @@ impl Default for ClipboardHistorySettings {
             copy_card_seconds: copy_notice::DEFAULT_CARD_SECONDS,
             pin_favorites: true,
             privacy: privacy::PrivacySettings::default(),
+            preview: preview_size::PreviewSettings::default(),
         }
     }
 }
@@ -297,6 +301,7 @@ impl ClipboardHistorySettings {
         self.excluded_apps = normalized_app_names(&self.excluded_apps);
         self.ai_prompts = normalized_ai_prompts(&self.ai_prompts);
         self.privacy = self.privacy.normalized();
+        self.preview = self.preview.normalized();
         self.shortcut = parse_shortcut_binding(&self.shortcut)
             .filter(|binding| binding.label != LEGACY_DEFAULT_SHORTCUT)
             .map_or_else(default_clipboard_shortcut, |binding| binding.label);
@@ -561,6 +566,12 @@ pub(crate) fn popup_pinned() -> bool {
     service().and_then(|service| service.snapshot()).map(|snapshot| snapshot.settings.popup_pinned).unwrap_or(false)
 }
 
+pub(crate) fn open_from_tray() {
+    if let Ok(service) = service() {
+        service.emit_shortcut();
+    }
+}
+
 pub(crate) fn refocus_popup(app: &AppHandle) {
     if let Some(window) = app.get_webview_window(popup::WINDOW_LABEL) {
         let hidden = service().and_then(|service| service.snapshot()).map(|snapshot| snapshot.settings.hide_from_capture).unwrap_or(true);
@@ -699,6 +710,9 @@ macro_rules! tauri_commands {
             crate::clipboard_history::clear_clipboard_history,
             crate::clipboard_history::preview_window::show_clipboard_preview,
             crate::clipboard_history::preview_window::hide_clipboard_preview,
+            crate::clipboard_history::preview_window::set_clipboard_preview_size,
+            crate::clipboard_history::preview_window::resize_clipboard_preview,
+            crate::clipboard_history::preview_window::clipboard_preview_has_pointer,
             crate::clipboard_history::actions::paste_clipboard_text,
             crate::clipboard_history::actions::add_clipboard_history_text,
             crate::clipboard_history::actions::pause_clipboard_capture,

@@ -1,3 +1,4 @@
+pub(crate) mod address;
 mod background;
 #[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
 mod hotkey;
@@ -216,18 +217,8 @@ pub async fn translate_text(
     translate(text, direction, provider, base_url, model).await.map(|translated| translated.text)
 }
 
-pub(super) fn host_provider(provider: Option<String>) -> Result<Option<String>, UserError> {
-    let found = find_provider(provider.as_deref())?;
-    if found.needs_address() {
-        let name = found.name;
-        return Err(UserError::new("translation.customUnavailable", format!("{name} is only available in the translation window for now.")).arg("service", name));
-    }
-    Ok(provider)
-}
-
 #[host_service("translator.translate", timeout_ms = 60_000)]
 async fn translate_for_host(text: String, direction: String, provider: Option<String>, model: Option<String>) -> Result<Translated, UserError> {
-    let provider = host_provider(provider)?;
     translate(text, direction, provider, None, model).await
 }
 
@@ -336,6 +327,7 @@ macro_rules! tauri_commands {
             crate::translation::has_translation_secret,
             crate::translation::save_translation_secret,
             crate::translation::delete_translation_secret,
+            crate::translation::address::save_translation_custom_address,
             crate::translation::translate_text,
             crate::translation::rewrite::rewrite_text,
             crate::translation::set_translation_shortcut,

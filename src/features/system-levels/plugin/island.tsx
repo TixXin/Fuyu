@@ -26,4 +26,8 @@ function LevelAlertTrailing({ levelPopup }: AlertSources) {
   return levelPopup ? <span className="notch-alert__value notch-alert__level"><LevelPopup change={levelPopup} /></span> : null;
 }
 
-alertSlot.add({ id: "level", order: 30, active: ({ levelPopup }) => Boolean(levelPopup), component: LevelAlertLeading, trailing: LevelAlertTrailing });
+function LevelAlertBody({ levelPopup }: AlertSources) {
+  return levelPopup ? <LevelPopup change={levelPopup} /> : null;
+}
+
+alertSlot.add({ id: "level", order: 30, component: LevelAlertLeading, trailing: LevelAlertTrailing, popup: LevelAlertBody });

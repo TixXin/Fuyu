@@ -1,6 +1,6 @@
 use super::provider::find_provider;
 use super::request::{request, Translated};
-use super::{engines_with, EngineSecret, TranslatorEngines};
+use super::{address, engines_with, EngineSecret, TranslatorEngines};
 use crate::user_error::UserError;
 use plugin_base::{Rpc, Serve, ServiceFailure};
 use reqwest::Url;
@@ -187,24 +187,51 @@ impl Host {
 }
 
 #[test]
-fn the_host_cannot_choose_where_a_secret_goes() {
+fn the_host_cannot_choose_where_a_secret_goes_and_custom_uses_the_saved_address() {
     let (endpoint, seen) = engine("200 OK", "application/json", r#"{"choices":[{"message":{"content":"hi"},"finish_reason":"stop"}]}"#);
     let mut host = Host::start();
     let address = endpoint.as_str().trim_end_matches("/chat/completions").to_string();
-    for (method, params) in [
+    let calls = [
         ("translator.translate", json!({ "text": "hello", "direction": "auto", "provider": "custom", "baseUrl": address, "model": "m" })),
         ("translator.rewrite", json!({ "text": "hello", "task": "polish", "provider": "custom", "baseUrl": address, "model": "m" })),
-    ] {
-        let error = host.error(method, params);
-        assert_eq!(error["code"], "translation.customUnavailable", "{method}: {error}");
+    ];
+    address::save("").unwrap();
+    for (method, params) in &calls {
+        let error = host.error(method, params.clone());
+        assert_eq!(error["code"], "translation.noAddress", "{method}: {error}");
         assert_eq!(error["data"], json!({ "args": { "service": "自定义接口" } }));
         assert!(!error.to_string().contains(&address) && !error.to_string().contains(SECRET), "{error}");
     }
+    address::save("http://api.example.com/v1").unwrap();
+    for (method, params) in &calls {
+        let error = host.error(method, params.clone());
+        assert_eq!(error["code"], "translation.urlScheme", "{method} should check the saved address, not the caller's: {error}");
+    }
+    address::save("  ").unwrap();
+    assert_eq!(address::read().unwrap(), None);
     assert!(seen.recv_timeout(Duration::from_millis(300)).is_err(), "the engine at the caller's address was reached");
     let (declarations, _) = plugin_base::ts::typescript(&plugin_base::ts::described());
     let entries: Vec<&str> = declarations.lines().filter(|line| line.trim_start().starts_with("\"translator.")).collect();
     assert_eq!(entries.len(), 3, "{declarations}");
     assert!(entries.iter().all(|line| !line.contains("baseUrl")), "{entries:?}");
+}
+
+#[test]
+fn only_the_custom_engine_falls_back_to_the_saved_address() {
+    let custom = find_provider(Some("custom")).unwrap();
+    let deepseek = find_provider(Some("deepseek")).unwrap();
+    let saved = || Ok(Some("https://saved.example/v1".to_owned()));
+    let nothing = || Ok(None);
+    let never = || -> Result<Option<String>, UserError> { panic!("the saved address should not be read") };
+    assert_eq!(address::stored_or(custom, None, saved).unwrap().as_deref(), Some("https://saved.example/v1"));
+    assert_eq!(address::stored_or(custom, Some("https://window.example"), never).unwrap().as_deref(), Some("https://window.example"));
+    assert_eq!(address::stored_or(deepseek, None, never).unwrap(), None);
+    let missing = address::stored_or(custom, None, nothing).unwrap_err();
+    assert_eq!(missing.code(), "translation.noAddress");
+    assert!(!shown_to_the_host(missing).contains(SECRET));
+    let failed = address::stored_or(custom, None, || Err(UserError::new("credential.read", "Could not read."))).unwrap_err();
+    assert_eq!(failed.code(), "credential.read");
+    assert_eq!(address::save(&format!("https://{}.example", "a".repeat(500))).unwrap_err().code(), "translation.urlLong");
 }
 
 #[test]

@@ -132,7 +132,7 @@ export type ErrorCode =
   | "calendar.needPassword"
   | "calendar.needAccount"
   | "translation.provider"
-  | "translation.customUnavailable"
+  | "translation.noAddress"
   | "translation.url"
   | "translation.urlEmpty"
   | "translation.urlLong"
@@ -377,7 +377,7 @@ export const zhCN: ErrorsText = {
     "calendar.needPassword": "请填写密码。",
     "calendar.needAccount": "请填写账号。",
     "translation.provider": ({ service }) => `不支持的翻译服务：${service}`,
-    "translation.customUnavailable": "自定义接口暂时只能在翻译窗口里用，插件还不能用。",
+    "translation.noAddress": ({ service }) => `请先在翻译设置中填写${service}的地址。`,
     "translation.url": "接口地址无效。",
     "translation.urlEmpty": "请填写自定义接口地址。",
     "translation.urlLong": "接口地址过长。",
@@ -619,7 +619,7 @@ export const en: ErrorsText = {
     "calendar.needPassword": "Fill in the password.",
     "calendar.needAccount": "Fill in the account.",
     "translation.provider": ({ service }) => `Unsupported translation service: ${service}`,
-    "translation.customUnavailable": "The custom endpoint only works in the translation window for now, not for plugins.",
+    "translation.noAddress": ({ service }) => `Fill in the address of ${service} in the translation settings first.`,
     "translation.url": "The service address is not valid.",
     "translation.urlEmpty": "Fill in the custom service address.",
     "translation.urlLong": "The service address is too long.",

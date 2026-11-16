@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+  <meta charset="UTF-8" />
+  <title>托盘卡片检查（英文）</title>
+  <style>
+    html body { margin: 0; background: linear-gradient(140deg, #1d2333, #2a2140); font: 14px "Segoe UI", "Microsoft YaHei", sans-serif; color: #f1f0f6; }
+    main { display: grid; grid-template-columns: repeat(3, max-content); gap: 20px; padding: 20px; align-items: start; }
+    .cell { display: grid; gap: 8px; padding: 14px; border-radius: 14px; }
+    .cell.light { background: linear-gradient(140deg, #dfe8f5, #f3e8e1); color: #222; }
+    .cell h3 { margin: 0; font-size: 13px; font-weight: 600; }
+    #window { padding: 20px; }
+    #results { max-width: 1160px; margin: 0 auto 24px; padding: 0 24px; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
+  </style>
+  <main id="gallery"></main>
+  <div id="window"></div>
+  <pre id="results" role="status">准备检查…</pre>
+  <script type="module" src="./tray-menu.tsx"></script>
+</html>

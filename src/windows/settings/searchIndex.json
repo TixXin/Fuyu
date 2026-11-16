@@ -29,6 +29,19 @@
       "page": "general",
       "zh-CN": {
         "group": "启动与语言",
+        "title": "托盘卡片样式",
+        "description": "托盘图标隐藏时用不到卡片。"
+      },
+      "en": {
+        "group": "Startup and language",
+        "title": "Tray card style",
+        "description": "The card isn't available while the tray icon is hidden."
+      }
+    },
+    {
+      "page": "general",
+      "zh-CN": {
+        "group": "启动与语言",
         "title": "界面语言"
       },
       "en": {
@@ -972,6 +985,19 @@
       "en": {
         "group": "Open panel",
         "title": "Panel height"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "拖动",
+        "title": "拖动时显示中线辅助线",
+        "description": "拖岛时在当前屏幕上画出横竖两条中线，把屏幕分成四格。贴着上下左右四条边的正中时会轻轻吸住，方便居中放下，这一点不受开关影响。"
+      },
+      "en": {
+        "group": "Dragging",
+        "title": "Show centre lines while dragging",
+        "description": "Draws dashed horizontal and vertical centre lines across the current screen while you drag the island, splitting it into quarters. Near the middle of any screen edge the island gently snaps to centre; that works with the lines off too."
       }
     },
     {

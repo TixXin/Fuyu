@@ -59,6 +59,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   maxPanelHeight: number;
   panelWidth: number;
   collapsedWidthExtra: number;
+  dragGrid: boolean;
   taskTextColor: string;
   pulseColor: string;
   pulseBrightness: number;

@@ -5,8 +5,7 @@ import { defineSlot, type IslandNoticeMeta } from "../../features/plugin-kernel/
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import type { RecordingNoticeState } from "../../features/screenshot/useRecording";
 import type { ScreenshotNoticeState } from "../../features/screenshot/useScreenshotNotice";
-import type { Timer } from "../../features/timer/timers";
-import { useIslandReminder, type ShownReminder } from "../../features/timer/useIslandReminder";
+import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 import { openSettingsWindow } from "../settings/api";
 import { FirstHintActions, FirstHintNotice } from "./first-hints/FirstHintNotice";
 import type { FirstHintsController } from "./first-hints/useFirstHints";
@@ -17,21 +16,18 @@ export type IslandNotice = { content: ReactNode; actions: ReactNode };
 type NoticeSources = {
   recording: RecordingNoticeState;
   voice: IslandNotice | null;
-  ringing: readonly Timer[];
   screenshotNotice: ScreenshotNoticeState;
   copyCard: ClipboardCopyCardState;
   firstHints: FirstHintsController;
 };
 
-type IslandNoticeSources = NoticeSources & { reminder: ShownReminder | null };
+const noticeSlot = defineSlot<NoticeSources, IslandNoticeMeta<NoticeSources>>("island.notice/v1");
 
-const noticeSlot = defineSlot<IslandNoticeSources, IslandNoticeMeta<IslandNoticeSources>>("island.notice/v1");
-
-function FirstHintContent({ firstHints }: IslandNoticeSources) {
+function FirstHintContent({ firstHints }: NoticeSources) {
   return <FirstHintNotice key={firstHints.current} hints={firstHints} />;
 }
 
-function FirstHintButtons({ firstHints }: IslandNoticeSources) {
+function FirstHintButtons({ firstHints }: NoticeSources) {
   return <FirstHintActions hints={firstHints} onConnectTools={() => openSettingsWindow("agentConnect")} />;
 }
 
@@ -39,11 +35,11 @@ noticeSlot.add({ id: "first-hints", order: 70, active: ({ firstHints }) => Boole
 
 export function useIslandNotice(sources: NoticeSources): IslandNotice | null {
   const entries = useSlotEntries(noticeSlot);
-  const all: IslandNoticeSources = { ...sources, reminder: useIslandReminder() };
-  const entry = entries.find((item) => item.active(all));
+  const { notices } = useIslandContributed();
+  const entry = entries.find((item) => notices.has(item.id) || item.active?.(sources));
   if (!entry) return null;
   return {
-    content: <SlotView slot={noticeSlot} props={all} select={() => [entry]} />,
-    actions: <SlotView slot={noticeSlot} props={all} select={() => [{ ...entry, component: entry.actions }]} />,
+    content: <SlotView slot={noticeSlot} props={sources} select={() => [entry]} />,
+    actions: <SlotView slot={noticeSlot} props={sources} select={() => [{ ...entry, component: entry.actions }]} />,
   };
 }

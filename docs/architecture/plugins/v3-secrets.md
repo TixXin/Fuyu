@@ -24,7 +24,7 @@
 4. **要给用户看或复制的，Rust 直接做完**：复制由 Rust 写进剪贴板（带「不进剪贴板历史」的标记）；要写进别的程序配置的，由 Rust 拼好整份配置写到目标位置；只在少数「显示给用户扫一下」的一次性码上例外（飞书扫码）。
 5. **错误里也不能有**：`UserError` 的 `message`、`detail`、`args` 都会到窗口。带密钥的网址发请求时，错误一律去掉网址（reqwest 的 `Error::without_url()`），会回显输入的地方用已有的 `UserError::redact`。
 6. **对外契约不随便变**：要变的在同一个提交里改前后端、留兼容读取，写进 [contracts.md](../contracts.md)。
-7. **密钥不跟着调用方给的地址走**（E36.3.18）：Rust 带着密钥发请求时，地址只能来自 Rust 自己的预设或用户在设置里存下的配置，不能来自这次调用的参数。宿主、插件、插件窗口给的地址一律不收：给宿主的入口不设地址参数，要靠调用方给地址的引擎（翻译的「自定义接口」）在宿主这条路上直接报错，等它的地址存进 Rust 再开放。否则谁能调这个方法，谁就能让 Rust 把密钥发到自己的服务器上。
+7. **密钥不跟着调用方给的地址走**（E36.3.18）：Rust 带着密钥发请求时，地址只能来自 Rust 自己的预设或用户在设置里存下的配置，不能来自这次调用的参数。宿主、插件、插件窗口给的地址一律不收：给宿主的入口不设地址参数，要用户自己填地址的引擎（翻译的「自定义接口」），地址由窗口在用户保存设置时交给 Rust 存下（E36.3.20，见第 1 行），Rust 发请求时自己读，宿主这条路上只用这一个。否则谁能调这个方法，谁就能让 Rust 把密钥发到自己的服务器上。
 
 ## 这条规则管什么、不管什么
 
@@ -44,7 +44,7 @@
 
 | # | 东西 | 存在哪 | 谁写 / 谁读 | 命令 | 明文回 JS？ | 要不要改 → 怎么改 | 大小 | 契约变不变 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 翻译 API 密钥（各服务一条） | 凭据管理器 / 钥匙串 `com.tixxin.fuyu.translation`，用户名是服务 id | 写：设置窗口 → `save_translation_secret`；读：`translate_text`、`rewrite_text` 在 Rust 里拼 `Authorization: Bearer` | `save_translation_secret(secret, provider)`、`has_translation_secret → bool`、`delete_translation_secret` | 不回。自定义服务地址拒绝带 `?key=` 的网址（`translation/provider.rs`） | 不改。E36.3.8 的 `translator/v1` 服务照样不暴露读密钥的方法 | — | 不变 |
+| 1 | 翻译 API 密钥（各服务一条） | 凭据管理器 / 钥匙串 `com.tixxin.fuyu.translation`，用户名是服务 id；自定义接口的地址也在这里，用户名 `custom-address`（E36.3.20：设置里填的地址由窗口经 `save_translation_custom_address` 交给 Rust，只进不出，宿主这条路上 Rust 只用它） | 写：设置窗口 → `save_translation_secret`；读：`translate_text`、`rewrite_text` 在 Rust 里拼 `Authorization: Bearer` | `save_translation_secret(secret, provider)`、`has_translation_secret → bool`、`delete_translation_secret` | 不回。自定义服务地址拒绝带 `?key=` 的网址（`translation/provider.rs`） | 不改。E36.3.8 的 `translator/v1` 服务照样不暴露读密钥的方法 | — | 不变 |
 | 2 | 邮箱授权码（多账户） | 凭据管理器 / 钥匙串 `com.tixxin.fuyu.qq-mail`，用户名是邮箱 | 写：`connect_qq_mail`；读：`mail/session.rs` 登录 IMAP / SMTP | `connect_qq_mail(email, authorizationCode, host)` → `MailSnapshot`（邮箱、状态、未读、邮件列表，无授权码） | 不回。登录失败的错误先 `redact(secret)` | 不改 | — | 不变 |
 | 3 | 日历：ICS 订阅链接、CalDAV 密码 | 凭据管理器 / 钥匙串 `com.tixxin.fuyu.calendar`，用户名是来源 id；`calendar-sources.json` 只存 id、种类、名称、CalDAV 地址、主机、账户 | 写：`add_calendar_source`；读：`get_calendar_events` 拉日程 | `add_calendar_source(kind, name, url, username, secret)` → `CalendarSource`（ICS 的 `url` 留空，只回 `host`）；`list_calendar_sources`；`get_calendar_events` | **会回**：`calendar/mod.rs` 的 `fetch_ics` 把 reqwest 错误 `.detail(error)`，错误文字带完整订阅链接；`add_calendar_source` 失败时的错误和 `get_calendar_events` 返回的 `CalendarSnapshot.problems[].message` 都会到窗口 | **改**：`fetch_ics` 里的 reqwest 错误先 `without_url()`；`calendar/caldav.rs` 同样处理（CalDAV 地址一般不含密码，但用户可能把账户密码写进网址）；加单元测试：拿一个假链接造连接失败，断言 `UserError` 序列化后不含链接 | 小 | 不变（只少了 `detail` 里的网址） |
 | 4 | Bark 推送设备 Key | 凭据管理器 / 钥匙串 `com.tixxin.fuyu.bark` | 写：手机推送设置 → `save_bark_key`（接受整条推送网址，Rust 抠出 Key）；读：`send_bark_push` 放进 JSON 请求体 | `has_bark_key → bool`、`save_bark_key`、`delete_bark_key`、`send_bark_push(server, title, body, group)` | 不回。但「服务器地址」存在 `localStorage` 的 `fuyu-agent-push.server`，用户若把带 Key 的整条网址粘进这一栏，Key 会以明文进 `localStorage`、`settings.json` 和升级前的备份 | 暂不改，记下。以后要改：前端保存服务器地址时只留到主机和端口（自建 Bark 带路径前缀的少见，留一个「高级」开关再说） | 小 | 改时：`fuyu-agent-push.server` 读取时兼容旧值 |

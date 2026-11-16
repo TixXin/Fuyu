@@ -10,7 +10,7 @@
 - 第 2 阶段（E36.2，#292）2026-11-15 完成：岛的展开页、页头按钮、收起条、刘海提醒，设置窗口的分类、分节，都经插槽注册，`features.ts`、`categories.ts` 里写死的列表去掉了；回归页 53 页、105 份 DOM 快照和改动前逐字一致。各块在哪注册、和计划不一样的地方、留给后面阶段的事，见 [v3-phase2-plan.md](v3-phase2-plan.md)「收口」。真岛验收列在下面「待人工验收」。
 - 同时并行两条地基（2026-11-15 起，经理会话统筹，三个主 agent 各管一条）：第 3 阶段地基（服务、宿主调 Rust、Rust 标记、宿主样板、密钥不经 JS），计划见 [v3-phase3-foundation-plan.md](v3-phase3-foundation-plan.md)，子任务 E36.3.1–E36.3.15；第 5 阶段地基（清单和 `.fuyu` 包、市场索引、审核、命令行、市场 CI、脚手架、作者文档），计划见 [v3-phase5-foundation-plan.md](v3-phase5-foundation-plan.md)，子任务 E36.5.1–E36.5.7。两个阶段的其余部分原本要等第 2 阶段，第 2 阶段已经完成。
 - **第 3 版默认打开之前必须完成**：E36.3.15（#514）把宿主和内置插件带进安装包，已合入（5b4cc37e），下次发版后在两个系统上验收安装版（见「待人工验收」）。
-- **第 3 版默认打开之前还要做**：~~E36.3.20（#550）翻译的 `custom` 引擎改由 Rust 读设置里的地址再开放~~（2026-11-15 已完成，地址存在凭据 `custom-address`，宿主这条路上重新开放）；E36.3.22（#552）`fuyu-plugin://` 不再把整个 `plugins-v3/` 交给窗口，现在第三方插件的界面能读到别的插件的 `data/` 和 `plugins.yml`、`safe-mode.json` 这些文件。两项都已建任务，2026-11-15 用户改口交给第 3 阶段组长，排进 [v3-phase3-plan.md](v3-phase3-plan.md)（E36.3.22 在第 0 批，E36.3.20 在翻译样板之后、默认打开之前）。E36.3.18、E36.3.19 两个安全修复已经合入（0cc861fa），不再挡发版。
+- 第 3 版默认打开之前的两项安全和接口任务已经做完，都在 main 上（PR #648）：E36.3.20（#550）翻译的 `custom` 引擎改由 Rust 读设置里的地址，宿主这条路上重新开放；E36.3.22（#552）`fuyu-plugin://` 只交出白名单里的目录，第三方插件的界面读不到别的插件的 `data/` 和配置文件。测试通道默认打开是 E36.3.47。
 - 自己试第 3 版：`node scripts/plugins-v3/install-demo.mjs` 装演示插件，再用 `pnpm tauri dev` 启动（开发版默认启动宿主，`FUYU_PLUGINS_V3=0` 关掉，E36.3.52），展开岛屿后最上面有一行插件的问候和每秒加一的计数。正式版和 `pnpm build:exe` 打出的程序要设 `FUYU_PLUGINS_V3=1` 才启动宿主（E36.3.15）：正式版用安装包里的宿主，`build:exe` 用仓库里的。
 - 包和目录的名字定在 [流程](v3-workflow.md)「代码放哪」：Cordis 在 `vendor/cordis/`，基座的 TS 包是 `packages/plugin-base`，Rust 部分是 `src-tauri/crates/plugin-base`。
 
@@ -161,10 +161,18 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 3 | 同上（不看 CRLF） | macOS | | |
 | 3 | E36.3.28（正式构建）：Ctrl+Alt+K 展开岛并打开计时器页；设置 → 快捷键 → 计时器改成别的组合、关掉、再打开都即时生效，被别的程序占用时有提示；插件页关掉计时器后按 Ctrl+Alt+K 没反应，计时器页、收起条小块、休息提醒都不见，打开后都回来；开发版和正式版同时开时正式版让出快捷键；设置 → 行为 → 系统提示里关掉「到点响一声」后到点不响；用旧版 `plugins.json`（`focusd.timer` 开着、声音关、快捷键改过）启动新版，`plugins.yml` 里出现 timer 的 config，开关和设置照旧，没开过 `focusd.timer` 的老用户升级后计时器默认开着；待办到期提醒照常弹在岛上，计时器关掉时不弹 | Windows | | |
 | 3 | E36.3.28：同上（快捷键在 `macos/hotkeys` 注册和撤销），另看没有辅助功能权限时的表现 | macOS | | |
+| 3 | E36.3.20：旧版本填过自定义翻译地址的，升级后打开翻译窗口或设置，凭据 `com.tixxin.fuyu.translation` 里出现 `custom-address`，值和设置里一样；开第 3 版宿主，用开发插件调 `translator/v1` 的 `translate({ engine: { engine: "custom" } })` 能翻译，改地址后不重启马上生效；清空地址后回 `no-address`，错误里没有地址和密钥；翻译窗口和剪贴板 AI 改写选自定义接口照常能用 | Windows | | |
+| 3 | 同上，另看第一次保存地址时钥匙串不弹确认框 | macOS | | |
 | 3 | E36.3.52：开发版不设 `FUYU_PLUGINS_V3`（PowerShell 里先 `Remove-Item Env:FUYU_PLUGINS_V3`）跑 `pnpm tauri dev`，设置 → 插件（第 3 版）宿主「已连接」；设 `FUYU_PLUGINS_V3=0` 再起，显示「宿主没开」和新的提示文字。`pnpm build:exe` 打出的是正式版，仍要 `=1` 才开 | Windows | | |
 | 3 | 同上 | macOS | | |
 | 3 | E36.3.29：插件页关掉翻译后，Ctrl+Shift+F、Ctrl+Alt+T 立刻失效，翻译窗口销毁，进程里少一个 translation-hotkeys 线程；再打开时快捷键是自己设的键位，窗口位置正常。翻译关着时重启，开机不注册快捷键、不建翻译窗口。旧版里关了快捷翻译的，升级后仍是关的，插件页和概览卡片一致。剪贴板的 AI 改写照常边出边显示，翻译关掉时提示「快捷翻译已关闭」。设了 `FUYU_WEBVIEW_LOW_MEMORY=1` 时，重建的翻译窗口照样进低内存 | Windows | | |
 | 3 | E36.3.29：同上前四项（快捷键是 ⌃⇧F、⌃⌥T）；重建的翻译窗口仍是不抢焦点的面板，全屏应用里也能弹出，反复开关十次不崩；翻译关着时，截图里点「翻译」没反应、不报错 | macOS | | |
+| 3 | E36.3.30：插件页关掉日历后，日历按钮和日历页、设置里的日历分类、收起态的倒计时都不见，打开后都回来；旧版里关了日历的，升级后仍是关的；设 `FUYU_PLUGINS_V3=1` 时 `calendar/v1` 返回的日程和日历页一致，来源里没有账号和链接，关掉日历时回 not-ready | Windows | | |
+| 3 | E36.3.30：同上，另看关掉再打开日历后节假日的「休 / 班」标记仍在 | macOS | | |
+| 3 | E36.3.22：`install-demo` 后开开发版，hello 演示照常出现；岛的开发者工具里 `fetch('http://fuyu-plugin.localhost/plugins.yml')`、`/data/…`、`/safe-mode.json` 都是 404，`/hello/island.js` 是 200；宿主重启后演示插件的界面照常加载 | Windows | | |
+| 3 | 同上，地址换成 `fuyu-plugin://localhost/…` | macOS | | |
+| 3 | E36.3.32：插件页关掉文件中转后，顶部按钮和页面、收起条和侧栏的数量、设置里的分类都消失，拖文件不再收进中转；再打开后都回来，列表还在。旧版里关了文件中转的，升级后仍是关的，插件页和概览卡片一致。设 `FUYU_PLUGINS_V3=1` 时经 `file-shelf/v1` 的 `add` 加文件，岛上马上多一项；`list` 和岛上一致；关掉后回 not-ready。关着时第 2 版插件的 `shelf.add` 回 503 | Windows | | |
+| 3 | E36.3.32：同上，另看关掉再打开后，从中转拖到 Finder 照常，拖出后按设置移除 | macOS | | |
 
 ## 等你定的事
 

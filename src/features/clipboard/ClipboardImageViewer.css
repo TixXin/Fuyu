@@ -1,0 +1,97 @@
+.clipboard-picture {
+  cursor: zoom-in;
+  user-select: none;
+}
+
+.clipboard-picture img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.clipboard-picture--zoomed {
+  cursor: zoom-out;
+}
+
+.clipboard-picture--pannable {
+  cursor: grab;
+  touch-action: none;
+}
+
+.clipboard-picture--dragging {
+  cursor: grabbing;
+}
+
+.clipboard-picture.clipboard-picture--zoomed img {
+  inset: auto;
+  top: 0;
+  left: 0;
+  max-width: none;
+  object-fit: fill;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.clipboard-zoom {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  max-width: calc(100% - 16px);
+  padding: 3px;
+  transform: translateX(-50%);
+  color: rgba(var(--pop-ink), 0.8);
+  background: color-mix(in srgb, var(--pop-fill) 86%, transparent);
+  border: 1px solid rgba(var(--pop-ink), 0.12);
+  border-radius: 9px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  cursor: default;
+  font-size: 11px;
+}
+
+.clipboard-zoom__button {
+  flex: none;
+  min-width: 24px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0 6px;
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.clipboard-zoom__button:hover {
+  color: rgba(var(--pop-ink), 0.95);
+  background: rgba(var(--pop-ink), 0.1);
+}
+
+.clipboard-zoom__button[aria-pressed="true"] {
+  color: rgba(var(--pop-ink), 0.95);
+  background: rgba(var(--pop-ink), 0.14);
+}
+
+.clipboard-zoom__button:focus-visible {
+  outline: 2px solid var(--pop-accent);
+  outline-offset: 1px;
+}
+
+.clipboard-zoom__level {
+  min-width: 40px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.clipboard-zoom__divider {
+  width: 1px;
+  height: 14px;
+  margin: 0 2px;
+  background: rgba(var(--pop-ink), 0.14);
+}
