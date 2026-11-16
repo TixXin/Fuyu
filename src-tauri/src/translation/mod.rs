@@ -45,10 +45,6 @@ static HAS_POSITIONED_WINDOW: AtomicBool = AtomicBool::new(false);
 static OPENS_IN_ISLAND: AtomicBool = AtomicBool::new(false);
 
 #[cfg_attr(not(windows), allow(dead_code))]
-pub(crate) fn translate_text_from_elsewhere(app: &AppHandle, text: String) {
-    let _ = app.emit(TRANSLATION_SELECTION_EVENT, text);
-}
-
 pub fn init(app: &AppHandle) {
     if APP.set(app.clone()).is_ok() {
         background::register(app);

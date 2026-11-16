@@ -275,6 +275,13 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
   - Tauri 命令 `set_qq_notifications_enabled`、`set_wechat_reminders_enabled` 删掉。QQ、微信的监听由开关表起停：`builtins.json` 里 `messages` 的 `background` 是 `["qq", "wechat", "mail"]`。`qq`、`wechat` 只在插件开着、配置里这个来源是 `true` 时起线程（Windows 是通知监听和托盘闪烁监听，Mac 是读 Dock 角标、看前台应用的一条线程），配置里还没有这个来源时不起；关掉时线程退出，微信收回暴露的界面和隐藏的任务栏按钮。以前它们开机就起、关不掉。`get_qq_notification_state` 和事件 `qq-notifications-changed`、`wechat-reminder-changed` 不变，快照里的 `enabled` 现在跟着配置走。
   - `mail` 是各邮箱的同步线程：关掉插件、或配置里 `mail` 是 `false` 时全部停下；这时 `connect_qq_mail`、`set_qq_mail_enabled` 回新错误码 `mail.off`，不起新线程（配置里还没有 `mail` 时不拦）。打开时由岛按各邮箱自己的开关重新连上。
   - 第 2 版插件的岛上通知（事件 `plugin-notification`、命令 `run_plugin_notification_action`，对插件作者的接口不变）改由消息显示：主窗口提供内部窗口服务 `island-notices/v1`（定义在 `src/lib/island-notices/service.ts`，不在公开的 `@fuyu/plugin-services` 里，owner `messages`）：方法 `notify(通知) → { shown }`，事件 `action`（`{ pluginId, action }`，用户点了通知上的按钮）。`src/features/plugins/plugin/runners.tsx` 只是接线：把事件转给服务，把 `action` 转成 `run_plugin_notification_action`。**行为变化**：消息插件关着时服务不在，第 2 版插件的岛上通知不显示（插件页「消息」一行写明了）。第 6 阶段随第 2 版一起删。
+- 内置插件迁移，截图和录屏（E36.3.35，2026-11-16 起）：
+  - `fuyu-settings` 的 `screenshotEnabled` 和 `translationEnabled` 一样改成开关表里 `screenshot` 的镜像（`LEGACY_SWITCHES` 多一行），读写和对账同上；它的缺省是 `false`，所以第一次迁时没打开过截图的（含新装的）会关掉 `screenshot`。
+  - 后台由开关表起停：`builtins.json` 里 `screenshot` 的 `background` 是 `["shortcuts", "windows"]`。`shortcuts` 是截图快捷键（Windows 的消息线程 `screenshot-hotkeys`，含小键盘和 PrintScreen 的低级键盘钩子；Mac 的 global-hotkey 注册），关掉时撤掉快捷键和钩子、线程退出，关着时 `screenshot_configure` 只记下设置，打开时生效；`windows` 是每个显示器的选区窗口 `screenshot-<n>` 和贴图窗口 `pin-<n>`（含预先建好的那个），关掉时进行中的截图、长截图取消，正在录的屏停下并照常存文件，所有贴图关掉，这些窗口销毁。以前快捷键线程开机就起、关不掉。
+  - 截图关着时 `screenshot_start` 照旧报错，托盘的「截图」照旧灰掉（`tray_menu_state.screenshotEnabled` 现在是插件开着且岛已经打开截图）。
+  - 截图的「翻译」不再发 `translation-selection`：Rust 识别出文字后发新事件 `screenshot-translate`（发给 `main`，载荷是识别出的文字），岛上的截图插件经 `translator/v1` 翻译后在收起条上显示译文；翻译关着时显示「快捷翻译已关闭」。`translation-selection` 只剩翻译自己的划词快捷键发。
+  - 截图卡片和录屏卡片的「放进文件中转」改调 `file-shelf/v1` 的 `add`，「发给 Agent」改读 `agents/v1` 的 `sessions`、调 `focus`；文件中转、Agent 关着时分别显示「文件中转已关闭」、「发给 Agent」按钮灰掉。
+  - 服务 `translator/v1` 的 `translate` 参数 `direction` 改成可省略：窗口里那份省略时用翻译设置里的方向，宿主那份按 `auto`。旧的调用方照旧传，行为不变。
 - 翻译「自定义接口」的地址交给 Rust（E36.3.20，2026-11-15 起）：
   - 新 Tauri 命令 `save_translation_custom_address`（参数 `address`，去掉首尾空白后存进凭据 `com.tixxin.fuyu.translation` / 用户名 `custom-address`；空串是删掉；超过 500 字节回 `translation.urlLong`；不检查格式，用的时候才查），没有读回的命令。
   - 用 `useTranslationSettings` 的窗口在打开时交一次 `fuyu-translation-settings` 的 `customBaseUrl`，改了再交（停 0.4 秒），所以旧版本填过的地址不用重填；localStorage 里的值照旧，翻译窗口自己请求时还传它。

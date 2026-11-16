@@ -14,6 +14,7 @@ export const SCREENSHOT_SELECTING_EVENT = "screenshot-selecting";
 export const PIN_ASSIGNED_EVENT = "screenshot-pin-assigned";
 export const SCREENSHOT_TAKEN_EVENT = "screenshot-taken";
 export const SCREENSHOT_TEXT_EVENT = "screenshot-text";
+export const SCREENSHOT_TRANSLATE_EVENT = "screenshot-translate";
 
 export type ScreenshotMode = "region" | "copy" | "text" | "translate" | "long" | "record" | "fullscreen";
 
@@ -211,6 +212,10 @@ export function closeAllPins() {
 
 export function listenScreenshotText(handler: EventCallback<string>) {
   return listen<string>(SCREENSHOT_TEXT_EVENT, handler);
+}
+
+export function listenScreenshotTranslate(handler: EventCallback<string>) {
+  return listen<string>(SCREENSHOT_TRANSLATE_EVENT, handler);
 }
 
 export type ScreenshotTaken = {

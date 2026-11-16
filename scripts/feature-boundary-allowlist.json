@@ -4,10 +4,6 @@
     "src/features/plugins/PluginDetailPage.tsx -> src/features/center-pattern/index.ts",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/ssh-tunnel/index.ts",
     "src/features/plugins/useBuiltinPlugin.ts -> src/features/plugin-views/api.ts",
-    "src/features/screenshot/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts",
-    "src/features/screenshot/useRecording.ts -> src/features/file-shelf/api.ts",
-    "src/features/screenshot/useScreenshotNotice.ts -> src/features/agent-status/api.ts",
-    "src/features/screenshot/useScreenshotNotice.ts -> src/features/file-shelf/api.ts",
     "src/features/session-ring/SessionRing.tsx -> src/features/agent-status/api.ts",
     "src/features/session-ring/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts",
     "src/features/session-ring/ringCounts.ts -> src/features/agent-status/api.ts",
@@ -42,7 +38,6 @@
   ],
   "removedBy": {
     "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts": "E36.3.45",
-    "src/features/screenshot/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts": "E36.3.35",
     "src/features/session-ring/plugin/runners.tsx -> src/features/agent-status/plugin/islandState.ts": "E36.3.40",
     "src/features/session-ring/useSessionRingDecor.tsx -> src/features/agent-status/api.ts": "E36.3.40",
     "src/features/session-ring/useSessionRingDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts": "E36.3.40",

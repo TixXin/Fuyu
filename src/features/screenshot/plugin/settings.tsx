@@ -10,6 +10,7 @@ import { shortcutSections, type ShortcutsSectionProps } from "../../plugin-kerne
 import { ScreenshotSettingsPage } from "../ScreenshotSettingsPage";
 import { ScreenshotShortcutGroup } from "../ScreenshotShortcutGroup";
 import type { IslandSettings } from "../../../lib/settings/types";
+import { OWNER } from "./owner.ts";
 
 type PageProps = {
   settings: IslandSettings;
@@ -29,7 +30,7 @@ function ScreenshotShortcutOwners({ settings }: SettingsRunnerProps) {
   return null;
 }
 
-settingsRunners.add({ id: "screenshot.shortcut-owners", component: ScreenshotShortcutOwners });
+settingsRunners.add({ id: "screenshot.shortcut-owners", component: ScreenshotShortcutOwners }, OWNER);
 
 function ScreenshotShortcutsSection({ settings, onSettingsChange, onOpenPage, takenBy }: ShortcutsSectionProps) {
   const t = useTranslation();
@@ -47,12 +48,12 @@ function ScreenshotShortcutsSection({ settings, onSettingsChange, onOpenPage, ta
   );
 }
 
-shortcutSections.add({ id: "shortcuts.screenshot", category: "shortcuts", order: 30, component: ScreenshotShortcutsSection });
+shortcutSections.add({ id: "shortcuts.screenshot", category: "shortcuts", order: 30, component: ScreenshotShortcutsSection }, OWNER);
 
 const screenshotPage = (tab: ComponentProps<typeof ScreenshotSettingsPage>["tab"]): ComponentType<PageProps> =>
   function ScreenshotPage({ settings, onSettingsChange, onOpenShortcuts }) {
     return <ScreenshotSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenShortcuts={onOpenShortcuts} />;
   };
 
-addSettingsCategory("screenshot", screenshotPage("screenshot"));
-addSettingsCategory("screenshotRecord", screenshotPage("screenshotRecord"));
+addSettingsCategory("screenshot", screenshotPage("screenshot"), OWNER);
+addSettingsCategory("screenshotRecord", screenshotPage("screenshotRecord"), OWNER);

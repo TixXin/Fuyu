@@ -1,3 +1,4 @@
+mod background;
 #[cfg_attr(target_os = "macos", path = "capture_macos.rs")]
 mod capture;
 #[cfg_attr(target_os = "macos", path = "clipboard_macos.rs")]
@@ -23,7 +24,9 @@ pub(crate) use output::is_screenshot_file;
 pub(crate) use output::sanitized_name;
 pub(crate) use pin::{forget as forget_pin, WINDOW_PREFIX as PIN_PREFIX};
 pub(crate) use session::WINDOW_PREFIX;
+pub(crate) const PLUGIN_ID: &str = "screenshot";
 const TEXT_EVENT: &str = "screenshot-text";
+const TRANSLATE_EVENT: &str = "screenshot-translate";
 const TAKEN_EVENT: &str = "screenshot-taken";
 const HISTORY_EVENT: &str = "screenshot-history-changed";
 
@@ -44,7 +47,8 @@ use session::{OverlaySession, PixelRect};
 use targets::LocalTarget;
 
 pub(crate) fn init(app: &AppHandle) {
-    hotkeys::start(app);
+    hotkeys::init(app);
+    background::register(app);
     output::prune_at_start(app);
 }
 
@@ -53,7 +57,7 @@ pub(crate) fn cancel(app: &AppHandle) {
 }
 
 pub(crate) fn is_enabled() -> bool {
-    hotkeys::is_enabled()
+    crate::plugin_kernel::builtins::is_enabled(PLUGIN_ID) && hotkeys::is_enabled()
 }
 
 #[tauri::command]
@@ -63,7 +67,7 @@ pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Opti
         history::set_keep_days(days);
         output::prune_at_start(&app);
     }
-    if enabled {
+    if is_enabled() {
         session::prepare(&app);
     }
 }
@@ -73,7 +77,7 @@ pub(crate) fn is_capturing() -> bool {
 }
 
 pub(crate) fn start_from_tray(app: &AppHandle) {
-    if !hotkeys::is_enabled() {
+    if !is_enabled() {
         return;
     }
     let app = app.clone();
@@ -90,7 +94,7 @@ pub fn screenshot_shortcut_status() -> Vec<shortcuts::ShortcutStatus> {
 
 #[tauri::command]
 pub fn screenshot_start(app: AppHandle, mode: session::Mode) -> Result<(), String> {
-    if !hotkeys::is_enabled() {
+    if !is_enabled() {
         return Err("Screenshots are turned off in Settings.".to_string());
     }
     session::start(&app, mode);
@@ -228,7 +232,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
             session::end(&app);
             let text = read_text(picture).await;
             if action == Action::Translate {
-                crate::translation::translate_text_from_elsewhere(&app, text);
+                let _ = app.emit_to(crate::island::WINDOW_LABEL, TRANSLATE_EVENT, text);
             } else {
                 if !text.is_empty() {
                     clipboard::copy_text(&text)?;
