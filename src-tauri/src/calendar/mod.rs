@@ -107,6 +107,12 @@ fn app_dir(app: &AppHandle) -> Result<std::path::PathBuf, UserError> {
     crate::home_dir::fuyu_home(app.path()).map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))
 }
 
+fn home_for_host() -> Result<std::path::PathBuf, UserError> {
+    crate::home_dir::current()
+        .map(std::path::Path::to_path_buf)
+        .ok_or_else(|| UserError::new("internal", "Something went wrong inside the island.").detail("the data folder is not set up yet"))
+}
+
 pub(super) fn http_error(code: &'static str, message: &'static str, error: reqwest::Error) -> UserError {
     UserError::new(code, message).detail(error.without_url())
 }
@@ -198,16 +204,16 @@ async fn read_all(sources: &[CalendarSource]) -> CalendarSnapshot {
 
 #[tauri::command]
 pub async fn get_calendar_events(app: AppHandle, refresh: bool) -> Result<CalendarSnapshot, UserError> {
-    read_events(&app, refresh).await
+    read_events(&app_dir(&app)?, refresh).await
 }
 
-#[host_service("calendar.events", timeout_ms = 60_000, inject(app))]
-async fn events_for_host(app: AppHandle, refresh: Option<bool>) -> Result<CalendarEvents, UserError> {
-    read_events(&app, refresh.unwrap_or(false)).await.map(CalendarEvents::from)
+#[host_service("calendar.events", timeout_ms = 60_000)]
+async fn events_for_host(refresh: Option<bool>) -> Result<CalendarEvents, UserError> {
+    read_events(&home_for_host()?, refresh.unwrap_or(false)).await.map(CalendarEvents::from)
 }
 
-async fn read_events(app: &AppHandle, refresh: bool) -> Result<CalendarSnapshot, UserError> {
-    let sources = sources::read(&app_dir(app)?);
+async fn read_events(dir: &std::path::Path, refresh: bool) -> Result<CalendarSnapshot, UserError> {
+    let sources = sources::read(dir);
     if sources.is_empty() {
         return Ok(CalendarSnapshot::default());
     }
@@ -260,9 +266,9 @@ impl From<Vec<CalendarSource>> for CalendarSources {
     }
 }
 
-#[host_service("calendar.sources", inject(app))]
-fn sources_for_host(app: AppHandle) -> Result<CalendarSources, UserError> {
-    Ok(sources::read(&app_dir(&app)?).into())
+#[host_service("calendar.sources")]
+fn sources_for_host() -> Result<CalendarSources, UserError> {
+    Ok(sources::read(&home_for_host()?).into())
 }
 
 #[tauri::command]
