@@ -33,11 +33,11 @@ It then updates:
 
 When WorkBuddy is installed (`%USERPROFILE%\.workbuddy` or `%USERPROFILE%\.workbuddy-ai` exists), it also updates `settings.json` in each of them; see [WorkBuddy](#workbuddy). When Qoder, CodeBuddy Code or Qwen Code is installed, it also updates their `settings.json`; see [Qoder, CodeBuddy Code and Qwen Code](#qoder-codebuddy-code-and-qwen-code). When TRAE or TRAE CN is installed, it writes `~/.trae/hooks.json` or `~/.trae-cn/hooks.json`; see [TRAE and TRAE CN](#trae-and-trae-cn). When ZCode or Kimi Code is installed, it updates `~/.zcode/cli/config.json` or `~/.kimi-code/config.toml`; see [ZCode](#zcode) and [Kimi Code](#kimi-code). When Antigravity is installed, it also writes `%USERPROFILE%\.gemini\config\hooks.json`; see [Antigravity](#antigravity). When DeepSeek Harness is installed, it writes `fuyu-dsh-hooks.json` next to the scripts and tells you what to add to DSH's profile; see [DeepSeek Harness](#deepseek-harness). When opencode is installed, it writes a plugin for opencode 1.x into opencode's config folder; see [opencode](#opencode).
 
-The status light card in Settings has one row per agent with hooks, showing whether its hooks are current. An agent that is not on this computer (`absent`) gets no row and never counts as outdated. When the app moves to its new name (FocuSD Island → Fuyu), it reinstalls the hooks of every agent that had them, remote ones included.
+The status light card in Settings has one row per agent with hooks, showing whether its hooks are current. An agent that is not on this computer (`absent`) gets no row and never counts as outdated. When an install from before the rename is upgraded, the app reinstalls the hooks of every agent that had them, remote ones included ([rename compatibility](../architecture/contracts.md#改名兼容d17)).
 
 **Development build.** `pnpm tauri dev` only reads the installed app's agent status and installs no hooks. Its Settings → AI Agent hides **安装/修复** and Codex / Claude Code's **清除状态**, shows no "hooks are outdated" notice (it would compare its own scripts, port and token with the ones the release build installed), and says under the status light card that hooks are installed by the release build.
 
-The operation is repeatable. Running **安装/修复** again rewrites Fuyu's managed hooks to the current app-data script path and removes older Fuyu hook entries that referenced development paths such as `D:\FocuSD\scripts`. Fuyu hooks under events it no longer writes are removed too, and an event left with no hooks is dropped.
+The operation is repeatable. Running **安装/修复** again rewrites Fuyu's managed hooks to the current app-data script path and removes older Fuyu hook entries that referenced development paths, including the ones from before the rename ([rename compatibility](../architecture/contracts.md#改名兼容d17)). Fuyu hooks under events it no longer writes are removed too, and an event left with no hooks is dropped.
 
 While the approval endpoint runs (approving on the island), Claude Code also gets the approval hooks: an HTTP `PermissionRequest` hook, a `PreToolUse` hook for `AskUserQuestion`, and an activity hook on `PostToolUse`, `PostToolUseFailure`, `PermissionDenied`, `Stop`, `SubagentStop` and `UserPromptSubmit`. The activity hook runs `curl.exe` (part of Windows 10 and 11) in the background (`"async": true`) to post the hook's input to `/claude/activity`; it never delays Claude Code, and with the island closed it gives up after a second. It lets the island close a card whose request was already answered in the terminal (docs/architecture/agent/island-interaction.md, 第 2 条). Installs from before 2026-11-07 lack it and show as needing repair.
 
@@ -141,7 +141,7 @@ The extension is on the VS Code Marketplace as `TixXin.fuyu` since 0.2.0 (publis
 - **Settings → AI Agent → Connection → Editor extension** lists the editors found (an extensions folder or a command line exists), each "Installed" or with an Install button (`get_editor_extension_states`, `install_editor_extension`).
 - **After a click** that lands in an editor without the extension (`no-extension`), the island sends `agent-editor-extension-missing` and the Agent page floats a pill at its bottom: Install / Don't ask again. It shows once per editor while the island runs, and never again for an editor dismissed (`fuyu-agent-editor-extension-dismissed`).
 
-What gets installed is the extension as it is in `packages/vscode-extension/` (`tixxin.fuyu`; the .vsix manifest takes its name, publisher, version and description from `package.json`). An editor that still has `tixxin.focusd-island` from before the rename counts as having the extension, since the island links to that one too.
+What gets installed is the extension as it is in `packages/vscode-extension/` (`tixxin.fuyu`; the .vsix manifest takes its name, publisher, version and description from `package.json`). An editor that still has the extension from before the rename counts as having it, since the island links to that one too ([rename compatibility](../architecture/contracts.md#改名兼容d17)).
 
 ## Reply Status Marker
 
@@ -191,7 +191,7 @@ Claude Code or Codex running on another computer (an SSH server, a dev container
      RemoteForward 39271 127.0.0.1:39271
    ```
 
-3. On the server, save this as `~/.local/bin/fuyu-remote-hook.sh` and make it executable. It needs `curl` and `python3`, gives up after a second and always exits 0, so a closed tunnel never holds the session up. A script set up before the rename as `focusd-remote-hook.sh` with `FOCUSD_TOKEN` keeps working; the names are only what this example uses.
+3. On the server, save this as `~/.local/bin/fuyu-remote-hook.sh` and make it executable. It needs `curl` and `python3`, gives up after a second and always exits 0, so a closed tunnel never holds the session up. A script set up before the rename under its old names keeps working ([rename compatibility](../architecture/contracts.md#改名兼容d17)); the names are only what this example uses.
 
    ```sh
    #!/bin/sh

@@ -29,7 +29,7 @@ Rust 里取目录一律用 `home_dir::fuyu_home(app.path())`，不直接用 `app
 窗口起来以后（`home_dir::after_start`，后台线程），只对真正换了位置的用户做：
 
 - **钩子**：装过 Claude Code / Codex 钩子的，重新安装一次，让配置里的命令指向家目录里的脚本。钩子脚本现在默认把状态写在**脚本所在的文件夹**（cmd 的 `%~dp0`、PowerShell 的 `$PSScriptRoot`），岛总是把脚本写在家目录里，所以不再写死 `%APPDATA%\com.tixxin.fuyu`；`FOCUSD_AGENT_STATUS_DIR` / `FOCUSD_AGENT_STATUS_PATH` 仍然可以覆盖。
-- **每日待办 Markdown**：把旧默认目录 `Documents\FocuSD` 里的 `.md` 复制到 `<家目录>\todo`，已有同名文件的不覆盖，旧文件不删。设置里存的保存目录如果就是旧默认目录，前端改成 `<家目录>\todo`；用户自己选过的目录不动。
+- **每日待办 Markdown**：把改名前的旧默认目录（见 [改名兼容](../architecture/contracts.md#改名兼容d17)）里的 `.md` 复制到 `<家目录>\todo`，已有同名文件的不覆盖，旧文件不删。设置里存的保存目录如果就是旧默认目录，前端改成 `<家目录>\todo`；用户自己选过的目录不动。
 
 每一步做完记在 `home-migration.json`（`{ from, at, hooks, todos }`），只做一次。
 
