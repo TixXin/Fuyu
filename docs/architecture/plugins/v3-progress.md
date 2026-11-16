@@ -161,6 +161,8 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 3 | 同上（不看 CRLF） | macOS | | |
 | 3 | E36.3.28（正式构建）：Ctrl+Alt+K 展开岛并打开计时器页；设置 → 快捷键 → 计时器改成别的组合、关掉、再打开都即时生效，被别的程序占用时有提示；插件页关掉计时器后按 Ctrl+Alt+K 没反应，计时器页、收起条小块、休息提醒都不见，打开后都回来；开发版和正式版同时开时正式版让出快捷键；设置 → 行为 → 系统提示里关掉「到点响一声」后到点不响；用旧版 `plugins.json`（`focusd.timer` 开着、声音关、快捷键改过）启动新版，`plugins.yml` 里出现 timer 的 config，开关和设置照旧，没开过 `focusd.timer` 的老用户升级后计时器默认开着；待办到期提醒照常弹在岛上，计时器关掉时不弹 | Windows | | |
 | 3 | E36.3.28：同上（快捷键在 `macos/hotkeys` 注册和撤销），另看没有辅助功能权限时的表现 | macOS | | |
+| 3 | E36.3.20：旧版本填过自定义翻译地址的，升级后打开翻译窗口或设置，凭据 `com.tixxin.fuyu.translation` 里出现 `custom-address`，值和设置里一样；开第 3 版宿主，用开发插件调 `translator/v1` 的 `translate({ engine: { engine: "custom" } })` 能翻译，改地址后不重启马上生效；清空地址后回 `no-address`，错误里没有地址和密钥；翻译窗口和剪贴板 AI 改写选自定义接口照常能用 | Windows | | |
+| 3 | 同上，另看第一次保存地址时钥匙串不弹确认框 | macOS | | |
 | 3 | E36.3.52：开发版不设 `FUYU_PLUGINS_V3`（PowerShell 里先 `Remove-Item Env:FUYU_PLUGINS_V3`）跑 `pnpm tauri dev`，设置 → 插件（第 3 版）宿主「已连接」；设 `FUYU_PLUGINS_V3=0` 再起，显示「宿主没开」和新的提示文字。`pnpm build:exe` 打出的是正式版，仍要 `=1` 才开 | Windows | | |
 | 3 | 同上 | macOS | | |
 | 3 | E36.3.29：插件页关掉翻译后，Ctrl+Shift+F、Ctrl+Alt+T 立刻失效，翻译窗口销毁，进程里少一个 translation-hotkeys 线程；再打开时快捷键是自己设的键位，窗口位置正常。翻译关着时重启，开机不注册快捷键、不建翻译窗口。旧版里关了快捷翻译的，升级后仍是关的，插件页和概览卡片一致。剪贴板的 AI 改写照常边出边显示，翻译关掉时提示「快捷翻译已关闭」。设了 `FUYU_WEBVIEW_LOW_MEMORY=1` 时，重建的翻译窗口照样进低内存 | Windows | | |
