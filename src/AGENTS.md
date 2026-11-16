@@ -120,6 +120,8 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 
 ## 测试
 
+这一节只记写法约束；要不要写测试、断言写成什么样、快照和失败怎么判断，先加载 `fuyu-testing` skill。
+
 - 纯逻辑写在不含 JSX 的 `.ts` 文件中，由 `tests/unit/*.test.mjs` 用 `node:test` 覆盖。
 - Node 直接加载 `.ts` 源码，所以被测模块必须满足：
   - 运行时的相对导入写完整的 `.ts` 扩展名（纯类型导入用 `import type`，可以不写扩展名）；
