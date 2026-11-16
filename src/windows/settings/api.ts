@@ -20,6 +20,12 @@ export function showSettingsWindow() {
   return invoke("show_settings_window");
 }
 
+const SETTINGS_WINDOW_REOPENED_EVENT = "settings-window-reopened";
+
+export function listenSettingsWindowReopened(onReopened: () => void) {
+  return listen(SETTINGS_WINDOW_REOPENED_EVENT, onReopened);
+}
+
 export type DevPriority = "releaseFirst" | "devFirst";
 
 export type DevPriorityState = { priority: DevPriority; yielding: boolean; releaseRunning: boolean; releaseYields?: boolean };

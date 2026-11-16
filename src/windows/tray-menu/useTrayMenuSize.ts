@@ -10,7 +10,7 @@ function report(card: HTMLElement, last: { width: number; height: number } | nul
   return size;
 }
 
-export function useTrayMenuSize(cardRef: RefObject<HTMLDivElement | null>, opened: number) {
+export function useTrayMenuSize(cardRef: RefObject<HTMLDivElement | null>, opened: number, settled: number) {
   const last = useRef<{ width: number; height: number } | null>(null);
 
   useLayoutEffect(() => {
@@ -19,6 +19,12 @@ export function useTrayMenuSize(cardRef: RefObject<HTMLDivElement | null>, opene
     last.current = report(card, null);
     focusFirstButton(card);
   }, [cardRef, opened]);
+
+  useLayoutEffect(() => {
+    const card = cardRef.current;
+    if (settled === 0 || !card) return;
+    last.current = report(card, last.current);
+  }, [cardRef, settled]);
 
   useEffect(() => {
     const card = cardRef.current;

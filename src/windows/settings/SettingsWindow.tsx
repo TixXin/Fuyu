@@ -9,7 +9,7 @@ import { LayoutEditor } from "./LayoutEditor";
 import "./slots/categories";
 import "./slots/runners";
 import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
-import { showSettingsWindow } from "./api";
+import { listenSettingsWindowReopened, showSettingsWindow } from "./api";
 import { DEFAULT_SETTINGS, isSameSettings, withLayoutFrom, withThemeFrom } from "../../lib/settings/settings";
 import { STORAGE_KEY, loadSettings, saveSettings } from "../../lib/settings/storage";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
@@ -59,23 +59,9 @@ export function SettingsWindow() {
   }, []);
 
   useEffect(() => {
-    const show = () => {
-      void showSettingsWindow().catch((error) => {
-        console.error("Failed to show settings window", error);
-      });
-    };
-    if (document.visibilityState === "hidden") {
-      show();
-      return;
-    }
-    let secondFrame = 0;
-    const firstFrame = window.requestAnimationFrame(() => {
-      secondFrame = window.requestAnimationFrame(show);
+    void showSettingsWindow().catch((error) => {
+      console.error("Failed to show settings window", error);
     });
-    return () => {
-      window.cancelAnimationFrame(firstFrame);
-      window.cancelAnimationFrame(secondFrame);
-    };
   }, []);
 
   useEffect(() => {
@@ -108,6 +94,23 @@ export function SettingsWindow() {
 
     window.addEventListener("storage", syncFromIsland);
     return () => window.removeEventListener("storage", syncFromIsland);
+  }, [focusRequestedSection]);
+
+  useEffect(() => {
+    let stop: (() => void) | undefined;
+    let cancelled = false;
+    const reopened = () => {
+      const nextSettings = loadSettings();
+      setStoredSettings((current) => (isSameSettings(current, nextSettings) ? current : nextSettings));
+      focusRequestedSection();
+    };
+    void listenSettingsWindowReopened(reopened)
+      .then((unlisten) => (cancelled ? unlisten() : (stop = unlisten)))
+      .catch((error) => console.error("Failed to listen for the settings window reopening", error));
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
   }, [focusRequestedSection]);
 
   const resetAppearance = useCallback(() => {

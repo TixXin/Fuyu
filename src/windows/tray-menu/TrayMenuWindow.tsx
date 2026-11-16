@@ -24,6 +24,8 @@ export function TrayMenuWindow() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<TrayMenuState | null>(null);
   const [opened, setOpened] = useState(0);
+  const [settled, setSettled] = useState(0);
+  const ready = useRef(false);
   const { layout, dnd, autostart, reload, toggleDnd, toggleAutostart } = useTrayMenuPrefs();
   const { shortcuts, refresh: refreshShortcuts } = useTrayShortcuts();
   const { status, refresh, media, join } = useTrayMenuStatus();
@@ -40,7 +42,7 @@ export function TrayMenuWindow() {
   }, [light]);
 
   const open = useCallback(async () => {
-    const [next] = await Promise.all([
+    const pending = Promise.all([
       getTrayMenuState().catch((error: unknown) => {
         console.error("Failed to read the tray card state", error);
         return null;
@@ -49,8 +51,15 @@ export function TrayMenuWindow() {
       refreshShortcuts(),
       loadTrayMenuLayout() === "status" ? refresh() : null,
     ]);
-    if (next) setState(next);
-    setOpened((count) => count + 1);
+    const stale = ready.current;
+    if (stale) setOpened((count) => count + 1);
+    const [next] = await pending;
+    if (next) {
+      ready.current = true;
+      setState(next);
+    }
+    if (stale) setSettled((count) => count + 1);
+    else setOpened((count) => count + 1);
   }, [refresh, refreshShortcuts, reload]);
 
   useEffect(() => {
@@ -66,7 +75,7 @@ export function TrayMenuWindow() {
     };
   }, [open]);
 
-  useTrayMenuSize(cardRef, opened);
+  useTrayMenuSize(cardRef, opened, settled);
 
   const handlers = useMemo<TrayCardHandlers>(() => ({
     onAction: (action, arg) => {

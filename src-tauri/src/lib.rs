@@ -157,6 +157,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             tray::build_tray(app)?;
+            tray_menu::prebuild(app.handle());
             plugin_kernel::builtins::init(app.handle());
             coexist::init(app.handle());
             if let Err(error) = clipboard_history::init(app.handle()) {
