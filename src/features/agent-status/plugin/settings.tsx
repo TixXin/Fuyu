@@ -21,7 +21,6 @@ import { OWNER } from "./owner.ts";
 type PageProps = {
   settings: IslandSettings;
   onSettingsChange(settings: IslandSettings): void;
-  onShowPage(page: string): void;
 };
 
 function ApprovalShortcutOwners() {
@@ -50,7 +49,7 @@ function ApprovalReference({ onOpenPage }: ShortcutsSectionProps) {
 
 shortcutReferences.add({ id: "shortcutsReference.approvals", category: "shortcutsReference", order: 30, component: ApprovalReference }, OWNER);
 
-addSettingsCategory("agents", ({ settings, onSettingsChange, onShowPage }: PageProps) => <AgentSettingsPage settings={settings} onSettingsChange={onSettingsChange} onOpenConnect={() => onShowPage("agentConnect")} />, OWNER);
+addSettingsCategory("agents", ({ settings, onSettingsChange }: PageProps) => <AgentSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
 addSettingsCategory("agentSessions", ({ settings, onSettingsChange }: PageProps) => <AgentSessionsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
 addSettingsCategory("agentAlerts", ({ settings, onSettingsChange }: PageProps) => <AgentAlertsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
 addSettingsCategory("sounds", () => <SoundSettingsSection />, OWNER);
