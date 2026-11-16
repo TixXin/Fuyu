@@ -21,7 +21,7 @@ let memoryReply: { pid: number; bytes: number; measure: "private-working-set" | 
 let safeReply: { mode: "third-party" | "minimal"; cause: "variable" | "shift" | "failures"; failures: number } | null = { mode: "third-party", cause: "failures", failures: 2 };
 let leaveCalls = 0;
 const catalog = (await import("../../src/features/builtins.json")).default as { plugins: { id: string; kind: "builtin" | "essential" }[] };
-let builtins = catalog.plugins.map(({ id, kind }) => ({ id, kind, enabled: id !== "clipboard", background: [] as { name: string; registered: boolean; running: boolean }[] }));
+let builtins = catalog.plugins.map(({ id, kind }) => ({ id, kind, enabled: id !== "clipboard", background: [] as { name: string; registered: boolean; running: boolean }[], config: {} }));
 const switchCalls: { id: string; enabled: boolean }[] = [];
 
 mockIPC((command, payload) => {

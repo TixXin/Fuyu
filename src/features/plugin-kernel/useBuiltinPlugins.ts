@@ -10,3 +10,10 @@ export function useBuiltinEnabled(id: string): boolean {
   const plugins = useBuiltinPlugins();
   return plugins?.find((plugin) => plugin.id === id)?.enabled ?? true;
 }
+
+const NO_CONFIG: Readonly<Record<string, unknown>> = Object.freeze({});
+
+export function useBuiltinConfig(id: string): Readonly<Record<string, unknown>> {
+  const plugins = useBuiltinPlugins();
+  return plugins?.find((plugin) => plugin.id === id)?.config ?? NO_CONFIG;
+}

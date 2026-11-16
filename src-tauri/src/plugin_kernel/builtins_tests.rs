@@ -1,4 +1,5 @@
 use super::*;
+use serde_json::json;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 #[derive(Default)]
@@ -6,6 +7,7 @@ struct Fake {
     running: AtomicBool,
     starts: AtomicUsize,
     stops: AtomicUsize,
+    configured: Mutex<Vec<Map<String, Value>>>,
 }
 
 impl Background for Fake {
@@ -22,6 +24,10 @@ impl Background for Fake {
 
     fn running(&self) -> bool {
         self.running.load(Ordering::SeqCst)
+    }
+
+    fn configure(&self, config: &Map<String, Value>) {
+        self.configured.lock().unwrap().push(config.clone());
     }
 }
 
@@ -141,8 +147,8 @@ fn the_list_shows_declared_background_that_never_registered() {
     let table = Table::new(vec![plugin("clipboard", Kind::Builtin, Some(&["watcher"])), plugin("timer", Kind::Builtin, Some(&[]))], BTreeSet::new());
     let list = table.list();
     assert_eq!(serde_json::to_value(&list).unwrap(), serde_json::json!([
-        { "id": "clipboard", "kind": "builtin", "enabled": true, "background": [{ "name": "watcher", "registered": false, "running": false }] },
-        { "id": "timer", "kind": "builtin", "enabled": true, "background": [] },
+        { "id": "clipboard", "kind": "builtin", "enabled": true, "background": [{ "name": "watcher", "registered": false, "running": false }], "config": {} },
+        { "id": "timer", "kind": "builtin", "enabled": true, "background": [], "config": {} },
     ]));
 }
 
@@ -168,4 +174,40 @@ fn the_catalog_is_checked() {
     assert!(parse_catalog(r#"{ "format": 2, "plugins": [] }"#).unwrap_err().contains("format 2"));
     assert!(parse_catalog(r#"{ "format": 1, "plugins": [{ "id": "a" }, { "id": "a" }] }"#).unwrap_err().contains("twice"));
     assert!(parse_catalog("nope").is_err());
+}
+
+#[test]
+fn config_is_kept_per_plugin_and_reaches_its_background() {
+    let catalog = vec![plugin("timer", Kind::Builtin, None), plugin("clipboard", Kind::Builtin, None)];
+    let loaded = BTreeMap::from([("timer".to_owned(), Map::from_iter([("sound".to_owned(), json!(false))])), ("gone".to_owned(), Map::from_iter([("x".to_owned(), json!(1))]))]);
+    let mut table = Table::new(catalog, BTreeSet::new()).with_config(loaded);
+    assert_eq!(Value::Object(table.config("timer")), json!({ "sound": false }));
+    assert!(table.config("gone").is_empty());
+    let fake = Arc::new(Fake::default());
+    register(&mut table, "timer", "shortcut", &fake);
+    table.set_config("timer", "shortcut", Some(json!("Ctrl+Alt+J"))).unwrap().unwrap().run();
+    assert_eq!(fake.configured.lock().unwrap().last().cloned().map(Value::Object), Some(json!({ "sound": false, "shortcut": "Ctrl+Alt+J" })));
+    assert!(table.set_config("timer", "shortcut", Some(json!("Ctrl+Alt+J"))).unwrap().is_none());
+    table.set_config("timer", "sound", None).unwrap().unwrap().run();
+    assert_eq!(Value::Object(table.config("timer")), json!({ "shortcut": "Ctrl+Alt+J" }));
+    assert!(table.set_config("clipboard", "sound", None).unwrap().is_none());
+    assert_eq!(table.set_config("timer", "bad key", Some(json!(1))).unwrap_err().code(), "pluginsV3.builtinConfigKey");
+    assert_eq!(table.set_config("timer", "list", Some(json!([1]))).unwrap_err().code(), "pluginsV3.builtinConfigValue");
+    assert_eq!(table.set_config("nope", "x", None).unwrap_err().code(), "pluginsV3.builtinUnknown");
+    assert_eq!(serde_json::to_value(table.list()).unwrap()[0]["config"], json!({ "shortcut": "Ctrl+Alt+J" }));
+}
+
+#[test]
+fn config_is_saved_in_plugins_yml() {
+    let dir = scratch("config");
+    let file = dir.join("plugins-v3").join(FILE);
+    write_config(&file, "timer", "sound", Some(&json!(false))).unwrap();
+    write_switch(&file, "timer", false).unwrap();
+    assert_eq!(Value::Object(read_config(&file).remove("timer").unwrap()), json!({ "sound": false }));
+    assert_eq!(read_disabled(&file), BTreeSet::from(["timer".to_owned()]));
+    write_config(&file, "timer", "sound", None).unwrap();
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: timer\n  disabled: true\n");
+    std::fs::write(&file, "[{ id: x }]\n").unwrap();
+    assert_eq!(write_config(&file, "timer", "sound", Some(&json!(true))).unwrap_err().code(), "pluginsV3.builtinConfigSave");
+    let _ = std::fs::remove_dir_all(&dir);
 }

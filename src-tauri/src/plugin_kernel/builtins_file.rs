@@ -1,5 +1,10 @@
 use std::collections::BTreeSet;
 
+#[path = "builtins_config.rs"]
+mod config;
+
+pub(crate) use config::{configs, format_scalar, set_config, valid_key};
+
 const DISABLED: &str = "disabled";
 const ID: &str = "id";
 

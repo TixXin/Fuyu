@@ -13,7 +13,7 @@ let revision = 0;
 
 export function switchList(): BuiltinPlugin[] {
   const ids = [...BUILTINS.map((plugin) => plugin.id), ...(withFake ? [FAKE] : [])];
-  return ids.map((id) => ({ id, kind: id === "updater" ? "essential" : "builtin", enabled: !off.has(id), background: [] }));
+  return ids.map((id) => ({ id, kind: id === "updater" ? "essential" : "builtin", enabled: !off.has(id), background: [], config: {} }));
 }
 
 export async function switchOff(ids: readonly string[], fake = false) {

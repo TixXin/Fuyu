@@ -50,9 +50,10 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 | 想做的事 | `plugins.yml` 里写 |
 |---|---|
 | 关掉内置的计时器 | `- id: timer`<br>`  disabled: true` |
-| 给它配置 | `- id: timer`<br>`  config: { … }` |
+| 给它配置 | `- id: timer`<br>`  config:`<br>`    sound: false`<br>`    shortcut: "Ctrl+Alt+T"` |
 | 恢复默认 | 删掉这一条 |
 
+- 设置窗口改配置走 Rust 的 `set_builtin_plugin_config`（2026-11-15 起，E36.3.28）：只写 `config:` 下每项一行的块写法，字符串写成 JSON 的双引号字符串；用户手写成 `config: { … }` 的条目它不改，报错。新配置交给这个插件在 Rust 里登记的后台（`Background::configure`），前端从 `get_builtin_plugins` 的 `config` 读。第 2 版内置插件的开关和设置第一次启动时迁进来一次（`plugin_kernel/v2_builtins.rs`，见 [contracts.md](../contracts.md)「内置插件的配置」）。
 - 改了 `plugins.yml` 后照旧重读（`--watch`），关掉的内置插件撤掉它的全部副作用：服务、受管定时器、监听器、界面文件（测试「plugins.yml switches a built-in plugin off」逐项核对）。
 - 运行时经加载器改条目（以后设置窗口的开关）时，include 照旧把差异写回文件：内置插件写回的只有 `id` 加改过的键，正好是上面这种开关条目。
 - **没带 `--builtins` 时清单是空的**，所有插件都是 `third-party`：`plugins.yml` 写 `kind: builtin` 或 `essential` 从来不算数。[边界](v3-boundary.md)「插件状态」里「`kind` 来自 `plugins.yml` 条目」那一句要改成「来自内置插件清单」，那一页由第 3 阶段主 agent 收尾时改。
