@@ -723,6 +723,60 @@
       "page": "theme",
       "zh-CN": {
         "group": "液态玻璃",
+        "title": "玻璃背后",
+        "description": "透出岛正后方的壁纸并磨砂，「玻璃强度」决定盖在上面的底色有多浓。背后有窗口挡着时仍显示壁纸；系统关掉「透明效果」或读不到壁纸时照旧用纯色玻璃。",
+        "options": [
+          "无",
+          "桌面壁纸"
+        ]
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Behind the glass",
+        "description": "Shows the wallpaper right behind the island, frosted; glass strength sets how thick the tint over it is. Windows behind the island are not shown; with Transparency effects off or no wallpaper to read, the glass stays solid.",
+        "options": [
+          "Nothing",
+          "Desktop wallpaper"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "模糊"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Blur"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "饱和度"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Saturation"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "噪点"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Grain"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "液态玻璃",
         "title": "颜色来源",
         "options": [
           "主题色",

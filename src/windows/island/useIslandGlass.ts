@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { CSSProperties } from "react";
 import { glassClassNames, glassPalette, glassPaused, glassVariables, type GlassPalette } from "../../lib/theme/glassPalette";
+import { isLightIsland } from "../../utils/color";
 import type { IslandSettings } from "../../lib/settings/types";
 import { usePageHidden } from "../../lib/usePageHidden";
 import type { IslandMode } from "./types";
@@ -12,6 +13,11 @@ export type IslandGlassView = {
   specular: boolean;
   paused: boolean;
   strength: number;
+  backdrop: boolean;
+  blur: number;
+  saturation: number;
+  contrastGuard: boolean;
+  light: boolean;
 };
 
 export function useIslandGlass({
@@ -34,7 +40,8 @@ export function useIslandGlass({
   reducedMotion: boolean;
 }) {
   const hidden = usePageHidden();
-  const { glassColorSource, glassColor1, glassColor2, glassColor3, glassContrastGuard } = settings;
+  const { glassColorSource, glassColor1, glassColor2, glassColor3, glassBackdrop } = settings;
+  const glassContrastGuard = settings.glassContrastGuard && glassBackdrop !== "wallpaper";
   const palette = useMemo(
     () => glassPalette({
       settings: { glassColorSource, glassColor1, glassColor2, glassColor3, glassContrastGuard },
@@ -44,10 +51,10 @@ export function useIslandGlass({
     }),
     [glassColorSource, glassColor1, glassColor2, glassColor3, glassContrastGuard, accent, cover, background],
   );
-  const { glassColorStrength, glassFlowSpeed, glassBlobScale, glassRimWidth } = settings;
+  const { glassColorStrength, glassFlowSpeed, glassBlobScale, glassRimWidth, glassBlur, glassSaturation, glassNoise } = settings;
   const glassStyle = useMemo(
-    () => glassVariables({ glassColorStrength, glassFlowSpeed, glassBlobScale, glassRimWidth }, palette) as CSSProperties,
-    [glassColorStrength, glassFlowSpeed, glassBlobScale, glassRimWidth, palette],
+    () => glassVariables({ glassColorStrength, glassFlowSpeed, glassBlobScale, glassRimWidth, glassBlur, glassSaturation, glassNoise }, palette) as CSSProperties,
+    [glassColorStrength, glassFlowSpeed, glassBlobScale, glassRimWidth, glassBlur, glassSaturation, glassNoise, palette],
   );
   const paused = glassPaused(settings, { mode, isTucked, quiet, hidden, reducedMotion });
   const glass: IslandGlassView = {
@@ -57,6 +64,11 @@ export function useIslandGlass({
     specular: settings.glassSpecular,
     paused,
     strength: glassColorStrength / 100,
+    backdrop: settings.glassBackdrop === "wallpaper",
+    blur: glassBlur,
+    saturation: glassSaturation,
+    contrastGuard: settings.glassContrastGuard,
+    light: isLightIsland(background),
   };
   return { glass, glassStyle };
 }

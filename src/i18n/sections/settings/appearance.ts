@@ -35,6 +35,12 @@ export type SettingsAppearanceText = {
     contrastGuard: string;
     contrastGuardHint: string;
     contrastGuardOff: string;
+    backdrop: string;
+    backdrops: { none: string; wallpaper: string };
+    backdropHint: string;
+    blur: string;
+    saturation: string;
+    noise: string;
   };
   preview: {
     label: string;
@@ -85,6 +91,12 @@ export const zhCN: SettingsAppearanceText = {
     contrastGuard: "文字保护",
     contrastGuardHint: "自动压暗或提亮色块，让文字始终看得清。",
     contrastGuardOff: "关掉后，颜色亮的地方文字可能看不清。",
+    backdrop: "玻璃背后",
+    backdrops: { none: "无", wallpaper: "桌面壁纸" },
+    backdropHint: "透出岛正后方的壁纸并磨砂，「玻璃强度」决定盖在上面的底色有多浓。背后有窗口挡着时仍显示壁纸；系统关掉「透明效果」或读不到壁纸时照旧用纯色玻璃。",
+    blur: "模糊",
+    saturation: "饱和度",
+    noise: "噪点",
   },
   preview: {
     label: "按当前设置画出的岛屿",
@@ -135,6 +147,12 @@ export const en: SettingsAppearanceText = {
     contrastGuard: "Keep text readable",
     contrastGuardHint: "Darkens or lightens the colours so text always stays readable.",
     contrastGuardOff: "With this off, text may be hard to read over bright colours.",
+    backdrop: "Behind the glass",
+    backdrops: { none: "Nothing", wallpaper: "Desktop wallpaper" },
+    backdropHint: "Shows the wallpaper right behind the island, frosted; glass strength sets how thick the tint over it is. Windows behind the island are not shown; with Transparency effects off or no wallpaper to read, the glass stays solid.",
+    blur: "Blur",
+    saturation: "Saturation",
+    noise: "Grain",
   },
   preview: {
     label: "The island with the current settings",
