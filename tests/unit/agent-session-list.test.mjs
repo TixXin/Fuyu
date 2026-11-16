@@ -59,11 +59,11 @@ test("labels for the session rows", () => {
   assert.equal(modelLabel("Opus 5.5", "medium"), "Opus 5.5 · Medium");
   assert.equal(modelLabel("gpt-6-astra", null), "gpt-6-astra");
   assert.equal(modelLabel(null, null), null);
-  const age = { justNow: "now", minutes: (n) => `${n}m`, hours: (n) => `${n}h`, days: (n) => `${n}d` };
-  assert.equal(sessionAge(1_000_000, 1_000_000 + 59_000, age), "now");
-  assert.equal(sessionAge(1_000_000, 1_000_000 + 125_000, age), "2m");
-  assert.equal(sessionAge(2_000_000, 1_000_000, age), "now");
-  assert.equal(sessionAge(0, 2758 * 60_000, age), "1d");
+  assert.equal(sessionAge(1_000_000, 1_000_000 + 59_000), "1m");
+  assert.equal(sessionAge(1_000_000, 1_000_000 + 125_000), "2m");
+  assert.equal(sessionAge(2_000_000, 1_000_000), "1m");
+  assert.equal(sessionAge(0, 90 * 60_000), "1h");
+  assert.equal(sessionAge(0, 2758 * 60_000), "1d");
 });
 
 test("the Agent page follows the AI Agent switch", () => {
@@ -159,7 +159,7 @@ test("the provider filter hides Codex or Claude Code but always shows WorkBuddy,
 
 test("the age column is as wide as its longest label", () => {
   assert.equal(ageSlotWidth([]), 0);
-  assert.ok(ageSlotWidth(["<1m"]) < ageSlotWidth(["12 分"]));
-  assert.ok(ageSlotWidth(["1 分"]) < ageSlotWidth(["12 小时"]));
-  assert.equal(ageSlotWidth(["<1m", "12 小时", "3 分"]), ageSlotWidth(["12 小时"]));
+  assert.ok(ageSlotWidth(["1m"]) < ageSlotWidth(["12m"]));
+  assert.ok(ageSlotWidth(["1h"]) < ageSlotWidth(["12m"]));
+  assert.equal(ageSlotWidth(["1m", "12m", "3h"]), ageSlotWidth(["12m"]));
 });

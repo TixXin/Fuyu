@@ -19,9 +19,7 @@ export type AgentText = {
     focus: (title: string) => string;
     notFound: string;
     notFoundEnded: string;
-    justNow: string;
     yourPrompt: (prompt: string) => string;
-    age: { minutes: (count: number) => string; hours: (count: number) => string; days: (count: number) => string };
     activeCount: (count: number) => string;
     duration: (parts: { hours: number; minutes: number; seconds: number }) => string;
     elapsedRunning: (duration: string) => string;
@@ -136,9 +134,7 @@ export const zhCN: AgentText = {
     focus: (title) => `切换到「${title}」所在的窗口`,
     notFound: "没找到对应的窗口",
     notFoundEnded: "没找到对应的窗口，会话可能已经关掉了",
-    justNow: "<1m",
     yourPrompt: (prompt) => `你：${prompt}`,
-    age: { minutes: (count) => `${count} 分`, hours: (count) => `${count} 小时`, days: (count) => `${count} 天` },
     activeCount: (count) => `${count} 个 Agent 会话正在运行，点击查看`,
     duration: ({ hours, minutes, seconds }) =>
       hours > 0 ? `${hours} 小时 ${minutes} 分` : minutes > 0 ? `${minutes} 分 ${seconds} 秒` : `${seconds} 秒`,
@@ -260,9 +256,7 @@ export const en: AgentText = {
     focus: (title) => `Switch to the window running "${title}"`,
     notFound: "No matching window found",
     notFoundEnded: "No matching window; the session may have been closed",
-    justNow: "<1m",
     yourPrompt: (prompt) => `You: ${prompt}`,
-    age: { minutes: (count) => `${count}m`, hours: (count) => `${count}h`, days: (count) => `${count}d` },
     activeCount: (count) => (count === 1 ? "1 agent session running; click to view" : `${count} agent sessions running; click to view`),
     duration: ({ hours, minutes, seconds }) =>
       hours > 0 ? `${hours}h ${minutes}m` : minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`,
