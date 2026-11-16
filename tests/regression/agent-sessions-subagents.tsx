@@ -3,11 +3,22 @@ import type { Root } from "react-dom/client";
 import { I18nProvider } from "../../src/i18n";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
 import type { AgentSessionSummary, AgentSubagent } from "../../src/features/agent-status/api";
+import type { AgentSessionView } from "../../src/features/agent-status/agentSettings";
 import { getAgentPageExpandedHeight } from "../../src/features/agent-status/islandLayout";
 
 type Context = { root: Root; fixture: HTMLElement; sessions: AgentSessionSummary[]; check: (condition: unknown, label: string) => void; chromeHeight: number };
 
 const settle = (ms = 30) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
+
+const renderer = (root: Root) => async (list: AgentSessionSummary[], view: AgentSessionView = "list") => {
+  await act(async () => {
+    root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={list} hostDisplay="both" view={view}
+      removal={view === "list" ? undefined : { remove: () => undefined, removed: null, undo: () => undefined }} /></I18nProvider></StrictMode>);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  });
+};
+const items = () => [...document.querySelectorAll<HTMLLIElement>(".agent-sessions__list > li:not(.agent-motion-ghost)")];
+const toggle = () => document.querySelector<HTMLButtonElement>(".agent-subagents__toggle");
 
 export function sampleSubagents(now: number): AgentSubagent[] {
   return [
@@ -24,18 +35,11 @@ export function sampleSubagents(now: number): AgentSubagent[] {
 
 export async function checkSubagents({ root, fixture, sessions, check, chromeHeight }: Context) {
   const now = Date.now();
-  const render = async (list: AgentSessionSummary[]) => {
-    await act(async () => {
-      root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={list} hostDisplay="both" /></I18nProvider></StrictMode>);
-      await new Promise((resolve) => setTimeout(resolve, 30));
-    });
-  };
+  const render = renderer(root);
   const withAgents = (agents: AgentSubagent[]) => [{ ...sessions[0], subagentList: agents }, ...sessions.slice(1)];
   fixture.style.height = `${getAgentPageExpandedHeight(3) - chromeHeight}px`;
   await render(withAgents(sampleSubagents(now)));
 
-  const items = () => [...document.querySelectorAll<HTMLLIElement>(".agent-sessions__list > li:not(.agent-motion-ghost)")];
-  const toggle = () => document.querySelector<HTMLButtonElement>(".agent-subagents__toggle");
   const first = items()[0];
   const button = toggle();
   check(button && button.textContent === "2 个子 Agent" && button.getAttribute("aria-expanded") === "false", "父行下面有「2 个子 Agent」小按钮，默认收起");
@@ -78,4 +82,31 @@ export async function checkSubagents({ root, fixture, sessions, check, chromeHei
 
   await settle(250);
   await render(sessions);
+}
+
+export async function checkSubagentCards({ root, sessions, check }: Pick<Context, "root" | "sessions" | "check">) {
+  const now = Date.now();
+  const render = renderer(root);
+  const withAgents = (agents: AgentSubagent[]) => [{ ...sessions[0], subagentList: agents }, ...sessions.slice(1)];
+  const panel = () => document.querySelector<HTMLElement>(".agent-sessions")!;
+  await render(withAgents(sampleSubagents(now)), "cards");
+  const card = () => items()[0].querySelector<HTMLElement>(".agent-card")!;
+  check(toggle()?.textContent === "2 个子 Agent" && !toggle()!.closest(".agent-card") && !card().textContent?.includes("子 Agent"),
+    "卡片视图在卡片下面放同一个按钮，不嵌在卡片里，卡片状态行不再重复写数量");
+  const cardBelow = items()[1];
+  const cardBelowTop = cardBelow.getBoundingClientRect().top;
+  await act(async () => { toggle()!.click(); });
+  const cardRows = [...document.querySelectorAll<HTMLLIElement>(".agent-subagent")];
+  check(cardRows.length === 2 && cardRows[0].getBoundingClientRect().top >= card().getBoundingClientRect().bottom, "卡片视图点开后在卡片下面列出子 Agent");
+  const cardBox = card().getBoundingClientRect();
+  const archiveBox = items()[0].querySelector(".agent-session__archive")!.getBoundingClientRect();
+  check(Math.abs((archiveBox.top + archiveBox.bottom) / 2 - (cardBox.top + cardBox.bottom) / 2) < 2, "展开后归档按钮仍在卡片正中，不跟着整块往下掉");
+  await settle(300);
+  check(cardBelow.getBoundingClientRect().top > cardBelowTop + 30 && panel().scrollWidth <= panel().clientWidth, `下面的卡片让出位置，不撑出横向滚动：${cardBelowTop} → ${cardBelow.getBoundingClientRect().top}`);
+  await render(withAgents(sampleSubagents(now)), "compact");
+  check(toggle() && !toggle()!.closest(".agent-card"), "紧凑视图也在卡片下面放按钮");
+  await render(withAgents([]), "cards");
+  check(!toggle() && card().textContent?.includes("2 个子 Agent"), "卡片视图里子 Agent 都跑完后按钮消失，只剩原来的数量");
+
+  await settle(250);
 }
