@@ -1,6 +1,6 @@
 import { useFileShelf } from "../../features/file-shelf/useFileShelf";
 import type { IslandSettings } from "../../lib/settings/types";
-import { useFileShelfDrop } from "./useFileShelfDrop";
+import { useFileShelfDrop } from "../../features/file-shelf/island/useFileShelfDrop";
 import type { useIslandNavigation } from "./useIslandNavigation";
 
 export function useIslandShelf(settings: IslandSettings, navigation: ReturnType<typeof useIslandNavigation>) {

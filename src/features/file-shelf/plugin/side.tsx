@@ -1,6 +1,6 @@
 import { Inbox } from "lucide-react";
 import { useTranslation } from "../../../i18n";
-import { defineSlot } from "../../../features/plugin-kernel/slots";
+import { defineSlot } from "../../plugin-kernel/slots";
 
 type SideContext = {
   shelfCount: number | null;
