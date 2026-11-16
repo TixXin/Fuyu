@@ -2,6 +2,7 @@ import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { MusicWaveButton } from "../MusicWaveButton";
 import { mediaIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type SideContext = {
   onOpenPage: (page: "music") => void;
@@ -36,4 +37,4 @@ function MusicRow({ onOpenPage }: SideContext) {
   return <MusicWaveButton isAvailable isPlaying={playing} audioPeak={mediaState.audioPeak} label={t.island.openMusic} onClick={() => onOpenPage("music")} />;
 }
 
-sideSlot.add({ id: "music", order: 40, component: MusicRow });
+sideSlot.add({ id: "music", order: 40, component: MusicRow }, OWNER);

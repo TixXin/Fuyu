@@ -1,21 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { listenLevelChanges, setLevelPopupEnabled, type LevelChange } from "./api";
+import { listenLevelChanges, type LevelChange } from "./api";
 
 export const LEVEL_POPUP_MS = 1500;
 
-export function useLevelPopup(watch: boolean, show: boolean): LevelChange | null {
+export function useLevelPopup(show: boolean): LevelChange | null {
   const [change, setChange] = useState<LevelChange | null>(null);
   const showRef = useRef(show);
   showRef.current = show;
 
   useEffect(() => {
-    void setLevelPopupEnabled(watch).catch((error: unknown) =>
-      console.error("Failed to switch the volume and brightness watcher", error),
-    );
-    if (!watch) {
-      setChange(null);
-      return;
-    }
     let cancelled = false;
     let unlisten: (() => void) | undefined;
     void listenLevelChanges((next) => {
@@ -30,7 +23,7 @@ export function useLevelPopup(watch: boolean, show: boolean): LevelChange | null
       cancelled = true;
       unlisten?.();
     };
-  }, [watch]);
+  }, []);
 
   useEffect(() => {
     if (!show) setChange(null);

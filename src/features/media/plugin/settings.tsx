@@ -2,6 +2,7 @@ import type { ComponentProps, ComponentType } from "react";
 import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
 import { MusicSettingsPage } from "../MusicSettingsPage";
 import type { IslandSettings } from "../../../lib/settings/types";
+import { OWNER } from "./owner.ts";
 
 type PageProps = {
   settings: IslandSettings;
@@ -13,6 +14,6 @@ const music = (tab: ComponentProps<typeof MusicSettingsPage>["tab"]): ComponentT
     return <MusicSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
   };
 
-addSettingsCategory("music", music("music"));
-addSettingsCategory("musicLyrics", music("musicLyrics"));
-addSettingsCategory("musicLyricsStyle", music("musicLyricsStyle"));
+addSettingsCategory("music", music("music"), OWNER);
+addSettingsCategory("musicLyrics", music("musicLyrics"), OWNER);
+addSettingsCategory("musicLyricsStyle", music("musicLyricsStyle"), OWNER);
