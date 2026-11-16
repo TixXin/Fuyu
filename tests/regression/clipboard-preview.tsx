@@ -1,7 +1,7 @@
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";
-import { mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
+import { mockConvertFileSrc, mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
@@ -9,6 +9,7 @@ import { ClipboardPreviewWindow } from "../../src/windows/clipboard/ClipboardPre
 import type { ClipboardHistoryItem } from "../../src/features/clipboard/api";
 import type { ClipboardPreviewPayload } from "../../src/features/clipboard/api";
 import { checkStay, pointer, renderStayFrame } from "./clipboard-preview-stay";
+import { checkEdit } from "./clipboard-preview-edit";
 
 const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
@@ -21,6 +22,7 @@ mockIPC((command, args) => {
   return null;
 }, { shouldMockEvents: true });
 mockConvertFileSrc("windows");
+mockWindows("clipboard-preview");
 type Invoke = (command: string, args?: unknown, options?: unknown) => Promise<unknown>;
 const internals = (window as unknown as { __TAURI_INTERNALS__: { invoke: Invoke } }).__TAURI_INTERNALS__;
 const mockedInvoke = internals.invoke;
@@ -111,6 +113,7 @@ async function runChecks() {
 
     await checkToolbar();
     await checkStay(check, calls);
+    await checkEdit(check, calls, TEXT, IMAGE, (item) => send(item));
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {

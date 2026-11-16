@@ -4,6 +4,7 @@ mod clipboard_io;
 mod command_text;
 mod copy_notice;
 pub(crate) mod deletion;
+pub(crate) mod edit;
 pub(crate) mod expand;
 pub(crate) mod drag;
 #[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
@@ -380,6 +381,8 @@ pub struct ClipboardHistoryItem {
     pin_order: Option<u32>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     truncated: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    edited_at: Option<i64>,
 }
 
 fn normalized_app_names(names: &[String]) -> Vec<String> {
@@ -539,14 +542,24 @@ pub async fn import_clipboard_history(content: String) -> Result<transfer::Impor
 
 #[tauri::command]
 pub async fn hide_clipboard_popup(app: AppHandle, blurred: Option<bool>) -> Result<(), String> {
-    if blurred == Some(true) && crate::screenshot::is_capturing() {
+    if blurred != Some(true) {
+        return popup::hide(&app);
+    }
+    if preview_window::editing() {
         return Ok(());
     }
-    if blurred == Some(true) && popup_pinned() {
-        popup::note_target(&app);
+    hide_on_blur(&app)
+}
+
+pub(crate) fn hide_on_blur(app: &AppHandle) -> Result<(), String> {
+    if crate::screenshot::is_capturing() {
         return Ok(());
     }
-    popup::hide(&app)
+    if popup_pinned() {
+        popup::note_target(app);
+        return Ok(());
+    }
+    popup::hide(app)
 }
 
 #[tauri::command]
@@ -704,6 +717,8 @@ macro_rules! tauri_commands {
             crate::clipboard_history::restore_clipboard_history_item,
             crate::clipboard_history::deletion::delete_clipboard_history_items,
             crate::clipboard_history::deletion::restore_clipboard_history_items,
+            crate::clipboard_history::edit::edit_clipboard_history_text,
+            crate::clipboard_history::edit::undo_clipboard_history_edit,
             crate::clipboard_history::pins::set_clipboard_pin_key,
             crate::clipboard_history::pins::set_clipboard_pin_order,
             crate::clipboard_history::expand::set_clipboard_popup_expanded,
@@ -713,6 +728,7 @@ macro_rules! tauri_commands {
             crate::clipboard_history::preview_window::set_clipboard_preview_size,
             crate::clipboard_history::preview_window::resize_clipboard_preview,
             crate::clipboard_history::preview_window::clipboard_preview_has_pointer,
+            crate::clipboard_history::preview_window::set_clipboard_preview_editing,
             crate::clipboard_history::actions::paste_clipboard_text,
             crate::clipboard_history::actions::add_clipboard_history_text,
             crate::clipboard_history::actions::pause_clipboard_capture,

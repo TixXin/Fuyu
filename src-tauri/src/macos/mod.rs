@@ -23,6 +23,7 @@ pub(crate) mod notch;
 pub(crate) mod ocr;
 pub(crate) mod pasteboard;
 pub(crate) mod power;
+pub(crate) mod preview_panel;
 pub(crate) mod private_memory;
 pub(crate) mod proc_info;
 pub(crate) mod process;
