@@ -27,12 +27,12 @@
 
 land 会推送、开 PR 并开启自动合并，所以要写 `--yes` 才执行（2026-11-14 起，用户定）：不带参数或带 `--help` / `-h` 只显示用法；带了别的参数却没写 `--yes`，或写了不认识的参数，报错并显示用法，什么都不推。`node scripts/mq/mq.mjs` 不带命令、任何命令带 `--help` 也只显示用法。
 
-1. `git fetch origin main`；本地还没包含 `origin/main` 时 `git merge --no-edit origin/main`。**用 merge，不用 rebase**：rebase 要求工作区干净，别的会话正在改的文件会挡住它，而且会改写别的会话已经看到的提交。合并被别的会话没提交的文件挡住、两边的提交本身不冲突时，land 改在仓库内部合并（`git merge-tree` 加 `git commit-tree`），把那个合并提交推上去；工作区、索引和本地 `main` 都不动，本地 `main` 等 PR 合入、那些文件提交后由 `mq:wait` / `mq:sync` 跟上（F34）。两边的提交真的冲突时撤回这次合并、停下，自己 `git merge origin/main` 解决后再 land。合进来的提交改了 `pnpm-lock.yaml` 时先 `pnpm install`。
+1. `git fetch origin main`；本地还没包含 `origin/main` 时，在仓库内部把它合进来（`git merge-tree` 加 `git commit-tree`），把这个合并提交推上去；工作区、索引和本地 `main` 都不动，本地 `main` 等 PR 合入后由 `mq:wait` / `mq:sync` 跟上（F34、F58）。**用 merge，不用 rebase**：rebase 要求工作区干净，而且会改写别的会话已经看到的提交。**共用工作区里不跑普通的 `git merge`**（F58）：工作区有没提交的改动时，它先 `stash create` 存一份，合并失败就 `reset --hard` 再 `stash apply`；这一步撞上别的会话占着的 `index.lock`，改动就放不回来（2026-11-16 冲掉过 49 个文件，#688）。两边的提交真的冲突时什么都不动、停下，列出冲突的文件。
 2. 把 `HEAD` 推到 `land/<GitHub 用户名>/<机器名>-<分支名>`（在 `main` 上就是 `…-main`），pre-push 钩子跑 `scripts/land-check.mjs --light`：Claude 署名行、已完成任务的提交记录、只改文档或版本号时的轻量检查。工作区里没提交的文件不会被推上去，land 会提一句有几个。
 3. 没有开着的 PR 就开一个，有就沿用（上一批还没合入时，新提交跟着进同一个 PR）；开启自动合并（`--merge`，提交号不变）。
 4. `--wait` 时在前台等合入，否则提示后台跑 `pnpm mq:wait`。
 
-合入用 merge commit，所以合完以后本地 `main` 一般能直接快进；land 之后又有了新提交时，`mq:wait` / `pnpm mq:sync` 把 `origin/main` merge 进来（不改写本地提交）。
+合入用 merge commit，所以合完以后本地 `main` 一般能直接快进；land 之后又有了新提交时，`mq:wait` / `pnpm mq:sync` 在仓库内部把 `origin/main` 合进来（不改写本地提交，也不跑 `git merge`）。快进只在快进会改到的文件（rename 的两边都算）都没有没提交的改动时才用 `git merge --ff-only`，否则也走下面的做法。动索引前先等别的进程放开 `index.lock`（最多约 30 秒，等不到就什么都不动、停下）。
 
 `mq:sync`（`mq:wait` 合入后也调它）被工作区里别的会话没提交的文件挡住时，不再整个放弃（F51）：先在仓库内部合并，对挡路的每个文件拿「它没提交的内容、本地 `main` 的版本、合并后的版本」做三方合并（`git merge-file`）。全都合得上，就让本地 `main` 前进，没挡路的文件直接检出，挡路的文件写回「合并后的版本加上它没提交的改动」，`git diff` 里仍只看得到那个会话自己的改动。有一个合不上（和 `origin/main` 改了同一处、暂存区里有它、一边新增或删除了它）就什么都不动，列出文件和原因，`pnpm tasks dirty` 看归谁。
 
@@ -305,6 +305,6 @@ Agent 状态从正式数据目录只读地读（F39.3）：钩子脚本把状态
 
 - PR 落后于 `main`：工作流 `.github/workflows/update-behind-prs.yml`（`scripts/mq/updateBehind.mjs`）按开启自动合并的先后，只更新排在最前、能合入的那个 PR；它出问题时 `pnpm mq:wait --update` 自己更新。它用仓库 secret `PR_UPDATER_TOKEN`，过期时 PR 会停在落后状态。
 - `mq:wait` 报告合入了，但本地 `main` 没跟上：`mq:sync` 会列出挡路的文件和原因（没提交的改动和 `origin/main` 改了同一处这类），等那些文件提交后再 `pnpm mq:sync`。land 说「改在仓库内部合并」之后也是这种情况。
-- land 说「合 origin/main 时冲突，已撤回」：这是两边的提交真的有内容冲突，land 会在下面列出冲突的文件。上面 git 打出的「Your local changes … would be overwritten by merge」只说明普通合并先被没提交的文件挡住，land 随后改在仓库内部合并也失败了才会走到这里，所以不用等别的会话提交。按提示 `git merge origin/main` 解决、提交，再 land。冲突的文件正好有别的会话没提交的改动时，才需要等它提交。
+- land 说「本地的提交和 origin/main 冲突，什么都没动」：两边的提交真的有内容冲突，land 列出冲突的文件。`git status` 里没有别人没提交的已跟踪文件时，才能自己 `git merge origin/main` 解决、提交，再 land；有的话不要 `git merge`（F58），先找改那些文件的会话或全局总控。
 - 一批里别人的提交让 PR 的 CI 没过（常见的是 Windows 上写的 Rust 在 `rust-macos` 上编译不过，本机查不出来）：先用 SendMessage 把失败的 job 和报错发给提交它的会话，并订阅它空闲。它空闲后那些文件仍没有改动、也没有回复时，被挡住的会话可以自己做最小的修复（只让检查通过，不改逻辑），单独提交、标题写清补的是哪个提交，再发消息告知对方；动手前先看那些文件有没有没提交的改动，有就不动。
 - `tests/scripts/mq.test.mjs` 在临时仓库里真的 land 一次（合并 main、不改写本地提交、不带走没提交的文件、只开一个 PR、没提交的文件挡住合并时照样推出去、冲突时撤回并列出文件；`--only` 只带选中的提交、缺依赖时拒绝、合入后不再列出），用假的 `gh` 代替 GitHub。

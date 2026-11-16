@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync, spawn } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -89,6 +89,99 @@ test("sync fast-forwards around an uncommitted file too, and stops without touch
   assert.match(said, /f\.txt: 没提交的改动和 origin\/main 改了同一处/);
   assert.equal(git(["rev-parse", "HEAD"], main), before);
   assert.equal(text(main, "f.txt"), lines(10, { 2: "origin", 6: "mine" }));
+}));
+
+const LONG_AGO = new Date("2001-01-01T00:00:00Z");
+
+function anotherSessionsEdits(main) {
+  git(["mv", "move.txt", "moved.txt"], main);
+  writeFileSync(path.join(main, "f.txt"), lines(10, { 8: "another session is editing line 8" }));
+  for (const file of ["f.txt", "moved.txt"]) utimesSync(path.join(main, file), LONG_AGO, LONG_AGO);
+  return () => ({
+    status: git(["status", "--porcelain", "--untracked-files=no"], main),
+    files: ["f.txt", "moved.txt"].map((file) => [file, text(main, file), statSync(path.join(main, file)).mtimeMs]),
+    gone: existsSync(path.join(main, "move.txt")),
+  });
+}
+
+function holdIndexLock(main, ms) {
+  const lock = path.join(main, ".git", "index.lock");
+  writeFileSync(lock, "");
+  if (!ms) return () => rmSync(lock, { force: true });
+  const holder = spawn(process.execPath, ["-e", `setTimeout(() => require("fs").rmSync(${JSON.stringify(lock)}, { force: true }), ${ms})`], { stdio: "ignore" });
+  const exited = new Promise((resolve) => holder.on("exit", resolve));
+  return () => exited;
+}
+
+async function withMoveTxt({ main, other, commit }) {
+  commit(main, "move.txt", "move\n", "add move.txt");
+  git(["push", "-q", "origin", "main"], main);
+  git(["pull", "-q", "--no-rebase", "origin", "main"], other);
+}
+
+test("land merges origin in without touching another session's edits or staged rename, with or without index.lock held (F58)", () => inRepos(async (repos) => {
+  const { remote, main, other, commit } = repos;
+  await withMoveTxt(repos);
+  commit(main, "mine.txt", "mine\n", "local work");
+  commit(other, "g.txt", "g\n", "origin adds g");
+  git(["push", "-q", "origin", "main"], other);
+  const look = anotherSessionsEdits(main);
+  const before = look();
+  const head = git(["rev-parse", "HEAD"], main);
+  const gh = { login: () => "tester", findPr: () => null, createPr: () => ({ number: 9, url: "u" }), editPr: () => {}, autoMerge: () => {} };
+  await quietly(async () => assert.equal(await land({ github: gh, host: "Test-PC", lock: () => ({ ok: true, release() {} }) }), 0));
+  assert.deepEqual(look(), before, "the edit and the staged rename were never reset and put back");
+  assert.equal(git(["rev-parse", "HEAD"], main), head, "local main is left to mq:wait / mq:sync");
+  const branch = "land/tester/test-pc-main";
+  assert.equal(git(["show", `${branch}:g.txt`], remote), "g");
+  assert.equal(git(["show", `${branch}:move.txt`], remote), "move", "the uncommitted rename is not pushed");
+
+  commit(other, "h.txt", "h\n", "origin adds h");
+  git(["push", "-q", "origin", "main"], other);
+  const release = holdIndexLock(main);
+  try {
+    await quietly(async () => assert.equal(await land({ github: gh, host: "Test-PC", lock: () => ({ ok: true, release() {} }) }), 0, "land does not need the index"));
+  } finally {
+    release();
+  }
+  assert.equal(git(["show", `${branch}:h.txt`], remote), "h");
+  assert.deepEqual(look(), before);
+}));
+
+test("sync waits out another process's index.lock and merges around a staged rename and an edit, without resetting them (F58)", () => inRepos(async (repos) => {
+  const { main, other, commit } = repos;
+  await withMoveTxt(repos);
+  commit(main, "mine.txt", "mine\n", "local work");
+  commit(other, "g.txt", "g\n", "origin adds g");
+  commit(other, "old.txt", "old\n", "origin adds old");
+  git(["mv", "old.txt", "new.txt"], other);
+  git(["commit", "-q", "-m", "origin renames old"], other);
+  git(["push", "-q", "origin", "main"], other);
+  const look = anotherSessionsEdits(main);
+  const before = look();
+  const released = holdIndexLock(main, 800);
+  await quietly(() => sync(main));
+  await released();
+  assert.equal(git(["rev-list", "--count", "HEAD..origin/main"], main), "0", "local main has everything from origin");
+  assert.equal(git(["log", "-1", "--format=%s", "HEAD^1"], main), "local work", "and keeps its own commit under a merge");
+  assert.deepEqual(look(), before, "the other session's edit and staged rename are untouched");
+  assert.equal(text(main, "g.txt"), "g\n");
+  assert.equal(text(main, "new.txt"), "old\n");
+  assert.equal(existsSync(path.join(main, "old.txt")), false, "origin's rename removes the old path too");
+}));
+
+test("sync does not fast-forward over the source of a staged rename that origin changed (F58)", () => inRepos(async (repos) => {
+  const { main, other, commit } = repos;
+  await withMoveTxt(repos);
+  commit(other, "move.txt", "origin edits move\n", "origin edits move.txt");
+  git(["push", "-q", "origin", "main"], other);
+  const look = anotherSessionsEdits(main);
+  const before = look();
+  const head = git(["rev-parse", "HEAD"], main);
+  const said = await quietly(() => sync(main));
+  assert.match(said, /move\.txt: 暂存区里有它的改动/);
+  assert.equal(git(["rev-parse", "HEAD"], main), head);
+  assert.deepEqual(look(), before);
 }));
 
 test("land --upto carries local main up to a commit with the same commit ids, and leaves later commits and the work tree alone", () => inRepos(async ({ remote, main, other, commit }) => {
