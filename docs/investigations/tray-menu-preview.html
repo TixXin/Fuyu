@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>托盘卡片预览</title>
+<style>
+:root {
+  --card-w: 344px;
+  --page-bg: #eceef2;
+  --page-fg: #18181e;
+  --page-fg2: rgba(24, 24, 30, 0.62);
+  --page-panel: #ffffff;
+  --page-line: rgba(0, 0, 0, 0.09);
+  --page-accent: #0a7fd1;
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page-bg); color: var(--page-fg); font: 14px/1.5 var(--font-ui); }
+header.top { padding: 20px 24px 8px; max-width: 1480px; margin: 0 auto; }
+header.top h1 { font-size: 20px; margin: 0 0 6px; }
+header.top p { margin: 0 0 4px; color: var(--page-fg2); }
+.tradeoffs { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin: 12px 0 4px; }
+.tradeoffs div { background: var(--page-panel); border: 1px solid var(--page-line); border-radius: 12px; padding: 10px 12px; }
+.tradeoffs b { display: block; margin-bottom: 2px; }
+.tradeoffs span { color: var(--page-fg2); font-size: 13px; }
+.controls { position: sticky; top: 0; z-index: 50; background: rgba(236, 238, 242, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--page-line); }
+.controls .in { max-width: 1480px; margin: 0 auto; padding: 10px 24px; display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+.ctl { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.ctl > span:first-child { color: var(--page-fg2); }
+.seg { display: inline-flex; background: rgba(0, 0, 0, 0.06); border-radius: 9px; padding: 2px; }
+.seg button { border: 0; background: transparent; font: inherit; padding: 4px 10px; border-radius: 7px; cursor: pointer; color: var(--page-fg); }
+.seg button[aria-pressed="true"] { background: var(--page-panel); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); font-weight: 600; }
+.seg button:focus-visible, .swatch:focus-visible, .ctl input:focus-visible { outline: 2px solid var(--page-accent); outline-offset: 2px; }
+.swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.swatch[aria-pressed="true"] { border-color: var(--page-fg); }
+.ctl input[type="range"] { width: 130px; }
+.ctl label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+main { max-width: 1480px; margin: 0 auto; padding: 16px 24px 80px; }
+.section-title { font-size: 15px; font-weight: 600; margin: 18px 0 10px; }
+.hint { color: var(--page-fg2); font-size: 13px; margin: 0 0 12px; }
+.overview { display: grid; grid-template-columns: repeat(3, max-content); gap: 18px; justify-content: start; overflow-x: auto; padding-bottom: 6px; }
+.ov-cell { border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.ov-cell[data-theme="dark"] { background: linear-gradient(140deg, #1d2333, #2a2140); }
+.ov-cell[data-theme="light"] { background: linear-gradient(140deg, #dfe8f5, #f3e8e1); }
+.ov-cell h3 { margin: 0; font-size: 13px; font-weight: 600; }
+.ov-cell[data-theme="dark"] h3 { color: rgba(255, 255, 255, 0.8); }
+.ov-cell[data-theme="light"] h3 { color: rgba(0, 0, 0, 0.7); }
+.scenes { display: grid; grid-template-columns: repeat(auto-fill, minmax(600px, 1fr)); gap: 18px; }
+.scene-box h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+.scene-box h3 small { font-weight: 400; color: var(--page-fg2); margin-left: 6px; }
+.scene { position: relative; height: 640px; border-radius: 14px; overflow: hidden; user-select: none; }
+.scene[data-theme="dark"] { background: radial-gradient(120% 90% at 20% 10%, #3b3170 0%, transparent 55%), radial-gradient(90% 80% at 85% 85%, #0f4c6a 0%, transparent 60%), #141826; }
+.scene[data-theme="light"] { background: radial-gradient(120% 90% at 15% 15%, #c9dcf6 0%, transparent 55%), radial-gradient(90% 80% at 85% 85%, #f6d8c7 0%, transparent 60%), #eef1f6; }
+.tb { position: absolute; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 0 10px; z-index: 2; }
+.scene[data-theme="dark"] .tb { background: rgba(28, 28, 32, 0.86); color: #fff; border-color: rgba(255, 255, 255, 0.08); }
+.scene[data-theme="light"] .tb { background: rgba(243, 243, 247, 0.88); color: #111; border-color: rgba(0, 0, 0, 0.08); }
+.tb-bottom { left: 0; right: 0; bottom: 0; height: 48px; border-top: 1px solid; }
+.tb-top { left: 0; right: 0; top: 0; height: 48px; border-bottom: 1px solid; }
+.tb-left { top: 0; bottom: 0; left: 0; width: 48px; flex-direction: column; padding: 10px 0; border-right: 1px solid; }
+.tb-apps, .tray { display: flex; align-items: center; gap: 4px; }
+.tb-bottom .tb-apps, .tb-top .tb-apps { position: absolute; left: 50%; transform: translateX(-50%); }
+.tb-bottom .tray, .tb-top .tray { margin-left: auto; }
+.tb-left .tb-apps, .tb-left .tray { flex-direction: column; }
+.app { width: 36px; height: 36px; border-radius: 6px; display: grid; place-items: center; }
+.app i { width: 22px; height: 22px; border-radius: 6px; display: block; }
+.app.start i { background: conic-gradient(from 45deg, #4cc2ff, #0078d4, #4cc2ff); border-radius: 5px; }
+.tray .ti { width: 28px; height: 32px; display: grid; place-items: center; border-radius: 5px; opacity: 0.9; }
+.tray .ti svg { width: 15px; height: 15px; }
+.trayicon { border: 0; background: transparent; color: inherit; cursor: pointer; width: 30px; height: 32px; border-radius: 5px; display: grid; place-items: center; }
+.trayicon:hover, .trayicon.open { background: rgba(127, 127, 127, 0.22); }
+.trayicon:focus-visible { outline: 2px solid #4cc2ff; outline-offset: 1px; }
+.trayicon svg { width: 20px; height: 12px; }
+.clock { font-size: 11.5px; text-align: right; line-height: 1.3; padding: 0 6px; white-space: nowrap; }
+.tb-left .clock { text-align: center; padding: 4px 0; font-size: 10.5px; }
+.mbar { position: absolute; top: 0; left: 0; right: 0; height: 26px; display: flex; align-items: center; gap: 2px; padding: 0 10px; font-size: 13px; z-index: 2; backdrop-filter: blur(20px); }
+.scene[data-theme="dark"] .mbar { background: rgba(30, 30, 36, 0.55); color: #fff; }
+.scene[data-theme="light"] .mbar { background: rgba(255, 255, 255, 0.5); color: #000; }
+.mbar .mi { padding: 0 8px; }
+.mbar .mi.bold { font-weight: 700; }
+.mbar .sp { flex: 1; }
+.mbar .ti { width: 28px; height: 22px; display: grid; place-items: center; }
+.mbar .ti svg { width: 15px; height: 15px; }
+.mbar .trayicon { width: 34px; height: 22px; border-radius: 5px; }
+.mbar .trayicon svg { width: 19px; height: 11px; }
+.mbar .clock { font-size: 13px; }
+.cardpos { position: absolute; z-index: 5; }
+.cardpos.enter-win { animation: enterWin 180ms cubic-bezier(0.22, 1, 0.36, 1); }
+.cardpos.enter-win-down { animation: enterWinDown 180ms cubic-bezier(0.22, 1, 0.36, 1); }
+.cardpos.enter-win-right { animation: enterWinRight 180ms cubic-bezier(0.22, 1, 0.36, 1); }
+.cardpos.enter-mac { animation: enterMac 140ms ease-out; }
+@keyframes enterWin { from { opacity: 0; transform: translateY(10px); } }
+@keyframes enterWinDown { from { opacity: 0; transform: translateY(-10px); } }
+@keyframes enterWinRight { from { opacity: 0; transform: translateX(-10px); } }
+@keyframes enterMac { from { opacity: 0; } }
+.scene-tip { position: absolute; left: 12px; font-size: 11.5px; padding: 3px 8px; border-radius: 6px; z-index: 1; }
+.scene[data-theme="dark"] .scene-tip { background: rgba(0, 0, 0, 0.35); color: rgba(255, 255, 255, 0.75); }
+.scene[data-theme="light"] .scene-tip { background: rgba(255, 255, 255, 0.6); color: rgba(0, 0, 0, 0.6); }
+.native { position: absolute; z-index: 6; min-width: 180px; padding: 4px; border-radius: 8px; font-size: 13px; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3); }
+.scene[data-theme="dark"] .native { background: #2b2b2f; color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); }
+.scene[data-theme="light"] .native { background: #f9f9f9; color: #111; border: 1px solid rgba(0, 0, 0, 0.1); }
+.native button { display: block; width: 100%; text-align: left; border: 0; background: transparent; color: inherit; font: inherit; padding: 5px 12px; border-radius: 5px; cursor: pointer; }
+.native button:hover, .native button:focus-visible { background: rgba(127, 127, 127, 0.2); outline: none; }
+.native hr { border: 0; height: 1px; background: rgba(127, 127, 127, 0.3); margin: 4px 6px; }
+.native .cap { padding: 3px 12px 2px; font-size: 11px; opacity: 0.55; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #18181e; color: #fff; padding: 8px 14px; border-radius: 10px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 100; max-width: calc(100vw - 32px); }
+.toast.show { opacity: 1; }
+
+.card {
+  --c-accent: #74d6ff; --c-on-accent: #06202c;
+  width: var(--card-w); container-type: inline-size; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px;
+  font: 13px/1.35 var(--font-ui); text-align: left; backdrop-filter: blur(24px) saturate(1.4);
+}
+.card[data-theme="dark"] {
+  --c-bg: rgba(32, 32, 36, 0.94); --c-fg: #f8f6f0; --c-fg2: rgba(248, 246, 240, 0.68); --c-fg3: rgba(248, 246, 240, 0.48);
+  --c-tile: rgba(255, 255, 255, 0.065); --c-tile-hover: rgba(255, 255, 255, 0.11); --c-line: rgba(255, 255, 255, 0.08);
+  --c-danger: #ff7a7a; --c-danger-bg: rgba(255, 122, 122, 0.12); --c-track: rgba(255, 255, 255, 0.2);
+  background: var(--c-bg); color: var(--c-fg); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.card[data-theme="light"] {
+  --c-bg: rgba(252, 252, 254, 0.96); --c-fg: #18181e; --c-fg2: rgba(24, 24, 30, 0.68); --c-fg3: rgba(24, 24, 30, 0.5);
+  --c-tile: rgba(0, 0, 0, 0.045); --c-tile-hover: rgba(0, 0, 0, 0.08); --c-line: rgba(0, 0, 0, 0.08);
+  --c-danger: #c42b2b; --c-danger-bg: rgba(196, 43, 43, 0.08); --c-track: rgba(0, 0, 0, 0.2);
+  background: var(--c-bg); color: var(--c-fg); border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 18px 50px rgba(30, 40, 70, 0.22), 0 2px 8px rgba(30, 40, 70, 0.1);
+}
+.card svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.card button { font: inherit; color: inherit; border: 0; background: transparent; cursor: pointer; margin: 0; min-width: 0; }
+.card button:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+.card kbd { font: 10.5px/1.2 var(--font-ui); color: var(--c-fg3); white-space: nowrap; letter-spacing: 0; }
+.hd { display: flex; align-items: center; gap: 7px; min-height: 30px; }
+.hd .mark svg { width: 26px; height: 14px; display: block; color: var(--c-fg); }
+.hd .nm { font-weight: 700; font-size: 14px; white-space: nowrap; }
+.hd .ver { font-size: 12px; color: var(--c-fg3); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px; border-radius: 6px; min-width: 0; flex: 0 1 auto; }
+.hd .vt { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.hd .badge { flex: none; }
+.hd button.ver:hover { background: var(--c-tile); }
+.badge { font-size: 11px; font-weight: 600; color: var(--c-on-accent); background: var(--c-accent); padding: 1px 6px; border-radius: 999px; white-space: nowrap; }
+.hd .sp { flex: 1; }
+.ib { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--c-fg2) !important; flex: none; }
+.ib:hover { background: var(--c-tile); color: var(--c-fg) !important; }
+.tile { background: var(--c-tile) !important; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px 4px; min-height: 76px; }
+.tile:hover { background: var(--c-tile-hover) !important; }
+.tile .tl { font-size: 12px; max-width: 100%; overflow-wrap: anywhere; text-align: center; line-height: 1.2; }
+.tile.off { color: var(--c-fg3); }
+.tile.off svg.i { opacity: 0.6; }
+.tile .offtag { font-size: 10.5px; color: var(--c-fg3); }
+.primary { border-radius: 12px; display: flex; align-items: flex-start; flex-direction: column; justify-content: space-between; gap: 6px; padding: 10px 12px; min-height: 76px; text-align: left; background: var(--c-tile) !important; }
+.primary:hover { background: var(--c-tile-hover) !important; }
+.primary[aria-pressed="true"] { background: var(--c-accent) !important; color: var(--c-on-accent) !important; }
+.primary[aria-pressed="true"]:hover { filter: brightness(1.06); }
+.primary svg.i { width: 18px; height: 18px; }
+.primary b { display: block; font-size: 15px; line-height: 1.2; }
+.primary small { display: block; font-size: 11.5px; opacity: 0.78; }
+.a-main { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; gap: 6px; }
+@container (max-width: 306px) {
+  .a-main { grid-template-columns: repeat(3, 1fr); }
+  .a-main .primary { grid-column: 1 / -1; min-height: 0; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; }
+}
+.strip { display: flex; align-items: center; gap: 4px; background: var(--c-tile); border-radius: 12px; padding: 4px 4px 4px 10px; }
+.strip .lab { font-size: 12px; color: var(--c-fg2); white-space: nowrap; margin-right: auto; padding-right: 4px; }
+.strip .ib:hover { background: var(--c-tile-hover); }
+.sws { display: flex; flex-direction: column; gap: 2px; }
+.sw { display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; border-radius: 9px; text-align: left; }
+.sw:hover { background: var(--c-tile); }
+.sw svg.i { color: var(--c-fg2); }
+.sw .sl { flex: 1; min-width: 0; }
+.track { width: 34px; height: 20px; border-radius: 999px; background: var(--c-track); position: relative; flex: none; transition: background 0.15s; }
+.knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); transition: left 0.15s; }
+.sw[aria-checked="true"] .track { background: var(--c-accent); }
+.sw[aria-checked="true"] .knob { left: 16px; }
+.card[data-theme="dark"] .sw[aria-checked="true"] .knob { background: var(--c-on-accent); }
+.ft { display: flex; align-items: center; gap: 6px; border-top: 1px solid var(--c-line); padding-top: 9px; }
+.ft .sp { flex: 1; }
+.fb { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 8px; color: var(--c-fg2) !important; white-space: nowrap; }
+.fb:hover { background: var(--c-tile); color: var(--c-fg) !important; }
+.fb.danger { color: var(--c-danger) !important; }
+.fb.danger:hover { background: var(--c-danger-bg); }
+.ft .sw { width: auto; flex: 0 1 auto; padding: 4px 6px; gap: 7px; }
+.ft .sw .track { width: 30px; height: 18px; }
+.ft .sw .knob { width: 14px; height: 14px; }
+.ft .sw[aria-checked="true"] .knob { left: 14px; }
+.ft .sw .sl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@container (max-width: 280px) {
+  .ft .fb .ft-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .ft .fb { padding: 6px; }
+}
+@container (max-width: 300px) {
+  .pill { flex-direction: column; gap: 3px; min-height: 50px; }
+}
+.blk { background: var(--c-tile); border-radius: 12px; padding: 10px; display: flex; align-items: center; gap: 10px; }
+.blk .bi { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex: none; background: var(--c-tile); color: var(--c-fg2); }
+.blk .bt { flex: 1; min-width: 0; }
+.blk .bt b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blk .bt span { display: block; font-size: 12px; color: var(--c-fg2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blk .ib:hover { background: var(--c-tile-hover); }
+.cover { width: 42px; height: 42px; border-radius: 9px; flex: none; background: linear-gradient(135deg, #ff8a5b, #7b4bff 60%, #2bb4ff); }
+.prog { height: 3px; border-radius: 3px; background: var(--c-track); margin-top: 6px; overflow: hidden; }
+.prog i { display: block; height: 100%; width: 42%; background: var(--c-accent); }
+.mini { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: var(--c-accent) !important; color: var(--c-on-accent) !important; white-space: nowrap; flex: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--c-fg2); margin-top: 2px; }
+.blk .bt .chips { display: flex; white-space: normal; overflow: visible; }
+.blk .bt .chips span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 12px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.calm { display: block; text-align: left; }
+.calm b { font-weight: 600; display: block; }
+.blk .bt.calm span { font-size: 12px; color: var(--c-fg2); white-space: normal; }
+.pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.pill { background: var(--c-tile) !important; border-radius: 10px; padding: 7px 6px; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; }
+.pill:hover { background: var(--c-tile-hover) !important; }
+.pill .tl { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pill[aria-pressed="true"] { background: var(--c-accent) !important; color: var(--c-on-accent) !important; }
+.pill.off { color: var(--c-fg3); }
+.c-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.c-row .tile { min-height: 58px; }
+.c-row .tile[aria-pressed="true"] { background: var(--c-accent) !important; color: var(--c-on-accent) !important; }
+.menu { display: flex; flex-direction: column; gap: 1px; border-top: 1px solid var(--c-line); padding-top: 6px; }
+.mi-row { display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; border-radius: 9px; text-align: left; }
+.mi-row:hover { background: var(--c-tile); }
+.mi-row svg.i { color: var(--c-fg2); }
+.mi-row.danger, .mi-row.danger svg.i { color: var(--c-danger); }
+.mi-row kbd { margin-left: auto; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>托盘 / 菜单栏卡片：三版内容挑一版</h1>
+  <p>左键点托盘图标弹浮屿自己的卡片，右键弹原生精简菜单（显示 / 隐藏岛屿、设置、退出）。深浅色跟系统，强调色跟浮屿的主题色。计划见 <code>docs/investigations/tray-menu-plan.md</code>。</p>
+  <div class="tradeoffs">
+    <div><b>A 入口型</b><span>常用功能一眼都在、最接近参考图，点一下就到；代价是卡片最高，歌、会议、Agent 这些状态还得回岛上看。</span></div>
+    <div><b>B 状态型</b><span>不展开岛就能看正在放的歌、下一个会议、Agent 在跑几个并顺手操作；代价是高度随情况变，功能按钮少，剪贴板只能靠快捷键。</span></div>
+    <div><b>C 精简型</b><span>最小最快，和现在的原生菜单最像，只多一排按钮，做起来和维护都最省；代价是比原生菜单多不了多少东西。</span></div>
+  </div>
+</header>
+<div class="controls"><div class="in" id="controls"></div></div>
+<main id="main"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const VERSION = "v0.3.10-beta.2";
+const S = {
+  view: "all", lang: "zh", theme: "both", accent: "sky", ovPlat: "win", width: 344,
+  update: true, translateOff: false, statusEmpty: false,
+  islandVisible: true, clipPaused: false, dnd: false, autostart: true, playing: true,
+  closed: new Set(), native: null, entering: null,
+};
+const ACCENTS = {
+  sky: { name: "天蓝（默认）", dark: ["#74d6ff", "#06202c"], light: ["#0a7fd1", "#ffffff"] },
+  mint: { name: "薄荷", dark: ["#5fe0a8", "#05261a"], light: ["#1f8a5b", "#ffffff"] },
+  violet: { name: "紫", dark: ["#b4a6ff", "#1a1240"], light: ["#5b47e0", "#ffffff"] },
+  amber: { name: "橙", dark: ["#ffb27a", "#2b1406"], light: ["#b4570f", "#ffffff"] },
+};
+const T = {
+  zh: {
+    name: "浮屿", updateBadge: "可更新", checkUpdate: "检查更新", settings: "设置", island: "岛屿",
+    islandOn: "显示中，点一下隐藏", islandOff: "已隐藏，点一下显示", islandOnShort: "显示中", islandOffShort: "已隐藏",
+    showIsland: "显示岛屿", hideIsland: "隐藏岛屿",
+    screenshot: "截图", translate: "翻译", clipboard: "剪贴板", off: "已关闭", offHint: "已关闭，去 设置 → {x} 里打开",
+    open: "打开", todos: "待办", notes: "笔记", calendar: "日历", files: "文件中转", agents: "AI 代理",
+    dnd: "游戏勿扰", clipPaused: "暂停剪贴板记录", autostart: "开机自启", restart: "重启", quit: "退出",
+    nowPlaying: "正在播放", song: "Night Drive", artist: "Lumen · 网易云音乐", play: "播放", pause: "暂停", next: "下一首",
+    meeting: "设计评审", meetingWhen: "25 分钟后 · 15:30–16:00", join: "加入",
+    agentTitle: "Claude Code · Codex", running: "2 个在跑", waiting: "1 个等你", viewAgents: "看 Agent 页",
+    calm: "现在没什么事", calmSub: "有歌在放、快开会或 Agent 在跑时会出现在这里",
+    demo: "演示：{x}", cardName: "浮屿托盘卡片",
+  },
+  en: {
+    name: "Fuyu", updateBadge: "Update", checkUpdate: "Check for updates", settings: "Settings", island: "Island",
+    islandOn: "Showing, click to hide", islandOff: "Hidden, click to show", islandOnShort: "Showing", islandOffShort: "Hidden",
+    showIsland: "Show island", hideIsland: "Hide island",
+    screenshot: "Screenshot", translate: "Translate", clipboard: "Clipboard", off: "Off", offHint: "Off. Turn it on in Settings → {x}",
+    open: "Open", todos: "To-dos", notes: "Notes", calendar: "Calendar", files: "File shelf", agents: "Agents",
+    dnd: "Game mode", clipPaused: "Pause clipboard history", autostart: "Launch at startup", restart: "Restart", quit: "Quit",
+    nowPlaying: "Now playing", song: "Night Drive", artist: "Lumen · NetEase Music", play: "Play", pause: "Pause", next: "Next",
+    meeting: "Design review", meetingWhen: "in 25 min · 15:30–16:00", join: "Join",
+    agentTitle: "Claude Code · Codex", running: "2 running", waiting: "1 waiting for you", viewAgents: "Open the Agents page",
+    calm: "Nothing going on", calmSub: "Music, upcoming meetings and running agents show up here",
+    demo: "Demo: {x}", cardName: "Fuyu tray card",
+  },
+};
+const t = (k, x) => (T[S.lang][k] ?? k).replace("{x}", x ?? "");
+const SC = { screenshot: "Ctrl+Shift+1", translate: "Ctrl+Shift+F", clipboard: { win: "Ctrl+Shift+W", mac: "Shift+Cmd+V" } };
+const MAC_ORDER = ["Ctrl", "Alt", "Shift", "Cmd"];
+const MAC_SYM = { Ctrl: "⌃", Alt: "⌥", Shift: "⇧", Cmd: "⌘" };
+function sc(key, plat) {
+  const raw = typeof SC[key] === "string" ? SC[key] : SC[key][plat];
+  if (plat === "win") return raw;
+  const parts = raw.split("+");
+  const k = parts.pop();
+  return parts.sort((a, b) => MAC_ORDER.indexOf(a) - MAC_ORDER.indexOf(b)).map((m) => MAC_SYM[m]).join("") + k;
+}
+const P = {
+  cog: '<path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 2v2M12 22v-2M17 20.66l-1-1.73M11 10.27 7 3.34M20.66 17l-1.73-1M3.34 7l1.73 1M14 12h8M2 12h2M20.66 7l-1.73 1M3.34 17l1.73-1M17 3.34l-1 1.73M11 13.73l-4 6.93"/>',
+  refresh: '<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff: '<path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3 3.8"/><path d="M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
+  shot: '<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="8" width="10" height="8" rx="1"/>',
+  translate: '<path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/>',
+  clipboard: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+  clipPause: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M10 11v6M14 11v6"/>',
+  power: '<path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>',
+  restart: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+  play: '<path d="M7 4l13 8-13 8z"/>',
+  pause: '<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>',
+  skip: '<path d="M5 4l10 8-10 8z"/><path d="M19 5v14"/>',
+  calendar: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  bot: '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/>',
+  game: '<path d="M6 12h4M8 10v4M15 13h.01M18 11h.01"/><rect width="20" height="12" x="2" y="6" rx="2"/>',
+  todos: '<rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4M13 6h8M13 12h8M13 18h8"/>',
+  notes: '<path d="M4 4h11l5 5v11H4z"/><path d="M8 12h8M8 16h5"/>',
+  files: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M12 10v6M9 13l3-3 3 3"/>',
+  zap: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+  chev: '<path d="m9 18 6-6-6-6"/>',
+  chevUp: '<path d="m18 15-6-6-6 6"/>',
+  video: '<path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 11"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
+  wifi: '<path d="M12 20h.01M2 8.82a15 15 0 0 1 20 0M5 12.86a10 10 0 0 1 14 0M8.5 16.43a5 5 0 0 1 7 0"/>',
+  vol: '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+  bat: '<rect width="16" height="10" x="2" y="7" rx="2"/><path d="M22 11v2"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+};
+const ic = (n) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+const sic = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+const MARK = '<svg viewBox="11 21 42 22" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M22 21h20a11 11 0 0 1 0 22H22a11 11 0 0 1 0-22Z M22 28a4 4 0 1 0 0 8a4 4 0 1 0 0-8Z M33 30h10a2 2 0 0 1 0 4H33a2 2 0 0 1 0-4Z"/></svg>';
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+function header(compact) {
+  const ver = S.update
+    ? `<button class="ver" data-k="ver" data-act="update" aria-label="${esc(VERSION + "，" + t("updateBadge"))}" title="${esc(t("updateBadge"))}"><span class="vt">${VERSION}</span><span class="badge">${t("updateBadge")}</span></button>`
+    : `<span class="ver"><span class="vt">${VERSION}</span></span>`;
+  const check = S.update || compact ? "" : `<button class="ib" data-k="check" data-act="check" aria-label="${esc(t("checkUpdate"))}" title="${esc(t("checkUpdate"))}">${ic("refresh")}</button>`;
+  return `<div class="hd"><span class="mark">${MARK}</span><span class="nm">${t("name")}</span>${ver}<span class="sp"></span>${check}<button class="ib" data-k="settings" data-act="settings" aria-label="${esc(t("settings"))}" title="${esc(t("settings"))}">${ic("cog")}</button></div>`;
+}
+function tile(key, icon, plat, withSc) {
+  const label = t(key);
+  const off = key === "translate" && S.translateOff;
+  const shortcut = withSc ? sc(key, plat) : "";
+  const name = [label, shortcut, off ? t("off") : ""].filter(Boolean).join("，");
+  const tip = off ? t("offHint", label) : [label, sc(key, plat)].join("  ");
+  const extra = off ? `<span class="offtag">${t("off")}</span>` : shortcut ? `<kbd>${shortcut}</kbd>` : "";
+  return `<button class="tile${off ? " off" : ""}" data-k="${key}" data-act="${key}"${off ? ' aria-disabled="true"' : ""} aria-label="${esc(name)}" title="${esc(tip)}">${ic(icon)}<span class="tl">${label}</span>${extra}</button>`;
+}
+function sw(key, icon, cls) {
+  return `<button class="sw${cls ? " " + cls : ""}" role="switch" aria-checked="${S[key]}" data-k="${key}" data-toggle="${key}">${icon ? ic(icon) : ""}<span class="sl">${t(key)}</span><span class="track"><span class="knob"></span></span></button>`;
+}
+function footer(lead) {
+  return `<div class="ft">${lead || ""}<span class="sp"></span><button class="fb" data-k="restart" data-act="restart">${ic("restart")}<span class="ft-t">${t("restart")}</span></button><button class="fb danger" data-k="quit" data-act="quit">${ic("power")}<span class="ft-t">${t("quit")}</span></button></div>`;
+}
+function islandPrimary() {
+  const on = S.islandVisible;
+  return `<button class="primary" data-k="island" data-toggle="islandVisible" aria-pressed="${on}" aria-label="${esc(t("island") + "，" + (on ? t("islandOn") : t("islandOff")))}">${ic(on ? "eye" : "eyeOff")}<span><b>${t("island")}</b><small>${on ? t("islandOnShort") : t("islandOffShort")}</small></span></button>`;
+}
+function cardA(plat) {
+  const jumps = [["todos", "todos"], ["notes", "notes"], ["calendar", "calendar"], ["files", "files"], ["agents", "bot"]]
+    .map(([k, i]) => `<button class="ib" data-k="j-${k}" data-act="${k}" aria-label="${esc(t("open") + " " + t(k))}" title="${esc(t(k))}">${ic(i)}</button>`).join("");
+  return header(false)
+    + `<div class="a-main">${islandPrimary()}${tile("screenshot", "shot", plat, true)}${tile("translate", "translate", plat, true)}${tile("clipboard", "clipboard", plat, true)}</div>`
+    + `<div class="strip"><span class="lab">${t("open")}</span>${jumps}</div>`
+    + `<div class="sws">${sw("dnd", "game")}${sw("clipPaused", "clipPause")}${sw("autostart", "zap")}</div>`
+    + footer("");
+}
+function cardB(plat) {
+  let status;
+  if (S.statusEmpty) {
+    status = `<div class="blk"><span class="bi">${ic("notes")}</span><span class="bt calm"><b>${t("calm")}</b><span>${t("calmSub")}</span></span></div>`;
+  } else {
+    status = `<div class="blk" aria-label="${esc(t("nowPlaying"))}"><span class="cover" aria-hidden="true"></span><span class="bt"><b>${t("song")}</b><span>${t("artist")}</span><span class="prog"><i></i></span></span>`
+      + `<button class="ib" data-k="play" data-toggle="playing" aria-label="${esc(S.playing ? t("pause") : t("play"))}" title="${esc(S.playing ? t("pause") : t("play"))}">${ic(S.playing ? "pause" : "play")}</button>`
+      + `<button class="ib" data-k="next" data-act="next" aria-label="${esc(t("next"))}" title="${esc(t("next"))}">${ic("skip")}</button></div>`
+      + `<div class="blk"><span class="bi">${ic("calendar")}</span><span class="bt"><b>${t("meeting")}</b><span>${t("meetingWhen")}</span></span><button class="mini" data-k="join" data-act="join">${t("join")}</button></div>`
+      + `<div class="blk"><span class="bi">${ic("bot")}</span><span class="bt"><b>${t("agentTitle")}</b><span class="chips"><span><i class="dot" style="background:#34c759"></i>${t("running")}</span><span><i class="dot" style="background:#ff9f43"></i>${t("waiting")}</span></span></span><button class="ib" data-k="agents" data-act="agents" aria-label="${esc(t("viewAgents"))}" title="${esc(t("viewAgents"))}">${ic("chev")}</button></div>`;
+  }
+  const on = S.islandVisible;
+  const off = S.translateOff;
+  const pills = `<div class="pills">`
+    + `<button class="pill" data-k="island" data-toggle="islandVisible" aria-pressed="${on}" aria-label="${esc(t("island") + "，" + (on ? t("islandOn") : t("islandOff")))}" title="${esc(on ? t("hideIsland") : t("showIsland"))}">${ic(on ? "eye" : "eyeOff")}<span class="tl">${t("island")}</span></button>`
+    + `<button class="pill" data-k="screenshot" data-act="screenshot" aria-label="${esc(t("screenshot") + "，" + sc("screenshot", plat))}" title="${esc(t("screenshot") + "  " + sc("screenshot", plat))}">${ic("shot")}<span class="tl">${t("screenshot")}</span></button>`
+    + `<button class="pill${off ? " off" : ""}" data-k="translate" data-act="translate"${off ? ' aria-disabled="true"' : ""} aria-label="${esc(t("translate") + (off ? "，" + t("off") : "，" + sc("translate", plat)))}" title="${esc(off ? t("offHint", t("translate")) : t("translate") + "  " + sc("translate", plat))}">${ic("translate")}<span class="tl">${t("translate")}</span></button></div>`;
+  return header(false) + status + pills + footer(sw("dnd", ""));
+}
+function cardC(plat) {
+  const on = S.islandVisible;
+  const islandTile = `<button class="tile" data-k="island" data-toggle="islandVisible" aria-pressed="${on}" aria-label="${esc(t("island") + "，" + (on ? t("islandOn") : t("islandOff")))}" title="${esc(on ? t("hideIsland") : t("showIsland"))}">${ic(on ? "eye" : "eyeOff")}<span class="tl">${t("island")}</span></button>`;
+  return header(true)
+    + `<div class="c-row">${islandTile}${tile("screenshot", "shot", plat, false)}${tile("translate", "translate", plat, false)}${tile("clipboard", "clipboard", plat, false)}</div>`
+    + `<div class="menu">${sw("clipPaused", "clipPause", "mi-row")}<button class="mi-row" data-k="settings2" data-act="settings">${ic("cog")}<span>${t("settings")}…</span></button><button class="mi-row danger" data-k="quit" data-act="quit">${ic("power")}<span>${t("quit")}</span></button></div>`;
+}
+function card(v, plat, theme, cid) {
+  const body = v === "A" ? cardA(plat) : v === "B" ? cardB(plat) : cardC(plat);
+  const [acc, on] = ACCENTS[S.accent][theme];
+  return `<div class="card" role="dialog" aria-label="${esc(t("cardName"))}" data-cid="${cid}" data-theme="${theme}" data-plat="${plat}" style="--c-accent:${acc};--c-on-accent:${on}">${body}</div>`;
+}
+
+const SCENES = [
+  { id: "win-bottom", plat: "win", label: "Windows · 任务栏在下", tip: "右下角托盘，卡片向上弹" },
+  { id: "win-left", plat: "win", label: "Windows · 任务栏在左", tip: "托盘在左下，卡片向右弹" },
+  { id: "win-top", plat: "win", label: "Windows · 任务栏在上", tip: "托盘在右上，卡片向下弹" },
+  { id: "mac", plat: "mac", label: "macOS · 菜单栏", tip: "菜单栏图标下面，右边对齐图标" },
+];
+const VNAME = { A: "A 入口型", B: "B 状态型", C: "C 精简型" };
+const themes = () => (S.theme === "both" ? ["dark", "light"] : [S.theme]);
+const TNAME = { dark: "深色", light: "浅色" };
+
+function trayIcon(sid) {
+  const open = !S.closed.has(sid);
+  return `<button class="trayicon${open ? " open" : ""}" data-sid="${sid}" aria-label="浮屿" aria-expanded="${open}" title="浮屿（左键卡片，右键原生菜单）">${MARK}</button>`;
+}
+function winBar(pos, sid) {
+  const apps = `<div class="tb-apps"><span class="app start"><i></i></span><span class="app"><i style="background:#f2b233"></i></span><span class="app"><i style="background:#3b82f6"></i></span><span class="app"><i style="background:#22a06b"></i></span><span class="app"><i style="background:#e5484d"></i></span></div>`;
+  const clock = pos === "left" ? `<span class="clock">15:05<br>11/15</span>` : `<span class="clock">15:05<br>2026/11/15</span>`;
+  const tray = `<div class="tray"><span class="ti">${sic("chevUp")}</span>${trayIcon(sid)}<span class="ti">${sic("wifi")}</span><span class="ti">${sic("vol")}</span>${pos === "left" ? "" : `<span class="ti">${sic("bat")}</span>`}${clock}</div>`;
+  return `<div class="tb tb-${pos}">${apps}${tray}</div>`;
+}
+function macBar(sid) {
+  return `<div class="mbar"><span class="mi bold">访达</span><span class="mi">文件</span><span class="mi">编辑</span><span class="mi">显示</span><span class="mi">窗口</span><span class="sp"></span>${trayIcon(sid)}<span class="ti">${sic("wifi")}</span><span class="ti">${sic("bat")}</span><span class="ti">${sic("search")}</span><span class="clock">11月15日 周日 15:05</span></div>`;
+}
+function scene(sc0, v, theme) {
+  const sid = `${v}-${sc0.id}-${theme}`;
+  const bar = sc0.plat === "mac" ? macBar(sid) : winBar(sc0.id.split("-")[1], sid);
+  const open = !S.closed.has(sid);
+  const tipPos = sc0.id === "win-top" || sc0.id === "mac" ? "bottom:12px" : "top:12px";
+  const tipLeft = sc0.id === "win-left" ? "left:60px" : "";
+  const nat = S.native === sid ? nativeMenu(sc0.plat) : "";
+  return `<div class="scene-box"><h3>${sc0.label} · ${TNAME[theme]}<small>${sc0.tip}</small></h3>`
+    + `<div class="scene" data-sid="${sid}" data-kind="${sc0.id}" data-theme="${theme}">${bar}`
+    + `<div class="scene-tip" style="${tipPos};${tipLeft}">点托盘图标开关卡片 · 点空白处关（失焦即关） · 右键图标看原生菜单</div>`
+    + (open ? `<div class="cardpos" data-for="${sid}" style="visibility:hidden">${card(v, sc0.plat, theme, sid)}</div>` : "")
+    + nat + `</div></div>`;
+}
+function nativeMenu(plat) {
+  const islandLabel = S.islandVisible ? t("hideIsland") : t("showIsland");
+  return `<div class="native" role="menu" style="visibility:hidden"><div class="cap">${plat === "mac" ? "原生菜单（⌃点按 / 右键）" : "原生菜单（右键）"}</div><button role="menuitem" data-native="island">${islandLabel}</button><button role="menuitem" data-native="settings">${t("settings")}…</button><hr><button role="menuitem" data-native="quit">${t("quit")}</button></div>`;
+}
+
+function controls() {
+  const seg = (key, opts) => `<span class="seg">${opts.map(([v, l]) => `<button data-set="${key}" data-val="${v}" aria-pressed="${S[key] === v}">${l}</button>`).join("")}</span>`;
+  const sw0 = Object.entries(ACCENTS).map(([k, a]) => `<button class="swatch" data-set="accent" data-val="${k}" aria-pressed="${S.accent === k}" aria-label="主题色：${a.name}" title="${a.name}" style="background:linear-gradient(135deg, ${a.dark[0]} 50%, ${a.light[0]} 50%)"></button>`).join("");
+  const chk = (key, l) => `<label><input type="checkbox" data-chk="${key}" ${S[key] ? "checked" : ""}>${l}</label>`;
+  return `<div class="ctl"><span>看</span>${seg("view", [["all", "三版对比"], ["A", "A 入口型"], ["B", "B 状态型"], ["C", "C 精简型"]])}</div>`
+    + `<div class="ctl"><span>语言</span>${seg("lang", [["zh", "中文"], ["en", "English"]])}</div>`
+    + `<div class="ctl"><span>颜色</span>${seg("theme", [["both", "深浅并排"], ["dark", "深色"], ["light", "浅色"]])}</div>`
+    + `<div class="ctl"><span>主题色</span>${sw0}</div>`
+    + `<div class="ctl"><span>卡片宽</span><input type="range" min="260" max="400" step="4" value="${S.width}" data-range="width" aria-label="卡片宽度"><span id="wval">${S.width}px</span></div>`
+    + `<div class="ctl"><span>演示</span>${chk("update", "有新版本")}${chk("translateOff", "翻译功能关掉")}${chk("statusEmpty", "B 没有状态可显示")}</div>`;
+}
+function renderMain() {
+  if (S.view === "all") {
+    const rows = themes().map((th) => ["A", "B", "C"].map((v) => `<div class="ov-cell" data-theme="${th}"><h3>${VNAME[v]} · ${TNAME[th]}</h3>${card(v, S.ovPlat, th, `ov-${v}-${th}`)}</div>`).join("")).join("");
+    return `<div class="section-title">三版并排</div><p class="hint">快捷键写法：<span class="seg">${[["win", "Windows（Ctrl+Shift+1）"], ["mac", "macOS（⌃⇧1）"]].map(([v, l]) => `<button data-set="ovPlat" data-val="${v}" aria-pressed="${S.ovPlat === v}">${l}</button>`).join("")}</span>　切到上面的 A / B / C 看它们放进 Windows 托盘和 Mac 菜单栏里的样子。卡片里 Tab / Shift+Tab 走一遍，方向键在按钮之间移动，Esc 关。</p><div class="overview">${rows}</div>`;
+  }
+  const v = S.view;
+  const boxes = SCENES.map((sc0) => themes().map((th) => scene(sc0, v, th)).join("")).join("");
+  return `<div class="section-title">${VNAME[v]}：Windows 托盘与 Mac 菜单栏</div><p class="hint">卡片打开时焦点在第一个按钮（Esc 关掉后焦点回到托盘图标）。Mac 上快捷键写成 ⌃⇧1 这类，Windows 写成 Ctrl+Shift+1。</p><div class="scenes">${boxes}</div>`;
+}
+
+function focusables(root) {
+  return [...root.querySelectorAll("button")].filter((b) => b.offsetParent !== null);
+}
+function renderAll(focusSel) {
+  const a = document.activeElement;
+  let keep = focusSel;
+  if (!keep && a && a.closest) {
+    const c = a.closest(".card");
+    if (c && a.dataset.k) keep = `.card[data-cid="${c.dataset.cid}"] [data-k="${a.dataset.k}"]`;
+    else if (a.dataset.set) keep = `[data-set="${a.dataset.set}"][data-val="${a.dataset.val}"]`;
+    else if (a.dataset.chk) keep = `[data-chk="${a.dataset.chk}"]`;
+    else if (a.dataset.range) keep = `[data-range="${a.dataset.range}"]`;
+    else if (a.classList.contains("trayicon")) keep = `.trayicon[data-sid="${a.dataset.sid}"]`;
+  }
+  document.documentElement.lang = S.lang === "zh" ? "zh-CN" : "en";
+  document.getElementById("controls").innerHTML = controls();
+  document.getElementById("main").innerHTML = renderMain();
+  placeAll();
+  if (keep) {
+    const el = document.querySelector(keep);
+    if (el) el.focus({ preventScroll: true });
+  }
+}
+function rel(el, scene) {
+  const r = el.getBoundingClientRect();
+  const s = scene.getBoundingClientRect();
+  return { l: r.left - s.left, t: r.top - s.top, r: r.right - s.left, b: r.bottom - s.top, w: r.width, h: r.height };
+}
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+function placeAll() {
+  document.querySelectorAll(".scene").forEach((sc0) => {
+    const kind = sc0.dataset.kind;
+    const icon = sc0.querySelector(".trayicon");
+    const ir = rel(icon, sc0);
+    const W = sc0.clientWidth;
+    const H = sc0.clientHeight;
+    const pos = sc0.querySelector(".cardpos");
+    if (pos) {
+      const cw = pos.offsetWidth;
+      const ch = pos.offsetHeight;
+      let x;
+      let y;
+      if (kind === "win-bottom") { x = clamp(ir.l + ir.w / 2 - cw / 2, 12, W - cw - 12); y = H - 48 - 12 - ch; }
+      else if (kind === "win-top") { x = clamp(ir.l + ir.w / 2 - cw / 2, 12, W - cw - 12); y = 48 + 12; }
+      else if (kind === "win-left") { x = 48 + 12; y = clamp(ir.b - ch, 12, H - ch - 12); }
+      else { x = clamp(ir.r - cw, 8, W - cw - 8); y = 26 + 6; }
+      pos.style.left = `${Math.round(x)}px`;
+      pos.style.top = `${Math.round(y)}px`;
+      pos.style.visibility = "visible";
+      if (S.entering === sc0.dataset.sid) {
+        pos.classList.add(kind === "mac" ? "enter-mac" : kind === "win-bottom" ? "enter-win" : kind === "win-top" ? "enter-win-down" : "enter-win-right");
+      }
+    }
+    const nat = sc0.querySelector(".native");
+    if (nat) {
+      const nw = nat.offsetWidth;
+      const nh = nat.offsetHeight;
+      let x;
+      let y;
+      if (kind === "win-bottom") { x = clamp(ir.l, 4, W - nw - 4); y = H - 48 - nh - 4; }
+      else if (kind === "win-top") { x = clamp(ir.l, 4, W - nw - 4); y = 48 + 4; }
+      else if (kind === "win-left") { x = 48 + 4; y = clamp(ir.t - nh + ir.h, 4, H - nh - 4); }
+      else { x = clamp(ir.l, 4, W - nw - 4); y = 26 + 2; }
+      nat.style.left = `${Math.round(x)}px`;
+      nat.style.top = `${Math.round(y)}px`;
+      nat.style.visibility = "visible";
+    }
+  });
+  S.entering = null;
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
+}
+const ACT_LABEL = { update: "updateBadge", check: "checkUpdate", settings: "settings", screenshot: "screenshot", translate: "translate", clipboard: "clipboard", restart: "restart", quit: "quit", next: "next", join: "join", agents: "viewAgents", todos: "todos", notes: "notes", calendar: "calendar", files: "files" };
+const TOGGLE_MSG = { islandVisible: () => (S.islandVisible ? t("islandOnShort") : t("islandOffShort")), playing: () => (S.playing ? t("play") : t("pause")) };
+
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("button, input");
+  if (el?.dataset.set) {
+    S[el.dataset.set] = el.dataset.val;
+    if (el.dataset.set === "view") S.closed.clear();
+    renderAll();
+    return;
+  }
+  if (el?.dataset.chk) {
+    S[el.dataset.chk] = el.checked;
+    renderAll();
+    return;
+  }
+  if (el?.dataset.native) {
+    const k = el.dataset.native;
+    const sid = S.native;
+    S.native = null;
+    if (k === "island") { S.islandVisible = !S.islandVisible; toast(`原生菜单：${S.islandVisible ? t("showIsland") : t("hideIsland")}`); }
+    else toast(`原生菜单：${t(k)}`);
+    renderAll(`.trayicon[data-sid="${sid}"]`);
+    return;
+  }
+  if (el?.classList.contains("trayicon")) {
+    const sid = el.dataset.sid;
+    S.native = null;
+    if (S.closed.has(sid)) {
+      S.closed.delete(sid);
+      S.entering = sid;
+      renderAll();
+      const c = document.querySelector(`.card[data-cid="${sid}"]`);
+      if (c) focusables(c)[0]?.focus({ preventScroll: true });
+    } else {
+      S.closed.add(sid);
+      renderAll(`.trayicon[data-sid="${sid}"]`);
+    }
+    return;
+  }
+  const inCard = e.target.closest(".card");
+  if (el && inCard) {
+    if (el.dataset.toggle) {
+      const k = el.dataset.toggle;
+      S[k] = !S[k];
+      const msg = TOGGLE_MSG[k] ? TOGGLE_MSG[k]() : `${t(k)}：${S[k] ? "开" : "关"}`;
+      renderAll();
+      toast(t("demo", msg));
+      return;
+    }
+    if (el.getAttribute("aria-disabled") === "true") { toast(t("offHint", t(el.dataset.act))); return; }
+    if (el.dataset.act) toast(t("demo", t(ACT_LABEL[el.dataset.act] || el.dataset.act)));
+    return;
+  }
+  const sc0 = e.target.closest(".scene");
+  if (sc0 && !inCard && !e.target.closest(".native")) {
+    const sid = sc0.dataset.sid;
+    if (S.native || !S.closed.has(sid)) {
+      S.native = null;
+      S.closed.add(sid);
+      renderAll();
+    }
+  } else if (S.native && !e.target.closest(".native")) {
+    S.native = null;
+    renderAll();
+  }
+});
+document.addEventListener("contextmenu", (e) => {
+  const icon = e.target.closest(".trayicon");
+  if (!icon) return;
+  e.preventDefault();
+  S.native = icon.dataset.sid;
+  S.closed.add(icon.dataset.sid);
+  renderAll();
+  document.querySelector(".native button")?.focus({ preventScroll: true });
+});
+document.addEventListener("input", (e) => {
+  if (e.target.dataset.range === "width") {
+    S.width = Number(e.target.value);
+    document.documentElement.style.setProperty("--card-w", `${S.width}px`);
+    document.getElementById("wval").textContent = `${S.width}px`;
+    placeAll();
+  }
+});
+document.addEventListener("keydown", (e) => {
+  const nat = e.target.closest?.(".native");
+  if (nat) {
+    const items = [...nat.querySelectorAll("button")];
+    const i = items.indexOf(e.target);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); items[(i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length].focus(); }
+    if (e.key === "Escape") { const sid = S.native; S.native = null; renderAll(`.trayicon[data-sid="${sid}"]`); }
+    return;
+  }
+  const c = e.target.closest?.(".card");
+  if (!c) return;
+  const items = focusables(c);
+  const i = items.indexOf(e.target);
+  if (e.key === "Escape") {
+    const sid = c.dataset.cid;
+    if (document.querySelector(`.trayicon[data-sid="${sid}"]`)) {
+      S.closed.add(sid);
+      renderAll(`.trayicon[data-sid="${sid}"]`);
+    } else e.target.blur();
+    return;
+  }
+  if (i < 0) return;
+  let to = null;
+  if (e.key === "ArrowRight") to = items[(i + 1) % items.length];
+  else if (e.key === "ArrowLeft") to = items[(i - 1 + items.length) % items.length];
+  else if (e.key === "Home") to = items[0];
+  else if (e.key === "End") to = items[items.length - 1];
+  else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    const down = e.key === "ArrowDown";
+    const cr = e.target.getBoundingClientRect();
+    const cx = cr.left + cr.width / 2;
+    const cy = cr.top + cr.height / 2;
+    let best = null;
+    let bestScore = Infinity;
+    for (const it of items) {
+      if (it === e.target) continue;
+      const r = it.getBoundingClientRect();
+      const y = r.top + r.height / 2;
+      const dy = down ? y - cy : cy - y;
+      if (dy < Math.min(cr.height, r.height) / 2) continue;
+      const score = dy * 3 + Math.abs(r.left + r.width / 2 - cx);
+      if (score < bestScore) { bestScore = score; best = it; }
+    }
+    to = best || (down ? items[0] : items[items.length - 1]);
+  }
+  if (to) { e.preventDefault(); to.focus(); }
+});
+new ResizeObserver(() => placeAll()).observe(document.body);
+renderAll();
+</script>
+</body>
+</html>
