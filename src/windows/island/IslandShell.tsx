@@ -2,7 +2,6 @@ import type { CSSProperties, ReactNode } from "react";
 import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { AppearanceMode } from "../../lib/settings/types";
-import type { MediaState } from "../../features/media/api";
 import type { MessagePreview, MessageSource } from "../../features/messages/messagePreview";
 import type { MailController } from "../../features/messages/mail/MailPanel";
 import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
@@ -54,12 +53,10 @@ type IslandShellProps = {
   isTucked: boolean;
   isDetached: boolean;
   side?: IslandSide | null;
-  sideCover?: boolean;
   showTitle: boolean;
   showCollapsedText: boolean;
   lineSources: CollapsedLineSources;
   activeAgentSessionCount: number;
-  mediaState: MediaState;
   agentVisualState: AgentVisualState;
   agentStatusLabel: string;
   features: IslandFeatures;
@@ -107,12 +104,10 @@ export function IslandShell({
   isTucked,
   isDetached,
   side = null,
-  sideCover = false,
   showTitle,
   showCollapsedText,
   lineSources,
   activeAgentSessionCount,
-  mediaState,
   agentVisualState,
   agentStatusLabel,
   features,
@@ -158,10 +153,8 @@ export function IslandShell({
     unreadCount,
     todoCount: lineSources.todoCount,
     shelfCount,
-    showCover: sideCover,
-    mediaState,
     };
-  useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null, showMusic: features.music === true });
+  useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null });
   const sideLayout = useSideColumnRows({ ...sideSources, onOpenPage, onOpenMessages }, collapsedSlots?.gauges ?? []);
   const sideHot = preview ? (preview.source === "qqMail" ? "mail" : "unread") : null;
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
@@ -243,8 +236,6 @@ export function IslandShell({
           collapsedLabel={collapsedLabel}
           lineSources={lineSources}
           agentSessionCount={features.agents ? activeAgentSessionCount : null}
-          mediaState={mediaState}
-          showMusic={features.music}
           shelfCount={shelfCount}
           quotaAlert={quotaAlert}
           agentVisualState={agentVisualState}

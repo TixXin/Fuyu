@@ -19,18 +19,10 @@ import { CLAUDE_USAGE_GAUGE_WIDTH, USAGE_COLORS, USAGE_PROVIDERS } from "../../s
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
-import type { MediaState } from "../../src/features/media/api";
 import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
-const UNAVAILABLE_MEDIA: MediaState = {
-  available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
-  title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
-  canSeek: false, canNext: false, canPrevious: false, shuffleActive: null, canShuffle: false,
-  repeatMode: "unknown", canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null,
-  sessions: [], updatedAt: 0,
-};
 const keys = ["fuyu-qq-notifications-enabled", "fuyu-wechat-reminders-enabled", "fuyu-qq-mail-settings"];
 const originals = keys.map((key) => localStorage.getItem(key));
 keys.forEach((key) => localStorage.removeItem(key));
@@ -100,7 +92,6 @@ function Fixture({ all = false }: { all?: boolean }) {
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} activeAgentSessionCount={0}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
-      mediaState={UNAVAILABLE_MEDIA}
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: false, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} collapsedSlots={{ gauges: providers.map((provider) => ({ id: `usage:${provider.id}`, node: <ClaudeUsageGauge key={provider.id} provider={provider} /> })), sideWidth }}
       onOpenPage={() => {}} onOpenMessages={() => {}}

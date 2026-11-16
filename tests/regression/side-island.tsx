@@ -59,11 +59,11 @@ function Fixture() {
   const qqMail = useMail(true);
   const gauges = Array.from({ length: state.gauges }, (_, index) => ({ id: `gauge-${index}`, node: <span className="gauge-dot">{index}</span> }));
   return <div className="stage" style={{ "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8 } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoCount: state.full ? 5 : null, levelPopup: state.level, deviceUse: state.full ? FULL_DEVICES : NO_DEVICES })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
-      mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached side={state.side} sideCover={state.cover} showTitle={false}
+    <IslandShell lineSources={useFixtureLines({ todoCount: state.full ? 5 : null, levelPopup: state.level, deviceUse: state.full ? FULL_DEVICES : NO_DEVICES, media: state.full ? PLAYING : MEDIA, sideCover: state.cover })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
+      mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached side={state.side} showTitle={false}
       showCollapsedText activeAgentSessionCount={state.full ? 3 : 0}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState={state.full ? "running" : "idle"} agentStatusLabel="AI Agent"
-      mediaState={state.full ? PLAYING : MEDIA} collapsedSlots={{ gauges }}
+      collapsedSlots={{ gauges }}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       shelfCount={state.full ? 2 : null}
       onOpenPage={() => {}} onOpenMessages={() => {}}

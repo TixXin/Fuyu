@@ -1,23 +1,22 @@
 import type { ComponentProps } from "react";
 import type { Translations } from "../../../i18n";
 import { defineSlot, type IslandCollapsedMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
-import type { MediaState } from "../api";
 import { MusicWaveButton } from "../MusicWaveButton";
-import type { PlayingLyrics } from "../lyrics/usePlayingLyrics";
 import { MusicPlayerPanel } from "../MusicPlayerPanel";
-import type { useMediaState } from "../useMediaState";
+import { mediaIsland } from "./islandState";
 import { islandPage } from "./page.ts";
 
 type MusicPageProps = {
-  media: ReturnType<typeof useMediaState>;
   settings: NonNullable<ComponentProps<typeof MusicPlayerPanel>["lyricsSettings"]>;
-  lyrics?: PlayingLyrics;
   onOpenSettings: (section: "music") => void;
 };
 
 const pageSlot = defineSlot<MusicPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");
 
-function MusicPage({ media, settings, lyrics, onOpenSettings }: MusicPageProps) {
+function MusicPage({ settings, onOpenSettings }: MusicPageProps) {
+  const island = mediaIsland.use();
+  if (!island) return null;
+  const { media, lyrics } = island;
   const { mediaState, isMediaTrackChanging, mediaCommandError, runMediaCommand } = media;
   return (
     <MusicPlayerPanel
@@ -39,14 +38,15 @@ pageSlot.add({ ...islandPage, component: MusicPage });
 
 type CollapsedContext = {
   t: Translations;
-  showMusic: boolean;
-  mediaState: MediaState;
+  hints: ReadonlySet<string>;
   onOpenPage: (page: "music") => void;
 };
 
 const collapsedSlot = defineSlot<CollapsedContext, IslandCollapsedMeta<CollapsedContext>>("island.collapsed/v1");
 
-function MusicItem({ t, mediaState, onOpenPage }: CollapsedContext) {
+function MusicItem({ t, onOpenPage }: CollapsedContext) {
+  const mediaState = mediaIsland.use()?.media.mediaState;
+  if (!mediaState) return null;
   return (
     <MusicWaveButton
       isAvailable={mediaState.available || mediaState.audioActive}
@@ -58,4 +58,4 @@ function MusicItem({ t, mediaState, onOpenPage }: CollapsedContext) {
   );
 }
 
-collapsedSlot.add({ id: "music", order: 60, shown: ({ showMusic }) => showMusic, component: MusicItem });
+collapsedSlot.add({ id: "music", order: 60, shown: ({ hints }) => hints.has("media.audible"), component: MusicItem });
