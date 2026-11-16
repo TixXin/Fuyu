@@ -177,7 +177,7 @@
 |---|---|---|---|---|
 | E36.3.28 | timer（含休息提醒） | 拥有者改成 `timer`；第 2 版 `focusd.timer` 的启用状态、设置（声音）和快捷键 Ctrl+Alt+K 迁过来，并从 `plugin_host/builtin.rs` 去掉；待办 → 计时器的 `pushIslandReminder` 改成窗口服务。**岛上的计时还用现在的 `localStorage`**，改用宿主的 `timers/v1` 等第 3 版默认打开（E36.3.48） | 第 0 批 | 要（第 2 版内置插件表） |
 | E36.3.29 | translation | 拥有者改成 `translation`；翻译窗口改成开着才建；快捷键在关着时一开机就不注册；剪贴板的 AI 改写、截图转翻译改成调 `translator/v1`（窗口服务，宿主没开时也能用） | 第 0 批 | 要 |
-| E36.3.30 | calendar | 拥有者改成 `calendar`；会议行改经插槽；`calendar/v1` 服务（读日程，第 4 阶段的日历来源建在它上面） | 第 0 批 | 要（服务标记） |
+| E36.3.30 | calendar | 拥有者改成 `calendar`；会议行留在外壳，关掉时靠旧开关的镜像停轮询、不显示，改经插槽挪给 E36.3.51（会议行和歌词轮播、弹窗先后、加入按钮缠在一起，属于外壳算布局）；`calendar/v1` 服务（读日程，第 4 阶段的日历来源建在它上面） | 第 0 批 | 要（服务标记） |
 
 翻译样板之后接着做 **E36.3.20**（#550）：用户在设置里存的自定义翻译地址交给 Rust 保存，宿主这条路上的 `translator/v1` 用 Rust 存的地址重新开放自定义引擎；宿主入口照旧不收地址参数，已经填过地址的用户升级后不用重填。scope 是 `src-tauri/src/translation/`、`src/features/translation/` 里存设置的部分、`v3-services.md`、`v3-secrets.md`、`data-storage.md`、`contracts.md`。它依赖 E36.3.29（两个都改 `translation/`，不能同时做），而且必须在 E36.3.47（默认打开）之前完成。要编译。
 
