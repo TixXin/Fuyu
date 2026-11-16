@@ -2,6 +2,7 @@ import type { IslandSettings } from "../../lib/settings/types";
 import type { BuiltinPlugin } from "./api.ts";
 
 export const LEGACY_SWITCHES = {
+  todoEnabled: "todos",
   translationEnabled: "translation",
   calendarEnabled: "calendar",
   shelfEnabled: "file-shelf",
