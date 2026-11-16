@@ -56,7 +56,6 @@ import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 import { useIslandGlass } from "./useIslandGlass";
 import { useAccentColor } from "../../lib/theme/useAccentColor";
 import { isLightIsland } from "../../utils/color";
-import { MessageBanner } from "../../features/messages/banner/MessageBanner";
 import { PluginPageButtons } from "./PluginPageButtons";
 import { useCollapsedSlots } from "./useCollapsedSlots";
 import { useTrayLanguage } from "./useTrayLanguage";
@@ -64,7 +63,7 @@ import { useFirstRunGuide } from "./useFirstRunGuide";
 import { useSettingsFileSync } from "../../lib/settings-backup/useSettingsFileSync";
 import { useOnboardingDemo, withDemoMedia } from "./useOnboardingDemo";
 import { useIslandLyrics } from "./useIslandLyrics";
-import { coverAccentVariables, useCoverColor } from "../../features/media/useCoverColor";
+import { useCoverColor } from "../../features/media/useCoverColor";
 import { useIslandFirstHints } from "./useIslandFirstHints";
 import { useIslandNotice } from "./islandNotice";
 import { useIslandVoiceInput } from "./useIslandVoiceInput";
@@ -79,7 +78,11 @@ import { useIslandAction, useIslandContributed, useSettleIslandContributions } f
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { useLegacyAlerts } from "./legacyAlerts";
 import { useLegacyLines } from "./legacyLines";
+import { overlaySlot } from "./slots/overlay";
+import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { useLegacyPopups } from "./legacyPopups";
 import { useLegacyStates } from "./legacyStates";
+import { useLegacyStyle } from "./legacyStyle";
 import type { IslandPage } from "./types";
 
 const NO_TODOS: TodoItem[] = [];
@@ -161,7 +164,7 @@ export function IslandApp() {
     translationPeek: quickPeek, screenshotPeek: quickPeek === null ? screenshotText : null,
   });
   useLegacyAlerts({ deviceAlert: notices.deviceAlert, quotaAlert, levelPopup: notices.levelPopup });
-  const { lines: contributedLines, alerts, settled } = useIslandContributed();
+  const { lines: contributedLines, alerts, popups, style, settled } = useIslandContributed();
   const textWidth = useCollapsedWidth({
     barText,
     noticeText: firstHints.current ? t.island.firstHint[firstHints.current] : null,
@@ -214,21 +217,16 @@ export function IslandApp() {
     durationMs: settings.messagePanelSeconds * 1000,
     notices, mode, page, openIslandPage, collapseIsland, onOpenMessages: openMessages,
   });
+  useLegacyPopups({ maxPanelHeight: settings.maxPanelHeight, agentCardHeight, agentAlert: alertPopup, arrivalsHeight: messagePanel.arrivals ? messagePanel.height : null });
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
-    messagePanel.arrivals !== null || alertPopup,
+    [...popups.values()].some((entry) => entry.open === true),
     null,
     panelIslandWidth(settings.panelWidth, settings.expandedScale),
   );
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
   const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
-  const pageIslandHeight = getExpandedIslandHeight({
-    page,
-    maxPanelHeight: settings.maxPanelHeight,
-    agentAlertRowHeight: agentCardHeight,
-    messageArrivalsHeight: messagePanel.arrivals ? messagePanel.height : undefined,
-    popup,
-  });
+  const pageIslandHeight = getExpandedIslandHeight({ maxPanelHeight: settings.maxPanelHeight, panel: popups.get(page), popup });
   const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
   const look = useMemo(() => (mode !== "collapsed" ? surfaceThemeColors(settings, "panel") : notch ? notchLook(settings) : surfaceThemeColors(settings, "collapsed")), [mode, notch, settings]);
   const accent = useAccentColor(settings);
@@ -237,15 +235,16 @@ export function IslandApp() {
   const coverColor = useCoverColor(media.mediaState.thumbnail, coverOn || glassCover);
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();
-  const { glass, glassStyle } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: glassCover && media.mediaState.playbackStatus === "playing" ? coverColor : null, mode, isTucked, quiet: game.quiet, reducedMotion });
+  useLegacyStyle({ cover: coverOn, coverColor, glassTint: glassCover && media.mediaState.playbackStatus === "playing" ? coverColor : null, background: look.islandBackgroundColor, accent });
+  const { glass, glassStyle } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: style.tint, mode, isTucked, quiet: game.quiet, reducedMotion });
   const stageStyle = useMemo(
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
       ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion),
-      ...(coverOn ? coverAccentVariables(coverColor, look.islandBackgroundColor, accent) : {}),
+      ...style.vars,
       ...glassStyle,
     }),
-    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, coverOn, coverColor, glassStyle],
+    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, style.vars, glassStyle],
   );
 
   const { fileShelf, isShelfDropping } = useIslandShelf(settings, navigation);
@@ -302,7 +301,7 @@ export function IslandApp() {
   useSettleIslandContributions();
 
   return (
-    <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${coverOn ? " cover-color" : ""}`} style={stageStyle}>
+    <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
       <IslandRunners mode={mode} page={page} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       <IslandShell
         qqMail={qqMail}
@@ -388,9 +387,7 @@ export function IslandApp() {
           calendar={calendar}
         />
       </IslandShell>
-      {banner.banner && (
-        <MessageBanner banner={banner.banner} bannerRef={banner.bannerRef} onOpen={banner.open} onClose={banner.close} onAction={banner.runAction} />
-      )}
+      <SlotView slot={overlaySlot} props={{ messageBanner: banner.banner && { banner: banner.banner, bannerRef: banner.bannerRef, onOpen: banner.open, onClose: banner.close, onAction: banner.runAction } }} />
       <PluginContextMenus />
     </main>
   );
