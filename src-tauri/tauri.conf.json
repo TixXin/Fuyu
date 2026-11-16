@@ -46,6 +46,7 @@
       },
       {
         "label": "clipboard",
+        "create": false,
         "title": "浮屿 - 剪贴板",
         "url": "index.html?window=clipboard",
         "width": 380,
@@ -61,6 +62,7 @@
       },
       {
         "label": "clipboard-preview",
+        "create": false,
         "title": "浮屿 - 剪贴板预览",
         "url": "index.html?window=clipboard-preview",
         "width": 420,
