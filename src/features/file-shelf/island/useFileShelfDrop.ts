@@ -1,24 +1,23 @@
 import { useEffect, useRef, useState } from "react";
-import { listenFileDrop } from "../../features/file-shelf/api";
-import type { FileShelfController } from "../../features/file-shelf/useFileShelf";
-import type { IslandMode, IslandPage } from "./types";
+import { listenFileDrop } from "../api";
+import type { FileShelfController } from "../useFileShelf";
 
-type FileShelfDropOptions = {
+type FileShelfDropOptions<Page extends string> = {
   enabled: boolean;
   expandOnDrop: boolean;
-  mode: IslandMode;
-  page: IslandPage;
+  mode: string;
+  page: Page;
   isTucked: boolean;
   isPeeking: boolean;
   shelf: Pick<FileShelfController, "addPaths" | "isDraggingOut">;
-  openIslandPage: (page: IslandPage) => void;
-  setPage: (page: IslandPage) => void;
+  openIslandPage: (page: "shelf") => void;
+  setPage: (page: Page) => void;
   collapseIsland: () => void;
   tuckIsland: () => void;
   minimizeToEdge: () => void;
 };
 
-export function useFileShelfDrop(options: FileShelfDropOptions) {
+export function useFileShelfDrop<Page extends string>(options: FileShelfDropOptions<Page>) {
   const [isDropping, setIsDropping] = useState(false);
   const latestRef = useRef(options);
   const restoreRef = useRef<(() => void) | null>(null);

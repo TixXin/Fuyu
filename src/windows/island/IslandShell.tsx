@@ -21,7 +21,6 @@ import type { IslandGlassView } from "./useIslandGlass";
 import { IslandResizeHints } from "./IslandResizeHints";
 import { IslandSideHandle } from "./IslandSideHandle";
 import { IslandSideColumn, useSideColumnRows } from "./IslandSideColumn";
-import { useLegacySide } from "./legacySide";
 import { IslandSideBubble } from "./IslandSideBubble";
 import { AlertPopup, useActiveAlert } from "./NotchAlert";
 import { IslandDragHint } from "./IslandDragHint";
@@ -42,7 +41,6 @@ type IslandShellProps = {
   showTitle: boolean;
   showCollapsedText: boolean;
   features: IslandFeatures;
-  shelfCount: number | null;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
   onCollapse: () => void;
@@ -82,7 +80,6 @@ export function IslandShell({
   showTitle,
   showCollapsedText,
   features,
-  shelfCount,
   onOpenPage,
   onWindowDragStart,
   onCollapse,
@@ -116,8 +113,7 @@ export function IslandShell({
   const { status } = contributed;
   const agentVisualState = status?.state ?? "idle";
   const agentStatusLabel = status?.label ?? "";
-  useLegacySide({ shelfCount });
-  const sideLayout = useSideColumnRows({ shelfCount, onOpenPage }, collapsedSlots?.gauges ?? []);
+  const sideLayout = useSideColumnRows({ onOpenPage }, collapsedSlots?.gauges ?? []);
   const sideHot = contributed.preview?.hot ?? null;
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
   const activeAlert = useActiveAlert();
@@ -191,7 +187,6 @@ export function IslandShell({
           showTitle={showTitle}
           showCollapsedText={showCollapsedText}
           collapsedLabel={collapsedLabel}
-          shelfCount={shelfCount}
           agentVisualState={agentVisualState}
           onOpenPage={onOpenPage}
           notice={notice}

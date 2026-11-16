@@ -239,7 +239,7 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 （2026-11-15 起，E36.2.3）岛和设置窗口里能放界面的位置。内置功能和第三方插件走同一套规则。
 
 - **名单和规则**是纯数据，在 `@fuyu/plugin-base/protocol` 的 `SLOTS`（第 5 阶段 `fuyu-plugin build` / `check` 离线检查用）。注册表在 `@fuyu/plugin-base/client/slots`（`createSlots`），不 import Cordis，窗口首屏不用加载内核。
-- **每个窗口一个注册表**，模块加载时同步建好（`src/features/plugin-kernel/slots.ts` 的 `windowSlots("island")`、`windowSlots("settings")`）。内置功能在 `src/features/<领域>/plugin/` 里注册：岛的界面在 `island.tsx`、不画界面的接线在 `runners.tsx`，设置窗口的在 `settings.tsx`；窗口用 `import.meta.glob(..., { eager: true })` 把它们一次收进来（岛是 `src/windows/island/slots/builtins.ts`），首帧就有，加一个功能不用改集中的列表；顺序全靠各项的 `order`。功能那边用 `defineSlot` 拿自己要的那几个字段的类型，不 import 窗口；页面的元数据另放在 `plugin/page.ts`，单元测试不加载组件也能读到；宿主启用并连上之后，加载器只往这个已有的注册表里加第三方项。宿主没启用时代码路径不变，只多一次同步建表。
+- **每个窗口一个注册表**，模块加载时同步建好（`src/features/plugin-kernel/slots.ts` 的 `windowSlots("island")`、`windowSlots("settings")`）。内置功能在 `src/features/<领域>/plugin/` 里注册：岛的界面在 `island.tsx`、不画界面的接线在 `runners.tsx`，设置窗口的在 `settings.tsx`；窗口用 `import.meta.glob(..., { eager: true })` 把它们一次收进来（岛是 `src/windows/island/slots/pluginFiles.ts`，经 `slots/builtins.ts` 在外壳样式之后载入），首帧就有，加一个功能不用改集中的列表；顺序全靠各项的 `order`。功能那边用 `defineSlot` 拿自己要的那几个字段的类型，不 import 窗口；页面的元数据另放在 `plugin/page.ts`，单元测试不加载组件也能读到；宿主启用并连上之后，加载器只往这个已有的注册表里加第三方项。宿主没启用时代码路径不变，只多一次同步建表。
 - **岛这边的类型**：`defineSlot<Props, Meta>(<插槽名>)` 给一个插槽绑上组件 props 和元数据的类型，元数据的类型在 `slots.ts`（`IslandPageMeta` 等）；渲染用 `SlotView`，要项的列表用 `useSlotEntries`。
 
 | 插槽 | 位置 | 种类 | 每插件上限 | 最多显示 | 元数据 |

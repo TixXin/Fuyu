@@ -1,17 +1,18 @@
 import { Inbox } from "lucide-react";
 import { useTranslation } from "../../../i18n";
-import { defineSlot } from "../../../features/plugin-kernel/slots";
+import { defineSlot } from "../../plugin-kernel/slots";
+import { shelfIsland } from "./islandState";
+import { OWNER } from "./owner";
 
 type SideContext = {
-  shelfCount: number | null;
   onOpenPage: (page: "shelf") => void;
 };
 
 const sideSlot = defineSlot<SideContext>("island.side/v1");
 
-function ShelfRow({ shelfCount, onOpenPage }: SideContext) {
+function ShelfRow({ onOpenPage }: SideContext) {
   const t = useTranslation();
-  const count = shelfCount ?? 0;
+  const count = shelfIsland.use().count ?? 0;
   return (
     <button
       type="button"
@@ -28,4 +29,4 @@ function ShelfRow({ shelfCount, onOpenPage }: SideContext) {
   );
 }
 
-sideSlot.add({ id: "shelf", order: 80, component: ShelfRow });
+sideSlot.add({ id: "shelf", order: 80, component: ShelfRow }, OWNER);

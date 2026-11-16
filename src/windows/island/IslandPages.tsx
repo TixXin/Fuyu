@@ -4,7 +4,6 @@ import { PluginViewPage } from "../../features/plugin-views/PluginViewPage";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import type { IslandSettings } from "../../lib/settings/types";
-import type { useFileShelf } from "../../features/file-shelf/useFileShelf";
 import type { useIslandFeatures } from "./useIslandFeatures";
 import type { useIslandNavigation } from "./useIslandNavigation";
 import type { usePluginPages } from "./usePluginPages";
@@ -19,8 +18,6 @@ export type IslandPagesProps = {
   settings: IslandSettings;
   features: ReturnType<typeof useIslandFeatures>["features"];
   pluginPages: ReturnType<typeof usePluginPages>;
-  fileShelf: ReturnType<typeof useFileShelf>;
-  isShelfDropping: boolean;
 };
 
 export type IslandPageProps = IslandPagesProps & {

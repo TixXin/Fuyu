@@ -58,7 +58,6 @@ function GlassIsland({ background, light }: { background: string; light: boolean
       mode={mode} page="todo" isTucked={false} isDetached={false} showTitle={false}
       showCollapsedText appearanceMode="liquidGlass" nativeGlassState="css-fallback" glass={glass}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
-      shelfCount={null}
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>

@@ -78,7 +78,7 @@ function Island({ agents, count, list, report, look }: { agents: boolean; count:
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents, translation: false, calendar: false, screenshots: false, timer: false }}
-      shelfCount={null} collapsedSlots={slots}
+      collapsedSlots={slots}
       onOpenPage={(page) => { openedPage = page; }}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>

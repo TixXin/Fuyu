@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import "./IslandSummary.css";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { summarySlot } from "./slots/line";
 
