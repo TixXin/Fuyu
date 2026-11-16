@@ -3,7 +3,7 @@
   "plugins": [
     { "id": "todos", "kind": "builtin", "root": "todos", "host": "host/index.mjs", "background": [] },
     { "id": "calendar", "kind": "builtin", "root": "calendar", "host": "host/index.mjs", "background": [] },
-    { "id": "music", "kind": "builtin", "root": "media", "host": "host/index.mjs" },
+    { "id": "music", "kind": "builtin", "root": "media", "host": "host/index.mjs", "background": ["session"] },
     { "id": "clipboard", "kind": "builtin", "root": "clipboard", "host": "host/index.mjs" },
     { "id": "screenshot", "kind": "builtin", "root": "screenshot", "host": "host/index.mjs" },
     { "id": "file-shelf", "kind": "builtin", "root": "file-shelf", "host": "host/index.mjs", "background": [] },

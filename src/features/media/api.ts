@@ -54,6 +54,10 @@ export function sendMediaCommand(command: MediaCommand, target: string | undefin
   return invoke<MediaState>(command, { target });
 }
 
+export function seekMedia(positionMs: number, target: string | undefined) {
+  return invoke<MediaState>("media_seek", { positionMs, target });
+}
+
 export function getAudioLevel() {
   return invoke<AudioLevel>("get_audio_level");
 }

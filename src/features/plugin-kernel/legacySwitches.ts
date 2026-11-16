@@ -5,6 +5,7 @@ export const LEGACY_SWITCHES = {
   translationEnabled: "translation",
   calendarEnabled: "calendar",
   shelfEnabled: "file-shelf",
+  musicEnabled: "music",
   deviceAlerts: "device-events",
   levelPopup: "system-levels",
   deviceUseIndicator: "device-use",

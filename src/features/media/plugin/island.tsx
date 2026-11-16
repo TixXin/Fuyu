@@ -5,6 +5,7 @@ import { MusicWaveButton } from "../MusicWaveButton";
 import { MusicPlayerPanel } from "../MusicPlayerPanel";
 import { mediaIsland } from "./islandState";
 import { islandPage } from "./page.ts";
+import { OWNER } from "./owner.ts";
 
 type MusicPageProps = {
   settings: NonNullable<ComponentProps<typeof MusicPlayerPanel>["lyricsSettings"]>;
@@ -34,7 +35,7 @@ function MusicPage({ settings, onOpenSettings }: MusicPageProps) {
   );
 }
 
-pageSlot.add({ ...islandPage, component: MusicPage });
+pageSlot.add({ ...islandPage, component: MusicPage }, OWNER);
 
 type CollapsedContext = {
   t: Translations;
@@ -58,4 +59,4 @@ function MusicItem({ t, onOpenPage }: CollapsedContext) {
   );
 }
 
-collapsedSlot.add({ id: "music", order: 60, shown: ({ hints }) => hints.has("media.audible"), component: MusicItem });
+collapsedSlot.add({ id: "music", order: 60, shown: ({ hints }) => hints.has("media.audible"), component: MusicItem }, OWNER);

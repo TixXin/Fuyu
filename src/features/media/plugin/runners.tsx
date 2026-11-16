@@ -11,6 +11,7 @@ import { useMediaState } from "../useMediaState";
 import { demoMediaState } from "./demo";
 import { mediaIsland } from "./islandState";
 import { lyricLineContribution } from "./lyricLine";
+import { OWNER } from "./owner.ts";
 
 type RunnerProps = {
   mode: string;
@@ -54,8 +55,8 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   if (playing) list.push({ kind: "hint", key: "media.playing" });
   if (coverOn) list.push({ kind: "style", vars: coverAccentVariables(coverColor, background, accent), className: "cover-color" });
   if (glassCover && playing && coverColor) list.push({ kind: "style", tint: coverColor });
-  useIslandContributions("builtin", "media.island", list);
+  useIslandContributions(OWNER, "media.island", list);
   return null;
 }
 
-runnerSlot.add({ id: "media.runner", component: MediaRunner });
+runnerSlot.add({ id: "media.runner", component: MediaRunner }, OWNER);
