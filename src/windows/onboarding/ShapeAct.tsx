@@ -3,7 +3,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { AccentSettingsRow } from "../settings/sections/AccentSettingsRow";
 import { THEME_MODES } from "../../lib/theme/themeMode";
-import type { IslandSettings, ThemeMode } from "../../lib/settings/types";
+import type { AppearanceMode, IslandSettings, ThemeMode } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
 
@@ -23,6 +23,21 @@ export function ShapeAct({ settings, onSettingsChange }: { settings: IslandSetti
               ariaLabel={text.theme}
               options={THEME_MODES.map((mode) => ({ value: mode, label: t.settings.colors.modes[mode] }))}
               onChange={(themeMode) => onSettingsChange({ ...settings, themeMode })}
+            />
+          }
+        />
+        <SettingsRow
+          title={text.look}
+          description={settings.appearanceMode === "liquidGlass" ? text.glassHint : undefined}
+          control={
+            <SettingsChoice<AppearanceMode>
+              value={settings.appearanceMode}
+              ariaLabel={text.look}
+              options={[
+                { value: "classic", label: text.solid },
+                { value: "liquidGlass", label: t.settings.appearance.liquidGlass },
+              ]}
+              onChange={(appearanceMode) => onSettingsChange({ ...settings, appearanceMode })}
             />
           }
         />
