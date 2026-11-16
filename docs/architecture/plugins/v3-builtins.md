@@ -145,12 +145,12 @@ node scripts/plugins-v3/build-builtins.mjs --minify --out <目录> --source <清
 | `__shared/react.js`、`__shared/react-jsx-runtime.js` | 程序自带的转接模块（`protocol` 的 `SHARED_MODULES`） | 已有 |
 | `builtin/<id>/<相对 root 的路径>` | 内置插件 `<id>` 的 `root` 下的文件 | **宿主已按这个登记**（`ctx.clients.add` 收到 `root` 里的文件时）；Rust 一侧的映射（读同一份清单，按 id 找 `root`，解析后不出 `root`）等插槽接入内置插件的界面时做 |
 | `dev/<id>/<相对路径>` | 数据目录外的开发文件夹（[v3-sources.md](v3-sources.md)） | 宿主已按这个登记，Rust 一侧的映射同上 |
-| 其余 | 数据目录 `plugins-v3/` 下的文件：已安装的包在 `packages/@作用域/名字/`（[v3-sources.md](v3-sources.md)），数据目录里的开发文件夹，直接写模块的插件 | 已有 |
+| 其余 | 数据目录 `plugins-v3/` 下的文件，只放行白名单（E36.3.22，[v3-boundary.md](v3-boundary.md)「窗口能读的文件」）：已安装的包在 `packages/@作用域/名字/`（[v3-sources.md](v3-sources.md)），数据目录里的开发文件夹和直接写模块的插件要宿主登记过界面文件；`data/`、`plugins.yml*`、`safe-mode.json`、`bisect.json` 一律 404 | 已有 |
 
 - `builtin/`、`dev/` 不会和数据目录里的东西撞：数据目录里只有 `plugins.yml`、`safe-mode.json`、`data/`、`packages/`，不放叫 `builtin`、`dev` 的东西。
 - 包根在地址里的层数：内置插件是 `builtin/<id>/`，2 层；已安装的包是 `packages/@作用域/名字/`，3 层。共享模块已改用根路径 `/__shared/react.js`（E36.5.4），层数不再影响它。
 - 开发版的内置插件界面是 TSX 源码，浏览器不能直接加载：到时由 Vite 提供（或开发版也先打包），这一点等插槽接入时定。
-- 现在 `fuyu-plugin://localhost/` 会把 `plugins-v3/` 下的任何文件给窗口，包括 `data/` 和 `plugins.yml`。同权模型下宿主插件本来就能读这些，所以不算新的口子，但窗口用不着它们，建议 Rust 那边不提供 `data/`（第 2 阶段 / Rust 的事，记在任务里）。
+- `fuyu-plugin://localhost/` 原来会把 `plugins-v3/` 下的任何文件给窗口，包括 `data/` 和 `plugins.yml`；E36.3.22 起改成白名单，窗口读不到这些了。
 
 ## 还要别处跟着改的
 
