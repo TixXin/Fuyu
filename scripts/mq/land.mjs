@@ -2,12 +2,10 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { machineName } from "../machine-name.mjs";
 import { github as realGitHub, landBranchName, prText } from "./github.mjs";
-import { mergeTree } from "./mergeTree.mjs";
 import { pickOnto } from "./pick.mjs";
-import { uptoRev } from "./upto.mjs";
+import { mergedWith, uptoRev } from "./upto.mjs";
 import { INTEGRATION_BRANCH, git, tryGit } from "./settings.mjs";
 import { landBusyNote, takeLandLock } from "./landLock.mjs";
-import { lockfileChanged } from "./sync.mjs";
 import { waitFor } from "./wait.mjs";
 
 export function landRefusal(branch) {
@@ -18,14 +16,6 @@ export function landRefusal(branch) {
 export function uncommittedNote(statusLines) {
   const tracked = statusLines.filter((line) => line && !line.startsWith("??"));
   return tracked.length ? `工作区里有 ${tracked.length} 个没提交的改动（可能是别的会话正在改的），这次不会带上。` : null;
-}
-
-function reinstallIfNeeded(before) {
-  const changed = tryGit(["diff", "--name-only", before, "HEAD"]).out.split("\n");
-  if (!lockfileChanged(changed)) return;
-  console.log("[land] 合进来的 main 改了锁文件，先 pnpm install，检查才用得上新依赖");
-  const result = spawnSync("pnpm", ["install"], { shell: process.platform === "win32", stdio: "inherit" });
-  if (result.status !== 0) console.error("[land] pnpm install 失败，推送前的检查可能因为依赖不对而失败。");
 }
 
 function patchIds(range) {
@@ -48,37 +38,20 @@ export function pendingCommits(base = `origin/${INTEGRATION_BRANCH}`, head = "HE
   return commits.filter(({ sha }) => !landed.has(mine.get(sha))).map(({ subject, at, body }) => ({ subject, at, body }));
 }
 
-function mergeOutsideWorkTree(upstream) {
-  const { tree, conflicts } = mergeTree("HEAD", upstream);
-  if (!tree) return { commit: null, conflicts };
-  const made = tryGit(["commit-tree", tree, "-p", "HEAD", "-p", upstream, "-m", `Merge remote-tracking branch '${upstream}'`]);
-  return { commit: made.ok ? made.out : null, conflicts: [] };
-}
-
 export function mergeMain() {
   git(["fetch", "origin", INTEGRATION_BRANCH, "--quiet"]);
   const upstream = `origin/${INTEGRATION_BRANCH}`;
   if (tryGit(["merge-base", "--is-ancestor", upstream, "HEAD"]).ok) return "HEAD";
-  const before = git(["rev-parse", "HEAD"]);
-  console.log(`[land] 先把 ${upstream} 合进来（merge，不改写已有的提交）…`);
-  const merge = spawnSync("git", ["merge", "--no-edit", upstream], { stdio: "inherit" });
-  if (merge.status === 0) {
-    reinstallIfNeeded(before);
-    return "HEAD";
-  }
-  spawnSync("git", ["merge", "--abort"], { stdio: "ignore" });
-  const { commit: merged, conflicts } = mergeOutsideWorkTree(upstream);
+  const { rev: merged, conflicts } = mergedWith("HEAD", upstream);
   if (merged) {
-    console.log(`\n[land] 工作区里没提交的文件挡住了合并，两边的提交本身不冲突：改在仓库内部合并（${merged.slice(0, 8)}），工作区和本地 ${INTEGRATION_BRANCH} 都没动。`);
-    console.log(`  本地 ${INTEGRATION_BRANCH} 等 PR 合入、那些文件提交后由 pnpm mq:wait / pnpm mq:sync 跟上。`);
+    console.log(`[land] 在仓库内部把 ${upstream} 合进来（${merged.slice(0, 8)}），工作区、暂存区和本地 ${INTEGRATION_BRANCH} 都没动。`);
+    console.log(`  本地 ${INTEGRATION_BRANCH} 等 PR 合入后由 pnpm mq:wait / pnpm mq:sync 跟上。`);
     return merged;
   }
-  console.error(`\n[land] 合 ${upstream} 时冲突，已撤回这次合并。`);
-  if (conflicts.length) {
-    console.error(`  本地的提交和 ${upstream} 改了同一处，冲突的文件：${conflicts.join("、")}`);
-    console.error("  这是两边提交的内容冲突；上面如果有 would be overwritten by merge，只说明普通合并先被没提交的文件挡了一下，不用等别的会话提交。");
-  }
-  console.error(`自己 git merge ${upstream} 解决冲突、提交后，再 pnpm mq:land --yes。`);
+  console.error(`\n[land] 本地的提交和 ${upstream} 冲突，什么都没动。`);
+  if (conflicts.length) console.error(`  冲突的文件：${conflicts.join("、")}`);
+  console.error(`  git status 里没有别人没提交的已跟踪文件时，才能自己 git merge ${upstream} 解决冲突、提交，再 pnpm mq:land --yes；`);
+  console.error("  工作区里有别人的改动时不要 git merge，失败时它会 reset --hard 冲掉那些改动（#688），先找改那些文件的会话或全局总控。");
   return null;
 }
 
