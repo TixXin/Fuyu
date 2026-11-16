@@ -20,7 +20,6 @@ use super::tool_call::{antigravity_tool_call, ToolCall};
 use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME};
 
 pub(super) const PROVIDER: &str = "antigravity";
-pub(super) const APP: &str = "antigravity";
 const SAVED_DIR: &str = "agent-antigravity";
 const DATA_DIRS: [&str; 3] = ["antigravity", "antigravity-ide", "antigravity-cli"];
 const HOOK_NAME: &str = "fuyu";
