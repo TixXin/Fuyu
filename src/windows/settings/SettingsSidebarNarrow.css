@@ -8,7 +8,7 @@
     z-index: 4;
     width: 52px;
     overflow: hidden;
-    transition: width var(--motion-base) ease, box-shadow var(--motion-base) ease;
+    transition: width var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease);
   }
 
   .settings-sidebar-card:is(:hover, :has(:focus-visible)) {
