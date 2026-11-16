@@ -3,11 +3,12 @@ import { useTranslation } from "../../i18n";
 import { PRIMARY_KEY } from "../../lib/shortcut/shortcut";
 import { PREVIEW_SIZES, type ClipboardPreviewSize, type ClipboardPreviewSizeRequest } from "../../features/clipboard/previewCommands";
 
-export function ClipboardPreviewBar({ hint, size, pinned, editing = false, onEdit, onSize, onTogglePin, onClose }: {
+export function ClipboardPreviewBar({ hint, size, pinned, editing = false, editLabel, onEdit, onSize, onTogglePin, onClose }: {
   hint: { key: string; text: string };
   size: ClipboardPreviewSize;
   pinned: boolean;
   editing?: boolean;
+  editLabel?: string;
   onEdit?: () => void;
   onSize: (size: ClipboardPreviewSizeRequest) => void;
   onTogglePin: () => void;
@@ -15,7 +16,7 @@ export function ClipboardPreviewBar({ hint, size, pinned, editing = false, onEdi
 }) {
   const t = useTranslation();
   const text = t.clipboard.previewWindow;
-  const edit = t.clipboard.popup.actions.editInPreview;
+  const edit = editLabel ?? t.clipboard.popup.actions.editInPreview;
   return (
     <div className="clipboard-preview__bar" role="toolbar" aria-label={text.toolbar} onDoubleClick={(event) => {
       if ((event.target as HTMLElement).closest("button")) return;

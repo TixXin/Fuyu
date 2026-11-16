@@ -5,11 +5,11 @@ import { clipboardImageUrl } from "./api";
 import { useImageZoom } from "./useImageZoom";
 import "./ClipboardImageViewer.css";
 
-type ViewerProps = { id: string; thumbnail?: string; width: number; height: number; controls?: boolean };
+type ViewerProps = { id: string; version?: string; thumbnail?: string; width: number; height: number; controls?: boolean };
 
-export function ClipboardImageViewer({ id, thumbnail, width, height, controls = false }: ViewerProps) {
+export function ClipboardImageViewer({ id, version, thumbnail, width, height, controls = false }: ViewerProps) {
   const text = useTranslation().clipboard.previewWindow.zoom;
-  const full = clipboardImageUrl(id);
+  const full = clipboardImageUrl(id, version);
   const [loaded, setLoaded] = useState<string | null>(null);
   const ready = loaded === full;
   const zoom = useImageZoom({ id, image: { width, height }, controls });
