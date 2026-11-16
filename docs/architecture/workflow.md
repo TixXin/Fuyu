@@ -130,6 +130,44 @@ land 从 git 的 pre-push 钩子里跑检查，环境里带着 `GIT_DIR` 等变�
 - 认领后 24 小时任务文件没有新的交接或提交，就算失效（`pnpm tasks stale`），别人可以先发消息再 `--takeover` 接手。做得久的任务停下时 `pnpm tasks note` 留交接，也就续上了。
 - `pnpm tasks done <编号> --commit "<提交标题>"`：本地 `main` 上有别的会话的提交，所以要明确写这次功能提交的标题（或已有的提交号）。
 
+## 两台机器
+
+Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方：没提交的文件、本地没推的提交，另一台都看不到（F31）。
+
+- **开工和合入**：每台机器开工前、land 前各 `pnpm mq:sync` 一次。一批合入之后，另一台同步了才看得到。
+- **同一个任务不两台同时做**：要换机器，先在这台 `pnpm tasks note` 留交接并 land，合入后另一台同步了再接手（认领怎么区分机器见上一节）。
+- **两边共用的代码**：在一台上改，land 前在本机做另一个平台的交叉检查（见「Rust 构建」的交叉 clippy），CI 在两个系统上各跑一遍；另一台同步后做真机验证。
+- **交接不靠消息**：写进任务文件，随提交合入，另一台同步后读。
+
+**给另一台机器的提示词**：要做的事、实测清单先写进任务文件或 issue 并合入，提示词只写三样，不重复任务里的内容：
+
+```text
+先 pnpm mq:sync，确认本地 main 已经跟上 origin/main。
+加载 fuyu-task，pnpm tasks show <编号> 读全文和交接（带 issue 的再 pnpm issue <N>）。
+这次要做：<一两句>。结果写回 <任务文件的备注 / issue #N 的回复>。
+```
+
+**不报错的平台差异**，在一台上正常、到另一台或 CI 上才出问题：
+
+- 测试按 `\n` 匹配仓库文件的内容时，先把 `\r\n` 换成 `\n`：Windows CI 检出来是 CRLF（388adf2b）。
+- 测试在临时仓库里提交（包括被测代码自己跑的 `rebase`、`merge`），要在临时仓库里设 `user.name`、`user.email`：Mac 的 git 能从主机名猜出身份，Windows CI 猜不出来（24d98155）。
+- 会话里或 `!` 跑的命令没有终端，`gh secret set` 读不到输入，静默存成空值；要请用户在真终端里粘贴。
+- 有几个测试文件带 `skip: process.platform !== "win32"`，Mac 上 `pnpm test` 全绿不代表它们跑过，要提前看用上面的 `mq:try`。
+- Mac 上 Claude Code 会话里的 `grep` 是包了一层的 ugrep，复杂正则报 `exceeds complexity limits`；改用 `rg` 或 `/usr/bin/grep`。
+
+**每台机器各有一份、不进 git 的东西**：
+
+| 东西 | 在哪 | 说明 |
+|---|---|---|
+| updater 签名私钥 | `~/.tauri/fuyu/`，两台都有 | [updater.md](../features/updater.md)「签名密钥」 |
+| 插件签名私钥 | 只在 Windows | [plugins/drafts/README.md](../../plugins/drafts/README.md) |
+| 机器名和别名 | 本地 git 配置 `fuyu.machine`、`fuyu.machineAlias` | 上一节 |
+| `gh` 登录 | 每台各 `gh auth login` 一次 | land、`pnpm issue` 都靠它 |
+| Claude 的项目记忆、`~/.claude/rules`、用户目录下的 skill | `~/.claude/` | 只在本机生效；属于项目的规则写进 `AGENTS.md` 或 `.claude/skills/` |
+| 预览面板的启动配置 | `.claude/launch.json`（`.gitignore` 排除） | |
+| 开发版数据目录 | 每台各一份正式数据的副本 | 「开发版和正式版同时开」 |
+| 重任务队列 | `~/.cache/fuyu-heavy/` | 「Rust 构建」 |
+
 ## 没提交的文件
 
 大家共用一个工作区，没提交的改动别人都看得到，也都会被它影响：本地 `main` 合不进 `origin/main` 上改了同一个文件的提交，会话和用户的 `pnpm tauri dev` 一直停在旧代码上；别人的检查跑的是混在一起的工作区，会因为你没提交的代码失败。2026-11-15 一天里工作区一度积了 129 个没提交的文件，本地 `main` 落后 `origin/main` 55 个提交（F41，issue #490）。所以：
