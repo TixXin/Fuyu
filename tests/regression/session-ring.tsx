@@ -1,5 +1,5 @@
 import { act, StrictMode, type CSSProperties } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
@@ -95,7 +95,20 @@ function check(condition: unknown, label: string) {
   messages.push(`PASS ${label}`);
 }
 
+let live: { root: Root; box: HTMLElement } | null = null;
+
+async function freezeLive() {
+  if (!live) return;
+  const { root, box } = live;
+  for (let tries = 0; tries < 50 && box.querySelector(".island--preparing"); tries += 1) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
+  const html = box.innerHTML;
+  await act(async () => root.unmount());
+  box.innerHTML = html;
+  live = null;
+}
+
 async function mount(caption: string, agents: boolean, count = 2) {
+  await freezeLive();
   let slots: CollapsedSlots = {};
   const box = document.createElement("div");
   box.className = "fixture";
@@ -103,8 +116,10 @@ async function mount(caption: string, agents: boolean, count = 2) {
   label.className = "caption";
   label.textContent = caption;
   fixtures.append(box, label);
+  const root = createRoot(box);
+  live = { root, box };
   await act(async () => {
-    createRoot(box).render(<StrictMode><Island agents={agents} count={count} list={sessions} report={(next) => { slots = next; }} look={corners} /></StrictMode>);
+    root.render(<StrictMode><Island agents={agents} count={count} list={sessions} report={(next) => { slots = next; }} look={corners} /></StrictMode>);
   });
   for (let frame = 0; frame < 10; frame += 1) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 16)); });
   return [box.querySelector<HTMLElement>(".island__collapsed")!, slots] as const;
@@ -164,11 +179,12 @@ async function runChecks() {
       && box16.bottom === columns[0].getBoundingClientRect().bottom && !bars(3)[1].dataset.state,
     "横条 6×3px、状态色，每根柱子 5 格一样高，从下往上亮，没亮的是暗格");
     const radius16 = parseFloat(getComputedStyle(bars(0)[0]).borderTopLeftRadius);
+    const shape16 = getComputedStyle(bars(0)[0]).getPropertyValue("corner-shape");
     corners = { "--island-corner-radius-size": 40, "--island-corner-shape": "round" } as CSSProperties;
     [bar] = await mount("信号格：岛屿圆角 40、圆角样式「圆角」", true);
     const round = bar.querySelector<HTMLElement>(".session-signal__bar")!;
     check(Math.abs(radius16 - (16 * 22 / 30) * 3 / 38) < 0.01 && getComputedStyle(round).borderTopLeftRadius === "1.5px"
-      && getComputedStyle(round).getPropertyValue("corner-shape") !== getComputedStyle(bars(0)[0]).getPropertyValue("corner-shape"),
+      && getComputedStyle(round).getPropertyValue("corner-shape") !== shape16,
     "横条圆角跟外观的岛屿圆角等比缩放（最大半个条高），圆角样式（方圆 / 圆角）跟着变");
     corners = {};
     sessions = CROWD;
