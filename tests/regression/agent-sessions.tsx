@@ -10,6 +10,7 @@ import { checkNarrow, renderShowcase } from "./agent-sessions-showcase";
 import { checkUsage } from "./agent-sessions-usage";
 import { checkSubagents } from "./agent-sessions-subagents";
 import { checkChildSessions } from "./agent-sessions-children";
+import { checkAgeColumns, renderAgeColumns } from "./agent-sessions-age";
 import type { AgentCardEffects, AgentHostDisplay, AgentSessionView } from "../../src/features/agent-status/agentSettings";
 
 const ISLAND_CHROME_HEIGHT = 86;
@@ -135,7 +136,7 @@ async function runChecks() {
     const removeButtons = [...document.querySelectorAll<HTMLButtonElement>(".agent-session__archive")];
     const firstRow = rows()[0].getBoundingClientRect();
     const firstRemove = removeButtons[0].getBoundingClientRect();
-    const providerIcon = rows()[0].querySelector(".agent-session__heading > :last-child")!.getBoundingClientRect();
+    const providerIcon = rows()[0].querySelector(".agent-session__agent")!.getBoundingClientRect();
     const archiveIcon = removeButtons[0].querySelector("svg")!.getBoundingClientRect();
     check(removeButtons.length === 3 && getComputedStyle(removeButtons[0]).opacity === "1"
       && firstRemove.left >= providerIcon.right && firstRemove.right <= firstRow.right && firstRemove.width <= 20
@@ -149,10 +150,10 @@ async function runChecks() {
       && getComputedStyle(agedArchive).opacity === "0" && getComputedStyle(age).opacity === "1"
       && Math.abs(age.getBoundingClientRect().right - agedArchive.querySelector("svg")!.getBoundingClientRect().right) < 1,
       "平时归档按钮的位置显示多久前更新，右边和归档图标对齐；运行中没有时间的行照常显示归档按钮");
-    const agedIcon = rows()[2].querySelector(".agent-session__heading > :last-child")!.getBoundingClientRect();
-    const firstIcon = rows()[0].querySelector(".agent-session__heading > :last-child")!.getBoundingClientRect();
+    const agedIcon = rows()[2].querySelector(".agent-session__agent")!.getBoundingClientRect();
+    const firstIcon = rows()[0].querySelector(".agent-session__agent")!.getBoundingClientRect();
     const slotGap = age!.getBoundingClientRect().left - agedIcon.right;
-    check(slotGap >= 0 && slotGap <= 12 && Math.abs(agedIcon.right - firstIcon.right) < 0.5, "时间那一列按最长的时间定宽，和左边的 Agent 图标不空出一大截，各行图标仍在同一列");
+    check(slotGap >= 0 && slotGap <= 16 && Math.abs(agedIcon.right - firstIcon.right) < 0.5, "时间那一列固定为「99m」宽，和左边的 Agent 图标不空出一大截，各行图标仍在同一列");
     agedArchive.focus();
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 200)); });
     check(getComputedStyle(agedArchive).opacity === "1" && getComputedStyle(age!).opacity === "0", "鼠标移上或用键盘选到这一行时，时间换成归档按钮");
@@ -205,7 +206,7 @@ async function runChecks() {
     const badge = (row: HTMLElement) => row.querySelector<HTMLImageElement>(".agent-session__agent > img.agent-session__host-badge");
     check(first.querySelector(".agent-session__host")?.textContent === "Orca" && badge(first)?.alt === "在 Orca 里运行" && badge(first)?.title === "在 Orca 里运行", "来源显示程序名，程序图标做成 Agent 图标右下角的角标，悬停说明在哪里运行");
     const order = (row: HTMLElement) => [...row.querySelector(".agent-session__heading")!.children].map((child) => child.className.split(" ")[0].replace("agent-session__", "")).join();
-    check(order(second) === "title,pill,meta,host,agent,time" && order(first) === "title,pill,meta,host,agent" && first.querySelector(".agent-session__agent > .agent-provider-icon"), `标题行依次是标题、胶囊、状态、来源、Agent 图标、时间：${order(second)}`);
+    check(order(second) === "title,pill,meta,host,agent,time" && order(first) === "title,pill,meta,host,agent,time" && !first.querySelector(".agent-session__age") && first.querySelector(".agent-session__agent > .agent-provider-icon"), `标题行依次是标题、胶囊、状态、来源、Agent 图标、时间：${order(second)}`);
     check(!badge(second) && !second.querySelector("svg") && second.querySelector(".agent-session__host")?.textContent === "Codex", "取不到程序图标时不显示角标，不再用通用的方框图标");
     check(!third.querySelector(".agent-session__host") && !badge(third), "不知道来源时不显示");
     await render("icon");
@@ -350,6 +351,7 @@ async function runChecks() {
     await act(async () => root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} view="cards" cardEffects="sparkle" hostDisplay="both" /></I18nProvider></StrictMode>));
     check(document.querySelectorAll(".agent-card--sparkle > .agent-card__band").length === 3
       && [...document.querySelectorAll<HTMLElement>(".agent-card--sparkle")].every((card) => card.offsetHeight === 62),"粒子流苏给每张卡片加一条流苏，不改变卡片高度");
+    await checkAgeColumns({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT }, check);
     await checkNarrow({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT }, check);
     await renderShowcase({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT });
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
@@ -363,6 +365,7 @@ async function runChecks() {
 
 if (params.has("test")) await runChecks();
 else if (params.has("showcase")) await renderShowcase({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT });
+else if (params.has("age")) await renderAgeColumns({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT });
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
   results.textContent = "点击会话查看跳转结果：只有 fly-island 会话能找到窗口。";
