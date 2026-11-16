@@ -78,3 +78,7 @@ export type UpdateDiagnostics = { osVersion: string; architecture: string };
 export function getUpdateDiagnostics() {
   return invoke<UpdateDiagnostics>("updater_diagnostics");
 }
+
+export function getForegroundFullscreen() {
+  return invoke<{ active: boolean; onIslandMonitor: boolean }>("get_foreground_fullscreen");
+}

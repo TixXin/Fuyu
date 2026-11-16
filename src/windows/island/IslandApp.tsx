@@ -18,7 +18,7 @@ import { useDevicePixelRatio } from "./useDevicePixelRatio";
 import { useGameMode } from "./useGameMode";
 import { useIslandKeyboard } from "./useIslandKeyboard";
 import { useIslandFeatures } from "./useIslandFeatures";
-import { useIslandAutoUpdate } from "./useIslandAutoUpdate";
+import { useIslandAutoUpdate } from "../../features/updater/useIslandAutoUpdate";
 import { useIslandNavigation } from "./useIslandNavigation";
 import { usePluginHostEvents } from "./usePluginHostEvents";
 import { usePluginKeybindings } from "./usePluginKeybindings";
