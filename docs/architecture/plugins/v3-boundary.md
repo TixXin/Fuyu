@@ -241,11 +241,13 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 
 | 插槽 | 位置 | 种类 | 每插件上限 | 最多显示 | 元数据 |
 |---|---|---|---|---|---|
-| `island.page/v1` | 展开页 | list | 2 | 不限，页头圆点另有上限 | `icon`、`shortcutOrder`（Alt+数字的顺序）、`headerDot`（在页头出圆点）、`enabled(features)`、`fallback(features)`（这页关掉时回退到哪页） |
+| `island.page/v1` | 展开页 | list | 2 | 不限，页头圆点另有上限 | `icon`、`shortcutOrder`（Alt+数字的顺序）、`headerDot`（在页头出圆点）、`enabled(features)`、`fallback(features)`（这页关掉时回退到哪页）、`fold`（`{ into, when(features), label(t) }`：条件成立时这页不单独出现，作为 `into` 那页里的一个子视图，组件多拿一个 `embedded: true`；现在只有截图历史折进剪贴板） |
 | `island.header/v1` | 页头右侧的按钮 | list | 1 | 不限 | `enabled(features)` |
 | `island.collapsed/v1` | 收起条 | list | 2 | 不限，用户的「收起条布局」照旧覆盖 | `group`（`gauges`：相邻的合进一个量表框，侧栏也显示）、`width`（收起条要加的宽度）、`hideable`（用户在布局里藏起来后整项撤掉，也不算宽度）、`shown(context)`（现在出不出现，不写就一直出现） |
 | `island.collapsed-center/v1` | 收起条的中心图案 | single | 1 | 1 | `width`、`shown(context)` |
 | `island.alert/v1` | 刘海提醒 | list | 1 | 窗口只显示排在最前、`active(sources)` 为真的一项 | `active(sources)`、`trailing`（右半边的组件） |
+| `island.notice/v1` | 岛上的提示（录屏、计时响铃、截图卡片、复制卡片、提醒、语音输入、第一次提示这类，占收起条的位置，带一排操作按钮） | list | 1 | 窗口只显示排在最前、`active(sources)` 为真的一项 | `active(sources)`、`actions`（操作按钮的组件，和 `component` 拿同一包 props） |
+| `island.runner/v1` | 岛上不画界面的组件：挂着就运行（接线 hook：提醒的计时、翻译的快捷键、开发版的实验台动作这类），卸下就停 | list | 1 | 不限 | 无 |
 | `island.dev/v1` | 第 1 阶段的开发插槽 | list | 1 | 3 | 无 |
 | `settings.category/v1` | 设置窗口的分类 | list | 2 | 不限 | `group`（侧栏分组）、`icon`、`tabs`（子页）、`available(...)`（平台是否支持）、`feature`（所属功能开关）、`aliases`（合并进来的旧分类名） |
 | `settings.section/v1` | 设置页里的分节 | list，按 `category` 分组 | 每个分类 4 | 不限 | `category` |

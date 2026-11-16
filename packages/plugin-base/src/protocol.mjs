@@ -39,11 +39,13 @@ export const SHARED_MODULES = {
 export const HOST_SHARED_MODULES = ["@fuyu/plugin-base", "fuyu-plugin", "@fuyu/plugin-base/services"];
 
 export const SLOTS = {
-  "island.page/v1": { kind: "list", perPlugin: 2, meta: ["icon", "shortcutOrder", "headerDot", "enabled", "fallback"] },
+  "island.page/v1": { kind: "list", perPlugin: 2, meta: ["icon", "shortcutOrder", "headerDot", "enabled", "fallback", "fold"] },
   "island.header/v1": { kind: "list", perPlugin: 1, meta: ["enabled"] },
   "island.collapsed/v1": { kind: "list", perPlugin: 2, meta: ["group", "width", "hideable", "shown"] },
   "island.collapsed-center/v1": { kind: "single", perPlugin: 1, meta: ["width", "shown"] },
   "island.alert/v1": { kind: "list", perPlugin: 1, meta: ["active", "trailing"] },
+  "island.notice/v1": { kind: "list", perPlugin: 1, meta: ["active", "actions"] },
+  "island.runner/v1": { kind: "list", perPlugin: 1, meta: [] },
   "island.dev/v1": { kind: "list", max: 3, perPlugin: 1, meta: [] },
   "settings.category/v1": { kind: "list", perPlugin: 2, meta: ["group", "icon", "tabs", "available", "feature", "aliases"] },
   "settings.section/v1": { kind: "list", perPlugin: 4, groupBy: "category", meta: ["category"] },
