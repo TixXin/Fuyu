@@ -87,3 +87,20 @@ D79、D78 合入后，请用户在 Windows 真机上按 D79 的实测清单测�
 ## 收口
 
 D79、D78 的提交交给 `Fuyu-[总控] 全局` 整批合入；合入后请用户真机实测，再关 issue。进度更新在本文末尾。
+
+## 进度
+
+- 2026-11-16：D79（原 D77，合并 `origin/main` 时改号）`5012bba1`、D78 `0d528a4f` 已在本地提交，组长看过 diff；`pnpm tasks dirty` 里没有它们留下的文件。交给 `Fuyu-[总控] 全局` 整批合入。
+- D78 更新了 `clipboard-popup` 回归页的快照：原来有一帧整张渲染了约 460 行，虚拟化后只渲染看得见的行，所以快照少了约 1.3 万行；另加了一帧 300 条的虚拟化检查。
+- D78 改了 `src/features/clipboard/api.ts` 的 `listenClipboardPopupOpened`（多带一个 `trace` 参数）。Mac 那台 C101.3 的认领范围里也有这个文件，合并时留意。
+
+## 合入后在 Windows 真机上实测
+
+1. 退出岛。在 PowerShell 里执行 `$env:FUYU_CLIPBOARD_TRACE='1'`，然后在同一个窗口里启动新的 `fuyu.exe`。
+2. 历史 30 条：按 Win+V 唤起再关掉，共 10 次。打开数据目录里的 `clipboard-open-trace.log`，看每次 `open` 行的 `total` 和 `first-frame` 行的 `page`、`since-show`。
+3. 把保留条数调到 500，复制到满（夹几张图），再测 10 次。
+4. 窗口隐藏时连续复制十几张图，再唤起：列表应该直接是新的，不会先显示旧列表再跳。
+5. 500 条时：滚轮、↑↓、Home/End、拖动固定项排序、Alt+字母粘贴都照常。
+6. 强调色设成「跟随 Windows」，改一下系统强调色再唤起，颜色应该跟上。
+7. 不设环境变量再启动一次：不会生成这个日志；跟随指针、居中、固定位置、粘贴回原窗口都和以前一样。
+8. 主观感受：还卡吗？把 `clipboard-open-trace.log` 发给我们。如果 `since-show` 还有几百毫秒，再按「第二阶段」开排查会话。
