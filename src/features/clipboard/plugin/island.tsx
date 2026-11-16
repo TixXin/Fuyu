@@ -1,20 +1,20 @@
 import type { ComponentProps } from "react";
 import { defineSlot, type IslandNoticeMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { ClipboardCopyNotice, ClipboardCopyNoticeActions } from "../ClipboardCopyNotice";
-import type { ClipboardCopyCardState } from "../useClipboardCopyCard";
 import { ClipboardHistoryPanel } from "../ClipboardHistoryPanel";
-import type { useClipboardHistory } from "../useClipboardHistory";
+import { clipboardIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 import { islandPage } from "./page.ts";
 
 type ClipboardPageProps = {
-  clipboard: ReturnType<typeof useClipboardHistory>;
   extraView?: ComponentProps<typeof ClipboardHistoryPanel>["extraView"];
 };
 
 const pageSlot = defineSlot<ClipboardPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");
 
-function ClipboardPage({ clipboard, extraView }: ClipboardPageProps) {
+function ClipboardPage({ extraView }: ClipboardPageProps) {
+  const clipboard = clipboardIsland.use()?.clipboard;
+  if (!clipboard) return null;
   const {
     clipboardHistory,
     copyClipboardHistoryItem,
@@ -38,16 +38,16 @@ function ClipboardPage({ clipboard, extraView }: ClipboardPageProps) {
 
 pageSlot.add({ ...islandPage, component: ClipboardPage }, OWNER);
 
-type NoticeSources = { copyCard: ClipboardCopyCardState };
+const noticeSlot = defineSlot<object, IslandNoticeMeta<object>>("island.notice/v1");
 
-const noticeSlot = defineSlot<NoticeSources, IslandNoticeMeta<NoticeSources>>("island.notice/v1");
-
-function CopyContent({ copyCard }: NoticeSources) {
-  return <ClipboardCopyNotice key={copyCard.current?.key} card={copyCard} />;
+function CopyContent() {
+  const copyCard = clipboardIsland.use()?.copyCard;
+  return copyCard ? <ClipboardCopyNotice key={copyCard.current?.key} card={copyCard} /> : null;
 }
 
-function CopyActions({ copyCard }: NoticeSources) {
-  return <ClipboardCopyNoticeActions card={copyCard} />;
+function CopyActions() {
+  const copyCard = clipboardIsland.use()?.copyCard;
+  return copyCard ? <ClipboardCopyNoticeActions card={copyCard} /> : null;
 }
 
-noticeSlot.add({ id: "copy", order: 50, active: ({ copyCard }) => Boolean(copyCard.current), component: CopyContent, actions: CopyActions }, OWNER);
+noticeSlot.add({ id: "copy", order: 50, component: CopyContent, actions: CopyActions }, OWNER);

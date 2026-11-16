@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import type { ClipboardCopyCardState } from "../../features/clipboard/useClipboardCopyCard";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { defineSlot, type IslandNoticeMeta } from "../../features/plugin-kernel/slots";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
@@ -12,7 +11,6 @@ import "./slots/builtins";
 export type IslandNotice = { content: ReactNode; actions: ReactNode };
 
 type NoticeSources = {
-  copyCard: ClipboardCopyCardState;
   firstHints: FirstHintsController;
 };
 
