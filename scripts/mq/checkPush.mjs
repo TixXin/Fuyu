@@ -12,6 +12,10 @@ export function parseRefUpdates(stdin) {
     });
 }
 
+export function onlyDeletes(update) {
+  return /^0+$/.test(update.localSha);
+}
+
 export function pushBlock(updates, env) {
   if (env[EMERGENCY_ENV] === "1") return null;
   const main = `refs/heads/${INTEGRATION_BRANCH}`;
@@ -43,6 +47,10 @@ export async function checkPush(env = process.env) {
   if (block) {
     console.error(block);
     return 1;
+  }
+  if (updates.every(onlyDeletes)) {
+    console.log("[check-push] 只是删除远程分支，跳过检查。");
+    return 0;
   }
   console.log(`[check-push] ${CHECK_COMMAND}`);
   const result = spawnSync(CHECK_COMMAND, { shell: true, stdio: "inherit", cwd: git(["rev-parse", "--show-toplevel"]) });
