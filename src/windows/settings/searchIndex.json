@@ -3411,11 +3411,11 @@
       "page": "agentConnect",
       "zh-CN": {
         "group": "回复状态标记",
-        "title": "让 Claude 在回复末尾标出在等什么（推荐打开）"
+        "title": "让 AI 代理在回复末尾标出在等什么（推荐打开）"
       },
       "en": {
         "group": "Reply status marker",
-        "title": "Have Claude mark what it waits for at the end of each reply (recommended)"
+        "title": "Have the agents mark what they wait for at the end of each reply (recommended)"
       }
     },
     {

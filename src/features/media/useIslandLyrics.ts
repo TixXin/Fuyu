@@ -1,13 +1,12 @@
 import type { IslandSettings } from "../../lib/settings/types";
-import type { MediaState } from "../../features/media/api";
-import { useCurrentLyric, type CurrentLyric } from "../../features/media/lyrics/useCurrentLyric";
-import { usePlayingLyrics, type PlayingLyrics } from "../../features/media/lyrics/usePlayingLyrics";
-import { introLine, songLine } from "../../features/media/lyrics/songLine";
-import { karaokeLook } from "../../features/media/lyrics/lyricsSettings";
-import type { IslandPage } from "./types";
+import type { MediaState } from "./api";
+import { useCurrentLyric, type CurrentLyric } from "./lyrics/useCurrentLyric";
+import { usePlayingLyrics, type PlayingLyrics } from "./lyrics/usePlayingLyrics";
+import { introLine, songLine } from "./lyrics/songLine";
+import { karaokeLook } from "./lyrics/lyricsSettings";
 
 type IslandLyricsOptions = {
-  page: IslandPage;
+  page: string;
   barShown: boolean;
 };
 

@@ -14,8 +14,6 @@ import type { UnseenSessions } from "../../features/agent-status/useUnseenSessio
 import type { AgentUsages } from "../../features/agent-status/usage";
 import type { IslandSettings } from "../../lib/settings/types";
 import type { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
-import type { useMediaState } from "../../features/media/useMediaState";
-import type { PlayingLyrics } from "../../features/media/lyrics/usePlayingLyrics";
 import type { CalendarState } from "../../features/calendar/useCalendar";
 import type { useFileShelf } from "../../features/file-shelf/useFileShelf";
 import type { useIslandAgentAlerts } from "./useIslandAgentAlerts";
@@ -42,8 +40,6 @@ export type IslandPagesProps = {
   messageSource: MessageView["messageSource"];
   messagePanel?: ReturnType<typeof useIslandMessagePanel>;
   openMessages: MessageView["openMessages"];
-  media: ReturnType<typeof useMediaState>;
-  lyrics?: PlayingLyrics;
   clipboard: ReturnType<typeof useClipboardHistory>;
   agentSessions: AgentSessionSummary[];
   unseenAgentSessions: UnseenSessions;

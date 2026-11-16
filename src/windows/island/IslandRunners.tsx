@@ -8,6 +8,12 @@ import "./slots/builtins";
 
 export type IslandRunnerProps = {
   mode: IslandMode;
+  isTucked: boolean;
+  quiet: boolean;
+  barText: boolean;
+  demo: { active: boolean; startedAt: number };
+  background: string;
+  accent: string | null;
   page: IslandPage;
   settings: IslandSettings;
   features: IslandFeatures;

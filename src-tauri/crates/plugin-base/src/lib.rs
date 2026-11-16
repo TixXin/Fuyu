@@ -16,3 +16,7 @@ pub use rpc::{Rpc, RpcError, PROTOCOL};
 pub use runtime::{node_for_host, official_download, ChosenNode, NodeSource, NODE_RELEASE};
 pub use serve::{Answer, Call, LocalFuture, Serve, ServeError};
 pub use supervisor::{Containment, Event, HostSpec, HostState, NoContainment, Supervisor, Timing};
+
+#[cfg(doctest)]
+#[doc = include_str!("../tests/app_handle.md")]
+pub struct AppHandleIsRefused;

@@ -2,9 +2,6 @@ import { useQQNotifications } from "../../features/messages/qq-notifications/QQN
 import { useWeChatReminders } from "../../features/messages/wechat/WeChatReminders";
 import { useMail } from "../../features/messages/mail/MailPanel";
 import { usePluginNotifications } from "../../features/plugins/usePluginNotifications";
-import { useDeviceUse } from "../../features/device-use/useDeviceUse";
-import { useLevelPopup } from "../../features/system-levels/useLevelPopup";
-import { useDeviceAlert } from "../../features/device-events/useDeviceAlert";
 import { usePluginPermissionPrompts } from "../../features/plugins/usePluginPermissionPrompts";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useState } from "react";
@@ -18,15 +15,11 @@ export function useIslandNotices(settings: IslandSettings, { mode, isTucked, qui
   const wechatReminders = useWeChatReminders(canPreviewMessages);
   const qqMail = useMail(canPreviewMessages);
   const pluginNotifications = usePluginNotifications(canPreviewMessages);
-  const deviceUse = useDeviceUse(settings.deviceUseIndicator);
-  const canPopUp = !quiet && mode === "collapsed" && !isTucked;
-  const levelPopup = useLevelPopup(settings.levelPopup, canPopUp);
-  const deviceAlert = useDeviceAlert(settings.deviceAlerts, canPopUp);
   const permissionPrompts = usePluginPermissionPrompts();
   const hasMessagePreview = Boolean(
     qqNotifications.preview || wechatReminders.previewReceivedAt !== null || qqMail.preview || pluginNotifications.notification,
   );
   const preview = useLatestMessagePreview(qqNotifications, wechatReminders, qqMail, pluginNotifications);
-  return { qqNotifications, wechatReminders, qqMail, pluginNotifications, preview, setMessagePanelOpen, deviceUse, levelPopup, deviceAlert, permissionPrompts, hasMessagePreview };
+  return { qqNotifications, wechatReminders, qqMail, pluginNotifications, preview, setMessagePanelOpen, permissionPrompts, hasMessagePreview };
 }
 

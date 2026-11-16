@@ -8,6 +8,8 @@ use syn::{
     Error, FnArg, GenericArgument, Ident, ItemFn, LitInt, LitStr, Pat, PathArguments, ReturnType, Token, Type,
 };
 
+const NO_APP_HANDLE: &str = "a host service cannot take an AppHandle, injected or not: it is registered statically, so the AppHandle and the tauri runtime would be linked into every Rust test binary, and on Windows those binaries then fail to start (0xc0000139). For the data folder use crate::home_dir::current(); see docs/architecture/plugins/v3-services.md, \"Rust 那条路\"";
+
 struct Args {
     name: LitStr,
     timeout_ms: Option<LitInt>,
@@ -42,6 +44,9 @@ impl Parse for Args {
                 let content;
                 syn::parenthesized!(content in input);
                 args.inject = Punctuated::<Ident, Token![,]>::parse_terminated(&content)?.into_iter().collect();
+                if let Some(app) = args.inject.iter().find(|name| *name == "app") {
+                    return Err(Error::new(app.span(), NO_APP_HANDLE));
+                }
             } else {
                 return Err(Error::new(key.span(), "expected `timeout_ms = <milliseconds>` or `inject(<parameter>, …)`"));
             }
@@ -103,6 +108,9 @@ fn params(function: &ItemFn, inject: &[Ident]) -> syn::Result<Vec<Param>> {
         };
         let ident = pattern.ident.clone();
         let ty = typed.ty.as_ref().clone();
+        if is_named(&ty, "AppHandle") || matches!(&ty, Type::Reference(reference) if is_named(&reference.elem, "AppHandle")) {
+            return Err(Error::new_spanned(&typed.ty, NO_APP_HANDLE));
+        }
         if let Type::Reference(reference) = &ty {
             if is_named(&reference.elem, "Call") {
                 found.push(Param::Call);
@@ -241,3 +249,6 @@ pub fn host_service(attr: TokenStream, item: TokenStream) -> TokenStream {
     let function = parse_macro_input!(item as ItemFn);
     expand(args, function).unwrap_or_else(Error::into_compile_error).into()
 }
+
+#[cfg(test)]
+mod tests;

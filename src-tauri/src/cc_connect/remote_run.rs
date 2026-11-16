@@ -1,19 +1,30 @@
 use super::{
     config_file::FILE_NAME,
-    script::{decode, find_exe, NOT_FOUND},
+    script::{decode, find_exe, proxy_env, NOT_FOUND},
 };
 use crate::user_error::UserError;
 
 const NO_CONFIG: &str = "NOCONFIG";
 
-pub(super) fn restart_script(path: Option<&str>) -> String {
+pub(super) fn restart_script(path: Option<&str>, proxy: Option<&str>) -> String {
     let mut script = find_exe(path);
+    script.push_str(&proxy_env(proxy));
     script.push_str(&format!(
         r#"[ -n "$exe" ] || {{ echo {NOT_FOUND}; exit 0; }}
 d="$HOME/.cc-connect"
 [ -f "$d/{FILE_NAME}" ] || {{ echo {NO_CONFIG}; exit 0; }}
 me=$(id -u)
+old=" $(pgrep -u "$me" -x cc-connect 2>/dev/null | tr '\n' ' ') "
+kept=
+for q in $old; do pp=$(ps -o ppid= -p "$q" 2>/dev/null | tr -d ' '); [ -n "$pp" ] && [ "$pp" != 1 ] && kept=1; done
 pkill -u "$me" -x cc-connect 2>/dev/null
+if [ -n "$kept" ]; then
+  i=0
+  while [ $i -lt 15 ]; do
+    for q in $(pgrep -u "$me" -x cc-connect 2>/dev/null); do case $old in *" $q "*) ;; *) echo R; exit 0 ;; esac; done
+    sleep 1; i=$((i + 1))
+  done
+fi
 i=0
 while pgrep -u "$me" -x cc-connect >/dev/null 2>&1 && [ $i -lt 10 ]; do sleep 1; i=$((i + 1)); done
 pkill -9 -u "$me" -x cc-connect 2>/dev/null
@@ -57,11 +68,13 @@ mod tests {
 
     #[test]
     fn it_stops_the_old_one_and_starts_through_a_login_shell_in_the_background() {
-        let script = restart_script(Some("/opt/cc-connect"));
+        let script = restart_script(Some("/opt/cc-connect"), Some("http://127.0.0.1:37897"));
         assert!(script.starts_with("exe='/opt/cc-connect'\n"));
         let stop = script.find("pkill -u \"$me\" -x cc-connect").unwrap();
         let start = script.find("nohup \"$@\"").unwrap();
         assert!(stop < start);
+        assert!(script.find("export http_proxy").unwrap() < start, "cc-connect starts with the tunnel's proxy");
+        assert!(script.contains("[ -n \"$kept\" ]") && script.find("echo R; exit 0").unwrap() < start, "a cc-connect its own loop brings back is left to that loop");
         assert!(script.contains("command -v bash >/dev/null 2>&1 && set -- bash -lc"));
         assert!(script.contains("exec \"$FUYU_CC_EXE\" --config \"$HOME/.cc-connect/config.toml\"' >\"$d/fuyu.log\" 2>&1 </dev/null &"));
     }

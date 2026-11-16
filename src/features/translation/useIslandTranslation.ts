@@ -1,13 +1,12 @@
 import { useCallback } from "react";
-import { presentTranslationWindow, toggleTranslationWindow } from "../../features/translation/api";
+import { presentTranslationWindow, toggleTranslationWindow } from "./api";
 import { requestTranslationHandoffOpen } from "../../lib/translation-handoff/storage";
-import type { IslandPage } from "./types";
 
 function reportOpenFailure(error: unknown) {
   console.error("Failed to open translation", error);
 }
 
-export function useIslandTranslation(inIsland: boolean, openIslandPage: (page: IslandPage) => void) {
+export function useIslandTranslation(inIsland: boolean, openIslandPage: (page: "translation") => void) {
   const openTranslator = useCallback(() => {
     if (inIsland) openIslandPage("translation");
     else void toggleTranslationWindow().catch(reportOpenFailure);

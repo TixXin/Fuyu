@@ -2,6 +2,7 @@ import type { ComponentProps } from "react";
 import { Bell } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot, type IslandCollapsedMeta, type IslandHeaderMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
+import { runIslandAction, useIslandContributed } from "../../plugin-kernel/useIslandContributions";
 import type { Translations } from "../../../i18n";
 import { MessageSourceIcon } from "../MessageSourceIcon";
 import type { MailController } from "../mail/MailPanel";
@@ -11,7 +12,6 @@ import { islandPage } from "./page.ts";
 
 type Panel = ComponentProps<typeof MessagesPanel>;
 type Arrivals = ComponentProps<typeof MessageArrivalsPanel>;
-type MediaCommand = "media_previous" | "media_play_pause" | "media_next";
 
 type MessagesPageProps = {
   features: Panel["enabledSources"];
@@ -28,10 +28,6 @@ type MessagesPageProps = {
     clearAll: Arrivals["onClearAll"];
   };
   openMessages: Panel["onSourceChange"];
-  media: {
-    mediaState: { playbackStatus: string };
-    runMediaCommand: (command: MediaCommand) => Promise<void> | void;
-  };
   onOpenSettings: (section: "mail") => void;
 };
 
@@ -46,16 +42,16 @@ type HeaderContext = {
 
 const pageSlot = defineSlot<MessagesPageProps, IslandPageMeta<Readonly<Record<string, unknown>>>>("island.page/v1");
 
-function MessagesPage({ features, qqMail, qqNotifications, wechatReminders, messageSource, messagePanel, openMessages, media, onOpenSettings }: MessagesPageProps) {
-  const { mediaState, runMediaCommand } = media;
+function MessagesPage({ features, qqMail, qqNotifications, wechatReminders, messageSource, messagePanel, openMessages, onOpenSettings }: MessagesPageProps) {
+  const playing = useIslandContributed().hints.has("media.playing");
   return (
     <div className="message-panel">
       {messagePanel?.arrivals ? (
         <MessageArrivalsPanel arrivals={messagePanel.arrivals} onOpen={messagePanel.open} onAction={messagePanel.runAction} onMeasure={messagePanel.measure} onShowAll={messagePanel.showAll} onClearAll={messagePanel.clearAll} media={{
-          playing: mediaState.playbackStatus === "playing",
-          onPrevious: () => void runMediaCommand("media_previous"),
-          onPlayPause: () => void runMediaCommand("media_play_pause"),
-          onNext: () => void runMediaCommand("media_next"),
+          playing,
+          onPrevious: () => void runIslandAction("media.previous"),
+          onPlayPause: () => void runIslandAction("media.play-pause"),
+          onNext: () => void runIslandAction("media.next"),
         }} />
       ) : <MessagesPanel qqMail={qqMail} qqNotifications={qqNotifications} wechatReminders={wechatReminders} source={messageSource} enabledSources={features} onSourceChange={openMessages} onOpenMailSettings={() => onOpenSettings("mail")} />}
     </div>

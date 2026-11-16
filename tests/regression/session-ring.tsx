@@ -15,18 +15,10 @@ import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
-import type { MediaState } from "../../src/features/media/api";
 import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
-const UNAVAILABLE_MEDIA: MediaState = {
-  available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable",
-  title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0,
-  canSeek: false, canNext: false, canPrevious: false, shuffleActive: null, canShuffle: false,
-  repeatMode: "unknown", canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null,
-  sessions: [], updatedAt: 0,
-};
 const keys = ["fuyu-qq-notifications-enabled", "fuyu-wechat-reminders-enabled", "fuyu-qq-mail-settings"];
 const originals = keys.map((key) => localStorage.getItem(key));
 keys.forEach((key) => localStorage.removeItem(key));
@@ -70,19 +62,18 @@ const NO_AGENTS: AgentActivity[] = [];
 
 let corners: CSSProperties = {};
 
-function Island({ agents, count, list, report }: { agents: boolean; count: number; list: AgentSessionSummary[]; report: (slots: CollapsedSlots) => void }) {
+function Island({ agents, count, list, report, look }: { agents: boolean; count: number; list: AgentSessionSummary[]; report: (slots: CollapsedSlots) => void; look: CSSProperties }) {
   const slots = useCollapsedSlots({ paused: true, agents: NO_AGENTS, sessions: list, unseen: UNSEEN, agentsOn: agents, onOpenAgents: OPEN_AGENTS, markLight: false });
   report(slots);
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const preview = useLatestMessagePreview(qq, wechat, qqMail, NO_PLUGIN_NOTIFICATIONS);
-  return <div className="stage" style={{ "--collapsed-island-width": "300px", ...corners } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办" })} deviceUse={{ camera: [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
+  return <div className="stage" style={{ "--collapsed-island-width": "300px", ...look } as CSSProperties}>
+    <IslandShell lineSources={useFixtureLines({ todoTitle: "剩余3个待办" })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={preview}
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} activeAgentSessionCount={count}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState="idle" agentStatusLabel="AI Agent 空闲或已完成"
-      mediaState={UNAVAILABLE_MEDIA}
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents, translation: false, calendar: false, screenshots: false, timer: false }}
       shelfCount={null} collapsedSlots={slots}
       onOpenPage={(page) => { openedPage = page; }} onOpenMessages={() => {}}
@@ -110,7 +101,7 @@ async function mount(caption: string, agents: boolean, count = 2) {
   label.textContent = caption;
   fixtures.append(box, label);
   await act(async () => {
-    createRoot(box).render(<StrictMode><Island agents={agents} count={count} list={sessions} report={(next) => { slots = next; }} /></StrictMode>);
+    createRoot(box).render(<StrictMode><Island agents={agents} count={count} list={sessions} report={(next) => { slots = next; }} look={corners} /></StrictMode>);
   });
   for (let frame = 0; frame < 10; frame += 1) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 16)); });
   return [box.querySelector<HTMLElement>(".island__collapsed")!, slots] as const;

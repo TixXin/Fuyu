@@ -41,7 +41,7 @@ export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, ima
       <span className="clipboard-popup__pane-head">{head}</span>
       {image ? (
         <div className="clipboard-popup__pane-image">
-          <ClipboardImageViewer id={item.id} thumbnail={image.thumbnailDataUrl} width={image.width} height={image.height} controls={imageZoom} />
+          <ClipboardImageViewer id={item.id} version={item.kind === "image" && item.editedAt ? item.hash : undefined} thumbnail={image.thumbnailDataUrl} width={image.width} height={image.height} controls={imageZoom} />
           {item.kind === "files" && <p className="clipboard-popup__pane-files">{item.files?.[0]}</p>}
           {item.ocrText && <p><b>{text.ocr}</b>{item.ocrText}</p>}
         </div>

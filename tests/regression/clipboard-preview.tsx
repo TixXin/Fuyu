@@ -1,7 +1,7 @@
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";
-import { mockConvertFileSrc, mockIPC } from "@tauri-apps/api/mocks";
+import { mockConvertFileSrc, mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
@@ -9,6 +9,8 @@ import { ClipboardPreviewWindow } from "../../src/windows/clipboard/ClipboardPre
 import type { ClipboardHistoryItem } from "../../src/features/clipboard/api";
 import type { ClipboardPreviewPayload } from "../../src/features/clipboard/api";
 import { checkStay, pointer, renderStayFrame } from "./clipboard-preview-stay";
+import { checkEdit } from "./clipboard-preview-edit";
+import { checkImageEdit, imageEditInvoke } from "./clipboard-preview-image-edit";
 
 const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
@@ -21,12 +23,13 @@ mockIPC((command, args) => {
   return null;
 }, { shouldMockEvents: true });
 mockConvertFileSrc("windows");
+mockWindows("clipboard-preview");
 type Invoke = (command: string, args?: unknown, options?: unknown) => Promise<unknown>;
 const internals = (window as unknown as { __TAURI_INTERNALS__: { invoke: Invoke } }).__TAURI_INTERNALS__;
 const mockedInvoke = internals.invoke;
 internals.invoke = (command, args, options) => {
   if (command === "plugin:event|emit_to") calls.push(`${command}:${JSON.stringify(args ?? {})}`);
-  return mockedInvoke(command, args, options);
+  return imageEditInvoke(command, args, options, calls) ?? mockedInvoke(command, args, options);
 };
 
 const now = Date.now();
@@ -73,14 +76,15 @@ async function checkToolbar() {
   check(calls.includes(`set_clipboard_preview_size:${JSON.stringify({ size: "toggle-full" })}`), "双击顶栏在全屏和上次大小之间切换");
   check(document.querySelectorAll(".clipboard-preview__edge").length === 8, "四条边四个角都能拖着改大小");
 
-  const pin = $<HTMLButtonElement>(".clipboard-preview__icon")!;
+  const pinButton = () => $<HTMLButtonElement>(".clipboard-preview__icon[aria-label^='钉住'], .clipboard-preview__icon[aria-label='取消钉住']")!;
+  const pin = pinButton();
   await click(pin);
   check(pin.getAttribute("aria-pressed") === "true" && hint().includes("Esc") && reports().some((call) => call.includes('"pinned":true')), "点图钉：钉住，告诉剪贴板窗口，提示改成「Esc 已钉住」");
   await open("right");
-  check($<HTMLButtonElement>(".clipboard-preview__icon")!.getAttribute("aria-pressed") === "false", "重新打开预览时图钉复位");
+  check(pinButton().getAttribute("aria-pressed") === "false", "重新打开预览时图钉复位");
   await act(async () => { $(".clipboard-preview-window")!.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
   check(reports().some((call) => call.includes('"inside":true')), "鼠标进预览告诉剪贴板窗口");
-  await click(document.querySelectorAll<HTMLButtonElement>(".clipboard-preview__icon")[1]);
+  await click($<HTMLButtonElement>(".clipboard-preview__icon[aria-label='关闭预览']"));
   check(reports().some((call) => call.includes('"type":"close"')), "点 × 让剪贴板窗口关预览");
 }
 
@@ -111,6 +115,8 @@ async function runChecks() {
 
     await checkToolbar();
     await checkStay(check, calls);
+    await checkEdit(check, calls, TEXT, IMAGE, (item) => send(item));
+    await checkImageEdit(check, calls, IMAGE, (item) => send(item));
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {

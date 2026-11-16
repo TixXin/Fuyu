@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "../../i18n";
 import { ClipboardPopupPreview } from "../../features/clipboard/ClipboardPopupPreview";
+import { ClipboardPreviewEditor } from "../../features/clipboard/ClipboardPreviewEditor";
+import { useClipboardPreviewCommand } from "../../features/clipboard/useClipboardPreviewCommand";
 import {
   clipboardImageUrl, listenClipboardPreviewClosing, pasteClipboardText, listenClipboardPreviewItem, listenClipboardPreviewLayout, listenClipboardPreviewOpened,
   reportClipboardPreview, setClipboardPreviewSize, type ClipboardPreviewPayload, type ClipboardPreviewSide,
@@ -10,6 +12,7 @@ import { useWindowLight } from "../../lib/theme/useWindowLight";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { ClipboardPreviewBar } from "./ClipboardPreviewBar";
 import { ClipboardPreviewEdges } from "./ClipboardPreviewEdges";
+import { ClipboardImageEditor } from "./ClipboardImageEditor";
 import "../../features/clipboard/ClipboardPopup.css";
 import "./ClipboardPreviewWindow.css";
 
@@ -38,6 +41,7 @@ export function ClipboardPreviewWindow() {
   const [pinned, setPinned] = useState(false);
   const [opened, setOpened] = useState(0);
   const [closing, setClosing] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,6 +55,7 @@ export function ClipboardPreviewWindow() {
       setSide(next);
       setClosing(false);
       setPinned(false);
+      setEditing(false);
       setOpened((count) => count + 1);
     }).then(keep);
     void listenClipboardPreviewLayout((layout) => {
@@ -74,11 +79,18 @@ export function ClipboardPreviewWindow() {
     report({ type: "pinned", pinned: next });
   };
 
+  const item = payload?.item;
+  const editable = item?.kind === "text" || (item?.kind === "image" && Boolean(item.image));
+  useClipboardPreviewCommand((command) => {
+    if (command.type === "edit" && editable) setEditing(true);
+  });
+
   const words = t.clipboard.previewWindow;
-  const hint = pinned
+  const hint = editing && editable
+    ? { key: "Esc", text: text.cancel }
+    : pinned
     ? { key: "Esc", text: words.pinnedHint }
     : { key: text.spaceKey, text: payload?.holding ? (payload.stay ? words.releaseToKeep : text.releaseToClose) : text.closePreview };
-  const item = payload?.item;
   return (
     <div
       className={`clipboard-preview-window clipboard-preview-window--${side} clipboard-preview-window--${size}${closing ? " clipboard-preview-window--out" : ""}${light ? " island-light" : ""}`}
@@ -86,8 +98,21 @@ export function ClipboardPreviewWindow() {
       onPointerLeave={() => report({ type: "pointer", inside: false })}
     >
       <section key={opened} className="clipboard-popup clipboard-preview" aria-label={t.clipboard.popup.preview.label}>
-        <ClipboardPreviewBar hint={hint} size={size} pinned={pinned} onSize={changeSize} onTogglePin={togglePin} onClose={() => report({ type: "close" })} />
-        {item && (
+        <ClipboardPreviewBar
+          hint={hint}
+          size={size}
+          pinned={pinned}
+          editing={editing}
+          editLabel={item?.kind === "image" ? words.image.edit : undefined}
+          onEdit={editable ? () => setEditing(true) : undefined}
+          onSize={changeSize}
+          onTogglePin={togglePin}
+          onClose={() => report({ type: "close" })}
+        />
+        {item && editing && editable && (item.kind === "image"
+          ? <ClipboardImageEditor key={item.id} item={item} onDone={() => setEditing(false)} />
+          : <ClipboardPreviewEditor key={item.id} item={item} onDone={() => setEditing(false)} />)}
+        {item && !(editing && editable) && (
           <div key={item.id} className="clipboard-preview__content">
             <ClipboardPopupPreview
               entry={item}

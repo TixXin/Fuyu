@@ -1,15 +1,23 @@
 import { getAgentRemoteHosts } from "../../../features/agent-status/api";
 import {
   addCcConnectProject,
+  addCcConnectRemoteProject,
   cancelCcConnectFeishuSetup,
+  cancelCcConnectRemoteFeishuSetup,
   CC_CONNECT_PLUGIN_ID,
   checkCcConnectBot,
+  detectCcConnectAgents,
   getCcConnectFeishuSetup,
+  getCcConnectRemoteFeishuSetup,
   getCcConnectRemoteStatus,
   getCcConnectStatus,
   installCcConnect,
+  installCcConnectRemote,
   programSetting,
+  restartCcConnectRemote,
   sendCcConnectMessage,
+  sendCcConnectRemoteMessage,
+  startCcConnectRemoteFeishuSetup,
   type CcConnectBotCheck,
   type CcConnectFeishuSetup,
   type CcConnectNewProject,
@@ -24,7 +32,7 @@ import { isMacOS } from "../../../lib/platform";
 
 export type PushAgent = CcConnectSetupAgent;
 
-export type PushBlock = "macLocal" | "remoteSoon";
+export type PushBlock = "macLocal";
 
 export type PushTargetState = {
   installed: boolean;
@@ -110,11 +118,47 @@ export function localTarget(mac = isMacOS): PushTarget {
   };
 }
 
+const REMOTE_HOME = "~";
+
 export function remoteTarget(host: string): PushTarget {
-  return blockedTarget(`ssh:${host}`, host, targetSlug(host), true, "remoteSoon", async () => {
-    const status = await getCcConnectRemoteStatus(host, remotePath(host));
-    return { installed: status.exe !== null, running: status.running, agents: KNOWN_AGENTS, projects: status.projects, taken: status.projects.map((project) => project.name) };
-  });
+  let agents: Promise<readonly PushAgent[]> | null = null;
+  const detect = () => {
+    agents ??= detectCcConnectAgents(host).then(
+      (found) => found.map((entry) => entry.agent),
+      (reason: unknown) => {
+        agents = null;
+        throw reason;
+      },
+    );
+    return agents;
+  };
+  return {
+    id: `ssh:${host}`,
+    label: host,
+    slug: targetSlug(host),
+    remote: true,
+    blocked: null,
+    async read() {
+      const [status, found] = await Promise.all([getCcConnectRemoteStatus(host, remotePath(host)), detect()]);
+      return { installed: status.exe !== null, running: status.running, agents: found, projects: status.projects, taken: status.projects.map((project) => project.name) };
+    },
+    async install() {
+      await installCcConnectRemote(host, remotePath(host));
+    },
+    prepare: () => Promise.resolve(),
+    checkBot: (platform, token) => checkCcConnectBot(platform, token),
+    async addProject({ platform, ...project }) {
+      if (platform === "feishu") {
+        await startCcConnectRemoteFeishuSetup(host, remotePath(host), { project: project.project, agent: project.agent, workDir: REMOTE_HOME });
+        return;
+      }
+      await addCcConnectRemoteProject(host, { ...project, platform, workDir: REMOTE_HOME });
+      await restartCcConnectRemote(host, remotePath(host));
+    },
+    feishuProgress: () => getCcConnectRemoteFeishuSetup(),
+    cancelFeishu: () => cancelCcConnectRemoteFeishuSetup(),
+    send: (project, sessionKey, text) => sendCcConnectRemoteMessage(host, remotePath(host), project, sessionKey, text),
+  };
 }
 
 export async function listPushTargets(mac = isMacOS): Promise<PushTarget[]> {

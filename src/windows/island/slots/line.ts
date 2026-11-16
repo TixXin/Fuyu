@@ -1,16 +1,13 @@
 import type { ReactNode } from "react";
 import type { AgentSession } from "../../../features/agent-status/session";
 import type { CollapsedMeeting } from "../../../features/calendar/upcoming";
-import type { CurrentLyric } from "../../../features/media/lyrics/useCurrentLyric";
 import { defineSlot } from "../../../features/plugin-kernel/slots";
 
 export type CollapsedLineSources = {
   agentSession: AgentSession | null;
-  lyricLine: CurrentLyric | null;
   meeting: CollapsedMeeting | null;
   todoTitle: string | null;
   todoCount: number | null;
-  translationPeek: string | null;
   screenshotPeek: string | null;
 };
 

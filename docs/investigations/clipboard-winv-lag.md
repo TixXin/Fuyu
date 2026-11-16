@@ -43,21 +43,21 @@
 3. **第一次和连着几次**：隔几分钟没用后第一次唤起，和紧接着第二次、第三次唤起，哪个更卡？只有第一次卡，偏向 R3 / R4。
 4. 在 PowerShell 里运行 `echo $env:FUYU_WEBVIEW_LOW_MEMORY`，告诉我们有没有输出（排除 D48）。
 
-不测也可以直接按下面的计划做：D77 会加打点，做完后用打点的数字对比。
+不测也可以直接按下面的计划做：D79 会加打点，做完后用打点的数字对比。
 
 ## 计划
 
 两个任务互不改同一个文件，可以并行（一个 Rust、一个前端，同时最多 1 个要 cargo 编译）。
 
-### D77 剪贴板窗口唤起：打点，并去掉主线程的来回（Rust，Windows）
+### D79 剪贴板窗口唤起：打点，并去掉主线程的来回（Rust，Windows）
 
-- issue：#659（https://github.com/TixXin/fuyu/issues/659），D77、D78 都挂在这个 issue 下。
+- issue：#659（https://github.com/TixXin/fuyu/issues/659），D79、D78 都挂在这个 issue 下。
 - 做什么：
   1. 打点：设环境变量 `FUYU_CLIPBOARD_TRACE=1` 时，把「钩子消息到达 → toggle 各段 → show → set_focus → 前端回报第一帧」的毫秒数追加写到应用数据目录下的 `clipboard-open-trace.log`；不设时不做任何事。前端那一段由 D78 在第一帧画出来后 `emit` 一个事件回来，Rust 这边监听并写入（事件名两边在任务文件里约好，写进 `contracts.md`）。
   2. 把 `toggle` 里要用主线程的部分合成一次 `run_on_main_thread` 执行（取前台窗口、取显示器、定位、显示、聚焦都在里面），不再从监听线程一次次同步等主线程；尺寸和位置合成一次 `set_bounds` / 一次 `SetWindowPos`。
   3. 先 emit `clipboard-popup-opened`，再 show 的顺序保留（让页面先开始准备），其余行为不变：固定位置、跟随指针、居中、内容保护、取消序列粘贴、记下粘贴目标窗口都照旧。
 - `--scope`：`src-tauri/src/clipboard_history/popup.rs`、`src-tauri/src/clipboard_history/service.rs`、`src-tauri/src/clipboard_history/listener.rs`、新文件 `src-tauri/src/clipboard_history/open_trace.rs`、`src-tauri/src/clipboard_history/mod.rs`、`docs/architecture/contracts.md`
-- **和 D48 冲突**：D48（进行中，Mac 那台，owner `d48`）的 scope 里也有 `popup.rs`。D77 只动 `toggle` 的定位和显示部分，`webview_memory::showing` / `hidden` 两行原样保留。开工前先 `pnpm tasks conflicts`，并 SendMessage 告诉 D48 的会话。
+- **和 D48 冲突**：D48（进行中，Mac 那台，owner `d48`）的 scope 里也有 `popup.rs`。D79 只动 `toggle` 的定位和显示部分，`webview_memory::showing` / `hidden` 两行原样保留。开工前先 `pnpm tasks conflicts`，并 SendMessage 告诉 D48 的会话。
 - 做完：`cargo test --manifest-path src-tauri/Cargo.toml`（用 `pnpm heavy --`）、`pnpm build:exe`；在任务里写实测清单（Windows 真机：设 `FUYU_CLIPBOARD_TRACE=1` 后唤起 10 次，记下各段耗时；分别用 30 条和 500 条历史测）。
 
 ### D78 剪贴板窗口唤起时不整表重渲染（前端）
@@ -69,21 +69,21 @@
   3. 缩略图 `<img>` 加 `decoding="async"`、`loading="lazy"`。
   4. 窗口隐藏时收到 `clipboard-history-changed` 只记一笔「有更新」，显示时（opened 事件）再拉一次；显示中照旧实时拉。不能出现先显示旧数据再跳变的情况：拉取在 opened 事件里就开始，比 show 更早。
   5. `useAccentColor` 在 Windows 上 `visibilitychange` 时的 invoke，改到 opened 事件之后再做，不挡第一帧（只改剪贴板窗口用到的路径，不改全局行为的，就不动 `src/lib/theme/`）。
-  6. 打点：设了 trace 时，第一帧画出来后把耗时 emit 给 Rust（事件名和 D77 一致）。
+  6. 打点：设了 trace 时，第一帧画出来后把耗时 emit 给 Rust（事件名和 D79 一致）。
 - `--scope`：`src/features/clipboard/ClipboardPopup.tsx`、`ClipboardPopupList.tsx`、`ClipboardPopupRow.tsx`、`ClipboardRowLead.tsx`、`useClipboardHistory.ts`、`src/windows/clipboard/`，以及 `tests/regression/` 里剪贴板弹窗的回归页
 - 做完：`pnpm check`、`pnpm build`、`pnpm test:regression clipboard`（界面不该变，快照只在虚拟化后 DOM 结构确实变化时更新，并在提交说明里写清）。
 - 和 D51 的关系：剪贴板窗口里的 `setInterval` 顺手在隐藏时停掉，D78 做完后在 D51 的任务文件里记一笔「剪贴板窗口已由 D78 处理」。
 
 ### 第二阶段（只在需要时）
 
-D77、D78 合入后，请用户在 Windows 真机上按 D77 的实测清单测一轮。如果 show 到第一帧还是要几百毫秒（R4），再开一个 `[排查]` 会话，研究让隐藏的 WebView2 保持「可见」状态的办法（例如放到屏幕外而不是 hide，或者关掉 WebView2 的遮挡检测），先出数字再决定改不改。现在不建这个任务。
+D79、D78 合入后，请用户在 Windows 真机上按 D79 的实测清单测一轮。如果 show 到第一帧还是要几百毫秒（R4），再开一个 `[排查]` 会话，研究让隐藏的 WebView2 保持「可见」状态的办法（例如放到屏幕外而不是 hide，或者关掉 WebView2 的遮挡检测），先出数字再决定改不改。现在不建这个任务。
 
 ## 需要用户定的
 
 1. 可以先做上面「用户先测」的 4 样吗？还是直接派会话？（不影响派工，测了能更早确认方向。）
 2. 隐藏时不再实时拉历史，改成唤起时再拉（D78 第 4 条）：唤起那一刻会多一次 invoke，但隐藏时省掉每次复制的整表更新。可以吗？
-3. D77 会碰 D48 正在做的 `popup.rs`：可以和 D48 并行，D77 只动定位和显示（推荐）；或者等 D48 收尾后再做 D77。
+3. D79 会碰 D48 正在做的 `popup.rs`：可以和 D48 并行，D79 只动定位和显示（推荐）；或者等 D48 收尾后再做 D79。
 
 ## 收口
 
-D77、D78 的提交交给 `Fuyu-[总控] 全局` 整批合入；合入后请用户真机实测，再关 issue。进度更新在本文末尾。
+D79、D78 的提交交给 `Fuyu-[总控] 全局` 整批合入；合入后请用户真机实测，再关 issue。进度更新在本文末尾。

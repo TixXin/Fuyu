@@ -1,11 +1,7 @@
-import type { DeviceUse } from "../../features/device-use/api";
-import type { LevelChange } from "../../features/system-levels/api";
-import type { DeviceAlert } from "../../features/device-events/api";
 import type { CSSProperties, ReactNode } from "react";
 import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
 import type { AgentVisualState } from "../../features/agent-status/status";
 import type { AppearanceMode } from "../../lib/settings/types";
-import type { MediaState } from "../../features/media/api";
 import type { MessagePreview, MessageSource } from "../../features/messages/messagePreview";
 import type { MailController } from "../../features/messages/mail/MailPanel";
 import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
@@ -57,19 +53,14 @@ type IslandShellProps = {
   isTucked: boolean;
   isDetached: boolean;
   side?: IslandSide | null;
-  sideCover?: boolean;
   showTitle: boolean;
   showCollapsedText: boolean;
   lineSources: CollapsedLineSources;
   activeAgentSessionCount: number;
-  mediaState: MediaState;
   agentVisualState: AgentVisualState;
   agentStatusLabel: string;
   features: IslandFeatures;
   shelfCount: number | null;
-  deviceUse: DeviceUse;
-  levelPopup?: LevelChange | null;
-  deviceAlert?: DeviceAlert | null;
   quotaAlert?: QuotaAlert | null;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
@@ -113,19 +104,14 @@ export function IslandShell({
   isTucked,
   isDetached,
   side = null,
-  sideCover = false,
   showTitle,
   showCollapsedText,
   lineSources,
   activeAgentSessionCount,
-  mediaState,
   agentVisualState,
   agentStatusLabel,
   features,
   shelfCount,
-  deviceUse,
-  levelPopup = null,
-  deviceAlert = null,
   quotaAlert = null,
   onOpenPage,
   onWindowDragStart,
@@ -167,11 +153,8 @@ export function IslandShell({
     unreadCount,
     todoCount: lineSources.todoCount,
     shelfCount,
-    showCover: sideCover,
-    mediaState,
-    deviceUse,
-  };
-  useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null, showMusic: features.music === true });
+    };
+  useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null });
   const sideLayout = useSideColumnRows({ ...sideSources, onOpenPage, onOpenMessages }, collapsedSlots?.gauges ?? []);
   const sideHot = preview ? (preview.source === "qqMail" ? "mail" : "unread") : null;
   const sideHotIndex = sideLayout.shown.findIndex((row) => row.id === sideHot);
@@ -253,12 +236,7 @@ export function IslandShell({
           collapsedLabel={collapsedLabel}
           lineSources={lineSources}
           agentSessionCount={features.agents ? activeAgentSessionCount : null}
-          mediaState={mediaState}
-          showMusic={features.music}
           shelfCount={shelfCount}
-          deviceUse={deviceUse}
-          levelPopup={levelPopup}
-          deviceAlert={deviceAlert}
           quotaAlert={quotaAlert}
           agentVisualState={agentVisualState}
           onOpenPage={onOpenPage}
@@ -308,7 +286,7 @@ export function IslandShell({
         <IslandSideBubble
           top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}
           preview={preview}
-          alert={activeAlert && <AlertPopup alert={activeAlert} sources={{ deviceAlert, quotaAlert, levelPopup }} />}
+          alert={activeAlert && <AlertPopup alert={activeAlert} sources={{ quotaAlert }} />}
           onOpenPreview={() => (preview && preview.source !== "plugin" ? onOpenMessages(preview.source) : onOpenPage(page))}
         />
       )}

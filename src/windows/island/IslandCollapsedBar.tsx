@@ -1,13 +1,8 @@
 import { Fragment, type ReactNode } from "react";
 import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
 import type { AgentVisualState } from "../../features/agent-status/status";
-import type { MediaState } from "../../features/media/api";
-import { useAudible } from "../../features/media/useAudible";
 import { CollapsedMessageContent } from "../../features/messages/CollapsedMessageContent";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
-import type { DeviceUse } from "../../features/device-use/api";
-import type { LevelChange } from "../../features/system-levels/api";
-import type { DeviceAlert } from "../../features/device-events/api";
 import { messagePreviewText, type MessagePreview, type MessageSource } from "../../features/messages/messagePreview";
 import type { MailController } from "../../features/messages/mail/MailPanel";
 import type { QQNotificationsController } from "../../features/messages/qq-notifications/QQNotifications";
@@ -46,12 +41,7 @@ type IslandCollapsedBarProps = {
   collapsedLabel: string;
   lineSources: CollapsedLineSources;
   agentSessionCount: number | null;
-  mediaState: MediaState;
-  showMusic: boolean;
   shelfCount: number | null;
-  deviceUse: DeviceUse;
-  levelPopup: LevelChange | null;
-  deviceAlert: DeviceAlert | null;
   quotaAlert?: QuotaAlert | null;
   agentVisualState: AgentVisualState;
   onOpenPage: (page: IslandPage) => void;
@@ -98,12 +88,7 @@ export function IslandCollapsedBar({
   collapsedLabel,
   lineSources,
   agentSessionCount,
-  mediaState,
-  showMusic,
   shelfCount,
-  deviceUse,
-  levelPopup,
-  deviceAlert,
   quotaAlert = null,
   agentVisualState,
   onOpenPage,
@@ -118,7 +103,6 @@ export function IslandCollapsedBar({
   const t = useTranslation();
   const notch = useIslandNotch();
   const updateVersion = useUpdateReminder();
-  const audible = useAudible(mediaState.audioActive);
   const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } =
     useWindowDragGesture(isTucked, onWindowDragStart);
   const pulseClassName = [
@@ -127,7 +111,7 @@ export function IslandCollapsedBar({
   ].join(" ");
   const contributed = useIslandContributed();
   const activeAlert = useActiveAlert();
-  const alertSources = { deviceAlert, quotaAlert, levelPopup };
+  const alertSources = { quotaAlert };
   const lines = visibleLines(contributed.lines, showCollapsedText);
   const line = shownLine(lines);
   const peekLine = line?.drop ? line : null;
@@ -148,10 +132,8 @@ export function IslandCollapsedBar({
       : <span className={pulseClassName} {...{ [OPENS_BAR]: "" }} />,
     qqMail,
     updateVersion,
-    deviceUse,
-    shelfCount,
-    showMusic: showMusic && audible,
-    mediaState,
+      shelfCount,
+    hints: contributed.hints,
     agentSessionCount,
     slots,
     onOpenPage,
@@ -240,7 +222,7 @@ export function IslandCollapsedBar({
     </>
   );
   const alerted = notch !== null && activeAlert !== null;
-  const dropped = notch !== null && hasNotchDrop({ preview, notice, translationPeek: peekLine });
+  const dropped = notch !== null && hasNotchDrop({ preview, notice, peek: peekLine });
   const messaged = notch !== null && !alerted && !notice && preview !== null;
   const wings = alerted ? "alert" : messaged ? `message:${preview?.source}:${preview?.receivedAt}` : dropped ? "dropped" : "idle";
 

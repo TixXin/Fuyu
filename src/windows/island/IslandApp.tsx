@@ -7,7 +7,6 @@ import { todoEvents } from "../../features/calendar/todoEvents";
 import { IslandPages } from "./IslandPages";
 import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
-import { useQuickTranslation } from "../../features/translation/useQuickTranslation";
 import { useScreenshotText } from "../../features/screenshot/useScreenshotText";
 import { useScreenshotCard } from "../../features/screenshot/useScreenshotCard";
 import { useScreenshotNotice } from "../../features/screenshot/useScreenshotNotice";
@@ -17,7 +16,6 @@ import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
 import { IslandShell } from "./IslandShell";
-import { useMediaState } from "../../features/media/useMediaState";
 import type { TodoItem } from "../../features/todos/types";
 import { useIslandWindow } from "./useIslandWindow";
 import { getExpandedIslandHeight } from "./expandedHeight";
@@ -40,7 +38,6 @@ import { useTuckHold } from "./useTuckHold";
 import { useIslandShelf } from "./useIslandShelf";
 import { useIslandScreenshot } from "./useIslandScreenshot";
 import { useIslandHover } from "./useIslandHover";
-import { useIslandTranslation } from "./useIslandTranslation";
 import { usePluginPages } from "./usePluginPages";
 import { useMessageView } from "./useMessageView";
 import { useIslandBanner } from "./useIslandBanner";
@@ -60,9 +57,7 @@ import { useCollapsedSlots } from "./useCollapsedSlots";
 import { useTrayLanguage } from "./useTrayLanguage";
 import { useFirstRunGuide } from "./useFirstRunGuide";
 import { useSettingsFileSync } from "../../lib/settings-backup/useSettingsFileSync";
-import { useOnboardingDemo, withDemoMedia } from "./useOnboardingDemo";
-import { useIslandLyrics } from "./useIslandLyrics";
-import { useCoverColor } from "../../features/media/useCoverColor";
+import { useOnboardingDemo } from "./useOnboardingDemo";
 import { useIslandFirstHints } from "./useIslandFirstHints";
 import { useIslandNotice } from "./islandNotice";
 import { useIslandVoiceInput } from "./useIslandVoiceInput";
@@ -72,8 +67,8 @@ import { islandMarginY } from "./islandForm";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
-import { leadLine } from "../../features/plugin-kernel/islandContributions";
-import { useIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
+import { LINE_PRIORITY, leadLine } from "../../features/plugin-kernel/islandContributions";
+import { runIslandAction, useIslandContributed, useLineBelow, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { useLegacyAlerts } from "./legacyAlerts";
 import { useLegacyLines } from "./legacyLines";
@@ -81,10 +76,12 @@ import { overlaySlot } from "./slots/overlay";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useLegacyPopups } from "./legacyPopups";
 import { useLegacyStates } from "./legacyStates";
-import { useLegacyStyle } from "./legacyStyle";
 import type { IslandPage } from "./types";
 
 const NO_TODOS: TodoItem[] = [];
+const openTranslator = () => {
+  runIslandAction("translation.open");
+};
 
 export function IslandApp() {
   const t = useTranslation();
@@ -104,7 +101,6 @@ export function IslandApp() {
   const { messageSource, setMessageSource, openMessages } = useMessageView(qqMail.closeReader, openIslandPage);
   const banner = useIslandBanner({ messageNotice: settings.messageNotice, notices, mode, isTucked, quiet: game.quiet, onOpenMessages: openMessages });
   const showsMessage = hasMessagePreview || banner.showing;
-  const media = withDemoMedia(useMediaState(settings.musicEnabled), demo);
   const { agentStatus, agentSessions, listedAgentSessions, activeAgentSessionCount, unseenAgentSessions, agentRemoval, agentSession: namedAgent, agentInterjection, agentActivity, agentUsages } =
     useIslandAgents(settings, demo.sessions);
   useIslandAutoUpdate({ mode, sessions: agentSessions });
@@ -130,8 +126,6 @@ export function IslandApp() {
   const screenshotNotice = useScreenshotNotice(screenshotCard, agentSessions);
   const copyCard = useClipboardCopyCard(!game.quiet);
   const recording = useRecording();
-  const quickPeek = useQuickTranslation(settings.translationEnabled);
-  const translationPeek = quickPeek ?? screenshotText;
   const firstHints = useIslandFirstHints({
     mode,
     isTucked,
@@ -140,12 +134,9 @@ export function IslandApp() {
   });
   const notch = useIslandNotch();
   const barText = settings.showCollapsedText && !notch;
-  const { lyrics, lyricLine: currentLyric } = useIslandLyrics(settings, media.mediaState, {
-    page,
-    barShown: mode === "collapsed" && !isTucked && barText,
-  });
-  const agentSession = settings.agentTitleMode === "changes" || (currentLyric && settings.lyricsIslandPriority === "lyrics") ? agentInterjection : namedAgent;
-  const lyricLine = agentSession ? null : currentLyric;
+  const below = useLineBelow(LINE_PRIORITY.agentInterjection);
+  const lyricsAhead = below?.shareable === true && below.priority > LINE_PRIORITY.agentTitle;
+  const agentSession = settings.agentTitleMode === "changes" || lyricsAhead ? agentInterjection : namedAgent;
   const { collapsedTaskTitle, collapsedTodoCount } = useCollapsedTodo(
     settings.todoEnabled ? todos : NO_TODOS,
     settings.todoEnabled ? activeTodoId : null,
@@ -155,30 +146,29 @@ export function IslandApp() {
   const timedTodos = useMemo(() => (settings.todoEnabled ? todoEvents(todos, Date.now(), t.island.todoList) : []), [settings.todoEnabled, t, todos]);
   const calendar = useCalendar(settings.calendarEnabled, settings.calendarRemindMinutes, timedTodos);
   const lineSources = useLegacyLines({
-    barText, agentSession, lyricLine, todoTitle: collapsedTaskTitle, todoCount: collapsedTodoCount,
+    barText, agentSession, todoTitle: collapsedTaskTitle, todoCount: collapsedTodoCount,
     interjecting: agentSession !== null && agentSession === agentInterjection,
     agentIconWidth: collapsedSlots.agentIconWidth ?? 0,
-    lyricsFirst: settings.lyricsIslandPriority === "lyrics",
     meeting: calendar.upcoming && settings.calendarEnabled ? { upcoming: calendar.upcoming, showTitle: settings.calendarShowTitle } : null,
-    translationPeek: quickPeek, screenshotPeek: quickPeek === null ? screenshotText : null,
+    screenshotPeek: screenshotText,
   });
-  useLegacyAlerts({ deviceAlert: notices.deviceAlert, quotaAlert, levelPopup: notices.levelPopup });
+  useLegacyAlerts({ quotaAlert });
   const { lines: contributedLines, alerts, popups, style, settled } = useIslandContributed();
   const textWidth = useCollapsedWidth({
     barText,
     noticeText: firstHints.current ? t.island.firstHint[firstHints.current] : null,
     showTitle: settings.showTitle,
     widthExtra: settings.collapsedWidthExtra,
-    peeking: banner.hasLinePreview || translationPeek !== null,
+    peeking: banner.hasLinePreview || contributedLines.some((line) => line.drop === true),
     slots: collapsedSlots,
   });
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
   useLegacyStates({
     showsMessage,
     prompting: permissionPrompts.current !== null || screenshotCard.current !== null,
-    peeking: Boolean(translationPeek),
+    peeking: Boolean(screenshotText),
     recording: recording.shown,
-    hold: useTuckHold(settings, { todos, activeTodoId, agentSessions, playing: media.mediaState.playbackStatus === "playing", messagesOpen: mode === "expanded" && page === "qq", notices }),
+    hold: useTuckHold(settings, { todos, activeTodoId, agentSessions, messagesOpen: mode === "expanded" && page === "qq", notices }),
     agentsActive: settings.agentStatusEnabled && activeAgentSessionCount > 0,
   });
   useIslandTucking({ settings, navigation });
@@ -228,12 +218,8 @@ export function IslandApp() {
   const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
   const look = useMemo(() => (mode !== "collapsed" ? surfaceThemeColors(settings, "panel") : notch ? notchLook(settings) : surfaceThemeColors(settings, "collapsed")), [mode, notch, settings]);
   const accent = useAccentColor(settings);
-  const coverOn = settings.musicEnabled && settings.lyricsCoverColor;
-  const glassCover = settings.appearanceMode === "liquidGlass" && settings.musicEnabled && settings.glassColorSource === "cover";
-  const coverColor = useCoverColor(media.mediaState.thumbnail, coverOn || glassCover);
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();
-  useLegacyStyle({ cover: coverOn, coverColor, glassTint: glassCover && media.mediaState.playbackStatus === "playing" ? coverColor : null, background: look.islandBackgroundColor, accent });
   const { glass, glassStyle } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: style.tint, mode, isTucked, quiet: game.quiet, reducedMotion });
   const stageStyle = useMemo(
     () => ({
@@ -268,7 +254,7 @@ export function IslandApp() {
   const voice = useIslandVoiceInput(addTodoOn, notebookProps);
   const islandNotice = useIslandNotice({ recording, voice, screenshotNotice, copyCard, firstHints });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
-    preview: banner.barPreview, notice: islandNotice !== null, translationPeek,
+    preview: banner.barPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
   }));
   const hoverTucked = useIslandHover({
     settings,
@@ -294,13 +280,11 @@ export function IslandApp() {
 
   const { agentVisualState, agentStatusLabel } = useAgentIndicator(agentStatus, settings, activeAgentSessionCount, t);
 
-  const { openTranslator, openTranslationPeek } = useIslandTranslation(features.translation, openIslandPage);
-  useIslandAction("translation.open-peek", openTranslationPeek);
   useSettleIslandContributions();
 
   return (
     <main className={`stage stage--font-${settings.fontFamily}${isLightIsland(look.islandBackgroundColor) ? " island-light" : ""}${style.classNames.map((name) => ` ${name}`).join("")}`} style={stageStyle}>
-      <IslandRunners mode={mode} page={page} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
+      <IslandRunners mode={mode} page={page} isTucked={isTucked} quiet={game.quiet} barText={barText} demo={demo} background={look.islandBackgroundColor} accent={accent} settings={settings} features={features} openIslandPage={openIslandPage} openEnabledPage={openEnabledPage} collapseIsland={collapseIsland} tuckIsland={tuckIsland} revealIsland={revealIsland} />
       <IslandShell
         qqMail={qqMail}
         qqNotifications={qqNotifications}
@@ -317,19 +301,15 @@ export function IslandApp() {
         glass={glass}
         isTucked={isTucked}
         isDetached={isPositionDetached || islandMarginY(settings) > 0}
-        side={side} sideCover={settings.sideMusicCover}
+        side={side}
         showTitle={settings.showTitle}
         showCollapsedText={barText}
         lineSources={lineSources}
         activeAgentSessionCount={activeAgentSessionCount}
-        mediaState={media.mediaState}
         agentVisualState={agentVisualState}
         agentStatusLabel={agentStatusLabel}
         features={features}
         shelfCount={settings.shelfEnabled && settings.shelfShowCount ? fileShelf.items.length : null}
-        deviceUse={notices.deviceUse}
-        levelPopup={notices.levelPopup}
-        deviceAlert={notices.deviceAlert}
         quotaAlert={quotaAlert}
         onOpenPage={openEnabledPage}
         onWindowDragStart={startIslandDrag}
@@ -368,8 +348,6 @@ export function IslandApp() {
           messageSource={messageSource}
           messagePanel={messagePanel}
           openMessages={openMessages}
-          media={media}
-          lyrics={lyrics}
           clipboard={clipboard}
           agentSessions={listedAgentSessions}
           unseenAgentSessions={unseenAgentSessions}

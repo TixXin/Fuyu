@@ -66,8 +66,12 @@ export type IslandContributed = {
   settled: boolean;
 };
 
+export const ISLAND_SIDE_ROW_HEIGHT = 28;
+export const ISLAND_SIDE_COVER_HEIGHT = 40;
+
 export const LINE_PRIORITY = {
   peek: 70,
+  screenshotPeek: 69,
   meeting: 60,
   agentInterjection: 50,
   lyricsFirst: 45,

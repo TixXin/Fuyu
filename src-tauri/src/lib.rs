@@ -51,6 +51,8 @@ mod tray_mark;
 mod tray_visibility;
 mod user_error;
 mod voice_input;
+#[cfg_attr(not(windows), path = "wallpaper/unsupported.rs")]
+mod wallpaper;
 #[cfg_attr(not(windows), path = "webview_recovery_unsupported.rs")]
 mod webview_recovery;
 #[cfg_attr(not(windows), path = "webview_memory_unsupported.rs")]
@@ -292,7 +294,8 @@ pub fn run() {
             platform_support;
             tray;
             tray_menu;
-            tray_visibility
+            tray_visibility;
+            wallpaper
         ))
         .build(context)
         .map(|app| {

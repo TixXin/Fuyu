@@ -103,8 +103,8 @@ export const zhCN: SettingsLayoutText = {
   trayIconHiddenHintMac: "图标隐藏后，从「应用程序」文件夹、启动台或 Spotlight 再次打开浮屿，会弹出这一页。",
   trayCard: "托盘卡片样式",
   trayCardMac: "菜单栏卡片样式",
-  trayCardHint: "左键点托盘图标弹出的卡片；右键仍是原生菜单。",
-  trayCardHintMac: "点菜单栏图标弹出的卡片；按住 Control 点按或右键仍是原生菜单。",
+  trayCardHint: "点托盘图标（左键或右键）弹出的卡片。",
+  trayCardHintMac: "点菜单栏图标（含按住 Control 点按或右键）弹出的卡片。",
   trayCardOffHint: "托盘图标隐藏时用不到卡片。",
   trayCardOffHintMac: "菜单栏图标隐藏时用不到卡片。",
   trayCardLayouts: {
@@ -171,8 +171,8 @@ export const en: SettingsLayoutText = {
   trayIconHiddenHintMac: "While the icon is hidden, opening Fuyu again from Applications, Launchpad or Spotlight brings up this page.",
   trayCard: "Tray card style",
   trayCardMac: "Menu bar card style",
-  trayCardHint: "The card that opens when you click the tray icon. Right-click still opens the native menu.",
-  trayCardHintMac: "The card that opens when you click the menu bar icon. Control-click or right-click still opens the native menu.",
+  trayCardHint: "The card that opens when you click the tray icon (left or right click).",
+  trayCardHintMac: "The card that opens when you click the menu bar icon, including Control-click and right-click.",
   trayCardOffHint: "The card isn't available while the tray icon is hidden.",
   trayCardOffHintMac: "The card isn't available while the menu bar icon is hidden.",
   trayCardLayouts: {

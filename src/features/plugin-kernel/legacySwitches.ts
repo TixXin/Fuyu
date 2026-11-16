@@ -5,6 +5,9 @@ export const LEGACY_SWITCHES = {
   translationEnabled: "translation",
   calendarEnabled: "calendar",
   shelfEnabled: "file-shelf",
+  deviceAlerts: "device-events",
+  levelPopup: "system-levels",
+  deviceUseIndicator: "device-use",
 } as const satisfies Partial<Record<keyof IslandSettings, string>>;
 
 export type LegacySwitch = keyof typeof LEGACY_SWITCHES;

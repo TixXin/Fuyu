@@ -2,7 +2,7 @@ import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
-import type { ClipboardPreviewCommand, ClipboardPreviewDragPhase, ClipboardPreviewEdge, ClipboardPreviewReport, ClipboardPreviewSize, ClipboardPreviewSizeRequest } from "./previewCommands";
+import type { ClipboardPreviewCommand, ClipboardPreviewDragPhase, ClipboardPreviewEditEnd, ClipboardPreviewEdge, ClipboardPreviewReport, ClipboardPreviewSize, ClipboardPreviewSizeRequest } from "./previewCommands";
 
 export type ClipboardHistorySettings = {
   enabled: boolean;
@@ -94,6 +94,7 @@ export type ClipboardHistoryItem = {
   pinKey?: string;
   pinOrder?: number;
   truncated?: boolean;
+  editedAt?: number;
 };
 
 export type ClipboardHistorySnapshot = {
@@ -151,6 +152,14 @@ export function pasteClipboardText(text: string, enter = false) {
 export function addClipboardHistoryText(text: string) {
   return invoke<ClipboardHistorySnapshot>("add_clipboard_history_text", { text });
 }
+
+export const editClipboardHistoryText = (id: string, text: string) => invoke<ClipboardHistorySnapshot>("edit_clipboard_history_text", { id, text });
+export const undoClipboardHistoryEdit = (id: string) => invoke<ClipboardHistorySnapshot>("undo_clipboard_history_edit", { id });
+export const readClipboardHistoryImage = (id: string) => invoke<ArrayBuffer>("read_clipboard_history_image", { id });
+export const saveClipboardHistoryImage = (id: string, image: ImageData, mode: "replace" | "new") =>
+  invoke<ClipboardHistorySnapshot>("save_clipboard_history_image", new Uint8Array(image.data.buffer, image.data.byteOffset, image.data.byteLength), {
+    headers: { "x-id": id, "x-width": String(image.width), "x-height": String(image.height), "x-mode": mode },
+  });
 
 export function pauseClipboardCapture(minutes: number | null) {
   return invoke<ClipboardHistorySnapshot>("pause_clipboard_capture", { minutes });
@@ -235,6 +244,8 @@ export function listenClipboardPopupBlur(handler: () => void) {
     if (!focused) handler();
   });
 }
+
+export const listenClipboardPreviewBlur = listenClipboardPopupBlur;
 
 export function toggleClipboardFavorite(id: string) {
   return invoke<ClipboardHistorySnapshot>("toggle_clipboard_history_favorite", { id });
@@ -350,8 +361,9 @@ export type ClipboardPreviewPayload = {
 export type ClipboardPeek = { item: ClipboardHistoryItem; holding: boolean; prefetch: string[]; stay?: boolean };
 export type ClipboardPreviewLayout = { side: ClipboardPreviewSide; size: ClipboardPreviewSize };
 
-export function clipboardImageUrl(id: string) {
-  return convertFileSrc(id, IMAGE_SCHEME);
+export function clipboardImageUrl(id: string, version?: string) {
+  const url = convertFileSrc(id, IMAGE_SCHEME);
+  return version ? `${url}?v=${encodeURIComponent(version.slice(0, 16))}` : url;
 }
 
 export function showClipboardPreview() {
@@ -374,14 +386,13 @@ export function listenClipboardPreviewOpened(handler: (side: ClipboardPreviewSid
   return listen<ClipboardPreviewSide>(OPENED_EVENT, ({ payload }) => handler(payload));
 }
 
-export function listenClipboardPreviewClosing(handler: () => void) {
-  return listen(CLOSING_EVENT, () => handler());
-}
+export const listenClipboardPreviewClosing = (handler: () => void) => listen(CLOSING_EVENT, () => handler());
 
 export const listenClipboardPreviewLayout = (handler: (layout: ClipboardPreviewLayout) => void) => listen<ClipboardPreviewLayout>(LAYOUT_EVENT, ({ payload }) => handler(payload));
 export const setClipboardPreviewSize = (size: ClipboardPreviewSizeRequest) => invoke<ClipboardPreviewLayout>("set_clipboard_preview_size", { size });
 export const resizeClipboardPreview = (edge: ClipboardPreviewEdge, dx: number, dy: number, phase: ClipboardPreviewDragPhase) => invoke<void>("resize_clipboard_preview", { edge, dx, dy, phase });
 export const clipboardPreviewHasPointer = () => invoke<boolean>("clipboard_preview_has_pointer");
+export const setClipboardPreviewEditing = (editing: boolean, then: ClipboardPreviewEditEnd = "refocus") => invoke<void>("set_clipboard_preview_editing", { editing, then });
 export const sendClipboardPreviewCommand = (command: ClipboardPreviewCommand) => emitTo(CLIPBOARD_PREVIEW_WINDOW, COMMAND_EVENT, command);
 export const listenClipboardPreviewCommand = (handler: (command: ClipboardPreviewCommand) => void) => listen<ClipboardPreviewCommand>(COMMAND_EVENT, ({ payload }) => handler(payload));
 export const reportClipboardPreview = (report: ClipboardPreviewReport) => emitTo("clipboard", REPORT_EVENT, report);

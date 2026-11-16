@@ -82,19 +82,19 @@ test("Agent page rows and the Agent settings", async () => {
   assert.equal(getAgentPageExpandedHeight(4, 0, "cards") - getAgentPageExpandedHeight(3, 0, "cards"), 68);
   assert.equal(getAgentPageExpandedHeight(4, 0, "compact") - getAgentPageExpandedHeight(3, 0, "compact"), 38);
   assert.equal(getAgentPageExpandedHeight(1, 0, "cards"), getAgentPageExpandedHeight(0, 0, "cards") + 62 + 6 - 6 + 6);
-  assert.equal(DEFAULT_SETTINGS.agentSessionView, "list");
-  assert.equal(normalizeSettings({ agentSessionView: "cards" }).agentSessionView, "cards");
-  assert.equal(normalizeSettings({ agentSessionView: "tiles" }).agentSessionView, "list");
+  assert.equal(DEFAULT_SETTINGS.agentSessionView, "cards");
+  assert.equal(normalizeSettings({ agentSessionView: "list" }).agentSessionView, "list");
+  assert.equal(normalizeSettings({ agentSessionView: "tiles" }).agentSessionView, "cards");
   assert.equal(DEFAULT_SETTINGS.agentSessionSort, "status");
   assert.equal(normalizeSettings({ agentSessionSort: "firstSeen" }).agentSessionSort, "firstSeen");
   assert.equal(normalizeSettings({ agentSessionGroup: "project" }).agentSessionGroup, "project");
   assert.equal(normalizeSettings({ agentSessionGroup: "tree" }).agentSessionGroup, "computer");
-  assert.equal(DEFAULT_SETTINGS.agentArchiveMotion, "slide");
-  assert.equal(normalizeSettings({ agentArchiveMotion: "dissolve" }).agentArchiveMotion, "dissolve");
-  assert.equal(normalizeSettings({ agentArchiveMotion: "explode" }).agentArchiveMotion, "slide");
-  assert.equal(DEFAULT_SETTINGS.agentCardEffects, "off");
-  assert.equal(normalizeSettings({ agentCardEffects: "sparkle" }).agentCardEffects, "sparkle");
-  assert.equal(normalizeSettings({ agentCardEffects: "rainbow" }).agentCardEffects, "off");
+  assert.equal(DEFAULT_SETTINGS.agentArchiveMotion, "dissolve");
+  assert.equal(normalizeSettings({ agentArchiveMotion: "slide" }).agentArchiveMotion, "slide");
+  assert.equal(normalizeSettings({ agentArchiveMotion: "explode" }).agentArchiveMotion, "dissolve");
+  assert.equal(DEFAULT_SETTINGS.agentCardEffects, "sparkle");
+  assert.equal(normalizeSettings({ agentCardEffects: "off" }).agentCardEffects, "off");
+  assert.equal(normalizeSettings({ agentCardEffects: "rainbow" }).agentCardEffects, "sparkle");
 
   assert.equal("agentVisibleRows" in normalizeSettings({ agentVisibleRows: 4 }), false);
 

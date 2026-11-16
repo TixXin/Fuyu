@@ -31,6 +31,19 @@ fi
     script
 }
 
+pub(super) const NO_HISTORY: &str = "case $- in *H*) set +H ;; esac\n";
+
+pub(super) fn proxy_env(proxy: Option<&str>) -> String {
+    let mut script = format!("{NO_HISTORY}p={}\n", sh_quote(proxy.unwrap_or_default()));
+    script.push_str(
+        r#"[ -n "$p" ] || p=$(bash -lc 'printf %s "${HTTPS_PROXY:-${https_proxy:-}}"' 2>/dev/null </dev/null)
+case $p in *[!A-Za-z0-9:/._@%-]*) p= ;; esac
+[ -n "$p" ] && export http_proxy="$p" https_proxy="$p" HTTP_PROXY="$p" HTTPS_PROXY="$p" no_proxy=localhost,127.0.0.1,::1 NO_PROXY=localhost,127.0.0.1,::1
+"#,
+    );
+    script
+}
+
 pub(super) fn in_login_shell(script: &str) -> String {
     let quoted = sh_quote(script);
     format!("if command -v bash >/dev/null 2>&1; then bash -lc {quoted} </dev/null; else sh -c {quoted} </dev/null; fi\n")
@@ -42,7 +55,7 @@ pub(super) fn tilde(var: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{find_exe, in_login_shell, sh_quote, tilde};
+    use super::{find_exe, in_login_shell, proxy_env, sh_quote, tilde};
 
     #[test]
     fn words_are_quoted_for_sh() {
@@ -56,6 +69,14 @@ mod tests {
         assert!(find.starts_with("exe='~/bin/cc-connect'\ncase $exe in \"~/\"*) exe=\"$HOME/${exe#??}\" ;; esac\n"));
         assert!(find.contains("[ -n \"$exe\" ] || exe=\"$HOME/.local/bin/cc-connect\"\n[ -x \"$exe\" ] || exe=\n"));
         assert_eq!(tilde("w"), "case $w in \"~\") w=\"$HOME\" ;; \"~/\"*) w=\"$HOME/${w#??}\" ;; esac\n");
+    }
+
+    #[test]
+    fn the_proxy_is_checked_with_history_expansion_off_and_exported() {
+        let env = proxy_env(Some("http://127.0.0.1:37897"));
+        assert!(env.starts_with("case $- in *H*) set +H ;; esac\np='http://127.0.0.1:37897'\n"));
+        assert!(env.contains("export http_proxy=\"$p\""));
+        assert!(proxy_env(None).contains("p=''\n[ -n \"$p\" ] || p=$(bash -lc"));
     }
 
     #[test]
