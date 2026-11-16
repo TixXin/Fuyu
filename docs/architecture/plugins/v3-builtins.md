@@ -67,6 +67,29 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 - 窗口用 `get_builtin_plugins` 读、听 `builtin-plugins-changed`（`features/plugin-kernel/builtinSwitches.ts`、`useBuiltinPlugins.ts`）；岛和设置窗口的插槽注册表按它调 `setDisabledOwners`，关掉的插件拥有的项不出现。设置 → 插件（第 3 版）列出全部内置插件、能开关；这一页在开发版里总会出现，正式版要设 `FUYU_PLUGINS_V3=1`。
 - 通用测试：Rust 的 `builtins_tests.rs` 按清单逐个关、逐个开，核对登记的后台都停了、又起来了；`tests/unit/builtin-switches.test.mjs` 用 Rust 写的格式让宿主逐个关掉计时器和翻译再打开。
 
+## 关掉后不留界面、不跑后台：三层检查（E36.3.27）
+
+计划「关键设计」第 6 条。每迁完一个功能，这三层都要过；新功能迁完不用另写检查，清单里有它就会被查到。
+
+| 层 | 在哪 | 查什么 |
+|---|---|---|
+| Rust | `plugin_kernel/builtins_tests.rs`（E36.3.23） | 逐个关、逐个开，登记的后台都停了、又起来了；清单没写 `background` 的跳过 |
+| 宿主 | `tests/unit/builtins-off.test.mjs` | 带全部内置插件起宿主，经 `plugins.yml` 逐个关：状态是 `disabled`，用量（受管定时器、监听器、服务、客户端）全是 0，不留服务和界面文件；关 → 开 → 关一轮后进程里的句柄（`process.getActiveResourcesInfo()`）不比关掉时多。另有一个故意用裸 `setInterval` 的假插件，证明漏了能查出来 |
+| 窗口 | 回归页 `builtins-off`（`pnpm test:regression builtins-off`） | 岛和设置窗口挂在一起，按插件逐个关掉后走一遍：折叠的岛、展开的岛、`island.page/v1` 的每一页、消息、设置的每个分类和标签页。三样算残留：注册表里它拥有的插槽项；只在它自己的 CSS 里定义的 class 还在页面上；只在它自己 `api.ts` 里出现的命令关掉后还在调、事件还在听 |
+
+窗口层的细节：
+
+- **哪些算迁完了**：在岛或设置窗口的插槽注册表里拥有至少一个项的插件。没迁完的跳过，结果里列成 `SKIP`，不算失败。清单的 `background` 不能当这个标准：E36.3.23 先给 8 个插件填了 `background: []`，它们的界面还没搬。`?all=1` 不管迁没迁完全都查（看还剩多少），`?only=timer,translation` 只查点名的。
+- **按领域记账**：`features/plugin-kernel/featureDomains.ts` 从源码里找出只属于一个插件的命令、事件（`api.ts`）和 class（`src/features/<root>/` 下的 CSS），几个功能共用的名字不算谁的。计时器的命令和事件都和岛、Agent 推送共用，所以它只能靠 class 查出来。`ipcLedger.ts` 包住 `__TAURI_INTERNALS__.invoke`，数每个命令调了几次、每个事件现在有几个监听。
+- 回归页自带一个假插件，证明「拥有者被关掉、项跟着消失」不算残留，「留在页面上的 class、还在调的命令、还在听的事件」都查得出。
+
+真岛上（开发版）还能看：
+
+- Rust 的 `plugin_kernel/diagnostics.rs`（只在开发版编译）向各窗口发 `builtin-diagnostics-request`，窗口用 `features/plugin-kernel/diagnostics.ts` 回 `builtin-diagnostics-report`（每个插件：拥有的插槽项、在听的事件、调过的命令、提供的服务），再加上宿主的 `status` 和开关表，一起给实验台的 `GET /v1/dev/builtins`。窗口的记账在 `slots.ts` 里随开发版启动装上。
+- `pnpm lab` 的「逐个关掉内置插件并核对」按钮：逐个关掉、等一会、核对上面三处有没有残留和关掉后还在调的命令，再打开；线程数一并列出（见 [实验台](../../features/island-lab.md)）。
+
+E36.3.27 用计时器和翻译做样板，`?only=timer,translation` 查出的残留：翻译的岛页还渲染 `.translation-panel*`，关掉后还在调 `has_translation_secret`、`set_translation_shortcut`、`set_translation_selection_shortcut`、`read_translation_clipboard`，还在听 `translation-selection`、`translation-island-shortcut`；计时器的岛页还渲染 `.timer-panel*`。宿主层两个都过（内核替它们收拾了）。修它们是 E36.3.28 / E36.3.29 的事。
+
 ## 内置插件的宿主部分怎么写
 
 - 放在 `src/features/<功能>/host/`，入口是清单里的 `host`。可以写 `.mjs`（配 `.d.mts`）或 `.ts`；可以 import 同一个功能里的纯函数（计时器 import `../timers.ts`），不复制。不能 import 浏览器的东西和 `@tauri-apps/api`（宿主是 Node）。`pnpm lint` 检查 `src/features/*/host/` 和 `packages/plugin-base/src/host/`（`eslint.config.js` 末尾那段）：禁止 `@tauri-apps/*`、`react`、`react-dom`、`lucide-react`、`dompurify`、`@fuyu/plugin-base/client`，以及 `api` / `api.ts`、`.tsx`、`.css`、`lib/`、`components/`、`windows/`、`client/` 下的模块（动态 `import()` 也拦），禁止用 `window`、`document`、`localStorage`、`sessionStorage`；测试在 `tests/scripts/host-lint.test.mjs`。用的是禁止名单而不是放行名单：放行名单要列每个领域的纯函数文件，每加一个内置插件都要改。lint 只看宿主文件自己的 import，它 import 的纯函数文件再往下 import 了什么查不到，那一层靠打包和加载时的报错。

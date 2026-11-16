@@ -47,4 +47,5 @@ export const SLOTS = {
   "island.dev/v1": { kind: "list", max: 3, perPlugin: 1, meta: [] },
   "settings.category/v1": { kind: "list", perPlugin: 2, meta: ["group", "icon", "tabs", "available", "feature", "aliases"] },
   "settings.section/v1": { kind: "list", perPlugin: 4, groupBy: "category", meta: ["category"] },
+  "settings.runner/v1": { kind: "list", perPlugin: 1, meta: [] },
 };

@@ -22,6 +22,10 @@
       "types": "./src/client/slots.d.mts",
       "default": "./src/client/slots.mjs"
     },
+    "./client/window-services": {
+      "types": "./src/client/window-services.d.mts",
+      "default": "./src/client/window-services.mjs"
+    },
     "./client/react": {
       "types": "./src/client/react.d.mts",
       "default": "./src/client/react.mjs"

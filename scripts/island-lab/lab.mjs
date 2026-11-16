@@ -1,6 +1,7 @@
 import {
   NOTCHES, PAGES, agentStatus, deviceAlert, levelChange, permissionRequest, pluginNotification, qqMessage, questionRequest, wechatMessage,
 } from "./actions.mjs";
+import { sweep } from "./builtins.mjs";
 
 const log = document.getElementById("log");
 const statusLine = document.getElementById("status");
@@ -21,6 +22,40 @@ async function call(method, route, body) {
   try { data = JSON.parse(text); } catch { data = text; }
   if (!response.ok) throw new Error(data?.error ?? `HTTP ${response.status}`);
   return data;
+}
+
+const data = (method, route, body) => call(method, route, body).then((answer) => answer?.data ?? answer);
+
+function showSweep(rows, done) {
+  let table = document.getElementById("builtins-table");
+  if (!table) {
+    const section = document.createElement("section");
+    section.className = "group";
+    section.innerHTML = '<h2>逐个关掉内置插件</h2><table id="builtins-table" class="sweep"><thead><tr><th>插件</th><th>关掉后还剩</th><th>线程数</th></tr></thead><tbody></tbody></table>';
+    document.getElementById("groups").prepend(section);
+    table = document.getElementById("builtins-table");
+  }
+  const body = table.querySelector("tbody");
+  body.replaceChildren(...rows.map((row) => {
+    const line = document.createElement("tr");
+    line.dataset.state = row.left.length ? "left" : "clean";
+    for (const text of [row.id, row.left.length ? row.left.join("；") : "没有残留", row.threads]) {
+      const cell = document.createElement("td");
+      cell.textContent = text;
+      line.append(cell);
+    }
+    return line;
+  }));
+  table.dataset.done = String(done);
+}
+
+async function sweepBuiltins() {
+  const rows = [];
+  note("开始逐个关掉内置插件，每个约 5 秒…");
+  await sweep(data, { onRow: (row) => { rows.push(row); showSweep(rows, false); } });
+  showSweep(rows, true);
+  const left = rows.filter((row) => row.left.length).length;
+  note(`核对完 ${rows.length} 个内置插件，${left} 个关掉后还有残留`, left ? "error" : "ok");
 }
 
 const emit = (event) => call("POST", "island/emit", event);
@@ -80,6 +115,9 @@ const GROUPS = [
     ["Claude 审批（Bash）", () => approval("claude", permissionRequest(now()))],
     ["Codex 审批", () => approval("codex", permissionRequest(now(), "codex"))],
     ["Claude 提问", () => approval("question", questionRequest(now()))],
+  ]],
+  ["内置插件", [
+    ["逐个关掉内置插件并核对", sweepBuiltins],
   ]],
   ["场景", [
     ["刘海 + 消息 + Agent 一起来", async () => {

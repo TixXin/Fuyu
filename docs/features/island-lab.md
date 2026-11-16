@@ -19,11 +19,12 @@
 | 消息、系统 | `POST /v1/dev/island/emit` 把事件原样发给岛，载荷和真后端发的一样 | 跳过了抓消息、读音量的原生代码，只测岛的界面 |
 | Agent 状态 | `PUT /v1/agent-status/lab`，和本地接口的同一套逻辑，来源记作 `island-lab/lab`；带机器名「实验台」，所以在 Agent 页上单独列一组，开着很多真会话时也看得见 | 是 |
 | 审批、提问 | 像 Claude Code / Codex 的 hook 一样往岛的审批端口发请求，等你在岛上点允许 / 拒绝 / 选项，页面记录里显示岛的回答 | 是，从头到尾 |
+| 内置插件 | 「逐个关掉内置插件并核对」：经 `PUT /v1/dev/builtins/<id>` 逐个关掉能关的内置插件（和设置里的开关是同一个命令），等一会再读 `GET /v1/dev/builtins`（开关表、宿主的状态和用量、各窗口的插槽项 / 监听 / 命令 / 服务），列出关掉后还留着的东西和进程线程数的变化，然后打开回去。核对的规则见 [内置插件](../architecture/plugins/v3-builtins.md)「三层检查」 | 是 |
 
 ## 实现
 
-- `scripts/island-lab/`：`server.mjs` 是一个只监听 127.0.0.1 的小服务，送出网页，并把按钮的请求转给岛：从 `island-lab.json`、`agent-approval.json`（先找岛的数据目录，再找应用数据目录）读端口和令牌，转发时不带 `Origin`。它只认自己那几条路径，也只接受来自本页面的请求，别的网页不能借它往岛上发东西。`actions.mjs` 是各按钮的载荷，`lab.mjs` 画按钮。
-- Rust：`local_api/lab.rs` 是开发版专用的监听（`#[cfg(debug_assertions)]`），只接 `/v1/health`、`/v1/dev/island/*` 和 `/v1/agent-status/*`，令牌每次启动重新生成；`local_api/dev_island.rs` 是那三条 `/v1/dev/island/*` 路径，本地接口在开发版里也认（正式版 404）。刘海覆盖在 `island/notch.rs`。
+- `scripts/island-lab/`：`server.mjs` 是一个只监听 127.0.0.1 的小服务，送出网页，并把按钮的请求转给岛：从 `island-lab.json`、`agent-approval.json`（先找岛的数据目录，再找应用数据目录）读端口和令牌，转发时不带 `Origin`。它只认自己那几条路径，也只接受来自本页面的请求，别的网页不能借它往岛上发东西。`actions.mjs` 是各按钮的载荷，`lab.mjs` 画按钮，`builtins.mjs` 是逐个关内置插件的流程和残留判断；线程数由 `server.mjs` 按岛的 pid 现查（macOS `ps -M`、Windows PowerShell、Linux `/proc`）。
+- Rust：`local_api/lab.rs` 是开发版专用的监听（`#[cfg(debug_assertions)]`），只接 `/v1/health`、`/v1/dev/island/*`、`/v1/dev/builtins`（E36.3.27，读诊断和开关内置插件，诊断在 `plugin_kernel/diagnostics.rs`）和 `/v1/agent-status/*`，令牌每次启动重新生成；`local_api/dev_island.rs` 是那三条 `/v1/dev/island/*` 路径，本地接口在开发版里也认（正式版 404）。刘海覆盖在 `island/notch.rs`。
 - 前端：`features/local-api/devIsland.ts` 处理 `emit` 和 `action`，只在开发版里接上（`import.meta.env.DEV`）；`windows/island/useDevIslandActions.ts` 把动作交给岛。
 - 测试：`tests/scripts/island-lab.test.mjs`（转发白名单、配置位置、载荷格式），`local_api/tests.rs` 的路径测试。
 

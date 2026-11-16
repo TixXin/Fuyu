@@ -121,6 +121,17 @@ export async function apply(ctx) {
 - 窗口的身份只有 label，**任何窗口都能调任何服务**：同权模型下没有按窗口的权限，这和方案一致。真正要收紧的是 Rust 命令的 capability，不在这里。
 - 窗口一侧的代理是 `@fuyu/plugin-base/client` 的 `createServiceProxy(call)`（`ServiceClient` 的同一套类型），用法见 v3-boundary.md「服务」。
 
+### 窗口里的服务表（E36.3.27）
+
+功能的界面部分之间互相调，用窗口里的服务表：`@fuyu/plugin-base/client/window-services` 的 `createWindowServices()`，浮屿的窗口里是 `src/features/plugin-kernel/services.ts` 的 `windowServices`（每个窗口一份）。
+
+- 和宿主同一套 `defineService` 定义、同一套错误码：`provide(定义, 实现, { owner: 插件 id })` 返回 `{ emit, dispose }`，`get(定义)` 返回和 `ctx.services.get` 一样的客户端（方法回 promise，`on(事件, 监听器)` 回取消函数）。
+- **先找本窗口，再找宿主**：本窗口有提供者就直接调；没有时经 `attach` 接上的宿主代理（`runtime.ts` 连上宿主后接）走 WebSocket；都没有回 `not-ready`。所以 `FUYU_PLUGINS_V3` 没开、宿主没起时，同一个窗口里的服务照常能用。同一个名字本窗口和宿主都有时，用本窗口的。
+- **跟着开关走**：`windowServices` 订阅了内置插件的开关表，拥有者被关掉时它提供的服务对调用方等于不存在（`not-ready`），正在等的调用回 `peer-gone`；打开后照常。提供者卸下（`dispose`）也一样。
+- 超时、流式进度（`onProgress`）、提供者抛出带 `code` 的错误原样传给调用方，和宿主一致；错误是 `HostCallError`（`code`、`message`、`data`）。
+- 事件：本窗口的提供者 `emit` 直接分给本窗口的监听器；接上宿主后，同名事件也从宿主转过来。
+- 测试 `packages/plugin-base/test/window-services.test.mjs`。
+
 ### 流式
 
 声明了 `progress: true` 的方法（`translator/v1` 的 `rewrite`）可以分几次推中间结果：
@@ -214,6 +225,7 @@ export async function apply(ctx) {
 | 测试 | `packages/plugin-services/test/define.test.mjs`（经转出测 `defineService`，已在 `pnpm test` 的范围里）、`types.check.mts`（在 `pnpm check:packages-types` 里）；`packages/plugin-base/test/services.test.mjs` 核对转出的是同一个函数、正则只有一个 | 这一轮 |
 | 宿主的服务表和窗口分发 | `packages/plugin-base/src/host/services.mjs`；`kernel.mjs` 装上访问器、`main.mjs` 的 `onCall`、快照和增量接上；测试 `packages/plugin-base/test/services.test.mjs` | 第二步，已做（Rust 来的 `service.call` 留给 E36.3.3，窗口来的 `progress` 留给 E36.3.8） |
 | 窗口的代理 | `packages/plugin-base/src/client/services.mjs`，测试 `test/service-proxy.test.mjs` 和 `services.test.mjs` 里经真 WebSocket 的那条 | 已做 |
+| 窗口里的服务表 | `packages/plugin-base/src/client/window-services.mjs`（子路径 `@fuyu/plugin-base/client/window-services`），浮屿的接线在 `src/features/plugin-kernel/services.ts`、`runtime.ts`；测试 `test/window-services.test.mjs` | E36.3.27，已做 |
 | Rust 生成的类型 | `packages/plugin-services/src/generated/`（`rust.d.mts`、`rust.mjs`），生成脚本 `scripts/plugins-v3/gen-rust-types.mjs`，宏在 `src-tauri/crates/plugin-base-macros` | E36.3.4，已做 |
 
 `plugin-base` 的源码**不 import `@fuyu/plugin-services`**（依赖是反过来的，`plugin-services` 依赖 `plugin-base`）：`plugin-base` 是要单独开源的基座，不能依赖浮屿的服务名单。它按形状认定义（`{ name, methods, events }`，和 `isServiceDefinition` 同一套检查）。

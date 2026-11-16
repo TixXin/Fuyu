@@ -40,6 +40,7 @@ export const PAGES = [
   "plugin-menus.html",
   "plugin-views.html?test=1",
   "plugins-v3.html",
+  "builtins-off.html",
   "plugin-slot.html",
   "settings.html?test=1",
   "settings-sidebar.html",

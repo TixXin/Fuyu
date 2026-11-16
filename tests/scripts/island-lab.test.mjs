@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
-import { configDirs, forwardTarget } from "../../scripts/island-lab/server.mjs";
+import { configDirs, forwardTarget, threadCount } from "../../scripts/island-lab/server.mjs";
+import { residueOf, sweep, switchable, threadsLine } from "../../scripts/island-lab/builtins.mjs";
 import { agentStatus, permissionRequest, qqMessage, questionRequest, wechatMessage } from "../../scripts/island-lab/actions.mjs";
 
 test("the lab forwards only its own routes to the island", () => {
@@ -41,4 +42,47 @@ test("agent and approval bodies match what the island expects", () => {
   assert.equal(typeof permission.session_id, "string");
   assert.equal(permission.tool_name, "Bash");
   assert.equal(questionRequest(1).tool_name, "AskUserQuestion");
+});
+
+test("the lab reads the built-in plugins and switches one, nothing else under /builtins", () => {
+  assert.deepEqual(forwardTarget("builtins", "GET"), { kind: "local", path: "/v1/dev/builtins" });
+  assert.deepEqual(forwardTarget("builtins/session-ring", "PUT"), { kind: "local", path: "/v1/dev/builtins/session-ring" });
+  assert.equal(forwardTarget("builtins", "PUT"), null);
+  assert.equal(forwardTarget("builtins/../todos", "PUT"), null);
+  assert.equal(forwardTarget("builtins/Timer", "PUT"), null);
+  assert.equal(threadCount(-1), null);
+});
+
+const diag = ({ enabled = false, running = false, state = "disabled", timers = 0, items = 0, listening = 0, calls = 0 } = {}) => ({
+  rust: [{ id: "timer", kind: "builtin", enabled, background: [{ name: "ticker", registered: true, running }] }, { id: "updater", kind: "essential", enabled: true, background: [] }],
+  host: { running: true, plugins: [{ id: "timer", state, usage: { timers, listeners: 0, services: 0, clients: 0 } }] },
+  windows: [{ window: "main", plugins: [{ id: "timer", items, listening, calls, services: 0 }] }],
+});
+
+test("a switched-off plugin with nothing left has an empty row; each leftover gets its own line", () => {
+  assert.deepEqual(residueOf("timer", diag({ calls: 4 }), diag({ calls: 4 })), []);
+  assert.deepEqual(residueOf("timer", diag({ calls: 4 }), diag({ running: true, state: "running", timers: 1, items: 2, listening: 1, calls: 6 })), [
+    "Rust 后台 ticker 还在跑",
+    "宿主里是 running",
+    "宿主 timers 1",
+    "main 窗口还有 2 个插槽项",
+    "main 窗口还在听 1 个事件",
+    "main 窗口关掉后又调了 2 次命令",
+  ]);
+  assert.deepEqual(switchable(diag({ enabled: true })), ["timer"]);
+  assert.equal(threadsLine(40, 37), "40 → 37（少 3）");
+  assert.equal(threadsLine(null, 37), "—");
+});
+
+test("the sweep switches each plugin off, reads it twice and always switches it back on", async () => {
+  const calls = [];
+  let on = true;
+  const call = async (method, route, body) => {
+    calls.push(`${method} ${route}${body ? ` ${body.enabled}` : ""}`);
+    if (method === "PUT") on = body.enabled;
+    return { ...diag({ enabled: on, items: on ? 1 : 0 }), threads: on ? 40 : 38 };
+  };
+  const rows = await sweep(call, { pause: async () => {} });
+  assert.deepEqual(rows, [{ id: "timer", left: [], threads: "40 → 38（少 2）" }]);
+  assert.deepEqual(calls, ["GET builtins", "GET builtins", "PUT builtins/timer false", "GET builtins", "GET builtins", "PUT builtins/timer true"]);
 });

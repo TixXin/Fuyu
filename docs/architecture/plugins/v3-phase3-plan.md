@@ -229,6 +229,33 @@ E36.3.21（111b02d5）的 lint 禁止宿主部分 import 任何 `lib/`、`compon
 | 外壳 `src/windows/island/`、`src/windows/settings/` | 第 0 批之后，功能任务原则上不碰外壳；要碰的先在任务里写明，组长排开 |
 | `v3-progress.md` | 只有组长改（阶段开头、结尾和待人工验收） |
 
+## 关掉后的残留：第 0 批末的基线
+
+E36.3.27 的回归页 `builtins-off` 默认只查「迁完了」的插件，即在插槽注册表里拥有至少一项的插件，不看 `builtins.json` 的 `background` 字段；E36.3.23 给 8 个插件预填了 `background: []`，它们的界面其实还没搬。Rust 一层照旧按 `background` 查。
+
+- 宿主一层：两个样板都通过，因为内核替它们收拾了定时器、监听和服务。能不能查出漏收拾，由一个故意用裸 `setInterval` 的假插件证明。
+- 用 `?all=1` 查全部插件，`?only=a,b` 查点名的。下表是 2026-11-15 的 `?all=1` 结果，迁移时对照，修完对应的行应该消失。
+
+| 插件 | 残留 |
+|---|---|
+| 没残留 | session-ring、claude-usage、cc-connect、ssh-tunnel、center-pattern |
+| translation | 岛的翻译页还渲染 `.translation-panel` 等 21 个 class；关掉后还调 `has_translation_secret`、`set_translation_shortcut`、`set_translation_selection_shortcut`（各 4 次）和 `read_translation_clipboard`（2 次）；还听 `translation-selection`、`translation-island-shortcut` |
+| timer | 岛的计时器页还渲染 `.timer-panel` 等 6 个 class（命令和事件和岛、Agent 推送共用，记不到它名下） |
+| todos | `.todo-island`、`.todo-date-picker` 在收起的岛、展开的岛、待办页、截图页上 |
+| calendar | 日历页 `.calendar-panel`；设置 → 日历 `.calendar-form`；调 `get_calendar_events`、`list_calendar_sources` |
+| music | 音乐页 `.media-waveform` 等；设置 → 音乐、歌词、歌词样式；调 `get_media_state`、`get_inflink_state`；听 `media-session-changed` |
+| clipboard | 剪贴板页 `.clipboard-page`；设置 → 片段；调 `get_clipboard_history`（35 次）、`get_clipboard_shortcut_error`、`get_clipboard_links`；听 `clipboard-history-changed`、`clipboard-item-copied`、`clipboard-links-changed`、`clipboard-history-shortcut` |
+| screenshot | 听 `screenshot-text`、`screenshot-taken`、`recording-state`、`recording-finished` |
+| file-shelf | 调 `get_file_shelf`；听 `file-shelf-changed` |
+| voice-input | 听 `voice-input-state` |
+| agents | Agent 页、设置 → Agent 各标签；调 `get_agent_status`（13 次）等 11 个命令；听 `agent-approval-requested`、`agent-approval-closed` |
+| local-api | 听 `local-api-request`、`dev-island-action` |
+| messages | `.island__summary-layer`、`.island-message-button` 在岛的外壳里到处都有（属于 E36.3.51），消息页和设置里的 `.message-brand-icon`；调 `get_qq_mail_state`；听 `qq-mail-changed`、`qq-notifications-changed`、`wechat-reminder-changed` |
+| device-events | 听 `device-alert` |
+| system-levels | 听 `system-level-changed` |
+| device-use | 调 `get_device_use` |
+| theme-market | 设置 → 主题市场 `.theme-market__grid`；调 `get_theme_market` |
+
 ## 不在这一阶段做的
 
 - **接缝**（第 4 阶段）：换翻译引擎、歌词来源、日历来源、Agent 接入，剪贴板和截图的动作，消息来源。消息先作为一个插件迁，三个来源到第 4 阶段再拆。

@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { BUILTIN, createSlots, SlotError, slotWindow, type SlotItem, type SlotRegistry, type SlotRule } from "@fuyu/plugin-base/client/slots";
 import { SLOTS, type SlotName } from "@fuyu/plugin-base/protocol";
 import { disabledBuiltinIds, subscribeBuiltinPlugins } from "./builtinSwitches.ts";
+import { installIpcLedger, type IpcInternals } from "./ipcLedger.ts";
 
 export type { SlotName };
 export type SlotWindow = "island" | "settings";
@@ -91,8 +92,18 @@ export function followBuiltinSwitches(registry: SlotRegistry): () => void {
   return subscribeBuiltinPlugins((plugins) => registry.setDisabledOwners(disabledBuiltinIds(plugins)));
 }
 
+function startDiagnostics() {
+  const internals = (window as unknown as { __TAURI_INTERNALS__?: IpcInternals }).__TAURI_INTERNALS__;
+  if (!internals || typeof internals.invoke !== "function") return;
+  const ledger = installIpcLedger(internals);
+  void Promise.all([import("./diagnostics.ts"), import("./services.ts")])
+    .then(([{ answerBuiltinDiagnostics }, { windowServices }]) => answerBuiltinDiagnostics(ledger, Object.values(registries), windowServices))
+    .catch((error: unknown) => console.error("Could not start the built-in plugin diagnostics", error));
+}
+
 if (typeof window !== "undefined") {
   for (const registry of Object.values(registries)) followBuiltinSwitches(registry);
+  if (import.meta.env.DEV) startDiagnostics();
 }
 
 export function slotWindowOf(name: SlotName): SlotWindow {

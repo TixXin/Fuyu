@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event";
 
 export interface HostConnection {
   enabled: boolean;
@@ -62,4 +62,31 @@ export function setBuiltinPluginEnabled(id: string, enabled: boolean): Promise<B
 
 export function onBuiltinPluginsChanged(handler: (plugins: unknown) => void): Promise<UnlistenFn> {
   return listen<unknown>(BUILTIN_PLUGINS_CHANGED, (event) => handler(event.payload));
+}
+
+export const BUILTIN_DIAGNOSTICS_REQUEST = "builtin-diagnostics-request";
+export const BUILTIN_DIAGNOSTICS_REPORT = "builtin-diagnostics-report";
+
+export interface BuiltinWindowUsage {
+  id: string;
+  items: number;
+  listening: number;
+  calls: number;
+  services: number;
+}
+
+export interface BuiltinDiagnosticsReport {
+  id: number;
+  window: string;
+  plugins: BuiltinWindowUsage[];
+}
+
+export function onBuiltinDiagnosticsRequest(handler: (id: number) => void): Promise<UnlistenFn> {
+  return listen<{ id?: unknown }>(BUILTIN_DIAGNOSTICS_REQUEST, (event) => {
+    if (typeof event.payload?.id === "number") handler(event.payload.id);
+  });
+}
+
+export function reportBuiltinDiagnostics(report: BuiltinDiagnosticsReport): Promise<void> {
+  return emit(BUILTIN_DIAGNOSTICS_REPORT, report);
 }
