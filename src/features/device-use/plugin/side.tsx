@@ -1,19 +1,15 @@
 import { defineSlot } from "../../plugin-kernel/slots";
-import type { DeviceUse } from "../api";
 import { DeviceUseIndicator } from "../DeviceUseIndicator";
+import { deviceUseState } from "./islandState";
 
-type SideContext = {
-  deviceUse: DeviceUse;
-};
+const sideSlot = defineSlot<object>("island.side/v1");
 
-const sideSlot = defineSlot<SideContext>("island.side/v1");
-
-function CameraRow({ deviceUse }: SideContext) {
-  return <DeviceUseIndicator deviceUse={{ ...deviceUse, microphone: [] }} />;
+function CameraRow() {
+  return <DeviceUseIndicator deviceUse={{ ...deviceUseState.use(), microphone: [] }} />;
 }
 
-function MicrophoneRow({ deviceUse }: SideContext) {
-  return <DeviceUseIndicator deviceUse={{ ...deviceUse, camera: [] }} />;
+function MicrophoneRow() {
+  return <DeviceUseIndicator deviceUse={{ ...deviceUseState.use(), camera: [] }} />;
 }
 
 sideSlot.add({ id: "device-camera", order: 70, component: CameraRow });

@@ -15,6 +15,9 @@ import type { MessagePreview } from "../../src/features/messages/messagePreview"
 import type { LevelChange } from "../../src/features/system-levels/api";
 import { useFixtureLines } from "./islandLines";
 
+const FULL_DEVICES = { camera: ["会议"], microphone: [] };
+const NO_DEVICES = { camera: [], microphone: [] };
+
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
@@ -56,7 +59,7 @@ function Fixture() {
   const qqMail = useMail(true);
   const gauges = Array.from({ length: state.gauges }, (_, index) => ({ id: `gauge-${index}`, node: <span className="gauge-dot">{index}</span> }));
   return <div className="stage" style={{ "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8 } as CSSProperties}>
-    <IslandShell lineSources={useFixtureLines({ todoCount: state.full ? 5 : null, levelPopup: state.level })} deviceUse={{ camera: state.full ? ["会议"] : [], microphone: [] }} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
+    <IslandShell lineSources={useFixtureLines({ todoCount: state.full ? 5 : null, levelPopup: state.level, deviceUse: state.full ? FULL_DEVICES : NO_DEVICES })} qqNotifications={qq} wechatReminders={wechat} qqMail={qqMail} pluginNotifications={NO_PLUGIN_NOTIFICATIONS} preview={state.preview}
       mode={state.expanded ? "expanded" : "collapsed"} page="todo" isTucked={state.tucked} isDetached side={state.side} sideCover={state.cover} showTitle={false}
       showCollapsedText activeAgentSessionCount={state.full ? 3 : 0}
       appearanceMode="classic" nativeGlassState="disabled" agentVisualState={state.full ? "running" : "idle"} agentStatusLabel="AI Agent"

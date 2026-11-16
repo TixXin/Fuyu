@@ -1,4 +1,3 @@
-import type { DeviceUse } from "../../features/device-use/api";
 import type { CSSProperties, ReactNode } from "react";
 import type { QuotaAlert } from "../../features/agent-status/quotaAlerts";
 import type { AgentVisualState } from "../../features/agent-status/status";
@@ -65,7 +64,6 @@ type IslandShellProps = {
   agentStatusLabel: string;
   features: IslandFeatures;
   shelfCount: number | null;
-  deviceUse: DeviceUse;
   quotaAlert?: QuotaAlert | null;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
@@ -119,7 +117,6 @@ export function IslandShell({
   agentStatusLabel,
   features,
   shelfCount,
-  deviceUse,
   quotaAlert = null,
   onOpenPage,
   onWindowDragStart,
@@ -163,8 +160,7 @@ export function IslandShell({
     shelfCount,
     showCover: sideCover,
     mediaState,
-    deviceUse,
-  };
+    };
   useLegacySide({ ...sideSources, hasMail: qqMail.preview !== null, showMusic: features.music === true });
   const sideLayout = useSideColumnRows({ ...sideSources, onOpenPage, onOpenMessages }, collapsedSlots?.gauges ?? []);
   const sideHot = preview ? (preview.source === "qqMail" ? "mail" : "unread") : null;
@@ -250,7 +246,6 @@ export function IslandShell({
           mediaState={mediaState}
           showMusic={features.music}
           shelfCount={shelfCount}
-          deviceUse={deviceUse}
           quotaAlert={quotaAlert}
           agentVisualState={agentVisualState}
           onOpenPage={onOpenPage}
