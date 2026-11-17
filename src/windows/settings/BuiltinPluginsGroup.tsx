@@ -5,8 +5,8 @@ import {
   Languages, ListTodo, MessageCircle, Mic, Music, Plug, RefreshCw, Smartphone, Sparkles,
   Store, Timer, Volume2, Waypoints, X, type LucideIcon,
 } from "lucide-react";
-import { TRANSLATIONS, useErrorText, useTranslation } from "../../i18n";
-import type { BuiltinPluginName, PluginV3Filter, PluginV3Group, PluginV3State } from "../../i18n/sections/settings/pluginsV3";
+import { useErrorText, useTranslation } from "../../i18n";
+import { en as enPluginsV3, zhCN as zhPluginsV3, type BuiltinPluginName, type PluginV3Filter, type PluginV3Group, type PluginV3State } from "../../i18n/sections/settings/pluginsV3";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
@@ -59,10 +59,8 @@ export function isAttentionState(state: PluginV3State): boolean {
 export function matchesPluginQuery(id: string, query: string, extraText = ""): boolean {
   const q = query.trim().toLowerCase().replace(/[\s_-]+/g, "");
   if (!q) return true;
-  const zh = TRANSLATIONS["zh-CN"].settings.pluginsV3;
-  const en = TRANSLATIONS.en.settings.pluginsV3;
   const key = id as BuiltinPluginName;
-  const haystack = [id, extraText, zh.builtinNames[key], en.builtinNames[key], zh.builtinNotes[key], en.builtinNotes[key], zh.builtinSummaries[key], en.builtinSummaries[key]]
+  const haystack = [id, extraText, zhPluginsV3.builtinNames[key], enPluginsV3.builtinNames[key], zhPluginsV3.builtinNotes[key], enPluginsV3.builtinNotes[key], zhPluginsV3.builtinSummaries[key], enPluginsV3.builtinSummaries[key]]
     .filter(Boolean).join(" ").toLowerCase().replace(/[\s_-]+/g, "");
   return haystack.includes(q);
 }
