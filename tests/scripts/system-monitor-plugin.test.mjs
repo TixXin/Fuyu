@@ -22,7 +22,10 @@ test("background recording keeps the plugin running and gives the opening page w
     const history = (await host.waitFor((h) => h.webviewMessages[0])).message;
     assert.equal(history.type, "history");
     for (const key of ["cpu", "gpu", "down", "up"]) {
-      assert.ok(Array.isArray(history[key]) && history[key].length >= 1, `${key}: ${JSON.stringify(history[key])}`);
+      const values = history[key];
+      assert.ok(Array.isArray(values) && values.length >= 5 && values.length <= 60, `${key}: ${JSON.stringify(values)}`);
+      assert.equal(values.length % 5, 0, `${key}: one reading every 5 s, shown as 5 points of a second`);
+      for (let i = 0; i < values.length; i += 5) assert.equal(new Set(values.slice(i, i + 5)).size, 1, `${key}: ${JSON.stringify(values)}`);
     }
     assert.equal((await host.waitFor((h) => h.webviewMessages[1])).message.type, "sample");
   } finally {

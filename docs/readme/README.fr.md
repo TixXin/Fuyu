@@ -6,7 +6,7 @@
 
   <p><b>Une île qui range le fouillis de votre bureau</b></p>
 
-  <p>Une île dynamique de bureau pour Windows et macOS : tâches, presse-papiers, messages, traduction, musique et état de vos agents IA, le tout sur une petite île en haut de l'écran.</p>
+  <p>Une île dynamique de bureau pour Windows et macOS : tâches, presse-papiers, messages Telegram, Discord, WhatsApp et autres, traduction, musique et état de vos agents IA, le tout sur une petite île en haut de l'écran.</p>
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="../assets/readme/download-windows.svg" alt="Télécharger pour Windows (x64)" width="156" height="38"></a>
@@ -99,7 +99,7 @@ Fuyu (浮屿, « îlot flottant ») est une île flottante légère, sans bord
   </tr>
   <tr>
     <td valign="top"><code>03</code></td>
-    <td><b>Messages</b><br>Alertes QQ et WeChat et plusieurs comptes e-mail ; vous pouvez lire les e-mails et y répondre depuis l'île.</td>
+    <td><b>Messages</b><br>Les nouveaux messages de Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu et DingTalk s'affichent sur l'île et ouvrent l'app en un clic ; plus plusieurs comptes e-mail ; vous pouvez lire les e-mails et y répondre depuis l'île.</td>
   </tr>
   <tr>
     <td valign="top"><code>04</code></td>
@@ -111,7 +111,7 @@ Fuyu (浮屿, « îlot flottant ») est une île flottante légère, sans bord
   </tr>
   <tr>
     <td valign="top"><code>06</code></td>
-    <td><b>Agents IA</b><br>L'état et la consommation de vos sessions Claude Code et Codex ; approuvez les demandes directement sur l'île, cliquez pour passer à la fenêtre correspondante et recevez des notifications sur votre téléphone quand vous n'êtes pas devant l'ordinateur.</td>
+    <td><b>Agents IA</b><br>L'état et la consommation de vos sessions Claude Code et Codex ; approuvez les demandes directement sur l'île, cliquez pour passer à la fenêtre correspondante et recevez des alertes sur Telegram, Discord, Feishu ou Bark quand vous n'êtes pas devant l'ordinateur, puis continuez à piloter l'agent depuis la conversation.</td>
   </tr>
   <tr>
     <td valign="top"><code>07</code></td>
@@ -148,7 +148,7 @@ Méthode de mesure et données complètes : [idle-usage.md](../investigations/i
    - **Windows** : téléchargez le `_x64-setup.exe`. Les installateurs ne sont pas signés ; si SmartScreen affiche un avertissement, choisissez « Informations complémentaires → Exécuter quand même ».
    - **macOS** : dans la [liste des releases](https://github.com/TixXin/fuyu/releases), téléchargez le `_aarch64.dmg` de la version la plus récente qui en contient un (si la dernière version stable n'en a pas, cherchez-le dans la version de test située au-dessus) et faites glisser Fuyu dans Applications. Au premier lancement, ouvrez Réglages Système → Confidentialité et sécurité et cliquez sur « Ouvrir quand même » ; les étapes détaillées sont dans le [guide d'installation sur Mac](https://fuyu.ing/#mac-install).
 2. **Déployez l'île** : survolez l'île en haut de l'écran avec le pointeur pour la déployer ; le bouton en forme d'engrenage ou l'icône de la zone de notification (sur Mac, l'icône de la barre des menus) ouvre les Paramètres. Sur Mac, le guide de bienvenue vous aide à activer les autorisations système nécessaires.
-3. **Configurez une seule fois** : l'e-mail, la traduction et les agents IA doivent être configurés une fois dans les Paramètres. Voir [e-mail](../features/mail.md), [agents IA](../features/agent-status-hooks.md), [notifications QQ](../features/qq-notifications.md) et [rappels WeChat](../features/wechat-reminders.md) (en chinois).
+3. **Configurez une seule fois** : l'e-mail, la traduction et les agents IA doivent être configurés une fois dans les Paramètres. Voir [e-mail](../features/mail.md), [agents IA](../features/agent-status-hooks.md), [notifications QQ](../features/qq-notifications.md), [rappels WeChat](../features/wechat-reminders.md) et [alertes sur le téléphone](../features/cc-connect.md) (en chinois).
 
 > [!NOTE]
 > Fonctionne sous Windows 10 / 11 et macOS 15 ou ultérieur (Apple silicon). Sur Mac, il y a quelques différences avec Windows : QQ et WeChat n'affichent que le nombre de messages non lus, pas leur contenu, et le contrôle multimédia et la luminosité passent par des interfaces privées du système. [platforms.md](../architecture/platforms.md) indique l'état de chaque fonction sur les deux plateformes (en chinois).
