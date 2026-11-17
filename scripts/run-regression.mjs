@@ -212,6 +212,26 @@ export async function withRegressionBrowser(root, firstPage, use) {
   }
 }
 
+export function recordSnapshotOutcome(page, variant, outcome, snapshotTally, { ci = process.env.CI === "true", log = console.log } = {}) {
+  if (outcome.late) {
+    if (ci) {
+      log(`✗ ${page}  snapshot settled late: ${outcome.label} (the page reported its result before its DOM stopped changing)`);
+      return false;
+    }
+    log(`    snapshot settled late: ${outcome.label} (the page reported its result before its DOM stopped changing)`);
+  }
+  if (outcome.status in snapshotTally) {
+    snapshotTally[outcome.status] += 1;
+    if (outcome.status !== "same") log(`    snapshot ${outcome.status}: ${outcome.label}`);
+    return true;
+  }
+  if (outcome.status === "missing") log(`✗ ${page}  no snapshot ${outcome.label}; run pnpm test:regression --update-snapshots`);
+  else if (outcome.status === "unsettled") log(`✗ ${page}  ${variant} DOM is still changing after the page reported its result; ${outcome.label} not written (${outcome.diff.changes} changed lines between two captures)`);
+  else log(`✗ ${page}  ${variant} DOM differs from ${outcome.label} (${outcome.diff.changes} changed lines; pnpm test:regression --update-snapshots if intended)`);
+  if (outcome.diff) for (const line of outcome.diff.text.split("\n")) log(`    ${line}`);
+  return false;
+}
+
 async function main() {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   const args = process.argv.slice(2);
@@ -226,17 +246,7 @@ async function main() {
   const snapshot = async (session, page, variant) => {
     const outcome = await settledSnapshot({ root, page, variant, update, darkActual, capture: () => captureSnapshot(session), sleep });
     if (variant === "dark") darkActual = outcome.actual;
-    if (outcome.late) console.log(`    snapshot settled late: ${outcome.label} (the page reported its result before its DOM stopped changing)`);
-    if (outcome.status in snapshotTally) {
-      snapshotTally[outcome.status] += 1;
-      if (outcome.status !== "same") console.log(`    snapshot ${outcome.status}: ${outcome.label}`);
-      return true;
-    }
-    if (outcome.status === "missing") console.log(`✗ ${page}  no snapshot ${outcome.label}; run pnpm test:regression --update-snapshots`);
-    else if (outcome.status === "unsettled") console.log(`✗ ${page}  ${variant} DOM is still changing after the page reported its result; ${outcome.label} not written (${outcome.diff.changes} changed lines between two captures)`);
-    else console.log(`✗ ${page}  ${variant} DOM differs from ${outcome.label} (${outcome.diff.changes} changed lines; pnpm test:regression --update-snapshots if intended)`);
-    if (outcome.diff) for (const line of outcome.diff.text.split("\n")) console.log(`    ${line}`);
-    return false;
+    return recordSnapshotOutcome(page, variant, outcome, snapshotTally);
   };
   await withRegressionBrowser(root, pages[0], async ({ session, base }) => {
     await prepareSnapshotBrowser(session);

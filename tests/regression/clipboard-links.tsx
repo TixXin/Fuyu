@@ -108,6 +108,7 @@ async function runChecks() {
     await act(async () => { document.querySelector<HTMLButtonElement>('.clipboard-copy-notice__actions button[aria-label="关闭"]')!.click(); });
     await act(async () => { await emit("clipboard-item-copied", { item: text("l2", "https://a.com/"), seconds: 3, origin: "history" }); });
     check(card()?.textContent?.startsWith("已复制") && button("已加入书签"), "Copying a saved link from history shows it as already bookmarked");
+    await act(async () => { document.querySelector<HTMLButtonElement>('.clipboard-copy-notice__actions button[aria-label="关闭"]')!.click(); });
 
     const grip = document.querySelectorAll<HTMLButtonElement>(".clipboard-link-row__grip")[1];
     await act(async () => { grip.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true })); });
