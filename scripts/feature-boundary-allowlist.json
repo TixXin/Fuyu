@@ -1,21 +1,5 @@
 {
-  "features": [
-    "src/features/plugins/useBuiltinPlugin.ts -> src/features/plugin-views/api.ts"
-  ],
-  "shared": [
-    "src/lib/settings/normalizeBehaviorSettings.ts -> src/features/calendar/calendarSettings.ts",
-    "src/lib/settings/normalizeBehaviorSettings.ts -> src/features/media/lyrics/lyricsSettings.ts",
-    "src/lib/settings/normalizeBehaviorSettings.ts -> src/features/todos/project.ts",
-    "src/lib/settings/settings.ts -> src/features/agent-status/agentSettings.ts",
-    "src/lib/settings/settingsDefaults.ts -> src/features/agent-status/agentSettings.ts",
-    "src/lib/settings/settingsDefaults.ts -> src/features/calendar/calendarSettings.ts",
-    "src/lib/settings/settingsDefaults.ts -> src/features/media/lyrics/lyricsSettings.ts",
-    "src/lib/settings/storage.ts -> src/features/todos/index.ts",
-    "src/lib/settings/types.ts -> src/features/agent-status/agentSettings.ts",
-    "src/lib/settings/types.ts -> src/features/calendar/calendarSettings.ts",
-    "src/lib/settings/types.ts -> src/features/media/lyrics/lyricsSettings.ts",
-    "src/lib/settings/types.ts -> src/features/todos/types.ts",
-    "src/lib/settings/useSettingPresets.ts -> src/features/todos/index.ts"
-  ],
+  "features": [],
+  "shared": [],
   "removedBy": {}
 }

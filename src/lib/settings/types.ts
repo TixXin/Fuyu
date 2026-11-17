@@ -1,8 +1,8 @@
-import type { AgentSettingValues } from "../../features/agent-status/agentSettings";
-import type { CalendarSettingValues } from "../../features/calendar/calendarSettings";
+import type { AgentSettingValues } from "./agentSettings";
+import type { CalendarSettingValues } from "./calendarSettings";
 import type { GlassSettingValues } from "./glassSettings";
-import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../../features/media/lyrics/lyricsSettings";
-import type { TodoProject } from "../../features/todos/types";
+import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "./lyricsSettings";
+import type { TodoProject } from "../todo-projects/prefix";
 
 export type TranslationTarget = "window" | "island";
 

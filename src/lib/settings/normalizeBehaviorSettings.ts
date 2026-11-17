@@ -1,7 +1,7 @@
 import { clamp } from "../../utils/number.ts";
-import { normalizeLyricsSettings } from "../../features/media/lyrics/lyricsSettings.ts";
-import { normalizeCalendarSettings } from "../../features/calendar/calendarSettings.ts";
-import { normalizeTodoProjects } from "../../features/todos/project.ts";
+import { normalizeLyricsSettings } from "./lyricsSettings.ts";
+import { normalizeCalendarSettings } from "./calendarSettings.ts";
+import { normalizeTodoProjects } from "../todo-projects/prefix.ts";
 import { DEFAULT_PAGE_NEXT_SHORTCUT, DEFAULT_PAGE_PREVIOUS_SHORTCUT, normalizePageCycleShortcut, normalizePageDigitModifiers } from "./pageShortcuts.ts";
 import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {

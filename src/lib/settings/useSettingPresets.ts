@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "../../i18n";
-import { createTodoId } from "../../features/todos";
-import { LEGACY_DEFAULT_PRESET_NAMES, isDefaultSettingPreset, mergeWithDefaultSettingPresets, normalizeSettings, withThemeFrom } from "./settings";
+import { createPresetId, LEGACY_DEFAULT_PRESET_NAMES, isDefaultSettingPreset, mergeWithDefaultSettingPresets, normalizeSettings, withThemeFrom } from "./settings";
 import { loadSettingPresets, saveSettingPresets } from "./storage";
 import { saveThemeFile } from "./api";
 import { buildTheme, parseTheme, themeFileName, type ThemeProblem } from "../theme/theme.ts";
@@ -26,7 +25,7 @@ export function useSettingPresets(
         (preset) => !preset.isDefault && !isDefaultSettingPreset(preset.id),
       ).length;
       const preset: IslandPreset = {
-        id: createTodoId(),
+        id: createPresetId(),
         name: t.settings.presets.defaultName(customPresetCount + 1),
         settings,
         createdAt: Date.now(),
@@ -91,7 +90,7 @@ export function useSettingPresets(
       const parsed = parseTheme(text, settings);
       if ("problem" in parsed) return parsed;
       const name = parsed.name && !LEGACY_DEFAULT_PRESET_NAMES.has(parsed.name) ? parsed.name : t.settings.presets.importedName;
-      const preset: IslandPreset = { id: createTodoId(), name, settings: parsed.settings, createdAt: Date.now(), isDefault: false };
+      const preset: IslandPreset = { id: createPresetId(), name, settings: parsed.settings, createdAt: Date.now(), isDefault: false };
       setPresets((currentPresets) => mergeWithDefaultSettingPresets([preset, ...currentPresets]));
       return { name };
     },

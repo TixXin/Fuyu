@@ -1,6 +1,6 @@
-import { DEFAULT_AGENT_SETTINGS, LEGACY_AGENT_FALLBACKS } from "../../features/agent-status/agentSettings.ts";
-import { DEFAULT_LYRICS_SETTINGS } from "../../features/media/lyrics/lyricsSettings.ts";
-import { DEFAULT_CALENDAR_SETTINGS } from "../../features/calendar/calendarSettings.ts";
+import { DEFAULT_AGENT_SETTINGS, LEGACY_AGENT_FALLBACKS } from "./agentSettings.ts";
+import { DEFAULT_LYRICS_SETTINGS } from "./lyricsSettings.ts";
+import { DEFAULT_CALENDAR_SETTINGS } from "./calendarSettings.ts";
 import { DEFAULT_GLASS_SETTINGS } from "./glassSettings.ts";
 import { DEFAULT_PAGE_DIGIT_MODIFIERS, DEFAULT_PAGE_NEXT_SHORTCUT, DEFAULT_PAGE_PREVIOUS_SHORTCUT } from "./pageShortcuts.ts";
 import {
