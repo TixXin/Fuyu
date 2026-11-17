@@ -113,8 +113,8 @@ fn home_for_host() -> Result<std::path::PathBuf, UserError> {
         .ok_or_else(|| UserError::new("internal", "Something went wrong inside the island.").detail("the data folder is not set up yet"))
 }
 
-pub(super) fn http_error(code: &'static str, message: &'static str, error: reqwest::Error) -> UserError {
-    UserError::new(code, message).detail(error.without_url())
+pub(super) fn http_error(error: UserError, cause: reqwest::Error) -> UserError {
+    error.detail(cause.without_url())
 }
 
 async fn fetch_ics(link: &str) -> Result<String, UserError> {
@@ -128,14 +128,14 @@ async fn download(url: reqwest::Url) -> Result<String, UserError> {
         .timeout(Duration::from_secs(15))
         .user_agent(concat!("Fuyu/", env!("CARGO_PKG_VERSION")))
         .build()
-        .map_err(|error| http_error("http.client", "Could not set up the connection.", error))?;
-    let response = client.get(url).send().await.map_err(|error| http_error("calendar.unreachable", "Could not reach the calendar.", error))?;
+        .map_err(|error| http_error(UserError::new("http.client", "Could not set up the connection."), error))?;
+    let response = client.get(url).send().await.map_err(|error| http_error(UserError::new("calendar.unreachable", "Could not reach the calendar."), error))?;
     match response.status().as_u16() {
         401 | 403 | 404 => return Err(UserError::new("calendar.linkExpired", "The subscription link has expired, or does not allow access.")),
         status if !(200..300).contains(&status) => return Err(UserError::new("calendar.status", format!("The calendar answered {status}.")).arg("status", status)),
         _ => {}
     }
-    let bytes = response.bytes().await.map_err(|error| http_error("calendar.read", "Could not read the calendar.", error))?;
+    let bytes = response.bytes().await.map_err(|error| http_error(UserError::new("calendar.read", "Could not read the calendar."), error))?;
     if bytes.len() > MAX_ICS_BYTES {
         return Err(UserError::new("calendar.tooLarge", "The calendar is too large."));
     }

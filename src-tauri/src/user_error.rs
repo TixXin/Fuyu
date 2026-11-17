@@ -13,8 +13,15 @@ pub(crate) struct UserError {
     message: String,
 }
 
+#[cfg(any(test, debug_assertions))]
+fn known_codes() -> &'static std::collections::BTreeSet<String> {
+    static CODES: std::sync::OnceLock<std::collections::BTreeSet<String>> = std::sync::OnceLock::new();
+    CODES.get_or_init(|| serde_json::from_str(include_str!("user_error_codes.json")).unwrap_or_default())
+}
+
 impl UserError {
     pub(crate) fn new(code: &'static str, message: impl Into<String>) -> Self {
+        debug_assert!(code == "plain" || known_codes().contains(code), "unlisted UserError code: {code}");
         Self { code, args: Map::new(), detail: None, message: message.into() }
     }
 
@@ -117,28 +124,28 @@ pub(crate) mod credential {
     const STALE_APP_STATUSES: [i32; 2] = [100_002, -67_068];
 
     pub(crate) fn open(error: impl Debug + Display) -> UserError {
-        failed("credential.open", format!("Could not open {STORE}."), error, cfg!(target_os = "macos"))
+        failed(UserError::new("credential.open", format!("Could not open {STORE}.")), error, cfg!(target_os = "macos"))
     }
 
     pub(crate) fn read(error: impl Debug + Display) -> UserError {
-        failed("credential.read", format!("Could not read from {STORE}."), error, cfg!(target_os = "macos"))
+        failed(UserError::new("credential.read", format!("Could not read from {STORE}.")), error, cfg!(target_os = "macos"))
     }
 
     pub(crate) fn save(error: impl Debug + Display) -> UserError {
-        failed("credential.save", format!("Could not save to {STORE}."), error, cfg!(target_os = "macos"))
+        failed(UserError::new("credential.save", format!("Could not save to {STORE}.")), error, cfg!(target_os = "macos"))
     }
 
     pub(crate) fn delete(error: impl Debug + Display) -> UserError {
-        failed("credential.delete", format!("Could not delete from {STORE}."), error, cfg!(target_os = "macos"))
+        failed(UserError::new("credential.delete", format!("Could not delete from {STORE}.")), error, cfg!(target_os = "macos"))
     }
 
-    fn failed(code: &'static str, message: String, error: impl Debug + Display, keychain: bool) -> UserError {
+    fn failed(fallback: UserError, error: impl Debug + Display, keychain: bool) -> UserError {
         let status = keychain.then(|| os_status(&format!("{error:?}"))).flatten();
         match status {
             Some(status) if STALE_APP_STATUSES.contains(&status) => {
                 UserError::new("credential.staleApp", "Fuyu has been updated; quit it and open it again.").detail(error)
             }
-            _ => UserError::new(code, message).detail(error),
+            _ => fallback.detail(error),
         }
     }
 
@@ -183,24 +190,60 @@ pub(crate) mod credential {
         #[test]
         fn a_replaced_app_bundle_asks_for_a_restart_on_the_mac() {
             for status in [100_002, -67_068] {
-                let error = failed("credential.save", "Could not save.".into(), platform_failure(status), true);
+                let error = failed(super::UserError::new("credential.save", "Could not save."), platform_failure(status), true);
                 assert_eq!(error.code(), "credential.staleApp");
             }
         }
 
         #[test]
         fn other_failures_keep_their_own_code() {
-            assert_eq!(failed("credential.save", "x".into(), platform_failure(-25_293), true).code(), "credential.save");
-            assert_eq!(failed("credential.read", "x".into(), platform_failure(100_002), false).code(), "credential.read");
-            assert_eq!(failed("credential.open", "x".into(), keyring::Error::NoEntry, true).code(), "credential.open");
+            assert_eq!(failed(super::UserError::new("credential.save", "x"), platform_failure(-25_293), true).code(), "credential.save");
+            assert_eq!(failed(super::UserError::new("credential.read", "x"), platform_failure(100_002), false).code(), "credential.read");
+            assert_eq!(failed(super::UserError::new("credential.open", "x"), keyring::Error::NoEntry, true).code(), "credential.open");
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::UserError;
+    use super::{known_codes, UserError};
     use serde_json::json;
+    use std::{collections::BTreeSet, fs, path::Path};
+
+    fn extract_codes(source: &str, file: &str) -> Result<Vec<String>, String> {
+        let needle = concat!("UserError", "::new(");
+        let mut codes = Vec::new();
+        let mut rest = source;
+        while let Some(at) = rest.find(needle) {
+            let after = &rest[at + needle.len()..];
+            let trimmed = after.trim_start();
+            let Some(quoted) = trimmed.strip_prefix('"') else {
+                let snippet: String = trimmed.chars().take(24).collect();
+                return Err(format!("{file}: UserError::new must take a string literal code, found `{snippet}`"));
+            };
+            let end = quoted.find('"').ok_or_else(|| format!("{file}: unterminated string literal in UserError::new"))?;
+            let code = &quoted[..end];
+            if code != "plain" {
+                codes.push(code.to_string());
+            }
+            rest = &quoted[end + 1..];
+        }
+        Ok(codes)
+    }
+
+    fn walk_rs(dir: &Path, codes: &mut BTreeSet<String>) {
+        for entry in fs::read_dir(dir).unwrap().flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                walk_rs(&path, codes);
+            } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
+                let text = fs::read_to_string(&path).unwrap();
+                for code in extract_codes(&text, &path.display().to_string()).unwrap() {
+                    codes.insert(code);
+                }
+            }
+        }
+    }
 
     #[test]
     fn the_page_gets_the_code_values_and_what_the_service_said() {
@@ -217,5 +260,14 @@ mod tests {
         let error = UserError::from("Something broke.").detail("  ");
         assert_eq!(serde_json::to_value(&error).unwrap(), json!({ "code": "plain", "message": "Something broke." }));
         assert_eq!(error.code(), "plain");
+    }
+
+    #[test]
+    fn variable_error_codes_are_rejected_and_every_code_is_in_user_error_codes_json() {
+        assert_eq!(extract_codes(concat!("UserError", r#"::new("pluginsV3.builtinSave", "x")"#), "a.rs").unwrap(), vec!["pluginsV3.builtinSave"]);
+        assert!(extract_codes(concat!("UserError", r#"::new(code, "x")"#), "a.rs").is_err());
+        let mut found = BTreeSet::new();
+        walk_rs(&Path::new(env!("CARGO_MANIFEST_DIR")).join("src"), &mut found);
+        assert_eq!(&found, known_codes());
     }
 }
