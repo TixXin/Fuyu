@@ -206,7 +206,6 @@ export type ErrorCode =
   | "mail.noDownloads"
   | "mail.noSender"
   | "mail.noText"
-  | "mail.notReady"
   | "mail.off"
   | "mail.notRecent"
   | "mail.read"
@@ -452,7 +451,6 @@ export const zhCN: ErrorsText = {
     "mail.noDownloads": "找不到下载文件夹。",
     "mail.noSender": "找不到这封邮件的发件人。",
     "mail.noText": "这封邮件没有可读取的文字正文，请在网页中查看。",
-    "mail.notReady": "邮箱服务尚未就绪。",
     "mail.off": "邮箱已关闭：在插件页打开「消息」，再在它的设置里打开邮箱。",
     "mail.notRecent": "邮件已不在最近列表中，请刷新收件箱。",
     "mail.read": "无法读取邮件。",
@@ -695,7 +693,6 @@ export const en: ErrorsText = {
     "mail.noDownloads": "The Downloads folder was not found.",
     "mail.noSender": "This mail's sender was not found.",
     "mail.noText": "This mail has no text to read; open it in the web mail.",
-    "mail.notReady": "The mail service is not ready yet.",
     "mail.off": "Mail is off. Turn on Messages in Plugins, then Mail in its settings.",
     "mail.notRecent": "The mail is no longer in the recent list; refresh the inbox.",
     "mail.read": "Could not read the mail.",

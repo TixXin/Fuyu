@@ -137,9 +137,9 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         app: app.clone(),
         state: Mutex::new(MonitorState::default()),
     });
-    SERVICE
-        .set(service.clone())
-        .map_err(|_| "QQ 通知服务已启动。".to_string())?;
+    if SERVICE.set(service.clone()).is_err() {
+        return Ok(());
+    }
     let listening = service.clone();
     let worker = Worker::new("qq-notifications", move |stop| monitor(listening.clone(), &stop));
     messages_plugin::register(
@@ -149,6 +149,11 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+fn ready(app: &AppHandle) -> Result<&'static Arc<NotificationService>, String> {
+    init(app)?;
+    service()
+}
+
 fn service() -> Result<&'static Arc<NotificationService>, String> {
     SERVICE
         .get()
@@ -156,8 +161,8 @@ fn service() -> Result<&'static Arc<NotificationService>, String> {
 }
 
 #[tauri::command]
-pub fn get_qq_notification_state() -> Result<NotificationSnapshot, String> {
-    Ok(service()?
+pub fn get_qq_notification_state(app: AppHandle) -> Result<NotificationSnapshot, String> {
+    Ok(ready(&app)?
         .state
         .lock()
         .map_err(|_| "QQ 通知状态不可用。")?
@@ -205,8 +210,8 @@ fn set_enabled(service: &NotificationService, enabled: bool) {
 }
 
 #[tauri::command]
-pub fn set_qq_auto_clear(enabled: bool) -> Result<NotificationSnapshot, String> {
-    let mut state = service()?.state.lock().map_err(|_| "QQ 通知状态不可用。")?;
+pub fn set_qq_auto_clear(app: AppHandle, enabled: bool) -> Result<NotificationSnapshot, String> {
+    let mut state = ready(&app)?.state.lock().map_err(|_| "QQ 通知状态不可用。")?;
     state.auto_clear = enabled;
     Ok(state.snapshot.clone())
 }

@@ -23,12 +23,14 @@ pub async fn migrate_todos(app: tauri::AppHandle, keys: LocalTodoKeys, normalize
 }
 
 #[tauri::command]
-pub fn get_todos_state() -> Result<TodosSnapshot, String> {
+pub fn get_todos_state(app: tauri::AppHandle) -> Result<TodosSnapshot, String> {
+    service::init(&app)?;
     service::current()
 }
 
 #[tauri::command]
-pub async fn apply_todos_change(change: TodosChange) -> Result<AppliedTodosChange, String> {
+pub async fn apply_todos_change(app: tauri::AppHandle, change: TodosChange) -> Result<AppliedTodosChange, String> {
+    service::init(&app)?;
     tauri::async_runtime::spawn_blocking(move || service::apply(&change))
         .await
         .map_err(|error| format!("The save task failed: {error}"))?

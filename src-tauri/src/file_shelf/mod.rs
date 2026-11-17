@@ -243,8 +243,10 @@ pub async fn get_file_shelf() -> Result<FileShelfSnapshot, String> {
 
 #[tauri::command]
 pub async fn set_file_shelf_options(
+    app: AppHandle,
     options: FileShelfOptions,
 ) -> Result<FileShelfSnapshot, String> {
+    init(&app)?;
     let service = service()?;
     *service.options.lock().unwrap_or_else(PoisonError::into_inner) = options.normalized();
     service.update(|items| items)

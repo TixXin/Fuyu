@@ -88,9 +88,8 @@ impl Default for MailSnapshot {
     }
 }
 
-pub fn init(app: &AppHandle) -> Result<(), UserError> {
-    accounts::init(app);
-    Ok(())
+pub fn init() {
+    accounts::init();
 }
 
 #[tauri::command]
@@ -103,6 +102,7 @@ pub fn get_qq_mail_state() -> Result<Vec<MailSnapshot>, UserError> {
 
 #[tauri::command]
 pub async fn connect_qq_mail(
+    app: AppHandle,
     email: String,
     authorization_code: String,
     host: Option<String>,
@@ -113,7 +113,7 @@ pub async fn connect_qq_mail(
     if secret.is_empty() || secret.len() > 256 || secret.chars().any(char::is_control) {
         return Err(UserError::new("mail.needCode", "Enter the authorization code made in the mailbox settings."));
     }
-    let service = accounts::find_or_start(&email, &host)?;
+    let service = accounts::find_or_start(&app, &email, &host)?;
     let (generation, snapshot) = {
         let mut state = service.lock()?;
         state.invalidate();
@@ -158,6 +158,7 @@ fn forget_if_never_connected(service: &MailService) {
 
 #[tauri::command]
 pub async fn set_qq_mail_enabled(
+    app: AppHandle,
     email: String,
     enabled: bool,
     host: Option<String>,
@@ -165,7 +166,7 @@ pub async fn set_qq_mail_enabled(
     let email = normalize_email(&email)?;
     let host = resolve_host(&email, host.as_deref())?;
     tauri::async_runtime::spawn_blocking(move || {
-        let service = accounts::find_or_start(&email, &host)?;
+        let service = accounts::find_or_start(&app, &email, &host)?;
         let mut state = service.lock()?;
         if state.snapshot.configured && state.snapshot.enabled == enabled {
             return Ok(state.snapshot.clone());
