@@ -6,6 +6,7 @@ import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { exitPluginSafeMode, type BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { BUILTIN_ICONS, BuiltinPluginsGroup, matchesPluginQuery, milliseconds, PluginDetailModal, stateOf, TONES } from "./BuiltinPluginsGroup";
+import { PluginBisectBar } from "./PluginBisectBar";
 import { PluginHostNodeRow } from "./PluginHostNodeRow";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginStatusV3 } from "./usePluginHostStatus";
 import "./PluginsV3SettingsPage.css";
@@ -308,6 +309,7 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins 
       {tab === "plugins" ? (
         <>
           <HostSummaryBar view={view} runningCount={runningCount} onOpenDiagnostics={() => setTab("diagnostics")} />
+          {open ? <PluginBisectBar thirdPartyIds={extras.filter((p) => p.kind === "third-party" || !p.kind).map((p) => p.id)} onBisect={view.bisect} /> : null}
           <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} />
         </>
       ) : (

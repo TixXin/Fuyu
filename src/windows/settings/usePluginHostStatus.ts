@@ -55,7 +55,12 @@ export interface PluginHostHandlers {
   onState: (state: ConnectionState) => void;
 }
 
-export type PluginHostConnector = (handlers: PluginHostHandlers) => { close(): void };
+export type PluginV3StateWithBisect = "bisect";
+
+export type PluginHostConnector = (handlers: PluginHostHandlers) => {
+  close(): void;
+  call?: (method: string, params?: unknown) => Promise<unknown>;
+};
 
 export interface PluginHostView {
   connection: ConnectionState;
@@ -63,6 +68,7 @@ export interface PluginHostView {
   host: HostInfoV3 | null;
   memory: HostMemory | null;
   safeMode: HostSafeMode | null;
+  bisect?: (off: readonly string[]) => Promise<{ off: string[]; unknown: string[] }>;
 }
 
 async function target() {
@@ -123,6 +129,13 @@ export function usePluginHostStatus(connect: PluginHostConnector = connectSettin
       },
       onState: (state) => setView((current) => ({ ...current, connection: state })),
     });
+    const runBisect = typeof connection.call === "function"
+      ? async (off: readonly string[]) => {
+          const res = (await connection.call!("bisect", { off: [...off] })) as { off?: string[]; unknown?: string[] } | null;
+          return { off: res?.off ?? [...off], unknown: res?.unknown ?? [] };
+        }
+      : undefined;
+    setView((current) => ({ ...current, bisect: runBisect }));
     return () => connection.close();
   }, [connect]);
   const pid = view.connection === "open" ? view.host?.pid ?? null : null;

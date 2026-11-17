@@ -2,7 +2,7 @@ import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
 import type { BuiltinPluginName, PluginV3State, SettingsPluginsV3Text } from "../../i18n/sections/settings/pluginsV3";
 import type { PluginStatusV3 } from "./usePluginHostStatus";
 
-const STATES: readonly PluginV3State[] = ["running", "waiting", "failed", "disabled", "auto-disabled", "safe-mode", "loading", "stopped", "unloading"];
+const STATES: readonly PluginV3State[] = ["running", "waiting", "failed", "disabled", "auto-disabled", "safe-mode", "bisect", "loading", "stopped", "unloading"];
 
 export function stateOf(plugin: PluginStatusV3): PluginV3State {
   return (STATES as readonly string[]).includes(plugin.state) ? (plugin.state as PluginV3State) : "loading";

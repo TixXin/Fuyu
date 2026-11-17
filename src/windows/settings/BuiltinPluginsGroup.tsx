@@ -17,7 +17,7 @@ const STATES: readonly PluginV3State[] = ["running", "waiting", "failed", "disab
 
 export const TONES: Record<PluginV3State, string> = {
   running: "ok", waiting: "warn", loading: "warn", failed: "bad",
-  "auto-disabled": "bad", "safe-mode": "info", disabled: "off", stopped: "off", unloading: "off",
+  "auto-disabled": "bad", "safe-mode": "info", bisect: "info", disabled: "off", stopped: "off", unloading: "off",
 };
 
 export const BUILTIN_GROUPS: Record<BuiltinPluginName, Exclude<PluginV3Group, "third-party">> = {

@@ -1,4 +1,4 @@
-export type PluginV3State = "running" | "waiting" | "failed" | "disabled" | "auto-disabled" | "safe-mode" | "loading" | "stopped" | "unloading";
+export type PluginV3State = "running" | "waiting" | "failed" | "disabled" | "auto-disabled" | "safe-mode" | "bisect" | "loading" | "stopped" | "unloading";
 
 export type PluginV3Connection = "connecting" | "open" | "reconnecting" | "failed" | "closed";
 
@@ -91,6 +91,17 @@ export type SettingsPluginsV3Text = {
   };
   serviceReplacedBy?: (service: string, by: string) => string;
   serviceYielded?: (service: string) => string;
+  unreviewedBadge?: string;
+  undeclaredBadge?: (items: string) => string;
+  bisect?: {
+    start: string;
+    testing: (step: number, count: number, ids: string) => string;
+    fixed: string;
+    stillBroken: string;
+    found: (id: string) => string;
+    clear: string;
+    restore: string;
+  };
   autoDisabled: (errors: number, seconds: number) => string;
   heldBySafeMode: (mode: string) => string;
   cpu: string;
@@ -234,6 +245,7 @@ export const zhCN: SettingsPluginsV3Text = {
     disabled: "已停用",
     "auto-disabled": "已自动停用",
     "safe-mode": "被安全模式拦下",
+    bisect: "排查停用中",
     loading: "加载中",
     stopped: "已停止",
     unloading: "正在停止",
@@ -247,6 +259,17 @@ export const zhCN: SettingsPluginsV3Text = {
   },
   serviceReplacedBy: (service, by) => `服务 ${service} 已由插件 ${by} 接管`,
   serviceYielded: (service) => `已让出服务 ${service}`,
+  unreviewedBadge: "未经市场审核",
+  undeclaredBadge: (items) => `未在清单声明：${items}`,
+  bisect: {
+    start: "二分排查问题插件",
+    testing: (step, count, ids) => `第 ${step} 步：已临时停用 ${count} 个第三方插件（${ids}），问题消失了吗？`,
+    fixed: "问题消失了",
+    stillBroken: "问题还在",
+    found: (id) => `已定位到问题插件：${id}（当前保持停用）`,
+    clear: "未在第三方插件中复现该问题，已恢复全部插件。",
+    restore: "结束并恢复全部",
+  },
   autoDisabled: (errors, seconds) => `${seconds} 秒内出错 ${errors} 次，已停用到宿主下次重启；没有改 plugins.yml。`,
   heldBySafeMode: (mode) => `安全模式（${mode}）下不启动这个插件。`,
   cpu: "CPU",
@@ -390,6 +413,7 @@ export const en: SettingsPluginsV3Text = {
     disabled: "Off",
     "auto-disabled": "Turned off",
     "safe-mode": "Held by safe mode",
+    bisect: "Held by bisect",
     loading: "Loading",
     stopped: "Stopped",
     unloading: "Stopping",
@@ -403,6 +427,17 @@ export const en: SettingsPluginsV3Text = {
   },
   serviceReplacedBy: (service, by) => `Service ${service} is replaced by ${by}`,
   serviceYielded: (service) => `Yielded service ${service}`,
+  unreviewedBadge: "Unreviewed",
+  undeclaredBadge: (items) => `Undeclared in manifest: ${items}`,
+  bisect: {
+    start: "Bisect plugins",
+    testing: (step, count, ids) => `Step ${step}: Temporarily turned off ${count} third-party plugin(s) (${ids}). Is the problem gone?`,
+    fixed: "Problem is gone",
+    stillBroken: "Still happening",
+    found: (id) => `Problem traced to plugin: ${id} (kept off for now)`,
+    clear: "Could not reproduce the issue across third-party plugins; all plugins restored.",
+    restore: "Finish & restore all",
+  },
   autoDisabled: (errors, seconds) => `${errors} errors within ${seconds} s, so it's off until the host restarts. plugins.yml is unchanged.`,
   heldBySafeMode: (mode) => `Not started in safe mode (${mode}).`,
   cpu: "CPU",
