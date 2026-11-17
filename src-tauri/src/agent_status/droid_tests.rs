@@ -87,8 +87,10 @@ fn hooks_go_into_settings_unless_hooks_json_exists() {
     let env = HookEnv { home_dir: &home, running_script: Path::new("/data/fuyu-agent-running.sh"), status_script: Path::new("/data/fuyu-agent-status.sh") };
     let entries = hook_entries(&env);
     let events: Vec<&str> = entries.iter().map(|(event, _)| *event).collect();
-    assert_eq!(events, ["UserPromptSubmit", "PreToolUse", "Stop", "Notification"]);
+    assert_eq!(events, ["UserPromptSubmit", "PreToolUse", "Stop", "Notification", "PreToolUse"]);
     assert_eq!(entries[3].1["matcher"], "permission_prompt");
+    assert_eq!(entries[4].1["matcher"], APPROVED_TOOLS);
+    assert!(entries[4].1["hooks"][0]["command"].as_str().unwrap().contains("droid permission"));
 
     fs::write(home.join("settings.json"), r#"{"model":"x","hooks":{"Stop":[{"hooks":[{"type":"command","command":"mine"}]}]}}"#).unwrap();
     assert_eq!(state_in(&home, &entries), HookInstallState::NotInstalled);
@@ -96,6 +98,7 @@ fn hooks_go_into_settings_unless_hooks_json_exists() {
     let settings: Value = serde_json::from_str(&fs::read_to_string(home.join("settings.json")).unwrap()).unwrap();
     assert_eq!(settings["model"], "x");
     assert_eq!(settings["hooks"]["Stop"].as_array().unwrap().len(), 2);
+    assert_eq!(settings["hooks"]["PreToolUse"].as_array().unwrap().len(), 2);
     assert_eq!(state_in(&home, &entries), HookInstallState::Current);
 
     fs::write(home.join("hooks.json"), r#"{"PreToolUse":[{"matcher":"Execute","hooks":[{"type":"command","command":"audit"}]}]}"#).unwrap();
@@ -103,7 +106,7 @@ fn hooks_go_into_settings_unless_hooks_json_exists() {
     install_into(&home, entries.clone()).unwrap();
     let hooks: Value = serde_json::from_str(&fs::read_to_string(home.join("hooks.json")).unwrap()).unwrap();
     assert!(hooks.get("hooks").is_none());
-    assert_eq!(hooks["PreToolUse"].as_array().unwrap().len(), 2);
+    assert_eq!(hooks["PreToolUse"].as_array().unwrap().len(), 3);
     assert_eq!(state_in(&home, &entries), HookInstallState::Current);
 
     fs::write(home.join("hooks.json"), "{broken").unwrap();

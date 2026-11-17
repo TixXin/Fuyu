@@ -10,6 +10,7 @@ $routes = @{
     trae = 'trae/pre-tool-use'
     traeCn = 'traeCn/pre-tool-use'
     antigravity = 'antigravity/pre-tool-use'
+    droid = 'droid/pre-tool-use'
     dsh = 'dsh/pre-tool-use'
 }
 $agent = if ($args.Count -gt 0) { [string]$args[0] } else { 'codex' }

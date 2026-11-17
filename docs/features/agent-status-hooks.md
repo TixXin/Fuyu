@@ -346,11 +346,11 @@ Listed with its own icon (task B55, issue #542). Not yet run with the island (#1
 
 ## Droid
 
-Factory's Droid is listed with its own icon (task B58, issue #546). Not yet run with the island (#179).
+Factory's Droid is listed with its own icon (task B58, issue #546; island approvals in B72.2, issue #782). Not yet run with the island (#179).
 
 - **Sessions**: `~/.factory/sessions/<project>/<uuid>.jsonl` with `<uuid>.settings.json` for the model and reasoning effort (or under `FACTORY_HOME`).
 - **Hooks**: written into `~/.factory/hooks.json` when it exists (events at the top level), otherwise into `hooks` in `~/.factory/settings.json`, since Droid ignores the latter when the former exists. The user's own hooks stay. Reopen the Droid session after installing.
-- **No approving on the island**: Droid has no `PermissionRequest` event; waiting on you comes from `Notification` with `permission_prompt`.
+- **Approving on the island**: `PreToolUse` (matcher `^(Bash|Execute|RunCommand|Edit|Write|MultiEdit)$`) posts to `/droid/pre-tool-use` and is answered with `hookSpecificOutput.permissionDecision` (`allow` to run without Droid's interactive prompt, `deny` with your reason, or `ask` to hand back to the terminal). Read-only tools are not stopped. Waiting on you comes from `Notification` with `permission_prompt` and while an island approval is pending.
 - Not done: usage, SSH.
 
 ## pi (pi-coding-agent / PiDeck)

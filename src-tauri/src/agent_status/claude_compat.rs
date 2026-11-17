@@ -42,7 +42,6 @@ pub(super) enum Waiting {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Reply {
     PermissionRequest,
-    #[cfg_attr(not(test), expect(dead_code))]
     PreToolUse(&'static str),
     Behavior,
     None,
@@ -66,7 +65,14 @@ pub(super) struct Compat {
     pub(super) aliases: &'static [(&'static str, &'static str)],
 }
 
-const SPECS: [&Compat; 5] = [&super::qoder::SPEC, &super::codebuddy::SPEC, &super::qwen::SPEC, &super::grok::SPEC, &super::copilot::SPEC];
+const SPECS: [&Compat; 6] = [
+    &super::qoder::SPEC,
+    &super::codebuddy::SPEC,
+    &super::qwen::SPEC,
+    &super::grok::SPEC,
+    &super::copilot::SPEC,
+    &super::droid::SPEC,
+];
 
 fn spec(provider: &str) -> Option<&'static Compat> {
     SPECS.into_iter().find(|spec| spec.provider == provider)

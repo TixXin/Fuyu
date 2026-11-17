@@ -142,11 +142,12 @@
 - [ ] 状态灯、等你、岛上允许 / 拒绝（拒绝时 Copilot 收到理由）；同一会话不再同时出现成 Claude Code（B55）
 - [ ] `PermissionRequest` 钩子的输入里有没有 `tool_name` / `tool_input`（文档没写；没有时审批卡片缺工具名）（B55）
 
-### Droid（B58，本机没装，装上后测）
+### Droid（B58、B72.2，本机没装，装上后测）
 
 - [ ] 装 droid 跑一轮：会话出现在 Agent 页，目录对（项目路径带 `-` 的以 `session_start.cwd` 为准），模型和推理强度显示（B58）
 - [ ] 注入的系统提问（`visibility: hidden`）不当成标题或最近提问（B58）
 - [ ] 装完重开会话，状态灯和「等你」（permission_prompt）正常；`hooks.json` 或 `settings.json` 里用户原有的钩子还在（B58）
+- [ ] 开岛上审批，跑命令或写文件工具（`Bash`/`Execute`/`Edit`/`Write`）：岛上弹出审批卡，点允许直接执行不再弹终端确认框、点拒绝带理由拦截、点交回终端回到 Droid 确认框；只读工具不弹卡（B72.2）
 
 ### Codex 和 Claude 桌面 App（B46）
 

@@ -20,6 +20,7 @@ pub enum Agent {
     Zcode,
     Mimo,
     Copilot,
+    Droid,
     Pi,
 }
 
@@ -33,7 +34,7 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 15] = [
+const AGENTS: [Agent; 16] = [
     Agent::ClaudeCode,
     Agent::Codex,
     Agent::Workbuddy,
@@ -48,6 +49,7 @@ const AGENTS: [Agent; 15] = [
     Agent::Zcode,
     Agent::Mimo,
     Agent::Copilot,
+    Agent::Droid,
     Agent::Pi,
 ];
 
@@ -79,6 +81,7 @@ impl Agent {
             Self::Trae => "/trae/pre-tool-use",
             Self::TraeCn => "/traeCn/pre-tool-use",
             Self::Copilot => "/copilot/permission-request",
+            Self::Droid => "/droid/pre-tool-use",
         }
     }
 
@@ -99,11 +102,12 @@ impl Agent {
             Self::Trae => "trae",
             Self::TraeCn => "traeCn",
             Self::Copilot => "copilot",
+            Self::Droid => "droid",
         }
     }
 
     pub(super) fn lacks_waiting_event(self) -> bool {
-        matches!(self, Self::Antigravity | Self::Dsh | Self::Trae | Self::TraeCn)
+        matches!(self, Self::Antigravity | Self::Dsh | Self::Trae | Self::TraeCn | Self::Droid)
     }
 }
 
@@ -277,7 +281,7 @@ pub(super) fn permission_response(
             .to_string(),
             _ => "{}".to_string(),
         },
-        Agent::Trae | Agent::TraeCn => pre_tool_use_response(decision, reason()),
+        Agent::Trae | Agent::TraeCn | Agent::Droid => pre_tool_use_response(decision, reason()),
         Agent::Copilot => behavior_response(decision, reason()),
         Agent::Opencode | Agent::Mimo | Agent::Pi => super::opencode::plugin_response(decision, message),
     }

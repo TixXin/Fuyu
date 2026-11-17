@@ -543,7 +543,7 @@ fn new_agents_have_their_own_routes_and_answers() {
     assert_eq!(copilot(None), json!({}));
     let camel = HookInput::parse_for(Agent::Copilot, br#"{"sessionId":"c1","toolName":"bash","toolArgs":{"command":"ls"}}"#).unwrap();
     assert_eq!((camel.session_id.as_str(), camel.tool_name.as_str(), &camel.tool_input), ("c1", "bash", &json!({"command": "ls"})));
-    for (agent, id) in [(Agent::Trae, "trae"), (Agent::TraeCn, "traeCn")] {
+    for (agent, id) in [(Agent::Trae, "trae"), (Agent::TraeCn, "traeCn"), (Agent::Droid, "droid")] {
         assert_eq!(route(&format!("/{id}/pre-tool-use")), Some((agent, Kind::Permission)));
         assert_eq!(serde_json::to_value(agent).unwrap(), json!(id));
         assert!(agent.lacks_waiting_event());

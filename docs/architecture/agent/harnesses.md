@@ -194,18 +194,18 @@ GitHub 的 Copilot CLI，id `copilot`。代码在 `copilot.rs`（会话）和 `c
 | 点会话跳过去 | ◐ 通用的终端窗口匹配 |
 | 用量环、SSH 远程、cc-connect | ✗ / ✗ / — |
 
-## Droid（B58）
+## Droid（B58、B72.2）
 
 Factory 的 Droid CLI，id `droid`。代码在 `droid.rs`（会话）和 `droid_hooks.rs`（钩子）。本机没装，没在真机上跑过（#179）。
 
 | 层 | Droid |
 |---|---|
 | 配置 | `~/.factory`（`FACTORY_HOME` 优先）；有 `~/.factory/hooks.json` 时写进它（事件在顶层），没有时写 `~/.factory/settings.json` 的 `hooks` 键（Droid 有 `hooks.json` 时不读 `settings.json` 的钩子）；用户自己的钩子保留；装完要重开 Droid 会话 |
-| 钩子 | Claude Code 的分组格式；Droid 没有 PermissionRequest 和 StopFailure |
+| 钩子 | Claude Code 的分组格式；Droid 没有 PermissionRequest 和 StopFailure，审批挂 `PreToolUse` |
 | 会话 | `~/.factory/sessions/<项目>/<uuid>.jsonl` 和旁边的 `<uuid>.settings.json`（模型、推理强度）；目录以 `session_start.cwd` 为准；`visibility: hidden` 的注入提问不当标题 |
 | 状态灯 | ✓ `agent-droid-running.flag` |
-| 等你 | Notification 的 `permission_prompt` |
-| 岛上审批 | ✗ 没有 PermissionRequest 事件 |
+| 等你 | Notification 的 `permission_prompt`，以及岛上审批挂起时 |
+| 岛上审批 | ✓ `/droid/pre-tool-use`，只拦命令与写改文件工具（`^(Bash\|Execute\|RunCommand\|Edit\|Write\|MultiEdit)$`），回 `hookSpecificOutput.permissionDecision`（`allow` 直接放行跳过确认框 / `deny` 带原因 / `ask` 交回终端） |
 | 点会话跳过去 | ◐ 通用的终端窗口匹配 |
 | 用量环、SSH 远程、cc-connect | ✗ / ✗ / — |
 
