@@ -69,7 +69,8 @@ export function pagesOfFeaturesOff(on: Readonly<Record<SettingsFeature, boolean>
 }
 
 export function isCategoryAvailable(category: SettingsCategory, unsupported: ReadonlySet<PlatformFeature>, mac = false, pluginsV3 = false): boolean {
-  return find(category)?.available?.({ unsupported, mac, pluginsV3 }) ?? true;
+  const item = find(category);
+  return item !== undefined && (item.available?.({ unsupported, mac, pluginsV3 }) ?? true);
 }
 
 export function searchCategories(query: string, describe: (category: SettingsCategory) => string): SettingsCategory[] {

@@ -2,6 +2,7 @@ import { CircleArrowUp } from "lucide-react";
 import type { Translations } from "../../../i18n";
 import { defineSlot, type IslandCollapsedMeta } from "../../plugin-kernel/slots";
 import { useUpdateReminder } from "../useBackgroundUpdateCheck";
+import { OWNER } from "./owner";
 import { UPDATE_REMINDER_HINT } from "./updateIsland";
 
 type CollapsedContext = {
@@ -30,4 +31,4 @@ function UpdateItem({ t, onOpenSettings }: CollapsedContext) {
   );
 }
 
-collapsedSlot.add({ id: "update", order: 30, shown: ({ hints }) => hints.has(UPDATE_REMINDER_HINT), component: UpdateItem });
+collapsedSlot.add({ id: "update", order: 30, shown: ({ hints }) => hints.has(UPDATE_REMINDER_HINT), component: UpdateItem }, OWNER);

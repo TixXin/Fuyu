@@ -27,6 +27,7 @@ const EDITORS: &[&str] = &[
 const TERMINALS: &[&str] = &[
     "terminal",
     "iterm",
+    "iterm2",
     "ghostty",
     "wezterm",
     "windowsterminal",
@@ -210,11 +211,24 @@ pub(super) fn focus_session_window(
 }
 
 #[cfg(target_os = "macos")]
-pub(super) fn select_mac_terminal_tab(focused: &FocusedWindow, chain: &[u32]) -> Option<bool> {
-    if !matches!(focused.app.as_str(), "terminal" | "iterm") {
+pub(super) fn session_tty(chain: &[u32], override_tty: Option<&str>) -> Option<String> {
+    override_tty
+        .map(str::to_string)
+        .or_else(|| chain.iter().find_map(|pid| crate::macos::proc_info::tty_path(*pid)))
+}
+
+#[cfg(target_os = "macos")]
+pub(super) fn select_mac_terminal_tab(
+    focused: &FocusedWindow,
+    chain: &[u32],
+    override_tty: Option<&str>,
+) -> Option<bool> {
+    if !crate::macos::terminal_tabs::supports(&focused.app) {
         return None;
     }
-    let tty = chain.iter().find_map(|pid| crate::macos::proc_info::tty_path(*pid))?;
+    let Some(tty) = session_tty(chain, override_tty) else {
+        return Some(false);
+    };
     Some(crate::macos::terminal_tabs::select(&focused.app, &tty))
 }
 

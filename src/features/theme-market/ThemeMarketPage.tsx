@@ -5,8 +5,6 @@ import type { IslandSettings } from "../../lib/settings/types";
 import { useLocale, useTranslation } from "../../i18n";
 import { getThemeMarket } from "./api";
 import { isThemeInUse, readMarketThemes, withMarketTheme, type MarketTheme } from "./model";
-import "../plugins/PluginMarketSection.css";
-import "../plugins/PluginCard.css";
 import "./ThemeMarketPage.css";
 
 const OFFICIAL = "TixXin";

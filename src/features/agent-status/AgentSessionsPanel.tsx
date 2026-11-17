@@ -11,7 +11,7 @@ import { useTranslation } from "../../i18n";
 import { AgentSessionCard } from "./AgentSessionCard";
 import { AgentUsageBar } from "./AgentUsageBar";
 import type { AgentUsages } from "./usage";
-import { focusAgentWindow, type AgentSessionSummary } from "./api";
+import { focusAgentWindow, listenAgentFocusWindowOnly, type AgentSessionSummary } from "./api";
 import { arrangeSessions, isActivePhase, modelLabel, sessionAge, sessionProject } from "./sessionList";
 import { shownEffort } from "./effortLabels";
 import { useEffortLabels } from "./useEffortLabels";
@@ -142,6 +142,20 @@ export function AgentSessionsPanel({
     const timer = window.setTimeout(() => setNotFoundId(null), NOT_FOUND_NOTICE_MS);
     return () => window.clearTimeout(timer);
   }, [notFoundId]);
+
+  const windowOnlyText = t.agent.sessions.windowOnly;
+  useEffect(() => {
+    if (reveal) return;
+    let disposed = false;
+    const unlisten = listenAgentFocusWindowOnly((payload) => {
+      if (disposed) return;
+      setRowNotice({ key: `${payload.provider}:${payload.sessionId}`, text: windowOnlyText });
+    }).catch(() => undefined);
+    return () => {
+      disposed = true;
+      void unlisten.then((stop) => stop?.());
+    };
+  }, [reveal, windowOnlyText]);
 
 
   const keyboard = useSessionKeyboard(

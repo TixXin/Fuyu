@@ -1,5 +1,6 @@
 import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { emit } from "@tauri-apps/api/event";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
@@ -18,7 +19,7 @@ mockIPC((command, payload) => {
   if (command === "list_agent_effort_labels") return {};
   if (command === "focus_agent_window") return true;
   return null;
-});
+}, { shouldMockEvents: true });
 const copied: string[] = [];
 Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (value: string) => { copied.push(value); } } });
 const original = window.matchMedia.bind(window);
@@ -130,6 +131,12 @@ async function runChecks() {
     await openMenu(rowButtons()[1]);
     await act(async () => menuItem("跳到窗口").click());
     check(await until(() => calls.some((call) => call.command === "focus_agent_window" && call.payload.sessionId === "b")), "菜单里的「跳到窗口」和点一行一样");
+    await act(async () => {
+      await emit("agent-focus-window-only", { provider: "codex", sessionId: "b", app: "codex", name: "Codex" });
+    });
+    check(await until(() => items()[1].querySelector('[role="status"]')?.textContent === "已切到窗口，请选会话" && !items()[0].querySelector('[role="status"]')), "只能切到应用窗口时在该行提示手动选会话");
+    await act(async () => rowButtons()[1].click());
+    check(await until(() => !items()[1].querySelector('[role="status"]')), "再次点击精确聚焦时清除行内提示");
     await openMenu(rowButtons()[1]);
     await act(async () => menuItem("归档").click());
     check(archived[archived.length - 1] === "b", "菜单里的「归档」归档这一行");

@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
+import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { entryOf, entryTabs, isCategoryAvailable, type SettingsCategory, type TabbedCategory } from "./categories";
+import { categorySlot } from "./slots/categorySlot";
+import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import "./SettingsTabs.css";
 
 export function SettingsTabs({ category, onCategoryChange }: { category: SettingsCategory; onCategoryChange: (category: SettingsCategory) => void }) {
   const text = useTranslation().settings.categories;
   const unsupported = useUnsupportedFeatures();
+  const pluginsV3 = usePluginsV3Enabled();
+  useSlotEntries(categorySlot);
   const entry = entryOf(category);
   const bar = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: false, end: false });
@@ -37,7 +42,7 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
   }, [category]);
 
   if (!entry) return null;
-  const tabs = entryTabs(entry).filter((tab) => isCategoryAvailable(tab, unsupported, isMacOS));
+  const tabs = entryTabs(entry).filter((tab) => isCategoryAvailable(tab, unsupported, isMacOS, pluginsV3));
   const move = (from: TabbedCategory, step: number) => {
     const next = tabs[(tabs.indexOf(from) + step + tabs.length) % tabs.length];
     onCategoryChange(next);

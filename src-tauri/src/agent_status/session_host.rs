@@ -45,8 +45,17 @@ const KNOWN_HOSTS: &[(&str, &str, &str)] = &[
     ("webstorm64", "WebStorm", "editor"),
     ("rustrover64", "RustRover", "editor"),
     ("codex", "Codex", "app"),
+    ("claude", "Claude", "app"),
+    ("antigravity", "Antigravity", "app"),
+    ("antigravity ide", "Antigravity IDE", "app"),
+    ("antigravity-ide", "Antigravity IDE", "app"),
+    ("workbuddy", "WorkBuddy", "app"),
+    ("workbuddyai", "WorkBuddy", "app"),
+    ("opencode", "OpenCode", "app"),
+    ("trae cn", "TRAE CN", "editor"),
     ("terminal", "Terminal", "terminal"),
     ("iterm", "iTerm2", "terminal"),
+    ("iterm2", "iTerm2", "terminal"),
     ("ghostty", "Ghostty", "terminal"),
     ("wezterm", "WezTerm", "terminal"),
     ("visual studio code", "VS Code", "editor"),
@@ -57,6 +66,23 @@ const KNOWN_HOSTS: &[(&str, &str, &str)] = &[
     ("rustrover", "RustRover", "editor"),
 ];
 
+pub(super) fn known_host_name(app: &str) -> Option<&'static str> {
+    KNOWN_HOSTS
+        .iter()
+        .find(|(known, _, _)| *known == app)
+        .map(|&(_, name, _)| name)
+}
+
+pub(super) fn app_display_name(app: &str, exe: Option<&str>) -> String {
+    if let Some(name) = known_host_name(app) {
+        return name.to_string();
+    }
+    if let Some(exe) = exe {
+        return host_for_exe(exe).name;
+    }
+    app.to_string()
+}
+
 pub(super) fn host_for_exe(exe: &str) -> SessionHost {
     let app = app_name(exe);
     let (name, kind) = KNOWN_HOSTS
@@ -64,6 +90,10 @@ pub(super) fn host_for_exe(exe: &str) -> SessionHost {
         .find(|(known, _, _)| *known == app)
         .map(|&(_, name, kind)| (name.to_string(), kind))
         .unwrap_or_else(|| {
+            #[cfg(target_os = "macos")]
+            if let Some(bundle) = crate::macos::apps::outer_app_name(exe) {
+                return (bundle, "app");
+            }
             let stem = Path::new(exe)
                 .file_stem()
                 .map(|stem| stem.to_string_lossy().to_string())
@@ -98,8 +128,11 @@ pub(super) fn host_from_env(
 ) -> Option<String> {
     let var = |name: &str| var(name).filter(|value| !value.is_empty());
     match var("TERM_PROGRAM").map(|program| program.to_lowercase()).as_deref() {
-        Some("wezterm") => var("WEZTERM_EXECUTABLE").or_else(|| open("wezterm-gui")),
-        Some("vscode") => var("VSCODE_GIT_ASKPASS_NODE").or_else(|| open("code")),
+        Some("wezterm") => var("WEZTERM_EXECUTABLE").or_else(|| open("wezterm-gui")).or_else(|| open("wezterm")),
+        Some("vscode") => var("VSCODE_GIT_ASKPASS_NODE").or_else(|| open("code")).or_else(|| open("visual studio code")),
+        Some("ghostty") => open("ghostty"),
+        Some("apple_terminal") => open("terminal"),
+        Some("iterm.app") => open("iterm").or_else(|| open("iterm2")),
         Some("mintty") => open("mintty"),
         _ if var("WT_SESSION").is_some() => open("windowsterminal"),
         _ => None,

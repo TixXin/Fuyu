@@ -1,6 +1,6 @@
-# `@fuyu/plugin-base` — Tauri + Node「万物皆插件」基座
+# `@fuyu/plugin-base`（公开名：`tauri-cordis`）— Tauri + Node「万物皆插件」基座
 
-`@fuyu/plugin-base`（配合 Rust 侧 `src-tauri/crates/plugin-base` 与 `plugin-base-macros`）是浮屿插件平台第 3 版的独立基座。它不包含任何浮屿业务代码（由 `test/boundary.test.mjs` 强制检查），任何 Tauri 或桌面 WebView 应用都可以用它搭建「内置功能与第三方扩展同权、能力皆服务、界面皆插槽」的插件架构。
+`@fuyu/plugin-base`（配合 Rust 侧 `src-tauri/crates/plugin-base` 与 `plugin-base-macros`，公开发布名定为 **`tauri-cordis`**，MIT 许可证）是浮屿插件平台第 3 版的独立基座。它不包含任何浮屿业务代码（由 `test/boundary.test.mjs` 强制检查），任何 Tauri 或桌面 WebView 应用都可以用它搭建「内置功能与第三方扩展同权、能力皆服务、界面皆插槽」的插件架构。
 
 ---
 

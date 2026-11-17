@@ -43,6 +43,7 @@ mod session_scan;
 mod sessions;
 pub(crate) use sessions::parse_timestamp_ms;
 mod title;
+mod tmux;
 mod todo_list;
 mod tool_call;
 pub(crate) mod usage;
@@ -462,6 +463,8 @@ pub async fn focus_agent_window(
     session_id: Option<String>,
 ) -> Result<bool, String> {
     let app_dir = crate::home_dir::agent_home(app.path()).ok();
+    let provider_for_event = provider.clone();
+    let session_for_event = session_id.clone().unwrap_or_default();
     let focused = tauri::async_runtime::spawn_blocking(move || {
         focus::focus_session(app_dir.as_deref(), &provider, cwd.as_deref(), title.as_deref(), session_id.as_deref())
     })
@@ -471,11 +474,22 @@ pub async fn focus_agent_window(
         let name = editor_extension::editor_name(&editor).unwrap_or(&editor).to_string();
         let payload = json!({ "app": editor, "name": name });
         let _ = app.emit_to(crate::island::WINDOW_LABEL, EDITOR_EXTENSION_MISSING_EVENT, payload);
+    } else if focused.found && !focused.exact && !session_for_event.is_empty() {
+        if let Some((focused_app, name)) = focused.focused_app {
+            let payload = json!({
+                "provider": provider_for_event,
+                "sessionId": session_for_event,
+                "app": focused_app,
+                "name": name,
+            });
+            let _ = app.emit_to(crate::island::WINDOW_LABEL, FOCUS_WINDOW_ONLY_EVENT, payload);
+        }
     }
     Ok(focused.found)
 }
 
 const EDITOR_EXTENSION_MISSING_EVENT: &str = "agent-editor-extension-missing";
+const FOCUS_WINDOW_ONLY_EVENT: &str = "agent-focus-window-only";
 
 #[tauri::command]
 pub async fn get_editor_extension_states() -> Vec<editor_extension::EditorExtensionState> {
