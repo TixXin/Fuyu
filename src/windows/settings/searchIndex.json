@@ -2658,6 +2658,19 @@
       }
     },
     {
+      "page": "messages",
+      "zh-CN": {
+        "group": "新消息提示",
+        "title": "识别通知中的验证码",
+        "description": "新邮件或通知含有验证码时，在横幅、弹出面板和阅读页显示一键复制按钮"
+      },
+      "en": {
+        "group": "New messages",
+        "title": "Detect verification codes",
+        "description": "Show a one-click copy button on banners, arrival cards and the mail reader when a verification code is found"
+      }
+    },
+    {
       "page": "messagesIm",
       "zh-CN": {
         "group": "QQ 通知",
