@@ -16,7 +16,9 @@ pub(crate) fn source_on(config: &Map<String, Value>, source: &str) -> bool {
 
 type Apply = Box<dyn Fn(bool) + Send + Sync>;
 type Cleanup = Box<dyn Fn() + Send + Sync>;
+type Running = Box<dyn Fn() -> bool + Send + Sync>;
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(crate) struct SourceWorker {
     source: &'static str,
     worker: Worker,
@@ -24,12 +26,21 @@ pub(crate) struct SourceWorker {
     after_stop: Option<Cleanup>,
 }
 
+#[cfg_attr(not(windows), allow(dead_code))]
 impl SourceWorker {
-    pub(crate) fn new(source: &'static str, worker: Worker, apply: impl Fn(bool) + Send + Sync + 'static) -> Self {
-        Self { source, worker, apply: Box::new(apply), after_stop: None }
+    pub(crate) fn new(
+        source: &'static str,
+        worker: Worker,
+        apply: impl Fn(bool) + Send + Sync + 'static,
+    ) -> Self {
+        Self {
+            source,
+            worker,
+            apply: Box::new(apply),
+            after_stop: None,
+        }
     }
 
-    #[cfg_attr(not(windows), allow(dead_code))]
     pub(crate) fn after_stop(mut self, cleanup: impl Fn() + Send + Sync + 'static) -> Self {
         self.after_stop = Some(Box::new(cleanup));
         self
@@ -75,6 +86,52 @@ impl Background for SourceWorker {
         if let Err(error) = self.follow(config) {
             eprintln!("[plugins-v3] could not start {} of {PLUGIN_ID}: {error}", self.source);
         }
+    }
+}
+
+pub(crate) struct SourceSwitch {
+    source: &'static str,
+    apply: Apply,
+    running: Running,
+}
+
+impl SourceSwitch {
+    pub(crate) fn new(
+        source: &'static str,
+        apply: impl Fn(bool) + Send + Sync + 'static,
+        running: impl Fn() -> bool + Send + Sync + 'static,
+    ) -> Self {
+        Self {
+            source,
+            apply: Box::new(apply),
+            running: Box::new(running),
+        }
+    }
+
+    fn follow(&self, config: &Map<String, Value>) {
+        (self.apply)(source_on(config, self.source));
+    }
+}
+
+impl Background for SourceSwitch {
+    fn start(&self) -> Result<(), String> {
+        self.follow(&builtins::config(PLUGIN_ID));
+        Ok(())
+    }
+
+    fn stop(&self) {
+        (self.apply)(false);
+    }
+
+    fn running(&self) -> bool {
+        (self.running)()
+    }
+
+    fn configure(&self, config: &Map<String, Value>) {
+        if !builtins::is_enabled(PLUGIN_ID) {
+            return;
+        }
+        self.follow(config);
     }
 }
 
@@ -137,5 +194,25 @@ mod tests {
         source.stop();
         assert!(!source.running());
         assert!(!on.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn shared_source_switch_reports_hub_running_and_turns_off_on_stop() {
+        let active = Arc::new(AtomicBool::new(false));
+        let applied = active.clone();
+        let running = active.clone();
+        let switch = SourceSwitch::new(
+            QQ,
+            move |value| applied.store(value, Ordering::SeqCst),
+            move || running.load(Ordering::SeqCst),
+        );
+        switch.follow(&config(json!({ "qq": true })));
+        assert!(switch.running());
+        switch.follow(&config(json!({ "qq": false })));
+        assert!(!switch.running());
+        switch.follow(&config(json!({ "qq": true })));
+        assert!(switch.running());
+        switch.stop();
+        assert!(!switch.running());
     }
 }

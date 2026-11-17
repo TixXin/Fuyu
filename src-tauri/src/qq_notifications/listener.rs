@@ -3,28 +3,23 @@ use crate::system::CommandExt;
 use std::{
     path::PathBuf,
     process::{Command, Stdio},
-    sync::Arc,
+    sync::{Arc, PoisonError},
     thread,
     time::{Duration, Instant},
 };
 use windows::{
     core::{HRESULT, HSTRING},
-    UI::Notifications::{
-        KnownNotificationBindings,
-        Management::{UserNotificationListener, UserNotificationListenerAccessStatus},
-        NotificationKinds, NotificationSetting, ToastNotificationManager, UserNotification,
-    },
+    UI::Notifications::{NotificationSetting, ToastNotificationManager},
 };
 
 use super::history::NotificationBuffer;
-use crate::plugin_kernel::worker::Stop;
-use super::{forget_seen, now_ms, publish, NotificationService, NotificationStatus, QQNotification};
+use super::{publish, NotificationService, NotificationStatus, QQNotification};
+use crate::toast_notifications::{self, PollBatch, ToastItem, ToastMatcher, ToastPoll};
 use crate::win32;
 
-const QQ_APP_ID: &str = "QQ";
+pub(super) const QQ_APP_ID: &str = "QQ";
 
-const REGISTRATION_REPAIR: &str =
-    include_str!("repair-qq-notification-registration.ps1");
+const REGISTRATION_REPAIR: &str = include_str!("repair-qq-notification-registration.ps1");
 
 const DIAGNOSTICS: [(&str, &str); 3] = [
     (
@@ -46,98 +41,106 @@ pub(super) fn is_diagnostic(parts: &[String]) -> bool {
     })
 }
 
-pub(super) fn monitor(service: Arc<NotificationService>, stop: &Stop) {
-    let mut repair_generation = None;
-    let mut repair_error = None;
-    let mut was_front = false;
-    loop {
-        let (enabled, generation) = match service.state.lock() {
-            Ok(state) => (state.snapshot.enabled, state.generation),
-            Err(_) => return,
+pub(super) fn handle_poll(service: &Arc<NotificationService>, poll: ToastPoll) {
+    let (enabled, generation) = match service.state.lock() {
+        Ok(state) => (state.snapshot.enabled, state.generation),
+        Err(_) => return,
+    };
+    if !enabled {
+        return;
+    }
+    let channel_error = if matches!(&poll, ToastPoll::Listening(_)) {
+        check_channel_error(service, generation)
+    } else {
+        None
+    };
+    let change = {
+        let Ok(mut state) = service.state.lock() else {
+            return;
         };
-        if !enabled {
-            if stop.wait(Duration::from_secs(1)) {
-                return;
-            }
-            continue;
-        }
-        let poll = read_notifications();
-        let channel_error = if matches!(&poll, Ok((NotificationStatus::Listening, _))) {
-            let setting = qq_notification_setting();
-            if repair_generation != Some(generation) {
-                repair_error = None;
-                if should_repair_registration(&setting) {
-                    repair_generation = Some(generation);
-                    repair_error = repair_registration(&service, generation).err();
-                }
-            }
-            let setting = qq_notification_setting();
-            if matches!(setting, Ok(NotificationSetting::Enabled)) {
-                repair_error = None;
-                None
-            } else {
-                repair_error.clone().or_else(|| registration_error(setting))
-            }
-        } else {
-            None
-        };
-        let change = {
-            let Ok(mut state) = service.state.lock() else {
-                return;
-            };
-            if state.generation != generation || !state.snapshot.enabled {
-                continue;
-            }
-            let before = state.snapshot.clone();
-            let newest = match poll {
-                Ok((NotificationStatus::Listening, current)) => {
-                    state.snapshot.status = NotificationStatus::Listening;
-                    state.snapshot.error = channel_error;
-                    let newest = state.buffer.sync(current);
-                    state.snapshot.items = state.buffer.items.clone();
-                    newest
-                }
-                Ok((status, _)) => {
-                    state.buffer = NotificationBuffer::default();
-                    state.snapshot.items.clear();
-                    state.snapshot.status = status;
-                    state.snapshot.error = None;
-                    None
-                }
-                Err(error) => {
-                    state.snapshot.status = NotificationStatus::Error;
-                    state.snapshot.error = Some(error);
-                    None
-                }
-            };
-            if state.snapshot != before {
-                state.snapshot.revision += 1;
-                Some((state.snapshot.clone(), newest))
-            } else {
-                None
-            }
-        };
-        if let Some((snapshot, newest)) = change {
-            publish(&service, snapshot, newest);
-        }
-        let front = qq_in_front();
-        if front && !was_front {
-            forget_seen(&service, now_ms());
-        }
-        was_front = front;
-        if stop.wait(Duration::from_secs(1)) {
+        if state.generation != generation || !state.snapshot.enabled {
             return;
         }
+        let before = state.snapshot.clone();
+        let newest = match poll {
+            ToastPoll::Listening(items) => {
+                let current = items.into_iter().filter_map(from_toast_item).collect();
+                state.snapshot.status = NotificationStatus::Listening;
+                state.snapshot.error = channel_error;
+                let newest = state.buffer.sync(current);
+                state.snapshot.items = state.buffer.items.clone();
+                newest
+            }
+            ToastPoll::PermissionDenied => {
+                state.buffer = NotificationBuffer::default();
+                state.snapshot.items.clear();
+                state.snapshot.status = NotificationStatus::PermissionDenied;
+                state.snapshot.error = None;
+                None
+            }
+            ToastPoll::PermissionRequired => {
+                state.buffer = NotificationBuffer::default();
+                state.snapshot.items.clear();
+                state.snapshot.status = NotificationStatus::PermissionRequired;
+                state.snapshot.error = None;
+                None
+            }
+            ToastPoll::Error(error) => {
+                state.snapshot.status = NotificationStatus::Error;
+                state.snapshot.error = Some(error);
+                None
+            }
+        };
+        if state.snapshot != before {
+            state.snapshot.revision += 1;
+            Some((state.snapshot.clone(), newest))
+        } else {
+            None
+        }
+    };
+    if let Some((snapshot, newest)) = change {
+        publish(service, snapshot, newest);
     }
 }
 
-fn qq_in_front() -> bool {
-    let process_id = win32::process::window_process_id(win32::window::foreground_window());
-    win32::process::image_path(process_id).is_some_and(|path| {
-        std::path::Path::new(&path)
-            .file_name()
-            .is_some_and(|name| name.eq_ignore_ascii_case("QQ.exe"))
-    })
+fn check_channel_error(service: &NotificationService, generation: u64) -> Option<String> {
+    let setting = qq_notification_setting();
+    let needs_repair = {
+        let mut repair = service
+            .repair
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        if repair.generation != Some(generation) {
+            repair.error = None;
+            if should_repair_registration(&setting) {
+                repair.generation = Some(generation);
+                true
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    };
+    if needs_repair {
+        let err = repair_registration(service, generation).err();
+        service
+            .repair
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .error = err;
+    }
+    let setting = qq_notification_setting();
+    let mut repair = service
+        .repair
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner);
+    if matches!(setting, Ok(NotificationSetting::Enabled)) {
+        repair.error = None;
+        None
+    } else {
+        repair.error.clone().or_else(|| registration_error(setting))
+    }
 }
 
 fn qq_notification_setting() -> windows::core::Result<NotificationSetting> {
@@ -227,72 +230,39 @@ fn repair_registration(service: &NotificationService, generation: u64) -> Result
     }
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 pub(super) fn read_notifications() -> Result<(NotificationStatus, Vec<QQNotification>), String> {
-    let _apartment = win32::com::WinRtApartment::multithreaded()
-        .map_err(|error| format!("无法初始化 Windows 通知：{error}"))?;
-    let listener = UserNotificationListener::Current()
-        .map_err(|error| format!("Windows 通知监听不可用：{error}"))?;
-    let access = listener
-        .GetAccessStatus()
-        .map_err(|error| format!("无法检查通知权限：{error}"))?;
-    if access != UserNotificationListenerAccessStatus::Allowed {
-        return Ok((
-            if access == UserNotificationListenerAccessStatus::Denied {
-                NotificationStatus::PermissionDenied
-            } else {
-                NotificationStatus::PermissionRequired
-            },
-            Vec::new(),
-        ));
+    match toast_notifications::read_matching(&[ToastMatcher::AumidExact(QQ_APP_ID.into())])? {
+        PollBatch::Allowed(items) => Ok((
+            NotificationStatus::Listening,
+            items.into_iter().filter_map(from_toast_item).collect(),
+        )),
+        PollBatch::PermissionDenied => Ok((NotificationStatus::PermissionDenied, Vec::new())),
+        PollBatch::PermissionRequired => Ok((NotificationStatus::PermissionRequired, Vec::new())),
     }
-    let operation = listener
-        .GetNotificationsAsync(NotificationKinds::Toast)
-        .map_err(|error| format!("无法读取 Windows 通知：{error}"))?;
-    let notifications =
-        pollster::block_on(operation).map_err(|error| format!("无法读取 Windows 通知：{error}"))?;
-    let mut items = Vec::new();
-    for notification in notifications {
-        if let Ok(Some(item)) = read_qq_notification(&notification) {
-            items.push(item);
-        }
-    }
-    Ok((NotificationStatus::Listening, items))
 }
 
-fn read_qq_notification(
-    notification: &UserNotification,
-) -> windows::core::Result<Option<QQNotification>> {
-    if notification.AppInfo()?.AppUserModelId()? != QQ_APP_ID {
-        return Ok(None);
+fn from_toast_item(item: ToastItem) -> Option<QQNotification> {
+    if is_diagnostic(&item.texts) {
+        return None;
     }
-    let id = notification.Id()?;
-    let ticks = notification.CreationTime()?.UniversalTime;
-    let mut parts = Vec::new();
-    if let Ok(elements) = notification
-        .Notification()?
-        .Visual()?
-        .GetBinding(&KnownNotificationBindings::ToastGeneric()?)
-        .and_then(|binding| binding.GetTextElements())
-    {
-        for element in elements {
-            if let Ok(text) = element.Text() {
-                parts.push(text.to_string_lossy());
-            }
-        }
-    }
-    if is_diagnostic(&parts) {
-        return Ok(None);
-    }
-    let title = parts
+    let title = item
+        .texts
         .first()
         .filter(|text| !text.trim().is_empty())
         .cloned()
         .unwrap_or_else(|| "QQ".into());
-    let body = parts.iter().skip(1).cloned().collect::<Vec<_>>().join("\n");
-    Ok(Some(QQNotification {
-        id: format!("QQ:{id}:{ticks}"),
+    let body = item
+        .texts
+        .iter()
+        .skip(1)
+        .cloned()
+        .collect::<Vec<_>>()
+        .join("\n");
+    Some(QQNotification {
+        id: format!("QQ:{}:{}", item.id, item.ticks),
         title: title.chars().take(120).collect(),
         body: body.chars().take(1000).collect(),
-        created_at: ticks / 10_000 - 11_644_473_600_000,
-    }))
+        created_at: item.created_at,
+    })
 }

@@ -3,6 +3,7 @@ mod chats;
 mod gate;
 mod plugin_view;
 mod reader;
+mod shell_hub;
 mod source;
 
 #[cfg(test)]
@@ -10,11 +11,9 @@ mod tests;
 
 use reader::{ChatReader, Flash, Listing, PlainReason};
 use serde::Serialize;
-use source::{installed_executable, ReminderListener, ReminderSignal};
+use source::installed_executable;
 use std::{
-    cell::RefCell,
     path::Path,
-    rc::Rc,
     sync::{Arc, Mutex, OnceLock},
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
@@ -23,6 +22,13 @@ use tauri::{AppHandle, Emitter, Manager};
 use windows::Win32::Foundation::HWND;
 
 pub(crate) use plugin_view::plugin_messages;
+#[allow(unused_imports)]
+pub(crate) use shell_hub::{
+    is_running as is_shell_attention_running, subscribe as subscribe_shell_attention,
+    subscribe_executables as subscribe_executable_attention, ShellSubscription,
+};
+#[allow(unused_imports)]
+pub(crate) use source::{ReminderSignal, ShellMatcher};
 
 use crate::messages_plugin::{self, SourceWorker};
 use crate::plugin_kernel::worker::{Stop, Worker};
@@ -246,8 +252,10 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     let listening = service.clone();
     let worker = Worker::new("wechat-reminders", move |stop| monitor(listening.clone(), &stop));
     let switched = service.clone();
-    let source = SourceWorker::new(messages_plugin::WECHAT, worker, move |enabled| set_enabled(&switched, enabled))
-        .after_stop(move || release(&service));
+    let source = SourceWorker::new(messages_plugin::WECHAT, worker, move |enabled| {
+        set_enabled(&switched, enabled)
+    })
+    .after_stop(move || release(&service));
     messages_plugin::register(messages_plugin::WECHAT, source);
     Ok(())
 }
@@ -324,7 +332,10 @@ pub fn set_wechat_expose_ui(app: AppHandle, enabled: bool) -> Result<ReminderSna
 }
 
 #[tauri::command]
-pub fn set_wechat_hide_taskbar_button(app: AppHandle, enabled: bool) -> Result<ReminderSnapshot, String> {
+pub fn set_wechat_hide_taskbar_button(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<ReminderSnapshot, String> {
     let service = ready(&app)?;
     let (snapshot, changed) = {
         let mut state = service.state.lock().map_err(|_| "微信提醒状态不可用。")?;
@@ -471,16 +482,25 @@ fn monitor(service: Arc<ReminderService>, stop: &Stop) {
             }
             continue;
         }
-        let events = Rc::new(RefCell::new(Vec::new()));
+        let events = Arc::new(Mutex::new(Vec::new()));
         let sink = events.clone();
-        let listener = installed_executable().and_then(|executable| {
-            ReminderListener::new(executable.clone(), move |event| {
-                sink.borrow_mut().push(event)
+        let subscription = installed_executable()
+            .and_then(|executable| {
+                executable
+                    .canonicalize()
+                    .map_err(|error| format!("无法确认微信安装路径：{error}"))
             })
-            .map(|listener| (listener, executable))
-        });
-        match listener {
-            Ok((listener, executable)) => {
+            .and_then(|executable| {
+                let matcher = ShellMatcher::exact_path(&executable.to_string_lossy());
+                shell_hub::subscribe(matcher, move |event| {
+                    if let Ok(mut pending) = sink.lock() {
+                        pending.push(event);
+                    }
+                })
+                .map(|sub| (sub, executable))
+            });
+        match subscription {
+            Ok((_subscription, executable)) => {
                 connection(&service, generation, None);
                 let allowed = || service.state.lock().is_ok_and(|state| state.snapshot.expose_ui);
                 let mut reader = ChatReader::new(|| look(&executable), allowed());
@@ -499,10 +519,12 @@ fn monitor(service: Arc<ReminderService>, stop: &Stop) {
                     }
                     keep_button(&service, &executable);
                     reader.set_allowed(allowed());
-                    listener.poll();
-                    let _ = listener.stats();
+                    let batch = events
+                        .lock()
+                        .map(|mut pending| std::mem::take(&mut *pending))
+                        .unwrap_or_default();
                     let now = Instant::now();
-                    for event in events.take() {
+                    for event in batch {
                         match event {
                             ReminderSignal::Attention => reader.flashed(now),
                             ReminderSignal::ActivatedElsewhere => reader.activated(false, now),
@@ -559,7 +581,9 @@ pub async fn open_wechat(chat: Option<String>) -> Result<(), String> {
                     .ok_or("no main window")
                     .and_then(|window| chats::open(window, &chat));
                 if let Err(why) = opened {
-                    eprintln!("WeChat reminders: could not open the chat ({why}); WeChat shows its last chat");
+                    eprintln!(
+                        "WeChat reminders: could not open the chat ({why}); WeChat shows its last chat"
+                    );
                 }
             }
             if let Ok(service) = service() {

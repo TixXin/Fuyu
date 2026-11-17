@@ -45,6 +45,8 @@ mod sync;
 mod system;
 mod system_levels;
 mod timer;
+#[cfg(any(windows, test))]
+mod toast_notifications;
 mod todos;
 mod translation;
 mod tray;
