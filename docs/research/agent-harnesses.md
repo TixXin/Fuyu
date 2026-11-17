@@ -63,7 +63,7 @@
 **会话文件**：
 
 - 记录在 `<数据目录>/brain/<conversationId>/.system_generated/logs/transcript.jsonl` [1]；CLI 1.5.8 实测文件名是 `transcript_full.jsonl`。每行的格式没找到文档，B23.3 要做成读不懂的记录就跳过。
-- 标题：CLI 有 `conversation_summaries.db`（SQLite，表 `conversation_summaries` 有 `title`、`status`、`last_modified_time`）和 `annotations/<id>.pbtxt`（`title:"..."`）[12]（未核实）。App 和 IDE 的 `conversations/*.pb` 是加密的 protobuf，新版 IDE 改成 `*.db` [13]（未核实）。为了不读加密文件、不加 SQLite 依赖，标题先用第一条用户输入，读不到就用文件夹名，和 Claude Code 没有标题时的做法一样。
+- 标题：2026-11-17 在 macOS 桌面版和 CLI 核实，主会话都在各自数据目录的 `annotations/<id>.pbtxt` 里实时写入 `title:"..."`（手动改名和自动生成的标题同步更新，归档时带 `archived:true`），`conversation_summaries.db` 的 `title` 与之一致；子代理会话（`parent_conversation_id` 非空）没有标题，且 `transcript.jsonl` 第 0 步固定是 `SYSTEM_MESSAGE`（主会话第 0 步是带 `<USER_REQUEST>` 的 `USER_INPUT`）。钩子的 `lastUserInput` 只给最新一轮输入，多轮回复「继续」时会被覆盖，所以标题应优先读 `annotations/<id>.pbtxt`，还没生成时退回 transcript 首条 `USER_INPUT`。
 
 **用量**：`/usage` 按模型组（Gemini、第三方模型）给出 5 小时和每周两个窗口，显示剩余量 [2]，和现在的用量环正好对得上。Atoll 的做法 [14]：
 
@@ -71,7 +71,7 @@
 2. `POST http(s)://127.0.0.1:<端口>/exa.language_server_pb.LanguageServerService/RetrieveUserQuotaSummary`（失败再试 `GetUserStatus`），请求头带 `x-codeium-csrf-token`，返回 `groups[].buckets[]`，每个桶有 `bucketId`（`gemini-5h`、`gemini-weekly`、`3p-5h`、`3p-weekly`）、`remainingFraction`、`resetTime`。
 3. 岛没开时用凭据里的 token 调 `cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary`。
 
-这些都是内部接口，随版本可能失效，而且在 Windows 上没人验证过。用户定这一轮不做，等有人能实测时再新增 `UsageSource::Antigravity`。
+这些都是内部接口，随版本可能失效。2026-11-17（B25，#170）在 macOS 真机（Antigravity 2.32.2）核实并落地：`language_server` 同时监听本地 HTTP 与 HTTPS 环回端口，明文 HTTP 端口可直接响应 `RetrieveUserQuotaSummary`（`gemini-5h`、`gemini-weekly`、`3p-5h`、`3p-weekly`）与 `GetUserStatus`（套餐名如 `Pro`）；未运行时只读 `~/.gemini/jetski-standalone-oauth-token` 或 `~/.gemini/oauth_creds.json` 调 `daily-cloudcode-pa.googleapis.com`（`retrieveUserQuotaSummary` 只回 `3p-*` 时补调 `fetchAvailableModels` 取 Gemini 5 小时配额），接口变更时提示「接口失效」而不显示 `0%`。
 
 **Linux**：CLI 用 `install.sh` 装到 `~/.local/bin/agy` [3]。官方只给 App 和 IDE 写了 Linux 要求（glibc ≥ 2.28）[4]，社区说 CLI 也要 2.28，另有说法是 2.17 也行，互相矛盾（未核实）。zcm6 是 CentOS 7、glibc 2.17，大概率跑不了。
 

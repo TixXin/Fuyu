@@ -11,7 +11,7 @@
 | Claude Code | 有 | 有（Code 页、Cowork） | VS Code | CLI、VS Code 扩展、SDK 共用 `~/.claude`（会话里的 `entrypoint` 区分）；App 的 Code 页正文也写在 `~/.claude/projects`（`entrypoint` 是 `claude-desktop`），App 另在 `<Claude 数据目录>/claude-code-sessions/<组织>/<账号>/local_<id>.json` 存标题、模型、档位（按 `cliSessionId` 对上）；Cowork 每个会话一个独立的 `.claude`，不读 `~/.claude/settings.json` | `~/.claude/projects`、`~/.claude/sessions`；Code 页的 `local_*.json`（只取标题、模型、档位，`claude_desktop.rs`）；Cowork 不读 |
 | Codex | 有 | 有 | VS Code | 共用 `~/.codex`（或 `CODEX_HOME`），形态看会话的 `originator`（`session_host.rs`）；2026-11-12 起历史迁进 sqlite，老会话的 rollout 文件已不在 | `~/.codex/state_5.sqlite` 的 `threads` 为主（只读，`codex_threads.rs`），列出的 rollout 照旧读；rollout 已不在的会话读 `thread_history_1.sqlite`；`session_index.jsonl` 的名字；库不在或表不对时退回只扫 `~/.codex/sessions` 最近两天 |
 | WorkBuddy | 无 | 有（国内版、WorkBuddy AI） | 无 | 只有桌面版；国内版 `~/.workbuddy`、WorkBuddy AI `~/.workbuddy-ai`（应用启动 CLI 时把 `WORKBUDDY_CONFIG_DIR` 设成它）都读，格式相同，显示成同一家（B49） | `~/.workbuddy/projects`、`~/.workbuddy/sessions`、`~/.workbuddy-ai/projects`、`~/.workbuddy-ai/sessions` |
-| Antigravity | 有（`agy`） | 有 | 有（IDE） | 三种共用钩子配置 `~/.gemini/config/hooks.json`；数据目录分开（`antigravity`、`antigravity-ide`、`antigravity-cli`），岛只看它们在不在；只有 CLI 实测过（#179）。程序：IDE 是 `Antigravity IDE.exe` / `Antigravity IDE.app`，2.0 和改名前的旧版是 `Antigravity.exe` / `Antigravity.app` | 钩子存下的输入 `agent-antigravity/`；远程是镜像里的 `.fuyu/agent-antigravity/` |
+| Antigravity | 有（`agy`） | 有 | 有（IDE） | 三种共用钩子配置 `~/.gemini/config/hooks.json`；数据目录分开（`antigravity`、`antigravity-ide`、`antigravity-cli`），程序：IDE 是 `Antigravity IDE.exe` / `Antigravity IDE.app`，2.0 和改名前的旧版是 `Antigravity.exe` / `Antigravity.app` | 钩子存下的输入 `agent-antigravity/`、`<数据目录>/annotations/<id>.pbtxt`（标题与归档状态）及钩子指出的 `transcript_full.jsonl`（首句兜底、子代理跳过、最近回复、当前工具、上下文 token）；远程是镜像里的 `.fuyu/agent-antigravity/` 和 `.gemini/antigravity-cli/annotations/` |
 | DSH | 无（Node 程序，能跑在服务器上） | 有（官方版、anywhere-labs 的 DSH Desktop / Beta / NEXT、dshed 等） | 无 | 几处存储按会话 id 合并，新的为准；分不出会话属于哪个桌面版 | 投影检查点，按顺序找这些目录：`DSH_HOME`、`DSH_DESKTOP_NEXT_HOME`（`~` 开头会展开，相对路径不读）；`~/.dsh`、`~/.dsh-beta`、`%APPDATA%\dsh-desktop\harness`；dshed 的 `<AppData>\dshed\dsh`；DSH NEXT、DSH Desktop Beta、DSH Desktop 在应用里选的目录（读它们 `<AppData>` 下的指针文件）。`<AppData>` 在 macOS 上是 `~/Library/Application Support` |
 | opencode | 有（`opencode`，2.x 起 TUI 是后台服务的客户端） | 有（Electron，OpenCode） | VS Code（开终端跑 TUI） | 2.x 几种形态共用一个后台服务（`~/.local/state/opencode/service.json`）和一个库；1.x 没有后台服务 | `~/.local/share/opencode/opencode.db`（`XDG_DATA_HOME`、`OPENCODE_DB` 优先），只读打开；2.x 读 `session_v2`/`session_message`/`session_part`，1.x 读 `session`/`message`/`part`，同一 id 以 2.x 为准 |
 
@@ -23,14 +23,14 @@
 
 | 功能 | Claude Code | Codex | WorkBuddy | Antigravity | DSH | opencode |
 |---|---|---|---|---|---|---|
-| 会话列表、标题、品牌图标 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ 未实测（#179）；子代理会话、归档会话不列 |
+| 会话列表、标题、品牌图标 | ✓ | ✓ | ✓ | ✓ 子代理会话、归档会话不列 | ✓ | ✓ 未实测（#179）；子代理会话、归档会话不列 |
 | 设置里单独显示 / 隐藏 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 「安装/修复」装钩子 | ✓ | ✓ | ✓ 开始、结束、等授权、审批，未实测（#179） | ✓ 开始、结束、`run_command` 审批 | ◐ 岛写钩子文件，用户要在 `cordis.patch.yml` 挂桥接插件（安装结果给出要加的几行），未实测（#179） | ✓ 1.x 插件 `plugin/fuyu-island.js`（opencode 配置目录下），只管等你和审批；2.x 不用，靠后台服务的 HTTP 接口 |
+| 「安装/修复」装钩子 | ✓ | ✓ | ✓ 开始、结束、等授权、审批，未实测（#179） | ✓ 开始、结束、`run_command` 审批 | ✓ 生成零依赖 Cordis 插件 `dsh-plugin/`（B72.1），尚无自定义 `cordis.patch.yml` 时自动写入挂载项，否则给出挂载片段，未在真岛实测（#179） | ✓ 1.x 插件 `plugin/fuyu-island.js`（opencode 配置目录下），只管等你和审批；2.x 不用，靠后台服务的 HTTP 接口 |
 | 状态灯卡片的一行、钩子是否装好 | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ 没有状态灯；后端已报插件状态（absent / notInstalled / outdated / current），设置页不显示、插件过期也不提示 |
 | 改名后自动重装钩子 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ 1.x 插件 |
-| 运行中 / 完成亮灯 | ✓ | ✓ | ✓ 未实测（#179） | ✓ | ◐ 挂了桥接后 ✓，没挂只靠会话数 | ◐ 2.x 读 `time_busy`/`time_idle`/`idle_outcome`，1.x 和 2.2 之前的 2.x 从最后一条消息推断；状态灯只靠会话数 |
+| 运行中 / 完成亮灯 | ✓ | ✓ | ✓ 未实测（#179） | ✓ | ✓ 挂了 `fuyu-island` 插件后实时亮灯（没挂只靠会话数） | ◐ 2.x 读 `time_busy`/`time_idle`/`idle_outcome`，1.x 和 2.2 之前的 2.x 从最后一条消息推断；状态灯只靠会话数 |
 | 「等你」 | ✓ | ✓ | ✓ 未实测（#179） | ◐ 只在岛上审批挂起时（钩子没有等授权的事件） | ◐ 打开的提问，和岛上审批挂起时 | ◐ 2.x 后台服务在跑时、1.x 装了插件时 ✓，未实测（#179）；`--standalone`（2.x）✗，私有服务的地址和密码拿不到 |
-| 在岛上审批 | ✓ | ✓ | ✓ 允许 / 拒绝，未实测（#179） | ✓ 允许 / 拒绝，只拦 `run_command` | ◐ 只能拒绝或交回 DSH（桥接不认 `allow`） | ◐ 2.x 和 1.x（插件）允许一次 / 拒绝 / 交回终端，不做「总是允许」，未实测（#179）；`--standalone` ✗ |
+| 在岛上审批 | ✓ | ✓ | ✓ 允许 / 拒绝，未实测（#179） | ✓ 允许 / 拒绝，只拦 `run_command` | ✓ 原生插件监听 `approval/request`（允许 `allowed-once` / 拒绝 `rejected` / 交回 `next()` / 取消联动，B72.1），未在真岛实测（#179） | ◐ 2.x 和 1.x（插件）允许一次 / 拒绝 / 交回终端，不做「总是允许」，未实测（#179）；`--standalone` ✗ |
 | 在岛上回答提问 | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | 会话卡片：模型、推理强度 | ✓ | ✓ | ◐ 只有模型 | ◐ 推理强度只有 CLI（从模型名后缀拆） | ✓ 存档第 2、3 版（#397） | ✓ |
 | 会话卡片：权限模式 | ✓ | ✓ | ✗ 会话文件里没有 | ✗ 钩子输入没有 | ✓（#397），未实测（#179） | ◐ 只认「计划」，未实测（#179） |
@@ -40,7 +40,7 @@
 | 判断会话已退出 | ✓ | ✓ | ✓ Windows 认 `WorkBuddy.exe`、`WorkBuddyAI.exe`，Mac 按 bundle id `com.workbuddy.workbuddy-ai`；国内版 Mac 版的 bundle id 不知道，认不出 | ✗ | ✗ | ◐ 只有 2.x：`service.json` 的 pid 不在了就记为已退出；1.x 只靠 10 分钟超时 |
 | 点会话跳过去 | ✓ 终端（含 Ghostty、WezTerm、`tmux`） / 编辑器标签；Claude 桌面版 Code 页只到窗口并提示 | ✓ 终端 / 编辑器标签；Codex 桌面版只到窗口并提示 | ◐ 只到 App 窗口（行内提示手动选会话，A12） | ◐ 只到窗口并提示（A12）：程序名认 `antigravity`、`antigravity ide`、`antigravity-ide`，按钩子的 `transcriptPath` 先找 IDE 或 2.0（CLI 走终端匹配），同一程序多个窗口按文件夹名挑（A10，#646）；钩子不记进程号，没有进程链 | ◐ 只到窗口并提示 | ◐ 桌面版在跑就到 OpenCode 窗口并提示，否则按目录 / 标题找终端 |
 | 回复标记 | ✓ 本机和远程都写 `CLAUDE.md`，远程未在服务器实测（#179） | ✓ 本机和远程，远程未实测（#179） | ✓ 未实测（#179） | ✓ 未实测（#179）；远程只有 CLI（远端有 `~/.gemini/antigravity-cli` 时），未实测（#179） | ✓ 本机和远程，远程未实测（#179） | ✓ 未实测（#179）；远程 ✗ |
-| 用量环 | ✓ | ✓ | ✗ 等插件平台第 3 版（#170） | ✗ 等插件平台第 3 版（#170） | ✗ 等插件平台第 3 版（#170） | ✗ 只有 OpenCode Go 订阅有额度窗口，等插件平台第 3 版（#170） |
+| 用量环 | ✓ | ✓ | ◐ 悬停显示已用积分（不画圆环，B25） | ✓ 同心双环（Gemini 5h / 7d，悬停附带 3p 5h / 7d；内部接口失效时提示，B25） | ◐ 悬停显示钱包余额（不画圆环，B25） | ✗ 只有 OpenCode Go 订阅有额度窗口，未接（#170） |
 | SSH 远程会话 | ✓ 含远程钩子 | ◐ 只读会话 | — 只有桌面版 | ✓ CLI 的会话、运行中 / 完成、岛上审批（远程「安装/修复」装钩子，`run_command` 审批经 SSH 反向转发），未在服务器实测（#179）；远程会话不显示「等你」 | ✓ 会话和三态，没有钩子和审批，未在服务器实测（#179） | ✓ 会话和三态（远端用 `sqlite3` 或 `python3` 把时间窗内的会话抽成小库再拉回），没有插件、审批和回复标记，未在服务器实测（#179） |
 | cc-connect | ✓ | ✓ | ✗ 未调研 | ✗ 未调研 | ✗ 未调研 | ✗ 未接（cc-connect README 说支持 OpenCode） |
 | 手机推送的详情、接管命令 | ✓ / ✓ | ✗ / ✓ | ✗ | ✗ | ✗ | ✗ |

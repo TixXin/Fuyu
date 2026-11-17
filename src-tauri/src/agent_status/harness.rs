@@ -104,7 +104,9 @@ pub(super) fn is_mirrored_file(remote: &str) -> bool {
         files.files.contains(&remote)
             || (files.session_dirs.iter().any(|dir| remote.starts_with(dir)) && remote.ends_with(".jsonl"))
             || files.checkpoint_dirs.iter().any(|dir| {
-                remote.strip_prefix(dir).is_some_and(|name| name.ends_with(".json") && !name.contains('/'))
+                remote.strip_prefix(dir).is_some_and(|name| {
+                    (name.ends_with(".json") || name.ends_with(".pbtxt")) && !name.contains('/')
+                })
             })
     })
 }
