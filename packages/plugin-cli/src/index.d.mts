@@ -204,11 +204,11 @@ export type InstalledPackageResult = {
 
 export declare const PACKAGES_SUBDIR: "packages";
 export declare function inspectPackage(
-  zipBuffer: Uint8Array,
+  zipBuffer: Uint8Array | string,
   options?: { source?: "market" | "manual"; allowManual?: boolean; appVersion?: string; expectedSha256?: string },
 ): InspectedPackage;
 export declare function installPackage(
-  zipBuffer: Uint8Array,
+  zipBuffer: Uint8Array | string,
   options: {
     dir: string;
     source?: "market" | "manual";

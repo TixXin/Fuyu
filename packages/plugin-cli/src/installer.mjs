@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { readPackage, sha256Hex, validateManifest } from "@fuyu/plugin-manifest";
 import { revocationOf } from "@fuyu/plugin-market";
@@ -61,7 +61,7 @@ export function inspectPackage(zipBuffer, options = {}) {
   if (source === "manual" && options.allowManual !== true) {
     throw installerError("manual-disabled", "Manual .fuyu package installation is turned off.");
   }
-  const buf = Buffer.isBuffer(zipBuffer) ? zipBuffer : Buffer.from(zipBuffer);
+  const buf = typeof zipBuffer === "string" ? readFileSync(zipBuffer) : Buffer.isBuffer(zipBuffer) ? zipBuffer : Buffer.from(zipBuffer);
   const sha256 = sha256Hex(buf);
   if (typeof options.expectedSha256 === "string" && options.expectedSha256.toLowerCase() !== sha256.toLowerCase()) {
     throw installerError("bad-sha256", `Package SHA-256 mismatch: expected ${options.expectedSha256}, got ${sha256}`);
@@ -147,11 +147,36 @@ export function uninstallPackage(dir, id, { configFile = "plugins.yml", removeDa
   return { id, removed: true };
 }
 
-export function applyRevocationsToDir(dir, revocations, { installed = [], configFile = "plugins.yml" } = {}) {
+function scanInstalledPackages(dir) {
+  const packagesRoot = join(dir, PACKAGES_SUBDIR);
+  if (!existsSync(packagesRoot)) return [];
+  const list = [];
+  for (const scopeEntry of readdirSync(packagesRoot, { withFileTypes: true })) {
+    if (!scopeEntry.isDirectory() || !scopeEntry.name.startsWith("@")) continue;
+    const scopeDir = join(packagesRoot, scopeEntry.name);
+    for (const pkgEntry of readdirSync(scopeDir, { withFileTypes: true })) {
+      if (!pkgEntry.isDirectory()) continue;
+      const pkgJson = join(scopeDir, pkgEntry.name, "package.json");
+      if (!existsSync(pkgJson)) continue;
+      try {
+        const parsed = JSON.parse(readFileSync(pkgJson, "utf8"));
+        if (typeof parsed.name === "string" && typeof parsed.version === "string") {
+          list.push({ id: parsed.name, version: parsed.version, source: "market" });
+        }
+      } catch {
+        continue;
+      }
+    }
+  }
+  return list;
+}
+
+export function applyRevocationsToDir(dir, revocations, { installed, configFile = "plugins.yml" } = {}) {
   const disabled = [];
   const warned = [];
   const ymlFile = join(dir, configFile);
-  for (const item of installed) {
+  const items = installed ?? scanInstalledPackages(dir);
+  for (const item of items) {
     const rev = revocationOf(revocations, item.id, item.version);
     if (!rev) continue;
     if (rev.level === "disable") {
