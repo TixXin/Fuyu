@@ -65,7 +65,7 @@ async function until(check, ms = 5000) {
   return check();
 }
 
-const ENTRY = { key: "claudeCode:a1", provider: "claudeCode", sessionId: "a1", title: "Fix the build", cwd: "/work", phase: "running", updatedAt: 5, remoteHost: null, listed: true, unseen: false };
+const ENTRY = { key: "claudeCode:a1", provider: "claudeCode", sessionId: "a1", title: "Fix the build", cwd: "/work", phase: "running", light: "working", updatedAt: 5, remoteHost: null, listed: true, unseen: false };
 
 test("the agents plugin provides agents/v1 through Rust", async () => {
   const { host, rust, agents } = await open({
@@ -99,12 +99,13 @@ test("switched-off agents are peer-gone, and a stopped agents plugin is not-read
 
 test("the island's sessions and usage turn into the shape Rust answers with", () => {
   const session = { provider: "claudeCode", sessionId: "a1", cwd: "/work", title: "Fix the build", model: "opus", phase: "running", lastMessage: null, updatedAt: 5, host: null, turnStartedAt: 1 };
-  assert.deepEqual(sessionEntry(session, { listed: true, unseen: false }), ENTRY);
-  const done = { ...session, sessionId: "b2", phase: "completed", remoteHost: "box" };
+  assert.deepEqual(sessionEntry(session, { listed: true, unseen: false, light: "working" }), ENTRY);
+  assert.equal(sessionEntry(session, { listed: true, unseen: false }).light, "done");
+  const done = { ...session, sessionId: "b2", phase: "completed", remoteHost: "box", replyAsks: true };
   const feed = agentFeedOf([session, done], [session], new Set(["claudeCode:b2"]), [{ id: "x", name: "X", phase: "running", updatedAt: 9, title: "t" }]);
-  assert.deepEqual(feed.sessions.map(({ key, listed, unseen, remoteHost }) => ({ key, listed, unseen, remoteHost })), [
-    { key: "claudeCode:a1", listed: true, unseen: false, remoteHost: null },
-    { key: "claudeCode:b2", listed: false, unseen: true, remoteHost: "box" },
+  assert.deepEqual(feed.sessions.map(({ key, light, listed, unseen, remoteHost }) => ({ key, light, listed, unseen, remoteHost })), [
+    { key: "claudeCode:a1", light: "working", listed: true, unseen: false, remoteHost: null },
+    { key: "claudeCode:b2", light: "yourTurn", listed: false, unseen: true, remoteHost: "box" },
   ]);
   assert.deepEqual(feed.others, [{ id: "x", name: "X", phase: "running", updatedAt: 9 }]);
   assert.deepEqual(reportEntry(null), { id: "", name: "", phase: "idle", updatedAt: 0 });

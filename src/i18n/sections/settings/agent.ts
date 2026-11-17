@@ -16,6 +16,9 @@ export type SettingsAgentText = {
   lightStyle: string;
   lightStyleHint: string;
   lightStyleOptions: { mark: string; dot: string };
+  agentPageSection: string;
+  expandChildren: string;
+  expandChildrenHint: string;
   sessionPageSection: string;
   hostDisplay: string;
   hostDisplayOptions: { both: string; icon: string; name: string; off: string };
@@ -203,6 +206,9 @@ export const zhCN: SettingsAgentText = {
   lightStyle: "状态灯样式",
   lightStyleHint: "收起条上 Agent 状态灯的样子。悬岛：应用图标的白胶囊，和条上的环一样高；绿点呼吸，运行时短横换成三个依次亮起的点，等你确认时变黄闪烁，失败或可能中断时变红，跑完打勾。圆点：原来的小圆点。",
   lightStyleOptions: { mark: "悬岛", dot: "圆点" },
+  agentPageSection: "Agent 页",
+  expandChildren: "子 Agent / 子会话默认展开",
+  expandChildrenHint: "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。",
   sessionPageSection: "会话列表",
   hostDisplay: "会话来源",
   hostDisplayOptions: { both: "图标和名称", icon: "只显示图标", name: "只显示名称", off: "不显示" },
@@ -390,6 +396,9 @@ export const en: SettingsAgentText = {
   lightStyle: "Status light",
   lightStyleHint: "How the Agent status light looks on the collapsed bar. Island mark: the app icon's white pill, as tall as the rings on the bar; its light breathes, three dots take the dash's place while running, it turns yellow and blinks while waiting for you, red when failed or possibly stopped, and shows a tick when done. Dot: the original small dot.",
   lightStyleOptions: { mark: "Island mark", dot: "Dot" },
+  agentPageSection: "Agent page",
+  expandChildren: "Expand subagents and child sessions",
+  expandChildrenHint: "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them.",
   sessionPageSection: "Session list",
   hostDisplay: "Session source",
   hostDisplayOptions: { both: "Icon and name", icon: "Icon only", name: "Name only", off: "Hidden" },

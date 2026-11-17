@@ -14,7 +14,8 @@ import { useSessionRingDecor } from "../../src/features/session-ring/useSessionR
 import { mergeIslandDecor } from "../../src/features/plugin-kernel/islandDecor";
 import type { CollapsedSlots } from "../../src/windows/island/types";
 import type { AgentActivity } from "../../src/features/center-pattern";
-import type { AgentSessionSummary } from "../../src/features/agent-status/api";
+import type { AgentSessionEntry } from "@fuyu/plugin-services";
+import { ringConfig } from "../../src/features/session-ring/ringConfig";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
@@ -30,24 +31,23 @@ window.addEventListener("beforeunload", () => {
 });
 
 const NOW = Date.now();
-const session = (sessionId: string, phase: AgentSessionSummary["phase"], title: string, minutesAgo = 0): AgentSessionSummary => ({
-  provider: "claudeCode", sessionId, cwd: "F:\\code\\fly-island", title, model: null, effort: null, phase,
-  lastMessage: null, updatedAt: NOW - minutesAgo * 60_000, host: null, turnStartedAt: null,
+const session = (sessionId: string, phase: string, light: string, title: string, minutesAgo = 0, unseen = false): AgentSessionEntry => ({
+  key: `claudeCode:${sessionId}`, provider: "claudeCode", sessionId, cwd: "F:\\code\\fly-island", title, phase, light,
+  updatedAt: NOW - minutesAgo * 60_000, remoteHost: null, listed: true, unseen,
 });
 const BUSY = [
-  session("a1", "waiting", "修复登录"),
-  { ...session("b2", "completed", "写测试"), replyAsks: true },
-  session("c3", "running", "重构"),
-  session("d4", "running", "文档"),
-  session("e5", "completed", "已看过", 2),
-  session("f6", "completed", "很久以前", 60),
+  session("a1", "waiting", "needs", "修复登录", 0, true),
+  session("b2", "completed", "yourTurn", "写测试", 0, true),
+  session("c3", "running", "working", "重构"),
+  session("d4", "running", "working", "文档"),
+  session("e5", "completed", "done", "已看过", 2),
+  session("f6", "completed", "done", "很久以前", 60),
 ];
-const UNSEEN: ReadonlySet<string> = new Set(["claudeCode:a1", "claudeCode:b2"]);
-const QUIET: AgentSessionSummary[] = [];
-const CROWD = [...BUSY, ...["g7", "h8", "i9", "j10", "k11", "l12"].map((id, index) => session(id, index % 3 ? "running" : "stale", id))];
+const QUIET: AgentSessionEntry[] = [];
+const CROWD = [...BUSY, ...["g7", "h8", "i9", "j10", "k11", "l12"].map((id, index) => (index % 3 ? session(id, "running", "working", id) : session(id, "stale", "stale", id)))];
 let pluginOn = true;
 let pluginSettings: Record<string, unknown> = { style: "grid" };
-let sessions: AgentSessionSummary[] = BUSY;
+let sessions: AgentSessionEntry[] = BUSY;
 mockIPC((command) => {
   if (command === "get_qq_mail_state") return [{
     revision: 0, email: "", configured: false, enabled: false, syncing: false,
@@ -55,7 +55,7 @@ mockIPC((command) => {
   }];
   if (command === "list_plugins") return {
     allowThirdParty: false, nodeAvailable: false, powershellAvailable: true, pluginsDir: "", autoUpdate: false, trustedPublishers: [],
-    plugins: [{ id: "focusd.session-ring", builtin: true, enabled: pluginOn, status: "running", settings: pluginSettings }],
+    plugins: [],
   };
 }, { shouldMockEvents: true });
 
@@ -65,8 +65,9 @@ const NO_AGENTS: AgentActivity[] = [];
 
 let corners: CSSProperties = {};
 
-function Island({ agents, count, list, report, look }: { agents: boolean; count: number; list: AgentSessionSummary[]; report: (slots: CollapsedSlots) => void; look: CSSProperties }) {
-  const slots: CollapsedSlots = mergeIslandDecor([useCenterDecor({ paused: true, agents: NO_AGENTS, markLight: false }), useSessionRingDecor({ paused: true, sessions: list, unseen: UNSEEN, agentsOn: agents, onOpenAgents: OPEN_AGENTS }), useCollapsedGauges(true)]);
+function Island({ agents, count, list, ring, report, look }: { agents: boolean; count: number; list: AgentSessionEntry[]; ring: boolean; report: (slots: CollapsedSlots) => void; look: CSSProperties }) {
+  const ringDecor = useSessionRingDecor({ paused: true, sessions: list, config: ringConfig(pluginSettings), agentsOn: agents, onOpenAgents: OPEN_AGENTS });
+  const slots: CollapsedSlots = mergeIslandDecor([useCenterDecor({ paused: true, agents: NO_AGENTS, markLight: false }), ring ? ringDecor : {}, useCollapsedGauges(true)]);
   report(slots);
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
@@ -119,7 +120,7 @@ async function mount(caption: string, agents: boolean, count = 2) {
   const root = createRoot(box);
   live = { root, box };
   await act(async () => {
-    root.render(<StrictMode><Island agents={agents} count={count} list={sessions} report={(next) => { slots = next; }} look={corners} /></StrictMode>);
+    root.render(<StrictMode><Island agents={agents} count={count} list={sessions} ring={pluginOn} report={(next) => { slots = next; }} look={corners} /></StrictMode>);
   });
   for (let frame = 0; frame < 10; frame += 1) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 16)); });
   return [box.querySelector<HTMLElement>(".island__collapsed")!, slots] as const;
@@ -217,7 +218,7 @@ async function runChecks() {
     pluginOn = false;
     sessions = BUSY;
     [bar] = await mount("插件停用：照旧显示蓝色数字", true);
-    check(bar.querySelector(".island-agent-count")?.textContent === "2" && !bar.querySelector(".session-ring"), "插件停用时照旧显示蓝色会话数");
+    check(bar.querySelector(".island-agent-count")?.textContent === "2" && !bar.querySelector(".session-ring"), "插件停用（runner 被注册表拿掉、不交装饰）时照旧显示蓝色会话数");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
@@ -231,7 +232,7 @@ async function runChecks() {
 if (automated) await runChecks();
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
-  const sets: [string, AgentSessionSummary[]][] = [["1", BUSY.slice(2, 3)], ["3", BUSY.slice(0, 3)], ["6", BUSY], ["12", CROWD]];
+  const sets: [string, AgentSessionEntry[]][] = [["1", BUSY.slice(2, 3)], ["3", BUSY.slice(0, 3)], ["6", BUSY], ["12", CROWD]];
   for (const [style, name] of [["grid", "像素格"], ["ring", "分段环"], ["bar", "状态条"], ["signal", "信号格"]]) {
     pluginSettings = { style };
     for (const [count, list] of sets) {

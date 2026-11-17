@@ -1,8 +1,10 @@
 import { useCallback } from "react";
-import { agentShell } from "../../agent-status/plugin/islandState";
 import { useProvideIslandDecor } from "../../plugin-kernel/islandDecor";
 import { defineSlot } from "../../plugin-kernel/slots";
+import { useRingConfig } from "../useRingConfig";
+import { useRingSessions } from "../useRingSessions";
 import { useSessionRingDecor } from "../useSessionRingDecor";
+import { OWNER } from "./owner.ts";
 
 type RunnerProps = {
   mode: string;
@@ -15,11 +17,12 @@ type RunnerProps = {
 const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
 
 function SessionRingRunner({ mode, isTucked, quiet, settings, openIslandPage }: RunnerProps) {
-  const { listed, unseenKeys } = agentShell.use();
+  const sessions = useRingSessions();
+  const [config] = useRingConfig();
   const onOpenAgents = useCallback(() => openIslandPage("agents"), [openIslandPage]);
-  const decor = useSessionRingDecor({ paused: mode !== "collapsed" || isTucked || quiet, sessions: listed, unseen: unseenKeys, agentsOn: settings.agentStatusEnabled, onOpenAgents });
+  const decor = useSessionRingDecor({ paused: mode !== "collapsed" || isTucked || quiet, sessions, config, agentsOn: settings.agentStatusEnabled, onOpenAgents });
   useProvideIslandDecor("session-ring", decor);
   return null;
 }
 
-runnerSlot.add({ id: "session-ring.runner", component: SessionRingRunner });
+runnerSlot.add({ id: "session-ring.runner", component: SessionRingRunner }, OWNER);

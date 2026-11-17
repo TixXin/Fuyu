@@ -34,7 +34,7 @@ src/
 │   ├── agent-status/        # AI 代理状态；sounds/ 为 Agent 音效：内置音效播放、设置 → 声音页、导入音效包；push/ 为手机推送（Bark 或 cc-connect，排队到离开电脑再发）
 │   ├── cc-connect/          # 第 3 版内置插件 cc-connect：设置是 AI Agent → 提醒 里的一节（CcConnectSettings.tsx 是程序路径和由岛启动，下面是找到的程序、找不到时下载、是否在运行、各项目聊过的会话）；CcConnectSetup.tsx 为新建机器人向导，FeishuSetup.tsx 为飞书扫码；plugin/services.ts 提供窗口服务 cc-connect/v1（定义在 lib/cc-connect/），手机推送经它发送和列目标
 │   ├── claude-usage/        # 收起条上的 Agent 用量双环（内置插件 claude-usage）：Claude Code、Codex 的用量经 agents/v1 取，GLM、Kimi 的用量和 Key 是自己的命令（api.ts）；阈值配色与悬停卡片文案（usageRing.ts），配置在 plugins.yml（usageConfig.ts、useUsageConfig.ts），设置在 AI Agent 页的「用量环」分组；用量的共用类型和工具在 lib/agent-usage/
-│   ├── session-ring/        # 收起条上的 Agent 会话环（内置插件 focusd.session-ring）：按状态分段计数与悬停卡片文案（ringCounts.ts），数据来自 agent-status 的会话列表
+│   ├── session-ring/        # 收起条上的 Agent 会话环（内置插件 session-ring）：按状态分段计数与悬停卡片文案（ringCounts.ts），会话经 agents/v1 取（useRingSessions.ts），样式和会话数开关在 plugins.yml（ringConfig.ts、useRingConfig.ts），设置在 AI Agent 页的「会话环」分组
 │   ├── ssh-tunnel/          # 内置插件 focusd.ssh-proxy-tunnel 的插件页部分：主机列表、服务器端口、占用确认、隧道状态与 export 行、运行信息里的本地代理（useSshTunnelProxy.ts）（tunnelPort.ts 为端口校验）
 │   ├── theme-market/        # 设置 → 主题市场：从 TixXin/fuyu-plugins 读取 themes.json，预览并应用或保存为预设
 │   ├── translation/         # 快捷翻译：服务与模型设置、凭据、快捷键的类型化封装，请求与自动翻译 hook，岛内翻译页

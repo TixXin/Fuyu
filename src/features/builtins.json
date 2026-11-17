@@ -5,7 +5,7 @@
     { "id": "calendar", "kind": "builtin", "root": "calendar", "host": "host/index.mjs", "background": [] },
     { "id": "music", "kind": "builtin", "root": "media", "host": "host/index.mjs", "background": ["session"] },
     { "id": "clipboard", "kind": "builtin", "root": "clipboard", "host": "host/index.mjs", "background": ["listener", "windows"] },
-    { "id": "screenshot", "kind": "builtin", "root": "screenshot", "host": "host/index.mjs" },
+    { "id": "screenshot", "kind": "builtin", "root": "screenshot", "host": "host/index.mjs", "background": ["shortcuts", "windows"] },
     { "id": "file-shelf", "kind": "builtin", "root": "file-shelf", "host": "host/index.mjs", "background": [] },
     { "id": "translation", "kind": "builtin", "root": "translation", "host": "host/index.mjs", "background": ["shortcuts", "window"] },
     { "id": "voice-input", "kind": "builtin", "root": "voice-input", "host": "host/index.mjs" },

@@ -29,9 +29,11 @@
 - Claude Code 的数据与 Agent 页顶部的用量相同（`get_agent_usage`，环经 `agents/v1` 的 `usage()` 读）：Claude Code 经本机 magpie 网关时读它的 `/v1/magpie/quotas`（只请求本机），否则读 claude-hud 写出的用量快照；都不联网、不读登录凭据。
 - 设置「直接向 Anthropic 查询」（默认关）打开后，原生端（`src-tauri/src/claude_usage/`）只读 Claude Code 的 `~/.claude/.credentials.json` 里的 access token（不刷新、不改写，不进日志、前端和事件），经 http(s) 代理请求 `api.anthropic.com/api/oauth/usage`：代理依次取插件配置、`HTTPS_PROXY`、Windows 系统代理，都没有就不请求，**从不直连**；不跟随重定向；间隔 5–120 分钟（设置「刷新间隔」），失败时加倍退避，429 遵守 `Retry-After`。`get_agent_usage` 在两份数据中取较新的，并带上最近一次失败的原因。这个接口没有公开文档，可能随时失效。
 
-### Agent 会话环（`focusd.session-ring`，默认关闭）
+### Agent 会话环（`focusd.session-ring`，已迁走）
 
-AI Agent 开启时，在收起条上代替蓝色会话数，样式可选像素格（默认）、分段环、状态条和信号格，按状态着色（等你确认、等你回复、运行、可能已停、完成），分段环和状态条的会话数可以用「显示会话数」开关关掉，悬停列出等你处理的会话，点击打开 Agent 页。数据就是 Agent 页的会话列表（Claude Code 和 Codex），只在岛屿窗口工作，没有原生部分。
+2026-11-16 起（E36.3.40）会话环是第 3 版的内置插件 `session-ring`，不在这张表里了；开关、样式和「显示会话数」第一次启动新版本时迁进 `plugins-v3/plugins.yml`（第 2 版里没打开过的迁过来也是关的），设置在 设置 → AI Agent 的「会话环」分组。会话经窗口服务 `agents/v1` 读。下面是它的做法，迁走后没变：
+
+AI Agent 开启时，在收起条上代替蓝色会话数，样式可选像素格（默认）、分段环、状态条和信号格，按状态着色（等你确认、等你回复、运行、可能已停、完成），分段环和状态条的会话数可以用「显示会话数」开关关掉，悬停列出等你处理的会话，点击打开 Agent 页。数据就是 Agent 页的会话列表（`agents/v1` 的 `sessions()` 里 `listed` 的那些），只在岛屿窗口工作，没有原生部分。
 
 ### 计时器（`focusd.timer`，已迁走）
 

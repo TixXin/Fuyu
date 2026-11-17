@@ -2,6 +2,7 @@ import type { AgentSessions } from "@fuyu/plugin-services";
 import { createRunnerStore } from "../../plugin-kernel/runnerStore.ts";
 import type { AgentSessionSummary, ExternalAgentStatus } from "../api";
 import { reportEntry, sessionEntry } from "../host/index.mjs";
+import { sessionLight } from "../sessionLight.ts";
 import { sessionKey } from "../unseen.ts";
 
 type Announce = (count: number) => void;
@@ -28,7 +29,7 @@ export function agentFeedOf(
   return {
     sessions: sessions.map((session) => {
       const key = sessionKey(session);
-      return sessionEntry(session, { listed: shown.has(key), unseen: unseen.has(key) });
+      return sessionEntry(session, { listed: shown.has(key), unseen: unseen.has(key), light: sessionLight(session) });
     }),
     others: (others ?? []).map(reportEntry),
   };

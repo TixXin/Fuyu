@@ -13,13 +13,28 @@ use crate::macos::hotkeys;
 
 static APP: OnceLock<AppHandle> = OnceLock::new();
 static ENABLED: AtomicBool = AtomicBool::new(false);
+static STARTED: AtomicBool = AtomicBool::new(false);
 static CONFIG: Mutex<Option<Vec<ShortcutConfig>>> = Mutex::new(None);
 static REGISTERED: Mutex<Vec<HotKey>> = Mutex::new(Vec::new());
 static STATUS: Mutex<Vec<ShortcutStatus>> = Mutex::new(Vec::new());
 
-pub(super) fn start(app: &AppHandle) {
+pub(super) fn init(app: &AppHandle) {
     let _ = APP.set(app.clone());
+}
+
+pub(super) fn start() -> Result<(), String> {
+    STARTED.store(true, Ordering::SeqCst);
     refresh_on_main_thread();
+    Ok(())
+}
+
+pub(super) fn stop() {
+    STARTED.store(false, Ordering::SeqCst);
+    refresh_on_main_thread();
+}
+
+pub(super) fn running() -> bool {
+    STARTED.load(Ordering::SeqCst)
 }
 
 pub(super) fn is_enabled() -> bool {
@@ -49,7 +64,7 @@ fn refresh() {
         hotkeys::unregister(hotkey);
     }
     let mut problems = Vec::new();
-    if ENABLED.load(Ordering::SeqCst) {
+    if STARTED.load(Ordering::SeqCst) && ENABLED.load(Ordering::SeqCst) {
         let config = CONFIG.lock().unwrap_or_else(PoisonError::into_inner).clone().unwrap_or_else(default_shortcuts);
         let (bindings, planned) = plan(&config);
         problems = planned;
@@ -76,7 +91,7 @@ fn refresh() {
 
 fn run_action(action: ShortcutAction) {
     let Some(app) = APP.get() else { return };
-    if !ENABLED.load(Ordering::SeqCst) {
+    if !STARTED.load(Ordering::SeqCst) || !ENABLED.load(Ordering::SeqCst) {
         return;
     }
     match action.mode() {

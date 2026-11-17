@@ -260,3 +260,12 @@ pub(super) fn close_all(app: &AppHandle) {
     }
     HIDDEN.store(false, Ordering::SeqCst);
 }
+
+pub(super) fn close_every(app: &AppHandle) {
+    for (label, window) in app.webview_windows() {
+        if label.starts_with(WINDOW_PREFIX) {
+            close(&window);
+        }
+    }
+    HIDDEN.store(false, Ordering::SeqCst);
+}

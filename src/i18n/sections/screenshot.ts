@@ -34,6 +34,8 @@ export type ScreenshotText = {
   readText: string;
   textCopied: (line: string) => string;
   noText: string;
+  translateOff: string;
+  shelfOff: string;
   redact: string;
   redacting: string;
   redacted: (count: number) => string;
@@ -125,6 +127,8 @@ export const zhCN: ScreenshotText = {
   readText: "识别文字",
   textCopied: (line) => `已复制识别的文字：${line}`,
   noText: "截图里没有识别到文字",
+  translateOff: "快捷翻译已关闭，打开后才能翻译截图",
+  shelfOff: "文件中转已关闭",
   longShot: "长截图（自动往下滚动拼接，也可以自己滚）",
   long: {
     title: "长截图",
@@ -248,6 +252,8 @@ export const en: ScreenshotText = {
   readText: "Read text",
   textCopied: (line) => `Copied the text: ${line}`,
   noText: "No text found in the screenshot",
+  translateOff: "Quick translation is off. Turn it on to translate screenshots.",
+  shelfOff: "The file shelf is off",
   longShot: "Long screenshot (scrolls and stitches; you can scroll yourself too)",
   long: {
     title: "Long screenshot",

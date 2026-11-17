@@ -14,7 +14,7 @@ export type EngineChoice = {
 export type TranslatorErrorCode = "no-secret" | "no-address" | "engine-failed" | "empty-text";
 
 export type TranslatorMethods = {
-  translate(params: { text: string; direction: Direction; engine?: EngineChoice }): { text: string; engine: TranslationEngine };
+  translate(params: { text: string; direction?: Direction; engine?: EngineChoice }): { text: string; engine: TranslationEngine };
   rewrite(params: { text: string; task: RewriteTask; prompt?: string; engine?: EngineChoice }): { text: string; engine: TranslationEngine };
   engines(): { engines: { engine: TranslationEngine; hasSecret: boolean }[] };
 };

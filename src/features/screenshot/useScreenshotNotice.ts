@@ -1,27 +1,66 @@
-import { useState, type PointerEvent } from "react";
+import { agentsV1, fileShelfV1, type AgentSessionEntry } from "@fuyu/plugin-services";
+import { useEffect, useState, type PointerEvent } from "react";
 import { Menu } from "@tauri-apps/api/menu";
-import { focusAgentWindow, type AgentSessionSummary } from "../agent-status/api";
-import { addFileShelfPaths } from "../file-shelf/api";
 import { useErrorText, useTranslation } from "../../i18n";
+import { windowServices } from "../plugin-kernel/services";
 import { dragScreenshot, pasteScreenshotToFront, type ScreenshotTaken } from "./api";
+import { serviceFailed } from "./serviceErrors";
 import type { ScreenshotCardState } from "./useScreenshotCard";
 
-function sessionName(session: AgentSessionSummary) {
+const agents = windowServices.get(agentsV1);
+const shelf = windowServices.get(fileShelfV1);
+const NO_SESSIONS: readonly AgentSessionEntry[] = [];
+
+function sessionName(session: AgentSessionEntry) {
   const folder = session.cwd?.split(/[\\/]/).filter(Boolean).pop();
   return session.title?.trim() || folder || session.provider;
 }
 
-export function useScreenshotNotice(card: ScreenshotCardState, sessions: readonly AgentSessionSummary[]) {
+function focusParams(session: AgentSessionEntry) {
+  return {
+    provider: session.provider,
+    ...(session.sessionId ? { sessionId: session.sessionId } : {}),
+    ...(session.cwd ? { cwd: session.cwd } : {}),
+    ...(session.title ? { title: session.title } : {}),
+  };
+}
+
+function useLocalSessions(watching: boolean) {
+  const [sessions, setSessions] = useState(NO_SESSIONS);
+  useEffect(() => {
+    if (!watching) return;
+    let live = true;
+    let asked = 0;
+    const load = () => {
+      const ask = ++asked;
+      agents.sessions().then(
+        (answer) => live && ask === asked && setSessions(answer.sessions.filter((session) => session.listed && !session.remoteHost)),
+        () => live && ask === asked && setSessions(NO_SESSIONS),
+      );
+    };
+    load();
+    const off = agents.on("changed", load);
+    const unwatch = windowServices.watch(load);
+    return () => {
+      live = false;
+      void off();
+      unwatch();
+    };
+  }, [watching]);
+  return watching ? sessions : NO_SESSIONS;
+}
+
+export function useScreenshotNotice(card: ScreenshotCardState) {
   const t = useTranslation().screenshot;
   const errorText = useErrorText();
   const [message, setMessage] = useState<{ path: string; text: string } | null>(null);
   const taken: ScreenshotTaken | null = card.current;
-  const local = sessions.filter((session) => !session.remoteHost);
+  const local = useLocalSessions(taken !== null);
   const report = (error: unknown) => taken && setMessage({ path: taken.path, text: errorText(error) });
 
-  const send = async (session: AgentSessionSummary) => {
+  const send = async (session: AgentSessionEntry) => {
     if (!taken) return;
-    const found = await focusAgentWindow(session.provider, session.cwd, session.title, session.sessionId);
+    const { found } = await agents.focus(focusParams(session));
     if (!found) {
       setMessage({ path: taken.path, text: t.card.agentNotFound });
       return;
@@ -47,7 +86,10 @@ export function useScreenshotNotice(card: ScreenshotCardState, sessions: readonl
 
   const shelve = () => {
     if (!taken) return;
-    addFileShelfPaths([taken.path]).then(() => setMessage({ path: taken.path, text: t.card.shelved }), report);
+    shelf.add({ paths: [taken.path] }).then(
+      () => setMessage({ path: taken.path, text: t.card.shelved }),
+      (error: unknown) => setMessage({ path: taken.path, text: serviceFailed(error, t.shelfOff, errorText) }),
+    );
   };
 
   const drag = (event: PointerEvent) => {

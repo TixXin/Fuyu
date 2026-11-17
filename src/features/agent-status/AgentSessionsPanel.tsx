@@ -30,6 +30,7 @@ import { useSessionKeyboard } from "./useSessionKeyboard";
 import { AgentSubagents, listedSubagents } from "./AgentSubagents";
 import { AgentSessionChildren } from "./AgentSessionChildren";
 import { nestSessions, type NestedSessions } from "./sessionChildren";
+import { useRowExpansion } from "./useRowExpansion";
 import "./AgentSessionsPanel.css";
 import type { AgentArchiveMotion, AgentCardEffects, AgentHostDisplay, AgentSessionGroup, AgentSessionSort, AgentSessionView } from "./agentSettings";
 
@@ -48,6 +49,7 @@ export function AgentSessionsPanel({
   showElapsed = true,
   showModel = true,
   showActivity = true,
+  expandChildren = false,
   unseen,
   removal,
   reveal,
@@ -65,6 +67,7 @@ export function AgentSessionsPanel({
   showElapsed?: boolean;
   showModel?: boolean;
   showActivity?: boolean;
+  expandChildren?: boolean;
   unseen?: UnseenSessions;
   removal?: SessionRemoval;
   reveal?: AlertedSession | null;
@@ -80,14 +83,14 @@ export function AgentSessionsPanel({
   const [notFoundId, setNotFoundId] = useState<string | null>(null);
   const [rowNotice, setRowNotice] = useState<{ key: string; text: string } | null>(null);
   const [menuKey, setMenuKey] = useState<string | null>(null);
-  const [openSubagents, setOpenSubagents] = useState<ReadonlySet<string>>(() => new Set());
-  const [openChildren, setOpenChildren] = useState<ReadonlySet<string>>(() => new Set());
+  const openSubagents = useRowExpansion(expandChildren);
+  const openChildren = useRowExpansion(expandChildren);
   const extensionHint = useEditorExtensionHint();
   const list = useScrollFade<HTMLUListElement>(sessions);
   const motion = useArchiveMotion(list.element, removal, archiveMotion);
   const nested: NestedSessions = view === "list" && !reveal ? nestSessions(sessions) : { roots: sessions, children: new Map() };
   const childDepth = new Map([...nested.children.values()].flat().map((child) => [sessionKey(child.session), child.depth]));
-  const shownChildren = (key: string) => (openChildren.has(key) ? nested.children.get(key) ?? [] : []);
+  const shownChildren = (key: string) => (openChildren.isOpen(key) ? nested.children.get(key) ?? [] : []);
   const arranged = arrangeSessions(nested.roots, sort, group).map((entry, _, groups) => ({
     ...entry,
     heading: !reveal && (group === "project" || (group === "computer" && (groups.length > 1 || entry.host !== null))),
@@ -99,7 +102,7 @@ export function AgentSessionsPanel({
       ...members.flatMap((root) => [root, ...shownChildren(sessionKey(root)).map((child) => child.session)]).map((session) => ({
         key: sessionKey(session),
         light: sessionLight(session),
-        open: openSubagents.has(sessionKey(session)) ? listedSubagents(session).length : 0,
+        open: openSubagents.isOpen(sessionKey(session)) ? listedSubagents(session).length : 0,
       })),
     ]),
     view,
@@ -120,13 +123,10 @@ export function AgentSessionsPanel({
     return () => observer.disconnect();
   }, [measure, cardKey]);
 
+  const keepSubagents = openSubagents.keep;
   useEffect(() => {
-    setOpenSubagents((current) => {
-      const running = new Set(listed.filter((session) => listedSubagents(session).length > 0).map(sessionKey));
-      const kept = [...current].filter((key) => running.has(key));
-      return kept.length === current.size ? current : new Set(kept);
-    });
-  }, [listed]);
+    keepSubagents(new Set(listed.filter((session) => listedSubagents(session).length > 0).map(sessionKey)));
+  }, [listed, keepSubagents]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), AGE_REFRESH_MS);
@@ -145,12 +145,6 @@ export function AgentSessionsPanel({
     return () => window.clearTimeout(timer);
   }, [notFoundId]);
 
-  const flip = (key: string) => (current: ReadonlySet<string>) => {
-    const next = new Set(current);
-    if (!next.delete(key)) next.add(key);
-    return next;
-  };
-  const toggleSubagents = (key: string) => setOpenSubagents(flip(key));
 
   const keyboard = useSessionKeyboard(
     removal && !reveal
@@ -277,7 +271,7 @@ export function AgentSessionsPanel({
                     {card}
                   </AgentSessionHoverCard>
                 )}
-                {subagents && <AgentSubagents session={session} open={openSubagents.has(key)} onToggle={() => toggleSubagents(key)} />}
+                {subagents && <AgentSubagents session={session} open={openSubagents.isOpen(key)} onToggle={() => openSubagents.toggle(key)} />}
                 {menu}
                 {archive}
               </li>
@@ -305,14 +299,14 @@ export function AgentSessionsPanel({
                 reveal || (listedSubagents(session).length === 0 && !nested.children.has(key)) ? undefined : (
                   <>
                     {listedSubagents(session).length > 0 && (
-                      <AgentSubagents session={session} open={openSubagents.has(key)} onToggle={() => toggleSubagents(key)} />
+                      <AgentSubagents session={session} open={openSubagents.isOpen(key)} onToggle={() => openSubagents.toggle(key)} />
                     )}
                     {nested.children.has(key) && (
                       <AgentSessionChildren
                         sessions={nested.children.get(key) ?? []}
-                        open={openChildren.has(key)}
+                        open={openChildren.isOpen(key)}
                         unseen={unseen?.keys}
-                        onToggle={() => setOpenChildren(flip(key))}
+                        onToggle={() => openChildren.toggle(key)}
                       />
                     )}
                   </>

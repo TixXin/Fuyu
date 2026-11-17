@@ -2711,6 +2711,19 @@
     {
       "page": "agents",
       "zh-CN": {
+        "group": "Agent 页",
+        "title": "子 Agent / 子会话默认展开",
+        "description": "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。"
+      },
+      "en": {
+        "group": "Agent page",
+        "title": "Expand subagents and child sessions",
+        "description": "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them."
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Codex"
       },
@@ -2975,6 +2988,30 @@
         "group": "Usage rings",
         "title": "Claude Code: ask Anthropic directly",
         "description": "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too."
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "会话环",
+        "title": "样式"
+      },
+      "en": {
+        "group": "Session ring",
+        "title": "Style"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "会话环",
+        "title": "显示会话数",
+        "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
+      },
+      "en": {
+        "group": "Session ring",
+        "title": "Show the count",
+        "description": "The number in the segmented ring and before the state bar. Off, only the colours' shares show; the pixel grid and signal bars have no number anyway."
       }
     },
     {

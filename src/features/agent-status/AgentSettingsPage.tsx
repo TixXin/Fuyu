@@ -65,6 +65,21 @@ function SessionTitleSection({ settings, onSettingsChange }: AgentSectionProps) 
   );
 }
 
+function SessionPageSection({ settings, onSettingsChange }: AgentSectionProps) {
+  const t = useTranslation();
+
+  return (
+    <SettingsGroup title={t.settings.agent.agentPageSection}>
+      <SettingsToggleRow
+        title={t.settings.agent.expandChildren}
+        description={t.settings.agent.expandChildrenHint}
+        checked={settings.agentExpandChildren}
+        onChange={(agentExpandChildren) => onSettingsChange({ ...settings, agentExpandChildren })}
+      />
+    </SettingsGroup>
+  );
+}
+
 function HooksSection() {
   const agentStatus = useAgentStatusSettings();
   return <AgentHooksSettingsSection {...agentStatus} />;
@@ -74,6 +89,7 @@ const sections = settingsSections<AgentSectionProps, "agents">();
 
 sections.add({ id: "agents.hooks", category: "agents", order: 10, component: HooksSection });
 sections.add({ id: "agents.session-title", category: "agents", order: 20, component: SessionTitleSection });
+sections.add({ id: "agents.session-page", category: "agents", order: 25, component: SessionPageSection });
 sections.add({ id: "agents.providers", category: "agents", order: 30, component: AgentProviderSwitches });
 
 export function AgentSettingsPage(props: AgentSectionProps) {

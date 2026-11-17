@@ -22,6 +22,12 @@ struct Finished {
     error: crate::user_error::UserError,
 }
 
+pub(crate) fn is_busy() -> bool {
+    false
+}
+
+pub(crate) fn stop_in_background(_app: &AppHandle) {}
+
 pub(crate) fn begin(app: &AppHandle, _request: Request) {
     let _ = app.emit_to(crate::island::WINDOW_LABEL, FINISHED_EVENT, Finished { summary: None, error: crate::user_error::unsupported() });
 }
