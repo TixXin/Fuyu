@@ -142,7 +142,7 @@ export function MessagesSettingsPage({ tab, ...page }: Omit<MessagesSectionProps
 
   return (
     <>
-      {tab === "messages" && <FeatureHeader feature="messages" icon={settingsCategoryIcon("messages")} aside={labels.sourcesOn(sourcesOn)} />}
+      <FeatureHeader feature="messages" icon={settingsCategoryIcon("messages")} aside={labels.sourcesOn(sourcesOn)} />
       <SlotView slot={sections} group={tab} props={props} />
     </>
   );
@@ -243,8 +243,7 @@ function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; 
         {settings.mailEnabled && !target && !adding && (
           <SettingsRow
             searchable={false}
-            title={full ? <span className="messages-settings__muted">{t.mail.limitReached(MAX_MAIL_ACCOUNTS)}</span> : ""}
-            control={full ? null : <SettingsLinkButton onClick={() => setAdding(true)}><Plus size={13} strokeWidth={2.2} aria-hidden="true" />{t.mail.addTitle}</SettingsLinkButton>}
+            title={full ? <span className="messages-settings__muted">{t.mail.limitReached(MAX_MAIL_ACCOUNTS)}</span> : <SettingsLinkButton onClick={() => setAdding(true)}><Plus size={13} strokeWidth={2.2} aria-hidden="true" />{t.mail.addTitle}</SettingsLinkButton>}
           />
         )}
       </SettingsGroup>
