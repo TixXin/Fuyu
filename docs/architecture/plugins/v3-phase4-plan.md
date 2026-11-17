@@ -1,6 +1,6 @@
 # 插件平台第 3 版第 4 阶段「接缝」：分步计划
 
-任务 E36.4（#294），父任务 E36（#289）。**状态：用户已确认，第六节全部按推荐**（2026-11-17）。
+任务 E36.4（#294），父任务 E36（#289）。**状态：已完成（E36.4.1–E36.4.9 全部完成，待真岛验收）**（2026-11-17）。
 
 第 3 阶段（E36.3）把 `src/features/` 的各个领域原样迁成了内置插件，并建起了宿主 `ctx.services` 与窗口 `windowServices` 两套同构的服务表。第 4 阶段在此基础上，把 7 项核心能力做成**可替换、可扩展的接缝（Seam = 接口定义 + 提供者 + 使用者）**，并补齐**服务冲突时的启用选择、替换关系展示、内置插件缺依赖超时提醒**。
 
@@ -167,3 +167,18 @@
 | 2 | **当第三方插件替换内置插件的某项服务时（如只换掉 `music` 里的 `lyrics/v1`），内置插件怎么处理？** | **只停用内置插件冲突的那一项服务（`disabledServices`）**，不关掉整个内置插件（音乐播放控制 `media/v1` 和音乐页照常运行）；如果内置插件只有这一项功能，也可以提示用户直接关掉内置插件 | 冲突时一律关掉整个内置插件：换个歌词源会把整个音乐播放器也关掉，不符合预期 |
 | 3 | **消息来源（邮箱、QQ、微信）在第 4 阶段是做成 `messages` 插件下的三个可开关来源，还是拆成 3 个独立的内置插件？** | **保持插件页里是一个「消息」内置插件**，把邮箱、QQ、微信抽成 `messages/v1` 接缝下的三个内置来源（各自有开关，第三方插件可新增第 4 个来源或按 `id` 替换其中一个） | 拆成 3 个独立内置插件（`mail`、`qq`、`wechat`）：插件页从 22 个变成 24 个（Mac 上还多出两个不支持的插件条目），而且第 3 阶段刚把开关存进 `messages` 的 `config: { mail, qq, wechat }`（E36.3.44），再拆又要做一次配置迁移 |
 | 4 | **`tauri-cordis` 公开发布的时机** | **等第 3 阶段收口（`E36.3.50`）或第 4 阶段做完后一起对外建仓**（现在四项条件和名字 `tauri-cordis` 都已就绪，随时可发，但对外建 GitHub 仓库和发 npm 包前先问你） | 现在立刻对外建 `TixXin/tauri-cordis` 仓库：也可以，只要你点头 |
+
+---
+
+## 七、收口总结（2026-11-17）
+
+1. **服务替换与等待诊断（E36.4.1）**：`src/features/builtins.json` 补齐全部内置服务提供者的 `provides`；宿主 `builtins.mjs` 与 `services.mjs` 支持 `disabledServices` 与 `replaces`（仅让出冲突的那项服务而不停掉整个内置插件，如 `music` 让出 `lyrics/v1` 时 `media/v1` 照常运行）；窗口 `createWindowServices` 在宿主有非同名拥有者提供同一服务或设了 `setDisabledServices` 时自动让出给宿主，恢复后自动切回；插件设置页展示「谁替换了什么」与 `waitingFor` 三种原因说明；主窗口内置插件 `waiting` 超 10 秒通过 `island-notices/v1` 弹提示。
+2. **7 个接缝全部落地并经端到端测试验证（E36.4.2–E36.4.9）**：
+   - **翻译引擎接缝（E36.4.2）**：`translator/v1` + `ctx.translatorEngines` / `registerTranslationEngine`，翻译主面板、独立翻译窗口、选区浮条与设置页统一走 `translator/v1`。
+   - **歌词来源接缝（E36.4.3）**：新增 `lyrics/v1`（`lookup`、`sources`、`changed`）+ `ctx.lyricsSources` / `registerLyricsSource`，`useLyrics.ts` 统一走 `lyrics/v1`。
+   - **日历来源接缝（E36.4.4）**：`calendar/v1`（新增 `changed` 事件）+ `ctx.calendarSources` / `registerCalendarSource`，`useCalendar.ts` 统一走 `calendar/v1` 并按源隔离错误进 `problems`。
+   - **AI 代理接入接缝（E36.4.5）**：`agents/v1` + `ctx.agentSources` / `registerAgentSource`，支持外部会话流、窗口聚焦器与额外额度来源汇总。
+   - **剪贴板动作接缝（E36.4.6）**：`clipboard/v1` 新增 `copyText`、`pasteText`，新增 `ctx.clipboardActions` / `registerClipboardAction` 接入剪贴板弹窗 `Ctrl+K` 面板与岛内剪贴板行菜单。
+   - **截图后动作接缝（E36.4.7）**：`ctx.screenshotActions` / `registerScreenshotAction` 接入截图完成通知卡与截图历史面板，内置「用浮屿翻译」迁为默认注册项。
+   - **消息来源接缝（E36.4.8）**：新增 `messages/v1`（`sources`、`notify`、`clear`、`changed`、`arrived`、`action`）+ `ctx.messageSources` / `registerMessageSource`，内置 `qq`、`wechat`、`qqMail` 统一登记，支持新增消息来源、按 `id` 替换内置来源与推送到达通知。
+   - **端到端验证（E36.4.9）**：`tests/unit/phase4-seams-e2e.test.mjs` 与 `tests/unit/plugin-service-replacement.test.mjs` 一次性覆盖全部 7 个接缝的扩充、按服务让出、整服务替换与停用恢复。
