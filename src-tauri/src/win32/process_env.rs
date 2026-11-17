@@ -100,7 +100,7 @@ pub(crate) fn split_command_line(line: &str) -> Vec<String> {
             '"' => {
                 started = true;
                 current.extend(std::iter::repeat_n('\\', backslashes / 2));
-                if backslashes % 2 == 0 {
+                if backslashes.is_multiple_of(2) {
                     in_quotes = !in_quotes;
                 } else {
                     current.push('"');
