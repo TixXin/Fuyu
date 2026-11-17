@@ -2,7 +2,7 @@ use base64::Engine;
 use std::{
     sync::{mpsc, Mutex, OnceLock, PoisonError},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 use windows::{
     core::Interface,
@@ -20,16 +20,20 @@ use windows::{
 };
 
 use super::audio::{read_master_volume, read_system_audio_peak, AUDIO_ACTIVE_THRESHOLD};
-use super::audio_fallback::{discover_fallback_sessions, state_from_fallback};
+use super::audio_fallback::{
+    discover_fallback_sessions_with_devices, state_from_fallback, FallbackMediaSession,
+};
+use super::cache::{FallbackCache, FallbackQuery, MetadataCache};
 pub(super) use super::players::friendly_app_label;
-use super::players::normalize_metadata_track;
+use super::players::{custom_players_snapshot, normalize_metadata_track, CustomMediaPlayer};
 use super::service::*;
-use super::timeline_clock::{self, track_key, Published};
 pub(super) use super::state::{current_unix_millis, MediaSessionInfo};
-use crate::win32;
+use super::timeline_clock::{self, track_key, Published};
+use crate::win32::{self, audio::CachedRenderAudio};
 
 pub(super) const MAX_THUMBNAIL_BYTES: u64 = 4_000_000;
 pub(super) const WINDOWS_EPOCH_OFFSET_TICKS: i64 = 116_444_736_000_000_000;
+const MANAGER_RETRY_COOLDOWN: Duration = Duration::from_secs(3);
 
 pub(super) type CachedThumbnail = (String, Option<String>);
 
@@ -37,7 +41,44 @@ pub(super) static THUMBNAIL_CACHE: OnceLock<Mutex<Option<CachedThumbnail>>> = On
 
 const MEDIA_CALL_TIMEOUT: Duration = Duration::from_secs(3);
 
-type MediaJob = Box<dyn FnOnce() + Send + 'static>;
+#[derive(Default)]
+pub(super) struct MediaWorkerState {
+    manager: Option<MediaSessionManager>,
+    manager_retry_at: Option<Instant>,
+    metadata_cache: MetadataCache<Metadata>,
+    fallback_cache: FallbackCache<FallbackMediaSession, Vec<CustomMediaPlayer>>,
+    pub(super) audio: Option<CachedRenderAudio>,
+}
+
+impl MediaWorkerState {
+    pub(super) fn manager(&mut self) -> Result<MediaSessionManager, String> {
+        if let Some(existing) = self.manager.as_ref() {
+            return Ok(existing.clone());
+        }
+        if let Some(until) = self.manager_retry_at {
+            if Instant::now() < until {
+                return Err("Windows media session manager is retrying.".to_string());
+            }
+        }
+        match request_manager() {
+            Ok(manager) => {
+                self.manager_retry_at = None;
+                self.manager = Some(manager.clone());
+                Ok(manager)
+            }
+            Err(error) => {
+                self.manager_retry_at = Some(Instant::now() + MANAGER_RETRY_COOLDOWN);
+                Err(error)
+            }
+        }
+    }
+
+    pub(super) fn invalidate_manager(&mut self) {
+        self.manager = None;
+    }
+}
+
+type MediaJob = Box<dyn FnOnce(&mut MediaWorkerState) + Send + 'static>;
 
 static MEDIA_WORKER: Mutex<Option<mpsc::Sender<MediaJob>>> = Mutex::new(None);
 
@@ -49,9 +90,13 @@ fn spawn_media_worker() -> Result<mpsc::Sender<MediaJob>, String> {
             let Ok(_apartment) = win32::com::ComApartment::multithreaded() else {
                 return;
             };
+            let mut state = MediaWorkerState::default();
             while let Ok(job) = rx.recv() {
-                let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(job));
+                let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    job(&mut state);
+                }));
             }
+            drop(state);
         })
         .map_err(|error| format!("Could not start the Windows media control thread: {error}"))?;
     Ok(tx)
@@ -60,16 +105,16 @@ fn spawn_media_worker() -> Result<mpsc::Sender<MediaJob>, String> {
 pub(super) fn on_media_thread<T, F>(operation: F) -> Result<T, String>
 where
     T: Send + 'static,
-    F: FnOnce() -> Result<T, String> + Send + 'static,
+    F: FnOnce(&mut MediaWorkerState) -> Result<T, String> + Send + 'static,
 {
     let (reply_tx, reply_rx) = mpsc::channel();
-    let job: MediaJob = Box::new(move || {
-        let _ = reply_tx.send(operation());
+    let job: MediaJob = Box::new(move |state| {
+        let _ = reply_tx.send(operation(state));
     });
     let mut guard = MEDIA_WORKER.lock().unwrap_or_else(PoisonError::into_inner);
     let mut pending = Some(job);
     if let Some(worker) = guard.as_ref() {
-        match worker.send(pending.take().unwrap_or_else(|| Box::new(|| {}))) {
+        match worker.send(pending.take().unwrap_or_else(|| Box::new(|_| {}))) {
             Ok(()) => {}
             Err(error) => {
                 pending = Some(error.0);
@@ -302,23 +347,55 @@ pub(super) fn send_media_key(key: VIRTUAL_KEY) {
     win32::input::send_key_up(key);
 }
 
-pub(super) fn read_media_state(target: Option<&str>) -> Result<MediaState, String> {
-    match request_manager() {
-        Ok(manager) => read_media_state_from_manager(&manager, target),
-        Err(_) => read_media_state_without_session(),
+pub(super) fn read_media_state(
+    state: &mut MediaWorkerState,
+    target: Option<&str>,
+) -> Result<MediaState, String> {
+    let manager = match state.manager() {
+        Ok(manager) => manager,
+        Err(_) => return read_media_state_without_session(state),
+    };
+    match read_media_state_from_manager(state, &manager, target) {
+        Ok(media_state) => Ok(media_state),
+        Err(_) => {
+            state.invalidate_manager();
+            match state.manager() {
+                Ok(fresh) => read_media_state_from_manager(state, &fresh, target),
+                Err(_) => read_media_state_without_session(state),
+            }
+        }
     }
 }
 
 pub(super) fn read_media_state_from_manager(
+    state: &mut MediaWorkerState,
     manager: &MediaSessionManager,
     target: Option<&str>,
 ) -> Result<MediaState, String> {
     let now_ms = current_unix_millis();
-    let audio_peak = read_system_audio_peak().unwrap_or(0.0);
+    let audio_peak = read_system_audio_peak(&mut state.audio).unwrap_or(0.0);
     let audio_active = audio_peak > AUDIO_ACTIVE_THRESHOLD;
-    let volume = read_master_volume().unwrap_or(-1.0);
+    let volume = read_master_volume(&mut state.audio).unwrap_or(-1.0);
     let smtc_sessions = list_sessions(manager);
-    let fallback_sessions = discover_fallback_sessions(&smtc_sessions, now_ms);
+    let resolved = resolve_session(manager, target)?;
+    let smtc_playing = resolved.as_ref().is_some_and(is_playing);
+    let target_id = target.filter(|id| !id.is_empty());
+    let target_needs_fallback =
+        target_id.is_some_and(|id| !smtc_sessions.iter().any(|session| session.id == id));
+    let query = FallbackQuery {
+        smtc_playing,
+        target_needs_fallback,
+        audio_active,
+        config_key: custom_players_snapshot(),
+        now_ms,
+    };
+    let devices_ref = state.audio.as_ref().map(|cached| cached.devices());
+    let fallback_sessions = state.fallback_cache.resolve(
+        query,
+        |entry| entry.playing,
+        || discover_fallback_sessions_with_devices(devices_ref, &smtc_sessions, now_ms),
+    );
+
     let mut sessions = smtc_sessions;
     for entry in &fallback_sessions {
         if !sessions.iter().any(|existing| existing.id == entry.id) {
@@ -330,14 +407,13 @@ pub(super) fn read_media_state_from_manager(
         }
     }
 
-    if let Some(target_id) = target.filter(|id| !id.is_empty()) {
+    if let Some(target_id) = target_id {
         if let Some(fallback) = fallback_sessions.iter().find(|entry| entry.id == target_id) {
             return Ok(state_from_fallback(fallback, sessions, volume, now_ms));
         }
     }
 
-    let resolved = resolve_session(manager, target)?;
-    if !resolved.as_ref().is_some_and(is_playing) {
+    if !smtc_playing {
         if let Some(playing_fallback) = fallback_sessions.iter().find(|entry| entry.playing) {
             return Ok(state_from_fallback(playing_fallback, sessions, volume, now_ms));
         }
@@ -410,10 +486,45 @@ pub(super) fn read_media_state_from_manager(
         .and_then(|value| value.Value().ok())
         .unwrap_or(1.0);
 
-    let Metadata { title, artist, album, thumbnail, track_id } = read_metadata(&session, source_app.as_deref());
-    let (position_ms, duration_ms) = read_timeline(&session, is_playing, playback_rate, |duration_ms| {
-        (source_app.clone().unwrap_or_default(), track_key(title.as_deref(), artist.as_deref(), album.as_deref(), duration_ms))
-    });
+    let epoch = super::events::metadata_epoch();
+    let events_on = super::events::running();
+    let Metadata {
+        title,
+        artist,
+        album,
+        thumbnail,
+        track_id,
+    } = if let Some(cached) =
+        state
+            .metadata_cache
+            .get(source_app.as_deref(), epoch, events_on, now_ms)
+    {
+        cached
+    } else {
+        let fresh = read_metadata(&session, source_app.as_deref());
+        state.metadata_cache.put(
+            source_app.as_deref(),
+            epoch,
+            now_ms,
+            fresh.title.is_some(),
+            fresh.thumbnail.is_some(),
+            fresh.clone(),
+        );
+        fresh
+    };
+
+    let (position_ms, duration_ms) =
+        read_timeline(&session, is_playing, playback_rate, |duration_ms| {
+            (
+                source_app.clone().unwrap_or_default(),
+                track_key(
+                    title.as_deref(),
+                    artist.as_deref(),
+                    album.as_deref(),
+                    duration_ms,
+                ),
+            )
+        });
 
     Ok(MediaState {
         available: true,
@@ -442,10 +553,26 @@ pub(super) fn read_media_state_from_manager(
     })
 }
 
-pub(super) fn read_media_state_without_session() -> Result<MediaState, String> {
+pub(super) fn read_media_state_without_session(
+    state: &mut MediaWorkerState,
+) -> Result<MediaState, String> {
     let now_ms = current_unix_millis();
-    let volume = read_master_volume().unwrap_or(-1.0);
-    let fallback_sessions = discover_fallback_sessions(&[], now_ms);
+    let audio_peak = read_system_audio_peak(&mut state.audio).unwrap_or(0.0);
+    let audio_active = audio_peak > AUDIO_ACTIVE_THRESHOLD;
+    let volume = read_master_volume(&mut state.audio).unwrap_or(-1.0);
+    let query = FallbackQuery {
+        smtc_playing: false,
+        target_needs_fallback: false,
+        audio_active,
+        config_key: custom_players_snapshot(),
+        now_ms,
+    };
+    let devices_ref = state.audio.as_ref().map(|cached| cached.devices());
+    let fallback_sessions = state.fallback_cache.resolve(
+        query,
+        |entry| entry.playing,
+        || discover_fallback_sessions_with_devices(devices_ref, &[], now_ms),
+    );
     if let Some(fallback) = fallback_sessions
         .iter()
         .find(|entry| entry.playing)
@@ -462,9 +589,6 @@ pub(super) fn read_media_state_without_session() -> Result<MediaState, String> {
         return Ok(state_from_fallback(fallback, sessions, volume, now_ms));
     }
 
-    let audio_peak = read_system_audio_peak().unwrap_or(0.0);
-    let audio_active = audio_peak > AUDIO_ACTIVE_THRESHOLD;
-
     Ok(MediaState {
         available: false,
         audio_active,
@@ -478,7 +602,6 @@ pub(super) fn read_media_state_without_session() -> Result<MediaState, String> {
         ..MediaState::empty()
     })
 }
-
 
 pub(super) fn read_timeline(
     session: &MediaSession,
@@ -510,11 +633,17 @@ pub(super) fn read_timeline(
         duration_ms: duration,
     };
     let (session_key, track) = identify(duration);
-    let elapsed = timeline_clock::sample(&session_key, &track, published, is_playing, current_unix_millis());
+    let elapsed = timeline_clock::sample(
+        &session_key,
+        &track,
+        published,
+        is_playing,
+        current_unix_millis(),
+    );
     (elapsed, duration)
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct Metadata {
     pub(super) title: Option<String>,
     pub(super) artist: Option<String>,
@@ -524,12 +653,15 @@ pub(super) struct Metadata {
 }
 
 pub(super) fn player_track_id(genres: impl IntoIterator<Item = String>) -> Option<String> {
-    genres.into_iter().map(|genre| genre.trim().to_string()).find(|genre| {
-        genre
-            .strip_prefix("NCM-")
-            .or_else(|| genre.strip_prefix("QQ-"))
-            .is_some_and(|id| !id.is_empty() && id.chars().all(|c| c.is_ascii_alphanumeric()))
-    })
+    genres
+        .into_iter()
+        .map(|genre| genre.trim().to_string())
+        .find(|genre| {
+            genre
+                .strip_prefix("NCM-")
+                .or_else(|| genre.strip_prefix("QQ-"))
+                .is_some_and(|id| !id.is_empty() && id.chars().all(|c| c.is_ascii_alphanumeric()))
+        })
 }
 
 pub(super) fn read_metadata(session: &MediaSession, source_app: Option<&str>) -> Metadata {
@@ -553,7 +685,13 @@ pub(super) fn read_metadata(session: &MediaSession, source_app: Option<&str>) ->
         .ok()
         .and_then(|genres| player_track_id(genres.into_iter().map(|genre| genre.to_string())));
 
-    Metadata { title, artist, album, thumbnail, track_id }
+    Metadata {
+        title,
+        artist,
+        album,
+        thumbnail,
+        track_id,
+    }
 }
 
 pub(super) fn cached_thumbnail(
@@ -647,17 +785,26 @@ pub(super) fn media_error(context: &str, error: windows::core::Error) -> String 
     format!("{context}: {error}")
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::player_track_id;
 
     #[test]
     fn a_player_plugin_names_the_song_among_the_genres() {
-        let genres = |list: &[&str]| list.iter().map(|genre| genre.to_string()).collect::<Vec<_>>();
-        assert_eq!(player_track_id(genres(&["流行", "NCM-487885426"])).as_deref(), Some("NCM-487885426"));
-        assert_eq!(player_track_id(genres(&["QQ-002Abc"])).as_deref(), Some("QQ-002Abc"));
-        assert_eq!(player_track_id(genres(&["Pop", "NCM-", "NCM-12 34"])), None);
+        let genres =
+            |list: &[&str]| list.iter().map(|genre| genre.to_string()).collect::<Vec<_>>();
+        assert_eq!(
+            player_track_id(genres(&["流行", "NCM-487885426"])).as_deref(),
+            Some("NCM-487885426")
+        );
+        assert_eq!(
+            player_track_id(genres(&["QQ-002Abc"])).as_deref(),
+            Some("QQ-002Abc")
+        );
+        assert_eq!(
+            player_track_id(genres(&["Pop", "NCM-", "NCM-12 34"])),
+            None
+        );
         assert_eq!(player_track_id(Vec::new()), None);
     }
 }

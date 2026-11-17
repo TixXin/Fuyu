@@ -124,6 +124,7 @@ fn resolve_host_process(
 fn collect_window_titles() -> (HashMap<u32, String>, HashMap<String, String>) {
     let mut by_pid: HashMap<u32, String> = HashMap::new();
     let mut by_exe: HashMap<String, String> = HashMap::new();
+    let mut path_by_pid: HashMap<u32, Option<String>> = HashMap::new();
 
     let _ = win32::window::for_each_top_level_window(|hwnd| {
         if win32::window::has_owner(hwnd) {
@@ -147,11 +148,14 @@ fn collect_window_titles() -> (HashMap<u32, String>, HashMap<String, String>) {
         if replace_pid {
             by_pid.insert(pid, title.clone());
         }
-        if let Some(path) = win32::process::image_path(pid) {
+        let cached_path = path_by_pid
+            .entry(pid)
+            .or_insert_with(|| win32::process::image_path(pid));
+        if let Some(path) = cached_path.as_deref() {
             let exe = path
                 .rsplit(['\\', '/'])
                 .next()
-                .unwrap_or(&path)
+                .unwrap_or(path)
                 .to_lowercase();
             let replace_exe = by_exe
                 .get(&exe)
@@ -184,24 +188,34 @@ fn smtc_already_covers(smtc_sessions: &[MediaSessionInfo], candidate_id: &str, l
     })
 }
 
-pub(super) fn discover_fallback_sessions(
+pub(super) fn discover_fallback_sessions_with_devices(
+    existing_devices: Option<&win32::audio::AudioDevices>,
     smtc_sessions: &[MediaSessionInfo],
     now_ms: i64,
 ) -> Vec<FallbackMediaSession> {
-    let Ok(devices) = win32::audio::AudioDevices::open() else {
-        return Vec::new();
+    let owned_devices;
+    let devices = match existing_devices {
+        Some(devices) => devices,
+        None => {
+            let Ok(opened) = win32::audio::AudioDevices::open() else {
+                return Vec::new();
+            };
+            owned_devices = opened;
+            &owned_devices
+        }
     };
-    let audio_sessions = devices.process_sessions();
+    let own_pid = std::process::id();
+    let audio_sessions: Vec<_> = devices
+        .process_sessions()
+        .into_iter()
+        .filter(|session| session.process_id != 0 && session.process_id != own_pid)
+        .collect();
     if audio_sessions.is_empty() {
         return Vec::new();
     }
 
-    let own_pid = std::process::id();
     let parents = win32::process_tree::parent_process_ids();
-    let (titles_by_pid, titles_by_exe) = collect_window_titles();
-    let custom = custom_players_snapshot();
-    let mut by_id: HashMap<String, FallbackMediaSession> = HashMap::new();
-
+    let mut candidates = Vec::new();
     for audio in audio_sessions {
         let Some((app_pid, exe_name, _)) = resolve_host_process(audio.process_id, own_pid, &parents) else {
             continue;
@@ -210,7 +224,22 @@ pub(super) fn discover_fallback_sessions(
         if SYSTEM_EXECUTABLES.iter().any(|sys| *sys == lowered_exe) {
             continue;
         }
+        if !is_browser_executable(&lowered_exe)
+            && smtc_already_covers(smtc_sessions, &lowered_exe, &default_player_label(&exe_name))
+        {
+            continue;
+        }
+        candidates.push((audio, app_pid, exe_name, lowered_exe));
+    }
+    if candidates.is_empty() {
+        return Vec::new();
+    }
 
+    let (titles_by_pid, titles_by_exe) = collect_window_titles();
+    let custom = custom_players_snapshot();
+    let mut by_id: HashMap<String, FallbackMediaSession> = HashMap::new();
+
+    for (audio, app_pid, exe_name, lowered_exe) in candidates {
         let window_title = titles_by_pid
             .get(&app_pid)
             .or_else(|| titles_by_pid.get(&audio.process_id))
@@ -295,7 +324,7 @@ pub(super) fn state_from_fallback(
     }
 }
 
-pub(crate) fn list_candidates() -> Vec<CustomMediaPlayer> {
+pub(crate) fn list_candidates(existing_devices: Option<&win32::audio::AudioDevices>) -> Vec<CustomMediaPlayer> {
     let own_pid = std::process::id();
     let parents = win32::process_tree::parent_process_ids();
     let custom = custom_players_snapshot();
@@ -303,7 +332,15 @@ pub(crate) fn list_candidates() -> Vec<CustomMediaPlayer> {
     let (titles_by_pid, _) = collect_window_titles();
 
     let mut audio_pids: HashSet<u32> = HashSet::new();
-    if let Ok(devices) = win32::audio::AudioDevices::open() {
+    let owned_devices;
+    let devices = match existing_devices {
+        Some(dev) => Some(dev),
+        None => {
+            owned_devices = win32::audio::AudioDevices::open().ok();
+            owned_devices.as_ref()
+        }
+    };
+    if let Some(devices) = devices {
         for session in devices.process_sessions() {
             if let Some((host_pid, _, _)) = resolve_host_process(session.process_id, own_pid, &parents) {
                 audio_pids.insert(host_pid);
