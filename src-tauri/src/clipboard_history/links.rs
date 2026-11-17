@@ -250,6 +250,9 @@ where
     let mut state = store.state.lock().map_err(|error| error.to_string())?;
     let mut next = state.clone();
     change(&mut next)?;
+    if next == *state {
+        return Ok(next);
+    }
     let next = clock::with(|clock, wall| restamp(&state, next, clock, wall));
     save(&store.path, &next)?;
     *state = next.clone();

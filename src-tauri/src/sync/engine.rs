@@ -119,16 +119,21 @@ fn device_name() -> String {
 }
 
 impl Engine {
-    fn publish(&self, status: SyncStatus) {
-        *guard(&self.status) = status.clone();
-        let _ = self.app.emit(STATUS_EVENT, status);
-    }
-
     fn update(&self, change: impl FnOnce(&mut SyncStatus)) -> SyncStatus {
-        let mut status = guard(&self.status).clone();
-        change(&mut status);
-        self.publish(status.clone());
-        status
+        let (changed, next) = {
+            let mut current = guard(&self.status);
+            let mut next = current.clone();
+            change(&mut next);
+            let changed = *current != next;
+            if changed {
+                *current = next.clone();
+            }
+            (changed, next)
+        };
+        if changed {
+            let _ = self.app.emit(STATUS_EVENT, next.clone());
+        }
+        next
     }
 
     fn round(&self) {
@@ -197,7 +202,9 @@ fn wake(engine: &Engine, wake: Wake) {
 
 pub(crate) fn notify_local_change() {
     if let Some(engine) = ENGINE.get() {
-        wake(engine, Wake::Changed);
+        if guard(&engine.status).phase != SyncPhase::Off {
+            wake(engine, Wake::Changed);
+        }
     }
 }
 
