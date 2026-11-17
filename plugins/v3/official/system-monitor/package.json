@@ -1,0 +1,50 @@
+{
+  "name": "@fuyu/system-monitor",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Cross-platform CPU, per-core load, memory usage and system uptime monitor on the island page and collapsed bar.",
+  "license": "MIT",
+  "author": "TixXin",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev --official",
+    "build": "fuyu-plugin build --official",
+    "check": "fuyu-plugin check --official --market",
+    "package": "fuyu-plugin pack --official",
+    "typecheck": "tsc",
+    "lint": "eslint ."
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "系统监控",
+      "en": "System monitor"
+    },
+    "description": {
+      "zh-CN": "基于 Node 原生接口跨平台显示 CPU 总体与每核负载、内存占用和系统运行时间，支持岛展开页与收起条指标。",
+      "en": "Shows cross-platform overall and per-core CPU load, memory usage, and system uptime on the island page and collapsed bar."
+    },
+    "icon": "assets/icon.svg",
+    "categories": [
+      "utilities",
+      "information"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
+    },
+    "slots": [
+      "island.page/v1",
+      "island.collapsed/v1",
+      "settings.section/v1"
+    ]
+  }
+}
