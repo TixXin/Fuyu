@@ -1021,6 +1021,43 @@ fn a_session_with_a_broken_parent_chain_finds_its_host_in_its_environment() {
     assert_eq!(app_display_name("ghostty", None), "Ghostty");
 }
 
+#[test]
+fn picks_the_project_window_across_macos_titles_and_added_editors() {
+    use super::window_focus::{
+        best_window, should_query_ax_windows, window_of_process_chain, SessionHints, WindowCandidate,
+    };
+
+    let candidate = |title: &str, app: &str| WindowCandidate {
+        title: title.to_string(),
+        app: app.to_string(),
+    };
+    let windows = [
+        candidate("README.md — blog", "cursor"),
+        candidate("focus.rs — Fuyu", "cursor"),
+        candidate("Fuyu — main.rs", "zed"),
+        candidate("shop – lib.rs", "rustrover"),
+        candidate("Fuyu", "trae cn"),
+    ];
+    let owners = [42, 42, 70, 80, 90];
+    let hints = |folder| SessionHints {
+        folder: Some(folder),
+        ..SessionHints::default()
+    };
+    assert_eq!(window_of_process_chain(&windows, &owners, &[100, 42], &hints("fuyu")), Some(1));
+    assert_eq!(window_of_process_chain(&windows, &owners, &[100, 42], &hints("blog")), Some(0));
+    assert_eq!(best_window(&windows[2..], &hints("fuyu")), Some(0));
+    assert_eq!(best_window(&windows[4..], &hints("fuyu")), Some(0));
+
+    let prefer = vec!["antigravity ide".to_string()];
+    assert!(should_query_ax_windows("cursor", 42, true, false, &[100, 42], &prefer));
+    assert!(!should_query_ax_windows("visual studio code", 55, true, false, &[100, 42], &prefer));
+    assert!(should_query_ax_windows("antigravity ide", 66, false, true, &[], &prefer));
+    assert!(!should_query_ax_windows("cursor", 42, false, true, &[], &prefer));
+    assert!(should_query_ax_windows("zed", 70, false, false, &[], &[]));
+    assert!(!should_query_ax_windows("safari", 88, false, false, &[], &[]));
+    assert!(!should_query_ax_windows("finder", 42, true, false, &[42], &[]));
+}
+
 #[cfg(windows)]
 #[test]
 fn host_icons_are_only_read_from_existing_executables() {

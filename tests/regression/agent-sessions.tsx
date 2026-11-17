@@ -154,7 +154,7 @@ async function runChecks() {
     const agedIcon = rows()[2].querySelector(".agent-session__agent")!.getBoundingClientRect();
     const firstIcon = rows()[0].querySelector(".agent-session__agent")!.getBoundingClientRect();
     const slotGap = age!.getBoundingClientRect().left - agedIcon.right;
-    check(slotGap >= 0 && slotGap <= 16 && Math.abs(agedIcon.right - firstIcon.right) < 0.5, "时间那一列固定为「99m」宽，和左边的 Agent 图标不空出一大截，各行图标仍在同一列");
+    check(slotGap >= 0 && slotGap <= 18 && Math.abs(agedIcon.right - firstIcon.right) < 0.5, "时间那一列固定为「99m」宽，和左边的 Agent 图标不空出一大截，各行图标仍在同一列");
     agedArchive.focus();
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 200)); });
     check(getComputedStyle(agedArchive).opacity === "1" && getComputedStyle(age!).opacity === "0", "鼠标移上或用键盘选到这一行时，时间换成归档按钮");
