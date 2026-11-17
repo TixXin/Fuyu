@@ -101,6 +101,7 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
 | `agent-approval-requested`（载荷 `{ id, agent, kind, sessionId, cwd, toolName, toolInput, permissionSuggestions, receivedAt }`：一个会话等你在岛上审批的工具调用（`kind: "permission"`），或要你回答的 AskUserQuestion（`kind: "question"`，`toolInput.questions`），同一会话同时只发一条） | `agent_approval/mod.rs` | 广播 |
 | `agent-approval-closed`（载荷 `{ id, reason }`，`reason` 为 `decided` / `timeout` / `disconnected` / `handedBack` / `shutdown`） | `agent_approval/mod.rs` | 广播 |
 | `agent-editor-extension-missing`（载荷 `{ app, name }`：点会话跳到的编辑器（`code` / `cursor` …，显示名 `VS Code` …）没装岛屿的扩展，Agent 页提示安装，A9） | `agent_status/mod.rs` | `main` |
+| `agent-focus-window-only`（载荷 `{ provider, sessionId, app, name }`：点会话只把宿主窗口调到前台、没能切到具体会话或标签页，Agent 页在该行提示手动选会话，A12） | `agent_status/mod.rs` | `main` |
 | `local-api-request`（载荷 `{ id, method, params }`，前端用 `answer_local_api_request` 回复） | `local_api/bridge.rs` | `main` |
 | `plugin-host-event`（载荷 `{ name, payload }`：插件可订阅的变化，由 Rust 合并后转给订阅的插件；`name` 见 `plugins/schema/rpc.json` 的 `events`） | 主窗口 `windows/island/usePluginHostEvents.ts` | Rust（`plugin_host/events.rs`） |
 | `plugin-notification`（载荷 `{ pluginId, pluginName, title, body, durationMs, actions }`：插件的 `island.notify`，按钮用 `run_plugin_notification_action` 回复） | `plugin_host/notify.rs` | `main` |
