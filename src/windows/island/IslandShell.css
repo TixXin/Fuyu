@@ -37,7 +37,7 @@
   color: var(--color-text);
   background: var(--island-fill, var(--island-background-color));
   border: 0;
-  box-shadow: inset 0 0 0 1px var(--color-white-a08);
+  box-shadow: var(--island-edge-lines, inset 0 0 0 1px var(--color-white-a08));
   overflow: visible;
   isolation: isolate;
   --island-shell-left: calc(max(0px, round(nearest, (100cqw - var(--island-shell-width)) / 2, var(--island-device-pixel, 1px))) + var(--island-pixel-nudge, 0.001px));

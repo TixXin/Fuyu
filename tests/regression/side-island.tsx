@@ -102,7 +102,8 @@ async function runChecks() {
     check(parseFloat(style.borderTopRightRadius) > 0 && parseFloat(style.borderBottomRightRadius) > 0, "朝屏幕内一侧是圆角");
     const fillet = getComputedStyle(island(), "::before");
     check(fillet.opacity === "1" && near(parseFloat(fillet.top), -8) && near(parseFloat(fillet.left), 0), "贴边角做反向圆弧（上方）");
-    check(near(parseFloat(getComputedStyle(island(), "::after").top), 48), "贴边角做反向圆弧（下方）");
+    const rim = getComputedStyle(island(), "::after");
+    check(near(parseFloat(rim.top), -8) && near(parseFloat(rim.bottom), -8) && rim.clipPath.startsWith("shape(evenodd") && !rim.clipPath.includes(" ccw"), "描边是一圈，连着上下两个反向圆弧");
     check(getComputedStyle(document.querySelector(".island__side-handle")!).opacity === "0", "没收起时不显示把手");
 
     await set({ full: true });

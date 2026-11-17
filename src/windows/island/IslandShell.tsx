@@ -26,6 +26,8 @@ import { AlertPopup, useActiveAlert } from "./NotchAlert";
 import { IslandDragHint } from "./IslandDragHint";
 import { sideBubbleTop } from "./sideColumn";
 import type { IslandSide } from "./useIslandSide";
+import { ISLAND_OUTLINE_STYLE } from "./islandOutline";
+import "./IslandOutline.css";
 
 type IslandShellProps = {
   mode: IslandMode;
@@ -142,7 +144,7 @@ export function IslandShell({
   return (
     <section
       className={className}
-      style={side ? ({ "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : undefined}
+      style={side ? ({ ...ISLAND_OUTLINE_STYLE, "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : (ISLAND_OUTLINE_STYLE as CSSProperties)}
       aria-label={collapsedLabel}
       onClick={(event) => {
         if (!isExpanded && event.target === event.currentTarget) {

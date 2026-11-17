@@ -141,7 +141,8 @@ async function runChecks() {
 
     await set({ settings: { glassRim: true, glassSheen: true, glassSpecular: false, glassMorph: "liquid" } });
     for (const island of islands()) {
-      check(getComputedStyle(island.querySelector(".island__glass-rim")!).display === "block", "打开油膜边后画出边");
+      const rim = getComputedStyle(island, "::after");
+      check(rim.backgroundImage.startsWith("conic-gradient(") && rim.clipPath.startsWith("shape(evenodd") && rim.animationName === "glassRimSpin", "打开油膜边后画出边，和反向弧是同一圈");
       check(getComputedStyle(island.querySelector(".island__glass-sheen")!).display === "block", "打开扫光后画出扫光");
       check(getComputedStyle(island.querySelector(".island__glass-highlight")!).display === "none", "关掉镜面高光后不画高光");
       check(island.classList.contains("island--glass-morph-liquid"), "形变设成液体");
