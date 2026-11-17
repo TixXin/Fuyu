@@ -193,7 +193,7 @@ fn finish_capture(app: &AppHandle, id: u64, grabs: Vec<Option<super::capture::Gr
     };
     for label in &failed {
         if let Some(window) = app.get_webview_window(label) {
-            let _ = window.destroy();
+            super::capture::close_overlay(app, window);
         }
     }
     hold_overlays(app, false);
@@ -238,7 +238,7 @@ fn place_windows(app: &AppHandle, monitors: &[Monitor]) -> Result<(), String> {
     for (name, window) in app.webview_windows() {
         let index = name.strip_prefix(WINDOW_PREFIX).and_then(|index| index.parse::<usize>().ok());
         if index.is_some_and(|index| index >= monitors.len()) {
-            let _ = window.destroy();
+            super::capture::close_overlay(app, window);
         }
     }
     Ok(())
@@ -273,17 +273,6 @@ fn overlay_window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String>
     super::capture::prepare_overlay(app, &window);
     crate::webview_memory::hidden(&window);
     Ok(window)
-}
-
-pub(crate) fn prepare(app: &AppHandle) {
-    let app = app.clone();
-    thread::spawn(move || {
-        let placed = app.available_monitors().map_err(|error| error.to_string()).and_then(|monitors| place_windows(&app, &monitors));
-        if let Err(error) = placed {
-            eprintln!("failed to prepare the screenshot windows: {error}");
-        }
-        super::pin::prepare(&app);
-    });
 }
 
 pub(crate) fn current(label: &str) -> Option<OverlaySession> {
@@ -406,7 +395,7 @@ pub(crate) fn end(app: &AppHandle) {
     CAPTURED.notify_all();
     for (name, window) in app.webview_windows() {
         if name.starts_with(WINDOW_PREFIX) {
-            let _ = window.destroy();
+            super::capture::close_overlay(app, window);
         }
     }
     if ended {
