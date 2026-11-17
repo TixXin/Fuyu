@@ -10,7 +10,7 @@ use super::session_records::{self, SessionRecord};
 use super::tmux;
 use super::wezterm;
 use super::window_focus::{self, app_name, SessionHints};
-use super::{antigravity, antigravity_focus, dsh, opencode, trae, workbuddy};
+use super::{antigravity, antigravity_focus, dsh, opencode, pi, trae, workbuddy};
 use crate::system::windows_home_dir;
 use crate::platform;
 
@@ -132,6 +132,7 @@ fn provider_apps(provider: &str, app_dir: Option<&Path>, session_id: Option<&str
             workbuddy::PROVIDER => workbuddy::running_app(),
             dsh::PROVIDER => dsh::running_app(),
             opencode::PROVIDER => opencode::running_app(),
+            pi::PROVIDER => pi::running_app(),
             trae::PROVIDER => Some(trae::APP.to_string()),
             trae::CN_PROVIDER => Some(trae::CN_APP.to_string()),
             _ => None,

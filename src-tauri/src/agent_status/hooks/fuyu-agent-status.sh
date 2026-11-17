@@ -4,8 +4,15 @@ phase=$2
 task=$(printf '%s' "${3:-}" | tr -cd 'A-Za-z0-9_.:-')
 minimum_visible_ms=800
 
-providers="codex claudeCode workbuddy antigravity dsh qoder codebuddy qwen trae traeCn zcode kimiCode grok copilot droid"
-case " $providers " in *" $provider "*) ;; *) exit 2 ;; esac
+providers="codex claudeCode workbuddy antigravity dsh qoder codebuddy qwen trae traeCn zcode kimiCode grok copilot droid pi"
+case "$provider" in
+  updatedAt|statusPath|others|"") exit 2 ;;
+  [A-Za-z]*)
+    case "$provider" in *[!A-Za-z0-9_-]*) exit 2 ;; esac
+    [ "${#provider}" -le 32 ] || exit 2
+    ;;
+  *) exit 2 ;;
+esac
 case "$phase" in idle|running|completed|failed) ;; *) exit 2 ;; esac
 
 status=${FOCUSD_AGENT_STATUS_PATH:-$(cd "$(dirname "$0")" && pwd)/agent-status.json}
@@ -69,6 +76,10 @@ for name in $providers; do
   fi
   json="$json\"$name\":$entry,"
 done
+case " $providers " in
+  *" $provider "*) ;;
+  *) json="$json\"$provider\":$next," ;;
+esac
 json="$json\"updatedAt\":$now}"
 printf '%s\n' "$json" > "$status.tmp" && mv -f "$status.tmp" "$status"
 exit 0

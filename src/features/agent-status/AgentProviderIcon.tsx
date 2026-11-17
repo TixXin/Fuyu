@@ -1,3 +1,4 @@
+import { Bot } from "lucide-react";
 import antigravityIcon from "../../assets/brands/antigravity.png";
 import claudeCodeIcon from "../../assets/brands/claude-code.png";
 import codebuddyIcon from "../../assets/brands/codebuddy.svg";
@@ -9,6 +10,7 @@ import kimiCodeIcon from "../../assets/brands/kimi-code.png";
 import mimoIcon from "../../assets/brands/mimo.png";
 import grokIcon from "../../assets/brands/grok.png";
 import opencodeIcon from "../../assets/brands/opencode.png";
+import piIcon from "../../assets/brands/pi.svg";
 import qoderIcon from "../../assets/brands/qoder.png";
 import qwenIcon from "../../assets/brands/qwen.png";
 import traeIcon from "../../assets/brands/trae.png";
@@ -35,13 +37,18 @@ const PROVIDER_ICONS: Record<SessionProvider, string> = {
   grok: grokIcon,
   copilot: copilotIcon,
   droid: droidIcon,
+  pi: piIcon,
 };
 
-export function AgentProviderIcon({ provider, size = 16 }: { provider: SessionProvider; size?: number }) {
+export function AgentProviderIcon({ provider, size = 16 }: { provider: SessionProvider | string; size?: number }) {
+  const icon = PROVIDER_ICONS[provider as SessionProvider];
+  if (!icon) {
+    return <Bot className="agent-provider-icon agent-provider-icon--custom" size={size} strokeWidth={1.7} aria-hidden="true" />;
+  }
   return (
     <img
       className={`agent-provider-icon agent-provider-icon--${provider}`}
-      src={PROVIDER_ICONS[provider]}
+      src={icon}
       alt=""
       aria-hidden="true"
       width={size}

@@ -21,6 +21,10 @@ export const DEFAULT_AGENT_STATUS: AgentStatusSnapshot = {
 export const AGENT_PROVIDER_LABELS = Object.fromEntries(
   SESSION_PROVIDERS.map((provider) => [provider, AGENTS[provider].label]),
 ) as Record<SessionProvider, string>;
+
+export function getAgentProviderLabel(provider: SessionProvider | string): string {
+  return AGENT_PROVIDER_LABELS[provider as SessionProvider] ?? provider;
+}
 export type AgentStatusEntry = {
   key: string;
   label: string;

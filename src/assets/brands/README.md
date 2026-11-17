@@ -38,5 +38,6 @@
 | `kimi-code.png` | [Kimi Code](https://github.com/MoonshotAI/kimi-code)（MIT） | 仓库里 VS Code 扩展的图标 `apps/vscode/resources/kimi-icon-storefront.png`（128×128），2026-11-15 取得 |
 | `copilot.png` | [GitHub Copilot CLI](https://github.com/features/copilot/cli) | 官方仓库 [github/copilot-sdk](https://github.com/github/copilot-sdk) 的 `assets/copilot.png`（256×256，深色图案、透明底）；深色岛上看不见，垫了白底并缩成 64×64，2026-11-15 取得 |
 | `droid.png` | [Factory Droid](https://factory.ai/) | 官网图标 [favicon.svg](https://factory.ai/favicon.svg)（自带黑底），渲染成 64×64 PNG，2026-11-15 取得 |
+| `pi.svg` | [pi (`pi-coding-agent`)](https://pi.dev/)（MIT） | 按 pi 命令行标识绘制的深色底 `π` 矢量图标，2026-11-17 制作 |
 
-QQ、微信、QQ 邮箱的品牌标识及相关权利归腾讯及对应权利人所有；网易邮箱标识归网易所有，Gmail、Antigravity 标识归 Google 所有，Outlook 标识归 Microsoft 所有；Claude 标识归 Anthropic 所有，OpenAI 标识归 OpenAI 所有，WorkBuddy、CodeBuddy 标识归腾讯所有，Qoder、Qwen 标识归阿里巴巴所有，TRAE 标识归字节跳动所有，DeepSeek 标识归杭州深度求索所有，opencode 标识归 opencode 项目所有，ZCode 标识归北京智谱华章科技所有，MiMo 标识归小米所有，Kimi 标识归北京月之暗面科技所有，Grok 标识归 xAI 所有，GitHub Copilot 标识归 GitHub 所有，Factory / Droid 标识归 Factory 所有。图标随应用打包，不在运行时请求远程图片。
+QQ、微信、QQ 邮箱的品牌标识及相关权利归腾讯及对应权利人所有；网易邮箱标识归网易所有，Gmail、Antigravity 标识归 Google 所有，Outlook 标识归 Microsoft 所有；Claude 标识归 Anthropic 所有，OpenAI 标识归 OpenAI 所有，WorkBuddy、CodeBuddy 标识归腾讯所有，Qoder、Qwen 标识归阿里巴巴所有，TRAE 标识归字节跳动所有，DeepSeek 标识归杭州深度求索所有，opencode 标识归 opencode 项目所有，ZCode 标识归北京智谱华章科技所有，MiMo 标识归小米所有，Kimi 标识归北京月之暗面科技所有，Grok 标识归 xAI 所有，GitHub Copilot 标识归 GitHub 所有，Factory / Droid 标识归 Factory 所有，pi 标识归 pi-coding-agent 项目所有。图标随应用打包，不在运行时请求远程图片。

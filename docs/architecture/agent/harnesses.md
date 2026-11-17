@@ -1,8 +1,8 @@
 # 各家 AI 代理的接入现状
 
-岛接了十七家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）和 Droid（B58）。后十一家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了十八家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）、Droid（B58）和 pi（B71），另支持通用的第三方代理文件与会话目录接入（`third_party.rs`，B71）。后十二家与通用第三方各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
-核对日期：2026-11-15（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
+核对日期：2026-11-17（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
 ## 形态和数据位置
 
@@ -208,3 +208,30 @@ Factory 的 Droid CLI，id `droid`。代码在 `droid.rs`（会话）和 `droid_
 | 岛上审批 | ✗ 没有 PermissionRequest 事件 |
 | 点会话跳过去 | ◐ 通用的终端窗口匹配 |
 | 用量环、SSH 远程、cc-connect | ✗ / ✗ / — |
+
+## pi（B71）
+
+开源终端代理 `@earendil-works/pi-coding-agent`（命令 `pi`）及基于它的桌面端 `PiDeck` / `PiCove`，id `pi`。代码在 `pi.rs`（会话与扩展安装器）。本机没装，没在真机上跑过（#179）。
+
+| 层 | pi |
+|---|---|
+| 配置 | `~/.pi/agent`（`PI_CODING_AGENT_DIR` 优先，直接指向该目录）；`~/.pi` 或 `PI_CODING_AGENT_DIR` 在才装；扩展写 `~/.pi/agent/extensions/fuyu-island.js`（由 `jiti` 加载） |
+| 扩展（钩子） | `session_start` 和 `session_shutdown` 写 `agent-sessions/<id>.json`（记 `process.pid`，供退出检测和窗口定位）；`agent_start` 写 `agent-pi-running.flag` 亮蓝灯；`agent_end` 写 `agent-status.json` 记完成或失败并清理等待通知；`tool_call` 刷新运行标记，设了 `FUYU_PI_APPROVAL=1` 时存等待通知并走岛上审批 |
+| 会话 | `~/.pi/agent/sessions/<编码目录>/<ISO>_<id>.jsonl`：首行 `session` 给 `id`、`cwd`、`timestamp`；`session_info` 给自定义标题（`rename`）；`model_change`、`thinking_level_change` 给模型和思考档位；`message` 转成 Claude 形状交 `parse_claude_tail` 解析最近提问、回复、工具（`toolCall` / `toolResult`）、token `usage` 和回复状态标记 |
+| 状态灯 | ✓ `agent-pi-running.flag` |
+| 等你 | `FUYU_PI_APPROVAL=1` 时 `tool_call` 写 `agent-notifications/pi-<id>.json` |
+| 岛上审批 | ◐ `/pi/permission`（同 opencode 插件格式，拒绝时返回 `{ block: true, reason }`）；pi 默认不对每次工具调用弹确认框，故扩展只在 `FUYU_PI_APPROVAL=1` 时挂起等岛上审批 |
+| 回复标记 | `~/.pi/agent/AGENTS.md` |
+| 判断会话已退出 | ✓ 靠扩展写的 `agent-sessions/<id>.json`（`endedAt` 或记录的 `pid` 已不在） |
+| 点会话跳过去 | ✓ 有进程记录时按进程链找终端；否则 `PiDeck` / `PiCove` 桌面版在跑就到对应窗口，不然按目录和标题找终端 |
+| 用量环、SSH 远程、cc-connect | ✗ / ✓（拉取 `.pi/agent/sessions/*/*.jsonl`）/ — |
+
+## 通用第三方代理接入（B71）
+
+不改浮屿源码即可接入任意第三方 Agent（`third_party.rs`）：
+
+- **状态灯**：`fuyu-agent-running`、`fuyu-agent-status`、`agent-<id>-running.flag` 和 `agent-status.json` 放开任意合法第三方 provider id（`[A-Za-z][A-Za-z0-9_-]{0,31}`，非内置 id），自动归入 `snapshot.others` 驱动岛上状态灯（蓝 / 绿 / 黄 / 10 分钟超时），支持 `clear_agent_status` 清除。
+- **会话列表**：扫描三处来源并合并进 `list_agent_sessions`（显示通用机器人图标与自定义名称，支持按工作目录与标题跳转终端）：
+  1. `<fuyu-home>/agent-third-party/<provider>/` 下直接放入的 `.jsonl`（兼容 Claude Code、pi、Droid 记录格式）或 `.json` 会话描述文件；
+  2. `<fuyu-home>/agent-providers.json`（或 `agent-third-party/config.json`）配置的 `{ id, name, sessionsDir }`；
+  3. `agent-status.json` 中第三方条目附带的 `sessionsDir` / `transcriptDir` 字段。

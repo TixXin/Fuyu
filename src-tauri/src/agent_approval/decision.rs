@@ -20,6 +20,7 @@ pub enum Agent {
     Zcode,
     Mimo,
     Copilot,
+    Pi,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -32,7 +33,7 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 14] = [
+const AGENTS: [Agent; 15] = [
     Agent::ClaudeCode,
     Agent::Codex,
     Agent::Workbuddy,
@@ -47,6 +48,7 @@ const AGENTS: [Agent; 14] = [
     Agent::Zcode,
     Agent::Mimo,
     Agent::Copilot,
+    Agent::Pi,
 ];
 
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
@@ -69,6 +71,7 @@ impl Agent {
             Self::Dsh => "/dsh/pre-tool-use",
             Self::Opencode => "/opencode/permission",
             Self::Mimo => "/mimo/permission",
+            Self::Pi => "/pi/permission",
             Self::Qoder => "/qoder/permission-request",
             Self::Zcode => "/zcode/permission-request",
             Self::Codebuddy => "/codebuddy/permission-request",
@@ -88,6 +91,7 @@ impl Agent {
             Self::Dsh => "dsh",
             Self::Opencode => "opencode",
             Self::Mimo => "mimo",
+            Self::Pi => "pi",
             Self::Qoder => "qoder",
             Self::Zcode => "zcode",
             Self::Codebuddy => "codebuddy",
@@ -136,7 +140,7 @@ impl HookInput {
     pub(super) fn parse_for(agent: Agent, body: &[u8]) -> Result<Self, &'static str> {
         match agent {
             Agent::Antigravity => {}
-            Agent::Opencode | Agent::Mimo => return super::opencode::plugin_input(body),
+            Agent::Opencode | Agent::Mimo | Agent::Pi => return super::opencode::plugin_input(body),
             _ => {
                 let mut input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
                 compat_input(agent.id(), &mut input);
@@ -275,7 +279,7 @@ pub(super) fn permission_response(
         },
         Agent::Trae | Agent::TraeCn => pre_tool_use_response(decision, reason()),
         Agent::Copilot => behavior_response(decision, reason()),
-        Agent::Opencode | Agent::Mimo => super::opencode::plugin_response(decision, message),
+        Agent::Opencode | Agent::Mimo | Agent::Pi => super::opencode::plugin_response(decision, message),
     }
 }
 

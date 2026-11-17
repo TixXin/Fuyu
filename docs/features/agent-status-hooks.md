@@ -1,6 +1,6 @@
 # AI Agent Status Hooks
 
-Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code, Grok CLI, Copilot CLI and Droid task activity on the collapsed island status light (opencode has no status light; its sessions only count on the Agent page, see [opencode](#opencode)):
+Fuyu can mirror Codex, Claude Code, WorkBuddy, Antigravity, DeepSeek Harness, Qoder, CodeBuddy Code, Qwen Code, TRAE, TRAE CN, ZCode, Kimi Code, Grok CLI, Copilot CLI, Droid and pi task activity on the collapsed island status light (opencode and MiMo Code have no status light; their sessions only count on the Agent page, see [opencode](#opencode)):
 
 - running task: blue
 - completed, idle, or no task: green
@@ -353,6 +353,16 @@ Factory's Droid is listed with its own icon (task B58, issue #546). Not yet run 
 - **No approving on the island**: Droid has no `PermissionRequest` event; waiting on you comes from `Notification` with `permission_prompt`.
 - Not done: usage, SSH.
 
+## pi (pi-coding-agent / PiDeck)
+
+`@earendil-works/pi-coding-agent` (CLI `pi` and the `PiDeck` / `PiCove` desktop app) is listed with its own icon (task B71, issue #745). Not yet run with the island (#179).
+
+- **Sessions**: `~/.pi/agent/sessions/<encoded folder>/<ISO>_<session-id>.jsonl` (or under `PI_CODING_AGENT_DIR`): `session` header for `id` and `cwd`, `session_info` for renamed titles, `model_change` and `thinking_level_change` for the model and effort, and `message` for prompts, replies, tool calls (`toolCall` / `toolResult`), token `usage` and the reply status marker. Also mirrored over SSH remote.
+- **Extension (hooks)**: **安装/修复** writes `~/.pi/agent/extensions/fuyu-island.js` when `~/.pi` (or `PI_CODING_AGENT_DIR`) exists. It hooks `session_start`, `agent_start`, `agent_end`, `tool_call` and `session_shutdown` to light the status light (`agent-pi-running.flag` and `agent-status.json`) and record `agent-sessions/<id>.json` for quit detection and window focus.
+- **Approving on the island**: since pi does not prompt on every tool call by default, set `FUYU_PI_APPROVAL=1` to have `tool_call` wait on `/pi/permission` and block denied calls.
+- **Reply marker**: `~/.pi/agent/AGENTS.md`.
+- **Clicking a session** focuses the terminal (or `PiDeck` / `PiCove` when running).
+
 ## TRAE and TRAE CN
 
 TRAE IDE's international and Chinese editions are two agents with the same icon: `trae` (`~/.trae`) and `traeCn` (`~/.trae-cn`), each with its own hooks, status light row and switch (task B29, issue #312). TRAE's session database is encrypted, so sessions are pieced together from what the hooks save, as for Antigravity: a session shows up only after the hooks are installed. Neither has been run with the island yet (#179).
@@ -387,7 +397,11 @@ Moonshot's Kimi Code CLI (the TypeScript `kimi`, data in `~/.kimi-code` or `KIMI
 
 ## Other Agents
 
-Tools other than the agents above can report their status too, with no Fuyu release needed: either from a plugin with the `agent-status:write` permission (`agentStatus.report`), or over the local API (`PUT /v1/agent-status/{source}`). These reports are kept in memory only and appear in the snapshot's `others` list. They light the island and name their session in the same way as the built-in agents, using a robot icon instead of a brand icon. See [local-api.md](local-api.md#ai-agent-状态) and [plugins/README.md](../plugins/README.md).
+Tools other than the agents above can report their status and sessions too, with no Fuyu release needed:
+
+- **Hook scripts & `agent-status.json` (B71)**: `fuyu-agent-running` and `fuyu-agent-status` accept any valid third-party provider id (`[A-Za-z][A-Za-z0-9_-]{0,31}`), writing `agent-<id>-running.flag` and updating `<id>` in `agent-status.json` (with optional `name`, `title`, `cwd`, `sessionsDir`). Non-built-in entries in `agent-status.json` and `agent-<id>-running.flag` automatically join the snapshot's `others` list and drive the status light.
+- **Third-party session directories (B71)**: configure `{ "id": "<provider>", "name": "<label>", "sessionsDir": "~/..." }` in `<fuyu-home>/agent-providers.json` (or `sessionsDir` on the provider's entry in `agent-status.json`), or drop `.jsonl` (Claude Code / pi / Droid format) or `.json` session files into `<fuyu-home>/agent-third-party/<provider>/`. They are listed on the Agent page with a robot icon and support window switching by folder and title.
+- **Plugin & Local API**: from a plugin with the `agent-status:write` permission (`agentStatus.report`), or over the local API (`PUT /v1/agent-status/{source}`). See [local-api.md](local-api.md#ai-agent-状态) and [plugins/README.md](../plugins/README.md).
 
 ## Manual Smoke Test
 

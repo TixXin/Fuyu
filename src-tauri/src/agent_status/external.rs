@@ -138,6 +138,29 @@ pub(super) fn clear_by_id(id: &str) -> bool {
     before != sources.len()
 }
 
+pub(super) fn file_status(
+    id: String,
+    name: String,
+    phase: String,
+    task_id: Option<String>,
+    title: Option<String>,
+    cwd: Option<String>,
+    updated_at: i64,
+) -> ExternalAgentStatus {
+    ExternalAgentStatus {
+        id,
+        name,
+        phase,
+        task_id,
+        title,
+        host: None,
+        agent: None,
+        cwd,
+        updated_at,
+        owner: "file".to_string(),
+    }
+}
+
 pub(super) fn current() -> Vec<ExternalAgentStatus> {
     let now = current_unix_millis();
     SOURCES

@@ -3,7 +3,7 @@ use std::path::Path;
 use super::hooks_state::HookInstallState;
 use super::sessions::AgentSessionSummary;
 use super::notifications::{is_waiting, saved_notifications, NOTIFICATIONS_DIR};
-use super::{antigravity, claude_code, codebuddy, codex, copilot, droid, dsh, grok, kimi_code, mimo, opencode, qoder, qwen, trae, workbuddy, zcode};
+use super::{antigravity, claude_code, codebuddy, codex, copilot, droid, dsh, grok, kimi_code, mimo, opencode, pi, qoder, qwen, third_party, trae, workbuddy, zcode};
 
 pub(super) const HARNESSES: &[Harness] = &[
     codex::HARNESS,
@@ -23,6 +23,7 @@ pub(super) const HARNESSES: &[Harness] = &[
     grok::HARNESS,
     copilot::HARNESS,
     droid::HARNESS,
+    pi::HARNESS,
 ];
 
 pub(super) struct Harness {
@@ -117,6 +118,7 @@ pub(super) fn extra_sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec
         .iter()
         .filter_map(|harness| harness.sessions)
         .flat_map(|read| read(roots, now, window_ms))
+        .chain(third_party::sessions(roots, now, window_ms))
         .map(|mut summary| {
             if summary.phase == "running" && is_waiting(&waiting, &summary.session_id, summary.updated_at) {
                 summary.phase = "waiting";
@@ -141,13 +143,13 @@ mod tests {
         assert_eq!(ids.len(), HARNESSES.len());
         assert_eq!(
             with_status_light().map(|(id, _)| id).collect::<Vec<_>>(),
-            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid"]
+            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid", "pi"]
         );
         assert_eq!(
             with_hooks().map(|(id, _)| id).collect::<Vec<_>>(),
-            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "opencode", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "mimo", "grok", "copilot", "droid"]
+            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "opencode", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "mimo", "grok", "copilot", "droid", "pi"]
         );
-        assert_eq!(remote_ids(), ["codex", "claudeCode", "antigravity", "dsh", "opencode"]);
+        assert_eq!(remote_ids(), ["codex", "claudeCode", "antigravity", "dsh", "opencode", "pi"]);
     }
 
     #[test]

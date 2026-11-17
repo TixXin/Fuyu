@@ -2745,6 +2745,17 @@
     {
       "page": "agents",
       "zh-CN": {
+        "group": "AI Agent 状态灯",
+        "title": "pi"
+      },
+      "en": {
+        "group": "AI Agent status light",
+        "title": "pi"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Codex"
       },
@@ -2927,6 +2938,17 @@
       "en": {
         "group": "Agents shown",
         "title": "Droid"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "pi"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "pi"
       }
     },
     {

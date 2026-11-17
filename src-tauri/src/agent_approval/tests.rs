@@ -185,6 +185,7 @@ fn hook_input_needs_a_session_and_a_tool() {
     assert!(HookInput::parse(b"not json").is_err());
     assert!(HookInput::parse(hook_body("s", "AskUserQuestion").as_bytes()).unwrap().is_question());
     assert_eq!(route("/codex/permission-request"), Some((Agent::Codex, Kind::Permission)));
+    assert_eq!(route("/pi/permission"), Some((Agent::Pi, Kind::Permission)));
     assert_eq!(route("/"), None);
 }
 

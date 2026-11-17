@@ -280,6 +280,29 @@ opencode 现在有两条线同时在发：**2.x**（2.0 在 2026-10 初发布，
 - **豆包工作**：办公代理，有自己的桌面客户端，和飞书打通，Mac 上能控制电脑；没找到本地数据的说明，未核实。不是编程代理，不接。
 - **用豆包模型跑别家代理**：火山方舟的编程套餐让 Claude Code、Codex 等用豆包模型，这种情况岛已经按 Claude Code / Codex 显示，不用另接。
 
+## pi（pi-coding-agent / PiDeck）（2026-11-17 追加）
+
+> 日期：2026-11-17。问题：Agent 页接入 `@earendil-works/pi-coding-agent`（仓库 `earendil-works/pi`）及基于它的桌面端 `PiDeck` / `PiCove`（issue #745），摸清形态、会话 JSONL 格式、extension 生命周期、全局提示词、窗口跳转及通用第三方代理接入方式。范围：`earendil-works/pi` 文档与源码、pi.dev 扩展文档、PiDeck / PiCove 仓库说明、#745 用户提供的 Windows 11 + pi 1.5.2 真实会话首行样本。本机没装 pi，**按文档与用户样本，未实测**。相关任务：B71。
+
+### 结论
+
+- **形态**：开源终端 CLI（`@earendil-works/pi-coding-agent`，命令 `pi`），以及把它当内核用的开源 Electron 桌面客户端 `PiDeck`（后改名 `PiCove`）[52][55]。两种形态共用同一套会话与配置目录 `~/.pi/agent`（环境变量 `PI_CODING_AGENT_DIR` 直接指向该目录，而非父级 `~/.pi`）[52][53]。
+- **会话**：树状 JSONL，路径 `~/.pi/agent/sessions/<编码后的 cwd>/<ISO 时间>_<session-id>.jsonl` [52][54]：
+  - 首行 `{"type":"session","version":3,"id":"<uuid>","timestamp":"<ISO>","cwd":"<路径>"}`。
+  - 标题记录 `{"type":"session_info","id":"...","parentId":"...","timestamp":"...","name":"<自定义标题>"}`（对应 `/name`、`--name` 或 `pi.setSessionName()`）[54]。
+  - 模型与思考档位记录：`{"type":"model_change","provider":"...","modelId":"...","model":"..."}`、`{"type":"thinking_level_change","thinkingLevel":"low|medium|high|max|auto"}` [52][54]。
+  - 上下文压缩记录：`{"type":"compaction",...}` [54]。
+  - 消息记录：`{"type":"message","id":"...","parentId":"...","timestamp":"...","message":{"role":"user"|"assistant"|"toolResult",...},"stopReason":"toolUse"|"stop"|"end_turn"|"error",...}`。助手工具调用块为 `{"type":"toolCall","id":"...","name":"bash|read|write|edit","arguments":{...}}`；工具结果为 `role: "toolResult"`（带 `toolCallId`、`toolName`、`content`、`isError`）；token 统计在 `usage`（`input`、`output`、`cacheRead`、`cacheWrite`、`totalTokens`）[54]。
+- **扩展（钩子）**：全局扩展目录 `~/.pi/agent/extensions/*.ts` 或 `*.js`（由 `jiti` 加载）[53]。默认导出 `export default function (pi)`，通过 `pi.on(event, handler)` 订阅生命周期 [53]：
+  - `session_start`（`event.reason` 为 `startup` / `new` / `resume` / `fork` / `reload`，`ctx.cwd`、`ctx.sessionManager.getSessionId()` / `getSessionFile()`）
+  - `agent_start`、`agent_end`
+  - `tool_call`（`event.toolName`、`event.toolCallId`、`event.input`，返回 `{ block: true, reason }` 可阻断工具执行；注意 pi 核心默认不设每次工具调用的确认弹窗，`tool_call` 对所有工具调用都会触发，岛上阻塞审批需按显式开关 `FUYU_PI_APPROVAL=1` 启用，避免默认拦下每次 `read`）
+  - `session_shutdown`（`event.reason` 为 `quit` / `reload` / `new` / `resume` / `fork`）
+- **全局提示词文件**：`~/.pi/agent/AGENTS.md`（或 `PI_CODING_AGENT_DIR/AGENTS.md`）[52]。
+- **用量**：自带多模型 BYOK，无统一官方订阅额度接口，会话内只计 token 与估算 `cost` [54]。
+- **SSH 远程**：Node CLI 可跑在 Linux 服务器上，会话是纯 `.jsonl` 文件，可直接加入 `RemoteFiles` 拉取 `~/.pi/agent/sessions`。
+- **跳转**：扩展在 `session_start` / `session_shutdown` 写 `agent-sessions/<id>.json`（记 `process.pid`），可沿进程链定位终端；无进程链时优先找运行中的 `PiDeck` / `PiCove` 桌面窗口，否则按目录名和标题匹配终端。
+
 ## 来源
 
 1. Antigravity Hooks 文档：https://antigravity.google/docs/hooks/
@@ -333,3 +356,7 @@ opencode 现在有两条线同时在发：**2.x**（2.0 在 2026-10 初发布，
 49. tokscale README（Trae 用量同步）：https://github.com/junhoyeo/tokscale
 50. trae-agent 仓库与钩子提案 #397：https://github.com/bytedance/trae-agent ，https://github.com/bytedance/trae-agent/issues/397
 51. TRAE CN 个人规则 `user_rules.md`（第三方文章，路径未经官方核实）：https://gitcode.csdn.net/6aa0de041a35784c84208747.html
+52. pi (`@earendil-works/pi-coding-agent`) 仓库与配置目录文档（查询日期 2026-11-17）：https://github.com/earendil-works/pi ，https://pi.dev
+53. pi Extension API（`session_start`、`agent_start`、`agent_end`、`tool_call`、`session_shutdown`）：https://pi.dev/docs/extensions
+54. pi SessionManager 与树状 JSONL 事件结构（`session`、`session_info`、`model_change`、`thinking_level_change`、`message`）：https://github.com/TixXin/fuyu/issues/745
+55. PiDeck / PiCove 桌面端：https://github.com/earendil-works/pi

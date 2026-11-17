@@ -18,6 +18,7 @@ export const AGENTS = {
   grok: { label: "Grok CLI", statusLight: true, remote: false },
   copilot: { label: "GitHub Copilot CLI", statusLight: true, remote: false },
   droid: { label: "Droid", statusLight: true, remote: false },
+  pi: { label: "pi", statusLight: true, remote: true },
 } as const satisfies Record<string, AgentInfo>;
 
 export type SessionProvider = keyof typeof AGENTS;
