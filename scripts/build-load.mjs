@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import os from "node:os";
 
 export function efficiencyCores(platform = process.platform) {
@@ -25,7 +25,4 @@ export function lowerPriority(tag) {
   } catch (error) {
     console.warn(`[${tag}] could not lower the build's priority: ${error.message}`);
   }
-  if (process.platform !== "darwin") return;
-  const result = spawnSync("taskpolicy", ["-b", "-p", String(process.pid)], { encoding: "utf8" });
-  if (result.status !== 0) console.warn(`[${tag}] could not move the build to the background tier: ${result.error?.message ?? result.stderr.trim()}`);
 }
