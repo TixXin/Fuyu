@@ -46,6 +46,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     messageNotice: oneOf(MESSAGE_NOTICES, settings?.messageNotice, LEGACY_FALLBACKS.messageNotice),
     messagePanelSeconds: oneOf(MESSAGE_PANEL_SECONDS, settings?.messagePanelSeconds, DEFAULT_SETTINGS.messagePanelSeconds),
     expandTrigger: settings?.expandTrigger === "hover" ? "hover" : "click",
+    clickCollapseOnLeave: settings?.clickCollapseOnLeave === true,
     hoverExpandDelayMs: typeof settings?.hoverExpandDelayMs === "number" && Number.isFinite(settings.hoverExpandDelayMs)
       ? clamp(Math.round(settings.hoverExpandDelayMs), MIN_HOVER_EXPAND_DELAY_MS, MAX_HOVER_EXPAND_DELAY_MS)
       : LEGACY_FALLBACKS.hoverExpandDelayMs,

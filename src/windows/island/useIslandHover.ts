@@ -17,14 +17,22 @@ type IslandHoverOptions = {
 };
 
 export function useIslandHover({ settings, navigation, quiet, leadPage, openEnabledPage }: IslandHoverOptions) {
-  const { mode, page, isTucked, isPeeking, collapseIsland, revealIsland, peekIsland, retractsAfterPeek, resumePeek } = navigation;
+  const {
+    mode, page, isTucked, isPeeking, openedByHover,
+    collapseIsland, revealIsland, peekIsland, retractsAfterPeek, resumePeek, markHoverOpen,
+  } = navigation;
   const { reveal } = useIslandContributed();
   const openCurrentPage = useCallback(
     () => openEnabledPage(leadPage ?? page),
     [leadPage, openEnabledPage, page],
   );
+  const openFromTuckedHover = useCallback(() => {
+    openCurrentPage();
+    markHoverOpen();
+  }, [markHoverOpen, openCurrentPage]);
   useHoverExpand({
-    enabled: settings.expandTrigger === "hover" && !quiet,
+    expandOnHover: settings.expandTrigger === "hover" && !quiet,
+    collapseOnLeave: (settings.expandTrigger === "hover" || settings.clickCollapseOnLeave || openedByHover) && !quiet,
     delayMs: settings.hoverExpandDelayMs,
     paused: reveal.pauseHover,
     collapseDelayMs: settings.hoverCollapseDelayMs,
@@ -38,7 +46,7 @@ export function useIslandHover({ settings, navigation, quiet, leadPage, openEnab
     delayMs: settings.hoverExpandDelayMs,
     isPeeking: isPeeking && mode === "collapsed",
     onPeek: peekIsland,
-    onOpen: openCurrentPage,
+    onOpen: openFromTuckedHover,
     retractsAfterPeek,
     resumePeek,
   });

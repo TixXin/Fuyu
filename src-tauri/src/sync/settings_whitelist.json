@@ -93,6 +93,7 @@
         "messageNotice": "sync",
         "messagePanelSeconds": "sync",
         "expandTrigger": "sync",
+        "clickCollapseOnLeave": "sync",
         "hoverExpandDelayMs": "sync",
         "hoverCollapseDelayMs": "sync",
         "hoverSwitchPage": "sync",

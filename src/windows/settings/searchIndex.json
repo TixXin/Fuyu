@@ -1050,11 +1050,13 @@
       "page": "behavior",
       "zh-CN": {
         "group": "展开",
-        "title": "悬停多久后展开"
+        "title": "鼠标移开后自动收起",
+        "description": "点开面板看完后，鼠标移出就自动收起，不用再点外部"
       },
       "en": {
         "group": "Opening",
-        "title": "Hover time before opening"
+        "title": "Close when pointer leaves",
+        "description": "Closes the panel after the pointer leaves, without clicking outside"
       }
     },
     {
@@ -3660,6 +3662,17 @@
         "group": "Reset and quit",
         "title": "Quit the island",
         "description": "Same as Quit in the tray menu; start it again from the Start menu or a desktop shortcut."
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "展开",
+        "title": "悬停多久后展开"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Hover time before opening"
       }
     }
   ]
