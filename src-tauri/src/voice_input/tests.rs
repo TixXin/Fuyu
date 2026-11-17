@@ -151,6 +151,14 @@ fn states_are_tagged_by_phase() {
 }
 
 #[test]
+fn shortcuts_is_the_background_listed_for_voice_input() {
+    let catalog = crate::plugin_kernel::builtins::catalog();
+    let voice = catalog.iter().find(|plugin| plugin.id == super::PLUGIN_ID).expect("voice-input is a built-in plugin");
+    let names = [super::background::SHORTCUTS.to_owned()];
+    assert_eq!(voice.background.as_deref(), Some(&names[..]));
+}
+
+#[test]
 #[ignore = "records the real microphone for FUYU_VOICE_SECONDS (default 6) and recognizes it with the packs installed under FUYU_VOICE_ROOT"]
 fn records_the_microphone_and_recognizes_it() {
     use std::sync::{Arc, Mutex};

@@ -236,6 +236,12 @@
       }
     },
     "fuyu-lyrics-offsets": "sync",
-    "fuyu-tray-menu-layout": "sync"
+    "fuyu-tray-menu-layout": "sync",
+    "fuyu-voice-input": {
+      "fields": {
+        "enabled": "firstMergeOnly",
+        "shortcut": "local"
+      }
+    }
   }
 }

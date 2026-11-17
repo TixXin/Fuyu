@@ -36,3 +36,38 @@ export function appendToNote(note: string, text: string): string {
   if (!note.trim()) return line;
   return note.endsWith("\n") ? `${note}${line}` : `${note}\n${line}`;
 }
+
+export type VoiceSwitchSeen = {
+  stored: boolean;
+  switched: boolean;
+};
+
+export type VoiceSwitchReconciled = {
+  switchTo?: boolean;
+  mirror?: boolean;
+  migrated: boolean;
+  seen: VoiceSwitchSeen;
+};
+
+export function withVoicePluginSwitch(settings: VoiceInputSettings, pluginEnabled: boolean | undefined): VoiceInputSettings {
+  if (pluginEnabled === undefined || settings.enabled === pluginEnabled) return settings;
+  return { ...settings, enabled: pluginEnabled };
+}
+
+export function reconcileVoiceSwitch(
+  storedEnabled: boolean,
+  pluginEnabled: boolean | undefined,
+  seen: VoiceSwitchSeen | null,
+  alreadyMigrated: boolean,
+): VoiceSwitchReconciled | null {
+  if (pluginEnabled === undefined) return null;
+  const nextSeen: VoiceSwitchSeen = { stored: storedEnabled, switched: pluginEnabled };
+  if (!alreadyMigrated) {
+    if (!storedEnabled && pluginEnabled) return { switchTo: false, migrated: true, seen: nextSeen };
+    if (storedEnabled !== pluginEnabled) return { mirror: pluginEnabled, migrated: true, seen: nextSeen };
+    return { migrated: true, seen: nextSeen };
+  }
+  if (storedEnabled === pluginEnabled) return { migrated: false, seen: nextSeen };
+  if (seen && storedEnabled !== seen.stored) return { switchTo: storedEnabled, migrated: false, seen: nextSeen };
+  return { mirror: pluginEnabled, migrated: false, seen: nextSeen };
+}
