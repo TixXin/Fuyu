@@ -1,0 +1,71 @@
+{
+  "name": "@fuyu/pomodoro",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Pomodoro timer linked to today's todos, with finished-round tracking and island notifications",
+  "author": "TixXin",
+  "license": "MIT",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev",
+    "build": "fuyu-plugin build",
+    "check": "fuyu-plugin check --market",
+    "package": "fuyu-plugin pack",
+    "typecheck": "tsc"
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "番茄钟",
+      "en": "Pomodoro"
+    },
+    "description": {
+      "zh-CN": "选择一条未完成待办或直接开启 25 分钟番茄钟，记录今日完成轮数，到点在岛上提醒，并在展开页和收起条显示倒计时。",
+      "en": "Start a 25-minute pomodoro on an open todo or on its own, track finished rounds today, notify on the island when done, and show the countdown on the island page and collapsed bar."
+    },
+    "icon": "assets/icon.svg",
+    "categories": [
+      "productivity",
+      "todos"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "island": "dist/island.js"
+    },
+    "inject": {
+      "required": [
+        "timers/v1",
+        "todos/v1",
+        "messages/v1"
+      ]
+    },
+    "slots": [
+      "island.page/v1",
+      "island.collapsed/v1"
+    ],
+    "commands": [
+      {
+        "id": "start",
+        "title": {
+          "zh-CN": "开始番茄钟",
+          "en": "Start pomodoro"
+        },
+        "keybinding": "Ctrl+Alt+P"
+      },
+      {
+        "id": "stop",
+        "title": {
+          "zh-CN": "停止番茄钟",
+          "en": "Stop pomodoro"
+        }
+      }
+    ]
+  }
+}
