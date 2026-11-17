@@ -1,4 +1,11 @@
-use std::sync::Arc;
+use std::{
+    sync::{
+        atomic::{AtomicBool, AtomicU64, Ordering},
+        Arc, Mutex, PoisonError,
+    },
+    thread,
+    time::Duration,
+};
 
 use tauri::{AppHandle, Manager, WebviewWindow, WebviewWindowBuilder};
 
@@ -10,6 +17,14 @@ pub(super) const LISTENER: &str = "listener";
 pub(super) const WINDOWS: &str = "windows";
 
 const LABELS: [&str; 2] = [popup::WINDOW_LABEL, preview_window::WINDOW_LABEL];
+const PREWARM_DELAY: Duration = Duration::from_secs(2);
+const PREVIEW_IDLE_DELAY: Duration = Duration::from_secs(5 * 60);
+const PREVIEW_POPUP_CLOSED_DELAY: Duration = Duration::from_secs(5);
+
+static WINDOWS_ACTIVE: AtomicBool = AtomicBool::new(false);
+static WINDOWS_GENERATION: AtomicU64 = AtomicU64::new(0);
+static PREVIEW_IDLE_GENERATION: AtomicU64 = AtomicU64::new(0);
+static BUILD_LOCK: Mutex<()> = Mutex::new(());
 
 pub(super) fn mirror(enabled: bool) {
     let Ok(service) = service() else {
@@ -34,7 +49,9 @@ struct Listener;
 
 impl Background for Listener {
     fn start(&self) -> Result<(), String> {
-        mirror(true);
+        if super::is_loaded() {
+            mirror(true);
+        }
         workers::start_capture()?;
         listener::start()?;
         privacy::start_secret_sweeper()?;
@@ -43,7 +60,9 @@ impl Background for Listener {
     }
 
     fn stop(&self) {
-        mirror(false);
+        if super::is_loaded() {
+            mirror(false);
+        }
         sequence::stop();
         listener::stop();
         privacy::stop_secret_sweeper();
@@ -59,15 +78,25 @@ struct Windows(AppHandle);
 
 impl Background for Windows {
     fn start(&self) -> Result<(), String> {
-        for label in LABELS {
-            if self.0.get_webview_window(label).is_none() {
-                build(&self.0, label)?;
+        WINDOWS_ACTIVE.store(true, Ordering::Release);
+        let generation = WINDOWS_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
+        let app = self.0.clone();
+        let _ = thread::Builder::new().name("clipboard-prewarm".into()).spawn(move || {
+            thread::sleep(PREWARM_DELAY);
+            if !WINDOWS_ACTIVE.load(Ordering::Acquire) || WINDOWS_GENERATION.load(Ordering::SeqCst) != generation {
+                return;
             }
-        }
+            if let Err(error) = ensure_popup_window(&app) {
+                eprintln!("failed to prewarm the clipboard window: {error}");
+            }
+        });
         Ok(())
     }
 
     fn stop(&self) {
+        WINDOWS_ACTIVE.store(false, Ordering::Release);
+        WINDOWS_GENERATION.fetch_add(1, Ordering::SeqCst);
+        cancel_preview_destroy();
         preview_window::forget();
         for label in LABELS {
             if let Some(window) = self.0.get_webview_window(label) {
@@ -77,11 +106,64 @@ impl Background for Windows {
     }
 
     fn running(&self) -> bool {
-        LABELS.iter().any(|label| self.0.get_webview_window(label).is_some())
+        WINDOWS_ACTIVE.load(Ordering::Acquire)
+            || LABELS.iter().any(|label| self.0.get_webview_window(label).is_some())
     }
 }
 
-fn build(app: &AppHandle, label: &'static str) -> Result<(), String> {
+pub(super) fn ensure_popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
+    ensure_window(app, popup::WINDOW_LABEL)
+}
+
+pub(super) fn ensure_preview_window(app: &AppHandle) -> Result<WebviewWindow, String> {
+    cancel_preview_destroy();
+    ensure_window(app, preview_window::WINDOW_LABEL)
+}
+
+pub(super) fn cancel_preview_destroy() {
+    PREVIEW_IDLE_GENERATION.fetch_add(1, Ordering::SeqCst);
+}
+
+pub(super) fn schedule_preview_idle_destroy(app: &AppHandle) {
+    schedule_preview_destroy(app, PREVIEW_IDLE_DELAY);
+}
+
+pub(super) fn schedule_preview_close_after_popup(app: &AppHandle) {
+    schedule_preview_destroy(app, PREVIEW_POPUP_CLOSED_DELAY);
+}
+
+fn schedule_preview_destroy(app: &AppHandle, delay: Duration) {
+    if app.get_webview_window(preview_window::WINDOW_LABEL).is_none() {
+        return;
+    }
+    let generation = PREVIEW_IDLE_GENERATION.fetch_add(1, Ordering::SeqCst) + 1;
+    let app = app.clone();
+    let _ = thread::Builder::new().name("clipboard-preview-idle".into()).spawn(move || {
+        thread::sleep(delay);
+        if PREVIEW_IDLE_GENERATION.load(Ordering::SeqCst) != generation || preview_window::editing() {
+            return;
+        }
+        if let Some(window) = app.get_webview_window(preview_window::WINDOW_LABEL) {
+            if !window.is_visible().unwrap_or(false) {
+                preview_window::forget();
+                close(&app, preview_window::WINDOW_LABEL, window);
+            }
+        }
+    });
+}
+
+fn ensure_window(app: &AppHandle, label: &'static str) -> Result<WebviewWindow, String> {
+    if let Some(window) = app.get_webview_window(label) {
+        return Ok(window);
+    }
+    let _guard = BUILD_LOCK.lock().unwrap_or_else(PoisonError::into_inner);
+    if let Some(window) = app.get_webview_window(label) {
+        return Ok(window);
+    }
+    build(app, label)
+}
+
+fn build(app: &AppHandle, label: &'static str) -> Result<WebviewWindow, String> {
     let config = app
         .config()
         .app
@@ -95,8 +177,8 @@ fn build(app: &AppHandle, label: &'static str) -> Result<(), String> {
         .visible(false)
         .build()
         .map_err(|error| format!("Could not create the {label} window: {error}"))?;
-    as_panel(app, label, window);
-    Ok(())
+    as_panel(app, label, window.clone());
+    Ok(window)
 }
 
 #[cfg(target_os = "macos")]

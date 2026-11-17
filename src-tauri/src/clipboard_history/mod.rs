@@ -55,7 +55,7 @@ use std::{
 };
 use tauri::{AppHandle, Manager};
 
-use store::{load_history, HISTORY_FILE_NAME, IMAGE_DIRECTORY_NAME};
+use store::{HISTORY_FILE_NAME, IMAGE_DIRECTORY_NAME};
 
 pub(crate) use shortcut::{parse_shortcut_binding, ShortcutBinding};
 #[cfg(target_os = "macos")]
@@ -451,6 +451,7 @@ pub struct ClipboardFileImage {
     thumbnail_data_url: String,
 }
 
+#[derive(Default)]
 struct ClipboardHistoryState {
     settings: ClipboardHistorySettings,
     items: Vec<ClipboardHistoryItem>,
@@ -464,6 +465,7 @@ struct ClipboardHistoryService {
     app: AppHandle,
     history_path: PathBuf,
     image_dir: PathBuf,
+    loaded: OnceLock<bool>,
     state: Mutex<ClipboardHistoryState>,
 }
 
@@ -659,33 +661,25 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     fs::create_dir_all(&image_dir)
         .map_err(|error| format!("Failed to create clipboard history directory: {error}"))?;
 
-    let persisted = load_history(&history_path);
-    let stored_enabled = persisted.settings.enabled;
-    if !persisted.items.is_empty() {
-        let (dir, items) = (image_dir.clone(), persisted.items.clone());
-        std::thread::spawn(move || service::remove_unreferenced_images(&dir, &items));
-    }
     let service = ClipboardHistoryService {
         app: app.clone(),
         history_path,
         image_dir,
-        state: Mutex::new(ClipboardHistoryState {
-            settings: persisted.settings.normalized(),
-            items: persisted.items,
-            snippets: persisted.snippets,
-            snippet_tombstones: persisted.snippet_tombstones,
-            last_capture_hash: None,
-            recently_deleted: Vec::new(),
-        }),
+        loaded: OnceLock::new(),
+        state: Mutex::new(ClipboardHistoryState::default()),
     };
 
     let _ = CLIPBOARD_HISTORY.set(service);
-    service::fill_file_images(None);
-    background::migrate_switch(stored_enabled);
-    if !switched_on() {
-        background::mirror(false);
-    }
     background::register(app);
+    if let Some(svc) = CLIPBOARD_HISTORY.get() {
+        let _ = std::thread::Builder::new().name("clipboard-history-load".into()).spawn(move || {
+            let stored_enabled = svc.ensure_loaded();
+            service::fill_file_images(None);
+            background::migrate_switch(stored_enabled);
+            background::mirror(switched_on());
+            svc.emit_changed();
+        });
+    }
     Ok(())
 }
 
@@ -693,10 +687,16 @@ pub(crate) fn switched_on() -> bool {
     crate::plugin_kernel::builtins::is_enabled(PLUGIN_ID)
 }
 
+pub(super) fn is_loaded() -> bool {
+    CLIPBOARD_HISTORY.get().is_some_and(|svc| svc.loaded.get().is_some())
+}
+
 fn service() -> Result<&'static ClipboardHistoryService, String> {
-    CLIPBOARD_HISTORY
+    let svc = CLIPBOARD_HISTORY
         .get()
-        .ok_or_else(|| "Clipboard history service is not initialized.".to_string())
+        .ok_or_else(|| "Clipboard history service is not initialized.".to_string())?;
+    let _ = svc.ensure_loaded();
+    Ok(svc)
 }
 
 fn current_unix_millis() -> i64 {

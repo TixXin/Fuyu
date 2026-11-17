@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ClipboardManager } from "../../features/clipboard/ClipboardManager";
 import { ClipboardPopup } from "../../features/clipboard/ClipboardPopup";
 import {
-  hideClipboardPopup, hideClipboardPreview, listenClipboardPopupBlur, listenClipboardPopupMoved, listenClipboardPopupOpened, pasteClipboardItem, pasteClipboardSequence,
-  pasteClipboardSnippet, sendClipboardPreview, setClipboardPopupExpanded, setClipboardPopupPin, showClipboardPreview, type ClipboardPeek,
+  hideClipboardPopup, hideClipboardPreview, listenClipboardPopupBlur, listenClipboardPopupMoved, listenClipboardPopupOpened, listenClipboardPreviewReport,
+  pasteClipboardItem, pasteClipboardSequence, pasteClipboardSnippet, sendClipboardPreview, setClipboardPopupExpanded, setClipboardPopupPin,
+  showClipboardPreview, type ClipboardPeek, type ClipboardPreviewPayload,
 } from "../../features/clipboard/api";
 import { ClipboardTitleBar } from "./ClipboardTitleBar";
 import { useClipboardHistory } from "../../features/clipboard/useClipboardHistory";
@@ -67,16 +68,39 @@ export function ClipboardWindow() {
   const pinned = clipboardHistory.settings.popupPinned === true;
   const linkPreview = clipboardHistory.settings.linkPreview === true;
   const peekOpen = useRef(false);
+  const latestPeek = useRef<ClipboardPreviewPayload | null>(null);
   const [previewBroken, setPreviewBroken] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let stop: (() => void) | undefined;
+    void listenClipboardPreviewReport((report) => {
+      if (report.type !== "ready") return;
+      const current = latestPeek.current;
+      if (!peekOpen.current || !current) return;
+      void sendClipboardPreview(current)
+        .then(() => {
+          if (peekOpen.current) return showClipboardPreview();
+        })
+        .catch(reportError("sync the clipboard preview"));
+    }).then((unlisten) => (cancelled ? unlisten() : (stop = unlisten)));
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, []);
 
   const onPeek = useCallback((peek: ClipboardPeek | null) => {
     if (!peek) {
+      latestPeek.current = null;
       if (!peekOpen.current) return;
       peekOpen.current = false;
       void hideClipboardPreview().catch(reportError("hide the clipboard preview"));
       return;
     }
-    const sent = sendClipboardPreview({ ...peek, linkPreview });
+    const payload = { ...peek, linkPreview };
+    latestPeek.current = payload;
+    const sent = sendClipboardPreview(payload);
     if (peekOpen.current) return;
     peekOpen.current = true;
     void sent.then(() => showClipboardPreview()).catch((error: unknown) => {
@@ -88,7 +112,10 @@ export function ClipboardWindow() {
 
   const toggleExpanded = useCallback(() => {
     const next = !expandedRef.current;
-    if (next) peekOpen.current = false;
+    if (next) {
+      latestPeek.current = null;
+      peekOpen.current = false;
+    }
     void setClipboardPopupExpanded(next)
       .catch(reportError("resize the clipboard window"))
       .finally(() => setExpanded(next));

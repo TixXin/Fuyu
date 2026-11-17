@@ -80,7 +80,7 @@ export function useSpacePeek(onClose: () => void, windowed = false, onEdited?: (
       if (report.type === "close") closeRef.current();
       else if (report.type === "pinned") pinnedRef.current = report.pinned;
       else if (report.type === "edited") editedRef.current?.(report.id);
-      else if (report.inside && downAt.current !== null) setVisited((visitedRef.current = true));
+      else if (report.type === "pointer" && report.inside && downAt.current !== null) setVisited((visitedRef.current = true));
     }).then((unlisten) => (cancelled ? unlisten() : (stop = unlisten)));
     return () => {
       cancelled = true;

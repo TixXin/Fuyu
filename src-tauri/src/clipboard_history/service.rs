@@ -1,6 +1,5 @@
-use base64::{engine::general_purpose, Engine as _};
 use image::RgbaImage;
-use std::{fs, path::Path, time::Duration};
+use std::{collections::HashSet, fs, path::Path, time::Duration};
 use tauri::{Emitter, Manager};
 
 use super::clipboard_io::{
@@ -38,14 +37,7 @@ pub(super) fn remove_files_older_than(dir: &Path, age: Duration) {
     }
 }
 
-pub(super) fn remove_unreferenced_images(dir: &Path, items: &[ClipboardHistoryItem]) {
-    let name = |path: &str| Path::new(path).file_name().map(|name| name.to_string_lossy().to_lowercase());
-    let kept: std::collections::HashSet<String> = items
-        .iter()
-        .filter_map(|item| item.image.as_ref())
-        .flat_map(|image| [name(&image.original_path), name(&image.thumbnail_path)])
-        .flatten()
-        .collect();
+pub(super) fn remove_unreferenced_images(dir: &Path, kept: &HashSet<String>) {
     let Ok(entries) = fs::read_dir(dir) else { return };
     for entry in entries.flatten() {
         let path = entry.path();
@@ -60,6 +52,27 @@ const PATH_CAPTURE_PAUSE: Duration = Duration::from_millis(800);
 
 
 impl ClipboardHistoryService {
+    pub(super) fn ensure_loaded(&self) -> bool {
+        *self.loaded.get_or_init(|| {
+            let persisted = super::store::load_history(&self.history_path);
+            let stored_enabled = persisted.settings.enabled;
+            let referenced = super::store::referenced_image_names(&persisted.items);
+            if !referenced.is_empty() {
+                let dir = self.image_dir.clone();
+                let _ = std::thread::Builder::new()
+                    .name("clipboard-image-sweep".into())
+                    .spawn(move || remove_unreferenced_images(&dir, &referenced));
+            }
+            if let Ok(mut state) = self.state.lock() {
+                state.settings = persisted.settings.normalized();
+                state.items = persisted.items;
+                state.snippets = persisted.snippets;
+                state.snippet_tombstones = persisted.snippet_tombstones;
+            }
+            stored_enabled
+        })
+    }
+
     pub(super) fn snapshot(&self) -> Result<ClipboardHistorySnapshot, String> {
         let state = self.state.lock().map_err(|error| error.to_string())?;
         Ok(Self::snapshot_locked(&state))
@@ -463,10 +476,7 @@ impl ClipboardHistoryService {
             byte_size: original_bytes.len() as u64,
             original_path: original_path.to_string_lossy().to_string(),
             thumbnail_path: thumbnail_path.to_string_lossy().to_string(),
-            thumbnail_data_url: Some(format!(
-                "data:image/png;base64,{}",
-                general_purpose::STANDARD.encode(thumbnail_bytes)
-            )),
+            thumbnail_data_url: None,
         })
     }
 
@@ -521,7 +531,7 @@ impl ClipboardHistoryService {
     pub(super) fn snapshot_locked(state: &ClipboardHistoryState) -> ClipboardHistorySnapshot {
         ClipboardHistorySnapshot {
             settings: state.settings.clone(),
-            items: state.items.clone(),
+            items: state.items.iter().map(super::store::item_with_protocol_thumbnail).collect(),
             snippets: state.snippets.clone(),
             capture: super::capture_pause::status(current_unix_millis()),
         }
@@ -656,7 +666,8 @@ fn only_images_no_entry_refers_to_are_swept() {
         "image": { "width": 1, "height": 1, "byteSize": 1, "originalPath": old("Kept.png"), "thumbnailPath": old("kept-thumb.png") }
     }))
     .expect("item");
-    remove_unreferenced_images(&dir, &[item]);
+    let kept = super::store::referenced_image_names(&[item]);
+    remove_unreferenced_images(&dir, &kept);
     let mut left: Vec<String> = fs::read_dir(&dir).expect("read").flatten().map(|entry| entry.file_name().to_string_lossy().into_owned()).collect();
     left.sort();
     let _ = fs::remove_dir_all(&dir);

@@ -53,7 +53,7 @@ fn pinned_origin(settings: &ClipboardHistorySettings, screens: &[(i32, i32, i32,
 }
 
 pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Result<(), String> {
-    let window = popup_window(app)?;
+    let window = super::background::ensure_popup_window(app)?;
     if window.is_visible().unwrap_or(false) {
         return hide(app);
     }
@@ -94,7 +94,11 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
 
 pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     super::preview_window::hide(app, false);
-    popup_window(app)?.hide().map_err(|error| error.to_string())
+    super::background::schedule_preview_close_after_popup(app);
+    let Some(window) = app.get_webview_window(WINDOW_LABEL) else {
+        return Ok(());
+    };
+    window.hide().map_err(|error| error.to_string())
 }
 
 pub(super) fn refocus(app: &AppHandle) -> Result<(), String> {

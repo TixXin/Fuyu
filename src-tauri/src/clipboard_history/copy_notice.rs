@@ -29,7 +29,7 @@ pub(super) fn normalized_seconds(seconds: u32) -> u32 {
 }
 
 fn notice_item(item: &ClipboardHistoryItem) -> ClipboardHistoryItem {
-    let mut item = item.clone();
+    let mut item = super::store::item_with_protocol_thumbnail(item);
     item.html = None;
     item.ocr_text = None;
     if item.masked {

@@ -25,6 +25,7 @@ fn popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 
 pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Result<(), String> {
     let mut trace = Trace::begin(app);
+    let _ = super::background::ensure_popup_window(app)?;
     let foreground = win32::window::foreground_window().0 as isize;
     let pointer = win32::window::cursor_position().map(|point| (point.x, point.y));
     let settings = settings.clone();
@@ -113,7 +114,10 @@ fn place(app: &AppHandle, window: &WebviewWindow, settings: &ClipboardHistorySet
 
 pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     super::preview_window::hide(app, false);
-    let window = popup_window(app)?;
+    super::background::schedule_preview_close_after_popup(app);
+    let Some(window) = app.get_webview_window(WINDOW_LABEL) else {
+        return Ok(());
+    };
     window.hide().map_err(|error| error.to_string())?;
     crate::webview_memory::hidden(&window);
     Ok(())
