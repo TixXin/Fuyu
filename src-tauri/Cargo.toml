@@ -34,6 +34,7 @@ imap-proto = "0.16"
 lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "native-tls", "builder", "hostname"] }
 keyring = { version = "4.2", default-features = false, features = ["v1", "windows-native-keyring-store"] }
 mailparse = "0.17"
+mimalloc = { version = "0.1", default-features = false }
 native-tls = "0.2"
 quick-xml = "0.39"
 rrule = "0.14"

@@ -564,23 +564,23 @@ pub(super) fn read_image_text(path: &str) -> Option<String> {
 }
 
 pub(super) fn fill_file_images(only: Option<String>) {
-    let Ok(service) = super::service() else {
-        return;
-    };
-    let wanted: Vec<(String, String)> = match service.state.lock() {
-        Ok(state) => state
-            .items
-            .iter()
-            .filter(|item| only.as_ref().is_none_or(|id| *id == item.id))
-            .filter_map(|item| super::file_image::single_image_file(item).map(|path| (item.id.clone(), path.to_string())))
-            .take(super::file_image::BACKFILL_LIMIT)
-            .collect(),
-        Err(_) => return,
-    };
-    if wanted.is_empty() {
-        return;
-    }
     std::thread::spawn(move || {
+        let Ok(service) = super::service() else {
+            return;
+        };
+        let wanted: Vec<(String, String)> = match service.state.lock() {
+            Ok(state) => state
+                .items
+                .iter()
+                .filter(|item| only.as_ref().is_none_or(|id| *id == item.id))
+                .filter_map(|item| super::file_image::single_image_file(item).map(|path| (item.id.clone(), path.to_string())))
+                .take(super::file_image::BACKFILL_LIMIT)
+                .collect(),
+            Err(_) => return,
+        };
+        if wanted.is_empty() {
+            return;
+        }
         let found: Vec<_> = wanted
             .into_iter()
             .filter_map(|(id, path)| super::file_image::read(&path).map(|image| (id, image)))
