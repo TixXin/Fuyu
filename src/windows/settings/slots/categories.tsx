@@ -91,7 +91,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   pluginsPages: plugins("pluginsPages"),
   pluginsUpdates: plugins("pluginsUpdates"),
   pluginsDev: plugins("pluginsDev"),
-  pluginsV3: () => <PluginsV3SettingsPage />,
+  pluginsV3: ({ onShowPage }) => <PluginsV3SettingsPage onOpenPage={onShowPage} />,
   market: ({ marketRequest, onManagePlugin }) => (
     <PluginMarketSection onManage={onManagePlugin} requestedId={marketRequest.requestedId} onDismissRequest={marketRequest.dismiss} />
   ),

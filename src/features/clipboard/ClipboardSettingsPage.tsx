@@ -79,13 +79,11 @@ export function ClipboardSettingsPage({ tab, settings, onOpenShortcuts }: {
 
   return (
     <>
-      {tab === "clipboard" && (
-        <FeatureHeader
-          feature="clipboard"
-          icon={settingsCategoryIcon("clipboard")}
-          status={openKeys ? t.settings.clipboard.headerShortcut(openKeys) : undefined}
-        />
-      )}
+      <FeatureHeader
+        feature="clipboard"
+        icon={settingsCategoryIcon("clipboard")}
+        status={openKeys ? t.settings.clipboard.headerShortcut(openKeys) : undefined}
+      />
       <SlotView slot={sections} group={tab} props={props} />
     </>
   );

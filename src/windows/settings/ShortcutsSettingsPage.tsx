@@ -51,7 +51,7 @@ export function ShortcutsSettingsPage({
 
   return (
     <>
-      <ShortcutFinder owners={[...owners, ...finderOnly]} onOpenPage={onOpenPage} />
+      {tab !== "shortcutsReference" && <ShortcutFinder owners={[...owners, ...finderOnly]} onOpenPage={onOpenPage} />}
       {tab === "shortcutsReference" ? (
         <div className="shortcut-sheet">
           <SlotView slot={shortcutReferences} group="shortcutsReference" props={props} />

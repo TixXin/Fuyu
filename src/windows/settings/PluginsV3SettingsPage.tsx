@@ -6,6 +6,7 @@ import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { exitPluginSafeMode, type BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { BUILTIN_ICONS, BuiltinPluginsGroup, matchesPluginQuery, milliseconds, PluginDetailModal, stateOf, TONES } from "./BuiltinPluginsGroup";
+import type { SettingsCategory } from "./categories";
 import { PluginBisectBar } from "./PluginBisectBar";
 import { PluginHostNodeRow } from "./PluginHostNodeRow";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginStatusV3 } from "./usePluginHostStatus";
@@ -239,10 +240,11 @@ function SearchInput({ query, onChange }: { query: string; onChange: (next: stri
   );
 }
 
-export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins }: {
+export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins, onOpenPage }: {
   view: PluginHostView;
   now?: number;
   builtins?: readonly BuiltinPlugin[] | null;
+  onOpenPage?: (page: SettingsCategory) => void;
 }) {
   const text = useTranslation().settings.pluginsV3;
   const loadedBuiltins = useBuiltinPlugins();
@@ -319,17 +321,17 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins 
         </>
       )}
 
-      {selectedId ? <PluginDetailModal builtin={selectedBuiltin} hostPlugin={selectedHost} onClose={() => setSelectedId(null)} /> : null}
+      {selectedId ? <PluginDetailModal builtin={selectedBuiltin} hostPlugin={selectedHost} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
     </>
   );
 }
 
-function HostConnectedPage({ connect, builtins }: { connect?: PluginHostConnector; builtins: readonly BuiltinPlugin[] | null }) {
+function HostConnectedPage({ connect, builtins, onOpenPage }: { connect?: PluginHostConnector; builtins: readonly BuiltinPlugin[] | null; onOpenPage?: (page: SettingsCategory) => void }) {
   const view = usePluginHostStatus(connect);
-  return <PluginsV3View view={view} builtins={builtins} />;
+  return <PluginsV3View view={view} builtins={builtins} onOpenPage={onOpenPage} />;
 }
 
-export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnector }) {
+export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
   const text = useTranslation().settings.pluginsV3;
   const hostEnabled = usePluginHostEnabled();
   const builtins = useBuiltinPlugins();
@@ -338,7 +340,7 @@ export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnect
   const selectedBuiltin = builtins?.find((b) => b.id === selectedId);
   return (
     <div className="plugins-v3">
-      {hostEnabled === true ? <HostConnectedPage connect={connect} builtins={builtins} /> : null}
+      {hostEnabled === true ? <HostConnectedPage connect={connect} builtins={builtins} onOpenPage={onOpenPage} /> : null}
       {hostEnabled === false ? (
         <>
           <div className="plugins-v3__tabs-bar">
@@ -358,7 +360,7 @@ export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnect
             </div>
           </section>
           <BuiltinPluginsGroup builtins={builtins} hostEnabled={false} query={query} onSelectPlugin={setSelectedId} />
-          {selectedId ? <PluginDetailModal builtin={selectedBuiltin} onClose={() => setSelectedId(null)} /> : null}
+          {selectedId ? <PluginDetailModal builtin={selectedBuiltin} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
         </>
       ) : null}
       {hostEnabled === null ? <BuiltinPluginsGroup builtins={builtins} hostEnabled={null} query={query} onSelectPlugin={setSelectedId} /> : null}

@@ -1,15 +1,17 @@
 import { useMemo } from "react";
 import { ArrowDown, ArrowLeftRight, ArrowUp } from "lucide-react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
-import { ToggleControl } from "../../../components/controls/ToggleControl";
+import { SettingsSwitch } from "../../../components/settings/SettingsSwitch";
 import { useLocale, useTranslation } from "../../../i18n";
 import { shownUsageProviders, usageItemId } from "../../../features/claude-usage/usageRing";
 import { pluginStatusItemId } from "../../../features/plugin-views/usePluginStatusItems";
 import { usePluginStatusItemList } from "../../../features/plugin-views/usePluginViews";
 import { OWNER as CLAUDE_USAGE } from "../../../features/claude-usage/plugin/owner";
-import { useBuiltinConfig, useBuiltinEnabled } from "../../../features/plugin-kernel/useBuiltinPlugins";
+import { builtinConfigBoolean, disabledBuiltinIds, isBuiltinEnabled } from "../../../features/plugin-kernel/builtinSwitches";
+import { useBuiltinConfig, useBuiltinPlugins } from "../../../features/plugin-kernel/useBuiltinPlugins";
 import {
   arrangeCollapsedItems,
+  filterCollapsedItemEntries,
   moveCollapsedItem,
   setCollapsedItemHidden,
   setCollapsedItemZone,
@@ -25,11 +27,14 @@ export function CollapsedItemsSection() {
   const { locale } = useLocale();
   const text = t.settings.collapsedItems;
   const { placements: saved, save } = useCollapsedPlacements();
-  const usageOn = useBuiltinEnabled(CLAUDE_USAGE);
+  const plugins = useBuiltinPlugins();
+  const usageOn = isBuiltinEnabled(plugins, CLAUDE_USAGE);
   const usageConfig = useBuiltinConfig(CLAUDE_USAGE);
   const declared = usePluginStatusItemList();
 
   const names = useMemo(() => {
+    const disabled = disabledBuiltinIds(plugins);
+    const mailOn = builtinConfigBoolean(plugins, "messages", "mail") !== false;
     const entries: [string, string][] = [
       ["status-light", text.item.statusLight],
       ["mail", text.item.mail],
@@ -45,8 +50,8 @@ export function CollapsedItemsSection() {
       for (const provider of shownUsageProviders(usageConfig)) entries.push([usageItemId(provider), text.item.usage(provider.name)]);
     }
     entries.push(["session-count", text.item.sessionCount]);
-    return new Map(entries);
-  }, [declared, locale, text, usageOn, usageConfig]);
+    return new Map(filterCollapsedItemEntries(entries, disabled, mailOn));
+  }, [declared, locale, plugins, text, usageOn, usageConfig]);
 
   const listed = useMemo(() => [...names.keys()], [names]);
   const placements = useMemo(() => arrangeCollapsedItems(listed, saved), [listed, saved]);
@@ -61,10 +66,11 @@ export function CollapsedItemsSection() {
         <ul className="plugin-pages">
           {rows.map((placement, index) => {
             const label = names.get(placement.id) ?? placement.id;
+            const switchId = `collapsed-item-${placement.id}`;
             return (
               <li className="plugin-pages__row collapsed-items__row" key={placement.id}>
                 <span className="collapsed-items__number" aria-hidden="true">{index + 1}</span>
-                <span className="plugin-pages__name"><strong>{label}</strong></span>
+                <label className="plugin-pages__name" htmlFor={switchId}><strong>{label}</strong></label>
                 <button className="plugin-card__button" type="button" disabled={index === 0} aria-label={text.moveUp(label)} onClick={() => change(moveCollapsedItem(placements, placement.id, -1, listed))}>
                   <ArrowUp size={12} strokeWidth={2.4} />
                 </button>
@@ -79,7 +85,7 @@ export function CollapsedItemsSection() {
                 >
                   <ArrowLeftRight size={12} strokeWidth={2.4} />
                 </button>
-                <ToggleControl label={text.show} checked={!placement.hidden} onChange={(show) => change(setCollapsedItemHidden(placements, placement.id, !show))} />
+                <SettingsSwitch id={switchId} checked={!placement.hidden} onChange={(show) => change(setCollapsedItemHidden(placements, placement.id, !show))} />
               </li>
             );
           })}
@@ -91,8 +97,10 @@ export function CollapsedItemsSection() {
   return (
     <SettingsGroup title={text.title} footer={text.hint}>
       <div className="collapsed-items">
-        {zone("left")}
-        {zone("right")}
+        <div className="collapsed-items__zones">
+          {zone("left")}
+          {zone("right")}
+        </div>
         <button className="plugin-card__button collapsed-items__reset" type="button" disabled={saved.length === 0} onClick={() => save([])}>
           {text.reset}
         </button>

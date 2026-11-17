@@ -1,10 +1,12 @@
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, FolderOpen } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
+import { isMacOS } from "../../lib/platform";
+import { revealFolder } from "../../lib/settings-backup/api";
 import { setBuiltinConfig } from "../plugin-kernel/builtinSwitches";
 import { copyLocalApiToken } from "./api";
 import { OWNER } from "./plugin/owner.ts";
@@ -21,7 +23,9 @@ function CopyButton({ copied, label, copiedLabel, onClick }: { copied: boolean; 
 }
 
 export function LocalApiSettings() {
-  const t = useTranslation().settings.localApi;
+  const settingsText = useTranslation().settings;
+  const t = settingsText.localApi;
+  const dataHome = settingsText.dataHome;
   const errorText = useErrorText();
   const { info, error, allowWrite, resetToken } = useLocalApiInfo();
   const [copied, flashCopied] = useFlash<Copied>();
@@ -49,7 +53,17 @@ export function LocalApiSettings() {
         control={<CopyButton copied={copied === "token"} label={t.copy} copiedLabel={t.copied} onClick={() => copy("token", copyLocalApiToken)} />}
       />
       <SettingsRow title={t.resetToken} description={t.resetTokenHint} control={<SettingsLinkButton tone="danger" onClick={() => void resetToken()}>{t.resetToken}</SettingsLinkButton>} />
-      <SettingsRow title={t.configFile} description={info?.configPath ?? ""} searchable={false} />
+      <SettingsRow
+        title={t.configFile}
+        description={info?.configPath ?? ""}
+        searchable={false}
+        control={info?.configPath ? (
+          <SettingsLinkButton onClick={() => void revealFolder(info.configPath)}>
+            <FolderOpen size={13} strokeWidth={2.2} aria-hidden="true" />
+            {isMacOS ? dataHome.revealMac : dataHome.reveal}
+          </SettingsLinkButton>
+        ) : null}
+      />
     </SettingsGroup>
   );
 }

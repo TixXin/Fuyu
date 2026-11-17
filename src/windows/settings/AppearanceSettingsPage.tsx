@@ -45,7 +45,7 @@ sections.add({ id: "appearanceCollapsed.collapsed-items", category: "appearanceC
 export function AppearanceSettingsPage({ tab, ...props }: AppearanceSectionProps & { tab: AppearanceTab }) {
   return (
     <>
-      <IslandPreview settings={props.settings} />
+      <IslandPreview settings={props.settings} compact={tab === "appearanceCollapsed"} />
       <SlotView slot={sections} group={tab} props={props} />
     </>
   );

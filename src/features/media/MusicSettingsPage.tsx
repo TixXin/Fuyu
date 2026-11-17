@@ -64,7 +64,7 @@ sections.add({ id: "musicLyricsStyle.karaoke", category: "musicLyricsStyle", ord
 export function MusicSettingsPage({ tab, ...props }: MusicSectionProps & { tab: MusicTab }) {
   return (
     <>
-      {tab === "music" && <FeatureHeader feature="music" icon={settingsCategoryIcon("music")} />}
+      <FeatureHeader feature="music" icon={settingsCategoryIcon("music")} />
       <SlotView slot={sections} group={tab} props={props} />
     </>
   );

@@ -8,12 +8,15 @@ import {
 import { TRANSLATIONS, useErrorText, useTranslation } from "../../i18n";
 import type { BuiltinPluginName, PluginV3Filter, PluginV3Group, PluginV3State } from "../../i18n/sections/settings/pluginsV3";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { switchBuiltinPlugin } from "../../features/plugin-kernel/builtinSwitches";
+import type { SettingsCategory } from "./categories";
+import { detailText, stateOf } from "./pluginServiceStatus";
 import type { PluginStatusV3 } from "./usePluginHostStatus";
 
-const STATES: readonly PluginV3State[] = ["running", "waiting", "failed", "disabled", "auto-disabled", "safe-mode", "loading", "stopped", "unloading"];
+export { detailText, stateOf };
 
 export const TONES: Record<PluginV3State, string> = {
   running: "ok", waiting: "warn", loading: "warn", failed: "bad",
@@ -36,21 +39,17 @@ export const BUILTIN_ICONS: Record<BuiltinPluginName, LucideIcon> = {
   "system-levels": Volume2, "device-use": Camera, "theme-market": Store, updater: RefreshCw,
 };
 
-export function stateOf(plugin: PluginStatusV3): PluginV3State {
-  return (STATES as readonly string[]).includes(plugin.state) ? (plugin.state as PluginV3State) : "loading";
-}
+const BUILTIN_PAGES: Record<BuiltinPluginName, SettingsCategory> = {
+  todos: "todos", calendar: "calendar", music: "music", clipboard: "clipboard", screenshot: "screenshot",
+  "file-shelf": "shelf", translation: "translation", "voice-input": "voiceInput", timer: "timerAlerts", messages: "messages",
+  agents: "agents", "session-ring": "agentSessions", "claude-usage": "agentRings", "cc-connect": "agentAlerts",
+  "ssh-tunnel": "agentTunnel", "local-api": "generalApi", "center-pattern": "appearanceCollapsed",
+  "device-events": "behaviorAlerts", "system-levels": "behaviorAlerts", "device-use": "behaviorAlerts",
+  "theme-market": "themeMarket", updater: "about",
+};
 
 export function milliseconds(ms: number) {
   return ms >= 1000 ? `${(ms / 1000).toFixed(2)} s` : `${ms.toFixed(ms < 10 ? 2 : ms < 100 ? 1 : 0)} ms`;
-}
-
-export function detailText(plugin: PluginStatusV3, text: ReturnType<typeof useTranslation>["settings"]["pluginsV3"]): string | null {
-  const state = stateOf(plugin);
-  const blocked = plugin.blocked;
-  return state === "waiting" && plugin.waitingFor?.length ? text.waitingFor(plugin.waitingFor.join(", "))
-    : blocked?.by === "errors" ? text.autoDisabled(blocked.errors, Math.round(blocked.windowMs / 1000))
-    : blocked?.by === "safe-mode" ? text.heldBySafeMode(text.safeModes[blocked.mode])
-    : plugin.reason ?? plugin.error ?? null;
 }
 
 export function isAttentionState(state: PluginV3State): boolean {
@@ -200,6 +199,7 @@ export function HostPluginCard({ plugin, onSelect }: { plugin: PluginStatusV3; o
           <div className="plugins-v3__title-line">
             <span className="plugins-v3__plugin-name" title={plugin.name}>{plugin.id}</span>
             {plugin.kind ? <span className="plugins-v3__kind">{text.kinds[plugin.kind]}</span> : null}
+            {plugin.source === "manual" && text.unreviewedBadge ? <span className="plugins-v3__kind">{text.unreviewedBadge}</span> : null}
             <span className="plugins-v3__state">{text.states[state]}</span>
           </div>
           {plugin.name && plugin.name !== plugin.id ? <span className="plugins-v3__id">{plugin.name}</span> : null}
@@ -212,8 +212,11 @@ export function HostPluginCard({ plugin, onSelect }: { plugin: PluginStatusV3; o
   );
 }
 
-export function PluginDetailModal({ builtin, hostPlugin, onClose }: { builtin?: BuiltinPlugin; hostPlugin?: PluginStatusV3; onClose: () => void }) {
-  const text = useTranslation().settings.pluginsV3;
+export function PluginDetailModal({ builtin, hostPlugin, onClose, onOpenPage }: {
+  builtin?: BuiltinPlugin; hostPlugin?: PluginStatusV3; onClose: () => void; onOpenPage?: (page: SettingsCategory) => void;
+}) {
+  const settingsText = useTranslation().settings;
+  const text = settingsText.pluginsV3;
   const switchId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -235,6 +238,7 @@ export function PluginDetailModal({ builtin, hostPlugin, onClose }: { builtin?: 
   const detail = hostPlugin ? detailText(hostPlugin, text) : null;
   const summary = (text.builtinNotes as Record<string, string | undefined>)[id] ?? (text.builtinSummaries as Record<string, string | undefined>)[id] ?? null;
   const note = builtin?.kind === "essential" ? `${text.essentialNote}${summary ? ` · ${summary}` : ""}` : summary;
+  const targetPage = builtin ? BUILTIN_PAGES[builtin.id as BuiltinPluginName] : undefined;
   const toggle = (enabled: boolean) => {
     if (!builtin) return;
     setBusy(true);
@@ -254,10 +258,7 @@ export function PluginDetailModal({ builtin, hostPlugin, onClose }: { builtin?: 
     <div className="plugins-v3__modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div ref={dialogRef} className={`plugins-v3__modal plugins-v3__plugin--${tone}`} role="dialog" aria-modal="true" aria-label={name} onKeyDown={onKeyDown}>
         <div className="plugins-v3__modal-head">
-          <span className={`plugins-v3__icon plugins-v3__icon--lg plugins-v3__icon--${tone}`} aria-hidden="true">
-            <Icon size={18} strokeWidth={2} />
-            <span className="plugins-v3__dot" />
-          </span>
+          <span className={`plugins-v3__icon plugins-v3__icon--lg plugins-v3__icon--${tone}`} aria-hidden="true"><Icon size={18} strokeWidth={2} /><span className="plugins-v3__dot" /></span>
           <div className="plugins-v3__title-col">
             <div className="plugins-v3__title-line">
               <strong className="plugins-v3__modal-title">{name}</strong>
@@ -266,14 +267,9 @@ export function PluginDetailModal({ builtin, hostPlugin, onClose }: { builtin?: 
             </div>
             <span className="plugins-v3__id">{id}</span>
           </div>
-          {builtin ? (
-            <div className="plugins-v3__switch">
-              <SettingsSwitch id={switchId} checked={builtin.enabled} disabled={builtin.kind === "essential" || busy} onChange={toggle} />
-            </div>
-          ) : null}
-          <button ref={closeRef} className="plugins-v3__modal-close" type="button" aria-label={text.closeDetail} title={text.closeDetail} onClick={onClose}>
-            <X size={15} strokeWidth={2.2} aria-hidden="true" />
-          </button>
+          {targetPage && onOpenPage ? <SettingsLinkButton onClick={() => { onClose(); onOpenPage(targetPage); }}>{settingsText.shortcuts.openFeaturePage}</SettingsLinkButton> : null}
+          {builtin ? <div className="plugins-v3__switch"><SettingsSwitch id={switchId} checked={builtin.enabled} disabled={builtin.kind === "essential" || busy} onChange={toggle} /></div> : null}
+          <button ref={closeRef} className="plugins-v3__modal-close" type="button" aria-label={text.closeDetail} title={text.closeDetail} onClick={onClose}><X size={15} strokeWidth={2.2} aria-hidden="true" /></button>
         </div>
         {note ? <p className="plugins-v3__note">{note}</p> : null}
         {detail ? <p className={`plugins-v3__detail plugins-v3__detail--${tone}`}>{detail}</p> : null}
