@@ -388,3 +388,14 @@ fn shared_shell_hub_starts_on_first_subscriber_and_stops_when_last_drops() {
     drop(second);
     assert!(!shell_hub::is_running());
 }
+
+#[test]
+fn source_errors_carry_stable_error_codes() {
+    use source::SourceError;
+    assert_eq!(shell_hub::source_user_error(SourceError::NotInstalled).code(), "wechat.notInstalled");
+    assert_eq!(shell_hub::source_user_error(SourceError::Canonicalize("x".into())).code(), "wechat.verifyPath");
+    assert_eq!(shell_hub::source_user_error(SourceError::AlreadyRunning).code(), "shellAttention.alreadyRunning");
+    assert_eq!(shell_hub::source_user_error(SourceError::RegisterEvent("x".into())).code(), "shellAttention.registerEvent");
+    assert_eq!(shell_hub::source_user_error(SourceError::CreateReceiver("x".into())).code(), "shellAttention.createReceiver");
+    assert_eq!(shell_hub::source_user_error(SourceError::Listen("x".into())).code(), "shellAttention.listen");
+}

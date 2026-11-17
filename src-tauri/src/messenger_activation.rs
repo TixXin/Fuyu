@@ -24,6 +24,7 @@ pub fn activate_window(window: HWND, name: &str) -> Result<(), UserError> {
     .arg("name", name))
 }
 
+#[allow(dead_code)]
 pub fn activate_existing_window(window: HWND, name: &str) -> Result<(), String> {
     activate_window(window, name).map_err(|error| error.to_string())
 }

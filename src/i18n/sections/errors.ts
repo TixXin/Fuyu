@@ -283,7 +283,63 @@ export type ErrorCode =
   | "soundPack.openFolder"
   | "soundPack.fileMissing"
   | "soundPack.readSound"
-  | "soundPack.tooLarge";
+  | "soundPack.tooLarge"
+  | "toast.init"
+  | "toast.unavailable"
+  | "toast.checkAccess"
+  | "toast.read"
+  | "qq.notReady"
+  | "qq.unavailable"
+  | "qq.requestAccessStart"
+  | "qq.requestAccess"
+  | "qq.accessFailed"
+  | "qq.openSettings"
+  | "qq.openApp"
+  | "qq.notInstalled"
+  | "qq.findWindow"
+  | "qq.noMainWindow"
+  | "qq.notRunning"
+  | "qq.noTrayEntry"
+  | "qq.multipleTrays"
+  | "qq.trayTimeout"
+  | "qq.multipleTrayIcons"
+  | "qq.trayNotReady"
+  | "qq.trayNoResponse"
+  | "qq.restoreFailed"
+  | "qq.disabledForApp"
+  | "qq.disabledForUser"
+  | "qq.disabledByPolicy"
+  | "qq.unsupportedInstall"
+  | "qq.channelNotReady"
+  | "qq.repairToolMissing"
+  | "qq.repairStart"
+  | "qq.repairUnfinished"
+  | "qq.repairFailed"
+  | "qq.repairStopped"
+  | "wechat.notReady"
+  | "wechat.unavailable"
+  | "wechat.notInstalled"
+  | "wechat.verifyPath"
+  | "wechat.notRunning"
+  | "wechat.findWindow"
+  | "wechat.noMainWindow"
+  | "wechat.openProtocol"
+  | "wechat.restoreFailed"
+  | "wechat.openApp"
+  | "wechat.exposeWaiting"
+  | "wechat.exposeExternal"
+  | "wechat.exposeOn"
+  | "wechat.exposeNoDll"
+  | "wechat.exposeOpenProcess"
+  | "wechat.exposeReadDll"
+  | "wechat.exposeNoSwitch"
+  | "wechat.exposeStillHidden"
+  | "shellAttention.alreadyRunning"
+  | "shellAttention.registerEvent"
+  | "shellAttention.createReceiver"
+  | "shellAttention.listen"
+  | "shellAttention.startThread"
+  | "shellAttention.startTimeout";
 
 export type ErrorsText = {
   withDetail: (text: string, detail: string) => string;
@@ -573,6 +629,62 @@ export const zhCN: ErrorsText = {
     "soundPack.fileMissing": "音效包里没有这个文件。",
     "soundPack.readSound": ({ name }) => `无法读取音效 ${name}。`,
     "soundPack.tooLarge": ({ name }) => `音效文件太大：${name}（最大 4 MB）`,
+    "toast.init": "无法初始化 Windows 通知。",
+    "toast.unavailable": "Windows 通知监听不可用。",
+    "toast.checkAccess": "无法检查通知权限。",
+    "toast.read": "无法读取 Windows 通知。",
+    "qq.notReady": "QQ 通知服务尚未就绪。",
+    "qq.unavailable": "QQ 通知状态不可用。",
+    "qq.requestAccessStart": "无法发起通知授权。",
+    "qq.requestAccess": "无法请求 Windows 通知权限。",
+    "qq.accessFailed": "Windows 通知授权失败。",
+    "qq.openSettings": isMacOS ? "无法打开系统辅助功能设置。" : "无法打开 Windows 通知设置。",
+    "qq.openApp": "无法打开 QQ。",
+    "qq.notInstalled": "未找到 QQ 安装路径。请先打开 QQ，再试一次。",
+    "qq.findWindow": "无法查找已运行的 QQ 窗口。",
+    "qq.noMainWindow": "QQ 已在运行，但未找到可用的主窗口，请从系统托盘打开 QQ。",
+    "qq.notRunning": "未找到正在运行的 QQ 窗口，请先打开并登录桌面版 QQ。",
+    "qq.noTrayEntry": "未找到 QQ 的托盘唤回入口，请双击系统托盘中的 QQ 图标。",
+    "qq.multipleTrays": "QQ 有多个托盘入口，无法确认主入口，请从系统托盘打开 QQ。",
+    "qq.trayTimeout": "查询 QQ 托盘图标超时，请从系统托盘打开 QQ。",
+    "qq.multipleTrayIcons": "QQ 有多个托盘图标，无法确认主入口，请双击系统托盘中的 QQ 图标。",
+    "qq.trayNotReady": "QQ 托盘图标尚未就绪，请从系统托盘打开 QQ。",
+    "qq.trayNoResponse": "QQ 没有响应托盘唤回请求，请从系统托盘打开。",
+    "qq.restoreFailed": "QQ 未能恢复可交互的主窗口，请双击系统托盘中的 QQ 图标。",
+    "qq.disabledForApp": "QQ 的 Windows 通知已关闭，请在系统通知设置中开启。",
+    "qq.disabledForUser": "Windows 系统通知已关闭，请在系统通知设置中开启。",
+    "qq.disabledByPolicy": "管理员策略禁止了 Windows 通知，请联系管理员。",
+    "qq.unsupportedInstall": "QQ 当前安装方式不支持系统通知，请检查或更新 QQ。",
+    "qq.channelNotReady": "QQ 通知通道尚未就绪，请确认已安装 QQ；可关闭后重新开启接收以重试。",
+    "qq.repairToolMissing": "无法定位 Windows 通知修复工具。",
+    "qq.repairStart": "无法启动 QQ 通知自动修复。",
+    "qq.repairUnfinished": "QQ 通知自动修复未完成，请确认 QQ 安装正常；可关闭后重新开启接收以重试。",
+    "qq.repairFailed": "QQ 通知自动修复失败。",
+    "qq.repairStopped": "QQ 通知自动修复已停止或超时，可关闭后重新开启接收以重试。",
+    "wechat.notReady": "微信提醒服务尚未就绪。",
+    "wechat.unavailable": "微信提醒状态不可用。",
+    "wechat.notInstalled": "未找到微信安装路径。打开微信后会自动连接。",
+    "wechat.verifyPath": "无法确认微信安装路径。",
+    "wechat.notRunning": "未找到正在运行的微信窗口，请先打开并登录桌面版微信。",
+    "wechat.findWindow": "无法查找已运行的微信窗口。",
+    "wechat.noMainWindow": "微信已在运行，但未定位到主窗口，请先从系统托盘打开并登录微信。",
+    "wechat.openProtocol": "无法通过微信注册入口唤回客户端，请从系统托盘打开微信。",
+    "wechat.restoreFailed": "微信未能恢复原来的主窗口，请双击系统托盘中的微信图标。",
+    "wechat.openApp": "无法打开微信。",
+    "wechat.exposeWaiting": "没找到微信主窗口，微信启动后会自动公开。",
+    "wechat.exposeExternal": "微信界面已被别的程序（例如读屏软件）公开。",
+    "wechat.exposeOn": "已公开微信界面。微信关在托盘里时读不到会话列表，最小化可以。",
+    "wechat.exposeNoDll": "没能公开微信界面：微信进程里没有 Weixin.dll（不是 4.x 版？）",
+    "wechat.exposeOpenProcess": "没能公开微信界面：打不开微信进程（微信以管理员身份运行时，岛也要以管理员身份运行）",
+    "wechat.exposeReadDll": "没能公开微信界面：读不到 Weixin.dll。",
+    "wechat.exposeNoSwitch": "没能公开微信界面：这个版本的微信里没找到辅助功能开关",
+    "wechat.exposeStillHidden": "没能公开微信界面：改了开关，微信的界面仍然没有公开",
+    "shellAttention.alreadyRunning": "任务栏提醒监听器已在此线程运行。",
+    "shellAttention.registerEvent": "无法注册任务栏提醒事件。",
+    "shellAttention.createReceiver": "无法创建任务栏提醒接收器。",
+    "shellAttention.listen": "无法监听任务栏提醒。",
+    "shellAttention.startThread": "无法启动任务栏提醒监听线程。",
+    "shellAttention.startTimeout": "任务栏提醒监听线程启动超时。",
   },
 };
 
@@ -859,5 +971,61 @@ export const en: ErrorsText = {
     "soundPack.fileMissing": "This file is not in the sound pack.",
     "soundPack.readSound": ({ name }) => `Could not read sound ${name}.`,
     "soundPack.tooLarge": ({ name }) => `The sound file is too large: ${name} (at most 4 MB).`,
+    "toast.init": "Could not initialize Windows notifications.",
+    "toast.unavailable": "Windows notification listener is unavailable.",
+    "toast.checkAccess": "Could not check notification permission.",
+    "toast.read": "Could not read Windows notifications.",
+    "qq.notReady": "The QQ notification service is not ready yet.",
+    "qq.unavailable": "The QQ notification state is unavailable.",
+    "qq.requestAccessStart": "Could not start the notification permission request.",
+    "qq.requestAccess": "Could not request Windows notification permission.",
+    "qq.accessFailed": "Windows notification authorization failed.",
+    "qq.openSettings": isMacOS ? "Could not open Accessibility settings." : "Could not open Windows notification settings.",
+    "qq.openApp": "Could not open QQ.",
+    "qq.notInstalled": "QQ installation path was not found. Open QQ first and try again.",
+    "qq.findWindow": "Could not look up running QQ windows.",
+    "qq.noMainWindow": "QQ is running, but no main window was found; open QQ from the system tray.",
+    "qq.notRunning": "No running QQ window was found; open and sign in to desktop QQ first.",
+    "qq.noTrayEntry": "Could not find QQ's tray entry; double-click the QQ icon in the system tray.",
+    "qq.multipleTrays": "QQ has multiple tray entries; open QQ from the system tray.",
+    "qq.trayTimeout": "Looking up the QQ tray icon timed out; open QQ from the system tray.",
+    "qq.multipleTrayIcons": "QQ has multiple tray icons; double-click the QQ icon in the system tray.",
+    "qq.trayNotReady": "The QQ tray icon is not ready yet; open QQ from the system tray.",
+    "qq.trayNoResponse": "QQ did not respond to the tray activation request; open it from the system tray.",
+    "qq.restoreFailed": "QQ did not restore an interactive main window; double-click the QQ icon in the system tray.",
+    "qq.disabledForApp": "Windows notifications for QQ are turned off; enable them in system notification settings.",
+    "qq.disabledForUser": "Windows system notifications are turned off; enable them in system notification settings.",
+    "qq.disabledByPolicy": "Windows notifications are disabled by administrator policy; contact your administrator.",
+    "qq.unsupportedInstall": "This QQ installation does not support system notifications; check or update QQ.",
+    "qq.channelNotReady": "The QQ notification channel is not ready yet; make sure QQ is installed, or turn receiving off and on again to retry.",
+    "qq.repairToolMissing": "Could not locate PowerShell to repair Windows notifications.",
+    "qq.repairStart": "Could not start the automatic QQ notification repair.",
+    "qq.repairUnfinished": "Automatic QQ notification repair did not finish; check your QQ installation, or turn receiving off and on again to retry.",
+    "qq.repairFailed": "Automatic QQ notification repair failed.",
+    "qq.repairStopped": "Automatic QQ notification repair stopped or timed out; turn receiving off and on again to retry.",
+    "wechat.notReady": "The WeChat reminder service is not ready yet.",
+    "wechat.unavailable": "The WeChat reminder state is unavailable.",
+    "wechat.notInstalled": "WeChat installation path was not found. It will connect automatically once WeChat opens.",
+    "wechat.verifyPath": "Could not verify the WeChat installation path.",
+    "wechat.notRunning": "No running WeChat window was found; open and sign in to desktop WeChat first.",
+    "wechat.findWindow": "Could not look up running WeChat windows.",
+    "wechat.noMainWindow": "WeChat is running, but no main window was found; open and sign in to WeChat from the system tray first.",
+    "wechat.openProtocol": "Could not bring WeChat back via its registered protocol; open WeChat from the system tray.",
+    "wechat.restoreFailed": "WeChat did not restore its main window; double-click the WeChat icon in the system tray.",
+    "wechat.openApp": "Could not open WeChat.",
+    "wechat.exposeWaiting": "WeChat main window not found; its UI will be exposed automatically once WeChat starts.",
+    "wechat.exposeExternal": "WeChat's UI is already exposed by another program (such as a screen reader).",
+    "wechat.exposeOn": "WeChat's UI is exposed. The chat list cannot be read while WeChat is closed to the tray, though minimizing works.",
+    "wechat.exposeNoDll": "Could not expose WeChat's UI: Weixin.dll was not found in the WeChat process (not version 4.x?).",
+    "wechat.exposeOpenProcess": "Could not expose WeChat's UI: could not open the WeChat process (if WeChat runs as administrator, run Fuyu as administrator too).",
+    "wechat.exposeReadDll": "Could not expose WeChat's UI: could not read Weixin.dll.",
+    "wechat.exposeNoSwitch": "Could not expose WeChat's UI: could not find the accessibility switch in this WeChat version.",
+    "wechat.exposeStillHidden": "Could not expose WeChat's UI: toggled the switch, yet WeChat's UI is still not exposed.",
+    "shellAttention.alreadyRunning": "The taskbar attention listener is already running on this thread.",
+    "shellAttention.registerEvent": "Could not register the taskbar attention event.",
+    "shellAttention.createReceiver": "Could not create the taskbar attention receiver.",
+    "shellAttention.listen": "Could not listen for taskbar attention.",
+    "shellAttention.startThread": "Could not start the taskbar attention listener thread.",
+    "shellAttention.startTimeout": "Starting the taskbar attention listener thread timed out.",
   },
 };

@@ -4,6 +4,7 @@ use crate::win32::{
 };
 use std::{
     cell::RefCell,
+    fmt,
     path::PathBuf,
     sync::atomic::{AtomicUsize, Ordering},
 };
@@ -141,7 +142,38 @@ thread_local! {
 
 const EXECUTABLES: [(&str, &str); 2] = [("Weixin", "Weixin.exe"), ("WeChat", "WeChat.exe")];
 
-pub fn installed_executable() -> Result<PathBuf, String> {
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SourceError {
+    NotInstalled,
+    Canonicalize(String),
+    AlreadyRunning,
+    RegisterEvent(String),
+    Window(String),
+    CreateReceiver(String),
+    Listen(String),
+}
+
+impl fmt::Display for SourceError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NotInstalled => formatter.write_str("WeChat installation path was not found. It will connect automatically once WeChat opens."),
+            Self::Canonicalize(error) => write!(formatter, "Could not verify the WeChat installation path: {error}"),
+            Self::AlreadyRunning => formatter.write_str("The taskbar attention listener is already running on this thread."),
+            Self::RegisterEvent(error) => write!(formatter, "Could not register the taskbar attention event: {error}"),
+            Self::Window(error) => formatter.write_str(error),
+            Self::CreateReceiver(error) => write!(formatter, "Could not create the taskbar attention receiver: {error}"),
+            Self::Listen(error) => write!(formatter, "Could not listen for taskbar attention: {error}"),
+        }
+    }
+}
+
+impl From<SourceError> for String {
+    fn from(error: SourceError) -> Self {
+        error.to_string()
+    }
+}
+
+pub fn installed_executable() -> Result<PathBuf, SourceError> {
     let existing = |path: PathBuf, name: &str| {
         let named = path
             .file_name()
@@ -181,7 +213,7 @@ pub fn installed_executable() -> Result<PathBuf, String> {
     let names = EXECUTABLES.map(|(_, name)| name);
     process::running_executable(&names)
         .map(PathBuf::from)
-        .ok_or_else(|| "未找到微信安装路径。打开微信后会自动连接。".into())
+        .ok_or(SourceError::NotInstalled)
 }
 
 pub fn normalized_path(path: &str) -> String {
@@ -260,10 +292,10 @@ impl ReminderListener {
     pub fn new(
         executable: PathBuf,
         callback: impl FnMut(ReminderSignal) + 'static,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, SourceError> {
         let executable = executable
             .canonicalize()
-            .map_err(|error| format!("无法确认微信安装路径：{error}"))?;
+            .map_err(|error| SourceError::Canonicalize(error.to_string()))?;
         let matcher = ShellMatcher::exact_path(&executable.to_string_lossy());
         Self::for_matcher(matcher, callback)
     }
@@ -272,7 +304,7 @@ impl ReminderListener {
     pub fn for_executables(
         names: &[&str],
         callback: impl FnMut(ReminderSignal) + 'static,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, SourceError> {
         Self::for_matcher(ShellMatcher::file_names(names), callback)
     }
 
@@ -280,7 +312,7 @@ impl ReminderListener {
     pub fn for_matcher(
         matcher: ShellMatcher,
         mut callback: impl FnMut(ReminderSignal) + 'static,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, SourceError> {
         Self::raw(move |signal, target, foreground| {
             if let Some(routed) =
                 route_window_signal(signal, &target, foreground.as_deref(), &matcher)
@@ -293,24 +325,25 @@ impl ReminderListener {
     #[allow(dead_code)]
     pub fn raw(
         callback: impl FnMut(ReminderSignal, TargetWindow, Option<String>) + 'static,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, SourceError> {
         if CONTEXT.with(|slot| slot.borrow().is_some()) {
-            return Err("任务栏提醒监听器已在此线程运行。".into());
+            return Err(SourceError::AlreadyRunning);
         }
-        let message =
-            shell_hook::hook_message().map_err(|error| format!("无法注册任务栏提醒事件：{error}"))?;
-        let instance = message_window::module_instance().map_err(|error| error.to_string())?;
+        let message = shell_hook::hook_message()
+            .map_err(|error| SourceError::RegisterEvent(error.to_string()))?;
+        let instance = message_window::module_instance()
+            .map_err(|error| SourceError::Window(error.to_string()))?;
         let class_name = format!(
             "{CLASS_PREFIX}-{}",
             NEXT_CLASS_ID.fetch_add(1, Ordering::Relaxed)
         );
         message_window::register_class::<ReminderWindow>(instance, &class_name)
-            .map_err(|error| error.to_string())?;
+            .map_err(|error| SourceError::Window(error.to_string()))?;
         let window = match message_window::create_tool_popup_window(instance, &class_name, "") {
             Ok(window) => window,
             Err(error) => {
                 let _ = message_window::unregister_class(instance, &class_name);
-                return Err(format!("无法创建任务栏提醒接收器：{error}"));
+                return Err(SourceError::CreateReceiver(error.to_string()));
             }
         };
         CONTEXT.with(|slot| {
@@ -326,7 +359,7 @@ impl ReminderListener {
             class_name,
         };
         shell_hook::register_window(window)
-            .map_err(|error| format!("无法监听任务栏提醒：{error}"))?;
+            .map_err(|error| SourceError::Listen(error.to_string()))?;
         Ok(listener)
     }
 

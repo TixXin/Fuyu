@@ -15,6 +15,7 @@ use windows::{
 use super::history::NotificationBuffer;
 use super::{publish, NotificationService, NotificationStatus, QQNotification};
 use crate::toast_notifications::{self, PollBatch, ToastItem, ToastMatcher, ToastPoll};
+use crate::user_error::UserError;
 use crate::win32;
 
 pub(super) const QQ_APP_ID: &str = "QQ";
@@ -87,7 +88,7 @@ pub(super) fn handle_poll(service: &Arc<NotificationService>, poll: ToastPoll) {
             }
             ToastPoll::Error(error) => {
                 state.snapshot.status = NotificationStatus::Error;
-                state.snapshot.error = Some(error);
+                state.snapshot.error = Some(toast_notifications::resolve_error(error));
                 None
             }
         };
@@ -103,7 +104,7 @@ pub(super) fn handle_poll(service: &Arc<NotificationService>, poll: ToastPoll) {
     }
 }
 
-fn check_channel_error(service: &NotificationService, generation: u64) -> Option<String> {
+fn check_channel_error(service: &NotificationService, generation: u64) -> Option<UserError> {
     let setting = qq_notification_setting();
     let needs_repair = {
         let mut repair = service
@@ -158,29 +159,40 @@ pub(super) fn should_repair_registration(
 
 pub(super) fn registration_error(
     setting: windows::core::Result<NotificationSetting>,
-) -> Option<String> {
+) -> Option<UserError> {
     match setting {
         Ok(NotificationSetting::Enabled) => None,
-        Ok(NotificationSetting::DisabledForApplication) => {
-            Some("QQ 的 Windows 通知已关闭，请在系统通知设置中开启。".into())
-        }
-        Ok(NotificationSetting::DisabledForUser) => {
-            Some("Windows 系统通知已关闭，请在系统通知设置中开启。".into())
-        }
-        Ok(NotificationSetting::DisabledByGroupPolicy) => {
-            Some("管理员策略禁止了 Windows 通知，请联系管理员。".into())
-        }
-        Ok(_) => Some("QQ 当前安装方式不支持系统通知，请检查或更新 QQ。".into()),
-        Err(error) => Some(format!(
-            "QQ 通知通道尚未就绪，请确认已安装 QQ；可关闭后重新开启接收以重试：{error}"
+        Ok(NotificationSetting::DisabledForApplication) => Some(UserError::new(
+            "qq.disabledForApp",
+            "Windows notifications for QQ are turned off; enable them in system notification settings.",
         )),
+        Ok(NotificationSetting::DisabledForUser) => Some(UserError::new(
+            "qq.disabledForUser",
+            "Windows system notifications are turned off; enable them in system notification settings.",
+        )),
+        Ok(NotificationSetting::DisabledByGroupPolicy) => Some(UserError::new(
+            "qq.disabledByPolicy",
+            "Windows notifications are disabled by administrator policy; contact your administrator.",
+        )),
+        Ok(_) => Some(UserError::new(
+            "qq.unsupportedInstall",
+            "This QQ installation does not support system notifications; check or update QQ.",
+        )),
+        Err(error) => Some(
+            UserError::new(
+                "qq.channelNotReady",
+                "The QQ notification channel is not ready yet; make sure QQ is installed, or turn receiving off and on again to retry.",
+            )
+            .detail(error),
+        ),
     }
 }
 
-fn repair_registration(service: &NotificationService, generation: u64) -> Result<(), String> {
+fn repair_registration(service: &NotificationService, generation: u64) -> Result<(), UserError> {
     let script = format!("& {{\n{REGISTRATION_REPAIR}\n}} -Repair");
     let bytes: Vec<u8> = script.encode_utf16().flat_map(u16::to_le_bytes).collect();
-    let system_root = std::env::var_os("SystemRoot").ok_or("无法定位 Windows 通知修复工具。")?;
+    let system_root = std::env::var_os("SystemRoot")
+        .ok_or_else(|| UserError::new("qq.repairToolMissing", "Could not locate PowerShell to repair Windows notifications."))?;
     let executable =
         PathBuf::from(system_root).join("System32/WindowsPowerShell/v1.0/powershell.exe");
     let mut child = Command::new(executable)
@@ -196,7 +208,7 @@ fn repair_registration(service: &NotificationService, generation: u64) -> Result
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
-        .map_err(|error| format!("无法启动 QQ 通知自动修复：{error}"))?;
+        .map_err(|error| UserError::new("qq.repairStart", "Could not start the automatic QQ notification repair.").detail(error))?;
     let deadline = Instant::now() + Duration::from_secs(30);
     loop {
         match child.try_wait() {
@@ -204,10 +216,10 @@ fn repair_registration(service: &NotificationService, generation: u64) -> Result
                 return if status.success() {
                     Ok(())
                 } else {
-                    Err(
-                        "QQ 通知自动修复未完成，请确认 QQ 安装正常；可关闭后重新开启接收以重试。"
-                            .into(),
-                    )
+                    Err(UserError::new(
+                        "qq.repairUnfinished",
+                        "Automatic QQ notification repair did not finish; check your QQ installation, or turn receiving off and on again to retry.",
+                    ))
                 }
             }
             Ok(None)
@@ -222,8 +234,11 @@ fn repair_registration(service: &NotificationService, generation: u64) -> Result
                 let _ = child.kill();
                 let _ = child.wait();
                 return Err(match result {
-                    Err(error) => format!("QQ 通知自动修复失败：{error}"),
-                    _ => "QQ 通知自动修复已停止或超时，可关闭后重新开启接收以重试。".into(),
+                    Err(error) => UserError::new("qq.repairFailed", "Automatic QQ notification repair failed.").detail(error),
+                    _ => UserError::new(
+                        "qq.repairStopped",
+                        "Automatic QQ notification repair stopped or timed out; turn receiving off and on again to retry.",
+                    ),
                 });
             }
         }
@@ -231,7 +246,7 @@ fn repair_registration(service: &NotificationService, generation: u64) -> Result
 }
 
 #[cfg_attr(not(test), allow(dead_code))]
-pub(super) fn read_notifications() -> Result<(NotificationStatus, Vec<QQNotification>), String> {
+pub(super) fn read_notifications() -> Result<(NotificationStatus, Vec<QQNotification>), UserError> {
     match toast_notifications::read_matching(&[ToastMatcher::AumidExact(QQ_APP_ID.into())])? {
         PollBatch::Allowed(items) => Ok((
             NotificationStatus::Listening,

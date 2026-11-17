@@ -21,7 +21,10 @@ use std::{
 };
 
 #[cfg(windows)]
-use crate::plugin_kernel::{builtins::Background, worker::Worker};
+use crate::{
+    plugin_kernel::{builtins::Background, worker::Worker},
+    user_error::UserError,
+};
 #[cfg(windows)]
 use cache::AppInfoCache;
 #[cfg(windows)]
@@ -36,6 +39,7 @@ const WAIT_SLICE: Duration = Duration::from_millis(200);
 struct ToastHub {
     dispatcher: Mutex<Dispatcher>,
     cache: Mutex<AppInfoCache>,
+    last_error: Mutex<Option<UserError>>,
     dirty: AtomicBool,
     worker: Worker,
 }
@@ -48,6 +52,7 @@ fn hub() -> &'static ToastHub {
     HUB.get_or_init(|| ToastHub {
         dispatcher: Mutex::new(Dispatcher::default()),
         cache: Mutex::new(AppInfoCache::default()),
+        last_error: Mutex::new(None),
         dirty: AtomicBool::new(false),
         worker: Worker::new("toast-notifications", run_loop),
     })
@@ -90,10 +95,12 @@ fn tick_once() {
         }
         dispatcher.active_matchers()
     };
-    let outcome = {
+    let polled = {
         let mut cache = hub.cache.lock().unwrap_or_else(PoisonError::into_inner);
         poller::poll_once(&mut cache, &matchers)
     };
+    *hub.last_error.lock().unwrap_or_else(PoisonError::into_inner) = polled.as_ref().err().cloned();
+    let outcome = polled.map_err(|error| error.to_string());
     let deliveries = {
         let dispatcher = hub
             .dispatcher
@@ -175,8 +182,20 @@ pub(crate) fn recent_apps() -> Vec<ToastApp> {
 }
 
 #[cfg(windows)]
+pub(crate) fn resolve_error(message: String) -> UserError {
+    hub()
+        .last_error
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .as_ref()
+        .filter(|error| error.to_string() == message)
+        .cloned()
+        .unwrap_or_else(|| UserError::from(message))
+}
+
+#[cfg(windows)]
 #[allow(dead_code)]
-pub(crate) fn read_matching(matchers: &[ToastMatcher]) -> Result<PollBatch, String> {
+pub(crate) fn read_matching(matchers: &[ToastMatcher]) -> Result<PollBatch, UserError> {
     let mut cache = AppInfoCache::default();
     poller::poll_once(&mut cache, matchers)
 }

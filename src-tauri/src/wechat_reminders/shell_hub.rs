@@ -9,9 +9,41 @@ use std::{
 use windows::Win32::{Foundation::HWND, UI::WindowsAndMessaging::WM_QUIT};
 
 use super::source::{
-    route_multi_signals, ReminderListener, ReminderSignal, ShellMatcher, TargetWindow,
+    route_multi_signals, ReminderListener, ReminderSignal, ShellMatcher, SourceError, TargetWindow,
 };
-use crate::win32::message_window;
+use crate::{user_error::UserError, win32::message_window};
+
+pub(super) fn source_user_error(error: SourceError) -> UserError {
+    match error {
+        SourceError::NotInstalled => UserError::new(
+            "wechat.notInstalled",
+            "WeChat installation path was not found. It will connect automatically once WeChat opens.",
+        ),
+        SourceError::Canonicalize(detail) => {
+            UserError::new("wechat.verifyPath", "Could not verify the WeChat installation path.").detail(detail)
+        }
+        SourceError::AlreadyRunning => UserError::new(
+            "shellAttention.alreadyRunning",
+            "The taskbar attention listener is already running on this thread.",
+        ),
+        SourceError::RegisterEvent(detail) => UserError::new(
+            "shellAttention.registerEvent",
+            "Could not register the taskbar attention event.",
+        )
+        .detail(detail),
+        SourceError::Window(detail) => {
+            UserError::new("internal", "Something went wrong inside the island.").detail(detail)
+        }
+        SourceError::CreateReceiver(detail) => UserError::new(
+            "shellAttention.createReceiver",
+            "Could not create the taskbar attention receiver.",
+        )
+        .detail(detail),
+        SourceError::Listen(detail) => {
+            UserError::new("shellAttention.listen", "Could not listen for taskbar attention.").detail(detail)
+        }
+    }
+}
 
 const START_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -54,10 +86,10 @@ impl Drop for ShellSubscription {
     }
 }
 
-pub(crate) fn subscribe(
+pub(super) fn subscribe_typed(
     matcher: ShellMatcher,
     callback: impl Fn(ReminderSignal) + Send + Sync + 'static,
-) -> Result<ShellSubscription, String> {
+) -> Result<ShellSubscription, UserError> {
     let hub = hub();
     let id = hub.next_id.fetch_add(1, Ordering::Relaxed);
     let mut runtime = hub.runtime.lock().unwrap_or_else(PoisonError::into_inner);
@@ -81,6 +113,14 @@ pub(crate) fn subscribe(
             callback: Arc::new(callback),
         });
     Ok(ShellSubscription { id })
+}
+
+#[allow(dead_code)]
+pub(crate) fn subscribe(
+    matcher: ShellMatcher,
+    callback: impl Fn(ReminderSignal) + Send + Sync + 'static,
+) -> Result<ShellSubscription, String> {
+    subscribe_typed(matcher, callback).map_err(|error| error.to_string())
 }
 
 #[allow(dead_code)]
@@ -127,8 +167,8 @@ fn unsubscribe(id: u64) {
     }
 }
 
-fn start_thread() -> Result<RunningLoop, String> {
-    let (ready_tx, ready_rx) = mpsc::sync_channel::<Result<isize, String>>(1);
+fn start_thread() -> Result<RunningLoop, UserError> {
+    let (ready_tx, ready_rx) = mpsc::sync_channel::<Result<isize, UserError>>(1);
     let handle = thread::Builder::new()
         .name("shell-attention".into())
         .spawn(move || {
@@ -143,18 +183,30 @@ fn start_thread() -> Result<RunningLoop, String> {
                     drop(listener);
                 }
                 Err(error) => {
-                    let _ = ready_tx.send(Err(error));
+                    let _ = ready_tx.send(Err(source_user_error(error)));
                 }
             }
         })
-        .map_err(|error| format!("无法启动任务栏提醒监听线程：{error}"))?;
+        .map_err(|error| {
+            UserError::new(
+                "shellAttention.startThread",
+                "Could not start the taskbar attention listener thread.",
+            )
+            .detail(error)
+        })?;
     match ready_rx.recv_timeout(START_TIMEOUT) {
         Ok(Ok(hwnd)) => Ok(RunningLoop { hwnd, handle }),
         Ok(Err(error)) => {
             let _ = handle.join();
             Err(error)
         }
-        Err(error) => Err(format!("任务栏提醒监听线程启动超时：{error}")),
+        Err(error) => Err(
+            UserError::new(
+                "shellAttention.startTimeout",
+                "Starting the taskbar attention listener thread timed out.",
+            )
+            .detail(error),
+        ),
     }
 }
 

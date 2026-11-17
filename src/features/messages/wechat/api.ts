@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type EventCallback } from "@tauri-apps/api/event";
+import type { NativeError } from "../../../i18n/nativeError";
 
 export type ReminderSnapshot = {
   revision: number;
@@ -7,11 +8,11 @@ export type ReminderSnapshot = {
   status: "disabled" | "waiting" | "listening" | "error" | "permissionRequired";
   pending: boolean;
   lastAttentionAt: number | null;
-  error: string | null;
+  error: NativeError | string | null;
   message: ChatMessage | null;
   items: ReminderItem[];
   exposeUi: boolean;
-  exposeStatus: string | null;
+  exposeStatus: NativeError | string | null;
   hideTaskbarButton: boolean;
 };
 

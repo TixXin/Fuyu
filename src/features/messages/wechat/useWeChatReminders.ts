@@ -1,5 +1,5 @@
 import { useErrorText, useTranslation } from "../../../i18n";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { setSourceEnabled } from "../plugin/useSourceSwitches";
 import { clearWeChatReminders, launchWeChat, listenWeChatReminderChanged, setWeChatExposeUi, setWeChatHideTaskbarButton, type ChatMessage, type ReminderSnapshot } from "./api";
@@ -132,10 +132,18 @@ export function useWeChatReminders(canPreview: boolean) {
   }), [run]);
 
   const dismissPreview = useCallback(() => setPreviewReceivedAt(null), []);
+  const localizedSnapshot = useMemo(
+    () => ({
+      ...snapshot,
+      error: snapshot.error ? errorText(snapshot.error) : null,
+      exposeStatus: snapshot.exposeStatus ? errorText(snapshot.exposeStatus) : null,
+    }),
+    [errorText, snapshot],
+  );
 
   const showing = canPreview && snapshot.pending && previewReceivedAt !== null;
   return {
-    snapshot, busy, actionError, setEnabled, setExposeUi, setHideTaskbarButton, openWeChat, clear, dismissPreview, ...autoClear,
+    snapshot: localizedSnapshot, busy, actionError, setEnabled, setExposeUi, setHideTaskbarButton, openWeChat, clear, dismissPreview, ...autoClear,
     previewReceivedAt: showing ? previewReceivedAt : null,
     previewMessage: showing ? previewMessage : null,
   };

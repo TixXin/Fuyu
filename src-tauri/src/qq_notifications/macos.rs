@@ -13,6 +13,7 @@ use crate::macos::{
     dock_badges::{self, Badge, DockSource},
 };
 use crate::messages_plugin::{self, SourceSwitch};
+use crate::user_error::UserError;
 
 pub(crate) use plugin_view::plugin_messages;
 
@@ -49,7 +50,7 @@ pub struct NotificationSnapshot {
     enabled: bool,
     status: NotificationStatus,
     items: Vec<QQNotification>,
-    error: Option<String>,
+    error: Option<UserError>,
 }
 
 impl Default for NotificationSnapshot {
@@ -103,10 +104,14 @@ fn now_ms() -> i64 {
         .unwrap_or_default()
 }
 
-fn service() -> Result<&'static Arc<NotificationService>, String> {
+fn service() -> Result<&'static Arc<NotificationService>, UserError> {
     SERVICE
         .get()
-        .ok_or_else(|| "The QQ reminder service is not ready yet.".to_string())
+        .ok_or_else(|| UserError::new("qq.notReady", "The QQ notification service is not ready yet."))
+}
+
+fn unavailable() -> UserError {
+    UserError::new("qq.unavailable", "The QQ notification state is unavailable.")
 }
 
 fn publish(
@@ -254,34 +259,34 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-fn snapshot() -> Result<NotificationSnapshot, String> {
+fn snapshot() -> Result<NotificationSnapshot, UserError> {
     Ok(service()?
         .state
         .lock()
-        .map_err(|_| "The QQ reminder state is unavailable.".to_string())?
+        .map_err(|_| unavailable())?
         .snapshot
         .clone())
 }
 
 #[tauri::command]
-pub fn get_qq_notification_state() -> Result<NotificationSnapshot, String> {
+pub fn get_qq_notification_state() -> Result<NotificationSnapshot, UserError> {
     snapshot()
 }
 
 pub(crate) fn diagnostic_state() -> Result<serde_json::Value, String> {
-    let snapshot = snapshot()?;
+    let snapshot = snapshot().map_err(|error| error.to_string())?;
     Ok(serde_json::json!({ "enabled": snapshot.enabled, "status": snapshot.status, "items": snapshot.items.len() }))
 }
 
 fn update(
     change: impl FnOnce(&mut NotificationState) -> bool,
-) -> Result<NotificationSnapshot, String> {
+) -> Result<NotificationSnapshot, UserError> {
     let service = service()?;
     let (snapshot, changed) = {
         let mut state = service
             .state
             .lock()
-            .map_err(|_| "The QQ reminder state is unavailable.".to_string())?;
+            .map_err(|_| unavailable())?;
         let changed = change(&mut state);
         if changed {
             state.snapshot.revision += 1;
@@ -295,7 +300,7 @@ fn update(
 }
 
 #[tauri::command]
-pub fn set_qq_auto_clear(enabled: bool) -> Result<NotificationSnapshot, String> {
+pub fn set_qq_auto_clear(enabled: bool) -> Result<NotificationSnapshot, UserError> {
     update(|state| {
         state.auto_clear = enabled;
         false
@@ -303,7 +308,7 @@ pub fn set_qq_auto_clear(enabled: bool) -> Result<NotificationSnapshot, String> 
 }
 
 #[tauri::command]
-pub fn clear_qq_notifications() -> Result<NotificationSnapshot, String> {
+pub fn clear_qq_notifications() -> Result<NotificationSnapshot, UserError> {
     update(|state| {
         let had = !state.snapshot.items.is_empty();
         state.snapshot.items.clear();
@@ -312,26 +317,31 @@ pub fn clear_qq_notifications() -> Result<NotificationSnapshot, String> {
 }
 
 #[tauri::command]
-pub async fn request_qq_notification_access() -> Result<String, String> {
+pub async fn request_qq_notification_access() -> Result<String, UserError> {
     if accessibility::is_trusted() {
         return Ok("allowed".to_string());
     }
-    dock_badges::open_accessibility_settings()?;
+    dock_badges::open_accessibility_settings()
+        .map_err(|error| UserError::new("qq.openSettings", "Could not open Accessibility settings.").detail(error))?;
     Ok("unspecified".to_string())
 }
 
 #[tauri::command]
-pub fn open_qq_notification_settings(access: bool) -> Result<(), String> {
+pub fn open_qq_notification_settings(access: bool) -> Result<(), UserError> {
     let _ = access;
     dock_badges::open_accessibility_settings()
+        .map_err(|error| UserError::new("qq.openSettings", "Could not open Accessibility settings.").detail(error))
 }
 
 #[tauri::command]
-pub async fn open_qq() -> Result<(), String> {
+pub async fn open_qq() -> Result<(), UserError> {
     let asked_at = now_ms();
-    tauri::async_runtime::spawn_blocking(|| dock_badges::open_app(BUNDLE_ID))
-        .await
-        .map_err(|error| error.to_string())??;
+    tauri::async_runtime::spawn_blocking(|| {
+        dock_badges::open_app(BUNDLE_ID)
+            .map_err(|error| UserError::new("qq.openApp", "Could not open QQ.").detail(error))
+    })
+    .await
+    .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))??;
     update(|state| state.forget_seen(asked_at)).map(|_| ())
 }
 
