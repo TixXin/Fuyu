@@ -2,7 +2,8 @@ use std::{ffi::c_void, ptr::NonNull};
 
 use objc2_core_audio::{
     kAudioDevicePropertyDeviceIsRunningSomewhere, kAudioDevicePropertyDeviceUID, kAudioDevicePropertyStreams,
-    kAudioHardwarePropertyProcessObjectList, kAudioProcessPropertyIsRunningInput, kAudioProcessPropertyPID, kAudioDevicePropertyTransportType,
+    kAudioHardwarePropertyProcessObjectList, kAudioProcessPropertyIsRunningInput, kAudioProcessPropertyIsRunningOutput,
+    kAudioProcessPropertyPID, kAudioDevicePropertyTransportType,
     kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE, kAudioDeviceTransportTypeUSB,
     kAudioHardwarePropertyDevices, kAudioObjectPropertyElementMain, kAudioObjectPropertyName, kAudioObjectPropertyScopeGlobal,
     kAudioObjectPropertyScopeInput, kAudioObjectPropertyScopeOutput, kAudioObjectSystemObject, AudioObjectGetPropertyData,
@@ -82,6 +83,18 @@ pub(crate) fn recording_pids() -> Option<Vec<i32>> {
         processes
             .into_iter()
             .filter(|&process| global_u32(process, kAudioProcessPropertyIsRunningInput).is_some_and(|running| running != 0))
+            .filter_map(|process| read::<i32>(process, kAudioProcessPropertyPID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain))
+            .filter(|&pid| pid > 0)
+            .collect(),
+    )
+}
+
+pub(crate) fn playing_pids() -> Option<Vec<i32>> {
+    let processes = system_list(kAudioHardwarePropertyProcessObjectList)?;
+    Some(
+        processes
+            .into_iter()
+            .filter(|&process| global_u32(process, kAudioProcessPropertyIsRunningOutput).is_some_and(|running| running != 0))
             .filter_map(|process| read::<i32>(process, kAudioProcessPropertyPID, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMain))
             .filter(|&pid| pid > 0)
             .collect(),

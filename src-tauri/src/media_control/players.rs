@@ -21,10 +21,9 @@ pub(crate) struct KnownPlayer {
     pub(crate) needles: &'static [&'static str],
     pub(crate) label: &'static str,
     pub(crate) title_suffixes: &'static [&'static str],
-    #[cfg_attr(not(windows), allow(dead_code))]
     pub(crate) standalone: bool,
-    #[cfg_attr(not(windows), allow(dead_code))]
     pub(crate) web_title_match: bool,
+    pub(crate) artist_first: bool,
 }
 
 const fn known(
@@ -33,81 +32,90 @@ const fn known(
     title_suffixes: &'static [&'static str],
     standalone: bool,
     web_title_match: bool,
+    artist_first: bool,
 ) -> KnownPlayer {
-    KnownPlayer { needles, label, title_suffixes, standalone, web_title_match }
+    KnownPlayer { needles, label, title_suffixes, standalone, web_title_match, artist_first }
 }
 
 pub(crate) const KNOWN_PLAYERS: &[KnownPlayer] = &[
-    known(&["xtmusic", "fnmusic", "feiniumusic", "feiniu-music", "fnnas-music", "feiniu", "飞牛音乐"], "飞牛音乐", &["飞牛音乐", "xtMusic", "FnMusic", "FeiNiuMusic", "飞牛私有云音乐"], true, true),
-    known(&["streammusic", "stream-music", "音流"], "音流", &["音流", "Stream Music", "StreamMusic"], true, false),
-    known(&["feishin"], "Feishin", &["Feishin"], true, true),
-    known(&["supersonic"], "Supersonic", &["Supersonic"], true, false),
-    known(&["sonixd"], "Sonixd", &["Sonixd"], true, false),
-    known(&["aonsoku"], "Aonsoku", &["Aonsoku"], true, false),
-    known(&["navidrome"], "Navidrome", &["Navidrome"], true, true),
-    known(&["plexamp"], "Plexamp", &["Plexamp"], true, false),
-    known(&["finamp"], "Finamp", &["Finamp"], true, false),
-    known(&["roon", "roonappliance"], "Roon", &["Roon"], true, false),
-    known(&["audirvana"], "Audirvana", &["Audirvana", "Audirvāna"], true, false),
-    known(&["netease", "cloudmusic", "163music"], "NetEase Music", &["网易云音乐", "NetEase Cloud Music", "CloudMusic"], true, true),
-    known(&["yesplaymusic"], "YesPlayMusic", &["YesPlayMusic"], true, true),
-    known(&["splayer"], "SPlayer", &["SPlayer"], true, false),
-    known(&["lyricease"], "LyricEase", &["LyricEase"], true, false),
-    known(&["algermusicplayer", "algermusic"], "AlgerMusic", &["AlgerMusicPlayer", "AlgerMusic"], true, false),
-    known(&["qqmusic"], "QQ Music", &["QQ音乐", "QQ Music", "QQMusic"], true, true),
-    known(&["kugou"], "KuGou", &["酷狗音乐", "酷狗概念版", "KuGou"], true, false),
-    known(&["kuwo", "kwmusic"], "Kuwo", &["酷我音乐", "Kuwo"], true, false),
-    known(&["sodamusic", "qishui", "汽水音乐"], "汽水音乐", &["汽水音乐", "Soda Music", "SodaMusic"], true, true),
-    known(&["lx-music", "lxmusic", "洛雪音乐"], "LX Music", &["洛雪音乐", "洛雪音乐助手", "LX Music", "lx-music-desktop"], true, false),
-    known(&["musicfree"], "MusicFree", &["MusicFree"], true, false),
-    known(&["listen1", "listen 1"], "Listen 1", &["Listen 1", "Listen1"], true, true),
-    known(&["ttplayer", "qianqian", "千千音乐", "千千静听"], "千千音乐", &["千千音乐", "千千静听", "TTPlayer"], true, false),
-    known(&["migumusic", "咪咕音乐"], "咪咕音乐", &["咪咕音乐", "Migu Music"], true, false),
-    known(&["bodian", "波点音乐"], "波点音乐", &["波点音乐"], true, false),
-    known(&["saltplayer", "椒盐音乐"], "Salt Player", &["椒盐音乐", "Salt Player", "SaltPlayer"], true, false),
-    known(&["fongermusic", "方格音乐"], "方格音乐", &["方格音乐", "FongerMusic"], true, false),
-    known(&["cider"], "Cider", &["Cider"], true, false),
-    known(&["spotify"], "Spotify", &["Spotify", "Spotify Free", "Spotify Premium"], true, false),
-    known(&["spotube"], "Spotube", &["Spotube"], true, false),
-    known(&["apple.music", "applemusic", "music.ui", "com.apple.music"], "Apple Music", &["Apple Music"], true, false),
-    known(&["itunes", "com.apple.itunes"], "iTunes", &["iTunes"], true, false),
-    known(&["tidal"], "TIDAL", &["TIDAL"], true, false),
-    known(&["deezer"], "Deezer", &["Deezer"], true, false),
-    known(&["qobuz"], "Qobuz", &["Qobuz"], true, false),
-    known(&["amazonmusic", "amazon music"], "Amazon Music", &["Amazon Music"], true, false),
-    known(&["youtube-music", "youtubemusic", "ytmdesktop"], "YouTube Music", &["YouTube Music"], true, true),
-    known(&["nuclear"], "Nuclear", &["Nuclear"], true, false),
-    known(&["foobar2000", "foobar"], "foobar2000", &["foobar2000"], true, false),
-    known(&["musicbee"], "MusicBee", &["MusicBee"], true, false),
-    known(&["aimp"], "AIMP", &["AIMP"], true, false),
-    known(&["winamp"], "Winamp", &["Winamp"], true, false),
-    known(&["wacup"], "WACUP", &["WACUP"], true, false),
-    known(&["dopamine"], "Dopamine", &["Dopamine"], true, false),
-    known(&["harmonoid"], "Harmonoid", &["Harmonoid"], true, false),
-    known(&["tauonmb", "tauon"], "Tauon", &["Tauon Music Box", "Tauon"], true, false),
-    known(&["strawberry"], "Strawberry", &["Strawberry"], true, false),
-    known(&["clementine"], "Clementine", &["Clementine"], true, false),
-    known(&["elisa"], "Elisa", &["Elisa"], true, false),
-    known(&["audacious"], "Audacious", &["Audacious"], true, false),
-    known(&["deadbeef"], "DeaDBeeF", &["DeaDBeeF"], true, false),
-    known(&["mediamonkey"], "MediaMonkey", &["MediaMonkey"], true, false),
-    known(&["resonic"], "Resonic", &["Resonic"], true, false),
-    known(&["mcool"], "Mcool", &["Mcool"], true, false),
-    known(&["tuneblade"], "TuneBlade", &["TuneBlade"], true, false),
-    known(&["vlc"], "VLC", &["VLC media player", "VLC"], true, false),
-    known(&["potplayer"], "PotPlayer", &["PotPlayer"], true, false),
-    known(&["mpv"], "mpv", &["mpv"], true, false),
-    known(&["mpc-hc", "mpc-be"], "MPC", &["Media Player Classic", "MPC-HC", "MPC-BE"], true, false),
-    known(&["kmplayer"], "KMPlayer", &["KMPlayer"], true, false),
-    known(&["wmplayer"], "Windows Media Player", &["Windows Media Player"], true, false),
-    known(&["zune", "groove"], "Groove", &["Groove Music", "Groove"], true, false),
-    known(&["chrome"], "Chrome", &["Google Chrome", "Chrome"], false, false),
-    known(&["msedge", "edge"], "Edge", &["Microsoft Edge", "Microsoft\u{200b} Edge", "Edge"], false, false),
-    known(&["firefox"], "Firefox", &["Mozilla Firefox", "Firefox"], false, false),
-    known(&["brave"], "Brave", &["Brave"], false, false),
-    known(&["opera"], "Opera", &["Opera"], false, false),
-    known(&["vivaldi"], "Vivaldi", &["Vivaldi"], false, false),
-    known(&["arc"], "Arc", &["Arc"], false, false),
+    known(&["xtmusic", "fnmusic", "feiniumusic", "feiniu-music", "fnnas-music", "feiniu", "飞牛音乐"], "飞牛音乐", &["飞牛音乐", "xtMusic", "FnMusic", "FeiNiuMusic", "飞牛私有云音乐"], true, true, false),
+    known(&["streammusic", "stream-music", "音流"], "音流", &["音流", "Stream Music", "StreamMusic"], true, false, false),
+    known(&["feishin"], "Feishin", &["Feishin"], true, true, false),
+    known(&["supersonic"], "Supersonic", &["Supersonic"], true, false, false),
+    known(&["sonixd"], "Sonixd", &["Sonixd"], true, false, false),
+    known(&["aonsoku"], "Aonsoku", &["Aonsoku"], true, false, false),
+    known(&["navidrome"], "Navidrome", &["Navidrome"], true, true, false),
+    known(&["plexamp"], "Plexamp", &["Plexamp"], true, false, false),
+    known(&["finamp"], "Finamp", &["Finamp"], true, false, false),
+    known(&["roon", "roonappliance"], "Roon", &["Roon"], true, false, false),
+    known(&["audirvana"], "Audirvana", &["Audirvana", "Audirvāna"], true, false, false),
+    known(&["netease", "cloudmusic", "163music"], "NetEase Music", &["网易云音乐", "NetEase Cloud Music", "CloudMusic"], true, true, false),
+    known(&["yesplaymusic"], "YesPlayMusic", &["YesPlayMusic"], true, true, false),
+    known(&["splayer"], "SPlayer", &["SPlayer"], true, false, false),
+    known(&["lyricease"], "LyricEase", &["LyricEase"], true, false, false),
+    known(&["algermusicplayer", "algermusic"], "AlgerMusic", &["AlgerMusicPlayer", "AlgerMusic"], true, false, false),
+    known(&["qqmusic"], "QQ Music", &["QQ音乐", "QQ Music", "QQMusic"], true, true, false),
+    known(&["kugou"], "KuGou", &["酷狗音乐", "酷狗概念版", "KuGou"], true, false, false),
+    known(&["kuwo", "kwmusic"], "Kuwo", &["酷我音乐", "Kuwo"], true, false, false),
+    known(&["sodamusic", "qishui", "汽水音乐"], "汽水音乐", &["汽水音乐", "Soda Music", "SodaMusic"], true, true, false),
+    known(&["lx-music", "lxmusic", "洛雪音乐"], "LX Music", &["洛雪音乐", "洛雪音乐助手", "LX Music", "lx-music-desktop"], true, false, false),
+    known(&["musicfree"], "MusicFree", &["MusicFree"], true, false, false),
+    known(&["listen1", "listen 1"], "Listen 1", &["Listen 1", "Listen1"], true, true, false),
+    known(&["tongzhong", "铜钟"], "铜钟", &["铜钟", "Tongzhong"], true, true, false),
+    known(&["ttplayer", "qianqian", "千千音乐", "千千静听"], "千千音乐", &["千千音乐", "千千静听", "TTPlayer"], true, false, false),
+    known(&["migumusic", "咪咕音乐"], "咪咕音乐", &["咪咕音乐", "Migu Music"], true, false, false),
+    known(&["bodian", "波点音乐"], "波点音乐", &["波点音乐"], true, false, false),
+    known(&["saltplayer", "椒盐音乐"], "Salt Player", &["椒盐音乐", "Salt Player", "SaltPlayer"], true, false, false),
+    known(&["fongermusic", "方格音乐"], "方格音乐", &["方格音乐", "FongerMusic"], true, false, false),
+    known(&["hibymusic", "海贝音乐"], "HiBy Music", &["海贝音乐", "HiBy Music", "HiByMusic"], true, false, false),
+    known(&["cider"], "Cider", &["Cider"], true, false, false),
+    known(&["spotify"], "Spotify", &["Spotify", "Spotify Free", "Spotify Premium"], true, false, false),
+    known(&["spotube"], "Spotube", &["Spotube"], true, false, false),
+    known(&["apple.music", "applemusic", "music.ui", "com.apple.music"], "Apple Music", &["Apple Music"], true, false, false),
+    known(&["itunes", "com.apple.itunes"], "iTunes", &["iTunes"], true, false, false),
+    known(&["tidal"], "TIDAL", &["TIDAL"], true, false, false),
+    known(&["deezer"], "Deezer", &["Deezer"], true, false, false),
+    known(&["qobuz"], "Qobuz", &["Qobuz"], true, false, false),
+    known(&["amazonmusic", "amazon music"], "Amazon Music", &["Amazon Music"], true, false, false),
+    known(&["youtube-music", "youtubemusic", "ytmdesktop"], "YouTube Music", &["YouTube Music"], true, true, false),
+    known(&["nuclear"], "Nuclear", &["Nuclear"], true, false, false),
+    known(&["foobar2000", "foobar"], "foobar2000", &["foobar2000"], true, false, true),
+    known(&["musicbee"], "MusicBee", &["MusicBee"], true, false, true),
+    known(&["aimp"], "AIMP", &["AIMP"], true, false, true),
+    known(&["winamp"], "Winamp", &["Winamp"], true, false, true),
+    known(&["wacup"], "WACUP", &["WACUP"], true, false, true),
+    known(&["dopamine"], "Dopamine", &["Dopamine"], true, false, false),
+    known(&["harmonoid"], "Harmonoid", &["Harmonoid"], true, false, false),
+    known(&["tauonmb", "tauon"], "Tauon", &["Tauon Music Box", "Tauon"], true, false, false),
+    known(&["strawberry"], "Strawberry", &["Strawberry"], true, false, true),
+    known(&["clementine"], "Clementine", &["Clementine"], true, false, true),
+    known(&["elisa"], "Elisa", &["Elisa"], true, false, false),
+    known(&["audacious"], "Audacious", &["Audacious"], true, false, true),
+    known(&["deadbeef"], "DeaDBeeF", &["DeaDBeeF"], true, false, true),
+    known(&["mediamonkey"], "MediaMonkey", &["MediaMonkey"], true, false, true),
+    known(&["resonic"], "Resonic", &["Resonic"], true, false, false),
+    known(&["mcool"], "Mcool", &["Mcool"], true, false, false),
+    known(&["tuneblade"], "TuneBlade", &["TuneBlade"], true, false, false),
+    known(&["swinsian"], "Swinsian", &["Swinsian"], true, false, false),
+    known(&["com.coppertino.vox", "vox"], "VOX", &["VOX"], true, false, false),
+    known(&["org.cogx.cog", "cog"], "Cog", &["Cog"], true, false, true),
+    known(&["pine player", "pineplayer"], "Pine Player", &["Pine Player"], true, false, true),
+    known(&["doppler"], "Doppler", &["Doppler"], true, false, false),
+    known(&["com.colliderli.iina", "iina"], "IINA", &["IINA"], true, false, false),
+    known(&["vlc"], "VLC", &["VLC media player", "VLC"], true, false, false),
+    known(&["potplayer"], "PotPlayer", &["PotPlayer"], true, false, false),
+    known(&["mpv"], "mpv", &["mpv"], true, false, false),
+    known(&["mpc-hc", "mpc-be"], "MPC", &["Media Player Classic", "MPC-HC", "MPC-BE"], true, false, false),
+    known(&["kmplayer"], "KMPlayer", &["KMPlayer"], true, false, false),
+    known(&["wmplayer"], "Windows Media Player", &["Windows Media Player"], true, false, false),
+    known(&["zune", "groove"], "Groove", &["Groove Music", "Groove"], true, false, false),
+    known(&["chrome"], "Chrome", &["Google Chrome", "Chrome"], false, false, false),
+    known(&["msedge", "edge"], "Edge", &["Microsoft Edge", "Microsoft\u{200b} Edge", "Edge"], false, false, false),
+    known(&["firefox"], "Firefox", &["Mozilla Firefox", "Firefox"], false, false, false),
+    known(&["brave"], "Brave", &["Brave"], false, false, false),
+    known(&["opera"], "Opera", &["Opera"], false, false, false),
+    known(&["vivaldi"], "Vivaldi", &["Vivaldi"], false, false, false),
+    known(&["arc"], "Arc", &["Arc"], false, false, false),
 ];
 
 const BROWSER_SUFFIXES: &[&str] = &[
@@ -307,6 +315,28 @@ pub(crate) fn friendly_app_label(id: &str) -> String {
     friendly_app_label_with_custom(id, &custom_players_snapshot())
 }
 
+#[cfg(any(windows, test))]
+pub(crate) fn packaged_executable_candidates(source_app: &str) -> Vec<&'static str> {
+    let lowered = source_app.to_lowercase();
+    if lowered.contains("spotify") {
+        vec!["Spotify.exe"]
+    } else if lowered.contains("applemusic") || lowered.contains("apple.music") {
+        vec!["AppleMusic.exe", "Music.UI.exe"]
+    } else if lowered.contains("itunes") {
+        vec!["iTunes.exe"]
+    } else if lowered.contains("tidal") {
+        vec!["TIDAL.exe"]
+    } else if lowered.contains("deezer") {
+        vec!["Deezer.exe"]
+    } else if lowered.contains("qobuz") {
+        vec!["Qobuz.exe"]
+    } else if lowered.contains("zune") || lowered.contains("groove") {
+        vec!["Music.UI.exe"]
+    } else {
+        Vec::new()
+    }
+}
+
 pub(crate) fn is_browser_executable(exe_or_id: &str) -> bool {
     let lowered = exe_or_id.to_lowercase();
     let stem = lowered
@@ -317,11 +347,10 @@ pub(crate) fn is_browser_executable(exe_or_id: &str) -> bool {
         .unwrap_or(&lowered);
     matches!(
         stem,
-        "chrome" | "msedge" | "edge" | "firefox" | "brave" | "opera" | "vivaldi" | "arc" | "safari"
+        "chrome" | "msedge" | "edge" | "firefox" | "brave" | "opera" | "vivaldi" | "arc" | "safari" | "google chrome" | "microsoft edge"
     )
 }
 
-#[cfg_attr(not(windows), allow(dead_code))]
 pub(crate) fn match_music_player(
     exe_or_id: &str,
     window_title: &str,
@@ -362,7 +391,6 @@ pub(crate) fn match_music_player(
     None
 }
 
-#[cfg_attr(not(windows), allow(dead_code))]
 fn title_mentions_player(title: &str, player: &KnownPlayer) -> bool {
     for suffix in player.title_suffixes {
         if title.eq_ignore_ascii_case(suffix) {
@@ -468,6 +496,28 @@ fn strip_player_affixes<'a>(mut text: &'a str, app_label: &str) -> &'a str {
 
 const SEPARATOR_CHARS: &[&str] = &[" - ", " – ", " — ", " / "];
 
+fn strip_leading_track_number(text: &str) -> &str {
+    let bytes = text.as_bytes();
+    let digits = bytes.iter().take_while(|byte| byte.is_ascii_digit()).count();
+    if (1..=3).contains(&digits) {
+        if let Some(rest) = text[digits..].strip_prefix(". ") {
+            let trimmed = rest.trim();
+            if !trimmed.is_empty() {
+                return trimmed;
+            }
+        }
+    }
+    text
+}
+
+fn is_artist_first_player(app_label: &str) -> bool {
+    KNOWN_PLAYERS.iter().any(|player| {
+        player.artist_first
+            && (player.label.eq_ignore_ascii_case(app_label)
+                || player.needles.iter().any(|needle| app_label.to_lowercase().contains(needle)))
+    })
+}
+
 fn is_bare_player_title(text: &str, app_label: &str) -> bool {
     if text.is_empty() || text.eq_ignore_ascii_case(app_label) {
         return true;
@@ -499,16 +549,22 @@ pub(crate) fn parse_window_track(
     }
     text = strip_browser_suffix(text);
     text = strip_player_affixes(text, app_label);
+    text = strip_leading_track_number(text);
     if is_bare_player_title(text, app_label) {
         return None;
     }
 
+    let artist_first = is_artist_first_player(app_label);
     for sep in [" - ", " – ", " — "] {
         if let Some((first, rest)) = text.split_once(sep) {
-            let title = first.trim();
-            let artist = rest.split(sep).next().unwrap_or(rest).trim();
-            if !title.is_empty() && !artist.is_empty() && !is_bare_player_title(artist, app_label) {
-                return Some((title.to_string(), Some(artist.to_string())));
+            let left = first.trim();
+            let right = rest.split(sep).next().unwrap_or(rest).trim();
+            if !left.is_empty() && !right.is_empty() && !is_bare_player_title(right, app_label) {
+                return if artist_first {
+                    Some((right.to_string(), Some(left.to_string())))
+                } else {
+                    Some((left.to_string(), Some(right.to_string())))
+                };
             }
         }
     }

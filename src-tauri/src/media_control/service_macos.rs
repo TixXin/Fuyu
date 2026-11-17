@@ -4,12 +4,13 @@ use super::adapter_macos::{self as adapter, Snapshot};
 use super::applescript_macos::{self as applescript, Track};
 use super::players::{
     custom_players_snapshot, default_player_label, friendly_app_label, is_browser_executable,
-    normalize_metadata_track, normalize_player_id, CustomMediaPlayer,
+    match_music_player, normalize_metadata_track, normalize_player_id, parse_window_track,
+    CustomMediaPlayer,
 };
 pub(crate) use super::state::{AudioLevel, MediaCommand, MediaSessionInfo, MediaState};
 use super::state::current_unix_millis;
 use super::timeline_clock::{self, track_key, Published};
-use crate::macos::{apps, audio};
+use crate::macos::{accessibility, apps, audio, audio_devices};
 
 const MAX_ARTWORK_BASE64: usize = 5_400_000;
 const PLAYING_PEAK: f32 = 0.4;
@@ -155,11 +156,73 @@ pub(crate) fn list_candidates() -> Vec<CustomMediaPlayer> {
     out
 }
 
-pub(crate) fn get_state(_target: Option<String>) -> Result<MediaState, String> {
-    if adapter::is_working() {
-        return Ok(adapter::snapshot().map_or_else(|| MediaState { volume: volume(), ..MediaState::empty() }, |snapshot| from_snapshot(&snapshot)));
+fn from_audio_process() -> Option<MediaState> {
+    let pids = audio_devices::playing_pids()?;
+    let own = i32::try_from(std::process::id()).ok()?;
+    let own = apps::responsible_pid(own);
+    let custom = custom_players_snapshot();
+
+    for raw_pid in pids {
+        let pid = apps::responsible_pid(raw_pid);
+        if pid <= 0 || pid == own {
+            continue;
+        }
+        let Some(name) = apps::display_name(pid).or_else(|| apps::path(pid)) else {
+            continue;
+        };
+        let window_title = accessibility::app_windows(pid)
+            .into_iter()
+            .map(|(_, title)| title.trim().to_string())
+            .filter(|title| !title.is_empty())
+            .max_by_key(String::len)
+            .unwrap_or_default();
+        let Some((id, label)) = match_music_player(&name, &window_title, &custom) else {
+            continue;
+        };
+        let (title, artist) = match parse_window_track(&window_title, &label) {
+            Some((song, singer)) => (Some(song), singer),
+            None => (None, None),
+        };
+        return Some(MediaState {
+            available: true,
+            audio_active: true,
+            audio_peak: PLAYING_PEAK,
+            playback_status: "playing",
+            title,
+            artist,
+            can_next: true,
+            can_previous: true,
+            volume: volume(),
+            sessions: vec![MediaSessionInfo {
+                id: id.clone(),
+                label,
+                playing: true,
+            }],
+            active_session_id: Some(id.clone()),
+            source_app: Some(id),
+            updated_at: current_unix_millis(),
+            ..MediaState::empty()
+        });
     }
-    Ok(from_track(applescript::current()))
+    None
+}
+
+pub(crate) fn get_state(_target: Option<String>) -> Result<MediaState, String> {
+    let primary = if adapter::is_working() {
+        adapter::snapshot().map_or_else(
+            || MediaState { volume: volume(), ..MediaState::empty() },
+            |snapshot| from_snapshot(&snapshot),
+        )
+    } else {
+        from_track(applescript::current())
+    };
+    if primary.playback_status == "playing" {
+        return Ok(primary);
+    }
+    if let Some(fallback) = from_audio_process() {
+        return Ok(fallback);
+    }
+    Ok(primary)
 }
 
 pub(crate) fn get_audio_level() -> Result<AudioLevel, String> {

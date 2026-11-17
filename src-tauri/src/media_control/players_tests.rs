@@ -12,6 +12,8 @@ fn recognizes_domestic_and_international_music_players() {
     assert_eq!(friendly_app_label("SodaMusic.exe"), "汽水音乐");
     assert_eq!(friendly_app_label("MusicFree.exe"), "MusicFree");
     assert_eq!(friendly_app_label("Listen1.exe"), "Listen 1");
+    assert_eq!(friendly_app_label("tongzhong.exe"), "铜钟");
+    assert_eq!(friendly_app_label("HiByMusic.exe"), "HiBy Music");
     assert_eq!(friendly_app_label("foobar2000.exe"), "foobar2000");
     assert_eq!(friendly_app_label("MusicBee.exe"), "MusicBee");
     assert_eq!(friendly_app_label("AIMP.exe"), "AIMP");
@@ -19,6 +21,10 @@ fn recognizes_domestic_and_international_music_players() {
     assert_eq!(friendly_app_label("Roon.exe"), "Roon");
     assert_eq!(friendly_app_label("Cider.exe"), "Cider");
     assert_eq!(friendly_app_label("Spotube.exe"), "Spotube");
+    assert_eq!(friendly_app_label("Swinsian"), "Swinsian");
+    assert_eq!(friendly_app_label("com.coppertino.VOX"), "VOX");
+    assert_eq!(friendly_app_label("org.cogx.cog"), "Cog");
+    assert_eq!(friendly_app_label("com.colliderli.iina"), "IINA");
 }
 
 #[test]
@@ -76,8 +82,15 @@ fn parses_song_and_artist_from_player_window_titles() {
         Some(("七里香".to_string(), Some("周杰伦".to_string())))
     );
     assert_eq!(
-        parse_window_track("Yesterday - The Beatles [foobar2000 v2.1.5]", "foobar2000"),
+        parse_window_track(
+            "01. The Beatles - Yesterday [foobar2000 v2.1.5]",
+            "foobar2000"
+        ),
         Some(("Yesterday".to_string(), Some("The Beatles".to_string())))
+    );
+    assert_eq!(
+        parse_window_track("2. 周杰伦 - 晴天 - AIMP", "AIMP"),
+        Some(("晴天".to_string(), Some("周杰伦".to_string())))
     );
     assert_eq!(parse_window_track("飞牛音乐", "飞牛音乐"), None);
     assert_eq!(parse_window_track("xtMusic", "飞牛音乐"), None);
@@ -101,5 +114,13 @@ fn splits_combined_metadata_titles_when_artist_is_missing() {
             Some("xtMusic.exe")
         ),
         (Some("稻香".to_string()), Some("周杰伦".to_string()))
+    );
+    assert_eq!(
+        packaged_executable_candidates("SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"),
+        vec!["Spotify.exe"]
+    );
+    assert_eq!(
+        packaged_executable_candidates("AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"),
+        vec!["AppleMusic.exe", "Music.UI.exe"]
     );
 }
