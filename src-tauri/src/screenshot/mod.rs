@@ -289,9 +289,15 @@ pub fn screenshot_long_end(action: String, folder: Option<String>, folder_name: 
 
 fn remember(app: &AppHandle, picture: &Picture) {
     let app = app.clone();
-    let copy = Picture { width: picture.width, height: picture.height, rgba: picture.rgba.clone() };
+    let png = match output::encode_png(picture) {
+        Ok(png) => png,
+        Err(error) => {
+            eprintln!("screenshot not kept in the history: {error}");
+            return;
+        }
+    };
     std::thread::spawn(move || {
-        match output::encode_png(&copy).and_then(|png| output::keep_png(&app, &png)) {
+        match output::keep_png(&app, &png) {
             Ok(_) => {
                 let _ = app.emit(HISTORY_EVENT, ());
             }

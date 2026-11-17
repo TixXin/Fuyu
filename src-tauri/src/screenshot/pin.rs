@@ -22,6 +22,7 @@ const MAX_SCALE: f64 = 8.0;
 const MIN_SIDE: f64 = 16.0;
 const HANDOFF_TIMEOUT: Duration = Duration::from_millis(600);
 const SWAP_DELAY: Duration = Duration::from_millis(50);
+const MAX_PINS: usize = 20;
 
 struct Pin {
     picture: Arc<Picture>,
@@ -139,7 +140,25 @@ fn place(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session:
     let info = PinInfo { width: picture.width, height: picture.height };
     let shown = shown_size((picture.width, picture.height), density);
     let (width, height) = (shown.0 + margin * 2, shown.1 + margin * 2);
-    pins().insert(label.clone(), Pin { picture: Arc::new(picture), margin, density, session });
+    let evicted = {
+        let mut guard = pins();
+        let mut to_remove = Vec::new();
+        while guard.len() >= MAX_PINS {
+            if let Some(oldest) = guard.keys().next().cloned() {
+                guard.remove(&oldest);
+                to_remove.push(oldest);
+            } else {
+                break;
+            }
+        }
+        guard.insert(label.clone(), Pin { picture: Arc::new(picture), margin, density, session });
+        to_remove
+    };
+    for old_label in evicted {
+        if let Some(old) = app.get_webview_window(&old_label) {
+            let _ = old.destroy();
+        }
+    }
     let placed = screen::set_window_position(&window, PhysicalPosition::new(at.0 - margin as i32, at.1 - margin as i32))
         .and_then(|()| screen::set_window_size(&window, PhysicalSize::new(width, height)));
     if let Err(error) = placed {
