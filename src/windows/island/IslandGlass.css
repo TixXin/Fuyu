@@ -178,3 +178,17 @@
     animation: none;
   }
 }
+
+.island--appearance-liquidGlass.island--glass-hidden {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.island--appearance-liquidGlass.island--glass-hidden .island__glass {
+  display: none;
+}
+
+.island--tucked .island__glass::before,
+.island--tucked .island__glass-highlight {
+  display: none;
+}

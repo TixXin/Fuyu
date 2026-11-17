@@ -58,7 +58,7 @@ export function useIslandGlass({
   );
   const paused = glassPaused(settings, { mode, isTucked, quiet, hidden, reducedMotion });
   const glass: IslandGlassView = {
-    className: glassClassNames(settings, paused),
+    className: glassClassNames(settings, paused, hidden),
     palette,
     shader: settings.glassStyle === "shader",
     specular: settings.glassSpecular,

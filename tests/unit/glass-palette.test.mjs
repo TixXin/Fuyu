@@ -91,6 +91,15 @@ test("variables and class names follow the settings", () => {
     "island--glass-specular",
     "island--glass-style-flow",
   ]);
+  const hiddenNames = glassClassNames({ ...DEFAULT_GLASS_SETTINGS, glassRim: true }, true, true).split(" ");
+  assert.deepEqual(hiddenNames.sort(), [
+    "island--glass-hidden",
+    "island--glass-morph-smooth",
+    "island--glass-paused",
+    "island--glass-rim",
+    "island--glass-specular",
+    "island--glass-style-flow",
+  ]);
 });
 
 test("old settings without the new fields read the defaults", () => {
