@@ -23,6 +23,9 @@ export interface PluginStatusV3 {
   state: string;
   kind?: PluginKindV3;
   waitingFor?: string[];
+  provides?: string[];
+  disabledServices?: string[];
+  replacedServices?: { service: string; by: string }[];
   error?: string;
   reason?: string;
   blocked?: { by: "errors"; errors: number; windowMs: number } | { by: "safe-mode"; mode: "third-party" | "minimal" };

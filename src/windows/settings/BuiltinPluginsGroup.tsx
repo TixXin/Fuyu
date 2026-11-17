@@ -11,9 +11,10 @@ import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { switchBuiltinPlugin } from "../../features/plugin-kernel/builtinSwitches";
+import { explainReplacedServices, explainWaitingFor, stateOf } from "./pluginServiceStatus";
 import type { PluginStatusV3 } from "./usePluginHostStatus";
 
-const STATES: readonly PluginV3State[] = ["running", "waiting", "failed", "disabled", "auto-disabled", "safe-mode", "loading", "stopped", "unloading"];
+export { stateOf };
 
 export const TONES: Record<PluginV3State, string> = {
   running: "ok", waiting: "warn", loading: "warn", failed: "bad",
@@ -36,24 +37,31 @@ export const BUILTIN_ICONS: Record<BuiltinPluginName, LucideIcon> = {
   "system-levels": Volume2, "device-use": Camera, "theme-market": Store, updater: RefreshCw,
 };
 
-export function stateOf(plugin: PluginStatusV3): PluginV3State {
-  return (STATES as readonly string[]).includes(plugin.state) ? (plugin.state as PluginV3State) : "loading";
-}
-
 export function milliseconds(ms: number) {
   return ms >= 1000 ? `${(ms / 1000).toFixed(2)} s` : `${ms.toFixed(ms < 10 ? 2 : ms < 100 ? 1 : 0)} ms`;
 }
 
-export function detailText(plugin: PluginStatusV3, text: ReturnType<typeof useTranslation>["settings"]["pluginsV3"]): string | null {
+export function detailText(
+  plugin: PluginStatusV3,
+  text: ReturnType<typeof useTranslation>["settings"]["pluginsV3"],
+  hostPlugins?: readonly PluginStatusV3[] | null,
+  builtins?: readonly BuiltinPlugin[] | null,
+): string | null {
   const state = stateOf(plugin);
   const blocked = plugin.blocked;
-  return state === "waiting" && plugin.waitingFor?.length
-    ? text.waitingFor(plugin.waitingFor.join(", "))
+  const replaced = explainReplacedServices(plugin.id, plugin, text);
+  const base = state === "waiting" && plugin.waitingFor?.length
+    ? (() => {
+        const reasons = hostPlugins || builtins ? explainWaitingFor(plugin.waitingFor, hostPlugins, builtins, text, stateOf) : [];
+        return reasons.length > 0 ? `${text.waitingFor(plugin.waitingFor.join(", "))} · ${reasons.join("；")}` : text.waitingFor(plugin.waitingFor.join(", "));
+      })()
     : blocked?.by === "errors"
       ? text.autoDisabled(blocked.errors, Math.round(blocked.windowMs / 1000))
       : blocked?.by === "safe-mode"
         ? text.heldBySafeMode(text.safeModes[blocked.mode])
         : plugin.reason ?? plugin.error ?? null;
+  if (replaced.length > 0) return base ? `${replaced.join(" · ")} · ${base}` : replaced.join(" · ");
+  return base;
 }
 
 export function isAttentionState(state: PluginV3State): boolean {

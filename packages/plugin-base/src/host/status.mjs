@@ -89,6 +89,18 @@ export function pluginStatus(ctx, logs = [], { gate, usage, services, clients } 
       if (last) extra.lastError = last;
       const undeclared = undeclaredOf(entry, provided, windows);
       if (undeclared) extra.undeclared = undeclared;
+      const disabledServices = Array.isArray(entry.options.disabledServices) ? entry.options.disabledServices.filter((s) => typeof s === "string") : [];
+      if (disabledServices.length > 0) extra.disabledServices = disabledServices;
+      const declaredProvides = entry.options[SOURCE]?.provides ?? entry.options[SOURCE]?.declared?.provides ?? [];
+      if (declaredProvides.length > 0) extra.provides = declaredProvides;
+      const replacedServices = declaredProvides
+        .map((svc) => {
+          const active = provided.find((item) => item.name === svc);
+          if (active && active.plugin !== status.id) return { service: svc, by: active.plugin };
+          return null;
+        })
+        .filter(Boolean);
+      if (replacedServices.length > 0) extra.replacedServices = replacedServices;
       return { ...status, ...extra };
     });
 }

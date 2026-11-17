@@ -84,6 +84,13 @@ export type SettingsPluginsV3Text = {
   states: Record<PluginV3State, string>;
   kinds: { essential: string; builtin: string; "third-party": string };
   waitingFor: (services: string) => string;
+  waitingReasons?: {
+    noProvider: (service: string) => string;
+    providerInactive: (service: string, provider: string, state: string) => string;
+    providerStarting: (service: string, provider: string) => string;
+  };
+  serviceReplacedBy?: (service: string, by: string) => string;
+  serviceYielded?: (service: string) => string;
   autoDisabled: (errors: number, seconds: number) => string;
   heldBySafeMode: (mode: string) => string;
   cpu: string;
@@ -233,6 +240,13 @@ export const zhCN: SettingsPluginsV3Text = {
   },
   kinds: { essential: "必需", builtin: "内置", "third-party": "第三方" },
   waitingFor: (services) => `在等服务：${services}`,
+  waitingReasons: {
+    noProvider: (service) => `没有插件提供 ${service}`,
+    providerInactive: (service, provider, state) => `${provider} 提供 ${service}，但它${state}`,
+    providerStarting: (service, provider) => `${provider} 正在启动以提供 ${service}`,
+  },
+  serviceReplacedBy: (service, by) => `服务 ${service} 已由插件 ${by} 接管`,
+  serviceYielded: (service) => `已让出服务 ${service}`,
   autoDisabled: (errors, seconds) => `${seconds} 秒内出错 ${errors} 次，已停用到宿主下次重启；没有改 plugins.yml。`,
   heldBySafeMode: (mode) => `安全模式（${mode}）下不启动这个插件。`,
   cpu: "CPU",
@@ -382,6 +396,13 @@ export const en: SettingsPluginsV3Text = {
   },
   kinds: { essential: "Essential", builtin: "Built-in", "third-party": "Third-party" },
   waitingFor: (services) => `Waiting for: ${services}`,
+  waitingReasons: {
+    noProvider: (service) => `No plugin provides ${service}`,
+    providerInactive: (service, provider, state) => `${provider} provides ${service}, but it is ${state.toLowerCase()}`,
+    providerStarting: (service, provider) => `${provider} is starting to provide ${service}`,
+  },
+  serviceReplacedBy: (service, by) => `Service ${service} is replaced by ${by}`,
+  serviceYielded: (service) => `Yielded service ${service}`,
   autoDisabled: (errors, seconds) => `${errors} errors within ${seconds} s, so it's off until the host restarts. plugins.yml is unchanged.`,
   heldBySafeMode: (mode) => `Not started in safe mode (${mode}).`,
   cpu: "CPU",
