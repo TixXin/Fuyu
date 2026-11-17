@@ -42,6 +42,16 @@ export function disabledBuiltinIds(plugins: readonly BuiltinPlugin[] | null): st
   return (plugins ?? []).filter((plugin) => !plugin.enabled).map((plugin) => plugin.id);
 }
 
+export function isBuiltinEnabled(plugins: readonly BuiltinPlugin[] | null, id: string, fallback = true): boolean {
+  if (!plugins) return fallback;
+  return plugins.find((plugin) => plugin.id === id)?.enabled ?? fallback;
+}
+
+export function builtinConfigBoolean(plugins: readonly BuiltinPlugin[] | null, id: string, key: string): boolean | undefined {
+  const value = plugins?.find((plugin) => plugin.id === id)?.config[key];
+  return typeof value === "boolean" ? value : undefined;
+}
+
 export function startBuiltinSwitches() {
   if (started) return;
   started = true;
