@@ -6,7 +6,6 @@
 - 跑法：`node --test packages/plugin-base/test/`（也在 `pnpm test` 里）；Rust 的 `cargo test --manifest-path src-tauri/Cargo.toml -p plugin-base`。
 - **状态**：「守住」= 测试通过；「做不到」= 内核现在做不到，测试已经写好并标成 `todo`（跑的时候显示 ⚠，不算失败），改好之后去掉 `todo`，状态改成「守住」。
 - 加承诺、改承诺时，测试和这一页在同一个提交里改。一条承诺没有测试，就不算承诺。
-- 窗口一侧的加载器和插槽（第 6 步）的承诺，由做第 6 步的会话在它合入时加到「窗口」一节。
 
 ## 依赖和启动顺序
 
@@ -121,3 +120,17 @@
 | 43 | 宿主换了端口和令牌重启后，窗口重新连上并拿到新的快照 | `sockets.test.mjs` › when the host restarts on a new port and token, the window reconnects and gets a fresh snapshot | 守住 |
 | 44 | 窗口发现漏了事件，要一份新快照，不带着缺口往下走 | `sockets.test.mjs` › a window that misses an event asks for a snapshot instead of going on with a gap | 守住 |
 | 45 | 连着宿主的窗口随时听到插件状态的变化 | `main.test.mjs` › a window connected to the host hears about plugin changes as they happen | 守住 |
+| 54 | 插槽项按 `order` 排序、同序保持注册顺序；`single` 插槽只留最后一项；超出 `max` 的截断，超出 `perPlugin` 的报 `too-many`；往未定义插槽注册立即报 `no-slot` | `slots.test.mjs` › items come out in order, and a list slot shows at most its maximum；`slots.test.mjs` › a single slot shows only the item added last；`slots.test.mjs` › adding to a slot that does not exist fails at once and says which；`slots.test.mjs` › one plugin cannot fill a slot past its share, and built-in items have no share | 守住 |
+| 55 | 同 `id` 的插槽项显式替换已有项并记下被替换者，替换方卸载后恢复原项；每项单独包错误边界，渲染抛错只影响该项 | `slots.test.mjs` › adding an item with an existing id replaces it, records what was replaced, and brings the old one back when the replacement is removed；`slots.test.mjs` › an item that throws while rendering shows the fallback for that item alone, and the rest still render | 守住 |
+| 56 | 窗口加载器在 `import()` 前先核对文件存在与 MIME，加载后注册插槽，插件卸载或升版时先撤掉旧插槽项；单个插件加载失败不影响同窗口其余插件 | `loader.test.mjs` › a plugin's window code is loaded, puts its items in slots, and they go when the plugin goes；`loader.test.mjs` › a new version is loaded from a new address, and the old one's items are gone first；`loader.test.mjs` › a missing file, a module without a plugin and a plugin that throws are each reported, and the others still load | 守住 |
+
+## 服务、Rust 通道、来源核对与二分排查（第 3 阶段）
+
+| # | 承诺 | 测试 | 状态 |
+|---|---|---|---|
+| 57 | 带版本的服务（`defineService`）在宿主与窗口调用时都校验方法与事件声明、执行超时保护；提供者下线时未完成的调用立即以 `peer-gone` 失败，事件监听随插件卸载自动清理 | `services.test.mjs` › a plugin provides a versioned service, another calls it and hears its events, and stopping the provider cleans up；`service-proxy.test.mjs` › a window calls a declared method by service name, within the declared time plus a little；`window-services.test.mjs` | 守住 |
+| 58 | `ctx.rust` 只允许内置插件调用和监听，第三方插件调用立即报 `forbidden`；支持进度流式回调（`onProgress`），Rust 端断开时未决调用立即以 `peer-gone` 失败 | `rust.test.mjs` › a plugin calls Rust and gets the answer or Rust's own error code；`rust.test.mjs` › only built-in plugins may call Rust or listen to its events; third-party plugins are refused with forbidden | 守住 |
+| 59 | 内置插件按 `builtins.json` 加载，`plugins.yml` 不能篡改内置插件的 `kind` 或代码路径，关掉内置插件后其服务、定时器、监听器和窗口入口全部撤掉 | `builtins.test.mjs` › built-in plugins run without an entry in plugins.yml, with the kind the app's list gives them；`builtins.test.mjs` › entries in plugins.yml cannot make a plugin built-in or swap a built-in's code；`builtins.test.mjs` › plugins.yml switches a built-in plugin off, and everything it set up goes with it | 守住 |
+| 60 | 按来源（`market`、`manual`、`dev`）校验 `package.json` 清单：市场和手动安装的包拒绝 `experimental` 接口，未声明却注册的服务或窗口在状态里标出 `undeclared` | `sources.test.mjs` › a market or hand-installed package that uses experimental interfaces fails with the reason; the same code loads from a development folder；`sources.test.mjs` › services and windows a plugin did not declare show up in its status | 守住 |
+| 61 | 二分排查（`host.bisect`）只在本轮运行停用指定第三方插件并标明 `bisect` 原因，不改写 `plugins.yml`，也不会停用内置或必需插件 | `bisect.test.mjs` › a bisect switches the listed plugins off for this run only, says why, and brings them back when the list changes | 守住 |
+| 62 | 不依赖浮屿业务的最小示例应用可端到端跑通外壳管道、宿主进程、版本化服务、第三方插件与窗口插槽 | `minimal-app.test.mjs` › a minimal application without Fuyu business code runs end-to-end across shell, host, services and window slots | 守住 |
