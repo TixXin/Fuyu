@@ -49,7 +49,7 @@ export function apply(ctx) {
   ctx.services.provide(translatorV1, {
     translate: async (params) => {
       const engine = engineOf("translate", params);
-      return translated(await call("translate", { text: params.text, direction: params.direction, ...engine }));
+      return translated(await call("translate", { text: params.text, direction: params.direction ?? "auto", ...engine }));
     },
     rewrite: async (params, caller) => {
       const engine = engineOf("rewrite", params);

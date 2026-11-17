@@ -43,8 +43,7 @@ input,
   *,
   *::before,
   *::after {
-    transition-duration: 0s !important;
-    transition-delay: 0s !important;
+    transition-property: opacity, visibility, color, background-color, border-color, outline-color, fill, stroke !important;
     scroll-behavior: auto !important;
   }
 }

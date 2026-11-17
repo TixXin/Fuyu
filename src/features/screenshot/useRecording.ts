@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { addFileShelfPaths } from "../file-shelf/api";
+import { fileShelfV1 } from "@fuyu/plugin-services";
 import { useErrorText, useTranslation } from "../../i18n";
 import {
   getRecordingStatus,
@@ -11,12 +11,16 @@ import {
   type RecordingFinished,
   type RecordingState,
 } from "./api";
+import { windowServices } from "../plugin-kernel/services";
 import { clockTime, elapsedOf } from "./recordingTime";
+import { serviceFailed } from "./serviceErrors";
+
+const shelf = windowServices.get(fileShelfV1);
 
 const FINISHED_SECONDS = 8;
 
 export function useRecording() {
-  const t = useTranslation().screenshot.recording;
+  const { recording: t, shelfOff } = useTranslation().screenshot;
   const errorText = useErrorText();
   const [state, setState] = useState<RecordingState | null>(null);
   const [finished, setFinished] = useState<RecordingFinished | null>(null);
@@ -83,7 +87,7 @@ export function useRecording() {
     togglePause: () => live && void pauseRecording(!live.paused).catch(report),
     stop: () => void stopRecording().catch(report),
     reveal: () => summary && void revealRecording(summary.path).catch(report),
-    shelve: () => summary && void addFileShelfPaths([summary.path]).then(() => setMessage(t.shelved), report),
+    shelve: () => summary && void shelf.add({ paths: [summary.path] }).then(() => setMessage(t.shelved), (error: unknown) => setMessage(serviceFailed(error, shelfOff, errorText))),
     dismiss,
     hold,
     release,

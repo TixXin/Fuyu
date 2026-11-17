@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>动效档位前后对比</title>
+<style>
+  :root {
+    --bg: #f6f6f4; --card: #fff; --text: #1d1d1f; --muted: #6e6e73; --line: #e3e3e0;
+    --old: #c2410c; --new: #0f766e; --chip: #1d1d1f; --chip-text: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141416; --card: #1e1e21; --text: #f2f2f2; --muted: #9a9aa0; --line: #2e2e33; --old: #fb923c; --new: #2dd4bf; --chip: #f2f2f2; --chip-text: #141416; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.55 -apple-system, "PingFang SC", "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .lead { color: var(--muted); margin: 0 0 18px; max-width: 760px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+  button { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button.primary { background: var(--chip); color: var(--chip-text); border-color: var(--chip); }
+  label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+  .row { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .row header { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  .row h2 { font-size: 15px; margin: 0; }
+  .row .where { color: var(--muted); font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .row p { margin: 6px 0 12px; color: var(--muted); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 640px) { .pair { grid-template-columns: 1fr; } }
+  .side { border: 1px dashed var(--line); border-radius: 10px; padding: 10px; }
+  .side .tag { font-size: 12px; font-weight: 600; }
+  .side.old .tag { color: var(--old); }
+  .side.new .tag { color: var(--new); }
+  .side code { display: block; font-size: 11.5px; color: var(--muted); margin: 2px 0 10px; word-break: break-all; }
+  .stage { height: 72px; position: relative; border-radius: 8px; background: rgba(127,127,127,.08); overflow: hidden; display: flex; align-items: center; padding: 0 12px; }
+  .chip { padding: 6px 12px; border-radius: 8px; background: rgba(127,127,127,.18); }
+  .pill { height: 34px; width: 180px; border-radius: 17px; background: #111; color: #eee; display: flex; align-items: center; padding: 0 14px; font-size: 13px; }
+  .card { width: 200px; padding: 10px 12px; border-radius: 10px; background: rgba(127,127,127,.22); font-size: 13px; }
+  .dot { width: 22px; height: 22px; border-radius: 50%; background: currentColor; position: absolute; left: 12px; }
+  .side.old .dot { color: var(--old); }
+  .side.new .dot { color: var(--new); }
+  svg.curve { width: 100%; height: 56px; display: block; margin-top: 8px; }
+  h2.group { font-size: 17px; margin: 28px 0 12px; }
+  .note { font-size: 13px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 10px; margin: 18px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>动效档位前后对比（D85.4）</h1>
+  <p class="lead">每一行左边是现在写死的曲线和时长，右边是并进档位后的样子，两边同时开始。点「全部重播」或单行的「重播」反复看，「慢放 4 倍」看清曲线差别。档位：曲线 <b>--motion-ease</b> (0.2, 0.8, 0.2, 1)、<b>--motion-ease-out</b> (0.22, 1, 0.36, 1)、<b>--motion-ease-in-out</b> (0.45, 0, 0.55, 1)；时长 120 / 160 / 240 / 420ms。</p>
+  <div class="bar">
+    <button class="primary" id="all">全部重播</button>
+    <label><input type="checkbox" id="slow"> 慢放 4 倍</label>
+    <label><input type="checkbox" id="loop"> 自动循环</label>
+  </div>
+  <h2 class="group" style="margin-top:0">第 1 段：src/windows/（已提交 47b615a1）</h2>
+  <div id="rows"></div>
+  <p class="note">第 1 段：34 个 CSS 文件、2 个 TS 文件。没动的：岛外壳开合（<code>--island-motion-*</code>，含玻璃的 bloom 和液态展开、侧栏淡出）、1s 以上的循环（呼吸、玻璃色块漂移）只换了曲线不换时长、匀速的 <code>linear</code>、新手引导里星星的回弹 <code>(0.2, 0.9, 0.3, 1.5)</code>（没有文字的装饰，留着并记进门禁白名单；要去掉回弹就说）。剪贴板预览的退场本来要并进 160ms，但 Rust 侧固定等 150ms 就隐藏窗口，所以落在 120ms。</p>
+  <p class="note">第 2 段：63 个 CSS 文件、2 个 TS 文件（useListMotion.ts、useArchiveMotion.ts）。没动的：1s 以上的循环（呼吸、闪烁、漂移）只换曲线；匀速的 <code>linear</code> 里歌曲进度条留 500ms（跟每 500ms 一次的进度刷新对齐）；600–999ms 的一次性提醒（Agent 卡片闪一下 640ms、快捷键保存 760ms、关于页波纹 900ms）留着进白名单；带回弹的装饰（插件坞图标、关于页小人跳一下）留着进白名单；减少动画里的 1ms 不动；<code>PluginNotificationActions.css</code> 别的会话在搬，没动。</p>
+</main>
+<script>
+const EASE = {
+  ease: "cubic-bezier(0.25, 0.1, 0.25, 1)",
+  "ease-out": "cubic-bezier(0, 0, 0.58, 1)",
+  "ease-in": "cubic-bezier(0.42, 0, 1, 1)",
+  "ease-in-out": "cubic-bezier(0.42, 0, 0.58, 1)",
+  "--motion-ease": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+  "--motion-ease-out": "cubic-bezier(0.22, 1, 0.36, 1)",
+  "--motion-ease-in-out": "cubic-bezier(0.45, 0, 0.55, 1)",
+};
+const curve = (name) => EASE[name] ?? name;
+const FRAMES = {
+  hover: [{ background: "rgba(127,127,127,.18)" }, { background: "rgba(13,148,136,.45)" }],
+  fadeIn: [{ opacity: 0 }, { opacity: 1 }],
+  fadeOut: [{ opacity: 1 }, { opacity: 0 }],
+  rise: [{ opacity: 0, transform: "translateY(3px)" }, { opacity: 1, transform: "none" }],
+  slide: [{ left: "12px" }, { left: "calc(100% - 34px)" }],
+  shadow: [{ boxShadow: "0 0 0 0 rgba(13,148,136,0)" }, { boxShadow: "0 0 0 6px rgba(13,148,136,.45)" }],
+  pop: [{ opacity: 0, transform: "scale(.96)" }, { opacity: 1, transform: "none" }],
+};
+const ROWS = [
+  { title: "设置侧栏、按钮的悬停变色", where: "SettingsSidebar.css · IslandApp.css · IslandHeader.css 等十几处", why: "最常见的写法 140ms ease，并进 --motion-base 后慢 20ms，曲线前段更快。", el: "chip", text: "悬停", frames: "hover", old: [140, "ease"], next: [160, "--motion-ease"] },
+  { title: "设置页切换（新页面淡入）", where: "LayoutEditor.css:147", why: "220ms → 240ms，曲线本来就是 --motion-ease。", el: "card", text: "设置页内容", frames: "fadeIn", old: [220, "--motion-ease"], next: [240, "--motion-ease"] },
+  { title: "岛展开后切页淡入", where: "usePageFadeIn.ts", why: "expo 曲线 (0.16, 1, 0.3, 1) 220ms → --motion-ease-out 240ms。", el: "card", text: "待办 · 3 项", frames: "fadeIn", old: [220, "cubic-bezier(0.16, 1, 0.3, 1)"], next: [240, "--motion-ease-out"] },
+  { title: "折叠条摘要换行（不支持 linear() 时的回退）", where: "IslandSummary.css:3–5 · IslandCollapsedBar.css:95", why: "560ms (.2,.85,.2,1) → 420ms --motion-ease。WebView2 / WebKit 都支持 linear()，实际走的是弹簧曲线，只是时长从 560 变 420；退场 200 → 240ms。", el: "pill", text: "下午 3 点 · 周会", frames: "rise", old: [560, "cubic-bezier(0.2, 0.85, 0.2, 1)"], next: [420, "--motion-ease"] },
+  { title: "刘海两翼进场", where: "IslandNotch.css:114", why: "只换曲线 (.2,.85,.2,1) → --motion-ease，时长不变。", el: "pill", text: "刘海翼", frames: "fadeIn", old: [240, "cubic-bezier(0.2, 0.85, 0.2, 1)"], next: [240, "--motion-ease"] },
+  { title: "长截图条的按钮位移", where: "LongShotBar.css:100", why: "200ms ease → 240ms --motion-ease。", el: "dot", frames: "slide", old: [200, "ease"], next: [240, "--motion-ease"] },
+  { title: "贴图的透明度和缩放", where: "PinWindow.css:24（关闭定时器同步到 160ms）", why: "opacity / transform 140ms ease → 160ms --motion-ease；阴影 280 → 240ms。", el: "card", text: "贴图", frames: "pop", old: [140, "ease"], next: [160, "--motion-ease"] },
+  { title: "剪贴板预览进场淡入", where: "ClipboardPreviewWindow.css:22", why: "170ms ease-out → 160ms --motion-ease；同时的滑入 expo → --motion-ease-out。", el: "card", text: "预览：一段复制的文字", frames: "fadeIn", old: [170, "ease-out"], next: [160, "--motion-ease"] },
+  { title: "剪贴板预览退场", where: "ClipboardPreviewWindow.css:28", why: "140ms ease-in → 120ms --motion-ease-in-out（Rust 侧 150ms 后隐藏窗口）。", el: "card", text: "预览：一段复制的文字", frames: "fadeOut", old: [140, "ease-in"], next: [120, "--motion-ease-in-out"] },
+  { title: "岛的阴影（悬停）", where: "IslandPill.css:3", why: "350ms ease → 420ms --motion-ease。", el: "pill", text: "浮屿", frames: "shadow", old: [350, "ease"], next: [420, "--motion-ease"] },
+  { title: "第一次提示气泡", where: "first-hints/FirstHintNotice.css:8", why: "260ms ease-out → 240ms --motion-ease。", el: "card", text: "试试把文件拖到岛上", frames: "rise", old: [260, "ease-out"], next: [240, "--motion-ease"] },
+  { title: "新手引导卡片进场", where: "onboarding/OnboardingWindow.css:19", why: "带文字的卡片原来有一点回弹 (0.2, 0.9, 0.3, 1.1)，按规矩换成不回弹的 --motion-ease-out，时长不变。", el: "card", text: "这是浮屿，点一下展开", frames: "pop", old: [420, "cubic-bezier(0.2, 0.9, 0.3, 1.1)"], next: [420, "--motion-ease-out"] },
+  { title: "新手引导聚光灯进场", where: "onboarding/Spotlight.css:7", why: "500ms ease-out → 420ms --motion-ease；跟随移动 220 → 240ms。", el: "card", text: "聚光灯", frames: "fadeIn", old: [500, "ease-out"], next: [420, "--motion-ease"] },
+  { group: "第 2 段：src/features/、src/components/（还没提交）", title: "新消息横幅进场", where: "messages/banner/MessageBanner.css", why: "220ms (0.23, 1, 0.32, 1) → 240ms --motion-ease-out；到达面板（MessageArrivalsPanel.css）同样。", el: "card", text: "微信 · 张三：今晚吃什么", frames: "rise", old: [220, "cubic-bezier(0.23, 1, 0.32, 1)"], next: [240, "--motion-ease-out"] },
+  { title: "折叠条新消息文字进场", where: "messages/CollapsedMessageContent.css", why: "460ms (.2, .75, .25, 1) → 420ms --motion-ease（图标 560 → 420ms，弹簧曲线不变；旧摘要退场 (.4, 0, .6, 1) → --motion-ease-in-out）。", el: "pill", text: "QQ · 收到 2 条消息", frames: "rise", old: [460, "cubic-bezier(0.2, 0.75, 0.25, 1)"], next: [420, "--motion-ease"] },
+  { title: "设置里的开关", where: "components/settings/SettingsSwitch.css（下拉、数字框、选择卡片等控件同样）", why: "140ms ease → 160ms --motion-ease。", el: "dot", frames: "slide", old: [140, "ease"], next: [160, "--motion-ease"] },
+  { title: "Agent 列表重排、进出", where: "agent-status/useListMotion.ts", why: "TS 里的动画：移动和进场 200ms、退场 180ms，曲线 (0.2, 0.7, 0.3, 1) → 240ms / 160ms --motion-ease。", el: "dot", frames: "slide", old: [200, "cubic-bezier(0.2, 0.7, 0.3, 1)"], next: [240, "--motion-ease"] },
+  { title: "Agent 归档化成灰", where: "agent-status/ArchiveDissolve.css · useArchiveMotion.ts", why: "480ms → 420ms（定时器 DISSOLVE_MS 跟着改）；漂移 ease-out → --motion-ease，扫过的 linear 不变。", el: "card", text: "Claude Code · fuyu", frames: "fadeOut", old: [480, "ease-out"], next: [420, "--motion-ease"] },
+  { title: "歌词换行", where: "media/lyrics/LyricsView.css", why: "220ms ease-out → 240ms --motion-ease。", el: "card", text: "下一句歌词", frames: "rise", old: [220, "ease-out"], next: [240, "--motion-ease"] },
+  { title: "中心图案的眼睛转向", where: "center-pattern/CenterPattern.css", why: "520ms (0.77, 0, 0.175, 1) → 420ms --motion-ease-in-out。", el: "dot", frames: "slide", old: [520, "cubic-bezier(0.77, 0, 0.175, 1)"], next: [420, "--motion-ease-in-out"] },
+  { title: "会话环、状态条的变化", where: "session-ring/SessionRing.css · plugin-views/templates/StatusTemplate.css", why: "200ms / 300ms ease → 240ms --motion-ease。", el: "chip", text: "3 个会话", frames: "hover", old: [300, "ease"], next: [240, "--motion-ease"] },
+];
+
+function plot(easing, color) {
+  const m = /cubic-bezier\(([^)]*)\)/.exec(easing);
+  if (!m) return "";
+  const [x1, y1, x2, y2] = m[1].split(",").map(Number);
+  const W = 200, H = 50, pad = 4;
+  const sx = (x) => pad + x * (W - 2 * pad), sy = (y) => H - pad - y * (H - 2 * pad) * 0.8;
+  return `<svg class="curve" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="M${sx(0)},${sy(0)} C${sx(x1)},${sy(y1)} ${sx(x2)},${sy(y2)} ${sx(1)},${sy(1)}" fill="none" stroke="${color}" stroke-width="2"/></svg>`;
+}
+
+function side(kind, [ms, name], row) {
+  const label = kind === "old" ? "现在" : "合并后";
+  const color = getComputedStyle(document.documentElement).getPropertyValue(kind === "old" ? "--old" : "--new");
+  const inner = row.el === "dot" ? `<div class="dot"></div>` : `<div class="${row.el}">${row.text}</div>`;
+  return `<div class="side ${kind}"><span class="tag">${label}</span><code>${ms}ms ${name}</code><div class="stage">${inner}</div>${plot(curve(name), color)}</div>`;
+}
+
+const host = document.getElementById("rows");
+ROWS.forEach((row, i) => {
+  if (row.group) { const h = document.createElement("h2"); h.className = "group"; h.textContent = row.group; host.appendChild(h); }
+  const el = document.createElement("section");
+  el.dataset.row = i;
+  el.className = "row";
+  el.innerHTML = `<header><h2>${row.title}</h2><button data-i="${i}">重播</button></header><div class="where">${row.where}</div><p>${row.why}</p><div class="pair">${side("old", row.old, row)}${side("new", row.next, row)}</div>`;
+  host.appendChild(el);
+});
+
+function play(i) {
+  const row = ROWS[i];
+  const k = document.getElementById("slow").checked ? 4 : 1;
+  const section = host.querySelector(`[data-row="${i}"]`);
+  const targets = section.querySelectorAll(".stage > *");
+  [row.old, row.next].forEach(([ms, name], j) => {
+    const t = targets[j];
+    t.getAnimations().forEach((a) => a.cancel());
+    t.animate(FRAMES[row.frames], { duration: ms * k, easing: curve(name), fill: "both", delay: 200 });
+  });
+}
+function playAll() { ROWS.forEach((_, i) => play(i)); }
+host.addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (b) play(Number(b.dataset.i)); });
+document.getElementById("all").addEventListener("click", playAll);
+let timer = null;
+document.getElementById("loop").addEventListener("change", (e) => {
+  clearInterval(timer);
+  if (e.target.checked) { playAll(); timer = setInterval(playAll, document.getElementById("slow").checked ? 3600 : 1400); }
+});
+playAll();
+</script>
+</body>
+</html>

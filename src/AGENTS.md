@@ -8,7 +8,7 @@
 src/
 ├── main.tsx                 # 唯一入口：按 ?window= 动态加载 windows/ 下对应的根组件，每个窗口只加载自己的代码（不要改回静态导入）
 ├── windows/                 # 每个 Tauri 窗口一个目录，只负责组合与窗口级行为
-│   ├── island/              # 主窗口：IslandApp（只做组装）、IslandShell、展开后的页面面板（IslandPages）、按职责的接线 hook（useIslandTucking / Shelf / Hover；新功能的接线加在这里，不加进 IslandApp）、窗口尺寸/拖拽/贴边 hook、自动化 hook；slots/ 是展开页、页头按钮、收起条、刘海提醒的插槽注册，新加一页或一个按钮在这里注册，不往列表里写死；first-hints/ 是岛上的「第一次」提示
+│   ├── island/              # 主窗口：IslandApp（只做组装）、IslandShell、展开后的页面面板（IslandPages）、岛自己的接线 hook（useIslandTucking / Hover、窗口尺寸/拖拽/贴边、自动化）；外壳不 import 功能（plugin-kernel 和第 2 版的 plugins、plugin-views 除外，边界测试查）：功能的界面在 `features/<领域>/plugin/` 里注册插槽项，接线写进它的 runner，影响岛形状的往贡献表里交（规则见 `docs/architecture/plugins/v3-boundary.md`「岛的贡献表」）；slots/ 是外壳自己的插槽项和插槽句柄，builtins.ts 先载外壳样式再经 pluginFiles.ts 收各功能的插件文件；first-hints/ 是岛上的「第一次」提示
 │   ├── clipboard/           # 剪贴板独立窗口（列表在 features/clipboard/ClipboardPopup.tsx，弹出、定位和粘贴在 src-tauri/src/clipboard_history/popup.rs）
 │   ├── screenshot/          # 截图的选区窗口（?window=screenshot，每个显示器一个）：冻结画面、选区拖动（useSelection.ts）、工具栏和放大镜
 │   ├── settings/            # 设置窗口；slots/ 是窗口这一侧的注册：categorySlot.ts（SettingsPageProps 和分类句柄）、categories.tsx（窗口自己的页面，并用 glob 收进各功能的 features/<领域>/plugin/settings.tsx）、runners.ts（窗口自己的 settings.runner/v1 项）；分类清单、句柄和快捷键页分节的类型在 features/plugin-kernel/（settingsCategories.ts、settingsSlots.ts），功能的设置页和注册写在功能里，不加进这里；sections/ 是设置页共用的分节组件（外观、行为、主题、预设、快捷键、待办、数据与备份、系统权限）
@@ -32,9 +32,9 @@ src/
 │   ├── plugin-views/        # 插件在岛上的页面与折叠条状态：模板（list / detail / form / status）、插件数据的规范化、页面顺序与隐藏
 │   ├── messages/            # 消息导航与预览；mail/、qq-notifications/、wechat/ 子目录；banner/ 为岛下方的新消息横幅（分组与计时）；arrivals/ 为新消息自动展开的面板（只列这次到达的消息）；island/ 是它们在岛上的接线：读 QQ、微信、邮箱和插件通知（useIslandNotices）、收起条预览、横幅（useIslandBanner）、到达面板（useIslandMessagePanel）、未读时的贴边保持
 │   ├── agent-status/        # AI 代理状态；sounds/ 为 Agent 音效：内置音效播放、设置 → 声音页、导入音效包；push/ 为手机推送（Bark 或 cc-connect，排队到离开电脑再发）
-│   ├── cc-connect/          # 内置插件 focusd.cc-connect 的插件页部分：找到的程序（找不到时下载）、是否在运行、各项目聊过的会话（手机推送的 cc-connect 通道从这里选目标）；CcConnectSetup.tsx 为新建机器人向导，FeishuSetup.tsx 为飞书扫码
-│   ├── claude-usage/        # 收起条上的 Claude 用量双环（内置插件 focusd.claude-usage）：读 agent-status 的用量（claude-hud 快照或直接查询的结果），阈值配色与悬停卡片文案（usageRing.ts），刷新命令封装（api.ts）
-│   ├── session-ring/        # 收起条上的 Agent 会话环（内置插件 focusd.session-ring）：按状态分段计数与悬停卡片文案（ringCounts.ts），数据来自 agent-status 的会话列表
+│   ├── cc-connect/          # 第 3 版内置插件 cc-connect：设置是 AI Agent → 提醒 里的一节（CcConnectSettings.tsx 是程序路径和由岛启动，下面是找到的程序、找不到时下载、是否在运行、各项目聊过的会话）；CcConnectSetup.tsx 为新建机器人向导，FeishuSetup.tsx 为飞书扫码；plugin/services.ts 提供窗口服务 cc-connect/v1（定义在 lib/cc-connect/），手机推送经它发送和列目标
+│   ├── claude-usage/        # 收起条上的 Agent 用量双环（内置插件 claude-usage）：Claude Code、Codex 的用量经 agents/v1 取，GLM、Kimi 的用量和 Key 是自己的命令（api.ts）；阈值配色与悬停卡片文案（usageRing.ts），配置在 plugins.yml（usageConfig.ts、useUsageConfig.ts），设置在 AI Agent 页的「用量环」分组；用量的共用类型和工具在 lib/agent-usage/
+│   ├── session-ring/        # 收起条上的 Agent 会话环（内置插件 session-ring）：按状态分段计数与悬停卡片文案（ringCounts.ts），会话经 agents/v1 取（useRingSessions.ts），样式和会话数开关在 plugins.yml（ringConfig.ts、useRingConfig.ts），设置在 AI Agent 页的「会话环」分组
 │   ├── ssh-tunnel/          # 内置插件 focusd.ssh-proxy-tunnel 的插件页部分：主机列表、服务器端口、占用确认、隧道状态与 export 行、运行信息里的本地代理（useSshTunnelProxy.ts）（tunnelPort.ts 为端口校验）
 │   ├── theme-market/        # 设置 → 主题市场：从 TixXin/fuyu-plugins 读取 themes.json，预览并应用或保存为预设
 │   ├── translation/         # 快捷翻译：服务与模型设置、凭据、快捷键的类型化封装，请求与自动翻译 hook，岛内翻译页
@@ -110,7 +110,7 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 - 岛屿有深色和浅色（`.island-light`，在 `tokens.css`）。文字、底色、边框的颜色不写死：中性色写 `rgba(var(--overlay-rgb, 255, 255, 255), a)`，状态色写 `var(--error-text, 原值)`、`--warning-text`、`--mint-text`、`--info-text`，深色岛保持原值，浅色岛用 `tokens.css` 里的值；只适合某一种底色的颜色写在 `.island-light` 规则里。`pnpm check:colors` 拦新增的写死颜色；`pnpm test:regression` 把每个回归页切成浅色岛量文字对比度（`scripts/regression-contrast.mjs`），确有理由的例外记在 `tests/regression/contrast-allowlist.json`。
 - 保持现有视觉语言：悬浮岛、紧凑面板、透明背景、清晰的控件状态。界面方向以 `docs/design/README.md` 为准。
 - 图标使用 lucide-react，不手写图标库已有的 SVG。
-- 无障碍：能用键盘到达的控件要有 `:focus-visible` 样式（鼠标操作时 `base.css` 会隐藏按钮的焦点框）；只有图标的按钮写 `aria-label`。新的 `animation` 要在同一个文件里加 `@media (prefers-reduced-motion: reduce)` 停掉或改成不动的形式（`tests/unit/reduced-motion.test.mjs` 会检查）；`transition` 已由 `base.css` 统一处理。
+- 无障碍：能用键盘到达的控件要有 `:focus-visible` 样式（鼠标操作时 `base.css` 会隐藏按钮的焦点框）；只有图标的按钮写 `aria-label`。新的 `animation` 要在同一个文件里加 `@media (prefers-reduced-motion: reduce)` 停掉或改成不动的形式（`tests/unit/reduced-motion.test.mjs` 会检查）；`transition` 已由 `base.css` 统一处理。曲线、时长档位和减少动画的目标见 `docs/design/motion.md`，加或改动画前加载 `fuyu-motion` skill。
 
 ## 多语言
 

@@ -1,7 +1,7 @@
 import { Minus, RotateCcw, Settings } from "lucide-react";
 import { shortcutLabel } from "../../../lib/shortcut/shortcut";
 import { defineSlot, type IslandHeaderMeta } from "../../../features/plugin-kernel/slots";
-import { useUpdateReminder } from "../../../features/updater/useBackgroundUpdateCheck";
+import { runIslandAction, useIslandContributed } from "../../../features/plugin-kernel/useIslandContributions";
 import { useTranslation } from "../../../i18n";
 import { isMacOS } from "../../../lib/platform";
 import { pageShortcutLabel, type IslandFeatures } from "../features";
@@ -31,20 +31,19 @@ export function withShortcut({ features, pageDigitModifiers }: Pick<IslandHeader
 
 function SettingsButton({ onOpenSettings }: IslandHeaderContext) {
   const t = useTranslation();
-  const updateVersion = useUpdateReminder();
-  const settingsLabel = updateVersion ? t.settings.project.update.islandReminder(updateVersion) : t.settings.title;
+  const badge = useIslandContributed().badges.get("settings");
   return (
     <button
       className="icon-button island-settings-button"
       type="button"
-      aria-label={settingsLabel}
+      aria-label={badge?.label ?? t.settings.title}
       onClick={(event) => {
         event.stopPropagation();
-        onOpenSettings(updateVersion ? "updates" : undefined);
+        if (!badge?.action || !runIslandAction(badge.action)) onOpenSettings();
       }}
     >
       <Settings size={16} strokeWidth={1.5} absoluteStrokeWidth aria-hidden="true" />
-      {updateVersion && <span className="island-settings-button__dot" aria-hidden="true" />}
+      {badge && <span className="island-settings-button__dot" aria-hidden="true" />}
     </button>
   );
 }

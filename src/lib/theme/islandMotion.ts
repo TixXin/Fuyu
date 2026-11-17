@@ -1,4 +1,5 @@
 import { landingCurve, springCurve } from "./motionCurves.ts";
+import { MOTION_BASE_MS, MOTION_FAST_MS, MOTION_MEDIUM_MS } from "./motionTokens.ts";
 import type { IslandMotion } from "../settings/types";
 
 export const ISLAND_MOTIONS = ["spring", "smooth", "fast", "bouncy", "none"] as const satisfies readonly IslandMotion[];
@@ -66,8 +67,21 @@ const PRESETS: Record<IslandMotion, { open: MotionTiming; close: MotionTiming }>
 
 export function islandMotionTiming(motion: IslandMotion, direction: "open" | "close", reducedMotion = false): MotionTiming {
   const timing = PRESETS[motion][direction];
-  if (!reducedMotion || !timing.bounces) return timing;
-  return { ...timing, widthEase: EASE_OUT, heightEase: EASE_OUT, radiusEase: EASE_OUT };
+  return reducedMotion ? calmed(timing, direction === "open" ? MOTION_MEDIUM_MS : MOTION_BASE_MS) : timing;
+}
+
+function calmed(timing: MotionTiming, cap: number): MotionTiming {
+  const shell = Math.min(timing.height, cap);
+  const fade = Math.min(timing.fade, MOTION_BASE_MS);
+  return {
+    width: Math.min(timing.width, cap), widthEase: EASE_OUT,
+    height: shell, heightEase: EASE_OUT,
+    radius: Math.min(timing.radius, cap), radiusEase: EASE_OUT, ease: EASE_OUT,
+    fade, fadeDelay: Math.max(0, Math.min(timing.fadeDelay, shell - fade)),
+    layer: Math.min(timing.layer, MOTION_FAST_MS),
+    collapsedDelay: Math.min(timing.collapsedDelay, Math.round(shell * 0.6)),
+    bloom: Math.min(timing.bloom, shell),
+  };
 }
 
 export function islandMotionVariables(motion: IslandMotion, direction: "open" | "close", reducedMotion = false): Record<string, string> {

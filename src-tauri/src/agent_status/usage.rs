@@ -15,21 +15,21 @@ const MAX_SNAPSHOT_BYTES: u64 = 64 * 1024;
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UsageWindow {
-    pub(super) name: String,
-    pub(super) used: f64,
-    pub(super) resets_at: Option<i64>,
+    pub(crate) name: String,
+    pub(crate) used: f64,
+    pub(crate) resets_at: Option<i64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentUsage {
-    pub(super) updated_at: Option<i64>,
-    pub(super) five_hour: Option<UsageWindow>,
-    pub(super) seven_day: Option<UsageWindow>,
-    pub(super) models: Vec<UsageWindow>,
-    pub(super) plan: Option<String>,
-    pub(super) source: UsageSource,
-    pub(super) error: Option<UsageError>,
+    pub(crate) updated_at: Option<i64>,
+    pub(crate) five_hour: Option<UsageWindow>,
+    pub(crate) seven_day: Option<UsageWindow>,
+    pub(crate) models: Vec<UsageWindow>,
+    pub(crate) plan: Option<String>,
+    pub(crate) source: UsageSource,
+    pub(crate) error: Option<UsageError>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]

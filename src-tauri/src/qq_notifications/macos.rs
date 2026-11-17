@@ -4,8 +4,7 @@ mod plugin_view;
 use serde::Serialize;
 use std::{
     sync::{Arc, Mutex, OnceLock},
-    thread,
-    time::{Duration, SystemTime, UNIX_EPOCH},
+    time::{SystemTime, UNIX_EPOCH},
 };
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -13,6 +12,9 @@ use crate::macos::{
     accessibility, apps,
     dock_badges::{self, Badge},
 };
+
+use crate::messages_plugin::{self, SourceWorker};
+use crate::plugin_kernel::worker::{Stop, Worker};
 
 pub(crate) use plugin_view::plugin_messages;
 
@@ -146,43 +148,48 @@ fn in_front() -> bool {
     apps::path_for_bundle_id(BUNDLE_ID).is_some_and(|path| path.trim_end_matches('/') == front.trim_end_matches('/'))
 }
 
-fn watch_front(service: Arc<NotificationService>) -> Result<(), String> {
-    thread::Builder::new()
-        .name("qq-seen".into())
-        .spawn(move || {
-            let mut was_front = false;
-            loop {
-                let watching = service.state.lock().is_ok_and(|state| state.snapshot.enabled && state.auto_clear);
-                let front = watching && in_front();
-                if front && !was_front {
-                    let _ = update(|state| state.forget_seen(now_ms()));
-                }
-                was_front = front;
-                thread::sleep(Duration::from_secs(1));
-            }
-        })
-        .map(|_| ())
-        .map_err(|error| error.to_string())
-}
-
-pub fn init(app: &AppHandle) -> Result<(), String> {
-    let service = Arc::new(NotificationService { app: app.clone(), state: Mutex::new(NotificationState::default()) });
-    SERVICE.set(service.clone()).map_err(|_| "The QQ reminder service is already running.".to_string())?;
-    watch_front(service.clone())?;
-    let wanted = service.clone();
+fn watch(service: &Arc<NotificationService>, stop: &Stop) {
+    let mut was_front = false;
     dock_badges::watch(
-        "qq-reminders",
         BUNDLE_ID,
-        move || wanted.state.lock().is_ok_and(|state| state.snapshot.enabled),
-        move |reading| {
+        |wait| stop.wait(wait),
+        |reading| {
             let (snapshot, newest) = {
                 let Ok(mut state) = service.state.lock() else { return };
                 let Some(newest) = apply(&mut state, reading, now_ms()) else { return };
                 (state.snapshot.clone(), newest)
             };
-            publish(&service, snapshot, newest);
+            publish(service, snapshot, newest);
         },
-    )
+        || {
+            let watching = service.state.lock().is_ok_and(|state| state.snapshot.enabled && state.auto_clear);
+            let front = watching && in_front();
+            if front && !was_front {
+                let _ = update(|state| state.forget_seen(now_ms()));
+            }
+            was_front = front;
+        },
+    );
+}
+
+fn set_enabled(enabled: bool) {
+    let _ = update(|state| {
+        if state.snapshot.enabled == enabled {
+            return false;
+        }
+        *state = NotificationState { auto_clear: state.auto_clear, ..NotificationState::default() };
+        state.snapshot.enabled = enabled;
+        state.snapshot.status = if enabled { NotificationStatus::Waiting } else { NotificationStatus::Disabled };
+        true
+    });
+}
+
+pub fn init(app: &AppHandle) -> Result<(), String> {
+    let service = Arc::new(NotificationService { app: app.clone(), state: Mutex::new(NotificationState::default()) });
+    SERVICE.set(service.clone()).map_err(|_| "The QQ reminder service is already running.".to_string())?;
+    let worker = Worker::new("qq-reminders", move |stop| watch(&service, &stop));
+    messages_plugin::register(messages_plugin::QQ, SourceWorker::new(messages_plugin::QQ, worker, set_enabled));
+    Ok(())
 }
 
 fn snapshot() -> Result<NotificationSnapshot, String> {
@@ -213,19 +220,6 @@ fn update(change: impl FnOnce(&mut NotificationState) -> bool) -> Result<Notific
         publish(service, snapshot.clone(), None);
     }
     Ok(snapshot)
-}
-
-#[tauri::command]
-pub fn set_qq_notifications_enabled(enabled: bool) -> Result<NotificationSnapshot, String> {
-    update(|state| {
-        if state.snapshot.enabled == enabled {
-            return false;
-        }
-        *state = NotificationState { auto_clear: state.auto_clear, ..NotificationState::default() };
-        state.snapshot.enabled = enabled;
-        state.snapshot.status = if enabled { NotificationStatus::Waiting } else { NotificationStatus::Disabled };
-        true
-    })
 }
 
 #[tauri::command]
@@ -271,7 +265,6 @@ macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::qq_notifications::get_qq_notification_state,
-            crate::qq_notifications::set_qq_notifications_enabled,
             crate::qq_notifications::request_qq_notification_access,
             crate::qq_notifications::open_qq_notification_settings,
             crate::qq_notifications::clear_qq_notifications,

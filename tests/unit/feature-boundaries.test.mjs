@@ -31,11 +31,14 @@ const repoPath = (path) => relative(ROOT, path).replaceAll("\\", "/");
 const featureOf = (path) => path.match(/^src\/features\/([^/]+)\//)?.[1] ?? null;
 const sharedLayer = (path) => /^src\/(lib|components|utils)\//.test(path);
 const PLATFORM = "plugin-kernel";
+const SHELL_READS = new Set([PLATFORM, "plugins", "plugin-views"]);
+const isShell = (path) => path.startsWith("src/windows/island/");
 
 function crossings() {
   const features = [];
   const shared = [];
   const windows = [];
+  const island = [];
   for (const file of sourceFiles(join(ROOT, "src"))) {
     const from = repoPath(file);
     for (const match of readFileSync(file, "utf8").matchAll(IMPORT)) {
@@ -45,12 +48,13 @@ function crossings() {
       if (featureOf(from) && to.startsWith("src/windows/")) windows.push(`${from} -> ${to}`);
       const toFeature = featureOf(to);
       if (!toFeature) continue;
+      if (isShell(from) && !SHELL_READS.has(toFeature)) island.push(`${from} -> ${to}`);
       const fromFeature = featureOf(from);
       if (fromFeature && toFeature !== PLATFORM && fromFeature !== toFeature) features.push(`${from} -> ${to}`);
       else if (sharedLayer(from)) shared.push(`${from} -> ${to}`);
     }
   }
-  return { features: [...new Set(features)].sort(), shared: [...new Set(shared)].sort(), windows: [...new Set(windows)].sort() };
+  return { features: [...new Set(features)].sort(), shared: [...new Set(shared)].sort(), windows: [...new Set(windows)].sort(), island: [...new Set(island)].sort() };
 }
 
 function compare(kind, found, allowed) {
@@ -75,5 +79,18 @@ test("a feature does not import a window", () => {
 test("the allowlist is sorted and has no duplicates", () => {
   for (const kind of ["features", "shared"]) {
     assert.deepEqual(ALLOWLIST[kind], [...new Set(ALLOWLIST[kind])].sort(), kind);
+  }
+});
+
+test("the island shell imports no feature besides the plugin kernel, plugins and plugin-views", () => {
+  assert.deepEqual(crossings().island, [], "The shell reads what features contribute: register a slot item or a runner in src/features/<feature>/plugin/ instead.");
+});
+
+test("every removedBy entry names an edge the allowlist still holds and a task that is still open", () => {
+  const held = new Set([...ALLOWLIST.features, ...ALLOWLIST.shared]);
+  for (const [edge, task] of Object.entries(ALLOWLIST.removedBy ?? {})) {
+    assert.ok(held.has(edge), `removedBy names an edge that is not in the allowlist: ${edge}`);
+    const group = task.match(/^[A-Z]+/)?.[0] ?? "";
+    assert.ok(existsSync(join(ROOT, "docs/tasks", group, `${task}.md`)), `${task} is done or missing, but ${edge} is still allowed: remove the import or name the task that will`);
   }
 });

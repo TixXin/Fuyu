@@ -31,8 +31,10 @@ pub(super) const SIDE_COLUMN_WIDTH: f64 = 44.0;
 pub(super) const SIDE_COLUMN_MIN_HEIGHT: f64 = 48.0;
 pub(super) const SIDE_COLUMN_MAX_HEIGHT: f64 = 300.0;
 
+const MAX_TOP_FILLET_RADIUS: f64 = 12.0;
+
 pub(super) fn max_expanded_width(scale: f64) -> f64 {
-    ((STAGE_WINDOW_WIDTH - 4.0) / scale).floor().max(EXPANDED_ISLAND_WIDTH)
+    (((STAGE_WINDOW_WIDTH - 4.0) / scale).floor() - 2.0 * MAX_TOP_FILLET_RADIUS).max(EXPANDED_ISLAND_WIDTH)
 }
 pub(super) const DEFAULT_EXPANDED_ISLAND_HEIGHT: f64 = 306.0;
 pub(super) const MIN_EXPANDED_ISLAND_HEIGHT: f64 = 72.0;
@@ -87,6 +89,7 @@ pub(crate) fn apply_stage_geometry(
         .or_else(|| primary_monitor.or(current_monitor))
         .ok_or_else(|| "No monitor is available for island positioning.".to_string())?;
 
+    let state = super::notch::resolve(window, &monitor, state);
     let scale = screen::monitor_scale(&monitor);
     let monitor_position = screen::monitor_origin(&monitor);
     let monitor_size = screen::monitor_size(&monitor);

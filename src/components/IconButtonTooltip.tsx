@@ -4,6 +4,7 @@ import { CARD_OFFSET, cardLeft } from "./hoverCardPlacement";
 import "./IslandHoverCard.css";
 
 const DELAY_MS = 1500;
+export const HIDE_TOOLTIP_EVENT = "fuyu-hide-tooltip";
 const TARGETS = "[title], [data-tooltip], button, [role='button'], [role='switch']";
 
 type Tip = { element: HTMLElement; text: string; pointerX: number | null };
@@ -83,6 +84,7 @@ export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { sco
     document.addEventListener("scroll", hide, true);
     document.addEventListener("keydown", onKey);
     window.addEventListener("blur", hide);
+    window.addEventListener(HIDE_TOOLTIP_EVENT, hide);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       hide();
@@ -94,6 +96,7 @@ export function IconButtonTooltip({ scope = ".island", delay = DELAY_MS }: { sco
       document.removeEventListener("scroll", hide, true);
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("blur", hide);
+      window.removeEventListener(HIDE_TOOLTIP_EVENT, hide);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [scope, delay]);

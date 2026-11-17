@@ -89,7 +89,7 @@
 .version-history__row svg {
   flex: none;
   color: var(--color-text-subtle);
-  transition: transform 160ms ease;
+  transition: transform var(--motion-base) var(--motion-ease);
 }
 
 .version-history__item--open .version-history__row svg {

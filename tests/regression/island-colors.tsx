@@ -98,6 +98,16 @@ const ratio = (a: Rgba, b: Rgba) => {
   return (high + 0.05) / (low + 0.05);
 };
 const MINIMUM: Record<string, number> = { "1": 4.5, "2": 4.5, "3": 3, ink: 4.5 };
+const LIGHT_TOKENS = ["--overlay-rgb", "--error-text", "--warning-text", "--popover-fill", "--text-1"];
+const tokensOn = (className: string) => {
+  const element = document.createElement("div");
+  element.className = className;
+  document.body.append(element);
+  const style = getComputedStyle(element);
+  const values = Object.fromEntries(LIGHT_TOKENS.map((name) => [name, style.getPropertyValue(name).trim()]));
+  element.remove();
+  return values;
+};
 const DESKS: [string, Rgba][] = [["black", [0, 0, 0, 1]], ["white", [255, 255, 255, 1]], ["blue", [43, 74, 122, 1]]];
 
 async function runChecks() {
@@ -117,6 +127,10 @@ async function runChecks() {
         check(worst.length === 4, `${swatch.label} on a ${deskName} desktop: ${worst.map((v) => v.toFixed(1)).join(" / ")}`);
       }
     }
+
+    const [lightTokens, darkTokens] = [tokensOn("island-light"), tokensOn("")];
+    const unset = LIGHT_TOKENS.filter((name) => !lightTokens[name] || lightTokens[name] === darkTokens[name]);
+    check(unset.length === 0, `A light island sets its own ${LIGHT_TOKENS.join(", ")}; left as on the dark island: ${unset.join(", ") || "none"}`);
 
     const custom = document.querySelector<HTMLElement>('[data-swatch="custom-dark"] [data-level="1"]')!;
     check(getComputedStyle(custom).color === "rgba(255, 217, 160, 0.96)", "A custom ink colours the text levels");

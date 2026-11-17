@@ -48,6 +48,10 @@ pub(crate) fn stop() {
     feishu::cancel();
 }
 
+pub(crate) fn running() -> bool {
+    runner::state() != runner::RunState::Off
+}
+
 #[tauri::command]
 pub async fn get_cc_connect_status(path: Option<String>) -> Result<CcConnectStatus, UserError> {
     let data_dir = data_dir()?;

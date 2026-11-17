@@ -6,6 +6,7 @@ import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
 import { RecordingNotice, RecordingNoticeActions } from "../../src/features/screenshot/RecordingNotice";
 import { useRecording } from "../../src/features/screenshot/useRecording";
+import "../../src/features/file-shelf/plugin/services.ts";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 

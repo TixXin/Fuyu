@@ -12,7 +12,7 @@
   color: var(--about-logo-call);
   font: 600 22px/1 Georgia, "Times New Roman", serif;
   text-decoration: none;
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color var(--motion-medium), background var(--motion-medium);
 }
 
 .about-identity__slot:hover,
@@ -56,7 +56,7 @@
   border: 1px solid var(--color-white-a08);
   border-radius: var(--radius-lg);
   text-decoration: none;
-  transition: background 140ms ease, border-color 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease);
 }
 
 .project-link:hover {
@@ -77,7 +77,7 @@
 
 .project-link--star .project-link__icon {
   color: var(--color-warning);
-  transition: transform 140ms ease, fill 140ms ease;
+  transition: transform var(--motion-base) var(--motion-ease), fill var(--motion-base) var(--motion-ease);
 }
 
 .project-link--star:is(:hover, :focus-visible) .project-link__icon {
@@ -86,7 +86,7 @@
 }
 
 .project-link--release .project-link__icon {
-  transition: transform 180ms ease, color 140ms ease;
+  transition: transform var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
 }
 
 .project-link--release:is(:hover, :focus-visible) .project-link__icon {
@@ -153,7 +153,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 32px 14px 14px;
-  transition: background 140ms ease, border-color 140ms ease, transform 160ms ease;
+  transition: background var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease);
 }
 
 .about-links .project-link:hover {
@@ -173,7 +173,7 @@
   top: 12px;
   right: 12px;
   opacity: 0.5;
-  transition: opacity 140ms ease;
+  transition: opacity var(--motion-base) var(--motion-ease);
 }
 
 .about-links .project-link:hover .project-link__arrow {

@@ -21,7 +21,6 @@ mod magpie;
 mod markers;
 mod notifications;
 mod orca;
-mod plan_usage;
 pub(crate) mod reply_marker;
 mod reply_text;
 pub(crate) mod remote_fetch;
@@ -42,10 +41,11 @@ pub(crate) mod sound_packs;
 mod tests;
 mod session_scan;
 mod sessions;
+pub(crate) use sessions::parse_timestamp_ms;
 mod title;
 mod todo_list;
 mod tool_call;
-mod usage;
+pub(crate) mod usage;
 mod push_detail;
 mod wezterm;
 mod window_focus;
@@ -518,28 +518,6 @@ pub async fn get_codex_usage() -> Result<Option<usage::AgentUsage>, String> {
 }
 
 #[tauri::command]
-pub async fn get_plan_usage(provider: String, refresh: bool) -> Result<usage::AgentUsage, String> {
-    let provider = plan_usage::PlanProvider::parse(&provider)?;
-    Ok(plan_usage::read(provider, refresh).await)
-}
-
-#[tauri::command]
-pub async fn set_plan_key(provider: String, key: String) -> Result<bool, crate::user_error::UserError> {
-    let provider = plan_usage::PlanProvider::parse(&provider)?;
-    tauri::async_runtime::spawn_blocking(move || plan_usage::save_key(provider, &key))
-        .await
-        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
-}
-
-#[tauri::command]
-pub async fn has_plan_key(provider: String) -> Result<bool, crate::user_error::UserError> {
-    let provider = plan_usage::PlanProvider::parse(&provider)?;
-    tauri::async_runtime::spawn_blocking(move || plan_usage::has_key(provider))
-        .await
-        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
-}
-
-#[tauri::command]
 pub async fn get_agent_host_icon(path: String) -> Result<Option<String>, String> {
     tauri::async_runtime::spawn_blocking(move || host_icon::icon_data_url(&path))
         .await
@@ -681,9 +659,6 @@ macro_rules! tauri_commands {
             crate::agent_status::refresh_agent_remote_hosts,
             crate::agent_status::get_agent_usage,
             crate::agent_status::get_codex_usage,
-            crate::agent_status::get_plan_usage,
-            crate::agent_status::set_plan_key,
-            crate::agent_status::has_plan_key,
             crate::agent_status::reply_marker::get_reply_marker_state,
             crate::agent_status::reply_marker::set_reply_marker,
             crate::agent_status::sound_packs::list_sound_packs,

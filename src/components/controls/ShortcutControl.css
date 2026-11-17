@@ -45,7 +45,7 @@
   font: inherit;
   font-size: 12px;
   font-weight: 500;
-  transition: background 140ms ease, border-color 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease);
 }
 
 .shortcut-record-button:has(.shortcut-keys--prompt) {
@@ -80,7 +80,7 @@
   background: var(--color-danger);
   border-color: transparent;
   box-shadow: 0 0 0 4px rgba(199, 80, 101, 0.16);
-  animation: saveButtonPop 760ms ease both;
+  animation: saveButtonPop 760ms var(--motion-ease) both;
 }
 
 .shortcut-row {

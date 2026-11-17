@@ -10,6 +10,7 @@ import { checkNarrow, renderShowcase } from "./agent-sessions-showcase";
 import { checkUsage } from "./agent-sessions-usage";
 import { checkSubagentCards, checkSubagents } from "./agent-sessions-subagents";
 import { checkChildSessions } from "./agent-sessions-children";
+import { checkExpandByDefault } from "./agent-sessions-expand";
 import { checkAgeColumns, renderAgeColumns } from "./agent-sessions-age";
 import type { AgentCardEffects, AgentHostDisplay, AgentSessionView } from "../../src/features/agent-status/agentSettings";
 
@@ -272,6 +273,7 @@ async function runChecks() {
     await checkUsage({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
     await checkSubagents({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
     await checkChildSessions({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
+    await checkExpandByDefault({ root, fixture, sessions, check, chromeHeight: ISLAND_CHROME_HEIGHT });
     sizeFor(3);
     await render("both");
 

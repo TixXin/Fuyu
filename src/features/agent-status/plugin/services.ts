@@ -16,7 +16,9 @@ const noUsage = (error: unknown) => {
   return null;
 };
 
-if (new URLSearchParams(window.location.search).get("window") === null) {
+const PROVIDED_IN = new Set([null, "settings"]);
+
+if (PROVIDED_IN.has(new URLSearchParams(window.location.search).get("window"))) {
   const provider = windowServices.provide(agentsV1, {
     sessions: async () => {
       const feed = agentFeed.get();

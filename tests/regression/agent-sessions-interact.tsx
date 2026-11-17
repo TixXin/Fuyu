@@ -9,6 +9,7 @@ import type { SessionRemoval } from "../../src/features/agent-status/useHiddenSe
 import type { AlertedSession } from "../../src/features/agent-status/useAgentAlerts";
 import { SESSION_FILTERS_STORAGE_KEY } from "../../src/features/agent-status/sessionFilters";
 import type { AgentSessionView } from "../../src/features/agent-status/agentSettings";
+import { until } from "./pollUntil";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const calls: Array<{ command: string; payload: Record<string, unknown> }> = [];
@@ -49,8 +50,6 @@ function check(condition: unknown, label: string) {
   if (!condition) throw new Error(label);
   messages.push(`PASS ${label}`);
 }
-const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
-const settle = async (done: () => boolean, ms = 2000) => { for (let spent = 0; !done() && spent < ms; spent += 50) await wait(50); };
 const archived: string[] = [];
 let removed: AgentSessionSummary | null = null;
 const removal: SessionRemoval = { remove: (session) => { archived.push(session.sessionId); }, removed, undo: () => { removed = null; } };
@@ -73,22 +72,25 @@ const rightClick = (target: Element) =>
   act(async () => { target.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2 })); });
 const closeMenu = async () => {
   await act(async () => { document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); });
-  await wait(30);
+  await until(() => !menu());
 };
 const hoverCard = () => document.querySelector<HTMLElement>(".agent-session-hover-card");
+const openMenu = async (target: Element) => {
+  await rightClick(target);
+  await until(menu);
+};
+const HOVER_DELAY_MS = 600;
 
 async function menuChecks(view: AgentSessionView) {
   await render(view);
-  await wait(40);
   const [first, , remote] = items();
   const more = first.querySelector<HTMLButtonElement>(".agent-session__more button");
   check(more?.getAttribute("aria-haspopup") === "menu" && more.getAttribute("aria-label")?.includes("更多操作"), `${view}：每行有「更多操作」按钮`);
-  check(getComputedStyle(first.querySelector(".agent-session__more")!).opacity === "0", `${view}：平时「⋯」不显示`);
+  check(await until(() => getComputedStyle(first.querySelector(".agent-session__more")!).opacity === "0"), `${view}：平时「⋯」不显示`);
 
-  await rightClick(first.querySelector(ROW)!);
-  await wait(40);
+  await openMenu(first.querySelector(ROW)!);
   check(menu() && menuLabels().join("|") === "跳到窗口|在文件夹中显示|复制路径|复制会话 id|归档|隐藏这个目录的会话", `${view}：右键一行弹出行菜单，项齐全`);
-  check(document.activeElement === menuItem("跳到窗口"), `${view}：菜单打开后焦点在第一项`);
+  check(await until(() => document.activeElement === menuItem("跳到窗口")), `${view}：菜单打开后焦点在第一项`);
   await press(document.activeElement!, "ArrowDown");
   check(document.activeElement === menuItem("在文件夹中显示"), `${view}：菜单里 ↓ 选下一项`);
   await press(document.activeElement!, "ArrowUp");
@@ -97,8 +99,7 @@ async function menuChecks(view: AgentSessionView) {
   await press(document.activeElement!, "Escape");
   check(!menu() && document.activeElement === more, `${view}：Esc 关菜单，焦点回到「⋯」`);
 
-  await rightClick(remote.querySelector(ROW)!);
-  await wait(40);
+  await openMenu(remote.querySelector(ROW)!);
   check(menu() && !menuLabels().includes("在文件夹中显示") && menuLabels().includes("复制路径"), `${view}：远程会话没有「在文件夹中显示」`);
   await closeMenu();
 }
@@ -107,44 +108,33 @@ async function runChecks() {
   try {
     await menuChecks("list");
 
-    await rightClick(rowButtons()[0]);
-    await wait(40);
+    await openMenu(rowButtons()[0]);
     await act(async () => menuItem("复制会话 id").click());
-    await wait(20);
-    check(copied[copied.length - 1] === "a" && !menu(), "复制会话 id，菜单关闭");
-    check(items()[0].querySelector('[role="status"]')?.textContent === "已复制", "复制后行内提示「已复制」");
-    await rightClick(rowButtons()[0]);
-    await wait(40);
+    check(await until(() => copied[copied.length - 1] === "a" && !menu()), "复制会话 id，菜单关闭");
+    check(await until(() => items()[0].querySelector('[role="status"]')?.textContent === "已复制"), "复制后行内提示「已复制」");
+    await openMenu(rowButtons()[0]);
     await act(async () => menuItem("复制路径").click());
-    await wait(20);
-    check(copied[copied.length - 1] === "E:\\Projects\\fly-island", "复制路径写进剪贴板");
-    await rightClick(rowButtons()[0]);
-    await wait(40);
+    check(await until(() => copied[copied.length - 1] === "E:\\Projects\\fly-island"), "复制路径写进剪贴板");
+    await openMenu(rowButtons()[0]);
     await act(async () => menuItem("在文件夹中显示").click());
-    await wait(20);
-    const reveal = calls.find((call) => call.command === "plugin:opener|reveal_item_in_dir");
+    const reveal = await until(() => calls.find((call) => call.command === "plugin:opener|reveal_item_in_dir"));
     check(reveal && JSON.stringify(reveal.payload).includes("fly-island"), "在文件夹中显示走 opener 的 revealItemInDir");
     let storageEvents = 0;
     const onStorage = (event: StorageEvent) => { if (event.key === SESSION_FILTERS_STORAGE_KEY) storageEvents += 1; };
     window.addEventListener("storage", onStorage);
-    await rightClick(rowButtons()[1]);
-    await wait(40);
+    await openMenu(rowButtons()[1]);
     await act(async () => menuItem("隐藏这个目录的会话").click());
     window.removeEventListener("storage", onStorage);
     const filters = JSON.parse(localStorage.getItem(SESSION_FILTERS_STORAGE_KEY) ?? "[]");
     check(filters.some((filter: { kind: string; value: string }) => filter.kind === "folder" && filter.value === "E:\\Projects\\MioPicFlow") && storageEvents === 1, "按目录隐藏写进「隐藏会话」规则并通知同窗口的列表");
-    await rightClick(rowButtons()[1]);
-    await wait(40);
+    await openMenu(rowButtons()[1]);
     await act(async () => menuItem("跳到窗口").click());
-    await wait(20);
-    check(calls.some((call) => call.command === "focus_agent_window" && call.payload.sessionId === "b"), "菜单里的「跳到窗口」和点一行一样");
-    await rightClick(rowButtons()[1]);
-    await wait(40);
+    check(await until(() => calls.some((call) => call.command === "focus_agent_window" && call.payload.sessionId === "b")), "菜单里的「跳到窗口」和点一行一样");
+    await openMenu(rowButtons()[1]);
     await act(async () => menuItem("归档").click());
     check(archived[archived.length - 1] === "b", "菜单里的「归档」归档这一行");
 
     await render("list");
-    await wait(20);
     const rows = rowButtons();
     check(rows.every((row) => row.tagName === "BUTTON"), "每行是按钮，Enter 跳转");
     rows[0].focus();
@@ -161,12 +151,10 @@ async function runChecks() {
     await press(rows[0], "ArrowDown", { altKey: true });
     check(document.activeElement === rows[0], "带修饰键的方向键不处理，留给岛上的快捷键");
     await press(rows[1], "F10", { shiftKey: true });
-    await wait(40);
-    check(menu() && items()[1].querySelector('.agent-session__more [aria-expanded="true"]'), "Shift+F10 打开选中行的菜单");
+    check(await until(() => menu() && items()[1].querySelector('.agent-session__more [aria-expanded="true"]')), "Shift+F10 打开选中行的菜单");
     await press(document.activeElement!, "Escape");
     await press(rows[0], "ContextMenu");
-    await wait(40);
-    check(menu() && items()[0].querySelector('.agent-session__more [aria-expanded="true"]'), "菜单键打开选中行的菜单");
+    check(await until(() => menu() && items()[0].querySelector('.agent-session__more [aria-expanded="true"]')), "菜单键打开选中行的菜单");
     await press(document.activeElement!, "Escape");
     rows[0].focus();
     await press(rows[0], "Delete");
@@ -175,45 +163,38 @@ async function runChecks() {
     check(archived[archived.length - 1] === "b", "Backspace 也归档");
     rows[2].focus();
     const moreShown = () => getComputedStyle(items()[2].querySelector(".agent-session__more")!).opacity === "1";
-    await settle(moreShown);
-    check(moreShown(), "键盘选中时「⋯」出现");
+    check(await until(moreShown), "键盘选中时「⋯」出现");
 
     await render("list", { withRemoval: false });
-    await wait(20);
     rowButtons()[0].focus();
     await press(rowButtons()[0], "Delete");
-    await rightClick(rowButtons()[0]);
-    await wait(40);
+    await openMenu(rowButtons()[0]);
     check(archived.length === 3 && menu() && !menuLabels().includes("归档"), "不能归档时 Delete 不动，菜单里也没有「归档」");
     await closeMenu();
 
     await render("list");
-    await wait(20);
     const anchor = items()[0].querySelector<HTMLElement>(".agent-session__hover")!;
+    const hoveredAt = performance.now();
     await act(async () => { anchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, clientX: 200 })); });
-    await wait(200);
-    check(!hoverCard(), "悬停不到一会儿不出卡片");
-    await wait(600);
-    const card = hoverCard();
+    const card = await until(hoverCard);
+    const shownAfter = performance.now() - hoveredAt;
+    check(card && shownAfter >= HOVER_DELAY_MS - 50, `悬停不到一会儿不出卡片（${Math.round(shownAfter)}ms 后出现）`);
     const lines = [...(card?.querySelectorAll(".island-hover-card__line") ?? [])].map((line) => line.textContent);
     check(lines[0] === `fly-island · ${SESSIONS[0].title}` && lines[1] === "你：给 Agent 页的会话行加上右键菜单和键盘操作" && lines[2] === "目录：E:\\Projects\\fly-island" && lines[3] === "在 Windows Terminal 里运行",
       "悬停一会儿出卡片：完整标题、最近提问、目录、宿主");
     check(card && getComputedStyle(card).whiteSpace === "normal" && card.getBoundingClientRect().width <= 362, "卡片里长标题换行，不撑出窗口");
-    await rightClick(rowButtons()[0]);
-    await wait(40);
-    check(menu() && !hoverCard(), "打开菜单时悬停卡片收起");
+    await openMenu(rowButtons()[0]);
+    check(await until(() => menu() && !hoverCard()), "打开菜单时悬停卡片收起");
     await closeMenu();
     await act(async () => { anchor.dispatchEvent(new PointerEvent("pointerout", { bubbles: true })); });
 
     const remoteAnchor = items()[2].querySelector<HTMLElement>(".agent-session__hover")!;
     await act(async () => { remoteAnchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, clientX: 200 })); });
-    await wait(700);
-    check(hoverCard()?.textContent?.includes("目录：devbox:/home/tixxin/fuyu"), "远程会话的卡片写主机名和远程路径");
+    check(await until(() => hoverCard()?.textContent?.includes("目录：devbox:/home/tixxin/fuyu")), "远程会话的卡片写主机名和远程路径");
     await act(async () => { remoteAnchor.dispatchEvent(new PointerEvent("pointerout", { bubbles: true })); });
 
     const alert: AlertedSession = { key: "claudeCode:a", kind: "completed", session: SESSIONS[0], rowHeight: 78, measure: () => undefined };
     await render("list", { reveal: alert });
-    await wait(20);
     check(!document.querySelector(".agent-session__hover") && !document.querySelector(".agent-session__more"), "弹出提醒里没有悬停卡片和行菜单");
 
     for (const view of ["cards", "compact"] as const) {
@@ -231,7 +212,6 @@ async function runChecks() {
 
     fixture.style.width = "400px";
     await render("list");
-    await wait(30);
     const narrow = items()[0];
     const more = narrow.querySelector<HTMLElement>(".agent-session__more button")!.getBoundingClientRect();
     const archive = narrow.querySelector<HTMLElement>(".agent-session__archive")!.getBoundingClientRect();
@@ -240,10 +220,8 @@ async function runChecks() {
     check(more.right <= archive.left && Math.abs((icon.left + icon.right) / 2 - (more.left + more.right) / 2) < 1.5 && archive.right <= narrow.getBoundingClientRect().right,
       "400 宽：「⋯」在归档左边，正好在 Agent 图标的位置");
     rowButtons()[0].focus();
-    await wait(200);
-    check(getComputedStyle(agent).opacity === "0" && getComputedStyle(narrow.querySelector(".agent-session__more")!).opacity === "1", "选中这一行时 Agent 图标换成「⋯」，不叠在一起");
-    await rightClick(rowButtons()[0]);
-    await wait(40);
+    check(await until(() => getComputedStyle(agent).opacity === "0" && getComputedStyle(narrow.querySelector(".agent-session__more")!).opacity === "1"), "选中这一行时 Agent 图标换成「⋯」，不叠在一起");
+    await openMenu(rowButtons()[0]);
     const box = menu()!.getBoundingClientRect();
     check(box.left >= 0 && box.right <= window.innerWidth && [...menu()!.querySelectorAll("span")].every((span) => span.scrollWidth <= span.clientWidth + 1), "400 宽：菜单不出窗口，文字不溢出");
     await closeMenu();

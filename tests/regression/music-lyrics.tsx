@@ -13,6 +13,7 @@ import { MediaWaveform } from "../../src/features/media/MediaWaveform";
 import { coverAccentVariables, useCoverColor } from "../../src/features/media/useCoverColor";
 import { contrastRatio, rgbToHex } from "../../src/features/media/coverColor";
 import { runLyricsHandoffChecks } from "./lyrics-handoff-checks";
+import { animationsDone, until } from "./pollUntil";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const LRC = [
@@ -24,10 +25,12 @@ const LRC = [
   "[00:15.00]刮风这天",
 ].join("\n");
 const queries: Array<Record<string, unknown>> = [];
+let answered = 0;
 mockIPC((command, payload) => {
   if (command !== "get_lyrics") return null;
   const query = (payload as { query: Record<string, unknown> }).query;
   queries.push(query);
+  setTimeout(() => { answered += 1; });
   if (query.title === "Yesterday") return { source: "kugou", lrc: ["[00:01.00]Oh I believe", "[00:05.00]in yesterday"].join("\n"), translation: "[00:01.00]哦 我相信" };
   if (query.title === "Believe") return { source: "kugou", lrc: "[00:01.00]<00:01.00>Oh <00:01.30>I <00:01.70>believe<00:03.00>\n[00:04.00]in yesterday" };
   return query.title === "晴天" ? { source: "lrclib", lrc: LRC } : null;
@@ -38,6 +41,7 @@ const results = document.getElementById("results")!;
 const messages: string[] = [];
 const root = createRoot(fixture);
 const ONLINE = { lyricsFolder: "", lyricsOnline: true, lyricsOffsetMs: 0 };
+const lookedUp = () => until(() => answered === queries.length);
 let settingsOpened = 0;
 const aligned: number[] = [];
 
@@ -56,8 +60,8 @@ async function render(mediaState: MediaState, lyricsSettings: typeof ONLINE | un
           onPlayPause={() => {}} onNext={() => {}} onPrevious={() => {}} lyricsSettings={lyricsSettings} onAlignLyrics={(ms) => aligned.push(ms)} />
       </I18nProvider></StrictMode>,
     );
-    await new Promise((resolve) => setTimeout(resolve, 60));
   });
+  await lookedUp();
 }
 
 function IslandLine({ mediaState, intro }: { mediaState: MediaState; intro: LyricsIntro }) {
@@ -69,8 +73,8 @@ function IslandLine({ mediaState, intro }: { mediaState: MediaState; intro: Lyri
 async function renderIsland(mediaState: MediaState, intro: LyricsIntro) {
   await act(async () => {
     root.render(<StrictMode><I18nProvider><IslandLine mediaState={mediaState} intro={intro} /></I18nProvider></StrictMode>);
-    await new Promise((resolve) => setTimeout(resolve, 60));
   });
+  await lookedUp();
 }
 
 function paintedCover(fills: Array<[string, number]>) {
@@ -104,10 +108,8 @@ async function renderCovers(withPanel?: MediaState) {
   await act(async () => {
     root.render(<StrictMode><I18nProvider><CoverStage name="dark" withPanel={withPanel} /><CoverStage name="light" /></I18nProvider></StrictMode>);
   });
-  for (let tries = 0; tries < 50 && [...document.querySelectorAll<HTMLElement>("[data-cover]")].some((stage) => !stage.dataset.color); tries += 1) {
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 100)); });
-  }
-  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 1_100)); });
+  await until(() => [...document.querySelectorAll<HTMLElement>("[data-cover]")].every((stage) => stage.dataset.color), 5000);
+  await until(() => animationsDone(fixture));
 }
 
 const cssHex = (value: string) => rgbToHex(value.match(/[\d.]+/g)!.slice(0, 3).map(Number) as [number, number, number]);
@@ -156,8 +158,7 @@ try {
   await renderIsland(track("晴天", 300, true), "note");
   check(islandLine().textContent === "♪" && islandLine().dataset.index === "-3", "前奏选「音符」时收起的岛显示音符");
   await renderIsland(track("晴天", 600, true), "note");
-  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 650)); });
-  check(islandLine().textContent === "故事的小黄花" && islandLine().dataset.index === "0", "到第一句时收起的岛切到歌词（换了 key，走淡入动画）");
+  check(await until(() => islandLine().textContent === "故事的小黄花" && islandLine().dataset.index === "0"), "到第一句时收起的岛切到歌词（换了 key，走淡入动画）");
   await renderIsland(track("晴天", 300), "song");
   check(islandLine().textContent === "待办", "暂停时前奏不显示歌名");
   await renderIsland(track("晴天", 13_500, true), "note");
@@ -170,8 +171,7 @@ try {
   await render(track("晴天", 6000), { ...ONLINE, lyricsOffsetMs: 2000 });
   check(lines()[1] === "故事的小黄花", "推后 2 秒时仍显示上一句");
   await render(track("晴天", 4500, true));
-  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 900)); });
-  check(lines()[1] === "从出生那年就飘着", "播放时在两次读取之间按时间往下走");
+  check(await until(() => lines()[1] === "从出生那年就飘着"), "播放时在两次读取之间按时间往下走");
 
   const before = queries.length;
   await render(track("七里香", 6000));
@@ -218,8 +218,7 @@ try {
   check(words().every((word) => getComputedStyle(word).animationPlayState === "paused"), "暂停时逐字填充也停住");
   await render(track("Believe", 1500, true));
   check(words().every((word) => getComputedStyle(word).animationPlayState === "running"), "播放时逐字填充往前走");
-  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 600)); });
-  check(fillX(words()[2]) !== "100%", "到点后下一个字开始变亮");
+  check(await until(() => words()[2] && fillX(words()[2]) !== "100%"), "到点后下一个字开始变亮");
   await render(track("Believe", 4500));
   check(words().length === 0 && lines()[1] === "in yesterday", "没有逐字时间的句子照常整句显示");
 

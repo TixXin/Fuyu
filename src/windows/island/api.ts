@@ -33,6 +33,18 @@ export function listenIslandNotch(handler: (notch: IslandNotch | null) => void):
   return listen<IslandNotch | null>(ISLAND_NOTCH_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
+export type AutoForm = "notch" | "top";
+
+export const ISLAND_AUTO_FORM_CHANGED_EVENT = "island-auto-form-changed";
+
+export function getIslandAutoForm(): Promise<AutoForm | null> {
+  return invoke<AutoForm | null>("get_island_auto_form");
+}
+
+export function listenIslandAutoForm(handler: (form: AutoForm | null) => void): Promise<UnlistenFn> {
+  return listen<AutoForm | null>(ISLAND_AUTO_FORM_CHANGED_EVENT, ({ payload }) => handler(payload));
+}
+
 export type IslandEdge = "top" | "left" | "right" | "bottom";
 
 export const ISLAND_EDGE_CHANGED_EVENT = "island-edge-changed";
@@ -71,6 +83,12 @@ export function listenIslandMoveArmed(
   return listen<IslandModifierTarget>(ISLAND_MOVE_ARMED_CHANGED_EVENT, ({ payload }) => handler(payload));
 }
 
+const ISLAND_HIDE_HINTS_EVENT = "island-hide-hints";
+
+export function listenIslandHideHints(handler: () => void): Promise<UnlistenFn> {
+  return listen(ISLAND_HIDE_HINTS_EVENT, () => handler());
+}
+
 const ISLAND_HOLD_CHANGED_EVENT = "island-hold-changed";
 
 export function listenIslandHold(handler: (held: boolean) => void): Promise<UnlistenFn> {
@@ -91,7 +109,7 @@ export function listenIslandResize(handler: (delta: IslandResizeDelta) => void):
 
 export const ISLAND_POSITION_CHANGED_EVENT = "island-position-changed";
 
-export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; animate?: boolean; dragGrid?: boolean };
+export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; autoForm: boolean; animate?: boolean; dragGrid?: boolean };
 
 export type IslandInteraction = {
   mode: IslandMode;

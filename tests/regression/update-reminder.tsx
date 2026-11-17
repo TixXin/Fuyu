@@ -12,11 +12,12 @@ import { I18nProvider } from "../../src/i18n";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
-import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 import { checkForUpdate, getUpdateState, installUpdate, reloadPreferences, setAutoCheck, setCheckInterval, setReminderMode, skipVersion } from "../../src/features/updater/updaterController";
 import { UPDATE_PREFERENCES_KEY } from "../../src/features/updater/storage";
 import { failNextUpdaterCall } from "./updateRuntimeMock";
 import { useFixtureLines } from "./islandLines";
+import { useUpdateContributions } from "../../src/features/updater/plugin/updateIsland";
 
 const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: automated });
@@ -24,6 +25,7 @@ async function update(action: () => void | Promise<unknown>) {
   if (automated) await act(async () => { await action(); });
   else await action();
 }
+const openUpdates = () => {};
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 
 const savedPreferences = localStorage.getItem(UPDATE_PREFERENCES_KEY);
@@ -38,13 +40,13 @@ function Island({ mode }: { mode: IslandMode }) {
   const qq = useQQNotifications(false);
   const wechat = useWeChatReminders(false);
   const qqMail = useMail(false);
+  useUpdateContributions(openUpdates);
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: null }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className="stage" style={{ "--collapsed-island-width": "300px", "--expanded-island-height": "220px", "--expanded-island-width": "460px" } as CSSProperties}>
     <IslandShell
       mode={mode} page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: false, translation: false, calendar: false, screenshots: false, timer: false }}
-      shelfCount={null}
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>

@@ -31,7 +31,7 @@ const used = (service: TranslationService): TranslationEngine => service.provide
 windowServices.provide(translatorV1, {
   translate: async ({ text, direction, engine }) => {
     const service = chosenService(engine);
-    return { text: await translateText(text, direction, service).catch(failed), engine: used(service) };
+    return { text: await translateText(text, direction ?? loadSettings().direction, service).catch(failed), engine: used(service) };
   },
   rewrite: async ({ text, task, prompt, engine }, caller) => {
     const service = chosenService(engine);

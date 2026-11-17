@@ -45,7 +45,7 @@
 | 列表、清理规则、命令 | `src-tauri/src/file_shelf/`（`mod.rs` 命令，`store.rs` 读写与规则，`availability.rs` 按卷检查是否可访问，`thumbnail.rs` 缩略图） |
 | 拖出 | `src-tauri/src/win32/ole.rs`：`SHDoDragDrop` + 资源管理器自己的数据对象。允许复制、移动、链接，首选复制。只允许复制时资源管理器会拒绝投放，这是没有直接用 `drag` crate 的原因 |
 | 复制到剪贴板 | `clipboard-win` 写入文件列表（CF_HDROP），与资源管理器的复制相同 |
-| 拖入 | Tauri 的 `onDragDropEvent`，`src/windows/island/useFileShelfDrop.ts` |
+| 拖入 | Tauri 的 `onDragDropEvent`，`src/features/file-shelf/island/useFileShelfDrop.ts`，由 file-shelf 内置插件的 runner（`plugin/runners.tsx`）挂上，计数、侧边行和页面读 `plugin/islandState.ts` |
 | 页面 | `src/features/file-shelf/` |
 
 列表保存在应用数据目录的 `file-shelf.json`。清理设置不写进这个文件：岛启动时通过 `set_file_shelf_options` 发给后端，之后每次读取或修改列表都会按它清理，所以不需要定时器。除添加外，命令只接收条目 id，只会把已在列表中的路径交给系统。

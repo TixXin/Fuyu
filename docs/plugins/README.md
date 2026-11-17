@@ -72,10 +72,7 @@ SDK、脚手架和示例插件都是 MIT 许可，拿来写插件不会给你的
 
 - 本地接口（`focusd.local-api`）：让其他程序通过 HTTP 读写待办、上报 AI Agent 状态，`fuyu-plugin dev` 也靠它。见 [本地接口](../features/local-api.md)。
 - 中心图案（`focusd.center-pattern`）：收起条中间的小图案或 Codex 宠物。
-- Agent 用量环（`focusd.claude-usage`）：收起条上每个 Agent 的 5 小时 / 7 天用量环。
-- Agent 会话环（`focusd.session-ring`）：收起条上按状态着色的会话环。
 - 计时器（`focusd.timer`）：岛上的倒计时和秒表，收起条显示剩余时间，到点提醒。
 - SSH 代理隧道（`focusd.ssh-proxy-tunnel`）：把这台电脑的代理借给 SSH 服务器。
-- cc-connect 手机连接（`focusd.cc-connect`）：经 cc-connect 把提醒推送到 Telegram、Discord、飞书。
 
 它们怎么实现、怎么新加一个，见 [内置插件](../architecture/plugins/builtins.md)。

@@ -19,8 +19,8 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    color 140ms ease,
-    background 140ms ease;
+    color var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease);
 }
 
 .settings-choice--multi .settings-choice__option {

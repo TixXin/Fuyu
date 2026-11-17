@@ -82,6 +82,20 @@ pub(super) fn prepare_overlay(app: &AppHandle, window: &WebviewWindow) {
     }
 }
 
+pub(super) fn close_overlay(app: &AppHandle, window: WebviewWindow) {
+    OVERLAYS.lock().unwrap_or_else(PoisonError::into_inner).clear();
+    let handle = app.clone();
+    let queued = app.run_on_main_thread(move || {
+        island_panel::forget_panel(&handle, window.label());
+        if let Err(error) = window.destroy() {
+            eprintln!("could not close a screenshot window: {error}");
+        }
+    });
+    if let Err(error) = queued {
+        eprintln!("could not close a screenshot window: {error}");
+    }
+}
+
 pub(super) fn prepare_pin(_window: &WebviewWindow) {}
 
 pub(super) fn drag_file(window: &WebviewWindow, path: PathBuf) -> Result<(), String> {

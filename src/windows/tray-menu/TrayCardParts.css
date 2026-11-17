@@ -45,7 +45,7 @@
   border-radius: 50%;
   background: var(--tray-knob);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  transition: left 0.15s;
+  transition: left var(--motion-base) var(--motion-ease);
 }
 
 .tray-card__switch[aria-checked="true"] .tray-card__track {

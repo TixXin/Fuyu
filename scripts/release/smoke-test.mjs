@@ -35,17 +35,42 @@ export function watchRun(run, { repo, id, interval, attempts = 6, pause = 15000 
   return false;
 }
 
-export function smokeTest(run, tag, repo) {
+export function waitForJobs(run, { repo, id, polls = 20, pause = 15000 }) {
+  let sawNone = false;
+  for (let poll = 0; poll < polls; poll += 1) {
+    const listed = run("gh", ["api", `repos/${repo}/actions/runs/${id}/jobs`, "--jq", ".total_count"], { capture: true, allowFailure: true });
+    if (listed.status === 0) {
+      if (Number(listed.stdout.trim()) > 0) return true;
+      sawNone = true;
+    }
+    if (poll < polls - 1) sleep(pause);
+  }
+  return !sawNone;
+}
+
+function dispatchSmoke(run, tag, repo, findPause) {
   const since = Date.now();
   const started = run("gh", ["workflow", "run", SMOKE_WORKFLOW, "--repo", repo, "--ref", "main", "-f", `tag=${tag}`], { capture: true, allowFailure: true });
   if (started.status !== 0) return `could not start ${SMOKE_WORKFLOW}: ${started.stderr.trim()}`;
-  let found = null;
-  for (let attempt = 0; attempt < 12 && !found; attempt += 1) {
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    sleep(findPause);
     const listed = run("gh", ["run", "list", "--repo", repo, "--workflow", SMOKE_WORKFLOW, "--limit", "5", "--json", "databaseId,createdAt,event,url"], { capture: true, allowFailure: true });
-    if (listed.status === 0) found = dispatchedRun(JSON.parse(listed.stdout || "[]"), since);
+    const found = listed.status === 0 ? dispatchedRun(JSON.parse(listed.stdout || "[]"), since) : null;
+    if (found) return found;
   }
-  if (!found) return `${SMOKE_WORKFLOW} was started but its run did not show up within a minute`;
-  console.log(`Smoke test running on a clean Windows runner: ${found.url}`);
-  return watchRun(run, { repo, id: found.databaseId, interval: 15 }) ? null : `the smoke test failed: ${found.url}`;
+  return `${SMOKE_WORKFLOW} was started but its run did not show up within a minute`;
+}
+
+export function smokeTest(run, tag, repo, { dispatches = 3, findPause = 5000, jobPolls = 20, pause = 15000 } = {}) {
+  for (let dispatch = 1; dispatch <= dispatches; dispatch += 1) {
+    const found = dispatchSmoke(run, tag, repo, findPause);
+    if (typeof found === "string") return found;
+    console.log(`Smoke test running on a clean Windows runner: ${found.url}`);
+    if (waitForJobs(run, { repo, id: found.databaseId, polls: jobPolls, pause })) {
+      return watchRun(run, { repo, id: found.databaseId, interval: 15, pause }) ? null : `the smoke test failed: ${found.url}`;
+    }
+    run("gh", ["run", "cancel", String(found.databaseId), "--repo", repo], { capture: true, allowFailure: true });
+    if (dispatch < dispatches) console.log(`  GitHub never gave run ${found.databaseId} a job; cancelled it and starting the smoke test again.`);
+  }
+  return `GitHub never gave the smoke test a job in ${dispatches} tries; the release stays a draft. Start ${SMOKE_WORKFLOW} again or check https://www.githubstatus.com`;
 }

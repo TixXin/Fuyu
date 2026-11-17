@@ -45,6 +45,12 @@ pub(super) fn prepare_overlay(_app: &AppHandle, window: &WebviewWindow) {
     }
 }
 
+pub(super) fn close_overlay(_app: &AppHandle, window: WebviewWindow) {
+    if let Err(error) = window.destroy() {
+        eprintln!("could not close a screenshot window: {error}");
+    }
+}
+
 pub(super) fn prepare_pin(window: &WebviewWindow) {
     if let Ok(hwnd) = window.hwnd() {
         let _ = win32::dwm::disable_transitions(hwnd);

@@ -32,8 +32,8 @@
   color: var(--text-2);
   cursor: pointer;
   transition:
-    color 140ms ease,
-    background 140ms ease;
+    color var(--motion-base) var(--motion-ease),
+    background var(--motion-base) var(--motion-ease);
 }
 
 .message-arrivals__media-button--main {

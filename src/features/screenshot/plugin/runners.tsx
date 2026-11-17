@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "../../../i18n";
-import { agentShell } from "../../agent-status/plugin/islandState";
 import { LINE_PRIORITY, type IslandContribution } from "../../plugin-kernel/islandContributions";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
@@ -11,6 +10,7 @@ import { useScreenshotCard } from "../useScreenshotCard";
 import { useScreenshotNotice } from "../useScreenshotNotice";
 import { useScreenshotText } from "../useScreenshotText";
 import { screenshotIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type RunnerProps = {
   settings: { screenshotEnabled: boolean };
@@ -39,7 +39,7 @@ function ScreenshotRunner({ settings, collapseIsland }: RunnerProps) {
   const peek = useScreenshotText();
   const screenshot = useIslandScreenshot(settings.screenshotEnabled, collapseIsland);
   const card = useScreenshotCard(screenshot.settings.cardSeconds);
-  const notice = useScreenshotNotice(card, agentShell.use().sessions);
+  const notice = useScreenshotNotice(card);
   const recording = useRecording();
   usePinsKey();
   useIslandAction("screenshot.start", screenshot.start);
@@ -53,8 +53,8 @@ function ScreenshotRunner({ settings, collapseIsland }: RunnerProps) {
   if (card.current !== null) list.push({ kind: "reveal", reveal: "always" }, { kind: "busy" });
   if (recording.shown) list.push({ kind: "busy" }, { kind: "notice", item: "recording" });
   if (notice.taken) list.push({ kind: "notice", item: "screenshot" });
-  useIslandContributions("builtin", "screenshot.island", list);
+  useIslandContributions(OWNER, "screenshot.island", list);
   return null;
 }
 
-runnerSlot.add({ id: "screenshot.runner", component: ScreenshotRunner });
+runnerSlot.add({ id: "screenshot.runner", component: ScreenshotRunner }, OWNER);

@@ -3,8 +3,8 @@
   border-radius: 0 0 var(--spot-radius) var(--spot-radius);
   box-shadow: 0 0 0 200vmax rgba(6, 8, 14, 0.5);
   pointer-events: none;
-  transition: left 220ms ease, top 220ms ease, width 220ms ease, height 220ms ease, border-radius 220ms ease;
-  animation: spotlightIn 500ms ease-out backwards;
+  transition: left var(--motion-medium) var(--motion-ease), top var(--motion-medium) var(--motion-ease), width var(--motion-medium) var(--motion-ease), height var(--motion-medium) var(--motion-ease), border-radius var(--motion-medium) var(--motion-ease);
+  animation: spotlightIn var(--motion-slow) var(--motion-ease) backwards;
 }
 
 .onboarding-spotlight::after {
@@ -14,7 +14,7 @@
   border: 2px solid var(--color-accent);
   border-top: 0;
   border-radius: inherit;
-  animation: spotlightCall 1.8s ease-out infinite;
+  animation: spotlightCall 1.8s var(--motion-ease) infinite;
 }
 
 .onboarding-spotlight--open::after {

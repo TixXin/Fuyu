@@ -24,9 +24,9 @@
 
 .island__glass {
   transition:
-    --glass-c1 1200ms ease,
-    --glass-c2 1200ms ease,
-    --glass-c3 1200ms ease;
+    --glass-c1 1200ms var(--motion-ease),
+    --glass-c2 1200ms var(--motion-ease),
+    --glass-c3 1200ms var(--motion-ease);
 }
 
 .island__glass-backdrop,
@@ -54,7 +54,7 @@
   aspect-ratio: 1;
   border-radius: var(--radius-circle, 50%);
   will-change: transform;
-  animation: glassBlob1 var(--glass-flow-duration, 23s) ease-in-out infinite alternate;
+  animation: glassBlob1 var(--glass-flow-duration, 23s) var(--motion-ease-in-out) infinite alternate;
   animation-name: var(--glass-blob, glassBlob1);
 }
 
@@ -124,7 +124,7 @@
   width: 260%;
   background: linear-gradient(115deg, transparent 30%, var(--glass-sheen-color, rgba(var(--overlay-rgb, 255, 255, 255), 0.18)) 45%, transparent 60%);
   mix-blend-mode: overlay;
-  animation: glassSheen calc(var(--glass-flow-duration, 23s) * 0.48) ease-in-out infinite alternate;
+  animation: glassSheen calc(var(--glass-flow-duration, 23s) * 0.48) var(--motion-ease-in-out) infinite alternate;
 }
 
 @keyframes glassSheen {

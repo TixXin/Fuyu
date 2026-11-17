@@ -45,3 +45,4 @@ src-tauri/tauri.release.conf.json
 /video/.browser
 /video/.tmp
 *.vsix
+/ai-guide/

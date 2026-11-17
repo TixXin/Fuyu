@@ -24,6 +24,7 @@ pub(crate) struct Migration {
     pub(crate) v2: &'static str,
     pub(crate) v3: &'static str,
     pub(crate) config: fn(&Grant) -> Vec<(&'static str, Value)>,
+    pub(crate) off_without_grant: bool,
 }
 
 fn timer_config(grant: &Grant) -> Vec<(&'static str, Value)> {
@@ -37,7 +38,37 @@ fn timer_config(grant: &Grant) -> Vec<(&'static str, Value)> {
     config
 }
 
-pub(crate) const MIGRATIONS: &[Migration] = &[Migration { v2: "focusd.timer", v3: "timer", config: timer_config }];
+const CLAUDE_USAGE_SWITCHES: [&str; 5] = ["claudeCode", "codex", "glm", "kimi", "askAnthropic"];
+const CLAUDE_USAGE_TEXTS: [&str; 2] = ["show", "proxy"];
+
+fn claude_usage_config(grant: &Grant) -> Vec<(&'static str, Value)> {
+    let settings = &grant.settings;
+    let switches = CLAUDE_USAGE_SWITCHES.into_iter().filter_map(|key| settings.get(key).filter(|value| value.is_boolean()).map(|value| (key, value.clone())));
+    let texts = CLAUDE_USAGE_TEXTS.into_iter().filter_map(|key| settings.get(key).filter(|value| value.is_string()).map(|value| (key, value.clone())));
+    let interval = settings.get("intervalMinutes").filter(|value| value.is_number()).map(|value| ("intervalMinutes", value.clone()));
+    switches.chain(texts).chain(interval).collect()
+}
+
+fn cc_connect_config(grant: &Grant) -> Vec<(&'static str, Value)> {
+    let settings = &grant.settings;
+    let path = settings.get("path").filter(|value| value.as_str().is_some_and(|path| !path.trim().is_empty())).map(|value| ("path", value.clone()));
+    let run = settings.get("run").filter(|value| value.is_boolean()).map(|value| ("run", value.clone()));
+    path.into_iter().chain(run).collect()
+}
+
+fn session_ring_config(grant: &Grant) -> Vec<(&'static str, Value)> {
+    let settings = &grant.settings;
+    let style = settings.get("style").filter(|value| value.is_string()).map(|value| ("style", value.clone()));
+    let count = settings.get("showCount").filter(|value| value.is_boolean()).map(|value| ("showCount", value.clone()));
+    style.into_iter().chain(count).collect()
+}
+
+pub(crate) const MIGRATIONS: &[Migration] = &[
+    Migration { v2: "focusd.timer", v3: "timer", config: timer_config, off_without_grant: false },
+    Migration { v2: "focusd.claude-usage", v3: "claude-usage", config: claude_usage_config, off_without_grant: true },
+    Migration { v2: "focusd.cc-connect", v3: "cc-connect", config: cc_connect_config, off_without_grant: true },
+    Migration { v2: "focusd.session-ring", v3: "session-ring", config: session_ring_config, off_without_grant: true },
+];
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 struct Marker {
@@ -61,7 +92,10 @@ pub(crate) struct Plan {
 }
 
 pub(crate) fn plan(migration: &Migration, grants: &Map<String, Value>) -> Option<Plan> {
-    let grant: Grant = serde_json::from_value(grants.get(migration.v2)?.clone()).ok()?;
+    let Some(grant) = grants.get(migration.v2) else {
+        return migration.off_without_grant.then(|| Plan { id: migration.v3, disable: true, config: Vec::new() });
+    };
+    let grant: Grant = serde_json::from_value(grant.clone()).ok()?;
     Some(Plan { id: migration.v3, disable: !grant.enabled, config: (migration.config)(&grant) })
 }
 

@@ -101,7 +101,7 @@ function Update-Tasks {
     $cli = Join-Path $script:Repo 'scripts\tasks\tasks.mjs'
     if (-not $script:Repo -or -not (Test-Path $cli)) {
         $script:Tasks = @()
-        $script:LoadError = Both '\u5728\u63d2\u4ef6\u8bbe\u7f6e\u91cc\u586b fly-island \u4ed3\u5e93\u76ee\u5f55' 'Set the fly-island repository folder in the settings.'
+        $script:LoadError = Both '\u5728\u63d2\u4ef6\u8bbe\u7f6e\u91cc\u586b\u6d6e\u5c7f\u4ed3\u5e93\u76ee\u5f55' 'Set the Fuyu repository folder in the settings.'
         Send-Model
         return
     }

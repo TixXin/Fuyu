@@ -82,7 +82,7 @@ label.settings-row__title {
 
 .settings-row--found {
   border-radius: var(--radius-md, 10px);
-  animation: settings-row-found 1.8s ease-out;
+  animation: settings-row-found 1.8s var(--motion-ease);
 }
 
 @keyframes settings-row-found {

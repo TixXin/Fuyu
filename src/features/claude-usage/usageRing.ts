@@ -1,5 +1,5 @@
-import type { AgentUsage, UsageWindow } from "../agent-status/api";
-import { liveUsage, untilReset, USAGE_STALE_MS, usageSourceLines } from "../agent-status/usage.ts";
+import type { AgentUsage, UsageWindow } from "../../lib/agent-usage/types";
+import { liveUsage, untilReset, USAGE_STALE_MS, usageSourceLines } from "../../lib/agent-usage/usage.ts";
 import type { HoverCardLine } from "../../components/IslandHoverCard";
 import type { MiniRingTrack } from "../../components/MiniRing";
 import type { ClaudeUsageText } from "../../i18n/sections/claudeUsage";
@@ -26,6 +26,8 @@ export const USAGE_PROVIDERS: readonly { id: UsageProviderId; name: string; colo
 export type UsageProvider = (typeof USAGE_PROVIDERS)[number];
 
 export const usageItemId = (provider: Pick<UsageProvider, "id">) => `usage:${provider.id}`;
+
+export const usageHint = (provider: Pick<UsageProvider, "id">) => `usage.${provider.id}`;
 
 export function shownUsageProviders(settings: Record<string, unknown>): UsageProvider[] {
   return USAGE_PROVIDERS.filter(({ id, defaultOn }) => (typeof settings[id] === "boolean" ? settings[id] : defaultOn));

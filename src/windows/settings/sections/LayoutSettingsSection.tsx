@@ -9,6 +9,8 @@ import { DEFAULT_SETTINGS, MAX_COLLAPSED_WIDTH_EXTRA, MAX_ISLAND_CORNER_RADIUS, 
 import type { IslandCornerShape, IslandForm, IslandSettings } from "../../../lib/settings/types";
 import { useIslandDockEdge } from "./useIslandDockEdge";
 
+const FORMS = ["top", "pill", "notch"] as const satisfies readonly IslandForm[];
+const MAC_FORMS = ["auto", ...FORMS] as const satisfies readonly IslandForm[];
 const scale = (value: number) => `${value.toFixed(2)}x`;
 const pixels = (value: number) => `${Math.round(value)} px`;
 const signedPixels = (value: number) => `${value > 0 ? "+" : ""}${Math.round(value)} px`;
@@ -113,7 +115,7 @@ function IslandFormGroup({ settings, onSettingsChange }: LayoutSectionProps) {
   const text = useTranslation().settings.layout;
   const edge = useIslandDockEdge() ?? "top";
   const offTop = edge !== "top";
-  const forms = (["top", "pill", "notch"] as const).map((value) => ({ value, label: text.formOptions[value] }));
+  const forms = (isMacOS ? MAC_FORMS : FORMS).map((value) => ({ value, label: text.formOptions[value] }));
 
   return (
     <SettingsGroup title={text.formTitle}>

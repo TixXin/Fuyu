@@ -18,18 +18,22 @@
 
 折叠岛没有摘要文字时，在中间显示眼睛、小鸟、光点、小猫、悬岛标志或一只 Codex Pets 宠物，摘要只有剩余待办数时排在待办数前面。悬岛标志和宠物随 Agent 会话的状态变化，岛上显示 Agent 标题时站在标题前代替 Agent 图标（状态灯已经是悬岛时，悬岛标志不再站过去）。设置「大小」调图案高度，默认 24px，和环一样高。
 
-### Agent 用量环（`focusd.claude-usage`，默认关闭；原名 Claude 用量环）
+### Agent 用量环（`focusd.claude-usage`，已迁走）
+
+2026-11-16 起（E36.3.39）用量环是第 3 版的内置插件 `claude-usage`，不在这张表里了；开关和设置第一次启动新版本时迁进 `plugins-v3/plugins.yml`（第 2 版里没打开过的迁过来也是关的），设置在 设置 → AI Agent 的「用量环」分组。下面是它的做法，迁走后没变：
 
 收起条上每个打开的 Agent 一个同心双环，外环 5 小时、内环 7 天（没有周限额时画本月），悬停显示详情卡片。设置里 Claude Code（默认开）、Codex、GLM、Kimi 各一个开关。
 
-- Codex 读本机 Codex 会话记录（`get_codex_usage`，和 Agent 页相同，不联网）。
-- GLM 和 Kimi 用插件页保存的 API Key 直连官方接口（`get_plan_usage`：`open.bigmodel.cn/api/monitor/usage/quota/limit`、`api.kimi.com/coding/v1/usages`；不走代理、不跟随重定向，答复缓存 1 分钟，点击环 10 秒内只放行一次）。Key 由 `set_plan_key` 存进 Windows 凭据管理器 `com.tixxin.fuyu.plan-usage`，`has_plan_key` 只回答有没有，Key 不回到前端、日志和插件设置。Qwen（阿里云百炼）没有公开的额度查询接口，暂不支持。
-- Claude Code 的数据与 Agent 页顶部的用量相同（`get_agent_usage`）：Claude Code 经本机 magpie 网关时读它的 `/v1/magpie/quotas`（只请求本机），否则读 claude-hud 写出的用量快照；都不联网、不读登录凭据。
-- 设置「直接向 Anthropic 查询」（默认关）打开后，原生端（`src-tauri/src/claude_usage/`）只读 Claude Code 的 `~/.claude/.credentials.json` 里的 access token（不刷新、不改写，不进日志、前端和事件），经 http(s) 代理请求 `api.anthropic.com/api/oauth/usage`：代理依次取插件设置、`HTTPS_PROXY`、Windows 系统代理，都没有就不请求，**从不直连**；不跟随重定向；间隔 5–120 分钟（设置「刷新间隔」），失败时加倍退避，429 遵守 `Retry-After`。`get_agent_usage` 在两份数据中取较新的，并带上最近一次失败的原因。这个接口没有公开文档，可能随时失效。
+- Codex 读本机 Codex 会话记录（`get_codex_usage`，环经 `agents/v1` 的 `usage()` 读，和 Agent 页相同，不联网）。
+- GLM 和 Kimi 用「用量环」分组里保存的 API Key 直连官方接口（`get_plan_usage`：`open.bigmodel.cn/api/monitor/usage/quota/limit`、`api.kimi.com/coding/v1/usages`；不走代理、不跟随重定向，答复缓存 1 分钟，点击环 10 秒内只放行一次）。Key 由 `set_plan_key` 存进 Windows 凭据管理器 `com.tixxin.fuyu.plan-usage`，`has_plan_key` 只回答有没有，Key 不回到前端、日志和插件设置。Qwen（阿里云百炼）没有公开的额度查询接口，暂不支持。
+- Claude Code 的数据与 Agent 页顶部的用量相同（`get_agent_usage`，环经 `agents/v1` 的 `usage()` 读）：Claude Code 经本机 magpie 网关时读它的 `/v1/magpie/quotas`（只请求本机），否则读 claude-hud 写出的用量快照；都不联网、不读登录凭据。
+- 设置「直接向 Anthropic 查询」（默认关）打开后，原生端（`src-tauri/src/claude_usage/`）只读 Claude Code 的 `~/.claude/.credentials.json` 里的 access token（不刷新、不改写，不进日志、前端和事件），经 http(s) 代理请求 `api.anthropic.com/api/oauth/usage`：代理依次取插件配置、`HTTPS_PROXY`、Windows 系统代理，都没有就不请求，**从不直连**；不跟随重定向；间隔 5–120 分钟（设置「刷新间隔」），失败时加倍退避，429 遵守 `Retry-After`。`get_agent_usage` 在两份数据中取较新的，并带上最近一次失败的原因。这个接口没有公开文档，可能随时失效。
 
-### Agent 会话环（`focusd.session-ring`，默认关闭）
+### Agent 会话环（`focusd.session-ring`，已迁走）
 
-AI Agent 开启时，在收起条上代替蓝色会话数，样式可选像素格（默认）、分段环、状态条和信号格，按状态着色（等你确认、等你回复、运行、可能已停、完成），分段环和状态条的会话数可以用「显示会话数」开关关掉，悬停列出等你处理的会话，点击打开 Agent 页。数据就是 Agent 页的会话列表（Claude Code 和 Codex），只在岛屿窗口工作，没有原生部分。
+2026-11-16 起（E36.3.40）会话环是第 3 版的内置插件 `session-ring`，不在这张表里了；开关、样式和「显示会话数」第一次启动新版本时迁进 `plugins-v3/plugins.yml`（第 2 版里没打开过的迁过来也是关的），设置在 设置 → AI Agent 的「会话环」分组。会话经窗口服务 `agents/v1` 读。下面是它的做法，迁走后没变：
+
+AI Agent 开启时，在收起条上代替蓝色会话数，样式可选像素格（默认）、分段环、状态条和信号格，按状态着色（等你确认、等你回复、运行、可能已停、完成），分段环和状态条的会话数可以用「显示会话数」开关关掉，悬停列出等你处理的会话，点击打开 Agent 页。数据就是 Agent 页的会话列表（`agents/v1` 的 `sessions()` 里 `listed` 的那些），只在岛屿窗口工作，没有原生部分。
 
 ### 计时器（`focusd.timer`，已迁走）
 
@@ -45,7 +49,9 @@ AI Agent 开启时，在收起条上代替蓝色会话数，样式可选像素�
 - 打开主机或改端口时先用一条短 ssh 在服务器上跑 `ss -ltn`（没有时 `netstat -ltn`）看端口是否已被占用，占用时问「仍要搭建隧道吗？」：是就照样搭（等端口空出来），否就不打开；查不了时同样询问，并写出原因；岛屿启动或重连时不弹窗，转发被拒时显示「端口被占用，等待中」并继续重试。
 - 打开的主机下面有一行可复制的 `export http_proxy=… https_proxy=… HTTPS_PROXY=…`，在服务器上运行它。
 
-### cc-connect 手机连接（`focusd.cc-connect`，默认关闭）
+### cc-connect 手机连接（`focusd.cc-connect`，已迁走）
+
+2026-11-16 起（E36.3.41）cc-connect 是第 3 版的内置插件 `cc-connect`，不在这张表里了；开关、程序路径和「由岛启动」第一次启动新版本时迁进 `plugins-v3/plugins.yml`（第 2 版里没打开过的迁过来也是关的），设置在 设置 → AI Agent → 提醒 的「cc-connect 手机连接」一节，手机推送经窗口服务 `cc-connect/v1` 发送。下面是它的做法，迁走后没变（原来写「插件页」的地方现在是那一节）：
 
 让手机推送经 [cc-connect](https://github.com/chenhg5/cc-connect) 的机器人发到 Telegram、Discord、飞书，没装过 cc-connect 也能从零搭好。
 

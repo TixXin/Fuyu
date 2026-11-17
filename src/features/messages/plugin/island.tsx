@@ -9,6 +9,7 @@ import { MessageArrivalsPanel } from "../arrivals/MessageArrivalsPanel";
 import { MessagesPanel } from "../Messages";
 import { islandPage } from "./page.ts";
 import { messagesIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type Panel = ComponentProps<typeof MessagesPanel>;
 
@@ -58,8 +59,8 @@ function MessagesButton({ page, withShortcut }: HeaderContext) {
   </button>;
 }
 
-pageSlot.add({ ...islandPage, component: MessagesPage });
-headerSlot.add({ id: "messages", order: 20, enabled: ({ isPageEnabled }) => isPageEnabled("qq"), component: MessagesButton });
+pageSlot.add({ ...islandPage, component: MessagesPage }, OWNER);
+headerSlot.add({ id: "messages", order: 20, enabled: ({ isPageEnabled }) => isPageEnabled("qq"), component: MessagesButton }, OWNER);
 
 type CollapsedContext = {
   t: Translations;
@@ -78,4 +79,4 @@ function MailItem({ t }: CollapsedContext) {
   );
 }
 
-collapsedSlot.add({ id: "mail", order: 20, shown: ({ hints }) => hints.has("messages.mail"), component: MailItem });
+collapsedSlot.add({ id: "mail", order: 20, shown: ({ hints }) => hints.has("messages.mail"), component: MailItem }, OWNER);

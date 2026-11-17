@@ -49,8 +49,8 @@ mockIPC((command, payload) => {
     case "get_audio_level": return { active: false, peak: 0, updatedAt: 0 };
     case "get_foreground_fullscreen": return { active: false, onIslandMonitor: false };
     case "set_island_interaction": return "disabled";
-    case "set_qq_notifications_enabled": return { revision: ++revision, enabled: args.enabled, status: args.enabled ? "listening" : "disabled", items: [], error: null };
-    case "set_wechat_reminders_enabled": return { revision: ++revision, enabled: args.enabled, status: args.enabled ? "listening" : "disabled", pending: false, lastAttentionAt: null, error: null };
+    case "get_qq_notification_state": return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+    case "set_wechat_expose_ui": case "set_wechat_hide_taskbar_button": return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
     case "get_qq_mail_state": return [{ revision: ++revision, email: "test@qq.com", configured: true, enabled: true, syncing: false, status: "connected", unreadCount: 1, items: [{ id: "mail:1", uid: 1, sender: "原始发件人", subject: "保留邮件主题", receivedAt: now.getTime(), unread: true }], lastSyncedAt: now.getTime(), error: null }];
     case "read_qq_mail": ++reads; return { id: args.messageId, content: "<script>removed</script>", contentType: "text/html" };
     case "has_translation_secret": return false;
@@ -99,7 +99,7 @@ else {
     check(document.querySelector(LANGUAGE_TRIGGER)?.getAttribute("aria-label") === "界面语言", "Chinese language control is reachable");
     const dataKeys = ["fuyu-todos", "fuyu-daily-note", "fuyu-archives", "fuyu-settings", "fuyu-setting-presets"];
     const dataBefore = dataKeys.map(key => localStorage.getItem(key));
-    const subscriptionsBefore = commands.filter(command => command.startsWith("set_qq_") || command === "set_wechat_reminders_enabled").length;
+    const subscriptionsBefore = commands.filter(command => command === "get_qq_notification_state" || command === "set_wechat_expose_ui").length;
     await switchTo("en");
     check(document.documentElement.lang === "en" && localStorage.getItem(LOCALE_STORAGE_KEY) === "en", "Language changes immediately and persists");
     check(document.querySelector(".settings-sidebar")?.textContent?.includes("Appearance"), "Settings categories are translated");
@@ -108,7 +108,7 @@ else {
     check(document.querySelector(".editor-panel")?.textContent?.includes("Collapsed island scale"), "Current scale and font settings are translated");
     await click(".settings-sidebar__item[data-category='general']");
     check(dataKeys.every((key, index) => localStorage.getItem(key) === dataBefore[index]), "Switching keeps tasks, notes, settings, and custom presets unchanged");
-    check(commands.filter(command => command.startsWith("set_qq_") || command === "set_wechat_reminders_enabled").length === subscriptionsBefore, "Switching does not reconnect notification receivers");
+    check(commands.filter(command => command === "get_qq_notification_state" || command === "set_wechat_expose_ui").length === subscriptionsBefore, "Switching does not reconnect notification receivers");
     await act(async () => { changeLocale!("constructor" as "en"); });
     check(document.documentElement.lang === "en", "Invalid locale cannot break the mounted interface");
     await click(".dot-button--todo");

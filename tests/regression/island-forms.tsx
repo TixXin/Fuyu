@@ -8,7 +8,7 @@ import { applyIslandNotch, notchExpandedExtra, notchFittedWidth, notchPanelWidth
 import { islandFormLayout, PILL_TOP_GAP } from "../../src/windows/island/islandForm";
 import type { IslandForm } from "../../src/lib/settings/types";
 import type { IslandNotch } from "../../src/windows/island/api";
-import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
@@ -40,7 +40,6 @@ function Fixture() {
       mode={state.expanded ? "expanded" : "collapsed"} page={state.popup ? "agents" : "todo"} popup={state.popup} isTucked={state.tucked} isDetached={islandFormLayout({ islandForm: state.form, marginY: 0, menuBarPlacement: "notch" }).marginY > 0} showTitle={false}
       showCollapsedText={!state.notch} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
-      shelfCount={null}
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
@@ -74,6 +73,7 @@ async function runChecks() {
     const layout = (islandForm: IslandForm, marginY = 0, menuBarPlacement: "notch" | "below" = "notch") => islandFormLayout({ islandForm, marginY, menuBarPlacement });
     check(layout("top").marginY === 0 && !layout("top").fitNotch && !layout("top").underMenuBar && layout("top", 0, "below").underMenuBar, "贴顶：离顶照「顶部距离」，菜单栏照设置");
     check(layout("pill").marginY === PILL_TOP_GAP && layout("pill", 30).marginY === 30 && layout("pill").underMenuBar && !layout("pill").fitNotch, "药丸：离顶至少 10，Mac 上从菜单栏下沿算");
+    check(layout("auto", 20, "below").marginY === 20 && layout("auto", 20, "below").underMenuBar && !layout("auto").fitNotch && layout("auto").autoForm && !layout("top").autoForm, "自动：先按贴顶排，由 Rust 按所在屏换成刘海");
     check(layout("notch", 40, "below").marginY === 0 && layout("notch", 40, "below").fitNotch && !layout("notch", 0, "below").underMenuBar, "刘海：贴住顶边、压在菜单栏上");
 
     await set({ form: "top" });

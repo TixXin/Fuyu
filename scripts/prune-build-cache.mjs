@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, rmSync, statfsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { mainCheckout, PUBLISH_DIR, targetDir } from "./build-dirs.mjs";
@@ -7,7 +7,7 @@ export const MAX_AGE_DAYS = 3;
 export const KEEP = 3;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const OWN_UNIT = /^(fuyu|fuyu_lib|focusd_island|focusd_island_lib)-([0-9a-z]+)(?:\.|$)/;
+const OWN_UNIT = /^(fuyu|fuyu_lib)-([0-9a-z]+)(?:\.|$)/;
 const INCREMENTAL_UNIT = /^(.+)-([0-9a-z]+)$/;
 const TEMP_ARCHIVE = /^\.tmp.*\.temp-archive$/;
 const LANE_DIR = /^lane-(\d+|build)$/;
@@ -74,17 +74,47 @@ export function profileDirs(target) {
   return candidates.filter((dir) => ["deps", "incremental"].some((sub) => existsSync(path.join(dir, sub))));
 }
 
-function profileItems(profile, cutoff) {
+export const RECENT_MS = 60 * 60 * 1000;
+export const MAX_UNITS = 8;
+export const LOW_FREE_BYTES = 40 * 1024 ** 3;
+const MEMBER_UNIT = /^(plugin_base|plugin_base_macros|sherpa_runtime)-([0-9a-z]+)(?:\.|$)/;
+
+export function pruneRules({ now, maxAgeDays, pressure }) {
+  const recent = now - RECENT_MS;
+  return [
+    { keep: KEEP, cutoff: now - maxAgeDays * DAY_MS },
+    { keep: MAX_UNITS, cutoff: recent },
+    ...(pressure ? [{ keep: KEEP, cutoff: recent }] : []),
+  ];
+}
+
+function staleByRules(units, rules) {
+  return [...new Set(rules.flatMap((rule) => staleUnits(units, rule.cutoff, rule.keep)))].sort();
+}
+
+export function freeBytes(dir) {
+  try {
+    const stat = statfsSync(dir);
+    return stat.bavail * stat.bsize;
+  } catch {
+    return Infinity;
+  }
+}
+
+function profileItems(profile, rules) {
+  const cutoff = rules[0].cutoff;
   const items = [];
   const incremental = path.join(profile, "incremental");
   const caches = groupUnits(list(incremental), INCREMENTAL_UNIT, (name) => mtime(path.join(incremental, name)));
-  for (const unit of staleUnits(caches.units, cutoff)) items.push({ path: path.join(incremental, unit), kind: "incremental" });
+  for (const unit of staleByRules(caches.units, rules)) items.push({ path: path.join(incremental, unit), kind: "incremental" });
   for (const sub of ["deps", "build", ".fingerprint"]) {
     const dir = path.join(profile, sub);
     const names = list(dir);
-    const own = groupUnits(names, OWN_UNIT, (name) => mtime(path.join(dir, name)));
-    for (const unit of staleUnits(own.units, cutoff)) {
-      for (const name of own.entriesOf.get(unit)) items.push({ path: path.join(dir, name), kind: "own" });
+    for (const pattern of [OWN_UNIT, MEMBER_UNIT]) {
+      const own = groupUnits(names, pattern, (name) => mtime(path.join(dir, name)));
+      for (const unit of staleByRules(own.units, rules)) {
+        for (const name of own.entriesOf.get(unit)) items.push({ path: path.join(dir, name), kind: "own" });
+      }
     }
     for (const name of names) {
       if (TEMP_ARCHIVE.test(name) && mtime(path.join(dir, name)) < cutoff) items.push({ path: path.join(dir, name), kind: "temp" });
@@ -93,9 +123,9 @@ function profileItems(profile, cutoff) {
   return items;
 }
 
-export function plan(target, { now = Date.now(), maxAgeDays = MAX_AGE_DAYS } = {}) {
-  const cutoff = now - maxAgeDays * DAY_MS;
-  const items = profileDirs(target).flatMap((profile) => profileItems(profile, cutoff));
+export function plan(target, { now = Date.now(), maxAgeDays = MAX_AGE_DAYS, pressure = freeBytes(target) < LOW_FREE_BYTES } = {}) {
+  const rules = pruneRules({ now, maxAgeDays, pressure });
+  const items = profileDirs(target).flatMap((profile) => profileItems(profile, rules));
   const unknown = [];
   for (const name of list(target)) {
     const dir = path.join(target, name);
@@ -107,7 +137,7 @@ export function plan(target, { now = Date.now(), maxAgeDays = MAX_AGE_DAYS } = {
     }
   }
   const lanes = items.filter((item) => item.kind === "lane").map((item) => item.path + path.sep);
-  return { items: items.filter((item) => item.kind === "lane" || !lanes.some((lane) => item.path.startsWith(lane))), unknown };
+  return { items: items.filter((item) => item.kind === "lane" || !lanes.some((lane) => item.path.startsWith(lane))), unknown, pressure };
 }
 
 const KIND_NAMES = {
@@ -118,7 +148,7 @@ const KIND_NAMES = {
 };
 
 export function prune(target, options = {}) {
-  const { items, unknown } = plan(target, options);
+  const { items, unknown, pressure } = plan(target, options);
   const counts = {};
   let bytes = 0;
   let failed = 0;
@@ -135,13 +165,14 @@ export function prune(target, options = {}) {
     bytes += size;
     counts[item.kind] = (counts[item.kind] ?? 0) + 1;
   }
-  return { bytes, counts, failed, unknown };
+  return { bytes, counts, failed, unknown, pressure };
 }
 
-export function summary({ bytes, counts, failed, unknown }, dryRun = false) {
+export function summary({ bytes, counts, failed, unknown, pressure }, dryRun = false) {
   const parts = Object.entries(counts).map(([kind, count]) => `${count} ${KIND_NAMES[kind]}`);
   const gb = (bytes / 1024 ** 3).toFixed(1);
   let line = parts.length ? `${dryRun ? "would free" : "freed"} ${gb} GB: ${parts.join(", ")}` : "nothing to delete";
+  if (pressure) line += "; disk is low, so only the newest builds were kept";
   if (failed) line += `; ${failed} in use, left for next time`;
   if (unknown.length) line += `; not managed here: ${unknown.map((dir) => `${dir.name} (unused ${dir.days} d)`).join(", ")}`;
   return line;
@@ -151,6 +182,7 @@ export function pruneMainTarget(options = {}) {
   try {
     const main = mainCheckout();
     const result = prune(targetDir(main), options);
+    if (options.quiet && !result.bytes && !result.failed) return;
     console.log(`[prune] ${summary(result, options.dryRun)}`);
   } catch (error) {
     console.warn(`[prune] skipped: ${error.message}`);

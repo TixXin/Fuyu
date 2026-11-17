@@ -86,6 +86,7 @@ test("the other kinds are folded into one view", () => {
     [{ kind: "style", vars: { "--cover": "#fff" }, className: "cover-color", tint: "#fff" }, { kind: "page", page: "qq", enabled: false }],
     [{ kind: "trail", item: "calendar.join" }, { kind: "preview", item: "messages.preview", hot: "mail" }],
     [{ kind: "summary", item: "messages.summary" }, { kind: "summary", item: "later.summary" }],
+    [{ kind: "badge", target: "settings", label: "New v2", action: "updater.open" }, { kind: "badge", target: "settings", label: "later" }],
   ], false);
   assert.deepEqual([...view.alerts], ["level"]);
   assert.deepEqual([...view.notices.keys()], ["recording"]);
@@ -98,4 +99,5 @@ test("the other kinds are folded into one view", () => {
   assert.deepEqual(view.trails, ["calendar.join"]);
   assert.equal(view.preview?.hot, "mail");
   assert.equal(view.summary, "messages.summary");
+  assert.equal(view.badges.get("settings")?.label, "New v2");
 });

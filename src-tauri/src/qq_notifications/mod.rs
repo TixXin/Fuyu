@@ -9,7 +9,6 @@ mod tests;
 use serde::Serialize;
 use std::{
     sync::{mpsc, Arc, Mutex, OnceLock},
-    thread,
     time::Duration,
 };
 use tauri::{AppHandle, Emitter, Manager};
@@ -21,6 +20,9 @@ use windows::UI::Notifications::Management::{
 use history::NotificationBuffer;
 use launcher::{activate_existing_qq, qq_executable};
 use listener::monitor;
+
+use crate::messages_plugin::{self, SourceWorker};
+use crate::plugin_kernel::worker::Worker;
 
 pub(crate) use plugin_view::plugin_messages;
 
@@ -125,26 +127,25 @@ fn forget_seen(service: &NotificationService, at: i64) {
 struct NotificationService {
     app: AppHandle,
     state: Mutex<MonitorState>,
-    wake: mpsc::SyncSender<()>,
 }
 
 pub fn init(app: &AppHandle) -> Result<(), String> {
     if SERVICE.get().is_some() {
         return Ok(());
     }
-    let (wake, receiver) = mpsc::sync_channel(1);
     let service = Arc::new(NotificationService {
         app: app.clone(),
         state: Mutex::new(MonitorState::default()),
-        wake,
     });
     SERVICE
         .set(service.clone())
         .map_err(|_| "QQ 通知服务已启动。".to_string())?;
-    thread::Builder::new()
-        .name("qq-notifications".into())
-        .spawn(move || monitor(service, receiver))
-        .map_err(|error| format!("无法启动 QQ 通知监听：{error}"))?;
+    let listening = service.clone();
+    let worker = Worker::new("qq-notifications", move |stop| monitor(listening.clone(), &stop));
+    messages_plugin::register(
+        messages_plugin::QQ,
+        SourceWorker::new(messages_plugin::QQ, worker, move |enabled| set_enabled(&service, enabled)),
+    );
     Ok(())
 }
 
@@ -178,13 +179,13 @@ fn notification_diagnostics(snapshot: &NotificationSnapshot) -> serde_json::Valu
     })
 }
 
-#[tauri::command]
-pub fn set_qq_notifications_enabled(enabled: bool) -> Result<NotificationSnapshot, String> {
-    let service = service()?;
+fn set_enabled(service: &NotificationService, enabled: bool) {
     let snapshot = {
-        let mut state = service.state.lock().map_err(|_| "QQ 通知状态不可用。")?;
+        let Ok(mut state) = service.state.lock() else {
+            return;
+        };
         if state.snapshot.enabled == enabled {
-            return Ok(state.snapshot.clone());
+            return;
         }
         state.generation += 1;
         state.buffer = NotificationBuffer::default();
@@ -200,9 +201,7 @@ pub fn set_qq_notifications_enabled(enabled: bool) -> Result<NotificationSnapsho
         };
         state.snapshot.clone()
     };
-    publish(service, snapshot.clone(), None);
-    let _ = service.wake.try_send(());
-    Ok(snapshot)
+    publish(service, snapshot, None);
 }
 
 #[tauri::command]
@@ -255,7 +254,6 @@ pub async fn request_qq_notification_access(app: AppHandle) -> Result<String, St
             .map_err(|error| format!("Windows 通知授权失败：{error}"))?,
         None => access,
     };
-    let _ = service()?.wake.try_send(());
     Ok(match access {
         UserNotificationListenerAccessStatus::Allowed => "allowed",
         UserNotificationListenerAccessStatus::Denied => "denied",
@@ -318,7 +316,6 @@ macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::qq_notifications::get_qq_notification_state,
-            crate::qq_notifications::set_qq_notifications_enabled,
             crate::qq_notifications::request_qq_notification_access,
             crate::qq_notifications::open_qq_notification_settings,
             crate::qq_notifications::clear_qq_notifications,

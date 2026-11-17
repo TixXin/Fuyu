@@ -9,6 +9,8 @@ import type { ClipboardHistoryItem, ClipboardHistorySnapshot } from "../../src/f
 import { FileShelfPanel } from "../../src/features/file-shelf/FileShelfPanel";
 import type { FileShelfItem } from "../../src/features/file-shelf/api";
 import type { FileShelfController } from "../../src/features/file-shelf/useFileShelf";
+import { loadPinyin } from "../../src/features/clipboard/popupQuery";
+import { until } from "./pollUntil";
 
 const automated = new URLSearchParams(location.search).has("test");
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated });
@@ -84,8 +86,6 @@ function check(condition: unknown, label: string) {
 const $ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const $$ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => [...root.querySelectorAll<T>(selector)];
 const click = (element: Element | null | undefined) => act(async () => { (element as HTMLElement | null)?.click(); });
-const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
-const settle = async (done: () => boolean, ms = 3000) => { for (let spent = 0; !done() && spent < ms; spent += 50) await wait(50); };
 const chip = (root: ParentNode, label: string) => $$("button.island-list-chip", root).find((button) => button.textContent === label);
 const menuItem = (label: string) => $$("button.row-menu__item").find((button) => button.textContent?.includes(label));
 const row = (root: ParentNode, id: string) => $(`[data-clipboard-id="${id}"], [data-shelf-id="${id}"]`, root) ?? $$(".island-list-row", root).find((item) => item.textContent?.includes(id));
@@ -135,15 +135,14 @@ async function runChecks() {
     const type = (value: string) => act(async () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(search, value);
       search.dispatchEvent(new Event("input", { bubbles: true }));
-      await new Promise((resolve) => setTimeout(resolve, 300));
     });
     await type("kzz");
-    await settle(() => $$(".island-list-row", clip).length === 1);
-    check($$(".island-list-row", clip).length === 1 && $$(".island-list-row", clip)[0].textContent?.includes("「扩展」组"), "拼音首字母 kzz 搜到「扩展」组");
+    check(await act(async () => loadPinyin()), "拼音库加载完成");
+    check(await until(() => $$(".island-list-row", clip).length === 1 && $$(".island-list-row", clip)[0].textContent?.includes("「扩展」组")), "拼音首字母 kzz 搜到「扩展」组");
     await type("/app:微信");
-    check($$(".island-list-row", clip).length === 2, "/app:微信 只看微信复制的");
+    check(await until(() => $$(".island-list-row", clip).length === 2), "/app:微信 只看微信复制的");
     await type("/color");
-    check($$(".island-list-row", clip).length === 1, "/color 只看颜色");
+    check(await until(() => $$(".island-list-row", clip).length === 1), "/color 只看颜色");
     await type("");
 
     const command = row(clip, "t2")!;
@@ -152,8 +151,7 @@ async function runChecks() {
     await click(menuItem("转换后复制"));
     check($(".clipboard-island-tools .clipboard-panel__result span", clip)?.textContent === "复制的会是", "转换页盖在列表上，写「复制的会是」");
     await click($$(".clipboard-panel__action", clip).find((button) => button.textContent?.includes("全部大写")));
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
-    check(copiedTexts.includes("PNPM TEST:REGRESSION CLIPBOARD && GIT STATUS --SHORT") && !$(".clipboard-island-tools", clip), "选一个转换就复制结果并关掉");
+    check(await until(() => copiedTexts.includes("PNPM TEST:REGRESSION CLIPBOARD && GIT STATUS --SHORT") && !$(".clipboard-island-tools", clip)), "选一个转换就复制结果并关掉");
     check($(".island-list-row__meta--accent", row(clip, "t2")!)?.textContent === "已复制", "复制后这一行显示「已复制」");
     await click($('button[aria-haspopup="menu"]', row(clip, "t4")!));
     check(menuItem("转换后复制") && !menuItem("AI 改写后复制"), "打码的密钥不能发给 AI");
@@ -173,8 +171,7 @@ async function runChecks() {
     check($$(".island-list-row", shelfPage).length === 1, "「置顶」只列置顶的文件");
     const empty = document.getElementById("shelf-empty")!;
     check($(".island-list-empty strong", empty)?.textContent === "把文件拖到岛上暂存" && $(".island-list-empty small", empty), "空的时候是图标加两行说明");
-    await settle(() => !$(".island-list-row__meta--accent"));
-    check(!$(".island-list-row__meta--accent") && $(".island-list-row__meta", row(clip, "t2")!)?.textContent?.includes("Windows Terminal"), "「已复制」过一会儿变回来源和时间");
+    check(await until(() => !$(".island-list-row__meta--accent"), 3000) && $(".island-list-row__meta", row(clip, "t2")!)?.textContent?.includes("Windows Terminal"), "「已复制」过一会儿变回来源和时间");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
