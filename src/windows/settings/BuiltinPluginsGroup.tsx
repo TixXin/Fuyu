@@ -263,6 +263,7 @@ export function PluginDetailModal({ builtin, hostPlugin, onClose, onOpenPage }: 
             <div className="plugins-v3__title-line">
               <strong className="plugins-v3__modal-title">{name}</strong>
               {kind ? <span className="plugins-v3__kind">{text.kinds[kind]}</span> : null}
+              {hostPlugin?.source === "manual" && text.unreviewedBadge ? <span className="plugins-v3__kind">{text.unreviewedBadge}</span> : null}
               <span className="plugins-v3__state">{text.states[state]}</span>
             </div>
             <span className="plugins-v3__id">{id}</span>

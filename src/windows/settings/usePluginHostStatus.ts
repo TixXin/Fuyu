@@ -22,6 +22,8 @@ export interface PluginStatusV3 {
   name: string;
   state: string;
   kind?: PluginKindV3;
+  source?: string;
+  undeclared?: { provides?: string[]; client?: string[] };
   waitingFor?: string[];
   provides?: string[];
   disabledServices?: string[];

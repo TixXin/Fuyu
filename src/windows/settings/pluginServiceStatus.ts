@@ -128,3 +128,28 @@ export function detectServiceConflicts(
   }
   return conflicts;
 }
+
+export function detailText(
+  plugin: PluginStatusV3,
+  text: SettingsPluginsV3Text,
+  hostPlugins?: readonly PluginStatusV3[] | null,
+  builtins?: readonly BuiltinPlugin[] | null,
+): string | null {
+  const state = stateOf(plugin);
+  const blocked = plugin.blocked;
+  const replaced = explainReplacedServices(plugin.id, plugin, text);
+  const undeclaredList = [...(plugin.undeclared?.provides ?? []), ...(plugin.undeclared?.client ?? [])];
+  const undeclaredNote = undeclaredList.length > 0 && text.undeclaredBadge ? text.undeclaredBadge(undeclaredList.join(", ")) : null;
+  const base = state === "waiting" && plugin.waitingFor?.length
+    ? (() => {
+        const reasons = hostPlugins || builtins ? explainWaitingFor(plugin.waitingFor, hostPlugins, builtins, text, stateOf) : [];
+        return reasons.length > 0 ? `${text.waitingFor(plugin.waitingFor.join(", "))} · ${reasons.join("；")}` : text.waitingFor(plugin.waitingFor.join(", "));
+      })()
+    : blocked?.by === "errors"
+      ? text.autoDisabled(blocked.errors, Math.round(blocked.windowMs / 1000))
+      : blocked?.by === "safe-mode"
+        ? text.heldBySafeMode(text.safeModes[blocked.mode])
+        : plugin.reason ?? plugin.error ?? null;
+  const extras = [...replaced, ...(undeclaredNote ? [undeclaredNote] : []), ...(base ? [base] : [])];
+  return extras.length > 0 ? extras.join(" · ") : null;
+}
