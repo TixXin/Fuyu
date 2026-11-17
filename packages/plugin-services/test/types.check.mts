@@ -36,7 +36,9 @@ void shelf.add({});
 
 declare const translator: ServiceClient<typeof translatorV1>;
 void translator.rewrite({ text: "hi", task: "polish" }, { onProgress: (chunk) => chunk.piece.length });
-void translator.engines().then((result) => result.engines.map((entry) => entry.hasSecret));
+void translator.engines().then((result) => result.engines.map((entry) => [entry.hasSecret, entry.label?.en, entry.defaultModel]));
+void translator.translate({ text: "hi", direction: "auto", engine: { engine: "deepl", model: "deepl-pro" } });
+void translator.on("changed", () => {});
 // @ts-expect-error translate does not stream
 void translator.translate({ text: "hi", direction: "auto" }, { onProgress: (chunk: string) => chunk });
 

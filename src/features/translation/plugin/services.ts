@@ -2,18 +2,23 @@ import { translatorV1, type EngineChoice, type TranslationEngine } from "@fuyu/p
 import { windowServices } from "../../plugin-kernel/services";
 import { isNativeError } from "../../../i18n/nativeError";
 import { hasTranslationSecret, rewriteText, translateText, type TranslationService } from "../api";
-import { TRANSLATION_PROVIDERS } from "../providers";
+import { isBuiltinTranslationProvider, TRANSLATION_PROVIDERS, translationEngines, type BuiltinTranslationProvider } from "../providers";
 import { loadSettings } from "../storage";
 import { fromRust } from "../host/index.mjs";
 import { OWNER } from "./owner.ts";
 
-function chosenService(engine: EngineChoice | undefined): TranslationService {
-  if (engine) return { provider: engine.engine, baseUrl: null, model: engine.model?.trim() || null };
+function chosenEngine(engine: EngineChoice | undefined): { id: TranslationEngine; model: string | null } {
+  if (engine) return { id: engine.engine, model: engine.model?.trim() || null };
+  const settings = loadSettings();
+  return { id: settings.provider, model: settings.models[settings.provider]?.trim() || null };
+}
+
+function builtinService(id: BuiltinTranslationProvider, model: string | null): TranslationService {
   const settings = loadSettings();
   return {
-    provider: settings.provider,
-    baseUrl: settings.provider === "custom" ? settings.customBaseUrl.trim() || null : null,
-    model: settings.models[settings.provider]?.trim() || null,
+    provider: id,
+    baseUrl: id === "custom" ? settings.customBaseUrl.trim() || null : null,
+    model,
   };
 }
 
@@ -26,19 +31,45 @@ function failed(error: unknown): never {
   throw serviceError(error);
 }
 
-const used = (service: TranslationService): TranslationEngine => service.provider;
-
-windowServices.provide(translatorV1, {
+const provider = windowServices.provide(translatorV1, {
   translate: async ({ text, direction, engine }) => {
-    const service = chosenService(engine);
-    return { text: await translateText(text, direction ?? loadSettings().direction, service).catch(failed), engine: used(service) };
+    const chosen = chosenEngine(engine);
+    const custom = translationEngines.get(chosen.id);
+    const resolvedDirection = direction ?? loadSettings().direction;
+    if (custom) {
+      return custom.translate({ text, direction: resolvedDirection, model: chosen.model });
+    }
+    if (!isBuiltinTranslationProvider(chosen.id)) {
+      throw Object.assign(new Error(`unknown translation engine ${chosen.id}`), { code: "bad-params" });
+    }
+    const service = builtinService(chosen.id, chosen.model);
+    return { text: await translateText(text, resolvedDirection, service).catch(failed), engine: service.provider };
   },
   rewrite: async ({ text, task, prompt, engine }, caller) => {
-    const service = chosenService(engine);
+    const chosen = chosenEngine(engine);
+    const custom = translationEngines.get(chosen.id);
+    if (custom) {
+      if (!custom.rewrite) {
+        throw Object.assign(new Error(`translation engine ${custom.engine} does not support rewrite`), { code: "unsupported" });
+      }
+      return custom.rewrite({ text, task, prompt: prompt ?? null, model: chosen.model }, caller);
+    }
+    if (!isBuiltinTranslationProvider(chosen.id)) {
+      throw Object.assign(new Error(`unknown translation engine ${chosen.id}`), { code: "bad-params" });
+    }
+    const service = builtinService(chosen.id, chosen.model);
     const onChunk = (piece: string) => caller.progress({ piece });
-    return { text: await rewriteText(text, task, service, { prompt, onChunk }).catch(failed), engine: used(service) };
+    return { text: await rewriteText(text, task, service, { prompt, onChunk }).catch(failed), engine: service.provider };
   },
-  engines: async () => ({
-    engines: await Promise.all(TRANSLATION_PROVIDERS.map(async (engine) => ({ engine, hasSecret: await hasTranslationSecret(engine).catch(failed) }))),
-  }),
+  engines: async () => {
+    const [builtins, extra] = await Promise.all([
+      Promise.all(TRANSLATION_PROVIDERS.map(async (engine) => ({ engine, hasSecret: await hasTranslationSecret(engine).catch(failed) }))),
+      translationEngines.entries(),
+    ]);
+    return { engines: [...builtins, ...extra] };
+  },
 }, { owner: OWNER });
+
+translationEngines.subscribe(() => {
+  provider.emit("changed", {});
+});

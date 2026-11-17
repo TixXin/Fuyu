@@ -1,8 +1,9 @@
 import { translatorV1 } from "@fuyu/plugin-services";
+import { createEngineRegistry } from "./engines.mjs";
 
 export const name = "translation";
 
-const PASSED = new Set(["bad-params", "timeout", "peer-gone"]);
+const PASSED = new Set(["bad-params", "timeout", "peer-gone", "unsupported", "empty-text", "no-secret", "no-address", "engine-failed"]);
 const RENAMED = { inactive: "peer-gone", "translation.noKey": "no-secret", "translation.noAddress": "no-address", "translation.empty": "empty-text" };
 const CALLER_MISTAKES = /^translation\.(tooLong|direction|provider|url[A-Za-z]*|modelLong|noModel)$/;
 const ENGINE_FIELDS = new Set(["engine", "model"]);
@@ -41,27 +42,61 @@ function engineOf(method, params) {
 const translated = (result) => ({ text: result?.text, engine: result?.engine });
 
 export function apply(ctx) {
+  const registry = createEngineRegistry();
   const call = (method, params, options) =>
     ctx.rust.call(`translator.${method}`, params, { timeoutMs: translatorV1.methods[method].timeoutMs, ...options }).catch((error) => {
       throw fromRust(error);
     });
 
-  ctx.services.provide(translatorV1, {
+  const provider = ctx.services.provide(translatorV1, {
     translate: async (params) => {
       const engine = engineOf("translate", params);
+      const custom = engine.provider ? registry.get(engine.provider) : null;
+      if (custom) {
+        return custom.translate({ text: params.text, direction: params.direction ?? "auto", model: engine.model ?? null });
+      }
       return translated(await call("translate", { text: params.text, direction: params.direction ?? "auto", ...engine }));
     },
     rewrite: async (params, caller) => {
       const engine = engineOf("rewrite", params);
+      const custom = engine.provider ? registry.get(engine.provider) : null;
+      if (custom) {
+        if (!custom.rewrite) {
+          throw translatorError("unsupported", `translation engine ${custom.engine} does not support rewrite`);
+        }
+        return custom.rewrite(
+          { text: params.text, task: params.task, prompt: params.prompt ?? null, model: engine.model ?? null },
+          caller,
+        );
+      }
       const onProgress = (data) => {
         if (typeof data?.piece === "string") caller.progress({ piece: data.piece });
       };
       return translated(await call("rewrite", { text: params.text, task: params.task, prompt: params.prompt ?? null, ...engine }, { onProgress }));
     },
     engines: async () => {
-      const result = await call("engines", null);
-      const engines = Array.isArray(result?.engines) ? result.engines : [];
-      return { engines: engines.map((entry) => ({ engine: entry?.engine, hasSecret: entry?.hasSecret === true })) };
+      const [result, extra] = await Promise.all([call("engines", null), registry.entries()]);
+      const builtins = Array.isArray(result?.engines)
+        ? result.engines.map((entry) => ({ engine: entry?.engine, hasSecret: entry?.hasSecret === true }))
+        : [];
+      return { engines: [...builtins, ...extra] };
     },
   });
+
+  const unsub = registry.subscribe(() => provider.emit("changed", {}));
+  ctx.effect(() => unsub, "translator.engines.watch");
+  const stopAccessor = ctx.reflect.accessor("translatorEngines", {
+    get() {
+      const caller = this;
+      return Object.freeze({
+        register: (spec) => {
+          const off = registry.register(spec);
+          caller.effect(() => off, `translatorEngines.register(${spec?.engine ?? ""})`);
+          return off;
+        },
+      });
+    },
+  });
+  ctx.effect(() => stopAccessor, "translatorEngines.accessor");
+  ctx.provide("translator.engines", Object.freeze({ register: (spec) => registry.register(spec) }));
 }

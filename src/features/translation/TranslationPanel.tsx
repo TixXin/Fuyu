@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Clipboard, Copy, X } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
-import { hasTranslationSecret, readTranslationClipboard } from "./api";
-import { DEFAULT_PROVIDER_MODELS } from "./providers";
+import { readTranslationClipboard } from "./api";
 import { type Direction } from "./storage";
 import { takeTranslationHandoff } from "../../lib/translation-handoff/storage";
 import { useAutoTranslate } from "./useAutoTranslate";
 import { useTranslationRequest } from "./useTranslationRequest";
 import { useTranslationSettings } from "./useTranslationSettings";
+import { useTranslatorEngines } from "./useTranslatorEngines";
 import "./TranslationPanel.css";
 import { isMacOS } from "../../lib/platform";
 
@@ -19,7 +19,6 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [hasSecret, setHasSecret] = useState(false);
   const [didCopy, setDidCopy] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const requestId = useRef(0);
@@ -31,17 +30,12 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
     { value: "auto", label: text.dirAuto }, { value: "zh-en", label: text.dirZhEn }, { value: "en-zh", label: text.dirEnZh },
   ];
   const directionHint = settings.direction === "zh-en" ? text.toEnglish : settings.direction === "en-zh" ? text.toChinese : text.autoHint;
-  const providerName = text.providers[settings.provider];
-  const model = settings.models[settings.provider] || DEFAULT_PROVIDER_MODELS[settings.provider];
+  const { hasSecret, error: engineError, providerLabel: providerName, defaultModel } = useTranslatorEngines(settings.provider, isOpen);
+  const model = settings.models[settings.provider] || defaultModel;
 
   useEffect(() => {
-    if (!isOpen) return;
-    let didCancel = false;
-    void hasTranslationSecret(settings.provider)
-      .then((saved) => { if (!didCancel) setHasSecret(saved); })
-      .catch((failure) => { if (!didCancel) setError(errorText(failure)); });
-    return () => { didCancel = true; };
-  }, [isOpen, settings.provider, errorText]);
+    if (engineError) setError(engineError);
+  }, [engineError]);
 
   const fillSource = useCallback((source: string, result: string) => {
     requestId.current += 1;

@@ -2,11 +2,11 @@ import { useErrorText, useTranslation } from "../../i18n";
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { ArrowRight, Check, Clipboard, Copy, Grip, Languages, LoaderCircle, Settings2, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { hasTranslationSecret, hideTranslationWindow, listenTranslationWindowOpened, readTranslationClipboard, setTranslationShortcut } from "../../features/translation/api";
+import { hideTranslationWindow, listenTranslationWindowOpened, readTranslationClipboard, setTranslationShortcut } from "../../features/translation/api";
 import { type Direction } from "../../features/translation/storage";
 import { takeTranslationHandoff } from "../../lib/translation-handoff/storage";
-import { DEFAULT_PROVIDER_MODELS } from "../../features/translation/providers";
 import { useTranslationSettings } from "../../features/translation/useTranslationSettings";
+import { useTranslatorEngines } from "../../features/translation/useTranslatorEngines";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { useWindowLight } from "../../lib/theme/useWindowLight";
 import { openSettingsWindow } from "../settings/api";
@@ -28,7 +28,6 @@ export function TranslationWindow() {
   const [error, setError] = useState("");
   const [shortcutError, setShortcutError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [hasSecret, setHasSecret] = useState(false);
   const [secretCheck, setSecretCheck] = useState(0);
   const [didCopy, setDidCopy] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -43,14 +42,11 @@ export function TranslationWindow() {
     : settings.direction === "en-zh"
       ? t.translator.chinese
       : t.translator.bilingual;
+  const { hasSecret, error: engineError, providerLabel: providerTitle, defaultModel } = useTranslatorEngines(settings.provider, true, secretCheck);
 
   useEffect(() => {
-    let didCancel = false;
-    void hasTranslationSecret(settings.provider)
-      .then((saved) => { if (!didCancel) setHasSecret(saved); })
-      .catch((failure) => { if (!didCancel) setError(errorText(failure)); });
-    return () => { didCancel = true; };
-  }, [settings.provider, secretCheck, errorText]);
+    if (engineError) setError(engineError);
+  }, [engineError]);
   useEffect(() => {
     void setTranslationShortcut(settings.shortcut)
       .then(() => setShortcutError(""))
@@ -143,8 +139,8 @@ export function TranslationWindow() {
     setDidCopy,
     onStart: noteAutoSource,
   });
-  const model = settings.models[settings.provider]?.trim() || DEFAULT_PROVIDER_MODELS[settings.provider];
-  const providerLabel = model ? `${t.translator.providers[settings.provider]} · ${model}` : t.translator.providers[settings.provider];
+  const model = settings.models[settings.provider]?.trim() || defaultModel;
+  const providerLabel = model ? `${providerTitle} · ${model}` : providerTitle;
   const autoTranslateKey = `${settings.direction}\0${settings.provider}\0${settings.customBaseUrl}\0${settings.models[settings.provider] ?? ""}`;
   useAutoTranslate(settings.autoTranslate && hasSecret && !isLoading, input, autoTranslateKey, skipAutoSource, submit);
 
