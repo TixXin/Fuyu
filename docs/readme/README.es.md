@@ -6,7 +6,7 @@
 
   <p><b>Una isla que recoge el desorden de tu escritorio</b></p>
 
-  <p>Una isla dinámica de escritorio para Windows y macOS: tareas, portapapeles, mensajes, traducción, música y el estado de tus agentes de IA, todo en una pequeña isla en la parte superior de la pantalla.</p>
+  <p>Una isla dinámica de escritorio para Windows y macOS: tareas, portapapeles, mensajes de Telegram, Discord, WhatsApp y más, traducción, música y el estado de tus agentes de IA, todo en una pequeña isla en la parte superior de la pantalla.</p>
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="../assets/readme/download-windows.svg" alt="Descargar para Windows (x64)" width="156" height="38"></a>
@@ -99,7 +99,7 @@ Fuyu (浮屿, «islote flotante») es una isla flotante ligera, sin bordes y sie
   </tr>
   <tr>
     <td valign="top"><code>03</code></td>
-    <td><b>Mensajes</b><br>Avisos de QQ y WeChat y varias cuentas de correo; puedes leer y responder los correos desde la isla.</td>
+    <td><b>Mensajes</b><br>Los mensajes nuevos de Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu y DingTalk aparecen en la isla y abren la app con un clic; además, varias cuentas de correo; puedes leer y responder los correos desde la isla.</td>
   </tr>
   <tr>
     <td valign="top"><code>04</code></td>
@@ -111,7 +111,7 @@ Fuyu (浮屿, «islote flotante») es una isla flotante ligera, sin bordes y sie
   </tr>
   <tr>
     <td valign="top"><code>06</code></td>
-    <td><b>Agentes de IA</b><br>El estado y el consumo de tus sesiones de Claude Code y Codex; aprueba solicitudes directamente en la isla, haz clic para saltar a la ventana correspondiente y recibe notificaciones en el teléfono cuando no estés en la computadora.</td>
+    <td><b>Agentes de IA</b><br>El estado y el consumo de tus sesiones de Claude Code y Codex; aprueba solicitudes directamente en la isla, haz clic para saltar a la ventana correspondiente y recibe avisos en Telegram, Discord, Feishu o Bark cuando no estés en la computadora, y sigue dirigiendo al agente desde el chat.</td>
   </tr>
   <tr>
     <td valign="top"><code>07</code></td>
@@ -148,7 +148,7 @@ Cómo se midió y los datos completos: [idle-usage.md](../investigations/idle-us
    - **Windows**: descarga el `_x64-setup.exe`. Los instaladores no tienen firma de código; si SmartScreen muestra un aviso, elige «Más información → Ejecutar de todas formas».
    - **macOS**: en la [lista de releases](https://github.com/TixXin/fuyu/releases), descarga el `_aarch64.dmg` de la versión más reciente que lo tenga (si la última versión estable no lo trae, búscalo en la versión de prueba que aparece encima) y arrastra Fuyu a Aplicaciones. La primera vez, abre Configuración del Sistema → Privacidad y seguridad y haz clic en «Abrir de todos modos»; los pasos uno por uno están en la [guía de instalación en Mac](https://fuyu.ing/#mac-install).
 2. **Despliega la isla**: pasa el puntero sobre la isla en la parte superior de la pantalla para desplegarla; el botón del engranaje o el ícono de la bandeja del sistema (en Mac, el ícono de la barra de menús) abre la Configuración. En Mac, la guía de bienvenida te lleva a activar los permisos del sistema que hacen falta.
-3. **Configura una sola vez**: el correo, la traducción y los agentes de IA necesitan configurarse una vez en la Configuración. Consulta [correo](../features/mail.md), [agentes de IA](../features/agent-status-hooks.md), [notificaciones de QQ](../features/qq-notifications.md) y [avisos de WeChat](../features/wechat-reminders.md) (en chino).
+3. **Configura una sola vez**: el correo, la traducción y los agentes de IA necesitan configurarse una vez en la Configuración. Consulta [correo](../features/mail.md), [agentes de IA](../features/agent-status-hooks.md), [notificaciones de QQ](../features/qq-notifications.md), [avisos de WeChat](../features/wechat-reminders.md) y [avisos en el teléfono](../features/cc-connect.md) (en chino).
 
 > [!NOTE]
 > Funciona en Windows 10 / 11 y en macOS 15 o posterior (Apple silicon). En Mac hay algunas diferencias con Windows: QQ y WeChat solo muestran el número de mensajes no leídos, no su contenido, y el control multimedia y el brillo usan interfaces privadas del sistema. En [platforms.md](../architecture/platforms.md) está el estado de cada función en las dos plataformas (en chino).
