@@ -24,6 +24,7 @@ import { activeTone } from "../../lib/theme/themeMode";
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { categorySlot } from "./slots/categorySlot";
 import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
 import { focusSection } from "../../lib/settings/sectionFocus";
@@ -43,6 +44,7 @@ export function SettingsWindow() {
   const [chosenCategory, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
   const unsupported = useUnsupportedFeatures();
   const pluginsV3 = usePluginsV3Enabled();
+  useSlotEntries(categorySlot);
   const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS, pluginsV3) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const features = useFeatureSwitches(settings, setSettings);
   const offFeature = features.hiddenPages.has(category) ? featureOf(category) : undefined;

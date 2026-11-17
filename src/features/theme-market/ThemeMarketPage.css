@@ -1,5 +1,95 @@
+.theme-market .plugin-market__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-lg);
+}
+
+.theme-market .plugin-market__status {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theme-market .plugin-card__button {
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  color: var(--color-text);
+  background: var(--color-white-a08);
+  border: 1px solid var(--color-white-a10);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.theme-market .plugin-card__button:hover {
+  background: var(--color-white-a10);
+}
+
+.theme-market .plugin-market__refresh {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  justify-content: center;
+  padding: 0;
+}
+
+.theme-market .plugin-market__spin {
+  animation: theme-market-spin 0.9s linear infinite;
+}
+
+@keyframes theme-market-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-market .plugin-market__spin {
+    animation: none;
+  }
+}
+
+.theme-market .plugin-card__error {
+  margin: 0;
+  color: var(--error-text, #ffb4a8);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.theme-market .plugin-market__badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  color: var(--color-text);
+  background: var(--color-white-a08);
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.theme-market .plugin-market__badge--official {
+  color: var(--color-accent, #74d6ff);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
 .theme-market__grid {
+  display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
 }
 
 .theme-market__item {

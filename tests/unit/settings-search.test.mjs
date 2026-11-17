@@ -123,5 +123,6 @@ test("a category added to settings.category/v1 brings its own group, tabs, switc
     for (const remove of removers) remove();
   }
   assert.ok(!settingsCategories().includes("demoTools"));
+  assert.equal(isCategoryAvailable("demoToolsMore", new Set(), false), false);
   assert.equal(settingsCategoryFor("demo-old"), null);
 });

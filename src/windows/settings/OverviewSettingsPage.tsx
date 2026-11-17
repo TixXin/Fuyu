@@ -8,7 +8,9 @@ import type { IslandSettings, ThemeMode } from "../../lib/settings/types";
 import { LOCALE_CODES, TRANSLATIONS, isLocaleCode, useTranslation, type LocaleCode } from "../../i18n";
 import { isMacOS, useDevBuild, type PlatformFeature } from "../../lib/platform";
 import { openOnboardingWindow } from "../onboarding/api";
+import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { FEATURE_PAGES, isCategoryAvailable, SETTINGS_FEATURES, type SettingsCategory, type SettingsFeature } from "./categories";
+import { categorySlot } from "./slots/categorySlot";
 import { OverviewStage, type StageFeature } from "./OverviewStage";
 import { CATEGORY_ICONS } from "./SettingsSidebar";
 import type { FeatureSwitch, FeatureSwitches } from "./useFeatureSwitches";
@@ -40,6 +42,7 @@ export function OverviewSettingsPage({
   const [spot, setSpot] = useState<StageFeature | null>(null);
   const launchId = useId();
   const devBuild = useDevBuild();
+  useSlotEntries(categorySlot);
   const offered = SETTINGS_FEATURES.filter((feature) => isCategoryAvailable(FEATURE_PAGES[feature][0], unsupported));
 
   const switchedOn = offered.filter((feature) => features[feature].on);
@@ -52,7 +55,9 @@ export function OverviewSettingsPage({
   });
   const next: [LucideIcon, string, string, () => void][] = [
     [SlidersHorizontal, text.look, text.lookHint, () => onOpenPage("appearance")],
-    [Palette, text.themes, text.themesHint, () => onOpenPage("themeMarket")],
+    ...(isCategoryAvailable("themeMarket", unsupported)
+      ? [[Palette, text.themes, text.themesHint, () => onOpenPage("themeMarket")] as [LucideIcon, string, string, () => void]]
+      : []),
     [Keyboard, text.shortcuts, text.shortcutsHint, () => onOpenPage("shortcuts")],
     [Sparkles, text.guide, text.guideHint, openOnboardingWindow],
   ];
