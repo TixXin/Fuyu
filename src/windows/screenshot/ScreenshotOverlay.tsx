@@ -33,7 +33,7 @@ import { useLongShot } from "./useLongShot";
 import { useAnnotations } from "./useAnnotations";
 import { useMeasure } from "./useMeasure";
 import { useScreenshotFrame } from "./useScreenshotFrame";
-import { capturePointer, GRAB, useSelection } from "./useSelection";
+import { capturePointer, GRAB, useSelection, type PointerCoords } from "./useSelection";
 import { useTargets } from "./useTargets";
 import "./ScreenshotOverlay.css";
 
@@ -158,11 +158,35 @@ export function ScreenshotOverlay() {
     setGif(loadScreenshotSettings().record.format === "gif");
   }, [sessionId]);
 
-  const at = (event: PointerEvent) => toPixels({ x: event.clientX, y: event.clientY }, scale);
+  const at = (event: PointerCoords) => toPixels({ x: event.clientX, y: event.clientY }, scale);
   const grabbedAt = (point: Point) => (chosen ? hitTest(chosen, point, GRAB * scale) : null);
+  const moveFrameRef = useRef(0);
+  const pendingMoveRef = useRef<PointerCoords | null>(null);
+  const latestMoveRef = useRef<(coords: PointerCoords) => void>(() => {});
+  latestMoveRef.current = (coords: PointerCoords) => {
+    onPointerMove(coords);
+    annotations.extend(toPixels({ x: coords.clientX, y: coords.clientY }, scale));
+  };
+
+  const flushMove = () => {
+    if (moveFrameRef.current !== 0) {
+      window.cancelAnimationFrame(moveFrameRef.current);
+      moveFrameRef.current = 0;
+    }
+    const coords = pendingMoveRef.current;
+    if (coords) {
+      pendingMoveRef.current = null;
+      latestMoveRef.current(coords);
+    }
+  };
+
+  useEffect(() => () => {
+    if (moveFrameRef.current !== 0) window.cancelAnimationFrame(moveFrameRef.current);
+  }, []);
 
   const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
     if (leaving) return;
+    flushMove();
     if (measure.active && event.button === 0 && bounds) {
       capturePointer(event);
       measure.begin(pixelAt(at(event), bounds));
@@ -190,16 +214,36 @@ export function ScreenshotOverlay() {
 
   const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
     if (leaving) return;
-    onPointerMove(event);
-    annotations.extend(at(event));
+    const coords = { clientX: event.clientX, clientY: event.clientY };
+    if (!dragging && !annotations.drafting) {
+      latestMoveRef.current(coords);
+      return;
+    }
+    pendingMoveRef.current = coords;
+    if (moveFrameRef.current === 0) {
+      moveFrameRef.current = window.requestAnimationFrame(() => {
+        moveFrameRef.current = 0;
+        const next = pendingMoveRef.current;
+        if (next) {
+          pendingMoveRef.current = null;
+          latestMoveRef.current(next);
+        }
+      });
+    }
   };
 
   const handlePointerUp = () => {
+    flushMove();
     if (measure.dragging) {
       measure.end();
       return;
     }
     if (!annotations.finish()) onPointerUp();
+  };
+
+  const handlePointerLeave = () => {
+    flushMove();
+    onPointerLeave();
   };
 
   const onContextMenu = (event: React.MouseEvent) => {
@@ -231,7 +275,7 @@ export function ScreenshotOverlay() {
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerLeave={onPointerLeave}
+      onPointerLeave={handlePointerLeave}
       onWheel={onWheel}
       onDoubleClick={() => !annotations.tool && !measure.active && grabbed === "inside" && copy()}
       onContextMenu={onContextMenu}

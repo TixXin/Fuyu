@@ -86,7 +86,7 @@ export function MusicPlayerPanel({
         {lyrics ? (
           <LyricsView lines={lyrics} mediaState={mediaState} offsetMs={offsetMs} intro={lyricsSettings.lyricsIntro} onPickLine={estimate ? onAlignLyrics : undefined} />
         ) : (
-          <MediaWaveform playing={isPlaying || mediaState.audioActive} audioPeak={mediaState.audioPeak} />
+          <MediaWaveform playing={isPlaying || mediaState.audioActive} audioPeak={mediaState.audioPeak > 0 ? mediaState.audioPeak : undefined} />
         )}
       </div>
 

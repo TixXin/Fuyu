@@ -1,16 +1,29 @@
-import { useEffect, useRef, type Dispatch, type RefObject, type SetStateAction } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
-import { getAudioLevel, type MediaPlaybackStatus, type MediaState } from "./api";
-import { AUDIO_ACTIVE_THRESHOLD } from "./mediaState";
+import { getAudioLevel, type AudioLevel, type MediaPlaybackStatus } from "./api";
+import { audioPeakStore } from "./audioPeakStore";
 
 export type MediaPlaybackIntent = { status: MediaPlaybackStatus; expiresAt: number };
 
+const noopSubscribe = () => () => {};
+
+export function useAudioPeak(override?: number): number {
+  const hasOverride = override !== undefined;
+  const live = useSyncExternalStore(
+    hasOverride ? noopSubscribe : audioPeakStore.subscribe,
+    hasOverride ? () => override : audioPeakStore.get,
+    hasOverride ? () => override : audioPeakStore.get,
+  );
+  return hasOverride ? override : live;
+}
+
 export function useAudioLevel(
-  setMediaState: Dispatch<SetStateAction<MediaState>>,
-  mediaPlaybackIntent: RefObject<MediaPlaybackIntent | null>,
+  onAudioLevel: (level: AudioLevel) => void,
   enabled = true,
 ) {
   const isRefreshingAudioLevel = useRef(false);
+  const latestHandler = useRef(onAudioLevel);
+  latestHandler.current = onAudioLevel;
 
   useEffect(() => {
     if (!enabled) {
@@ -28,55 +41,9 @@ export function useAudioLevel(
 
       try {
         const audioLevel = await getAudioLevel();
-
-        if (didCancel) {
-          return;
+        if (!didCancel) {
+          latestHandler.current(audioLevel);
         }
-
-        setMediaState((currentState) => {
-          const intent = mediaPlaybackIntent.current;
-          const isPauseIntent =
-            intent &&
-            Date.now() < intent.expiresAt &&
-            intent.status === "paused";
-
-          if (currentState.playbackStatus === "paused" || isPauseIntent) {
-            if (
-              currentState.playbackStatus === "paused" &&
-              !currentState.audioActive &&
-              currentState.audioPeak === 0
-            ) {
-              return currentState;
-            }
-            return {
-              ...currentState,
-              audioActive: false,
-              audioPeak: 0,
-              playbackStatus: "paused",
-            };
-          }
-
-          const decayedPeak = currentState.audioPeak * 0.82;
-          const nextPeak = audioLevel.active
-            ? Math.max(decayedPeak, audioLevel.peak)
-            : decayedPeak;
-          const audioActive =
-            (audioLevel.active || nextPeak > AUDIO_ACTIVE_THRESHOLD * 1.5);
-          const audioPeak = audioActive ? nextPeak : 0;
-
-          if (
-            currentState.audioActive === audioActive &&
-            currentState.audioPeak === audioPeak
-          ) {
-            return currentState;
-          }
-
-          return {
-            ...currentState,
-            audioActive,
-            audioPeak,
-          };
-        });
       } catch (error) {
         console.error("Failed to read audio level", error);
       } finally {
@@ -94,5 +61,5 @@ export function useAudioLevel(
       didCancel = true;
       stop();
     };
-  }, [enabled, mediaPlaybackIntent, setMediaState]);
+  }, [enabled]);
 }

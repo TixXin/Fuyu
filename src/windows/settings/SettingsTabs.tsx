@@ -19,6 +19,7 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
   useEffect(() => {
     const node = bar.current;
     if (!node) return;
+    let frame = 0;
     const measure = () => {
       const box = node.getBoundingClientRect();
       const first = node.firstElementChild?.getBoundingClientRect();
@@ -27,12 +28,20 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
       const end = last ? last.right > box.right + 1 : false;
       setEdges((old) => (old.start === start && old.end === end ? old : { start, end }));
     };
+    const onScroll = () => {
+      if (frame !== 0) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        measure();
+      });
+    };
     measure();
-    node.addEventListener("scroll", measure, { passive: true });
+    node.addEventListener("scroll", onScroll, { passive: true });
     const observer = new ResizeObserver(measure);
     observer.observe(node);
     return () => {
-      node.removeEventListener("scroll", measure);
+      if (frame !== 0) window.cancelAnimationFrame(frame);
+      node.removeEventListener("scroll", onScroll);
       observer.disconnect();
     };
   }, [entry]);

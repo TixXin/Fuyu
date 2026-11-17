@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { clamp } from "../../utils/number";
+import { useAudioPeak } from "./useAudioLevel";
 import "./MusicWaveButton.css";
 
 export function MusicWaveButton({
@@ -12,10 +13,11 @@ export function MusicWaveButton({
 }: {
   isAvailable: boolean;
   isPlaying: boolean;
-  audioPeak: number;
+  audioPeak?: number;
   label: string;
   onClick: () => void;
 }) {
+  const effectivePeak = useAudioPeak(audioPeak);
   const [phase, setPhase] = useState(0);
   const className = [
     "music-wave-button",
@@ -39,7 +41,7 @@ export function MusicWaveButton({
   }, [shouldAnimate]);
 
   const liftedPeak = isPlaying
-    ? clamp(Math.log1p(clamp(audioPeak, 0, 1) * 150) / Math.log1p(150), 0, 1)
+    ? clamp(Math.log1p(clamp(effectivePeak, 0, 1) * 150) / Math.log1p(150), 0, 1)
     : 0;
   const barScales = [0.34, 0.72, 0.48, 0.86, 0.42].map((bar, index) => {
     const floor = isAvailable ? 0.22 : 0.12;

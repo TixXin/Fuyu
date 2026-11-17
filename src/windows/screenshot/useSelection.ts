@@ -15,6 +15,8 @@ import {
 
 export const GRAB = 6;
 
+export type PointerCoords = { clientX: number; clientY: number };
+
 export function capturePointer(event: PointerEvent<HTMLElement>) {
   try {
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -26,6 +28,10 @@ type Drag =
   | { kind: "draw"; origin: Point }
   | { kind: "move"; origin: Point; start: PixelRect }
   | { kind: "resize"; handle: Handle; start: PixelRect };
+
+function sameRect(a: PixelRect | null, b: PixelRect): boolean {
+  return a !== null && a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
+}
 
 export function useSelection(session: ScreenshotSession | null, bounds: Size | null, scale: number) {
   const [selection, setSelection] = useState<PixelRect | null>(null);
@@ -58,7 +64,7 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
     };
   }, []);
 
-  const at = (event: PointerEvent) => toPixels({ x: event.clientX, y: event.clientY }, scale);
+  const at = (event: PointerCoords) => toPixels({ x: event.clientX, y: event.clientY }, scale);
 
   const start = (next: Drag) => {
     drag.current = next;
@@ -79,15 +85,18 @@ export function useSelection(session: ScreenshotSession | null, bounds: Size | n
     }
   };
 
-  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+  const onPointerMove = (event: PointerCoords) => {
     if (!bounds) return;
     const point = at(event);
-    setPointer(point);
+    setPointer((prev) => (prev && prev.x === point.x && prev.y === point.y ? prev : point));
     const current = drag.current;
     if (!current) return;
-    if (current.kind === "draw") setSelection(rectFromPoints(current.origin, point, bounds));
-    else if (current.kind === "move") setSelection(moveRect(current.start, point.x - current.origin.x, point.y - current.origin.y, bounds));
-    else setSelection(resizeRect(current.start, current.handle, point, bounds));
+    const next = current.kind === "draw"
+      ? rectFromPoints(current.origin, point, bounds)
+      : current.kind === "move"
+        ? moveRect(current.start, point.x - current.origin.x, point.y - current.origin.y, bounds)
+        : resizeRect(current.start, current.handle, point, bounds);
+    setSelection((prev) => (sameRect(prev, next) ? prev : next));
   };
 
   const onPointerUp = () => {
