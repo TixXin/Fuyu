@@ -13,7 +13,7 @@ pub(crate) mod worker;
 
 use std::{
     path::PathBuf,
-    sync::{Arc, Mutex, OnceLock},
+    sync::{Arc, Condvar, Mutex, OnceLock, PoisonError},
     time::Duration,
 };
 
@@ -25,10 +25,18 @@ const SWITCH: &str = "FUYU_PLUGINS_V3";
 const CONFIG: &str = "plugins.yml";
 const RELEASE_ORIGINS: [&str; 3] = ["tauri://localhost", "http://tauri.localhost", "https://tauri.localhost"];
 
-static SUPERVISOR: OnceLock<Mutex<Option<Arc<Supervisor>>>> = OnceLock::new();
+static SUPERVISOR: OnceLock<(Mutex<Option<Arc<Supervisor>>>, Condvar)> = OnceLock::new();
 static PLUGINS_DIR: OnceLock<PathBuf> = OnceLock::new();
 static TRACKER: OnceLock<Mutex<safe_mode::Tracker>> = OnceLock::new();
 static STOPPING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn supervisor_gate() -> &'static (Mutex<Option<Arc<Supervisor>>>, Condvar) {
+    SUPERVISOR.get_or_init(|| (Mutex::new(None), Condvar::new()))
+}
+
+fn supervisor_slot() -> Option<&'static Mutex<Option<Arc<Supervisor>>>> {
+    SUPERVISOR.get().map(|(mutex, _)| mutex)
+}
 
 fn is_prerelease(version: &str) -> bool {
     version.split_once('-').is_some_and(|(core, _)| {
@@ -239,11 +247,22 @@ fn track(event: &Event) {
 }
 
 const BISECT_TIMEOUT: Duration = Duration::from_secs(5);
-const SLOT_WAIT: Duration = Duration::from_millis(50);
-const SLOT_TRIES: u32 = 100;
+const SLOT_WAIT: Duration = Duration::from_secs(5);
 
 fn supervisor() -> Option<Arc<Supervisor>> {
-    SUPERVISOR.get()?.lock().ok()?.clone()
+    supervisor_slot()?.lock().ok()?.clone()
+}
+
+fn wait_for_supervisor() -> Option<Arc<Supervisor>> {
+    let (mutex, condvar) = supervisor_gate();
+    let guard = mutex.lock().unwrap_or_else(PoisonError::into_inner);
+    let (guard, _) = condvar.wait_timeout_while(guard, SLOT_WAIT, |slot| {
+        slot.is_none() && !STOPPING.load(std::sync::atomic::Ordering::SeqCst)
+    }).unwrap_or_else(PoisonError::into_inner);
+    if STOPPING.load(std::sync::atomic::Ordering::SeqCst) {
+        return None;
+    }
+    guard.clone()
 }
 
 fn ready_generation(supervisor: &Supervisor) -> Option<u32> {
@@ -255,21 +274,12 @@ fn ready_generation(supervisor: &Supervisor) -> Option<u32> {
 
 fn resend_bisect(generation: u32) {
     let Some(dir) = PLUGINS_DIR.get() else { return };
-    for _ in 0..SLOT_TRIES {
-        if STOPPING.load(std::sync::atomic::Ordering::SeqCst) {
-            return;
-        }
-        let Some(supervisor) = supervisor() else {
-            std::thread::sleep(SLOT_WAIT);
-            continue;
-        };
-        if ready_generation(&supervisor) != Some(generation) {
-            return;
-        }
-        if let Err(error) = supervisor.call(bisect::METHOD, bisect::params(&bisect::off(dir)), BISECT_TIMEOUT) {
-            eprintln!("[plugins-v3] could not hand the bisect list to the plugin host (#{generation}): {error}");
-        }
+    let Some(supervisor) = wait_for_supervisor() else { return };
+    if ready_generation(&supervisor) != Some(generation) {
         return;
+    }
+    if let Err(error) = supervisor.call(bisect::METHOD, bisect::params(&bisect::off(dir)), BISECT_TIMEOUT) {
+        eprintln!("[plugins-v3] could not hand the bisect list to the plugin host (#{generation}): {error}");
     }
 }
 
@@ -310,13 +320,15 @@ fn start(home: PathBuf, dir: PathBuf, files: HostFiles, origins: Vec<String>, de
         track(&event);
         report(event);
     })?;
-    let mut slot = SUPERVISOR.get_or_init(Mutex::default).lock().map_err(|_| "the plugin host lock is poisoned".to_string())?;
+    let (mutex, condvar) = supervisor_gate();
+    let mut slot = mutex.lock().map_err(|_| "the plugin host lock is poisoned".to_string())?;
     if STOPPING.load(std::sync::atomic::Ordering::SeqCst) {
         drop(slot);
         supervisor.stop();
         return Ok(());
     }
     *slot = Some(Arc::new(supervisor));
+    condvar.notify_all();
     Ok(())
 }
 
@@ -331,7 +343,7 @@ pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     let home = crate::home_dir::fuyu_home(tauri::Manager::path(app)).map_err(|error| error.to_string())?;
     let dir = plugins_dir(app)?;
     let _ = PLUGINS_DIR.set(dir.clone());
-    let _ = SUPERVISOR.get_or_init(Mutex::default);
+    let _ = supervisor_gate();
     let dev_url = app.config().build.dev_url.as_ref().map(ToString::to_string);
     let origins = host_origins(cfg!(debug_assertions), dev_url.as_deref());
     let files = host_files(tauri::Manager::path(app).resource_dir().ok().as_deref(), cfg!(debug_assertions));
@@ -384,7 +396,7 @@ fn connection_now(switched_on: bool, slot: Option<&Mutex<Option<Arc<Supervisor>>
 
 #[tauri::command]
 pub(crate) fn get_plugin_host_connection() -> HostConnection {
-    let connection = connection_now(switched_on(), SUPERVISOR.get());
+    let connection = connection_now(switched_on(), supervisor_slot());
     HostConnection { safe_mode: tracker().and_then(|tracker| tracker.current()), node: node_status::current(), ..connection }
 }
 
@@ -428,7 +440,7 @@ fn memory_of(pid: Option<u32>, read: impl Fn(u32) -> Option<u64>) -> Option<Host
 
 #[tauri::command]
 pub(crate) fn get_plugin_host_memory() -> Option<HostMemory> {
-    memory_of(host_pid(SUPERVISOR.get()), crate::platform::private_memory::private_bytes)
+    memory_of(host_pid(supervisor_slot()), crate::platform::private_memory::private_bytes)
 }
 
 pub(crate) fn respond(request: &tauri::http::Request<Vec<u8>>) -> tauri::http::Response<Vec<u8>> {
@@ -453,7 +465,10 @@ pub(crate) use tauri_commands;
 pub(crate) fn shutdown() {
     STOPPING.store(true, std::sync::atomic::Ordering::SeqCst);
     node_status::gate().stop();
-    let supervisor = SUPERVISOR.get().and_then(|slot| slot.lock().ok()?.take());
+    if let Some((_, condvar)) = SUPERVISOR.get() {
+        condvar.notify_all();
+    }
+    let supervisor = supervisor_slot().and_then(|slot| slot.lock().ok()?.take());
     if let Some(supervisor) = supervisor {
         supervisor.stop();
     }

@@ -1,7 +1,7 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
     path::{Path, PathBuf},
-    sync::{Arc, Mutex, OnceLock, PoisonError},
+    sync::{Arc, Condvar, Mutex, OnceLock, PoisonError},
     time::Duration,
 };
 
@@ -17,8 +17,7 @@ const CATALOG: &str = include_str!("../../../src/features/builtins.json");
 const CATALOG_FORMAT: u32 = 1;
 const DIR: &str = "plugins-v3";
 const FILE: &str = "plugins.yml";
-const READY_POLL: Duration = Duration::from_millis(50);
-const READY_POLLS: u32 = 200;
+const READY_WAIT: Duration = Duration::from_secs(10);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -314,11 +313,15 @@ struct Switches {
     ready: bool,
 }
 
-static SWITCHES: OnceLock<Mutex<Switches>> = OnceLock::new();
+static SWITCHES: OnceLock<(Mutex<Switches>, Condvar)> = OnceLock::new();
 static APP: OnceLock<AppHandle> = OnceLock::new();
 
+fn switches_gate() -> &'static (Mutex<Switches>, Condvar) {
+    SWITCHES.get_or_init(|| (Mutex::new(Switches { table: Table::new(catalog(), BTreeSet::new()), file: None, ready: false }), Condvar::new()))
+}
+
 fn switches() -> &'static Mutex<Switches> {
-    SWITCHES.get_or_init(|| Mutex::new(Switches { table: Table::new(catalog(), BTreeSet::new()), file: None, ready: false }))
+    &switches_gate().0
 }
 
 fn fuyu_home(app: &AppHandle) -> Option<PathBuf> {
@@ -350,6 +353,7 @@ pub(crate) fn init(app: &AppHandle) {
             }
         }
         *slot = Switches { table, file, ready: true };
+        switches_gate().1.notify_all();
         actions
     };
     run_all(actions);
@@ -376,11 +380,10 @@ pub(crate) fn config(id: &str) -> Map<String, Value> {
 }
 
 fn wait_until_ready() {
-    for _ in 0..READY_POLLS {
-        if switches().lock().unwrap_or_else(PoisonError::into_inner).ready {
-            return;
-        }
-        std::thread::sleep(READY_POLL);
+    let (mutex, condvar) = switches_gate();
+    let guard = mutex.lock().unwrap_or_else(PoisonError::into_inner);
+    if !guard.ready {
+        let _ = condvar.wait_timeout_while(guard, READY_WAIT, |slot| !slot.ready);
     }
 }
 
