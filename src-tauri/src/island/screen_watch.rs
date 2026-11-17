@@ -1,10 +1,7 @@
-use std::{thread, time::Duration};
 use tauri::{Monitor, WebviewWindow};
 
 use super::state::read_window_state;
 use crate::macos::notch::{read_notches, ScreenNotch};
-
-const POLL_INTERVAL: Duration = Duration::from_secs(2);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(super) struct Display {
@@ -44,23 +41,27 @@ fn read_screens(window: &WebviewWindow) -> Option<Screens> {
     Some(Screens::new(monitors.iter().map(display_of).collect(), read_notches(window)))
 }
 
-pub(super) fn start(window: WebviewWindow) {
-    thread::spawn(move || {
-        let mut last = read_screens(&window);
-        loop {
-            thread::sleep(POLL_INTERVAL);
-            let Some(screens) = read_screens(&window) else {
-                continue;
-            };
-            if last.as_ref() == Some(&screens) {
-                continue;
-            }
-            last = Some(screens);
-            if let Err(error) = super::apply_stage_geometry(&window, read_window_state(), false) {
-                eprintln!("Failed to place the island after the screens changed: {error}");
-            }
+pub(super) struct ScreenWatcher {
+    last: Option<Screens>,
+}
+
+impl ScreenWatcher {
+    pub(super) fn new(window: &WebviewWindow) -> Self {
+        Self { last: read_screens(window) }
+    }
+
+    pub(super) fn poll(&mut self, window: &WebviewWindow) {
+        let Some(screens) = read_screens(window) else {
+            return;
+        };
+        if self.last.as_ref() == Some(&screens) {
+            return;
+        };
+        self.last = Some(screens);
+        if let Err(error) = super::apply_stage_geometry(window, read_window_state(), false) {
+            eprintln!("Failed to place the island after the screens changed: {error}");
         }
-    });
+    }
 }
 
 #[cfg(test)]

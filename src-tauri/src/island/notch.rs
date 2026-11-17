@@ -179,14 +179,6 @@ pub fn get_island_notch() -> Option<Notch> {
     read_window_state().notch
 }
 
-#[cfg(target_os = "macos")]
-pub(crate) fn start_notch_watch(window: WebviewWindow) {
-    super::screen_watch::start(window);
-}
-
-#[cfg(not(target_os = "macos"))]
-pub(crate) fn start_notch_watch(_window: WebviewWindow) {}
-
 #[cfg(test)]
 mod tests {
     use super::*;

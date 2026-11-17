@@ -56,7 +56,6 @@ objc2::define_class!(
 );
 
 const LEVELS_ABOVE_MENU_BAR: i64 = 3;
-const TOP_SPACE_CHECK: std::time::Duration = std::time::Duration::from_secs(2);
 const OVERLAY_ABOVE_ISLAND: i64 = 1;
 
 pub(crate) fn make_overlay_panel(window: &WebviewWindow) -> Result<u32, String> {
@@ -187,12 +186,9 @@ pub(crate) fn island_has_real_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, 
     }
 }
 
-pub(crate) fn keep_in_top_space(window: WebviewWindow) {
-    let _ = std::thread::Builder::new().name("island-top-space".into()).spawn(move || loop {
-        let target = window.clone();
-        let _ = window.run_on_main_thread(move || pin_to_top_space(&target));
-        std::thread::sleep(TOP_SPACE_CHECK);
-    });
+pub(crate) fn refresh_top_space(window: &WebviewWindow) {
+    let target = window.clone();
+    let _ = window.run_on_main_thread(move || pin_to_top_space(&target));
 }
 
 fn pin_to_top_space(window: &WebviewWindow) {

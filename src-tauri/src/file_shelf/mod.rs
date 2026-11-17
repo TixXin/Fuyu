@@ -78,16 +78,25 @@ pub struct FileShelfSnapshot {
     items: Vec<FileShelfEntry>,
 }
 
+#[derive(Default)]
+struct ShelfItems(Option<Vec<FileShelfItem>>);
+
+impl ShelfItems {
+    fn get_mut(&mut self, path: &Path) -> &mut Vec<FileShelfItem> {
+        self.0.get_or_insert_with(|| load_items(path))
+    }
+}
+
 struct FileShelfService {
     path: PathBuf,
-    items: Mutex<Vec<FileShelfItem>>,
+    items: Mutex<ShelfItems>,
     options: Mutex<FileShelfOptions>,
     availability: Availability,
     thumbnails: Thumbnails,
 }
 
 impl FileShelfService {
-    fn items(&self) -> MutexGuard<'_, Vec<FileShelfItem>> {
+    fn items(&self) -> MutexGuard<'_, ShelfItems> {
         self.items.lock().unwrap_or_else(PoisonError::into_inner)
     }
 
@@ -100,7 +109,12 @@ impl FileShelfService {
         change: impl FnOnce(Vec<FileShelfItem>) -> Vec<FileShelfItem>,
     ) -> Result<FileShelfSnapshot, String> {
         let options = self.options();
-        let paths: Vec<String> = self.items().iter().map(|item| item.path.clone()).collect();
+        let paths: Vec<String> = self
+            .items()
+            .get_mut(&self.path)
+            .iter()
+            .map(|item| item.path.clone())
+            .collect();
         let known = self.availability.check(&paths);
         let presence = |path: &str| {
             known.get(path).copied().unwrap_or_else(|| {
@@ -111,19 +125,21 @@ impl FileShelfService {
                 }
             })
         };
-        let mut items = self.items();
+        let mut guard = self.items();
+        let items = guard.get_mut(&self.path);
         let next = prune(change(items.clone()), options, current_unix_millis(), presence);
         if next != *items {
             save_items(&self.path, &next)?;
             *items = next.clone();
             announce_change(items.len());
         }
-        drop(items);
+        drop(guard);
         Ok(snapshot_of(&next, presence))
     }
 
     fn path_of(&self, id: &str) -> Result<String, String> {
         self.items()
+            .get_mut(&self.path)
             .iter()
             .find(|item| item.id == id)
             .map(|item| item.path.clone())
@@ -133,6 +149,7 @@ impl FileShelfService {
     fn existing_paths(&self, ids: &[String]) -> Result<Vec<String>, String> {
         let candidates: Vec<String> = self
             .items()
+            .get_mut(&self.path)
             .iter()
             .filter(|item| ids.contains(&item.id))
             .map(|item| item.path.clone())
@@ -171,13 +188,17 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     let path = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?
         .join(FILE_SHELF_FILE_NAME);
-    let items = Mutex::new(load_items(&path));
     let _ = FILE_SHELF.set(FileShelfService {
         path,
-        items,
+        items: Mutex::new(ShelfItems::default()),
         options: Mutex::new(FileShelfOptions::default()),
         availability: Availability::default(),
         thumbnails: Thumbnails::default(),
+    });
+    let _ = std::thread::Builder::new().name("file-shelf-load".into()).spawn(|| {
+        if let Ok(shelf) = service() {
+            let _ = shelf.items().get_mut(&shelf.path);
+        }
     });
     let _ = ANNOUNCE_CHANGE.set(Box::new(|count| {
         crate::plugin_host::publish_event("shelf.changed", serde_json::json!({ "count": count }));

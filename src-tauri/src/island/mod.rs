@@ -30,6 +30,7 @@ pub(crate) mod screen;
 mod screen_watch;
 mod state;
 pub(crate) mod top_edge;
+mod watch;
 
 #[cfg(test)]
 mod tests;
@@ -54,11 +55,10 @@ use crate::win32;
 use state::{mutate_window_state, read_window_state, window_state, CornerShape, IslandMode, MonitorFollow};
 
 pub(crate) use geometry::apply_stage_geometry;
-pub(crate) use follow::start_monitor_follow_loop;
 #[cfg(debug_assertions)]
 pub(crate) use notch::set_dev_notch;
-pub(crate) use notch::start_notch_watch;
 pub(crate) use passthrough::start_cursor_passthrough_loop;
+pub(crate) use watch::start_window_watch;
 #[cfg(target_os = "macos")]
 pub(crate) use passthrough::hide_transient_hints;
 
@@ -183,6 +183,9 @@ pub fn set_island_interaction(
         }
         *state
     });
+    if previous_state.monitor_follow != state.monitor_follow {
+        watch::wake();
+    }
     apply_stage_geometry(
         &window,
         state,
