@@ -72,6 +72,5 @@ SDK、脚手架和示例插件都是 MIT 许可，拿来写插件不会给你的
 
 - 中心图案（`focusd.center-pattern`）：收起条中间的小图案或 Codex 宠物。
 - 计时器（`focusd.timer`）：岛上的倒计时和秒表，收起条显示剩余时间，到点提醒。
-- SSH 代理隧道（`focusd.ssh-proxy-tunnel`）：把这台电脑的代理借给 SSH 服务器。
 
 它们怎么实现、怎么新加一个，见 [内置插件](../architecture/plugins/builtins.md)。

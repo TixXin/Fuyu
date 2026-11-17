@@ -24,6 +24,7 @@ fn the_local_proxy_follows_the_choice() {
     assert_eq!(choice(&settings(json!({ "localProxy": "clash-verge", "customPort": 1 }))), Ok(Choice::ClashVerge));
     assert_eq!(choice(&settings(json!({ "localProxy": "v2rayn" }))), Ok(Choice::V2rayN));
     assert_eq!(choice(&settings(json!({ "localProxy": "custom", "customPort": 8118 }))), Ok(Choice::Custom(8118)));
+    assert_eq!(choice(&settings(json!({ "localProxy": "custom" }))), Ok(Choice::Custom(7897)));
     assert_eq!(choice(&settings(json!({ "localProxy": "auto" }))), Ok(Choice::Auto));
     assert_eq!(choice(&Map::new()), Ok(Choice::Auto));
     for bad in [json!(0), json!(65_536), json!(80.5), json!("8118")] {

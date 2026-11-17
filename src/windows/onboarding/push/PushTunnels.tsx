@@ -2,10 +2,10 @@ import { Network } from "lucide-react";
 import { useState } from "react";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsSwitch } from "../../../components/settings/SettingsSwitch";
-import { setPluginEnabled } from "../../../features/plugins/api";
-import { useBuiltinPlugin } from "../../../features/plugins/useBuiltinPlugin";
-import { SSH_TUNNEL_PLUGIN_ID } from "../../../features/ssh-tunnel";
+import { switchBuiltinPlugin } from "../../../features/plugin-kernel/builtinSwitches";
+import { useBuiltinEnabled } from "../../../features/plugin-kernel/useBuiltinPlugins";
 import type { SshTunnelHost } from "../../../features/ssh-tunnel/api";
+import { OWNER as SSH_TUNNEL_PLUGIN } from "../../../features/ssh-tunnel/plugin/owner";
 import { useSshTunnels } from "../../../features/ssh-tunnel/useSshTunnels";
 import { useErrorText, useTranslation } from "../../../i18n";
 
@@ -16,7 +16,7 @@ export function PushTunnels({ hosts }: { hosts: readonly string[] }) {
   const text = t.onboarding.push.tunnel;
   const states = t.settings.plugins.sshTunnel;
   const errorText = useErrorText();
-  const plugin = useBuiltinPlugin(SSH_TUNNEL_PLUGIN_ID);
+  const enabled = useBuiltinEnabled(SSH_TUNNEL_PLUGIN);
   const tunnels = useSshTunnels();
   const [error, setError] = useState<string | null>(null);
   const entries = hosts.flatMap((host) => tunnels.hosts?.find((entry) => entry.host === host) ?? []);
@@ -24,13 +24,13 @@ export function PushTunnels({ hosts }: { hosts: readonly string[] }) {
 
   const toggle = (entry: SshTunnelHost, on: boolean) => {
     setError(null);
-    const ready = on && !plugin.enabled ? setPluginEnabled(SSH_TUNNEL_PLUGIN_ID, true) : Promise.resolve(null);
+    const ready = on && !enabled ? switchBuiltinPlugin(SSH_TUNNEL_PLUGIN, true) : Promise.resolve();
     ready.then(() => tunnels.toggle(entry, on, entry.remotePort ?? DEFAULT_PORT)).catch((reason: unknown) => setError(errorText(reason)));
   };
   const describe = (entry: SshTunnelHost) => {
     if (tunnels.checking === entry.host) return states.checking;
     if (!entry.enabled) return text.off;
-    const state = plugin.enabled ? states.state[entry.state] : states.waitingForPlugin;
+    const state = enabled ? states.state[entry.state] : states.waitingForPlugin;
     return `${state} · ${text.port(entry.remotePort ?? DEFAULT_PORT)}`;
   };
 

@@ -2,7 +2,6 @@
   "features": [
     "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts",
     "src/features/plugins/PluginDetailPage.tsx -> src/features/center-pattern/index.ts",
-    "src/features/plugins/PluginDetailPage.tsx -> src/features/ssh-tunnel/index.ts",
     "src/features/plugins/useBuiltinPlugin.ts -> src/features/plugin-views/api.ts",
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginCard.css",
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginMarketSection.css",

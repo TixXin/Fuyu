@@ -3681,6 +3681,19 @@
       }
     },
     {
+      "page": "agentRemote",
+      "zh-CN": {
+        "group": "SSH 代理隧道",
+        "title": "本地代理",
+        "description": "自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和 Windows 系统代理，再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。"
+      },
+      "en": {
+        "group": "SSH proxy tunnel",
+        "title": "Local proxy",
+        "description": "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the Windows system proxy, then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none."
+      }
+    },
+    {
       "page": "plugins",
       "zh-CN": {
         "group": "",

@@ -2,12 +2,12 @@ import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
-import "../../src/features/plugins/PluginCard.css";
+import "../../src/styles/fonts.css";
+import "../../src/styles/base.css";
 import "../../src/windows/settings/LayoutEditor.css";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
-import { PluginDetailPage } from "../../src/features/plugins/PluginDetailPage";
-import type { PluginInfo } from "../../src/features/plugins/api";
 import type { SshTunnelHost, SshTunnelProxy } from "../../src/features/ssh-tunnel/api";
+import { SshTunnelSettings } from "../../src/features/ssh-tunnel/SshTunnelSettings";
 
 const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
 localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
@@ -29,11 +29,19 @@ let hosts: SshTunnelHost[] = [
 const takenPorts = new Set([10089]);
 const uncheckablePort = 40404;
 let proxy: SshTunnelProxy | null = { port: 7897, found: "clashVerge", listening: true };
+const builtin = { id: "ssh-tunnel", kind: "builtin", enabled: true, background: [{ name: "tunnels", registered: true, running: true }], config: {} as Record<string, unknown> };
 const calls: { command: string; args: Record<string, unknown> }[] = [];
 mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   calls.push({ command, args });
   switch (command) {
+    case "get_builtin_plugins": return [builtin];
+    case "set_builtin_plugin_config": {
+      const key = String(args.key);
+      if (args.value === null || args.value === undefined) delete builtin.config[key];
+      else builtin.config = { ...builtin.config, [key]: args.value };
+      return [builtin];
+    }
     case "get_ssh_tunnels": return hosts;
     case "get_ssh_tunnel_proxy": return proxy;
     case "check_ssh_tunnel_port":
@@ -46,26 +54,7 @@ mockIPC((command, payload) => {
     }
     default: throw new Error(`Unexpected command ${command}`);
   }
-});
-
-const settingsSchema: PluginInfo["settingsSchema"] = [
-  { key: "localProxy", type: "select", title: { "zh-CN": "本地代理", en: "Local proxy" }, default: "auto", options: [
-    { value: "auto", title: { "zh-CN": "自动检测", en: "Auto" } },
-    { value: "clash-verge", title: { "zh-CN": "Clash Verge（7897）", en: "Clash Verge (7897)" } },
-    { value: "v2rayn", title: { "zh-CN": "v2rayN（10808）", en: "v2rayN (10808)" } },
-    { value: "custom", title: { "zh-CN": "自定义端口", en: "Custom port" } },
-  ] },
-  { key: "customPort", type: "number", title: { "zh-CN": "本地端口", en: "Local port" }, min: 1, max: 65535, default: 7897 },
-];
-const plugin = (localProxy: string): PluginInfo => ({
-  id: "focusd.ssh-proxy-tunnel", builtin: true, dev: false, invalidReason: null,
-  name: { "zh-CN": "SSH 代理隧道", en: "SSH proxy tunnel" }, description: null, version: "1.0.0", author: "ShengLin1001", homepage: "",
-  permissions: [], optionalPermissions: [], calls: [], commands: [], runtime: "builtin", platforms: ["windows", "macos"], webview: false, hasProcess: true, enabled: true, needsApproval: false,
-  status: "running", error: null, log: [], settingsSchema, settings: { localProxy, customPort: 7897 }, info: [], notificationsMuted: false, windowRules: {},
-  keybindingConflicts: [], keybindings: {}, sensitive: {}, activation: "startup", activationEvents: [], startupMs: null, resources: null,
-  keepAlive: null, revoked: null, updateAvailable: null, signingKeyChanged: false, authorKey: null, autoUpdated: null, updateFailed: null, preRelease: false,
-  preReleaseAvailable: null, memoryLimitMb: 512,
-});
+}, { shouldMockEvents: true });
 
 const messages: string[] = [];
 const check = (condition: unknown, message: string) => {
@@ -75,19 +64,6 @@ const check = (condition: unknown, message: string) => {
 const page = document.getElementById("page")!;
 const root = createRoot(page);
 const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
-const noop = () => undefined;
-let closed = 0;
-const render = async (localProxy: string) => {
-  await act(async () => {
-    root.render(
-      <StrictMode><I18nProvider>
-        <PluginDetailPage plugin={plugin(localProxy)} busy={false} notice={null} allowed nodeAvailable powershellAvailable onBack={() => { closed += 1; }} onEnabledChange={noop} onSettingChange={noop} onRunCommand={noop}
-          onNotificationsMutedChange={noop} onWindowRulesChange={noop} onPreReleaseChange={noop} onMemoryLimitChange={noop} onClearData={noop} onRevokeSensitive={noop} />
-      </I18nProvider></StrictMode>,
-    );
-  });
-  await settle();
-};
 const row = (host: string) => [...document.querySelectorAll<HTMLElement>(".ssh-tunnel__host")].find((found) => found.querySelector("label")?.textContent === host)!;
 const state = (host: string) => row(host).querySelector(".ssh-tunnel__state")?.textContent ?? "";
 const flip = async (host: string) => { await act(async () => { row(host).querySelector<HTMLInputElement>("[role='switch']")!.click(); }); await settle(); };
@@ -102,31 +78,43 @@ const answer = async (text: string) => {
   await settle();
 };
 const lastSet = () => calls.filter((call) => call.command === "set_ssh_tunnel").slice(-1)[0]?.args;
-
-const shown = () => document.querySelector(".plugin-dialog")?.textContent ?? "";
-const info = () => document.querySelector<HTMLElement>(".plugin-info")?.closest(".settings-section");
+const lastConfig = () => calls.filter((call) => call.command === "set_builtin_plugin_config").slice(-1)[0]?.args;
+const shown = () => page.textContent ?? "";
+const proxyStatus = () => document.querySelector<HTMLElement>(".ssh-tunnel__proxy-status");
+const pickLocalProxy = async (value: string) => {
+  await act(async () => { page.querySelector<HTMLButtonElement>("button[aria-label='本地代理']")!.click(); });
+  await act(async () => { page.querySelector<HTMLElement>(`.select-control__option[data-value='${value}']`)!.click(); });
+  await settle();
+};
 
 try {
-  await render("auto");
-  const modal = document.querySelector<HTMLElement>(".plugin-dialog[role='dialog'][aria-modal='true']");
-  check(modal && !page.contains(modal) && document.activeElement === modal.querySelector(".plugin-dialog__close") && modal.querySelector("[role='switch']"),
-    "A plugin's settings open in a modal dialog over the list: focus goes to Close, and the header has the plugin's switch");
-  await act(async () => { modal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
-  check(closed === 1, "Esc closes the dialog");
-  check(info()?.querySelector(".plugin-info__row code")?.textContent === "127.0.0.1:7897"
-    && info()?.textContent?.includes("端口来自 Clash Verge 的设置，代理正在监听。"),
-  "The running info shows the local proxy found and that it listens");
+  await act(async () => {
+    root.render(
+      <StrictMode><I18nProvider>
+        <SshTunnelSettings />
+      </I18nProvider></StrictMode>,
+    );
+  });
+  await settle();
+
+  check(proxyStatus()?.querySelector("code")?.textContent === "127.0.0.1:7897"
+    && proxyStatus()?.textContent?.includes("端口来自 Clash Verge 的设置，代理正在监听。"),
+  "The active proxy row shows the local proxy found and that it listens");
   proxy = { port: 10808, found: "v2rayNDefault", listening: false };
   await act(async () => { await new Promise((resolve) => setTimeout(resolve, 3_200)); });
-  check(info()?.querySelector("code")?.textContent === "127.0.0.1:10808"
-    && info()?.querySelector(".plugin-card__error")?.textContent === "v2rayN 的默认端口，但现在没有程序在监听这个端口：请打开代理软件。",
+  check(proxyStatus()?.querySelector("code")?.textContent === "127.0.0.1:10808"
+    && proxyStatus()?.querySelector(".ssh-tunnel__error")?.textContent === "v2rayN 的默认端口，但现在没有程序在监听这个端口：请打开代理软件。",
   "A proxy nothing listens on is read again and flagged");
   proxy = { port: 7897, found: "clashVerge", listening: true };
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 3_200)); });
 
-  await render("clash-verge");
-  check(shown().includes("本地代理") && !shown().includes("本地端口"), "The local port field stays hidden until Custom port is picked");
-  await render("custom");
-  check(shown().includes("本地端口"), "Picking Custom port shows the local port field");
+  await pickLocalProxy("clash-verge");
+  check(lastConfig()?.id === "ssh-tunnel" && lastConfig()?.key === "localProxy" && lastConfig()?.value === "clash-verge"
+    && shown().includes("本地代理") && !shown().includes("本地端口"),
+  "The local port field stays hidden until Custom port is picked");
+  await pickLocalProxy("custom");
+  check(lastConfig()?.key === "localProxy" && lastConfig()?.value === "custom" && shown().includes("本地端口"),
+    "Picking Custom port shows the local port field");
 
   check(state("zcm6") === "已连接" && row("zcm6").querySelector("code")?.textContent
     === "export http_proxy=http://127.0.0.1:10089 https_proxy=http://127.0.0.1:10089 HTTPS_PROXY=http://127.0.0.1:10089",

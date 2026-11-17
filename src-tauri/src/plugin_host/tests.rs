@@ -520,7 +520,7 @@ mod settings_tests {
 mod builtin_tests {
     use std::path::PathBuf;
 
-    use super::super::builtin::{has_native_work, is_builtin, manifests, BUILTINS, SSH_TUNNEL_ID};
+    use super::super::builtin::{has_native_work, is_builtin, manifests, BUILTINS};
     use super::super::grants::{record_builtin_start, record_builtin_stop};
     use super::super::runtime::{RuntimeInfo, RuntimeStatus};
     use super::super::manifest::{parse_manifest, PluginRuntime};
@@ -546,10 +546,11 @@ mod builtin_tests {
 
     #[test]
     fn only_native_built_in_plugins_do_work_in_this_process() {
-        assert_eq!(has_native_work(BUILTINS, SSH_TUNNEL_ID), Ok(true));
         assert_eq!(has_native_work(BUILTINS, "focusd.center-pattern"), Ok(false));
         assert!(!is_builtin("focusd.local-api"));
+        assert!(!is_builtin("focusd.ssh-proxy-tunnel"));
         let table = [("focusd.native", "", true), ("focusd.window-only", "", false)];
+        assert_eq!(has_native_work(&table, "focusd.native"), Ok(true));
         assert_eq!(has_native_work(&table, "focusd.window-only"), Ok(false));
         assert!(has_native_work(&table, "focusd.unknown").expect_err("unknown").contains("focusd.unknown"));
     }
