@@ -21,7 +21,7 @@
 | 窗口 label | 前端入口 | 说明 |
 |---|---|---|
 | `main` | 默认 | 悬浮岛本体，折叠态 / 展开态 / 贴边收起 |
-| `translation` | `?window=translation` | 快捷翻译窗口，常驻、隐藏显示 |
+| `translation` | `?window=translation` | 快捷翻译窗口，`create: false`，按需创建，收起隐藏、空闲 10 分钟后销毁 |
 | `clipboard` | `?window=clipboard` | 剪贴板独立窗口，常驻、隐藏显示，快捷键或 Win+V 弹出 |
 | `clipboard-preview` | `?window=clipboard-preview` | 剪贴板的空格预览，贴在剪贴板窗口旁边；常驻、隐藏显示，不抢焦点 |
 | `settings` | `?window=settings` | 设置窗口，`create: false`，按需创建，关闭时销毁 |

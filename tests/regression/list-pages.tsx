@@ -100,7 +100,8 @@ async function runChecks() {
     check($$(".island-list-row", clip).length === ITEMS.length, "每条记录一行");
     check($(".island-list-row__meta", first)?.textContent?.includes("VS Code") && $(".island-list-row__meta", first)?.textContent?.includes("刚刚"), "第二行写来源程序和时间");
     const image = $$(".island-list-row", clip)[2];
-    check($(".island-list-row__main", image)?.textContent === "图片 770×148" && $("img", image), "图片写成「图片 宽×高」，行首是缩略图");
+    const thumbImg = $("img", image);
+    check($(".island-list-row__main", image)?.textContent === "图片 770×148" && thumbImg && thumbImg.getAttribute("loading") === "lazy" && thumbImg.getAttribute("decoding") === "async", "图片写成「图片 宽×高」，行首是懒加载异步解码缩略图");
     check($(".island-list-search kbd", clip)?.textContent === "Ctrl+Shift+W", "搜索框一直显示，带打开剪贴板的快捷键");
     const list = $(".island-list", clip)!;
     const short = $$(".island-list-row", clip).filter((item) => item.getBoundingClientRect().height + 0.5 < $(".island-list-row__text", item)!.getBoundingClientRect().height + 14);
@@ -172,6 +173,26 @@ async function runChecks() {
     const empty = document.getElementById("shelf-empty")!;
     check($(".island-list-empty strong", empty)?.textContent === "把文件拖到岛上暂存" && $(".island-list-empty small", empty), "空的时候是图标加两行说明");
     check(await until(() => !$(".island-list-row__meta--accent"), 3000) && $(".island-list-row__meta", row(clip, "t2")!)?.textContent?.includes("Windows Terminal"), "「已复制」过一会儿变回来源和时间");
+
+    const savedItems = items;
+    items = Array.from({ length: 200 }, (_, index) => ({ ...base, id: `v${index}`, kind: "text" as const, copiedAt: now - index * 1000, preview: `批量剪贴记录 ${index}` }));
+    await act(async () => renderAll());
+    const mountedCount = $$(".island-list-row", clip).length;
+    check(mountedCount > 0 && mountedCount < 40, `200 条记录只按视口虚拟挂载 ${mountedCount} 行`);
+    const virtualList = $(".island-list", clip)!;
+    await act(async () => {
+      virtualList.scrollTop = virtualList.scrollHeight;
+      virtualList.dispatchEvent(new Event("scroll"));
+    });
+    check(await until(() => Boolean(row(clip, "v199")) && !row(clip, "v0")), "滚到底部后挂载末尾记录并卸载顶部记录");
+    items = savedItems;
+    await act(async () => renderAll());
+    await act(async () => {
+      const restoredList = $(".island-list", clip)!;
+      restoredList.scrollTop = 0;
+      restoredList.dispatchEvent(new Event("scroll"));
+    });
+    check(await until(() => $$(".island-list-row", clip).length === savedItems.length), "恢复原记录后列表行完整显示");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

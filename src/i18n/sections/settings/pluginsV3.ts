@@ -1,4 +1,4 @@
-export type PluginV3State = "running" | "waiting" | "failed" | "disabled" | "auto-disabled" | "safe-mode" | "loading" | "stopped" | "unloading";
+export type PluginV3State = "running" | "waiting" | "failed" | "disabled" | "auto-disabled" | "safe-mode" | "bisect" | "loading" | "stopped" | "unloading";
 
 export type PluginV3Connection = "connecting" | "open" | "reconnecting" | "failed" | "closed";
 
@@ -91,6 +91,17 @@ export type SettingsPluginsV3Text = {
   };
   serviceReplacedBy?: (service: string, by: string) => string;
   serviceYielded?: (service: string) => string;
+  unreviewedBadge?: string;
+  undeclaredBadge?: (items: string) => string;
+  bisect?: {
+    start: string;
+    testing: (step: number, count: number, ids: string) => string;
+    fixed: string;
+    stillBroken: string;
+    found: (id: string) => string;
+    clear: string;
+    restore: string;
+  };
   autoDisabled: (errors: number, seconds: number) => string;
   heldBySafeMode: (mode: string) => string;
   cpu: string;
@@ -159,7 +170,7 @@ export const zhCN: SettingsPluginsV3Text = {
     updater: "后台检查版本更新与应用内安装",
   },
   builtins: "内置插件",
-  builtinsNote: "开关存在数据目录的 plugins-v3/plugins.yml，宿主没开也生效。关掉的插件撤掉它的界面、停掉它的后台；功能迁成插件之前，关掉还看不出变化。",
+  builtinsNote: "开关存在数据目录的 plugins-v3/plugins.yml，宿主没开也生效。关掉的插件撤掉它的界面、停掉它的后台。",
   builtinsLoading: "正在读取内置插件。",
   builtinNames: {
     todos: "待办",
@@ -185,7 +196,7 @@ export const zhCN: SettingsPluginsV3Text = {
     "theme-market": "主题市场",
     updater: "自动更新",
   },
-  builtinNotes: { messages: "关掉后，第 2 版插件在岛上的通知也不显示", "cc-connect": "设置在 AI Agent → 提醒；关掉后手机推送的 cc-connect 通道也停用", "ssh-tunnel": "设置在 AI Agent → SSH 远程；只支持 Windows，关掉后反向隧道结束", "session-ring": "设置在 AI Agent → 会话环；读 AI Agent 插件的会话列表", "local-api": "设置在 通用 → 本机接口；转给待办、AI Agent、剪贴板的请求，那个插件关着时回 503", "center-pattern": "设置在 外观 → 中心图案；悬岛和宠物读 AI Agent 插件的会话状态" },
+  builtinNotes: { clipboard: "关掉期间打码的密钥条目不按时清理，下次打开时清扫", messages: "关掉后，第 2 版插件在岛上的通知也不显示", "claude-usage": "设置在 AI Agent → 用量环；AI Agent 插件关着时设置组一并隐藏", "cc-connect": "设置在 AI Agent → 提醒；关掉后手机推送的 cc-connect 通道也停用", "ssh-tunnel": "设置在 AI Agent → SSH 远程；只支持 Windows，关掉后反向隧道结束", "session-ring": "设置在 AI Agent → 会话环；读 AI Agent 插件的会话列表", "local-api": "设置在 通用 → 本机接口；转给待办、AI Agent、剪贴板的请求，那个插件关着时回 503", "center-pattern": "设置在 外观 → 中心图案；悬岛和宠物读 AI Agent 插件的会话状态" },
   essentialNote: "浮屿必需，不能关",
   hostOff: "宿主没开",
   hostOffNote: "测试版和开发版默认启动宿主，设 FUYU_PLUGINS_V3=0 就关掉；正式版设了 FUYU_PLUGINS_V3=1 才启动。内置插件的开关照样生效。",
@@ -234,6 +245,7 @@ export const zhCN: SettingsPluginsV3Text = {
     disabled: "已停用",
     "auto-disabled": "已自动停用",
     "safe-mode": "被安全模式拦下",
+    bisect: "排查停用中",
     loading: "加载中",
     stopped: "已停止",
     unloading: "正在停止",
@@ -247,6 +259,17 @@ export const zhCN: SettingsPluginsV3Text = {
   },
   serviceReplacedBy: (service, by) => `服务 ${service} 已由插件 ${by} 接管`,
   serviceYielded: (service) => `已让出服务 ${service}`,
+  unreviewedBadge: "未经市场审核",
+  undeclaredBadge: (items) => `未在清单声明：${items}`,
+  bisect: {
+    start: "二分排查问题插件",
+    testing: (step, count, ids) => `第 ${step} 步：已临时停用 ${count} 个第三方插件（${ids}），问题消失了吗？`,
+    fixed: "问题消失了",
+    stillBroken: "问题还在",
+    found: (id) => `已定位到问题插件：${id}（当前保持停用）`,
+    clear: "未在第三方插件中复现该问题，已恢复全部插件。",
+    restore: "结束并恢复全部",
+  },
   autoDisabled: (errors, seconds) => `${seconds} 秒内出错 ${errors} 次，已停用到宿主下次重启；没有改 plugins.yml。`,
   heldBySafeMode: (mode) => `安全模式（${mode}）下不启动这个插件。`,
   cpu: "CPU",
@@ -315,7 +338,7 @@ export const en: SettingsPluginsV3Text = {
     updater: "Background update checks and in-app installation",
   },
   builtins: "Built-in plugins",
-  builtinsNote: "Switches are saved in plugins-v3/plugins.yml in the data folder and work without the host. A plugin switched off loses its UI and its background work; until a feature becomes a plugin, switching it off changes nothing yet.",
+  builtinsNote: "Switches are saved in plugins-v3/plugins.yml in the data folder and work without the host. A plugin switched off loses its UI and its background work.",
   builtinsLoading: "Reading the built-in plugins.",
   builtinNames: {
     todos: "To-dos",
@@ -341,7 +364,7 @@ export const en: SettingsPluginsV3Text = {
     "theme-market": "Theme market",
     updater: "Updates",
   },
-  builtinNotes: { messages: "Off also hides version 2 plugins' island notices", "cc-connect": "Settings are under AI Agent → Alerts; off also stops the phone push's cc-connect channel", "ssh-tunnel": "Settings are under AI Agent → SSH remote; Windows only, off ends the reverse tunnels", "session-ring": "Settings are under AI Agent → Session ring; reads the AI Agent plugin's session list", "local-api": "Settings are under General → Local API; requests for todos, AI Agent or the clipboard answer 503 while that plugin is off", "center-pattern": "Settings are under Appearance → Center pattern; the island mark and pets read the AI Agent plugin's session states" },
+  builtinNotes: { clipboard: "While off, masked secret items are not purged on timer until the clipboard is turned back on", messages: "Off also hides version 2 plugins' island notices", "claude-usage": "Settings are under AI Agent → Usage ring; hidden while the AI Agent plugin is off", "cc-connect": "Settings are under AI Agent → Alerts; off also stops the phone push's cc-connect channel", "ssh-tunnel": "Settings are under AI Agent → SSH remote; Windows only, off ends the reverse tunnels", "session-ring": "Settings are under AI Agent → Session ring; reads the AI Agent plugin's session list", "local-api": "Settings are under General → Local API; requests for todos, AI Agent or the clipboard answer 503 while that plugin is off", "center-pattern": "Settings are under Appearance → Center pattern; the island mark and pets read the AI Agent plugin's session states" },
   essentialNote: "Fuyu needs it; always on",
   hostOff: "Host not running",
   hostOffNote: "Beta and dev builds start the host unless FUYU_PLUGINS_V3=0; stable releases start it only with FUYU_PLUGINS_V3=1. Built-in plugin switches work either way.",
@@ -390,6 +413,7 @@ export const en: SettingsPluginsV3Text = {
     disabled: "Off",
     "auto-disabled": "Turned off",
     "safe-mode": "Held by safe mode",
+    bisect: "Held by bisect",
     loading: "Loading",
     stopped: "Stopped",
     unloading: "Stopping",
@@ -403,6 +427,17 @@ export const en: SettingsPluginsV3Text = {
   },
   serviceReplacedBy: (service, by) => `Service ${service} is replaced by ${by}`,
   serviceYielded: (service) => `Yielded service ${service}`,
+  unreviewedBadge: "Unreviewed",
+  undeclaredBadge: (items) => `Undeclared in manifest: ${items}`,
+  bisect: {
+    start: "Bisect plugins",
+    testing: (step, count, ids) => `Step ${step}: Temporarily turned off ${count} third-party plugin(s) (${ids}). Is the problem gone?`,
+    fixed: "Problem is gone",
+    stillBroken: "Still happening",
+    found: (id) => `Problem traced to plugin: ${id} (kept off for now)`,
+    clear: "Could not reproduce the issue across third-party plugins; all plugins restored.",
+    restore: "Finish & restore all",
+  },
   autoDisabled: (errors, seconds) => `${errors} errors within ${seconds} s, so it's off until the host restarts. plugins.yml is unchanged.`,
   heldBySafeMode: (mode) => `Not started in safe mode (${mode}).`,
   cpu: "CPU",

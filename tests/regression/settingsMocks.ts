@@ -1,7 +1,27 @@
+import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
+import catalog from "../../src/features/builtins.json";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
+import { BUILTIN_PLUGINS_CHANGED, type BuiltinPlugin } from "../../src/features/plugin-kernel/api";
 import { DEMO_CURRENT_VERSION } from "./updateDemo";
 import { updateRuntimeMock } from "./updateRuntimeMock";
+
+let builtins: BuiltinPlugin[] | null = null;
+
+export function mockBuiltinPlugins(): BuiltinPlugin[] {
+  if (!builtins) {
+    const stored = JSON.parse(globalThis.localStorage?.getItem("fuyu-settings") ?? "{}") as Record<string, unknown>;
+    const voice = JSON.parse(globalThis.localStorage?.getItem("fuyu-voice-input") ?? "{}") as Record<string, unknown>;
+    builtins = catalog.plugins.map(({ id, kind }) => ({
+      id,
+      kind: kind === "essential" ? "essential" : "builtin",
+      enabled: id === "screenshot" ? stored.screenshotEnabled === true : id === "voice-input" ? voice.enabled === true : true,
+      background: [],
+      config: id === "messages" ? { qq: true, wechat: true, mail: stored.mailEnabled !== false } : {},
+    }));
+  }
+  return builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } }));
+}
 
 const demoUpdate = Boolean((globalThis as { fuyuDemoUpdate?: boolean }).fuyuDemoUpdate);
 let revision = 0;
@@ -47,6 +67,23 @@ mockIPC((command, payload) => {
     command = "list_plugins";
   }
   switch (command) {
+    case "get_builtin_plugins": return mockBuiltinPlugins();
+    case "set_builtin_plugin_enabled": {
+      const list = mockBuiltinPlugins();
+      builtins = list.map((plugin) => (plugin.id === String(args.id) ? { ...plugin, enabled: Boolean(args.enabled) } : plugin));
+      void emit(BUILTIN_PLUGINS_CHANGED, mockBuiltinPlugins());
+      return mockBuiltinPlugins();
+    }
+    case "set_builtin_plugin_config": {
+      const list = mockBuiltinPlugins();
+      builtins = list.map((plugin) => (
+        plugin.id === String(args.id)
+          ? { ...plugin, config: { ...plugin.config, [String(args.key)]: args.value } }
+          : plugin
+      ));
+      void emit(BUILTIN_PLUGINS_CHANGED, mockBuiltinPlugins());
+      return mockBuiltinPlugins();
+    }
     case "get_reply_marker_state": return replyMarker();
     case "get_editor_extension_states":
       return [
@@ -60,6 +97,23 @@ mockIPC((command, payload) => {
     case "get_local_api_info": return { running: true, url: "http://127.0.0.1:39271/v1", configPath: "C:\\Users\\demo\\.fuyu\\local-api.json" };
     case "copy_local_api_token": return null;
     case "get_data_home": return { home: "C:\\Users\\demo\\.fuyu", defaultHome: "C:\\Users\\demo\\.fuyu", source: "default" };
+    case "get_sync_status":
+    case "set_sync_config":
+      return {
+        phase: "off",
+        folder: null,
+        deviceId: "demo-device-id",
+        lastSyncAt: null,
+        lastError: null,
+        confirm: null,
+        categories: ["todos", "snippets", "links", "settings", "presets"].map((category) => ({ category, state: "waiting", message: null, lastSyncAt: null })),
+        optionalGroups: [],
+        devices: [],
+        skippedFiles: [],
+      };
+    case "sync_now":
+    case "confirm_sync_deletions":
+      return null;
     case "update_backup_list": return {
       backups: [{ id: "pre-update-0.3.9-20261115-100000", fromVersion: "0.3.9", toVersion: "0.4.0", createdAt: Date.UTC(2026, 10, 15, 2), size: 245760, files: 12, skipped: [] }],
       brokenFiles: [],

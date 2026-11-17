@@ -1,8 +1,8 @@
 # 各家 AI 代理的接入现状
 
-岛接了十七家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）和 Droid（B58）。后十一家各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了十八家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）、Droid（B58）和 pi（B71），另支持通用的第三方代理文件与会话目录接入（`third_party.rs`，B71）。后十二家与通用第三方各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
-核对日期：2026-11-15（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
+核对日期：2026-11-17（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
 ## 形态和数据位置
 
@@ -11,7 +11,7 @@
 | Claude Code | 有 | 有（Code 页、Cowork） | VS Code | CLI、VS Code 扩展、SDK 共用 `~/.claude`（会话里的 `entrypoint` 区分）；App 的 Code 页正文也写在 `~/.claude/projects`（`entrypoint` 是 `claude-desktop`），App 另在 `<Claude 数据目录>/claude-code-sessions/<组织>/<账号>/local_<id>.json` 存标题、模型、档位（按 `cliSessionId` 对上）；Cowork 每个会话一个独立的 `.claude`，不读 `~/.claude/settings.json` | `~/.claude/projects`、`~/.claude/sessions`；Code 页的 `local_*.json`（只取标题、模型、档位，`claude_desktop.rs`）；Cowork 不读 |
 | Codex | 有 | 有 | VS Code | 共用 `~/.codex`（或 `CODEX_HOME`），形态看会话的 `originator`（`session_host.rs`）；2026-11-12 起历史迁进 sqlite，老会话的 rollout 文件已不在 | `~/.codex/state_5.sqlite` 的 `threads` 为主（只读，`codex_threads.rs`），列出的 rollout 照旧读；rollout 已不在的会话读 `thread_history_1.sqlite`；`session_index.jsonl` 的名字；库不在或表不对时退回只扫 `~/.codex/sessions` 最近两天 |
 | WorkBuddy | 无 | 有（国内版、WorkBuddy AI） | 无 | 只有桌面版；国内版 `~/.workbuddy`、WorkBuddy AI `~/.workbuddy-ai`（应用启动 CLI 时把 `WORKBUDDY_CONFIG_DIR` 设成它）都读，格式相同，显示成同一家（B49） | `~/.workbuddy/projects`、`~/.workbuddy/sessions`、`~/.workbuddy-ai/projects`、`~/.workbuddy-ai/sessions` |
-| Antigravity | 有（`agy`） | 有 | 有（IDE） | 三种共用钩子配置 `~/.gemini/config/hooks.json`；数据目录分开（`antigravity`、`antigravity-ide`、`antigravity-cli`），岛只看它们在不在；只有 CLI 实测过（#179）。程序：IDE 是 `Antigravity IDE.exe` / `Antigravity IDE.app`，2.0 和改名前的旧版是 `Antigravity.exe` / `Antigravity.app` | 钩子存下的输入 `agent-antigravity/`；远程是镜像里的 `.fuyu/agent-antigravity/` |
+| Antigravity | 有（`agy`） | 有 | 有（IDE） | 三种共用钩子配置 `~/.gemini/config/hooks.json`；数据目录分开（`antigravity`、`antigravity-ide`、`antigravity-cli`），程序：IDE 是 `Antigravity IDE.exe` / `Antigravity IDE.app`，2.0 和改名前的旧版是 `Antigravity.exe` / `Antigravity.app` | 钩子存下的输入 `agent-antigravity/`、`<数据目录>/annotations/<id>.pbtxt`（标题与归档状态）及钩子指出的 `transcript_full.jsonl`（首句兜底、子代理跳过、最近回复、当前工具、上下文 token）；远程是镜像里的 `.fuyu/agent-antigravity/` 和 `.gemini/antigravity-cli/annotations/` |
 | DSH | 无（Node 程序，能跑在服务器上） | 有（官方版、anywhere-labs 的 DSH Desktop / Beta / NEXT、dshed 等） | 无 | 几处存储按会话 id 合并，新的为准；分不出会话属于哪个桌面版 | 投影检查点，按顺序找这些目录：`DSH_HOME`、`DSH_DESKTOP_NEXT_HOME`（`~` 开头会展开，相对路径不读）；`~/.dsh`、`~/.dsh-beta`、`%APPDATA%\dsh-desktop\harness`；dshed 的 `<AppData>\dshed\dsh`；DSH NEXT、DSH Desktop Beta、DSH Desktop 在应用里选的目录（读它们 `<AppData>` 下的指针文件）。`<AppData>` 在 macOS 上是 `~/Library/Application Support` |
 | opencode | 有（`opencode`，2.x 起 TUI 是后台服务的客户端） | 有（Electron，OpenCode） | VS Code（开终端跑 TUI） | 2.x 几种形态共用一个后台服务（`~/.local/state/opencode/service.json`）和一个库；1.x 没有后台服务 | `~/.local/share/opencode/opencode.db`（`XDG_DATA_HOME`、`OPENCODE_DB` 优先），只读打开；2.x 读 `session_v2`/`session_message`/`session_part`，1.x 读 `session`/`message`/`part`，同一 id 以 2.x 为准 |
 
@@ -23,14 +23,14 @@
 
 | 功能 | Claude Code | Codex | WorkBuddy | Antigravity | DSH | opencode |
 |---|---|---|---|---|---|---|
-| 会话列表、标题、品牌图标 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ 未实测（#179）；子代理会话、归档会话不列 |
+| 会话列表、标题、品牌图标 | ✓ | ✓ | ✓ | ✓ 子代理会话、归档会话不列 | ✓ | ✓ 未实测（#179）；子代理会话、归档会话不列 |
 | 设置里单独显示 / 隐藏 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 「安装/修复」装钩子 | ✓ | ✓ | ✓ 开始、结束、等授权、审批，未实测（#179） | ✓ 开始、结束、`run_command` 审批 | ◐ 岛写钩子文件，用户要在 `cordis.patch.yml` 挂桥接插件（安装结果给出要加的几行），未实测（#179） | ✓ 1.x 插件 `plugin/fuyu-island.js`（opencode 配置目录下），只管等你和审批；2.x 不用，靠后台服务的 HTTP 接口 |
+| 「安装/修复」装钩子 | ✓ | ✓ | ✓ 开始、结束、等授权、审批，未实测（#179） | ✓ 开始、结束、`run_command` 审批 | ✓ 生成零依赖 Cordis 插件 `dsh-plugin/`（B72.1），尚无自定义 `cordis.patch.yml` 时自动写入挂载项，否则给出挂载片段，未在真岛实测（#179） | ✓ 1.x 插件 `plugin/fuyu-island.js`（opencode 配置目录下），只管等你和审批；2.x 不用，靠后台服务的 HTTP 接口 |
 | 状态灯卡片的一行、钩子是否装好 | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ 没有状态灯；后端已报插件状态（absent / notInstalled / outdated / current），设置页不显示、插件过期也不提示 |
 | 改名后自动重装钩子 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ 1.x 插件 |
-| 运行中 / 完成亮灯 | ✓ | ✓ | ✓ 未实测（#179） | ✓ | ◐ 挂了桥接后 ✓，没挂只靠会话数 | ◐ 2.x 读 `time_busy`/`time_idle`/`idle_outcome`，1.x 和 2.2 之前的 2.x 从最后一条消息推断；状态灯只靠会话数 |
+| 运行中 / 完成亮灯 | ✓ | ✓ | ✓ 未实测（#179） | ✓ | ✓ 挂了 `fuyu-island` 插件后实时亮灯（没挂只靠会话数） | ◐ 2.x 读 `time_busy`/`time_idle`/`idle_outcome`，1.x 和 2.2 之前的 2.x 从最后一条消息推断；状态灯只靠会话数 |
 | 「等你」 | ✓ | ✓ | ✓ 未实测（#179） | ◐ 只在岛上审批挂起时（钩子没有等授权的事件） | ◐ 打开的提问，和岛上审批挂起时 | ◐ 2.x 后台服务在跑时、1.x 装了插件时 ✓，未实测（#179）；`--standalone`（2.x）✗，私有服务的地址和密码拿不到 |
-| 在岛上审批 | ✓ | ✓ | ✓ 允许 / 拒绝，未实测（#179） | ✓ 允许 / 拒绝，只拦 `run_command` | ◐ 只能拒绝或交回 DSH（桥接不认 `allow`） | ◐ 2.x 和 1.x（插件）允许一次 / 拒绝 / 交回终端，不做「总是允许」，未实测（#179）；`--standalone` ✗ |
+| 在岛上审批 | ✓ | ✓ | ✓ 允许 / 拒绝，未实测（#179） | ✓ 允许 / 拒绝，只拦 `run_command` | ✓ 原生插件监听 `approval/request`（允许 `allowed-once` / 拒绝 `rejected` / 交回 `next()` / 取消联动，B72.1），未在真岛实测（#179） | ◐ 2.x 和 1.x（插件）允许一次 / 拒绝 / 交回终端，不做「总是允许」，未实测（#179）；`--standalone` ✗ |
 | 在岛上回答提问 | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | 会话卡片：模型、推理强度 | ✓ | ✓ | ◐ 只有模型 | ◐ 推理强度只有 CLI（从模型名后缀拆） | ✓ 存档第 2、3 版（#397） | ✓ |
 | 会话卡片：权限模式 | ✓ | ✓ | ✗ 会话文件里没有 | ✗ 钩子输入没有 | ✓（#397），未实测（#179） | ◐ 只认「计划」，未实测（#179） |
@@ -40,7 +40,7 @@
 | 判断会话已退出 | ✓ | ✓ | ✓ Windows 认 `WorkBuddy.exe`、`WorkBuddyAI.exe`，Mac 按 bundle id `com.workbuddy.workbuddy-ai`；国内版 Mac 版的 bundle id 不知道，认不出 | ✗ | ✗ | ◐ 只有 2.x：`service.json` 的 pid 不在了就记为已退出；1.x 只靠 10 分钟超时 |
 | 点会话跳过去 | ✓ 终端（含 Ghostty、WezTerm、`tmux`） / 编辑器标签；Claude 桌面版 Code 页只到窗口并提示 | ✓ 终端 / 编辑器标签；Codex 桌面版只到窗口并提示 | ◐ 只到 App 窗口（行内提示手动选会话，A12） | ◐ 只到窗口并提示（A12）：程序名认 `antigravity`、`antigravity ide`、`antigravity-ide`，按钩子的 `transcriptPath` 先找 IDE 或 2.0（CLI 走终端匹配），同一程序多个窗口按文件夹名挑（A10，#646）；钩子不记进程号，没有进程链 | ◐ 只到窗口并提示 | ◐ 桌面版在跑就到 OpenCode 窗口并提示，否则按目录 / 标题找终端 |
 | 回复标记 | ✓ 本机和远程都写 `CLAUDE.md`，远程未在服务器实测（#179） | ✓ 本机和远程，远程未实测（#179） | ✓ 未实测（#179） | ✓ 未实测（#179）；远程只有 CLI（远端有 `~/.gemini/antigravity-cli` 时），未实测（#179） | ✓ 本机和远程，远程未实测（#179） | ✓ 未实测（#179）；远程 ✗ |
-| 用量环 | ✓ | ✓ | ✗ 等插件平台第 3 版（#170） | ✗ 等插件平台第 3 版（#170） | ✗ 等插件平台第 3 版（#170） | ✗ 只有 OpenCode Go 订阅有额度窗口，等插件平台第 3 版（#170） |
+| 用量环 | ✓ | ✓ | ◐ 悬停显示已用积分（不画圆环，B25） | ✓ 同心双环（Gemini 5h / 7d，悬停附带 3p 5h / 7d；内部接口失效时提示，B25） | ◐ 悬停显示钱包余额（不画圆环，B25） | ✗ 只有 OpenCode Go 订阅有额度窗口，未接（#170） |
 | SSH 远程会话 | ✓ 含远程钩子 | ◐ 只读会话 | — 只有桌面版 | ✓ CLI 的会话、运行中 / 完成、岛上审批（远程「安装/修复」装钩子，`run_command` 审批经 SSH 反向转发），未在服务器实测（#179）；远程会话不显示「等你」 | ✓ 会话和三态，没有钩子和审批，未在服务器实测（#179） | ✓ 会话和三态（远端用 `sqlite3` 或 `python3` 把时间窗内的会话抽成小库再拉回），没有插件、审批和回复标记，未在服务器实测（#179） |
 | cc-connect | ✓ | ✓ | ✗ 未调研 | ✗ 未调研 | ✗ 未调研 | ✗ 未接（cc-connect README 说支持 OpenCode） |
 | 手机推送的详情、接管命令 | ✓ / ✓ | ✗ / ✓ | ✗ | ✗ | ✗ | ✗ |
@@ -86,7 +86,7 @@ B56 起声明多了三项，给钩子格式相近、外壳不同的几家用（G
 | SSH 远程会话 | ✗ 三家都有 Linux CLI，能做，还没做 | ✗ | ✗ |
 | cc-connect | — | — | — |
 
-## TRAE 和 TRAE CN（B29）
+## TRAE 和 TRAE CN（B29、B72.3）
 
 TRAE IDE 的国际版和 CN 版按用户的决定分成两家：`trae`（显示「TRAE」，`~/.trae`）和 `traeCn`（显示「TRAE CN」，`~/.trae-cn`），钩子、存下的输入、状态灯和设置开关各一套，图标共用。代码在 `trae.rs`。豆包桌面版没有能接的地方，不接（调研见 [agent-harnesses.md](../../research/agent-harnesses.md) 豆包一节）。
 
@@ -99,7 +99,7 @@ TRAE IDE 的国际版和 CN 版按用户的决定分成两家：`trae`（显示�
 | 会话 | 从 `agent-trae/`、`agent-traeCn/` 里存下的钩子输入按 `session_id` 拼：标题是第一句提问，最近提问、当前工具（`tool_name`、`tool_input.command` / 文件名）、最近回复（Stop 的 `last_assistant_message`）；每个会话只留第一次和最后一次提问、最近回复和最新一条，24 小时以上的删掉。装钩子之前的会话看不到。没有模型、权限模式、待办、上下文 token |
 | 状态灯 | ✓ `agent-trae-running.flag` / `agent-traeCn-running.flag` |
 | 等你 | Notification 的 `permission_prompt`、`ask_user_question`、`document_review`、`browser_interaction`；岛上审批挂起时也算 |
-| 岛上审批 | ◐ 只拦 `RunCommand`，`/trae/pre-tool-use`、`/traeCn/pre-tool-use`，回 `hookSpecificOutput.permissionDecision`（`allow` / `deny` 带理由 / `ask` 交回 TRAE）。TRAE 的工具在「手动确认」模式时，岛上点允许后还要在 TRAE 里点一下 |
+| 岛上审批 | ✓ 拦截命令执行、文件写改删与 MCP 工具（`^(RunCommand\|Bash\|Write\|Edit\|MultiEdit\|StrReplace\|CreateFile\|DeleteFile\|WriteToFile\|ReplaceInFile\|mcp__.*)$`，不拦只读工具），`/trae/pre-tool-use`、`/traeCn/pre-tool-use`，回 `hookSpecificOutput.permissionDecision`（`allow` / `deny` 带理由 / `ask` 交回 TRAE），并忽略主会话自带的 `agent_id`（B72.3）。TRAE 设为「自动执行」时岛上点允许直接执行（无需回 TRAE 再点一次）、点交回才在 TRAE 弹窗；「手动确认」模式下 `allow` 不跳过 IDE 确认框 |
 | 回复标记 | ✗ 个人规则文件的路径官方没写，没核实前不动用户的文件；用户自己让 TRAE 写标记的话能认出来 |
 | 点会话跳过去 | ◐ 到 TRAE / TRAE CN 窗口，到不了具体会话 |
 | 判断会话已退出 | ✗ 没有 SessionEnd，靠 24 小时清理和运行中超时变完成 |
@@ -194,17 +194,44 @@ GitHub 的 Copilot CLI，id `copilot`。代码在 `copilot.rs`（会话）和 `c
 | 点会话跳过去 | ◐ 通用的终端窗口匹配 |
 | 用量环、SSH 远程、cc-connect | ✗ / ✗ / — |
 
-## Droid（B58）
+## Droid（B58、B72.2）
 
 Factory 的 Droid CLI，id `droid`。代码在 `droid.rs`（会话）和 `droid_hooks.rs`（钩子）。本机没装，没在真机上跑过（#179）。
 
 | 层 | Droid |
 |---|---|
 | 配置 | `~/.factory`（`FACTORY_HOME` 优先）；有 `~/.factory/hooks.json` 时写进它（事件在顶层），没有时写 `~/.factory/settings.json` 的 `hooks` 键（Droid 有 `hooks.json` 时不读 `settings.json` 的钩子）；用户自己的钩子保留；装完要重开 Droid 会话 |
-| 钩子 | Claude Code 的分组格式；Droid 没有 PermissionRequest 和 StopFailure |
+| 钩子 | Claude Code 的分组格式；Droid 没有 PermissionRequest 和 StopFailure，审批挂 `PreToolUse` |
 | 会话 | `~/.factory/sessions/<项目>/<uuid>.jsonl` 和旁边的 `<uuid>.settings.json`（模型、推理强度）；目录以 `session_start.cwd` 为准；`visibility: hidden` 的注入提问不当标题 |
 | 状态灯 | ✓ `agent-droid-running.flag` |
-| 等你 | Notification 的 `permission_prompt` |
-| 岛上审批 | ✗ 没有 PermissionRequest 事件 |
+| 等你 | Notification 的 `permission_prompt`，以及岛上审批挂起时 |
+| 岛上审批 | ✓ `/droid/pre-tool-use`，只拦命令与写改文件工具（`^(Bash\|Execute\|RunCommand\|Edit\|Write\|MultiEdit)$`），回 `hookSpecificOutput.permissionDecision`（`allow` 直接放行跳过确认框 / `deny` 带原因 / `ask` 交回终端） |
 | 点会话跳过去 | ◐ 通用的终端窗口匹配 |
 | 用量环、SSH 远程、cc-connect | ✗ / ✗ / — |
+
+## pi（B71）
+
+开源终端代理 `@earendil-works/pi-coding-agent`（命令 `pi`）及基于它的桌面端 `PiDeck` / `PiCove`，id `pi`。代码在 `pi.rs`（会话与扩展安装器）。本机没装，没在真机上跑过（#179）。
+
+| 层 | pi |
+|---|---|
+| 配置 | `~/.pi/agent`（`PI_CODING_AGENT_DIR` 优先，直接指向该目录）；`~/.pi` 或 `PI_CODING_AGENT_DIR` 在才装；扩展写 `~/.pi/agent/extensions/fuyu-island.js`（由 `jiti` 加载） |
+| 扩展（钩子） | `session_start` 和 `session_shutdown` 写 `agent-sessions/<id>.json`（记 `process.pid`，供退出检测和窗口定位）；`agent_start` 写 `agent-pi-running.flag` 亮蓝灯；`agent_end` 写 `agent-status.json` 记完成或失败并清理等待通知；`tool_call` 刷新运行标记，设了 `FUYU_PI_APPROVAL=1` 时存等待通知并走岛上审批 |
+| 会话 | `~/.pi/agent/sessions/<编码目录>/<ISO>_<id>.jsonl`：首行 `session` 给 `id`、`cwd`、`timestamp`；`session_info` 给自定义标题（`rename`）；`model_change`、`thinking_level_change` 给模型和思考档位；`message` 转成 Claude 形状交 `parse_claude_tail` 解析最近提问、回复、工具（`toolCall` / `toolResult`）、token `usage` 和回复状态标记 |
+| 状态灯 | ✓ `agent-pi-running.flag` |
+| 等你 | `FUYU_PI_APPROVAL=1` 时 `tool_call` 写 `agent-notifications/pi-<id>.json` |
+| 岛上审批 | ◐ `/pi/permission`（同 opencode 插件格式，拒绝时返回 `{ block: true, reason }`）；pi 默认不对每次工具调用弹确认框，故扩展只在 `FUYU_PI_APPROVAL=1` 时挂起等岛上审批 |
+| 回复标记 | `~/.pi/agent/AGENTS.md` |
+| 判断会话已退出 | ✓ 靠扩展写的 `agent-sessions/<id>.json`（`endedAt` 或记录的 `pid` 已不在） |
+| 点会话跳过去 | ✓ 有进程记录时按进程链找终端；否则 `PiDeck` / `PiCove` 桌面版在跑就到对应窗口，不然按目录和标题找终端 |
+| 用量环、SSH 远程、cc-connect | ✗ / ✓（拉取 `.pi/agent/sessions/*/*.jsonl`）/ — |
+
+## 通用第三方代理接入（B71）
+
+不改浮屿源码即可接入任意第三方 Agent（`third_party.rs`）：
+
+- **状态灯**：`fuyu-agent-running`、`fuyu-agent-status`、`agent-<id>-running.flag` 和 `agent-status.json` 放开任意合法第三方 provider id（`[A-Za-z][A-Za-z0-9_-]{0,31}`，非内置 id），自动归入 `snapshot.others` 驱动岛上状态灯（蓝 / 绿 / 黄 / 10 分钟超时），支持 `clear_agent_status` 清除。
+- **会话列表**：扫描三处来源并合并进 `list_agent_sessions`（显示通用机器人图标与自定义名称，支持按工作目录与标题跳转终端）：
+  1. `<fuyu-home>/agent-third-party/<provider>/` 下直接放入的 `.jsonl`（兼容 Claude Code、pi、Droid 记录格式）或 `.json` 会话描述文件；
+  2. `<fuyu-home>/agent-providers.json`（或 `agent-third-party/config.json`）配置的 `{ id, name, sessionsDir }`；
+  3. `agent-status.json` 中第三方条目附带的 `sessionsDir` / `transcriptDir` 字段。

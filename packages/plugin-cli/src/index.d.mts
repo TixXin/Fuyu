@@ -1,5 +1,5 @@
 import type { PluginManifest, PrivateKeyInput, SigningKeyObject } from "@fuyu/plugin-manifest";
-import type { SignatureObject } from "@fuyu/plugin-market";
+import type { Localized, RevocationState, SignatureObject } from "@fuyu/plugin-market";
 import type { Finding, Report } from "@fuyu/plugin-review";
 
 export interface Issue {
@@ -145,3 +145,88 @@ export declare function signCommitAt(
 export declare function signPackageFile(file: string, privateKey: PrivateKeyInput, out?: string): { file: string; name: string; version: string; digest: string; keyId: string };
 
 export declare function run(argv: string[], io?: { stdout?: Writable; stderr?: Writable; cwd?: string; env?: Record<string, string | undefined> }): Promise<number>;
+
+export interface DevOptions extends BuildOptions {
+  dataDir?: string;
+  configFile?: string;
+  once?: boolean;
+  cleanOnly?: boolean;
+  debounceMs?: number;
+  onRebuild?: (result: BuildResult) => void;
+  onError?: (error: unknown) => void;
+}
+
+export interface DevSession {
+  id: string;
+  ymlFile: string;
+  cleaned: boolean;
+  result: BuildResult | null;
+  rebuild?: () => Promise<BuildResult>;
+  close: (options?: { clean?: boolean }) => Promise<void>;
+}
+
+export declare const DEV_DIR_ENV: "FUYU_PLUGINS_V3_DIR";
+export declare function defaultDataDir(home?: string): string;
+export declare function registerDevEntry(ymlFile: string, id: string, devOutDir: string): string;
+export declare function unregisterDevEntry(ymlFile: string, id: string): boolean;
+export declare function dev(dir: string, options?: DevOptions): Promise<DevSession>;
+
+export type PackageConfirmation = {
+  readonly unreviewed: boolean;
+  readonly displayName?: Localized;
+  readonly description?: Localized;
+  readonly nodeApis: readonly string[];
+  readonly provides: readonly string[];
+  readonly replaces: readonly string[];
+  readonly slots: readonly string[];
+};
+
+export type InspectedPackage = {
+  readonly id: string;
+  readonly version: string;
+  readonly source: "market" | "manual";
+  readonly digest: string;
+  readonly sha256: string;
+  readonly manifest: Record<string, unknown>;
+  readonly files: readonly { path: string; data: Uint8Array }[];
+  readonly confirmation: PackageConfirmation;
+};
+
+export type InstalledPackageResult = {
+  readonly id: string;
+  readonly version: string;
+  readonly source: "market" | "manual";
+  readonly root: string;
+  readonly digest: string;
+  readonly sha256: string;
+  readonly confirmation: PackageConfirmation;
+};
+
+export declare const PACKAGES_SUBDIR: "packages";
+export declare function inspectPackage(
+  zipBuffer: Uint8Array | string,
+  options?: { source?: "market" | "manual"; allowManual?: boolean; appVersion?: string; expectedSha256?: string },
+): InspectedPackage;
+export declare function installPackage(
+  zipBuffer: Uint8Array | string,
+  options: {
+    dir: string;
+    source?: "market" | "manual";
+    allowManual?: boolean;
+    appVersion?: string;
+    expectedSha256?: string;
+    revocations?: RevocationState | null;
+    disabled?: boolean;
+    configFile?: string;
+  },
+): InstalledPackageResult;
+export declare function uninstallPackage(
+  dir: string,
+  id: string,
+  options?: { configFile?: string; removeData?: boolean },
+): { id: string; removed: boolean };
+export declare function applyRevocationsToDir(
+  dir: string,
+  revocations: RevocationState | null,
+  options?: { installed?: readonly { id: string; version: string; source?: string }[]; configFile?: string },
+): { disabled: string[]; warned: { id: string; version: string; reasons: Localized[] }[] };

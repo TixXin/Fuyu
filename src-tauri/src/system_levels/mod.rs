@@ -2,7 +2,7 @@
 mod readers;
 
 use std::{
-    sync::Arc,
+    sync::{Arc, Mutex, PoisonError},
     time::{Duration, Instant},
 };
 
@@ -22,7 +22,7 @@ const WATCHER: &str = "watcher";
 
 const VOLUME_POLL: Duration = Duration::from_millis(100);
 const BRIGHTNESS_POLL: Duration = Duration::from_millis(400);
-const DEVICE_REFRESH: Duration = Duration::from_secs(2);
+const DEVICE_REFRESH: Duration = Duration::from_secs(5);
 const BRIGHTNESS_RETRY: Duration = Duration::from_secs(60);
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
@@ -56,7 +56,7 @@ fn watch(app: &AppHandle, stop: &Stop) {
     let emit = |change: LevelChange| {
         let _ = app.emit_to(WINDOW_LABEL, LEVEL_CHANGED_EVENT, change);
     };
-    let mut volume_tracker = LevelTracker::default();
+    let volume_tracker = Arc::new(Mutex::new(LevelTracker::default()));
     let mut brightness_tracker = LevelTracker::default();
     let mut volume: Option<OutputVolume> = None;
     let mut volume_opened = Instant::now() - DEVICE_REFRESH;
@@ -65,13 +65,42 @@ fn watch(app: &AppHandle, stop: &Stop) {
     let mut has_brightness = true;
     loop {
         if volume_opened.elapsed() >= DEVICE_REFRESH {
-            volume = open_volume();
+            let tracker = Arc::clone(&volume_tracker);
+            let handle = app.clone();
+            let next_volume = open_volume(move |percent, muted| {
+                let changed = tracker
+                    .lock()
+                    .unwrap_or_else(PoisonError::into_inner)
+                    .changed((percent, muted));
+                if changed {
+                    let _ = handle.emit_to(
+                        WINDOW_LABEL,
+                        LEVEL_CHANGED_EVENT,
+                        LevelChange::Volume { level: percent as f32 / 100.0, muted },
+                    );
+                }
+            });
+            let initial = next_volume.as_ref().and_then(volume_reading);
+            {
+                let mut guard = volume_tracker.lock().unwrap_or_else(PoisonError::into_inner);
+                guard.reset();
+                if let Some(reading) = initial {
+                    let _ = guard.changed(reading);
+                }
+            }
+            volume = next_volume;
             volume_opened = Instant::now();
-            volume_tracker.reset();
         }
-        if let Some((percent, muted)) = volume.as_ref().and_then(volume_reading) {
-            if volume_tracker.changed((percent, muted)) {
-                emit(LevelChange::Volume { level: percent as f32 / 100.0, muted });
+        let subscribed = volume.as_ref().is_some_and(OutputVolume::is_subscribed);
+        if !subscribed {
+            if let Some((percent, muted)) = volume.as_ref().and_then(volume_reading) {
+                let changed = volume_tracker
+                    .lock()
+                    .unwrap_or_else(PoisonError::into_inner)
+                    .changed((percent, muted));
+                if changed {
+                    emit(LevelChange::Volume { level: percent as f32 / 100.0, muted });
+                }
             }
         }
         let wait = if has_brightness { BRIGHTNESS_POLL } else { BRIGHTNESS_RETRY };
@@ -83,7 +112,12 @@ fn watch(app: &AppHandle, stop: &Stop) {
                 emit(LevelChange::Brightness { level: percent as f32 / 100.0 });
             }
         }
-        if stop.wait(VOLUME_POLL) {
+        let sleep_for = if subscribed {
+            wait.min(DEVICE_REFRESH)
+        } else {
+            VOLUME_POLL
+        };
+        if stop.wait(sleep_for) {
             return;
         }
     }

@@ -5,10 +5,12 @@ import {
 } from "../../lib/settings/settings";
 import type { IslandSettings } from "../../lib/settings/types";
 import { clamp } from "../../utils/number.ts";
-import { listenIslandResize, setIslandPanelResizable } from "./api";
+import { throttle } from "../../utils/throttle.ts";
+import { listenIslandResize, setIslandPanelResizable, type IslandResizeDelta } from "./api";
 import { maxExpandedIslandWidth } from "./layout";
 
 const RESIZING_CLASS = "island-resizing";
+const RESIZE_THROTTLE_MS = 16;
 
 export function useIslandResize(settings: IslandSettings, setSettings: (settings: IslandSettings) => void, popup: boolean) {
   const [resizingHeight, setResizingHeight] = useState(false);
@@ -22,7 +24,7 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
   useEffect(() => {
     let cancelled = false;
     let stop: (() => void) | undefined;
-    void listenIslandResize(({ width, height, collapsed, done }) => {
+    const applyDelta = ({ width, height, collapsed, done }: IslandResizeDelta) => {
       const { settings: current, setSettings: save } = latest.current;
       const start = (startRef.current ??= {
         width: current.panelWidth,
@@ -44,6 +46,15 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
         save({ ...current, panelWidth, maxPanelHeight });
       }
       setResizingHeight(!done && height !== 0);
+    };
+    const throttledApply = throttle(applyDelta, RESIZE_THROTTLE_MS);
+    void listenIslandResize((delta) => {
+      if (delta.done) {
+        throttledApply.cancel();
+        applyDelta(delta);
+        return;
+      }
+      throttledApply(delta);
     })
       .then((unlisten) => {
         if (cancelled) unlisten();
@@ -52,6 +63,7 @@ export function useIslandResize(settings: IslandSettings, setSettings: (settings
       .catch((error: unknown) => console.error("Failed to listen for island resizing", error));
     return () => {
       cancelled = true;
+      throttledApply.cancel();
       stop?.();
       document.documentElement.classList.remove(RESIZING_CLASS);
     };

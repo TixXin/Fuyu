@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { open } from "@tauri-apps/plugin-dialog";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 
 export const SYNC_CATEGORIES = ["todos", "snippets", "links", "settings", "presets"] as const;
 
@@ -80,4 +82,13 @@ export function confirmSyncDeletions() {
 
 export function onSyncStatus(handler: (status: SyncStatus) => void): Promise<UnlistenFn> {
   return listen<SyncStatus>(SYNC_STATUS_EVENT, (event) => handler(event.payload));
+}
+
+export async function pickSyncFolder(title: string): Promise<string | null> {
+  const picked = await open({ directory: true, multiple: false, title });
+  return typeof picked === "string" ? picked : null;
+}
+
+export function revealSyncFolder(path: string): Promise<void> {
+  return revealItemInDir(path);
 }

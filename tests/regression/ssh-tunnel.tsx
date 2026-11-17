@@ -8,6 +8,7 @@ import "../../src/windows/settings/LayoutEditor.css";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import type { SshTunnelHost, SshTunnelProxy } from "../../src/features/ssh-tunnel/api";
 import { SshTunnelSettings } from "../../src/features/ssh-tunnel/SshTunnelSettings";
+import { until } from "./pollUntil";
 
 const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
 localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
@@ -95,18 +96,18 @@ try {
       </I18nProvider></StrictMode>,
     );
   });
-  await settle();
+  await until(() => proxyStatus()?.querySelector("code")?.textContent === "127.0.0.1:7897");
 
   check(proxyStatus()?.querySelector("code")?.textContent === "127.0.0.1:7897"
     && proxyStatus()?.textContent?.includes("端口来自 Clash Verge 的设置，代理正在监听。"),
   "The active proxy row shows the local proxy found and that it listens");
   proxy = { port: 10808, found: "v2rayNDefault", listening: false };
-  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 3_200)); });
+  await until(() => proxyStatus()?.querySelector("code")?.textContent === "127.0.0.1:10808", 4000);
   check(proxyStatus()?.querySelector("code")?.textContent === "127.0.0.1:10808"
     && proxyStatus()?.querySelector(".ssh-tunnel__error")?.textContent === "v2rayN 的默认端口，但现在没有程序在监听这个端口：请打开代理软件。",
   "A proxy nothing listens on is read again and flagged");
   proxy = { port: 7897, found: "clashVerge", listening: true };
-  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 3_200)); });
+  await until(() => proxyStatus()?.querySelector("code")?.textContent === "127.0.0.1:7897" && !proxyStatus()?.querySelector(".ssh-tunnel__error"), 4000);
 
   await pickLocalProxy("clash-verge");
   check(lastConfig()?.id === "ssh-tunnel" && lastConfig()?.key === "localProxy" && lastConfig()?.value === "clash-verge"

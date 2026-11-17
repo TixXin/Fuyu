@@ -1,6 +1,7 @@
 import { useTranslation } from "../../../i18n";
 import { SettingsChoiceCards } from "../../../components/settings/SettingsChoiceCards";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
+import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
@@ -22,9 +23,11 @@ import type { ExpandTrigger, IslandSettings } from "../../../lib/settings/types"
 export function ExpandSettingsSection({
   settings,
   onSettingsChange,
+  onOpenPageKeys,
 }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
+  onOpenPageKeys?: () => void;
 }) {
   const t = useTranslation();
   const layout = t.settings.layout;
@@ -92,6 +95,14 @@ export function ExpandSettingsSection({
             defaultValue={DEFAULT_HOVER_SWITCH_DELAY_MS}
             resetLabel={layout.resetToDefault}
             onChange={(hoverSwitchDelayMs) => update({ hoverSwitchDelayMs })}
+          />
+        )}
+        {onOpenPageKeys && (
+          <SettingsRow
+            searchable={false}
+            title={expand.pageKeys}
+            description={expand.pageKeysHint}
+            control={<SettingsLinkButton onClick={onOpenPageKeys}>{expand.pageKeysOpen}</SettingsLinkButton>}
           />
         )}
       </SettingsGroup>

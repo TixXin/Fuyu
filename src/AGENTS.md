@@ -11,7 +11,7 @@ src/
 │   ├── island/              # 主窗口：IslandApp（只做组装）、IslandShell、展开后的页面面板（IslandPages）、岛自己的接线 hook（useIslandTucking / Hover、窗口尺寸/拖拽/贴边、自动化）；外壳不 import 功能（plugin-kernel 和第 2 版的 plugins、plugin-views 除外，边界测试查）：功能的界面在 `features/<领域>/plugin/` 里注册插槽项，接线写进它的 runner，影响岛形状的往贡献表里交（规则见 `docs/architecture/plugins/v3-boundary.md`「岛的贡献表」）；slots/ 是外壳自己的插槽项和插槽句柄，builtins.ts 先载外壳样式再经 pluginFiles.ts 收各功能的插件文件；first-hints/ 是岛上的「第一次」提示
 │   ├── clipboard/           # 剪贴板独立窗口（列表在 features/clipboard/ClipboardPopup.tsx，弹出、定位和粘贴在 src-tauri/src/clipboard_history/popup.rs）
 │   ├── screenshot/          # 截图的选区窗口（?window=screenshot，每个显示器一个）：冻结画面、选区拖动（useSelection.ts）、工具栏和放大镜
-│   ├── settings/            # 设置窗口；slots/ 是窗口这一侧的注册：categorySlot.ts（SettingsPageProps 和分类句柄）、categories.tsx（窗口自己的页面，并用 glob 收进各功能的 features/<领域>/plugin/settings.tsx）、runners.ts（窗口自己的 settings.runner/v1 项）；分类清单、句柄和快捷键页分节的类型在 features/plugin-kernel/（settingsCategories.ts、settingsSlots.ts），功能的设置页和注册写在功能里，不加进这里；sections/ 是设置页共用的分节组件（外观、行为、主题、预设、快捷键、待办、数据与备份、系统权限）
+│   ├── settings/            # 设置窗口；slots/ 是窗口这一侧的注册：categorySlot.ts（SettingsPageProps 和分类句柄）、categories.tsx（窗口自己的页面，并用 glob 收进各功能的 features/<领域>/plugin/settings.tsx）、runners.ts（窗口自己的 settings.runner/v1 项）；分类清单、句柄和快捷键页分节的类型在 features/plugin-kernel/（settingsCategories.ts、settingsSlots.ts），功能的设置页和注册写在功能里，不加进这里；sections/ 是设置页共用的分节组件（外观、行为、主题、预设、快捷键、数据与备份、系统权限）
 │   ├── onboarding/          # 新手引导（?window=onboarding）：透明遮罩压暗屏幕、照亮真岛，旁边的卡片分幕讲解（有哪几幕、各在什么情况下出现，看 `OnboardingWindow.tsx` 的 `ACTS` 和它下面的筛选）；新装第一次启动时由 island/useFirstRunGuide.ts 打开，设置 → 关于里能再打开；引导开着时岛放演示内容（island/useOnboardingDemo.ts）
 │   └── translation/         # 快捷翻译窗口
 ├── features/                # 业务领域，每个领域自包含
@@ -41,7 +41,7 @@ src/
 │   ├── translation/         # 快捷翻译：服务与模型设置、凭据、快捷键的类型化封装，请求与自动翻译 hook，岛内翻译页
 │   └── updater/             # 自动更新
 ├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览）
-├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写；settings/ 是岛屿设置（fuyu-settings）的模型：范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayoutSettings.ts、normalizeBehaviorSettings.ts，新设置加在这几个文件里，settings.ts 只做入口；各功能自己那一份（日历、歌词、待办项目、Agent 会话列表和提醒的 agentSettings.ts）的类型、默认值和读取留在功能里，由这里汇总；theme/ 是主题、强调色、玻璃配色和动效（含 useReducedMotion）；shortcut/ 是快捷键的通用工具和录制（剪贴板专用的在 features/clipboard/shortcut.ts）；settings-backup/ 是设置文件、导出和恢复（只含 BACKUP_KEYS 列出的设置 key）、升级前的备份；system-permissions/ 是系统权限的查询
+├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写；settings/ 是岛屿设置（fuyu-settings）的模型：范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayoutSettings.ts、normalizeBehaviorSettings.ts，日历、歌词、Agent 会话列表和提醒的设置字段与默认值在 calendarSettings.ts、lyricsSettings.ts、agentSettings.ts，待办项目列表在 lib/todo-projects/，新设置加在这几个文件里，settings.ts 只做入口；theme/ 是主题、强调色、玻璃配色和动效（含 useReducedMotion）；shortcut/ 是快捷键的通用工具和录制（剪贴板专用的在 features/clipboard/shortcut.ts）；settings-backup/ 是设置文件、导出和恢复（只含 BACKUP_KEYS 列出的设置 key，并经 registerBackupSwitches 桥接内置插件开关）、升级前的备份；system-permissions/ 是系统权限的查询
 ├── utils/                   # 无副作用的纯函数（文本测量、颜色、日期、数值）
 ├── i18n/                    # 类型化多语言字典与 Provider；sections/ 按分区放文案（settings/ 再按设置页分），types.ts 与 locales/ 只做汇总
 ├── styles/                  # 全局 CSS：变量、基础样式、字体
@@ -59,6 +59,7 @@ features/<领域>/
 ├── types.ts                       # 本领域共享类型（类型较少时可省略，直接写在使用处）
 ├── <纯逻辑>.ts                     # 可单测的纯函数，例如 markdown.ts、shortcut.ts
 ├── host/                          # 内置插件的宿主部分（插件平台第 3 版，跑在 Node 里）：入口登记在 src/features/builtins.json；可以 import 本领域的纯函数，不能 import 浏览器的东西和 @tauri-apps/api（pnpm lint 会拦，规则在 eslint.config.js），数据写 ctx.dataDir；规则见 docs/architecture/plugins/v3-builtins.md「内置插件的宿主部分怎么写」
+├── plugin/                        # 内置插件的窗口部分（由 windows/ 和 main.tsx 的 glob 收集，按拥有者挂在插槽与窗口服务表上，插件关闭时一并撤除）：owner.ts（插件 id 常量）、island.tsx（岛页面、页头按钮、收起条、刘海提醒）、runners.tsx（不画界面的岛接线与贡献上报）、settings.tsx（设置分类、分节、快捷键分节与设置窗口 runner）、services.ts（窗口服务注册）
 └── <Name>.css                     # 与组件同名的样式文件
 ```
 
@@ -72,7 +73,7 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 
 - 只能向右（向下）依赖，下层不得 import 上层。`components/`、`utils/` 不得依赖任何 feature。
 - `utils/` 只放纯函数，不依赖 React、Tauri、DOM 和 `localStorage`。
-- feature 之间不直接 import：共享的类型、函数和样式上提到 `lib/`、`components/`、`utils/`，运行时要调别的功能走服务（插件平台第 3 版，见 `docs/architecture/plugins/v3-phase3-plan.md`「关键设计」第 4 条）。`tests/unit/feature-boundaries.test.mjs` 检查 feature 之间、`lib/`、`components/`、`utils/` 到 feature 的 import，以及 feature 到 `windows/` 的 import（这一条没有白名单），现有的记在 `scripts/feature-boundary-allowlist.json`，只减不增；去掉一条后把它从白名单删掉，测试会提醒。
+- feature 之间不直接 import：共享的类型、函数和样式上提到 `lib/`、`components/`、`utils/`，运行时要调别的功能走服务（插件平台第 3 版，见 `docs/architecture/plugins/v3-phase3-plan.md`「关键设计」第 4 条）。`tests/unit/feature-boundaries.test.mjs` 检查 feature 之间、`lib/`、`components/`、`utils/` 到 feature 的 import，以及 feature 到 `windows/` 的 import；`scripts/feature-boundary-allowlist.json` 已清零，不得新增白名单记录。
 - `windows/` 负责组合 feature、处理窗口级状态（折叠/展开、尺寸、面板切换），不写领域逻辑。
 
 ## 边界收口

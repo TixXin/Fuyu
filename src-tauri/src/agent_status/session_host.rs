@@ -52,6 +52,8 @@ const KNOWN_HOSTS: &[(&str, &str, &str)] = &[
     ("workbuddy", "WorkBuddy", "app"),
     ("workbuddyai", "WorkBuddy", "app"),
     ("opencode", "OpenCode", "app"),
+    ("pideck", "PiDeck", "app"),
+    ("picove", "PiCove", "app"),
     ("trae cn", "TRAE CN", "editor"),
     ("terminal", "Terminal", "terminal"),
     ("iterm", "iTerm2", "terminal"),

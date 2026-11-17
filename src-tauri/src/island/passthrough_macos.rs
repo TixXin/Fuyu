@@ -8,7 +8,7 @@ use tauri::{AppHandle, Emitter, WebviewWindow};
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
-    geometry::{cursor_near_stage, cursor_on_island, island_rect, passthrough_sleep_duration, stage_point, IslandOnScreen},
+    geometry::{cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect, passthrough_sleep_duration, stage_point, IslandOnScreen},
     state::{read_window_state, IslandMode},
 };
 use super::screen;
@@ -177,20 +177,24 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
 
             HINTS_POSSIBLE.store(is_inside || was_held, Ordering::SeqCst);
 
+            let near = pointer.is_none_or(|p| cursor_near_stage(p.left, p.top, p.width, p.height, p.cursor_x, p.cursor_y));
             tick = tick.wrapping_add(1);
             let tracking = CURSOR_TRACKING.load(Ordering::Relaxed);
-            if !tracking {
+            if !tracking || is_inside || state.is_tucked {
                 last_cursor = None;
             } else if tick.is_multiple_of(CURSOR_EVENT_EVERY_TICKS) {
-                let point = pointer.map(stage_cursor);
+                let point = pointer.map(|p| {
+                    let raw = stage_cursor(p);
+                    let (x, y) = gaze_cursor_point((raw.x, raw.y), near);
+                    CursorPoint { x, y }
+                });
                 if point.is_some() && point != last_cursor {
                     last_cursor = point;
                     let _ = window.emit(ISLAND_CURSOR_MOVED_EVENT, point);
                 }
             }
 
-            let near = pointer.is_none_or(|p| cursor_near_stage(p.left, p.top, p.width, p.height, p.cursor_x, p.cursor_y));
-            let active = is_inside || is_on_banner || held || tracking || near;
+            let active = is_inside || is_on_banner || held || near;
             thread::sleep(passthrough_sleep_duration(true, active));
         }
     });

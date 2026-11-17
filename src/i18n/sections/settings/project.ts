@@ -10,6 +10,8 @@ export type SettingsProjectText = {
   hero: {
     stable: string;
     beta: string;
+    devTag: string;
+    devIsland: string;
     idle: string;
     checking: string;
     latest: string;
@@ -137,6 +139,8 @@ export const zhCN: SettingsProjectText = {
   hero: {
     stable: "稳定版",
     beta: "测试版",
+    devTag: "DEV 开发版",
+    devIsland: "开发版 · 不自动更新",
     idle: "还没检查更新",
     checking: "正在检查更新…",
     latest: "已是最新",
@@ -265,6 +269,8 @@ export const en: SettingsProjectText = {
   hero: {
     stable: "Stable",
     beta: "Beta",
+    devTag: "DEV build",
+    devIsland: "Dev build · updates off",
     idle: "Not checked yet",
     checking: "Checking for updates…",
     latest: "Up to date",

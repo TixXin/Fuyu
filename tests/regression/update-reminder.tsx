@@ -115,15 +115,14 @@ async function runChecks() {
     await update(() => checkForUpdate());
     check(headline() === "检查更新失败" && heroIsland.textContent === "检查更新失败" && statusButton() === "重试", "检查出错时仍写「检查更新失败」，按钮是「重试」");
     await update(() => checkForUpdate());
-    check(heroIsland.textContent === "有新版本 v0.3.4" && !document.querySelector("#settings .about-hero__status") && document.querySelector("#settings .about-hero__sea"),
-      "关于页横幅是海面上的小岛，岛上直接写更新状态，不再另有状态胶囊");
+    check(heroIsland.textContent === "有新版本 v0.3.4" && !document.querySelector("#settings .about-hero__status") && Boolean(document.querySelector("#settings .about-hero__emblem")),
+      "关于页横幅左侧是微缩岛屿徽章、右侧小岛直接写更新状态，不再另有状态胶囊");
     await update(() => heroIsland.click());
     check(heroIsland.textContent === "谢谢你，赛博养岛人" && document.querySelector("#settings .about-hero--greeting"), "点小岛，它会打个招呼");
     check(document.querySelector("#settings .about-colophon")?.textContent === "浮屿 v0.3.3 · 以 AGPL-3.0 开源 · 用 Tauri 和 React 构建",
       "关于页最下面是落款");
-    await update(() => document.querySelector<HTMLButtonElement>("#settings .settings-tabs__tab[data-tab='aboutHelp']")!.click());
-    check(document.querySelector("#settings .about-danger .settings-row"),
-      "帮助与重置子页最下面是单独的危险区");
+    check(Boolean(document.querySelector("#settings .about-workbench")) && Boolean(document.querySelector("#settings .about-danger .settings-row")),
+      "关于页双栏工作台右栏底部是单独的危险区");
     const version = getUpdateState().nextVersion;
     await update(() => skipVersion(version));
     check(!document.querySelector("#collapsed .island-update-badge"), "跳过这个版本后收起条不再提醒");
@@ -139,6 +138,8 @@ async function runChecks() {
     check(stage.dataset.feature !== undefined && document.querySelectorAll("#settings .settings-overview__tile").length === 3
       && document.querySelectorAll("#settings .settings-overview__next-tile").length === 4 && /^已开 \d+ \/ \d+$/.test(document.querySelector("#settings .settings-overview__count")?.textContent ?? ""),
       "概览：移开后舞台接着轮播开着的功能；常用是三块磁贴，接下来是四块，功能标题旁写开了几个");
+    const todosCard = document.querySelector<HTMLElement>("#settings .settings-overview__feature[data-feature='todos']")!;
+    await update(() => { todosCard.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })); });
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {

@@ -1,7 +1,8 @@
+import { FeatureHeader } from "../../../components/settings/FeatureHeader";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { useTranslation } from "../../../i18n";
 import { useReportShortcutOwners } from "../../../lib/shortcut/useReportShortcutOwners";
-import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
+import { addSettingsCategory, settingsCategoryIcon } from "../../plugin-kernel/settingsCategories";
 import { settingsRunners, shortcutSections, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
 import { BreakRemindersGroup } from "../BreakRemindersGroup";
 import { TimerShortcutRow } from "../TimerShortcutRow";
@@ -9,8 +10,13 @@ import { TimerSoundGroup } from "../TimerSoundGroup";
 import { useTimerConfig } from "../useTimerConfig";
 import { OWNER } from "./owner.ts";
 
-addSettingsCategory("timerAlerts", () => <TimerSoundGroup />, OWNER);
-addSettingsCategory("timerBreaks", () => <BreakRemindersGroup />, OWNER);
+addSettingsCategory("timerAlerts", () => (
+  <>
+    <FeatureHeader feature="behaviorAlerts" icon={settingsCategoryIcon("behaviorAlerts")} />
+    <TimerSoundGroup />
+    <BreakRemindersGroup />
+  </>
+), OWNER);
 
 function TimerShortcutOwners() {
   const t = useTranslation();

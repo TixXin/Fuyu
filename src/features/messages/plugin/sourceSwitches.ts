@@ -1,8 +1,8 @@
-export const MIRRORED_SOURCES = ["qq", "wechat"] as const;
+export const MESSAGE_SOURCES = ["qq", "wechat", "mail"] as const;
 
-export type MirroredSource = (typeof MIRRORED_SOURCES)[number];
+export type MessageSource = (typeof MESSAGE_SOURCES)[number];
 
-export type SourceValues = Record<MirroredSource, boolean>;
+export type SourceValues = Record<MessageSource, boolean>;
 
 export type SourceConfig = Readonly<Record<string, unknown>>;
 
@@ -11,20 +11,16 @@ export function sourceSwitch(config: SourceConfig, source: string): boolean | un
   return typeof value === "boolean" ? value : undefined;
 }
 
-export interface SourcesReconciled {
-  write: [MirroredSource, boolean][];
-  mirror: [MirroredSource, boolean][];
-}
-
-export function reconcileSources(stored: SourceValues, config: SourceConfig, seen: SourceValues | null, sources: readonly MirroredSource[] = MIRRORED_SOURCES): SourcesReconciled {
-  const result: SourcesReconciled = { write: [], mirror: [] };
+export function migrateSources(
+  stored: Partial<SourceValues>,
+  config: SourceConfig,
+  sources: readonly MessageSource[] = MESSAGE_SOURCES,
+): [MessageSource, boolean][] {
+  const write: [MessageSource, boolean][] = [];
   for (const source of sources) {
-    const on = sourceSwitch(config, source);
+    if (sourceSwitch(config, source) !== undefined) continue;
     const kept = stored[source];
-    if (on === undefined) result.write.push([source, kept]);
-    else if (kept === on) continue;
-    else if (seen && kept !== seen[source]) result.write.push([source, kept]);
-    else result.mirror.push([source, on]);
+    if (typeof kept === "boolean") write.push([source, kept]);
   }
-  return result;
+  return write;
 }

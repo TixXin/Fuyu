@@ -10,7 +10,7 @@ import { FEATURE_PAGES, type SettingsFeature } from "./categories";
 import { CATEGORY_ICONS } from "./SettingsSidebar";
 import "./OverviewStage.css";
 
-export type StageFeature = SettingsFeature | "messages";
+export type StageFeature = SettingsFeature | "behaviorAlerts" | "messages";
 
 const CYCLE_MS = 2_800;
 
@@ -28,7 +28,7 @@ export function OverviewStage({ settings, spot, playing, onCount }: { settings: 
   }, [cycling]);
 
   const shown = spot ?? (playing.length > 0 ? playing[turn % playing.length] : null);
-  const Icon = shown ? CATEGORY_ICONS[shown === "messages" ? "messages" : FEATURE_PAGES[shown][0]] : null;
+  const Icon = shown ? CATEGORY_ICONS[shown === "messages" ? "messages" : shown === "behaviorAlerts" ? "behaviorAlerts" : FEATURE_PAGES[shown][0]] : null;
   const colors = surfaceThemeColors(resolveThemeColors(settings, systemDark), "collapsed");
   const island = {
     "--stage-fill": colors.islandBackgroundColor,

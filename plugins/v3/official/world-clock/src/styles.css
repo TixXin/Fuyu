@@ -1,0 +1,171 @@
+.fuyu-world-clock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-world-clock__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fuyu-world-clock__select,
+.fuyu-world-clock__input {
+  padding: 4px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+}
+
+.fuyu-world-clock__input {
+  flex: 1;
+  min-width: 110px;
+}
+
+.fuyu-world-clock__button {
+  padding: 4px 12px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  font-weight: 500;
+  color: var(--fuyu-plugin-on-accent);
+  background: var(--fuyu-plugin-accent);
+  cursor: pointer;
+}
+
+.fuyu-world-clock__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fuyu-world-clock__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-world-clock__row:hover {
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-world-clock__city {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fuyu-world-clock__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-world-clock__badge {
+  padding: 1px 5px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: color-mix(in srgb, var(--fuyu-plugin-accent) 16%, var(--fuyu-plugin-surface));
+  color: var(--fuyu-plugin-text-secondary);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.fuyu-world-clock__sub {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-world-clock__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.fuyu-world-clock__time {
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-world-clock__mini {
+  padding: 2px 6px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.fuyu-world-clock__mini:hover,
+.fuyu-world-clock__mini--active {
+  border-color: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-world-clock__settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fuyu-world-clock__section-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fuyu-world-clock__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.fuyu-world-clock__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-world-clock-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.fuyu-world-clock-chip__code {
+  font-weight: 600;
+  color: var(--fuyu-plugin-accent);
+}
+
+.fuyu-world-clock-chip__time {
+  font-variant-numeric: tabular-nums;
+  color: var(--fuyu-plugin-text);
+}

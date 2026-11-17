@@ -36,7 +36,7 @@ send() {
   set -- "$1" $(stat -c '%s %Y' "$1" 2>/dev/null)
   [ -n "$3" ] || return 0
   if printf '%s\n' "$KNOWN" | grep -qxF "$2 $3 $n"; then printf 'S %s\n' "$n"; return 0; fi
-  case "$n" in *.json|*.db)
+  case "$n" in *.json|*.db|*.pbtxt)
     [ "$2" -le __WHOLE_MAX__ ] || return 0
     printf 'F %s %s 0 %s %s\n' "$2" "$3" "$2" "$n"
     { head -c "$2" "$1"; dd if=/dev/zero bs="$2" count=1; } | head -c "$2"
@@ -98,7 +98,7 @@ done
 const END_OF_KNOWN: &str = "FUYU_KNOWN";
 const READY: &[u8] = b"FUYU_READY";
 pub(super) fn is_whole_file(path: &str) -> bool {
-    path.ends_with(".json") || path.ends_with(".db")
+    path.ends_with(".json") || path.ends_with(".db") || path.ends_with(".pbtxt")
 }
 
 pub(super) const APPROVAL_PORT_FILE: &str = ".fuyu/approval-port";

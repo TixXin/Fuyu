@@ -65,8 +65,13 @@ fn an_unreachable_island_leaves_run_command_to_antigravity() {
 
 #[test]
 fn the_pulled_files_and_the_mirror_reader_agree() {
-    assert_eq!(REMOTE_FILES.checkpoint_dirs, [format!("{SAVED_DIR}/").as_str()]);
-    assert!(REMOTE_FILES.find[0].starts_with(&format!("find {SAVED_DIR} ")));
+    assert_eq!(
+        REMOTE_FILES.checkpoint_dirs,
+        [format!("{SAVED_DIR}/").as_str(), format!("{CLI_DIR}/annotations/").as_str()]
+    );
+    assert!(REMOTE_FILES.find[0].contains(&format!("find {SAVED_DIR} ")));
+    assert!(REMOTE_FILES.find[0].contains(&format!("{CLI_DIR}/annotations/$c.pbtxt")));
+    assert!(crate::agent_status::harness::is_mirrored_file(".gemini/antigravity-cli/annotations/a2706318.pbtxt"));
 }
 
 #[cfg(unix)]
@@ -76,7 +81,7 @@ fn the_saved_input_turns_into_a_remote_session() {
     use std::{fs, process::Command, time::SystemTime};
     let home = std::env::temp_dir().join(format!("fuyu-antigravity-remote-save-{}", std::process::id()));
     let _ = fs::remove_dir_all(&home);
-    fs::create_dir_all(&home).unwrap();
+    fs::create_dir_all(home.join(CLI_DIR).join("annotations")).unwrap();
     let run = |state: &str, input: &str| {
         let mut child = Command::new("sh")
             .arg("-c")
@@ -89,7 +94,8 @@ fn the_saved_input_turns_into_a_remote_session() {
         child.stdin.take().unwrap().write_all(input.as_bytes()).unwrap();
         assert!(child.wait().unwrap().success());
     };
-    let input = r#"{"conversationId": "a2706318", "cwd": "/srv/demo", "lastUserInput": "ping", "modelName": "gemini"}"#;
+    fs::write(home.join(CLI_DIR).join("annotations").join("a2706318.pbtxt"), "title:\"Remote CLI Task\"").unwrap();
+    let input = r#"{"conversationId": "a2706318", "cwd": "/srv/demo", "lastUserInput": "继续", "modelName": "gemini"}"#;
     run("running", input);
     let saved = home.join(SAVED_DIR);
     assert!(saved.join("running-a2706318.json").is_file());
@@ -97,7 +103,10 @@ fn the_saved_input_turns_into_a_remote_session() {
     let now = system_time_to_unix_millis(SystemTime::now()).unwrap();
     let listed = read_sessions(&roots, now, 60_000);
     assert_eq!(listed.len(), 1);
-    assert_eq!((listed[0].session_id.as_str(), listed[0].phase), ("a2706318", "running"));
+    assert_eq!(
+        (listed[0].session_id.as_str(), listed[0].phase, listed[0].title.as_deref(), listed[0].last_prompt.as_deref()),
+        ("a2706318", "running", Some("Remote CLI Task"), Some("继续"))
+    );
     run("stop", input);
     run("stop", r#"{"conversationId": "../x"}"#);
     let names: Vec<_> = fs::read_dir(&saved).unwrap().flatten().map(|entry| entry.file_name()).collect();

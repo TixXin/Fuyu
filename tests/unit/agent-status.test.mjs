@@ -6,6 +6,7 @@ import {
   getAgentStatusLabel,
   getAgentVisualState,
   isAgentAttentionPhase,
+  partitionAgentProviders,
   withoutHiddenProviders,
 } from "../../src/features/agent-status/status.ts";
 import { TRANSLATIONS } from "../../src/i18n/index.ts";
@@ -71,4 +72,20 @@ test("agents switched off in settings neither light nor name the island", () => 
   assert.equal(getAgentVisualState(noCodex), "running");
   assert.equal(getAgentStatusLabel(noCodex, t), t.agent.running("Claude Code"));
   assert.equal(getAgentVisualState(withoutHiddenProviders(status, { claudeCode: false, codex: false })), "idle");
+});
+
+test("detected or active providers stay in the primary grid and absent idle ones fold into more", () => {
+  const providers = ["codex", "claudeCode", "workbuddy", "grok"];
+  assert.deepEqual(
+    partitionAgentProviders(providers, DEFAULT_AGENT_STATUS, null),
+    { primary: ["codex", "claudeCode"], more: ["workbuddy", "grok"] },
+  );
+  assert.deepEqual(
+    partitionAgentProviders(
+      providers,
+      { ...DEFAULT_AGENT_STATUS, grok: { phase: "running", updatedAt: 1 } },
+      { codex: "absent", claudeCode: "current", workbuddy: "absent", grok: "absent", scriptsOutdated: false },
+    ),
+    { primary: ["claudeCode", "grok"], more: ["codex", "workbuddy"] },
+  );
 });

@@ -42,9 +42,15 @@ pub(super) fn lines() -> bool {
 pub(super) fn present(app: &AppHandle, work: Rect, snap: Option<Edge>) {
     GENERATION.fetch_add(1, Ordering::SeqCst);
     let state = DragGridState { visible: true, lines: lines(), snap };
-    *STATE.lock().unwrap_or_else(PoisonError::into_inner) = state;
+    let state_changed = {
+        let mut slot = STATE.lock().unwrap_or_else(PoisonError::into_inner);
+        let changed = *slot != state;
+        *slot = state;
+        changed
+    };
     let handle = app.clone();
     let _ = app.run_on_main_thread(move || {
+        let existed = handle.get_webview_window(WINDOW_LABEL).is_some();
         let window = match grid_window(&handle) {
             Ok(window) => window,
             Err(error) => {
@@ -54,7 +60,9 @@ pub(super) fn present(app: &AppHandle, work: Rect, snap: Option<Edge>) {
         };
         place(&window, work);
         reveal(&handle, &window);
-        let _ = window.emit_to(WINDOW_LABEL, STATE_EVENT, state);
+        if !existed || state_changed {
+            let _ = window.emit_to(WINDOW_LABEL, STATE_EVENT, state);
+        }
     });
 }
 

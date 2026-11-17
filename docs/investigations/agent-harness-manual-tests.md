@@ -43,10 +43,9 @@
 ### DeepSeek Harness
 
 - [ ] 会话列表：开一个会话，核对标题、模型、档位、最近提问和回复；提问时显示「等你」；运行中、完成、10 分钟没动静变「可能中断」；点会话切到 DSH 窗口（#179 原清单）
-- [ ] 「安装/修复」：岛写 `~/.fuyu/fuyu-dsh-hooks.json`，安装结果末尾给出要加进 `profiles/<名字>/cordis.patch.yml` 的几行（B27）
-- [ ] 核对那几行（`- id: fuyu-hooks / name: "@deepseek-ai/dsh-hooks-claude-code" / config.configPath`）是不是 DSH patch 层正确的写法；桥接包是 DSH 自带还是要在 profile 目录装（B27）
-- [ ] 加上后重启 DSH 再点「安装/修复」：提示消失，钩子状态变 current；发一句话，状态灯亮运行中 / 完成（B27）
-- [ ] 开岛上审批，DSH 跑 shell 工具：岛上只有「交回终端 / 拒绝」，拒绝后 DSH 显示被拦下；核对 DSH 的 shell 工具名，matcher 现在是 `^(shell|exec|bash|run_command|run_code)$`（B27）
+- [ ] 「安装/修复」：岛在数据目录生成 `dsh-plugin/`（`package.json`、`cordis.patch.yml`、`index.js`）并删除旧 `fuyu-dsh-hooks.json`；DSH 家目录下没有自定义 `cordis.patch.yml` 时自动写入 `- insert: [{ id: fuyu-island, name: ... }]`，钩子状态直接为 current；已有自定义 `cordis.patch.yml` 时原文件保留、安装结果末尾给出要追加的 3 行 `- insert:` 片段（B72.1）
+- [ ] 重启 DSH 后发一句话：状态灯亮运行中，结束后变完成（出错变失败）（B72.1）
+- [ ] 开岛上审批，让 DSH 触发一次需要审批的工具调用（`approval/request`）：岛上弹出审批卡，显示工具名、命令/文件参数与原因，且有「允许」「拒绝」「到终端」三个按钮；点「允许」DSH 直接放行执行（不再弹 DSH 确认框）；点「拒绝」DSH 显示被拒绝；点「到终端」交回 DSH 原生确认框；挂起期间在 DSH 里取消本轮对话，岛上审批卡在 1 秒内自动关闭（B72.1）
 - [ ] 会话卡片：显示「deepseek-flash · high」这类模型和强度；权限预设切到 auto 显示「自动」，完全访问显示「跳过确认」；写待办时显示 1/3 这类进度；跑较长命令时显示工具名（B44）
 
 ### Antigravity
@@ -84,12 +83,12 @@
 - [ ] 点会话：切到跑这个 CLI 的终端窗口（B48）
 - [ ] 对一遍真机会话的字段名：Qwen 的 `tool_result` 记录、CodeBuddy 套壳记录的字段是从源码读的（只看字段名，不抄内容）（B48）
 
-### TRAE、TRAE CN（B29，本机没装，装上后两个版本各测一遍）
+### TRAE、TRAE CN（B29、B72.3，本机没装，装上后两个版本各测一遍）
 
-- [ ] 「安装/修复」后状态灯卡片里出现「TRAE」/「TRAE CN」、状态已安装；`~/.trae/hooks.json`（或 `~/.trae-cn/hooks.json`）里有 `"version": 1` 和 UserPromptSubmit、PreToolUse（两组，一组 matcher `RunCommand` 走审批）、PostToolUse、Stop、Notification，原有内容不动（B29）
+- [ ] 「安装/修复」后状态灯卡片里出现「TRAE」/「TRAE CN」、状态已安装；`~/.trae/hooks.json`（或 `~/.trae-cn/hooks.json`）里有 `"version": 1` 和 UserPromptSubmit、PreToolUse（两组，一组 matcher 覆盖命令、写改删文件与 `mcp__.*` 走审批）、PostToolUse、Stop、Notification，原有内容不动（B29、B72.3）
 - [ ] TRAE 设置 → Hooks 里看得到岛的钩子吗，要不要手动启用或过安全提示；执行方式是「沙箱中运行」时 `agent-trae/` 里有没有文件（B29）
 - [ ] Agent / SOLO 模式问一句：Agent 页出现会话，标题是第一句提问，目录对；跑命令时转圈并显示当前工具；回复完变完成、显示最后的回复；第二轮后最近提问更新、标题不变（B29）
-- [ ] 跑一条命令：岛上出审批卡片；拒绝时 TRAE 不执行并显示理由；允许时自动执行模式直接跑，手动确认模式下记下实际表现；「交回」时 TRAE 自己问（B29）
+- [ ] 将 TRAE 设为「自动执行」并开岛上审批，跑命令、写改文件或调 MCP 工具：岛上出审批卡片（主会话带 `agent_id` 如 `solo_agent` 时不被误判为子代理）；点允许直接执行不再弹 TRAE 确认框；点拒绝 TRAE 不执行并显示理由；点「交回」时触发 TRAE 确认框；只读工具不弹卡（B29、B72.3）
 - [ ] TRAE 自己弹确认（不经过岛的工具）时，岛上显示「等你」（B29）
 - [ ] 点会话切到 TRAE / TRAE CN 窗口（B29）
 - [ ] 打开 TRAE 的「导入 Claude Code 钩子」，看会不会多出一条 Claude Code 会话（B29）
@@ -142,11 +141,12 @@
 - [ ] 状态灯、等你、岛上允许 / 拒绝（拒绝时 Copilot 收到理由）；同一会话不再同时出现成 Claude Code（B55）
 - [ ] `PermissionRequest` 钩子的输入里有没有 `tool_name` / `tool_input`（文档没写；没有时审批卡片缺工具名）（B55）
 
-### Droid（B58，本机没装，装上后测）
+### Droid（B58、B72.2，本机没装，装上后测）
 
 - [ ] 装 droid 跑一轮：会话出现在 Agent 页，目录对（项目路径带 `-` 的以 `session_start.cwd` 为准），模型和推理强度显示（B58）
 - [ ] 注入的系统提问（`visibility: hidden`）不当成标题或最近提问（B58）
 - [ ] 装完重开会话，状态灯和「等你」（permission_prompt）正常；`hooks.json` 或 `settings.json` 里用户原有的钩子还在（B58）
+- [ ] 开岛上审批，跑命令或写文件工具（`Bash`/`Execute`/`Edit`/`Write`）：岛上弹出审批卡，点允许直接执行不再弹终端确认框、点拒绝带理由拦截、点交回终端回到 Droid 确认框；只读工具不弹卡（B72.2）
 
 ### Codex 和 Claude 桌面 App（B46）
 
@@ -176,7 +176,7 @@
 
 ### DeepSeek Harness
 
-- [ ] Windows 上桥接用什么 shell 跑 command 字符串（cmd 还是 PowerShell）；命令是 `cmd.exe /d /s /c ""…" dsh"` / `powershell.exe -NoProfile … -File "…" dsh completed`（B27）
+- [ ] Windows 上生成的 `%USERPROFILE%\.fuyu\dsh-plugin\index.js`（反斜杠路径 JSON 转义）在 DSH Desktop / `dsh web` 启动时能经 `%USERPROFILE%\.dsh\cordis.patch.yml` 正常加载并驱动状态灯与岛上审批（允许、拒绝、交回 DSH、取消）（B72.1）
 - [ ] 数据目录（B32）。每项在那个目录里开会话、发一句话，看列表里有没有、三态对不对：
   - [ ] 系统环境变量 `DSH_HOME=D:\dsh-data`（设好后重启岛），`npx @deepseek-ai/dsh web` 开会话
   - [ ] `DSH_HOME=~\dsh-alt` 读 `%USERPROFILE%\dsh-alt`

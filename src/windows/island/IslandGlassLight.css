@@ -37,29 +37,6 @@
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 1), transparent);
 }
 
-.island-light .island--appearance-liquidGlass .editor-panel {
-  background:
-    radial-gradient(
-      circle at var(--glass-pointer-x) var(--glass-pointer-y),
-      color-mix(in srgb, var(--glass-page-accent) calc(calc(var(--glass-panel-accent-alpha) * 1.4) * 100%), transparent),
-      transparent 36%
-    ),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.25)),
-    rgba(255, 255, 255, 0.35);
-  border-color: rgba(30, 40, 60, 0.08);
-  box-shadow:
-    0 14px 32px rgba(30, 40, 60, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset 0 -1px 0 rgba(30, 40, 60, 0.06);
-}
-
-.island-light .island--appearance-liquidGlass.island--glass-css-fallback .editor-panel {
-  background:
-    radial-gradient(circle at 82% 12%, color-mix(in srgb, var(--glass-page-accent) 16%, transparent), transparent 34%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3)),
-    rgba(250, 250, 252, 0.8);
-}
-
 :root[data-island-top-edge="attached"] .island-light .island--appearance-liquidGlass.island--expanded,
 :root:not([data-island-top-edge]) .island-light .island--docked.island--appearance-liquidGlass.island--expanded {
   box-shadow:

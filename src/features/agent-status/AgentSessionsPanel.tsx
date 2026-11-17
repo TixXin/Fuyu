@@ -15,7 +15,7 @@ import { focusAgentWindow, listenAgentFocusWindowOnly, type AgentSessionSummary 
 import { arrangeSessions, isActivePhase, modelLabel, sessionAge, sessionProject } from "./sessionList";
 import { shownEffort } from "./effortLabels";
 import { useEffortLabels } from "./useEffortLabels";
-import { AGENT_PROVIDER_LABELS } from "./status";
+import { getAgentProviderLabel } from "./status";
 import { useScrollFade } from "./useScrollFade";
 import { asksUser, sessionKey } from "./unseen";
 import type { UnseenSessions } from "./useUnseenSessions";
@@ -234,7 +234,7 @@ export function AgentSessionsPanel({
           ...members.flatMap((root) => [root, ...shownChildren(sessionKey(root)).map((child) => child.session)]).map((session) => {
           const depth = Math.min(childDepth.get(sessionKey(session)) ?? 0, MAX_CHILD_DEPTH);
           const project = sessionProject(session.cwd);
-          const title = session.title ?? project ?? AGENT_PROVIDER_LABELS[session.provider];
+          const title = session.title ?? project ?? getAgentProviderLabel(session.provider);
           const model = modelLabel(session.model, shownEffort(session.provider, session.effort, effortLabels));
           const key = sessionKey(session);
           const notFound = notFoundId === session.sessionId
@@ -306,6 +306,7 @@ export function AgentSessionsPanel({
               showElapsed={showElapsed}
               showModel={showModel}
               showActivity={showActivity}
+              effects={cardEffects}
               unseen={unseen}
               subagents={
                 reveal || (listedSubagents(session).length === 0 && !nested.children.has(key)) ? undefined : (

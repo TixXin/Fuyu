@@ -10,6 +10,8 @@ mod dev_lane;
 mod device_events;
 #[cfg_attr(target_os = "macos", path = "device_use/macos.rs")]
 mod device_use;
+#[cfg(any(debug_assertions, test))]
+mod emit_diagnostics;
 mod file_shelf;
 mod fs_write;
 mod home_dir;
@@ -43,6 +45,8 @@ mod sync;
 mod system;
 mod system_levels;
 mod timer;
+#[cfg(any(windows, test))]
+mod toast_notifications;
 mod todos;
 mod translation;
 mod tray;
@@ -157,12 +161,33 @@ pub fn run() {
 
         })
         .setup(move |app| {
+            #[cfg(debug_assertions)]
+            emit_diagnostics::start(app.handle());
             system::update_backup::apply_pending_restore();
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             tray::build_tray(app)?;
             plugin_kernel::builtins::init(app.handle());
             coexist::init(app.handle());
+            if let Ok(window) = island::main_window(app.handle()) {
+                #[cfg(target_os = "macos")]
+                if let Err(error) = macos::island_panel::make_panel(&window) {
+                    eprintln!("failed to make the island a panel: {error}");
+                }
+                #[cfg(target_os = "macos")]
+                macos::island_panel::refresh_top_space(&window);
+                let stage = window.clone();
+                let sized = app.handle().run_on_main_thread(move || {
+                    if let Err(error) = island::apply_stage_geometry(&stage, island::IslandWindowState::default(), false) {
+                        eprintln!("failed to size and position island window: {error}");
+                    }
+                });
+                if let Err(error) = sized {
+                    eprintln!("failed to size and position island window: {error}");
+                }
+                island::start_window_watch(window.clone());
+                island::start_cursor_passthrough_loop(window);
+            }
             if let Err(error) = clipboard_history::init(app.handle()) {
                 eprintln!("failed to initialize clipboard history: {error}");
             }
@@ -215,27 +240,6 @@ pub fn run() {
             }
             if let Err(error) = notification_diagnostics::start(app.handle()) {
                 eprintln!("failed to initialize notification diagnostics: {error}");
-            }
-            if let Ok(window) = island::main_window(app.handle()) {
-                #[cfg(target_os = "macos")]
-                if let Err(error) = macos::island_panel::make_panel(&window) {
-                    eprintln!("failed to make the island a panel: {error}");
-                }
-                #[cfg(target_os = "macos")]
-                macos::island_panel::keep_in_top_space(window.clone());
-                let stage = window.clone();
-                let sized = app.handle().run_on_main_thread(move || {
-                    if let Err(error) = island::apply_stage_geometry(&stage, island::IslandWindowState::default(), false) {
-                        eprintln!("failed to size and position island window: {error}");
-                    }
-                });
-                if let Err(error) = sized {
-                    eprintln!("failed to size and position island window: {error}");
-                }
-                island::start_monitor_follow_loop(window.clone());
-                island::start_notch_watch(window.clone());
-                dev_lane::watch_installed_island(window.clone());
-                island::start_cursor_passthrough_loop(window);
             }
             system::fullscreen::start(app.handle());
             media_control::init(app.handle());

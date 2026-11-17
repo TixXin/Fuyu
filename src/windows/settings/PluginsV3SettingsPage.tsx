@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { Blocks, Search, X, type LucideIcon } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginsV3";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { exitPluginSafeMode, type BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
-import { BUILTIN_ICONS, BuiltinPluginsGroup, milliseconds, PluginDetailModal, stateOf, TONES } from "./BuiltinPluginsGroup";
+import { BUILTIN_ICONS, BuiltinPluginsGroup, matchesPluginQuery, milliseconds, PluginDetailModal, stateOf, TONES } from "./BuiltinPluginsGroup";
+import type { SettingsCategory } from "./categories";
+import { PluginBisectBar } from "./PluginBisectBar";
 import { PluginHostNodeRow } from "./PluginHostNodeRow";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginStatusV3 } from "./usePluginHostStatus";
 import "./PluginsV3SettingsPage.css";
@@ -51,7 +53,7 @@ function HostSummaryBar({ view, runningCount, onOpenDiagnostics }: { view: Plugi
   const open = connection === "open";
   const memoryKey = measured?.measure ?? "rss";
   return (
-    <section className={`plugins-v3__host-bar${open && host?.safe ? " plugins-v3__dock--safe" : ""}`} aria-label={text.host}>
+    <section className={`plugins-v3__host-bar settings-group${open && host?.safe ? " plugins-v3__dock--safe" : ""}`} aria-label={text.host}>
       <div className="plugins-v3__host-bar-row">
         <div className="plugins-v3__host-bar-left">
           <span className={`plugins-v3__connection plugins-v3__connection--${connection}`} data-connection={connection}>{text.connection[connection]}</span>
@@ -83,7 +85,7 @@ function HostDock({ view, now }: { view: PluginHostView; now: number }) {
   const open = connection === "open";
   const memoryKey = measured?.measure ?? "rss";
   return (
-    <section className={`plugins-v3__dock${open && host?.safe ? " plugins-v3__dock--safe" : ""}`} aria-label={text.host}>
+    <section className={`plugins-v3__dock settings-group${open && host?.safe ? " plugins-v3__dock--safe" : ""}`} aria-label={text.host}>
       <div className="plugins-v3__dock-top">
         <div className="plugins-v3__dock-main">
           <div className="plugins-v3__dock-headline">
@@ -126,16 +128,16 @@ function DiagnosticsTable({ builtins, hostPlugins, query, onSelectPlugin }: {
   const builtinIds = new Set(builtins?.map((b) => b.id) ?? []);
   const hostById = new Map((hostPlugins ?? []).map((p) => [p.id, p]));
   const extras = (hostPlugins ?? []).filter((p) => !builtinIds.has(p.id));
-  const q = query.trim().toLowerCase();
 
   const rows = [
-    ...extras.map((p) => ({ id: p.id, name: p.id, kind: p.kind, state: stateOf(p), usage: p.usage, icon: Blocks })),
+    ...extras.map((p) => ({ id: p.id, name: p.id, extra: p.name, kind: p.kind, state: stateOf(p), usage: p.usage, icon: Blocks })),
     ...(builtins ?? []).map((b) => {
       const id = b.id as BuiltinPluginName;
       const hp = hostById.get(b.id);
       return {
         id: b.id,
         name: (text.builtinNames as Record<string, string | undefined>)[id] ?? b.id,
+        extra: "",
         kind: b.kind,
         state: hp ? stateOf(hp) : b.enabled ? ("running" as const) : ("disabled" as const),
         usage: hp?.usage,
@@ -143,62 +145,66 @@ function DiagnosticsTable({ builtins, hostPlugins, query, onSelectPlugin }: {
       };
     }),
   ]
-    .filter((row) => !q || row.name.toLowerCase().includes(q) || row.id.toLowerCase().includes(q))
+    .filter((row) => matchesPluginQuery(row.id, query, row.extra))
     .sort((a, b) => (b.usage?.errors ?? 0) - (a.usage?.errors ?? 0) || (b.usage?.cpuMs ?? 0) - (a.usage?.cpuMs ?? 0));
 
   return (
-    <section className="plugins-v3__table-card" aria-label={text.plugins}>
-      <div className="plugins-v3__table-scroll">
-        <table className="plugins-v3__diag-table">
-          <thead>
-            <tr>
-              <th>{text.plugins}</th>
-              <th>{text.stateCol}</th>
-              <th className="plugins-v3__num">{text.cpu}</th>
-              <th className="plugins-v3__num">{text.apply}</th>
-              <th className="plugins-v3__num">{text.services}</th>
-              <th className="plugins-v3__num">{text.timers}</th>
-              <th className="plugins-v3__num">{text.listeners}</th>
-              <th className="plugins-v3__num">{text.clients}</th>
-              <th className="plugins-v3__num">{text.errors}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const Icon = row.icon;
-              const tone = TONES[row.state];
-              const u = row.usage;
-              return (
-                <tr key={row.id} onClick={() => onSelectPlugin(row.id)}>
-                  <td>
-                    <div className="plugins-v3__diag-plugin">
-                      <span className={`plugins-v3__icon plugins-v3__icon--sm plugins-v3__icon--${tone}`} aria-hidden="true">
-                        <Icon size={14} strokeWidth={2} />
-                        <span className="plugins-v3__dot" />
-                      </span>
-                      <div className="plugins-v3__title-col">
-                        <div className="plugins-v3__title-line">
-                          <span className="plugins-v3__plugin-name">{row.name}</span>
-                          {row.kind && row.kind !== "builtin" ? <span className="plugins-v3__kind">{text.kinds[row.kind]}</span> : null}
+    <section className="plugins-v3__table-card settings-group" aria-label={text.plugins}>
+      {rows.length === 0 ? (
+        <p className="plugins-v3__empty">{text.noMatches}</p>
+      ) : (
+        <div className="plugins-v3__table-scroll">
+          <table className="plugins-v3__diag-table">
+            <thead>
+              <tr>
+                <th>{text.plugins}</th>
+                <th>{text.stateCol}</th>
+                <th className="plugins-v3__num">{text.cpu}</th>
+                <th className="plugins-v3__num">{text.apply}</th>
+                <th className="plugins-v3__num">{text.services}</th>
+                <th className="plugins-v3__num">{text.timers}</th>
+                <th className="plugins-v3__num">{text.listeners}</th>
+                <th className="plugins-v3__num">{text.clients}</th>
+                <th className="plugins-v3__num">{text.errors}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const Icon = row.icon;
+                const tone = TONES[row.state];
+                const u = row.usage;
+                return (
+                  <tr key={row.id} onClick={() => onSelectPlugin(row.id)}>
+                    <td>
+                      <div className="plugins-v3__diag-plugin">
+                        <span className={`plugins-v3__icon plugins-v3__icon--sm plugins-v3__icon--${tone}`} aria-hidden="true">
+                          <Icon size={14} strokeWidth={2} />
+                          <span className="plugins-v3__dot" />
+                        </span>
+                        <div className="plugins-v3__title-col">
+                          <div className="plugins-v3__title-line">
+                            <span className="plugins-v3__plugin-name">{row.name}</span>
+                            {row.kind && row.kind !== "builtin" ? <span className="plugins-v3__kind">{text.kinds[row.kind]}</span> : null}
+                          </div>
+                          <span className="plugins-v3__id">{row.id}</span>
                         </div>
-                        <span className="plugins-v3__id">{row.id}</span>
                       </div>
-                    </div>
-                  </td>
-                  <td><span className={`plugins-v3__foot-state plugins-v3__foot-state--${tone}`}>{text.states[row.state]}</span></td>
-                  <td className="plugins-v3__num" title={u ? text.calls(u.calls) : undefined}>{u ? `${milliseconds(u.cpuMs)} (${u.calls})` : "–"}</td>
-                  <td className="plugins-v3__num">{u && u.applyMs !== null ? milliseconds(u.applyMs) : "–"}</td>
-                  <td className="plugins-v3__num">{u ? u.services : "–"}</td>
-                  <td className="plugins-v3__num">{u ? u.timers : "–"}</td>
-                  <td className="plugins-v3__num">{u ? u.listeners : "–"}</td>
-                  <td className="plugins-v3__num">{u ? u.clients : "–"}</td>
-                  <td className={`plugins-v3__num${u && u.errors > 0 ? " plugins-v3__diag-err" : ""}`}>{u ? u.errors : "–"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                    </td>
+                    <td><span className={`plugins-v3__foot-state plugins-v3__foot-state--${tone}`}>{text.states[row.state]}</span></td>
+                    <td className="plugins-v3__num" title={u ? text.calls(u.calls) : undefined}>{u ? `${milliseconds(u.cpuMs)} (${u.calls})` : "–"}</td>
+                    <td className="plugins-v3__num">{u && u.applyMs !== null ? milliseconds(u.applyMs) : "–"}</td>
+                    <td className="plugins-v3__num">{u ? u.services : "–"}</td>
+                    <td className="plugins-v3__num">{u ? u.timers : "–"}</td>
+                    <td className="plugins-v3__num">{u ? u.listeners : "–"}</td>
+                    <td className="plugins-v3__num">{u ? u.clients : "–"}</td>
+                    <td className={`plugins-v3__num${u && u.errors > 0 ? " plugins-v3__diag-err" : ""}`}>{u ? u.errors : "–"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
       <div className="plugins-v3__footnotes">
         <SettingsFootnote text={text.cpuNote} />
         <SettingsFootnote text={text.preview} />
@@ -234,10 +240,11 @@ function SearchInput({ query, onChange }: { query: string; onChange: (next: stri
   );
 }
 
-export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins }: {
+export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins, onOpenPage }: {
   view: PluginHostView;
   now?: number;
   builtins?: readonly BuiltinPlugin[] | null;
+  onOpenPage?: (page: SettingsCategory) => void;
 }) {
   const text = useTranslation().settings.pluginsV3;
   const loadedBuiltins = useBuiltinPlugins();
@@ -260,15 +267,24 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins 
     }).length + extras.filter((p) => stateOf(p) === "running").length;
   const selectedBuiltin = builtins?.find((b) => b.id === selectedId);
   const selectedHost = selectedId ? hostById.get(selectedId) : undefined;
+  const switchTabKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const next: PluginsV3Tab = tab === "plugins" ? "diagnostics" : "plugins";
+    setTab(next);
+    const parent = event.currentTarget;
+    requestAnimationFrame(() => parent.querySelector<HTMLButtonElement>(`[data-tab='${next}']`)?.focus());
+  };
 
   return (
     <>
       <div className="plugins-v3__tabs-bar">
-        <div className="plugins-v3__tabs" role="tablist">
+        <div className="plugins-v3__tabs" role="tablist" onKeyDown={switchTabKey}>
           <button
             className={`plugins-v3__tab${tab === "plugins" ? " plugins-v3__tab--active" : ""}`}
             type="button"
             role="tab"
+            tabIndex={tab === "plugins" ? 0 : -1}
             aria-selected={tab === "plugins"}
             data-tab="plugins"
             onClick={() => setTab("plugins")}
@@ -279,6 +295,7 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins 
             className={`plugins-v3__tab${tab === "diagnostics" ? " plugins-v3__tab--active" : ""}`}
             type="button"
             role="tab"
+            tabIndex={tab === "diagnostics" ? 0 : -1}
             aria-selected={tab === "diagnostics"}
             data-tab="diagnostics"
             onClick={() => setTab("diagnostics")}
@@ -294,7 +311,8 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins 
       {tab === "plugins" ? (
         <>
           <HostSummaryBar view={view} runningCount={runningCount} onOpenDiagnostics={() => setTab("diagnostics")} />
-          <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} />
+          {open ? <PluginBisectBar thirdPartyIds={extras.filter((p) => p.kind === "third-party" || !p.kind).map((p) => p.id)} onBisect={view.bisect} /> : null}
+          <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
         </>
       ) : (
         <>
@@ -303,17 +321,17 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins 
         </>
       )}
 
-      {selectedId ? <PluginDetailModal builtin={selectedBuiltin} hostPlugin={selectedHost} onClose={() => setSelectedId(null)} /> : null}
+      {selectedId ? <PluginDetailModal builtin={selectedBuiltin} hostPlugin={selectedHost} hostPlugins={plugins} builtins={builtins} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
     </>
   );
 }
 
-function HostConnectedPage({ connect, builtins }: { connect?: PluginHostConnector; builtins: readonly BuiltinPlugin[] | null }) {
+function HostConnectedPage({ connect, builtins, onOpenPage }: { connect?: PluginHostConnector; builtins: readonly BuiltinPlugin[] | null; onOpenPage?: (page: SettingsCategory) => void }) {
   const view = usePluginHostStatus(connect);
-  return <PluginsV3View view={view} builtins={builtins} />;
+  return <PluginsV3View view={view} builtins={builtins} onOpenPage={onOpenPage} />;
 }
 
-export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnector }) {
+export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
   const text = useTranslation().settings.pluginsV3;
   const hostEnabled = usePluginHostEnabled();
   const builtins = useBuiltinPlugins();
@@ -322,7 +340,7 @@ export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnect
   const selectedBuiltin = builtins?.find((b) => b.id === selectedId);
   return (
     <div className="plugins-v3">
-      {hostEnabled === true ? <HostConnectedPage connect={connect} builtins={builtins} /> : null}
+      {hostEnabled === true ? <HostConnectedPage connect={connect} builtins={builtins} onOpenPage={onOpenPage} /> : null}
       {hostEnabled === false ? (
         <>
           <div className="plugins-v3__tabs-bar">
@@ -333,7 +351,7 @@ export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnect
             </div>
             <SearchInput query={query} onChange={setQuery} />
           </div>
-          <section className="plugins-v3__host-bar" aria-label={text.host}>
+          <section className="plugins-v3__host-bar settings-group" aria-label={text.host}>
             <div className="plugins-v3__host-bar-row">
               <div className="plugins-v3__host-bar-left">
                 <span className="plugins-v3__connection plugins-v3__connection--closed" data-connection="off">{text.hostOff}</span>
@@ -341,11 +359,11 @@ export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnect
               </div>
             </div>
           </section>
-          <BuiltinPluginsGroup builtins={builtins} hostEnabled={false} query={query} onSelectPlugin={setSelectedId} />
-          {selectedId ? <PluginDetailModal builtin={selectedBuiltin} onClose={() => setSelectedId(null)} /> : null}
+          <BuiltinPluginsGroup builtins={builtins} hostEnabled={false} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
+          {selectedId ? <PluginDetailModal builtin={selectedBuiltin} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
         </>
       ) : null}
-      {hostEnabled === null ? <BuiltinPluginsGroup builtins={builtins} hostEnabled={null} query={query} onSelectPlugin={setSelectedId} /> : null}
+      {hostEnabled === null ? <BuiltinPluginsGroup builtins={builtins} hostEnabled={null} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} /> : null}
     </div>
   );
 }

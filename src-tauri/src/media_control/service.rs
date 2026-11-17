@@ -4,9 +4,15 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 };
 
 use super::audio::{read_system_audio_peak, set_master_volume, AUDIO_ACTIVE_THRESHOLD};
+use super::audio_fallback::{discover_fallback_sessions, list_candidates as fallback_candidates};
+use super::players::CustomMediaPlayer;
 use super::session::*;
 use super::timeline_clock;
 pub(crate) use super::state::{AudioLevel, MediaCommand, MediaState};
+
+pub(crate) fn list_candidates() -> Vec<CustomMediaPlayer> {
+    on_media_thread(|| Ok(fallback_candidates())).unwrap_or_default()
+}
 
 pub(crate) fn get_state(target: Option<String>) -> Result<MediaState, String> {
     on_media_thread(move || read_media_state(target.as_deref()))
@@ -30,13 +36,23 @@ pub(crate) fn run_command(
     on_media_thread(move || {
         if let Some(id) = target.as_deref() {
             let manager = request_manager()?;
-            let session = session_by_id(&manager, id)?
-                .ok_or_else(|| "The selected media source is no longer available.".to_string())?;
-            if run_session_command(&session, command)? {
-                thread::sleep(Duration::from_millis(40));
+            if let Some(session) = session_by_id(&manager, id)? {
+                if run_session_command(&session, command)? {
+                    thread::sleep(Duration::from_millis(40));
+                    return read_media_state_from_manager(&manager, Some(id));
+                }
+                return Err("The selected media source did not accept the command.".to_string());
+            }
+            let fallbacks = discover_fallback_sessions(&list_sessions(&manager), current_unix_millis());
+            if fallbacks.iter().any(|entry| entry.id == id) {
+                let key_command = command
+                    .as_media_key()
+                    .ok_or_else(|| "This player cannot change shuffle or repeat from Fuyu.".to_string())?;
+                send_media_key(key_command);
+                thread::sleep(Duration::from_millis(80));
                 return read_media_state_from_manager(&manager, Some(id));
             }
-            return Err("The selected media source did not accept the command.".to_string());
+            return Err("The selected media source is no longer available.".to_string());
         }
 
         if let Ok(manager) = request_manager() {

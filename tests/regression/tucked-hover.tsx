@@ -6,6 +6,7 @@ import { ISLAND_HOVER_CHANGED_EVENT } from "../../src/windows/island/api";
 import { useIslandNavigation } from "../../src/windows/island/useIslandNavigation";
 import { useTuckPeek } from "../../src/windows/island/useTuckPeek";
 import { useTuckedHoverOpen } from "../../src/windows/island/useTuckedHoverOpen";
+import { until } from "./pollUntil";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 mockIPC(() => null, { shouldMockEvents: true });
@@ -61,14 +62,14 @@ const state = () => `${island.mode}/${island.isTucked ? "tucked" : "out"}`;
 
 async function runChecks() {
   try {
-    await wait(50);
+    await until(() => Boolean(island));
 
     await act(async () => island.minimizeToEdge());
     await arrive();
     await wait(400);
     check(state() === "collapsed/out" && island.isPeeking, "只露出岛屿：鼠标移上去只露出岛屿，不展开面板");
     await hover(false);
-    await wait(450);
+    await until(() => state() === "collapsed/tucked");
     check(state() === "collapsed/tucked", "只露出岛屿：鼠标移开后岛屿收回边缘");
 
     await act(async () => setOpensPanel(true));
@@ -76,16 +77,16 @@ async function runChecks() {
     check(state() === "collapsed/out", "展开面板：先立即露出岛屿");
     await wait(200);
     check(state() === "collapsed/out", "展开面板：露出的动画结束前不展开面板");
-    await wait(400);
+    await until(() => state() === "expanded/out" && island.isPeeking);
     check(state() === "expanded/out" && island.isPeeking, "展开面板：停留后展开面板，仍记得要收回");
     await hover(false);
-    await wait(450);
+    await until(() => state() === "collapsed/tucked");
     check(state() === "collapsed/tucked", "展开面板：鼠标移开后面板关闭，岛屿收回边缘");
 
     await arrive();
     await wait(40);
     await hover(false);
-    await wait(500);
+    await until(() => state() === "collapsed/tucked");
     check(state() === "collapsed/tucked", "鼠标只是划过边缘时不展开面板，岛屿收回");
 
     await arrive();
@@ -94,25 +95,25 @@ async function runChecks() {
     await wait(50);
     check(state() === "collapsed/out", "快速移出时岛屿还没收回");
     await hover(true);
-    await wait(400);
+    await until(() => state() === "expanded/out");
     check(state() === "expanded/out", "快速移出再移入，鼠标停在岛屿上时面板照样展开");
     await hover(false);
-    await wait(450);
+    await until(() => state() === "collapsed/tucked");
     check(state() === "collapsed/tucked", "之后移开，面板关闭、岛屿收回");
 
     await arrive();
-    await wait(400);
+    await until(() => state() === "expanded/out");
     await act(async () => document.querySelector<HTMLInputElement>("#draft")!.focus());
     await hover(false);
     await wait(500);
     check(state() === "expanded/out", "面板里正在输入时，鼠标移开也不收回");
     await act(async () => document.querySelector<HTMLInputElement>("#draft")!.blur());
-    await wait(600);
+    await until(() => state() === "collapsed/tucked");
     check(state() === "collapsed/tucked", "输入框失去焦点后再收回");
 
     await act(async () => island.idleTuck(null));
     await arrive();
-    await wait(400);
+    await until(() => state() === "expanded/out");
     await hover(false);
     await wait(450);
     check(state() === "expanded/out", "没开「鼠标移开后重新收起」时，展开后不自动收回");

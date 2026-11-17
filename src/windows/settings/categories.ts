@@ -14,7 +14,27 @@ export interface SettingsGroupRow {
 
 export const DEFAULT_SETTINGS_CATEGORY: SettingsCategory = "overview";
 
-const registered = (): Categories => categorySlot.items();
+const NullPage = () => null;
+
+function shellCategories(items: Categories = categorySlot.items()): Categories {
+  if (items.length === 0) return items;
+  const present = new Set<string>(items.map((item) => item.id));
+  const extras: Category[] = [];
+  BUILTIN_CATEGORIES.forEach((builtin, index) => {
+    if (present.has(builtin.id) || !("feature" in builtin)) return;
+    extras.push({
+      ...builtin,
+      id: builtin.id,
+      owner: "builtin",
+      order: index - BUILTIN_CATEGORIES.length,
+      component: NullPage,
+    } as unknown as Category);
+  });
+  if (extras.length === 0) return items;
+  return [...items, ...extras].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
+}
+
+const registered = (): Categories => shellCategories();
 const idOf = (item: Category) => item.id as SettingsCategory;
 const find = (category: string) => registered().find((item) => item.id === category);
 const entryIn = (category: SettingsCategory, items: Categories) => items.find((item) => item.tabs?.includes(category));

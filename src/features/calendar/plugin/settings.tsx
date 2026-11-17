@@ -8,10 +8,4 @@ type PageProps = {
   onSettingsChange(settings: IslandSettings): void;
 };
 
-const calendarPage = (tab: "calendar" | "calendarSources") =>
-  function CalendarPage({ settings, onSettingsChange }: PageProps) {
-    return <CalendarSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
-  };
-
-addSettingsCategory("calendar", calendarPage("calendar"), OWNER);
-addSettingsCategory("calendarSources", calendarPage("calendarSources"), OWNER);
+addSettingsCategory("calendar", ({ settings, onSettingsChange }: PageProps) => <CalendarSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);

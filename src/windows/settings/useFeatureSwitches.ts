@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
-import { switchBuiltinPlugin } from "../../features/plugin-kernel/builtinSwitches";
-import { useBuiltinEnabled } from "../../features/plugin-kernel/useBuiltinPlugins";
+import { isBuiltinEnabled, switchBuiltinPlugin } from "../../features/plugin-kernel/builtinSwitches";
+import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { useVoiceInputSettings } from "../../features/voice-input/useVoiceInputSettings";
 import { pagesOfFeaturesOff, type SettingsCategory, type SettingsFeature } from "./categories";
 
@@ -9,41 +9,47 @@ export type FeatureSwitch = { on: boolean; set: (on: boolean) => void };
 
 export type FeatureSwitches = Record<SettingsFeature, FeatureSwitch>;
 
-type FlagKey = "todoEnabled" | "calendarEnabled" | "musicEnabled" | "translationEnabled" | "shelfEnabled" | "screenshotEnabled" | "agentStatusEnabled";
-
-const FLAGS: Record<Exclude<SettingsFeature, "clipboard" | "voiceInput">, FlagKey> = {
-  todos: "todoEnabled",
-  calendar: "calendarEnabled",
-  music: "musicEnabled",
-  translation: "translationEnabled",
-  shelf: "shelfEnabled",
-  screenshot: "screenshotEnabled",
-  agents: "agentStatusEnabled",
+const PLUGINS: Record<Exclude<SettingsFeature, "voiceInput">, { id: string; fallback?: keyof IslandSettings }> = {
+  todos: { id: "todos", fallback: "todoEnabled" },
+  calendar: { id: "calendar", fallback: "calendarEnabled" },
+  music: { id: "music", fallback: "musicEnabled" },
+  translation: { id: "translation", fallback: "translationEnabled" },
+  clipboard: { id: "clipboard" },
+  shelf: { id: "file-shelf", fallback: "shelfEnabled" },
+  screenshot: { id: "screenshot", fallback: "screenshotEnabled" },
+  agents: { id: "agents", fallback: "agentStatusEnabled" },
 };
 
 export function useFeatureSwitches(
   settings: IslandSettings,
-  onSettingsChange: (update: (current: IslandSettings) => IslandSettings) => void,
+  _onSettingsChange?: (update: (current: IslandSettings) => IslandSettings) => void,
 ): { switches: FeatureSwitches; hiddenPages: ReadonlySet<SettingsCategory> } {
-  const clipboard = useBuiltinEnabled("clipboard");
+  const plugins = useBuiltinPlugins();
   const [voice, updateVoice] = useVoiceInputSettings();
   return useMemo(() => {
-    const flag = (key: FlagKey): FeatureSwitch => ({
-      on: settings[key],
-      set: (on) => onSettingsChange((current) => ({ ...current, [key]: on })),
-    });
+    const plugin = (feature: Exclude<SettingsFeature, "voiceInput">): FeatureSwitch => {
+      const { id, fallback } = PLUGINS[feature];
+      const defaultOn = fallback ? Boolean(settings[fallback]) : true;
+      return {
+        on: isBuiltinEnabled(plugins, id, defaultOn),
+        set: (enabled) => void switchBuiltinPlugin(id, enabled).catch((error: unknown) => console.error(`Could not switch the ${id} plugin`, error)),
+      };
+    };
     const switches: FeatureSwitches = {
-      todos: flag(FLAGS.todos),
-      calendar: flag(FLAGS.calendar),
-      music: flag(FLAGS.music),
-      translation: flag(FLAGS.translation),
-      clipboard: { on: clipboard, set: (enabled) => void switchBuiltinPlugin("clipboard", enabled).catch((error: unknown) => console.error("Could not switch the clipboard plugin", error)) },
-      shelf: flag(FLAGS.shelf),
-      screenshot: flag(FLAGS.screenshot),
-      voiceInput: { on: voice.enabled, set: (enabled) => updateVoice({ ...voice, enabled }) },
-      agents: flag(FLAGS.agents),
+      todos: plugin("todos"),
+      calendar: plugin("calendar"),
+      music: plugin("music"),
+      translation: plugin("translation"),
+      clipboard: plugin("clipboard"),
+      shelf: plugin("shelf"),
+      screenshot: plugin("screenshot"),
+      voiceInput: {
+        on: isBuiltinEnabled(plugins, "voice-input", voice.enabled),
+        set: (enabled) => updateVoice({ ...voice, enabled }),
+      },
+      agents: plugin("agents"),
     };
     const on = Object.fromEntries(Object.entries(switches).map(([feature, value]) => [feature, value.on])) as Record<SettingsFeature, boolean>;
     return { switches, hiddenPages: pagesOfFeaturesOff(on) };
-  }, [settings, clipboard, voice, onSettingsChange, updateVoice]);
+  }, [plugins, settings, voice, updateVoice]);
 }

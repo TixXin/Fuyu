@@ -1,0 +1,159 @@
+.fuyu-pomodoro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-pomodoro__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-pomodoro__clock-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-pomodoro__clock {
+  flex-shrink: 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-pomodoro__subtitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-pomodoro__rounds {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-pomodoro__bar {
+  height: 4px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  overflow: hidden;
+}
+
+.fuyu-pomodoro__bar-fill {
+  height: 100%;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-accent);
+}
+
+.fuyu-pomodoro__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fuyu-pomodoro__button {
+  max-width: 100%;
+  padding: 5px 12px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  font-weight: 500;
+  color: var(--fuyu-plugin-on-accent);
+  background: var(--fuyu-plugin-accent);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-pomodoro__todos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fuyu-pomodoro__section-label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-pomodoro__list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fuyu-pomodoro__todo {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  text-align: left;
+  color: var(--fuyu-plugin-text-secondary);
+  background: var(--fuyu-plugin-surface);
+  cursor: pointer;
+}
+
+.fuyu-pomodoro__todo:hover {
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-pomodoro__todo--selected {
+  border-color: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-pomodoro__todo-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-pomodoro__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-pomodoro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 12px;
+  color: var(--fuyu-plugin-accent);
+  white-space: nowrap;
+}
+
+.fuyu-pomodoro-chip__time {
+  font-variant-numeric: tabular-nums;
+  color: var(--fuyu-plugin-text);
+}

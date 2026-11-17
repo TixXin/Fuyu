@@ -141,31 +141,27 @@
 
 .settings-group__card > .about-links {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: 10px;
-  padding: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 158px), 1fr));
+  gap: 8px;
+  padding: 10px;
 }
 
 .about-links .project-link {
   position: relative;
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-columns: 32px minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
-  padding: 14px 32px 14px 14px;
-  transition: background var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease);
-}
-
-.about-links .project-link:hover {
-  transform: translateY(-1px);
+  gap: 10px;
+  padding: 11px 26px 11px 11px;
+  transition: background var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease);
 }
 
 .about-links .project-link__icon {
   box-sizing: content-box;
-  padding: 8px;
+  padding: 7px;
   color: var(--project-link-tone, var(--color-accent));
   background: color-mix(in srgb, var(--project-link-tone, var(--color-accent)) 15%, transparent);
-  border-radius: 10px;
+  border-radius: 9px;
 }
 
 .about-links .project-link__arrow {
@@ -194,10 +190,4 @@
 
 .about-links .project-link--release:is(:hover, :focus-visible) .project-link__icon {
   color: var(--project-link-tone);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .about-links .project-link:hover {
-    transform: none;
-  }
 }

@@ -1,6 +1,6 @@
 use base64::Engine;
 use std::{
-    sync::{Mutex, OnceLock},
+    sync::{mpsc, Mutex, OnceLock, PoisonError},
     thread,
     time::Duration,
 };
@@ -20,6 +20,9 @@ use windows::{
 };
 
 use super::audio::{read_master_volume, read_system_audio_peak, AUDIO_ACTIVE_THRESHOLD};
+use super::audio_fallback::{discover_fallback_sessions, state_from_fallback};
+pub(super) use super::players::friendly_app_label;
+use super::players::normalize_metadata_track;
 use super::service::*;
 use super::timeline_clock::{self, track_key, Published};
 pub(super) use super::state::{current_unix_millis, MediaSessionInfo};
@@ -32,19 +35,67 @@ pub(super) type CachedThumbnail = (String, Option<String>);
 
 pub(super) static THUMBNAIL_CACHE: OnceLock<Mutex<Option<CachedThumbnail>>> = OnceLock::new();
 
+const MEDIA_CALL_TIMEOUT: Duration = Duration::from_secs(3);
+
+type MediaJob = Box<dyn FnOnce() + Send + 'static>;
+
+static MEDIA_WORKER: Mutex<Option<mpsc::Sender<MediaJob>>> = Mutex::new(None);
+
+fn spawn_media_worker() -> Result<mpsc::Sender<MediaJob>, String> {
+    let (tx, rx) = mpsc::channel::<MediaJob>();
+    thread::Builder::new()
+        .name("media-com-worker".into())
+        .spawn(move || {
+            let Ok(_apartment) = win32::com::ComApartment::multithreaded() else {
+                return;
+            };
+            while let Ok(job) = rx.recv() {
+                let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(job));
+            }
+        })
+        .map_err(|error| format!("Could not start the Windows media control thread: {error}"))?;
+    Ok(tx)
+}
+
 pub(super) fn on_media_thread<T, F>(operation: F) -> Result<T, String>
 where
     T: Send + 'static,
     F: FnOnce() -> Result<T, String> + Send + 'static,
 {
-    thread::spawn(move || {
-        let _apartment = win32::com::ComApartment::multithreaded()
-            .map_err(|error| media_error("Failed to initialize the media COM thread", error))?;
-
-        operation()
-    })
-    .join()
-    .map_err(|_| "The Windows media control thread panicked.".to_string())?
+    let (reply_tx, reply_rx) = mpsc::channel();
+    let job: MediaJob = Box::new(move || {
+        let _ = reply_tx.send(operation());
+    });
+    let mut guard = MEDIA_WORKER.lock().unwrap_or_else(PoisonError::into_inner);
+    let mut pending = Some(job);
+    if let Some(worker) = guard.as_ref() {
+        match worker.send(pending.take().unwrap_or_else(|| Box::new(|| {}))) {
+            Ok(()) => {}
+            Err(error) => {
+                pending = Some(error.0);
+                *guard = None;
+            }
+        }
+    }
+    if let Some(job) = pending {
+        let worker = spawn_media_worker()?;
+        worker
+            .send(job)
+            .map_err(|_| "The Windows media control thread exited immediately.".to_string())?;
+        *guard = Some(worker);
+    }
+    drop(guard);
+    match reply_rx.recv_timeout(MEDIA_CALL_TIMEOUT) {
+        Ok(result) => result,
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            *MEDIA_WORKER.lock().unwrap_or_else(PoisonError::into_inner) = None;
+            Err("The Windows media control call timed out.".to_string())
+        }
+        Err(mpsc::RecvTimeoutError::Disconnected) => {
+            *MEDIA_WORKER.lock().unwrap_or_else(PoisonError::into_inner) = None;
+            Err("The Windows media control thread panicked.".to_string())
+        }
+    }
 }
 
 pub(super) fn request_manager() -> Result<MediaSessionManager, String> {
@@ -262,12 +313,40 @@ pub(super) fn read_media_state_from_manager(
     manager: &MediaSessionManager,
     target: Option<&str>,
 ) -> Result<MediaState, String> {
+    let now_ms = current_unix_millis();
     let audio_peak = read_system_audio_peak().unwrap_or(0.0);
     let audio_active = audio_peak > AUDIO_ACTIVE_THRESHOLD;
     let volume = read_master_volume().unwrap_or(-1.0);
-    let sessions = list_sessions(manager);
+    let smtc_sessions = list_sessions(manager);
+    let fallback_sessions = discover_fallback_sessions(&smtc_sessions, now_ms);
+    let mut sessions = smtc_sessions;
+    for entry in &fallback_sessions {
+        if !sessions.iter().any(|existing| existing.id == entry.id) {
+            sessions.push(MediaSessionInfo {
+                id: entry.id.clone(),
+                label: entry.label.clone(),
+                playing: entry.playing,
+            });
+        }
+    }
 
-    let Some(session) = resolve_session(manager, target)? else {
+    if let Some(target_id) = target.filter(|id| !id.is_empty()) {
+        if let Some(fallback) = fallback_sessions.iter().find(|entry| entry.id == target_id) {
+            return Ok(state_from_fallback(fallback, sessions, volume, now_ms));
+        }
+    }
+
+    let resolved = resolve_session(manager, target)?;
+    if !resolved.as_ref().is_some_and(is_playing) {
+        if let Some(playing_fallback) = fallback_sessions.iter().find(|entry| entry.playing) {
+            return Ok(state_from_fallback(playing_fallback, sessions, volume, now_ms));
+        }
+    }
+
+    let Some(session) = resolved else {
+        if let Some(fallback) = fallback_sessions.first() {
+            return Ok(state_from_fallback(fallback, sessions, volume, now_ms));
+        }
         return Ok(MediaState {
             available: false,
             audio_active,
@@ -359,11 +438,30 @@ pub(super) fn read_media_state_from_manager(
         source_app,
         active_session_id: session_id(&session),
         sessions,
-        updated_at: current_unix_millis(),
+        updated_at: now_ms,
     })
 }
 
 pub(super) fn read_media_state_without_session() -> Result<MediaState, String> {
+    let now_ms = current_unix_millis();
+    let volume = read_master_volume().unwrap_or(-1.0);
+    let fallback_sessions = discover_fallback_sessions(&[], now_ms);
+    if let Some(fallback) = fallback_sessions
+        .iter()
+        .find(|entry| entry.playing)
+        .or_else(|| fallback_sessions.first())
+    {
+        let sessions = fallback_sessions
+            .iter()
+            .map(|entry| MediaSessionInfo {
+                id: entry.id.clone(),
+                label: entry.label.clone(),
+                playing: entry.playing,
+            })
+            .collect();
+        return Ok(state_from_fallback(fallback, sessions, volume, now_ms));
+    }
+
     let audio_peak = read_system_audio_peak().unwrap_or(0.0);
     let audio_active = audio_peak > AUDIO_ACTIVE_THRESHOLD;
 
@@ -376,7 +474,7 @@ pub(super) fn read_media_state_without_session() -> Result<MediaState, String> {
         } else {
             "unavailable"
         },
-        volume: read_master_volume().unwrap_or(-1.0),
+        volume,
         ..MediaState::empty()
     })
 }
@@ -442,8 +540,9 @@ pub(super) fn read_metadata(session: &MediaSession, source_app: Option<&str>) ->
         return Metadata::default();
     };
 
-    let title = non_empty(properties.Title().ok().map(|value| value.to_string()));
-    let artist = non_empty(properties.Artist().ok().map(|value| value.to_string()));
+    let raw_title = non_empty(properties.Title().ok().map(|value| value.to_string()));
+    let raw_artist = non_empty(properties.Artist().ok().map(|value| value.to_string()));
+    let (title, artist) = normalize_metadata_track(raw_title, raw_artist, source_app);
     let album = non_empty(properties.AlbumTitle().ok().map(|value| value.to_string()));
     let thumbnail = cached_thumbnail(source_app, title.as_deref(), artist.as_deref(), || {
         properties.Thumbnail().ok()
@@ -532,56 +631,6 @@ pub(super) fn repeat_mode_label(mode: RepeatMode) -> &'static str {
         RepeatMode::List => "list",
         _ => "unknown",
     }
-}
-
-pub(super) fn friendly_app_label(id: &str) -> String {
-    let lowered = id.to_ascii_lowercase();
-    let known = [
-        ("spotify", "Spotify"),
-        ("chrome", "Chrome"),
-        ("msedge", "Edge"),
-        ("edge", "Edge"),
-        ("firefox", "Firefox"),
-        ("brave", "Brave"),
-        ("opera", "Opera"),
-        ("vlc", "VLC"),
-        ("itunes", "iTunes"),
-        ("apple.music", "Apple Music"),
-        ("applemusic", "Apple Music"),
-        ("music.ui", "Apple Music"),
-        ("tidal", "TIDAL"),
-        ("deezer", "Deezer"),
-        ("foobar", "foobar2000"),
-        ("aimp", "AIMP"),
-        ("netease", "NetEase Music"),
-        ("cloudmusic", "NetEase Music"),
-        ("qqmusic", "QQ Music"),
-        ("kugou", "KuGou"),
-        ("kuwo", "Kuwo"),
-        ("potplayer", "PotPlayer"),
-        ("winamp", "Winamp"),
-        ("zune", "Groove"),
-        ("groove", "Groove"),
-    ];
-
-    for (needle, label) in known {
-        if lowered.contains(needle) {
-            return label.to_string();
-        }
-    }
-
-    if let Some(stripped) = lowered.strip_suffix(".exe") {
-        if let Some(name) = stripped.rsplit(['\\', '/']).next() {
-            if !name.is_empty() {
-                let mut chars = name.chars();
-                if let Some(first) = chars.next() {
-                    return first.to_uppercase().collect::<String>() + chars.as_str();
-                }
-            }
-        }
-    }
-
-    id.to_string()
 }
 
 pub(super) fn non_empty(value: Option<String>) -> Option<String> {

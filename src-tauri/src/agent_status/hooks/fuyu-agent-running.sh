@@ -1,9 +1,14 @@
 #!/bin/sh
 provider=$1
 case "$provider" in
-  codex|claudeCode|workbuddy|dsh|qoder|codebuddy|qwen|zcode|kimiCode|grok|copilot|droid) ;;
+  codex|claudeCode|workbuddy|dsh|qoder|codebuddy|qwen|zcode|kimiCode|grok|copilot|droid|pi) ;;
   antigravity) case "$2" in start|running|stop) ;; *) exit 2 ;; esac ;;
   trae|traeCn) case "$2" in running|stop|notification) ;; *) exit 2 ;; esac ;;
+  updatedAt|statusPath|others|"") exit 2 ;;
+  [A-Za-z]*)
+    case "$provider" in *[!A-Za-z0-9_-]*) exit 2 ;; esac
+    [ "${#provider}" -le 32 ] || exit 2
+    ;;
   *) exit 2 ;;
 esac
 marker="agent-$provider-running.flag"

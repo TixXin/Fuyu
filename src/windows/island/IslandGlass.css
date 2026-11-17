@@ -98,15 +98,15 @@
 
 .island__glass-highlight {
   top: 2px;
-  left: var(--glass-pointer-x);
+  left: 0;
   width: 42%;
   height: 2px;
   border-radius: var(--radius-pill);
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.82), transparent);
   filter: blur(0.4px);
   opacity: var(--glass-highlight-opacity);
-  transform: translateX(-50%);
-  transition: left var(--motion-medium) var(--motion-ease);
+  transform: translateX(calc(var(--glass-pointer-x) * 100 / 42 - 50%));
+  transition: transform var(--motion-medium) var(--motion-ease);
 }
 
 .island--appearance-liquidGlass.island--collapsed {
@@ -177,4 +177,18 @@
   .island--appearance-liquidGlass.island--collapsed .island__glass::after {
     animation: none;
   }
+}
+
+.island--appearance-liquidGlass.island--glass-hidden {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.island--appearance-liquidGlass.island--glass-hidden .island__glass {
+  display: none;
+}
+
+.island--tucked .island__glass::before,
+.island--tucked .island__glass-highlight {
+  display: none;
 }

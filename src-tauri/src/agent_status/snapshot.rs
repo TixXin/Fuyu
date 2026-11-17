@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::harness;
+use super::third_party::{is_third_party_id, ThirdPartyAgentStatus};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -33,6 +34,8 @@ pub(super) type AgentStatuses = BTreeMap<&'static str, AgentTaskStatus>;
 pub(super) struct PersistedAgentStatus {
     #[serde(flatten)]
     pub(super) agents: AgentStatuses,
+    #[serde(flatten, skip_serializing_if = "BTreeMap::is_empty")]
+    pub(super) third_party: BTreeMap<String, ThirdPartyAgentStatus>,
     pub(super) updated_at: i64,
 }
 
@@ -57,7 +60,19 @@ impl TryFrom<StoredAgentStatus> for PersistedAgentStatus {
             };
             agents.insert(id, status);
         }
-        Ok(Self { agents, updated_at: stored.updated_at })
+        let mut third_party = BTreeMap::new();
+        for (id, value) in stored.agents {
+            if is_third_party_id(&id) && value.is_object() {
+                if let Ok(status) = serde_json::from_value::<ThirdPartyAgentStatus>(value) {
+                    third_party.insert(id, status);
+                }
+            }
+        }
+        Ok(Self {
+            agents,
+            third_party,
+            updated_at: stored.updated_at,
+        })
     }
 }
 
@@ -93,6 +108,7 @@ fn default_agent_statuses() -> AgentStatuses {
 pub(super) fn default_persisted_agent_status() -> PersistedAgentStatus {
     PersistedAgentStatus {
         agents: default_agent_statuses(),
+        third_party: BTreeMap::new(),
         updated_at: current_unix_millis(),
     }
 }
@@ -101,19 +117,26 @@ pub(super) fn agent_status_snapshot_from_persisted(
     persisted: PersistedAgentStatus,
     status_path: String,
 ) -> AgentStatusSnapshot {
+    let updated_at = if persisted.updated_at > 0 {
+        persisted.updated_at
+    } else {
+        current_unix_millis()
+    };
+    let mut others: Vec<_> = persisted
+        .third_party
+        .into_iter()
+        .map(|(id, status)| status.to_external(&id, updated_at))
+        .collect();
+    others.extend(super::external::current());
     AgentStatusSnapshot {
         agents: persisted
             .agents
             .into_iter()
             .map(|(id, status)| (id, normalize_agent_task_status(status)))
             .collect(),
-        updated_at: if persisted.updated_at > 0 {
-            persisted.updated_at
-        } else {
-            current_unix_millis()
-        },
+        updated_at,
         status_path,
-        others: super::external::current(),
+        others,
     }
 }
 

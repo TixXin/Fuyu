@@ -56,8 +56,9 @@ objc2::define_class!(
 );
 
 const LEVELS_ABOVE_MENU_BAR: i64 = 3;
-const TOP_SPACE_CHECK: std::time::Duration = std::time::Duration::from_secs(2);
 const OVERLAY_ABOVE_ISLAND: i64 = 1;
+const STARTUP_WAKE_STEP: std::time::Duration = std::time::Duration::from_millis(1500);
+const STARTUP_WAKE_LIMIT: u32 = 40;
 
 pub(crate) fn make_overlay_panel(window: &WebviewWindow) -> Result<u32, String> {
     let panel = window.to_panel::<OverlayPanel>().map_err(|error| error.to_string())?;
@@ -87,7 +88,7 @@ pub(crate) fn make_preview_panel(window: &WebviewWindow) -> Result<(), String> {
     float_above_island(window, window.to_panel::<PreviewPanel>().map_err(|error| error.to_string())?)
 }
 
-fn float_above_island(window: &WebviewWindow, panel: PanelHandle<tauri::Wry>) -> Result<(), String> {
+pub(super) fn float_above_island(window: &WebviewWindow, panel: PanelHandle<tauri::Wry>) -> Result<(), String> {
     panel.set_level(PanelLevel::MainMenu.value() + LEVELS_ABOVE_MENU_BAR + POPUP_ABOVE_ISLAND);
     panel.set_collection_behavior(
         CollectionBehavior::new()
@@ -102,7 +103,11 @@ fn float_above_island(window: &WebviewWindow, panel: PanelHandle<tauri::Wry>) ->
 }
 
 pub(crate) fn forget_panel<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) {
-    let _ = app.remove_webview_panel(label);
+    if let Ok(panel) = app.get_webview_panel(label) {
+        let mask = panel.as_panel().styleMask() & !objc2_app_kit::NSWindowStyleMask::NonactivatingPanel;
+        let _ = panel.set_style_mask(mask);
+        let _ = panel.to_window();
+    }
 }
 
 pub(crate) fn show_panel_without_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) -> bool {
@@ -139,7 +144,20 @@ pub(crate) fn make_panel(window: &WebviewWindow) -> Result<(), String> {
     if let Err(error) = look_key_while_hovered(panel.as_panel()) {
         eprintln!("{error}");
     }
+    keep_startup_webview_awake(window.clone());
     Ok(())
+}
+
+fn keep_startup_webview_awake(window: WebviewWindow) {
+    let _ = std::thread::Builder::new().name("island-startup-wake".into()).spawn(move || {
+        for _ in 0..STARTUP_WAKE_LIMIT {
+            std::thread::sleep(STARTUP_WAKE_STEP);
+            if window.is_visible().unwrap_or(true) {
+                break;
+            }
+            let _ = window.eval("0");
+        }
+    });
 }
 
 fn look_key_while_hovered(panel: &objc2_app_kit::NSPanel) -> Result<(), String> {
@@ -187,12 +205,9 @@ pub(crate) fn island_has_real_key<R: tauri::Runtime>(app: &tauri::AppHandle<R>, 
     }
 }
 
-pub(crate) fn keep_in_top_space(window: WebviewWindow) {
-    let _ = std::thread::Builder::new().name("island-top-space".into()).spawn(move || loop {
-        let target = window.clone();
-        let _ = window.run_on_main_thread(move || pin_to_top_space(&target));
-        std::thread::sleep(TOP_SPACE_CHECK);
-    });
+pub(crate) fn refresh_top_space(window: &WebviewWindow) {
+    let target = window.clone();
+    let _ = window.run_on_main_thread(move || pin_to_top_space(&target));
 }
 
 fn pin_to_top_space(window: &WebviewWindow) {

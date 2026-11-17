@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Sparkles } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { useDevBuild } from "../../lib/platform";
 import { useOpenInBrowser } from "./useOpenInBrowser";
 import { getUpdateState, subscribeToUpdate, type UpdateState } from "./updaterController";
 import "./AboutHero.css";
@@ -9,9 +10,13 @@ type Tone = "ok" | "new" | "busy" | "error" | "muted";
 
 const GREETING_MS = 2_600;
 
-function heroStatus(state: UpdateState, text: ReturnType<typeof useTranslation>["settings"]["project"]["hero"]): [string, Tone] | null {
+function heroStatus(
+  state: UpdateState,
+  devBuild: boolean,
+  text: ReturnType<typeof useTranslation>["settings"]["project"]["hero"],
+): [string, Tone] | null {
   switch (state.stage) {
-    case "disabled": return null;
+    case "disabled": return devBuild ? [text.devIsland, "ok"] : null;
     case "idle": return [text.idle, "muted"];
     case "checking": return [text.checking, "busy"];
     case "latest": return [text.latest, "ok"];
@@ -24,12 +29,32 @@ function heroStatus(state: UpdateState, text: ReturnType<typeof useTranslation>[
   }
 }
 
+export function AboutLogoCallLink() {
+  const text = useTranslation().settings.project;
+  const { onClick } = useOpenInBrowser();
+
+  return (
+    <a
+      className="about-logo-pill"
+      href={text.logoCallUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={onClick}
+      aria-label={text.logoCall}
+    >
+      <Sparkles size={12} strokeWidth={1.8} aria-hidden="true" />
+      <span>{text.logoCredit}</span>
+      <strong>{text.logoOpen}</strong>
+    </a>
+  );
+}
+
 export function AboutHero() {
   const t = useTranslation();
   const text = t.settings.project;
+  const devBuild = useDevBuild();
   const state = useSyncExternalStore(subscribeToUpdate, getUpdateState);
-  const { failed, onClick } = useOpenInBrowser();
-  const status = heroStatus(state, text.hero);
+  const status = heroStatus(state, devBuild, text.hero);
   const [greeting, setGreeting] = useState<number | null>(null);
   const taps = useRef(0);
   const timer = useRef<number | undefined>(undefined);
@@ -45,45 +70,34 @@ export function AboutHero() {
 
   return (
     <section className={greeting !== null ? "about-hero about-hero--greeting" : "about-hero"} aria-label={text.appName}>
-      <div className="about-hero__scene" aria-hidden="true">
-        <i /><i /><i /><i /><i /><i />
-        <span className="about-hero__sea"><b /><b /><b /></span>
-      </div>
-      <a
-        className="about-identity__slot about-hero__logo"
-        href={text.logoCallUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={onClick}
-        aria-label={text.logoCall}
-        title={text.logoCall}
+      <button
+        className="about-hero__emblem"
+        type="button"
+        onClick={greet}
+        aria-label={text.hero.greet}
       >
-        <span aria-hidden="true">?</span>
-      </a>
+        <span className="about-hero__emblem-pill" aria-hidden="true" />
+        <span className="about-hero__emblem-wave" aria-hidden="true" />
+      </button>
       <div className="about-hero__body">
         <div className="about-hero__heading">
           <p className="about-hero__name">{text.appName}</p>
           {state.version ? <span className="about-hero__tag">{text.versionChip(state.version)}</span> : null}
-          {state.stage === "disabled" ? null : (
+          {devBuild ? (
+            <span className="about-hero__tag about-hero__tag--beta">{text.hero.devTag}</span>
+          ) : state.stage === "disabled" ? null : (
             <span className={`about-hero__tag${state.channel === "beta" ? " about-hero__tag--beta" : ""}`}>
               {state.channel === "beta" ? text.hero.beta : text.hero.stable}
             </span>
           )}
         </div>
         <p className="about-hero__description">{text.description}</p>
-        <a className="about-identity__credit" href={text.logoCallUrl} target="_blank" rel="noopener noreferrer" onClick={onClick}>
-          <Sparkles size={12} strokeWidth={1.8} aria-hidden="true" />
-          <span>{text.logoCredit}</span>
-          <strong>{text.logoOpen}</strong>
-        </a>
-        {failed ? <p className="project-link-error" role="alert">{text.openFailed}</p> : null}
       </div>
       <div className="about-hero__side">
         <button
           className={`about-hero__island about-hero__island--${greeting !== null ? "ok" : status?.[1] ?? "ok"}`}
           type="button"
           aria-label={text.hero.greet}
-          title={text.hero.greet}
           onClick={greet}
         >
           <i />

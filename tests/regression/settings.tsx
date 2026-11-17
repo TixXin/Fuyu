@@ -78,7 +78,7 @@ if (!automated) {
     await act(async () => { mount(); });
     check(categories().length > 0, "The sidebar lists the settings pages");
 
-    const pages = [...categories(), "generalData", "generalApi", "theme", "themeStyle", "themeGlass", "appearance", "appearanceCollapsed", "themePresets", "themeMarket", "behaviorTuck", "behaviorQuiet", "shortcutsIsland", "shortcutsReference", "todosStorage", "calendarSources", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "clipboardData", "timerAlerts", "timerBreaks", "behaviorAlerts", "messagesIm", "messagesMail", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote", "agentTunnel", "aboutHistory", "aboutHelp"];
+    const pages = [...categories(), "generalData", "generalSync", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket", "behaviorTuck", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "messagesMail", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote"];
     for (const category of pages) {
       await openPage(category as SettingsCategory);
       const item = element(`.settings-sidebar__item[data-category='${sidebarItemOf(category as SettingsCategory)}']`);
@@ -207,12 +207,11 @@ if (!automated) {
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-group__header .settings-link-button")].find((link) => link.textContent === "全部快捷键 ›")?.click(); });
     check(element(".settings-page__title").textContent === "快捷键", "A feature page's shortcut group links back to all shortcuts");
     await openPage("behavior");
-    check(texts(".settings-tabs__tab") === "展开与收起|贴边隐藏|全屏与免打扰" && !texts(".settings-group__title").includes("页面切换") && texts(".settings-cards__label") === "点击|鼠标悬停", "Behavior has three tabs; opening is chosen from two picture cards, and page keys are no longer repeated here");
+    check(texts(".settings-tabs__tab") === "展开与收起|贴边隐藏" && !texts(".settings-group__title").includes("页面切换") && texts(".settings-cards__label") === "点击|鼠标悬停", "Behavior has two tabs; opening is chosen from two picture cards, and page keys are no longer repeated here");
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "去设置")?.click(); });
     check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps");
     await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
-    await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时器|休息提醒|系统提示" && texts(".settings-group__title") === "计时器" && texts(".settings-row__title") === "到点响一声", "Timer & alerts has three tabs starting with the timer's sound");
-    await openPage("timerBreaks"); check(texts(".settings-group__title") === "休息提醒" && texts(".settings-row__title") === "休息提醒" && !document.querySelector(".break-reminder-row"), "Break reminders tab shows break reminders, off with no items shown");
+    await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时与休息|系统提示" && texts(".settings-group__title") === "计时器|休息提醒" && texts(".settings-row__title") === "到点响一声|休息提醒" && !document.querySelector(".break-reminder-row"), "Timer & alerts has two tabs starting with the timer's sound and break reminders");
     await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示", "Volume, headphones and camera alerts are one group on the System alerts tab");
     await openPage("general"); check(texts(".settings-group__title") === "启动与语言" && !texts(".settings-row__title").includes("最小化按钮"), "General opens on startup and language");
     await openPage("generalData"); check(texts(".settings-group__title") === "数据|升级前的备份" && texts(".settings-row__title").includes("0.3.9 → 0.4.0") && !document.querySelector(".settings-backup__status--error"), "Data and backup tab shows data folder, backup and pre-update backups");
@@ -233,7 +232,7 @@ if (!automated) {
     check(storedSettings().opacity === 60 && document.querySelector(".appearance-reset"), "Cancelling keeps the appearance");
     await click(".appearance-reset"); await click(".appearance-reset--danger");
     check(storedSettings().opacity === DEFAULT_SETTINGS.opacity && storedSettings().carryOverIncompleteTodos === false, "Confirming resets the appearance and keeps todo settings");
-    await openPage("themeGlass"); await checkGlassLooks(check);
+    await openPage("themeStyle"); await checkGlassLooks(check);
     await openPage("appearanceCollapsed");
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
@@ -344,9 +343,7 @@ if (!automated) {
     check(replyMarkerCalls.join() === "true" && markerSwitch!.checked, "Switching the reply status marker on writes it");
 
     await openPage("agentRemote"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
-    check(/devbox.*nas/s.test(element(".editor-panel").textContent ?? ""), "The remote computers page lists the SSH hosts to read sessions from");
-    await openPage("agentTunnel"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
-    check(texts(".settings-group__title").includes("SSH 代理隧道"), "The SSH tunnel tab shows the SSH proxy tunnel section");
+    check(/devbox.*nas/s.test(element(".editor-panel").textContent ?? "") && texts(".settings-group__title").includes("SSH 代理隧道"), "The SSH remote page lists both the remote hosts and the SSH proxy tunnel section");
     await openPage("agents"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     check(agentPolls() > pollsAway, "The on-the-island page reads the agents' state");
     const agentGroups = [...document.querySelectorAll<HTMLElement>(".editor-panel .settings-group")], hooksGroup = agentGroups.find((group) => group.textContent?.includes("AI Agent 状态灯"));
@@ -354,6 +351,9 @@ if (!automated) {
     check(hooksLink && agentGroups.indexOf(hooksGroup!) <= 1 && hooksGroup!.querySelector(".agent-hooks-message--attention"), "The on-the-island page opens with the status light card, which says the hooks are missing and has Install/repair");
     await act(async () => { hooksLink!.click(); await new Promise(resolve => setTimeout(resolve, 20)); });
     check(commands.includes("install_agent_status_hooks") && element(".settings-tabs__tab--active").dataset.tab === "agents", "Install/repair on the on-the-island page installs the hooks there");
+    const primaryCards = [...document.querySelectorAll<HTMLElement>(".agent-provider-grid:not(.agent-provider-grid--more) .agent-provider-card")], moreToggle = element<HTMLButtonElement>(".agent-providers__more-toggle");
+    check(primaryCards.map((card) => card.dataset.provider).join("|") === "codex|claudeCode" && moreToggle.getAttribute("aria-expanded") === "false", "Detected agents are shown in the primary grid while undetected ones start folded");
+    await act(async () => { moreToggle.click(); }); check(moreToggle.getAttribute("aria-expanded") === "true" && document.querySelectorAll(".agent-provider-grid--more .agent-provider-card").length > 0, "Expanding more agents reveals the rest of the supported agents");
     localStorage.removeItem("fuyu-agent-session-filters");
     await openPage("agentSessions");
     const filterGroup = () => [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.includes("隐藏会话"))!;
@@ -368,11 +368,10 @@ if (!automated) {
 
     await openPage("about");
     const hero = element(".about-hero");
-    check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && hero.getBoundingClientRect().height >= hero.scrollHeight - 1,
-      "About opens with the app's hero card, not clipped");
-    await openPage("aboutHelp");
-    check(document.querySelectorAll(".about-links .project-link").length === 4
-      && texts(".settings-group__title").includes("帮助|重置与退出"), "Links are four tiles; help, then reset and quit, come last");
+    check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && Boolean(hero.querySelector(".about-hero__emblem")) && Boolean(document.querySelector(".about-logo-pill")) && hero.getBoundingClientRect().height >= hero.scrollHeight - 1,
+      "About opens with the app's emblem hero card and logo call pill, not clipped");
+    check(document.querySelectorAll(".about-workbench__col").length === 2 && document.querySelectorAll(".about-links .project-link").length === 4
+      && texts(".settings-group__title").includes("帮助|重置与退出"), "About lays out version and changelog alongside the four link tiles, help, and reset and quit");
     const aboutLink = (label: string) =>
       [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((button) => button.textContent === label);
     await act(async () => { aboutLink("重置")!.click(); });

@@ -1,87 +1,147 @@
-import { CircleAlert } from "lucide-react";
+import { Activity, CircleAlert, CircleCheck, LoaderCircle, TriangleAlert } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
-import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
-import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
 import { useDevBuild } from "../../lib/platform";
 import type { AgentHooksInstallResult, AgentHooksState, AgentStatusSnapshot } from "./api";
 import { RemoteResultLines } from "./RemoteResultLines";
-import { getAgentHooksNotice, getAgentPhaseLabel, getAgentStatusLabel, isAgentAttentionPhase, listAgentStatuses, type AgentHooksInstallState } from "./status";
+import {
+  getAgentHooksNotice,
+  getAgentStatusLabel,
+  getAgentVisualState,
+  type AgentHooksInstallState,
+  type AgentVisualState,
+} from "./status";
 import "./AgentHooksSettingsSection.css";
 
-export function AgentHooksSettingsSection({ agentStatus, clearingAgentProvider, agentHooksInstallState, agentHooksInstallResult, agentHooksInstallError, agentHooksState, onClearAgentStatus, onInstallAgentHooks }: {
+type HooksCardTone = "muted" | "ok" | "warn" | "busy" | "error";
+
+function resolveCardTone(
+  installState: AgentHooksInstallState,
+  hooksNotice: "update" | "install" | null,
+  visualState: AgentVisualState,
+  hooksState: AgentHooksState | null,
+): HooksCardTone {
+  if (installState === "error") return "error";
+  if (installState === "installing") return "busy";
+  if (hooksNotice !== null || visualState === "attention") return "warn";
+  if (visualState === "running" || installState === "installed" || hooksState !== null) return "ok";
+  return "muted";
+}
+
+function HooksStatusIcon({
+  installState,
+  hooksNotice,
+  visualState,
+}: {
+  installState: AgentHooksInstallState;
+  hooksNotice: "update" | "install" | null;
+  visualState: AgentVisualState;
+}) {
+  const props = { size: 20, strokeWidth: 1.9, "aria-hidden": true } as const;
+  if (installState === "installing") return <LoaderCircle className="agent-hooks-card__spinner" {...props} />;
+  if (installState === "error") return <TriangleAlert {...props} />;
+  if (hooksNotice !== null || visualState === "attention") return <CircleAlert {...props} />;
+  if (visualState === "running") return <Activity {...props} />;
+  return <CircleCheck {...props} />;
+}
+
+export function AgentHooksSettingsSection({
+  agentStatus,
+  agentHooksInstallState,
+  agentHooksInstallResult,
+  agentHooksInstallError,
+  agentHooksState,
+  onInstallAgentHooks,
+}: {
   agentStatus: AgentStatusSnapshot;
-  clearingAgentProvider: string | null;
+  clearingAgentProvider?: string | null;
   agentHooksInstallState: AgentHooksInstallState;
   agentHooksInstallResult: AgentHooksInstallResult | null;
   agentHooksInstallError: string;
   agentHooksState: AgentHooksState | null;
-  onClearAgentStatus: (provider: string) => void;
+  onClearAgentStatus?: (provider: string) => void;
   onInstallAgentHooks: () => void;
 }) {
   const t = useTranslation();
   const text = t.settings.agent;
   const devBuild = useDevBuild();
   const hooksNotice = getAgentHooksNotice(agentHooksState);
-  const installLabel = agentHooksInstallState === "installing" ? text.installing : agentHooksInstallState === "installed" ? text.installed : text.install;
+  const visualState = getAgentVisualState(agentStatus);
+  const tone = resolveCardTone(agentHooksInstallState, hooksNotice, visualState, agentHooksState);
+  const installLabel =
+    agentHooksInstallState === "installing"
+      ? text.installing
+      : agentHooksInstallState === "installed"
+        ? text.installed
+        : text.install;
 
-  const footer = agentHooksInstallState === "error" ? (
-    <span className="agent-hooks-message agent-hooks-message--error" role="alert">{agentHooksInstallError}</span>
-  ) : hooksNotice ? (
-    <span className="agent-hooks-message agent-hooks-message--attention" role="status">
-      <CircleAlert size={13} strokeWidth={2.4} aria-hidden="true" />
-      {hooksNotice === "update" ? text.hooksOutdated : text.hooksMissing}
-    </span>
-  ) : agentHooksInstallState === "installed" && agentHooksInstallResult ? (
-    <span className="agent-hooks-message">
-      {text.scriptsDir} <code>{agentHooksInstallResult.scriptsDir}</code>
-      <RemoteResultLines results={agentHooksInstallResult.remotes} />
-      {agentHooksInstallResult.dshBridge && (
-        <span>
-          <br />
-          {text.dshBridge}
-          <code className="agent-hooks-snippet">{agentHooksInstallResult.dshBridge}</code>
-        </span>
-      )}
-    </span>
-  ) : devBuild ? (
-    <span className="agent-hooks-message" role="status">{text.hooksDevBuild}</span>
-  ) : undefined;
+  const statusNote =
+    agentHooksInstallState === "error" ? (
+      <span className="agent-hooks-message agent-hooks-message--error" role="alert">
+        {agentHooksInstallError}
+      </span>
+    ) : hooksNotice ? (
+      <span className="agent-hooks-message agent-hooks-message--attention" role="status">
+        <CircleAlert size={13} strokeWidth={2.4} aria-hidden="true" />
+        {hooksNotice === "update" ? text.hooksOutdated : text.hooksMissing}
+      </span>
+    ) : devBuild ? (
+      <span className="agent-hooks-message" role="status">
+        {text.hooksDevBuild}
+      </span>
+    ) : (
+      <span className="agent-hooks-message" role="status">
+        {text.hooksReady}
+      </span>
+    );
 
   return (
-    <SettingsGroup
-      title={text.title}
-      action={
-        <SettingsLinkButton disabled={agentHooksInstallState === "installing"} onClick={onInstallAgentHooks}>
-          {installLabel}
-        </SettingsLinkButton>
-      }
-      footer={footer}
-    >
-      <SettingsRow title={text.currentStatus} control={<span className="agent-hooks-value">{getAgentStatusLabel(agentStatus, t)}</span>} />
-      {listAgentStatuses(agentStatus)
-        .filter(({ provider, status }) => !provider || status.phase !== "idle" || agentHooksState?.[provider] !== "absent")
-        .map(({ key, label, provider, status }) => {
-        const attention = isAgentAttentionPhase(status.phase);
-        return (
-          <SettingsRow
-            key={key}
-            title={label}
-            control={
-              <>
-                <span className={attention ? "agent-hooks-value agent-hooks-value--attention" : "agent-hooks-value"}>
-                  {getAgentPhaseLabel(status.phase, t)}
+    <SettingsGroup title={text.title}>
+      <div className={`agent-hooks-card agent-hooks-card--${tone}`}>
+        <div className="agent-hooks-card__row">
+          <span className="agent-hooks-card__icon">
+            <HooksStatusIcon installState={agentHooksInstallState} hooksNotice={hooksNotice} visualState={visualState} />
+          </span>
+          <div className="agent-hooks-card__copy">
+            <div className="agent-hooks-card__headline">
+              <span className="agent-hooks-card__label">{text.currentStatus}</span>
+              <strong className={visualState === "attention" ? "agent-hooks-value agent-hooks-value--attention" : "agent-hooks-value"}>
+                {getAgentStatusLabel(agentStatus, t)}
+              </strong>
+            </div>
+            {statusNote}
+          </div>
+          <div className="agent-hooks-card__actions">
+            <button
+              type="button"
+              className={
+                hooksNotice
+                  ? "settings-link-button agent-hooks-card__button agent-hooks-card__button--primary"
+                  : "settings-link-button agent-hooks-card__button"
+              }
+              disabled={agentHooksInstallState === "installing"}
+              onClick={onInstallAgentHooks}
+            >
+              {installLabel}
+            </button>
+          </div>
+        </div>
+        {agentHooksInstallState === "installed" && agentHooksInstallResult ? (
+          <div className="agent-hooks-card__result">
+            <span className="agent-hooks-message">
+              {text.scriptsDir} <code>{agentHooksInstallResult.scriptsDir}</code>
+              <RemoteResultLines results={agentHooksInstallResult.remotes} />
+              {agentHooksInstallResult.dshBridge ? (
+                <span>
+                  <br />
+                  {text.dshBridge}
+                  <code className="agent-hooks-snippet">{agentHooksInstallResult.dshBridge}</code>
                 </span>
-                {attention && !(devBuild && provider) && (
-                  <SettingsLinkButton disabled={clearingAgentProvider === key} onClick={() => onClearAgentStatus(key)}>
-                    {clearingAgentProvider === key ? text.clearing : text.clearStatus}
-                  </SettingsLinkButton>
-                )}
-              </>
-            }
-          />
-        );
-      })}
+              ) : null}
+            </span>
+          </div>
+        ) : null}
+      </div>
     </SettingsGroup>
   );
 }

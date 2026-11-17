@@ -185,6 +185,7 @@ fn hook_input_needs_a_session_and_a_tool() {
     assert!(HookInput::parse(b"not json").is_err());
     assert!(HookInput::parse(hook_body("s", "AskUserQuestion").as_bytes()).unwrap().is_question());
     assert_eq!(route("/codex/permission-request"), Some((Agent::Codex, Kind::Permission)));
+    assert_eq!(route("/pi/permission"), Some((Agent::Pi, Kind::Permission)));
     assert_eq!(route("/"), None);
 }
 
@@ -518,6 +519,7 @@ fn new_agents_have_their_own_routes_and_answers() {
     use super::decision::permission_response;
     assert_eq!(route("/workbuddy/permission-request"), Some((Agent::Workbuddy, Kind::Permission)));
     assert_eq!(route("/antigravity/pre-tool-use"), Some((Agent::Antigravity, Kind::Permission)));
+    assert_eq!(route("/dsh/permission"), Some((Agent::Dsh, Kind::Permission)));
     assert_eq!(route("/dsh/pre-tool-use"), Some((Agent::Dsh, Kind::Permission)));
     assert_eq!(serde_json::to_value(Agent::Workbuddy).unwrap(), json!("workbuddy"));
     assert_eq!(serde_json::to_value(Agent::Dsh).unwrap(), json!("dsh"));
@@ -542,7 +544,7 @@ fn new_agents_have_their_own_routes_and_answers() {
     assert_eq!(copilot(None), json!({}));
     let camel = HookInput::parse_for(Agent::Copilot, br#"{"sessionId":"c1","toolName":"bash","toolArgs":{"command":"ls"}}"#).unwrap();
     assert_eq!((camel.session_id.as_str(), camel.tool_name.as_str(), &camel.tool_input), ("c1", "bash", &json!({"command": "ls"})));
-    for (agent, id) in [(Agent::Trae, "trae"), (Agent::TraeCn, "traeCn")] {
+    for (agent, id) in [(Agent::Trae, "trae"), (Agent::TraeCn, "traeCn"), (Agent::Droid, "droid")] {
         assert_eq!(route(&format!("/{id}/pre-tool-use")), Some((agent, Kind::Permission)));
         assert_eq!(serde_json::to_value(agent).unwrap(), json!(id));
         assert!(agent.lacks_waiting_event());
@@ -553,6 +555,14 @@ fn new_agents_have_their_own_routes_and_answers() {
         assert_eq!(denied["hookSpecificOutput"]["permissionDecisionReason"], "不行");
         assert_eq!(answer(Some(Decision::Terminal))["hookSpecificOutput"]["permissionDecision"], "ask");
         assert_eq!(answer(None), json!({}));
+    }
+    for agent in [Agent::Trae, Agent::TraeCn] {
+        let input = HookInput::parse_for(
+            agent,
+            br#"{"session_id":"t1","tool_name":"Edit","tool_input":{"file_path":"a.ts"},"agent_id":"solo_agent","agent_type":"agent"}"#,
+        )
+        .unwrap();
+        assert_eq!((input.session_id.as_str(), input.tool_name.as_str(), input.agent_id), ("t1", "Edit", None));
     }
     for (agent, id) in [(Agent::Qoder, "qoder"), (Agent::Codebuddy, "codebuddy"), (Agent::Qwen, "qwen")] {
         assert_eq!(route(&format!("/{id}/permission-request")), Some((agent, Kind::Permission)));
@@ -569,11 +579,16 @@ fn new_agents_have_their_own_routes_and_answers() {
     assert_eq!(ag(None), json!({}));
 
     let dsh = |decision| permission_response(Agent::Dsh, decision, None, None);
+    let allowed: Value = serde_json::from_str(&dsh(Some(Decision::Allow))).unwrap();
+    assert_eq!(allowed["outcome"], "allowed-once");
+    assert_eq!(allowed["hookSpecificOutput"]["permissionDecision"], "allow");
     let denied: Value = serde_json::from_str(&dsh(Some(Decision::Deny))).unwrap();
+    assert_eq!(denied["outcome"], "rejected");
+    assert_eq!(denied["reason"], "Denied in Fuyu");
     assert_eq!(denied["hookSpecificOutput"]["permissionDecision"], "deny");
     assert_eq!(denied["hookSpecificOutput"]["permissionDecisionReason"], "Denied in Fuyu");
-    assert_eq!(dsh(Some(Decision::Allow)), "{}");
     assert_eq!(dsh(Some(Decision::Terminal)), "{}");
+    assert_eq!(dsh(None), "{}");
 }
 
 #[test]

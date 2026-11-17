@@ -117,7 +117,7 @@ fn run(app: &AppHandle, action: Action) {
         hide(app);
     }
     match action {
-        Action::ToggleIsland => crate::tray::toggle_island(app),
+        Action::ToggleIsland => crate::tray::toggle_island_from_card(app),
         Action::Screenshot => crate::screenshot::start_from_tray(app),
         Action::Translate => translation::open_translator(app),
         Action::Clipboard => crate::clipboard_history::open_from_tray(),

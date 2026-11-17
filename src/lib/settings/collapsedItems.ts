@@ -16,6 +16,28 @@ const DEFAULT_ORDER: readonly { id: string; zone: CollapsedZone }[] = [
   { id: "session-count", zone: "right" },
 ];
 
+export const COLLAPSED_ITEM_PLUGINS: Readonly<Record<string, string>> = {
+  mail: "messages",
+  update: "updater",
+  "device-use": "device-use",
+  shelf: "file-shelf",
+  music: "music",
+  "session-count": "agents",
+};
+
+export function filterCollapsedItemEntries(
+  entries: readonly (readonly [string, string])[],
+  disabledPluginIds: ReadonlySet<string> | readonly string[],
+  mailEnabled = true,
+): [string, string][] {
+  const off = new Set(disabledPluginIds);
+  return entries.filter(([id]) => {
+    if (id === "mail" && !mailEnabled) return false;
+    const owner = COLLAPSED_ITEM_PLUGINS[id];
+    return !owner || !off.has(owner);
+  }).map(([id, label]) => [id, label]);
+}
+
 function defaultSlot(id: string) {
   const index = DEFAULT_ORDER.findIndex((entry) => (entry.id.endsWith(":") ? id.startsWith(entry.id) : entry.id === id));
   return index < 0 ? { rank: DEFAULT_ORDER.length, zone: "right" as const } : { rank: index, zone: DEFAULT_ORDER[index].zone };

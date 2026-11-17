@@ -89,6 +89,18 @@ pub(crate) fn toggle_island(app: &AppHandle) {
     refresh(app, None);
 }
 
+pub(crate) fn toggle_island_from_card(app: &AppHandle) {
+    if island_visible(app) {
+        island::hide_island(app);
+    } else {
+        let _ = island::show_island_without_focus(app);
+    }
+    let handle = app.clone();
+    if app.run_on_main_thread(move || refresh(&handle, None)).is_err() {
+        refresh(app, None);
+    }
+}
+
 pub(crate) fn pop_up_native_menu(app: &AppHandle) {
     let Some(menu) = app.try_state::<TrayMenu>() else { return };
     let Ok(window) = island::main_window(app) else { return };

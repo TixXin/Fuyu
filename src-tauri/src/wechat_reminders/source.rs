@@ -2,18 +2,24 @@ use crate::win32::{
     message_window::{self, WindowMessages},
     process, registry, shell_hook, window,
 };
-use std::{cell::RefCell, path::PathBuf};
+use std::{
+    cell::RefCell,
+    path::PathBuf,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 use windows::Win32::{
     Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM},
     System::Registry::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE},
     UI::WindowsAndMessaging::{HSHELL_REDRAW, HSHELL_WINDOWACTIVATED, HSHELL_WINDOWCREATED},
 };
 
-const CLASS_NAME: &str = "FuyuWeChatReminderSource";
+const CLASS_PREFIX: &str = "FuyuShellReminderSource";
 const HSHELL_FLASH: u32 = HSHELL_REDRAW | 0x8000;
 const HSHELL_RUDEAPPACTIVATED: u32 = HSHELL_WINDOWACTIVATED | 0x8000;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+static NEXT_CLASS_ID: AtomicUsize = AtomicUsize::new(1);
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ReminderSignal {
     Attention,
     Activated,
@@ -23,15 +29,109 @@ pub enum ReminderSignal {
 }
 
 #[derive(Clone, Copy, Default)]
+#[allow(dead_code)]
 pub struct SourceStats {
     pub shell_events: u64,
     pub metadata_errors: u64,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
+pub enum ShellMatcher {
+    ExactPath(String),
+    FileNames(Vec<String>),
+}
+
+#[allow(dead_code)]
+impl ShellMatcher {
+    pub fn exact_path(path: &str) -> Self {
+        Self::ExactPath(normalized_path(path))
+    }
+
+    pub fn file_names(names: &[&str]) -> Self {
+        Self::FileNames(
+            names
+                .iter()
+                .map(|name| name.trim())
+                .filter(|name| !name.is_empty())
+                .map(ToOwned::to_owned)
+                .collect(),
+        )
+    }
+
+    pub fn matches_path(&self, raw_path: &str) -> bool {
+        match self {
+            Self::ExactPath(expected) => normalized_path(raw_path) == *expected,
+            Self::FileNames(names) => extract_file_name(raw_path).is_some_and(|actual| {
+                names
+                    .iter()
+                    .any(|expected| actual.eq_ignore_ascii_case(expected))
+            }),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TargetWindow {
+    Invalid,
+    Unreadable,
+    Path(String),
+}
+
+#[allow(dead_code)]
+pub fn route_window_signal(
+    signal: ReminderSignal,
+    target: &TargetWindow,
+    foreground_path: Option<&str>,
+    matcher: &ShellMatcher,
+) -> Option<ReminderSignal> {
+    match target {
+        TargetWindow::Unreadable => None,
+        TargetWindow::Invalid => {
+            (signal == ReminderSignal::Activated).then_some(ReminderSignal::ActivatedElsewhere)
+        }
+        TargetWindow::Path(path) => {
+            if matcher.matches_path(path) {
+                if signal == ReminderSignal::Attention
+                    && foreground_path.is_some_and(|fg| matcher.matches_path(fg))
+                {
+                    None
+                } else {
+                    Some(signal)
+                }
+            } else if signal == ReminderSignal::Activated {
+                Some(ReminderSignal::ActivatedElsewhere)
+            } else {
+                None
+            }
+        }
+    }
+}
+
+#[allow(dead_code)]
+pub fn route_multi_signals<'a, I>(
+    signal: ReminderSignal,
+    target: &TargetWindow,
+    foreground_path: Option<&str>,
+    matchers: I,
+) -> Vec<(usize, ReminderSignal)>
+where
+    I: IntoIterator<Item = (usize, &'a ShellMatcher)>,
+{
+    let mut out = Vec::new();
+    for (id, matcher) in matchers {
+        if let Some(routed) = route_window_signal(signal, target, foreground_path, matcher) {
+            out.push((id, routed));
+        }
+    }
+    out
+}
+
+type RawCallback = Box<dyn FnMut(ReminderSignal, TargetWindow, Option<String>)>;
+
 struct ListenerContext {
     message: u32,
-    executable: String,
-    callback: Box<dyn FnMut(ReminderSignal)>,
+    callback: RawCallback,
     stats: SourceStats,
 }
 
@@ -84,18 +184,34 @@ pub fn installed_executable() -> Result<PathBuf, String> {
         .ok_or_else(|| "未找到微信安装路径。打开微信后会自动连接。".into())
 }
 
-fn normalized_path(path: &str) -> String {
+pub fn normalized_path(path: &str) -> String {
     path.trim_start_matches(r"\\?\")
         .replace('/', "\\")
         .to_lowercase()
 }
 
-fn matches_window(window: HWND, executable: &str) -> Result<bool, ()> {
-    if window.is_invalid() {
-        return Ok(false);
+fn extract_file_name(path: &str) -> Option<&str> {
+    path.rsplit(['\\', '/'])
+        .next()
+        .filter(|name| !name.is_empty())
+}
+
+fn inspect_window(handle: HWND) -> TargetWindow {
+    if handle.is_invalid() {
+        return TargetWindow::Invalid;
     }
-    let path = process::image_path(process::window_process_id(window)).ok_or(())?;
-    Ok(normalized_path(&path) == executable)
+    match process::image_path(process::window_process_id(handle)) {
+        Some(path) => TargetWindow::Path(path),
+        None => TargetWindow::Unreadable,
+    }
+}
+
+fn foreground_image_path() -> Option<String> {
+    let fg = window::foreground_window();
+    if fg.is_invalid() {
+        return None;
+    }
+    process::image_path(process::window_process_id(fg))
 }
 
 struct ReminderWindow;
@@ -120,22 +236,14 @@ impl WindowMessages for ReminderWindow {
                 HSHELL_WINDOWCREATED => ReminderSignal::WindowCreated,
                 _ => return,
             };
-            match matches_window(HWND(target.0 as *mut _), &context.executable) {
-                Ok(true) => {
-                    if signal == ReminderSignal::Attention
-                        && matches_window(window::foreground_window(), &context.executable)
-                            .unwrap_or(false)
-                    {
-                        return;
-                    }
-                    (context.callback)(signal);
-                }
-                Err(()) => context.stats.metadata_errors += 1,
-                Ok(false) if signal == ReminderSignal::Activated => {
-                    (context.callback)(ReminderSignal::ActivatedElsewhere)
-                }
-                Ok(false) => {}
+            let inspected = inspect_window(HWND(target.0 as *mut _));
+            if inspected == TargetWindow::Unreadable {
+                context.stats.metadata_errors += 1;
             }
+            let foreground = (signal == ReminderSignal::Attention)
+                .then(foreground_image_path)
+                .flatten();
+            (context.callback)(signal, inspected, foreground);
         });
         None
     }
@@ -144,49 +252,95 @@ impl WindowMessages for ReminderWindow {
 pub struct ReminderListener {
     window: HWND,
     instance: HINSTANCE,
+    class_name: String,
 }
 
 impl ReminderListener {
+    #[allow(dead_code)]
     pub fn new(
         executable: PathBuf,
         callback: impl FnMut(ReminderSignal) + 'static,
     ) -> Result<Self, String> {
-        if CONTEXT.with(|slot| slot.borrow().is_some()) {
-            return Err("微信提醒监听器已在此线程运行。".into());
-        }
         let executable = executable
             .canonicalize()
             .map_err(|error| format!("无法确认微信安装路径：{error}"))?;
+        let matcher = ShellMatcher::exact_path(&executable.to_string_lossy());
+        Self::for_matcher(matcher, callback)
+    }
+
+    #[allow(dead_code)]
+    pub fn for_executables(
+        names: &[&str],
+        callback: impl FnMut(ReminderSignal) + 'static,
+    ) -> Result<Self, String> {
+        Self::for_matcher(ShellMatcher::file_names(names), callback)
+    }
+
+    #[allow(dead_code)]
+    pub fn for_matcher(
+        matcher: ShellMatcher,
+        mut callback: impl FnMut(ReminderSignal) + 'static,
+    ) -> Result<Self, String> {
+        Self::raw(move |signal, target, foreground| {
+            if let Some(routed) =
+                route_window_signal(signal, &target, foreground.as_deref(), &matcher)
+            {
+                callback(routed);
+            }
+        })
+    }
+
+    #[allow(dead_code)]
+    pub fn raw(
+        callback: impl FnMut(ReminderSignal, TargetWindow, Option<String>) + 'static,
+    ) -> Result<Self, String> {
+        if CONTEXT.with(|slot| slot.borrow().is_some()) {
+            return Err("任务栏提醒监听器已在此线程运行。".into());
+        }
         let message =
-            shell_hook::hook_message().map_err(|error| format!("无法注册微信提醒事件：{error}"))?;
+            shell_hook::hook_message().map_err(|error| format!("无法注册任务栏提醒事件：{error}"))?;
         let instance = message_window::module_instance().map_err(|error| error.to_string())?;
-        message_window::register_class::<ReminderWindow>(instance, CLASS_NAME)
+        let class_name = format!(
+            "{CLASS_PREFIX}-{}",
+            NEXT_CLASS_ID.fetch_add(1, Ordering::Relaxed)
+        );
+        message_window::register_class::<ReminderWindow>(instance, &class_name)
             .map_err(|error| error.to_string())?;
-        let window = match message_window::create_tool_popup_window(instance, CLASS_NAME, "") {
+        let window = match message_window::create_tool_popup_window(instance, &class_name, "") {
             Ok(window) => window,
             Err(error) => {
-                let _ = message_window::unregister_class(instance, CLASS_NAME);
-                return Err(format!("无法创建微信提醒接收器：{error}"));
+                let _ = message_window::unregister_class(instance, &class_name);
+                return Err(format!("无法创建任务栏提醒接收器：{error}"));
             }
         };
         CONTEXT.with(|slot| {
             *slot.borrow_mut() = Some(ListenerContext {
                 message,
-                executable: normalized_path(&executable.to_string_lossy()),
                 callback: Box::new(callback),
                 stats: SourceStats::default(),
             })
         });
-        let listener = Self { window, instance };
+        let listener = Self {
+            window,
+            instance,
+            class_name,
+        };
         shell_hook::register_window(window)
-            .map_err(|error| format!("无法监听微信任务栏提醒：{error}"))?;
+            .map_err(|error| format!("无法监听任务栏提醒：{error}"))?;
         Ok(listener)
     }
 
+    #[allow(dead_code)]
+    pub fn hwnd(&self) -> HWND {
+        self.window
+    }
+
+    #[allow(dead_code)]
     pub fn poll(&self) {
         message_window::dispatch_pending_messages();
     }
 
+    #[allow(dead_code)]
     pub fn stats(&self) -> SourceStats {
         CONTEXT.with(|slot| {
             slot.borrow()
@@ -201,7 +355,7 @@ impl Drop for ReminderListener {
     fn drop(&mut self) {
         let _ = shell_hook::deregister_window(self.window);
         let _ = message_window::destroy_window(self.window);
-        let _ = message_window::unregister_class(self.instance, CLASS_NAME);
+        let _ = message_window::unregister_class(self.instance, &self.class_name);
         CONTEXT.with(|slot| *slot.borrow_mut() = None);
     }
 }

@@ -16,7 +16,7 @@ import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { ResetAppearanceButton } from "./sections/ResetAppearanceButton";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useSettingPresets } from "../../lib/settings/useSettingPresets";
-import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
+import { useSettingsWithBuiltinSwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import { useMarketInstallRequest } from "../../features/plugins/market-link/useMarketInstallRequest";
 import { useLocale, useTranslation } from "../../i18n";
@@ -28,6 +28,7 @@ import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { categorySlot } from "./slots/categorySlot";
 import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
 import { focusSection } from "../../lib/settings/sectionFocus";
+import { AboutLogoCallLink } from "../../features/updater/AboutHero";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -36,8 +37,8 @@ const SETTINGS_LIGHT_FILL = "#eceef2";
 export function SettingsWindow() {
   const t = useTranslation();
   const { locale, setLocale } = useLocale();
-  const [storedSettings, setStoredSettings] = useState<IslandSettings>(loadSettings);
-  const [settings, setSettings] = useLegacySwitches([storedSettings, setStoredSettings]);
+  const [storedSettings, setSettings] = useState<IslandSettings>(loadSettings);
+  const settings = useSettingsWithBuiltinSwitches(storedSettings);
   useWindowAccent(settings);
   const systemDark = useSystemDark();
   const presets = useSettingPresets(settings, setSettings);
@@ -53,7 +54,7 @@ export function SettingsWindow() {
   const focusRequestedSection = useCallback(() => {
     const section = takeFocusRequest();
     if (section === "savePath") {
-      setCategory("todosStorage");
+      setCategory("todos");
       focusSection(section);
     }
     const target = section && settingsCategoryFor(section);
@@ -84,7 +85,7 @@ export function SettingsWindow() {
     const syncFromIsland = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY) {
         const nextSettings = loadSettings();
-        setStoredSettings((current) =>
+        setSettings((current) =>
           isSameSettings(current, nextSettings) ? current : nextSettings,
         );
       }
@@ -103,7 +104,7 @@ export function SettingsWindow() {
     let cancelled = false;
     const reopened = () => {
       const nextSettings = loadSettings();
-      setStoredSettings((current) => (isSameSettings(current, nextSettings) ? current : nextSettings));
+      setSettings((current) => (isSameSettings(current, nextSettings) ? current : nextSettings));
       focusRequestedSection();
     };
     void listenSettingsWindowReopened(reopened)
@@ -150,10 +151,12 @@ export function SettingsWindow() {
         hidden={features.hiddenPages}
         onCategoryChange={changeCategory}
         titleAction={
-          category === "theme" || category === "themeStyle" || category === "themeGlass" || category === "themePresets"
+          category === "theme" || category === "themeStyle"
             ? <ResetAppearanceButton onReset={resetAppearance} />
             : category === "appearance" || category === "appearanceCollapsed"
             ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
+            : category === "about"
+            ? <AboutLogoCallLink />
             : null
         }
       >

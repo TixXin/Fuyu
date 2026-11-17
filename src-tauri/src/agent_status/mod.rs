@@ -71,6 +71,8 @@ mod droid;
 mod droid_hooks;
 mod kimi_hooks;
 mod mimo;
+mod pi;
+mod third_party;
 
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -190,13 +192,14 @@ fn read_agent_status(app: AppHandle) -> Result<AgentStatusSnapshot, String> {
 
 #[tauri::command]
 pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatusSnapshot, String> {
-    let Some((id, light)) = harness::with_status_light().find(|(id, _)| *id == provider) else {
+    let builtin = harness::with_status_light().find(|(id, _)| *id == provider);
+    if builtin.is_none() && !third_party::is_third_party_id(&provider) {
         return if external::clear_by_id(&provider) {
             read_agent_status(app)
         } else {
             Err("Unsupported agent provider.".to_string())
         };
-    };
+    }
     crate::dev_lane::refuse_in_preview("clear the agents' status")?;
     let app_dir = crate::home_dir::fuyu_home(app.path())
         .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
@@ -218,8 +221,17 @@ pub fn clear_agent_status(app: AppHandle, provider: String) -> Result<AgentStatu
         updated_at: now,
     };
 
-    persisted.agents.insert(id, cleared_status);
-    remove_agent_marker_files(&app_dir, light.running_marker, light.running_hold, light.saved_inputs);
+    if let Some((id, light)) = builtin {
+        persisted.agents.insert(id, cleared_status);
+        remove_agent_marker_files(&app_dir, light.running_marker, light.running_hold, light.saved_inputs);
+    } else {
+        if let Some(entry) = persisted.third_party.get_mut(&provider) {
+            entry.phase = default_agent_phase();
+            entry.task_id = None;
+            entry.updated_at = now;
+        }
+        third_party::clear_markers(&app_dir, &provider);
+    }
 
     let prefix = format!("{provider}-");
     for entry in fs::read_dir(app_dir.join(notifications::NOTIFICATIONS_DIR)).into_iter().flatten().flatten() {

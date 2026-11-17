@@ -27,6 +27,7 @@ import * as onboarding from "../sections/onboarding.ts";
 import * as errors from "../sections/errors.ts";
 import * as voiceInput from "../sections/voiceInput.ts";
 import * as trayMenu from "../sections/trayMenu.ts";
+import * as sync from "../sections/sync.ts";
 
 const en: Translations = {
   localeLabel: "English",
@@ -69,6 +70,7 @@ const en: Translations = {
   errors: errors.en,
   voiceInput: voiceInput.en,
   trayMenu: trayMenu.en,
+  sync: sync.en,
 };
 
 export default en;

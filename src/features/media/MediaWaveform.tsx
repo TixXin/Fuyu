@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
+import { useAudioPeak } from "./useAudioLevel";
 import "./MediaWaveform.css";
 
 const POINTS = Array.from({ length: 86 }, (_, index) => {
@@ -17,11 +18,12 @@ function wavePath(phase: number, layer: number, level: number) {
   }).join(" ");
 }
 
-export function MediaWaveform({ playing, audioPeak }: { playing: boolean; audioPeak: number }) {
+export function MediaWaveform({ playing, audioPeak }: { playing: boolean; audioPeak?: number }) {
+  const effectivePeak = useAudioPeak(audioPeak);
   const svgRef = useRef<SVGSVGElement>(null);
   const phaseRef = useRef(0);
-  const peakRef = useRef(audioPeak);
-  peakRef.current = audioPeak;
+  const peakRef = useRef(effectivePeak);
+  peakRef.current = effectivePeak;
 
   useLayoutEffect(() => {
     const svg = svgRef.current;

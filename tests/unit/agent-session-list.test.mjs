@@ -93,6 +93,7 @@ test("Agent page rows and the Agent settings", async () => {
   assert.equal(normalizeSettings({ agentArchiveMotion: "explode" }).agentArchiveMotion, "dissolve");
   assert.equal(DEFAULT_SETTINGS.agentCardEffects, "sparkle");
   assert.equal(normalizeSettings({ agentCardEffects: "off" }).agentCardEffects, "off");
+  assert.equal(normalizeSettings({ agentCardEffects: "orbit" }).agentCardEffects, "orbit");
   assert.equal(normalizeSettings({ agentCardEffects: "rainbow" }).agentCardEffects, "sparkle");
 
   assert.equal("agentVisibleRows" in normalizeSettings({ agentVisibleRows: 4 }), false);

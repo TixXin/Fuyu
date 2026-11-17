@@ -1,0 +1,998 @@
+<body>
+  <main class="settings-stage sync-fixture settings-stage--light">
+    <div class="layout">
+      <div id="wide">
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              同步状态
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="sync-status sync-status--ok">
+              <div class="sync-status__row">
+                <span class="sync-status__icon">
+                  <svg aria-hidden="true" class="lucide lucide-circle-check" fill="none" height="19" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="19" xmlns="http://www.w3.org/2000/svg"></svg>
+                </span>
+                <div class="sync-status__copy" role="status">
+                  <strong>
+                    同步已就绪
+                  </strong>
+                  <span>
+                    本机改动 5 秒后自动推送，每 5 分钟及打开本页时自动拉取合并。
+                  </span>
+                  <span class="sync-status__meta">
+                    上次同步：2026年11月15日 09:30
+                  </span>
+                </div>
+                <div class="sync-status__actions">
+                  <button class="sync-status__button" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-refresh-cw" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span>
+                      立即同步
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              同步方式
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    同步文件夹
+                  </span>
+                  <span class="settings-row__description">
+                    <span class="sync-folder-path">
+                      /Users/demo/iCloud/FuyuSync
+                    </span>
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-folder-actions">
+                    <button class="settings-link-button" type="button">
+                      在文件夹中显示
+                    </button>
+                    <button class="settings-link-button" type="button">
+                      更换…
+                    </button>
+                    <button class="settings-link-button settings-link-button--danger" type="button">
+                      停止同步
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              请专门新建一个子目录用于同步，不要把浮屿的数据文件夹（~/.fuyu）直接放进网盘：每台设备只写自己的文件，首次并入前会自动在本地留一份备份。
+            </p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              同步内容
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id1_">
+                    待办、每日笔记与归档
+                  </label>
+                  <span class="settings-row__description">
+                    按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id1_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id2_">
+                    常用短语
+                  </label>
+                  <span class="settings-row__description">
+                    剪贴板里的常用语与 AI 提示词模板。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id2_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id3_">
+                    链接书签
+                  </label>
+                  <span class="settings-row__description">
+                    剪贴板收藏的常用网址与排列顺序。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id3_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id4_">
+                    通用与功能设置
+                  </label>
+                  <span class="settings-row__description">
+                    按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id4_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id5_">
+                    我的主题预设
+                  </label>
+                  <span class="settings-row__description">
+                    已保存的外观样式预设（自动剔除显示器与尺寸等设备字段）。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id5_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              所有凭据与 API 密钥、普通剪贴板历史和图片、截图文件、文件中转及窗口位置/快捷键等本机项永不离开本机。
+            </p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              可选同步
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id6_">
+                    翻译服务与模型选择
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id6_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id7_">
+                    PrtSc 接管与录屏参数
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id7_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id8_">
+                    Agent 提示音量与音效包
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id8_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id9_">
+                    手机推送开关与通道
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id9_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id10_">
+                    邮箱账号列表（不含密码）
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id10_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id11_">
+                    收起条项目与顺序
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：收起条可能包含仅在某一台电脑安装的第三方插件或平台专属项。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id11_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id12_">
+                    插件岛上页面顺序与隐藏
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：各台电脑安装的插件集合不同，页面列表未必一致。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id12_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id13_">
+                    更新通道（稳定版 / 测试版）
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：便于在一台电脑尝鲜测试版，另一台主力机保持稳定版。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id13_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              以上分组涉及本机硬件、外部服务或插件环境差异，默认关闭；开启后仅在同样开启该组的电脑之间合并。
+            </p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              已连接的设备
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-device__title">
+                      <svg aria-hidden="true" class="lucide lucide-laptop" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        MacBook Air
+                      </span>
+                      <span class="sync-badge sync-badge--ok">
+                        本机
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    macOS · v0.3.11 · 上次同步 2026年11月15日 09:30
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-device__title">
+                      <svg aria-hidden="true" class="lucide lucide-laptop" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        Office-PC
+                      </span>
+                      <span class="sync-badge sync-badge--warn">
+                        超过 180 天未活跃
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    Windows · v0.3.9 · 上次同步 2026年2月1日 08:00
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              配置指南
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-cloud" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        OneDrive / iCloud Drive
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    在网盘里新建一个文件夹（如 Sync/Fuyu），在各台电脑上都选中它即可；按需下载的占位文件会在同步时自动拉取。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-folder-sync" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        坚果云同步盘
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    安装坚果云客户端后将一个本地文件夹设为同步文件夹，在 Windows 与 Mac 上分别选中该文件夹。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-share2 lucide-share-2" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        Syncthing 局域网/跨网同步
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    共享同一个文件夹给多台设备，浮屿会自动忽略 .sync-conflict 与临时文件，按条无锁合并。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-hard-drive" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        NAS / SMB 局域网共享
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    挂载群晖或飞牛等 SMB 共享目录后选中；外出未挂载共享盘时会自动跳过当轮同步，回来后继续。
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              多台电脑之间只需指向同一个云盘同步目录或局域网共享目录即可协同工作。
+            </p>
+          </div>
+        </section>
+      </div>
+      <div id="narrow">
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              同步状态
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="sync-status sync-status--ok">
+              <div class="sync-status__row">
+                <span class="sync-status__icon">
+                  <svg aria-hidden="true" class="lucide lucide-circle-check" fill="none" height="19" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="19" xmlns="http://www.w3.org/2000/svg"></svg>
+                </span>
+                <div class="sync-status__copy" role="status">
+                  <strong>
+                    同步已就绪
+                  </strong>
+                  <span>
+                    本机改动 5 秒后自动推送，每 5 分钟及打开本页时自动拉取合并。
+                  </span>
+                  <span class="sync-status__meta">
+                    上次同步：2026年11月15日 09:30
+                  </span>
+                </div>
+                <div class="sync-status__actions">
+                  <button class="sync-status__button" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-refresh-cw" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span>
+                      立即同步
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              同步方式
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    同步文件夹
+                  </span>
+                  <span class="settings-row__description">
+                    <span class="sync-folder-path">
+                      /Users/demo/iCloud/FuyuSync
+                    </span>
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-folder-actions">
+                    <button class="settings-link-button" type="button">
+                      在文件夹中显示
+                    </button>
+                    <button class="settings-link-button" type="button">
+                      更换…
+                    </button>
+                    <button class="settings-link-button settings-link-button--danger" type="button">
+                      停止同步
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              请专门新建一个子目录用于同步，不要把浮屿的数据文件夹（~/.fuyu）直接放进网盘：每台设备只写自己的文件，首次并入前会自动在本地留一份备份。
+            </p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              同步内容
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id14_">
+                    待办、每日笔记与归档
+                  </label>
+                  <span class="settings-row__description">
+                    按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id14_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id15_">
+                    常用短语
+                  </label>
+                  <span class="settings-row__description">
+                    剪贴板里的常用语与 AI 提示词模板。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id15_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id16_">
+                    链接书签
+                  </label>
+                  <span class="settings-row__description">
+                    剪贴板收藏的常用网址与排列顺序。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id16_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id17_">
+                    通用与功能设置
+                  </label>
+                  <span class="settings-row__description">
+                    按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id17_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id18_">
+                    我的主题预设
+                  </label>
+                  <span class="settings-row__description">
+                    已保存的外观样式预设（自动剔除显示器与尺寸等设备字段）。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id18_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              所有凭据与 API 密钥、普通剪贴板历史和图片、截图文件、文件中转及窗口位置/快捷键等本机项永不离开本机。
+            </p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              可选同步
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id19_">
+                    翻译服务与模型选择
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id19_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id20_">
+                    PrtSc 接管与录屏参数
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id20_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id21_">
+                    Agent 提示音量与音效包
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id21_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id22_">
+                    手机推送开关与通道
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id22_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id23_">
+                    邮箱账号列表（不含密码）
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id23_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id24_">
+                    收起条项目与顺序
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：收起条可能包含仅在某一台电脑安装的第三方插件或平台专属项。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id24_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id25_">
+                    插件岛上页面顺序与隐藏
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：各台电脑安装的插件集合不同，页面列表未必一致。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id25_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id26_">
+                    更新通道（稳定版 / 测试版）
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：便于在一台电脑尝鲜测试版，另一台主力机保持稳定版。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id26_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              以上分组涉及本机硬件、外部服务或插件环境差异，默认关闭；开启后仅在同样开启该组的电脑之间合并。
+            </p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              已连接的设备
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-device__title">
+                      <svg aria-hidden="true" class="lucide lucide-laptop" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        MacBook Air
+                      </span>
+                      <span class="sync-badge sync-badge--ok">
+                        本机
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    macOS · v0.3.11 · 上次同步 2026年11月15日 09:30
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-device__title">
+                      <svg aria-hidden="true" class="lucide lucide-laptop" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        Office-PC
+                      </span>
+                      <span class="sync-badge sync-badge--warn">
+                        超过 180 天未活跃
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    Windows · v0.3.9 · 上次同步 2026年2月1日 08:00
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              配置指南
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-cloud" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        OneDrive / iCloud Drive
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    在网盘里新建一个文件夹（如 Sync/Fuyu），在各台电脑上都选中它即可；按需下载的占位文件会在同步时自动拉取。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-folder-sync" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        坚果云同步盘
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    安装坚果云客户端后将一个本地文件夹设为同步文件夹，在 Windows 与 Mac 上分别选中该文件夹。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-share2 lucide-share-2" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        Syncthing 局域网/跨网同步
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    共享同一个文件夹给多台设备，浮屿会自动忽略 .sync-conflict 与临时文件，按条无锁合并。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-hard-drive" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        NAS / SMB 局域网共享
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    挂载群晖或飞牛等 SMB 共享目录后选中；外出未挂载共享盘时会自动跳过当轮同步，回来后继续。
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              多台电脑之间只需指向同一个云盘同步目录或局域网共享目录即可协同工作。
+            </p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</body>

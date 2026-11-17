@@ -52,7 +52,7 @@ function MusicItem({ t, onOpenPage }: CollapsedContext) {
     <MusicWaveButton
       isAvailable={mediaState.available || mediaState.audioActive}
       isPlaying={mediaState.playbackStatus === "playing"}
-      audioPeak={mediaState.audioPeak}
+      audioPeak={mediaState.audioPeak > 0 ? mediaState.audioPeak : undefined}
       label={t.island.openMusic}
       onClick={() => onOpenPage("music")}
     />

@@ -425,6 +425,14 @@ pub(super) fn stage_point(window_left: f64, window_top: f64, window_width: f64, 
     (round((cursor_x - window_left) / physical_scale), round((cursor_y - window_top) / physical_scale))
 }
 
+const GAZE_NEAR_STEP: f64 = 4.0;
+const GAZE_FAR_STEP: f64 = 24.0;
+
+pub(super) fn gaze_cursor_point((x, y): (f64, f64), near_stage: bool) -> (f64, f64) {
+    let step = if near_stage { GAZE_NEAR_STEP } else { GAZE_FAR_STEP };
+    ((x / step).round() * step, (y / step).round() * step)
+}
+
 pub(super) fn cursor_on_island(
     window_left: f64,
     window_top: f64,

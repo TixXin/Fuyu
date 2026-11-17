@@ -399,11 +399,12 @@ pub(crate) fn get_builtin_plugins() -> Vec<BuiltinPlugin> {
 #[tauri::command]
 pub(crate) async fn set_builtin_plugin_enabled(id: String, enabled: bool) -> Result<Vec<BuiltinPlugin>, UserError> {
     let _ = tauri::async_runtime::spawn_blocking(wait_until_ready).await;
-    let actions = {
+    let (changed, actions) = {
         let mut slot = switches().lock().unwrap_or_else(PoisonError::into_inner);
         let was = slot.table.disabled().clone();
         let actions = slot.table.set_enabled(&id, enabled)?;
-        if slot.table.disabled() != &was {
+        let changed = slot.table.disabled() != &was;
+        if changed {
             if let Some(file) = slot.file.clone() {
                 if let Err(error) = write_switch(&file, &id, enabled) {
                     let _ = slot.table.set_enabled(&id, !enabled);
@@ -411,12 +412,14 @@ pub(crate) async fn set_builtin_plugin_enabled(id: String, enabled: bool) -> Res
                 }
             }
         }
-        actions
+        (changed, actions)
     };
     run_all(actions);
     let plugins = list();
-    if let Some(app) = APP.get() {
-        let _ = app.emit(CHANGED_EVENT, &plugins);
+    if changed {
+        if let Some(app) = APP.get() {
+            let _ = app.emit(CHANGED_EVENT, &plugins);
+        }
     }
     Ok(plugins)
 }
@@ -438,12 +441,15 @@ pub(crate) async fn set_builtin_plugin_config(id: String, key: String, value: Op
         }
         reconfigure
     };
+    let changed = reconfigure.is_some();
     if let Some(reconfigure) = reconfigure {
         reconfigure.run();
     }
     let plugins = list();
-    if let Some(app) = APP.get() {
-        let _ = app.emit(CHANGED_EVENT, &plugins);
+    if changed {
+        if let Some(app) = APP.get() {
+            let _ = app.emit(CHANGED_EVENT, &plugins);
+        }
     }
     Ok(plugins)
 }

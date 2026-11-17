@@ -8,13 +8,13 @@ export type SettingsCategoriesText = {
   expand: (group: string) => string;
   collapse: (group: string) => string;
   keywords: Record<
-    | "overview" | "general" | "generalData" | "generalApi" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts" | "timerAlerts" | "timerBreaks" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeGlass" | "themePresets" | "themeMarket" | "shortcuts" | "todos" | "todosStorage" | "calendar" | "calendarSources" | "music" | "translation" | "clipboard"
-    | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentTunnel" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
-    | "plugins" | "pluginsV3" | "market" | "about" | "aboutHistory" | "aboutHelp",
+    | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
+    | "plugins" | "pluginsV3" | "market" | "about",
     string
   >;
-  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; todos: string; calendar: string; music: string; clipboard: string; screenshot: string; messages: string; plugins: string; agents: string; agentAppearance: string; agentAlerts: string; agentRemote: string; about: string };
-  tabs: Record<"general" | "generalData" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "clipboardData" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts" | "timerAlerts" | "timerBreaks" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "themeGlass" | "appearance" | "appearanceCollapsed" | "themePresets" | "themeMarket" | "todos" | "todosStorage" | "calendar" | "calendarSources" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "agentRemote" | "agentTunnel" | "about" | "aboutHistory" | "aboutHelp", string>;
+  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; plugins: string; agents: string; agentAppearance: string; agentAlerts: string };
+  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect", string>;
   groups: {
     basics: string;
     features: string;
@@ -24,13 +24,12 @@ export type SettingsCategoriesText = {
   overview: string;
   general: string;
   generalData: string;
+  generalSync: string;
   generalApi: string;
   behavior: string;
   behaviorTuck: string;
-  behaviorQuiet: string;
   behaviorAlerts: string;
   timerAlerts: string;
-  timerBreaks: string;
   shortcutsIsland: string;
   shortcutsReference: string;
   pluginsPages: string;
@@ -40,14 +39,11 @@ export type SettingsCategoriesText = {
   musicLyricsStyle: string;
   clipboardHistory: string;
   clipboardSnippets: string;
-  clipboardData: string;
   screenshotRecord: string;
   appearance: string;
   appearanceCollapsed: string;
   theme: string;
   themeStyle: string;
-  themeGlass: string;
-  themePresets: string;
   themeMarket: string;
   shortcuts: string;
   messages: string;
@@ -55,7 +51,6 @@ export type SettingsCategoriesText = {
   messagesMail: string;
   mail: string;
   todos: string;
-  todosStorage: string;
   music: string;
   clipboard: string;
   translation: string;
@@ -63,13 +58,11 @@ export type SettingsCategoriesText = {
   screenshot: string;
   voiceInput: string;
   calendar: string;
-  calendarSources: string;
   agents: string;
   agentAppearance: string;
   agentSessions: string;
   agentRings: string;
   agentRemote: string;
-  agentTunnel: string;
   agentAlerts: string;
   sounds: string;
   agentPush: string;
@@ -79,8 +72,6 @@ export type SettingsCategoriesText = {
   pluginsV3: string;
   market: string;
   about: string;
-  aboutHistory: string;
-  aboutHelp: string;
 };
 
 export const zhCN: SettingsCategoriesText = {
@@ -96,18 +87,16 @@ export const zhCN: SettingsCategoriesText = {
     overview: "概览 开始 新手 入门 常用 功能 开启 关闭 启用",
     general: "开机 自启 登录 语言 托盘 菜单栏 权限",
     generalData: "数据 文件夹 备份 恢复 导出 导入 迁移",
+    generalSync: "跨设备 同步 云盘 网盘 OneDrive iCloud 坚果云 Syncthing NAS 设备 合并",
     generalApi: "本机接口 Local API 令牌 端口 HTTP",
-    behavior: "展开 悬停 收起 动画 切换页面",
+    behavior: "展开 悬停 收起 动画 切换页面 全屏 游戏 勿扰 免打扰",
     behaviorTuck: "贴边 隐藏 露出 最小化 托盘 菜单栏",
-    behaviorQuiet: "全屏 游戏 勿扰 免打扰",
     behaviorAlerts: "系统提示 音量 亮度 耳机 蓝牙 电量 电源 充电 摄像头 麦克风 隐私",
-    timerAlerts: "计时器 倒计时 番茄钟 响铃 声音",
-    timerBreaks: "休息 提醒 久坐 护眼",
+    timerAlerts: "计时器 倒计时 番茄钟 响铃 声音 休息 提醒 久坐 护眼",
     musicLyrics: "歌词 来源 文件夹 LRC 在线 酷狗 网易云 提前 推后",
     musicLyricsStyle: "歌词 样式 逐字 高亮 发光 颜色 卡拉OK",
-    clipboardHistory: "记录 图片 文件 密码 密钥 排除 条数 清理 OCR",
+    clipboardHistory: "记录 图片 文件 密码 密钥 排除 条数 清理 OCR 导入 导出 备份 迁移 链接 书签 网址 网站 图标",
     clipboardSnippets: "常用语 短语 提示词 AI",
-    clipboardData: "导入 导出 备份 迁移",
     screenshotRecord: "录屏 录制 GIF MP4 帧率 画质 声音 麦克风",
     pluginsPages: "岛上页面 顺序 隐藏 插件快捷键 命令",
     pluginsUpdates: "自动更新 检查更新 受信任 发布者 信任",
@@ -116,16 +105,12 @@ export const zhCN: SettingsCategoriesText = {
     shortcutsReference: "速查 Esc 拖动 调整大小 审批",
     appearance: "位置 显示器 屏幕 尺寸 大小 缩放 面板高度 形态 刘海",
     appearanceCollapsed: "显示内容 收起条 项目 排序 中心图案 宠物 眼睛",
-    theme: "颜色 背景 浅色 深色 配色 强调色 亮点 文字",
-    themeStyle: "风格 经典 像素 透明 不透明度 字体 圆角 超椭圆",
-    themeGlass: "液态玻璃 折射 流光 模糊 高光",
-    themePresets: "我的主题 预设 样式 导入 导出 保存",
+    theme: "颜色 背景 浅色 深色 配色 强调色 亮点 文字 我的主题 预设 样式 导入 导出 保存",
+    themeStyle: "风格 经典 像素 透明 不透明度 字体 圆角 超椭圆 液态玻璃 折射 流光 模糊 高光",
     themeMarket: "主题 皮肤 配色 下载 应用 分享",
     shortcuts: "按键 组合键 热键 全局",
-    todos: "任务 笔记 归档 待办",
-    todosStorage: "项目 标签 保存路径 文件夹 导出 Markdown",
-    calendar: "日程 会议 倒计时 提醒",
-    calendarSources: "CalDAV ICS 订阅 节假日 日历来源",
+    todos: "任务 笔记 归档 待办 项目 标签 保存路径 文件夹 导出 Markdown",
+    calendar: "日程 会议 倒计时 提醒 CalDAV ICS 订阅 节假日 日历来源",
     music: "歌词 媒体 播放 波形 酷狗 网易云",
     translation: "翻译服务 模型 密钥 API 语言",
     clipboard: "复制 粘贴 历史 图片",
@@ -135,12 +120,11 @@ export const zhCN: SettingsCategoriesText = {
     messages: "消息 提醒方式 横幅 面板 预览",
     messagesIm: "QQ 微信 通知 聊天",
     messagesMail: "邮箱 邮件 IMAP 授权码",
-    agents: "Claude Code Codex 钩子 hook 安装 修复 代理",
+    agents: "Claude Code Codex 钩子 hook 安装 修复 状态灯 启用 代理 提供方 Cursor Gemini OpenCode WorkBuddy Antigravity DeepSeek Qoder CodeBuddy Qwen TRAE ZCode Kimi MiMo Grok Copilot Droid pi",
     agentAppearance: "会话标题 状态灯 收起条 岛上显示 外观",
-    agentSessions: "会话 卡片 列表 隐藏会话 筛选",
+    agentSessions: "会话 卡片 列表 隐藏会话 筛选 子会话",
     agentRings: "用量 用量环 会话环 额度 GLM Kimi Anthropic",
-    agentRemote: "SSH 远程 服务器 主机 其他电脑",
-    agentTunnel: "SSH 隧道 代理 转发 端口",
+    agentRemote: "SSH 远程 服务器 主机 其他电脑 隧道 代理 转发 端口",
     agentAlerts: "弹出 提醒 通知",
     sounds: "音效 声音包 提示音",
     agentPush: "手机推送 Bark cc-connect 机器人 飞书",
@@ -149,9 +133,7 @@ export const zhCN: SettingsCategoriesText = {
     plugins: "扩展 已安装 插件目录 开发者 更新 岛屿页面",
     pluginsV3: "插件 第 3 版 内核 宿主 状态 占用 CPU 出错 停用 安全模式 开发中",
     market: "扩展 插件 下载 安装 搜索",
-    about: "版本 更新 检查更新 测试版 通道",
-    aboutHistory: "更新日志 版本历史 发行说明",
-    aboutHelp: "帮助 新手引导 诊断 重置 退出 反馈 Star",
+    about: "版本 更新 检查更新 测试版 通道 更新日志 版本历史 发行说明 帮助 新手引导 诊断 重置 退出 反馈 Star",
   },
   entries: {
     general: "通用",
@@ -159,8 +141,6 @@ export const zhCN: SettingsCategoriesText = {
     behaviorAlerts: "计时与提醒",
     appearance: "外观",
     shortcuts: "快捷键",
-    todos: "待办",
-    calendar: "日历",
     music: "音乐",
     clipboard: "剪贴板",
     screenshot: "截图",
@@ -169,12 +149,11 @@ export const zhCN: SettingsCategoriesText = {
     agents: "Agent",
     agentAppearance: "外观",
     agentAlerts: "提醒",
-    agentRemote: "SSH 远程",
-    about: "关于",
   },
   tabs: {
     general: "启动与托盘",
     generalData: "数据与备份",
+    generalSync: "跨设备同步",
     generalApi: "本机接口",
     plugins: "已安装",
     pluginsPages: "页面与快捷键",
@@ -184,31 +163,22 @@ export const zhCN: SettingsCategoriesText = {
     musicLyrics: "歌词来源",
     musicLyricsStyle: "歌词样式",
     clipboard: "打开与粘贴",
-    clipboardHistory: "记录什么",
+    clipboardHistory: "记录与链接",
     clipboardSnippets: "常用语与提示词",
-    clipboardData: "导入导出",
     screenshot: "截图",
     screenshotRecord: "录屏",
     behavior: "展开与收起",
     behaviorTuck: "贴边隐藏",
-    behaviorQuiet: "全屏与免打扰",
     behaviorAlerts: "系统提示",
-    timerAlerts: "计时器",
-    timerBreaks: "休息提醒",
+    timerAlerts: "计时与休息",
     shortcuts: "全局",
     shortcutsIsland: "岛上",
     shortcutsReference: "速查表",
     theme: "主题与配色",
-    themeStyle: "风格与圆角",
-    themeGlass: "液态玻璃",
+    themeStyle: "材质与圆角",
     appearance: "位置与尺寸",
     appearanceCollapsed: "收起条项目",
-    themePresets: "我的主题",
     themeMarket: "主题市场",
-    todos: "待办与归档",
-    todosStorage: "项目与存储",
-    calendar: "岛上提醒",
-    calendarSources: "日历来源",
     messages: "提醒方式",
     messagesIm: "QQ 与微信",
     messagesMail: "邮箱",
@@ -221,11 +191,6 @@ export const zhCN: SettingsCategoriesText = {
     agentAlerts: "桌面提醒",
     sounds: "声音",
     agentPush: "推送与机器人",
-    agentRemote: "远程主机",
-    agentTunnel: "SSH 隧道",
-    about: "版本与更新",
-    aboutHistory: "更新日志",
-    aboutHelp: "帮助与重置",
   },
   groups: {
     basics: "基础",
@@ -236,13 +201,12 @@ export const zhCN: SettingsCategoriesText = {
   overview: "概览",
   general: "通用",
   generalData: "数据与备份",
+  generalSync: "跨设备同步",
   generalApi: "本机接口",
   behavior: "行为",
   behaviorTuck: "贴边隐藏",
-  behaviorQuiet: "全屏与免打扰",
   behaviorAlerts: "系统提示",
-  timerAlerts: "计时器",
-  timerBreaks: "休息提醒",
+  timerAlerts: "计时与休息",
   shortcutsIsland: "岛上按键",
   shortcutsReference: "按键速查表",
   pluginsPages: "插件页面与快捷键",
@@ -250,16 +214,13 @@ export const zhCN: SettingsCategoriesText = {
   pluginsDev: "插件开发者",
   musicLyrics: "歌词来源",
   musicLyricsStyle: "歌词样式",
-  clipboardHistory: "剪贴板记录",
+  clipboardHistory: "记录与链接",
   clipboardSnippets: "常用语与提示词",
-  clipboardData: "剪贴板导入导出",
   screenshotRecord: "录屏",
   appearance: "位置与尺寸",
   appearanceCollapsed: "收起条项目",
   theme: "主题与配色",
-  themeStyle: "风格与圆角",
-  themeGlass: "液态玻璃",
-  themePresets: "我的主题",
+  themeStyle: "材质与圆角",
   themeMarket: "主题市场",
   shortcuts: "快捷键",
   messages: "消息",
@@ -267,7 +228,6 @@ export const zhCN: SettingsCategoriesText = {
   messagesMail: "邮箱",
   mail: "邮箱",
   todos: "待办",
-  todosStorage: "项目与存储",
   music: "音乐",
   clipboard: "剪贴板",
   translation: "翻译",
@@ -275,13 +235,11 @@ export const zhCN: SettingsCategoriesText = {
   screenshot: "截图",
   voiceInput: "语音输入",
   calendar: "日历",
-  calendarSources: "日历来源",
   agents: "钩子与代理",
   agentAppearance: "状态灯与标题",
   agentSessions: "会话列表",
   agentRings: "用量与会话环",
-  agentRemote: "远程主机",
-  agentTunnel: "SSH 隧道",
+  agentRemote: "SSH 远程",
   agentAlerts: "桌面提醒",
   sounds: "声音",
   agentPush: "推送与机器人",
@@ -291,8 +249,6 @@ export const zhCN: SettingsCategoriesText = {
   pluginsV3: "插件（第 3 版）",
   market: "插件市场",
   about: "关于",
-  aboutHistory: "更新日志",
-  aboutHelp: "帮助与重置",
 };
 
 export const en: SettingsCategoriesText = {
@@ -308,18 +264,16 @@ export const en: SettingsCategoriesText = {
     overview: "overview start beginner getting started common features turn on off enable",
     general: "startup launch login language tray menu bar permissions",
     generalData: "data folder backup restore export import move",
+    generalSync: "cross-device sync cloud drive onedrive icloud nutstore syncthing nas devices merge",
     generalApi: "local api token port http",
-    behavior: "expand hover collapse animation motion switch page",
+    behavior: "expand hover collapse animation motion switch page fullscreen game quiet do not disturb",
     behaviorTuck: "tuck hide reveal minimise minimize tray menu bar",
-    behaviorQuiet: "fullscreen game quiet do not disturb",
     behaviorAlerts: "system alerts volume brightness headphones bluetooth battery charger power camera microphone privacy",
-    timerAlerts: "timer countdown pomodoro alarm sound",
-    timerBreaks: "break reminder rest eye",
+    timerAlerts: "timer countdown pomodoro alarm sound break reminder rest eye",
     musicLyrics: "lyrics sources folder lrc online kugou netease offset",
     musicLyricsStyle: "lyrics style karaoke highlight glow colour color",
-    clipboardHistory: "record images files passwords secrets exclude limit cleanup ocr",
+    clipboardHistory: "record images files passwords secrets exclude limit cleanup ocr import export backup move links bookmarks url website favicon",
     clipboardSnippets: "snippets phrases prompts ai",
-    clipboardData: "import export backup move",
     screenshotRecord: "screen recording record gif mp4 frame rate quality sound microphone",
     pluginsPages: "island pages order hide plugin shortcuts commands",
     pluginsUpdates: "automatic updates check trusted publishers trust",
@@ -328,16 +282,12 @@ export const en: SettingsCategoriesText = {
     shortcutsReference: "reference sheet esc drag resize approval",
     appearance: "position display monitor screen size scale panel height form notch",
     appearanceCollapsed: "display collapsed bar items order center pattern pet eyes",
-    theme: "colour color background light dark tone accent pulse ink",
-    themeStyle: "style classic pixel opacity transparency font corner squircle",
-    themeGlass: "liquid glass refraction flow blur specular",
-    themePresets: "my themes preset style import export save",
+    theme: "colour color background light dark tone accent pulse ink my themes preset style import export save",
+    themeStyle: "style classic pixel opacity transparency font corner squircle liquid glass refraction flow blur specular",
     themeMarket: "themes skins colours colors download apply share",
     shortcuts: "keys hotkey keyboard global",
-    todos: "tasks notes archive todos",
-    todosStorage: "projects tags save folder export markdown",
-    calendar: "events meeting countdown reminder",
-    calendarSources: "caldav ics subscription holidays calendar sources",
+    todos: "tasks notes archive todos projects tags save folder export markdown",
+    calendar: "events meeting countdown reminder caldav ics subscription holidays calendar sources",
     music: "lyrics media playback waveform kugou netease",
     translation: "service model key api language",
     clipboard: "copy paste history images",
@@ -347,12 +297,11 @@ export const en: SettingsCategoriesText = {
     messages: "messages notice style banner panel preview",
     messagesIm: "qq wechat notifications chat",
     messagesMail: "mail email imap",
-    agents: "claude code codex hooks install repair providers",
+    agents: "claude code codex hooks install repair status light enable agents providers cursor gemini opencode workbuddy antigravity deepseek qoder codebuddy qwen trae zcode kimi mimo grok copilot droid pi",
     agentAppearance: "session title status light collapsed bar on the island appearance",
-    agentSessions: "sessions cards list hide filter",
+    agentSessions: "sessions cards list hide filter subagent",
     agentRings: "usage ring session ring quota glm kimi anthropic",
-    agentRemote: "ssh remote server host other computers",
-    agentTunnel: "ssh tunnel proxy forward port",
+    agentRemote: "ssh remote server host other computers tunnel proxy forward port",
     agentAlerts: "pop-up alerts notifications",
     sounds: "sound pack",
     agentPush: "mobile push bark cc-connect bot feishu",
@@ -361,9 +310,7 @@ export const en: SettingsCategoriesText = {
     plugins: "extensions installed folder developer updates island pages",
     pluginsV3: "plugins v3 kernel host status usage cpu errors disabled safe mode preview",
     market: "extensions plugins download install browse",
-    about: "version updates check beta channel",
-    aboutHistory: "changelog version history release notes",
-    aboutHelp: "help onboarding guide diagnostics reset quit feedback star",
+    about: "version updates check beta channel changelog version history release notes help onboarding guide diagnostics reset quit feedback star",
   },
   entries: {
     general: "General",
@@ -371,8 +318,6 @@ export const en: SettingsCategoriesText = {
     behaviorAlerts: "Timer & alerts",
     appearance: "Appearance",
     shortcuts: "Shortcuts",
-    todos: "Todos",
-    calendar: "Calendar",
     music: "Music",
     clipboard: "Clipboard",
     screenshot: "Screenshots",
@@ -381,12 +326,11 @@ export const en: SettingsCategoriesText = {
     agents: "Agent",
     agentAppearance: "Appearance",
     agentAlerts: "Alerts",
-    agentRemote: "SSH remote",
-    about: "About",
   },
   tabs: {
     general: "Startup and tray",
     generalData: "Data and backup",
+    generalSync: "Cross-device sync",
     generalApi: "Local API",
     plugins: "Installed",
     pluginsPages: "Pages and shortcuts",
@@ -396,31 +340,22 @@ export const en: SettingsCategoriesText = {
     musicLyrics: "Lyrics sources",
     musicLyricsStyle: "Lyrics style",
     clipboard: "Opening and pasting",
-    clipboardHistory: "What is kept",
+    clipboardHistory: "Records and links",
     clipboardSnippets: "Snippets and prompts",
-    clipboardData: "Import and export",
     screenshot: "Screenshots",
     screenshotRecord: "Recording",
     behavior: "Expand and collapse",
     behaviorTuck: "Tucking",
-    behaviorQuiet: "Fullscreen and quiet",
     behaviorAlerts: "System alerts",
-    timerAlerts: "Timer",
-    timerBreaks: "Break reminders",
+    timerAlerts: "Timer and breaks",
     shortcuts: "Global",
     shortcutsIsland: "On the island",
     shortcutsReference: "Reference",
     theme: "Theme and colors",
-    themeStyle: "Style and corners",
-    themeGlass: "Liquid glass",
+    themeStyle: "Material and corners",
     appearance: "Position and size",
     appearanceCollapsed: "Collapsed bar",
-    themePresets: "My themes",
     themeMarket: "Theme market",
-    todos: "Todos and archive",
-    todosStorage: "Projects and storage",
-    calendar: "On the island",
-    calendarSources: "Calendar sources",
     messages: "Notice style",
     messagesIm: "QQ and WeChat",
     messagesMail: "Mail",
@@ -433,11 +368,6 @@ export const en: SettingsCategoriesText = {
     agentAlerts: "Desktop alerts",
     sounds: "Sounds",
     agentPush: "Push and bots",
-    agentRemote: "Remote hosts",
-    agentTunnel: "SSH tunnel",
-    about: "Version and updates",
-    aboutHistory: "Changelog",
-    aboutHelp: "Help and reset",
   },
   groups: {
     basics: "Basics",
@@ -448,13 +378,12 @@ export const en: SettingsCategoriesText = {
   overview: "Overview",
   general: "General",
   generalData: "Data and backup",
+  generalSync: "Cross-device sync",
   generalApi: "Local API",
   behavior: "Behavior",
   behaviorTuck: "Tucking",
-  behaviorQuiet: "Fullscreen and quiet",
   behaviorAlerts: "System alerts",
-  timerAlerts: "Timer",
-  timerBreaks: "Break reminders",
+  timerAlerts: "Timer and breaks",
   shortcutsIsland: "Island keys",
   shortcutsReference: "Key reference",
   pluginsPages: "Plugin pages and shortcuts",
@@ -462,16 +391,13 @@ export const en: SettingsCategoriesText = {
   pluginsDev: "Plugin developer",
   musicLyrics: "Lyrics sources",
   musicLyricsStyle: "Lyrics style",
-  clipboardHistory: "Clipboard records",
+  clipboardHistory: "Records and links",
   clipboardSnippets: "Snippets and prompts",
-  clipboardData: "Clipboard import and export",
   screenshotRecord: "Recording",
   appearance: "Position and size",
   appearanceCollapsed: "Collapsed bar",
   theme: "Theme and colors",
-  themeStyle: "Style and corners",
-  themeGlass: "Liquid glass",
-  themePresets: "My themes",
+  themeStyle: "Material and corners",
   themeMarket: "Theme market",
   shortcuts: "Shortcuts",
   messages: "Messages",
@@ -479,7 +405,6 @@ export const en: SettingsCategoriesText = {
   messagesMail: "Mail",
   mail: "Mail",
   todos: "Todos",
-  todosStorage: "Projects and storage",
   music: "Music",
   clipboard: "Clipboard",
   translation: "Translation",
@@ -487,13 +412,11 @@ export const en: SettingsCategoriesText = {
   screenshot: "Screenshot",
   voiceInput: "Voice input",
   calendar: "Calendar",
-  calendarSources: "Calendar sources",
   agents: "Hooks and agents",
   agentAppearance: "Light and title",
   agentSessions: "Session list",
   agentRings: "Usage and session rings",
-  agentRemote: "Remote hosts",
-  agentTunnel: "SSH tunnel",
+  agentRemote: "SSH remote",
   agentAlerts: "Desktop alerts",
   sounds: "Sounds",
   agentPush: "Push and bots",
@@ -503,6 +426,4 @@ export const en: SettingsCategoriesText = {
   pluginsV3: "Plugins (v3)",
   market: "Plugin market",
   about: "About",
-  aboutHistory: "Changelog",
-  aboutHelp: "Help and reset",
 };

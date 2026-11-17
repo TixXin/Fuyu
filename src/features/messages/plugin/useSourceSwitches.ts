@@ -1,38 +1,32 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { setBuiltinConfig } from "../../plugin-kernel/builtinSwitches";
 import { useBuiltinConfig, useBuiltinPlugins } from "../../plugin-kernel/useBuiltinPlugins";
-import { isQQNotificationsEnabled, saveQQNotificationsEnabled } from "../qq-notifications/storage";
-import { isWeChatRemindersEnabled, saveWeChatRemindersEnabled } from "../wechat/storage";
+import { isQQNotificationsEnabled } from "../qq-notifications/storage";
+import { isWeChatRemindersEnabled } from "../wechat/storage";
 import { OWNER } from "./owner.ts";
-import { MIRRORED_SOURCES, reconcileSources, type MirroredSource, type SourceValues } from "./sourceSwitches.ts";
+import { MESSAGE_SOURCES, migrateSources, sourceSwitch, type MessageSource } from "./sourceSwitches.ts";
 
-const MIRRORS: Record<MirroredSource, (on: boolean) => void> = {
-  qq: saveQQNotificationsEnabled,
-  wechat: saveWeChatRemindersEnabled,
-};
-
-export async function setSourceEnabled(source: MirroredSource, on: boolean): Promise<void> {
+export async function setSourceEnabled(source: MessageSource, on: boolean): Promise<void> {
   await setBuiltinConfig(OWNER, source, on);
-  MIRRORS[source](on);
 }
 
-function write(source: MirroredSource, on: boolean) {
+export function useMailEnabled(fallback = true): boolean {
+  const config = useBuiltinConfig(OWNER);
+  return sourceSwitch(config, "mail") ?? fallback;
+}
+
+function write(source: MessageSource, on: boolean) {
   void setBuiltinConfig(OWNER, source, on).catch((error: unknown) => console.error(`Could not save the ${source} message source switch`, error));
 }
 
-export function useSourceReconcile() {
+export function useSourceReconcile(mailFallback = true) {
   const plugins = useBuiltinPlugins();
   const config = useBuiltinConfig(OWNER);
-  const seen = useRef<SourceValues | null>(null);
   useEffect(() => {
-    if (!plugins) return;
-    const stored: SourceValues = { qq: isQQNotificationsEnabled(), wechat: isWeChatRemindersEnabled() };
-    const result = reconcileSources(stored, config, seen.current, MIRRORED_SOURCES);
-    for (const [source, on] of result.write) write(source, on);
-    for (const [source, on] of result.mirror) {
-      MIRRORS[source](on);
-      stored[source] = on;
+    if (!plugins?.some((plugin) => plugin.id === OWNER)) return;
+    const stored = { qq: isQQNotificationsEnabled(), wechat: isWeChatRemindersEnabled(), mail: mailFallback };
+    for (const [source, on] of migrateSources(stored, config, MESSAGE_SOURCES)) {
+      write(source, on);
     }
-    seen.current = stored;
-  }, [plugins, config]);
+  }, [plugins, config, mailFallback]);
 }

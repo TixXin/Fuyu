@@ -1,0 +1,140 @@
+.session-ring-art {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.session-ring-art__grid {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5px;
+}
+
+.session-ring-art__grid i {
+  border-radius: 2px;
+  background: var(--color-white-a12);
+}
+
+.session-ring-art__ring {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-circle);
+  background: conic-gradient(
+    var(--color-light-needs) 0deg 60deg,
+    var(--color-light-your-turn) 68deg 132deg,
+    var(--color-light-working) 140deg 260deg,
+    var(--color-light-done) 268deg 352deg,
+    transparent 352deg 360deg
+  );
+}
+
+.session-ring-art__ring-inner {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-circle);
+  background: var(--color-surface-dark);
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.island-light .session-ring-art__ring-inner {
+  background: var(--color-white);
+}
+
+.session-ring-art__bar-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: var(--color-surface-dark);
+  border-radius: var(--radius-pill);
+}
+
+.island-light .session-ring-art__bar-wrap {
+  background: var(--color-white);
+  border: 1px solid var(--color-white-a12);
+}
+
+.session-ring-art__count {
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.session-ring-art__bar {
+  width: 44px;
+  height: 5px;
+  display: flex;
+  gap: 2px;
+}
+
+.session-ring-art__seg {
+  height: 100%;
+  border-radius: var(--radius-pill);
+}
+
+.session-ring-art__seg--needs {
+  flex: 1;
+  background: var(--color-light-needs);
+}
+
+.session-ring-art__seg--turn {
+  flex: 1;
+  background: var(--color-light-your-turn);
+}
+
+.session-ring-art__seg--work {
+  flex: 2;
+  background: var(--color-light-working);
+}
+
+.session-ring-art__seg--done {
+  flex: 1.5;
+  background: var(--color-light-done);
+}
+
+.session-ring-art__signal {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.session-ring-art__col {
+  display: grid;
+  gap: 2px;
+}
+
+.session-ring-art__col i {
+  width: 7px;
+  height: 3.5px;
+  border-radius: 1.5px;
+  background: var(--color-white-a12);
+}
+
+.session-ring-art__grid i.session-ring-art__lit--needs,
+.session-ring-art__col i.session-ring-art__lit--needs {
+  background: var(--color-light-needs);
+}
+
+.session-ring-art__grid i.session-ring-art__lit--turn,
+.session-ring-art__col i.session-ring-art__lit--turn {
+  background: var(--color-light-your-turn);
+}
+
+.session-ring-art__grid i.session-ring-art__lit--work,
+.session-ring-art__col i.session-ring-art__lit--work {
+  background: var(--color-light-working);
+}
+
+.session-ring-art__grid i.session-ring-art__lit--done,
+.session-ring-art__col i.session-ring-art__lit--done {
+  background: var(--color-light-done);
+}

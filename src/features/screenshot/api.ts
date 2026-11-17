@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen, type EventCallback } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { open } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { OcrWord } from "./redact";
 import type { PixelRect } from "./selection";
@@ -324,4 +325,9 @@ export function listenRecordingFinished(handler: EventCallback<RecordingFinished
 
 export function revealRecording(path: string) {
   return revealItemInDir(path);
+}
+
+export async function pickSaveFolder(title: string) {
+  const picked = await open({ directory: true, multiple: false, title });
+  return typeof picked === "string" ? picked : null;
 }

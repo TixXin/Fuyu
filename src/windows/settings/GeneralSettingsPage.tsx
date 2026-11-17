@@ -11,7 +11,11 @@ import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";
 
 function moveTodoFolder(from: string, to: string) {
-  const join = (home: string) => `${home.replace(/[\\/]+$/, "")}\\todo`;
+  const join = (home: string) => {
+    const trimmed = home.replace(/[\\/]+$/, "");
+    const sep = trimmed.includes("/") && !trimmed.includes("\\") ? "/" : "\\";
+    return `${trimmed}${sep}todo`;
+  };
   if (sameDirectory(loadSaveDirectory(), join(from))) saveSaveDirectory(join(to));
 }
 

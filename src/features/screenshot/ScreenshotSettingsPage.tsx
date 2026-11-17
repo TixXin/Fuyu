@@ -1,10 +1,14 @@
 import { useState, type Dispatch, type SetStateAction } from "react";
+import { FolderOpen } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../../lib/settings/types";
+import { revealFolder } from "../../lib/settings-backup/api";
+import { pickSaveFolder } from "./api";
 import { ScreenshotShortcutRows } from "./ScreenshotShortcutRows";
 import { CARD_SECONDS, HISTORY_DAYS, type CardSeconds, type HistoryDays, type ScreenshotSettings } from "./settings";
 import { RecordSettingsGroup } from "./RecordSettingsGroup";
@@ -66,23 +70,48 @@ function CapturingSection({ settings, onSettingsChange }: ScreenshotSectionProps
 }
 
 function AfterSection({ screenshot, onScreenshotChange: setScreenshot, folderDraft, onFolderDraftChange, onSaveFolder }: ScreenshotSectionProps) {
-  const text = useTranslation().settings.screenshot;
+  const settingsText = useTranslation().settings;
+  const text = settingsText.screenshot;
+  const dataHome = settingsText.dataHome;
+  const pickFolder = () => {
+    void pickSaveFolder(text.saveFolder).then((picked) => {
+      if (!picked) return;
+      onFolderDraftChange(picked);
+      setScreenshot({ ...screenshot, saveFolder: picked });
+    });
+  };
   return (
     <SettingsGroup title={text.afterTitle}>
       <SettingsRow
         title={text.saveFolder}
         description={isMacOS ? text.saveFolderHintMac : text.saveFolderHint}
         control={
-          <SettingsInput
-            value={folderDraft}
-            placeholder={text.saveFolderPlaceholder}
-            aria-label={text.saveFolder}
-            onChange={(event) => onFolderDraftChange(event.target.value)}
-            onBlur={onSaveFolder}
-            onKeyDown={(event) => { if (event.key === "Enter") onSaveFolder(); }}
-          />
+          <>
+            {folderDraft.trim() ? (
+              <SettingsLinkButton onClick={() => void revealFolder(folderDraft.trim())}>
+                <FolderOpen size={13} strokeWidth={2.2} aria-hidden="true" />
+                {isMacOS ? dataHome.revealMac : dataHome.reveal}
+              </SettingsLinkButton>
+            ) : null}
+            {folderDraft.trim() ? (
+              <SettingsLinkButton onClick={() => { onFolderDraftChange(""); setScreenshot({ ...screenshot, saveFolder: "" }); }}>
+                {dataHome.useDefault}
+              </SettingsLinkButton>
+            ) : null}
+            <SettingsLinkButton onClick={pickFolder}>{dataHome.change}</SettingsLinkButton>
+          </>
         }
-      />
+      >
+        <SettingsInput
+          monospace
+          value={folderDraft}
+          placeholder={text.saveFolderPlaceholder}
+          aria-label={text.saveFolder}
+          onChange={(event) => onFolderDraftChange(event.target.value)}
+          onBlur={onSaveFolder}
+          onKeyDown={(event) => { if (event.key === "Enter") onSaveFolder(); }}
+        />
+      </SettingsRow>
       <SettingsRow
         title={text.cardSeconds}
         description={text.cardSecondsHint}
@@ -148,7 +177,7 @@ export function ScreenshotSettingsPage({
 
   return (
     <>
-      {shown === "screenshot" && <FeatureHeader feature="screenshot" icon={settingsCategoryIcon("screenshot")} />}
+      <FeatureHeader feature="screenshot" icon={settingsCategoryIcon("screenshot")} />
       <SlotView slot={sections} group={shown} props={props} />
     </>
   );

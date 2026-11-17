@@ -37,30 +37,104 @@ function blocks(css) {
 }
 
 const moving = (body) => /(^|[;\s])animation(-name)?\s*:\s*(?!none\b)[^;]+/.test(body);
+const calmsAnimation = (body) => /(^|[;\s])(animation(-name|-duration|-play-state|-timing-function)?|visibility|display)\s*:/.test(body);
 
-test("every animation stops or calms down when Windows asks for less motion", () => {
-  const sheets = cssFiles(SRC).map((file) => {
-    const all = blocks(readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, ""));
-    const own = all
-      .filter((block) => /prefers-reduced-motion:\s*reduce/.test(block.prelude))
-      .map((block) => block.body)
-      .join("\n");
-    return { file, all, own };
-  });
-  const reduced = sheets.map((sheet) => sheet.own).join("\n");
+function parseRules(css, media = []) {
+  const out = [];
+  for (const block of blocks(css)) {
+    if (block.prelude.startsWith("@keyframes")) continue;
+    if (block.prelude.startsWith("@")) {
+      out.push(...parseRules(block.body, [...media, block.prelude]));
+    } else {
+      const selectors = block.prelude.split(",").map((part) => part.trim()).filter(Boolean);
+      out.push({ selectors, body: block.body, media });
+    }
+  }
+  return out;
+}
+
+function selectorMatches(animated, reduced) {
+  if (reduced === "*" || /\s\*\s*$/.test(reduced)) return true;
+  if (animated === reduced) return true;
+  if (animated.endsWith(` ${reduced}`) || animated.endsWith(`>${reduced}`)) {
+    return !animated.startsWith(":root[");
+  }
+  return false;
+}
+
+export function missingReducedMotionSelectors(sheets) {
+  const parsed = sheets.map(({ file, css }) => ({
+    file,
+    rules: parseRules(css.replace(/\/\*[\s\S]*?\*\//g, "")),
+  }));
+  const globalWildcard = parsed.some(({ rules }) =>
+    rules.some(
+      (rule) =>
+        rule.media.some((item) => /prefers-reduced-motion:\s*reduce/.test(item)) &&
+        calmsAnimation(rule.body) &&
+        rule.selectors.includes("*"),
+    ),
+  );
+  if (globalWildcard) return [];
+
   const missing = [];
-  for (const { file, all, own } of sheets) {
-    if (/\s\*\s*[,{]/.test(own)) continue;
-    for (const block of all) {
-      if (block.prelude.startsWith("@") || !moving(block.body)) continue;
-      for (const selector of block.prelude.split(",").map((part) => part.trim())) {
-        const element = selector.split(/\s+/).pop();
-        if (COLOUR_ONLY.has(selector) || reduced.includes(selector) || reduced.includes(element)) continue;
-        missing.push(`${path.relative(SRC, file)}: ${selector}`);
+  for (const { file, rules } of parsed) {
+    const reducedSelectors = rules
+      .filter((rule) => rule.media.some((item) => /prefers-reduced-motion:\s*reduce/.test(item)) && calmsAnimation(rule.body))
+      .flatMap((rule) => rule.selectors);
+    for (const rule of rules) {
+      if (rule.media.some((item) => /prefers-reduced-motion:\s*(reduce|no-preference)/.test(item))) continue;
+      if (!moving(rule.body)) continue;
+      for (const selector of rule.selectors) {
+        if (COLOUR_ONLY.has(selector)) continue;
+        if (reducedSelectors.some((reduced) => selectorMatches(selector, reduced))) continue;
+        missing.push(`${file}: ${selector}`);
       }
     }
   }
-  assert.deepEqual(missing, []);
+  return missing;
+}
+
+test("every animation stops or calms down when Windows asks for less motion", () => {
+  const sheets = cssFiles(SRC).map((file) => ({
+    file: path.relative(SRC, file).replaceAll("\\", "/"),
+    css: readFileSync(file, "utf8"),
+  }));
+  assert.deepEqual(missingReducedMotionSelectors(sheets), []);
+});
+
+test("nested @-rules and substring selector collisions are caught while no-preference and global rules pass", () => {
+  assert.deepEqual(
+    missingReducedMotionSelectors([
+      {
+        file: "a.css",
+        css: "@container (min-width: 100px) { .toast { animation: pop 160ms; } } @media (prefers-reduced-motion: reduce) { .toast-close { animation: none; } }",
+      },
+    ]),
+    ["a.css: .toast"],
+  );
+  assert.deepEqual(
+    missingReducedMotionSelectors([
+      {
+        file: "a.css",
+        css: "@media (prefers-reduced-motion: no-preference) { .drawer { animation: open 160ms; } }",
+      },
+    ]),
+    [],
+  );
+  assert.deepEqual(
+    missingReducedMotionSelectors([
+      {
+        file: "base.css",
+        css: "@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; } }",
+      },
+      {
+        file: "feature.css",
+        css: ".badge { animation: pulse 1s infinite; }",
+      },
+    ]),
+    [],
+  );
 });
 
 const reducedRules = (file) => {

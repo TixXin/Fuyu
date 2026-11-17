@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { BACKUP_KEYS, backupFileName, buildBackup, parseBackup } from "../../src/lib/settings-backup/backup.ts";
+import { BACKUP_KEYS, backupFileName, buildBackup, parseBackup, switchesFromBackup, withSwitchSnapshot } from "../../src/lib/settings-backup/backup.ts";
+import { collectBackup, registerBackupSwitches, restoreBackup } from "../../src/lib/settings-backup/storage.ts";
 
 test("a backup holds the set settings keys and nothing else", () => {
   const stored = {
@@ -64,4 +65,69 @@ test("a backup from before the rename restores under the new key names", () => {
   assert.deepEqual(parseBackup(old), { keys: { "fuyu-settings": '{"opacity":80}', "fuyu-locale": "en" } });
   const both = JSON.stringify({ app: "fuyu", version: 1, keys: { "fuyu-locale": "zh-CN", "focusd-island-locale": "en" } });
   assert.deepEqual(parseBackup(both), { keys: { "fuyu-locale": "zh-CN" } });
+});
+
+test("exporting with a built-in switch snapshot records plugin and message source switches and restoring applies them", () => {
+  const snapshot = {
+    enabled: { todos: false, screenshot: true, agents: false, "voice-input": true },
+    config: { messages: { qq: false, wechat: true, mail: false } },
+  };
+  const exported = withSwitchSnapshot({ "fuyu-settings": '{"opacity":90}' }, snapshot);
+  const savedSettings = JSON.parse(exported["fuyu-settings"]);
+  assert.equal(savedSettings.opacity, 90);
+  assert.equal(savedSettings.todoEnabled, false);
+  assert.equal(savedSettings.screenshotEnabled, true);
+  assert.equal(savedSettings.agentStatusEnabled, false);
+  assert.equal(savedSettings.mailEnabled, false);
+  assert.equal(exported["fuyu-qq-notifications-enabled"], "false");
+  assert.equal(exported["fuyu-wechat-reminders-enabled"], "true");
+  assert.deepEqual(JSON.parse(exported["fuyu-voice-input"]), { enabled: true, shortcut: "Ctrl+Shift+Space" });
+
+  const restored = switchesFromBackup(exported);
+  assert.deepEqual(restored.plugins, [
+    ["todos", false],
+    ["screenshot", true],
+    ["agents", false],
+    ["voice-input", true],
+  ]);
+  assert.deepEqual(restored.configs, [
+    ["messages", "mail", false],
+    ["messages", "qq", false],
+    ["messages", "wechat", true],
+  ]);
+  assert.ok(restored.migrated.includes("todoEnabled") && restored.migrated.includes("fuyu-voice-input"));
+});
+
+test("collectBackup and restoreBackup bridge built-in switches even when fuyu-settings was absent before export", () => {
+  const store = new Map();
+  const prevWindow = globalThis.window;
+  const localStorage = {
+    getItem: (key) => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => { store.set(key, String(value)); },
+    removeItem: (key) => { store.delete(key); },
+  };
+  globalThis.window = { localStorage, dispatchEvent: () => true };
+  const applied = [];
+  registerBackupSwitches({
+    snapshot: () => ({
+      enabled: { todos: false, music: true, screenshot: false },
+      config: { messages: { qq: false, wechat: false, mail: true } },
+    }),
+    apply: (restored) => { applied.push(restored); },
+  });
+  try {
+    const backup = collectBackup(new Date("2026-11-17T08:00:00Z"));
+    assert.equal(JSON.parse(backup.keys["fuyu-settings"]).todoEnabled, false);
+    assert.equal(backup.keys["fuyu-qq-notifications-enabled"], "false");
+    store.clear();
+    const count = restoreBackup(backup.keys);
+    assert.ok(count > 0);
+    assert.equal(applied.length, 1);
+    assert.deepEqual(applied[0].plugins, [["todos", false], ["screenshot", false], ["music", true]]);
+    assert.deepEqual(applied[0].configs, [["messages", "mail", true], ["messages", "qq", false], ["messages", "wechat", false]]);
+  } finally {
+    registerBackupSwitches(null);
+    if (prevWindow === undefined) delete globalThis.window;
+    else globalThis.window = prevWindow;
+  }
 });

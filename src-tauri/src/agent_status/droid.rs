@@ -14,6 +14,7 @@ use super::sessions::{parse_claude_tail, session_phase, AgentSessionSummary, Ses
 use super::title::{display_title, folder_title, user_prompt_in_record};
 
 pub(super) const PROVIDER: &str = "droid";
+pub(super) const APPROVED_TOOLS: &str = "^(Bash|Execute|RunCommand|Edit|Write|MultiEdit)$";
 const HOME_DIR: &str = ".factory";
 const HOME_ENV: &str = "FACTORY_HOME";
 const SESSIONS_DIR: &str = "sessions";
@@ -28,7 +29,7 @@ pub(super) const SPEC: Compat = Compat {
     prompt_file: "AGENTS.md",
     waiting: Waiting::PermissionPrompt,
     hooks_file: "settings.json",
-    reply: Reply::None,
+    reply: Reply::PreToolUse(APPROVED_TOOLS),
     aliases: &[],
 };
 

@@ -83,6 +83,188 @@
       }
     },
     {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步方式",
+        "title": "同步文件夹",
+        "description": "未选择（首次使用请手动指定一个空目录或已有的 fuyu-sync 上级目录）"
+      },
+      "en": {
+        "group": "Sync method",
+        "title": "Sync folder",
+        "description": "Not selected (pick an empty folder or an existing parent folder containing fuyu-sync)"
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "待办、每日笔记与归档",
+        "description": "按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "Todos, daily notes and archive",
+        "description": "Merges todos and project tags item-by-item; keeps a conflict copy if both computers edit the same day's note."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "常用短语",
+        "description": "剪贴板里的常用语与 AI 提示词模板。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "Snippets",
+        "description": "Saved clipboard phrases and AI prompt templates."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "链接书签",
+        "description": "剪贴板收藏的常用网址与排列顺序。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "Link bookmarks",
+        "description": "Saved websites in the clipboard window and their order."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "通用与功能设置",
+        "description": "按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "General and feature settings",
+        "description": "Syncs allowlisted theme, behavior and feature preferences; feature master switches copy only on first merge."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "我的主题预设",
+        "description": "已保存的外观样式预设（自动剔除显示器与尺寸等设备字段）。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "Saved themes",
+        "description": "Style presets with monitor and size fields stripped per machine."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "翻译服务与模型选择",
+        "description": "默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Translation service and models",
+        "description": "Off by default: API keys stay local, and custom endpoints like local Ollama rarely work on another machine."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "PrtSc 接管与录屏参数",
+        "description": "默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "PrtSc capture and recording options",
+        "description": "Off by default: keyboard keys, microphones and system audio capture differ across machines and OSes."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "Agent 提示音量与音效包",
+        "description": "默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Agent sound volume and sound pack",
+        "description": "Off by default: speaker levels vary by machine, and custom sound packs may not be installed elsewhere."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "手机推送开关与通道",
+        "description": "默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Mobile push switch and channel",
+        "description": "Off by default: turning push on across multiple computers can send duplicate alerts."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "邮箱账号列表（不含密码）",
+        "description": "默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Mail accounts (without passwords)",
+        "description": "Off by default: app passwords stay in each computer's keychain, so accounts still need sign-in there."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "收起条项目与顺序",
+        "description": "默认关闭：收起条可能包含仅在某一台电脑安装的第三方插件或平台专属项。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Collapsed bar items and order",
+        "description": "Off by default: the bar can include plugins or items only available on one computer."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "插件岛上页面顺序与隐藏",
+        "description": "默认关闭：各台电脑安装的插件集合不同，页面列表未必一致。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Plugin island page order and visibility",
+        "description": "Off by default: different computers may have different plugins installed."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "更新通道（稳定版 / 测试版）",
+        "description": "默认关闭：便于在一台电脑尝鲜测试版，另一台主力机保持稳定版。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Update channel (Stable / Beta)",
+        "description": "Off by default: lets you test Beta builds on one computer while keeping another on Stable."
+      }
+    },
+    {
       "page": "generalApi",
       "zh-CN": {
         "group": "本机接口",
@@ -383,7 +565,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "预设"
@@ -394,7 +576,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "风格"
@@ -405,7 +587,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "玻璃强度"
@@ -416,7 +598,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "玻璃背后",
@@ -437,7 +619,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "模糊"
@@ -448,7 +630,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "饱和度"
@@ -459,7 +641,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "噪点"
@@ -470,7 +652,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "颜色来源",
@@ -491,7 +673,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "颜色 1"
@@ -502,7 +684,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "颜色 2"
@@ -513,7 +695,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "颜色 3"
@@ -524,7 +706,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "色彩浓度"
@@ -535,7 +717,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "流动速度"
@@ -546,7 +728,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "色块大小"
@@ -557,7 +739,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "折叠时流动",
@@ -576,7 +758,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "油膜边"
@@ -587,7 +769,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "边宽"
@@ -598,7 +780,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "扫光"
@@ -609,7 +791,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "镜面高光",
@@ -622,7 +804,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "展开收起",
@@ -643,7 +825,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "文字保护",
@@ -924,6 +1106,32 @@
       }
     },
     {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "全屏和游戏",
+        "title": "游戏勿扰",
+        "description": "不悬停展开，不抢键盘焦点，不弹消息预览，已展开的面板会收起。消息照常接收。"
+      },
+      "en": {
+        "group": "Full screen and games",
+        "title": "Do not disturb in games",
+        "description": "No opening on hover, no taking the keyboard focus, no message pop-ups, and an open panel closes. Messages still arrive."
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "全屏和游戏",
+        "title": "游戏时贴边隐藏",
+        "description": "全屏程序占住岛所在的屏幕时贴到顶部，退出后自动露出。"
+      },
+      "en": {
+        "group": "Full screen and games",
+        "title": "Tuck away during games",
+        "description": "Tucks to the top edge while a full-screen app fills the island's screen, and slides back out afterwards."
+      }
+    },
+    {
       "page": "behaviorTuck",
       "zh-CN": {
         "group": "贴边隐藏",
@@ -1073,32 +1281,6 @@
       }
     },
     {
-      "page": "behaviorQuiet",
-      "zh-CN": {
-        "group": "全屏和游戏",
-        "title": "游戏勿扰",
-        "description": "不悬停展开，不抢键盘焦点，不弹消息预览，已展开的面板会收起。消息照常接收。"
-      },
-      "en": {
-        "group": "Full screen and games",
-        "title": "Do not disturb in games",
-        "description": "No opening on hover, no taking the keyboard focus, no message pop-ups, and an open panel closes. Messages still arrive."
-      }
-    },
-    {
-      "page": "behaviorQuiet",
-      "zh-CN": {
-        "group": "全屏和游戏",
-        "title": "游戏时贴边隐藏",
-        "description": "全屏程序占住岛所在的屏幕时贴到顶部，退出后自动露出。"
-      },
-      "en": {
-        "group": "Full screen and games",
-        "title": "Tuck away during games",
-        "description": "Tucks to the top edge while a full-screen app fills the island's screen, and slides back out afterwards."
-      }
-    },
-    {
       "page": "shortcuts",
       "zh-CN": {
         "group": "",
@@ -1159,19 +1341,6 @@
         "group": "Page switching",
         "title": "Take the keyboard on hover",
         "description": "Page keys work as soon as the cursor rests on the expanded island. This takes keyboard focus from the window you are using and hands it back when the cursor leaves"
-      }
-    },
-    {
-      "page": "shortcutsReference",
-      "zh-CN": {
-        "group": "",
-        "title": "按键查询",
-        "description": "按下一组组合键，看看浮屿里是谁在用它。"
-      },
-      "en": {
-        "group": "",
-        "title": "Look up keys",
-        "description": "Press a key combination to see what in Fuyu uses it."
       }
     },
     {
@@ -1329,7 +1498,7 @@
       }
     },
     {
-      "page": "todosStorage",
+      "page": "todos",
       "zh-CN": {
         "group": "待办清单保存路径",
         "title": "文件夹"
@@ -1366,7 +1535,7 @@
       }
     },
     {
-      "page": "calendarSources",
+      "page": "calendar",
       "zh-CN": {
         "group": "已添加的日历",
         "title": "用的是"
@@ -1897,90 +2066,6 @@
       }
     },
     {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "复制链接时在岛上提示",
-        "description": "在任何地方复制了网址，收起的岛上弹一条，点书签按钮就存进剪贴板页的「书签」。 书签显示网站图标要打开「读取链接标题和图标」。"
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Offer to bookmark copied links",
-        "description": "When you copy a web address anywhere, the collapsed island shows it; the bookmark button keeps it under Bookmarks on the clipboard page. Site icons on bookmarks need “Read link titles and icons”."
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "识别哪些链接",
-        "options": [
-          "所有网址",
-          "只认 http(s):// 开头的"
-        ]
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Which links",
-        "options": [
-          "Any web address",
-          "Only http(s)://"
-        ]
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "这些网站不提示",
-        "description": "填域名，用逗号、空格或换行分开；子域名一起算，例如 google.com 也包括 mail.google.com。"
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Never for these sites",
-        "description": "Domains, separated by commas, spaces or new lines. Subdomains count too: google.com covers mail.google.com."
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "只提示这些网站",
-        "description": "留空就是所有网站。"
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Only for these sites",
-        "description": "Leave empty for every site."
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "导出书签",
-        "description": "写成「下载」文件夹里的一个 JSON 文件。"
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Export bookmarks",
-        "description": "Writes a JSON file to your Downloads folder."
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "导入书签",
-        "description": "读浮屿导出的 JSON，或每行一个网址的文本文件；已有的网址跳过。"
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Import bookmarks",
-        "description": "Reads a JSON file exported by Fuyu, or a text file with one address per line. Addresses you already have are skipped."
-      }
-    },
-    {
       "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
@@ -2156,7 +2241,91 @@
       }
     },
     {
-      "page": "clipboardData",
+      "page": "clipboardHistory",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "复制链接时在岛上提示",
+        "description": "在任何地方复制了网址，收起的岛上弹一条，点书签按钮就存进剪贴板页的「书签」。 书签显示网站图标要打开「读取链接标题和图标」。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Offer to bookmark copied links",
+        "description": "When you copy a web address anywhere, the collapsed island shows it; the bookmark button keeps it under Bookmarks on the clipboard page. Site icons on bookmarks need “Read link titles and icons”."
+      }
+    },
+    {
+      "page": "clipboardHistory",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "识别哪些链接",
+        "options": [
+          "所有网址",
+          "只认 http(s):// 开头的"
+        ]
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Which links",
+        "options": [
+          "Any web address",
+          "Only http(s)://"
+        ]
+      }
+    },
+    {
+      "page": "clipboardHistory",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "这些网站不提示",
+        "description": "填域名，用逗号、空格或换行分开；子域名一起算，例如 google.com 也包括 mail.google.com。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Never for these sites",
+        "description": "Domains, separated by commas, spaces or new lines. Subdomains count too: google.com covers mail.google.com."
+      }
+    },
+    {
+      "page": "clipboardHistory",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "只提示这些网站",
+        "description": "留空就是所有网站。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Only for these sites",
+        "description": "Leave empty for every site."
+      }
+    },
+    {
+      "page": "clipboardHistory",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "导出书签",
+        "description": "写成「下载」文件夹里的一个 JSON 文件。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Export bookmarks",
+        "description": "Writes a JSON file to your Downloads folder."
+      }
+    },
+    {
+      "page": "clipboardHistory",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "导入书签",
+        "description": "读浮屿导出的 JSON，或每行一个网址的文本文件；已有的网址跳过。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Import bookmarks",
+        "description": "Reads a JSON file exported by Fuyu, or a text file with one address per line. Addresses you already have are skipped."
+      }
+    },
+    {
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "导入导出",
         "title": "导出剪贴板历史",
@@ -2169,7 +2338,7 @@
       }
     },
     {
-      "page": "clipboardData",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "导入导出",
         "title": "从文件导入",
@@ -2415,7 +2584,7 @@
       }
     },
     {
-      "page": "timerBreaks",
+      "page": "timerAlerts",
       "zh-CN": {
         "group": "休息提醒",
         "title": "休息提醒",
@@ -2567,369 +2736,6 @@
       }
     },
     {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "当前状态"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Status"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Codex"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Codex"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Claude Code"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Claude Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "WorkBuddy"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "WorkBuddy"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Antigravity"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Antigravity"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "DeepSeek Harness"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "DeepSeek Harness"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Qoder"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Qoder"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "CodeBuddy"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "CodeBuddy"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Qwen Code"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Qwen Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "TRAE"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "TRAE"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "TRAE CN"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "TRAE CN"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "ZCode"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "ZCode"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Kimi Code"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Kimi Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Grok CLI"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Grok CLI"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "GitHub Copilot CLI"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "GitHub Copilot CLI"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "AI Agent 状态灯",
-        "title": "Droid"
-      },
-      "en": {
-        "group": "AI Agent status light",
-        "title": "Droid"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Codex"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Codex"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Claude Code"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Claude Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "WorkBuddy"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "WorkBuddy"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Antigravity"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Antigravity"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "DeepSeek Harness"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "DeepSeek Harness"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "opencode"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "opencode"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Qoder"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Qoder"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "CodeBuddy"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "CodeBuddy"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Qwen Code"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Qwen Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "TRAE"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "TRAE"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "TRAE CN"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "TRAE CN"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "ZCode"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "ZCode"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Kimi Code"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Kimi Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "MiMo Code"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "MiMo Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Grok CLI"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Grok CLI"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "GitHub Copilot CLI"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "GitHub Copilot CLI"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Droid"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Droid"
-      }
-    },
-    {
       "page": "agentConnect",
       "zh-CN": {
         "group": "回复状态标记",
@@ -3020,19 +2826,6 @@
       }
     },
     {
-      "page": "agentAppearance",
-      "zh-CN": {
-        "group": "Agent 页",
-        "title": "子 Agent / 子会话默认展开",
-        "description": "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。"
-      },
-      "en": {
-        "group": "Agent page",
-        "title": "Expand subagents and child sessions",
-        "description": "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them."
-      }
-    },
-    {
       "page": "agentSessions",
       "zh-CN": {
         "group": "会话列表",
@@ -3043,6 +2836,19 @@
         "group": "Session list",
         "title": "List sessions from the last",
         "description": "Only sessions active within this time are listed."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "子 Agent / 子会话默认展开",
+        "description": "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。"
+      },
+      "en": {
+        "group": "Session list",
+        "title": "Expand subagents and child sessions",
+        "description": "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them."
       }
     },
     {
@@ -3115,12 +2921,12 @@
       "zh-CN": {
         "group": "会话卡片",
         "title": "卡片光效",
-        "description": "只在「卡片」和「紧凑」显示方式下生效。粒子流苏：边框按状态颜色发光，进行中和等你处理的会呼吸，左侧飘着一条粒子流苏。渐变带：从右端铺开一层状态颜色的渐变，进行中和等你处理的更亮。"
+        "description": "粒子流苏与渐变带只在「卡片」和「紧凑」显示方式下生效；流光边框在三种显示方式下都只给等你确认的会话加上绕边框流动的光带，减少动画时静止。"
       },
       "en": {
         "group": "Session cards",
         "title": "Card light effects",
-        "description": "Only in the Cards and Compact layouts. Sparkle band: cards glow in their state's colour, breathing while working or waiting on you, with a drifting band of sparks on the left. Gradient: a wash in that colour from the right end, brighter while working or waiting on you."
+        "description": "Sparkle band and Gradient apply in Cards and Compact; Flowing border adds an orbiting light ribbon only to sessions waiting for your approval across all three layouts, staying still under reduced motion."
       }
     },
     {
@@ -3718,7 +3524,7 @@
       }
     },
     {
-      "page": "agentTunnel",
+      "page": "agentRemote",
       "zh-CN": {
         "group": "SSH 代理隧道",
         "title": "本地代理",
@@ -3753,7 +3559,7 @@
       }
     },
     {
-      "page": "aboutHelp",
+      "page": "about",
       "zh-CN": {
         "group": "帮助",
         "title": "新手引导",
@@ -3766,7 +3572,7 @@
       }
     },
     {
-      "page": "aboutHelp",
+      "page": "about",
       "zh-CN": {
         "group": "帮助",
         "title": "诊断信息",
@@ -3779,7 +3585,7 @@
       }
     },
     {
-      "page": "aboutHelp",
+      "page": "about",
       "zh-CN": {
         "group": "重置与退出",
         "title": "重置所有设置",
@@ -3792,7 +3598,7 @@
       }
     },
     {
-      "page": "aboutHelp",
+      "page": "about",
       "zh-CN": {
         "group": "重置与退出",
         "title": "退出岛屿",

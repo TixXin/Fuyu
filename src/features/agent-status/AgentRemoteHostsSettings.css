@@ -2,26 +2,62 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-xl);
-  padding: var(--space-xl) 16px;
+  padding: 14px 16px;
   color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.55;
 }
 
-.agent-remote__intro > svg {
+.agent-remote__icon {
   flex: none;
-  margin-top: 2px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
   color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  border-radius: var(--radius-lg);
 }
 
-.agent-remote__intro p {
+.agent-remote__copy {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.agent-remote__copy p {
   margin: 0;
 }
 
-.agent-remote__intro p + p {
-  margin-top: var(--space-xs);
+.agent-remote__copy .settings-footnote {
   color: var(--color-text-subtle);
   font-size: 12px;
+}
+
+.agent-remote__host-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-remote__dot {
+  flex: none;
+  width: 6.5px;
+  height: 6.5px;
+  border-radius: var(--radius-circle);
+  background: var(--color-white-a18);
+}
+
+.agent-remote__dot--ok {
+  background: var(--color-light-working);
+}
+
+.agent-remote__dot--busy {
+  background: var(--color-accent);
+}
+
+.agent-remote__dot--error {
+  background: var(--color-light-needs);
 }
 
 .agent-remote__origin {
@@ -117,7 +153,7 @@
   min-width: 64px;
   height: 30px;
   padding: 0 14px;
-  color: var(--color-ink);
+  color: var(--color-on-accent);
   background: var(--color-accent);
   border: 0;
   border-radius: var(--radius-md);

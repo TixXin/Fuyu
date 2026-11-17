@@ -82,11 +82,11 @@ jobs:
           security find-identity -v -p codesigning "$keychain"
           echo "APPLE_SIGNING_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
 
-      - name: Plugin host and built-in plugins
-        run: node scripts/plugins-v3/release-resources.mjs
+      - name: Release config
+        run: node scripts/release/mac-build.mjs config
 
       - name: Build
-        run: pnpm tauri build --ci --bundles app,dmg --config src-tauri/tauri.bundle-macos.conf.json --config '{"bundle":{"createUpdaterArtifacts":false}}' --config "$(node scripts/plugins-v3/release-resources.mjs --overlay)"
+        run: pnpm tauri build --ci --bundles app,dmg --config src-tauri/tauri.bundle-macos.conf.json --config src-tauri/tauri.release.conf.json
 
       - name: Package
         run: |
@@ -100,12 +100,7 @@ jobs:
       - name: Check the signature and that it starts
         run: |
           app=src-tauri/target/release/bundle/macos/Fuyu.app
-          for file in plugins-v3/host/main.mjs plugins-v3/builtins/builtins.json; do
-            if [ ! -f "$app/Contents/Resources/$file" ]; then
-              echo "::error::Fuyu.app has no Contents/Resources/$file"
-              exit 1
-            fi
-          done
+          node scripts/release/mac-build.mjs verify "$app"
           codesign --verify --deep --strict --verbose=2 "$app"
           codesign -dv "$app" 2>&1 | grep -E "Authority|Signature|Identifier"
           "$app/Contents/MacOS/fuyu" > "$RUNNER_TEMP/fuyu.log" 2>&1 &

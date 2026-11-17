@@ -79,9 +79,15 @@ pub(crate) fn stage_x(monitor: (i32, i32, i32), window: (i32, i32), scale: f64) 
     left_edge(aside, monitor_x, monitor_width, window_width)
 }
 
-pub(crate) fn watch_installed_island(window: tauri::WebviewWindow) {
-    if lane().is_some() && !centred_preview() {
-        beside::start_watch(window);
+pub(crate) const BESIDE_LOOK_EVERY: std::time::Duration = beside::LOOK_EVERY;
+
+pub(crate) fn watches_installed_island() -> bool {
+    lane().is_some() && !centred_preview()
+}
+
+pub(crate) fn poll_installed_island(window: &tauri::WebviewWindow) {
+    if watches_installed_island() {
+        beside::poll(window);
     }
 }
 

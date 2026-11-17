@@ -49,7 +49,7 @@ function GlassIsland({ background, light }: { background: string; light: boolean
   const stageStyle = {
     "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1,
     "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8,
-    "--glass-intensity": settings.glassIntensity / 100, "--island-background-color": background, "--glass-tint-color": background, "--glass-collapsed-tint-color": background,
+    "--glass-intensity": settings.glassIntensity / 100, "--glass-panel-blur": `${10 + (settings.glassIntensity / 100) * 9}px`, "--island-background-color": background, "--glass-tint-color": background, "--glass-collapsed-tint-color": background,
     ...(light ? { "--island-ink-rgb": "24, 24, 30", "--task-text-color": "#1c1c1f" } : {}),
     ...glassStyle,
   } as CSSProperties;
@@ -110,10 +110,10 @@ async function runChecks() {
 
     for (const notch of ["on", "simulated"]) {
       document.documentElement.dataset.islandNotch = notch;
-      check(islands().every((island) => playState(island) === "paused"), `刘海形态（${notch}）下折叠岛的玻璃停下`);
+      check(islands().every((island) => playState(island) === "paused" && getComputedStyle(island).backdropFilter === "none" && getComputedStyle(island.querySelector(".island__glass-highlight")!).display === "none"), `刘海形态（${notch}）下折叠岛的玻璃停下并关闭实时模糊`);
     }
     delete document.documentElement.dataset.islandNotch;
-    check(islands().every((island) => playState(island) === "running"), "离开刘海形态后接着流动");
+    check(islands().every((island) => playState(island) === "running" && getComputedStyle(island).backdropFilter !== "none" && getComputedStyle(island.querySelector(".island__glass-highlight")!).display === "block" && getComputedStyle(island.querySelector(".island__glass-highlight")!).transitionProperty === "transform"), "离开刘海形态后接着流动并恢复模糊与合成层高光");
 
     await set({ tucked: true });
     check(islands().every((island) => island.classList.contains("island--glass-paused") && playState(island) === "paused"), "收到边缘时停下");
@@ -156,6 +156,7 @@ async function runChecks() {
     for (const island of islands()) {
       const tone = island.closest<HTMLElement>(".stage")!.dataset.tone;
       check(island.style.getPropertyValue("--glass-wallpaper").startsWith('url("data:image/jpeg'), `${tone}：选了壁纸后岛的底子换成磨砂过的壁纸`);
+      check(getComputedStyle(island).backdropFilter === "none", `${tone}：选了壁纸后关闭主壳实时 backdrop-filter`);
       check(getComputedStyle(island).backgroundImage.includes("data:image/jpeg"), `${tone}：岛本体（含贴顶圆角继承的背景）画出壁纸`);
       check(island.querySelector(".island__glass-noise"), `${tone}：加了噪点层`);
       check(getComputedStyle(island, "::before").backgroundImage.includes("data:image/jpeg"), `${tone}：贴顶圆角继承同一块磨砂壁纸`);

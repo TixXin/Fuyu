@@ -21,6 +21,10 @@ export const DEFAULT_AGENT_STATUS: AgentStatusSnapshot = {
 export const AGENT_PROVIDER_LABELS = Object.fromEntries(
   SESSION_PROVIDERS.map((provider) => [provider, AGENTS[provider].label]),
 ) as Record<SessionProvider, string>;
+
+export function getAgentProviderLabel(provider: SessionProvider | string): string {
+  return AGENT_PROVIDER_LABELS[provider as SessionProvider] ?? provider;
+}
 export type AgentStatusEntry = {
   key: string;
   label: string;
@@ -38,6 +42,36 @@ export function listAgentStatuses(snapshot: AgentStatusSnapshot): AgentStatusEnt
     })),
     ...(snapshot.others ?? []).map((other) => ({ key: other.id, label: other.name, provider: null, status: other })),
   ];
+}
+
+export function isAgentProviderDetected(
+  provider: SessionProvider,
+  snapshot: AgentStatusSnapshot,
+  hooksState: AgentHooksState | null,
+): boolean {
+  const status = (snapshot as Partial<Record<SessionProvider, AgentTaskStatus>>)[provider];
+  if (status && status.phase !== "idle") return true;
+  const hook = (hooksState as Partial<Record<SessionProvider, string>> | null)?.[provider];
+  return hook !== undefined && hook !== "absent";
+}
+
+export function partitionAgentProviders(
+  providers: readonly SessionProvider[],
+  snapshot: AgentStatusSnapshot,
+  hooksState: AgentHooksState | null,
+): { primary: SessionProvider[]; more: SessionProvider[] } {
+  const detected = providers.filter((provider) => isAgentProviderDetected(provider, snapshot, hooksState));
+  if (detected.length === 0) {
+    return {
+      primary: providers.filter((provider) => provider === "codex" || provider === "claudeCode"),
+      more: providers.filter((provider) => provider !== "codex" && provider !== "claudeCode"),
+    };
+  }
+  const detectedSet = new Set(detected);
+  return {
+    primary: detected,
+    more: providers.filter((provider) => !detectedSet.has(provider)),
+  };
 }
 
 export function withoutHiddenProviders(snapshot: AgentStatusSnapshot, shown: SessionFilter): AgentStatusSnapshot {

@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import test from "node:test";
-import { RELEASE_RESOURCES, resourcesOverlay, SHIPPED_FILES } from "../../scripts/plugins-v3/release-resources.mjs";
+import { BUILD_APP_ARGS, BUNDLE_CONFIG } from "../../scripts/build-app-macos.mjs";
+import { BUILD_EXE_ARGS } from "../../scripts/build-exe.mjs";
+import { RELEASE_RESOURCES, resourcesOverlay, SHIPPED_FILES, verifyShippedResources } from "../../scripts/plugins-v3/release-resources.mjs";
+import { macOverlay, verifyMacResources } from "../../scripts/release/mac-build.mjs";
+import { localReleaseOverlay } from "../../scripts/release/prepare-release-config.mjs";
 import { windowsOverlay } from "../../scripts/release/windows-build.mjs";
 
-const read = (path) => readFileSync(path, "utf8").replace(/\r\n/g, "\n");
-const MODULE = "scripts/plugins-v3/release-resources.mjs";
+const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 
 test("the host and the built-in plugins land side by side under plugins-v3", () => {
   assert.deepEqual(Object.values(RELEASE_RESOURCES).sort(), ["plugins-v3/builtins", "plugins-v3/host"]);
@@ -13,30 +18,49 @@ test("the host and the built-in plugins land side by side under plugins-v3", () 
   assert.deepEqual(resourcesOverlay(), { bundle: { resources: { ...RELEASE_RESOURCES } } });
 });
 
-test("both Windows release overlays carry the same resources", () => {
-  const ci = windowsOverlay({ version: "1.0.0", plugins: { updater: { pubkey: "KEY" } } }, "1.0.0");
-  assert.deepEqual(ci.bundle.resources, { ...RELEASE_RESOURCES });
-  const local = read("scripts/release/prepare-release-config.mjs");
-  assert.match(local, /resources: releaseResources\(\)/);
-  assert.match(local, /await prepareReleaseResources\(\)/);
+test("Windows, macOS and local release overlays all carry the same resources", () => {
+  const base = { version: "1.0.0", plugins: { updater: { pubkey: "KEY" } } };
+  const win = windowsOverlay(base, "1.0.0");
+  const local = localReleaseOverlay(base, { TAURI_UPDATER_PUBKEY: "KEY" });
+  const mac = macOverlay();
+  assert.deepEqual(win.bundle.resources, { ...RELEASE_RESOURCES });
+  assert.deepEqual(local.bundle.resources, { ...RELEASE_RESOURCES });
+  assert.deepEqual(mac.bundle.resources, { ...RELEASE_RESOURCES });
+  assert.equal(mac.bundle.createUpdaterArtifacts, false);
 });
 
-test("the macOS release build bundles the resources after preparing them", () => {
-  const workflow = read(".github/workflows/release-macos.yml");
-  const prepare = workflow.indexOf(`run: node ${MODULE}\n`);
-  const build = workflow.indexOf(`--config "$(node ${MODULE} --overlay)"`);
-  assert.ok(prepare > 0 && build > prepare, "release-macos.yml prepares the resources, then passes them to the build");
-  for (const file of SHIPPED_FILES) assert.ok(workflow.includes(file), `release-macos.yml checks ${file}`);
+test("installed and macOS bundle verifiers check every shipped file from the single list", () => {
+  const root = mkdtempSync(join(tmpdir(), "fuyu-release-resources-"));
+  const appDir = join(root, "Fuyu.app");
+  const resourcesDir = join(appDir, "Contents", "Resources");
+  for (const file of SHIPPED_FILES) {
+    const full = join(resourcesDir, file);
+    mkdirSync(dirname(full), { recursive: true });
+    writeFileSync(full, "ok");
+  }
+  verifyShippedResources(resourcesDir);
+  verifyMacResources(appDir);
+
+  for (const file of SHIPPED_FILES) {
+    const full = join(resourcesDir, file);
+    unlinkSync(full);
+    assert.throws(() => verifyShippedResources(resourcesDir), new RegExp(file.replaceAll("/", "[/\\\\]")));
+    assert.throws(() => verifyMacResources(appDir), new RegExp(file.replaceAll("/", "[/\\\\]")));
+    writeFileSync(full, "ok");
+  }
+  rmSync(root, { recursive: true, force: true });
 });
 
 test("development builds and build:exe do not bundle the resources", () => {
-  for (const file of ["src-tauri/tauri.conf.json", "src-tauri/tauri.macos.conf.json", "src-tauri/tauri.bundle-macos.conf.json", "scripts/build-app-macos.mjs", "scripts/build-exe.mjs"]) {
-    const text = read(file);
-    assert.ok(!text.includes("plugins-v3") && !text.includes("release-resources"), `${file} must not bundle the plugin host`);
+  const releaseKeys = new Set(Object.keys(RELEASE_RESOURCES));
+  const releaseValues = new Set(Object.values(RELEASE_RESOURCES));
+  for (const file of ["src-tauri/tauri.conf.json", "src-tauri/tauri.macos.conf.json", BUNDLE_CONFIG]) {
+    const resources = readJson(file).bundle?.resources ?? {};
+    for (const [key, value] of Object.entries(resources)) {
+      assert.ok(!releaseKeys.has(key) && !releaseValues.has(value), `${file} must not bundle ${key} -> ${value}`);
+    }
   }
-});
-
-test("the Windows smoke test checks every shipped file", () => {
-  const smoke = read("scripts/release/smoke-test.ps1");
-  for (const file of SHIPPED_FILES) assert.ok(smoke.includes(file.replaceAll("/", "\\")), file);
+  for (const args of [BUILD_APP_ARGS, BUILD_EXE_ARGS]) {
+    assert.ok(!args.some((arg) => arg.includes("tauri.release.conf.json") || arg.includes("resources")), args.join(" "));
+  }
 });

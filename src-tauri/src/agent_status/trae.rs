@@ -25,7 +25,8 @@ pub(super) const PROVIDER: &str = "trae";
 pub(super) const CN_PROVIDER: &str = "traeCn";
 pub(super) const APP: &str = "trae";
 pub(super) const CN_APP: &str = "trae cn";
-pub(super) const APPROVED_TOOLS: &str = "RunCommand";
+pub(super) const APPROVED_TOOLS: &str =
+    "^(RunCommand|Bash|Write|Edit|MultiEdit|StrReplace|CreateFile|DeleteFile|WriteToFile|ReplaceInFile|mcp__.*)$";
 const MAX_AGE_MS: i64 = 24 * 60 * 60 * 1000;
 const DETAIL_MAX_CHARS: usize = 80;
 const DETAIL_KEYS: [&str; 6] = ["command", "file_path", "path", "target_file", "query", "url"];

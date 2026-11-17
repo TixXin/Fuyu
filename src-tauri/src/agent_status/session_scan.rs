@@ -25,6 +25,8 @@ use super::workbuddy;
 
 pub(super) const ACTIVE_WINDOW_MS: i64 = 2 * 60 * 60 * 1000;
 const MAX_SESSIONS: usize = 12;
+const MAX_CACHED_SESSIONS: usize = 128;
+const SESSION_CACHE_TTL_MS: i64 = 10 * 60 * 1000;
 const REGISTRY_GRACE_MS: i64 = 30_000;
 const TAIL_BYTES: u64 = 256 * 1024;
 const HEAD_BYTES: u64 = 4 * 1024 * 1024;
@@ -59,7 +61,6 @@ fn scan(
     registry: Option<HashSet<String>>,
 ) -> Vec<AgentSessionSummary> {
     let now = current_unix_millis();
-    let mut cache = SESSION_CACHE.lock().unwrap_or_else(PoisonError::into_inner);
     let mut sessions = Vec::new();
 
     let codex_home = home_dir.join(".codex");
@@ -69,32 +70,37 @@ fn scan(
     let mut live_claude = registry;
     let mut live_workbuddy = None;
     let mut workbuddy_running = None;
-    for (provider, path, modified) in recent_session_files(home_dir, now, window_ms, &threads) {
-        if let Some((mut summary, state)) =
-            cache.summary(provider, &path, modified, codex_index.as_deref())
-        {
-            match provider {
-                "codex" => {
-                    let thread = threads.iter().find(|thread| thread.id == summary.session_id);
-                    merge_thread(&mut summary, thread);
+    let files = recent_session_files(home_dir, now, window_ms, &threads);
+    let scanned: HashSet<PathBuf> = files.iter().map(|(_, path, _)| path.clone()).collect();
+    {
+        let mut cache = SESSION_CACHE.lock().unwrap_or_else(PoisonError::into_inner);
+        for (provider, path, modified) in files {
+            if let Some((mut summary, state)) =
+                cache.summary(provider, &path, modified, codex_index.as_deref(), now)
+            {
+                match provider {
+                    "codex" => {
+                        let thread = threads.iter().find(|thread| thread.id == summary.session_id);
+                        merge_thread(&mut summary, thread);
+                    }
+                    "claudeCode" => {
+                        let session = desktop.get(&summary.session_id);
+                        claude_desktop::merge(&mut summary, session);
+                    }
+                    _ => {}
                 }
-                "claudeCode" => {
-                    let session = desktop.get(&summary.session_id);
-                    claude_desktop::merge(&mut summary, session);
-                }
-                _ => {}
+                let asked_user = is_waiting(waiting, &summary.session_id, summary.updated_at);
+                summary.closed = has_ended(app_dir, &summary.session_id).unwrap_or_else(|| match summary.provider {
+                    "claudeCode" => left_registry(&[home_dir.join(".claude")], &summary, now, &mut live_claude),
+                    workbuddy::PROVIDER => {
+                        left_registry(&workbuddy::data_dirs(home_dir), &summary, now, &mut live_workbuddy)
+                            && !*workbuddy_running.get_or_insert_with(workbuddy::app_running)
+                    }
+                    _ => false,
+                });
+                settle(&mut summary, state, asked_user, compacting, now);
+                sessions.push(summary);
             }
-            let asked_user = is_waiting(waiting, &summary.session_id, summary.updated_at);
-            summary.closed = has_ended(app_dir, &summary.session_id).unwrap_or_else(|| match summary.provider {
-                "claudeCode" => left_registry(&[home_dir.join(".claude")], &summary, now, &mut live_claude),
-                workbuddy::PROVIDER => {
-                    left_registry(&workbuddy::data_dirs(home_dir), &summary, now, &mut live_workbuddy)
-                        && !*workbuddy_running.get_or_insert_with(workbuddy::app_running)
-                }
-                _ => false,
-            });
-            settle(&mut summary, state, asked_user, compacting, now);
-            sessions.push(summary);
         }
     }
     for thread in &threads {
@@ -115,13 +121,16 @@ fn scan(
         settle(&mut summary, state, asked_user, compacting, now);
         sessions.push(summary);
     }
-    cache.forget_missing(home_dir, &sessions);
     let roots = ScanRoots { home_dir, local_app_dir: app_dir };
     sessions.extend(harness::extra_sessions(&roots, now, window_ms));
 
     let is_active = |phase: &str| matches!(phase, "running" | "waiting");
     sessions.sort_by_key(|session| (!is_active(session.phase), -session.updated_at));
     sessions.truncate(MAX_SESSIONS);
+    SESSION_CACHE
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .prune(home_dir, &scanned, &sessions, now);
     sessions
 }
 
@@ -259,6 +268,7 @@ struct CachedSession {
     summary: AgentSessionSummary,
     state: TurnState,
     head: SessionHead,
+    last_seen_ms: i64,
 }
 
 #[derive(Clone, Default)]
@@ -282,6 +292,7 @@ impl SessionCache {
         path: &Path,
         modified: i64,
         codex_index: Option<&str>,
+        now: i64,
     ) -> Option<(AgentSessionSummary, TurnState)> {
         let metadata = fs::metadata(path).ok()?;
         let stamp = (metadata.len(), metadata.modified().ok());
@@ -359,19 +370,47 @@ impl SessionCache {
                 summary: summary.clone(),
                 state,
                 head,
+                last_seen_ms: now,
             },
         );
         Some((summary, state))
     }
 
-    fn forget_missing(&mut self, home_dir: &Path, listed: &[AgentSessionSummary]) {
-        if let Some(sessions) = &mut self.sessions {
-            sessions.retain(|path, cached| {
-                !path.starts_with(home_dir)
-                    || listed
-                        .iter()
-                        .any(|session| session.session_id == cached.summary.session_id)
-            });
+    fn prune(
+        &mut self,
+        home_dir: &Path,
+        scanned: &HashSet<PathBuf>,
+        listed: &[AgentSessionSummary],
+        now: i64,
+    ) {
+        let Some(sessions) = &mut self.sessions else {
+            return;
+        };
+        for (path, cached) in sessions.iter_mut() {
+            if cached.last_seen_ms > now {
+                cached.last_seen_ms = now;
+            }
+            if path.starts_with(home_dir)
+                && listed
+                    .iter()
+                    .any(|session| session.session_id == cached.summary.session_id)
+            {
+                cached.last_seen_ms = now;
+            }
+        }
+        sessions.retain(|path, cached| {
+            let in_scan = !path.starts_with(home_dir) || scanned.contains(path);
+            in_scan && now.saturating_sub(cached.last_seen_ms) <= SESSION_CACHE_TTL_MS
+        });
+        if sessions.len() > MAX_CACHED_SESSIONS {
+            let mut order: Vec<(PathBuf, i64)> = sessions
+                .iter()
+                .map(|(path, cached)| (path.clone(), cached.last_seen_ms))
+                .collect();
+            order.sort_by(|left, right| left.1.cmp(&right.1).then_with(|| left.0.cmp(&right.0)));
+            for (path, _) in order.into_iter().take(sessions.len() - MAX_CACHED_SESSIONS) {
+                sessions.remove(&path);
+            }
         }
     }
 }
@@ -483,4 +522,77 @@ pub(super) fn read_tail(path: &Path) -> Option<String> {
         bytes.drain(..=first_newline);
     }
     Some(String::from_utf8_lossy(&bytes).into_owned())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn fake_summary(id: &str) -> AgentSessionSummary {
+        summary_from("claudeCode", id.to_string(), None, None, SessionTail::default(), 0)
+    }
+
+    fn insert_cached(cache: &mut SessionCache, path: PathBuf, id: &str, last_seen_ms: i64) {
+        cache.sessions.get_or_insert_with(HashMap::new).insert(
+            path,
+            CachedSession {
+                stamp: (1, None),
+                summary: fake_summary(id),
+                state: TurnState::Done,
+                head: SessionHead::default(),
+                last_seen_ms,
+            },
+        );
+    }
+
+    #[test]
+    fn session_cache_prunes_deleted_local_unlisted_and_stale_remote_entries() {
+        let mut cache = SessionCache::new();
+        let home = PathBuf::from("/local/home");
+        let remote = PathBuf::from("/app/remote-sessions/devbox");
+        let top_path = home.join("top.jsonl");
+        let extra_path = home.join("extra.jsonl");
+        let deleted_path = home.join("deleted.jsonl");
+        let remote_path = remote.join("ssh.jsonl");
+
+        let t0 = 1_000_000;
+        insert_cached(&mut cache, top_path.clone(), "top", t0);
+        insert_cached(&mut cache, extra_path.clone(), "extra", t0);
+        insert_cached(&mut cache, deleted_path.clone(), "deleted", t0);
+        insert_cached(&mut cache, remote_path.clone(), "ssh", t0);
+
+        let scanned = HashSet::from([top_path.clone(), extra_path.clone()]);
+        let listed = vec![fake_summary("top")];
+
+        cache.prune(&home, &scanned, &listed, t0 + 5_000);
+        let map = cache.sessions.as_ref().expect("cache map");
+        assert!(!map.contains_key(&deleted_path));
+        assert!(map.contains_key(&top_path));
+        assert!(map.contains_key(&extra_path));
+        assert!(map.contains_key(&remote_path));
+
+        cache.prune(&home, &scanned, &listed, t0 + SESSION_CACHE_TTL_MS + 1);
+        let map = cache.sessions.as_ref().expect("cache map");
+        assert!(map.contains_key(&top_path));
+        assert!(!map.contains_key(&extra_path));
+        assert!(!map.contains_key(&remote_path));
+    }
+
+    #[test]
+    fn session_cache_evicts_oldest_entries_above_capacity() {
+        let mut cache = SessionCache::new();
+        let home = PathBuf::from("/local/home");
+        let mut scanned = HashSet::new();
+        for index in 0..(MAX_CACHED_SESSIONS + 10) {
+            let path = home.join(format!("s-{index:03}.jsonl"));
+            scanned.insert(path.clone());
+            insert_cached(&mut cache, path, &format!("s-{index:03}"), index as i64 + 1);
+        }
+        cache.prune(&home, &scanned, &[], (MAX_CACHED_SESSIONS + 20) as i64);
+        let map = cache.sessions.as_ref().expect("cache map");
+        assert_eq!(map.len(), MAX_CACHED_SESSIONS);
+        assert!(!map.contains_key(&home.join("s-000.jsonl")));
+        assert!(!map.contains_key(&home.join("s-009.jsonl")));
+        assert!(map.contains_key(&home.join("s-010.jsonl")));
+    }
 }

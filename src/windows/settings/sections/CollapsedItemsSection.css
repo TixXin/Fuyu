@@ -4,6 +4,13 @@
   padding: 12px 16px 14px;
 }
 
+.collapsed-items__zones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
 .collapsed-items__zone {
   display: grid;
   gap: 6px;

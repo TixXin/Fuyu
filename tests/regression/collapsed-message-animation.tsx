@@ -210,6 +210,7 @@ async function runChecks() {
       ? { ...matchMedia(query), matches: true } : matchMedia(query);
     await notify("wechat");
     check(summary().children.length === 1 && !summary().querySelector(".island__summary-layer--incoming"), "减少动态效果时新消息直接可读且无离场残留");
+    check(summary().getAnimations({ subtree: true }).length === 0, "减少动态效果时收起条摘要区无运行中的动画");
     await act(async () => button().click());
     check(commands.includes("open_wechat") && !summary().querySelector(".island-message-preview"), "减少动态效果时点击微信并立即恢复专注任务");
     window.matchMedia = matchMedia;

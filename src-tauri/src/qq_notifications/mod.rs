@@ -8,7 +8,7 @@ mod tests;
 
 use serde::Serialize;
 use std::{
-    sync::{mpsc, Arc, Mutex, OnceLock},
+    sync::{mpsc, Arc, Mutex, OnceLock, PoisonError},
     time::Duration,
 };
 use tauri::{AppHandle, Emitter, Manager};
@@ -19,10 +19,10 @@ use windows::UI::Notifications::Management::{
 
 use history::NotificationBuffer;
 use launcher::{activate_existing_qq, qq_executable};
-use listener::monitor;
+use listener::{handle_poll, QQ_APP_ID};
 
-use crate::messages_plugin::{self, SourceWorker};
-use crate::plugin_kernel::worker::Worker;
+use crate::messages_plugin::{self, SourceSwitch};
+use crate::toast_notifications::{self, Subscription, ToastMatcher};
 
 pub(crate) use plugin_view::plugin_messages;
 
@@ -104,6 +104,12 @@ impl MonitorState {
     }
 }
 
+#[derive(Default)]
+struct RepairState {
+    generation: Option<u64>,
+    error: Option<String>,
+}
+
 fn now_ms() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -127,6 +133,7 @@ fn forget_seen(service: &NotificationService, at: i64) {
 struct NotificationService {
     app: AppHandle,
     state: Mutex<MonitorState>,
+    repair: Mutex<RepairState>,
 }
 
 pub fn init(app: &AppHandle) -> Result<(), String> {
@@ -136,16 +143,39 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     let service = Arc::new(NotificationService {
         app: app.clone(),
         state: Mutex::new(MonitorState::default()),
+        repair: Mutex::new(RepairState::default()),
     });
     if SERVICE.set(service.clone()).is_err() {
         return Ok(());
     }
-    let listening = service.clone();
-    let worker = Worker::new("qq-notifications", move |stop| monitor(listening.clone(), &stop));
-    messages_plugin::register(
+    let polled = service.clone();
+    let foregrounded = service.clone();
+    toast_notifications::subscribe(Subscription {
+        source: messages_plugin::QQ,
+        matchers: vec![ToastMatcher::AumidExact(QQ_APP_ID.into())],
+        executables: vec!["QQ.exe".into()],
+        on_poll: Arc::new(move |poll| handle_poll(&polled, poll)),
+        on_foreground: Arc::new(move |at| forget_seen(&foregrounded, at)),
+    });
+    let switched = service.clone();
+    let checked = service;
+    let switch = SourceSwitch::new(
         messages_plugin::QQ,
-        SourceWorker::new(messages_plugin::QQ, worker, move |enabled| set_enabled(&service, enabled)),
+        move |enabled| {
+            set_enabled(&switched, enabled);
+            toast_notifications::set_enabled(messages_plugin::QQ, enabled);
+        },
+        move || {
+            checked
+                .state
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .snapshot
+                .enabled
+                && toast_notifications::is_source_running(messages_plugin::QQ)
+        },
     );
+    messages_plugin::register(messages_plugin::QQ, switch);
     Ok(())
 }
 
@@ -206,6 +236,13 @@ fn set_enabled(service: &NotificationService, enabled: bool) {
         };
         state.snapshot.clone()
     };
+    if !enabled {
+        let mut repair = service
+            .repair
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        *repair = RepairState::default();
+    }
     publish(service, snapshot, None);
 }
 

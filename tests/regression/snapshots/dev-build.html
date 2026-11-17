@@ -81,9 +81,7 @@
                       常用功能一眼都在
                     </span>
                   </span>
-                  <svg aria-hidden="true" class="lucide lucide-check settings-cards__check" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 6 9 17l-5-5"></path>
-                  </svg>
+                  <svg aria-hidden="true" class="lucide lucide-check settings-cards__check" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
                 </button>
                 <button aria-pressed="false" class="settings-cards__card" type="button">
                   <span aria-hidden="true" class="settings-cards__art">
@@ -139,9 +137,7 @@
                       <span>
                         简体中文
                       </span>
-                      <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg">
-                        <path d="m6 9 6 6 6-6"></path>
-                      </svg>
+                      <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
                     </button>
                   </div>
                 </div>
@@ -151,11 +147,7 @@
         </div>
       </section>
       <a class="project-link project-link--release" href="https://fuyu.ing/releases/" rel="noopener noreferrer" target="_blank">
-        <svg aria-hidden="true" class="lucide lucide-download project-link__icon" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 15V3"></path>
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <path d="m7 10 5 5 5-5"></path>
-        </svg>
+        <svg aria-hidden="true" class="lucide lucide-download project-link__icon" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
         <span class="project-link__copy">
           <strong>
             查看最新版本
@@ -164,11 +156,7 @@
             这是开发版，不检查也不安装更新。新版本请在安装的正式版里更新。
           </span>
         </span>
-        <svg aria-hidden="true" class="lucide lucide-external-link project-link__arrow" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15 3h6v6"></path>
-          <path d="M10 14 21 3"></path>
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-        </svg>
+        <svg aria-hidden="true" class="lucide lucide-external-link project-link__arrow" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
       </a>
       <div id="bar" style="position: relative; height: 40px">
         <div class="dev-bar">
@@ -194,245 +182,34 @@
             <h2 class="settings-group__title">
               AI Agent 状态灯
             </h2>
-            <button class="settings-link-button" type="button">
-              安装/修复
-            </button>
           </div>
           <div class="settings-group__card">
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    当前状态
+            <div class="agent-hooks-card agent-hooks-card--warn">
+              <div class="agent-hooks-card__row">
+                <span class="agent-hooks-card__icon">
+                  <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"></svg>
+                </span>
+                <div class="agent-hooks-card__copy">
+                  <div class="agent-hooks-card__headline">
+                    <span class="agent-hooks-card__label">
+                      当前状态
+                    </span>
+                    <strong class="agent-hooks-value">
+                      AI Agent 空闲或已完成
+                    </strong>
+                  </div>
+                  <span class="agent-hooks-message agent-hooks-message--attention" role="status">
+                    <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    还没有安装钩子。点“安装/修复”后重启正在用的 AI Agent，状态灯和会话标题才会工作。
                   </span>
                 </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    AI Agent 空闲或已完成
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    Codex
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
+                <div class="agent-hooks-card__actions">
+                  <button class="settings-link-button agent-hooks-card__button agent-hooks-card__button--primary" type="button">
+                    安装/修复
+                  </button>
                 </div>
               </div>
             </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    Claude Code
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    WorkBuddy
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    Antigravity
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    DeepSeek Harness
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    Qoder
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    CodeBuddy
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    Qwen Code
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    TRAE
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    TRAE CN
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    ZCode
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    Kimi Code
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    Grok CLI
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    GitHub Copilot CLI
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <span class="settings-row__title">
-                    Droid
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="agent-hooks-value">
-                    空闲
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="settings-group__footer">
-            <span class="agent-hooks-message agent-hooks-message--attention" role="status">
-              <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" x2="12" y1="8" y2="12"></line>
-                <line x1="12" x2="12.01" y1="16" y2="16"></line>
-              </svg>
-              还没有安装钩子。点“安装/修复”后重启正在用的 AI Agent，状态灯和会话标题才会工作。
-            </span>
           </div>
         </section>
       </div>
