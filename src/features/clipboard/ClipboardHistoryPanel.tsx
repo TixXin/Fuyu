@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ClipboardList } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import type { ClipboardCopyAs, ClipboardHistorySnapshot } from "./api";
 import { ClipboardActionPanel } from "./ClipboardActionPanel";
 import { ClipboardFilters } from "./ClipboardFilters";
@@ -61,10 +62,7 @@ export function ClipboardHistoryPanel({
   } = useClipboardNoteEditor(snapshot.items, onCopyItem, onToggleFavorite, onUpdateNote, dismissConfirmations);
   const tags = useMemo(() => topTags(snapshot.items), [snapshot.items]);
 
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), CLOCK_MS);
-    return () => window.clearInterval(timer);
-  }, []);
+  useEffect(() => visibilityInterval(() => setNow(Date.now()), CLOCK_MS), []);
 
   const showTag = (tag: string) => {
     setExtra(null);

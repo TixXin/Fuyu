@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useReducedMotion } from "../../lib/theme/useReducedMotion";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { resolveThemeColors, surfaceThemeColors } from "../../lib/theme/themeMode";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
@@ -23,8 +24,7 @@ export function OverviewStage({ settings, spot, playing, onCount }: { settings: 
 
   useEffect(() => {
     if (!cycling) return;
-    const timer = window.setInterval(() => setTurn((value) => value + 1), CYCLE_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setTurn((value) => value + 1), CYCLE_MS);
   }, [cycling]);
 
   const shown = spot ?? (playing.length > 0 ? playing[turn % playing.length] : null);

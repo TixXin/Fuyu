@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { visibilityInterval } from "../useVisibilityInterval";
 import { getSystemPermissions, type SystemPermission } from "./api";
 
 const RECHECK_MS = 1500;
@@ -14,10 +15,10 @@ export function useSystemPermissions() {
 
   useEffect(() => {
     refresh();
-    const timer = window.setInterval(refresh, RECHECK_MS);
+    const stop = visibilityInterval(refresh, RECHECK_MS);
     window.addEventListener("focus", refresh);
     return () => {
-      window.clearInterval(timer);
+      stop();
       window.removeEventListener("focus", refresh);
     };
   }, [refresh]);

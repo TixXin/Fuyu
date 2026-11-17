@@ -28,6 +28,9 @@
   max-width: none;
   object-fit: fill;
   transform-origin: 0 0;
+}
+
+.clipboard-picture.clipboard-picture--dragging img {
   will-change: transform;
 }
 

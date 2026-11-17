@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getWindowsAccentColor } from "../settings/api";
 import type { IslandSettings } from "../settings/types";
+import { visibilityInterval } from "../useVisibilityInterval";
 
 const WINDOWS_ACCENT_RECHECK_MS = 60_000;
 
@@ -19,12 +20,10 @@ export function useAccentColor(settings: Pick<IslandSettings, "accentMode" | "ac
         .catch((error: unknown) => console.error("Failed to read the Windows accent colour", error));
     };
     read();
-    const timer = window.setInterval(read, WINDOWS_ACCENT_RECHECK_MS);
-    document.addEventListener("visibilitychange", read);
+    const stop = visibilityInterval(read, WINDOWS_ACCENT_RECHECK_MS);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", read);
+      stop();
     };
   }, [followsWindows]);
 

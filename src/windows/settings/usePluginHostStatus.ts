@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { connectHost, type ConnectionState } from "@fuyu/plugin-base/client";
 import { getPluginHostConnection, getPluginHostMemory, type HostMemory, type HostSafeMode } from "../../features/plugin-kernel/api";
 import { loadDevBuild } from "../../lib/platform";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 
 export type PluginKindV3 = "essential" | "builtin" | "third-party";
 
@@ -137,10 +138,10 @@ export function usePluginHostStatus(connect: PluginHostConnector = connectSettin
         if (live) setView((current) => ({ ...current, safeMode: connection.safeMode ?? null }));
       })
       .catch(() => undefined);
-    const timer = window.setInterval(read, MEMORY_EVERY_MS);
+    const stop = visibilityInterval(read, MEMORY_EVERY_MS);
     return () => {
       live = false;
-      window.clearInterval(timer);
+      stop();
     };
   }, [pid]);
   return view;
