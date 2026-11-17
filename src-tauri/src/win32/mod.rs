@@ -1,3 +1,4 @@
+pub(crate) mod app_activation;
 pub(crate) mod audio;
 pub(crate) mod audio_capture;
 pub(crate) mod audio_outputs;

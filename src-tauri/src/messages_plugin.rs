@@ -9,6 +9,13 @@ pub(crate) const PLUGIN_ID: &str = "messages";
 pub(crate) const QQ: &str = "qq";
 pub(crate) const WECHAT: &str = "wechat";
 pub(crate) const MAIL: &str = "mail";
+pub(crate) const TELEGRAM: &str = "telegram";
+pub(crate) const DISCORD: &str = "discord";
+pub(crate) const WHATSAPP: &str = "whatsapp";
+pub(crate) const TIM: &str = "tim";
+pub(crate) const FEISHU: &str = "feishu";
+pub(crate) const DINGTALK: &str = "dingtalk";
+pub(crate) const WECOM: &str = "wecom";
 
 pub(crate) fn source_on(config: &Map<String, Value>, source: &str) -> bool {
     matches!(config.get(source), Some(Value::Bool(true)))
@@ -160,10 +167,26 @@ mod tests {
     }
 
     #[test]
-    fn the_three_sources_are_the_background_listed_for_messages() {
+    fn all_ten_sources_are_the_background_listed_for_messages() {
         let catalog = builtins::catalog();
         let plugin = catalog.iter().find(|plugin| plugin.id == PLUGIN_ID).expect("messages is a built-in plugin");
-        assert_eq!(plugin.background.as_deref(), Some(&[QQ.to_owned(), WECHAT.to_owned(), MAIL.to_owned()][..]));
+        assert_eq!(
+            plugin.background.as_deref(),
+            Some(
+                &[
+                    QQ.to_owned(),
+                    WECHAT.to_owned(),
+                    MAIL.to_owned(),
+                    TELEGRAM.to_owned(),
+                    DISCORD.to_owned(),
+                    WHATSAPP.to_owned(),
+                    TIM.to_owned(),
+                    FEISHU.to_owned(),
+                    DINGTALK.to_owned(),
+                    WECOM.to_owned(),
+                ][..]
+            )
+        );
     }
 
     #[test]

@@ -15,6 +15,7 @@ mod emit_diagnostics;
 mod file_shelf;
 mod fs_write;
 mod home_dir;
+mod im_sources;
 mod island;
 mod local_api;
 mod lyrics;
@@ -238,6 +239,9 @@ pub fn run() {
             if let Err(error) = wechat_reminders::init(app.handle()) {
                 eprintln!("failed to initialize WeChat reminders: {error}");
             }
+            if let Err(error) = im_sources::init(app.handle()) {
+                eprintln!("failed to initialize IM sources: {error}");
+            }
             if let Err(error) = notification_diagnostics::start(app.handle()) {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
@@ -257,6 +261,7 @@ pub fn run() {
             mail;
             wechat_reminders;
             qq_notifications;
+            im_sources;
             island;
             todos;
             system;
