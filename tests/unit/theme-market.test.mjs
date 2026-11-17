@@ -3,19 +3,19 @@ import test from "node:test";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings.ts";
 import { isThemeInUse, readMarketThemes, withMarketTheme } from "../../src/features/theme-market/model.ts";
 
-const midnight = { id: "focusd.midnight", name: { "zh-CN": "午夜蓝", en: "Midnight" }, author: "TixXin", appearance: { islandBackgroundColor: "#0f1a2e", islandCornerRadius: 28 } };
+const midnight = { id: "fuyu.midnight", name: { "zh-CN": "午夜蓝", en: "Midnight" }, author: "TixXin", appearance: { islandBackgroundColor: "#0f1a2e", islandCornerRadius: 28 } };
 
 test("market entries are read only when they make sense", () => {
   const themes = readMarketThemes([
     midnight,
     midnight,
     { ...midnight, id: "Bad Id" },
-    { ...midnight, id: "focusd.noname", name: {} },
-    { ...midnight, id: "focusd.sizes", appearance: { collapsedScale: 1.3 } },
+    { ...midnight, id: "fuyu.noname", name: {} },
+    { ...midnight, id: "fuyu.sizes", appearance: { collapsedScale: 1.3 } },
     "nope",
-    { ...midnight, id: "focusd.en", name: { en: "Only English" } },
+    { ...midnight, id: "fuyu.en", name: { en: "Only English" } },
   ]);
-  assert.deepEqual(themes.map((theme) => theme.id), ["focusd.midnight", "focusd.en"]);
+  assert.deepEqual(themes.map((theme) => theme.id), ["fuyu.midnight", "fuyu.en"]);
   assert.equal(themes[1].name["zh-CN"], "Only English");
 });
 

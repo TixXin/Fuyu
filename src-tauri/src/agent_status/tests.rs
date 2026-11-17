@@ -96,8 +96,8 @@ fn codex_index_and_folder_titles() {
     assert_eq!(codex_thread_name(&index, "missing"), None);
 
     assert_eq!(
-        folder_title(r"E:\Projects\fly-island\").as_deref(),
-        Some("fly-island")
+        folder_title(r"E:\Projects\fuyu\").as_deref(),
+        Some("fuyu")
     );
     assert_eq!(folder_title("/home/me/repo").as_deref(), Some("repo"));
     assert_eq!(folder_title(r"C:\"), None);
@@ -106,7 +106,7 @@ fn codex_index_and_folder_titles() {
 fn temp_dirs() -> (PathBuf, PathBuf) {
     static COUNTER: AtomicUsize = AtomicUsize::new(0);
     let base = std::env::temp_dir().join(format!(
-        "focusd-title-test-{}-{}",
+        "fuyu-title-test-{}-{}",
         std::process::id(),
         COUNTER.fetch_add(1, Ordering::Relaxed)
     ));
@@ -152,10 +152,10 @@ fn session_windows_are_matched_by_folder_and_title() {
         app: app.to_string(),
     };
     let windows = vec![
-        window("fly-island settings regression - Google Chrome", "chrome"),
+        window("fuyu settings regression - Google Chrome", "chrome"),
         window("README.md - code - Visual Studio Code", "code"),
         window(
-            "message_window.rs - fly-island - Visual Studio Code",
+            "message_window.rs - fuyu - Visual Studio Code",
             "code",
         ),
         window("✳ 插件市场功能", "windowsterminal"),
@@ -175,11 +175,11 @@ fn session_windows_are_matched_by_folder_and_title() {
     };
 
     assert_eq!(
-        find(Some("fly-island"), Some("插件市场功能"), false),
+        find(Some("fuyu"), Some("插件市场功能"), false),
         Some(3)
     );
     assert_eq!(find(None, Some("插件市场…"), false), Some(3));
-    assert_eq!(find(Some("fly-island"), Some("别的标题"), false), Some(2));
+    assert_eq!(find(Some("fuyu"), Some("别的标题"), false), Some(2));
     assert_eq!(find(Some("code"), None, false), Some(1));
     assert_eq!(find(Some("MioPicFlow"), None, false), Some(4));
     assert_eq!(find(Some("elsewhere"), None, true), Some(5));
@@ -451,7 +451,7 @@ fn recent_sessions_are_listed_running_first() {
     let project = home.join(".claude").join("projects").join("E--p");
     let assistant = |stop: &str, text: &str| {
         line(
-            json!({"type": "assistant", "sessionId": "x", "cwd": "E:\\Projects\\fly-island",
+            json!({"type": "assistant", "sessionId": "x", "cwd": "E:\\Projects\\fuyu",
             "message": {"model": "claude-opus-5-5", "stop_reason": stop, "content": [{"type": "text", "text": text}]}}),
         )
     };
@@ -542,7 +542,7 @@ fn a_session_keeps_the_folder_it_started_in() {
     let project = home
         .join(".claude")
         .join("projects")
-        .join("E--Projects-fly-island");
+        .join("E--Projects-fuyu");
     fs::create_dir_all(&project).unwrap();
     let record = |cwd: &str, value: serde_json::Value| {
         let mut value = value;
@@ -553,9 +553,9 @@ fn a_session_keeps_the_folder_it_started_in() {
     fs::write(
         project.join("moved.jsonl"),
         [
-            record(r"E:\Projects\fly-island", json!({"type": "user", "message": {"content": "开始"}})),
+            record(r"E:\Projects\fuyu", json!({"type": "user", "message": {"content": "开始"}})),
             record(
-                r"E:\Projects\fly-island\src-tauri",
+                r"E:\Projects\fuyu\src-tauri",
                 json!({"type": "assistant", "message": {"model": "claude-opus-5-5", "stop_reason": "tool_use", "content": []}}),
             ),
         ]
@@ -565,7 +565,7 @@ fn a_session_keeps_the_folder_it_started_in() {
 
     let sessions = list_sessions(&home, None, &WaitingNotifications::new(), super::session_scan::ACTIVE_WINDOW_MS);
     assert_eq!(sessions.len(), 1);
-    assert_eq!(sessions[0].cwd.as_deref(), Some(r"E:\Projects\fly-island"));
+    assert_eq!(sessions[0].cwd.as_deref(), Some(r"E:\Projects\fuyu"));
 }
 
 #[cfg(windows)]
@@ -577,8 +577,8 @@ fn hooks_state_matches_what_the_installers_write() {
         claude_code_hooks_state, codex_hooks_state, script_outdated, HookInstallState,
     };
 
-    let running = Path::new(r"C:\a b\focusd-agent-running.cmd");
-    let status = Path::new(r"C:\a b\focusd-agent-status.ps1");
+    let running = Path::new(r"C:\a b\fuyu-agent-running.cmd");
+    let status = Path::new(r"C:\a b\fuyu-agent-status.ps1");
 
     let current = format!(
         "model = \"x\"\r\n\r\n{}",
@@ -594,7 +594,7 @@ fn hooks_state_matches_what_the_installers_write() {
         codex_hooks_state(Some(&old), running, status, None),
         HookInstallState::Outdated
     );
-    let elsewhere = Path::new(r"D:\FocuSD\scripts\focusd-agent-running.cmd");
+    let elsewhere = Path::new(r"D:\Fuyu\scripts\fuyu-agent-running.cmd");
     assert_eq!(
         codex_hooks_state(Some(&current), elsewhere, status, None),
         HookInstallState::Outdated
@@ -866,11 +866,11 @@ fn the_session_process_chain_picks_its_nearest_window() {
     let candidates = [
         window("Orca", "orca"),
         window("main.rs - other - Visual Studio Code", "code"),
-        window("lib.rs - fly-island - Visual Studio Code", "code"),
+        window("lib.rs - fuyu - Visual Studio Code", "code"),
         window("Program Manager", "explorer"),
     ];
     let owners = [10, 20, 20, 1];
-    let hints = SessionHints { folder: Some("fly-island"), ancestors: &[], title: Some("Commit 频率约束"), is_codex: false };
+    let hints = SessionHints { folder: Some("fuyu"), ancestors: &[], title: Some("Commit 频率约束"), is_codex: false };
 
     assert_eq!(window_of_process_chain(&candidates, &owners, &[100, 90, 11, 10, 1], &hints), Some(0));
     assert_eq!(window_of_process_chain(&candidates, &owners, &[100, 90, 20], &hints), Some(2));
@@ -882,7 +882,7 @@ fn the_session_process_chain_picks_its_nearest_window() {
 fn a_session_registry_entry_names_its_process() {
     use super::session_process::{session_entry, SessionProcess};
 
-    let entry = r#"{"pid":32816,"sessionId":"23e370fd","procStart":"134383392529449190","name":"fly-island-7e"}"#;
+    let entry = r#"{"pid":32816,"sessionId":"23e370fd","procStart":"134383392529449190","name":"fuyu-7e"}"#;
     assert_eq!(
         session_entry(entry),
         Some(("23e370fd".to_string(), SessionProcess { pid: 32816, started: Some(134383392529449190) }))
@@ -919,17 +919,17 @@ fn an_agent_terminal_is_only_picked_when_it_is_the_only_one_in_its_folder() {
     let list = |terminals: serde_json::Value| json!({ "ok": true, "result": { "terminals": terminals } }).to_string();
     let terminal = |handle: &str, agent: &str, path: &str| json!({ "handle": handle, "agentIdentity": agent, "worktreePath": path, "orphaned": false });
     let one = list(json!([
-        terminal("term_aa", "claude", "E:/Projects/fly-island"),
-        terminal("term_bb", "codex", "E:/Projects/fly-island"),
+        terminal("term_aa", "claude", "E:/Projects/fuyu"),
+        terminal("term_bb", "codex", "E:/Projects/fuyu"),
         terminal("term_cc", "codex", "E:/Projects/Other"),
     ]));
-    assert_eq!(only_agent_terminal(&one, "codex", r"E:\Projects\fly-island\").as_deref(), Some("term_bb"));
+    assert_eq!(only_agent_terminal(&one, "codex", r"E:\Projects\fuyu\").as_deref(), Some("term_bb"));
     assert_eq!(only_agent_terminal(&one, "codex", r"E:\Projects\Missing"), None);
     let two = list(json!([
-        terminal("term_bb", "codex", "E:/Projects/fly-island"),
-        terminal("term_dd", "codex", "e:/projects/FLY-ISLAND"),
+        terminal("term_bb", "codex", "E:/Projects/fuyu"),
+        terminal("term_dd", "codex", "e:/projects/FUYU"),
     ]));
-    assert_eq!(only_agent_terminal(&two, "codex", r"E:\Projects\fly-island"), None);
+    assert_eq!(only_agent_terminal(&two, "codex", r"E:\Projects\fuyu"), None);
     assert_eq!(only_agent_terminal("not json", "codex", "E:"), None);
 }
 
@@ -949,7 +949,7 @@ fn orca_terminal_records_name_their_session() {
         PathBuf::from(r"C:\Apps\orca\resources\bin\orca.exe")
     );
 
-    let app_dir = std::env::temp_dir().join(format!("focusd-orca-records-{}", std::process::id()));
+    let app_dir = std::env::temp_dir().join(format!("fuyu-orca-records-{}", std::process::id()));
     let records = app_dir.join(AGENT_TERMINALS_DIR_NAME);
     fs::create_dir_all(&records).unwrap();
     fs::write(records.join("term_aaaa.json"), r#"{"session_id":"s1"}"#).unwrap();
@@ -1081,7 +1081,7 @@ fn a_working_turn_shows_its_prompt_and_latest_tool() {
         line(json!({"type": "user", "message": {"role": "user", "content": "<pasted_content id=\"1\">  release  0.5.3 </pasted_content>"}})),
         tool("Bash", json!({"command": "git status\n  && git log -1"})),
         result.clone(),
-        tool("mcp__magpie__Edit", json!({"file_path": "E:\\Projects\\fly-island\\src\\App.tsx"})),
+        tool("mcp__magpie__Edit", json!({"file_path": "E:\\Projects\\fuyu\\src\\App.tsx"})),
         result,
     ]
     .concat();
@@ -1121,18 +1121,18 @@ fn editor_titles_match_through_their_markers_and_parent_folders() {
     use super::window_focus::{bare_segment, best_window, SessionHints, WindowCandidate};
 
     assert_eq!(bare_segment(" ● main.rs "), "main.rs");
-    assert_eq!(bare_segment("fly-island (workspace)"), "fly-island");
+    assert_eq!(bare_segment("fuyu (workspace)"), "fuyu");
     assert_eq!(bare_segment("visual studio code [管理员]"), "visual studio code");
 
     let window = |title: &str| WindowCandidate { title: title.to_string(), app: "code".to_string() };
     let windows = [
         window("● lib.rs - other - Visual Studio Code"),
-        window("● main.rs - fly-island (Workspace) - Visual Studio Code [Administrator]"),
+        window("● main.rs - fuyu (Workspace) - Visual Studio Code [Administrator]"),
     ];
     let hints = |folder, ancestors| SessionHints { folder: Some(folder), ancestors, title: None, is_codex: false };
-    assert_eq!(best_window(&windows, &hints("fly-island", &[])), Some(1));
-    let above = ["fly-island-lanes".to_string(), "Projects".to_string()];
-    let repo = [window("README.md - fly-island-lanes - Visual Studio Code")];
+    assert_eq!(best_window(&windows, &hints("fuyu", &[])), Some(1));
+    let above = ["fuyu-lanes".to_string(), "Projects".to_string()];
+    let repo = [window("README.md - fuyu-lanes - Visual Studio Code")];
     assert_eq!(best_window(&repo, &hints("3", &above)), Some(0));
     assert_eq!(best_window(&repo, &hints("3", &[])), None);
     assert_eq!(bare_segment("app (workspace) [ssh: dev-box]"), "app");
@@ -1148,8 +1148,8 @@ fn session_folders_and_remembered_processes() {
     use super::session_memory::SeenSession;
 
     assert_eq!(
-        folder_names(r"E:\Projects\fly-island-lanes\3\"),
-        (Some("3".to_string()), vec!["fly-island-lanes".to_string(), "Projects".to_string()])
+        folder_names(r"E:\Projects\fuyu-lanes\3\"),
+        (Some("3".to_string()), vec!["fuyu-lanes".to_string(), "Projects".to_string()])
     );
     assert_eq!(folder_names("E:/"), (None, vec![]));
     let seen = SeenSession { pid: 6528, started: Some(42), host_exe: None, orca_handle: None, seen_at: 0 };
@@ -1234,7 +1234,7 @@ fn editor_terminals_are_asked_for_through_the_extension_link() {
     );
     assert_eq!(focus_link("cursor", "tixxin.fuyu", &[], None), "cursor://tixxin.fuyu/focus?pids=");
 
-    let home = std::env::temp_dir().join(format!("focusd-editor-ext-{}", std::process::id()));
+    let home = std::env::temp_dir().join(format!("fuyu-editor-ext-{}", std::process::id()));
     let extensions = home.join(".vscode").join("extensions");
     fs::create_dir_all(extensions.join("tixxin.focusd-island-tools-1.0.0")).unwrap();
     assert_eq!(installed_extension(&extensions), None);
@@ -1275,7 +1275,7 @@ fn the_extension_is_packaged_as_a_vsix_with_its_manifest() {
 fn an_editors_command_line_is_found_next_to_it_on_path_or_in_its_install_folder() {
     use super::editor_extension::find_cli;
 
-    let root = std::env::temp_dir().join(format!("focusd-editor-cli-{}", std::process::id()));
+    let root = std::env::temp_dir().join(format!("fuyu-editor-cli-{}", std::process::id()));
     let running = root.join("running");
     fs::create_dir_all(running.join("bin")).unwrap();
     fs::write(running.join("bin").join("code.cmd"), "").unwrap();
@@ -1334,7 +1334,7 @@ fn session_records_name_a_live_process_and_its_tab() {
     assert_eq!(reused.live_pid(), None);
     assert_eq!(parse("{\"orcaHandle\":\"x & calc\"}").and_then(|record| record.orca_handle()), None);
 
-    let app_dir = std::env::temp_dir().join(format!("focusd-records-{}", std::process::id()));
+    let app_dir = std::env::temp_dir().join(format!("fuyu-records-{}", std::process::id()));
     fs::create_dir_all(app_dir.join(DIR_NAME)).unwrap();
     fs::write(app_dir.join(DIR_NAME).join("s-1.json"), "{\"source\":\"startup\"}").unwrap();
     assert_eq!(read(&app_dir, "s-1").and_then(|record| record.source).as_deref(), Some("startup"));
@@ -1382,7 +1382,7 @@ fn usage_comes_from_the_claude_hud_snapshot() {
     let (home, _) = temp_dirs();
     assert_eq!(expand_path("~/usage.json", &home), Some(home.join("usage.json")));
     assert_eq!(expand_path("relative/usage.json", &home), None);
-    assert_eq!(expand_path("${FOCUSD_NO_SUCH_VAR}/usage.json", &home), None);
+    assert_eq!(expand_path("${FUYU_NO_SUCH_VAR}/usage.json", &home), None);
     let claude = home.join(".claude");
     assert_eq!(snapshot_path(&claude, &home), None);
     let hud = claude.join("plugins").join("claude-hud");
@@ -1559,7 +1559,7 @@ fn context_tokens_come_from_the_newest_model_call() {
 #[cfg(windows)]
 #[test]
 fn a_symlinked_file_is_not_written() {
-    let dir = std::env::temp_dir().join(format!("focusd-symlink-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("fuyu-symlink-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let target = dir.join("target.md");
     let link = dir.join("link.md");
@@ -1645,7 +1645,7 @@ fn a_background_task_waking_the_session_is_not_a_prompt() {
 fn hooks_from_before_the_rename_count_as_outdated_and_are_replaced() {
     use super::claude_hooks::{claude_code_hook_entries, install_claude_code_hook_events};
     use super::codex_hooks::{build_codex_hook_block, remove_managed_codex_hook_block};
-    use super::hooks_state::{claude_code_hooks_state, codex_hooks_state, HookInstallState};
+    use super::hooks_state::{claude_code_hooks_state, codex_hooks_state, script_outdated, HookInstallState};
 
     let old_running = Path::new(r"C:\Users\me\AppData\Roaming\com.focusd.island\focusd-agent-running.cmd");
     let old_status = Path::new(r"C:\Users\me\AppData\Roaming\com.focusd.island\focusd-agent-status.ps1");
@@ -1660,6 +1660,15 @@ fn hooks_from_before_the_rename_count_as_outdated_and_are_replaced() {
     let cleaned = remove_managed_codex_hook_block(&config);
     assert!(!cleaned.contains("focusd-agent-") && !cleaned.contains("FocuSD Agent Status Hooks"), "{cleaned}");
     assert!(cleaned.contains("[profiles.mine]") && cleaned.starts_with("model = \"x\""));
+
+    let legacy_message_block = build_codex_hook_block(running, status, false)
+        .replace("Updating Fuyu agent status", "Updating FocuSD agent status");
+    assert_eq!(codex_hooks_state(Some(&legacy_message_block), running, status, None), HookInstallState::Current);
+    assert!(!script_outdated(
+        Some("throw \"Timed out waiting for the FocuSD agent status file lock.\"\n"),
+        "throw \"Timed out waiting for the Fuyu agent status file lock.\"\n",
+        true,
+    ));
 
     let mut hooks = serde_json::Map::new();
     let users = json!({ "hooks": [{ "type": "command", "command": "notify-send hi" }] });

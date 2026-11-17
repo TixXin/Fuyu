@@ -21,7 +21,7 @@ function session(sessionId, light, overrides = {}) {
     key: `claudeCode:${sessionId}`,
     provider: "claudeCode",
     sessionId,
-    cwd: "F:\\code\\fly-island",
+    cwd: "F:\\code\\fuyu",
     title: `title ${sessionId}`,
     phase: "completed",
     light,
@@ -92,9 +92,9 @@ test("card names up to three sessions waiting on you, those needing you first", 
   const lines = sessionRingCardLines(sessions, zhCN);
   assert.deepEqual(lines, [
     "等你确认 2 · 等你回复 3",
-    "等你确认：修复登录 · fly-island",
+    "等你确认：修复登录 · fuyu",
     "等你确认：n2",
-    "等你回复：写测试 · fly-island",
+    "等你回复：写测试 · fuyu",
   ]);
   const long = sessionRingCardLines([sessions[2]], en);
   assert.equal(long[1], `Your turn: ${"x".repeat(40)}…`);

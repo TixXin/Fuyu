@@ -5,8 +5,8 @@ use super::{
     AGENT_RUNNING_NOTIFICATION_ARG, AGENT_SESSION_SCRIPT_FILE_NAME,
 };
 
-pub(super) const FOCUSD_AGENT_HOOK_BLOCK_BEGIN: &str = "# BEGIN Fuyu Agent Status Hooks";
-pub(super) const FOCUSD_AGENT_HOOK_BLOCK_END: &str = "# END Fuyu Agent Status Hooks";
+pub(super) const ISLAND_HOOK_BLOCK_BEGIN: &str = "# BEGIN Fuyu Agent Status Hooks";
+pub(super) const ISLAND_HOOK_BLOCK_END: &str = "# END Fuyu Agent Status Hooks";
 const LEGACY_HOOK_BLOCK: (&str, &str) = ("# BEGIN FocuSD Agent Status Hooks", "# END FocuSD Agent Status Hooks");
 
 pub(super) fn install_codex_status_hooks(
@@ -51,7 +51,7 @@ type = "command"
 command = {submit_command}
 command_windows = {submit_command}
 timeout = 1
-statusMessage = "Updating FocuSD agent status"
+statusMessage = "Updating Fuyu agent status"
 
 [[hooks.Stop]]
 [[hooks.Stop.hooks]]
@@ -59,7 +59,7 @@ type = "command"
 command = {stop_command}
 command_windows = {stop_command}
 timeout = 5
-statusMessage = "Updating FocuSD agent status"
+statusMessage = "Updating Fuyu agent status"
 
 [[hooks.SessionStart]]
 [[hooks.SessionStart.hooks]]
@@ -89,8 +89,8 @@ command_windows = {approval_command}
 timeout = {approval_timeout}
 
 {end}"#,
-        begin = FOCUSD_AGENT_HOOK_BLOCK_BEGIN,
-        end = FOCUSD_AGENT_HOOK_BLOCK_END,
+        begin = ISLAND_HOOK_BLOCK_BEGIN,
+        end = ISLAND_HOOK_BLOCK_END,
         submit_command = toml_basic_string(&submit_command),
         stop_command = toml_basic_string(&stop_command),
         session_start_command = toml_basic_string(&session_start_command),
@@ -102,7 +102,7 @@ timeout = {approval_timeout}
 }
 
 pub(super) fn remove_managed_codex_hook_block(content: &str) -> String {
-    let current = remove_hook_blocks(content, FOCUSD_AGENT_HOOK_BLOCK_BEGIN, FOCUSD_AGENT_HOOK_BLOCK_END);
+    let current = remove_hook_blocks(content, ISLAND_HOOK_BLOCK_BEGIN, ISLAND_HOOK_BLOCK_END);
     let (legacy_begin, legacy_end) = LEGACY_HOOK_BLOCK;
     remove_legacy_codex_focusd_hooks(&remove_hook_blocks(&current, legacy_begin, legacy_end))
 }
@@ -271,8 +271,8 @@ mod tests {
     #[test]
     fn prompt_submit_hook_only_marks_running() {
         let block = build_codex_hook_block(
-            Path::new(r"C:\a b\focusd-agent-running.cmd"),
-            Path::new(r"C:\a b\focusd-agent-status.ps1"),
+            Path::new(r"C:\a b\fuyu-agent-running.cmd"),
+            Path::new(r"C:\a b\fuyu-agent-status.ps1"),
             false,
         );
         assert!(!block.contains("async"));
@@ -281,11 +281,11 @@ mod tests {
         assert_eq!(background.matches("async = true").count(), 1, "only SessionStart runs in the background");
 
         assert!(block.contains(
-            r#"command = "cmd.exe /d /s /c \"\"C:\\a b\\focusd-agent-running.cmd\" codex\"""#
+            r#"command = "cmd.exe /d /s /c \"\"C:\\a b\\fuyu-agent-running.cmd\" codex\"""#
         ));
         assert!(!block.contains("capture"));
         assert!(block.contains(
-            r#"command = "cmd.exe /d /s /c \"\"C:\\a b\\focusd-agent-running.cmd\" codex notification\"""#
+            r#"command = "cmd.exe /d /s /c \"\"C:\\a b\\fuyu-agent-running.cmd\" codex notification\"""#
         ));
         assert!(block.contains("[[hooks.SessionStart]]") && block.contains("[[hooks.PermissionRequest]]"));
         assert!(block.contains(r#"fuyu-agent-session.ps1\" codex start"#));

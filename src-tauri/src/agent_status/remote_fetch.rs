@@ -75,7 +75,7 @@ if [ -d .claude/sessions ]; then
 fi
 echo E
 }
-echo FOCUSD_READY
+echo FUYU_READY
 while read -r W N P K; do
   if [ -n "$K" ]; then
     MINE="$N $P $NODE $K"
@@ -88,15 +88,15 @@ while read -r W N P K; do
     fi
   fi
   KNOWN=
-  while IFS= read -r line && [ "$line" != FOCUSD_KNOWN ]; do
+  while IFS= read -r line && [ "$line" != FUYU_KNOWN ]; do
     KNOWN="$KNOWN$line
 "
   done
   fetch
 done
 "#;
-const END_OF_KNOWN: &str = "FOCUSD_KNOWN";
-const READY: &[u8] = b"FOCUSD_READY";
+const END_OF_KNOWN: &str = "FUYU_KNOWN";
+const READY: &[u8] = b"FUYU_READY";
 pub(super) fn is_whole_file(path: &str) -> bool {
     path.ends_with(".json") || path.ends_with(".db")
 }
@@ -433,10 +433,10 @@ mod tests {
     #[test]
     #[ignore]
     fn a_standing_connection_answers_request_after_request() {
-        let Ok(host) = std::env::var("FOCUSD_SSH_TEST_HOST") else { return };
+        let Ok(host) = std::env::var("FUYU_SSH_TEST_HOST") else { return };
         let target = SshTarget { destination: host, port: None };
         let started = std::time::Instant::now();
-        let app_dir = std::env::temp_dir().join(format!("focusd-ssh-config-{}", std::process::id()));
+        let app_dir = std::env::temp_dir().join(format!("fuyu-ssh-config-{}", std::process::id()));
         let config = write_island_config(&app_dir, "test", &target, Some(47_839)).unwrap();
         let forward = Forward { port: 47_839, token: "ab12".into() };
         let mut connection = Connection::open(&target, Some(&config), Some(forward)).unwrap();
@@ -472,9 +472,9 @@ mod tests {
     #[test]
     fn a_request_lists_the_window_and_known_files() {
         let known = HashMap::from([(".claude/projects/p/a.jsonl".to_string(), RemoteFile { size: 7, mtime: 9 })]);
-        assert_eq!(request(120, &known, None), "120\n7 9 .claude/projects/p/a.jsonl\nFOCUSD_KNOWN\n");
+        assert_eq!(request(120, &known, None), "120\n7 9 .claude/projects/p/a.jsonl\nFUYU_KNOWN\n");
         let forward = Forward { port: 47_830, token: "ab12".into() };
-        assert_eq!(request(0, &HashMap::new(), Some((43_495, &forward))), "1 43495 47830 ab12\nFOCUSD_KNOWN\n");
+        assert_eq!(request(0, &HashMap::new(), Some((43_495, &forward))), "1 43495 47830 ab12\nFUYU_KNOWN\n");
         let said = "Warning: Permanently added 'ln2'\nAllocated port 43495 for remote forward to 127.0.0.1:47830\n";
         assert_eq!(allocated_port(said), Some(43_495));
         assert_eq!(allocated_port("Allocated port x for remote forward\n"), None);

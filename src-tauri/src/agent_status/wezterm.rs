@@ -85,11 +85,11 @@ mod tests {
     #[test]
     fn the_pane_is_found_by_tty_first_then_by_the_title_claude_code_set() {
         let list = br#"[
-            {"window_id":0,"tab_id":0,"pane_id":0,"title":"\u25d1 Flyisland \u4e0a\u6e38\u4ed3\u5e93","cwd":"file:///F:/x","tty_name":"/dev/ttys002"},
+            {"window_id":0,"tab_id":0,"pane_id":0,"title":"\u25d1 Fuyu \u4e0a\u6e38\u4ed3\u5e93","cwd":"file:///F:/x","tty_name":"/dev/ttys002"},
             {"window_id":0,"tab_id":1,"pane_id":4,"title":"\u2733 T7 shield sync","cwd":"file:///F:/y","tty_name":"/dev/ttys007"},
             {"window_id":0,"tab_id":2,"pane_id":5,"title":"scg6928@ln2: ~","cwd":""}
         ]"#;
-        assert_eq!(select_pane_id(list, None, Some("Flyisland 上游仓库")), Some(0));
+        assert_eq!(select_pane_id(list, None, Some("Fuyu 上游仓库")), Some(0));
         assert_eq!(select_pane_id(list, None, Some("T7 shield sync")), Some(4));
         assert_eq!(select_pane_id(list, Some("/dev/ttys007"), None), Some(4));
         assert_eq!(select_pane_id(list, None, Some("something else")), None);

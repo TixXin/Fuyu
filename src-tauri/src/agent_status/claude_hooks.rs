@@ -226,7 +226,7 @@ fn install_hook_events(hooks: &mut Map<String, Value>, entries: Vec<(&'static st
     }
     let others: Vec<String> = hooks.keys().filter(|name| !cleared.contains(&name.as_str())).cloned().collect();
     for event_name in others {
-        if !matches!(hooks.get(&event_name), Some(Value::Array(list)) if list.iter().any(value_contains_focusd_hook_signature)) {
+        if !matches!(hooks.get(&event_name), Some(Value::Array(list)) if list.iter().any(value_contains_island_hook_signature)) {
             continue;
         }
         let kept = unmanaged_entries(hooks, &event_name, keep_approval);
@@ -266,7 +266,7 @@ fn remove_managed(mut entry: Value, keep_approval: bool) -> Option<Value> {
         return Some(entry);
     };
 
-    hooks.retain(|hook| !value_contains_focusd_hook_signature(hook) || (keep_approval && is_approval_hook(hook)));
+    hooks.retain(|hook| !value_contains_island_hook_signature(hook) || (keep_approval && is_approval_hook(hook)));
     if hooks.is_empty() {
         None
     } else {
@@ -274,11 +274,11 @@ fn remove_managed(mut entry: Value, keep_approval: bool) -> Option<Value> {
     }
 }
 
-pub(super) fn value_contains_focusd_hook_signature(value: &Value) -> bool {
+pub(super) fn value_contains_island_hook_signature(value: &Value) -> bool {
     match value {
         Value::String(text) => super::is_island_hook_text(text),
-        Value::Array(values) => values.iter().any(value_contains_focusd_hook_signature),
-        Value::Object(values) => values.values().any(value_contains_focusd_hook_signature),
+        Value::Array(values) => values.iter().any(value_contains_island_hook_signature),
+        Value::Object(values) => values.values().any(value_contains_island_hook_signature),
         _ => false,
     }
 }
@@ -344,7 +344,7 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn running_hook_passes_script_path_as_unquoted_argument() {
-        let path = Path::new(r"C:\Users\a b\focusd-agent-running.cmd");
+        let path = Path::new(r"C:\Users\a b\fuyu-agent-running.cmd");
         let entry = claude_code_running_hook_entry(path);
         let args = entry["hooks"][0]["args"].as_array().unwrap();
 
@@ -353,7 +353,7 @@ mod tests {
             &vec![
                 json!("/d"),
                 json!("/c"),
-                json!(r"C:\Users\a b\focusd-agent-running.cmd"),
+                json!(r"C:\Users\a b\fuyu-agent-running.cmd"),
                 json!("claudeCode"),
             ]
         );
@@ -363,8 +363,8 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn only_waiting_notifications_save_their_input() {
-        let running = Path::new(r"C:\focusd-agent-running.cmd");
-        let status = Path::new(r"C:\focusd-agent-status.ps1");
+        let running = Path::new(r"C:\fuyu-agent-running.cmd");
+        let status = Path::new(r"C:\fuyu-agent-status.ps1");
         let mut hooks = Map::new();
         install_claude_code_hook_events(&mut hooks, claude_code_hook_entries(running, status));
 
@@ -397,8 +397,8 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn approval_hook_sits_beside_the_status_hook_and_repair_replaces_it() {
-        let running = Path::new(r"C:\focusd-agent-running.cmd");
-        let status = Path::new(r"C:\focusd-agent-status.ps1");
+        let running = Path::new(r"C:\fuyu-agent-running.cmd");
+        let status = Path::new(r"C:\fuyu-agent-status.ps1");
         let approval = |port: u16| ApprovalHook {
             url: format!("http://127.0.0.1:{port}/claude/permission-request"),
             question_url: Some(format!("http://127.0.0.1:{port}/claude/ask-user-question")),
@@ -421,7 +421,7 @@ mod tests {
         assert_eq!(hook["url"], json!("http://127.0.0.1:51000/claude/permission-request"));
         assert_eq!(hook["headers"]["Authorization"], json!("Bearer t"));
         assert_eq!(hook["timeout"], json!(APPROVAL_HOOK_TIMEOUT_SECONDS));
-        assert!(value_contains_focusd_hook_signature(hook));
+        assert!(value_contains_island_hook_signature(hook));
 
         let pre_tool = hooks["PreToolUse"].as_array().unwrap();
         assert_eq!(pre_tool.len(), 2, "the status hook and the question hook");
@@ -430,13 +430,13 @@ mod tests {
         let question = &pre_tool[1]["hooks"][0];
         assert_eq!(question["url"], json!("http://127.0.0.1:51000/claude/ask-user-question"));
         assert_eq!(question["timeout"], json!(APPROVAL_HOOK_TIMEOUT_SECONDS));
-        assert!(value_contains_focusd_hook_signature(question));
+        assert!(value_contains_island_hook_signature(question));
 
         for event in ACTIVITY_EVENTS {
             let activity = &hooks[event].as_array().unwrap().last().unwrap()["hooks"][0];
             assert_eq!((activity["command"].as_str(), activity["async"].as_bool()), (Some("curl.exe"), Some(true)), "{event}");
             assert_eq!(activity["args"].as_array().unwrap().last(), Some(&json!("http://127.0.0.1:51000/claude/activity")));
-            assert!(activity["args"].as_array().unwrap().contains(&json!("@-")) && value_contains_focusd_hook_signature(activity));
+            assert!(activity["args"].as_array().unwrap().contains(&json!("@-")) && value_contains_island_hook_signature(activity));
         }
         assert_eq!(hooks["Stop"].as_array().unwrap().len(), 2, "the status hook and one activity hook");
         assert_eq!(hooks["PostToolUse"].as_array().unwrap().len(), 1);
@@ -464,7 +464,7 @@ mod tests {
         let activity = claude_code_activity_hook_entry("http://127.0.0.1:1/claude/activity", "t");
         assert_eq!(activity["hooks"][0]["command"], json!("/usr/bin/curl"));
         assert!(activity["hooks"][0]["args"].as_array().unwrap().contains(&json!("/dev/null")));
-        assert!(value_contains_focusd_hook_signature(&hook("Stop")));
+        assert!(value_contains_island_hook_signature(&hook("Stop")));
     }
 
 }

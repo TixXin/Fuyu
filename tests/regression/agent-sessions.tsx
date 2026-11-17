@@ -26,7 +26,7 @@ mockIPC((command, payload) => {
   if (command === "focus_agent_window") {
     const args = (payload ?? {}) as Record<string, unknown>;
     focusCalls.push(args);
-    return args.cwd === "E:\\Projects\\fly-island";
+    return args.cwd === "E:\\Projects\\fuyu";
   }
   if (command === "list_agent_effort_labels") return { claudeCode: { medium: "xhigh", high: "max" } };
   if (command === "get_agent_host_icon") {
@@ -44,7 +44,7 @@ mockIPC((command, payload) => {
 
 const SESSIONS: AgentSessionSummary[] = [
   {
-    provider: "claudeCode", sessionId: "a", cwd: "E:\\Projects\\fly-island", title: "设置界面完善思路",
+    provider: "claudeCode", sessionId: "a", cwd: "E:\\Projects\\fuyu", title: "设置界面完善思路",
     model: "Opus 5.5", effort: "medium", phase: "running", updatedAt: now - 20_000, turnStartedAt: now - 200_000,
     permissionMode: "bypass", subagents: 2,
     host: { name: "Orca", exe: "C:\\Apps\\orca\\Orca.exe", kind: "terminal" },
@@ -85,7 +85,7 @@ async function runChecks() {
   try {
     check(rows().length === 3, "列出全部会话");
     const [first, second, third] = rows();
-    check(first.textContent?.includes("fly-island · 设置界面完善思路") && first.querySelector(".agent-provider-icon--claudeCode"), "每行显示图标、项目名和标题");
+    check(first.textContent?.includes("fuyu · 设置界面完善思路") && first.querySelector(".agent-provider-icon--claudeCode"), "每行显示图标、项目名和标题");
     const pill = (row: HTMLElement) => [...row.querySelectorAll(".agent-session__pill > *")].map((part) => part.textContent).join(" · ");
     check(pill(first) === "Opus 5.5 · XH · 跳过确认" && first.querySelector(".agent-session__pill")?.getAttribute("title") === "Opus 5.5 · Xhigh · 跳过确认", `模型、推理强度、权限合成一个胶囊，强度缩写，悬停看全称：${pill(first)}`);
     check(pill(second) === "gpt-6-astra · H", "插件只改了 Claude Code 的强度时，Codex 照原样显示");
@@ -371,5 +371,5 @@ else if (params.has("showcase")) await renderShowcase({ root, fixture, sessions,
 else if (params.has("age")) await renderAgeColumns({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT });
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
-  results.textContent = "点击会话查看跳转结果：只有 fly-island 会话能找到窗口。";
+  results.textContent = "点击会话查看跳转结果：只有 fuyu 会话能找到窗口。";
 }

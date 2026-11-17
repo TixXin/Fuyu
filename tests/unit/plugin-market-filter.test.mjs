@@ -41,7 +41,7 @@ test("the market filters by words in either language, publisher and category", (
 
 test("only categories in use are offered, and repositories become GitHub links", () => {
   assert.deepEqual(usedCategories(plugins, ["todos", "media", "productivity"]), ["media", "productivity"]);
-  assert.equal(repositoryUrl("TixXin/fly-island"), "https://github.com/TixXin/fly-island");
+  assert.equal(repositoryUrl("TixXin/fuyu"), "https://github.com/TixXin/fuyu");
   assert.equal(repositoryUrl("javascript:alert(1)"), null);
   assert.equal(repositoryUrl("a/b/c"), null);
   assert.equal(repositoryUrl(null), null);

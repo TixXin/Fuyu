@@ -38,8 +38,8 @@ const ITEMS: ClipboardHistoryItem[] = [
 const SHELF: FileShelfItem[] = [
   { id: "s1", path: "D:\\Work\\Design\\设计稿-v3.fig", name: "设计稿-v3.fig", isDir: false, size: 18_400_000, addedAt: now, pinned: true, missing: false, unreachable: false },
   { id: "s2", path: "C:\\Users\\me\\Desktop\\周报-2026-11-09.docx", name: "周报-2026-11-09.docx", isDir: false, size: 86_000, addedAt: now, pinned: false, missing: false, unreachable: false },
-  { id: "s3", path: "C:\\Users\\me\\Downloads\\fly-island-screenshots", name: "fly-island-screenshots", isDir: true, size: 0, addedAt: now, pinned: false, missing: false, unreachable: false },
-  { id: "s4", path: "E:\\Projects\\fly-island\\docs\\assets\\demo-preview.gif", name: "demo-preview.gif", isDir: false, size: 3_100_000, addedAt: now, pinned: false, missing: false, unreachable: false },
+  { id: "s3", path: "C:\\Users\\me\\Downloads\\fuyu-screenshots", name: "fuyu-screenshots", isDir: true, size: 0, addedAt: now, pinned: false, missing: false, unreachable: false },
+  { id: "s4", path: "E:\\Projects\\fuyu\\docs\\assets\\demo-preview.gif", name: "demo-preview.gif", isDir: false, size: 3_100_000, addedAt: now, pinned: false, missing: false, unreachable: false },
   { id: "s5", path: "C:\\Users\\me\\Downloads\\old-installer.exe", name: "old-installer.exe", isDir: false, size: 0, addedAt: now, pinned: false, missing: true, unreachable: false },
   { id: "s6", path: "\\\\NAS\\共享\\合同扫描.pdf", name: "合同扫描.pdf", isDir: false, size: 0, addedAt: now, pinned: false, missing: false, unreachable: true },
 ];

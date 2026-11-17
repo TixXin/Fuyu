@@ -210,7 +210,7 @@ fn a_session_shows_one_request_at_a_time() {
 
 #[test]
 fn config_gets_a_token_and_keeps_it() {
-    let dir = std::env::temp_dir().join(format!("focusd-approval-test-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("fuyu-approval-test-{}", std::process::id()));
     let path = dir.join("agent-approval.json");
     let _ = std::fs::remove_dir_all(&dir);
     let (config, changed) = load_config(&path).unwrap();

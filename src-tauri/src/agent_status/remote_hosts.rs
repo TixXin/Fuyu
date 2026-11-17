@@ -185,7 +185,7 @@ mod tests {
     use super::*;
 
     fn temp_dir(tag: &str) -> std::path::PathBuf {
-        std::env::temp_dir().join(format!("focusd-remote-hosts-{tag}-{}", std::process::id()))
+        std::env::temp_dir().join(format!("fuyu-remote-hosts-{tag}-{}", std::process::id()))
     }
 
     fn cleanup(dir: &Path) {

@@ -322,7 +322,7 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
 | 旧数据目录 `com.focusd.island`、旧安装项 `fly-island`、旧 exe `focusd-island.exe`、旧凭据 `com.focusd.island.*` | `src-tauri/src/rename_migration/` | 老用户升级后数据、凭据全空 |
 | localStorage `focusd-island-*` 复制成 `fuyu-*` | `src/lib/copyRenamedKeys.ts`、`src/lib/renamedKeys.ts` | 同上 |
 | 开机自启旧值 `FocuSD Island` | `src-tauri/src/system/startup.rs` | 旧值留在注册表，开机启动两次或指向不存在的 exe |
-| Agent hook 旧签名 `focusd-agent-`、旧标记块 `# BEGIN/END FocuSD Agent Status Hooks`、旧请求头 `X-FocuSD-Hook` / `X-FocuSD-Remote` | `src-tauri/src/agent_status/{mod,claude_hooks,codex_hooks}.rs`、`src-tauri/src/agent_approval/http.rs` | 用户机器上的旧 hook 不再被认成「需要修复」，旧块永远留在配置里 |
+| Agent hook 旧签名 `focusd-agent-`、旧标记块 `# BEGIN/END FocuSD Agent Status Hooks`、Codex 钩子旧状态提示 `Updating FocuSD agent status`、`fuyu-agent-status.ps1` 旧锁超时文字 `Timed out waiting for the FocuSD agent status file lock.`、旧请求头 `X-FocuSD-Hook` / `X-FocuSD-Remote` | `src-tauri/src/agent_status/{mod,claude_hooks,codex_hooks,hooks_state}.rs`、`src-tauri/src/agent_approval/http.rs` | 用户机器上的旧 hook 不再被认成「需要修复」或仅因提示文字变更就标成过期，旧块永远留在配置里 |
 | 回复标记旧文件 `rules/focusd-island-reply-marker.md`、旧块标记 `focusd-island: reply marker v1–v3` | `src-tauri/src/agent_status/reply_marker.rs` | 旧规则文件不再被清掉，提示词里出现两份标记说明 |
 | SSH 远端旧目录 `~/.focusd-island/` | `src-tauri/src/agent_status/{remote_setup,remote_fetch}.rs` | 没修复 hook 的远端主机的通知读不到 |
 | VS Code 旧扩展 `tixxin.focusd-island` | `src-tauri/src/agent_status/editor_terminal.rs` | 只装了旧扩展的用户点会话跳不到终端 |

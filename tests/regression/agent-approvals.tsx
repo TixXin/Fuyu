@@ -15,7 +15,7 @@ const names: string[] = [];
 const idOf = (name: string) => (names.includes(name) ? names.indexOf(name) : names.push(name) - 1) + 1;
 const nameOf = (id: unknown) => names[Number(id) - 1] ?? String(id);
 const request = (name: string, sessionId: string, extra: Partial<AgentApprovalRequest> = {}): AgentApprovalRequest => ({
-  id: idOf(name), kind: "permission", agent: "claudeCode", sessionId, permissionSuggestions: null, cwd: "E:\\Projects\\fly-island", toolName: "Bash",
+  id: idOf(name), kind: "permission", agent: "claudeCode", sessionId, permissionSuggestions: null, cwd: "E:\\Projects\\fuyu", toolName: "Bash",
   toolInput: { command: COMMAND, description: "跑回归页并查看改动" }, receivedAt: 0, ...extra,
 });
 const SUGGESTIONS = [{ type: "addRules", rules: [{ toolName: "Bash", ruleContent: "pnpm test:regression:*" }], behavior: "allow", destination: "localSettings" }];
@@ -45,7 +45,7 @@ mockIPC(
 );
 
 const sessions: AgentSessionSummary[] = [{
-  provider: "claudeCode", sessionId: "s1", cwd: "E:\\Projects\\fly-island", title: "岛上审批", model: null, effort: null,
+  provider: "claudeCode", sessionId: "s1", cwd: "E:\\Projects\\fuyu", title: "岛上审批", model: null, effort: null,
   phase: "waiting", lastMessage: null, updatedAt: 0, host: null, turnStartedAt: null,
 }];
 
