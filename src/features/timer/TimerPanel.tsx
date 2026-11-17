@@ -3,7 +3,7 @@ import { BellRing, Pause, Play, Plus, Timer as TimerIcon, Watch, X } from "lucid
 import { useTranslation } from "../../i18n";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { cancelTimer, extendTimer, pauseTimer, resumeTimer, startCountdown, startStopwatch, useTimers } from "./store";
-import { clockText, isFinished, MAX_TIMERS, parseDuration, shownMs, type Timer } from "./timers";
+import { clockText, isFinished, parseDuration, shownMs, type Timer } from "./timers";
 import "../../components/list/IslandList.css";
 import "./TimerPanel.css";
 
@@ -38,28 +38,14 @@ export function TimerPanel({ isOpen }: { isOpen: boolean }) {
       setProblem(t.invalid);
       return;
     }
-    if (timers.length >= MAX_TIMERS) {
+    if (!startCountdown(length)) {
       setProblem(t.full);
       return;
     }
-    void startCountdown(length).then((result) => {
-      if (result === "ok") {
-        setText("");
-        setProblem(null);
-      } else {
-        setProblem(result === "limit" ? t.full : t.unavailable);
-      }
-    });
+    setText("");
+    setProblem(null);
   };
-  const stopwatch = () => {
-    if (timers.length >= MAX_TIMERS) {
-      setProblem(t.full);
-      return;
-    }
-    void startStopwatch().then((result) => {
-      setProblem(result === "ok" ? null : result === "limit" ? t.full : t.unavailable);
-    });
-  };
+  const stopwatch = () => setProblem(startStopwatch() ? null : t.full);
 
   return (
     <section className="island-list-page timer-panel" aria-label={t.countdown}>
