@@ -86,12 +86,8 @@ pub fn open(app: &AppHandle) -> Result<(), String> {
     }
     let closing = window.clone();
     window.on_window_event(move |event| {
-        if let WindowEvent::CloseRequested { api, .. } = event {
+        if let WindowEvent::CloseRequested { .. } = event {
             bounds::save(&closing);
-            if !closing.is_fullscreen().unwrap_or(false) {
-                api.prevent_close();
-                let _ = closing.hide();
-            }
         }
     });
     trace.mark("built");

@@ -17,8 +17,6 @@ const OPEN_EVENT: &str = "tray-menu-open";
 const DEFAULT_SIZE: (f64, f64) = (320.0, 420.0);
 const SHOW_FALLBACK: Duration = Duration::from_millis(700);
 const REOPEN_GUARD: Duration = Duration::from_millis(400);
-#[cfg(not(target_os = "macos"))]
-const PREBUILD_DELAY: Duration = Duration::from_secs(5);
 
 #[derive(Clone, Copy)]
 struct Anchor {
@@ -115,26 +113,6 @@ fn create(app: &AppHandle) -> Result<WebviewWindow, String> {
     crate::macos::tray_panel::make_tray_panel(&window)?;
     Ok(window)
 }
-
-#[cfg(not(target_os = "macos"))]
-pub(crate) fn prebuild(app: &AppHandle) {
-    let app = app.clone();
-    thread::spawn(move || {
-        thread::sleep(PREBUILD_DELAY);
-        let handle = app.clone();
-        let queued = app.run_on_main_thread(move || {
-            if let Err(error) = create(&handle) {
-                eprintln!("failed to prebuild the tray card: {error}");
-            }
-        });
-        if let Err(error) = queued {
-            eprintln!("failed to prebuild the tray card: {error}");
-        }
-    });
-}
-
-#[cfg(target_os = "macos")]
-pub(crate) fn prebuild(_app: &AppHandle) {}
 
 pub(crate) fn toggle(app: &AppHandle, icon: Option<&tauri::Rect>) {
     if is_open(app) {
@@ -276,12 +254,7 @@ pub(crate) fn hide(app: &AppHandle) {
     let _ = app.run_on_main_thread(move || {
         let Some(window) = card_window(&handle) else { return };
         #[cfg(target_os = "macos")]
-        let hidden = crate::macos::tray_panel::hide_tray_panel(&window);
-        #[cfg(not(target_os = "macos"))]
-        let hidden = false;
-        if !hidden {
-            let _ = window.hide();
-        }
-        crate::webview_memory::hidden(&window);
+        crate::macos::tray_panel::hide_tray_panel(&window);
+        let _ = window.destroy();
     });
 }
