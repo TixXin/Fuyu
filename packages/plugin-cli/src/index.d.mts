@@ -145,3 +145,28 @@ export declare function signCommitAt(
 export declare function signPackageFile(file: string, privateKey: PrivateKeyInput, out?: string): { file: string; name: string; version: string; digest: string; keyId: string };
 
 export declare function run(argv: string[], io?: { stdout?: Writable; stderr?: Writable; cwd?: string; env?: Record<string, string | undefined> }): Promise<number>;
+
+export interface DevOptions extends BuildOptions {
+  dataDir?: string;
+  configFile?: string;
+  once?: boolean;
+  cleanOnly?: boolean;
+  debounceMs?: number;
+  onRebuild?: (result: BuildResult) => void;
+  onError?: (error: unknown) => void;
+}
+
+export interface DevSession {
+  id: string;
+  ymlFile: string;
+  cleaned: boolean;
+  result: BuildResult | null;
+  rebuild?: () => Promise<BuildResult>;
+  close: (options?: { clean?: boolean }) => Promise<void>;
+}
+
+export declare const DEV_DIR_ENV: "FUYU_PLUGINS_V3_DIR";
+export declare function defaultDataDir(home?: string): string;
+export declare function registerDevEntry(ymlFile: string, id: string, devOutDir: string): string;
+export declare function unregisterDevEntry(ymlFile: string, id: string): boolean;
+export declare function dev(dir: string, options?: DevOptions): Promise<DevSession>;

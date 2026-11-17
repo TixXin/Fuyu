@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { VERSION, check, run } from "../src/index.mjs";
+import { VERSION, check, dev, run } from "../src/index.mjs";
 import { REVIEW_FIXTURES, capture, copyFixture, editJson, tempDir, writeFiles } from "./helpers.mjs";
 
 test("help, version and bad arguments", async () => {
@@ -100,4 +100,28 @@ test("review prints Markdown or JSON and exits 1 only on red", async () => {
   assert.ok(existsSync(join(json.io.cwd, "report.md")));
   const usage = capture(tempDir());
   assert.equal(await run(["review", fixture("1.0.0")], usage.io), 2);
+});
+
+test("dev builds the plugin, registers source: dev in plugins.yml, rebuilds on change and cleans up", async () => {
+  const dir = copyFixture();
+  const dataDir = tempDir();
+  const out = capture(dir);
+  assert.equal(await run(["dev", "--once", "--data-dir", dataDir], out.io), 0, out.stderr());
+  assert.match(out.stdout(), /dev @someone\/fuyu-hello/);
+  const yml = readFileSync(join(dataDir, "plugins.yml"), "utf8");
+  assert.match(yml, /- id: "@someone\/fuyu-hello"/);
+  assert.match(yml, /source: dev/);
+
+  let rebuilt = 0;
+  const session = await dev(dir, {
+    dataDir,
+    debounceMs: 20,
+    onRebuild: () => {
+      rebuilt += 1;
+    },
+  });
+  await session.rebuild();
+  assert.equal(rebuilt, 1);
+  await session.close({ clean: true });
+  assert.equal(readFileSync(join(dataDir, "plugins.yml"), "utf8").trim(), "[]");
 });

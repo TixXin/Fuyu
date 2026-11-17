@@ -2,6 +2,7 @@ export { BUILD_ONLY_FIELDS, DEFAULT_OUT_DIR, VERSION, build, builtManifest, read
 export { builtinName } from "./bundle.mjs";
 export { check } from "./check.mjs";
 export { run } from "./cli.mjs";
+export { DEV_DIR_ENV, defaultDataDir, dev, registerDevEntry, unregisterDevEntry } from "./dev.mjs";
 export { compareDeclarations } from "./declarations.mjs";
 export { OUTPUT_DIR, SOURCE_DIR, SOURCE_EXTENSIONS, planEntries, sourceFor } from "./entries.mjs";
 export { BuildError } from "./errors.mjs";

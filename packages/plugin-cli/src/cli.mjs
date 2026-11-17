@@ -4,6 +4,7 @@ import { parseArgs } from "node:util";
 import { publicKeyOf } from "@fuyu/plugin-market";
 import { VERSION, build, realPath } from "./build.mjs";
 import { check } from "./check.mjs";
+import { dev } from "./dev.mjs";
 import { BuildError, formatIssue } from "./errors.mjs";
 import { KEY_ENV, generateSigningKey, loadSigningKey } from "./keys.mjs";
 import { pack } from "./pack.mjs";
@@ -43,6 +44,10 @@ Commands:
     --key <file>, --out <file>
   sign <file.fuyu>     Add your author signature to a package
     --key <file>, --out <file>
+  dev [folder]         Build, register in plugins.yml as source: dev, and rebuild on changes
+    --data-dir <folder>  plugin host data directory containing plugins.yml
+    --once               build and register once without watching
+    --clean              remove the dev entry from plugins.yml
   version, help
 
 The signing key comes from --key, else ${KEY_ENV} (the PEM text), else ~/.fuyu-plugin/signing.key.
@@ -65,6 +70,7 @@ const OPTIONS = {
   },
   keygen: { key: { type: "string" } },
   sign: { key: { type: "string" }, out: { type: "string" }, commit: { type: "string" }, repository: { type: "string" } },
+  dev: { ...BUILD, out: { type: "string" }, "data-dir": { type: "string" }, once: { type: "boolean" }, clean: { type: "boolean" } },
 };
 const CONFIG_KEYS = ["shared", "hostExternal", "appModules", "packageDepth", "nodeTarget", "browserTarget"];
 
@@ -179,6 +185,27 @@ const commands = {
     const json = `${JSON.stringify(signed, null, 2)}\n`;
     if (values.out) writeFileSync(resolve(io.cwd, values.out), json);
     io.stdout.write(json);
+    return 0;
+  },
+
+  async dev({ values, positionals }, io, out) {
+    const dir = resolve(io.cwd, positionals[0] ?? ".");
+    const dataDir = values["data-dir"] ? resolve(io.cwd, values["data-dir"]) : io.env.FUYU_PLUGINS_V3_DIR;
+    if (values.clean) {
+      const cleaned = await dev(dir, { dataDir, cleanOnly: true });
+      out.out(`removed dev entry ${cleaned.id} from ${out.show(cleaned.ymlFile)}`);
+      return 0;
+    }
+    const session = await dev(dir, {
+      ...buildOptions(values, io.cwd),
+      outDir: values.out ? resolve(io.cwd, values.out) : undefined,
+      dataDir,
+      once: Boolean(values.once),
+      onRebuild: (res) => out.out(`rebuilt ${res.manifest.name} ${res.manifest.version}`),
+      onError: (err) => out.error(err instanceof Error ? err.message : String(err)),
+    });
+    session.result.warnings.forEach(out.warn);
+    out.out(`dev ${session.id} -> ${out.show(session.result.outDir)} (registered in ${out.show(session.ymlFile)})`);
     return 0;
   },
 };
