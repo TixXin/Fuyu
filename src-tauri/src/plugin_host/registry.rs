@@ -13,7 +13,6 @@ use super::{
     runtime::{self, CallRecord, Resources, RuntimeStatus},
     sensitive::SensitiveChoice,
     settings::{self, InfoItem, SettingSpec},
-    store::PluginsState,
     updates, InstalledPlugin, PluginHost,
 };
 
@@ -135,27 +134,6 @@ fn scan_folder(plugins_dir: &PathBuf, app_version: &str) -> Vec<InstalledPlugin>
     found.append(&mut installed);
     found.sort_by(|left, right| left.folder.cmp(&right.folder));
     found
-}
-
-pub(super) fn migrate_local_api(state: &mut PluginsState, installed: &[InstalledPlugin], legacy: Option<(bool, bool)>) -> bool {
-    if state.plugins.contains_key(builtin::LOCAL_API_ID) {
-        return false;
-    }
-    let Some((enabled, allow_write)) = legacy else { return false };
-    if !enabled && !allow_write {
-        return false;
-    }
-    let permissions = installed
-        .iter()
-        .find(|plugin| plugin.folder == builtin::LOCAL_API_ID)
-        .and_then(|plugin| plugin.manifest.as_ref().ok())
-        .map(|manifest| manifest.permissions.clone())
-        .unwrap_or_default();
-    let grant = state.plugins.entry(builtin::LOCAL_API_ID.to_string()).or_default();
-    grant.enabled = enabled;
-    grant.granted_permissions = if enabled { permissions } else { Vec::new() };
-    grant.settings.insert(builtin::LOCAL_API_ALLOW_WRITE.to_string(), Value::Bool(allow_write));
-    true
 }
 
 pub(super) fn rescan() -> Result<(), String> {

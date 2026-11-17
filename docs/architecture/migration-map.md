@@ -72,7 +72,7 @@
 | `slots/collapsed.tsx` 的邮件、更新、设备占用、文件中转、音乐、用量环、计时、会话数、中心图案 | 各自功能的 `plugin/island.tsx`；状态灯和上下文类型留在外壳 |
 | `slots/alerts.tsx` 的设备、额度、音量亮度提醒 | `device-events`、`agent-status`、`system-levels` 的 `plugin/island.tsx`；`NotchAlertSources` 留在外壳 |
 | `islandNotice.tsx` 的录屏、语音、计时响铃、截图、复制、提醒卡片 | 插槽 `island.notice/v1`，项在各功能的 `plugin/island.tsx`；第一次提示留在外壳 |
-| `IslandApp.tsx` 里的 `useBreakReminders`、`useDevIslandActions`，`useIslandTranslation` 里的 `useTranslationEnabled`、`useTranslationIslandShortcut` | 插槽 `island.runner/v1`：`timer`、`local-api`、`translation` 的 `plugin/runners.tsx`；`windows/island/useDevIslandActions.ts` → `features/local-api/useDevIslandActions.ts` |
+| `IslandApp.tsx` 里的 `useBreakReminders`、`useDevIslandActions`，`useIslandTranslation` 里的 `useTranslationEnabled`、`useTranslationIslandShortcut` | 插槽 `island.runner/v1`：`timer`、`local-api`、`translation` 的 `plugin/runners.tsx`；`windows/island/useDevIslandActions.ts` → `features/local-api/useDevIslandActions.ts`（2026-11-16 起整座桥连同两个 runner 搬到 `features/island-bridge/`，不再归本机接口，E36.3.43） |
 
 ## 迁移映射：Rust
 

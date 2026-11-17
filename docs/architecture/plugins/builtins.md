@@ -10,9 +10,9 @@
 
 ## 现有的内置插件
 
-### 本地接口（`focusd.local-api`）
+### 本地接口（`focusd.local-api`，已迁走）
 
-见 [本地接口](../../features/local-api.md)。
+2026-11-16 起（E36.3.43）本机接口是第 3 版的内置插件 `local-api`，不在这张表里了；开关和「允许修改」第一次启动新版本时迁进 `plugins-v3/plugins.yml`（第 2 版里没打开过的迁过来也是关的），设置在 设置 → 通用 →「本机接口」。见 [本地接口](../../features/local-api.md)。
 
 ### 中心图案（`focusd.center-pattern`，默认关闭）
 

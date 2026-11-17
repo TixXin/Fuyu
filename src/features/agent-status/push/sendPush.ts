@@ -1,9 +1,10 @@
 import { ccConnectV1 } from "../../../lib/cc-connect/service";
+import { getUserIdleSeconds, isSessionLocked } from "../../../lib/api";
 import { windowServices } from "../../plugin-kernel/services";
 import type { AgentAlert, AgentAlertKind } from "../alerts";
 import { sessionProject } from "../sessionList";
 import { AGENT_PROVIDER_LABELS } from "../status";
-import { getAgentPushDetail, getUserIdleSeconds, isSessionLocked, NO_PUSH_DETAIL, sendBarkPush } from "./api";
+import { getAgentPushDetail, NO_PUSH_DETAIL, sendBarkPush } from "./api";
 import { ccConnectText, pushBody, takeoverCommands } from "./pushText";
 import { LOCAL_HOST, pushRoute, type AgentPushSettings } from "./storage";
 

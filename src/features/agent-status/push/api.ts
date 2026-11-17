@@ -16,14 +16,6 @@ export function sendBarkPush(server: string, title: string, body: string, group:
   return invoke<void>("send_bark_push", { server, title, body, group });
 }
 
-export function getUserIdleSeconds() {
-  return invoke<number | null>("get_user_idle_seconds");
-}
-
-export function isSessionLocked() {
-  return invoke<boolean>("is_session_locked");
-}
-
 export type AgentPushDetail = {
   entrypoint: string | null;
   wait: { kind: "question" | "plan" | "reply"; text: string } | null;

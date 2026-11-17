@@ -25,7 +25,8 @@ src/
 │   ├── file-shelf/          # 文件中转：拖到岛上的文件（只存路径）、拖出、复制、打开
 │   ├── screenshot/          # 截图（C41）：选区的纯计算（selection.ts，物理像素和 CSS 像素的换算）、放大镜、api.ts
 │   ├── center-pattern/      # 内置插件"中心图案"：SVG 动画（眼睛跟随光标）、Codex Pets 宠物 sprite、宠物随 Agent 状态的 mood
-│   ├── local-api/           # 本地接口的前端一侧：转发请求的分发与桥接 hook（待办部分在 todos/apiCommands.ts；开关与设置在内置插件页）
+│   ├── island-bridge/       # 不是插件：Rust 转给岛的请求（local-api-request）的桥，方法分发、待办经 todos/v1，开发版另有岛屿实验台的动作；runner 拥有者 builtin，本机接口、第 2 版插件的待办调用和实验台共用，关掉本机接口不撤它
+│   ├── local-api/           # 第 3 版内置插件 local-api（本机接口）：设置是 通用 里的一节（LocalApiSettings.tsx：允许修改、地址、复制令牌、重新生成令牌，令牌只由 Rust 复制）。岛上接 Rust 转来的请求（local-api-request）的桥不在这里，在 island-bridge/
 │   ├── plugins/             # 设置 → 插件扩展页与插件市场页：已安装插件、启用与授权、从市场安装
 │   ├── plugin-dev/          # 设置 → 插件扩展 → 开发者：开发模式开关、从文件夹加载插件、JSON-RPC 收发记录、手动发送事件
 │   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧（E36.1，开发中）：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件（runtime.ts，宿主启动了才工作：测试版和开发版默认启动，正式版要设 FUYU_PLUGINS_V3=1）；插槽：每个窗口一份注册表和各插槽的类型化句柄（slots.ts，名单和规则在 @fuyu/plugin-base/protocol 的 SLOTS）、渲染（SlotView.tsx）、订阅（useSlotEntries.ts），内置功能不设那个环境变量也经它们注册和渲染

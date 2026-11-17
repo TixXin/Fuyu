@@ -1,34 +1,19 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 
-export const LOCAL_API_REQUEST_EVENT = "local-api-request";
-
-export type LocalApiRequest = {
-  id: number;
-  method: string;
-  params: unknown;
+export type LocalApiInfo = {
+  running: boolean;
+  url: string;
+  configPath: string;
 };
 
-export type LocalApiResponse =
-  | { ok: true; data: unknown }
-  | { ok: false; status: number; error: string };
-
-export function answerLocalApiRequest(id: number, response: LocalApiResponse) {
-  return invoke<void>("answer_local_api_request", { id, response });
+export function getLocalApiInfo() {
+  return invoke<LocalApiInfo>("get_local_api_info");
 }
 
-export function listenLocalApiRequests(handler: (request: LocalApiRequest) => void) {
-  return listen<LocalApiRequest>(LOCAL_API_REQUEST_EVENT, (event) => handler(event.payload));
+export function resetLocalApiToken() {
+  return invoke<LocalApiInfo>("reset_local_api_token");
 }
 
-export const DEV_ISLAND_ACTION_EVENT = "dev-island-action";
-
-export type DevIslandAction =
-  | { action: "open"; page: string }
-  | { action: "collapse" }
-  | { action: "tuck" }
-  | { action: "reveal" };
-
-export function listenDevIslandActions(handler: (action: DevIslandAction) => void) {
-  return listen<DevIslandAction>(DEV_ISLAND_ACTION_EVENT, (event) => handler(event.payload));
+export function copyLocalApiToken() {
+  return invoke<void>("copy_local_api_token");
 }

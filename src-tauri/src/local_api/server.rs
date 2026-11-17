@@ -97,6 +97,7 @@ fn answer(app: &AppHandle, request: &mut Request, port: u16) -> Result<Value, Ap
     }
 
     let call = routes::route(request.method().as_str(), request.url(), &body)?;
+    super::switches::check(call.method)?;
     if call.writes && !config.allow_write {
         return Err(ApiError::new(403, "Changes are turned off in Fuyu settings."));
     }

@@ -1,6 +1,6 @@
 import { act } from "react";
 import { emit } from "@tauri-apps/api/event";
-import { DEV_ISLAND_ACTION_EVENT } from "../../src/features/local-api/api";
+import { DEV_ISLAND_ACTION_EVENT } from "../../src/features/island-bridge/api";
 import { windowSlots } from "../../src/features/plugin-kernel/slots";
 import type { IpcLedger } from "../../src/features/plugin-kernel/ipcLedger";
 

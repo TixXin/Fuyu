@@ -1,3 +1,4 @@
+mod background;
 mod bridge;
 mod config;
 #[cfg(debug_assertions)]
@@ -6,6 +7,8 @@ mod dev_island;
 mod lab;
 mod routes;
 mod server;
+pub(crate) mod settings;
+mod switches;
 #[cfg(test)]
 mod tests;
 
@@ -24,10 +27,9 @@ struct LocalApiService {
     app: AppHandle,
     path: PathBuf,
     config: Mutex<LocalApiConfig>,
-    legacy: (bool, bool),
 }
 
-pub(crate) struct LocalApiStatus {
+struct LocalApiStatus {
     pub url: String,
     pub token: String,
     pub config_path: String,
@@ -60,9 +62,9 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     let _ = SERVICE.set(LocalApiService {
         app: app.clone(),
         path,
-        legacy: (config.enabled, config.allow_write),
         config: Mutex::new(config),
     });
+    background::init();
     Ok(())
 }
 
@@ -80,11 +82,7 @@ fn current_config() -> LocalApiConfig {
     SERVICE.get().map(|service| config(service).clone()).unwrap_or_default()
 }
 
-pub(crate) fn legacy_switches() -> Option<(bool, bool)> {
-    SERVICE.get().map(|service| service.legacy)
-}
-
-pub(crate) fn start(allow_write: bool) -> Result<LocalApiStatus, String> {
+fn start(allow_write: bool) -> Result<LocalApiStatus, String> {
     let service = service()?;
     {
         let mut config = config(service);
@@ -97,7 +95,7 @@ pub(crate) fn start(allow_write: bool) -> Result<LocalApiStatus, String> {
     status()
 }
 
-pub(crate) fn stop() -> Result<(), String> {
+fn stop() -> Result<(), String> {
     let service = service()?;
     server::stop();
     crate::agent_status::clear_external_owner(server::LOCAL_API_OWNER);
@@ -106,14 +104,14 @@ pub(crate) fn stop() -> Result<(), String> {
     save_config(&service.path, &config)
 }
 
-pub(crate) fn set_allow_write(allow_write: bool) -> Result<(), String> {
+fn set_allow_write(allow_write: bool) -> Result<(), String> {
     let service = service()?;
     let mut config = config(service);
     config.allow_write = allow_write;
     save_config(&service.path, &config)
 }
 
-pub(crate) fn reset_token() -> Result<LocalApiStatus, String> {
+fn reset_token() -> Result<LocalApiStatus, String> {
     let service = service()?;
     {
         let mut config = config(service);
@@ -123,7 +121,7 @@ pub(crate) fn reset_token() -> Result<LocalApiStatus, String> {
     status()
 }
 
-pub(crate) fn status() -> Result<LocalApiStatus, String> {
+fn status() -> Result<LocalApiStatus, String> {
     let service = service()?;
     let config = config(service).clone();
     Ok(LocalApiStatus {
@@ -134,6 +132,7 @@ pub(crate) fn status() -> Result<LocalApiStatus, String> {
 }
 
 pub(crate) fn call_island(app: &AppHandle, method: &'static str, params: serde_json::Value) -> Result<serde_json::Value, (u16, String)> {
+    switches::check(method).map_err(|error| (error.status, error.message))?;
     let call = routes::ApiCall { method, params, writes: false };
     bridge::dispatch(app, call).map_err(|error| (error.status, error.message))
 }
@@ -147,6 +146,9 @@ macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
             crate::local_api::answer_local_api_request,
+            crate::local_api::settings::get_local_api_info,
+            crate::local_api::settings::reset_local_api_token,
+            crate::local_api::settings::copy_local_api_token,
         ] $($rest)*)
     };
 }
