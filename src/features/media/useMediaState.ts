@@ -9,7 +9,9 @@ import { useMediaSessionChanges } from "./useMediaSessionChanges";
 import { pickEffectiveMediaTarget } from "./sourcePriority";
 import { useMusicSourcePriority } from "./useMusicSourcePriority";
 
-export function useMediaState(enabled = true) {
+const FALLBACK_POLL_MS = 30_000;
+
+export function useMediaState(enabled = true, waveformVisible = true) {
   const [mediaState, setMediaState] =
     useState<MediaState>(DEFAULT_MEDIA_STATE);
   const [isMediaTrackChanging, setIsMediaTrackChanging] = useState(false);
@@ -195,7 +197,7 @@ export function useMediaState(enabled = true) {
   useAudioLevel(
     setMediaState,
     mediaPlaybackIntent,
-    enabled && (mediaState.playbackStatus === "playing" || mediaState.audioActive),
+    enabled && waveformVisible && (mediaState.playbackStatus === "playing" || mediaState.audioActive),
   );
 
   useMediaSessionChanges(enabled, refreshMediaState);
@@ -210,7 +212,7 @@ export function useMediaState(enabled = true) {
 
     return visibilityInterval(() => {
       void refreshMediaState();
-    }, 1500);
+    }, FALLBACK_POLL_MS);
   }, [enabled, refreshMediaState]);
 
   const effectiveMediaTarget = useMemo(

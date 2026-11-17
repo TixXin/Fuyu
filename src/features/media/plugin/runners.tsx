@@ -29,7 +29,8 @@ const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
 
 function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, background, accent }: RunnerProps) {
   const t = useTranslation();
-  const live = useMediaState(settings.musicEnabled);
+  const waveformVisible = !isTucked && (mode === "collapsed" || page === "music");
+  const live = useMediaState(settings.musicEnabled, waveformVisible);
   const demoState = useMemo(() => (demo.active ? demoMediaState(t.onboarding.demo, demo.startedAt) : null), [demo.active, demo.startedAt, t]);
   const media = useMemo(() => (demoState && live.mediaState.playbackStatus !== "playing" ? { ...live, mediaState: demoState } : live), [demoState, live]);
   const { mediaState, runMediaCommand } = media;

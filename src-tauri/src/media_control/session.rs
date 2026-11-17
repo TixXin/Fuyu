@@ -1,6 +1,6 @@
 use base64::Engine;
 use std::{
-    sync::{Mutex, OnceLock},
+    sync::{mpsc, Mutex, OnceLock, PoisonError},
     thread,
     time::Duration,
 };
@@ -35,19 +35,67 @@ pub(super) type CachedThumbnail = (String, Option<String>);
 
 pub(super) static THUMBNAIL_CACHE: OnceLock<Mutex<Option<CachedThumbnail>>> = OnceLock::new();
 
+const MEDIA_CALL_TIMEOUT: Duration = Duration::from_secs(3);
+
+type MediaJob = Box<dyn FnOnce() + Send + 'static>;
+
+static MEDIA_WORKER: Mutex<Option<mpsc::Sender<MediaJob>>> = Mutex::new(None);
+
+fn spawn_media_worker() -> Result<mpsc::Sender<MediaJob>, String> {
+    let (tx, rx) = mpsc::channel::<MediaJob>();
+    thread::Builder::new()
+        .name("media-com-worker".into())
+        .spawn(move || {
+            let Ok(_apartment) = win32::com::ComApartment::multithreaded() else {
+                return;
+            };
+            while let Ok(job) = rx.recv() {
+                let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(job));
+            }
+        })
+        .map_err(|error| format!("Could not start the Windows media control thread: {error}"))?;
+    Ok(tx)
+}
+
 pub(super) fn on_media_thread<T, F>(operation: F) -> Result<T, String>
 where
     T: Send + 'static,
     F: FnOnce() -> Result<T, String> + Send + 'static,
 {
-    thread::spawn(move || {
-        let _apartment = win32::com::ComApartment::multithreaded()
-            .map_err(|error| media_error("Failed to initialize the media COM thread", error))?;
-
-        operation()
-    })
-    .join()
-    .map_err(|_| "The Windows media control thread panicked.".to_string())?
+    let (reply_tx, reply_rx) = mpsc::channel();
+    let job: MediaJob = Box::new(move || {
+        let _ = reply_tx.send(operation());
+    });
+    let mut guard = MEDIA_WORKER.lock().unwrap_or_else(PoisonError::into_inner);
+    let mut pending = Some(job);
+    if let Some(worker) = guard.as_ref() {
+        match worker.send(pending.take().unwrap_or_else(|| Box::new(|| {}))) {
+            Ok(()) => {}
+            Err(error) => {
+                pending = Some(error.0);
+                *guard = None;
+            }
+        }
+    }
+    if let Some(job) = pending {
+        let worker = spawn_media_worker()?;
+        worker
+            .send(job)
+            .map_err(|_| "The Windows media control thread exited immediately.".to_string())?;
+        *guard = Some(worker);
+    }
+    drop(guard);
+    match reply_rx.recv_timeout(MEDIA_CALL_TIMEOUT) {
+        Ok(result) => result,
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            *MEDIA_WORKER.lock().unwrap_or_else(PoisonError::into_inner) = None;
+            Err("The Windows media control call timed out.".to_string())
+        }
+        Err(mpsc::RecvTimeoutError::Disconnected) => {
+            *MEDIA_WORKER.lock().unwrap_or_else(PoisonError::into_inner) = None;
+            Err("The Windows media control thread panicked.".to_string())
+        }
+    }
 }
 
 pub(super) fn request_manager() -> Result<MediaSessionManager, String> {

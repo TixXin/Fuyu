@@ -47,6 +47,7 @@ struct Watched {
     session: MediaSession,
     properties_token: i64,
     playback_token: i64,
+    timeline_token: i64,
 }
 
 struct Running {
@@ -99,6 +100,13 @@ fn watch(app: &AppHandle, sender: Sender<Signal>, signals: Receiver<Signal>) -> 
             Ok(())
         }))
         .map_err(|error| media_error("Failed to watch the media sessions", error))?;
+    let to_thread = sender.clone();
+    let current_token = manager
+        .CurrentSessionChanged(&TypedEventHandler::new(move |_, _| {
+            let _ = to_thread.send(Signal::Sessions);
+            Ok(())
+        }))
+        .map_err(|error| media_error("Failed to watch the current media session", error))?;
 
     let mut songs: HashMap<Option<String>, String> = HashMap::new();
     let mut watched = Vec::new();
@@ -117,9 +125,13 @@ fn watch(app: &AppHandle, sender: Sender<Signal>, signals: Receiver<Signal>) -> 
             Signal::Stop => {
                 unsubscribe(&watched);
                 let _ = manager.RemoveSessionsChanged(sessions_token);
+                let _ = manager.RemoveCurrentSessionChanged(current_token);
                 return Ok(());
             }
-            Signal::Sessions => resubscribe = true,
+            Signal::Sessions => {
+                resubscribe = true;
+                emit(app, "playback", current_unix_millis(), None);
+            }
             Signal::Playback(id, at) => emit(app, "playback", at, id),
             Signal::Track(id, at) => {
                 let Some(entry) = watched.iter().find(|entry| entry.id == id) else { continue };
@@ -154,7 +166,14 @@ fn subscribe(manager: &MediaSessionManager, sender: &Sender<Signal>) -> Vec<Watc
                     Ok(())
                 }))
                 .ok()?;
-            Some(Watched { id, session, properties_token, playback_token })
+            let (tx, timeline_id) = (sender.clone(), id.clone());
+            let timeline_token = session
+                .TimelinePropertiesChanged(&TypedEventHandler::new(move |_, _| {
+                    let _ = tx.send(Signal::Playback(timeline_id.clone(), current_unix_millis()));
+                    Ok(())
+                }))
+                .ok()?;
+            Some(Watched { id, session, properties_token, playback_token, timeline_token })
         })
         .collect()
 }
@@ -163,6 +182,7 @@ fn unsubscribe(watched: &[Watched]) {
     for entry in watched {
         let _ = entry.session.RemoveMediaPropertiesChanged(entry.properties_token);
         let _ = entry.session.RemovePlaybackInfoChanged(entry.playback_token);
+        let _ = entry.session.RemoveTimelinePropertiesChanged(entry.timeline_token);
     }
 }
 
