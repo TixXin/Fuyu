@@ -5,14 +5,7 @@ import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginsV3";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { exitPluginSafeMode, type BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
-import {
-  BUILTIN_ICONS,
-  BuiltinPluginsGroup,
-  milliseconds,
-  PluginDetailModal,
-  stateOf,
-  TONES,
-} from "./BuiltinPluginsGroup";
+import { BUILTIN_ICONS, BuiltinPluginsGroup, milliseconds, PluginDetailModal, stateOf, TONES } from "./BuiltinPluginsGroup";
 import { PluginHostNodeRow } from "./PluginHostNodeRow";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginStatusV3 } from "./usePluginHostStatus";
 import "./PluginsV3SettingsPage.css";
@@ -46,24 +39,44 @@ function SafeModeBanner({ view, mode }: { view: PluginHostView; mode: "third-par
         <strong>{`${text.safeMode} · ${text.safeModes[mode]}`}</strong>
         {cause ? <span>{cause}</span> : null}
       </div>
-      {canLeave ? (
-        <button className="plugins-v3__leave" type="button" disabled={leaving} onClick={leave}>
-          {text.leaveSafeMode}
-        </button>
-      ) : null}
+      {canLeave ? <button className="plugins-v3__leave" type="button" disabled={leaving} onClick={leave}>{text.leaveSafeMode}</button> : null}
     </div>
   );
 }
 
-function HostDock({
-  view,
-  now,
-  onOpenDiagnostics,
-}: {
-  view: PluginHostView;
-  now: number;
-  onOpenDiagnostics?: () => void;
-}) {
+function HostSummaryBar({ view, runningCount, onOpenDiagnostics }: { view: PluginHostView; runningCount: number; onOpenDiagnostics: () => void }) {
+  const text = useTranslation().settings.pluginsV3;
+  const { host, connection, memory } = view;
+  const measured = memory && host && memory.pid === host.pid ? memory : null;
+  const open = connection === "open";
+  const memoryKey = measured?.measure ?? "rss";
+  return (
+    <section className={`plugins-v3__host-bar${open && host?.safe ? " plugins-v3__dock--safe" : ""}`} aria-label={text.host}>
+      <div className="plugins-v3__host-bar-row">
+        <div className="plugins-v3__host-bar-left">
+          <span className={`plugins-v3__connection plugins-v3__connection--${connection}`} data-connection={connection}>{text.connection[connection]}</span>
+          {open && host ? (
+            <>
+              <span className="plugins-v3__host-meta">{text.hostDetail(host.pid, host.node)}</span>
+              <span className="plugins-v3__host-meta" title={text.memoryNotes[memoryKey]}>
+                {text.memoryTitles[memoryKey]}{" "}
+                <strong className="plugins-v3__value" data-measure={memoryKey}>{megabytes(measured ? measured.bytes : host.rssBytes)}</strong>
+              </span>
+              <span className="plugins-v3__host-meta">{text.runningSummary(runningCount)}</span>
+              {host.dev ? <span className="plugins-v3__badge plugins-v3__badge--dev">{text.devMode}</span> : null}
+              <span className="plugins-v3__sr-only">{text.memoryNotes[memoryKey]}</span>
+            </>
+          ) : null}
+        </div>
+        <button className="plugins-v3__diag-link" type="button" onClick={onOpenDiagnostics}>{text.openDiagnostics}</button>
+      </div>
+      <PluginHostNodeRow watching={!open} />
+      {open && host?.safe ? <SafeModeBanner key={host.pid} view={view} mode={host.safe} /> : null}
+    </section>
+  );
+}
+
+function HostDock({ view, now }: { view: PluginHostView; now: number }) {
   const text = useTranslation().settings.pluginsV3;
   const { host, connection, memory } = view;
   const measured = memory && host && memory.pid === host.pid ? memory : null;
@@ -74,9 +87,7 @@ function HostDock({
       <div className="plugins-v3__dock-top">
         <div className="plugins-v3__dock-main">
           <div className="plugins-v3__dock-headline">
-            <span className={`plugins-v3__connection plugins-v3__connection--${connection}`} data-connection={connection}>
-              {text.connection[connection]}
-            </span>
+            <span className={`plugins-v3__connection plugins-v3__connection--${connection}`} data-connection={connection}>{text.connection[connection]}</span>
             {open && host ? <span className="plugins-v3__host-meta">{text.hostDetail(host.pid, host.node)}</span> : null}
             {open && host?.dev ? <span className="plugins-v3__badge plugins-v3__badge--dev">{text.devMode}</span> : null}
           </div>
@@ -86,9 +97,7 @@ function HostDock({
           <div className="plugins-v3__metrics">
             <div className="plugins-v3__metric">
               <span className="plugins-v3__metric-label">{text.memoryTitles[memoryKey]}</span>
-              <span className="plugins-v3__value" data-measure={memoryKey}>
-                {megabytes(measured ? measured.bytes : host.rssBytes)}
-              </span>
+              <span className="plugins-v3__value" data-measure={memoryKey}>{megabytes(measured ? measured.bytes : host.rssBytes)}</span>
             </div>
             <div className="plugins-v3__metric">
               <span className="plugins-v3__metric-label">{text.hostCpu}</span>
@@ -98,11 +107,6 @@ function HostDock({
               <span className="plugins-v3__metric-label">{text.uptime}</span>
               <span className="plugins-v3__value">{duration(now - host.startedAt)}</span>
             </div>
-            {onOpenDiagnostics ? (
-              <button className="plugins-v3__diag-link" type="button" onClick={onOpenDiagnostics}>
-                {text.openDiagnostics}
-              </button>
-            ) : null}
           </div>
         ) : null}
       </div>
@@ -112,12 +116,7 @@ function HostDock({
   );
 }
 
-function DiagnosticsTable({
-  builtins,
-  hostPlugins,
-  query,
-  onSelectPlugin,
-}: {
+function DiagnosticsTable({ builtins, hostPlugins, query, onSelectPlugin }: {
   builtins: readonly BuiltinPlugin[] | null;
   hostPlugins: PluginStatusV3[] | null;
   query: string;
@@ -130,14 +129,7 @@ function DiagnosticsTable({
   const q = query.trim().toLowerCase();
 
   const rows = [
-    ...extras.map((p) => ({
-      id: p.id,
-      name: p.id,
-      kind: p.kind,
-      state: stateOf(p),
-      usage: p.usage,
-      icon: Blocks,
-    })),
+    ...extras.map((p) => ({ id: p.id, name: p.id, kind: p.kind, state: stateOf(p), usage: p.usage, icon: Blocks })),
     ...(builtins ?? []).map((b) => {
       const id = b.id as BuiltinPluginName;
       const hp = hostById.get(b.id);
@@ -161,13 +153,14 @@ function DiagnosticsTable({
           <thead>
             <tr>
               <th>{text.plugins}</th>
-              <th>{text.cpu}</th>
-              <th>{text.apply}</th>
-              <th>{text.services}</th>
-              <th>{text.timers}</th>
-              <th>{text.listeners}</th>
-              <th>{text.clients}</th>
-              <th>{text.errors}</th>
+              <th>{text.stateCol}</th>
+              <th className="plugins-v3__num">{text.cpu}</th>
+              <th className="plugins-v3__num">{text.apply}</th>
+              <th className="plugins-v3__num">{text.services}</th>
+              <th className="plugins-v3__num">{text.timers}</th>
+              <th className="plugins-v3__num">{text.listeners}</th>
+              <th className="plugins-v3__num">{text.clients}</th>
+              <th className="plugins-v3__num">{text.errors}</th>
             </tr>
           </thead>
           <tbody>
@@ -179,43 +172,69 @@ function DiagnosticsTable({
                 <tr key={row.id} onClick={() => onSelectPlugin(row.id)}>
                   <td>
                     <div className="plugins-v3__diag-plugin">
-                      <span className={`plugins-v3__icon plugins-v3__icon--${tone}`} aria-hidden="true">
+                      <span className={`plugins-v3__icon plugins-v3__icon--sm plugins-v3__icon--${tone}`} aria-hidden="true">
                         <Icon size={14} strokeWidth={2} />
                         <span className="plugins-v3__dot" />
                       </span>
                       <div className="plugins-v3__title-col">
                         <div className="plugins-v3__title-line">
                           <span className="plugins-v3__plugin-name">{row.name}</span>
-                          {row.kind ? <span className="plugins-v3__kind">{text.kinds[row.kind]}</span> : null}
-                          <span className="plugins-v3__state">{text.states[row.state]}</span>
+                          {row.kind && row.kind !== "builtin" ? <span className="plugins-v3__kind">{text.kinds[row.kind]}</span> : null}
                         </div>
                         <span className="plugins-v3__id">{row.id}</span>
                       </div>
                     </div>
                   </td>
-                  <td title={u ? text.calls(u.calls) : undefined}>{u ? milliseconds(u.cpuMs) : "–"}</td>
-                  <td>{u && u.applyMs !== null ? milliseconds(u.applyMs) : "–"}</td>
-                  <td>{u ? u.services : "–"}</td>
-                  <td>{u ? u.timers : "–"}</td>
-                  <td>{u ? u.listeners : "–"}</td>
-                  <td>{u ? u.clients : "–"}</td>
-                  <td className={u && u.errors > 0 ? "plugins-v3__diag-err" : undefined}>{u ? u.errors : "–"}</td>
+                  <td><span className={`plugins-v3__foot-state plugins-v3__foot-state--${tone}`}>{text.states[row.state]}</span></td>
+                  <td className="plugins-v3__num" title={u ? text.calls(u.calls) : undefined}>{u ? `${milliseconds(u.cpuMs)} (${u.calls})` : "–"}</td>
+                  <td className="plugins-v3__num">{u && u.applyMs !== null ? milliseconds(u.applyMs) : "–"}</td>
+                  <td className="plugins-v3__num">{u ? u.services : "–"}</td>
+                  <td className="plugins-v3__num">{u ? u.timers : "–"}</td>
+                  <td className="plugins-v3__num">{u ? u.listeners : "–"}</td>
+                  <td className="plugins-v3__num">{u ? u.clients : "–"}</td>
+                  <td className={`plugins-v3__num${u && u.errors > 0 ? " plugins-v3__diag-err" : ""}`}>{u ? u.errors : "–"}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
-      <SettingsFootnote text={text.cpuNote} />
+      <div className="plugins-v3__footnotes">
+        <SettingsFootnote text={text.cpuNote} />
+        <SettingsFootnote text={text.preview} />
+      </div>
     </section>
   );
 }
 
-export function PluginsV3View({
-  view,
-  now = Date.now(),
-  builtins: givenBuiltins,
-}: {
+function SearchInput({ query, onChange }: { query: string; onChange: (next: string) => void }) {
+  const text = useTranslation().settings.pluginsV3;
+  return (
+    <label className="plugins-v3__search">
+      <Search size={13} strokeWidth={2.2} aria-hidden="true" />
+      <input
+        type="search"
+        value={query}
+        placeholder={text.searchPlaceholder}
+        aria-label={text.searchPlaceholder}
+        onChange={(event) => onChange(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && query) {
+            event.preventDefault();
+            onChange("");
+          }
+        }}
+      />
+      {query ? (
+        <button className="plugins-v3__search-clear" type="button" aria-label={text.closeDetail} onClick={() => onChange("")}>
+          <X size={12} strokeWidth={2.2} aria-hidden="true" />
+        </button>
+      ) : null}
+    </label>
+  );
+}
+
+export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins }: {
   view: PluginHostView;
   now?: number;
   builtins?: readonly BuiltinPlugin[] | null;
@@ -231,9 +250,14 @@ export function PluginsV3View({
   const measured = memory && host && memory.pid === host.pid ? memory : null;
   const open = connection === "open";
   const builtinIds = new Set(builtins?.map((item) => item.id) ?? []);
-  const extraCount = (plugins ?? []).filter((item) => !builtinIds.has(item.id)).length;
-  const totalCount = (builtins?.length ?? 0) + extraCount;
+  const extras = (plugins ?? []).filter((item) => !builtinIds.has(item.id));
+  const totalCount = (builtins?.length ?? 0) + extras.length;
   const hostById = new Map((plugins ?? []).map((item) => [item.id, item]));
+  const runningCount =
+    (builtins ?? []).filter((b) => {
+      const hp = hostById.get(b.id);
+      return hp ? stateOf(hp) === "running" : b.enabled;
+    }).length + extras.filter((p) => stateOf(p) === "running").length;
   const selectedBuiltin = builtins?.find((b) => b.id === selectedId);
   const selectedHost = selectedId ? hostById.get(selectedId) : undefined;
 
@@ -261,47 +285,22 @@ export function PluginsV3View({
           >
             <span className={`plugins-v3__tab-dot plugins-v3__tab-dot--${connection}`} />
             <span>{text.tabs.diagnostics}</span>
-            {open && host ? (
-              <span className="plugins-v3__tab-pill">{megabytes(measured ? measured.bytes : host.rssBytes)}</span>
-            ) : null}
+            {open && host ? <span className="plugins-v3__tab-pill">{megabytes(measured ? measured.bytes : host.rssBytes)}</span> : null}
           </button>
         </div>
-        <label className="plugins-v3__search">
-          <Search size={13} strokeWidth={2.2} aria-hidden="true" />
-          <input
-            type="search"
-            value={query}
-            placeholder={text.searchPlaceholder}
-            aria-label={text.searchPlaceholder}
-            onChange={(event) => setQuery(event.currentTarget.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Escape" && query) {
-                event.preventDefault();
-                setQuery("");
-              }
-            }}
-          />
-          {query ? (
-            <button className="plugins-v3__search-clear" type="button" aria-label={text.closeDetail} onClick={() => setQuery("")}>
-              <X size={12} strokeWidth={2.2} aria-hidden="true" />
-            </button>
-          ) : null}
-        </label>
+        <SearchInput query={query} onChange={setQuery} />
       </div>
 
-      <HostDock view={view} now={now} onOpenDiagnostics={tab === "plugins" ? () => setTab("diagnostics") : undefined} />
-
       {tab === "plugins" ? (
-        <BuiltinPluginsGroup
-          builtins={builtins}
-          hostPlugins={plugins}
-          hostEnabled={true}
-          stale={!open}
-          query={query}
-          onSelectPlugin={setSelectedId}
-        />
+        <>
+          <HostSummaryBar view={view} runningCount={runningCount} onOpenDiagnostics={() => setTab("diagnostics")} />
+          <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} />
+        </>
       ) : (
-        <DiagnosticsTable builtins={builtins} hostPlugins={plugins} query={query} onSelectPlugin={setSelectedId} />
+        <>
+          <HostDock view={view} now={now} />
+          <DiagnosticsTable builtins={builtins} hostPlugins={plugins} query={query} onSelectPlugin={setSelectedId} />
+        </>
       )}
 
       {selectedId ? <PluginDetailModal builtin={selectedBuiltin} hostPlugin={selectedHost} onClose={() => setSelectedId(null)} /> : null}
@@ -323,7 +322,6 @@ export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnect
   const selectedBuiltin = builtins?.find((b) => b.id === selectedId);
   return (
     <div className="plugins-v3">
-      <SettingsFootnote text={text.preview} />
       {hostEnabled === true ? <HostConnectedPage connect={connect} builtins={builtins} /> : null}
       {hostEnabled === false ? (
         <>
@@ -333,26 +331,13 @@ export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnect
                 <span>{text.tabs.plugins(builtins?.length ?? 0)}</span>
               </button>
             </div>
-            <label className="plugins-v3__search">
-              <Search size={13} strokeWidth={2.2} aria-hidden="true" />
-              <input
-                type="search"
-                value={query}
-                placeholder={text.searchPlaceholder}
-                aria-label={text.searchPlaceholder}
-                onChange={(event) => setQuery(event.currentTarget.value)}
-              />
-            </label>
+            <SearchInput query={query} onChange={setQuery} />
           </div>
-          <section className="plugins-v3__dock" aria-label={text.host}>
-            <div className="plugins-v3__dock-top">
-              <div className="plugins-v3__dock-main">
-                <div className="plugins-v3__dock-headline">
-                  <span className="plugins-v3__connection plugins-v3__connection--closed" data-connection="off">
-                    {text.hostOff}
-                  </span>
-                </div>
-                <p className="plugins-v3__dock-note">{text.hostOffNote}</p>
+          <section className="plugins-v3__host-bar" aria-label={text.host}>
+            <div className="plugins-v3__host-bar-row">
+              <div className="plugins-v3__host-bar-left">
+                <span className="plugins-v3__connection plugins-v3__connection--closed" data-connection="off">{text.hostOff}</span>
+                <span className="plugins-v3__dock-note">{text.hostOffNote}</span>
               </div>
             </div>
           </section>

@@ -44,6 +44,11 @@ export type SettingsPluginsV3Text = {
   groups: Record<PluginV3Group, string>;
   filters: Record<PluginV3Filter, (count: number) => string>;
   closeDetail: string;
+  stateCol: string;
+  noResources: string;
+  viewDetail: string;
+  runningSummary: (running: number) => string;
+  builtinSummaries: Record<BuiltinPluginName, string>;
   builtins: string;
   builtinsNote: string;
   builtinsLoading: string;
@@ -118,6 +123,34 @@ export const zhCN: SettingsPluginsV3Text = {
     off: (count) => `已关闭 (${count})`,
   },
   closeDetail: "关闭",
+  stateCol: "状态",
+  noResources: "无常驻资源",
+  viewDetail: "详情 ›",
+  runningSummary: (running) => `${running} 个运行中`,
+  builtinSummaries: {
+    todos: "待办列表、每日笔记与归档，提供 todos/v1 服务",
+    calendar: "日程视图与收起条会前倒计时，提供 calendar/v1 服务",
+    music: "媒体控制、封面取色与同步歌词，提供 media/v1 服务",
+    clipboard: "剪贴板历史、独立弹窗与空格预览，提供 clipboard/v1 服务",
+    screenshot: "区域截图、屏幕贴图与录屏快捷键",
+    "file-shelf": "拖入小岛暂存文件、拖出与批量打开，提供 file-shelf/v1 服务",
+    translation: "划词翻译、独立翻译窗与 AI 改写，提供 translator/v1 服务",
+    "voice-input": "按住快捷键语音转文字并写入待办或笔记",
+    timer: "倒计时、番茄钟与休息提醒，提供 timers/v1 服务",
+    agents: "AI 代理会话状态、工具审批与远程连接，提供 agents/v1 服务",
+    "session-ring": "收起条上的 Agent 会话分段环；读 AI Agent 插件的会话列表",
+    "claude-usage": "收起条上的 Agent 用量双环（Claude、Codex、GLM、Kimi）",
+    "cc-connect": "设置在 AI Agent → 提醒；关掉后手机推送的 cc-connect 通道也停用",
+    "ssh-tunnel": "设置在 AI Agent → SSH 远程；只支持 Windows，关掉后反向隧道结束",
+    "local-api": "设置在 通用 → 本机接口；转给待办、AI Agent、剪贴板的请求，那个插件关着时回 503",
+    "center-pattern": "收起条中心的眼睛动画与随 Agent 状态变表情的宠物",
+    messages: "QQ、微信提醒与多邮箱收信；关掉后，第 2 版插件在岛上的通知也不显示",
+    "device-events": "耳机连接断开、蓝牙低电量与插拔电源时在小岛提示",
+    "system-levels": "调节音量或亮度时在收起的小岛或刘海两侧提示",
+    "device-use": "应用占用摄像头或麦克风时在收起条显示图标",
+    "theme-market": "浏览、预览并应用社区主题或保存为本地预设",
+    updater: "后台检查版本更新与应用内安装",
+  },
   builtins: "内置插件",
   builtinsNote: "开关存在数据目录的 plugins-v3/plugins.yml，宿主没开也生效。关掉的插件撤掉它的界面、停掉它的后台；功能迁成插件之前，关掉还看不出变化。",
   builtinsLoading: "正在读取内置插件。",
@@ -239,6 +272,34 @@ export const en: SettingsPluginsV3Text = {
     off: (count) => `Off (${count})`,
   },
   closeDetail: "Close",
+  stateCol: "State",
+  noResources: "No active resources",
+  viewDetail: "Details ›",
+  runningSummary: (running) => `${running} running`,
+  builtinSummaries: {
+    todos: "To-dos, daily notes and archive; provides todos/v1",
+    calendar: "Schedule view and pre-meeting countdown; provides calendar/v1",
+    music: "Media controls, cover tint and synced lyrics; provides media/v1",
+    clipboard: "Clipboard history, popup and Space preview; provides clipboard/v1",
+    screenshot: "Region capture, pinned screenshots and screen recording shortcuts",
+    "file-shelf": "Drop files onto the island to hold, drag out or open; provides file-shelf/v1",
+    translation: "Selection translation, popup window and AI rewrite; provides translator/v1",
+    "voice-input": "Hold shortcut to transcribe speech into to-dos or notes",
+    timer: "Countdown, pomodoro and break reminders; provides timers/v1",
+    agents: "AI agent session status, tool approvals and remote links; provides agents/v1",
+    "session-ring": "Segmented session ring on the collapsed bar; reads AI Agent sessions",
+    "claude-usage": "Dual usage rings on the collapsed bar (Claude, Codex, GLM, Kimi)",
+    "cc-connect": "Settings under AI Agent → Alerts; off also stops cc-connect phone push",
+    "ssh-tunnel": "Settings under AI Agent → SSH remote; Windows only, off ends reverse tunnels",
+    "local-api": "Settings under General → Local API; answers 503 when target plugin is off",
+    "center-pattern": "Center eye animation and pets that react to AI Agent states",
+    messages: "QQ, WeChat and mail alerts; off also hides v2 plugin notices",
+    "device-events": "Headphone, low battery and power alerts on the collapsed island",
+    "system-levels": "Volume and brightness popups on the collapsed island or notch",
+    "device-use": "Camera and microphone indicator on the collapsed bar",
+    "theme-market": "Browse, preview and apply community themes or save as presets",
+    updater: "Background update checks and in-app installation",
+  },
   builtins: "Built-in plugins",
   builtinsNote: "Switches are saved in plugins-v3/plugins.yml in the data folder and work without the host. A plugin switched off loses its UI and its background work; until a feature becomes a plugin, switching it off changes nothing yet.",
   builtinsLoading: "Reading the built-in plugins.",

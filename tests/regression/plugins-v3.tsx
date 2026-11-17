@@ -205,7 +205,7 @@ try {
 
   await act(async () => card("counter")!.click());
   check(page.querySelector("[role='dialog']")?.textContent?.includes("counter"), "Clicking a plugin card opens its detail dialog");
-  await act(async () => page.querySelector<HTMLButtonElement>(".plugins-v3__modal .plugins-v3__leave")!.click());
+  await act(async () => page.querySelector<HTMLButtonElement>(".plugins-v3__modal-close")!.click());
   check(!page.querySelector("[role='dialog']"), "and the close button dismisses the dialog");
 
   await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='diagnostics']")!.click());

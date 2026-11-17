@@ -1,8 +1,9 @@
-import { useId, useState, type MouseEvent } from "react";
+import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
+import { createPortal } from "react-dom";
 import {
   Blocks, Bot, Calendar, Camera, CircleDot, ClipboardList, Crop, Gauge, Headphones, Inbox,
   Languages, ListTodo, MessageCircle, Mic, Music, Plug, RefreshCw, Smartphone, Sparkles,
-  Store, Timer, Volume2, Waypoints, type LucideIcon,
+  Store, Timer, Volume2, Waypoints, X, type LucideIcon,
 } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
 import type { BuiltinPluginName, PluginV3Filter, PluginV3Group, PluginV3State } from "../../i18n/sections/settings/pluginsV3";
@@ -59,6 +60,18 @@ export function isAttentionState(state: PluginV3State): boolean {
   return state === "failed" || state === "auto-disabled" || state === "safe-mode" || state === "waiting";
 }
 
+function resourceSummary(plugin: PluginStatusV3 | undefined, text: ReturnType<typeof useTranslation>["settings"]["pluginsV3"]): string {
+  const u = plugin?.usage;
+  if (!u) return text.viewDetail;
+  const parts = [
+    u.services > 0 ? `${u.services} ${text.services}` : "",
+    u.timers > 0 ? `${u.timers} ${text.timers}` : "",
+    u.listeners > 0 ? `${u.listeners} ${text.listeners}` : "",
+    u.errors > 0 ? `${u.errors} ${text.errors}` : "",
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : text.noResources;
+}
+
 function UsageList({ plugin }: { plugin: PluginStatusV3 }) {
   const text = useTranslation().settings.pluginsV3;
   const usage = plugin.usage;
@@ -76,11 +89,11 @@ function UsageList({ plugin }: { plugin: PluginStatusV3 }) {
   );
 }
 
-function LastErrorDetails({ plugin }: { plugin: PluginStatusV3 }) {
+function LastErrorDetails({ plugin, defaultOpen = false }: { plugin: PluginStatusV3; defaultOpen?: boolean }) {
   const text = useTranslation().settings.pluginsV3;
   if (!plugin.lastError) return null;
   return (
-    <details className="plugins-v3__last-error">
+    <details className="plugins-v3__last-error" open={defaultOpen || undefined}>
       <summary>{text.lastError}</summary>
       <pre>{plugin.lastError.text}</pre>
     </details>
@@ -101,8 +114,11 @@ function BuiltinPluginCard({ plugin, hostPlugin, onSelect }: { plugin: BuiltinPl
   const Icon = (BUILTIN_ICONS as Record<string, LucideIcon | undefined>)[id] ?? Blocks;
   const state = hostPlugin ? stateOf(hostPlugin) : plugin.enabled ? "running" : "disabled";
   const tone = TONES[state];
-  const note = error ?? (essential ? text.essentialNote : text.builtinNotes[id] ?? null);
+  const summary = text.builtinNotes[id] ?? text.builtinSummaries[id] ?? "";
+  const note = error ?? (essential ? `${text.essentialNote} · ${summary}` : summary);
   const hostDetail = hostPlugin ? detailText(hostPlugin, text) : null;
+  const showStateBadge = state !== "running" && state !== "disabled";
+  const usage = hostPlugin?.usage;
   const change = (enabled: boolean) => {
     setBusy(true);
     setError(null);
@@ -130,8 +146,8 @@ function BuiltinPluginCard({ plugin, hostPlugin, onSelect }: { plugin: BuiltinPl
         <div className="plugins-v3__title-col">
           <div className="plugins-v3__title-line">
             <label className="plugins-v3__plugin-name" htmlFor={switchId} title={name}>{name}</label>
-            <span className="plugins-v3__kind">{text.kinds[plugin.kind]}</span>
-            {hostPlugin ? <span className="plugins-v3__state">{text.states[state]}</span> : null}
+            {essential ? <span className="plugins-v3__kind">{text.kinds.essential}</span> : null}
+            {showStateBadge ? <span className="plugins-v3__state">{text.states[state]}</span> : null}
           </div>
           <span className="plugins-v3__id">{plugin.id}</span>
         </div>
@@ -140,9 +156,20 @@ function BuiltinPluginCard({ plugin, hostPlugin, onSelect }: { plugin: BuiltinPl
         </div>
       </div>
       {note ? <p className="plugins-v3__note">{note}</p> : null}
-      {hostDetail ? <p className="plugins-v3__detail">{hostDetail}</p> : null}
-      {hostPlugin ? <UsageList plugin={hostPlugin} /> : null}
-      {hostPlugin ? <LastErrorDetails plugin={hostPlugin} /> : null}
+      {hostDetail ? <p className={`plugins-v3__detail plugins-v3__detail--${tone}`}>{hostDetail}</p> : null}
+      <div className="plugins-v3__card-foot">
+        {usage && plugin.enabled && state === "running" ? (
+          <>
+            <span>{`${text.cpu} ${milliseconds(usage.cpuMs)} · ${text.apply} ${usage.applyMs === null ? "–" : milliseconds(usage.applyMs)}`}</span>
+            <span>{resourceSummary(hostPlugin, text)}</span>
+          </>
+        ) : (
+          <>
+            <span className={`plugins-v3__foot-state plugins-v3__foot-state--${tone}`}>{text.states[state]}</span>
+            <span>{text.viewDetail}</span>
+          </>
+        )}
+      </div>
     </article>
   );
 }
@@ -171,7 +198,7 @@ export function HostPluginCard({ plugin, onSelect }: { plugin: PluginStatusV3; o
           {plugin.name && plugin.name !== plugin.id ? <span className="plugins-v3__id">{plugin.name}</span> : null}
         </div>
       </div>
-      {detail ? <p className="plugins-v3__detail">{detail}</p> : null}
+      {detail ? <p className={`plugins-v3__detail plugins-v3__detail--${tone}`}>{detail}</p> : null}
       <UsageList plugin={plugin} />
       <LastErrorDetails plugin={plugin} />
     </article>
@@ -180,33 +207,72 @@ export function HostPluginCard({ plugin, onSelect }: { plugin: PluginStatusV3; o
 
 export function PluginDetailModal({ builtin, hostPlugin, onClose }: { builtin?: BuiltinPlugin; hostPlugin?: PluginStatusV3; onClose: () => void }) {
   const text = useTranslation().settings.pluginsV3;
+  const switchId = useId();
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    closeRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   if (!builtin && !hostPlugin) return null;
   const id = builtin?.id ?? hostPlugin!.id;
+  const builtinId = id as BuiltinPluginName;
   const name = (text.builtinNames as Record<string, string | undefined>)[id] ?? hostPlugin?.name ?? id;
+  const Icon = (BUILTIN_ICONS as Record<string, LucideIcon | undefined>)[id] ?? Blocks;
   const kind = builtin?.kind ?? hostPlugin?.kind;
   const state = hostPlugin ? stateOf(hostPlugin) : builtin?.enabled ? "running" : "disabled";
+  const tone = TONES[state];
   const detail = hostPlugin ? detailText(hostPlugin, text) : null;
-  const note = builtin?.kind === "essential" ? text.essentialNote : text.builtinNotes[id as BuiltinPluginName] ?? null;
-  return (
-    <div className="plugins-v3__modal-backdrop" role="dialog" aria-modal="true" aria-label={name} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="plugins-v3__modal">
+  const summary = (text.builtinNotes as Record<string, string | undefined>)[id] ?? (text.builtinSummaries as Record<string, string | undefined>)[id] ?? null;
+  const note = builtin?.kind === "essential" ? `${text.essentialNote}${summary ? ` · ${summary}` : ""}` : summary;
+  const toggle = (enabled: boolean) => {
+    if (!builtin) return;
+    setBusy(true);
+    void switchBuiltinPlugin(builtin.id, enabled).finally(() => setBusy(false));
+  };
+
+  return createPortal(
+    <div className="plugins-v3__modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div className={`plugins-v3__modal plugins-v3__plugin--${tone}`} role="dialog" aria-modal="true" aria-label={name}>
         <div className="plugins-v3__modal-head">
+          <span className={`plugins-v3__icon plugins-v3__icon--lg plugins-v3__icon--${tone}`} aria-hidden="true">
+            <Icon size={18} strokeWidth={2} />
+            <span className="plugins-v3__dot" />
+          </span>
           <div className="plugins-v3__title-col">
             <div className="plugins-v3__title-line">
               <strong className="plugins-v3__modal-title">{name}</strong>
               {kind ? <span className="plugins-v3__kind">{text.kinds[kind]}</span> : null}
               <span className="plugins-v3__state">{text.states[state]}</span>
             </div>
-            <span className="plugins-v3__id">{id}</span>
+            <span className="plugins-v3__id">{builtinId}</span>
           </div>
-          <button className="plugins-v3__leave" type="button" onClick={onClose}>{text.closeDetail}</button>
+          {builtin ? (
+            <div className="plugins-v3__switch">
+              <SettingsSwitch id={switchId} checked={builtin.enabled} disabled={builtin.kind === "essential" || busy} onChange={toggle} />
+            </div>
+          ) : null}
+          <button ref={closeRef} className="plugins-v3__modal-close" type="button" aria-label={text.closeDetail} title={text.closeDetail} onClick={onClose}>
+            <X size={15} strokeWidth={2.2} aria-hidden="true" />
+          </button>
         </div>
         {note ? <p className="plugins-v3__note">{note}</p> : null}
-        {detail ? <p className="plugins-v3__detail">{detail}</p> : null}
+        {detail ? <p className={`plugins-v3__detail plugins-v3__detail--${tone}`}>{detail}</p> : null}
+        {hostPlugin ? <LastErrorDetails plugin={hostPlugin} defaultOpen /> : null}
         {hostPlugin ? <UsageList plugin={hostPlugin} /> : null}
-        {hostPlugin ? <LastErrorDetails plugin={hostPlugin} /> : null}
+        <SettingsFootnote text={text.cpuNote} />
       </div>
-    </div>
+    </div>,
+    document.querySelector(".settings-stage") ?? document.getElementById("page") ?? document.body,
   );
 }
 
@@ -238,7 +304,8 @@ export function BuiltinPluginsGroup({
     if (filter === "attention" && !isAttentionState(state)) return false;
     if (!q) return true;
     const name = (text.builtinNames as Record<string, string | undefined>)[id] ?? item.id;
-    return name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q) || (text.builtinNotes[id] ?? "").toLowerCase().includes(q);
+    const note = text.builtinNotes[id] ?? text.builtinSummaries[id] ?? "";
+    return name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q) || note.toLowerCase().includes(q);
   };
 
   const matchExtra = (item: PluginStatusV3) => {
@@ -306,6 +373,7 @@ export function BuiltinPluginsGroup({
       <div className="plugins-v3__footnotes">
         <SettingsFootnote text={text.builtinsNote} />
         <SettingsFootnote text={text.cpuNote} />
+        <SettingsFootnote text={text.preview} />
       </div>
     </div>
   );
