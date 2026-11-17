@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { releaseDatesPlugin } from "./scripts/vite/release-dates.mjs";
+import { createWatchIgnored } from "./scripts/vite/watch-ignored.mjs";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
@@ -21,7 +22,7 @@ export default defineConfig(async () => ({
         }
       : undefined,
     watch: {
-      ignored: ["**/src-tauri/**"],
+      ignored: [createWatchIgnored()],
     },
   },
 }));
