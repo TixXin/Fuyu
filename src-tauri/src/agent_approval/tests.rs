@@ -555,6 +555,14 @@ fn new_agents_have_their_own_routes_and_answers() {
         assert_eq!(answer(Some(Decision::Terminal))["hookSpecificOutput"]["permissionDecision"], "ask");
         assert_eq!(answer(None), json!({}));
     }
+    for agent in [Agent::Trae, Agent::TraeCn] {
+        let input = HookInput::parse_for(
+            agent,
+            br#"{"session_id":"t1","tool_name":"Edit","tool_input":{"file_path":"a.ts"},"agent_id":"solo_agent","agent_type":"agent"}"#,
+        )
+        .unwrap();
+        assert_eq!((input.session_id.as_str(), input.tool_name.as_str(), input.agent_id), ("t1", "Edit", None));
+    }
     for (agent, id) in [(Agent::Qoder, "qoder"), (Agent::Codebuddy, "codebuddy"), (Agent::Qwen, "qwen")] {
         assert_eq!(route(&format!("/{id}/permission-request")), Some((agent, Kind::Permission)));
         assert_eq!(serde_json::to_value(agent).unwrap(), json!(id));

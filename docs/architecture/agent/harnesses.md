@@ -86,7 +86,7 @@ B56 起声明多了三项，给钩子格式相近、外壳不同的几家用（G
 | SSH 远程会话 | ✗ 三家都有 Linux CLI，能做，还没做 | ✗ | ✗ |
 | cc-connect | — | — | — |
 
-## TRAE 和 TRAE CN（B29）
+## TRAE 和 TRAE CN（B29、B72.3）
 
 TRAE IDE 的国际版和 CN 版按用户的决定分成两家：`trae`（显示「TRAE」，`~/.trae`）和 `traeCn`（显示「TRAE CN」，`~/.trae-cn`），钩子、存下的输入、状态灯和设置开关各一套，图标共用。代码在 `trae.rs`。豆包桌面版没有能接的地方，不接（调研见 [agent-harnesses.md](../../research/agent-harnesses.md) 豆包一节）。
 
@@ -99,7 +99,7 @@ TRAE IDE 的国际版和 CN 版按用户的决定分成两家：`trae`（显示�
 | 会话 | 从 `agent-trae/`、`agent-traeCn/` 里存下的钩子输入按 `session_id` 拼：标题是第一句提问，最近提问、当前工具（`tool_name`、`tool_input.command` / 文件名）、最近回复（Stop 的 `last_assistant_message`）；每个会话只留第一次和最后一次提问、最近回复和最新一条，24 小时以上的删掉。装钩子之前的会话看不到。没有模型、权限模式、待办、上下文 token |
 | 状态灯 | ✓ `agent-trae-running.flag` / `agent-traeCn-running.flag` |
 | 等你 | Notification 的 `permission_prompt`、`ask_user_question`、`document_review`、`browser_interaction`；岛上审批挂起时也算 |
-| 岛上审批 | ◐ 只拦 `RunCommand`，`/trae/pre-tool-use`、`/traeCn/pre-tool-use`，回 `hookSpecificOutput.permissionDecision`（`allow` / `deny` 带理由 / `ask` 交回 TRAE）。TRAE 的工具在「手动确认」模式时，岛上点允许后还要在 TRAE 里点一下 |
+| 岛上审批 | ✓ 拦截命令执行、文件写改删与 MCP 工具（`^(RunCommand\|Bash\|Write\|Edit\|MultiEdit\|StrReplace\|CreateFile\|DeleteFile\|WriteToFile\|ReplaceInFile\|mcp__.*)$`，不拦只读工具），`/trae/pre-tool-use`、`/traeCn/pre-tool-use`，回 `hookSpecificOutput.permissionDecision`（`allow` / `deny` 带理由 / `ask` 交回 TRAE），并忽略主会话自带的 `agent_id`（B72.3）。TRAE 设为「自动执行」时岛上点允许直接执行（无需回 TRAE 再点一次）、点交回才在 TRAE 弹窗；「手动确认」模式下 `allow` 不跳过 IDE 确认框 |
 | 回复标记 | ✗ 个人规则文件的路径官方没写，没核实前不动用户的文件；用户自己让 TRAE 写标记的话能认出来 |
 | 点会话跳过去 | ◐ 到 TRAE / TRAE CN 窗口，到不了具体会话 |
 | 判断会话已退出 | ✗ 没有 SessionEnd，靠 24 小时清理和运行中超时变完成 |

@@ -84,12 +84,12 @@
 - [ ] 点会话：切到跑这个 CLI 的终端窗口（B48）
 - [ ] 对一遍真机会话的字段名：Qwen 的 `tool_result` 记录、CodeBuddy 套壳记录的字段是从源码读的（只看字段名，不抄内容）（B48）
 
-### TRAE、TRAE CN（B29，本机没装，装上后两个版本各测一遍）
+### TRAE、TRAE CN（B29、B72.3，本机没装，装上后两个版本各测一遍）
 
-- [ ] 「安装/修复」后状态灯卡片里出现「TRAE」/「TRAE CN」、状态已安装；`~/.trae/hooks.json`（或 `~/.trae-cn/hooks.json`）里有 `"version": 1` 和 UserPromptSubmit、PreToolUse（两组，一组 matcher `RunCommand` 走审批）、PostToolUse、Stop、Notification，原有内容不动（B29）
+- [ ] 「安装/修复」后状态灯卡片里出现「TRAE」/「TRAE CN」、状态已安装；`~/.trae/hooks.json`（或 `~/.trae-cn/hooks.json`）里有 `"version": 1` 和 UserPromptSubmit、PreToolUse（两组，一组 matcher 覆盖命令、写改删文件与 `mcp__.*` 走审批）、PostToolUse、Stop、Notification，原有内容不动（B29、B72.3）
 - [ ] TRAE 设置 → Hooks 里看得到岛的钩子吗，要不要手动启用或过安全提示；执行方式是「沙箱中运行」时 `agent-trae/` 里有没有文件（B29）
 - [ ] Agent / SOLO 模式问一句：Agent 页出现会话，标题是第一句提问，目录对；跑命令时转圈并显示当前工具；回复完变完成、显示最后的回复；第二轮后最近提问更新、标题不变（B29）
-- [ ] 跑一条命令：岛上出审批卡片；拒绝时 TRAE 不执行并显示理由；允许时自动执行模式直接跑，手动确认模式下记下实际表现；「交回」时 TRAE 自己问（B29）
+- [ ] 将 TRAE 设为「自动执行」并开岛上审批，跑命令、写改文件或调 MCP 工具：岛上出审批卡片（主会话带 `agent_id` 如 `solo_agent` 时不被误判为子代理）；点允许直接执行不再弹 TRAE 确认框；点拒绝 TRAE 不执行并显示理由；点「交回」时触发 TRAE 确认框；只读工具不弹卡（B29、B72.3）
 - [ ] TRAE 自己弹确认（不经过岛的工具）时，岛上显示「等你」（B29）
 - [ ] 点会话切到 TRAE / TRAE CN 窗口（B29）
 - [ ] 打开 TRAE 的「导入 Claude Code 钩子」，看会不会多出一条 Claude Code 会话（B29）

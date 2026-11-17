@@ -145,6 +145,13 @@ impl HookInput {
         match agent {
             Agent::Antigravity => {}
             Agent::Opencode | Agent::Mimo | Agent::Pi => return super::opencode::plugin_input(body),
+            Agent::Trae | Agent::TraeCn => {
+                let mut input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
+                if let Some(fields) = input.as_object_mut() {
+                    fields.remove("agent_id");
+                }
+                return Self::from_value(&input);
+            }
             _ => {
                 let mut input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
                 compat_input(agent.id(), &mut input);
