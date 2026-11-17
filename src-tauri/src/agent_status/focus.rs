@@ -3,16 +3,19 @@ use std::path::Path;
 use super::editor_terminal::{self, EditorTerminal};
 use super::focus_log::Attempt;
 use super::orca;
+use super::session_host;
 use super::session_memory::{self, SeenSession};
 use super::session_process::{ancestor_chain, session_process_chain};
 use super::session_records::{self, SessionRecord};
-use super::wezterm::{self, WEZTERM_APP};
+use super::tmux;
+use super::wezterm;
 use super::window_focus::{self, app_name, SessionHints};
 use super::{antigravity, antigravity_focus, dsh, opencode, trae, workbuddy};
 use crate::system::windows_home_dir;
 use crate::platform;
 
 const WINDOWS_TERMINAL_APP: &str = "windowsterminal";
+const SINGLE_SESSION_TERMINALS: &[&str] = &["cmd", "powershell", "pwsh", "mintty"];
 
 const MAX_ANCESTORS: usize = 4;
 
@@ -138,8 +141,43 @@ fn provider_apps(provider: &str, app_dir: Option<&Path>, session_id: Option<&str
     }
 }
 
+#[derive(Default)]
+pub(super) struct FocusSteps {
+    pub(super) has_chain: bool,
+    pub(super) orca_switched: bool,
+    pub(super) wezterm_selected: bool,
+    pub(super) tmux_selected: bool,
+    pub(super) mac_tab: Option<bool>,
+    pub(super) wt_selected: bool,
+    pub(super) editor_sent: bool,
+}
+
+pub(super) fn is_exact_focus(app: &str, steps: &FocusSteps) -> bool {
+    steps.orca_switched
+        || steps.wezterm_selected
+        || steps.wt_selected
+        || steps.editor_sent
+        || steps.mac_tab == Some(true)
+        || (steps.tmux_selected && steps.mac_tab != Some(false))
+        || (SINGLE_SESSION_TERMINALS.contains(&app) && steps.has_chain)
+        || (cfg!(windows) && app == "alacritty" && steps.has_chain)
+}
+
+#[cfg(target_os = "macos")]
+fn session_tty(chain: &[u32], tmux_target: Option<&tmux::TmuxTarget>) -> Option<String> {
+    let override_tty = tmux_target.and_then(|target| target.client_tty.as_deref());
+    window_focus::session_tty(chain, override_tty)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn session_tty(_chain: &[u32], _tmux_target: Option<&tmux::TmuxTarget>) -> Option<String> {
+    None
+}
+
 pub(super) struct Focused {
     pub(super) found: bool,
+    pub(super) exact: bool,
+    pub(super) focused_app: Option<(String, String)>,
     pub(super) missing_extension: Option<String>,
 }
 
@@ -158,7 +196,17 @@ pub(super) fn focus_session(
     if record.is_some() {
         log.note("record=yes");
     }
-    let chain = process_chain(is_codex, session_id, record.as_ref(), seen.as_ref(), &mut log);
+    let mut chain = process_chain(is_codex, session_id, record.as_ref(), seen.as_ref(), &mut log);
+    let tmux_target = tmux::resolve(&chain);
+    if let Some(target) = &tmux_target {
+        log.note("tmux=pane");
+        for &pid in &target.client_chain {
+            if !chain.contains(&pid) {
+                chain.push(pid);
+            }
+        }
+    }
+    let tty = session_tty(&chain, tmux_target.as_ref());
     let lookup = Lookup { app_dir, record: record.as_ref(), is_codex, session_id, cwd, title };
     let handle = orca_handle(&lookup, &chain, seen.as_ref(), &mut log);
 
@@ -172,52 +220,74 @@ pub(super) fn focus_session(
     }
     let (folder, ancestors) = cwd.map(folder_names).unwrap_or_default();
     let hints = SessionHints { folder: folder.as_deref(), ancestors: &ancestors, title, is_codex };
-    let mut wezterm_tab = false;
+    let mut steps = FocusSteps { has_chain: !chain.is_empty(), ..FocusSteps::default() };
     let focused = window_focus::focus_session_window(&hints, &chain, &prefer_apps).or_else(|| {
-        wezterm_tab = wezterm::activate_tab_titled(None, title?);
-        wezterm_tab.then(|| window_focus::focus_session_window(&hints, &chain, &[WEZTERM_APP.to_string()]))?
+        steps.wezterm_selected = wezterm::activate_pane(None, tty.as_deref(), title);
+        steps.wezterm_selected.then(|| window_focus::focus_session_window(&hints, &chain, &wezterm::prefer_apps()))?
     });
-    if wezterm_tab {
+    if steps.wezterm_selected {
         log.note("wezterm-tab=selected");
     }
     let Some(focused) = focused else {
         log.finish(app_dir, "not found");
-        return Focused { found: false, missing_extension: None };
+        return Focused { found: false, exact: false, focused_app: None, missing_extension: None };
     };
     log.note(format!("window={}", focused.app));
+    let focused_exe = platform::process::image_path(focused.process_id);
     if let Some(handle) = handle.filter(|_| focused.app == orca::ORCA_APP) {
-        let switched = platform::process::image_path(focused.process_id)
-            .is_some_and(|orca_exe| orca::switch_terminal(Path::new(&orca_exe), &handle));
-        log.note(if switched { "switch=sent" } else { "switch=failed" });
+        steps.orca_switched = focused_exe
+            .as_deref()
+            .is_some_and(|orca_exe| orca::switch_terminal(Path::new(orca_exe), &handle));
+        log.note(if steps.orca_switched { "switch=sent" } else { "switch=failed" });
     }
-    if let Some(title) = title.filter(|_| focused.app == WEZTERM_APP && !wezterm_tab) {
-        let exe = platform::process::image_path(focused.process_id);
-        let selected = wezterm::activate_tab_titled(exe.as_deref().map(Path::new), title);
-        log.note(if selected { "wezterm-tab=selected" } else { "wezterm-tab=none" });
+    if wezterm::is_app(&focused.app) && !steps.wezterm_selected {
+        steps.wezterm_selected = wezterm::activate_pane(focused_exe.as_deref().map(Path::new), tty.as_deref(), title);
+        log.note(if steps.wezterm_selected { "wezterm-tab=selected" } else { "wezterm-tab=none" });
+    }
+    if let Some(target) = &tmux_target {
+        steps.tmux_selected = tmux::select(target);
+        log.note(if steps.tmux_selected { "tmux=selected" } else { "tmux=none" });
     }
     #[cfg(target_os = "macos")]
-    if let Some(selected) = window_focus::select_mac_terminal_tab(&focused, &chain) {
-        log.note(if selected { "mac-tab=selected" } else { "mac-tab=none" });
-    }
-    if let Some(title) = title.filter(|_| focused.app == WINDOWS_TERMINAL_APP) {
-        let selected = window_focus::select_terminal_tab(&focused, title);
-        log.note(if selected { "wt-tab=selected" } else { "wt-tab=none" });
-    }
-    let mut missing_extension = None;
-    if let (true, Ok(home_dir)) = (focused.in_front, windows_home_dir()) {
-        let shown = editor_terminal::show_session_terminal(&home_dir, &focused.app, &chain, title);
-        match shown {
-            Some(EditorTerminal::Sent) => log.note("editor-terminal=sent"),
-            Some(EditorTerminal::NoExtension) => {
-                log.note("editor-terminal=no-extension");
-                missing_extension = Some(focused.app.clone());
-            }
-            Some(EditorTerminal::Failed) => log.note("editor-terminal=failed"),
-            None => {}
+    {
+        let override_tty = tmux_target.as_ref().and_then(|target| target.client_tty.as_deref());
+        steps.mac_tab = window_focus::select_mac_terminal_tab(&focused, &chain, override_tty);
+        if let Some(selected) = steps.mac_tab {
+            log.note(if selected { "mac-tab=selected" } else { "mac-tab=none" });
         }
     }
+    if let Some(title) = title.filter(|_| focused.app == WINDOWS_TERMINAL_APP) {
+        steps.wt_selected = window_focus::select_terminal_tab(&focused, title);
+        log.note(if steps.wt_selected { "wt-tab=selected" } else { "wt-tab=none" });
+    }
+    let mut missing_extension = None;
+    let is_native_trae = matches!(provider, trae::PROVIDER | trae::CN_PROVIDER);
+    if !is_native_trae {
+        if let (true, Ok(home_dir)) = (focused.in_front, windows_home_dir()) {
+            let shown = editor_terminal::show_session_terminal(&home_dir, &focused.app, &chain, title);
+            match shown {
+                Some(EditorTerminal::Sent) => {
+                    steps.editor_sent = true;
+                    log.note("editor-terminal=sent");
+                }
+                Some(EditorTerminal::NoExtension) => {
+                    log.note("editor-terminal=no-extension");
+                    missing_extension = Some(focused.app.clone());
+                }
+                Some(EditorTerminal::Failed) => log.note("editor-terminal=failed"),
+                None => {}
+            }
+        }
+    }
+    let exact = is_exact_focus(&focused.app, &steps);
+    let display_name = session_host::app_display_name(&focused.app, focused_exe.as_deref());
     log.finish(app_dir, if focused.in_front { "focused" } else { "found, flashed (Windows kept it behind)" });
-    Focused { found: true, missing_extension }
+    Focused {
+        found: true,
+        exact,
+        focused_app: Some((focused.app, display_name)),
+        missing_extension,
+    }
 }
 
 #[cfg(windows)]
@@ -254,4 +324,26 @@ pub(super) fn sessions_in_front(app_dir: Option<&Path>, sessions: &[SessionRef])
         })
         .map(|session| session.session_id.clone())
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{is_exact_focus, FocusSteps};
+
+    #[test]
+    fn distinguishes_exact_tab_focus_from_window_only_focus() {
+        assert!(!is_exact_focus("antigravity", &FocusSteps { has_chain: true, ..FocusSteps::default() }));
+        assert!(!is_exact_focus("claude", &FocusSteps { has_chain: true, ..FocusSteps::default() }));
+        assert!(!is_exact_focus("codex", &FocusSteps { has_chain: true, ..FocusSteps::default() }));
+        assert!(!is_exact_focus("ghostty", &FocusSteps { has_chain: true, mac_tab: Some(false), ..FocusSteps::default() }));
+        assert!(is_exact_focus("ghostty", &FocusSteps { has_chain: true, mac_tab: Some(true), ..FocusSteps::default() }));
+        assert!(is_exact_focus("alacritty", &FocusSteps { has_chain: true, tmux_selected: true, mac_tab: None, ..FocusSteps::default() }));
+        assert!(!is_exact_focus("ghostty", &FocusSteps { has_chain: true, tmux_selected: true, mac_tab: Some(false), ..FocusSteps::default() }));
+        assert!(is_exact_focus("orca", &FocusSteps { orca_switched: true, ..FocusSteps::default() }));
+        assert!(is_exact_focus("wezterm", &FocusSteps { wezterm_selected: true, ..FocusSteps::default() }));
+        assert!(is_exact_focus("windowsterminal", &FocusSteps { wt_selected: true, ..FocusSteps::default() }));
+        assert!(is_exact_focus("cursor", &FocusSteps { editor_sent: true, ..FocusSteps::default() }));
+        assert!(is_exact_focus("pwsh", &FocusSteps { has_chain: true, ..FocusSteps::default() }));
+        assert!(!is_exact_focus("pwsh", &FocusSteps::default()));
+    }
 }

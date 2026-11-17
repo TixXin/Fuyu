@@ -19,6 +19,7 @@ export type AgentText = {
     focus: (title: string) => string;
     notFound: string;
     notFoundEnded: string;
+    windowOnly: string;
     yourPrompt: (prompt: string) => string;
     activeCount: (count: number) => string;
     duration: (parts: { hours: number; minutes: number; seconds: number }) => string;
@@ -77,6 +78,7 @@ export type AgentText = {
       folder: (path: string) => string;
       remoteFolder: (host: string, path: string) => string;
       host: (host: string) => string;
+      windowOnly: string;
     };
   };
   usage: {
@@ -134,6 +136,7 @@ export const zhCN: AgentText = {
     focus: (title) => `切换到「${title}」所在的窗口`,
     notFound: "没找到对应的窗口",
     notFoundEnded: "没找到对应的窗口，会话可能已经关掉了",
+    windowOnly: "已切到窗口，请选会话",
     yourPrompt: (prompt) => `你：${prompt}`,
     activeCount: (count) => `${count} 个 Agent 会话正在运行，点击查看`,
     duration: ({ hours, minutes, seconds }) =>
@@ -192,6 +195,7 @@ export const zhCN: AgentText = {
       folder: (path) => `目录：${path}`,
       remoteFolder: (host, path) => `目录：${host}:${path}`,
       host: (host) => `在 ${host} 里运行`,
+      windowOnly: "点击只切到窗口，需手动选会话",
     },
     toolCall: (tool) => `正在调用 ${tool}`,
   },
@@ -256,6 +260,7 @@ export const en: AgentText = {
     focus: (title) => `Switch to the window running "${title}"`,
     notFound: "No matching window found",
     notFoundEnded: "No matching window; the session may have been closed",
+    windowOnly: "Window focused; pick session",
     yourPrompt: (prompt) => `You: ${prompt}`,
     activeCount: (count) => (count === 1 ? "1 agent session running; click to view" : `${count} agent sessions running; click to view`),
     duration: ({ hours, minutes, seconds }) =>
@@ -314,6 +319,7 @@ export const en: AgentText = {
       folder: (path) => `Folder: ${path}`,
       remoteFolder: (host, path) => `Folder: ${host}:${path}`,
       host: (host) => `Running in ${host}`,
+      windowOnly: "Click focuses window only; pick session there",
     },
     toolCall: (tool) => `Calling ${tool}`,
   },

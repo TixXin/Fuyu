@@ -213,6 +213,19 @@ export function listenEditorExtensionMissing(onMissing: (editor: EditorExtension
   return listen<EditorExtensionMissing>(EDITOR_EXTENSION_MISSING_EVENT, (event) => onMissing(event.payload));
 }
 
+const FOCUS_WINDOW_ONLY_EVENT = "agent-focus-window-only";
+
+export type AgentFocusWindowOnly = {
+  provider: SessionProvider;
+  sessionId: string;
+  app: string;
+  name: string;
+};
+
+export function listenAgentFocusWindowOnly(onWindowOnly: (focused: AgentFocusWindowOnly) => void) {
+  return listen<AgentFocusWindowOnly>(FOCUS_WINDOW_ONLY_EVENT, (event) => onWindowOnly(event.payload));
+}
+
 export function agentSessionsInFront(sessions: Pick<AgentSessionSummary, "provider" | "sessionId">[]) {
   return invoke<string[]>("agent_sessions_in_front", {
     sessions: sessions.map(({ provider, sessionId }) => ({ provider, sessionId })),

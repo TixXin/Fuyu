@@ -999,7 +999,7 @@ fn codex_rollouts_name_where_they_started() {
 
 #[test]
 fn a_session_with_a_broken_parent_chain_finds_its_host_in_its_environment() {
-    use super::session_host::host_from_env;
+    use super::session_host::{app_display_name, host_from_env};
     let env = |pairs: &'static [(&'static str, &'static str)]| {
         move |name: &str| pairs.iter().find(|(key, _)| *key == name).map(|(_, value)| value.to_string())
     };
@@ -1009,10 +1009,16 @@ fn a_session_with_a_broken_parent_chain_finds_its_host_in_its_environment() {
     let vscode = env(&[("TERM_PROGRAM", "vscode"), ("WEZTERM_EXECUTABLE", "D:/WezTerm/wezterm-gui.exe"), ("VSCODE_GIT_ASKPASS_NODE", "D:/VS Code/Code.exe")]);
     assert_eq!(host_from_env(vscode, open).as_deref(), Some("D:/VS Code/Code.exe"));
     assert_eq!(host_from_env(env(&[("TERM_PROGRAM", "vscode")]), open).as_deref(), Some("C:/apps/code.exe"));
+    assert_eq!(host_from_env(env(&[("TERM_PROGRAM", "ghostty")]), open).as_deref(), Some("C:/apps/ghostty.exe"));
+    assert_eq!(host_from_env(env(&[("TERM_PROGRAM", "Apple_Terminal")]), open).as_deref(), Some("C:/apps/terminal.exe"));
+    assert_eq!(host_from_env(env(&[("TERM_PROGRAM", "iTerm.app")]), open).as_deref(), Some("C:/apps/iterm.exe"));
     assert_eq!(host_from_env(env(&[("TERM_PROGRAM", "mintty")]), open).as_deref(), Some("C:/apps/mintty.exe"));
     assert_eq!(host_from_env(env(&[("WT_SESSION", "1b2c")]), open).as_deref(), Some("C:/apps/windowsterminal.exe"));
     assert_eq!(host_from_env(env(&[("TERM_PROGRAM", "")]), open), None);
     assert_eq!(host_from_env(env(&[]), |_| None), None);
+    assert_eq!(app_display_name("antigravity ide", None), "Antigravity IDE");
+    assert_eq!(app_display_name("claude", None), "Claude");
+    assert_eq!(app_display_name("ghostty", None), "Ghostty");
 }
 
 #[cfg(windows)]
