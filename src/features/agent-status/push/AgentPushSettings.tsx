@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { SettingsChoice } from "../../../components/settings/SettingsChoice";
+import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../../components/settings/SettingsInput";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
@@ -74,7 +76,7 @@ export function AgentPushSettings() {
   const channelOptions = AGENT_PUSH_CHANNELS.map((channel) => ({ value: channel, label: text.channels[channel] }));
 
   return (
-    <SettingsGroup title={text.title} footer={bark ? text.hint : text.ccConnectHint}>
+    <SettingsGroup title={text.title} footer={<SettingsFootnote text={bark ? text.hint : text.ccConnectHint} />}>
       <SettingsToggleRow title={text.enabled} description={text.enabledHint} checked={settings.enabled} onChange={(enabled) => setSettings({ ...settings, enabled })} />
       {settings.enabled && (
         <>
@@ -82,11 +84,11 @@ export function AgentPushSettings() {
             indent
             title={text.channel}
             control={
-              <SettingsSelect
+              <SettingsChoice<AgentPushChannel>
                 value={settings.channel}
                 options={channelOptions}
                 ariaLabel={text.channel}
-                onChange={(channel: AgentPushChannel) => setSettings({ ...settings, channel })}
+                onChange={(channel) => setSettings({ ...settings, channel })}
               />
             }
           />

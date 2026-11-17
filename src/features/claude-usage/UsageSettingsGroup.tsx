@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
@@ -11,6 +12,7 @@ import { isPlan, PlanKeyField } from "./PlanKeyFields";
 import { USAGE_INTERVAL, type UsageShow } from "./usageConfig.ts";
 import { USAGE_PROVIDERS } from "./usageRing";
 import { useUsageConfig } from "./useUsageConfig";
+import "./ClaudeUsageGauge.css";
 
 function ProxyRow({ proxy, onChange }: { proxy: string; onChange: (proxy: string) => void }) {
   const text = useTranslation().claudeUsage.settings;
@@ -44,10 +46,20 @@ export function UsageSettingsGroup() {
     kimi: isMacOS ? text.kimiHintMac : text.kimiHint,
   };
   return (
-    <SettingsGroup title={text.title} footer={text.footer}>
+    <SettingsGroup title={text.title} footer={<SettingsFootnote text={text.footer} />}>
       {USAGE_PROVIDERS.map((provider) => (
         <div key={provider.id} data-usage-provider={provider.id}>
-          <SettingsToggleRow title={provider.name} description={hints[provider.id]} checked={config.providers[provider.id]} onChange={(on) => update(provider.id, on)} />
+          <SettingsToggleRow
+            title={
+              <span className="claude-usage-provider">
+                <span className="claude-usage-provider__swatch" style={{ "--swatch-color": provider.color } as CSSProperties} aria-hidden="true" />
+                {provider.name}
+              </span>
+            }
+            description={hints[provider.id]}
+            checked={config.providers[provider.id]}
+            onChange={(on) => update(provider.id, on)}
+          />
           {config.providers[provider.id] && isPlan(provider) ? <PlanKeyField provider={provider} /> : null}
         </div>
       ))}

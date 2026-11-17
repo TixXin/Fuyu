@@ -1,7 +1,10 @@
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
+import { LightStyleArt } from "./AgentAppearanceGlyphs";
 import { AgentHooksSettingsSection } from "./AgentHooksSettingsSection";
 import { AgentProviderSwitches } from "./AgentProviderSwitches";
 import { useAgentStatusSettings } from "./useAgentStatusSettings";
@@ -16,50 +19,60 @@ type AgentSectionProps = {
 };
 
 function SessionTitleSection({ settings, onSettingsChange }: AgentSectionProps) {
-  const t = useTranslation();
+  const text = useTranslation().settings.agent;
 
   return (
-    <SettingsGroup title={t.settings.agent.sessionTitleSection}>
-      <SettingsToggleRow
-        title={t.settings.agent.sessionTitle}
-        description={t.settings.agent.sessionTitleHint}
-        checked={settings.agentTitleEnabled}
-        onChange={(agentTitleEnabled) => onSettingsChange({ ...settings, agentTitleEnabled })}
-      />
-      {settings.agentTitleEnabled && (
-        <SettingsRow
-          indent
-          title={t.settings.agent.titleMode}
-          description={t.settings.agent.titleModeHint}
-          control={
-            <SettingsChoice<AgentTitleMode>
-              value={settings.agentTitleMode}
-              ariaLabel={t.settings.agent.titleMode}
-              options={[
-                { value: "changes", label: t.settings.agent.titleModeOptions.changes },
-                { value: "running", label: t.settings.agent.titleModeOptions.running },
-              ]}
-              onChange={(agentTitleMode) => onSettingsChange({ ...settings, agentTitleMode })}
-            />
-          }
-        />
-      )}
-      <SettingsRow
-        title={t.settings.agent.lightStyle}
-        description={t.settings.agent.lightStyleHint}
-        control={
-          <SettingsChoice<AgentLightStyle>
+    <>
+      <SettingsGroup title={text.lightSectionTitle} footer={<SettingsFootnote text={text.lightStyleHint} />}>
+        <SettingsRow title={text.lightStyle}>
+          <SettingsChoiceCards<AgentLightStyle>
             value={settings.agentLightStyle}
-            ariaLabel={t.settings.agent.lightStyle}
+            ariaLabel={text.lightStyle}
             options={[
-              { value: "mark", label: t.settings.agent.lightStyleOptions.mark },
-              { value: "dot", label: t.settings.agent.lightStyleOptions.dot },
+              {
+                value: "mark",
+                label: text.lightStyleOptions.mark,
+                hint: text.lightStyleHints.mark,
+                art: <LightStyleArt style="mark" />,
+              },
+              {
+                value: "dot",
+                label: text.lightStyleOptions.dot,
+                hint: text.lightStyleHints.dot,
+                art: <LightStyleArt style="dot" />,
+              },
             ]}
             onChange={(agentLightStyle) => onSettingsChange({ ...settings, agentLightStyle })}
           />
-        }
-      />
-    </SettingsGroup>
+        </SettingsRow>
+      </SettingsGroup>
+      <SettingsGroup title={text.sessionTitleSection}>
+        <SettingsToggleRow
+          title={text.sessionTitle}
+          description={text.sessionTitleHint}
+          checked={settings.agentTitleEnabled}
+          onChange={(agentTitleEnabled) => onSettingsChange({ ...settings, agentTitleEnabled })}
+        />
+        {settings.agentTitleEnabled && (
+          <SettingsRow
+            indent
+            title={text.titleMode}
+            description={text.titleModeHint}
+            control={
+              <SettingsChoice<AgentTitleMode>
+                value={settings.agentTitleMode}
+                ariaLabel={text.titleMode}
+                options={[
+                  { value: "changes", label: text.titleModeOptions.changes },
+                  { value: "running", label: text.titleModeOptions.running },
+                ]}
+                onChange={(agentTitleMode) => onSettingsChange({ ...settings, agentTitleMode })}
+              />
+            }
+          />
+        )}
+      </SettingsGroup>
+    </>
   );
 }
 

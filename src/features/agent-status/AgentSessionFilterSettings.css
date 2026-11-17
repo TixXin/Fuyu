@@ -1,5 +1,29 @@
+.session-filter__rule {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.session-filter__icon {
+  flex: none;
+  color: var(--color-text-subtle);
+}
+
 .session-filter__value {
   overflow-wrap: anywhere;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 12.5px;
+}
+
+.session-filter__badge {
+  flex: none;
+  padding: 2px 8px;
+  color: var(--color-text-subtle);
+  background: var(--color-white-a06);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .session-filter__remove {

@@ -3,13 +3,18 @@
     <section class="settings-group">
       <div class="settings-group__card">
         <div class="agent-remote__intro">
-          <svg aria-hidden="true" class="lucide lucide-server" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
-          <div>
+          <span aria-hidden="true" class="agent-remote__icon">
+            <svg aria-hidden="true" class="lucide lucide-server" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
+          </span>
+          <div class="agent-remote__copy">
             <p>
               在 Agent 页列出其他电脑上的 Claude Code、Codex、DSH 和 Antigravity CLI 会话：打开的主机，岛屿和它保持一条 ssh 连接，每 3 秒读一次它最近的会话记录，服务器上不用安装任何东西。
             </p>
-            <p>
-              只能用密钥登录，不会弹出密码框，先确认终端里 ssh 能直接登上去。点上面的「安装/修复」后，远程的 Claude Code 和 Antigravity CLI 能在岛上审批；远程会话不能切到它的窗口。
+            <p class="settings-footnote">
+              只能用密钥登录，不会弹出密码框，先确认终端里 ssh 能直接登上去。
+              <button aria-expanded="false" class="settings-footnote__toggle" type="button">
+                了解更多
+              </button>
             </p>
           </div>
         </div>

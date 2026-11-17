@@ -14,3 +14,18 @@
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+.claude-usage-provider {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.claude-usage-provider__swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-circle);
+  border: 2.2px solid var(--swatch-color, var(--usage-claude));
+  box-shadow: inset 0 0 0 1.8px transparent, inset 0 0 0 3.2px color-mix(in srgb, var(--swatch-color, var(--usage-claude)) 55%, transparent);
+}

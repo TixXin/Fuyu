@@ -13,9 +13,11 @@ export type SettingsAgentText = {
   titleMode: string;
   titleModeHint: string;
   titleModeOptions: { changes: string; running: string };
+  lightSectionTitle: string;
   lightStyle: string;
   lightStyleHint: string;
   lightStyleOptions: { mark: string; dot: string };
+  lightStyleHints: { mark: string; dot: string };
   agentPageSection: string;
   expandChildren: string;
   expandChildrenHint: string;
@@ -25,6 +27,7 @@ export type SettingsAgentText = {
   sessionView: string;
   sessionViewHint: string;
   sessionViewOptions: { list: string; cards: string; compact: string };
+  sessionViewHints: { list: string; cards: string; compact: string };
   archiveMotion: string;
   archiveMotionHint: string;
   archiveMotionOptions: { slide: string; dissolve: string };
@@ -97,6 +100,7 @@ export type SettingsAgentText = {
     remind: string;
     remindDescription: string;
     remindValue: (seconds: number) => string;
+    quotaSectionTitle: string;
     quota: string;
     quotaDescription: string;
     quotaValue: (percent: number) => string;
@@ -222,9 +226,11 @@ export const zhCN: SettingsAgentText = {
   titleMode: "什么时候显示",
   titleModeHint: "有变化时：会话开始、跑完或出错时显示 4 秒，等你确认时一直显示到你处理，其余时间留给待办和中心图案。运行时一直显示：有 Agent 在运行就显示，结束 3 秒后恢复待办。",
   titleModeOptions: { changes: "有变化时", running: "运行时一直显示" },
+  lightSectionTitle: "状态灯",
   lightStyle: "状态灯样式",
   lightStyleHint: "收起条上 Agent 状态灯的样子。悬岛：应用图标的白胶囊，和条上的环一样高；绿点呼吸，运行时短横换成三个依次亮起的点，等你确认时变黄闪烁，失败或可能中断时变红，跑完打勾。圆点：原来的小圆点。",
   lightStyleOptions: { mark: "悬岛", dot: "圆点" },
+  lightStyleHints: { mark: "白胶囊配呼吸状态点与动态横条", dot: "简洁的传统小圆点呼吸灯" },
   agentPageSection: "Agent 页",
   expandChildren: "子 Agent / 子会话默认展开",
   expandChildrenHint: "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。",
@@ -234,6 +240,7 @@ export const zhCN: SettingsAgentText = {
   sessionView: "显示方式",
   sessionViewHint: "卡片：每个会话一张按状态颜色描边的卡片，第二行写它在做什么和上下文大小。紧凑：每个会话一行，只有状态色条、标题、状态和时间。",
   sessionViewOptions: { list: "列表", cards: "卡片", compact: "紧凑" },
+  sessionViewHints: { list: "状态点、标题与最多两行回复", cards: "状态描边卡片，附工具与上下文", compact: "单行状态色条，同屏容纳更多" },
   archiveMotion: "归档动画",
   archiveMotionHint: "滑出：会话向右滑出再收起。粒子消散：会话从左到右化成状态颜色的粒子散开再收起。系统要求减少动画时直接移除。",
   archiveMotionOptions: { slide: "滑出", dissolve: "粒子消散" },
@@ -306,6 +313,7 @@ export const zhCN: SettingsAgentText = {
     remind: "没处理时再提醒",
     remindDescription: "等你确认或回答的会话过了这么久还在等，再弹一次并再响一次；每次等待只补一次",
     remindValue: (seconds) => (seconds === 0 ? "不再提醒" : seconds < 60 ? `${seconds} 秒后` : `${seconds / 60} 分钟后`),
+    quotaSectionTitle: "用量额度",
     quota: "额度提醒",
     quotaDescription: "Claude 或 Codex 的 5 小时、7 天用量到这条线时，在收起的岛屿上提醒一次；额度刷新后再提醒一次",
     quotaValue: (percent) => (percent === 0 ? "不提醒" : `用到 ${percent}%`),
@@ -431,9 +439,11 @@ export const en: SettingsAgentText = {
   titleMode: "When to show it",
   titleModeHint: "On changes: for 4 seconds when a session starts, finishes or fails, and while it waits for your approval; otherwise the todo and the center pattern stay. While running: the whole time an agent runs, then the todo again 3 seconds after it finishes.",
   titleModeOptions: { changes: "On changes", running: "While running" },
+  lightSectionTitle: "Status light",
   lightStyle: "Status light",
   lightStyleHint: "How the Agent status light looks on the collapsed bar. Island mark: the app icon's white pill, as tall as the rings on the bar; its light breathes, three dots take the dash's place while running, it turns yellow and blinks while waiting for you, red when failed or possibly stopped, and shows a tick when done. Dot: the original small dot.",
   lightStyleOptions: { mark: "Island mark", dot: "Dot" },
+  lightStyleHints: { mark: "White pill with breathing dot and animated dash", dot: "Minimal breathing status dot" },
   agentPageSection: "Agent page",
   expandChildren: "Expand subagents and child sessions",
   expandChildrenHint: "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them.",
@@ -443,6 +453,7 @@ export const en: SettingsAgentText = {
   sessionView: "Layout",
   sessionViewHint: "Cards: one card per session, framed in its state's colour, with what it is doing and its context size on the second line. Compact: one line per session with only the state bar, title, state and time.",
   sessionViewOptions: { list: "List", cards: "Cards", compact: "Compact" },
+  sessionViewHints: { list: "Status dot, title and two-line reply", cards: "State-framed card with tool and context", compact: "Single-line bar for denser lists" },
   archiveMotion: "Archive animation",
   archiveMotionHint: "Slide: the session slides out to the right, then folds away. Dissolve: it turns into dust in its state's colour from left to right, then folds away. When Windows asks for less motion it goes at once.",
   archiveMotionOptions: { slide: "Slide", dissolve: "Dissolve" },
@@ -515,6 +526,7 @@ export const en: SettingsAgentText = {
     remind: "Remind again",
     remindDescription: "If a session is still waiting for your approval or answer this long, pop up and sound once more; once per wait",
     remindValue: (seconds) => (seconds === 0 ? "Never" : seconds < 60 ? `after ${seconds} s` : `after ${seconds / 60} min`),
+    quotaSectionTitle: "Quota",
     quota: "Usage alert",
     quotaDescription: "When Claude's or Codex's 5-hour or 7-day usage reaches this level, say so once on the collapsed island, and again when it resets",
     quotaValue: (percent) => (percent === 0 ? "Off" : `at ${percent}%`),

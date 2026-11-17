@@ -1,3 +1,5 @@
+import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
@@ -24,61 +26,66 @@ export function AgentAlertSettings({
   const startedOptions = (["everyTurn", "newSession", "off"] as const).map((value) => ({ value, label: text.startedOptions[value] }));
 
   return (
-    <SettingsGroup title={text.title} footer={text.hint}>
-      <SettingsRow
-        title={text.started}
-        control={
-          <SettingsSelect
-            value={settings.agentAlertStarted}
-            options={startedOptions}
-            ariaLabel={text.started}
-            onChange={(value) => update({ agentAlertStarted: value as AgentAlertStarted })}
-          />
-        }
-      />
-      <SettingsToggleRow title={text.waiting} checked={settings.agentAlertWaiting} onChange={(agentAlertWaiting) => update({ agentAlertWaiting })} />
-      {settings.agentAlertWaiting && (
+    <>
+      <SettingsGroup title={text.title} footer={<SettingsFootnote text={text.hint} />}>
         <SettingsRow
-          indent
-          title={text.remind}
-          description={text.remindDescription}
+          title={text.started}
           control={
-            <SettingsSelect
-              value={String(settings.agentRemindSeconds)}
-              options={remindOptions}
-              ariaLabel={text.remind}
-              onChange={(value) => update({ agentRemindSeconds: Number(value) })}
+            <SettingsChoice<AgentAlertStarted>
+              value={settings.agentAlertStarted}
+              options={startedOptions}
+              ariaLabel={text.started}
+              onChange={(agentAlertStarted) => update({ agentAlertStarted })}
             />
           }
         />
-      )}
-      <SettingsToggleRow title={text.completed} checked={settings.agentAlertCompleted} onChange={(agentAlertCompleted) => update({ agentAlertCompleted })} />
-      <SettingsToggleRow title={text.failed} checked={settings.agentAlertFailed} onChange={(agentAlertFailed) => update({ agentAlertFailed })} />
-      <SettingsRow
-        title={text.quota}
-        description={text.quotaDescription}
-        control={
-          <SettingsSelect
-            value={String(settings.agentQuotaAlertPercent)}
-            options={quotaOptions}
-            ariaLabel={text.quota}
-            onChange={(value) => update({ agentQuotaAlertPercent: Number(value) })}
+        <SettingsToggleRow title={text.waiting} checked={settings.agentAlertWaiting} onChange={(agentAlertWaiting) => update({ agentAlertWaiting })} />
+        {settings.agentAlertWaiting && (
+          <SettingsRow
+            indent
+            title={text.remind}
+            description={text.remindDescription}
+            control={
+              <SettingsSelect
+                value={String(settings.agentRemindSeconds)}
+                options={remindOptions}
+                ariaLabel={text.remind}
+                onChange={(value) => update({ agentRemindSeconds: Number(value) })}
+              />
+            }
           />
-        }
-      />
-      {anyOn && (
+        )}
+        <SettingsToggleRow title={text.completed} checked={settings.agentAlertCompleted} onChange={(agentAlertCompleted) => update({ agentAlertCompleted })} />
+        <SettingsToggleRow title={text.failed} checked={settings.agentAlertFailed} onChange={(agentAlertFailed) => update({ agentAlertFailed })} />
+        {anyOn && (
+          <SettingsRow
+            indent
+            title={text.seconds}
+            control={
+              <SettingsSelect
+                value={String(settings.agentAlertSeconds)}
+                options={secondsOptions}
+                ariaLabel={text.seconds}
+                onChange={(value) => update({ agentAlertSeconds: Number(value) })}
+              />
+            }
+          />
+        )}
+      </SettingsGroup>
+      <SettingsGroup title={text.quotaSectionTitle}>
         <SettingsRow
-          title={text.seconds}
+          title={text.quota}
+          description={text.quotaDescription}
           control={
             <SettingsSelect
-              value={String(settings.agentAlertSeconds)}
-              options={secondsOptions}
-              ariaLabel={text.seconds}
-              onChange={(value) => update({ agentAlertSeconds: Number(value) })}
+              value={String(settings.agentQuotaAlertPercent)}
+              options={quotaOptions}
+              ariaLabel={text.quota}
+              onChange={(value) => update({ agentQuotaAlertPercent: Number(value) })}
             />
           }
         />
-      )}
-    </SettingsGroup>
+      </SettingsGroup>
+    </>
   );
 }
