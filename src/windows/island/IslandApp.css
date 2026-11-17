@@ -141,11 +141,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .island__active-task,
-  .island__agent-session {
-    animation: none;
-  }
-
   .island,
   .island__collapsed,
   .island__expanded,

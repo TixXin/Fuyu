@@ -216,8 +216,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .island-update-badge { animation: none; }
-  .island__summary-row > .island-meeting { animation: none; }
+  .island__active-task,
+  .island__agent-session,
+  .island-update-badge,
+  .island__summary-row > .island-meeting {
+    animation: none;
+  }
 }
 
 .island-shelf-count {
