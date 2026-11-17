@@ -57,6 +57,9 @@ pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
     if path == QUESTION_PATH {
         return Some((Agent::ClaudeCode, Kind::Question));
     }
+    if path == "/dsh/pre-tool-use" {
+        return Some((Agent::Dsh, Kind::Permission));
+    }
     AGENTS
         .into_iter()
         .find(|agent| agent.path() == path)
@@ -70,7 +73,7 @@ impl Agent {
             Self::Codex => "/codex/permission-request",
             Self::Workbuddy => "/workbuddy/permission-request",
             Self::Antigravity => "/antigravity/pre-tool-use",
-            Self::Dsh => "/dsh/pre-tool-use",
+            Self::Dsh => "/dsh/permission",
             Self::Opencode => "/opencode/permission",
             Self::Mimo => "/mimo/permission",
             Self::Pi => "/pi/permission",
@@ -278,7 +281,17 @@ pub(super) fn permission_response(
             Some(Decision::Terminal) => json!({ "decision": "ask" }).to_string(),
         },
         Agent::Dsh => match decision {
+            Some(Decision::Allow | Decision::AllowAlways) => json!({
+                "outcome": "allowed-once",
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "allow",
+                }
+            })
+            .to_string(),
             Some(Decision::Deny) => json!({
+                "outcome": "rejected",
+                "reason": reason(),
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
                     "permissionDecision": "deny",

@@ -43,10 +43,9 @@
 ### DeepSeek Harness
 
 - [ ] 会话列表：开一个会话，核对标题、模型、档位、最近提问和回复；提问时显示「等你」；运行中、完成、10 分钟没动静变「可能中断」；点会话切到 DSH 窗口（#179 原清单）
-- [ ] 「安装/修复」：岛写 `~/.fuyu/fuyu-dsh-hooks.json`，安装结果末尾给出要加进 `profiles/<名字>/cordis.patch.yml` 的几行（B27）
-- [ ] 核对那几行（`- id: fuyu-hooks / name: "@deepseek-ai/dsh-hooks-claude-code" / config.configPath`）是不是 DSH patch 层正确的写法；桥接包是 DSH 自带还是要在 profile 目录装（B27）
-- [ ] 加上后重启 DSH 再点「安装/修复」：提示消失，钩子状态变 current；发一句话，状态灯亮运行中 / 完成（B27）
-- [ ] 开岛上审批，DSH 跑 shell 工具：岛上只有「交回终端 / 拒绝」，拒绝后 DSH 显示被拦下；核对 DSH 的 shell 工具名，matcher 现在是 `^(shell|exec|bash|run_command|run_code)$`（B27）
+- [ ] 「安装/修复」：岛在数据目录生成 `dsh-plugin/`（`package.json`、`cordis.patch.yml`、`index.js`）并删除旧 `fuyu-dsh-hooks.json`；DSH 家目录下没有自定义 `cordis.patch.yml` 时自动写入 `- insert: [{ id: fuyu-island, name: ... }]`，钩子状态直接为 current；已有自定义 `cordis.patch.yml` 时原文件保留、安装结果末尾给出要追加的 3 行 `- insert:` 片段（B72.1）
+- [ ] 重启 DSH 后发一句话：状态灯亮运行中，结束后变完成（出错变失败）（B72.1）
+- [ ] 开岛上审批，让 DSH 触发一次需要审批的工具调用（`approval/request`）：岛上弹出审批卡，显示工具名、命令/文件参数与原因，且有「允许」「拒绝」「到终端」三个按钮；点「允许」DSH 直接放行执行（不再弹 DSH 确认框）；点「拒绝」DSH 显示被拒绝；点「到终端」交回 DSH 原生确认框；挂起期间在 DSH 里取消本轮对话，岛上审批卡在 1 秒内自动关闭（B72.1）
 - [ ] 会话卡片：显示「deepseek-flash · high」这类模型和强度；权限预设切到 auto 显示「自动」，完全访问显示「跳过确认」；写待办时显示 1/3 这类进度；跑较长命令时显示工具名（B44）
 
 ### Antigravity
@@ -177,7 +176,7 @@
 
 ### DeepSeek Harness
 
-- [ ] Windows 上桥接用什么 shell 跑 command 字符串（cmd 还是 PowerShell）；命令是 `cmd.exe /d /s /c ""…" dsh"` / `powershell.exe -NoProfile … -File "…" dsh completed`（B27）
+- [ ] Windows 上生成的 `%USERPROFILE%\.fuyu\dsh-plugin\index.js`（反斜杠路径 JSON 转义）在 DSH Desktop / `dsh web` 启动时能经 `%USERPROFILE%\.dsh\cordis.patch.yml` 正常加载并驱动状态灯与岛上审批（允许、拒绝、交回 DSH、取消）（B72.1）
 - [ ] 数据目录（B32）。每项在那个目录里开会话、发一句话，看列表里有没有、三态对不对：
   - [ ] 系统环境变量 `DSH_HOME=D:\dsh-data`（设好后重启岛），`npx @deepseek-ai/dsh web` 开会话
   - [ ] `DSH_HOME=~\dsh-alt` 读 `%USERPROFILE%\dsh-alt`

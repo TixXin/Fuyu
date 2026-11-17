@@ -519,6 +519,7 @@ fn new_agents_have_their_own_routes_and_answers() {
     use super::decision::permission_response;
     assert_eq!(route("/workbuddy/permission-request"), Some((Agent::Workbuddy, Kind::Permission)));
     assert_eq!(route("/antigravity/pre-tool-use"), Some((Agent::Antigravity, Kind::Permission)));
+    assert_eq!(route("/dsh/permission"), Some((Agent::Dsh, Kind::Permission)));
     assert_eq!(route("/dsh/pre-tool-use"), Some((Agent::Dsh, Kind::Permission)));
     assert_eq!(serde_json::to_value(Agent::Workbuddy).unwrap(), json!("workbuddy"));
     assert_eq!(serde_json::to_value(Agent::Dsh).unwrap(), json!("dsh"));
@@ -578,11 +579,16 @@ fn new_agents_have_their_own_routes_and_answers() {
     assert_eq!(ag(None), json!({}));
 
     let dsh = |decision| permission_response(Agent::Dsh, decision, None, None);
+    let allowed: Value = serde_json::from_str(&dsh(Some(Decision::Allow))).unwrap();
+    assert_eq!(allowed["outcome"], "allowed-once");
+    assert_eq!(allowed["hookSpecificOutput"]["permissionDecision"], "allow");
     let denied: Value = serde_json::from_str(&dsh(Some(Decision::Deny))).unwrap();
+    assert_eq!(denied["outcome"], "rejected");
+    assert_eq!(denied["reason"], "Denied in Fuyu");
     assert_eq!(denied["hookSpecificOutput"]["permissionDecision"], "deny");
     assert_eq!(denied["hookSpecificOutput"]["permissionDecisionReason"], "Denied in Fuyu");
-    assert_eq!(dsh(Some(Decision::Allow)), "{}");
     assert_eq!(dsh(Some(Decision::Terminal)), "{}");
+    assert_eq!(dsh(None), "{}");
 }
 
 #[test]

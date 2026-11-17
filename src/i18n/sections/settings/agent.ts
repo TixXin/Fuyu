@@ -419,7 +419,7 @@ export const zhCN: SettingsAgentText = {
   },
   hooksOutdated: "已安装的钩子是旧版本，“等待确认”状态等新功能不会生效。请点“安装/修复”，然后重启正在用的 AI Agent。",
   hooksMissing: "还没有安装钩子。点“安装/修复”后重启正在用的 AI Agent，状态灯和会话标题才会工作。",
-  dshBridge: "DeepSeek Harness 还没挂上钩子桥。把下面几行加到 DSH 配置目录 profiles 下的 cordis.patch.yml 末尾，重启 DSH 后再点一次“安装/修复”：",
+  dshBridge: "DeepSeek Harness 已有自定义 cordis.patch.yml，岛屿没有直接覆盖。把下面几行加到 DSH 家目录（或 profiles/<名字>）下的 cordis.patch.yml 末尾，重启 DSH 后再点一次“安装/修复”：",
   hooksDevBuild: "开发版读的是正式版的 Agent 状态。在这里点“安装/修复”装的是正式版的钩子：脚本放在正式版的数据目录，审批走正式版的端口，开发版关掉后照样能用。",
   remoteResult: (host, error) => (error ? `SSH 远程 ${host}：失败，${error}` : `SSH 远程 ${host}：已完成`),
 };
@@ -632,7 +632,7 @@ export const en: SettingsAgentText = {
   },
   hooksOutdated: "The installed hooks are from an older version, so newer features such as the waiting-for-you state won't work. Click Install/repair, then restart the AI agents you use.",
   hooksMissing: "No hooks installed yet. Click Install/repair, then restart the AI agents you use, for the status light and session titles to work.",
-  dshBridge: "DeepSeek Harness has no hook bridge yet. Add these lines to the end of cordis.patch.yml under profiles in the DSH home, restart DSH, then click Install/repair again:",
+  dshBridge: "DeepSeek Harness already has a custom cordis.patch.yml, so Fuyu kept it as is. Add these lines to the end of cordis.patch.yml in the DSH home (or under profiles/<name>), restart DSH, then click Install/repair again:",
   hooksDevBuild: "The development build reads the installed Fuyu's agent status. Install/repair here sets up the installed Fuyu's hooks: the scripts go to its data folder and approvals go to its port, so they keep working after the development build closes.",
   remoteResult: (host, error) => (error ? `SSH remote ${host}: failed, ${error}` : `SSH remote ${host}: done`),
 };
