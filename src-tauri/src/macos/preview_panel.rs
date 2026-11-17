@@ -1,7 +1,5 @@
-use tauri::WebviewWindow;
+use tauri::{Manager, WebviewWindow};
 use tauri_nspanel::{tauri_panel, WebviewWindowExt};
-
-use super::island_panel::PreviewPanel;
 
 tauri_panel! {
     panel!(EditingPreviewPanel {
@@ -13,10 +11,20 @@ tauri_panel! {
 }
 
 pub(crate) fn take_keys(window: &WebviewWindow, on: bool) {
-    let swapped = if on { window.to_panel::<EditingPreviewPanel>() } else { window.to_panel::<PreviewPanel>() };
-    match swapped {
-        Ok(panel) if on => panel.make_key_and_order_front(),
-        Ok(_) => {}
-        Err(error) => eprintln!("failed to switch the clipboard preview panel: {error}"),
+    super::island_panel::forget_panel(window.app_handle(), window.label());
+    let swapped = if on {
+        window
+            .to_panel::<EditingPreviewPanel>()
+            .map_err(|error| error.to_string())
+            .and_then(|panel| {
+                super::island_panel::float_above_island(window, panel.clone())?;
+                panel.make_key_and_order_front();
+                Ok(())
+            })
+    } else {
+        super::island_panel::make_preview_panel(window)
+    };
+    if let Err(error) = swapped {
+        eprintln!("failed to switch the clipboard preview panel: {error}");
     }
 }
