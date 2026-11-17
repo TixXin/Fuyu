@@ -20,7 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: scripts/release/smoke-test.ps1
+          sparse-checkout: |
+            scripts/release/smoke-test.ps1
+            scripts/plugins-v3/release-resources.mjs
           sparse-checkout-cone-mode: false
 
       - name: Download the draft's installer
