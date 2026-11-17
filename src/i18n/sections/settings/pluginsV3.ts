@@ -28,8 +28,22 @@ export type BuiltinPluginName =
   | "theme-market"
   | "updater";
 
+export type PluginV3Group = "third-party" | "core" | "ai" | "system";
+
+export type PluginV3Filter = "all" | "core" | "ai" | "system" | "third-party" | "attention" | "off";
+
 export type SettingsPluginsV3Text = {
   preview: string;
+  searchPlaceholder: string;
+  noMatches: string;
+  tabs: {
+    plugins: (count: number) => string;
+    diagnostics: string;
+  };
+  openDiagnostics: string;
+  groups: Record<PluginV3Group, string>;
+  filters: Record<PluginV3Filter, (count: number) => string>;
+  closeDetail: string;
   builtins: string;
   builtinsNote: string;
   builtinsLoading: string;
@@ -81,6 +95,29 @@ export type SettingsPluginsV3Text = {
 
 export const zhCN: SettingsPluginsV3Text = {
   preview: "开发中：开发版里总会出现，正式版要设了 FUYU_PLUGINS_V3=1 才出现。",
+  searchPlaceholder: "搜索插件名称、ID 或说明…",
+  noMatches: "没有匹配的插件。",
+  tabs: {
+    plugins: (count) => `功能与插件 (${count})`,
+    diagnostics: "宿主与运行诊断",
+  },
+  openDiagnostics: "查看运行诊断 ›",
+  groups: {
+    "third-party": "宿主与第三方插件",
+    core: "岛屿核心功能",
+    ai: "AI Agent 与连接",
+    system: "外观与系统提示",
+  },
+  filters: {
+    all: (count) => `全部 (${count})`,
+    core: (count) => `核心功能 (${count})`,
+    ai: (count) => `AI 与连接 (${count})`,
+    system: (count) => `外观与系统 (${count})`,
+    "third-party": (count) => `第三方 (${count})`,
+    attention: (count) => `需处理 (${count})`,
+    off: (count) => `已关闭 (${count})`,
+  },
+  closeDetail: "关闭",
   builtins: "内置插件",
   builtinsNote: "开关存在数据目录的 plugins-v3/plugins.yml，宿主没开也生效。关掉的插件撤掉它的界面、停掉它的后台；功能迁成插件之前，关掉还看不出变化。",
   builtinsLoading: "正在读取内置插件。",
@@ -179,6 +216,29 @@ export const zhCN: SettingsPluginsV3Text = {
 
 export const en: SettingsPluginsV3Text = {
   preview: "In development: always shown in a dev build; a release build shows it only with FUYU_PLUGINS_V3=1.",
+  searchPlaceholder: "Search plugin name, ID or notes…",
+  noMatches: "No matching plugins.",
+  tabs: {
+    plugins: (count) => `Features & plugins (${count})`,
+    diagnostics: "Host & diagnostics",
+  },
+  openDiagnostics: "View diagnostics ›",
+  groups: {
+    "third-party": "Host and third-party plugins",
+    core: "Core island features",
+    ai: "AI agents and connections",
+    system: "Appearance and system alerts",
+  },
+  filters: {
+    all: (count) => `All (${count})`,
+    core: (count) => `Core (${count})`,
+    ai: (count) => `AI & Link (${count})`,
+    system: (count) => `System (${count})`,
+    "third-party": (count) => `Third-party (${count})`,
+    attention: (count) => `Attention (${count})`,
+    off: (count) => `Off (${count})`,
+  },
+  closeDetail: "Close",
   builtins: "Built-in plugins",
   builtinsNote: "Switches are saved in plugins-v3/plugins.yml in the data folder and work without the host. A plugin switched off loses its UI and its background work; until a feature becomes a plugin, switching it off changes nothing yet.",
   builtinsLoading: "Reading the built-in plugins.",

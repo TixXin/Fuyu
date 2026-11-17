@@ -203,6 +203,16 @@ try {
   check(side.fake.open === 0, "Leaving the page closes its connection");
   await send((given) => given.onSnapshot({ plugins: PLUGINS, host: HOST }));
 
+  await act(async () => card("counter")!.click());
+  check(page.querySelector("[role='dialog']")?.textContent?.includes("counter"), "Clicking a plugin card opens its detail dialog");
+  await act(async () => page.querySelector<HTMLButtonElement>(".plugins-v3__modal .plugins-v3__leave")!.click());
+  check(!page.querySelector("[role='dialog']"), "and the close button dismisses the dialog");
+
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='diagnostics']")!.click());
+  check(page.querySelectorAll(".plugins-v3__diag-table tbody tr").length === 29, "The diagnostics tab lists all built-in and host plugins in a comparison table");
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='plugins']")!.click());
+  check(page.querySelectorAll(".plugins-v3__builtin").length === 22, "Switching back to the plugins tab restores the grouped card grid");
+
   results.textContent = messages.join("\n");
   document.documentElement.dataset.testResult = "passed";
 } catch (error) {
