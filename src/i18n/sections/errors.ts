@@ -239,7 +239,51 @@ export type ErrorCode =
   | "voiceInput.modelBroken"
   | "voiceInput.micFailed"
   | "voiceInput.micDenied"
-  | "voiceInput.noModel";
+  | "voiceInput.noModel"
+  | "file.noDownloads"
+  | "clipboard.notExport"
+  | "clipboard.newerExport"
+  | "clipboard.importTooLarge"
+  | "settingsBackup.badName"
+  | "settingsBackup.badContent"
+  | "settingsBackup.tooManyNames"
+  | "notificationVerify.badId"
+  | "notificationVerify.unisolated"
+  | "notificationVerify.start"
+  | "messenger.notInteractive"
+  | "messenger.foreground"
+  | "remoteHosts.save"
+  | "remoteHosts.host"
+  | "remoteHosts.tooMany"
+  | "remoteHosts.address"
+  | "remoteHosts.name"
+  | "remoteHosts.user"
+  | "remoteHosts.port"
+  | "remoteHosts.tooManyCustom"
+  | "remoteHosts.unknown"
+  | "sshTunnel.notReady"
+  | "sshTunnel.start"
+  | "sshTunnel.needPort"
+  | "sshTunnel.remotePort"
+  | "sshTunnel.tooMany"
+  | "sshTunnel.save"
+  | "sshTunnel.noPortTool"
+  | "sshTunnel.portCheck"
+  | "soundPack.noDataDir"
+  | "soundPack.format"
+  | "soundPack.sizeOrEmpty"
+  | "soundPack.empty"
+  | "soundPack.writeSound"
+  | "soundPack.save"
+  | "soundPack.fromPlugin"
+  | "soundPack.badId"
+  | "soundPack.notFound"
+  | "soundPack.delete"
+  | "soundPack.pluginGone"
+  | "soundPack.openFolder"
+  | "soundPack.fileMissing"
+  | "soundPack.readSound"
+  | "soundPack.tooLarge";
 
 export type ErrorsText = {
   withDetail: (text: string, detail: string) => string;
@@ -485,6 +529,50 @@ export const zhCN: ErrorsText = {
     "voiceInput.micFailed": "用不了麦克风；检查有没有接麦克风，以及系统隐私设置里是否允许浮屿使用麦克风。",
     "voiceInput.micDenied": "浮屿没有麦克风权限；在系统设置 → 隐私与安全性 → 麦克风里打开。",
     "voiceInput.noModel": "先在设置 → 语音输入里下载语音模型。",
+    "file.noDownloads": "找不到下载文件夹。",
+    "clipboard.notExport": "这不是岛屿导出的剪贴板文件。",
+    "clipboard.newerExport": "这不是岛屿导出的剪贴板文件，或者来自更新的版本。",
+    "clipboard.importTooLarge": "剪贴板文件太大。",
+    "settingsBackup.badName": "备份文件名无效。",
+    "settingsBackup.badContent": "这不是有效的设置或主题备份。",
+    "settingsBackup.tooManyNames": ({ name, dir }) => `${dir} 里叫 ${name} 的文件太多，请清理后重试。`,
+    "notificationVerify.badId": "通知验收必须提供独立的 32 位十六进制运行标识。",
+    "notificationVerify.unisolated": "通知验收未隔离应用数据目录。",
+    "notificationVerify.start": "无法启动通知验收记录。",
+    "messenger.notInteractive": ({ name }) => `${name}尚未恢复可交互的主窗口，请从系统托盘打开。`,
+    "messenger.foreground": ({ name }) => `已找到${name}窗口，但未能切换到前台，请点击任务栏或托盘中的${name}。`,
+    "remoteHosts.save": "没能保存远程电脑设置。",
+    "remoteHosts.host": ({ host }) => `「${host}」不是 SSH 主机名。`,
+    "remoteHosts.tooMany": ({ max }) => `最多选择 ${max} 台电脑。`,
+    "remoteHosts.address": ({ host }) => `「${host}」不是有效的主机名或地址。`,
+    "remoteHosts.name": ({ name }) => `「${name}」不能用作显示名：只能用字母、数字、. _ - 或 @。`,
+    "remoteHosts.user": ({ user }) => `「${user}」不是有效的用户名。`,
+    "remoteHosts.port": "端口要是 1–65535。",
+    "remoteHosts.tooManyCustom": ({ max }) => `最多添加 ${max} 台电脑。`,
+    "remoteHosts.unknown": ({ host }) => `找不到 SSH 电脑「${host}」。`,
+    "sshTunnel.notReady": "SSH 代理隧道尚未准备好。",
+    "sshTunnel.start": ({ host }) => `无法启动到 ${host} 的隧道。`,
+    "sshTunnel.needPort": ({ host }) => `先填 ${host} 上的服务器端口。`,
+    "sshTunnel.remotePort": ({ min }) => `服务器上的端口要是 ${min}–65535。`,
+    "sshTunnel.tooMany": ({ max }) => `最多设置 ${max} 台主机。`,
+    "sshTunnel.save": "没能保存 SSH 隧道设置。",
+    "sshTunnel.noPortTool": "服务器上既没有 ss 也没有 netstat。",
+    "sshTunnel.portCheck": "检查服务器端口失败。",
+    "soundPack.noDataDir": "找不到应用数据目录。",
+    "soundPack.format": ({ name }) => `不支持的音效格式：${name}`,
+    "soundPack.sizeOrEmpty": ({ name }) => `音效文件太大或是空的：${name}（最大 4 MB）`,
+    "soundPack.empty": "这个文件夹里没有能用的音效。",
+    "soundPack.writeSound": ({ name }) => `无法写入音效 ${name}。`,
+    "soundPack.save": "无法保存音效包。",
+    "soundPack.fromPlugin": "这个音效包来自插件，请在插件页关闭或卸载它。",
+    "soundPack.badId": "音效包 id 无效。",
+    "soundPack.notFound": "找不到这个音效包。",
+    "soundPack.delete": "无法删除音效包。",
+    "soundPack.pluginGone": "找不到这个音效包，插件可能已关闭或卸载。",
+    "soundPack.openFolder": "无法打开文件夹。",
+    "soundPack.fileMissing": "音效包里没有这个文件。",
+    "soundPack.readSound": ({ name }) => `无法读取音效 ${name}。`,
+    "soundPack.tooLarge": ({ name }) => `音效文件太大：${name}（最大 4 MB）`,
   },
 };
 
@@ -727,5 +815,49 @@ export const en: ErrorsText = {
     "voiceInput.micFailed": "Could not use the microphone; check that one is connected and that Fuyu may use it in the system privacy settings.",
     "voiceInput.micDenied": "Fuyu may not use the microphone; allow it in System Settings → Privacy & Security → Microphone.",
     "voiceInput.noModel": "Download the speech model in Settings → Voice input first.",
+    "file.noDownloads": "The Downloads folder was not found.",
+    "clipboard.notExport": "This is not a clipboard file exported from Fuyu.",
+    "clipboard.newerExport": "This is not a clipboard file exported from Fuyu, or it comes from a newer version.",
+    "clipboard.importTooLarge": "The clipboard file is too large.",
+    "settingsBackup.badName": "Not a settings backup file name.",
+    "settingsBackup.badContent": "Not a settings or theme backup.",
+    "settingsBackup.tooManyNames": ({ name, dir }) => `Too many files named ${name} in ${dir}; clear some and try again.`,
+    "notificationVerify.badId": "Notification verification requires an isolated 32-digit hex run ID.",
+    "notificationVerify.unisolated": "Notification verification did not isolate the app data folder.",
+    "notificationVerify.start": "Could not start recording notification verification.",
+    "messenger.notInteractive": ({ name }) => `${name} has not restored an interactive main window yet; open it from the system tray.`,
+    "messenger.foreground": ({ name }) => `Found the ${name} window, but could not bring it to the front; click ${name} in the taskbar or tray.`,
+    "remoteHosts.save": "Could not save the remote computers.",
+    "remoteHosts.host": ({ host }) => `"${host}" is not an SSH host name.`,
+    "remoteHosts.tooMany": ({ max }) => `At most ${max} computers.`,
+    "remoteHosts.address": ({ host }) => `"${host}" is not a host name or address.`,
+    "remoteHosts.name": ({ name }) => `"${name}" cannot be a name: use letters, digits, . _ - or @.`,
+    "remoteHosts.user": ({ user }) => `"${user}" is not a user name.`,
+    "remoteHosts.port": "The port must be 1–65535.",
+    "remoteHosts.tooManyCustom": ({ max }) => `At most ${max} added computers.`,
+    "remoteHosts.unknown": ({ host }) => `Unknown SSH computer ${host}.`,
+    "sshTunnel.notReady": "The SSH proxy tunnel is not set up yet.",
+    "sshTunnel.start": ({ host }) => `Could not start the tunnel to ${host}.`,
+    "sshTunnel.needPort": ({ host }) => `Set the port on ${host} first.`,
+    "sshTunnel.remotePort": ({ min }) => `The port on the server must be ${min}–65535.`,
+    "sshTunnel.tooMany": ({ max }) => `At most ${max} hosts.`,
+    "sshTunnel.save": "Could not save the SSH tunnels.",
+    "sshTunnel.noPortTool": "Neither ss nor netstat runs on the server.",
+    "sshTunnel.portCheck": "Could not check the port on the server.",
+    "soundPack.noDataDir": "Could not find the app data folder.",
+    "soundPack.format": ({ name }) => `Unsupported sound format: ${name}`,
+    "soundPack.sizeOrEmpty": ({ name }) => `The sound file is empty or too large: ${name} (at most 4 MB).`,
+    "soundPack.empty": "There are no usable sounds in this folder.",
+    "soundPack.writeSound": ({ name }) => `Could not write sound ${name}.`,
+    "soundPack.save": "Could not save the sound pack.",
+    "soundPack.fromPlugin": "This sound pack comes from a plugin; disable or uninstall it on the Plugins page.",
+    "soundPack.badId": "The sound pack id is not valid.",
+    "soundPack.notFound": "This sound pack was not found.",
+    "soundPack.delete": "Could not delete the sound pack.",
+    "soundPack.pluginGone": "This sound pack was not found; the plugin may be disabled or uninstalled.",
+    "soundPack.openFolder": "Could not open the folder.",
+    "soundPack.fileMissing": "This file is not in the sound pack.",
+    "soundPack.readSound": ({ name }) => `Could not read sound ${name}.`,
+    "soundPack.tooLarge": ({ name }) => `The sound file is too large: ${name} (at most 4 MB).`,
   },
 };

@@ -537,17 +537,17 @@ pub async fn paste_clipboard_sequence(app: AppHandle, ids: Vec<String>) -> Resul
 }
 
 #[tauri::command]
-pub async fn export_clipboard_history() -> Result<String, String> {
+pub async fn export_clipboard_history() -> Result<String, crate::user_error::UserError> {
     tauri::async_runtime::spawn_blocking(|| service()?.export())
         .await
-        .map_err(|error| format!("Failed to join the export: {error}"))?
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
 #[tauri::command]
-pub async fn import_clipboard_history(content: String) -> Result<transfer::ImportReport, String> {
+pub async fn import_clipboard_history(content: String) -> Result<transfer::ImportReport, crate::user_error::UserError> {
     tauri::async_runtime::spawn_blocking(move || service()?.import(&content))
         .await
-        .map_err(|error| format!("Failed to join the import: {error}"))?
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
 #[tauri::command]
