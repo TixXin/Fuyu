@@ -14,6 +14,8 @@ use super::{
 use crate::win32;
 
 const AUDIBLE_HOLD_MS: i64 = 2_500;
+const AUDIBLE_CACHE_TTL_MS: i64 = 60_000;
+const MAX_AUDIBLE_SESSIONS: usize = 64;
 const SYSTEM_EXECUTABLES: &[&str] = &[
     "explorer.exe",
     "svchost.exe",
@@ -48,19 +50,41 @@ fn audible_cache() -> &'static Mutex<HashMap<String, i64>> {
     LAST_AUDIBLE_MS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-fn is_held_playing(id: &str, active: bool, peak: f32, now_ms: i64) -> bool {
-    let mut guard = audible_cache().lock().unwrap_or_else(PoisonError::into_inner);
+fn update_audible_cache(
+    cache: &mut HashMap<String, i64>,
+    id: &str,
+    active: bool,
+    peak: f32,
+    now_ms: i64,
+) -> bool {
+    cache.retain(|_, last| now_ms.saturating_sub(*last) <= AUDIBLE_CACHE_TTL_MS);
     if peak > AUDIO_ACTIVE_THRESHOLD {
-        guard.insert(id.to_string(), now_ms);
+        cache.insert(id.to_string(), now_ms);
+        if cache.len() > MAX_AUDIBLE_SESSIONS {
+            let mut order: Vec<(String, i64)> = cache
+                .iter()
+                .filter(|(key, _)| key.as_str() != id)
+                .map(|(key, last)| (key.clone(), *last))
+                .collect();
+            order.sort_by(|left, right| left.1.cmp(&right.1).then_with(|| left.0.cmp(&right.0)));
+            for (key, _) in order.into_iter().take(cache.len() - MAX_AUDIBLE_SESSIONS) {
+                cache.remove(&key);
+            }
+        }
         return true;
     }
     if !active {
-        guard.remove(id);
+        cache.remove(id);
         return false;
     }
-    guard
+    cache
         .get(id)
         .is_some_and(|last| now_ms.saturating_sub(*last) <= AUDIBLE_HOLD_MS)
+}
+
+fn is_held_playing(id: &str, active: bool, peak: f32, now_ms: i64) -> bool {
+    let mut guard = audible_cache().lock().unwrap_or_else(PoisonError::into_inner);
+    update_audible_cache(&mut guard, id, active, peak, now_ms)
 }
 
 fn resolve_host_process(
@@ -311,4 +335,31 @@ pub(crate) fn list_candidates() -> Vec<CustomMediaPlayer> {
 
     candidates.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.label.cmp(&b.1.label)));
     candidates.into_iter().map(|(_, item)| item).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn audible_cache_expires_stale_entries_and_caps_capacity() {
+        let mut cache = HashMap::new();
+        let t0 = 100_000;
+        assert!(update_audible_cache(&mut cache, "old", true, AUDIO_ACTIVE_THRESHOLD + 0.1, t0));
+        assert!(update_audible_cache(&mut cache, "old", true, 0.0, t0 + AUDIBLE_HOLD_MS));
+        assert!(!update_audible_cache(&mut cache, "old", true, 0.0, t0 + AUDIBLE_HOLD_MS + 1));
+
+        let later = t0 + AUDIBLE_CACHE_TTL_MS + 10;
+        assert!(update_audible_cache(&mut cache, "fresh", true, AUDIO_ACTIVE_THRESHOLD + 0.1, later));
+        assert!(!cache.contains_key("old"));
+
+        for index in 0..(MAX_AUDIBLE_SESSIONS + 5) {
+            let at = later + 10 + index as i64;
+            update_audible_cache(&mut cache, &format!("app-{index:02}"), true, AUDIO_ACTIVE_THRESHOLD + 0.1, at);
+        }
+        assert_eq!(cache.len(), MAX_AUDIBLE_SESSIONS);
+        assert!(!cache.contains_key("fresh"));
+        assert!(!cache.contains_key("app-00"));
+        assert!(cache.contains_key(&format!("app-{:02}", MAX_AUDIBLE_SESSIONS + 4)));
+    }
 }
