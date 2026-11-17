@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval.ts";
 import { phasesOf, trackWaiting, type SessionPhases, type WaitingReminders } from "./alerts.ts";
 import type { AgentSessionSummary } from "./api";
 import { AGENT_INTERJECTION_MS, interjectingSession, remindingSession } from "./interjection.ts";
@@ -32,8 +33,7 @@ export function useAgentInterjection(sessions: AgentSessionSummary[], enabled: b
       const due = remindingSession(reminders.current, latest.current, Date.now(), remindAfterMs);
       if (due) setFlash({ key: sessionKey(due), until: Date.now() + AGENT_INTERJECTION_MS });
     };
-    const timer = window.setInterval(check, Math.min(REMIND_CHECK_MS, Math.max(50, remindAfterMs / 4)));
-    return () => window.clearInterval(timer);
+    return visibilityInterval(check, Math.min(REMIND_CHECK_MS, Math.max(50, remindAfterMs / 4)));
   }, [waiting, remindAfterMs]);
 
   useEffect(() => {

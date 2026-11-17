@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { listAgentSessions, type AgentSessionSummary } from "./api";
 import { sameAgentSessions } from "./sessionList";
 
@@ -27,10 +28,10 @@ export function useAgentSessions(enabled: boolean, intervalMs: number, windowHou
       }
     };
     void refresh();
-    const timer = window.setInterval(() => void refresh(), intervalMs);
+    const stop = visibilityInterval(() => void refresh(), intervalMs);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, [enabled, intervalMs, windowHours]);
 

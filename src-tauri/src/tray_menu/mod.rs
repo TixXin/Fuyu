@@ -8,7 +8,7 @@ use tauri::{AppHandle, Emitter};
 
 use crate::{island, settings_window, translation};
 
-pub(crate) use window::{hide, prebuild, toggle, WINDOW_LABEL};
+pub(crate) use window::{hide, toggle, WINDOW_LABEL};
 
 const STATE_EVENT: &str = "tray-menu-state";
 const OPEN_PAGE_EVENT: &str = "tray-menu-open-page";

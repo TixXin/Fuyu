@@ -300,6 +300,12 @@ export type SettingsPluginsText = {
     };
   };
   sshTunnel: {
+    group: string;
+    groupHint: string;
+    localProxy: string;
+    localProxyHint: string;
+    localProxyOptions: Record<"auto" | "clash-verge" | "v2rayn" | "custom", string>;
+    customPort: string;
     title: string;
     hint: string;
     empty: string;
@@ -315,6 +321,7 @@ export type SettingsPluginsText = {
     no: string;
     proxy: {
       label: string;
+      current: string;
       looking: string;
       found: Record<"clashVerge" | "v2rayN" | "systemProxy" | "clashVergeDefault" | "v2rayNDefault" | "custom", string>;
       listening: string;
@@ -702,9 +709,20 @@ export const zhCN: SettingsPluginsText = {
     },
   },
   sshTunnel: {
-    title: "主机",
-    hint: "主机来自 ~/.ssh/config 和 AI Agent → 远程电脑里添加的电脑。每台填一个服务器上的端口（1024–65535，别和别人的隧道重复），打开后在服务器上运行下面那行 export 就能用这里的代理。",
-    empty: "没有主机：在 ~/.ssh/config 里写 Host，或在 AI Agent → 远程电脑里添加。",
+    group: "SSH 代理隧道",
+    groupHint: "把这台电脑的代理借给 SSH 服务器：为下面打开的每台主机常驻一条 ssh 反向隧道（服务器上的 127.0.0.1:端口 → 这里的本地代理），服务器上设好 http_proxy 就能经这里上网。只用密钥登录，断开后自动重连；在 设置 → 插件（第 3 版）里关掉内置插件「SSH 代理隧道」或退出岛屿时，隧道一起结束。",
+    localProxy: "本地代理",
+    localProxyHint: "自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和 Windows 系统代理，再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。",
+    localProxyOptions: {
+      auto: "自动检测",
+      "clash-verge": "Clash Verge（默认 7897）",
+      v2rayn: "v2rayN（默认 10808）",
+      custom: "自定义端口",
+    },
+    customPort: "本地端口",
+    title: "隧道主机",
+    hint: "主机来自 ~/.ssh/config 和上面添加的主机。每台填一个服务器上的端口（1024–65535，别和别人的隧道重复），打开后在服务器上运行下面那行 export 就能用这里的代理。",
+    empty: "没有主机：在 ~/.ssh/config 里写 Host，或在上面添加一台。",
     port: "服务器端口",
     portInvalid: "端口要是 1024–65535 的整数",
     needsPort: "先填服务器端口",
@@ -724,6 +742,7 @@ export const zhCN: SettingsPluginsText = {
     no: "否",
     proxy: {
       label: "本地代理",
+      current: "当前转发到",
       looking: "正在查找本地代理…",
       found: {
         clashVerge: "端口来自 Clash Verge 的设置",
@@ -1118,9 +1137,20 @@ export const en: SettingsPluginsText = {
     },
   },
   sshTunnel: {
-    title: "Hosts",
-    hint: "Hosts come from ~/.ssh/config and the computers added under AI Agent → Remote computers. Give each a port on the server (1024–65535, not one another tunnel uses); once it is on, run the export line below on the server to use the proxy here.",
-    empty: "No hosts: add a Host to ~/.ssh/config, or a computer under AI Agent → Remote computers.",
+    group: "SSH proxy tunnel",
+    groupHint: "Lends this computer's proxy to SSH servers: for each host switched on below, a resident ssh reverse tunnel (127.0.0.1:port on the server to the local proxy here), so the server reaches the internet through here once http_proxy is set there. Key login only, and it reconnects after a drop; switching off the built-in plugin \"SSH proxy tunnel\" under Settings → Plugins (v3) or quitting the island ends the tunnels.",
+    localProxy: "Local proxy",
+    localProxyHint: "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the Windows system proxy, then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none.",
+    localProxyOptions: {
+      auto: "Auto",
+      "clash-verge": "Clash Verge (7897 by default)",
+      v2rayn: "v2rayN (10808 by default)",
+      custom: "Custom port",
+    },
+    customPort: "Local port",
+    title: "Tunnel hosts",
+    hint: "Hosts come from ~/.ssh/config and the hosts added above. Give each a port on the server (1024–65535, not one another tunnel uses); once it is on, run the export line below on the server to use the proxy here.",
+    empty: "No hosts: add a Host to ~/.ssh/config, or add one above.",
     port: "Server port",
     portInvalid: "The port must be a whole number from 1024 to 65535",
     needsPort: "Set the server port first",
@@ -1140,6 +1170,7 @@ export const en: SettingsPluginsText = {
     no: "No",
     proxy: {
       label: "Local proxy",
+      current: "Forwarding to",
       looking: "Looking for the local proxy…",
       found: {
         clashVerge: "Port from Clash Verge's settings",

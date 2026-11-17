@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getMediaState, type MediaState } from "./api";
 import { MusicSourceList } from "./MusicSourceList";
 import "./MusicSourceSettingsSection.css";
@@ -23,10 +24,10 @@ function useLiveMediaSessions() {
         });
     };
     read();
-    const timer = window.setInterval(read, LIVE_SESSION_POLL_MS);
+    const stop = visibilityInterval(read, LIVE_SESSION_POLL_MS);
     return () => {
       didCancel = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, []);
 

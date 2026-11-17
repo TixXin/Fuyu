@@ -8,6 +8,7 @@ import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../../../lib/settings/types";
+import { visibilityInterval } from "../../../lib/useVisibilityInterval";
 import { KaraokeText } from "./KaraokeText";
 import { karaokeWords } from "./lrc";
 import { karaokeLook, LYRICS_KARAOKE_DIM, type LyricsKaraokeColor, type LyricsKaraokeFallback, type LyricsKaraokeFill } from "./lyricsSettings";
@@ -19,8 +20,7 @@ const PREVIEW_LOOP_MS = 4_800;
 function KaraokePreview({ settings, line }: { settings: IslandSettings; line: string }) {
   const [round, setRound] = useState(0);
   useEffect(() => {
-    const timer = window.setInterval(() => setRound((value) => value + 1), PREVIEW_LOOP_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setRound((value) => value + 1), PREVIEW_LOOP_MS);
   }, []);
   const words = useMemo(() => karaokeWords({ timeMs: 0, text: line }, PREVIEW_FILL_MS / 0.85, true) ?? [], [line]);
   const look = karaokeLook(settings, settings.taskTextColor);

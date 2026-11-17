@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { detectAlerts, phasesOf, takeDueReminders, trackWaiting, type AgentAlert, type AgentAlertKind, type AgentAlertKinds, type SessionPhases, type WaitingReminders } from "./alerts";
 import { agentSessionsInFront, type AgentSessionSummary } from "./api";
 import { sessionKey } from "./unseen";
@@ -129,8 +130,7 @@ export function useAgentAlerts({ sessions, kinds, durationMs, canAlert, isOpenOn
       }
     };
     check();
-    const timer = window.setInterval(check, Math.min(REMIND_CHECK_MS, Math.max(50, remindAfterMs / 4)));
-    return () => window.clearInterval(timer);
+    return visibilityInterval(check, Math.min(REMIND_CHECK_MS, Math.max(50, remindAfterMs / 4)));
   }, [remindAfterMs, waiting]);
 
   return useMemo(

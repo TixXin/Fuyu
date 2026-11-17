@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useErrorText } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { checkSshTunnelPort, getSshTunnels, setSshTunnel, type SshTunnelHost } from "./api";
 
 const STATUS_POLL_MS = 3_000;
@@ -24,8 +25,7 @@ export function useSshTunnels() {
 
   useEffect(() => {
     refresh();
-    const timer = window.setInterval(refresh, STATUS_POLL_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(refresh, STATUS_POLL_MS);
   }, [refresh]);
 
   const save = (host: string, enabled: boolean, port: number | null) =>

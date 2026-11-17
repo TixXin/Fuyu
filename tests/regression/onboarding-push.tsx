@@ -16,7 +16,7 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated }
 const QR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 const commands: { command: string; args: Record<string, unknown> }[] = [];
 const plugin = { id: "cc-connect", kind: "builtin", enabled: false, background: [], config: {} as Record<string, unknown> };
-const tunnelPlugin = { id: "focusd.ssh-proxy-tunnel", builtin: true, enabled: false, status: "stopped", settings: {} as Record<string, unknown> };
+const tunnelPlugin = { id: "ssh-tunnel", kind: "builtin", enabled: false, background: [], config: {} as Record<string, unknown> };
 const tunnel = { host: "devbox", enabled: false, remotePort: null as number | null, state: "off", error: null };
 const remote = { exe: null as string | null, running: false, projects: [] as typeof local.projects };
 const local = {
@@ -40,15 +40,16 @@ mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   commands.push({ command, args });
   switch (command) {
-    case "list_plugins": return { plugins: [tunnelPlugin] };
-    case "get_builtin_plugins": return [plugin];
-    case "set_builtin_plugin_enabled":
-      plugin.enabled = Boolean(args.enabled);
-      return [plugin];
+    case "get_builtin_plugins": return [plugin, tunnelPlugin];
+    case "set_builtin_plugin_enabled": {
+      const target = args.id === tunnelPlugin.id ? tunnelPlugin : plugin;
+      target.enabled = Boolean(args.enabled);
+      return [plugin, tunnelPlugin];
+    }
     case "set_builtin_plugin_config":
       plugin.config = { ...plugin.config, [String(args.key)]: args.value };
       if (args.key === "run") local.running = true;
-      return [plugin];
+      return [plugin, tunnelPlugin];
     case "get_agent_remote_hosts": return [{ host: "devbox", fetchedAt: 1, error: null, fetching: false }];
     case "get_cc_connect_status": return local;
     case "get_cc_connect_remote_status": return remote;
@@ -69,10 +70,6 @@ mockIPC((command, payload) => {
       local.exe = "C:\\Users\\me\\Fuyu\\cc-connect\\cc-connect.exe";
       local.exeSource = "downloaded";
       return local.exe;
-    case "set_plugin_enabled":
-      tunnelPlugin.enabled = Boolean(args.enabled);
-      tunnelPlugin.status = "running";
-      return { plugins: [tunnelPlugin] };
     case "check_cc_connect_bot": return { name: "fuyu_bot", inviteUrl: null, senders: [{ id: "4242", name: "Me" }] };
     case "add_cc_connect_project":
       local.configProjects = [...local.configProjects, String(args.project)];

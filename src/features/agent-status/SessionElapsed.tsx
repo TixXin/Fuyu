@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { useTranslation } from "../../i18n";
 import type { AgentSessionSummary } from "./api";
 import { durationParts, isActivePhase, turnElapsedMs } from "./sessionList";
@@ -10,8 +11,7 @@ export function SessionElapsed({ session }: { session: AgentSessionSummary }) {
 
   useEffect(() => {
     if (!active) return;
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setNow(Date.now()), 1000);
   }, [active]);
 
   const elapsed = turnElapsedMs(session, now);

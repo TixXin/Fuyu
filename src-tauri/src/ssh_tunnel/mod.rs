@@ -1,3 +1,4 @@
+mod background;
 mod config;
 mod local_proxy;
 #[cfg(test)]
@@ -46,10 +47,14 @@ fn state() -> MutexGuard<'static, State> {
 pub fn init(app: &AppHandle) -> Result<(), String> {
     let dir = crate::home_dir::fuyu_home(app.path()).map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
     let _ = APP_DIR.set(dir);
+    background::init();
     Ok(())
 }
 
 pub(crate) fn remote_proxy(host: &str) -> Option<String> {
+    if !crate::plugin_kernel::builtins::is_enabled(background::PLUGIN_ID) {
+        return None;
+    }
     let dir = app_dir().ok()?;
     config::read(&dir).into_iter().find(|tunnel| tunnel.enabled && tunnel.host == host).map(|tunnel| format!("http://127.0.0.1:{}", tunnel.remote_port))
 }
@@ -58,7 +63,7 @@ fn app_dir() -> Result<PathBuf, String> {
     APP_DIR.get().cloned().ok_or_else(|| "The SSH proxy tunnel is not set up yet".to_string())
 }
 
-pub(crate) fn start(settings: &Map<String, Value>) -> Result<(), String> {
+pub(super) fn start(settings: &Map<String, Value>) -> Result<(), String> {
     let choice = local_proxy::choice(settings)?;
     let mut state = state();
     state.choice = Some(choice);
@@ -75,12 +80,16 @@ pub(crate) fn start(settings: &Map<String, Value>) -> Result<(), String> {
     Ok(())
 }
 
-pub(crate) fn stop() {
+pub(super) fn stop() {
     let mut state = state();
     state.choice = None;
     state.proxy = None;
     state.watcher = None;
     state.tunnels.clear();
+}
+
+pub(super) fn running() -> bool {
+    state().watcher.is_some()
 }
 
 fn watch_proxy(woken: &mpsc::Receiver<()>) {

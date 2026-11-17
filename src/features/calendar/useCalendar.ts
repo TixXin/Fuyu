@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getCalendarEvents, type CalendarEvent, type CalendarSnapshot } from "./api";
 import { nextChangeAt, upcomingMeeting, type UpcomingMeeting } from "./upcoming";
 
@@ -44,8 +45,7 @@ export function useCalendar(enabled: boolean, remindMinutes: number, extra: read
       return;
     }
     void load(false);
-    const timer = window.setInterval(() => void load(false), POLL_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => void load(false), POLL_MS);
   }, [enabled, load]);
 
   useEffect(() => {

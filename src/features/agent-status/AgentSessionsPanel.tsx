@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Archive } from "lucide-react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { ArchivedNotice } from "./ArchivedNotice";
 import { EditorExtensionHint } from "./EditorExtensionHint";
 import { useEditorExtensionHint } from "./useEditorExtensionHint";
@@ -128,10 +129,7 @@ export function AgentSessionsPanel({
     keepSubagents(new Set(listed.filter((session) => listedSubagents(session).length > 0).map(sessionKey)));
   }, [listed, keepSubagents]);
 
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), AGE_REFRESH_MS);
-    return () => window.clearInterval(timer);
-  }, []);
+  useEffect(() => visibilityInterval(() => setNow(Date.now()), AGE_REFRESH_MS), []);
 
   useEffect(() => {
     if (!rowNotice) return;

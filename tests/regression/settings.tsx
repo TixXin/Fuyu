@@ -101,8 +101,9 @@ if (!automated) {
     check(cardNames() === "本地接口" && texts(".plugins-list__title") === "内置（1）", "Search finds installed plugins by their name in either language");
     await type(element<HTMLInputElement>(".plugins-toolbar input"), "");
     await act(async () => { document.querySelector<HTMLElement>(".plugins-list__grid .plugin-card--openable .plugin-card__title")?.click(); });
-    check(onPluginPage(), "Clicking a plugin's card opens its page");
-    await backToList();
+    const pluginModal = document.querySelector<HTMLElement>(".plugin-dialog[role='dialog'][aria-modal='true']");
+    check(onPluginPage() && pluginModal && document.activeElement === pluginModal.querySelector(".plugin-dialog__close") && Boolean(pluginModal.querySelector(".plugin-card__switch input")), "Clicking a plugin's card opens its modal dialog with focus on Close and its switch in the header");
+    await act(async () => { pluginModal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); }); check(!onPluginPage(), "Esc closes the plugin dialog");
     const runLine = [...document.querySelectorAll<HTMLElement>(".plugin-card__facts")].find((hint) => hint.textContent?.startsWith("内存"));
     check(runLine?.textContent?.split(" · ")[0] === "内存 4.0 MB", "A plugin's card shows only the plugin's own memory, without the runtime");
     check(runLine && !runLine.hasAttribute("title"), "The run line has no hover tooltip");
@@ -348,7 +349,7 @@ if (!automated) {
     check(replyMarkerCalls.join() === "true" && markerSwitch!.checked, "Switching the reply status marker on writes it");
 
     await openPage("agentRemote"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
-    check(/devbox.*nas/s.test(element(".editor-panel").textContent ?? ""), "The remote computers page lists the SSH hosts to read sessions from");
+    check(/devbox.*nas/s.test(element(".editor-panel").textContent ?? "") && texts(".settings-group__title").includes("SSH 代理隧道"), "The remote computers page lists the SSH hosts to read sessions from and includes the SSH proxy tunnel section");
     await openPage("agents"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     check(agentPolls() > pollsAway, "The on-the-island page reads the agents' state");
     const agentGroups = [...document.querySelectorAll<HTMLElement>(".editor-panel .settings-group")], hooksGroup = agentGroups.find((group) => group.textContent?.includes("AI Agent 状态灯"));

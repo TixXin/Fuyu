@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { clamp } from "../../utils/number";
 import "./MusicWaveButton.css";
 
@@ -34,8 +35,7 @@ export function MusicWaveButton({
       return;
     }
 
-    const interval = window.setInterval(() => setPhase(performance.now() / 260), 100);
-    return () => window.clearInterval(interval);
+    return visibilityInterval(() => setPhase(performance.now() / 260), 100);
   }, [shouldAnimate]);
 
   const liftedPeak = isPlaying

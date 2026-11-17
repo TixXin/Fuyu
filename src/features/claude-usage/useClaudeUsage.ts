@@ -1,6 +1,7 @@
 import { agentsV1 } from "@fuyu/plugin-services";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AgentUsage } from "../../lib/agent-usage/types";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { windowServices } from "../plugin-kernel/services";
 import { getPlanUsage, refreshClaudeUsage } from "./api";
 import { isServiceOff, usageFromReport } from "./agentUsage.ts";
@@ -55,11 +56,11 @@ export function useClaudeUsage(provider: UsageProviderId = "claudeCode", enabled
     };
     read(refreshNext.current);
     refreshNext.current = false;
-    const timer = window.setInterval(() => read(false), REFRESH_MS);
+    const stop = visibilityInterval(() => read(false), REFRESH_MS);
     const unwatch = windowServices.watch(() => read(false));
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      stop();
       unwatch();
     };
   }, [provider, enabled, nonce]);

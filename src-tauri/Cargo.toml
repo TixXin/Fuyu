@@ -90,9 +90,11 @@ rgb = "0.8"
 unwrap_used = "deny"
 expect_used = "deny"
 
-# Debug builds (`pnpm tauri dev`, cargo test, lane previews) keep file and line numbers in
-# backtraces, but no full debug info: it made the dependencies several times larger and
-# slower to link, and nobody steps through them in a debugger.
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+
 [profile.dev]
 debug = "line-tables-only"
 

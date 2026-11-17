@@ -6,11 +6,13 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { useFlash } from "../../components/settings/useFlash";
 import { useTranslation } from "../../i18n";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
 import { RemoteHostForm } from "./RemoteHostForm";
 import { customAddress, useRemoteHosts, type RemoteHostEntry } from "./useRemoteHosts";
 import "./AgentRemoteHostsSettings.css";
 
-export function AgentRemoteHostsSettings() {
+function RemoteHostsSection() {
   const text = useTranslation().settings.agent;
   const remote = useRemoteHosts();
   const [adding, setAdding] = useState(false);
@@ -59,6 +61,14 @@ export function AgentRemoteHostsSettings() {
       </SettingsGroup>
     </>
   );
+}
+
+const sections = settingsSections<Record<never, never>, "agentRemote">();
+
+sections.add({ id: "agentRemote.hosts", category: "agentRemote", order: 10, component: RemoteHostsSection });
+
+export function AgentRemoteHostsSettings() {
+  return <SlotView slot={sections} group="agentRemote" />;
 }
 
 function HostRow({ entry, onToggle, onRemove }: { entry: RemoteHostEntry; onToggle: (on: boolean) => void; onRemove: () => void }) {

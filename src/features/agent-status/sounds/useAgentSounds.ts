@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { visibilityInterval } from "../../../lib/useVisibilityInterval";
 import { agentSessionsInFront, type AgentSessionSummary } from "../api";
 import { sessionKey } from "../unseen";
 import { rememberedPhase } from "../sessionLight";
@@ -43,8 +44,7 @@ export function useAgentSounds(sessions: AgentSessionSummary[], canPlay: boolean
       const due = takeIdleSessions(idleRef.current, current, unread, Date.now());
       playOne(due.map((session) => ({ event: "idle", session })), latest.current);
     };
-    const timer = window.setInterval(check, IDLE_CHECK_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(check, IDLE_CHECK_MS);
   }, []);
 }
 

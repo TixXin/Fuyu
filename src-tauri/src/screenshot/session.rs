@@ -15,7 +15,6 @@ use crate::island::screen;
 
 pub(crate) const WINDOW_PREFIX: &str = "screenshot-";
 const SESSION_EVENT: &str = "screenshot-session";
-const ENDED_EVENT: &str = "screenshot-ended";
 const CAPTURE_SETTLE: Duration = Duration::from_millis(80);
 const CAPTURE_WAIT: Duration = Duration::from_secs(5);
 
@@ -194,8 +193,7 @@ fn finish_capture(app: &AppHandle, id: u64, grabs: Vec<Option<super::capture::Gr
     };
     for label in &failed {
         if let Some(window) = app.get_webview_window(label) {
-            let _ = window.hide();
-            crate::webview_memory::hidden(&window);
+            let _ = window.destroy();
         }
     }
     hold_overlays(app, false);
@@ -406,9 +404,7 @@ pub(crate) fn end(app: &AppHandle) {
     CAPTURED.notify_all();
     for (name, window) in app.webview_windows() {
         if name.starts_with(WINDOW_PREFIX) {
-            let _ = window.hide();
-            crate::webview_memory::hidden(&window);
-            let _ = app.emit_to(name.as_str(), ENDED_EVENT, ());
+            let _ = window.destroy();
         }
     }
     if ended {

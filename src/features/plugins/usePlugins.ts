@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import {
   checkPluginUpdates,
   clearPluginData,
@@ -66,10 +67,10 @@ export function usePlugins() {
         .then((next) => !didCancel && setSnapshot(next))
         .catch((nextError: unknown) => !didCancel && setError(errorText(nextError)));
     refresh();
-    const timer = window.setInterval(refresh, REFRESH_MS);
+    const stop = visibilityInterval(refresh, REFRESH_MS);
     return () => {
       didCancel = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, [errorText]);
 

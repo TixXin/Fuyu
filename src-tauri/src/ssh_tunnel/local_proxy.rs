@@ -43,13 +43,15 @@ pub(super) fn choice(settings: &Map<String, Value>) -> Result<Choice, String> {
     match settings.get("localProxy").and_then(Value::as_str) {
         Some("clash-verge") => Ok(Choice::ClashVerge),
         Some("v2rayn") => Ok(Choice::V2rayN),
-        Some("custom") => settings
-            .get("customPort")
-            .and_then(Value::as_u64)
-            .and_then(|port| u16::try_from(port).ok())
-            .filter(|&port| port > 0)
-            .map(Choice::Custom)
-            .ok_or_else(|| "The local proxy port must be a whole number from 1 to 65535".to_string()),
+        Some("custom") => match settings.get("customPort") {
+            None => Ok(Choice::Custom(CLASH_VERGE_PORT)),
+            Some(value) => value
+                .as_u64()
+                .and_then(|port| u16::try_from(port).ok())
+                .filter(|&port| port > 0)
+                .map(Choice::Custom)
+                .ok_or_else(|| "The local proxy port must be a whole number from 1 to 65535".to_string()),
+        },
         _ => Ok(Choice::Auto),
     }
 }

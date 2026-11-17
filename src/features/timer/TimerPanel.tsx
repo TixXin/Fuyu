@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BellRing, Pause, Play, Plus, Timer as TimerIcon, Watch, X } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { cancelTimer, extendTimer, pauseTimer, resumeTimer, startCountdown, startStopwatch, useTimers } from "./store";
 import { clockText, isFinished, parseDuration, shownMs, type Timer } from "./timers";
 import "../../components/list/IslandList.css";
@@ -13,8 +14,7 @@ function useNow(running: boolean) {
   useEffect(() => {
     setNow(Date.now());
     if (!running) return;
-    const id = window.setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => window.clearInterval(id);
+    return visibilityInterval(() => setNow(Date.now()), TICK_MS);
   }, [running]);
   return now;
 }

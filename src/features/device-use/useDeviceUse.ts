@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getDeviceUse, type DeviceUse } from "./api";
 import { sameDeviceUse } from "./deviceUse";
 
@@ -21,10 +22,10 @@ export function useDeviceUse(): DeviceUse {
       }
     };
     void refresh();
-    const timer = window.setInterval(() => void refresh(), POLL_MS);
+    const stop = visibilityInterval(() => void refresh(), POLL_MS);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, []);
 

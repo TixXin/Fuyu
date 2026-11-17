@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { openDevicePrivacySettings } from "../device-use/api";
+import { openDevicePrivacySettings } from "../../lib/system-permissions/api";
 import type { TodosIsland } from "../todos/plugin/islandState";
 import { useTranslation } from "../../i18n";
 import { getErrorMessage } from "../../utils/error";

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { useErrorText } from "../../i18n";
 import { clearAgentProviderStatus, getAgentHooksState, getAgentStatus, installAgentStatusHooks, type AgentHooksInstallResult, type AgentHooksState, type AgentStatusSnapshot } from "./api";
 import { AGENT_PROVIDERS, DEFAULT_AGENT_STATUS, type AgentHooksInstallState } from "./status";
@@ -50,10 +51,9 @@ export function useAgentStatusSettings() {
 
   useEffect(() => {
     void refreshAgentStatus();
-    const interval = window.setInterval(() => {
+    return visibilityInterval(() => {
       void refreshAgentStatus();
     }, AGENT_STATUS_POLL_MS);
-    return () => window.clearInterval(interval);
   }, [refreshAgentStatus]);
 
   const clearAgentStatus = useCallback(async (provider: string) => {

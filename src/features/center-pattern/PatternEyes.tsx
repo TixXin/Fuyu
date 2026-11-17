@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { acquireIslandCursor, canTrackIslandCursor, listenIslandCursor, releaseIslandCursor, type CursorPoint } from "./api";
 import { gazeOffset } from "./patterns";
 import { useReducedMotion } from "../../lib/theme/useReducedMotion";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 
 const MAX_PUPIL_OFFSET = 2.6;
 const WANDER_AFTER_MS = 4000;
@@ -38,7 +39,7 @@ export function PatternEyes({ paused }: { paused: boolean }) {
     const onMouseMove = (event: MouseEvent) => lookAt({ x: event.clientX, y: event.clientY });
     window.addEventListener("mousemove", onMouseMove);
 
-    const wander = window.setInterval(() => {
+    const stopWander = visibilityInterval(() => {
       if (performance.now() - lastPointAt < WANDER_AFTER_MS) return;
       svg.dataset.gaze = "wander";
       glance = (glance + 1 + Math.floor(Math.random() * (WANDER_GLANCES.length - 1))) % WANDER_GLANCES.length;
@@ -60,7 +61,7 @@ export function PatternEyes({ paused }: { paused: boolean }) {
     return () => {
       disposed = true;
       window.removeEventListener("mousemove", onMouseMove);
-      window.clearInterval(wander);
+      stopWander();
       unlisten?.();
       if (native) releaseIslandCursor();
     };
