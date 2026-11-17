@@ -129,6 +129,58 @@
     {
       "page": "general",
       "zh-CN": {
+        "group": "本机接口",
+        "title": "允许修改待办、笔记和 Agent 状态",
+        "description": "关闭时只能读取，写请求回 403。"
+      },
+      "en": {
+        "group": "Local API",
+        "title": "Allow changes to todos, notes and agent status",
+        "description": "When off, it can only read; writes answer 403."
+      }
+    },
+    {
+      "page": "general",
+      "zh-CN": {
+        "group": "本机接口",
+        "title": "地址",
+        "description": "没有在运行"
+      },
+      "en": {
+        "group": "Local API",
+        "title": "Address",
+        "description": "Not running"
+      }
+    },
+    {
+      "page": "general",
+      "zh-CN": {
+        "group": "本机接口",
+        "title": "访问令牌",
+        "description": "令牌不在这里显示，复制后粘贴到脚本里。"
+      },
+      "en": {
+        "group": "Local API",
+        "title": "Access token",
+        "description": "The token is not shown here; copy it and paste it into your script."
+      }
+    },
+    {
+      "page": "general",
+      "zh-CN": {
+        "group": "本机接口",
+        "title": "重新生成令牌",
+        "description": "换一个新令牌，用旧令牌的脚本立即失效。"
+      },
+      "en": {
+        "group": "Local API",
+        "title": "Regenerate token",
+        "description": "Switches to a new token; scripts using the old one stop working at once."
+      }
+    },
+    {
+      "page": "general",
+      "zh-CN": {
         "group": "",
         "title": "退出岛屿",
         "description": "和托盘菜单里的「退出」一样；要再打开，从开始菜单或桌面快捷方式启动。"

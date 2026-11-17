@@ -43,6 +43,7 @@ pub struct LocalizedText {
 }
 
 impl LocalizedText {
+    #[cfg(test)]
     pub(super) fn new(zh_cn: &str, en: &str) -> Self {
         Self {
             zh_cn: zh_cn.to_string(),

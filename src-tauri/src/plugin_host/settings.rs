@@ -132,6 +132,7 @@ pub struct InfoItem {
 }
 
 impl InfoItem {
+    #[cfg(test)]
     pub(super) fn new(label: LocalizedText, value: String, copy: bool, secret: bool) -> Self {
         Self { label, value, copy, secret }
     }
