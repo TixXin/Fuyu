@@ -9,7 +9,7 @@ use windows::Win32::Foundation::HWND;
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
     modifier::{self, ModifierTarget},
-    geometry::{cursor_near_stage, cursor_on_island, island_rect, passthrough_sleep_duration, stage_point, IslandOnScreen},
+    geometry::{cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect, passthrough_sleep_duration, stage_point, IslandOnScreen},
     state::{read_window_state, IslandMode},
 };
 use crate::win32;
@@ -82,32 +82,36 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 was_move_armed = is_move_armed;
                 let _ = window.emit(ISLAND_MOVE_ARMED_CHANGED_EVENT, is_move_armed);
             }
-            let held = modifier::is_resizing() || (alt && matches!(read_window_state().mode, IslandMode::Expanded));
+            let state = read_window_state();
+            let held = modifier::is_resizing() || (alt && matches!(state.mode, IslandMode::Expanded));
             if held != was_held {
                 was_held = held;
                 let _ = window.emit(ISLAND_HOLD_CHANGED_EVENT, held);
             }
 
+            let near = hwnd.is_none_or(cursor_is_near_stage);
             tick = tick.wrapping_add(1);
             let tracking = CURSOR_TRACKING.load(Ordering::Relaxed);
-            if !tracking {
+            if !tracking || is_inside || state.is_tucked {
                 last_cursor = None;
             } else if tick.is_multiple_of(CURSOR_EVENT_EVERY_TICKS) {
-                let point = hwnd.and_then(cursor_in_window);
+                let point = hwnd.and_then(|handle| gaze_cursor_in_window(handle, near));
                 if point.is_some() && point != last_cursor {
                     last_cursor = point;
                     let _ = window.emit(ISLAND_CURSOR_MOVED_EVENT, point);
                 }
             }
 
-            let active = is_inside
-                || is_on_banner
-                || held
-                || tracking
-                || hwnd.is_none_or(cursor_is_near_stage);
+            let active = is_inside || is_on_banner || held || near;
             thread::sleep(passthrough_sleep_duration(true, active));
         }
     });
+}
+
+fn gaze_cursor_in_window(hwnd: HWND, near_stage: bool) -> Option<CursorPoint> {
+    let point = cursor_in_window(hwnd)?;
+    let (x, y) = gaze_cursor_point((point.x, point.y), near_stage);
+    Some(CursorPoint { x, y })
 }
 
 fn cursor_in_window(hwnd: HWND) -> Option<CursorPoint> {

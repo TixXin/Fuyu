@@ -1,7 +1,7 @@
 # 浮屿性能优化审查报告
 
 > 审查时间：2026-11-17 | 基于 Tauri 性能调研 + 全代码库审计
-> 更新：2026-11-17（同步标注 H1–H5、M1、M5、M8、L1–L3 的落地提交与代码库现状，避免后续重复排查）
+> 更新：2026-11-17（同步标注全部 17 项 H1–H5、M1–M8、L1–L4 的落地提交与核查结论）
 
 本报告基于 [Tauri 性能优化调研](tauri-performance-optimization.md) 和 [#746](https://github.com/TixXin/Fuyu/issues/746) 实测数据，对浮屿代码进行逐项审查并跟踪落地状态。
 
@@ -15,17 +15,17 @@
 | **H4** | 瞬态与低频窗口改为按需创建、关闭/空闲销毁 | ✅ 已解决 | #746、D92、D50（`5713333f`、`4d00b60e`、`62d774b9`、`408c7a51`） |
 | **H5** | 主岛游标穿透轮询自适应降频（其余循环本为瞬态） | ✅ 已解决 | D91（`17ae888e`） |
 | **M1** | `CenterPattern` 单图案挂载 + `data-paused` 暂停动画 + 合成层拆分 | ✅ 已自带处理 | [CenterPattern.tsx](/src/features/center-pattern/CenterPattern.tsx)、D56.1（`5514da0b`） |
-| **M2** | 岛 `backdrop-filter: blur` 层数与收起态优化 | ⏳ 待做 | — |
-| **M3** | `setup()` 非首帧关键子系统异步启动 | ⏳ 待做 | — |
-| **M4** | 常驻低频轮询 OS 线程合并 | ⏳ 待做 | — |
+| **M2** | 岛 `backdrop-filter: blur` 层数与收起态优化 | ✅ 已解决 | D94（`a178e6d1`） |
+| **M3** | `setup()` 首帧窗口提前与同步磁盘读取异步化 | ✅ 已解决 | D93（`22c27806`）、D96 |
+| **M4** | 常驻低频轮询 OS 线程合并与事件驱动改造 | ✅ 已解决 | D52（`24cbe95c`）、D96 |
 | **M5** | 移除静态常驻 `will-change` | ✅ 已解决 | E41（`63ba8780`） |
-| **M6** | `Spotlight.css` 等布局属性动画改为 `transform` | ⏳ 待做 | — |
-| **M7** | Rust 高频 `emit` 去重与前端事件节流 | ⏳ 待做 | 关联 D49（#257） |
+| **M6** | `Spotlight.css` 等布局属性动画改为 `transform` | ✅ 已解决 | D95（`de56d536`） |
+| **M7** | Rust 高频 `emit` 去重与前端事件节流 | ✅ 已解决 | D49、D49.1 |
 | **M8** | `plugin_kernel` 50ms 忙等改为 `Condvar` | ✅ 已解决 | D90（`02fab778`） |
 | **L1** | 引入 `mimalloc` 全局内存分配器 | ✅ 已解决 | D93（`22c27806`） |
 | **L2** | `chrono-tz` 关闭默认特性裁剪 | ✅ 已解决 | D90（`02fab778`） |
 | **L3** | `pollster` 限定 Windows 平台编译 | ✅ 已解决 | D90（`02fab778`） |
-| **L4** | `pinyin-pro` 打包体积与按需引入核查 | ⏳ 待做 | — |
+| **L4** | `pinyin-pro` 打包体积与按需引入核查 | ✅ 已核查分包 | [popupQuery.ts](/src/features/clipboard/popupQuery.ts) 动态 `import()` |
 
 > [!NOTE]
 > H2（D51）与 H4（#746、D92、D50）的代码改动与自动化测试均已落地；Windows 10/11 真机上的 WebView2 `gpu-process` / `renderer` 回落幅度与闲置 CPU 前后采数见各任务交接清单。常驻剪贴板窗口的 WebView2 内存让出 API 另由 D48（#256）跟踪。
@@ -100,42 +100,31 @@
 
 ---
 
-### M2. 岛 backdrop-filter blur 多层叠加 — ⏳ 待做
+### M2. 岛 backdrop-filter blur 多层叠加 — ✅ 已解决（D94）
 
 **影响：** 稳态 GPU 开销最大的单项
 
-| 文件 | 值 | 状态 |
-|---|---|---|
-| [IslandGlass.css](/src/windows/island/IslandGlass.css) | `blur(var(--glass-panel-blur)) saturate(1.18)` | 始终开启 |
-| [IslandApp.css](/src/windows/island/IslandApp.css) | `blur(var(--glass-panel-blur)) saturate(1.12)` | 始终开启 |
-| [IslandGlass.css](/src/windows/island/IslandGlass.css) | `filter: blur(20px)` | 装饰层 |
-
-2–3 层 blur 在透明置顶窗口上始终运行，是稳态下最大的 GPU 成本。#746 对照实验显示毛玻璃只值 ~27 MB GPU，但 CPU/GPU 合成开销主观上明显。
-
-**建议：** 此项是产品核心外观，无法去掉。可以：
-- 折叠态只保留 1 层 blur（减少合成层数）
-- 贴边收起 / 隐藏时完全关闭 blur
-- 经典外观模式下确认 blur 确实不激活
+> **解决现状（D94，`a178e6d1`）：** 壁纸背板模式与刘海折叠态已禁用主壳冗余 `backdrop-filter`；窗口隐藏时附加 `island--glass-hidden` 关闭实时模糊与玻璃层，贴边收起时隐藏光斑模糊与高光图层，并清理了主岛样式中失效的 `.editor-panel` 玻璃规则。
 
 ---
 
-### M3. 同步启动链——25 个子系统顺序初始化 — ⏳ 待做
+### M3. 同步启动链——25 个子系统顺序初始化 — ✅ 已解决（D93 / D96）
 
-**位置：** [lib.rs](/src-tauri/src/lib.rs) `setup()` 闭包
+**位置：** [lib.rs](/src-tauri/src/lib.rs) `setup()` 闭包、[file_shelf/mod.rs](/src-tauri/src/file_shelf/mod.rs)
 
-约 25 个子系统在 `setup()` 中**顺序同步初始化**，包括：clipboard_history、translation、screenshot、voice_input、file_shelf、sync、todos、agent_approval、ssh_tunnel、cc_connect、plugin_host、plugin_kernel、mail、qq_notifications、wechat_reminders、media_control、agent_status 等。
-
-启动延迟 = 所有 init 耗时之和。任何一个做了同步 I/O（文件读取、注册表查询、网络检查）都会阻塞。（注：D93 `22c27806` 已先行将剪贴板历史图片回填目录扫描移入后台线程。）
-
-**建议：** 把非首帧关键子系统（mail、QQ、WeChat、SSH tunnel 等）移到后台异步启动，不阻塞首帧渲染。
+> **解决现状（D93 `22c27806`、D96）：**
+> 1. **主岛首帧初始化提前（D96）：** [lib.rs](/src-tauri/src/lib.rs) 中主岛窗口面板化与 `apply_stage_geometry` 已从十余个后台服务之后提前至 `coexist::init` 后立即执行，避免后台子系统初始化推迟首帧定位。
+> 2. **阻塞磁盘 I/O 移出主线程（D93、D96）：** `clipboard_history` 图片回填扫描已移入后台线程（D93）；[file_shelf/mod.rs](/src-tauri/src/file_shelf/mod.rs) 的 `items` 已改为互斥锁保护的按需懒加载并在后台短线程预热（D96），其余 `mail`、`qq_notifications`、`wechat_reminders`、`ssh_tunnel`、`cc_connect` 等 `init()` 本身仅注册状态或派生后台线程，不再同步阻塞主线程。
 
 ---
 
-### M4. 30–50+ 常驻 OS 线程 — ⏳ 待做
+### M4. 30–50+ 常驻 OS 线程 — ✅ 已解决（D52 / D96）
 
-代码库中有 ~150 个 `thread::spawn` / `thread::Builder::new()`，稳态下估计有 30–50+ 个 OS 线程在运行。每个 OS 线程的栈空间 1–8 MB，50 个线程就是 50–400 MB 仅栈内存。
+**位置：** [island/watch.rs](/src-tauri/src/island/watch.rs)、[media_control](/src-tauri/src/media_control)、[system_levels](/src-tauri/src/system_levels)
 
-**建议：** 多个低频轮询（device_events 的电池/外设/电源检查，fullscreen 检查，coexist 检查）可以合并到同一个线程里做多速率轮询——`device_events/mod.rs` 已经是好的示范；Windows 媒体状态与音量轮询可按 D52（#260）改为 GSMTC / `IAudioEndpointVolumeCallback` 事件回调。
+> **解决现状（D52 `24cbe95c`、D96）：**
+> 1. **Windows 媒体与系统音量改为事件驱动（D52，`24cbe95c`）：** 媒体状态改为订阅 GSMTC 事件（轮询降为低频兜底），系统音量与静音改为 `IAudioEndpointVolumeCallback` 回调并复用单条常驻 COM 工作线程，消除每 1.5s / 0.5s 派生短命 COM 线程的开销。
+> 2. **主岛 4 条低频看护线程合并（D96）：** 将原有的 `start_monitor_follow_loop`（300ms）、`keep_in_top_space`（macOS 2s）、`start_notch_watch`（macOS 2s）与 `watch_installed_island`（开发版 3s）合并为单条多速率 `"island-watch"` 线程（[island/watch.rs](/src-tauri/src/island/watch.rs)）；在默认的 `MonitorFollow::Primary` 下不再每 300ms 空唤醒（Windows 正式版无周期任务时 `park()` 挂起），切换显示器跟随时通过 `Thread::unpark()` 立即唤醒。
 
 ---
 
@@ -147,27 +136,21 @@
 
 ---
 
-### M6. Spotlight.css 同时 transition 5 个布局属性 — ⏳ 待做
+### M6. Spotlight.css 同时 transition 5 个布局属性 — ✅ 已解决（D95）
 
 **位置：** [Spotlight.css](/src/windows/onboarding/Spotlight.css)
 
-```css
-transition: left, top, width, height, border-radius;
-```
-
-同时 transition `left`、`top`、`width`、`height`、`border-radius` 五个布局属性，每帧强制完整布局重算。这是最重的布局触发动画。
-
-另有 ~15 处 transition 使用了 `width`、`height`、`left` 等布局属性（详见 IslandGlass.css、UpdatePanel.css、TodoIslandPage.css、SettingsSidebarNarrow.css 等）。
-
-**建议：** 用 `transform: translate() + scale()` 替代 `left/top/width/height` 动画。
+> **解决现状（D95，`de56d536`）：** 新手引导 `Spotlight` 定位、液态玻璃高光与托盘开关滑块过渡已迁移到 `transform` 合成层动画，避免每帧触发几何布局重算。
 
 ---
 
-### M7. 前端没有任何 throttle / debounce（及高频 emit 去重） — ⏳ 待做（关联 D49）
+### M7. 前端没有任何 throttle / debounce（及高频 emit 去重） — ✅ 已解决（D49 / D49.1）
 
-整个前端代码中搜索不到通用 `throttle` 或 `debounce`。高频事件（Rust 端 `emit` 的 resize、drag、media 变化）直接到达前端，没有速率控制；且在 WebView2 下每次 `emit` 都会生成不可回收的内联脚本，影响长跑内存增长。
+**位置：** [throttle.ts](/src/utils/throttle.ts)、[emit_diagnostics.rs](/src-tauri/src/emit_diagnostics.rs)、[emit-frequency-audit.md](/docs/investigations/emit-frequency-audit.md)
 
-**建议：** 结合任务 D49（#257）推进 Rust 侧高频 `emit` 内容去重（内容未变不重复发送），并在前端侧对窗口 resize、拖拽、媒体状态等高频事件补充 throttle。
+> **解决现状（D49、D49.1）：**
+> 1. **Rust 侧去重与量化：** 补齐 `sync-status-changed`、`builtin-plugins-changed`、`clipboard-links-changed`、`drag-grid-state` 同状态去重；`foreground-fullscreen-changed` 改为精准 `emit_to("main")`；`island-cursor-moved` 在岛内与贴边收起态停发、移除对 48ms 远离降频的阻塞，并按远/近区网格量化去重，闲置状态每分钟 `emit` 降至 0（详见 [emit-frequency-audit.md](/docs/investigations/emit-frequency-audit.md)）。
+> 2. **前端侧节流：** 新增通用 `throttle` 工具与单测，接入 `useIslandResize`（中间帧 16ms 合并、结束立即落盘）、`IslandDragHint` 与 `PatternEyes` 高回报率鼠标 `mousemove`。
 
 ---
 
@@ -193,9 +176,9 @@ transition: left, top, width, height, border-radius;
 
 > **解决现状（D90，`02fab778`）：** 已在 [Cargo.toml](/src-tauri/Cargo.toml) 将 `pollster = "0.4"` 移入 `[target.'cfg(windows)'.dependencies]`，macOS 不再编译该依赖。
 
-### L4. `pinyin-pro` 可能有较大体积 — ⏳ 待做
+### L4. `pinyin-pro` 可能有较大体积 — ✅ 已核查（已动态分包）
 
-中文拼音库，包含完整字典（估计 ~100 KB+），需确认是否被 tree-shake 以及是否仅在需要的窗口 chunk 中按需加载。
+> **核查现状：** [popupQuery.ts](/src/features/clipboard/popupQuery.ts) 通过 `import("pinyin-pro")` 动态按需引入，Vite 构建已将其独立拆分为异步 chunk（未压缩约 212 KB），主岛 `main` 及设置、翻译、截图等其他窗口均不打包或加载该字典库。（剪贴板窗口挂载时 `useEffect` 预调 `loadPinyin()` 的进一步延迟至首次输入搜索词优化，另归入第二轮深度审查跟进。）
 
 ---
 
@@ -210,21 +193,21 @@ flowchart TD
         H4["✅ H4: 瞬态/空闲窗口 destroy 释放 (#746/D92/D50)"]
         H5["✅ H5: 游标穿透轮询自适应降频 (D91)"]
     end
-    subgraph "🟡 中优先级"
+    subgraph "🟡 中优先级（已全部处理）"
         M1["✅ M1: CenterPattern 单图案与暂停动画 (已自带/D56.1)"]
-        M2["⏳ M2: blur 层数与收起态优化"]
-        M3["⏳ M3: setup() 异步启动链"]
-        M4["⏳ M4: 合并常驻 OS 线程"]
+        M2["✅ M2: blur 层数与收起态优化 (D94)"]
+        M3["✅ M3: setup() 首帧提前与读盘异步化 (D93/D96)"]
+        M4["✅ M4: 合并常驻线程与事件驱动 (D52/D96)"]
         M5["✅ M5: will-change 不常驻 (E41)"]
-        M6["⏳ M6: 布局属性动画转 transform"]
-        M7["⏳ M7: 高频 emit 去重与前端 throttle (D49)"]
+        M6["✅ M6: 布局属性动画转 transform (D95)"]
+        M7["✅ M7: 高频 emit 去重与前端 throttle (D49)"]
         M8["✅ M8: plugin_kernel Condvar 唤醒 (D90)"]
     end
-    subgraph "🟢 低优先级"
+    subgraph "🟢 低优先级（已全部处理）"
         L1["✅ L1: mimalloc 全局分配器 (D93)"]
         L2["✅ L2: chrono-tz 关闭默认特性 (D90)"]
         L3["✅ L3: pollster 限定 Windows (D90)"]
-        L4["⏳ L4: pinyin-pro 体积核查"]
+        L4["✅ L4: pinyin-pro 独立异步分包 (已核查)"]
     end
 ```
 

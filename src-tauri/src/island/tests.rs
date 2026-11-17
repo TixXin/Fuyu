@@ -369,4 +369,9 @@ fn passthrough_polling_slows_down_when_hidden_or_far_from_stage() {
     assert!(cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, -20.0, 580.0));
     assert!(!cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, -21.0, 580.0));
     assert!(!cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, 100.0, 581.0));
+
+    assert_eq!(gaze_cursor_point((121.4, 38.9), true), (120.0, 40.0));
+    assert_eq!(gaze_cursor_point((121.9, 39.8), true), (120.0, 40.0));
+    assert_eq!(gaze_cursor_point((950.0, 520.0), false), (960.0, 528.0));
+    assert_eq!(gaze_cursor_point((965.0, 534.0), false), (960.0, 528.0));
 }
