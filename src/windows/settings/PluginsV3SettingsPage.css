@@ -1,4 +1,5 @@
 .plugins-v3 { min-width: 0; display: grid; gap: var(--space-xl); }
+.plugins-v3 .settings-group + .settings-group { margin-top: 0; }
 .plugins-v3__sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 .plugins-v3__tabs-bar {
@@ -217,6 +218,8 @@
 .plugins-v3__detail--info { color: var(--info-text, #8cc8ff); border-left-color: var(--info-text, #8cc8ff); background: color-mix(in srgb, var(--info-text, #8cc8ff) 8%, transparent); }
 
 .plugins-v3__card-foot { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--color-white-a06); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; color: var(--text-3); font-size: 11px; font-variant-numeric: tabular-nums; }
+.plugins-v3__foot-btn { padding: 0; color: inherit; background: transparent; border: 0; font: inherit; cursor: pointer; }
+.plugins-v3__foot-btn:hover { color: var(--text-1); }
 .plugins-v3__foot-state--ok { color: var(--mint-text, #7ee2b8); }
 .plugins-v3__foot-state--warn { color: var(--warning-text, #ffd166); }
 .plugins-v3__foot-state--bad { color: var(--error-text, #ff9aa9); }
@@ -256,8 +259,10 @@
 .plugins-v3__modal-title { color: var(--text-1); font-size: 15px; font-weight: 650; }
 .plugins-v3__modal .plugins-v3__note,
 .plugins-v3__modal .plugins-v3__detail { -webkit-line-clamp: unset; display: block; }
+.plugins-v3__modal .plugins-v3__usage { padding-top: 0; border-top: 0; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
+.plugins-v3__modal .plugins-v3__usage > div { padding: 7px 10px; background: var(--color-white-a04); border: 1px solid var(--color-white-a08); border-radius: var(--radius-md); }
 .plugins-v3__modal-close { flex: none; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; color: var(--text-2); background: var(--color-white-a08); border: 0; border-radius: 50%; cursor: pointer; }
 .plugins-v3__modal-close:hover { color: var(--text-1); background: var(--color-white-a16); }
 
-.plugins-v3 :is(.plugins-v3__tab, .plugins-v3__filter, .plugins-v3__diag-link, .plugins-v3__leave, .plugins-v3__modal-close):focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+.plugins-v3 :is(.plugins-v3__tab, .plugins-v3__filter, .plugins-v3__diag-link, .plugins-v3__foot-btn, .plugins-v3__leave, .plugins-v3__modal-close):focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
 .settings-stage--light :is(.plugins-v3__card, .plugins-v3__dock, .plugins-v3__host-bar, .plugins-v3__table-scroll) { background: var(--settings-card, var(--color-white)); border-color: var(--settings-card-line, var(--color-white-a08)); }

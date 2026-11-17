@@ -383,12 +383,12 @@
       <div class="plugins-v3">
         <div class="plugins-v3__tabs-bar">
           <div class="plugins-v3__tabs" role="tablist">
-            <button aria-selected="true" class="plugins-v3__tab plugins-v3__tab--active" data-tab="plugins" role="tab" type="button">
+            <button aria-selected="true" class="plugins-v3__tab plugins-v3__tab--active" data-tab="plugins" role="tab" tabindex="0" type="button">
               <span>
                 功能与插件 (29)
               </span>
             </button>
-            <button aria-selected="false" class="plugins-v3__tab" data-tab="diagnostics" role="tab" type="button">
+            <button aria-selected="false" class="plugins-v3__tab" data-tab="diagnostics" role="tab" tabindex="-1" type="button">
               <span class="plugins-v3__tab-dot plugins-v3__tab-dot--open"></span>
               <span>
                 宿主与运行诊断
@@ -406,7 +406,7 @@
             <input aria-label="搜索插件名称、ID 或说明…" placeholder="搜索插件名称、ID 或说明…" type="search" value="">
           </label>
         </div>
-        <section aria-label="宿主" class="plugins-v3__host-bar plugins-v3__dock--safe">
+        <section aria-label="宿主" class="plugins-v3__host-bar settings-group plugins-v3__dock--safe">
           <div class="plugins-v3__host-bar-row">
             <div class="plugins-v3__host-bar-left">
               <span class="plugins-v3__connection plugins-v3__connection--open" data-connection="open">
@@ -470,7 +470,7 @@
               已关闭 (2)
             </button>
           </div>
-          <section aria-label="宿主与第三方插件" class="plugins-v3__section">
+          <section aria-label="宿主与第三方插件" class="plugins-v3__section settings-group">
             <h3 class="plugins-v3__section-title">
               宿主与第三方插件
             </h3>
@@ -1039,7 +1039,7 @@
               </article>
             </div>
           </section>
-          <section aria-label="岛屿核心功能" class="plugins-v3__section">
+          <section aria-label="岛屿核心功能" class="plugins-v3__section settings-group">
             <h3 class="plugins-v3__section-title">
               岛屿核心功能
             </h3>
@@ -1080,9 +1080,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="calendar" data-enabled="true">
@@ -1120,9 +1120,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="music" data-enabled="true">
@@ -1159,9 +1159,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin plugins-v3__card--off" data-builtin="clipboard" data-enabled="false">
@@ -1201,9 +1201,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--off">
                     已停用
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="screenshot" data-enabled="true">
@@ -1239,9 +1239,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="file-shelf" data-enabled="true">
@@ -1277,9 +1277,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="translation" data-enabled="true">
@@ -1319,9 +1319,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="voice-input" data-enabled="true">
@@ -1358,9 +1358,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="timer" data-enabled="true">
@@ -1397,9 +1397,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="messages" data-enabled="true">
@@ -1434,14 +1434,14 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
             </div>
           </section>
-          <section aria-label="AI Agent 与连接" class="plugins-v3__section">
+          <section aria-label="AI Agent 与连接" class="plugins-v3__section settings-group">
             <h3 class="plugins-v3__section-title">
               AI Agent 与连接
             </h3>
@@ -1483,9 +1483,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="session-ring" data-enabled="true">
@@ -1521,9 +1521,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="claude-usage" data-enabled="true">
@@ -1559,9 +1559,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="cc-connect" data-enabled="true">
@@ -1597,9 +1597,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="ssh-tunnel" data-enabled="true">
@@ -1640,9 +1640,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="local-api" data-enabled="true">
@@ -1680,14 +1680,14 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
             </div>
           </section>
-          <section aria-label="外观与系统提示" class="plugins-v3__section">
+          <section aria-label="外观与系统提示" class="plugins-v3__section settings-group">
             <h3 class="plugins-v3__section-title">
               外观与系统提示
             </h3>
@@ -1727,9 +1727,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="device-events" data-enabled="true">
@@ -1764,9 +1764,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="system-levels" data-enabled="true">
@@ -1803,9 +1803,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="device-use" data-enabled="true">
@@ -1841,9 +1841,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="theme-market" data-enabled="true">
@@ -1880,9 +1880,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
               <article class="plugins-v3__card plugins-v3__builtin" data-builtin="updater" data-enabled="true">
@@ -1923,9 +1923,9 @@
                   <span class="plugins-v3__foot-state plugins-v3__foot-state--ok">
                     运行中
                   </span>
-                  <span>
+                  <button class="plugins-v3__foot-btn" type="button">
                     详情 ›
-                  </span>
+                  </button>
                 </div>
               </article>
             </div>

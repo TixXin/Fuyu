@@ -204,9 +204,17 @@ try {
   await send((given) => given.onSnapshot({ plugins: PLUGINS, host: HOST }));
 
   await act(async () => card("counter")!.click());
-  check(page.querySelector("[role='dialog']")?.textContent?.includes("counter"), "Clicking a plugin card opens its detail dialog");
-  await act(async () => page.querySelector<HTMLButtonElement>(".plugins-v3__modal-close")!.click());
-  check(!page.querySelector("[role='dialog']"), "and the close button dismisses the dialog");
+  const modal = page.querySelector<HTMLElement>("[role='dialog']");
+  check(modal?.textContent?.includes("counter") && document.activeElement === modal.querySelector(".plugins-v3__modal-close"), "Clicking a plugin card opens its detail dialog and focuses the close button");
+  await act(async () => { modal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+  check(!page.querySelector("[role='dialog']"), "and Escape dismisses the dialog");
+
+  const searchInput = page.querySelector<HTMLInputElement>(".plugins-v3__search input")!;
+  const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+  await act(async () => { valueSetter.call(searchInput, "local api"); searchInput.dispatchEvent(new Event("input", { bubbles: true })); });
+  check(page.querySelectorAll(".plugins-v3__builtin").length === 1 && Boolean(builtinRow("local-api")), "Search finds built-in plugins by name across languages and ignores spaces or hyphens");
+  await act(async () => page.querySelector<HTMLButtonElement>(".plugins-v3__search-clear")!.click());
+  check(page.querySelectorAll(".plugins-v3__builtin").length === 22, "Clearing the search brings back all 22 built-in plugins");
 
   await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='diagnostics']")!.click());
   check(page.querySelectorAll(".plugins-v3__diag-table tbody tr").length === 29, "The diagnostics tab lists all built-in and host plugins in a comparison table");
