@@ -1,8 +1,8 @@
-import { SettingsGroup } from "../../../components/settings/SettingsGroup";
-import { SettingsNumberRow } from "../../../components/settings/SettingsNumberRow";
-import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
-import { useTranslation } from "../../../i18n";
-import type { IslandSettings } from "../../../lib/settings/types";
+import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
+import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
+import { useTranslation } from "../../i18n";
+import type { IslandSettings } from "../../lib/settings/types";
 
 export function TodoSettingsSection({ settings, onSettingsChange }: {
   settings: IslandSettings;

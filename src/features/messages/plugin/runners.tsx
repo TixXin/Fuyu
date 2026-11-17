@@ -11,7 +11,7 @@ import { useMessageView } from "../island/useMessageView";
 import { useTuckHold } from "../island/useTuckHold";
 import { useMessagesIsland } from "./islandMessages";
 import { OWNER } from "./owner.ts";
-import { useSourceReconcile } from "./useSourceSwitches";
+import { useMailEnabled, useSourceReconcile } from "./useSourceSwitches";
 
 type RunnerProps = {
   settings: IslandSettings;
@@ -37,12 +37,13 @@ function MessagesRunner({ settings, mode, page, isTucked, quiet, host, openIslan
     durationMs: settings.messagePanelSeconds * 1000,
     notices, mode, page, openIslandPage, collapseIsland, onOpenMessages: openMessages, host,
   });
-  const hold = useTuckHold(settings, { messagesOpen: mode === "expanded" && page === "qq", notices });
-  useSourceReconcile();
-  useMailSwitch(settings.mailEnabled, qqMail);
+  const mailOn = useMailEnabled(settings.mailEnabled);
+  const hold = useTuckHold({ ...settings, mailEnabled: mailOn }, { messagesOpen: mode === "expanded" && page === "qq", notices });
+  useSourceReconcile(settings.mailEnabled);
+  useMailSwitch(mailOn, qqMail);
   const qq = qqNotifications.snapshot.enabled && !unsupported.has("qq");
   const wechat = wechatReminders.snapshot.enabled && !unsupported.has("wechat");
-  useSourceFallback(messageSource, { qq, wechat, qqMail: settings.mailEnabled }, setMessageSource);
+  useSourceFallback(messageSource, { qq, wechat, qqMail: mailOn }, setMessageSource);
   const { banner: shown, bannerRef, open, close, runAction } = banner;
   const bannerView = useMemo(() => shown && { banner: shown, bannerRef, onOpen: open, onClose: close, onAction: runAction }, [shown, bannerRef, open, close, runAction]);
   useMessagesIsland({

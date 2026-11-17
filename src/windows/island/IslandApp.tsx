@@ -8,7 +8,7 @@ import { openSettingsWindow } from "../settings/api";
 import { takeIslandClickFocus } from "./api";
 import { islandHost } from "./islandHost";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
-import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
+import { useMigrateLegacySwitches, useSettingsWithBuiltinSwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { IslandShell } from "./IslandShell";
 import { useIslandWindow } from "./useIslandWindow";
 import { getExpandedIslandHeight } from "./expandedHeight";
@@ -68,8 +68,9 @@ export function IslandApp() {
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage } = navigation;
   const pluginPages = usePluginPages(page);
   const side = useIslandSide();
-  const [storedSettings, setSettings] = useLegacySwitches(useIslandSettings(), { reconcile: true });
-  const settings = useResolvedTheme(storedSettings);
+  const [storedSettings, setSettings] = useIslandSettings();
+  useMigrateLegacySwitches(storedSettings);
+  const settings = useResolvedTheme(useSettingsWithBuiltinSwitches(storedSettings));
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
   const permissionPrompts = usePluginPermissionPrompts();
   useFirstRunGuide();
@@ -202,7 +203,7 @@ export function IslandApp() {
         onResetPosition={resetIslandPosition}
         minimizesToTray={settings.minimizeAction === "tray"}
         onMinimize={settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge}
-        onOpenTranslator={settings.translationEnabled && settings.translationTarget === "island" ? openTranslator : null}
+        onOpenTranslator={features.translation ? openTranslator : null}
         onOpenSettings={openSettingsWindow}
         onTuck={tuckIsland}
         onReveal={hoverTucked}

@@ -1,7 +1,27 @@
+import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
+import catalog from "../../src/features/builtins.json";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
+import { BUILTIN_PLUGINS_CHANGED, type BuiltinPlugin } from "../../src/features/plugin-kernel/api";
 import { DEMO_CURRENT_VERSION } from "./updateDemo";
 import { updateRuntimeMock } from "./updateRuntimeMock";
+
+let builtins: BuiltinPlugin[] | null = null;
+
+export function mockBuiltinPlugins(): BuiltinPlugin[] {
+  if (!builtins) {
+    const stored = JSON.parse(globalThis.localStorage?.getItem("fuyu-settings") ?? "{}") as Record<string, unknown>;
+    const voice = JSON.parse(globalThis.localStorage?.getItem("fuyu-voice-input") ?? "{}") as Record<string, unknown>;
+    builtins = catalog.plugins.map(({ id, kind }) => ({
+      id,
+      kind: kind === "essential" ? "essential" : "builtin",
+      enabled: id === "screenshot" ? stored.screenshotEnabled === true : id === "voice-input" ? voice.enabled === true : true,
+      background: [],
+      config: id === "messages" ? { qq: true, wechat: true, mail: stored.mailEnabled !== false } : {},
+    }));
+  }
+  return builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } }));
+}
 
 const demoUpdate = Boolean((globalThis as { fuyuDemoUpdate?: boolean }).fuyuDemoUpdate);
 let revision = 0;
@@ -47,6 +67,23 @@ mockIPC((command, payload) => {
     command = "list_plugins";
   }
   switch (command) {
+    case "get_builtin_plugins": return mockBuiltinPlugins();
+    case "set_builtin_plugin_enabled": {
+      const list = mockBuiltinPlugins();
+      builtins = list.map((plugin) => (plugin.id === String(args.id) ? { ...plugin, enabled: Boolean(args.enabled) } : plugin));
+      void emit(BUILTIN_PLUGINS_CHANGED, mockBuiltinPlugins());
+      return mockBuiltinPlugins();
+    }
+    case "set_builtin_plugin_config": {
+      const list = mockBuiltinPlugins();
+      builtins = list.map((plugin) => (
+        plugin.id === String(args.id)
+          ? { ...plugin, config: { ...plugin.config, [String(args.key)]: args.value } }
+          : plugin
+      ));
+      void emit(BUILTIN_PLUGINS_CHANGED, mockBuiltinPlugins());
+      return mockBuiltinPlugins();
+    }
     case "get_reply_marker_state": return replyMarker();
     case "get_editor_extension_states":
       return [

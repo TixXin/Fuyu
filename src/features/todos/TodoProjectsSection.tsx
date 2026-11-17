@@ -1,12 +1,12 @@
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
-import { SettingsGroup } from "../../../components/settings/SettingsGroup";
-import { SettingsInput } from "../../../components/settings/SettingsInput";
-import { SettingsRow } from "../../../components/settings/SettingsRow";
-import { useTranslation } from "../../../i18n";
-import { MAX_TODO_PROJECTS, readProject } from "../../../features/todos/project.ts";
-import { requestTodoProjectEdit } from "../../../features/todos/projectEdits.ts";
-import type { IslandSettings } from "../../../lib/settings/types";
-import "../../../features/plugin-views/PluginIslandPagesSection.css";
+import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsInput } from "../../components/settings/SettingsInput";
+import { SettingsRow } from "../../components/settings/SettingsRow";
+import { useTranslation } from "../../i18n";
+import type { IslandSettings } from "../../lib/settings/types";
+import { MAX_TODO_PROJECTS, readProject } from "./project.ts";
+import { requestTodoProjectEdit } from "./projectEdits.ts";
+import "./TodoProjectsSection.css";
 
 export function TodoProjectsSection({ projects }: { projects: IslandSettings["todoProjects"] }) {
   const text = useTranslation().settings.todo;
@@ -29,9 +29,9 @@ export function TodoProjectsSection({ projects }: { projects: IslandSettings["to
   return (
     <SettingsGroup title={text.projects}>
       <SettingsRow title={text.projects} description={projects.length === 0 ? text.projectsEmpty : text.projectsHint} searchable={projects.length > 0}>
-        <ul className="plugin-pages">
+        <ul className="todo-projects">
           {projects.map((project, index) => (
-            <li className="plugin-pages__row" key={project.id}>
+            <li className="todo-projects__row" key={project.id}>
               <SettingsInput
                 key={project.name}
                 defaultValue={project.name}
@@ -46,13 +46,13 @@ export function TodoProjectsSection({ projects }: { projects: IslandSettings["to
                   }
                 }}
               />
-              <button className="plugin-card__button" type="button" disabled={index === 0} aria-label={text.moveUp(project.name)} onClick={() => requestTodoProjectEdit({ type: "move", id: project.id, by: -1 })}>
+              <button className="todo-projects__button" type="button" disabled={index === 0} aria-label={text.moveUp(project.name)} onClick={() => requestTodoProjectEdit({ type: "move", id: project.id, by: -1 })}>
                 <ArrowUp size={12} strokeWidth={2.4} />
               </button>
-              <button className="plugin-card__button" type="button" disabled={index === projects.length - 1} aria-label={text.moveDown(project.name)} onClick={() => requestTodoProjectEdit({ type: "move", id: project.id, by: 1 })}>
+              <button className="todo-projects__button" type="button" disabled={index === projects.length - 1} aria-label={text.moveDown(project.name)} onClick={() => requestTodoProjectEdit({ type: "move", id: project.id, by: 1 })}>
                 <ArrowDown size={12} strokeWidth={2.4} />
               </button>
-              <button className="plugin-card__button" type="button" aria-label={text.removeProject(project.name)} onClick={() => requestTodoProjectEdit({ type: "remove", id: project.id })}>
+              <button className="todo-projects__button" type="button" aria-label={text.removeProject(project.name)} onClick={() => requestTodoProjectEdit({ type: "remove", id: project.id })}>
                 <Trash2 size={12} strokeWidth={2.4} />
               </button>
             </li>

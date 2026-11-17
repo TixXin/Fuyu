@@ -10,10 +10,11 @@ export const BUILTINS = catalog.plugins.map(({ id, kind, root }) => ({ id, root,
 let off = new Set<string>();
 let withFake = false;
 let revision = 0;
+const configs: Record<string, Record<string, unknown>> = {};
 
 export function switchList(): BuiltinPlugin[] {
   const ids = [...BUILTINS.map((plugin) => plugin.id), ...(withFake ? [FAKE] : [])];
-  return ids.map((id) => ({ id, kind: id === "updater" ? "essential" : "builtin", enabled: !off.has(id), background: [], config: {} }));
+  return ids.map((id) => ({ id, kind: id === "updater" ? "essential" : "builtin", enabled: !off.has(id), background: [], config: { ...(configs[id] ?? {}) } }));
 }
 
 export async function switchOff(ids: readonly string[], fake = false) {
@@ -37,6 +38,9 @@ mockIPC((command, payload) => {
     case "set_builtin_plugin_enabled":
       if (args.enabled) off.delete(String(args.id));
       else off.add(String(args.id));
+      return switchList();
+    case "set_builtin_plugin_config":
+      configs[String(args.id)] = { ...(configs[String(args.id)] ?? {}), [String(args.key)]: args.value };
       return switchList();
     case "get_plugin_host_connection": return { enabled: false, port: null, token: null, generation: null, safeMode: null };
     case "get_launch_at_startup": return false;

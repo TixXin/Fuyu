@@ -25,7 +25,7 @@ const NO_PAGES: ReadonlySet<SettingsCategory> = new Set();
 
 export function SettingsSidebar({
   category,
-  hidden = NO_PAGES,
+  hidden,
   onCategoryChange,
   onRowOpen,
 }: {
@@ -39,7 +39,8 @@ export function SettingsSidebar({
   const unsupported = useUnsupportedFeatures();
   const pluginsV3 = usePluginsV3Enabled();
   const slotItems = useSlotEntries(categorySlot);
-  const groups = settingsGroups(slotItems);
+  const hiddenSet = hidden ?? NO_PAGES;
+  const groups = settingsGroups(hidden && slotItems.length > 0 ? undefined : slotItems);
   const text = t.settings.categories;
   const [query, setQuery] = useState("");
   const [folded, setFolded] = useState<ReadonlySet<SettingsGroup>>(() => new Set());
@@ -67,13 +68,13 @@ export function SettingsSidebar({
   const pagesOf = (item: SettingsCategory) => entryPages(item).filter(available);
   const found = (page: SettingsCategory) => matches.includes(page) || hits.some((hit) => hit.page === page);
   const shown = (item: SettingsCategory) =>
-    pagesOf(item).some((page) => (searching ? found(page) : page === category || !hidden.has(page)));
-  const anyHidden = !searching && [...hidden].some((page) => page !== category && available(page));
+    pagesOf(item).some((page) => (searching ? found(page) : page === category || !hiddenSet.has(page)));
+  const anyHidden = !searching && [...hiddenSet].some((page) => page !== category && available(page));
   const current = sidebarItemOf(category);
   const openHit = (hit: SettingsRowHit) => onRowOpen?.(hit.page, hit.text.title);
   const openItem = (item: SettingsCategory) => {
     const pages = pagesOf(item);
-    onCategoryChange(pages.find((page) => !hidden.has(page)) ?? pages[0] ?? item);
+    onCategoryChange(pages.find((page) => !hiddenSet.has(page)) ?? pages[0] ?? item);
   };
   const openBest = () => {
     if (isTitleHit(hits[0], query)) openHit(hits[0]);
@@ -109,7 +110,7 @@ export function SettingsSidebar({
   };
 
   const item = (entry: SettingsCategory, nested = false) => {
-    const Icon = slotItems.find((other) => other.id === entry)?.icon;
+    const Icon = slotItems.find((other) => other.id === entry)?.icon ?? CATEGORY_ICONS[entry];
     const isActive = entry === current;
     return (
       <li key={entry}>

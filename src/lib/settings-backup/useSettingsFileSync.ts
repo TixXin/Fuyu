@@ -4,7 +4,13 @@ import { visibilityInterval } from "../useVisibilityInterval.ts";
 import { onSettingsSyncApplied, writeSettingsFile, type SettingsSyncApplied } from "./api";
 import { isBackupKey } from "./backup.ts";
 import { currentKeys, fingerprint, settingsFileText, type SettingsKeys } from "./settingsFile.ts";
-import { readSettingsFileSynced, restoreBackup, saveSettingsFileSynced } from "./storage.ts";
+import {
+  readBackupSwitchSnapshot,
+  readSettingsFileSynced,
+  restoreBackup,
+  saveSettingsFileSynced,
+  subscribeBackupSwitches,
+} from "./storage.ts";
 
 const CHECK_MS = 2_000;
 
@@ -21,7 +27,7 @@ export function useSettingsFileSync() {
     let writing = false;
     const check = () => {
       if (writing) return;
-      const keys = currentKeys(readString);
+      const keys = currentKeys(readString, readBackupSwitchSnapshot());
       const print = fingerprint(keys);
       if (print === readSettingsFileSynced()) return;
       writing = true;
@@ -33,10 +39,12 @@ export function useSettingsFileSync() {
         });
     };
     check();
-    const stop = visibilityInterval(check, CHECK_MS);
+    const stopTimer = visibilityInterval(check, CHECK_MS);
+    const stopSwitches = subscribeBackupSwitches(check);
     window.addEventListener("storage", check);
     return () => {
-      stop();
+      stopTimer();
+      stopSwitches();
       window.removeEventListener("storage", check);
     };
   }, []);
@@ -46,7 +54,7 @@ export function useSettingsFileSync() {
     let stop: (() => void) | null = null;
     void onSettingsSyncApplied((applied) => {
       restoreBackup(syncedKeys(applied));
-      saveSettingsFileSynced(fingerprint(currentKeys(readString)));
+      saveSettingsFileSynced(fingerprint(currentKeys(readString, readBackupSwitchSnapshot())));
     }).then((unlisten) => {
       if (active) stop = unlisten;
       else unlisten();

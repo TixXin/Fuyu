@@ -1,12 +1,13 @@
-import { TodoProjectsSection } from "./sections/TodoProjectsSection";
-import { TodoSettingsSection } from "./sections/TodoSettingsSection";
-import type { IslandSettings } from "../../lib/settings/types";
-import { SavePathSettingsSection } from "../../features/todos/SavePathSettingsSection";
-import { useSharedSaveDirectorySetting, type SaveDirectorySetting } from "../../features/todos/saveDirectoryStore";
 import { FeatureHeader } from "../../components/settings/FeatureHeader";
-import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { settingsSections } from "./slots/sectionSlot";
-import { settingsCategoryIcon } from "../../features/plugin-kernel/settingsCategories";
+import type { IslandSettings } from "../../lib/settings/types";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
+import { OWNER } from "./plugin/owner.ts";
+import { SavePathSettingsSection } from "./SavePathSettingsSection";
+import { useSharedSaveDirectorySetting, type SaveDirectorySetting } from "./saveDirectoryStore";
+import { TodoProjectsSection } from "./TodoProjectsSection";
+import { TodoSettingsSection } from "./TodoSettingsSection";
 
 type TodosSectionProps = {
   settings: IslandSettings;
@@ -32,9 +33,9 @@ function SavePathSection({ saveDirectory }: TodosSectionProps) {
 
 const sections = settingsSections<TodosSectionProps, "todos">();
 
-sections.add({ id: "todos.general", category: "todos", order: 10, component: TodoSettingsSection });
-sections.add({ id: "todos.projects", category: "todos", order: 20, component: ProjectsSection });
-sections.add({ id: "todos.save-path", category: "todos", order: 30, component: SavePathSection });
+sections.add({ id: "todos.general", category: "todos", order: 10, component: TodoSettingsSection }, OWNER);
+sections.add({ id: "todos.projects", category: "todos", order: 20, component: ProjectsSection }, OWNER);
+sections.add({ id: "todos.save-path", category: "todos", order: 30, component: SavePathSection }, OWNER);
 
 export function TodosSettingsPage(page: Omit<TodosSectionProps, "saveDirectory">) {
   const saveDirectory = useSharedSaveDirectorySetting();

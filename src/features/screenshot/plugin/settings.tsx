@@ -5,6 +5,8 @@ import { SHORTCUT_ACTIONS } from "../settings";
 import { useScreenshotSettings } from "../useScreenshotSettings";
 import type { ComponentProps, ComponentType } from "react";
 import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
+import { isBuiltinEnabled, switchBuiltinPlugin } from "../../plugin-kernel/builtinSwitches";
+import { useBuiltinPlugins } from "../../plugin-kernel/useBuiltinPlugins";
 import { FeaturePageLink } from "../../../components/settings/FeaturePageLink";
 import { shortcutSections, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
 import { ScreenshotSettingsPage } from "../ScreenshotSettingsPage";
@@ -32,18 +34,19 @@ function ScreenshotShortcutOwners({ settings }: SettingsRunnerProps) {
 
 settingsRunners.add({ id: "screenshot.shortcut-owners", component: ScreenshotShortcutOwners }, OWNER);
 
-function ScreenshotShortcutsSection({ settings, onSettingsChange, onOpenPage, takenBy }: ShortcutsSectionProps) {
+function ScreenshotShortcutsSection({ settings, onOpenPage, takenBy }: ShortcutsSectionProps) {
   const t = useTranslation();
+  const plugins = useBuiltinPlugins();
   const [screenshot, setScreenshot] = useScreenshotSettings();
   return (
     <ScreenshotShortcutGroup
       title={t.settings.categories.screenshot}
       action={<FeaturePageLink page="screenshot" onOpenPage={onOpenPage} />}
-      enabled={settings.screenshotEnabled}
+      enabled={isBuiltinEnabled(plugins, OWNER, settings.screenshotEnabled)}
       screenshot={screenshot}
       onScreenshotChange={setScreenshot}
       takenBy={takenBy}
-      onTurnOn={() => onSettingsChange({ ...settings, screenshotEnabled: true })}
+      onTurnOn={() => void switchBuiltinPlugin(OWNER, true)}
     />
   );
 }
