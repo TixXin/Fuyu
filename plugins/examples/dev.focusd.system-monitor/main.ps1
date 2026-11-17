@@ -4,7 +4,7 @@
 # It reads only while something shows the figures: every second while the page is open
 # (programs every 3 s, the GPU every 2 s), every 2 s for the collapsed bar when some bar
 # items are ticked, and not at all otherwise. With "record in the background" ticked it also
-# reads CPU, GPU and network every second while the page is closed and keeps the last five minutes,
+# reads CPU, GPU and network every 5 s while the page is closed and keeps the last minute,
 # which the page gets when it opens. Bar items and background recording keep the plugin running
 # (host.keepAlive); without them it starts 10 s after the island and stops when idle.
 #
@@ -43,9 +43,13 @@ $script:Degree = [string][char]0x00B0
 $script:TotalMemory = [double](Get-CimInstance Win32_ComputerSystem -Property TotalPhysicalMemory).TotalPhysicalMemory
 
 $BarKeys = @('barCpu', 'barMemory', 'barCpuTemperature', 'barGpuTemperature')
-# The page's charts show five minutes, one sample a second.
-$HistoryLength = 300
+# The page reads every second. In the background a reading every 5 s is enough for a chart and
+# costs a fifth of the CPU; the recording keeps the last minute of them.
+$PageMs = 1000
+$BackgroundMs = 5000
+$HistoryLength = 12
 $script:History = @{ cpu = @(); gpu = @(); down = @(); up = @() }
+$script:HistoryAt = [datetime]::MinValue
 
 function Test-Setting([string]$Key) {
     $script:Settings.ContainsKey($Key) -and [bool]$script:Settings[$Key]
@@ -262,8 +266,12 @@ function Send-Bar {
     else { Update-FocusdStatus 'bar' $text -Tone $worst }
 }
 
-# The four charted series, the same values the page pushes (GPU 0 when there is none).
+# The four charted series, the same values the page pushes (GPU 0 when there is none), one
+# point per 5 s also while the page is open, so the recording stays continuous across openings.
 function Add-History([double]$Cpu, $Gpu, $Network) {
+    $now = Get-Date
+    if (($now - $script:HistoryAt).TotalMilliseconds -lt ($BackgroundMs - 100)) { return }
+    $script:HistoryAt = $now
     $usage = 0.0
     if ($null -ne $Gpu -and $null -ne $Gpu.usage) { $usage = $Gpu.usage }
     $new = @{ cpu = $Cpu; gpu = $usage; down = $Network.down; up = $Network.up }
@@ -272,6 +280,16 @@ function Add-History([double]$Cpu, $Gpu, $Network) {
         if ($values.Count -gt $HistoryLength) { $values = $values[($values.Count - $HistoryLength)..($values.Count - 1)] }
         $script:History[$key] = $values
     }
+}
+
+# The recording for the page, each 5 s point repeated so the chart keeps one point a second.
+function Get-HistoryMessage {
+    $repeat = [int]($BackgroundMs / $PageMs)
+    $message = @{ type = 'history' }
+    foreach ($key in $script:History.Keys) {
+        $message[$key] = @(foreach ($value in $script:History[$key]) { for ($i = 0; $i -lt $repeat; $i++) { $value } })
+    }
+    $message
 }
 
 # Background recording with the page closed: only what the charts draw.
@@ -334,7 +352,7 @@ function Send-Page {
 function Invoke-Due {
     $now = Get-Date
     if ((Test-Sampling) -and $now -ge $script:NextPage) {
-        $script:NextPage = $now.AddMilliseconds(1000)
+        $script:NextPage = $now.AddMilliseconds($(if ($script:Visible) { $PageMs } else { $BackgroundMs }))
         Open-Counters
         if ($script:Visible -and $script:PageReady) { Send-Page } else { Save-Sample }
     }
@@ -378,14 +396,14 @@ while ($true) {
                 }
                 'webview.message' {
                     # The page sends { type: "ready" } once it has loaded; answer at once,
-                    # first with the five minutes recorded while it was closed.
+                    # first with the minute recorded while it was closed.
                     if ($message.params.message.type -eq 'ready') {
                         $script:Visible = $true; $script:PageReady = $true; $script:NextPage = [datetime]::MinValue
                         # A page opened afresh may have lost its icons; send what it does not list.
                         $script:IconsSent = @{}
                         foreach ($name in @($message.params.message.icons)) { if ($name) { $script:IconsSent[[string]$name] = $true } }
                         $script:ProcsAt = [datetime]::MinValue
-                        if (Test-Setting 'backgroundHistory') { [void](Send-FocusdWebviewMessage 'monitor' (@{ type = 'history' } + $script:History)) }
+                        if (Test-Setting 'backgroundHistory') { [void](Send-FocusdWebviewMessage 'monitor' (Get-HistoryMessage)) }
                     }
                     # The page's button next to the program list.
                     if ($message.params.message.type -eq 'taskManager') {

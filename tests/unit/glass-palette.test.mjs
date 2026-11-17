@@ -64,11 +64,12 @@ test("colour sources: theme accent, cover while playing, custom colours", () => 
 
 test("the flow pauses when tucked, quiet, hidden, reduced motion or collapsed in expanded-only mode", () => {
   const running = { mode: "collapsed", isTucked: false, quiet: false, hidden: false, reducedMotion: false };
-  assert.equal(glassPaused(DEFAULT_GLASS_SETTINGS, running), false);
+  const always = { ...DEFAULT_GLASS_SETTINGS, glassFlowWhen: "always" };
+  assert.equal(glassPaused(always, running), false);
   for (const key of ["isTucked", "quiet", "hidden", "reducedMotion"]) {
-    assert.equal(glassPaused(DEFAULT_GLASS_SETTINGS, { ...running, [key]: true }), true, key);
+    assert.equal(glassPaused(always, { ...running, [key]: true }), true, key);
   }
-  const expandedOnly = { ...DEFAULT_GLASS_SETTINGS, glassFlowWhen: "expanded" };
+  const expandedOnly = DEFAULT_GLASS_SETTINGS;
   assert.equal(glassPaused(expandedOnly, running), true);
   assert.equal(glassPaused(expandedOnly, { ...running, mode: "expanded" }), false);
   assert.equal(glassPaused({ ...DEFAULT_GLASS_SETTINGS, glassFlowSpeed: 0 }, running), true);

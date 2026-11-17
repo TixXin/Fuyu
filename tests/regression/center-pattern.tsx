@@ -162,14 +162,14 @@ async function runChecks() {
   expect(fixture.querySelector(".cp-slot")!.childElementCount === 0, "插件关闭时不填槽位");
 
   const markIn = (agents: AgentActivity[]) => slotWith({ pattern: "mark", pet: "" }, agents)
-    .then(() => fixture.querySelector<SVGSVGElement>(".cp-slot .center-mark")!);
-  const lightFill = (mark: SVGSVGElement) => getComputedStyle(mark.querySelector(".center-mark-light circle")!).fill;
+    .then(() => fixture.querySelector<HTMLElement>(".cp-slot .center-mark")!);
+  const lightFill = (mark: HTMLElement) => getComputedStyle(mark.querySelector(".center-mark-light circle")!).fill;
   let mark = await markIn([]);
   expect(mark.dataset.mood === "idle" && lightFill(mark) === "rgb(106, 191, 155)" && mark.querySelector(".center-mark-dash path") !== null,
     "悬岛空闲：绿点、短横");
   expect(getComputedStyle(mark.querySelector(".center-mark-pill")!).animationName === (reducedMotion ? "none" : "center-mark-open"),
     reducedMotion ? "减弱动态时悬岛不弹开" : "悬岛空闲时胶囊定时弹开");
-  const pill = (selector: string) => fixture.querySelector(`${selector} .center-mark-pill`)?.getBoundingClientRect();
+  const pill = (selector: string) => fixture.querySelector(`${selector} .center-mark-pill rect`)?.getBoundingClientRect();
   const centerPill = pill(".cp-slot .island__center-slot");
   const iconPill = pill(".cp-agent-icon");
   expect(centerPill !== undefined && Math.abs(centerPill.height - 24) < 0.6 && iconPill !== undefined && Math.abs(iconPill.height - 24) < 0.6,
@@ -189,8 +189,8 @@ async function runChecks() {
 
   centerPlugin = { enabled: false, settings: { pattern: "cat", pet: "" } };
   await render(<Slot key="light" markLight agents={[{ phase: "waiting", updatedAt: Date.now() }]} />);
-  const lightPill = fixture.querySelector(".cp-light .center-mark-pill")?.getBoundingClientRect();
-  expect(fixture.querySelector<SVGSVGElement>(".cp-light .center-mark")?.dataset.mood === "waiting" && lightPill !== undefined && Math.abs(lightPill.height - 24) < 0.6,
+  const lightPill = fixture.querySelector(".cp-light .center-mark-pill rect")?.getBoundingClientRect();
+  expect(fixture.querySelector<HTMLElement>(".cp-light .center-mark")?.dataset.mood === "waiting" && lightPill !== undefined && Math.abs(lightPill.height - 24) < 0.6,
     "悬岛状态灯：中心图案关着也跟随 Agent，胶囊 24px 高");
   centerPlugin = { enabled: true, settings: { pattern: "mark", pet: "" } };
   await render(<Slot key="light-and-center" markLight />);

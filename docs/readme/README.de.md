@@ -6,7 +6,7 @@
 
   <p><b>Eine Insel, die das Chaos auf deinem Desktop einsammelt</b></p>
 
-  <p>Eine Dynamic Island für den Desktop unter Windows und macOS: Aufgaben, Zwischenablage, Nachrichten, Übersetzung, Musik und der Status deiner KI-Agenten, alles in einer kleinen Insel oben am Bildschirm.</p>
+  <p>Eine Dynamic Island für den Desktop unter Windows und macOS: Aufgaben, Zwischenablage, Nachrichten aus Telegram, Discord, WhatsApp und mehr, Übersetzung, Musik und der Status deiner KI-Agenten, alles in einer kleinen Insel oben am Bildschirm.</p>
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="../assets/readme/download-windows.svg" alt="Für Windows herunterladen (x64)" width="156" height="38"></a>
@@ -99,7 +99,7 @@ Fuyu (浮屿, „schwebende Insel“) ist eine leichte, rahmenlose Insel, die im
   </tr>
   <tr>
     <td valign="top"><code>03</code></td>
-    <td><b>Nachrichten</b><br>Hinweise von QQ und WeChat und mehrere E-Mail-Konten; E-Mails kannst du direkt in der Insel lesen und beantworten.</td>
+    <td><b>Nachrichten</b><br>Neue Nachrichten aus Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu und DingTalk erscheinen in der Insel und öffnen die App per Klick; dazu mehrere E-Mail-Konten; E-Mails kannst du direkt in der Insel lesen und beantworten.</td>
   </tr>
   <tr>
     <td valign="top"><code>04</code></td>
@@ -111,7 +111,7 @@ Fuyu (浮屿, „schwebende Insel“) ist eine leichte, rahmenlose Insel, die im
   </tr>
   <tr>
     <td valign="top"><code>06</code></td>
-    <td><b>KI-Agenten</b><br>Status und Verbrauch deiner Claude-Code- und Codex-Sitzungen; gib Anfragen direkt in der Insel frei, spring per Klick ins passende Fenster und lass dich aufs Handy benachrichtigen, wenn du nicht am Rechner sitzt.</td>
+    <td><b>KI-Agenten</b><br>Status und Verbrauch deiner Claude-Code- und Codex-Sitzungen; gib Anfragen direkt in der Insel frei, spring per Klick ins passende Fenster und lass dich über Telegram, Discord, Feishu oder Bark benachrichtigen, wenn du nicht am Rechner sitzt – und steuere den Agenten direkt aus dem Chat weiter.</td>
   </tr>
   <tr>
     <td valign="top"><code>07</code></td>
@@ -148,7 +148,7 @@ Wie gemessen wurde und alle Daten: [idle-usage.md](../investigations/idle-usage.
    - **Windows**: Lade die `_x64-setup.exe` herunter. Die Installer sind nicht codesigniert; wenn SmartScreen eine Warnung zeigt, wähle „Weitere Informationen → Trotzdem ausführen“.
    - **macOS**: Lade in der [Release-Liste](https://github.com/TixXin/fuyu/releases) die `_aarch64.dmg` der neuesten Version herunter, die eine hat (fehlt sie bei der letzten stabilen Version, findest du sie bei der Testversion darüber), und zieh Fuyu in den Ordner Programme. Öffne beim ersten Mal Systemeinstellungen → Datenschutz & Sicherheit und klick auf „Dennoch öffnen“; die einzelnen Schritte stehen in der [Installationsanleitung für den Mac](https://fuyu.ing/#mac-install).
 2. **Insel aufklappen**: Fahr mit dem Mauszeiger über die Insel oben am Bildschirm, um sie aufzuklappen; das Zahnrad oder das Symbol im Infobereich der Taskleiste (auf dem Mac das Symbol in der Menüleiste) öffnet die Einstellungen. Auf dem Mac führt dich die Einführung durch die nötigen Systemberechtigungen.
-3. **Einmal einrichten**: E-Mail, Übersetzung und KI-Agenten musst du einmalig in den Einstellungen einrichten. Siehe [E-Mail](../features/mail.md), [KI-Agenten](../features/agent-status-hooks.md), [QQ-Benachrichtigungen](../features/qq-notifications.md) und [WeChat-Hinweise](../features/wechat-reminders.md) (auf Chinesisch).
+3. **Einmal einrichten**: E-Mail, Übersetzung und KI-Agenten musst du einmalig in den Einstellungen einrichten. Siehe [E-Mail](../features/mail.md), [KI-Agenten](../features/agent-status-hooks.md), [QQ-Benachrichtigungen](../features/qq-notifications.md), [WeChat-Hinweise](../features/wechat-reminders.md) und [Handy-Benachrichtigungen](../features/cc-connect.md) (auf Chinesisch).
 
 > [!NOTE]
 > Läuft unter Windows 10 / 11 und macOS 15 oder neuer (Apple Silicon). Auf dem Mac gibt es ein paar Unterschiede zu Windows: QQ und WeChat zeigen nur die Zahl der ungelesenen Nachrichten, nicht deren Inhalt, und Mediensteuerung und Helligkeit nutzen private Systemschnittstellen. In [platforms.md](../architecture/platforms.md) steht der Stand jeder Funktion auf beiden Plattformen (auf Chinesisch).

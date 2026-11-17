@@ -97,13 +97,16 @@ async function runChecks() {
       check(island.querySelectorAll(".island__glass-flow i").length === 4, `${tone}：画了四团色块`);
       check(island.querySelector(".island__glass > .island__glass-backdrop") === island.querySelector(".island__glass")!.firstElementChild, `${tone}：最底下留着背景层的位置`);
       check(getComputedStyle(island.querySelector(".island__glass-flow i")!).animationName === "glassBlob1", `${tone}：色块在动`);
-      check(playState(island) === "running", `${tone}：折叠时默认一直流动`);
+      check(playState(island) === "paused", `${tone}：折叠时默认停着，只在展开时流动`);
       for (const name of ["--glass-c1", "--glass-c2", "--glass-c3"]) {
         const color = getComputedStyle(island).getPropertyValue(name).trim();
         const value = luminance(color);
         check(tone === "dark" ? value <= 0.1 + 1e-3 : value >= 0.62 - 1e-3, `${tone}：${name} 的相对亮度 ${value.toFixed(3)} 守住文字对比度`);
       }
     }
+
+    await set({ settings: { glassBackdrop: "none", glassFlowWhen: "always" } });
+    check(islands().every((island) => playState(island) === "running"), "选「一直」后折叠时也流动");
 
     for (const notch of ["on", "simulated"]) {
       document.documentElement.dataset.islandNotch = notch;

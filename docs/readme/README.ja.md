@@ -6,7 +6,7 @@
 
   <p><b>デスクトップの細々したものを、ひとつの島に</b></p>
 
-  <p>Windows と macOS のデスクトップ用ダイナミックアイランドです。ToDo、クリップボード、メッセージ、翻訳、音楽、AI の状態が、画面上端の小さな島にまとまります。</p>
+  <p>Windows と macOS のデスクトップ用ダイナミックアイランドです。ToDo、クリップボード、Telegram・Discord・WhatsApp などのメッセージ、翻訳、音楽、AI の状態が、画面上端の小さな島にまとまります。</p>
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="../assets/readme/download-windows.svg" alt="Windows 版をダウンロード（x64）" width="156" height="38"></a>
@@ -99,7 +99,7 @@ Fuyu（浮屿）は、軽量でフチのない、常に最前面に表示され�
   </tr>
   <tr>
     <td valign="top"><code>03</code></td>
-    <td><b>メッセージ</b><br>QQ・WeChat の通知と複数のメールアカウント。メールは島の上でそのまま読んで返信できます。</td>
+    <td><b>メッセージ</b><br>Telegram・Discord・WhatsApp・QQ・WeChat・WeCom・TIM・Feishu・DingTalk の新着メッセージを島で知らせ、クリックでそのアプリを開きます。複数のメールアカウントにも対応。メールは島の上でそのまま読んで返信できます。</td>
   </tr>
   <tr>
     <td valign="top"><code>04</code></td>
@@ -111,7 +111,7 @@ Fuyu（浮屿）は、軽量でフチのない、常に最前面に表示され�
   </tr>
   <tr>
     <td valign="top"><code>06</code></td>
-    <td><b>AI エージェント</b><br>Claude Code と Codex のセッションの状態と使用量を表示します。確認を求められたら島の上でそのまま承認でき、クリックで該当するウィンドウに切り替わります。席を外しているときはスマートフォンに通知できます。</td>
+    <td><b>AI エージェント</b><br>Claude Code と Codex のセッションの状態と使用量を表示します。確認を求められたら島の上でそのまま承認でき、クリックで該当するウィンドウに切り替わります。席を外しているときは Telegram・Discord・Feishu・Bark に通知でき、チャットからそのままエージェントに指示を続けられます。</td>
   </tr>
   <tr>
     <td valign="top"><code>07</code></td>
@@ -148,7 +148,7 @@ Fuyu（浮屿）は、軽量でフチのない、常に最前面に表示され�
    - **Windows**：`_x64-setup.exe` をダウンロードします。インストーラーにはコード署名がないため、SmartScreen の警告が出たら「詳細情報 → 実行」を選んでください。
    - **macOS**：[リリース一覧](https://github.com/TixXin/fuyu/releases)から `_aarch64.dmg` を含む最新のリリースを探してダウンロードし（最新の正式版にない場合は、その上にあるプレリリースにあります）、Fuyu を「アプリケーション」にドラッグします。初回は「システム設定 → プライバシーとセキュリティ」で「このまま開く」をクリックする必要があります。詳しい手順は [Mac インストールガイド](https://fuyu.ing/#mac-install)をご覧ください。
 2. **島を開く**：画面上端の島にマウスを乗せると開きます。歯車ボタンかトレイアイコン（Mac ではメニューバーアイコン）で設定を開きます。Mac では初回ガイドが、必要なシステム権限の許可まで案内します。
-3. **一度だけ設定**：メール、翻訳、AI エージェントは、最初に設定画面で一度設定が必要です。詳しくはそれぞれの説明をご覧ください（中国語）：[メール](../features/mail.md)、[AI エージェント](../features/agent-status-hooks.md)、[QQ 通知](../features/qq-notifications.md)、[WeChat 通知](../features/wechat-reminders.md)。
+3. **一度だけ設定**：メール、翻訳、AI エージェントは、最初に設定画面で一度設定が必要です。詳しくはそれぞれの説明をご覧ください（中国語）：[メール](../features/mail.md)、[AI エージェント](../features/agent-status-hooks.md)、[QQ 通知](../features/qq-notifications.md)、[WeChat 通知](../features/wechat-reminders.md)、[スマートフォン通知](../features/cc-connect.md)。
 
 > [!NOTE]
 > Windows 10 / 11 と macOS 15 以降（Apple シリコン）に対応しています。Mac 版には Windows と異なる点がいくつかあります。QQ と WeChat は未読数のみの表示でメッセージ内容は読めません。メディア操作と明るさにはシステムの非公開 API を使っています。各機能の両プラットフォームでの対応状況は [platforms.md](../architecture/platforms.md)（中国語）をご覧ください。
