@@ -138,6 +138,8 @@ async function runChecks() {
     check(stage.dataset.feature !== undefined && document.querySelectorAll("#settings .settings-overview__tile").length === 3
       && document.querySelectorAll("#settings .settings-overview__next-tile").length === 4 && /^已开 \d+ \/ \d+$/.test(document.querySelector("#settings .settings-overview__count")?.textContent ?? ""),
       "概览：移开后舞台接着轮播开着的功能；常用是三块磁贴，接下来是四块，功能标题旁写开了几个");
+    const todosCard = document.querySelector<HTMLElement>("#settings .settings-overview__feature[data-feature='todos']")!;
+    await update(() => { todosCard.dispatchEvent(new MouseEvent("mouseover", { bubbles: true })); });
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {

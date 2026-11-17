@@ -225,111 +225,6 @@
             <section class="settings-group">
               <div class="settings-group__header">
                 <h2 class="settings-group__title">
-                  会话列表
-                </h2>
-              </div>
-              <div class="settings-group__card">
-                <div class="settings-row">
-                  <div class="settings-row__main">
-                    <div class="settings-row__text">
-                      <span class="settings-row__title">
-                        列出多久内的会话
-                      </span>
-                      <span class="settings-row__description">
-                        最后一次活动在这段时间内的会话才会列出。
-                      </span>
-                    </div>
-                    <div class="settings-row__control">
-                      <div class="settings-select">
-                        <div class="select-control">
-                          <button aria-controls="_id1_" aria-expanded="false" aria-haspopup="listbox" aria-label="列出多久内的会话" class="select-control__trigger" role="combobox" type="button">
-                            <span>
-                              最近 24 小时
-                            </span>
-                            <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-row">
-                  <div class="settings-row__main">
-                    <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id2_">
-                        子 Agent / 子会话默认展开
-                      </label>
-                      <span class="settings-row__description">
-                        会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。
-                      </span>
-                    </div>
-                    <div class="settings-row__control">
-                      <span class="settings-switch">
-                        <input id="_id2_" role="switch" type="checkbox">
-                        <span aria-hidden="true" class="settings-switch__track"></span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-row">
-                  <div class="settings-row__main">
-                    <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id3_">
-                        只显示进行中的会话
-                      </label>
-                      <span class="settings-row__description">
-                        隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。
-                      </span>
-                    </div>
-                    <div class="settings-row__control">
-                      <span class="settings-switch">
-                        <input id="_id3_" role="switch" type="checkbox">
-                        <span aria-hidden="true" class="settings-switch__track"></span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-row">
-                  <div class="settings-row__main">
-                    <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id4_">
-                        隐藏已退出的会话
-                      </label>
-                      <span class="settings-row__description">
-                        Claude Code 或 Codex 已经退出的会话不再列出，SessionEnd hook 没触发也算：按进程是否还在判断，远程电脑上的 Claude Code 会话同样适用。
-                      </span>
-                    </div>
-                    <div class="settings-row__control">
-                      <span class="settings-switch">
-                        <input checked="" id="_id4_" role="switch" type="checkbox">
-                        <span aria-hidden="true" class="settings-switch__track"></span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-row">
-                  <div class="settings-row__main">
-                    <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id5_">
-                        在顶部显示 Claude 用量
-                      </label>
-                      <span class="settings-row__description">
-                        5 小时、7 天和各模型的用量，以及最紧的那个何时重置。读的是 claude-hud 状态栏保存的用量文件（它的 externalUsagePath 或 externalUsageWritePath 设置）；没有时不显示。
-                      </span>
-                    </div>
-                    <div class="settings-row__control">
-                      <span class="settings-switch">
-                        <input checked="" id="_id5_" role="switch" type="checkbox">
-                        <span aria-hidden="true" class="settings-switch__track"></span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-            <section class="settings-group">
-              <div class="settings-group__header">
-                <h2 class="settings-group__title">
                   会话卡片
                 </h2>
               </div>
@@ -344,12 +239,110 @@
                         卡片：每个会话一张按状态颜色描边的卡片，第二行写它在做什么和上下文大小。紧凑：每个会话一行，只有状态色条、标题、状态和时间。
                       </span>
                     </div>
+                  </div>
+                  <div aria-label="显示方式" class="settings-cards" role="group">
+                    <button aria-pressed="false" class="settings-cards__card" type="button">
+                      <span aria-hidden="true" class="settings-cards__art">
+                        <span class="agent-glyph agent-glyph--view agent-glyph--stack">
+                          <span class="agent-glyph__list-row">
+                            <i class="agent-glyph__list-dot agent-glyph__list-dot--work"></i>
+                            <span class="agent-glyph__list-lines">
+                              <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
+                              <b class="agent-glyph__bar agent-glyph__bar--soft"></b>
+                            </span>
+                            <s class="agent-glyph__time"></s>
+                          </span>
+                          <span class="agent-glyph__list-row">
+                            <i class="agent-glyph__list-dot agent-glyph__list-dot--turn"></i>
+                            <span class="agent-glyph__list-lines">
+                              <b class="agent-glyph__bar agent-glyph__bar--mid"></b>
+                              <b class="agent-glyph__bar agent-glyph__bar--soft"></b>
+                            </span>
+                            <s class="agent-glyph__time"></s>
+                          </span>
+                        </span>
+                      </span>
+                      <span class="settings-cards__text">
+                        <span class="settings-cards__label">
+                          列表
+                        </span>
+                        <span class="settings-cards__hint">
+                          状态点、标题与最多两行回复
+                        </span>
+                      </span>
+                    </button>
+                    <button aria-pressed="true" class="settings-cards__card settings-cards__card--active" type="button">
+                      <span aria-hidden="true" class="settings-cards__art">
+                        <span class="agent-glyph agent-glyph--view">
+                          <span class="agent-glyph__card">
+                            <span class="agent-glyph__card-top">
+                              <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
+                              <em class="agent-glyph__pill"></em>
+                            </span>
+                            <span class="agent-glyph__card-bottom">
+                              <i class="agent-glyph__state-chip"></i>
+                              <b class="agent-glyph__bar agent-glyph__bar--short"></b>
+                            </span>
+                          </span>
+                        </span>
+                      </span>
+                      <span class="settings-cards__text">
+                        <span class="settings-cards__label">
+                          卡片
+                        </span>
+                        <span class="settings-cards__hint">
+                          状态描边卡片，附工具与上下文
+                        </span>
+                      </span>
+                      <svg aria-hidden="true" class="lucide lucide-check settings-cards__check" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </button>
+                    <button aria-pressed="false" class="settings-cards__card" type="button">
+                      <span aria-hidden="true" class="settings-cards__art">
+                        <span class="agent-glyph agent-glyph--view agent-glyph--stack">
+                          <span class="agent-glyph__compact-row">
+                            <i class="agent-glyph__stripe agent-glyph__stripe--needs"></i>
+                            <b class="agent-glyph__bar agent-glyph__bar--strong"></b>
+                            <s class="agent-glyph__time"></s>
+                          </span>
+                          <span class="agent-glyph__compact-row">
+                            <i class="agent-glyph__stripe agent-glyph__stripe--turn"></i>
+                            <b class="agent-glyph__bar"></b>
+                            <s class="agent-glyph__time"></s>
+                          </span>
+                          <span class="agent-glyph__compact-row">
+                            <i class="agent-glyph__stripe agent-glyph__stripe--work"></i>
+                            <b class="agent-glyph__bar agent-glyph__bar--mid"></b>
+                            <s class="agent-glyph__time"></s>
+                          </span>
+                        </span>
+                      </span>
+                      <span class="settings-cards__text">
+                        <span class="settings-cards__label">
+                          紧凑
+                        </span>
+                        <span class="settings-cards__hint">
+                          单行状态色条，同屏容纳更多
+                        </span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <span class="settings-row__title">
+                        卡片光效
+                      </span>
+                      <span class="settings-row__description">
+                        粒子流苏与渐变带只在「卡片」和「紧凑」显示方式下生效；流光边框在三种显示方式下都只给等你确认的会话加上绕边框流动的光带，减少动画时静止。
+                      </span>
+                    </div>
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="显示方式" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id1_" aria-expanded="false" aria-haspopup="listbox" aria-label="卡片光效" class="select-control__trigger" role="combobox" type="button">
                             <span>
-                              卡片
+                              粒子流苏
                             </span>
                             <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
                           </button>
@@ -369,39 +362,13 @@
                       </span>
                     </div>
                     <div class="settings-row__control">
-                      <div class="settings-select">
-                        <div class="select-control">
-                          <button aria-controls="_id7_" aria-expanded="false" aria-haspopup="listbox" aria-label="归档动画" class="select-control__trigger" role="combobox" type="button">
-                            <span>
-                              粒子消散
-                            </span>
-                            <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-row">
-                  <div class="settings-row__main">
-                    <div class="settings-row__text">
-                      <span class="settings-row__title">
-                        卡片光效
-                      </span>
-                      <span class="settings-row__description">
-                        只在「卡片」和「紧凑」显示方式下生效。粒子流苏：边框按状态颜色发光，进行中和等你处理的会呼吸，左侧飘着一条粒子流苏。渐变带：从右端铺开一层状态颜色的渐变，进行中和等你处理的更亮。
-                      </span>
-                    </div>
-                    <div class="settings-row__control">
-                      <div class="settings-select">
-                        <div class="select-control">
-                          <button aria-controls="_id8_" aria-expanded="false" aria-haspopup="listbox" aria-label="卡片光效" class="select-control__trigger" role="combobox" type="button">
-                            <span>
-                              粒子流苏
-                            </span>
-                            <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-                          </button>
-                        </div>
+                      <div aria-label="归档动画" class="settings-choice" role="group">
+                        <button aria-pressed="false" class="settings-choice__option" type="button">
+                          滑出
+                        </button>
+                        <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                          粒子消散
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -419,7 +386,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id9_" aria-expanded="false" aria-haspopup="listbox" aria-label="会话来源" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id2_" aria-expanded="false" aria-haspopup="listbox" aria-label="会话来源" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               只显示图标
                             </span>
@@ -433,13 +400,13 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id10_">
+                      <label class="settings-row__title" for="_id3_">
                         显示模型和推理强度
                       </label>
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input checked="" id="_id10_" role="switch" type="checkbox">
+                        <input checked="" id="_id3_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -448,7 +415,7 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id11_">
+                      <label class="settings-row__title" for="_id4_">
                         显示最近提问和正在用的工具
                       </label>
                       <span class="settings-row__description">
@@ -457,7 +424,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input checked="" id="_id11_" role="switch" type="checkbox">
+                        <input checked="" id="_id4_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -466,7 +433,7 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id12_">
+                      <label class="settings-row__title" for="_id5_">
                         显示运行时长
                       </label>
                       <span class="settings-row__description">
@@ -475,7 +442,112 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input id="_id12_" role="switch" type="checkbox">
+                        <input id="_id5_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="settings-group">
+              <div class="settings-group__header">
+                <h2 class="settings-group__title">
+                  会话列表
+                </h2>
+              </div>
+              <div class="settings-group__card">
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <span class="settings-row__title">
+                        列出多久内的会话
+                      </span>
+                      <span class="settings-row__description">
+                        最后一次活动在这段时间内的会话才会列出。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <div class="settings-select">
+                        <div class="select-control">
+                          <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="列出多久内的会话" class="select-control__trigger" role="combobox" type="button">
+                            <span>
+                              最近 24 小时
+                            </span>
+                            <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id7_">
+                        子 Agent / 子会话默认展开
+                      </label>
+                      <span class="settings-row__description">
+                        会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id7_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id8_">
+                        只显示进行中的会话
+                      </label>
+                      <span class="settings-row__description">
+                        隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id8_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id9_">
+                        隐藏已退出的会话
+                      </label>
+                      <span class="settings-row__description">
+                        Claude Code 或 Codex 已经退出的会话不再列出，SessionEnd hook 没触发也算：按进程是否还在判断，远程电脑上的 Claude Code 会话同样适用。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input checked="" id="_id9_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id10_">
+                        在顶部显示 Claude 用量
+                      </label>
+                      <span class="settings-row__description">
+                        5 小时、7 天和各模型的用量，以及最紧的那个何时重置。读的是 claude-hud 状态栏保存的用量文件（它的 externalUsagePath 或 externalUsageWritePath 设置）；没有时不显示。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input checked="" id="_id10_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -498,15 +570,13 @@
                       </span>
                     </div>
                     <div class="settings-row__control">
-                      <div class="settings-select">
-                        <div class="select-control">
-                          <button aria-controls="_id13_" aria-expanded="false" aria-haspopup="listbox" aria-label="规则类型" class="select-control__trigger" role="combobox" type="button">
-                            <span>
-                              所在目录
-                            </span>
-                            <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-                          </button>
-                        </div>
+                      <div aria-label="规则类型" class="settings-choice" role="group">
+                        <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                          所在目录
+                        </button>
+                        <button aria-pressed="false" class="settings-choice__option" type="button">
+                          标题或提示词包含
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -519,7 +589,12 @@
                 </div>
               </div>
               <div class="settings-group__footer">
-                符合任一条的会话在岛上完全不出现：Agent 页、会话数、收起条标题、提醒和音效都不算它。目录规则也隐藏它的子目录；文字规则匹配会话标题（没有标题时是第一句提示词）或最近一句提示词，不分大小写。
+                <p class="settings-footnote">
+                  符合任一条的会话在岛上完全不出现：Agent 页、会话数、收起条标题、提醒和音效都不算它。
+                  <button aria-expanded="false" class="settings-footnote__toggle" type="button">
+                    了解更多
+                  </button>
+                </p>
               </div>
             </section>
           </div>
