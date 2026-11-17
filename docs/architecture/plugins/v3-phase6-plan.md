@@ -30,13 +30,13 @@
 
 | 旧第 2 版 ID | 新第 3 版包名 | 目录 | 用到的 v3 服务（`inject.required`） | 用到的 v3 插槽 / 命令 | 改动要点 |
 |---|---|---|---|---|---|
-| `dev.focusd.pomodoro` | `@fuyu/pomodoro` | `plugins/v3/official/pomodoro` | `timers/v1`、`todos/v1`、`messages/v1` | `island.page/v1`、`island.bar/v1`、命令 `start` / `stop` | 复用脚手架番茄钟结构并增强：支持关联当前待办、展示已完成轮数（存于 `ctx.dataDir`）、到点经 `messages/v1` 弹通知 |
+| `dev.focusd.pomodoro` | `@fuyu/pomodoro` | `plugins/v3/official/pomodoro` | `timers/v1`、`todos/v1`、`messages/v1` | `island.page/v1`、`island.collapsed/v1`、命令 `start` / `stop` | 复用脚手架番茄钟结构并增强：支持关联当前待办、展示已完成轮数（存于 `ctx.dataDir`）、到点经 `messages/v1` 弹通知 |
 | `dev.focusd.todo-digest` | `@fuyu/todo-digest` | `plugins/v3/official/todo-digest` | `todos/v1`、`messages/v1` | `settings.section/v1`、命令 `write-digest` | 监听 `todos/v1` 的 `changed` 统计未完成待办，执行 `write-digest` 时将未完成清单追加到当日 `note` 并弹完成通知 |
-| `dev.focusd.todo-ring` | `@fuyu/todo-ring` | `plugins/v3/official/todo-ring` | `todos/v1` | `island.page/v1`、`island.bar/v1` | 告别旧版 iframe/webview，直接用 React 组件 + `--fuyu-plugin-*` 主题变量画今日待办完成进度环与待办列表 |
+| `dev.focusd.todo-ring` | `@fuyu/todo-ring` | `plugins/v3/official/todo-ring` | `todos/v1` | `island.page/v1`、`island.collapsed/v1` | 告别旧版 iframe/webview，直接用 React 组件 + `--fuyu-plugin-*` 主题变量画今日待办完成进度环与待办列表 |
 | `dev.focusd.now-playing` | `@fuyu/now-playing` | `plugins/v3/official/now-playing` | `media/v1`、`messages/v1` | `settings.section/v1`、命令 `show` | 订阅 `media/v1` 的 `changed` 事件，支持手动触发或切歌时经 `messages/v1` 在岛上提示歌名与歌手 |
-| `dev.focusd.weather` | `@fuyu/weather` | `plugins/v3/official/weather` | `messages/v1` | `island.page/v1`、`island.bar/v1`、`settings.section/v1`、命令 `refresh` | 声明 `fuyu.network: ["api.open-meteo.com", "geocoding-api.open-meteo.com"]`，设置城市后拉取实时天气、逐小时与 7 天预报，降雨预警经 `messages/v1` 提醒 |
+| `dev.focusd.weather` | `@fuyu/weather` | `plugins/v3/official/weather` | `messages/v1` | `island.page/v1`、`island.collapsed/v1`、`settings.section/v1`、命令 `refresh` | 声明 `fuyu.network: ["api.open-meteo.com", "geocoding-api.open-meteo.com"]`，设置城市后拉取实时天气、逐小时与 7 天预报，降雨预警经 `messages/v1` 提醒 |
 | `dev.focusd.github-issues` | `@fuyu/github-issues` | `plugins/v3/official/github-issues` | `messages/v1` | `island.page/v1`、`settings.section/v1`、命令 `refresh` | 声明 `fuyu.network: ["api.github.com"]`，列出所配仓库未关闭的 issue，点击打开浏览器 |
-| `dev.focusd.system-monitor` | `@fuyu/system-monitor` | `plugins/v3/official/system-monitor` | —（声明 `fuyu.nodeApis: ["os"]`） | `island.page/v1`、`island.bar/v1`、`settings.section/v1` | 用 Node `node:os`（CPU 核心负载、内存占用、运行时间）在 Windows 和 macOS 双端免外部依赖运行，提供展开监控页与收起条指标 |
+| `dev.focusd.system-monitor` | `@fuyu/system-monitor` | `plugins/v3/official/system-monitor` | —（声明 `fuyu.nodeApis: ["os"]`） | `island.page/v1`、`island.collapsed/v1`、`settings.section/v1` | 用 Node `node:os`（CPU 核心负载、内存占用、运行时间）在 Windows 和 macOS 双端免外部依赖运行，提供展开监控页与收起条指标 |
 
 ---
 
