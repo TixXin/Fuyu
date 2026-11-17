@@ -3,6 +3,7 @@ import { windowServices } from "../../plugin-kernel/services";
 import { isNativeError } from "../../../i18n/nativeError";
 import { focusAgentWindow, getAgentRemoteHosts, getAgentUsage, getCodexUsage, type SessionProvider } from "../api";
 import { focusParams, fromRust, usageReport } from "../host/index.mjs";
+import { agentSources, registerAgentSource, subscribeAgentSources } from "../host/sources.mjs";
 import { agentFeed, onAgentsChanged } from "./agentFeed";
 import { OWNER } from "./owner.ts";
 
@@ -23,15 +24,17 @@ if (PROVIDED_IN.has(new URLSearchParams(window.location.search).get("window"))) 
     sessions: async () => {
       const feed = agentFeed.get();
       if (!feed) throw Object.assign(new Error("agents/v1 sessions: the agent list is not loaded"), { code: "not-ready" });
-      return feed;
+      return agentSources.mergeSessions(feed);
     },
     usage: async () => {
       const [claude, codex] = await Promise.all([getAgentUsage().catch(noUsage), getCodexUsage().catch(noUsage)]);
-      return { claude: usageReport(claude), codex: usageReport(codex) };
+      return agentSources.mergeUsage({ claude: usageReport(claude), codex: usageReport(codex) });
     },
     focus: async (params) => {
-      const { provider: agent, sessionId, cwd, title } = focusParams(params);
-      const found = await focusAgentWindow(agent as SessionProvider, cwd, title, sessionId).catch(failed);
+      const normalized = focusParams(params);
+      const custom = await agentSources.tryFocus(normalized);
+      if (custom) return custom;
+      const found = await focusAgentWindow(normalized.provider as SessionProvider, normalized.cwd, normalized.title, normalized.sessionId).catch(failed);
       return { found };
     },
     remoteHosts: async () => {
@@ -40,4 +43,10 @@ if (PROVIDED_IN.has(new URLSearchParams(window.location.search).get("window"))) 
     },
   }, { owner: OWNER });
   onAgentsChanged((count) => provider.emit("changed", { count }));
+  subscribeAgentSources(() => {
+    const feed = agentFeed.get();
+    provider.emit("changed", { count: (feed?.sessions.length ?? 0) + (feed?.others.length ?? 0) });
+  });
 }
+
+export { agentSources, registerAgentSource, subscribeAgentSources };
