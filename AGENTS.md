@@ -29,7 +29,7 @@
 | `screenshot-<n>` | `?window=screenshot` | 截图的选区窗口，每个显示器一个；开始截图时创建，截图结束即销毁 |
 | `pin-<n>` | `?window=pin` | 贴到屏幕上的截图，每张一个，贴图时创建，关闭时销毁 |
 | `drag-grid` | `?window=drag-grid` | 拖岛时的中线辅助线（横竖两条，分成四格），`create: false`；拖岛时创建，松手淡出后销毁；透明、鼠标穿透、不抢焦点、压在岛下面，铺满岛所在屏幕的工作区 |
-| `tray-menu` | `?window=tray-menu` | 托盘卡片，`create: false`；点托盘 / 菜单栏图标时创建，失焦或收起时销毁 |
+| `tray-menu` | `?window=tray-menu` | 托盘卡片，`create: false`；点托盘 / 菜单栏图标时创建，失焦或收起时隐藏、空闲 10 分钟后销毁 |
 
 **结构重构已完成（Phase 0–6，收尾与待人工验收项见 [refactor-plan.md](docs/architecture/history/refactor-plan.md)）。** 代码已按 [overview.md](docs/architecture/overview.md) 的目标结构组织：Rust 侧的 `unsafe` 只在平台层 `src-tauri/src/win32/`、`src-tauri/src/macos/` 中，生产代码不用 `unwrap` / `expect`，clippy 与 ESLint 均为 0 告警。新代码沿用这套结构与子目录规则。
 
