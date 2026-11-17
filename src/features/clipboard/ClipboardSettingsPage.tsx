@@ -55,14 +55,14 @@ function AiPromptSection({ clipboardSettings, onClipboardSettingsChange }: Clipb
   return <ClipboardAiPromptSettings clipboardSettings={clipboardSettings} onChange={onClipboardSettingsChange} />;
 }
 
-type ClipboardTab = "clipboard" | "clipboardHistory" | "clipboardLinks" | "clipboardSnippets";
+type ClipboardTab = "clipboard" | "clipboardHistory" | "clipboardSnippets";
 
 const sections = settingsSections<ClipboardSectionProps, ClipboardTab>();
 
 sections.add({ id: "clipboard.general", category: "clipboard", order: 10, component: GeneralSection });
 sections.add({ id: "clipboardHistory.record", category: "clipboardHistory", order: 10, component: RecordSection });
+sections.add({ id: "clipboardHistory.links", category: "clipboardHistory", order: 15, component: LinksSection });
 sections.add({ id: "clipboardHistory.transfer", category: "clipboardHistory", order: 20, component: ClipboardTransferSettings });
-sections.add({ id: "clipboardLinks.links", category: "clipboardLinks", order: 10, component: LinksSection });
 sections.add({ id: "clipboardSnippets.snippets", category: "clipboardSnippets", order: 10, component: ClipboardSnippetSettings });
 sections.add({ id: "clipboardSnippets.ai-prompts", category: "clipboardSnippets", order: 20, component: AiPromptSection });
 

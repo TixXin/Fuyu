@@ -2,7 +2,7 @@ import type { ComponentType, ReactNode } from "react";
 import { useTranslation } from "../../i18n";
 import "./FeatureHeader.css";
 
-export type HeaderFeature = "todos" | "calendar" | "music" | "translation" | "clipboard" | "shelf" | "screenshot" | "voiceInput" | "agents" | "messages";
+export type HeaderFeature = "todos" | "calendar" | "music" | "translation" | "clipboard" | "shelf" | "screenshot" | "voiceInput" | "agents" | "messages" | "behaviorAlerts";
 
 export function FeatureHeader({
   feature,
@@ -18,6 +18,7 @@ export function FeatureHeader({
   off?: boolean;
 }) {
   const settings = useTranslation().settings;
+  const name = feature === "behaviorAlerts" ? settings.categories.entries.behaviorAlerts : settings.categories[feature];
 
   return (
     <section className="settings-group">
@@ -25,7 +26,7 @@ export function FeatureHeader({
         <div className="settings-row feature-header__row" data-search="off">
           <span className="feature-header__icon" aria-hidden="true"><Icon size={22} strokeWidth={1.8} /></span>
           <div className="feature-header__text">
-            <strong className="feature-header__name">{settings.categories[feature]}</strong>
+            <strong className="feature-header__name">{name}</strong>
             <span className="settings-row__description">{settings.overview.features[feature]}</span>
             {status && !off ? <span className="feature-header__status">{status}</span> : null}
           </div>

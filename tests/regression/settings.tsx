@@ -78,7 +78,7 @@ if (!automated) {
     await act(async () => { mount(); });
     check(categories().length > 0, "The sidebar lists the settings pages");
 
-    const pages = [...categories(), "generalData", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket", "behaviorTuck", "behaviorQuiet", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardLinks", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "messagesMail", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote", "agentTunnel"];
+    const pages = [...categories(), "generalData", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket", "behaviorTuck", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "messagesMail", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote"];
     for (const category of pages) {
       await openPage(category as SettingsCategory);
       const item = element(`.settings-sidebar__item[data-category='${sidebarItemOf(category as SettingsCategory)}']`);
@@ -207,7 +207,7 @@ if (!automated) {
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-group__header .settings-link-button")].find((link) => link.textContent === "全部快捷键 ›")?.click(); });
     check(element(".settings-page__title").textContent === "快捷键", "A feature page's shortcut group links back to all shortcuts");
     await openPage("behavior");
-    check(texts(".settings-tabs__tab") === "展开与收起|贴边隐藏|全屏与免打扰" && !texts(".settings-group__title").includes("页面切换") && texts(".settings-cards__label") === "点击|鼠标悬停", "Behavior has three tabs; opening is chosen from two picture cards, and page keys are no longer repeated here");
+    check(texts(".settings-tabs__tab") === "展开与收起|贴边隐藏" && !texts(".settings-group__title").includes("页面切换") && texts(".settings-cards__label") === "点击|鼠标悬停", "Behavior has two tabs; opening is chosen from two picture cards, and page keys are no longer repeated here");
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "去设置")?.click(); });
     check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps");
     await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
@@ -343,9 +343,7 @@ if (!automated) {
     check(replyMarkerCalls.join() === "true" && markerSwitch!.checked, "Switching the reply status marker on writes it");
 
     await openPage("agentRemote"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
-    check(/devbox.*nas/s.test(element(".editor-panel").textContent ?? ""), "The remote computers page lists the SSH hosts to read sessions from");
-    await openPage("agentTunnel"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
-    check(texts(".settings-group__title").includes("SSH 代理隧道"), "The SSH tunnel tab shows the SSH proxy tunnel section");
+    check(/devbox.*nas/s.test(element(".editor-panel").textContent ?? "") && texts(".settings-group__title").includes("SSH 代理隧道"), "The SSH remote page lists both the remote hosts and the SSH proxy tunnel section");
     await openPage("agents"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     check(agentPolls() > pollsAway, "The on-the-island page reads the agents' state");
     const agentGroups = [...document.querySelectorAll<HTMLElement>(".editor-panel .settings-group")], hooksGroup = agentGroups.find((group) => group.textContent?.includes("AI Agent 状态灯"));

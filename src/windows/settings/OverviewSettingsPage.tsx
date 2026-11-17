@@ -8,6 +8,8 @@ import type { IslandSettings, ThemeMode } from "../../lib/settings/types";
 import { LOCALE_CODES, TRANSLATIONS, isLocaleCode, useTranslation, type LocaleCode } from "../../i18n";
 import { isMacOS, useDevBuild, type PlatformFeature } from "../../lib/platform";
 import { openOnboardingWindow } from "../onboarding/api";
+import { switchBuiltinPlugin } from "../../features/plugin-kernel/builtinSwitches";
+import { useBuiltinEnabled } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { FEATURE_PAGES, isCategoryAvailable, SETTINGS_FEATURES, type SettingsCategory, type SettingsFeature } from "./categories";
 import { categorySlot } from "./slots/categorySlot";
@@ -44,9 +46,12 @@ export function OverviewSettingsPage({
   const devBuild = useDevBuild();
   useSlotEntries(categorySlot);
   const offered = SETTINGS_FEATURES.filter((feature) => isCategoryAvailable(FEATURE_PAGES[feature][0], unsupported));
+  const timerOn = useBuiltinEnabled("timer");
 
   const switchedOn = offered.filter((feature) => features[feature].on);
-  const playing: StageFeature[] = [...switchedOn, "messages"];
+  const onTotal = switchedOn.length + (timerOn ? 1 : 0);
+  const allTotal = offered.length + 1;
+  const playing: StageFeature[] = [...switchedOn, ...(timerOn ? (["behaviorAlerts"] as const) : []), "messages"];
   const watch = (feature: StageFeature) => ({
     onMouseEnter: () => setSpot(feature),
     onMouseLeave: () => setSpot(null),
@@ -64,7 +69,7 @@ export function OverviewSettingsPage({
 
   return (
     <div className="settings-overview" data-search="off">
-      <OverviewStage settings={settings} spot={spot} playing={playing} onCount={switchedOn.length} />
+      <OverviewStage settings={settings} spot={spot} playing={playing} onCount={onTotal} />
 
       <section className="settings-group">
         <div className="settings-group__header">
@@ -102,12 +107,13 @@ export function OverviewSettingsPage({
       <section className="settings-group">
         <div className="settings-group__header">
           <h2 className="settings-group__title">{text.featuresTitle}</h2>
-          <span className="settings-overview__count">{text.featuresOn(switchedOn.length, offered.length)}</span>
+          <span className="settings-overview__count">{text.featuresOn(onTotal, allTotal)}</span>
         </div>
         <ul className="settings-overview__features">
           {offered.map((feature) => (
             <FeatureCard key={feature} feature={feature} state={features[feature]} watch={watch(feature)} onOpen={() => onOpenPage(FEATURE_PAGES[feature][0])} />
           ))}
+          <TimerCard on={timerOn} watch={watch("behaviorAlerts")} onOpen={() => onOpenPage("behaviorAlerts")} />
           <MessagesCard watch={watch("messages")} onOpen={() => onOpenPage("messages")} />
         </ul>
         <div className="settings-group__footer">
@@ -156,6 +162,27 @@ function FeatureCard({ feature, state, watch, onOpen }: { feature: SettingsFeatu
       <span className="settings-overview__feature-side">
         <SettingsSwitch id={id} checked={state.on} onChange={state.set} />
         {state.on && <OpenLink label={t.settings.overview.open} onClick={onOpen} />}
+      </span>
+    </li>
+  );
+}
+
+function TimerCard({ on, watch, onOpen }: { on: boolean; watch: Watch; onOpen: () => void }) {
+  const t = useTranslation();
+  const id = useId();
+  const Icon = CATEGORY_ICONS.behaviorAlerts;
+  return (
+    <li className={`settings-overview__feature${on ? " settings-overview__feature--on" : ""}`} data-feature="behaviorAlerts" {...watch}>
+      <span className="settings-overview__feature-icon" aria-hidden="true">
+        <Icon size={18} strokeWidth={2} />
+      </span>
+      <span className="settings-overview__feature-text">
+        <label className="settings-overview__feature-name" htmlFor={id}>{t.settings.categories.entries.behaviorAlerts}</label>
+        <span className="settings-overview__feature-hint">{t.settings.overview.features.behaviorAlerts}</span>
+      </span>
+      <span className="settings-overview__feature-side">
+        <SettingsSwitch id={id} checked={on} onChange={(next) => void switchBuiltinPlugin("timer", next)} />
+        <OpenLink label={t.settings.overview.open} onClick={onOpen} />
       </span>
     </li>
   );

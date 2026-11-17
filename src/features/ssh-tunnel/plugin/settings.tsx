@@ -1,5 +1,5 @@
-import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
+import { settingsSections } from "../../plugin-kernel/settingsSlots";
 import { SshTunnelSettings } from "../SshTunnelSettings";
 import { OWNER } from "./owner.ts";
 
-addSettingsCategory("agentTunnel", () => <SshTunnelSettings />, OWNER);
+settingsSections().add({ id: "agentRemote.ssh-tunnel", category: "agentRemote", order: 20, component: SshTunnelSettings }, OWNER);

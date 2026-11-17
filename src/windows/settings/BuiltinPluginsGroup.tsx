@@ -43,7 +43,7 @@ const BUILTIN_PAGES: Record<BuiltinPluginName, SettingsCategory> = {
   todos: "todos", calendar: "calendar", music: "music", clipboard: "clipboard", screenshot: "screenshot",
   "file-shelf": "shelf", translation: "translation", "voice-input": "voiceInput", timer: "timerAlerts", messages: "messages",
   agents: "agents", "session-ring": "agentSessions", "claude-usage": "agentRings", "cc-connect": "agentAlerts",
-  "ssh-tunnel": "agentTunnel", "local-api": "generalApi", "center-pattern": "appearanceCollapsed",
+  "ssh-tunnel": "agentRemote", "local-api": "generalApi", "center-pattern": "appearanceCollapsed",
   "device-events": "behaviorAlerts", "system-levels": "behaviorAlerts", "device-use": "behaviorAlerts",
   "theme-market": "themeMarket", updater: "about",
 };

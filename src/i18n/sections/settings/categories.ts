@@ -8,13 +8,13 @@ export type SettingsCategoriesText = {
   expand: (group: string) => string;
   collapse: (group: string) => string;
   keywords: Record<
-    | "overview" | "general" | "generalData" | "generalApi" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardLinks" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
-    | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentTunnel" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
+    | "overview" | "general" | "generalData" | "generalApi" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
     | "plugins" | "pluginsV3" | "market" | "about",
     string
   >;
-  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; plugins: string; agents: string; agentAppearance: string; agentAlerts: string; agentRemote: string };
-  tabs: Record<"general" | "generalData" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardLinks" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "agentRemote" | "agentTunnel", string>;
+  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; plugins: string; agents: string; agentAppearance: string; agentAlerts: string };
+  tabs: Record<"general" | "generalData" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect", string>;
   groups: {
     basics: string;
     features: string;
@@ -27,7 +27,6 @@ export type SettingsCategoriesText = {
   generalApi: string;
   behavior: string;
   behaviorTuck: string;
-  behaviorQuiet: string;
   behaviorAlerts: string;
   timerAlerts: string;
   shortcutsIsland: string;
@@ -38,7 +37,6 @@ export type SettingsCategoriesText = {
   musicLyrics: string;
   musicLyricsStyle: string;
   clipboardHistory: string;
-  clipboardLinks: string;
   clipboardSnippets: string;
   screenshotRecord: string;
   appearance: string;
@@ -64,7 +62,6 @@ export type SettingsCategoriesText = {
   agentSessions: string;
   agentRings: string;
   agentRemote: string;
-  agentTunnel: string;
   agentAlerts: string;
   sounds: string;
   agentPush: string;
@@ -90,15 +87,13 @@ export const zhCN: SettingsCategoriesText = {
     general: "开机 自启 登录 语言 托盘 菜单栏 权限",
     generalData: "数据 文件夹 备份 恢复 导出 导入 迁移",
     generalApi: "本机接口 Local API 令牌 端口 HTTP",
-    behavior: "展开 悬停 收起 动画 切换页面",
+    behavior: "展开 悬停 收起 动画 切换页面 全屏 游戏 勿扰 免打扰",
     behaviorTuck: "贴边 隐藏 露出 最小化 托盘 菜单栏",
-    behaviorQuiet: "全屏 游戏 勿扰 免打扰",
     behaviorAlerts: "系统提示 音量 亮度 耳机 蓝牙 电量 电源 充电 摄像头 麦克风 隐私",
     timerAlerts: "计时器 倒计时 番茄钟 响铃 声音 休息 提醒 久坐 护眼",
     musicLyrics: "歌词 来源 文件夹 LRC 在线 酷狗 网易云 提前 推后",
     musicLyricsStyle: "歌词 样式 逐字 高亮 发光 颜色 卡拉OK",
-    clipboardHistory: "记录 图片 文件 密码 密钥 排除 条数 清理 OCR 导入 导出 备份 迁移",
-    clipboardLinks: "链接 书签 网址 网站 图标",
+    clipboardHistory: "记录 图片 文件 密码 密钥 排除 条数 清理 OCR 导入 导出 备份 迁移 链接 书签 网址 网站 图标",
     clipboardSnippets: "常用语 短语 提示词 AI",
     screenshotRecord: "录屏 录制 GIF MP4 帧率 画质 声音 麦克风",
     pluginsPages: "岛上页面 顺序 隐藏 插件快捷键 命令",
@@ -127,8 +122,7 @@ export const zhCN: SettingsCategoriesText = {
     agentAppearance: "会话标题 状态灯 收起条 岛上显示 外观",
     agentSessions: "会话 卡片 列表 隐藏会话 筛选 子会话",
     agentRings: "用量 用量环 会话环 额度 GLM Kimi Anthropic",
-    agentRemote: "SSH 远程 服务器 主机 其他电脑",
-    agentTunnel: "SSH 隧道 代理 转发 端口",
+    agentRemote: "SSH 远程 服务器 主机 其他电脑 隧道 代理 转发 端口",
     agentAlerts: "弹出 提醒 通知",
     sounds: "音效 声音包 提示音",
     agentPush: "手机推送 Bark cc-connect 机器人 飞书",
@@ -153,7 +147,6 @@ export const zhCN: SettingsCategoriesText = {
     agents: "Agent",
     agentAppearance: "外观",
     agentAlerts: "提醒",
-    agentRemote: "SSH 远程",
   },
   tabs: {
     general: "启动与托盘",
@@ -167,14 +160,12 @@ export const zhCN: SettingsCategoriesText = {
     musicLyrics: "歌词来源",
     musicLyricsStyle: "歌词样式",
     clipboard: "打开与粘贴",
-    clipboardHistory: "记录与数据",
-    clipboardLinks: "链接与书签",
+    clipboardHistory: "记录与链接",
     clipboardSnippets: "常用语与提示词",
     screenshot: "截图",
     screenshotRecord: "录屏",
     behavior: "展开与收起",
     behaviorTuck: "贴边隐藏",
-    behaviorQuiet: "全屏与免打扰",
     behaviorAlerts: "系统提示",
     timerAlerts: "计时与休息",
     shortcuts: "全局",
@@ -197,8 +188,6 @@ export const zhCN: SettingsCategoriesText = {
     agentAlerts: "桌面提醒",
     sounds: "声音",
     agentPush: "推送与机器人",
-    agentRemote: "远程主机",
-    agentTunnel: "SSH 隧道",
   },
   groups: {
     basics: "基础",
@@ -212,7 +201,6 @@ export const zhCN: SettingsCategoriesText = {
   generalApi: "本机接口",
   behavior: "行为",
   behaviorTuck: "贴边隐藏",
-  behaviorQuiet: "全屏与免打扰",
   behaviorAlerts: "系统提示",
   timerAlerts: "计时与休息",
   shortcutsIsland: "岛上按键",
@@ -222,8 +210,7 @@ export const zhCN: SettingsCategoriesText = {
   pluginsDev: "插件开发者",
   musicLyrics: "歌词来源",
   musicLyricsStyle: "歌词样式",
-  clipboardHistory: "记录与数据",
-  clipboardLinks: "链接与书签",
+  clipboardHistory: "记录与链接",
   clipboardSnippets: "常用语与提示词",
   screenshotRecord: "录屏",
   appearance: "位置与尺寸",
@@ -248,8 +235,7 @@ export const zhCN: SettingsCategoriesText = {
   agentAppearance: "状态灯与标题",
   agentSessions: "会话列表",
   agentRings: "用量与会话环",
-  agentRemote: "远程主机",
-  agentTunnel: "SSH 隧道",
+  agentRemote: "SSH 远程",
   agentAlerts: "桌面提醒",
   sounds: "声音",
   agentPush: "推送与机器人",
@@ -275,15 +261,13 @@ export const en: SettingsCategoriesText = {
     general: "startup launch login language tray menu bar permissions",
     generalData: "data folder backup restore export import move",
     generalApi: "local api token port http",
-    behavior: "expand hover collapse animation motion switch page",
+    behavior: "expand hover collapse animation motion switch page fullscreen game quiet do not disturb",
     behaviorTuck: "tuck hide reveal minimise minimize tray menu bar",
-    behaviorQuiet: "fullscreen game quiet do not disturb",
     behaviorAlerts: "system alerts volume brightness headphones bluetooth battery charger power camera microphone privacy",
     timerAlerts: "timer countdown pomodoro alarm sound break reminder rest eye",
     musicLyrics: "lyrics sources folder lrc online kugou netease offset",
     musicLyricsStyle: "lyrics style karaoke highlight glow colour color",
-    clipboardHistory: "record images files passwords secrets exclude limit cleanup ocr import export backup move",
-    clipboardLinks: "links bookmarks url website favicon",
+    clipboardHistory: "record images files passwords secrets exclude limit cleanup ocr import export backup move links bookmarks url website favicon",
     clipboardSnippets: "snippets phrases prompts ai",
     screenshotRecord: "screen recording record gif mp4 frame rate quality sound microphone",
     pluginsPages: "island pages order hide plugin shortcuts commands",
@@ -312,8 +296,7 @@ export const en: SettingsCategoriesText = {
     agentAppearance: "session title status light collapsed bar on the island appearance",
     agentSessions: "sessions cards list hide filter subagent",
     agentRings: "usage ring session ring quota glm kimi anthropic",
-    agentRemote: "ssh remote server host other computers",
-    agentTunnel: "ssh tunnel proxy forward port",
+    agentRemote: "ssh remote server host other computers tunnel proxy forward port",
     agentAlerts: "pop-up alerts notifications",
     sounds: "sound pack",
     agentPush: "mobile push bark cc-connect bot feishu",
@@ -338,7 +321,6 @@ export const en: SettingsCategoriesText = {
     agents: "Agent",
     agentAppearance: "Appearance",
     agentAlerts: "Alerts",
-    agentRemote: "SSH remote",
   },
   tabs: {
     general: "Startup and tray",
@@ -352,14 +334,12 @@ export const en: SettingsCategoriesText = {
     musicLyrics: "Lyrics sources",
     musicLyricsStyle: "Lyrics style",
     clipboard: "Opening and pasting",
-    clipboardHistory: "Records and data",
-    clipboardLinks: "Links and bookmarks",
+    clipboardHistory: "Records and links",
     clipboardSnippets: "Snippets and prompts",
     screenshot: "Screenshots",
     screenshotRecord: "Recording",
     behavior: "Expand and collapse",
     behaviorTuck: "Tucking",
-    behaviorQuiet: "Fullscreen and quiet",
     behaviorAlerts: "System alerts",
     timerAlerts: "Timer and breaks",
     shortcuts: "Global",
@@ -382,8 +362,6 @@ export const en: SettingsCategoriesText = {
     agentAlerts: "Desktop alerts",
     sounds: "Sounds",
     agentPush: "Push and bots",
-    agentRemote: "Remote hosts",
-    agentTunnel: "SSH tunnel",
   },
   groups: {
     basics: "Basics",
@@ -397,7 +375,6 @@ export const en: SettingsCategoriesText = {
   generalApi: "Local API",
   behavior: "Behavior",
   behaviorTuck: "Tucking",
-  behaviorQuiet: "Fullscreen and quiet",
   behaviorAlerts: "System alerts",
   timerAlerts: "Timer and breaks",
   shortcutsIsland: "Island keys",
@@ -407,8 +384,7 @@ export const en: SettingsCategoriesText = {
   pluginsDev: "Plugin developer",
   musicLyrics: "Lyrics sources",
   musicLyricsStyle: "Lyrics style",
-  clipboardHistory: "Records and data",
-  clipboardLinks: "Links and bookmarks",
+  clipboardHistory: "Records and links",
   clipboardSnippets: "Snippets and prompts",
   screenshotRecord: "Recording",
   appearance: "Position and size",
@@ -433,8 +409,7 @@ export const en: SettingsCategoriesText = {
   agentAppearance: "Light and title",
   agentSessions: "Session list",
   agentRings: "Usage and session rings",
-  agentRemote: "Remote hosts",
-  agentTunnel: "SSH tunnel",
+  agentRemote: "SSH remote",
   agentAlerts: "Desktop alerts",
   sounds: "Sounds",
   agentPush: "Push and bots",
