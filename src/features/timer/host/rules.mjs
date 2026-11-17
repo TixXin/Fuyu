@@ -1,4 +1,4 @@
-import { EXTEND_MS, MAX_DURATION_MS, MAX_TIMERS, dueTimers, extended, newCountdown, newStopwatch, paused, resumed } from "../timers.ts";
+import { EXTEND_MS, MAX_DURATION_MS, MAX_TIMERS, dueTimers, extended, newCountdown, newStopwatch, normalizeTimers, paused, resumed } from "../timers.ts";
 
 export function timersError(code, message) {
   return Object.assign(new Error(message), { code });
@@ -52,4 +52,15 @@ export function ringDue(timers, now) {
   if (due.size === 0) return { timers, due: [] };
   const next = timers.map((timer) => (due.has(timer.id) ? { ...paused(timer, now), alerted: true } : timer));
   return { timers: next, due: next.filter((timer) => due.has(timer.id)) };
+}
+
+export function adoptTimers(timers, params, now) {
+  if (!isObject(params) || !Array.isArray(params.timers)) {
+    throw timersError("bad-params", "timers/v1 adopt needs { timers } with a list of timers");
+  }
+  const merged = normalizeTimers([...timers, ...normalizeTimers(params.timers)]);
+  const added = merged.length - timers.length;
+  if (added === 0) return { timers, due: [], added: 0 };
+  const rung = ringDue(merged, now);
+  return { timers: rung.timers, due: rung.due, added };
 }

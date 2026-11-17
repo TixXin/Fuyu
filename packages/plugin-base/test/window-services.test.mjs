@@ -132,3 +132,21 @@ test("listeners hear the window's provider and the host, and the host subscripti
   assert.deepEqual(heard, [1, 2]);
   assert.deepEqual(host.calls.map((call) => call.method), ["service.on", "service.off"]);
 });
+
+test("watchers hear when the attached host updates its services or disconnects", () => {
+  const host = fakeHost();
+  const services = createWindowServices();
+  let notifications = 0;
+  const unwatch = services.watch(() => {
+    notifications += 1;
+  });
+  services.attach(host.proxy);
+  assert.equal(notifications, 1);
+  host.proxy.update([{ name: "demo.echo/v1", plugin: "echo", methods: ["echo"], events: [] }]);
+  assert.equal(notifications, 2);
+  services.attach(null);
+  assert.equal(notifications, 3);
+  host.proxy.update([]);
+  assert.equal(notifications, 3);
+  unwatch();
+});

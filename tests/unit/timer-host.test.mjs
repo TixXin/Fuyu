@@ -201,6 +201,8 @@ test("bad parameters get the service's error codes and change nothing", async ()
     ["extend", { id: watch.id }, "bad-params"],
     ["extend", { id: watch.id, byMs: -1 }, "bad-duration"],
     ["remove", { id: 3 }, "bad-params"],
+    ["adopt", {}, "bad-params"],
+    ["adopt", { timers: "nope" }, "bad-params"],
     ["snooze", {}, "no-method"],
   ];
   for (const [method, params, code] of failures) {
@@ -226,4 +228,35 @@ test("a data file that cannot be read starts empty and says why", async () => {
   assert.equal(timerStatus(host).state, "running");
   assert.deepEqual((await window(host).call("list")).timers, []);
   assert.ok(host.logs.some((entry) => entry.type === "warn" && entry.text.includes("could not read")));
+});
+
+test("adopt brings legacy timers into timers.json once and rings any countdown that ran out", async () => {
+  const dir = space();
+  const host = await open(dir);
+  const win = window(host);
+  const existing = (await win.call("start", { kind: "stopwatch" })).timer;
+  const now = Date.now();
+  const legacy = [
+    existing,
+    { id: "old-running", kind: "countdown", durationMs: 5 * MINUTE, elapsedMs: MINUTE, runningSince: now - MINUTE, alerted: false },
+    { id: "old-due", kind: "countdown", durationMs: MINUTE, elapsedMs: 0, runningSince: now - 2 * MINUTE, alerted: false },
+    { id: "old-alerted", kind: "countdown", durationMs: 2 * MINUTE, elapsedMs: 2 * MINUTE, runningSince: null, alerted: true },
+    { id: "old-paused", kind: "stopwatch", durationMs: 0, elapsedMs: 30_000, runningSince: null, alerted: false },
+    { id: "", kind: "countdown", durationMs: 1000, elapsedMs: 0, runningSince: now, alerted: false },
+  ];
+  const first = await win.call("adopt", { timers: legacy });
+  assert.equal(first.added, 4);
+  assert.equal(first.timers.length, 5);
+  assert.deepEqual(win.events("due").map((due) => due.timer.id), ["old-due"]);
+  const byId = Object.fromEntries(first.timers.map((timer) => [timer.id, timer]));
+  assert.equal(byId["old-due"].alerted, true);
+  assert.equal(byId["old-due"].runningSince, null);
+  assert.equal(byId["old-alerted"].alerted, true);
+  assert.equal(byId["old-paused"].elapsedMs, 30_000);
+  assert.ok(Math.abs(remainingOf(byId["old-running"], first.at) - 3 * MINUTE) < 2000);
+  assert.deepEqual(readData(dir).timers, first.timers);
+  const changesBefore = win.events("changed").length;
+  const second = await win.call("adopt", { timers: legacy });
+  assert.equal(second.added, 0);
+  assert.equal(win.events("changed").length, changesBefore);
 });
