@@ -8,13 +8,13 @@ export type SettingsCategoriesText = {
   expand: (group: string) => string;
   collapse: (group: string) => string;
   keywords: Record<
-    | "overview" | "general" | "generalData" | "generalApi" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
     | "plugins" | "pluginsV3" | "market" | "about",
     string
   >;
   entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; plugins: string; agents: string; agentAppearance: string; agentAlerts: string };
-  tabs: Record<"general" | "generalData" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect", string>;
+  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect", string>;
   groups: {
     basics: string;
     features: string;
@@ -24,6 +24,7 @@ export type SettingsCategoriesText = {
   overview: string;
   general: string;
   generalData: string;
+  generalSync: string;
   generalApi: string;
   behavior: string;
   behaviorTuck: string;
@@ -86,6 +87,7 @@ export const zhCN: SettingsCategoriesText = {
     overview: "概览 开始 新手 入门 常用 功能 开启 关闭 启用",
     general: "开机 自启 登录 语言 托盘 菜单栏 权限",
     generalData: "数据 文件夹 备份 恢复 导出 导入 迁移",
+    generalSync: "跨设备 同步 云盘 网盘 OneDrive iCloud 坚果云 Syncthing NAS 设备 合并",
     generalApi: "本机接口 Local API 令牌 端口 HTTP",
     behavior: "展开 悬停 收起 动画 切换页面 全屏 游戏 勿扰 免打扰",
     behaviorTuck: "贴边 隐藏 露出 最小化 托盘 菜单栏",
@@ -151,6 +153,7 @@ export const zhCN: SettingsCategoriesText = {
   tabs: {
     general: "启动与托盘",
     generalData: "数据与备份",
+    generalSync: "跨设备同步",
     generalApi: "本机接口",
     plugins: "已安装",
     pluginsPages: "页面与快捷键",
@@ -198,6 +201,7 @@ export const zhCN: SettingsCategoriesText = {
   overview: "概览",
   general: "通用",
   generalData: "数据与备份",
+  generalSync: "跨设备同步",
   generalApi: "本机接口",
   behavior: "行为",
   behaviorTuck: "贴边隐藏",
@@ -260,6 +264,7 @@ export const en: SettingsCategoriesText = {
     overview: "overview start beginner getting started common features turn on off enable",
     general: "startup launch login language tray menu bar permissions",
     generalData: "data folder backup restore export import move",
+    generalSync: "cross-device sync cloud drive onedrive icloud nutstore syncthing nas devices merge",
     generalApi: "local api token port http",
     behavior: "expand hover collapse animation motion switch page fullscreen game quiet do not disturb",
     behaviorTuck: "tuck hide reveal minimise minimize tray menu bar",
@@ -325,6 +330,7 @@ export const en: SettingsCategoriesText = {
   tabs: {
     general: "Startup and tray",
     generalData: "Data and backup",
+    generalSync: "Cross-device sync",
     generalApi: "Local API",
     plugins: "Installed",
     pluginsPages: "Pages and shortcuts",
@@ -372,6 +378,7 @@ export const en: SettingsCategoriesText = {
   overview: "Overview",
   general: "General",
   generalData: "Data and backup",
+  generalSync: "Cross-device sync",
   generalApi: "Local API",
   behavior: "Behavior",
   behaviorTuck: "Tucking",

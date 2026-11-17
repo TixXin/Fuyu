@@ -96,7 +96,8 @@ test("Appearance has 5 tabs, AI Agent is a group of 4 items, and every page is r
   assert.equal(sidebarItemOf("agentRings"), "agentAppearance");
   assert.equal(sidebarItemOf("themeMarket"), "appearance");
   assert.equal(sidebarItemOf("music"), "music");
-  assert.deepEqual(entryPages("general"), ["general", "generalData", "generalApi"]);
+  assert.deepEqual(entryPages("general"), ["general", "generalData", "generalSync", "generalApi"]);
+  assert.equal(settingsCategoryFor("sync"), "generalSync");
   const listed = SETTINGS_GROUPS.flatMap((group) => group.categories);
   assert.equal(new Set(listed).size, listed.length);
   const reachable = new Set(listed.flatMap((item) => entryPages(item)));

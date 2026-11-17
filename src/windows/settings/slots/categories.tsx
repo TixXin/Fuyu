@@ -3,6 +3,7 @@ import { AppearanceSettingsPage } from "../AppearanceSettingsPage";
 import { BehaviorSettingsPage } from "../BehaviorSettingsPage";
 import { ThemeSettingsPage } from "../ThemeSettingsPage";
 import { GeneralSettingsPage } from "../GeneralSettingsPage";
+import { SyncSettingsPage } from "../SyncSettingsPage";
 import { OverviewSettingsPage } from "../OverviewSettingsPage";
 import { ShortcutsSettingsPage } from "../ShortcutsSettingsPage";
 import { AboutSettingsPage } from "../AboutSettingsPage";
@@ -68,6 +69,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   ),
   general: general("general"),
   generalData: general("generalData"),
+  generalSync: () => <SyncSettingsPage />,
   behavior: behavior("behavior"),
   behaviorTuck: behavior("behaviorTuck"),
   behaviorAlerts: behavior("behaviorAlerts"),

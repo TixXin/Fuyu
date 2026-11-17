@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Bell, Bot, Brush, CalendarDays, ClipboardList, Compass, Crop, FlaskConical, Gauge, Inbox, Info, Keyboard, Languages, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Puzzle, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
+import { Bell, Bot, Brush, CalendarDays, ClipboardList, Compass, Crop, FlaskConical, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Puzzle, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { defineSlot, type SettingsCategoryMeta } from "./slots.ts";
 
@@ -17,8 +17,9 @@ const supports = (feature: PlatformFeature) => ({ unsupported }: CategoryContext
 
 export const BUILTIN_CATEGORIES = [
   { id: "overview", icon: Compass, group: null },
-  { id: "general", icon: SlidersHorizontal, group: "basics", tabs: ["general", "generalData", "generalApi"] },
+  { id: "general", icon: SlidersHorizontal, group: "basics", tabs: ["general", "generalData", "generalSync", "generalApi"] },
   { id: "generalData", icon: SlidersHorizontal },
+  { id: "generalSync", icon: FolderSync, aliases: ["sync"] },
   { id: "generalApi", icon: SlidersHorizontal },
   { id: "appearance", icon: LayoutTemplate, group: "basics", tabs: ["theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket"] },
   { id: "theme", icon: Palette, aliases: ["themePresets"] },

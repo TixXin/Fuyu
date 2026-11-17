@@ -97,6 +97,23 @@ mockIPC((command, payload) => {
     case "get_local_api_info": return { running: true, url: "http://127.0.0.1:39271/v1", configPath: "C:\\Users\\demo\\.fuyu\\local-api.json" };
     case "copy_local_api_token": return null;
     case "get_data_home": return { home: "C:\\Users\\demo\\.fuyu", defaultHome: "C:\\Users\\demo\\.fuyu", source: "default" };
+    case "get_sync_status":
+    case "set_sync_config":
+      return {
+        phase: "off",
+        folder: null,
+        deviceId: "demo-device-id",
+        lastSyncAt: null,
+        lastError: null,
+        confirm: null,
+        categories: ["todos", "snippets", "links", "settings", "presets"].map((category) => ({ category, state: "waiting", message: null, lastSyncAt: null })),
+        optionalGroups: [],
+        devices: [],
+        skippedFiles: [],
+      };
+    case "sync_now":
+    case "confirm_sync_deletions":
+      return null;
     case "update_backup_list": return {
       backups: [{ id: "pre-update-0.3.9-20261115-100000", fromVersion: "0.3.9", toVersion: "0.4.0", createdAt: Date.UTC(2026, 10, 15, 2), size: 245760, files: 12, skipped: [] }],
       brokenFiles: [],

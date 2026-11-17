@@ -83,6 +83,188 @@
       }
     },
     {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步方式",
+        "title": "同步文件夹",
+        "description": "未选择（首次使用请手动指定一个空目录或已有的 fuyu-sync 上级目录）"
+      },
+      "en": {
+        "group": "Sync method",
+        "title": "Sync folder",
+        "description": "Not selected (pick an empty folder or an existing parent folder containing fuyu-sync)"
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "待办、每日笔记与归档",
+        "description": "按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "Todos, daily notes and archive",
+        "description": "Merges todos and project tags item-by-item; keeps a conflict copy if both computers edit the same day's note."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "常用短语",
+        "description": "剪贴板里的常用语与 AI 提示词模板。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "Snippets",
+        "description": "Saved clipboard phrases and AI prompt templates."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "链接书签",
+        "description": "剪贴板收藏的常用网址与排列顺序。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "Link bookmarks",
+        "description": "Saved websites in the clipboard window and their order."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "通用与功能设置",
+        "description": "按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "General and feature settings",
+        "description": "Syncs allowlisted theme, behavior and feature preferences; feature master switches copy only on first merge."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "我的主题预设",
+        "description": "已保存的外观样式预设（自动剔除显示器与尺寸等设备字段）。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "Saved themes",
+        "description": "Style presets with monitor and size fields stripped per machine."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "翻译服务与模型选择",
+        "description": "默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Translation service and models",
+        "description": "Off by default: API keys stay local, and custom endpoints like local Ollama rarely work on another machine."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "PrtSc 接管与录屏参数",
+        "description": "默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "PrtSc capture and recording options",
+        "description": "Off by default: keyboard keys, microphones and system audio capture differ across machines and OSes."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "Agent 提示音量与音效包",
+        "description": "默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Agent sound volume and sound pack",
+        "description": "Off by default: speaker levels vary by machine, and custom sound packs may not be installed elsewhere."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "手机推送开关与通道",
+        "description": "默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Mobile push switch and channel",
+        "description": "Off by default: turning push on across multiple computers can send duplicate alerts."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "邮箱账号列表（不含密码）",
+        "description": "默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Mail accounts (without passwords)",
+        "description": "Off by default: app passwords stay in each computer's keychain, so accounts still need sign-in there."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "收起条项目与顺序",
+        "description": "默认关闭：收起条可能包含仅在某一台电脑安装的第三方插件或平台专属项。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Collapsed bar items and order",
+        "description": "Off by default: the bar can include plugins or items only available on one computer."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "插件岛上页面顺序与隐藏",
+        "description": "默认关闭：各台电脑安装的插件集合不同，页面列表未必一致。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Plugin island page order and visibility",
+        "description": "Off by default: different computers may have different plugins installed."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "可选同步",
+        "title": "更新通道（稳定版 / 测试版）",
+        "description": "默认关闭：便于在一台电脑尝鲜测试版，另一台主力机保持稳定版。"
+      },
+      "en": {
+        "group": "Optional sync",
+        "title": "Update channel (Stable / Beta)",
+        "description": "Off by default: lets you test Beta builds on one computer while keeping another on Stable."
+      }
+    },
+    {
       "page": "generalApi",
       "zh-CN": {
         "group": "本机接口",
