@@ -2,10 +2,14 @@ use serde_json::{Map, Value};
 
 use super::adapter_macos::{self as adapter, Snapshot};
 use super::applescript_macos::{self as applescript, Track};
+use super::players::{
+    custom_players_snapshot, default_player_label, friendly_app_label, is_browser_executable,
+    normalize_metadata_track, normalize_player_id, CustomMediaPlayer,
+};
 pub(crate) use super::state::{AudioLevel, MediaCommand, MediaSessionInfo, MediaState};
 use super::state::current_unix_millis;
 use super::timeline_clock::{self, track_key, Published};
-use crate::macos::audio;
+use crate::macos::{apps, audio};
 
 const MAX_ARTWORK_BASE64: usize = 5_400_000;
 const PLAYING_PEAK: f32 = 0.4;
@@ -62,13 +66,14 @@ fn from_fuyu(info: &Map<String, Value>) -> bool {
 
 fn from_snapshot(snapshot: &Snapshot) -> MediaState {
     let info = &snapshot.info;
-    let Some(title) = text(info, "title").filter(|_| !from_fuyu(info)) else {
+    let source = text(info, "parentApplicationBundleIdentifier").or_else(|| text(info, "bundleIdentifier"));
+    let (title, artist) = normalize_metadata_track(text(info, "title"), text(info, "artist"), source.as_deref());
+    let Some(title) = title.filter(|_| !from_fuyu(info)) else {
         return MediaState { volume: volume(), ..MediaState::empty() };
     };
     let playing = info.get("playing").and_then(Value::as_bool).unwrap_or(false);
-    let source = text(info, "parentApplicationBundleIdentifier").or_else(|| text(info, "bundleIdentifier"));
     let duration_ms = number(info, "duration").map_or(0, |seconds| (seconds * 1000.0) as i64);
-    let track = track_key(Some(&title), text(info, "artist").as_deref(), text(info, "album").as_deref(), duration_ms);
+    let track = track_key(Some(&title), artist.as_deref(), text(info, "album").as_deref(), duration_ms);
     let position_ms = timeline_clock::sample(source.as_deref().unwrap_or_default(), &track, published(info, snapshot.received_ms), playing, current_unix_millis());
     let shuffle = number(info, "shuffleMode");
     let repeat = number(info, "repeatMode");
@@ -78,7 +83,7 @@ fn from_snapshot(snapshot: &Snapshot) -> MediaState {
         audio_peak: if playing { PLAYING_PEAK } else { 0.0 },
         playback_status: if playing { "playing" } else { "paused" },
         title: Some(title),
-        artist: text(info, "artist"),
+        artist,
         album: text(info, "album"),
         thumbnail: artwork(info),
         position_ms,
@@ -91,7 +96,7 @@ fn from_snapshot(snapshot: &Snapshot) -> MediaState {
         repeat_mode: repeat_label(repeat),
         can_repeat: repeat.is_some(),
         volume: volume(),
-        sessions: source.iter().map(|id| MediaSessionInfo { id: id.clone(), label: id.clone(), playing }).collect(),
+        sessions: source.iter().map(|id| MediaSessionInfo { id: id.clone(), label: friendly_app_label(id), playing }).collect(),
         active_session_id: source.clone(),
         source_app: source,
         ..MediaState::empty()
@@ -117,11 +122,37 @@ fn from_track(track: Option<Track>) -> MediaState {
         can_next: true,
         can_previous: true,
         volume: volume(),
-        sessions: source.iter().map(|id| MediaSessionInfo { id: id.clone(), label: id.clone(), playing: track.playing }).collect(),
+        sessions: source.iter().map(|id| MediaSessionInfo { id: id.clone(), label: friendly_app_label(id), playing: track.playing }).collect(),
         active_session_id: source.clone(),
         source_app: source,
         ..MediaState::empty()
     }
+}
+
+pub(crate) fn list_candidates() -> Vec<CustomMediaPlayer> {
+    let own = std::process::id();
+    let custom = custom_players_snapshot();
+    let mut out = Vec::new();
+    for (pid, path) in apps::regular_apps() {
+        if pid == own {
+            continue;
+        }
+        let name = apps::outer_app_name(&path)
+            .unwrap_or_else(|| path.rsplit('/').next().unwrap_or(&path).to_string());
+        let Some(id) = normalize_player_id(&name) else {
+            continue;
+        };
+        if is_browser_executable(&id)
+            || custom.iter().any(|item| item.id == id)
+            || out.iter().any(|item: &CustomMediaPlayer| item.id == id)
+        {
+            continue;
+        }
+        let label = default_player_label(&name);
+        out.push(CustomMediaPlayer { id, label });
+    }
+    out.sort_by(|a, b| a.label.cmp(&b.label));
+    out
 }
 
 pub(crate) fn get_state(_target: Option<String>) -> Result<MediaState, String> {

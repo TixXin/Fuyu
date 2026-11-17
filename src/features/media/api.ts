@@ -11,6 +11,11 @@ export type MediaSessionInfo = {
   playing: boolean;
 };
 
+export type CustomMediaPlayer = {
+  id: string;
+  label: string;
+};
+
 export type MediaState = {
   available: boolean;
   audioActive: boolean;
@@ -60,6 +65,22 @@ export function seekMedia(positionMs: number, target: string | undefined) {
 
 export function getAudioLevel() {
   return invoke<AudioLevel>("get_audio_level");
+}
+
+export function getCustomMediaPlayers() {
+  return invoke<CustomMediaPlayer[]>("get_custom_media_players");
+}
+
+export function addCustomMediaPlayer(id: string, label?: string) {
+  return invoke<CustomMediaPlayer[]>("add_custom_media_player", { id, label });
+}
+
+export function removeCustomMediaPlayer(id: string) {
+  return invoke<CustomMediaPlayer[]>("remove_custom_media_player", { id });
+}
+
+export function listMediaPlayerCandidates() {
+  return invoke<CustomMediaPlayer[]>("list_media_player_candidates");
 }
 
 export const MEDIA_SESSION_CHANGED_EVENT = "media-session-changed";

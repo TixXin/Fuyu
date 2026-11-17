@@ -46,11 +46,12 @@ export function MusicPlayerPanel({
 
   const estimate = mediaState.positionEstimate;
   const source = mediaState.sessions.find((session) => session.id === mediaState.activeSessionId)?.label ?? null;
+  const trackTitle = mediaState.title ?? (mediaState.available ? source : null) ?? t.music.noMedia;
 
   const prevDisabled = mediaState.available && !mediaState.canPrevious;
   const nextDisabled = mediaState.available && !mediaState.canNext;
 
-  const meta = [hasTrack ? (mediaState.artist ?? t.music.unknownArtist) : null, source].filter(Boolean).join(" · ");
+  const meta = [hasTrack ? (mediaState.artist ?? t.music.unknownArtist) : null, hasTrack ? source : null].filter(Boolean).join(" · ");
 
   return (
     <section className={mediaState.available ? "music-player" : "music-player music-player--empty"} aria-label={t.music.playerLabel}>
@@ -59,7 +60,7 @@ export function MusicPlayerPanel({
           {mediaState.thumbnail ? <img src={mediaState.thumbnail} alt="" draggable={false} /> : <Music2 size={24} strokeWidth={1.7} />}
         </div>
         <div className="music-player__meta">
-          <span className="music-player__track">{mediaState.title ?? t.music.noMedia}</span>
+          <span className="music-player__track">{trackTitle}</span>
           {meta && <span className="music-player__artist">{meta}</span>}
         </div>
         {chineseHint && (

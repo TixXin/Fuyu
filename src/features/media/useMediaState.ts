@@ -6,6 +6,7 @@ import { playbackPosition } from "./lyrics/lrc";
 import { alignClock, clockPosition, hasTimeline, holdIntentTimeline, keepIslandTimeline, NO_CLOCK, settleClockAt, startClockAt, type TrackClock } from "./trackClock";
 import { useAudioLevel } from "./useAudioLevel";
 import { useMediaSessionChanges } from "./useMediaSessionChanges";
+import { pickEffectiveMediaTarget } from "./sourcePriority";
 import { useMusicSourcePriority } from "./useMusicSourcePriority";
 
 export function useMediaState(enabled = true) {
@@ -212,27 +213,10 @@ export function useMediaState(enabled = true) {
     }, 1500);
   }, [enabled, refreshMediaState]);
 
-  const effectiveMediaTarget = useMemo(() => {
-    if (mediaState.sessions.length === 0) {
-      return null;
-    }
-
-    const present = new Map(
-      mediaState.sessions.map((session) => [session.id, session]),
-    );
-
-    for (const source of musicSourcePriority) {
-      if (present.get(source.id)?.playing) {
-        return source.id;
-      }
-    }
-    for (const source of musicSourcePriority) {
-      if (present.has(source.id)) {
-        return source.id;
-      }
-    }
-    return null;
-  }, [musicSourcePriority, mediaState.sessions]);
+  const effectiveMediaTarget = useMemo(
+    () => pickEffectiveMediaTarget(mediaState.sessions, musicSourcePriority),
+    [musicSourcePriority, mediaState.sessions],
+  );
 
   useEffect(() => {
     if (!enabled || mediaTargetRef.current === effectiveMediaTarget) {
