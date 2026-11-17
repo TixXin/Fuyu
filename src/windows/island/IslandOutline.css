@@ -1,0 +1,179 @@
+@supports (clip-path: shape(from 0 0, line to 1px 1px, close)) {
+  .island {
+    --island-rim-width: 1px;
+    --island-rim-paint: none;
+    --island-rim-fade: none;
+    --island-rim-opacity: 1;
+    --island-outline-fillets: var(--island-outline-fillets-top);
+    --island-outline-rim: var(--island-outline-rim-free);
+    --island-edge-lines: 0 0 transparent;
+    --island-outline-body: none;
+    --island-surface-overflow: hidden;
+    --island-glass-bleed: 0;
+    --island-refraction-visibility: visible;
+  }
+
+  .island--expanded {
+    --island-rim-paint: linear-gradient(var(--color-white-a08) 0 0);
+  }
+
+  .island--appearance-liquidGlass {
+    --island-rim-top: rgba(255, 255, 255, var(--glass-inset-alpha, 0.34));
+    --island-rim-bottom: rgba(8, 18, 28, 0.16);
+    --island-rim-left: rgba(170, 230, 255, calc(var(--glass-border-alpha, 0.23) + var(--glass-cyan-alpha, 0.12)));
+    --island-rim-right: rgba(255, 190, 236, calc(var(--glass-border-alpha, 0.23) + var(--glass-magenta-alpha, 0.07)));
+    --island-rim-paint:
+      linear-gradient(var(--island-rim-top) 0 2px, transparent 2px),
+      linear-gradient(0deg, var(--island-rim-bottom) 0 2px, transparent 2px),
+      linear-gradient(90deg, var(--island-rim-left) 50%, var(--island-rim-right) 50%);
+  }
+
+  .island-light .island--appearance-liquidGlass {
+    --island-rim-top: rgba(255, 255, 255, 0.9);
+    --island-rim-bottom: rgba(30, 40, 60, 0.1);
+    --island-rim-left: rgba(60, 150, 210, calc(0.07 + var(--glass-cyan-alpha, 0.12)));
+    --island-rim-right: rgba(200, 90, 170, calc(0.07 + var(--glass-magenta-alpha, 0.07)));
+  }
+
+  .island.island--glass-rim {
+    --island-rim-width: var(--glass-rim-width, 1.5px);
+    --island-rim-opacity: 0.85;
+  }
+
+  .island-light .island.island--glass-rim {
+    --island-rim-opacity: 0.7;
+    --glass-rim-light: rgba(255, 255, 255, 0.9);
+  }
+
+  :root[data-island-notch] .island--collapsed {
+    --island-rim-paint: none;
+  }
+
+  :root[data-island-top-edge="attached"] .island,
+  :root:not([data-island-top-edge]) .island--docked {
+    --island-outline-rim: var(--island-outline-rim-top);
+    --island-outline-body: var(--island-outline-body-top);
+    --island-surface-overflow: visible;
+    --island-refraction-visibility: hidden;
+    --island-glass-bleed: 0 calc(-1 * var(--island-top-fillet));
+    --island-rim-fade: linear-gradient(180deg, transparent 0.5px, var(--color-black, #000) calc(var(--island-top-fillet) * 0.45 + 0.6px));
+  }
+
+  :root[data-island-edge="bottom"] .island {
+    --island-outline-fillets: var(--island-outline-fillets-bottom);
+    --island-outline-rim: var(--island-outline-rim-bottom);
+    --island-outline-body: var(--island-outline-body-bottom);
+    --island-surface-overflow: visible;
+    --island-refraction-visibility: hidden;
+    --island-glass-bleed: 0 calc(-1 * var(--island-top-fillet));
+    --island-rim-fade: linear-gradient(0deg, transparent 0.5px, var(--color-black, #000) calc(var(--island-top-fillet) * 0.45 + 0.6px));
+  }
+
+  :root .island.island--side-left {
+    --island-outline-fillets: var(--island-outline-fillets-left);
+    --island-outline-rim: var(--island-outline-rim-left);
+    --island-outline-body: var(--island-outline-body-left);
+    --island-surface-overflow: visible;
+    --island-refraction-visibility: hidden;
+    --island-glass-bleed: calc(-1 * var(--island-top-fillet)) 0;
+    --island-rim-fade: linear-gradient(90deg, transparent 0.5px, var(--color-black, #000) calc(var(--island-top-fillet) * 0.45 + 0.6px));
+  }
+
+  :root .island.island--side-right {
+    --island-outline-fillets: var(--island-outline-fillets-right);
+    --island-outline-rim: var(--island-outline-rim-right);
+    --island-outline-body: var(--island-outline-body-right);
+    --island-surface-overflow: visible;
+    --island-refraction-visibility: hidden;
+    --island-glass-bleed: calc(-1 * var(--island-top-fillet)) 0;
+    --island-rim-fade: linear-gradient(270deg, transparent 0.5px, var(--color-black, #000) calc(var(--island-top-fillet) * 0.45 + 0.6px));
+  }
+
+  .island::before,
+  .island::after {
+    inset: 0 calc(-1 * var(--island-top-fillet)) !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important;
+  }
+
+  .island.island--side::before,
+  .island.island--side::after {
+    inset: calc(-1 * var(--island-top-fillet)) 0 !important;
+  }
+
+  .island::before {
+    -webkit-mask: none !important;
+    mask: none !important;
+    clip-path: var(--island-outline-fillets);
+  }
+
+  .island.island--side::before {
+    background: inherit !important;
+  }
+
+  .stage .island.island--side.island--appearance-liquidGlass[data-glass-wallpaper]::before {
+    background-position:
+      0 0,
+      var(--glass-wallpaper-x) calc(var(--glass-wallpaper-y) + var(--island-top-fillet)) !important;
+  }
+
+  .island::after {
+    z-index: 1;
+    opacity: var(--island-rim-opacity) !important;
+    background: var(--island-rim-paint) !important;
+    -webkit-mask: var(--island-rim-fade) !important;
+    mask: var(--island-rim-fade) !important;
+    clip-path: var(--island-outline-rim);
+  }
+
+  .island.island--glass-rim::after {
+    background:
+      conic-gradient(
+        from var(--glass-rim-angle),
+        var(--glass-c1),
+        var(--glass-c2),
+        var(--glass-rim-light, rgba(var(--overlay-rgb, 255, 255, 255), 0.53)),
+        var(--glass-c3),
+        var(--glass-c1)
+      ) !important;
+    animation: glassRimSpin calc(var(--glass-flow-duration, 23s) * 0.4) linear infinite;
+  }
+
+  :root[data-island-notch] .island--collapsed.island--glass-rim::after {
+    background: none !important;
+  }
+
+  .island--glass-paused.island--glass-rim::after,
+  :root[data-island-notch] .island--collapsed.island--glass-rim::after {
+    animation-play-state: paused;
+  }
+
+  .island .island__surface {
+    overflow: var(--island-surface-overflow);
+    clip-path: var(--island-outline-body);
+  }
+
+  .island--appearance-liquidGlass .island__glass {
+    inset: var(--island-glass-bleed);
+  }
+
+  .island .island__glass-refraction {
+    visibility: var(--island-refraction-visibility);
+  }
+
+  .island.island--glass-rim .island__glass-rim {
+    display: none;
+  }
+
+  .island .island__glass-refraction {
+    border-width: 0;
+    clip-path: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island.island--glass-rim::after {
+    animation-play-state: paused;
+  }
+}

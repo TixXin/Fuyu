@@ -71,7 +71,7 @@ async function runChecks() {
     check(parseFloat(style.borderBottomLeftRadius) === 0 && parseFloat(style.borderBottomRightRadius) === 0, "贴底一侧是直边");
     check(parseFloat(style.borderTopLeftRadius) > 0 && parseFloat(style.borderTopRightRadius) > 0, "上方两角是圆角");
     const fillet = getComputedStyle(island(), "::before");
-    check(fillet.opacity === "1" && fillet.transform.startsWith("matrix(1, 0, 0, -1"), "两个下角画反向圆弧（贴顶圆角翻到下面）");
+    check(fillet.opacity === "1" && near(parseFloat(fillet.left), -8) && near(parseFloat(fillet.right), -8) && fillet.clipPath.startsWith("shape(") && / cw[,)]/.test(fillet.clipPath) && !fillet.clipPath.includes(" ccw"), "两个下角画向下翻的反向圆弧");
     check(near(box(".island__collapsed").bottom, shell.bottom), "收起层贴着岛的下沿");
 
     await set({ expanded: true });
