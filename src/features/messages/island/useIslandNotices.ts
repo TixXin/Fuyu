@@ -1,6 +1,6 @@
 import { useQQNotifications } from "../qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../wechat/WeChatReminders";
-import { useMail } from "../mail/MailPanel";
+import { useMail } from "../mail/useMail";
 import { usePluginNotifications } from "./usePluginNotifications";
 import { useState } from "react";
 import { useLatestMessagePreview } from "./useLatestMessagePreview";

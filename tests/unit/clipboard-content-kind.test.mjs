@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { colorFormats, contentKind, linkLabel, parseColor, stripTracking } from "../../src/features/clipboard/contentKind.ts";
-import { loadPinyin, matchesPopupQuery, parsePopupQuery } from "../../src/features/clipboard/popupQuery.ts";
+import { isPinyinLoaded, loadPinyin, matchesPopupQuery, parsePopupQuery, queryNeedsPinyin } from "../../src/features/clipboard/popupQuery.ts";
 
 const text = (value, extra = {}) => ({ id: value, kind: "text", hash: value, createdAt: 0, copiedAt: 0, preview: value, text: value, ...extra });
 
@@ -35,6 +35,16 @@ test("the search takes / rules, and a rule still being typed narrows nothing", (
   const old = text("old", { copiedAt: now - 3 * 86_400_000, source: { path: "", name: "Weixin" } });
   assert.equal(matchesPopupQuery(old, parsePopupQuery("/today"), now), false);
   assert.equal(matchesPopupQuery(old, parsePopupQuery("/week /app:weix"), now), true);
+});
+
+test("pinyin dictionary stays unloaded until an ASCII letter word is searched", () => {
+  assert.equal(isPinyinLoaded(), false);
+  assert.equal(queryNeedsPinyin(parsePopupQuery("")), false);
+  assert.equal(queryNeedsPinyin(parsePopupQuery("会议 123")), false);
+  assert.equal(queryNeedsPinyin(parsePopupQuery("/img /today /app:微信")), false);
+  assert.equal(queryNeedsPinyin(parsePopupQuery("/usr/bin")), false);
+  assert.equal(queryNeedsPinyin(parsePopupQuery("hy")), true);
+  assert.equal(queryNeedsPinyin(parsePopupQuery("/today huiyi")), true);
 });
 
 test("Chinese matches by its pinyin and by the first letters", async () => {

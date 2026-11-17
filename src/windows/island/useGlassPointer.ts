@@ -30,8 +30,8 @@ export function useGlassPointer(isLiquidGlass: boolean) {
 
       glassFrameRef.current = window.requestAnimationFrame(() => {
         glassFrameRef.current = null;
-        island.style.setProperty("--glass-pointer-x", `${pointerX * 100}%`);
-        island.style.setProperty("--glass-pointer-y", `${pointerY * 100}%`);
+        island.style.setProperty("--glass-pointer-x", String(pointerX));
+        island.style.setProperty("--glass-pointer-y", String(pointerY));
       });
     },
     [isLiquidGlass],
@@ -48,8 +48,8 @@ export function useGlassPointer(isLiquidGlass: boolean) {
         glassFrameRef.current = null;
       }
 
-      event.currentTarget.style.setProperty("--glass-pointer-x", "50%");
-      event.currentTarget.style.setProperty("--glass-pointer-y", "18%");
+      event.currentTarget.style.setProperty("--glass-pointer-x", "0.5");
+      event.currentTarget.style.setProperty("--glass-pointer-y", "0.18");
     },
     [isLiquidGlass],
   );
