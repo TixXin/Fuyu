@@ -2,6 +2,7 @@ import { act, StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import "../../src/styles/tokens.css";
 import { switchOff } from "./builtinsOffMocks";
+import { until } from "./pollUntil";
 import { windowSlots } from "../../src/features/plugin-kernel/slots";
 import { islandContributions } from "../../src/features/plugin-kernel/useIslandContributions";
 import { IslandApp } from "../../src/windows/island/IslandApp";
@@ -56,7 +57,13 @@ try {
   await mount();
   await settle(120);
   check(pages().includes("todo") && islandContributions.snapshot().lines.some((line) => line.item.startsWith("todos.")), "With todos on, the island has the todo page and the todo lines on the collapsed bar");
+  check(await until(() => !present(".island--preparing") && !present(".todo-island"), 2000), "Once collapsed preparation settles, the expanded page subtree is hibernated");
   check(await expand() && activePage() === "todo" && present(".todo-island"), "With todos on, the expanded island opens on the todo page");
+  await act(async () => { document.querySelector<HTMLElement>(".island__collapse-target")?.click(); });
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    check(present(".todo-island"), "During the close transition, the expanded page stays mounted until the shell finishes closing");
+  }
+  check(await until(() => !present(".todo-island"), 2000), "After the close transition finishes, the expanded page subtree unmounts again");
   await unmount();
 
   await switchOff(["todos"]);

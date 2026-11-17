@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { createContext, useContext, type CSSProperties, type ReactNode } from "react";
 import type { AppearanceMode } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
@@ -67,6 +67,11 @@ type IslandShellProps = {
 };
 
 const NO_SOURCES = {};
+const IslandPreparingContext = createContext(false);
+
+export function useIslandShellPreparing() {
+  return useContext(IslandPreparingContext);
+}
 
 export function IslandShell({
   mode,
@@ -223,7 +228,9 @@ export function IslandShell({
             hoverSwitchDelayMs={hoverSwitchDelayMs}
             pluginPageButtons={pluginPageButtons}
           />
-          <div ref={contentRef} className="island__content">{children}</div>
+          <div ref={contentRef} className="island__content">
+            <IslandPreparingContext.Provider value={isPreparing && !isExpanded}>{children}</IslandPreparingContext.Provider>
+          </div>
         </div>
         {overlay}
       </div>
