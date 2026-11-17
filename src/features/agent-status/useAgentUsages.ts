@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getAgentUsage, getCodexUsage } from "./api";
 import { EMPTY_USAGES, type AgentUsages } from "./usage";
 
@@ -23,10 +24,10 @@ export function useAgentUsages(enabled: boolean): AgentUsages {
       });
     };
     refresh();
-    const timer = window.setInterval(refresh, REFRESH_MS);
+    const stop = visibilityInterval(refresh, REFRESH_MS);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, [enabled]);
 

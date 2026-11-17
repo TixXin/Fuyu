@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { agentSessionsInFront, type AgentSessionSummary } from "./api";
 import { isUnseen, loadSeenTurns, markSeen, saveSeen, sessionKey, type SeenTurns } from "./unseen";
 
@@ -30,10 +31,10 @@ export function useUnseenSessions(sessions: AgentSessionSummary[], enabled: bool
       }
     };
     void check();
-    const timer = window.setInterval(() => void check(), IN_FRONT_CHECK_MS);
+    const stop = visibilityInterval(() => void check(), IN_FRONT_CHECK_MS);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, [unseen]);
 

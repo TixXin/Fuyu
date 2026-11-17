@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getLocalDateString } from "../../utils/date";
 import { getTodoSignature } from "./markdown";
 import { clearLastSavedSignature, createTodoId, loadLastSavedSignature, saveLastSavedSignature } from "./storage";
@@ -101,7 +102,6 @@ export function useTodoRollover({
       }
     };
 
-    const interval = window.setInterval(checkForNewDay, 30_000);
-    return () => window.clearInterval(interval);
+    return visibilityInterval(checkForNewDay, 30_000);
   }, [currentTodoDate, rolloverToToday]);
 }

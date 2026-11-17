@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useErrorText } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { useBuiltinConfig } from "../plugin-kernel/useBuiltinPlugins";
 import { getCcConnectStatus, programSetting, type CcConnectStatus } from "./api";
 import { OWNER } from "./plugin/owner.ts";
@@ -24,8 +25,7 @@ export function useCcConnect() {
 
   useEffect(() => {
     void refresh();
-    const timer = window.setInterval(() => void refresh(), REFRESH_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => void refresh(), REFRESH_MS);
   }, [refresh]);
 
   return { path, run: config.run === true, status, error, refresh };

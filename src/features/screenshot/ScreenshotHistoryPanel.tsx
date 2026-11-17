@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Check, Copy, Images, Pin, Trash2 } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { copyHistoryScreenshot, deleteHistoryScreenshot, dragScreenshot, pinHistoryScreenshot, type HistoryItem } from "./api";
 import { clockTime, groupByDay, type HistoryDay } from "./historyDays";
 import { useScreenshotHistory } from "./useScreenshotHistory";
@@ -24,8 +25,7 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
   const thisYear = new Date(now).getFullYear();
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), CLOCK_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setNow(Date.now()), CLOCK_MS);
   }, []);
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fileShelfV1 } from "@fuyu/plugin-services";
 import { useErrorText, useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import {
   getRecordingStatus,
   listenRecordingFinished,
@@ -65,8 +66,7 @@ export function useRecording() {
   const running = state?.phase === "recording" && !state.paused;
   useEffect(() => {
     if (!running) return;
-    const id = window.setInterval(() => setNow(Date.now()), 500);
-    return () => window.clearInterval(id);
+    return visibilityInterval(() => setNow(Date.now()), 500);
   }, [running]);
 
   const report = (error: unknown) => setMessage(errorText(error));

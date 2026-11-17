@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { readPresence } from "./api";
 import { advanceBreaks, snoozedProgress, type BreakReminder, type BreakReminderSettings, type Presence } from "./breakReminders";
 import { replaceIslandReminders } from "./reminders";
@@ -43,10 +44,10 @@ export function useBreakReminders() {
       progress.current = result.progress;
       setDue((current) => (sameItems(current, result.due) ? current : result.due));
     };
-    const interval = window.setInterval(() => void tick(), TICK_MS);
+    const stop = visibilityInterval(() => void tick(), TICK_MS);
     return () => {
       cancelled = true;
-      window.clearInterval(interval);
+      stop();
     };
   }, [running]);
 

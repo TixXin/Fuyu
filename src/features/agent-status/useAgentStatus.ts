@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getAgentStatus, type AgentStatusSnapshot } from "./api";
 import { DEFAULT_AGENT_STATUS, listAgentStatuses } from "./status";
 
@@ -46,11 +47,9 @@ export function useAgentStatus(enabled = true) {
 
     void refreshAgentStatus();
 
-    const interval = window.setInterval(() => {
+    return visibilityInterval(() => {
       void refreshAgentStatus();
     }, 200);
-
-    return () => window.clearInterval(interval);
   }, [enabled, refreshAgentStatus]);
 
   return agentStatus;

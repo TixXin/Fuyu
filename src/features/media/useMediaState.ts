@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getMediaState, sendMediaCommand, type MediaCommand, type MediaPlaybackStatus, type MediaSessionChange, type MediaState } from "./api";
 import { AUDIO_ACTIVE_THRESHOLD, DEFAULT_MEDIA_STATE, isSameMediaState } from "./mediaState";
 import { playbackPosition } from "./lyrics/lrc";
@@ -206,11 +207,9 @@ export function useMediaState(enabled = true) {
 
     void refreshMediaState();
 
-    const interval = window.setInterval(() => {
+    return visibilityInterval(() => {
       void refreshMediaState();
     }, 1500);
-
-    return () => window.clearInterval(interval);
   }, [enabled, refreshMediaState]);
 
   const effectiveMediaTarget = useMemo(() => {

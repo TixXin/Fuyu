@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getSshTunnelProxy, type SshTunnelProxy } from "./api";
 
 const POLL_MS = 3_000;
@@ -14,10 +15,10 @@ export function useSshTunnelProxy(on: boolean) {
         .then((next) => !cancelled && setProxy(next))
         .catch(() => !cancelled && setProxy(null));
     read();
-    const timer = window.setInterval(read, POLL_MS);
+    const stop = visibilityInterval(read, POLL_MS);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, [on]);
 

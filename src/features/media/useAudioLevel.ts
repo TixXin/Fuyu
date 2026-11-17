@@ -1,4 +1,5 @@
 import { useEffect, useRef, type Dispatch, type RefObject, type SetStateAction } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getAudioLevel, type MediaPlaybackStatus, type MediaState } from "./api";
 import { AUDIO_ACTIVE_THRESHOLD } from "./mediaState";
 
@@ -85,13 +86,13 @@ export function useAudioLevel(
 
     void refreshAudioLevel();
 
-    const interval = window.setInterval(() => {
+    const stop = visibilityInterval(() => {
       void refreshAudioLevel();
     }, 500);
 
     return () => {
       didCancel = true;
-      window.clearInterval(interval);
+      stop();
     };
   }, [enabled, mediaPlaybackIntent, setMediaState]);
 }
