@@ -2,7 +2,7 @@ use serde::Serialize;
 use std::{
     collections::HashMap,
     sync::{
-        mpsc::{self, Receiver, Sender},
+        mpsc::{self, Receiver, RecvTimeoutError, Sender},
         Mutex, PoisonError,
     },
     thread::{self, JoinHandle},
@@ -18,11 +18,13 @@ use windows::{
 };
 
 use super::audio::{read_system_audio_peak, AUDIO_ACTIVE_THRESHOLD};
-use super::session::{current_unix_millis, media_error, request_manager, session_id};
+use super::audio_fallback::discover_fallback_sessions;
+use super::session::{current_unix_millis, is_playing, list_sessions, media_error, request_manager, session_id};
 use crate::win32;
 
 pub(crate) const MEDIA_SESSION_CHANGED_EVENT: &str = "media-session-changed";
 
+const FALLBACK_WATCH_STEP: Duration = Duration::from_millis(1200);
 const QUIET_GRACE: Duration = Duration::from_millis(300);
 const SOUND_WAIT: Duration = Duration::from_millis(2000);
 const SOUND_STEP: Duration = Duration::from_millis(15);
@@ -111,6 +113,7 @@ fn watch(app: &AppHandle, sender: Sender<Signal>, signals: Receiver<Signal>) -> 
     let mut songs: HashMap<Option<String>, String> = HashMap::new();
     let mut watched = Vec::new();
     let mut resubscribe = true;
+    let mut last_fallback: Option<(String, bool, Option<String>, Option<String>)> = None;
     loop {
         if resubscribe {
             resubscribe = false;
@@ -120,20 +123,19 @@ fn watch(app: &AppHandle, sender: Sender<Signal>, signals: Receiver<Signal>) -> 
                 songs.entry(entry.id.clone()).or_insert_with(|| song(&entry.session));
             }
         }
-        let signal = signals.recv().unwrap_or(Signal::Stop);
-        match signal {
-            Signal::Stop => {
+        match signals.recv_timeout(FALLBACK_WATCH_STEP) {
+            Ok(Signal::Stop) | Err(RecvTimeoutError::Disconnected) => {
                 unsubscribe(&watched);
                 let _ = manager.RemoveSessionsChanged(sessions_token);
                 let _ = manager.RemoveCurrentSessionChanged(current_token);
                 return Ok(());
             }
-            Signal::Sessions => {
+            Ok(Signal::Sessions) => {
                 resubscribe = true;
                 emit(app, "playback", current_unix_millis(), None);
             }
-            Signal::Playback(id, at) => emit(app, "playback", at, id),
-            Signal::Track(id, at) => {
+            Ok(Signal::Playback(id, at)) => emit(app, "playback", at, id),
+            Ok(Signal::Track(id, at)) => {
                 let Some(entry) = watched.iter().find(|entry| entry.id == id) else { continue };
                 let now = song(&entry.session);
                 if songs.get(&id) == Some(&now) {
@@ -142,8 +144,59 @@ fn watch(app: &AppHandle, sender: Sender<Signal>, signals: Receiver<Signal>) -> 
                 songs.insert(id.clone(), now);
                 emit(app, "track", sound_onset(at), id);
             }
+            Err(RecvTimeoutError::Timeout) => {
+                check_fallback_changes(app, &manager, &watched, &mut last_fallback);
+            }
         }
     }
+}
+
+fn check_fallback_changes(
+    app: &AppHandle,
+    manager: &MediaSessionManager,
+    watched: &[Watched],
+    last_fallback: &mut Option<(String, bool, Option<String>, Option<String>)>,
+) {
+    let audible = read_system_audio_peak().is_ok_and(|peak| peak > AUDIO_ACTIVE_THRESHOLD);
+    if !audible && last_fallback.as_ref().is_none_or(|(_, playing, _, _)| !*playing) {
+        return;
+    }
+    if watched.iter().any(|entry| is_playing(&entry.session)) {
+        *last_fallback = None;
+        return;
+    }
+    let now_ms = current_unix_millis();
+    let fallbacks = discover_fallback_sessions(&list_sessions(manager), now_ms);
+    let next = fallbacks
+        .iter()
+        .find(|entry| entry.playing)
+        .or_else(|| fallbacks.first())
+        .map(|entry| {
+            (
+                entry.id.clone(),
+                entry.playing,
+                entry.title.clone(),
+                entry.artist.clone(),
+            )
+        });
+    if &next == last_fallback {
+        return;
+    }
+    let kind = match (&last_fallback, &next) {
+        (Some((_, _, old_title, old_artist)), Some((_, true, new_title, new_artist)))
+            if (old_title != new_title || old_artist != new_artist) && new_title.is_some() =>
+        {
+            "track"
+        }
+        (None, Some((_, true, new_title, _))) if new_title.is_some() => "track",
+        _ => "playback",
+    };
+    let session_id = next
+        .as_ref()
+        .map(|(id, _, _, _)| id.clone())
+        .or_else(|| last_fallback.as_ref().map(|(id, _, _, _)| id.clone()));
+    *last_fallback = next;
+    emit(app, kind, now_ms, session_id);
 }
 
 fn subscribe(manager: &MediaSessionManager, sender: &Sender<Signal>) -> Vec<Watched> {
