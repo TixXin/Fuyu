@@ -71,6 +71,7 @@ export function inspectPackage(zipBuffer, options = {}) {
     stage: "built",
     allowExperimental: false,
     appVersion: options.appVersion,
+    official: source === "market" || options.official === true,
   });
   if (!check.ok) {
     throw installerError(
