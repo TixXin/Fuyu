@@ -1,3 +1,4 @@
+mod background;
 #[cfg_attr(target_os = "macos", path = "capture_macos.rs")]
 mod capture;
 mod download;
@@ -17,16 +18,25 @@ use crate::user_error::UserError;
 pub use model::VoiceModelStatus;
 pub use session::VoiceInputState;
 
+pub(crate) const PLUGIN_ID: &str = "voice-input";
 pub(crate) const SHORTCUT_EVENT: &str = "voice-input-shortcut-status";
 
 static APP: OnceLock<AppHandle> = OnceLock::new();
 
 pub(crate) fn init(app: &AppHandle) {
     let _ = APP.set(app.clone());
-    hotkey::start(app);
+    hotkey::init(app);
+    background::register(app);
+}
+
+pub(crate) fn is_enabled() -> bool {
+    crate::plugin_kernel::builtins::is_enabled(PLUGIN_ID)
 }
 
 fn on_hotkey() {
+    if !is_enabled() {
+        return;
+    }
     let Some(app) = APP.get().cloned() else { return };
     std::thread::spawn(move || {
         let _ = session::toggle(&app);
@@ -41,7 +51,12 @@ pub fn voice_input_state() -> VoiceInputState {
 #[tauri::command]
 pub async fn voice_input_configure(app: AppHandle, enabled: bool, shortcut: String) {
     let shortcut = shortcut.trim().to_string();
-    hotkey::configure((enabled && !shortcut.is_empty()).then_some(shortcut));
+    let wanted = if is_enabled() {
+        (enabled && !shortcut.is_empty()).then_some(shortcut)
+    } else {
+        (!shortcut.is_empty()).then_some(shortcut)
+    };
+    hotkey::configure(wanted);
     if !enabled {
         let _ = session::stop(&app, false);
         engine::unload();

@@ -8,7 +8,7 @@
     { "id": "screenshot", "kind": "builtin", "root": "screenshot", "host": "host/index.mjs", "background": ["shortcuts", "windows"] },
     { "id": "file-shelf", "kind": "builtin", "root": "file-shelf", "host": "host/index.mjs", "background": [] },
     { "id": "translation", "kind": "builtin", "root": "translation", "host": "host/index.mjs", "background": ["shortcuts", "window"] },
-    { "id": "voice-input", "kind": "builtin", "root": "voice-input", "host": "host/index.mjs" },
+    { "id": "voice-input", "kind": "builtin", "root": "voice-input", "host": "host/index.mjs", "background": ["shortcuts"] },
     { "id": "timer", "kind": "builtin", "root": "timer", "host": "host/index.mjs", "background": ["shortcuts"] },
     { "id": "agents", "kind": "builtin", "root": "agent-status", "host": "host/index.mjs", "background": ["approvals", "opencode", "remote", "hotkeys"] },
     { "id": "session-ring", "kind": "builtin", "root": "session-ring", "host": "host/index.mjs", "background": [] },

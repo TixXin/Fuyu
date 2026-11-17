@@ -1,7 +1,7 @@
 use std::{
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
-        Condvar, Mutex,
+        Arc, Condvar, Mutex,
     },
     thread,
     time::{Duration, Instant},
@@ -54,7 +54,7 @@ struct Frame {
     width: u32,
     height: u32,
     scale: f64,
-    rgba: Vec<u8>,
+    rgba: Arc<Vec<u8>>,
 }
 
 struct Session {
@@ -130,7 +130,7 @@ fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
 }
 
 fn grabbed(index: usize, grab: super::capture::Grab) -> Frame {
-    Frame { label: label(index), origin: grab.origin, width: grab.width, height: grab.height, scale: grab.scale, rgba: grab.rgba }
+    Frame { label: label(index), origin: grab.origin, width: grab.width, height: grab.height, scale: grab.scale, rgba: Arc::new(grab.rgba) }
 }
 
 fn announce(app: &AppHandle, id: u64) {
@@ -315,7 +315,9 @@ pub(super) fn add_targets(id: u64, more: Vec<Target>) -> Option<Vec<String>> {
 }
 
 pub(crate) fn frame(label: &str) -> Option<Vec<u8>> {
-    session().as_ref()?.frames.iter().find(|frame| frame.label == label && !frame.rgba.is_empty()).map(|frame| frame.rgba.clone())
+    let guard = session();
+    let frame = guard.as_ref()?.frames.iter().find(|frame| frame.label == label && !frame.rgba.is_empty())?;
+    Some(Arc::unwrap_or_clone(Arc::clone(&frame.rgba)))
 }
 
 pub(crate) fn overlay_ready(window: &WebviewWindow, id: u64) {

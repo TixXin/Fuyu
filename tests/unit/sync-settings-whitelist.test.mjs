@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults.ts";
 import { normalizeScreenshotSettings } from "../../src/features/screenshot/settings.ts";
 import { BACKUP_KEYS } from "../../src/lib/settings-backup/backup.ts";
 import { DEFAULT_SETTINGS as DEFAULT_TRANSLATION_SETTINGS } from "../../src/features/translation/storage.ts";
+import { DEFAULT_VOICE_INPUT_SETTINGS } from "../../src/features/voice-input/settings.ts";
 
 const whitelist = JSON.parse(readFileSync(new URL("../../src-tauri/src/sync/settings_whitelist.json", import.meta.url), "utf8"));
 const MODES = new Set(["sync", "local", "firstMergeOnly", "byId", "optional"]);
@@ -19,6 +20,7 @@ const OBJECT_SETTINGS = {
   "fuyu-agent-sounds": DEFAULT_AGENT_SOUND_SETTINGS,
   "fuyu-agent-approval": DEFAULT_AGENT_APPROVAL_SETTINGS,
   "fuyu-agent-push": DEFAULT_AGENT_PUSH_SETTINGS,
+  "fuyu-voice-input": DEFAULT_VOICE_INPUT_SETTINGS,
 };
 
 const sorted = (values) => [...values].sort();
@@ -56,6 +58,8 @@ test("the user's choices hold: screen sizes and shortcuts stay local, module swi
   assert.equal(whitelist.keys["fuyu-setting-presets"], "byId");
   assert.equal(whitelist.keys["fuyu-translation-settings"].fields.shortcut, "local");
   assert.equal(whitelist.keys["fuyu-screenshot-settings"].fields.shortcuts, "local");
+  assert.equal(whitelist.keys["fuyu-voice-input"].fields.enabled, "firstMergeOnly");
+  assert.equal(whitelist.keys["fuyu-voice-input"].fields.shortcut, "local");
   for (const key of ["fuyu-qq-notifications-enabled", "fuyu-wechat-reminders-enabled", "fuyu-wechat-expose-ui", "fuyu-wechat-hide-taskbar-button"]) {
     assert.equal(whitelist.keys[key], "local", key);
   }

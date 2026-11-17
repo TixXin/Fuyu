@@ -24,6 +24,7 @@ export function createWindowServices({ remote = null, owner: defaultOwner = "bui
   const watchers = new Set();
   let disabled = new Set();
   let host = remote;
+  let unwatchHost = null;
 
   const live = (provider) => provider.active && !disabled.has(provider.owner) && providers.get(provider.definition.name)?.includes(provider);
   const current = (name) => providers.get(name)?.find((provider) => !disabled.has(provider.owner)) ?? null;
@@ -177,13 +178,17 @@ export function createWindowServices({ remote = null, owner: defaultOwner = "bui
 
     attach(proxy) {
       if (proxy === host) return;
+      unwatchHost?.();
+      unwatchHost = null;
       for (const key of [...remoteOff.keys()]) void dropRemote(key);
       host = proxy ?? null;
+      if (typeof host?.watch === "function") unwatchHost = host.watch(() => changed());
       for (const key of listeners.keys()) {
         const [name, event] = key.split("\n");
         const definition = definitions.get(name);
         if (definition) hearRemote(definition, event);
       }
+      changed();
     },
 
     setDisabledOwners(ids) {
@@ -217,5 +222,6 @@ export function createWindowServices({ remote = null, owner: defaultOwner = "bui
       return () => watchers.delete(watcher);
     },
   };
+  if (typeof host?.watch === "function") unwatchHost = host.watch(() => changed());
   return Object.freeze(table);
 }

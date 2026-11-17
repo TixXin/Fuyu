@@ -29,6 +29,7 @@ test("a backup carries the AI Agent approval and phone push choices and lyrics o
     "fuyu-collapsed-items",
     "fuyu-plugin-market-favorites",
     "fuyu-screenshot-annotation",
+    "fuyu-voice-input",
   ]) {
     assert.ok(BACKUP_KEYS.includes(key), key);
   }

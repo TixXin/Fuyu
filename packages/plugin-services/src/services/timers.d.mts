@@ -21,6 +21,7 @@ export type TimersMethods = {
   extend(params: { id: string; byMs?: number }): { timer: Timer };
   remove(params: { id: string }): { removed: boolean };
   dismissRinging(): { removed: number };
+  adopt(params: { timers: Timer[] }): { timers: Timer[]; added: number; at: number };
 };
 
 export type TimersEvents = {

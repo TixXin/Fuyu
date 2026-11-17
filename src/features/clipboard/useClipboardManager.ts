@@ -1,4 +1,5 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { deleteClipboardItems, restoreClipboardItems, type ClipboardHistoryItem } from "./api";
 import { clickSelection, EMPTY_SELECTION, selectAll, visibleSelection, type ManageSelection } from "./manageSelection";
 import { withoutPending } from "./pendingItems";
@@ -21,9 +22,8 @@ export function useClipboardManager(items: readonly ClipboardHistoryItem[]) {
   const searched = useDeferredValue(query);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), CLOCK_MS);
     void loadPinyin().then((pinyin) => setPinyinReady(pinyin !== null));
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setNow(Date.now()), CLOCK_MS);
   }, []);
 
   const report = useCallback((action: string) => (error: unknown) => {

@@ -64,7 +64,6 @@
   animation:
     agent-band-drift-a 16s linear infinite,
     agent-band-twinkle 2.6s var(--motion-ease-in-out) infinite;
-  will-change: transform, opacity;
 }
 
 .agent-card__band::after {

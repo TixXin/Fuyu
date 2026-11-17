@@ -4,11 +4,7 @@
     "src/features/plugins/PluginDetailPage.tsx -> src/features/center-pattern/index.ts",
     "src/features/plugins/useBuiltinPlugin.ts -> src/features/plugin-views/api.ts",
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginCard.css",
-    "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginMarketSection.css",
-    "src/features/timer/ReminderNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
-    "src/features/timer/TimerNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
-    "src/features/voice-input/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts",
-    "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/todos/plugin/islandState.ts"
+    "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginMarketSection.css"
   ],
   "shared": [
     "src/lib/settings/normalizeBehaviorSettings.ts -> src/features/calendar/calendarSettings.ts",
@@ -26,8 +22,6 @@
     "src/lib/settings/useSettingPresets.ts -> src/features/todos/index.ts"
   ],
   "removedBy": {
-    "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts": "E36.3.45",
-    "src/features/voice-input/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.36",
-    "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.36"
+    "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts": "E36.3.45"
   }
 }

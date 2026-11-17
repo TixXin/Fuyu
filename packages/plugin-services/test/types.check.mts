@@ -5,6 +5,9 @@ const listed: Promise<{ timers: Timer[]; at: number }> = timers.list();
 void listed;
 void timers.start({ kind: "countdown", durationMs: 60_000 });
 void timers.start({ kind: "stopwatch" });
+void timers.adopt({ timers: [] }).then((result) => result.added + result.timers.length);
+// @ts-expect-error adopt needs { timers }
+void timers.adopt({});
 // @ts-expect-error a countdown needs its duration
 void timers.start({ kind: "countdown" });
 // @ts-expect-error pause needs the id

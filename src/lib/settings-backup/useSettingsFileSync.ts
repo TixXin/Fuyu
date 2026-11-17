@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { readString } from "../storage.ts";
+import { visibilityInterval } from "../useVisibilityInterval.ts";
 import { onSettingsSyncApplied, writeSettingsFile, type SettingsSyncApplied } from "./api";
 import { isBackupKey } from "./backup.ts";
 import { currentKeys, fingerprint, settingsFileText, type SettingsKeys } from "./settingsFile.ts";
@@ -32,10 +33,10 @@ export function useSettingsFileSync() {
         });
     };
     check();
-    const timer = window.setInterval(check, CHECK_MS);
+    const stop = visibilityInterval(check, CHECK_MS);
     window.addEventListener("storage", check);
     return () => {
-      window.clearInterval(timer);
+      stop();
       window.removeEventListener("storage", check);
     };
   }, []);
