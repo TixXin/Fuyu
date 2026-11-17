@@ -312,7 +312,7 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
         <>
           <HostSummaryBar view={view} runningCount={runningCount} onOpenDiagnostics={() => setTab("diagnostics")} />
           {open ? <PluginBisectBar thirdPartyIds={extras.filter((p) => p.kind === "third-party" || !p.kind).map((p) => p.id)} onBisect={view.bisect} /> : null}
-          <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} />
+          <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
         </>
       ) : (
         <>
@@ -321,7 +321,7 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
         </>
       )}
 
-      {selectedId ? <PluginDetailModal builtin={selectedBuiltin} hostPlugin={selectedHost} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
+      {selectedId ? <PluginDetailModal builtin={selectedBuiltin} hostPlugin={selectedHost} hostPlugins={plugins} builtins={builtins} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
     </>
   );
 }
@@ -359,11 +359,11 @@ export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: Plugi
               </div>
             </div>
           </section>
-          <BuiltinPluginsGroup builtins={builtins} hostEnabled={false} query={query} onSelectPlugin={setSelectedId} />
+          <BuiltinPluginsGroup builtins={builtins} hostEnabled={false} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
           {selectedId ? <PluginDetailModal builtin={selectedBuiltin} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
         </>
       ) : null}
-      {hostEnabled === null ? <BuiltinPluginsGroup builtins={builtins} hostEnabled={null} query={query} onSelectPlugin={setSelectedId} /> : null}
+      {hostEnabled === null ? <BuiltinPluginsGroup builtins={builtins} hostEnabled={null} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} /> : null}
     </div>
   );
 }

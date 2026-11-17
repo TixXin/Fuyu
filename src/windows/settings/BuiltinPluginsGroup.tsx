@@ -53,7 +53,7 @@ export function milliseconds(ms: number) {
 }
 
 export function isAttentionState(state: PluginV3State): boolean {
-  return state === "failed" || state === "auto-disabled" || state === "safe-mode" || state === "waiting";
+  return state === "failed" || state === "auto-disabled" || state === "safe-mode" || state === "waiting" || state === "bisect";
 }
 
 export function matchesPluginQuery(id: string, query: string, extraText = ""): boolean {
@@ -110,8 +110,11 @@ function LastErrorDetails({ plugin, defaultOpen = false }: { plugin: PluginStatu
 const INTERACTIVE = "button, input, label, summary, details, .settings-switch";
 const FOCUSABLE = "button:not(:disabled), input:not(:disabled), summary, [tabindex]:not([tabindex='-1'])";
 
-function BuiltinPluginCard({ plugin, hostPlugin, onSelect }: { plugin: BuiltinPlugin; hostPlugin?: PluginStatusV3; onSelect: () => void }) {
-  const text = useTranslation().settings.pluginsV3;
+function BuiltinPluginCard({ plugin, hostPlugin, onSelect, onOpenPage }: {
+  plugin: BuiltinPlugin; hostPlugin?: PluginStatusV3; onSelect: () => void; onOpenPage?: (page: SettingsCategory) => void;
+}) {
+  const settingsText = useTranslation().settings;
+  const text = settingsText.pluginsV3;
   const errorText = useErrorText();
   const switchId = useId();
   const [busy, setBusy] = useState(false);
@@ -127,6 +130,7 @@ function BuiltinPluginCard({ plugin, hostPlugin, onSelect }: { plugin: BuiltinPl
   const hostDetail = hostPlugin ? detailText(hostPlugin, text) : null;
   const showStateBadge = state !== "running" && state !== "disabled";
   const usage = hostPlugin?.usage;
+  const targetPage = BUILTIN_PAGES[id];
   const change = (enabled: boolean) => {
     setBusy(true);
     setError(null);
@@ -145,10 +149,7 @@ function BuiltinPluginCard({ plugin, hostPlugin, onSelect }: { plugin: BuiltinPl
       onClick={openCard}
     >
       <div className="plugins-v3__plugin-head">
-        <span className={`plugins-v3__icon plugins-v3__icon--${tone}`} aria-hidden="true">
-          <Icon size={16} strokeWidth={2} />
-          <span className="plugins-v3__dot" />
-        </span>
+        <span className={`plugins-v3__icon plugins-v3__icon--${tone}`} aria-hidden="true"><Icon size={16} strokeWidth={2} /><span className="plugins-v3__dot" /></span>
         <div className="plugins-v3__title-col">
           <div className="plugins-v3__title-line">
             <label className="plugins-v3__plugin-name" htmlFor={switchId} title={name}>{name}</label>
@@ -157,24 +158,24 @@ function BuiltinPluginCard({ plugin, hostPlugin, onSelect }: { plugin: BuiltinPl
           </div>
           <span className="plugins-v3__id">{plugin.id}</span>
         </div>
-        <div className="plugins-v3__switch">
-          <SettingsSwitch id={switchId} checked={plugin.enabled} disabled={essential || busy} onChange={change} />
-        </div>
+        <div className="plugins-v3__switch"><SettingsSwitch id={switchId} checked={plugin.enabled} disabled={essential || busy} onChange={change} /></div>
       </div>
       {note ? <p className="plugins-v3__note">{note}</p> : null}
       {hostDetail ? <p className={`plugins-v3__detail plugins-v3__detail--${tone}`}>{hostDetail}</p> : null}
       <div className="plugins-v3__card-foot">
         {usage && plugin.enabled && state === "running" ? (
-          <>
-            <span>{`${text.cpu} ${milliseconds(usage.cpuMs)} · ${text.apply} ${usage.applyMs === null ? "–" : milliseconds(usage.applyMs)}`}</span>
-            <button className="plugins-v3__foot-btn" type="button" onClick={onSelect}>{resourceSummary(hostPlugin, text)}</button>
-          </>
+          <span>{`${text.cpu} ${milliseconds(usage.cpuMs)} · ${text.apply} ${usage.applyMs === null ? "–" : milliseconds(usage.applyMs)}`}</span>
         ) : (
-          <>
-            <span className={`plugins-v3__foot-state plugins-v3__foot-state--${tone}`}>{text.states[state]}</span>
-            <button className="plugins-v3__foot-btn" type="button" onClick={onSelect}>{text.viewDetail}</button>
-          </>
+          <span className={`plugins-v3__foot-state plugins-v3__foot-state--${tone}`}>{text.states[state]}</span>
         )}
+        <span className="plugins-v3__foot-actions">
+          <button className="plugins-v3__foot-btn" type="button" onClick={onSelect}>
+            {usage && plugin.enabled && state === "running" ? resourceSummary(hostPlugin, text) : text.viewDetail}
+          </button>
+          {targetPage && onOpenPage && plugin.enabled ? (
+            <button className="plugins-v3__foot-link" type="button" onClick={() => onOpenPage(targetPage)}>{settingsText.shortcuts.openFeaturePage}</button>
+          ) : null}
+        </span>
       </div>
     </article>
   );
@@ -212,8 +213,9 @@ export function HostPluginCard({ plugin, onSelect }: { plugin: PluginStatusV3; o
   );
 }
 
-export function PluginDetailModal({ builtin, hostPlugin, onClose, onOpenPage }: {
-  builtin?: BuiltinPlugin; hostPlugin?: PluginStatusV3; onClose: () => void; onOpenPage?: (page: SettingsCategory) => void;
+export function PluginDetailModal({ builtin, hostPlugin, hostPlugins, builtins, onClose, onOpenPage }: {
+  builtin?: BuiltinPlugin; hostPlugin?: PluginStatusV3; hostPlugins?: readonly PluginStatusV3[] | null;
+  builtins?: readonly BuiltinPlugin[] | null; onClose: () => void; onOpenPage?: (page: SettingsCategory) => void;
 }) {
   const settingsText = useTranslation().settings;
   const text = settingsText.pluginsV3;
@@ -235,7 +237,7 @@ export function PluginDetailModal({ builtin, hostPlugin, onClose, onOpenPage }: 
   const kind = builtin?.kind ?? hostPlugin?.kind;
   const state = hostPlugin ? stateOf(hostPlugin) : builtin?.enabled ? "running" : "disabled";
   const tone = TONES[state];
-  const detail = hostPlugin ? detailText(hostPlugin, text) : null;
+  const detail = hostPlugin ? detailText(hostPlugin, text, hostPlugins, builtins) : null;
   const summary = (text.builtinNotes as Record<string, string | undefined>)[id] ?? (text.builtinSummaries as Record<string, string | undefined>)[id] ?? null;
   const note = builtin?.kind === "essential" ? `${text.essentialNote}${summary ? ` · ${summary}` : ""}` : summary;
   const targetPage = builtin ? BUILTIN_PAGES[builtin.id as BuiltinPluginName] : undefined;
@@ -283,7 +285,7 @@ export function PluginDetailModal({ builtin, hostPlugin, onClose, onOpenPage }: 
 }
 
 export function BuiltinPluginsGroup({
-  builtins, hostPlugins = null, hostEnabled = null, stale = false, query = "", onSelectPlugin,
+  builtins, hostPlugins = null, hostEnabled = null, stale = false, query = "", onSelectPlugin, onOpenPage,
 }: {
   builtins: readonly BuiltinPlugin[] | null;
   hostPlugins?: PluginStatusV3[] | null;
@@ -291,6 +293,7 @@ export function BuiltinPluginsGroup({
   stale?: boolean;
   query?: string;
   onSelectPlugin: (id: string) => void;
+  onOpenPage?: (page: SettingsCategory) => void;
 }) {
   const text = useTranslation().settings.pluginsV3;
   const [filter, setFilter] = useState<PluginV3Filter>("all");
@@ -371,7 +374,7 @@ export function BuiltinPluginsGroup({
             <section key={groupKey} className="plugins-v3__section settings-group" aria-label={text.groups[groupKey]}>
               <h3 className="plugins-v3__section-title">{text.groups[groupKey]}</h3>
               <div className="plugins-v3__grid">
-                {items.map((plugin) => <BuiltinPluginCard key={plugin.id} plugin={plugin} hostPlugin={hostById.get(plugin.id)} onSelect={() => onSelectPlugin(plugin.id)} />)}
+                {items.map((plugin) => <BuiltinPluginCard key={plugin.id} plugin={plugin} hostPlugin={hostById.get(plugin.id)} onSelect={() => onSelectPlugin(plugin.id)} onOpenPage={onOpenPage} />)}
               </div>
             </section>
           );
