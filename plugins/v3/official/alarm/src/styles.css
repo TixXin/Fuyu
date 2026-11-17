@@ -1,0 +1,205 @@
+.fuyu-alarm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-alarm__ring-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--fuyu-plugin-accent);
+  border-radius: var(--fuyu-plugin-radius);
+  background: color-mix(in srgb, var(--fuyu-plugin-accent) 16%, var(--fuyu-plugin-surface));
+}
+
+.fuyu-alarm__ring-info {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-alarm__ring-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.fuyu-alarm__form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fuyu-alarm__form-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.fuyu-alarm__time-input,
+.fuyu-alarm__input,
+.fuyu-alarm__select {
+  padding: 4px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+}
+
+.fuyu-alarm__input {
+  flex: 1;
+  min-width: 90px;
+}
+
+.fuyu-alarm__days {
+  display: flex;
+  gap: 4px;
+}
+
+.fuyu-alarm__day {
+  padding: 2px 7px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text-secondary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.fuyu-alarm__day--on {
+  border-color: var(--fuyu-plugin-accent);
+  background: color-mix(in srgb, var(--fuyu-plugin-accent) 22%, var(--fuyu-plugin-surface));
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-alarm__button {
+  padding: 4px 12px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  font-weight: 500;
+  color: var(--fuyu-plugin-on-accent);
+  background: var(--fuyu-plugin-accent);
+  cursor: pointer;
+}
+
+.fuyu-alarm__mini {
+  padding: 3px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.fuyu-alarm__mini:hover {
+  border-color: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-alarm__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fuyu-alarm__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-alarm__row--off {
+  opacity: 0.6;
+}
+
+.fuyu-alarm__row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fuyu-alarm__row-time {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-alarm__row-meta {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-alarm__row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.fuyu-alarm__settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fuyu-alarm__section-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fuyu-alarm__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.fuyu-alarm__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-alarm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 12px;
+  color: var(--fuyu-plugin-accent);
+  white-space: nowrap;
+}
+
+.fuyu-alarm-chip__time {
+  font-variant-numeric: tabular-nums;
+  color: var(--fuyu-plugin-text);
+}

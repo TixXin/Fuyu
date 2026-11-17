@@ -1,0 +1,19 @@
+declare module "node:crypto" {
+  export function randomUUID(): string;
+}
+
+declare module "node:fs" {
+  export function mkdirSync(path: string, options?: { recursive?: boolean }): string | undefined;
+  export function readFileSync(path: string, encoding: "utf8"): string;
+  export function writeFileSync(path: string, data: string, encoding?: "utf8"): void;
+}
+
+declare module "node:path" {
+  export function join(...paths: string[]): string;
+}
+
+declare module "cordis" {
+  interface Context {
+    readonly dataDir: string;
+  }
+}

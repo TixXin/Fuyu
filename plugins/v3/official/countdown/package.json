@@ -1,0 +1,49 @@
+{
+  "name": "@fuyu/countdown",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Day countdowns and anniversaries with custom card backgrounds and a collapsed-bar day counter",
+  "author": "TixXin",
+  "license": "MIT",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev",
+    "build": "fuyu-plugin build",
+    "check": "fuyu-plugin check --market",
+    "package": "fuyu-plugin pack",
+    "typecheck": "tsc"
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "倒数日",
+      "en": "Countdown"
+    },
+    "description": {
+      "zh-CN": "管理重要日期与纪念日，支持自定义卡片背景图，并在收起条显示最近一项的剩余天数。",
+      "en": "Track upcoming milestones and anniversaries with custom card backgrounds and a day counter on the collapsed bar."
+    },
+    "icon": "assets/icon.svg",
+    "categories": [
+      "productivity",
+      "utilities"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
+    },
+    "slots": [
+      "island.page/v1",
+      "island.collapsed/v1",
+      "settings.section/v1"
+    ]
+  }
+}
