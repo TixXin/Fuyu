@@ -62,23 +62,32 @@ fn capture_and_emit_selection() {
 
 #[tauri::command]
 pub fn toggle_translation_window(app: AppHandle) -> Result<(), String> {
-    let window = app
-        .get_webview_window(WINDOW_LABEL)
-        .ok_or_else(|| "Translation window was not found.".to_string())?;
-    if window.is_visible().map_err(|error| error.to_string())? {
-        window.hide().map_err(|error| error.to_string())?;
-        crate::webview_memory::hidden(&window);
-        return Ok(());
+    if let Some(window) = app.get_webview_window(WINDOW_LABEL) {
+        if window.is_visible().map_err(|error| error.to_string())? {
+            return hide(&app, &window);
+        }
     }
+    show(&app)
+}
 
+fn show(app: &AppHandle) -> Result<(), String> {
+    background::cancel_idle_destroy();
+    let window = background::ensure_window(app)?;
     if !HAS_POSITIONED_WINDOW.load(Ordering::Relaxed) {
         placement::place(&window)?;
         HAS_POSITIONED_WINDOW.store(true, Ordering::Relaxed);
     }
     crate::webview_memory::showing(&window);
     window.show().map_err(|error| error.to_string())?;
-    focus_translation_window(&app, &window)?;
+    focus_translation_window(app, &window)?;
     let _ = app.emit(TRANSLATION_WINDOW_OPENED_EVENT, ());
+    Ok(())
+}
+
+fn hide(app: &AppHandle, window: &tauri::WebviewWindow) -> Result<(), String> {
+    window.hide().map_err(|error| error.to_string())?;
+    crate::webview_memory::hidden(window);
+    background::schedule_idle_destroy(app);
     Ok(())
 }
 
@@ -102,25 +111,23 @@ fn focus_translation_window(_: &AppHandle, window: &tauri::WebviewWindow) -> Res
 
 #[tauri::command]
 pub fn present_translation_window(app: AppHandle) -> Result<(), String> {
-    let window = app
-        .get_webview_window(WINDOW_LABEL)
-        .ok_or_else(|| "Translation window was not found.".to_string())?;
-    if window.is_visible().map_err(|error| error.to_string())? {
-        focus_translation_window(&app, &window)?;
-        let _ = app.emit(TRANSLATION_WINDOW_OPENED_EVENT, ());
-        return Ok(());
+    if let Some(window) = app.get_webview_window(WINDOW_LABEL) {
+        if window.is_visible().map_err(|error| error.to_string())? {
+            background::cancel_idle_destroy();
+            focus_translation_window(&app, &window)?;
+            let _ = app.emit(TRANSLATION_WINDOW_OPENED_EVENT, ());
+            return Ok(());
+        }
     }
-    toggle_translation_window(app)
+    show(&app)
 }
 
 #[tauri::command]
 pub fn hide_translation_window(app: AppHandle) -> Result<(), String> {
-    let window = app
-        .get_webview_window(WINDOW_LABEL)
-        .ok_or_else(|| "Translation window was not found.".to_string())?;
-    window.hide().map_err(|error| error.to_string())?;
-    crate::webview_memory::hidden(&window);
-    Ok(())
+    let Some(window) = app.get_webview_window(WINDOW_LABEL) else {
+        return Ok(());
+    };
+    hide(&app, &window)
 }
 
 #[tauri::command]
