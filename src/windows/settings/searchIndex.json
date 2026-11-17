@@ -1140,6 +1140,43 @@
       }
     },
     {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "中心图案",
+        "title": "图案"
+      },
+      "en": {
+        "group": "Center pattern",
+        "title": "Pattern"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "中心图案",
+        "title": "宠物",
+        "description": "图案选「宠物」时显示哪一只，默认小八（xiaoba）。宠物包（pet.json + spritesheet）放在 ~/.codex/pets 或应用数据目录的 pets 文件夹里；找不到时显示眼睛。"
+      },
+      "en": {
+        "group": "Center pattern",
+        "title": "Pet",
+        "description": "Which pet the Pet pattern shows; xiaoba by default. Pet packs (pet.json + spritesheet) go in ~/.codex/pets or the pets folder of the app data directory; without one the eyes show."
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "中心图案",
+        "title": "大小（像素）",
+        "description": "图案的高度，默认 24，和收起条上的环一样高；悬岛量的是胶囊，宠物比它高 4。"
+      },
+      "en": {
+        "group": "Center pattern",
+        "title": "Size (px)",
+        "description": "How tall the pattern is; 24 by default, as tall as the rings on the collapsed bar. For the island mark it is the pill; a pet is 4 taller."
+      }
+    },
+    {
       "page": "shortcuts",
       "zh-CN": {
         "group": "",

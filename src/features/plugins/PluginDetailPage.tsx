@@ -3,7 +3,6 @@ import { Eraser, ExternalLink, Play } from "lucide-react";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useLocale, useTranslation } from "../../i18n";
-import { CENTER_PATTERN_PET_KEY, CENTER_PATTERN_PLUGIN_ID, petChoices, usePetChoices } from "../center-pattern";
 import { openPluginHomepage, PLUGIN_MEMORY_LIMITS_MB, type PluginInfo, type PluginWindowRules } from "./api";
 import { pluginHealth } from "./installedFilter";
 import { PluginDialog } from "./PluginDialog";
@@ -57,7 +56,6 @@ export function PluginDetailPage({
   const t = useTranslation();
   const { locale } = useLocale();
   const running = plugin.status === "running";
-  const pets = usePetChoices(plugin.id === CENTER_PATTERN_PLUGIN_ID);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const name = plugin.name?.[locale] ?? plugin.id;
   const description = plugin.description?.[locale];
@@ -134,13 +132,8 @@ export function PluginDetailPage({
               key={spec.key}
               spec={spec}
               value={plugin.settings[spec.key]}
-              disabled={busy || (pets === "loading" && spec.key === CENTER_PATTERN_PET_KEY)}
+              disabled={busy}
               onChange={(value) => onSettingChange(spec.key, value)}
-              choices={
-                pets && spec.key === CENTER_PATTERN_PET_KEY
-                  ? petChoices(pets, String(plugin.settings[spec.key] ?? ""), t.settings.plugins.detail.pets)
-                  : undefined
-              }
             />
           ))
         )}

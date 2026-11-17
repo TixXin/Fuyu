@@ -30,7 +30,7 @@ src-tauri/src/
 ├── pets/                    # Codex Pets（petdex）：只读列出 ~/.codex/pets 与 <app data>/pets，校验后以 data URL 返回图集
 ├── local_api/               # 本地接口（第 3 版内置插件 local-api，background.rs 把 HTTP 服务登记成后台 server，关掉插件就停）：127.0.0.1 HTTP（tiny_http）、鉴权与路由、转给 main 窗口的桥、local-api.json；switches.rs 让转给待办、Agent、剪贴板的请求在那个插件关着时回 503；settings.rs 是设置页的命令（令牌只由 Rust 复制）
 ├── plugin_kernel/           # 插件平台第 3 版的宿主（E36.1）：测试版（版本号带 -）和开发版默认启动、设成 0 关掉，正式版设 FUYU_PLUGINS_V3=1 才启动，安装包里用资源目录里的宿主；找 Node（找下载的状态和重试在 node_status.rs）、在数据目录的 plugins-v3/ 下拉起 packages/plugin-base 的宿主，用 platform::job 管住它（containment.rs）。看管宿主的通用部分在 crates/plugin-base
-├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、插件自己的窗口（windows/，实验接口，E34）、内置插件（builtin.rs）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）
+├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、插件自己的窗口（windows/，实验接口，E34）、内置插件（builtin.rs，已全部迁到第 3 版）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）
 ├── media_control/
 ├── calendar/                # 日历：CalDAV（caldav.rs）和 ICS 订阅链接，iCalendar 解析和重复日程展开（ics.rs，rrule），会议链接识别（meeting_link.rs），来源配置与凭据（sources.rs）
 ├── lyrics/                  # 音乐页歌词：本地 .lrc 文件夹（local.rs）、LRCLIB（lrclib.rs，用户开启才联网）、按歌名歌手时长匹配（matching.rs），在线结果缓存在 lyrics-cache/

@@ -24,7 +24,7 @@ src/
 │   ├── clipboard/           # 剪贴板历史、快捷键
 │   ├── file-shelf/          # 文件中转：拖到岛上的文件（只存路径）、拖出、复制、打开
 │   ├── screenshot/          # 截图（C41）：选区的纯计算（selection.ts，物理像素和 CSS 像素的换算）、放大镜、api.ts
-│   ├── center-pattern/      # 内置插件"中心图案"：SVG 动画（眼睛跟随光标）、Codex Pets 宠物 sprite、宠物随 Agent 状态的 mood
+│   ├── center-pattern/      # 第 3 版内置插件 center-pattern（中心图案）：SVG 动画（眼睛跟随光标）、Codex Pets 宠物 sprite、宠物随 Agent 状态的 mood（经 agents/v1 读），配置在 plugins.yml，设置在 外观 的「中心图案」分组
 │   ├── island-bridge/       # 不是插件：Rust 转给岛的请求（local-api-request）的桥，方法分发、待办经 todos/v1，开发版另有岛屿实验台的动作；runner 拥有者 builtin，本机接口、第 2 版插件的待办调用和实验台共用，关掉本机接口不撤它
 │   ├── local-api/           # 第 3 版内置插件 local-api（本机接口）：设置是 通用 里的一节（LocalApiSettings.tsx：允许修改、地址、复制令牌、重新生成令牌，令牌只由 Rust 复制）。岛上接 Rust 转来的请求（local-api-request）的桥不在这里，在 island-bridge/
 │   ├── plugins/             # 设置 → 插件扩展页与插件市场页：已安装插件、启用与授权、从市场安装

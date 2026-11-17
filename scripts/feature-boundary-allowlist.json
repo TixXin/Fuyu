@@ -1,7 +1,5 @@
 {
   "features": [
-    "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts",
-    "src/features/plugins/PluginDetailPage.tsx -> src/features/center-pattern/index.ts",
     "src/features/plugins/useBuiltinPlugin.ts -> src/features/plugin-views/api.ts"
   ],
   "shared": [
@@ -19,7 +17,5 @@
     "src/lib/settings/types.ts -> src/features/todos/types.ts",
     "src/lib/settings/useSettingPresets.ts -> src/features/todos/index.ts"
   ],
-  "removedBy": {
-    "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts": "E36.3.45"
-  }
+  "removedBy": {}
 }

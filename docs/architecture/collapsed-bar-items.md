@@ -7,7 +7,7 @@
 | 位置 | 内容 | 来源 |
 |---|---|---|
 | 左端 | Agent 状态灯 `island__pulse` | 内置 |
-| 中间 | 摘要文字或中心图案（`slots.center`） | 内置 / 内置插件 `focusd.center-pattern` |
+| 中间 | 摘要文字或中心图案（`slots.center`） | 内置 / 内置插件 `center-pattern` |
 | 右侧 | 新邮件、更新提醒 | 内置 |
 | | 插件状态（`PluginStatusSlot`，只显示优先级最高的一个） | 市场插件 `status.update` |
 | | 摄像头 / 麦克风、文件架数量、音乐波形 | 内置 |

@@ -34,12 +34,12 @@ fn migrates_once_into_plugins_yml() {
     let file = home.join("plugins-v3").join("plugins.yml");
     std::fs::write(home.join(V2_STATE), json!({ "plugins": { "focusd.timer": { "enabled": false, "settings": { "sound": false } } } }).to_string()).unwrap();
     migrate(&home, &file);
-    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: timer\n  disabled: true\n  config:\n    sound: false\n- id: claude-usage\n  disabled: true\n- id: cc-connect\n  disabled: true\n- id: session-ring\n  disabled: true\n- id: local-api\n  disabled: true\n- id: ssh-tunnel\n  disabled: true\n");
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: timer\n  disabled: true\n  config:\n    sound: false\n- id: claude-usage\n  disabled: true\n- id: cc-connect\n  disabled: true\n- id: session-ring\n  disabled: true\n- id: local-api\n  disabled: true\n- id: ssh-tunnel\n  disabled: true\n- id: center-pattern\n  disabled: true\n");
     std::fs::write(&file, "[]\n").unwrap();
     migrate(&home, &file);
     assert_eq!(std::fs::read_to_string(&file).unwrap(), "[]\n");
     let marker: Value = serde_json::from_str(&std::fs::read_to_string(home.join("plugins-v3").join(MARKER)).unwrap()).unwrap();
-    assert_eq!(marker, json!({ "format": 1, "migrated": ["focusd.cc-connect", "focusd.claude-usage", "focusd.local-api", "focusd.session-ring", "focusd.ssh-proxy-tunnel", "focusd.timer"] }));
+    assert_eq!(marker, json!({ "format": 1, "migrated": ["focusd.cc-connect", "focusd.center-pattern", "focusd.claude-usage", "focusd.local-api", "focusd.session-ring", "focusd.ssh-proxy-tunnel", "focusd.timer"] }));
 }
 
 #[test]
@@ -47,7 +47,7 @@ fn without_old_settings_only_the_plugins_that_were_off_unless_granted_start_off(
     let home = scratch("fresh");
     let file = home.join("plugins-v3").join("plugins.yml");
     migrate(&home, &file);
-    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: claude-usage\n  disabled: true\n- id: cc-connect\n  disabled: true\n- id: session-ring\n  disabled: true\n- id: local-api\n  disabled: true\n- id: ssh-tunnel\n  disabled: true\n");
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), "- id: claude-usage\n  disabled: true\n- id: cc-connect\n  disabled: true\n- id: session-ring\n  disabled: true\n- id: local-api\n  disabled: true\n- id: ssh-tunnel\n  disabled: true\n- id: center-pattern\n  disabled: true\n");
     assert!(home.join("plugins-v3").join(MARKER).exists());
 }
 
@@ -139,4 +139,20 @@ fn the_ssh_tunnel_carries_its_switch_and_local_proxy() {
     let odd = grants_of(json!({ "focusd.ssh-proxy-tunnel": { "enabled": false, "settings": { "localProxy": 3, "customPort": "8118" } } }));
     assert_eq!(plan(ssh_tunnel(), &odd), Some(Plan { id: "ssh-tunnel", disable: true, config: vec![] }));
     assert_eq!(plan(ssh_tunnel(), &Map::new()), Some(Plan { id: "ssh-tunnel", disable: true, config: vec![] }));
+}
+
+fn center_pattern() -> &'static Migration {
+    MIGRATIONS.iter().find(|migration| migration.v3 == "center-pattern").unwrap()
+}
+
+#[test]
+fn the_center_pattern_carries_its_switch_pattern_pet_and_size() {
+    let on = grants_of(json!({ "focusd.center-pattern": { "enabled": true, "settings": { "pattern": "pet", "pet": "noir", "size": 20, "other": 1 } } }));
+    assert_eq!(
+        plan(center_pattern(), &on),
+        Some(Plan { id: "center-pattern", disable: false, config: vec![("pattern", json!("pet")), ("pet", json!("noir")), ("size", json!(20))] })
+    );
+    let odd = grants_of(json!({ "focusd.center-pattern": { "enabled": false, "settings": { "pattern": 1, "pet": true, "size": "20" } } }));
+    assert_eq!(plan(center_pattern(), &odd), Some(Plan { id: "center-pattern", disable: true, config: vec![] }));
+    assert_eq!(plan(center_pattern(), &Map::new()), Some(Plan { id: "center-pattern", disable: true, config: vec![] }));
 }

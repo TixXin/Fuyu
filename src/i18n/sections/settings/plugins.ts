@@ -127,7 +127,6 @@ export type SettingsPluginsText = {
     infoWhenRunning: string;
     settings: string;
     noSettings: string;
-    pets: { unset: string; none: string; failed: string; loading: string; missing: (id: string) => string; app: string };
     actions: string;
     copy: string;
     copied: string;
@@ -328,6 +327,17 @@ export type SettingsPluginsText = {
       notListening: string;
     };
   };
+  centerPattern: {
+    group: string;
+    groupHint: string;
+    pattern: string;
+    patterns: Record<"eyes" | "bird" | "orb" | "cat" | "mark" | "pet", string>;
+    pet: string;
+    petHint: string;
+    size: string;
+    sizeHint: string;
+    pets: { unset: string; none: string; failed: string; loading: string; missing: (id: string) => string; app: string };
+  };
 };
 
 export const zhCN: SettingsPluginsText = {
@@ -494,14 +504,6 @@ export const zhCN: SettingsPluginsText = {
     infoWhenRunning: "插件运行后，会在这里显示它提供的信息。",
     settings: "设置",
     noSettings: "这个插件没有可以调整的设置。",
-    pets: {
-      unset: "未选择（显示眼睛）",
-      none: "没有找到宠物（显示眼睛）",
-      failed: "读不到宠物列表（显示眼睛）",
-      loading: "正在读取宠物…",
-      missing: (id) => `${id}（已找不到）`,
-      app: "本应用",
-    },
     actions: "操作",
     copy: "复制",
     copied: "已复制",
@@ -756,6 +758,31 @@ export const zhCN: SettingsPluginsText = {
       notListening: "，但现在没有程序在监听这个端口：请打开代理软件。",
     },
   },
+  centerPattern: {
+    group: "中心图案",
+    groupHint: "收起的岛上没有文字时，在中间显示一个小动画（只有剩余待办数时排在待办数前面）；显示 Agent 标题时，宠物或悬岛标志站在标题前代替 Agent 图标。在 设置 → 插件（第 3 版）里关掉内置插件「中心图案」可停用。",
+    pattern: "图案",
+    patterns: {
+      eyes: "眼睛",
+      bird: "小鸟",
+      orb: "光点",
+      cat: "小猫",
+      mark: "悬岛",
+      pet: "宠物",
+    },
+    pet: "宠物",
+    petHint: "图案选「宠物」时显示哪一只，默认小八（xiaoba）。宠物包（pet.json + spritesheet）放在 ~/.codex/pets 或应用数据目录的 pets 文件夹里；找不到时显示眼睛。",
+    size: "大小（像素）",
+    sizeHint: "图案的高度，默认 24，和收起条上的环一样高；悬岛量的是胶囊，宠物比它高 4。",
+    pets: {
+      unset: "未选择（显示眼睛）",
+      none: "没有找到宠物（显示眼睛）",
+      failed: "读不到宠物列表（显示眼睛）",
+      loading: "正在读取宠物…",
+      missing: (id) => `${id}（已找不到）`,
+      app: "本应用",
+    },
+  },
 };
 
 export const en: SettingsPluginsText = {
@@ -922,14 +949,6 @@ export const en: SettingsPluginsText = {
     infoWhenRunning: "Once the plugin runs, what it shares appears here.",
     settings: "Settings",
     noSettings: "This plugin has no settings.",
-    pets: {
-      unset: "None (shows the eyes)",
-      none: "No pets found (shows the eyes)",
-      failed: "Could not read the pets (shows the eyes)",
-      loading: "Reading pets…",
-      missing: (id) => `${id} (missing)`,
-      app: "this app",
-    },
     actions: "Actions",
     copy: "Copy",
     copied: "Copied",
@@ -1182,6 +1201,31 @@ export const en: SettingsPluginsText = {
       },
       listening: "; the proxy is listening.",
       notListening: ", but nothing listens on it now: start the proxy app.",
+    },
+  },
+  centerPattern: {
+    group: "Center pattern",
+    groupHint: "When the collapsed island shows no text, a small animation sits in its middle (ahead of an idle to-do count when that is all there is); while an agent title shows, the pet or the island mark stands before it in place of the agent icon. Switch off the built-in plugin \"Center pattern\" under Settings → Plugins (v3) to turn this off.",
+    pattern: "Pattern",
+    patterns: {
+      eyes: "Eyes",
+      bird: "Bird",
+      orb: "Light",
+      cat: "Cat",
+      mark: "Island mark",
+      pet: "Pet",
+    },
+    pet: "Pet",
+    petHint: "Which pet the Pet pattern shows; xiaoba by default. Pet packs (pet.json + spritesheet) go in ~/.codex/pets or the pets folder of the app data directory; without one the eyes show.",
+    size: "Size (px)",
+    sizeHint: "How tall the pattern is; 24 by default, as tall as the rings on the collapsed bar. For the island mark it is the pill; a pet is 4 taller.",
+    pets: {
+      unset: "None (shows the eyes)",
+      none: "No pets found (shows the eyes)",
+      failed: "Could not read the pets (shows the eyes)",
+      loading: "Reading pets…",
+      missing: (id) => `${id} (missing)`,
+      app: "this app",
     },
   },
 };

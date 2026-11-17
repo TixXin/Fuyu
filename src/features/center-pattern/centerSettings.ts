@@ -2,22 +2,56 @@ import type { AgentSessions } from "@fuyu/plugin-services";
 import type { PetInfo } from "./api";
 import { CENTER_PATTERNS, type CenterPatternId, type PetMood } from "./patterns.ts";
 
-export const CENTER_PATTERN_PLUGIN_ID = "focusd.center-pattern";
-export const CENTER_PATTERN_PET_KEY = "pet";
+export const CENTER_PATTERN_OPTIONS = [...CENTER_PATTERNS, "pet"] as const;
+export type CenterPatternSelection = (typeof CENTER_PATTERN_OPTIONS)[number];
+
+export const CENTER_PATTERN_SIZE = { min: 16, max: 30, default: 24 } as const;
+
+export const CENTER_CONFIG_DEFAULTS = {
+  pattern: "eyes" as CenterPatternSelection,
+  pet: "xiaoba",
+  size: CENTER_PATTERN_SIZE.default,
+} as const;
+
+export type CenterConfigKey = keyof typeof CENTER_CONFIG_DEFAULTS;
+
+export type CenterConfig = {
+  pattern: CenterPatternSelection;
+  pet: string;
+  size: number;
+};
+
 export const PET_DONE_HOLD_MS = 3000;
 
 export type CenterPatternChoice = { pattern: CenterPatternId; petId: null } | { pattern: "pet"; petId: string };
 
-export function centerPatternChoice(settings: Record<string, unknown>): CenterPatternChoice {
-  const pattern = settings.pattern;
-  const petId = typeof settings[CENTER_PATTERN_PET_KEY] === "string" ? (settings[CENTER_PATTERN_PET_KEY] as string).trim() : "";
-  if (pattern === "pet") return petId ? { pattern: "pet", petId } : { pattern: "eyes", petId: null };
-  return { pattern: CENTER_PATTERNS.find((known) => known === pattern) ?? "eyes", petId: null };
+export function centerPatternSize(settings: Readonly<Record<string, unknown>>): number {
+  const size = settings.size;
+  return typeof size === "number" && Number.isFinite(size)
+    ? Math.round(Math.min(CENTER_PATTERN_SIZE.max, Math.max(CENTER_PATTERN_SIZE.min, size)))
+    : CENTER_PATTERN_SIZE.default;
 }
 
-export function centerPatternSize(settings: Record<string, unknown>): number {
-  const size = settings.size;
-  return typeof size === "number" && Number.isFinite(size) ? Math.round(Math.min(30, Math.max(16, size))) : 24;
+export function centerConfig(raw: Readonly<Record<string, unknown>>): CenterConfig {
+  const pattern = CENTER_PATTERN_OPTIONS.find((known) => known === raw.pattern) ?? CENTER_CONFIG_DEFAULTS.pattern;
+  const pet = typeof raw.pet === "string" ? raw.pet.trim() : CENTER_CONFIG_DEFAULTS.pet;
+  return { pattern, pet, size: centerPatternSize(raw) };
+}
+
+export function storedCenterValue(key: CenterConfigKey, value: string | number): string | number | null {
+  if (key === "pattern") return value === CENTER_CONFIG_DEFAULTS.pattern ? null : value;
+  if (key === "pet") {
+    const trimmed = String(value).trim();
+    return trimmed === CENTER_CONFIG_DEFAULTS.pet ? null : trimmed;
+  }
+  const clamped = centerPatternSize({ size: value });
+  return clamped === CENTER_CONFIG_DEFAULTS.size ? null : clamped;
+}
+
+export function centerPatternChoice(settings: Readonly<Record<string, unknown>>): CenterPatternChoice {
+  const { pattern, pet } = centerConfig(settings);
+  if (pattern === "pet") return pet ? { pattern: "pet", petId: pet } : { pattern: "eyes", petId: null };
+  return { pattern, petId: null };
 }
 
 export type AgentActivity = { phase: string; updatedAt: number };
