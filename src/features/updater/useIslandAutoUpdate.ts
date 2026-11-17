@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { getUserIdleSeconds, isSessionLocked } from "../agent-status/push/api";
+import { getUserIdleSeconds, isSessionLocked } from "../../lib/api";
 import {
   downloadInBackground, getUpdateState, installUpdate, subscribeToUpdate,
 } from "./updaterController";

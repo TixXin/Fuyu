@@ -8,6 +8,7 @@ import type { SettingsThemeMarketText } from "./themeMarket";
 import type { SettingsResetAppearanceText } from "./resetAppearance";
 import type { SettingsWindowControlsText } from "./windowControls";
 import type { SettingsDevBuildText } from "./devBuild";
+import type { SettingsLocalApiText } from "./localApi";
 import type { SettingsPluginsV3Text } from "./pluginsV3";
 import type { SettingsCategoriesText } from "./categories";
 import type { SettingsBehaviorText } from "./behavior";
@@ -49,6 +50,7 @@ import * as themeMarket from "./themeMarket.ts";
 import * as resetAppearance from "./resetAppearance.ts";
 import * as windowControls from "./windowControls.ts";
 import * as devBuild from "./devBuild.ts";
+import * as localApi from "./localApi.ts";
 import * as pluginsV3 from "./pluginsV3.ts";
 import * as categories from "./categories.ts";
 import * as behavior from "./behavior.ts";
@@ -107,6 +109,7 @@ export type SettingsText = {
   expand: SettingsExpandText;
 
   gameMode: SettingsGameModeText;
+  localApi: SettingsLocalApiText;
   deviceUse: SettingsDeviceUseText;
   levelPopup: SettingsLevelPopupText;
   deviceAlerts: SettingsDeviceAlertsText;
@@ -171,6 +174,7 @@ export const zhCN: SettingsText = {
   expand: expand.zhCN,
 
   gameMode: gameMode.zhCN,
+  localApi: localApi.zhCN,
   deviceUse: deviceUse.zhCN,
   levelPopup: levelPopup.zhCN,
   deviceAlerts: deviceAlerts.zhCN,
@@ -235,6 +239,7 @@ export const en: SettingsText = {
   expand: expand.en,
 
   gameMode: gameMode.en,
+  localApi: localApi.en,
   deviceUse: deviceUse.en,
   levelPopup: levelPopup.en,
   deviceAlerts: deviceAlerts.en,
