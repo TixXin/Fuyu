@@ -1,11 +1,17 @@
 import type { AgentUsage, UsageWindow } from "../../lib/agent-usage/types";
 import { liveUsage, untilReset, USAGE_STALE_MS, usageSourceLines } from "../../lib/agent-usage/usage.ts";
+import { formatAge } from "../../components/list/formatAgo.ts";
 import type { HoverCardLine } from "../../components/IslandHoverCard";
 import type { MiniRingTrack } from "../../components/MiniRing";
 import type { ClaudeUsageText } from "../../i18n/sections/claudeUsage";
+import type { HoverProviderId, HoverUsage } from "./api";
+
+export type { HoverProviderId };
 
 export const CLAUDE_USAGE_RING_SIZE = 24;
 export const CLAUDE_USAGE_GAUGE_WIDTH = CLAUDE_USAGE_RING_SIZE + 6;
+export const HOVER_ONLY_ITEM_ID = "usage:hover";
+export const HOVER_ONLY_HINT = "usage.hover";
 
 export const USAGE_COLORS = {
   normal: "var(--usage-claude)",
@@ -14,16 +20,24 @@ export const USAGE_COLORS = {
   stale: "var(--usage-stale)",
 } as const;
 
-export type UsageProviderId = "claudeCode" | "codex" | "glm" | "kimi";
+export type UsageProviderId = "claudeCode" | "codex" | "antigravity" | "glm" | "kimi";
+export type AllUsageProviderId = UsageProviderId | HoverProviderId;
 
 export const USAGE_PROVIDERS: readonly { id: UsageProviderId; name: string; color: string; defaultOn: boolean }[] = [
   { id: "claudeCode", name: "Claude Code", color: USAGE_COLORS.normal, defaultOn: true },
   { id: "codex", name: "Codex", color: "var(--usage-codex)", defaultOn: false },
+  { id: "antigravity", name: "Antigravity", color: "var(--usage-antigravity)", defaultOn: false },
   { id: "glm", name: "GLM", color: "var(--usage-glm)", defaultOn: false },
   { id: "kimi", name: "Kimi", color: "var(--usage-kimi)", defaultOn: false },
 ];
 
+export const HOVER_USAGE_PROVIDERS: readonly { id: HoverProviderId; name: string; color: string; defaultOn: boolean }[] = [
+  { id: "workbuddy", name: "WorkBuddy", color: "var(--usage-workbuddy)", defaultOn: false },
+  { id: "dsh", name: "DeepSeek Harness", color: "var(--usage-dsh)", defaultOn: false },
+];
+
 export type UsageProvider = (typeof USAGE_PROVIDERS)[number];
+export type HoverUsageProvider = (typeof HOVER_USAGE_PROVIDERS)[number];
 
 export const usageItemId = (provider: Pick<UsageProvider, "id">) => `usage:${provider.id}`;
 
@@ -31,6 +45,14 @@ export const usageHint = (provider: Pick<UsageProvider, "id">) => `usage.${provi
 
 export function shownUsageProviders(settings: Record<string, unknown>): UsageProvider[] {
   return USAGE_PROVIDERS.filter(({ id, defaultOn }) => (typeof settings[id] === "boolean" ? settings[id] : defaultOn));
+}
+
+export function shownHoverProviders(settings: Record<string, unknown>): HoverUsageProvider[] {
+  return HOVER_USAGE_PROVIDERS.filter(({ id, defaultOn }) => (typeof settings[id] === "boolean" ? settings[id] : defaultOn));
+}
+
+export function needsHoverOnlyGauge(settings: Record<string, unknown>): boolean {
+  return shownUsageProviders(settings).length === 0 && shownHoverProviders(settings).length > 0;
 }
 
 export function isUsageStale(usage: AgentUsage | null, now: number) {
@@ -94,4 +116,60 @@ export function usageCardLines(
   const hadNumbers = Boolean(given.fiveHour || given.sevenDay || given.models.length > 0);
   lines.push(...usageSourceLines(hadNumbers ? usage : { ...usage, updatedAt: null }, now, text));
   return [...title, ...lines];
+}
+
+export function hoverProviderLines(
+  item: HoverUsage | null | undefined,
+  provider: HoverUsageProvider,
+  now: number,
+  text: ClaudeUsageText,
+): HoverCardLine[] {
+  const lines: HoverCardLine[] = [{ text: provider.name, color: provider.color }];
+  if (!item) {
+    lines.push({ text: text.noUsage[provider.id], muted: true });
+    return lines;
+  }
+  if (provider.id === "workbuddy") {
+    if (item.credits) {
+      lines.push({
+        text: text.workbuddyCredits(item.credits.today, item.credits.sevenDay, item.credits.total, item.credits.totalTokens),
+      });
+      if (item.updatedAt !== null) {
+        const ago = formatAge(Math.max(0, now - item.updatedAt), text.ago);
+        lines.push({ text: text.updated(ago, text.fromWorkbuddy), muted: true });
+      }
+    } else if (item.error) {
+      lines.push({ text: text.workbuddyErrors[item.error.kind] });
+    } else {
+      lines.push({ text: text.noUsage.workbuddy, muted: true });
+    }
+    return lines;
+  }
+
+  if (item.wallets.length > 0) {
+    const depleted = item.available === false;
+    for (const wallet of item.wallets) {
+      lines.push({
+        text: text.dshWallet(wallet.currency, wallet.total, wallet.toppedUp, wallet.granted),
+        color: depleted ? USAGE_COLORS.danger : undefined,
+      });
+    }
+    if (depleted) {
+      lines.push({ text: text.dshEmpty, color: USAGE_COLORS.danger });
+    }
+    if (item.error) {
+      lines.push({ text: text.dshErrors[item.error.kind] });
+    }
+    if (item.updatedAt !== null) {
+      const ago = formatAge(Math.max(0, now - item.updatedAt), text.ago);
+      const source = item.source === "dshAccount" ? text.fromDshAccount : text.fromDshApi;
+      const stale = now - item.updatedAt > USAGE_STALE_MS;
+      lines.push({ text: stale ? text.staleUpdated(ago, source) : text.updated(ago, source), muted: !stale });
+    }
+  } else if (item.error) {
+    lines.push({ text: text.dshErrors[item.error.kind] });
+  } else {
+    lines.push({ text: text.noUsage.dsh, muted: true });
+  }
+  return lines;
 }

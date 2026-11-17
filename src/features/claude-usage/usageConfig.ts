@@ -1,4 +1,4 @@
-import { shownUsageProviders, type UsageProviderId } from "./usageRing.ts";
+import { shownHoverProviders, shownUsageProviders, type AllUsageProviderId } from "./usageRing.ts";
 
 export type UsageShow = "used" | "remaining";
 
@@ -7,8 +7,11 @@ export const USAGE_INTERVAL = { min: 5, max: 120 } as const;
 export const USAGE_CONFIG_DEFAULTS = {
   claudeCode: true,
   codex: false,
+  antigravity: false,
   glm: false,
   kimi: false,
+  workbuddy: false,
+  dsh: false,
   show: "used",
   askAnthropic: false,
   proxy: "",
@@ -18,7 +21,7 @@ export const USAGE_CONFIG_DEFAULTS = {
 export type UsageConfigKey = keyof typeof USAGE_CONFIG_DEFAULTS;
 
 export type UsageConfig = {
-  providers: Record<UsageProviderId, boolean>;
+  providers: Record<AllUsageProviderId, boolean>;
   show: UsageShow;
   askAnthropic: boolean;
   proxy: string;
@@ -26,10 +29,21 @@ export type UsageConfig = {
 };
 
 export function usageConfig(raw: Readonly<Record<string, unknown>>): UsageConfig {
-  const shown = new Set(shownUsageProviders(raw).map((provider) => provider.id));
+  const shown = new Set([
+    ...shownUsageProviders(raw).map((provider) => provider.id),
+    ...shownHoverProviders(raw).map((provider) => provider.id),
+  ]);
   const interval = typeof raw.intervalMinutes === "number" && Number.isFinite(raw.intervalMinutes) ? Math.round(raw.intervalMinutes) : USAGE_CONFIG_DEFAULTS.intervalMinutes;
   return {
-    providers: { claudeCode: shown.has("claudeCode"), codex: shown.has("codex"), glm: shown.has("glm"), kimi: shown.has("kimi") },
+    providers: {
+      claudeCode: shown.has("claudeCode"),
+      codex: shown.has("codex"),
+      antigravity: shown.has("antigravity"),
+      glm: shown.has("glm"),
+      kimi: shown.has("kimi"),
+      workbuddy: shown.has("workbuddy"),
+      dsh: shown.has("dsh"),
+    },
     show: raw.show === "remaining" ? "remaining" : "used",
     askAnthropic: raw.askAnthropic === true,
     proxy: typeof raw.proxy === "string" ? raw.proxy : "",

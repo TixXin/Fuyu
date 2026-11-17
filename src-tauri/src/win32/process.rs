@@ -79,6 +79,35 @@ pub(crate) fn running_executable(file_names: &[&str]) -> Option<String> {
     None
 }
 
+pub(crate) fn pids_matching_name(needle: &str) -> Vec<u32> {
+    let needle = needle.to_ascii_lowercase();
+    let Some(snapshot) = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) }
+        .ok()
+        .map(ProcessHandle)
+    else {
+        return Vec::new();
+    };
+    let mut pids = Vec::new();
+    let mut entry = PROCESSENTRY32W {
+        dwSize: size_of::<PROCESSENTRY32W>() as u32,
+        ..Default::default()
+    };
+    let mut more = unsafe { Process32FirstW(snapshot.0, &mut entry) }.is_ok();
+    while more {
+        let length = entry
+            .szExeFile
+            .iter()
+            .position(|unit| *unit == 0)
+            .unwrap_or(entry.szExeFile.len());
+        let name = String::from_utf16_lossy(&entry.szExeFile[..length]).to_ascii_lowercase();
+        if name.contains(&needle) {
+            pids.push(entry.th32ProcessID);
+        }
+        more = unsafe { Process32NextW(snapshot.0, &mut entry) }.is_ok();
+    }
+    pids
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -1,6 +1,5 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
-import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
@@ -10,9 +9,8 @@ import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import { isPlan, PlanKeyField } from "./PlanKeyFields";
 import { USAGE_INTERVAL, type UsageShow } from "./usageConfig.ts";
-import { USAGE_PROVIDERS } from "./usageRing";
+import { HOVER_USAGE_PROVIDERS, USAGE_PROVIDERS } from "./usageRing";
 import { useUsageConfig } from "./useUsageConfig";
-import "./ClaudeUsageGauge.css";
 
 function ProxyRow({ proxy, onChange }: { proxy: string; onChange: (proxy: string) => void }) {
   const text = useTranslation().claudeUsage.settings;
@@ -42,25 +40,23 @@ export function UsageSettingsGroup() {
   const [config, update] = useUsageConfig();
   const hints: Partial<Record<string, string>> = {
     codex: text.codexHint,
+    antigravity: text.antigravityHint,
     glm: isMacOS ? text.glmHintMac : text.glmHint,
     kimi: isMacOS ? text.kimiHintMac : text.kimiHint,
+    workbuddy: text.workbuddyHint,
+    dsh: text.dshHint,
   };
   return (
-    <SettingsGroup title={text.title} footer={<SettingsFootnote text={text.footer} />}>
+    <SettingsGroup title={text.title} footer={text.footer}>
       {USAGE_PROVIDERS.map((provider) => (
         <div key={provider.id} data-usage-provider={provider.id}>
-          <SettingsToggleRow
-            title={
-              <span className="claude-usage-provider">
-                <span className="claude-usage-provider__swatch" style={{ "--swatch-color": provider.color } as CSSProperties} aria-hidden="true" />
-                {provider.name}
-              </span>
-            }
-            description={hints[provider.id]}
-            checked={config.providers[provider.id]}
-            onChange={(on) => update(provider.id, on)}
-          />
+          <SettingsToggleRow title={provider.name} description={hints[provider.id]} checked={config.providers[provider.id]} onChange={(on) => update(provider.id, on)} />
           {config.providers[provider.id] && isPlan(provider) ? <PlanKeyField provider={provider} /> : null}
+        </div>
+      ))}
+      {HOVER_USAGE_PROVIDERS.map((provider) => (
+        <div key={provider.id} data-usage-provider={provider.id}>
+          <SettingsToggleRow title={provider.name} description={hints[provider.id]} checked={config.providers[provider.id]} onChange={(on) => update(provider.id, on)} />
         </div>
       ))}
       <SettingsRow
