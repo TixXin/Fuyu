@@ -17,6 +17,7 @@ mod island;
 mod local_api;
 mod lyrics;
 mod media_control;
+mod messages_plugin;
 #[cfg(windows)]
 mod messenger_activation;
 mod notification_diagnostics;
@@ -167,6 +168,7 @@ pub fn run() {
             screenshot::init(app.handle());
             voice_input::init(app.handle());
             timer::init(app.handle());
+            claude_usage::init();
             if let Err(error) = file_shelf::init(app.handle()) {
                 eprintln!("failed to initialize the file shelf: {error}");
             }

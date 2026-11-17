@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { commitBlock } from "../../scripts/mq/checkCommit.mjs";
-import { parseRefUpdates, pushBlock } from "../../scripts/mq/checkPush.mjs";
+import { onlyDeletes, parseRefUpdates, pushBlock } from "../../scripts/mq/checkPush.mjs";
 import { land, landRefusal, pendingCommits, uncommittedNote } from "../../scripts/mq/land.mjs";
 import { conflictedFiles } from "../../scripts/mq/mergeTree.mjs";
 import { batchAdvice, landRequest, listOption, main } from "../../scripts/mq/mq.mjs";
@@ -47,6 +47,10 @@ test("nobody pushes main directly, other branches go through, and an emergency l
   assert.equal(pushBlock(parseRefUpdates("refs/heads/lane/3 a refs/heads/land/t/pc-lane-3 b"), {}), null);
   assert.equal(pushBlock(updates, { CLAUDE_CODE_MERGE_QUEUE_EMERGENCY_PUSH: "1" }), null);
   assert.equal(pushBlock(parseRefUpdates("refs/heads/pr-9 a refs/heads/pr-9 b"), {}), null);
+  const deletion = parseRefUpdates(`(delete) ${"0".repeat(40)} refs/heads/try/t/pc-main bbb`);
+  assert.equal(deletion.every(onlyDeletes), true, "deleting a finished try branch skips the push checks");
+  assert.equal(updates.every(onlyDeletes), false);
+  assert.match(pushBlock(parseRefUpdates(`(delete) ${"0".repeat(40)} refs/heads/main bbb`), {}), /pnpm mq:land/, "deleting main is still refused");
 });
 
 test("a commit on main names its files, so it cannot sweep up what another session staged", () => {
@@ -132,6 +136,7 @@ function fakeGitHub() {
     editPr: (pr) => calls.edited.push(pr),
     autoMerge: (number) => calls.autoMerged.push(number),
     updateBranch: (number) => calls.updated.push(number),
+    openPrHeads: () => [],
   };
 }
 

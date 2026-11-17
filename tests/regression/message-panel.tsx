@@ -18,7 +18,9 @@ import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatRem
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
 import type { MessageSource } from "../../src/features/messages/messagePreview";
-import { usePluginNotifications } from "../../src/features/plugins/usePluginNotifications";
+import { usePluginNotifications } from "../../src/features/messages/island/usePluginNotifications";
+import "../../src/features/messages/plugin/services";
+import { PluginNoticesRunner } from "../../src/features/plugins/plugin/runners";
 import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -44,11 +46,11 @@ mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   commands.push({ command, args });
   if (command === "request_qq_notification_access") return "allowed";
-  if (command === "set_qq_notifications_enabled") return { revision: ++revision, enabled: args.enabled, status: "listening", items: [], error: null };
-  if (command === "set_wechat_reminders_enabled") return { revision: ++revision, enabled: args.enabled, status: "listening", pending: false, lastAttentionAt: null, error: null };
+  if (command === "get_qq_notification_state") return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+  if (command === "set_wechat_expose_ui" || command === "set_wechat_hide_taskbar_button") return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
   if (command === "get_qq_mail_state") return [mail];
   if (command === "clear_qq_notifications") return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
-  if (command === "clear_wechat_reminders") return { revision: ++revision, enabled: true, status: "listening", pending: true, lastAttentionAt: revision, error: null, items: [] };
+  if (command === "clear_wechat_reminders") return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: revision, error: null, items: [] };
   if (command === "mark_qq_mail_read") {
     mail = { ...mail, revision: ++revision, unreadCount: 0, items: mail.items.map((item) => item.id === args.messageId ? { ...item, unread: false } : item) };
     return mail;
@@ -103,7 +105,6 @@ function Fixture() {
       mode={mode} page={page} popup={popup} isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: false, translation: false, calendar: false, screenshots: false, timer: false }}
-      shelfCount={null}
       onOpenPage={openIslandPage}
       onPageChange={setPage} onWindowDragStart={() => {}} onCollapse={collapseIsland}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
@@ -313,7 +314,7 @@ async function runChecks() {
   }
 }
 
-await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><Fixture /></StrictMode>); });
+await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><PluginNoticesRunner /><Fixture /></StrictMode>); });
 if (automated) await runChecks();
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });

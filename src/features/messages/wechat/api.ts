@@ -36,10 +36,6 @@ export type ReminderEvent = { snapshot: ReminderSnapshot; windowVisible: boolean
 
 export const WECHAT_REMINDER_CHANGED_EVENT = "wechat-reminder-changed";
 
-export function setWeChatRemindersEnabled(enabled: boolean) {
-  return invoke<ReminderSnapshot>("set_wechat_reminders_enabled", { enabled });
-}
-
 export function setWeChatExposeUi(enabled: boolean) {
   return invoke<ReminderSnapshot>("set_wechat_expose_ui", { enabled });
 }

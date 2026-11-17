@@ -22,7 +22,7 @@
   line-height: 18px;
   white-space: nowrap;
   pointer-events: none;
-  animation: island-hover-card-in 140ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation: island-hover-card-in var(--motion-base) var(--motion-ease-out) both;
 }
 
 .island-light .island-hover-card {

@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { defineSlot, type IslandCollapsedMeta } from "../../plugin-kernel/slots";
 import { ClaudeUsageGauge } from "../ClaudeUsageGauge";
-import { CLAUDE_USAGE_GAUGE_WIDTH, USAGE_PROVIDERS, shownUsageProviders, usageItemId, type UsageProvider } from "../usageRing";
+import { CLAUDE_USAGE_GAUGE_WIDTH, USAGE_PROVIDERS, usageHint, usageItemId, type UsageProvider } from "../usageRing";
+import { useUsageConfig } from "../useUsageConfig";
+import { OWNER } from "./owner.ts";
 
 type GaugeContext = {
-  usage: { enabled: boolean; settings: Record<string, unknown>; showRemaining: boolean };
+  hints: ReadonlySet<string>;
   listenIslandHover: (handler: (inside: boolean) => void) => Promise<() => void>;
 };
 
 const gaugeSlot = defineSlot<GaugeContext, IslandCollapsedMeta<GaugeContext>>("island.collapsed/v1");
 
-function UsageGaugeSlot({ providers, showRemaining, listenIslandHover }: { providers: readonly UsageProvider[]; showRemaining: boolean; listenIslandHover: GaugeContext["listenIslandHover"] }) {
+function UsageGaugeSlot({ provider, listenIslandHover }: { provider: UsageProvider; listenIslandHover: GaugeContext["listenIslandHover"] }) {
   const [hovered, setHovered] = useState(true);
+  const [{ show }] = useUsageConfig();
   useEffect(() => {
     let cancelled = false;
     let unlisten: (() => void) | undefined;
@@ -26,23 +29,26 @@ function UsageGaugeSlot({ providers, showRemaining, listenIslandHover }: { provi
       unlisten?.();
     };
   }, [listenIslandHover]);
-  return providers.map((provider) => <ClaudeUsageGauge key={provider.id} provider={provider} islandHovered={hovered} showRemaining={showRemaining} />);
+  return <ClaudeUsageGauge provider={provider} islandHovered={hovered} showRemaining={show === "remaining"} />;
 }
 
 function usageGauge(provider: UsageProvider) {
-  return function UsageGauge({ usage, listenIslandHover }: GaugeContext) {
-    return <UsageGaugeSlot providers={[provider]} showRemaining={usage.showRemaining} listenIslandHover={listenIslandHover} />;
+  return function UsageGauge({ listenIslandHover }: GaugeContext) {
+    return <UsageGaugeSlot provider={provider} listenIslandHover={listenIslandHover} />;
   };
 }
 
 for (const provider of USAGE_PROVIDERS) {
-  gaugeSlot.add({
-    id: usageItemId(provider),
-    order: 70,
-    group: "gauges",
-    width: CLAUDE_USAGE_GAUGE_WIDTH,
-    hideable: true,
-    shown: ({ usage }) => usage.enabled && shownUsageProviders(usage.settings).includes(provider),
-    component: usageGauge(provider),
-  });
+  gaugeSlot.add(
+    {
+      id: usageItemId(provider),
+      order: 70,
+      group: "gauges",
+      width: CLAUDE_USAGE_GAUGE_WIDTH,
+      hideable: true,
+      shown: ({ hints }) => hints.has(usageHint(provider)),
+      component: usageGauge(provider),
+    },
+    OWNER,
+  );
 }

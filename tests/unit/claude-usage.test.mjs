@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { USAGE_STALE_MS } from "../../src/features/agent-status/usage.ts";
+import { USAGE_STALE_MS } from "../../src/lib/agent-usage/usage.ts";
 import { USAGE_COLORS, USAGE_PROVIDERS, isUsageStale, shownUsageProviders, usageCardLines, usageColor, usageRings } from "../../src/features/claude-usage/usageRing.ts";
 import { en, zhCN } from "../../src/i18n/sections/claudeUsage.ts";
 
@@ -118,6 +118,27 @@ test("with a provider the card starts with its name and plan in its colour", () 
   ]);
   assert.deepEqual(texts(usageCardLines(null, NOW, zhCN, false, provider("codex"))), ["Codex", zhCN.noUsage.codex]);
   const noKey = usage({ source: "glm", fiveHour: null, sevenDay: null, updatedAt: null, plan: null, error: { kind: "noCredentials", message: "" } });
-  assert.deepEqual(texts(usageCardLines(noKey, NOW, zhCN, false, provider("glm"))), ["GLM", zhCN.noUsage.glm, "还没有保存 API Key，请在插件页填写"]);
+  assert.deepEqual(texts(usageCardLines(noKey, NOW, zhCN, false, provider("glm"))), ["GLM", zhCN.noUsage.glm, "还没有保存 API Key，请在设置 → AI Agent 的用量环里填写"]);
   for (const kind of Object.keys(zhCN.errors)) assert.ok(zhCN.planErrors[kind] && en.planErrors[kind], kind);
+});
+
+test("the usage rings' config falls back to its defaults and keeps the interval in range", async () => {
+  const { storedValue, usageConfig } = await import("../../src/features/claude-usage/usageConfig.ts");
+  assert.deepEqual(usageConfig({}), { providers: { claudeCode: true, codex: false, glm: false, kimi: false }, show: "used", askAnthropic: false, proxy: "", intervalMinutes: 5 });
+  const set = usageConfig({ claudeCode: false, kimi: true, show: "remaining", askAnthropic: true, proxy: "http://127.0.0.1:7890", intervalMinutes: 500 });
+  assert.deepEqual(set, { providers: { claudeCode: false, codex: false, glm: false, kimi: true }, show: "remaining", askAnthropic: true, proxy: "http://127.0.0.1:7890", intervalMinutes: 120 });
+  assert.equal(usageConfig({ show: "odd", intervalMinutes: "soon", proxy: 3 }).show, "used");
+  assert.equal(usageConfig({ intervalMinutes: 1 }).intervalMinutes, 5);
+  assert.equal(storedValue("claudeCode", true), null, "a default value is removed from plugins.yml");
+  assert.equal(storedValue("intervalMinutes", 30), 30);
+});
+
+test("agents/v1 usage reports turn back into the ring's usage", async () => {
+  const { isServiceOff, usageFromReport } = await import("../../src/features/claude-usage/agentUsage.ts");
+  const report = { updatedAt: NOW, fiveHour: { name: "", used: 10, resetsAt: null }, sevenDay: null, models: [], plan: "Pro", source: "api", error: "tokenExpired" };
+  assert.deepEqual(usageFromReport(report), { ...report, source: "api", error: { kind: "tokenExpired", message: "" } });
+  assert.deepEqual(usageFromReport({ ...report, source: "other", error: "unknown" }), { ...report, source: "hud", error: null });
+  assert.equal(usageFromReport(null), null);
+  assert.equal(isServiceOff(Object.assign(new Error("off"), { code: "not-ready" })), true);
+  assert.equal(isServiceOff(new Error("failed")), false);
 });

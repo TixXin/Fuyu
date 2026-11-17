@@ -105,10 +105,12 @@ test("a plugin that keeps failing is switched off for this run only, without tou
   assert.equal(flaky.usage.timers, 0);
   assert.equal(flaky.usage.listeners, 0);
   assert.equal(byId(running.status(), "busy").state, "running");
-  space.write({ "plugins.yml": config(entries) + "\n" });
-  await sleep(600);
+  assert.equal(readFileSync(join(space.dir, "plugins.yml"), "utf8"), before);
+  const reread = config([entries[0], { ...entries[1], disabled: true }]);
+  space.write({ "plugins.yml": reread });
+  assert.ok(await until(() => byId(running.status(), "busy").state === "disabled"), "the rewritten plugins.yml was not read again");
   assert.equal(byId(running.status(), "flaky").state, "auto-disabled");
-  assert.equal(readFileSync(join(space.dir, "plugins.yml"), "utf8").trim(), before.trim());
+  assert.equal(readFileSync(join(space.dir, "plugins.yml"), "utf8"), reread);
   await running.stop();
   const again = await startHost({ dir: space.dir });
   cleanup.push(() => again.stop());

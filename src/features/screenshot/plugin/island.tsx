@@ -7,6 +7,7 @@ import { ScreenshotNotice, ScreenshotNoticeActions } from "../ScreenshotNotice";
 import { ScreenshotHistoryPanel } from "../ScreenshotHistoryPanel";
 import { islandPage } from "./page.ts";
 import { screenshotIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 type ScreenshotsPageProps = { embedded?: boolean };
 
@@ -37,8 +38,8 @@ function ScreenshotButton() {
   );
 }
 
-pageSlot.add({ ...islandPage, component: ScreenshotsPage });
-headerSlot.add({ id: "screenshot", order: 40, enabled: ({ hints }) => hints.has("screenshot.start"), component: ScreenshotButton });
+pageSlot.add({ ...islandPage, component: ScreenshotsPage }, OWNER);
+headerSlot.add({ id: "screenshot", order: 40, enabled: ({ hints }) => hints.has("screenshot.start"), component: ScreenshotButton }, OWNER);
 
 type NoticeSources = object;
 
@@ -64,5 +65,5 @@ function ScreenshotActions() {
   return notice && <ScreenshotNoticeActions notice={notice} />;
 }
 
-noticeSlot.add({ id: "recording", order: 10, component: RecordingContent, actions: RecordingActions });
-noticeSlot.add({ id: "screenshot", order: 40, component: ScreenshotContent, actions: ScreenshotActions });
+noticeSlot.add({ id: "recording", order: 10, component: RecordingContent, actions: RecordingActions }, OWNER);
+noticeSlot.add({ id: "screenshot", order: 40, component: ScreenshotContent, actions: ScreenshotActions }, OWNER);

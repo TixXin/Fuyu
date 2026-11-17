@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, type Dispatch, type SetStateAction } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
-import { switchBuiltinPlugin } from "./builtinSwitches.ts";
-import { reconcile, switchChanges, withSwitches, type ReconcileState } from "./legacySwitches.ts";
+import { setBuiltinConfig, switchBuiltinPlugin } from "./builtinSwitches.ts";
+import { reconcile, switchChanges, withSwitches, type ReconcileState, type SwitchTarget } from "./legacySwitches.ts";
 import { loadMigratedSwitches, saveMigratedSwitches } from "./storage.ts";
 import { useBuiltinPlugins } from "./useBuiltinPlugins.ts";
 
 type Pair = readonly [IslandSettings, Dispatch<SetStateAction<IslandSettings>>];
 
-function flip(id: string, on: boolean) {
-  void switchBuiltinPlugin(id, on).catch((error: unknown) => console.error(`Could not switch the built-in plugin ${id}`, error));
+function flip(target: SwitchTarget, on: boolean) {
+  const write = typeof target === "string" ? switchBuiltinPlugin(target, on) : setBuiltinConfig(target.plugin, target.key, on);
+  const name = typeof target === "string" ? target : `${target.plugin}.${target.key}`;
+  void write.catch((error: unknown) => console.error(`Could not switch the built-in plugin ${name}`, error));
 }
 
 function useReconcile(settings: IslandSettings, setSettings: Pair[1], plugins: ReturnType<typeof useBuiltinPlugins>, active: boolean) {
@@ -19,7 +21,7 @@ function useReconcile(settings: IslandSettings, setSettings: Pair[1], plugins: R
     const result = reconcile(settings, plugins, seen.current, migrated);
     seen.current = result.seen;
     if (result.migrated.length) saveMigratedSwitches([...migrated, ...result.migrated]);
-    for (const [id, on] of result.switch) flip(id, on);
+    for (const [target, on] of result.switch) flip(target, on);
     if (Object.keys(result.mirror).length) setSettings((current) => ({ ...current, ...result.mirror }));
   }, [active, plugins, settings, setSettings]);
 }
@@ -33,7 +35,7 @@ export function useLegacySwitches([stored, setStored]: Pair, options: { reconcil
   const setSettings = useCallback<Pair[1]>((next) => {
     const before = latest.current.settings;
     const after = typeof next === "function" ? next(before) : next;
-    for (const [id, on] of switchChanges(before, after)) flip(id, on);
+    for (const [target, on] of switchChanges(before, after)) flip(target, on);
     setStored((current) => {
       const base = withSwitches(current, latest.current.plugins);
       return typeof next === "function" ? next(base) : next;

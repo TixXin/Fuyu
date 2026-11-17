@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CC_CONNECT_AGENT_LABELS } from "../../../features/cc-connect";
+import { CC_CONNECT_AGENT_LABELS } from "../../../lib/cc-connect/labels";
 import { useTranslation } from "../../../i18n";
 import { ConnectRow } from "./ConnectRow";
 import type { PlannedProject, TargetEntry } from "./plan";

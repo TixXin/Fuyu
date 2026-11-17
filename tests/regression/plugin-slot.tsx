@@ -26,6 +26,7 @@ const Hello = () => (
     <span className="count" style={{ flexShrink: 0, color: "var(--fuyu-plugin-text-muted)" }}>#12</span>
   </div>
 );
+const Builtin = () => <div className="builtin">built-in row</div>;
 
 const messages: string[] = [];
 const check = (condition: unknown, message: string) => {
@@ -56,14 +57,17 @@ const contrast = (el: HTMLElement, base: { r: number; g: number; b: number }) =>
 
 try {
   const registry = createSlots({ [NAME]: { kind: "list", max: 3, perPlugin: 1 } });
+  registry.add(NAME, { id: "core", component: Builtin });
   registry.add(NAME, { id: "hello", component: Hello }, "hello");
   await act(async () => {
     createRoot(island).render(<StrictMode><PluginSlotItems registry={registry} name={NAME} /></StrictMode>);
   });
 
-  const slot = island.querySelector<HTMLElement>(".plugin-slot")!;
   const demo = island.querySelector<HTMLElement>(".demo")!;
-  check(slot && slot.dataset.slot === NAME, "The slot wraps its items in .plugin-slot with the slot name");
+  const slot = demo.closest<HTMLElement>(".plugin-slot")!;
+  check(slot && slot.dataset.slot === NAME, "The slot wraps a plugin's item in .plugin-slot with the slot name");
+  const builtin = island.querySelector<HTMLElement>(".builtin");
+  check(builtin && !builtin.closest(".plugin-slot") && island.querySelectorAll(".plugin-slot").length === 1, "and leaves a built-in item unwrapped, so built-in rows keep the island's own colours");
   check(getComputedStyle(slot).display === "contents", "and the wrapper adds no box, so the island layout stays the same");
   const missing = SLOT_THEME.filter((name) => getComputedStyle(slot).getPropertyValue(name).trim() === "");
   check(missing.length === 0, `Every public theme variable is defined on the slot (${SLOT_THEME.length}); missing: ${missing.join(", ") || "none"}`);

@@ -7,6 +7,7 @@ import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
 import { MessagesSettingsPage } from "../MessagesSettingsPage";
 import type { IslandSettings } from "../../../lib/settings/types";
 import type { PlatformFeature } from "../../../lib/platform";
+import { OWNER } from "./owner.ts";
 
 type PageProps = {
   settings: IslandSettings;
@@ -30,6 +31,6 @@ function MessagesRunner() {
   return null;
 }
 
-settingsRunners.add({ id: "messages.controllers", component: MessagesRunner });
+settingsRunners.add({ id: "messages.controllers", component: MessagesRunner }, OWNER);
 
-addSettingsCategory("messages", ({ settings, unsupported, onSettingsChange }: PageProps) => <MessagesSettingsPage settings={settings} unsupported={unsupported} onSettingsChange={onSettingsChange} />);
+addSettingsCategory("messages", ({ settings, unsupported, onSettingsChange }: PageProps) => <MessagesSettingsPage settings={settings} unsupported={unsupported} onSettingsChange={onSettingsChange} />, OWNER);

@@ -4,7 +4,6 @@ import {
   addCcConnectRemoteProject,
   cancelCcConnectFeishuSetup,
   cancelCcConnectRemoteFeishuSetup,
-  CC_CONNECT_PLUGIN_ID,
   checkCcConnectBot,
   detectCcConnectAgents,
   getCcConnectFeishuSetup,
@@ -26,8 +25,9 @@ import {
   type CcConnectSetupPlatform,
 } from "../../../features/cc-connect/api";
 import { remotePath } from "../../../features/cc-connect/remotePaths";
-import { listPlugins, setPluginEnabled, setPluginSetting } from "../../../features/plugins/api";
-import { builtinPluginState } from "../../../features/plugins/builtinPlugin";
+import { OWNER as CC_CONNECT_PLUGIN } from "../../../features/cc-connect/plugin/owner";
+import { getBuiltinPlugins } from "../../../features/plugin-kernel/api";
+import { setBuiltinConfig, switchBuiltinPlugin } from "../../../features/plugin-kernel/builtinSwitches";
 import { isMacOS } from "../../../lib/platform";
 
 export type PushAgent = CcConnectSetupAgent;
@@ -69,7 +69,8 @@ export function targetSlug(name: string) {
 }
 
 async function localPath() {
-  return programSetting(builtinPluginState(await listPlugins(), CC_CONNECT_PLUGIN_ID).settings);
+  const plugins = await getBuiltinPlugins();
+  return programSetting(plugins.find((plugin) => plugin.id === CC_CONNECT_PLUGIN)?.config ?? {});
 }
 
 function blockedTarget(id: string, label: string | null, slug: string, remote: boolean, blocked: PushBlock, read: () => Promise<PushTargetState>): PushTarget {
@@ -101,8 +102,8 @@ export function localTarget(mac = isMacOS): PushTarget {
       await installCcConnect();
     },
     async prepare() {
-      await setPluginEnabled(CC_CONNECT_PLUGIN_ID, true);
-      await setPluginSetting(CC_CONNECT_PLUGIN_ID, "run", true);
+      await switchBuiltinPlugin(CC_CONNECT_PLUGIN, true);
+      await setBuiltinConfig(CC_CONNECT_PLUGIN, "run", true);
     },
     checkBot: (platform, token) => checkCcConnectBot(platform, token),
     async addProject(project) {

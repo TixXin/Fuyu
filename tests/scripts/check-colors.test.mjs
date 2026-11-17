@@ -9,6 +9,17 @@ test("literal colours in text, fill and border properties are found", () => {
   assert.deepEqual(lines(css), [2, 3, 4, 5]);
 });
 
+test("a neutral white is found however it is spelled, so a light island never gets white text or fills", () => {
+  const whites = ["#fff", "#ffffff", "#ffffffcc", "white", "WHITE", "rgba(255, 255, 255, 0.1)", "rgba(255,255,255,.1)", "rgb(255 255 255 / 10%)", "rgb(255, 255, 255)"];
+  for (const property of ["color", "background", "background-color", "border", "border-top-color", "outline", "fill", "stroke"]) {
+    for (const white of whites) {
+      const value = property.startsWith("border") && property !== "border-top-color" ? `1px solid ${white}` : white;
+      assert.deepEqual(lines(`.a {\n  ${property}: ${value};\n}`), [2], `${property}: ${value}`);
+    }
+  }
+  assert.deepEqual(lines(".a {\n  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent);\n}"), [2]);
+});
+
 test("tokens, fallbacks, shadows and keywords are allowed", () => {
   const css = [
     ".a {",

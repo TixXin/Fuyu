@@ -105,7 +105,7 @@
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 140ms ease, filter 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), filter var(--motion-base) var(--motion-ease);
 }
 
 .update-status__button:hover:not(:disabled) {
@@ -147,12 +147,12 @@
   height: 100%;
   background: var(--update-tone);
   border-radius: inherit;
-  transition: width 180ms ease;
+  transition: width var(--motion-base) var(--motion-ease);
 }
 
 .update-status__track--unknown .update-status__fill {
   width: 35%;
-  animation: update-status-slide 1.2s ease-in-out infinite;
+  animation: update-status-slide 1.2s var(--motion-ease-in-out) infinite;
 }
 
 .update-notes {
@@ -192,7 +192,7 @@
 .update-notes__toggle svg {
   flex: none;
   color: var(--color-text-subtle);
-  transition: transform 160ms ease;
+  transition: transform var(--motion-base) var(--motion-ease);
 }
 
 .update-notes--open .update-notes__toggle svg {

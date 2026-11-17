@@ -44,7 +44,7 @@
   height: var(--cell);
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
   border-radius: 2px;
-  transition: background 200ms ease, box-shadow 200ms ease;
+  transition: background var(--motion-medium) var(--motion-ease), box-shadow var(--motion-medium) var(--motion-ease);
 }
 
 .session-grid__cell[data-state],
@@ -105,7 +105,7 @@
 .session-signal__bar {
   height: calc(var(--signal-bar) * 1px);
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.1);
-  transition: background 200ms ease, box-shadow 200ms ease;
+  transition: background var(--motion-medium) var(--motion-ease), box-shadow var(--motion-medium) var(--motion-ease);
   border-radius: min(calc(var(--signal-bar) * 0.5px), calc(var(--island-radius-collapsed, 22px) * var(--signal-bar) / 38));
   corner-shape: var(--island-corner-shape, round);
 }
@@ -117,13 +117,13 @@
 .session-grid__cell[data-state="needs"],
 .session-bar__part[data-state="needs"],
 .session-signal__bar[data-state="needs"] {
-  animation: session-grid-pulse 1.4s ease-in-out infinite;
+  animation: session-grid-pulse 1.4s var(--motion-ease-in-out) infinite;
 }
 
 .session-grid__cell[data-state="working"],
 .session-bar__part[data-state="working"],
 .session-signal__bar[data-state="working"] {
-  animation: session-grid-breathe 2.8s ease-in-out infinite;
+  animation: session-grid-breathe 2.8s var(--motion-ease-in-out) infinite;
 }
 
 .session-ring--paused .session-grid__cell,

@@ -22,7 +22,7 @@
 
 .media-waveform__lines {
   transform-origin: 253px 56px;
-  transition: transform 200ms ease, opacity 180ms ease;
+  transition: transform var(--motion-medium) var(--motion-ease), opacity var(--motion-base) var(--motion-ease);
 }
 
 .media-waveform__line {

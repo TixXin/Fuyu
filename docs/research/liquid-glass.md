@@ -19,7 +19,7 @@
 | 色彩浓度 `glassColorStrength` | 0–100% | 70% | 色块不透明度 |
 | 流动速度 `glassFlowSpeed` | 0–200% | 100% | 0 等于静止 |
 | 色块大小 `glassBlobScale` | 60–160% | 100% | |
-| 折叠岛流动 `glassFlowWhen` | 一直 / 只在展开时 | 一直 | 可以再加「放歌或 Agent 运行时」，第 2 波看实现成本 |
+| 折叠岛流动 `glassFlowWhen` | 一直 / 只在展开时 | 只在展开时（2026-11-16 起，省掉收起时每帧重新合成的 GPU） | 可以再加「放歌或 Agent 运行时」，第 2 波看实现成本 |
 | 油膜边 `glassRim` + 边宽 | 开关，1–3px | 关，1.5px | 极光风格默认开 |
 | 扫光 `glassSheen` | 开关 | 关 | 极光风格默认开 |
 | 镜面高光 `glassSpecular` | 开关（跟鼠标） | 开 | 原来的 `useGlassPointer` 光斑换成它 |

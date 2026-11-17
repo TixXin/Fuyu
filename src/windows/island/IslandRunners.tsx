@@ -27,6 +27,9 @@ export type IslandRunnerProps = {
   host: IslandHost;
   features: IslandFeatures;
   openIslandPage: (page: IslandPage) => void;
+  setPage: (page: IslandPage) => void;
+  isPeeking: boolean;
+  minimizeToEdge: () => void;
   openEnabledPage: (page: IslandPage) => void;
   collapseIsland: () => void;
   tuckIsland: () => void;

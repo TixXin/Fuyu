@@ -12,8 +12,9 @@ import { useAgentInterjection } from "../../src/features/agent-status/useAgentIn
 import type { QQNotificationsController } from "../../src/features/messages/qq-notifications/QQNotifications";
 import type { WeChatRemindersController } from "../../src/features/messages/wechat/WeChatReminders";
 import type { MailController } from "../../src/features/messages/mail/MailPanel";
-import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 import { useFixtureLines } from "./islandLines";
+import { until } from "./pollUntil";
 
 type Check = (condition: unknown, label: string) => void;
 
@@ -40,7 +41,7 @@ function Stage({ media }: { media: MediaState }) {
       mode="collapsed" page="todo" isTucked={false} isDetached showTitle={false} showCollapsedText
       appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: false, shelf: false, qq: true, wechat: true, qqMail: true, agents: true, translation: false, calendar: false, screenshots: false, timer: false }}
-      shelfCount={null} onOpenPage={() => {}} onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
+      onOpenPage={() => {}} onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}}
       onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span>待办清单</span>
@@ -67,11 +68,7 @@ const settled = () => summary().children.length === 1 && !summary().querySelecto
 const probe = () => document.querySelector<HTMLElement>(".agent-probe")!.textContent;
 
 async function waitFor(condition: () => boolean, label: string, timeout = 2000) {
-  const deadline = performance.now() + timeout;
-  while (!condition()) {
-    if (performance.now() > deadline) throw new Error(`等待超时：${label}`);
-    await pause(16);
-  }
+  if (!(await until(condition, timeout))) throw new Error(`等待超时：${label}`);
 }
 
 export async function runLyricsHandoffChecks(root: Root, media: MediaState, check: Check) {
@@ -87,12 +84,15 @@ export async function runLyricsHandoffChecks(root: Root, media: MediaState, chec
   await waitFor(settled, "消息进入");
   check(!lyricRow() && summary().textContent?.includes("下午一起开会吗"), "消息打断歌词");
   await pause(1200);
+  const restoredFrom = Date.now();
   await act(async () => setPreview(null));
+  const restoredBy = Date.now();
   check(getComputedStyle(lyricRow()!).animationDuration === "0s", "消息结束、歌词恢复时只走一次整体弹簧，不叠加换句动画");
   const believe = [...lyricRow()!.querySelectorAll<HTMLElement>(".karaoke__word")][2];
-  const expected = 1700 - (1000 + (Date.now() - sampledAt));
+  const latest = 1700 - (1000 + (restoredFrom - sampledAt));
+  const earliest = 1700 - (1000 + (restoredBy - sampledAt));
   const delay = Number.parseFloat(believe.style.animationDelay);
-  check(delay < 0 && Math.abs(delay - expected) < 250, `恢复后逐字高亮按真实时间接上（延迟 ${Math.round(delay)}ms，应为 ${Math.round(expected)}ms），不从句首重跑`);
+  check(delay < 0 && delay >= earliest - 50 && delay <= latest + 50, `恢复后逐字高亮按真实时间接上（延迟 ${Math.round(delay)}ms，应在 ${Math.round(earliest)}–${Math.round(latest)}ms 之间），不从句首重跑`);
   await waitFor(settled, "恢复完成");
 
   await act(async () => setLyric({ text: "in yesterday", index: 1, longest: "Oh I believe" }));
@@ -106,10 +106,8 @@ export async function runLyricsHandoffChecks(root: Root, media: MediaState, chec
   await act(async () => setSessions([agent("running")]));
   await act(async () => setSessions([agent("waiting")]));
   check(probe() === "重构歌词", "Agent 开始等你时插话");
-  await pause(4300);
-  check(probe() === "", "Agent 等你插话 4 秒后让回歌词，不再一直占住");
-  await pause(4000);
-  check(!document.querySelector(".island-meeting") && lyricRow()?.textContent === "in yesterday", "会议提醒几秒后回到歌词");
+  check(await until(() => probe() === "", 4300), "Agent 等你插话 4 秒后让回歌词，不再一直占住");
+  check(await until(() => !document.querySelector(".island-meeting") && lyricRow()?.textContent === "in yesterday" && probe() === "重构歌词", 4000), "会议提醒几秒后回到歌词");
   check(document.querySelector(".island-meeting-join"), "回到歌词时加入会议按钮仍可点");
   check(probe() === "重构歌词", "到提醒时间还在等你，再插话一次");
   await waitFor(() => probe() === "", "再插话后让回", 6000);

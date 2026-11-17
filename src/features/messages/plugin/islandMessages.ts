@@ -2,9 +2,10 @@ import { useRef } from "react";
 import { useTranslation, type Translations } from "../../../i18n";
 import { ISLAND_SIDE_ROW_HEIGHT, type IslandContribution } from "../../plugin-kernel/islandContributions";
 import { useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
-import type { PluginNotification } from "../../plugins/api";
+import type { IslandNotice } from "../../../lib/island-notices/service";
 import { messagePreviewText } from "../messagePreview";
 import { messagesIsland, type MessagesIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 const MESSAGE_ARRIVALS_CHROME_HEIGHT = 86;
 
@@ -61,7 +62,7 @@ function openPreview({ preview, plugin, mail, qq, wechat, open }: MessagesIsland
   });
 }
 
-function isPluginNotification(value: unknown): value is PluginNotification {
+function isPluginNotification(value: unknown): value is IslandNotice {
   return typeof value === "object" && value !== null && typeof (value as { pluginId?: unknown }).pluginId === "string";
 }
 
@@ -80,5 +81,5 @@ export function useMessagesIsland(state: MessagesIsland | null, flags: MessagesI
   useIslandAction("notify", state && ((payload) => {
     if (isPluginNotification(payload)) latest.current?.plugin.post(payload);
   }));
-  useIslandContributions("builtin", "messages.island", state ? messagesContributions(state, flags, t) : []);
+  useIslandContributions(OWNER, "messages.island", state ? messagesContributions(state, flags, t) : []);
 }

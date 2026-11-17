@@ -14,9 +14,12 @@ type ClaudeUsageGaugeProps = {
 
 export function ClaudeUsageGauge({ provider = USAGE_PROVIDERS[0], islandHovered = true, showRemaining = false }: ClaudeUsageGaugeProps) {
   const t = useTranslation();
-  const { usage, now, refresh } = useClaudeUsage(provider.id);
+  const { usage, agentsOff, now, refresh } = useClaudeUsage(provider.id);
   const rings = useMemo(() => usageRings(usage, now, showRemaining, provider.color), [usage, now, showRemaining, provider]);
-  const lines = useMemo(() => usageCardLines(usage, now, t.claudeUsage, showRemaining, provider), [usage, now, t, showRemaining, provider]);
+  const lines = useMemo(() => {
+    const card = usageCardLines(usage, now, t.claudeUsage, showRemaining, provider);
+    return agentsOff ? [card[0], { text: t.claudeUsage.needsAgents, muted: true }] : card;
+  }, [usage, agentsOff, now, t, showRemaining, provider]);
   const label = t.claudeUsage.ringLabel(lines.map((line) => line.text).join("; "));
 
   return (

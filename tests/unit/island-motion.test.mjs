@@ -51,18 +51,25 @@ test("bouncy springs out, swings back a little and settles; its height bounces b
   assert.ok(close.collapsedDelay > deepest);
 });
 
-test("reduce motion takes the bounce out, not the animation", () => {
-  for (const direction of ["open", "close"]) {
-    const reduced = islandMotionTiming("bouncy", direction, true);
-    for (const key of ["widthEase", "heightEase", "radiusEase"]) assert.doesNotMatch(reduced[key], /^linear/, key);
+test("reduce motion keeps a short ease-out opening and closing without bounce (motion.md)", () => {
+  const overshoots = (ease) => /^linear/.test(ease) || /,\s*1\.\d+,/.test(ease);
+  for (const motion of ISLAND_MOTIONS) {
+    for (const direction of ["open", "close"]) {
+      const full = islandMotionTiming(motion, direction);
+      const reduced = islandMotionTiming(motion, direction, true);
+      for (const key of ["widthEase", "heightEase", "radiusEase", "ease"]) assert.ok(!overshoots(reduced[key]), `${motion} ${direction} ${key}`);
+      for (const key of ["width", "height", "radius"]) {
+        assert.ok(reduced[key] <= 240, `${motion} ${direction} ${key} ${reduced[key]}`);
+        assert.ok(reduced[key] <= full[key], `${motion} ${direction} ${key} not longer`);
+      }
+      assert.ok(reduced.fade <= 160, `${motion} ${direction} fade`);
+      assert.ok(reduced.fadeDelay >= 0 && reduced.fadeDelay + reduced.fade <= reduced.height || motion === "none", `${motion} ${direction} fade ends with the shell`);
+      if (motion !== "none") assert.ok(reduced.height > 0, `${motion} ${direction} still animates`);
+    }
+    assert.ok(islandMotionTiming(motion, "close", true).height <= islandMotionTiming(motion, "open", true).height, `${motion} closes no slower`);
   }
-  for (const motion of ["spring"]) {
-    assert.match(islandMotionTiming(motion, "open").widthEase, /,\s*1\.\d+,/);
-    const reduced = islandMotionTiming(motion, "open", true);
-    assert.doesNotMatch(reduced.widthEase, /,\s*1\.\d+,/);
-    assert.equal(reduced.width, islandMotionTiming(motion, "open").width);
-  }
-  assert.equal(islandMotionVariables("none", "open")["--island-motion-width"], "0ms");
+  assert.equal(islandMotionVariables("bouncy", "open", true)["--island-motion-height-ease"], "cubic-bezier(0.22, 1, 0.36, 1)");
+  assert.equal(islandMotionVariables("none", "open", true)["--island-motion-width"], "0ms");
   assert.equal(islandMotionVariables("none", "close")["--island-motion-layer"], "0ms");
 });
 

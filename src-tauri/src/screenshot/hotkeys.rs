@@ -2,12 +2,13 @@ use std::sync::{
     atomic::{AtomicBool, AtomicIsize, Ordering},
     Mutex, OnceLock, PoisonError,
 };
-use std::thread;
+use std::thread::{self, JoinHandle};
+use std::time::{Duration, Instant};
 
 use tauri::{AppHandle, Emitter};
 use windows::Win32::{
     Foundation::{HWND, LPARAM, LRESULT, WPARAM},
-    UI::WindowsAndMessaging::{WM_APP, WM_HOTKEY},
+    UI::WindowsAndMessaging::{WM_APP, WM_HOTKEY, WM_QUIT},
 };
 
 use super::session;
@@ -22,6 +23,8 @@ const REFRESH_MESSAGE: u32 = WM_APP + 0x61;
 const NUMPAD_MESSAGE: u32 = WM_APP + 0x62;
 const PRINT_MESSAGE: u32 = WM_APP + 0x63;
 const MOD_CONTROL_SHIFT: u32 = 0x0002 | 0x0004;
+const CLASS_NAME: &str = "FuyuScreenshotShortcuts";
+const READY_WAIT: Duration = Duration::from_secs(2);
 
 pub(crate) fn numpad_digit(binding: &Binding) -> Option<u32> {
     let digit = binding.key_code.checked_sub(u32::from(b'0')).filter(|digit| *digit <= 9)?;
@@ -35,14 +38,51 @@ static PRINT_SCREEN: AtomicBool = AtomicBool::new(false);
 static CONFIG: Mutex<Option<Vec<ShortcutConfig>>> = Mutex::new(None);
 static BOUND: Mutex<Vec<Binding>> = Mutex::new(Vec::new());
 static STATUS: Mutex<Vec<ShortcutStatus>> = Mutex::new(Vec::new());
+static THREAD: Mutex<Option<JoinHandle<()>>> = Mutex::new(None);
 
-pub(super) fn start(app: &AppHandle) {
+pub(super) fn init(app: &AppHandle) {
     let _ = APP.set(app.clone());
-    thread::spawn(|| {
-        if let Err(error) = run() {
-            eprintln!("screenshot shortcuts are unavailable: {error}");
+}
+
+pub(super) fn start() -> Result<(), String> {
+    let mut slot = THREAD.lock().unwrap_or_else(PoisonError::into_inner);
+    if slot.as_ref().is_some_and(|handle| !handle.is_finished()) {
+        return Ok(());
+    }
+    let handle = thread::Builder::new()
+        .name("screenshot-hotkeys".into())
+        .spawn(|| {
+            if let Err(error) = run() {
+                eprintln!("screenshot shortcuts are unavailable: {error}");
+            }
+        })
+        .map_err(|error| format!("Could not start the screenshot shortcuts: {error}"))?;
+    *slot = Some(handle);
+    Ok(())
+}
+
+pub(super) fn stop() {
+    let Some(handle) = THREAD.lock().unwrap_or_else(PoisonError::into_inner).take() else {
+        return;
+    };
+    let started = Instant::now();
+    while !handle.is_finished() {
+        let window = WINDOW.load(Ordering::SeqCst);
+        if window != 0 {
+            let _ = message_window::post_message(HWND(window as *mut core::ffi::c_void), WM_QUIT);
+            break;
         }
-    });
+        if started.elapsed() >= READY_WAIT {
+            eprintln!("the screenshot shortcut thread did not get ready, so it is left to finish on its own");
+            return;
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+    let _ = handle.join();
+}
+
+pub(super) fn running() -> bool {
+    THREAD.lock().unwrap_or_else(PoisonError::into_inner).as_ref().is_some_and(|handle| !handle.is_finished())
 }
 
 pub(super) fn is_enabled() -> bool {
@@ -75,15 +115,31 @@ pub(super) fn status() -> Vec<ShortcutStatus> {
 }
 
 fn run() -> Result<(), String> {
-    let class = "FuyuScreenshotShortcuts";
     let instance = message_window::module_instance().map_err(|error| error.to_string())?;
-    message_window::register_class::<ShortcutWindow>(instance, class).map_err(|error| error.to_string())?;
-    let window = message_window::create_message_only_window(instance, class, "Fuyu Screenshot Shortcuts").map_err(|error| error.to_string())?;
+    message_window::register_class::<ShortcutWindow>(instance, CLASS_NAME).map_err(|error| error.to_string())?;
+    let window = match message_window::create_message_only_window(instance, CLASS_NAME, "Fuyu Screenshot Shortcuts") {
+        Ok(window) => window,
+        Err(error) => {
+            let _ = message_window::unregister_class(instance, CLASS_NAME);
+            return Err(error.to_string());
+        }
+    };
     WINDOW.store(window.0 as isize, Ordering::SeqCst);
     refresh(window);
     message_window::run_message_loop();
+    WINDOW.store(0, Ordering::SeqCst);
     release(window);
+    report(Vec::new());
+    let _ = message_window::destroy_window(window);
+    let _ = message_window::unregister_class(instance, CLASS_NAME);
     Ok(())
+}
+
+fn report(problems: Vec<ShortcutStatus>) {
+    *STATUS.lock().unwrap_or_else(PoisonError::into_inner) = problems.clone();
+    if let Some(app) = APP.get() {
+        let _ = app.emit(STATUS_EVENT, problems);
+    }
 }
 
 fn release(window: HWND) {
@@ -123,10 +179,7 @@ fn refresh(window: HWND) {
             }
         }
     }
-    *STATUS.lock().unwrap_or_else(PoisonError::into_inner) = problems.clone();
-    if let Some(app) = APP.get() {
-        let _ = app.emit(STATUS_EVENT, problems);
-    }
+    report(problems);
 }
 
 fn bound_action(found: impl Fn(&Binding) -> bool) -> Option<ShortcutAction> {

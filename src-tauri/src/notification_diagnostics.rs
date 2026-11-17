@@ -7,10 +7,10 @@ use std::{
 use tauri::{AppHandle, Manager};
 
 pub fn verification_identifier() -> Option<String> {
-    if std::env::var("FOCUSD_VERIFY_NOTIFICATIONS").as_deref() != Ok("1") {
+    if std::env::var("FUYU_VERIFY_NOTIFICATIONS").as_deref() != Ok("1") {
         return None;
     }
-    let run_id = std::env::var("FOCUSD_NOTIFICATION_VERIFICATION_ID").ok()?;
+    let run_id = std::env::var("FUYU_NOTIFICATION_VERIFICATION_ID").ok()?;
     if run_id.len() != 32 || !run_id.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return None;
     }
@@ -18,7 +18,7 @@ pub fn verification_identifier() -> Option<String> {
 }
 
 pub fn start(app: &AppHandle) -> Result<(), String> {
-    if std::env::var("FOCUSD_VERIFY_NOTIFICATIONS").as_deref() != Ok("1") {
+    if std::env::var("FUYU_VERIFY_NOTIFICATIONS").as_deref() != Ok("1") {
         return Ok(());
     }
     let identifier =
@@ -27,8 +27,8 @@ pub fn start(app: &AppHandle) -> Result<(), String> {
         return Err("通知验收未隔离应用数据目录。".into());
     }
     let run_id =
-        std::env::var("FOCUSD_NOTIFICATION_VERIFICATION_ID").map_err(|error| error.to_string())?;
-    let seconds = std::env::var("FOCUSD_VERIFY_NOTIFICATION_SECONDS")
+        std::env::var("FUYU_NOTIFICATION_VERIFICATION_ID").map_err(|error| error.to_string())?;
+    let seconds = std::env::var("FUYU_VERIFY_NOTIFICATION_SECONDS")
         .ok()
         .and_then(|value| value.parse::<u64>().ok())
         .unwrap_or(180)
@@ -37,7 +37,7 @@ pub fn start(app: &AppHandle) -> Result<(), String> {
         .duration_since(UNIX_EPOCH)
         .map_err(|error| error.to_string())?
         .as_millis();
-    let directory = std::env::temp_dir().join("FocuSD-notification-verification");
+    let directory = std::env::temp_dir().join("Fuyu-notification-verification");
     fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
     let path = directory.join(format!("{run_id}.json"));
     let app = app.clone();

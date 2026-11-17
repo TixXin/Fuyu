@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { addArrival, removeArrival, arrivalKey, type ArrivalMessage } from "../arrivals/messageArrivals";
 import type { MailMessage } from "../mail/api";
 import type { MessageSource } from "../messagePreview";
-import { runPluginNotificationAction } from "../../plugins/api";
+import { runNoticeAction } from "../plugin/notices";
 import type { useIslandNotices } from "./useIslandNotices";
 import { HOVER_HOLD_RETRY_MS } from "../../plugin-kernel/hoverHold";
 import { useHoverHold } from "../../plugin-kernel/useHoverHold";
@@ -133,11 +133,7 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   }, [arrivals, close, end, onOpenMessages, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
 
   const runAction = useCallback((message: PanelArrival, action: string) => {
-    if (message.pluginId) {
-      void runPluginNotificationAction(message.pluginId, action).catch((error: unknown) =>
-        console.error("Failed to run a plugin notification action", error),
-      );
-    }
+    if (message.pluginId) runNoticeAction(message.pluginId, action);
     pluginNotifications.dismiss();
     const rest = removeArrival(arrivals ?? [], arrivalKey(message));
     if (rest.length === 0) close();

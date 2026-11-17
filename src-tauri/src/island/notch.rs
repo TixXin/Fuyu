@@ -7,6 +7,7 @@ use super::state::{mutate_window_state, read_window_state, IslandWindowState};
 static DEV_NOTCH: Mutex<Option<Notch>> = Mutex::new(None);
 
 pub(crate) const ISLAND_NOTCH_CHANGED_EVENT: &str = "island-notch-changed";
+pub(crate) const ISLAND_AUTO_FORM_CHANGED_EVENT: &str = "island-auto-form-changed";
 pub(super) const MIN_NOTCH_WING: f64 = 56.0;
 pub(super) const TUCKED_NOTCH_INSET: f64 = 2.0;
 pub(super) const NOTCH_DROP_HEIGHT: f64 = 38.0;
@@ -95,8 +96,42 @@ fn notch_for(_window: &WebviewWindow, _monitor: &Monitor) -> Option<Notch> {
     None
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum AutoForm {
+    Notch,
+    Top,
+}
+
+pub(super) fn resolve_auto_form(state: IslandWindowState, screen_has_notch: bool) -> IslandWindowState {
+    if !state.auto_form {
+        return state;
+    }
+    if screen_has_notch {
+        IslandWindowState { fit_notch: true, under_menu_bar: false, margin_y: 0.0, ..state }
+    } else {
+        IslandWindowState { fit_notch: false, ..state }
+    }
+}
+
+fn shown_auto_form(state: IslandWindowState) -> Option<AutoForm> {
+    state.auto_form.then_some(if state.fit_notch { AutoForm::Notch } else { AutoForm::Top })
+}
+
+fn screen_notch(window: &WebviewWindow, monitor: &Monitor) -> Option<Notch> {
+    dev_notch().or_else(|| notch_for(window, monitor))
+}
+
+pub(super) fn resolve(window: &WebviewWindow, monitor: &Monitor, state: IslandWindowState) -> IslandWindowState {
+    if !state.auto_form {
+        return state;
+    }
+    resolve_auto_form(state, screen_notch(window, monitor).is_some())
+}
+
 pub(super) fn under_menu_bar(window: &WebviewWindow, monitor: &Monitor, state: IslandWindowState) -> bool {
-    state.under_menu_bar || (!state.fit_notch && dev_notch().or_else(|| notch_for(window, monitor)).is_some())
+    let state = resolve(window, monitor, state);
+    state.under_menu_bar || (!state.fit_notch && screen_notch(window, monitor).is_some())
 }
 
 fn dev_notch() -> Option<Notch> {
@@ -112,28 +147,31 @@ pub(crate) fn set_dev_notch(app: &tauri::AppHandle, size: Option<(f64, f64)>) ->
 
 pub(super) fn settle(window: &WebviewWindow, monitor: &Monitor, state: IslandWindowState) -> Option<Notch> {
     let notch = if wants_notch(state) {
-        dev_notch().or_else(|| notch_for(window, monitor)).or(Some(Notch::simulated(state.collapsed_scale)))
+        screen_notch(window, monitor).or(Some(Notch::simulated(state.collapsed_scale)))
     } else {
         None
     };
-    let previous = read_window_state().notch;
-    if previous != notch {
+    let auto_form = shown_auto_form(state);
+    let previous = read_window_state();
+    if previous.notch != notch || previous.shown_auto_form != auto_form {
         mutate_window_state(|state| {
             state.notch = notch;
+            state.shown_auto_form = auto_form;
             *state
         });
+    }
+    if previous.notch != notch {
         let _ = window.emit(ISLAND_NOTCH_CHANGED_EVENT, notch);
+    }
+    if previous.shown_auto_form != auto_form {
+        let _ = window.emit(ISLAND_AUTO_FORM_CHANGED_EVENT, auto_form);
     }
     notch
 }
 
 #[tauri::command]
-pub fn primary_screen_has_notch(app: tauri::AppHandle) -> Result<bool, String> {
-    let window = super::main_window(&app)?;
-    let Some(monitor) = window.primary_monitor().map_err(|error| error.to_string())? else {
-        return Ok(false);
-    };
-    Ok(dev_notch().or_else(|| notch_for(&window, &monitor)).is_some())
+pub fn get_island_auto_form() -> Option<AutoForm> {
+    read_window_state().shown_auto_form
 }
 
 #[tauri::command]
@@ -190,6 +228,28 @@ mod tests {
         assert!(!wants_notch(IslandWindowState { under_menu_bar: true, ..base }));
         assert!(!wants_notch(IslandWindowState { margin_y: 8.0, ..base }));
         assert!(!wants_notch(IslandWindowState { custom_position: Some(super::super::IslandPosition::at(10, 0)), ..base }));
+    }
+
+    #[test]
+    fn auto_form_fits_the_notch_only_on_a_screen_with_one() {
+        let auto = IslandWindowState { auto_form: true, under_menu_bar: true, margin_y: 12.0, ..IslandWindowState::default() };
+        let on_notch = resolve_auto_form(auto, true);
+        assert!(on_notch.fit_notch && !on_notch.under_menu_bar && on_notch.margin_y == 0.0);
+        assert!(wants_notch(on_notch));
+        assert_eq!(shown_auto_form(on_notch), Some(AutoForm::Notch));
+        let elsewhere = resolve_auto_form(IslandWindowState { fit_notch: true, ..auto }, false);
+        assert!(!elsewhere.fit_notch && elsewhere.under_menu_bar && elsewhere.margin_y == 12.0);
+        assert_eq!(shown_auto_form(elsewhere), Some(AutoForm::Top));
+    }
+
+    #[test]
+    fn chosen_forms_are_left_alone() {
+        let top = IslandWindowState { under_menu_bar: true, ..IslandWindowState::default() };
+        let resolved = resolve_auto_form(top, true);
+        assert!(!resolved.fit_notch && resolved.under_menu_bar);
+        assert_eq!(shown_auto_form(resolved), None);
+        let notch = IslandWindowState { fit_notch: true, ..IslandWindowState::default() };
+        assert!(resolve_auto_form(notch, false).fit_notch);
     }
 
     #[test]

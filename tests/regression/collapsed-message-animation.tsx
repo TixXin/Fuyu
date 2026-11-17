@@ -6,7 +6,7 @@ import { emit } from "@tauri-apps/api/event";
 import "../../src/windows/island/IslandApp";
 import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useLatestMessagePreview } from "../../src/features/messages/island/useLatestMessagePreview";
-import type { PluginNotificationsController } from "../../src/features/plugins/usePluginNotifications";
+import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 import type { IslandMode } from "../../src/windows/island/types";
@@ -46,11 +46,11 @@ mockIPC((command, payload) => {
   commands.push(command);
   const args = (payload ?? {}) as Record<string, unknown>;
   if (command === "request_qq_notification_access") return "allowed";
-  if (command === "set_qq_notifications_enabled") return {
-    revision: ++revision, enabled: args.enabled, status: "listening", items: [], error: null,
+  if (command === "get_qq_notification_state") return {
+    revision: ++revision, enabled: true, status: "listening", items: [], error: null,
   };
-  if (command === "set_wechat_reminders_enabled") return {
-    revision: ++revision, enabled: args.enabled, status: "listening", pending: false, lastAttentionAt: null, error: null,
+  if (command === "set_wechat_expose_ui" || command === "set_wechat_hide_taskbar_button") return {
+    revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null,
   };
   if (command === "get_qq_mail_state") return [mail];
   if (command === "read_qq_mail") return { id: args.messageId, content: "本周项目进度已更新", contentType: "text/plain" };
@@ -105,7 +105,6 @@ function Fixture() {
       mode={mode} page="todo" isTucked={tucked} isDetached={true} showTitle={title}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: agentsEnabled, translation: false, calendar: false, screenshots: false, timer: false }}
-      shelfCount={null}
       onOpenPage={(page) => { openedPage = page; }}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => setMode("collapsed")}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => setTucked(true)} onReveal={() => setTucked(false)} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>

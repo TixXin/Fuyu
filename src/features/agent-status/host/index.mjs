@@ -32,7 +32,7 @@ export function focusParams(params) {
   return { provider: read.provider, sessionId: text(read.sessionId), cwd: text(read.cwd), title: text(read.title) };
 }
 
-export function sessionEntry(session, { listed, unseen }) {
+export function sessionEntry(session, { listed, unseen, light }) {
   const provider = String(session?.provider ?? "");
   const sessionId = String(session?.sessionId ?? "");
   return {
@@ -42,6 +42,7 @@ export function sessionEntry(session, { listed, unseen }) {
     title: text(session?.title),
     cwd: text(session?.cwd),
     phase: String(session?.phase ?? "completed"),
+    light: text(light) ?? "done",
     updatedAt: number(session?.updatedAt) ?? 0,
     remoteHost: text(session?.remoteHost),
     listed: listed === true,

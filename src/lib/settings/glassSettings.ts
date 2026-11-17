@@ -67,7 +67,7 @@ export const DEFAULT_GLASS_SETTINGS: GlassSettingValues = {
   glassColorStrength: 30,
   glassFlowSpeed: 100,
   glassBlobScale: 100,
-  glassFlowWhen: "always",
+  glassFlowWhen: "expanded",
   glassRim: false,
   glassRimWidth: 1.5,
   glassSheen: false,

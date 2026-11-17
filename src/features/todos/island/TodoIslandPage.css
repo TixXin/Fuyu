@@ -105,7 +105,7 @@
   height: 100%;
   background: var(--color-light-working);
   border-radius: inherit;
-  transition: width 240ms ease;
+  transition: width var(--motion-medium) var(--motion-ease);
 }
 
 .todo-island__save--saved {
@@ -135,7 +135,7 @@
 .todo-island__composer {
   height: 34px;
   padding: 0 5px 0 10px;
-  transition: box-shadow 140ms ease;
+  transition: box-shadow var(--motion-base) var(--motion-ease);
 }
 
 .todo-island__composer:focus-within {
@@ -277,7 +277,7 @@
   border-radius: 10px;
   font: inherit;
   cursor: pointer;
-  transition: background 140ms ease, box-shadow 140ms ease;
+  transition: background var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease);
 }
 
 .todo-island__archive-day:hover {

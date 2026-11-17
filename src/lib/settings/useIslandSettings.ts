@@ -1,29 +1,14 @@
 import { useEffect, useState } from "react";
-import { legacyFormFromScreen, storedSettingsText } from "./migrateIslandForm";
 import { isSameSettings } from "./settings";
 import { STORAGE_KEY, loadSettings, saveSettings } from "./storage";
 import type { IslandSettings } from "./types";
 
 export function useIslandSettings() {
   const [settings, setSettings] = useState<IslandSettings>(loadSettings);
-  const [legacyStored] = useState(storedSettingsText);
 
   useEffect(() => {
     saveSettings(settings);
   }, [settings]);
-
-  useEffect(() => {
-    if (!legacyStored) return;
-    let live = true;
-    void legacyFormFromScreen(legacyStored).then((form) => {
-      if (live && form === "notch") {
-        setSettings((current) => (current.islandForm === "top" ? { ...current, islandForm: form } : current));
-      }
-    });
-    return () => {
-      live = false;
-    };
-  }, [legacyStored]);
 
   useEffect(() => {
     const syncFromSettingsWindow = (event: StorageEvent) => {

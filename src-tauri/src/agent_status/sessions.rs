@@ -97,7 +97,7 @@ impl SessionTail {
     }
 }
 
-pub(super) fn parse_timestamp_ms(text: &str) -> Option<i64> {
+pub(crate) fn parse_timestamp_ms(text: &str) -> Option<i64> {
     let number = |range: std::ops::Range<usize>| text.get(range)?.parse::<i64>().ok();
     let bytes = text.as_bytes();
     if bytes.len() < 19 || bytes[4] != b'-' || bytes[7] != b'-' || !matches!(bytes[10], b'T' | b' ') {

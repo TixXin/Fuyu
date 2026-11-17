@@ -111,7 +111,7 @@
   gap: var(--space-md);
   min-width: 0;
   height: 100%;
-  animation: islandNotchWingIn 240ms cubic-bezier(.2, .85, .2, 1) backwards;
+  animation: islandNotchWingIn var(--motion-medium) var(--motion-ease) backwards;
 }
 
 @keyframes islandNotchWingIn {

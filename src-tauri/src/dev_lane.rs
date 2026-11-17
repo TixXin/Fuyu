@@ -6,16 +6,24 @@ use std::sync::OnceLock;
 
 pub(crate) use seed::before_start;
 
-const ENV: &str = "FOCUSD_DEV_LANE";
+const ENV: [&str; 2] = ["FUYU_DEV_LANE", "FOCUSD_DEV_LANE"];
 const SHARED_ENV: &str = "FUYU_DEV_SHARED_IDENTITY";
-const CENTER_ENV: &str = "FOCUSD_DEV_LANE_CENTER";
+const CENTER_ENV: [&str; 2] = ["FUYU_DEV_LANE_CENTER", "FOCUSD_DEV_LANE_CENTER"];
+
+fn env_var(names: [&str; 2]) -> Option<String> {
+    first_set(names.map(|name| std::env::var(name).ok()))
+}
+
+fn first_set(values: [Option<String>; 2]) -> Option<String> {
+    values.into_iter().flatten().next()
+}
 
 pub(crate) fn lane() -> Option<u32> {
     static LANE: OnceLock<Option<u32>> = OnceLock::new();
     *LANE.get_or_init(|| {
         let shared = std::env::var(SHARED_ENV).is_ok_and(|value| value == "1");
         let verifying = crate::notification_diagnostics::verification_identifier().is_some();
-        chosen(cfg!(debug_assertions) && !cfg!(test), shared || verifying, std::env::var(ENV).ok().as_deref())
+        chosen(cfg!(debug_assertions) && !cfg!(test), shared || verifying, env_var(ENV).as_deref())
     })
 }
 
@@ -58,7 +66,7 @@ pub(crate) fn separate_webview_storage(lane: u32) {
 }
 
 fn centred_preview() -> bool {
-    std::env::var(CENTER_ENV).is_ok_and(|value| value == "1")
+    env_var(CENTER_ENV).is_some_and(|value| value == "1")
 }
 
 pub(crate) fn stage_x(monitor: (i32, i32, i32), window: (i32, i32), scale: f64) -> i32 {
@@ -94,7 +102,14 @@ pub(crate) fn refuse_in_preview(action: &str) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{chosen, identifier, left_edge, port_in, service_in, stage_x};
+    use super::{chosen, first_set, identifier, left_edge, port_in, service_in, stage_x};
+
+    #[test]
+    fn the_new_variable_wins_and_the_old_name_still_counts() {
+        assert_eq!(first_set([Some("7".into()), Some("3".into())]).as_deref(), Some("7"));
+        assert_eq!(first_set([None, Some("3".into())]).as_deref(), Some("3"));
+        assert_eq!(first_set([None, None]), None);
+    }
 
     #[test]
     fn a_lane_keeps_off_the_installed_apps_ports() {

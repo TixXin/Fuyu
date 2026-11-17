@@ -67,6 +67,18 @@ fn repeated_flashes_create_one_reminder_and_activation_acknowledges_it() {
 }
 
 #[test]
+fn clearing_the_list_also_ends_the_pending_reminder() {
+    let mut state = ReminderState::default();
+    state.set_enabled(true);
+    let generation = state.generation;
+    assert!(state.apply(generation, ReminderSignal::Attention, 1000));
+    assert!(state.clear());
+    assert!(!state.snapshot.pending && state.snapshot.items.is_empty());
+    assert!(!state.clear(), "clearing twice changes nothing");
+    assert!(state.apply(generation, ReminderSignal::Attention, 2000), "the next flash is news again");
+}
+
+#[test]
 fn disabling_clears_pending_state_and_rejects_old_listener_events() {
     let mut state = ReminderState::default();
     state.set_enabled(true);

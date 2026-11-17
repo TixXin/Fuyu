@@ -173,7 +173,7 @@
   width: calc(90% * var(--glass-blob-scale, 1));
   aspect-ratio: 1;
   border-radius: 50%;
-  animation: islandPreviewBlobA var(--glass-flow-duration, 23s) ease-in-out infinite alternate;
+  animation: islandPreviewBlobA var(--glass-flow-duration, 23s) var(--motion-ease-in-out) infinite alternate;
   animation-name: var(--preview-blob, islandPreviewBlobA);
 }
 

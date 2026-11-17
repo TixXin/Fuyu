@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useErrorText } from "../../i18n";
-import { useBuiltinPlugin } from "../plugins/useBuiltinPlugin";
-import { CC_CONNECT_PLUGIN_ID, getCcConnectStatus, programSetting, type CcConnectStatus } from "./api";
+import { useBuiltinConfig } from "../plugin-kernel/useBuiltinPlugins";
+import { getCcConnectStatus, programSetting, type CcConnectStatus } from "./api";
+import { OWNER } from "./plugin/owner.ts";
 
 const REFRESH_MS = 5_000;
 
 export function useCcConnect() {
-  const plugin = useBuiltinPlugin(CC_CONNECT_PLUGIN_ID);
-  const path = programSetting(plugin.settings);
+  const config = useBuiltinConfig(OWNER);
+  const path = programSetting(config);
   const errorText = useErrorText();
   const [status, setStatus] = useState<CcConnectStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,11 +23,10 @@ export function useCcConnect() {
   }, [path, errorText]);
 
   useEffect(() => {
-    if (!plugin.enabled) return;
     void refresh();
     const timer = window.setInterval(() => void refresh(), REFRESH_MS);
     return () => window.clearInterval(timer);
-  }, [plugin.enabled, refresh]);
+  }, [refresh]);
 
-  return { enabled: plugin.enabled, path, status, error, refresh };
+  return { path, run: config.run === true, status, error, refresh };
 }

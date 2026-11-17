@@ -3,7 +3,7 @@ use crate::system::CommandExt;
 use std::{
     path::PathBuf,
     process::{Command, Stdio},
-    sync::{mpsc, Arc},
+    sync::Arc,
     thread,
     time::{Duration, Instant},
 };
@@ -17,6 +17,7 @@ use windows::{
 };
 
 use super::history::NotificationBuffer;
+use crate::plugin_kernel::worker::Stop;
 use super::{forget_seen, now_ms, publish, NotificationService, NotificationStatus, QQNotification};
 use crate::win32;
 
@@ -45,7 +46,7 @@ pub(super) fn is_diagnostic(parts: &[String]) -> bool {
     })
 }
 
-pub(super) fn monitor(service: Arc<NotificationService>, receiver: mpsc::Receiver<()>) {
+pub(super) fn monitor(service: Arc<NotificationService>, stop: &Stop) {
     let mut repair_generation = None;
     let mut repair_error = None;
     let mut was_front = false;
@@ -55,7 +56,7 @@ pub(super) fn monitor(service: Arc<NotificationService>, receiver: mpsc::Receive
             Err(_) => return,
         };
         if !enabled {
-            if receiver.recv().is_err() {
+            if stop.wait(Duration::from_secs(1)) {
                 return;
             }
             continue;
@@ -124,9 +125,7 @@ pub(super) fn monitor(service: Arc<NotificationService>, receiver: mpsc::Receive
             forget_seen(&service, now_ms());
         }
         was_front = front;
-        if receiver.recv_timeout(Duration::from_secs(1))
-            == Err(mpsc::RecvTimeoutError::Disconnected)
-        {
+        if stop.wait(Duration::from_secs(1)) {
             return;
         }
     }

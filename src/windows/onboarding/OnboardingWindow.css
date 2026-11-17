@@ -15,8 +15,8 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
-  transition: left 260ms ease, top 260ms ease, bottom 260ms ease;
-  animation: onboardingCardIn 420ms cubic-bezier(0.2, 0.9, 0.3, 1.1) 200ms backwards;
+  transition: left var(--motion-medium) var(--motion-ease), top var(--motion-medium) var(--motion-ease), bottom var(--motion-medium) var(--motion-ease);
+  animation: onboardingCardIn var(--motion-slow) var(--motion-ease-out) 200ms backwards;
 }
 
 .onboarding--light .onboarding__card {
@@ -48,7 +48,7 @@
   height: 6px;
   border-radius: var(--radius-pill);
   background: var(--color-white-a16);
-  transition: width 160ms ease, background 160ms ease;
+  transition: width var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
 }
 
 .onboarding__dot--done {
@@ -81,7 +81,7 @@
   overflow-y: auto;
   scrollbar-width: thin;
   padding: 0 20px 8px;
-  animation: onboardingAct 300ms ease-out;
+  animation: onboardingAct var(--motion-medium) var(--motion-ease);
 }
 
 .onboarding__notice {

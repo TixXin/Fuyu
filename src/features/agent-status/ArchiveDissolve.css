@@ -3,7 +3,7 @@
   mask-image: linear-gradient(90deg, transparent 40%, #000 60%);
   -webkit-mask-size: 250% 100%;
   mask-size: 250% 100%;
-  animation: agent-dissolve-sweep 480ms linear forwards;
+  animation: agent-dissolve-sweep var(--motion-slow) linear forwards;
 }
 
 .agent-dissolve__dust {
@@ -22,8 +22,8 @@
   -webkit-mask-size: 250% 100%;
   mask-size: 250% 100%;
   animation:
-    agent-dissolve-sweep 480ms linear forwards,
-    agent-dissolve-drift 480ms ease-out forwards;
+    agent-dissolve-sweep var(--motion-slow) linear forwards,
+    agent-dissolve-drift var(--motion-slow) var(--motion-ease) forwards;
 }
 
 @keyframes agent-dissolve-sweep {

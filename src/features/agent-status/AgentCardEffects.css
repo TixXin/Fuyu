@@ -12,7 +12,7 @@
 }
 
 .agent-card--sparkle.agent-card--lively {
-  animation: agent-card-breathe 2.8s ease-in-out infinite;
+  animation: agent-card-breathe 2.8s var(--motion-ease-in-out) infinite;
 }
 
 @keyframes agent-card-breathe {
@@ -63,7 +63,7 @@
     radial-gradient(circle at 13px 5px, var(--halo) 0 0.7px, transparent 1.6px) 0 0 / 24px 13px;
   animation:
     agent-band-drift-a 16s linear infinite,
-    agent-band-twinkle 2.6s ease-in-out infinite;
+    agent-band-twinkle 2.6s var(--motion-ease-in-out) infinite;
   will-change: transform, opacity;
 }
 
@@ -78,7 +78,7 @@
     radial-gradient(circle at 18px 9px, var(--halo) 0 0.7px, transparent 1.6px) 0 0 / 20px 11px;
   animation:
     agent-band-drift-b 9s linear infinite,
-    agent-band-twinkle 2.6s ease-in-out -1.3s infinite;
+    agent-band-twinkle 2.6s var(--motion-ease-in-out) -1.3s infinite;
 }
 
 .agent-sessions__list > li:nth-child(3n + 2) .agent-card__band::before { animation-delay: -5s, -0.8s; }

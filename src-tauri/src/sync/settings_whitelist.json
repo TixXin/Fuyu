@@ -46,6 +46,7 @@
         "agentShowModel": "sync",
         "agentShowActivity": "sync",
         "agentShowUsage": "sync",
+        "agentExpandChildren": "sync",
         "agentAlertCompleted": "sync",
         "agentAlertFailed": "sync",
         "agentAlertWaiting": "sync",

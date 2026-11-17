@@ -4,18 +4,19 @@ import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../../i18n";
-import { CC_CONNECT_AGENT_LABELS, chatLabel, type CcConnectProject, type useCcConnect, type useRemoteCcConnect } from "../../cc-connect";
+import { CC_CONNECT_AGENT_LABELS, chatLabel } from "../../../lib/cc-connect/labels";
+import type { CcConnectProject } from "../../../lib/cc-connect/service";
 import { LOCAL_HOST, pushHost, type AgentPushSettings, type CcConnectPushHost } from "./storage";
+import type { useCcConnectTargets } from "./useCcConnectTargets";
 
 type Props = {
   settings: AgentPushSettings;
   onChange: (settings: AgentPushSettings) => void;
-  cc: ReturnType<typeof useCcConnect>;
-  remote: ReturnType<typeof useRemoteCcConnect>;
-  targets: boolean;
+  targets: ReturnType<typeof useCcConnectTargets>;
+  picking: boolean;
 };
 
-export function CcConnectPushTargets({ settings, onChange, cc, remote, targets }: Props) {
+export function CcConnectPushTargets({ settings, onChange, targets, picking }: Props) {
   const text = useTranslation().settings.agent.push.ccConnect;
   const setHost = (host: string, entry: CcConnectPushHost) => onChange({ ...settings, ccConnect: { ...settings.ccConnect, [host]: entry } });
   const mute = (host: string, on: boolean) =>
@@ -23,17 +24,23 @@ export function CcConnectPushTargets({ settings, onChange, cc, remote, targets }
 
   return (
     <>
-      {[LOCAL_HOST, ...remote.hosts].map((host) => {
+      {[LOCAL_HOST, ...targets.hosts].map((host) => {
         const on = !settings.mutedHosts.includes(host);
         const entry = pushHost(settings, host);
         const change = (next: CcConnectPushHost) => setHost(host, next);
         return (
           <Fragment key={host}>
             <SettingsToggleRow indent searchable={false} title={host || text.thisComputer} description={text.hostHint} checked={on} onChange={(next) => mute(host, next)} />
-            {on && targets && host === LOCAL_HOST ? (
-              <ProjectChats projects={cc.status?.projects ?? []} error={cc.error} entry={entry} onChange={change} onRefresh={() => void cc.refresh()} />
+            {on && picking && host === LOCAL_HOST ? (
+              <ProjectChats
+                projects={targets.entries[LOCAL_HOST]?.status?.projects ?? []}
+                error={targets.entries[LOCAL_HOST]?.error ?? null}
+                entry={entry}
+                onChange={change}
+                onRefresh={() => void targets.read(LOCAL_HOST)}
+              />
             ) : null}
-            {on && targets && host !== LOCAL_HOST ? <RemoteTargets host={host} entry={entry} onChange={change} remote={remote} /> : null}
+            {on && picking && host !== LOCAL_HOST ? <RemoteTargets host={host} entry={entry} onChange={change} targets={targets} /> : null}
           </Fragment>
         );
       })}
@@ -41,9 +48,9 @@ export function CcConnectPushTargets({ settings, onChange, cc, remote, targets }
   );
 }
 
-function RemoteTargets({ host, entry, onChange, remote }: { host: string; entry: CcConnectPushHost; onChange: (entry: CcConnectPushHost) => void; remote: Props["remote"] }) {
+function RemoteTargets({ host, entry, onChange, targets }: { host: string; entry: CcConnectPushHost; onChange: (entry: CcConnectPushHost) => void; targets: Props["targets"] }) {
   const text = useTranslation().settings.agent.push.ccConnect;
-  const state = remote.entries[host];
+  const state = targets.entries[host];
   const status = state?.status ?? null;
   const found = status?.exe ? (status.running ? status.exe : `${status.exe} · ${text.notRunning}`) : `${text.notFound}: ${text.notFoundHint}`;
   return (
@@ -54,14 +61,14 @@ function RemoteTargets({ host, entry, onChange, remote }: { host: string; entry:
           searchable={false}
           title={text.program}
           description={state?.reading ? text.reading : (state?.error ?? (status ? found : undefined))}
-          control={<SettingsLinkButton disabled={state?.reading} onClick={() => void remote.read(host)}>{text.refresh}</SettingsLinkButton>}
+          control={<SettingsLinkButton disabled={state?.reading} onClick={() => void targets.read(host)}>{text.refresh}</SettingsLinkButton>}
         />
       ) : null}
       {(status && !status.exe) || entry.viaLocal ? (
         <SettingsToggleRow indent={2} searchable={false} title={text.viaLocal} description={text.viaLocalHint} checked={entry.viaLocal} onChange={(viaLocal) => onChange({ ...entry, viaLocal })} />
       ) : null}
       {status?.exe && !entry.viaLocal ? (
-        <ProjectChats projects={status.projects} error={null} entry={entry} onChange={onChange} onRefresh={() => void remote.read(host)} />
+        <ProjectChats projects={status.projects} error={null} entry={entry} onChange={onChange} onRefresh={() => void targets.read(host)} />
       ) : null}
     </>
   );

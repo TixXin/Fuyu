@@ -108,7 +108,7 @@
 
 .island-side-ring--attention {
   --island-side-ring-color: var(--color-warning);
-  animation: island-side-ring-pulse 1.2s ease-in-out infinite;
+  animation: island-side-ring-pulse 1.2s var(--motion-ease-in-out) infinite;
 }
 
 .island-side-ring__dot {
@@ -179,7 +179,7 @@
   color: var(--color-text);
   background: var(--island-fill, var(--island-background-color));
   cursor: default;
-  animation: island-side-bubble-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: island-side-bubble-in var(--motion-medium) var(--motion-ease-out) both;
 }
 
 .island-side-bubble[role="button"] {

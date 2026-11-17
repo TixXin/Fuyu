@@ -77,13 +77,14 @@
 | 前端静态检查 | `pnpm lint`（ESLint，配置见 `eslint.config.js`） |
 | 文件行数检查 | `pnpm check:size` |
 | 深色专用颜色检查 | `pnpm check:colors`（CSS 里写死的颜色要写成 `var(--变量, 原值)`；存量记在 `scripts/color-literal-allowlist.json`，只减不增，规则见 `src/AGENTS.md`） |
+| 动效检查 | `pnpm check:motion`（CSS 里写死的曲线和不在档位上的时长要换成 `--motion-*` token；存量记在 `scripts/motion-literal-allowlist.json`，只减不增，规则见 `docs/design/motion.md`） |
 | 密钥字段检查 | `pnpm check:secrets`（Rust 里带 `Serialize`、字段名像密钥、类型是字符串的字段要登记在 `scripts/secret-fields-allowlist.json` 并写理由，规则见 `src-tauri/AGENTS.md`） |
 | 回归页类型检查 | `pnpm check:tests-types`（`tests/tsconfig.json`，检查 `tests/regression/*.tsx`） |
 | 浏览器回归页 | `pnpm test:regression [页面名中的词] [--update-snapshots]`（跑 `tests/regression/` 的回归页并比对 DOM 快照；界面本该变时加 `--update-snapshots`，快照随提交带上；细节见 workflow.md「验证」） |
 | 岛屿实验台 | `pnpm lab`（打开 http://127.0.0.1:5199/，点按钮让正在跑的 `pnpm tauri dev` 的岛弹消息、展开收起、模拟刘海、发起 Agent 审批；不用开本地接口，见 `docs/features/island-lab.md`） |
 | README 的 SVG | `pnpm readme:assets`（重新生成 `docs/assets/readme/` 里的小岛和下载按钮；改它们改 `scripts/readme/assets.mjs`，不直接改 SVG） |
 | 设置搜索索引 | `pnpm settings:index`（新增、删除或改名设置项后运行，重写 `src/windows/settings/searchIndex.json`；漏跑时 `settings-search` 回归页会失败） |
-| 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 颜色检查 + 任务检查 + 单元测试） |
+| 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 颜色检查 + 动效检查 + 任务检查 + 单元测试） |
 | Rust 单元测试 | `cargo test --manifest-path src-tauri/Cargo.toml` |
 | 仅生成 release 可执行文件 | `pnpm build:exe`（写到 `src-tauri/target/release`，岛屿在运行也不用关；Mac 上打成 `Fuyu.app`） |
 | 重任务排队 | `pnpm heavy [--label <名字>] -- <命令…>`（全机器限量排队，见 workflow.md「Rust 构建」） |
@@ -92,7 +93,7 @@
 | 改版本号、起草发布说明 | `pnpm release:version <版本号>`（四处版本号一起改，不要手动改） |
 | 发布 | `pnpm release`（流程见 `docs/features/updater.md`） |
 | 查 GitHub issue | `pnpm issue [<编号…>]`（正文、回复和对应任务；不带编号是列表，参数见 workflow.md「任务认领」） |
-| 合入 main | `pnpm mq:pending`（该不该提 PR）、`pnpm mq:land --yes --body <中文 PR 正文文件>`（开 PR 合入）、`pnpm mq:wait`（后台等合入）、`pnpm mq:try`（先跑 CI）、`pnpm mq:sync`（跟上 `origin/main`）；用法和 `--upto` / `--only` 见 workflow.md「现在怎么做」 |
+| 合入 main | `pnpm mq:pending`（该不该提 PR）、`pnpm mq:land --yes --body <中文 PR 正文文件>`（开 PR 合入）、`pnpm mq:wait`（后台等合入）、`pnpm mq:try`（先跑 CI，`--clean` 删跑完的）、`pnpm mq:sync`（跟上 `origin/main`）；用法和 `--upto` / `--only` 见 workflow.md「现在怎么做」 |
 | 同一个文件里只提交自己的改动 | `pnpm mq:commit-part`（见 workflow.md「同一个文件里只提交自己的改动」） |
 | 进度汇总 | `pnpm progress [--no-github] [--json]`（一屏：进行中的任务和负责的会话、没提交的文件、没推的提交和落后多少、开着的 PR、任务已完成而 issue 还开着的） |
 

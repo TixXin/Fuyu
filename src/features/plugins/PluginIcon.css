@@ -56,7 +56,7 @@
 .plugin-icon__dot--off { --plugin-dot: rgba(var(--overlay-rgb, 255, 255, 255), 0.18); }
 
 .plugin-icon__dot--busy {
-  animation: plugin-icon-pulse 1.2s ease-in-out infinite;
+  animation: plugin-icon-pulse 1.2s var(--motion-ease-in-out) infinite;
 }
 
 @keyframes plugin-icon-pulse {

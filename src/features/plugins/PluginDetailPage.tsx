@@ -3,9 +3,7 @@ import { Eraser, ExternalLink, Play } from "lucide-react";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useLocale, useTranslation } from "../../i18n";
-import { CC_CONNECT_PLUGIN_ID, CcConnectSection } from "../cc-connect";
 import { CENTER_PATTERN_PET_KEY, CENTER_PATTERN_PLUGIN_ID, petChoices, usePetChoices } from "../center-pattern";
-import { PlanKeyFields } from "../claude-usage/PlanKeyFields";
 import { SSH_TUNNEL_PLUGIN_ID, SshTunnelHosts, useSshTunnelProxy } from "../ssh-tunnel";
 import { openPluginHomepage, PLUGIN_MEMORY_LIMITS_MB, type PluginInfo, type PluginWindowRules } from "./api";
 import { pluginHealth } from "./installedFilter";
@@ -176,9 +174,7 @@ export function PluginDetailPage({
         )}
       </section>
 
-      {plugin.id === "focusd.claude-usage" ? <PlanKeyFields settings={plugin.settings} disabled={busy} /> : null}
       {plugin.builtin && plugin.id === SSH_TUNNEL_PLUGIN_ID ? <SshTunnelHosts /> : null}
-      {plugin.builtin && plugin.id === CC_CONNECT_PLUGIN_ID ? <CcConnectSection /> : null}
 
       {plugin.permissions.includes("island:notify") ? (
         <section className="settings-section plugins-panel">

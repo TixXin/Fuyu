@@ -98,7 +98,7 @@
   height: 100%;
   object-fit: cover;
   object-position: top center;
-  transition: transform 220ms ease;
+  transition: transform var(--motion-medium) var(--motion-ease);
 }
 
 .screenshot-history__shot::after {
@@ -108,7 +108,7 @@
   border-radius: inherit;
   box-shadow: inset 0 0 0 1px rgba(var(--list-ink), 0.12);
   pointer-events: none;
-  transition: box-shadow 140ms ease;
+  transition: box-shadow var(--motion-base) var(--motion-ease);
 }
 
 .screenshot-history__shot:hover img {
@@ -146,7 +146,7 @@
   font-size: 12px;
   font-weight: 600;
   background: color-mix(in srgb, var(--list-accent) 30%, var(--screenshot-history-caption-fill, rgba(12, 13, 16, 0.62)));
-  animation: screenshotHistoryCopied 180ms ease both;
+  animation: screenshotHistoryCopied var(--motion-base) var(--motion-ease) both;
 }
 
 @keyframes screenshotHistoryCopied {
@@ -166,7 +166,7 @@
   backdrop-filter: blur(6px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 140ms ease;
+  transition: opacity var(--motion-base) var(--motion-ease);
 }
 
 .screenshot-history__item:hover .screenshot-history__actions,
@@ -217,7 +217,7 @@
   box-shadow: 0 4px 14px var(--screenshot-history-shadow, rgba(0, 0, 0, 0.3));
   transform: translateX(-50%);
   pointer-events: none;
-  animation: islandListNotice 2.4s ease both;
+  animation: islandListNotice 2.4s var(--motion-ease) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

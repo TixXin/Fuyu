@@ -3,7 +3,7 @@
   inset: 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 120ms ease-out;
+  transition: opacity var(--motion-fast) var(--motion-ease);
   --drag-grid-dash: 12px;
   --drag-grid-gap: 8px;
 }

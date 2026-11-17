@@ -6,7 +6,8 @@ import { useLocale, useTranslation } from "../../../i18n";
 import { shownUsageProviders, usageItemId } from "../../../features/claude-usage/usageRing";
 import { pluginStatusItemId } from "../../../features/plugin-views/usePluginStatusItems";
 import { usePluginStatusItemList } from "../../../features/plugin-views/usePluginViews";
-import { useBuiltinPlugin } from "../../../features/plugins/useBuiltinPlugin";
+import { OWNER as CLAUDE_USAGE } from "../../../features/claude-usage/plugin/owner";
+import { useBuiltinConfig, useBuiltinEnabled } from "../../../features/plugin-kernel/useBuiltinPlugins";
 import {
   arrangeCollapsedItems,
   moveCollapsedItem,
@@ -19,14 +20,13 @@ import { useCollapsedPlacements } from "../../../lib/settings/useCollapsedPlacem
 import "../../../features/plugin-views/PluginIslandPagesSection.css";
 import "./CollapsedItemsSection.css";
 
-const CLAUDE_USAGE_PLUGIN_ID = "focusd.claude-usage";
-
 export function CollapsedItemsSection() {
   const t = useTranslation();
   const { locale } = useLocale();
   const text = t.settings.collapsedItems;
   const { placements: saved, save } = useCollapsedPlacements();
-  const usage = useBuiltinPlugin(CLAUDE_USAGE_PLUGIN_ID);
+  const usageOn = useBuiltinEnabled(CLAUDE_USAGE);
+  const usageConfig = useBuiltinConfig(CLAUDE_USAGE);
   const declared = usePluginStatusItemList();
 
   const names = useMemo(() => {
@@ -41,12 +41,12 @@ export function CollapsedItemsSection() {
       entries.push([pluginStatusItemId(item.pluginId, item.itemId), several ? `${plugin} · ${item.itemId}` : plugin]);
     }
     entries.push(["device-use", text.item.deviceUse], ["shelf", text.item.shelf], ["music", text.item.music]);
-    if (usage.enabled) {
-      for (const provider of shownUsageProviders(usage.settings)) entries.push([usageItemId(provider), text.item.usage(provider.name)]);
+    if (usageOn) {
+      for (const provider of shownUsageProviders(usageConfig)) entries.push([usageItemId(provider), text.item.usage(provider.name)]);
     }
     entries.push(["session-count", text.item.sessionCount]);
     return new Map(entries);
-  }, [declared, locale, text, usage.enabled, usage.settings]);
+  }, [declared, locale, text, usageOn, usageConfig]);
 
   const listed = useMemo(() => [...names.keys()], [names]);
   const placements = useMemo(() => arrangeCollapsedItems(listed, saved), [listed, saved]);

@@ -1,6 +1,5 @@
 import { Fragment, type ReactNode } from "react";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
-import { useUpdateReminder } from "../../features/updater/useBackgroundUpdateCheck";
 import { arrangeCollapsedItems, zoneIds, type CollapsedZone } from "../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import type { PluginViewEntry } from "../../features/plugin-views/api";
@@ -25,7 +24,6 @@ type IslandCollapsedBarProps = {
   showTitle: boolean;
   showCollapsedText: boolean;
   collapsedLabel: string;
-  shelfCount: number | null;
   agentVisualState: string;
   onOpenPage: (page: IslandPage) => void;
   notice?: { content: ReactNode; actions: ReactNode } | null;
@@ -64,7 +62,6 @@ export function IslandCollapsedBar({
   showTitle,
   showCollapsedText,
   collapsedLabel,
-  shelfCount,
   agentVisualState,
   onOpenPage,
   notice = null,
@@ -76,7 +73,6 @@ export function IslandCollapsedBar({
 }: IslandCollapsedBarProps) {
   const t = useTranslation();
   const notch = useIslandNotch();
-  const updateVersion = useUpdateReminder();
   const { didDragRef, prepareWindowDrag, handleWindowDragMove, cancelWindowDrag } =
     useWindowDragGesture(isTucked, onWindowDragStart);
   const pulseClassName = [
@@ -105,8 +101,6 @@ export function IslandCollapsedBar({
     statusLight: slots.statusLight
       ? <span className="island__mark-light" {...{ [OPENS_BAR]: "" }}>{slots.statusLight}</span>
       : <span className={pulseClassName} {...{ [OPENS_BAR]: "" }} />,
-    updateVersion,
-      shelfCount,
     hints: contributed.hints,
     slots,
     onOpenPage,

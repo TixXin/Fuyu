@@ -191,12 +191,12 @@ type SessionFile = (&'static str, PathBuf, i64);
 fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64, threads: &[Thread]) -> Vec<SessionFile> {
     let mut files = Vec::new();
     let mut seen = HashSet::new();
-    let mut push_recent = |provider: &'static str, path: PathBuf| {
+    let mut push_recent = |provider: &'static str, path: PathBuf, listed: Option<fs::Metadata>| {
         if !seen.insert(path.clone()) {
             return;
         }
-        let modified = fs::metadata(&path)
-            .ok()
+        let modified = listed
+            .or_else(|| fs::metadata(&path).ok())
             .filter(|metadata| metadata.is_file())
             .and_then(|metadata| metadata.modified().ok())
             .and_then(system_time_to_unix_millis);
@@ -206,26 +206,19 @@ fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64, threads: &[Th
     };
 
     for project in read_dir_paths(&home_dir.join(".claude").join("projects")) {
-        for path in read_dir_paths(&project) {
-            if path
-                .extension()
-                .is_some_and(|extension| extension == "jsonl")
-            {
-                push_recent("claudeCode", path);
-            }
+        for (path, listed) in jsonl_entries(&project) {
+            push_recent("claudeCode", path, listed);
         }
     }
 
     for project in workbuddy::data_dirs(home_dir).iter().flat_map(|dir| read_dir_paths(&dir.join("projects"))) {
-        for path in read_dir_paths(&project) {
-            if path.extension().is_some_and(|extension| extension == "jsonl") {
-                push_recent(workbuddy::PROVIDER, path);
-            }
+        for (path, listed) in jsonl_entries(&project) {
+            push_recent(workbuddy::PROVIDER, path, listed);
         }
     }
 
     for path in threads.iter().filter_map(|thread| thread.rollout.clone()) {
-        push_recent("codex", path);
+        push_recent("codex", path, None);
     }
 
     let mut days = Vec::new();
@@ -236,13 +229,8 @@ fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64, threads: &[Th
     }
     days.sort();
     for day in days.iter().rev().take(2) {
-        for path in read_dir_paths(day) {
-            if path
-                .extension()
-                .is_some_and(|extension| extension == "jsonl")
-            {
-                push_recent("codex", path);
-            }
+        for (path, _) in jsonl_entries(day) {
+            push_recent("codex", path, None);
         }
     }
     files
@@ -251,6 +239,18 @@ fn recent_session_files(home_dir: &Path, now: i64, window_ms: i64, threads: &[Th
 fn read_dir_paths(dir: &Path) -> Vec<PathBuf> {
     fs::read_dir(dir)
         .map(|entries| entries.flatten().map(|entry| entry.path()).collect())
+        .unwrap_or_default()
+}
+
+fn jsonl_entries(dir: &Path) -> Vec<(PathBuf, Option<fs::Metadata>)> {
+    fs::read_dir(dir)
+        .map(|entries| {
+            entries
+                .flatten()
+                .filter(|entry| Path::new(&entry.file_name()).extension().is_some_and(|extension| extension == "jsonl"))
+                .map(|entry| (entry.path(), entry.metadata().ok().filter(|metadata| !metadata.file_type().is_symlink())))
+                .collect()
+        })
         .unwrap_or_default()
 }
 

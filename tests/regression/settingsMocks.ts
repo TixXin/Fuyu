@@ -81,9 +81,8 @@ mockIPC((command, payload) => {
       mailboxes = [...mailboxes.filter((box) => box.email !== email), ...(next.configured ? [next] : [])];
       return next;
     }
-    case "get_qq_notification_state": return { revision: ++revision, enabled: false, status: "disabled", items: [], error: null };
-    case "set_qq_notifications_enabled": return { revision: ++revision, enabled: args.enabled, status: args.enabled ? "listening" : "disabled", items: [], error: null };
-    case "set_wechat_reminders_enabled": return { revision: ++revision, enabled: args.enabled, status: args.enabled ? "listening" : "disabled", pending: false, lastAttentionAt: null, error: null };
+    case "get_qq_notification_state": return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+    case "set_wechat_expose_ui": case "set_wechat_hide_taskbar_button": return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
     case "has_translation_secret": return args.provider === "deepseek";
     case "set_translation_shortcut": return args.shortcut;
     case "updater_configured": return true;

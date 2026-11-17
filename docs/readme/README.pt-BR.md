@@ -6,7 +6,7 @@
 
   <p><b>Uma ilha que recolhe a bagunça da sua área de trabalho</b></p>
 
-  <p>Uma ilha dinâmica de desktop para Windows e macOS: tarefas, área de transferência, mensagens, tradução, música e o status dos seus agentes de IA, tudo numa pequena ilha no topo da tela.</p>
+  <p>Uma ilha dinâmica de desktop para Windows e macOS: tarefas, área de transferência, mensagens do Telegram, Discord, WhatsApp e outros, tradução, música e o status dos seus agentes de IA, tudo numa pequena ilha no topo da tela.</p>
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="../assets/readme/download-windows.svg" alt="Baixar para Windows (x64)" width="156" height="38"></a>
@@ -99,7 +99,7 @@ Fuyu (浮屿, «ilhota flutuante») é uma ilha flutuante leve, sem bordas e sem
   </tr>
   <tr>
     <td valign="top"><code>03</code></td>
-    <td><b>Mensagens</b><br>Avisos do QQ e do WeChat e várias contas de e-mail; você pode ler e responder e-mails direto na ilha.</td>
+    <td><b>Mensagens</b><br>Mensagens novas de Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu e DingTalk aparecem na ilha e abrem o app com um clique; além de várias contas de e-mail; você pode ler e responder e-mails direto na ilha.</td>
   </tr>
   <tr>
     <td valign="top"><code>04</code></td>
@@ -111,7 +111,7 @@ Fuyu (浮屿, «ilhota flutuante») é uma ilha flutuante leve, sem bordas e sem
   </tr>
   <tr>
     <td valign="top"><code>06</code></td>
-    <td><b>Agentes de IA</b><br>O status e o uso das suas sessões do Claude Code e do Codex; aprove pedidos direto na ilha, clique para pular para a janela certa e receba notificações no celular quando estiver longe do computador.</td>
+    <td><b>Agentes de IA</b><br>O status e o uso das suas sessões do Claude Code e do Codex; aprove pedidos direto na ilha, clique para pular para a janela certa e receba alertas no Telegram, Discord, Feishu ou Bark quando estiver longe do computador, continuando a comandar o agente pelo chat.</td>
   </tr>
   <tr>
     <td valign="top"><code>07</code></td>
@@ -148,7 +148,7 @@ Como foi medido e os dados completos: [idle-usage.md](../investigations/idle-usa
    - **Windows**: baixe o `_x64-setup.exe`. Os instaladores não têm assinatura de código; se o SmartScreen mostrar um aviso, escolha «Mais informações → Executar assim mesmo».
    - **macOS**: na [lista de releases](https://github.com/TixXin/fuyu/releases), baixe o `_aarch64.dmg` da versão mais recente que o tenha (se a última versão estável não tiver, procure na versão de teste logo acima dela) e arraste o Fuyu para Aplicativos. Na primeira vez, abra Ajustes do Sistema → Privacidade e Segurança e clique em «Abrir Mesmo Assim»; o passo a passo está no [guia de instalação no Mac](https://fuyu.ing/#mac-install).
 2. **Abra a ilha**: passe o ponteiro sobre a ilha no topo da tela para abri-la; o botão de engrenagem ou o ícone na bandeja do sistema (no Mac, o ícone na barra de menus) abre as Configurações. No Mac, o guia de boas-vindas ajuda você a ativar as permissões do sistema necessárias.
-3. **Configure uma vez**: e-mail, tradução e agentes de IA precisam ser configurados uma vez nas Configurações. Veja [e-mail](../features/mail.md), [agentes de IA](../features/agent-status-hooks.md), [notificações do QQ](../features/qq-notifications.md) e [avisos do WeChat](../features/wechat-reminders.md) (em chinês).
+3. **Configure uma vez**: e-mail, tradução e agentes de IA precisam ser configurados uma vez nas Configurações. Veja [e-mail](../features/mail.md), [agentes de IA](../features/agent-status-hooks.md), [notificações do QQ](../features/qq-notifications.md), [avisos do WeChat](../features/wechat-reminders.md) e [alertas no celular](../features/cc-connect.md) (em chinês).
 
 > [!NOTE]
 > Funciona no Windows 10 / 11 e no macOS 15 ou posterior (Apple silicon). No Mac há algumas diferenças em relação ao Windows: QQ e WeChat mostram só o número de mensagens não lidas, não o conteúdo, e o controle de mídia e o brilho usam interfaces privadas do sistema. Em [platforms.md](../architecture/platforms.md) está a situação de cada função nas duas plataformas (em chinês).

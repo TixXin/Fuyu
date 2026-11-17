@@ -13,7 +13,9 @@ import { useQQNotifications } from "../../src/features/messages/qq-notifications
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
-import { usePluginNotifications } from "../../src/features/plugins/usePluginNotifications";
+import { usePluginNotifications } from "../../src/features/messages/island/usePluginNotifications";
+import "../../src/features/messages/plugin/services";
+import { PluginNoticesRunner } from "../../src/features/plugins/plugin/runners";
 import type { MessageNotice } from "../../src/lib/settings/types";
 import { useFixtureLines } from "./islandLines";
 
@@ -40,8 +42,8 @@ mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   commands.push({ command, args });
   if (command === "request_qq_notification_access") return "allowed";
-  if (command === "set_qq_notifications_enabled") return { revision: ++revision, enabled: args.enabled, status: "listening", items: [], error: null };
-  if (command === "set_wechat_reminders_enabled") return { revision: ++revision, enabled: args.enabled, status: "listening", pending: false, lastAttentionAt: null, error: null };
+  if (command === "get_qq_notification_state") return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+  if (command === "set_wechat_expose_ui" || command === "set_wechat_hide_taskbar_button") return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
   if (command === "get_qq_mail_state") return [mail];
   if (command === "read_qq_mail") return { id: args.messageId, content: "本周项目进度已更新", contentType: "text/plain", attachments: [] };
 }, { shouldMockEvents: true });
@@ -71,7 +73,6 @@ function Fixture() {
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: false, translation: false, calendar: false, screenshots: false, timer: false }}
-      shelfCount={null}
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
@@ -191,7 +192,7 @@ async function runChecks() {
   }
 }
 
-await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><Fixture /></StrictMode>); });
+await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><PluginNoticesRunner /><Fixture /></StrictMode>); });
 if (automated) await runChecks();
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });

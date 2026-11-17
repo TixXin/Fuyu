@@ -34,6 +34,7 @@ export type AgentSettingValues = {
   agentShowModel: boolean;
   agentShowActivity: boolean;
   agentShowUsage: boolean;
+  agentExpandChildren: boolean;
   agentAlertCompleted: boolean;
   agentAlertFailed: boolean;
   agentAlertWaiting: boolean;
@@ -58,6 +59,7 @@ export const DEFAULT_AGENT_SETTINGS: AgentSettingValues = {
   agentShowModel: true,
   agentShowActivity: true,
   agentShowUsage: true,
+  agentExpandChildren: false,
   agentAlertCompleted: true,
   agentAlertFailed: true,
   agentAlertWaiting: true,
@@ -90,6 +92,7 @@ export function normalizeAgentSettings(settings: LegacyIslandSettings | null | u
     agentShowModel: settings?.agentShowModel !== false,
     agentShowActivity: settings?.agentShowActivity !== false,
     agentShowUsage: settings?.agentShowUsage !== false,
+    agentExpandChildren: settings?.agentExpandChildren === true,
     agentAlertCompleted: settings?.agentAlertCompleted !== false,
     agentAlertFailed: settings?.agentAlertFailed !== false,
     agentAlertWaiting: settings?.agentAlertWaiting !== false,

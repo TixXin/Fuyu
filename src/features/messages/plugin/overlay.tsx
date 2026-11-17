@@ -1,6 +1,7 @@
 import { defineSlot } from "../../plugin-kernel/slots";
 import { MessageBanner } from "../banner/MessageBanner";
 import { messagesIsland } from "./islandState";
+import { OWNER } from "./owner.ts";
 
 const overlaySlot = defineSlot<object>("island.overlay/v1");
 
@@ -9,4 +10,4 @@ function BannerOverlay() {
   return banner ? <MessageBanner {...banner} /> : null;
 }
 
-overlaySlot.add({ id: "messages.banner", component: BannerOverlay });
+overlaySlot.add({ id: "messages.banner", component: BannerOverlay }, OWNER);

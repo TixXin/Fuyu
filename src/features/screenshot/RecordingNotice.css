@@ -7,7 +7,7 @@
 }
 
 .recording-notice__dot--live {
-  animation: recording-notice-pulse 1.2s ease-in-out infinite;
+  animation: recording-notice-pulse 1.2s var(--motion-ease-in-out) infinite;
 }
 
 .recording-notice__dot--still {
