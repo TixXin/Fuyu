@@ -45,6 +45,35 @@ pub(super) const MAX_CORNER_RADIUS: f64 = 40.0;
 pub(super) const STAGE_WINDOW_PADDING_Y: f64 = 24.0;
 pub(super) const TUCKED_VISIBLE_EDGE_HEIGHT: f64 = 10.0;
 pub(super) const POSITION_ANIMATION_DURATION: Duration = Duration::from_millis(320);
+pub(super) const PASSTHROUGH_FAST_TICK: Duration = Duration::from_millis(12);
+pub(super) const PASSTHROUGH_IDLE_TICK: Duration = Duration::from_millis(48);
+pub(super) const PASSTHROUGH_HIDDEN_TICK: Duration = Duration::from_millis(240);
+const PASSTHROUGH_WAKE_MARGIN: f64 = 120.0;
+
+pub(super) fn cursor_near_stage(
+    window_left: f64,
+    window_top: f64,
+    window_width: f64,
+    window_height: f64,
+    cursor_x: f64,
+    cursor_y: f64,
+) -> bool {
+    let margin = PASSTHROUGH_WAKE_MARGIN * (window_width / STAGE_WINDOW_WIDTH).max(1.0);
+    cursor_x >= window_left - margin
+        && cursor_x <= window_left + window_width + margin
+        && cursor_y >= window_top - margin
+        && cursor_y <= window_top + window_height + margin
+}
+
+pub(super) fn passthrough_sleep_duration(visible: bool, active: bool) -> Duration {
+    if !visible {
+        PASSTHROUGH_HIDDEN_TICK
+    } else if active {
+        PASSTHROUGH_FAST_TICK
+    } else {
+        PASSTHROUGH_IDLE_TICK
+    }
+}
 
 pub(super) static POSITION_ANIMATION_GENERATION: AtomicU64 = AtomicU64::new(0);
 static RUNNING_SLIDE: Mutex<Option<(u64, (i32, i32))>> = Mutex::new(None);

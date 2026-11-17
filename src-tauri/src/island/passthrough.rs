@@ -2,7 +2,6 @@ use serde::Serialize;
 use std::{
     sync::atomic::{AtomicBool, Ordering},
     thread,
-    time::Duration,
 };
 use tauri::{Emitter, WebviewWindow};
 use windows::Win32::Foundation::HWND;
@@ -10,7 +9,7 @@ use windows::Win32::Foundation::HWND;
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
     modifier::{self, ModifierTarget},
-    geometry::{cursor_on_island, island_rect, stage_point, IslandOnScreen},
+    geometry::{cursor_near_stage, cursor_on_island, island_rect, passthrough_sleep_duration, stage_point, IslandOnScreen},
     state::{read_window_state, IslandMode},
 };
 use crate::win32;
@@ -49,6 +48,10 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut last_cursor: Option<CursorPoint> = None;
 
         loop {
+            if !window.is_visible().unwrap_or(true) {
+                thread::sleep(passthrough_sleep_duration(false, false));
+                continue;
+            }
             let is_inside = hwnd.is_none_or(cursor_is_inside_island);
             let is_on_banner = hwnd.is_some_and(cursor_is_on_banner);
             let should_ignore = !is_inside && !is_on_banner;
@@ -86,7 +89,8 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
             }
 
             tick = tick.wrapping_add(1);
-            if !CURSOR_TRACKING.load(Ordering::Relaxed) {
+            let tracking = CURSOR_TRACKING.load(Ordering::Relaxed);
+            if !tracking {
                 last_cursor = None;
             } else if tick.is_multiple_of(CURSOR_EVENT_EVERY_TICKS) {
                 let point = hwnd.and_then(cursor_in_window);
@@ -96,7 +100,12 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 }
             }
 
-            thread::sleep(Duration::from_millis(12));
+            let active = is_inside
+                || is_on_banner
+                || held
+                || tracking
+                || hwnd.is_none_or(cursor_is_near_stage);
+            thread::sleep(passthrough_sleep_duration(true, active));
         }
     });
 }
@@ -148,5 +157,22 @@ pub(super) fn cursor_is_inside_island(hwnd: HWND) -> bool {
         cursor.x as f64,
         cursor.y as f64,
         read_window_state(),
+    )
+}
+
+fn cursor_is_near_stage(hwnd: HWND) -> bool {
+    let Some(window_rect) = win32::window::window_rect(hwnd) else {
+        return true;
+    };
+    let Some(cursor) = win32::window::cursor_position() else {
+        return true;
+    };
+    cursor_near_stage(
+        window_rect.left as f64,
+        window_rect.top as f64,
+        (window_rect.right - window_rect.left).max(1) as f64,
+        (window_rect.bottom - window_rect.top).max(1) as f64,
+        cursor.x as f64,
+        cursor.y as f64,
     )
 }
