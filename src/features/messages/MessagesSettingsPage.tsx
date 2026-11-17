@@ -122,14 +122,16 @@ function WeChatSection({ wechatReminders, unsupported }: MessagesSectionProps) {
   );
 }
 
-const sections = settingsSections<MessagesSectionProps, "messages">();
+export type MessagesTab = "messages" | "messagesIm" | "messagesMail";
+
+const sections = settingsSections<MessagesSectionProps, MessagesTab>();
 
 sections.add({ id: "messages.notice", category: "messages", order: 10, component: NoticeSection }, OWNER);
-sections.add({ id: "messages.qq", category: "messages", order: 20, component: QQSection }, OWNER);
-sections.add({ id: "messages.wechat", category: "messages", order: 30, component: WeChatSection }, OWNER);
-sections.add({ id: "messages.mail", category: "messages", order: 40, component: MailGroups }, OWNER);
+sections.add({ id: "messagesIm.qq", category: "messagesIm", order: 20, component: QQSection }, OWNER);
+sections.add({ id: "messagesIm.wechat", category: "messagesIm", order: 30, component: WeChatSection }, OWNER);
+sections.add({ id: "messagesMail.mail", category: "messagesMail", order: 40, component: MailGroups }, OWNER);
 
-export function MessagesSettingsPage(page: Omit<MessagesSectionProps, "qqNotifications" | "wechatReminders">) {
+export function MessagesSettingsPage({ tab, ...page }: Omit<MessagesSectionProps, "qqNotifications" | "wechatReminders"> & { tab: MessagesTab }) {
   const controllers = useMessageControllers();
   const t = useTranslation();
   if (!controllers) return null;
@@ -140,8 +142,8 @@ export function MessagesSettingsPage(page: Omit<MessagesSectionProps, "qqNotific
 
   return (
     <>
-      <FeatureHeader feature="messages" icon={settingsCategoryIcon("messages")} aside={labels.sourcesOn(sourcesOn)} />
-      <SlotView slot={sections} group="messages" props={props} />
+      {tab === "messages" && <FeatureHeader feature="messages" icon={settingsCategoryIcon("messages")} aside={labels.sourcesOn(sourcesOn)} />}
+      <SlotView slot={sections} group={tab} props={props} />
     </>
   );
 }

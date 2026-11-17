@@ -37,7 +37,9 @@ export function isEntry(item: SettingsCategory): item is SettingsEntry {
 }
 
 export function entryTabs(entry: SettingsEntry): readonly TabbedCategory[] {
-  return (find(entry)?.tabs ?? []) as readonly TabbedCategory[];
+  const items = registered();
+  const known = new Set<string>(items.map(idOf));
+  return (find(entry)?.tabs ?? []).filter((tab) => known.has(tab)) as readonly TabbedCategory[];
 }
 
 export function entryPages(item: SettingsCategory): readonly SettingsCategory[] {

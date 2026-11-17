@@ -118,7 +118,7 @@ try {
     check(text(found?.querySelector(".settings-row__title")) === "会话来源", "…and marks the row it found");
 
     await type("弹出提醒");
-    check(document.querySelector(".settings-sidebar__hit--tab[data-tab='agentAlerts']") && categories().includes("agents"),
+    check(document.querySelector(".settings-sidebar__hit--tab[data-tab='agentAlerts']") && categories().includes("agentAlerts"),
       "Words written together find a page whose keywords have them apart, shown as a tab under its sidebar item");
     await type("隐藏已退出的会话");
     check(hits("agentSessions").includes("隐藏已退出的会话"), "A switch's title finds it");

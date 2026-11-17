@@ -47,16 +47,18 @@ function IslandSection({ settings, onSettingsChange }: CalendarSectionProps) {
   );
 }
 
-const sections = settingsSections<CalendarSectionProps, "calendar">();
+export type CalendarTab = "calendar" | "calendarSources";
+
+const sections = settingsSections<CalendarSectionProps, CalendarTab>();
 
 sections.add({ id: "calendar.island", category: "calendar", order: 10, component: IslandSection });
-sections.add({ id: "calendar.sources", category: "calendar", order: 20, component: CalendarSourcesSection });
+sections.add({ id: "calendarSources.sources", category: "calendarSources", order: 20, component: CalendarSourcesSection });
 
-export function CalendarSettingsPage(props: CalendarSectionProps) {
+export function CalendarSettingsPage({ tab, ...props }: CalendarSectionProps & { tab: CalendarTab }) {
   return (
     <>
-      <FeatureHeader feature="calendar" icon={settingsCategoryIcon("calendar")} />
-      <SlotView slot={sections} group="calendar" props={props} />
+      {tab === "calendar" && <FeatureHeader feature="calendar" icon={settingsCategoryIcon("calendar")} />}
+      <SlotView slot={sections} group={tab} props={props} />
     </>
   );
 }

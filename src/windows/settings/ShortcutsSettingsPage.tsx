@@ -27,21 +27,12 @@ function IslandReference() {
   );
 }
 
-function ReferenceSheetSection(props: ShortcutsSectionProps) {
-  return (
-    <div className="shortcut-sheet">
-      <SlotView slot={shortcutReferences} group="shortcutsReference" props={props} />
-    </div>
-  );
-}
-
 function PluginsSection({ onOpenPage, takenBy, refreshPlugins }: ShortcutsSectionProps) {
   return <PluginShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={<FeaturePageLink page="plugins" onOpenPage={onOpenPage} />} />;
 }
 
 shortcutSections.add({ id: "shortcuts.plugins", category: "shortcuts", order: 50, component: PluginsSection });
 shortcutSections.add({ id: "shortcutsIsland.pages", category: "shortcutsIsland", order: 10, component: PageKeysSection });
-shortcutSections.add({ id: "shortcutsIsland.reference", category: "shortcutsIsland", order: 20, component: ReferenceSheetSection });
 shortcutReferences.add({ id: "shortcutsReference.island", category: "shortcutsReference", order: 10, component: IslandReference });
 
 export function ShortcutsSettingsPage({
@@ -50,7 +41,7 @@ export function ShortcutsSettingsPage({
   onSettingsChange,
   onOpenPage,
 }: {
-  tab: "shortcuts" | "shortcutsIsland";
+  tab: "shortcuts" | "shortcutsIsland" | "shortcutsReference";
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   onOpenPage: (page: SettingsCategory) => void;
@@ -61,7 +52,13 @@ export function ShortcutsSettingsPage({
   return (
     <>
       <ShortcutFinder owners={[...owners, ...finderOnly]} onOpenPage={onOpenPage} />
-      <SlotView slot={shortcutSections} group={tab} props={props} />
+      {tab === "shortcutsReference" ? (
+        <div className="shortcut-sheet">
+          <SlotView slot={shortcutReferences} group="shortcutsReference" props={props} />
+        </div>
+      ) : (
+        <SlotView slot={shortcutSections} group={tab} props={props} />
+      )}
     </>
   );
 }

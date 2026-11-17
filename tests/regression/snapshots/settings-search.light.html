@@ -67,14 +67,42 @@
                       <li>
                         <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="theme" type="button">
                           <span>
-                            样式
+                            主题与配色
+                          </span>
+                        </button>
+                      </li>
+                      <li>
+                        <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="themeStyle" type="button">
+                          <span>
+                            风格与圆角
+                          </span>
+                        </button>
+                      </li>
+                      <li>
+                        <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="themeGlass" type="button">
+                          <span>
+                            液态玻璃
                           </span>
                         </button>
                       </li>
                       <li>
                         <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="appearance" type="button">
                           <span>
-                            尺寸与内容
+                            位置与尺寸
+                          </span>
+                        </button>
+                      </li>
+                      <li>
+                        <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="appearanceCollapsed" type="button">
+                          <span>
+                            收起条项目
+                          </span>
+                        </button>
+                      </li>
+                      <li>
+                        <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="themePresets" type="button">
+                          <span>
+                            我的主题
                           </span>
                         </button>
                       </li>
@@ -86,7 +114,7 @@
                         </button>
                       </li>
                       <li>
-                        <button class="settings-sidebar__hit" data-page="theme" title="外观 › 样式 › 质感与形状 › 外观模式" type="button">
+                        <button class="settings-sidebar__hit" data-page="themeStyle" title="外观 › 风格与圆角 › 质感与形状 › 外观模式" type="button">
                           <span>
                             外观模式
                           </span>
@@ -135,6 +163,63 @@
                   </li>
                 </ul>
               </section>
+              <section aria-label="AI Agent" class="settings-sidebar__group">
+                <button aria-expanded="true" aria-label="折叠「AI Agent」" class="settings-sidebar__folder settings-sidebar__folder--holds-active" data-group="agents" disabled="" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-bot" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 8V4H8"></path>
+                    <rect height="12" rx="2" width="16" x="4" y="8"></rect>
+                    <path d="M2 14h2"></path>
+                    <path d="M20 14h2"></path>
+                    <path d="M15 13v2"></path>
+                    <path d="M9 13v2"></path>
+                  </svg>
+                  <span>
+                    AI Agent
+                  </span>
+                  <svg aria-hidden="true" class="lucide lucide-chevron-right settings-sidebar__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m9 18 6-6-6-6"></path>
+                  </svg>
+                </button>
+                <ul class="settings-sidebar__children">
+                  <li>
+                    <button aria-current="page" class="settings-sidebar__item settings-sidebar__item--nested settings-sidebar__item--active" data-category="agentAppearance" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-palette" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"></path>
+                        <circle cx="13.5" cy="6.5" fill="currentColor" r=".5"></circle>
+                        <circle cx="17.5" cy="10.5" fill="currentColor" r=".5"></circle>
+                        <circle cx="6.5" cy="12.5" fill="currentColor" r=".5"></circle>
+                        <circle cx="8.5" cy="7.5" fill="currentColor" r=".5"></circle>
+                      </svg>
+                      <span>
+                        外观
+                      </span>
+                    </button>
+                    <ul class="settings-sidebar__hits">
+                      <li>
+                        <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="agentAppearance" type="button">
+                          <span>
+                            状态灯与标题
+                          </span>
+                        </button>
+                      </li>
+                      <li>
+                        <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="agentSessions" type="button">
+                          <span>
+                            会话列表
+                          </span>
+                        </button>
+                      </li>
+                      <li>
+                        <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="agentRings" type="button">
+                          <span>
+                            用量与会话环
+                          </span>
+                        </button>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </section>
             </div>
             <div class="settings-sidebar__footer">
               <ul>
@@ -151,14 +236,14 @@
                   </button>
                   <ul class="settings-sidebar__hits">
                     <li>
-                      <button class="settings-sidebar__hit" data-page="about" title="关于 › 帮助 › 新手引导" type="button">
+                      <button class="settings-sidebar__hit" data-page="aboutHelp" title="关于 › 帮助与重置 › 帮助 › 新手引导" type="button">
                         <span>
                           新手引导
                         </span>
                       </button>
                     </li>
                     <li>
-                      <button class="settings-sidebar__hit" data-page="about" title="关于 › 重置与退出 › 重置所有设置" type="button">
+                      <button class="settings-sidebar__hit" data-page="aboutHelp" title="关于 › 帮助与重置 › 重置与退出 › 重置所有设置" type="button">
                         <span>
                           重置所有设置
                         </span>
@@ -173,30 +258,18 @@
         <div class="settings-content">
           <div class="settings-page__header" data-tauri-drag-region="true">
             <h1 class="settings-page__title" data-tauri-drag-region="true">
-              AI Agent
+              外观
             </h1>
           </div>
-          <div aria-label="AI Agent" class="settings-tabs" data-tauri-drag-region="true" role="tablist">
-            <button aria-selected="false" class="settings-tabs__tab" data-tab="agents" role="tab" tabindex="-1" type="button">
-              岛上显示
+          <div aria-label="外观" class="settings-tabs" data-tauri-drag-region="true" role="tablist">
+            <button aria-selected="false" class="settings-tabs__tab" data-tab="agentAppearance" role="tab" tabindex="-1" type="button">
+              状态灯与标题
             </button>
             <button aria-selected="true" class="settings-tabs__tab settings-tabs__tab--active" data-tab="agentSessions" role="tab" tabindex="0" type="button">
               会话列表
             </button>
-            <button aria-selected="false" class="settings-tabs__tab" data-tab="agentAlerts" role="tab" tabindex="-1" type="button">
-              提醒
-            </button>
-            <button aria-selected="false" class="settings-tabs__tab" data-tab="sounds" role="tab" tabindex="-1" type="button">
-              声音
-            </button>
-            <button aria-selected="false" class="settings-tabs__tab" data-tab="agentApprovals" role="tab" tabindex="-1" type="button">
-              审批
-            </button>
-            <button aria-selected="false" class="settings-tabs__tab" data-tab="agentConnect" role="tab" tabindex="-1" type="button">
-              连接
-            </button>
-            <button aria-selected="false" class="settings-tabs__tab" data-tab="agentRemote" role="tab" tabindex="-1" type="button">
-              SSH 远程
+            <button aria-selected="false" class="settings-tabs__tab" data-tab="agentRings" role="tab" tabindex="-1" type="button">
+              用量与会话环
             </button>
           </div>
           <div class="editor-panel">

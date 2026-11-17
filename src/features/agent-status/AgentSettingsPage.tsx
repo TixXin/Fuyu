@@ -85,18 +85,20 @@ function HooksSection() {
   return <AgentHooksSettingsSection {...agentStatus} />;
 }
 
-const sections = settingsSections<AgentSectionProps, "agents">();
+export type AgentTab = "agents" | "agentAppearance" | "agentRings";
+
+const sections = settingsSections<AgentSectionProps, AgentTab>();
 
 sections.add({ id: "agents.hooks", category: "agents", order: 10, component: HooksSection });
-sections.add({ id: "agents.session-title", category: "agents", order: 20, component: SessionTitleSection });
-sections.add({ id: "agents.session-page", category: "agents", order: 25, component: SessionPageSection });
 sections.add({ id: "agents.providers", category: "agents", order: 30, component: AgentProviderSwitches });
+sections.add({ id: "agentAppearance.session-title", category: "agentAppearance", order: 20, component: SessionTitleSection });
+sections.add({ id: "agentAppearance.session-page", category: "agentAppearance", order: 25, component: SessionPageSection });
 
-export function AgentSettingsPage(props: AgentSectionProps) {
+export function AgentSettingsPage({ tab, ...props }: AgentSectionProps & { tab: AgentTab }) {
   return (
     <>
-      <FeatureHeader feature="agents" icon={settingsCategoryIcon("agents")} />
-      <SlotView slot={sections} group="agents" props={props} />
+      {tab === "agents" && <FeatureHeader feature="agents" icon={settingsCategoryIcon("agents")} />}
+      <SlotView slot={sections} group={tab} props={props} />
     </>
   );
 }

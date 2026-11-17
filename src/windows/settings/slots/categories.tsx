@@ -18,6 +18,29 @@ export type { SettingsPageProps };
 
 type Page = ComponentType<SettingsPageProps>;
 
+const general = (tab: ComponentProps<typeof GeneralSettingsPage>["tab"]): Page =>
+  function GeneralPage({ locale, settings, onLocaleChange, onSettingsChange }) {
+    return (
+      <GeneralSettingsPage
+        tab={tab}
+        locale={locale}
+        settings={settings}
+        onLocaleChange={onLocaleChange}
+        onSettingsChange={onSettingsChange}
+      />
+    );
+  };
+
+const appearance = (tab: ComponentProps<typeof AppearanceSettingsPage>["tab"]): Page =>
+  function AppearancePage({ settings, onSettingsChange }) {
+    return <AppearanceSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
+  };
+
+const theme = (tab: ComponentProps<typeof ThemeSettingsPage>["tab"]): Page =>
+  function ThemePage({ settings, presets, onSettingsChange }) {
+    return <ThemeSettingsPage tab={tab} settings={settings} presets={presets} onSettingsChange={onSettingsChange} />;
+  };
+
 const behavior = (tab: ComponentProps<typeof BehaviorSettingsPage>["tab"]): Page =>
   function BehaviorPage({ settings, onSettingsChange, onShowPage }) {
     return <BehaviorSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenPageKeys={() => onShowPage("shortcutsIsland")} />;
@@ -28,9 +51,19 @@ const shortcuts = (tab: ComponentProps<typeof ShortcutsSettingsPage>["tab"]): Pa
     return <ShortcutsSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenPage={onOpenPage} />;
   };
 
+const todos = (tab: ComponentProps<typeof TodosSettingsPage>["tab"]): Page =>
+  function TodosPage({ settings, onSettingsChange }) {
+    return <TodosSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
+  };
+
 const plugins = (tab: ComponentProps<typeof PluginsSettingsPage>["tab"]): Page =>
   function PluginsPage({ settings, managedPluginId, onOpenShortcuts }) {
     return <PluginsSettingsPage tab={tab} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={onOpenShortcuts} />;
+  };
+
+const about = (tab: ComponentProps<typeof AboutSettingsPage>["tab"]): Page =>
+  function AboutPage({ onSettingsChange }) {
+    return <AboutSettingsPage tab={tab} onSettingsChange={onSettingsChange} />;
   };
 
 const PAGES: Partial<Record<SettingsCategory, Page>> = {
@@ -45,22 +78,23 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
       onOpenPage={onOpenPage}
     />
   ),
-  general: ({ locale, settings, onLocaleChange, onSettingsChange }) => (
-    <GeneralSettingsPage
-      locale={locale}
-      settings={settings}
-      onLocaleChange={onLocaleChange}
-      onSettingsChange={onSettingsChange}
-    />
-  ),
+  general: general("general"),
+  generalData: general("generalData"),
   behavior: behavior("behavior"),
   behaviorTuck: behavior("behaviorTuck"),
+  behaviorQuiet: behavior("behaviorQuiet"),
   behaviorAlerts: behavior("behaviorAlerts"),
-  appearance: ({ settings, onSettingsChange }) => <AppearanceSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
-  theme: ({ settings, presets, onSettingsChange }) => <ThemeSettingsPage settings={settings} presets={presets} onSettingsChange={onSettingsChange} />,
+  appearance: appearance("appearance"),
+  appearanceCollapsed: appearance("appearanceCollapsed"),
+  theme: theme("theme"),
+  themeStyle: theme("themeStyle"),
+  themeGlass: theme("themeGlass"),
+  themePresets: theme("themePresets"),
   shortcuts: shortcuts("shortcuts"),
   shortcutsIsland: shortcuts("shortcutsIsland"),
-  todos: ({ settings, onSettingsChange }) => <TodosSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
+  shortcutsReference: shortcuts("shortcutsReference"),
+  todos: todos("todos"),
+  todosStorage: todos("todosStorage"),
   plugins: plugins("plugins"),
   pluginsPages: plugins("pluginsPages"),
   pluginsUpdates: plugins("pluginsUpdates"),
@@ -69,9 +103,11 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   market: ({ marketRequest, onManagePlugin }) => (
     <PluginMarketSection onManage={onManagePlugin} requestedId={marketRequest.requestedId} onDismissRequest={marketRequest.dismiss} />
   ),
-  about: ({ onSettingsChange }) => <AboutSettingsPage onSettingsChange={onSettingsChange} />,
+  about: about("about"),
+  aboutHistory: about("aboutHistory"),
+  aboutHelp: about("aboutHelp"),
 };
 
-const OWNERS: Partial<Record<SettingsCategory, string>> = { todos: TODOS };
+const OWNERS: Partial<Record<SettingsCategory, string>> = { todos: TODOS, todosStorage: TODOS };
 
 for (const [id, page] of Object.entries(PAGES)) addSettingsCategory(id as SettingsCategory, page, OWNERS[id as SettingsCategory]);

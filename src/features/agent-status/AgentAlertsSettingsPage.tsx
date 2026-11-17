@@ -9,11 +9,13 @@ type AgentAlertsSectionProps = {
   onSettingsChange: (settings: IslandSettings) => void;
 };
 
-const sections = settingsSections<AgentAlertsSectionProps, "agentAlerts">();
+export type AgentAlertsTab = "agentAlerts" | "agentPush";
+
+const sections = settingsSections<AgentAlertsSectionProps, AgentAlertsTab>();
 
 sections.add({ id: "agentAlerts.alerts", category: "agentAlerts", order: 10, component: AgentAlertSettings });
-sections.add({ id: "agentAlerts.push", category: "agentAlerts", order: 20, component: AgentPushSettings });
+sections.add({ id: "agentPush.push", category: "agentPush", order: 20, component: AgentPushSettings });
 
-export function AgentAlertsSettingsPage(props: AgentAlertsSectionProps) {
-  return <SlotView slot={sections} group="agentAlerts" props={props} />;
+export function AgentAlertsSettingsPage({ tab, ...props }: AgentAlertsSectionProps & { tab: AgentAlertsTab }) {
+  return <SlotView slot={sections} group={tab} props={props} />;
 }
