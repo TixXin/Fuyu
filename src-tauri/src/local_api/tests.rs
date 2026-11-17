@@ -143,3 +143,36 @@ fn island_lab_serves_only_dev_island_and_agent_status() {
     assert_eq!(lab_call("GET", "/v1/todos", b"").map_err(|error| error.status), Err(404));
     assert_eq!(lab_call("POST", "/v1/dev/plugins", br#"{"path":"/tmp"}"#).map_err(|error| error.status), Err(404));
 }
+
+#[test]
+fn routes_to_a_switched_off_feature_answer_503() {
+    use super::switches::check_with;
+    let off = |plugin: &str| plugin != "todos" && plugin != "agents" && plugin != "clipboard";
+    for method in ["todos.list", "todos.add", "note.get", "note.set", "agentStatus.report", "agentStatus.clear", "clipboard.list"] {
+        let error = check_with(method, off).expect_err(method);
+        assert_eq!(error.status, 503, "{method}");
+        assert!(error.message.contains("switched off"), "{method}");
+    }
+    for method in ["health", "dev.load", "devIsland.emit"] {
+        assert!(check_with(method, off).is_ok(), "{method}");
+    }
+    assert!(check_with("todos.list", |plugin| plugin == "todos").is_ok());
+    assert!(check_with("agentStatus.report", |plugin| plugin == "todos").is_err());
+}
+
+#[test]
+fn the_server_is_the_background_listed_for_local_api() {
+    use super::background::{PLUGIN_ID, SERVER};
+    let catalog = crate::plugin_kernel::builtins::catalog();
+    let plugin = catalog.iter().find(|plugin| plugin.id == PLUGIN_ID).expect("local-api is a built-in plugin");
+    assert_eq!(plugin.background.as_deref(), Some(&[SERVER.to_owned()][..]));
+}
+
+#[test]
+fn allow_write_reads_only_a_boolean() {
+    use super::background::allow_write;
+    let config = |value: serde_json::Value| value.as_object().cloned().unwrap_or_default();
+    assert!(allow_write(&config(json!({ "allowWrite": true }))));
+    assert!(!allow_write(&config(json!({ "allowWrite": "true" }))));
+    assert!(!allow_write(&config(json!({}))));
+}

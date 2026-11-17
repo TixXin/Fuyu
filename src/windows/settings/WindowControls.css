@@ -41,6 +41,11 @@
   background: #28c840;
 }
 
+.window-controls--resting .window-controls__dots:hover .window-controls__dot {
+  color: transparent;
+  background: var(--settings-dot, rgba(128, 128, 136, 0.45));
+}
+
 .window-controls__dot:focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
@@ -90,6 +95,11 @@
 
 .window-buttons__button--close:active {
   background: #f1707a;
+}
+
+.window-buttons--resting .window-buttons__button:hover {
+  color: var(--color-text-muted);
+  background: transparent;
 }
 
 .window-buttons__button:focus-visible {

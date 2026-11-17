@@ -15,7 +15,7 @@
     { "id": "claude-usage", "kind": "builtin", "root": "claude-usage", "host": "host/index.mjs", "background": ["poller"] },
     { "id": "cc-connect", "kind": "builtin", "root": "cc-connect", "host": "host/index.mjs", "background": ["runner"] },
     { "id": "ssh-tunnel", "kind": "builtin", "root": "ssh-tunnel", "host": "host/index.mjs" },
-    { "id": "local-api", "kind": "builtin", "root": "local-api", "host": "host/index.mjs" },
+    { "id": "local-api", "kind": "builtin", "root": "local-api", "host": "host/index.mjs", "background": ["server"] },
     { "id": "center-pattern", "kind": "builtin", "root": "center-pattern", "host": "host/index.mjs" },
     { "id": "messages", "kind": "builtin", "root": "messages", "host": "host/index.mjs", "background": ["qq", "wechat", "mail"] },
     { "id": "device-events", "kind": "builtin", "root": "device-events", "host": "host/index.mjs", "background": ["watcher"] },

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { runTodoApiCall } from "../../src/features/todos/apiCommands.ts";
-import { dispatchLocalApiRequest } from "../../src/features/local-api/dispatch.ts";
+import { dispatchLocalApiRequest } from "../../src/features/island-bridge/dispatch.ts";
 
 const todo = (id, title, completed = false) => ({ id, title, completed, createdAt: 1 });
 const state = (overrides = {}) => ({

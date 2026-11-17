@@ -68,13 +68,12 @@ use std::{
 };
 use tauri::{AppHandle, Manager};
 
-use crate::local_api;
 
 use grants::sync_processes;
 use manifest::PluginManifest;
-use registry::{migrate_local_api, scan};
+use registry::scan;
 use runtime::{RuntimeTable, Supervisor};
-use store::{load_state, save_state, PluginsState, STATE_FILE_NAME};
+use store::{load_state, PluginsState, STATE_FILE_NAME};
 
 const PLUGINS_DIR_NAME: &str = "plugins";
 const PLUGIN_DATA_DIR_NAME: &str = "plugins-data";
@@ -112,10 +111,7 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     let installed = scan(&plugins_dir, &app_version(app));
     let loaded = load_state(&state_path);
     let broken_state_backup = loaded.backup;
-    let mut state = loaded.state;
-    if migrate_local_api(&mut state, &installed, local_api::legacy_switches()) {
-        save_state(&state_path, &state)?;
-    }
+    let state = loaded.state;
     let host = PluginHost {
         app: app.clone(),
         installed: Mutex::new(installed),
