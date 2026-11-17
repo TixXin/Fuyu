@@ -9,8 +9,12 @@ import { TimerSoundGroup } from "../TimerSoundGroup";
 import { useTimerConfig } from "../useTimerConfig";
 import { OWNER } from "./owner.ts";
 
-addSettingsCategory("timerAlerts", () => <TimerSoundGroup />, OWNER);
-addSettingsCategory("timerBreaks", () => <BreakRemindersGroup />, OWNER);
+addSettingsCategory("timerAlerts", () => (
+  <>
+    <TimerSoundGroup />
+    <BreakRemindersGroup />
+  </>
+), OWNER);
 
 function TimerShortcutOwners() {
   const t = useTranslation();

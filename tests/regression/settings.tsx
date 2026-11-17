@@ -78,7 +78,7 @@ if (!automated) {
     await act(async () => { mount(); });
     check(categories().length > 0, "The sidebar lists the settings pages");
 
-    const pages = [...categories(), "generalData", "generalApi", "theme", "themeStyle", "themeGlass", "appearance", "appearanceCollapsed", "themePresets", "themeMarket", "behaviorTuck", "behaviorQuiet", "shortcutsIsland", "shortcutsReference", "todosStorage", "calendarSources", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "clipboardData", "timerAlerts", "timerBreaks", "behaviorAlerts", "messagesIm", "messagesMail", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote", "agentTunnel", "aboutHistory", "aboutHelp"];
+    const pages = [...categories(), "generalData", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket", "behaviorTuck", "behaviorQuiet", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardLinks", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "messagesMail", "agentProviders", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote", "agentTunnel", "aboutHistory", "aboutHelp"];
     for (const category of pages) {
       await openPage(category as SettingsCategory);
       const item = element(`.settings-sidebar__item[data-category='${sidebarItemOf(category as SettingsCategory)}']`);
@@ -211,8 +211,7 @@ if (!automated) {
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "去设置")?.click(); });
     check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps");
     await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
-    await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时器|休息提醒|系统提示" && texts(".settings-group__title") === "计时器" && texts(".settings-row__title") === "到点响一声", "Timer & alerts has three tabs starting with the timer's sound");
-    await openPage("timerBreaks"); check(texts(".settings-group__title") === "休息提醒" && texts(".settings-row__title") === "休息提醒" && !document.querySelector(".break-reminder-row"), "Break reminders tab shows break reminders, off with no items shown");
+    await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时与休息|系统提示" && texts(".settings-group__title") === "计时器|休息提醒" && texts(".settings-row__title") === "到点响一声|休息提醒" && !document.querySelector(".break-reminder-row"), "Timer & alerts has two tabs starting with the timer's sound and break reminders");
     await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示", "Volume, headphones and camera alerts are one group on the System alerts tab");
     await openPage("general"); check(texts(".settings-group__title") === "启动与语言" && !texts(".settings-row__title").includes("最小化按钮"), "General opens on startup and language");
     await openPage("generalData"); check(texts(".settings-group__title") === "数据|升级前的备份" && texts(".settings-row__title").includes("0.3.9 → 0.4.0") && !document.querySelector(".settings-backup__status--error"), "Data and backup tab shows data folder, backup and pre-update backups");
@@ -233,7 +232,7 @@ if (!automated) {
     check(storedSettings().opacity === 60 && document.querySelector(".appearance-reset"), "Cancelling keeps the appearance");
     await click(".appearance-reset"); await click(".appearance-reset--danger");
     check(storedSettings().opacity === DEFAULT_SETTINGS.opacity && storedSettings().carryOverIncompleteTodos === false, "Confirming resets the appearance and keeps todo settings");
-    await openPage("themeGlass"); await checkGlassLooks(check);
+    await openPage("themeStyle"); await checkGlassLooks(check);
     await openPage("appearanceCollapsed");
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
@@ -329,9 +328,9 @@ if (!automated) {
       "The typed server is saved with the mailbox");
 
     await openPage("agentConnect");
-    check(texts(".settings-tabs__tab") === "钩子与代理|连接与扩展|审批" && texts(".settings-page__title") === "Agent"
+    check(texts(".settings-tabs__tab") === "状态灯钩子|启用的代理|连接与扩展|审批" && texts(".settings-page__title") === "Agent"
       && element(".settings-sidebar__item--active").dataset.category === "agents",
-      "Agent is the first item in the AI Agent group, with tabs for hooks and agents, connection and approvals");
+      "Agent is the first item in the AI Agent group, with tabs for hooks, enabled agents, connection and approvals");
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     const connectGroups = [...document.querySelectorAll<HTMLElement>(".settings-group")];
     const markerGroup = connectGroups.find((group) => group.textContent?.includes("回复状态标记"));

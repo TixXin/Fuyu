@@ -51,11 +51,6 @@ const shortcuts = (tab: ComponentProps<typeof ShortcutsSettingsPage>["tab"]): Pa
     return <ShortcutsSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenPage={onOpenPage} />;
   };
 
-const todos = (tab: ComponentProps<typeof TodosSettingsPage>["tab"]): Page =>
-  function TodosPage({ settings, onSettingsChange }) {
-    return <TodosSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
-  };
-
 const plugins = (tab: ComponentProps<typeof PluginsSettingsPage>["tab"]): Page =>
   function PluginsPage({ settings, managedPluginId, onOpenShortcuts }) {
     return <PluginsSettingsPage tab={tab} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={onOpenShortcuts} />;
@@ -88,13 +83,10 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   appearanceCollapsed: appearance("appearanceCollapsed"),
   theme: theme("theme"),
   themeStyle: theme("themeStyle"),
-  themeGlass: theme("themeGlass"),
-  themePresets: theme("themePresets"),
   shortcuts: shortcuts("shortcuts"),
   shortcutsIsland: shortcuts("shortcutsIsland"),
   shortcutsReference: shortcuts("shortcutsReference"),
-  todos: todos("todos"),
-  todosStorage: todos("todosStorage"),
+  todos: ({ settings, onSettingsChange }) => <TodosSettingsPage settings={settings} onSettingsChange={onSettingsChange} />,
   plugins: plugins("plugins"),
   pluginsPages: plugins("pluginsPages"),
   pluginsUpdates: plugins("pluginsUpdates"),
@@ -108,6 +100,6 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   aboutHelp: about("aboutHelp"),
 };
 
-const OWNERS: Partial<Record<SettingsCategory, string>> = { todos: TODOS, todosStorage: TODOS };
+const OWNERS: Partial<Record<SettingsCategory, string>> = { todos: TODOS };
 
 for (const [id, page] of Object.entries(PAGES)) addSettingsCategory(id as SettingsCategory, page, OWNERS[id as SettingsCategory]);

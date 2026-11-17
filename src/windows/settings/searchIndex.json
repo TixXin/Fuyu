@@ -383,7 +383,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "预设"
@@ -394,7 +394,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "风格"
@@ -405,7 +405,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "玻璃强度"
@@ -416,7 +416,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "玻璃背后",
@@ -437,7 +437,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "模糊"
@@ -448,7 +448,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "饱和度"
@@ -459,7 +459,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "噪点"
@@ -470,7 +470,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "颜色来源",
@@ -491,7 +491,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "颜色 1"
@@ -502,7 +502,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "颜色 2"
@@ -513,7 +513,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "颜色 3"
@@ -524,7 +524,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "色彩浓度"
@@ -535,7 +535,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "流动速度"
@@ -546,7 +546,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "色块大小"
@@ -557,7 +557,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "折叠时流动",
@@ -576,7 +576,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "油膜边"
@@ -587,7 +587,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "边宽"
@@ -598,7 +598,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "扫光"
@@ -609,7 +609,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "镜面高光",
@@ -622,7 +622,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "展开收起",
@@ -643,7 +643,7 @@
       }
     },
     {
-      "page": "themeGlass",
+      "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
         "title": "文字保护",
@@ -1329,7 +1329,7 @@
       }
     },
     {
-      "page": "todosStorage",
+      "page": "todos",
       "zh-CN": {
         "group": "待办清单保存路径",
         "title": "文件夹"
@@ -1366,7 +1366,7 @@
       }
     },
     {
-      "page": "calendarSources",
+      "page": "calendar",
       "zh-CN": {
         "group": "已添加的日历",
         "title": "用的是"
@@ -1897,90 +1897,6 @@
       }
     },
     {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "复制链接时在岛上提示",
-        "description": "在任何地方复制了网址，收起的岛上弹一条，点书签按钮就存进剪贴板页的「书签」。 书签显示网站图标要打开「读取链接标题和图标」。"
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Offer to bookmark copied links",
-        "description": "When you copy a web address anywhere, the collapsed island shows it; the bookmark button keeps it under Bookmarks on the clipboard page. Site icons on bookmarks need “Read link titles and icons”."
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "识别哪些链接",
-        "options": [
-          "所有网址",
-          "只认 http(s):// 开头的"
-        ]
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Which links",
-        "options": [
-          "Any web address",
-          "Only http(s)://"
-        ]
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "这些网站不提示",
-        "description": "填域名，用逗号、空格或换行分开；子域名一起算，例如 google.com 也包括 mail.google.com。"
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Never for these sites",
-        "description": "Domains, separated by commas, spaces or new lines. Subdomains count too: google.com covers mail.google.com."
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "只提示这些网站",
-        "description": "留空就是所有网站。"
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Only for these sites",
-        "description": "Leave empty for every site."
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "导出书签",
-        "description": "写成「下载」文件夹里的一个 JSON 文件。"
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Export bookmarks",
-        "description": "Writes a JSON file to your Downloads folder."
-      }
-    },
-    {
-      "page": "clipboard",
-      "zh-CN": {
-        "group": "链接书签",
-        "title": "导入书签",
-        "description": "读浮屿导出的 JSON，或每行一个网址的文本文件；已有的网址跳过。"
-      },
-      "en": {
-        "group": "Link bookmarks",
-        "title": "Import bookmarks",
-        "description": "Reads a JSON file exported by Fuyu, or a text file with one address per line. Addresses you already have are skipped."
-      }
-    },
-    {
       "page": "clipboardHistory",
       "zh-CN": {
         "group": "剪贴板历史",
@@ -2156,7 +2072,7 @@
       }
     },
     {
-      "page": "clipboardData",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "导入导出",
         "title": "导出剪贴板历史",
@@ -2169,7 +2085,7 @@
       }
     },
     {
-      "page": "clipboardData",
+      "page": "clipboardHistory",
       "zh-CN": {
         "group": "导入导出",
         "title": "从文件导入",
@@ -2179,6 +2095,90 @@
         "group": "Import and export",
         "title": "Import from a file",
         "description": "A file exported on another computer: only entries and snippets not here yet are added, nothing is removed."
+      }
+    },
+    {
+      "page": "clipboardLinks",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "复制链接时在岛上提示",
+        "description": "在任何地方复制了网址，收起的岛上弹一条，点书签按钮就存进剪贴板页的「书签」。 书签显示网站图标要打开「读取链接标题和图标」。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Offer to bookmark copied links",
+        "description": "When you copy a web address anywhere, the collapsed island shows it; the bookmark button keeps it under Bookmarks on the clipboard page. Site icons on bookmarks need “Read link titles and icons”."
+      }
+    },
+    {
+      "page": "clipboardLinks",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "识别哪些链接",
+        "options": [
+          "所有网址",
+          "只认 http(s):// 开头的"
+        ]
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Which links",
+        "options": [
+          "Any web address",
+          "Only http(s)://"
+        ]
+      }
+    },
+    {
+      "page": "clipboardLinks",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "这些网站不提示",
+        "description": "填域名，用逗号、空格或换行分开；子域名一起算，例如 google.com 也包括 mail.google.com。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Never for these sites",
+        "description": "Domains, separated by commas, spaces or new lines. Subdomains count too: google.com covers mail.google.com."
+      }
+    },
+    {
+      "page": "clipboardLinks",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "只提示这些网站",
+        "description": "留空就是所有网站。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Only for these sites",
+        "description": "Leave empty for every site."
+      }
+    },
+    {
+      "page": "clipboardLinks",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "导出书签",
+        "description": "写成「下载」文件夹里的一个 JSON 文件。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Export bookmarks",
+        "description": "Writes a JSON file to your Downloads folder."
+      }
+    },
+    {
+      "page": "clipboardLinks",
+      "zh-CN": {
+        "group": "链接书签",
+        "title": "导入书签",
+        "description": "读浮屿导出的 JSON，或每行一个网址的文本文件；已有的网址跳过。"
+      },
+      "en": {
+        "group": "Link bookmarks",
+        "title": "Import bookmarks",
+        "description": "Reads a JSON file exported by Fuyu, or a text file with one address per line. Addresses you already have are skipped."
       }
     },
     {
@@ -2415,7 +2415,7 @@
       }
     },
     {
-      "page": "timerBreaks",
+      "page": "timerAlerts",
       "zh-CN": {
         "group": "休息提醒",
         "title": "休息提醒",
@@ -2754,7 +2754,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Codex"
@@ -2765,7 +2765,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Claude Code"
@@ -2776,7 +2776,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "WorkBuddy"
@@ -2787,7 +2787,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Antigravity"
@@ -2798,7 +2798,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "DeepSeek Harness"
@@ -2809,7 +2809,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "opencode"
@@ -2820,7 +2820,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Qoder"
@@ -2831,7 +2831,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "CodeBuddy"
@@ -2842,7 +2842,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Qwen Code"
@@ -2853,7 +2853,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "TRAE"
@@ -2864,7 +2864,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "TRAE CN"
@@ -2875,7 +2875,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "ZCode"
@@ -2886,7 +2886,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Kimi Code"
@@ -2897,7 +2897,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "MiMo Code"
@@ -2908,7 +2908,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Grok CLI"
@@ -2919,7 +2919,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "GitHub Copilot CLI"
@@ -2930,7 +2930,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "Droid"
@@ -2941,7 +2941,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentProviders",
       "zh-CN": {
         "group": "显示哪些 Agent",
         "title": "pi"
@@ -3042,19 +3042,6 @@
       }
     },
     {
-      "page": "agentAppearance",
-      "zh-CN": {
-        "group": "Agent 页",
-        "title": "子 Agent / 子会话默认展开",
-        "description": "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。"
-      },
-      "en": {
-        "group": "Agent page",
-        "title": "Expand subagents and child sessions",
-        "description": "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them."
-      }
-    },
-    {
       "page": "agentSessions",
       "zh-CN": {
         "group": "会话列表",
@@ -3065,6 +3052,19 @@
         "group": "Session list",
         "title": "List sessions from the last",
         "description": "Only sessions active within this time are listed."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话列表",
+        "title": "子 Agent / 子会话默认展开",
+        "description": "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。"
+      },
+      "en": {
+        "group": "Session list",
+        "title": "Expand subagents and child sessions",
+        "description": "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them."
       }
     },
     {

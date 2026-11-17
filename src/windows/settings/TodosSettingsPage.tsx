@@ -30,22 +30,20 @@ function SavePathSection({ saveDirectory }: TodosSectionProps) {
   );
 }
 
-export type TodosTab = "todos" | "todosStorage";
-
-const sections = settingsSections<TodosSectionProps, TodosTab>();
+const sections = settingsSections<TodosSectionProps, "todos">();
 
 sections.add({ id: "todos.general", category: "todos", order: 10, component: TodoSettingsSection });
-sections.add({ id: "todosStorage.projects", category: "todosStorage", order: 20, component: ProjectsSection });
-sections.add({ id: "todosStorage.save-path", category: "todosStorage", order: 30, component: SavePathSection });
+sections.add({ id: "todos.projects", category: "todos", order: 20, component: ProjectsSection });
+sections.add({ id: "todos.save-path", category: "todos", order: 30, component: SavePathSection });
 
-export function TodosSettingsPage({ tab, ...page }: Omit<TodosSectionProps, "saveDirectory"> & { tab: TodosTab }) {
+export function TodosSettingsPage(page: Omit<TodosSectionProps, "saveDirectory">) {
   const saveDirectory = useSharedSaveDirectorySetting();
   if (!saveDirectory) return null;
   const props = { ...page, saveDirectory };
   return (
     <>
-      {tab === "todos" && <FeatureHeader feature="todos" icon={settingsCategoryIcon("todos")} />}
-      <SlotView slot={sections} group={tab} props={props} />
+      <FeatureHeader feature="todos" icon={settingsCategoryIcon("todos")} />
+      <SlotView slot={sections} group="todos" props={props} />
     </>
   );
 }

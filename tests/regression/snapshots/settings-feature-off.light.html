@@ -408,14 +408,6 @@
               待办
             </h1>
           </div>
-          <div aria-label="待办" class="settings-tabs" data-tauri-drag-region="true" role="tablist">
-            <button aria-selected="true" class="settings-tabs__tab settings-tabs__tab--active" data-tab="todos" role="tab" tabindex="0" type="button">
-              待办与归档
-            </button>
-            <button aria-selected="false" class="settings-tabs__tab" data-tab="todosStorage" role="tab" tabindex="-1" type="button">
-              项目与存储
-            </button>
-          </div>
           <div class="editor-panel">
             <section class="settings-group">
               <div class="feature-header">
@@ -509,6 +501,55 @@
                 </div>
               </div>
             </section>
+            <section class="settings-group">
+              <div class="settings-group__header">
+                <h2 class="settings-group__title">
+                  项目
+                </h2>
+              </div>
+              <div class="settings-group__card">
+                <div class="settings-row" data-search="off">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <span class="settings-row__title">
+                        项目
+                      </span>
+                      <span class="settings-row__description">
+                        还没有项目。在下面输入名字，或在待办页点筛选条上的 +。
+                      </span>
+                    </div>
+                  </div>
+                  <ul class="plugin-pages"></ul>
+                  <input aria-label="新项目名，回车添加" class="settings-input" maxlength="20" placeholder="新项目名，回车添加" spellcheck="false">
+                </div>
+              </div>
+            </section>
+            <div class="save-path-panel save-path-panel--attention">
+              <section class="settings-group">
+                <div class="settings-group__header">
+                  <h2 class="settings-group__title">
+                    待办清单保存路径
+                  </h2>
+                </div>
+                <div class="settings-group__card">
+                  <div class="settings-row">
+                    <div class="settings-row__main">
+                      <div class="settings-row__text">
+                        <span class="settings-row__title">
+                          文件夹
+                        </span>
+                      </div>
+                      <div class="settings-row__control">
+                        <button class="settings-link-button" type="button">
+                          保存
+                        </button>
+                      </div>
+                    </div>
+                    <input aria-label="待办清单 Markdown 保存文件夹" class="settings-input settings-input--mono" placeholder="D:/Todos" spellcheck="false" value="">
+                  </div>
+                </div>
+              </section>
+            </div>
           </div>
         </div>
       </div>

@@ -53,7 +53,7 @@ export function SettingsWindow() {
   const focusRequestedSection = useCallback(() => {
     const section = takeFocusRequest();
     if (section === "savePath") {
-      setCategory("todosStorage");
+      setCategory("todos");
       focusSection(section);
     }
     const target = section && settingsCategoryFor(section);
@@ -150,7 +150,7 @@ export function SettingsWindow() {
         hidden={features.hiddenPages}
         onCategoryChange={changeCategory}
         titleAction={
-          category === "theme" || category === "themeStyle" || category === "themeGlass" || category === "themePresets"
+          category === "theme" || category === "themeStyle"
             ? <ResetAppearanceButton onReset={resetAppearance} />
             : category === "appearance" || category === "appearanceCollapsed"
             ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />

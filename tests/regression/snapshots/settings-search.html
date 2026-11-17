@@ -74,14 +74,7 @@
                       <li>
                         <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="themeStyle" type="button">
                           <span>
-                            风格与圆角
-                          </span>
-                        </button>
-                      </li>
-                      <li>
-                        <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="themeGlass" type="button">
-                          <span>
-                            液态玻璃
+                            材质与圆角
                           </span>
                         </button>
                       </li>
@@ -100,13 +93,6 @@
                         </button>
                       </li>
                       <li>
-                        <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="themePresets" type="button">
-                          <span>
-                            我的主题
-                          </span>
-                        </button>
-                      </li>
-                      <li>
                         <button class="settings-sidebar__hit settings-sidebar__hit--tab" data-tab="themeMarket" type="button">
                           <span>
                             主题市场
@@ -114,7 +100,7 @@
                         </button>
                       </li>
                       <li>
-                        <button class="settings-sidebar__hit" data-page="themeStyle" title="外观 › 风格与圆角 › 质感与形状 › 外观模式" type="button">
+                        <button class="settings-sidebar__hit" data-page="themeStyle" title="外观 › 材质与圆角 › 质感与形状 › 外观模式" type="button">
                           <span>
                             外观模式
                           </span>
@@ -310,10 +296,10 @@
                   <div class="settings-row__main">
                     <div class="settings-row__text">
                       <label class="settings-row__title" for="_id2_">
-                        只显示进行中的会话
+                        子 Agent / 子会话默认展开
                       </label>
                       <span class="settings-row__description">
-                        隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。
+                        会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。
                       </span>
                     </div>
                     <div class="settings-row__control">
@@ -328,15 +314,15 @@
                   <div class="settings-row__main">
                     <div class="settings-row__text">
                       <label class="settings-row__title" for="_id3_">
-                        隐藏已退出的会话
+                        只显示进行中的会话
                       </label>
                       <span class="settings-row__description">
-                        Claude Code 或 Codex 已经退出的会话不再列出，SessionEnd hook 没触发也算：按进程是否还在判断，远程电脑上的 Claude Code 会话同样适用。
+                        隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。
                       </span>
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input checked="" id="_id3_" role="switch" type="checkbox">
+                        <input id="_id3_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -346,6 +332,24 @@
                   <div class="settings-row__main">
                     <div class="settings-row__text">
                       <label class="settings-row__title" for="_id4_">
+                        隐藏已退出的会话
+                      </label>
+                      <span class="settings-row__description">
+                        Claude Code 或 Codex 已经退出的会话不再列出，SessionEnd hook 没触发也算：按进程是否还在判断，远程电脑上的 Claude Code 会话同样适用。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input checked="" id="_id4_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id5_">
                         在顶部显示 Claude 用量
                       </label>
                       <span class="settings-row__description">
@@ -354,7 +358,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input checked="" id="_id4_" role="switch" type="checkbox">
+                        <input checked="" id="_id5_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -382,7 +386,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id5_" aria-expanded="false" aria-haspopup="listbox" aria-label="显示方式" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="显示方式" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               卡片
                             </span>
@@ -408,7 +412,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="归档动画" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id7_" aria-expanded="false" aria-haspopup="listbox" aria-label="归档动画" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               粒子消散
                             </span>
@@ -434,7 +438,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id7_" aria-expanded="false" aria-haspopup="listbox" aria-label="卡片光效" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id8_" aria-expanded="false" aria-haspopup="listbox" aria-label="卡片光效" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               粒子流苏
                             </span>
@@ -460,7 +464,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id8_" aria-expanded="false" aria-haspopup="listbox" aria-label="会话来源" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id9_" aria-expanded="false" aria-haspopup="listbox" aria-label="会话来源" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               只显示图标
                             </span>
@@ -476,27 +480,9 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id9_">
+                      <label class="settings-row__title" for="_id10_">
                         显示模型和推理强度
                       </label>
-                    </div>
-                    <div class="settings-row__control">
-                      <span class="settings-switch">
-                        <input checked="" id="_id9_" role="switch" type="checkbox">
-                        <span aria-hidden="true" class="settings-switch__track"></span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div class="settings-row">
-                  <div class="settings-row__main">
-                    <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id10_">
-                        显示最近提问和正在用的工具
-                      </label>
-                      <span class="settings-row__description">
-                        进行中的会话在回复上方显示你最近一次的提问，运行时显示它正在调用的工具（如 Bash 命令、正在改的文件）。
-                      </span>
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
@@ -510,6 +496,24 @@
                   <div class="settings-row__main">
                     <div class="settings-row__text">
                       <label class="settings-row__title" for="_id11_">
+                        显示最近提问和正在用的工具
+                      </label>
+                      <span class="settings-row__description">
+                        进行中的会话在回复上方显示你最近一次的提问，运行时显示它正在调用的工具（如 Bash 命令、正在改的文件）。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input checked="" id="_id11_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id12_">
                         显示运行时长
                       </label>
                       <span class="settings-row__description">
@@ -518,7 +522,7 @@
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input id="_id11_" role="switch" type="checkbox">
+                        <input id="_id12_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -543,7 +547,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id12_" aria-expanded="false" aria-haspopup="listbox" aria-label="规则类型" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id13_" aria-expanded="false" aria-haspopup="listbox" aria-label="规则类型" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               所在目录
                             </span>

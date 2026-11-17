@@ -89,8 +89,8 @@ test("the settings window opens on the overview, and a feature that is off takes
   for (const pages of Object.values(FEATURE_PAGES)) for (const page of pages) assert.ok(SETTINGS_CATEGORIES.includes(page), page);
 });
 
-test("Appearance has 7 tabs, AI Agent is a group of 4 items, and every page is reachable", () => {
-  assert.deepEqual(entryPages("appearance"), ["theme", "themeStyle", "themeGlass", "appearance", "appearanceCollapsed", "themePresets", "themeMarket"]);
+test("Appearance has 5 tabs, AI Agent is a group of 4 items, and every page is reachable", () => {
+  assert.deepEqual(entryPages("appearance"), ["theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket"]);
   assert.deepEqual(SETTINGS_GROUPS.find((group) => group.label === "agents")?.categories, ["agents", "agentAppearance", "agentAlerts", "agentRemote"]);
   assert.equal(sidebarItemOf("sounds"), "agentAlerts");
   assert.equal(sidebarItemOf("agentRings"), "agentAppearance");
