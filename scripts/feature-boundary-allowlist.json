@@ -8,7 +8,6 @@
     "src/features/theme-market/ThemeMarketPage.tsx -> src/features/plugins/PluginMarketSection.css",
     "src/features/timer/ReminderNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
     "src/features/timer/TimerNotice.tsx -> src/features/screenshot/ScreenshotNotice.css",
-    "src/features/updater/useIslandAutoUpdate.ts -> src/features/agent-status/push/api.ts",
     "src/features/voice-input/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts",
     "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/device-use/api.ts",
     "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/todos/plugin/islandState.ts"
@@ -30,7 +29,6 @@
   ],
   "removedBy": {
     "src/features/center-pattern/useCenterDecor.tsx -> src/features/plugins/useBuiltinPlugin.ts": "E36.3.45",
-    "src/features/updater/useIslandAutoUpdate.ts -> src/features/agent-status/push/api.ts": "E36.3.43",
     "src/features/voice-input/plugin/runners.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.36",
     "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/device-use/api.ts": "E36.3.36",
     "src/features/voice-input/useIslandVoiceInput.tsx -> src/features/todos/plugin/islandState.ts": "E36.3.36"
