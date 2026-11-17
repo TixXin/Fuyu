@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { blockedShortcut } from "../../src/lib/browserDefaults.ts";
+import { blockedShortcut, macSelectionCopyText } from "../../src/lib/browserDefaults.ts";
 
 const keys = (key, mods = {}) => ({ key, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, ...mods });
 const mac = { mac: true, dev: false };
@@ -31,4 +31,13 @@ test("typing and the app's own keys are left alone", () => {
   assert.equal(blockedShortcut(keys("v", { ctrlKey: true }), win), false);
   assert.equal(blockedShortcut(keys("h", { ctrlKey: true }), mac), false);
   assert.equal(blockedShortcut(keys("ArrowLeft", { metaKey: true }), mac), false);
+});
+
+test("macOS selection copy only triggers on plain Cmd+C outside editable fields", () => {
+  assert.equal(macSelectionCopyText(keys("c", { metaKey: true }), mac, false, "验证码 356407"), "验证码 356407");
+  assert.equal(macSelectionCopyText(keys("C", { metaKey: true }), mac, false, "order-99"), "order-99");
+  assert.equal(macSelectionCopyText(keys("c", { metaKey: true }), mac, true, "in-input"), null);
+  assert.equal(macSelectionCopyText(keys("c", { metaKey: true }), mac, false, ""), null);
+  assert.equal(macSelectionCopyText(keys("c", { ctrlKey: true }), win, false, "windows"), null);
+  assert.equal(macSelectionCopyText(keys("c", { metaKey: true, shiftKey: true }), mac, false, "devtools"), null);
 });

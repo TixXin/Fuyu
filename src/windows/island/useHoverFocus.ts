@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { listenIslandHover, releaseIslandHoverFocus, takeIslandHoverFocus } from "./api";
 import { HOVER_FOCUS_DWELL_MS, HOVER_FOCUS_RETRY_MS, hoverFocusAction } from "./hoverFocus";
-import { isEditingText } from "./useHoverExpand";
+import { hasTextSelection, isEditingText } from "./useHoverExpand";
 import type { IslandMode } from "./types";
 
 function logFocusError(error: unknown) {
@@ -11,10 +11,25 @@ function logFocusError(error: unknown) {
 
 export function useHoverFocus(mode: IslandMode, blocked: boolean) {
   const [isHovering, setIsHovering] = useState(false);
+  const [selecting, setSelecting] = useState(false);
   const stateRef = useRef({ mode, isHovering });
   useEffect(() => {
     stateRef.current = { mode, isHovering };
   }, [isHovering, mode]);
+
+  useEffect(() => {
+    if (mode !== "expanded") {
+      setSelecting(false);
+      return;
+    }
+    const syncSelection = () => {
+      const next = hasTextSelection();
+      setSelecting((current) => (current === next ? current : next));
+    };
+    syncSelection();
+    document.addEventListener("selectionchange", syncSelection);
+    return () => document.removeEventListener("selectionchange", syncSelection);
+  }, [mode]);
 
   useEffect(() => {
     let didCancel = false;
@@ -36,6 +51,7 @@ export function useHoverFocus(mode: IslandMode, blocked: boolean) {
       expanded: mode === "expanded",
       hovering: isHovering,
       editing: isEditingText(),
+      selecting,
       blocked,
     });
     if (action === "none") return;
@@ -55,13 +71,13 @@ export function useHoverFocus(mode: IslandMode, blocked: boolean) {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [blocked, isHovering, mode]);
+  }, [blocked, isHovering, mode, selecting]);
 
   useEffect(() => {
     const handleFocusOut = () => {
       window.setTimeout(() => {
         const { mode: currentMode, isHovering: hovering } = stateRef.current;
-        if (currentMode === "expanded" && !hovering && !isEditingText()) {
+        if (currentMode === "expanded" && !hovering && !isEditingText() && !hasTextSelection()) {
           void releaseIslandHoverFocus().catch(logFocusError);
         }
       }, 0);

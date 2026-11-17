@@ -17,8 +17,17 @@ export function bannerKey(preview: MessagePreview): string {
   return `${preview.source}:${preview.receivedAt}`;
 }
 
+export function sameBannerActions(
+  left: readonly { id: string; title: string }[],
+  right: readonly { id: string; title: string }[],
+): boolean {
+  return left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.title === right[index]?.title);
+}
+
 export function addBannerMessage<T extends BannerMessage>(state: BannerState<T> | null, message: T): BannerState<T> {
-  if (state && bannerKey(state.message) === bannerKey(message)) return state;
+  if (state && bannerKey(state.message) === bannerKey(message)) {
+    return sameBannerActions(state.message.actions, message.actions) ? state : { ...state, message };
+  }
   return { message, more: state ? state.more + 1 : 0, version: (state?.version ?? 0) + 1 };
 }
 

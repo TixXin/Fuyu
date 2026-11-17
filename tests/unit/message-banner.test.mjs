@@ -22,6 +22,10 @@ test("a banner starts with the first message and groups the ones that follow", (
 test("the same arrival seen again leaves the banner as it is", () => {
   const banner = addBannerMessage(null, message("qq", 100));
   assert.equal(addBannerMessage(banner, message("qq", 100)), banner);
+  const withOtp = addBannerMessage(banner, { ...message("qq", 100), actions: [{ id: "copy-otp:356407", title: "复制 356407" }] });
+  assert.equal(withOtp.more, banner.more);
+  assert.equal(withOtp.version, banner.version);
+  assert.equal(withOtp.message.actions[0]?.id, "copy-otp:356407");
   assert.equal(bannerKey(message("qq", 100)), bannerKey(message("qq", 100, "别人")));
   assert.notEqual(bannerKey(message("qq", 100)), bannerKey(message("qqMail", 100)));
 });

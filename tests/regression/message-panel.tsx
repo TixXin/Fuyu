@@ -305,6 +305,23 @@ async function runChecks() {
     await wait(DURATION_MS + 400);
     check(rows().length === 0, "按过播放按钮后仍按时长自己收起");
 
+    await update(async () => {
+      const receivedAt = Date.now();
+      await emit("qq-notifications-changed", {
+        snapshot: { revision: ++revision, enabled: true, status: "listening", items: [{ id: `qq-otp-${revision}`, title: "验证服务", body: "您的动态码是 904812，请勿告知他人。", createdAt: receivedAt }], error: null },
+        newestId: `qq-otp-${revision}`, windowVisible: true,
+      });
+    });
+    await waitFor(() => rows().length === 1, "含验证码的通知弹出到达面板");
+    const otpAction = rows()[0].querySelector<HTMLButtonElement>(".message-arrivals__action");
+    check(otpAction?.textContent === "复制 904812", "到达面板显示一键复制验证码按钮");
+    await act(async () => {
+      otpAction!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      otpAction!.click();
+    });
+    await waitFor(() => commands.some((entry) => entry.command === "copy_message_text" && entry.args.text === "904812") && state.mode === "collapsed", "复制验证码后自动收起");
+    check(rows().length === 0, "点到达面板复制验证码后移除提醒并收起");
+
     results.textContent = messages.join("\n");
     results.dataset.result = "passed";
   } catch (error) {

@@ -152,6 +152,14 @@
   line-height: 18px;
 }
 
+.message-arrivals__copied {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--mint-text, #b3ddc7);
+  font-size: 11px;
+  line-height: 18px;
+}
+
 .message-arrivals__body {
   display: -webkit-box;
   overflow: hidden;

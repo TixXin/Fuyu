@@ -27,7 +27,7 @@ import { SlotView } from "../plugin-kernel/SlotView";
 import { settingsSections } from "../plugin-kernel/settingsSlots";
 import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 import { OWNER } from "./plugin/owner.ts";
-import { setSourceEnabled, useMailEnabled } from "./plugin/useSourceSwitches";
+import { setMessageOtpCopyEnabled, setSourceEnabled, useMailEnabled, useMessageOtpCopyEnabled } from "./plugin/useSourceSwitches";
 
 type MessagesSectionProps = {
   settings: IslandSettings;
@@ -40,6 +40,7 @@ type MessagesSectionProps = {
 function NoticeSection({ settings, onSettingsChange }: MessagesSectionProps) {
   const t = useTranslation();
   const labels = t.settings.messageSources;
+  const otpCopyEnabled = useMessageOtpCopyEnabled();
 
   return (
     <SettingsGroup title={labels.noticeTitle} footer={<SettingsFootnote text={labels.noticeHint} />}>
@@ -69,6 +70,12 @@ function NoticeSection({ settings, onSettingsChange }: MessagesSectionProps) {
           }
         />
       )}
+      <SettingsToggleRow
+        title={labels.otpCopyLabel}
+        description={labels.otpCopyDescription}
+        checked={otpCopyEnabled}
+        onChange={(on) => void setMessageOtpCopyEnabled(on)}
+      />
     </SettingsGroup>
   );
 }

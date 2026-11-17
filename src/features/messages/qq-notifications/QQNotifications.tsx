@@ -1,6 +1,8 @@
 import { useTranslation } from "../../../i18n";
-import type { ReactNode } from "react";
-import { ArrowUpRight, KeyRound, Power, RefreshCw, Settings2, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ArrowUpRight, Check, Copy, KeyRound, Power, RefreshCw, Settings2, Trash2 } from "lucide-react";
+import { copyMessageText } from "../../../lib/api";
+import { notificationCopyableText } from "../messageCopy";
 import { MessageSourceIcon } from "../MessageSourceIcon";
 import "./QQNotifications.css";
 import { isMacOS } from "../../../lib/platform";
@@ -34,6 +36,9 @@ export function QQNotificationControls({ controller, compact = false }: { contro
 export function QQNotificationPanel({ controller, navigation }: { controller: QQNotificationsController; navigation: ReactNode }) {
   const { snapshot, busy, actionError, refresh, clear, openQQ } = controller;
   const t = useTranslation();
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copyTimerRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
   const error = actionError || snapshot.error || (snapshot.status === "permissionRequired" || snapshot.status === "permissionDenied" ? (isMacOS ? t.qq.permissionRequiredMac : t.qq.status[snapshot.status]) : null);
   return (
     <section className="qq-panel" aria-label={t.qq.recent}>
@@ -50,14 +55,34 @@ export function QQNotificationPanel({ controller, navigation }: { controller: QQ
       <div className="qq-panel__list" role="list" aria-label={t.qq.list} aria-busy={busy}>
         {snapshot.items.length === 0 ? (
           <div className="qq-panel__empty" role="status"><span className="message-empty-icon"><MessageSourceIcon source="qq" size={28} /></span><span>{t.common.noMessages}</span></div>
-        ) : snapshot.items.map((item) => (
-          <article className="qq-panel__item" key={item.id} role="listitem" data-message-id={item.id}>
-            <button type="button" disabled={busy} onClick={() => void openQQ()} aria-label={t.qq.openNotification(item.title)}>
-              <div className="qq-panel__item-heading"><strong>{item.title}</strong><time dateTime={new Date(item.createdAt).toISOString()}>{new Date(item.createdAt).toLocaleTimeString(t.localeTag, { hour: "2-digit", minute: "2-digit" })}</time></div>
-              {(item.unread ? t.messages.unreadCount(item.unread) : item.body) && <p>{item.unread ? t.messages.unreadCount(item.unread) : item.body}</p>}
-            </button>
-          </article>
-        ))}
+        ) : snapshot.items.map((item) => {
+          const copyable = item.unread ? "" : notificationCopyableText(item.title, item.body);
+          const copied = copiedId === item.id;
+          return (
+            <article className={`qq-panel__item${copyable ? " qq-panel__item--copyable" : ""}`} key={item.id} role="listitem" data-message-id={item.id}>
+              <button type="button" disabled={busy} onClick={() => void openQQ()} aria-label={t.qq.openNotification(item.title)}>
+                <div className="qq-panel__item-heading"><strong>{item.title}</strong><time dateTime={new Date(item.createdAt).toISOString()}>{new Date(item.createdAt).toLocaleTimeString(t.localeTag, { hour: "2-digit", minute: "2-digit" })}</time></div>
+                {(item.unread ? t.messages.unreadCount(item.unread) : item.body) && <p>{item.unread ? t.messages.unreadCount(item.unread) : item.body}</p>}
+              </button>
+              {copyable && (
+                <button
+                  className={`icon-button qq-panel__copy${copied ? " qq-panel__copy--done" : ""}`}
+                  type="button"
+                  aria-label={copied ? t.messages.copied : t.messages.copyText}
+                  onClick={() => {
+                    void copyMessageText(copyable).then(() => {
+                      setCopiedId(item.id);
+                      window.clearTimeout(copyTimerRef.current);
+                      copyTimerRef.current = window.setTimeout(() => setCopiedId((current) => (current === item.id ? null : current)), 1400);
+                    }).catch(() => undefined);
+                  }}
+                >
+                  {copied ? <Check size={14} strokeWidth={1.9} aria-hidden="true" /> : <Copy size={14} strokeWidth={1.8} aria-hidden="true" />}
+                </button>
+              )}
+            </article>
+          );
+        })}
       </div>
     </section>
   );

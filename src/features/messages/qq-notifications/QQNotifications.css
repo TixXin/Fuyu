@@ -247,6 +247,7 @@
 }
 
 .qq-panel__item {
+  position: relative;
   margin: 0;
   border-bottom: 1px solid rgba(var(--overlay-rgb, 255, 255, 255), .055);
 }
@@ -255,7 +256,7 @@
   border-bottom: 0;
 }
 
-.qq-panel__item > button {
+.qq-panel__item > button:first-child {
   display: block;
   width: 100%;
   padding: 13px 8px;
@@ -268,8 +269,32 @@
   transition: background var(--motion-base) var(--motion-ease);
 }
 
-.qq-panel__item > button:hover {
+.qq-panel__item--copyable > button:first-child {
+  padding-right: 36px;
+}
+
+.qq-panel__item > button:first-child:hover {
   background: rgba(var(--overlay-rgb, 255, 255, 255), .035);
+}
+
+.qq-panel .icon-button.qq-panel__copy {
+  position: absolute;
+  right: 6px;
+  bottom: 8px;
+  width: 26px;
+  height: 26px;
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease), color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
+}
+
+.qq-panel__item--copyable:hover .qq-panel__copy,
+.qq-panel__item--copyable:focus-within .qq-panel__copy,
+.qq-panel .icon-button.qq-panel__copy--done {
+  opacity: 1;
+}
+
+.qq-panel .icon-button.qq-panel__copy--done {
+  color: var(--mint-text, #b3ddc7);
 }
 
 .qq-panel__item-heading {

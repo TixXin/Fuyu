@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useTranslation } from "../../../i18n";
+import { copyMessageText } from "../../../lib/api";
 import { addArrival, removeArrival, arrivalKey, type ArrivalMessage } from "../arrivals/messageArrivals";
 import type { MailMessage } from "../mail/api";
 import type { MessageSource } from "../messagePreview";
+import { extractVerificationCode, otpActionId, parseOtpAction } from "../otp";
 import { runNoticeAction } from "../plugin/notices";
+import { useMessageOtpCopyEnabled } from "../plugin/useSourceSwitches";
 import type { useIslandNotices } from "./useIslandNotices";
 import { HOVER_HOLD_RETRY_MS } from "../../plugin-kernel/hoverHold";
 import { useHoverHold } from "../../plugin-kernel/useHoverHold";
@@ -27,6 +31,8 @@ type MessagePanelOptions = {
 
 export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page, openIslandPage, collapseIsland, onOpenMessages, host }: MessagePanelOptions) {
   const { preview, qqNotifications, wechatReminders, qqMail, pluginNotifications, setMessagePanelOpen } = notices;
+  const t = useTranslation().messages;
+  const otpEnabled = useMessageOtpCopyEnabled();
   const [arrivals, setArrivals] = useState<PanelArrival[] | null>(null);
   const [height, setHeight] = useState(0);
   const autoOpenedRef = useRef(false);
@@ -52,8 +58,9 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     if (wasOpen) latest.current.collapseIsland();
   }, [end]);
 
-  const incoming = enabled && preview ? toArrival(preview, notices) : null;
+  const incoming = enabled && preview ? toArrival(preview, notices, otpEnabled, t.copyCode) : null;
   const incomingKey = incoming ? `${arrivalKey(incoming)}:${incoming.receivedAt}` : null;
+  const incomingActionsKey = incoming ? incoming.actions.map((item) => `${item.id}:${item.title}`).join("|") : "";
   const incomingRef = useRef(incoming);
   incomingRef.current = incoming;
   useEffect(() => {
@@ -79,6 +86,14 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   }, [incomingKey, close, setMessagePanelOpen]);
 
   const showing = arrivals !== null;
+  useEffect(() => {
+    const message = incomingRef.current;
+    if (!showing || !message) return;
+    setArrivals((list) => {
+      if (!list || !list.some((item) => arrivalKey(item) === arrivalKey(message) && item.receivedAt === message.receivedAt)) return list;
+      return addArrival(list, message);
+    });
+  }, [incomingActionsKey, showing]);
   const showAll = useCallback(() => {
     autoOpenedRef.current = false;
     window.clearTimeout(closeTimerRef.current);
@@ -133,12 +148,23 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   }, [arrivals, close, end, onOpenMessages, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
 
   const runAction = useCallback((message: PanelArrival, action: string) => {
+    const otp = parseOtpAction(action);
+    if (otp) {
+      void copyMessageText(otp).catch(() => undefined);
+      if (message.source === "qqMail") qqMail.dismissPreview();
+      else if (message.source === "qq") qqNotifications.dismissPreview();
+      else if (message.source === "wechat") wechatReminders.dismissPreview();
+      const rest = removeArrival(arrivals ?? [], arrivalKey(message));
+      if (rest.length === 0) close();
+      else setArrivals(rest);
+      return;
+    }
     if (message.pluginId) runNoticeAction(message.pluginId, action);
     pluginNotifications.dismiss();
     const rest = removeArrival(arrivals ?? [], arrivalKey(message));
     if (rest.length === 0) close();
     else setArrivals(rest);
-  }, [arrivals, close, pluginNotifications]);
+  }, [arrivals, close, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
 
   const clearAll = useCallback(() => {
     const mails = (arrivals ?? []).flatMap((item) => item.mail?.account && item.mail.message.unread ? [{ account: item.mail.account, id: item.mail.message.id }] : []);
@@ -163,15 +189,25 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   };
 }
 
-function toArrival(preview: NonNullable<PanelNotices["preview"]>, notices: PanelNotices): PanelArrival {
-  const base: PanelArrival = { ...preview, actions: [] };
+function toArrival(
+  preview: NonNullable<PanelNotices["preview"]>,
+  notices: PanelNotices,
+  otpEnabled: boolean,
+  copyCodeLabel: (code: string) => string,
+): PanelArrival {
   const { qqMail, pluginNotifications } = notices;
-  if (preview.source === "qqMail" && qqMail.preview) {
-    return { ...base, mail: { message: qqMail.preview, account: qqMail.previewAccount } };
-  }
   const notification = pluginNotifications.notification;
   if (preview.source === "plugin" && notification) {
-    return { ...base, actions: notification.actions, pluginId: notification.pluginId };
+    return { ...preview, actions: notification.actions, pluginId: notification.pluginId };
+  }
+  const otp = !otpEnabled ? null
+    : preview.source === "qqMail" ? qqMail.previewOtp
+      : preview.source === "qq" || (preview.source === "wechat" && preview.chat) ? extractVerificationCode(preview.title, preview.body)
+        : null;
+  const actions = otp ? [{ id: otpActionId(otp), title: copyCodeLabel(otp) }] : [];
+  const base: PanelArrival = { ...preview, actions };
+  if (preview.source === "qqMail" && qqMail.preview) {
+    return { ...base, mail: { message: qqMail.preview, account: qqMail.previewAccount } };
   }
   return base;
 }

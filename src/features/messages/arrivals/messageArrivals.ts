@@ -10,10 +10,20 @@ export function arrivalKey(message: MessagePreview): string {
   return message.source === "wechat" && !message.chat ? "wechat" : `${message.source}:${message.receivedAt}`;
 }
 
+export function sameArrivalActions(
+  left: readonly { id: string; title: string }[],
+  right: readonly { id: string; title: string }[],
+): boolean {
+  return left.length === right.length && left.every((item, index) => item.id === right[index]?.id && item.title === right[index]?.title);
+}
+
 export function addArrival<T extends ArrivalMessage>(list: readonly T[], message: T): T[] {
   const key = arrivalKey(message);
   const index = list.findIndex((item) => arrivalKey(item) === key);
-  if (index >= 0 && list[index].receivedAt === message.receivedAt) return list as T[];
+  if (index >= 0 && list[index].receivedAt === message.receivedAt) {
+    if (sameArrivalActions(list[index].actions, message.actions)) return list as T[];
+    return list.map((item, current) => (current === index ? message : item));
+  }
   return [message, ...list.filter((item) => arrivalKey(item) !== key)].slice(0, MAX_ARRIVALS);
 }
 
