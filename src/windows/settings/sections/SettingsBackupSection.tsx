@@ -1,5 +1,6 @@
-import { useRef, type ChangeEvent, type ReactNode } from "react";
+import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { Download, FolderOpen, RotateCw, Upload } from "lucide-react";
+import { SettingsConfirmBar } from "../../../components/settings/SettingsInlineConfirm";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { useErrorText, useTranslation } from "../../../i18n";
@@ -19,6 +20,7 @@ export function SettingsBackupSection({ onNote }: { onNote: (note: ReactNode) =>
   const errorText = useErrorText();
   const text = t.settings.backup;
   const fileInput = useRef<HTMLInputElement>(null);
+  const [pendingKeys, setPendingKeys] = useState<Record<string, string> | null>(null);
 
   const note = (status: Status) => (
     <>
@@ -60,11 +62,18 @@ export function SettingsBackupSection({ onNote }: { onNote: (note: ReactNode) =>
     if (!file) return;
     const parsed = parseBackup(await file.text());
     if ("problem" in parsed) {
+      setPendingKeys(null);
       setStatus({ kind: "error", message: text.problems[parsed.problem] });
       return;
     }
-    if (!window.confirm(text.confirmRestore)) return;
-    setStatus({ kind: "restored", count: restoreBackup(parsed.keys) });
+    setPendingKeys(parsed.keys);
+  };
+
+  const applyPendingRestore = () => {
+    if (!pendingKeys) return;
+    const keys = pendingKeys;
+    setPendingKeys(null);
+    setStatus({ kind: "restored", count: restoreBackup(keys) });
   };
 
   return (
@@ -96,7 +105,16 @@ export function SettingsBackupSection({ onNote }: { onNote: (note: ReactNode) =>
             />
           </>
         }
-      />
+      >
+        {pendingKeys ? (
+          <SettingsConfirmBar
+            message={text.confirmRestore}
+            confirmLabel={text.confirmRestoreAction}
+            onConfirm={applyPendingRestore}
+            onCancel={() => setPendingKeys(null)}
+          />
+        ) : null}
+      </SettingsRow>
     </>
   );
 }

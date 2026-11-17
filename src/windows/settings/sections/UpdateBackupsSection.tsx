@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
-import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
+import { SettingsInlineConfirm } from "../../../components/settings/SettingsInlineConfirm";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { useErrorText, useLocale, useTranslation } from "../../../i18n";
 import { readString } from "../../../lib/storage.ts";
@@ -31,7 +31,6 @@ export function UpdateBackupsSection() {
   const time = (at: number) => new Date(at).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
 
   const restore = async (backup: UpdateBackup) => {
-    if (!window.confirm(text.confirmRestore(backup.fromVersion, time(backup.createdAt)))) return;
     setRestoring(backup.id);
     setError(null);
     try {
@@ -67,10 +66,16 @@ export function UpdateBackupsSection() {
           title={text.item(backup.fromVersion, backup.toVersion)}
           description={text.meta(time(backup.createdAt), formatBytes(backup.size), backup.files)}
           control={
-            <SettingsLinkButton onClick={() => void restore(backup)} disabled={restoring !== null}>
+            <SettingsInlineConfirm
+              tone="accent"
+              disabled={restoring !== null}
+              confirmLabel={t.settings.backup.confirmRestoreAction}
+              hint={text.confirmRestore(backup.fromVersion, time(backup.createdAt))}
+              onConfirm={() => void restore(backup)}
+            >
               <RotateCcw size={13} strokeWidth={2.2} aria-hidden="true" />
               {restoring === backup.id ? text.restoring : text.restoreAction}
-            </SettingsLinkButton>
+            </SettingsInlineConfirm>
           }
         />
       ))}

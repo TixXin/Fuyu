@@ -1,0 +1,33 @@
+.settings-inline-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.settings-confirm-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+  margin-top: var(--space-xs);
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--warning-text, var(--color-warning)) 10%, var(--color-white-a04));
+  border: 1px solid color-mix(in srgb, var(--warning-text, var(--color-warning)) 26%, transparent);
+  border-radius: var(--radius-md);
+}
+
+.settings-confirm-bar__text {
+  flex: 1 1 240px;
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.settings-confirm-bar__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}

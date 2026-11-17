@@ -1,4 +1,6 @@
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsInlineConfirm } from "../../components/settings/SettingsInlineConfirm";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { isNativeError } from "../../i18n/nativeError";
@@ -28,7 +30,7 @@ function ModelRow() {
   const control = busy
     ? progress?.stage !== "unpack" && <SettingsLinkButton onClick={cancel}>{t.cancelDownload}</SettingsLinkButton>
     : status?.installed
-      ? <SettingsLinkButton tone="danger" onClick={remove}>{t.deleteModel}</SettingsLinkButton>
+      ? <SettingsInlineConfirm tone="danger" onConfirm={remove}>{t.deleteModel}</SettingsInlineConfirm>
       : status?.supported && <SettingsLinkButton onClick={download}>{t.download}</SettingsLinkButton>;
   return (
     <SettingsRow title={t.modelName} description={state} control={control || undefined}>
@@ -48,10 +50,10 @@ export function VoiceInputSettingsSection({ settings, onSettingsChange, takenBy 
   const t = useTranslation().voiceInput.settings;
   return (
     <>
-      <SettingsGroup title={t.title} footer={`${t.shortcutHint} ${t.languages}`}>
+      <SettingsGroup title={t.title} footer={<SettingsFootnote text={`${t.shortcutHint} ${t.languages}`} />}>
         <VoiceShortcutRow shortcut={settings.shortcut} takenBy={takenBy} onChange={(shortcut) => onSettingsChange({ ...settings, shortcut })} />
       </SettingsGroup>
-      <SettingsGroup title={t.modelTitle} footer={t.privacy}>
+      <SettingsGroup title={t.modelTitle} footer={<SettingsFootnote text={t.privacy} />}>
         <ModelRow />
       </SettingsGroup>
     </>

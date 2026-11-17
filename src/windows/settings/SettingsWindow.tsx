@@ -160,7 +160,13 @@ export function SettingsWindow() {
             : null
         }
       >
-        {offFeature && <FeatureOffPage feature={offFeature} onOpenOverview={() => changeCategory("overview")} />}
+        {offFeature && (
+          <FeatureOffPage
+            feature={offFeature}
+            onEnable={() => features.switches[offFeature].set(true)}
+            onOpenOverview={() => changeCategory("overview")}
+          />
+        )}
         <SlotView
           slot={categorySlot}
           props={{

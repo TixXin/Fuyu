@@ -89,8 +89,18 @@ try {
   await wait(40);
   check(active() === "todos" && offPage("todos") && document.querySelector(".feature-header--off"), "A link from the island to a feature that is off opens its page as the off page");
   check(!document.querySelector(".editor-panel .settings-group__card"), "The off page shows none of the feature's settings");
-  check(element(".feature-off").textContent!.includes("在概览里打开"), "The off page says the feature is turned on in the overview");
-  await click(".feature-off__note button");
+  check(Boolean(document.querySelector(".feature-off__enable")) && element(".feature-off").textContent!.includes("概览"), "The off page offers direct enable and a link to the overview");
+  await click(".feature-off__enable");
+  await wait(40);
+  check(pluginOn("todos") === true && !offPage("todos") && Boolean(document.querySelector(".editor-panel .settings-group__card")), "Enable right on the off page turns the feature on and reveals its settings");
+  await openPage("overview");
+  await click(overviewSwitch("todos"));
+  await act(async () => {
+    requestSettingsFocus("savePath");
+    window.dispatchEvent(new StorageEvent("storage", { key: SETTINGS_FOCUS_STORAGE_KEY, newValue: localStorage.getItem(SETTINGS_FOCUS_STORAGE_KEY) }));
+  });
+  await wait(40);
+  await click(".feature-off__actions .settings-link-button");
   check(active() === "overview" && document.querySelector(overviewSwitch("todos")), "Go to overview opens the overview");
 
   await click(overviewSwitch("agents"));

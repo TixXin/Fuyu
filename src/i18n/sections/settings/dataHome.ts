@@ -6,6 +6,7 @@ export type SettingsDataHomeText = {
   hint: string;
   fromEnv: string;
   change: string;
+  confirmAction: string;
   reveal: string;
   revealMac: string;
   useDefault: string;
@@ -22,6 +23,7 @@ export const zhCN: SettingsDataHomeText = {
   hint: "待办、设置、剪贴板历史、插件和每日待办 Markdown 都放在这里。换到一个空文件夹时会把现有数据复制过去；换到已经有浮屿数据的文件夹（比如网盘里同步来的）就直接用它的。旧文件夹不会删除。重启岛屿后生效。同一个文件夹不要在两台电脑上同时用。",
   fromEnv: "由环境变量 FUYU_HOME 指定，在这里改不了。",
   change: "更换",
+  confirmAction: "确认更换",
   reveal: "打开文件夹",
   revealMac: "在访达中打开",
   useDefault: "改回默认",
@@ -38,6 +40,7 @@ export const en: SettingsDataHomeText = {
   hint: "Todos, settings, clipboard history, plugins and the daily todo Markdown live here. Moving to an empty folder copies the current data there; a folder that already has Fuyu data (synced from a cloud drive, say) is used as it is. The old folder is not deleted. Takes effect after a restart. Do not use one folder on two computers at once.",
   fromEnv: "Set by the FUYU_HOME environment variable; it cannot be changed here.",
   change: "Change",
+  confirmAction: "Confirm move",
   reveal: "Open folder",
   revealMac: "Open in Finder",
   useDefault: "Use the default",

@@ -1,4 +1,5 @@
 import { Check, Copy } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
@@ -44,7 +45,7 @@ export function SshTunnelSettings() {
 
   return (
     <>
-      <SettingsGroup title={t.group} footer={failure ? <span className="ssh-tunnel__error">{failure}</span> : t.groupHint}>
+      <SettingsGroup title={t.group} footer={failure ? <span className="ssh-tunnel__error">{failure}</span> : <SettingsFootnote text={t.groupHint} />}>
         <SettingsRow
           title={t.localProxy}
           description={t.localProxyHint}

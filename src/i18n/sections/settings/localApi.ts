@@ -10,6 +10,7 @@ export type SettingsLocalApiText = {
   copy: string;
   copied: string;
   resetToken: string;
+  resetTokenConfirm: string;
   resetTokenHint: string;
   notRunning: string;
 };
@@ -26,6 +27,7 @@ export const zhCN: SettingsLocalApiText = {
   copy: "复制",
   copied: "已复制",
   resetToken: "重新生成令牌",
+  resetTokenConfirm: "确认换新",
   resetTokenHint: "换一个新令牌，用旧令牌的脚本立即失效。",
   notRunning: "没有在运行",
 };
@@ -42,6 +44,7 @@ export const en: SettingsLocalApiText = {
   copy: "Copy",
   copied: "Copied",
   resetToken: "Regenerate token",
+  resetTokenConfirm: "Confirm regenerate",
   resetTokenHint: "Switches to a new token; scripts using the old one stop working at once.",
   notRunning: "Not running",
 };

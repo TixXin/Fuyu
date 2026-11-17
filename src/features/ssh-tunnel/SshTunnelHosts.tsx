@@ -1,5 +1,6 @@
 import { useId, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
@@ -17,7 +18,7 @@ export function SshTunnelHosts() {
   const tunnels = useSshTunnels();
 
   return (
-    <SettingsGroup title={t.title} footer={tunnels.error ? <span className="ssh-tunnel__error">{tunnels.error}</span> : t.hint}>
+    <SettingsGroup title={t.title} footer={tunnels.error ? <span className="ssh-tunnel__error">{tunnels.error}</span> : <SettingsFootnote text={t.hint} />}>
       {tunnels.hosts?.length === 0 ? <SettingsRow searchable={false} title={t.empty} /> : null}
       {tunnels.hosts?.map((entry) => (
         <HostRow

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Play } from "lucide-react";
 import { useTranslation } from "../../../i18n";
+import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
-import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { useReducedMotion } from "../../../lib/theme/useReducedMotion";
 import { islandMotionTiming, islandMotionVariables } from "../../../lib/theme/islandMotion";
 import type { IslandMotion } from "../../../lib/settings/types";
@@ -35,7 +35,7 @@ export function IslandMotionRow({ value, onChange }: { value: IslandMotion; onCh
       title={text.motionCurve}
       description={text.motionHint}
       control={
-        <SettingsSelect<IslandMotion>
+        <SettingsChoice<IslandMotion>
           value={value}
           options={options}
           ariaLabel={text.motion}

@@ -30,7 +30,7 @@ export function AgentApprovalSettings() {
           />
         )}
       </SettingsGroup>
-      <SettingsGroup title={shortcutsText.approvalTitle} footer={shortcutsText.approvalHint}>
+      <SettingsGroup title={shortcutsText.approvalTitle} footer={<SettingsFootnote text={shortcutsText.approvalHint} />}>
         {APPROVAL_HOTKEYS.map(({ action, shortcut }) => (
           <SettingsRow
             key={action}
