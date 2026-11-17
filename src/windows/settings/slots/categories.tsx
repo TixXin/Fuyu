@@ -56,11 +56,6 @@ const plugins = (tab: ComponentProps<typeof PluginsSettingsPage>["tab"]): Page =
     return <PluginsSettingsPage tab={tab} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={onOpenShortcuts} />;
   };
 
-const about = (tab: ComponentProps<typeof AboutSettingsPage>["tab"]): Page =>
-  function AboutPage({ onSettingsChange }) {
-    return <AboutSettingsPage tab={tab} onSettingsChange={onSettingsChange} />;
-  };
-
 const PAGES: Partial<Record<SettingsCategory, Page>> = {
   overview: ({ settings, locale, features, unsupported, onLocaleChange, onSettingsChange, onOpenPage }) => (
     <OverviewSettingsPage
@@ -95,9 +90,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   market: ({ marketRequest, onManagePlugin }) => (
     <PluginMarketSection onManage={onManagePlugin} requestedId={marketRequest.requestedId} onDismissRequest={marketRequest.dismiss} />
   ),
-  about: about("about"),
-  aboutHistory: about("aboutHistory"),
-  aboutHelp: about("aboutHelp"),
+  about: ({ onSettingsChange }) => <AboutSettingsPage onSettingsChange={onSettingsChange} />,
 };
 
 const OWNERS: Partial<Record<SettingsCategory, string>> = { todos: TODOS };

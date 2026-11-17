@@ -3390,7 +3390,7 @@
       }
     },
     {
-      "page": "aboutHelp",
+      "page": "about",
       "zh-CN": {
         "group": "帮助",
         "title": "新手引导",
@@ -3403,7 +3403,7 @@
       }
     },
     {
-      "page": "aboutHelp",
+      "page": "about",
       "zh-CN": {
         "group": "帮助",
         "title": "诊断信息",
@@ -3416,7 +3416,7 @@
       }
     },
     {
-      "page": "aboutHelp",
+      "page": "about",
       "zh-CN": {
         "group": "重置与退出",
         "title": "重置所有设置",
@@ -3429,7 +3429,7 @@
       }
     },
     {
-      "page": "aboutHelp",
+      "page": "about",
       "zh-CN": {
         "group": "重置与退出",
         "title": "退出岛屿",

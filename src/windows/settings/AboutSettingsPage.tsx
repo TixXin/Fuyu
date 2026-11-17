@@ -73,23 +73,26 @@ function SystemSection({ onSettingsChange }: AboutSectionProps) {
   );
 }
 
-export type AboutTab = "about" | "aboutHistory" | "aboutHelp";
+const sections = settingsSections<AboutSectionProps, "about">();
 
-const sections = settingsSections<AboutSectionProps, AboutTab>();
-
-sections.add({ id: "about.links", category: "aboutHelp", order: 30, component: ProjectLinksSection });
-sections.add({ id: "about.help", category: "aboutHelp", order: 40, component: HelpSection });
-sections.add({ id: "about.system", category: "aboutHelp", order: 50, component: SystemSection });
-
-export function AboutSettingsPage({ tab, ...props }: AboutSectionProps & { tab: AboutTab }) {
+export function AboutSettingsPage(props: AboutSectionProps) {
   const text = useTranslation().settings.project;
   const version = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
 
   return (
     <>
-      {tab === "about" && <AboutHero />}
-      <SlotView slot={sections} group={tab} props={props} />
-      {tab === "about" && <p className="about-colophon">{text.colophon(version)}</p>}
+      <AboutHero />
+      <div className="about-workbench">
+        <div className="about-workbench__col">
+          <SlotView slot={sections} group="about" props={props} />
+        </div>
+        <div className="about-workbench__col">
+          <ProjectLinksSection />
+          <HelpSection />
+          <SystemSection onSettingsChange={props.onSettingsChange} />
+        </div>
+      </div>
+      <p className="about-colophon">{text.colophon(version)}</p>
     </>
   );
 }

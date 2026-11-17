@@ -10,11 +10,11 @@ export type SettingsCategoriesText = {
   keywords: Record<
     | "overview" | "general" | "generalData" | "generalApi" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardLinks" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentTunnel" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
-    | "plugins" | "pluginsV3" | "market" | "about" | "aboutHistory" | "aboutHelp",
+    | "plugins" | "pluginsV3" | "market" | "about",
     string
   >;
-  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; plugins: string; agents: string; agentAppearance: string; agentAlerts: string; agentRemote: string; about: string };
-  tabs: Record<"general" | "generalData" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardLinks" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "agentRemote" | "agentTunnel" | "about" | "aboutHistory" | "aboutHelp", string>;
+  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; plugins: string; agents: string; agentAppearance: string; agentAlerts: string; agentRemote: string };
+  tabs: Record<"general" | "generalData" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardLinks" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "agentRemote" | "agentTunnel", string>;
   groups: {
     basics: string;
     features: string;
@@ -74,8 +74,6 @@ export type SettingsCategoriesText = {
   pluginsV3: string;
   market: string;
   about: string;
-  aboutHistory: string;
-  aboutHelp: string;
 };
 
 export const zhCN: SettingsCategoriesText = {
@@ -139,9 +137,7 @@ export const zhCN: SettingsCategoriesText = {
     plugins: "扩展 已安装 插件目录 开发者 更新 岛屿页面",
     pluginsV3: "插件 第 3 版 内核 宿主 状态 占用 CPU 出错 停用 安全模式 开发中",
     market: "扩展 插件 下载 安装 搜索",
-    about: "版本 更新 检查更新 测试版 通道",
-    aboutHistory: "更新日志 版本历史 发行说明",
-    aboutHelp: "帮助 新手引导 诊断 重置 退出 反馈 Star",
+    about: "版本 更新 检查更新 测试版 通道 更新日志 版本历史 发行说明 帮助 新手引导 诊断 重置 退出 反馈 Star",
   },
   entries: {
     general: "通用",
@@ -158,7 +154,6 @@ export const zhCN: SettingsCategoriesText = {
     agentAppearance: "外观",
     agentAlerts: "提醒",
     agentRemote: "SSH 远程",
-    about: "关于",
   },
   tabs: {
     general: "启动与托盘",
@@ -204,9 +199,6 @@ export const zhCN: SettingsCategoriesText = {
     agentPush: "推送与机器人",
     agentRemote: "远程主机",
     agentTunnel: "SSH 隧道",
-    about: "版本与更新",
-    aboutHistory: "更新日志",
-    aboutHelp: "帮助与重置",
   },
   groups: {
     basics: "基础",
@@ -267,8 +259,6 @@ export const zhCN: SettingsCategoriesText = {
   pluginsV3: "插件（第 3 版）",
   market: "插件市场",
   about: "关于",
-  aboutHistory: "更新日志",
-  aboutHelp: "帮助与重置",
 };
 
 export const en: SettingsCategoriesText = {
@@ -332,9 +322,7 @@ export const en: SettingsCategoriesText = {
     plugins: "extensions installed folder developer updates island pages",
     pluginsV3: "plugins v3 kernel host status usage cpu errors disabled safe mode preview",
     market: "extensions plugins download install browse",
-    about: "version updates check beta channel",
-    aboutHistory: "changelog version history release notes",
-    aboutHelp: "help onboarding guide diagnostics reset quit feedback star",
+    about: "version updates check beta channel changelog version history release notes help onboarding guide diagnostics reset quit feedback star",
   },
   entries: {
     general: "General",
@@ -351,7 +339,6 @@ export const en: SettingsCategoriesText = {
     agentAppearance: "Appearance",
     agentAlerts: "Alerts",
     agentRemote: "SSH remote",
-    about: "About",
   },
   tabs: {
     general: "Startup and tray",
@@ -397,9 +384,6 @@ export const en: SettingsCategoriesText = {
     agentPush: "Push and bots",
     agentRemote: "Remote hosts",
     agentTunnel: "SSH tunnel",
-    about: "Version and updates",
-    aboutHistory: "Changelog",
-    aboutHelp: "Help and reset",
   },
   groups: {
     basics: "Basics",
@@ -460,6 +444,4 @@ export const en: SettingsCategoriesText = {
   pluginsV3: "Plugins (v3)",
   market: "Plugin market",
   about: "About",
-  aboutHistory: "Changelog",
-  aboutHelp: "Help and reset",
 };

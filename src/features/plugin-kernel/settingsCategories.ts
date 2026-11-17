@@ -67,9 +67,7 @@ export const BUILTIN_CATEGORIES = [
   { id: "pluginsDev", icon: Puzzle },
   { id: "pluginsV3", icon: FlaskConical, group: "extensions", available: ({ pluginsV3 }) => pluginsV3 },
   { id: "market", icon: Store, group: "extensions" },
-  { id: "about", icon: Info, group: null, tabs: ["about", "aboutHistory", "aboutHelp"], aliases: ["updates"] },
-  { id: "aboutHistory", icon: Info },
-  { id: "aboutHelp", icon: Info },
+  { id: "about", icon: Info, group: null, aliases: ["updates", "aboutHistory", "aboutHelp"] },
 ] as const satisfies readonly BuiltinCategory[];
 
 type Builtin = (typeof BUILTIN_CATEGORIES)[number];

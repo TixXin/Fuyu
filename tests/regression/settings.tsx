@@ -78,7 +78,7 @@ if (!automated) {
     await act(async () => { mount(); });
     check(categories().length > 0, "The sidebar lists the settings pages");
 
-    const pages = [...categories(), "generalData", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket", "behaviorTuck", "behaviorQuiet", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardLinks", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "messagesMail", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote", "agentTunnel", "aboutHistory", "aboutHelp"];
+    const pages = [...categories(), "generalData", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket", "behaviorTuck", "behaviorQuiet", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardLinks", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "messagesMail", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote", "agentTunnel"];
     for (const category of pages) {
       await openPage(category as SettingsCategory);
       const item = element(`.settings-sidebar__item[data-category='${sidebarItemOf(category as SettingsCategory)}']`);
@@ -370,11 +370,10 @@ if (!automated) {
 
     await openPage("about");
     const hero = element(".about-hero");
-    check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && hero.getBoundingClientRect().height >= hero.scrollHeight - 1,
-      "About opens with the app's hero card, not clipped");
-    await openPage("aboutHelp");
-    check(document.querySelectorAll(".about-links .project-link").length === 4
-      && texts(".settings-group__title").includes("帮助|重置与退出"), "Links are four tiles; help, then reset and quit, come last");
+    check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && Boolean(hero.querySelector(".about-hero__emblem")) && Boolean(document.querySelector(".about-logo-pill")) && hero.getBoundingClientRect().height >= hero.scrollHeight - 1,
+      "About opens with the app's emblem hero card and logo call pill, not clipped");
+    check(document.querySelectorAll(".about-workbench__col").length === 2 && document.querySelectorAll(".about-links .project-link").length === 4
+      && texts(".settings-group__title").includes("帮助|重置与退出"), "About lays out version and changelog alongside the four link tiles, help, and reset and quit");
     const aboutLink = (label: string) =>
       [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((button) => button.textContent === label);
     await act(async () => { aboutLink("重置")!.click(); });

@@ -7,7 +7,7 @@ function HistorySection() {
   return <VersionHistory />;
 }
 
-const sections = settingsSections<object, "about" | "aboutHistory">();
+const sections = settingsSections<object, "about">();
 
 sections.add({ id: "about.updates", category: "about", order: 10, component: UpdateSettingsSection }, OWNER);
-sections.add({ id: "about.history", category: "aboutHistory", order: 20, component: HistorySection }, OWNER);
+sections.add({ id: "about.history", category: "about", order: 20, component: HistorySection }, OWNER);

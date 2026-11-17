@@ -28,6 +28,7 @@ import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { categorySlot } from "./slots/categorySlot";
 import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
 import { focusSection } from "../../lib/settings/sectionFocus";
+import { AboutLogoCallLink } from "../../features/updater/AboutHero";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -154,6 +155,8 @@ export function SettingsWindow() {
             ? <ResetAppearanceButton onReset={resetAppearance} />
             : category === "appearance" || category === "appearanceCollapsed"
             ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
+            : category === "about"
+            ? <AboutLogoCallLink />
             : null
         }
       >
