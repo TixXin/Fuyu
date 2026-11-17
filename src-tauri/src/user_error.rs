@@ -21,6 +21,7 @@ fn known_codes() -> &'static std::collections::BTreeSet<String> {
 
 impl UserError {
     pub(crate) fn new(code: &'static str, message: impl Into<String>) -> Self {
+        #[cfg(any(test, debug_assertions))]
         debug_assert!(code == "plain" || known_codes().contains(code), "unlisted UserError code: {code}");
         Self { code, args: Map::new(), detail: None, message: message.into() }
     }
