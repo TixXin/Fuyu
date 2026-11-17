@@ -1,4 +1,5 @@
 import { clipboardV1 } from "@fuyu/plugin-services";
+import { createClipboardActionRegistry } from "./actions.mjs";
 
 export const name = "clipboard";
 
@@ -31,6 +32,26 @@ export function limitOf(params) {
   return limit;
 }
 
+export function copyParamsOf(params) {
+  if (!isObject(params) || !Object.keys(params).every((key) => key === "text") || typeof params.text !== "string" || params.text.trim() === "") {
+    throw clipboardError("bad-params", "clipboard/v1 copyText takes { text: string } with non-empty text");
+  }
+  return { text: params.text };
+}
+
+export function pasteParamsOf(params) {
+  if (
+    !isObject(params) ||
+    !Object.keys(params).every((key) => key === "text" || key === "enter") ||
+    typeof params.text !== "string" ||
+    params.text === "" ||
+    (params.enter !== undefined && typeof params.enter !== "boolean")
+  ) {
+    throw clipboardError("bad-params", "clipboard/v1 pasteText takes { text: string, enter?: boolean } with non-empty text");
+  }
+  return { text: params.text, enter: params.enter === true };
+}
+
 function serviceText(item) {
   return {
     id: String(item.id),
@@ -47,6 +68,33 @@ export function serviceTexts(answer) {
 }
 
 export function apply(ctx) {
+  const actions = createClipboardActionRegistry();
+  const stopAccessor = ctx.reflect.accessor("clipboardActions", {
+    get() {
+      const caller = this;
+      return Object.freeze({
+        register: (spec) => {
+          const off = actions.register(spec);
+          caller.effect(() => off, `clipboardActions.register(${spec?.id ?? ""})`);
+          return off;
+        },
+        list: () => actions.list(),
+        forItem: (item) => actions.forItem(item),
+        run: (id, context) => actions.run(id, context),
+      });
+    },
+  });
+  ctx.effect(() => stopAccessor, "clipboardActions.accessor");
+  ctx.provide(
+    "clipboard.actions",
+    Object.freeze({
+      register: (spec) => actions.register(spec),
+      list: () => actions.list(),
+      forItem: (item) => actions.forItem(item),
+      run: (id, context) => actions.run(id, context),
+    }),
+  );
+
   ctx.services.provide(clipboardV1, {
     history: async (params) =>
       serviceTexts(
@@ -54,5 +102,19 @@ export function apply(ctx) {
           throw fromRust(error);
         }),
       ),
+    copyText: async (params) => {
+      const { text } = copyParamsOf(params);
+      await ctx.rust.call("clipboard.copyText", { text }).catch((error) => {
+        throw fromRust(error);
+      });
+      return { ok: true };
+    },
+    pasteText: async (params) => {
+      const { text, enter } = pasteParamsOf(params);
+      await ctx.rust.call("clipboard.pasteText", { text, enter }).catch((error) => {
+        throw fromRust(error);
+      });
+      return { ok: true };
+    },
   });
 }

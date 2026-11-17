@@ -20,6 +20,7 @@
   justify-content: center;
   gap: 5px;
   padding: 0 12px;
+  font-family: inherit;
   color: inherit;
   text-align: left;
   background: rgba(var(--agent-ink), 0.05);

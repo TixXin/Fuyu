@@ -8,7 +8,7 @@ use tauri::{AppHandle, Emitter, WebviewWindow};
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
-    geometry::{cursor_on_island, island_rect, stage_point, IslandOnScreen},
+    geometry::{cursor_near_stage, cursor_on_island, island_rect, passthrough_sleep_duration, stage_point, IslandOnScreen},
     state::{read_window_state, IslandMode},
 };
 use super::screen;
@@ -20,7 +20,6 @@ const ISLAND_MOVE_ARMED_CHANGED_EVENT: &str = "island-move-armed-changed";
 const ISLAND_CURSOR_MOVED_EVENT: &str = "island-cursor-moved";
 const ISLAND_HIDE_HINTS_EVENT: &str = "island-hide-hints";
 const CURSOR_EVENT_EVERY_TICKS: u32 = 3;
-const TICK: Duration = Duration::from_millis(12);
 const MODIFIER_ARM_DELAY: Duration = Duration::from_millis(200);
 
 static CURSOR_TRACKING: AtomicBool = AtomicBool::new(false);
@@ -137,6 +136,10 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut last_cursor: Option<CursorPoint> = None;
 
         loop {
+            if !window.is_visible().unwrap_or(true) {
+                thread::sleep(passthrough_sleep_duration(false, false));
+                continue;
+            }
             let pointer = pointer(&window);
             let is_inside = pointer.is_none_or(|pointer| {
                 cursor_on_island(pointer.left, pointer.top, pointer.width, pointer.height, pointer.cursor_x, pointer.cursor_y, read_window_state())
@@ -175,7 +178,8 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
             HINTS_POSSIBLE.store(is_inside || was_held, Ordering::SeqCst);
 
             tick = tick.wrapping_add(1);
-            if !CURSOR_TRACKING.load(Ordering::Relaxed) {
+            let tracking = CURSOR_TRACKING.load(Ordering::Relaxed);
+            if !tracking {
                 last_cursor = None;
             } else if tick.is_multiple_of(CURSOR_EVENT_EVERY_TICKS) {
                 let point = pointer.map(stage_cursor);
@@ -185,7 +189,9 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 }
             }
 
-            thread::sleep(TICK);
+            let near = pointer.is_none_or(|p| cursor_near_stage(p.left, p.top, p.width, p.height, p.cursor_x, p.cursor_y));
+            let active = is_inside || is_on_banner || held || tracking || near;
+            thread::sleep(passthrough_sleep_duration(true, active));
         }
     });
 }

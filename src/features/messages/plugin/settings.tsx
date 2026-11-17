@@ -33,4 +33,11 @@ function MessagesRunner() {
 
 settingsRunners.add({ id: "messages.controllers", component: MessagesRunner }, OWNER);
 
-addSettingsCategory("messages", ({ settings, unsupported, onSettingsChange }: PageProps) => <MessagesSettingsPage settings={settings} unsupported={unsupported} onSettingsChange={onSettingsChange} />, OWNER);
+const messagesPage = (tab: "messages" | "messagesIm" | "messagesMail") =>
+  function MessagesPage({ settings, unsupported, onSettingsChange }: PageProps) {
+    return <MessagesSettingsPage tab={tab} settings={settings} unsupported={unsupported} onSettingsChange={onSettingsChange} />;
+  };
+
+addSettingsCategory("messages", messagesPage("messages"), OWNER);
+addSettingsCategory("messagesIm", messagesPage("messagesIm"), OWNER);
+addSettingsCategory("messagesMail", messagesPage("messagesMail"), OWNER);

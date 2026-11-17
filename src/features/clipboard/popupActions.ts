@@ -1,6 +1,7 @@
 import type { ClipboardActionsText } from "../../i18n/sections/clipboardActions";
 import type { ClipboardCaptureStatus, ClipboardCopyAs, ClipboardHistoryItem } from "./api";
 import { colorFormats, contentKind } from "./contentKind.ts";
+import { getClipboardActionsForItem, resolveClipboardActionLabel, type ClipboardActionContext, type ClipboardActionSpec } from "./host/actions.mjs";
 import { PRIMARY_KEY } from "../../lib/shortcut/shortcut.ts";
 
 export type PopupAction = {
@@ -9,6 +10,7 @@ export type PopupAction = {
   label: string;
   keys?: string;
   note?: string;
+  keywords?: readonly string[];
   icon: ActionIcon;
   run?: () => void;
   next?: "transforms" | "note" | "ai" | "pinKey";
@@ -75,7 +77,40 @@ export function popupActions(item: ClipboardHistoryItem | undefined, capture: Cl
 
 export function filterActions(actions: readonly PopupAction[], query: string): PopupAction[] {
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  return actions.filter((action) => words.every((word) => `${action.label} ${action.note ?? ""} ${action.keys ?? ""}`.toLowerCase().includes(word)));
+  return actions.filter((action) => {
+    const haystack = `${action.label} ${action.note ?? ""} ${action.keys ?? ""} ${(action.keywords ?? []).join(" ")}`.toLowerCase();
+    return words.every((word) => haystack.includes(word));
+  });
+}
+
+export function withPluginClipboardActions(
+  actions: readonly PopupAction[],
+  item: ClipboardHistoryItem | undefined,
+  locale: "zh" | "en" = "zh",
+  context?: Omit<ClipboardActionContext, "item" | "locale">,
+  specs: readonly ClipboardActionSpec[] = getClipboardActionsForItem(item),
+): PopupAction[] {
+  if (!item || specs.length === 0) return [...actions];
+  const result = [...actions];
+  for (const spec of specs) {
+    const group = spec.group ?? "entry";
+    const action: PopupAction = {
+      id: `plugin:${spec.id}`,
+      group,
+      label: resolveClipboardActionLabel(spec.label, locale),
+      note: spec.note ? resolveClipboardActionLabel(spec.note, locale) : undefined,
+      keywords: spec.keywords,
+      icon: spec.icon ?? "wand",
+      run: () => void Promise.resolve(spec.run({ item, locale, ...context })).catch((error: unknown) => console.error(`Clipboard action ${spec.id} failed`, error)),
+    };
+    let lastInGroup = -1;
+    for (let i = 0; i < result.length; i += 1) {
+      if (result[i].group === group) lastInGroup = i;
+    }
+    if (lastInGroup >= 0) result.splice(lastInGroup + 1, 0, action);
+    else result.push(action);
+  }
+  return result;
 }
 
 export function mergedText(items: readonly ClipboardHistoryItem[], separator: "newline" | "space" | "comma"): string {

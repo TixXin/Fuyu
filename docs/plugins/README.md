@@ -68,9 +68,4 @@ SDK、脚手架和示例插件都是 MIT 许可，拿来写插件不会给你的
 
 ## 内置插件
 
-有几个可选功能直接编译在岛屿里，在 **设置 → 插件扩展** 中和普通插件一样启用、授权和设置，卡片上标着「内置」。它们不用下载，不受「允许运行第三方插件」开关限制，也不能卸载：
-
-- 中心图案（`focusd.center-pattern`）：收起条中间的小图案或 Codex 宠物。
-- 计时器（`focusd.timer`）：岛上的倒计时和秒表，收起条显示剩余时间，到点提醒。
-
-它们怎么实现、怎么新加一个，见 [内置插件](../architecture/plugins/builtins.md)。
+原来的第 2 版内置插件（计时器、本机接口、cc-connect、SSH 代理隧道、用量环、会话环、中心图案）已迁成第 3 版的内置插件（`timer`、`local-api`、`cc-connect`、`ssh-tunnel`、`claude-usage`、`session-ring`、`center-pattern`），开关和配置见 [内置插件](../architecture/plugins/builtins.md)。

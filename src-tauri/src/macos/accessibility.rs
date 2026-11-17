@@ -4,6 +4,7 @@ use objc2_core_foundation::{CFArray, CFBoolean, CFDictionary, CFRetained, CFStri
 use objc2_foundation::NSURL;
 
 const MESSAGING_TIMEOUT_SECONDS: f32 = 0.5;
+const WINDOW_TIMEOUT_SECONDS: f32 = 0.15;
 
 #[link(name = "ApplicationServices", kind = "framework")]
 extern "C" {
@@ -13,6 +14,8 @@ extern "C" {
     fn AXUIElementCreateApplication(pid: i32) -> *mut CFType;
     fn AXUIElementSetMessagingTimeout(element: *const CFType, timeout: f32) -> i32;
     fn AXUIElementCopyAttributeValue(element: *const CFType, attribute: *const CFString, value: *mut *mut CFType) -> i32;
+    fn AXUIElementSetAttributeValue(element: *const CFType, attribute: *const CFString, value: *const CFType) -> i32;
+    fn AXUIElementPerformAction(element: *const CFType, action: *const CFString) -> i32;
 }
 
 pub(crate) fn is_trusted() -> bool {
@@ -36,17 +39,22 @@ pub(crate) fn ask_for_trust() -> bool {
     unsafe { AXIsProcessTrustedWithOptions(options) != 0 }
 }
 
+#[derive(Clone)]
 pub(crate) struct Element(CFRetained<CFType>);
 
 impl Element {
     pub(crate) fn application(pid: i32) -> Option<Self> {
+        Self::application_with_timeout(pid, MESSAGING_TIMEOUT_SECONDS)
+    }
+
+    pub(crate) fn application_with_timeout(pid: i32, timeout: f32) -> Option<Self> {
         let element = unsafe { CFRetained::from_raw(NonNull::new(AXUIElementCreateApplication(pid))?) };
-        unsafe { AXUIElementSetMessagingTimeout(&*element, MESSAGING_TIMEOUT_SECONDS) };
+        unsafe { AXUIElementSetMessagingTimeout(&*element, timeout) };
         Some(Self(element))
     }
 
-    pub(crate) fn children(&self) -> Vec<Element> {
-        let Some(value) = attribute(&self.0, "AXChildren") else {
+    fn elements(&self, name: &str) -> Vec<Element> {
+        let Some(value) = attribute(&self.0, name) else {
             return Vec::new();
         };
         let Some(array) = value.downcast_ref::<CFArray>() else {
@@ -56,8 +64,44 @@ impl Element {
         array.iter().map(Element).collect()
     }
 
+    pub(crate) fn children(&self) -> Vec<Element> {
+        self.elements("AXChildren")
+    }
+
+    pub(crate) fn windows(&self) -> Vec<Element> {
+        self.elements("AXWindows")
+            .into_iter()
+            .filter(|window| window.text("AXRole").as_deref() == Some("AXWindow"))
+            .collect()
+    }
+
     pub(crate) fn text(&self, name: &str) -> Option<String> {
         Some(attribute(&self.0, name)?.downcast_ref::<CFString>()?.to_string())
+    }
+
+    pub(crate) fn boolean(&self, name: &str) -> Option<bool> {
+        Some(attribute(&self.0, name)?.downcast_ref::<CFBoolean>()?.as_bool())
+    }
+
+    pub(crate) fn set_boolean(&self, name: &str, value: bool) -> bool {
+        let name = CFString::from_str(name);
+        let flag = CFBoolean::new(value);
+        let flag: &CFType = flag.as_ref();
+        unsafe { AXUIElementSetAttributeValue(&*self.0, &*name, flag) == 0 }
+    }
+
+    pub(crate) fn perform(&self, action: &str) -> bool {
+        let action = CFString::from_str(action);
+        unsafe { AXUIElementPerformAction(&*self.0, &*action) == 0 }
+    }
+
+    pub(crate) fn raise_window(&self) -> bool {
+        if self.boolean("AXMinimized") == Some(true) {
+            let _ = self.set_boolean("AXMinimized", false);
+        }
+        let main = self.set_boolean("AXMain", true);
+        let raised = self.perform("AXRaise");
+        main || raised
     }
 
     pub(crate) fn url_path(&self, name: &str) -> Option<String> {
@@ -65,6 +109,22 @@ impl Element {
         let url: &NSURL = unsafe { &*(CFRetained::as_ptr(&value).as_ptr() as *const NSURL) };
         Some(url.path()?.to_string())
     }
+}
+
+pub(crate) fn app_windows(pid: i32) -> Vec<(Element, String)> {
+    if !is_trusted() {
+        return Vec::new();
+    }
+    let Some(app) = Element::application_with_timeout(pid, WINDOW_TIMEOUT_SECONDS) else {
+        return Vec::new();
+    };
+    app.windows()
+        .into_iter()
+        .map(|window| {
+            let title = window.text("AXTitle").unwrap_or_default();
+            (window, title)
+        })
+        .collect()
 }
 
 pub(crate) fn selected_text() -> Option<String> {

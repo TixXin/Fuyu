@@ -78,6 +78,18 @@
                     </button>
                   </li>
                   <li>
+                    <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="appearance" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-layout-template" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                        <rect height="7" rx="1" width="18" x="3" y="3"></rect>
+                        <rect height="7" rx="1" width="9" x="3" y="14"></rect>
+                        <rect height="7" rx="1" width="5" x="16" y="14"></rect>
+                      </svg>
+                      <span>
+                        外观
+                      </span>
+                    </button>
+                  </li>
+                  <li>
                     <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="behavior" type="button">
                       <svg aria-hidden="true" class="lucide lucide-mouse-pointer-click" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
                         <path d="M14 4.1 12 6"></path>
@@ -88,18 +100,6 @@
                       </svg>
                       <span>
                         行为
-                      </span>
-                    </button>
-                  </li>
-                  <li>
-                    <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="appearance" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-layout-template" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
-                        <rect height="7" rx="1" width="18" x="3" y="3"></rect>
-                        <rect height="7" rx="1" width="9" x="3" y="14"></rect>
-                        <rect height="7" rx="1" width="5" x="16" y="14"></rect>
-                      </svg>
-                      <span>
-                        外观
                       </span>
                     </button>
                   </li>
@@ -249,6 +249,18 @@
                     </button>
                   </li>
                   <li>
+                    <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="behaviorAlerts" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-timer" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                        <line x1="10" x2="14" y1="2" y2="2"></line>
+                        <line x1="12" x2="15" y1="14" y2="11"></line>
+                        <circle cx="12" cy="14" r="8"></circle>
+                      </svg>
+                      <span>
+                        计时与提醒
+                      </span>
+                    </button>
+                  </li>
+                  <li>
                     <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="messages" type="button">
                       <svg aria-hidden="true" class="lucide lucide-message-circle" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
                         <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"></path>
@@ -260,23 +272,79 @@
                   </li>
                 </ul>
               </section>
-              <ul class="settings-sidebar__top">
-                <li>
-                  <button class="settings-sidebar__item" data-category="agents" type="button">
-                    <svg aria-hidden="true" class="lucide lucide-bot" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 8V4H8"></path>
-                      <rect height="12" rx="2" width="16" x="4" y="8"></rect>
-                      <path d="M2 14h2"></path>
-                      <path d="M20 14h2"></path>
-                      <path d="M15 13v2"></path>
-                      <path d="M9 13v2"></path>
-                    </svg>
-                    <span>
-                      AI Agent
-                    </span>
-                  </button>
-                </li>
-              </ul>
+              <section aria-label="AI Agent" class="settings-sidebar__group">
+                <button aria-expanded="true" aria-label="折叠「AI Agent」" class="settings-sidebar__folder" data-group="agents" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-bot" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 8V4H8"></path>
+                    <rect height="12" rx="2" width="16" x="4" y="8"></rect>
+                    <path d="M2 14h2"></path>
+                    <path d="M20 14h2"></path>
+                    <path d="M15 13v2"></path>
+                    <path d="M9 13v2"></path>
+                  </svg>
+                  <span>
+                    AI Agent
+                  </span>
+                  <svg aria-hidden="true" class="lucide lucide-chevron-right settings-sidebar__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m9 18 6-6-6-6"></path>
+                  </svg>
+                </button>
+                <ul class="settings-sidebar__children">
+                  <li>
+                    <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="agents" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-bot" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 8V4H8"></path>
+                        <rect height="12" rx="2" width="16" x="4" y="8"></rect>
+                        <path d="M2 14h2"></path>
+                        <path d="M20 14h2"></path>
+                        <path d="M15 13v2"></path>
+                        <path d="M9 13v2"></path>
+                      </svg>
+                      <span>
+                        Agent
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="agentAppearance" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-palette" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"></path>
+                        <circle cx="13.5" cy="6.5" fill="currentColor" r=".5"></circle>
+                        <circle cx="17.5" cy="10.5" fill="currentColor" r=".5"></circle>
+                        <circle cx="6.5" cy="12.5" fill="currentColor" r=".5"></circle>
+                        <circle cx="8.5" cy="7.5" fill="currentColor" r=".5"></circle>
+                      </svg>
+                      <span>
+                        外观
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="agentAlerts" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-bell" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10.268 21a2 2 0 0 0 3.464 0"></path>
+                        <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path>
+                      </svg>
+                      <span>
+                        提醒
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="settings-sidebar__item settings-sidebar__item--nested" data-category="agentRemote" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-server" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                        <rect height="8" rx="2" ry="2" width="20" x="2" y="2"></rect>
+                        <rect height="8" rx="2" ry="2" width="20" x="2" y="14"></rect>
+                        <line x1="6" x2="6.01" y1="6" y2="6"></line>
+                        <line x1="6" x2="6.01" y1="18" y2="18"></line>
+                      </svg>
+                      <span>
+                        SSH 远程
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+              </section>
               <section aria-label="扩展" class="settings-sidebar__group">
                 <button aria-expanded="true" aria-label="折叠「扩展」" class="settings-sidebar__folder" data-group="extensions" type="button">
                   <svg aria-hidden="true" class="lucide lucide-blocks" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
@@ -339,6 +407,14 @@
             <h1 class="settings-page__title" data-tauri-drag-region="true">
               待办
             </h1>
+          </div>
+          <div aria-label="待办" class="settings-tabs" data-tauri-drag-region="true" role="tablist">
+            <button aria-selected="true" class="settings-tabs__tab settings-tabs__tab--active" data-tab="todos" role="tab" tabindex="0" type="button">
+              待办与归档
+            </button>
+            <button aria-selected="false" class="settings-tabs__tab" data-tab="todosStorage" role="tab" tabindex="-1" type="button">
+              项目与存储
+            </button>
           </div>
           <div class="editor-panel">
             <section class="settings-group">
@@ -433,55 +509,6 @@
                 </div>
               </div>
             </section>
-            <section class="settings-group">
-              <div class="settings-group__header">
-                <h2 class="settings-group__title">
-                  项目
-                </h2>
-              </div>
-              <div class="settings-group__card">
-                <div class="settings-row" data-search="off">
-                  <div class="settings-row__main">
-                    <div class="settings-row__text">
-                      <span class="settings-row__title">
-                        项目
-                      </span>
-                      <span class="settings-row__description">
-                        还没有项目。在下面输入名字，或在待办页点筛选条上的 +。
-                      </span>
-                    </div>
-                  </div>
-                  <ul class="plugin-pages"></ul>
-                  <input aria-label="新项目名，回车添加" class="settings-input" maxlength="20" placeholder="新项目名，回车添加" spellcheck="false">
-                </div>
-              </div>
-            </section>
-            <div class="save-path-panel save-path-panel--attention">
-              <section class="settings-group">
-                <div class="settings-group__header">
-                  <h2 class="settings-group__title">
-                    待办清单保存路径
-                  </h2>
-                </div>
-                <div class="settings-group__card">
-                  <div class="settings-row">
-                    <div class="settings-row__main">
-                      <div class="settings-row__text">
-                        <span class="settings-row__title">
-                          文件夹
-                        </span>
-                      </div>
-                      <div class="settings-row__control">
-                        <button class="settings-link-button" type="button">
-                          保存
-                        </button>
-                      </div>
-                    </div>
-                    <input aria-label="待办清单 Markdown 保存文件夹" class="settings-input settings-input--mono" placeholder="D:/Todos" spellcheck="false" value="">
-                  </div>
-                </div>
-              </section>
-            </div>
           </div>
         </div>
       </div>

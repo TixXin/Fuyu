@@ -97,7 +97,7 @@ fn client() -> Result<reqwest::Client, UserError> {
     if let Some(proxy) = reqwest_proxy()? {
         builder = builder.proxy(proxy);
     }
-    builder.build().map_err(|error| super::http_error("http.client", "Could not set up the connection.", error))
+    builder.build().map_err(|error| super::http_error(UserError::new("http.client", "Could not set up the connection."), error))
 }
 
 pub(super) struct Account<'a> {
@@ -134,13 +134,13 @@ impl Transport for Http<'_> {
             .body(body.to_string())
             .send()
             .await
-            .map_err(|error| super::http_error("calendar.unreachable", "Could not reach the calendar.", error))?;
+            .map_err(|error| super::http_error(UserError::new("calendar.unreachable", "Could not reach the calendar."), error))?;
         let status = response.status().as_u16();
         let location = response.headers().get(reqwest::header::LOCATION).and_then(|value| value.to_str().ok()).map(str::to_string);
         if !(200..300).contains(&status) {
             return Ok(Reply { status, location, body: String::new() });
         }
-        let bytes = response.bytes().await.map_err(|error| super::http_error("calendar.read", "Could not read the calendar.", error))?;
+        let bytes = response.bytes().await.map_err(|error| super::http_error(UserError::new("calendar.read", "Could not read the calendar."), error))?;
         if bytes.len() > MAX_RESPONSE_BYTES {
             return Err(UserError::new("calendar.tooLarge", "The calendar is too large."));
         }

@@ -1,1 +1,1 @@
-Object.assign(globalThis, { isTauri: true, focusdDemoUpdate: true });
+Object.assign(globalThis, { isTauri: true, fuyuDemoUpdate: true });

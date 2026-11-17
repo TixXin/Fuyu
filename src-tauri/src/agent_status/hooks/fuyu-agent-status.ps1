@@ -136,7 +136,7 @@ $hasLock = $false
 try {
   $hasLock = $mutex.WaitOne([TimeSpan]::FromSeconds(5))
   if (-not $hasLock) {
-    throw "Timed out waiting for the FocuSD agent status file lock."
+    throw "Timed out waiting for the Fuyu agent status file lock."
   }
 
   $now = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()

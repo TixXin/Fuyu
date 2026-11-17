@@ -27,6 +27,7 @@ void calendar.events({ refresh: true }).then((result) => result.problems.map((pr
 // @ts-expect-error refresh is a boolean
 void calendar.events({ refresh: "yes" });
 void calendar.sources().then((result) => result.sources.map((source) => (source.kind === "caldav" ? source.host : source.name)));
+void calendar.on("changed", () => {});
 
 declare const shelf: ServiceClient<typeof fileShelfV1>;
 void shelf.list().then((result) => result.items.map((item) => (item.missing ? item.name : item.path)));
@@ -36,7 +37,9 @@ void shelf.add({});
 
 declare const translator: ServiceClient<typeof translatorV1>;
 void translator.rewrite({ text: "hi", task: "polish" }, { onProgress: (chunk) => chunk.piece.length });
-void translator.engines().then((result) => result.engines.map((entry) => entry.hasSecret));
+void translator.engines().then((result) => result.engines.map((entry) => [entry.hasSecret, entry.label?.en, entry.defaultModel]));
+void translator.translate({ text: "hi", direction: "auto", engine: { engine: "deepl", model: "deepl-pro" } });
+void translator.on("changed", () => {});
 // @ts-expect-error translate does not stream
 void translator.translate({ text: "hi", direction: "auto" }, { onProgress: (chunk: string) => chunk });
 

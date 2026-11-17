@@ -95,8 +95,8 @@ try {
   await type("音效");
   await click(".settings-sidebar__hit--tab[data-tab='sounds']");
   await wait(40);
-  check(offPage("agents") && tabs().length === FEATURE_PAGES.agents.length, "Search opens a tab of a feature that is off as the off page, with its tabs still shown");
-  await click(".settings-tabs__tab[data-tab='agentConnect']");
+  check(offPage("agents") && tabs().length === 3, "Search opens a tab of a feature that is off as the off page, with its tabs still shown");
+  await click(".settings-tabs__tab[data-tab='agentPush']");
   check(offPage("agents"), "Every tab of a feature that is off is the off page");
 
   await type("");

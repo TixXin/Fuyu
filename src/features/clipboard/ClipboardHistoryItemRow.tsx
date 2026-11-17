@@ -1,11 +1,13 @@
+import { useSyncExternalStore } from "react";
 import { BookmarkPlus, Braces, Check, Copy, FileImage, ImageIcon, Link2, Pencil, ScanText, Sparkles, SquareTerminal, Star, Trash2, WandSparkles, X } from "lucide-react";
 import { RowMenu, type RowMenuItem } from "../../components/list/RowMenu";
 import { formatAgo } from "../../components/list/formatAgo";
-import { useTranslation } from "../../i18n";
+import { useLocale, useTranslation } from "../../i18n";
 import type { ClipboardCopyAs, ClipboardHistoryItem, ClipboardLink } from "./api";
 import { ClipboardEntryIcon } from "./ClipboardEntryIcon";
 import { contentKind, linkLabel } from "./contentKind";
 import { fileFolder, fileImageLabel, sourceName } from "./fileEntry";
+import { getClipboardActions, getClipboardActionsForItem, resolveClipboardActionLabel, subscribeClipboardActions } from "./host/actions.mjs";
 import { formatBytes } from "../../utils/bytes";
 import { isMacOS } from "../../lib/platform";
 
@@ -55,8 +57,11 @@ export function ClipboardHistoryItemRow({
   onBookmark?: (url: string) => void;
 }) {
   const t = useTranslation();
+  const locale = useLocale().locale === "en" ? "en" : "zh";
   const text = t.clipboard;
   const copyText = text.popup.actions.copy;
+  useSyncExternalStore(subscribeClipboardActions, getClipboardActions);
+  const pluginActions = getClipboardActionsForItem(item);
   const image = item.kind === "image" ? item.image : undefined;
   const kind = contentKind(item);
   const main = item.kind === "image" && image ? text.imageLabel(image.width, image.height) : kind?.kind === "link" ? linkLabel(kind.url) : item.preview;
@@ -92,6 +97,12 @@ export function ClipboardHistoryItemRow({
     ...(linkUrl && onBookmark
       ? [{ key: "bookmark", label: linkSaved ? text.links.bookmarked : text.links.bookmark, icon: <BookmarkPlus size={14} strokeWidth={2} />, disabled: linkSaved, onSelect: () => onBookmark(linkUrl) }]
       : []),
+    ...pluginActions.map((spec) => ({
+      key: `plugin:${spec.id}`,
+      label: resolveClipboardActionLabel(spec.label, locale),
+      icon: <WandSparkles size={14} strokeWidth={2} />,
+      onSelect: () => void Promise.resolve(spec.run({ item, locale })).catch((error: unknown) => console.error(`Clipboard action ${spec.id} failed`, error)),
+    })),
     {
       key: "delete",
       label: isConfirmingDelete ? text.confirmDelete : text.deleteItem,

@@ -246,15 +246,17 @@ pub(crate) fn hide(app: &AppHandle) {
     lock_trace().take();
     *ANCHOR.lock().unwrap_or_else(PoisonError::into_inner) = None;
     let Some(window) = card_window(app) else { return };
-    if !window.is_visible().unwrap_or(false) {
-        return;
+    if window.is_visible().unwrap_or(false) {
+        *HIDDEN_AT.lock().unwrap_or_else(PoisonError::into_inner) = Some(Instant::now());
     }
-    *HIDDEN_AT.lock().unwrap_or_else(PoisonError::into_inner) = Some(Instant::now());
     let handle = app.clone();
     let _ = app.run_on_main_thread(move || {
         let Some(window) = card_window(&handle) else { return };
         #[cfg(target_os = "macos")]
-        crate::macos::tray_panel::hide_tray_panel(&window);
+        {
+            crate::macos::tray_panel::hide_tray_panel(&window);
+            crate::macos::island_panel::forget_panel(&handle, WINDOW_LABEL);
+        }
         let _ = window.destroy();
     });
 }

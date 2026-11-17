@@ -127,3 +127,82 @@ test("the window's snapshot and the host's answer turn into the same shape", () 
   assert.equal(fromRust({ code: "timeout", message: "late" }).code, "timeout");
   assert.equal(fromRust({ code: "inactive", message: "gone" }).code, "peer-gone");
 });
+
+test("plugins can register custom calendar sources, merge events and isolate per-source errors", async () => {
+  const { host, calendar } = await open({
+    "calendar.events": () => ({ events: [STANDUP], problems: [], fetchedAt: 5, fromMs: 1, toMs: 100, sourceCount: 1 }),
+    "calendar.sources": () => ({ sources: [{ id: "cal-1", kind: "caldav", name: "Work", host: "dav.example" }] }),
+  });
+  let changes = 0;
+  const offChanged = calendar.on("changed", () => {
+    changes += 1;
+  });
+  const pluginFiber = await host.ctx.plugin({
+    name: "feishu-calendar",
+    inject: ["calendar.sources"],
+    apply(ctx) {
+      ctx.calendarSources.register({
+        id: "feishu",
+        name: "飞书日历",
+        host: "feishu.cn",
+        events: ({ refresh }) => [
+          { uid: "b", title: refresh ? "Refreshed Sync" : "Feishu Sync", startMs: 5, endMs: 15, allDay: false, location: "Room 1", meetingLink: null },
+          { uid: "a", title: "Duplicate Standup", startMs: 10, endMs: 20, allDay: false },
+        ],
+      });
+      ctx.calendarSources.register({
+        id: "broken-source",
+        name: "Broken",
+        events: () => {
+          throw Object.assign(new Error("token expired"), { code: "calendar.authFailed" });
+        },
+      });
+      assert.throws(
+        () => ctx.calendarSources.register({ id: "feishu", name: "Dup", events: () => [] }),
+        { code: "conflict" },
+      );
+    },
+  });
+  assert.ok(await until(() => changes >= 1));
+  const sources = await calendar.sources();
+  assert.deepEqual(sources, {
+    sources: [
+      { id: "cal-1", kind: "caldav", name: "Work", host: "dav.example" },
+      { id: "feishu", kind: "plugin", name: "飞书日历", host: "feishu.cn" },
+      { id: "broken-source", kind: "plugin", name: "Broken", host: "broken-source" },
+    ],
+  });
+  const merged = await calendar.events({ refresh: true });
+  assert.equal(merged.sourceCount, 3);
+  assert.deepEqual(merged.events.map((item) => [item.uid, item.title, item.calendar]), [
+    ["b", "Refreshed Sync", "飞书日历"],
+    ["a", "Standup", "Work"],
+  ]);
+  assert.deepEqual(merged.problems, [
+    { sourceId: "broken-source", reason: "calendar.authFailed", message: "token expired" },
+  ]);
+
+  await pluginFiber.dispose();
+  assert.ok(await until(() => changes >= 2));
+  assert.deepEqual(await calendar.sources(), {
+    sources: [{ id: "cal-1", kind: "caldav", name: "Work", host: "dav.example" }],
+  });
+  await offChanged();
+});
+
+test("when the built-in calendar plugin is disabled, another plugin can replace calendar/v1", async () => {
+  const { host, calendar } = await open({});
+  [...host.ctx.loader.entries()].find((candidate) => candidate.options.id === "calendar").update({ disabled: true });
+  assert.ok(await until(() => !host.services().some((service) => service.name === "calendar/v1")));
+  const replacement = await host.ctx.plugin({
+    name: "custom-calendar",
+    apply(ctx) {
+      ctx.services.provide(calendarV1, {
+        events: () => ({ events: [STANDUP], problems: [], fetchedAt: 99, fromMs: 1, toMs: 50, sourceCount: 1 }),
+        sources: () => ({ sources: [{ id: "custom", kind: "plugin", name: "Custom", host: "localhost" }] }),
+      });
+    },
+  });
+  assert.equal((await calendar.events({})).fetchedAt, 99);
+  await replacement.dispose();
+});

@@ -51,9 +51,9 @@ export function useScreenshotFrame() {
   useEffect(() => {
     if (id === null) return;
     let cancelled = false;
+    const canvas = canvasRef.current;
     getScreenshotFrame()
       .then((buffer) => {
-        const canvas = canvasRef.current;
         if (cancelled || !canvas) return;
         canvas.width = width;
         canvas.height = height;
@@ -65,6 +65,12 @@ export function useScreenshotFrame() {
     return () => {
       cancelled = true;
       setPicture(null);
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.width = 0;
+        canvas.height = 0;
+      }
     };
   }, [id, width, height]);
 

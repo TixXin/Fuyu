@@ -1,6 +1,7 @@
 import type { TodoTags } from "./tags";
+import type { TodoProject } from "../../lib/todo-projects/prefix";
 
-export type TodoProject = { id: string; name: string };
+export type { TodoProject };
 
 export type TodoPriority = "high" | "medium" | "low";
 export type TodoColor = "red" | "orange" | "yellow" | "green" | "blue" | "purple";

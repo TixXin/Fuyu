@@ -16,6 +16,7 @@ export interface WindowServices {
   /** Route what this window does not provide to the host's service proxy, or stop doing so with `null`. */
   attach(proxy: ServiceProxy | null): void;
   setDisabledOwners(ids: Iterable<string>): void;
+  setDisabledServices(names: Iterable<string>): void;
   /** The services provided in this window right now. */
   list(): ServiceEntry[];
   has(name: string): boolean;

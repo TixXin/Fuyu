@@ -62,6 +62,11 @@ pub(super) fn hook_entries_state(hooks: &Value, expected: &[(&str, Value)]) -> H
     }
 }
 
+const LEGACY_CODEX_STATUS_MESSAGE: &str = "Updating FocuSD agent status";
+const CODEX_STATUS_MESSAGE: &str = "Updating Fuyu agent status";
+const LEGACY_STATUS_LOCK_ERROR: &str = "Timed out waiting for the FocuSD agent status file lock.";
+const STATUS_LOCK_ERROR: &str = "Timed out waiting for the Fuyu agent status file lock.";
+
 pub(super) fn codex_hooks_state(
     config_toml: Option<&str>,
     running_script_path: &Path,
@@ -71,7 +76,7 @@ pub(super) fn codex_hooks_state(
     let Some(config) = config_toml else {
         return HookInstallState::NotInstalled;
     };
-    let config = normalize_windows_line_endings(config);
+    let config = normalize_windows_line_endings(config).replace(LEGACY_CODEX_STATUS_MESSAGE, CODEX_STATUS_MESSAGE);
     let holds = |async_start: bool| {
         let expected = build_codex_hook_block(running_script_path, status_script_path, async_start);
         config.contains(&normalize_windows_line_endings(&expected))
@@ -96,7 +101,8 @@ pub(super) fn script_outdated(
 ) -> bool {
     match installed {
         Some(content) => {
-            normalize_windows_line_endings(content) != normalize_windows_line_endings(bundled)
+            normalize_windows_line_endings(content).replace(LEGACY_STATUS_LOCK_ERROR, STATUS_LOCK_ERROR)
+                != normalize_windows_line_endings(bundled)
         }
         None => hooks_installed,
     }

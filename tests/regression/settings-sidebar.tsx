@@ -60,11 +60,11 @@ try {
 
   const groupRows = () => [...host.querySelectorAll<HTMLButtonElement>(".settings-sidebar__folder")];
   const group = (name: string) => element<HTMLButtonElement>(`.settings-sidebar__folder[data-group='${name}']`);
-  check(groupRows().map((row) => row.dataset.group).join() === "basics,features,extensions"
+  check(groupRows().map((row) => row.dataset.group).join() === "basics,features,agents,extensions"
     && groupRows().every((row) => row.getAttribute("aria-expanded") === "true"),
     "Every group is a row that folds, and all start unfolded");
-  check(listed().join() === "overview,general,behavior,appearance,shortcuts,todos,calendar,music,translation,clipboard,shelf,screenshot,voiceInput,messages,agents,plugins,market,about",
-    "Every sidebar item is listed at first: the overview on top, Appearance and AI Agent once each, and no Plugins (v3) while its switch is off");
+  check(listed().join() === "overview,general,appearance,behavior,shortcuts,todos,calendar,music,translation,clipboard,shelf,screenshot,voiceInput,behaviorAlerts,messages,agents,agentAppearance,agentAlerts,agentRemote,plugins,market,about",
+    "Every sidebar item is listed at first: the overview on top, Appearance and the four AI Agent items in their groups, and no Plugins (v3) while its switch is off");
   check(host.querySelector(".settings-sidebar__footer [data-category='about']"), "About is pinned below the page list");
   check(element(".settings-sidebar__item--active").dataset.category === "general", "The open page is marked");
 
@@ -77,7 +77,7 @@ try {
   check(group("basics").getAttribute("aria-label") === "展开「基础」", "The row says what clicking it does");
 
   await type("蓝牙");
-  check(listed().join() === "behavior", "Searching a keyword lists only the pages that have it");
+  check(listed().join() === "behaviorAlerts", "Searching a keyword lists only the pages that have it");
   await type("剪贴");
   check(listed().join() === "clipboard" && group("features").disabled, "Search also finds pages in folded groups");
   await press("Enter");
@@ -89,7 +89,7 @@ try {
   check(search().value === "" && group("features").getAttribute("aria-expanded") === "false", "Escape clears the search; folded groups stay folded");
   await act(async () => { group("features").click(); });
   await act(async () => { group("basics").click(); });
-  check(listed().length === 18, "Unfolding shows the pages again");
+  check(listed().length === 22, "Unfolding shows the pages again");
   check(!host.querySelector(".settings-sidebar__more"), "With every feature on there is no link to turn more on");
 
   const off = new Set<SettingsCategory>([...FEATURE_PAGES.music, ...FEATURE_PAGES.agents]);
@@ -102,11 +102,11 @@ try {
   await mount("music", off);
   check(listed().includes("music") && element(".settings-sidebar__item--active").dataset.category === "music", "The open page stays listed even when its feature is off");
   await type("岛上显示");
-  check(listed().join() === "music,agents", "Search still finds the pages of features that are off");
+  check(listed().join() === "music,agentAppearance", "Search still finds the pages of features that are off");
   await mount("sounds");
-  check(element(".settings-sidebar__item--active").dataset.category === "agents", "A tab marks the sidebar item it belongs to");
+  check(element(".settings-sidebar__item--active").dataset.category === "agentAlerts", "A tab marks the sidebar item it belongs to");
   await type("音效");
-  check(listed().join() === "agents" && host.querySelector(".settings-sidebar__hit--tab[data-tab='sounds']"), "A tab found by search shows under its sidebar item");
+  check(listed().join() === "agentAlerts" && host.querySelector(".settings-sidebar__hit--tab[data-tab='sounds']"), "A tab found by search shows under its sidebar item");
   await act(async () => { element<HTMLButtonElement>(".settings-sidebar__hit--tab[data-tab='sounds']").click(); });
   check(opened[opened.length - 1] === "sounds", "…and opens that tab");
   await press("Escape");

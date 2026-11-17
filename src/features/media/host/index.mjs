@@ -1,4 +1,5 @@
-import { mediaV1 } from "@fuyu/plugin-services";
+import { lyricsV1, mediaV1 } from "@fuyu/plugin-services";
+import { createLyricsSourceRegistry } from "./lyricsSources.mjs";
 
 export const name = "music";
 
@@ -61,5 +62,43 @@ export function apply(ctx) {
     next: () => answer("next", null),
     previous: () => answer("previous", null),
     seek: (params) => answer("seek", { positionMs: positionOf(params) }),
+  });
+
+  let lyricsProvider = null;
+  const lyricsSources = createLyricsSourceRegistry({
+    onChange: () => {
+      lyricsProvider?.emit("changed", {});
+    },
+  });
+  const stopAccessor = ctx.reflect.accessor("lyricsSources", {
+    get() {
+      const caller = this;
+      return Object.freeze({
+        register: (spec) => {
+          const off = lyricsSources.register(spec);
+          caller.effect(() => off, `lyricsSources.register(${spec?.id ?? ""})`);
+          return off;
+        },
+        sources: () => lyricsSources.sources(),
+      });
+    },
+  });
+  ctx.effect(() => stopAccessor, "lyricsSources.accessor");
+  ctx.provide(
+    "lyrics.sources",
+    Object.freeze({
+      register: (spec) => lyricsSources.register(spec),
+      sources: () => lyricsSources.sources(),
+    }),
+  );
+
+  lyricsProvider = ctx.services.provide(lyricsV1, {
+    lookup: (query) =>
+      lyricsSources.lookup(query, (normalized) =>
+        ctx.rust.call("lyrics.lookup", { query: normalized }).catch((error) => {
+          throw fromRust(error);
+        }),
+      ),
+    sources: () => ({ sources: [...lyricsSources.sources().sources] }),
   });
 }

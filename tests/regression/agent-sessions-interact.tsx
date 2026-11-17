@@ -29,7 +29,7 @@ localStorage.removeItem(SESSION_FILTERS_STORAGE_KEY);
 const now = Date.now();
 const SESSIONS: AgentSessionSummary[] = [
   {
-    provider: "claudeCode", sessionId: "a", cwd: "E:\\Projects\\fly-island", title: "Agent 页会话行的右键菜单、键盘选行和悬停卡片，标题很长时卡片里要写全",
+    provider: "claudeCode", sessionId: "a", cwd: "E:\\Projects\\fuyu", title: "Agent 页会话行的右键菜单、键盘选行和悬停卡片，标题很长时卡片里要写全",
     model: "Opus 5.5", effort: null, phase: "running", updatedAt: now - 20_000, turnStartedAt: now - 200_000,
     lastPrompt: "给 Agent 页的会话行加上右键菜单和键盘操作", lastMessage: "已经加好菜单。", host: { name: "Windows Terminal", exe: null, kind: "terminal" },
   },
@@ -115,11 +115,11 @@ async function runChecks() {
     check(await until(() => items()[0].querySelector('[role="status"]')?.textContent === "已复制"), "复制后行内提示「已复制」");
     await openMenu(rowButtons()[0]);
     await act(async () => menuItem("复制路径").click());
-    check(await until(() => copied[copied.length - 1] === "E:\\Projects\\fly-island"), "复制路径写进剪贴板");
+    check(await until(() => copied[copied.length - 1] === "E:\\Projects\\fuyu"), "复制路径写进剪贴板");
     await openMenu(rowButtons()[0]);
     await act(async () => menuItem("在文件夹中显示").click());
     const reveal = await until(() => calls.find((call) => call.command === "plugin:opener|reveal_item_in_dir"));
-    check(reveal && JSON.stringify(reveal.payload).includes("fly-island"), "在文件夹中显示走 opener 的 revealItemInDir");
+    check(reveal && JSON.stringify(reveal.payload).includes("fuyu"), "在文件夹中显示走 opener 的 revealItemInDir");
     let storageEvents = 0;
     const onStorage = (event: StorageEvent) => { if (event.key === SESSION_FILTERS_STORAGE_KEY) storageEvents += 1; };
     window.addEventListener("storage", onStorage);
@@ -187,7 +187,7 @@ async function runChecks() {
     const shownAfter = performance.now() - hoveredAt;
     check(card && shownAfter >= HOVER_DELAY_MS - 50, `悬停不到一会儿不出卡片（${Math.round(shownAfter)}ms 后出现）`);
     const lines = [...(card?.querySelectorAll(".island-hover-card__line") ?? [])].map((line) => line.textContent);
-    check(lines[0] === `fly-island · ${SESSIONS[0].title}` && lines[1] === "你：给 Agent 页的会话行加上右键菜单和键盘操作" && lines[2] === "目录：E:\\Projects\\fly-island" && lines[3] === "在 Windows Terminal 里运行",
+    check(lines[0] === `fuyu · ${SESSIONS[0].title}` && lines[1] === "你：给 Agent 页的会话行加上右键菜单和键盘操作" && lines[2] === "目录：E:\\Projects\\fuyu" && lines[3] === "在 Windows Terminal 里运行",
       "悬停一会儿出卡片：完整标题、最近提问、目录、宿主");
     check(card && getComputedStyle(card).whiteSpace === "normal" && card.getBoundingClientRect().width <= 362, "卡片里长标题换行，不撑出窗口");
     await openMenu(rowButtons()[0]);

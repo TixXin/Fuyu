@@ -1,5 +1,5 @@
 import { HEX_COLOR_PATTERN } from "../../utils/color.ts";
-import { normalizeAgentSettings } from "../../features/agent-status/agentSettings.ts";
+import { normalizeAgentSettings } from "./agentSettings.ts";
 import { normalizeBehaviorSettings } from "./normalizeBehaviorSettings.ts";
 import { normalizeLayoutSettings } from "./normalizeLayoutSettings.ts";
 import { GLASS_SETTING_KEYS } from "./glassSettings.ts";
@@ -85,6 +85,13 @@ export function normalizeSettings(
     ...normalizeAgentSettings(settings),
     ...normalizeBehaviorSettings(settings),
   };
+}
+
+export function createPresetId() {
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 export function getDefaultSettingPresets(): IslandPreset[] {

@@ -7,13 +7,19 @@ import { CornerSettingsRows } from "./sections/LayoutSettingsSection";
 import { PresetSettingsSection } from "./sections/PresetSettingsSection";
 import { StyleSettingsSection } from "./sections/StyleSettingsSection";
 import { ThemeModeSection } from "./sections/ThemeModeSection";
+import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsRow } from "../../components/settings/SettingsRow";
+import { useTranslation } from "../../i18n";
 import { activeTone, resolveThemeColors, THEME_COLORS, withThemeColors, type ThemeTone } from "../../lib/theme/themeMode";
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
-import type { IslandSettings } from "../../lib/settings/types";
+import type { AppearanceMode, IslandSettings } from "../../lib/settings/types";
 import type { useSettingPresets } from "../../lib/settings/useSettingPresets";
 import { requestPanelPreview } from "./storage";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";
+
+export type ThemeTab = "theme" | "themeStyle" | "themeGlass" | "themePresets";
 
 type ThemeSectionProps = {
   settings: IslandSettings;
@@ -66,6 +72,29 @@ function StyleSection({ settings, onSettingsChange }: ThemeSectionProps) {
 }
 
 function GlassSection({ settings, onSettingsChange }: ThemeSectionProps) {
+  const text = useTranslation().settings.appearance;
+  if (settings.appearanceMode !== "liquidGlass") {
+    return (
+      <SettingsGroup title={text.glass.title}>
+        <SettingsRow
+          searchable={false}
+          title={text.title}
+          description={text.glass.pauseHint}
+          control={
+            <SettingsChoice<AppearanceMode>
+              value={settings.appearanceMode}
+              ariaLabel={text.title}
+              options={[
+                { value: "classic", label: text.classic },
+                { value: "liquidGlass", label: text.liquidGlass },
+              ]}
+              onChange={(appearanceMode) => onSettingsChange({ ...settings, appearanceMode })}
+            />
+          }
+        />
+      </SettingsGroup>
+    );
+  }
   return <GlassSettingsSection settings={settings} onSettingsChange={onSettingsChange} />;
 }
 
@@ -73,20 +102,22 @@ function PresetsSection({ presets }: ThemeSectionProps) {
   return <PresetSettingsSection {...presets} />;
 }
 
-const sections = settingsSections<ThemeSectionProps, "theme">();
+const sections = settingsSections<ThemeSectionProps, ThemeTab>();
 
 sections.add({ id: "theme.mode", category: "theme", order: 10, component: ThemeModeSection });
 sections.add({ id: "theme.builtin", category: "theme", order: 20, component: BuiltinSection });
 sections.add({ id: "theme.colors", category: "theme", order: 30, component: ColorsSection });
-sections.add({ id: "theme.style", category: "theme", order: 40, component: StyleSection });
-sections.add({ id: "theme.glass", category: "theme", order: 45, component: GlassSection });
-sections.add({ id: "theme.presets", category: "theme", order: 50, component: PresetsSection });
+sections.add({ id: "themeStyle.style", category: "themeStyle", order: 10, component: StyleSection });
+sections.add({ id: "themeGlass.glass", category: "themeGlass", order: 10, component: GlassSection });
+sections.add({ id: "themePresets.presets", category: "themePresets", order: 10, component: PresetsSection });
 
 export function ThemeSettingsPage({
+  tab,
   settings,
   presets,
   onSettingsChange,
 }: {
+  tab: ThemeTab;
   settings: IslandSettings;
   presets: ReturnType<typeof useSettingPresets>;
   onSettingsChange: (settings: IslandSettings) => void;
@@ -99,7 +130,7 @@ export function ThemeSettingsPage({
   return (
     <>
       <IslandPreview settings={shown} />
-      <SlotView slot={sections} group="theme" props={props} />
+      <SlotView slot={sections} group={tab} props={props} />
     </>
   );
 }

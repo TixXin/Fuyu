@@ -1,17 +1,16 @@
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { useTranslation } from "../../../i18n";
 import { useReportShortcutOwners } from "../../../lib/shortcut/useReportShortcutOwners";
-import { settingsRunners, settingsSections, shortcutSections, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
+import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
+import { settingsRunners, shortcutSections, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
 import { BreakRemindersGroup } from "../BreakRemindersGroup";
 import { TimerShortcutRow } from "../TimerShortcutRow";
 import { TimerSoundGroup } from "../TimerSoundGroup";
 import { useTimerConfig } from "../useTimerConfig";
 import { OWNER } from "./owner.ts";
 
-const sections = settingsSections<object, "behaviorAlerts">();
-
-sections.add({ id: "behaviorAlerts.timer", category: "behaviorAlerts", order: 30, component: TimerSoundGroup }, OWNER);
-sections.add({ id: "behaviorAlerts.breaks", category: "behaviorAlerts", order: 20, component: BreakRemindersGroup }, OWNER);
+addSettingsCategory("timerAlerts", () => <TimerSoundGroup />, OWNER);
+addSettingsCategory("timerBreaks", () => <BreakRemindersGroup />, OWNER);
 
 function TimerShortcutOwners() {
   const t = useTranslation();

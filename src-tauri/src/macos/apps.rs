@@ -36,6 +36,11 @@ pub(crate) fn activate(pid: i32) -> bool {
         .is_some_and(|app| app.activateWithOptions(NSApplicationActivationOptions::ActivateAllWindows))
 }
 
+pub(crate) fn activate_main_window(pid: i32) -> bool {
+    NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
+        .is_some_and(|app| app.activateWithOptions(NSApplicationActivationOptions::empty()))
+}
+
 fn executable_of(app: &NSRunningApplication) -> Option<String> {
     Some(app.executableURL()?.path()?.to_string())
 }

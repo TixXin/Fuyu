@@ -67,9 +67,6 @@ pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Opti
         history::set_keep_days(days);
         output::prune_at_start(&app);
     }
-    if is_enabled() {
-        session::prepare(&app);
-    }
 }
 
 pub(crate) fn is_capturing() -> bool {

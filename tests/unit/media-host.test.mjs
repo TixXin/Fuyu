@@ -7,9 +7,10 @@ import { PassThrough } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { after, test } from "node:test";
 import { startHost } from "@fuyu/plugin-base/host";
-import { mediaV1 } from "@fuyu/plugin-services";
+import { lyricsV1, mediaV1 } from "@fuyu/plugin-services";
 import { connect } from "../../packages/plugin-base/src/host/rpc.mjs";
 import { fromRust, positionOf, serviceNowPlaying } from "../../src/features/media/host/index.mjs";
+import { lyricsQueryOf, normalizeLyricsResult } from "../../src/features/media/host/lyricsSources.mjs";
 
 const BUILTINS = fileURLToPath(new URL("../../src/features/", import.meta.url));
 
@@ -48,8 +49,15 @@ async function open(methods) {
   cleanup.push(() => host.stop());
   await host.settle();
   let media;
-  await host.ctx.plugin({ name: "asker", apply: (ctx) => void (media = ctx.services.get(mediaV1)) });
-  return { host, rust, media };
+  let lyrics;
+  await host.ctx.plugin({
+    name: "asker",
+    apply: (ctx) => {
+      media = ctx.services.get(mediaV1);
+      lyrics = ctx.services.get(lyricsV1);
+    },
+  });
+  return { host, rust, media, lyrics };
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -146,4 +154,90 @@ test("the window's media state and the host's answer turn into the same shape", 
   assert.equal(fromRust({ code: "timeout", message: "late" }).code, "timeout");
   assert.equal(fromRust({ code: "inactive", message: "gone" }).code, "peer-gone");
   assert.equal(fromRust("plain").data.reason, "failed");
+  assert.equal(lyricsQueryOf({ title: "Song" }).online, true);
+  assert.throws(() => lyricsQueryOf({ title: "   " }), { code: "bad-params" });
+  assert.throws(() => lyricsQueryOf({ title: "Song", extra: 1 }), { code: "bad-params" });
+  assert.deepEqual(normalizeLyricsResult({ lrc: "[00:01.00]hi", translation: "[00:01.00]你好" }, "qq"), {
+    source: "qq",
+    lrc: "[00:01.00]hi",
+    translation: "[00:01.00]你好",
+  });
+  assert.equal(normalizeLyricsResult({ lrc: "   " }), null);
+});
+
+test("lyrics/v1 looks up through custom lyrics sources and Rust fallback, and cleans up on plugin stop", async () => {
+  const { host, rust, lyrics } = await open({
+    "lyrics.lookup": ({ query }) =>
+      query.title === "Builtin Song"
+        ? { source: "lrclib", lrc: "[00:00.00]builtin line", translation: null }
+        : null,
+  });
+  const changed = [];
+  const offChanged = lyrics.on("changed", () => changed.push("changed"));
+  cleanup.push(offChanged);
+
+  assert.deepEqual(
+    (await lyrics.sources()).sources.map((item) => item.id),
+    ["local", "netease", "lrclib", "kugou"],
+  );
+  assert.deepEqual(await lyrics.lookup({ title: "Builtin Song" }), {
+    source: "lrclib",
+    lrc: "[00:00.00]builtin line",
+  });
+  assert.equal(rust.asked("lyrics.lookup").length, 1);
+
+  const sub = host.ctx.plugin({
+    name: "qq-music-lyrics",
+    inject: ["lyrics.sources"],
+    apply(ctx) {
+      ctx.lyricsSources.register({
+        id: "qq-music",
+        label: { zh: "QQ 音乐", en: "QQ Music" },
+        order: 5,
+        lookup: async (query) => {
+          if (query.title === "Custom First") {
+            return { source: "qq-music", lrc: "[00:01.00]custom priority", translation: "[00:01.00]自定义优先" };
+          }
+          return null;
+        },
+      });
+      ctx.lyricsSources.register({
+        id: "fallback-lyrics",
+        label: { zh: "兜底歌词", en: "Fallback Lyrics" },
+        order: 120,
+        lookup: async (query) => {
+          if (query.title === "Fallback Song") {
+            return { source: "fallback-lyrics", lrc: "[00:02.00]fallback line" };
+          }
+          throw new Error("unreachable");
+        },
+      });
+    },
+  });
+  await host.settle();
+  assert.ok(changed.length >= 1);
+  assert.deepEqual(
+    (await lyrics.sources()).sources.map((item) => item.id),
+    ["qq-music", "local", "netease", "lrclib", "kugou", "fallback-lyrics"],
+  );
+  assert.deepEqual(await lyrics.lookup({ title: "Custom First" }), {
+    source: "qq-music",
+    lrc: "[00:01.00]custom priority",
+    translation: "[00:01.00]自定义优先",
+  });
+  assert.equal(rust.asked("lyrics.lookup").length, 1);
+
+  assert.deepEqual(await lyrics.lookup({ title: "Fallback Song" }), {
+    source: "fallback-lyrics",
+    lrc: "[00:02.00]fallback line",
+  });
+  assert.equal(rust.asked("lyrics.lookup").length, 2);
+
+  sub.dispose();
+  await host.settle();
+  assert.deepEqual(
+    (await lyrics.sources()).sources.map((item) => item.id),
+    ["local", "netease", "lrclib", "kugou"],
+  );
+  assert.equal(await lyrics.lookup({ title: "Fallback Song" }), null);
 });

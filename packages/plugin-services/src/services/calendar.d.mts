@@ -3,9 +3,11 @@ import type { CalendarEvents } from "../generated/rust.mjs";
 
 export type { CalendarEvent, CalendarEvents, CalendarProblem } from "../generated/rust.mjs";
 
+export type CalendarSourceKind = "ics" | "caldav" | "plugin" | (string & {});
+
 export type CalendarSource = {
   id: string;
-  kind: "ics" | "caldav";
+  kind: CalendarSourceKind;
   name: string;
   host: string;
 };
@@ -15,4 +17,8 @@ export type CalendarMethods = {
   sources(): { sources: CalendarSource[] };
 };
 
-export const calendarV1: ServiceDefinition<CalendarMethods, {}, {}>;
+export type CalendarServiceEvents = {
+  changed: Record<string, never>;
+};
+
+export const calendarV1: ServiceDefinition<CalendarMethods, CalendarServiceEvents, {}>;

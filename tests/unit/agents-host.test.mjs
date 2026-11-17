@@ -117,3 +117,82 @@ test("the island's sessions and usage turn into the shape Rust answers with", ()
   assert.equal(fromRust({ code: "inactive", message: "off" }).code, "peer-gone");
   assert.equal(fromRust("plain").data.reason, "failed");
 });
+
+test("plugins can register external agent sources for sessions, focus and usage, and stopping withdraws them", async () => {
+  const { host, rust, agents } = await open({
+    "agents.sessions": () => ({ sessions: [ENTRY], others: [] }),
+    "agents.usage": () => ({ claude: null, codex: null }),
+    "agents.focus": () => ({ found: false }),
+    "agents.remoteHosts": () => ({ hosts: [] }),
+  });
+  let changed = 0;
+  const offChanged = agents.on("changed", () => {
+    changed += 1;
+  });
+  const focusedArgs = [];
+  const aiderPlugin = await host.ctx.plugin({
+    name: "aider-harness",
+    inject: ["agents.sources"],
+    apply(ctx) {
+      ctx.agentSources.register({
+        provider: "aider",
+        sessions: () => [
+          {
+            sessionId: "s-aider",
+            title: "Refactor API",
+            cwd: "/repo",
+            phase: "running",
+            light: "working",
+            updatedAt: 42,
+          },
+        ],
+        others: () => [{ id: "aider-bg", name: "Aider Daemon", phase: "running", updatedAt: 40 }],
+        focus: (params) => {
+          focusedArgs.push(params);
+          return { found: true };
+        },
+        usage: () => ({
+          updatedAt: 50,
+          fiveHour: { name: "5h", used: 25, resetsAt: 100 },
+          sevenDay: null,
+          models: [],
+          plan: "pro",
+          source: "plugin",
+        }),
+      });
+      assert.throws(
+        () => ctx.agentSources.register({ provider: "aider" }),
+        { code: "conflict" },
+      );
+    },
+  });
+  assert.ok(await until(() => changed >= 1));
+  const sessions = await agents.sessions();
+  assert.equal(sessions.sessions.length, 2);
+  assert.deepEqual(sessions.sessions[1], {
+    key: "aider:s-aider",
+    provider: "aider",
+    sessionId: "s-aider",
+    title: "Refactor API",
+    cwd: "/repo",
+    phase: "running",
+    light: "working",
+    updatedAt: 42,
+    remoteHost: null,
+    listed: true,
+    unseen: false,
+  });
+  assert.deepEqual(sessions.others, [{ id: "aider-bg", name: "Aider Daemon", phase: "running", updatedAt: 40 }]);
+  assert.deepEqual(await agents.focus({ provider: "aider", sessionId: "s-aider", cwd: "/repo" }), { found: true });
+  assert.equal(focusedArgs.length, 1);
+  assert.equal(rust.asked("agents.focus").length, 0);
+  const usage = await agents.usage();
+  assert.equal(usage.extra?.aider?.plan, "pro");
+  assert.equal(usage.extra?.aider?.fiveHour?.used, 25);
+
+  await aiderPlugin.dispose();
+  assert.ok(await until(() => changed >= 2));
+  assert.deepEqual(await agents.sessions(), { sessions: [ENTRY], others: [] });
+  assert.deepEqual(await agents.usage(), { claude: null, codex: null });
+  await offChanged();
+});

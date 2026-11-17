@@ -30,14 +30,14 @@ function PageKeysSection({ onOpenPageKeys }: BehaviorSectionProps) {
   );
 }
 
-type BehaviorTab = "behavior" | "behaviorTuck" | "behaviorAlerts";
+export type BehaviorTab = "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts";
 
 const sections = settingsSections<BehaviorSectionProps, BehaviorTab>();
 
 sections.add({ id: "behavior.expand", category: "behavior", order: 10, component: ExpandSettingsSection });
 sections.add({ id: "behavior.page-keys", category: "behavior", order: 20, component: PageKeysSection });
 sections.add({ id: "behaviorTuck.tuck", category: "behaviorTuck", order: 10, component: TuckSettingsSection });
-sections.add({ id: "behaviorTuck.game-mode", category: "behaviorTuck", order: 20, component: GameModeSettingsSection });
+sections.add({ id: "behaviorQuiet.game-mode", category: "behaviorQuiet", order: 10, component: GameModeSettingsSection });
 sections.add({ id: "behaviorAlerts.system", category: "behaviorAlerts", order: 10, component: SystemAlertsGroup });
 
 export function BehaviorSettingsPage({ tab, ...props }: BehaviorSectionProps & { tab: BehaviorTab }) {

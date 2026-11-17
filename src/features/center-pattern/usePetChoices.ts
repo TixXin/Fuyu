@@ -9,7 +9,7 @@ export function usePetChoices(enabled: boolean): PetList | null {
     if (!enabled) return;
     let cancelled = false;
     listPets()
-      .then((list) => !cancelled && setPets(list))
+      .then((list) => !cancelled && setPets(Array.isArray(list) ? list : []))
       .catch((error: unknown) => {
         console.error("Failed to list pets", error);
         if (!cancelled) setPets("failed");

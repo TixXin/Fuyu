@@ -35,6 +35,19 @@ function checkDefinition(definition) {
 const eventKey = (name, event) => `service:${name}:${event}`;
 const declared = (table, member) => typeof member === "string" && Object.hasOwn(table, member);
 
+function disabledServicesOf(ctx) {
+  for (let fiber = ctx.fiber; fiber; ) {
+    if (fiber.entry) {
+      const list = fiber.entry.options?.disabledServices;
+      return Array.isArray(list) ? list : [];
+    }
+    const parent = fiber.parent?.fiber;
+    if (!parent || parent === fiber) break;
+    fiber = parent;
+  }
+  return [];
+}
+
 export class Services {
   constructor() {
     this.providers = new Map();
@@ -63,6 +76,9 @@ export class Services {
     for (const method of Object.keys(definition.methods)) {
       if (typeof impl?.[method] !== "function") throw new TypeError(`the provider of ${definition.name} has no method ${method}`);
       methods[method] = impl[method];
+    }
+    if (disabledServicesOf(ctx).includes(definition.name)) {
+      return Object.freeze({ emit: () => false, dispose: () => Promise.resolve() });
     }
     const provider = { definition, impl, methods, plugin: pluginId(ctx), ctx, pending: new Set(), active: true };
     const handle = {

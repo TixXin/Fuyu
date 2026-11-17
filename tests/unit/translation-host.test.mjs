@@ -196,3 +196,90 @@ test("turning the translation plugin off fails its waiting calls, cancels them i
   assert.deepEqual(host.rustListeners(), {});
   assert.equal(liveTimers(host), 0);
 });
+
+test("a plugin registers a custom translation engine on translator.engines, and stopping the plugin withdraws it", async () => {
+  const { host, rust, translator } = await open({
+    "translator.engines": () => ({ engines: [{ engine: "deepseek", hasSecret: true }] }),
+  });
+  let changes = 0;
+  const offChanged = translator.on("changed", () => {
+    changes += 1;
+  });
+  const deeplFiber = await host.ctx.plugin({
+    name: "deepl-plugin",
+    inject: ["translator.engines"],
+    apply(ctx) {
+      ctx.translatorEngines.register({
+        engine: "deepl",
+        label: { "zh-CN": "DeepL 翻译", en: "DeepL" },
+        defaultModel: "deepl-pro",
+        translate: ({ text, direction, model }) => ({ text: `[${direction}:${model}] ${text}` }),
+        rewrite: ({ text, task, model }, caller) => {
+          caller.progress({ piece: "part-1 " });
+          caller.progress("part-2");
+          return `[${task}:${model}] ${text}`;
+        },
+      });
+      assert.throws(
+        () => ctx.translatorEngines.register({ engine: "deepseek", translate: () => "no" }),
+        { code: "conflict" },
+      );
+      assert.throws(
+        () => ctx.translatorEngines.register({ engine: "deepl", translate: () => "no" }),
+        { code: "conflict" },
+      );
+    },
+  });
+  assert.ok(await until(() => changes >= 1));
+  const listed = await translator.engines();
+  assert.deepEqual(listed, {
+    engines: [
+      { engine: "deepseek", hasSecret: true },
+      { engine: "deepl", hasSecret: true, label: { "zh-CN": "DeepL 翻译", en: "DeepL" }, defaultModel: "deepl-pro" },
+    ],
+  });
+  assert.deepEqual(
+    await translator.translate({ text: "你好", direction: "zh-en", engine: { engine: "deepl" } }),
+    { text: "[zh-en:deepl-pro] 你好", engine: "deepl" },
+  );
+  const chunks = [];
+  assert.deepEqual(
+    await translator.rewrite(
+      { text: "hello", task: "polish", engine: { engine: "deepl", model: "deepl-next" } },
+      { onProgress: (chunk) => chunks.push(chunk) },
+    ),
+    { text: "[polish:deepl-next] hello", engine: "deepl" },
+  );
+  assert.deepEqual(chunks, [{ piece: "part-1 " }, { piece: "part-2" }]);
+  assert.deepEqual(rust.asked("translator.translate"), []);
+  assert.deepEqual(rust.asked("translator.rewrite"), []);
+
+  await deeplFiber.dispose();
+  assert.ok(await until(() => changes >= 2));
+  assert.deepEqual(await translator.engines(), {
+    engines: [{ engine: "deepseek", hasSecret: true }],
+  });
+  await offChanged();
+});
+
+test("when the built-in translation plugin is disabled, another plugin can replace translator/v1", async () => {
+  const { host, translator } = await open({});
+  const entry = [...host.ctx.loader.entries()].find((candidate) => candidate.options.id === "translation");
+  entry.update({ disabled: true });
+  assert.ok(await until(() => !host.services().some((service) => service.name === "translator/v1")));
+  const replacement = await host.ctx.plugin({
+    name: "custom-translator",
+    apply(ctx) {
+      ctx.services.provide(translatorV1, {
+        translate: ({ text }) => ({ text: `replaced:${text}`, engine: "custom-plugin" }),
+        rewrite: ({ text }, caller) => {
+          caller.progress({ piece: text });
+          return { text: `rewritten:${text}`, engine: "custom-plugin" };
+        },
+        engines: () => ({ engines: [{ engine: "custom-plugin", hasSecret: true, label: { "zh-CN": "替换翻译", en: "Replaced" } }] }),
+      });
+    },
+  });
+  assert.deepEqual(await translator.translate({ text: "hi" }), { text: "replaced:hi", engine: "custom-plugin" });
+  await replacement.dispose();
+});

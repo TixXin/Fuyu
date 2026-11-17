@@ -233,6 +233,10 @@ pub(super) fn focus_session(
         return Focused { found: false, exact: false, focused_app: None, missing_extension: None };
     };
     log.note(format!("window={}", focused.app));
+    #[cfg(target_os = "macos")]
+    if focused.window_raised {
+        log.note("ax-window=raised");
+    }
     let focused_exe = platform::process::image_path(focused.process_id);
     if let Some(handle) = handle.filter(|_| focused.app == orca::ORCA_APP) {
         steps.orca_switched = focused_exe

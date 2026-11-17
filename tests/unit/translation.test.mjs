@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createEngineRegistry } from "../../src/features/translation/host/engines.mjs";
+import { registerTranslationEngine } from "../../src/features/translation/providers.ts";
 import { DEFAULT_SETTINGS, normalizeTranslationSettings } from "../../src/features/translation/storage.ts";
 import { requestTranslationHandoffOpen, saveTranslationHandoff, takeTranslationHandoff } from "../../src/lib/translation-handoff/storage.ts";
 
@@ -62,4 +64,39 @@ test("the window takes a quick result only right after the island asked to open 
     if (previous) Object.defineProperty(globalThis, "localStorage", previous);
     else delete globalThis.localStorage;
   }
+});
+
+test("registered custom translation engines are accepted by settings normalization and cleaned up on dispose", async () => {
+  assert.equal(normalizeTranslationSettings({ provider: "ollama" }).provider, "deepseek");
+  const dispose = registerTranslationEngine({
+    engine: "ollama",
+    label: { "zh-CN": "本地 Ollama", en: "Local Ollama" },
+    defaultModel: "qwen3:8b",
+    translate: ({ text, direction, model }) => `[${direction}:${model}] ${text}`,
+  });
+  try {
+    const normalized = normalizeTranslationSettings({ provider: "ollama", models: { ollama: "llama3.3" } });
+    assert.equal(normalized.provider, "ollama");
+    assert.deepEqual(normalized.models, { ollama: "llama3.3" });
+  } finally {
+    dispose();
+  }
+  assert.equal(normalizeTranslationSettings({ provider: "ollama" }).provider, "deepseek");
+
+  const registry = createEngineRegistry();
+  let notified = 0;
+  registry.subscribe(() => {
+    notified += 1;
+  });
+  const off = registry.register({
+    engine: "local-llm",
+    hasSecret: () => true,
+    translate: ({ text }) => ({ text: text.toUpperCase() }),
+  });
+  assert.equal(notified, 1);
+  assert.deepEqual(await registry.get("local-llm").translate({ text: "hello" }), { text: "HELLO", engine: "local-llm" });
+  assert.equal(registry.get("local-llm").rewrite, null);
+  off();
+  assert.equal(notified, 2);
+  assert.equal(registry.get("local-llm"), null);
 });

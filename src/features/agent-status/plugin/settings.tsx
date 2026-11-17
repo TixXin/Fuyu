@@ -49,9 +49,22 @@ function ApprovalReference({ onOpenPage }: ShortcutsSectionProps) {
 
 shortcutReferences.add({ id: "shortcutsReference.approvals", category: "shortcutsReference", order: 30, component: ApprovalReference }, OWNER);
 
-addSettingsCategory("agents", ({ settings, onSettingsChange }: PageProps) => <AgentSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
+const agentPage = (tab: "agents" | "agentAppearance" | "agentRings") =>
+  function AgentPage({ settings, onSettingsChange }: PageProps) {
+    return <AgentSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
+  };
+
+const agentAlertsPage = (tab: "agentAlerts" | "agentPush") =>
+  function AgentAlertsTabPage({ settings, onSettingsChange }: PageProps) {
+    return <AgentAlertsSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
+  };
+
+addSettingsCategory("agents", agentPage("agents"), OWNER);
+addSettingsCategory("agentAppearance", agentPage("agentAppearance"), OWNER);
+addSettingsCategory("agentRings", agentPage("agentRings"), OWNER);
 addSettingsCategory("agentSessions", ({ settings, onSettingsChange }: PageProps) => <AgentSessionsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
-addSettingsCategory("agentAlerts", ({ settings, onSettingsChange }: PageProps) => <AgentAlertsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
+addSettingsCategory("agentAlerts", agentAlertsPage("agentAlerts"), OWNER);
+addSettingsCategory("agentPush", agentAlertsPage("agentPush"), OWNER);
 addSettingsCategory("sounds", () => <SoundSettingsSection />, OWNER);
 addSettingsCategory("agentApprovals", () => <AgentApprovalSettings />, OWNER);
 addSettingsCategory("agentConnect", () => <AgentConnectSettingsPage />, OWNER);

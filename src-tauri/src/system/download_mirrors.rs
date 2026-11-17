@@ -75,13 +75,13 @@ impl Exhausted {
     }
 
     pub(crate) fn to_user_error(&self, what: &str) -> UserError {
-        let (code, message) = match self.kind() {
-            FailureKind::Unreachable => ("download.unreachable", format!("Could not reach any download source for {what}.")),
-            FailureKind::Timeout => ("download.timeout", format!("Downloading {what} timed out on every source.")),
-            FailureKind::Invalid => ("download.checksum", format!("The downloaded {what} did not pass verification.")),
-            FailureKind::Status | FailureKind::TooLarge => ("download.failed", format!("Downloading {what} failed on every source.")),
+        let error = match self.kind() {
+            FailureKind::Unreachable => UserError::new("download.unreachable", format!("Could not reach any download source for {what}.")),
+            FailureKind::Timeout => UserError::new("download.timeout", format!("Downloading {what} timed out on every source.")),
+            FailureKind::Invalid => UserError::new("download.checksum", format!("The downloaded {what} did not pass verification.")),
+            FailureKind::Status | FailureKind::TooLarge => UserError::new("download.failed", format!("Downloading {what} failed on every source.")),
         };
-        UserError::new(code, message).arg("what", what).arg("tried", self.tried()).detail(self.summary())
+        error.arg("what", what).arg("tried", self.tried()).detail(self.summary())
     }
 }
 

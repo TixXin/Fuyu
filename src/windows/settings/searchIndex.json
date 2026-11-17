@@ -50,51 +50,7 @@
       }
     },
     {
-      "page": "general",
-      "zh-CN": {
-        "group": "位置",
-        "title": "吸附到"
-      },
-      "en": {
-        "group": "Position",
-        "title": "Dock to"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "位置",
-        "title": "显示在"
-      },
-      "en": {
-        "group": "Position",
-        "title": "Show on"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "位置",
-        "title": "顶部距离"
-      },
-      "en": {
-        "group": "Position",
-        "title": "Top margin"
-      }
-    },
-    {
-      "page": "general",
-      "zh-CN": {
-        "group": "位置",
-        "title": "回到默认位置"
-      },
-      "en": {
-        "group": "Position",
-        "title": "Back to the default position"
-      }
-    },
-    {
-      "page": "general",
+      "page": "generalData",
       "zh-CN": {
         "group": "数据",
         "title": "数据文件夹"
@@ -105,7 +61,7 @@
       }
     },
     {
-      "page": "general",
+      "page": "generalData",
       "zh-CN": {
         "group": "数据",
         "title": "导出设置"
@@ -116,7 +72,7 @@
       }
     },
     {
-      "page": "general",
+      "page": "generalData",
       "zh-CN": {
         "group": "数据",
         "title": "从文件恢复"
@@ -127,7 +83,7 @@
       }
     },
     {
-      "page": "general",
+      "page": "generalApi",
       "zh-CN": {
         "group": "本机接口",
         "title": "允许修改待办、笔记和 Agent 状态",
@@ -140,20 +96,20 @@
       }
     },
     {
-      "page": "general",
+      "page": "generalApi",
       "zh-CN": {
         "group": "本机接口",
         "title": "地址",
-        "description": "没有在运行"
+        "description": "http://127.0.0.1:39271/v1"
       },
       "en": {
         "group": "Local API",
         "title": "Address",
-        "description": "Not running"
+        "description": "http://127.0.0.1:39271/v1"
       }
     },
     {
-      "page": "general",
+      "page": "generalApi",
       "zh-CN": {
         "group": "本机接口",
         "title": "访问令牌",
@@ -166,7 +122,7 @@
       }
     },
     {
-      "page": "general",
+      "page": "generalApi",
       "zh-CN": {
         "group": "本机接口",
         "title": "重新生成令牌",
@@ -179,16 +135,722 @@
       }
     },
     {
-      "page": "general",
+      "page": "theme",
       "zh-CN": {
-        "group": "",
-        "title": "退出岛屿",
-        "description": "和托盘菜单里的「退出」一样；要再打开，从开始菜单或桌面快捷方式启动。"
+        "group": "浅色和深色",
+        "title": "配色",
+        "description": "深色、浅色各有一套颜色；跟随系统按 Windows 的深色 / 浅色模式在两套之间自动切换。"
       },
       "en": {
-        "group": "",
-        "title": "Quit the island",
-        "description": "Same as Quit in the tray menu; start it again from the Start menu or a desktop shortcut."
+        "group": "Light and dark",
+        "title": "Colors",
+        "description": "Dark and light each have their own colors; System switches between them with Windows' dark or light mode."
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "浅色和深色",
+        "title": "保持深色",
+        "description": "配色是浅色时，选中的部分仍然用深色那一套。独立窗口指翻译和剪贴板窗口，设置窗口跟随配色。 现在是深色，换成浅色后才看得出区别。",
+        "options": [
+          "岛屿",
+          "面板",
+          "独立窗口"
+        ]
+      },
+      "en": {
+        "group": "Light and dark",
+        "title": "Keep dark",
+        "description": "With light colors, the selected parts still use the dark set. Other windows are the translation and clipboard windows; the settings window follows the colors. Colors are dark now; this shows once they turn light.",
+        "options": [
+          "Island",
+          "Panel",
+          "Other windows"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "浅色和深色",
+        "title": "强调色",
+        "description": "焦点框、当前页的图标、链接用的颜色。跟随 Windows 用「设置 → 个性化 → 颜色」里的主题色。",
+        "options": [
+          "默认",
+          "跟随 Windows",
+          "自选"
+        ]
+      },
+      "en": {
+        "group": "Light and dark",
+        "title": "Accent",
+        "description": "The color of focus rings, the open page's icon and links. Windows uses the accent from Settings > Personalization > Colors.",
+        "options": [
+          "Default",
+          "Windows",
+          "Pick"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "内置配色",
+        "title": "一键换配色",
+        "description": "同时换掉深色、浅色两套颜色和透明度；配色是深色时切到浅色。磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。之后还可以在下面接着调。"
+      },
+      "en": {
+        "group": "Built-in colors",
+        "title": "Color sets",
+        "description": "Replaces both the dark and light colors and the opacity; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. You can keep adjusting below."
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "调整哪一套",
+        "description": "下面的颜色改的是这一套，预览也显示这一套。",
+        "options": [
+          "深色",
+          "浅色"
+        ]
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Adjusting",
+        "description": "The colors below change this set, and the preview shows it.",
+        "options": [
+          "Dark",
+          "Light"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "岛屿背景"
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Island background"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "任务/待办字样"
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Task text"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "亮点颜色"
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Accent"
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "岛上文字",
+        "description": "自动按岛屿背景的深浅取黑字或白字。自选只改岛上的普通文字，强调色和状态颜色不变。",
+        "options": [
+          "自动",
+          "自选"
+        ]
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Island text",
+        "description": "Auto picks dark or light text from the island background. A custom color only changes the island's plain text; the accent and status colors stay.",
+        "options": [
+          "Auto",
+          "Custom"
+        ]
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "颜色",
+        "title": "亮点亮度"
+      },
+      "en": {
+        "group": "Colors",
+        "title": "Accent brightness"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "质感与形状",
+        "title": "外观模式",
+        "options": [
+          "经典",
+          "液态玻璃"
+        ]
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Appearance",
+        "options": [
+          "Classic",
+          "Liquid glass"
+        ]
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "质感与形状",
+        "title": "字体",
+        "options": [
+          "默认字体",
+          "像素字体"
+        ]
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Font",
+        "options": [
+          "System",
+          "Pixel"
+        ]
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "质感与形状",
+        "title": "不透明度"
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Opacity"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "质感与形状",
+        "title": "圆角样式",
+        "options": [
+          "方圆",
+          "圆角"
+        ]
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Corner style",
+        "options": [
+          "Squircle",
+          "Round"
+        ]
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "质感与形状",
+        "title": "岛屿圆角"
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Island corner radius"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "质感与形状",
+        "title": "贴边圆角"
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Docked corner radius"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "预设"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Preset"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "风格"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Style"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "玻璃强度"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Glass strength"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "玻璃背后",
+        "description": "透出岛正后方的壁纸并磨砂，「玻璃强度」决定盖在上面的底色有多浓。背后有窗口挡着时仍显示壁纸；系统关掉「透明效果」或读不到壁纸时照旧用纯色玻璃。",
+        "options": [
+          "无",
+          "桌面壁纸"
+        ]
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Behind the glass",
+        "description": "Shows the wallpaper right behind the island, frosted; glass strength sets how thick the tint over it is. Windows behind the island are not shown; with Transparency effects off or no wallpaper to read, the glass stays solid.",
+        "options": [
+          "Nothing",
+          "Desktop wallpaper"
+        ]
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "模糊"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Blur"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "饱和度"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Saturation"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "噪点"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Grain"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "颜色来源",
+        "options": [
+          "主题色",
+          "跟封面",
+          "自定义"
+        ]
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Colours from",
+        "options": [
+          "Accent",
+          "Album art",
+          "Custom"
+        ]
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "颜色 1"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Colour 1"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "颜色 2"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Colour 2"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "颜色 3"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Colour 3"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "色彩浓度"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Colour strength"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "流动速度"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Flow speed"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "色块大小"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Blob size"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "折叠时流动",
+        "options": [
+          "一直",
+          "只在展开时"
+        ]
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Flow when collapsed",
+        "options": [
+          "Always",
+          "Only expanded"
+        ]
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "油膜边"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Oil-film rim"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "边宽"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Rim width"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "扫光"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Sheen"
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "镜面高光",
+        "description": "高光跟着鼠标走。"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Specular highlight",
+        "description": "The highlight follows the pointer."
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "展开收起",
+        "options": [
+          "平滑",
+          "轻弹",
+          "液体"
+        ]
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Expand and collapse",
+        "options": [
+          "Smooth",
+          "Soft bounce",
+          "Liquid"
+        ]
+      }
+    },
+    {
+      "page": "themeGlass",
+      "zh-CN": {
+        "group": "液态玻璃",
+        "title": "文字保护",
+        "description": "自动压暗或提亮色块，让文字始终看得清。"
+      },
+      "en": {
+        "group": "Liquid glass",
+        "title": "Keep text readable",
+        "description": "Darkens or lightens the colours so text always stays readable."
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "位置",
+        "title": "吸附到"
+      },
+      "en": {
+        "group": "Position",
+        "title": "Dock to"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "位置",
+        "title": "显示在"
+      },
+      "en": {
+        "group": "Position",
+        "title": "Show on"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "位置",
+        "title": "顶部距离"
+      },
+      "en": {
+        "group": "Position",
+        "title": "Top margin"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "位置",
+        "title": "回到默认位置"
+      },
+      "en": {
+        "group": "Position",
+        "title": "Back to the default position"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "形态",
+        "title": "岛的形态",
+        "description": "药丸离顶 10px，带投影；刘海是顶部正中 240×32 的黑色刘海，折叠时两边放图标。",
+        "options": [
+          "贴顶",
+          "悬空药丸",
+          "刘海"
+        ]
+      },
+      "en": {
+        "group": "Form",
+        "title": "Island form",
+        "description": "The pill floats 10px below the top with a shadow; the notch is a 240×32 black notch at the top centre with icons on both sides when collapsed.",
+        "options": [
+          "Top",
+          "Floating pill",
+          "Notch"
+        ]
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "折叠岛屿",
+        "title": "折叠岛屿大小"
+      },
+      "en": {
+        "group": "Collapsed island",
+        "title": "Collapsed island scale"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "折叠岛屿",
+        "title": "折叠岛屿宽度",
+        "description": "在随内容变化的宽度上加宽或收窄。也可以按住 Alt 拖动折叠岛屿的左右边缘来调。"
+      },
+      "en": {
+        "group": "Collapsed island",
+        "title": "Collapsed island width",
+        "description": "Widens or narrows the width that follows the content. Or hold Alt and drag the collapsed island's sides."
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "展开面板",
+        "title": "展开面板大小"
+      },
+      "en": {
+        "group": "Open panel",
+        "title": "Expanded panel scale"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "展开面板",
+        "title": "面板宽度",
+        "description": "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Alt 拖动展开面板的左右边缘或底边来调。"
+      },
+      "en": {
+        "group": "Open panel",
+        "title": "Panel width",
+        "description": "Every page has this width and height and scrolls inside when it holds more. Or hold Alt and drag the open panel's side or bottom edge."
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "展开面板",
+        "title": "面板高度"
+      },
+      "en": {
+        "group": "Open panel",
+        "title": "Panel height"
+      }
+    },
+    {
+      "page": "appearance",
+      "zh-CN": {
+        "group": "拖动",
+        "title": "拖动时显示中线辅助线",
+        "description": "拖岛时在当前屏幕上画出横竖两条中线，把屏幕分成四格。贴着上下左右四条边的正中时会轻轻吸住，方便居中放下，这一点不受开关影响。"
+      },
+      "en": {
+        "group": "Dragging",
+        "title": "Show centre lines while dragging",
+        "description": "Draws dashed horizontal and vertical centre lines across the current screen while you drag the island, splitting it into quarters. Near the middle of any screen edge the island gently snaps to centre; that works with the lines off too."
+      }
+    },
+    {
+      "page": "appearanceCollapsed",
+      "zh-CN": {
+        "group": "显示内容",
+        "title": "显示折叠岛屿文字"
+      },
+      "en": {
+        "group": "Display",
+        "title": "Show collapsed island text"
+      }
+    },
+    {
+      "page": "appearanceCollapsed",
+      "zh-CN": {
+        "group": "显示内容",
+        "title": "显示岛屿名称"
+      },
+      "en": {
+        "group": "Display",
+        "title": "Show island name"
+      }
+    },
+    {
+      "page": "appearanceCollapsed",
+      "zh-CN": {
+        "group": "中心图案",
+        "title": "图案"
+      },
+      "en": {
+        "group": "Center pattern",
+        "title": "Pattern"
+      }
+    },
+    {
+      "page": "appearanceCollapsed",
+      "zh-CN": {
+        "group": "中心图案",
+        "title": "宠物",
+        "description": "图案选「宠物」时显示哪一只，默认小八（xiaoba）。宠物包（pet.json + spritesheet）放在 ~/.codex/pets 或应用数据目录的 pets 文件夹里；找不到时显示眼睛。"
+      },
+      "en": {
+        "group": "Center pattern",
+        "title": "Pet",
+        "description": "Which pet the Pet pattern shows; xiaoba by default. Pet packs (pet.json + spritesheet) go in ~/.codex/pets or the pets folder of the app data directory; without one the eyes show."
+      }
+    },
+    {
+      "page": "appearanceCollapsed",
+      "zh-CN": {
+        "group": "中心图案",
+        "title": "大小（像素）",
+        "description": "图案的高度，默认 24，和收起条上的环一样高；悬岛量的是胶囊，宠物比它高 4。"
+      },
+      "en": {
+        "group": "Center pattern",
+        "title": "Size (px)",
+        "description": "How tall the pattern is; 24 by default, as tall as the rings on the collapsed bar. For the island mark it is the pill; a pet is 4 taller."
       }
     },
     {
@@ -411,7 +1073,7 @@
       }
     },
     {
-      "page": "behaviorTuck",
+      "page": "behaviorQuiet",
       "zh-CN": {
         "group": "全屏和游戏",
         "title": "游戏勿扰",
@@ -424,7 +1086,7 @@
       }
     },
     {
-      "page": "behaviorTuck",
+      "page": "behaviorQuiet",
       "zh-CN": {
         "group": "全屏和游戏",
         "title": "游戏时贴边隐藏",
@@ -434,709 +1096,6 @@
         "group": "Full screen and games",
         "title": "Tuck away during games",
         "description": "Tucks to the top edge while a full-screen app fills the island's screen, and slides back out afterwards."
-      }
-    },
-    {
-      "page": "behaviorAlerts",
-      "zh-CN": {
-        "group": "在小岛上提示",
-        "title": "音量与亮度",
-        "description": "用键盘、任务栏或其他程序调音量或屏幕亮度时，收起的小岛显示当前大小，1.5 秒后恢复。亮度只支持笔记本自带的屏幕。"
-      },
-      "en": {
-        "group": "Shown on the island",
-        "title": "Volume and brightness",
-        "description": "When the volume or screen brightness changes, from the keyboard, the taskbar or another app, the collapsed island shows the new level for 1.5 seconds. Brightness works for a laptop's built-in screen only."
-      }
-    },
-    {
-      "page": "behaviorAlerts",
-      "zh-CN": {
-        "group": "在小岛上提示",
-        "title": "耳机与充电",
-        "description": "耳机或蓝牙音频设备连接、断开时，收起的小岛显示 3 秒，蓝牙设备带电量；蓝牙鼠标、键盘连上时也显示电量；蓝牙设备电量降到 20% 和 10% 时各提醒一次；笔记本插上或拔掉电源时也会提示。蓝牙电量要设备自己报告给 Windows 才有，用 USB 接收器的鼠标键盘暂时读不到。"
-      },
-      "en": {
-        "group": "Shown on the island",
-        "title": "Headphones and charging",
-        "description": "When headphones or Bluetooth audio connect or disconnect, the collapsed island says so for 3 seconds, with the battery level of Bluetooth devices; Bluetooth mice and keyboards show their battery level when they connect too. A Bluetooth device warns once at 20% and again at 10%, and a laptop says when its charger is plugged in or pulled out. Bluetooth battery levels show only for devices that report them to Windows; mice and keyboards on a USB receiver can't be read yet."
-      }
-    },
-    {
-      "page": "behaviorAlerts",
-      "zh-CN": {
-        "group": "在小岛上提示",
-        "title": "摄像头和麦克风使用提示",
-        "description": "有程序在用摄像头或麦克风时，在小岛上显示绿色摄像头或橙色麦克风图标，点击打开系统的隐私设置。"
-      },
-      "en": {
-        "group": "Shown on the island",
-        "title": "Camera and microphone in use",
-        "description": "While an app uses the camera or the microphone, the island shows a green camera or an orange microphone; click it to open Windows' privacy settings."
-      }
-    },
-    {
-      "page": "behaviorAlerts",
-      "zh-CN": {
-        "group": "休息提醒",
-        "title": "休息提醒",
-        "description": "按间隔在岛上提醒起身、远眺。锁屏或离开 5 分钟以上时不计时，全屏时等退出再提醒"
-      },
-      "en": {
-        "group": "Break reminders",
-        "title": "Break reminders",
-        "description": "Reminds you on the island to get up or look away. Doesn't count while the screen is locked or you've been away 5+ minutes, and waits until you leave full screen"
-      }
-    },
-    {
-      "page": "behaviorAlerts",
-      "zh-CN": {
-        "group": "计时器",
-        "title": "到点响一声",
-        "description": "倒计时到点时，除了岛上的提醒再响一声"
-      },
-      "en": {
-        "group": "Timer",
-        "title": "Play a sound when time is up",
-        "description": "When a countdown ends, a sound plays as well as the reminder on the island"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "浅色和深色",
-        "title": "配色",
-        "description": "深色、浅色各有一套颜色；跟随系统按 Windows 的深色 / 浅色模式在两套之间自动切换。"
-      },
-      "en": {
-        "group": "Light and dark",
-        "title": "Colors",
-        "description": "Dark and light each have their own colors; System switches between them with Windows' dark or light mode."
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "浅色和深色",
-        "title": "保持深色",
-        "description": "配色是浅色时，选中的部分仍然用深色那一套。独立窗口指翻译和剪贴板窗口，设置窗口跟随配色。 现在是深色，换成浅色后才看得出区别。",
-        "options": [
-          "岛屿",
-          "面板",
-          "独立窗口"
-        ]
-      },
-      "en": {
-        "group": "Light and dark",
-        "title": "Keep dark",
-        "description": "With light colors, the selected parts still use the dark set. Other windows are the translation and clipboard windows; the settings window follows the colors. Colors are dark now; this shows once they turn light.",
-        "options": [
-          "Island",
-          "Panel",
-          "Other windows"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "浅色和深色",
-        "title": "强调色",
-        "description": "焦点框、当前页的图标、链接用的颜色。跟随 Windows 用「设置 → 个性化 → 颜色」里的主题色。",
-        "options": [
-          "默认",
-          "跟随 Windows",
-          "自选"
-        ]
-      },
-      "en": {
-        "group": "Light and dark",
-        "title": "Accent",
-        "description": "The color of focus rings, the open page's icon and links. Windows uses the accent from Settings > Personalization > Colors.",
-        "options": [
-          "Default",
-          "Windows",
-          "Pick"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "内置配色",
-        "title": "一键换配色",
-        "description": "同时换掉深色、浅色两套颜色和透明度；配色是深色时切到浅色。磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。之后还可以在下面接着调。"
-      },
-      "en": {
-        "group": "Built-in colors",
-        "title": "Color sets",
-        "description": "Replaces both the dark and light colors and the opacity; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. You can keep adjusting below."
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "颜色",
-        "title": "调整哪一套",
-        "description": "下面的颜色改的是这一套，预览也显示这一套。",
-        "options": [
-          "深色",
-          "浅色"
-        ]
-      },
-      "en": {
-        "group": "Colors",
-        "title": "Adjusting",
-        "description": "The colors below change this set, and the preview shows it.",
-        "options": [
-          "Dark",
-          "Light"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "颜色",
-        "title": "岛屿背景"
-      },
-      "en": {
-        "group": "Colors",
-        "title": "Island background"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "颜色",
-        "title": "任务/待办字样"
-      },
-      "en": {
-        "group": "Colors",
-        "title": "Task text"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "颜色",
-        "title": "亮点颜色"
-      },
-      "en": {
-        "group": "Colors",
-        "title": "Accent"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "颜色",
-        "title": "岛上文字",
-        "description": "自动按岛屿背景的深浅取黑字或白字。自选只改岛上的普通文字，强调色和状态颜色不变。",
-        "options": [
-          "自动",
-          "自选"
-        ]
-      },
-      "en": {
-        "group": "Colors",
-        "title": "Island text",
-        "description": "Auto picks dark or light text from the island background. A custom color only changes the island's plain text; the accent and status colors stay.",
-        "options": [
-          "Auto",
-          "Custom"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "颜色",
-        "title": "亮点亮度"
-      },
-      "en": {
-        "group": "Colors",
-        "title": "Accent brightness"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "质感与形状",
-        "title": "外观模式",
-        "options": [
-          "经典",
-          "液态玻璃"
-        ]
-      },
-      "en": {
-        "group": "Look and shape",
-        "title": "Appearance",
-        "options": [
-          "Classic",
-          "Liquid glass"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "质感与形状",
-        "title": "字体",
-        "options": [
-          "默认字体",
-          "像素字体"
-        ]
-      },
-      "en": {
-        "group": "Look and shape",
-        "title": "Font",
-        "options": [
-          "System",
-          "Pixel"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "质感与形状",
-        "title": "不透明度"
-      },
-      "en": {
-        "group": "Look and shape",
-        "title": "Opacity"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "质感与形状",
-        "title": "圆角样式",
-        "options": [
-          "方圆",
-          "圆角"
-        ]
-      },
-      "en": {
-        "group": "Look and shape",
-        "title": "Corner style",
-        "options": [
-          "Squircle",
-          "Round"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "质感与形状",
-        "title": "岛屿圆角"
-      },
-      "en": {
-        "group": "Look and shape",
-        "title": "Island corner radius"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "质感与形状",
-        "title": "贴边圆角"
-      },
-      "en": {
-        "group": "Look and shape",
-        "title": "Docked corner radius"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "预设"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Preset"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "风格"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Style"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "玻璃强度"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Glass strength"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "玻璃背后",
-        "description": "透出岛正后方的壁纸并磨砂，「玻璃强度」决定盖在上面的底色有多浓。背后有窗口挡着时仍显示壁纸；系统关掉「透明效果」或读不到壁纸时照旧用纯色玻璃。",
-        "options": [
-          "无",
-          "桌面壁纸"
-        ]
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Behind the glass",
-        "description": "Shows the wallpaper right behind the island, frosted; glass strength sets how thick the tint over it is. Windows behind the island are not shown; with Transparency effects off or no wallpaper to read, the glass stays solid.",
-        "options": [
-          "Nothing",
-          "Desktop wallpaper"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "模糊"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Blur"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "饱和度"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Saturation"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "噪点"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Grain"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "颜色来源",
-        "options": [
-          "主题色",
-          "跟封面",
-          "自定义"
-        ]
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Colours from",
-        "options": [
-          "Accent",
-          "Album art",
-          "Custom"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "颜色 1"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Colour 1"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "颜色 2"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Colour 2"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "颜色 3"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Colour 3"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "色彩浓度"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Colour strength"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "流动速度"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Flow speed"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "色块大小"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Blob size"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "折叠时流动",
-        "options": [
-          "一直",
-          "只在展开时"
-        ]
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Flow when collapsed",
-        "options": [
-          "Always",
-          "Only expanded"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "油膜边"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Oil-film rim"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "边宽"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Rim width"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "扫光"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Sheen"
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "镜面高光",
-        "description": "高光跟着鼠标走。"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Specular highlight",
-        "description": "The highlight follows the pointer."
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "展开收起",
-        "options": [
-          "平滑",
-          "轻弹",
-          "液体"
-        ]
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Expand and collapse",
-        "options": [
-          "Smooth",
-          "Soft bounce",
-          "Liquid"
-        ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "液态玻璃",
-        "title": "文字保护",
-        "description": "自动压暗或提亮色块，让文字始终看得清。"
-      },
-      "en": {
-        "group": "Liquid glass",
-        "title": "Keep text readable",
-        "description": "Darkens or lightens the colours so text always stays readable."
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "形态",
-        "title": "岛的形态",
-        "description": "药丸离顶 10px，带投影；刘海是顶部正中 240×32 的黑色刘海，折叠时两边放图标。",
-        "options": [
-          "贴顶",
-          "悬空药丸",
-          "刘海"
-        ]
-      },
-      "en": {
-        "group": "Form",
-        "title": "Island form",
-        "description": "The pill floats 10px below the top with a shadow; the notch is a 240×32 black notch at the top centre with icons on both sides when collapsed.",
-        "options": [
-          "Top",
-          "Floating pill",
-          "Notch"
-        ]
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "折叠岛屿",
-        "title": "折叠岛屿大小"
-      },
-      "en": {
-        "group": "Collapsed island",
-        "title": "Collapsed island scale"
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "折叠岛屿",
-        "title": "折叠岛屿宽度",
-        "description": "在随内容变化的宽度上加宽或收窄。也可以按住 Alt 拖动折叠岛屿的左右边缘来调。"
-      },
-      "en": {
-        "group": "Collapsed island",
-        "title": "Collapsed island width",
-        "description": "Widens or narrows the width that follows the content. Or hold Alt and drag the collapsed island's sides."
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "展开面板",
-        "title": "展开面板大小"
-      },
-      "en": {
-        "group": "Open panel",
-        "title": "Expanded panel scale"
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "展开面板",
-        "title": "面板宽度",
-        "description": "所有页面都用这个宽度和高度，内容多了在页面里滚动。也可以按住 Alt 拖动展开面板的左右边缘或底边来调。"
-      },
-      "en": {
-        "group": "Open panel",
-        "title": "Panel width",
-        "description": "Every page has this width and height and scrolls inside when it holds more. Or hold Alt and drag the open panel's side or bottom edge."
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "展开面板",
-        "title": "面板高度"
-      },
-      "en": {
-        "group": "Open panel",
-        "title": "Panel height"
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "拖动",
-        "title": "拖动时显示中线辅助线",
-        "description": "拖岛时在当前屏幕上画出横竖两条中线，把屏幕分成四格。贴着上下左右四条边的正中时会轻轻吸住，方便居中放下，这一点不受开关影响。"
-      },
-      "en": {
-        "group": "Dragging",
-        "title": "Show centre lines while dragging",
-        "description": "Draws dashed horizontal and vertical centre lines across the current screen while you drag the island, splitting it into quarters. Near the middle of any screen edge the island gently snaps to centre; that works with the lines off too."
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "显示内容",
-        "title": "显示折叠岛屿文字"
-      },
-      "en": {
-        "group": "Display",
-        "title": "Show collapsed island text"
-      }
-    },
-    {
-      "page": "appearance",
-      "zh-CN": {
-        "group": "显示内容",
-        "title": "显示岛屿名称"
-      },
-      "en": {
-        "group": "Display",
-        "title": "Show island name"
       }
     },
     {
@@ -1203,7 +1162,20 @@
       }
     },
     {
-      "page": "shortcutsIsland",
+      "page": "shortcutsReference",
+      "zh-CN": {
+        "group": "",
+        "title": "按键查询",
+        "description": "按下一组组合键，看看浮屿里是谁在用它。"
+      },
+      "en": {
+        "group": "",
+        "title": "Look up keys",
+        "description": "Press a key combination to see what in Fuyu uses it."
+      }
+    },
+    {
+      "page": "shortcutsReference",
       "zh-CN": {
         "group": "岛上操作",
         "title": "收起展开的岛"
@@ -1214,7 +1186,7 @@
       }
     },
     {
-      "page": "shortcutsIsland",
+      "page": "shortcutsReference",
       "zh-CN": {
         "group": "岛上操作",
         "title": "移动岛屿"
@@ -1225,7 +1197,7 @@
       }
     },
     {
-      "page": "shortcutsIsland",
+      "page": "shortcutsReference",
       "zh-CN": {
         "group": "岛上操作",
         "title": "调整面板宽高（按住 Alt 时面板不收起）"
@@ -1236,7 +1208,7 @@
       }
     },
     {
-      "page": "shortcutsIsland",
+      "page": "shortcutsReference",
       "zh-CN": {
         "group": "翻译输入框",
         "title": "翻译"
@@ -1247,7 +1219,7 @@
       }
     },
     {
-      "page": "shortcutsIsland",
+      "page": "shortcutsReference",
       "zh-CN": {
         "group": "翻译输入框",
         "title": "换行"
@@ -1258,7 +1230,7 @@
       }
     },
     {
-      "page": "shortcutsIsland",
+      "page": "shortcutsReference",
       "zh-CN": {
         "group": "翻译输入框",
         "title": "填入剪贴板（独立窗口）"
@@ -1269,7 +1241,7 @@
       }
     },
     {
-      "page": "shortcutsIsland",
+      "page": "shortcutsReference",
       "zh-CN": {
         "group": "AI Agent 审批卡片",
         "title": "允许"
@@ -1280,7 +1252,7 @@
       }
     },
     {
-      "page": "shortcutsIsland",
+      "page": "shortcutsReference",
       "zh-CN": {
         "group": "AI Agent 审批卡片",
         "title": "拒绝"
@@ -1291,7 +1263,7 @@
       }
     },
     {
-      "page": "shortcutsIsland",
+      "page": "shortcutsReference",
       "zh-CN": {
         "group": "AI Agent 审批卡片",
         "title": "到终端"
@@ -1357,7 +1329,7 @@
       }
     },
     {
-      "page": "todos",
+      "page": "todosStorage",
       "zh-CN": {
         "group": "待办清单保存路径",
         "title": "文件夹"
@@ -1394,7 +1366,7 @@
       }
     },
     {
-      "page": "calendar",
+      "page": "calendarSources",
       "zh-CN": {
         "group": "已添加的日历",
         "title": "用的是"
@@ -2430,6 +2402,71 @@
       }
     },
     {
+      "page": "timerAlerts",
+      "zh-CN": {
+        "group": "计时器",
+        "title": "到点响一声",
+        "description": "倒计时到点时，除了岛上的提醒再响一声"
+      },
+      "en": {
+        "group": "Timer",
+        "title": "Play a sound when time is up",
+        "description": "When a countdown ends, a sound plays as well as the reminder on the island"
+      }
+    },
+    {
+      "page": "timerBreaks",
+      "zh-CN": {
+        "group": "休息提醒",
+        "title": "休息提醒",
+        "description": "按间隔在岛上提醒起身、远眺。锁屏或离开 5 分钟以上时不计时，全屏时等退出再提醒"
+      },
+      "en": {
+        "group": "Break reminders",
+        "title": "Break reminders",
+        "description": "Reminds you on the island to get up or look away. Doesn't count while the screen is locked or you've been away 5+ minutes, and waits until you leave full screen"
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
+        "title": "音量与亮度",
+        "description": "用键盘、任务栏或其他程序调音量或屏幕亮度时，收起的小岛显示当前大小，1.5 秒后恢复。亮度只支持笔记本自带的屏幕。"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Volume and brightness",
+        "description": "When the volume or screen brightness changes, from the keyboard, the taskbar or another app, the collapsed island shows the new level for 1.5 seconds. Brightness works for a laptop's built-in screen only."
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
+        "title": "耳机与充电",
+        "description": "耳机或蓝牙音频设备连接、断开时，收起的小岛显示 3 秒，蓝牙设备带电量；蓝牙鼠标、键盘连上时也显示电量；蓝牙设备电量降到 20% 和 10% 时各提醒一次；笔记本插上或拔掉电源时也会提示。蓝牙电量要设备自己报告给 Windows 才有，用 USB 接收器的鼠标键盘暂时读不到。"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Headphones and charging",
+        "description": "When headphones or Bluetooth audio connect or disconnect, the collapsed island says so for 3 seconds, with the battery level of Bluetooth devices; Bluetooth mice and keyboards show their battery level when they connect too. A Bluetooth device warns once at 20% and again at 10%, and a laptop says when its charger is plugged in or pulled out. Bluetooth battery levels show only for devices that report them to Windows; mice and keyboards on a USB receiver can't be read yet."
+      }
+    },
+    {
+      "page": "behaviorAlerts",
+      "zh-CN": {
+        "group": "在小岛上提示",
+        "title": "摄像头和麦克风使用提示",
+        "description": "有程序在用摄像头或麦克风时，在小岛上显示绿色摄像头或橙色麦克风图标，点击打开系统的隐私设置。"
+      },
+      "en": {
+        "group": "Shown on the island",
+        "title": "Camera and microphone in use",
+        "description": "While an app uses the camera or the microphone, the island shows a green camera or an orange microphone; click it to open Windows' privacy settings."
+      }
+    },
+    {
       "page": "messages",
       "zh-CN": {
         "group": "新消息提示",
@@ -2452,7 +2489,7 @@
       }
     },
     {
-      "page": "messages",
+      "page": "messagesIm",
       "zh-CN": {
         "group": "QQ 通知",
         "title": "接收 QQ 消息",
@@ -2465,7 +2502,7 @@
       }
     },
     {
-      "page": "messages",
+      "page": "messagesIm",
       "zh-CN": {
         "group": "QQ 通知",
         "title": "看过后从岛上去掉",
@@ -2478,7 +2515,7 @@
       }
     },
     {
-      "page": "messages",
+      "page": "messagesIm",
       "zh-CN": {
         "group": "微信提醒",
         "title": "接收微信提醒",
@@ -2491,7 +2528,7 @@
       }
     },
     {
-      "page": "messages",
+      "page": "messagesIm",
       "zh-CN": {
         "group": "微信提醒",
         "title": "看过后从岛上去掉",
@@ -2504,7 +2541,7 @@
       }
     },
     {
-      "page": "messages",
+      "page": "messagesIm",
       "zh-CN": {
         "group": "微信提醒",
         "title": "显示联系人和消息摘要",
@@ -2517,7 +2554,7 @@
       }
     },
     {
-      "page": "messages",
+      "page": "messagesMail",
       "zh-CN": {
         "group": "邮箱",
         "title": "启用邮箱",
@@ -2708,6 +2745,228 @@
     {
       "page": "agents",
       "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Codex"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Codex"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Claude Code"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Claude Code"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "WorkBuddy"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "WorkBuddy"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Antigravity"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Antigravity"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "DeepSeek Harness"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "DeepSeek Harness"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "opencode"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "opencode"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Qoder"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Qoder"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "CodeBuddy"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "CodeBuddy"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Qwen Code"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Qwen Code"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "TRAE"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "TRAE"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "TRAE CN"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "TRAE CN"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "ZCode"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "ZCode"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Kimi Code"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Kimi Code"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "MiMo Code"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "MiMo Code"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Grok CLI"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Grok CLI"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "GitHub Copilot CLI"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "GitHub Copilot CLI"
+      }
+    },
+    {
+      "page": "agents",
+      "zh-CN": {
+        "group": "显示哪些 Agent",
+        "title": "Droid"
+      },
+      "en": {
+        "group": "Agents shown",
+        "title": "Droid"
+      }
+    },
+    {
+      "page": "agentConnect",
+      "zh-CN": {
+        "group": "回复状态标记",
+        "title": "让 AI 代理在回复末尾标出在等什么（推荐打开）"
+      },
+      "en": {
+        "group": "Reply status marker",
+        "title": "Have the agents mark what they wait for at the end of each reply (recommended)"
+      }
+    },
+    {
+      "page": "agentApprovals",
+      "zh-CN": {
+        "group": "在岛上审批",
+        "title": "在岛上允许或拒绝 Agent 的操作"
+      },
+      "en": {
+        "group": "Approve on the island",
+        "title": "Allow or deny agent actions on the island"
+      }
+    },
+    {
+      "page": "agentApprovals",
+      "zh-CN": {
+        "group": "在岛上审批",
+        "title": "终端在前台时也在岛上弹出",
+        "description": "关闭时，会话所在的终端或编辑器窗口在前台，就直接在终端里审批。"
+      },
+      "en": {
+        "group": "Approve on the island",
+        "title": "Also while the terminal is in front",
+        "description": "Off, a request from a session whose terminal or editor window is in front is approved in that terminal."
+      }
+    },
+    {
+      "page": "agentAppearance",
+      "zh-CN": {
         "group": "小岛显示",
         "title": "在小岛显示会话标题",
         "description": "在待办的位置显示 Agent 图标和会话标题。标题直接读取 Claude Code 和 Codex 的会话记录，不需要安装钩子。"
@@ -2719,7 +2978,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentAppearance",
       "zh-CN": {
         "group": "小岛显示",
         "title": "什么时候显示",
@@ -2740,7 +2999,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentAppearance",
       "zh-CN": {
         "group": "小岛显示",
         "title": "状态灯样式",
@@ -2761,7 +3020,7 @@
       }
     },
     {
-      "page": "agents",
+      "page": "agentAppearance",
       "zh-CN": {
         "group": "Agent 页",
         "title": "子 Agent / 子会话默认展开",
@@ -2771,299 +3030,6 @@
         "group": "Agent page",
         "title": "Expand subagents and child sessions",
         "description": "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Codex"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Codex"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Claude Code"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Claude Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "WorkBuddy"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "WorkBuddy"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Antigravity"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Antigravity"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "DeepSeek Harness"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "DeepSeek Harness"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "opencode"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "opencode"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Qoder"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Qoder"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "CodeBuddy"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "CodeBuddy"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Qwen Code"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Qwen Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "TRAE"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "TRAE"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "TRAE CN"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "TRAE CN"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "ZCode"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "ZCode"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Kimi Code"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Kimi Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "MiMo Code"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "MiMo Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Grok CLI"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Grok CLI"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "GitHub Copilot CLI"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "GitHub Copilot CLI"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "显示哪些 Agent",
-        "title": "Droid"
-      },
-      "en": {
-        "group": "Agents shown",
-        "title": "Droid"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "Claude Code"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "Claude Code"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "Codex",
-        "description": "读本机 Codex 会话记录里的额度（CODEX_HOME 或 ~/.codex 下的 sessions），不联网。Codex 跑过一轮后才有数据。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "Codex",
-        "description": "Reads the limits in Codex's session logs on this computer (sessions under CODEX_HOME or ~/.codex), with no network access. Numbers appear after Codex has run a turn."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "GLM",
-        "description": "用下面保存的智谱开放平台 API Key，每分钟最多一次直连 open.bigmodel.cn 查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Key 存在 Windows 凭据管理器里，只发给智谱。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "GLM",
-        "description": "Asks open.bigmodel.cn directly, at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits with the Zhipu open platform API key saved below. The key lives in the Windows Credential Manager and goes to Zhipu only."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "Kimi",
-        "description": "用下面保存的 Kimi Code API Key，每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Key 存在 Windows 凭据管理器里，只发给 Kimi。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "Kimi",
-        "description": "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits with the Kimi Code API key saved below. The key lives in the Windows Credential Manager and goes to Kimi only."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "环和悬停卡片显示",
-        "options": [
-          "已用",
-          "剩余"
-        ]
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "Rings and card show",
-        "options": [
-          "Used",
-          "Left"
-        ]
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "用量环",
-        "title": "Claude Code：直接向 Anthropic 查询",
-        "description": "打开后读取本机 Claude Code 保存的登录令牌（~/.claude/.credentials.json，只读，不刷新、不改写，也不会发给 Anthropic 以外的地方），按下面的间隔经代理请求 api.anthropic.com 的用量接口。这个接口没有公开文档，可能随时失效，失效时退回 claude-hud 的快照。Agent 页顶部的用量也会用这份数据。"
-      },
-      "en": {
-        "group": "Usage rings",
-        "title": "Claude Code: ask Anthropic directly",
-        "description": "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too."
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话环",
-        "title": "样式"
-      },
-      "en": {
-        "group": "Session ring",
-        "title": "Style"
-      }
-    },
-    {
-      "page": "agents",
-      "zh-CN": {
-        "group": "会话环",
-        "title": "显示会话数",
-        "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
-      },
-      "en": {
-        "group": "Session ring",
-        "title": "Show the count",
-        "description": "The number in the segmented ring and before the state bar. Off, only the colours' shares show; the pixel grid and signal bars have no number anyway."
       }
     },
     {
@@ -3219,6 +3185,112 @@
       }
     },
     {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "Claude Code"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Claude Code"
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "Codex",
+        "description": "读本机 Codex 会话记录里的额度（CODEX_HOME 或 ~/.codex 下的 sessions），不联网。Codex 跑过一轮后才有数据。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Codex",
+        "description": "Reads the limits in Codex's session logs on this computer (sessions under CODEX_HOME or ~/.codex), with no network access. Numbers appear after Codex has run a turn."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "GLM",
+        "description": "用下面保存的智谱开放平台 API Key，每分钟最多一次直连 open.bigmodel.cn 查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Key 存在 Windows 凭据管理器里，只发给智谱。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "GLM",
+        "description": "Asks open.bigmodel.cn directly, at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits with the Zhipu open platform API key saved below. The key lives in the Windows Credential Manager and goes to Zhipu only."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "Kimi",
+        "description": "用下面保存的 Kimi Code API Key，每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Key 存在 Windows 凭据管理器里，只发给 Kimi。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Kimi",
+        "description": "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits with the Kimi Code API key saved below. The key lives in the Windows Credential Manager and goes to Kimi only."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "环和悬停卡片显示",
+        "options": [
+          "已用",
+          "剩余"
+        ]
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Rings and card show",
+        "options": [
+          "Used",
+          "Left"
+        ]
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "Claude Code：直接向 Anthropic 查询",
+        "description": "打开后读取本机 Claude Code 保存的登录令牌（~/.claude/.credentials.json，只读，不刷新、不改写，也不会发给 Anthropic 以外的地方），按下面的间隔经代理请求 api.anthropic.com 的用量接口。这个接口没有公开文档，可能随时失效，失效时退回 claude-hud 的快照。Agent 页顶部的用量也会用这份数据。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Claude Code: ask Anthropic directly",
+        "description": "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "会话环",
+        "title": "样式"
+      },
+      "en": {
+        "group": "Session ring",
+        "title": "Style"
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "会话环",
+        "title": "显示会话数",
+        "description": "分段环中间和状态条前面的数字。关掉后只看颜色比例；像素格和信号格本来就不写数字。"
+      },
+      "en": {
+        "group": "Session ring",
+        "title": "Show the count",
+        "description": "The number in the segmented ring and before the state bar. Off, only the colours' shares show; the pixel grid and signal bars have no number anyway."
+      }
+    },
+    {
       "page": "agentAlerts",
       "zh-CN": {
         "group": "弹出提醒",
@@ -3297,139 +3369,6 @@
       "en": {
         "group": "Pop-up alerts",
         "title": "Stays open for"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "手机推送",
-        "title": "推送到手机",
-        "description": "Agent 等你、完成或出错时推到手机：iPhone 上的 Bark，或 cc-connect 在 Telegram、Discord、飞书上的机器人"
-      },
-      "en": {
-        "group": "Phone push",
-        "title": "Push to your phone",
-        "description": "When an agent needs you, finishes or fails, push it to your phone: Bark on an iPhone, or cc-connect's bot on Telegram, Discord or Feishu"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "手机推送",
-        "title": "推送通道"
-      },
-      "en": {
-        "group": "Phone push",
-        "title": "Channel"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "手机推送",
-        "title": "服务器地址",
-        "description": "留空用 Bark 官方服务器；自建 bark-server 时填它的地址"
-      },
-      "en": {
-        "group": "Phone push",
-        "title": "Server",
-        "description": "Leave empty for Bark's own server; for a self-hosted bark-server, enter its address"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "手机推送",
-        "title": "设备 Key",
-        "description": "在 Bark 里复制推送地址粘贴进来，或只粘贴其中那串字母数字"
-      },
-      "en": {
-        "group": "Phone push",
-        "title": "Device key",
-        "description": "Copy the push URL in Bark and paste it here, or just the letters and digits in it"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "手机推送",
-        "title": "等你确认或回答时"
-      },
-      "en": {
-        "group": "Phone push",
-        "title": "When it waits for you"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "手机推送",
-        "title": "完成一轮时"
-      },
-      "en": {
-        "group": "Phone push",
-        "title": "When a turn finishes"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "手机推送",
-        "title": "出错时"
-      },
-      "en": {
-        "group": "Phone push",
-        "title": "When it fails"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "手机推送",
-        "title": "什么时候推",
-        "description": "锁屏立即推；没锁屏时没有键盘鼠标操作满这么久才推。离开前在电脑上看过的不再推，坐在电脑前时不打扰手机"
-      },
-      "en": {
-        "group": "Phone push",
-        "title": "When to push",
-        "description": "At once when the screen is locked; otherwise after this long without keyboard or mouse. What you looked at on the computer before leaving is not pushed, so the phone stays quiet while you sit there"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "手机推送",
-        "title": "发送测试"
-      },
-      "en": {
-        "group": "Phone push",
-        "title": "Send a test"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "cc-connect 手机连接",
-        "title": "cc-connect 程序路径",
-        "description": "留空自动找：正在运行的 cc-connect、PATH（npm i -g cc-connect 装在这里）、这里下载的那份，再看 C、D 盘 Program Files 和 Program Files (x86) 下的 cc-connect 文件夹。不搜全盘。"
-      },
-      "en": {
-        "group": "cc-connect phone link",
-        "title": "cc-connect program",
-        "description": "Leave empty to find it: the running cc-connect, PATH (where npm i -g cc-connect puts it), the one downloaded here, then a cc-connect folder in Program Files or Program Files (x86) on C: and D:. The disks are not searched."
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "cc-connect 手机连接",
-        "title": "由岛启动 cc-connect",
-        "description": "岛开着时让 cc-connect 在后台一直运行（不弹窗口，退出岛时一起退出）。已经在别处运行的 cc-connect 不接管。"
-      },
-      "en": {
-        "group": "cc-connect phone link",
-        "title": "Keep cc-connect running",
-        "description": "While the island runs, cc-connect runs in the background too (no window, it ends with the island). A cc-connect started elsewhere is left alone."
       }
     },
     {
@@ -3646,42 +3585,140 @@
       }
     },
     {
-      "page": "agentApprovals",
+      "page": "agentPush",
       "zh-CN": {
-        "group": "在岛上审批",
-        "title": "在岛上允许或拒绝 Agent 的操作"
+        "group": "手机推送",
+        "title": "推送到手机",
+        "description": "Agent 等你、完成或出错时推到手机：iPhone 上的 Bark，或 cc-connect 在 Telegram、Discord、飞书上的机器人"
       },
       "en": {
-        "group": "Approve on the island",
-        "title": "Allow or deny agent actions on the island"
+        "group": "Phone push",
+        "title": "Push to your phone",
+        "description": "When an agent needs you, finishes or fails, push it to your phone: Bark on an iPhone, or cc-connect's bot on Telegram, Discord or Feishu"
       }
     },
     {
-      "page": "agentApprovals",
+      "page": "agentPush",
       "zh-CN": {
-        "group": "在岛上审批",
-        "title": "终端在前台时也在岛上弹出",
-        "description": "关闭时，会话所在的终端或编辑器窗口在前台，就直接在终端里审批。"
+        "group": "手机推送",
+        "title": "推送通道"
       },
       "en": {
-        "group": "Approve on the island",
-        "title": "Also while the terminal is in front",
-        "description": "Off, a request from a session whose terminal or editor window is in front is approved in that terminal."
+        "group": "Phone push",
+        "title": "Channel"
       }
     },
     {
-      "page": "agentConnect",
+      "page": "agentPush",
       "zh-CN": {
-        "group": "回复状态标记",
-        "title": "让 AI 代理在回复末尾标出在等什么（推荐打开）"
+        "group": "手机推送",
+        "title": "服务器地址",
+        "description": "留空用 Bark 官方服务器；自建 bark-server 时填它的地址"
       },
       "en": {
-        "group": "Reply status marker",
-        "title": "Have the agents mark what they wait for at the end of each reply (recommended)"
+        "group": "Phone push",
+        "title": "Server",
+        "description": "Leave empty for Bark's own server; for a self-hosted bark-server, enter its address"
       }
     },
     {
-      "page": "agentRemote",
+      "page": "agentPush",
+      "zh-CN": {
+        "group": "手机推送",
+        "title": "设备 Key",
+        "description": "在 Bark 里复制推送地址粘贴进来，或只粘贴其中那串字母数字"
+      },
+      "en": {
+        "group": "Phone push",
+        "title": "Device key",
+        "description": "Copy the push URL in Bark and paste it here, or just the letters and digits in it"
+      }
+    },
+    {
+      "page": "agentPush",
+      "zh-CN": {
+        "group": "手机推送",
+        "title": "等你确认或回答时"
+      },
+      "en": {
+        "group": "Phone push",
+        "title": "When it waits for you"
+      }
+    },
+    {
+      "page": "agentPush",
+      "zh-CN": {
+        "group": "手机推送",
+        "title": "完成一轮时"
+      },
+      "en": {
+        "group": "Phone push",
+        "title": "When a turn finishes"
+      }
+    },
+    {
+      "page": "agentPush",
+      "zh-CN": {
+        "group": "手机推送",
+        "title": "出错时"
+      },
+      "en": {
+        "group": "Phone push",
+        "title": "When it fails"
+      }
+    },
+    {
+      "page": "agentPush",
+      "zh-CN": {
+        "group": "手机推送",
+        "title": "什么时候推",
+        "description": "锁屏立即推；没锁屏时没有键盘鼠标操作满这么久才推。离开前在电脑上看过的不再推，坐在电脑前时不打扰手机"
+      },
+      "en": {
+        "group": "Phone push",
+        "title": "When to push",
+        "description": "At once when the screen is locked; otherwise after this long without keyboard or mouse. What you looked at on the computer before leaving is not pushed, so the phone stays quiet while you sit there"
+      }
+    },
+    {
+      "page": "agentPush",
+      "zh-CN": {
+        "group": "手机推送",
+        "title": "发送测试"
+      },
+      "en": {
+        "group": "Phone push",
+        "title": "Send a test"
+      }
+    },
+    {
+      "page": "agentPush",
+      "zh-CN": {
+        "group": "cc-connect 手机连接",
+        "title": "cc-connect 程序路径",
+        "description": "留空自动找：正在运行的 cc-connect、PATH（npm i -g cc-connect 装在这里）、这里下载的那份，再看 C、D 盘 Program Files 和 Program Files (x86) 下的 cc-connect 文件夹。不搜全盘。"
+      },
+      "en": {
+        "group": "cc-connect phone link",
+        "title": "cc-connect program",
+        "description": "Leave empty to find it: the running cc-connect, PATH (where npm i -g cc-connect puts it), the one downloaded here, then a cc-connect folder in Program Files or Program Files (x86) on C: and D:. The disks are not searched."
+      }
+    },
+    {
+      "page": "agentPush",
+      "zh-CN": {
+        "group": "cc-connect 手机连接",
+        "title": "由岛启动 cc-connect",
+        "description": "岛开着时让 cc-connect 在后台一直运行（不弹窗口，退出岛时一起退出）。已经在别处运行的 cc-connect 不接管。"
+      },
+      "en": {
+        "group": "cc-connect phone link",
+        "title": "Keep cc-connect running",
+        "description": "While the island runs, cc-connect runs in the background too (no window, it ends with the island). A cc-connect started elsewhere is left alone."
+      }
+    },
+    {
+      "page": "agentTunnel",
       "zh-CN": {
         "group": "SSH 代理隧道",
         "title": "本地代理",
@@ -3716,7 +3753,7 @@
       }
     },
     {
-      "page": "about",
+      "page": "aboutHelp",
       "zh-CN": {
         "group": "帮助",
         "title": "新手引导",
@@ -3729,7 +3766,7 @@
       }
     },
     {
-      "page": "about",
+      "page": "aboutHelp",
       "zh-CN": {
         "group": "帮助",
         "title": "诊断信息",
@@ -3742,7 +3779,7 @@
       }
     },
     {
-      "page": "about",
+      "page": "aboutHelp",
       "zh-CN": {
         "group": "重置与退出",
         "title": "重置所有设置",
@@ -3755,7 +3792,7 @@
       }
     },
     {
-      "page": "about",
+      "page": "aboutHelp",
       "zh-CN": {
         "group": "重置与退出",
         "title": "退出岛屿",

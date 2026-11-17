@@ -13,7 +13,7 @@ export const DEMO_UPDATE: UpdateInfo = {
     "",
     "## 安装包",
     "",
-    "- FocuSD.Island_0.3.4_x64-setup.exe",
+    "- Fuyu_0.3.4_x64-setup.exe",
     "",
     "---",
     "",

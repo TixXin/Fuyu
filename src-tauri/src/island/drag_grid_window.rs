@@ -146,7 +146,10 @@ fn reveal(_app: &AppHandle, window: &WebviewWindow) {
 
 fn conceal(window: &WebviewWindow) {
     #[cfg(target_os = "macos")]
-    crate::macos::drag_grid::hide_grid_panel(window);
+    {
+        crate::macos::drag_grid::hide_grid_panel(window);
+        crate::macos::island_panel::forget_panel(window.app_handle(), WINDOW_LABEL);
+    }
     let _ = window.destroy();
 }
 

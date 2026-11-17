@@ -357,3 +357,16 @@ fn a_bottom_docked_island_sits_at_the_bottom_of_its_stage() {
     assert!(on(left + width / 2.0, 460.0 - height + 0.5));
     assert!(!on(left + width / 2.0, 10.0));
 }
+
+#[test]
+fn passthrough_polling_slows_down_when_hidden_or_far_from_stage() {
+    assert_eq!(passthrough_sleep_duration(false, true), PASSTHROUGH_HIDDEN_TICK);
+    assert_eq!(passthrough_sleep_duration(false, false), PASSTHROUGH_HIDDEN_TICK);
+    assert_eq!(passthrough_sleep_duration(true, true), PASSTHROUGH_FAST_TICK);
+    assert_eq!(passthrough_sleep_duration(true, false), PASSTHROUGH_IDLE_TICK);
+
+    assert!(cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, 100.0, 0.0));
+    assert!(cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, -20.0, 580.0));
+    assert!(!cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, -21.0, 580.0));
+    assert!(!cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, 100.0, 581.0));
+}

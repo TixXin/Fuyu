@@ -9,7 +9,7 @@ const NOTES = `## 更新内容
 
 ## 安装包
 
-- \`fly-island_0.3.0_x64-setup.exe\`：安装包。
+- \`fuyu_0.3.0_x64-setup.exe\`：安装包。
 
 ---
 
