@@ -6,7 +6,7 @@
 
   <p><b>One island for your desktop</b></p>
 
-  <p>A desktop island for Windows and macOS: tasks, clipboard, messages, translation, music and AI status on one small island at the top of your screen.</p>
+  <p>A desktop island for Windows and macOS: tasks, clipboard, messages from Telegram, Discord, WhatsApp and more, translation, music and AI status on one small island at the top of your screen.</p>
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="../assets/readme/download-windows.svg" alt="Download for Windows (x64)" width="156" height="38"></a>
@@ -97,7 +97,7 @@ Fuyu (浮屿, "floating islet") is a lightweight, borderless, always-on-top floa
   </tr>
   <tr>
     <td valign="top"><code>03</code></td>
-    <td><b>Messages</b><br>QQ and WeChat alerts and several mailboxes, with mail you can read and answer on the island.</td>
+    <td><b>Messages</b><br>New messages from Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu and DingTalk pop up on the island and open the app in one click; plus several mailboxes, with mail you can read and answer on the island.</td>
   </tr>
   <tr>
     <td valign="top"><code>04</code></td>
@@ -109,7 +109,7 @@ Fuyu (浮屿, "floating islet") is a lightweight, borderless, always-on-top floa
   </tr>
   <tr>
     <td valign="top"><code>06</code></td>
-    <td><b>AI agents</b><br>The state and usage of your Claude Code and Codex sessions; approve a request right on the island, click a session to jump to its window, and get pushed to your phone while you are away.</td>
+    <td><b>AI agents</b><br>The state and usage of your Claude Code and Codex sessions; approve a request right on the island, click a session to jump to its window, and get alerts on Telegram, Discord, Feishu or Bark while you are away, then keep steering the agent from the chat.</td>
   </tr>
   <tr>
     <td valign="top"><code>07</code></td>
@@ -146,7 +146,7 @@ How it was measured, with the numbers: [idle-usage.md](../investigations/idle-us
    - **Windows**: get the `_x64-setup.exe`. The installers are not code-signed; if SmartScreen warns, choose "More info → Run anyway".
    - **macOS**: in the [release list](https://github.com/TixXin/fuyu/releases), get the `_aarch64.dmg` from the newest release that has one (a pre-release above the latest stable one, if the stable one has none) and drag Fuyu into Applications. The first time, open System Settings > Privacy & Security and click "Open Anyway"; see the [Mac install guide](https://fuyu.ing/#mac-install) for every step.
 2. **Open the island**: move the pointer onto the island at the top of the screen to expand it; the gear button or the tray icon (the menu bar icon on a Mac) opens Settings. On a Mac the welcome guide walks you through the system permissions Fuyu needs.
-3. **Set up once**: mail, translation and AI agents need a one-time setup in Settings. See [mail](../features/mail.md), [AI agents](../features/agent-status-hooks.md), [QQ](../features/qq-notifications.md) and [WeChat](../features/wechat-reminders.md) (in Chinese).
+3. **Set up once**: mail, translation and AI agents need a one-time setup in Settings. See [mail](../features/mail.md), [AI agents](../features/agent-status-hooks.md), [QQ](../features/qq-notifications.md), [WeChat](../features/wechat-reminders.md) and [phone alerts](../features/cc-connect.md) (in Chinese).
 
 > [!NOTE]
 > Fuyu runs on Windows 10 and 11 and on macOS 15 or later (Apple silicon). A few things differ on the Mac: QQ and WeChat show only unread counts, not message text, and media control and brightness use private system APIs. [platforms.md](../architecture/platforms.md) lists every feature on both systems (in Chinese).

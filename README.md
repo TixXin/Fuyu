@@ -97,7 +97,7 @@
   </tr>
   <tr>
     <td valign="top"><code>03</code></td>
-    <td><b>消息</b><br>QQ、微信提醒和多个邮箱，邮件可以直接在岛上阅读和回复。</td>
+    <td><b>消息</b><br>QQ、微信、企业微信、TIM、Telegram、Discord、WhatsApp、飞书、钉钉来了新消息，岛上都会提醒，点一下打开对应应用；还有多个邮箱，邮件可以直接在岛上阅读和回复。</td>
   </tr>
   <tr>
     <td valign="top"><code>04</code></td>
@@ -109,7 +109,7 @@
   </tr>
   <tr>
     <td valign="top"><code>06</code></td>
-    <td><b>AI Agent</b><br>显示 Claude Code 和 Codex 会话的运行状态和用量，要你确认时直接在岛上批准，点一下切到对应窗口；离开电脑时可以推送到手机。</td>
+    <td><b>AI Agent</b><br>显示 Claude Code 和 Codex 会话的运行状态和用量，要你确认时直接在岛上批准，点一下切到对应窗口；离开电脑时推送到手机：Telegram、Discord、飞书机器人或 iPhone 上的 Bark，还能在聊天里接着指挥 Agent。</td>
   </tr>
   <tr>
     <td valign="top"><code>07</code></td>
@@ -146,7 +146,7 @@
    - **Windows**：下载 `_x64-setup.exe`。安装包没有代码签名，SmartScreen 提示时点「更多信息 → 仍要运行」。
    - **macOS**：在 [Releases 列表](https://github.com/TixXin/fuyu/releases)里找最新一个带 `_aarch64.dmg` 的版本下载（最新正式版里没有时，在它上面的测试版里），把 Fuyu 拖进「应用程序」。第一次打开要在「系统设置 → 隐私与安全性」里点「仍要打开」，一步步的说明见 [Mac 安装教程](https://fuyu.ing/zh/#mac-install)。
 2. **展开小岛**：鼠标移到屏幕顶部的岛上即可展开，点齿轮或托盘图标（Mac 上是菜单栏图标）打开设置。Mac 上新手引导会带你打开要用到的系统权限。
-3. **配置一次**：邮箱、翻译和 AI Agent 需要先在设置里配置一次，具体见各自的说明：[邮箱](docs/features/mail.md)、[AI Agent](docs/features/agent-status-hooks.md)、[QQ 通知](docs/features/qq-notifications.md)、[微信提醒](docs/features/wechat-reminders.md)。
+3. **配置一次**：邮箱、翻译和 AI Agent 需要先在设置里配置一次，具体见各自的说明：[邮箱](docs/features/mail.md)、[AI Agent](docs/features/agent-status-hooks.md)、[QQ 通知](docs/features/qq-notifications.md)、[微信提醒](docs/features/wechat-reminders.md)、[手机推送](docs/features/cc-connect.md)。
 
 > [!NOTE]
 > 支持 Windows 10 / 11 和 macOS 15 以上（Apple 芯片）。Mac 版有几处和 Windows 不同：QQ、微信只显示未读数，读不到消息内容；媒体控制和亮度用到了系统私有接口。每个功能在两个平台上的情况见 [platforms.md](docs/architecture/platforms.md)。

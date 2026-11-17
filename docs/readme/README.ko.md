@@ -6,7 +6,7 @@
 
   <p><b>데스크톱의 자잘한 일들을 섬 하나에</b></p>
 
-  <p>Windows와 macOS용 데스크톱 다이내믹 아일랜드입니다. 할 일, 클립보드, 메시지, 번역, 음악, AI 상태를 화면 위쪽의 작은 섬 하나에 모았습니다.</p>
+  <p>Windows와 macOS용 데스크톱 다이내믹 아일랜드입니다. 할 일, 클립보드, Telegram·Discord·WhatsApp 등의 메시지, 번역, 음악, AI 상태를 화면 위쪽의 작은 섬 하나에 모았습니다.</p>
 
   <p>
     <a href="https://github.com/TixXin/fuyu/releases/latest"><img src="../assets/readme/download-windows.svg" alt="Windows용 다운로드 (x64)" width="156" height="38"></a>
@@ -98,7 +98,7 @@ Fuyu(浮屿, '떠 있는 작은 섬')는 가볍고 테두리 없이 항상 맨 �
   </tr>
   <tr>
     <td valign="top"><code>03</code></td>
-    <td><b>메시지</b><br>QQ, WeChat 알림과 여러 메일 계정. 메일은 섬에서 바로 읽고 답장할 수 있습니다.</td>
+    <td><b>메시지</b><br>Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu, DingTalk의 새 메시지를 섬에서 알려 주고, 클릭하면 해당 앱이 열립니다. 여러 메일 계정도 지원합니다. 메일은 섬에서 바로 읽고 답장할 수 있습니다.</td>
   </tr>
   <tr>
     <td valign="top"><code>04</code></td>
@@ -110,7 +110,7 @@ Fuyu(浮屿, '떠 있는 작은 섬')는 가볍고 테두리 없이 항상 맨 �
   </tr>
   <tr>
     <td valign="top"><code>06</code></td>
-    <td><b>AI 에이전트</b><br>Claude Code와 Codex 세션의 실행 상태와 사용량을 보여 줍니다. 확인이 필요할 때 섬에서 바로 승인하고, 한 번 클릭으로 해당 창으로 전환합니다. 자리를 비웠을 때는 휴대폰으로 알림을 보낼 수 있습니다.</td>
+    <td><b>AI 에이전트</b><br>Claude Code와 Codex 세션의 실행 상태와 사용량을 보여 줍니다. 확인이 필요할 때 섬에서 바로 승인하고, 한 번 클릭으로 해당 창으로 전환합니다. 자리를 비웠을 때는 Telegram, Discord, Feishu, Bark로 알림을 받고, 채팅에서 바로 에이전트에게 계속 지시할 수 있습니다.</td>
   </tr>
   <tr>
     <td valign="top"><code>07</code></td>
@@ -147,7 +147,7 @@ Fuyu(浮屿, '떠 있는 작은 섬')는 가볍고 테두리 없이 항상 맨 �
    - **Windows**: `_x64-setup.exe`를 받습니다. 설치 파일에는 코드 서명이 없으므로 SmartScreen 경고가 나오면 「추가 정보 → 실행」을 누릅니다.
    - **macOS**: [릴리스 목록](https://github.com/TixXin/fuyu/releases)에서 `_aarch64.dmg`가 있는 가장 최신 버전을 받고(최신 정식 버전에 없으면 그 위의 테스트 버전에 있습니다), Fuyu를 「응용 프로그램」으로 끌어다 놓습니다. 처음 열 때는 「시스템 설정 → 개인정보 보호 및 보안」에서 「그래도 열기」를 눌러야 합니다. 단계별 설명은 [Mac 설치 가이드](https://fuyu.ing/#mac-install)를 참고하세요.
 2. **섬 펼치기**: 마우스를 화면 위쪽의 섬에 올리면 펼쳐집니다. 톱니바퀴나 트레이 아이콘(Mac에서는 메뉴 막대 아이콘)을 누르면 설정이 열립니다. Mac에서는 첫 실행 가이드가 필요한 시스템 권한을 여는 과정을 안내합니다.
-3. **한 번만 설정하기**: 메일, 번역, AI 에이전트는 설정에서 한 번 구성해야 합니다. 자세한 내용은 각 설명을 참고하세요(중국어): [메일](../features/mail.md), [AI 에이전트](../features/agent-status-hooks.md), [QQ 알림](../features/qq-notifications.md), [WeChat 알림](../features/wechat-reminders.md).
+3. **한 번만 설정하기**: 메일, 번역, AI 에이전트는 설정에서 한 번 구성해야 합니다. 자세한 내용은 각 설명을 참고하세요(중국어): [메일](../features/mail.md), [AI 에이전트](../features/agent-status-hooks.md), [QQ 알림](../features/qq-notifications.md), [WeChat 알림](../features/wechat-reminders.md), [휴대폰 알림](../features/cc-connect.md).
 
 > [!NOTE]
 > Windows 10 / 11과 macOS 15 이상(Apple 실리콘)을 지원합니다. Mac 버전은 Windows와 몇 가지가 다릅니다. QQ와 WeChat은 읽지 않은 메시지 수만 표시하고 내용은 읽지 못하며, 미디어 제어와 밝기에는 시스템 비공개 API를 사용합니다. 각 기능의 두 플랫폼 지원 현황은 [platforms.md](../architecture/platforms.md)(중국어)를 참고하세요.
