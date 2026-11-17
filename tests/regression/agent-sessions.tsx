@@ -12,6 +12,7 @@ import { checkSubagentCards, checkSubagents } from "./agent-sessions-subagents";
 import { checkChildSessions } from "./agent-sessions-children";
 import { checkExpandByDefault } from "./agent-sessions-expand";
 import { checkAgeColumns, renderAgeColumns } from "./agent-sessions-age";
+import { until } from "./pollUntil";
 import type { AgentCardEffects, AgentHostDisplay, AgentSessionView } from "../../src/features/agent-status/agentSettings";
 
 const ISLAND_CHROME_HEIGHT = 86;
@@ -228,7 +229,7 @@ async function runChecks() {
     check(meta(third) === "用时 4 分 12 秒" && time(third) === "1h", "结束的会话显示这一轮用时");
     check(!second.querySelector(".agent-session__elapsed"), "不知道这一轮何时开始时不显示时长");
     const before = first.querySelector(".agent-session__elapsed")?.textContent;
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 1100)); });
+    await until(() => first.querySelector(".agent-session__elapsed")?.textContent !== before);
     check(first.querySelector(".agent-session__elapsed")?.textContent !== before, "进行中的会话时长每秒更新");
     await render("both", { showElapsed: false, showModel: false });
     check(!document.querySelector(".agent-session__elapsed") && !document.querySelector(".agent-session__pill-model") && document.querySelector(".agent-session__pill-mode"), "可以关掉运行时长和模型，权限照常显示");

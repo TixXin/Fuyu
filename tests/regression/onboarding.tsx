@@ -9,6 +9,7 @@ import catalog from "../../src/features/builtins.json";
 import { BUILTIN_PLUGINS_CHANGED, type BuiltinPlugin } from "../../src/features/plugin-kernel/api";
 import { OnboardingWindow } from "../../src/windows/onboarding/OnboardingWindow";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
+import { until } from "./pollUntil";
 
 const query = new URLSearchParams(location.search);
 const automated = query.has("test");
@@ -117,7 +118,7 @@ if (!automated) {
 } else {
   try {
     await act(async () => { mount(); });
-    await wait(30);
+    await until(() => commands.some(({ command }) => command === "show_onboarding_window"));
     check(commands.some(({ command }) => command === "show_onboarding_window"), "The overlay is shown once the page has painted");
     check(welcome().kind === "hello", "The island is asked to say hello as the guide opens");
     check(JSON.parse(localStorage.getItem("fuyu-onboarding-demo") ?? "{}").until > Date.now(), "The island's demo runs while the guide is open");
@@ -187,15 +188,15 @@ if (!automated) {
     await placeIsland(open);
     check(stars() === 1 && document.querySelector(".onboarding-spotlight--open"), "Opening the real island earns a star, and the light grows with it");
     check(parseFloat(card().style.top || "0") !== closed.height + 28, "The card moves out of the way of the open island");
-    await wait(900);
+    await until(() => commands.some(({ command }) => command === "get_file_shelf"));
     shelfItems = [{ id: "dropped", addedAt: 2 }];
-    await wait(900);
+    await until(() => stars() === 2);
     check(stars() === 2, "A file landing on the shelf earns a star, even when the shelf holds as many entries as before");
     await act(async () => { await emit("clipboard-popup-opened"); });
-    await wait(10);
+    await until(() => stars() === 3);
     check(stars() === 3 && document.querySelector(".onboarding__lead")?.textContent === "全部完成，你已经会用了。", "The real clipboard popup opening earns the last star");
     await act(async () => { document.querySelector<HTMLInputElement>("#onboarding-winv")!.click(); });
-    await wait(10);
+    await until(() => clipboard.winV === true);
     check(clipboard.winV === true, "Win+V is saved in the clipboard settings");
     await placeIsland(closed);
 
