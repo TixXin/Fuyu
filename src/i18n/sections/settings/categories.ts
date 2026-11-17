@@ -9,12 +9,12 @@ export type SettingsCategoriesText = {
   collapse: (group: string) => string;
   keywords: Record<
     | "overview" | "general" | "generalData" | "generalApi" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardLinks" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
-    | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentProviders" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentTunnel" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
+    | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentTunnel" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
     | "plugins" | "pluginsV3" | "market" | "about" | "aboutHistory" | "aboutHelp",
     string
   >;
   entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; plugins: string; agents: string; agentAppearance: string; agentAlerts: string; agentRemote: string; about: string };
-  tabs: Record<"general" | "generalData" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardLinks" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentProviders" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "agentRemote" | "agentTunnel" | "about" | "aboutHistory" | "aboutHelp", string>;
+  tabs: Record<"general" | "generalData" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardLinks" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorQuiet" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "agentRemote" | "agentTunnel" | "about" | "aboutHistory" | "aboutHelp", string>;
   groups: {
     basics: string;
     features: string;
@@ -60,7 +60,6 @@ export type SettingsCategoriesText = {
   voiceInput: string;
   calendar: string;
   agents: string;
-  agentProviders: string;
   agentAppearance: string;
   agentSessions: string;
   agentRings: string;
@@ -126,8 +125,7 @@ export const zhCN: SettingsCategoriesText = {
     messages: "消息 提醒方式 横幅 面板 预览",
     messagesIm: "QQ 微信 通知 聊天",
     messagesMail: "邮箱 邮件 IMAP 授权码",
-    agents: "Claude Code Codex 钩子 hook 安装 修复 状态灯",
-    agentProviders: "启用 代理 提供方 Claude Code Codex Cursor Gemini OpenCode",
+    agents: "Claude Code Codex 钩子 hook 安装 修复 状态灯 启用 代理 提供方 Cursor Gemini OpenCode WorkBuddy Antigravity DeepSeek Qoder CodeBuddy Qwen TRAE ZCode Kimi MiMo Grok Copilot Droid pi",
     agentAppearance: "会话标题 状态灯 收起条 岛上显示 外观",
     agentSessions: "会话 卡片 列表 隐藏会话 筛选 子会话",
     agentRings: "用量 用量环 会话环 额度 GLM Kimi Anthropic",
@@ -195,8 +193,7 @@ export const zhCN: SettingsCategoriesText = {
     messages: "提醒方式",
     messagesIm: "QQ 与微信",
     messagesMail: "邮箱",
-    agents: "状态灯钩子",
-    agentProviders: "启用的代理",
+    agents: "钩子与代理",
     agentConnect: "连接与扩展",
     agentApprovals: "审批",
     agentAppearance: "状态灯与标题",
@@ -255,8 +252,7 @@ export const zhCN: SettingsCategoriesText = {
   screenshot: "截图",
   voiceInput: "语音输入",
   calendar: "日历",
-  agents: "状态灯钩子",
-  agentProviders: "启用的代理",
+  agents: "钩子与代理",
   agentAppearance: "状态灯与标题",
   agentSessions: "会话列表",
   agentRings: "用量与会话环",
@@ -322,8 +318,7 @@ export const en: SettingsCategoriesText = {
     messages: "messages notice style banner panel preview",
     messagesIm: "qq wechat notifications chat",
     messagesMail: "mail email imap",
-    agents: "claude code codex hooks install repair status light",
-    agentProviders: "enable agents providers claude code codex cursor gemini opencode",
+    agents: "claude code codex hooks install repair status light enable agents providers cursor gemini opencode workbuddy antigravity deepseek qoder codebuddy qwen trae zcode kimi mimo grok copilot droid pi",
     agentAppearance: "session title status light collapsed bar on the island appearance",
     agentSessions: "sessions cards list hide filter subagent",
     agentRings: "usage ring session ring quota glm kimi anthropic",
@@ -391,8 +386,7 @@ export const en: SettingsCategoriesText = {
     messages: "Notice style",
     messagesIm: "QQ and WeChat",
     messagesMail: "Mail",
-    agents: "Status light hooks",
-    agentProviders: "Enabled agents",
+    agents: "Hooks and agents",
     agentConnect: "Connection",
     agentApprovals: "Approvals",
     agentAppearance: "Light and title",
@@ -451,8 +445,7 @@ export const en: SettingsCategoriesText = {
   screenshot: "Screenshot",
   voiceInput: "Voice input",
   calendar: "Calendar",
-  agents: "Status light hooks",
-  agentProviders: "Enabled agents",
+  agents: "Hooks and agents",
   agentAppearance: "Light and title",
   agentSessions: "Session list",
   agentRings: "Usage and session rings",

@@ -65,17 +65,21 @@ function SessionTitleSection({ settings, onSettingsChange }: AgentSectionProps) 
   );
 }
 
-function HooksSection() {
+function HooksAndProvidersSection({ settings, onSettingsChange }: AgentSectionProps) {
   const agentStatus = useAgentStatusSettings();
-  return <AgentHooksSettingsSection {...agentStatus} />;
+  return (
+    <>
+      <AgentHooksSettingsSection {...agentStatus} />
+      <AgentProviderSwitches settings={settings} onSettingsChange={onSettingsChange} {...agentStatus} />
+    </>
+  );
 }
 
-export type AgentTab = "agents" | "agentProviders" | "agentAppearance" | "agentRings";
+export type AgentTab = "agents" | "agentAppearance" | "agentRings";
 
 const sections = settingsSections<AgentSectionProps, AgentTab>();
 
-sections.add({ id: "agents.hooks", category: "agents", order: 10, component: HooksSection });
-sections.add({ id: "agentProviders.providers", category: "agentProviders", order: 10, component: AgentProviderSwitches });
+sections.add({ id: "agents.hooks", category: "agents", order: 10, component: HooksAndProvidersSection });
 sections.add({ id: "agentAppearance.session-title", category: "agentAppearance", order: 20, component: SessionTitleSection });
 
 export function AgentSettingsPage({ tab, ...props }: AgentSectionProps & { tab: AgentTab }) {

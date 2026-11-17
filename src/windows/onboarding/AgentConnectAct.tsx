@@ -17,8 +17,8 @@ export function AgentConnectAct({ settings, onSettingsChange }: { settings: Isla
       <h2 className="onboarding__step">{text.remote}</h2>
       <AgentRemoteHostsSettings />
       <h2 className="onboarding__step">{text.agents}</h2>
-      <AgentProviderSwitches settings={settings} onSettingsChange={onSettingsChange} />
       <AgentHooksSettingsSection {...agentStatus} />
+      <AgentProviderSwitches settings={settings} onSettingsChange={onSettingsChange} {...agentStatus} />
       <h2 className="onboarding__step">{text.marker}</h2>
       <AgentReplyMarkerSettings />
     </>

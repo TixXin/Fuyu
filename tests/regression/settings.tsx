@@ -78,7 +78,7 @@ if (!automated) {
     await act(async () => { mount(); });
     check(categories().length > 0, "The sidebar lists the settings pages");
 
-    const pages = [...categories(), "generalData", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket", "behaviorTuck", "behaviorQuiet", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardLinks", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "messagesMail", "agentProviders", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote", "agentTunnel", "aboutHistory", "aboutHelp"];
+    const pages = [...categories(), "generalData", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket", "behaviorTuck", "behaviorQuiet", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardLinks", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "messagesMail", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote", "agentTunnel", "aboutHistory", "aboutHelp"];
     for (const category of pages) {
       await openPage(category as SettingsCategory);
       const item = element(`.settings-sidebar__item[data-category='${sidebarItemOf(category as SettingsCategory)}']`);
@@ -328,9 +328,9 @@ if (!automated) {
       "The typed server is saved with the mailbox");
 
     await openPage("agentConnect");
-    check(texts(".settings-tabs__tab") === "状态灯钩子|启用的代理|连接与扩展|审批" && texts(".settings-page__title") === "Agent"
+    check(texts(".settings-tabs__tab") === "钩子与代理|连接与扩展|审批" && texts(".settings-page__title") === "Agent"
       && element(".settings-sidebar__item--active").dataset.category === "agents",
-      "Agent is the first item in the AI Agent group, with tabs for hooks, enabled agents, connection and approvals");
+      "Agent is the first item in the AI Agent group, with tabs for hooks and agents, connection and approvals");
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     const connectGroups = [...document.querySelectorAll<HTMLElement>(".settings-group")];
     const markerGroup = connectGroups.find((group) => group.textContent?.includes("回复状态标记"));
@@ -353,6 +353,9 @@ if (!automated) {
     check(hooksLink && agentGroups.indexOf(hooksGroup!) <= 1 && hooksGroup!.querySelector(".agent-hooks-message--attention"), "The on-the-island page opens with the status light card, which says the hooks are missing and has Install/repair");
     await act(async () => { hooksLink!.click(); await new Promise(resolve => setTimeout(resolve, 20)); });
     check(commands.includes("install_agent_status_hooks") && element(".settings-tabs__tab--active").dataset.tab === "agents", "Install/repair on the on-the-island page installs the hooks there");
+    const primaryCards = [...document.querySelectorAll<HTMLElement>(".agent-provider-grid:not(.agent-provider-grid--more) .agent-provider-card")], moreToggle = element<HTMLButtonElement>(".agent-providers__more-toggle");
+    check(primaryCards.map((card) => card.dataset.provider).join("|") === "codex|claudeCode" && moreToggle.getAttribute("aria-expanded") === "false", "Detected agents are shown in the primary grid while undetected ones start folded");
+    await act(async () => { moreToggle.click(); }); check(moreToggle.getAttribute("aria-expanded") === "true" && document.querySelectorAll(".agent-provider-grid--more .agent-provider-card").length > 0, "Expanding more agents reveals the rest of the supported agents");
     localStorage.removeItem("fuyu-agent-session-filters");
     await openPage("agentSessions");
     const filterGroup = () => [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.includes("隐藏会话"))!;

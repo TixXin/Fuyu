@@ -64,7 +64,14 @@ export type SettingsAgentText = {
   remoteSave: string;
   remoteCancel: string;
   agentsSection: string;
+  agentsEnabledCount: (enabled: number, total: number) => string;
+  moreAgents: (count: number) => string;
   showAgentsHint: string;
+  hooksReady: string;
+  hookBadgeOutdated: string;
+  hookBadgeNotInstalled: string;
+  notDetectedBadge: string;
+  sessionOnlyBadge: string;
   hideFinished: string;
   hideFinishedHint: string;
   hideClosed: string;
@@ -254,7 +261,14 @@ export const zhCN: SettingsAgentText = {
   remoteSave: "添加",
   remoteCancel: "取消",
   agentsSection: "显示哪些 Agent",
+  agentsEnabledCount: (enabled, total) => `已启用 ${enabled} / ${total}`,
+  moreAgents: (count) => `更多支持的 Agent（${count}）`,
   showAgentsHint: "关掉的 Agent 不出现在 Agent 页，也不算进岛上的运行数量。",
+  hooksReady: "钩子已就绪，状态灯与岛上审批可正常工作。",
+  hookBadgeOutdated: "钩子待更新",
+  hookBadgeNotInstalled: "未装钩子",
+  notDetectedBadge: "未检测到",
+  sessionOnlyBadge: "会话记录",
   hideFinished: "只显示进行中的会话",
   hideFinishedHint: "隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。",
   hideClosed: "隐藏已退出的会话",
@@ -444,7 +458,14 @@ export const en: SettingsAgentText = {
   remoteSave: "Add",
   remoteCancel: "Cancel",
   agentsSection: "Agents shown",
+  agentsEnabledCount: (enabled, total) => `${enabled} / ${total} on`,
+  moreAgents: (count) => `${count} more supported agents`,
   showAgentsHint: "Agents switched off are left out of the Agent page and the island's running count.",
+  hooksReady: "Hooks are ready for the status light and approvals on the island.",
+  hookBadgeOutdated: "Hooks outdated",
+  hookBadgeNotInstalled: "No hooks yet",
+  notDetectedBadge: "Not detected",
+  sessionOnlyBadge: "Session log",
   hideFinished: "Only sessions in progress",
   hideFinishedHint: "Hide finished and failed sessions; keep running, waiting and possibly stalled ones.",
   hideClosed: "Hide sessions that have quit",

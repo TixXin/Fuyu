@@ -49,7 +49,7 @@ function ApprovalReference({ onOpenPage }: ShortcutsSectionProps) {
 
 shortcutReferences.add({ id: "shortcutsReference.approvals", category: "shortcutsReference", order: 30, component: ApprovalReference }, OWNER);
 
-const agentPage = (tab: "agents" | "agentProviders" | "agentAppearance" | "agentRings") =>
+const agentPage = (tab: "agents" | "agentAppearance" | "agentRings") =>
   function AgentPage({ settings, onSettingsChange }: PageProps) {
     return <AgentSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
   };
@@ -60,7 +60,6 @@ const agentAlertsPage = (tab: "agentAlerts" | "agentPush") =>
   };
 
 addSettingsCategory("agents", agentPage("agents"), OWNER);
-addSettingsCategory("agentProviders", agentPage("agentProviders"), OWNER);
 addSettingsCategory("agentAppearance", agentPage("agentAppearance"), OWNER);
 addSettingsCategory("agentRings", agentPage("agentRings"), OWNER);
 addSettingsCategory("agentSessions", ({ settings, onSettingsChange }: PageProps) => <AgentSessionsSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
