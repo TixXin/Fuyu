@@ -13,7 +13,7 @@ mod waiting;
 use std::{
     path::PathBuf,
     sync::{
-        atomic::{AtomicU16, Ordering},
+        atomic::{AtomicBool, AtomicU16, Ordering},
         Arc, Mutex, OnceLock, PoisonError,
     },
     time::Duration,
@@ -43,6 +43,7 @@ struct Service {
 }
 
 static SERVICE: OnceLock<Service> = OnceLock::new();
+static WANTED: AtomicBool = AtomicBool::new(false);
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub(crate) struct ApprovalEndpoint {
@@ -101,6 +102,9 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         own: Mutex::new(None),
         borrowed: Mutex::new(None),
     });
+    if let Some(service) = SERVICE.get() {
+        service.shared.set_enabled(WANTED.load(Ordering::SeqCst));
+    }
     background::register(opencode);
     Ok(())
 }
@@ -263,7 +267,10 @@ fn service() -> Result<&'static Service, String> {
 
 #[tauri::command]
 pub fn set_agent_approval_enabled(enabled: bool) -> Result<(), String> {
-    service()?.shared.set_enabled(enabled);
+    WANTED.store(enabled, Ordering::SeqCst);
+    if let Some(service) = SERVICE.get() {
+        service.shared.set_enabled(enabled);
+    }
     Ok(())
 }
 

@@ -240,9 +240,9 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         gate: Mutex::new(gate::Keeper::new(folder)),
         button: Mutex::new(button::Keeper::default()),
     });
-    SERVICE
-        .set(service.clone())
-        .map_err(|_| "微信提醒服务已启动。".to_string())?;
+    if SERVICE.set(service.clone()).is_err() {
+        return Ok(());
+    }
     let listening = service.clone();
     let worker = Worker::new("wechat-reminders", move |stop| monitor(listening.clone(), &stop));
     let switched = service.clone();
@@ -255,6 +255,11 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
 fn release(service: &ReminderService) {
     let _ = service.gate.lock().map(|mut gate| gate.off());
     let _ = service.button.lock().map(|mut button| button.restore());
+}
+
+fn ready(app: &AppHandle) -> Result<&'static Arc<ReminderService>, String> {
+    init(app)?;
+    service()
 }
 
 fn service() -> Result<&'static Arc<ReminderService>, String> {
@@ -299,8 +304,8 @@ fn set_enabled(service: &ReminderService, enabled: bool) {
 }
 
 #[tauri::command]
-pub fn set_wechat_expose_ui(enabled: bool) -> Result<ReminderSnapshot, String> {
-    let service = service()?;
+pub fn set_wechat_expose_ui(app: AppHandle, enabled: bool) -> Result<ReminderSnapshot, String> {
+    let service = ready(&app)?;
     if !enabled {
         let _ = service.gate.lock().map(|mut gate| gate.off());
     }
@@ -319,8 +324,8 @@ pub fn set_wechat_expose_ui(enabled: bool) -> Result<ReminderSnapshot, String> {
 }
 
 #[tauri::command]
-pub fn set_wechat_hide_taskbar_button(enabled: bool) -> Result<ReminderSnapshot, String> {
-    let service = service()?;
+pub fn set_wechat_hide_taskbar_button(app: AppHandle, enabled: bool) -> Result<ReminderSnapshot, String> {
+    let service = ready(&app)?;
     let (snapshot, changed) = {
         let mut state = service.state.lock().map_err(|_| "微信提醒状态不可用。")?;
         let changed = state.set_hide_taskbar_button(enabled);
@@ -333,8 +338,8 @@ pub fn set_wechat_hide_taskbar_button(enabled: bool) -> Result<ReminderSnapshot,
 }
 
 #[tauri::command]
-pub fn set_wechat_auto_clear(enabled: bool) -> Result<ReminderSnapshot, String> {
-    let mut state = service()?.state.lock().map_err(|_| "微信提醒状态不可用。")?;
+pub fn set_wechat_auto_clear(app: AppHandle, enabled: bool) -> Result<ReminderSnapshot, String> {
+    let mut state = ready(&app)?.state.lock().map_err(|_| "微信提醒状态不可用。")?;
     state.auto_clear = enabled;
     Ok(state.snapshot.clone())
 }

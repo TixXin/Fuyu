@@ -63,11 +63,32 @@ fn session_ring_config(grant: &Grant) -> Vec<(&'static str, Value)> {
     style.into_iter().chain(count).collect()
 }
 
+fn local_api_config(grant: &Grant) -> Vec<(&'static str, Value)> {
+    grant.settings.get("allowWrite").filter(|value| value.is_boolean()).map(|value| ("allowWrite", value.clone())).into_iter().collect()
+}
+
+const LOCAL_API_V2: &str = "focusd.local-api";
+const LOCAL_API_FILE: &str = "local-api.json";
+
+pub(crate) fn with_old_local_api(mut grants: Map<String, Value>, local_api: Option<&str>) -> Map<String, Value> {
+    if grants.contains_key(LOCAL_API_V2) {
+        return grants;
+    }
+    let Some(old) = local_api.and_then(|text| serde_json::from_str::<Value>(text).ok()) else { return grants };
+    let enabled = old.get("enabled").and_then(Value::as_bool).unwrap_or(false);
+    let allow_write = old.get("allowWrite").and_then(Value::as_bool).unwrap_or(false);
+    if enabled || allow_write {
+        grants.insert(LOCAL_API_V2.to_owned(), serde_json::json!({ "enabled": enabled, "settings": { "allowWrite": allow_write } }));
+    }
+    grants
+}
+
 pub(crate) const MIGRATIONS: &[Migration] = &[
     Migration { v2: "focusd.timer", v3: "timer", config: timer_config, off_without_grant: false },
     Migration { v2: "focusd.claude-usage", v3: "claude-usage", config: claude_usage_config, off_without_grant: true },
     Migration { v2: "focusd.cc-connect", v3: "cc-connect", config: cc_connect_config, off_without_grant: true },
     Migration { v2: "focusd.session-ring", v3: "session-ring", config: session_ring_config, off_without_grant: true },
+    Migration { v2: LOCAL_API_V2, v3: "local-api", config: local_api_config, off_without_grant: true },
 ];
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -130,6 +151,7 @@ pub(crate) fn migrate(home: &Path, plugins_file: &Path) {
             return;
         }
     };
+    let grants = with_old_local_api(grants, std::fs::read_to_string(home.join(LOCAL_API_FILE)).ok().as_deref());
     for migration in pending {
         if let Some(plan) = plan(migration, &grants) {
             if let Err(error) = apply(&plan, plugins_file) {

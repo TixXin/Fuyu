@@ -70,7 +70,6 @@ SDK、脚手架和示例插件都是 MIT 许可，拿来写插件不会给你的
 
 有几个可选功能直接编译在岛屿里，在 **设置 → 插件扩展** 中和普通插件一样启用、授权和设置，卡片上标着「内置」。它们不用下载，不受「允许运行第三方插件」开关限制，也不能卸载：
 
-- 本地接口（`focusd.local-api`）：让其他程序通过 HTTP 读写待办、上报 AI Agent 状态，`fuyu-plugin dev` 也靠它。见 [本地接口](../features/local-api.md)。
 - 中心图案（`focusd.center-pattern`）：收起条中间的小图案或 Codex 宠物。
 - 计时器（`focusd.timer`）：岛上的倒计时和秒表，收起条显示剩余时间，到点提醒。
 - SSH 代理隧道（`focusd.ssh-proxy-tunnel`）：把这台电脑的代理借给 SSH 服务器。

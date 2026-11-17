@@ -2,6 +2,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     path::{Path, PathBuf},
     sync::{Arc, Mutex, OnceLock, PoisonError},
+    time::Duration,
 };
 
 use serde::{Deserialize, Serialize};
@@ -16,6 +17,8 @@ const CATALOG: &str = include_str!("../../../src/features/builtins.json");
 const CATALOG_FORMAT: u32 = 1;
 const DIR: &str = "plugins-v3";
 const FILE: &str = "plugins.yml";
+const READY_POLL: Duration = Duration::from_millis(50);
+const READY_POLLS: u32 = 200;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -372,6 +375,15 @@ pub(crate) fn config(id: &str) -> Map<String, Value> {
     switches().lock().unwrap_or_else(PoisonError::into_inner).table.config(id)
 }
 
+fn wait_until_ready() {
+    for _ in 0..READY_POLLS {
+        if switches().lock().unwrap_or_else(PoisonError::into_inner).ready {
+            return;
+        }
+        std::thread::sleep(READY_POLL);
+    }
+}
+
 fn list() -> Vec<BuiltinPlugin> {
     switches().lock().unwrap_or_else(PoisonError::into_inner).table.list()
 }
@@ -383,6 +395,7 @@ pub(crate) fn get_builtin_plugins() -> Vec<BuiltinPlugin> {
 
 #[tauri::command]
 pub(crate) async fn set_builtin_plugin_enabled(id: String, enabled: bool) -> Result<Vec<BuiltinPlugin>, UserError> {
+    let _ = tauri::async_runtime::spawn_blocking(wait_until_ready).await;
     let actions = {
         let mut slot = switches().lock().unwrap_or_else(PoisonError::into_inner);
         let was = slot.table.disabled().clone();
@@ -407,6 +420,7 @@ pub(crate) async fn set_builtin_plugin_enabled(id: String, enabled: bool) -> Res
 
 #[tauri::command]
 pub(crate) async fn set_builtin_plugin_config(id: String, key: String, value: Option<Value>) -> Result<Vec<BuiltinPlugin>, UserError> {
+    let _ = tauri::async_runtime::spawn_blocking(wait_until_ready).await;
     let reconfigure = {
         let mut slot = switches().lock().unwrap_or_else(PoisonError::into_inner);
         let before = slot.table.config(&id).get(&key).cloned();

@@ -520,12 +520,10 @@ mod settings_tests {
 mod builtin_tests {
     use std::path::PathBuf;
 
-    use super::super::builtin::{has_native_work, is_builtin, manifests, BUILTINS, LOCAL_API_ALLOW_WRITE, LOCAL_API_ID};
+    use super::super::builtin::{has_native_work, is_builtin, manifests, BUILTINS, SSH_TUNNEL_ID};
     use super::super::grants::{record_builtin_start, record_builtin_stop};
     use super::super::runtime::{RuntimeInfo, RuntimeStatus};
     use super::super::manifest::{parse_manifest, PluginRuntime};
-    use super::super::store::PluginsState;
-    use super::super::registry::migrate_local_api;
     use super::super::InstalledPlugin;
 
     fn installed() -> Vec<InstalledPlugin> {
@@ -533,15 +531,6 @@ mod builtin_tests {
             .into_iter()
             .map(|(id, manifest)| InstalledPlugin { folder: id.to_string(), dir: PathBuf::new(), manifest, builtin: true, dev: false })
             .collect()
-    }
-
-    #[test]
-    fn the_local_api_manifest_is_valid() {
-        let plugins = installed();
-        let manifest = plugins[0].manifest.as_ref().expect("valid built-in manifest");
-        assert_eq!(manifest.id, LOCAL_API_ID);
-        assert_eq!(manifest.runtime, PluginRuntime::Builtin);
-        assert!(manifest.permissions.contains(&"agent-status:write".to_string()));
     }
 
     #[test]
@@ -557,7 +546,9 @@ mod builtin_tests {
 
     #[test]
     fn only_native_built_in_plugins_do_work_in_this_process() {
-        assert_eq!(has_native_work(BUILTINS, LOCAL_API_ID), Ok(true));
+        assert_eq!(has_native_work(BUILTINS, SSH_TUNNEL_ID), Ok(true));
+        assert_eq!(has_native_work(BUILTINS, "focusd.center-pattern"), Ok(false));
+        assert!(!is_builtin("focusd.local-api"));
         let table = [("focusd.native", "", true), ("focusd.window-only", "", false)];
         assert_eq!(has_native_work(&table, "focusd.window-only"), Ok(false));
         assert!(has_native_work(&table, "focusd.unknown").expect_err("unknown").contains("focusd.unknown"));
@@ -583,30 +574,6 @@ mod builtin_tests {
     fn plugins_from_disk_cannot_claim_builtin() {
         let text = r#"{ "id": "dev.sneaky", "name": { "zh-CN": "x", "en": "x" }, "version": "1", "apiVersion": 1, "runtime": { "type": "builtin" } }"#;
         assert!(parse_manifest(text, "dev.sneaky", "0.2.14").expect_err("refused").contains("builtin"));
-    }
-
-    #[test]
-    fn the_old_local_api_switches_carry_over_once() {
-        let plugins = installed();
-
-        let mut state = PluginsState::default();
-        assert!(migrate_local_api(&mut state, &plugins, Some((true, true))));
-        let grant = &state.plugins[LOCAL_API_ID];
-        assert!(grant.enabled);
-        assert_eq!(grant.granted_permissions.len(), 5);
-        assert_eq!(grant.settings[LOCAL_API_ALLOW_WRITE], true);
-        assert!(!migrate_local_api(&mut state, &plugins, Some((false, false))));
-        assert!(state.plugins[LOCAL_API_ID].enabled);
-
-        let mut never_used = PluginsState::default();
-        assert!(!migrate_local_api(&mut never_used, &plugins, Some((false, false))));
-        assert!(never_used.plugins.is_empty());
-        assert!(!migrate_local_api(&mut never_used, &plugins, None));
-
-        let mut read_only = PluginsState::default();
-        assert!(migrate_local_api(&mut read_only, &plugins, Some((false, true))));
-        assert!(!read_only.plugins[LOCAL_API_ID].enabled);
-        assert!(read_only.plugins[LOCAL_API_ID].granted_permissions.is_empty());
     }
 }
 

@@ -3,7 +3,7 @@ use std::{
     collections::BTreeMap,
     sync::{
         atomic::{AtomicU64, Ordering},
-        mpsc, Arc, Mutex, MutexGuard, OnceLock, PoisonError,
+        mpsc, Arc, Mutex, MutexGuard, PoisonError,
     },
     thread::{self, JoinHandle},
 };
@@ -19,13 +19,11 @@ use super::supervisor::supervise;
 
 pub(super) const MAX_ACCOUNTS: usize = 5;
 
-static APP: OnceLock<AppHandle> = OnceLock::new();
 static SERVICES: Mutex<BTreeMap<String, Arc<MailService>>> = Mutex::new(BTreeMap::new());
 static THREADS: Mutex<Vec<JoinHandle<()>>> = Mutex::new(Vec::new());
 static REVISION: AtomicU64 = AtomicU64::new(0);
 
-pub(super) fn init(app: &AppHandle) {
-    let _ = APP.set(app.clone());
+pub(super) fn init() {
     crate::messages_plugin::register(MAIL, Accounts);
 }
 
@@ -86,7 +84,7 @@ pub(super) fn find(email: &str) -> Result<Arc<MailService>, UserError> {
         .ok_or_else(|| UserError::new("mail.connectThis", "Connect this mailbox first."))
 }
 
-pub(super) fn find_or_start(email: &str, host: &str) -> Result<Arc<MailService>, UserError> {
+pub(super) fn find_or_start(app: &AppHandle, email: &str, host: &str) -> Result<Arc<MailService>, UserError> {
     let mut services = services();
     if let Some(service) = services.get(email) {
         if service.is_alive() {
@@ -101,12 +99,11 @@ pub(super) fn find_or_start(email: &str, host: &str) -> Result<Arc<MailService>,
     if services.len() >= MAX_ACCOUNTS {
         return Err(UserError::new("mail.tooMany", format!("At most {MAX_ACCOUNTS} mailboxes at once; disconnect one first.")).arg("max", MAX_ACCOUNTS));
     }
-    let app = APP.get().ok_or_else(|| UserError::new("mail.notReady", "The mail service is not ready yet."))?.clone();
     let (sender, receiver) = mpsc::channel();
     let mut state = MailState::default();
     state.snapshot.email = Some(email.to_string());
     let service = Arc::new(MailService {
-        app,
+        app: app.clone(),
         email: email.to_string(),
         host: Mutex::new(host.to_string()),
         state: Mutex::new(state),

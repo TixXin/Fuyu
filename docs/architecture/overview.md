@@ -19,7 +19,7 @@
 │           pets（只读的 Codex Pets 宠物包）· claude_usage（可选经代理查 oauth/usage）  │
 │           ssh_tunnel（内置插件：每台主机一条常驻 ssh -R，把本机代理借给服务器）      │
 │           cc_connect（内置插件：找 cc-connect、读它的会话列表，经它把推送发到手机）  │
-│           local_api（127.0.0.1 HTTP，内置插件 focusd.local-api）                     │
+│           local_api（127.0.0.1 HTTP，内置插件 local-api）                            │
 │           plugin_host（插件子进程，stdio JSON-RPC，市场与签名，独立 WebView2 页面）  │
 │           mail · qq_notifications · wechat_reminders · translation · settings_window │
 │           device_use · system_levels · device_events · system · rename_migration     │
