@@ -2921,12 +2921,12 @@
       "zh-CN": {
         "group": "会话卡片",
         "title": "卡片光效",
-        "description": "只在「卡片」和「紧凑」显示方式下生效。粒子流苏：边框按状态颜色发光，进行中和等你处理的会呼吸，左侧飘着一条粒子流苏。渐变带：从右端铺开一层状态颜色的渐变，进行中和等你处理的更亮。"
+        "description": "粒子流苏与渐变带只在「卡片」和「紧凑」显示方式下生效；流光边框在三种显示方式下都只给等你确认的会话加上绕边框流动的光带，减少动画时静止。"
       },
       "en": {
         "group": "Session cards",
         "title": "Card light effects",
-        "description": "Only in the Cards and Compact layouts. Sparkle band: cards glow in their state's colour, breathing while working or waiting on you, with a drifting band of sparks on the left. Gradient: a wash in that colour from the right end, brighter while working or waiting on you."
+        "description": "Sparkle band and Gradient apply in Cards and Compact; Flowing border adds an orbiting light ribbon only to sessions waiting for your approval across all three layouts, staying still under reduced motion."
       }
     },
     {

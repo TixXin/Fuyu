@@ -13,7 +13,8 @@ import { sessionLight } from "./sessionLight";
 import { pillParts } from "./sessionPill";
 import type { UnseenSessions } from "./useUnseenSessions";
 import "./AgentSessionRow.css";
-import type { AgentHostDisplay } from "./agentSettings";
+import "./AgentCardEffects.css";
+import type { AgentCardEffects, AgentHostDisplay } from "./agentSettings";
 
 export function AgentSessionRow({
   session,
@@ -30,6 +31,7 @@ export function AgentSessionRow({
   showElapsed,
   showModel,
   showActivity,
+  effects = "off",
   unseen,
   subagents,
   menu,
@@ -51,6 +53,7 @@ export function AgentSessionRow({
   showElapsed: boolean;
   showModel: boolean;
   showActivity: boolean;
+  effects?: AgentCardEffects;
   unseen?: UnseenSessions;
   subagents?: ReactNode;
   menu?: ReactNode;
@@ -85,9 +88,12 @@ export function AgentSessionRow({
   ]
     .filter(Boolean)
     .flatMap((part, index) => (index === 0 ? [part] : [" · ", part]));
+  const key = sessionKey(session);
+  const looked = Boolean(unseen && !unseen.keys.has(key) && asksUser(session));
+  const orbit = effects === "orbit" && light === "needs" && !looked;
   const button = (
     <button
-      className={`agent-session agent-session--${session.phase} agent-session--light-${light} agent-session--${full ? "full" : "compact"}${unseen?.keys.has(sessionKey(session)) ? " agent-session--unseen" : unseen && asksUser(session) ? " agent-session--looked" : ""}`}
+      className={`agent-session agent-session--${session.phase} agent-session--light-${light} agent-session--${full ? "full" : "compact"}${unseen?.keys.has(key) ? " agent-session--unseen" : looked ? " agent-session--looked" : ""}${orbit ? " agent-session--orbit" : ""}`}
       type="button"
       onClick={onOpen}
     >
@@ -123,6 +129,7 @@ export function AgentSessionRow({
           full && <SessionBody session={session} showActivity={showActivity} />
         )}
       </span>
+      {orbit && <span className="agent-orbit-ring" aria-hidden="true" />}
     </button>
   );
   return (

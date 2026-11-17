@@ -306,6 +306,7 @@ export function AgentSessionsPanel({
               showElapsed={showElapsed}
               showModel={showModel}
               showActivity={showActivity}
+              effects={cardEffects}
               unseen={unseen}
               subagents={
                 reveal || (listedSubagents(session).length === 0 && !nested.children.has(key)) ? undefined : (

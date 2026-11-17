@@ -78,6 +78,7 @@ export function AgentSessionCard({
     doing,
   ].filter(Boolean);
 
+  const orbit = effects === "orbit" && light === "needs" && !looked;
   const className = [
     `agent-card agent-card--${session.phase} agent-card--light-${light}`,
     LIVELY.has(light) && !looked && "agent-card--lively",
@@ -85,12 +86,14 @@ export function AgentSessionCard({
     unseen && "agent-card--unseen",
     looked && "agent-card--looked",
     cardReply && "agent-card--reply",
-    effects !== "off" && `agent-card--${effects}`,
+    effects !== "off" && effects !== "orbit" && `agent-card--${effects}`,
+    orbit && "agent-card--orbit",
   ].filter(Boolean).join(" ");
 
   return (
     <button className={className} type="button" onClick={onOpen}>
       {effects === "sparkle" && <span className="agent-card__band" aria-hidden="true" />}
+      {orbit && <span className="agent-orbit-ring" aria-hidden="true" />}
       <span className="agent-card__heading">
         {compact && <span className="agent-card__bar" aria-hidden="true" />}
         <span className="agent-card__title">

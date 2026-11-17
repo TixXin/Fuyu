@@ -6,7 +6,7 @@ export type AgentSessionView = "list" | "cards" | "compact";
 export type AgentSessionSort = "status" | "recent" | "firstSeen";
 export type AgentSessionGroup = "computer" | "project" | "none";
 export type AgentArchiveMotion = "slide" | "dissolve";
-export type AgentCardEffects = "off" | "sparkle" | "gradient";
+export type AgentCardEffects = "off" | "sparkle" | "gradient" | "orbit";
 export type AgentAlertStarted = "everyTurn" | "newSession" | "off";
 
 export const AGENT_HOST_DISPLAYS: readonly AgentHostDisplay[] = ["both", "icon", "name", "off"];
@@ -14,7 +14,7 @@ export const AGENT_SESSION_VIEWS: readonly AgentSessionView[] = ["list", "cards"
 export const AGENT_SESSION_SORTS: readonly AgentSessionSort[] = ["status", "recent", "firstSeen"];
 export const AGENT_SESSION_GROUPS: readonly AgentSessionGroup[] = ["computer", "project", "none"];
 export const AGENT_ARCHIVE_MOTIONS: readonly AgentArchiveMotion[] = ["slide", "dissolve"];
-export const AGENT_CARD_EFFECTS: readonly AgentCardEffects[] = ["off", "sparkle", "gradient"];
+export const AGENT_CARD_EFFECTS: readonly AgentCardEffects[] = ["off", "sparkle", "gradient", "orbit"];
 export const AGENT_SESSION_HOURS = [1, 2, 6, 24] as const;
 export const AGENT_REMIND_SECONDS = [0, 30, 60, 120, 300] as const;
 export const AGENT_QUOTA_ALERT_PERCENTS = [0, 70, 80, 90] as const;
