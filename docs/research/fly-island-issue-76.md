@@ -1,6 +1,6 @@
 # 上游 fly-island#76 逐项核查与开源方案调研
 
-> 日期：2026-11-17。问题：[flyl1u/fly-island#76](https://github.com/flyl1u/fly-island/issues/76) 里用户反馈的 6 大类（共 11 个具体问题与建议）是否也是浮屿（Fuyu）的问题？全网开源项目怎么处理同类需求与故障？我们该怎么取舍？范围：上游仓库 `flyl1u/fly-island` 默认分支源码、本仓库当前 `main` 源码与历史任务、GitHub 同类开源项目（Pot、STranslate、Easydict、ECDICT、MTranServer、EcoPaste、QuickClipboard、TieZ、Maccy、CopyQ、BoringNotch、FluentFlyout）源码与文档、Microsoft Learn Win32 / WebView2 技术文档。相关任务：关联已完成任务 B29、B72.3、C29、C37、C69、C106、D30、D66、D78、D79、E36.4.2；待用户拍板是否新建后续任务。
+> 日期：2026-11-17。问题：[flyl1u/fly-island#76](https://github.com/flyl1u/fly-island/issues/76) 里用户反馈的 6 大类（共 11 个具体问题与建议）是否也是浮屿（Fuyu）的问题？全网开源项目怎么处理同类需求与故障？我们该怎么取舍？范围：上游仓库 `flyl1u/fly-island` 默认分支源码、本仓库当前 `main` 源码与历史任务、GitHub 同类开源项目（Pot、STranslate、Easydict、ECDICT、MTranServer、EcoPaste、QuickClipboard、TieZ、Maccy、CopyQ、BoringNotch、FluentFlyout）源码与文档、Microsoft Learn Win32 / WebView2 技术文档。相关任务：新建跟进任务 [D99](../tasks/D/D99.md)（#814）、[C110](../tasks/C/C110.md)（#815）、[E42](../tasks/E/E42.md)（#816）、[D100](../tasks/D/D100.md)（#817）、[D101](../tasks/D/D101.md)（#818）、[C111](../tasks/C/C111.md)（#819）；关联已完成任务 B29、B72.3、C29、C37、C69、C106、D30、D66、D78、D79、E36.4.2。
 
 ## 结论与全局对照
 
