@@ -10,6 +10,8 @@ mod dev_lane;
 mod device_events;
 #[cfg_attr(target_os = "macos", path = "device_use/macos.rs")]
 mod device_use;
+#[cfg(any(debug_assertions, test))]
+mod emit_diagnostics;
 mod file_shelf;
 mod fs_write;
 mod home_dir;
@@ -157,6 +159,8 @@ pub fn run() {
 
         })
         .setup(move |app| {
+            #[cfg(debug_assertions)]
+            emit_diagnostics::start(app.handle());
             system::update_backup::apply_pending_restore();
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
