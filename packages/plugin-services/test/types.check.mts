@@ -27,6 +27,7 @@ void calendar.events({ refresh: true }).then((result) => result.problems.map((pr
 // @ts-expect-error refresh is a boolean
 void calendar.events({ refresh: "yes" });
 void calendar.sources().then((result) => result.sources.map((source) => (source.kind === "caldav" ? source.host : source.name)));
+void calendar.on("changed", () => {});
 
 declare const shelf: ServiceClient<typeof fileShelfV1>;
 void shelf.list().then((result) => result.items.map((item) => (item.missing ? item.name : item.path)));

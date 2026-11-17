@@ -1,11 +1,17 @@
 import { calendarV1 } from "@fuyu/plugin-services";
+import {
+  createCalendarSourceRegistry,
+  mergeCalendarEvents,
+  mergeCalendarSources,
+  normalizeCalendarEvent,
+  normalizeCalendarProblem,
+} from "./sources.mjs";
 
 export const name = "calendar";
 
 const PASSED = new Set(["bad-params", "timeout", "peer-gone"]);
 
 const isObject = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
-const text = (value) => (typeof value === "string" ? value : null);
 const number = (value) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
 
 function calendarError(code, message, data) {
@@ -21,34 +27,12 @@ export function fromRust(error) {
   return calendarError(code, String(error?.message ?? error), data);
 }
 
-function serviceEvent(event) {
-  return {
-    uid: String(event.uid),
-    title: String(event.title ?? ""),
-    startMs: number(event.startMs),
-    endMs: number(event.endMs),
-    allDay: event.allDay === true,
-    location: text(event.location),
-    meetingLink: text(event.meetingLink),
-    calendar: String(event.calendar ?? ""),
-  };
-}
-
-function serviceProblem(problem) {
-  const said = isObject(problem.message) ? problem.message : null;
-  return {
-    sourceId: String(problem.sourceId ?? ""),
-    reason: text(problem.reason) ?? text(said?.code) ?? "failed",
-    message: text(said?.message) ?? text(problem.message) ?? "",
-  };
-}
-
 export function serviceEvents(snapshot) {
   const read = isObject(snapshot) ? snapshot : {};
   const list = (value) => (Array.isArray(value) ? value.filter(isObject) : []);
   return {
-    events: list(read.events).filter((event) => typeof event.uid === "string").map(serviceEvent),
-    problems: list(read.problems).map(serviceProblem),
+    events: list(read.events).filter((event) => typeof event.uid === "string").map((event) => normalizeCalendarEvent(event)),
+    problems: list(read.problems).map((problem) => normalizeCalendarProblem(problem)),
     fetchedAt: number(read.fetchedAt),
     fromMs: number(read.fromMs),
     toMs: number(read.toMs),
@@ -61,7 +45,12 @@ export function serviceSources(list) {
   return {
     sources: read
       .filter((source) => isObject(source) && typeof source.id === "string")
-      .map((source) => ({ id: source.id, kind: source.kind === "caldav" ? "caldav" : "ics", name: String(source.name ?? ""), host: String(source.host ?? "") })),
+      .map((source) => ({
+        id: source.id,
+        kind: source.kind === "caldav" ? "caldav" : "ics",
+        name: String(source.name ?? ""),
+        host: String(source.host ?? ""),
+      })),
   };
 }
 
@@ -74,13 +63,38 @@ export function refreshOf(params) {
 }
 
 export function apply(ctx) {
+  const registry = createCalendarSourceRegistry();
   const call = (method, params) =>
     ctx.rust.call(`calendar.${method}`, params, { timeoutMs: calendarV1.methods[method].timeoutMs }).catch((error) => {
       throw fromRust(error);
     });
 
-  ctx.services.provide(calendarV1, {
-    events: async (params) => serviceEvents(await call("events", { refresh: refreshOf(params) })),
-    sources: async () => serviceSources(await call("sources", null)),
+  const provider = ctx.services.provide(calendarV1, {
+    events: async (params) => {
+      const refresh = refreshOf(params);
+      const base = serviceEvents(await call("events", { refresh }));
+      return mergeCalendarEvents(base, registry, refresh);
+    },
+    sources: async () => {
+      const base = serviceSources(await call("sources", null));
+      return mergeCalendarSources(base, registry);
+    },
   });
+
+  const unsub = registry.subscribe(() => provider.emit("changed", {}));
+  ctx.effect(() => unsub, "calendar.sources.watch");
+  const stopAccessor = ctx.reflect.accessor("calendarSources", {
+    get() {
+      const caller = this;
+      return Object.freeze({
+        register: (spec) => {
+          const off = registry.register(spec);
+          caller.effect(() => off, `calendarSources.register(${spec?.id ?? ""})`);
+          return off;
+        },
+      });
+    },
+  });
+  ctx.effect(() => stopAccessor, "calendarSources.accessor");
+  ctx.provide("calendar.sources", Object.freeze({ register: (spec) => registry.register(spec) }));
 }
