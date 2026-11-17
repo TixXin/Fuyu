@@ -7,10 +7,8 @@ import { AgentProviderSwitches } from "./AgentProviderSwitches";
 import { useAgentStatusSettings } from "./useAgentStatusSettings";
 import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import { SlotView } from "../plugin-kernel/SlotView";
 import { settingsSections } from "../plugin-kernel/settingsSlots";
-import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 
 type AgentSectionProps = {
   settings: IslandSettings;
@@ -83,10 +81,5 @@ sections.add({ id: "agents.hooks", category: "agents", order: 10, component: Hoo
 sections.add({ id: "agentAppearance.session-title", category: "agentAppearance", order: 20, component: SessionTitleSection });
 
 export function AgentSettingsPage({ tab, ...props }: AgentSectionProps & { tab: AgentTab }) {
-  return (
-    <>
-      {tab === "agents" && <FeatureHeader feature="agents" icon={settingsCategoryIcon("agents")} />}
-      <SlotView slot={sections} group={tab} props={props} />
-    </>
-  );
+  return <SlotView slot={sections} group={tab} props={props} />;
 }

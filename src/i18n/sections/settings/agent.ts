@@ -72,6 +72,7 @@ export type SettingsAgentText = {
   hookBadgeNotInstalled: string;
   notDetectedBadge: string;
   sessionOnlyBadge: string;
+  externalBadge: string;
   hideFinished: string;
   hideFinishedHint: string;
   hideClosed: string;
@@ -173,6 +174,17 @@ export type SettingsAgentText = {
     title: string;
     toggle: string;
     hint: string;
+    legendTurn: string;
+    legendTurnHint: string;
+    legendBg: string;
+    legendBgHint: string;
+    legendDone: string;
+    legendDoneHint: string;
+    filesTitle: string;
+    fileInstalled: string;
+    fileOutdated: string;
+    filePending: string;
+    fileError: string;
     linked: (target: string) => string;
     noFiles: string;
     outdated: string;
@@ -269,6 +281,7 @@ export const zhCN: SettingsAgentText = {
   hookBadgeNotInstalled: "未装钩子",
   notDetectedBadge: "未检测到",
   sessionOnlyBadge: "会话记录",
+  externalBadge: "外部上报",
   hideFinished: "只显示进行中的会话",
   hideFinishedHint: "隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。",
   hideClosed: "隐藏已退出的会话",
@@ -352,8 +365,8 @@ export const zhCN: SettingsAgentText = {
     onIsland: "在岛上允许或拒绝 Agent 的操作",
     whenInFront: "终端在前台时也在岛上弹出",
     whenInFrontHint: "关闭时，会话所在的终端或编辑器窗口在前台，就直接在终端里审批。",
-    hint: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 Ctrl+Alt+Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。",
-    hintMac: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 ⌃⌥Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。",
+    hint: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 Ctrl+Alt+Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
+    hintMac: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 ⌃⌥Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
   },
   filters: {
     title: "隐藏会话",
@@ -369,7 +382,18 @@ export const zhCN: SettingsAgentText = {
   replyMarker: {
     title: "回复状态标记",
     toggle: "让 AI 代理在回复末尾标出在等什么（推荐打开）",
-    hint: "打开后，会在各家 AI 代理的全局提示词文件末尾追加一段说明（Claude Code 的 CLAUDE.md，Codex、opencode 和 DeepSeek Harness 的 AGENTS.md，Antigravity 的 GEMINI.md，WorkBuddy 和 CodeBuddy 的 CODEBUDDY.md，Qoder 的 AGENTS.md，Qwen Code 的 QWEN.md，Kimi Code 的 ~/.kimi-code/AGENTS.md，GitHub Copilot CLI 的 ~/.copilot/copilot-instructions.md，Droid 的 ~/.factory/AGENTS.md，pi 的 ~/.pi/agent/AGENTS.md；只动这一段，文件其他内容不动），让它每次回复的最后一行写一个符号：↩ 等你回复、⋯ 在等它自己启动的后台任务、✓ 做完了。岛屿据此区分“等你回复”和“做完了”：Agent 页、会话环，以及提醒和音效（等你回复按“等你确认或回答”弹出、用提问音效；等后台任务时不弹不响）。这一行会出现在回复里。文件是软链时写在它指向的文件里，几家指向同一份文件时只写一段。SSH 远程页里打开的电脑也会写上。只对之后开始的会话生效；关掉时删掉这一段。本机写到的文件：",
+    hint: "打开后，会在各家 AI 代理的全局提示词文件末尾追加一段说明（Claude Code 的 CLAUDE.md，Codex、opencode 和 DeepSeek Harness 的 AGENTS.md，Antigravity 的 GEMINI.md，WorkBuddy 和 CodeBuddy 的 CODEBUDDY.md，Qoder 的 AGENTS.md，Qwen Code 的 QWEN.md，Kimi Code 的 ~/.kimi-code/AGENTS.md，GitHub Copilot CLI 的 ~/.copilot/copilot-instructions.md，Droid 的 ~/.factory/AGENTS.md，pi 的 ~/.pi/agent/AGENTS.md；只动这一段，文件其他内容不动），让它每次回复的最后一行写一个符号：↩ 等你回复、⋯ 在等它自己启动的后台任务、✓ 做完了。岛屿据此区分“等你回复”和“做完了”：Agent 页、会话环，以及提醒和音效（等你回复按“等你确认或回答”弹出、用提问音效；等后台任务时不弹不响）。这一行会出现在回复里。文件是软链时写在它指向的文件里，几家指向同一份文件时只写一段。SSH 远程页里打开的电脑也会写上。只对之后开始的会话生效；关掉时删掉这一段。",
+    legendTurn: "等你回复",
+    legendTurnHint: "弹出提醒 · 提问音效",
+    legendBg: "等后台任务",
+    legendBgHint: "保持运行 · 不打扰",
+    legendDone: "做完了",
+    legendDoneHint: "标为完成 · 完成提醒",
+    filesTitle: "本机全局提示词文件",
+    fileInstalled: "已写入",
+    fileOutdated: "待更新",
+    filePending: "未写入",
+    fileError: "异常",
     linked: (target) => `软链，写在 ${target}`,
     noFiles: "本机没有找到这几家 AI 代理。",
     outdated: "说明是旧版本，或者还在旧的规则文件 rules/fuyu-reply-marker.md 里，或者有一家还没写上；关掉再打开，或点上面的“安装/修复”即可更新。",
@@ -466,6 +490,7 @@ export const en: SettingsAgentText = {
   hookBadgeNotInstalled: "No hooks yet",
   notDetectedBadge: "Not detected",
   sessionOnlyBadge: "Session log",
+  externalBadge: "External",
   hideFinished: "Only sessions in progress",
   hideFinishedHint: "Hide finished and failed sessions; keep running, waiting and possibly stalled ones.",
   hideClosed: "Hide sessions that have quit",
@@ -549,8 +574,8 @@ export const en: SettingsAgentText = {
     onIsland: "Allow or deny agent actions on the island",
     whenInFront: "Also while the terminal is in front",
     whenInFrontHint: "Off, a request from a session whose terminal or editor window is in front is approved in that terminal.",
-    hint: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (Ctrl+Alt+Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up.",
-    hintMac: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (⌃⌥Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up.",
+    hint: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (Ctrl+Alt+Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
+    hintMac: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (⌃⌥Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
   },
   filters: {
     title: "Hide sessions",
@@ -566,7 +591,18 @@ export const en: SettingsAgentText = {
   replyMarker: {
     title: "Reply status marker",
     toggle: "Have the agents mark what they wait for at the end of each reply (recommended)",
-    hint: "When on, the island appends a section to the end of each AI agent's global prompt file (CLAUDE.md for Claude Code, AGENTS.md for Codex, opencode and DeepSeek Harness, GEMINI.md for Antigravity, CODEBUDDY.md for WorkBuddy and CodeBuddy, AGENTS.md for Qoder, QWEN.md for Qwen Code, ~/.kimi-code/AGENTS.md for Kimi Code, ~/.copilot/copilot-instructions.md for GitHub Copilot CLI, ~/.factory/AGENTS.md for Droid, ~/.pi/agent/AGENTS.md for pi; only that section changes, the rest of the file stays as it is), asking the agent to end every reply with one symbol on its own line: ↩ your turn, ⋯ waiting on a background task it started, ✓ done. The island uses it to tell \"your turn\" from \"done\": on the Agent page, the session ring, and in alerts and sounds (your turn pops up as waiting for you, with the question sound; waiting on a background task neither pops up nor sounds). The line shows in the replies. When a file is a link, the section goes into the file it points to, and agents sharing one file get one section. Computers switched on under SSH remote get it too. It applies to sessions started from then on; switching off removes the section. Files on this computer:",
+    hint: "When on, the island appends a section to the end of each AI agent's global prompt file (CLAUDE.md for Claude Code, AGENTS.md for Codex, opencode and DeepSeek Harness, GEMINI.md for Antigravity, CODEBUDDY.md for WorkBuddy and CodeBuddy, AGENTS.md for Qoder, QWEN.md for Qwen Code, ~/.kimi-code/AGENTS.md for Kimi Code, ~/.copilot/copilot-instructions.md for GitHub Copilot CLI, ~/.factory/AGENTS.md for Droid, ~/.pi/agent/AGENTS.md for pi; only that section changes, the rest of the file stays as it is), asking the agent to end every reply with one symbol on its own line: ↩ your turn, ⋯ waiting on a background task it started, ✓ done. The island uses it to tell \"your turn\" from \"done\": on the Agent page, the session ring, and in alerts and sounds (your turn pops up as waiting for you, with the question sound; waiting on a background task neither pops up nor sounds). The line shows in the replies. When a file is a link, the section goes into the file it points to, and agents sharing one file get one section. Computers switched on under SSH remote get it too. It applies to sessions started from then on; switching off removes the section.",
+    legendTurn: "Your turn",
+    legendTurnHint: "Pop-up alert · question sound",
+    legendBg: "Background task",
+    legendBgHint: "Stays running · quiet",
+    legendDone: "Finished",
+    legendDoneHint: "Marked done · done alert",
+    filesTitle: "Global prompt files on this computer",
+    fileInstalled: "Written",
+    fileOutdated: "Outdated",
+    filePending: "Not written",
+    fileError: "Error",
     linked: (target) => `a link; written in ${target}`,
     noFiles: "None of these AI agents was found on this computer.",
     outdated: "The instruction is an older version, still in the old rules file rules/fuyu-reply-marker.md, or missing for one of the agents; switch off and on again, or click Install/repair above, to update it.",

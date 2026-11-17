@@ -11,6 +11,7 @@ import type {
   AgentHooksState,
   AgentStatusSnapshot,
   AgentTaskStatus,
+  ExternalAgentStatus,
   HookInstallState,
   SessionProvider,
 } from "./api";
@@ -34,6 +35,54 @@ function resolveDotTone(status: AgentTaskStatus, hookState: HookInstallState | u
   if (isAgentAttentionPhase(status.phase) || hookState === "outdated" || hookState === "notInstalled") return "attention";
   if (status.phase === "completed") return "done";
   return "idle";
+}
+
+function ExternalTile({
+  entry,
+  clearing,
+  onClearStatus,
+}: {
+  entry: ExternalAgentStatus;
+  clearing: boolean;
+  onClearStatus?: () => void;
+}) {
+  const t = useTranslation();
+  const text = t.settings.agent;
+  const attention = isAgentAttentionPhase(entry.phase);
+  const active = entry.phase === "running" || entry.phase === "waiting";
+  const dotTone = resolveDotTone(entry, undefined);
+  const cardClass = [
+    "agent-provider-card",
+    attention ? "agent-provider-card--attention" : "",
+    active ? "agent-provider-card--active" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <div className={cardClass} data-provider={entry.id}>
+      <span className="agent-provider-card__icon" aria-hidden="true">
+        <AgentProviderIcon provider={entry.agent ?? entry.id} />
+      </span>
+      <div className="agent-provider-card__body">
+        <span className="agent-provider-card__name">{entry.name}</span>
+        <div className="agent-provider-card__meta">
+          <span className={`agent-provider-card__dot agent-provider-card__dot--${dotTone}`} aria-hidden="true" />
+          <span className={attention ? "agent-hooks-value agent-hooks-value--attention" : "agent-hooks-value"}>
+            {getAgentPhaseLabel(entry.phase, t)}
+          </span>
+          {attention && onClearStatus ? (
+            <SettingsLinkButton disabled={clearing} onClick={onClearStatus}>
+              {clearing ? text.clearing : text.clearStatus}
+            </SettingsLinkButton>
+          ) : null}
+        </div>
+      </div>
+      <div className="agent-provider-card__side">
+        <span className="agent-provider-card__tag">{text.externalBadge}</span>
+      </div>
+    </div>
+  );
 }
 
 function ProviderTile({
@@ -131,6 +180,7 @@ export function AgentProviderSwitches({
   const devBuild = useDevBuild();
   const [moreOpen, setMoreOpen] = useState(false);
   const { primary, more } = partitionAgentProviders(SHOWN_PROVIDERS, agentStatus, agentHooksState);
+  const externals = agentStatus.others ?? [];
   const enabledCount = SHOWN_PROVIDERS.filter((provider) => !settings.agentHiddenProviders.includes(provider)).length;
 
   const setProviderShown = (provider: SessionProvider, shown: boolean) => {
@@ -166,7 +216,17 @@ export function AgentProviderSwitches({
         <h2 className="settings-group__title">{text.agentsSection}</h2>
         <span className="agent-providers__summary">{text.agentsEnabledCount(enabledCount, SHOWN_PROVIDERS.length)}</span>
       </div>
-      <div className="agent-provider-grid">{primary.map(renderTile)}</div>
+      <div className="agent-provider-grid">
+        {primary.map(renderTile)}
+        {externals.map((entry) => (
+          <ExternalTile
+            key={entry.id}
+            entry={entry}
+            clearing={clearingAgentProvider === entry.id}
+            onClearStatus={onClearAgentStatus ? () => onClearAgentStatus(entry.id) : undefined}
+          />
+        ))}
+      </div>
       {more.length > 0 ? (
         <div className="agent-providers__more">
           <button
