@@ -93,6 +93,16 @@ pub(super) fn completions_url(
     Url::parse(&endpoint).map_err(|error| UserError::new("translation.url", "The service address is not valid.").detail(error))
 }
 
+pub(super) fn is_loopback_url(url: &Url) -> bool {
+    matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"))
+}
+
+pub(super) fn is_loopback_custom_address(raw: Option<&str>) -> bool {
+    raw.and_then(|raw| validate_custom_base_url(raw).ok())
+        .and_then(|valid| Url::parse(&valid).ok())
+        .is_some_and(|url| is_loopback_url(&url))
+}
+
 fn validate_custom_base_url(raw: &str) -> Result<String, UserError> {
     let raw = raw.trim();
     if raw.is_empty() {
@@ -106,7 +116,7 @@ fn validate_custom_base_url(raw: &str) -> Result<String, UserError> {
     if !url.username().is_empty() || url.password().is_some() {
         return Err(UserError::new("translation.urlCredentials", "The service address cannot hold a user name or password; put the key in the key field."));
     }
-    let is_local = matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"));
+    let is_local = is_loopback_url(&url);
     match url.scheme() {
         "https" => {}
         "http" if is_local => {}
@@ -228,6 +238,17 @@ mod tests {
             url("http://127.0.0.1:8080").unwrap(),
             "http://127.0.0.1:8080/chat/completions"
         );
+        assert_eq!(
+            url("http://[::1]:11434/v1").unwrap(),
+            "http://[::1]:11434/v1/chat/completions"
+        );
+        assert!(is_loopback_custom_address(Some("http://localhost:11434/v1")));
+        assert!(is_loopback_custom_address(Some("https://127.0.0.1:8080/v1")));
+        assert!(is_loopback_custom_address(Some("http://[::1]:11434/v1")));
+        assert!(!is_loopback_custom_address(Some("https://api.example.com/v1")));
+        assert!(!is_loopback_custom_address(Some("http://api.example.com/v1")));
+        assert!(!is_loopback_custom_address(Some("")));
+        assert!(!is_loopback_custom_address(None));
         assert_eq!(url("http://api.example.com/v1").unwrap_err().code(), "translation.urlScheme");
         assert!(url("https://user:pass@api.example.com/v1").is_err());
         assert!(url("https://api.example.com/v1?key=1").is_err());

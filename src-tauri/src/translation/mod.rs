@@ -13,7 +13,7 @@ mod selection;
 mod tests;
 
 use crate::user_error::{credential, UserError};
-use crate::clipboard_history::parse_shortcut_binding;
+use crate::clipboard_history::{parse_shortcut_binding, ShortcutBinding};
 use arboard::Clipboard;
 use keyring::{Entry, Error as KeyringError};
 use plugin_base::host_service;
@@ -180,13 +180,25 @@ pub(crate) struct TranslatorEngines {
 
 #[host_service("translator.engines")]
 fn engines() -> Result<TranslatorEngines, UserError> {
-    engines_with(|provider| read_secret(provider).map(|secret| secret.is_some()))
+    engines_with(|provider| read_secret(provider).map(|secret| secret.is_some()), address::read)
 }
 
-fn engines_with(has_secret: impl Fn(&Provider) -> Result<bool, UserError>) -> Result<TranslatorEngines, UserError> {
+fn engines_with(
+    has_secret: impl Fn(&Provider) -> Result<bool, UserError>,
+    custom_address: impl FnOnce() -> Result<Option<String>, UserError>,
+) -> Result<TranslatorEngines, UserError> {
+    let mut custom_address = Some(custom_address);
     let engines = providers()
         .iter()
-        .map(|provider| Ok(EngineSecret { engine: provider.id, has_secret: has_secret(provider)? }))
+        .map(|provider| {
+            let mut ready = has_secret(provider)?;
+            if !ready && provider.id == "custom" {
+                if let Some(read_address) = custom_address.take() {
+                    ready = provider::is_loopback_custom_address(read_address()?.as_deref());
+                }
+            }
+            Ok(EngineSecret { engine: provider.id, has_secret: ready })
+        })
         .collect::<Result<_, UserError>>()?;
     Ok(TranslatorEngines { engines })
 }
@@ -263,16 +275,49 @@ pub(crate) async fn translate(
     complete(&instruction, text, provider.as_deref(), base_url.as_deref(), model.as_deref(), None).await
 }
 
+#[derive(Clone)]
+pub(super) enum WantedBinding {
+    Default,
+    Off,
+    Set(ShortcutBinding),
+}
+
+impl WantedBinding {
+    pub(super) fn from_option(binding: Option<ShortcutBinding>) -> Self {
+        match binding {
+            Some(binding) => Self::Set(binding),
+            None => Self::Off,
+        }
+    }
+
+    pub(super) fn resolve(&self, default_shortcut: &str) -> Option<ShortcutBinding> {
+        match self {
+            Self::Default => parse_shortcut_binding(default_shortcut),
+            Self::Off => None,
+            Self::Set(binding) => Some(binding.clone()),
+        }
+    }
+}
+
+pub(super) fn parse_optional_shortcut(shortcut: &str) -> Result<Option<ShortcutBinding>, UserError> {
+    let shortcut = shortcut.trim();
+    if shortcut.is_empty() {
+        return Ok(None);
+    }
+    parse_shortcut_binding(shortcut)
+        .map(Some)
+        .ok_or_else(|| UserError::new("shortcut.invalid", "That shortcut is not valid; use at least one modifier key."))
+}
+
 #[tauri::command]
 pub async fn set_translation_shortcut(shortcut: String) -> Result<String, UserError> {
-    let binding = parse_shortcut_binding(&shortcut)
-        .ok_or_else(|| UserError::new("shortcut.invalid", "That shortcut is not valid; use at least one modifier key."))?;
+    let binding = parse_optional_shortcut(&shortcut)?;
     if !hotkey::running() {
-        let label = binding.label.clone();
+        let label = binding.as_ref().map(|item| item.label.clone()).unwrap_or_default();
         hotkey::want(binding);
         return Ok(label);
     }
-    tauri::async_runtime::spawn_blocking(move || change_hotkey(Some(binding)))
+    tauri::async_runtime::spawn_blocking(move || change_hotkey(binding))
         .await
         .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
@@ -284,14 +329,13 @@ pub fn set_translation_target(island: bool) {
 
 #[tauri::command]
 pub async fn set_translation_selection_shortcut(shortcut: String) -> Result<String, UserError> {
-    let binding = parse_shortcut_binding(&shortcut)
-        .ok_or_else(|| UserError::new("shortcut.invalid", "That shortcut is not valid; use at least one modifier key."))?;
+    let binding = parse_optional_shortcut(&shortcut)?;
     if !hotkey::running() {
-        let label = binding.label.clone();
+        let label = binding.as_ref().map(|item| item.label.clone()).unwrap_or_default();
         hotkey::want_selection(binding);
         return Ok(label);
     }
-    tauri::async_runtime::spawn_blocking(move || change_selection_hotkey(Some(binding)))
+    tauri::async_runtime::spawn_blocking(move || change_selection_hotkey(binding))
         .await
         .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }

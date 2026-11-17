@@ -30,7 +30,7 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
     { value: "auto", label: text.dirAuto }, { value: "zh-en", label: text.dirZhEn }, { value: "en-zh", label: text.dirEnZh },
   ];
   const directionHint = settings.direction === "zh-en" ? text.toEnglish : settings.direction === "en-zh" ? text.toChinese : text.autoHint;
-  const { hasSecret, error: engineError, providerLabel: providerName, defaultModel } = useTranslatorEngines(settings.provider, isOpen);
+  const { hasSecret, error: engineError, providerLabel: providerName, defaultModel } = useTranslatorEngines(settings.provider, isOpen, 0, settings.customBaseUrl);
   const model = settings.models[settings.provider] || defaultModel;
 
   useEffect(() => {

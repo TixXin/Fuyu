@@ -8,6 +8,7 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
 import { deleteTranslationSecret, saveTranslationSecret } from "./api";
+import { isLoopbackCustomBaseUrl } from "./providers";
 import type { TranslationSettings } from "./storage";
 import { useTranslatorEngines } from "./useTranslatorEngines";
 import "./TranslationSettingsSection.css";
@@ -25,7 +26,8 @@ export function TranslationSettingsSection({ settings, setSettings, lead, useFoo
   const [savingSecret, setSavingSecret] = useState(false);
   const [secretNotice, flashSecret] = useFlash<string>();
   const provider = settings.provider;
-  const { options, hasSecret, setHasSecret, error: serviceError, setError: setServiceError, isBuiltin, defaultModel } = useTranslatorEngines(provider);
+  const { options, hasStoredSecret, setHasSecret, error: serviceError, setError: setServiceError, isBuiltin, defaultModel } = useTranslatorEngines(provider, true, 0, settings.customBaseUrl);
+  const optionalLocalSecret = provider === "custom" && isLoopbackCustomBaseUrl(settings.customBaseUrl);
 
   const saveSecret = async () => {
     if (!secretDraft.trim()) return;
@@ -85,15 +87,15 @@ export function TranslationSettingsSection({ settings, setSettings, lead, useFoo
         {isBuiltin && (
           <SettingsRow
             title={t.translator.secret}
-            description={secretNotice ? <span role="status">{secretNotice}</span> : hasSecret ? t.common.saved : undefined}
+            description={secretNotice ? <span role="status">{secretNotice}</span> : hasStoredSecret ? t.common.saved : optionalLocalSecret ? t.translator.optionalLocalSecret : undefined}
             control={
               <>
                 <SettingsLinkButton disabled={!secretDraft.trim() || savingSecret} onClick={() => void saveSecret()}>{t.translator.saveSecret}</SettingsLinkButton>
-                {hasSecret && <SettingsLinkButton tone="danger" onClick={() => void removeSecret()}>{t.translator.deleteSecret}</SettingsLinkButton>}
+                {hasStoredSecret && <SettingsLinkButton tone="danger" onClick={() => void removeSecret()}>{t.translator.deleteSecret}</SettingsLinkButton>}
               </>
             }
           >
-            <SettingsInput type="password" autoComplete="off" aria-label={t.translator.secret} value={secretDraft} onChange={(event) => setSecretDraft(event.currentTarget.value)} onKeyDown={(event) => { if (event.key === "Enter") void saveSecret(); }} placeholder={hasSecret ? t.translator.replaceSecret : t.translator.enterSecret} />
+            <SettingsInput type="password" autoComplete="off" aria-label={t.translator.secret} value={secretDraft} onChange={(event) => setSecretDraft(event.currentTarget.value)} onKeyDown={(event) => { if (event.key === "Enter") void saveSecret(); }} placeholder={hasStoredSecret ? t.translator.replaceSecret : optionalLocalSecret ? t.translator.enterOptionalSecret : t.translator.enterSecret} />
           </SettingsRow>
         )}
       </SettingsGroup>

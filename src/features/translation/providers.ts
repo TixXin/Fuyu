@@ -33,4 +33,19 @@ export function isTranslationProvider(value: unknown): value is TranslationProvi
   return isBuiltinTranslationProvider(value) || translationEngines.has(value);
 }
 
+const MAX_CUSTOM_BASE_URL_LENGTH = 500;
+
+export function isLoopbackCustomBaseUrl(raw: string): boolean {
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed.length > MAX_CUSTOM_BASE_URL_LENGTH) return false;
+  try {
+    const url = new URL(trimmed);
+    if (url.username || url.password || url.search || url.hash) return false;
+    if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+    return url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]" || url.hostname === "::1";
+  } catch {
+    return false;
+  }
+}
+
 export { registerTranslationEngine, subscribeTranslationEngines, translationEngines, type CustomTranslationEngineSpec };

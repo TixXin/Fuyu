@@ -305,6 +305,9 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
   - 用 `useTranslationSettings` 的窗口在打开时交一次 `fuyu-translation-settings` 的 `customBaseUrl`，改了再交（停 0.4 秒），所以旧版本填过的地址不用重填；localStorage 里的值照旧，翻译窗口自己请求时还传它。
   - `translate_text`、`rewrite_text` 选自定义接口又没传 `baseUrl`（`null`）时用存下的地址，没存过回新错误码 `translation.noAddress`（参数 `service`）。宿主的 `translator.translate`、`translator.rewrite` 照旧没有地址参数，选自定义接口时只用存下的地址；不再回 `translation.customUnavailable`。
   - 服务 `translator/v1`：`engine.engine` 可以是 `custom`；新错误码 `no-address`（`data.reason` 是 `translation.noAddress`）。
+- 翻译单条快捷键置空与本机回环免密钥（C110，2026-11-17 起）：
+  - `fuyu-translation-settings` 的 `shortcut` 与 `selectionShortcut` 允许保存为空字符串 `""`，表示单独关闭该条全局热键（重启不回退默认值）；字段缺失或非字符串时仍分别取默认 `Ctrl+Shift+F`、`Ctrl+Alt+T`。Tauri 命令 `set_translation_shortcut`、`set_translation_selection_shortcut` 接受空或空白字符串，注销对应热键并返回 `""`。
+  - `provider` 为 `custom` 且目标地址主机为本机回环（`localhost`、`127.0.0.1`、`[::1]`）时，凭据库未存密钥不回 `translation.noKey`、请求不带 `Authorization` 头（已存密钥时照常带 `Bearer` 头）；`translator.engines`（及 `translator/v1` 的 `engines()`）在 `custom` 已存密钥或已存本机回环地址时返回 `hasSecret: true`；`has_translation_secret` 仍只报告系统凭据库里是否存有密钥。远端 `https://` 自定义地址仍要求已保存密钥。
 - 插件平台第 3 版第 4 阶段接缝（E36.4.1–E36.4.9，2026-11-17 起）：
   - `src/features/builtins.json` 的内置插件条目新增可选 `provides: string[]`；`plugins-v3/plugins.yml` 的条目新增可选 `disabledServices: string[]`（或由启用中第三方插件的 `replaces: string[]` 自动推导），只让出指定服务而不停掉整个内置插件；窗口 `windowServices` 在宿主由非同名插件提供该服务或设了 `setDisabledServices` 时自动让出给宿主。
   - `@fuyu/plugin-services` 新增公开服务 `lyrics/v1`（`lookup`、`sources`，事件 `changed`，由 `music` 提供）和 `messages/v1`（`sources`、`notify`、`clear`，事件 `changed`、`arrived`、`action`，由 `messages` 提供）；`translator/v1` 与 `calendar/v1` 新增事件 `changed`；`clipboard/v1` 新增方法 `copyText({ text })`、`pasteText({ text, enter? })`；`agents/v1` 的 `usage()` 返回值新增可选 `extra` 字典。

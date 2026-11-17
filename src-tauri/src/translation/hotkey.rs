@@ -10,14 +10,14 @@ use windows::Win32::{
     UI::WindowsAndMessaging::{WM_APP, WM_HOTKEY, WM_QUIT},
 };
 
-use crate::clipboard_history::{parse_shortcut_binding, ShortcutBinding};
+use crate::clipboard_history::ShortcutBinding;
 use crate::user_error::UserError;
 use crate::win32::{
     self,
     message_window::{self, WindowMessages},
 };
 
-use super::{capture_and_emit_selection, open_translator, APP, DEFAULT_SELECTION_SHORTCUT, DEFAULT_SHORTCUT};
+use super::{capture_and_emit_selection, open_translator, WantedBinding, APP, DEFAULT_SELECTION_SHORTCUT, DEFAULT_SHORTCUT};
 
 const HOTKEY_ID: i32 = 0x4654;
 const SELECTION_HOTKEY_ID: i32 = 0x4655;
@@ -31,8 +31,8 @@ static HOTKEY_WINDOW: Mutex<Option<isize>> = Mutex::new(None);
 static HOTKEY_THREAD: Mutex<Option<JoinHandle<()>>> = Mutex::new(None);
 static ACTIVE_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
 static SELECTION_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
-static WANTED_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
-static WANTED_SELECTION_BINDING: Mutex<Option<ShortcutBinding>> = Mutex::new(None);
+static WANTED_BINDING: Mutex<WantedBinding> = Mutex::new(WantedBinding::Default);
+static WANTED_SELECTION_BINDING: Mutex<WantedBinding> = Mutex::new(WantedBinding::Default);
 type PendingBinding = (Option<ShortcutBinding>, mpsc::Sender<Result<String, UserError>>);
 
 static PENDING_BINDING: Mutex<Option<PendingBinding>> = Mutex::new(None);
@@ -79,12 +79,12 @@ pub(super) fn running() -> bool {
     HOTKEY_THREAD.lock().unwrap_or_else(PoisonError::into_inner).as_ref().is_some_and(|handle| !handle.is_finished())
 }
 
-pub(super) fn want(binding: ShortcutBinding) {
-    remember(&WANTED_BINDING, Some(binding));
+pub(super) fn want(binding: Option<ShortcutBinding>) {
+    remember(&WANTED_BINDING, WantedBinding::from_option(binding));
 }
 
-pub(super) fn want_selection(binding: ShortcutBinding) {
-    remember(&WANTED_SELECTION_BINDING, Some(binding));
+pub(super) fn want_selection(binding: Option<ShortcutBinding>) {
+    remember(&WANTED_SELECTION_BINDING, WantedBinding::from_option(binding));
 }
 
 pub(super) fn coexist_refresh() {
@@ -94,13 +94,19 @@ pub(super) fn coexist_refresh() {
     }
 }
 
-fn remember(slot: &Mutex<Option<ShortcutBinding>>, binding: Option<ShortcutBinding>) {
+fn remember(slot: &Mutex<WantedBinding>, binding: WantedBinding) {
     if let Ok(mut wanted) = slot.lock() {
         *wanted = binding;
     }
 }
 
-fn follow_coexist(hwnd: HWND, id: i32, active_slot: &Mutex<Option<ShortcutBinding>>, wanted_slot: &Mutex<Option<ShortcutBinding>>) {
+fn follow_coexist(
+    hwnd: HWND,
+    id: i32,
+    default_shortcut: &str,
+    active_slot: &Mutex<Option<ShortcutBinding>>,
+    wanted_slot: &Mutex<WantedBinding>,
+) {
     let Ok(mut active) = active_slot.lock() else { return };
     if crate::coexist::yielding() {
         if active.take().is_some() {
@@ -111,7 +117,7 @@ fn follow_coexist(hwnd: HWND, id: i32, active_slot: &Mutex<Option<ShortcutBindin
     if active.is_some() {
         return;
     }
-    let wanted = wanted_slot.lock().ok().and_then(|wanted| wanted.clone());
+    let wanted = wanted_slot.lock().ok().and_then(|wanted| wanted.resolve(default_shortcut));
     if let Some(binding) = wanted {
         if register_binding(hwnd, id, &binding).is_ok() {
             *active = Some(binding);
@@ -197,14 +203,14 @@ fn register_default(
     shortcut: &str,
     id: i32,
     slot: &Mutex<Option<ShortcutBinding>>,
-    wanted_slot: &Mutex<Option<ShortcutBinding>>,
+    wanted_slot: &Mutex<WantedBinding>,
 ) {
-    let wanted = wanted_slot.lock().unwrap_or_else(PoisonError::into_inner).clone();
-    if let Some(binding) = wanted.or_else(|| parse_shortcut_binding(shortcut)) {
+    let wanted = wanted_slot.lock().unwrap_or_else(PoisonError::into_inner).resolve(shortcut);
+    if let Some(binding) = wanted {
         if crate::coexist::yielding() {
-            remember(wanted_slot, Some(binding));
+            remember(wanted_slot, WantedBinding::Set(binding));
         } else if register_binding(hwnd, id, &binding).is_ok() {
-            remember(wanted_slot, Some(binding.clone()));
+            remember(wanted_slot, WantedBinding::Set(binding.clone()));
             *slot.lock().unwrap_or_else(PoisonError::into_inner) = Some(binding);
         }
     }
@@ -220,7 +226,7 @@ fn apply_binding_change(
     id: i32,
     pending_slot: &Mutex<Option<PendingBinding>>,
     active_slot: &Mutex<Option<ShortcutBinding>>,
-    wanted_slot: &Mutex<Option<ShortcutBinding>>,
+    wanted_slot: &Mutex<WantedBinding>,
 ) {
     let pending = pending_slot.lock().ok().and_then(|mut value| value.take());
     let Some((binding, sender)) = pending else {
@@ -231,13 +237,13 @@ fn apply_binding_change(
         let _ = win32::hotkey::unregister(hwnd, id);
     }
     let Some(binding) = binding else {
-        remember(wanted_slot, None);
+        remember(wanted_slot, WantedBinding::Off);
         let _ = sender.send(Ok(String::new()));
         return;
     };
     if crate::coexist::yielding() {
         let label = binding.label.clone();
-        remember(wanted_slot, Some(binding));
+        remember(wanted_slot, WantedBinding::Set(binding));
         let _ = sender.send(Ok(label));
         return;
     }
@@ -248,7 +254,7 @@ fn apply_binding_change(
         } else {
             previous.and_then(|old| register_binding(hwnd, id, &old).ok().map(|()| old))
         };
-        remember(wanted_slot, active.clone());
+        remember(wanted_slot, WantedBinding::from_option(active.clone()));
     }
     let _ = sender.send(result);
 }
@@ -279,8 +285,8 @@ impl WindowMessages for TranslationHotkeyWindow {
             return Some(LRESULT(0));
         }
         if message == COEXIST_MESSAGE {
-            follow_coexist(hwnd, HOTKEY_ID, &ACTIVE_BINDING, &WANTED_BINDING);
-            follow_coexist(hwnd, SELECTION_HOTKEY_ID, &SELECTION_BINDING, &WANTED_SELECTION_BINDING);
+            follow_coexist(hwnd, HOTKEY_ID, DEFAULT_SHORTCUT, &ACTIVE_BINDING, &WANTED_BINDING);
+            follow_coexist(hwnd, SELECTION_HOTKEY_ID, DEFAULT_SELECTION_SHORTCUT, &SELECTION_BINDING, &WANTED_SELECTION_BINDING);
             return Some(LRESULT(0));
         }
         None
