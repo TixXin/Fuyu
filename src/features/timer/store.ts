@@ -7,7 +7,7 @@ import { createTimerController, type StartTimerResult, type TimerSnapshot } from
 export { TIMERS_KEY, TIMERS_MIGRATED_KEY };
 export type { StartTimerResult, TimerSnapshot };
 
-function playRingSound() {
+export function playRingSound() {
   void new Audio(complete).play().catch((error: unknown) => console.error("Failed to play the timer sound", error));
 }
 

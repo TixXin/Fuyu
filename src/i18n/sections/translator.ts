@@ -28,6 +28,9 @@ export type TranslatorText = {
   optionalLocalSecret: string;
   saveSecret: string;
   deleteSecret: string;
+  testSecret: string;
+  testingSecret: string;
+  testOk: string;
   secretSaved: string;
   secretDeleted: string;
   shortcut: string;
@@ -103,6 +106,9 @@ export const zhCN: TranslatorText = {
   optionalLocalSecret: "本机服务无需密钥；若开启了鉴权也可保存",
   saveSecret: "保存密钥",
   deleteSecret: "删除已保存密钥",
+  testSecret: "测试连接",
+  testingSecret: "测试中…",
+  testOk: "连接正常",
   secretSaved: "新密钥已保存",
   secretDeleted: "密钥已删除",
   shortcut: "全局快捷键",
@@ -178,6 +184,9 @@ export const en: TranslatorText = {
   optionalLocalSecret: "Optional for local services; save one if auth is enabled",
   saveSecret: "Save key",
   deleteSecret: "Delete saved key",
+  testSecret: "Test",
+  testingSecret: "Testing…",
+  testOk: "Connected",
   secretSaved: "New key saved",
   secretDeleted: "Key deleted",
   shortcut: "Global shortcut",

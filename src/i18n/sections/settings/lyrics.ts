@@ -43,6 +43,7 @@ export type SettingsLyricsText = {
   };
   karaoke: {
     title: string;
+    highlightTitle: string;
     hint: string;
     preview: string;
     previewLine: string;
@@ -118,6 +119,7 @@ export const zhCN: SettingsLyricsText = {
   },
   karaoke: {
     title: "岛上的歌词样式",
+    highlightTitle: "高亮与外观",
     hint: "只影响收起的岛上那一行；音乐页的歌词照旧。",
     preview: "预览",
     previewLine: "而风声吹到这 已不需要释怀",
@@ -193,6 +195,7 @@ export const en: SettingsLyricsText = {
   },
   karaoke: {
     title: "Lyrics on the island",
+    highlightTitle: "Highlight and look",
     hint: "Only the line on the collapsed island; the music page's lyrics stay as they are.",
     preview: "Preview",
     previewLine: "And the wind blows by, nothing left to let go",

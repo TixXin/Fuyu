@@ -253,7 +253,21 @@ function MailGroups({ settings }: { settings: IslandSettings }) {
         {mailEnabled && !target && !adding && (
           <SettingsRow
             searchable={false}
-            title={full ? <span className="messages-settings__muted">{t.mail.limitReached(MAX_MAIL_ACCOUNTS)}</span> : <SettingsLinkButton onClick={() => setAdding(true)}><Plus size={13} strokeWidth={2.2} aria-hidden="true" />{t.mail.addTitle}</SettingsLinkButton>}
+            title={
+              full
+                ? <span className="messages-settings__muted">{t.mail.limitReached(MAX_MAIL_ACCOUNTS)}</span>
+                : mailboxes.length === 0
+                  ? <span className="messages-settings__muted">{t.mail.noMailbox}</span>
+                  : ""
+            }
+            control={
+              !full ? (
+                <SettingsLinkButton onClick={() => setAdding(true)}>
+                  <Plus size={13} strokeWidth={2.2} aria-hidden="true" />
+                  {t.mail.addTitle}
+                </SettingsLinkButton>
+              ) : undefined
+            }
           />
         )}
       </SettingsGroup>
