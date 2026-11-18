@@ -1,6 +1,6 @@
 # 桌面聊天软件消息上岛与开源方案调研
 
-> 日期：2026-11-17。问题：消息页接入 Telegram、Discord、WhatsApp、TIM、飞书、钉钉、企业微信（#642 / C102），开源社区在 Windows 与 macOS 上如何实现通知捕获、未读读取与窗口唤起，各目标客户端有哪些真实差异，浮屿应采用什么架构落地。范围：GitHub 仓库与源码检索（`eythaann/Seelen-UI`、`amnweb/yasb`、`RavelloH/WinToastRelay`、`sadeeshasathsara/dynamic-island-on-windows`、`GEORGEWWWU/NetSpeed-Dynamic`、`warpirate/pillar-dynamic-island-for-windows`、`marcimastro98/Xenon`、`xiaogdgenuine/Doll`、`djbclark/site-djbclark`、`telegramdesktop/tdesktop`、`Homebrew/homebrew-cask`），腾讯 TIM 官网版本接口与本机 macOS `lsappinfo` 实测。相关任务：[C102](/docs/tasks/C/C102.md)、[C57](/docs/tasks/C/C57.md)
+> 日期：2026-11-17。问题：消息页接入 Telegram、Discord、WhatsApp、TIM、飞书、钉钉、企业微信（#642 / C102），开源社区在 Windows 与 macOS 上如何实现通知捕获、未读读取与窗口唤起，各目标客户端有哪些真实差异，浮屿应采用什么架构落地。范围：GitHub 仓库与源码检索（`eythaann/Seelen-UI`、`amnweb/yasb`、`RavelloH/WinToastRelay`、`sadeeshasathsara/dynamic-island-on-windows`、`GEORGEWWWU/NetSpeed-Dynamic`、`warpirate/pillar-dynamic-island-for-windows`、`marcimastro98/Xenon`、`xiaogdgenuine/Doll`、`djbclark/site-djbclark`、`telegramdesktop/tdesktop`、`Homebrew/homebrew-cask`），腾讯 TIM 官网版本接口与本机 macOS `lsappinfo` 实测。相关任务：[C102](/docs/tasks/0-archive/C/C102.md)、[C116](/docs/tasks/C/C116.md)（#843）、[C57](/docs/tasks/C/C57.md)
 
 ## 结论
 
@@ -173,10 +173,11 @@ flowchart TD
 1. **新来源默认开关**：7 个新来源**默认关闭**，在「设置 → 消息 → 即时通讯」里调原生检测把**本机已安装的应用排在前面并标「已安装」**，方便用户一键开启，避免升级后消息页顶栏突然挤出多个图标或首次启动弹权限请求。
 2. **Windows「Toast 优先 + 任务栏闪烁兜底」策略**：对 Telegram（默认自绘弹窗）、TIM、企业微信、钉钉、飞书，收到系统 Toast 时显示完整发件人与摘要；没收到系统 Toast 但捕获到任务栏闪烁时，自动兜底显示「有新提醒」。
 3. **TIM 在 macOS 上的处理**：鉴于腾讯官网已下架 macOS 版 TIM，Mac 端默认不在设置页展示 TIM，仅当检测到用户机器上装有历史遗留 `com.tencent.tim` 时才显示。
-4. **子任务拆分**：
-   - [C102.1](/docs/tasks/C/C102.1.md)（#778）：抽离消息双端共享监听底座（Windows Toast 缓存分发与闪烁复用、macOS 批量 Dock 角标轮询）
-   - [C102.2](/docs/tasks/C/C102.2.md)（#779）：接入 Telegram、Discord、WhatsApp、TIM、飞书、钉钉、企业微信原生后端与三级应用唤起
-   - [C102.3](/docs/tasks/C/C102.3.md)（#780）：7 个新聊天来源品牌图标、通用消息面板与设置页接入、测试与文档同步
+4. **子任务拆分（均已完成）与真机验收**：
+   - [C102.1](/docs/tasks/0-archive/C/C102.1.md)（#778）：抽离消息双端共享监听底座（Windows Toast 缓存分发与闪烁复用、macOS 批量 Dock 角标轮询）
+   - [C102.2](/docs/tasks/0-archive/C/C102.2.md)（#779）：接入 Telegram、Discord、WhatsApp、TIM、飞书、钉钉、企业微信原生后端与三级应用唤起
+   - [C102.3](/docs/tasks/0-archive/C/C102.3.md)（#780）：7 个新聊天来源品牌图标、通用消息面板与设置页接入、测试与文档同步
+   - [C116](/docs/tasks/C/C116.md)（#843）：双端真实登录客户端真机实测跟进
 
 ---
 
