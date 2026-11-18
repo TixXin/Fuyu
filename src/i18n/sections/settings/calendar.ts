@@ -56,6 +56,12 @@ export type SettingsCalendarText = {
   noSources: string;
   icsFrom: (host: string) => string;
   remove: (name: string) => string;
+  subCalendarsCount: (count: number) => string;
+  subCalendarShow: (name: string) => string;
+  subCalendarColor: (name: string) => string;
+  subCalendarCountdownOn: string;
+  subCalendarCountdownOff: string;
+  subCalendarCountdownToggle: (name: string) => string;
   addHolidays: string;
   holidaysAdded: string;
   holidaysName: string;
@@ -134,6 +140,12 @@ export const zhCN: SettingsCalendarText = {
   noSources: "还没有日历。可以先订阅中国节假日，不用账号；工作日历在下面添加。",
   icsFrom: (host) => `订阅 · ${host}`,
   remove: (name) => `删除日历「${name}」`,
+  subCalendarsCount: (count) => `${count} 个子日历`,
+  subCalendarShow: (name) => `切换显示子日历「${name}」`,
+  subCalendarColor: (name) => `切换子日历「${name}」的颜色`,
+  subCalendarCountdownOn: "参与倒计时",
+  subCalendarCountdownOff: "仅面板显示",
+  subCalendarCountdownToggle: (name) => `切换子日历「${name}」是否参与会前倒计时`,
   addHolidays: "订阅中国节假日",
   holidaysAdded: "已订阅节假日",
   holidaysName: "中国节假日",
@@ -220,6 +232,12 @@ export const en: SettingsCalendarText = {
   noSources: "No calendar yet. Subscribe to China's holidays without an account, or add a work calendar below.",
   icsFrom: (host) => `Subscription · ${host}`,
   remove: (name) => `Delete the calendar "${name}"`,
+  subCalendarsCount: (count) => `${count} sub-calendars`,
+  subCalendarShow: (name) => `Toggle visibility of "${name}"`,
+  subCalendarColor: (name) => `Cycle color of "${name}"`,
+  subCalendarCountdownOn: "In countdown",
+  subCalendarCountdownOff: "Panel only",
+  subCalendarCountdownToggle: (name) => `Toggle countdown participation for "${name}"`,
   addHolidays: "Subscribe to China's holidays",
   holidaysAdded: "Holidays subscribed",
   holidaysName: "China holidays",

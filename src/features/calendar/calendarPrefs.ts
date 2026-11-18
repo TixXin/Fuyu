@@ -18,6 +18,15 @@ export type AgendaRange = (typeof AGENDA_RANGES)[number];
 export const WEEK_STARTS_ON = ["auto", "monday", "sunday"] as const;
 export type WeekStartsOn = (typeof WEEK_STARTS_ON)[number];
 
+export const CALENDAR_COLOR_PALETTE = [
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+] as const;
+
 export type CalendarPrefs = {
   countdownScope: CountdownScope;
   countdownFormat: CountdownFormat;
@@ -33,6 +42,9 @@ export type CalendarPrefs = {
   weekStartsOn: WeekStartsOn;
   includeTimedTodos: boolean;
   customMeetingDomain: string;
+  hiddenCalendars: string[];
+  noCountdownCalendars: string[];
+  calendarColors: Record<string, string>;
 };
 
 export const DEFAULT_CALENDAR_PREFS: CalendarPrefs = {
@@ -50,14 +62,79 @@ export const DEFAULT_CALENDAR_PREFS: CalendarPrefs = {
   weekStartsOn: "auto",
   includeTimedTodos: true,
   customMeetingDomain: "",
+  hiddenCalendars: [],
+  noCountdownCalendars: [],
+  calendarColors: {},
 };
 
 const DOMAIN_HOST = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}(?::(\d{1,5}))?$/;
 const HTTPS_URLS = /https:\/\/[^\s<>"')\]}，。；！）】]+/giu;
 const TRAILING_PUNCT = /[.,;:!?)'"\]}]+$/;
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+const MAX_LIST_ENTRIES = 100;
 
 function pick<T>(allowed: readonly T[], value: unknown, fallback: T): T {
   return (allowed as readonly unknown[]).includes(value) ? (value as T) : fallback;
+}
+
+export function normalizeCalendarColor(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim().toLowerCase();
+  if (HEX_COLOR.test(trimmed)) return trimmed;
+  if (/^#[0-9a-f]{8}$/i.test(trimmed)) return trimmed.slice(0, 7);
+  return null;
+}
+
+export function resolveCalendarColor(
+  calendarName: string,
+  overrides: Readonly<Record<string, string>> | undefined,
+  nativeColors?: Readonly<Record<string, string | null | undefined>>,
+): string | null {
+  const key = calendarName.trim();
+  if (!key) return null;
+  const override = overrides ? normalizeCalendarColor(overrides[key]) : null;
+  if (override) return override;
+  const native = nativeColors ? normalizeCalendarColor(nativeColors[key]) : null;
+  return native;
+}
+
+export function cycleCalendarColor(current: string | null): string | null {
+  if (!current) return CALENDAR_COLOR_PALETTE[0];
+  const normalized = current.toLowerCase();
+  const idx = CALENDAR_COLOR_PALETTE.findIndex((item) => item === normalized);
+  if (idx < 0) return CALENDAR_COLOR_PALETTE[0];
+  if (idx + 1 >= CALENDAR_COLOR_PALETTE.length) return null;
+  return CALENDAR_COLOR_PALETTE[idx + 1];
+}
+
+function normalizeNameList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of value) {
+    if (typeof item !== "string") continue;
+    const trimmed = item.trim().slice(0, 120);
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+    if (out.length >= MAX_LIST_ENTRIES) break;
+  }
+  return out;
+}
+
+function normalizeColorMap(value: unknown): Record<string, string> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const out: Record<string, string> = {};
+  let count = 0;
+  for (const [rawKey, rawVal] of Object.entries(value as Record<string, unknown>)) {
+    const key = rawKey.trim().slice(0, 120);
+    const color = normalizeCalendarColor(rawVal);
+    if (!key || !color) continue;
+    out[key] = color;
+    count += 1;
+    if (count >= MAX_LIST_ENTRIES) break;
+  }
+  return out;
 }
 
 export function parseMeetingDomain(value: unknown): string | null {
@@ -110,11 +187,13 @@ export function withCalendarEventPrefs(event: CalendarEvent, customDomain: strin
 
 export function prepareCalendarEvents(
   events: readonly CalendarEvent[],
-  prefs: Pick<CalendarPrefs, "hideDeclined" | "customMeetingDomain">,
+  prefs: Pick<CalendarPrefs, "hideDeclined" | "customMeetingDomain"> & { hiddenCalendars?: readonly string[] },
 ): CalendarEvent[] {
+  const hidden = prefs.hiddenCalendars && prefs.hiddenCalendars.length > 0 ? new Set(prefs.hiddenCalendars) : null;
   const out: CalendarEvent[] = [];
   for (const event of events) {
     if (prefs.hideDeclined && event.declined === true) continue;
+    if (hidden && event.calendar && hidden.has(event.calendar.trim())) continue;
     out.push(withCalendarEventPrefs(event, prefs.customMeetingDomain));
   }
   return out;
@@ -140,5 +219,8 @@ export function normalizeCalendarPrefs(value: unknown): CalendarPrefs {
     weekStartsOn: pick(WEEK_STARTS_ON, saved.weekStartsOn, DEFAULT_CALENDAR_PREFS.weekStartsOn),
     includeTimedTodos: saved.includeTimedTodos !== undefined ? Boolean(saved.includeTimedTodos) : DEFAULT_CALENDAR_PREFS.includeTimedTodos,
     customMeetingDomain: rawDomain,
+    hiddenCalendars: normalizeNameList(saved.hiddenCalendars),
+    noCountdownCalendars: normalizeNameList(saved.noCountdownCalendars),
+    calendarColors: normalizeColorMap(saved.calendarColors),
   };
 }

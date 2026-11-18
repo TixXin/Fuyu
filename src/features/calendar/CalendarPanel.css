@@ -142,12 +142,22 @@
 }
 
 .calendar-event__place {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: rgba(var(--calendar-ink), 0.5);
   font-size: 11px;
 }
 
 .calendar-event__place:empty {
   display: none;
+}
+
+.calendar-event__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-circle);
 }
 
 .calendar-event__join {

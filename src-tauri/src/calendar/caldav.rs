@@ -17,10 +17,20 @@ const MULTIGET_BATCH: usize = 100;
 pub(super) struct DavResponse {
     pub(super) href: String,
     pub(super) displayname: Option<String>,
+    pub(super) color: Option<String>,
     pub(super) calendar_data: Vec<String>,
     pub(super) is_calendar: bool,
     pub(super) principal: Option<String>,
     pub(super) home: Option<String>,
+}
+
+pub(super) fn normalize_hex_color(raw: &str) -> Option<String> {
+    let trimmed = raw.trim().strip_prefix('#')?;
+    let hex = match trimmed.len() {
+        6 | 8 if trimmed.bytes().all(|b| b.is_ascii_hexdigit()) => &trimmed[..6],
+        _ => return None,
+    };
+    Some(format!("#{}", hex.to_ascii_lowercase()))
 }
 
 pub(super) fn parse_multistatus(xml: &str) -> Vec<DavResponse> {
@@ -78,6 +88,11 @@ pub(super) fn parse_multistatus(xml: &str) -> Vec<DavResponse> {
                             let trimmed = text.trim();
                             if !trimmed.is_empty() {
                                 response.displayname = Some(trimmed.to_string());
+                            }
+                        }
+                        ("calendar-color", Some("prop")) => {
+                            if let Some(color) = normalize_hex_color(&text) {
+                                response.color = Some(color);
                             }
                         }
                         ("calendar-data", _) => response.calendar_data.push(text.clone()),
@@ -216,8 +231,8 @@ pub(super) fn calendar_query(from: DateTime<Utc>, to: DateTime<Utc>) -> String {
 }
 
 pub(super) const PROPFIND_DISCOVERY: &str = r#"<?xml version="1.0" encoding="utf-8"?>
-<d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
-  <d:prop><d:current-user-principal/><c:calendar-home-set/><d:resourcetype/><d:displayname/></d:prop>
+<d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav" xmlns:ic="http://apple.com/ns/ical/">
+  <d:prop><d:current-user-principal/><c:calendar-home-set/><d:resourcetype/><d:displayname/><ic:calendar-color/></d:prop>
 </d:propfind>"#;
 
 fn join(base: &Url, href: &str) -> Result<Url, UserError> {
@@ -276,18 +291,20 @@ async fn entry_point<T: Transport>(transport: &T, base: &Url) -> Result<(Url, Ve
 pub(super) struct RemoteCalendar {
     pub(super) url: Url,
     pub(super) displayname: Option<String>,
+    pub(super) color: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct CalendarFeed {
     pub(super) displayname: Option<String>,
+    pub(super) color: Option<String>,
     pub(super) texts: Vec<String>,
 }
 
 pub(super) async fn calendars<T: Transport>(transport: &T, base: &Url) -> Result<Vec<RemoteCalendar>, UserError> {
     let (at, answer) = entry_point(transport, base).await?;
     if let Some(cal) = answer.iter().find(|response| response.is_calendar) {
-        return Ok(vec![RemoteCalendar { url: at, displayname: cal.displayname.clone() }]);
+        return Ok(vec![RemoteCalendar { url: at, displayname: cal.displayname.clone(), color: cal.color.clone() }]);
     }
     let home = match answer.iter().find_map(|response| response.home.clone()) {
         Some(home) => join(&at, &home)?,
@@ -304,7 +321,7 @@ pub(super) async fn calendars<T: Transport>(transport: &T, base: &Url) -> Result
         .into_iter()
         .filter(|response| response.is_calendar)
         .take(MAX_CALENDARS)
-        .map(|response| Ok(RemoteCalendar { url: join(&listed.url, &response.href)?, displayname: response.displayname }))
+        .map(|response| Ok(RemoteCalendar { url: join(&listed.url, &response.href)?, displayname: response.displayname, color: response.color }))
         .collect()
 }
 
@@ -359,7 +376,7 @@ pub(super) async fn events<T: Transport>(transport: &T, base: &Url, from: DateTi
     let mut feeds = Vec::new();
     for calendar in calendars(transport, base).await? {
         let texts = calendar_events(transport, &calendar.url, from, to).await?;
-        feeds.push(CalendarFeed { displayname: calendar.displayname, texts });
+        feeds.push(CalendarFeed { displayname: calendar.displayname, color: calendar.color, texts });
     }
     Ok(feeds)
 }

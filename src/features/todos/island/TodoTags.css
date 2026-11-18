@@ -70,6 +70,10 @@
   color: var(--text-3);
 }
 
+.todo-tag-repeat {
+  color: var(--info-text, #64b5f6);
+}
+
 .island-light {
   --todo-tag-red: #e03131;
   --todo-tag-orange: #e8590c;

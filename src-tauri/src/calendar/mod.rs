@@ -18,6 +18,7 @@ pub(crate) fn get_calendar_shortcut_problem() -> Option<&'static str> {
 use crate::user_error::UserError;
 use plugin_base::host_service;
 use std::{
+    collections::BTreeMap,
     sync::{Mutex, PoisonError},
     time::{Duration, Instant},
 };
@@ -27,7 +28,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Manager};
 
 use ics::{events_between, events_between_for, CalendarEvent};
-use sources::{CalendarSource, SourceKind, MAX_SOURCES};
+use sources::{CalendarSource, SourceKind, SubCalendar, MAX_SOURCES};
 
 const REFRESH_AFTER: Duration = Duration::from_secs(15 * 60);
 const MAX_ICS_BYTES: usize = 16 * 1024 * 1024;
@@ -48,6 +49,8 @@ pub struct CalendarSnapshot {
     from_ms: i64,
     to_ms: i64,
     source_count: usize,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    calendar_colors: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -200,18 +203,51 @@ fn events_from_feeds(source: &CalendarSource, feeds: &[caldav::CalendarFeed], fr
     events
 }
 
-async fn read_source(source: &CalendarSource, secret: &str, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<CalendarEvent>, UserError> {
+fn discovered_sub_calendars(source: &CalendarSource, feeds: &[caldav::CalendarFeed]) -> Vec<SubCalendar> {
+    if source.kind != SourceKind::Caldav {
+        return Vec::new();
+    }
+    let mut found: Vec<SubCalendar> = Vec::new();
+    for feed in feeds {
+        let name = feed
+            .displayname
+            .as_deref()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .unwrap_or_else(|| source.name.as_str())
+            .to_string();
+        if name.is_empty() {
+            continue;
+        }
+        if let Some(existing) = found.iter_mut().find(|item| item.name == name) {
+            if existing.color.is_none() && feed.color.is_some() {
+                existing.color.clone_from(&feed.color);
+            }
+        } else {
+            found.push(SubCalendar { name, color: feed.color.clone() });
+        }
+    }
+    found
+}
+
+async fn read_source(
+    source: &CalendarSource,
+    secret: &str,
+    from: DateTime<Utc>,
+    to: DateTime<Utc>,
+) -> Result<(Vec<CalendarEvent>, Vec<SubCalendar>), UserError> {
     let feeds = match source.kind {
-        SourceKind::Ics => vec![caldav::CalendarFeed { displayname: None, texts: vec![fetch_ics(secret).await?] }],
+        SourceKind::Ics => vec![caldav::CalendarFeed { displayname: None, color: None, texts: vec![fetch_ics(secret).await?] }],
         SourceKind::Caldav => {
             let account = caldav::Account { url: &source.url, username: &source.username, password: secret };
             caldav::fetch(&account, from, to).await?
         }
     };
-    Ok(events_from_feeds(source, &feeds, from, to))
+    let calendars = discovered_sub_calendars(source, &feeds);
+    Ok((events_from_feeds(source, &feeds, from, to), calendars))
 }
 
-async fn read_all(sources: &[CalendarSource]) -> CalendarSnapshot {
+async fn read_all(sources: &mut [CalendarSource]) -> (CalendarSnapshot, bool) {
     let (from, to) = window(Local::now());
     let mut snapshot = CalendarSnapshot {
         fetched_at: Utc::now().timestamp_millis(),
@@ -220,20 +256,32 @@ async fn read_all(sources: &[CalendarSource]) -> CalendarSnapshot {
         source_count: sources.len(),
         ..CalendarSnapshot::default()
     };
-    for source in sources {
+    let mut changed = false;
+    for source in sources.iter_mut() {
         let result = match sources::read_secret(&source.id) {
             Ok(Some(secret)) => read_source(source, &secret, from, to).await,
             Ok(None) => Err(UserError::new("calendar.secretMissing", "The saved password or link is missing; remove this calendar and add it again.")),
             Err(error) => Err(error),
         };
         match result {
-            Ok(events) => snapshot.events.extend(events),
+            Ok((events, calendars)) => {
+                if source.kind == SourceKind::Caldav && !calendars.is_empty() && source.calendars != calendars {
+                    source.calendars = calendars;
+                    changed = true;
+                }
+                for sub in &source.calendars {
+                    if let Some(color) = &sub.color {
+                        snapshot.calendar_colors.entry(sub.name.clone()).or_insert_with(|| color.clone());
+                    }
+                }
+                snapshot.events.extend(events);
+            }
             Err(message) => snapshot.problems.push(SourceProblem { source_id: source.id.clone(), message }),
         }
     }
     snapshot.events.sort_by(|a, b| (a.start_ms, &a.uid).cmp(&(b.start_ms, &b.uid)));
     snapshot.events.dedup_by(|a, b| a.uid == b.uid && a.start_ms == b.start_ms);
-    snapshot
+    (snapshot, changed)
 }
 
 #[tauri::command]
@@ -247,7 +295,7 @@ async fn events_for_host(refresh: Option<bool>) -> Result<CalendarEvents, UserEr
 }
 
 async fn read_events(dir: &std::path::Path, refresh: bool) -> Result<CalendarSnapshot, UserError> {
-    let sources = sources::read(dir);
+    let mut sources = sources::read(dir);
     if sources.is_empty() {
         return Ok(CalendarSnapshot::default());
     }
@@ -257,7 +305,10 @@ async fn read_events(dir: &std::path::Path, refresh: bool) -> Result<CalendarSna
             return Ok(cached.snapshot.clone());
         }
     }
-    let snapshot = read_all(&sources).await;
+    let (snapshot, changed) = read_all(&mut sources).await;
+    if changed {
+        let _ = sources::write(dir, &sources);
+    }
     *CACHE.lock().unwrap_or_else(PoisonError::into_inner) = Some(Cached { snapshot: snapshot.clone(), at: Instant::now(), sources });
     Ok(snapshot)
 }
@@ -337,16 +388,18 @@ pub async fn add_calendar_source(
         }
     };
     let name = Some(name.trim().chars().take(40).collect::<String>()).filter(|name| !name.is_empty()).unwrap_or_else(|| host.clone());
-    let source = CalendarSource {
+    let mut source = CalendarSource {
         id: format!("cal-{}", Utc::now().timestamp_millis()),
         kind,
         name,
         url,
         host,
         username: username.trim().to_string(),
+        calendars: Vec::new(),
     };
     let (from, to) = window(Local::now());
-    read_source(&source, &secret, from, to).await?;
+    let (_, calendars) = read_source(&source, &secret, from, to).await?;
+    source.calendars = calendars;
     sources::save_secret(&source.id, &secret)?;
     saved.push(source.clone());
     sources::write(&dir, &saved)?;
@@ -427,6 +480,7 @@ mod tests {
             url: "https://dav.example/me/".into(),
             host: "dav.example".into(),
             username: "me@example.com".into(),
+            calendars: Vec::new(),
         };
         let shown = serde_json::to_value(CalendarSources::from(vec![saved])).unwrap();
         assert_eq!(shown, serde_json::json!({ "sources": [{ "id": "cal-1", "kind": "caldav", "name": "Work", "host": "dav.example" }] }));
@@ -450,6 +504,7 @@ mod tests {
             url: "https://caldav.feishu.cn".into(),
             host: "caldav.feishu.cn".into(),
             username: "alice@example.com".into(),
+            calendars: Vec::new(),
         };
         let ics_of = |uid: &str, extra: &str| {
             format!("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:{uid}\nSUMMARY:{uid}\nDTSTART:20261110T020000Z\nDTEND:20261110T030000Z\n{extra}END:VEVENT\nEND:VCALENDAR\n")
@@ -457,15 +512,25 @@ mod tests {
         let feeds = [
             caldav::CalendarFeed {
                 displayname: Some("个人日历".into()),
+                color: Some("#3b82f6".into()),
                 texts: vec![ics_of("e1", "ATTENDEE;PARTSTAT=DECLINED:mailto:alice@example.com\n")],
             },
-            caldav::CalendarFeed { displayname: Some("公共会议室".into()), texts: vec![ics_of("e2", "TRANSP:TRANSPARENT\n")] },
-            caldav::CalendarFeed { displayname: None, texts: vec![ics_of("e3", "")] },
+            caldav::CalendarFeed { displayname: Some("公共会议室".into()), color: Some("#10b981".into()), texts: vec![ics_of("e2", "TRANSP:TRANSPARENT\n")] },
+            caldav::CalendarFeed { displayname: None, color: None, texts: vec![ics_of("e3", "")] },
         ];
         let from = Utc.with_ymd_and_hms(2026, 11, 10, 0, 0, 0).unwrap();
         let to = Utc.with_ymd_and_hms(2026, 11, 11, 0, 0, 0).unwrap();
         let parsed = events_from_feeds(&source, &feeds, from, to);
         let summary: Vec<(&str, &str, bool, bool)> = parsed.iter().map(|e| (e.uid.as_str(), e.calendar.as_str(), e.declined, e.free)).collect();
         assert_eq!(summary, [("e1", "个人日历", true, false), ("e2", "公共会议室", false, true), ("e3", "飞书", false, false)]);
+        let subs = discovered_sub_calendars(&source, &feeds);
+        assert_eq!(
+            subs,
+            [
+                SubCalendar { name: "个人日历".into(), color: Some("#3b82f6".into()) },
+                SubCalendar { name: "公共会议室".into(), color: Some("#10b981".into()) },
+                SubCalendar { name: "飞书".into(), color: None },
+            ]
+        );
     }
 }

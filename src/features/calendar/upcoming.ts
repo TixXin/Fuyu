@@ -29,6 +29,8 @@ export type UpcomingOptions = {
   customMeetingDomain?: string;
   bannerEnabled?: boolean;
   bannerMinutes?: CalendarBannerMinutes;
+  hiddenCalendars?: readonly string[];
+  noCountdownCalendars?: readonly string[];
 };
 
 export type DueMeetingBanner = {
@@ -54,15 +56,30 @@ export function holdEndMs(event: Pick<CalendarEvent, "startMs" | "endMs">, holdM
   return Math.min(event.endMs, event.startMs + holdMinutes * 60_000);
 }
 
+function isCalendarExcluded(
+  calendarName: string,
+  hiddenCalendars: readonly string[] | undefined,
+  noCountdownCalendars: readonly string[] | undefined,
+): boolean {
+  const key = calendarName.trim();
+  if (!key) return false;
+  if (hiddenCalendars && hiddenCalendars.includes(key)) return true;
+  if (noCountdownCalendars && noCountdownCalendars.includes(key)) return true;
+  return false;
+}
+
 function resolveCandidate(
   event: CalendarEvent,
   hideDeclined: boolean,
   ignoreFree: boolean,
   customDomain: string,
+  hiddenCalendars?: readonly string[],
+  noCountdownCalendars?: readonly string[],
 ): CalendarEvent | null {
   if (event.allDay || event.endMs <= event.startMs) return null;
   if (hideDeclined && event.declined === true) return null;
   if (ignoreFree && event.free === true) return null;
+  if (isCalendarExcluded(event.calendar, hiddenCalendars, noCountdownCalendars)) return null;
   return customDomain ? withCalendarEventPrefs(event, customDomain) : event;
 }
 
@@ -81,7 +98,7 @@ export function upcomingMeeting(
   const window = remindMinutes * 60_000;
   const candidates: CalendarEvent[] = [];
   for (const raw of events) {
-    const event = resolveCandidate(raw, hideDeclined, ignoreFree, customDomain);
+    const event = resolveCandidate(raw, hideDeclined, ignoreFree, customDomain, options.hiddenCalendars, options.noCountdownCalendars);
     if (!event) continue;
     if (countdownScope === "meetingsOnly" && !event.meetingLink) continue;
     if (event.startMs - now <= window && now < holdEndMs(event, holdMinutes)) {
@@ -123,7 +140,7 @@ export function nextChangeAt(
   const bannerLead = bannerMinutes * 60_000;
   const times: number[] = [];
   for (const raw of events) {
-    const event = resolveCandidate(raw, hideDeclined, ignoreFree, customDomain);
+    const event = resolveCandidate(raw, hideDeclined, ignoreFree, customDomain, options.hiddenCalendars, options.noCountdownCalendars);
     if (!event) continue;
     if (remindMinutes > 0 && (countdownScope !== "meetingsOnly" || Boolean(event.meetingLink))) {
       times.push(event.startMs - window, event.startMs, holdEndMs(event, holdMinutes), event.endMs);
@@ -152,7 +169,7 @@ export function meetingBannerId(event: Pick<CalendarEvent, "uid" | "startMs">): 
 export function dueMeetingBanner(
   events: readonly CalendarEvent[],
   now: number,
-  options: Pick<UpcomingOptions, "bannerEnabled" | "bannerMinutes" | "hideDeclined" | "ignoreFreeInCountdown" | "customMeetingDomain">,
+  options: Pick<UpcomingOptions, "bannerEnabled" | "bannerMinutes" | "hideDeclined" | "ignoreFreeInCountdown" | "customMeetingDomain" | "hiddenCalendars" | "noCountdownCalendars">,
   reminded: ReadonlySet<string>,
 ): DueMeetingBanner | null {
   if (options.bannerEnabled === false) return null;
@@ -163,7 +180,7 @@ export function dueMeetingBanner(
   const lead = bannerMinutes * 60_000;
   const due: CalendarEvent[] = [];
   for (const raw of events) {
-    const event = resolveCandidate(raw, hideDeclined, ignoreFree, customDomain);
+    const event = resolveCandidate(raw, hideDeclined, ignoreFree, customDomain, options.hiddenCalendars, options.noCountdownCalendars);
     if (!event) continue;
     const id = meetingBannerId(event);
     if (reminded.has(id)) continue;
