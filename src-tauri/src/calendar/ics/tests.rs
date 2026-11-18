@@ -103,3 +103,79 @@ fn zones_durations_and_escapes_are_read() {
     assert_eq!(unescape("a\\, b\\; c\\nd\\\\"), "a, b; c\nd\\");
     assert!(events_between("not a calendar", utc(2026, 1, 1, 0, 0), utc(2027, 1, 1, 0, 0)).is_empty());
 }
+
+#[test]
+fn transparency_and_attendee_decline_status_are_parsed_with_and_without_account() {
+    let existing = events_between(CALENDAR, utc(2026, 11, 5, 16, 0), utc(2026, 11, 9, 16, 0));
+    assert!(existing.iter().all(|event| !event.declined && !event.free));
+
+    let caldav_ics = "\
+BEGIN:VCALENDAR\r
+X-WR-CALNAME:工程排期\r
+BEGIN:VEVENT\r
+UID:declined-me@example\r
+SUMMARY:我已拒绝的评审\r
+DTSTART:20261110T020000Z\r
+DTEND:20261110T030000Z\r
+ATTENDEE;CN=\"Bob\";PARTSTAT=ACCEPTED:mailto:bob@example.com\r
+ATTENDEE;CN=\"Smith; Alice\";PARTSTAT=DECLINED:MAILTO:Alice@Example.com\r
+END:VEVENT\r
+BEGIN:VEVENT\r
+UID:other-declined@example\r
+SUMMARY:别人拒绝但我要参加\r
+DTSTART:20261110T040000Z\r
+DTEND:20261110T050000Z\r
+ATTENDEE;PARTSTAT=ACCEPTED:mailto:alice@example.com\r
+ATTENDEE;PARTSTAT=DECLINED:mailto:bob@example.com\r
+END:VEVENT\r
+BEGIN:VEVENT\r
+UID:uuid-email@example\r
+SUMMARY:iCloud UUID 参会人\r
+DTSTART:20261110T060000Z\r
+DTEND:20261110T070000Z\r
+TRANSP:transparent\r
+ATTENDEE;CN=\"Alice\";EMAIL=alice@example.com;PARTSTAT=DECLINED:urn:uuid:1111-2222\r
+END:VEVENT\r
+BEGIN:VEVENT\r
+UID:principal-id@example\r
+SUMMARY:飞书账号匹配\r
+DTSTART:20261110T080000Z\r
+DTEND:20261110T090000Z\r
+ATTENDEE;PARTSTAT=DECLINED:/principals/users/u_abc123/\r
+END:VEVENT\r
+END:VCALENDAR\r
+";
+    let for_alice = events_between_for(caldav_ics, utc(2026, 11, 10, 0, 0), utc(2026, 11, 11, 0, 0), Some("Alice <alice@example.com>"));
+    let flags: Vec<(&str, bool, bool, &str)> =
+        for_alice.iter().map(|e| (e.uid.as_str(), e.declined, e.free, e.calendar.as_str())).collect();
+    assert_eq!(
+        flags,
+        [
+            ("declined-me@example", true, false, "工程排期"),
+            ("other-declined@example", false, false, "工程排期"),
+            ("uuid-email@example", true, true, "工程排期"),
+            ("principal-id@example", false, false, "工程排期"),
+        ]
+    );
+
+    let for_feishu = events_between_for(caldav_ics, utc(2026, 11, 10, 0, 0), utc(2026, 11, 11, 0, 0), Some("u_abc123"));
+    assert!(for_feishu.iter().find(|e| e.uid == "principal-id@example").unwrap().declined);
+    assert!(!for_feishu.iter().find(|e| e.uid == "other-declined@example").unwrap().declined);
+
+    let without_account = events_between(caldav_ics, utc(2026, 11, 10, 0, 0), utc(2026, 11, 11, 0, 0));
+    assert!(!without_account.iter().find(|e| e.uid == "declined-me@example").unwrap().declined);
+    assert!(without_account.iter().find(|e| e.uid == "uuid-email@example").unwrap().declined);
+
+    let outlook_free = "\
+BEGIN:VCALENDAR\n\
+BEGIN:VEVENT\n\
+UID:cdo-free@example\n\
+SUMMARY:弹性办公备忘\n\
+DTSTART:20261110T090000Z\n\
+DTEND:20261110T100000Z\n\
+X-MICROSOFT-CDO-BUSYSTATUS:FREE\n\
+END:VEVENT\n\
+END:VCALENDAR\n";
+    let parsed = events_between(outlook_free, utc(2026, 11, 10, 0, 0), utc(2026, 11, 11, 0, 0));
+    assert_eq!((parsed[0].free, parsed[0].declined), (true, false));
+}

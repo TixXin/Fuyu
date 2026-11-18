@@ -20,6 +20,11 @@ export type SettingsMessageSourcesText = {
   wechatTitle: string;
   wechatHint: string;
   wechatHintMac: string;
+  imOthersTitle: string;
+  installedBadge: string;
+  imOthersHint: string;
+  imOthersHintMac: string;
+  imSystemToastHint: string;
 };
 
 export const zhCN: SettingsMessageSourcesText = {
@@ -44,6 +49,11 @@ export const zhCN: SettingsMessageSourcesText = {
   qqHintMac: "看程序坞里 QQ 图标上的未读数，数字变多时提醒；读不到是谁、说了什么。需要 QQ 开着，并在「系统设置 → 隐私与安全性 → 辅助功能」里允许浮屿。",
   wechatHintMac: "看程序坞里微信图标上的未读数，数字变多时提醒；读不到是谁、说了什么。需要微信开着，并在「系统设置 → 隐私与安全性 → 辅助功能」里允许浮屿。",
   wechatHint: "监听电脑版微信在任务栏的闪烁提醒，需要微信保持登录。不打开下面的开关时，只知道有新提醒，不知道是谁、说了什么。",
+  imOthersTitle: "更多聊天软件",
+  installedBadge: "已安装",
+  imOthersHint: "本机已安装的应用排在前面。读取系统通知中的发送人和摘要，客户端未发系统通知但闪烁任务栏时兜底显示「有新提醒」，只保留在本次运行的内存中。",
+  imOthersHintMac: "本机已安装的应用排在前面。看程序坞图标上的未读数，数字变多时提醒；需要对应应用开着，并在「系统设置 → 隐私与安全性 → 辅助功能」里允许浮屿。",
+  imSystemToastHint: "默认自绘弹窗时只提示「有新提醒」；在软件设置内开启系统通知即可显示发送人和消息内容。",
 };
 
 export const en: SettingsMessageSourcesText = {
@@ -68,4 +78,9 @@ export const en: SettingsMessageSourcesText = {
   qqHintMac: "Watches the unread count on QQ's Dock icon and tells you when it goes up; who wrote and what cannot be read. QQ must be running and Fuyu allowed under System Settings > Privacy & Security > Accessibility.",
   wechatHintMac: "Watches the unread count on WeChat's Dock icon and tells you when it goes up; who wrote and what cannot be read. WeChat must be running and Fuyu allowed under System Settings > Privacy & Security > Accessibility.",
   wechatHint: "Watches WeChat desktop flashing in the taskbar; WeChat must stay signed in. Without the switch below it only knows that something came, not who or what.",
+  imOthersTitle: "More chat apps",
+  installedBadge: "Installed",
+  imOthersHint: "Installed apps appear first. Reads the sender and preview from system notifications, falls back to a taskbar-flash reminder when an app uses its own popups, and keeps items in memory for this run only.",
+  imOthersHintMac: "Installed apps appear first. Watches the unread count on each app's Dock icon and tells you when it goes up; the app must be running and Fuyu allowed under System Settings > Privacy & Security > Accessibility.",
+  imSystemToastHint: "Shows 'New reminder' while the app uses its own popups; turn on system notifications in the app's settings to display the sender and message.",
 };

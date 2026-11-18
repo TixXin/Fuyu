@@ -1,4 +1,5 @@
 import type { CalendarEvent } from "./api";
+import type { AgendaRange, WeekStartsOn } from "./calendarPrefs.ts";
 import { CHINESE_DAY_NAMES, chineseDay } from "./lunar.ts";
 
 const DAY_MS = 86_400_000;
@@ -13,15 +14,51 @@ export function nextDay(dayStart: number) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).getTime();
 }
 
+export function agendaDayStarts(today: number, selected: number, range: AgendaRange = "twoDays"): number[] {
+  if (range === "sevenDays") {
+    const out: number[] = [];
+    let day = selected;
+    for (let index = 0; index < 7; index += 1) {
+      out.push(day);
+      day = nextDay(day);
+    }
+    return out;
+  }
+  return selected === today ? [today, nextDay(today)] : [selected];
+}
+
 export function monthStart(ms: number, months = 0) {
   const date = new Date(ms);
   return new Date(date.getFullYear(), date.getMonth() + months, 1).getTime();
 }
 
-export function monthDays(month: number) {
+export function resolveWeekStart(weekStartsOn: WeekStartsOn = "auto"): "monday" | "sunday" {
+  return weekStartsOn === "sunday" ? "sunday" : "monday";
+}
+
+export function monthDays(month: number, weekStartsOn: WeekStartsOn = "auto") {
   const first = new Date(month);
-  const lead = (first.getDay() + 6) % 7;
+  const sundayFirst = resolveWeekStart(weekStartsOn) === "sunday";
+  const lead = sundayFirst ? first.getDay() : (first.getDay() + 6) % 7;
   return Array.from({ length: 42 }, (_, index) => new Date(first.getFullYear(), first.getMonth(), 1 - lead + index).getTime());
+}
+
+export function isoWeekNumber(ms: number): number {
+  const date = new Date(ms);
+  const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayNum = (new Date(utc).getUTCDay() + 6) % 7;
+  const thursday = utc + (3 - dayNum) * DAY_MS;
+  const yearStart = Date.UTC(new Date(thursday).getUTCFullYear(), 0, 1);
+  return Math.floor((thursday - yearStart) / DAY_MS / 7) + 1;
+}
+
+export function monthWeekNumbers(days: readonly number[], weekStartsOn: WeekStartsOn = "auto"): number[] {
+  const mondayOffset = resolveWeekStart(weekStartsOn) === "sunday" ? 1 : 0;
+  const weeks: number[] = [];
+  for (let row = 0; row < Math.floor(days.length / 7); row += 1) {
+    weeks.push(isoWeekNumber(days[row * 7 + mondayOffset]));
+  }
+  return weeks;
 }
 
 export function eventsOn(events: readonly CalendarEvent[], dayStart: number) {

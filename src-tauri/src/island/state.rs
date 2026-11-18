@@ -105,6 +105,7 @@ impl CornerShape {
 pub(crate) struct IslandWindowState {
     pub(super) mode: IslandMode,
     pub(super) is_tucked: bool,
+    pub(super) is_dimmed: bool,
     pub(super) tuck_style: TuckStyle,
     pub(super) collapsed_scale: f64,
     pub(super) expanded_scale: f64,
@@ -187,6 +188,13 @@ impl IslandWindowState {
             IslandMode::Expanded => self.expanded_scale,
         }
     }
+
+    pub(super) fn dimmed_passthrough(self) -> bool {
+        self.is_dimmed
+            && matches!(self.mode, IslandMode::Collapsed)
+            && !self.is_tucked
+            && !self.is_dragging
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
@@ -219,6 +227,7 @@ impl Default for IslandWindowState {
         Self {
             mode: IslandMode::Collapsed,
             is_tucked: false,
+            is_dimmed: false,
             tuck_style: TuckStyle::Edge,
             collapsed_scale: DEFAULT_COLLAPSED_SCALE,
             expanded_scale: DEFAULT_EXPANDED_SCALE,

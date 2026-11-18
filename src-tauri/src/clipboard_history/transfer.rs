@@ -127,23 +127,29 @@ impl ClipboardHistoryService {
 
         let mut state = self.state.lock().map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
         let items = added.len();
-        state.items.extend(added);
-        state.items.sort_by_key(|item| std::cmp::Reverse(item.copied_at));
         let mut snippets = 0;
         let state_ref = &mut *state;
+        let mut sync_changed = false;
         crate::sync::clock::with(|clock, wall| {
+            sync_changed |= super::favorites_sync::on_imported(&mut added, &mut state_ref.favorite_tombstones, clock, wall);
             for snippet in file.snippets {
                 if !state_ref.snippets.iter().any(|kept| kept.text() == snippet.text()) {
                     super::snippets::adopt(&mut state_ref.snippets, &mut state_ref.snippet_tombstones, snippet, clock, wall);
                     snippets += 1;
+                    sync_changed = true;
                 }
             }
         });
+        state_ref.items.extend(added);
+        state_ref.items.sort_by_key(|item| std::cmp::Reverse(item.copied_at));
         self.enforce_limit_locked(&mut state);
         self.persist_locked(&state)?;
         drop(state);
         self.flush_persisted()?;
         self.emit_changed();
+        if sync_changed {
+            crate::sync::notify_local_change();
+        }
         Ok(ImportReport { items, snippets })
     }
 }

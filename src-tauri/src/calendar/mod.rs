@@ -14,7 +14,7 @@ use chrono::{DateTime, Datelike, Local, Months, NaiveDate, TimeZone, Utc};
 use serde::Serialize;
 use tauri::{AppHandle, Manager};
 
-use ics::{events_between, CalendarEvent};
+use ics::{events_between, events_between_for, CalendarEvent};
 use sources::{CalendarSource, SourceKind, MAX_SOURCES};
 
 const REFRESH_AFTER: Duration = Duration::from_secs(15 * 60);
@@ -162,19 +162,41 @@ fn ungzip(bytes: &[u8]) -> Result<Vec<u8>, UserError> {
     Ok(unpacked)
 }
 
+fn events_from_feeds(source: &CalendarSource, feeds: &[caldav::CalendarFeed], from: DateTime<Utc>, to: DateTime<Utc>) -> Vec<CalendarEvent> {
+    let custom_ics_name = source.kind == SourceKind::Ics && !source.name.trim().is_empty() && source.name != source.host;
+    let mut events = Vec::new();
+    for feed in feeds {
+        let sub_name = feed.displayname.as_deref().map(str::trim).filter(|name| !name.is_empty());
+        for text in &feed.texts {
+            let parsed = match source.kind {
+                SourceKind::Ics => events_between(text, from, to),
+                SourceKind::Caldav => events_between_for(text, from, to, Some(&source.username)),
+            };
+            for mut event in parsed {
+                if let Some(name) = sub_name {
+                    event.calendar = name.to_string();
+                } else if custom_ics_name {
+                    event.calendar = source.name.clone();
+                }
+                if event.calendar.trim().is_empty() {
+                    event.calendar = source.name.clone();
+                }
+                events.push(event);
+            }
+        }
+    }
+    events
+}
+
 async fn read_source(source: &CalendarSource, secret: &str, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<CalendarEvent>, UserError> {
-    let texts = match source.kind {
-        SourceKind::Ics => vec![fetch_ics(secret).await?],
+    let feeds = match source.kind {
+        SourceKind::Ics => vec![caldav::CalendarFeed { displayname: None, texts: vec![fetch_ics(secret).await?] }],
         SourceKind::Caldav => {
             let account = caldav::Account { url: &source.url, username: &source.username, password: secret };
             caldav::fetch(&account, from, to).await?
         }
     };
-    let mut events: Vec<CalendarEvent> = texts.iter().flat_map(|text| events_between(text, from, to)).collect();
-    for event in &mut events {
-        event.calendar = source.name.clone();
-    }
-    Ok(events)
+    Ok(events_from_feeds(source, &feeds, from, to))
 }
 
 async fn read_all(sources: &[CalendarSource]) -> CalendarSnapshot {
@@ -411,5 +433,33 @@ mod tests {
         assert_eq!((from, to), (local(2026, 10, 1), local(2027, 1, 1)));
         let (from, to) = window(Local.with_ymd_and_hms(2027, 1, 31, 23, 0, 0).unwrap());
         assert_eq!((from, to), (local(2026, 12, 1), local(2027, 3, 1)));
+    }
+
+    #[test]
+    fn sub_calendar_names_are_preserved_with_fallback_to_source_name() {
+        let source = CalendarSource {
+            id: "cal-1".into(),
+            kind: SourceKind::Caldav,
+            name: "飞书".into(),
+            url: "https://caldav.feishu.cn".into(),
+            host: "caldav.feishu.cn".into(),
+            username: "alice@example.com".into(),
+        };
+        let ics_of = |uid: &str, extra: &str| {
+            format!("BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:{uid}\nSUMMARY:{uid}\nDTSTART:20261110T020000Z\nDTEND:20261110T030000Z\n{extra}END:VEVENT\nEND:VCALENDAR\n")
+        };
+        let feeds = [
+            caldav::CalendarFeed {
+                displayname: Some("个人日历".into()),
+                texts: vec![ics_of("e1", "ATTENDEE;PARTSTAT=DECLINED:mailto:alice@example.com\n")],
+            },
+            caldav::CalendarFeed { displayname: Some("公共会议室".into()), texts: vec![ics_of("e2", "TRANSP:TRANSPARENT\n")] },
+            caldav::CalendarFeed { displayname: None, texts: vec![ics_of("e3", "")] },
+        ];
+        let from = Utc.with_ymd_and_hms(2026, 11, 10, 0, 0, 0).unwrap();
+        let to = Utc.with_ymd_and_hms(2026, 11, 11, 0, 0, 0).unwrap();
+        let parsed = events_from_feeds(&source, &feeds, from, to);
+        let summary: Vec<(&str, &str, bool, bool)> = parsed.iter().map(|e| (e.uid.as_str(), e.calendar.as_str(), e.declined, e.free)).collect();
+        assert_eq!(summary, [("e1", "个人日历", true, false), ("e2", "公共会议室", false, true), ("e3", "飞书", false, false)]);
     }
 }

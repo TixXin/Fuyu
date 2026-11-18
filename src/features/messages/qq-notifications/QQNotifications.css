@@ -65,7 +65,7 @@
   flex: 0 0 auto;
   justify-content: space-between;
   align-items: center;
-  gap: var(--space-xl);
+  gap: var(--space-md);
   min-height: 46px;
   margin-bottom: 4px;
   padding-bottom: 12px;

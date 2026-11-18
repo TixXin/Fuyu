@@ -235,6 +235,8 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 5 | E36.5.8–E36.5.12 第 5 阶段第三方插件：同上 1–3 | macOS | | |
 | 6 | E36.6.1–E36.6.3 7 个官方 v3 插件（`@fuyu/pomodoro`、`@fuyu/todo-digest`、`@fuyu/todo-ring`、`@fuyu/now-playing`、`@fuyu/weather`、`@fuyu/github-issues`、`@fuyu/system-monitor`）：1) 在宿主中加载启用，插件页全部显示「运行中」 2) 番茄钟选待办倒计时、待办摘要追加今日笔记、待办进度环圆环联动、正在播放切歌通知、天气设城市拉取与降雨提醒、GitHub Issue 仓库分组展示、系统监控 CPU/内存采样及收起条显示在深浅色主题下均正常 | Windows | | |
 | 6 | E36.6.1–E36.6.3 7 个官方 v3 插件：同上 1–2（无需装 PowerShell） | macOS | | |
+| 6 | E36.6.4 旧第 2 版插件迁移引导与一次性提示：1) 在含 `dev.focusd.weather`（设好城市）与第三方第 2 版插件的环境中启动浮屿，主岛收起条展示一次升级提示，点跳转按钮直接打开 `设置 → 插件（第 3 版）`，重启浮屿后主岛不再重复弹出 2) `设置 → 插件（第 3 版）` 展示 `dev.focusd.weather → @fuyu/weather` 对照、「已迁移原配置」标记（`plugins-v3/data/@fuyu/weather/config.json` 保留原城市与单位）及其他第 2 版插件说明；已安装于 `plugins-v3/packages/@fuyu/*` 的官方插件自动补入 `plugins.yml`；点击「知道了，不再提示」后永久收起 | Windows | | |
+| 6 | E36.6.4 旧第 2 版插件迁移引导与一次性提示：同上 1–2 | macOS | | |
 
 ## 等你定的事
 

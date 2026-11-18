@@ -2,8 +2,8 @@ import { clamp } from "../../utils/number.ts";
 import { getColorSetting } from "../../utils/color.ts";
 import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
-  MAX_ISLAND_CORNER_RADIUS, MAX_MAX_PANEL_HEIGHT, MAX_TOP_FILLET_RADIUS,
-  MIN_ISLAND_CORNER_RADIUS, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS,
+  MAX_ISLAND_CORNER_RADIUS, MAX_ISLAND_OPACITY, MAX_MAX_PANEL_HEIGHT, MAX_TOP_FILLET_RADIUS,
+  MIN_ISLAND_CORNER_RADIUS, MIN_ISLAND_OPACITY, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS,
   MAX_PANEL_WIDTH, MIN_PANEL_WIDTH, MAX_COLLAPSED_WIDTH_EXTRA, MIN_COLLAPSED_WIDTH_EXTRA,
 } from "./settingsLimits.ts";
 import { hasThemeSets, THEME_COLOR_KEYS, THEME_COLORS, THEME_MODES, themeSetsFromSingleColors } from "../theme/themeMode.ts";
@@ -45,6 +45,9 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
       100,
     ),
     opacity: clamp(Number(settings?.opacity ?? DEFAULT_SETTINGS.opacity), 50, 100),
+    islandOpacity: typeof settings?.islandOpacity === "number" && Number.isFinite(settings.islandOpacity)
+      ? clamp(Math.round(settings.islandOpacity), MIN_ISLAND_OPACITY, MAX_ISLAND_OPACITY)
+      : DEFAULT_SETTINGS.islandOpacity,
     collapsedScale: clamp(Number(collapsedScale), 0.75, 1.4),
     expandedScale: clamp(Number(expandedScale), 0.75, 1.4),
     islandMonitor: settings?.islandMonitor === "cursor" || settings?.islandMonitor === "foreground" ? settings.islandMonitor : "primary",

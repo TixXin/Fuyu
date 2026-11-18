@@ -68,6 +68,7 @@ impl ClipboardHistoryService {
                 state.items = persisted.items;
                 state.snippets = persisted.snippets;
                 state.snippet_tombstones = persisted.snippet_tombstones;
+                state.favorite_tombstones = persisted.favorite_tombstones;
             }
             stored_enabled
         })
@@ -164,6 +165,7 @@ impl ClipboardHistoryService {
         {
             let mut moved_item = state.items.remove(index);
             moved_item.copied_at = current_unix_millis();
+            moved_item.from_sync = false;
             state.items.insert(0, moved_item);
             self.persist_locked(&state)?;
         }
@@ -176,17 +178,24 @@ impl ClipboardHistoryService {
 
     pub(super) fn toggle_favorite(&self, id: &str) -> Result<ClipboardHistorySnapshot, String> {
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
-        let item = state
+        let state_ref = &mut *state;
+        let item = state_ref
             .items
             .iter_mut()
             .find(|item| item.id == id)
             .ok_or_else(|| "Clipboard history item was not found.".to_string())?;
         item.favorite = !item.favorite;
+        let sync_changed = crate::sync::clock::with(|clock, wall| {
+            super::favorites_sync::on_favorite_toggled(item, &mut state_ref.favorite_tombstones, clock, wall)
+        });
         self.persist_locked(&state)?;
         let snapshot = Self::snapshot_locked(&state);
         drop(state);
 
         self.emit_changed();
+        if sync_changed {
+            crate::sync::notify_local_change();
+        }
         Ok(snapshot)
     }
 
@@ -201,14 +210,21 @@ impl ClipboardHistoryService {
             .iter_mut()
             .find(|item| item.id == id)
             .ok_or_else(|| "Clipboard history item was not found.".to_string())?;
+        let (old_note, old_tags) = (item.note.clone(), item.tags.clone());
         let (note, tags) = super::split_note_tags(note);
         item.note = note;
         item.tags = tags;
+        let sync_changed = crate::sync::clock::with(|clock, wall| {
+            super::favorites_sync::on_note_changed(item, &old_note, &old_tags, clock, wall)
+        });
         self.persist_locked(&state)?;
         let snapshot = Self::snapshot_locked(&state);
         drop(state);
 
         self.emit_changed();
+        if sync_changed {
+            crate::sync::notify_local_change();
+        }
         Ok(snapshot)
     }
 
@@ -255,7 +271,8 @@ impl ClipboardHistoryService {
         if !settings.enabled {
             return;
         }
-        if settings.skip_sensitive && super::system::is_marked_private() {
+        let private_capture = super::system::is_marked_private();
+        if settings.skip_sensitive && private_capture {
             return;
         }
         if settings.privacy.forget_cleared() && super::system::is_empty() {
@@ -288,12 +305,16 @@ impl ClipboardHistoryService {
         }
         let masked = secret && settings.secrets == SecretHandling::Mask;
 
-        if let Err(error) = self.insert_capture(capture, source, masked) {
+        if let Err(error) = self.insert_capture_inner(capture, source, masked, private_capture) {
             eprintln!("failed to store clipboard history item: {error}");
         }
     }
 
     pub(super) fn insert_capture(&self, capture: ClipboardCapture, source: Option<ClipboardSource>, masked: bool) -> Result<(), String> {
+        self.insert_capture_inner(capture, source, masked, false)
+    }
+
+    fn insert_capture_inner(&self, capture: ClipboardCapture, source: Option<ClipboardSource>, masked: bool, private: bool) -> Result<(), String> {
         let now = current_unix_millis();
         let hash = capture.hash().to_string();
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
@@ -314,6 +335,10 @@ impl ClipboardHistoryService {
         if let Some(index) = state.items.iter().position(|item| item.hash == hash) {
             let mut item = state.items.remove(index);
             item.copied_at = now;
+            item.from_sync = false;
+            if private {
+                item.private = true;
+            }
             let id = item.id.clone();
             state.items.insert(0, item);
             self.persist_locked(&state)?;
@@ -346,6 +371,10 @@ impl ClipboardHistoryService {
             pin_order: None,
             truncated: false,
             edited_at: None,
+            private,
+            from_sync: false,
+            updated_at: None,
+            device_id: None,
         };
         let item = match capture {
             ClipboardCapture::Text { hash, text, preview, html } => {
@@ -517,6 +546,7 @@ impl ClipboardHistoryService {
             items,
             snippets: state.snippets.clone(),
             snippet_tombstones: state.snippet_tombstones.clone(),
+            favorite_tombstones: state.favorite_tombstones.clone(),
         };
         self.writer.schedule(history)
     }

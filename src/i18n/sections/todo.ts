@@ -7,6 +7,7 @@ export type TodoText = {
   editTitle: string;
   start: string;
   stop: string;
+  elapsedFocus: (elapsed: string) => string;
   delete: string;
   deleteTask: (taskTitle: string) => string;
   reorderTask: (taskTitle: string) => string;
@@ -22,6 +23,7 @@ export const zhCN: TodoText = {
   editTitle: "编辑任务名",
   start: "开始",
   stop: "结束",
+  elapsedFocus: (elapsed) => `已进行 ${elapsed}`,
   delete: "删除",
   deleteTask: (taskTitle) => `删除：${taskTitle}`,
   reorderTask: (taskTitle) => `拖动排序：${taskTitle}`,
@@ -37,6 +39,7 @@ export const en: TodoText = {
   editTitle: "Edit task name",
   start: "Start",
   stop: "Stop",
+  elapsedFocus: (elapsed) => `${elapsed} elapsed`,
   delete: "Delete",
   deleteTask: (taskTitle) => `Delete: ${taskTitle}`,
   reorderTask: (taskTitle) => `Reorder: ${taskTitle}`,

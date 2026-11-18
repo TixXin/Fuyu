@@ -2,9 +2,17 @@ import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import { emit } from "@tauri-apps/api/event";
-import { ISLAND_HOLD_CHANGED_EVENT, ISLAND_HOVER_CHANGED_EVENT } from "../../src/windows/island/api";
+import {
+  ISLAND_DIM_WAKE_EVENT,
+  ISLAND_HOLD_CHANGED_EVENT,
+  ISLAND_HOVER_CHANGED_EVENT,
+  ISLAND_REVEAL_REQUESTED_EVENT,
+  setIslandBannerRect,
+} from "../../src/windows/island/api";
 import { useIslandHoldListener } from "../../src/windows/island/islandHold";
 import { useHoverExpand } from "../../src/windows/island/useHoverExpand";
+import { useIdleDim } from "../../src/windows/island/useIdleDim";
+import { useIdleTuck } from "../../src/windows/island/useIslandAutomation";
 import { useIslandNavigation } from "../../src/windows/island/useIslandNavigation";
 import { useTuckPeek } from "../../src/windows/island/useTuckPeek";
 import { useTuckedHoverOpen } from "../../src/windows/island/useTuckedHoverOpen";
@@ -19,20 +27,38 @@ const HOVER_DELAY_MS = 0;
 
 type Island = ReturnType<typeof useIslandNavigation>;
 let island: Island;
+let dimmed = false;
 let enter: () => void;
 let setOpensPanel: (value: boolean) => void;
 let setHoverCollapseEnabled: (value: boolean) => void;
 let setClickCollapseOnLeave: (value: boolean) => void;
+let setDimEnabled: (value: boolean) => void;
+let setAutoTuckEnabled: (value: boolean) => void;
+let setAgentWaiting: (value: boolean) => void;
 
 function Harness() {
   const [opensPanel, changeOpensPanel] = useState(false);
   const [hoverCollapseEnabled, changeHoverCollapseEnabled] = useState(false);
   const [clickCollapseOnLeave, changeClickCollapseOnLeave] = useState(false);
+  const [dimEnabled, changeDimEnabled] = useState(false);
+  const [autoTuckEnabled, changeAutoTuckEnabled] = useState(false);
+  const [agentWaiting, changeAgentWaiting] = useState(false);
   const navigation = useIslandNavigation();
   island = navigation;
   setOpensPanel = changeOpensPanel;
   setHoverCollapseEnabled = changeHoverCollapseEnabled;
   setClickCollapseOnLeave = changeClickCollapseOnLeave;
+  setDimEnabled = changeDimEnabled;
+  setAutoTuckEnabled = changeAutoTuckEnabled;
+  setAgentWaiting = changeAgentWaiting;
+  dimmed = useIdleDim({
+    enabled: dimEnabled,
+    seconds: 0.12,
+    mode: navigation.mode,
+    isTucked: navigation.isTucked,
+    agentWaiting,
+  });
+  useIdleTuck(autoTuckEnabled, 0.28, navigation.isTucked, `${navigation.mode}:${navigation.page}`, () => navigation.idleTuck(RETRACT_MS));
   useIslandHoldListener();
   useHoverExpand({
     expandOnHover: false,
@@ -195,6 +221,46 @@ async function runChecks() {
     await hover(false);
     await wait(300);
     check(state() === "expanded/out", "随后手动点击展开时，不再受上一次贴边悬停影响而自动收起");
+
+    await act(async () => setDimEnabled(true));
+    await wait(220);
+    check(state() === "expanded/out" && !dimmed, "闲置变淡：展开面板时不进入闲置变淡");
+
+    await act(async () => island.collapseIsland());
+    await until(() => dimmed);
+    check(state() === "collapsed/out" && dimmed, "闲置变淡：收起超时无操作后进入变淡态");
+
+    await act(async () => { await emit(ISLAND_DIM_WAKE_EVENT); });
+    check(!dimmed, "闲置变淡：原生探测到光标靠近或移入时立即恢复");
+
+    await until(() => dimmed);
+    await act(async () => { void setIslandBannerRect({ x: 120, y: 50, width: 320, height: 64 }); });
+    check(!dimmed, "闲置变淡：弹出消息横幅时立即恢复且保持清醒");
+    await wait(200);
+    check(!dimmed, "闲置变淡：横幅展示期间不再次变淡");
+    await act(async () => { void setIslandBannerRect(null); });
+
+    await until(() => dimmed);
+    await act(async () => setAgentWaiting(true));
+    check(!dimmed, "闲置变淡：Agent 进入审批或等待提醒时立即恢复");
+
+    await until(() => dimmed);
+    await act(async () => { await emit(ISLAND_REVEAL_REQUESTED_EVENT); });
+    check(!dimmed, "闲置变淡：从托盘重新显示岛屿时立即恢复不透明");
+
+    await act(async () => setAutoTuckEnabled(true));
+    await until(() => dimmed);
+    check(state() === "collapsed/out" && dimmed, "闲置变淡与贴边隐藏同开：先进入变淡态");
+    await until(() => state() === "collapsed/tucked");
+    check(state() === "collapsed/tucked" && !dimmed, "闲置变淡与贴边隐藏同开：随后贴边隐藏并退出变淡穿透");
+
+    await act(async () => {
+      setAutoTuckEnabled(false);
+      setDimEnabled(false);
+      setAgentWaiting(false);
+      island.openIslandPage("todo");
+    });
+    check(state() === "expanded/out" && !dimmed, "关闭闲置变淡并展开面板后恢复常规态");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

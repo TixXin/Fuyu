@@ -21,6 +21,7 @@ function wait(ms: number) {
 type IslandWindowOptions = {
   mode: IslandMode;
   isTucked: boolean;
+  isDimmed?: boolean;
   settings: IslandSettings;
   setSettings: (settings: IslandSettings) => void;
   expandedIslandHeight: number;
@@ -33,6 +34,7 @@ type IslandWindowOptions = {
 export function useIslandWindow({
   mode,
   isTucked,
+  isDimmed = false,
   settings,
   setSettings,
   expandedIslandHeight,
@@ -57,6 +59,7 @@ export function useIslandWindow({
       nextExpandedWidth: number,
       nextCollapsedWidth: number,
       nextIsTucked: boolean,
+      nextIsDimmed: boolean,
     ) => {
       try {
         const glassState = await islandApi.setIslandInteraction({
@@ -69,6 +72,7 @@ export function useIslandWindow({
           collapsedWidth: nextCollapsedWidth,
           customPosition: islandPositionRef.current,
           isTucked: nextIsTucked,
+          isDimmed: nextIsDimmed,
           animatePosition: !reducedMotion,
           glassEnabled: nextSettings.appearanceMode === "liquidGlass",
           glassIntensity: nextSettings.glassIntensity,
@@ -151,6 +155,7 @@ export function useIslandWindow({
       expandedIslandWidth,
       collapsedIslandWidth,
       isTucked,
+      isDimmed,
     );
     void Promise.race([synced, wait(SYNC_WAIT_BEFORE_SHOW_MS)]).finally(() => {
       void showReadyIsland();
@@ -162,6 +167,7 @@ export function useIslandWindow({
     expandedIslandWidth,
     collapsedIslandWidth,
     isTucked,
+    isDimmed,
     mode,
     settings.marginY,
     settings.islandForm,

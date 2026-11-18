@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import { I18nProvider, LOCALE_STORAGE_KEY, TRANSLATIONS } from "../../src/i18n";
+import { marketV1, type MarketCatalogPlugin } from "@fuyu/plugin-services";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { HostInfoV3, PluginHostConnector, PluginHostHandlers, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
 
@@ -85,8 +86,48 @@ mockIPC((command, payload) => {
 const { SettingsSidebar } = await import("../../src/windows/settings/SettingsSidebar");
 await import("../../src/windows/settings/slots/categories");
 const { PluginsV3SettingsPage } = await import("../../src/windows/settings/PluginsV3SettingsPage");
+const { windowServices } = await import("../../src/features/plugin-kernel/services");
 const { windowSlots } = await import("../../src/features/plugin-kernel/slots");
 const { NODE_EVERY_MS } = await import("../../src/windows/settings/usePluginHostNode");
+
+let manualAllowed = false;
+let weatherInstalled: string | null = null;
+const marketCalls: string[] = [];
+const makeMarketEntry = (name: string, official: boolean, fresh: boolean, zh: string, en: string, network: string[], slots: string[]): MarketCatalogPlugin => {
+  const confirmation = { unreviewed: false, official, displayName: { "zh-CN": zh, en }, description: { "zh-CN": zh, en }, network, nodeApis: official ? [] : ["node:crypto"], provides: official ? [] : ["clock/v1"], replaces: [], slots };
+  const installedVersion = name === "@fuyu/weather" ? weatherInstalled : null;
+  return {
+    name, official, publisher: { github: official ? "TixXin" : "someone", official },
+    displayName: { "zh-CN": zh, en }, description: { "zh-CN": zh, en }, categories: ["utilities"],
+    installedVersion, enabled: Boolean(installedVersion), source: installedVersion ? "market" : null, revoked: false,
+    install: { version: "1.0.0", sha256: "a".repeat(64), size: 2048, publishedAt: "2026-11-18T00:00:00Z", fresh, confirmation },
+    manual: null, autoUpdate: null,
+  };
+};
+const marketSnapshot = () => ({
+  plugins: [
+    makeMarketEntry("@fuyu/weather", true, false, "天气", "Weather", ["api.open-meteo.com"], ["island.page/v1"]),
+    makeMarketEntry("@someone/clock", false, true, "时钟", "Clock", [], ["island.collapsed/v1"]),
+  ],
+  installed: [], updatedAt: null, manualAllowed, error: null,
+});
+let emitMarketChanged: (() => void) | undefined;
+const marketProvider = windowServices.provide(marketV1, {
+  catalog: () => marketSnapshot(),
+  refresh: () => (marketCalls.push("refresh"), marketSnapshot()),
+  inspectPackage: () => { throw new Error("unexpected inspectPackage"); },
+  installMarket: ({ name, version }) => {
+    marketCalls.push(`installMarket:${name}@${version ?? ""}`);
+    if (name === "@fuyu/weather") weatherInstalled = version ?? "1.0.0";
+    emitMarketChanged?.();
+    return { id: name, version: version ?? "1.0.0", source: "market" as const, sha256: "a".repeat(64), confirmation: marketSnapshot().plugins[0].install!.confirmation };
+  },
+  installFile: () => { throw new Error("unexpected installFile"); },
+  setManualAllowed: ({ allowed }) => (manualAllowed = allowed, marketCalls.push(`manual:${allowed}`), emitMarketChanged?.(), { manualAllowed }),
+  setEnabled: ({ id, enabled }) => (marketCalls.push(`setEnabled:${id}=${enabled}`), { id, enabled }),
+  uninstall: ({ id, removeData }) => (marketCalls.push(`uninstall:${id}:${Boolean(removeData)}`), { id, removed: true as const }),
+});
+emitMarketChanged = () => { marketProvider.emit("changed", {}); };
 
 const text = TRANSLATIONS[locale].settings.pluginsV3;
 const usage = (more: Partial<NonNullable<PluginStatusV3["usage"]>> = {}) => ({ cpuMs: 0, calls: 0, applyMs: 0.4, timers: 0, listeners: 0, services: 0, clients: 0, errors: 0, ...more });
@@ -269,6 +310,54 @@ try {
       && migrationCard!.textContent!.includes("com.example.custom"),
     "The v2 migration guide lists mapped @fuyu/* official plugins, carried-over settings, and other legacy v2 plugins",
   );
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-action='migration-open-market']")!.click());
+  await settle();
+  check(page.querySelector("[data-tab='market']")?.getAttribute("aria-selected") === "true", "Clicking Open Plugin Market on the v2 migration card switches straight to the v3 market tab");
+  check(
+    Boolean(page.querySelector("[data-market-plugin='@fuyu/weather']"))
+      && page.querySelector("[data-market-plugin='@fuyu/weather']")!.textContent!.includes(text.market.officialBadge)
+      && page.querySelector("[data-market-plugin='@someone/clock']")!.textContent!.includes(text.market.cooldownBadge)
+      && !page.querySelector("[data-action='market-install-file']"),
+    "The v3 market tab lists official and cooldown badges and hides local .fuyu import while manual install is off",
+  );
+  await act(async () => page.querySelector<HTMLInputElement>(".plugins-v3__manual-toggle input")!.click());
+  await settle();
+  check(manualAllowed && Boolean(page.querySelector("[data-action='market-install-file']")), "Turning on manual .fuyu installation reveals the file import button");
+  await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@fuyu/weather']")!.querySelector<HTMLButtonElement>("[data-action='market-install']")!.click());
+  await settle();
+  const installModal = page.querySelector<HTMLElement>("[data-install-modal='@fuyu/weather']");
+  check(
+    Boolean(installModal)
+      && installModal!.textContent!.includes("api.open-meteo.com")
+      && installModal!.textContent!.includes("island.page/v1")
+      && installModal!.textContent!.includes(text.market.confirmModal.hostSecurityNote),
+    "Clicking Install opens the confirmation modal with declared network domains, UI slots, and the host credential note",
+  );
+  await act(async () => installModal!.querySelector<HTMLButtonElement>("[data-action='confirm-install']")!.click());
+  await settle();
+  check(
+    marketCalls.includes("installMarket:@fuyu/weather@1.0.0")
+      && !page.querySelector("[data-install-modal='@fuyu/weather']")
+      && page.querySelector("[data-market-plugin='@fuyu/weather']")!.textContent!.includes(text.market.installedBadge("1.0.0")),
+    "Confirming installs the market plugin and marks the card as installed",
+  );
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='plugins']")!.click());
+  await settle();
+
+  await send((given) => given.onSnapshot({ plugins: [...PLUGINS, { id: "@fuyu/weather", name: "Weather", state: "running", kind: "third-party", source: "market" }], host: HOST }));
+  await settle();
+  await act(async () => card("@fuyu/weather")!.querySelector<HTMLInputElement>("input")!.click());
+  await settle();
+  check(marketCalls.includes("setEnabled:@fuyu/weather=false"), "Toggling a market-installed plugin card calls market/v1 setEnabled");
+  await act(async () => card("@fuyu/weather")!.click());
+  await settle();
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-action='uninstall-plugin']")!.click());
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-action='confirm-uninstall-plugin']")!.click());
+  await settle();
+  check(marketCalls.includes("uninstall:@fuyu/weather:false") && !page.querySelector("[role='dialog']"), "Confirming uninstall in the detail modal removes the plugin via market/v1 and closes the modal");
+  await send((given) => given.onSnapshot({ plugins: PLUGINS, host: HOST }));
+  await settle();
+
   await act(async () => page.querySelector<HTMLButtonElement>(".plugins-v3__migration-dismiss")!.click());
   await settle();
   check(migrationDismissCalls.join() === "settings" && !page.querySelector(".plugins-v3__migration"), "Dismissing the v2 migration guide persists once and hides the banner without repeating");

@@ -50,9 +50,11 @@ import { useAutoIslandForm } from "./autoIslandForm";
 import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPanelWidth, useIslandNotch, useNotchDropSync } from "./notch";
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
-import { leadLine } from "../../features/plugin-kernel/islandContributions";
+import { LINE_PRIORITY, leadLine } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed, useIslandContributions, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
 import { useCollapsedWidth } from "./useCollapsedWidth";
+import { effectiveIslandOpacity } from "./idleDim";
+import { useIdleDim } from "./useIdleDim";
 import { overlaySlot } from "./slots/overlay";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import type { IslandPage } from "./types";
@@ -96,7 +98,7 @@ export function IslandApp() {
   const notch = useIslandNotch();
   const autoForm = useAutoIslandForm();
   const barText = settings.showCollapsedText && !notch;
-  const { lines: contributedLines, alerts, popups, style, settled, hints, preview: contributedPreview } = useIslandContributed();
+  const { lines: contributedLines, alerts, popups, style, settled, hints, preview: contributedPreview, reveal: contributedReveal, status: contributedStatus } = useIslandContributed();
   usePluginKeybindings({ mode, page, hasActiveTodo: hints.has("todos.active") });
   const textWidth = useCollapsedWidth({
     barText,
@@ -118,9 +120,10 @@ export function IslandApp() {
     openIslandPage,
     pluginPages: pluginPages.pageIds,
   });
+  const hasOpenPopup = [...popups.values()].some((entry) => entry.open === true);
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
-    [...popups.values()].some((entry) => entry.open === true),
+    hasOpenPopup,
     null,
     panelIslandWidth(settings.panelWidth, settings.expandedScale),
   );
@@ -128,6 +131,24 @@ export function IslandApp() {
   const { resizingHeight, resizing } = useIslandResize(settings, setSettings, popup);
   const pageIslandHeight = getExpandedIslandHeight({ maxPanelHeight: settings.maxPanelHeight, panel: popups.get(page), popup });
   const expandedIslandHeight = (resizingHeight && !popup ? settings.maxPanelHeight : pageIslandHeight) + notchExpandedExtra(notch, settings.expandedScale, popup);
+  const islandNotice = useIslandNotice({ firstHints, v2Upgrade });
+  const isDimmed = useIdleDim({
+    enabled: settings.idleDim,
+    seconds: settings.idleDimSeconds,
+    mode,
+    isTucked,
+    resizing: resizing !== null,
+    demoActive: demo.active,
+    hasPrompt: permissionPrompts.current !== null,
+    hasNotice: islandNotice !== null,
+    hasPreview: contributedPreview !== null,
+    hasAlert: alerts.size > 0,
+    hasOpenPopup,
+    hasReveal: contributedReveal.always || contributedReveal.allowed || contributedReveal.pauseIdle,
+    hasAgentInterjection: contributedLines.some((line) => line.priority === LINE_PRIORITY.agentInterjection),
+    agentWaiting: contributedStatus?.state === "waiting",
+  });
+  const islandOpacity = effectiveIslandOpacity(settings, { mode, isTucked, isDimmed });
   const look = useMemo(() => (mode !== "collapsed" ? surfaceThemeColors(settings, "panel") : notch ? notchLook(settings) : surfaceThemeColors(settings, "collapsed")), [mode, notch, settings]);
   const accent = useAccentColor(settings);
   const devicePixelRatio = useDevicePixelRatio();
@@ -137,10 +158,12 @@ export function IslandApp() {
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
       ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion),
+      ...(islandOpacity < 1 ? { "--island-opacity": String(islandOpacity) } : {}),
+      ...(settings.islandMotion === "none" ? { "--island-opacity-duration": "0ms" } : {}),
       ...style.vars,
       ...glassStyle,
     }),
-    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, style.vars, glassStyle],
+    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, islandOpacity, style.vars, glassStyle],
   );
 
   const {
@@ -152,6 +175,7 @@ export function IslandApp() {
   } = useIslandWindow({
     mode,
     isTucked,
+    isDimmed,
     settings,
     setSettings,
     expandedIslandHeight,
@@ -161,7 +185,6 @@ export function IslandApp() {
     onCollapse: collapseIsland,
   });
 
-  const islandNotice = useIslandNotice({ firstHints, v2Upgrade });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
     preview: contributedPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
   }));
@@ -199,6 +222,7 @@ export function IslandApp() {
         nativeGlassState={nativeGlassState}
         glass={glass}
         isTucked={isTucked}
+        isDimmed={isDimmed}
         tuckStyle={settings.tuckStyle}
         isDetached={isPositionDetached || islandMarginY(settings, autoForm) > 0}
         side={side}

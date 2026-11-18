@@ -74,8 +74,8 @@ fn dingtalk_root_refuses_propfind_so_the_well_known_redirect_is_followed() {
         .on("PROPFIND", &format!("{host}/dav/u_abc/"), 207, &listing("/dav/u_abc/", "/dav/u_abc/work/"))
         .on("REPORT", &format!("{host}/dav/u_abc/work/"), 207, EVENTS);
     let (from, to) = window();
-    let texts = run(events(&mock, &url(host), from, to)).unwrap();
-    assert_eq!(texts, ["BEGIN:VCALENDAR"]);
+    let feeds = run(events(&mock, &url(host), from, to)).unwrap();
+    assert_eq!(feeds, [CalendarFeed { displayname: None, texts: vec!["BEGIN:VCALENDAR".into()] }]);
     assert_eq!(
         mock.sent(),
         [
@@ -96,7 +96,7 @@ fn a_root_that_answers_is_used_without_trying_the_well_known_address() {
         .on("PROPFIND", "https://caldav.feishu.cn/principals/u1/", 207, &home("/calendars/u1/"))
         .on("PROPFIND", "https://caldav.feishu.cn/calendars/u1/", 207, &listing("/calendars/u1/", "/calendars/u1/a/"));
     let found = run(calendars(&mock, &url("https://caldav.feishu.cn"))).unwrap();
-    assert_eq!(found, [url("https://caldav.feishu.cn/calendars/u1/a/")]);
+    assert_eq!(found, [RemoteCalendar { url: url("https://caldav.feishu.cn/calendars/u1/a/"), displayname: None }]);
     assert!(mock.sent().iter().all(|line| !line.contains(".well-known")));
 }
 
@@ -105,7 +105,7 @@ fn a_calendar_address_is_used_as_it_is() {
     let address = "https://dav.example.com/cal/me/work/";
     let mock = Mock::default().on("PROPFIND", address, 207, &listing("/x/", address));
     let found = run(calendars(&mock, &url(address))).unwrap();
-    assert_eq!(found, [url(address)]);
+    assert_eq!(found, [RemoteCalendar { url: url(address), displayname: None }]);
     assert_eq!(mock.sent().len(), 1);
 }
 
@@ -118,7 +118,7 @@ fn an_empty_root_answer_falls_back_to_the_well_known_address() {
         .on("PROPFIND", "https://cloud.example.com/remote.php/dav/", 207, &home("/remote.php/dav/calendars/me/"))
         .on("PROPFIND", "https://cloud.example.com/remote.php/dav/calendars/me/", 207, &listing("/remote.php/dav/calendars/me/", "/remote.php/dav/calendars/me/personal/"));
     let found = run(calendars(&mock, &url("https://cloud.example.com"))).unwrap();
-    assert_eq!(found, [url("https://cloud.example.com/remote.php/dav/calendars/me/personal/")]);
+    assert_eq!(found, [RemoteCalendar { url: url("https://cloud.example.com/remote.php/dav/calendars/me/personal/"), displayname: None }]);
 }
 
 #[test]
@@ -208,4 +208,36 @@ fn a_failed_request_never_shows_the_address() {
     assert_eq!(error.code(), "calendar.unreachable");
     let shown = serde_json::to_string(&error).unwrap() + &error.to_string();
     assert!(!shown.contains("s3cr3t") && !shown.contains("pa55word") && !shown.contains("/dav/"), "{shown}");
+}
+
+#[test]
+fn multiple_sub_calendars_keep_their_unescaped_display_names() {
+    let multi = r#"<D:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+<D:response><D:href>/calendars/u1/</D:href><D:propstat><D:prop><D:displayname>Root</D:displayname><D:resourcetype><D:collection/></D:resourcetype></D:prop></D:propstat></D:response>
+<D:response><D:href>/calendars/u1/personal/</D:href><D:propstat><D:prop><D:displayname>个人日程</D:displayname><D:resourcetype><D:collection/><C:calendar/></D:resourcetype></D:prop></D:propstat></D:response>
+<D:response><D:href>/calendars/u1/team/</D:href><D:propstat><D:prop><D:displayname>研发 &amp; 测试</D:displayname><D:resourcetype><D:collection/><C:calendar/></D:resourcetype></D:prop></D:propstat></D:response>
+<D:response><D:href>/calendars/u1/unnamed/</D:href><D:propstat><D:prop><D:displayname>   </D:displayname><D:resourcetype><D:collection/><C:calendar/></D:resourcetype></D:prop></D:propstat></D:response>
+</D:multistatus>"#;
+    let body_of = |uid: &str| {
+        format!(
+            r#"<d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:response><d:href>/{uid}.ics</d:href><d:propstat><d:prop><c:calendar-data>UID:{uid}</c:calendar-data></d:prop></d:propstat></d:response></d:multistatus>"#
+        )
+    };
+    let mock = Mock::default()
+        .on("PROPFIND", "https://caldav.feishu.cn/", 207, &principal("/principals/u1/"))
+        .on("PROPFIND", "https://caldav.feishu.cn/principals/u1/", 207, &home("/calendars/u1/"))
+        .on("PROPFIND", "https://caldav.feishu.cn/calendars/u1/", 207, multi)
+        .on("REPORT", "https://caldav.feishu.cn/calendars/u1/personal/", 207, &body_of("p1"))
+        .on("REPORT", "https://caldav.feishu.cn/calendars/u1/team/", 207, &body_of("t1"))
+        .on("REPORT", "https://caldav.feishu.cn/calendars/u1/unnamed/", 207, &body_of("u1"));
+    let (from, to) = window();
+    let feeds = run(events(&mock, &url("https://caldav.feishu.cn"), from, to)).unwrap();
+    assert_eq!(
+        feeds,
+        [
+            CalendarFeed { displayname: Some("个人日程".into()), texts: vec!["UID:p1".into()] },
+            CalendarFeed { displayname: Some("研发 & 测试".into()), texts: vec!["UID:t1".into()] },
+            CalendarFeed { displayname: None, texts: vec!["UID:u1".into()] },
+        ]
+    );
 }

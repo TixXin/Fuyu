@@ -3,7 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { windowServices } from "../plugin-kernel/services";
 import type { CalendarEvent, CalendarSnapshot } from "./api";
+import { DEFAULT_CALENDAR_PREFS, prepareCalendarEvents, type CalendarPrefs } from "./calendarPrefs";
 import { subscribeCalendarSources } from "./plugin/services";
+import { CALENDAR_REFRESH_KEY } from "./storage";
 import { nextChangeAt, upcomingMeeting, type UpcomingMeeting } from "./upcoming";
 
 const POLL_MS = 60_000;
@@ -18,7 +20,7 @@ function toSnapshot(value: CalendarEvents | null | undefined): CalendarSnapshot 
     return EMPTY_CALENDAR;
   }
   return {
-    events: value.events,
+    events: value.events as CalendarEvent[],
     problems: value.problems.map((problem) => ({
       sourceId: problem.sourceId,
       message: problem.reason && problem.reason !== "failed" ? { code: problem.reason, message: problem.message } : problem.message,
@@ -37,12 +39,18 @@ export type CalendarState = {
   refresh: () => void;
 };
 
-export function useCalendar(enabled: boolean, remindMinutes: number, extra: readonly CalendarEvent[] = NO_EVENTS): CalendarState {
+export function useCalendar(
+  enabled: boolean,
+  remindMinutes: number,
+  extra: readonly CalendarEvent[] = NO_EVENTS,
+  prefs: CalendarPrefs = DEFAULT_CALENDAR_PREFS,
+): CalendarState {
   const [read, setSnapshot] = useState<CalendarSnapshot>(EMPTY_CALENDAR);
-  const snapshot = useMemo(
-    () => (enabled && extra.length > 0 ? { ...read, events: [...read.events, ...extra].sort((a, b) => a.startMs - b.startMs) } : read),
-    [enabled, extra, read],
-  );
+  const snapshot = useMemo(() => {
+    if (!enabled) return read;
+    const merged = extra.length > 0 ? [...read.events, ...extra].sort((a, b) => a.startMs - b.startMs) : read.events;
+    return { ...read, events: prepareCalendarEvents(merged, prefs) };
+  }, [enabled, extra, prefs, read]);
   const [now, setNow] = useState(() => Date.now());
 
   const load = useCallback(async (refresh: boolean) => {
@@ -65,22 +73,30 @@ export function useCalendar(enabled: boolean, remindMinutes: number, extra: read
     const offChanged = calendar.on("changed", () => void load(false));
     const offSources = subscribeCalendarSources(() => void load(false));
     const offWatch = windowServices.watch(() => void load(false));
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === CALENDAR_REFRESH_KEY) void load(false);
+    };
+    window.addEventListener("storage", onStorage);
     return () => {
       offTimer();
       void offChanged();
       offSources();
       offWatch();
+      window.removeEventListener("storage", onStorage);
     };
   }, [enabled, load]);
 
   useEffect(() => {
-    const at = nextChangeAt(snapshot.events, now, remindMinutes);
+    const at = nextChangeAt(snapshot.events, now, remindMinutes, prefs);
     if (at === null) return;
     const timer = window.setTimeout(() => setNow(Date.now()), Math.max(0, at - Date.now()) + 50);
     return () => window.clearTimeout(timer);
-  }, [now, remindMinutes, snapshot.events]);
+  }, [now, prefs, remindMinutes, snapshot.events]);
 
-  const upcoming = useMemo(() => upcomingMeeting(snapshot.events, now, remindMinutes), [now, remindMinutes, snapshot.events]);
+  const upcoming = useMemo(
+    () => upcomingMeeting(snapshot.events, now, remindMinutes, prefs),
+    [now, prefs, remindMinutes, snapshot.events],
+  );
   const refresh = useCallback(() => void load(true), [load]);
   return useMemo(() => ({ snapshot, upcoming, now, refresh }), [now, refresh, snapshot, upcoming]);
 }

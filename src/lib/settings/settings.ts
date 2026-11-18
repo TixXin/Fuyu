@@ -31,6 +31,7 @@ export const THEME_SETTING_KEYS = [
   "glassIntensity",
   ...GLASS_SETTING_KEYS,
   "opacity",
+  "islandOpacity",
   "topFilletRadius",
   "islandCornerRadius",
   "islandCornerShape",

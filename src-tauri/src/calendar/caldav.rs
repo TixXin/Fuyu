@@ -16,6 +16,7 @@ const MULTIGET_BATCH: usize = 100;
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct DavResponse {
     pub(super) href: String,
+    pub(super) displayname: Option<String>,
     pub(super) calendar_data: Vec<String>,
     pub(super) is_calendar: bool,
     pub(super) principal: Option<String>,
@@ -61,7 +62,7 @@ pub(super) fn parse_multistatus(xml: &str) -> Vec<DavResponse> {
                     _ => "",
                 });
                 if let Some(code) = name.strip_prefix('#') {
-                    let value = code.strip_prefix('x').map_or_else(|| code.parse().ok(), |hex| u32::from_str_radix(hex, 16).ok());
+                    let value = code.strip_prefix(['x', 'X']).map_or_else(|| code.parse().ok(), |hex| u32::from_str_radix(hex, 16).ok());
                     text.extend(value.and_then(char::from_u32));
                 }
             }
@@ -73,6 +74,12 @@ pub(super) fn parse_multistatus(xml: &str) -> Vec<DavResponse> {
                         ("href", Some("response")) => response.href = text.trim().to_string(),
                         ("href", _) if stack.iter().any(|open| open == "current-user-principal") => response.principal = Some(text.trim().to_string()),
                         ("href", _) if stack.iter().any(|open| open == "calendar-home-set") => response.home = Some(text.trim().to_string()),
+                        ("displayname", Some("prop")) => {
+                            let trimmed = text.trim();
+                            if !trimmed.is_empty() {
+                                response.displayname = Some(trimmed.to_string());
+                            }
+                        }
                         ("calendar-data", _) => response.calendar_data.push(text.clone()),
                         ("calendar", _) if stack.iter().any(|open| open == "resourcetype") => response.is_calendar = true,
                         _ => {}
@@ -210,7 +217,7 @@ pub(super) fn calendar_query(from: DateTime<Utc>, to: DateTime<Utc>) -> String {
 
 pub(super) const PROPFIND_DISCOVERY: &str = r#"<?xml version="1.0" encoding="utf-8"?>
 <d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
-  <d:prop><d:current-user-principal/><c:calendar-home-set/><d:resourcetype/></d:prop>
+  <d:prop><d:current-user-principal/><c:calendar-home-set/><d:resourcetype/><d:displayname/></d:prop>
 </d:propfind>"#;
 
 fn join(base: &Url, href: &str) -> Result<Url, UserError> {
@@ -265,10 +272,22 @@ async fn entry_point<T: Transport>(transport: &T, base: &Url) -> Result<(Url, Ve
     Err(typed_error.unwrap_or_else(not_calendar))
 }
 
-pub(super) async fn calendars<T: Transport>(transport: &T, base: &Url) -> Result<Vec<Url>, UserError> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct RemoteCalendar {
+    pub(super) url: Url,
+    pub(super) displayname: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct CalendarFeed {
+    pub(super) displayname: Option<String>,
+    pub(super) texts: Vec<String>,
+}
+
+pub(super) async fn calendars<T: Transport>(transport: &T, base: &Url) -> Result<Vec<RemoteCalendar>, UserError> {
     let (at, answer) = entry_point(transport, base).await?;
-    if answer.iter().any(|response| response.is_calendar) {
-        return Ok(vec![at]);
+    if let Some(cal) = answer.iter().find(|response| response.is_calendar) {
+        return Ok(vec![RemoteCalendar { url: at, displayname: cal.displayname.clone() }]);
     }
     let home = match answer.iter().find_map(|response| response.home.clone()) {
         Some(home) => join(&at, &home)?,
@@ -281,7 +300,12 @@ pub(super) async fn calendars<T: Transport>(transport: &T, base: &Url) -> Result
     };
     let listed = dav(transport, "PROPFIND", &home, "1", PROPFIND_DISCOVERY).await?;
     let found = parse_multistatus(&listed.body);
-    found.iter().filter(|response| response.is_calendar).take(MAX_CALENDARS).map(|response| join(&listed.url, &response.href)).collect()
+    found
+        .into_iter()
+        .filter(|response| response.is_calendar)
+        .take(MAX_CALENDARS)
+        .map(|response| Ok(RemoteCalendar { url: join(&listed.url, &response.href)?, displayname: response.displayname }))
+        .collect()
 }
 
 const PROPFIND_ITEMS: &str = r#"<?xml version="1.0" encoding="utf-8"?>
@@ -331,15 +355,16 @@ async fn calendar_events<T: Transport>(transport: &T, calendar: &Url, from: Date
     read_items(transport, calendar).await.map_err(|error| refused.unwrap_or(error))
 }
 
-pub(super) async fn events<T: Transport>(transport: &T, base: &Url, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<String>, UserError> {
-    let mut texts = Vec::new();
+pub(super) async fn events<T: Transport>(transport: &T, base: &Url, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<CalendarFeed>, UserError> {
+    let mut feeds = Vec::new();
     for calendar in calendars(transport, base).await? {
-        texts.extend(calendar_events(transport, &calendar, from, to).await?);
+        let texts = calendar_events(transport, &calendar.url, from, to).await?;
+        feeds.push(CalendarFeed { displayname: calendar.displayname, texts });
     }
-    Ok(texts)
+    Ok(feeds)
 }
 
-pub(super) async fn fetch(account: &Account<'_>, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<String>, UserError> {
+pub(super) async fn fetch(account: &Account<'_>, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<CalendarFeed>, UserError> {
     let base = Url::parse(account.url.trim()).map_err(|_| UserError::new("calendar.address", "The calendar address is not valid."))?;
     if base.scheme() != "https" {
         return Err(UserError::new("calendar.https", "The calendar address must start with https://."));
@@ -380,10 +405,11 @@ END:VCALENDAR</C:calendar-data></D:prop></D:propstat></D:response>
 
         let listing = r#"<d:multistatus xmlns:d="DAV:" xmlns:cal="urn:ietf:params:xml:ns:caldav">
           <d:response><d:href>/calendars/u1/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/></d:resourcetype></d:prop></d:propstat></d:response>
-          <d:response><d:href>/calendars/u1/work/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/><cal:calendar/></d:resourcetype></d:prop></d:propstat></d:response>
+          <d:response><d:href>/calendars/u1/work/</d:href><d:propstat><d:prop><d:displayname>研发 &amp; 产品</d:displayname><d:resourcetype><d:collection/><cal:calendar/></d:resourcetype></d:prop></d:propstat><d:propstat><d:prop><d:displayname/></d:prop></d:propstat></d:response>
         </d:multistatus>"#;
-        let calendars: Vec<String> = parse_multistatus(listing).into_iter().filter(|response| response.is_calendar).map(|response| response.href).collect();
-        assert_eq!(calendars, ["/calendars/u1/work/"]);
+        let calendars: Vec<(String, Option<String>)> = parse_multistatus(listing).into_iter().filter(|response| response.is_calendar).map(|response| (response.href, response.displayname)).collect();
+        assert_eq!(calendars, [("/calendars/u1/work/".into(), Some("研发 & 产品".into()))]);
+        assert!(PROPFIND_DISCOVERY.contains("displayname"));
         assert!(parse_multistatus("not xml").is_empty());
     }
 

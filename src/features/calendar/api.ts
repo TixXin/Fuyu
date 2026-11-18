@@ -15,6 +15,8 @@ export type CalendarEvent = {
   location: string | null;
   meetingLink: string | null;
   calendar: string;
+  declined?: boolean;
+  free?: boolean;
 };
 
 export type CalendarSnapshot = {

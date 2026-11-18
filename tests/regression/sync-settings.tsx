@@ -8,7 +8,7 @@ import "../../src/styles/base.css";
 import "../../src/windows/settings/SettingsWindow.css";
 import { I18nProvider, LOCALE_STORAGE_KEY, TRANSLATIONS, useLocale, type LocaleCode } from "../../src/i18n";
 import { SYNC_STATUS_EVENT, type OptionalSyncGroup, type SyncCategory, type SyncStatus } from "../../src/features/sync/api";
-import { SYNC_CATEGORY_ITEMS } from "../../src/features/sync/syncState";
+import { DEFAULT_ENABLED_CATEGORIES, SYNC_CATEGORY_ITEMS } from "../../src/features/sync/syncState";
 
 const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
 localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
@@ -30,7 +30,7 @@ let currentStatus: SyncStatus = {
   confirm: null,
   categories: SYNC_CATEGORY_ITEMS.map((category) => ({
     category,
-    state: "waiting",
+    state: DEFAULT_ENABLED_CATEGORIES.includes(category) ? "waiting" : "off",
     message: null,
     lastSyncAt: null,
   })),
@@ -141,7 +141,13 @@ try {
 
   const catGroup = groupByTitle(wide, zh.categories.groupTitle)!;
   const catSwitches = [...catGroup.querySelectorAll<HTMLInputElement>("input[role='switch']")];
-  check(catSwitches.length === 5 && catSwitches.every((input) => input.checked), "All five primary sync categories start enabled");
+  check(
+    catSwitches.length === 6
+      && catSwitches.slice(0, 5).every((input) => input.checked)
+      && !catSwitches[5].checked
+      && wide.textContent?.includes(zh.categories.items.clipFavorites.title),
+    "Five primary sync categories start enabled while clipboard favorites starts off",
+  );
 
   const optGroup = groupByTitle(wide, zh.optional.groupTitle)!;
   const optSwitches = [...optGroup.querySelectorAll<HTMLInputElement>("input[role='switch']")];

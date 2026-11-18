@@ -200,6 +200,26 @@
                 </div>
               </div>
             </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id6_">
+                    剪贴板收藏（仅文字）
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：仅按正文哈希去重合并已收藏的纯文本与备注；打码、密钥特征、隐私排除格式及图片均留在本机。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="settings-switch">
+                      <input id="_id6_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="settings-group__footer">
             <p class="settings-footnote">
@@ -217,29 +237,11 @@
             <div class="settings-row">
               <div class="settings-row__main">
                 <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id6_">
+                  <label class="settings-row__title" for="_id7_">
                     翻译服务与模型选择
                   </label>
                   <span class="settings-row__description">
                     默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id6_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id7_">
-                    PrtSc 接管与录屏参数
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -254,10 +256,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id8_">
-                    Agent 提示音量与音效包
+                    PrtSc 接管与录屏参数
                   </label>
                   <span class="settings-row__description">
-                    默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。
+                    默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -272,10 +274,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id9_">
-                    手机推送开关与通道
+                    Agent 提示音量与音效包
                   </label>
                   <span class="settings-row__description">
-                    默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。
+                    默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -290,10 +292,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id10_">
-                    邮箱账号列表（不含密码）
+                    手机推送开关与通道
                   </label>
                   <span class="settings-row__description">
-                    默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。
+                    默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -308,10 +310,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id11_">
-                    收起条项目与顺序
+                    邮箱账号列表（不含密码）
                   </label>
                   <span class="settings-row__description">
-                    默认关闭：收起条可能包含仅在某一台电脑安装的第三方插件或平台专属项。
+                    默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -326,10 +328,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id12_">
-                    插件岛上页面顺序与隐藏
+                    收起条项目与顺序
                   </label>
                   <span class="settings-row__description">
-                    默认关闭：各台电脑安装的插件集合不同，页面列表未必一致。
+                    默认关闭：收起条可能包含仅在某一台电脑安装的第三方插件或平台专属项。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -344,6 +346,24 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id13_">
+                    插件岛上页面顺序与隐藏
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：各台电脑安装的插件集合不同，页面列表未必一致。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id13_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id14_">
                     更新通道（稳定版 / 测试版）
                   </label>
                   <span class="settings-row__description">
@@ -352,7 +372,7 @@
                 </div>
                 <div class="settings-row__control">
                   <span class="settings-switch">
-                    <input id="_id13_" role="switch" type="checkbox">
+                    <input id="_id14_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </div>
@@ -584,34 +604,11 @@
             <div class="settings-row">
               <div class="settings-row__main">
                 <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id14_">
+                  <label class="settings-row__title" for="_id15_">
                     待办、每日笔记与归档
                   </label>
                   <span class="settings-row__description">
                     按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <div class="sync-category__control">
-                    <span class="sync-badge sync-badge--ok">
-                      已同步
-                    </span>
-                    <span class="settings-switch">
-                      <input checked="" id="_id14_" role="switch" type="checkbox">
-                      <span aria-hidden="true" class="settings-switch__track"></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id15_">
-                    常用短语
-                  </label>
-                  <span class="settings-row__description">
-                    剪贴板里的常用语与 AI 提示词模板。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -631,10 +628,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id16_">
-                    链接书签
+                    常用短语
                   </label>
                   <span class="settings-row__description">
-                    剪贴板收藏的常用网址与排列顺序。
+                    剪贴板里的常用语与 AI 提示词模板。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -654,10 +651,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id17_">
-                    通用与功能设置
+                    链接书签
                   </label>
                   <span class="settings-row__description">
-                    按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。
+                    剪贴板收藏的常用网址与排列顺序。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -677,6 +674,29 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id18_">
+                    通用与功能设置
+                  </label>
+                  <span class="settings-row__description">
+                    按白名单同步配色、行为与功能偏好；各功能总开关仅在首次并入时带入。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="sync-badge sync-badge--ok">
+                      已同步
+                    </span>
+                    <span class="settings-switch">
+                      <input checked="" id="_id18_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id19_">
                     我的主题预设
                   </label>
                   <span class="settings-row__description">
@@ -689,7 +709,27 @@
                       已同步
                     </span>
                     <span class="settings-switch">
-                      <input checked="" id="_id18_" role="switch" type="checkbox">
+                      <input checked="" id="_id19_" role="switch" type="checkbox">
+                      <span aria-hidden="true" class="settings-switch__track"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id20_">
+                    剪贴板收藏（仅文字）
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：仅按正文哈希去重合并已收藏的纯文本与备注；打码、密钥特征、隐私排除格式及图片均留在本机。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div class="sync-category__control">
+                    <span class="settings-switch">
+                      <input id="_id20_" role="switch" type="checkbox">
                       <span aria-hidden="true" class="settings-switch__track"></span>
                     </span>
                   </div>
@@ -713,47 +753,11 @@
             <div class="settings-row">
               <div class="settings-row__main">
                 <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id19_">
+                  <label class="settings-row__title" for="_id21_">
                     翻译服务与模型选择
                   </label>
                   <span class="settings-row__description">
                     默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id19_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id20_">
-                    PrtSc 接管与录屏参数
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。
-                  </span>
-                </div>
-                <div class="settings-row__control">
-                  <span class="settings-switch">
-                    <input id="_id20_" role="switch" type="checkbox">
-                    <span aria-hidden="true" class="settings-switch__track"></span>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row__main">
-                <div class="settings-row__text">
-                  <label class="settings-row__title" for="_id21_">
-                    Agent 提示音量与音效包
-                  </label>
-                  <span class="settings-row__description">
-                    默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -768,10 +772,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id22_">
-                    手机推送开关与通道
+                    PrtSc 接管与录屏参数
                   </label>
                   <span class="settings-row__description">
-                    默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。
+                    默认关闭：键盘布局、麦克风与系统声音捕获能力因电脑和系统而异。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -786,10 +790,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id23_">
-                    邮箱账号列表（不含密码）
+                    Agent 提示音量与音效包
                   </label>
                   <span class="settings-row__description">
-                    默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。
+                    默认关闭：外放/耳机音量习惯不同，且自定义音效包可能未在另一台电脑安装。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -804,10 +808,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id24_">
-                    收起条项目与顺序
+                    手机推送开关与通道
                   </label>
                   <span class="settings-row__description">
-                    默认关闭：收起条可能包含仅在某一台电脑安装的第三方插件或平台专属项。
+                    默认关闭：多台电脑同时开启推送会导致同一条提醒重复发到手机。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -822,10 +826,10 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id25_">
-                    插件岛上页面顺序与隐藏
+                    邮箱账号列表（不含密码）
                   </label>
                   <span class="settings-row__description">
-                    默认关闭：各台电脑安装的插件集合不同，页面列表未必一致。
+                    默认关闭：授权码保存在本机钥匙串中，同步过去后仍需在当地重新授权登录。
                   </span>
                 </div>
                 <div class="settings-row__control">
@@ -840,6 +844,42 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <label class="settings-row__title" for="_id26_">
+                    收起条项目与顺序
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：收起条可能包含仅在某一台电脑安装的第三方插件或平台专属项。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id26_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id27_">
+                    插件岛上页面顺序与隐藏
+                  </label>
+                  <span class="settings-row__description">
+                    默认关闭：各台电脑安装的插件集合不同，页面列表未必一致。
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <span class="settings-switch">
+                    <input id="_id27_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <label class="settings-row__title" for="_id28_">
                     更新通道（稳定版 / 测试版）
                   </label>
                   <span class="settings-row__description">
@@ -848,7 +888,7 @@
                 </div>
                 <div class="settings-row__control">
                   <span class="settings-switch">
-                    <input id="_id26_" role="switch" type="checkbox">
+                    <input id="_id28_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </div>

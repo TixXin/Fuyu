@@ -1,4 +1,4 @@
-export const CALENDAR_REMIND_MINUTES = [0, 5, 10, 15, 30] as const;
+export const CALENDAR_REMIND_MINUTES = [0, 5, 10, 15, 30, 60] as const;
 export type CalendarRemindMinutes = (typeof CALENDAR_REMIND_MINUTES)[number];
 
 export type CalendarSettingValues = {

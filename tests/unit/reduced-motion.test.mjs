@@ -166,7 +166,7 @@ test("the island shell still opens and closes when Windows asks for less motion"
   const shell = reducedRules("windows/island/IslandShell.css").find((rule) => rule.selectors.includes(".island"));
   assert.ok(shell, "IslandShell.css lets the shell transition through");
   const kept = list(shell.declarations["transition-property"] ?? "");
-  for (const variable of ["--island-shell-width", "--island-shell-height", "--island-shell-top-corner", "--island-shell-bottom-corner", "--island-shell-fill"]) {
+  for (const variable of ["--island-shell-width", "--island-shell-height", "--island-shell-top-corner", "--island-shell-bottom-corner", "--island-shell-fill", "--island-shell-opacity"]) {
     assert.ok(kept.includes(variable), variable);
   }
   assert.ok(kept.every((prop) => prop.startsWith("--")), "WebKit drops regular transitions on an element that transitions @property variables");

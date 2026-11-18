@@ -3,8 +3,11 @@ import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { emit } from "@tauri-apps/api/event";
+import { useImSources } from "../../src/features/messages/im-sources/useImSources";
+import { IM_SOURCE_IDS, type ImSourceId, type ImSourceSnapshot } from "../../src/features/messages/im-sources/imSourcesState";
 import { useMail, type MailController, sanitizeMailHtml } from "../../src/features/messages/mail/MailPanel";
 import type { MailContent, MailSnapshot } from "../../src/features/messages/mail/api";
+import type { MessageSource } from "../../src/features/messages/messagePreview";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { MessagesPanel, messagePanelHeight, type MessageView } from "../../src/features/messages/Messages";
@@ -22,6 +25,20 @@ let revision = 0;
 let mail: MailController;
 let view: MessageView;
 let setView: (source: MessageView) => void;
+let setExtraImOn: (on: boolean) => void;
+let imItemsBySource: Partial<Record<ImSourceId, ImSourceSnapshot["items"]>> = {};
+const imSnapshotOf = (source: ImSourceId): ImSourceSnapshot => {
+  const enabled = sources[source] === true;
+  return {
+    source,
+    revision: ++revision,
+    enabled,
+    installed: source === "telegram" || source === "feishu",
+    status: enabled ? "listening" : "disabled",
+    items: enabled ? (imItemsBySource[source] ?? []) : [],
+    error: null,
+  };
+};
 let readBehavior = async (id: string): Promise<MailContent> => ({ id, attachments: [], contentType: "text/plain", content: "你好，\n\n本周的开发工作已完成，请查看下面的安排：\n\n1. 周二完成消息界面验收。\n2. 周四讨论下个版本。\n3. 周五汇总反馈。\n\n谢谢。\n产品团队" });
 let snapshot: MailSnapshot = {
   revision: ++revision, email: "demo@qq.com", configured: state !== "disconnected", enabled: true, syncing: false,
@@ -54,6 +71,18 @@ mockIPC((command, payload) => {
     case "set_qq_mail_enabled": snapshot = { ...snapshot, revision: ++revision, enabled: Boolean(args.enabled), status: args.enabled ? "connected" : "paused" }; return snapshot;
     case "request_qq_notification_access": return "allowed";
     case "get_qq_notification_state": return { revision: ++revision, enabled: true, status: "listening", error: null, items: state === "empty" || state === "disconnected" ? [] : [{ id: "qq:1", title: "设计讨论组", body: "新版界面已准备好，方便时看一下。", createdAt: now - 30_000 }] };
+    case "get_im_sources_state": {
+      const target = typeof args.source === "string" ? (args.source as ImSourceId) : null;
+      return (target ? [target] : IM_SOURCE_IDS).map(imSnapshotOf);
+    }
+    case "set_im_source_auto_clear": return imSnapshotOf(String(args.source) as ImSourceId);
+    case "clear_im_source_notifications": {
+      const source = String(args.source) as ImSourceId;
+      imItemsBySource = { ...imItemsBySource, [source]: [] };
+      return imSnapshotOf(source);
+    }
+    case "open_im_source": return null;
+    case "request_im_notification_access": return "allowed";
     case "set_wechat_expose_ui": case "set_wechat_hide_taskbar_button": return wechatSnapshot();
     case "get_builtin_plugins": return plugins();
     case "set_builtin_plugin_config":
@@ -69,9 +98,18 @@ function Fixture() {
   mail = useMail(false);
   const qqNotifications = useQQNotifications(false);
   const wechatReminders = useWeChatReminders(false);
+  const imSources = useImSources(false);
+  const [extraIm, setExtraIm] = useState(false);
+  setExtraImOn = setExtraIm;
   [view, setView] = useState<MessageView>(["reader", "html", "loading", "error", "auth", "mail", "disconnected"].includes(state) ? "qqMail" : ["wechat", "wechatError"].includes(state) ? "wechat" : "qq");
   const height = messagePanelHeight(view, mail.wantsTallPanel);
-  return <section className="message-fixture" style={{ height }}><header className="fixture-heading">fuyu<span>消息</span></header><div className="message-panel"><MessagesPanel source={view} enabledSources={{ qq: true, wechat: true, qqMail: true }} onSourceChange={next => { mail.closeReader(); setView(next); }} onOpenMailSettings={() => calls.push({ command: "open_mail_settings", args: {} })} qqMail={mail} qqNotifications={qqNotifications} wechatReminders={wechatReminders} /></div></section>;
+  const enabledSources: Partial<Record<MessageSource, boolean>> & Pick<Record<MessageSource, boolean>, "qq" | "wechat" | "qqMail"> = {
+    qq: true,
+    wechat: true,
+    qqMail: true,
+    ...(extraIm ? Object.fromEntries(IM_SOURCE_IDS.map((id) => [id, true])) : {}),
+  };
+  return <section className="message-fixture" style={{ height }}><header className="fixture-heading">fuyu<span>消息</span></header><div className="message-panel"><MessagesPanel source={view} enabledSources={enabledSources} onSourceChange={next => { mail.closeReader(); setView(next); }} onOpenMailSettings={() => calls.push({ command: "open_mail_settings", args: {} })} qqMail={mail} qqNotifications={qqNotifications} wechatReminders={wechatReminders} imSources={imSources} /></div></section>;
 }
 
 const root = createRoot(document.getElementById("fixture")!);
@@ -131,6 +169,66 @@ try {
     check(view! === "qq" && document.querySelector('[aria-label="QQ 最近通知"]'), "切回 QQ 显示自己的通知列表");
     await click("复制内容");
     check(calls.some(call => call.command === "copy_message_text" && call.args.text === "新版界面已准备好，方便时看一下。") && !calls.some(call => call.command === "open_qq") && Boolean(document.querySelector('button[aria-label="已复制"]')), "QQ 通知项可单独复制正文且不唤起 QQ");
+
+    const fixtureBox = document.querySelector<HTMLElement>(".message-fixture")!;
+    fixtureBox.style.width = "350px";
+    imItemsBySource = {
+      telegram: [
+        { id: "telegram:toast:1:1", kind: "toast", title: "Alice", body: "构建包已通过验收", createdAt: now - 5_000 },
+        { id: "telegram:flash:2", kind: "flash", title: "Telegram", body: "", createdAt: now - 15_000 },
+        { id: "telegram:badge:3", kind: "badge", title: "Telegram", body: "", createdAt: now - 25_000, unread: 4 },
+      ],
+    };
+    sources = { ...sources, ...Object.fromEntries(IM_SOURCE_IDS.map((id) => [id, true])) };
+    await act(async () => {
+      setExtraImOn(true);
+      await emit("im-sources-changed", { source: "telegram", snapshot: imSnapshotOf("telegram"), newestId: "telegram:toast:1:1", windowVisible: true });
+    });
+    const navBar = document.querySelector<HTMLDivElement>(".message-sources")!;
+    const qqPanelEl = document.querySelector<HTMLElement>(".qq-panel")!;
+    const qqHeaderEl = document.querySelector<HTMLElement>(".qq-panel__header")!;
+    const areBrandIconsReady = () =>
+      IM_SOURCE_IDS.every((id) => {
+        const img = document.querySelector<HTMLImageElement>(`.message-brand-icon--${id}`);
+        return Boolean(img && img.complete && img.naturalWidth > 0);
+      });
+    await until(areBrandIconsReady);
+    check(areBrandIconsReady(), "7 个新来源官方品牌图标全部成功加载");
+    check(
+      qqPanelEl.scrollWidth <= qqPanelEl.clientWidth + 1
+        && qqHeaderEl.scrollWidth <= qqHeaderEl.clientWidth + 1
+        && navBar.scrollWidth > navBar.clientWidth,
+      "350px 窄面板同时开启 10 个来源时顶栏可横向滚动且面板不溢出",
+    );
+    await act(async () => { navBar.dispatchEvent(new WheelEvent("wheel", { deltaY: 80, bubbles: true })); });
+    check(navBar.scrollLeft > 0, "鼠标滚轮可横向滚动多来源标签栏");
+    await click("企业微信通知");
+    check(view! === "wecom" && document.querySelector("[aria-label='企业微信最近通知']"), "切换到最右侧的企业微信来源并显示对应面板");
+    await click("Telegram 通知");
+    const tgItems = () => [...document.querySelectorAll<HTMLElement>("[aria-label='最近收到的 Telegram 通知'] .qq-panel__item")];
+    check(
+      tgItems().length === 3
+        && tgItems()[0].textContent?.includes("Alice")
+        && tgItems()[0].textContent?.includes("构建包已通过验收")
+        && Boolean(tgItems()[0].querySelector(".qq-panel__copy"))
+        && tgItems()[1].textContent?.includes("有新提醒")
+        && !tgItems()[1].querySelector(".qq-panel__copy")
+        && tgItems()[2].textContent?.includes("4 条未读")
+        && !tgItems()[2].querySelector(".qq-panel__copy"),
+      "通用 IM 面板兼容展示 Toast 正文、闪烁有新提醒与未读数条目",
+    );
+    await click("打开 Telegram：Alice");
+    check(calls.some((call) => call.command === "open_im_source" && call.args.source === "telegram"), "点击 IM 通知项唤起对应应用");
+    await click("清空岛内 Telegram 通知");
+    check(calls.some((call) => call.command === "clear_im_source_notifications" && call.args.source === "telegram") && tgItems().length === 0, "清空 IM 来源通知列表");
+    sources = { qq: true, wechat: true, mail: true };
+    fixtureBox.style.width = "";
+    await act(async () => {
+      setExtraImOn(false);
+      await emit("im-sources-changed", { source: "telegram", snapshot: imSnapshotOf("telegram"), newestId: null, windowVisible: false });
+      setView("qq");
+    });
+
     await click("邮箱");
     const list = document.querySelector<HTMLDivElement>('.qq-mail-list')!;
     list.scrollTop = 120;

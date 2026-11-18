@@ -211,6 +211,7 @@
   font: inherit;
   font-size: 12px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   cursor: pointer;
   transition: color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);

@@ -1,10 +1,12 @@
 import { useSyncExternalStore } from "react";
+import type { ImSourcesController } from "./im-sources/useImSources";
 import type { QQNotificationsController } from "./qq-notifications/QQNotifications";
 import type { WeChatRemindersController } from "./wechat/WeChatReminders";
 
 export interface MessageControllers {
   qqNotifications: QQNotificationsController;
   wechatReminders: WeChatRemindersController;
+  imSources: ImSourcesController;
 }
 
 let current: MessageControllers | null = null;

@@ -62,14 +62,19 @@ export function MessageArrivalsPanel({
       )}
       <ul className="message-arrivals__list">
         {arrivals.map((message) => {
+          const isFlash = message.kind === "flash";
+          const isBadge = message.kind === "badge";
           const plainWeChat = message.source === "wechat" && !message.chat;
-          const title = plainWeChat ? t.wechat : message.title.trim() || (message.source === "qq" ? "QQ" : t.sourceLabels[message.source]);
+          const title = plainWeChat ? t.wechat
+            : isFlash ? t.sourceLabels[message.source]
+              : message.title.trim() || (message.source === "qq" ? "QQ" : t.sourceLabels[message.source]);
           const body = plainWeChat ? t.wechatPreview
-            : message.source === "qqMail" ? message.body.trim() || t.newMail
-              : message.source === "plugin" ? message.body.trim() : message.body.trim() || t.newMessage;
+            : isFlash ? t.newReminder
+              : message.source === "qqMail" ? message.body.trim() || t.newMail
+                : message.source === "plugin" ? message.body.trim() : message.body.trim() || t.newMessage;
           const controls = message.mediaControls && media ? media : null;
           const key = arrivalKey(message);
-          const copyable = plainWeChat ? "" : notificationCopyableText(message.title, message.body);
+          const copyable = plainWeChat || isFlash || isBadge ? "" : notificationCopyableText(message.title, message.body);
           const copied = copiedKey === key;
           return (
             <li className={`message-arrivals__item${controls ? " message-arrivals__item--media" : ""}`} key={key}>

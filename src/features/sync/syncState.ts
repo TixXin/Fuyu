@@ -6,6 +6,15 @@ export const SYNC_CATEGORY_ITEMS: readonly SyncCategory[] = [
   "links",
   "settings",
   "presets",
+  "clipFavorites",
+];
+
+export const DEFAULT_ENABLED_CATEGORIES: readonly SyncCategory[] = [
+  "todos",
+  "snippets",
+  "links",
+  "settings",
+  "presets",
 ];
 
 export const OPTIONAL_GROUP_ITEMS: readonly OptionalSyncGroup[] = [
@@ -30,7 +39,7 @@ export const DEFAULT_SYNC_STATUS: SyncStatus = {
   confirm: null,
   categories: SYNC_CATEGORY_ITEMS.map((category) => ({
     category,
-    state: "waiting",
+    state: DEFAULT_ENABLED_CATEGORIES.includes(category) ? "waiting" : "off",
     message: null,
     lastSyncAt: null,
   })),

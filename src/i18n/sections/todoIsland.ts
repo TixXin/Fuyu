@@ -12,6 +12,8 @@ export type TodoIslandText = {
   addPlaceholderFor: (date: string) => string;
   emptyTitle: string;
   emptyHint: string;
+  allDoneTitle: string;
+  allDoneHint: string;
   notePlaceholder: string;
   save: { idle: string; saving: string; saved: string; needsPath: string; error: string };
   backToArchive: string;
@@ -19,6 +21,7 @@ export type TodoIslandText = {
   noArchives: string;
   noArchiveTasks: string;
   inProgress: string;
+  inProgressElapsed: (elapsed: string) => string;
   todayDone: (done: number, total: number) => string;
   clearDone: (count: number) => string;
   doneSection: (count: number) => string;
@@ -52,6 +55,8 @@ export const zhCN: TodoIslandText = {
   addPlaceholderFor: (date) => `添加 ${date} 的待办`,
   emptyTitle: "今天还很轻",
   emptyHint: "在上面输入一件事，回车添加",
+  allDoneTitle: "今天的待办都做完了",
+  allDoneHint: "在上面继续添加，或去归档回看",
   notePlaceholder: "写点今天的笔记…",
   save: {
     idle: "保存今天的清单为 Markdown",
@@ -65,6 +70,7 @@ export const zhCN: TodoIslandText = {
   noArchives: "还没有保存过的清单",
   noArchiveTasks: "这天没有记下待办",
   inProgress: "进行中",
+  inProgressElapsed: (elapsed) => `进行中 · ${elapsed}`,
   todayDone: (done, total) => `今天完成 ${done}/${total}`,
   clearDone: (count) => (count > 0 ? `清除已完成（${count} 件）` : "清除已完成"),
   doneSection: (count) => `已完成 ${count}`,
@@ -98,6 +104,8 @@ export const en: TodoIslandText = {
   addPlaceholderFor: (date) => `Add a task for ${date}`,
   emptyTitle: "A light day so far",
   emptyHint: "Type a task above and press Enter",
+  allDoneTitle: "All done for today",
+  allDoneHint: "Add another task above, or check the archive",
   notePlaceholder: "Notes for today…",
   save: {
     idle: "Save today's list as Markdown",
@@ -111,6 +119,7 @@ export const en: TodoIslandText = {
   noArchives: "No saved lists yet",
   noArchiveTasks: "No tasks were written down",
   inProgress: "In progress",
+  inProgressElapsed: (elapsed) => `In progress · ${elapsed}`,
   todayDone: (done, total) => `${done} of ${total} done today`,
   clearDone: (count) => (count > 0 ? `Clear done (${count})` : "Clear done"),
   doneSection: (count) => `Done ${count}`,

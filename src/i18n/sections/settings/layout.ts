@@ -18,6 +18,9 @@ export type SettingsLayoutText = {
   dragGrid: string;
   dragGridHint: string;
   opacity: string;
+  opacityHint: string;
+  islandOpacity: string;
+  islandOpacityHint: string;
   marginY: string;
   topFilletRadius: string;
   islandCornerRadius: string;
@@ -82,6 +85,9 @@ export const zhCN: SettingsLayoutText = {
   dragGrid: "拖动时显示中线辅助线",
   dragGridHint: "拖岛时在当前屏幕上画出横竖两条中线，把屏幕分成四格。贴着上下左右四条边的正中时会轻轻吸住，方便居中放下，这一点不受开关影响。",
   opacity: "不透明度",
+  opacityHint: "只调整岛底色的浓淡，文字和图标保持不透明。",
+  islandOpacity: "整体不透明度",
+  islandOpacityHint: "连同文字、图标和展开面板一起调整整个岛的不透明度。",
   marginY: "顶部距离",
   topFilletRadius: "贴边圆角",
   islandCornerRadius: "岛屿圆角",
@@ -150,6 +156,9 @@ export const en: SettingsLayoutText = {
   dragGrid: "Show centre lines while dragging",
   dragGridHint: "Draws dashed horizontal and vertical centre lines across the current screen while you drag the island, splitting it into quarters. Near the middle of any screen edge the island gently snaps to centre; that works with the lines off too.",
   opacity: "Opacity",
+  opacityHint: "Adjusts only the island's background fill while keeping text and icons opaque.",
+  islandOpacity: "Island opacity",
+  islandOpacityHint: "Dims the entire island, including text, icons and the open panel.",
   marginY: "Top margin",
   topFilletRadius: "Docked corner radius",
   islandCornerRadius: "Island corner radius",

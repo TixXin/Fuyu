@@ -30,6 +30,7 @@ export type MessageSourceRegistry = {
   subscribe(listener: () => void): () => void;
   notify(notice: unknown): { shown: boolean; receivedAt: number };
   clear(params?: unknown): Promise<{ ok: true }>;
+  refresh(): void;
   resetForTest(): void;
 };
 
@@ -37,6 +38,7 @@ export const BUILTIN_MESSAGE_SOURCES: readonly MessageSourceSpec[];
 export function normalizeArrivalNotice(raw: unknown, now?: number): NormalizedArrivalNotice;
 export function clearParamsOf(params: unknown): { source: string | undefined };
 export function createMessageSourceRegistry(options?: {
+  config?: Readonly<Record<string, unknown>>;
   onChange?: () => void;
   onArrive?: (notice: NormalizedArrivalNotice) => boolean | void;
 }): MessageSourceRegistry;
@@ -49,4 +51,5 @@ export function getMessageSourcesSnapshot(): readonly MessageSourceStatus[];
 export function subscribeMessageSources(listener: () => void): () => void;
 export function notifyMessageArrival(notice: unknown): { shown: boolean; receivedAt: number };
 export function clearMessageSources(params?: unknown): Promise<{ ok: true }>;
+export function refreshMessageSources(): void;
 export function resetMessageSourcesForTest(): void;

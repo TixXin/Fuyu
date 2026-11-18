@@ -1,15 +1,16 @@
 import type { ComponentProps } from "react";
 import { Bell } from "lucide-react";
-import { useTranslation } from "../../../i18n";
+import { useTranslation, type Translations } from "../../../i18n";
 import { defineSlot, type IslandCollapsedMeta, type IslandHeaderMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { runIslandAction, useIslandContributed } from "../../plugin-kernel/useIslandContributions";
-import type { Translations } from "../../../i18n";
-import { MessageSourceIcon } from "../MessageSourceIcon";
 import { MessageArrivalsPanel } from "../arrivals/MessageArrivalsPanel";
+import { firstPendingImSource, imUnreadTotal } from "../im-sources/imSourcesState";
+import { resolveMessageSource } from "../island/messageSource";
 import { MessagesPanel } from "../Messages";
-import { islandPage } from "./page.ts";
+import { MessageSourceIcon } from "../MessageSourceIcon";
 import { messagesIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
+import { islandPage } from "./page.ts";
 
 type Panel = ComponentProps<typeof MessagesPanel>;
 
@@ -30,7 +31,7 @@ function MessagesPage({ features, onOpenSettings }: MessagesPageProps) {
   const playing = useIslandContributed().hints.has("media.playing");
   const messages = messagesIsland.use();
   if (!messages) return null;
-  const { mail: qqMail, qq: qqNotifications, wechat: wechatReminders, source: messageSource, panel: messagePanel, open: openMessages } = messages;
+  const { mail: qqMail, qq: qqNotifications, wechat: wechatReminders, im: imSources, enabledSources, source: messageSource, panel: messagePanel, open: openMessages } = messages;
   return (
     <div className="message-panel">
       {messagePanel?.arrivals ? (
@@ -40,7 +41,18 @@ function MessagesPage({ features, onOpenSettings }: MessagesPageProps) {
           onPlayPause: () => void runIslandAction("media.play-pause"),
           onNext: () => void runIslandAction("media.next"),
         }} />
-      ) : <MessagesPanel qqMail={qqMail} qqNotifications={qqNotifications} wechatReminders={wechatReminders} source={messageSource} enabledSources={features} onSourceChange={openMessages} onOpenMailSettings={() => onOpenSettings("mail")} />}
+      ) : (
+        <MessagesPanel
+          qqMail={qqMail}
+          qqNotifications={qqNotifications}
+          wechatReminders={wechatReminders}
+          imSources={imSources}
+          source={messageSource}
+          enabledSources={enabledSources ?? features}
+          onSourceChange={openMessages}
+          onOpenMailSettings={() => onOpenSettings("mail")}
+        />
+      )}
     </div>
   );
 }
@@ -52,11 +64,23 @@ function MessagesButton({ page, withShortcut }: HeaderContext) {
   const messages = messagesIsland.use();
   const qqNotificationCount = messages?.qq.snapshot.items.length ?? 0;
   const wechatPending = messages?.wechat.snapshot.pending ?? false;
-  const messageBadgeLabel = t.messages.badge(qqNotificationCount, wechatPending);
-  return <button className={`icon-button island-message-button${page === "qq" ? " island-message-button--active" : ""}`} type="button" aria-label={withShortcut(t.messages.label(messageBadgeLabel), "qq")} aria-pressed={page === "qq"} onClick={() => messages?.open(wechatPending ? "wechat" : "qq")}>
-    <Bell size={16} strokeWidth={1.5} absoluteStrokeWidth />
-    {(qqNotificationCount > 0 || wechatPending) && <span className="island-message-button__dot" aria-hidden="true" />}
-  </button>;
+  const extraCount = messages?.im ? imUnreadTotal(messages.im.snapshots) : 0;
+  const pendingIm = messages?.im ? firstPendingImSource(messages.im.snapshots) : null;
+  const messageBadgeLabel = t.messages.badge(qqNotificationCount, wechatPending, extraCount);
+  const defaultSource = messages?.enabledSources ? resolveMessageSource("qq", messages.enabledSources) : "qq";
+  const target = qqNotificationCount > 0 ? "qq" : wechatPending ? "wechat" : pendingIm ?? defaultSource;
+  return (
+    <button
+      className={`icon-button island-message-button${page === "qq" ? " island-message-button--active" : ""}`}
+      type="button"
+      aria-label={withShortcut(t.messages.label(messageBadgeLabel), "qq")}
+      aria-pressed={page === "qq"}
+      onClick={() => messages?.open(target)}
+    >
+      <Bell size={16} strokeWidth={1.5} absoluteStrokeWidth />
+      {(qqNotificationCount > 0 || wechatPending || extraCount > 0) && <span className="island-message-button__dot" aria-hidden="true" />}
+    </button>
+  );
 }
 
 pageSlot.add({ ...islandPage, component: MessagesPage }, OWNER);

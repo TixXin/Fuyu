@@ -34,3 +34,39 @@ test("the arrival time reads as a 24-hour clock", () => {
   assert.equal(bannerClock(new Date(2026, 10, 9, 9, 5).getTime()), "09:05");
   assert.equal(bannerClock(new Date(2026, 10, 9, 23, 41).getTime()), "23:41");
 });
+
+test("upgrading a taskbar-flash banner to a real toast via replacedId updates the card without inflating more", () => {
+  const flash = {
+    source: "telegram",
+    id: "telegram:flash:1000",
+    kind: "flash",
+    title: "Telegram",
+    body: "",
+    receivedAt: 1000,
+    durationMs: 5_000,
+    actions: [],
+  };
+  const first = addBannerMessage(null, flash);
+  assert.equal(first.more, 0);
+
+  const toast = {
+    source: "telegram",
+    id: "telegram:toast:42:9",
+    replacedId: "telegram:flash:1000",
+    kind: "toast",
+    title: "Alice",
+    body: "验证码 482910",
+    receivedAt: 1300,
+    durationMs: 5_000,
+    actions: [{ id: "copy-otp:482910", title: "复制 482910" }],
+  };
+  const upgraded = addBannerMessage(first, toast);
+  assert.equal(upgraded.more, 0);
+  assert.equal(upgraded.message.title, "Alice");
+  assert.ok(upgraded.version > first.version);
+
+  const withOther = addBannerMessage(first, message("qq", 1100));
+  assert.equal(withOther.more, 1);
+  const upgradedAfterOther = addBannerMessage(withOther, toast);
+  assert.equal(upgradedAfterOther.more, 1);
+});

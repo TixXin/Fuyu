@@ -28,11 +28,18 @@
   initial-value: #000000;
 }
 
+@property --island-shell-opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
 .island {
   --glass-pointer-x: 0.5;
   --glass-pointer-y: 0.18;
   --glass-page-accent: var(--color-accent);
   --island-shell-fill: var(--island-fill, var(--island-background-color));
+  --island-shell-opacity: var(--island-opacity, 1);
   --island-radius: calc(var(--island-corner-radius-size, 30) * 1px);
   --island-radius-collapsed: calc(var(--island-radius) * 22 / 30);
   --island-panel-radius: max(8px, calc(var(--island-radius) - 20px));
@@ -43,6 +50,7 @@
   flex: 0 0 auto;
   color: var(--color-text);
   background: var(--island-shell-fill);
+  opacity: var(--island-shell-opacity);
   border: 0;
   box-shadow: var(--island-edge-lines, inset 0 0 0 1px var(--color-white-a08));
   overflow: visible;
@@ -56,7 +64,8 @@
     --island-shell-height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-top-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-bottom-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
-    --island-shell-fill var(--motion-slow) var(--motion-ease);
+    --island-shell-fill var(--motion-slow) var(--motion-ease),
+    --island-shell-opacity var(--island-opacity-duration, var(--motion-base)) var(--motion-ease);
 }
 
 .island__surface {
@@ -139,7 +148,13 @@
   transition-delay: 0s;
 }
 
+.island--dimmed {
+  --island-opacity-duration: var(--motion-medium);
+  pointer-events: none;
+}
+
 .island--tucked.island--tucked-hidden {
+  --island-shell-opacity: 0;
   opacity: 0;
   pointer-events: none;
 }
@@ -196,6 +211,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .island {
-    transition-property: --island-shell-width, --island-shell-height, --island-shell-top-corner, --island-shell-bottom-corner, --island-shell-fill !important;
+    --island-opacity-duration: var(--motion-base);
+    transition-property: --island-shell-width, --island-shell-height, --island-shell-top-corner, --island-shell-bottom-corner, --island-shell-fill, --island-shell-opacity !important;
   }
 }

@@ -2,7 +2,9 @@ import type { PointerEvent as ReactPointerEvent } from "react";
 import { Check, GripVertical, Play, Square, Trash2 } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import type { TodoTags } from "../tags";
+import { todoElapsedLabel } from "../todoPrefs.ts";
 import type { TodoItem } from "../types";
+import { useElapsedNow } from "../useElapsedNow";
 import { TodoTagMarks, TodoTagMenu } from "./TodoTagMenu";
 
 const ICON = { size: 14, strokeWidth: 1.5, absoluteStrokeWidth: true, "aria-hidden": true } as const;
@@ -10,6 +12,7 @@ const ICON = { size: 14, strokeWidth: 1.5, absoluteStrokeWidth: true, "aria-hidd
 export function TodoIslandRow({
   todo,
   showProject = false,
+  showElapsed = true,
   editable,
   isActive,
   canReorder,
@@ -37,6 +40,7 @@ export function TodoIslandRow({
   isDragging: boolean;
   isDragOver: boolean;
   showProject?: boolean;
+  showElapsed?: boolean;
   isEditing: boolean;
   titleDraft: string;
   onTitleDraftChange: (value: string) => void;
@@ -53,6 +57,9 @@ export function TodoIslandRow({
   onDragCancel: () => void;
 }) {
   const t = useTranslation();
+  const trackElapsed = isActive && showElapsed && typeof todo.startedAt === "number";
+  const now = useElapsedNow(trackElapsed);
+  const elapsed = isActive ? todoElapsedLabel(todo.startedAt, now, showElapsed) : null;
   const className = [
     "todo-island-row",
     todo.completed ? "todo-island-row--done" : "",
@@ -116,7 +123,7 @@ export function TodoIslandRow({
           {isActive ? (
             <button className="todo-island-row__stop" type="button" aria-label={t.todo.actionOnTask(t.todo.stop, todo.title)} onClick={() => onStart(todo.id)}>
               <Square size={10} strokeWidth={0} fill="currentColor" aria-hidden="true" />
-              <span className="todo-island-row__stop-state">{t.todoIsland.inProgress}</span>
+              <span className="todo-island-row__stop-state">{elapsed ? t.todoIsland.inProgressElapsed(elapsed) : t.todoIsland.inProgress}</span>
               <span className="todo-island-row__stop-action">{t.todo.stop}</span>
             </button>
           ) : (

@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useMemo, useState, type SetStateAction } from "react";
-import { createTodoId, loadActiveTodoId, loadTodos, saveActiveTodoId, saveTodos } from "./storage";
-import { adoptActiveTodo, isInProgress, latestStartedId, toggleStarted, withoutStart } from "./activeTodos";
-import { splitProjectPrefix } from "./project";
-import { withTags, type TodoTags } from "./tags";
-import type { TodoItem } from "./types";
+import { adoptActiveTodo, isInProgress, latestStartedId, toggleStarted, withoutStart } from "./activeTodos.ts";
+import { splitProjectPrefix } from "./project.ts";
+import { createTodoId, loadActiveTodoId, loadTodos, saveActiveTodoId, saveTodos } from "./storage.ts";
+import { withTags, type TodoTags } from "./tags.ts";
+import { insertTodoItem, playTodoCompleteSound, type TodoInsertPosition } from "./todoPrefs.ts";
+import type { TodoItem, TodoPriority } from "./types.ts";
 import { useTodoFileField } from "./useTodoFileField";
 
-export function useTodoList(onStartTodo: () => void) {
+export function useTodoList(
+  onStartTodo: () => void,
+  options: { completionSound?: boolean; insertPosition?: TodoInsertPosition } = {},
+) {
+  const { completionSound = true, insertPosition = "bottom" } = options;
   const [todos, setTodos] = useState<TodoItem[]>(() => adoptActiveTodo(loadTodos(), loadActiveTodoId(), Date.now()));
   const [draftTodo, setDraftTodo] = useState("");
   const activeTodoId = useMemo(() => latestStartedId(todos), [todos]);
@@ -17,33 +22,44 @@ export function useTodoList(onStartTodo: () => void) {
   useTodoFileField("todos", setTodos);
   useTodoFileField("activeTodoId", adoptOutsideActive);
 
-  const addTodo = useCallback((defaultProject?: string) => {
-    const { title, project = typeof defaultProject === "string" ? defaultProject : undefined } = splitProjectPrefix(draftTodo);
-
-    if (!title) {
-      return;
-    }
-
-    setTodos((currentTodos) => [
-      {
+  const insertItem = useCallback(
+    (title: string, project?: string, priority?: TodoPriority) => {
+      if (!title) return;
+      const item: TodoItem = {
         id: createTodoId(),
         title,
         completed: false,
         createdAt: Date.now(),
         ...(project ? { project } : {}),
-      },
-      ...currentTodos,
-    ]);
-    setDraftTodo("");
-  }, [draftTodo]);
+        ...(priority ? { priority } : {}),
+      };
+      setTodos((currentTodos) => insertTodoItem(currentTodos, item, insertPosition));
+    },
+    [insertPosition],
+  );
 
-  const toggleTodo = useCallback((id: string) => {
-    setTodos((currentTodos) =>
-      currentTodos.map((todo) =>
-        todo.id === id ? withoutStart({ ...todo, completed: !todo.completed }) : todo,
-      ),
-    );
-  }, []);
+  const addTodo = useCallback(
+    (defaultProject?: string) => {
+      const { title, project = typeof defaultProject === "string" ? defaultProject : undefined } = splitProjectPrefix(draftTodo);
+      if (!title) return;
+      insertItem(title, project);
+      setDraftTodo("");
+    },
+    [draftTodo, insertItem],
+  );
+
+  const toggleTodo = useCallback(
+    (id: string) => {
+      const target = todos.find((todo) => todo.id === id);
+      if (target && !target.completed && completionSound) {
+        playTodoCompleteSound();
+      }
+      setTodos((currentTodos) =>
+        currentTodos.map((todo) => (todo.id === id ? withoutStart({ ...todo, completed: !todo.completed }) : todo)),
+      );
+    },
+    [completionSound, todos],
+  );
 
   const tagTodo = useCallback((id: string, tags: TodoTags) => {
     setTodos((currentTodos) => currentTodos.map((todo) => (todo.id === id ? withTags(todo, tags) : todo)));
@@ -51,26 +67,14 @@ export function useTodoList(onStartTodo: () => void) {
 
   const updateTodoTitle = useCallback((id: string, title: string) => {
     const nextTitle = title.trim();
-
-    if (!nextTitle) {
-      return;
-    }
-
-    setTodos((currentTodos) =>
-      currentTodos.map((todo) =>
-        todo.id === id ? { ...todo, title: nextTitle } : todo,
-      ),
-    );
+    if (!nextTitle) return;
+    setTodos((currentTodos) => currentTodos.map((todo) => (todo.id === id ? { ...todo, title: nextTitle } : todo)));
   }, []);
 
   const startTodo = useCallback(
     (id: string) => {
       const todo = todos.find((item) => item.id === id);
-
-      if (!todo || todo.completed) {
-        return;
-      }
-
+      if (!todo || todo.completed) return;
       setTodos((currentTodos) => toggleStarted(currentTodos, id, Date.now()));
       if (!isInProgress(todo)) onStartTodo();
     },
@@ -86,48 +90,23 @@ export function useTodoList(onStartTodo: () => void) {
   }, []);
 
   const reorderTodo = useCallback((sourceId: string, targetId: string) => {
-    if (sourceId === targetId) {
-      return;
-    }
-
+    if (sourceId === targetId) return;
     setTodos((currentTodos) => {
       const sourceIndex = currentTodos.findIndex((todo) => todo.id === sourceId);
       const targetIndex = currentTodos.findIndex((todo) => todo.id === targetId);
-
-      if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) {
-        return currentTodos;
-      }
-
+      if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return currentTodos;
       const nextTodos = [...currentTodos];
       const [movedTodo] = nextTodos.splice(sourceIndex, 1);
-      const insertIndex = targetIndex;
-      nextTodos.splice(insertIndex, 0, movedTodo);
-
+      nextTodos.splice(targetIndex, 0, movedTodo);
       return nextTodos;
     });
   }, []);
 
-  useEffect(() => {
-    saveTodos(todos);
-  }, [todos]);
-
-  useEffect(() => {
-    saveActiveTodoId(activeTodoId);
-  }, [activeTodoId]);
+  useEffect(() => { saveTodos(todos); }, [todos]);
+  useEffect(() => { saveActiveTodoId(activeTodoId); }, [activeTodoId]);
 
   return {
-    todos,
-    setTodos,
-    draftTodo,
-    setDraftTodo,
-    activeTodoId,
-    stopAllTodos,
-    addTodo,
-    toggleTodo,
-    updateTodoTitle,
-    tagTodo,
-    startTodo,
-    deleteTodo,
-    reorderTodo,
+    todos, setTodos, draftTodo, setDraftTodo, activeTodoId, stopAllTodos,
+    insertItem, addTodo, toggleTodo, updateTodoTitle, tagTodo, startTodo, deleteTodo, reorderTodo,
   };
 }

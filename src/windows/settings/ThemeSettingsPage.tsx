@@ -3,6 +3,7 @@ import { BuiltinThemesSection } from "./sections/BuiltinThemesSection";
 import { ColorSettingsSection } from "./sections/ColorSettingsSection";
 import { StickyIslandPreview } from "./StickyIslandPreview";
 import { GlassSettingsSection } from "./sections/GlassSettingsSection";
+import { IdleDimSettingsSection } from "./sections/IdleDimSettingsSection";
 import { CornerSettingsRows } from "./sections/LayoutSettingsSection";
 import { PresetSettingsSection } from "./sections/PresetSettingsSection";
 import { StyleSettingsSection } from "./sections/StyleSettingsSection";
@@ -71,6 +72,10 @@ function GlassSection({ settings, onSettingsChange }: ThemeSectionProps) {
   return <GlassSettingsSection settings={settings} onSettingsChange={onSettingsChange} />;
 }
 
+function IdleDimSection({ settings, onSettingsChange }: ThemeSectionProps) {
+  return <IdleDimSettingsSection settings={settings} onSettingsChange={onSettingsChange} />;
+}
+
 function PresetsSection({ presets }: ThemeSectionProps) {
   return <PresetSettingsSection {...presets} />;
 }
@@ -82,6 +87,7 @@ sections.add({ id: "theme.builtin", category: "theme", order: 20, component: Bui
 sections.add({ id: "theme.colors", category: "theme", order: 30, component: ColorsSection });
 sections.add({ id: "theme.presets", category: "theme", order: 50, component: PresetsSection });
 sections.add({ id: "themeStyle.style", category: "themeStyle", order: 10, component: StyleSection });
+sections.add({ id: "themeStyle.idleDim", category: "themeStyle", order: 15, component: IdleDimSection });
 sections.add({ id: "themeStyle.glass", category: "themeStyle", order: 20, component: GlassSection });
 
 export function ThemeSettingsPage({

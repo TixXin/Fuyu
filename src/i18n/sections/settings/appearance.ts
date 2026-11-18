@@ -8,6 +8,13 @@ export type SettingsAppearanceText = {
   liquidGlass: string;
   glassStrength: string;
   styleTitle: string;
+  idleDim: {
+    title: string;
+    enable: string;
+    enableHint: string;
+    seconds: string;
+    opacity: string;
+  };
   glass: {
     title: string;
     refractionTitle: string;
@@ -68,6 +75,13 @@ export const zhCN: SettingsAppearanceText = {
   liquidGlass: "液态玻璃",
   glassStrength: "玻璃强度",
   styleTitle: "质感与形状",
+  idleDim: {
+    title: "闲置变淡",
+    enable: "闲置时自动变淡",
+    enableHint: "收起状态下长时间无操作时自动降低整岛不透明度，变淡期间鼠标点击穿透到下方窗口；光标靠近或有新提醒时立即恢复。",
+    seconds: "闲置多久后变淡",
+    opacity: "变淡后不透明度",
+  },
   glass: {
     title: "液态玻璃",
     refractionTitle: "背景折射与色彩",
@@ -128,6 +142,13 @@ export const en: SettingsAppearanceText = {
   liquidGlass: "Liquid glass",
   glassStrength: "Glass strength",
   styleTitle: "Look and shape",
+  idleDim: {
+    title: "Idle dimming",
+    enable: "Dim when idle",
+    enableHint: "Dims the collapsed island after a while without activity and lets mouse clicks pass through to windows underneath; restores at once when the pointer comes near or an alert arrives.",
+    seconds: "Idle time before dimming",
+    opacity: "Dimmed opacity",
+  },
   glass: {
     title: "Liquid glass",
     refractionTitle: "Refraction and colours",

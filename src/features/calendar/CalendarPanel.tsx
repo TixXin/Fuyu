@@ -1,20 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { ListTodo, RefreshCcw, Settings, Video } from "lucide-react";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
-import { openMeetingLink, type CalendarEvent, type CalendarSnapshot } from "./api";
+import { getLocalDateString } from "../../utils/date";
+import type { CalendarEvent, CalendarSnapshot } from "./api";
 import { CalendarEmpty } from "./CalendarEmpty";
 import { CalendarMonth } from "./CalendarMonth";
 import { CalendarTodoInput } from "./CalendarTodoInput";
-import { SCHEDULED_TODO_UID, scheduledTodoEvents } from "./todoEvents";
-import { getLocalDateString } from "../../utils/date";
+import { prepareCalendarEvents } from "./calendarPrefs";
+import { joinCalendarMeeting } from "./joinMeeting";
 import { chineseDay } from "./lunar.ts";
-import { eventsOn, isRead, monthStart, namesTheDay, nextDay, nextSpecialDay, startOfDay } from "./monthView.ts";
+import { agendaDayStarts, eventsOn, isRead, monthStart, namesTheDay, nextDay, nextSpecialDay, startOfDay } from "./monthView.ts";
+import { SCHEDULED_TODO_UID, scheduledTodoEvents } from "./todoEvents";
 import { clockTime } from "./upcoming";
+import { useCalendarPrefs } from "./useCalendarPrefs";
 import "./CalendarPanel.css";
-
-function join(link: string) {
-  void openMeetingLink(link).catch((error: unknown) => console.error("Failed to open the meeting link", error));
-}
 
 export function CalendarPanel({
   snapshot,
@@ -33,17 +32,22 @@ export function CalendarPanel({
   const text = t.calendar;
   const errorText = useErrorText();
   const lunar = useLocale().locale === "zh-CN";
+  const [prefs, setPrefs] = useCalendarPrefs();
   const today = startOfDay(now);
   const [picked, setPicked] = useState<number | null>(null);
   const [month, setMonth] = useState<number | null>(null);
+  const [unfoldedDays, setUnfoldedDays] = useState<ReadonlySet<number>>(() => new Set());
   const selected = picked ?? today;
   const shownMonth = month ?? monthStart(selected);
   const todoList = t.island.todoList;
   const scheduled = todos?.scheduled;
-  const events = useMemo(
-    () => (scheduled?.length ? [...snapshot.events, ...scheduledTodoEvents(scheduled, todoList)].sort((a, b) => a.startMs - b.startMs) : snapshot.events),
-    [scheduled, snapshot.events, todoList],
-  );
+  const events = useMemo(() => {
+    const merged = scheduled?.length
+      ? [...snapshot.events, ...scheduledTodoEvents(scheduled, todoList, prefs.includeTimedTodos)].sort((a, b) => a.startMs - b.startMs)
+      : snapshot.events;
+    return prepareCalendarEvents(merged, prefs);
+  }, [prefs, scheduled, snapshot.events, todoList]);
+
   useEffect(() => {
     onRefresh();
   }, [onRefresh]);
@@ -60,6 +64,14 @@ export function CalendarPanel({
     setPicked(day === today ? null : day);
     setMonth(null);
   };
+  const toggleDayFold = (day: number) => {
+    setUnfoldedDays((current) => {
+      const next = new Set(current);
+      if (next.has(day)) next.delete(day);
+      else next.add(day);
+      return next;
+    });
+  };
   const subtitle = (day: number) => {
     if (!lunar) return "";
     const chinese = chineseDay(new Date(day));
@@ -68,9 +80,15 @@ export function CalendarPanel({
     return [chinese.lunar, named, coming ? text.daysUntil(coming.name, coming.days) : ""].filter(Boolean).join(" · ");
   };
   const tomorrow = nextDay(today);
-  const days = selected === today
-    ? [{ day: today, label: `${text.today} · ${text.dayTitle(new Date(today))}` }, { day: tomorrow, label: `${text.tomorrow} · ${text.dayTitle(new Date(tomorrow))}` }]
-    : [{ day: selected, label: text.dayTitle(new Date(selected)) }];
+  const days = agendaDayStarts(today, selected, prefs.agendaRange).map((day) => ({
+    day,
+    label: day === today
+      ? `${text.today} · ${text.dayTitle(new Date(day))}`
+      : day === tomorrow
+        ? `${text.tomorrow} · ${text.dayTitle(new Date(tomorrow))}`
+        : text.dayTitle(new Date(day)),
+  }));
+  const sevenDays = prefs.agendaRange === "sevenDays";
 
   const row = (event: CalendarEvent) => {
     const past = event.endMs <= now;
@@ -85,7 +103,12 @@ export function CalendarPanel({
           <span className="calendar-event__place">{[event.location, event.calendar].filter(Boolean).join(" · ")}</span>
         </span>
         {event.meetingLink && !past && (
-          <button className="calendar-event__join" type="button" aria-label={text.joinLabel(event.title || text.untitled)} onClick={() => join(event.meetingLink!)}>
+          <button
+            className="calendar-event__join"
+            type="button"
+            aria-label={text.joinLabel(event.title || text.untitled)}
+            onClick={() => joinCalendarMeeting(event.meetingLink!, prefs.pauseMediaOnJoin)}
+          >
             <Video size={13} strokeWidth={2.4} aria-hidden="true" />
             {text.join}
           </button>
@@ -104,6 +127,15 @@ export function CalendarPanel({
           >
             {snapshot.problems.length > 0 ? text.problems(snapshot.problems.length) : snapshot.fetchedAt ? text.updatedAt(clockTime(snapshot.fetchedAt)) : ""}
           </span>
+          <button
+            className={`calendar-panel__range${sevenDays ? " calendar-panel__range--active" : ""}`}
+            type="button"
+            aria-pressed={sevenDays}
+            aria-label={text.toggleRangeLabel(sevenDays)}
+            onClick={() => setPrefs({ ...prefs, agendaRange: sevenDays ? "twoDays" : "sevenDays" })}
+          >
+            {sevenDays ? text.rangeSevenDays : text.rangeTwoDays}
+          </button>
           <button className="calendar-panel__icon" type="button" aria-label={text.refresh} onClick={onRefresh}>
             <RefreshCcw size={14} strokeWidth={2.2} aria-hidden="true" />
           </button>
@@ -114,14 +146,42 @@ export function CalendarPanel({
         <div className="calendar-panel__days">
           {days.map(({ day, label }) => {
             const dayEvents = eventsOn(events, day).filter((event) => !namesTheDay(event));
+            const allDayEvents = prefs.foldAllDay ? dayEvents.filter((event) => event.allDay) : [];
+            const timedEvents = prefs.foldAllDay ? dayEvents.filter((event) => !event.allDay) : [];
+            const canFold = prefs.foldAllDay && allDayEvents.length > 1;
+            const expanded = unfoldedDays.has(day);
             const read = snapshot.fromMs === 0 || isRead(snapshot, day);
             const sub = subtitle(day);
+            const showTodoInput = Boolean(todos) && day >= today && (!sevenDays || day === selected);
             return (
               <div key={day} className="calendar-day">
                 <h3 className="calendar-day__label">{label}</h3>
                 {sub && <p className="calendar-day__lunar">{sub}</p>}
-                {dayEvents.length > 0 ? <ul className="calendar-day__events">{dayEvents.map(row)}</ul> : <p className="calendar-day__empty">{read ? text.nothing : text.notRead}</p>}
-                {todos && day >= today && <CalendarTodoInput label={label} onAdd={(title) => todos.onAdd(title, getLocalDateString(new Date(day)))} />}
+                {dayEvents.length > 0 ? (
+                  <ul className="calendar-day__events">
+                    {canFold ? (
+                      <>
+                        {(expanded ? allDayEvents : [allDayEvents[0]]).map(row)}
+                        <li className="calendar-day__fold-item">
+                          <button
+                            className="calendar-day__fold"
+                            type="button"
+                            aria-expanded={expanded}
+                            onClick={() => toggleDayFold(day)}
+                          >
+                            {expanded ? text.foldAllDay : text.moreAllDay(allDayEvents.length - 1)}
+                          </button>
+                        </li>
+                        {timedEvents.map(row)}
+                      </>
+                    ) : (
+                      dayEvents.map(row)
+                    )}
+                  </ul>
+                ) : (
+                  <p className="calendar-day__empty">{read ? text.nothing : text.notRead}</p>
+                )}
+                {showTodoInput && <CalendarTodoInput label={label} onAdd={(title) => todos!.onAdd(title, getLocalDateString(new Date(day)))} />}
               </div>
             );
           })}
@@ -132,6 +192,8 @@ export function CalendarPanel({
         today={today}
         selected={selected}
         events={events}
+        showWeekNumbers={prefs.showWeekNumbers}
+        weekStartsOn={prefs.weekStartsOn}
         onSelect={select}
         onMonth={(delta) => setMonth(monthStart(shownMonth, delta))}
       />

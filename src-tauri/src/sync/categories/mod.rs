@@ -1,3 +1,4 @@
+pub(crate) mod clip_favorites;
 pub(crate) mod links;
 pub(crate) mod settings;
 pub(crate) mod snippets;

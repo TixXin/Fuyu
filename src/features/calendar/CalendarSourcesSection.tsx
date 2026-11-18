@@ -5,9 +5,11 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
-import { addCalendarSource, listCalendarSources, removeCalendarSource, type CalendarSource } from "./api";
-import { CALENDAR_PRESETS, guessKind, needsServer, presetOf, type CalendarService } from "./presets";
+import { useFlash } from "../../components/settings/useFlash";
+import { addCalendarSource, getCalendarEvents, listCalendarSources, removeCalendarSource, type CalendarSource } from "./api";
 import { addChinaHolidays, hasChinaHolidays } from "./holidays";
+import { CALENDAR_PRESETS, guessKind, needsServer, presetOf, type CalendarService } from "./presets";
+import { notifyCalendarRefresh } from "./storage";
 import "./CalendarSourcesSection.css";
 
 const EMPTY_FORM = { name: "", address: "", username: "", password: "" };
@@ -19,6 +21,8 @@ export function CalendarSourcesSection() {
   const [service, setService] = useState<CalendarService>("feishu");
   const [form, setForm] = useState(EMPTY_FORM);
   const [adding, setAdding] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshed, flashRefreshed] = useFlash<boolean>();
   const [state, setState] = useState<{ busy: boolean; error: string }>({ busy: false, error: "" });
 
   const reload = useCallback(async () => {
@@ -32,6 +36,20 @@ export function CalendarSourcesSection() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  const refreshSources = async () => {
+    setRefreshing(true);
+    try {
+      await getCalendarEvents(true);
+      await reload();
+      notifyCalendarRefresh();
+      flashRefreshed(true);
+    } catch (error) {
+      console.error("Failed to refresh calendars", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const preset = presetOf(service);
   const kind = service === "other" ? guessKind(form.address) : preset.kind;
@@ -93,13 +111,25 @@ export function CalendarSourcesSection() {
       <SettingsGroup
         title={text.sources}
         action={
-          <SettingsLinkButton disabled={holidaysAdded || state.busy} onClick={() => void run(() => addChinaHolidays(text.holidaysName))}>
-            {holidaysAdded ? text.holidaysAdded : text.addHolidays}
-          </SettingsLinkButton>
+          sources.length > 0 ? (
+            <span className="calendar-source__header-actions">
+              <SettingsLinkButton disabled={state.busy || refreshing} onClick={() => void refreshSources()}>
+                {refreshed ? text.refreshed : refreshing ? text.refreshing : text.refreshNow}
+              </SettingsLinkButton>
+              <SettingsLinkButton disabled={holidaysAdded || state.busy} onClick={() => void run(() => addChinaHolidays(text.holidaysName))}>
+                {holidaysAdded ? text.holidaysAdded : text.addHolidays}
+              </SettingsLinkButton>
+            </span>
+          ) : (
+            <SettingsLinkButton disabled={holidaysAdded || state.busy} onClick={() => void run(() => addChinaHolidays(text.holidaysName))}>
+              {holidaysAdded ? text.holidaysAdded : text.addHolidays}
+            </SettingsLinkButton>
+          )
         }
       >
         {sources.map((source) => (
-          <SettingsRow searchable={false}
+          <SettingsRow
+            searchable={false}
             key={source.id}
             title={source.name}
             description={source.kind === "ics" ? text.icsFrom(source.host) : `${source.username} · ${source.host}`}

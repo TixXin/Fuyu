@@ -97,6 +97,25 @@
       "page": "generalSync",
       "zh-CN": {
         "group": "同步方式",
+        "title": "同步通道",
+        "options": [
+          "同步文件夹",
+          "WebDAV"
+        ]
+      },
+      "en": {
+        "group": "Sync method",
+        "title": "Transport",
+        "options": [
+          "Sync folder",
+          "WebDAV"
+        ]
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步方式",
         "title": "同步文件夹",
         "description": "未选择（首次使用请手动指定一个空目录或已有的 fuyu-sync 上级目录）"
       },
@@ -169,6 +188,19 @@
         "group": "What to sync",
         "title": "Saved themes",
         "description": "Style presets with monitor and size fields stripped per machine."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步内容",
+        "title": "剪贴板收藏（仅文字）",
+        "description": "默认关闭：仅按正文哈希去重合并已收藏的纯文本与备注；打码、密钥特征、隐私排除格式及图片均留在本机。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "Clipboard favorites (text only)",
+        "description": "Off by default: deduplicates favorited text entries by content hash; masked, secret, private-format and image entries stay local."
       }
     },
     {
@@ -527,11 +559,26 @@
       "page": "themeStyle",
       "zh-CN": {
         "group": "质感与形状",
-        "title": "不透明度"
+        "title": "不透明度",
+        "description": "只调整岛底色的浓淡，文字和图标保持不透明。"
       },
       "en": {
         "group": "Look and shape",
-        "title": "Opacity"
+        "title": "Opacity",
+        "description": "Adjusts only the island's background fill while keeping text and icons opaque."
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "质感与形状",
+        "title": "整体不透明度",
+        "description": "连同文字、图标和展开面板一起调整整个岛的不透明度。"
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Island opacity",
+        "description": "Dims the entire island, including text, icons and the open panel."
       }
     },
     {
@@ -573,6 +620,41 @@
       "en": {
         "group": "Look and shape",
         "title": "Docked corner radius"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "闲置变淡",
+        "title": "闲置时自动变淡",
+        "description": "收起状态下长时间无操作时自动降低整岛不透明度，变淡期间鼠标点击穿透到下方窗口；光标靠近或有新提醒时立即恢复。"
+      },
+      "en": {
+        "group": "Idle dimming",
+        "title": "Dim when idle",
+        "description": "Dims the collapsed island after a while without activity and lets mouse clicks pass through to windows underneath; restores at once when the pointer comes near or an alert arrives."
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "闲置变淡",
+        "title": "闲置多久后变淡"
+      },
+      "en": {
+        "group": "Idle dimming",
+        "title": "Idle time before dimming"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "闲置变淡",
+        "title": "变淡后不透明度"
+      },
+      "en": {
+        "group": "Idle dimming",
+        "title": "Dimmed opacity"
       }
     },
     {
@@ -1572,56 +1654,179 @@
     {
       "page": "todos",
       "zh-CN": {
-        "group": "任务",
+        "group": "小岛显示与排序",
         "title": "空闲时显示剩余待办数"
       },
       "en": {
-        "group": "Tasks",
+        "group": "Island display & sorting",
         "title": "Show todo count when idle"
       }
     },
     {
       "page": "todos",
       "zh-CN": {
-        "group": "任务",
-        "title": "自动将未完成任务写入下一天"
+        "group": "小岛显示与排序",
+        "title": "显示进行中已用时长",
+        "description": "在待办列表和收起的小岛上显示已开始时长，例如 18m。"
       },
       "en": {
-        "group": "Tasks",
-        "title": "Carry unfinished tasks to next day"
+        "group": "Island display & sorting",
+        "title": "Show elapsed time while in progress",
+        "description": "Displays how long an active task has been running on its row and the collapsed bar."
       }
     },
     {
       "page": "todos",
       "zh-CN": {
-        "group": "任务",
-        "title": "允许拖动调整任务顺序"
-      },
-      "en": {
-        "group": "Tasks",
-        "title": "Drag to reorder tasks"
-      }
-    },
-    {
-      "page": "todos",
-      "zh-CN": {
-        "group": "任务",
+        "group": "小岛显示与排序",
         "title": "多任务流动"
       },
       "en": {
-        "group": "Tasks",
+        "group": "Island display & sorting",
         "title": "Rotate through pending tasks"
       }
     },
     {
       "page": "todos",
       "zh-CN": {
-        "group": "任务",
+        "group": "小岛显示与排序",
         "title": "每个任务停留时间（秒）"
       },
       "en": {
-        "group": "Tasks",
+        "group": "Island display & sorting",
         "title": "Time per task (seconds)"
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "小岛显示与排序",
+        "title": "列表排序方式"
+      },
+      "en": {
+        "group": "Island display & sorting",
+        "title": "Task sort order"
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "小岛显示与排序",
+        "title": "允许拖动调整任务顺序"
+      },
+      "en": {
+        "group": "Island display & sorting",
+        "title": "Drag to reorder tasks"
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "快速录入与轻语法",
+        "title": "行内快捷语法识别",
+        "description": "回车添加时自动识别并剥离 #项目、!1–!3（或 p1–p3）优先级与 @明天 / @下周一 / @MM-DD 日期。"
+      },
+      "en": {
+        "group": "Quick entry & inline syntax",
+        "title": "Inline quick syntax",
+        "description": "Extracts and strips #project, !1–!3 (or p1–p3) priority and @tomorrow or @MM-DD dates on Enter."
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "快速录入与轻语法",
+        "title": "新建待办插入位置",
+        "options": [
+          "列表底部",
+          "列表顶部"
+        ]
+      },
+      "en": {
+        "group": "Quick entry & inline syntax",
+        "title": "Insert new tasks at",
+        "options": [
+          "Bottom",
+          "Top"
+        ]
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "反馈与跨天归档",
+        "title": "勾选完成时播放轻音效"
+      },
+      "en": {
+        "group": "Feedback & daily rollover",
+        "title": "Play subtle sound on completion"
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "反馈与跨天归档",
+        "title": "新一天开始时间",
+        "description": "到这个时间才把前一天归档并开启新清单，避免熬夜过零点提前翻篇。"
+      },
+      "en": {
+        "group": "Feedback & daily rollover",
+        "title": "New day starts at",
+        "description": "Waits until this hour before archiving yesterday's list, so late-night work stays on today."
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "反馈与跨天归档",
+        "title": "自动将未完成任务写入下一天"
+      },
+      "en": {
+        "group": "Feedback & daily rollover",
+        "title": "Carry unfinished tasks to next day"
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "反馈与跨天归档",
+        "title": "已完成任务显示方式"
+      },
+      "en": {
+        "group": "Feedback & daily rollover",
+        "title": "Completed tasks"
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "反馈与跨天归档",
+        "title": "Markdown 导出附带信息",
+        "options": [
+          "优先级标记",
+          "已用时长"
+        ]
+      },
+      "en": {
+        "group": "Feedback & daily rollover",
+        "title": "Include in Markdown export",
+        "options": [
+          "Priority",
+          "Elapsed time"
+        ]
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "反馈与跨天归档",
+        "title": "应用内归档保留时长",
+        "description": "只裁剪应用内归档列表，不会删除已保存到文件夹的 Markdown 文件。"
+      },
+      "en": {
+        "group": "Feedback & daily rollover",
+        "title": "Keep in-app archives for",
+        "description": "Trims older entries in the app's archive list without deleting saved Markdown files."
       }
     },
     {
@@ -1638,27 +1843,223 @@
     {
       "page": "calendar",
       "zh-CN": {
-        "group": "小岛显示",
+        "group": "小岛倒计时显示",
         "title": "会前倒计时",
-        "description": "会议开始前这么久，收起的小岛显示「标题 · 10 分钟后」，有会议链接时旁边有「加入」按钮。开始后再留 5 分钟。今天的待办以时间开头（例如「15:00 周会」「9:30-10:00 站会」）也会这样倒计时，不用添加日历。"
+        "description": "会议开始前这么久，收起的小岛显示会前倒计时，有会议链接时旁边带「加入」按钮。"
       },
       "en": {
-        "group": "On the island",
+        "group": "Collapsed countdown",
         "title": "Countdown before a meeting",
-        "description": "This long before a meeting starts, the collapsed island shows \"Title · in 10 min\", with a Join button when it has a meeting link. It stays for 5 minutes after the start. Today's todos that start with a time (\"15:00 Weekly sync\", \"9:30-10:00 Standup\") count down the same way, with no calendar added."
+        "description": "This long before a meeting starts, the collapsed island counts down, with a Join button when it has a meeting link."
       }
     },
     {
       "page": "calendar",
       "zh-CN": {
-        "group": "小岛显示",
-        "title": "显示会议标题",
-        "description": "关掉后只显示「会议 · 10 分钟后」，共享屏幕时不会露出会议内容。"
+        "group": "小岛倒计时显示",
+        "title": "倒计时范围",
+        "description": "只在关注视频会议时，可以把没有会议链接的普通日程排除在收起条倒计时外。"
       },
       "en": {
-        "group": "On the island",
+        "group": "Collapsed countdown",
+        "title": "Countdown scope",
+        "description": "Count down every timed event, or only events that include a video meeting link."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "小岛倒计时显示",
+        "title": "收起条显示格式",
+        "description": "选择收起条展示会议时间与标题的详略方式。"
+      },
+      "en": {
+        "group": "Collapsed countdown",
+        "title": "Collapsed bar format",
+        "description": "Choose how the start time, title and remaining minutes appear on the bar."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "小岛倒计时显示",
+        "title": "显示会议标题",
+        "description": "关掉后收起条与横幅提醒只写「会议」，共享屏幕时不会露出会议内容。"
+      },
+      "en": {
+        "group": "Collapsed countdown",
         "title": "Show the meeting's title",
-        "description": "Off shows only \"Meeting · in 10 min\", so a shared screen does not reveal what the meeting is about."
+        "description": "Off shows only \"Meeting\" on the bar and banner, so a shared screen does not reveal what the meeting is about."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "小岛倒计时显示",
+        "title": "开始后保留时长",
+        "description": "会议开始后收起条继续保留的时长；选直至会议结束时会动态显示剩余分钟数。"
+      },
+      "en": {
+        "group": "Collapsed countdown",
+        "title": "Keep after start",
+        "description": "How long the countdown stays once the meeting starts, or keep until the meeting ends."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "会前强提醒与入会动作",
+        "title": "会前弹出岛屿强提醒横幅",
+        "description": "临近开会时在岛屿弹出一次提醒横幅，有会议链接时附带「立即加入」按钮。"
+      },
+      "en": {
+        "group": "Strong reminder & joining",
+        "title": "Pop up an island reminder banner",
+        "description": "Show a one-time banner on the island right before a meeting, with a Join now button when a link is available."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "会前强提醒与入会动作",
+        "title": "强提醒提前量"
+      },
+      "en": {
+        "group": "Strong reminder & joining",
+        "title": "Banner lead time"
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "会前强提醒与入会动作",
+        "title": "点击加入会议时自动暂停媒体",
+        "description": "点「加入」打开会议链接前，若当前正在播放音乐或视频则自动暂停。"
+      },
+      "en": {
+        "group": "Strong reminder & joining",
+        "title": "Pause media when joining",
+        "description": "Pause active music or video playback automatically right before opening a meeting link."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "会前强提醒与入会动作",
+        "title": "自定义视频会议域名",
+        "description": "填写企业私有视频会议域名后，日程地点里的 https://<域名>/… 链接也会识别为会议链接。"
+      },
+      "en": {
+        "group": "Strong reminder & joining",
+        "title": "Custom meeting domain",
+        "description": "Recognize https://<domain>/… links in event locations for self-hosted video conferencing."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "日历面板与过滤规则",
+        "title": "默认日程视图",
+        "description": "打开日历页时默认展示的议程跨度，面板右上角也可以随时切换。",
+        "options": [
+          "近两日",
+          "未来 7 天"
+        ]
+      },
+      "en": {
+        "group": "Calendar panel & filters",
+        "title": "Default agenda view",
+        "description": "How many days open by default in the calendar panel; also switchable in the panel header.",
+        "options": [
+          "2 days",
+          "7 days"
+        ]
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "日历面板与过滤规则",
+        "title": "隐藏已拒绝的日程",
+        "description": "不显示你已在日历邀请中选择「拒绝」的会议。"
+      },
+      "en": {
+        "group": "Calendar panel & filters",
+        "title": "Hide declined events",
+        "description": "Hide invitations you have declined."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "日历面板与过滤规则",
+        "title": "空闲日程不参与倒计时",
+        "description": "标为「空闲 / 透明」的提醒日程仍显示在面板里，但不触发收起条倒计时和强提醒。"
+      },
+      "en": {
+        "group": "Calendar panel & filters",
+        "title": "Skip free events in countdown",
+        "description": "Keep free / transparent events in the list without triggering countdowns or banners."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "日历面板与过滤规则",
+        "title": "在列表中折叠全天日程",
+        "description": "同一天有多条全天日程时默认折叠其余项，点击可展开。"
+      },
+      "en": {
+        "group": "Calendar panel & filters",
+        "title": "Fold extra all-day events",
+        "description": "Collapse additional all-day events when a day has more than one."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "日历面板与过滤规则",
+        "title": "月历显示周数",
+        "description": "在月历每行左侧显示 ISO 周数。"
+      },
+      "en": {
+        "group": "Calendar panel & filters",
+        "title": "Show week numbers",
+        "description": "Show ISO week numbers alongside the monthly grid."
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "日历面板与过滤规则",
+        "title": "每周起始日",
+        "options": [
+          "默认",
+          "周一",
+          "周日"
+        ]
+      },
+      "en": {
+        "group": "Calendar panel & filters",
+        "title": "Week starts on",
+        "options": [
+          "Auto",
+          "Mon",
+          "Sun"
+        ]
+      }
+    },
+    {
+      "page": "calendar",
+      "zh-CN": {
+        "group": "日历面板与过滤规则",
+        "title": "以时间开头的待办并入日程",
+        "description": "今天未完成的待办若以时间开头（如「15:00 周会」「9:30-10:00 站会」），自动排入日程并参与会前倒计时。"
+      },
+      "en": {
+        "group": "Calendar panel & filters",
+        "title": "Include timed todos in schedule",
+        "description": "Treat incomplete todos starting with a time (\"15:00 Weekly sync\", \"9:30-10:00 Standup\") as today's events."
       }
     },
     {
@@ -2895,6 +3296,96 @@
         "group": "WeChat reminders",
         "title": "Show the contact and message",
         "description": "Sets one accessibility byte inside the running WeChat from 0 to 1, so WeChat exposes its interface as it would to a screen reader: reminder cards then show the contact and message and open that chat. Memory only; done again after WeChat restarts and undone when turned off. WeChat does not support this, it costs WeChat some CPU and memory, and Tencent may treat it as unusual behaviour. Nothing can be read while WeChat is closed to the tray; minimized works."
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收 Telegram 消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive Telegram messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "看过后从岛上去掉",
+        "description": "Telegram 被切到前台、或在岛上点开 Telegram 后，去掉在那之前到的消息；之后到的留着。"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Remove once seen",
+        "description": "When Telegram comes to the front or you open it from the island, messages that arrived before then are removed; later ones stay."
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收飞书消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive Feishu messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收 Discord 消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive Discord messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收 WhatsApp 消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive WhatsApp messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收 TIM 消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive TIM messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收钉钉消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive DingTalk messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收企业微信消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive WeCom messages"
       }
     },
     {

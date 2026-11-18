@@ -220,6 +220,7 @@ mod tests {
             items: vec![item],
             snippets: Vec::new(),
             snippet_tombstones: Vec::new(),
+            favorite_tombstones: Vec::new(),
         }
     }
 

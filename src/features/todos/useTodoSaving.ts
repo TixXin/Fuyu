@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { saveTodoMarkdown } from "./api";
-import { formatTodoDocumentAsMarkdown, getTodoSignature } from "./markdown";
-import { saveLastSavedSignature } from "./storage";
-import type { SaveState, TodoItem } from "./types";
+import { formatTodoDocumentAsMarkdown, getTodoSignature } from "./markdown.ts";
+import { saveLastSavedSignature } from "./storage.ts";
+import type { SaveState, TodoItem } from "./types.ts";
 import { useTodoAutoSave } from "./useTodoAutoSave";
 import { useTodoSaveDirectory } from "./useTodoSaveDirectory";
 
@@ -18,6 +18,8 @@ type TodoSavingOptions = {
   currentTodoDate: string;
   todos: TodoItem[];
   dailyNote: string;
+  markdownPriority: boolean;
+  markdownElapsed: boolean;
   upsertArchive: UpsertArchive;
   onMissingSaveDirectory: () => void;
 };
@@ -26,6 +28,8 @@ export function useTodoSaving({
   currentTodoDate,
   todos,
   dailyNote,
+  markdownPriority,
+  markdownElapsed,
   upsertArchive,
   onMissingSaveDirectory,
 }: TodoSavingOptions) {
@@ -35,34 +39,33 @@ export function useTodoSaving({
     setSaveState((current) => (current === "needs-path" ? "idle" : current));
   }, []);
   const saveDirectory = useTodoSaveDirectory(clearNeedsPath);
+  const markdownOptions = useMemo(
+    () => ({ markdownPriority, markdownElapsed }),
+    [markdownElapsed, markdownPriority],
+  );
 
   const saveTodosToDisk = useCallback(
     async (date: string, todoList: TodoItem[], nextDailyNote: string) => {
       const directory = saveDirectory.trim();
-
-      if (!directory) {
-        throw new Error("Missing todo save path.");
-      }
+      if (!directory) throw new Error("Missing todo save path.");
 
       const result = await saveTodoMarkdown(
         directory,
         date,
-        formatTodoDocumentAsMarkdown(todoList, nextDailyNote),
+        formatTodoDocumentAsMarkdown(todoList, nextDailyNote, markdownOptions),
       );
 
       upsertArchive(date, todoList, nextDailyNote, true, result.filePath);
-      saveLastSavedSignature(getTodoSignature(date, todoList, nextDailyNote));
-
+      saveLastSavedSignature(getTodoSignature(date, todoList, nextDailyNote, markdownOptions));
       return result;
     },
-    [saveDirectory, upsertArchive],
+    [markdownOptions, saveDirectory, upsertArchive],
   );
 
   const showTodoSavedState = useCallback(() => {
     if (saveStateResetTimer.current !== null) {
       window.clearTimeout(saveStateResetTimer.current);
     }
-
     setSaveState("saved");
     saveStateResetTimer.current = window.setTimeout(() => {
       setSaveState("idle");
@@ -76,9 +79,7 @@ export function useTodoSaving({
       onMissingSaveDirectory();
       return;
     }
-
     setSaveState("saving");
-
     try {
       await saveTodosToDisk(currentTodoDate, todos, dailyNote);
       showTodoSavedState();
@@ -86,21 +87,14 @@ export function useTodoSaving({
       console.error("Failed to save todo markdown", error);
       setSaveState("error");
     }
-  }, [
-    currentTodoDate,
-    dailyNote,
-    onMissingSaveDirectory,
-    saveDirectory,
-    saveTodosToDisk,
-    showTodoSavedState,
-    todos,
-  ]);
+  }, [currentTodoDate, dailyNote, onMissingSaveDirectory, saveDirectory, saveTodosToDisk, showTodoSavedState, todos]);
 
   useTodoAutoSave({
     currentTodoDate,
     todos,
     dailyNote,
     saveDirectory,
+    markdownOptions,
     saveTodosToDisk,
     setSaveState,
   });
@@ -114,5 +108,5 @@ export function useTodoSaving({
     [],
   );
 
-  return { saveDirectory, saveState, saveTodosToDisk, saveTodayTodos };
+  return { saveDirectory, saveState, markdownOptions, saveTodosToDisk, saveTodayTodos };
 }

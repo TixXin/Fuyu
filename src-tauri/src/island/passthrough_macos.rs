@@ -8,8 +8,12 @@ use tauri::{AppHandle, Emitter, WebviewWindow};
 
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
-    geometry::{cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect, passthrough_sleep_duration, stage_point, IslandOnScreen},
-    state::{read_window_state, IslandMode},
+    geometry::{
+        cursor_near_island, cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect,
+        passthrough_sleep_duration, should_ignore_cursor, stage_point, DimWakeTracker, IslandOnScreen,
+    },
+    state::{mutate_window_state, read_window_state, IslandMode},
+    ISLAND_DIM_WAKE_EVENT,
 };
 use super::screen;
 use crate::macos::input;
@@ -134,18 +138,34 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let mut modifier_hold = ModifierHold::default();
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
+        let mut dim_wake = DimWakeTracker::default();
 
         loop {
             if !window.is_visible().unwrap_or(true) {
+                dim_wake = DimWakeTracker::default();
                 thread::sleep(passthrough_sleep_duration(false, false));
                 continue;
             }
+            let mut state = read_window_state();
             let pointer = pointer(&window);
-            let is_inside = pointer.is_none_or(|pointer| {
-                cursor_on_island(pointer.left, pointer.top, pointer.width, pointer.height, pointer.cursor_x, pointer.cursor_y, read_window_state())
+            let raw_inside = pointer.map_or(!state.dimmed_passthrough(), |pointer| {
+                cursor_on_island(pointer.left, pointer.top, pointer.width, pointer.height, pointer.cursor_x, pointer.cursor_y, state)
             });
+            let is_near_island = raw_inside
+                || pointer.is_some_and(|pointer| {
+                    cursor_near_island(pointer.left, pointer.top, pointer.width, pointer.height, pointer.cursor_x, pointer.cursor_y, state)
+                });
+            let raw_cursor = pointer.map(|pointer| (pointer.cursor_x, pointer.cursor_y));
+            if dim_wake.poll(state.dimmed_passthrough(), is_near_island, raw_cursor) {
+                state = mutate_window_state(|current| {
+                    current.is_dimmed = false;
+                    *current
+                });
+                let _ = window.emit(ISLAND_DIM_WAKE_EVENT, ());
+            }
+            let is_inside = raw_inside && !state.dimmed_passthrough();
             let is_on_banner = pointer.is_some_and(on_banner);
-            let should_ignore = !is_inside && !is_on_banner;
+            let should_ignore = should_ignore_cursor(state, raw_inside, is_on_banner);
 
             if should_ignore != ignoring_cursor && window.set_ignore_cursor_events(should_ignore).is_ok() {
                 ignoring_cursor = should_ignore;
@@ -163,7 +183,6 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 modifier_hold.block();
             }
             let modifier = modifier_hold.update(input::is_only_control_key_down(), Instant::now());
-            let state = read_window_state();
             let move_armed = is_inside && modifier && !state.is_tucked;
             if move_armed != was_move_armed {
                 was_move_armed = move_armed;

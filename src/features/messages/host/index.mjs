@@ -3,9 +3,10 @@ import { createMessageSourceRegistry } from "./sources.mjs";
 
 export const name = "messages";
 
-export function apply(ctx) {
+export function apply(ctx, config = {}) {
   let provider = null;
   const registry = createMessageSourceRegistry({
+    config,
     onChange: () => {
       provider?.emit("changed", {});
     },
