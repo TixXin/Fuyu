@@ -69,7 +69,7 @@ function renderAll() {
     onToggleFavorite={(id) => { calls.push(`star:${id}`); }}
     onUpdateNote={() => true}
     onDeleteItem={(id) => { calls.push(`delete:${id}`); items = items.filter((item) => item.id !== id); renderAll(); }}
-    onClear={() => {}}
+    onClear={() => { calls.push("clear"); items = items.filter((item) => item.favorite); renderAll(); }}
   />;
   const pages = [clip, clip, <FileShelfPanel shelf={shelf(SHELF)} isDropTarget={false} revealOnDoubleClick={false} />, <FileShelfPanel shelf={shelf(SHELF)} isDropTarget={false} revealOnDoubleClick={false} />, <FileShelfPanel shelf={shelf([])} isDropTarget={false} revealOnDoubleClick={false} />];
   ["clip-dark", "clip-light", "shelf-dark", "shelf-light", "shelf-empty"].forEach((id, index) => {
@@ -85,7 +85,15 @@ function check(condition: unknown, label: string) {
 }
 const $ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const $$ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => [...root.querySelectorAll<T>(selector)];
-const click = (element: Element | null | undefined) => act(async () => { (element as HTMLElement | null)?.click(); });
+const click = async (element: Element | null | undefined) => {
+  if (!element) return;
+  await act(async () => {
+    element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+  });
+  await act(async () => {
+    (element as HTMLElement).click();
+  });
+};
 const chip = (root: ParentNode, label: string) => $$("button.island-list-chip", root).find((button) => button.textContent === label);
 const menuItem = (label: string) => $$("button.row-menu__item").find((button) => button.textContent?.includes(label));
 const row = (root: ParentNode, id: string) => $(`[data-clipboard-id="${id}"], [data-shelf-id="${id}"]`, root) ?? $$(".island-list-row", root).find((item) => item.textContent?.includes(id));
@@ -126,8 +134,26 @@ async function runChecks() {
     await click($('button[aria-haspopup="menu"]', $$(".island-list-row", clip)[0]));
     await click(menuItem("删除剪贴记录"));
     check(menuItem("再点一次删除") && !calls.includes("delete:t1"), "删除先要再点一次确认");
-    await click(menuItem("再点一次删除"));
-    check(calls.includes("delete:t1") && !row(clip, "t1"), "确认后删除");
+    await click($(".island-list-count", clip));
+    check(!$(".row-menu"), "点击菜单外部关闭菜单");
+    await click($('button[aria-haspopup="menu"]', $$(".island-list-row", clip)[0]));
+    check(menuItem("删除剪贴记录") && !menuItem("再点一次删除"), "点击菜单外部后删除确认态重置");
+    await click(menuItem("删除剪贴记录"));
+    check(menuItem("再点一次删除") && !calls.includes("delete:t1"), "再次进入单条删除确认态");
+    await click($("span", menuItem("再点一次删除")!));
+    check(calls.includes("delete:t1") && !row(clip, "t1") && !$(".row-menu"), "确认后删除并关闭菜单");
+
+    const savedBeforeClear = items;
+    await click($('header button[aria-haspopup="menu"]', clip));
+    await click(menuItem("清空剪贴板历史"));
+    check(menuItem("确认清空") && !calls.includes("clear"), "清空历史先进入二次确认态");
+    check(await until(() => Boolean(menuItem("清空剪贴板历史")), 4000), "超过 3 秒未点自动重置清空确认态");
+    await click(menuItem("清空剪贴板历史"));
+    check(menuItem("确认清空") && !calls.includes("clear"), "超时后再次点击重新进入清空确认态");
+    await click(menuItem("确认清空"));
+    check(calls.includes("clear") && $$(".island-list-row", clip).length === 1 && Boolean(row(clip, "t2")) && !$(".row-menu"), "二次确认后清空非收藏记录并关闭菜单");
+    items = savedBeforeClear;
+    await act(async () => renderAll());
 
     const color = row(clip, "c1")!;
     check($(".clipboard-swatch", color) && $(".island-list-row__meta", color)?.textContent?.startsWith("颜色"), "颜色：行首是色块，第二行标「颜色」");
