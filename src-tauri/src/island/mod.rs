@@ -3,6 +3,8 @@ pub(crate) mod bottom_edge;
 #[cfg_attr(target_os = "macos", path = "focus_macos.rs")]
 #[cfg_attr(not(any(windows, target_os = "macos")), path = "focus_unsupported.rs")]
 pub(crate) mod focus;
+#[cfg(any(windows, target_os = "macos", test))]
+mod focus_slots;
 #[cfg_attr(not(any(windows, target_os = "macos")), path = "follow_unsupported.rs")]
 mod follow;
 #[cfg(any(windows, target_os = "macos"))]

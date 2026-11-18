@@ -375,3 +375,36 @@ fn passthrough_polling_slows_down_when_hidden_or_far_from_stage() {
     assert_eq!(gaze_cursor_point((950.0, 520.0), false), (960.0, 528.0));
     assert_eq!(gaze_cursor_point((965.0, 534.0), false), (960.0, 528.0));
 }
+
+#[test]
+fn shortcut_focus_survives_hover_release_and_restores_on_collapse() {
+    use super::focus_slots::FocusSlots;
+
+    let slots = FocusSlots::new();
+    slots.note_hover(0);
+    slots.note_expanded(0);
+    assert_eq!(slots.take_hover(), None);
+    assert_eq!(slots.take_expanded(), None);
+
+    slots.note_expanded(41);
+    assert_eq!(slots.take_hover(), None);
+    assert_eq!(slots.take_hover(), None);
+    slots.note_expanded(0);
+    assert_eq!(slots.take_expanded(), Some(41));
+    assert_eq!(slots.take_expanded(), None);
+
+    slots.note_hover(52);
+    assert_eq!(slots.take_hover(), Some(52));
+    assert_eq!(slots.take_hover(), None);
+    assert_eq!(slots.take_expanded(), None);
+
+    slots.note_hover(63);
+    slots.note_expanded(0);
+    assert_eq!(slots.take_hover(), None);
+    assert_eq!(slots.take_expanded(), Some(63));
+
+    slots.note_hover(63);
+    slots.note_expanded(74);
+    assert_eq!(slots.take_hover(), None);
+    assert_eq!(slots.take_expanded(), Some(74));
+}
