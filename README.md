@@ -75,55 +75,58 @@
 
 ## 岛上有什么
 
-<p align="center">
-  <a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/todo-zh.webp" alt="展开的岛上是今天的待办，已完成的划掉收在下面" width="398" height="224"></a>
-  <a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/music-zh.webp" alt="岛上的音乐页：封面、同步歌词、进度条和播放控制" width="398" height="224"></a>
-  <a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/messages-zh.webp" alt="岛下弹出的新消息：一封邮件、一条微信和一条 QQ" width="398" height="224"></a>
-  <a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/clipboard-zh.webp" alt="岛上的剪贴板历史：命令、链接、一段文字和一张图片，各自标着来源" width="398" height="224"></a>
-  <a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/translate-zh.webp" alt="岛上的翻译页：左边原文，右边译文" width="398" height="224"></a>
-  <a href="https://fuyu.ing/zh/#agent"><img src="docs/assets/readme/agents-zh.webp" alt="岛上弹出 Claude Code 的审批请求：要运行的命令，以及拒绝和允许两个按钮" width="398" height="224"></a>
-  <br>
-  <sub>点任意一张图，到官网亲手点一点这座岛</sub>
-</p>
+<p><sub>点功能名展开或收起；点动图到官网亲手点一点这座岛</sub></p>
 
-<table>
-  <tr>
-    <td valign="top"><code>01</code></td>
-    <td><b>待办与笔记</b><br>每天的任务、当前专注的事项、每日笔记和历史归档。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>02</code></td>
-    <td><b>音乐</b><br>控制正在播放的媒体，显示音频波形和同步歌词。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>03</code></td>
-    <td><b>消息</b><br>QQ、微信、企业微信、TIM、Telegram、Discord、WhatsApp、飞书、钉钉来了新消息，岛上都会提醒，点一下打开对应应用；还有多个邮箱，邮件可以直接在岛上阅读和回复。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>04</code></td>
-    <td><b>剪贴板与文件中转</b><br>图文剪贴板历史；把文件先拖到岛上暂存，再拖去别的程序。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>05</code></td>
-    <td><b>快捷翻译</b><br>一个快捷键打开，支持多家大模型翻译服务。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>06</code></td>
-    <td><b>AI Agent</b><br>显示 Claude Code 和 Codex 会话的运行状态和用量，要你确认时直接在岛上批准，点一下切到对应窗口；离开电脑时推送到手机：Telegram、Discord、飞书机器人或 iPhone 上的 Bark，还能在聊天里接着指挥 Agent。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>07</code></td>
-    <td><b>日历</b><br>今天和明天的日程、带农历和节假日的月历，会议快开始时在岛上倒计时，可一键加入。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>08</code></td>
-    <td><b>系统提示</b><br>音量、亮度变化，摄像头和麦克风正在被哪个程序使用。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>09</code></td>
-    <td><b>插件与主题</b><br>从插件市场安装插件来扩展岛屿，敏感数据需要你单独授权；主题市场里挑现成的外观。</td>
-  </tr>
-</table>
+<details open>
+<summary><b>01 · 待办与笔记</b></summary>
+<p>每天的任务、当前专注的事项、每日笔记和历史归档。</p>
+<p><a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/todo-zh.webp" alt="展开的岛上是今天的待办，已完成的划掉收在下面" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>02 · 音乐</b></summary>
+<p>控制正在播放的媒体，显示音频波形和同步歌词。</p>
+<p><a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/music-zh.webp" alt="岛上的音乐页：封面、同步歌词、进度条和播放控制" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>03 · 消息</b></summary>
+<p>QQ、微信、企业微信、TIM、Telegram、Discord、WhatsApp、飞书、钉钉来了新消息，岛上都会提醒，点一下打开对应应用；还有多个邮箱，邮件可以直接在岛上阅读和回复。</p>
+<p><a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/messages-zh.webp" alt="岛下弹出的新消息：一封邮件、一条微信和一条 QQ" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>04 · 剪贴板与文件中转</b></summary>
+<p>图文剪贴板历史；把文件先拖到岛上暂存，再拖去别的程序。</p>
+<p><a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/clipboard-zh.webp" alt="岛上的剪贴板历史：命令、链接、一段文字和一张图片，各自标着来源" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>05 · 快捷翻译</b></summary>
+<p>一个快捷键打开，支持多家大模型翻译服务。</p>
+<p><a href="https://fuyu.ing/zh/#day"><img src="docs/assets/readme/translate-zh.webp" alt="岛上的翻译页：左边原文，右边译文" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>06 · AI Agent</b></summary>
+<p>显示 Claude Code 和 Codex 会话的运行状态和用量，要你确认时直接在岛上批准，点一下切到对应窗口；离开电脑时推送到手机：Telegram、Discord、飞书机器人或 iPhone 上的 Bark，还能在聊天里接着指挥 Agent。</p>
+<p><a href="https://fuyu.ing/zh/#agent"><img src="docs/assets/readme/agents-zh.webp" alt="岛上弹出 Claude Code 的审批请求：要运行的命令，以及拒绝和允许两个按钮" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>07 · 日历</b></summary>
+<p>今天和明天的日程、带农历和节假日的月历，会议快开始时在岛上倒计时，可一键加入。</p>
+</details>
+
+<details>
+<summary><b>08 · 系统提示</b></summary>
+<p>音量、亮度变化，摄像头和麦克风正在被哪个程序使用。</p>
+</details>
+
+<details>
+<summary><b>09 · 插件与主题</b></summary>
+<p>从插件市场安装插件来扩展岛屿，敏感数据需要你单独授权；主题市场里挑现成的外观。</p>
+</details>
 
 岛屿的外观、大小、收起方式、快捷键和每个功能都可以在设置窗口里调整，支持应用内自动更新。数据都保存在本机。
 

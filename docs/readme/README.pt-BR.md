@@ -77,55 +77,58 @@ Fuyu (浮屿, «ilhota flutuante») é uma ilha flutuante leve, sem bordas e sem
 
 ## O que tem na ilha
 
-<p align="center">
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/todo-en.webp" alt="A ilha aberta com as tarefas de hoje; as concluídas aparecem riscadas embaixo" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/music-en.webp" alt="A página de música da ilha: capa, letra sincronizada, barra de progresso e controles de reprodução" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/messages-en.webp" alt="Mensagens novas descendo da ilha: um e-mail, uma mensagem do WeChat e uma do QQ" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/clipboard-en.webp" alt="O histórico da área de transferência na ilha: um comando, um link, um texto e uma imagem, cada um com o app de onde veio" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/translate-en.webp" alt="A página de tradução da ilha: o texto original à esquerda e a tradução à direita" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="Um pedido de aprovação do Claude Code na ilha: o comando que ele quer executar e os botões Recusar e Permitir" width="398" height="224"></a>
-  <br>
-  <sub>Clique em qualquer imagem para experimentar a ilha você mesmo no site</sub>
-</p>
+<p><sub>Clique em um recurso para abri-lo ou fechá-lo; clique em uma animação para experimentar a ilha você mesmo no site</sub></p>
 
-<table>
-  <tr>
-    <td valign="top"><code>01</code></td>
-    <td><b>Tarefas e notas</b><br>As tarefas do dia, aquela em que você está focado, uma nota diária e o arquivo dos dias anteriores.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>02</code></td>
-    <td><b>Música</b><br>Controle o que está tocando, com forma de onda de áudio e letra sincronizada.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>03</code></td>
-    <td><b>Mensagens</b><br>Mensagens novas de Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu e DingTalk aparecem na ilha e abrem o app com um clique; além de várias contas de e-mail; você pode ler e responder e-mails direto na ilha.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>04</code></td>
-    <td><b>Área de transferência e bandeja de arquivos</b><br>Histórico da área de transferência com texto e imagens; solte arquivos na ilha e depois arraste-os para outro app.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>05</code></td>
-    <td><b>Tradução rápida</b><br>Abre com um atalho de teclado e aceita vários serviços de tradução baseados em LLM.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>06</code></td>
-    <td><b>Agentes de IA</b><br>O status e o uso das suas sessões do Claude Code e do Codex; aprove pedidos direto na ilha, clique para pular para a janela certa e receba alertas no Telegram, Discord, Feishu ou Bark quando estiver longe do computador, continuando a comandar o agente pelo chat.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>07</code></td>
-    <td><b>Calendário</b><br>Os compromissos de hoje e de amanhã, um calendário mensal com datas lunares e feriados, uma contagem regressiva na ilha antes de cada reunião e entrada com um clique.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>08</code></td>
-    <td><b>Avisos do sistema</b><br>Mudanças de volume e brilho, e qual app está usando a câmera ou o microfone.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>09</code></td>
-    <td><b>Plugins e temas</b><br>Amplie a ilha com plugins da loja (dados sensíveis exigem sua permissão à parte) e escolha um visual pronto na loja de temas.</td>
-  </tr>
-</table>
+<details open>
+<summary><b>01 · Tarefas e notas</b></summary>
+<p>As tarefas do dia, aquela em que você está focado, uma nota diária e o arquivo dos dias anteriores.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/todo-en.webp" alt="A ilha aberta com as tarefas de hoje; as concluídas aparecem riscadas embaixo" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>02 · Música</b></summary>
+<p>Controle o que está tocando, com forma de onda de áudio e letra sincronizada.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/music-en.webp" alt="A página de música da ilha: capa, letra sincronizada, barra de progresso e controles de reprodução" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>03 · Mensagens</b></summary>
+<p>Mensagens novas de Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu e DingTalk aparecem na ilha e abrem o app com um clique; além de várias contas de e-mail; você pode ler e responder e-mails direto na ilha.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/messages-en.webp" alt="Mensagens novas descendo da ilha: um e-mail, uma mensagem do WeChat e uma do QQ" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>04 · Área de transferência e bandeja de arquivos</b></summary>
+<p>Histórico da área de transferência com texto e imagens; solte arquivos na ilha e depois arraste-os para outro app.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/clipboard-en.webp" alt="O histórico da área de transferência na ilha: um comando, um link, um texto e uma imagem, cada um com o app de onde veio" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>05 · Tradução rápida</b></summary>
+<p>Abre com um atalho de teclado e aceita vários serviços de tradução baseados em LLM.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/translate-en.webp" alt="A página de tradução da ilha: o texto original à esquerda e a tradução à direita" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>06 · Agentes de IA</b></summary>
+<p>O status e o uso das suas sessões do Claude Code e do Codex; aprove pedidos direto na ilha, clique para pular para a janela certa e receba alertas no Telegram, Discord, Feishu ou Bark quando estiver longe do computador, continuando a comandar o agente pelo chat.</p>
+<p><a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="Um pedido de aprovação do Claude Code na ilha: o comando que ele quer executar e os botões Recusar e Permitir" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>07 · Calendário</b></summary>
+<p>Os compromissos de hoje e de amanhã, um calendário mensal com datas lunares e feriados, uma contagem regressiva na ilha antes de cada reunião e entrada com um clique.</p>
+</details>
+
+<details>
+<summary><b>08 · Avisos do sistema</b></summary>
+<p>Mudanças de volume e brilho, e qual app está usando a câmera ou o microfone.</p>
+</details>
+
+<details>
+<summary><b>09 · Plugins e temas</b></summary>
+<p>Amplie a ilha com plugins da loja (dados sensíveis exigem sua permissão à parte) e escolha um visual pronto na loja de temas.</p>
+</details>
 
 A aparência, o tamanho, o jeito de recolher, os atalhos e cada função são ajustados na janela de Configurações, e o app se atualiza sozinho. Todos os seus dados ficam no seu computador.
 
