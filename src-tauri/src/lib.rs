@@ -300,6 +300,7 @@ pub fn run() {
                 tauri::RunEvent::Exit => {
                     plugin_kernel::shutdown();
                     agent_approval::shutdown();
+                    clipboard_history::shutdown();
                     home_dir::before_exit();
                     wechat_reminders::shutdown();
                 }

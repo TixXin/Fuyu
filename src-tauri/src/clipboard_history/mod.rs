@@ -23,6 +23,7 @@ pub(crate) mod image_protocol;
 mod listener;
 #[cfg(windows)]
 mod open_trace;
+mod persist;
 pub(crate) mod pins;
 mod plugin_view;
 #[cfg_attr(target_os = "macos", path = "popup_macos.rs")]
@@ -466,6 +467,7 @@ struct ClipboardHistoryService {
     history_path: PathBuf,
     image_dir: PathBuf,
     loaded: OnceLock<bool>,
+    writer: persist::HistoryWriter,
     state: Mutex<ClipboardHistoryState>,
 }
 
@@ -490,17 +492,23 @@ pub fn set_clipboard_history_settings(
 }
 
 #[tauri::command]
-pub fn copy_clipboard_history_item(id: String) -> Result<ClipboardHistorySnapshot, String> {
-    let snapshot = service()?.copy_item(&id)?;
-    copy_notice::notify_copied(&id, false);
-    Ok(snapshot)
+pub async fn copy_clipboard_history_item(id: String) -> Result<ClipboardHistorySnapshot, String> {
+    workers::run_blocking(move || {
+        let snapshot = service()?.copy_item(&id)?;
+        copy_notice::notify_copied(&id, false);
+        Ok(snapshot)
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn copy_clipboard_history_item_as(id: String, copy_as: CopyAs) -> Result<ClipboardHistorySnapshot, String> {
-    let snapshot = service()?.copy_item_as(&id, copy_as)?;
-    copy_notice::notify_copied(&id, false);
-    Ok(snapshot)
+pub async fn copy_clipboard_history_item_as(id: String, copy_as: CopyAs) -> Result<ClipboardHistorySnapshot, String> {
+    workers::run_blocking(move || {
+        let snapshot = service()?.copy_item_as(&id, copy_as)?;
+        copy_notice::notify_copied(&id, false);
+        Ok(snapshot)
+    })
+    .await
 }
 
 #[tauri::command]
@@ -512,9 +520,12 @@ pub async fn paste_clipboard_history_item(
     copy_as: Option<CopyAs>,
 ) -> Result<(), String> {
     let options = popup::PasteOptions { plain: plain.unwrap_or(false), enter: enter.unwrap_or(false), copy_as };
-    popup::paste(&app, &id, options)?;
-    copy_notice::notify_copied(&id, true);
-    Ok(())
+    workers::run_blocking(move || {
+        popup::paste(&app, &id, options)?;
+        copy_notice::notify_copied(&id, true);
+        Ok(())
+    })
+    .await
 }
 
 #[tauri::command]
@@ -529,13 +540,16 @@ pub fn delete_clipboard_snippet(id: String) -> Result<ClipboardHistorySnapshot, 
 
 #[tauri::command]
 pub async fn paste_clipboard_snippet(app: AppHandle, id: String) -> Result<(), String> {
-    let text = service()?.snippet_text(&id)?;
-    popup::paste_text(&app, &text, false)
+    workers::run_blocking(move || {
+        let text = service()?.snippet_text(&id)?;
+        popup::paste_text(&app, &text, false)
+    })
+    .await
 }
 
 #[tauri::command]
 pub async fn paste_clipboard_sequence(app: AppHandle, ids: Vec<String>) -> Result<(), String> {
-    sequence::start(&app, ids)
+    workers::run_blocking(move || sequence::start(&app, ids)).await
 }
 
 #[tauri::command]
@@ -644,8 +658,8 @@ pub fn restore_clipboard_history_item(id: String) -> Result<ClipboardHistorySnap
 }
 
 #[tauri::command]
-pub fn clear_clipboard_history() -> Result<ClipboardHistorySnapshot, String> {
-    service()?.clear()
+pub async fn clear_clipboard_history() -> Result<ClipboardHistorySnapshot, String> {
+    workers::run_blocking(|| service()?.clear()).await
 }
 
 pub fn init(app: &AppHandle) -> Result<(), String> {
@@ -661,11 +675,13 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     fs::create_dir_all(&image_dir)
         .map_err(|error| format!("Failed to create clipboard history directory: {error}"))?;
 
+    let writer = persist::HistoryWriter::new(history_path.clone(), persist::PERSIST_DEBOUNCE);
     let service = ClipboardHistoryService {
         app: app.clone(),
         history_path,
         image_dir,
         loaded: OnceLock::new(),
+        writer,
         state: Mutex::new(ClipboardHistoryState::default()),
     };
 
@@ -681,6 +697,20 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         });
     }
     Ok(())
+}
+
+pub(super) fn flush() {
+    if let Some(svc) = CLIPBOARD_HISTORY.get() {
+        if let Err(error) = svc.writer.flush() {
+            eprintln!("failed to flush clipboard history: {error}");
+        }
+    }
+}
+
+pub(crate) fn shutdown() {
+    if let Some(svc) = CLIPBOARD_HISTORY.get() {
+        svc.writer.shutdown();
+    }
 }
 
 pub(crate) fn switched_on() -> bool {

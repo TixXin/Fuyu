@@ -128,16 +128,23 @@ pub async fn save_clipboard_history_image(request: Request<'_>) -> Result<Clipbo
     if width.checked_mul(height).and_then(|pixels| pixels.checked_mul(4)) != Some(body.len()) {
         return Err("The image pixels do not match its size.".to_string());
     }
-    let service = service()?;
-    match header("x-mode") {
-        Some("replace") => replace(service, header("x-id").ok_or_else(|| "The entry id is missing.".to_string())?, width, height, body.clone()),
-        Some("new") => {
-            let capture = ClipboardCapture::Image { hash: image_hash(width, height, body), width, height, rgba: body.clone() };
-            service.insert_capture(capture, None, false)?;
-            service.snapshot()
+    let mode = header("x-mode").unwrap_or_default().to_owned();
+    let id = header("x-id").map(str::to_owned);
+    let rgba = body.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let service = service()?;
+        match mode.as_str() {
+            "replace" => replace(service, id.as_deref().ok_or_else(|| "The entry id is missing.".to_string())?, width, height, rgba),
+            "new" => {
+                let capture = ClipboardCapture::Image { hash: image_hash(width, height, &rgba), width, height, rgba };
+                service.insert_capture(capture, None, false)?;
+                service.snapshot()
+            }
+            _ => Err("Unknown image save mode.".to_string()),
         }
-        _ => Err("Unknown image save mode.".to_string()),
-    }
+    })
+    .await
+    .map_err(|error| format!("Failed to join clipboard image save task: {error}"))?
 }
 
 #[tauri::command]
@@ -147,7 +154,11 @@ pub async fn read_clipboard_history_image(id: String) -> Result<Response, String
         state.items.iter().find(|item| item.id == id).and_then(|item| item.image.as_ref()).map(|image| image.original_path.clone())
     };
     let path = path.ok_or_else(|| "That image is gone.".to_string())?;
-    fs::read(path).map(Response::new).map_err(|error| format!("Failed to read the clipboard image: {error}"))
+    tauri::async_runtime::spawn_blocking(move || {
+        fs::read(path).map(Response::new).map_err(|error| format!("Failed to read the clipboard image: {error}"))
+    })
+    .await
+    .map_err(|error| format!("Failed to join clipboard image read task: {error}"))?
 }
 
 #[cfg(test)]

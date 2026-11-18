@@ -221,6 +221,7 @@ impl ClipboardHistoryService {
         self.persist_locked(&state)?;
         let snapshot = Self::snapshot_locked(&state);
         drop(state);
+        self.flush_persisted()?;
 
         self.emit_changed();
         Ok(snapshot)
@@ -508,17 +509,20 @@ impl ClipboardHistoryService {
     }
 
     pub(super) fn persist_locked(&self, state: &ClipboardHistoryState) -> Result<(), String> {
+        let mut items = state.items.clone();
+        super::store::strip_disk_backed_thumbnails(&mut items);
         let history = PersistedClipboardHistory {
             version: super::store::HISTORY_VERSION,
             settings: state.settings.clone(),
-            items: state.items.clone(),
+            items,
             snippets: state.snippets.clone(),
             snippet_tombstones: state.snippet_tombstones.clone(),
         };
-        let content = serde_json::to_string_pretty(&history)
-            .map_err(|error| format!("Failed to serialize clipboard history: {error}"))?;
-        crate::fs_write::replace_file(&self.history_path, content.as_bytes())
-            .map_err(|error| format!("Failed to write clipboard history: {error}"))
+        self.writer.schedule(history)
+    }
+
+    pub(super) fn flush_persisted(&self) -> Result<(), String> {
+        self.writer.flush()
     }
 
     pub(super) fn remove_item_files(&self, item: &ClipboardHistoryItem) {

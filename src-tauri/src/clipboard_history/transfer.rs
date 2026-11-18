@@ -63,6 +63,7 @@ fn parse_export(content: &str) -> Result<ExportFile, UserError> {
 
 impl ClipboardHistoryService {
     pub(super) fn export(&self) -> Result<String, UserError> {
+        let _ = self.flush_persisted();
         let (items, snippets) = {
             let state = self.state.lock().map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
             (state.items.clone(), state.snippets.clone())
@@ -141,6 +142,7 @@ impl ClipboardHistoryService {
         self.enforce_limit_locked(&mut state);
         self.persist_locked(&state)?;
         drop(state);
+        self.flush_persisted()?;
         self.emit_changed();
         Ok(ImportReport { items, snippets })
     }

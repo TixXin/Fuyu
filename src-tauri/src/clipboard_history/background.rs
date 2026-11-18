@@ -67,6 +67,7 @@ impl Background for Listener {
         listener::stop();
         privacy::stop_secret_sweeper();
         workers::stop_capture();
+        super::flush();
     }
 
     fn running(&self) -> bool {

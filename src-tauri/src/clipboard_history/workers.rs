@@ -75,6 +75,12 @@ pub(super) fn capture_running() -> bool {
     CAPTURE.lock().unwrap_or_else(PoisonError::into_inner).as_ref().is_some_and(|handle| !handle.is_finished())
 }
 
+pub(super) async fn run_blocking<T: Send + 'static>(
+    work: impl FnOnce() -> Result<T, String> + Send + 'static,
+) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(work).await.map_err(|error| format!("Failed to join clipboard task: {error}"))?
+}
+
 pub(super) fn notify_clipboard_changed() {
     let sender = NOTIFY.lock().unwrap_or_else(PoisonError::into_inner).clone();
     if let Some(sender) = sender {
