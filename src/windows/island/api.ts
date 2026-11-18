@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type EventCallback, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import type { IslandCornerShape, IslandMonitor } from "../../lib/settings/types";
+import type { IslandCornerShape, IslandMonitor, TuckStyle } from "../../lib/settings/types";
 import type { IslandPosition } from "./storage";
 import type { IslandMode, NativeGlassState } from "./types";
 
@@ -109,7 +109,7 @@ export function listenIslandResize(handler: (delta: IslandResizeDelta) => void):
 
 export const ISLAND_POSITION_CHANGED_EVENT = "island-position-changed";
 
-export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; autoForm: boolean; animate?: boolean; dragGrid?: boolean };
+export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; autoForm: boolean; animate?: boolean; dragGrid?: boolean; tuckStyle?: TuckStyle };
 
 export type IslandInteraction = {
   mode: IslandMode;
@@ -128,6 +128,7 @@ export type IslandInteraction = {
   cornerRadius: number;
   cornerShape: IslandCornerShape;
   monitorFollow: IslandMonitor;
+  tuckStyle?: TuckStyle;
 };
 
 export function setIslandLayout(layout: IslandLayout) {

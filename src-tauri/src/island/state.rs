@@ -48,6 +48,25 @@ pub(crate) enum MonitorFollow {
     Foreground,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) enum TuckStyle {
+    #[default]
+    Edge,
+    Line,
+    Hidden,
+}
+
+impl TuckStyle {
+    pub(super) fn from_value(value: &str) -> Option<Self> {
+        match value {
+            "edge" => Some(Self::Edge),
+            "line" => Some(Self::Line),
+            "hidden" => Some(Self::Hidden),
+            _ => None,
+        }
+    }
+}
+
 impl MonitorFollow {
     pub(super) fn from_value(value: &str) -> Option<Self> {
         match value {
@@ -86,6 +105,7 @@ impl CornerShape {
 pub(crate) struct IslandWindowState {
     pub(super) mode: IslandMode,
     pub(super) is_tucked: bool,
+    pub(super) tuck_style: TuckStyle,
     pub(super) collapsed_scale: f64,
     pub(super) expanded_scale: f64,
     pub(super) margin_y: f64,
@@ -199,6 +219,7 @@ impl Default for IslandWindowState {
         Self {
             mode: IslandMode::Collapsed,
             is_tucked: false,
+            tuck_style: TuckStyle::Edge,
             collapsed_scale: DEFAULT_COLLAPSED_SCALE,
             expanded_scale: DEFAULT_EXPANDED_SCALE,
             margin_y: DEFAULT_MARGIN_Y,

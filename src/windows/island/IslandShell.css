@@ -139,6 +139,11 @@
   transition-delay: 0s;
 }
 
+.island--tucked.island--tucked-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .island--expanded .island__collapsed {
   pointer-events: none;
   opacity: 0;

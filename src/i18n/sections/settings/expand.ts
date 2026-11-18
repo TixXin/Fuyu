@@ -25,6 +25,11 @@ export type SettingsExpandText = {
   tuckedHover: string;
   tuckedHoverReveal: string;
   tuckedHoverExpand: string;
+  tuckStyle: string;
+  tuckStyleHint: string;
+  tuckStyleEdge: string;
+  tuckStyleLine: string;
+  tuckStyleHidden: string;
   motion: string;
   motionHint: string;
   motionSpring: string;
@@ -71,6 +76,11 @@ export const zhCN: SettingsExpandText = {
   tuckedHover: "鼠标移到隐藏的岛上",
   tuckedHoverReveal: "只露出岛屿",
   tuckedHoverExpand: "展开面板",
+  tuckStyle: "露出样式",
+  tuckStyleHint: "顶边和底边贴边隐藏后露出的厚度；贴边隐身时完全不显露，鼠标推到屏幕边缘 2px 热区照常唤醒",
+  tuckStyleEdge: "标准露边",
+  tuckStyleLine: "极简细线",
+  tuckStyleHidden: "贴边隐身",
   motion: "开合动画",
   motionHint: "弹性同官网；Q 弹冲出去再轻轻回一下，高度也会弹；平滑和快速收起更快、不回弹",
   motionSpring: "弹性（同官网）",
@@ -117,6 +127,11 @@ export const en: SettingsExpandText = {
   tuckedHover: "Pointer on a tucked island",
   tuckedHoverReveal: "Slides it out",
   tuckedHoverExpand: "Opens the panel",
+  tuckStyle: "Tucked edge",
+  tuckStyleHint: "How much of the island stays visible when tucked at the top or bottom edge; Hidden leaves a 2px wake strip at the screen edge",
+  tuckStyleEdge: "Standard edge",
+  tuckStyleLine: "Thin line",
+  tuckStyleHidden: "Hidden",
   motion: "Open and close",
   motionHint: "Spring moves as the website's island; Bouncy springs out and back, its height bounces too; Smooth and Fast close quicker, without a bounce",
   motionSpring: "Spring (as the website)",

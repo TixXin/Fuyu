@@ -1302,6 +1302,29 @@
     {
       "page": "behaviorTuck",
       "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "露出样式",
+        "description": "顶边和底边贴边隐藏后露出的厚度；贴边隐身时完全不显露，鼠标推到屏幕边缘 2px 热区照常唤醒",
+        "options": [
+          "标准露边",
+          "极简细线",
+          "贴边隐身"
+        ]
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Tucked edge",
+        "description": "How much of the island stays visible when tucked at the top or bottom edge; Hidden leaves a 2px wake strip at the screen edge",
+        "options": [
+          "Standard edge",
+          "Thin line",
+          "Hidden"
+        ]
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
         "group": "露出",
         "title": "鼠标移到隐藏的岛上",
         "options": [

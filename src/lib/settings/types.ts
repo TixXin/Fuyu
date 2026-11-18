@@ -20,6 +20,7 @@ export type IslandForm = "auto" | "top" | "pill" | "notch";
 export type ExpandTrigger = "click" | "hover";
 export type MinimizeAction = "tray" | "tuck";
 export type TuckedHoverAction = "reveal" | "expand";
+export type TuckStyle = "edge" | "line" | "hidden";
 
 export type MessageNotice = "line" | "banner" | "panel";
 export type IslandMotion = "spring" | "smooth" | "fast" | "bouncy" | "none";
@@ -91,6 +92,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   hoverSwitchDelayMs: number;
   minimizeAction: MinimizeAction;
   tuckedHoverAction: TuckedHoverAction;
+  tuckStyle: TuckStyle;
   pageDigitModifiers: string;
   pageNextShortcut: string;
   pagePreviousShortcut: string;

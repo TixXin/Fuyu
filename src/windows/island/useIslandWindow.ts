@@ -76,6 +76,7 @@ export function useIslandWindow({
           cornerRadius: nextSettings.islandCornerRadius,
           cornerShape: nextSettings.islandCornerShape,
           monitorFollow: nextSettings.islandMonitor,
+          tuckStyle: nextSettings.tuckStyle,
         });
         setNativeGlassState(glassState);
       } catch (error) {
@@ -172,6 +173,7 @@ export function useIslandWindow({
     settings.islandCornerRadius,
     settings.islandCornerShape,
     settings.islandMonitor,
+    settings.tuckStyle,
     showReadyIsland,
     syncNativeInteraction,
   ]);

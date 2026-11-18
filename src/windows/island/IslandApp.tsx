@@ -199,6 +199,7 @@ export function IslandApp() {
         nativeGlassState={nativeGlassState}
         glass={glass}
         isTucked={isTucked}
+        tuckStyle={settings.tuckStyle}
         isDetached={isPositionDetached || islandMarginY(settings, autoForm) > 0}
         side={side}
         showTitle={settings.showTitle}

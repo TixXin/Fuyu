@@ -8,7 +8,7 @@ import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRo
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, MAX_AUTO_TUCK_RETRACT_DELAY_MS, MIN_AUTO_TUCK_RETRACT_DELAY_MS } from "../../../lib/settings/settings";
 import { IslandGlyph } from "../../../components/settings/IslandGlyph";
-import type { IslandSettings, MinimizeAction, TuckedHoverAction } from "../../../lib/settings/types";
+import type { IslandSettings, MinimizeAction, TuckedHoverAction, TuckStyle } from "../../../lib/settings/types";
 import "./TuckSettingsSection.css";
 
 const IDLE_SECONDS = [5, 10, 15, 30, 60, 120, 300, 600];
@@ -36,6 +36,11 @@ export function TuckSettingsSection({
   const minimizeActions: { value: MinimizeAction; label: string }[] = [
     { value: "tray", label: isMacOS ? layout.minimizeToMenuBar : layout.minimizeToTray },
     { value: "tuck", label: layout.minimizeToTop },
+  ];
+  const tuckStyles: { value: TuckStyle; label: string }[] = [
+    { value: "edge", label: expand.tuckStyleEdge },
+    { value: "line", label: expand.tuckStyleLine },
+    { value: "hidden", label: expand.tuckStyleHidden },
   ];
 
   return (
@@ -104,6 +109,18 @@ export function TuckSettingsSection({
               options={minimizeActions}
               ariaLabel={layout.minimizeAction}
               onChange={(minimizeAction) => update({ minimizeAction })}
+            />
+          }
+        />
+        <SettingsRow
+          title={expand.tuckStyle}
+          description={expand.tuckStyleHint}
+          control={
+            <SettingsChoice
+              value={settings.tuckStyle}
+              options={tuckStyles}
+              ariaLabel={expand.tuckStyle}
+              onChange={(tuckStyle) => update({ tuckStyle })}
             />
           }
         />

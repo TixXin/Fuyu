@@ -9,7 +9,7 @@ use std::{
 use tauri::{LogicalSize, Monitor, PhysicalPosition, Size, WebviewWindow};
 
 use super::screen;
-use super::state::{CornerShape, Edge, IslandMode, IslandPosition, IslandWindowState, MonitorFollow};
+use super::state::{CornerShape, Edge, IslandMode, IslandPosition, IslandWindowState, MonitorFollow, TuckStyle};
 
 pub(super) const STAGE_WINDOW_WIDTH: f64 = 820.0;
 pub(super) const STAGE_WINDOW_HEIGHT: f64 = 460.0;
@@ -44,7 +44,18 @@ pub(super) const MIN_CORNER_RADIUS: f64 = 16.0;
 pub(super) const MAX_CORNER_RADIUS: f64 = 40.0;
 pub(super) const STAGE_WINDOW_PADDING_Y: f64 = 24.0;
 pub(super) const TUCKED_VISIBLE_EDGE_HEIGHT: f64 = 10.0;
+pub(super) const TUCKED_VISIBLE_LINE_HEIGHT: f64 = 4.0;
+pub(super) const TUCKED_HIDDEN_HOTZONE_HEIGHT: f64 = 2.0;
 pub(super) const POSITION_ANIMATION_DURATION: Duration = Duration::from_millis(320);
+
+pub(super) fn tucked_top_offset(collapsed_scale: f64, scale: f64, tuck_style: TuckStyle) -> i32 {
+    let height = COLLAPSED_ISLAND_HEIGHT * collapsed_scale;
+    match tuck_style {
+        TuckStyle::Edge => -((height - TUCKED_VISIBLE_EDGE_HEIGHT).max(0.0) * scale).round() as i32,
+        TuckStyle::Line => -((height - TUCKED_VISIBLE_LINE_HEIGHT).max(0.0) * scale).round() as i32,
+        TuckStyle::Hidden => -(height * scale).ceil() as i32,
+    }
+}
 pub(super) const PASSTHROUGH_FAST_TICK: Duration = Duration::from_millis(12);
 pub(super) const PASSTHROUGH_IDLE_TICK: Duration = Duration::from_millis(48);
 pub(super) const PASSTHROUGH_HIDDEN_TICK: Duration = Duration::from_millis(240);
@@ -124,10 +135,7 @@ pub(crate) fn apply_stage_geometry(
     let monitor_size = screen::monitor_size(&monitor);
     let physical_width = (STAGE_WINDOW_WIDTH * scale).round() as i32;
     let physical_top_offset = (state.margin_y * scale).round() as i32;
-    let tucked_top_offset =
-        -((COLLAPSED_ISLAND_HEIGHT * state.collapsed_scale - TUCKED_VISIBLE_EDGE_HEIGHT).max(0.0)
-            * scale)
-            .round() as i32;
+    let tucked_top_offset = tucked_top_offset(state.collapsed_scale, scale, state.tuck_style);
     let top_inset = super::top_edge::top_edge(&monitor, super::notch::under_menu_bar(window, &monitor, state)).y - monitor_position.y;
     let centered_x = crate::dev_lane::stage_x(
         (monitor_position.x, monitor_position.y + top_inset, monitor_size.width as i32),
@@ -460,6 +468,20 @@ pub(super) fn cursor_on_island(
             _ => local_x - island_left,
         };
         return point_in_notch(local_y, depth, 0.0, 0.0, island_height, island_width, radius, 0.0, state.corner_shape);
+    }
+
+    if state.is_tucked && state.tuck_style == TuckStyle::Hidden && state.notch.is_none() {
+        if local_x < island_left || local_x > island_left + island_width {
+            return false;
+        }
+        let hotzone = TUCKED_HIDDEN_HOTZONE_HEIGHT * physical_scale;
+        let hidden_depth = island_height.ceil();
+        return if state.attached_edge == Some(Edge::Bottom) {
+            let edge_y = (window_height - hidden_depth).max(0.0);
+            local_y >= edge_y - hotzone && local_y <= window_height
+        } else {
+            local_y >= 0.0 && local_y <= hidden_depth + hotzone
+        };
     }
 
     if state.attached_edge == Some(Edge::Bottom) {

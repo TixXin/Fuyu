@@ -44,6 +44,7 @@ export function useIslandHover({ settings, navigation, quiet, leadPage, openEnab
   const hoverTucked = useTuckedHoverOpen({
     opensPanel: settings.tuckedHoverAction === "expand" && !quiet,
     delayMs: settings.hoverExpandDelayMs,
+    isTucked,
     isPeeking: isPeeking && mode === "collapsed",
     onPeek: peekIsland,
     onOpen: openFromTuckedHover,

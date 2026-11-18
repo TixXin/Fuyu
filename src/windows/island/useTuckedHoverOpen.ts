@@ -6,6 +6,7 @@ const MIN_OPEN_DELAY_MS = 320;
 type TuckedHoverOptions = {
   opensPanel: boolean;
   delayMs: number;
+  isTucked?: boolean;
   isPeeking: boolean;
   onPeek: () => void;
   onOpen: () => void;
@@ -36,7 +37,10 @@ export function useTuckedHoverOpen(options: TuckedHoverOptions) {
     void listenIslandHover((inside) => {
       hoveringRef.current = inside;
       if (!inside) window.clearTimeout(timerRef.current);
-      else if (optionsRef.current.isPeeking) scheduleOpen();
+      else if (optionsRef.current.isTucked) {
+        optionsRef.current.onPeek();
+        scheduleOpen();
+      } else if (optionsRef.current.isPeeking) scheduleOpen();
     })
       .then((next) => {
         if (didCancel) next();

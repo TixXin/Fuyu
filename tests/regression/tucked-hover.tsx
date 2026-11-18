@@ -49,6 +49,7 @@ function Harness() {
   enter = useTuckedHoverOpen({
     opensPanel,
     delayMs: HOVER_DELAY_MS,
+    isTucked: navigation.isTucked,
     isPeeking: navigation.isPeeking && navigation.mode === "collapsed",
     onPeek: navigation.peekIsland,
     onOpen: () => {
@@ -106,6 +107,13 @@ async function runChecks() {
     await hover(false);
     await until(() => state() === "collapsed/tucked");
     check(state() === "collapsed/tucked", "展开面板：鼠标移开后面板关闭，岛屿收回边缘");
+
+    await hover(true);
+    await until(() => state() === "expanded/out" && island.isPeeking);
+    check(state() === "expanded/out" && island.isPeeking, "贴边隐身：仅靠原生边缘热区悬停事件即可唤醒并展开面板");
+    await hover(false);
+    await until(() => state() === "collapsed/tucked");
+    check(state() === "collapsed/tucked", "贴边隐身：移出边缘热区并离开面板后收回边缘");
 
     await arrive();
     await wait(40);
