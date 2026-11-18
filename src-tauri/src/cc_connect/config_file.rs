@@ -1,10 +1,10 @@
 use super::agents;
 use crate::user_error::UserError;
-use std::collections::BTreeMap;
-#[cfg(windows)]
-use std::path::PathBuf;
-#[cfg(any(windows, test))]
-use std::{fs, path::Path};
+use std::{
+    collections::BTreeMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 pub(super) const FILE_NAME: &str = "config.toml";
 pub(super) const PLATFORMS: [&str; 3] = ["telegram", "discord", "feishu"];
@@ -19,7 +19,6 @@ pub(super) struct NewProject<'a> {
     pub(super) proxy: Option<&'a str>,
 }
 
-#[cfg(windows)]
 pub(super) fn config_path(data_dir: &Path) -> PathBuf {
     data_dir.join(FILE_NAME)
 }
@@ -28,7 +27,6 @@ fn id_like(value: &str) -> bool {
     (1..=64).contains(&value.len()) && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
 }
 
-#[cfg(any(windows, test))]
 pub(super) fn check(project: &NewProject, taken: &[String]) -> Result<(), UserError> {
     let dir = Path::new(project.work_dir);
     if !dir.is_absolute() || !dir.is_dir() {
@@ -152,7 +150,6 @@ pub(super) fn project_agents(text: &str) -> BTreeMap<String, String> {
     agents
 }
 
-#[cfg(any(windows, test))]
 pub(super) fn add_project(path: &Path, project: &NewProject, today: &str, stamp: &str) -> Result<Option<String>, UserError> {
     let original = match fs::read_to_string(path) {
         Ok(text) => Some(text),
@@ -177,7 +174,6 @@ pub(super) fn add_project(path: &Path, project: &NewProject, today: &str, stamp:
     Ok(original)
 }
 
-#[cfg(any(windows, test))]
 pub(super) fn restore(path: &Path, original: Option<&str>) -> Result<(), UserError> {
     match original {
         Some(text) => write(path, text),
@@ -185,7 +181,6 @@ pub(super) fn restore(path: &Path, original: Option<&str>) -> Result<(), UserErr
     }
 }
 
-#[cfg(any(windows, test))]
 fn write(path: &Path, text: &str) -> Result<(), UserError> {
     let temp = path.with_file_name(format!("{FILE_NAME}.fuyu.tmp"));
     fs::write(&temp, text).map_err(|error| UserError::new("file.write", format!("Could not write {}.", temp.display())).arg("path", temp.display().to_string()).detail(error))?;
