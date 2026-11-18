@@ -1739,7 +1739,7 @@ dependencies = [
 
 [[package]]
 name = "fuyu"
-version = "0.3.11-beta.3"
+version = "0.3.11-beta.4"
 dependencies = [
  "arboard",
  "argon2",
