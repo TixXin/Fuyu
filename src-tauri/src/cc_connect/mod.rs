@@ -3,19 +3,15 @@ mod background;
 mod bots;
 mod chats;
 mod config_file;
-#[cfg(windows)]
 mod feishu;
 mod install;
-#[cfg_attr(not(windows), path = "local_unsupported.rs")]
 pub(crate) mod local;
-#[cfg(windows)]
 mod locate;
 pub(crate) mod remote;
 pub(crate) mod remote_feishu;
 mod remote_install;
 mod remote_project;
 mod remote_run;
-#[cfg(windows)]
 mod runner;
 mod script;
 

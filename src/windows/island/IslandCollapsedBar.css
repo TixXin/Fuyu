@@ -29,6 +29,9 @@
   background: var(--island-pulse-color);
   box-shadow: 0 0 14px var(--island-pulse-glow-color);
   filter: brightness(var(--island-pulse-brightness));
+  transition:
+    background-color var(--motion-medium) var(--motion-ease),
+    box-shadow var(--motion-medium) var(--motion-ease);
 }
 
 .island__mark-light {
@@ -62,6 +65,7 @@
   font-size: 15px;
   font-weight: 700;
   line-height: 1.2;
+  transition: color var(--motion-medium) var(--motion-ease);
 }
 
 .island__todo-count {
@@ -74,6 +78,7 @@
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color var(--motion-medium) var(--motion-ease);
 }
 
 .island__todo-center {
@@ -92,6 +97,7 @@
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color var(--motion-medium) var(--motion-ease);
   animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, var(--motion-ease)) backwards;
 }
 
@@ -105,6 +111,7 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 1.2;
+  transition: color var(--motion-medium) var(--motion-ease);
   animation: taskFlowIn var(--line-enter-duration, var(--motion-slow)) var(--summary-spring, var(--motion-ease)) backwards;
 }
 

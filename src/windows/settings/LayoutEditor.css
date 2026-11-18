@@ -17,6 +17,9 @@
   box-shadow:
     0 0 0 1px var(--settings-card-line),
     0 6px 18px rgba(0, 0, 0, 0.18);
+  transition:
+    background-color var(--motion-medium) var(--motion-ease),
+    box-shadow var(--motion-medium) var(--motion-ease);
 }
 
 .settings-sidebar-card > .settings-sidebar {
@@ -44,6 +47,7 @@
   background: rgba(var(--overlay-rgb, 255, 255, 255), 0.075);
   scrollbar-color: rgba(116, 214, 255, 0.38) var(--color-white-a08);
   scrollbar-width: thin;
+  transition: background-color var(--motion-medium) var(--motion-ease);
 }
 
 .editor-panel::-webkit-scrollbar {
@@ -84,6 +88,7 @@
   font-size: 22px;
   font-weight: 700;
   line-height: 1.2;
+  transition: color var(--motion-medium) var(--motion-ease);
 }
 
 .settings-section {
@@ -95,6 +100,9 @@
   border: 1px solid var(--color-white-a06);
   border-radius: var(--radius-lg);
   box-shadow: none;
+  transition:
+    background-color var(--motion-medium) var(--motion-ease),
+    border-color var(--motion-medium) var(--motion-ease);
 }
 
 .settings-section--list {

@@ -9,6 +9,7 @@ mod node_status;
 pub(crate) mod protocol;
 mod safe_mode;
 mod v2_builtins;
+pub(crate) mod v2_migration;
 pub(crate) mod worker;
 
 use std::{
@@ -457,6 +458,8 @@ macro_rules! tauri_commands {
             crate::plugin_kernel::builtins::get_builtin_plugins,
             crate::plugin_kernel::builtins::set_builtin_plugin_enabled,
             crate::plugin_kernel::builtins::set_builtin_plugin_config,
+            crate::plugin_kernel::v2_migration::get_v2_plugin_migration,
+            crate::plugin_kernel::v2_migration::dismiss_v2_plugin_migration,
         ] $($rest)*)
     };
 }

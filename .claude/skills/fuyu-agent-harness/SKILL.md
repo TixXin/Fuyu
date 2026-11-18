@@ -7,7 +7,7 @@ description: >
   a small fix where one harness is missing from a list. Do NOT change per-agent wiring
   in src/features/agent-status or src-tauri/src/agent_status without loading this
   skill first. 触发：接入新的 agent / harness、支持某个 AI 代理、给某家补钩子、某家没显示、
-  只有 Claude Code 和 Codex、安装/修复漏了、远程侧适配、cc-connect 接入、用量环加一家。
+  只有 Claude Code 和 Codex、安装/修复漏了、移除钩子漏了、远程侧适配、cc-connect 接入、用量环加一家。
 ---
 
 # 接入或扩展一家 AI 代理（harness）
@@ -37,7 +37,7 @@ description: >
 |---|---|
 | 身份 | Rust 里这家的模块和 `PROVIDER` 常量；前端 `SessionProvider` / `AgentProvider`（`agent-status/api.ts`）、`AGENT_PROVIDERS` 和名称表（`status.ts`）、`AgentProviderIcon.tsx` 和 `src/assets/brands/`（来源写进同目录的 `README.md`）、`effortLabels.ts`；设置里的显示 / 隐藏开关（`appearance/types.ts`、`settingsDefaults.ts`、`normalizeAgentSettings.ts`、`AgentSettingsPage.tsx`、i18n，改完 `pnpm settings:index`） |
 | 会话 | 读会话的函数，接进 `session_scan.rs`（本机和远程镜像两条路都要接）；标题、权限模式、待办、当前工具、已退出判断；`focus.rs` 的跳转 |
-| 钩子 | `install_agent_status_hooks_now` 和 `reinstall_hooks_after_rename` 两处都调用这家的 `install_hooks`；`hooks/` 里 `.cmd` / `.ps1` / `.sh` 三份脚本都加这家的分支（脚本由 `include_str!` 编进二进制，按 Rust 改动验证）；`hooks_state.rs` 的钩子状态 |
+| 钩子 | 在这家 `HARNESS` 的 `Hooks`（`harness.rs`）里同时提供 `install`、`check`、`uninstall`（安装/修复、移除钩子、卸载前清理与重装恢复、改名迁移都遍历 `HARNESSES`）：`uninstall` 只剥离浮屿受管条目/标记块/独占插件文件（变空的事件或 `hooks` 键一并删掉，未变不写盘，配置不存在时不新建空文件）；写入外部配置的命令包裹脚本存在性守卫（缺失直接退出 0），外部 JS 插件写文件前先确认家目录已存在、绝不自行 `mkdir` 顶层家目录；`hooks/` 里 `.cmd` / `.ps1` / `.sh` 三份脚本都加这家的分支（脚本由 `include_str!` 编进二进制，按 Rust 改动验证） |
 | 状态灯 | 快照（`snapshot.rs`、`agent-status.json`）、`markers.rs`、`external.rs`；设置页状态灯卡片（`listAgentStatuses`、`getAgentHooksNotice`） |
 | 等你 / 审批 | 等授权的钩子写进 `agent-notifications/<家>-*.json`（`notifications.rs` 认）；在岛上审批要加 `agent_approval/decision.rs` 的 `Agent` 和路由、审批脚本，并放宽前端 `approvals/api.ts` 的类型 |
 | 回复标记 | `reply_marker.rs` 写这家的全局提示词文件，这家的会话解析里认出标记 |

@@ -198,6 +198,8 @@
   "pluginsV3.builtinEssential",
   "pluginsV3.builtinSave",
   "pluginsV3.builtinUnknown",
+  "pluginsV3.invalidDismissTarget",
+  "pluginsV3.migrationSave",
   "qq.accessFailed",
   "qq.channelNotReady",
   "qq.disabledByPolicy",

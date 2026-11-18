@@ -2,7 +2,10 @@ use windows::{
     core::{HSTRING, PCWSTR, PWSTR},
     Win32::{
         Foundation::ERROR_NOT_FOUND,
-        Security::Credentials::{CredEnumerateW, CredFree, CredReadW, CredWriteW, CREDENTIALW, CRED_FLAGS, CRED_FLAGS_USERNAME_TARGET, CRED_TYPE_GENERIC},
+        Security::Credentials::{
+            CredDeleteW, CredEnumerateW, CredFree, CredReadW, CredWriteW, CREDENTIALW, CRED_FLAGS,
+            CRED_FLAGS_USERNAME_TARGET, CRED_TYPE_GENERIC,
+        },
     },
 };
 
@@ -57,4 +60,51 @@ pub(crate) fn copy_generic_credentials(rename: impl Fn(&str) -> Option<String>) 
         copied += 1;
     }
     Ok(copied)
+}
+
+pub(crate) fn delete_generic_credentials(matches: impl Fn(&str) -> bool) -> Result<usize, String> {
+    let mut count = 0u32;
+    let mut list: *mut *mut CREDENTIALW = std::ptr::null_mut();
+    if let Err(error) = unsafe { CredEnumerateW(PCWSTR::null(), None, &mut count, &mut list) } {
+        if error.code() == ERROR_NOT_FOUND.to_hresult() {
+            return Ok(0);
+        }
+        return Err(format!("Could not list the saved credentials: {error}"));
+    }
+    let targets = {
+        let _buffer = CredBuffer(list as *const _);
+        let items = unsafe { std::slice::from_raw_parts(list, count as usize) };
+        let mut matched = Vec::new();
+        for &item in items {
+            if item.is_null() {
+                continue;
+            }
+            let credential = unsafe { *item };
+            if credential.Type != CRED_TYPE_GENERIC || credential.TargetName.is_null() {
+                continue;
+            }
+            let Ok(target) = (unsafe { credential.TargetName.to_string() }) else {
+                continue;
+            };
+            if matches(&target) {
+                matched.push(target);
+            }
+        }
+        matched
+    };
+    let mut deleted = 0;
+    let mut errors = Vec::new();
+    for target in targets {
+        let wide = HSTRING::from(target.as_str());
+        match unsafe { CredDeleteW(PCWSTR(wide.as_ptr()), CRED_TYPE_GENERIC, None) } {
+            Ok(()) => deleted += 1,
+            Err(error) if error.code() == ERROR_NOT_FOUND.to_hresult() => {}
+            Err(error) => errors.push(format!("Could not delete the credential {target}: {error}")),
+        }
+    }
+    if errors.is_empty() {
+        Ok(deleted)
+    } else {
+        Err(errors.join("; "))
+    }
 }

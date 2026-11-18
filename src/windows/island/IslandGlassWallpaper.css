@@ -1,10 +1,8 @@
 .stage .island.island--appearance-liquidGlass[data-glass-wallpaper] {
   --glass-frost-alpha: min(0.95, calc(var(--glass-intensity, 0.25) + var(--glass-backdrop-boost, 0)));
+  --island-shell-fill: color-mix(in srgb, var(--island-background-color) calc(var(--glass-frost-alpha) * 100%), transparent);
   background:
-    linear-gradient(
-      color-mix(in srgb, var(--island-background-color) calc(var(--glass-frost-alpha) * 100%), transparent),
-      color-mix(in srgb, var(--island-background-color) calc(var(--glass-frost-alpha) * 100%), transparent)
-    ) 0 0 / 100% 100% no-repeat,
+    linear-gradient(var(--island-shell-fill), var(--island-shell-fill)) 0 0 / 100% 100% no-repeat,
     var(--glass-wallpaper) var(--glass-wallpaper-x) var(--glass-wallpaper-y) / var(--glass-wallpaper-size) no-repeat,
     var(--glass-wallpaper-color);
   backdrop-filter: none;
@@ -42,7 +40,8 @@
 
 @media (prefers-reduced-transparency: reduce) {
   .stage .island.island--appearance-liquidGlass[data-glass-wallpaper] {
-    background: var(--glass-tint-color);
+    --island-shell-fill: var(--glass-tint-color);
+    background: var(--island-shell-fill);
   }
 
   .island__glass-noise {

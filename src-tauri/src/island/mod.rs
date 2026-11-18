@@ -57,7 +57,7 @@ use geometry::{
 use glass::apply_glass_material;
 #[cfg(windows)]
 use crate::win32;
-use state::{mutate_window_state, read_window_state, window_state, CornerShape, IslandMode, MonitorFollow};
+use state::{mutate_window_state, read_window_state, window_state, CornerShape, IslandMode, MonitorFollow, TuckStyle};
 
 pub(crate) use geometry::apply_stage_geometry;
 #[cfg(debug_assertions)]
@@ -99,6 +99,8 @@ pub struct IslandLayout {
     animate: bool,
     #[serde(default)]
     drag_grid: Option<bool>,
+    #[serde(default)]
+    tuck_style: Option<String>,
 }
 
 #[tauri::command]
@@ -114,6 +116,9 @@ pub fn set_island_layout(app: AppHandle, layout: IslandLayout) -> Result<(), Str
         state.under_menu_bar = layout.under_menu_bar;
         state.fit_notch = layout.fit_notch;
         state.auto_form = layout.auto_form;
+        if let Some(tuck_style) = layout.tuck_style.as_deref().and_then(TuckStyle::from_value) {
+            state.tuck_style = tuck_style;
+        }
         *state
     });
     apply_stage_geometry(&window, state, layout.animate)
@@ -142,6 +147,7 @@ pub fn set_island_interaction(
     corner_radius: Option<f64>,
     corner_shape: Option<String>,
     monitor_follow: Option<String>,
+    tuck_style: Option<String>,
 ) -> Result<String, String> {
     let _ = (glass_intensity, glass_tint);
     let window = main_window(&app)?;
@@ -192,6 +198,9 @@ pub fn set_island_interaction(
         if let Some(monitor_follow) = monitor_follow.as_deref().and_then(MonitorFollow::from_value) {
             state.monitor_follow = monitor_follow;
         }
+        if let Some(tuck_style) = tuck_style.as_deref().and_then(TuckStyle::from_value) {
+            state.tuck_style = tuck_style;
+        }
         *state
     });
     if previous_state.monitor_follow != state.monitor_follow {
@@ -201,7 +210,9 @@ pub fn set_island_interaction(
         &window,
         state,
         animate_position.unwrap_or(true)
-            && (previous_state.is_tucked != state.is_tucked || previous_state.out_at_top != state.out_at_top),
+            && (previous_state.is_tucked != state.is_tucked
+                || previous_state.out_at_top != state.out_at_top
+                || (state.is_tucked && previous_state.tuck_style != state.tuck_style)),
     )?;
     if !state.is_dragging {
         focus::island_mode_synced(&window, matches!(state.mode, IslandMode::Expanded));

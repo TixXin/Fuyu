@@ -77,6 +77,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   hoverSwitchDelayMs: DEFAULT_HOVER_SWITCH_DELAY_MS,
   minimizeAction: "tuck",
   tuckedHoverAction: "reveal",
+  tuckStyle: "edge",
   pageDigitModifiers: DEFAULT_PAGE_DIGIT_MODIFIERS,
   pageNextShortcut: DEFAULT_PAGE_NEXT_SHORTCUT,
   pagePreviousShortcut: DEFAULT_PAGE_PREVIOUS_SHORTCUT,

@@ -55,6 +55,7 @@ mod tray_menu;
 #[cfg(target_os = "macos")]
 mod tray_mark;
 mod tray_visibility;
+mod uninstall_cleanup;
 mod user_error;
 mod voice_input;
 #[cfg_attr(not(windows), path = "wallpaper/unsupported.rs")]
@@ -85,6 +86,9 @@ macro_rules! collect_commands {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    if uninstall_cleanup::maybe_run_from_args() {
+        std::process::exit(0);
+    }
     let mut context = tauri::generate_context!();
     if let Some(identifier) = notification_diagnostics::verification_identifier() {
         context.config_mut().identifier = identifier;

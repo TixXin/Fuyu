@@ -152,7 +152,7 @@ mockIPC((command, payload) => {
     case "updater_diagnostics": return updateRuntimeMock(command, args, demoUpdate);
     case "get_cached_plugin_market": return null;
     case "list_plugin_views": return { views: [], status: [], statusItems: [{ pluginId: "dev.example.todo-sync", pluginName: { "zh-CN": "待办同步示例", en: "Todo sync example" }, itemId: "count" }] };
-    case "get_theme_market": return [{ id: "fuyu.midnight", name: { "zh-CN": "午夜蓝", en: "Midnight" }, author: "TixXin", appearance: { islandBackgroundColor: "#0f1a2e", islandCornerRadius: 28 } }, { id: "someone.dusk", name: { "zh-CN": "黄昏", en: "Dusk" }, description: { "zh-CN": "一句话", en: "One line" }, author: "someone", appearance: { islandBackgroundColor: "#1b1020", collapsedScale: 1.3 } }];
+    case "get_theme_market": return [{ id: "fuyu.midnight", name: { "zh-CN": "午夜蓝", en: "Midnight" }, author: "TixXin", appearance: { islandBackgroundColor: "#0f1a2e", islandCornerRadius: 28 } }, { id: "fuyu.polar", name: { "zh-CN": "极光霜", en: "Polar" }, description: { "zh-CN": "深浅两套配色", en: "Dark and light sets" }, author: "TixXin", appearance: { opacity: 92, dark: { islandBackgroundColor: "#141b26", taskTextColor: "#edf2fa", pulseColor: "#4ee0a0" }, light: { islandBackgroundColor: "#eef3fa", taskTextColor: "#18212e", pulseColor: "#188f59" } } }, { id: "someone.dusk", name: { "zh-CN": "黄昏", en: "Dusk" }, description: { "zh-CN": "一句话", en: "One line" }, author: "someone", appearance: { islandBackgroundColor: "#1b1020", collapsedScale: 1.3 } }];
     case "get_plugin_market_likes": return { "dev.example.new": { count: 12, url: "https://github.com/TixXin/fuyu-plugins/discussions/9" }, "dev.example.todo-sync": { count: 3, url: "https://github.com/TixXin/fuyu-plugins/discussions/8" } };
     case "get_plugin_market": return {
       indexUrl: "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/index.json",
@@ -195,6 +195,9 @@ mockIPC((command, payload) => {
     case "get_agent_hooks_state": return { codex: "notInstalled", claudeCode: "notInstalled", scriptsOutdated: false };
     case "uninstall_agent_status_hooks": return { removedAt: 1700000000000, remotes: [] };
     case "list_sound_packs": return [{ id: "chimes-1", name: "Chimes", author: "Ann", license: "CC0-1.0", sounds: { complete: "complete.wav", error: "error.wav" } }];
+    case "get_v2_plugin_migration":
+    case "dismiss_v2_plugin_migration":
+      return { official: [], other: [], islandPending: false, settingsPending: false };
     default: return null;
   }
 }, { shouldMockEvents: true });

@@ -26,6 +26,38 @@ let retryCalls = 0;
 const catalog = (await import("../../src/features/builtins.json")).default as { plugins: { id: string; kind: "builtin" | "essential" }[] };
 let builtins = catalog.plugins.map(({ id, kind }) => ({ id, kind, enabled: id !== "clipboard", background: [] as { name: string; registered: boolean; running: boolean }[], config: {} }));
 const switchCalls: { id: string; enabled: boolean }[] = [];
+const migrationDismissCalls: string[] = [];
+let migrationReply = {
+  official: [
+    {
+      v2Id: "dev.focusd.weather",
+      v3Id: "@fuyu/weather",
+      title: { "zh-CN": "天气", en: "Weather" },
+      enabledInV2: true,
+      configMigrated: true,
+      installedInV3: false,
+      registeredInYml: false,
+    },
+    {
+      v2Id: "dev.focusd.pomodoro",
+      v3Id: "@fuyu/pomodoro",
+      title: { "zh-CN": "番茄钟", en: "Pomodoro" },
+      enabledInV2: true,
+      configMigrated: false,
+      installedInV3: true,
+      registeredInYml: true,
+    },
+  ],
+  other: [
+    {
+      id: "com.example.custom",
+      title: { "zh-CN": "自定义小插件", en: "Custom gadget" },
+      enabledInV2: true,
+    },
+  ],
+  islandPending: false,
+  settingsPending: true,
+};
 
 mockIPC((command, payload) => {
   if (command === "get_builtin_plugins") return builtins;
@@ -40,6 +72,13 @@ mockIPC((command, payload) => {
   if (command === "get_plugin_host_connection") return { enabled: true, port: 1, token: "t", generation: 1, safeMode: safeReply, node: nodeReply };
   if (command === "retry_plugin_host_node") return (retryCalls += 1, nodeReply = { state: "checking" }, true);
   if (command === "get_platform_support") return { os: "windows", unsupported: [], devBuild: true };
+  if (command === "get_v2_plugin_migration") return migrationReply;
+  if (command === "dismiss_v2_plugin_migration") {
+    const { target } = payload as { target: string };
+    migrationDismissCalls.push(target);
+    migrationReply = { ...migrationReply, settingsPending: false };
+    return migrationReply;
+  }
   return null;
 });
 
@@ -197,7 +236,7 @@ try {
     narrowHandlers.onState("open");
     narrowHandlers.onSnapshot({ plugins: PLUGINS, host: HOST });
   });
-  const overflowing = [...narrow.querySelectorAll<HTMLElement>(".plugins-v3__plugin, .plugins-v3__plugin-head, .settings-row")].filter((element) => element.scrollWidth > element.clientWidth + 1);
+  const overflowing = [...narrow.querySelectorAll<HTMLElement>(".plugins-v3__plugin, .plugins-v3__plugin-head, .plugins-v3__migration-item, .settings-row")].filter((element) => element.scrollWidth > element.clientWidth + 1);
   check(narrow.querySelectorAll(".plugins-v3__plugin").length > 0 && overflowing.length === 0, "In a 300 px wide window nothing spills out sideways");
   await act(async () => narrowRoot.unmount());
   check(side.fake.open === 0, "Leaving the page closes its connection");
@@ -220,6 +259,19 @@ try {
   check(page.querySelectorAll(".plugins-v3__diag-table tbody tr").length === 29, "The diagnostics tab lists all built-in and host plugins in a comparison table");
   await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='plugins']")!.click());
   check(page.querySelectorAll(".plugins-v3__builtin").length === 22, "Switching back to the plugins tab restores the grouped card grid");
+
+  const migrationCard = page.querySelector<HTMLElement>(".plugins-v3__migration");
+  check(
+    Boolean(migrationCard)
+      && migrationCard!.textContent!.includes("dev.focusd.weather → @fuyu/weather")
+      && migrationCard!.textContent!.includes(text.v2Migration.configCarried)
+      && migrationCard!.textContent!.includes(text.v2Migration.switchedToV3)
+      && migrationCard!.textContent!.includes("com.example.custom"),
+    "The v2 migration guide lists mapped @fuyu/* official plugins, carried-over settings, and other legacy v2 plugins",
+  );
+  await act(async () => page.querySelector<HTMLButtonElement>(".plugins-v3__migration-dismiss")!.click());
+  await settle();
+  check(migrationDismissCalls.join() === "settings" && !page.querySelector(".plugins-v3__migration"), "Dismissing the v2 migration guide persists once and hides the banner without repeating");
 
   results.textContent = messages.join("\n");
   document.documentElement.dataset.testResult = "passed";

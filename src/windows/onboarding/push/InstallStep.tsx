@@ -37,18 +37,14 @@ export function InstallStep({ targets }: { targets: PushTargets }) {
               <Icon size={15} aria-hidden="true" className="push-act__icon" />
               <div className="push-act__main">
                 <span className="push-act__name">{target.label ?? text.thisComputer}</span>
-                {target.blocked === "macLocal" ? (
-                  <span className="push-act__note">{text.install.macLocal}</span>
-                ) : (
-                  <span className="push-act__note">
-                    {state === null ? (error ? null : text.install.reading) : state.installed ? (state.running ? `${text.install.installed} · ${text.install.running}` : text.install.installed) : text.install.missing}
-                  </span>
-                )}
+                <span className="push-act__note">
+                  {state === null ? (error ? null : text.install.reading) : state.installed ? (state.running ? `${text.install.installed} · ${text.install.running}` : text.install.installed) : text.install.missing}
+                </span>
                 {error ? <span className="push-act__error">{error}</span> : null}
               </div>
               {state?.installed ? (
                 <Check size={15} aria-hidden="true" className="push-act__ok" />
-              ) : target.blocked === null && state ? (
+              ) : state ? (
                 <button className="onboarding__button" type="button" disabled={busy !== null} onClick={() => void install(entry)}>
                   <Download size={13} aria-hidden="true" />
                   {busy === target.id ? text.install.installing : text.install.install}

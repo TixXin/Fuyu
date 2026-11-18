@@ -1,5 +1,5 @@
 import { createContext, useContext, type CSSProperties, type ReactNode } from "react";
-import type { AppearanceMode } from "../../lib/settings/types";
+import type { AppearanceMode, TuckStyle } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
@@ -38,6 +38,7 @@ type IslandShellProps = {
   nativeGlassState: NativeGlassState;
   glass?: IslandGlassView;
   isTucked: boolean;
+  tuckStyle?: TuckStyle;
   isDetached: boolean;
   side?: IslandSide | null;
   showTitle: boolean;
@@ -82,6 +83,7 @@ export function IslandShell({
   nativeGlassState,
   glass,
   isTucked,
+  tuckStyle = "edge",
   isDetached,
   side = null,
   showTitle,
@@ -133,6 +135,7 @@ export function IslandShell({
     isPreparing && !isExpanded ? "island--preparing" : "",
     isDetached ? "island--detached" : "island--docked",
     isTucked ? "island--tucked" : "",
+    isTucked && tuckStyle === "hidden" ? "island--tucked-hidden" : "",
     side ? `island--side island--side-${side}` : "",
     popup ? "island--popup" : "",
     isLiquidGlass ? `island--glass-${nativeGlassState}` : "",

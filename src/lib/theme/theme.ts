@@ -1,5 +1,5 @@
 import { THEME_SETTING_KEYS, normalizeSettings, withThemeFrom } from "../settings/settings.ts";
-import { AUTO_INK, hasThemeSets, themeColors, themeSetsFromSingleColors } from "./themeMode.ts";
+import { expandNestedThemeColors, themeAppearanceDefaults, themeColors } from "./themeMode.ts";
 import type { IslandSettings } from "../settings/types";
 
 export const MAX_THEME_NAME_LENGTH = 60;
@@ -49,12 +49,13 @@ export function parseTheme(
     return { problem: "notTheme" };
   }
   if (typeof file.version !== "number" || file.version > 1) return { problem: "newerVersion" };
-  const source = file.appearance as Record<string, unknown>;
+  const source = expandNestedThemeColors(file.appearance as Record<string, unknown>);
   const picked = Object.fromEntries(
     THEME_SETTING_KEYS.filter((key) => key in source).map((key) => [key, source[key]]),
   );
-  const sets = hasThemeSets(picked) ? {} : themeSetsFromSingleColors({ ...current, themeMode: "custom", ...picked });
-  const settings = withThemeFrom(current, normalizeSettings({ ...current, ...AUTO_INK, ...picked, ...sets }));
+  const defaults = themeAppearanceDefaults(current, picked);
+  const merged = normalizeSettings({ ...current, ...defaults, ...picked });
+  const settings = withThemeFrom(current, { ...merged, ...themeColors(merged, merged.themeMode === "light" ? "light" : "dark") });
   const name = typeof file.name === "string" ? file.name.trim().slice(0, MAX_THEME_NAME_LENGTH) : "";
   return { name, settings };
 }

@@ -22,10 +22,17 @@
   initial-value: 0px;
 }
 
+@property --island-shell-fill {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #000000;
+}
+
 .island {
   --glass-pointer-x: 0.5;
   --glass-pointer-y: 0.18;
   --glass-page-accent: var(--color-accent);
+  --island-shell-fill: var(--island-fill, var(--island-background-color));
   --island-radius: calc(var(--island-corner-radius-size, 30) * 1px);
   --island-radius-collapsed: calc(var(--island-radius) * 22 / 30);
   --island-panel-radius: max(8px, calc(var(--island-radius) - 20px));
@@ -35,7 +42,7 @@
   position: relative;
   flex: 0 0 auto;
   color: var(--color-text);
-  background: var(--island-fill, var(--island-background-color));
+  background: var(--island-shell-fill);
   border: 0;
   box-shadow: var(--island-edge-lines, inset 0 0 0 1px var(--color-white-a08));
   overflow: visible;
@@ -49,7 +56,7 @@
     --island-shell-height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-top-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
     --island-shell-bottom-corner var(--island-motion-radius, 450ms) var(--island-motion-radius-ease, cubic-bezier(0.22, 1, 0.36, 1)),
-    background-color 360ms ease;
+    --island-shell-fill var(--motion-slow) var(--motion-ease);
 }
 
 .island__surface {
@@ -77,7 +84,6 @@
   --island-shell-top-corner: 0px;
   --island-shell-bottom-corner: var(--island-shell-radius-collapsed);
   cursor: default;
-  background: var(--island-fill, var(--island-background-color));
   box-shadow: none;
 }
 
@@ -133,6 +139,11 @@
   transition-delay: 0s;
 }
 
+.island--tucked.island--tucked-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .island--expanded .island__collapsed {
   pointer-events: none;
   opacity: 0;
@@ -185,6 +196,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .island {
-    transition-property: --island-shell-width, --island-shell-height, --island-shell-top-corner, --island-shell-bottom-corner, background-color !important;
+    transition-property: --island-shell-width, --island-shell-height, --island-shell-top-corner, --island-shell-bottom-corner, --island-shell-fill !important;
   }
 }

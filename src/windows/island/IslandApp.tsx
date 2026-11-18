@@ -41,6 +41,7 @@ import { useFirstRunGuide } from "./useFirstRunGuide";
 import { useSettingsFileSync } from "../../lib/settings-backup/useSettingsFileSync";
 import { useOnboardingDemo } from "./useOnboardingDemo";
 import { useIslandFirstHints } from "./useIslandFirstHints";
+import { useV2UpgradeNotice } from "./useV2UpgradeNotice";
 import { useIslandNotice } from "./islandNotice";
 import { useIslandSide } from "./useIslandSide";
 import { IslandRunners } from "./IslandRunners";
@@ -86,6 +87,12 @@ export function IslandApp() {
     quiet: game.quiet,
     demoActive: demo.active,
   });
+  const v2Upgrade = useV2UpgradeNotice({
+    mode,
+    isTucked,
+    quiet: game.quiet,
+    demoActive: demo.active,
+  });
   const notch = useIslandNotch();
   const autoForm = useAutoIslandForm();
   const barText = settings.showCollapsedText && !notch;
@@ -93,7 +100,7 @@ export function IslandApp() {
   usePluginKeybindings({ mode, page, hasActiveTodo: hints.has("todos.active") });
   const textWidth = useCollapsedWidth({
     barText,
-    noticeText: firstHints.current ? t.island.firstHint[firstHints.current] : null,
+    noticeText: v2Upgrade.text ?? (firstHints.current ? t.island.firstHint[firstHints.current] : null),
     showTitle: settings.showTitle,
     widthExtra: settings.collapsedWidthExtra,
     peeking: contributedPreview !== null || contributedLines.some((line) => line.drop === true),
@@ -154,7 +161,7 @@ export function IslandApp() {
     onCollapse: collapseIsland,
   });
 
-  const islandNotice = useIslandNotice({ firstHints });
+  const islandNotice = useIslandNotice({ firstHints, v2Upgrade });
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
     preview: contributedPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
   }));
@@ -192,6 +199,7 @@ export function IslandApp() {
         nativeGlassState={nativeGlassState}
         glass={glass}
         isTucked={isTucked}
+        tuckStyle={settings.tuckStyle}
         isDetached={isPositionDetached || islandMarginY(settings, autoForm) > 0}
         side={side}
         showTitle={settings.showTitle}

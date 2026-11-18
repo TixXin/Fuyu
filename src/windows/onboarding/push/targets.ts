@@ -28,11 +28,8 @@ import { remotePath } from "../../../features/cc-connect/remotePaths";
 import { OWNER as CC_CONNECT_PLUGIN } from "../../../features/cc-connect/plugin/owner";
 import { getBuiltinPlugins } from "../../../features/plugin-kernel/api";
 import { setBuiltinConfig, switchBuiltinPlugin } from "../../../features/plugin-kernel/builtinSwitches";
-import { isMacOS } from "../../../lib/platform";
 
 export type PushAgent = CcConnectSetupAgent;
-
-export type PushBlock = "macLocal";
 
 export type PushTargetState = {
   installed: boolean;
@@ -49,7 +46,6 @@ export type PushTarget = {
   label: string | null;
   slug: string;
   remote: boolean;
-  blocked: PushBlock | null;
   read(): Promise<PushTargetState>;
   install(): Promise<void>;
   prepare(): Promise<void>;
@@ -73,21 +69,12 @@ async function localPath() {
   return programSetting(plugins.find((plugin) => plugin.id === CC_CONNECT_PLUGIN)?.config ?? {});
 }
 
-function blockedTarget(id: string, label: string | null, slug: string, remote: boolean, blocked: PushBlock, read: () => Promise<PushTargetState>): PushTarget {
-  const no = () => Promise.reject(new Error(blocked));
-  return { id, label, slug, remote, blocked, read, install: no, prepare: no, checkBot: no, addProject: no, feishuProgress: no, cancelFeishu: no, send: no };
-}
-
-export function localTarget(mac = isMacOS): PushTarget {
-  if (mac) {
-    return blockedTarget(LOCAL_TARGET_ID, null, "local", false, "macLocal", async () => ({ installed: false, running: false, agents: KNOWN_AGENTS, projects: [], taken: [] }));
-  }
+export function localTarget(): PushTarget {
   return {
     id: LOCAL_TARGET_ID,
     label: null,
     slug: "local",
     remote: false,
-    blocked: null,
     async read() {
       const status = await getCcConnectStatus(await localPath());
       return {
@@ -138,7 +125,6 @@ export function remoteTarget(host: string): PushTarget {
     label: host,
     slug: targetSlug(host),
     remote: true,
-    blocked: null,
     async read() {
       const [status, found] = await Promise.all([getCcConnectRemoteStatus(host, remotePath(host)), detect()]);
       return { installed: status.exe !== null, running: status.running, agents: found, projects: status.projects, taken: status.projects.map((project) => project.name) };
@@ -162,7 +148,7 @@ export function remoteTarget(host: string): PushTarget {
   };
 }
 
-export async function listPushTargets(mac = isMacOS): Promise<PushTarget[]> {
+export async function listPushTargets(): Promise<PushTarget[]> {
   const hosts = await getAgentRemoteHosts().catch(() => null);
-  return [localTarget(mac), ...(hosts ?? []).map((entry) => remoteTarget(entry.host))];
+  return [localTarget(), ...(hosts ?? []).map((entry) => remoteTarget(entry.host))];
 }
