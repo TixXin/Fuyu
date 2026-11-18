@@ -167,7 +167,11 @@
         "mailEnabled": "firstMergeOnly",
         "gameDoNotDisturb": "local",
         "gameAutoTuck": "local",
-        "hoverTakesKeyboard": "local"
+        "hoverTakesKeyboard": "local",
+        "idleDim": "sync",
+        "idleDimOpacity": "sync",
+        "idleDimSeconds": "sync",
+        "islandOpacity": "sync"
       }
     },
     "fuyu-setting-presets": "byId",
@@ -244,6 +248,8 @@
         "enabled": "firstMergeOnly",
         "shortcut": "local"
       }
-    }
+    },
+    "fuyu-calendar-prefs": "sync",
+    "fuyu-todo-prefs": "sync"
   }
 }
