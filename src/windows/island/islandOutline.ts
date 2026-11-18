@@ -83,14 +83,17 @@ function fillets(): Segment[] {
   ];
 }
 
-function toIslandBox(segments: Segment[]): Segment[] {
-  const shift = ([x, y]: Point): Point => [`(${x.split("100%").join(`(100% + 2 * ${FILLET})`)}) - ${FILLET}`, y];
+function shiftX(segments: Segment[], widen: string, offset: string): Segment[] {
+  const shift = ([x, y]: Point): Point => [`(${x.split("100%").join(`(100% ${widen} 2 * ${FILLET})`)}) ${offset} ${FILLET}`, y];
   return segments.map((segment) =>
     segment.kind === "curve"
       ? { ...segment, to: shift(segment.to), c1: shift(segment.c1), c2: shift(segment.c2) }
       : { ...segment, to: shift(segment.to) },
   );
 }
+
+const toIslandBox = (segments: Segment[]) => shiftX(segments, "+", "-");
+const toFilletBox = (segments: Segment[]) => shiftX(segments, "-", "+");
 
 function place(edge: OutlineEdge, [x, y]: Point): Point {
   if (edge === "bottom") return [x, `100% - (${y})`];
@@ -118,9 +121,9 @@ function render(edge: OutlineEdge, segments: Segment[]): string {
 
 function ring(edge: OutlineEdge, docked: boolean): string {
   const corners = docked ? CORNERS[edge] : CORNERS.top;
-  const fillet = docked ? FILLET : "0px";
-  const outer = render(edge, contour(corners, fillet, "0px", docked));
-  const inner = render(edge, contour(corners, fillet, RIM, docked)).replace(/^from /, "move to ");
+  const path = (w: string) => (docked ? contour(corners, FILLET, w, true) : toFilletBox(contour(corners, "0px", w, false)));
+  const outer = render(edge, path("0px"));
+  const inner = render(edge, path(RIM)).replace(/^from /, "move to ");
   return `shape(evenodd ${outer}, ${inner})`;
 }
 

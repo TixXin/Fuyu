@@ -90,3 +90,16 @@
 .cover--en .cover__title {
   font-size: 86px;
 }
+
+.stage-root--vertical .cover__board {
+  width: 1080px;
+  height: 1350px;
+  transform: scale(calc(720 / 1080));
+}
+
+.stage-root--vertical .cover__title { left: 70px; top: 80px; }
+.stage-root--vertical .cover__sub { left: 80px; top: 470px; }
+.stage-root--vertical .cover__tags { left: 80px; top: 600px; width: 920px; }
+.stage-root--vertical .cover__bar { left: 130px; top: 800px; width: 820px; }
+.stage-root--vertical .cover__list { left: 90px; top: 900px; width: 900px; }
+.stage-root--vertical .cover__lyrics { left: 300px; top: 1200px; width: 720px; }
