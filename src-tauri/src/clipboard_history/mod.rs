@@ -67,7 +67,9 @@ pub(crate) use plugin_view::{local_api_history, plugin_history, plugin_item};
 pub(crate) use links::{links_for_sync, replace_links_from_sync};
 pub(crate) use links_order::key_between as link_key_between;
 pub(crate) use snippets::{replace_snippets_from_sync, snippets_for_sync};
-pub(crate) use favorites_sync::{apply_sync_doc as sync_favorites_apply, favorites_for_sync, replace_favorites_from_sync, to_sync_doc as sync_favorites_to_doc};
+#[cfg(test)]
+pub(crate) use favorites_sync::apply_sync_doc as sync_favorites_apply;
+pub(crate) use favorites_sync::{favorites_for_sync, replace_favorites_from_sync, to_sync_doc as sync_favorites_to_doc};
 pub(crate) use pins::checked_key as checked_pin_key;
 pub(crate) use secrets::looks_like_secret as is_secret_clipboard_text;
 pub(crate) use edit::text_hash as text_clipboard_hash;

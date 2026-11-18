@@ -490,14 +490,12 @@ pub(crate) fn apply_sync_doc(
     (next_items, tombstones)
 }
 
-pub(crate) fn favorites_for_sync() -> Result<Option<(Vec<ClipboardHistoryItem>, Vec<Tombstone>, usize)>, String> {
+pub(crate) type SyncFavorites = (Vec<ClipboardHistoryItem>, Vec<Tombstone>);
+
+pub(crate) fn favorites_for_sync() -> Result<Option<SyncFavorites>, String> {
     let Ok(service) = super::service() else { return Ok(None) };
     let state = service.state.lock().map_err(|error| error.to_string())?;
-    Ok(Some((
-        state.items.clone(),
-        state.favorite_tombstones.clone(),
-        state.settings.privacy.max_text_bytes(),
-    )))
+    Ok(Some((state.items.clone(), state.favorite_tombstones.clone())))
 }
 
 pub(crate) fn replace_favorites_from_sync(

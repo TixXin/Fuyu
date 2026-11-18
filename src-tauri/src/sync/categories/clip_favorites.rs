@@ -5,7 +5,7 @@ use super::Category;
 use crate::{
     clipboard_history::{
         checked_pin_key, favorites_for_sync, is_secret_clipboard_text, replace_favorites_from_sync,
-        sync_favorites_apply, sync_favorites_to_doc, text_clipboard_hash, ClipboardHistoryItem,
+        sync_favorites_to_doc, text_clipboard_hash, ClipboardHistoryItem,
     },
     sync::{config::SyncCategory, layout::Doc, Hlc, Tombstone},
 };
@@ -14,12 +14,13 @@ pub(crate) fn to_doc(items: &[ClipboardHistoryItem], tombstones: &[Tombstone], d
     sync_favorites_to_doc(items, tombstones, device)
 }
 
+#[cfg(test)]
 pub(crate) fn apply(
     local: &[ClipboardHistoryItem],
     merged: &Doc,
     text_limit: usize,
 ) -> (Vec<ClipboardHistoryItem>, Vec<Tombstone>) {
-    sync_favorites_apply(local, merged, text_limit)
+    crate::clipboard_history::sync_favorites_apply(local, merged, text_limit)
 }
 
 pub(crate) fn tidy(doc: &mut Doc, tick: &mut dyn FnMut() -> Hlc) {
@@ -92,7 +93,7 @@ impl Category for ClipFavorites {
     }
 
     fn load(&mut self) -> Result<Option<Doc>, String> {
-        let Some((items, tombstones, _)) = favorites_for_sync()? else {
+        let Some((items, tombstones)) = favorites_for_sync()? else {
             return Ok(None);
         };
         let doc = to_doc(&items, &tombstones, &self.device);
