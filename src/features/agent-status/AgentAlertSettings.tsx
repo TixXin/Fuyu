@@ -77,7 +77,7 @@ export function AgentAlertSettings({
           title={text.quota}
           description={text.quotaDescription}
           control={
-            <SettingsSelect
+            <SettingsChoice
               value={String(settings.agentQuotaAlertPercent)}
               options={quotaOptions}
               ariaLabel={text.quota}

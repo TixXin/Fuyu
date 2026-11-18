@@ -14,6 +14,7 @@ export function SettingsSecretRow({
   placeholder,
   ariaLabel,
   hasSecret,
+  indent = false,
   saving = false,
   testing = false,
   saveLabel,
@@ -32,6 +33,7 @@ export function SettingsSecretRow({
   placeholder?: string;
   ariaLabel?: string;
   hasSecret: boolean;
+  indent?: boolean;
   saving?: boolean;
   testing?: boolean;
   saveLabel: string;
@@ -49,6 +51,7 @@ export function SettingsSecretRow({
 
   return (
     <SettingsRow
+      indent={indent}
       title={title}
       description={description ?? (hasSecret ? common.saved : undefined)}
       searchable={searchable}

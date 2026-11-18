@@ -43,6 +43,7 @@ export type ClaudeUsageText = {
   needsAgents: string;
   settings: {
     title: string;
+    optionsTitle: string;
     footer: string;
     codexHint: string;
     antigravityHint: string;
@@ -211,6 +212,7 @@ export const zhCN: ClaudeUsageText = {
   needsAgents: "需要打开 AI Agent 插件",
   settings: {
     title: "用量环",
+    optionsTitle: "显示口径与直连查询",
     footer: "在收起条上给有额度窗口的 Agent 显示同心双环（外环 5 小时，内环 7 天或本月），悬停显示详情，点击刷新；用到 70% 和 90% 时统一变黄、变红。WorkBuddy 和 DeepSeek Harness 没有百分比窗口，不画圆环，只在悬停卡片中显示已用积分或账户余额。联网查询项默认均关闭，凭据只在 Rust 进程内存中使用。",
     codexHint: "读本机 Codex 会话记录里的额度（CODEX_HOME 或 ~/.codex 下的 sessions），不联网。Codex 跑过一轮后才有数据。",
     antigravityHint: "优先查询本机运行中的 Antigravity 本地服务，未运行时只读 ~/.gemini 下的登录令牌向 Cloud Code 查询 Gemini 与 Claude / GPT 的 5 小时和每周额度。这是未公开的内部接口，随版本可能失效（失效时提示「接口失效」）。",
@@ -372,6 +374,7 @@ export const en: ClaudeUsageText = {
   needsAgents: "Needs the AI Agent plugin switched on",
   settings: {
     title: "Usage rings",
+    optionsTitle: "Display and direct query",
     footer: "Gives each agent with quota windows two rings on the collapsed bar (5 hours outside, 7 days or the month inside), with details on hover and a refresh on click; 70% and 90% turn yellow and red. WorkBuddy and DeepSeek Harness have no percentage windows, so they stay out of the rings and show credits or wallet balance on hover. Network lookups default to off and credentials stay in Rust memory.",
     codexHint: "Reads the limits in Codex's session logs on this computer (sessions under CODEX_HOME or ~/.codex), with no network access. Numbers appear after Codex has run a turn.",
     antigravityHint: "Queries the running local Antigravity server first, or falls back to ~/.gemini login tokens (read-only) to ask Cloud Code for Gemini and Claude / GPT 5-hour and weekly limits. Uses undocumented internal endpoints that may break across updates (reported as \"Endpoint changed\").",
