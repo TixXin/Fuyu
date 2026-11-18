@@ -4,7 +4,7 @@
 >
 > 我们借鉴的是功能和交互逻辑。界面、文案、图标和音效都自己做，不照搬。
 
-任务和进度见 [B6](../../tasks/B/B6.md)（`pnpm tasks show B6`），音效选型和实测记录见 [agent-island-interaction-tasks.md](island-interaction-notes.md)。
+任务和进度见 [B6](../../tasks/0-archive/B/B6.md)（`pnpm tasks show B6`），音效选型和实测记录见 [agent-island-interaction-tasks.md](island-interaction-notes.md)。
 
 ## 一、参考软件有哪些能力
 
@@ -70,7 +70,7 @@
 - 第 3 条：不在选项里的文字原样接受，输入框可以一直显示。
 - 第 4 条补充：`AskUserQuestion` 在 `PreToolUse` 返回空决定后还会再触发一次 `PermissionRequest`。岛上不处理这个提问时，这一次要立即返回空决定。用 `PreToolUse` 回答后不会再触发。
 - 第 5 条：延迟可忽略；岛屿没运行时连接失败，审批框立即出现。
-- Codex 还没测，做第 2 期的 Codex 部分前补测。
+- **Codex 补测结论（2026-11-17，Codex CLI 0.169.0，B6.0.4）**：`PermissionRequest` 钩子等待期间终端不显示审批框（只显示 `Running hooks`），返回 `{}` 后约 29 毫秒终端弹出审批框；返回 `allow` 直接放行执行、不出审批框；返回 `deny` 加 `message` 直接拦截并在终端显示 `Blocked by hook` 与拒绝原因、同时传回模型；等待时按 Esc 约 2 毫秒即断开 HTTP 连接；沙箱自动放行的命令不触发 `PermissionRequest`；新装或变更钩子后首次启动需在 `Hooks need review`（或 `/hooks`）中确认信任。详见「实测记录」。
 
 ## 三、设计
 

@@ -1,6 +1,6 @@
 # Agent 岛上交互：音效与实测记录
 
-方案见 [agent-island-interaction.md](island-interaction.md)。任务和进度在 [B6](../../tasks/B/B6.md) 和它的子任务里（`pnpm tasks show B6`），这里只留音效的选型和实测得出的结论；实测结论变了，同步修改方案文档里受影响的部分。
+方案见 [agent-island-interaction.md](island-interaction.md)。任务和进度在 [B6](../../tasks/0-archive/B/B6.md) 和它的子任务里（`pnpm tasks show B6`），这里只留音效的选型和实测得出的结论；实测结论变了，同步修改方案文档里受影响的部分。
 
 ## 音效
 
@@ -37,4 +37,23 @@
 - `AskUserQuestion` 会先后经过 `PreToolUse` 和 `PermissionRequest`。端点收到工具名为 `AskUserQuestion` 的 `PermissionRequest` 时，如果岛上没有在处理这个提问（例如第 3 期的开关没开，或用户点了「到终端处理」），要立即返回空决定，不能再挂一次。
 - 自由文本回答可以做，提问卡片上一直显示输入框。
 - 岛屿没运行时不影响 Agent，不需要额外兜底。
-- Codex（0.4）还没测，第 2 期做 Codex 那部分之前补上。
+
+### 2026-11-17 · Codex CLI 0.169.0 · macOS
+
+**做法**：在仓库外的临时目录设独立 `CODEX_HOME`，写入浮屿 `codex_hooks.rs` 生成的 `[[hooks.*]]` 配置与四份 `/bin/sh` 钩子脚本（`fuyu-agent-approval.sh` 等），在 `127.0.0.1` 上分别挂模拟的 OpenAI Responses 流式端点与岛屿审批端点（`/codex/permission-request`），在真实伪终端（PTY）里运行 `codex`（`workspace-write` + `approval_policy = "on-request"`），触发需要提权审批的 `exec_command`（`sandbox_permissions: "require_escalated"`）与无需提权的普通命令。测试目录用完即删，不进仓库。
+
+| 测试 | 结果 |
+|---|---|
+| 钩子输入字段 | 底层工具虽为 `exec_command`（`cmd`、`justification`），`PermissionRequest` 钩子收到的 JSON 已归一化为 `tool_name: "Bash"`、`tool_input: { command, description }`，带 `session_id`、`turn_id`、`transcript_path`、`cwd`、`model`、`permission_mode`（无 `permission_suggestions`），与岛屿现有解析和预览字段完全一致 |
+| 沙箱内自动放行的命令 | 不需要人工审批的命令直接执行，**不触发** `PermissionRequest`，也不写 `agent-notifications` |
+| 新装钩子未信任 | 未信任时启动即弹 `Hooks need review`（`Review hooks` / `Trust all and continue` / `Continue without trusting`）；跳过信任则钩子不运行，信任后哈希写入 `config.toml` 的 `[hooks.state."..."]` |
+| 挂起 3 秒后返回 `{}` | 等待期间终端**不显示**审批框，底栏只显示 `Working (... • esc to interrupt)` 与 `Running hooks ◦ 1`；端点返回 `{}`（脚本过滤为空输出、退出码 0）后约 29 毫秒终端弹出 `Would you like to run the following command?`，按 `y` 照常执行 |
+| 返回 `allow` | **生效**：不出终端审批框，命令立即执行，终端记录 `• Ran ...` 与输出，退出码与 stdout 正常传回模型 |
+| 返回 `deny` 加 `message` | **生效**：不出终端审批框，命令不执行，终端显示 `• Blocked by hook` / `└ Denied in Fuyu`，拒绝原因（`Rejected("Denied in Fuyu")`）传回模型 |
+| 挂起时按 Esc | 立即中断本轮（终端显示 `■ Conversation interrupted`），钩子子进程树同步结束，本机 HTTP 端点在按 Esc 后约 2 毫秒读到连接关闭（EOF），岛上可据此立即撤卡 |
+| 服务器没运行（端口无监听程序） | `fuyu-agent-approval.sh` 连未监听端口立即退出 0，约 92 毫秒内终端照常弹出审批框，无报错无卡顿 |
+
+**结论**：
+
+- Codex 0.169.0 的 `PermissionRequest` 在挂起等待期间仍然挡住终端审批框（与 Claude Code 2.1.319 起同时显示审批框不同），不存在「终端先点了但连接不断」的情况，不需要额外装类似 `/claude/activity` 的消卡钩子。
+- 浮屿当前的 `hookSpecificOutput.decision`（`allow` / `deny` + `message` / 空 `{}` 交回终端）和连接断开撤卡逻辑对 Codex 全部原样生效，无需改代码。
