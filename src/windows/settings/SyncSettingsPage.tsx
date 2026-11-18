@@ -18,14 +18,15 @@ export function SyncSettingsPage() {
         actionError={sync.actionError}
         onSyncNow={() => void sync.runSyncNow()}
         onConfirmDeletions={() => void sync.confirmDeletions()}
-        onStopSync={() => void sync.stopFolderSync()}
+        onStopSync={() => void sync.stopCurrentSync(false)}
       />
       <SyncBackendSection
         status={sync.status}
         busy={sync.busy}
         onChooseFolder={(title) => void sync.chooseFolder(title)}
         onRevealFolder={() => void sync.revealFolder()}
-        onStopSync={() => void sync.stopFolderSync()}
+        onSaveWebdav={(url, username, password) => sync.saveWebdav(url, username, password)}
+        onStopSync={(forgetWebdav) => void sync.stopCurrentSync(forgetWebdav)}
       />
       <SyncCategoriesSection
         status={sync.status}

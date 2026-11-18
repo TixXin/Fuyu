@@ -1,14 +1,17 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "../../../i18n";
 import type { IslandContribution } from "../../plugin-kernel/islandContributions";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { listenCalendarJoinShortcut } from "../api";
+import { joinCalendarMeeting } from "../joinMeeting";
 import { todoEvents } from "../todoEvents";
 import { useCalendar } from "../useCalendar";
 import { useCalendarPrefs } from "../useCalendarPrefs";
 import { useMeetingBanner } from "../useMeetingBanner";
 import { useTodoLink } from "../useTodoLink";
 import { calendarState, meetingBannerState, meetingState, todoLinkState } from "./islandState";
+import { resolveJoinShortcutTarget } from "./joinShortcut";
 import { useMeetingContributions } from "./meetingLines";
 import { OWNER } from "./owner.ts";
 
@@ -32,6 +35,37 @@ function CalendarRunner({ barText, settings }: RunnerProps) {
   const calendar = useCalendar(settings.calendarEnabled, settings.calendarRemindMinutes, timedTodos, prefs);
   calendarState.useProvide(calendar);
   const { upcoming } = calendar;
+  const joinContext = useRef({
+    enabled: settings.calendarEnabled,
+    upcoming,
+    pauseMediaOnJoin: prefs.pauseMediaOnJoin,
+  });
+  joinContext.current = {
+    enabled: settings.calendarEnabled,
+    upcoming,
+    pauseMediaOnJoin: prefs.pauseMediaOnJoin,
+  };
+
+  useEffect(() => {
+    let disposed = false;
+    let stop: (() => void) | null = null;
+    void listenCalendarJoinShortcut(() => {
+      const target = resolveJoinShortcutTarget(joinContext.current);
+      if (target) {
+        joinCalendarMeeting(target.link, target.pauseMedia);
+      }
+    })
+      .then((unlisten) => {
+        if (disposed) unlisten();
+        else stop = unlisten;
+      })
+      .catch((error: unknown) => console.error("Failed to listen for the calendar join shortcut", error));
+    return () => {
+      disposed = true;
+      stop?.();
+    };
+  }, []);
+
   const meeting = useMemo(
     () =>
       upcoming && settings.calendarEnabled

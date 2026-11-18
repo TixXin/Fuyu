@@ -1,7 +1,19 @@
 mod caldav;
+#[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
+mod hotkey;
 mod ics;
 mod meeting_link;
+mod shortcut;
 mod sources;
+
+#[cfg(windows)]
+pub(crate) use shortcut::coexist_refresh;
+pub(crate) use shortcut::init;
+
+#[tauri::command]
+pub(crate) fn get_calendar_shortcut_problem() -> Option<&'static str> {
+    shortcut::problem()
+}
 
 use crate::user_error::UserError;
 use plugin_base::host_service;
@@ -357,6 +369,7 @@ macro_rules! tauri_commands {
             crate::calendar::list_calendar_sources,
             crate::calendar::add_calendar_source,
             crate::calendar::remove_calendar_source,
+            crate::calendar::get_calendar_shortcut_problem,
         ] $($rest)*)
     };
 }
@@ -417,13 +430,6 @@ mod tests {
         };
         let shown = serde_json::to_value(CalendarSources::from(vec![saved])).unwrap();
         assert_eq!(shown, serde_json::json!({ "sources": [{ "id": "cal-1", "kind": "caldav", "name": "Work", "host": "dav.example" }] }));
-    }
-
-    #[test]
-    fn the_calendar_has_no_background_in_rust() {
-        let catalog = crate::plugin_kernel::builtins::catalog();
-        let calendar = catalog.iter().find(|plugin| plugin.id == "calendar").expect("calendar is a built-in plugin");
-        assert_eq!(calendar.background.as_deref(), Some(&[][..]));
     }
 
     #[test]

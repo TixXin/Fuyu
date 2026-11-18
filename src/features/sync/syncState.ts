@@ -1,4 +1,4 @@
-import type { OptionalSyncGroup, SyncCategory, SyncStatus } from "./api";
+import type { OptionalSyncGroup, SyncBackendKind, SyncCategory, SyncStatus } from "./api";
 
 export const SYNC_CATEGORY_ITEMS: readonly SyncCategory[] = [
   "todos",
@@ -32,10 +32,13 @@ export const STALE_DEVICE_MS = 180 * 24 * 60 * 60 * 1000;
 
 export const DEFAULT_SYNC_STATUS: SyncStatus = {
   phase: "off",
+  backend: "off",
   folder: null,
+  webdav: null,
   deviceId: null,
   lastSyncAt: null,
   lastError: null,
+  error: null,
   confirm: null,
   categories: SYNC_CATEGORY_ITEMS.map((category) => ({
     category,
@@ -47,6 +50,17 @@ export const DEFAULT_SYNC_STATUS: SyncStatus = {
   devices: [],
   skippedFiles: [],
 };
+
+export function activeSyncBackend(status: SyncStatus): SyncBackendKind {
+  if (status.backend === "webdav" || status.backend === "folder" || status.backend === "off") {
+    return status.backend;
+  }
+  return status.folder ? "folder" : "off";
+}
+
+export function isSyncActive(status: SyncStatus): boolean {
+  return activeSyncBackend(status) !== "off";
+}
 
 export function enabledCategories(status: SyncStatus): SyncCategory[] {
   return status.categories

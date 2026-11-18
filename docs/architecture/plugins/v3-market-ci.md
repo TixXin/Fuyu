@@ -95,8 +95,8 @@
 
 | 名字 | 放在哪 | 用途 |
 |---|---|---|
-| `FUYU_INDEX_V3_SIGNING_KEY` | `fuyu-plugins` 的 `release` 环境（只允许 `main`） | 签 `index.v3.json`。新的一把，不复用第 2 版的 `FOCUSD_PLUGIN_SIGNING_KEY`：那把同时签第 2 版的撤销名单，第 3 版要求索引密钥签不了撤销名单（信任根两组不能重叠） |
-| 撤销密钥 | 维护者自己的电脑，离线 | 签 `revoked.v3.json`，签好开 PR；CI 不经手 |
+| `FUYU_INDEX_V3_SIGNING_KEY` | `fuyu-plugins` 的 `release` 环境（只允许 `main`） | 签 `index.v3.json`（公钥 `keyId: d5a27e09caa2594b`）。新的一把，不复用第 2 版的 `FOCUSD_PLUGIN_SIGNING_KEY`：那把同时签第 2 版的撤销名单，第 3 版要求索引密钥签不了撤销名单（信任根两组不能重叠） |
+| 撤销密钥（`~/.tauri/fuyu/revocation-v3.key`） | 维护者自己的电脑，离线 | 签 `revoked.v3.json`（公钥 `keyId: 63fd60abfbf525be`，2026-11-17 生成并入信任根），用 `node scripts/plugins-v3/sign-revoked.mjs <revoked.v3.json>` 离线签好后开 PR；CI 不经手 |
 | `CI_PUSH_DEPLOY_KEY` | `ci-push` 环境（只允许 `main`） | 有写权限的部署密钥 `ci-push`，四个推 `main` 的工作流用它；规则集里给它 Always 绕过 |
 | `FOCUSD_PLUGIN_SIGNING_KEY` | `release` 环境 | 第 2 版索引，不变 |
 

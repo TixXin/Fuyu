@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { parseTodoInlineSyntax } from "./inlineSyntax.ts";
 import { MAX_TODO_PROJECTS, readProject } from "./project.ts";
 import { loadCurrentTodoDate, loadDailyNote, saveCurrentTodoDate, saveDailyNote } from "./storage.ts";
@@ -8,11 +8,13 @@ import { useScheduledTodos } from "./useScheduledTodos";
 import { useTodoApiHandlers } from "./useTodoApiHandlers";
 import { useTodoArchives } from "./useTodoArchives";
 import { useTodoFileField } from "./useTodoFileField";
+import { useTodoFocusTimer } from "./useTodoFocusTimer";
 import { useTodoList } from "./useTodoList";
 import { useTodoPrefs } from "./useTodoPrefs";
 import { useTodoProjectSync } from "./useTodoProjectSync";
 import { useTodoRollover } from "./useTodoRollover";
 import { useTodoSaving } from "./useTodoSaving";
+import { useTodoTimedReminders } from "./useTodoTimedReminders";
 
 type TodosOptions = {
   carryOverIncompleteTodos: boolean;
@@ -30,14 +32,28 @@ export function useTodos({
   onMissingSaveDirectory,
 }: TodosOptions) {
   const [prefs] = useTodoPrefs();
+  const focusDoneRef = useRef<(todoId: string, minutes: number) => void>(() => undefined);
+  const startFocusTimer = useTodoFocusTimer({
+    enabled: prefs.focusTimerEnabled,
+    focusMinutes: prefs.focusTimerMinutes,
+    onFocusCompleted: (todoId, minutes) => focusDoneRef.current(todoId, minutes),
+  });
   const list = useTodoList(onStartTodo, {
     completionSound: prefs.completionSound,
     insertPosition: prefs.insertPosition,
+    autoCompleteFromSubtasks: prefs.autoCompleteFromSubtasks,
+    onTodoStarted: startFocusTimer,
   });
+  focusDoneRef.current = list.addFocusMinutes;
   const { todos, setTodos, draftTodo, setDraftTodo, activeTodoId, stopAllTodos, insertItem } = list;
   const [dailyNote, setDailyNote] = useState(loadDailyNote);
   useTodoFileField("dailyNote", setDailyNote);
   const [currentTodoDate, setCurrentTodoDate] = useState<string>(() => loadCurrentTodoDate(prefs.dayStartHour));
+  useTodoTimedReminders({
+    enabled: prefs.timedReminderEnabled,
+    date: currentTodoDate,
+    todos,
+  });
   const { archives, setArchives, upsertArchive } = useTodoArchives(prefs.archiveRetentionDays);
   const visibleArchives = useMemo(
     () => filterArchivesByRetention(archives, currentTodoDate, prefs.archiveRetentionDays),
@@ -178,6 +194,10 @@ export function useTodos({
       onStartTodo: list.startTodo,
       onDeleteTodo: list.deleteTodo,
       onReorderTodo: list.reorderTodo,
+      onAddSubtask: list.addSubtask,
+      onToggleSubtask: list.toggleSubtask,
+      onDeleteSubtask: list.deleteSubtask,
+      onUpdateTodoNote: list.updateNote,
       onSaveToday: saveTodayTodos,
       onShowArchive: showArchive,
       onShowDaily: showDaily,

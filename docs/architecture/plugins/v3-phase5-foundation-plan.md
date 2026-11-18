@@ -211,7 +211,7 @@
   - 现状：`fuyu-plugin build` 把 `HOST_EXTERNALS` 展开成 `name` 和 `name/*`，`@fuyu/plugin-base` 的子路径全留在外面，可宿主只共享不带子路径的那个，运行时找不到模块。内置插件也有同一个问题，由 E36.3.16 修。
   - 改法：E36.3.16（c1c36a31）在 protocol 导出 `HOST_SHARED_MODULES`（`@fuyu/plugin-base`、`fuyu-plugin`），由宿主默认共享。命令行已跟上（780e7530）：按名字精确匹配，名单外的包括子路径都打进包里；v3-cli.md 和 `docs/plugins/v3/cli.md` 一起改了。
 - `defineService` 和服务名规则已由 E36.3.17 挪走（0f4161dc、2051b1b3）：`defineService`、`isServiceDefinition` 等在 `@fuyu/plugin-base/services`，它进了 `HOST_SHARED_MODULES`，命令行按名字精确匹配，自动留在包外；`@fuyu/plugin-services` 转出同一个函数。服务名正则 `SERVICE_NAME` 只留一份，在 `@fuyu/plugin-manifest/names`。单开子路径是因为主入口用到 `node:crypto` 和 zlib，而 protocol 会进窗口。脚手架没用 `defineService`。
-- `TixXin/fuyu-plugins` 还没打开私密漏洞报告（Settings → Code security → Private vulnerability reporting），market-rules 的「还没定的」里记着。这是仓库设置，要用户自己点，收口时随汇报提给经理。
+- `TixXin/fuyu-plugins` 的私密漏洞报告（Settings → Code security → Private vulnerability reporting）已核实开启（`enabled: true`）；独立离线撤销密钥（`keyId: 63fd60abfbf525be`，存于本机 `~/.tauri/fuyu/revocation-v3.key`）已生成并写入 `keys/trusted.v3.json` 与宿主 `DEFAULT_TRUST`（E44）。
 - 2026-11-17 后半部分 E36.5.8–E36.5.12 全部完成并归档：
   - `E36.5.8`（#768）：`packages/plugin-cli/src/installer.mjs` 提供 `inspectPackage`、`installPackage`、`uninstallPackage`、`applyRevocationsToDir`（支持解包到 `packages/<scope>/<name>`、写入 `plugins.yml`、手动安装默认拦截与 `allowManual` 放行、撤销名单 `disable` 停用保留数据）；设置窗口卡片与详情弹窗展示 `source === "manual"` 的「未经过市场审核」标记与 `undeclared` 未声明能力提示。
   - `E36.5.9`（#769）：宿主窗口 WebSocket 暴露 `bisect` 方法，设置窗口 `PluginsV3SettingsPage` 接入 `PluginBisectBar` 折半排查向导（`src/windows/settings/pluginBisect.ts`、`PluginBisectBar.tsx`）。

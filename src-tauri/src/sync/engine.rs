@@ -9,16 +9,23 @@ use std::{
 };
 use tauri::{AppHandle, Emitter};
 
+use crate::user_error::UserError;
+
 use super::{
+    backend::Backend,
     backend_folder::FolderBackend,
     base,
-    categories::{clip_favorites::ClipFavorites, links::Links, settings, snippets::Snippets, todos::Todos, Category},
+    categories::{
+        clip_favorites::ClipFavorites, links::Links, settings, snippets::Snippets, todos::Todos,
+        Category,
+    },
     clock,
-    config::{self, SyncCategory, SyncConfig},
+    config::{self, SyncBackendKind, SyncCategory, SyncConfig, WebdavConfig},
     device,
     layout::DeviceInfo,
-    round::{Clockwork, Options, Round},
+    round::{Clockwork, Options, Round, RoundResult},
     status::{SyncPhase, SyncStatus},
+    webdav::{self, WebdavBackend},
     Hlc,
 };
 
@@ -71,8 +78,17 @@ pub(crate) fn start(app: &AppHandle, home: PathBuf, data_home: PathBuf) {
     }
     let (sender, receiver) = mpsc::channel();
     let config = config::load(&home);
-    let status = SyncStatus::new(&config, device::id().ok());
-    let engine = Engine { app: app.clone(), home, data_home, wake: Mutex::new(sender), status: Mutex::new(status), options: Mutex::new(Options::default()), run: Mutex::new(()) };
+    let has_pw = webdav::secret::has_password();
+    let status = SyncStatus::new(&config, device::id().ok(), has_pw);
+    let engine = Engine {
+        app: app.clone(),
+        home,
+        data_home,
+        wake: Mutex::new(sender),
+        status: Mutex::new(status),
+        options: Mutex::new(Options::default()),
+        run: Mutex::new(()),
+    };
     if ENGINE.set(engine).is_err() {
         return;
     }
@@ -115,7 +131,9 @@ fn device_name() -> String {
             return name;
         }
     }
-    std::env::var("COMPUTERNAME").or_else(|_| std::env::var("HOSTNAME")).unwrap_or_default()
+    std::env::var("COMPUTERNAME")
+        .or_else(|_| std::env::var("HOSTNAME"))
+        .unwrap_or_default()
 }
 
 impl Engine {
@@ -136,25 +154,33 @@ impl Engine {
         next
     }
 
+    fn fail_round(&self, config: &SyncConfig, has_pw: bool, error: UserError) {
+        self.update(|status| {
+            status.configure(config, has_pw);
+            status.phase = SyncPhase::Error;
+            status.last_error = Some(error.to_string());
+            status.error = Some(error);
+        });
+    }
+
     fn round(&self) {
         let _running = guard(&self.run);
         let config = config::load(&self.home);
-        let Some(folder) = config.folder.clone() else {
-            self.update(|status| status.configure(&config));
+        let has_pw = webdav::secret::has_password();
+        let active = config.active_backend();
+        if active == SyncBackendKind::Off {
+            self.update(|status| status.configure(&config, has_pw));
             return;
-        };
+        }
         let device_id = match device::id() {
             Ok(id) => id,
             Err(error) => {
-                self.update(|status| {
-                    status.phase = SyncPhase::Error;
-                    status.last_error = Some(error);
-                });
+                self.fail_round(&config, has_pw, UserError::from(error));
                 return;
             }
         };
         self.update(|status| {
-            status.configure(&config);
+            status.configure(&config, has_pw);
             status.device_id = Some(device_id.clone());
             status.phase = SyncPhase::Syncing;
         });
@@ -166,14 +192,62 @@ impl Engine {
             last_sync_at: 0,
         };
         let options = std::mem::take(&mut *guard(&self.options));
-        let result = run_round(&self.app, &self.home, &self.data_home, &config, &folder, &me, options);
+
+        let (result, user_error) = match active {
+            SyncBackendKind::Off => return,
+            SyncBackendKind::Folder => {
+                let Some(folder) = config.folder.as_deref() else {
+                    self.update(|status| status.configure(&config, has_pw));
+                    return;
+                };
+                let backend = FolderBackend::new(PathBuf::from(folder));
+                let out = run_with_backend(&self.app, &self.home, &self.data_home, &config, &backend, &me, options);
+                (out, None)
+            }
+            SyncBackendKind::Webdav => {
+                let Some(webdav_cfg) = config.webdav.as_ref() else {
+                    self.update(|status| status.configure(&config, has_pw));
+                    return;
+                };
+                let password = match webdav::secret::read_password() {
+                    Ok(Some(password)) => password,
+                    Ok(None) => {
+                        let error = UserError::new("sync.webdavNeedPassword", "Enter the WebDAV app password.");
+                        self.fail_round(&config, false, error);
+                        return;
+                    }
+                    Err(error) => {
+                        self.fail_round(&config, has_pw, error);
+                        return;
+                    }
+                };
+                let backend = match WebdavBackend::new(&webdav_cfg.url, &webdav_cfg.username, &password) {
+                    Ok(backend) => backend,
+                    Err(error) => {
+                        self.fail_round(&config, true, error);
+                        return;
+                    }
+                };
+                let out = run_with_backend(&self.app, &self.home, &self.data_home, &config, &backend, &me, options);
+                let taken = backend.take_last_error();
+                (out, taken)
+            }
+        };
+
         let now = clock::wall_ms();
-        self.update(|status| status.finish(result, &device_id, now));
+        self.update(|status| status.finish(result, user_error, &device_id, now));
     }
 }
 
-fn run_round(app: &AppHandle, home: &Path, data_home: &Path, config: &SyncConfig, folder: &str, me: &DeviceInfo, options: Options) -> super::round::RoundResult {
-    let backend = FolderBackend::new(PathBuf::from(folder));
+fn run_with_backend(
+    app: &AppHandle,
+    home: &Path,
+    data_home: &Path,
+    config: &SyncConfig,
+    backend: &dyn Backend,
+    me: &DeviceInfo,
+    options: Options,
+) -> RoundResult {
     let state_dir = home.join(base::DIR_NAME);
     let device = me.device_id.as_str();
     let mut todos = Todos::new(device);
@@ -183,18 +257,35 @@ fn run_round(app: &AppHandle, home: &Path, data_home: &Path, config: &SyncConfig
     let mut settings_part = settings::Settings::new(app.clone(), settings::Part::Settings, device, groups);
     let mut presets = settings::Settings::new(app.clone(), settings::Part::Presets, device, groups);
     let mut clip_favorites = ClipFavorites::new(device);
-    let all: [&mut dyn Category; 6] = [&mut todos, &mut snippets, &mut links, &mut settings_part, &mut presets, &mut clip_favorites];
-    let (mut enabled, disabled): (Vec<&mut dyn Category>, Vec<&mut dyn Category>) = all.into_iter().partition(|category| config.enabled(category.kind()));
+    let all: [&mut dyn Category; 6] = [
+        &mut todos,
+        &mut snippets,
+        &mut links,
+        &mut settings_part,
+        &mut presets,
+        &mut clip_favorites,
+    ];
+    let (mut enabled, disabled): (Vec<&mut dyn Category>, Vec<&mut dyn Category>) =
+        all.into_iter().partition(|category| config.enabled(category.kind()));
     let disabled: Vec<SyncCategory> = disabled.iter().map(|category| category.kind()).collect();
     let app_version = app.package_info().version.to_string();
     let mut backup = || crate::system::update_backup::create_before_sync(data_home, &app_version);
     let mut clock = GlobalClock;
-    let mut round = Round { backend: &backend, me, state_dir: &state_dir, clock: &mut clock, options, backup: &mut backup };
+    let mut round = Round {
+        backend,
+        me,
+        state_dir: &state_dir,
+        clock: &mut clock,
+        options,
+        backup: &mut backup,
+    };
     round.run(&mut enabled, &disabled)
 }
 
-fn engine() -> Result<&'static Engine, String> {
-    ENGINE.get().ok_or_else(|| "Sync is not started.".to_string())
+fn engine() -> Result<&'static Engine, UserError> {
+    ENGINE
+        .get()
+        .ok_or_else(|| UserError::new("sync.notStarted", "Sync is not started."))
 }
 
 fn wake(engine: &Engine, wake: Wake) {
@@ -209,40 +300,179 @@ pub(crate) fn notify_local_change() {
     }
 }
 
-pub(crate) fn status() -> Result<SyncStatus, String> {
+pub(crate) fn status() -> Result<SyncStatus, UserError> {
     Ok(guard(&engine()?.status).clone())
 }
 
-pub(crate) fn configure(folder: Option<String>, categories: Vec<SyncCategory>, optional_groups: Vec<String>) -> Result<SyncStatus, String> {
-    let engine = engine()?;
-    let next = SyncConfig { folder, categories, optional_groups, ..SyncConfig::default() }.normalized();
-    if let Some(folder) = &next.folder {
-        let path = Path::new(folder);
-        if !path.is_absolute() || !path.is_dir() {
-            return Err(format!("{folder} is not a folder that can be used for sync."));
-        }
-    }
+fn apply_saved_config(engine: &Engine, previous: &SyncConfig, next: SyncConfig) -> Result<SyncStatus, UserError> {
     let running = guard(&engine.run);
-    let previous = config::load(&engine.home);
-    if previous.folder != next.folder {
+    if previous.target_key() != next.target_key() {
         base::forget(&engine.home.join(base::DIR_NAME));
         *guard(&engine.options) = Options::default();
     }
-    config::save(&engine.home, &next)?;
+    config::save(&engine.home, &next).map_err(UserError::from)?;
     drop(running);
-    let status = engine.update(|status| status.configure(&next));
-    if next.folder.is_some() {
+    let has_pw = webdav::secret::has_password();
+    let updated = engine.update(|status| status.configure(&next, has_pw));
+    if next.active_backend() != SyncBackendKind::Off {
         wake(engine, Wake::Now);
     }
-    Ok(status)
+    Ok(updated)
 }
 
-pub(crate) fn sync_now() -> Result<(), String> {
+pub(crate) fn configure(
+    folder: Option<String>,
+    categories: Vec<SyncCategory>,
+    optional_groups: Vec<String>,
+) -> Result<SyncStatus, UserError> {
+    let engine = engine()?;
+    let trimmed_folder = folder
+        .map(|folder| folder.trim().to_string())
+        .filter(|folder| !folder.is_empty());
+    if let Some(folder) = &trimmed_folder {
+        let path = Path::new(folder);
+        if !path.is_absolute() || !path.is_dir() {
+            return Err(UserError::new(
+                "sync.badFolder",
+                format!("{folder} is not a folder that can be used for sync."),
+            )
+            .arg("path", folder.clone()));
+        }
+    }
+    let previous = config::load(&engine.home);
+    let backend = if trimmed_folder.is_some() {
+        SyncBackendKind::Folder
+    } else {
+        SyncBackendKind::Off
+    };
+    let next = SyncConfig {
+        version: previous.version,
+        backend: Some(backend),
+        folder: trimmed_folder,
+        webdav: previous.webdav.clone(),
+        categories,
+        optional_groups,
+    }
+    .normalized();
+    apply_saved_config(engine, &previous, next)
+}
+
+pub(super) fn resolve_webdav_password_for_saved(
+    saved: Option<&WebdavConfig>,
+    target_url: &reqwest::Url,
+    username: &str,
+    provided: Option<&str>,
+) -> Result<String, UserError> {
+    if let Some(secret) = provided.map(str::trim).filter(|secret| !secret.is_empty()) {
+        return Ok(secret.to_string());
+    }
+    let matches_saved = saved.is_some_and(|existing| {
+        webdav::normalize_webdav_url(&existing.url).ok().as_ref() == Some(target_url)
+            && existing.username == username
+    });
+    if matches_saved {
+        if let Some(stored) = webdav::secret::read_password()? {
+            return Ok(stored);
+        }
+    }
+    Err(UserError::new("sync.webdavNeedPassword", "Enter the WebDAV app password."))
+}
+
+pub(crate) fn configure_webdav(
+    url: String,
+    username: String,
+    password: Option<String>,
+    categories: Vec<SyncCategory>,
+    optional_groups: Vec<String>,
+) -> Result<SyncStatus, UserError> {
+    let engine = engine()?;
+    let parsed_url = webdav::normalize_webdav_url(&url)?;
+    let clean_url = webdav::clean_webdav_url(&url)?;
+    let trimmed_user = username.trim().to_string();
+    if trimmed_user.is_empty() {
+        return Err(UserError::new("sync.webdavNeedUsername", "Enter the WebDAV username."));
+    }
+    let previous = config::load(&engine.home);
+    let resolved_password = resolve_webdav_password_for_saved(
+        previous.webdav.as_ref(),
+        &parsed_url,
+        &trimmed_user,
+        password.as_deref(),
+    )?;
+    if password.as_deref().is_some_and(|raw| !raw.trim().is_empty()) {
+        webdav::secret::save_password(&resolved_password)?;
+    }
+    let next = SyncConfig {
+        version: previous.version,
+        backend: Some(SyncBackendKind::Webdav),
+        folder: previous.folder.clone(),
+        webdav: Some(WebdavConfig {
+            url: clean_url,
+            username: trimmed_user,
+        }),
+        categories,
+        optional_groups,
+    }
+    .normalized();
+    apply_saved_config(engine, &previous, next)
+}
+
+pub(crate) async fn test_webdav(
+    url: String,
+    username: String,
+    password: Option<String>,
+) -> Result<(), UserError> {
+    let parsed_url = webdav::normalize_webdav_url(&url)?;
+    let trimmed_user = username.trim().to_string();
+    if trimmed_user.is_empty() {
+        return Err(UserError::new("sync.webdavNeedUsername", "Enter the WebDAV username."));
+    }
+    let saved_webdav = ENGINE
+        .get()
+        .map(|engine| config::load(&engine.home).webdav)
+        .unwrap_or(None);
+    let resolved_password = resolve_webdav_password_for_saved(
+        saved_webdav.as_ref(),
+        &parsed_url,
+        &trimmed_user,
+        password.as_deref(),
+    )?;
+    let backend = WebdavBackend::new(parsed_url.as_str(), &trimmed_user, &resolved_password)?;
+    backend.test_connection().await
+}
+
+pub(crate) fn stop(forget_webdav: bool) -> Result<SyncStatus, UserError> {
+    let engine = engine()?;
+    let previous = config::load(&engine.home);
+    if forget_webdav {
+        webdav::secret::delete_password()?;
+    }
+    let next = SyncConfig {
+        version: previous.version,
+        backend: Some(SyncBackendKind::Off),
+        folder: if previous.active_backend() == SyncBackendKind::Folder {
+            None
+        } else {
+            previous.folder.clone()
+        },
+        webdav: if forget_webdav {
+            None
+        } else {
+            previous.webdav.clone()
+        },
+        categories: previous.categories.clone(),
+        optional_groups: previous.optional_groups.clone(),
+    }
+    .normalized();
+    apply_saved_config(engine, &previous, next)
+}
+
+pub(crate) fn sync_now() -> Result<(), UserError> {
     wake(engine()?, Wake::Now);
     Ok(())
 }
 
-pub(crate) fn confirm() -> Result<(), String> {
+pub(crate) fn confirm() -> Result<(), UserError> {
     let engine = engine()?;
     *guard(&engine.options) = Options { allow_deletions: true, allow_reset: true };
     wake(engine, Wake::Now);

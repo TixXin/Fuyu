@@ -48,6 +48,25 @@
               <div class="settings-row__main">
                 <div class="settings-row__text">
                   <span class="settings-row__title">
+                    同步通道
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div aria-label="同步通道" class="settings-choice" role="group">
+                    <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                      同步文件夹
+                    </button>
+                    <button aria-pressed="false" class="settings-choice__option" type="button">
+                      WebDAV
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
                     同步文件夹
                   </span>
                   <span class="settings-row__description">
@@ -446,6 +465,57 @@
                 <div class="settings-row__text">
                   <span class="settings-row__title">
                     <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-key-round" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        坚果云 WebDAV（应用密码）
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    登录坚果云网页版 → 账户信息 → 安全选项 → 第三方应用管理 → 添加应用密码（不能填登录密码）；先在坚果云新建同步文件夹（或用「我的坚果云」），地址填 https://dav.jianguoyun.com/dav/我的坚果云/。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-globe" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        Nextcloud WebDAV
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    地址填 https://你的域名/remote.php/dav/files/你的用户名/Fuyu/（请勿使用旧版 /remote.php/webdav）；开启两步验证时请在「设置 → 安全 → 设备与会话」中生成专用应用密码。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-server" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        群晖 Synology WebDAV
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    在套件中心安装启用 WebDAV Server（默认 HTTPS 5006、局域网 HTTP 5005），确认账号有对应共享文件夹读写权限与 WebDAV 应用权限，地址填 https://NAS地址:5006/共享文件夹/Fuyu/。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
                       <svg aria-hidden="true" class="lucide lucide-cloud" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
                       <span>
                         OneDrive / iCloud Drive
@@ -465,12 +535,12 @@
                     <span class="sync-help__title">
                       <svg aria-hidden="true" class="lucide lucide-folder-sync" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
                       <span>
-                        坚果云同步盘
+                        坚果云桌面同步盘
                       </span>
                     </span>
                   </span>
                   <span class="settings-row__description">
-                    安装坚果云客户端后将一个本地文件夹设为同步文件夹，在 Windows 与 Mac 上分别选中该文件夹。
+                    若已安装坚果云桌面客户端，也可直接用「同步文件夹」方式在 Windows 与 Mac 上选中同一个本地同步目录。
                   </span>
                 </div>
               </div>
@@ -512,7 +582,7 @@
           </div>
           <div class="settings-group__footer">
             <p class="settings-footnote">
-              多台电脑之间只需指向同一个云盘同步目录或局域网共享目录即可协同工作。
+              多台电脑之间只需指向同一个 WebDAV 目录、云盘同步目录或局域网共享目录即可协同工作。
             </p>
           </div>
         </section>
@@ -560,6 +630,25 @@
             </h2>
           </div>
           <div class="settings-group__card">
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    同步通道
+                  </span>
+                </div>
+                <div class="settings-row__control">
+                  <div aria-label="同步通道" class="settings-choice" role="group">
+                    <button aria-pressed="true" class="settings-choice__option settings-choice__option--active" type="button">
+                      同步文件夹
+                    </button>
+                    <button aria-pressed="false" class="settings-choice__option" type="button">
+                      WebDAV
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="settings-row">
               <div class="settings-row__main">
                 <div class="settings-row__text">
@@ -962,6 +1051,57 @@
                 <div class="settings-row__text">
                   <span class="settings-row__title">
                     <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-key-round" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        坚果云 WebDAV（应用密码）
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    登录坚果云网页版 → 账户信息 → 安全选项 → 第三方应用管理 → 添加应用密码（不能填登录密码）；先在坚果云新建同步文件夹（或用「我的坚果云」），地址填 https://dav.jianguoyun.com/dav/我的坚果云/。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-globe" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        Nextcloud WebDAV
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    地址填 https://你的域名/remote.php/dav/files/你的用户名/Fuyu/（请勿使用旧版 /remote.php/webdav）；开启两步验证时请在「设置 → 安全 → 设备与会话」中生成专用应用密码。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
+                      <svg aria-hidden="true" class="lucide lucide-server" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        群晖 Synology WebDAV
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    在套件中心安装启用 WebDAV Server（默认 HTTPS 5006、局域网 HTTP 5005），确认账号有对应共享文件夹读写权限与 WebDAV 应用权限，地址填 https://NAS地址:5006/共享文件夹/Fuyu/。
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-help__title">
                       <svg aria-hidden="true" class="lucide lucide-cloud" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
                       <span>
                         OneDrive / iCloud Drive
@@ -981,12 +1121,12 @@
                     <span class="sync-help__title">
                       <svg aria-hidden="true" class="lucide lucide-folder-sync" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
                       <span>
-                        坚果云同步盘
+                        坚果云桌面同步盘
                       </span>
                     </span>
                   </span>
                   <span class="settings-row__description">
-                    安装坚果云客户端后将一个本地文件夹设为同步文件夹，在 Windows 与 Mac 上分别选中该文件夹。
+                    若已安装坚果云桌面客户端，也可直接用「同步文件夹」方式在 Windows 与 Mac 上选中同一个本地同步目录。
                   </span>
                 </div>
               </div>
@@ -1028,7 +1168,7 @@
           </div>
           <div class="settings-group__footer">
             <p class="settings-footnote">
-              多台电脑之间只需指向同一个云盘同步目录或局域网共享目录即可协同工作。
+              多台电脑之间只需指向同一个 WebDAV 目录、云盘同步目录或局域网共享目录即可协同工作。
             </p>
           </div>
         </section>

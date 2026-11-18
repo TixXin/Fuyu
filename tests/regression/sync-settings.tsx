@@ -23,10 +23,13 @@ const OLD_DEVICE_SYNC = Date.UTC(2026, 1, 1, 0, 0);
 
 let currentStatus: SyncStatus = {
   phase: "off",
+  backend: "off",
   folder: null,
+  webdav: null,
   deviceId: "mac-studio-01",
   lastSyncAt: null,
   lastError: null,
+  error: null,
   confirm: null,
   categories: SYNC_CATEGORY_ITEMS.map((category) => ({
     category,
@@ -40,7 +43,8 @@ let currentStatus: SyncStatus = {
 };
 
 const calls: { command: string; args: Record<string, unknown> }[] = [];
-let nextPickedFolder: string | null = "/Users/demo/iCloud/FuyuSync";
+const nextPickedFolder = "/Users/demo/iCloud/FuyuSync";
+let nextWebdavTestError: unknown = null;
 
 mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
@@ -58,9 +62,11 @@ mockIPC((command, payload) => {
       const optionalGroups = (args.optionalGroups as OptionalSyncGroup[]) ?? [];
       currentStatus = {
         ...currentStatus,
+        backend: folder ? "folder" : "off",
         folder,
         phase: folder ? "idle" : "off",
         lastSyncAt: folder ? LAST_SYNC : null,
+        error: null,
         optionalGroups,
         categories: SYNC_CATEGORY_ITEMS.map((category) => ({
           category,
@@ -74,6 +80,51 @@ mockIPC((command, payload) => {
               { deviceId: "win-desk-02", name: "Office-PC", platform: "windows", appVersion: "0.3.9", lastSyncAt: OLD_DEVICE_SYNC, thisDevice: false },
             ]
           : [],
+      };
+      return structuredClone(currentStatus);
+    }
+    case "test_sync_webdav": {
+      if (nextWebdavTestError !== null) {
+        throw nextWebdavTestError;
+      }
+      return null;
+    }
+    case "set_sync_webdav": {
+      const url = String(args.url ?? "").trim();
+      const username = String(args.username ?? "").trim();
+      const categories = (args.categories as SyncCategory[]) ?? [];
+      const optionalGroups = (args.optionalGroups as OptionalSyncGroup[]) ?? [];
+      currentStatus = {
+        ...currentStatus,
+        backend: "webdav",
+        phase: "idle",
+        lastSyncAt: LAST_SYNC,
+        lastError: null,
+        error: null,
+        webdav: { url: url.endsWith("/") ? url : `${url}/`, username, hasPassword: true },
+        optionalGroups,
+        categories: SYNC_CATEGORY_ITEMS.map((category) => ({
+          category,
+          state: categories.includes(category) ? "ok" : "off",
+          message: null,
+          lastSyncAt: categories.includes(category) ? LAST_SYNC : null,
+        })),
+        devices: [
+          { deviceId: "mac-studio-01", name: "MacBook Air", platform: "macos", appVersion: "0.3.11", lastSyncAt: LAST_SYNC, thisDevice: true },
+          { deviceId: "win-desk-02", name: "Office-PC", platform: "windows", appVersion: "0.3.9", lastSyncAt: OLD_DEVICE_SYNC, thisDevice: false },
+        ],
+      };
+      return structuredClone(currentStatus);
+    }
+    case "stop_sync": {
+      const forget = Boolean(args.forgetWebdav);
+      currentStatus = {
+        ...currentStatus,
+        backend: "off",
+        phase: "off",
+        lastError: null,
+        error: null,
+        webdav: forget ? null : currentStatus.webdav,
       };
       return structuredClone(currentStatus);
     }
@@ -120,6 +171,12 @@ const settle = async () => {
   });
 };
 
+const setInputValue = (input: HTMLInputElement, value: string) => {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+  setter?.call(input, value);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+};
+
 const groupByTitle = (root: HTMLElement, title: string) =>
   [...root.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.querySelector(".settings-group__title")?.textContent === title);
 
@@ -154,6 +211,71 @@ try {
   const optDescs = [...optGroup.querySelectorAll<HTMLElement>(".settings-row__description")].map((el) => el.textContent ?? "");
   check(optSwitches.length === 8 && optSwitches.every((input) => !input.checked) && optDescs.every((desc) => desc.startsWith("默认关闭：")),
     "All eight optional sync groups start off and explain why");
+
+  const webdavChoice = [...wide.querySelectorAll<HTMLButtonElement>(".settings-choice__option")].find((btn) => btn.textContent === zh.backend.methods.webdav)!;
+  await act(async () => { webdavChoice.click(); });
+  await settle();
+
+  const urlInput = wide.querySelector<HTMLInputElement>("#sync-webdav-url")!;
+  const userInput = wide.querySelector<HTMLInputElement>("#sync-webdav-username")!;
+  const passInput = wide.querySelector<HTMLInputElement>("#sync-webdav-password")!;
+  await act(async () => {
+    setInputValue(urlInput, "https://dav.jianguoyun.com/dav/我的坚果云");
+    setInputValue(userInput, "alice@example.com");
+    setInputValue(passInput, "app-secret-123");
+  });
+  await settle();
+
+  nextWebdavTestError = { code: "sync.webdavAuth", message: "The WebDAV username or app password was rejected." };
+  const testBtn = [...wide.querySelectorAll<HTMLButtonElement>(".sync-status__button")].find((btn) => btn.textContent?.includes(zh.backend.webdav.testAction))!;
+  await act(async () => { testBtn.click(); });
+  await settle();
+  check(wide.textContent?.includes("第三方应用密码"), "Wrong WebDAV password surfaces localized app-password guidance");
+
+  nextWebdavTestError = null;
+  await act(async () => { testBtn.click(); });
+  await settle();
+  check(wide.textContent?.includes(zh.backend.webdav.testOk), "Test connection shows confirmation when WebDAV folder is reachable");
+
+  const narrowWebdavChoice = [...narrow.querySelectorAll<HTMLButtonElement>(".settings-choice__option")].find((btn) => btn.textContent === zh.backend.methods.webdav)!;
+  await act(async () => { narrowWebdavChoice.click(); });
+  await settle();
+  const narrowWebdavOverflow = [...narrow.querySelectorAll<HTMLElement>("*")].filter(
+    (el) => el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflowX !== "hidden" && el.clientWidth > 0,
+  );
+  check(narrowWebdavOverflow.length === 0 && narrow.scrollWidth <= 340, "WebDAV form fits cleanly inside a 340px narrow container");
+
+  const saveWebdavBtn = [...wide.querySelectorAll<HTMLButtonElement>(".sync-status__button--primary")].find((btn) => btn.textContent?.includes(zh.backend.webdav.saveAction))!;
+  await act(async () => { saveWebdavBtn.click(); });
+  await settle();
+  check(
+    calls.some((call) => call.command === "set_sync_webdav")
+      && passInput.value === ""
+      && wide.textContent?.includes(zh.backend.webdav.activeBadge),
+    "Saving WebDAV enables sync and clears plaintext password from the input",
+  );
+
+  await act(async () => {
+    currentStatus = {
+      ...currentStatus,
+      phase: "folderMissing",
+      error: { code: "sync.webdavRateLimited", message: "Rate limited" },
+    };
+    await emit(SYNC_STATUS_EVENT, structuredClone(currentStatus));
+  });
+  await settle();
+  check(
+    wide.textContent?.includes(zh.status.webdavUnavailable.headline) && wide.textContent?.includes("600"),
+    "Rate-limited or offline WebDAV rounds show WebDAV-specific status and rate-limit hint",
+  );
+
+  const folderChoice = [...wide.querySelectorAll<HTMLButtonElement>(".settings-choice__option")].find((btn) => btn.textContent === zh.backend.methods.folder)!;
+  const narrowFolderChoice = [...narrow.querySelectorAll<HTMLButtonElement>(".settings-choice__option")].find((btn) => btn.textContent === zh.backend.methods.folder)!;
+  await act(async () => {
+    folderChoice.click();
+    narrowFolderChoice.click();
+  });
+  await settle();
 
   const chooseBtn = [...wide.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((btn) => btn.textContent === zh.backend.chooseFolder)!;
   await act(async () => { chooseBtn.click(); });
@@ -198,7 +320,12 @@ try {
 
   await act(async () => { switchLocale("en"); });
   await settle();
-  check(wide.textContent?.includes(en.optional.groupTitle) && wide.textContent?.includes("Off by default:"), "Switching to English translates all sections and optional hints");
+  check(
+    wide.textContent?.includes(en.optional.groupTitle)
+      && wide.textContent?.includes("Off by default:")
+      && wide.textContent?.includes(en.help.items.nutstoreWebdav.title),
+    "Switching to English translates all sections, WebDAV guides and optional hints",
+  );
   await act(async () => { switchLocale("zh-CN"); });
   await settle();
 

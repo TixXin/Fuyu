@@ -113,7 +113,7 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
                       onPointerUp={() => { pressed.current = null; }}
                       onClick={() => void copy(item)}
                     >
-                      {item.thumbnail ? <img src={item.thumbnail} alt="" draggable={false} /> : <Images size={22} aria-hidden="true" />}
+                      {item.thumbnail ? <img src={item.thumbnail} alt="" loading="lazy" decoding="async" draggable={false} /> : <Images size={22} aria-hidden="true" />}
                       <span className="screenshot-history__time">{clockTime(item.takenAt)}</span>
                       {copiedPath === item.path && (
                         <span className="screenshot-history__copied" role="status">

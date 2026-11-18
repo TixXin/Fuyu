@@ -209,6 +209,99 @@
   gap: 6px 10px;
 }
 
+.sync-webdav__label {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.sync-webdav__field {
+  margin-top: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.sync-webdav__field .settings-input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.sync-webdav__secret {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sync-webdav__secret .settings-input {
+  padding-right: 34px;
+}
+
+.sync-webdav__eye {
+  position: absolute;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.sync-webdav__eye:hover {
+  color: var(--color-text-strong);
+  background: var(--color-white-a08);
+}
+
+.sync-webdav__eye:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+.sync-webdav__actions-row > .settings-row__main {
+  display: none;
+}
+
+.sync-webdav__footer {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sync-webdav__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.sync-webdav__feedback {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.sync-webdav__feedback > svg {
+  flex: none;
+}
+
+.sync-webdav__feedback--ok {
+  color: var(--mint-text, #98d4bb);
+  background: color-mix(in srgb, var(--mint-text, #98d4bb) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mint-text, #98d4bb) 28%, transparent);
+}
+
 .sync-category__control {
   display: inline-flex;
   align-items: center;

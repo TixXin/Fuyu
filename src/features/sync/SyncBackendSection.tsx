@@ -7,6 +7,8 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
 import type { SyncStatus } from "./api";
 import { SYNC_BACKENDS, SYNC_SECURITY_SECTIONS, type SyncBackendId } from "./syncBackends";
+import { activeSyncBackend } from "./syncState";
+import { SyncWebdavSection } from "./SyncWebdavSection";
 
 const CONFIRM_MS = 4_000;
 
@@ -15,16 +17,18 @@ export function SyncBackendSection({
   busy,
   onChooseFolder,
   onRevealFolder,
+  onSaveWebdav,
   onStopSync,
 }: {
   status: SyncStatus;
   busy: boolean;
   onChooseFolder: (pickerTitle: string) => void;
   onRevealFolder: () => void;
-  onStopSync: () => void;
+  onSaveWebdav: (url: string, username: string, password: string | null) => Promise<boolean>;
+  onStopSync: (forgetWebdav?: boolean) => void;
 }) {
   const text = useTranslation().sync.backend;
-  const [selectedBackend, setSelectedBackend] = useState<SyncBackendId>("folder");
+  const [pickedBackend, setPickedBackend] = useState<SyncBackendId | null>(null);
   const [confirmingStop, setConfirmingStop] = useState(false);
 
   useEffect(() => {
@@ -33,8 +37,11 @@ export function SyncBackendSection({
     return () => window.clearTimeout(timer);
   }, [confirmingStop]);
 
+  const activeKind = activeSyncBackend(status);
+  const selectedBackend: SyncBackendId = pickedBackend ?? (activeKind === "webdav" ? "webdav" : "folder");
   const activeEntry = SYNC_BACKENDS.find((entry) => entry.id === selectedBackend) ?? SYNC_BACKENDS[0];
   const ExtraBackend = activeEntry?.component;
+  const isFolderActive = activeKind === "folder" && Boolean(status.folder);
 
   return (
     <>
@@ -53,7 +60,10 @@ export function SyncBackendSection({
                   value: entry.id,
                   label: text.methods[entry.id],
                 }))}
-                onChange={setSelectedBackend}
+                onChange={(next) => {
+                  setConfirmingStop(false);
+                  setPickedBackend(next);
+                }}
               />
             }
           />
@@ -73,35 +83,70 @@ export function SyncBackendSection({
               status.folder ? (
                 <div className="sync-folder-actions">
                   <SettingsLinkButton onClick={onRevealFolder}>{text.revealFolder}</SettingsLinkButton>
-                  <SettingsLinkButton disabled={busy} onClick={() => onChooseFolder(text.folderPickerTitle)}>
+                  <SettingsLinkButton
+                    disabled={busy}
+                    onClick={() => {
+                      setPickedBackend("folder");
+                      onChooseFolder(text.folderPickerTitle);
+                    }}
+                  >
                     {text.changeFolder}
                   </SettingsLinkButton>
-                  {confirmingStop ? (
-                    <>
-                      <SettingsLinkButton onClick={() => setConfirmingStop(false)}>{text.stopCancel}</SettingsLinkButton>
-                      <SettingsLinkButton
-                        tone="danger"
-                        disabled={busy}
-                        onClick={() => {
-                          setConfirmingStop(false);
-                          onStopSync();
-                        }}
-                      >
-                        {text.stopConfirm}
+                  {isFolderActive ? (
+                    confirmingStop ? (
+                      <>
+                        <SettingsLinkButton onClick={() => setConfirmingStop(false)}>{text.stopCancel}</SettingsLinkButton>
+                        <SettingsLinkButton
+                          tone="danger"
+                          disabled={busy}
+                          onClick={() => {
+                            setConfirmingStop(false);
+                            onStopSync(false);
+                          }}
+                        >
+                          {text.stopConfirm}
+                        </SettingsLinkButton>
+                      </>
+                    ) : (
+                      <SettingsLinkButton tone="danger" disabled={busy} onClick={() => setConfirmingStop(true)}>
+                        {text.stopSync}
                       </SettingsLinkButton>
-                    </>
+                    )
                   ) : (
-                    <SettingsLinkButton tone="danger" disabled={busy} onClick={() => setConfirmingStop(true)}>
-                      {text.stopSync}
+                    <SettingsLinkButton
+                      disabled={busy}
+                      onClick={() => {
+                        setPickedBackend("folder");
+                        onChooseFolder(text.folderPickerTitle);
+                      }}
+                    >
+                      {text.chooseFolder}
                     </SettingsLinkButton>
                   )}
                 </div>
               ) : (
-                <SettingsLinkButton disabled={busy} onClick={() => onChooseFolder(text.folderPickerTitle)}>
+                <SettingsLinkButton
+                  disabled={busy}
+                  onClick={() => {
+                    setPickedBackend("folder");
+                    onChooseFolder(text.folderPickerTitle);
+                  }}
+                >
                   {text.chooseFolder}
                 </SettingsLinkButton>
               )
             }
+          />
+        ) : selectedBackend === "webdav" ? (
+          <SyncWebdavSection
+            status={status}
+            busy={busy}
+            onSaveWebdav={async (url, username, password) => {
+              const ok = await onSaveWebdav(url, username, password);
+              if (ok) setPickedBackend("webdav");
+              return ok;
+            }}
+            onStopSync={onStopSync}
           />
         ) : ExtraBackend ? (
           <ExtraBackend status={status} busy={busy} />

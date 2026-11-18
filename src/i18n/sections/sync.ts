@@ -9,6 +9,8 @@ export type SyncText = {
     lastSynced: (time: string) => string;
     skippedFiles: (count: number) => string;
     phases: Record<SyncPhase, { headline: string; hint: string }>;
+    webdavUnavailable: { headline: string; hint: string };
+    webdavError: { headline: string; hint: string };
   };
   confirm: {
     title: string;
@@ -23,6 +25,7 @@ export type SyncText = {
     methodLabel: string;
     methods: {
       folder: string;
+      webdav: string;
     };
     folderTitle: string;
     folderUnset: string;
@@ -33,6 +36,26 @@ export type SyncText = {
     stopSync: string;
     stopConfirm: string;
     stopCancel: string;
+    webdav: {
+      urlLabel: string;
+      urlHint: string;
+      urlPlaceholder: string;
+      usernameLabel: string;
+      usernamePlaceholder: string;
+      passwordLabel: string;
+      passwordHint: string;
+      passwordSavedHint: string;
+      passwordPlaceholder: string;
+      passwordSavedPlaceholder: string;
+      testAction: string;
+      testingAction: string;
+      testOk: string;
+      saveAction: string;
+      updateAction: string;
+      forgetPassword: string;
+      forgetConfirm: string;
+      activeBadge: string;
+    };
     footnote: string;
   };
   categories: {
@@ -63,6 +86,9 @@ export type SyncText = {
     groupTitle: string;
     footnote: string;
     items: {
+      nutstoreWebdav: { title: string; description: string };
+      nextcloudWebdav: { title: string; description: string };
+      synologyWebdav: { title: string; description: string };
       cloudDrive: { title: string; description: string };
       nutstore: { title: string; description: string };
       syncthing: { title: string; description: string };
@@ -82,7 +108,7 @@ export const zhCN: SyncText = {
     phases: {
       off: {
         headline: "尚未开启跨设备同步",
-        hint: "选择一个同步文件夹后，待办、短语、书签和通用设置会在多台电脑之间按条自动合并。",
+        hint: "选择同步文件夹或配置 WebDAV 后，待办、短语、书签和通用设置会在多台电脑之间按条自动合并。",
       },
       idle: {
         headline: "同步已就绪",
@@ -109,6 +135,14 @@ export const zhCN: SyncText = {
         hint: "请检查同步文件夹读写权限或网盘客户端状态后重试。",
       },
     },
+    webdavUnavailable: {
+      headline: "暂无法连接 WebDAV 服务器",
+      hint: "网络已断开、请求触发限流退避或服务器繁忙，本轮已安全跳过，恢复后自动继续。",
+    },
+    webdavError: {
+      headline: "上一次 WebDAV 同步未完成",
+      hint: "请检查服务器地址、用户名与应用密码后重试。",
+    },
   },
   confirm: {
     title: "需要确认删除操作",
@@ -123,6 +157,7 @@ export const zhCN: SyncText = {
     methodLabel: "同步通道",
     methods: {
       folder: "同步文件夹",
+      webdav: "WebDAV",
     },
     folderTitle: "同步文件夹",
     folderUnset: "未选择（首次使用请手动指定一个空目录或已有的 fuyu-sync 上级目录）",
@@ -133,6 +168,26 @@ export const zhCN: SyncText = {
     stopSync: "停止同步",
     stopConfirm: "确认停止",
     stopCancel: "取消",
+    webdav: {
+      urlLabel: "服务器目录地址",
+      urlHint: "公网服务须用 https://（局域网 NAS 可用 http://），请指向已建好的子目录",
+      urlPlaceholder: "https://dav.jianguoyun.com/dav/我的坚果云/",
+      usernameLabel: "用户名 / 账号",
+      usernamePlaceholder: "例如邮箱或 NAS 账号名",
+      passwordLabel: "应用密码",
+      passwordHint: "仅保存在本机系统钥匙串 / 凭据管理器中，不写入配置文件也不同步",
+      passwordSavedHint: "已保存在本机系统钥匙串中；留空则沿用当前地址与账号的已存密码",
+      passwordPlaceholder: "填写第三方应用密码",
+      passwordSavedPlaceholder: "已保存（如需更换请重新输入）",
+      testAction: "测试连接",
+      testingAction: "正在测试…",
+      testOk: "连接成功，WebDAV 目录可正常访问。",
+      saveAction: "保存并启用 WebDAV",
+      updateAction: "更新 WebDAV 设置",
+      forgetPassword: "清除凭据",
+      forgetConfirm: "确认清除",
+      activeBadge: "正在使用",
+    },
     footnote: "请专门新建一个子目录用于同步，不要把浮屿的数据文件夹（~/.fuyu）直接放进网盘：每台设备只写自己的文件，首次并入前会自动在本地留一份备份。",
   },
   categories: {
@@ -227,15 +282,27 @@ export const zhCN: SyncText = {
   },
   help: {
     groupTitle: "配置指南",
-    footnote: "多台电脑之间只需指向同一个云盘同步目录或局域网共享目录即可协同工作。",
+    footnote: "多台电脑之间只需指向同一个 WebDAV 目录、云盘同步目录或局域网共享目录即可协同工作。",
     items: {
+      nutstoreWebdav: {
+        title: "坚果云 WebDAV（应用密码）",
+        description: "登录坚果云网页版 → 账户信息 → 安全选项 → 第三方应用管理 → 添加应用密码（不能填登录密码）；先在坚果云新建同步文件夹（或用「我的坚果云」），地址填 https://dav.jianguoyun.com/dav/我的坚果云/。",
+      },
+      nextcloudWebdav: {
+        title: "Nextcloud WebDAV",
+        description: "地址填 https://你的域名/remote.php/dav/files/你的用户名/Fuyu/（请勿使用旧版 /remote.php/webdav）；开启两步验证时请在「设置 → 安全 → 设备与会话」中生成专用应用密码。",
+      },
+      synologyWebdav: {
+        title: "群晖 Synology WebDAV",
+        description: "在套件中心安装启用 WebDAV Server（默认 HTTPS 5006、局域网 HTTP 5005），确认账号有对应共享文件夹读写权限与 WebDAV 应用权限，地址填 https://NAS地址:5006/共享文件夹/Fuyu/。",
+      },
       cloudDrive: {
         title: "OneDrive / iCloud Drive",
         description: "在网盘里新建一个文件夹（如 Sync/Fuyu），在各台电脑上都选中它即可；按需下载的占位文件会在同步时自动拉取。",
       },
       nutstore: {
-        title: "坚果云同步盘",
-        description: "安装坚果云客户端后将一个本地文件夹设为同步文件夹，在 Windows 与 Mac 上分别选中该文件夹。",
+        title: "坚果云桌面同步盘",
+        description: "若已安装坚果云桌面客户端，也可直接用「同步文件夹」方式在 Windows 与 Mac 上选中同一个本地同步目录。",
       },
       syncthing: {
         title: "Syncthing 局域网/跨网同步",
@@ -260,7 +327,7 @@ export const en: SyncText = {
     phases: {
       off: {
         headline: "Cross-device sync is off",
-        hint: "Choose a sync folder to merge todos, snippets, bookmarks and general settings item-by-item across your computers.",
+        hint: "Choose a sync folder or configure WebDAV to merge todos, snippets, bookmarks and general settings item-by-item across your computers.",
       },
       idle: {
         headline: "Sync is ready",
@@ -287,6 +354,14 @@ export const en: SyncText = {
         hint: "Check folder permissions or your sync client and try again.",
       },
     },
+    webdavUnavailable: {
+      headline: "WebDAV server is temporarily unreachable",
+      hint: "Offline, rate-limited or server busy. This round was skipped safely and will resume automatically.",
+    },
+    webdavError: {
+      headline: "Last WebDAV sync didn't finish",
+      hint: "Check your WebDAV URL, username and app password, then try again.",
+    },
   },
   confirm: {
     title: "Confirm deletions",
@@ -301,6 +376,7 @@ export const en: SyncText = {
     methodLabel: "Transport",
     methods: {
       folder: "Sync folder",
+      webdav: "WebDAV",
     },
     folderTitle: "Sync folder",
     folderUnset: "Not selected (pick an empty folder or an existing parent folder containing fuyu-sync)",
@@ -311,6 +387,26 @@ export const en: SyncText = {
     stopSync: "Stop sync",
     stopConfirm: "Confirm stop",
     stopCancel: "Cancel",
+    webdav: {
+      urlLabel: "Server folder URL",
+      urlHint: "Use https:// for remote servers (http:// is allowed on LAN NAS) and point to a subfolder",
+      urlPlaceholder: "https://dav.jianguoyun.com/dav/MySync/",
+      usernameLabel: "Username",
+      usernamePlaceholder: "Account email or NAS username",
+      passwordLabel: "App password",
+      passwordHint: "Stored only in this computer's keychain / credential manager and never synced",
+      passwordSavedHint: "Stored in this computer's keychain; leave blank to keep using it for the same URL and username",
+      passwordPlaceholder: "Enter dedicated app password",
+      passwordSavedPlaceholder: "Saved (enter a new one to replace)",
+      testAction: "Test connection",
+      testingAction: "Testing…",
+      testOk: "Connected — WebDAV folder is reachable.",
+      saveAction: "Save & enable WebDAV",
+      updateAction: "Update WebDAV settings",
+      forgetPassword: "Clear credentials",
+      forgetConfirm: "Confirm clear",
+      activeBadge: "Active",
+    },
     footnote: "Use a dedicated subfolder for sync rather than placing Fuyu's data folder (~/.fuyu) inside a cloud drive. Each device writes only its own files, and a local backup is created automatically before the first merge.",
   },
   categories: {
@@ -393,7 +489,7 @@ export const en: SyncText = {
   devices: {
     groupTitle: "Synced devices",
     empty: "No synced devices yet",
-    emptyHint: "Computers that sync with this folder appear here after the first round.",
+    emptyHint: "Computers that sync with this target appear here after the first round.",
     thisDevice: "This computer",
     stale: "Inactive 180+ days",
     platforms: {
@@ -405,15 +501,27 @@ export const en: SyncText = {
   },
   help: {
     groupTitle: "Setup guides",
-    footnote: "Point Fuyu on each computer at the same cloud-synced or network-shared folder.",
+    footnote: "Point Fuyu on each computer at the same WebDAV folder, cloud-synced folder or network share.",
     items: {
+      nutstoreWebdav: {
+        title: "Nutstore WebDAV (app password)",
+        description: "On Nutstore Web, open Account Info → Security → Third-Party App Management → Add App Password (never your login password). Create or pick a sync folder first and enter https://dav.jianguoyun.com/dav/MySync/ (not bare /dav/).",
+      },
+      nextcloudWebdav: {
+        title: "Nextcloud WebDAV",
+        description: "Use https://your-domain/remote.php/dav/files/YOUR_USER/Fuyu/ (avoid legacy /remote.php/webdav). If 2FA is enabled, generate an app password under Settings → Security → Devices & sessions.",
+      },
+      synologyWebdav: {
+        title: "Synology NAS WebDAV",
+        description: "Install and enable WebDAV Server in Package Center (HTTPS 5006 by default, LAN HTTP 5005), grant read/write folder and WebDAV app permissions, and enter https://NAS:5006/SharedFolder/Fuyu/.",
+      },
       cloudDrive: {
         title: "OneDrive / iCloud Drive",
         description: "Create a dedicated folder (such as Sync/Fuyu) inside your cloud drive and select it on each computer.",
       },
       nutstore: {
         title: "Nutstore sync folder",
-        description: "Sync a local folder with the Nutstore desktop client and select that folder on Windows and Mac.",
+        description: "If you run the Nutstore desktop client, you can also pick the local synced folder under Sync folder mode.",
       },
       syncthing: {
         title: "Syncthing",

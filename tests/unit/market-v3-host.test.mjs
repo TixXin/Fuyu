@@ -7,8 +7,9 @@ import { test } from "node:test";
 import { startHost } from "@fuyu/plugin-base/host";
 import { marketV1 } from "@fuyu/plugin-services";
 import { packFiles, sha256Hex } from "../../packages/plugin-manifest/src/index.mjs";
-import { publicKeyOf, signCommit, signText } from "../../packages/plugin-market/src/index.mjs";
-import { createMarketService } from "../../src/features/updater/host/market.mjs";
+import { isPublicKeyEntry, publicKeyOf, signCommit, signText, trustOverlaps } from "../../packages/plugin-market/src/index.mjs";
+import { signRevokedDocument } from "../../scripts/plugins-v3/sign-revoked.mjs";
+import { DEFAULT_TRUST, createMarketService } from "../../src/features/updater/host/market.mjs";
 
 const DAY = 24 * 60 * 60 * 1000;
 const NOW = Date.parse("2026-11-18T12:00:00Z");
@@ -375,4 +376,18 @@ test("essential updater built-in provides market/v1 inside startHost", async () 
     rmSync(root, { recursive: true, force: true });
     rmSync(builtinsDir, { recursive: true, force: true });
   }
+});
+
+test("DEFAULT_TRUST embeds non-overlapping index and revocation keys, and signRevokedDocument verifies cleanly", () => {
+  assert.ok(DEFAULT_TRUST.index.length >= 1 && DEFAULT_TRUST.index.every(isPublicKeyEntry));
+  assert.ok(DEFAULT_TRUST.revocation.length >= 1 && DEFAULT_TRUST.revocation.every(isPublicKeyEntry));
+  assert.equal(trustOverlaps(DEFAULT_TRUST), false);
+
+  const revKey = makeKey();
+  const privPem = revKey.privateKey.export({ type: "pkcs8", format: "pem" });
+  const docText = JSON.stringify({ format: 3, serial: 10, generatedAt: iso(NOW - DAY), expires: iso(NOW + 30 * DAY), entries: [], withdrawn: [] });
+  const trust = { index: DEFAULT_TRUST.index, revocation: [revKey.entry] };
+  const signed = signRevokedDocument(docText, privPem, { trust, lastSerial: 9, now: NOW });
+  assert.equal(signed.keyId, revKey.entry.keyId);
+  assert.throws(() => signRevokedDocument(docText, privPem, { trust, lastSerial: 11, now: NOW }), /older-serial/);
 });

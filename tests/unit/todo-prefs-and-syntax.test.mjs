@@ -49,6 +49,7 @@ test("normalizeTodoPrefs keeps valid choices and falls back to defaults on broke
     archiveRetentionDays: 180,
   });
   assert.deepEqual(custom, {
+    ...DEFAULT_TODO_PREFS,
     showElapsed: false,
     sortBy: "priority",
     inlineSyntax: false,

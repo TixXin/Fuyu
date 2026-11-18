@@ -19,6 +19,10 @@ export type TodoPrefs = {
   markdownPriority: boolean;
   markdownElapsed: boolean;
   archiveRetentionDays: TodoArchiveRetentionDays;
+  autoCompleteFromSubtasks: boolean;
+  focusTimerEnabled: boolean;
+  focusTimerMinutes: number;
+  timedReminderEnabled: boolean;
 };
 
 export const TODO_SORT_MODES: readonly TodoSortBy[] = ["manual", "priority", "createdDesc"];
@@ -26,6 +30,8 @@ export const TODO_INSERT_POSITIONS: readonly TodoInsertPosition[] = ["bottom", "
 export const TODO_DAY_START_HOURS: readonly TodoDayStartHour[] = [0, 2, 3, 4, 5, 6];
 export const TODO_DONE_DISPLAYS: readonly TodoDoneDisplay[] = ["fold", "inline", "hide"];
 export const TODO_ARCHIVE_RETENTION_DAYS: readonly TodoArchiveRetentionDays[] = [0, 90, 180, 365];
+export const MIN_FOCUS_TIMER_MINUTES = 5;
+export const MAX_FOCUS_TIMER_MINUTES = 120;
 
 export const DEFAULT_TODO_PREFS: TodoPrefs = {
   showElapsed: true,
@@ -38,6 +44,10 @@ export const DEFAULT_TODO_PREFS: TodoPrefs = {
   markdownPriority: true,
   markdownElapsed: false,
   archiveRetentionDays: 0,
+  autoCompleteFromSubtasks: false,
+  focusTimerEnabled: false,
+  focusTimerMinutes: 25,
+  timedReminderEnabled: true,
 };
 
 const MIN_REAL_TIMESTAMP_MS = 946_684_800_000;
@@ -48,6 +58,11 @@ function pickOne<T>(allowed: readonly T[], value: unknown, fallback: T): T {
 
 function pickBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
+}
+
+function pickFocusMinutes(value: unknown, fallback: number): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  return Math.max(MIN_FOCUS_TIMER_MINUTES, Math.min(MAX_FOCUS_TIMER_MINUTES, Math.round(value)));
 }
 
 export function normalizeTodoPrefs(value: unknown): TodoPrefs {
@@ -63,6 +78,10 @@ export function normalizeTodoPrefs(value: unknown): TodoPrefs {
     markdownPriority: pickBoolean(saved.markdownPriority, DEFAULT_TODO_PREFS.markdownPriority),
     markdownElapsed: pickBoolean(saved.markdownElapsed, DEFAULT_TODO_PREFS.markdownElapsed),
     archiveRetentionDays: pickOne(TODO_ARCHIVE_RETENTION_DAYS, saved.archiveRetentionDays, DEFAULT_TODO_PREFS.archiveRetentionDays),
+    autoCompleteFromSubtasks: pickBoolean(saved.autoCompleteFromSubtasks, DEFAULT_TODO_PREFS.autoCompleteFromSubtasks),
+    focusTimerEnabled: pickBoolean(saved.focusTimerEnabled, DEFAULT_TODO_PREFS.focusTimerEnabled),
+    focusTimerMinutes: pickFocusMinutes(saved.focusTimerMinutes, DEFAULT_TODO_PREFS.focusTimerMinutes),
+    timedReminderEnabled: pickBoolean(saved.timedReminderEnabled, DEFAULT_TODO_PREFS.timedReminderEnabled),
   };
 }
 

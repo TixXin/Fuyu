@@ -1,4 +1,4 @@
-import { Cloud, FolderSync, HardDrive, Share2 } from "lucide-react";
+import { Cloud, FolderSync, Globe, HardDrive, KeyRound, Server, Share2 } from "lucide-react";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -7,6 +7,9 @@ import { useTranslation } from "../../i18n";
 export function SyncHelpSection() {
   const text = useTranslation().sync.help;
   const guides = [
+    { key: "nutstoreWebdav", icon: KeyRound, copy: text.items.nutstoreWebdav },
+    { key: "nextcloudWebdav", icon: Globe, copy: text.items.nextcloudWebdav },
+    { key: "synologyWebdav", icon: Server, copy: text.items.synologyWebdav },
     { key: "cloudDrive", icon: Cloud, copy: text.items.cloudDrive },
     { key: "nutstore", icon: FolderSync, copy: text.items.nutstore },
     { key: "syncthing", icon: Share2, copy: text.items.syncthing },

@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import type { SyncStatus } from "./api";
 
-export type SyncBackendId = "folder";
+export type SyncBackendId = "folder" | "webdav";
 
 export type SyncSectionProps = {
   status: SyncStatus;
@@ -15,6 +15,7 @@ export type SyncBackendEntry = {
 
 export const SYNC_BACKENDS: readonly SyncBackendEntry[] = [
   { id: "folder" },
+  { id: "webdav" },
 ];
 
 export const SYNC_SECURITY_SECTIONS: readonly ComponentType<SyncSectionProps>[] = [];

@@ -40,7 +40,12 @@ export const DEFAULT_TRUST = Object.freeze({
       publicKey: "eDA1G3SVRyRrRYn6MrI7D3MPSANyngEApnk0U1v9tfE=",
     }),
   ]),
-  revocation: Object.freeze([]),
+  revocation: Object.freeze([
+    Object.freeze({
+      keyId: "63fd60abfbf525be",
+      publicKey: "GlFZU5NMzeKCWMUrp9euiH/Eemc0H6W2wDqolVd99ig=",
+    }),
+  ]),
 });
 
 export const DEFAULT_INDEX_URL = "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/index.v3.json";

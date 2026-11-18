@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { emit, listen } from "@tauri-apps/api/event";
+import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
 
 export type SaveTodoResult = {
@@ -90,4 +90,21 @@ export type TodoHostEventName = "todos.changed" | "note.changed";
 
 export function emitTodoHostEvent(name: TodoHostEventName, payload: Record<string, unknown>) {
   return emit(PLUGIN_HOST_EVENT, { name, payload });
+}
+
+export const TODO_QUICK_ADD_SHORTCUT_EVENT = "todo-quick-add-shortcut";
+export const TODO_SHORTCUT_STATUS_EVENT = "todo-shortcut-status";
+
+export type TodoShortcutProblem = "invalid" | "taken";
+
+export function listenTodoQuickAddShortcut(handler: () => void): Promise<UnlistenFn> {
+  return listen(TODO_QUICK_ADD_SHORTCUT_EVENT, () => handler());
+}
+
+export function getTodoShortcutProblem(): Promise<TodoShortcutProblem | null> {
+  return invoke<TodoShortcutProblem | null>("get_todo_shortcut_problem");
+}
+
+export function listenTodoShortcutProblem(handler: (problem: TodoShortcutProblem | null) => void): Promise<UnlistenFn> {
+  return listen<TodoShortcutProblem | null>(TODO_SHORTCUT_STATUS_EVENT, ({ payload }) => handler(payload));
 }

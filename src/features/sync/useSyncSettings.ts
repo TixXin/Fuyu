@@ -6,6 +6,8 @@ import {
   pickSyncFolder,
   revealSyncFolder,
   setSyncConfig,
+  setSyncWebdav,
+  stopSync,
   syncNow,
   type OptionalSyncGroup,
   type SyncCategory,
@@ -13,7 +15,9 @@ import {
 } from "./api";
 import {
   DEFAULT_SYNC_STATUS,
+  activeSyncBackend,
   enabledCategories,
+  isSyncActive,
   toggleCategoryList,
   toggleOptionalGroupList,
 } from "./syncState";
@@ -23,7 +27,8 @@ export type SyncController = {
   busy: boolean;
   actionError: unknown;
   chooseFolder: (pickerTitle: string) => Promise<void>;
-  stopFolderSync: () => Promise<void>;
+  saveWebdav: (url: string, username: string, password: string | null) => Promise<boolean>;
+  stopCurrentSync: (forgetWebdav?: boolean) => Promise<void>;
   revealFolder: () => Promise<void>;
   toggleCategory: (category: SyncCategory, checked: boolean) => Promise<void>;
   toggleOptionalGroup: (group: OptionalSyncGroup, checked: boolean) => Promise<void>;
@@ -55,7 +60,7 @@ export function useSyncSettings(): SyncController {
       .then((initial) => {
         if (!alive) return;
         setStatus(initial);
-        if (initial.folder && initial.phase === "idle") {
+        if (isSyncActive(initial) && initial.phase === "idle") {
           void syncNow().catch((error: unknown) => {
             if (alive) setActionError(error);
           });
@@ -71,18 +76,16 @@ export function useSyncSettings(): SyncController {
     };
   }, []);
 
-  const applyConfig = useCallback(async (
-    folder: string | null,
-    categories: SyncCategory[],
-    optionalGroups: OptionalSyncGroup[],
-  ) => {
+  const runBusy = useCallback(async (task: () => Promise<SyncStatus>) => {
     setBusy(true);
     setActionError(null);
     try {
-      const next = await setSyncConfig(folder, categories, optionalGroups);
+      const next = await task();
       setStatus(next);
+      return true;
     } catch (error: unknown) {
       setActionError(error);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -93,15 +96,31 @@ export function useSyncSettings(): SyncController {
     try {
       const picked = await pickSyncFolder(pickerTitle);
       if (!picked) return;
-      await applyConfig(picked, enabledCategories(status), status.optionalGroups);
+      await runBusy(() => setSyncConfig(picked, enabledCategories(status), status.optionalGroups));
     } catch (error: unknown) {
       setActionError(error);
     }
-  }, [applyConfig, status]);
+  }, [runBusy, status]);
 
-  const stopFolderSync = useCallback(async () => {
-    await applyConfig(null, enabledCategories(status), status.optionalGroups);
-  }, [applyConfig, status]);
+  const saveWebdav = useCallback((url: string, username: string, password: string | null) => {
+    return runBusy(() =>
+      setSyncWebdav({
+        url,
+        username,
+        password,
+        categories: enabledCategories(status),
+        optionalGroups: status.optionalGroups,
+      }),
+    );
+  }, [runBusy, status]);
+
+  const stopCurrentSync = useCallback(async (forgetWebdav = false) => {
+    if (forgetWebdav || activeSyncBackend(status) === "webdav") {
+      await runBusy(() => stopSync(forgetWebdav));
+      return;
+    }
+    await runBusy(() => setSyncConfig(null, enabledCategories(status), status.optionalGroups));
+  }, [runBusy, status]);
 
   const revealFolder = useCallback(async () => {
     if (!status.folder) return;
@@ -113,15 +132,23 @@ export function useSyncSettings(): SyncController {
     }
   }, [status.folder]);
 
+  const saveSelection = useCallback(async (categories: SyncCategory[], optionalGroups: OptionalSyncGroup[]) => {
+    if (activeSyncBackend(status) === "webdav" && status.webdav) {
+      const { url, username } = status.webdav;
+      await runBusy(() => setSyncWebdav({ url, username, password: null, categories, optionalGroups }));
+      return;
+    }
+    const folder = activeSyncBackend(status) === "folder" ? status.folder : null;
+    await runBusy(() => setSyncConfig(folder, categories, optionalGroups));
+  }, [runBusy, status]);
+
   const toggleCategory = useCallback(async (category: SyncCategory, checked: boolean) => {
-    const next = toggleCategoryList(enabledCategories(status), category, checked);
-    await applyConfig(status.folder, next, status.optionalGroups);
-  }, [applyConfig, status]);
+    await saveSelection(toggleCategoryList(enabledCategories(status), category, checked), status.optionalGroups);
+  }, [saveSelection, status]);
 
   const toggleOptionalGroup = useCallback(async (group: OptionalSyncGroup, checked: boolean) => {
-    const next = toggleOptionalGroupList(status.optionalGroups, group, checked);
-    await applyConfig(status.folder, enabledCategories(status), next);
-  }, [applyConfig, status]);
+    await saveSelection(enabledCategories(status), toggleOptionalGroupList(status.optionalGroups, group, checked));
+  }, [saveSelection, status]);
 
   const runSyncNow = useCallback(async () => {
     setActionError(null);
@@ -149,7 +176,8 @@ export function useSyncSettings(): SyncController {
     busy,
     actionError,
     chooseFolder,
-    stopFolderSync,
+    saveWebdav,
+    stopCurrentSync,
     revealFolder,
     toggleCategory,
     toggleOptionalGroup,

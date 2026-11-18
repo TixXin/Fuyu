@@ -20,6 +20,8 @@ export const OPTIONAL_SYNC_GROUPS = [
 
 export type OptionalSyncGroup = (typeof OPTIONAL_SYNC_GROUPS)[number];
 
+export type SyncBackendKind = "off" | "folder" | "webdav";
+
 export type SyncPhase = "off" | "idle" | "syncing" | "folderMissing" | "needsConfirm" | "newerVersion" | "error";
 
 export type CategoryState = "off" | "waiting" | "ok" | "notReady" | "newerVersion" | "needsConfirm" | "error";
@@ -49,12 +51,21 @@ export type SyncDevice = {
   thisDevice: boolean;
 };
 
+export type WebdavSummary = {
+  url: string;
+  username: string;
+  hasPassword: boolean;
+};
+
 export type SyncStatus = {
   phase: SyncPhase;
+  backend?: SyncBackendKind;
   folder: string | null;
+  webdav?: WebdavSummary | null;
   deviceId: string | null;
   lastSyncAt: number | null;
   lastError: string | null;
+  error?: unknown;
   confirm: SyncConfirm | null;
   categories: CategoryStatus[];
   optionalGroups: OptionalSyncGroup[];
@@ -70,6 +81,24 @@ export function getSyncStatus() {
 
 export function setSyncConfig(folder: string | null, categories: SyncCategory[], optionalGroups: OptionalSyncGroup[]) {
   return invoke<SyncStatus>("set_sync_config", { folder, categories, optionalGroups });
+}
+
+export function setSyncWebdav(input: {
+  url: string;
+  username: string;
+  password: string | null;
+  categories: SyncCategory[];
+  optionalGroups: OptionalSyncGroup[];
+}) {
+  return invoke<SyncStatus>("set_sync_webdav", input);
+}
+
+export function testSyncWebdav(url: string, username: string, password: string | null) {
+  return invoke<void>("test_sync_webdav", { url, username, password });
+}
+
+export function stopSync(forgetWebdav = false) {
+  return invoke<SyncStatus>("stop_sync", { forgetWebdav });
 }
 
 export function syncNow() {

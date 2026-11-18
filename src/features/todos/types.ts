@@ -8,6 +8,12 @@ export type TodoColor = "red" | "orange" | "yellow" | "green" | "blue" | "purple
 
 export type TodoPageMode = "today" | "daily" | "archive" | "review" | "upcoming";
 
+export type TodoSubtask = {
+  id: string;
+  title: string;
+  completed: boolean;
+};
+
 export type TodoItem = {
   id: string;
   title: string;
@@ -17,6 +23,9 @@ export type TodoItem = {
   startedAt?: number;
   priority?: TodoPriority;
   color?: TodoColor;
+  subtasks?: TodoSubtask[];
+  note?: string;
+  focusMinutes?: number;
   updatedAt?: string;
   deviceId?: string;
 };
@@ -75,6 +84,10 @@ export type TodoPageProps = {
   onStartTodo: (id: string) => void;
   onDeleteTodo: (id: string) => void;
   onReorderTodo: (sourceId: string, targetId: string) => void;
+  onAddSubtask?: (todoId: string, title: string) => void;
+  onToggleSubtask?: (todoId: string, subtaskId: string) => void;
+  onDeleteSubtask?: (todoId: string, subtaskId: string) => void;
+  onUpdateTodoNote?: (todoId: string, note: string) => void;
   onSaveToday: () => void;
   onShowArchive: () => void;
   onShowDaily: () => void;

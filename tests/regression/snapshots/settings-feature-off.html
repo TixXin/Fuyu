@@ -415,7 +415,7 @@
             <section class="settings-group">
               <div class="settings-group__header">
                 <h2 class="settings-group__title">
-                  反馈与跨天归档
+                  专注联动与提醒
                 </h2>
               </div>
               <div class="settings-group__card">
@@ -423,6 +423,69 @@
                   <div class="settings-row__main">
                     <div class="settings-row__text">
                       <label class="settings-row__title" for="_id7_">
+                        开始任务时启动专注倒计时
+                      </label>
+                      <span class="settings-row__description">
+                        点击待办的「开始」时自动拉起倒计时，到点后自动累加到该待办的专注时长。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id7_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id8_">
+                        带时刻（HH:mm）的待办到点提醒
+                      </label>
+                      <span class="settings-row__description">
+                        今日标题以时刻开头（如 15:00 回电话）且未完成的待办，到点弹出岛屿提醒横幅并支持推迟。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input checked="" id="_id8_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id9_">
+                        子任务全部勾选后自动完成主待办
+                      </label>
+                      <span class="settings-row__description">
+                        当至少有一项子步骤且最后一项被勾选完成时，自动将主待办标记为已完成。
+                      </span>
+                    </div>
+                    <div class="settings-row__control">
+                      <span class="settings-switch">
+                        <input id="_id9_" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="settings-group">
+              <div class="settings-group__header">
+                <h2 class="settings-group__title">
+                  反馈与跨天归档
+                </h2>
+              </div>
+              <div class="settings-group__card">
+                <div class="settings-row">
+                  <div class="settings-row__main">
+                    <div class="settings-row__text">
+                      <label class="settings-row__title" for="_id10_">
                         勾选完成时播放轻音效
                       </label>
                     </div>
@@ -432,7 +495,7 @@
                         试听
                       </button>
                       <span class="settings-switch">
-                        <input checked="" id="_id7_" role="switch" type="checkbox">
+                        <input checked="" id="_id10_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -451,7 +514,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id8_" aria-expanded="false" aria-haspopup="listbox" aria-label="新一天开始时间" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id11_" aria-expanded="false" aria-haspopup="listbox" aria-label="新一天开始时间" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               00:00（午夜）
                             </span>
@@ -465,13 +528,13 @@
                 <div class="settings-row">
                   <div class="settings-row__main">
                     <div class="settings-row__text">
-                      <label class="settings-row__title" for="_id9_">
+                      <label class="settings-row__title" for="_id12_">
                         自动将未完成任务写入下一天
                       </label>
                     </div>
                     <div class="settings-row__control">
                       <span class="settings-switch">
-                        <input id="_id9_" role="switch" type="checkbox">
+                        <input id="_id12_" role="switch" type="checkbox">
                         <span aria-hidden="true" class="settings-switch__track"></span>
                       </span>
                     </div>
@@ -487,7 +550,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id10_" aria-expanded="false" aria-haspopup="listbox" aria-label="已完成任务显示方式" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id13_" aria-expanded="false" aria-haspopup="listbox" aria-label="已完成任务显示方式" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               收起在底部折叠栏
                             </span>
@@ -531,7 +594,7 @@
                     <div class="settings-row__control">
                       <div class="settings-select">
                         <div class="select-control">
-                          <button aria-controls="_id11_" aria-expanded="false" aria-haspopup="listbox" aria-label="应用内归档保留时长" class="select-control__trigger" role="combobox" type="button">
+                          <button aria-controls="_id14_" aria-expanded="false" aria-haspopup="listbox" aria-label="应用内归档保留时长" class="select-control__trigger" role="combobox" type="button">
                             <span>
                               永久保留
                             </span>
@@ -542,6 +605,40 @@
                     </div>
                   </div>
                 </div>
+              </div>
+            </section>
+            <section class="settings-group">
+              <div class="settings-group__header">
+                <h2 class="settings-group__title">
+                  快捷键
+                </h2>
+              </div>
+              <div class="settings-group__card">
+                <div class="shortcut-row">
+                  <div class="shortcut-control">
+                    <div class="shortcut-control__meta">
+                      <span>
+                        快速添加待办
+                      </span>
+                      <strong>
+                        未设置
+                      </strong>
+                    </div>
+                    <div class="shortcut-control__actions">
+                      <button class="shortcut-record-button" type="button">
+                        <span class="shortcut-keys shortcut-keys--prompt">
+                          <svg aria-hidden="true" class="lucide lucide-keyboard" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                          <span>
+                            设置快捷键
+                          </span>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-group__footer">
+                在任何地方按下都会展开岛并把光标放进待办输入框（推荐 Alt+Shift+T）；回车添加或按 Esc 后自动收起并回到刚才的窗口。
               </div>
             </section>
             <section class="settings-group">

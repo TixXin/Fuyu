@@ -1,17 +1,52 @@
 import type { LocalTodoKeys, TodosData } from "./api";
-import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
+import type { ScheduledTodo, TodoArchive, TodoItem, TodoSubtask } from "./types";
 import { getLocalDateString } from "../../utils/date.ts";
+import { withoutStart } from "./activeTodos.ts";
 import { readProject } from "./project.ts";
 import { normalizeScheduledTodo, sortScheduledTodos } from "./schedule.ts";
 import { readTags } from "./tags.ts";
 import { getLogicalTodoDate } from "./todoPrefs.ts";
 
+export const MAX_TODO_SUBTASKS = 50;
+export const MAX_TODO_NOTE_LENGTH = 1000;
+const MAX_FOCUS_MINUTES_TOTAL = 1_000_000;
+
 export function createTodoId() {
-  if ("crypto" in window && typeof window.crypto.randomUUID === "function") {
-    return window.crypto.randomUUID();
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
   }
 
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+export function normalizeTodoSubtasks(value: unknown): { subtasks?: TodoSubtask[] } {
+  if (!Array.isArray(value)) return {};
+  const subtasks: TodoSubtask[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object") continue;
+    const raw = entry as Record<string, unknown>;
+    if (typeof raw.title !== "string") continue;
+    const title = raw.title.trim();
+    if (!title) continue;
+    const id = typeof raw.id === "string" && raw.id.trim() ? raw.id.trim() : createTodoId();
+    subtasks.push({ id, title, completed: Boolean(raw.completed) });
+    if (subtasks.length >= MAX_TODO_SUBTASKS) break;
+  }
+  return subtasks.length > 0 ? { subtasks } : {};
+}
+
+export function normalizeTodoNote(value: unknown): { note?: string } {
+  if (typeof value !== "string") return {};
+  const collapsed = value.replace(/[\r\n]+/g, " ").trim();
+  if (!collapsed) return {};
+  const note = Array.from(collapsed).slice(0, MAX_TODO_NOTE_LENGTH).join("").trim();
+  return note ? { note } : {};
+}
+
+export function normalizeTodoFocusMinutes(value: unknown): { focusMinutes?: number } {
+  if (typeof value !== "number" || !Number.isFinite(value)) return {};
+  const minutes = Math.min(MAX_FOCUS_MINUTES_TOTAL, Math.floor(value));
+  return minutes > 0 ? { focusMinutes: minutes } : {};
 }
 
 export function normalizeTodo(todo: Partial<TodoItem>): TodoItem {
@@ -23,7 +58,81 @@ export function normalizeTodo(todo: Partial<TodoItem>): TodoItem {
     ...withProject(todo.project),
     ...readTags(todo),
     ...(typeof todo.startedAt === "number" && Number.isFinite(todo.startedAt) && !todo.completed ? { startedAt: todo.startedAt } : {}),
+    ...normalizeTodoSubtasks(todo.subtasks),
+    ...normalizeTodoNote(todo.note),
+    ...normalizeTodoFocusMinutes(todo.focusMinutes),
   };
+}
+
+export function addTodoSubtask(todo: TodoItem, rawTitle: string, id = createTodoId()): TodoItem {
+  const title = rawTitle.trim();
+  if (!title) return todo;
+  const current = todo.subtasks ?? [];
+  if (current.length >= MAX_TODO_SUBTASKS) return todo;
+  return {
+    ...todo,
+    subtasks: [...current, { id, title, completed: false }],
+  };
+}
+
+export function toggleTodoSubtask(
+  todo: TodoItem,
+  subtaskId: string,
+  autoCompleteFromSubtasks = false,
+): { todo: TodoItem; autoCompleted: boolean } {
+  const current = todo.subtasks ?? [];
+  const target = current.find((subtask) => subtask.id === subtaskId);
+  if (!target) return { todo, autoCompleted: false };
+  const nextCompleted = !target.completed;
+  const subtasks = current.map((subtask) => (subtask.id === subtaskId ? { ...subtask, completed: nextCompleted } : subtask));
+  const shouldAutoComplete =
+    autoCompleteFromSubtasks &&
+    !todo.completed &&
+    nextCompleted &&
+    subtasks.length >= 1 &&
+    subtasks.every((subtask) => subtask.completed);
+  if (shouldAutoComplete) {
+    return {
+      todo: withoutStart({ ...todo, subtasks, completed: true }),
+      autoCompleted: true,
+    };
+  }
+  return {
+    todo: { ...todo, subtasks },
+    autoCompleted: false,
+  };
+}
+
+export function deleteTodoSubtask(todo: TodoItem, subtaskId: string): TodoItem {
+  const current = todo.subtasks ?? [];
+  const subtasks = current.filter((subtask) => subtask.id !== subtaskId);
+  if (subtasks.length === current.length) return todo;
+  if (subtasks.length === 0) {
+    const rest = { ...todo };
+    delete rest.subtasks;
+    return rest;
+  }
+  return { ...todo, subtasks };
+}
+
+export function updateTodoNote(todo: TodoItem, rawNote: string): TodoItem {
+  const normalized = normalizeTodoNote(rawNote);
+  if (!normalized.note) {
+    if (todo.note === undefined) return todo;
+    const rest = { ...todo };
+    delete rest.note;
+    return rest;
+  }
+  if (todo.note === normalized.note) return todo;
+  return { ...todo, note: normalized.note };
+}
+
+export function addTodoFocusMinutes(todo: TodoItem, minutes: number): TodoItem {
+  if (!Number.isFinite(minutes)) return todo;
+  const delta = Math.floor(minutes);
+  if (delta <= 0) return todo;
+  const total = Math.min(MAX_FOCUS_MINUTES_TOTAL, (todo.focusMinutes ?? 0) + delta);
+  return { ...todo, focusMinutes: total };
 }
 
 export function withProject(value: unknown): { project?: string } {
