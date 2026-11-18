@@ -1,8 +1,13 @@
 import * as esbuild from "esbuild";
+import { existsSync } from "node:fs";
 import { isBuiltin } from "node:module";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { BuildError } from "./errors.mjs";
 import { isPackageOrSubpath, sharedPath } from "./shared.mjs";
+
+const CLI_SRC_DIR = dirname(fileURLToPath(import.meta.url));
+const BUILTIN_SERVICES_ENTRY = join(CLI_SRC_DIR, "..", "..", "plugin-services", "src", "index.mjs");
 
 const ASSET_LOADERS = Object.fromEntries(
   [".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".svg", ".woff", ".woff2", ".ttf", ".otf", ".mp3", ".wav", ".ogg"].map((extension) => [extension, "dataurl"]),
@@ -61,18 +66,24 @@ function exactly(names) {
   return new RegExp(`^(?:${names.map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`);
 }
 
-function hostSharedPlugin(names) {
-  const filter = exactly(names);
+function hostSharedPlugin(names, dir) {
+  const filter = names.length ? exactly(names) : null;
   return {
     name: "fuyu-host-shared",
     setup(build) {
-      build.onResolve({ filter }, (args) => ({ path: args.path, external: true }));
+      if (filter) build.onResolve({ filter }, (args) => ({ path: args.path, external: true }));
+      build.onResolve({ filter: /^@fuyu\/plugin-services$/ }, () => {
+        if (!existsSync(join(dir, "node_modules", "@fuyu", "plugin-services")) && existsSync(BUILTIN_SERVICES_ENTRY)) {
+          return { path: BUILTIN_SERVICES_ENTRY };
+        }
+        return undefined;
+      });
     },
   };
 }
 
 export async function bundleHost({ dir, entry, output, external, target = "node22" }) {
-  const plugins = external.length ? [hostSharedPlugin(external)] : [];
+  const plugins = [hostSharedPlugin(external, dir)];
   const options = { ...common(dir, target), platform: "node", entryPoints: [entry], outfile: join(dir, output), plugins };
   let { result, warnings } = await run(options, output);
   const imports = () => Object.entries(result.metafile.outputs).find(([path]) => path.endsWith(".js"))?.[1].imports ?? [];
