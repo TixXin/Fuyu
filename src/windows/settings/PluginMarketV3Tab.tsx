@@ -210,7 +210,13 @@ export function PluginMarketV3Tab({
       kind: "market",
       name: plugin.name,
       version: candidate.version,
-      modal: { id: plugin.name, version: candidate.version, isUpdate, confirmation: candidate.confirmation },
+      modal: {
+        id: plugin.name,
+        version: candidate.version,
+        isUpdate,
+        fresh: Boolean(candidate.fresh),
+        confirmation: candidate.confirmation,
+      },
     });
   };
 

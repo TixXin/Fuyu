@@ -331,12 +331,19 @@ try {
     Boolean(page.querySelector("[data-market-plugin='@fuyu/weather']"))
       && page.querySelector("[data-market-plugin='@fuyu/weather']")!.textContent!.includes(text.market.officialBadge)
       && page.querySelector("[data-market-plugin='@someone/clock']")!.textContent!.includes(text.market.cooldownBadge)
+      && !page.querySelector("[data-market-plugin='@someone/clock']")!.textContent!.includes(text.market.cooldownHint)
+      && !page.querySelector("[data-market-plugin='@someone/clock'] .plugins-v3__pill--warn")
       && !page.querySelector("[data-action='market-install-file']"),
-    "The v3 market tab lists official and cooldown badges and hides local .fuyu import while manual install is off",
+    "The v3 market tab lists official and calm New badges without warning banners and hides local .fuyu import while manual install is off",
   );
   await act(async () => page.querySelector<HTMLInputElement>(".plugins-v3__manual-toggle input")!.click());
   await settle();
   check(manualAllowed && Boolean(page.querySelector("[data-action='market-install-file']")), "Turning on manual .fuyu installation reveals the file import button");
+  await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@someone/clock']")!.querySelector<HTMLButtonElement>("[data-action='market-install']")!.click());
+  await settle();
+  const clockModal = page.querySelector<HTMLElement>("[data-install-modal='@someone/clock']");
+  check(Boolean(clockModal) && clockModal!.textContent!.includes(text.market.confirmModal.cooldownInstallNote), "Clicking Install on a fresh plugin shows the cooldown note inside the confirmation modal");
+  await act(async () => { clockModal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
   await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@fuyu/weather']")!.querySelector<HTMLButtonElement>("[data-action='market-open-detail']")!.click());
   await settle();
   const marketDetail = page.querySelector<HTMLElement>("[data-market-detail-modal='@fuyu/weather']");
@@ -348,13 +355,7 @@ try {
   await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@fuyu/weather']")!.querySelector<HTMLButtonElement>("[data-action='market-install']")!.click());
   await settle();
   const installModal = page.querySelector<HTMLElement>("[data-install-modal='@fuyu/weather']");
-  check(
-    Boolean(installModal)
-      && installModal!.textContent!.includes("api.open-meteo.com")
-      && installModal!.textContent!.includes("island.page/v1")
-      && installModal!.textContent!.includes(text.market.confirmModal.hostSecurityNote),
-    "Clicking Install opens the confirmation modal with declared network domains, UI slots, and the host credential note",
-  );
+  check(Boolean(installModal) && !installModal!.textContent!.includes(text.market.confirmModal.cooldownInstallNote) && installModal!.textContent!.includes("api.open-meteo.com") && installModal!.textContent!.includes("island.page/v1") && installModal!.textContent!.includes(text.market.confirmModal.hostSecurityNote), "Clicking Install opens the confirmation modal with declared network domains, UI slots, and the host credential note");
   await act(async () => installModal!.querySelector<HTMLButtonElement>("[data-action='confirm-install']")!.click());
   await settle();
   check(

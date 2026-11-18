@@ -156,6 +156,7 @@ export type SettingsPluginsV3Text = {
     officialBadge: string;
     reviewedBadge: string;
     cooldownBadge: string;
+    cooldownTitle: string;
     cooldownHint: string;
     revokedBadge: string;
     installedBadge: (version: string) => string;
@@ -178,6 +179,8 @@ export type SettingsPluginsV3Text = {
       sourceManualWarn: string;
       trustChangeWarn: string;
       requiresNote: (plugins: string) => string;
+      cooldownInstallNote: string;
+      cooldownUpdateNote: string;
       networkLabel: string;
       networkNone: string;
       nodeApisLabel: string;
@@ -427,8 +430,9 @@ export const zhCN: SettingsPluginsV3Text = {
     installFromFile: "从文件安装 .fuyu…",
     officialBadge: "官方",
     reviewedBadge: "市场已审核",
-    cooldownBadge: "冷静期新发",
-    cooldownHint: "发布未满 3 天冷静期，暂不自动升级，可手动确认安装",
+    cooldownBadge: "刚上架",
+    cooldownTitle: "上架未满 3 天",
+    cooldownHint: "未满 3 天，暂缓自动更新",
     revokedBadge: "已撤销",
     installedBadge: (version) => `已安装 v${version}`,
     installBtn: "安装",
@@ -450,6 +454,8 @@ export const zhCN: SettingsPluginsV3Text = {
       sourceManualWarn: "未经市场审核：来自本地 .fuyu 文件，请确认插件作者与来源可信后再安装。",
       trustChangeWarn: "该插件更换了签名密钥或源码仓库，请确认作者身份后再更新。",
       requiresNote: (plugins) => `将一并安装依赖插件：${plugins}`,
+      cooldownInstallNote: "该版本上架未满 3 天冷静期，确认后立即安装。",
+      cooldownUpdateNote: "该版本上架未满 3 天冷静期，尚未自动推送，确认后立即更新。",
       networkLabel: "联网域名",
       networkNone: "不联网",
       nodeApisLabel: "Node 内置模块",
@@ -699,8 +705,9 @@ export const en: SettingsPluginsV3Text = {
     installFromFile: "Install .fuyu from file…",
     officialBadge: "Official",
     reviewedBadge: "Market reviewed",
-    cooldownBadge: "New · 3d cooldown",
-    cooldownHint: "Published within the 3-day cooldown; auto-update waits, manual install available",
+    cooldownBadge: "New",
+    cooldownTitle: "Published within the last 3 days",
+    cooldownHint: "Within 3d cooldown · manual update",
     revokedBadge: "Revoked",
     installedBadge: (version) => `Installed v${version}`,
     installBtn: "Install",
@@ -722,6 +729,8 @@ export const en: SettingsPluginsV3Text = {
       sourceManualWarn: "Unreviewed package: imported from a local .fuyu file. Only install if you trust the author.",
       trustChangeWarn: "This plugin changed its signing key or source repository. Verify the author's identity before updating.",
       requiresNote: (plugins) => `Will also install required plugins: ${plugins}`,
+      cooldownInstallNote: "Published within the 3-day cooldown; confirming installs it right away.",
+      cooldownUpdateNote: "Published within the 3-day cooldown (auto-update waits); confirming updates right away.",
       networkLabel: "Network domains",
       networkNone: "No network access",
       nodeApisLabel: "Node built-in modules",

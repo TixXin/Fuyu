@@ -20,7 +20,8 @@ export function PluginMarketCard({
   const installCandidate = !plugin.installedVersion ? (plugin.install ?? plugin.manual) : null;
   const updateCandidate = plugin.installedVersion ? (plugin.manual ?? plugin.autoUpdate) : null;
   const activeCandidate = updateCandidate ?? installCandidate;
-  const fresh = Boolean(activeCandidate?.fresh);
+  const freshInstall = Boolean(installCandidate?.fresh);
+  const freshUpdate = Boolean(updateCandidate?.fresh);
 
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     if ((event.target as Element).closest("button")) return;
@@ -53,7 +54,9 @@ export function PluginMarketCard({
             ) : (
               <span className="plugins-v3__pill">{copy.reviewedBadge}</span>
             )}
-            {fresh ? <span className="plugins-v3__pill plugins-v3__pill--warn">{copy.cooldownBadge}</span> : null}
+            {freshInstall ? (
+              <span className="plugins-v3__pill" title={copy.cooldownTitle}>{copy.cooldownBadge}</span>
+            ) : null}
             {plugin.revoked ? <span className="plugins-v3__pill plugins-v3__pill--bad">{copy.revokedBadge}</span> : null}
           </div>
           <span className="plugins-v3__id">{plugin.name}</span>
@@ -61,12 +64,11 @@ export function PluginMarketCard({
       </div>
 
       {desc ? <p className="plugins-v3__note">{desc}</p> : null}
-      {fresh ? <p className="plugins-v3__detail plugins-v3__detail--warn">{copy.cooldownHint}</p> : null}
 
       <div className="plugins-v3__card-foot">
         <span>
           {plugin.installedVersion
-            ? copy.installedBadge(plugin.installedVersion)
+            ? `${copy.installedBadge(plugin.installedVersion)}${freshUpdate ? ` · ${copy.cooldownHint}` : ""}`
             : activeCandidate
             ? `v${activeCandidate.version}`
             : "–"}
