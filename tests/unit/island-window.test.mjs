@@ -248,6 +248,39 @@ test("single-flight frame queue coalesces bursts, trails in-flight work, and flu
   resolvers.shift()();
 });
 
+test("a hidden window flushes the frame queue on a timeout and goes back to animation frames once shown", async () => {
+  const { createSingleFlightFrameQueue } = await import("../../src/windows/island/windowSync.ts");
+  let hidden = true;
+  const frames = [];
+  const sent = [];
+  const queue = createSingleFlightFrameQueue(
+    (item) => {
+      sent.push(item);
+      return Promise.resolve();
+    },
+    {
+      requestFrame: (callback) => {
+        frames.push(callback);
+        return frames.length;
+      },
+      cancelFrame: () => undefined,
+      isHidden: () => hidden,
+    },
+  );
+
+  await queue.schedule("while hidden");
+  assert.deepEqual(sent, ["while hidden"]);
+  assert.equal(frames.length, 0, "a hidden window never waits for an animation frame");
+
+  hidden = false;
+  const shown = queue.schedule("once shown");
+  assert.equal(frames.length, 1, "a visible window waits for the animation frame again");
+  frames.shift()();
+  await shown;
+  assert.deepEqual(sent, ["while hidden", "once shown"]);
+  queue.dispose();
+});
+
 test("external resize tracker enters resizing mode only on rapid geometry StorageEvents and settles cleanly", async () => {
   const {
     EXTERNAL_RESIZE_BURST_MS,

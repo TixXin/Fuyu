@@ -38,6 +38,7 @@ function sameGeometry(left: GeometrySnapshot, right: GeometrySnapshot): boolean 
 export type SingleFlightQueueOptions = {
   requestFrame?: (callback: () => void) => number;
   cancelFrame?: (id: number) => void;
+  isHidden?: () => boolean;
 };
 
 export function createSingleFlightFrameQueue<T>(
@@ -48,8 +49,12 @@ export function createSingleFlightFrameQueue<T>(
     options.requestFrame ?? ((callback: () => void) => window.requestAnimationFrame(callback));
   const cancelFrame =
     options.cancelFrame ?? ((id: number) => window.cancelAnimationFrame(id));
+  const isHidden =
+    options.isHidden ??
+    (() => typeof document !== "undefined" && document.visibilityState === "hidden");
 
   let frame: number | null = null;
+  let frameIsTimeout = false;
   let inFlight = false;
   let disposed = false;
   let hasPending = false;
@@ -73,13 +78,26 @@ export function createSingleFlightFrameQueue<T>(
         flush();
         return;
       }
-      if (frame === null) {
-        frame = requestFrame(() => {
-          frame = null;
-          flush();
-        });
-      }
+      scheduleFrame();
     });
+  };
+
+  const scheduleFrame = () => {
+    if (frame !== null || inFlight) return;
+    if (isHidden()) {
+      frameIsTimeout = true;
+      frame = globalThis.setTimeout(() => {
+        frame = null;
+        frameIsTimeout = false;
+        flush();
+      }, 0) as unknown as number;
+    } else {
+      frameIsTimeout = false;
+      frame = requestFrame(() => {
+        frame = null;
+        flush();
+      });
+    }
   };
 
   const schedule = (item: T): Promise<void> => {
@@ -92,20 +110,20 @@ export function createSingleFlightFrameQueue<T>(
       flush();
       return promise;
     }
-    if (frame === null && !inFlight) {
-      frame = requestFrame(() => {
-        frame = null;
-        flush();
-      });
-    }
+    scheduleFrame();
     return promise;
   };
 
   const dispose = () => {
     disposed = true;
     if (frame !== null) {
-      cancelFrame(frame);
+      if (frameIsTimeout) {
+        globalThis.clearTimeout(frame);
+      } else {
+        cancelFrame(frame);
+      }
       frame = null;
+      frameIsTimeout = false;
     }
     if (hasPending && !inFlight) {
       flush();
