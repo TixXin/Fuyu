@@ -194,7 +194,7 @@ try {
   });
   await settle();
 
-  check(document.querySelector(".settings-sidebar__item[data-category='pluginsV3']"), "With the v3 switch on, the sidebar lists the Plugins (v3) page");
+  check(document.querySelector(".settings-sidebar__item[data-category='pluginsV3']"), "The sidebar always lists the Plugins (v3) page");
   const builtinRow = (id: string) => page.querySelector<HTMLElement>(`.plugins-v3__builtin[data-builtin='${id}']`);
   const builtinSwitch = (id: string) => builtinRow(id)?.querySelector<HTMLInputElement>("input");
   check(page.querySelectorAll(".plugins-v3__builtin").length === 22 && catalog.plugins.every(({ id }) => builtinRow(id)?.textContent?.includes(text.builtinNames[id as keyof typeof text.builtinNames])), "The page lists all 22 built-in plugins by name, before the host has answered");

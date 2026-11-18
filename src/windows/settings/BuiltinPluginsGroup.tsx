@@ -343,7 +343,6 @@ export function BuiltinPluginsGroup({
       <div className="plugins-v3__footnotes">
         <SettingsFootnote text={text.builtinsNote} />
         <SettingsFootnote text={text.cpuNote} />
-        <SettingsFootnote text={text.preview} />
       </div>
     </div>
   );

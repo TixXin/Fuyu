@@ -8,7 +8,6 @@ export type SettingsGroup = "basics" | "features" | "agents" | "extensions";
 export interface CategoryContext {
   unsupported: ReadonlySet<PlatformFeature>;
   mac: boolean;
-  pluginsV3: boolean;
 }
 
 type BuiltinCategory = SettingsCategoryMeta<CategoryContext, SettingsGroup> & { id: string };
@@ -63,7 +62,7 @@ export const BUILTIN_CATEGORIES = [
   { id: "pluginsPages", icon: Puzzle },
   { id: "pluginsUpdates", icon: Puzzle },
   { id: "pluginsDev", icon: Puzzle },
-  { id: "pluginsV3", icon: FlaskConical, group: "extensions", available: ({ pluginsV3 }) => pluginsV3 },
+  { id: "pluginsV3", icon: FlaskConical, group: "extensions" },
   { id: "market", icon: Store, group: "extensions" },
   { id: "about", icon: Info, group: null, aliases: ["updates", "aboutHistory", "aboutHelp"] },
 ] as const satisfies readonly BuiltinCategory[];

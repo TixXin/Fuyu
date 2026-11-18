@@ -90,9 +90,9 @@ export function pagesOfFeaturesOff(on: Readonly<Record<SettingsFeature, boolean>
   return new Set(items.filter((item) => off(item.feature)).map(idOf));
 }
 
-export function isCategoryAvailable(category: SettingsCategory, unsupported: ReadonlySet<PlatformFeature>, mac = false, pluginsV3 = false): boolean {
+export function isCategoryAvailable(category: SettingsCategory, unsupported: ReadonlySet<PlatformFeature>, mac = false): boolean {
   const item = find(category);
-  return item !== undefined && (item.available?.({ unsupported, mac, pluginsV3 }) ?? true);
+  return item !== undefined && (item.available?.({ unsupported, mac }) ?? true);
 }
 
 export function searchCategories(query: string, describe: (category: SettingsCategory) => string): SettingsCategory[] {

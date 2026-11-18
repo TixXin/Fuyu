@@ -16,7 +16,6 @@ import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { ResetAppearanceButton } from "./sections/ResetAppearanceButton";
 import { useSettingPresets } from "../../lib/settings/useSettingPresets";
 import { useSettingsWithBuiltinSwitches } from "../../features/plugin-kernel/useLegacySwitches";
-import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import { useMarketInstallRequest } from "../../features/plugins/market-link/useMarketInstallRequest";
 import { useLocale, useTranslation } from "../../i18n";
 import { activeTone } from "../../lib/theme/themeMode";
@@ -43,9 +42,8 @@ export function SettingsWindow() {
   const presets = useSettingPresets(settings, setSettings);
   const [chosenCategory, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
   const unsupported = useUnsupportedFeatures();
-  const pluginsV3 = usePluginsV3Enabled();
   useSlotEntries(categorySlot);
-  const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS, pluginsV3) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
+  const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const features = useFeatureSwitches(settings, setSettings);
   const offFeature = features.hiddenPages.has(category) ? featureOf(category) : undefined;
   const page = offFeature ? null : category;

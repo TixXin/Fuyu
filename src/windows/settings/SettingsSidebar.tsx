@@ -6,7 +6,6 @@ import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { entryOf, entryPages, isCategoryAvailable, isEntry, searchCategories, settingsGroups, sidebarItemOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
 import { BUILTIN_CATEGORIES, categorySlot } from "./slots/categorySlot";
-import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import "./SettingsSidebar.css";
 
 export const CATEGORY_ICONS = Object.fromEntries(BUILTIN_CATEGORIES.map((item) => [item.id, item.icon])) as Record<SettingsCategory, LucideIcon>;
@@ -51,7 +50,6 @@ export function SettingsSidebar({
   const t = useTranslation();
   const { locale } = useLocale();
   const unsupported = useUnsupportedFeatures();
-  const pluginsV3 = usePluginsV3Enabled();
   const slotItems = useSlotEntries(categorySlot);
   const hiddenSet = hidden ?? NO_PAGES;
   const groups = settingsGroups(hidden && slotItems.length > 0 ? undefined : slotItems);
@@ -97,7 +95,7 @@ export function SettingsSidebar({
   };
   const matches = searchCategories(query, describe);
   const hits = onRowOpen && searching ? searchSettingsRows(query, searchEntries, locale, LOCALE_CODES, describe) : [];
-  const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported, isMacOS, pluginsV3);
+  const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported, isMacOS);
   const pagesOf = (item: SettingsCategory) => entryPages(item).filter(available);
   const found = (page: SettingsCategory) => matches.includes(page) || hits.some((hit) => hit.page === page);
   const shown = (item: SettingsCategory) =>
