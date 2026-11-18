@@ -304,6 +304,7 @@ Agent 状态从正式数据目录只读地读（F39.3）：钩子脚本把状态
 
 ## 排障
 
+- 开发版一启动就 panic，报 WebView2 `0x800700AA`「请求的资源在使用中」或 `拒绝访问 (os error 5)`：沙箱给工作区加的 Low 完整性标记让 `target\debug\fuyu.exe` 以低完整性运行，写不了 `%APPDATA%`。`pnpm tauri dev` 启动前会自动把 `target\debug` 改回 Medium（`scripts/dev-integrity.mjs`）；原因、确认方法和手动修法见 [dev-island-issues.md](../investigations/dev-island-issues.md) 第 5 节。
 - 手动关 land PR（被新 PR 取代了、不要了）用 `gh pr close <n> --delete-branch`，不然分支一直留在远程；land 只自动关本机的、提交都已经在新 PR 里的那些（F59）。
 - PR 落后于 `main`：工作流 `.github/workflows/update-behind-prs.yml`（`scripts/mq/updateBehind.mjs`）按开启自动合并的先后，只更新排在最前、能合入的那个 PR；它出问题时 `pnpm mq:wait --update` 自己更新。它用仓库 secret `PR_UPDATER_TOKEN`，过期时 PR 会停在落后状态。
 - `mq:wait` 报告合入了，但本地 `main` 没跟上：`mq:sync` 会列出挡路的文件和原因（没提交的改动和 `origin/main` 改了同一处这类），等那些文件提交后再 `pnpm mq:sync`。land 说「改在仓库内部合并」之后也是这种情况。
