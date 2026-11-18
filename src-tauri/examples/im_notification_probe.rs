@@ -1,9 +1,22 @@
 #[cfg(windows)]
+mod messages_plugin {
+    pub(crate) const TELEGRAM: &str = "telegram";
+    pub(crate) const DISCORD: &str = "discord";
+    pub(crate) const WHATSAPP: &str = "whatsapp";
+    pub(crate) const TIM: &str = "tim";
+    pub(crate) const FEISHU: &str = "feishu";
+    pub(crate) const DINGTALK: &str = "dingtalk";
+    pub(crate) const WECOM: &str = "wecom";
+}
+
+#[cfg(windows)]
 #[path = "../src/im_sources/specs.rs"]
+#[allow(dead_code)]
 mod im_specs;
 
 #[cfg(windows)]
 #[path = "../src/wechat_reminders/source.rs"]
+#[allow(dead_code)]
 mod shell_source;
 
 #[cfg(windows)]

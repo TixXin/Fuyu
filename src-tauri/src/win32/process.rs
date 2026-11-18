@@ -79,6 +79,7 @@ pub(crate) fn running_executable(file_names: &[&str]) -> Option<String> {
     None
 }
 
+#[allow(dead_code)]
 pub(crate) fn pids_matching_name(needle: &str) -> Vec<u32> {
     let needle = needle.to_ascii_lowercase();
     let Some(snapshot) = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) }
