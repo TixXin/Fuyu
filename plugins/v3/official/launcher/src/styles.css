@@ -1,0 +1,268 @@
+.fuyu-launcher,
+.fuyu-launcher-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-launcher-settings {
+  gap: 10px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-launcher__search-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fuyu-launcher__input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-launcher__input-wrap:focus-within {
+  border-color: var(--fuyu-plugin-accent);
+}
+
+.fuyu-launcher__search-icon {
+  flex-shrink: 0;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-launcher__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-launcher__input::placeholder {
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-launcher__clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text-secondary);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fuyu-launcher__clear-btn:focus-visible,
+.fuyu-launcher__button:focus-visible,
+.fuyu-launcher__item:focus-visible {
+  outline: 2px solid var(--fuyu-plugin-accent);
+  outline-offset: 1px;
+}
+
+.fuyu-launcher__list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 224px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.fuyu-launcher__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fuyu-launcher__item:hover {
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-launcher__item--active,
+.fuyu-launcher__item--active:hover {
+  border-color: var(--fuyu-plugin-accent);
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-launcher__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  border: 1px solid var(--fuyu-plugin-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-launcher__item--active .fuyu-launcher__avatar {
+  border-color: var(--fuyu-plugin-accent);
+  background: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-on-accent);
+}
+
+.fuyu-launcher__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.fuyu-launcher__name {
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-launcher__folder {
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-launcher__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.fuyu-launcher__badge {
+  padding: 1px 6px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  border: 1px solid var(--fuyu-plugin-border);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fuyu-plugin-text-secondary);
+  white-space: nowrap;
+}
+
+.fuyu-launcher__enter {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fuyu-plugin-accent);
+}
+
+.fuyu-launcher__empty {
+  margin: 0;
+  padding: 18px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-launcher__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-launcher__button {
+  max-width: 100%;
+  padding: 5px 10px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  font-size: 12px;
+  color: var(--fuyu-plugin-on-accent);
+  background: var(--fuyu-plugin-accent);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-launcher__button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.fuyu-launcher__button--secondary {
+  border: 1px solid var(--fuyu-plugin-border);
+  color: var(--fuyu-plugin-text);
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-launcher__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-launcher-settings__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-launcher-settings__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fuyu-launcher-settings__sub {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-launcher-settings__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
