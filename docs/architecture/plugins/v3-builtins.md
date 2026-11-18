@@ -65,7 +65,7 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 
 - 清单在编译时读进 Rust（`include_str!`），启动时读 `plugins.yml` 里内置插件的 `disabled`；之后只经命令 `set_builtin_plugin_enabled` 写，写的格式就是上表「关掉内置的计时器」那样（`builtins_file.rs`，只改那一条，别的条目和注释不动）。宿主在跑时监视这个文件，Rust 写完它自己重读，不另发通知。
 - 有后台的模块在自己的 `init` 里调 `plugin_kernel::builtins::register(<插件 id>, <名字>, Arc<dyn Background>)`，`Background` 有 `start` / `stop` / `running`；名字要写进清单这个插件的 `background`。开关表在启动时和开关变化时调它们（锁外调，`start` 里可以再读开关）。`builtins::init` 在 `lib.rs` 的 setup 最前面，早于各模块的 `init`；之前登记的先记着，`init` 读完文件再起。
-- 窗口用 `get_builtin_plugins` 读、听 `builtin-plugins-changed`（`features/plugin-kernel/builtinSwitches.ts`、`useBuiltinPlugins.ts`）；岛和设置窗口的插槽注册表按它调 `setDisabledOwners`，关掉的插件拥有的项不出现。设置 → 插件（第 3 版）列出全部内置插件、能开关；这一页在开发版里总会出现，正式版要设 `FUYU_PLUGINS_V3=1`。
+- 窗口用 `get_builtin_plugins` 读、听 `builtin-plugins-changed`（`features/plugin-kernel/builtinSwitches.ts`、`useBuiltinPlugins.ts`）；岛和设置窗口的插槽注册表按它调 `setDisabledOwners`，关掉的插件拥有的项不出现。设置 → 插件（第 3 版）始终列出全部内置插件并可开关，即使设 `FUYU_PLUGINS_V3=0` 关掉宿主也保留入口。
 - 通用测试：Rust 的 `builtins_tests.rs` 按清单逐个关、逐个开，核对登记的后台都停了、又起来了；`tests/unit/builtin-switches.test.mjs` 用 Rust 写的格式让宿主逐个关掉计时器和翻译再打开。
 
 ### 旧开关（`fuyu-settings` 里的字段，E36.3.29 起，E36.3.50 收口）

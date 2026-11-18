@@ -208,7 +208,7 @@ export function PluginDiagnosticsTab({
           </div>
         )}
         <div className="plugins-v3__footnotes">
-          <SettingsFootnote text={`${text.cpuNote} ${text.preview}`} />
+          <SettingsFootnote text={text.cpuNote} />
         </div>
       </section>
     </>

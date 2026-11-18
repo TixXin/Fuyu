@@ -5,6 +5,8 @@ export interface ScaffoldInput {
   displayName?: string;
   displayNameZh?: string;
   fuyu?: string;
+  standalone?: boolean;
+  sdkVersion?: string;
   dir?: string;
 }
 
@@ -16,7 +18,8 @@ export interface ScaffoldOptions {
   displayName: { "zh-CN": string; en: string };
   description: { "zh-CN": string; en: string };
   css: string;
-  checkout: string;
+  checkout: string | null;
+  sdkVersion?: string;
   dir: string;
 }
 
@@ -27,6 +30,7 @@ export interface MainIo {
 }
 
 export declare const ENGINE: string;
+export declare const SDK_VERSION: string;
 export declare const TOOLS: Readonly<Record<string, string>>;
 export declare const FUYU_PACKAGES: Readonly<Record<string, string>>;
 export declare const OWN_CHECKOUT: string;
@@ -43,5 +47,5 @@ export declare function fillTemplate(text: string, options: ScaffoldOptions): st
 export declare function projectFiles(options: ScaffoldOptions): Map<string, string>;
 export declare function scaffold(input: ScaffoldInput): { options: ScaffoldOptions; written: string[] };
 export declare function isCheckout(dir: string): boolean;
-export declare function findCheckout(given?: string): string;
-export declare function devDependencies(checkout: string): Record<string, string>;
+export declare function findCheckout(given?: string, options?: { standalone?: boolean }): string | null;
+export declare function devDependencies(checkout: string | null, sdkVersion?: string): Record<string, string>;

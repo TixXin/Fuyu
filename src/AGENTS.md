@@ -13,6 +13,7 @@ src/
 │   ├── screenshot/          # 截图的选区窗口（?window=screenshot，每个显示器一个）：冻结画面、选区拖动（useSelection.ts）、工具栏和放大镜
 │   ├── settings/            # 设置窗口；slots/ 是窗口这一侧的注册：categorySlot.ts（SettingsPageProps 和分类句柄）、categories.tsx（窗口自己的页面，并用 glob 收进各功能的 features/<领域>/plugin/settings.tsx）、runners.ts（窗口自己的 settings.runner/v1 项）；分类清单、句柄和快捷键页分节的类型在 features/plugin-kernel/（settingsCategories.ts、settingsSlots.ts），功能的设置页和注册写在功能里，不加进这里；sections/ 是设置页共用的分节组件（外观、行为、主题、预设、快捷键、数据与备份、系统权限）
 │   ├── onboarding/          # 新手引导（?window=onboarding）：透明遮罩压暗屏幕、照亮真岛，旁边的卡片分幕讲解（有哪几幕、各在什么情况下出现，看 `OnboardingWindow.tsx` 的 `ACTS` 和它下面的筛选）；新装第一次启动时由 island/useFirstRunGuide.ts 打开，设置 → 关于里能再打开；引导开着时岛放演示内容（island/useOnboardingDemo.ts）
+│   ├── plugin-window/       # 第 3 版插件的独立窗口（?window=plugin-window，实验能力 windows/v1）：overlay 带宿主受控护栏标题条（显示插件名与关闭按钮），渲染 plugin-window.view/v1 插槽
 │   └── translation/         # 快捷翻译窗口
 ├── features/                # 业务领域，每个领域自包含
 │   ├── todos/               # 待办、每日笔记、归档、Markdown 导出
@@ -29,7 +30,7 @@ src/
 │   ├── local-api/           # 第 3 版内置插件 local-api（本机接口）：设置是 通用 里的一节（LocalApiSettings.tsx：允许修改、地址、复制令牌、重新生成令牌，令牌只由 Rust 复制）。岛上接 Rust 转来的请求（local-api-request）的桥不在这里，在 island-bridge/
 │   ├── plugins/             # 设置 → 插件扩展页与插件市场页：已安装插件、启用与授权、从市场安装
 │   ├── plugin-dev/          # 设置 → 插件扩展 → 开发者：开发模式开关、从文件夹加载插件、JSON-RPC 收发记录、手动发送事件
-│   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧（E36.1，开发中）：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件（runtime.ts，宿主启动了才工作：测试版和开发版默认启动，正式版要设 FUYU_PLUGINS_V3=1）；插槽：每个窗口一份注册表和各插槽的类型化句柄（slots.ts，名单和规则在 @fuyu/plugin-base/protocol 的 SLOTS）、渲染（SlotView.tsx）、订阅（useSlotEntries.ts），内置功能不设那个环境变量也经它们注册和渲染
+│   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件（runtime.ts，宿主默认启动，设 FUYU_PLUGINS_V3=0 关掉）；插槽：每个窗口一份注册表和各插槽的类型化句柄（slots.ts，名单和规则在 @fuyu/plugin-base/protocol 的 SLOTS）、渲染（SlotView.tsx）、订阅（useSlotEntries.ts），宿主关着时内置功能也经它们注册和渲染
 │   ├── plugin-views/        # 插件在岛上的页面与折叠条状态：模板（list / detail / form / status）、插件数据的规范化、页面顺序与隐藏
 │   ├── messages/            # 消息导航与预览；mail/、qq-notifications/、wechat/ 子目录；banner/ 为岛下方的新消息横幅（分组与计时）；arrivals/ 为新消息自动展开的面板（只列这次到达的消息）；island/ 是它们在岛上的接线：读 QQ、微信、邮箱和插件通知（useIslandNotices）、收起条预览、横幅（useIslandBanner）、到达面板（useIslandMessagePanel）、未读时的贴边保持
 │   ├── agent-status/        # AI 代理状态；sounds/ 为 Agent 音效：内置音效播放、设置 → 声音页、导入音效包；push/ 为手机推送（Bark 或 cc-connect，排队到离开电脑再发）

@@ -14,8 +14,8 @@ Options:
   --repository <repo>     default: github:<owner>/<name>
   --display-name <text>   the name people see, in English
   --display-name-zh <text>  the name people see, in Chinese (default: the English one)
-  --fuyu <folder>         a checkout of TixXin/fuyu to link Fuyu's packages from
-                          (until fuyu-plugin 2.0 is on npm; default: the one this runs from)
+  --fuyu <folder>         a checkout of TixXin/fuyu to link @fuyu/* packages from
+  --standalone            use fuyu-plugin from npm even inside a TixXin/fuyu checkout
   --yes                   do not ask, use the options and defaults
   --help`;
 
@@ -26,6 +26,7 @@ const OPTIONS = {
   "display-name": { type: "string" },
   "display-name-zh": { type: "string" },
   fuyu: { type: "string" },
+  standalone: { type: "boolean" },
   yes: { type: "boolean" },
   help: { type: "boolean", short: "h" },
 };
@@ -65,6 +66,7 @@ export async function main(argv = process.argv.slice(2), io = { cwd: process.cwd
     displayName: values["display-name"],
     displayNameZh: values["display-name-zh"],
     fuyu: values.fuyu,
+    standalone: values.standalone,
   };
   if (!values.yes && io.interactive) await fillIn(input);
   input.dir = resolve(io.cwd, positionals[0] ?? input.name ?? "my-plugin");
@@ -72,7 +74,7 @@ export async function main(argv = process.argv.slice(2), io = { cwd: process.cwd
   const folder = relative(io.cwd, options.dir) || ".";
   io.log(`\nCreated ${options.packageName} in ${folder}:`);
   for (const path of written) io.log(`  ${path}`);
-  io.log(`\nFuyu's packages are linked from ${options.checkout}.`);
+  if (options.checkout) io.log(`\nFuyu's packages are linked from ${options.checkout}.`);
   io.log(`\nNext:\n  cd ${folder}\n  npm install\n  npm run typecheck && npm run lint && npm run check`);
   return 0;
 }

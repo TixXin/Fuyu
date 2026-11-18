@@ -6,6 +6,7 @@ npm 包 `fuyu-plugin` 和 `create-fuyu-plugin` 的版本单独标在括号里。
 
 ## 下一版
 
+- **插件平台第 3 版 SDK 发布到 npm**（npm 包 2.0.0）：`fuyu-plugin@2.0.0` 与 `create-fuyu-plugin@2.0.0` 正式面向插件平台第 3 版发布。外部作者无需克隆浮屿仓库，直接运行 `npm create fuyu-plugin@latest` 即可生成带 TypeScript、React、ESLint 生命周期规则的项目，从 `"fuyu-plugin"`（`Context`、`Service`、`defineService` 及命令行编程接口）、`"fuyu-plugin/services"`（内置服务定义与类型，宿主与窗口代码通用）、`"fuyu-plugin/protocol"` 与 `"fuyu-plugin/host"`（`startHost` 集成测试宿主）按子路径导入，并用 `npx fuyu-plugin dev / check / pack / sign` 完成本地联调、市场规则自查与打包。第 2 版插件请参考 [从第 2 版迁移](v3/migrate-from-v2.md)。
 - **插件自己的窗口（实验）**：`window.create` 等方法在岛屿之外新建浮层（能拿键盘焦点，带岛屿画的标题条）和小组件（不拿键盘焦点，可以贴在桌面上、透明、点击穿透），`screens.list` 给出每块屏幕。要权限 `windows`，清单里写 `experimentalApis: ["windows"]`，只在开发模式下、只在 Windows 上可用，名字转正前可能改。SDK：Node `plugin.windows.*`、`plugin.screens.*`，模拟宿主也有。示例见 `plugins/drafts/dev.focusd.window-demo`，设计见 [插件的独立窗口](../architecture/plugins/plugin-windows.md)。
 - **列表页面的键盘操作**：有搜索框的 `list` 页面里，上下键选条目，回车打开，Esc 清空输入；插件用 `island.openView` 打开页面时焦点自动进搜索框。岛屿处理，插件和 SDK 不用改。见 [岛上界面 · list 模板](ui.md#list-模板)。
 - **`validate` 多两项告警**（npm 包 0.7.0）：清单里不认识的字段（比如把 `activationEvents` 写成 `activationEvent`，岛屿会静默忽略）告警并给出最接近的字段名；复制进插件的单文件 SDK 比命令行工具旧时告警。单文件 SDK 从这一版起带版本号：Node `SDK_VERSION`、PowerShell `$script:FuyuSdkVersion`。`publish` 的提示不再说新版本「一小时内」上架，改成实际情况（通常几小时，岛屿再每 6 小时查一次）。见 [快速开始 · 检查和打包](quickstart.md)。

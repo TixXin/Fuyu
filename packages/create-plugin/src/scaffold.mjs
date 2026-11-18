@@ -49,7 +49,8 @@ export function normalizeOptions(input = {}) {
     displayName: { "zh-CN": zh, en },
     description: { "zh-CN": `${zh}：浮屿插件`, en: `${en}: a Fuyu plugin` },
     css: cssPrefix(name),
-    checkout: findCheckout(input.fuyu),
+    checkout: findCheckout(input.fuyu, { standalone: Boolean(input.standalone) }),
+    ...(input.sdkVersion ? { sdkVersion: input.sdkVersion } : {}),
     dir: resolve(input.dir ?? name),
   };
 }
@@ -68,8 +69,14 @@ export function fillTemplate(text, options) {
   return text.replace(/\{\{(\w+)\}\}/g, (match, key) => values[key] ?? match);
 }
 
+function rewriteStandaloneImports(text, standalone) {
+  if (!standalone) return text;
+  return text.replaceAll('"@fuyu/plugin-base"', '"fuyu-plugin"').replaceAll('"@fuyu/plugin-services"', '"fuyu-plugin/services"');
+}
+
 export function projectFiles(options) {
-  const files = new Map(templateFiles().map(([path, text]) => [path, fillTemplate(text, options)]));
+  const standalone = options.checkout === null;
+  const files = new Map(templateFiles().map(([path, text]) => [path, rewriteStandaloneImports(fillTemplate(text, options), standalone)]));
   files.set("package.json", packageJson(options));
   files.set("README.md", readme(options));
   files.set("LICENSE", license(options));

@@ -5,7 +5,7 @@ use std::{
 
 use super::{
     window_url, ControlRequest, CreateWindow, PluginWindowOpenSpec, WindowDriver, WindowManager,
-    WindowPatch, MAX_PER_PLUGIN, MAX_TOTAL,
+    WindowPatch, MAX_PER_PLUGIN, MAX_TOTAL, WINDOW_PREFIX,
 };
 
 #[derive(Default)]
@@ -235,4 +235,20 @@ fn window_url_percent_encodes_scoped_ids_and_special_title_characters() {
         url,
         "index.html?window=plugin-window&plugin=%40fuyu%2Fpomodoro&windowId=mini%261&kind=overlay&title=%E4%B8%93%E6%B3%A8%2025%3A00%20%231%3Fok%3Dtrue"
     );
+}
+
+#[test]
+fn default_capability_covers_plugin_window_labels() {
+    let raw = include_str!("../../capabilities/default.json");
+    let parsed: serde_json::Value = serde_json::from_str(raw).unwrap();
+    let windows = parsed["windows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|entry| entry.as_str())
+        .collect::<Vec<_>>();
+    let pattern = format!("{WINDOW_PREFIX}*");
+    assert!(windows.contains(&pattern.as_str()));
+    assert!(parsed["permissions"].as_array().unwrap().iter().any(|entry| entry.as_str() == Some("core:window:allow-close")));
+    assert!(parsed["permissions"].as_array().unwrap().iter().any(|entry| entry.as_str() == Some("core:window:allow-start-dragging")));
 }

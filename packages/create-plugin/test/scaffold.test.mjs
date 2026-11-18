@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { validateManifest } from "@fuyu/plugin-manifest";
 import { SHARED_MODULES, SLOTS } from "@fuyu/plugin-base/protocol";
 import { SERVICES, timersV1 } from "@fuyu/plugin-services";
-import { EXPERIMENTAL, FUYU_PACKAGES, SERVICES_USED, SLOTS_USED, TOOLS, findCheckout, main, normalizeOptions, projectFiles, scaffold } from "@fuyu/create-plugin";
+import { EXPERIMENTAL, FUYU_PACKAGES, SDK_VERSION, SERVICES_USED, SLOTS_USED, TOOLS, devDependencies, findCheckout, main, normalizeOptions, projectFiles, scaffold } from "@fuyu/create-plugin";
 import { OPTIONS, REPO_ROOT, tempDir } from "./helpers.mjs";
 
 test("options name the package @<owner>/<name> after the repository owner, with readable defaults", () => {
@@ -86,4 +86,24 @@ test("services-and-slots.md documents every service in @fuyu/plugin-services and
   for (const slot of Object.keys(SLOTS)) {
     assert.ok(doc.includes(`\`${slot}\``), `missing slot ${slot} in services-and-slots.md`);
   }
+});
+
+test("standalone npm mode depends on fuyu-plugin and rewrites @fuyu/* imports in source files", () => {
+  assert.equal(SDK_VERSION, "^2.0.0");
+  assert.equal(findCheckout(undefined, { standalone: true }), null);
+  assert.deepEqual(devDependencies(null), Object.fromEntries([["fuyu-plugin", "^2.0.0"], ...Object.entries(TOOLS)].sort(([a], [b]) => a.localeCompare(b))));
+  const options = normalizeOptions({ ...OPTIONS, standalone: true, dir: "x" });
+  assert.equal(options.checkout, null);
+  const files = projectFiles(options);
+  const pkg = JSON.parse(files.get("package.json"));
+  assert.equal(pkg.devDependencies["fuyu-plugin"], "^2.0.0");
+  for (const name of Object.keys(FUYU_PACKAGES)) assert.equal(pkg.devDependencies[name], undefined);
+  for (const [path, text] of files) {
+    if (!path.startsWith("src/")) continue;
+    assert.doesNotMatch(text, /@fuyu\/plugin-(base|services)/, path);
+  }
+  assert.match(files.get("src/host.ts"), /from "fuyu-plugin"/);
+  assert.match(files.get("src/host.ts"), /from "fuyu-plugin\/services"/);
+  assert.match(files.get("src/island.tsx"), /from "fuyu-plugin"/);
+  assert.doesNotMatch(files.get("README.md"), /file:/);
 });

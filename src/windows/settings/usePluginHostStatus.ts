@@ -3,7 +3,6 @@ import { connectHost, createServiceProxy, type ConnectionState, type ServiceEven
 import type { ServiceEntry } from "@fuyu/plugin-base/services";
 import { getPluginHostConnection, getPluginHostMemory, type HostMemory, type HostSafeMode } from "../../features/plugin-kernel/api";
 import { windowServices } from "../../features/plugin-kernel/services";
-import { loadDevBuild } from "../../lib/platform";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 
 export type PluginKindV3 = "essential" | "builtin" | "third-party";
@@ -93,10 +92,6 @@ export function loadPluginHostEnabled(): Promise<boolean> {
   return hostEnabled;
 }
 
-export function loadPluginsV3Enabled(): Promise<boolean> {
-  return Promise.all([loadPluginHostEnabled(), loadDevBuild()]).then(([host, dev]) => host || dev);
-}
-
 function useLoaded(load: () => Promise<boolean>): boolean | null {
   const [on, setOn] = useState<boolean | null>(null);
   useEffect(() => {
@@ -109,10 +104,6 @@ function useLoaded(load: () => Promise<boolean>): boolean | null {
     };
   }, [load]);
   return on;
-}
-
-export function usePluginsV3Enabled(): boolean {
-  return useLoaded(loadPluginsV3Enabled) === true;
 }
 
 export function usePluginHostEnabled(): boolean | null {

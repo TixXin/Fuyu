@@ -16,7 +16,7 @@
 
 浮屿 / Fuyu（仓库 `TixXin/fuyu`，2026-11 改过名，见下面「对外契约」）是 Windows 优先的桌面效率工具，以透明、无边框、始终置顶的 Tauri 悬浮岛形式运行。主要功能：待办、每日笔记与归档，日历与会议提醒，外观设置、预设与主题市场，媒体控制与同步歌词，剪贴板历史与文件中转，快捷翻译，截图与贴图，QQ 通知、多邮箱和微信提醒，音量亮度与摄像头麦克风提示，手机推送，AI 代理状态，以及自动更新。
 
-应用有八个窗口，外加截图时每个显示器一个选区窗口、每张贴图一个窗口，前端通过同一入口的 `?window=` 参数分发：
+应用有八个固定窗口，外加截图选区、贴图和第 3 版插件的独立窗口，前端通过同一入口的 `?window=` 参数分发：
 
 | 窗口 label | 前端入口 | 说明 |
 |---|---|---|
@@ -30,6 +30,7 @@
 | `pin-<n>` | `?window=pin` | 贴到屏幕上的截图，每张一个，贴图时创建，关闭时销毁 |
 | `drag-grid` | `?window=drag-grid` | 拖岛时的中线辅助线（横竖两条，分成四格），`create: false`；拖岛时创建，松手淡出后销毁；透明、鼠标穿透、不抢焦点、压在岛下面，铺满岛所在屏幕的工作区 |
 | `tray-menu` | `?window=tray-menu` | 托盘卡片，`create: false`；点托盘 / 菜单栏图标时创建，失焦或收起时隐藏、空闲 10 分钟后销毁 |
+| `plugin-window-<n>` | `?window=plugin-window` | 第 3 版插件独立窗口（实验能力 `windows/v1`），按需创建，插件停用或宿主停止时销毁 |
 
 **结构重构已完成（Phase 0–6，收尾与待人工验收项见 [refactor-plan.md](docs/architecture/history/refactor-plan.md)）。** 代码已按 [overview.md](docs/architecture/overview.md) 的目标结构组织：Rust 侧的 `unsafe` 只在平台层 `src-tauri/src/win32/`、`src-tauri/src/macos/` 中，生产代码不用 `unwrap` / `expect`，clippy 与 ESLint 均为 0 告警。新代码沿用这套结构与子目录规则。
 
