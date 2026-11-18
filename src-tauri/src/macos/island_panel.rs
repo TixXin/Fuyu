@@ -19,7 +19,7 @@ tauri_panel! {
 
     panel!(PreviewPanel {
         config: {
-            can_become_key_window: false,
+            can_become_key_window: super::preview_panel::can_become_key(),
             is_floating_panel: true
         }
     })
@@ -85,10 +85,11 @@ pub(crate) fn make_popup_panel(window: &WebviewWindow) -> Result<(), String> {
 }
 
 pub(crate) fn make_preview_panel(window: &WebviewWindow) -> Result<(), String> {
+    super::preview_panel::reset_can_become_key();
     float_above_island(window, window.to_panel::<PreviewPanel>().map_err(|error| error.to_string())?)
 }
 
-pub(super) fn float_above_island(window: &WebviewWindow, panel: PanelHandle<tauri::Wry>) -> Result<(), String> {
+fn float_above_island(window: &WebviewWindow, panel: PanelHandle<tauri::Wry>) -> Result<(), String> {
     panel.set_level(PanelLevel::MainMenu.value() + LEVELS_ABOVE_MENU_BAR + POPUP_ABOVE_ISLAND);
     panel.set_collection_behavior(
         CollectionBehavior::new()
@@ -104,6 +105,8 @@ pub(super) fn float_above_island(window: &WebviewWindow, panel: PanelHandle<taur
 
 pub(crate) fn forget_panel<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str) {
     if let Ok(panel) = app.get_webview_panel(label) {
+        panel.resign_key_window();
+        panel.hide();
         let mask = panel.as_panel().styleMask() & !objc2_app_kit::NSWindowStyleMask::NonactivatingPanel;
         let _ = panel.set_style_mask(mask);
         let _ = panel.to_window();

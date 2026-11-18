@@ -17,6 +17,7 @@ const OPEN_EVENT: &str = "tray-menu-open";
 const DEFAULT_SIZE: (f64, f64) = (320.0, 420.0);
 const SHOW_FALLBACK: Duration = Duration::from_millis(700);
 const REOPEN_GUARD: Duration = Duration::from_millis(400);
+const IDLE_DESTROY_DELAY: Duration = Duration::from_secs(10 * 60);
 
 #[derive(Clone, Copy)]
 struct Anchor {
@@ -28,6 +29,7 @@ static ANCHOR: Mutex<Option<Anchor>> = Mutex::new(None);
 static SIZE: Mutex<(f64, f64)> = Mutex::new(DEFAULT_SIZE);
 static HIDDEN_AT: Mutex<Option<Instant>> = Mutex::new(None);
 static GENERATION: AtomicU64 = AtomicU64::new(0);
+static IDLE_GENERATION: AtomicU64 = AtomicU64::new(0);
 static PENDING_TRACE: Mutex<Option<WindowTrace>> = Mutex::new(None);
 
 #[cfg(target_os = "macos")]
@@ -123,6 +125,7 @@ pub(crate) fn toggle(app: &AppHandle, icon: Option<&tauri::Rect>) {
     if recently_hidden {
         return;
     }
+    cancel_idle_destroy();
     let icon = icon_rect_copy(icon);
     let trace = WindowTrace::begin(WINDOW_LABEL, if card_window(app).is_some() { "reuse" } else { "create" });
     let handle = app.clone();
@@ -148,10 +151,13 @@ fn icon_anchor(app: &AppHandle, icon: Option<&tauri::Rect>) -> Anchor {
 }
 
 fn open(app: &AppHandle, anchor: Anchor, mut trace: WindowTrace) -> Result<(), String> {
+    cancel_idle_destroy();
     trace.mark("queued");
     let existed = card_window(app).is_some();
     let window = create(app)?;
-    if !existed {
+    if existed {
+        crate::webview_memory::showing(&window);
+    } else {
         trace.mark("built");
     }
     *lock_trace() = Some(trace);
@@ -241,6 +247,57 @@ fn reveal(app: &AppHandle, via: &'static str) {
     finish_trace(app, trace, via);
 }
 
+fn next_idle_generation(counter: &AtomicU64) -> u64 {
+    counter.fetch_add(1, Ordering::SeqCst).wrapping_add(1)
+}
+
+fn idle_generation_matches(counter: &AtomicU64, scheduled: u64) -> bool {
+    counter.load(Ordering::SeqCst) == scheduled
+}
+
+fn should_destroy_idle(counter: &AtomicU64, scheduled: u64, open: bool, opening: bool) -> bool {
+    !open && !opening && idle_generation_matches(counter, scheduled)
+}
+
+fn cancel_idle_destroy() {
+    let _ = next_idle_generation(&IDLE_GENERATION);
+}
+
+fn schedule_idle_destroy(app: &AppHandle) {
+    let scheduled = next_idle_generation(&IDLE_GENERATION);
+    let app = app.clone();
+    let _ = thread::Builder::new().name("tray-menu-idle".into()).spawn(move || {
+        thread::sleep(IDLE_DESTROY_DELAY);
+        if !idle_generation_matches(&IDLE_GENERATION, scheduled) {
+            return;
+        }
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            let opening = ANCHOR.lock().unwrap_or_else(PoisonError::into_inner).is_some();
+            if !should_destroy_idle(&IDLE_GENERATION, scheduled, is_open(&handle), opening) {
+                return;
+            }
+            let Some(window) = card_window(&handle) else { return };
+            #[cfg(target_os = "macos")]
+            crate::macos::island_panel::forget_panel(&handle, WINDOW_LABEL);
+            let _ = window.destroy();
+        });
+    });
+}
+
+#[cfg(target_os = "macos")]
+fn hide_window(window: &WebviewWindow) {
+    if !crate::macos::tray_panel::hide_tray_panel(window) {
+        let _ = window.hide();
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+fn hide_window(window: &WebviewWindow) {
+    let _ = window.hide();
+    crate::webview_memory::hidden(window);
+}
+
 pub(crate) fn hide(app: &AppHandle) {
     GENERATION.fetch_add(1, Ordering::SeqCst);
     lock_trace().take();
@@ -249,14 +306,46 @@ pub(crate) fn hide(app: &AppHandle) {
     if window.is_visible().unwrap_or(false) {
         *HIDDEN_AT.lock().unwrap_or_else(PoisonError::into_inner) = Some(Instant::now());
     }
+    schedule_idle_destroy(app);
     let handle = app.clone();
     let _ = app.run_on_main_thread(move || {
-        let Some(window) = card_window(&handle) else { return };
-        #[cfg(target_os = "macos")]
-        {
-            crate::macos::tray_panel::hide_tray_panel(&window);
-            crate::macos::island_panel::forget_panel(&handle, WINDOW_LABEL);
+        if ANCHOR.lock().unwrap_or_else(PoisonError::into_inner).is_some() {
+            return;
         }
-        let _ = window.destroy();
+        let Some(window) = card_window(&handle) else { return };
+        hide_window(&window);
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::AtomicU64;
+
+    use super::{idle_generation_matches, next_idle_generation, should_destroy_idle};
+
+    #[test]
+    fn reopen_or_later_hide_invalidates_earlier_idle_destroy() {
+        let counter = AtomicU64::new(0);
+        let first_hide = next_idle_generation(&counter);
+        assert!(idle_generation_matches(&counter, first_hide));
+        assert!(should_destroy_idle(&counter, first_hide, false, false));
+
+        let _reopen = next_idle_generation(&counter);
+        assert!(!idle_generation_matches(&counter, first_hide));
+        assert!(!should_destroy_idle(&counter, first_hide, false, false));
+
+        let second_hide = next_idle_generation(&counter);
+        assert!(!should_destroy_idle(&counter, first_hide, false, false));
+        assert!(should_destroy_idle(&counter, second_hide, false, false));
+    }
+
+    #[test]
+    fn visible_or_opening_card_is_never_destroyed_on_idle_tick() {
+        let counter = AtomicU64::new(0);
+        let scheduled = next_idle_generation(&counter);
+        assert!(!should_destroy_idle(&counter, scheduled, true, false));
+        assert!(!should_destroy_idle(&counter, scheduled, false, true));
+        assert!(!should_destroy_idle(&counter, scheduled, true, true));
+        assert!(should_destroy_idle(&counter, scheduled, false, false));
+    }
 }
