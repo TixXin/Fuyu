@@ -1,3 +1,5 @@
+use crate::messages_plugin::{DINGTALK, DISCORD, FEISHU, TELEGRAM, TIM, WECOM, WHATSAPP};
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum MatchRule {
@@ -80,7 +82,7 @@ impl ImSourceSpec {
 
 pub const SOURCES: [ImSourceSpec; 7] = [
     ImSourceSpec {
-        id: "telegram",
+        id: TELEGRAM,
         display_name: "Telegram",
         toast_rules: &[
             MatchRule::AumidPrefix("Telegram.TelegramDesktop"),
@@ -103,7 +105,7 @@ pub const SOURCES: [ImSourceSpec; 7] = [
         macos_bundle_ids: &["ru.keepcoder.Telegram", "com.tdesktop.Telegram"],
     },
     ImSourceSpec {
-        id: "discord",
+        id: DISCORD,
         display_name: "Discord",
         toast_rules: &[
             MatchRule::AumidPrefix("com.squirrel.Discord"),
@@ -126,7 +128,7 @@ pub const SOURCES: [ImSourceSpec; 7] = [
         ],
     },
     ImSourceSpec {
-        id: "whatsapp",
+        id: WHATSAPP,
         display_name: "WhatsApp",
         toast_rules: &[
             MatchRule::AumidPrefix("5319275A.WhatsAppDesktop"),
@@ -144,7 +146,7 @@ pub const SOURCES: [ImSourceSpec; 7] = [
         macos_bundle_ids: &["net.whatsapp.WhatsApp"],
     },
     ImSourceSpec {
-        id: "tim",
+        id: TIM,
         display_name: "TIM",
         toast_rules: &[
             MatchRule::AumidExact("Tencent.TIM"),
@@ -162,7 +164,7 @@ pub const SOURCES: [ImSourceSpec; 7] = [
         macos_bundle_ids: &["com.tencent.tim"],
     },
     ImSourceSpec {
-        id: "feishu",
+        id: FEISHU,
         display_name: "Feishu",
         toast_rules: &[
             MatchRule::AumidContains("Feishu"),
@@ -185,7 +187,7 @@ pub const SOURCES: [ImSourceSpec; 7] = [
         macos_bundle_ids: &["com.electron.lark", "com.larksuite.larkApp"],
     },
     ImSourceSpec {
-        id: "dingtalk",
+        id: DINGTALK,
         display_name: "DingTalk",
         toast_rules: &[
             MatchRule::AumidContains("DingTalk"),
@@ -202,7 +204,7 @@ pub const SOURCES: [ImSourceSpec; 7] = [
         macos_bundle_ids: &["com.alibaba.DingTalkMac", "com.dingtalk.mac"],
     },
     ImSourceSpec {
-        id: "wecom",
+        id: WECOM,
         display_name: "WeCom",
         toast_rules: &[
             MatchRule::AumidContains("WXWork"),
