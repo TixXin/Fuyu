@@ -70,12 +70,13 @@
   2. 若用户装有其他第 2 版插件，在岛上和插件设置页给出一次性升级说明。
 - **验收**：旧 `dev.focusd.*` 配置能平滑映射，一次性提示不重复打扰。
 
-### E36.6.5：删除第 2 版插件宿主与前端模块（等用户确认下线第 2 版后执行）
+### E36.6.5：删除第 2 版插件宿主与前端模块（已完成，2026-11-18）
 - **范围**：`src-tauri/src/plugin_host/`、`src/features/plugins/`、`src/features/plugin-views/`、`src-tauri/src/plugin_kernel/v2_builtins.rs`
 - **内容**：
   1. 移除 Rust 侧 `src-tauri/src/plugin_host/` 及其 Tauri 命令、链接协议 `focusd://` 分发。
   2. 移除前端 `src/features/plugins/`、`src/features/plugin-views/` 与第 2 版插件设置页、市场页旧实现。
 - **验收**：`cargo test`、`pnpm check`、`pnpm build` 与回归页全部通过。
+- **结果**：Rust 侧 `plugin_host`、`v2_builtins.rs` 与各功能的 v2 `plugin_view.rs` 全部删除，`v2_migration.rs` 改为直接读旧数据；主题市场从旧宿主抽到 `src-tauri/src/theme_market.rs`。前端删掉 `features/plugins`、`features/plugin-views`、`features/plugin-dev`、第 2 版设置页与侧栏里的「插件」「插件市场」入口，插件命令快捷键由第 3 版的 `fuyu.commands` 接管，岛上的插件页面、收起条状态、权限提示和右键菜单随旧宿主一起撤掉。回归页 `plugin-info`、`plugin-menus`、`plugin-views` 删除，其余页面按第 3 版插槽重写。
 
 ### E36.6.6：删除第 2 版 SDK/模板/旧示例与旧名兼容并收口 E36（等用户确认下线第 2 版后执行）
 - **范围**：`packages/fuyu-plugin`、`packages/create-fuyu-plugin`、`packages/powershell`、`plugins/`（旧 v2 文件）、`scripts/plugins/`、`packages/plugin-cli/src/keys.mjs`、`docs/architecture/contracts.md`、`docs/architecture/plugins/v3-progress.md`

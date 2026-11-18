@@ -190,7 +190,7 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
           {showHostNotice ? (
             <HostSummaryBar view={view} runningCount={runningCount} showRunning={installedCount > 0} onOpenDiagnostics={() => setTab("diagnostics")} />
           ) : null}
-          <V2PluginMigrationCard onOpenMarketTab={() => setTab("market")} onOpenPage={onOpenPage} />
+          <V2PluginMigrationCard onOpenMarketTab={() => setTab("market")} />
           {open ? <PluginBisectBar thirdPartyIds={extras.map((p) => p.id)} onBisect={view.bisect} /> : null}
           <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} onOpenMarketTab={() => setTab("market")} />
         </>
@@ -238,7 +238,7 @@ export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: Plugi
               </div>
             </div>
           </section>
-          <V2PluginMigrationCard onOpenPage={onOpenPage} />
+          <V2PluginMigrationCard />
           <BuiltinPluginsGroup builtins={builtins} hostEnabled={false} query={query} onSelectPlugin={setSelectedId} />
           {selectedId ? <PluginDetailModal builtin={selectedBuiltin} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
         </>

@@ -4330,28 +4330,6 @@
       }
     },
     {
-      "page": "plugins",
-      "zh-CN": {
-        "group": "",
-        "title": "允许运行第三方插件"
-      },
-      "en": {
-        "group": "",
-        "title": "Allow third-party plugins"
-      }
-    },
-    {
-      "page": "plugins",
-      "zh-CN": {
-        "group": "",
-        "title": "插件目录"
-      },
-      "en": {
-        "group": "",
-        "title": "Plugins folder"
-      }
-    },
-    {
       "page": "about",
       "zh-CN": {
         "group": "帮助",

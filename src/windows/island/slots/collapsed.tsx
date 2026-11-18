@@ -23,8 +23,6 @@ export type CollapsedGaugeContext = {
 export const collapsedBarSlot = defineSlot<CollapsedBarContext, IslandCollapsedMeta<CollapsedBarContext>>("island.collapsed/v1");
 export const collapsedGaugeSlot = defineSlot<CollapsedGaugeContext, IslandCollapsedMeta<CollapsedGaugeContext>>("island.collapsed/v1");
 
-export const PLUGIN_STATUS_ORDER = 35;
-
 export function slotWidth<Context>(width: SlotWidth<Context> | undefined, context: Context) {
   return typeof width === "function" ? width(context) : width ?? 0;
 }

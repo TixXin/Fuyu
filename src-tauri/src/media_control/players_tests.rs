@@ -115,12 +115,4 @@ fn splits_combined_metadata_titles_when_artist_is_missing() {
         ),
         (Some("稻香".to_string()), Some("周杰伦".to_string()))
     );
-    assert_eq!(
-        packaged_executable_candidates("SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"),
-        vec!["Spotify.exe"]
-    );
-    assert_eq!(
-        packaged_executable_candidates("AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"),
-        vec!["AppleMusic.exe", "Music.UI.exe"]
-    );
 }

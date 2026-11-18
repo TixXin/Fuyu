@@ -29,7 +29,7 @@ const WATCHED_PATHS = [
   "src/main.tsx",
   "src/windows/island/IslandApp.tsx",
   "src/features/media/plugin/runners.tsx",
-  "src/features/plugins/PluginsSettings.tsx",
+  "src/features/plugin-kernel/slots.ts",
   "tests/regression/agent-sessions.tsx",
   "tests/regression/agent-sessions.html",
   "packages/plugin-base/src/index.ts",

@@ -92,24 +92,6 @@ test("every official package is signed by the official author key (run pnpm plug
   }
 });
 
-test("market updates are offered only for newer versions", async () => {
-  const { isNewerVersion } = await import("../../src/features/plugins/version.ts");
-  assert.equal(isNewerVersion("1.0.1", "1.0.0"), true);
-  assert.equal(isNewerVersion("1.10.0", "1.9.9"), true);
-  assert.equal(isNewerVersion("2", "1.9"), true);
-  assert.equal(isNewerVersion("1.0.0", "1.0.0"), false);
-  assert.equal(isNewerVersion("1.0", "1.0.0"), false);
-  assert.equal(isNewerVersion("1.0.0-beta", "1.0.0"), false);
-  assert.equal(isNewerVersion("0.9.0", "1.0.0"), false);
-  assert.equal(isNewerVersion("1.0.0", "1.0.0-beta.2"), true, "a release updates its own beta");
-  assert.equal(isNewerVersion("1.0.0-beta.2", "1.0.0-beta.1"), true);
-  assert.equal(isNewerVersion("1.0.0-beta.10", "1.0.0-beta.2"), true);
-  assert.equal(isNewerVersion("1.0.0-beta", "1.0.0-alpha"), true);
-  assert.equal(isNewerVersion("1.0.0-beta.1", "1.0.0-beta"), true);
-  assert.equal(isNewerVersion("1.0.0-beta", "1.0.0-1"), true);
-  assert.equal(isNewerVersion("1.0.0+build.2", "1.0.0"), false);
-});
-
 test("the index says what each plugin needs installed", () => {
   assert.equal(runtimeRequirement({ type: "process", command: "bin/app.EXE" }), "exe");
   assert.equal(runtimeRequirement({ type: "process", command: "main.ps1" }), "powershell");

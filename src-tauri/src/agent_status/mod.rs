@@ -683,6 +683,11 @@ pub(super) fn normalize_windows_line_endings(content: &str) -> String {
     content.replace("\r\n", "\n").replace('\n', "\r\n")
 }
 
+#[tauri::command]
+pub fn list_agent_effort_labels() -> Result<std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>>, String> {
+    Ok(std::collections::BTreeMap::new())
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
@@ -697,6 +702,7 @@ macro_rules! tauri_commands {
             crate::agent_status::agent_sessions_in_front,
             crate::agent_status::get_agent_host_icon,
             crate::agent_status::list_agent_sessions,
+            crate::agent_status::list_agent_effort_labels,
             crate::agent_status::get_agent_push_detail,
             crate::agent_status::list_ssh_hosts,
             crate::agent_status::get_agent_remote_hosts,

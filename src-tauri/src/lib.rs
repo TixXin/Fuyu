@@ -27,7 +27,6 @@ mod notification_diagnostics;
 mod onboarding_window;
 mod pets;
 mod phone_push;
-mod plugin_host;
 mod plugin_kernel;
 mod mail;
 #[cfg_attr(target_os = "macos", path = "qq_notifications/macos.rs")]
@@ -45,6 +44,7 @@ mod ssh_tunnel;
 mod sync;
 mod system;
 mod system_levels;
+mod theme_market;
 mod timer;
 #[cfg(any(windows, test))]
 mod toast_notifications;
@@ -114,9 +114,6 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             if let Some(package) = plugin_kernel::package_open::find_in_args(args.iter().skip(1), Some(std::path::Path::new(&cwd))) {
                 plugin_kernel::package_open::open(app, package, false);
-            } else if let Some(link) = plugin_host::find_link(&args) {
-                let _ = island::show_island(app);
-                plugin_host::open_link(app, link, false);
             } else {
                 tray_visibility::reopen(app);
             }
@@ -232,20 +229,12 @@ pub fn run() {
             if let Err(error) = cc_connect::init(app.handle()) {
                 eprintln!("failed to initialize cc-connect: {error}");
             }
-            if let Err(error) = plugin_host::init(app.handle()) {
-                eprintln!("failed to initialize plugins: {error}");
-            }
             if let Err(error) = plugin_kernel::init(app.handle()) {
                 eprintln!("failed to start the plugin platform v3 host: {error}");
             }
             plugin_kernel::package_open::mark_started();
             if let Some(package) = plugin_kernel::package_open::find_in_args(std::env::args_os().skip(1), None) {
                 plugin_kernel::package_open::open(app.handle(), package, true);
-            } else {
-                let args: Vec<String> = std::env::args().collect();
-                if let Some(link) = plugin_host::find_link(&args) {
-                    plugin_host::open_link(app.handle(), link, true);
-                }
             }
             mail::init();
             if let Err(error) = qq_notifications::init(app.handle()) {
@@ -271,8 +260,8 @@ pub fn run() {
             file_shelf;
             coexist;
             local_api;
-            plugin_host;
             plugin_kernel;
+            theme_market;
             mail;
             wechat_reminders;
             qq_notifications;
@@ -321,10 +310,7 @@ pub fn run() {
                 }
                 #[cfg(target_os = "macos")]
                 tauri::RunEvent::Opened { urls } => {
-                    let rest = plugin_kernel::package_open::open_opened_urls(_app, &urls);
-                    if !rest.is_empty() {
-                        plugin_host::open_opened_links(_app, &rest);
-                    }
+                    let _ = plugin_kernel::package_open::open_opened_urls(_app, &urls);
                 }
                 #[cfg(target_os = "macos")]
                 tauri::RunEvent::Reopen { .. } => tray_visibility::reopen(_app),

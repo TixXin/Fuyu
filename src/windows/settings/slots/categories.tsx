@@ -7,9 +7,7 @@ import { SyncSettingsPage } from "../SyncSettingsPage";
 import { OverviewSettingsPage } from "../OverviewSettingsPage";
 import { ShortcutsSettingsPage } from "../ShortcutsSettingsPage";
 import { AboutSettingsPage } from "../AboutSettingsPage";
-import { PluginsSettingsPage } from "../PluginsSettingsPage";
 import { PluginsV3SettingsPage } from "../PluginsV3SettingsPage";
-import { PluginMarketSection } from "../../../features/plugins/PluginMarketSection";
 import { addSettingsCategory, type SettingsCategory, type SettingsPageProps } from "./categorySlot";
 import "./builtinModuleSwitches";
 import "./featureSettings";
@@ -51,11 +49,6 @@ const shortcuts = (tab: ComponentProps<typeof ShortcutsSettingsPage>["tab"]): Pa
     return <ShortcutsSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenPage={onOpenPage} />;
   };
 
-const plugins = (tab: ComponentProps<typeof PluginsSettingsPage>["tab"]): Page =>
-  function PluginsPage({ settings, managedPluginId, onOpenShortcuts }) {
-    return <PluginsSettingsPage tab={tab} settings={settings} managedPluginId={managedPluginId} onOpenShortcuts={onOpenShortcuts} />;
-  };
-
 const PAGES: Partial<Record<SettingsCategory, Page>> = {
   overview: ({ settings, locale, features, unsupported, onLocaleChange, onSettingsChange, onOpenPage }) => (
     <OverviewSettingsPage
@@ -82,14 +75,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   shortcuts: shortcuts("shortcuts"),
   shortcutsIsland: shortcuts("shortcutsIsland"),
   shortcutsReference: shortcuts("shortcutsReference"),
-  plugins: plugins("plugins"),
-  pluginsPages: plugins("pluginsPages"),
-  pluginsUpdates: plugins("pluginsUpdates"),
-  pluginsDev: plugins("pluginsDev"),
   pluginsV3: ({ onShowPage }) => <PluginsV3SettingsPage onOpenPage={onShowPage} />,
-  market: ({ marketRequest, onManagePlugin }) => (
-    <PluginMarketSection onManage={onManagePlugin} requestedId={marketRequest.requestedId} onDismissRequest={marketRequest.dismiss} />
-  ),
   about: ({ onSettingsChange }) => <AboutSettingsPage onSettingsChange={onSettingsChange} />,
 };
 

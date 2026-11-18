@@ -16,8 +16,13 @@ import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
 import { usePluginNotifications } from "../../src/features/messages/island/usePluginNotifications";
 import "../../src/features/messages/plugin/services";
-import { PluginNoticesRunner } from "../../src/features/plugins/plugin/runners";
 import type { MessageNotice } from "../../src/lib/settings/types";
+import { deliverNotice } from "../../src/features/messages/plugin/notices";
+import { islandNoticesV1 } from "../../src/lib/island-notices/service";
+import { windowServices } from "../../src/features/plugin-kernel/services";
+
+const noticeActions: { pluginId: string; action: string }[] = [];
+windowServices.get(islandNoticesV1).on("action", (event) => noticeActions.push(event));
 import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -109,8 +114,8 @@ async function notify(source: "qq" | "wechat" | "qqMail" | "plugin", title = "�
       mail = { ...mail, revision: ++revision, unreadCount: 1, items: [{ id: `mail-${revision}`, uid: revision, sender: title, subject: "本周项目进度已更新", unread: true, receivedAt }] };
       await emit("qq-mail-changed", { snapshot: mail, newestId: `mail-${revision}`, windowVisible: true });
     }
-    if (source === "plugin") await emit("plugin-notification", {
-      pluginId: "dev.test.build", pluginName: "构建", title, body: "main 分支构建通过", durationMs, actions: [{ id: "open", title: "查看" }, { id: "rerun", title: "重跑" }],
+    if (source === "plugin") deliverNotice({
+      pluginId: "dev.test.build", pluginName: { "zh-CN": "构建", en: "Build" }, title, body: "main 分支构建通过", durationMs, actions: [{ id: "open", title: "查看" }, { id: "rerun", title: "重跑" }],
     });
   });
 }
@@ -174,7 +179,7 @@ async function runChecks() {
     const actions = [...banner()!.querySelectorAll<HTMLButtonElement>(".message-banner__action")];
     check(actions.map((button) => button.textContent).join(",") === "查看,重跑", "插件通知带上它的按钮");
     await act(async () => actions[1].click());
-    check(commands.some((entry) => entry.command === "run_plugin_notification_action" && entry.args.id === "dev.test.build" && entry.args.action === "rerun") && !banner(), "点插件按钮运行动作并收回");
+    check(noticeActions.some((event) => event.pluginId === "dev.test.build" && event.action === "rerun") && !banner(), "点插件按钮运行动作并收回");
 
     await notify("plugin", "部署完成", 400);
     await act(async () => { await emit("island-banner-hover-changed", true); });
@@ -256,7 +261,7 @@ async function runChecks() {
   }
 }
 
-await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><PluginNoticesRunner /><Fixture /></StrictMode>); });
+await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><Fixture /></StrictMode>); });
 if (automated) await runChecks();
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });

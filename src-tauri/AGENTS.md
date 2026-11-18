@@ -30,7 +30,6 @@ src-tauri/src/
 ├── pets/                    # Codex Pets（petdex）：只读列出 ~/.codex/pets 与 <app data>/pets，校验后以 data URL 返回图集
 ├── local_api/               # 本地接口（第 3 版内置插件 local-api，background.rs 把 HTTP 服务登记成后台 server，关掉插件就停）：127.0.0.1 HTTP（tiny_http）、鉴权与路由、转给 main 窗口的桥、local-api.json；switches.rs 让转给待办、Agent、剪贴板的请求在那个插件关着时回 503；settings.rs 是设置页的命令（令牌只由 Rust 复制）
 ├── plugin_kernel/           # 插件平台第 3 版的宿主：默认启动（设 FUYU_PLUGINS_V3=0 关掉），正式安装包用资源目录里的宿主；找 Node（找下载的状态和重试在 node_status.rs）、在数据目录的 plugins-v3/ 下拉起 packages/plugin-base 的宿主，用 platform::job 管住它（containment.rs）；keybindings.rs 同步第 3 版插件全局热键，plugin_windows.rs 管理实验独立窗口（plugin-window-<n>）。看管宿主的通用部分在 crates/plugin-base
-├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、插件自己的窗口（windows/，实验接口，E34）、内置插件（builtin.rs，已全部迁到第 3 版）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）
 ├── media_control/
 ├── calendar/                # 日历：CalDAV（caldav.rs）和 ICS 订阅链接，iCalendar 解析和重复日程展开（ics.rs，rrule），会议链接识别（meeting_link.rs），来源配置与凭据（sources.rs）
 ├── lyrics/                  # 音乐页歌词：本地 .lrc 文件夹（local.rs）、LRCLIB（lrclib.rs，用户开启才联网）、按歌名歌手时长匹配（matching.rs），在线结果缓存在 lyrics-cache/
@@ -102,7 +101,6 @@ src-tauri/src/
 - 事件名定义为模块内的 `const`，向特定窗口发事件时使用窗口 label 常量（例如 `settings_window::WINDOW_LABEL`），不写字面量。
 - **命令和事件不返回密钥明文**（E36.3.7）：返回值和事件里不放密码、令牌、API 密钥、授权码，前端只拿 `has_xxx → bool` 这类状态；要用密钥的请求在 Rust 里拼好发出去。带密钥的网址发请求时，错误里去掉网址（reqwest 错误先 `without_url()`，或 `redact`）再 `.detail`。`pnpm check:secrets`（`scripts/check-secret-fields.mjs`）扫带 `Serialize` 的结构体，字段名像密钥、类型是字符串或 `Value` 的会报错；只写文件、不交给窗口的配置和例外登记在 `scripts/secret-fields-allowlist.json`，每条写理由，新增要在 PR 正文说明。规则和例外名单见 [v3-secrets.md](../docs/architecture/plugins/v3-secrets.md)。
 - 新增命令后，同步更新前端对应的 `api.ts`；用到插件权限时更新 `capabilities/default.json`。新窗口的 label 必须加入 capabilities 的 `windows` 列表。
-- **插件 API 的新能力先进实验通道**（2026-11-14 起，用户定，E30）：新方法、事件、贡献点或给已有方法加的行为，先放进 `plugin_host/dev.rs` 的 `EXPERIMENTAL_APIS`，只给开发模式的插件用；满足 [v2-platform.md](../docs/architecture/plugins/v2-platform.md) 3.1 节的转正条件后才进 `initialize.capabilities`。给已有方法加一个旧插件不会传的可选字段，不算新能力。
 
 ## 错误处理
 

@@ -1,6 +1,3 @@
-#[path = "plugin_view.rs"]
-mod plugin_view;
-
 use serde::Serialize;
 use std::{
     sync::{Arc, Mutex, OnceLock, PoisonError},
@@ -14,8 +11,6 @@ use crate::macos::{
 };
 use crate::messages_plugin::{self, SourceSwitch};
 use crate::user_error::UserError;
-
-pub(crate) use plugin_view::plugin_messages;
 
 const EVENT_NAME: &str = "qq-notifications-changed";
 const BUNDLE_ID: &str = "com.tencent.qq";
@@ -119,7 +114,6 @@ fn publish(
     snapshot: NotificationSnapshot,
     newest_id: Option<String>,
 ) {
-    plugin_view::publish_received(&snapshot, newest_id.as_deref());
     let window_visible = service
         .app
         .get_webview_window(crate::island::WINDOW_LABEL)

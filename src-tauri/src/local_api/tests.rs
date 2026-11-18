@@ -107,21 +107,6 @@ fn tokens_are_random_hex() {
 }
 
 #[test]
-fn development_routes_reach_the_plugin_host() {
-    let load = route("POST", "/v1/dev/plugins", br#"{"path":"C:/work/plugin"}"#).expect("load");
-    assert_eq!((load.method, load.params, load.writes), ("dev.load", json!({ "path": "C:/work/plugin" }), true));
-    let reload = route("POST", "/v1/dev/plugins/me.x/reload", b"").expect("reload");
-    assert_eq!((reload.params, reload.writes), (json!({ "id": "me.x" }), true));
-    let unload = route("DELETE", "/v1/dev/plugins/me.x", b"").expect("unload");
-    assert_eq!((unload.method, unload.writes), ("dev.unload", true));
-    let log = route("GET", "/v1/dev/plugins/me.x/log?after=12", b"").expect("log");
-    assert_eq!((log.method, log.params, log.writes), ("dev.log", json!({ "id": "me.x", "after": 12 }), false));
-    assert_eq!(route("GET", "/v1/dev/plugins/me.x/log?after=nope", b"").expect("log").params["after"], 0);
-    assert_eq!(route("GET", "/v1/dev/plugins", b"").map_err(|error| error.status), Err(405));
-    assert_eq!(route("PUT", "/v1/dev/plugins/me.x/reload", b"").map_err(|error| error.status), Err(405));
-}
-
-#[test]
 fn dev_island_routes_need_no_write_permission() {
     let emit = route("POST", "/v1/dev/island/emit", br#"{"event":"device-alert","payload":{}}"#).expect("emit");
     assert_eq!((emit.method, emit.writes), ("devIsland.emit", false));
@@ -153,7 +138,7 @@ fn routes_to_a_switched_off_feature_answer_503() {
         assert_eq!(error.status, 503, "{method}");
         assert!(error.message.contains("switched off"), "{method}");
     }
-    for method in ["health", "dev.load", "devIsland.emit"] {
+    for method in ["health", "devIsland.emit"] {
         assert!(check_with(method, off).is_ok(), "{method}");
     }
     assert!(check_with("todos.list", |plugin| plugin == "todos").is_ok());

@@ -1,6 +1,3 @@
-#[path = "plugin_view.rs"]
-mod plugin_view;
-
 use serde::Serialize;
 use std::{
     sync::{Arc, Mutex, OnceLock, PoisonError},
@@ -11,8 +8,6 @@ use tauri::{AppHandle, Emitter, Manager};
 use crate::macos::dock_badges::{self, Badge, DockSource};
 use crate::messages_plugin::{self, SourceSwitch};
 use crate::user_error::UserError;
-
-pub(crate) use plugin_view::plugin_messages;
 
 const EVENT_NAME: &str = "wechat-reminder-changed";
 const BUNDLE_ID: &str = "com.tencent.xinWeChat";
@@ -106,7 +101,6 @@ fn unavailable() -> UserError {
 }
 
 fn publish(service: &ReminderService, snapshot: ReminderSnapshot) {
-    plugin_view::publish_received(&snapshot);
     let visible = service
         .app
         .get_webview_window(crate::island::WINDOW_LABEL)

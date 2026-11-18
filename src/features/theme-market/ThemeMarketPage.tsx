@@ -88,7 +88,7 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
             ]}
             onChange={setFilter}
           />
-          <button className="plugin-card__button plugin-market__refresh" type="button" aria-label={text.refresh} disabled={loading} onClick={() => void refresh()}>
+          <button className="settings-button plugin-market__refresh" type="button" aria-label={text.refresh} disabled={loading} onClick={() => void refresh()}>
             <RefreshCcw className={loading ? "plugin-market__spin" : undefined} size={12} strokeWidth={2.4} />
           </button>
         </div>
@@ -145,7 +145,7 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
                   </div>
                 ) : null}
                 <button
-                  className="plugin-card__button"
+                  className="settings-button"
                   type="button"
                   disabled={saved.has(theme.id)}
                   onClick={() => {
@@ -156,7 +156,7 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
                   {saved.has(theme.id) ? text.saved : text.save}
                 </button>
                 <button
-                  className="plugin-card__button theme-market__apply"
+                  className="settings-button theme-market__apply"
                   type="button"
                   aria-pressed={inUse}
                   disabled={inUse}

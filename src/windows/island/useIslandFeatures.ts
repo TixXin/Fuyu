@@ -3,19 +3,15 @@ import type { IslandSettings } from "../../lib/settings/types";
 import { useUnsupportedFeatures } from "../../lib/platform";
 import { builtinConfigBoolean, isBuiltinEnabled } from "../../features/plugin-kernel/builtinSwitches";
 import { foldScreenshotsIntoClipboard, resolveIslandPage, withoutUnsupported, type IslandFeatures } from "./features";
-import type { IslandPage, PluginPageId } from "./types";
-import { usePluginOpenView } from "./usePluginOpenView";
+import type { IslandPage } from "./types";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
-
-const NO_PLUGIN_PAGES: readonly PluginPageId[] = [];
 
 type IslandFeatureOptions = {
   settings: IslandSettings;
   page: IslandPage;
   setPage: (page: IslandPage) => void;
   openIslandPage: (page: IslandPage) => void;
-  pluginPages?: readonly PluginPageId[];
 };
 
 export function useIslandFeatures({
@@ -23,7 +19,6 @@ export function useIslandFeatures({
   page,
   setPage,
   openIslandPage,
-  pluginPages,
 }: IslandFeatureOptions) {
   const unsupported = useUnsupportedFeatures();
   const plugins = useBuiltinPlugins();
@@ -45,12 +40,10 @@ export function useIslandFeatures({
       qqMail: mailOn,
       agents: enabled("agents", settings.agentStatusEnabled),
       translation: enabled("translation", settings.translationEnabled) && settings.translationTarget === "island",
-      pluginPages,
     }, unsupported));
   }, [
     unsupported,
     plugins,
-    pluginPages,
     pages.qq,
     pages.wechat,
     settings.agentStatusEnabled,
@@ -74,7 +67,6 @@ export function useIslandFeatures({
     const next = resolveIslandPage(target, features);
     if (next) openIslandPage(next);
   }, [features, openIslandPage]);
-  usePluginOpenView(pluginPages ?? NO_PLUGIN_PAGES, openEnabledPage);
 
   return { features, openEnabledPage };
 }

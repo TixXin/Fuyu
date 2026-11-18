@@ -3,18 +3,16 @@ use windows::Win32::{
     Foundation::{CloseHandle, HANDLE},
     System::{
         JobObjects::{
-            AssignProcessToJobObject, CreateJobObjectW, QueryInformationJobObject, SetInformationJobObject,
-            JobObjectBasicAccountingInformation, JobObjectBasicProcessIdList, JobObjectExtendedLimitInformation,
-            JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, JOBOBJECT_BASIC_PROCESS_ID_LIST,
-            JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+            AssignProcessToJobObject, CreateJobObjectW, SetInformationJobObject,
+            JobObjectExtendedLimitInformation, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+            JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
         },
-        ProcessStatus::{GetProcessMemoryInfo, PROCESS_MEMORY_COUNTERS},
         Diagnostics::ToolHelp::{CreateToolhelp32Snapshot, Thread32First, Thread32Next, TH32CS_SNAPTHREAD, THREADENTRY32},
         Threading::{OpenThread, ResumeThread, CREATE_SUSPENDED, THREAD_SUSPEND_RESUME},
     },
 };
 
-use super::process::{image_path, open_for_limited_query, ProcessHandle};
+use super::process::ProcessHandle;
 
 pub(crate) const START_SUSPENDED: u32 = CREATE_SUSPENDED.0;
 
@@ -41,26 +39,10 @@ pub(crate) fn resume(process_id: u32) -> Result<(), String> {
     Ok(())
 }
 
-const MAX_LISTED_PROCESSES: usize = 64;
-
 pub(crate) struct Job(HANDLE);
 
 unsafe impl Send for Job {}
 unsafe impl Sync for Job {}
-
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub(crate) struct JobUsage {
-    pub memory_bytes: u64,
-    pub cpu_ticks: u64,
-    pub processes: Vec<JobProcess>,
-}
-
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub(crate) struct JobProcess {
-    pub name: String,
-    pub private_bytes: u64,
-    pub working_set_bytes: u64,
-}
 
 impl Job {
     pub(crate) fn new() -> Result<Self, String> {
@@ -85,25 +67,10 @@ impl Job {
         unsafe { AssignProcessToJobObject(self.0, process) }.map_err(|error| format!("Could not put the plugin in a job object: {error}"))
     }
 
-    pub(crate) fn usage(&self) -> Option<JobUsage> {
-        let mut accounting = JOBOBJECT_BASIC_ACCOUNTING_INFORMATION::default();
-        unsafe {
-            QueryInformationJobObject(
-                Some(self.0),
-                JobObjectBasicAccountingInformation,
-                std::ptr::from_mut(&mut accounting).cast(),
-                size_of::<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION>() as u32,
-                None,
-            )
-        }
-        .ok()?;
-        let cpu_ticks = u64::try_from(accounting.TotalUserTime).unwrap_or(0) + u64::try_from(accounting.TotalKernelTime).unwrap_or(0);
-        let processes: Vec<JobProcess> = self.process_ids().into_iter().filter_map(process_memory).collect();
-        let memory_bytes = processes.iter().map(|process| process.private_bytes).sum();
-        Some(JobUsage { memory_bytes, cpu_ticks, processes })
-    }
-
+    #[cfg(test)]
     fn process_ids(&self) -> Vec<u32> {
+        use windows::Win32::System::JobObjects::{QueryInformationJobObject, JobObjectBasicProcessIdList, JOBOBJECT_BASIC_PROCESS_ID_LIST};
+        const MAX_LISTED_PROCESSES: usize = 64;
         #[repr(C)]
         struct IdList {
             header: JOBOBJECT_BASIC_PROCESS_ID_LIST,
@@ -129,20 +96,6 @@ impl Job {
             .filter_map(|id| u32::try_from(id).ok())
             .collect()
     }
-}
-
-fn process_memory(process_id: u32) -> Option<JobProcess> {
-    let process = open_for_limited_query(process_id)?;
-    let mut counters = PROCESS_MEMORY_COUNTERS::default();
-    unsafe { GetProcessMemoryInfo(process.0, &mut counters, size_of::<PROCESS_MEMORY_COUNTERS>() as u32) }.ok()?;
-    let name = image_path(process_id)
-        .and_then(|path| path.rsplit(['\\', '/']).next().map(str::to_string))
-        .unwrap_or_default();
-    Some(JobProcess {
-        name,
-        private_bytes: counters.PagefileUsage as u64,
-        working_set_bytes: counters.WorkingSetSize as u64,
-    })
 }
 
 impl Drop for Job {
@@ -204,10 +157,6 @@ mod tests {
         std::thread::sleep(std::time::Duration::from_millis(500));
         let ids = job.process_ids();
         assert!(ids.len() >= 2, "cmd and ping are both in the job: {ids:?}");
-        let usage = job.usage().expect("usage");
-        assert!(usage.memory_bytes > 0);
-        assert!(usage.processes.iter().any(|process| process.name.eq_ignore_ascii_case("cmd.exe") && process.working_set_bytes > 0), "{:?}", usage.processes);
-        assert_eq!(usage.memory_bytes, usage.processes.iter().map(|process| process.private_bytes).sum::<u64>());
         drop(job);
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
         let mut ended = || child_ended(&mut child) && ids.iter().all(|id| !alive(*id));
