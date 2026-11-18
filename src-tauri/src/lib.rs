@@ -127,6 +127,9 @@ pub fn run() {
         .on_page_load(|webview, _| {
             webview_recovery::attach(webview);
             webview_memory::page_loaded(webview);
+            if let Some(window) = webview.app_handle().get_webview_window(webview.label()) {
+                recording::apply_to_window(&window);
+            }
         })
         .on_window_event(|window, event| {
             if window.label() == translation::WINDOW_LABEL

@@ -43,6 +43,8 @@ export type SettingsScreenshotText = {
   recordFormat: string;
   recordFormatHint: string;
   recordFormats: Record<"mp4" | "gif", string>;
+  recordOwnWindows: string;
+  recordOwnWindowsHint: string;
 };
 
 export const zhCN: SettingsScreenshotText = {
@@ -110,6 +112,8 @@ export const zhCN: SettingsScreenshotText = {
   recordFormat: "默认格式",
   recordFormatHint: "录屏时选区之前按 G 可以临时换成另一种。视频放在「视频 › 浮屿录屏」。",
   recordFormats: { mp4: "MP4 视频", gif: "GIF 动图" },
+  recordOwnWindows: "录制浮屿自己的窗口",
+  recordOwnWindowsHint: "把剪贴板、快捷翻译、设置和悬浮岛也录进视频里。默认关，只录贴图。",
 };
 
 export const en: SettingsScreenshotText = {
@@ -177,4 +181,6 @@ export const en: SettingsScreenshotText = {
   recordFormat: "Default format",
   recordFormatHint: "Press G before choosing the area to switch for one recording. Videos go to Videos › Fuyu Recordings.",
   recordFormats: { mp4: "MP4 video", gif: "GIF animation" },
+  recordOwnWindows: "Record Fuyu's own windows",
+  recordOwnWindowsHint: "Include the clipboard, translator, Settings and the island in recordings. Off by default, when only pins appear.",
 };

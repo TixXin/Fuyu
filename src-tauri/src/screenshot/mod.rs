@@ -73,6 +73,17 @@ pub(crate) fn is_capturing() -> bool {
     session::id().is_some()
 }
 
+pub(super) fn is_capturable_own_window(label: &str) -> bool {
+    matches!(
+        label,
+        crate::translation::WINDOW_LABEL
+            | crate::clipboard_history::POPUP_WINDOW_LABEL
+            | crate::clipboard_history::preview_window::WINDOW_LABEL
+            | crate::settings_window::WINDOW_LABEL
+            | crate::tray_menu::WINDOW_LABEL
+    ) || label.starts_with(PIN_PREFIX)
+}
+
 pub(crate) fn start_from_tray(app: &AppHandle) {
     if !is_enabled() {
         return;
@@ -197,6 +208,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
                 system_audio: flag("x-system-audio"),
                 microphone: flag("x-microphone"),
                 gif: Some(header("x-format") == Some("gif")),
+                own_windows: flag("x-own-windows"),
                 folder_name,
             };
             crate::recording::begin(&app, request);

@@ -57,7 +57,7 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
     if window.is_visible().unwrap_or(false) {
         return hide(app);
     }
-    let _ = window.set_content_protected(settings.hide_from_capture);
+    let _ = window.set_content_protected(super::wanted_capture_protection(settings.hide_from_capture));
     super::sequence::stop();
     let own = i32::try_from(std::process::id()).ok();
     *TARGET_APP.lock().unwrap_or_else(PoisonError::into_inner) = apps::frontmost_pid().filter(|pid| Some(*pid) != own);
@@ -120,6 +120,8 @@ pub(super) fn outer_position(app: &AppHandle) -> Option<(i32, i32)> {
     let position = screen::window_position(&popup_window(app).ok()?).ok()?;
     Some((position.x, position.y))
 }
+
+pub(super) fn sync_taskbar(_app: &AppHandle, _pinned: bool) {}
 
 pub(super) fn note_target(_app: &AppHandle) {
     let own = i32::try_from(std::process::id()).ok();

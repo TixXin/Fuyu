@@ -146,8 +146,8 @@ fn show(app: &AppHandle) -> Result<Side, String> {
     let hidden = super::service()
         .and_then(|service| service.snapshot())
         .map(|snapshot| snapshot.settings.hide_from_capture)
-        .unwrap_or(true);
-    let _ = preview.set_content_protected(hidden);
+        .unwrap_or(false);
+    let _ = preview.set_content_protected(super::wanted_capture_protection(hidden));
     let layout = arrange(app, &preview)?;
     show_without_focus(&preview)?;
     keep_below_popup(app, &preview);

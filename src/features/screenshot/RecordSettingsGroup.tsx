@@ -68,6 +68,12 @@ export function RecordSettingsGroup({ screenshot, onChange }: { screenshot: Scre
         checked={record.microphone}
         onChange={(microphone) => set({ microphone })}
       />
+      <SettingsToggleRow
+        title={text.recordOwnWindows}
+        description={text.recordOwnWindowsHint}
+        checked={record.ownWindows}
+        onChange={(ownWindows) => set({ ownWindows })}
+      />
     </SettingsGroup>
   );
 }

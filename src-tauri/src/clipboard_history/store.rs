@@ -7,7 +7,7 @@ use super::{ClipboardHistoryItem, ClipboardHistoryItemKind, ClipboardHistorySett
 
 pub(super) const HISTORY_FILE_NAME: &str = "clipboard-history.json";
 
-pub(super) const HISTORY_VERSION: u32 = 2;
+pub(super) const HISTORY_VERSION: u32 = 3;
 
 pub(super) const IMAGE_DIRECTORY_NAME: &str = "clipboard-images";
 
@@ -62,12 +62,20 @@ pub(super) fn item_with_protocol_thumbnail(item: &ClipboardHistoryItem) -> Clipb
     clone
 }
 
+pub(super) fn migrate_settings(version: u32, mut settings: ClipboardHistorySettings) -> ClipboardHistorySettings {
+    if version < HISTORY_VERSION {
+        settings.hide_from_capture = false;
+    }
+    settings.normalized()
+}
+
 pub(super) fn load_history(history_path: &Path) -> PersistedClipboardHistory {
     fs::read_to_string(history_path)
         .ok()
         .and_then(|content| serde_json::from_str::<PersistedClipboardHistory>(&content).ok())
         .map(|mut history| {
-            history.settings = history.settings.normalized();
+            history.settings = migrate_settings(history.version, history.settings);
+            history.version = HISTORY_VERSION;
             history.items.retain(|item| match item.kind {
                 ClipboardHistoryItemKind::Text => {
                     item.text.as_ref().is_some_and(|text| !text.is_empty())
@@ -131,8 +139,33 @@ pub(super) fn create_item_id(timestamp: i64, hash: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{item_with_protocol_thumbnail, strip_disk_backed_thumbnails};
-    use crate::clipboard_history::ClipboardHistoryItem;
+    use super::{item_with_protocol_thumbnail, load_history, strip_disk_backed_thumbnails, PersistedClipboardHistory, HISTORY_VERSION};
+    use crate::clipboard_history::{privacy::effective_capture_protection, ClipboardHistoryItem, ClipboardHistorySettings};
+
+    #[test]
+    fn capture_hiding_defaults_to_off_migrates_old_history_and_yields_to_recording_mode() {
+        assert!(!ClipboardHistorySettings::default().hide_from_capture);
+        let dir = std::env::temp_dir().join(format!("fuyu-clip-migrate-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("temp dir");
+        let hidden = ClipboardHistorySettings { hide_from_capture: true, ..ClipboardHistorySettings::default() };
+        let v2 = dir.join("v2.json");
+        let saved_v2 = PersistedClipboardHistory { version: 2, settings: hidden.clone(), ..PersistedClipboardHistory::default() };
+        std::fs::write(&v2, serde_json::to_string(&saved_v2).expect("json")).expect("v2");
+        let migrated = load_history(&v2);
+        assert_eq!(migrated.version, HISTORY_VERSION);
+        assert!(!migrated.settings.hide_from_capture);
+
+        let v3 = dir.join("v3.json");
+        let saved_v3 = PersistedClipboardHistory { version: HISTORY_VERSION, settings: hidden, ..PersistedClipboardHistory::default() };
+        std::fs::write(&v3, serde_json::to_string(&saved_v3).expect("json")).expect("v3");
+        assert!(load_history(&v3).settings.hide_from_capture);
+        let _ = std::fs::remove_dir_all(&dir);
+
+        assert!(!effective_capture_protection(false, false, false));
+        assert!(effective_capture_protection(true, false, false));
+        assert!(effective_capture_protection(false, true, false));
+        assert!(!effective_capture_protection(true, false, true));
+    }
 
     #[test]
     fn disk_backed_thumbnails_drop_inline_base64_and_resolve_protocol_urls() {

@@ -12,7 +12,7 @@ mod tests;
 use tauri::AppHandle;
 
 use crate::user_error::UserError;
-pub(crate) use control::{begin, is_busy, stop_in_background, Request};
+pub(crate) use control::{apply_to_window, begin, hides_own_windows, is_busy, records_own_windows, stop_in_background, Request};
 use session::Summary;
 use state::State;
 

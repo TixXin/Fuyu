@@ -157,7 +157,7 @@ pub struct ClipboardHistorySettings {
     capture_html: bool,
     #[serde(default = "default_true")]
     ocr: bool,
-    #[serde(default = "default_true")]
+    #[serde(default)]
     hide_from_capture: bool,
     #[serde(default)]
     link_preview: bool,
@@ -286,7 +286,7 @@ impl Default for ClipboardHistorySettings {
             capture_files: true,
             capture_html: true,
             ocr: true,
-            hide_from_capture: true,
+            hide_from_capture: false,
             link_preview: false,
             flatten_terminal_commands: false,
             local_api_read: false,
@@ -486,7 +486,9 @@ pub fn set_clipboard_history_settings(
     settings: ClipboardHistorySettings,
 ) -> Result<ClipboardHistorySnapshot, String> {
     let enabled = settings.enabled;
-    let snapshot = service()?.set_settings(settings)?;
+    let svc = service()?;
+    let snapshot = svc.set_settings(settings)?;
+    restore_capture_protection(&svc.app);
     background::follow_setting(enabled);
     Ok(snapshot)
 }
@@ -598,7 +600,9 @@ pub async fn set_clipboard_popup_pin(app: AppHandle, pinned: Option<bool>) -> Re
     let position = if settings.popup_pinned { popup::outer_position(&app) } else { None };
     settings.popup_pin_x = position.map(|(x, _)| x).or(settings.popup_pin_x.filter(|_| settings.popup_pinned));
     settings.popup_pin_y = position.map(|(_, y)| y).or(settings.popup_pin_y.filter(|_| settings.popup_pinned));
-    service.set_settings(settings)
+    let snapshot = service.set_settings(settings)?;
+    popup::sync_taskbar(&app, snapshot.settings.popup_pinned);
+    Ok(snapshot)
 }
 
 pub(crate) fn popup_pinned() -> bool {
@@ -614,25 +618,9 @@ pub(crate) fn open_from_tray() {
     }
 }
 
-pub(crate) fn refocus_popup(app: &AppHandle) {
-    if let Some(window) = app.get_webview_window(popup::WINDOW_LABEL) {
-        let hidden = service().and_then(|service| service.snapshot()).map(|snapshot| snapshot.settings.hide_from_capture).unwrap_or(true);
-        let _ = window.set_content_protected(hidden);
-    }
-    if let Err(error) = popup::refocus(app) {
-        eprintln!("failed to give the clipboard window its focus back: {error}");
-    }
-}
-
-pub(crate) fn show_popup_in_screenshot(app: &AppHandle) -> bool {
-    let Some(window) = app.get_webview_window(popup::WINDOW_LABEL) else {
-        return false;
-    };
-    if !window.is_visible().unwrap_or(false) {
-        return false;
-    }
-    window.set_content_protected(false).is_ok()
-}
+#[cfg(windows)]
+pub(crate) use privacy::{is_clipboard_window, unprotect_for_recording};
+pub(crate) use privacy::{refocus_popup, restore_capture_protection, show_popup_in_screenshot, wanted_capture_protection};
 
 #[tauri::command]
 pub fn toggle_clipboard_history_favorite(id: String) -> Result<ClipboardHistorySnapshot, String> {
