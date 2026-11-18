@@ -1,4 +1,4 @@
-import type { MarketMethods } from "../../../../packages/plugin-services/src/services/market.mjs";
+import type { MarketCatalogSnapshot, MarketMethods } from "../../../../packages/plugin-services/src/services/market.mjs";
 
 export interface MarketTrustKey {
   keyId: string;
@@ -28,6 +28,7 @@ export type MarketServiceInstance = {
     ...args: Parameters<MarketMethods[K]>
   ) => Promise<ReturnType<MarketMethods[K]>>;
 } & {
+  autoUpdate(): Promise<MarketCatalogSnapshot>;
   subscribe(listener: (payload: Record<string, never>) => void): () => boolean;
 };
 

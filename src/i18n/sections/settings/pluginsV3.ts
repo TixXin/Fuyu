@@ -161,6 +161,8 @@ export type SettingsPluginsV3Text = {
       sourceOfficial: string;
       sourceMarket: string;
       sourceManualWarn: string;
+      trustChangeWarn: string;
+      requiresNote: (plugins: string) => string;
       networkLabel: string;
       networkNone: string;
       nodeApisLabel: string;
@@ -389,6 +391,8 @@ export const zhCN: SettingsPluginsV3Text = {
       sourceOfficial: "官方插件（@fuyu/*）",
       sourceMarket: "市场已审核",
       sourceManualWarn: "未经市场审核：来自本地 .fuyu 文件，请确认插件作者与来源可信后再安装。",
+      trustChangeWarn: "该插件更换了签名密钥或源码仓库，请确认作者身份后再更新。",
+      requiresNote: (plugins) => `将一并安装依赖插件：${plugins}`,
       networkLabel: "联网域名",
       networkNone: "不联网",
       nodeApisLabel: "Node 内置模块",
@@ -617,6 +621,8 @@ export const en: SettingsPluginsV3Text = {
       sourceOfficial: "Official plugin (@fuyu/*)",
       sourceMarket: "Reviewed in market",
       sourceManualWarn: "Unreviewed package: imported from a local .fuyu file. Only install if you trust the author.",
+      trustChangeWarn: "This plugin changed its signing key or source repository. Verify the author's identity before updating.",
+      requiresNote: (plugins) => `Will also install required plugins: ${plugins}`,
       networkLabel: "Network domains",
       networkNone: "No network access",
       nodeApisLabel: "Node built-in modules",
