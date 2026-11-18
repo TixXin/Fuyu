@@ -20,7 +20,7 @@ export function selectVersions(plugin, { fuyuVersion, platform, now, installed =
     const revocation = revocationOf(revocations, plugin.name, entry.version);
     let reason = null;
     if (!entry.platforms?.includes(platform)) reason = "platform";
-    else if (!satisfies(fuyuVersion, entry.engines?.fuyu)) reason = "engines";
+    else if (!satisfies(fuyuVersion, entry.engines?.fuyu, { includePrerelease: true })) reason = "engines";
     else if (!prerelease && isPrerelease(entry.version)) reason = "prerelease";
     else if (revocation?.level === "disable") reason = "revoked";
     if (reason) skipped.push({ version: entry.version, reason });

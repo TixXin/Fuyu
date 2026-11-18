@@ -36,7 +36,7 @@ const { ok, errors, warnings, manifest, app } = validateManifest(pkg, options);
 | `type` | 必填，固定 `"module"` | `module` |
 | `license` | 必填，SPDX 标识；`UNLICENSED` 不收（必须开源） | `required`、`license` |
 | `repository` | 必填。认 `owner/repo`、`github:` / `gitlab:` / `bitbucket:` 简写、`https://`、`git+https://`、`git+ssh://`、`git@host:owner/repo.git`，或 `{ "url": … }` | `required`、`repository` |
-| `engines.fuyu` | 必填，npm 的 semver 范围（`^`、`~`、`>=`、`1.x`、`a - b`、`\|\|`）；预发布版只匹配写了同一版本预发布的范围 | `required`、`range`、`engine` |
+| `engines.fuyu` | 必填，npm 的 semver 范围（`^`、`~`、`>=`、`1.x`、`a - b`、`\|\|`）；插件自己的版本按 npm 规则（预发布版只匹配写了同一版本预发布的范围），浮屿自己的版本按纯顺序比（`0.3.11-beta.4` 满足 `>=0.3.10`，不满足 `>=0.3.11`），所以测试版也能装插件 | `required`、`range`、`engine` |
 | `description`、`homepage`、`keywords`、`files` | 可选，类型要对 | `type` |
 
 其余 npm 认识的字段（`scripts`、`dependencies`、`exports`……）直接放过；npm 也不认识的顶层字段给告警 `unknown`。

@@ -29,6 +29,17 @@ test("prereleases only match ranges that name a prerelease of the same version",
   assert.equal(satisfies("0.5.0-beta.1", ">=0.4.0-beta.0 <0.6"), false);
 });
 
+test("a caller can let a prerelease take part in a range by ordering", () => {
+  const app = (version, range) => satisfies(version, range, { includePrerelease: true });
+  assert.equal(app("0.3.11-beta.4", ">=0.3.10"), true);
+  assert.equal(app("0.3.11-beta.4", "^0.3.10"), true);
+  assert.equal(app("0.3.11-beta.4", "*"), true);
+  assert.equal(app("0.3.11-beta.4", ">=0.3.11"), false);
+  assert.equal(app("0.3.10-beta.1", ">=0.3.10"), false);
+  assert.equal(app("0.4.0-beta.1", "^0.3.10"), false);
+  assert.equal(satisfies("0.3.11-beta.4", ">=0.3.10"), false);
+});
+
 test("bad ranges are rejected", () => {
   for (const bad of ["", "abc", ">=1.x.2", "1.2.3.4", "^", "latest", null]) assert.equal(isValidRange(bad), false, String(bad));
   assert.equal(satisfies("1.0.0", "nonsense"), false);

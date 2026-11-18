@@ -53,7 +53,7 @@ const wild = (part) => part === undefined || part === "*" || part === "x" || par
 
 const version = (major, minor, patch, prerelease = []) => ({ major, minor, patch, prerelease });
 
-const floor = (major, minor, patch) => version(major, minor, patch, [0]);
+const floor = (major, minor, patch) => ({ ...version(major, minor, patch, [0]), synthetic: true });
 
 function parsePartial(text) {
   const match = PARTIAL.exec(text);
@@ -152,9 +152,16 @@ function test(comparator, v) {
   }
 }
 
-export function satisfies(versionText, rangeText) {
+const sameTuple = (a, b) => a.major === b.major && a.minor === b.minor && a.patch === b.patch;
+
+export function satisfies(versionText, rangeText, options = {}) {
   const v = parseVersion(versionText);
   const sets = parseRange(rangeText);
   if (!v || !sets) return false;
-  return sets.some((set) => set.every((comparator) => test(comparator, v)));
+  const includePrerelease = options?.includePrerelease === true;
+  return sets.some((set) => {
+    if (!set.every((comparator) => test(comparator, v))) return false;
+    if (!v.prerelease.length || includePrerelease) return true;
+    return set.some((comparator) => comparator.v && !comparator.v.synthetic && comparator.v.prerelease.length > 0 && sameTuple(comparator.v, v));
+  });
 }
