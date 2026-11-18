@@ -24,7 +24,7 @@ pub fn set_clipboard_pin_order(ids: Vec<String>) -> Result<ClipboardHistorySnaps
     })
 }
 
-pub(super) fn checked_key(key: &str) -> Result<String, String> {
+pub(crate) fn checked_key(key: &str) -> Result<String, String> {
     let mut chars = key.trim().chars();
     match (chars.next(), chars.next()) {
         (Some(letter), None) if letter.is_ascii_alphabetic() && !RESERVED_KEYS.contains(&letter.to_ascii_uppercase()) => {
@@ -60,12 +60,20 @@ pub(super) fn apply_order(items: &mut [ClipboardHistoryItem], ids: &[String]) {
 impl ClipboardHistoryService {
     fn update_pins(&self, change: impl FnOnce(&mut [ClipboardHistoryItem]) -> Result<(), String>) -> Result<ClipboardHistorySnapshot, String> {
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
-        change(&mut state.items)?;
+        let state_ref = &mut *state;
+        let before = super::favorites_sync::snapshot_pins(&state_ref.items);
+        change(&mut state_ref.items)?;
+        let sync_changed = crate::sync::clock::with(|clock, wall| {
+            super::favorites_sync::on_pins_updated(&before, &mut state_ref.items, &mut state_ref.favorite_tombstones, clock, wall)
+        });
         self.persist_locked(&state)?;
         let snapshot = Self::snapshot_locked(&state);
         drop(state);
 
         self.emit_changed();
+        if sync_changed {
+            crate::sync::notify_local_change();
+        }
         Ok(snapshot)
     }
 }

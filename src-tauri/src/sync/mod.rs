@@ -7,7 +7,7 @@ mod codec;
 mod config;
 pub(crate) mod device;
 mod engine;
-mod layout;
+pub(crate) mod layout;
 mod merge;
 pub(crate) mod record;
 mod round;

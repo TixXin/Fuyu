@@ -8,6 +8,7 @@ pub(crate) mod deletion;
 pub(crate) mod edit;
 pub(crate) mod edit_image;
 pub(crate) mod expand;
+mod favorites_sync;
 pub(crate) mod drag;
 #[cfg_attr(target_os = "macos", path = "hotkey_macos.rs")]
 mod hotkey;
@@ -66,6 +67,10 @@ pub(crate) use plugin_view::{local_api_history, plugin_history, plugin_item};
 pub(crate) use links::{links_for_sync, replace_links_from_sync};
 pub(crate) use links_order::key_between as link_key_between;
 pub(crate) use snippets::{replace_snippets_from_sync, snippets_for_sync};
+pub(crate) use favorites_sync::{apply_sync_doc as sync_favorites_apply, favorites_for_sync, replace_favorites_from_sync, to_sync_doc as sync_favorites_to_doc};
+pub(crate) use pins::checked_key as checked_pin_key;
+pub(crate) use secrets::looks_like_secret as is_secret_clipboard_text;
+pub(crate) use edit::text_hash as text_clipboard_hash;
 pub(crate) use popup::WINDOW_LABEL as POPUP_WINDOW_LABEL;
 
 pub(crate) const PLUGIN_ID: &str = "clipboard";
@@ -207,16 +212,6 @@ fn normalized_ai_prompts(prompts: &[AiPrompt]) -> Vec<AiPrompt> {
         kept.push(AiPrompt { id, title, prompt: text });
     }
     kept
-}
-
-#[cfg(test)]
-#[test]
-fn ai_prompts_need_a_title_and_text_and_stay_few() {
-    let prompt = |id: &str, title: &str, text: &str| AiPrompt { id: id.into(), title: title.into(), prompt: text.into() };
-    let kept = normalized_ai_prompts(&[prompt("a", " 邮件 ", " 改成正式邮件 "), prompt("a", "dup", "x"), prompt("b", "", "x"), prompt("c", "t", "  ")]);
-    assert_eq!(kept, [prompt("a", "邮件", "改成正式邮件")]);
-    let many: Vec<AiPrompt> = (0..30).map(|index| prompt(&index.to_string(), "t", "x")).collect();
-    assert_eq!(normalized_ai_prompts(&many).len(), MAX_AI_PROMPTS);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -391,6 +386,14 @@ pub struct ClipboardHistoryItem {
     truncated: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     edited_at: Option<i64>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    private: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    from_sync: bool,
+    #[serde(default, deserialize_with = "crate::sync::clock::lenient", skip_serializing_if = "Option::is_none")]
+    updated_at: Option<crate::sync::Hlc>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    device_id: Option<String>,
 }
 
 fn normalized_app_names(names: &[String]) -> Vec<String> {
@@ -410,15 +413,6 @@ pub(crate) fn split_note_tags(note: &str) -> (String, Vec<String>) {
         .partition(|word| word.len() > 1 && (word.starts_with('#') || word.starts_with('＃')));
     let tags: Vec<String> = tags.iter().map(|tag| tag.trim_start_matches(['#', '＃']).to_string()).collect();
     (words.join(" ").chars().take(MAX_NOTE_CHARACTERS).collect(), normalized_tags(&tags))
-}
-
-#[cfg(test)]
-#[test]
-fn notes_give_their_hash_words_as_tags() {
-    let (note, tags) = split_note_tags("#Work  meeting link #ops #work ＃周报");
-    assert_eq!(note, "meeting link");
-    assert_eq!(tags, ["Work", "ops", "周报"]);
-    assert_eq!(split_note_tags("# alone"), ("# alone".to_string(), Vec::<String>::new()));
 }
 
 pub(crate) fn normalized_tags(tags: &[String]) -> Vec<String> {
@@ -458,6 +452,7 @@ struct ClipboardHistoryState {
     items: Vec<ClipboardHistoryItem>,
     snippets: Vec<snippets::ClipboardSnippet>,
     snippet_tombstones: Vec<crate::sync::Tombstone>,
+    favorite_tombstones: Vec<crate::sync::Tombstone>,
     last_capture_hash: Option<String>,
     recently_deleted: deletion::Removed,
 }
@@ -789,3 +784,25 @@ macro_rules! tauri_commands {
     };
 }
 pub(crate) use tauri_commands;
+
+#[cfg(test)]
+mod tests {
+    use super::{normalized_ai_prompts, split_note_tags, AiPrompt, MAX_AI_PROMPTS};
+
+    #[test]
+    fn ai_prompts_need_a_title_and_text_and_stay_few() {
+        let prompt = |id: &str, title: &str, text: &str| AiPrompt { id: id.into(), title: title.into(), prompt: text.into() };
+        let kept = normalized_ai_prompts(&[prompt("a", " 邮件 ", " 改成正式邮件 "), prompt("a", "dup", "x"), prompt("b", "", "x"), prompt("c", "t", "  ")]);
+        assert_eq!(kept, [prompt("a", "邮件", "改成正式邮件")]);
+        let many: Vec<AiPrompt> = (0..30).map(|index| prompt(&index.to_string(), "t", "x")).collect();
+        assert_eq!(normalized_ai_prompts(&many).len(), MAX_AI_PROMPTS);
+    }
+
+    #[test]
+    fn notes_give_their_hash_words_as_tags() {
+        let (note, tags) = split_note_tags("#Work  meeting link #ops #work ＃周报");
+        assert_eq!(note, "meeting link");
+        assert_eq!(tags, ["Work", "ops", "周报"]);
+        assert_eq!(split_note_tags("# alone"), ("# alone".to_string(), Vec::<String>::new()));
+    }
+}

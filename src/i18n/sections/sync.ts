@@ -168,6 +168,10 @@ export const zhCN: SyncText = {
         title: "我的主题预设",
         description: "已保存的外观样式预设（自动剔除显示器与尺寸等设备字段）。",
       },
+      clipFavorites: {
+        title: "剪贴板收藏（仅文字）",
+        description: "默认关闭：仅按正文哈希去重合并已收藏的纯文本与备注；打码、密钥特征、隐私排除格式及图片均留在本机。",
+      },
     },
   },
   optional: {
@@ -341,6 +345,10 @@ export const en: SyncText = {
       presets: {
         title: "Saved themes",
         description: "Style presets with monitor and size fields stripped per machine.",
+      },
+      clipFavorites: {
+        title: "Clipboard favorites (text only)",
+        description: "Off by default: deduplicates favorited text entries by content hash; masked, secret, private-format and image entries stay local.",
       },
     },
   },

@@ -174,6 +174,19 @@
     {
       "page": "generalSync",
       "zh-CN": {
+        "group": "同步内容",
+        "title": "剪贴板收藏（仅文字）",
+        "description": "默认关闭：仅按正文哈希去重合并已收藏的纯文本与备注；打码、密钥特征、隐私排除格式及图片均留在本机。"
+      },
+      "en": {
+        "group": "What to sync",
+        "title": "Clipboard favorites (text only)",
+        "description": "Off by default: deduplicates favorited text entries by content hash; masked, secret, private-format and image entries stay local."
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
         "group": "可选同步",
         "title": "翻译服务与模型选择",
         "description": "默认关闭：API 密钥各台单独保存，且本地模型地址（如 Ollama）在另一台电脑上往往不可用。"

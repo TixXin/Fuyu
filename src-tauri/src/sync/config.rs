@@ -12,10 +12,26 @@ pub enum SyncCategory {
     Links,
     Settings,
     Presets,
+    ClipFavorites,
 }
 
 impl SyncCategory {
-    pub(crate) const ALL: [Self; 5] = [Self::Todos, Self::Snippets, Self::Links, Self::Settings, Self::Presets];
+    pub(crate) const ALL: [Self; 6] = [
+        Self::Todos,
+        Self::Snippets,
+        Self::Links,
+        Self::Settings,
+        Self::Presets,
+        Self::ClipFavorites,
+    ];
+
+    pub(crate) const DEFAULT_ON: [Self; 5] = [
+        Self::Todos,
+        Self::Snippets,
+        Self::Links,
+        Self::Settings,
+        Self::Presets,
+    ];
 
     pub(crate) fn name(self) -> &'static str {
         match self {
@@ -24,6 +40,7 @@ impl SyncCategory {
             Self::Links => "links",
             Self::Settings => "settings",
             Self::Presets => "presets",
+            Self::ClipFavorites => "clip-favorites",
         }
     }
 }
@@ -35,19 +52,19 @@ pub struct SyncConfig {
     pub version: u32,
     #[serde(default)]
     pub folder: Option<String>,
-    #[serde(default = "all_categories")]
+    #[serde(default = "default_categories")]
     pub categories: Vec<SyncCategory>,
     #[serde(default)]
     pub optional_groups: Vec<String>,
 }
 
-fn all_categories() -> Vec<SyncCategory> {
-    SyncCategory::ALL.to_vec()
+fn default_categories() -> Vec<SyncCategory> {
+    SyncCategory::DEFAULT_ON.to_vec()
 }
 
 impl Default for SyncConfig {
     fn default() -> Self {
-        Self { version: VERSION, folder: None, categories: all_categories(), optional_groups: Vec::new() }
+        Self { version: VERSION, folder: None, categories: default_categories(), optional_groups: Vec::new() }
     }
 }
 

@@ -26,6 +26,8 @@ pub(super) struct PersistedClipboardHistory {
     pub(super) snippets: Vec<super::snippets::ClipboardSnippet>,
     #[serde(default)]
     pub(super) snippet_tombstones: Vec<crate::sync::Tombstone>,
+    #[serde(default)]
+    pub(super) favorite_tombstones: Vec<crate::sync::Tombstone>,
 }
 
 pub(super) fn referenced_image_names(items: &[ClipboardHistoryItem]) -> HashSet<String> {
@@ -84,8 +86,12 @@ pub(super) fn load_history(history_path: &Path) -> PersistedClipboardHistory {
                 ClipboardHistoryItemKind::Files => item.files.as_ref().is_some_and(|files| !files.is_empty()),
             });
             strip_disk_backed_thumbnails(&mut history.items);
-            crate::sync::clock::with(|clock, _| super::snippets::fill_missing(&mut history.snippets, clock.device()));
+            crate::sync::clock::with(|clock, _| {
+                super::snippets::fill_missing(&mut history.snippets, clock.device());
+                super::favorites_sync::fill_missing(&mut history.items, clock.device());
+            });
             crate::sync::clock::observe(super::snippets::all_stamps(&history.snippets, &history.snippet_tombstones));
+            crate::sync::clock::observe(super::favorites_sync::all_stamps(&history.items, &history.favorite_tombstones));
             history
         })
         .unwrap_or_default()

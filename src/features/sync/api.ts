@@ -3,7 +3,7 @@ import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 
-export const SYNC_CATEGORIES = ["todos", "snippets", "links", "settings", "presets"] as const;
+export const SYNC_CATEGORIES = ["todos", "snippets", "links", "settings", "presets", "clipFavorites"] as const;
 
 export type SyncCategory = (typeof SYNC_CATEGORIES)[number];
 

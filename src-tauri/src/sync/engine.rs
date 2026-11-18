@@ -12,7 +12,7 @@ use tauri::{AppHandle, Emitter};
 use super::{
     backend_folder::FolderBackend,
     base,
-    categories::{links::Links, settings, snippets::Snippets, todos::Todos, Category},
+    categories::{clip_favorites::ClipFavorites, links::Links, settings, snippets::Snippets, todos::Todos, Category},
     clock,
     config::{self, SyncCategory, SyncConfig},
     device,
@@ -182,7 +182,8 @@ fn run_round(app: &AppHandle, home: &Path, data_home: &Path, config: &SyncConfig
     let groups = &config.optional_groups;
     let mut settings_part = settings::Settings::new(app.clone(), settings::Part::Settings, device, groups);
     let mut presets = settings::Settings::new(app.clone(), settings::Part::Presets, device, groups);
-    let all: [&mut dyn Category; 5] = [&mut todos, &mut snippets, &mut links, &mut settings_part, &mut presets];
+    let mut clip_favorites = ClipFavorites::new(device);
+    let all: [&mut dyn Category; 6] = [&mut todos, &mut snippets, &mut links, &mut settings_part, &mut presets, &mut clip_favorites];
     let (mut enabled, disabled): (Vec<&mut dyn Category>, Vec<&mut dyn Category>) = all.into_iter().partition(|category| config.enabled(category.kind()));
     let disabled: Vec<SyncCategory> = disabled.iter().map(|category| category.kind()).collect();
     let app_version = app.package_info().version.to_string();

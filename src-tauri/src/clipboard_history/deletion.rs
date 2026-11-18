@@ -65,9 +65,14 @@ pub(super) fn put_back(items: &mut Vec<ClipboardHistoryItem>, removed: &mut Remo
 impl ClipboardHistoryService {
     pub(super) fn delete_items(&self, ids: &[String]) -> Result<ClipboardHistorySnapshot, String> {
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
-        let removed = take_items(&mut state.items, ids);
+        let state_ref = &mut *state;
+        let removed = take_items(&mut state_ref.items, ids);
+        let mut sync_changed = false;
         if !removed.is_empty() {
-            for (earlier, _) in std::mem::replace(&mut state.recently_deleted, removed) {
+            sync_changed = crate::sync::clock::with(|clock, wall| {
+                super::favorites_sync::on_items_removed(&removed, &state_ref.items, &mut state_ref.favorite_tombstones, clock, wall)
+            });
+            for (earlier, _) in std::mem::replace(&mut state_ref.recently_deleted, removed) {
                 self.remove_item_files(&earlier);
             }
             self.persist_locked(&state)?;
@@ -83,19 +88,29 @@ impl ClipboardHistoryService {
         drop(state);
 
         self.emit_changed();
+        if sync_changed {
+            crate::sync::notify_local_change();
+        }
         Ok(snapshot)
     }
 
     pub(super) fn restore_items(&self, ids: &[String]) -> Result<ClipboardHistorySnapshot, String> {
         let mut guard = self.state.lock().map_err(|error| error.to_string())?;
         let state = &mut *guard;
+        let mut sync_changed = false;
         if put_back(&mut state.items, &mut state.recently_deleted, ids) {
+            sync_changed = crate::sync::clock::with(|clock, wall| {
+                super::favorites_sync::on_items_restored(&mut state.items, ids, &mut state.favorite_tombstones, clock, wall)
+            });
             self.persist_locked(state)?;
         }
         let snapshot = Self::snapshot_locked(state);
         drop(guard);
 
         self.emit_changed();
+        if sync_changed {
+            crate::sync::notify_local_change();
+        }
         Ok(snapshot)
     }
 
