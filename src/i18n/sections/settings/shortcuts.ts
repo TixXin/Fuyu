@@ -28,6 +28,12 @@ export type SettingsShortcutsText = {
   translate: string;
   newLine: string;
   pasteClipboard: string;
+  clipboardWindowTitle: string;
+  clipboardPreview: string;
+  clipboardSnippetsTab: string;
+  clipboardPlainPaste: string;
+  clipboardAiRewrite: string;
+  clipboardQuickPick: string;
   taken: (shortcut: string, owner: string) => string;
   reset: (shortcut: string) => string;
   pluginTitle: string;
@@ -72,6 +78,12 @@ export const zhCN: SettingsShortcutsText = {
   translate: "翻译",
   newLine: "换行",
   pasteClipboard: "填入剪贴板（独立窗口）",
+  clipboardWindowTitle: "剪贴板独立窗口",
+  clipboardPreview: "空格大图 / 全文预览",
+  clipboardSnippetsTab: "切换历史与常用语",
+  clipboardPlainPaste: "粘贴为纯文本",
+  clipboardAiRewrite: "AI 改写或总结",
+  clipboardQuickPick: "快速粘贴第 1–9 条",
   taken: (shortcut, owner) => `${shortcut} 已被「${owner}」使用，请换一个。`,
   reset: (shortcut) => `恢复默认（${shortcut}）`,
   pluginTitle: "插件快捷键",
@@ -116,6 +128,12 @@ export const en: SettingsShortcutsText = {
   translate: "Translate",
   newLine: "New line",
   pasteClipboard: "Fill from the clipboard (window only)",
+  clipboardWindowTitle: "Clipboard window",
+  clipboardPreview: "Spacebar peek",
+  clipboardSnippetsTab: "Switch history and snippets",
+  clipboardPlainPaste: "Paste as plain text",
+  clipboardAiRewrite: "AI rewrite or summary",
+  clipboardQuickPick: "Quick paste entry 1–9",
   taken: (shortcut, owner) => `${shortcut} is already used by "${owner}". Choose another.`,
   reset: (shortcut) => `Reset to default (${shortcut})`,
   pluginTitle: "Plugin shortcuts",

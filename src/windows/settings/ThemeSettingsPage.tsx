@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BuiltinThemesSection } from "./sections/BuiltinThemesSection";
 import { ColorSettingsSection } from "./sections/ColorSettingsSection";
-import { IslandPreview } from "../../components/island-preview/IslandPreview";
+import { StickyIslandPreview } from "./StickyIslandPreview";
 import { GlassSettingsSection } from "./sections/GlassSettingsSection";
 import { CornerSettingsRows } from "./sections/LayoutSettingsSection";
 import { PresetSettingsSection } from "./sections/PresetSettingsSection";
@@ -102,7 +102,7 @@ export function ThemeSettingsPage({
   const props = { settings, presets, onSettingsChange, tone, shown, onEditingChange: setEditing };
   return (
     <>
-      <IslandPreview settings={shown} />
+      <StickyIslandPreview settings={shown} />
       <SlotView slot={sections} group={tab} props={props} />
     </>
   );

@@ -1,6 +1,6 @@
 import { CollapsedItemsSection } from "./sections/CollapsedItemsSection";
 import { DisplaySettingsSection } from "./sections/DisplaySettingsSection";
-import { IslandPreview } from "../../components/island-preview/IslandPreview";
+import { StickyIslandPreview } from "./StickyIslandPreview";
 import { SizeSettingsSection } from "./sections/LayoutSettingsSection";
 import { PositionSettingsSection } from "./sections/PositionSettingsSection";
 import type { IslandSettings } from "../../lib/settings/types";
@@ -45,7 +45,7 @@ sections.add({ id: "appearanceCollapsed.collapsed-items", category: "appearanceC
 export function AppearanceSettingsPage({ tab, ...props }: AppearanceSectionProps & { tab: AppearanceTab }) {
   return (
     <>
-      <IslandPreview settings={props.settings} compact={tab === "appearanceCollapsed"} />
+      <StickyIslandPreview settings={props.settings} compact={tab === "appearanceCollapsed"} />
       <SlotView slot={sections} group={tab} props={props} />
     </>
   );

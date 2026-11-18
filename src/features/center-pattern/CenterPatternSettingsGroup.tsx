@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { SelectControl } from "../../components/controls/SelectControl";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -8,6 +8,7 @@ import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
 import { setBuiltinConfig } from "../plugin-kernel/builtinSwitches";
 import { useBuiltinConfig } from "../plugin-kernel/useBuiltinPlugins";
+import { CenterPattern } from "./CenterPattern";
 import {
   CENTER_PATTERN_OPTIONS,
   CENTER_PATTERN_SIZE,
@@ -19,6 +20,7 @@ import {
 } from "./centerSettings.ts";
 import { OWNER } from "./plugin/owner.ts";
 import { usePetChoices } from "./usePetChoices";
+import "./CenterPatternSettingsGroup.css";
 
 export function CenterPatternSettingsGroup() {
   const text = useTranslation().settings.plugins.centerPattern;
@@ -34,31 +36,35 @@ export function CenterPatternSettingsGroup() {
   };
 
   return (
-    <SettingsGroup title={text.group} footer={failure ? <span className="plugin-card__error">{failure}</span> : text.groupHint}>
+    <SettingsGroup title={text.group} footer={failure ? <span className="plugin-card__error">{failure}</span> : <SettingsFootnote text={text.groupHint} />}>
       <SettingsRow
         title={text.pattern}
         control={
-          <SettingsSelect<CenterPatternSelection>
-            value={config.pattern}
-            ariaLabel={text.pattern}
-            options={CENTER_PATTERN_OPTIONS.map((pattern) => ({ value: pattern, label: text.patterns[pattern] }))}
-            onChange={(pattern) => save("pattern", pattern)}
-          />
+          <>
+            <span className="center-pattern-preview" aria-hidden="true">
+              <CenterPattern pattern={config.pattern === "pet" ? "eyes" : config.pattern} paused height={18} />
+            </span>
+            <SettingsSelect<CenterPatternSelection>
+              value={config.pattern}
+              ariaLabel={text.pattern}
+              options={CENTER_PATTERN_OPTIONS.map((pattern) => ({ value: pattern, label: text.patterns[pattern] }))}
+              onChange={(pattern) => save("pattern", pattern)}
+            />
+          </>
         }
       />
       <SettingsRow
+        indent={config.pattern === "pet"}
         title={text.pet}
         description={text.petHint}
         control={
-          <div className="settings-select">
-            <SelectControl
-              value={config.pet}
-              ariaLabel={text.pet}
-              disabled={pets === "loading"}
-              options={choices}
-              onChange={(pet) => save("pet", pet)}
-            />
-          </div>
+          <SettingsSelect
+            value={config.pet}
+            ariaLabel={text.pet}
+            disabled={pets === "loading"}
+            options={choices}
+            onChange={(pet) => save("pet", pet)}
+          />
         }
       />
       <SettingsNumberRow
