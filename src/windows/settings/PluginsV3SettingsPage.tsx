@@ -3,7 +3,7 @@ import { Search, X } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
 import { onPluginPackageOpen, takePendingPluginPackage, type BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
-import { BuiltinPluginsGroup, stateOf } from "./BuiltinPluginsGroup";
+import { BuiltinPluginsGroup, isExternalPlugin, stateOf } from "./BuiltinPluginsGroup";
 import type { SettingsCategory } from "./categories";
 import { PluginBisectBar } from "./PluginBisectBar";
 import { PluginDetailModal } from "./PluginDetailModal";
@@ -123,16 +123,13 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
   const measured = memory && host && memory.pid === host.pid ? memory : null;
   const open = connection === "open";
   const builtinIds = new Set(builtins?.map((item) => item.id) ?? []);
-  const extras = (plugins ?? []).filter((item) => !builtinIds.has(item.id));
-  const totalCount = (builtins?.length ?? 0) + extras.length;
+  const extras = (plugins ?? []).filter((item) => isExternalPlugin(item, builtinIds));
+  const installedCount = extras.length;
   const hostById = new Map((plugins ?? []).map((item) => [item.id, item]));
-  const runningCount =
-    (builtins ?? []).filter((b) => {
-      const hp = hostById.get(b.id);
-      return hp ? stateOf(hp) === "running" : b.enabled;
-    }).length + extras.filter((p) => stateOf(p) === "running").length;
+  const runningCount = extras.filter((p) => stateOf(p) === "running").length;
   const selectedBuiltin = builtins?.find((b) => b.id === selectedId);
   const selectedHost = selectedId ? hostById.get(selectedId) : undefined;
+  const showHostNotice = !open || Boolean(host?.safe);
 
   const switchTabKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -158,7 +155,7 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
             data-tab="plugins"
             onClick={() => setTab("plugins")}
           >
-            <span>{text.tabs.plugins(totalCount)}</span>
+            <span>{text.tabs.plugins(installedCount)}</span>
           </button>
           <button
             className={`plugins-v3__tab${tab === "market" ? " plugins-v3__tab--active" : ""}`}
@@ -190,10 +187,12 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
 
       {tab === "plugins" ? (
         <>
-          <HostSummaryBar view={view} runningCount={runningCount} onOpenDiagnostics={() => setTab("diagnostics")} />
+          {showHostNotice ? (
+            <HostSummaryBar view={view} runningCount={runningCount} showRunning={installedCount > 0} onOpenDiagnostics={() => setTab("diagnostics")} />
+          ) : null}
           <V2PluginMigrationCard onOpenMarketTab={() => setTab("market")} onOpenPage={onOpenPage} />
-          {open ? <PluginBisectBar thirdPartyIds={extras.filter((p) => p.kind === "third-party" || !p.kind).map((p) => p.id)} onBisect={view.bisect} /> : null}
-          <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
+          {open ? <PluginBisectBar thirdPartyIds={extras.map((p) => p.id)} onBisect={view.bisect} /> : null}
+          <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} onOpenMarketTab={() => setTab("market")} />
         </>
       ) : tab === "market" ? (
         <PluginMarketV3Tab connected={open} query={query} openedPackage={openedPackage} openedError={openedError} onConsumeOpenedPackage={handleConsumeOpenedPackage} />
@@ -226,7 +225,7 @@ export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: Plugi
           <div className="plugins-v3__tabs-bar">
             <div className="plugins-v3__tabs" role="tablist">
               <button className="plugins-v3__tab plugins-v3__tab--active" type="button" role="tab" aria-selected={true} data-tab="plugins">
-                <span>{text.tabs.plugins(builtins?.length ?? 0)}</span>
+                <span>{text.tabs.plugins(0)}</span>
               </button>
             </div>
             <SearchInput query={query} onChange={setQuery} />
@@ -240,11 +239,11 @@ export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: Plugi
             </div>
           </section>
           <V2PluginMigrationCard onOpenPage={onOpenPage} />
-          <BuiltinPluginsGroup builtins={builtins} hostEnabled={false} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
+          <BuiltinPluginsGroup builtins={builtins} hostEnabled={false} query={query} onSelectPlugin={setSelectedId} />
           {selectedId ? <PluginDetailModal builtin={selectedBuiltin} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
         </>
       ) : null}
-      {hostEnabled === null ? <BuiltinPluginsGroup builtins={builtins} hostEnabled={null} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} /> : null}
+      {hostEnabled === null ? <BuiltinPluginsGroup builtins={builtins} hostEnabled={null} query={query} onSelectPlugin={setSelectedId} /> : null}
     </div>
   );
 }

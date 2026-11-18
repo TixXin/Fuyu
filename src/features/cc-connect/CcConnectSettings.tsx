@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
-import { setBuiltinConfig } from "../plugin-kernel/builtinSwitches";
+import { setBuiltinConfig, switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
 import { CcConnectSection } from "./CcConnectSection";
 import { OWNER } from "./plugin/owner.ts";
 import { useCcConnect } from "./useCcConnect";
@@ -15,6 +16,7 @@ function save(key: "path" | "run", value: string | boolean | null) {
 }
 
 export function CcConnectSettings() {
+  const switchId = useId();
   const t = useTranslation().settings.plugins.ccConnect;
   const cc = useCcConnect();
   const [path, setPath] = useState(cc.path);
@@ -26,7 +28,11 @@ export function CcConnectSettings() {
 
   return (
     <>
-      <SettingsGroup title={t.group} footer={<SettingsFootnote text={t.groupHint} />}>
+      <SettingsGroup
+        title={t.group}
+        action={<SettingsSwitch id={switchId} ariaLabel={t.group} checked onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch(() => undefined)} />}
+        footer={<SettingsFootnote text={t.groupHint} />}
+      >
         <SettingsRow title={t.path} description={t.pathHint}>
           <SettingsInput
             monospace

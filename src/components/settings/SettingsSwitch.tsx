@@ -4,11 +4,13 @@ export function SettingsSwitch({
   id,
   checked,
   disabled,
+  ariaLabel,
   onChange,
 }: {
   id: string;
   checked: boolean;
   disabled?: boolean;
+  ariaLabel?: string;
   onChange: (checked: boolean) => void;
 }) {
   return (
@@ -17,6 +19,7 @@ export function SettingsSwitch({
         id={id}
         type="checkbox"
         role="switch"
+        aria-label={ariaLabel}
         checked={checked}
         disabled={disabled}
         onChange={(event) => onChange(event.currentTarget.checked)}

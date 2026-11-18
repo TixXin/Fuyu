@@ -11,6 +11,7 @@ import { PluginsSettingsPage } from "../PluginsSettingsPage";
 import { PluginsV3SettingsPage } from "../PluginsV3SettingsPage";
 import { PluginMarketSection } from "../../../features/plugins/PluginMarketSection";
 import { addSettingsCategory, type SettingsCategory, type SettingsPageProps } from "./categorySlot";
+import "./builtinModuleSwitches";
 import "./featureSettings";
 
 export type { SettingsPageProps };
@@ -70,6 +71,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   general: general("general"),
   generalData: general("generalData"),
   generalSync: () => <SyncSettingsPage />,
+  generalApi: general("generalApi"),
   behavior: behavior("behavior"),
   behaviorTuck: behavior("behaviorTuck"),
   behaviorAlerts: behavior("behaviorAlerts"),

@@ -8,7 +8,6 @@ import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
-import { switchBuiltinPlugin } from "../../features/plugin-kernel/builtinSwitches";
 import { windowServices } from "../../features/plugin-kernel/services";
 import type { SettingsCategory } from "./categories";
 import {
@@ -19,6 +18,7 @@ import {
   TONES,
   detailText,
   isManagedThirdParty,
+  isOfficialMarketPlugin,
   stateOf,
 } from "./BuiltinPluginsGroup";
 import { PluginSchemaForm } from "./PluginSchemaForm";
@@ -75,16 +75,8 @@ export function PluginDetailModal({
   const note = builtin?.kind === "essential" ? `${text.essentialNote}${summary ? ` · ${summary}` : ""}` : summary;
   const targetPage = builtin ? BUILTIN_PAGES[builtin.id as BuiltinPluginName] : undefined;
   const managedThirdParty = !builtin && isManagedThirdParty(hostPlugin);
+  const officialMarket = !builtin && isOfficialMarketPlugin(hostPlugin);
   const thirdPartyEnabled = state !== "disabled";
-
-  const toggleBuiltin = (enabled: boolean) => {
-    if (!builtin) return;
-    setBusy(true);
-    setActionError(null);
-    void switchBuiltinPlugin(builtin.id, enabled)
-      .catch((failure: unknown) => setActionError(errorText(failure)))
-      .finally(() => setBusy(false));
-  };
 
   const toggleThirdParty = (enabled: boolean) => {
     if (!hostPlugin) return;
@@ -135,7 +127,11 @@ export function PluginDetailModal({
           <div className="plugins-v3__title-col">
             <div className="plugins-v3__title-line">
               <strong className="plugins-v3__modal-title">{name}</strong>
-              {kind ? <span className="plugins-v3__kind">{text.kinds[kind]}</span> : null}
+              {officialMarket ? (
+                <span className="plugins-v3__pill plugins-v3__pill--official">{text.market.officialBadge}</span>
+              ) : kind ? (
+                <span className="plugins-v3__kind">{text.kinds[kind]}</span>
+              ) : null}
               {hostPlugin?.source === "manual" && text.unreviewedBadge ? <span className="plugins-v3__kind">{text.unreviewedBadge}</span> : null}
               <span className="plugins-v3__state">{text.states[state]}</span>
             </div>
@@ -146,11 +142,7 @@ export function PluginDetailModal({
               {settingsText.shortcuts.openFeaturePage}
             </SettingsLinkButton>
           ) : null}
-          {builtin ? (
-            <div className="plugins-v3__switch">
-              <SettingsSwitch id={switchId} checked={builtin.enabled} disabled={builtin.kind === "essential" || busy} onChange={toggleBuiltin} />
-            </div>
-          ) : managedThirdParty ? (
+          {managedThirdParty ? (
             <div className="plugins-v3__switch">
               <SettingsSwitch id={switchId} checked={thirdPartyEnabled} disabled={busy} onChange={toggleThirdParty} />
             </div>
