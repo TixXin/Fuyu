@@ -12,13 +12,12 @@
   color: var(--text-1);
   font-family: var(--font-ui);
   transform: translateX(-50%);
-  animation: message-banner-in var(--motion-medium) var(--motion-ease-out) both;
+  animation: message-banner-in var(--motion-medium) var(--motion-ease-out) backwards;
 }
 
 @keyframes message-banner-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -8px) scale(0.97);
   }
 }
 

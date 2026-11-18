@@ -534,3 +534,56 @@ fn cursor_near_island_and_dim_wake_tracker_handle_approach_and_parked_cursor() {
     assert!(!reenter.poll(true, false, Some((410.0, 120.0))));
     assert!(reenter.poll(true, true, Some((410.0, 18.0))));
 }
+
+#[test]
+fn ordinary_open_and_close_skip_stage_geometry_until_stage_inputs_change() {
+    assert_eq!(DEFAULT_EXPANDED_ISLAND_HEIGHT, 360.0);
+
+    let collapsed = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+    assert!(should_apply_stage_geometry(&collapsed, &collapsed, false));
+    assert!(!should_apply_stage_geometry(&collapsed, &collapsed, true));
+
+    let mut expanded = collapsed;
+    expanded.mode = IslandMode::Expanded;
+    expanded.collapsed_width = 312.0;
+    expanded.expanded_width = 800.0;
+    expanded.is_dimmed = true;
+    expanded.corner_radius = 24.0;
+    expanded.corner_shape = CornerShape::Round;
+    expanded.top_fillet_radius = 4.0;
+    expanded.glass_enabled = true;
+    expanded.glass_native = true;
+    expanded.glass_intensity = 45.0;
+    expanded.glass_tint_rgb = (18, 22, 30);
+    expanded.expanded_height = 130.0;
+    assert!(!stage_geometry_inputs_changed(&collapsed, &expanded));
+    assert!(!should_apply_stage_geometry(&collapsed, &expanded, true));
+
+    let mut taller = expanded;
+    taller.expanded_height = 490.0;
+    assert!(stage_geometry_inputs_changed(&collapsed, &taller));
+    assert!(!stage_geometry_inputs_changed(
+        &state(IslandMode::Collapsed, 1.0, 490.0),
+        &taller,
+    ));
+
+    let mut tucked = collapsed;
+    tucked.is_tucked = true;
+    assert!(stage_geometry_inputs_changed(&collapsed, &tucked));
+
+    let mut margined = collapsed;
+    margined.margin_y = 12.0;
+    assert!(stage_geometry_inputs_changed(&collapsed, &margined));
+
+    let mut side_collapsed = collapsed;
+    side_collapsed.attached_edge = Some(Edge::Left);
+    side_collapsed.custom_position = Some(IslandPosition {
+        x: 0,
+        y: 420,
+        edge: Some(Edge::Left),
+        along: Some(0.5),
+    });
+    let mut side_expanded = side_collapsed;
+    side_expanded.mode = IslandMode::Expanded;
+    assert!(stage_geometry_inputs_changed(&side_collapsed, &side_expanded));
+}

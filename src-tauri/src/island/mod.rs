@@ -50,10 +50,11 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 use geometry::{
-    monitor_for_island_position, out_at_top_after, DEFAULT_EXPANDED_ISLAND_HEIGHT, EXPANDED_ISLAND_HEIGHT_RANGE,
-    max_expanded_width, MAX_ADJUSTED_COLLAPSED_WIDTH, MAX_CORNER_RADIUS, MIN_ADJUSTED_COLLAPSED_WIDTH,
-    MIN_COLLAPSED_ISLAND_WIDTH, MIN_CORNER_RADIUS,
-    MIN_EXPANDED_ISLAND_HEIGHT, POSITION_ANIMATION_GENERATION,
+    max_expanded_width, monitor_for_island_position, out_at_top_after, should_apply_stage_geometry,
+    stage_geometry_synced, DEFAULT_EXPANDED_ISLAND_HEIGHT, EXPANDED_ISLAND_HEIGHT_RANGE,
+    MAX_ADJUSTED_COLLAPSED_WIDTH, MAX_CORNER_RADIUS, MIN_ADJUSTED_COLLAPSED_WIDTH,
+    MIN_COLLAPSED_ISLAND_WIDTH, MIN_CORNER_RADIUS, MIN_EXPANDED_ISLAND_HEIGHT,
+    POSITION_ANIMATION_GENERATION,
 };
 use glass::apply_glass_material;
 #[cfg(windows)]
@@ -230,14 +231,16 @@ pub fn set_island_interaction(
     if previous_state.monitor_follow != state.monitor_follow {
         watch::wake();
     }
-    apply_stage_geometry(
-        &window,
-        state,
-        animate_position.unwrap_or(true)
-            && (previous_state.is_tucked != state.is_tucked
-                || previous_state.out_at_top != state.out_at_top
-                || (state.is_tucked && previous_state.tuck_style != state.tuck_style)),
-    )?;
+    if should_apply_stage_geometry(&previous_state, &state, stage_geometry_synced()) {
+        apply_stage_geometry(
+            &window,
+            state,
+            animate_position.unwrap_or(true)
+                && (previous_state.is_tucked != state.is_tucked
+                    || previous_state.out_at_top != state.out_at_top
+                    || (state.is_tucked && previous_state.tuck_style != state.tuck_style)),
+        )?;
+    }
     if !state.is_dragging {
         focus::island_mode_synced(&window, matches!(state.mode, IslandMode::Expanded));
     }

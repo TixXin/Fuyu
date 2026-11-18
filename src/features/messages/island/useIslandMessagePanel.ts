@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "../../../i18n";
 import { copyMessageText } from "../../../lib/api";
-import { addArrival, removeArrival, arrivalKey, type ArrivalMessage } from "../arrivals/messageArrivals";
+import { addArrival, arrivalKey, estimateArrivalsHeight, removeArrival, type ArrivalMessage } from "../arrivals/messageArrivals";
 import { isImSource } from "../im-sources/imSourcesState";
 import type { ImSourcesController } from "../im-sources/useImSources";
 import type { MailMessage } from "../mail/api";
@@ -38,8 +38,9 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   const t = useTranslation().messages;
   const otpEnabled = useMessageOtpCopyEnabled();
   const [arrivals, setArrivals] = useState<PanelArrival[] | null>(null);
-  const [height, setHeight] = useState(0);
+  const [measuredHeight, setMeasuredHeight] = useState<number | null>(null);
   const autoOpenedRef = useRef(false);
+  const pendingOpenRef = useRef(false);
   const closeTimerRef = useRef<number | undefined>(undefined);
   const handledKeyRef = useRef<string | null>(null);
   const isOnMessages = mode === "expanded" && page === "qq";
@@ -51,8 +52,10 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
 
   const end = useCallback(() => {
     autoOpenedRef.current = false;
+    pendingOpenRef.current = false;
     window.clearTimeout(closeTimerRef.current);
     setArrivals(null);
+    setMeasuredHeight(null);
     setMessagePanelOpen(false);
   }, [setMessagePanelOpen]);
 
@@ -76,7 +79,7 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     setArrivals((list) => addArrival((list ?? []).filter((item) => !(message.mediaControls && item.mediaControls && item.pluginId === message.pluginId)), message));
     setMessagePanelOpen(true);
     autoOpenedRef.current = true;
-    if (current.mode === "collapsed") current.openIslandPage("qq");
+    if (current.mode === "collapsed") pendingOpenRef.current = true;
     const closeLater = (heldSince: number) => {
       if (!autoOpenedRef.current) return;
       if (latest.current.holdsOpen(heldSince)) {
@@ -90,6 +93,13 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   }, [incomingKey, close, setMessagePanelOpen]);
 
   const showing = arrivals !== null;
+  useLayoutEffect(() => {
+    if (!pendingOpenRef.current) return;
+    pendingOpenRef.current = false;
+    if (arrivals !== null && latest.current.mode === "collapsed") {
+      latest.current.openIslandPage("qq");
+    }
+  }, [arrivals]);
   useEffect(() => {
     const message = incomingRef.current;
     if (!showing || !message) return;
@@ -100,8 +110,10 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   }, [incomingActionsKey, showing]);
   const showAll = useCallback(() => {
     autoOpenedRef.current = false;
+    pendingOpenRef.current = false;
     window.clearTimeout(closeTimerRef.current);
     setArrivals(null);
+    setMeasuredHeight(null);
     setMessagePanelOpen(false);
   }, [setMessagePanelOpen]);
   useEffect(() => {
@@ -193,11 +205,14 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     close();
   }, [arrivals, close, imSources, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
 
+  const visibleArrivals = showing && (mode === "collapsed" || page === "qq") ? arrivals : null;
+  const height = visibleArrivals ? (measuredHeight ?? estimateArrivalsHeight(visibleArrivals)) : 0;
+
   return {
     clearAll,
-    arrivals: showing && page === "qq" ? arrivals : null,
+    arrivals: visibleArrivals,
     height,
-    measure: setHeight,
+    measure: setMeasuredHeight,
     open,
     runAction,
     showAll,

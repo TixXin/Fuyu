@@ -33,3 +33,31 @@ export function addArrival<T extends ArrivalMessage>(list: readonly T[], message
 export function removeArrival<T extends ArrivalMessage>(list: readonly T[], key: string): T[] {
   return list.filter((item) => arrivalKey(item) !== key);
 }
+
+const HEADER_AND_GAP_HEIGHT = 30;
+const LIST_ROW_GAP = 6;
+const INLINE_ROW_HEIGHT = 46;
+const INLINE_ACTIONS_HEIGHT = 32;
+const CARD_BASE_HEIGHT = 36;
+const CARD_BODY_LINE_HEIGHT = 17;
+const CARD_BODY_GAP = 2;
+const CARD_ACTIONS_HEIGHT = 33;
+
+export function estimateArrivalsHeight(arrivals: readonly ArrivalMessage[]): number {
+  if (arrivals.length === 0) return 0;
+  if (arrivals.length === 1 && arrivals[0].inline === true) {
+    return INLINE_ROW_HEIGHT + (arrivals[0].actions.length > 0 ? INLINE_ACTIONS_HEIGHT : 0);
+  }
+  let rowsHeight = 0;
+  for (const item of arrivals) {
+    const plainWeChat = item.source === "wechat" && !item.chat;
+    const isFlash = item.kind === "flash";
+    const trimmed = item.body.trim();
+    const hasBody = plainWeChat || isFlash || item.source !== "plugin" || trimmed.length > 0;
+    const bodyLines = !hasBody ? 0 : !plainWeChat && !isFlash && trimmed.length > 26 ? 2 : 1;
+    const bodyHeight = bodyLines > 0 ? CARD_BODY_GAP + bodyLines * CARD_BODY_LINE_HEIGHT : 0;
+    const actionsHeight = item.actions.length > 0 ? CARD_ACTIONS_HEIGHT : 0;
+    rowsHeight += CARD_BASE_HEIGHT + bodyHeight + actionsHeight;
+  }
+  return HEADER_AND_GAP_HEIGHT + rowsHeight + (arrivals.length - 1) * LIST_ROW_GAP;
+}
