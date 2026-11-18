@@ -97,6 +97,12 @@ async function runChecks() {
     check(windowClass().includes("--right") && $(".clipboard-preview") !== before, "放在剪贴板窗口右边；每次打开换一个新面板，从头播放滑入");
     check(getComputedStyle($(".clipboard-preview")!).animationName.includes("clipboard-preview-slide"), "进场是 CSS 动画，不等动画帧回调：动画没跑时面板也照样看得见");
     check($(".clipboard-popup__pane-body")?.textContent === TEXT.text, "内容是这条的全文");
+    check(!$(".clipboard-popup__pane-meta-note"), "没有备注时不多渲染空备注行");
+    const longNote = "这是一段超过列表显示宽度的完整长备注，确认按空格打开预览窗时能完整读到全部文字而不被单行省略号截断";
+    await send({ ...TEXT, note: longNote, tags: ["周报"] });
+    const previewNote = $(".clipboard-popup__pane-meta-note");
+    check(previewNote?.textContent === longNote && getComputedStyle(previewNote!).whiteSpace === "pre-wrap", "空格预览窗口完整展示多行自动折行的长备注");
+    await send(TEXT);
     check(hint().includes("空格") && hint().includes("关闭"), "顶栏左边写「空格 关闭」");
 
     await send(IMAGE, { holding: true });
