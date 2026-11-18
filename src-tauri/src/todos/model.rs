@@ -17,6 +17,14 @@ pub struct TodoSubtask {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct TodoRecurrence {
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interval: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TodoItem {
     pub id: String,
     pub title: String,
@@ -30,6 +38,8 @@ pub struct TodoItem {
     pub priority: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recurrence: Option<TodoRecurrence>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub subtasks: Vec<TodoSubtask>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -67,6 +77,8 @@ pub struct ScheduledTodo {
     pub priority: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recurrence: Option<TodoRecurrence>,
     #[serde(default, deserialize_with = "clock::lenient", skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<Hlc>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

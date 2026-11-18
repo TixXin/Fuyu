@@ -1,5 +1,3 @@
-import { emit } from "@tauri-apps/api/event";
-import { mockIPC } from "@tauri-apps/api/mocks";
 import { act, StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
@@ -7,8 +5,7 @@ import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
 import "../../src/windows/settings/SettingsWindow.css";
 import { I18nProvider, LOCALE_STORAGE_KEY, TRANSLATIONS, useLocale, type LocaleCode } from "../../src/i18n";
-import { SYNC_STATUS_EVENT, type OptionalSyncGroup, type SyncCategory, type SyncStatus } from "../../src/features/sync/api";
-import { DEFAULT_ENABLED_CATEGORIES, SYNC_CATEGORY_ITEMS } from "../../src/features/sync/syncState";
+import { installSyncSettingsMocks, NEXT_PICKED_FOLDER } from "./syncSettingsMocks";
 
 const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
 localStorage.setItem(LOCALE_STORAGE_KEY, "zh-CN");
@@ -18,134 +15,8 @@ window.addEventListener("beforeunload", () => {
 });
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true, isTauri: true });
 
-const LAST_SYNC = Date.UTC(2026, 10, 15, 1, 30);
-const OLD_DEVICE_SYNC = Date.UTC(2026, 1, 1, 0, 0);
-
-let currentStatus: SyncStatus = {
-  phase: "off",
-  backend: "off",
-  folder: null,
-  webdav: null,
-  deviceId: "mac-studio-01",
-  lastSyncAt: null,
-  lastError: null,
-  error: null,
-  confirm: null,
-  categories: SYNC_CATEGORY_ITEMS.map((category) => ({
-    category,
-    state: DEFAULT_ENABLED_CATEGORIES.includes(category) ? "waiting" : "off",
-    message: null,
-    lastSyncAt: null,
-  })),
-  optionalGroups: [],
-  devices: [],
-  skippedFiles: [],
-};
-
-const calls: { command: string; args: Record<string, unknown> }[] = [];
-const nextPickedFolder = "/Users/demo/iCloud/FuyuSync";
-let nextWebdavTestError: unknown = null;
-
-mockIPC((command, payload) => {
-  const args = (payload ?? {}) as Record<string, unknown>;
-  calls.push({ command, args });
-  switch (command) {
-    case "get_sync_status":
-      return structuredClone(currentStatus);
-    case "plugin:dialog|open":
-      return nextPickedFolder;
-    case "plugin:opener|reveal_item_in_dir":
-      return null;
-    case "set_sync_config": {
-      const folder = (args.folder as string | null) ?? null;
-      const categories = (args.categories as SyncCategory[]) ?? [];
-      const optionalGroups = (args.optionalGroups as OptionalSyncGroup[]) ?? [];
-      currentStatus = {
-        ...currentStatus,
-        backend: folder ? "folder" : "off",
-        folder,
-        phase: folder ? "idle" : "off",
-        lastSyncAt: folder ? LAST_SYNC : null,
-        error: null,
-        optionalGroups,
-        categories: SYNC_CATEGORY_ITEMS.map((category) => ({
-          category,
-          state: categories.includes(category) ? (folder ? "ok" : "waiting") : "off",
-          message: null,
-          lastSyncAt: folder && categories.includes(category) ? LAST_SYNC : null,
-        })),
-        devices: folder
-          ? [
-              { deviceId: "mac-studio-01", name: "MacBook Air", platform: "macos", appVersion: "0.3.11", lastSyncAt: LAST_SYNC, thisDevice: true },
-              { deviceId: "win-desk-02", name: "Office-PC", platform: "windows", appVersion: "0.3.9", lastSyncAt: OLD_DEVICE_SYNC, thisDevice: false },
-            ]
-          : [],
-      };
-      return structuredClone(currentStatus);
-    }
-    case "test_sync_webdav": {
-      if (nextWebdavTestError !== null) {
-        throw nextWebdavTestError;
-      }
-      return null;
-    }
-    case "set_sync_webdav": {
-      const url = String(args.url ?? "").trim();
-      const username = String(args.username ?? "").trim();
-      const categories = (args.categories as SyncCategory[]) ?? [];
-      const optionalGroups = (args.optionalGroups as OptionalSyncGroup[]) ?? [];
-      currentStatus = {
-        ...currentStatus,
-        backend: "webdav",
-        phase: "idle",
-        lastSyncAt: LAST_SYNC,
-        lastError: null,
-        error: null,
-        webdav: { url: url.endsWith("/") ? url : `${url}/`, username, hasPassword: true },
-        optionalGroups,
-        categories: SYNC_CATEGORY_ITEMS.map((category) => ({
-          category,
-          state: categories.includes(category) ? "ok" : "off",
-          message: null,
-          lastSyncAt: categories.includes(category) ? LAST_SYNC : null,
-        })),
-        devices: [
-          { deviceId: "mac-studio-01", name: "MacBook Air", platform: "macos", appVersion: "0.3.11", lastSyncAt: LAST_SYNC, thisDevice: true },
-          { deviceId: "win-desk-02", name: "Office-PC", platform: "windows", appVersion: "0.3.9", lastSyncAt: OLD_DEVICE_SYNC, thisDevice: false },
-        ],
-      };
-      return structuredClone(currentStatus);
-    }
-    case "stop_sync": {
-      const forget = Boolean(args.forgetWebdav);
-      currentStatus = {
-        ...currentStatus,
-        backend: "off",
-        phase: "off",
-        lastError: null,
-        error: null,
-        webdav: forget ? null : currentStatus.webdav,
-      };
-      return structuredClone(currentStatus);
-    }
-    case "sync_now":
-      return null;
-    case "confirm_sync_deletions": {
-      currentStatus = {
-        ...currentStatus,
-        phase: "idle",
-        confirm: null,
-        categories: currentStatus.categories.map((entry) => (
-          entry.state === "needsConfirm" ? { ...entry, state: "ok", lastSyncAt: LAST_SYNC } : entry
-        )),
-      };
-      void emit(SYNC_STATUS_EVENT, structuredClone(currentStatus));
-      return null;
-    }
-    default:
-      return null;
-  }
-}, { shouldMockEvents: true });
+const harness = installSyncSettingsMocks();
+const { calls } = harness;
 
 const { SyncSettingsPage } = await import("../../src/windows/settings/SyncSettingsPage");
 
@@ -196,6 +67,17 @@ try {
 
   check(wide.textContent?.includes(zh.status.phases.off.headline) && wide.textContent?.includes(zh.backend.folderUnset), "Sync starts off without a pre-filled folder");
 
+  const encGroupInitial = groupByTitle(wide, zh.encryption.groupTitle)!;
+  const openEncInitialBtn = [...encGroupInitial.querySelectorAll<HTMLButtonElement>("button")].find(
+    (btn) => btn.textContent?.includes(zh.encryption.openEnableAction),
+  )!;
+  check(
+    Boolean(encGroupInitial)
+      && encGroupInitial.textContent?.includes(zh.encryption.badges.off)
+      && openEncInitialBtn.disabled,
+    "End-to-end encryption starts off by default and requires an active backend before enabling",
+  );
+
   const catGroup = groupByTitle(wide, zh.categories.groupTitle)!;
   const catSwitches = [...catGroup.querySelectorAll<HTMLInputElement>("input[role='switch']")];
   check(
@@ -226,13 +108,13 @@ try {
   });
   await settle();
 
-  nextWebdavTestError = { code: "sync.webdavAuth", message: "The WebDAV username or app password was rejected." };
+  harness.setWebdavTestError({ code: "sync.webdavAuth", message: "The WebDAV username or app password was rejected." });
   const testBtn = [...wide.querySelectorAll<HTMLButtonElement>(".sync-status__button")].find((btn) => btn.textContent?.includes(zh.backend.webdav.testAction))!;
   await act(async () => { testBtn.click(); });
   await settle();
   check(wide.textContent?.includes("第三方应用密码"), "Wrong WebDAV password surfaces localized app-password guidance");
 
-  nextWebdavTestError = null;
+  harness.setWebdavTestError(null);
   await act(async () => { testBtn.click(); });
   await settle();
   check(wide.textContent?.includes(zh.backend.webdav.testOk), "Test connection shows confirmation when WebDAV folder is reachable");
@@ -256,12 +138,10 @@ try {
   );
 
   await act(async () => {
-    currentStatus = {
-      ...currentStatus,
+    await harness.emitStatus({
       phase: "folderMissing",
       error: { code: "sync.webdavRateLimited", message: "Rate limited" },
-    };
-    await emit(SYNC_STATUS_EVENT, structuredClone(currentStatus));
+    });
   });
   await settle();
   check(
@@ -280,7 +160,7 @@ try {
   const chooseBtn = [...wide.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((btn) => btn.textContent === zh.backend.chooseFolder)!;
   await act(async () => { chooseBtn.click(); });
   await settle();
-  check(wide.querySelector(".sync-folder-path")?.textContent === nextPickedFolder && wide.textContent?.includes(zh.status.phases.idle.headline),
+  check(wide.querySelector(".sync-folder-path")?.textContent === NEXT_PICKED_FOLDER && wide.textContent?.includes(zh.status.phases.idle.headline),
     "Picking a folder saves it and switches status to ready");
 
   check(wide.textContent?.includes("MacBook Air") && wide.textContent?.includes(zh.devices.thisDevice) && wide.textContent?.includes(zh.devices.stale),
@@ -300,13 +180,12 @@ try {
   check(JSON.stringify(lastConfigCall?.args.optionalGroups) === JSON.stringify(["translationProvider"]), "Turning an optional group on sends its id to set_sync_config");
 
   await act(async () => {
-    currentStatus = {
-      ...currentStatus,
+    const cur = harness.getStatus();
+    await harness.emitStatus({
       phase: "needsConfirm",
       confirm: { reason: "manyDeletions", category: "todos", removed: 18, total: 20 },
-      categories: currentStatus.categories.map((entry) => (entry.category === "todos" ? { ...entry, state: "needsConfirm" } : entry)),
-    };
-    await emit(SYNC_STATUS_EVENT, structuredClone(currentStatus));
+      categories: cur.categories.map((entry) => (entry.category === "todos" ? { ...entry, state: "needsConfirm" } : entry)),
+    });
   });
   await settle();
   const confirmDialog = wide.querySelector<HTMLElement>(".sync-confirm[role='alertdialog']");
@@ -318,19 +197,105 @@ try {
   check(calls.some((call) => call.command === "confirm_sync_deletions") && !wide.querySelector(".sync-confirm"),
     "Confirming deletions calls confirm_sync_deletions and clears the brake");
 
+  const encGroup = groupByTitle(wide, zh.encryption.groupTitle)!;
+  const openEncBtn = [...encGroup.querySelectorAll<HTMLButtonElement>("button")].find(
+    (btn) => btn.textContent?.includes(zh.encryption.openEnableAction),
+  )!;
+  await act(async () => { openEncBtn.click(); });
+  await settle();
+  check(
+    encGroup.textContent?.includes(zh.encryption.warningTitle)
+      && encGroup.textContent?.includes("找不回来"),
+    "Opening E2EE setup prominently warns that forgotten passphrases cannot be recovered",
+  );
+
+  const encPassInput = encGroup.querySelector<HTMLInputElement>("#sync-enc-passphrase")!;
+  const encConfirmInput = encGroup.querySelector<HTMLInputElement>("#sync-enc-confirm")!;
+  await act(async () => {
+    setInputValue(encPassInput, "correct-horse-battery");
+    setInputValue(encConfirmInput, "mismatch-value");
+  });
+  await settle();
+  check(encGroup.textContent?.includes(zh.encryption.passphraseMismatch), "Mismatched E2EE passphrases show an immediate alert");
+
+  await act(async () => { setInputValue(encConfirmInput, "correct-horse-battery"); });
+  await settle();
+  const enableSubmitBtn = [...encGroup.querySelectorAll<HTMLButtonElement>(".sync-status__button--primary")].find(
+    (btn) => btn.textContent?.includes(zh.encryption.enableSubmitAction),
+  )!;
+  await act(async () => { enableSubmitBtn.click(); });
+  await settle();
+  check(
+    calls.some((call) => call.command === "enable_sync_encryption")
+      && encGroup.textContent?.includes(zh.encryption.badges.unlocked)
+      && encGroup.textContent?.includes("9f8e7d6c5b4a"),
+    "Enabling E2EE migrates remote data and shows unlocked status with key ID",
+  );
+
+  const copyRkBtn = [...encGroup.querySelectorAll<HTMLButtonElement>("button")].find(
+    (btn) => btn.textContent?.includes(zh.encryption.copyRecoveryAction),
+  )!;
+  await act(async () => { copyRkBtn.click(); });
+  await settle();
+  const saveRkBtn = [...encGroup.querySelectorAll<HTMLButtonElement>("button")].find(
+    (btn) => btn.textContent?.includes(zh.encryption.saveRecoveryAction),
+  )!;
+  await act(async () => { saveRkBtn.click(); });
+  await settle();
+  check(
+    calls.some((call) => call.command === "copy_sync_recovery_key")
+      && calls.some((call) => call.command === "save_sync_recovery_key")
+      && encGroup.textContent?.includes("fuyu-sync-recovery-key-2026-11-17-2240.txt"),
+    "Recovery key can be copied concealed or saved to Downloads without exposing plaintext to JS",
+  );
+
+  await act(async () => {
+    await harness.emitStatus({
+      phase: "locked",
+      encryption: { state: "locked", hasLocalKey: false, keyId: "9f8e7d6c5b4a" },
+    });
+  });
+  await settle();
+  check(
+    wide.textContent?.includes(zh.status.phases.locked.headline)
+      && encGroup.textContent?.includes(zh.encryption.badges.locked),
+    "Locked remote store shows locked phase and prompts for passphrase or recovery key",
+  );
+
+  const unlockInput = encGroup.querySelector<HTMLInputElement>("#sync-enc-unlock")!;
+  const unlockBtn = [...encGroup.querySelectorAll<HTMLButtonElement>(".sync-status__button--primary")].find(
+    (btn) => btn.textContent?.includes(zh.encryption.unlockSubmitAction),
+  )!;
+  await act(async () => { setInputValue(unlockInput, "wrong-passphrase"); });
+  await settle();
+  await act(async () => { unlockBtn.click(); });
+  await settle();
+  check(encGroup.textContent?.includes("同步口令或恢复密钥不正确"), "Wrong passphrase shows localized sync.badPassphrase error");
+
+  await act(async () => { setInputValue(unlockInput, "FUYU-ABCDEFG-HJKLMPQ-RSTUVWX-YZ23456-789ABCD-EFGHJKL-MNPQRST-UVWXYZ2"); });
+  await settle();
+  await act(async () => { unlockBtn.click(); });
+  await settle();
+  check(
+    calls.some((call) => call.command === "unlock_sync_encryption")
+      && encGroup.textContent?.includes(zh.encryption.badges.unlocked),
+    "Entering a recovery key unlocks E2EE on this computer",
+  );
+
   await act(async () => { switchLocale("en"); });
   await settle();
   check(
     wide.textContent?.includes(en.optional.groupTitle)
       && wide.textContent?.includes("Off by default:")
+      && wide.textContent?.includes(en.encryption.groupTitle)
       && wide.textContent?.includes(en.help.items.nutstoreWebdav.title),
-    "Switching to English translates all sections, WebDAV guides and optional hints",
+    "Switching to English translates all sections, encryption controls, WebDAV guides and optional hints",
   );
   await act(async () => { switchLocale("zh-CN"); });
   await settle();
 
   await act(async () => {
-    await emit(SYNC_STATUS_EVENT, structuredClone(currentStatus));
+    await harness.emitStatus({});
   });
   await settle();
 

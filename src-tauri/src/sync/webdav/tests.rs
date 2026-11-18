@@ -27,7 +27,7 @@ use crate::sync::{
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum EtagFlavor {
+pub(crate) enum EtagFlavor {
     NutstoreUnquoted,
     SynologyQuoted,
 }
@@ -74,7 +74,7 @@ impl MockDavState {
     }
 }
 
-struct MockDavServer {
+pub(crate) struct MockDavServer {
     addr: std::net::SocketAddr,
     state: Arc<Mutex<MockDavState>>,
     stop: Arc<AtomicBool>,
@@ -82,7 +82,7 @@ struct MockDavServer {
 }
 
 impl MockDavServer {
-    fn start(user: &str, pass: &str, etag_flavor: EtagFlavor) -> Self {
+    pub(crate) fn start(user: &str, pass: &str, etag_flavor: EtagFlavor) -> Self {
         let listener = TcpListener::bind("127.0.0.1:0").expect("bind mock webdav");
         listener.set_nonblocking(true).expect("nonblocking");
         let addr = listener.local_addr().expect("local addr");
@@ -109,7 +109,7 @@ impl MockDavServer {
         Self { addr, state, stop, handle: Some(handle) }
     }
 
-    fn url(&self, suffix: &str) -> String {
+    pub(crate) fn url(&self, suffix: &str) -> String {
         format!("http://{}{suffix}", self.addr)
     }
 }

@@ -271,8 +271,22 @@ export type ErrorCode =
   | "sshTunnel.save"
   | "sshTunnel.noPortTool"
   | "sshTunnel.portCheck"
+  | "sync.alreadyEncrypted"
   | "sync.badFolder"
+  | "sync.badPassphrase"
+  | "sync.cryptoDeriveFailed"
+  | "sync.cryptoInvalidMeta"
+  | "sync.cryptoNewerVersion"
+  | "sync.cryptoRandom"
+  | "sync.cryptoWrapFailed"
+  | "sync.migrationIo"
+  | "sync.needBackendFirst"
+  | "sync.newerVersion"
+  | "sync.noUnlockedKey"
+  | "sync.notEncrypted"
   | "sync.notStarted"
+  | "sync.passphraseTooShort"
+  | "sync.recoveryClipboard"
   | "sync.webdavAuth"
   | "sync.webdavInvalidXml"
   | "sync.webdavNeedPassword"
@@ -632,8 +646,22 @@ export const zhCN: ErrorsText = {
     "sshTunnel.save": "没能保存 SSH 隧道设置。",
     "sshTunnel.noPortTool": "服务器上既没有 ss 也没有 netstat。",
     "sshTunnel.portCheck": "检查服务器端口失败。",
+    "sync.alreadyEncrypted": "远端已经开启了端到端加密。",
     "sync.badFolder": ({ path }) => `${path} 不是可用于同步的文件夹。`,
+    "sync.badPassphrase": "同步口令或恢复密钥不正确。",
+    "sync.cryptoDeriveFailed": "派生同步加密密钥失败。",
+    "sync.cryptoInvalidMeta": "远端加密元数据损坏或格式无效。",
+    "sync.cryptoNewerVersion": "远端加密使用了更新的格式，请先更新浮屿。",
+    "sync.cryptoRandom": "无法生成加密所需的随机密钥。",
+    "sync.cryptoWrapFailed": "封装同步数据密钥失败。",
+    "sync.migrationIo": "读写远端同步文件失败，请检查同步目录或 WebDAV 连接后再试。",
+    "sync.needBackendFirst": "请先选择同步文件夹或连接 WebDAV，再配置端到端加密。",
+    "sync.newerVersion": "远端数据由更新版本的浮屿写入，请先更新浮屿。",
+    "sync.noUnlockedKey": "请先在这台电脑上解锁端到端加密，再导出恢复密钥。",
+    "sync.notEncrypted": "远端尚未开启端到端加密。",
     "sync.notStarted": "同步服务尚未启动。",
+    "sync.passphraseTooShort": ({ min }) => `同步口令至少需要 ${min} 个字符。`,
+    "sync.recoveryClipboard": "无法把恢复密钥复制到剪贴板。",
     "sync.webdavAuth": "WebDAV 账号或应用密码不正确（401/403）。坚果云、开启两步验证的 Nextcloud 等请填写网页端单独生成的第三方应用密码，不要填登录密码。",
     "sync.webdavInvalidXml": "该地址返回的不是有效的 WebDAV 目录响应，请检查是否误填成了网页地址。",
     "sync.webdavNeedPassword": "请填写 WebDAV 应用密码。",
@@ -990,8 +1018,22 @@ export const en: ErrorsText = {
     "sshTunnel.save": "Could not save the SSH tunnels.",
     "sshTunnel.noPortTool": "Neither ss nor netstat runs on the server.",
     "sshTunnel.portCheck": "Could not check the port on the server.",
+    "sync.alreadyEncrypted": "End-to-end encryption is already enabled on the remote store.",
     "sync.badFolder": ({ path }) => `${path} is not a folder that can be used for sync.`,
+    "sync.badPassphrase": "The sync passphrase or recovery key is incorrect.",
+    "sync.cryptoDeriveFailed": "Could not derive the sync encryption key.",
+    "sync.cryptoInvalidMeta": "The remote encryption metadata is invalid or corrupted.",
+    "sync.cryptoNewerVersion": "Remote encryption uses a newer format; update Fuyu first.",
+    "sync.cryptoRandom": "Could not generate a random encryption key.",
+    "sync.cryptoWrapFailed": "Could not wrap the sync data key.",
+    "sync.migrationIo": "Could not read or write remote sync files; check the sync folder or WebDAV connection and try again.",
+    "sync.needBackendFirst": "Choose a sync folder or connect WebDAV before configuring end-to-end encryption.",
+    "sync.newerVersion": "Remote data was written by a newer version of Fuyu; update Fuyu first.",
+    "sync.noUnlockedKey": "Unlock end-to-end encryption on this computer before exporting the recovery key.",
+    "sync.notEncrypted": "End-to-end encryption is not enabled on the remote store.",
     "sync.notStarted": "Sync is not started yet.",
+    "sync.passphraseTooShort": ({ min }) => `Use a sync passphrase with at least ${min} characters.`,
+    "sync.recoveryClipboard": "Could not copy the recovery key to the clipboard.",
     "sync.webdavAuth": "The WebDAV username or app password was rejected (401/403). For Nutstore or 2FA-enabled Nextcloud, generate a dedicated app password rather than using your login password.",
     "sync.webdavInvalidXml": "That address did not return a valid WebDAV folder response; check that you entered the WebDAV endpoint rather than a web page URL.",
     "sync.webdavNeedPassword": "Enter the WebDAV app password.",

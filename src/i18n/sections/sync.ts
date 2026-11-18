@@ -1,4 +1,5 @@
 import type { CategoryState, OptionalSyncGroup, SyncCategory, SyncPhase } from "../../features/sync/api";
+import { en as encryptionEn, zhCN as encryptionZhCN, type SyncEncryptionText } from "./syncEncryption.ts";
 
 export type SyncText = {
   status: {
@@ -58,6 +59,7 @@ export type SyncText = {
     };
     footnote: string;
   };
+  encryption: SyncEncryptionText;
   categories: {
     groupTitle: string;
     footnote: string;
@@ -130,6 +132,10 @@ export const zhCN: SyncText = {
         headline: "远端包含更高版本写入的数据",
         hint: "另一台电脑上的浮屿版本更新，请先升级本机应用后再继续同步该类别。",
       },
+      locked: {
+        headline: "远端已开启端到端加密，等待本机解锁",
+        hint: "请在下方「端到端加密」中输入同步口令或恢复密钥，解锁后自动合并数据。",
+      },
       error: {
         headline: "上一次同步未完成",
         hint: "请检查同步文件夹读写权限或网盘客户端状态后重试。",
@@ -190,6 +196,7 @@ export const zhCN: SyncText = {
     },
     footnote: "请专门新建一个子目录用于同步，不要把浮屿的数据文件夹（~/.fuyu）直接放进网盘：每台设备只写自己的文件，首次并入前会自动在本地留一份备份。",
   },
+  encryption: encryptionZhCN,
   categories: {
     groupTitle: "同步内容",
     footnote: "所有凭据与 API 密钥、普通剪贴板历史和图片、截图文件、文件中转及窗口位置/快捷键等本机项永不离开本机。",
@@ -349,6 +356,10 @@ export const en: SyncText = {
         headline: "Remote data uses a newer format",
         hint: "Another computer is running a newer version of Fuyu. Update Fuyu on this computer to resume syncing that category.",
       },
+      locked: {
+        headline: "Remote sync is encrypted — unlock to continue",
+        hint: "Enter your sync passphrase or recovery key under End-to-end encryption below to merge on this computer.",
+      },
       error: {
         headline: "Last sync didn't finish",
         hint: "Check folder permissions or your sync client and try again.",
@@ -409,6 +420,7 @@ export const en: SyncText = {
     },
     footnote: "Use a dedicated subfolder for sync rather than placing Fuyu's data folder (~/.fuyu) inside a cloud drive. Each device writes only its own files, and a local backup is created automatically before the first merge.",
   },
+  encryption: encryptionEn,
   categories: {
     groupTitle: "What to sync",
     footnote: "Credentials, API keys, regular clipboard history and images, screenshots, the file shelf, and machine-specific layout or shortcuts never leave this computer.",

@@ -5,7 +5,7 @@ import { splitProjectPrefix } from "./project.ts";
 import { createTodoId, loadActiveTodoId, loadTodos, saveActiveTodoId, saveTodos } from "./storage.ts";
 import { withTags, type TodoTags } from "./tags.ts";
 import { insertTodoItem, playTodoCompleteSound, type TodoInsertPosition } from "./todoPrefs.ts";
-import type { TodoItem, TodoPriority } from "./types.ts";
+import type { TodoItem, TodoPriority, TodoRecurrence } from "./types.ts";
 import { useTodoFileField } from "./useTodoFileField";
 
 export function useTodoList(
@@ -15,6 +15,7 @@ export function useTodoList(
     insertPosition?: TodoInsertPosition;
     autoCompleteFromSubtasks?: boolean;
     onTodoStarted?: (id: string) => void;
+    onTodoCompleted?: (todo: TodoItem) => void;
   } = {},
 ) {
   const {
@@ -22,6 +23,7 @@ export function useTodoList(
     insertPosition = "bottom",
     autoCompleteFromSubtasks = false,
     onTodoStarted,
+    onTodoCompleted,
   } = options;
   const [todos, setTodos] = useState<TodoItem[]>(() => adoptActiveTodo(loadTodos(), loadActiveTodoId(), Date.now()));
   const [draftTodo, setDraftTodo] = useState("");
@@ -34,7 +36,7 @@ export function useTodoList(
   useTodoFileField("activeTodoId", adoptOutsideActive);
 
   const insertItem = useCallback(
-    (title: string, project?: string, priority?: TodoPriority) => {
+    (title: string, project?: string, priority?: TodoPriority, recurrence?: TodoRecurrence) => {
       if (!title) return;
       const item: TodoItem = {
         id: createTodoId(),
@@ -43,6 +45,7 @@ export function useTodoList(
         createdAt: Date.now(),
         ...(project ? { project } : {}),
         ...(priority ? { priority } : {}),
+        ...(recurrence ? { recurrence } : {}),
       };
       setTodos((currentTodos) => insertTodoItem(currentTodos, item, insertPosition));
     },
@@ -62,14 +65,15 @@ export function useTodoList(
   const toggleTodo = useCallback(
     (id: string) => {
       const target = todos.find((todo) => todo.id === id);
-      if (target && !target.completed && completionSound) {
-        playTodoCompleteSound();
+      if (target && !target.completed) {
+        if (completionSound) playTodoCompleteSound();
+        onTodoCompleted?.(target);
       }
       setTodos((currentTodos) =>
         currentTodos.map((todo) => (todo.id === id ? withoutStart({ ...todo, completed: !todo.completed }) : todo)),
       );
     },
-    [completionSound, todos],
+    [completionSound, onTodoCompleted, todos],
   );
 
   const tagTodo = useCallback((id: string, tags: TodoTags) => {
@@ -105,8 +109,9 @@ export function useTodoList(
       const target = todos.find((todo) => todo.id === todoId);
       if (target) {
         const preview = toggleTodoSubtask(target, subtaskId, autoCompleteFromSubtasks);
-        if (preview.autoCompleted && completionSound) {
-          playTodoCompleteSound();
+        if (preview.autoCompleted) {
+          if (completionSound) playTodoCompleteSound();
+          onTodoCompleted?.(target);
         }
       }
       setTodos((currentTodos) =>
@@ -115,7 +120,7 @@ export function useTodoList(
         ),
       );
     },
-    [autoCompleteFromSubtasks, completionSound, todos],
+    [autoCompleteFromSubtasks, completionSound, onTodoCompleted, todos],
   );
 
   const deleteSubtask = useCallback((todoId: string, subtaskId: string) => {

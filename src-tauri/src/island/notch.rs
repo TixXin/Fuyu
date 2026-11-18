@@ -161,6 +161,7 @@ pub(super) fn settle(window: &WebviewWindow, monitor: &Monitor, state: IslandWin
         });
     }
     if previous.notch != notch {
+        super::glass::refresh_glass(window);
         let _ = window.emit(ISLAND_NOTCH_CHANGED_EVENT, notch);
     }
     if previous.shown_auto_form != auto_form {

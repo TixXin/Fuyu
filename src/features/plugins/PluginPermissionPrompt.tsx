@@ -8,7 +8,7 @@ export function PluginPermissionPrompt({ prompts }: { prompts: PluginPermissionP
   const { locale } = useLocale();
   const request = prompts.current;
   if (!request) return null;
-  const labels = t.settings.plugins.sensitive;
+  const labels = t.pluginViews.sensitivePrompt;
   const text = labels.prompt(request.pluginName?.[locale] ?? request.pluginId, labels.action[request.permission]);
 
   return (

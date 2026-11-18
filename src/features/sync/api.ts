@@ -22,7 +22,15 @@ export type OptionalSyncGroup = (typeof OPTIONAL_SYNC_GROUPS)[number];
 
 export type SyncBackendKind = "off" | "folder" | "webdav";
 
-export type SyncPhase = "off" | "idle" | "syncing" | "folderMissing" | "needsConfirm" | "newerVersion" | "error";
+export type SyncPhase =
+  | "off"
+  | "idle"
+  | "syncing"
+  | "folderMissing"
+  | "needsConfirm"
+  | "newerVersion"
+  | "locked"
+  | "error";
 
 export type CategoryState = "off" | "waiting" | "ok" | "notReady" | "newerVersion" | "needsConfirm" | "error";
 
@@ -57,11 +65,20 @@ export type WebdavSummary = {
   hasPassword: boolean;
 };
 
+export type EncryptionState = "off" | "unlocked" | "locked";
+
+export type EncryptionSummary = {
+  state: EncryptionState;
+  hasLocalKey: boolean;
+  keyId: string | null;
+};
+
 export type SyncStatus = {
   phase: SyncPhase;
   backend?: SyncBackendKind;
   folder: string | null;
   webdav?: WebdavSummary | null;
+  encryption?: EncryptionSummary;
   deviceId: string | null;
   lastSyncAt: number | null;
   lastError: string | null;
@@ -107,6 +124,34 @@ export function syncNow() {
 
 export function confirmSyncDeletions() {
   return invoke<void>("confirm_sync_deletions");
+}
+
+export function enableSyncEncryption(passphrase: string) {
+  return invoke<SyncStatus>("enable_sync_encryption", { passphrase });
+}
+
+export function unlockSyncEncryption(secret: string) {
+  return invoke<SyncStatus>("unlock_sync_encryption", { secret });
+}
+
+export function changeSyncPassphrase(currentSecret: string, newPassphrase: string) {
+  return invoke<SyncStatus>("change_sync_passphrase", { currentSecret, newPassphrase });
+}
+
+export function disableSyncEncryption(secret: string) {
+  return invoke<SyncStatus>("disable_sync_encryption", { secret });
+}
+
+export function copySyncRecoveryKey() {
+  return invoke<void>("copy_sync_recovery_key");
+}
+
+export function saveSyncRecoveryKey() {
+  return invoke<string>("save_sync_recovery_key");
+}
+
+export function resetSyncRemote(passphrase: string | null) {
+  return invoke<SyncStatus>("reset_sync_remote", { passphrase });
 }
 
 export function onSyncStatus(handler: (status: SyncStatus) => void): Promise<UnlistenFn> {

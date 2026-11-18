@@ -1,3 +1,4 @@
+import { parseHolidayTitleMark } from "../../utils/workday.ts";
 import type { CalendarEvent } from "./api";
 import type { AgendaRange, WeekStartsOn } from "./calendarPrefs.ts";
 import { CHINESE_DAY_NAMES, chineseDay } from "./lunar.ts";
@@ -68,21 +69,19 @@ export function eventsOn(events: readonly CalendarEvent[], dayStart: number) {
 
 export type DayMark = "off" | "work";
 
-const OFF = /[（(]休[)）]\s*$/u;
-const WORK = /[（(]班[)）]\s*$/u;
 const LUNAR_DATE_TITLE = /^(?:闰)?[正二三四五六七八九十冬腊]月(?:初|十|廿|二十|三十)/u;
 
 export function dayMark(events: readonly CalendarEvent[]): DayMark | null {
   const allDay = events.filter((event) => event.allDay);
-  if (allDay.some((event) => WORK.test(event.title))) return "work";
-  if (allDay.some((event) => OFF.test(event.title))) return "off";
+  if (allDay.some((event) => parseHolidayTitleMark(event.title) === "work")) return "work";
+  if (allDay.some((event) => parseHolidayTitleMark(event.title) === "off")) return "off";
   return null;
 }
 
 export function namesTheDay(event: CalendarEvent) {
   if (!event.allDay) return false;
   const title = event.title.trim();
-  return OFF.test(title) || WORK.test(title) || LUNAR_DATE_TITLE.test(title)
+  return parseHolidayTitleMark(title) !== null || LUNAR_DATE_TITLE.test(title)
     || CHINESE_DAY_NAMES.has(title) || CHINESE_DAY_NAMES.has(title.replace(/节$/u, "")) || CHINESE_DAY_NAMES.has(`${title}节`);
 }
 

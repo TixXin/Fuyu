@@ -1,4 +1,4 @@
-import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { errorText } from "./nativeError.ts";
 import type { LocaleCode, Translations } from "./types";
 
@@ -52,21 +52,38 @@ type LoadedSlices = {
 };
 
 const loaded = new Map<LocaleCode, LoadedSlices>();
+let loadedRevision = 0;
+const loadedListeners = new Set<() => void>();
+
+function subscribeLoaded(listener: () => void) {
+  loadedListeners.add(listener);
+  return () => {
+    loadedListeners.delete(listener);
+  };
+}
 const devModules = import.meta.env?.DEV
   ? import.meta.glob<{ TRANSLATIONS: Record<LocaleCode, Translations> }>("./translations.ts", { eager: true })
   : undefined;
 
 function needsSettingsSlice(windowKind: string | null): boolean {
-  return windowKind === "settings" || windowKind === "onboarding";
+  if (windowKind === "settings" || windowKind === "onboarding") return true;
+  for (const entry of loaded.values()) {
+    if (entry.hasSettings) return true;
+  }
+  return false;
 }
 
 function needsOnboardingSlice(windowKind: string | null): boolean {
-  return windowKind === null || windowKind === "onboarding";
+  if (windowKind === null || windowKind === "onboarding") return true;
+  for (const entry of loaded.values()) {
+    if (entry.hasOnboarding) return true;
+  }
+  return false;
 }
 
 export function hasLoadedI18n(locale: LocaleCode, windowKind: string | null): boolean {
   const entry = loaded.get(locale);
-  if (!entry) return Boolean(devModules?.["./translations.ts"]);
+  if (!entry) return loaded.size === 0 && Boolean(devModules?.["./translations.ts"]);
   if (needsSettingsSlice(windowKind) && !entry.hasSettings) return false;
   if (needsOnboardingSlice(windowKind) && !entry.hasOnboarding) return false;
   return true;
@@ -106,6 +123,8 @@ export async function preloadI18n(locale: LocaleCode, windowKind: string | null)
     hasSettings: Boolean(existing?.hasSettings || settingsMod),
     hasOnboarding: Boolean(existing?.hasOnboarding || onboardingMod),
   });
+  loadedRevision += 1;
+  loadedListeners.forEach((listener) => listener());
   return dictionary;
 }
 
@@ -114,10 +133,12 @@ export function getLoadedI18n(locale: LocaleCode): Translations | undefined {
 }
 
 function resolveDictionary(locale: LocaleCode): Translations {
-  const ready = loaded.get(locale)?.dictionary ?? loaded.get(FALLBACK_LOCALE)?.dictionary;
-  if (ready) return ready;
-  const fallback = devModules?.["./translations.ts"]?.TRANSLATIONS;
-  if (fallback) return fallback[locale] ?? fallback[FALLBACK_LOCALE];
+  const direct = loaded.get(locale)?.dictionary;
+  if (direct) return direct;
+  const dev = devModules?.["./translations.ts"]?.TRANSLATIONS;
+  if (loaded.size === 0 && dev) return dev[locale] ?? dev[FALLBACK_LOCALE];
+  const fallback = loaded.get(FALLBACK_LOCALE)?.dictionary ?? dev?.[locale] ?? dev?.[FALLBACK_LOCALE];
+  if (fallback) return fallback;
   throw new Error(`Translations for ${locale} were used before preloadI18n completed`);
 }
 
@@ -133,6 +154,7 @@ const LocaleContext = createContext<{ locale: LocaleCode; setLocale: (locale: Lo
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, updateLocale] = useState<LocaleCode>(loadLocale);
+  useSyncExternalStore(subscribeLoaded, () => loadedRevision, () => loadedRevision);
   const switchLocale = useCallback((next: LocaleCode) => {
     const kind = currentWindowKind();
     if (hasLoadedI18n(next, kind)) {

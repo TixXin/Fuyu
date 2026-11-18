@@ -1,13 +1,14 @@
 import { nextMonday } from "./datePicker.ts";
 import { readProject } from "./project.ts";
 import { addDays, isDateString } from "./schedule.ts";
-import type { TodoPriority } from "./types.ts";
+import type { TodoPriority, TodoRecurrence } from "./types.ts";
 
 export type ParsedTodoInput = {
   title: string;
   project?: string;
   priority?: TodoPriority;
   date?: string;
+  recurrence?: TodoRecurrence;
 };
 
 const PRIORITY_TOKENS: Readonly<Record<string, TodoPriority>> = {
@@ -33,6 +34,20 @@ const NEXT_WEEKDAY_OFFSETS: Readonly<Record<string, number>> = {
   天: 6,
 };
 
+const RECURRENCE_TOKENS: Readonly<Record<string, TodoRecurrence["kind"]>> = {
+  每天: "daily",
+  每日: "daily",
+  daily: "daily",
+  工作日: "workdays",
+  法定工作日: "workdays",
+  workday: "workdays",
+  workdays: "workdays",
+  每周: "weekly",
+  weekly: "weekly",
+  每月: "monthly",
+  monthly: "monthly",
+};
+
 function parsePriorityToken(token: string): TodoPriority | undefined {
   return PRIORITY_TOKENS[token.toLowerCase()];
 }
@@ -42,6 +57,13 @@ function parseProjectToken(token: string): string | undefined {
   const raw = token.slice(1);
   if (raw.includes("#") || /^\d+$/u.test(raw)) return undefined;
   return readProject(raw);
+}
+
+function parseRecurrenceToken(token: string): TodoRecurrence | undefined {
+  if (!token.startsWith("@") && !token.startsWith("＠")) return undefined;
+  const body = token.slice(1).toLowerCase();
+  const kind = RECURRENCE_TOKENS[body];
+  return kind ? { kind } : undefined;
 }
 
 function parseMonthDay(raw: string, today: string): string | undefined {
@@ -86,14 +108,18 @@ export function parseTodoInlineSyntax(input: string, today: string, inlineSyntax
   let project: string | undefined;
   let priority: TodoPriority | undefined;
   let date: string | undefined;
+  let recurrence: TodoRecurrence | undefined;
   const kept: string[] = [];
   let seenContent = false;
 
+  const isMetaToken = (candidate: string) =>
+    parsePriorityToken(candidate) !== undefined ||
+    parseRecurrenceToken(candidate) !== undefined ||
+    (isDateString(today) && parseDateToken(candidate, today) !== undefined);
+
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
-    const trailingMetaOnly = tokens
-      .slice(index + 1)
-      .every((rest) => parsePriorityToken(rest) !== undefined || (isDateString(today) && parseDateToken(rest, today) !== undefined));
+    const trailingMetaOnly = tokens.slice(index + 1).every(isMetaToken);
     const allowProject = !seenContent || trailingMetaOnly;
     if (project === undefined && allowProject) {
       const parsedProject = parseProjectToken(token);
@@ -106,6 +132,13 @@ export function parseTodoInlineSyntax(input: string, today: string, inlineSyntax
       const parsedPriority = parsePriorityToken(token);
       if (parsedPriority !== undefined) {
         priority = parsedPriority;
+        continue;
+      }
+    }
+    if (recurrence === undefined) {
+      const parsedRecurrence = parseRecurrenceToken(token);
+      if (parsedRecurrence !== undefined) {
+        recurrence = parsedRecurrence;
         continue;
       }
     }
@@ -128,5 +161,6 @@ export function parseTodoInlineSyntax(input: string, today: string, inlineSyntax
     ...(project ? { project } : {}),
     ...(priority ? { priority } : {}),
     ...(date ? { date } : {}),
+    ...(recurrence ? { recurrence } : {}),
   };
 }

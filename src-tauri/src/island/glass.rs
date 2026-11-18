@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
-use tauri::WebviewWindow;
+use tauri::{AppHandle, WebviewWindow};
 
-use super::state::IslandWindowState;
+use super::state::{IslandGlassFrame, IslandWindowState};
 use crate::win32;
 
 pub(super) static NATIVE_GLASS_INITIALIZED: OnceLock<()> = OnceLock::new();
@@ -17,6 +17,7 @@ pub(super) fn clear_window_glass_region(window: &WebviewWindow) -> Result<(), St
 pub(super) fn apply_glass_material(
     window: &WebviewWindow,
     state: IslandWindowState,
+    _frame: Option<IslandGlassFrame>,
 ) -> Result<String, String> {
     if NATIVE_GLASS_INITIALIZED.get().is_none() {
         let _ = window_vibrancy::clear_acrylic(window);
@@ -29,4 +30,11 @@ pub(super) fn apply_glass_material(
     } else {
         Ok("disabled".to_string())
     }
+}
+
+pub(super) fn refresh_glass(_window: &WebviewWindow) {}
+
+#[tauri::command]
+pub fn sync_island_glass_frame(_app: AppHandle, _frame: IslandGlassFrame) -> Result<(), String> {
+    Ok(())
 }

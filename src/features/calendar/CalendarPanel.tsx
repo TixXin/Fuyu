@@ -6,7 +6,7 @@ import type { CalendarEvent, CalendarSnapshot } from "./api";
 import { CalendarEmpty } from "./CalendarEmpty";
 import { CalendarMonth } from "./CalendarMonth";
 import { CalendarTodoInput } from "./CalendarTodoInput";
-import { prepareCalendarEvents } from "./calendarPrefs";
+import { prepareCalendarEvents, resolveCalendarColor } from "./calendarPrefs";
 import { joinCalendarMeeting } from "./joinMeeting";
 import { chineseDay } from "./lunar.ts";
 import { agendaDayStarts, eventsOn, isRead, monthStart, namesTheDay, nextDay, nextSpecialDay, startOfDay } from "./monthView.ts";
@@ -95,12 +95,16 @@ export function CalendarPanel({
     const running = event.startMs <= now && now < event.endMs;
     const todo = event.uid.startsWith(SCHEDULED_TODO_UID);
     const time = event.allDay ? (todo ? text.todo : text.allDay) : `${clockTime(event.startMs)}–${clockTime(event.endMs)}`;
+    const color = todo ? null : resolveCalendarColor(event.calendar, prefs.calendarColors, snapshot.calendarColors);
     return (
       <li key={`${event.uid}:${event.startMs}`} className={`calendar-event${past ? " calendar-event--past" : ""}${running && !event.allDay ? " calendar-event--now" : ""}${todo ? " calendar-event--todo" : ""}`}>
         <span className="calendar-event__time">{todo && <ListTodo size={12} strokeWidth={2.2} aria-label={text.todo} />}{time}</span>
         <span className="calendar-event__main">
           <span className="calendar-event__title">{event.title || text.untitled}</span>
-          <span className="calendar-event__place">{[event.location, event.calendar].filter(Boolean).join(" · ")}</span>
+          <span className="calendar-event__place">
+            {color && <span className="calendar-event__dot" style={{ backgroundColor: color }} aria-hidden="true" />}
+            {[event.location, event.calendar].filter(Boolean).join(" · ")}
+          </span>
         </span>
         {event.meetingLink && !past && (
           <button

@@ -1,4 +1,4 @@
-import type { TodoColor, TodoPriority } from "../../features/todos/types";
+import type { TodoColor, TodoPriority, TodoRecurrenceKind } from "../../features/todos/types";
 
 export type TodoIslandText = {
   tabsLabel: string;
@@ -44,6 +44,8 @@ export type TodoIslandText = {
     noPriority: string;
     color: Record<TodoColor, string>;
     noColor: string;
+    recurrence: Record<TodoRecurrenceKind, string>;
+    noRecurrence: string;
     dueTitle: string;
   };
 };
@@ -93,11 +95,13 @@ export const zhCN: TodoIslandText = {
   itemNotePlaceholder: "添加一行简短备注…",
   itemNoteLabel: "任务备注",
   tags: {
-    menu: (title) => `「${title}」的优先级和颜色`,
+    menu: (title) => `「${title}」的优先级、颜色和重复`,
     priority: { high: "高优先级", medium: "中优先级", low: "低优先级" },
     noPriority: "不设优先级",
     color: { red: "红色", orange: "橙色", yellow: "黄色", green: "绿色", blue: "蓝色", purple: "紫色" },
     noColor: "不设颜色",
+    recurrence: { daily: "每天重复", workdays: "法定工作日重复", weekly: "每周重复", monthly: "每月重复" },
+    noRecurrence: "取消重复",
     dueTitle: "高优先级待办今天到期",
   },
 };
@@ -147,11 +151,13 @@ export const en: TodoIslandText = {
   itemNotePlaceholder: "Add a short note…",
   itemNoteLabel: "Task note",
   tags: {
-    menu: (title) => `Priority and color of ${title}`,
+    menu: (title) => `Priority, color and repeat of ${title}`,
     priority: { high: "High priority", medium: "Medium priority", low: "Low priority" },
     noPriority: "No priority",
     color: { red: "Red", orange: "Orange", yellow: "Yellow", green: "Green", blue: "Blue", purple: "Purple" },
     noColor: "No color",
+    recurrence: { daily: "Repeat daily", workdays: "Repeat on workdays", weekly: "Repeat weekly", monthly: "Repeat monthly" },
+    noRecurrence: "Do not repeat",
     dueTitle: "High-priority task due today",
   },
 };

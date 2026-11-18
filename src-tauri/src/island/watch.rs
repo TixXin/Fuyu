@@ -12,12 +12,20 @@ use super::{
 
 #[cfg(any(target_os = "macos", test))]
 const SCREEN_CHECK_INTERVAL: Duration = Duration::from_secs(2);
+const STARTUP_WAIT_LIMIT: Duration = Duration::from_secs(60);
 
 static WATCH_THREAD: OnceLock<Thread> = OnceLock::new();
+static INTERACTION_READY_AT: OnceLock<Instant> = OnceLock::new();
 
 pub(super) fn wake() {
     if let Some(thread) = WATCH_THREAD.get() {
         thread.unpark();
+    }
+}
+
+pub(super) fn note_interaction_ready() {
+    if INTERACTION_READY_AT.set(Instant::now()).is_ok() {
+        wake();
     }
 }
 
@@ -26,6 +34,13 @@ fn startup_fallback_delay(debug: bool) -> Duration {
         Duration::from_secs(6)
     } else {
         Duration::from_secs(3)
+    }
+}
+
+fn startup_fallback_deadline(started_at: Instant, ready_at: Option<Instant>, debug: bool) -> Instant {
+    match ready_at {
+        Some(ready_at) => ready_at + startup_fallback_delay(debug),
+        None => started_at + STARTUP_WAIT_LIMIT,
     }
 }
 
@@ -41,18 +56,21 @@ fn should_run_startup_fallback(visible: bool, user_hidden: bool) -> bool {
 }
 
 fn advance_startup_fallback(
-    deadline: Instant,
+    started_at: Instant,
+    ready_at: Option<Instant>,
     now: Instant,
+    debug: bool,
     visible: bool,
     user_hidden: bool,
 ) -> StartupFallbackAction {
     if !should_run_startup_fallback(visible, user_hidden) {
         return StartupFallbackAction::Clear;
     }
-    if now >= deadline {
-        StartupFallbackAction::RevealNow
-    } else {
-        StartupFallbackAction::KeepWaiting
+    match ready_at {
+        Some(ready_at) if now >= ready_at + startup_fallback_delay(debug) => StartupFallbackAction::RevealNow,
+        Some(_) => StartupFallbackAction::KeepWaiting,
+        None if now >= started_at + STARTUP_WAIT_LIMIT => StartupFallbackAction::Clear,
+        None => StartupFallbackAction::KeepWaiting,
     }
 }
 
@@ -85,7 +103,8 @@ pub(crate) fn start_window_watch(window: WebviewWindow) {
         let mut next_screen = start + SCREEN_CHECK_INTERVAL;
         let mut next_beside = crate::dev_lane::watches_installed_island()
             .then_some(start + crate::dev_lane::BESIDE_LOOK_EVERY);
-        let mut startup_fallback = Some(start + startup_fallback_delay(cfg!(debug_assertions)));
+        let debug = cfg!(debug_assertions);
+        let mut startup_fallback = Some(start);
 
         loop {
             let following = !matches!(read_window_state().monitor_follow, MonitorFollow::Primary);
@@ -95,7 +114,12 @@ pub(crate) fn start_window_watch(window: WebviewWindow) {
             #[cfg(not(target_os = "macos"))]
             let screen_wait: Option<Duration> = None;
             let beside_wait = next_beside.map(|deadline| remaining_until(deadline, now));
-            let startup_wait = startup_fallback.map(|deadline| remaining_until(deadline, now));
+            let startup_wait = startup_fallback.map(|started_at| {
+                remaining_until(
+                    startup_fallback_deadline(started_at, INTERACTION_READY_AT.get().copied(), debug),
+                    now,
+                )
+            });
 
             match next_sleep(following, FOLLOW_INTERVAL, screen_wait, beside_wait, startup_wait) {
                 Some(wait) if !wait.is_zero() => thread::park_timeout(wait),
@@ -104,10 +128,12 @@ pub(crate) fn start_window_watch(window: WebviewWindow) {
             }
 
             let now = Instant::now();
-            if let Some(deadline) = startup_fallback {
+            if let Some(started_at) = startup_fallback {
                 match advance_startup_fallback(
-                    deadline,
+                    started_at,
+                    INTERACTION_READY_AT.get().copied(),
                     now,
+                    debug,
                     window.is_visible().unwrap_or(true),
                     super::user_hidden(),
                 ) {
@@ -195,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn startup_fallback_reveals_only_once_deadline_passes_without_visibility_or_user_hide() {
+    fn startup_fallback_waits_for_mounted_interaction_and_never_reveals_unmounted_stage() {
         assert_eq!(startup_fallback_delay(true), Duration::from_secs(6));
         assert_eq!(startup_fallback_delay(false), Duration::from_secs(3));
 
@@ -205,14 +231,48 @@ mod tests {
         assert!(!should_run_startup_fallback(true, true));
 
         let start = Instant::now();
-        let deadline = start + Duration::from_secs(3);
-        let early = start + Duration::from_secs(1);
+        let unmounted_at_10s = start + Duration::from_secs(10);
+        let unmounted_at_limit = start + STARTUP_WAIT_LIMIT;
+        assert_eq!(startup_fallback_deadline(start, None, true), unmounted_at_limit);
+        assert_eq!(
+            advance_startup_fallback(start, None, unmounted_at_10s, false, false, false),
+            StartupFallbackAction::KeepWaiting,
+        );
+        assert_eq!(
+            advance_startup_fallback(start, None, unmounted_at_limit, false, false, false),
+            StartupFallbackAction::Clear,
+        );
 
-        assert_eq!(advance_startup_fallback(deadline, early, false, false), StartupFallbackAction::KeepWaiting);
-        assert_eq!(advance_startup_fallback(deadline, early, true, false), StartupFallbackAction::Clear);
-        assert_eq!(advance_startup_fallback(deadline, early, false, true), StartupFallbackAction::Clear);
-        assert_eq!(advance_startup_fallback(deadline, deadline, false, false), StartupFallbackAction::RevealNow);
-        assert_eq!(advance_startup_fallback(deadline, deadline, true, false), StartupFallbackAction::Clear);
-        assert_eq!(advance_startup_fallback(deadline, deadline, false, true), StartupFallbackAction::Clear);
+        let ready = start + Duration::from_secs(8);
+        let before_delay = ready + Duration::from_secs(2);
+        let at_release_delay = ready + Duration::from_secs(3);
+        let at_debug_delay = ready + Duration::from_secs(6);
+
+        assert_eq!(startup_fallback_deadline(start, Some(ready), false), at_release_delay);
+        assert_eq!(startup_fallback_deadline(start, Some(ready), true), at_debug_delay);
+        assert_eq!(
+            advance_startup_fallback(start, Some(ready), before_delay, false, false, false),
+            StartupFallbackAction::KeepWaiting,
+        );
+        assert_eq!(
+            advance_startup_fallback(start, Some(ready), at_release_delay, false, false, false),
+            StartupFallbackAction::RevealNow,
+        );
+        assert_eq!(
+            advance_startup_fallback(start, Some(ready), at_release_delay, true, false, false),
+            StartupFallbackAction::KeepWaiting,
+        );
+        assert_eq!(
+            advance_startup_fallback(start, Some(ready), at_debug_delay, true, false, false),
+            StartupFallbackAction::RevealNow,
+        );
+        assert_eq!(
+            advance_startup_fallback(start, Some(ready), at_release_delay, false, true, false),
+            StartupFallbackAction::Clear,
+        );
+        assert_eq!(
+            advance_startup_fallback(start, Some(ready), at_release_delay, false, false, true),
+            StartupFallbackAction::Clear,
+        );
     }
 }

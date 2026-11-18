@@ -128,6 +128,19 @@
     {
       "page": "generalSync",
       "zh-CN": {
+        "group": "端到端加密",
+        "title": "端到端加密默认关闭",
+        "description": "默认关闭：开启后远端设备文件均以密文存放，网盘或 WebDAV 服务端无法读取正文；忘了口令且没留恢复密钥时数据无法找回。先在上方选择同步文件夹或连接 WebDAV，再开启加密"
+      },
+      "en": {
+        "group": "End-to-end encryption",
+        "title": "End-to-end encryptionOff by default",
+        "description": "Off by default: encrypts remote device files so your cloud drive or WebDAV provider cannot read them. If you forget the passphrase without a recovery key, remote data cannot be recovered.Choose a sync folder or connect WebDAV above first"
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
         "group": "同步内容",
         "title": "待办、每日笔记与归档",
         "description": "按条合并待办与项目标签；同一天的每日笔记若两端同时改动会保留冲突副本。"

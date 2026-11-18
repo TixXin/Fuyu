@@ -35,6 +35,11 @@ export const DEFAULT_SYNC_STATUS: SyncStatus = {
   backend: "off",
   folder: null,
   webdav: null,
+  encryption: {
+    state: "off",
+    hasLocalKey: false,
+    keyId: null,
+  },
   deviceId: null,
   lastSyncAt: null,
   lastError: null,

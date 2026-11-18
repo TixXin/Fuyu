@@ -117,6 +117,17 @@ export const ISLAND_POSITION_CHANGED_EVENT = "island-position-changed";
 
 export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; autoForm: boolean; animate?: boolean; dragGrid?: boolean; tuckStyle?: TuckStyle };
 
+export type IslandGlassFrame = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  topRadius: number;
+  bottomRadius: number;
+  filletRadius: number;
+  activeTransition?: boolean;
+};
+
 export type IslandInteraction = {
   mode: IslandMode;
   collapsedScale: number;
@@ -131,6 +142,9 @@ export type IslandInteraction = {
   glassEnabled: boolean;
   glassIntensity: number;
   glassTint: string;
+  glassBackdrop?: string;
+  topFilletRadius?: number;
+  glassFrame?: IslandGlassFrame | null;
   cornerRadius: number;
   cornerShape: IslandCornerShape;
   monitorFollow: IslandMonitor;
@@ -144,6 +158,10 @@ export function setIslandLayout(layout: IslandLayout) {
 
 export function setIslandInteraction(interaction: IslandInteraction) {
   return invoke<NativeGlassState>("set_island_interaction", interaction);
+}
+
+export function syncIslandGlassFrame(frame: IslandGlassFrame) {
+  return invoke<void>("sync_island_glass_frame", { frame });
 }
 
 export function showReadyIsland() {

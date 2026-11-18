@@ -4,6 +4,7 @@ import {
   CloudOff,
   FolderX,
   LoaderCircle,
+  LockKeyhole,
   RefreshCw,
   ShieldAlert,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const PHASE_TONES: Record<SyncPhase, Tone> = {
   folderMissing: "warn",
   needsConfirm: "warn",
   newerVersion: "warn",
+  locked: "warn",
   error: "error",
 };
 
@@ -29,6 +31,7 @@ function PhaseIcon({ phase, isWebdav }: { phase: SyncPhase; isWebdav: boolean })
   const props = { size: 19, strokeWidth: 1.8, "aria-hidden": true } as const;
   if (phase === "syncing") return <LoaderCircle className="sync-status__spinner" {...props} />;
   if (phase === "idle") return <CircleCheck {...props} />;
+  if (phase === "locked") return <LockKeyhole {...props} />;
   if (phase === "folderMissing") return isWebdav ? <CloudOff {...props} /> : <FolderX {...props} />;
   if (phase === "needsConfirm") return <ShieldAlert {...props} />;
   if (phase === "newerVersion" || phase === "error") return <AlertTriangle {...props} />;

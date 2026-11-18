@@ -47,8 +47,9 @@ export type SettingsAppearanceText = {
     contrastGuardHint: string;
     contrastGuardOff: string;
     backdrop: string;
-    backdrops: { none: string; wallpaper: string };
+    backdrops: { none: string; wallpaper: string; native: string };
     backdropHint: string;
+    nativeHint: string;
     blur: string;
     saturation: string;
     noise: string;
@@ -114,8 +115,9 @@ export const zhCN: SettingsAppearanceText = {
     contrastGuardHint: "自动压暗或提亮色块，让文字始终看得清。",
     contrastGuardOff: "关掉后，颜色亮的地方文字可能看不清。",
     backdrop: "玻璃背后",
-    backdrops: { none: "无", wallpaper: "桌面壁纸" },
+    backdrops: { none: "无", wallpaper: "桌面壁纸", native: "原生透出（实验）" },
     backdropHint: "透出岛正后方的壁纸并磨砂，「玻璃强度」决定盖在上面的底色有多浓。背后有窗口挡着时仍显示壁纸；系统关掉「透明效果」或读不到壁纸时照旧用纯色玻璃。",
+    nativeHint: "由 macOS 原生玻璃实时磨砂岛正后方的窗口与桌面（macOS 26 用系统液态玻璃，旧版用毛玻璃）；刘海形态折叠时保持纯黑，开启系统「降低透明度」时自动退回纯色玻璃。",
     blur: "模糊",
     saturation: "饱和度",
     noise: "噪点",
@@ -181,8 +183,9 @@ export const en: SettingsAppearanceText = {
     contrastGuardHint: "Darkens or lightens the colours so text always stays readable.",
     contrastGuardOff: "With this off, text may be hard to read over bright colours.",
     backdrop: "Behind the glass",
-    backdrops: { none: "Nothing", wallpaper: "Desktop wallpaper" },
+    backdrops: { none: "Nothing", wallpaper: "Desktop wallpaper", native: "Native blur (experimental)" },
     backdropHint: "Shows the wallpaper right behind the island, frosted; glass strength sets how thick the tint over it is. Windows behind the island are not shown; with Transparency effects off or no wallpaper to read, the glass stays solid.",
+    nativeHint: "Blurs live windows and the desktop behind the island with native macOS glass (system Liquid Glass on macOS 26, vibrancy on older versions). Stays solid black when collapsed into the notch, and falls back to solid glass when Reduce transparency is on.",
     blur: "Blur",
     saturation: "Saturation",
     noise: "Grain",

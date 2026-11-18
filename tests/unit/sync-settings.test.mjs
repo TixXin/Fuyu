@@ -60,3 +60,17 @@ test("devices inactive for over 180 days are marked stale", () => {
   assert.equal(isDeviceStale(now - STALE_DEVICE_MS + 1_000, now), false);
   assert.equal(isDeviceStale(now - STALE_DEVICE_MS - 1_000, now), true);
 });
+
+test("end-to-end encryption starts off by default and warns that lost passphrases cannot be recovered", () => {
+  assert.deepEqual(DEFAULT_SYNC_STATUS.encryption, {
+    state: "off",
+    hasLocalKey: false,
+    keyId: null,
+  });
+  assert.ok(zhCN.encryption.offDescription.startsWith("默认关闭："));
+  assert.ok(en.encryption.offDescription.startsWith("Off by default:"));
+  assert.ok(zhCN.encryption.warningTitle.includes("找不回来"));
+  assert.ok(en.encryption.warningTitle.includes("cannot be recovered"));
+  assert.ok(zhCN.status.phases.locked.headline.length > 0);
+  assert.ok(en.status.phases.locked.headline.length > 0);
+});

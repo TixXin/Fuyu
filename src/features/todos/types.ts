@@ -5,6 +5,12 @@ export type { TodoProject };
 
 export type TodoPriority = "high" | "medium" | "low";
 export type TodoColor = "red" | "orange" | "yellow" | "green" | "blue" | "purple";
+export type TodoRecurrenceKind = "daily" | "workdays" | "weekly" | "monthly";
+
+export type TodoRecurrence = {
+  kind: TodoRecurrenceKind;
+  interval?: number;
+};
 
 export type TodoPageMode = "today" | "daily" | "archive" | "review" | "upcoming";
 
@@ -23,6 +29,7 @@ export type TodoItem = {
   startedAt?: number;
   priority?: TodoPriority;
   color?: TodoColor;
+  recurrence?: TodoRecurrence;
   subtasks?: TodoSubtask[];
   note?: string;
   focusMinutes?: number;
@@ -38,6 +45,7 @@ export type ScheduledTodo = {
   project?: string;
   priority?: TodoPriority;
   color?: TodoColor;
+  recurrence?: TodoRecurrence;
   updatedAt?: string;
   deviceId?: string;
 };

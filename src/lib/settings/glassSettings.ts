@@ -6,7 +6,7 @@ export const GLASS_STYLES = ["static", "flow", "aurora", "shader"] as const;
 export const GLASS_COLOR_SOURCES = ["accent", "cover", "custom"] as const;
 export const GLASS_FLOW_WHEN = ["always", "expanded"] as const;
 export const GLASS_MORPHS = ["smooth", "soft", "liquid"] as const;
-export const GLASS_BACKDROPS = ["none", "wallpaper"] as const;
+export const GLASS_BACKDROPS = ["none", "wallpaper", "native"] as const;
 
 export type GlassStyle = (typeof GLASS_STYLES)[number];
 export type GlassColorSource = (typeof GLASS_COLOR_SOURCES)[number];

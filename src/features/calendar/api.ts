@@ -27,9 +27,15 @@ export type CalendarSnapshot = {
   fromMs: number;
   toMs: number;
   sourceCount: number;
+  calendarColors?: Record<string, string>;
 };
 
 export type CalendarSourceKind = "ics" | "caldav";
+
+export type SubCalendar = {
+  name: string;
+  color?: string | null;
+};
 
 export type CalendarSource = {
   id: string;
@@ -38,6 +44,7 @@ export type CalendarSource = {
   url: string;
   host: string;
   username: string;
+  calendars?: SubCalendar[];
 };
 
 export function getCalendarEvents(refresh = false) {

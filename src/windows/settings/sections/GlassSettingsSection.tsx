@@ -8,6 +8,7 @@ import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../../i18n";
+import { isMacOS } from "../../../lib/platform";
 import { GLASS_STYLE_PRESETS, glassPalette } from "../../../lib/theme/glassPalette";
 import { GLASS_LOOK_VALUES, GLASS_LOOKS, glassLookOf, type GlassLookId } from "../../../lib/theme/glassLooks";
 import {
@@ -47,6 +48,14 @@ export function GlassSettingsSection({
 
   const look = glassLookOf(settings) ?? "custom";
   const lookOptions = [...GLASS_LOOKS, ...(look === "custom" ? ["custom" as const] : [])].map((value) => ({ value, label: text.looks[value] }));
+  const backdropValues = isMacOS || settings.glassBackdrop === "native"
+    ? GLASS_BACKDROPS
+    : (["none", "wallpaper"] as const);
+  const backdropDescription = settings.glassBackdrop === "wallpaper"
+    ? text.backdropHint
+    : settings.glassBackdrop === "native"
+      ? text.nativeHint
+      : undefined;
 
   return (
     <>
@@ -97,13 +106,13 @@ export function GlassSettingsSection({
       <SettingsGroup title={text.refractionTitle}>
         <SettingsRow
           title={text.backdrop}
-          description={settings.glassBackdrop === "wallpaper" ? text.backdropHint : undefined}
+          description={backdropDescription}
           control={
             <SettingsChoice
               value={settings.glassBackdrop}
-              options={GLASS_BACKDROPS.map((value) => ({ value, label: text.backdrops[value] }))}
+              options={backdropValues.map((value) => ({ value, label: text.backdrops[value] }))}
               ariaLabel={text.backdrop}
-              onChange={(glassBackdrop) => set(glassBackdrop === "wallpaper" ? { glassBackdrop, glassIntensity: Math.min(settings.glassIntensity, 40) } : { glassBackdrop })}
+              onChange={(glassBackdrop) => set(glassBackdrop !== "none" ? { glassBackdrop, glassIntensity: Math.min(settings.glassIntensity, 40) } : { glassBackdrop })}
             />
           }
         />

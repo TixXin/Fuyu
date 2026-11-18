@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { parseTodoInlineSyntax } from "./inlineSyntax.ts";
 import { MAX_TODO_PROJECTS, readProject } from "./project.ts";
+import { hasPendingRecurringSchedule, nextOccurrenceDate } from "./recurrence.ts";
 import { loadCurrentTodoDate, loadDailyNote, saveCurrentTodoDate, saveDailyNote } from "./storage.ts";
 import { filterArchivesByRetention } from "./todoPrefs.ts";
 import type { TodoItem, TodoPageMode, TodoProject } from "./types.ts";
+import { useHolidayMarks } from "./useHolidayMarks";
 import { useScheduledTodos } from "./useScheduledTodos";
 import { useTodoApiHandlers } from "./useTodoApiHandlers";
 import { useTodoArchives } from "./useTodoArchives";
@@ -32,7 +34,9 @@ export function useTodos({
   onMissingSaveDirectory,
 }: TodosOptions) {
   const [prefs] = useTodoPrefs();
+  const holidayMarks = useHolidayMarks();
   const focusDoneRef = useRef<(todoId: string, minutes: number) => void>(() => undefined);
+  const completedRef = useRef<(todo: TodoItem) => void>(() => undefined);
   const startFocusTimer = useTodoFocusTimer({
     enabled: prefs.focusTimerEnabled,
     focusMinutes: prefs.focusTimerMinutes,
@@ -43,6 +47,7 @@ export function useTodos({
     insertPosition: prefs.insertPosition,
     autoCompleteFromSubtasks: prefs.autoCompleteFromSubtasks,
     onTodoStarted: startFocusTimer,
+    onTodoCompleted: (todo) => completedRef.current(todo),
   });
   focusDoneRef.current = list.addFocusMinutes;
   const { todos, setTodos, draftTodo, setDraftTodo, activeTodoId, stopAllTodos, insertItem } = list;
@@ -61,6 +66,18 @@ export function useTodos({
   );
   const { scheduledTodos, setScheduledTodos, scheduleTodo, deleteScheduledTodo, tagScheduledTodo } =
     useScheduledTodos(currentTodoDate, setTodos, prefs.dayStartHour);
+  completedRef.current = (todo: TodoItem) => {
+    if (!todo.recurrence) return;
+    if (hasPendingRecurringSchedule(scheduledTodos, todo.title, todo.project, todo.recurrence, currentTodoDate)) return;
+    const nextDate = nextOccurrenceDate(currentTodoDate, todo.recurrence, holidayMarks);
+    if (nextDate > currentTodoDate) {
+      scheduleTodo(todo.title, nextDate, todo.project, {
+        priority: todo.priority,
+        color: todo.color,
+        recurrence: todo.recurrence,
+      });
+    }
+  };
   const editProjects = useTodoProjectSync({
     projects, onProjectsChange, currentDate: currentTodoDate, todos, setTodos, scheduledTodos, setScheduledTodos, archives, setArchives,
   });
@@ -83,10 +100,13 @@ export function useTodos({
     if (!parsed.title) return;
     const project = parsed.project ?? fallback;
     const targetDate = parsed.date ?? draftDate;
+    const tags = parsed.priority || parsed.recurrence
+      ? { ...(parsed.priority ? { priority: parsed.priority } : {}), ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}) }
+      : undefined;
     if (targetDate && targetDate > currentTodoDate) {
-      scheduleTodo(parsed.title, targetDate, project, parsed.priority ? { priority: parsed.priority } : undefined);
+      scheduleTodo(parsed.title, targetDate, project, tags);
     } else {
-      insertItem(parsed.title, project, parsed.priority);
+      insertItem(parsed.title, project, parsed.priority, parsed.recurrence);
     }
     setDraftTodo("");
     setDraftDate(null);
@@ -96,11 +116,14 @@ export function useTodos({
     const parsed = parseTodoInlineSyntax(rawTitle, currentTodoDate, prefs.inlineSyntax);
     if (!parsed.title) return;
     const targetDate = parsed.date ?? date;
+    const tags = parsed.priority || parsed.recurrence
+      ? { ...(parsed.priority ? { priority: parsed.priority } : {}), ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}) }
+      : undefined;
     if (targetDate > currentTodoDate) {
-      scheduleTodo(parsed.title, targetDate, parsed.project, parsed.priority ? { priority: parsed.priority } : undefined);
+      scheduleTodo(parsed.title, targetDate, parsed.project, tags);
       return;
     }
-    insertItem(parsed.title, parsed.project, parsed.priority);
+    insertItem(parsed.title, parsed.project, parsed.priority, parsed.recurrence);
   }, [currentTodoDate, insertItem, prefs.inlineSyntax, scheduleTodo]);
 
   const [todoPageMode, setTodoPageMode] = useState<TodoPageMode>("today");

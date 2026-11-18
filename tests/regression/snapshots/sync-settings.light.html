@@ -100,6 +100,104 @@
         <section class="settings-group">
           <div class="settings-group__header">
             <h2 class="settings-group__title">
+              端到端加密
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-encryption__title">
+                      <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        端到端加密
+                      </span>
+                      <span class="sync-badge sync-badge--ok">
+                        已开启并解锁
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    <span class="sync-encryption__desc">
+                      <span>
+                        本机已解锁数据密钥，推送与拉取的文件均自动完成端到端加解密。
+                      </span>
+                      <span class="sync-encryption__key-id">
+                        密钥标识：9f8e7d6c5b4a
+                      </span>
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-encryption__title">
+                      <svg aria-hidden="true" class="lucide lucide-key-round" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        恢复密钥
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    忘了口令或在新电脑解锁时可用；密钥不在页面显示，直接隐藏写入剪贴板或保存到「下载」文件夹。
+                  </span>
+                </div>
+              </div>
+              <div class="sync-encryption__recovery-actions">
+                <button class="sync-status__button" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-copy" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                  <span>
+                    复制恢复密钥
+                  </span>
+                </button>
+                <button class="sync-status__button" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                  <span>
+                    保存恢复密钥文件
+                  </span>
+                </button>
+              </div>
+            </div>
+            <div class="settings-row sync-webdav__actions-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title"></span>
+                </div>
+              </div>
+              <div class="sync-webdav__actions">
+                <button class="settings-link-button" type="button">
+                  修改口令…
+                </button>
+                <button class="settings-link-button settings-link-button--danger" type="button">
+                  关闭加密…
+                </button>
+                <button class="settings-link-button settings-link-button--danger" type="button">
+                  重置远端…
+                </button>
+              </div>
+            </div>
+            <div class="sync-encryption__feedback-wrap">
+              <p class="sync-webdav__feedback sync-webdav__feedback--ok" role="status">
+                <svg aria-hidden="true" class="lucide lucide-circle-check" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                <span>
+                  已解锁端到端加密并完成同步。
+                </span>
+              </p>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              口令经 Argon2id（64 MiB、3 轮）派生密钥封装随机数据密钥，数据用 XChaCha20-Poly1305 加密且绑定远端路径与格式版本；解开的数据密钥仅存本机系统钥匙串，口令本身永不落盘。
+            </p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
               同步内容
             </h2>
           </div>
@@ -680,6 +778,96 @@
           <div class="settings-group__footer">
             <p class="settings-footnote">
               请专门新建一个子目录用于同步，不要把浮屿的数据文件夹（~/.fuyu）直接放进网盘：每台设备只写自己的文件，首次并入前会自动在本地留一份备份。
+            </p>
+          </div>
+        </section>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2 class="settings-group__title">
+              端到端加密
+            </h2>
+          </div>
+          <div class="settings-group__card">
+            <div class="settings-row">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-encryption__title">
+                      <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        端到端加密
+                      </span>
+                      <span class="sync-badge sync-badge--ok">
+                        已开启并解锁
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    <span class="sync-encryption__desc">
+                      <span>
+                        本机已解锁数据密钥，推送与拉取的文件均自动完成端到端加解密。
+                      </span>
+                      <span class="sync-encryption__key-id">
+                        密钥标识：9f8e7d6c5b4a
+                      </span>
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="settings-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title">
+                    <span class="sync-encryption__title">
+                      <svg aria-hidden="true" class="lucide lucide-key-round" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                      <span>
+                        恢复密钥
+                      </span>
+                    </span>
+                  </span>
+                  <span class="settings-row__description">
+                    忘了口令或在新电脑解锁时可用；密钥不在页面显示，直接隐藏写入剪贴板或保存到「下载」文件夹。
+                  </span>
+                </div>
+              </div>
+              <div class="sync-encryption__recovery-actions">
+                <button class="sync-status__button" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-copy" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                  <span>
+                    复制恢复密钥
+                  </span>
+                </button>
+                <button class="sync-status__button" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                  <span>
+                    保存恢复密钥文件
+                  </span>
+                </button>
+              </div>
+            </div>
+            <div class="settings-row sync-webdav__actions-row" data-search="off">
+              <div class="settings-row__main">
+                <div class="settings-row__text">
+                  <span class="settings-row__title"></span>
+                </div>
+              </div>
+              <div class="sync-webdav__actions">
+                <button class="settings-link-button" type="button">
+                  修改口令…
+                </button>
+                <button class="settings-link-button settings-link-button--danger" type="button">
+                  关闭加密…
+                </button>
+                <button class="settings-link-button settings-link-button--danger" type="button">
+                  重置远端…
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="settings-group__footer">
+            <p class="settings-footnote">
+              口令经 Argon2id（64 MiB、3 轮）派生密钥封装随机数据密钥，数据用 XChaCha20-Poly1305 加密且绑定远端路径与格式版本；解开的数据密钥仅存本机系统钥匙串，口令本身永不落盘。
             </p>
           </div>
         </section>

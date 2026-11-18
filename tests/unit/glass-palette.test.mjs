@@ -107,4 +107,7 @@ test("old settings without the new fields read the defaults", () => {
   assert.deepEqual(normalizeGlassSettings(null), DEFAULT_GLASS_SETTINGS);
   assert.equal(normalizeGlassSettings({ glassStyle: "neon", glassFlowSpeed: 999 }).glassStyle, "flow");
   assert.equal(normalizeGlassSettings({ glassFlowSpeed: 999 }).glassFlowSpeed, 200);
+  assert.equal(normalizeGlassSettings({ glassBackdrop: "native" }).glassBackdrop, "native");
+  assert.equal(normalizeGlassSettings({ glassBackdrop: "none" }).glassBackdrop, "none");
+  assert.equal(normalizeGlassSettings({ glassBackdrop: "acrylic" }).glassBackdrop, DEFAULT_GLASS_SETTINGS.glassBackdrop);
 });

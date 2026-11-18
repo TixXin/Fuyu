@@ -10,8 +10,15 @@ import type { useIslandFeatures } from "./useIslandFeatures";
 import type { useIslandNavigation } from "./useIslandNavigation";
 import type { usePluginPages } from "./usePluginPages";
 import { openSettingsWindow } from "../settings/api";
-import { useIslandShellPreparing } from "./IslandShell";
+import { useIslandShellPreparing, useIslandShellPrewarmed } from "./IslandShell";
 import { getTodoScrollStartRows } from "./layout";
+import {
+  finishCloseHold,
+  finishDeferredOpen,
+  initialPanelAwakeState,
+  isPanelAwake,
+  syncPanelAwakeState,
+} from "./panelAwake";
 import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
 
@@ -36,19 +43,37 @@ function getCloseHoldMs(islandMotion: IslandSettings["islandMotion"], reducedMot
   return Math.max(timing.width, timing.height, timing.layer);
 }
 
-function usePanelAwake(isExpanded: boolean, isPreparing: boolean, closeHoldMs: number): boolean {
-  const [wasExpanded, setWasExpanded] = useState(isExpanded);
-  const [closing, setClosing] = useState(false);
-  if (wasExpanded !== isExpanded) {
-    setWasExpanded(isExpanded);
-    setClosing(!isExpanded && closeHoldMs > 0);
+function usePanelAwake(
+  isExpanded: boolean,
+  isPreparing: boolean,
+  isPrewarmed: boolean,
+  deferColdOpen: boolean,
+  closeHoldMs: number,
+): boolean {
+  const input = { isExpanded, isPreparing, isPrewarmed, deferColdOpen, closeHoldMs };
+  const [state, setState] = useState(() => initialPanelAwakeState(input));
+  const synced = syncPanelAwakeState(state, input);
+  if (synced !== state) {
+    setState(synced);
   }
+
   useEffect(() => {
-    if (!closing || isExpanded || closeHoldMs <= 0) return;
-    const timer = window.setTimeout(() => setClosing(false), closeHoldMs);
+    if (!synced.deferringOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      setState((current) => finishDeferredOpen(current));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [synced.deferringOpen]);
+
+  useEffect(() => {
+    if (!synced.closing || isExpanded || closeHoldMs <= 0) return;
+    const timer = window.setTimeout(() => {
+      setState((current) => finishCloseHold(current, { isPreparing, isPrewarmed }));
+    }, closeHoldMs);
     return () => window.clearTimeout(timer);
-  }, [closing, isExpanded, closeHoldMs]);
-  return isExpanded || isPreparing || (closing && closeHoldMs > 0);
+  }, [synced.closing, isExpanded, closeHoldMs, isPreparing, isPrewarmed]);
+
+  return isPanelAwake(synced, input);
 }
 
 export function IslandPages(props: IslandPagesProps): ReactNode {
@@ -57,9 +82,21 @@ export function IslandPages(props: IslandPagesProps): ReactNode {
   const entries = useSlotEntries(pageSlot);
   const reducedMotion = useReducedMotion();
   const isPreparing = useIslandShellPreparing();
-  const awake = usePanelAwake(mode === "expanded", isPreparing, getCloseHoldMs(settings.islandMotion, reducedMotion));
+  const isPrewarmed = useIslandShellPrewarmed();
+  const deferColdOpen = !reducedMotion && settings.islandMotion !== "none";
+  const awake = usePanelAwake(
+    mode === "expanded",
+    isPreparing,
+    isPrewarmed,
+    deferColdOpen,
+    getCloseHoldMs(settings.islandMotion, reducedMotion),
+  );
   if (!awake) return null;
-  const pageProps: IslandPageProps = { ...props, onOpenSettings: openSettingsWindow, todoScrollStartRows: getTodoScrollStartRows(settings.maxPanelHeight) };
+  const pageProps: IslandPageProps = {
+    ...props,
+    onOpenSettings: openSettingsWindow,
+    todoScrollStartRows: getTodoScrollStartRows(settings.maxPanelHeight),
+  };
   const folded = entries.find((entry) => entry.fold?.into === page && entry.fold.when(features));
   if (folded?.fold) {
     const Folded = folded.component;
