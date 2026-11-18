@@ -37,7 +37,10 @@ mod tests;
 
 use serde::Deserialize;
 use std::{
-    sync::{atomic::Ordering, PoisonError},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        PoisonError,
+    },
     thread,
     time::Duration,
 };
@@ -71,6 +74,12 @@ pub(crate) use state::{record_dragged_position, IslandPosition, IslandWindowStat
 pub(crate) const WINDOW_LABEL: &str = "main";
 const ISLAND_REVEAL_REQUESTED_EVENT: &str = "island-reveal-requested";
 const ISLAND_POSITION_CHANGED_EVENT: &str = "island-position-changed";
+
+static USER_HIDDEN_ISLAND: AtomicBool = AtomicBool::new(false);
+
+pub(super) fn user_hidden() -> bool {
+    USER_HIDDEN_ISLAND.load(Ordering::SeqCst)
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -339,6 +348,7 @@ pub fn show_ready_island(app: AppHandle) -> Result<(), String> {
 }
 
 pub(crate) fn show_island_without_focus(app: &AppHandle) -> Result<(), String> {
+    USER_HIDDEN_ISLAND.store(false, Ordering::SeqCst);
     let window = main_window(app)?;
     apply_stage_geometry(&window, read_window_state(), false)?;
     focus::show_island_at_startup(&window)?;
@@ -358,10 +368,10 @@ pub(crate) fn main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 }
 
 pub(crate) fn show_island(app: &AppHandle) -> Result<(), String> {
+    USER_HIDDEN_ISLAND.store(false, Ordering::SeqCst);
     let window = main_window(app)?;
     apply_stage_geometry(&window, read_window_state(), false)?;
-    window.show().map_err(|error| error.to_string())?;
-    window.set_focus().map_err(|error| error.to_string())?;
+    focus::show_island(&window)?;
     if read_window_state().is_tucked {
         let _ = window.emit(ISLAND_REVEAL_REQUESTED_EVENT, ());
     }
@@ -369,9 +379,31 @@ pub(crate) fn show_island(app: &AppHandle) -> Result<(), String> {
 }
 
 pub(crate) fn hide_island(app: &AppHandle) {
+    USER_HIDDEN_ISLAND.store(true, Ordering::SeqCst);
     POSITION_ANIMATION_GENERATION.fetch_add(1, Ordering::SeqCst);
-    if let Ok(window) = main_window(app) {
+    let Ok(window) = main_window(app) else {
+        crate::tray::refresh_now(app);
+        return;
+    };
+    #[cfg(target_os = "macos")]
+    {
+        let handle = app.clone();
+        let target = window.clone();
+        if app
+            .run_on_main_thread(move || {
+                let _ = target.hide();
+                crate::tray::refresh_now(&handle);
+            })
+            .is_err()
+        {
+            let _ = window.hide();
+            crate::tray::refresh_now(app);
+        }
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
         let _ = window.hide();
+        crate::tray::refresh_now(app);
     }
 }
 

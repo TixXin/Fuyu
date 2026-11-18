@@ -1,4 +1,4 @@
-use tauri::{AppHandle, WebviewWindow};
+use tauri::{AppHandle, Manager, WebviewWindow};
 
 use super::main_window;
 
@@ -28,7 +28,16 @@ pub(crate) fn island_mode_synced(_window: &WebviewWindow, _expanded: bool) {}
 
 pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), String> {
     window.show().map_err(|error| error.to_string())?;
-    window.set_focus().map_err(|error| error.to_string())
+    window.set_focus().map_err(|error| error.to_string())?;
+    crate::tray::refresh_now(window.app_handle());
+    Ok(())
+}
+
+pub(crate) fn show_island(window: &WebviewWindow) -> Result<(), String> {
+    window.show().map_err(|error| error.to_string())?;
+    window.set_focus().map_err(|error| error.to_string())?;
+    crate::tray::refresh_now(window.app_handle());
+    Ok(())
 }
 
 pub(crate) fn focus_island_for_shortcut(window: &WebviewWindow) {

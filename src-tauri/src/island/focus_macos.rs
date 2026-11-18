@@ -96,6 +96,27 @@ pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), Strin
                     eprintln!("could not show the island at startup: {error}");
                 }
             }
+            crate::tray::refresh_now(&app);
+        })
+        .map_err(|error| error.to_string())
+}
+
+pub(crate) fn show_island(window: &WebviewWindow) -> Result<(), String> {
+    let app = window.app_handle().clone();
+    follow_hover(&app);
+    if let Some(pid) = other_frontmost_app() {
+        PREVIOUS_APP.store(pid, Ordering::SeqCst);
+    }
+    let fallback = window.clone();
+    window
+        .run_on_main_thread(move || {
+            if !island_panel::show_panel_without_key(&app, WINDOW_LABEL) {
+                if let Err(error) = fallback.show() {
+                    eprintln!("could not show the island: {error}");
+                }
+            }
+            let _ = island_panel::make_island_key(&app, WINDOW_LABEL);
+            crate::tray::refresh_now(&app);
         })
         .map_err(|error| error.to_string())
 }
