@@ -21,6 +21,10 @@ pub struct CalendarEvent {
     pub(super) location: Option<String>,
     pub(super) meeting_link: Option<String>,
     pub(super) calendar: String,
+    #[serde(default)]
+    pub(super) declined: bool,
+    #[serde(default)]
+    pub(super) free: bool,
 }
 
 #[derive(Debug)]
@@ -42,6 +46,20 @@ fn unfold(text: &str) -> Vec<String> {
     lines
 }
 
+fn split_unquoted(text: &str, sep: char) -> Vec<&str> {
+    let (mut out, mut start, mut quoted) = (Vec::new(), 0, false);
+    for (idx, c) in text.char_indices() {
+        if c == '"' {
+            quoted = !quoted;
+        } else if c == sep && !quoted {
+            out.push(&text[start..idx]);
+            start = idx + c.len_utf8();
+        }
+    }
+    out.push(&text[start..]);
+    out
+}
+
 fn property(line: &str) -> Option<Property> {
     let mut quoted = false;
     let split = line.char_indices().find(|&(_, c)| {
@@ -51,7 +69,7 @@ fn property(line: &str) -> Option<Property> {
         c == ':' && !quoted
     })?;
     let (head, value) = (&line[..split.0], &line[split.0 + 1..]);
-    let mut parts = head.split(';');
+    let mut parts = split_unquoted(head, ';').into_iter();
     let name = parts.next()?.trim().to_ascii_uppercase();
     let params = parts
         .filter_map(|part| part.split_once('='))
@@ -149,6 +167,82 @@ fn duration(value: &str) -> Option<Duration> {
     Some(Duration::seconds(sign * total))
 }
 
+#[derive(Debug)]
+struct Attendee {
+    value: String,
+    cn: Option<String>,
+    email: Option<String>,
+    declined: bool,
+}
+
+fn strip_mailto(text: &str) -> &str {
+    let trimmed = text.trim();
+    if trimmed.len() >= 7 && trimmed[..7].eq_ignore_ascii_case("mailto:") {
+        trimmed[7..].trim()
+    } else {
+        trimmed
+    }
+}
+
+fn push_token(tokens: &mut Vec<String>, raw: &str) {
+    let token = strip_mailto(raw).trim_matches(['<', '>', '"', '\'']).trim().to_ascii_lowercase();
+    if !token.is_empty() && !tokens.contains(&token) {
+        tokens.push(token);
+    }
+}
+
+fn account_tokens(account: Option<&str>) -> Vec<String> {
+    let Some(account) = account.map(str::trim).filter(|text| !text.is_empty()) else {
+        return Vec::new();
+    };
+    let mut tokens = Vec::new();
+    push_token(&mut tokens, account);
+    if let Some((_, rest)) = account.split_once('<') {
+        if let Some((inside, _)) = rest.split_once('>') {
+            push_token(&mut tokens, inside);
+        }
+    }
+    for part in account.split(|c: char| c.is_whitespace() || matches!(c, '<' | '>' | '"' | '\'' | ',' | ';')) {
+        if part.contains('@') {
+            push_token(&mut tokens, part);
+        }
+    }
+    tokens
+}
+
+impl Attendee {
+    fn from_property(property: &Property) -> Self {
+        Self {
+            value: property.value.trim().to_string(),
+            cn: property.params.get("CN").cloned(),
+            email: property.params.get("EMAIL").cloned(),
+            declined: property.params.get("PARTSTAT").is_some_and(|status| status.eq_ignore_ascii_case("DECLINED")),
+        }
+    }
+
+    fn matches(&self, tokens: &[String]) -> bool {
+        let mut candidates = Vec::new();
+        push_token(&mut candidates, &self.value);
+        if self.value.starts_with('/') {
+            if let Some(seg) = self.value.trim_end_matches('/').rsplit('/').next() {
+                push_token(&mut candidates, seg);
+            }
+        }
+        if let Some(email) = &self.email {
+            push_token(&mut candidates, email);
+        }
+        if let Some(cn) = &self.cn {
+            push_token(&mut candidates, cn);
+            if let Some((_, rest)) = cn.split_once('<') {
+                if let Some((inside, _)) = rest.split_once('>') {
+                    push_token(&mut candidates, inside);
+                }
+            }
+        }
+        tokens.iter().any(|token| candidates.contains(token))
+    }
+}
+
 #[derive(Debug, Default)]
 struct RawEvent {
     uid: String,
@@ -163,6 +257,9 @@ struct RawEvent {
     exdates: Vec<i64>,
     recurrence_id: Option<i64>,
     cancelled: bool,
+    transp_free: bool,
+    cdo_free: bool,
+    attendees: Vec<Attendee>,
 }
 
 impl RawEvent {
@@ -174,7 +271,16 @@ impl RawEvent {
             .unwrap_or_else(|| if all_day { Duration::days(1) } else { Duration::zero() })
     }
 
-    fn occurrence(&self, start: DateTime<Tz>, all_day: bool, length: Duration) -> CalendarEvent {
+    fn is_declined(&self, tokens: &[String]) -> bool {
+        if tokens.is_empty() {
+            self.attendees.len() == 1 && self.attendees[0].declined
+        } else {
+            let matched: Vec<&Attendee> = self.attendees.iter().filter(|attendee| attendee.matches(tokens)).collect();
+            !matched.is_empty() && matched.iter().all(|attendee| attendee.declined)
+        }
+    }
+
+    fn occurrence(&self, start: DateTime<Tz>, all_day: bool, length: Duration, calname: &str, tokens: &[String]) -> CalendarEvent {
         let start_ms = start.timestamp_millis();
         CalendarEvent {
             uid: self.uid.clone(),
@@ -184,12 +290,15 @@ impl RawEvent {
             all_day,
             location: self.location.clone(),
             meeting_link: meeting_link(&[self.url.as_deref(), self.location.as_deref(), self.description.as_deref()]),
-            calendar: String::new(),
+            calendar: calname.to_string(),
+            declined: self.is_declined(tokens),
+            free: self.transp_free || self.cdo_free,
         }
     }
 }
 
-fn raw_events(text: &str) -> Vec<RawEvent> {
+fn raw_events(text: &str) -> (String, Vec<RawEvent>) {
+    let mut calname = String::new();
     let mut events = Vec::new();
     let mut current: Option<RawEvent> = None;
     let mut nested = 0usize;
@@ -199,6 +308,12 @@ fn raw_events(text: &str) -> Vec<RawEvent> {
             ("END", "VEVENT") => events.extend(current.take()),
             ("BEGIN", _) if current.is_some() => nested += 1,
             ("END", _) if current.is_some() && nested > 0 => nested -= 1,
+            ("X-WR-CALNAME", _) if current.is_none() => {
+                let parsed = unescape(&property.value);
+                if !parsed.is_empty() {
+                    calname = parsed;
+                }
+            }
             _ => {}
         }
         let Some(event) = current.as_mut().filter(|_| nested == 0) else {
@@ -222,10 +337,13 @@ fn raw_events(text: &str) -> Vec<RawEvent> {
             }
             "RECURRENCE-ID" => event.recurrence_id = moment(&property).map(|(at, _)| at.timestamp_millis()),
             "STATUS" => event.cancelled = property.value.trim().eq_ignore_ascii_case("CANCELLED"),
+            "TRANSP" => event.transp_free = property.value.trim().eq_ignore_ascii_case("TRANSPARENT"),
+            "X-MICROSOFT-CDO-BUSYSTATUS" => event.cdo_free = property.value.trim().eq_ignore_ascii_case("FREE"),
+            "ATTENDEE" => event.attendees.push(Attendee::from_property(&property)),
             _ => {}
         }
     }
-    events
+    (calname, events)
 }
 
 fn split_until(rule: &str) -> (String, Option<i64>) {
@@ -262,7 +380,12 @@ fn repeats(rule: &str, start: DateTime<Tz>, length: Duration, from: DateTime<Utc
 }
 
 pub(super) fn events_between(text: &str, from: DateTime<Utc>, to: DateTime<Utc>) -> Vec<CalendarEvent> {
-    let raw = raw_events(text);
+    events_between_for(text, from, to, None)
+}
+
+pub(super) fn events_between_for(text: &str, from: DateTime<Utc>, to: DateTime<Utc>, self_account: Option<&str>) -> Vec<CalendarEvent> {
+    let tokens = account_tokens(self_account);
+    let (calname, raw) = raw_events(text);
     let overlaps = |event: &CalendarEvent| {
         event.end_ms.max(event.start_ms + 1) > from.timestamp_millis() && event.start_ms < to.timestamp_millis()
     };
@@ -289,7 +412,7 @@ pub(super) fn events_between(text: &str, from: DateTime<Utc>, to: DateTime<Utc>)
             if event.exdates.contains(&ms) || replaced.is_some_and(|starts| starts.contains(&ms)) {
                 continue;
             }
-            let occurrence = event.occurrence(at, all_day, length);
+            let occurrence = event.occurrence(at, all_day, length, &calname, &tokens);
             if overlaps(&occurrence) {
                 events.push(occurrence);
             }
