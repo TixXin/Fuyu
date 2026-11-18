@@ -182,7 +182,7 @@ Tecnologías: Tauri 2, React 19 + TypeScript y Rust. Las versiones y las actuali
 
 ## Comunidad
 
-¿Tienes dudas, ideas o solo quieres conversar? Escanea el código para unirte a nuestro grupo de usuarios en WeChat (sobre todo en chino):
+¿Tienes dudas, ideas o solo quieres conversar? Únete a nuestro [servidor de Discord](https://discord.gg/azu5aZFuRY) o escanea el código para unirte a nuestro grupo de usuarios en WeChat (sobre todo en chino):
 
 <p align="center">
   <img src="../assets/readme/wechat-group.png" alt="Código QR del grupo de usuarios de Fuyu en WeChat" width="220">

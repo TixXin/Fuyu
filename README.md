@@ -180,7 +180,7 @@ pnpm tauri build    # 打包安装程序
 
 ## 用户交流群
 
-用着有问题、有想法，或者只是想聊聊，欢迎扫码进微信群：
+用着有问题、有想法，或者只是想聊聊，欢迎加入 [Discord 社区](https://discord.gg/azu5aZFuRY) 或扫码进微信群：
 
 <p align="center">
   <img src="docs/assets/readme/wechat-group.png" alt="浮屿用户交流群的微信二维码" width="220">
