@@ -197,7 +197,7 @@ test("every published slot has a valid name, a window, a share and its metadata 
   const registry = createSlots(SLOTS);
   assert.deepEqual(registry.names().sort(), Object.keys(SLOTS).sort());
   for (const [name, rule] of Object.entries(SLOTS)) {
-    assert.ok(["island", "settings"].includes(slotWindow(name)), name);
+    assert.ok(["island", "settings", "plugin-window"].includes(slotWindow(name)), name);
     assert.ok(Number.isInteger(rule.perPlugin) && rule.perPlugin >= 1, name);
     assert.ok(Array.isArray(rule.meta), name);
     if (rule.groupBy) assert.ok(rule.meta.includes(rule.groupBy), `${name} lists its group field`);

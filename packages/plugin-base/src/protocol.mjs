@@ -53,4 +53,5 @@ export const SLOTS = {
   "settings.category/v1": { kind: "list", perPlugin: 2, meta: ["group", "icon", "tabs", "available", "feature", "aliases"] },
   "settings.section/v1": { kind: "list", perPlugin: 4, groupBy: "category", meta: ["category"] },
   "settings.runner/v1": { kind: "list", perPlugin: 1, meta: [] },
+  "plugin-window.view/v1": { kind: "list", perPlugin: 8, meta: ["windowId", "title"], experimental: true },
 };

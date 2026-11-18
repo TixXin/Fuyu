@@ -46,3 +46,18 @@ export function isServiceDefinition(value) {
       typeof value.events === "object",
   );
 }
+
+export const commandsV1 = defineService("commands/v1", {
+  methods: { list: true, run: true, setKeybinding: true },
+  events: { changed: true },
+});
+
+export const pluginConfigV1 = defineService("plugin-config/v1", {
+  methods: { list: true, get: true, set: true, reset: true },
+  events: { changed: true },
+});
+
+export const pluginWindowsV1 = defineService("plugin-windows/v1", {
+  methods: { getRules: true, setRules: true, list: true },
+  events: { changed: true },
+});

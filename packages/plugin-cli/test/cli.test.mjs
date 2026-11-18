@@ -130,7 +130,7 @@ test("check validates service names in provides, replaces and inject while allow
       pkg.fuyu.provides = ["weather/v1", "weather.forecast/v2"];
       pkg.fuyu.replaces = ["lyrics/v1"];
       pkg.fuyu.inject = {
-        required: ["clients", "translator.engines", "weather/v1"],
+        required: ["clients", "commands", "config", "http", "translator.engines", "weather/v1"],
         optional: ["reminders/v1", "clipboard.actions"],
       };
     });
@@ -194,4 +194,40 @@ test("dev builds the plugin, registers source: dev in plugins.yml, rebuilds on c
   assert.equal(rebuilt, 1);
   await session.close({ clean: true });
   assert.equal(readFileSync(join(dataDir, "plugins.yml"), "utf8").trim(), "[]");
+});
+
+test("check requires experimental windows/v1 for plugin-window.view/v1 slot and windows inject, and refuses both under --market", async () => {
+  const missingExp = copyFixture("hello", (root) => {
+    writeFiles(root, {
+      "src/island.tsx": readFileSync(join(root, "src/island.tsx"), "utf8").replace("island.dev/v1", "plugin-window.view/v1"),
+    });
+    editJson(join(root, "package.json"), (pkg) => {
+      pkg.fuyu.slots = ["plugin-window.view/v1"];
+      pkg.fuyu.inject = { required: ["windows"] };
+    });
+  });
+  const missingRes = await check(missingExp);
+  assert.equal(missingRes.ok, false);
+  assert.ok(missingRes.errors.some((issue) => issue.path === "fuyu.slots[0]" && issue.code === "experimental"));
+  assert.ok(missingRes.errors.some((issue) => issue.path === "fuyu.inject.required[0]" && issue.code === "experimental"));
+
+  const withExp = copyFixture("hello", (root) => {
+    writeFiles(root, {
+      "src/island.tsx": readFileSync(join(root, "src/island.tsx"), "utf8").replace("island.dev/v1", "plugin-window.view/v1"),
+    });
+    editJson(join(root, "package.json"), (pkg) => {
+      pkg.fuyu.slots = ["plugin-window.view/v1"];
+      pkg.fuyu.inject = { required: ["windows"] };
+      pkg.fuyu.experimental = ["windows/v1"];
+    });
+  });
+  const devRes = await check(withExp);
+  assert.equal(devRes.ok, true, JSON.stringify(devRes.errors));
+
+  const marketOut = capture(withExp);
+  assert.equal(await run(["check", "--market", "--json"], marketOut.io), 1);
+  const marketJson = JSON.parse(marketOut.stdout());
+  assert.equal(marketJson.ok, false);
+  assert.ok(marketJson.errors.some((issue) => issue.path === "fuyu.slots[0]" && issue.code === "experimental"));
+  assert.ok(marketJson.errors.some((issue) => issue.path === "fuyu.inject.required[0]" && issue.code === "experimental"));
 });
