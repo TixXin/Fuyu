@@ -31,13 +31,15 @@ fn write_lock() -> &'static Mutex<()> {
     WRITE_LOCK.get_or_init(|| Mutex::new(()))
 }
 
+type ConfigBuilder = fn(&Map<String, Value>) -> Option<Value>;
+
 struct OfficialMapping {
     v2_id: &'static str,
     v3_id: &'static str,
     slug: &'static str,
     zh_cn: &'static str,
     en: &'static str,
-    build_config: Option<fn(&Map<String, Value>) -> Option<Value>>,
+    build_config: Option<ConfigBuilder>,
 }
 
 const OFFICIAL_MAPPINGS: &[OfficialMapping] = &[
