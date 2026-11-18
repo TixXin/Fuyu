@@ -97,6 +97,25 @@
       "page": "generalSync",
       "zh-CN": {
         "group": "同步方式",
+        "title": "同步通道",
+        "options": [
+          "同步文件夹",
+          "WebDAV"
+        ]
+      },
+      "en": {
+        "group": "Sync method",
+        "title": "Transport",
+        "options": [
+          "Sync folder",
+          "WebDAV"
+        ]
+      }
+    },
+    {
+      "page": "generalSync",
+      "zh-CN": {
+        "group": "同步方式",
         "title": "同步文件夹",
         "description": "未选择（首次使用请手动指定一个空目录或已有的 fuyu-sync 上级目录）"
       },
