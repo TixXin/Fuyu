@@ -77,55 +77,58 @@ Fuyu（浮屿）は、軽量でフチのない、常に最前面に表示され�
 
 ## 島にあるもの
 
-<p align="center">
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/todo-en.webp" alt="開いた島に今日の ToDo が並び、完了したものは取り消し線付きで下にまとめられています" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/music-en.webp" alt="島の音楽ページ：ジャケット、同期歌詞、プログレスバーと再生コントロール" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/messages-en.webp" alt="島の下に表示された新着メッセージ：メール、WeChat、QQ が 1 件ずつ" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/clipboard-en.webp" alt="島のクリップボード履歴：コマンド、リンク、テキスト、画像が、それぞれのコピー元アプリ付きで並んでいます" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/translate-en.webp" alt="島の翻訳ページ：左に原文、右に訳文" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="島に表示された Claude Code の承認リクエスト：実行しようとしているコマンドと、拒否・許可の 2 つのボタン" width="398" height="224"></a>
-  <br>
-  <sub>どの画像をクリックしても、公式サイトで実際に島を触ってみられます</sub>
-</p>
+<p><sub>機能名をクリックすると開閉します。アニメーションをクリックすると、公式サイトで島を実際に操作できます</sub></p>
 
-<table>
-  <tr>
-    <td valign="top"><code>01</code></td>
-    <td><b>ToDo とノート</b><br>毎日のタスク、いま集中している項目、デイリーノートと過去のアーカイブ。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>02</code></td>
-    <td><b>音楽</b><br>再生中のメディアを操作し、音声波形と同期歌詞を表示します。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>03</code></td>
-    <td><b>メッセージ</b><br>Telegram・Discord・WhatsApp・QQ・WeChat・WeCom・TIM・Feishu・DingTalk の新着メッセージを島で知らせ、クリックでそのアプリを開きます。複数のメールアカウントにも対応。メールは島の上でそのまま読んで返信できます。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>04</code></td>
-    <td><b>クリップボードとファイル中継</b><br>テキストと画像のクリップボード履歴。ファイルをいったん島にドラッグして置いておき、あとで別のアプリへドラッグできます。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>05</code></td>
-    <td><b>クイック翻訳</b><br>ショートカットキーひとつで開き、複数の大規模言語モデルの翻訳サービスに対応します。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>06</code></td>
-    <td><b>AI エージェント</b><br>Claude Code と Codex のセッションの状態と使用量を表示します。確認を求められたら島の上でそのまま承認でき、クリックで該当するウィンドウに切り替わります。席を外しているときは Telegram・Discord・Feishu・Bark に通知でき、チャットからそのままエージェントに指示を続けられます。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>07</code></td>
-    <td><b>カレンダー</b><br>今日と明日の予定、旧暦と祝日入りの月カレンダー。会議が近づくと島でカウントダウンし、ワンクリックで参加できます。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>08</code></td>
-    <td><b>システム表示</b><br>音量や明るさの変化、カメラとマイクをどのアプリが使っているか。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>09</code></td>
-    <td><b>プラグインとテーマ</b><br>プラグインマーケットからプラグインを入れて島を拡張できます（機密データには個別の許可が必要です）。テーママーケットでは既製の外観を選べます。</td>
-  </tr>
-</table>
+<details open>
+<summary><b>01 · ToDo とノート</b></summary>
+<p>毎日のタスク、いま集中している項目、デイリーノートと過去のアーカイブ。</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/todo-en.webp" alt="開いた島に今日の ToDo が並び、完了したものは取り消し線付きで下にまとめられています" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>02 · 音楽</b></summary>
+<p>再生中のメディアを操作し、音声波形と同期歌詞を表示します。</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/music-en.webp" alt="島の音楽ページ：ジャケット、同期歌詞、プログレスバーと再生コントロール" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>03 · メッセージ</b></summary>
+<p>Telegram・Discord・WhatsApp・QQ・WeChat・WeCom・TIM・Feishu・DingTalk の新着メッセージを島で知らせ、クリックでそのアプリを開きます。複数のメールアカウントにも対応。メールは島の上でそのまま読んで返信できます。</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/messages-en.webp" alt="島の下に表示された新着メッセージ：メール、WeChat、QQ が 1 件ずつ" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>04 · クリップボードとファイル中継</b></summary>
+<p>テキストと画像のクリップボード履歴。ファイルをいったん島にドラッグして置いておき、あとで別のアプリへドラッグできます。</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/clipboard-en.webp" alt="島のクリップボード履歴：コマンド、リンク、テキスト、画像が、それぞれのコピー元アプリ付きで並んでいます" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>05 · クイック翻訳</b></summary>
+<p>ショートカットキーひとつで開き、複数の大規模言語モデルの翻訳サービスに対応します。</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/translate-en.webp" alt="島の翻訳ページ：左に原文、右に訳文" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>06 · AI エージェント</b></summary>
+<p>Claude Code と Codex のセッションの状態と使用量を表示します。確認を求められたら島の上でそのまま承認でき、クリックで該当するウィンドウに切り替わります。席を外しているときは Telegram・Discord・Feishu・Bark に通知でき、チャットからそのままエージェントに指示を続けられます。</p>
+<p><a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="島に表示された Claude Code の承認リクエスト：実行しようとしているコマンドと、拒否・許可の 2 つのボタン" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>07 · カレンダー</b></summary>
+<p>今日と明日の予定、旧暦と祝日入りの月カレンダー。会議が近づくと島でカウントダウンし、ワンクリックで参加できます。</p>
+</details>
+
+<details>
+<summary><b>08 · システム表示</b></summary>
+<p>音量や明るさの変化、カメラとマイクをどのアプリが使っているか。</p>
+</details>
+
+<details>
+<summary><b>09 · プラグインとテーマ</b></summary>
+<p>プラグインマーケットからプラグインを入れて島を拡張できます（機密データには個別の許可が必要です）。テーママーケットでは既製の外観を選べます。</p>
+</details>
 
 島の外観、サイズ、閉じ方、ショートカットキー、各機能はすべて設定ウィンドウで調整でき、アプリ内の自動更新にも対応しています。データはすべてこのコンピューター内に保存されます。
 

@@ -49,27 +49,27 @@ winget install Gyan.FFmpeg
 
 ```powershell
 pnpm render --v 001-one-island --lang zh
-pnpm still '11,15,18,22.6,27.2,32.6,37.2' --lang zh
+pnpm still '18' --lang zh
 Copy-Item out\001-one-island\001-one-island-zh.mp4 ..\docs\assets\promo-001-one-island.mp4
 ffmpeg -y -t 43.15 -i out\001-one-island\001-one-island-zh.mp4 -filter_complex "fps=12.5,scale=800:-1:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" -loop 0 ..\docs\assets\readme\tour-zh.gif
-ffmpeg -y -i out\001-one-island\still-zh-011.00.png -vf "scale=1280:-1:flags=lanczos" -c:v libwebp -q:v 90 ..\docs\assets\readme\todo-zh.webp
+ffmpeg -y -ss 9.3 -t 3.7 -i out\001-one-island\001-one-island-zh.mp4 -vf "fps=12.5,scale=1280:-1:flags=lanczos" -c:v libwebp_anim -q:v 75 -loop 0 ..\docs\assets\readme\todo-zh.webp
 ffmpeg -y -i out\001-one-island\still-zh-018.00.png -vf "crop=1920:240:0:0,scale=1600:-1:flags=lanczos" -c:v libwebp -q:v 90 ..\docs\assets\readme\collapsed-zh.webp
 ```
 
-| 文件 | 静帧（秒） | 画面 |
+| 文件 | 时间（秒） | 画面 |
 |---|---|---|
 | `tour-*.gif` | 0 – 43.15 | 整条视频，不含结尾卡 |
-| `collapsed-*.webp` | 18 | 收起的岛在显示歌词，只留画面顶部一条 |
-| `todo-*.webp` | 11 | 待办 |
-| `music-*.webp` | 15 | 音乐和歌词 |
-| `messages-*.webp` | 22.6 | 新消息 |
-| `clipboard-*.webp` | 27.2 | 剪贴板 |
-| `translate-*.webp` | 32.6 | 翻译 |
-| `agents-*.webp` | 37.2 | AI Agent 审批 |
+| `collapsed-*.webp` | 18（静帧） | 收起的岛在显示歌词，只留画面顶部一条 |
+| `todo-*.webp` | 9.3 – 13.0 | 待办 |
+| `music-*.webp` | 13.5 – 18.5 | 音乐和歌词，最后收成显示歌词的小岛 |
+| `messages-*.webp` | 19.5 – 23.0 | 新消息 |
+| `clipboard-*.webp` | 25.5 – 29.0 | 剪贴板 |
+| `translate-*.webp` | 29.0 – 34.0 | 翻译 |
+| `agents-*.webp` | 34.6 – 39.8 | AI Agent 审批 |
 
 - 动图在 43.15 秒截断：这时岛已经收回、字幕已经消失，循环回开头的画面是接得上的。结尾卡留给完整视频。
 - 动图用 12.5 帧：GIF 的帧间隔以 1/100 秒为单位，12.5 帧正好是 8，播放速度不会偏。宽 800 是 GitHub 上 README 正文的宽度，一个动图约 5 MB。
-- 截图存成 WebP，一张约 30 KB；六张功能截图都用上面 `todo` 那条命令，只换文件名。
+- 六个功能是 README「岛上有什么」里点开才看到的循环动图，存成动画 WebP（1280 宽，一个 70–190 KB，同样画面的 GIF 要大好几倍）。都用上面 `todo` 那条命令，按表换 `-ss`（起点）、`-t`（时长）和文件名。视频的节奏改了要重新对表：每秒抽两帧拼成一张图看切换点，起止都避开切换中的空面板。
 
 ## 横版和竖版
 

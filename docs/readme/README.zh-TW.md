@@ -76,55 +76,58 @@
 
 ## 島上有什麼
 
-<p align="center">
-  <a href="https://fuyu.ing/zh/#day"><img src="../assets/readme/todo-zh.webp" alt="展開的島上是今天的待辦，已完成的劃掉並收在下方" width="398" height="224"></a>
-  <a href="https://fuyu.ing/zh/#day"><img src="../assets/readme/music-zh.webp" alt="島上的音樂頁：封面、同步歌詞、進度條和播放控制" width="398" height="224"></a>
-  <a href="https://fuyu.ing/zh/#day"><img src="../assets/readme/messages-zh.webp" alt="島下方跳出的新訊息：一封郵件、一則微信和一則 QQ" width="398" height="224"></a>
-  <a href="https://fuyu.ing/zh/#day"><img src="../assets/readme/clipboard-zh.webp" alt="島上的剪貼簿紀錄：指令、連結、一段文字和一張圖片，各自標示來源" width="398" height="224"></a>
-  <a href="https://fuyu.ing/zh/#day"><img src="../assets/readme/translate-zh.webp" alt="島上的翻譯頁：左邊是原文，右邊是譯文" width="398" height="224"></a>
-  <a href="https://fuyu.ing/zh/#agent"><img src="../assets/readme/agents-zh.webp" alt="島上跳出 Claude Code 的審核請求：要執行的指令，以及拒絕和允許兩個按鈕" width="398" height="224"></a>
-  <br>
-  <sub>點任一張圖，到官網親手玩玩這座島</sub>
-</p>
+<p><sub>點功能名稱展開或收起；點動圖到官網親手點一點這座島</sub></p>
 
-<table>
-  <tr>
-    <td valign="top"><code>01</code></td>
-    <td><b>待辦與筆記</b><br>每天的任務、目前專注的事項、每日筆記和歷史封存。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>02</code></td>
-    <td><b>音樂</b><br>控制正在播放的媒體，顯示音訊波形和同步歌詞。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>03</code></td>
-    <td><b>訊息</b><br>QQ、微信、企業微信、TIM、Telegram、Discord、WhatsApp、飛書、釘釘有新訊息，島上都會提醒，點一下打開對應的 App；還有多個信箱，郵件可以直接在島上閱讀和回覆。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>04</code></td>
-    <td><b>剪貼簿與檔案中轉</b><br>圖文剪貼簿紀錄；先把檔案拖到島上暫放，再拖到其他程式。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>05</code></td>
-    <td><b>快速翻譯</b><br>一個快速鍵就能開啟，支援多家大型語言模型翻譯服務。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>06</code></td>
-    <td><b>AI Agent</b><br>顯示 Claude Code 和 Codex 工作階段的執行狀態和用量，需要你確認時直接在島上核准，點一下就切到對應的視窗；離開電腦時推播到手機：Telegram、Discord、飛書機器人或 iPhone 上的 Bark，還能在聊天裡繼續指揮 Agent。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>07</code></td>
-    <td><b>行事曆</b><br>今天和明天的行程、附農曆和節假日的月曆，會議快開始時在島上倒數，可一鍵加入。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>08</code></td>
-    <td><b>系統提示</b><br>音量、亮度變化，以及攝影機和麥克風正被哪個程式使用。</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>09</code></td>
-    <td><b>外掛與佈景主題</b><br>從外掛市集安裝外掛來擴充島嶼，敏感資料需要你另外授權；佈景主題市集裡有現成的外觀可挑。</td>
-  </tr>
-</table>
+<details open>
+<summary><b>01 · 待辦與筆記</b></summary>
+<p>每天的任務、目前專注的事項、每日筆記和歷史封存。</p>
+<p><a href="https://fuyu.ing/zh/#day"><img src="../assets/readme/todo-zh.webp" alt="展開的島上是今天的待辦，已完成的劃掉並收在下方" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>02 · 音樂</b></summary>
+<p>控制正在播放的媒體，顯示音訊波形和同步歌詞。</p>
+<p><a href="https://fuyu.ing/zh/#day"><img src="../assets/readme/music-zh.webp" alt="島上的音樂頁：封面、同步歌詞、進度條和播放控制" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>03 · 訊息</b></summary>
+<p>QQ、微信、企業微信、TIM、Telegram、Discord、WhatsApp、飛書、釘釘有新訊息，島上都會提醒，點一下打開對應的 App；還有多個信箱，郵件可以直接在島上閱讀和回覆。</p>
+<p><a href="https://fuyu.ing/zh/#day"><img src="../assets/readme/messages-zh.webp" alt="島下方跳出的新訊息：一封郵件、一則微信和一則 QQ" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>04 · 剪貼簿與檔案中轉</b></summary>
+<p>圖文剪貼簿紀錄；先把檔案拖到島上暫放，再拖到其他程式。</p>
+<p><a href="https://fuyu.ing/zh/#day"><img src="../assets/readme/clipboard-zh.webp" alt="島上的剪貼簿紀錄：指令、連結、一段文字和一張圖片，各自標示來源" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>05 · 快速翻譯</b></summary>
+<p>一個快速鍵就能開啟，支援多家大型語言模型翻譯服務。</p>
+<p><a href="https://fuyu.ing/zh/#day"><img src="../assets/readme/translate-zh.webp" alt="島上的翻譯頁：左邊是原文，右邊是譯文" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>06 · AI Agent</b></summary>
+<p>顯示 Claude Code 和 Codex 工作階段的執行狀態和用量，需要你確認時直接在島上核准，點一下就切到對應的視窗；離開電腦時推播到手機：Telegram、Discord、飛書機器人或 iPhone 上的 Bark，還能在聊天裡繼續指揮 Agent。</p>
+<p><a href="https://fuyu.ing/zh/#agent"><img src="../assets/readme/agents-zh.webp" alt="島上跳出 Claude Code 的審核請求：要執行的指令，以及拒絕和允許兩個按鈕" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>07 · 行事曆</b></summary>
+<p>今天和明天的行程、附農曆和節假日的月曆，會議快開始時在島上倒數，可一鍵加入。</p>
+</details>
+
+<details>
+<summary><b>08 · 系統提示</b></summary>
+<p>音量、亮度變化，以及攝影機和麥克風正被哪個程式使用。</p>
+</details>
+
+<details>
+<summary><b>09 · 外掛與佈景主題</b></summary>
+<p>從外掛市集安裝外掛來擴充島嶼，敏感資料需要你另外授權；佈景主題市集裡有現成的外觀可挑。</p>
+</details>
 
 島嶼的外觀、大小、收起方式、快速鍵和每項功能都可以在設定視窗裡調整，並支援應用程式內自動更新。資料全都儲存在本機。
 
