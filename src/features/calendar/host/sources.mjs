@@ -18,6 +18,8 @@ export function normalizeCalendarEvent(event, fallbackCalendar = "") {
     location: text(event.location),
     meetingLink: text(event.meetingLink),
     calendar: String(event.calendar || fallbackCalendar || ""),
+    ...(event.declined === true ? { declined: true } : {}),
+    ...(event.free === true ? { free: true } : {}),
   };
 }
 

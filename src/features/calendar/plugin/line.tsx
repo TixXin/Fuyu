@@ -1,6 +1,6 @@
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
-import { openMeetingLink } from "../api";
+import { joinCalendarMeeting } from "../joinMeeting";
 import { MeetingLine } from "../MeetingLine";
 import { meetingState } from "./islandState";
 import { OWNER } from "./owner.ts";
@@ -9,7 +9,7 @@ const lineSlot = defineSlot<object>("island.line/v1");
 
 function UpcomingMeetingLine() {
   const meeting = meetingState.use();
-  return meeting ? <MeetingLine meeting={meeting.upcoming} showTitle={meeting.showTitle} /> : null;
+  return meeting ? <MeetingLine meeting={meeting.upcoming} showTitle={meeting.showTitle} format={meeting.format} /> : null;
 }
 
 function JoinMeetingButton() {
@@ -23,7 +23,7 @@ function JoinMeetingButton() {
       type="button"
       onClick={(event) => {
         event.stopPropagation();
-        void openMeetingLink(link).catch((error: unknown) => console.error("Failed to open the meeting link", error));
+        joinCalendarMeeting(link, meeting.pauseMediaOnJoin !== false);
       }}
     >
       {t.calendar.join}

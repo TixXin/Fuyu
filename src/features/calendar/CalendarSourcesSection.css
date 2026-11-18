@@ -92,3 +92,9 @@
   align-self: flex-end;
   flex-direction: row-reverse;
 }
+
+.calendar-source__header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-md);
+}
