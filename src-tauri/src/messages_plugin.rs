@@ -9,12 +9,19 @@ pub(crate) const PLUGIN_ID: &str = "messages";
 pub(crate) const QQ: &str = "qq";
 pub(crate) const WECHAT: &str = "wechat";
 pub(crate) const MAIL: &str = "mail";
+#[allow(dead_code)]
 pub(crate) const TELEGRAM: &str = "telegram";
+#[allow(dead_code)]
 pub(crate) const DISCORD: &str = "discord";
+#[allow(dead_code)]
 pub(crate) const WHATSAPP: &str = "whatsapp";
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(crate) const TIM: &str = "tim";
+#[allow(dead_code)]
 pub(crate) const FEISHU: &str = "feishu";
+#[allow(dead_code)]
 pub(crate) const DINGTALK: &str = "dingtalk";
+#[allow(dead_code)]
 pub(crate) const WECOM: &str = "wecom";
 
 pub(crate) fn source_on(config: &Map<String, Value>, source: &str) -> bool {
