@@ -1,11 +1,51 @@
 .theme-market .plugin-market__header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
-  padding: 16px;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding: 12px 16px;
   background: var(--color-white-a04);
   border: 1px solid var(--color-white-a08);
   border-radius: var(--radius-lg);
+}
+
+.theme-market__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-market__search {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  color: var(--color-text-muted);
+  background: var(--color-white-a06);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-pill);
+}
+
+.theme-market__search input {
+  width: 148px;
+  min-width: 0;
+  color: var(--color-text);
+  background: transparent;
+  border: 0;
+  outline: none;
+  font: inherit;
+  font-size: 12px;
+}
+
+.theme-market__search input::placeholder {
+  color: var(--color-text-subtle);
+}
+
+.theme-market__search:focus-within {
+  border-color: var(--color-focus-ring);
 }
 
 .theme-market .plugin-market__status {

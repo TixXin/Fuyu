@@ -60,7 +60,7 @@ function HostSummaryBar({ view, runningCount, onOpenDiagnostics }: { view: Plugi
           {open && host ? (
             <>
               <span className="plugins-v3__host-meta">{text.hostDetail(host.pid, host.node)}</span>
-              <span className="plugins-v3__host-meta" title={text.memoryNotes[memoryKey]}>
+              <span className="plugins-v3__host-meta">
                 {text.memoryTitles[memoryKey]}{" "}
                 <strong className="plugins-v3__value" data-measure={memoryKey}>{megabytes(measured ? measured.bytes : host.rssBytes)}</strong>
               </span>
@@ -161,10 +161,7 @@ function DiagnosticsTable({ builtins, hostPlugins, query, onSelectPlugin }: {
                 <th>{text.stateCol}</th>
                 <th className="plugins-v3__num">{text.cpu}</th>
                 <th className="plugins-v3__num">{text.apply}</th>
-                <th className="plugins-v3__num">{text.services}</th>
-                <th className="plugins-v3__num">{text.timers}</th>
-                <th className="plugins-v3__num">{text.listeners}</th>
-                <th className="plugins-v3__num">{text.clients}</th>
+                <th className="plugins-v3__num">{text.resourcesCol}</th>
                 <th className="plugins-v3__num">{text.errors}</th>
               </tr>
             </thead>
@@ -173,6 +170,14 @@ function DiagnosticsTable({ builtins, hostPlugins, query, onSelectPlugin }: {
                 const Icon = row.icon;
                 const tone = TONES[row.state];
                 const u = row.usage;
+                const resourceParts = u
+                  ? [
+                      u.services > 0 ? `${text.services} ${u.services}` : "",
+                      u.timers > 0 ? `${text.timers} ${u.timers}` : "",
+                      u.listeners > 0 ? `${text.listeners} ${u.listeners}` : "",
+                      u.clients > 0 ? `${text.clients} ${u.clients}` : "",
+                    ].filter(Boolean)
+                  : [];
                 return (
                   <tr key={row.id} onClick={() => onSelectPlugin(row.id)}>
                     <td>
@@ -191,12 +196,9 @@ function DiagnosticsTable({ builtins, hostPlugins, query, onSelectPlugin }: {
                       </div>
                     </td>
                     <td><span className={`plugins-v3__foot-state plugins-v3__foot-state--${tone}`}>{text.states[row.state]}</span></td>
-                    <td className="plugins-v3__num" title={u ? text.calls(u.calls) : undefined}>{u ? `${milliseconds(u.cpuMs)} (${u.calls})` : "–"}</td>
+                    <td className="plugins-v3__num">{u ? `${milliseconds(u.cpuMs)} (${u.calls})` : "–"}</td>
                     <td className="plugins-v3__num">{u && u.applyMs !== null ? milliseconds(u.applyMs) : "–"}</td>
-                    <td className="plugins-v3__num">{u ? u.services : "–"}</td>
-                    <td className="plugins-v3__num">{u ? u.timers : "–"}</td>
-                    <td className="plugins-v3__num">{u ? u.listeners : "–"}</td>
-                    <td className="plugins-v3__num">{u ? u.clients : "–"}</td>
+                    <td className="plugins-v3__num">{u ? (resourceParts.length > 0 ? resourceParts.join(" · ") : "0") : "–"}</td>
                     <td className={`plugins-v3__num${u && u.errors > 0 ? " plugins-v3__diag-err" : ""}`}>{u ? u.errors : "–"}</td>
                   </tr>
                 );
@@ -206,8 +208,7 @@ function DiagnosticsTable({ builtins, hostPlugins, query, onSelectPlugin }: {
         </div>
       )}
       <div className="plugins-v3__footnotes">
-        <SettingsFootnote text={text.cpuNote} />
-        <SettingsFootnote text={text.preview} />
+        <SettingsFootnote text={`${text.cpuNote} ${text.preview}`} />
       </div>
     </section>
   );

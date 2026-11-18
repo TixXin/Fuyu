@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BadgeCheck, Check, RefreshCcw } from "lucide-react";
+import { BadgeCheck, Check, RefreshCcw, Search } from "lucide-react";
 import { IslandPreview } from "../../components/island-preview/IslandPreview";
+import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useLocale, useTranslation } from "../../i18n";
 import { getThemeMarket } from "./api";
@@ -10,6 +12,8 @@ import "./ThemeMarketPage.css";
 const OFFICIAL = "TixXin";
 
 let lastThemes: MarketTheme[] | null = null;
+
+type Filter = "all" | "official";
 
 export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
   settings: IslandSettings;
@@ -23,6 +27,8 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [saved, setSaved] = useState<ReadonlySet<string>>(new Set());
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -40,21 +46,52 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
   useEffect(() => { void refresh(); }, [refresh]);
 
   const looks = useMemo(() => (themes ?? []).map((theme) => ({ theme, applied: withMarketTheme(settings, theme) })), [themes, settings]);
+  const shownLooks = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return looks.filter(({ theme }) => {
+      if (filter === "official" && theme.author !== OFFICIAL) return false;
+      if (!q) return true;
+      const haystack = [theme.id, theme.name["zh-CN"], theme.name.en, theme.author ?? "", theme.description?.["zh-CN"] ?? "", theme.description?.en ?? ""].join(" ").toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [looks, query, filter]);
   const status = loading ? text.refreshing : themes ? text.status(themes.length) : "";
 
   return (
     <section className="settings-section settings-section--list plugins-panel theme-market">
       <div className="plugin-market__header">
         <span className="plugin-market__status" aria-live="polite">{status}</span>
-        <button className="plugin-card__button plugin-market__refresh" type="button" aria-label={text.refresh} disabled={loading} onClick={() => void refresh()}>
-          <RefreshCcw className={loading ? "plugin-market__spin" : undefined} size={12} strokeWidth={2.4} />
-        </button>
+        <div className="theme-market__toolbar">
+          <label className="theme-market__search">
+            <Search size={13} strokeWidth={2.2} aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              placeholder={text.searchPlaceholder}
+              aria-label={text.searchPlaceholder}
+              onChange={(event) => setQuery(event.currentTarget.value)}
+            />
+          </label>
+          <SettingsChoice<Filter>
+            value={filter}
+            ariaLabel={text.filterAll}
+            options={[
+              { value: "all", label: text.filterAll },
+              { value: "official", label: text.filterOfficial },
+            ]}
+            onChange={setFilter}
+          />
+          <button className="plugin-card__button plugin-market__refresh" type="button" aria-label={text.refresh} disabled={loading} onClick={() => void refresh()}>
+            <RefreshCcw className={loading ? "plugin-market__spin" : undefined} size={12} strokeWidth={2.4} />
+          </button>
+        </div>
       </div>
       {failed ? <p className="plugin-card__error" role="alert">{text.loadFailed}</p> : null}
       {themes === null && loading ? <p className="settings-section__hint">{text.loading}</p> : null}
       {themes !== null && themes.length === 0 && !failed ? <p className="settings-section__hint">{text.empty}</p> : null}
+      {themes !== null && themes.length > 0 && shownLooks.length === 0 ? <p className="settings-section__hint">{text.noMatches}</p> : null}
       <div className="plugin-market__grid theme-market__grid">
-        {looks.map(({ theme, applied }) => {
+        {shownLooks.map(({ theme, applied }) => {
           const inUse = isThemeInUse(settings, theme);
           const official = theme.author === OFFICIAL;
           return (
@@ -98,7 +135,9 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
           );
         })}
       </div>
-      <p className="settings-section__hint">{text.hint}</p>
+      <div className="settings-group__footer">
+        <SettingsFootnote text={text.hint} />
+      </div>
     </section>
   );
 }

@@ -111,6 +111,7 @@ export type SettingsPluginsV3Text = {
   listeners: string;
   services: string;
   clients: string;
+  resourcesCol: string;
   errors: string;
   lastError: string;
   cpuNote: string;
@@ -279,6 +280,7 @@ export const zhCN: SettingsPluginsV3Text = {
   listeners: "监听器",
   services: "服务",
   clients: "界面文件",
+  resourcesCol: "活跃资源",
   errors: "出错",
   lastError: "最近一次出错",
   cpuNote: "CPU 是近似值：只算经内核登记的回调（事件监听、受管定时器、启动）的同步部分，await 之后的不算。",
@@ -447,6 +449,7 @@ export const en: SettingsPluginsV3Text = {
   listeners: "Listeners",
   services: "Services",
   clients: "UI files",
+  resourcesCol: "Resources",
   errors: "Errors",
   lastError: "Last error",
   cpuNote: "CPU is approximate: only the synchronous part of callbacks registered through the kernel (listeners, managed timers, start) is counted, not what runs after an await.",
