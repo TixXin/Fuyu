@@ -169,18 +169,20 @@ export class PluginWindows {
     }, `ctx.windows.create(${id})`);
     record.stopEffect = stopEffect;
     await this.callRpc("pluginKernel.windowOpen", {
-      pluginId: owner,
-      windowId: id,
-      title: state.title,
-      kind: state.kind,
-      width: state.width,
-      height: state.height,
-      x: state.x,
-      y: state.y,
-      alwaysOnTop: state.alwaysOnTop,
-      clickThrough: state.clickThrough,
-      resizable: state.resizable,
-      visible: state.visible,
+      spec: {
+        pluginId: owner,
+        windowId: id,
+        title: state.title,
+        kind: state.kind,
+        width: state.width,
+        height: state.height,
+        x: state.x,
+        y: state.y,
+        alwaysOnTop: state.alwaysOnTop,
+        clickThrough: state.clickThrough,
+        resizable: state.resizable,
+        visible: state.visible,
+      },
     });
     this.emitChanged();
     return { ...state };

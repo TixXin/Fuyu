@@ -205,7 +205,18 @@ test("ctx.windows gates on experimental windows/v1, enforces limits and guardrai
   assert.equal(created.alwaysOnTop, true);
   assert.equal(created.clickThrough, true);
   assert.equal(created.visible, true);
-  assert.ok(rpc.calls.some((c) => c.method === "pluginKernel.windowOpen" && c.params.windowId === "overlay-1" && c.params.alwaysOnTop === true));
+  assert.ok(
+    rpc.calls.some(
+      (c) =>
+        c.method === "pluginKernel.windowOpen" &&
+        c.params.spec?.pluginId === "hud" &&
+        c.params.spec?.windowId === "overlay-1" &&
+        c.params.spec?.title === "HUD 1" &&
+        c.params.spec?.alwaysOnTop === true &&
+        c.params.spec?.clickThrough === true &&
+        c.params.spec?.visible === true,
+    ),
+  );
 
   const updatedRules = await winService.setRules({
     id: "hud",

@@ -57,6 +57,7 @@ export function serviceFeaturesForWindow(windowKind: string | null): readonly Se
     case "clipboard-preview":
     case "tray-menu":
     case "onboarding":
+    case "plugin-window":
     default:
       return NO_SERVICE_FEATURES;
   }

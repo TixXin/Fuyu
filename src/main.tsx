@@ -91,6 +91,10 @@ async function loadWindow(): Promise<ReactNode> {
       const { OnboardingWindow } = await import("./windows/onboarding/OnboardingWindow");
       return <OnboardingWindow />;
     }
+    case "plugin-window": {
+      const { PluginWindowApp } = await import("./windows/plugin-window/PluginWindowApp");
+      return <PluginWindowApp />;
+    }
     default: {
       const [{ TodosGate }, { IslandApp }] = await Promise.all([
         import("./features/todos/TodosGate"),

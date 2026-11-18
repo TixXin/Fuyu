@@ -1,0 +1,109 @@
+.plugin-window-stage {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--font-ui);
+  color: var(--text-1);
+}
+
+.plugin-window {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.plugin-window--overlay {
+  --plugin-window-surface: var(--color-surface-dark);
+  background: var(--plugin-window-surface);
+  border: 1px solid var(--color-white-a16);
+  border-radius: var(--radius-xl);
+  color-scheme: dark;
+}
+
+.island-light .plugin-window--overlay {
+  --plugin-window-surface: #f6f6f8;
+  color-scheme: light;
+}
+
+.plugin-window--widget {
+  background: transparent;
+}
+
+.plugin-window__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex: 0 0 34px;
+  padding: 0 var(--space-md) 0 var(--space-xl);
+  border-bottom: 1px solid var(--color-white-a10);
+  background: var(--color-white-a04);
+  user-select: none;
+  cursor: move;
+}
+
+.plugin-window__badge {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  background: var(--color-white-a08);
+  color: var(--color-accent);
+  pointer-events: none;
+}
+
+.plugin-window__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  pointer-events: none;
+}
+
+.plugin-window__close {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.plugin-window__close:hover {
+  background: var(--color-white-a10);
+  color: var(--text-1);
+}
+
+.plugin-window__close:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+}
+
+.plugin-window__body {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+}
