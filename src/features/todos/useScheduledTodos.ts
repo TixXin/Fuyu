@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { useTranslation } from "../../i18n";
-import { getLocalDateString } from "../../utils/date";
 import { remindersV1 } from "@fuyu/plugin-services";
+import { useTranslation } from "../../i18n";
 import { windowServices } from "../plugin-kernel/services";
-import { DUE_REMINDER_SOURCE, dueReminderId, pickDueReminders } from "./dueReminders";
-import { sortScheduledTodos, splitDueTodos, toTodoItems } from "./schedule";
-import { createTodoId, loadScheduledTodos, saveScheduledTodos } from "./storage";
-import { withTags, type TodoTags } from "./tags";
-import type { ScheduledTodo, TodoItem } from "./types";
+import { DUE_REMINDER_SOURCE, dueReminderId, pickDueReminders } from "./dueReminders.ts";
+import { sortScheduledTodos, splitDueTodos, toTodoItems } from "./schedule.ts";
+import { createTodoId, loadScheduledTodos, saveScheduledTodos } from "./storage.ts";
+import { readTags, withTags, type TodoTags } from "./tags.ts";
+import { getLogicalTodoDate } from "./todoPrefs.ts";
+import type { ScheduledTodo, TodoItem } from "./types.ts";
 import { useTodoFileField } from "./useTodoFileField";
 
 const remindedDue = new Set<string>();
@@ -15,6 +15,7 @@ const remindedDue = new Set<string>();
 export function useScheduledTodos(
   currentTodoDate: string,
   setTodos: Dispatch<SetStateAction<TodoItem[]>>,
+  dayStartHour = 0,
 ) {
   const dueTitle = useTranslation().todoIsland.tags.dueTitle;
   const [scheduledTodos, setScheduledTodos] = useState<ScheduledTodo[]>(loadScheduledTodos);
@@ -25,15 +26,12 @@ export function useScheduledTodos(
   }, [scheduledTodos]);
 
   useEffect(() => {
-    if (currentTodoDate !== getLocalDateString()) {
+    if (currentTodoDate !== getLogicalTodoDate(new Date(), dayStartHour)) {
       return;
     }
 
     const { due, later } = splitDueTodos(scheduledTodos, currentTodoDate);
-
-    if (due.length === 0) {
-      return;
-    }
+    if (due.length === 0) return;
 
     setScheduledTodos(later);
     setTodos((currentTodos) => [
@@ -43,10 +41,17 @@ export function useScheduledTodos(
     for (const todo of pickDueReminders(due, remindedDue)) {
       void windowServices.get(remindersV1).push({ id: dueReminderId(todo), source: DUE_REMINDER_SOURCE, icon: "flag", title: dueTitle, detail: todo.title }).catch(() => undefined);
     }
-  }, [currentTodoDate, dueTitle, scheduledTodos, setTodos]);
+  }, [currentTodoDate, dayStartHour, dueTitle, scheduledTodos, setTodos]);
 
-  const scheduleTodo = useCallback((title: string, date: string, project?: string): ScheduledTodo => {
-    const todo = { id: createTodoId(), title, date, createdAt: Date.now(), ...(project ? { project } : {}) };
+  const scheduleTodo = useCallback((title: string, date: string, project?: string, tags?: TodoTags): ScheduledTodo => {
+    const todo: ScheduledTodo = {
+      id: createTodoId(),
+      title,
+      date,
+      createdAt: Date.now(),
+      ...(project ? { project } : {}),
+      ...(tags ? readTags(tags) : {}),
+    };
     setScheduledTodos((current) => sortScheduledTodos([...current, todo]));
     return todo;
   }, []);

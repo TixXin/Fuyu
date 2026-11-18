@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { loadTodoArchives, saveTodoArchives } from "./storage";
-import type { TodoArchive, TodoItem } from "./types";
+import { loadTodoArchives, saveTodoArchives } from "./storage.ts";
+import { filterArchivesByRetention, type TodoArchiveRetentionDays } from "./todoPrefs.ts";
+import type { TodoArchive, TodoItem } from "./types.ts";
 
-export function useTodoArchives() {
+export function useTodoArchives(retentionDays: TodoArchiveRetentionDays = 0) {
   const [archives, setArchives] = useState<TodoArchive[]>(loadTodoArchives);
 
   const upsertArchive = useCallback(
@@ -22,13 +23,14 @@ export function useTodoArchives() {
         filePath,
       };
 
-      setArchives((currentArchives) =>
-        [archive, ...currentArchives.filter((item) => item.date !== date)].sort(
+      setArchives((currentArchives) => {
+        const sorted = [archive, ...currentArchives.filter((item) => item.date !== date)].sort(
           (a, b) => b.date.localeCompare(a.date),
-        ),
-      );
+        );
+        return filterArchivesByRetention(sorted, date, retentionDays);
+      });
     },
-    [],
+    [retentionDays],
   );
 
   useEffect(() => {

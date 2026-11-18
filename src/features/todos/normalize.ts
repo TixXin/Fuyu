@@ -4,6 +4,7 @@ import { getLocalDateString } from "../../utils/date.ts";
 import { readProject } from "./project.ts";
 import { normalizeScheduledTodo, sortScheduledTodos } from "./schedule.ts";
 import { readTags } from "./tags.ts";
+import { getLogicalTodoDate } from "./todoPrefs.ts";
 
 export function createTodoId() {
   if ("crypto" in window && typeof window.crypto.randomUUID === "function") {
@@ -72,8 +73,8 @@ export function parseTodos(stored: string | null): TodoItem[] {
   }
 }
 
-export function parseCurrentTodoDate(stored: string | null) {
-  return stored ?? getLocalDateString();
+export function parseCurrentTodoDate(stored: string | null, dayStartHour = 0) {
+  return stored ?? getLogicalTodoDate(new Date(), dayStartHour);
 }
 
 export function parseTodoArchives(stored: string | null): TodoArchive[] {
