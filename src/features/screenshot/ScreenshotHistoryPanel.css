@@ -130,9 +130,8 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 16px;
-  background: var(--screenshot-history-caption-fill, rgba(12, 13, 16, 0.62));
+  background: var(--screenshot-history-caption-fill, rgba(12, 13, 16, 0.78));
   border-radius: 999px;
-  backdrop-filter: blur(6px);
 }
 
 .screenshot-history__copied {
@@ -161,9 +160,8 @@
   display: flex;
   gap: 1px;
   padding: 2px;
-  background: var(--screenshot-history-caption-fill, rgba(12, 13, 16, 0.62));
+  background: var(--screenshot-history-caption-fill, rgba(12, 13, 16, 0.78));
   border-radius: 999px;
-  backdrop-filter: blur(6px);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--motion-base) var(--motion-ease);

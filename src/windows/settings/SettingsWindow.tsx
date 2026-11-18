@@ -10,11 +10,10 @@ import "./slots/categories";
 import "./slots/runners";
 import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
 import { listenSettingsWindowReopened, showSettingsWindow } from "./api";
-import { DEFAULT_SETTINGS, isSameSettings, withLayoutFrom, withThemeFrom } from "../../lib/settings/settings";
-import { STORAGE_KEY, loadSettings, saveSettings } from "../../lib/settings/storage";
+import { DEFAULT_SETTINGS, withLayoutFrom, withThemeFrom } from "../../lib/settings/settings";
+import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { ResetAppearanceButton } from "./sections/ResetAppearanceButton";
-import type { IslandSettings } from "../../lib/settings/types";
 import { useSettingPresets } from "../../lib/settings/useSettingPresets";
 import { useSettingsWithBuiltinSwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { usePluginsV3Enabled } from "./usePluginHostStatus";
@@ -37,7 +36,7 @@ const SETTINGS_LIGHT_FILL = "#eceef2";
 export function SettingsWindow() {
   const t = useTranslation();
   const { locale, setLocale } = useLocale();
-  const [storedSettings, setSettings] = useState<IslandSettings>(loadSettings);
+  const [storedSettings, setSettings, reloadSettings] = useIslandSettings({ coalesceInputFrames: true });
   const settings = useSettingsWithBuiltinSwitches(storedSettings);
   useWindowAccent(settings);
   const systemDark = useSystemDark();
@@ -76,35 +75,23 @@ export function SettingsWindow() {
   }, [t]);
 
   useEffect(() => {
-    saveSettings(storedSettings);
-  }, [storedSettings]);
-
-  useEffect(() => {
     focusRequestedSection();
 
-    const syncFromIsland = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
-        const nextSettings = loadSettings();
-        setSettings((current) =>
-          isSameSettings(current, nextSettings) ? current : nextSettings,
-        );
-      }
-
+    const syncFocusFromIsland = (event: StorageEvent) => {
       if (event.key === SETTINGS_FOCUS_STORAGE_KEY && event.newValue !== null) {
         focusRequestedSection();
       }
     };
 
-    window.addEventListener("storage", syncFromIsland);
-    return () => window.removeEventListener("storage", syncFromIsland);
+    window.addEventListener("storage", syncFocusFromIsland);
+    return () => window.removeEventListener("storage", syncFocusFromIsland);
   }, [focusRequestedSection]);
 
   useEffect(() => {
     let stop: (() => void) | undefined;
     let cancelled = false;
     const reopened = () => {
-      const nextSettings = loadSettings();
-      setSettings((current) => (isSameSettings(current, nextSettings) ? current : nextSettings));
+      reloadSettings();
       focusRequestedSection();
     };
     void listenSettingsWindowReopened(reopened)
@@ -114,7 +101,7 @@ export function SettingsWindow() {
       cancelled = true;
       stop?.();
     };
-  }, [focusRequestedSection]);
+  }, [focusRequestedSection, reloadSettings]);
 
   const resetAppearance = useCallback(() => {
     setSettings((current) => withThemeFrom(current, DEFAULT_SETTINGS));

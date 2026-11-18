@@ -12,6 +12,7 @@ export function StickyIslandPreview({
 }) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [stuck, setStuck] = useState(false);
+  const [sentinelHeight, setSentinelHeight] = useState(0);
 
   useEffect(() => {
     if (compact) {
@@ -23,7 +24,13 @@ export function StickyIslandPreview({
     const root = element.closest(".editor-panel");
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry) setStuck(!entry.isIntersecting);
+        if (!entry) return;
+        const nextStuck = !entry.isIntersecting;
+        if (nextStuck) {
+          const measured = element.offsetHeight || Math.round(entry.boundingClientRect.height);
+          if (measured > 0) setSentinelHeight(measured);
+        }
+        setStuck(nextStuck);
       },
       { root, threshold: 0.05 },
     );
@@ -39,10 +46,16 @@ export function StickyIslandPreview({
     );
   }
 
+  const collapseSentinel = stuck && sentinelHeight > 0;
+
   return (
     <>
-      <div ref={sentinelRef} className="sticky-island-preview__sentinel">
-        <IslandPreview settings={settings} />
+      <div
+        ref={sentinelRef}
+        className="sticky-island-preview__sentinel"
+        style={collapseSentinel ? { height: `${sentinelHeight}px` } : undefined}
+      >
+        {collapseSentinel ? null : <IslandPreview settings={settings} />}
       </div>
       {stuck ? (
         <div className="sticky-island-preview__bar" data-search="off">

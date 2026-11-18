@@ -4,10 +4,15 @@ import { useLocale, useTranslation } from "../../i18n";
 import type { CalendarEvent } from "./api";
 import type { WeekStartsOn } from "./calendarPrefs";
 import { chineseDay } from "./lunar.ts";
-import { dayMark, eventsOn, monthDays, monthWeekNumbers, namesTheDay, resolveWeekStart, startOfDay } from "./monthView.ts";
+import { dayMark, monthDays, monthWeekNumbers, namesTheDay, nextDay, resolveWeekStart, startOfDay } from "./monthView.ts";
 import "./CalendarMonth.css";
 
 const KEY_STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+const EMPTY_EVENTS: readonly CalendarEvent[] = [];
+
+function formatDayKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
 
 export function CalendarMonth({
   month,
@@ -36,17 +41,49 @@ export function CalendarMonth({
   const grid = useRef<HTMLDivElement>(null);
   const sundayFirst = resolveWeekStart(weekStartsOn) === "sunday";
   const weekdays = sundayFirst ? [text.weekdays[6], ...text.weekdays.slice(0, 6)] : text.weekdays;
+  const gridDays = useMemo(() => monthDays(month, weekStartsOn), [month, weekStartsOn]);
+  const eventsByDay = useMemo(() => {
+    const buckets = new Map<string, CalendarEvent[]>();
+    if (gridDays.length === 0 || events.length === 0) return buckets;
+    const rangeStart = gridDays[0];
+    const rangeEnd = nextDay(gridDays[gridDays.length - 1]);
+    for (const event of events) {
+      if (event.startMs >= rangeEnd || event.endMs < rangeStart) continue;
+      if (event.endMs === rangeStart && !(event.endMs === event.startMs && event.startMs >= rangeStart)) continue;
+      let cursor = Math.max(startOfDay(event.startMs), rangeStart);
+      while (cursor < rangeEnd) {
+        const end = nextDay(cursor);
+        if (event.startMs >= end) break;
+        if (event.endMs > cursor || (event.endMs === event.startMs && event.startMs >= cursor)) {
+          const key = formatDayKey(new Date(cursor));
+          const bucket = buckets.get(key);
+          if (bucket) bucket.push(event);
+          else buckets.set(key, [event]);
+        }
+        if (end >= event.endMs && end > event.startMs) break;
+        cursor = end;
+      }
+    }
+    return buckets;
+  }, [events, gridDays]);
   const days = useMemo(
     () =>
-      monthDays(month, weekStartsOn).map((day) => {
-        const on = eventsOn(events, day);
-        return { day, date: new Date(day), on: on.filter((event) => !namesTheDay(event)).length, mark: dayMark(on), chinese: chineseDay(new Date(day)) };
+      gridDays.map((day) => {
+        const date = new Date(day);
+        const on = eventsByDay.get(formatDayKey(date)) ?? EMPTY_EVENTS;
+        return {
+          day,
+          date,
+          on: on.filter((event) => !namesTheDay(event)).length,
+          mark: dayMark(on),
+          chinese: chineseDay(date),
+        };
       }),
-    [events, month, weekStartsOn],
+    [eventsByDay, gridDays],
   );
   const weeks = useMemo(
-    () => (showWeekNumbers ? monthWeekNumbers(days.map((entry) => entry.day), weekStartsOn) : []),
-    [days, showWeekNumbers, weekStartsOn],
+    () => (showWeekNumbers ? monthWeekNumbers(gridDays, weekStartsOn) : []),
+    [gridDays, showWeekNumbers, weekStartsOn],
   );
   const anchor = days.some(({ day }) => day === selected) ? selected : month;
 
