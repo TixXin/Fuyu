@@ -1,4 +1,5 @@
 import { isMacOS } from "../../../lib/platform.ts";
+import { en as pluginViewsEn, zhCN as pluginViewsZh, type PluginSensitivePromptText } from "../pluginViews.ts";
 
 export type SettingsPluginsText = {
   allowThirdParty: string;
@@ -42,17 +43,7 @@ export type SettingsPluginsText = {
   permission: Record<"todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write" | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control" | "shelf:read" | "shelf:write" | "windows", string>;
   needsApproval: string;
   keybindingConflict: (shortcuts: string) => string;
-  sensitive: {
-    prompt: (plugin: string, action: string) => string;
-    allow: string;
-    once: string;
-    deny: string;
-    action: Record<
-      | "todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write"
-      | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control"
-      | "shelf:read" | "shelf:write" | "windows" | "uri",
-      string
-    >;
+  sensitive: PluginSensitivePromptText & {
     title: string;
     hint: string;
     allowed: string;
@@ -401,28 +392,7 @@ export const zhCN: SettingsPluginsText = {
   needsApproval: "新版本需要更多权限，已暂停。关掉再打开开关即可授权。",
   keybindingConflict: (shortcuts: string) => `快捷键已被其他程序占用：${shortcuts}`,
   sensitive: {
-    prompt: (plugin: string, action: string) => `${plugin} 想${action}`,
-    allow: "允许",
-    once: "本次",
-    deny: "拒绝",
-    action: {
-      "todos:read": "读取待办",
-      "todos:write": "修改待办",
-      "notes:read": "读取笔记",
-      "notes:write": "修改笔记",
-      "agent-status:read": "读取 AI Agent 状态",
-      "agent-status:write": "报告 AI Agent 状态",
-      "island:notify": "在岛上显示通知",
-      secrets: "保存自己的密钥",
-      "media:control": "控制媒体播放",
-      "clipboard:read": "读取剪贴板历史",
-      "messages:read": "读取消息提醒",
-      "media:read": "读取正在播放的内容",
-      "shelf:read": "读取文件中转列表",
-      "shelf:write": "修改文件中转列表",
-      windows: "新建自己的窗口",
-      uri: "处理网页或其他程序打开的 fuyu:// 链接",
-    },
+    ...pluginViewsZh.sensitivePrompt,
     title: "需要询问的权限",
     hint: "插件第一次使用敏感权限、申请可选权限或收到链接时，岛上会询问你。撤销后，下次会再问一次。",
     allowed: "已允许",
@@ -848,28 +818,7 @@ export const en: SettingsPluginsText = {
   needsApproval: "The new version asks for more permissions, so it is paused. Switch it off and on to allow them.",
   keybindingConflict: (shortcuts: string) => `Shortcut already in use by another app: ${shortcuts}`,
   sensitive: {
-    prompt: (plugin: string, action: string) => `${plugin} wants to ${action}`,
-    allow: "Allow",
-    once: "Once",
-    deny: "Deny",
-    action: {
-      "todos:read": "read your todos",
-      "todos:write": "change your todos",
-      "notes:read": "read your note",
-      "notes:write": "change your note",
-      "agent-status:read": "read AI agent statuses",
-      "agent-status:write": "report AI agent statuses",
-      "island:notify": "show notifications on the island",
-      secrets: "keep its own secrets",
-      "media:control": "control media playback",
-      "clipboard:read": "read your clipboard history",
-      "messages:read": "read your message alerts",
-      "media:read": "see what is playing",
-      "shelf:read": "read the file shelf",
-      "shelf:write": "change the file shelf",
-      windows: "open windows of its own",
-      uri: "handle a fuyu:// link opened by a web page or another app",
-    },
+    ...pluginViewsEn.sensitivePrompt,
     title: "Permissions the island asks about",
     hint: "The island asks you the first time a plugin uses a sensitive permission, asks for an optional one, or receives a link. After you revoke an answer, it asks again.",
     allowed: "Allowed",

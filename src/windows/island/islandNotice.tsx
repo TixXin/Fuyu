@@ -31,7 +31,7 @@ function V2UpgradeContent({ v2Upgrade }: NoticeSources) {
 }
 
 function V2UpgradeButtons({ v2Upgrade }: NoticeSources) {
-  const copy = useTranslation().settings.pluginsV3.v2Migration;
+  const copy = useTranslation().island.v2Migration;
   if (!v2Upgrade?.active) return null;
   const stop = (run: () => void) => (event: { stopPropagation: () => void }) => {
     event.stopPropagation();
@@ -42,8 +42,8 @@ function V2UpgradeButtons({ v2Upgrade }: NoticeSources) {
       <button
         className="first-hint__action"
         type="button"
-        aria-label={copy.islandViewGuide}
-        title={copy.islandViewGuide}
+        aria-label={copy.viewGuide}
+        title={copy.viewGuide}
         onClick={stop(() => {
           v2Upgrade.acknowledge();
           openSettingsWindow("pluginsV3");
@@ -54,8 +54,8 @@ function V2UpgradeButtons({ v2Upgrade }: NoticeSources) {
       <button
         className="first-hint__action"
         type="button"
-        aria-label={copy.islandGotIt}
-        title={copy.islandGotIt}
+        aria-label={copy.gotIt}
+        title={copy.gotIt}
         onClick={stop(v2Upgrade.acknowledge)}
       >
         <Check size={13} strokeWidth={2} aria-hidden="true" />

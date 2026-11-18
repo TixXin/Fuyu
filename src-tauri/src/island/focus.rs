@@ -98,6 +98,7 @@ pub(crate) fn set_click_activation(window: &WebviewWindow, activates: bool) {
 }
 
 pub(crate) fn island_mode_synced(window: &WebviewWindow, expanded: bool) {
+    super::watch::note_interaction_ready();
     set_click_activation(window, expanded);
     if expanded {
         return;

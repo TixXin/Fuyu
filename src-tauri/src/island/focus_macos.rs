@@ -91,6 +91,7 @@ pub fn take_island_click_focus() -> Result<bool, String> {
 pub(crate) fn set_click_activation(_window: &WebviewWindow, _activates: bool) {}
 
 pub(crate) fn island_mode_synced(window: &WebviewWindow, expanded: bool) {
+    super::watch::note_interaction_ready();
     if expanded {
         return;
     }

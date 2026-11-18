@@ -117,9 +117,6 @@ export type SettingsPluginsV3Text = {
   lastError: string;
   cpuNote: string;
   v2Migration: {
-    islandNotice: (count: number) => string;
-    islandViewGuide: string;
-    islandGotIt: string;
     title: string;
     summary: string;
     officialHeading: string;
@@ -348,9 +345,6 @@ export const zhCN: SettingsPluginsV3Text = {
   lastError: "最近一次出错",
   cpuNote: "CPU 是近似值：只算经内核登记的回调（事件监听、受管定时器、启动）的同步部分，await 之后的不算。",
   v2Migration: {
-    islandNotice: (count) => `检测到 ${count} 个旧第 2 版插件，官方插件已升级至 @fuyu/*`,
-    islandViewGuide: "查看迁移说明",
-    islandGotIt: "知道了",
     title: "旧第 2 版插件下线与迁移说明",
     summary: "第 2 版进程与自定义网页插件即将下线。官方插件已按第 3 版跨平台接口重写为 @fuyu/*，原有设置已自动保留到第 3 版数据目录。",
     officialHeading: "官方插件新版对照",
@@ -579,9 +573,6 @@ export const en: SettingsPluginsV3Text = {
   lastError: "Last error",
   cpuNote: "CPU is approximate: only the synchronous part of callbacks registered through the kernel (listeners, managed timers, start) is counted, not what runs after an await.",
   v2Migration: {
-    islandNotice: (count) => `${count} legacy v2 ${count === 1 ? "plugin" : "plugins"} found; official plugins moved to @fuyu/*`,
-    islandViewGuide: "View upgrade guide",
-    islandGotIt: "Got it",
     title: "Legacy v2 plugin retirement & migration",
     summary: "Version 2 process and custom-webview plugins are being retired. Official plugins have been rewritten for Platform v3 as @fuyu/*, and your previous settings have been carried over.",
     officialHeading: "Official plugin replacements",

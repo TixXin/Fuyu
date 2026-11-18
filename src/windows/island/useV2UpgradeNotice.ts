@@ -23,13 +23,13 @@ export function useV2UpgradeNotice({
 }) {
   const { busy } = useIslandContributed();
   const { snapshot, dismiss } = useV2PluginMigration();
-  const copy = useTranslation().settings.pluginsV3.v2Migration;
+  const copy = useTranslation().island.v2Migration;
   const [held, setHeld] = useState(false);
 
   const canShow = mode === "collapsed" && !isTucked && !busy && !quiet && !demoActive;
   const active = canShow && shouldShowIslandMigrationNotice(snapshot);
   const count = totalLegacyPlugins(snapshot);
-  const text = active ? copy.islandNotice(count) : null;
+  const text = active ? copy.notice(count) : null;
 
   useEffect(() => {
     if (!active || held) return;
