@@ -360,8 +360,13 @@
                       </span>
                     </div>
                   </div>
-                  <ul class="todo-projects"></ul>
-                  <input aria-label="新项目名，回车添加" class="settings-input" maxlength="20" placeholder="新项目名，回车添加" spellcheck="false">
+                  <div class="todo-projects__add">
+                    <input aria-label="新项目名，回车添加" class="settings-input" maxlength="20" placeholder="新项目名，回车添加" spellcheck="false" value="">
+                    <button class="todo-projects__button todo-projects__button--add" disabled="" type="button">
+                      <svg aria-hidden="true" class="lucide lucide-plus" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
+                      添加
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -383,6 +388,9 @@
                       <div class="settings-row__control">
                         <button class="settings-link-button" type="button">
                           保存
+                        </button>
+                        <button class="settings-link-button" type="button">
+                          选择文件夹…
                         </button>
                       </div>
                     </div>
