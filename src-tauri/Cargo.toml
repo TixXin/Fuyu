@@ -67,7 +67,7 @@ global-hotkey = "0.10"
 libc = "0.2"
 objc2 = "0.6"
 objc2-avf-audio = { version = "0.3", default-features = false, features = ["std", "block2", "AVAudioApplication", "AVAudioBuffer", "AVAudioEngine", "AVAudioFormat", "AVAudioIONode", "AVAudioNode", "AVAudioTime", "AVAudioTypes"] }
-objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSApplication", "NSBitmapImageRep", "NSColor", "NSColorSpace", "NSEvent", "NSImage", "NSImageRep", "NSPasteboard", "NSResponder", "NSRunningApplication", "NSWorkspace"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSAppearance", "NSApplication", "NSBitmapImageRep", "NSColor", "NSColorSpace", "NSEvent", "NSImage", "NSImageRep", "NSPanel", "NSPasteboard", "NSResponder", "NSRunningApplication", "NSView", "NSVisualEffectView", "NSWindow", "NSWorkspace"] }
 objc2-core-audio = { version = "0.3", default-features = false, features = ["std", "AudioHardware"] }
 objc2-core-foundation = { version = "0.3", default-features = false, features = ["std", "CFArray", "CFCGTypes", "CFData", "CFDictionary", "CFNumber", "CFString"] }
 objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSData", "NSDictionary", "NSError", "NSProcessInfo", "NSRange", "NSString", "NSURL"] }
