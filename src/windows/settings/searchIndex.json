@@ -83,6 +83,17 @@
       }
     },
     {
+      "page": "generalData",
+      "zh-CN": {
+        "group": "",
+        "title": "崩溃诊断日志"
+      },
+      "en": {
+        "group": "",
+        "title": "Crash logs"
+      }
+    },
+    {
       "page": "generalSync",
       "zh-CN": {
         "group": "同步方式",
