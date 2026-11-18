@@ -1,3 +1,4 @@
+import { STAGE_WIDTH } from "../../stage/stageState";
 import { createStore } from "../../stage/store";
 import type { Chapter, TermLine } from "./copy";
 
@@ -24,8 +25,8 @@ export type Scene = {
 
 export const scene = createStore<Scene>({
   card: null, terms: {}, focus: null, away: false, phone: "hidden", chat: [], pr: "hidden", settings: "hidden", cover: "in",
-  cursor: { x: 640, y: 560, ms: 0, visible: false, pressed: false },
-  gather: false, ring: null, zoom: { x: 640, y: 360, scale: 1 },
+  cursor: { x: STAGE_WIDTH / 2, y: 560, ms: 0, visible: false, pressed: false },
+  gather: false, ring: null, zoom: { x: STAGE_WIDTH / 2, y: 360, scale: 1 },
 });
 
 let cardId = 0;
