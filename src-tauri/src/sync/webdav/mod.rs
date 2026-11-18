@@ -2,7 +2,7 @@ pub(crate) mod rate_limit;
 pub(crate) mod secret;
 pub(crate) mod xml;
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},

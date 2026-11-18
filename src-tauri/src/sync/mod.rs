@@ -5,6 +5,7 @@ mod categories;
 pub(crate) mod clock;
 mod codec;
 mod config;
+pub(crate) mod crypto;
 pub(crate) mod device;
 mod engine;
 pub(crate) mod layout;
@@ -105,6 +106,68 @@ pub(crate) fn confirm_sync_deletions() -> Result<(), crate::user_error::UserErro
     engine::confirm()
 }
 
+#[tauri::command]
+pub(crate) async fn enable_sync_encryption(
+    passphrase: String,
+) -> Result<SyncStatus, crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(move || crypto::commands::enable(passphrase))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub(crate) async fn unlock_sync_encryption(
+    secret: String,
+) -> Result<SyncStatus, crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(move || crypto::commands::unlock(secret))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub(crate) async fn change_sync_passphrase(
+    current_secret: String,
+    new_passphrase: String,
+) -> Result<SyncStatus, crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crypto::commands::change_passphrase(current_secret, new_passphrase)
+    })
+    .await
+    .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub(crate) async fn disable_sync_encryption(
+    secret: String,
+) -> Result<SyncStatus, crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(move || crypto::commands::disable(secret))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub(crate) async fn copy_sync_recovery_key() -> Result<(), crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(crypto::commands::copy_recovery_key)
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub(crate) async fn save_sync_recovery_key() -> Result<String, crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(crypto::commands::save_recovery_key)
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub(crate) async fn reset_sync_remote(
+    passphrase: Option<String>,
+) -> Result<SyncStatus, crate::user_error::UserError> {
+    tauri::async_runtime::spawn_blocking(move || crypto::commands::reset_remote(passphrase))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
@@ -115,6 +178,13 @@ macro_rules! tauri_commands {
             crate::sync::stop_sync,
             crate::sync::sync_now,
             crate::sync::confirm_sync_deletions,
+            crate::sync::enable_sync_encryption,
+            crate::sync::unlock_sync_encryption,
+            crate::sync::change_sync_passphrase,
+            crate::sync::disable_sync_encryption,
+            crate::sync::copy_sync_recovery_key,
+            crate::sync::save_sync_recovery_key,
+            crate::sync::reset_sync_remote,
         ] $($rest)*)
     };
 }

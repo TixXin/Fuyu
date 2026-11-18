@@ -21,10 +21,11 @@ use super::{
     },
     clock,
     config::{self, SyncBackendKind, SyncCategory, SyncConfig, WebdavConfig},
+    crypto::{self, DataKey},
     device,
     layout::DeviceInfo,
     round::{Clockwork, Options, Round, RoundResult},
-    status::{SyncPhase, SyncStatus},
+    status::{EncryptionState, SyncPhase, SyncStatus},
     webdav::{self, WebdavBackend},
     Hlc,
 };
@@ -40,7 +41,7 @@ enum Wake {
     Now,
 }
 
-struct Engine {
+pub(super) struct Engine {
     app: AppHandle,
     home: PathBuf,
     data_home: PathBuf,
@@ -79,7 +80,8 @@ pub(crate) fn start(app: &AppHandle, home: PathBuf, data_home: PathBuf) {
     let (sender, receiver) = mpsc::channel();
     let config = config::load(&home);
     let has_pw = webdav::secret::has_password();
-    let status = SyncStatus::new(&config, device::id().ok(), has_pw);
+    let has_enc = crypto::keychain::has_data_key();
+    let status = SyncStatus::new(&config, device::id().ok(), has_pw, has_enc);
     let engine = Engine {
         app: app.clone(),
         home,
@@ -137,6 +139,37 @@ fn device_name() -> String {
 }
 
 impl Engine {
+    pub(super) fn home_dir(&self) -> &Path {
+        &self.home
+    }
+
+    pub(super) fn lock_run(&self) -> MutexGuard<'_, ()> {
+        guard(&self.run)
+    }
+
+    pub(super) fn set_encryption_summary(
+        &self,
+        state: EncryptionState,
+        has_local_key: bool,
+        key_id: Option<String>,
+    ) -> SyncStatus {
+        self.update(|status| {
+            status.encryption.state = state;
+            status.encryption.has_local_key = has_local_key;
+            status.encryption.key_id = key_id;
+        })
+    }
+
+    pub(super) fn prepare_after_remote_reset(&self) {
+        base::forget(&self.home.join(base::DIR_NAME));
+        *guard(&self.options) = Options { allow_deletions: false, allow_reset: true };
+    }
+
+    pub(super) fn run_round_blocking(&self) -> Result<SyncStatus, UserError> {
+        self.round();
+        Ok(guard(&self.status).clone())
+    }
+
     fn update(&self, change: impl FnOnce(&mut SyncStatus)) -> SyncStatus {
         let (changed, next) = {
             let mut current = guard(&self.status);
@@ -154,9 +187,9 @@ impl Engine {
         next
     }
 
-    fn fail_round(&self, config: &SyncConfig, has_pw: bool, error: UserError) {
+    fn fail_round(&self, config: &SyncConfig, has_pw: bool, has_enc: bool, error: UserError) {
         self.update(|status| {
-            status.configure(config, has_pw);
+            status.configure(config, has_pw, has_enc);
             status.phase = SyncPhase::Error;
             status.last_error = Some(error.to_string());
             status.error = Some(error);
@@ -167,20 +200,22 @@ impl Engine {
         let _running = guard(&self.run);
         let config = config::load(&self.home);
         let has_pw = webdav::secret::has_password();
+        let unlocked_key = crypto::keychain::read_data_key().ok().flatten();
+        let has_enc = unlocked_key.is_some();
         let active = config.active_backend();
         if active == SyncBackendKind::Off {
-            self.update(|status| status.configure(&config, has_pw));
+            self.update(|status| status.configure(&config, has_pw, has_enc));
             return;
         }
         let device_id = match device::id() {
             Ok(id) => id,
             Err(error) => {
-                self.fail_round(&config, has_pw, UserError::from(error));
+                self.fail_round(&config, has_pw, has_enc, UserError::from(error));
                 return;
             }
         };
         self.update(|status| {
-            status.configure(&config, has_pw);
+            status.configure(&config, has_pw, has_enc);
             status.device_id = Some(device_id.clone());
             status.phase = SyncPhase::Syncing;
         });
@@ -197,38 +232,38 @@ impl Engine {
             SyncBackendKind::Off => return,
             SyncBackendKind::Folder => {
                 let Some(folder) = config.folder.as_deref() else {
-                    self.update(|status| status.configure(&config, has_pw));
+                    self.update(|status| status.configure(&config, has_pw, has_enc));
                     return;
                 };
                 let backend = FolderBackend::new(PathBuf::from(folder));
-                let out = run_with_backend(&self.app, &self.home, &self.data_home, &config, &backend, &me, options);
+                let out = self.run_with_backend(&config, &backend, &me, options, unlocked_key.as_ref());
                 (out, None)
             }
             SyncBackendKind::Webdav => {
                 let Some(webdav_cfg) = config.webdav.as_ref() else {
-                    self.update(|status| status.configure(&config, has_pw));
+                    self.update(|status| status.configure(&config, has_pw, has_enc));
                     return;
                 };
                 let password = match webdav::secret::read_password() {
                     Ok(Some(password)) => password,
                     Ok(None) => {
                         let error = UserError::new("sync.webdavNeedPassword", "Enter the WebDAV app password.");
-                        self.fail_round(&config, false, error);
+                        self.fail_round(&config, false, has_enc, error);
                         return;
                     }
                     Err(error) => {
-                        self.fail_round(&config, has_pw, error);
+                        self.fail_round(&config, has_pw, has_enc, error);
                         return;
                     }
                 };
                 let backend = match WebdavBackend::new(&webdav_cfg.url, &webdav_cfg.username, &password) {
                     Ok(backend) => backend,
                     Err(error) => {
-                        self.fail_round(&config, true, error);
+                        self.fail_round(&config, true, has_enc, error);
                         return;
                     }
                 };
-                let out = run_with_backend(&self.app, &self.home, &self.data_home, &config, &backend, &me, options);
+                let out = self.run_with_backend(&config, &backend, &me, options, unlocked_key.as_ref());
                 let taken = backend.take_last_error();
                 (out, taken)
             }
@@ -237,55 +272,90 @@ impl Engine {
         let now = clock::wall_ms();
         self.update(|status| status.finish(result, user_error, &device_id, now));
     }
+
+    fn run_with_backend(
+        &self,
+        config: &SyncConfig,
+        backend: &dyn Backend,
+        me: &DeviceInfo,
+        options: Options,
+        unlocked_key: Option<&DataKey>,
+    ) -> RoundResult {
+        let state_dir = self.home.join(base::DIR_NAME);
+        let device = me.device_id.as_str();
+        let mut todos = Todos::new(device);
+        let mut snippets = Snippets::new(device);
+        let mut links = Links::new(self.app.clone(), device);
+        let groups = &config.optional_groups;
+        let mut settings_part =
+            settings::Settings::new(self.app.clone(), settings::Part::Settings, device, groups);
+        let mut presets =
+            settings::Settings::new(self.app.clone(), settings::Part::Presets, device, groups);
+        let mut clip_favorites = ClipFavorites::new(device);
+        let all: [&mut dyn Category; 6] = [
+            &mut todos,
+            &mut snippets,
+            &mut links,
+            &mut settings_part,
+            &mut presets,
+            &mut clip_favorites,
+        ];
+        let (mut enabled, disabled): (Vec<&mut dyn Category>, Vec<&mut dyn Category>) =
+            all.into_iter().partition(|category| config.enabled(category.kind()));
+        let disabled: Vec<SyncCategory> = disabled.iter().map(|category| category.kind()).collect();
+        let app_version = self.app.package_info().version.to_string();
+        let data_home = &self.data_home;
+        let mut backup = || crate::system::update_backup::create_before_sync(data_home, &app_version);
+        let mut clock = GlobalClock;
+        let mut round = Round {
+            backend,
+            me,
+            state_dir: &state_dir,
+            clock: &mut clock,
+            options,
+            unlocked_key,
+            backup: &mut backup,
+        };
+        round.run(&mut enabled, &disabled)
+    }
 }
 
-fn run_with_backend(
-    app: &AppHandle,
-    home: &Path,
-    data_home: &Path,
-    config: &SyncConfig,
-    backend: &dyn Backend,
-    me: &DeviceInfo,
-    options: Options,
-) -> RoundResult {
-    let state_dir = home.join(base::DIR_NAME);
-    let device = me.device_id.as_str();
-    let mut todos = Todos::new(device);
-    let mut snippets = Snippets::new(device);
-    let mut links = Links::new(app.clone(), device);
-    let groups = &config.optional_groups;
-    let mut settings_part = settings::Settings::new(app.clone(), settings::Part::Settings, device, groups);
-    let mut presets = settings::Settings::new(app.clone(), settings::Part::Presets, device, groups);
-    let mut clip_favorites = ClipFavorites::new(device);
-    let all: [&mut dyn Category; 6] = [
-        &mut todos,
-        &mut snippets,
-        &mut links,
-        &mut settings_part,
-        &mut presets,
-        &mut clip_favorites,
-    ];
-    let (mut enabled, disabled): (Vec<&mut dyn Category>, Vec<&mut dyn Category>) =
-        all.into_iter().partition(|category| config.enabled(category.kind()));
-    let disabled: Vec<SyncCategory> = disabled.iter().map(|category| category.kind()).collect();
-    let app_version = app.package_info().version.to_string();
-    let mut backup = || crate::system::update_backup::create_before_sync(data_home, &app_version);
-    let mut clock = GlobalClock;
-    let mut round = Round {
-        backend,
-        me,
-        state_dir: &state_dir,
-        clock: &mut clock,
-        options,
-        backup: &mut backup,
-    };
-    round.run(&mut enabled, &disabled)
+pub(super) fn open_backend(config: &SyncConfig) -> Result<Box<dyn Backend>, UserError> {
+    match config.active_backend() {
+        SyncBackendKind::Off => Err(UserError::new(
+            "sync.needBackendFirst",
+            "Choose a sync folder or connect WebDAV first.",
+        )),
+        SyncBackendKind::Folder => {
+            let folder = config.folder.as_deref().ok_or_else(|| {
+                UserError::new("sync.needBackendFirst", "Choose a sync folder first.")
+            })?;
+            Ok(Box::new(FolderBackend::new(PathBuf::from(folder))))
+        }
+        SyncBackendKind::Webdav => {
+            let webdav_cfg = config.webdav.as_ref().ok_or_else(|| {
+                UserError::new("sync.needBackendFirst", "Configure WebDAV first.")
+            })?;
+            let password = webdav::secret::read_password()?.ok_or_else(|| {
+                UserError::new("sync.webdavNeedPassword", "Enter the WebDAV app password.")
+            })?;
+            Ok(Box::new(WebdavBackend::new(
+                &webdav_cfg.url,
+                &webdav_cfg.username,
+                &password,
+            )?))
+        }
+    }
 }
 
-fn engine() -> Result<&'static Engine, UserError> {
+pub(super) fn instance() -> Result<&'static Engine, UserError> {
     ENGINE
         .get()
         .ok_or_else(|| UserError::new("sync.notStarted", "Sync is not started."))
+}
+
+fn engine() -> Result<&'static Engine, UserError> {
+    instance()
 }
 
 fn wake(engine: &Engine, wake: Wake) {
@@ -313,7 +383,8 @@ fn apply_saved_config(engine: &Engine, previous: &SyncConfig, next: SyncConfig) 
     config::save(&engine.home, &next).map_err(UserError::from)?;
     drop(running);
     let has_pw = webdav::secret::has_password();
-    let updated = engine.update(|status| status.configure(&next, has_pw));
+    let has_enc = crypto::keychain::has_data_key();
+    let updated = engine.update(|status| status.configure(&next, has_pw, has_enc));
     if next.active_backend() != SyncBackendKind::Off {
         wake(engine, Wake::Now);
     }

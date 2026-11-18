@@ -8,6 +8,7 @@ import { useTranslation } from "../../i18n";
 import type { SyncStatus } from "./api";
 import { SYNC_BACKENDS, SYNC_SECURITY_SECTIONS, type SyncBackendId } from "./syncBackends";
 import { activeSyncBackend } from "./syncState";
+import { SyncEncryptionSection } from "./SyncEncryptionSection";
 import { SyncWebdavSection } from "./SyncWebdavSection";
 
 const CONFIRM_MS = 4_000;
@@ -153,9 +154,13 @@ export function SyncBackendSection({
         ) : null}
       </SettingsGroup>
 
-      {SYNC_SECURITY_SECTIONS.map((Section, index) => (
-        <Section key={index} status={status} busy={busy} />
-      ))}
+      {SYNC_SECURITY_SECTIONS.map((entry) =>
+        entry.id === "encryption" ? (
+          <SyncEncryptionSection key={entry.id} status={status} busy={busy} />
+        ) : entry.component ? (
+          <entry.component key={entry.id} status={status} busy={busy} />
+        ) : null,
+      )}
     </>
   );
 }

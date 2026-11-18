@@ -13,6 +13,7 @@ use super::{
         snippets, todos, Category,
     },
     config::SyncCategory,
+    crypto::DataKey,
     layout::{DeviceInfo, Doc},
     round::{Clockwork, Options, Round, RoundResult},
     settings_meta::{self, SettingsMeta},
@@ -171,6 +172,7 @@ pub(super) struct Device {
     pub settings: MemSettings,
     pub presets: MemSettings,
     pub favorites: MemFavorites,
+    pub key: Option<DataKey>,
     pub backups: usize,
 }
 
@@ -192,6 +194,7 @@ impl Device {
             settings: MemSettings { part: Part::Settings, local: empty.clone(), device: id.into(), groups: Vec::new() },
             presets: MemSettings { part: Part::Presets, local: empty, device: id.into(), groups: Vec::new() },
             favorites: MemFavorites { items: Vec::new(), tombstones: Vec::new(), enabled: false, device: id.into() },
+            key: None,
             backups: 0,
         }
     }
@@ -216,7 +219,8 @@ impl Device {
         } else {
             vec![SyncCategory::ClipFavorites]
         };
-        let mut round = Round { backend, me: &me, state_dir: &self.state, clock: &mut self.clock, options, backup: &mut backup };
+        let unlocked_key = self.key.as_ref();
+        let mut round = Round { backend, me: &me, state_dir: &self.state, clock: &mut self.clock, options, unlocked_key, backup: &mut backup };
         round.run(&mut categories, &disabled)
     }
 

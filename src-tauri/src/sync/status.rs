@@ -17,7 +17,34 @@ pub enum SyncPhase {
     FolderMissing,
     NeedsConfirm,
     NewerVersion,
+    Locked,
     Error,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum EncryptionState {
+    Off,
+    Unlocked,
+    Locked,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EncryptionSummary {
+    pub state: EncryptionState,
+    pub has_local_key: bool,
+    pub key_id: Option<String>,
+}
+
+impl Default for EncryptionSummary {
+    fn default() -> Self {
+        Self {
+            state: EncryptionState::Off,
+            has_local_key: false,
+            key_id: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -83,6 +110,7 @@ pub struct SyncStatus {
     pub backend: SyncBackendKind,
     pub folder: Option<String>,
     pub webdav: Option<WebdavSummary>,
+    pub encryption: EncryptionSummary,
     pub device_id: Option<String>,
     pub last_sync_at: Option<u64>,
     pub last_error: Option<String>,
@@ -95,12 +123,22 @@ pub struct SyncStatus {
 }
 
 impl SyncStatus {
-    pub(crate) fn new(config: &SyncConfig, device_id: Option<String>, has_webdav_password: bool) -> Self {
+    pub(crate) fn new(
+        config: &SyncConfig,
+        device_id: Option<String>,
+        has_webdav_password: bool,
+        has_encryption_key: bool,
+    ) -> Self {
         let mut status = Self {
             phase: SyncPhase::Off,
             backend: SyncBackendKind::Off,
             folder: None,
             webdav: None,
+            encryption: EncryptionSummary {
+                state: EncryptionState::Off,
+                has_local_key: has_encryption_key,
+                key_id: None,
+            },
             device_id,
             last_sync_at: None,
             last_error: None,
@@ -111,11 +149,16 @@ impl SyncStatus {
             devices: Vec::new(),
             skipped_files: Vec::new(),
         };
-        status.configure(config, has_webdav_password);
+        status.configure(config, has_webdav_password, has_encryption_key);
         status
     }
 
-    pub(crate) fn configure(&mut self, config: &SyncConfig, has_webdav_password: bool) {
+    pub(crate) fn configure(
+        &mut self,
+        config: &SyncConfig,
+        has_webdav_password: bool,
+        has_encryption_key: bool,
+    ) {
         self.backend = config.active_backend();
         self.folder = config.folder.clone();
         self.webdav = config.webdav.as_ref().map(|webdav| WebdavSummary {
@@ -123,12 +166,15 @@ impl SyncStatus {
             username: webdav.username.clone(),
             has_password: has_webdav_password,
         });
+        self.encryption.has_local_key = has_encryption_key;
         self.optional_groups = config.optional_groups.clone();
         if self.backend == SyncBackendKind::Off {
             self.phase = SyncPhase::Off;
             self.confirm = None;
             self.last_error = None;
             self.error = None;
+            self.encryption.state = EncryptionState::Off;
+            self.encryption.key_id = None;
         } else if self.phase == SyncPhase::Off {
             self.phase = SyncPhase::Idle;
         }
@@ -190,15 +236,35 @@ impl SyncStatus {
                 });
             }
             RoundResult::NewerVersion => self.phase = SyncPhase::NewerVersion,
+            RoundResult::EncryptionLocked { key_id } => {
+                self.phase = SyncPhase::Locked;
+                self.encryption.state = EncryptionState::Locked;
+                self.encryption.key_id = Some(key_id);
+            }
             RoundResult::Failed(message) => {
                 self.phase = SyncPhase::Error;
                 self.last_error = Some(message);
                 self.error = error;
             }
-            RoundResult::Done { categories, devices, skipped } => {
+            RoundResult::Done {
+                categories,
+                devices,
+                skipped,
+                encrypted_key_id,
+            } => {
                 self.phase = SyncPhase::Idle;
                 self.last_sync_at = Some(now);
                 self.skipped_files = skipped;
+                match encrypted_key_id {
+                    Some(key_id) => {
+                        self.encryption.state = EncryptionState::Unlocked;
+                        self.encryption.key_id = Some(key_id);
+                    }
+                    None => {
+                        self.encryption.state = EncryptionState::Off;
+                        self.encryption.key_id = None;
+                    }
+                }
                 self.devices = devices.into_iter().map(|device| device_row(device, me)).collect();
                 for (category, outcome) in categories {
                     self.record(category, outcome, now);
