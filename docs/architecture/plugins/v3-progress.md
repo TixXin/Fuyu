@@ -47,7 +47,7 @@
 | 4 | 接缝（2–3 周） | E36.4（#294） | 已完成 | 2026-11-17 | 2026-11-17 | E36.4.1–E36.4.9 全部完成：服务替换与冲突让出（`disabledServices`）、`waiting` 3 种原因说明与 10 秒超时提醒，以及翻译引擎、歌词来源（`lyrics/v1`）、日历来源、AI 代理接入、剪贴板动作、截图后动作、消息来源（`messages/v1`）7 个接缝全部落地并经端到端测试通过；真岛验收列在下面「待人工验收」 |
 | 5 | 第三方插件（4–5 周） | E36.5（#295） | 已完成 | 2026-11-15 | 2026-11-17 | 地基 E36.5.1–E36.5.7、后半部分 E36.5.8–E36.5.12，以及跟进闭环 E43（`market/v1` 服务与设置页市场/安装确认/卸载界面）、E44（独立离线撤销密钥 `63fd60abfbf525be` 入双端信任根）、E45（11 个 `@fuyu/*` 官方 v3 插件上架 `TixXin/fuyu-plugins`）全部完成；真岛验收列在下面「待人工验收」 |
 | 6 | 下线第 2 版（2–3 周） | E36.6（#296） | 第一批与迁移引导已完成 | 2026-11-17 | | 计划见 [v3-phase6-plan.md](v3-phase6-plan.md)。第一批 E36.6.1–E36.6.3（7 个官方插件 v3 重写）及 E36.6.4（旧第 2 版已装插件迁移引导与一次性提示）已完成；仅剩 E36.6.5–E36.6.6（删第 2 版代码与旧名兼容）等用户确认后执行 |
-| — | 基座公开发布 | E36.3.49（#597）、E46（#855），条件见方案「基座做成开源项目」 | 已公开建仓（待首版发包） | 2026-11-17 | 2026-11-17 | 公开仓库 [`TixXin/tauri-cordis`](https://github.com/TixXin/tauri-cordis)（MIT）已创建并推送（`352943e`），拆出 6 个 npm 包与 2 个 Rust crate（`0.1.0`），三平台 CI（run `44258162777`）与打包演练全绿；等维护者登录或配置 npm / crates.io 凭据后推 `v0.1.0` 标签发布到注册表 |
+| — | 基座公开发布 | E36.3.49（#597）、E46（#855），条件见方案「基座做成开源项目」 | 已完成 | 2026-11-17 | 2026-11-18 | 公开仓库 [`TixXin/tauri-cordis`](https://github.com/TixXin/tauri-cordis)（MIT）已发布 `v0.1.0`：6 个 npm 包（`tauri-cordis`、`@tauri-cordis/manifest`、`@tauri-cordis/market`、`@tauri-cordis/review`、`@tauri-cordis/cli`、`create-tauri-cordis-plugin`）与 2 个 Rust crate（`tauri-cordis`、`tauri-cordis-macros`）全部上架，三平台 CI 全绿，crates.io OIDC 免密钥发布已绑定 |
 
 ## 开工前的准备
 
@@ -243,7 +243,6 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 | 提出 | 事项 | 影响 |
 |---|---|---|
 | 2026-11-14 | Mac 上现在用什么签名身份 | 决定什么时候能测公证。第 0 阶段没测 |
-| 2026-11-17 | `TixXin/tauri-cordis` 首版发包到 npm 与 crates.io（E46） | 公开仓库、打包检查与 GitHub Actions 发布流水线已就位；需在 npmjs.com 建 `tauri-cordis` 组织并配好凭据（或本机 `npm login` + `cargo login`）后推 `v0.1.0` 标签 |
 
 方案里留到实现时再定的细则（审核的快速通过规则、冷静期天数、手动安装默认开关、基座的名字和许可证）不在这里重复，到对应的阶段再提出来。
 
