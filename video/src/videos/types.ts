@@ -13,6 +13,7 @@ export type VideoModule = {
   windows: (lang: Lang, format: Format) => ClutterWindow[];
   backdrop?: (lang: Lang, format: Format) => ReactNode;
   scenery?: (lang: Lang, format: Format) => ReactNode;
+  overlay?: (lang: Lang, format: Format) => ReactNode;
   look?: "promo" | "recording" | "editorial";
   initial?: Partial<StageState>;
   bgm?: string;
