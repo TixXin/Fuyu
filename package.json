@@ -2,7 +2,7 @@
   "name": "fuyu",
   "private": true,
   "license": "AGPL-3.0-only",
-  "version": "0.3.11-beta.3",
+  "version": "0.3.11-beta.4",
   "type": "module",
   "scripts": {
     "prepare": "node scripts/install-git-hooks.mjs",
