@@ -12,6 +12,17 @@ export type SettingsTodoText = {
   inlineSyntaxHint: string;
   insertPosition: string;
   insertOptions: Record<TodoInsertPosition, string>;
+  focusGroup: string;
+  focusTimer: string;
+  focusTimerHint: string;
+  focusTimerPluginOffHint: string;
+  focusTimerPluginOff: string;
+  enableTimerPlugin: string;
+  focusTimerMinutes: string;
+  timedReminder: string;
+  timedReminderHint: string;
+  autoCompleteFromSubtasks: string;
+  autoCompleteFromSubtasksHint: string;
   rolloverGroup: string;
   completionSound: string;
   dayStartHour: string;
@@ -58,6 +69,17 @@ export const zhCN: SettingsTodoText = {
     bottom: "列表底部",
     top: "列表顶部",
   },
+  focusGroup: "专注联动与提醒",
+  focusTimer: "开始任务时启动专注倒计时",
+  focusTimerHint: "点击待办的「开始」时自动拉起倒计时，到点后自动累加到该待办的专注时长。",
+  focusTimerPluginOffHint: "内置「计时器」插件当前未开启，启用后即可联动专注倒计时与准点提醒。",
+  focusTimerPluginOff: "需要启用内置「计时器」插件才能启动专注倒计时与岛上提醒。",
+  enableTimerPlugin: "启用计时器",
+  focusTimerMinutes: "专注时长（分钟）",
+  timedReminder: "带时刻（HH:mm）的待办到点提醒",
+  timedReminderHint: "今日标题以时刻开头（如 15:00 回电话）且未完成的待办，到点弹出岛屿提醒横幅并支持推迟。",
+  autoCompleteFromSubtasks: "子任务全部勾选后自动完成主待办",
+  autoCompleteFromSubtasksHint: "当至少有一项子步骤且最后一项被勾选完成时，自动将主待办标记为已完成。",
   rolloverGroup: "反馈与跨天归档",
   completionSound: "勾选完成时播放轻音效",
   dayStartHour: "新一天开始时间",
@@ -116,6 +138,17 @@ export const en: SettingsTodoText = {
     bottom: "Bottom",
     top: "Top",
   },
+  focusGroup: "Focus timer & reminders",
+  focusTimer: "Start focus timer when starting a task",
+  focusTimerHint: "Starts a countdown via the built-in timer when you click Start on a task, and credits focus minutes when due.",
+  focusTimerPluginOffHint: "The built-in Timer plugin is currently off; enable it to use focus countdowns and timed reminders.",
+  focusTimerPluginOff: "Enable the built-in Timer plugin to run focus timers and island reminders.",
+  enableTimerPlugin: "Enable Timer",
+  focusTimerMinutes: "Focus duration (minutes)",
+  timedReminder: "Remind at scheduled time (HH:mm)",
+  timedReminderHint: "Shows an island reminder banner with snooze when an unfinished task starting with HH:mm reaches its time.",
+  autoCompleteFromSubtasks: "Complete main task when all subtasks are checked",
+  autoCompleteFromSubtasksHint: "Automatically marks the parent task done once its last remaining subtask is checked off.",
   rolloverGroup: "Feedback & daily rollover",
   completionSound: "Play subtle sound on completion",
   dayStartHour: "New day starts at",

@@ -33,6 +33,11 @@ export type TodoIslandText = {
   newProjectPlaceholder: string;
   addToProject: (project: string) => string;
   projectCount: (project: string, open: number) => string;
+  subtaskProgress: (done: number, total: number) => string;
+  hasNote: string;
+  addSubtaskPlaceholder: string;
+  itemNotePlaceholder: string;
+  itemNoteLabel: string;
   tags: {
     menu: (title: string) => string;
     priority: Record<TodoPriority, string>;
@@ -82,6 +87,11 @@ export const zhCN: TodoIslandText = {
   newProjectPlaceholder: "项目名，回车保存",
   addToProject: (project) => `新待办加到「${project}」`,
   projectCount: (project, open) => `${project}，${open} 件未完成`,
+  subtaskProgress: (done, total) => `子步骤已完成 ${done}/${total}`,
+  hasNote: "含备注",
+  addSubtaskPlaceholder: "添加子步骤，回车继续",
+  itemNotePlaceholder: "添加一行简短备注…",
+  itemNoteLabel: "任务备注",
   tags: {
     menu: (title) => `「${title}」的优先级和颜色`,
     priority: { high: "高优先级", medium: "中优先级", low: "低优先级" },
@@ -131,6 +141,11 @@ export const en: TodoIslandText = {
   newProjectPlaceholder: "Project name, Enter to save",
   addToProject: (project) => `New tasks go to ${project}`,
   projectCount: (project, open) => `${project}, ${open} open`,
+  subtaskProgress: (done, total) => `${done} of ${total} subtasks done`,
+  hasNote: "Has note",
+  addSubtaskPlaceholder: "Add a step, press Enter",
+  itemNotePlaceholder: "Add a short note…",
+  itemNoteLabel: "Task note",
   tags: {
     menu: (title) => `Priority and color of ${title}`,
     priority: { high: "High priority", medium: "Medium priority", low: "Low priority" },

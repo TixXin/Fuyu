@@ -6,6 +6,7 @@ import { settingsSections } from "../plugin-kernel/settingsSlots";
 import { OWNER } from "./plugin/owner.ts";
 import { SavePathSettingsSection } from "./SavePathSettingsSection";
 import { useSharedSaveDirectorySetting, type SaveDirectorySetting } from "./saveDirectoryStore";
+import { TodoFocusSettingsSection } from "./TodoFocusSettingsSection";
 import { TodoProjectsSection } from "./TodoProjectsSection";
 import { TodoRolloverSettingsSection } from "./TodoRolloverSettingsSection";
 import { TodoSettingsSection } from "./TodoSettingsSection";
@@ -35,6 +36,7 @@ function SavePathSection({ saveDirectory }: TodosSectionProps) {
 const sections = settingsSections<TodosSectionProps, "todos">();
 
 sections.add({ id: "todos.general", category: "todos", order: 10, component: TodoSettingsSection }, OWNER);
+sections.add({ id: "todos.focus", category: "todos", order: 12, component: TodoFocusSettingsSection }, OWNER);
 sections.add({ id: "todos.rollover", category: "todos", order: 15, component: TodoRolloverSettingsSection }, OWNER);
 sections.add({ id: "todos.projects", category: "todos", order: 20, component: ProjectsSection }, OWNER);
 sections.add({ id: "todos.save-path", category: "todos", order: 30, component: SavePathSection }, OWNER);

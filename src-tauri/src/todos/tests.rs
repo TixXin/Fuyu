@@ -571,6 +571,65 @@ fn a_todos_priority_and_color_survive_a_save() {
     assert!(!plain.contains("priority") && !plain.contains("color"));
 }
 
+#[test]
+fn legacy_todos_json_without_subtasks_note_or_focus_loads_and_omits_empty_fields() {
+    let legacy = sample();
+    assert!(legacy.data.todos[0].subtasks.is_empty());
+    assert_eq!(legacy.data.todos[0].note, None);
+    assert_eq!(legacy.data.todos[0].focus_minutes, None);
+    let plain = serde_json::to_string(&legacy).expect("encode");
+    assert!(!plain.contains("\"subtasks\":") && !plain.contains("\"note\":") && !plain.contains("\"focusMinutes\":"));
+}
+
+#[test]
+fn subtasks_notes_and_focus_minutes_round_trip_and_validate_bounds() {
+    let dir = temp_dir("subtasks");
+    let path = dir.join("todos.json");
+    let mut value = serde_json::to_value(sample()).expect("encode");
+    value["todos"][0]["subtasks"] = json!([
+        { "id": "s1", "title": "查资料", "completed": true },
+        { "id": "s2", "title": "写初稿", "completed": false }
+    ]);
+    value["todos"][0]["note"] = json!("周五下班前发审阅");
+    value["todos"][0]["focusMinutes"] = json!(50);
+    let file: TodosFile = serde_json::from_value(value).expect("decode");
+    save(&path, &file).expect("save");
+    let loaded = load(&path).expect("load").expect("present");
+    assert_eq!(loaded.data.todos[0].subtasks.len(), 2);
+    assert!(loaded.data.todos[0].subtasks[0].completed);
+    assert_eq!(loaded.data.todos[0].subtasks[1].title, "写初稿");
+    assert_eq!(loaded.data.todos[0].note.as_deref(), Some("周五下班前发审阅"));
+    assert_eq!(loaded.data.todos[0].focus_minutes, Some(50));
+
+    let mut empty_sub_id = loaded.data.clone();
+    empty_sub_id.todos[0].subtasks[0].id.clear();
+    assert!(validate(&empty_sub_id).is_err());
+
+    let mut blank_sub_title = loaded.data.clone();
+    blank_sub_title.todos[0].subtasks[0].title = "   ".into();
+    assert!(validate(&blank_sub_title).is_err());
+
+    let mut too_many = loaded.data.clone();
+    too_many.todos[0].subtasks = (0..51)
+        .map(|index| super::model::TodoSubtask {
+            id: format!("s-{index}"),
+            title: format!("step {index}"),
+            completed: false,
+        })
+        .collect();
+    assert!(validate(&too_many).is_err());
+
+    let mut long_note = loaded.data.clone();
+    long_note.todos[0].note = Some("备".repeat(1001));
+    assert!(validate(&long_note).is_err());
+
+    let mut max_note = loaded.data.clone();
+    max_note.todos[0].note = Some("备".repeat(1000));
+    assert!(validate(&max_note).is_ok());
+
+    let _ = fs::remove_dir_all(dir);
+}
+
 mod stamp_tests {
     use serde_json::json;
     use std::fs;
@@ -764,12 +823,5 @@ mod host_tests {
         assert_eq!(error_code(404), "not-found");
         assert_eq!(error_code(503), "inactive");
         assert_eq!(error_code(500), "failed");
-    }
-
-    #[test]
-    fn todos_have_no_background_in_rust() {
-        let catalog = crate::plugin_kernel::builtins::catalog();
-        let todos = catalog.iter().find(|plugin| plugin.id == "todos").expect("todos is a built-in plugin");
-        assert_eq!(todos.background.as_deref(), Some(&[][..]));
     }
 }

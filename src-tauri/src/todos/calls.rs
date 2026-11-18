@@ -78,7 +78,21 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
                     changed(json!(todo), next)
                 }
                 _ => {
-                    let todo = TodoItem { id: id.to_string(), title, completed: false, created_at: Number::from(now), project, started_at: None, priority: None, color: None, updated_at: None, device_id: None };
+                    let todo = TodoItem {
+                        id: id.to_string(),
+                        title,
+                        completed: false,
+                        created_at: Number::from(now),
+                        project,
+                        started_at: None,
+                        priority: None,
+                        color: None,
+                        subtasks: Vec::new(),
+                        note: None,
+                        focus_minutes: None,
+                        updated_at: None,
+                        device_id: None,
+                    };
                     next.todos.insert(0, todo.clone());
                     changed(json!(todo), next)
                 }

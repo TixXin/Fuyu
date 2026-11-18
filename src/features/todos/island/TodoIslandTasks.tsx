@@ -33,6 +33,10 @@ export function TodoIslandTasks({
   onStartTodo,
   onDeleteTodo,
   onReorderTodo,
+  onAddSubtask,
+  onToggleSubtask,
+  onDeleteSubtask,
+  onUpdateTodoNote,
 }: {
   todos: TodoItem[];
   editable: boolean;
@@ -53,6 +57,10 @@ export function TodoIslandTasks({
   onStartTodo: (id: string) => void;
   onDeleteTodo: (id: string) => void;
   onReorderTodo: (sourceId: string, targetId: string) => void;
+  onAddSubtask?: (todoId: string, title: string) => void;
+  onToggleSubtask?: (todoId: string, subtaskId: string) => void;
+  onDeleteSubtask?: (todoId: string, subtaskId: string) => void;
+  onUpdateTodoNote?: (todoId: string, note: string) => void;
 }) {
   const t = useTranslation();
   const text = t.todoIsland;
@@ -61,6 +69,15 @@ export function TodoIslandTasks({
   const editing = useTodoNotebookEditing(editable, canReorder, onUpdateTodo, onReorderTodo);
   const later = draftDate !== null && draftDate > currentDate;
   const [doneFolded, setDoneFolded] = useState(false);
+  const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(() => new Set());
+  const toggleExpand = (id: string) => {
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   const projects = editable ? [...new Set([...savedProjects, ...projectsOf(todos)])] : projectsOf(todos);
   const [pickedProject, setPickedProject] = useState<string | null>(null);
   const filter = (editable && pickedProject === INBOX) || (pickedProject && projects.includes(pickedProject)) ? pickedProject : null;
@@ -89,6 +106,7 @@ export function TodoIslandTasks({
       isDragging={editing.draggedTodoId === todo.id}
       isDragOver={editing.dragOverTodoId === todo.id}
       isEditing={editing.editingTodoId === todo.id}
+      isExpanded={expandedIds.has(todo.id)}
       titleDraft={editing.todoTitleDraft}
       onTitleDraftChange={editing.setTodoTitleDraft}
       onCommitEdit={editing.commitTodoTitleEdit}
@@ -98,6 +116,11 @@ export function TodoIslandTasks({
       onStart={onStartTodo}
       onDelete={onDeleteTodo}
       onTag={onTagTodo}
+      onToggleExpand={toggleExpand}
+      onAddSubtask={onAddSubtask}
+      onToggleSubtask={onToggleSubtask}
+      onDeleteSubtask={onDeleteSubtask}
+      onUpdateTodoNote={onUpdateTodoNote}
       onDragStart={editing.startTodoDrag}
       onDragMove={editing.moveTodoDrag}
       onDragEnd={editing.finishTodoDrag}

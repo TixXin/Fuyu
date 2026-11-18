@@ -11,6 +11,9 @@ export type TodoText = {
   delete: string;
   deleteTask: (taskTitle: string) => string;
   reorderTask: (taskTitle: string) => string;
+  expandDetails: (taskTitle: string) => string;
+  collapseDetails: (taskTitle: string) => string;
+  deleteSubtask: (subtaskTitle: string) => string;
   pluginMenu: string;
 };
 
@@ -27,6 +30,9 @@ export const zhCN: TodoText = {
   delete: "删除",
   deleteTask: (taskTitle) => `删除：${taskTitle}`,
   reorderTask: (taskTitle) => `拖动排序：${taskTitle}`,
+  expandDetails: (taskTitle) => `展开子步骤与备注：${taskTitle}`,
+  collapseDetails: (taskTitle) => `收起子步骤与备注：${taskTitle}`,
+  deleteSubtask: (subtaskTitle) => `删除子步骤：${subtaskTitle}`,
   pluginMenu: "插件操作",
 };
 
@@ -43,5 +49,8 @@ export const en: TodoText = {
   delete: "Delete",
   deleteTask: (taskTitle) => `Delete: ${taskTitle}`,
   reorderTask: (taskTitle) => `Reorder: ${taskTitle}`,
+  expandDetails: (taskTitle) => `Expand subtasks and note: ${taskTitle}`,
+  collapseDetails: (taskTitle) => `Collapse subtasks and note: ${taskTitle}`,
+  deleteSubtask: (subtaskTitle) => `Delete subtask: ${subtaskTitle}`,
   pluginMenu: "Plugin actions",
 };

@@ -1,13 +1,59 @@
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { Check, GripVertical, Play, Square, Trash2 } from "lucide-react";
+import { Check, FileText, GripVertical, ListChecks, Play, Square, Trash2 } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import type { TodoTags } from "../tags";
 import { todoElapsedLabel } from "../todoPrefs.ts";
 import type { TodoItem } from "../types";
 import { useElapsedNow } from "../useElapsedNow";
+import { TodoSubtaskPanel } from "./TodoSubtaskPanel";
 import { TodoTagMarks, TodoTagMenu } from "./TodoTagMenu";
 
 const ICON = { size: 14, strokeWidth: 1.5, absoluteStrokeWidth: true, "aria-hidden": true } as const;
+
+function TodoRowBadges({
+  done,
+  total,
+  hasNote,
+  canExpand,
+  isExpanded,
+  label,
+  progressTitle,
+  noteTitle,
+  onToggle,
+}: {
+  done: number;
+  total: number;
+  hasNote: boolean;
+  canExpand: boolean;
+  isExpanded: boolean;
+  label: string;
+  progressTitle: string;
+  noteTitle: string;
+  onToggle: () => void;
+}) {
+  const inner = (
+    <>
+      {total > 0 && (
+        <span className="todo-island-row__subtask-badge" title={progressTitle}>
+          {done}/{total}
+        </span>
+      )}
+      {hasNote && (
+        <span className="todo-island-row__note-icon" title={noteTitle}>
+          <FileText size={11} strokeWidth={1.8} aria-hidden="true" />
+        </span>
+      )}
+    </>
+  );
+  if (!canExpand) {
+    return <span className="todo-island-row__meta todo-island-row__meta--static">{inner}</span>;
+  }
+  return (
+    <button className="todo-island-row__meta" type="button" aria-expanded={isExpanded} aria-label={label} onClick={onToggle}>
+      {inner}
+    </button>
+  );
+}
 
 export function TodoIslandRow({
   todo,
@@ -19,6 +65,7 @@ export function TodoIslandRow({
   isDragging,
   isDragOver,
   isEditing,
+  isExpanded = false,
   titleDraft,
   onTitleDraftChange,
   onCommitEdit,
@@ -28,6 +75,11 @@ export function TodoIslandRow({
   onStart,
   onDelete,
   onTag,
+  onToggleExpand,
+  onAddSubtask,
+  onToggleSubtask,
+  onDeleteSubtask,
+  onUpdateTodoNote,
   onDragStart,
   onDragMove,
   onDragEnd,
@@ -42,6 +94,7 @@ export function TodoIslandRow({
   showProject?: boolean;
   showElapsed?: boolean;
   isEditing: boolean;
+  isExpanded?: boolean;
   titleDraft: string;
   onTitleDraftChange: (value: string) => void;
   onCommitEdit: () => void;
@@ -51,6 +104,11 @@ export function TodoIslandRow({
   onStart: (id: string) => void;
   onDelete: (id: string) => void;
   onTag: (id: string, tags: TodoTags) => void;
+  onToggleExpand?: (id: string) => void;
+  onAddSubtask?: (todoId: string, title: string) => void;
+  onToggleSubtask?: (todoId: string, subtaskId: string) => void;
+  onDeleteSubtask?: (todoId: string, subtaskId: string) => void;
+  onUpdateTodoNote?: (todoId: string, note: string) => void;
   onDragStart: (event: ReactPointerEvent<HTMLButtonElement>, todoId: string) => void;
   onDragMove: (event: ReactPointerEvent<HTMLButtonElement>) => void;
   onDragEnd: (event: ReactPointerEvent<HTMLButtonElement>) => void;
@@ -60,13 +118,36 @@ export function TodoIslandRow({
   const trackElapsed = isActive && showElapsed && typeof todo.startedAt === "number";
   const now = useElapsedNow(trackElapsed);
   const elapsed = isActive ? todoElapsedLabel(todo.startedAt, now, showElapsed) : null;
+  const subtaskTotal = todo.subtasks?.length ?? 0;
+  const subtaskDone = todo.subtasks ? todo.subtasks.filter((subtask) => subtask.completed).length : 0;
+  const hasNote = Boolean(todo.note?.trim());
+  const hasDetails = subtaskTotal > 0 || hasNote;
+  const canEditDetails = editable && Boolean(onAddSubtask || onUpdateTodoNote);
+  const canExpand = Boolean(onToggleExpand) && (canEditDetails || hasDetails);
+  const showDetails = isExpanded && canExpand;
+  const expandLabel = showDetails ? t.todo.collapseDetails(todo.title) : t.todo.expandDetails(todo.title);
+
   const className = [
     "todo-island-row",
     todo.completed ? "todo-island-row--done" : "",
     isActive ? "todo-island-row--active" : "",
     isDragging ? "todo-island-row--dragging" : "",
     isDragOver ? "todo-island-row--drag-over" : "",
+    showDetails ? "todo-island-row--expanded" : "",
+    canReorder ? "todo-island-row--reorderable" : "",
   ].filter(Boolean).join(" ");
+
+  const titleNode = editable ? (
+    <button className="todo-island-row__title todo-island-row__title--editable" type="button" onClick={() => onStartEdit(todo)}>
+      {showProject && todo.project && <span className="todo-project-tag">{todo.project}</span>}
+      {todo.title}
+    </button>
+  ) : (
+    <span className="todo-island-row__title">
+      {showProject && todo.project && <span className="todo-project-tag">{todo.project}</span>}
+      {todo.title}
+    </span>
+  );
 
   return (
     <div className={className} role="listitem" data-todo-id={todo.id} data-priority={todo.priority}>
@@ -108,13 +189,23 @@ export function TodoIslandRow({
               if (event.key === "Escape") onCancelEdit();
             }}
           />
-        ) : editable ? (
-          <button className="todo-island-row__title todo-island-row__title--editable" type="button" onClick={() => onStartEdit(todo)}>
-            {showProject && todo.project && <span className="todo-project-tag">{todo.project}</span>}
-            {todo.title}
-          </button>
+        ) : hasDetails ? (
+          <span className="todo-island-row__headline">
+            {titleNode}
+            <TodoRowBadges
+              done={subtaskDone}
+              total={subtaskTotal}
+              hasNote={hasNote}
+              canExpand={canExpand}
+              isExpanded={showDetails}
+              label={expandLabel}
+              progressTitle={t.todoIsland.subtaskProgress(subtaskDone, subtaskTotal)}
+              noteTitle={t.todoIsland.hasNote}
+              onToggle={() => onToggleExpand?.(todo.id)}
+            />
+          </span>
         ) : (
-          <span className="todo-island-row__title">{showProject && todo.project && <span className="todo-project-tag">{todo.project}</span>}{todo.title}</span>
+          titleNode
         )}
       </span>
       {editable && !isEditing ? <TodoTagMenu todo={todo} onTag={(tags) => onTag(todo.id, tags)} /> : !editable && <TodoTagMarks todo={todo} />}
@@ -133,10 +224,31 @@ export function TodoIslandRow({
               </button>
             )
           )}
+          {canEditDetails && (
+            <button
+              className={showDetails ? "todo-island-row__action todo-island-row__action--expanded" : "todo-island-row__action"}
+              type="button"
+              aria-expanded={showDetails}
+              aria-label={expandLabel}
+              onClick={() => onToggleExpand?.(todo.id)}
+            >
+              <ListChecks {...ICON} />
+            </button>
+          )}
           <button className="todo-island-row__action todo-island-row__action--delete" type="button" aria-label={t.todo.deleteTask(todo.title)} onClick={() => onDelete(todo.id)}>
             <Trash2 {...ICON} />
           </button>
         </span>
+      )}
+      {showDetails && (
+        <TodoSubtaskPanel
+          todo={todo}
+          editable={canEditDetails}
+          onAddSubtask={onAddSubtask}
+          onToggleSubtask={onToggleSubtask}
+          onDeleteSubtask={onDeleteSubtask}
+          onUpdateTodoNote={onUpdateTodoNote}
+        />
       )}
     </div>
   );

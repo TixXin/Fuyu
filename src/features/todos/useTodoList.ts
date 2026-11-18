@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type SetStateAction } from "react";
 import { adoptActiveTodo, isInProgress, latestStartedId, toggleStarted, withoutStart } from "./activeTodos.ts";
+import { addTodoFocusMinutes, addTodoSubtask, deleteTodoSubtask, toggleTodoSubtask, updateTodoNote } from "./normalize.ts";
 import { splitProjectPrefix } from "./project.ts";
 import { createTodoId, loadActiveTodoId, loadTodos, saveActiveTodoId, saveTodos } from "./storage.ts";
 import { withTags, type TodoTags } from "./tags.ts";
@@ -9,9 +10,19 @@ import { useTodoFileField } from "./useTodoFileField";
 
 export function useTodoList(
   onStartTodo: () => void,
-  options: { completionSound?: boolean; insertPosition?: TodoInsertPosition } = {},
+  options: {
+    completionSound?: boolean;
+    insertPosition?: TodoInsertPosition;
+    autoCompleteFromSubtasks?: boolean;
+    onTodoStarted?: (id: string) => void;
+  } = {},
 ) {
-  const { completionSound = true, insertPosition = "bottom" } = options;
+  const {
+    completionSound = true,
+    insertPosition = "bottom",
+    autoCompleteFromSubtasks = false,
+    onTodoStarted,
+  } = options;
   const [todos, setTodos] = useState<TodoItem[]>(() => adoptActiveTodo(loadTodos(), loadActiveTodoId(), Date.now()));
   const [draftTodo, setDraftTodo] = useState("");
   const activeTodoId = useMemo(() => latestStartedId(todos), [todos]);
@@ -75,11 +86,49 @@ export function useTodoList(
     (id: string) => {
       const todo = todos.find((item) => item.id === id);
       if (!todo || todo.completed) return;
+      const wasInProgress = isInProgress(todo);
       setTodos((currentTodos) => toggleStarted(currentTodos, id, Date.now()));
-      if (!isInProgress(todo)) onStartTodo();
+      if (!wasInProgress) {
+        onStartTodo();
+        onTodoStarted?.(id);
+      }
     },
-    [onStartTodo, todos],
+    [onStartTodo, onTodoStarted, todos],
   );
+
+  const addSubtask = useCallback((todoId: string, title: string) => {
+    setTodos((currentTodos) => currentTodos.map((todo) => (todo.id === todoId ? addTodoSubtask(todo, title) : todo)));
+  }, []);
+
+  const toggleSubtask = useCallback(
+    (todoId: string, subtaskId: string) => {
+      const target = todos.find((todo) => todo.id === todoId);
+      if (target) {
+        const preview = toggleTodoSubtask(target, subtaskId, autoCompleteFromSubtasks);
+        if (preview.autoCompleted && completionSound) {
+          playTodoCompleteSound();
+        }
+      }
+      setTodos((currentTodos) =>
+        currentTodos.map((todo) =>
+          todo.id === todoId ? toggleTodoSubtask(todo, subtaskId, autoCompleteFromSubtasks).todo : todo,
+        ),
+      );
+    },
+    [autoCompleteFromSubtasks, completionSound, todos],
+  );
+
+  const deleteSubtask = useCallback((todoId: string, subtaskId: string) => {
+    setTodos((currentTodos) => currentTodos.map((todo) => (todo.id === todoId ? deleteTodoSubtask(todo, subtaskId) : todo)));
+  }, []);
+
+  const updateNote = useCallback((todoId: string, note: string) => {
+    setTodos((currentTodos) => currentTodos.map((todo) => (todo.id === todoId ? updateTodoNote(todo, note) : todo)));
+  }, []);
+
+  const addFocusMinutes = useCallback((todoId: string, minutes: number) => {
+    setTodos((currentTodos) => currentTodos.map((todo) => (todo.id === todoId ? addTodoFocusMinutes(todo, minutes) : todo)));
+  }, []);
 
   const stopAllTodos = useCallback(() => {
     setTodos((currentTodos) => (currentTodos.some(isInProgress) ? currentTodos.map(withoutStart) : currentTodos));
@@ -108,5 +157,6 @@ export function useTodoList(
   return {
     todos, setTodos, draftTodo, setDraftTodo, activeTodoId, stopAllTodos,
     insertItem, addTodo, toggleTodo, updateTodoTitle, tagTodo, startTodo, deleteTodo, reorderTodo,
+    addSubtask, toggleSubtask, deleteSubtask, updateNote, addFocusMinutes,
   };
 }
