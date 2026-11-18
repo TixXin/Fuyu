@@ -66,6 +66,19 @@
 
 下一步要用户提供：白闪时用手机录一段慢动作视频（或 Win+Alt+R 录屏），看清白的那一下有多长、在面板长出来之前还是之后、白的范围是不是正好是展开后的面板；以及是点开的、悬停展开的，还是消息弹出来时展开的。
 
+### 源码复核与修复落地（2026-11-18，D69）
+
+结合 `D97.2`（折叠态休眠卸载 `<IslandPages />`）合入后的当前 `HEAD` 与底层 `wry` / `tao` WebView2 初始化路径复审，定位到三处具体根因并落地前两项修复（第三项因并行会话 `C90` 正在改 `island/glass.rs` 移交 `D56.3` 清理）：
+
+1. **窗口隐藏期无效预热 + 首次展开 Frame 0 同步冷挂载尖峰**
+   - 根因：`useIslandPreparing.ts` 在 `main` 窗口尚未完成初始交互同步与 `show_ready_island` 可见化时即跑完定时器并卸载 `<IslandPages />`，可见 HWND 从未完成展开层 GPU 瓦片预热；随后首次展开在 Frame 0 同一帧内同时发起 `.island--expanded` 外壳过渡与整棵面板组件树的同步冷挂载（实测 83–233 ms），吞掉前 120 ms `fadeDelay` 并在合成器超时或深浅过渡时闪出空白/浅色帧。
+   - 修复：`useIslandPreparing.ts` 监听页面可见状态与初始窗口尺寸同步窗口期，确保可见窗口完成 GPU 瓦片预热后再休眠；`IslandShell.tsx` 在折叠态 `onPointerEnter` / `onPointerDown` 提前激活短暂预唤醒（无操作自动过期重新休眠），让点击松手或悬停展开前已完成 `<IslandPages />` 挂载；`panelAwake.ts` 与 `IslandPages.tsx` 对未预唤醒的快捷键/消息冷展开采用 `1-rAF` 外壳先行（Frame 0 先零阻塞启动纯色外壳形变，Frame 1 在 `fadeDelay` 面板透明窗口期内挂载内容）。
+2. **插件子 WebView2 未设透明创建选项且导航完成前提前置顶显示**
+   - 根因：`src-tauri/src/win32/webview_page.rs` 调用 `CreateCoreWebView2ControllerOptions()` 时未通过 `ICoreWebView2ControllerOptions3::SetDefaultBackgroundColor` 设 `(0, 0, 0, 0)` 全透明底色；且 `AddScriptToExecuteOnDocumentCreated` 与 `Navigate` 尚未完成首帧文档加载时，`src-tauri/src/plugin_host/webviews.rs` 已通过 `page.place(...)` 立即调用 `SetIsVisible(true)` 与 `SetWindowPos(HWND_TOP)` 将纯白 `#FFFFFF` 子控制器置顶露白。
+   - 修复：创建控制器选项时通过 `ICoreWebView2ControllerOptions3` 设全透明默认背景 `(0, 0, 0, 0)`；在 `Page` 内引入 `VisibilityGate` 记录目标可见意图（`SetBounds` 仍立即生效以保证首帧视口尺寸准确），待首次 `NavigationCompleted` 后再执行 `SetIsVisible(true)` 与置顶，并收严 `webviews.rs` 异步创建与关闭的 `generation` 校验。
+3. **`island/glass.rs` 遗留死代码强制擦除重绘（待 `C90` 合入后随 `D56.3` 清理）**
+   - 根因：Windows `src-tauri/src/island/glass.rs` 首次同步仍调用已废弃的 `window_vibrancy::clear_acrylic` 与 `SetWindowRgn(hwnd, None, true)`（`bRedraw = true` 同步擦除重绘整个 HWND）。为避免与正在修改 `glass.rs` 的并行会话 `C90` 冲突，留待 `C90` 合入后在 `D56.3` 一并移除。
+
 ## 3. 岛有时看不见，要点托盘图标才出来
 
 `main` 窗口在配置里是 `visible: false`。只有前端挂载后，在 `useIslandWindow.ts` 的 effect 里调用 `show_ready_island`，窗口才显示。所以只要前端没挂载，岛就看不见。dev 下有几条路会走到这里：

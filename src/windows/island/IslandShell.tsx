@@ -1,4 +1,4 @@
-import { createContext, useContext, type CSSProperties, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { AppearanceMode, TuckStyle } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
@@ -12,6 +12,7 @@ import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import type { PluginViewEntry } from "../../features/plugin-views/api";
 import type { CollapsedSlots, IslandMode, IslandPage, NativeGlassState } from "./types";
 import { useGlassPointer } from "./useGlassPointer";
+import { PREWARM_HOLD_MS, PREWARM_LEAVE_MS } from "./panelAwake";
 import { useIslandPreparing } from "./useIslandPreparing";
 import { usePageFadeIn } from "./usePageFadeIn";
 import { DevWatermark } from "../../components/DevWatermark";
@@ -69,10 +70,58 @@ type IslandShellProps = {
 };
 
 const NO_SOURCES = {};
-const IslandPreparingContext = createContext(false);
+const IslandPreparingContext = createContext({ isPreparing: false, isPrewarmed: false });
 
 export function useIslandShellPreparing() {
-  return useContext(IslandPreparingContext);
+  return useContext(IslandPreparingContext).isPreparing;
+}
+
+export function useIslandShellPrewarmed() {
+  return useContext(IslandPreparingContext).isPrewarmed;
+}
+
+function useCollapsedPrewarm(isExpanded: boolean) {
+  const [isPrewarmed, setIsPrewarmed] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  const wake = useCallback(() => {
+    if (isExpanded) return;
+    clearTimer();
+    setIsPrewarmed(true);
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
+      setIsPrewarmed(false);
+    }, PREWARM_HOLD_MS);
+  }, [clearTimer, isExpanded]);
+
+  const leave = useCallback(() => {
+    if (isExpanded) return;
+    clearTimer();
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
+      setIsPrewarmed(false);
+    }, PREWARM_LEAVE_MS);
+  }, [clearTimer, isExpanded]);
+
+  if (isExpanded && isPrewarmed) {
+    setIsPrewarmed(false);
+  }
+
+  useEffect(() => {
+    if (isExpanded) {
+      clearTimer();
+    }
+    return clearTimer;
+  }, [clearTimer, isExpanded]);
+
+  return { isPrewarmed: isPrewarmed && !isExpanded, wake, leave };
 }
 
 export function IslandShell({
@@ -119,6 +168,11 @@ export function IslandShell({
   const isLiquidGlass = appearanceMode === "liquidGlass";
   const { handleGlassPointerMove, resetGlassPointer } = useGlassPointer(isLiquidGlass && glass?.specular !== false);
   const isPreparing = useIslandPreparing(isExpanded);
+  const prewarm = useCollapsedPrewarm(isExpanded);
+  const preparingContext = useMemo(
+    () => ({ isPreparing: isPreparing && !isExpanded, isPrewarmed: prewarm.isPrewarmed }),
+    [isExpanded, isPreparing, prewarm.isPrewarmed],
+  );
   const contentRef = usePageFadeIn<HTMLDivElement>(page, mode);
   const contributed = useIslandContributed();
   const { status } = contributed;
@@ -162,8 +216,13 @@ export function IslandShell({
           onOpenPage(leadPage);
         }
       }}
+      onPointerEnter={prewarm.wake}
+      onPointerDown={prewarm.wake}
       onPointerMove={handleGlassPointerMove}
-      onPointerLeave={resetGlassPointer}
+      onPointerLeave={(event) => {
+        resetGlassPointer(event);
+        prewarm.leave();
+      }}
       onMouseEnter={() => {
         if (isTucked) {
           onReveal();
@@ -235,7 +294,7 @@ export function IslandShell({
             pluginPageButtons={pluginPageButtons}
           />
           <div ref={contentRef} className="island__content">
-            <IslandPreparingContext.Provider value={isPreparing && !isExpanded}>{children}</IslandPreparingContext.Provider>
+            <IslandPreparingContext.Provider value={preparingContext}>{children}</IslandPreparingContext.Provider>
           </div>
         </div>
         {overlay}
