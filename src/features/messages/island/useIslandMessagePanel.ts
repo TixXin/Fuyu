@@ -2,6 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { useTranslation } from "../../../i18n";
 import { copyMessageText } from "../../../lib/api";
 import { addArrival, removeArrival, arrivalKey, type ArrivalMessage } from "../arrivals/messageArrivals";
+import { isImSource } from "../im-sources/imSourcesState";
+import type { ImSourcesController } from "../im-sources/useImSources";
 import type { MailMessage } from "../mail/api";
 import type { MessageSource } from "../messagePreview";
 import { extractVerificationCode, otpActionId, parseOtpAction } from "../otp";
@@ -15,7 +17,9 @@ import type { IslandHost } from "../../plugin-kernel/islandHost";
 
 export type PanelArrival = ArrivalMessage & { mail?: { message: MailMessage; account: string | null }; pluginId?: string };
 
-type PanelNotices = Pick<ReturnType<typeof useIslandNotices>, "preview" | "qqNotifications" | "wechatReminders" | "qqMail" | "pluginNotifications" | "setMessagePanelOpen">;
+type PanelNotices = Pick<ReturnType<typeof useIslandNotices>, "preview" | "qqNotifications" | "wechatReminders" | "qqMail" | "pluginNotifications" | "setMessagePanelOpen"> & {
+  imSources?: ImSourcesController;
+};
 
 type MessagePanelOptions = {
   enabled: boolean;
@@ -30,7 +34,7 @@ type MessagePanelOptions = {
 };
 
 export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page, openIslandPage, collapseIsland, onOpenMessages, host }: MessagePanelOptions) {
-  const { preview, qqNotifications, wechatReminders, qqMail, pluginNotifications, setMessagePanelOpen } = notices;
+  const { preview, qqNotifications, wechatReminders, qqMail, pluginNotifications, imSources, setMessagePanelOpen } = notices;
   const t = useTranslation().messages;
   const otpEnabled = useMessageOtpCopyEnabled();
   const [arrivals, setArrivals] = useState<PanelArrival[] | null>(null);
@@ -139,13 +143,21 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
       void qqMail.readMail(message.mail.message, message.mail.account);
       return;
     }
+    if (isImSource(message.source)) {
+      const source = message.source;
+      void imSources?.openSource(source).then((opened) => {
+        if (opened === false) onOpenMessages(source);
+        else latest.current.collapseIsland();
+      });
+      return;
+    }
     const source = message.source;
     const launch = source === "qq" ? qqNotifications.openQQ() : wechatReminders.openWeChat(message.chat);
     void launch.then((opened) => {
       if (opened === false) onOpenMessages(source);
       else latest.current.collapseIsland();
     });
-  }, [arrivals, close, end, onOpenMessages, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
+  }, [arrivals, close, end, imSources, onOpenMessages, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
 
   const runAction = useCallback((message: PanelArrival, action: string) => {
     const otp = parseOtpAction(action);
@@ -154,6 +166,7 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
       if (message.source === "qqMail") qqMail.dismissPreview();
       else if (message.source === "qq") qqNotifications.dismissPreview();
       else if (message.source === "wechat") wechatReminders.dismissPreview();
+      else if (isImSource(message.source)) imSources?.dismissPreview(message.source);
       const rest = removeArrival(arrivals ?? [], arrivalKey(message));
       if (rest.length === 0) close();
       else setArrivals(rest);
@@ -164,19 +177,21 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     const rest = removeArrival(arrivals ?? [], arrivalKey(message));
     if (rest.length === 0) close();
     else setArrivals(rest);
-  }, [arrivals, close, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
+  }, [arrivals, close, imSources, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
 
   const clearAll = useCallback(() => {
     const mails = (arrivals ?? []).flatMap((item) => item.mail?.account && item.mail.message.unread ? [{ account: item.mail.account, id: item.mail.message.id }] : []);
     void (async () => { for (const mail of mails) await qqMail.markRead(mail.account, mail.id); })();
     void qqNotifications.clear();
     void wechatReminders.clear();
+    imSources?.clearAll();
     qqNotifications.dismissPreview();
     wechatReminders.dismissPreview();
+    imSources?.dismissAllPreviews();
     qqMail.dismissPreview();
     pluginNotifications.dismiss();
     close();
-  }, [arrivals, close, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
+  }, [arrivals, close, imSources, pluginNotifications, qqMail, qqNotifications, wechatReminders]);
 
   return {
     clearAll,
@@ -200,9 +215,10 @@ function toArrival(
   if (preview.source === "plugin" && notification) {
     return { ...preview, actions: notification.actions, pluginId: notification.pluginId };
   }
+  const richIm = preview.source !== "plugin" && isImSource(preview.source) && preview.kind !== "flash" && preview.kind !== "badge";
   const otp = !otpEnabled ? null
     : preview.source === "qqMail" ? qqMail.previewOtp
-      : preview.source === "qq" || (preview.source === "wechat" && preview.chat) ? extractVerificationCode(preview.title, preview.body)
+      : preview.source === "qq" || richIm || (preview.source === "wechat" && preview.chat) ? extractVerificationCode(preview.title, preview.body)
         : null;
   const actions = otp ? [{ id: otpActionId(otp), title: copyCodeLabel(otp) }] : [];
   const base: PanelArrival = { ...preview, actions };

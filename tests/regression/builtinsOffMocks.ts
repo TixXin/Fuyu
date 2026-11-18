@@ -56,6 +56,7 @@ mockIPC((command, payload) => {
     case "get_foreground_fullscreen": return { active: false, onIslandMonitor: false };
     case "set_island_interaction": return "disabled";
     case "get_qq_notification_state": return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+    case "get_im_sources_state": return [];
     case "set_wechat_expose_ui": case "set_wechat_hide_taskbar_button": return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
     case "get_qq_mail_state": return [];
     case "has_translation_secret": return false;

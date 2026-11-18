@@ -1,6 +1,7 @@
 import { Mail, MessageCircle } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import { defineSlot } from "../../plugin-kernel/slots";
+import { firstPendingImSource, imUnreadTotal } from "../im-sources/imSourcesState";
 import { messagesIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 
@@ -13,7 +14,11 @@ const sideSlot = defineSlot<SideContext>("island.side/v1");
 function UnreadRow({ onOpenPage }: SideContext) {
   const t = useTranslation();
   const messages = messagesIsland.use();
-  const unreadCount = (messages?.qq.snapshot.items.length ?? 0) + Number(messages?.wechat.snapshot.pending ?? false);
+  const qqCount = messages?.qq.snapshot.items.length ?? 0;
+  const wechatPending = messages?.wechat.snapshot.pending ?? false;
+  const extraCount = messages?.im ? imUnreadTotal(messages.im.snapshots) : 0;
+  const unreadCount = qqCount + Number(wechatPending) + extraCount;
+  const pendingIm = messages?.im ? firstPendingImSource(messages.im.snapshots) : null;
   return (
     <button
       type="button"
@@ -21,6 +26,10 @@ function UnreadRow({ onOpenPage }: SideContext) {
       aria-label={t.messages.unreadCount(unreadCount)}
       onClick={(event) => {
         event.stopPropagation();
+        if (qqCount === 0 && !wechatPending && pendingIm && messages) {
+          messages.open(pendingIm);
+          return;
+        }
         onOpenPage("qq");
       }}
     >

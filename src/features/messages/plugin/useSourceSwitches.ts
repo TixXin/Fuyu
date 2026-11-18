@@ -4,10 +4,33 @@ import { useBuiltinConfig, useBuiltinPlugins } from "../../plugin-kernel/useBuil
 import { isQQNotificationsEnabled } from "../qq-notifications/storage";
 import { isWeChatRemindersEnabled } from "../wechat/storage";
 import { OWNER } from "./owner.ts";
-import { MESSAGE_SOURCES, migrateSources, sourceSwitch, type MessageSource } from "./sourceSwitches.ts";
+import {
+  imAutoClearKey,
+  imSourceEnabled,
+  isImAutoClearEnabled,
+  MESSAGE_SOURCES,
+  migrateSources,
+  sourceSwitch,
+  type ImSourceId,
+  type MessageSource,
+} from "./sourceSwitches.ts";
 
 export async function setSourceEnabled(source: MessageSource, on: boolean): Promise<void> {
   await setBuiltinConfig(OWNER, source, on);
+}
+
+export async function setImAutoClearEnabled(source: ImSourceId, on: boolean): Promise<void> {
+  await setBuiltinConfig(OWNER, imAutoClearKey(source), on);
+}
+
+export function useImSourceAutoClear(source: ImSourceId): boolean {
+  const config = useBuiltinConfig(OWNER);
+  return isImAutoClearEnabled(config, source);
+}
+
+export function useImSourceEnabled(source: ImSourceId): boolean {
+  const config = useBuiltinConfig(OWNER);
+  return imSourceEnabled(config, source);
 }
 
 export function useMailEnabled(fallback = true): boolean {

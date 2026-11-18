@@ -1,4 +1,4 @@
-import type { MessagePreview } from "../messagePreview";
+import type { MessagePreview } from "../messagePreview.ts";
 
 export const BANNER_MS = 5_000;
 
@@ -11,10 +11,11 @@ export type BannerState<T extends BannerMessage = BannerMessage> = {
   message: T;
   more: number;
   version: number;
+  seenIds?: readonly string[];
 };
 
 export function bannerKey(preview: MessagePreview): string {
-  return `${preview.source}:${preview.receivedAt}`;
+  return preview.id ? `${preview.source}:${preview.id}` : `${preview.source}:${preview.receivedAt}`;
 }
 
 export function sameBannerActions(
@@ -28,7 +29,21 @@ export function addBannerMessage<T extends BannerMessage>(state: BannerState<T> 
   if (state && bannerKey(state.message) === bannerKey(message)) {
     return sameBannerActions(state.message.actions, message.actions) ? state : { ...state, message };
   }
-  return { message, more: state ? state.more + 1 : 0, version: (state?.version ?? 0) + 1 };
+  const previousIds = state?.seenIds ?? (state?.message.id ? [state.message.id] : []);
+  const nextIds = message.id
+    ? [...previousIds.filter((id) => id !== message.replacedId && id !== message.id), message.id]
+    : previousIds;
+  const replacesExisting = Boolean(
+    state
+      && message.replacedId
+      && (state.message.id === message.replacedId || previousIds.includes(message.replacedId)),
+  );
+  return {
+    message,
+    more: state ? (replacesExisting ? state.more : state.more + 1) : 0,
+    version: (state?.version ?? 0) + 1,
+    ...(nextIds.length > 0 ? { seenIds: nextIds } : {}),
+  };
 }
 
 export function bannerClock(receivedAt: number): string {

@@ -28,13 +28,16 @@ export function MessageBanner({
   const copyTimerRef = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
 
+  const isFlash = message.kind === "flash";
+  const isBadge = message.kind === "badge";
   const fallbackTitle = message.source === "qq" ? "QQ" : t.sourceLabels[message.source];
-  const title = message.title.trim() || fallbackTitle;
+  const title = isFlash ? fallbackTitle : message.title.trim() || fallbackTitle;
   const plainWeChat = message.source === "wechat" && !message.chat;
-  const body = message.source === "plugin" ? message.body.trim()
-    : message.source === "qqMail" ? message.body.trim() || t.newMail
-      : message.body.trim() || t.newMessage;
-  const copyable = plainWeChat ? "" : notificationCopyableText(message.title, message.body);
+  const body = isFlash ? t.newReminder
+    : message.source === "plugin" ? message.body.trim()
+      : message.source === "qqMail" ? message.body.trim() || t.newMail
+        : message.body.trim() || t.newMessage;
+  const copyable = plainWeChat || isFlash || isBadge ? "" : notificationCopyableText(message.title, message.body);
   const copied = copiedKey === currentKey;
 
   const handleContextMenu = (event: ReactMouseEvent<HTMLButtonElement>) => {

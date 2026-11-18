@@ -16,6 +16,9 @@ import { MailConnectForm } from "./mail/MailConnectForm";
 import { MAX_MAIL_ACCOUNTS } from "./mail/mailAccounts";
 import { loadMailAccounts } from "./mail/storage";
 import { useMailAccounts } from "./mail/useMailAccounts";
+import { ImSourcesSettingsSection } from "./im-sources/ImSourcesSettingsSection";
+import { IM_SOURCE_IDS } from "./im-sources/imSourcesState";
+import type { ImSourcesController } from "./im-sources/useImSources";
 import type { QQNotificationsController } from "./qq-notifications/QQNotifications";
 import { useMessageControllers } from "./settingsControllers";
 import type { WeChatRemindersController } from "./wechat/WeChatReminders";
@@ -33,6 +36,7 @@ type MessagesSectionProps = {
   settings: IslandSettings;
   qqNotifications: QQNotificationsController;
   wechatReminders: WeChatRemindersController;
+  imSources: ImSourcesController;
   unsupported: ReadonlySet<PlatformFeature>;
   onSettingsChange: (settings: IslandSettings) => void;
 };
@@ -130,6 +134,10 @@ function WeChatSection({ wechatReminders, unsupported }: MessagesSectionProps) {
   );
 }
 
+function ImOthersSection({ imSources }: MessagesSectionProps) {
+  return <ImSourcesSettingsSection imSources={imSources} />;
+}
+
 export type MessagesTab = "messages" | "messagesIm" | "messagesMail";
 
 const sections = settingsSections<MessagesSectionProps, MessagesTab>();
@@ -137,17 +145,23 @@ const sections = settingsSections<MessagesSectionProps, MessagesTab>();
 sections.add({ id: "messages.notice", category: "messages", order: 10, component: NoticeSection }, OWNER);
 sections.add({ id: "messagesIm.qq", category: "messagesIm", order: 20, component: QQSection }, OWNER);
 sections.add({ id: "messagesIm.wechat", category: "messagesIm", order: 30, component: WeChatSection }, OWNER);
+sections.add({ id: "messagesIm.others", category: "messagesIm", order: 35, component: ImOthersSection }, OWNER);
 sections.add({ id: "messagesMail.mail", category: "messagesMail", order: 40, component: MailGroups }, OWNER);
 
-export function MessagesSettingsPage({ tab, ...page }: Omit<MessagesSectionProps, "qqNotifications" | "wechatReminders"> & { tab: MessagesTab }) {
+export function MessagesSettingsPage({ tab, ...page }: Omit<MessagesSectionProps, "qqNotifications" | "wechatReminders" | "imSources"> & { tab: MessagesTab }) {
   const controllers = useMessageControllers();
   const t = useTranslation();
   const mailOn = useMailEnabled(page.settings.mailEnabled);
   if (!controllers) return null;
   const props = { ...page, ...controllers };
-  const { qqNotifications, wechatReminders, unsupported } = props;
+  const { qqNotifications, wechatReminders, imSources, unsupported } = props;
   const labels = t.settings.messageSources;
-  const sourcesOn = [!unsupported.has("qq") && qqNotifications.snapshot.enabled, !unsupported.has("wechat") && wechatReminders.snapshot.enabled, mailOn].filter(Boolean).length;
+  const sourcesOn = [
+    !unsupported.has("qq") && qqNotifications.snapshot.enabled,
+    !unsupported.has("wechat") && wechatReminders.snapshot.enabled,
+    mailOn,
+    ...IM_SOURCE_IDS.map((id) => imSources.snapshots[id].enabled),
+  ].filter(Boolean).length;
 
   return (
     <>

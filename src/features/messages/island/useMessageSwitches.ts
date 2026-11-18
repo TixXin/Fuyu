@@ -20,10 +20,12 @@ export function useMailSwitch(mailSwitch: boolean, mail: MailController) {
   }, [configured, receiving, mailSwitch, setReceiving]);
 }
 
-export function useSourceFallback(source: MessageView, enabled: Readonly<Record<MessageSource, boolean>>, setSource: (source: MessageView) => void) {
-  const { qq, wechat, qqMail } = enabled;
+export function useSourceFallback(source: MessageView, enabled: Partial<Readonly<Record<MessageSource, boolean>>>, setSource: (source: MessageView) => void) {
+  const signature = JSON.stringify(enabled);
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
   useEffect(() => {
-    const next = resolveMessageSource(source, { qq, wechat, qqMail });
+    const next = resolveMessageSource(source, enabledRef.current);
     if (next !== source) setSource(next);
-  }, [source, qq, wechat, qqMail, setSource]);
+  }, [source, signature, setSource]);
 }

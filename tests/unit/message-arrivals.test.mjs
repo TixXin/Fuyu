@@ -42,3 +42,30 @@ test("the list keeps the newest few and drops a row on request", () => {
   const key = arrivalKey(list[0]);
   assert.equal(removeArrival(list, key).length, MAX_ARRIVALS - 1);
 });
+
+test("replacedId swaps out a temporary taskbar-flash arrival when the real toast arrives", () => {
+  let list = addArrival([], {
+    source: "feishu",
+    id: "feishu:flash:1000",
+    kind: "flash",
+    title: "Feishu",
+    body: "",
+    receivedAt: 1000,
+    actions: [],
+  });
+  list = addArrival(list, message("qq", 1100));
+  list = addArrival(list, {
+    source: "feishu",
+    id: "feishu:toast:7:1",
+    replacedId: "feishu:flash:1000",
+    kind: "toast",
+    title: "张工",
+    body: "发布完成",
+    receivedAt: 1250,
+    actions: [],
+  });
+  assert.deepEqual(list.map((item) => item.id ?? `${item.source}:${item.receivedAt}`), [
+    "feishu:toast:7:1",
+    "qq:1100",
+  ]);
+});

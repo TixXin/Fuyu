@@ -1,23 +1,33 @@
 import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import catalog from "../../src/features/builtins.json";
+import { IM_SOURCE_IDS, type ImSourceId } from "../../src/features/messages/im-sources/imSourcesState";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
 import { BUILTIN_PLUGINS_CHANGED, type BuiltinPlugin } from "../../src/features/plugin-kernel/api";
 import { DEMO_CURRENT_VERSION } from "./updateDemo";
 import { updateRuntimeMock } from "./updateRuntimeMock";
 
 let builtins: BuiltinPlugin[] | null = null;
+const INSTALLED_MOCK_IM_SOURCES = new Set<ImSourceId>(["telegram", "feishu"]);
 
 export function mockBuiltinPlugins(): BuiltinPlugin[] {
   if (!builtins) {
     const stored = JSON.parse(globalThis.localStorage?.getItem("fuyu-settings") ?? "{}") as Record<string, unknown>;
     const voice = JSON.parse(globalThis.localStorage?.getItem("fuyu-voice-input") ?? "{}") as Record<string, unknown>;
+    const allOn = new URLSearchParams(globalThis.location?.search ?? "").get("state") === "on";
     builtins = catalog.plugins.map(({ id, kind }) => ({
       id,
       kind: kind === "essential" ? "essential" : "builtin",
       enabled: id === "screenshot" ? stored.screenshotEnabled === true : id === "voice-input" ? voice.enabled === true : true,
       background: [],
-      config: id === "messages" ? { qq: true, wechat: true, mail: stored.mailEnabled !== false } : {},
+      config: id === "messages"
+        ? {
+            qq: true,
+            wechat: true,
+            mail: stored.mailEnabled !== false,
+            ...(allOn ? Object.fromEntries(IM_SOURCE_IDS.map((source) => [source, true])) : {}),
+          }
+        : {},
     }));
   }
   return builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } }));
@@ -138,6 +148,39 @@ mockIPC((command, payload) => {
       return next;
     }
     case "get_qq_notification_state": return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+    case "get_im_sources_state": {
+      const msgConfig = mockBuiltinPlugins().find((plugin) => plugin.id === "messages")?.config ?? {};
+      const target = typeof args.source === "string" ? (args.source as ImSourceId) : null;
+      const ids = target ? [target] : IM_SOURCE_IDS;
+      return ids.map((source) => {
+        const enabled = msgConfig[source] === true;
+        return {
+          source,
+          revision: ++revision,
+          enabled,
+          installed: INSTALLED_MOCK_IM_SOURCES.has(source),
+          status: enabled ? "listening" : "disabled",
+          items: [],
+          error: null,
+        };
+      });
+    }
+    case "set_im_source_auto_clear": {
+      const source = String(args.source) as ImSourceId;
+      const msgConfig = mockBuiltinPlugins().find((plugin) => plugin.id === "messages")?.config ?? {};
+      const enabled = msgConfig[source] === true;
+      return {
+        source,
+        revision: ++revision,
+        enabled,
+        installed: INSTALLED_MOCK_IM_SOURCES.has(source),
+        status: enabled ? "listening" : "disabled",
+        items: [],
+        error: null,
+      };
+    }
+    case "request_im_notification_access": return "allowed";
+    case "open_im_notification_settings": return null;
     case "set_wechat_expose_ui": case "set_wechat_hide_taskbar_button": return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
     case "has_translation_secret": return args.provider === "deepseek";
     case "set_translation_shortcut": return args.shortcut;

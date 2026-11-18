@@ -11,6 +11,7 @@ import { islandHost } from "../../src/windows/island/islandHost";
 import { MessageBanner } from "../../src/features/messages/banner/MessageBanner";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
+import { useImSources } from "../../src/features/messages/im-sources/useImSources";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
 import { usePluginNotifications } from "../../src/features/messages/island/usePluginNotifications";
@@ -43,6 +44,17 @@ mockIPC((command, payload) => {
   commands.push({ command, args });
   if (command === "request_qq_notification_access") return "allowed";
   if (command === "get_qq_notification_state") return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+  if (command === "get_im_sources_state") return [];
+  if (command === "open_im_source") {
+    const source = String(args.source);
+    void emit("im-sources-changed", {
+      source,
+      snapshot: { source, revision: ++revision, enabled: true, installed: true, status: "listening", items: [], error: null },
+      newestId: null,
+      windowVisible: true,
+    });
+    return null;
+  }
   if (command === "set_wechat_expose_ui" || command === "set_wechat_hide_taskbar_button") return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
   if (command === "get_qq_mail_state") return [mail];
   if (command === "read_qq_mail") return { id: args.messageId, content: String(args.messageId).startsWith("otp-mail-") ? "Verification code: 849201" : "本周项目进度已更新", contentType: "text/plain", attachments: [] };
@@ -58,16 +70,17 @@ function Fixture() {
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const plugins = usePluginNotifications(true);
-  const preview = useLatestMessagePreview(qq, wechat, qqMail, plugins);
-  const hasMessagePreview = Boolean(qq.preview || wechat.previewReceivedAt !== null || qqMail.preview || plugins.notification);
+  const imSources = useImSources(true);
+  const preview = useLatestMessagePreview(qq, wechat, qqMail, plugins, imSources);
+  const hasMessagePreview = Boolean(qq.preview || wechat.previewReceivedAt !== null || qqMail.preview || plugins.notification || imSources.previews.length > 0);
   const banner = useIslandBanner({
     messageNotice: notice,
-    notices: { preview, hasMessagePreview, qqNotifications: qq, wechatReminders: wechat, qqMail, pluginNotifications: plugins },
+    notices: { preview, hasMessagePreview, qqNotifications: qq, wechatReminders: wechat, qqMail, pluginNotifications: plugins, imSources },
     mode: "collapsed", isTucked: false, quiet: false,
     onOpenMessages: (source) => { openedSource = source; },
     host: islandHost,
   });
-  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: plugins, preview: banner.barPreview, open: (source) => { openedSource = source; } }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
+  useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: plugins, im: imSources, preview: banner.barPreview, open: (source) => { openedSource = source; } }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className="stage" style={{ "--collapsed-island-width": "300px" } as CSSProperties}>
     <IslandShell
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
@@ -202,6 +215,31 @@ async function runChecks() {
     await act(async () => banner()!.querySelector<HTMLButtonElement>(".message-banner__action")!.click());
     await waitFor(() => commands.some((entry) => entry.command === "copy_message_text" && entry.args.text === "849201"), "复制邮件正文验证码");
     check(!banner(), "点邮件横幅复制验证码后收回");
+
+    const flashId = "telegram:flash:5000";
+    const toastId = "telegram:toast:9:1";
+    await update(async () => {
+      await emit("im-sources-changed", {
+        source: "telegram",
+        snapshot: { source: "telegram", revision: ++revision, enabled: true, installed: true, status: "listening", items: [{ id: flashId, kind: "flash", title: "Telegram", body: "", createdAt: Date.now() }], error: null },
+        newestId: flashId,
+        windowVisible: true,
+      });
+    });
+    check(banner()?.querySelector(".message-brand-icon--telegram") && banner()!.querySelector(".message-banner__body")?.textContent === "有新提醒" && !banner()!.querySelector(".message-banner__more"), "Telegram 闪烁兜底先弹出有新提醒横幅");
+    await update(async () => {
+      await emit("im-sources-changed", {
+        source: "telegram",
+        snapshot: { source: "telegram", revision: ++revision, enabled: true, installed: true, status: "listening", items: [{ id: toastId, kind: "toast", title: "Alice", body: "登录验证码 731904", createdAt: Date.now() }], error: null },
+        newestId: toastId,
+        replacedId: flashId,
+        windowVisible: true,
+      });
+    });
+    check(banner()?.querySelector(".message-banner__title")?.textContent === "Alice" && !banner()!.querySelector(".message-banner__more") && banner()!.querySelector(".message-banner__action")?.textContent === "复制 731904", "2 秒内到达真实 Toast 时经 replacedId 原位升级横幅且不计为多条");
+    await act(async () => banner()!.querySelector<HTMLButtonElement>(".message-banner__main")!.click());
+    await waitFor(() => commands.some((entry) => entry.command === "open_im_source" && entry.args.source === "telegram"), "点 Telegram 横幅唤起 Telegram");
+    check(!banner(), "点 Telegram 横幅后收回");
 
     await act(async () => changeNotice("line"));
     await notify("qq", "小张");

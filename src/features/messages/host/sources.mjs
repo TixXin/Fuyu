@@ -6,6 +6,13 @@ export const BUILTIN_MESSAGE_SOURCES = Object.freeze([
   Object.freeze({ id: "qq", label: Object.freeze({ zh: "QQ", en: "QQ" }), builtin: true, order: 10 }),
   Object.freeze({ id: "wechat", label: Object.freeze({ zh: "微信", en: "WeChat" }), builtin: true, order: 20 }),
   Object.freeze({ id: "qqMail", label: Object.freeze({ zh: "邮箱", en: "Mail" }), builtin: true, order: 30 }),
+  Object.freeze({ id: "telegram", label: Object.freeze({ zh: "Telegram", en: "Telegram" }), builtin: true, enabled: false, order: 40 }),
+  Object.freeze({ id: "discord", label: Object.freeze({ zh: "Discord", en: "Discord" }), builtin: true, enabled: false, order: 45 }),
+  Object.freeze({ id: "whatsapp", label: Object.freeze({ zh: "WhatsApp", en: "WhatsApp" }), builtin: true, enabled: false, order: 50 }),
+  Object.freeze({ id: "tim", label: Object.freeze({ zh: "TIM", en: "TIM" }), builtin: true, enabled: false, order: 55 }),
+  Object.freeze({ id: "feishu", label: Object.freeze({ zh: "飞书", en: "Feishu" }), builtin: true, enabled: false, order: 60 }),
+  Object.freeze({ id: "dingtalk", label: Object.freeze({ zh: "钉钉", en: "DingTalk" }), builtin: true, enabled: false, order: 65 }),
+  Object.freeze({ id: "wecom", label: Object.freeze({ zh: "企业微信", en: "WeCom" }), builtin: true, enabled: false, order: 70 }),
 ]);
 
 function messagesError(code, message) {
@@ -72,14 +79,20 @@ function validateSource(spec) {
   });
 }
 
-export function createMessageSourceRegistry({ onChange, onArrive } = {}) {
+function configuredBuiltin(builtin, config) {
+  if (!isObject(config)) return builtin;
+  const key = builtin.id === "qqMail" ? "mail" : builtin.id;
+  return typeof config[key] === "boolean" ? { ...builtin, enabled: config[key] } : builtin;
+}
+
+export function createMessageSourceRegistry({ onChange, onArrive, config } = {}) {
   const stacks = new Map();
   const counts = new Map();
   const listeners = new Set();
   if (typeof onChange === "function") listeners.add(onChange);
 
   for (const builtin of BUILTIN_MESSAGE_SOURCES) {
-    stacks.set(builtin.id, [{ token: Symbol(builtin.id), spec: validateSource(builtin) }]);
+    stacks.set(builtin.id, [{ token: Symbol(builtin.id), spec: validateSource(configuredBuiltin(builtin, config)) }]);
   }
 
   let snapshot = Object.freeze([]);
@@ -195,11 +208,14 @@ export function createMessageSourceRegistry({ onChange, onArrive } = {}) {
       notify();
       return { ok: true };
     },
+    refresh() {
+      notify();
+    },
     resetForTest() {
       stacks.clear();
       counts.clear();
       for (const builtin of BUILTIN_MESSAGE_SOURCES) {
-        stacks.set(builtin.id, [{ token: Symbol(builtin.id), spec: validateSource(builtin) }]);
+        stacks.set(builtin.id, [{ token: Symbol(builtin.id), spec: validateSource(configuredBuiltin(builtin, config)) }]);
       }
       notify();
     },
@@ -237,6 +253,10 @@ export function notifyMessageArrival(notice) {
 
 export function clearMessageSources(params) {
   return defaultRegistry.clear(params);
+}
+
+export function refreshMessageSources() {
+  defaultRegistry.refresh();
 }
 
 export function resetMessageSourcesForTest() {

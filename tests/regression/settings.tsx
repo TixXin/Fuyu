@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings";
 import { entryOf, settingsCategoryFor, sidebarItemOf, type SettingsCategory } from "../../src/windows/settings/categories";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { checkGlassLooks } from "./settings-glass-looks";
+import { checkImMessageSources } from "./settings-im-sources";
 import { checkThemeMarket } from "./settings-theme-market";
 import { commands, keybindingCalls, mailCalls, marketInstalls, openedUrls, REPLY_MARKER, replyMarkerCalls, revokedPermissions } from "./settingsMocks";
 
@@ -294,6 +295,7 @@ if (!automated) {
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 1_500)); });
     check(document.querySelector(".save-path-panel .save-path-saved"), "The saved confirmation stays long enough to notice");
 
+    await checkImMessageSources(check, openPage);
     await openPage("messagesMail");
     const rows = () => [...document.querySelectorAll<HTMLElement>(".mail-settings__account")];
     check(rows().length === 2 && rows()[0].textContent?.includes("demo@qq.com"), "The mail page lists every mailbox");

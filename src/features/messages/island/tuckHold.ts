@@ -13,6 +13,7 @@ export type UnreadSources = {
   qq: { enabled: boolean; count: number };
   wechat: { enabled: boolean; pending: boolean };
   mail: { enabled: boolean; newUnread: boolean };
+  im?: { unread: number };
 };
 
 export type MailCount = { email: string | null; enabled: boolean; unreadCount: number | null };
@@ -42,8 +43,8 @@ export function hasNewUnreadMail(baselines: MailBaselines, boxes: readonly MailC
     enabled && email !== null && unreadCount !== null && unreadCount > (baselines[email] ?? unreadCount));
 }
 
-export function hasUnreadMessages({ qq, wechat, mail }: UnreadSources): boolean {
-  return (qq.enabled && qq.count > 0) || (wechat.enabled && wechat.pending) || (mail.enabled && mail.newUnread);
+export function hasUnreadMessages({ qq, wechat, mail, im }: UnreadSources): boolean {
+  return (qq.enabled && qq.count > 0) || (wechat.enabled && wechat.pending) || (mail.enabled && mail.newUnread) || ((im?.unread ?? 0) > 0);
 }
 
 export function holdsTuck(settings: HoldSettings, state: TuckHoldState): boolean {
