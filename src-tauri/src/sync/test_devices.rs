@@ -5,6 +5,7 @@ use std::{
 };
 
 use super::{
+    backend::Backend,
     backend_folder::FolderBackend,
     categories::{
         clip_favorites, links,
@@ -200,8 +201,7 @@ impl Device {
         self.clock.tick()
     }
 
-    pub(super) fn sync_with(&mut self, folder: &Path, options: Options) -> RoundResult {
-        let backend = FolderBackend::new(folder.to_path_buf());
+    pub(super) fn sync_backend(&mut self, backend: &dyn Backend, options: Options) -> RoundResult {
         let me = DeviceInfo { device_id: self.id.clone(), name: format!("{} pc", self.id), platform: "test".into(), app_version: "1.0.0".into(), last_sync_at: 0 };
         let backups = &mut self.backups;
         let mut backup = || {
@@ -216,8 +216,13 @@ impl Device {
         } else {
             vec![SyncCategory::ClipFavorites]
         };
-        let mut round = Round { backend: &backend, me: &me, state_dir: &self.state, clock: &mut self.clock, options, backup: &mut backup };
+        let mut round = Round { backend, me: &me, state_dir: &self.state, clock: &mut self.clock, options, backup: &mut backup };
         round.run(&mut categories, &disabled)
+    }
+
+    pub(super) fn sync_with(&mut self, folder: &Path, options: Options) -> RoundResult {
+        let backend = FolderBackend::new(folder.to_path_buf());
+        self.sync_backend(&backend, options)
     }
 
     pub(super) fn sync(&mut self, folder: &Path) -> RoundResult {

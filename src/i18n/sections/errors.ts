@@ -271,6 +271,20 @@ export type ErrorCode =
   | "sshTunnel.save"
   | "sshTunnel.noPortTool"
   | "sshTunnel.portCheck"
+  | "sync.badFolder"
+  | "sync.notStarted"
+  | "sync.webdavAuth"
+  | "sync.webdavInvalidXml"
+  | "sync.webdavNeedPassword"
+  | "sync.webdavNeedUsername"
+  | "sync.webdavNotFound"
+  | "sync.webdavNutstoreRoot"
+  | "sync.webdavOffline"
+  | "sync.webdavRateLimited"
+  | "sync.webdavScheme"
+  | "sync.webdavStatus"
+  | "sync.webdavUrl"
+  | "sync.webdavUrlCredentials"
   | "soundPack.noDataDir"
   | "soundPack.format"
   | "soundPack.sizeOrEmpty"
@@ -618,6 +632,20 @@ export const zhCN: ErrorsText = {
     "sshTunnel.save": "没能保存 SSH 隧道设置。",
     "sshTunnel.noPortTool": "服务器上既没有 ss 也没有 netstat。",
     "sshTunnel.portCheck": "检查服务器端口失败。",
+    "sync.badFolder": ({ path }) => `${path} 不是可用于同步的文件夹。`,
+    "sync.notStarted": "同步服务尚未启动。",
+    "sync.webdavAuth": "WebDAV 账号或应用密码不正确（401/403）。坚果云、开启两步验证的 Nextcloud 等请填写网页端单独生成的第三方应用密码，不要填登录密码。",
+    "sync.webdavInvalidXml": "该地址返回的不是有效的 WebDAV 目录响应，请检查是否误填成了网页地址。",
+    "sync.webdavNeedPassword": "请填写 WebDAV 应用密码。",
+    "sync.webdavNeedUsername": "请填写 WebDAV 用户名。",
+    "sync.webdavNotFound": "服务器上找不到该 WebDAV 目录（404），请先在网页端或 NAS 中新建该文件夹，或检查路径大小写。",
+    "sync.webdavNutstoreRoot": "坚果云不允许直接写入 /dav/ 根目录，请在路径末尾加上已建好的同步文件夹（例如 https://dav.jianguoyun.com/dav/我的坚果云/）。",
+    "sync.webdavOffline": "连不上 WebDAV 服务器，请检查网络连接、服务器地址或代理设置。",
+    "sync.webdavRateLimited": "WebDAV 请求过于频繁（触发服务端限流或达到 30 分钟 600 次保护上限），已自动暂停退避，稍后恢复。",
+    "sync.webdavScheme": "公网 WebDAV 地址必须以 https:// 开头（仅本机或局域网 NAS 可使用 http://）。",
+    "sync.webdavStatus": ({ status }) => `WebDAV 服务器返回 HTTP ${status}。`,
+    "sync.webdavUrl": "WebDAV 服务器地址无效，请填写完整的服务器与目录地址。",
+    "sync.webdavUrlCredentials": "请勿在 WebDAV 地址中直接嵌入用户名或密码，请填在下方对应输入框中。",
     "soundPack.noDataDir": "找不到应用数据目录。",
     "soundPack.format": ({ name }) => `不支持的音效格式：${name}`,
     "soundPack.sizeOrEmpty": ({ name }) => `音效文件太大或是空的：${name}（最大 4 MB）`,
@@ -962,6 +990,20 @@ export const en: ErrorsText = {
     "sshTunnel.save": "Could not save the SSH tunnels.",
     "sshTunnel.noPortTool": "Neither ss nor netstat runs on the server.",
     "sshTunnel.portCheck": "Could not check the port on the server.",
+    "sync.badFolder": ({ path }) => `${path} is not a folder that can be used for sync.`,
+    "sync.notStarted": "Sync is not started yet.",
+    "sync.webdavAuth": "The WebDAV username or app password was rejected (401/403). For Nutstore or 2FA-enabled Nextcloud, generate a dedicated app password rather than using your login password.",
+    "sync.webdavInvalidXml": "That address did not return a valid WebDAV folder response; check that you entered the WebDAV endpoint rather than a web page URL.",
+    "sync.webdavNeedPassword": "Enter the WebDAV app password.",
+    "sync.webdavNeedUsername": "Enter the WebDAV username.",
+    "sync.webdavNotFound": "That WebDAV folder was not found on the server (404). Create the folder on the server first or check path capitalization.",
+    "sync.webdavNutstoreRoot": "Nutstore does not allow writing directly to /dav/; append an existing sync folder (for example https://dav.jianguoyun.com/dav/我的坚果云/).",
+    "sync.webdavOffline": "Could not reach the WebDAV server. Check your network connection, server URL or proxy settings.",
+    "sync.webdavRateLimited": "Too many WebDAV requests (rate-limited by server or reached the 600 requests / 30 min safety limit); paused briefly to cool down.",
+    "sync.webdavScheme": "Remote WebDAV URLs must start with https:// (http:// is allowed only on localhost or LAN NAS).",
+    "sync.webdavStatus": ({ status }) => `The WebDAV server answered HTTP ${status}.`,
+    "sync.webdavUrl": "The WebDAV server URL is not valid; enter a complete folder URL.",
+    "sync.webdavUrlCredentials": "Do not embed username or password inside the WebDAV URL; enter them in the fields below.",
     "soundPack.noDataDir": "Could not find the app data folder.",
     "soundPack.format": ({ name }) => `Unsupported sound format: ${name}`,
     "soundPack.sizeOrEmpty": ({ name }) => `The sound file is empty or too large: ${name} (at most 4 MB).`,

@@ -11,6 +11,7 @@ import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import type { SyncPhase, SyncStatus } from "./api";
+import { activeSyncBackend, isSyncActive } from "./syncState";
 
 type Tone = "muted" | "ok" | "busy" | "warn" | "error";
 
@@ -24,11 +25,11 @@ const PHASE_TONES: Record<SyncPhase, Tone> = {
   error: "error",
 };
 
-function PhaseIcon({ phase }: { phase: SyncPhase }) {
+function PhaseIcon({ phase, isWebdav }: { phase: SyncPhase; isWebdav: boolean }) {
   const props = { size: 19, strokeWidth: 1.8, "aria-hidden": true } as const;
   if (phase === "syncing") return <LoaderCircle className="sync-status__spinner" {...props} />;
   if (phase === "idle") return <CircleCheck {...props} />;
-  if (phase === "folderMissing") return <FolderX {...props} />;
+  if (phase === "folderMissing") return isWebdav ? <CloudOff {...props} /> : <FolderX {...props} />;
   if (phase === "needsConfirm") return <ShieldAlert {...props} />;
   if (phase === "newerVersion" || phase === "error") return <AlertTriangle {...props} />;
   return <CloudOff {...props} />;
@@ -53,12 +54,22 @@ export function SyncStatusSection({
   const { locale } = useLocale();
   const errorText = useErrorText();
   const text = t.sync;
-  const phaseCopy = text.status.phases[status.phase];
+  const isWebdav = activeSyncBackend(status) === "webdav";
+  const active = isSyncActive(status);
+  const phaseCopy = isWebdav && status.phase === "folderMissing"
+    ? text.status.webdavUnavailable
+    : isWebdav && status.phase === "error"
+      ? text.status.webdavError
+      : text.status.phases[status.phase];
   const tone = PHASE_TONES[status.phase];
   const formattedLast = status.lastSyncAt
     ? text.status.lastSynced(new Date(status.lastSyncAt).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" }))
-    : status.folder ? text.status.neverSynced : null;
-  const errorDetail = actionError !== null ? errorText(actionError) : status.lastError;
+    : active ? text.status.neverSynced : null;
+  const errorDetail = actionError !== null
+    ? errorText(actionError)
+    : status.error != null
+      ? errorText(status.error)
+      : status.lastError;
   const confirm = status.confirm;
   const confirmSummary = confirm
     ? confirm.reason === "remoteCleared"
@@ -75,7 +86,7 @@ export function SyncStatusSection({
       <div className={`sync-status sync-status--${tone}`}>
         <div className="sync-status__row">
           <span className="sync-status__icon">
-            <PhaseIcon phase={status.phase} />
+            <PhaseIcon phase={status.phase} isWebdav={isWebdav} />
           </span>
           <div className="sync-status__copy" role={tone === "error" ? "alert" : "status"}>
             <strong>{phaseCopy.headline}</strong>
@@ -85,7 +96,7 @@ export function SyncStatusSection({
               <span className="sync-status__warn">{text.status.skippedFiles(status.skippedFiles.length)}</span>
             ) : null}
           </div>
-          {status.folder !== null && status.phase !== "needsConfirm" ? (
+          {active && status.phase !== "needsConfirm" ? (
             <div className="sync-status__actions">
               <button
                 className="sync-status__button"

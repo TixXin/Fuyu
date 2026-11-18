@@ -1,7 +1,9 @@
 use serde::Serialize;
 
+use crate::user_error::UserError;
+
 use super::{
-    config::{SyncCategory, SyncConfig},
+    config::{SyncBackendKind, SyncCategory, SyncConfig},
     layout::DeviceInfo,
     round::{Outcome, RoundResult},
 };
@@ -68,12 +70,23 @@ pub struct SyncDevice {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct WebdavSummary {
+    pub url: String,
+    pub username: String,
+    pub has_password: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SyncStatus {
     pub phase: SyncPhase,
+    pub backend: SyncBackendKind,
     pub folder: Option<String>,
+    pub webdav: Option<WebdavSummary>,
     pub device_id: Option<String>,
     pub last_sync_at: Option<u64>,
     pub last_error: Option<String>,
+    pub(crate) error: Option<UserError>,
     pub confirm: Option<SyncConfirm>,
     pub categories: Vec<CategoryStatus>,
     pub optional_groups: Vec<String>,
@@ -82,30 +95,40 @@ pub struct SyncStatus {
 }
 
 impl SyncStatus {
-    pub(crate) fn new(config: &SyncConfig, device_id: Option<String>) -> Self {
+    pub(crate) fn new(config: &SyncConfig, device_id: Option<String>, has_webdav_password: bool) -> Self {
         let mut status = Self {
             phase: SyncPhase::Off,
+            backend: SyncBackendKind::Off,
             folder: None,
+            webdav: None,
             device_id,
             last_sync_at: None,
             last_error: None,
+            error: None,
             confirm: None,
             categories: Vec::new(),
             optional_groups: Vec::new(),
             devices: Vec::new(),
             skipped_files: Vec::new(),
         };
-        status.configure(config);
+        status.configure(config, has_webdav_password);
         status
     }
 
-    pub(crate) fn configure(&mut self, config: &SyncConfig) {
+    pub(crate) fn configure(&mut self, config: &SyncConfig, has_webdav_password: bool) {
+        self.backend = config.active_backend();
         self.folder = config.folder.clone();
+        self.webdav = config.webdav.as_ref().map(|webdav| WebdavSummary {
+            url: webdav.url.clone(),
+            username: webdav.username.clone(),
+            has_password: has_webdav_password,
+        });
         self.optional_groups = config.optional_groups.clone();
-        if config.folder.is_none() {
+        if self.backend == SyncBackendKind::Off {
             self.phase = SyncPhase::Off;
             self.confirm = None;
             self.last_error = None;
+            self.error = None;
         } else if self.phase == SyncPhase::Off {
             self.phase = SyncPhase::Idle;
         }
@@ -122,7 +145,9 @@ impl SyncStatus {
                 CategoryStatus {
                     category: *category,
                     state,
-                    message: kept.filter(|_| state != CategoryState::Off).and_then(|kept| kept.message.clone()),
+                    message: kept
+                        .filter(|_| state != CategoryState::Off)
+                        .and_then(|kept| kept.message.clone()),
                     last_sync_at: kept.and_then(|kept| kept.last_sync_at),
                 }
             })
@@ -139,22 +164,36 @@ impl SyncStatus {
         }
     }
 
-    pub(crate) fn finish(&mut self, result: RoundResult, me: &str, now: u64) {
+    pub(crate) fn finish(
+        &mut self,
+        result: RoundResult,
+        error: Option<UserError>,
+        me: &str,
+        now: u64,
+    ) {
         self.confirm = None;
         self.last_error = None;
+        self.error = None;
         match result {
             RoundResult::FolderMissing(message) => {
                 self.phase = SyncPhase::FolderMissing;
                 self.last_error = Some(message);
+                self.error = error;
             }
             RoundResult::RemoteCleared => {
                 self.phase = SyncPhase::NeedsConfirm;
-                self.confirm = Some(SyncConfirm { reason: ConfirmReason::RemoteCleared, category: None, removed: 0, total: 0 });
+                self.confirm = Some(SyncConfirm {
+                    reason: ConfirmReason::RemoteCleared,
+                    category: None,
+                    removed: 0,
+                    total: 0,
+                });
             }
             RoundResult::NewerVersion => self.phase = SyncPhase::NewerVersion,
             RoundResult::Failed(message) => {
                 self.phase = SyncPhase::Error;
                 self.last_error = Some(message);
+                self.error = error;
             }
             RoundResult::Done { categories, devices, skipped } => {
                 self.phase = SyncPhase::Idle;
@@ -163,6 +202,9 @@ impl SyncStatus {
                 self.devices = devices.into_iter().map(|device| device_row(device, me)).collect();
                 for (category, outcome) in categories {
                     self.record(category, outcome, now);
+                }
+                if self.phase == SyncPhase::Error {
+                    self.error = error;
                 }
             }
         }
@@ -177,7 +219,12 @@ impl SyncStatus {
                 self.set_category(category, CategoryState::NeedsConfirm, None, now);
                 if self.confirm.is_none() {
                     self.phase = SyncPhase::NeedsConfirm;
-                    self.confirm = Some(SyncConfirm { reason: ConfirmReason::ManyDeletions, category: Some(category), removed, total });
+                    self.confirm = Some(SyncConfirm {
+                        reason: ConfirmReason::ManyDeletions,
+                        category: Some(category),
+                        removed,
+                        total,
+                    });
                 }
             }
             Outcome::Failed(message) => {
