@@ -540,11 +540,26 @@
       "page": "themeStyle",
       "zh-CN": {
         "group": "质感与形状",
-        "title": "不透明度"
+        "title": "不透明度",
+        "description": "只调整岛底色的浓淡，文字和图标保持不透明。"
       },
       "en": {
         "group": "Look and shape",
-        "title": "Opacity"
+        "title": "Opacity",
+        "description": "Adjusts only the island's background fill while keeping text and icons opaque."
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "质感与形状",
+        "title": "整体不透明度",
+        "description": "连同文字、图标和展开面板一起调整整个岛的不透明度。"
+      },
+      "en": {
+        "group": "Look and shape",
+        "title": "Island opacity",
+        "description": "Dims the entire island, including text, icons and the open panel."
       }
     },
     {
@@ -586,6 +601,41 @@
       "en": {
         "group": "Look and shape",
         "title": "Docked corner radius"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "闲置变淡",
+        "title": "闲置时自动变淡",
+        "description": "收起状态下长时间无操作时自动降低整岛不透明度，变淡期间鼠标点击穿透到下方窗口；光标靠近或有新提醒时立即恢复。"
+      },
+      "en": {
+        "group": "Idle dimming",
+        "title": "Dim when idle",
+        "description": "Dims the collapsed island after a while without activity and lets mouse clicks pass through to windows underneath; restores at once when the pointer comes near or an alert arrives."
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "闲置变淡",
+        "title": "闲置多久后变淡"
+      },
+      "en": {
+        "group": "Idle dimming",
+        "title": "Idle time before dimming"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "闲置变淡",
+        "title": "变淡后不透明度"
+      },
+      "en": {
+        "group": "Idle dimming",
+        "title": "Dimmed opacity"
       }
     },
     {
