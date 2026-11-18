@@ -155,7 +155,6 @@ fn remove_editor_extensions(home_dir: &Path) {
     }
 }
 
-#[allow(dead_code)]
 pub(crate) fn cleanup_for_app_uninstall(app_dir: &Path, home_dir: &Path, delete_data: bool) {
     let previous = read_marker(app_dir).unwrap_or_default();
     let running_script = app_dir.join(AGENT_RUNNING_SCRIPT_FILE_NAME);

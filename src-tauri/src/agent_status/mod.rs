@@ -87,7 +87,6 @@ use hooks_state::{script_outdated, AgentHooksState};
 use markers::{apply_agent_running_markers, remove_agent_marker_files, remove_legacy_hook_inputs};
 pub(crate) use claude_compat::{claimed_elsewhere, compat_input, compat_reply, Reply};
 pub use uninstall::AgentHooksUninstallResult;
-#[allow(unused_imports)]
 pub(crate) use uninstall::cleanup_for_app_uninstall;
 use uninstall::restore_hooks_after_reinstall;
 use snapshot::{
