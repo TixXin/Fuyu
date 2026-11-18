@@ -1,5 +1,5 @@
 import { request as httpRequest } from "node:http";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const FUYU_DIR = "__FUYU_DIR__";
@@ -10,12 +10,21 @@ const WAIT_MS = 140000;
 const REPLIES = new Set(["once", "always", "reject"]);
 const open = new Map();
 
+async function fuyuDirExists() {
+  try {
+    return (await stat(FUYU_DIR)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 function noteFile(id) {
   return join(NOTES_DIR, `opencode-plugin-${String(id).replace(/[^A-Za-z0-9_.-]/g, "_")}.json`);
 }
 
 async function note(request) {
   try {
+    if (!(await fuyuDirExists())) return;
     await mkdir(NOTES_DIR, { recursive: true });
     await writeFile(noteFile(request.id), JSON.stringify({ hook_event_name: "PermissionRequest", session_id: request.sessionID }));
   } catch {}

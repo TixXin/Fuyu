@@ -35,7 +35,7 @@ pub(super) const SPEC: Compat = Compat {
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
-    hooks: Some(Hooks { install: droid_hooks::install, check: droid_hooks::check }),
+    hooks: Some(Hooks { install: droid_hooks::install, check: droid_hooks::check, uninstall: droid_hooks::uninstall }),
     status_light: Some(StatusLight {
         running_marker: "agent-droid-running.flag",
         running_hold: "agent-droid-running-hold.flag",

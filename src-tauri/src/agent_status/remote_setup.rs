@@ -168,6 +168,48 @@ pub(super) fn install_hooks(app_dir: &Path) -> Vec<RemoteResult> {
     })
 }
 
+pub(super) fn without_remote_hooks(text: &str) -> Result<String, String> {
+    if text.trim().is_empty() {
+        return Ok(text.to_string());
+    }
+    let original: Value = serde_json::from_str(text)
+        .map_err(|error| format!("Failed to parse ~/{SETTINGS_PATH}: {error}"))?;
+    let mut config = original.clone();
+    let root = config
+        .as_object_mut()
+        .ok_or_else(|| format!("~/{SETTINGS_PATH} must contain a JSON object"))?;
+    if let Some(Value::Object(hooks)) = root.get_mut("hooks") {
+        install_claude_code_hook_events(hooks, Vec::new());
+    }
+    if Some(&*root) == original.as_object() {
+        return Ok(text.to_string());
+    }
+    if root.get("hooks").and_then(Value::as_object).is_some_and(serde_json::Map::is_empty) {
+        root.remove("hooks");
+    }
+    serde_json::to_string_pretty(&config).map_err(|error| error.to_string())
+}
+
+pub(super) fn uninstall_hooks(app_dir: &Path) -> Vec<RemoteResult> {
+    for_each_remote(app_dir, &|_, target| {
+        let claude = edit(target, SETTINGS_PATH, &without_remote_hooks);
+        let antigravity = super::antigravity_remote::uninstall(target).map_err(|error| format!("Antigravity: {error}"));
+        let cleanup = run_ssh(
+            target,
+            &format!(
+                "rm -rf \"$HOME/{REMOTE_NOTIFICATIONS_DIR}\" \"$HOME/{LEGACY_REMOTE_NOTIFICATIONS_DIR}\" \"$HOME/{APPROVAL_PORT_FILE}\"\n"
+            ),
+        )
+        .map(|_| ());
+        let errors: Vec<String> = [claude, antigravity, cleanup].into_iter().filter_map(Result::err).collect();
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors.join("; "))
+        }
+    })
+}
+
 pub(super) fn set_reply_marker(app_dir: &Path, enabled: bool) -> Vec<RemoteResult> {
     let change = if enabled { Change::Enable } else { Change::Disable };
     for_each_remote(app_dir, &|_, target| remote_reply_marker::sync(target, change))

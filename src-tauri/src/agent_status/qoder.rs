@@ -22,7 +22,7 @@ pub(super) const SPEC: Compat = Compat {
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
-    hooks: Some(Hooks { install, check }),
+    hooks: Some(Hooks { install, check, uninstall }),
     status_light: Some(StatusLight {
         running_marker: "agent-qoder-running.flag",
         running_hold: "agent-qoder-running-hold.flag",
@@ -38,6 +38,10 @@ fn install(env: &HookEnv) -> Result<(), String> {
 
 fn check(env: &HookEnv) -> HookInstallState {
     claude_compat::hooks_state(&SPEC, env)
+}
+
+fn uninstall(env: &HookEnv) -> Result<(), String> {
+    claude_compat::uninstall_hooks(&SPEC, env)
 }
 
 fn sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {

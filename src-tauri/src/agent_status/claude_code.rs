@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::claude_hooks::{install_claude_code_status_hooks, ApprovalHook};
+use super::claude_hooks::{install_claude_code_status_hooks, uninstall_claude_code_status_hooks, ApprovalHook};
 use super::harness::{Harness, HookEnv, Hooks, RemoteFiles, StatusLight};
 use super::hooks_state::{claude_code_hooks_state, HookInstallState};
 use super::markers::{
@@ -18,6 +18,7 @@ pub(super) const HARNESS: Harness = Harness {
     hooks: Some(Hooks {
         install,
         check: hooks_state,
+        uninstall,
     }),
     status_light: Some(StatusLight {
         running_marker: CLAUDE_CODE_RUNNING_MARKER_FILE_NAME,
@@ -56,6 +57,10 @@ fn install(env: &HookEnv) -> Result<(), String> {
         approval_hook().as_ref(),
         crate::agent_approval::hook_endpoint_unknown(),
     )
+}
+
+fn uninstall(env: &HookEnv) -> Result<(), String> {
+    uninstall_claude_code_status_hooks(&settings_path(env.home_dir))
 }
 
 fn hooks_state(env: &HookEnv) -> HookInstallState {

@@ -1,5 +1,5 @@
 import { request as httpRequest } from "node:http";
-import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const FUYU_DIR = "__FUYU_DIR__";
@@ -24,6 +24,14 @@ function sessionIdOf(session, agent) {
   return text(session?.id, 200) || text(session?.header?.id, 200) || text(agent?.id, 200) || "dsh-default";
 }
 
+async function fuyuDirExists() {
+  try {
+    return (await stat(FUYU_DIR)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 async function writeAtomic(target, content) {
   const tmp = `${target}.${process.pid}.${Date.now()}.tmp`;
   await writeFile(tmp, content, "utf8");
@@ -32,7 +40,7 @@ async function writeAtomic(target, content) {
 
 async function markRunning() {
   try {
-    await mkdir(FUYU_DIR, { recursive: true });
+    if (!(await fuyuDirExists())) return;
     await writeFile(RUNNING_FILE, "", "utf8");
     await rm(HOLD_FILE, { force: true });
   } catch {}
@@ -41,7 +49,7 @@ async function markRunning() {
 async function markFinished(phase) {
   const now = Date.now();
   try {
-    await mkdir(FUYU_DIR, { recursive: true });
+    if (!(await fuyuDirExists())) return;
     let visibleUntil = 0;
     try {
       const info = await stat(RUNNING_FILE);

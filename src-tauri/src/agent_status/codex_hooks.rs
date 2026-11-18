@@ -27,6 +27,26 @@ pub(super) fn install_codex_status_hooks(
     write_text_file(config_path, &next_content)
 }
 
+pub(super) fn uninstall_codex_status_hooks(config_path: &Path) -> Result<(), String> {
+    let content = match fs::read_to_string(config_path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(format!("Failed to read Codex config.toml: {error}")),
+    };
+    let cleaned = remove_managed_codex_hook_block(&content);
+    if cleaned == content {
+        return Ok(());
+    }
+    let trimmed = cleaned.trim_end();
+    let next = if trimmed.is_empty() {
+        String::new()
+    } else {
+        let newline = if content.contains("\r\n") { "\r\n" } else { "\n" };
+        format!("{trimmed}{newline}")
+    };
+    write_text_file(config_path, &next)
+}
+
 pub(super) fn build_codex_hook_block(
     running_script_path: &Path,
     status_script_path: &Path,
@@ -212,30 +232,21 @@ pub(super) fn is_codex_nested_hook_header_for(header: &str, hook_path: &str) -> 
 
 #[cfg(windows)]
 pub(super) fn agent_running_command(script_path: &Path, provider: &str) -> String {
-    format!(
-        "cmd.exe /d /s /c \"\"{}\" {}\"",
-        script_path.to_string_lossy(),
-        provider
-    )
+    let script = script_path.to_string_lossy();
+    format!("cmd.exe /d /s /c \"if exist \"{script}\" (\"{script}\" {provider}) else exit /b 0\"")
 }
 
 #[cfg(windows)]
 pub(super) fn agent_running_command_with(script_path: &Path, provider: &str, arg: &str) -> String {
-    format!(
-        "cmd.exe /d /s /c \"\"{}\" {} {}\"",
-        script_path.to_string_lossy(),
-        provider,
-        arg
-    )
+    let script = script_path.to_string_lossy();
+    format!("cmd.exe /d /s /c \"if exist \"{script}\" (\"{script}\" {provider} {arg}) else exit /b 0\"")
 }
 
 #[cfg(windows)]
 pub(super) fn agent_status_command(script_path: &Path, provider: &str, phase: &str) -> String {
+    let script = script_path.to_string_lossy();
     format!(
-        "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"{}\" {} {}",
-        script_path.to_string_lossy(),
-        provider,
-        phase
+        "cmd.exe /d /s /c \"if exist \"{script}\" (powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"{script}\" {provider} {phase}) else exit /b 0\""
     )
 }
 
@@ -246,17 +257,20 @@ fn shell_quoted(path: &Path) -> String {
 
 #[cfg(not(windows))]
 pub(super) fn agent_running_command(script_path: &Path, provider: &str) -> String {
-    format!("/bin/sh {} {provider}", shell_quoted(script_path))
+    let script = shell_quoted(script_path);
+    format!("[ -f {script} ] && exec /bin/sh {script} {provider} || exit 0")
 }
 
 #[cfg(not(windows))]
 pub(super) fn agent_running_command_with(script_path: &Path, provider: &str, arg: &str) -> String {
-    format!("/bin/sh {} {provider} {arg}", shell_quoted(script_path))
+    let script = shell_quoted(script_path);
+    format!("[ -f {script} ] && exec /bin/sh {script} {provider} {arg} || exit 0")
 }
 
 #[cfg(not(windows))]
 pub(super) fn agent_status_command(script_path: &Path, provider: &str, phase: &str) -> String {
-    format!("/bin/sh {} {provider} {phase}", shell_quoted(script_path))
+    let script = shell_quoted(script_path);
+    format!("[ -f {script} ] && exec /bin/sh {script} {provider} {phase} || exit 0")
 }
 
 pub(super) fn toml_basic_string(value: &str) -> String {
@@ -281,17 +295,17 @@ mod tests {
         assert_eq!(background.matches("async = true").count(), 1, "only SessionStart runs in the background");
 
         assert!(block.contains(
-            r#"command = "cmd.exe /d /s /c \"\"C:\\a b\\fuyu-agent-running.cmd\" codex\"""#
+            r#"command = "cmd.exe /d /s /c \"if exist \"C:\\a b\\fuyu-agent-running.cmd\" (\"C:\\a b\\fuyu-agent-running.cmd\" codex) else exit /b 0\"""#
         ));
         assert!(!block.contains("capture"));
         assert!(block.contains(
-            r#"command = "cmd.exe /d /s /c \"\"C:\\a b\\fuyu-agent-running.cmd\" codex notification\"""#
+            r#"command = "cmd.exe /d /s /c \"if exist \"C:\\a b\\fuyu-agent-running.cmd\" (\"C:\\a b\\fuyu-agent-running.cmd\" codex notification) else exit /b 0\"""#
         ));
         assert!(block.contains("[[hooks.SessionStart]]") && block.contains("[[hooks.PermissionRequest]]"));
-        assert!(block.contains(r#"fuyu-agent-session.ps1\" codex start"#));
+        assert!(block.contains(r#"fuyu-agent-session.ps1\" codex start) else exit /b 0"#));
         assert_eq!(
             agent_running_command(Path::new(r"C:\s.cmd"), "codex"),
-            r#"cmd.exe /d /s /c ""C:\s.cmd" codex""#
+            r#"cmd.exe /d /s /c "if exist "C:\s.cmd" ("C:\s.cmd" codex) else exit /b 0""#
         );
     }
 
@@ -299,10 +313,13 @@ mod tests {
     #[test]
     fn mac_commands_quote_the_script_for_the_shell() {
         let block = build_codex_hook_block(Path::new("/Users/a b/.fuyu/fuyu-agent-running.sh"), Path::new("/Users/a b/.fuyu/fuyu-agent-status.sh"), false);
-        assert!(block.contains(r#"command = "/bin/sh '/Users/a b/.fuyu/fuyu-agent-running.sh' codex""#));
-        assert!(block.contains(r#"command = "/bin/sh '/Users/a b/.fuyu/fuyu-agent-session.sh' codex start""#));
-        assert!(block.contains(r#"command = "/bin/sh '/Users/a b/.fuyu/fuyu-agent-approval.sh' codex permission""#));
-        assert_eq!(agent_running_command(Path::new("/tmp/it's.sh"), "codex"), r#"/bin/sh '/tmp/it'\''s.sh' codex"#);
+        assert!(block.contains(r#"command = "[ -f '/Users/a b/.fuyu/fuyu-agent-running.sh' ] && exec /bin/sh '/Users/a b/.fuyu/fuyu-agent-running.sh' codex || exit 0""#));
+        assert!(block.contains(r#"command = "[ -f '/Users/a b/.fuyu/fuyu-agent-session.sh' ] && exec /bin/sh '/Users/a b/.fuyu/fuyu-agent-session.sh' codex start || exit 0""#));
+        assert!(block.contains(r#"command = "[ -f '/Users/a b/.fuyu/fuyu-agent-approval.sh' ] && exec /bin/sh '/Users/a b/.fuyu/fuyu-agent-approval.sh' codex permission || exit 0""#));
+        assert_eq!(
+            agent_running_command(Path::new("/tmp/it's.sh"), "codex"),
+            r#"[ -f '/tmp/it'\''s.sh' ] && exec /bin/sh '/tmp/it'\''s.sh' codex || exit 0"#
+        );
     }
 
 }

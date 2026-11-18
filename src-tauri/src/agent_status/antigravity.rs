@@ -35,6 +35,7 @@ pub(super) const HARNESS: Harness = Harness {
     hooks: Some(Hooks {
         install: install_hooks,
         check: hooks_state,
+        uninstall: uninstall_hooks,
     }),
     status_light: Some(StatusLight {
         running_marker: "agent-antigravity-running.flag",
@@ -506,6 +507,30 @@ pub(super) fn install_hooks(env: &HookEnv) -> Result<(), String> {
     let content = serde_json::to_string_pretty(&config)
         .map_err(|error| format!("Failed to serialize Antigravity hooks.json: {error}"))?;
     write_text_file(&path, &content)
+}
+
+pub(super) fn uninstall_hooks(env: &HookEnv) -> Result<(), String> {
+    let path = hooks_path(env.home_dir);
+    let content = match fs::read_to_string(&path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(format!("Failed to read Antigravity hooks.json: {error}")),
+    };
+    let trimmed = content.trim_start_matches('\u{feff}').trim();
+    if trimmed.is_empty() {
+        return Ok(());
+    }
+    let mut config: Value = serde_json::from_str(trimmed)
+        .map_err(|error| format!("Failed to parse Antigravity hooks.json: {error}"))?;
+    let root = config
+        .as_object_mut()
+        .ok_or_else(|| "Antigravity hooks.json must contain a JSON object.".to_string())?;
+    if root.remove(HOOK_NAME).is_none() {
+        return Ok(());
+    }
+    let serialized = serde_json::to_string_pretty(&config)
+        .map_err(|error| format!("Failed to serialize Antigravity hooks.json: {error}"))?;
+    write_text_file(&path, &serialized)
 }
 
 #[cfg(test)]

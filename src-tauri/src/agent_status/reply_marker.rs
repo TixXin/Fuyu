@@ -183,11 +183,23 @@ fn changed(text: &str, change: Change) -> Option<String> {
     (next != text).then_some(next)
 }
 
+fn is_exclusive_rules_file(target: &Path) -> bool {
+    target.file_name().is_some_and(|name| name == "fuyu-island.md")
+        && target.parent().and_then(Path::file_name).is_some_and(|dir| dir == "rules")
+}
+
 fn sync_file(target: &Path, change: Change) -> (bool, bool, Option<String>) {
     let text = match read_text(target) {
         Ok(text) => text,
         Err(error) => return (false, false, Some(error)),
     };
+    if change == Change::Disable && is_exclusive_rules_file(target) {
+        let next = without_block(&text);
+        if next.trim().is_empty() {
+            let error = super::uninstall::remove_file_if_exists(target).err();
+            return (false, false, error);
+        }
+    }
     let (text, error) = match changed(&text, change) {
         Some(next) => match super::write_text_file(target, &next) {
             Ok(()) => (next, None),
@@ -255,6 +267,20 @@ fn state(home_dir: &Path, change: Change) -> Result<ReplyMarkerState, String> {
 
 fn home_dir() -> Result<PathBuf, String> {
     crate::system::windows_home_dir()
+}
+
+pub(super) fn is_installed_in(home_dir: &Path) -> bool {
+    state(home_dir, Change::Read).is_ok_and(|current| current.installed)
+}
+
+pub(super) fn set_local(home_dir: &Path, enabled: bool) -> Result<(), String> {
+    let result = state(home_dir, if enabled { Change::Enable } else { Change::Disable })?;
+    let errors: Vec<&str> = result.files.iter().filter_map(|file| file.error.as_deref()).collect();
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors.join("; "))
+    }
 }
 
 pub(super) fn upgrade_installed() {

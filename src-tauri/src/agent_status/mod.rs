@@ -73,6 +73,7 @@ mod kimi_hooks;
 mod mimo;
 mod pi;
 mod third_party;
+mod uninstall;
 
 use serde::Serialize;
 use serde_json::{json, Value};
@@ -85,6 +86,10 @@ use harness::HookEnv;
 use hooks_state::{script_outdated, AgentHooksState};
 use markers::{apply_agent_running_markers, remove_agent_marker_files, remove_legacy_hook_inputs};
 pub(crate) use claude_compat::{claimed_elsewhere, compat_input, compat_reply, Reply};
+pub use uninstall::AgentHooksUninstallResult;
+#[allow(unused_imports)]
+pub(crate) use uninstall::cleanup_for_app_uninstall;
+use uninstall::restore_hooks_after_reinstall;
 use snapshot::{
     agent_status_snapshot_from_persisted, current_unix_millis, default_agent_phase,
     default_agent_status_snapshot, default_persisted_agent_status, AgentStatusSnapshot,
@@ -256,7 +261,17 @@ pub(crate) const PLUGIN_ID: &str = "agents";
 pub fn init() {
     background::register();
     if may_change_hook_files() {
-        std::thread::spawn(reply_marker::upgrade_installed);
+        std::thread::spawn(|| {
+            if let (Some(app_dir), Ok(home_dir)) = (
+                crate::home_dir::current().map(Path::to_path_buf).or_else(crate::home_dir::real_home),
+                windows_home_dir(),
+            ) {
+                if let Err(error) = restore_hooks_after_reinstall(&app_dir, &home_dir) {
+                    eprintln!("failed to restore hooks after reinstall: {error}");
+                }
+            }
+            reply_marker::upgrade_installed();
+        });
     }
 }
 
@@ -282,6 +297,16 @@ pub(crate) fn clear_external_owner(owner: &str) {
 #[tauri::command]
 pub async fn install_agent_status_hooks(app: AppHandle) -> Result<AgentHooksInstallResult, String> {
     tauri::async_runtime::spawn_blocking(move || install_agent_status_hooks_now(&app))
+        .await
+        .map_err(|error| format!("Failed to join the agent hooks task: {error}"))?
+}
+
+#[tauri::command]
+pub async fn uninstall_agent_status_hooks(app: AppHandle) -> Result<AgentHooksUninstallResult, String> {
+    crate::dev_lane::refuse_in_preview("remove the agents' hooks")?;
+    let app_dir = crate::home_dir::agent_home(app.path())
+        .map_err(|error| format!("Failed to resolve app data directory: {error}"))?;
+    tauri::async_runtime::spawn_blocking(move || uninstall::uninstall_agent_status_hooks_now(&app_dir))
         .await
         .map_err(|error| format!("Failed to join the agent hooks task: {error}"))?
 }
@@ -665,6 +690,7 @@ macro_rules! tauri_commands {
             crate::agent_status::get_agent_status,
             crate::agent_status::clear_agent_status,
             crate::agent_status::install_agent_status_hooks,
+            crate::agent_status::uninstall_agent_status_hooks,
             crate::agent_status::get_agent_hooks_state,
             crate::agent_status::focus_agent_window,
             crate::agent_status::get_editor_extension_states,

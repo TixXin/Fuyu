@@ -80,6 +80,31 @@ pub(super) fn install_into(dir: &Path, block: &str) -> Result<(), String> {
     Ok(())
 }
 
+pub(super) fn uninstall(env: &HookEnv) -> Result<(), String> {
+    uninstall_from(&home(env.home_dir))
+}
+
+pub(super) fn uninstall_from(dir: &Path) -> Result<(), String> {
+    let path = dir.join(CONFIG_FILE);
+    let content = match fs::read_to_string(&path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(format!("Failed to read Kimi Code config.toml: {error}")),
+    };
+    let cleaned = remove_hook_blocks(&content, BLOCK_BEGIN, BLOCK_END);
+    if cleaned == content {
+        return Ok(());
+    }
+    let trimmed = cleaned.trim_end();
+    let next = if trimmed.is_empty() {
+        String::new()
+    } else {
+        let newline = if content.contains("\r\n") { "\r\n" } else { "\n" };
+        format!("{trimmed}{newline}")
+    };
+    write_text_file(&path, &next)
+}
+
 pub(super) fn check(env: &HookEnv) -> HookInstallState {
     let dir = home(env.home_dir);
     if !dir.is_dir() {
