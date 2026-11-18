@@ -9,6 +9,7 @@ import { BUILTIN_ICONS, BuiltinPluginsGroup, matchesPluginQuery, milliseconds, P
 import type { SettingsCategory } from "./categories";
 import { PluginBisectBar } from "./PluginBisectBar";
 import { PluginHostNodeRow } from "./PluginHostNodeRow";
+import { V2PluginMigrationCard } from "./V2PluginMigrationCard";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginStatusV3 } from "./usePluginHostStatus";
 import "./PluginsV3SettingsPage.css";
 
@@ -312,6 +313,7 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
       {tab === "plugins" ? (
         <>
           <HostSummaryBar view={view} runningCount={runningCount} onOpenDiagnostics={() => setTab("diagnostics")} />
+          <V2PluginMigrationCard onOpenPage={onOpenPage} />
           {open ? <PluginBisectBar thirdPartyIds={extras.filter((p) => p.kind === "third-party" || !p.kind).map((p) => p.id)} onBisect={view.bisect} /> : null}
           <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
         </>
@@ -360,6 +362,7 @@ export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: Plugi
               </div>
             </div>
           </section>
+          <V2PluginMigrationCard onOpenPage={onOpenPage} />
           <BuiltinPluginsGroup builtins={builtins} hostEnabled={false} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
           {selectedId ? <PluginDetailModal builtin={selectedBuiltin} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
         </>

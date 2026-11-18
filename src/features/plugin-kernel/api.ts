@@ -1,5 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event";
+import {
+  normalizeV2MigrationSnapshot,
+  type V2MigrationDismissTarget,
+  type V2MigrationSnapshot,
+} from "./v2Migration.ts";
+
+export type { V2MigrationDismissTarget, V2MigrationSnapshot } from "./v2Migration.ts";
 
 export interface HostConnection {
   enabled: boolean;
@@ -107,4 +114,22 @@ export function onBuiltinDiagnosticsRequest(handler: (id: number) => void): Prom
 
 export function reportBuiltinDiagnostics(report: BuiltinDiagnosticsReport): Promise<void> {
   return emit(BUILTIN_DIAGNOSTICS_REPORT, report);
+}
+
+export const V2_PLUGIN_MIGRATION_CHANGED = "v2-plugin-migration-changed";
+
+export async function getV2PluginMigration(): Promise<V2MigrationSnapshot> {
+  const raw = await invoke<unknown>("get_v2_plugin_migration");
+  return normalizeV2MigrationSnapshot(raw);
+}
+
+export async function dismissV2PluginMigration(target: V2MigrationDismissTarget): Promise<V2MigrationSnapshot> {
+  const raw = await invoke<unknown>("dismiss_v2_plugin_migration", { target });
+  return normalizeV2MigrationSnapshot(raw);
+}
+
+export function onV2PluginMigrationChanged(handler: (snapshot: V2MigrationSnapshot) => void): Promise<UnlistenFn> {
+  return listen<unknown>(V2_PLUGIN_MIGRATION_CHANGED, (event) => {
+    handler(normalizeV2MigrationSnapshot(event.payload));
+  });
 }
