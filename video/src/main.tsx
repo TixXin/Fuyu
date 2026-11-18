@@ -13,6 +13,7 @@ const VIDEOS: Record<string, () => Promise<{ default: VideoModule }>> = {
   "002-agents": () => import("./videos/002-agents"),
   "003-messages": () => import("./videos/003-messages"),
   "004-one-day": () => import("./videos/004-one-day"),
+  "005-at-work": () => import("./videos/005-at-work"),
 };
 
 const params = new URLSearchParams(location.search);
@@ -53,7 +54,7 @@ Object.assign(window, { __video: control });
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    <Stage lang={lang} windows={video.windows(lang, FORMAT)} endCard={video.endCard(lang)} backdrop={video.backdrop?.(lang, FORMAT)} scenery={video.scenery?.(lang, FORMAT)} look={video.look ?? "promo"} />
+    <Stage lang={lang} windows={video.windows(lang, FORMAT)} endCard={video.endCard(lang)} backdrop={video.backdrop?.(lang, FORMAT)} scenery={video.scenery?.(lang, FORMAT)} overlay={video.overlay?.(lang, FORMAT)} look={video.look ?? "promo"} />
   </StrictMode>,
 );
 

@@ -62,6 +62,7 @@ cd video
 - `ref-clean.wav` 是从用户给的参考女声里取的 6.6 秒，已经去掉背景音乐；`--reference-text` 必须是这段音频里说的原话。参考音频不进仓库。
 - 换参考音色时：先转写找一段 5–10 秒、纯中文、句子完整的；音频里有背景音乐就先做人声分离（`python -m demucs --two-stems vocals -n htdemucs`），再裁成 16 kHz 单声道。句间空隙的音量从 -21 dB 降到 -49 dB 才算干净。
 - 克隆的声音会公开发布，换新的参考音色时向用户确认有权使用。
+- 沿用前一条视频的声音时，参考音频从仓库里那条的旁白重建，不用找原始参考：`ffmpeg -i video/assets/voice/<旧 id>/zh/l1.mp3 -i video/assets/voice/<旧 id>/zh/l3.mp3 -filter_complex "[0:a]apad=pad_dur=0.35[a];[a][1:a]concat=n=2:v=0:a=1,aresample=16000,aformat=channel_layouts=mono" <ref.wav>`，`--reference-text` 是那两句在旧视频 `narration.json` 里的原文连起来。中英两版用同一段中文参考。
 - 重装环境：Python 3.10；RTX 50 系要 `torch==2.7.1` 和 `torchaudio==2.7.1` 的 cu128 版，不能用仓库钉的 2.3.1；`openai-whisper` 不钉版本并加 `setuptools<81`；另外装 `pyworld`（只要预编译包）、`faster-whisper`、`demucs`（`--no-deps`）、`sphn`。模型从 ModelScope 下 `FunAudioLLM/Fun-CosyVoice3-0.5B-2512`。
 
 ## 配乐
@@ -76,6 +77,7 @@ uv run python E:\Projects\fuyu\.claude\skills\fuyu-video\scripts\bgm.py --ace . 
 - 时长比视频长 15 秒以上。一次出两首（批量上限是 2），用可量的指标挑：`ebur128` 的 LRA 小（平稳）、中间没有静音、`readback.py` 回读是空的（没有人声）。
 - 转成成片用的文件：裁到尾部静音之前，`loudnorm=I=-16:TP=-1.5`，结尾 1–1.5 秒淡出，存成 `video/assets/bgm/<视频 id>.mp3`。
 - 渲染器会循环铺满、开头结尾淡入淡出、有旁白时压低。压得太狠就听不见：现在的参数在 `render/render.mjs` 的 `sidechaincompress` 和 `volume=0.8`。
+- 显存 4 GB 左右的卡（如 GTX 1050 Ti）：加 `--offload`、`--seeds` 一次只给一个、设 `ACESTEP_GENERATION_TIMEOUT=3600`，一首约 8 分钟；两首一起跑会撞上它默认 600 秒的超时。加载主模型时内存峰值高，空闲内存不到 8 GB 先别跑。模型不在 `<ace>/checkpoints` 时设 `ACESTEP_CHECKPOINTS_DIR`。
 - 模型下载卡住时设 `$env:ACESTEP_DOWNLOAD_SOURCE = 'modelscope'` 再 `uv run acestep-download`（文档里写的 `--download-source` 参数下载器不认）。
 
 ## 踩过的坑

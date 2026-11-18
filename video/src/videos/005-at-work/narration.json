@@ -1,0 +1,36 @@
+{
+  "zh": {
+    "l1": "六个 Agent 一起干活，你还在挨个切窗口看？",
+    "l2": "浮屿把它们收进一座岛。悬停一下，用量和进度都在。",
+    "l3": "跑完、出错、等你确认，岛会亮灯。",
+    "l4": "拿不准的地方，它就在岛上问你。",
+    "l5": "做完的会话一点就归档，再点一下，跳回对应的终端。",
+    "l6": "离开电脑，进度推到手机上，回一句，它接着干。",
+    "l7": "QQ、微信、邮件的新消息，也在岛上看。",
+    "l8": "开会前倒计时，点一下就入会。",
+    "l9": "勾掉待办，顺手记一笔。鼠标移开，岛自己收起。",
+    "l10": "写代码的时候，歌词跟着音乐，一个字一个字地亮。",
+    "l11": "深色、浅色，还有几种液态玻璃，随你换。",
+    "l12": "拖到屏幕边上，它自己吸附。",
+    "l13": "想让岛显示点别的？让 Agent 写个插件，提交到插件市场，谁都能装。",
+    "l14": "你的岛，你自己定。",
+    "l15": "浮屿，Windows 上的桌面灵动岛。开源，免费。"
+  },
+  "en": {
+    "l1": "Six agents at work, and you're still switching windows to check on them?",
+    "l2": "Fuyu puts them all on one island. Hover for usage and progress.",
+    "l3": "Done, failed, or waiting: the island lights up.",
+    "l4": "When an agent isn't sure, it asks you right there.",
+    "l5": "Archive a finished session with one click. Click another to jump back to its terminal.",
+    "l6": "Away from your desk? Progress goes to your phone. Reply, and it keeps going.",
+    "l7": "New messages from QQ, WeChat and mail show up on the island too.",
+    "l8": "A countdown before meetings. One click to join.",
+    "l9": "Tick off a to-do, jot a note. Move the mouse away, and the island tucks itself in.",
+    "l10": "While you code, the lyrics light up with the music.",
+    "l11": "Dark, light, and a few kinds of liquid glass. Your pick.",
+    "l12": "Drag it to the edge, and it snaps into place.",
+    "l13": "Want the island to show something else? Have an agent write a plugin and submit it to the market, where anyone can install it.",
+    "l14": "Your island, your way.",
+    "l15": "Fuyu. A dynamic island for the Windows desktop. Free and open source."
+  }
+}
