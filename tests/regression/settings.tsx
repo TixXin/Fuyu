@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings";
 import { entryOf, settingsCategoryFor, sidebarItemOf, type SettingsCategory } from "../../src/windows/settings/categories";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { checkGlassLooks } from "./settings-glass-looks";
+import { checkThemeMarket } from "./settings-theme-market";
 import { commands, keybindingCalls, mailCalls, marketInstalls, openedUrls, REPLY_MARKER, replyMarkerCalls, revokedPermissions } from "./settingsMocks";
 
 const query = new URLSearchParams(location.search);
@@ -252,20 +253,7 @@ if (!automated) {
     check(savedItems() === null && zoneRows("左侧").join("|") === "Agent 状态灯", "Reset to default clears the saved order");
 
     await openPage("themeMarket");
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
-    const card = (id: string) => document.querySelector<HTMLElement>(`.theme-market__item[data-theme-id="${id}"]`)!;
-    const cardButton = (id: string, label: string) => [...card(id).querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === label);
-    check(document.querySelectorAll(".theme-market__item").length === 2 && card("fuyu.midnight").querySelector(".island-preview--compact")
-      && card("fuyu.midnight").querySelector(".plugin-market__badge--official") && card("someone.dusk").textContent?.includes("作者 someone"),
-      "The theme market lists each theme with a preview, Official for the island's own");
-    const scaleBefore = JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}").collapsedScale;
-    await act(async () => { cardButton("someone.dusk", "应用")!.click(); });
-    const afterApply = JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { islandBackgroundColor?: string; collapsedScale?: number };
-    check(afterApply.islandBackgroundColor === "#1b1020" && afterApply.collapsedScale === scaleBefore && cardButton("someone.dusk", "使用中")?.disabled,
-      "Apply changes the look, not the size, and the card says it is in use");
-    await act(async () => { cardButton("fuyu.midnight", "保存到我的主题")!.click(); });
-    check(cardButton("fuyu.midnight", "已保存")?.disabled && (localStorage.getItem("fuyu-setting-presets") ?? "").includes("午夜蓝"),
-      "Save adds the theme to the saved themes");
+    await checkThemeMarket(check);
 
     await openPage("music");
     const waveSwitch = () => settingRow("在收起的岛上显示音乐波形")?.querySelector<HTMLInputElement>("input");

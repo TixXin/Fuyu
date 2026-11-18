@@ -1,5 +1,5 @@
 import { THEME_SETTING_KEYS, normalizeSettings, withThemeFrom } from "../../lib/settings/settings.ts";
-import { hasThemeSets, themeSetsFromSingleColors } from "../../lib/theme/themeMode.ts";
+import { expandNestedThemeColors, hasDualThemeColors, themeAppearanceDefaults, themeColors } from "../../lib/theme/themeMode.ts";
 import type { IslandSettings } from "../../lib/settings/types";
 
 type Text = { "zh-CN": string; en: string };
@@ -33,7 +33,8 @@ export function readMarketThemes(entries: readonly unknown[]): MarketTheme[] {
     const name = readText(record.name, 40);
     const look = record.appearance;
     if (!id || seen.has(id) || !name || typeof look !== "object" || look === null) continue;
-    const appearance = Object.fromEntries(THEME_SETTING_KEYS.filter((key) => key in look).map((key) => [key, (look as Record<string, unknown>)[key]]));
+    const expanded = expandNestedThemeColors(look as Record<string, unknown>);
+    const appearance = Object.fromEntries(THEME_SETTING_KEYS.filter((key) => key in expanded).map((key) => [key, expanded[key]]));
     if (Object.keys(appearance).length === 0) continue;
     seen.add(id);
     themes.push({
@@ -47,13 +48,19 @@ export function readMarketThemes(entries: readonly unknown[]): MarketTheme[] {
   return themes;
 }
 
-export function withMarketTheme(current: IslandSettings, theme: MarketTheme): IslandSettings {
-  const sets = hasThemeSets(theme.appearance) ? {} : themeSetsFromSingleColors({ ...current, themeMode: "custom", ...theme.appearance });
-  return withThemeFrom(current, normalizeSettings({ ...current, ...theme.appearance, ...sets } as IslandSettings));
+export function isDualMarketTheme(theme: MarketTheme) {
+  return hasDualThemeColors(theme.appearance);
 }
+
+export function withMarketTheme(current: IslandSettings, theme: MarketTheme): IslandSettings {
+  const defaults = themeAppearanceDefaults(current, theme.appearance);
+  const merged = normalizeSettings({ ...current, ...defaults, ...theme.appearance } as IslandSettings);
+  return withThemeFrom(current, { ...merged, ...themeColors(merged, merged.themeMode === "light" ? "light" : "dark") });
+}
+
+const COPY_KEYS = new Set<string>(["islandBackgroundColor", "taskTextColor", "pulseColor", "inkColor"]);
 
 export function isThemeInUse(current: IslandSettings, theme: MarketTheme) {
   const applied = withMarketTheme(current, theme);
-  const copies = new Set<string>(["islandBackgroundColor", "taskTextColor", "pulseColor"]);
-  return THEME_SETTING_KEYS.every((key) => copies.has(key) || applied[key] === current[key]);
+  return THEME_SETTING_KEYS.every((key) => COPY_KEYS.has(key) || applied[key] === current[key]);
 }

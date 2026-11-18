@@ -126,6 +126,12 @@
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
+.theme-market__badge--dual {
+  color: var(--color-text-muted);
+  background: var(--color-white-a06);
+  border: 1px solid var(--color-white-a08);
+}
+
 .theme-market__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -180,8 +186,53 @@
 .theme-market__actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 6px;
+}
+
+.theme-market__tones {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: auto;
+  padding: 2px;
+  background: var(--color-white-a06);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-pill);
+}
+
+.theme-market__tone {
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 7px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+
+.theme-market__tone:hover {
+  color: var(--color-text);
+}
+
+.theme-market__tone[aria-pressed="true"] {
+  color: var(--color-text);
+  background: var(--color-white-a12);
+}
+
+.theme-market__tone:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
 }
 
 .theme-market__apply[aria-pressed="true"] {
