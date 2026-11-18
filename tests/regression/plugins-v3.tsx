@@ -80,6 +80,7 @@ mockIPC((command, payload) => {
     migrationReply = { ...migrationReply, settingsPending: false };
     return migrationReply;
   }
+  if (command === "take_pending_plugin_package") return null;
   return null;
 });
 

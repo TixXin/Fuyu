@@ -111,8 +111,10 @@ pub fn run() {
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());
     let result = builder
-        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            if let Some(link) = plugin_host::find_link(&args) {
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            if let Some(package) = plugin_kernel::package_open::find_in_args(args.iter().skip(1), Some(std::path::Path::new(&cwd))) {
+                plugin_kernel::package_open::open(app, package, false);
+            } else if let Some(link) = plugin_host::find_link(&args) {
                 let _ = island::show_island(app);
                 plugin_host::open_link(app, link, false);
             } else {
@@ -236,9 +238,14 @@ pub fn run() {
             if let Err(error) = plugin_kernel::init(app.handle()) {
                 eprintln!("failed to start the plugin platform v3 host: {error}");
             }
-            let args: Vec<String> = std::env::args().collect();
-            if let Some(link) = plugin_host::find_link(&args) {
-                plugin_host::open_link(app.handle(), link, true);
+            plugin_kernel::package_open::mark_started();
+            if let Some(package) = plugin_kernel::package_open::find_in_args(std::env::args_os().skip(1), None) {
+                plugin_kernel::package_open::open(app.handle(), package, true);
+            } else {
+                let args: Vec<String> = std::env::args().collect();
+                if let Some(link) = plugin_host::find_link(&args) {
+                    plugin_host::open_link(app.handle(), link, true);
+                }
             }
             mail::init();
             if let Err(error) = qq_notifications::init(app.handle()) {
@@ -313,7 +320,12 @@ pub fn run() {
                     wechat_reminders::shutdown();
                 }
                 #[cfg(target_os = "macos")]
-                tauri::RunEvent::Opened { urls } => plugin_host::open_opened_links(_app, &urls),
+                tauri::RunEvent::Opened { urls } => {
+                    let rest = plugin_kernel::package_open::open_opened_urls(_app, &urls);
+                    if !rest.is_empty() {
+                        plugin_host::open_opened_links(_app, &rest);
+                    }
+                }
                 #[cfg(target_os = "macos")]
                 tauri::RunEvent::Reopen { .. } => tray_visibility::reopen(_app),
                 _ => {}

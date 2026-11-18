@@ -7,6 +7,12 @@ import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { PluginInstallConfirmModal, resolvePluginText, type PendingPluginInstall } from "./PluginInstallConfirmModal";
 import "./PluginMarketV3Tab.css";
 
+export interface OpenedPluginPackage {
+  seq: number;
+  fileName: string;
+  base64: string;
+}
+
 type PendingAction =
   | { kind: "market"; name: string; version: string; modal: PendingPluginInstall }
   | { kind: "file"; base64: string; sha256: string; modal: PendingPluginInstall };
@@ -123,12 +129,50 @@ function MarketPluginCard({
   );
 }
 
-export function PluginMarketV3Tab({
-  connected,
-  query,
-}: {
+function useOpenedPluginPackage(
+  connected: boolean,
+  openedPackage: OpenedPluginPackage | null | undefined,
+  onConsume: ((seq: number) => void) | undefined,
+  openFileConfirm: (base64: string) => Promise<void>,
+  onError: (message: string) => void,
+) {
+  const errorText = useErrorText();
+  const handledSeqRef = useRef(0);
+  useEffect(() => {
+    if (!connected || !openedPackage || handledSeqRef.current === openedPackage.seq) return;
+    let cancelled = false;
+    let busy = false;
+    const run = () => {
+      if (cancelled || busy || handledSeqRef.current === openedPackage.seq) return;
+      busy = true;
+      void openFileConfirm(openedPackage.base64)
+        .then(() => {
+          if (cancelled) return;
+          handledSeqRef.current = openedPackage.seq;
+          onConsume?.(openedPackage.seq);
+        })
+        .catch((failure: unknown) => {
+          busy = false;
+          if (cancelled) return;
+          const code = (failure as { code?: unknown } | null)?.code;
+          if (code === "not-ready" || code === "no-provider") return;
+          handledSeqRef.current = openedPackage.seq;
+          onConsume?.(openedPackage.seq);
+          onError(errorText(failure));
+        });
+    };
+    run();
+    const offWatch = windowServices.watch(run);
+    return () => { cancelled = true; offWatch(); };
+  }, [connected, errorText, onConsume, onError, openFileConfirm, openedPackage]);
+}
+
+export function PluginMarketV3Tab({ connected, query, openedPackage, openedError, onConsumeOpenedPackage }: {
   connected: boolean;
   query: string;
+  openedPackage?: OpenedPluginPackage | null;
+  openedError?: string | null;
+  onConsumeOpenedPackage?: (seq: number) => void;
 }) {
   const text = useTranslation().settings.pluginsV3;
   const copy = text.market;
@@ -146,32 +190,28 @@ export function PluginMarketV3Tab({
 
   const loadCatalog = useCallback(() => {
     if (!connected) return;
-    void marketClient
-      .catalog()
-      .then((next) => {
-        setSnapshot(next);
-        setBannerError(next.error);
-      })
-      .catch(() => undefined);
+    void marketClient.catalog().then((next) => { setSnapshot(next); setBannerError(next.error); }).catch(() => undefined);
   }, [connected]);
+
+  const openFileConfirm = useCallback(async (base64: string) => {
+    const inspected = await marketClient.inspectPackage({ base64 });
+    setBannerError(null);
+    setModalError(null);
+    setPending({ kind: "file", base64, sha256: inspected.sha256, modal: { id: inspected.id, version: inspected.version, confirmation: inspected.confirmation } });
+  }, []);
 
   useEffect(() => {
     if (!connected) return;
     loadCatalog();
     const offWatch = windowServices.watch(loadCatalog);
     const offChanged = marketClient.on("changed", loadCatalog);
-    return () => {
-      offWatch();
-      void offChanged();
-    };
+    return () => { offWatch(); void offChanged(); };
   }, [connected, loadCatalog]);
 
+  useOpenedPluginPackage(connected, openedPackage, onConsumeOpenedPackage, openFileConfirm, setBannerError);
+
   if (!connected) {
-    return (
-      <div className="plugins-v3__market">
-        <p className="plugins-v3__empty">{copy.hostDisconnected}</p>
-      </div>
-    );
+    return <div className="plugins-v3__market"><p className="plugins-v3__empty">{copy.hostDisconnected}</p></div>;
   }
 
   const refresh = () => {
@@ -204,21 +244,7 @@ export function PluginMarketV3Tab({
     setBannerError(null);
     void file
       .arrayBuffer()
-      .then(async (buf) => {
-        const base64 = bytesToBase64(new Uint8Array(buf));
-        const inspected = await marketClient.inspectPackage({ base64 });
-        setModalError(null);
-        setPending({
-          kind: "file",
-          base64,
-          sha256: inspected.sha256,
-          modal: {
-            id: inspected.id,
-            version: inspected.version,
-            confirmation: inspected.confirmation,
-          },
-        });
-      })
+      .then((buf) => openFileConfirm(bytesToBase64(new Uint8Array(buf))))
       .catch((failure: unknown) => setBannerError(errorText(failure)));
   };
 
@@ -237,24 +263,31 @@ export function PluginMarketV3Tab({
       kind: "market",
       name: plugin.name,
       version: candidate.version,
-      modal: {
-        id: plugin.name,
-        version: candidate.version,
-        isUpdate,
-        confirmation: candidate.confirmation,
-      },
+      modal: { id: plugin.name, version: candidate.version, isUpdate, confirmation: candidate.confirmation },
     });
   };
+
+  const plugins = snapshot?.plugins ?? [];
+  const filtered = plugins.filter((item) => matchesMarketQuery(item, query));
+  const manualAllowed = snapshot?.manualAllowed === true;
+  const shownBannerError = bannerError ?? openedError ?? null;
 
   const confirmInstall = () => {
     if (!pending) return;
     setInstalling(true);
     setModalError(null);
-    const task =
-      pending.kind === "market"
-        ? marketClient.installMarket({ name: pending.name, version: pending.version })
-        : marketClient.installFile({ base64: pending.base64, expectedSha256: pending.sha256 });
-    void task
+    const run = async () => {
+      if (pending.kind === "market") {
+        await marketClient.installMarket({ name: pending.name, version: pending.version });
+        return;
+      }
+      if (!manualAllowed) {
+        const res = await marketClient.setManualAllowed({ allowed: true });
+        setSnapshot((prev) => (prev ? { ...prev, manualAllowed: res.manualAllowed } : prev));
+      }
+      await marketClient.installFile({ base64: pending.base64, expectedSha256: pending.sha256 });
+    };
+    void run()
       .then(() => {
         setPending(null);
         loadCatalog();
@@ -262,10 +295,6 @@ export function PluginMarketV3Tab({
       .catch((failure: unknown) => setModalError(errorText(failure)))
       .finally(() => setInstalling(false));
   };
-
-  const plugins = snapshot?.plugins ?? [];
-  const filtered = plugins.filter((item) => matchesMarketQuery(item, query));
-  const manualAllowed = snapshot?.manualAllowed === true;
 
   return (
     <div className="plugins-v3__market">
@@ -323,7 +352,7 @@ export function PluginMarketV3Tab({
         </div>
       </section>
 
-      {bannerError ? <p className="plugins-v3__error-banner">{bannerError}</p> : null}
+      {shownBannerError ? <p className="plugins-v3__error-banner">{shownBannerError}</p> : null}
 
       {snapshot === null ? (
         <p className="plugins-v3__empty">{copy.loading}</p>

@@ -1,14 +1,14 @@
-import { useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useCallback, useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { Search, X } from "lucide-react";
-import { useTranslation } from "../../i18n";
-import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
+import { useErrorText, useTranslation } from "../../i18n";
+import { onPluginPackageOpen, takePendingPluginPackage, type BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { BuiltinPluginsGroup, stateOf } from "./BuiltinPluginsGroup";
 import type { SettingsCategory } from "./categories";
 import { PluginBisectBar } from "./PluginBisectBar";
 import { PluginDetailModal } from "./PluginDetailModal";
 import { HostSummaryBar, megabytes, PluginDiagnosticsTab } from "./PluginDiagnosticsTab";
-import { PluginMarketV3Tab } from "./PluginMarketV3Tab";
+import { PluginMarketV3Tab, type OpenedPluginPackage } from "./PluginMarketV3Tab";
 import { V2PluginMigrationCard } from "./V2PluginMigrationCard";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView } from "./usePluginHostStatus";
 import "./PluginsV3SettingsPage.css";
@@ -44,6 +44,31 @@ function SearchInput({ query, onChange }: { query: string; onChange: (next: stri
   );
 }
 
+let bufferedPackage: OpenedPluginPackage | null = null;
+let inFlightPackage: Promise<{ pkg: OpenedPluginPackage | null; error: string | null }> | null = null;
+let nextPackageSeq = 0;
+
+function consumeBufferedPackage(seq: number) {
+  if (bufferedPackage?.seq === seq) bufferedPackage = null;
+}
+
+function pullPendingPackage(formatError: (error: unknown) => string): Promise<{ pkg: OpenedPluginPackage | null; error: string | null }> {
+  if (inFlightPackage) return inFlightPackage;
+  inFlightPackage = takePendingPluginPackage()
+    .then((taken) => {
+      if (taken) {
+        nextPackageSeq += 1;
+        bufferedPackage = { seq: nextPackageSeq, fileName: taken.fileName, base64: taken.base64 };
+      }
+      return { pkg: bufferedPackage, error: null };
+    })
+    .catch((failure: unknown) => ({ pkg: null, error: formatError(failure) }))
+    .finally(() => {
+      inFlightPackage = null;
+    });
+  return inFlightPackage;
+}
+
 export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins, onOpenPage }: {
   view: PluginHostView;
   now?: number;
@@ -51,11 +76,48 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
   onOpenPage?: (page: SettingsCategory) => void;
 }) {
   const text = useTranslation().settings.pluginsV3;
+  const errorText = useErrorText();
   const loadedBuiltins = useBuiltinPlugins();
   const builtins = givenBuiltins === undefined ? loadedBuiltins : givenBuiltins;
   const [tab, setTab] = useState<PluginsV3Tab>("plugins");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [openedPackage, setOpenedPackage] = useState<OpenedPluginPackage | null>(null);
+  const [openedError, setOpenedError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let stop: (() => void) | null = null;
+    const syncPending = () => {
+      void pullPendingPackage(errorText).then(({ pkg, error }) => {
+        if (cancelled) return;
+        if (pkg) {
+          setOpenedError(null);
+          setOpenedPackage(pkg);
+          setTab("market");
+        } else if (error) {
+          setOpenedError(error);
+          setTab("market");
+        }
+      });
+    };
+    syncPending();
+    void onPluginPackageOpen(syncPending)
+      .then((unlisten) => {
+        if (cancelled) unlisten();
+        else stop = unlisten;
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, [errorText]);
+
+  const handleConsumeOpenedPackage = useCallback((seq: number) => {
+    consumeBufferedPackage(seq);
+    setOpenedPackage((prev) => (prev?.seq === seq ? null : prev));
+  }, []);
 
   const { host, plugins, connection, memory } = view;
   const measured = memory && host && memory.pid === host.pid ? memory : null;
@@ -134,7 +196,7 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
           <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
         </>
       ) : tab === "market" ? (
-        <PluginMarketV3Tab connected={open} query={query} />
+        <PluginMarketV3Tab connected={open} query={query} openedPackage={openedPackage} openedError={openedError} onConsumeOpenedPackage={handleConsumeOpenedPackage} />
       ) : (
         <PluginDiagnosticsTab view={view} now={now} builtins={builtins} hostPlugins={plugins} query={query} onSelectPlugin={setSelectedId} />
       )}
