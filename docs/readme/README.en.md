@@ -59,7 +59,7 @@
   <p>
     <a href="../assets/promo-001-one-island-en.mp4"><img src="../assets/readme/tour-en.gif" alt="Fuyu tour: the windows scattered over a desktop fold into the island at the top of the screen, which then opens todos, music with lyrics, new messages, the clipboard, translation and an AI agent approval before tucking itself away" width="800" height="450"></a>
     <br>
-    <sub>The whole tour in 43 seconds. The island on screen is the real frontend, not a screen recording (<a href="../../video/README.md">how it is made</a>, in Chinese) · <a href="../assets/promo-001-one-island-en.mp4">Watch the full video with sound</a> · <a href="../assets/promo-004-one-day-en.mp4">A day with Fuyu (46 seconds, narrated)</a></sub>
+    <sub>The whole tour in 43 seconds. The island on screen is the real frontend, not a screen recording (<a href="../../video/README.md">how it is made</a>, in Chinese) · <a href="../assets/promo-001-one-island-en.mp4">Watch the full video with sound</a> · <a href="../assets/promo-004-one-day-en.mp4">A day with Fuyu (46 seconds, narrated)</a> · <a href="../assets/promo-005-at-work-en.mp4">Building Fuyu with Fuyu (2 minutes, narrated)</a></sub>
   </p>
 </div>
 
