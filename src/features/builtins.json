@@ -1,8 +1,8 @@
 {
   "format": 1,
   "plugins": [
-    { "id": "todos", "kind": "builtin", "root": "todos", "host": "host/index.mjs", "background": [], "provides": ["todos/v1"] },
-    { "id": "calendar", "kind": "builtin", "root": "calendar", "host": "host/index.mjs", "background": [], "provides": ["calendar/v1"] },
+    { "id": "todos", "kind": "builtin", "root": "todos", "host": "host/index.mjs", "background": ["shortcuts"], "provides": ["todos/v1"] },
+    { "id": "calendar", "kind": "builtin", "root": "calendar", "host": "host/index.mjs", "background": ["shortcuts"], "provides": ["calendar/v1"] },
     { "id": "music", "kind": "builtin", "root": "media", "host": "host/index.mjs", "background": ["session"], "provides": ["media/v1", "lyrics/v1"] },
     { "id": "clipboard", "kind": "builtin", "root": "clipboard", "host": "host/index.mjs", "background": ["listener", "windows"], "provides": ["clipboard/v1"] },
     { "id": "screenshot", "kind": "builtin", "root": "screenshot", "host": "host/index.mjs", "background": ["shortcuts", "windows"] },

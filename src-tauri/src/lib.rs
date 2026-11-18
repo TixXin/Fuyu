@@ -203,6 +203,7 @@ pub fn run() {
             screenshot::init(app.handle());
             voice_input::init(app.handle());
             timer::init(app.handle());
+            calendar::init(app.handle());
             claude_usage::init();
             if let Err(error) = file_shelf::init(app.handle()) {
                 eprintln!("failed to initialize the file shelf: {error}");

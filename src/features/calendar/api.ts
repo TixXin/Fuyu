@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type { NativeError } from "../../i18n/nativeError";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
@@ -53,4 +54,21 @@ export function addCalendarSource(source: { kind: CalendarSourceKind; name: stri
 
 export function removeCalendarSource(id: string) {
   return invoke<void>("remove_calendar_source", { id });
+}
+
+export const CALENDAR_JOIN_SHORTCUT_EVENT = "calendar-join-shortcut";
+export const CALENDAR_SHORTCUT_STATUS_EVENT = "calendar-shortcut-status";
+
+export type CalendarShortcutProblem = "invalid" | "taken";
+
+export function listenCalendarJoinShortcut(handler: () => void): Promise<UnlistenFn> {
+  return listen(CALENDAR_JOIN_SHORTCUT_EVENT, () => handler());
+}
+
+export function getCalendarShortcutProblem(): Promise<CalendarShortcutProblem | null> {
+  return invoke<CalendarShortcutProblem | null>("get_calendar_shortcut_problem");
+}
+
+export function listenCalendarShortcutProblem(handler: (problem: CalendarShortcutProblem | null) => void): Promise<UnlistenFn> {
+  return listen<CalendarShortcutProblem | null>(CALENDAR_SHORTCUT_STATUS_EVENT, ({ payload }) => handler(payload));
 }
