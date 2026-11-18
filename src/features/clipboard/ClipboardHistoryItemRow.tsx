@@ -120,6 +120,7 @@ export const ClipboardHistoryItemRow = memo(function ClipboardHistoryItemRow({
       icon: <Trash2 size={14} strokeWidth={2} />,
       danger: true,
       keepOpen: !isConfirmingDelete,
+      confirming: isConfirmingDelete,
       onSelect: () => onDelete(item.id),
     },
   ];
