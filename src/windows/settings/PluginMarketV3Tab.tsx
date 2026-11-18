@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent } from "react";
-import { Blocks, RefreshCw, Upload } from "lucide-react";
+import { RefreshCw, Upload } from "lucide-react";
 import { marketV1, type MarketCatalogPlugin, type MarketCatalogSnapshot } from "@fuyu/plugin-services";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { windowServices } from "../../features/plugin-kernel/services";
-import { useErrorText, useLocale, useTranslation } from "../../i18n";
-import { PluginInstallConfirmModal, resolvePluginText, type PendingPluginInstall } from "./PluginInstallConfirmModal";
+import { useErrorText, useTranslation } from "../../i18n";
+import { PluginInstallConfirmModal, type PendingPluginInstall } from "./PluginInstallConfirmModal";
+import { PluginMarketCard } from "./PluginMarketCard";
+import { PluginMarketDetailModal } from "./PluginMarketDetailModal";
 import "./PluginMarketV3Tab.css";
 
 export interface OpenedPluginPackage {
@@ -46,89 +48,6 @@ function matchesMarketQuery(plugin: MarketCatalogPlugin, query: string): boolean
   return haystack.includes(q);
 }
 
-function MarketPluginCard({
-  plugin,
-  onChooseMarketInstall,
-}: {
-  plugin: MarketCatalogPlugin;
-  onChooseMarketInstall: (plugin: MarketCatalogPlugin, version: string, isUpdate: boolean) => void;
-}) {
-  const { locale } = useLocale();
-  const copy = useTranslation().settings.pluginsV3.market;
-  const title = resolvePluginText(plugin.displayName, locale, plugin.name);
-  const desc = resolvePluginText(plugin.description, locale, "");
-  const installCandidate = !plugin.installedVersion ? (plugin.install ?? plugin.manual) : null;
-  const updateCandidate = plugin.installedVersion ? (plugin.manual ?? plugin.autoUpdate) : null;
-  const activeCandidate = updateCandidate ?? installCandidate;
-  const fresh = Boolean(activeCandidate?.fresh);
-
-  return (
-    <article className="plugins-v3__card" data-market-plugin={plugin.name}>
-      <div className="plugins-v3__plugin-head">
-        <span className="plugins-v3__icon plugins-v3__icon--info" aria-hidden="true">
-          <Blocks size={16} strokeWidth={2} />
-          <span className="plugins-v3__dot" />
-        </span>
-        <div className="plugins-v3__title-col">
-          <div className="plugins-v3__title-line">
-            <span className="plugins-v3__plugin-name" title={title}>{title}</span>
-            {plugin.official ? (
-              <span className="plugins-v3__pill plugins-v3__pill--official">{copy.officialBadge}</span>
-            ) : (
-              <span className="plugins-v3__pill">{copy.reviewedBadge}</span>
-            )}
-            {fresh ? <span className="plugins-v3__pill plugins-v3__pill--warn">{copy.cooldownBadge}</span> : null}
-            {plugin.revoked ? <span className="plugins-v3__pill plugins-v3__pill--bad">{copy.revokedBadge}</span> : null}
-          </div>
-          <span className="plugins-v3__id">{plugin.name}</span>
-        </div>
-      </div>
-
-      {desc ? <p className="plugins-v3__note">{desc}</p> : null}
-      {fresh ? <p className="plugins-v3__detail plugins-v3__detail--warn">{copy.cooldownHint}</p> : null}
-
-      <div className="plugins-v3__card-foot">
-        <span>
-          {plugin.installedVersion
-            ? copy.installedBadge(plugin.installedVersion)
-            : activeCandidate
-            ? `v${activeCandidate.version}`
-            : "–"}
-        </span>
-        <span className="plugins-v3__foot-actions">
-          {installCandidate ? (
-            <button
-              className="plugins-v3__btn plugins-v3__btn--primary"
-              type="button"
-              data-action="market-install"
-              onClick={() => onChooseMarketInstall(plugin, installCandidate.version, false)}
-            >
-              {copy.installBtn}
-            </button>
-          ) : updateCandidate ? (
-            <button
-              className="plugins-v3__btn plugins-v3__btn--primary"
-              type="button"
-              data-action="market-update"
-              onClick={() => onChooseMarketInstall(plugin, updateCandidate.version, true)}
-            >
-              {copy.updateBtn(updateCandidate.version)}
-            </button>
-          ) : plugin.installedVersion ? (
-            <button className="plugins-v3__btn" type="button" disabled>
-              {copy.installedBtn}
-            </button>
-          ) : (
-            <button className="plugins-v3__btn" type="button" disabled>
-              {copy.unavailableBtn}
-            </button>
-          )}
-        </span>
-      </div>
-    </article>
-  );
-}
-
 function useOpenedPluginPackage(
   connected: boolean,
   openedPackage: OpenedPluginPackage | null | undefined,
@@ -163,11 +82,20 @@ function useOpenedPluginPackage(
     };
     run();
     const offWatch = windowServices.watch(run);
-    return () => { cancelled = true; offWatch(); };
+    return () => {
+      cancelled = true;
+      offWatch();
+    };
   }, [connected, errorText, onConsume, onError, openFileConfirm, openedPackage]);
 }
 
-export function PluginMarketV3Tab({ connected, query, openedPackage, openedError, onConsumeOpenedPackage }: {
+export function PluginMarketV3Tab({
+  connected,
+  query,
+  openedPackage,
+  openedError,
+  onConsumeOpenedPackage,
+}: {
   connected: boolean;
   query: string;
   openedPackage?: OpenedPluginPackage | null;
@@ -185,19 +113,31 @@ export function PluginMarketV3Tab({ connected, query, openedPackage, openedError
   const [togglingManual, setTogglingManual] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
+  const [detailName, setDetailName] = useState<string | null>(null);
   const [installing, setInstalling] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
   const loadCatalog = useCallback(() => {
     if (!connected) return;
-    void marketClient.catalog().then((next) => { setSnapshot(next); setBannerError(next.error); }).catch(() => undefined);
+    void marketClient
+      .catalog()
+      .then((next) => {
+        setSnapshot(next);
+        setBannerError(next.error);
+      })
+      .catch(() => undefined);
   }, [connected]);
 
   const openFileConfirm = useCallback(async (base64: string) => {
     const inspected = await marketClient.inspectPackage({ base64 });
     setBannerError(null);
     setModalError(null);
-    setPending({ kind: "file", base64, sha256: inspected.sha256, modal: { id: inspected.id, version: inspected.version, confirmation: inspected.confirmation } });
+    setPending({
+      kind: "file",
+      base64,
+      sha256: inspected.sha256,
+      modal: { id: inspected.id, version: inspected.version, confirmation: inspected.confirmation },
+    });
   }, []);
 
   useEffect(() => {
@@ -205,13 +145,20 @@ export function PluginMarketV3Tab({ connected, query, openedPackage, openedError
     loadCatalog();
     const offWatch = windowServices.watch(loadCatalog);
     const offChanged = marketClient.on("changed", loadCatalog);
-    return () => { offWatch(); void offChanged(); };
+    return () => {
+      offWatch();
+      void offChanged();
+    };
   }, [connected, loadCatalog]);
 
   useOpenedPluginPackage(connected, openedPackage, onConsumeOpenedPackage, openFileConfirm, setBannerError);
 
   if (!connected) {
-    return <div className="plugins-v3__market"><p className="plugins-v3__empty">{copy.hostDisconnected}</p></div>;
+    return (
+      <div className="plugins-v3__market">
+        <p className="plugins-v3__empty">{copy.hostDisconnected}</p>
+      </div>
+    );
   }
 
   const refresh = () => {
@@ -269,6 +216,7 @@ export function PluginMarketV3Tab({ connected, query, openedPackage, openedError
 
   const plugins = snapshot?.plugins ?? [];
   const filtered = plugins.filter((item) => matchesMarketQuery(item, query));
+  const detailPlugin = detailName ? (plugins.find((item) => item.name === detailName) ?? null) : null;
   const manualAllowed = snapshot?.manualAllowed === true;
   const shownBannerError = bannerError ?? openedError ?? null;
 
@@ -363,14 +311,23 @@ export function PluginMarketV3Tab({ connected, query, openedPackage, openedError
       ) : (
         <div className="plugins-v3__grid">
           {filtered.map((plugin) => (
-            <MarketPluginCard
+            <PluginMarketCard
               key={plugin.name}
               plugin={plugin}
+              onOpenDetail={(picked) => setDetailName(picked.name)}
               onChooseMarketInstall={chooseMarketInstall}
             />
           ))}
         </div>
       )}
+
+      {detailPlugin ? (
+        <PluginMarketDetailModal
+          plugin={detailPlugin}
+          onClose={() => setDetailName(null)}
+          onChooseInstall={chooseMarketInstall}
+        />
+      ) : null}
 
       {pending ? (
         <PluginInstallConfirmModal

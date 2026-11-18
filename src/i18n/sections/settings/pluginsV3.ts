@@ -116,6 +116,21 @@ export type SettingsPluginsV3Text = {
   errors: string;
   lastError: string;
   cpuNote: string;
+  schemaForm: {
+    heading: string;
+    resetBtn: string;
+    resettingBtn: string;
+  };
+  windowRules: {
+    heading: string;
+    openCount: (count: number) => string;
+    disallowAlwaysOnTop: string;
+    disallowAlwaysOnTopHint: string;
+    disallowClickThrough: string;
+    disallowClickThroughHint: string;
+    hideAll: string;
+    hideAllHint: string;
+  };
   v2Migration: {
     title: string;
     summary: string;
@@ -174,6 +189,33 @@ export type SettingsPluginsV3Text = {
       hostSecurityNote: string;
       confirmBtn: string;
       cancelBtn: string;
+    };
+    detailModal: {
+      loading: string;
+      previewBadge: string;
+      likesCount: (count: number) => string;
+      publisherBy: (name: string) => string;
+      licenseLabel: (spdx: string) => string;
+      platformsLabel: (list: string) => string;
+      links: {
+        repository: string;
+        homepage: string;
+        bugs: string;
+        funding: string;
+      };
+      screenshotsHeading: string;
+      tabs: {
+        readme: string;
+        changelog: string;
+        capabilities: string;
+      };
+      noReadme: string;
+      noChangelog: string;
+      versionsHeading: string;
+      noVersions: string;
+      urgentBadge: string;
+      commandsLabel: string;
+      requiresLabel: string;
     };
   };
 };
@@ -346,6 +388,21 @@ export const zhCN: SettingsPluginsV3Text = {
   errors: "出错",
   lastError: "最近一次出错",
   cpuNote: "CPU 是近似值：只算经内核登记的回调（事件监听、受管定时器、启动）的同步部分，await 之后的不算。",
+  schemaForm: {
+    heading: "插件设置",
+    resetBtn: "恢复默认设置",
+    resettingBtn: "正在恢复…",
+  },
+  windowRules: {
+    heading: "窗口权限守卫",
+    openCount: (count) => `${count} 个活动窗口`,
+    disallowAlwaysOnTop: "不允许置顶",
+    disallowAlwaysOnTopHint: "禁止此插件的独立窗口始终置顶",
+    disallowClickThrough: "不允许点击穿透",
+    disallowClickThroughHint: "禁止此插件将窗口设为鼠标穿透",
+    hideAll: "隐藏全部窗口",
+    hideAllHint: "立即隐藏并阻止显示此插件的全部独立窗口",
+  },
   v2Migration: {
     title: "旧第 2 版插件下线与迁移说明",
     summary: "第 2 版进程与自定义网页插件即将下线。官方插件已按第 3 版跨平台接口重写为 @fuyu/*，原有设置已自动保留到第 3 版数据目录。",
@@ -404,6 +461,33 @@ export const zhCN: SettingsPluginsV3Text = {
       hostSecurityNote: "宿主侧插件运行在本机 Node 进程中，可访问本插件数据目录与系统凭据管理器。",
       confirmBtn: "确认安装",
       cancelBtn: "取消",
+    },
+    detailModal: {
+      loading: "正在读取插件详情…",
+      previewBadge: "预览版",
+      likesCount: (count) => `${count} 赞`,
+      publisherBy: (name) => `发布者：${name}`,
+      licenseLabel: (spdx) => `协议：${spdx}`,
+      platformsLabel: (list) => `平台：${list}`,
+      links: {
+        repository: "源码仓库",
+        homepage: "主页",
+        bugs: "反馈问题",
+        funding: "赞助支持",
+      },
+      screenshotsHeading: "截图预览",
+      tabs: {
+        readme: "说明",
+        changelog: "更新日志",
+        capabilities: "能力声明",
+      },
+      noReadme: "暂无详细说明。",
+      noChangelog: "暂无更新日志。",
+      versionsHeading: "历史版本",
+      noVersions: "暂无版本记录。",
+      urgentBadge: "紧急修复",
+      commandsLabel: "命令与快捷键",
+      requiresLabel: "依赖插件",
     },
   },
 };
@@ -576,6 +660,21 @@ export const en: SettingsPluginsV3Text = {
   errors: "Errors",
   lastError: "Last error",
   cpuNote: "CPU is approximate: only the synchronous part of callbacks registered through the kernel (listeners, managed timers, start) is counted, not what runs after an await.",
+  schemaForm: {
+    heading: "Plugin settings",
+    resetBtn: "Reset defaults",
+    resettingBtn: "Resetting…",
+  },
+  windowRules: {
+    heading: "Window guardrails",
+    openCount: (count) => `${count} open ${count === 1 ? "window" : "windows"}`,
+    disallowAlwaysOnTop: "Disallow always on top",
+    disallowAlwaysOnTopHint: "Prevent this plugin's windows from staying above other apps",
+    disallowClickThrough: "Disallow click-through",
+    disallowClickThroughHint: "Prevent this plugin from making windows ignore mouse clicks",
+    hideAll: "Hide all windows",
+    hideAllHint: "Immediately hide and keep all windows from this plugin hidden",
+  },
   v2Migration: {
     title: "Legacy v2 plugin retirement & migration",
     summary: "Version 2 process and custom-webview plugins are being retired. Official plugins have been rewritten for Platform v3 as @fuyu/*, and your previous settings have been carried over.",
@@ -634,6 +733,33 @@ export const en: SettingsPluginsV3Text = {
       hostSecurityNote: "Host-side plugins run in a local Node process with access to their own data folder and the OS credential manager.",
       confirmBtn: "Install",
       cancelBtn: "Cancel",
+    },
+    detailModal: {
+      loading: "Loading plugin details…",
+      previewBadge: "Preview",
+      likesCount: (count) => `${count} ${count === 1 ? "like" : "likes"}`,
+      publisherBy: (name) => `By ${name}`,
+      licenseLabel: (spdx) => `License: ${spdx}`,
+      platformsLabel: (list) => `Platforms: ${list}`,
+      links: {
+        repository: "Repository",
+        homepage: "Homepage",
+        bugs: "Report issue",
+        funding: "Sponsor",
+      },
+      screenshotsHeading: "Screenshots",
+      tabs: {
+        readme: "README",
+        changelog: "Changelog",
+        capabilities: "Capabilities",
+      },
+      noReadme: "No README provided.",
+      noChangelog: "No changelog provided.",
+      versionsHeading: "Versions",
+      noVersions: "No version history.",
+      urgentBadge: "Urgent",
+      commandsLabel: "Commands",
+      requiresLabel: "Required plugins",
     },
   },
 };
