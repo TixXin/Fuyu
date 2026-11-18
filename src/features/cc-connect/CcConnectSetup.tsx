@@ -1,5 +1,11 @@
-import { useState, type ReactNode } from "react";
-import { SelectControl } from "../../components/controls/SelectControl";
+import { useState } from "react";
+import { SettingsFolderRow } from "../../components/settings/SettingsFolderRow";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
+import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsInput } from "../../components/settings/SettingsInput";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
+import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { useErrorText, useTranslation } from "../../i18n";
 import {
   addCcConnectProject,
@@ -88,123 +94,142 @@ export function CcConnectSetup({ cc }: { cc: ReturnType<typeof useCcConnect> }) 
   const canAdd = ready && token.trim() !== "" && ids.length > 0 && allowFromValid(allowFrom);
 
   return (
-    <section className="settings-section plugins-panel">
-      <div className="settings-section__header">
-        <span>{t.title}</span>
-      </div>
-      <p className="settings-section__hint">{t.hint}</p>
-      <Field label={t.platform}>
-        <SelectControl
-          value={platform}
-          options={CC_CONNECT_SETUP_PLATFORMS.map((value) => ({ value, label: texts.platforms[value] ?? value }))}
-          ariaLabel={t.platform}
-          disabled={feishu}
-          onChange={pick}
-        />
-      </Field>
-      <Field label={t.agent} hint={t.agentHint}>
-        <SelectControl
-          value={agent}
-          options={CC_CONNECT_SETUP_AGENTS.map((value) => ({ value, label: CC_CONNECT_AGENT_LABELS[value] }))}
-          ariaLabel={t.agent}
-          disabled={feishu}
-          onChange={(next) => setAgent(next as CcConnectSetupAgent)}
-        />
-      </Field>
-      <Field label={t.project} hint={t.projectHint}>
-        <input className="plugin-setting__input" value={name} disabled={feishu} onChange={(event) => setProject(event.currentTarget.value)} />
-      </Field>
-      <Field label={t.workDir} hint={t.workDirHint}>
-        <input className="plugin-setting__input" value={folder} disabled={feishu} onChange={(event) => setWorkDir(event.currentTarget.value)} />
-      </Field>
-      <ol className="cc-connect-setup__steps">
-        {t.steps[platform].map((step) => (
-          <li key={step}>{step}</li>
-        ))}
-      </ol>
+    <SettingsGroup
+      title={t.title}
+      footer={
+        <>
+          <SettingsFootnote text={t.hint} />
+          {added ? <p role="status">{t.added}</p> : null}
+          {error ? <p className="plugin-card__error" role="alert">{error}</p> : null}
+        </>
+      }
+    >
+      <SettingsRow
+        searchable={false}
+        title={t.platform}
+        control={
+          <SettingsSelect
+            value={platform}
+            options={CC_CONNECT_SETUP_PLATFORMS.map((value) => ({ value, label: texts.platforms[value] ?? value }))}
+            ariaLabel={t.platform}
+            disabled={feishu}
+            onChange={pick}
+          />
+        }
+      />
+      <SettingsRow
+        searchable={false}
+        title={t.agent}
+        description={t.agentHint}
+        control={
+          <SettingsSelect
+            value={agent}
+            options={CC_CONNECT_SETUP_AGENTS.map((value) => ({ value, label: CC_CONNECT_AGENT_LABELS[value] }))}
+            ariaLabel={t.agent}
+            disabled={feishu}
+            onChange={(next) => setAgent(next as CcConnectSetupAgent)}
+          />
+        }
+      />
+      <SettingsRow searchable={false} title={t.project} description={t.projectHint}>
+        <SettingsInput value={name} disabled={feishu} aria-label={t.project} onChange={(event) => setProject(event.currentTarget.value)} />
+      </SettingsRow>
+      <SettingsFolderRow
+        searchable={false}
+        title={t.workDir}
+        description={t.workDirHint}
+        value={folder}
+        readOnly={feishu}
+        ariaLabel={t.workDir}
+        browseTitle={t.workDir}
+        onChange={setWorkDir}
+        onPick={setWorkDir}
+      />
+      <SettingsRow searchable={false} title="">
+        <ol className="cc-connect-setup__steps">
+          {t.steps[platform].map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+      </SettingsRow>
       {platform === "feishu" ? (
         feishu ? (
-          <FeishuSetup onEnd={() => setFeishu(false)} />
+          <SettingsRow searchable={false} title="">
+            <FeishuSetup onEnd={() => setFeishu(false)} />
+          </SettingsRow>
         ) : (
-          <div className="cc-connect-setup__actions">
-            <button className="plugin-card__button" type="button" disabled={!ready || !status.exe} onClick={() => void add()}>
-              {busy === "add" ? t.adding : t.feishuStart}
-            </button>
-          </div>
+          <SettingsRow
+            searchable={false}
+            title=""
+            control={
+              <SettingsLinkButton disabled={!ready || !status.exe} onClick={() => void add()}>
+                {busy === "add" ? t.adding : t.feishuStart}
+              </SettingsLinkButton>
+            }
+          />
         )
       ) : (
         <>
-          <Field label={t.token}>
-            <div className="cc-connect-setup__inline">
-              <input
-                className="plugin-setting__input"
-                type="password"
-                autoComplete="off"
-                value={token}
-                onChange={(event) => {
-                  setToken(event.currentTarget.value);
-                  setBot(null);
-                }}
-              />
-              <button className="plugin-card__button" type="button" disabled={!token.trim() || busy !== null} onClick={() => void check()}>
-                {busy === "check" ? t.checking : platform === "telegram" ? t.find : t.check}
-              </button>
-            </div>
-          </Field>
-          {bot ? (
-            <div className="cc-connect-setup__actions">
-              <p className="settings-section__hint">{t.bot(bot.name)}</p>
-              {bot.inviteUrl ? (
-                <button className="plugin-card__button plugin-card__button--quiet" type="button" onClick={() => void openCcConnectLink(bot.inviteUrl ?? "")}>
-                  {t.invite}
-                </button>
-              ) : null}
-            </div>
-          ) : null}
+          <SettingsRow
+            searchable={false}
+            title={t.token}
+            description={bot ? t.bot(bot.name) : undefined}
+            control={
+              <>
+                {bot?.inviteUrl ? (
+                  <SettingsLinkButton onClick={() => void openCcConnectLink(bot.inviteUrl ?? "")}>{t.invite}</SettingsLinkButton>
+                ) : null}
+                <SettingsLinkButton disabled={!token.trim() || busy !== null} onClick={() => void check()}>
+                  {busy === "check" ? t.checking : platform === "telegram" ? t.find : t.check}
+                </SettingsLinkButton>
+              </>
+            }
+          >
+            <SettingsInput
+              type="password"
+              monospace
+              autoComplete="off"
+              aria-label={t.token}
+              value={token}
+              onChange={(event) => {
+                setToken(event.currentTarget.value);
+                setBot(null);
+              }}
+            />
+          </SettingsRow>
           {platform === "telegram" && bot ? (
-            bot.senders.length > 0 ? (
-              <div className="cc-connect-setup__senders">
-                <p className="settings-section__hint">{t.senders}</p>
-                {bot.senders.map((sender) => (
-                  <button
-                    key={sender.id}
-                    className="plugin-card__button cc-connect-setup__sender"
-                    type="button"
-                    aria-pressed={ids.includes(sender.id)}
-                    onClick={() => toggleSender(sender.id)}
-                  >
-                    {`${sender.name} · ${sender.id}`}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <p className="settings-section__hint">{t.noSenders}</p>
-            )
+            <SettingsRow searchable={false} title={bot.senders.length > 0 ? t.senders : t.noSenders}>
+              {bot.senders.length > 0 ? (
+                <div className="cc-connect-setup__senders">
+                  {bot.senders.map((sender) => (
+                    <button
+                      key={sender.id}
+                      className="plugin-card__button cc-connect-setup__sender"
+                      type="button"
+                      aria-pressed={ids.includes(sender.id)}
+                      onClick={() => toggleSender(sender.id)}
+                    >
+                      {`${sender.name} · ${sender.id}`}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </SettingsRow>
           ) : null}
-          <Field label={t.allowFrom} hint={allowFrom.trim() && !allowFromValid(allowFrom) ? t.allowFromInvalid : t.allowFromHint}>
-            <input className="plugin-setting__input" value={allowFrom} onChange={(event) => setAllowFrom(event.currentTarget.value)} />
-          </Field>
-          <div className="cc-connect-setup__actions">
-            <button className="plugin-card__button" type="button" disabled={!canAdd} onClick={() => void add()}>
-              {busy === "add" ? t.adding : t.add}
-            </button>
-          </div>
+          <SettingsRow
+            searchable={false}
+            title={t.allowFrom}
+            description={allowFrom.trim() && !allowFromValid(allowFrom) ? t.allowFromInvalid : t.allowFromHint}
+            control={
+              <SettingsLinkButton disabled={!canAdd} onClick={() => void add()}>
+                {busy === "add" ? t.adding : t.add}
+              </SettingsLinkButton>
+            }
+          >
+            <SettingsInput value={allowFrom} aria-label={t.allowFrom} onChange={(event) => setAllowFrom(event.currentTarget.value)} />
+          </SettingsRow>
         </>
       )}
-      {added ? <p className="settings-section__hint">{t.added}</p> : null}
-      {error ? <p className="plugin-card__error">{error}</p> : null}
-    </section>
-  );
-}
-
-function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <div className="plugin-setting">
-      <label className="plugin-setting__row">
-        <span>{label}</span>
-        {children}
-      </label>
-      {hint ? <p className="settings-section__hint">{hint}</p> : null}
-    </div>
+    </SettingsGroup>
   );
 }

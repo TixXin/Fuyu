@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getPluginHostConnection, retryPluginHostNode, type HostNodeStatus } from "../../features/plugin-kernel/api";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 
 export const NODE_EVERY_MS = 1000;
 
@@ -21,10 +22,10 @@ export function usePluginHostNode(watching: boolean): PluginHostNode {
         })
         .catch(() => undefined);
     read();
-    const timer = window.setInterval(read, NODE_EVERY_MS);
+    const stop = visibilityInterval(read, NODE_EVERY_MS);
     return () => {
       live = false;
-      window.clearInterval(timer);
+      stop();
     };
   }, [watching, round]);
   const retry = useCallback(() => {

@@ -26,6 +26,11 @@
   box-shadow: 0 10px 32px rgba(0, 0, 0, 0.16);
   font-size: 13px;
   color-scheme: dark;
+  transition:
+    background-color var(--motion-medium) var(--motion-ease),
+    color var(--motion-medium) var(--motion-ease),
+    border-color var(--motion-medium) var(--motion-ease),
+    box-shadow var(--motion-medium) var(--motion-ease);
 }
 
 .island-light .translation-window {
@@ -130,6 +135,7 @@
   margin: 0 20px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--translation-border);
+  transition: border-color var(--motion-medium) var(--motion-ease);
 }
 .translation-window__languages {
   display: flex;
@@ -158,6 +164,10 @@
   background: var(--translation-control);
   border: 1px solid var(--translation-border);
   border-radius: 7px;
+  transition:
+    background-color var(--motion-base) var(--motion-ease),
+    color var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease);
 }
 .translation-window select {
   min-width: 0;
@@ -186,7 +196,10 @@
   min-height: 0;
   padding: 10px 0 12px;
 }
-.translation-window__source { border-bottom: 1px solid var(--translation-border); }
+.translation-window__source {
+  border-bottom: 1px solid var(--translation-border);
+  transition: border-color var(--motion-medium) var(--motion-ease);
+}
 .translation-window__panel-heading {
   display: flex;
   align-items: center;
@@ -241,6 +254,10 @@
   border: 1px solid var(--translation-border);
   border-radius: 7px;
   font-size: 12px;
+  transition:
+    background-color var(--motion-base) var(--motion-ease),
+    color var(--motion-base) var(--motion-ease),
+    border-color var(--motion-base) var(--motion-ease);
 }
 .translation-window__clipboard:hover { color: var(--translation-text); background: var(--translation-control); }
 .translation-window__clipboard > svg { flex: 0 0 auto; }
@@ -274,6 +291,7 @@
   margin: 0 20px;
   padding: 12px 0 16px;
   border-top: 1px solid var(--translation-border);
+  transition: border-color var(--motion-medium) var(--motion-ease);
 }
 .translation-window__footer-info { min-width: 0; flex: 1; color: var(--translation-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 .translation-window__error { color: var(--error-text, #ffb4b8); }

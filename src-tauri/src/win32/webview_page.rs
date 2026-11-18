@@ -1,7 +1,8 @@
-use std::rc::Rc;
+use std::{cell::Cell, rc::Rc};
 use webview2_com::{
     take_pwstr, AcceleratorKeyPressedEventHandler, AddScriptToExecuteOnDocumentCreatedCompletedHandler,
-    CreateCoreWebView2ControllerCompletedHandler, DownloadStartingEventHandler, FocusChangedEventHandler, Microsoft::Web::WebView2::Win32::*, NavigationStartingEventHandler,
+    CreateCoreWebView2ControllerCompletedHandler, DownloadStartingEventHandler, FocusChangedEventHandler,
+    Microsoft::Web::WebView2::Win32::*, NavigationCompletedEventHandler, NavigationStartingEventHandler,
     NewWindowRequestedEventHandler, PermissionRequestedEventHandler, WebMessageReceivedEventHandler,
     WebResourceRequestedEventHandler,
 };
@@ -41,10 +42,52 @@ pub(crate) struct PageOptions {
     pub dev_tools: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum VisibilityAction {
+    Hide,
+    HoldUntilReady,
+    Show,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct VisibilityGate {
+    ready: bool,
+    want_visible: bool,
+    closed: bool,
+}
+
+impl VisibilityGate {
+    fn request_place(&mut self, width: i32, height: i32) -> VisibilityAction {
+        let want_visible = width > 0 && height > 0;
+        self.want_visible = want_visible;
+        if self.closed || !want_visible {
+            VisibilityAction::Hide
+        } else if self.ready {
+            VisibilityAction::Show
+        } else {
+            VisibilityAction::HoldUntilReady
+        }
+    }
+
+    fn mark_navigation_completed(&mut self) -> bool {
+        if self.closed || self.ready {
+            return false;
+        }
+        self.ready = true;
+        self.want_visible
+    }
+
+    fn mark_closed(&mut self) {
+        self.want_visible = false;
+        self.closed = true;
+    }
+}
+
 pub(crate) struct Page {
     controller: ICoreWebView2Controller,
     webview: ICoreWebView2,
     window: Option<HWND>,
+    visibility: Rc<Cell<VisibilityGate>>,
 }
 
 fn child_windows(parent: HWND) -> Vec<HWND> {
@@ -95,6 +138,9 @@ pub(crate) fn create(
         controller_options
             .SetIsInPrivateModeEnabled(true)
             .map_err(|error| format!("Could not set up the page: {error}"))?;
+        if let Ok(options3) = controller_options.cast::<ICoreWebView2ControllerOptions3>() {
+            let _ = options3.SetDefaultBackgroundColor(COREWEBVIEW2_COLOR { A: 0, R: 0, G: 0, B: 0 });
+        }
         env10
             .CreateCoreWebView2ControllerWithOptions(parent, &controller_options, &handler)
             .map_err(|error| format!("Could not create the page: {error}"))
@@ -109,6 +155,7 @@ fn set_up(
     host: Rc<dyn PageHost>,
 ) -> Result<Page, String> {
     let fail = |error: windows::core::Error| format!("Could not set up the page: {error}");
+    let visibility = Rc::new(Cell::new(VisibilityGate::default()));
     let webview = unsafe {
         controller.SetIsVisible(false).map_err(fail)?;
         if let Ok(controller2) = controller.cast::<ICoreWebView2Controller2>() {
@@ -118,11 +165,12 @@ fn set_up(
         harden(&webview, options.dev_tools).map_err(fail)?;
         guard_requests(&webview, env, host.clone()).map_err(fail)?;
         guard_navigation(&webview, host.clone()).map_err(fail)?;
+        reveal_when_loaded(&webview, &controller, window, visibility.clone()).map_err(fail)?;
         listen_for_messages(&webview, host.clone()).map_err(fail)?;
         listen_for_keys_and_focus(&controller, host).map_err(fail)?;
         webview
     };
-    let page = Page { controller, webview, window };
+    let page = Page { controller, webview, window, visibility };
     let navigate_webview = page.webview.clone();
     let start_url = HSTRING::from(options.start_url);
     let after_script = AddScriptToExecuteOnDocumentCreatedCompletedHandler::create(Box::new(move |_, _| {
@@ -130,6 +178,29 @@ fn set_up(
     }));
     unsafe { page.webview.AddScriptToExecuteOnDocumentCreated(&HSTRING::from(options.init_script), &after_script) }.map_err(fail)?;
     Ok(page)
+}
+
+unsafe fn reveal_when_loaded(
+    webview: &ICoreWebView2,
+    controller: &ICoreWebView2Controller,
+    window: Option<HWND>,
+    visibility: Rc<Cell<VisibilityGate>>,
+) -> windows::core::Result<()> {
+    let nav_controller = controller.clone();
+    let handler = NavigationCompletedEventHandler::create(Box::new(move |_, _| {
+        let mut gate = visibility.get();
+        let should_show = gate.mark_navigation_completed();
+        visibility.set(gate);
+        if should_show {
+            let _ = unsafe { nav_controller.SetIsVisible(true) };
+            if let Some(hwnd) = window {
+                let _ = unsafe { SetWindowPos(hwnd, Some(HWND_TOP), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE) };
+            }
+        }
+        Ok(())
+    }));
+    let mut token = 0i64;
+    unsafe { webview.add_NavigationCompleted(&handler, &mut token) }
 }
 
 unsafe fn harden(webview: &ICoreWebView2, dev_tools: bool) -> windows::core::Result<()> {
@@ -307,9 +378,21 @@ impl Page {
 
     pub(crate) fn place(&self, x: i32, y: i32, width: i32, height: i32) {
         let bounds = RECT { left: x, top: y, right: x + width.max(0), bottom: y + height.max(0) };
+        let mut gate = self.visibility.get();
+        let action = gate.request_place(width, height);
+        self.visibility.set(gate);
         unsafe {
             let _ = self.controller.SetBounds(bounds);
-            let _ = self.controller.SetIsVisible(width > 0 && height > 0);
+            match action {
+                VisibilityAction::Hide => {
+                    let _ = self.controller.SetIsVisible(false);
+                    return;
+                }
+                VisibilityAction::HoldUntilReady => return,
+                VisibilityAction::Show => {
+                    let _ = self.controller.SetIsVisible(true);
+                }
+            }
         }
         if let Some(window) = self.window {
             let _ = unsafe { SetWindowPos(window, Some(HWND_TOP), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE) };
@@ -323,8 +406,39 @@ impl Page {
 
 impl Drop for Page {
     fn drop(&mut self) {
+        let mut gate = self.visibility.get();
+        gate.mark_closed();
+        self.visibility.set(gate);
         unsafe {
             let _ = self.controller.Close();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn holds_visibility_until_initial_navigation_completes() {
+        let mut gate = VisibilityGate::default();
+        assert_eq!(gate.request_place(320, 200), VisibilityAction::HoldUntilReady);
+        assert!(gate.mark_navigation_completed());
+        assert!(!gate.mark_navigation_completed());
+        assert_eq!(gate.request_place(340, 220), VisibilityAction::Show);
+    }
+
+    #[test]
+    fn hides_when_zero_sized_or_closed_before_navigation_finishes() {
+        let mut hidden = VisibilityGate::default();
+        assert_eq!(hidden.request_place(320, 200), VisibilityAction::HoldUntilReady);
+        assert_eq!(hidden.request_place(0, 200), VisibilityAction::Hide);
+        assert!(!hidden.mark_navigation_completed());
+
+        let mut closed = VisibilityGate::default();
+        assert_eq!(closed.request_place(320, 200), VisibilityAction::HoldUntilReady);
+        closed.mark_closed();
+        assert!(!closed.mark_navigation_completed());
+        assert_eq!(closed.request_place(320, 200), VisibilityAction::Hide);
     }
 }

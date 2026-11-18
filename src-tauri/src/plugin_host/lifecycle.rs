@@ -33,6 +33,7 @@ pub(super) fn plugin_own_bytes(total_bytes: u64, runtime_bytes: Option<u64>) -> 
 }
 const HIGH_CPU_PERCENT: f32 = 25.0;
 const HIGH_CPU_SAMPLES: u32 = 12;
+const MAX_TRACKED_PLUGINS: usize = 128;
 
 struct CpuSample {
     at: Instant,
@@ -49,6 +50,39 @@ struct State {
     startup_finished: bool,
 }
 
+impl State {
+    fn apply_runnable(&mut self, mut runnable: HashMap<String, Activation>, now: Instant) {
+        if runnable.len() > MAX_TRACKED_PLUGINS {
+            let mut keys: Vec<String> = runnable.keys().cloned().collect();
+            keys.sort();
+            for key in keys.into_iter().skip(MAX_TRACKED_PLUGINS) {
+                runnable.remove(&key);
+            }
+        }
+        self.active.retain(|id, _| runnable.get(id).is_some_and(|activation| !activation.is_eager()));
+        self.scheduled.retain(|id, _| runnable.contains_key(id));
+        self.cpu.retain(|id, _| runnable.contains_key(id));
+        for id in runnable.keys() {
+            self.scheduled.entry(id.clone()).or_insert(now);
+        }
+        for id in newly_started_after_startup(&self.runnable, &runnable, self.startup_finished) {
+            self.active.entry(id).or_insert_with(|| ActivationEvent::StartupFinished.label());
+        }
+        self.runnable = runnable;
+    }
+
+    fn prune_cpu<F: Fn(&str) -> bool>(&mut self, is_running: F) {
+        self.cpu.retain(|id, _| self.runnable.contains_key(id) && is_running(id));
+        if self.cpu.len() > MAX_TRACKED_PLUGINS {
+            let mut order: Vec<(String, Instant)> = self.cpu.iter().map(|(id, sample)| (id.clone(), sample.at)).collect();
+            order.sort_by(|left, right| left.1.cmp(&right.1).then_with(|| left.0.cmp(&right.0)));
+            for (id, _) in order.into_iter().take(self.cpu.len() - MAX_TRACKED_PLUGINS) {
+                self.cpu.remove(&id);
+            }
+        }
+    }
+}
+
 const SETTINGS_CHANGED: &str = "onSettingsChanged";
 
 fn state() -> &'static Mutex<State> {
@@ -57,16 +91,7 @@ fn state() -> &'static Mutex<State> {
 }
 
 pub(super) fn set_runnable(runnable: HashMap<String, Activation>) {
-    let mut state = lock(state());
-    state.active.retain(|id, _| runnable.get(id).is_some_and(|activation| !activation.is_eager()));
-    state.scheduled.retain(|id, _| runnable.contains_key(id));
-    for id in runnable.keys() {
-        state.scheduled.entry(id.clone()).or_insert_with(Instant::now);
-    }
-    for id in newly_started_after_startup(&state.runnable, &runnable, state.startup_finished) {
-        state.active.entry(id).or_insert_with(|| ActivationEvent::StartupFinished.label());
-    }
-    state.runnable = runnable;
+    lock(state()).apply_runnable(runnable, Instant::now());
 }
 
 pub(super) fn newly_started_after_startup(before: &HashMap<String, Activation>, next: &HashMap<String, Activation>, startup_finished: bool) -> Vec<String> {
@@ -244,6 +269,7 @@ fn tick() {
     {
         let supervisors = lock(&host.supervisors);
         let mut state = lock(state());
+        state.prune_cpu(|id| supervisors.contains_key(id));
         for (id, supervisor) in supervisors.iter() {
             if let Some(usage) = supervisor.usage() {
                 let sample = state.cpu.entry(id.clone()).or_insert(CpuSample { at: now, ticks: usage.cpu_ticks, high: 0 });
@@ -346,4 +372,41 @@ fn stop_idle(id: &str) {
         supervisor.stop_idle();
         agent_status::clear_external_owner(&id);
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn lazy_activation() -> Activation {
+        Activation { events: vec![ActivationEvent::Uri] }
+    }
+
+    #[test]
+    fn lifecycle_state_cleans_uninstalled_plugins_and_caps_capacity() {
+        let mut state = State::default();
+        let now = Instant::now();
+        let mut initial = HashMap::new();
+        for index in 0..(MAX_TRACKED_PLUGINS + 6) {
+            initial.insert(format!("plugin-{index:03}"), lazy_activation());
+        }
+        state.apply_runnable(initial, now);
+        assert_eq!(state.runnable.len(), MAX_TRACKED_PLUGINS);
+        assert_eq!(state.scheduled.len(), MAX_TRACKED_PLUGINS);
+
+        for id in state.runnable.keys() {
+            state.cpu.insert(id.clone(), CpuSample { at: now, ticks: 10, high: 0 });
+            state.active.insert(id.clone(), "onUri".into());
+        }
+        state.prune_cpu(|id| id == "plugin-000");
+        assert_eq!(state.cpu.len(), 1);
+        assert!(state.cpu.contains_key("plugin-000"));
+
+        let next = HashMap::from([("plugin-001".to_string(), lazy_activation())]);
+        state.apply_runnable(next, now + Duration::from_secs(5));
+        assert!(state.cpu.is_empty());
+        assert_eq!(state.active.len(), 1);
+        assert!(state.active.contains_key("plugin-001"));
+        assert_eq!(state.scheduled.len(), 1);
+    }
 }

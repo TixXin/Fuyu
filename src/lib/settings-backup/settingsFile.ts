@@ -1,4 +1,4 @@
-import { BACKUP_KEYS, buildBackup, parseBackup, type BackupKey } from "./backup.ts";
+import { BACKUP_KEYS, buildBackup, parseBackup, type BackupKey, type BuiltinSwitchSnapshot } from "./backup.ts";
 
 export type SettingsKeys = Partial<Record<BackupKey, string>>;
 
@@ -12,8 +12,8 @@ export function fingerprint(keys: SettingsKeys): string {
   return `${(hash >>> 0).toString(16)}:${text.length}`;
 }
 
-export function currentKeys(read: (key: BackupKey) => string | null): SettingsKeys {
-  return buildBackup(read, new Date(0)).keys;
+export function currentKeys(read: (key: BackupKey) => string | null, snapshot: BuiltinSwitchSnapshot | null = null): SettingsKeys {
+  return buildBackup(read, new Date(0), snapshot).keys;
 }
 
 export function settingsFileText(keys: SettingsKeys, now: Date): string {

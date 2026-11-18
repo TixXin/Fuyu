@@ -187,8 +187,8 @@ fn run(app: &AppHandle, owner: &str, owner_window: Option<&WebviewWindow>, id: u
     };
     let centre = (x + (width / 2) as i32, y + (height / 2) as i32);
     let mut stitcher = Stitcher::new(width_px, height_px, first.clone());
-    let mut previous = first.clone();
-    let mut tried = first;
+    let mut previous = first;
+    let mut tried = true;
     let mut notches = START_NOTCHES;
     let mut wheeled: Option<Instant> = None;
     let mut still = 0;
@@ -227,14 +227,14 @@ fn run(app: &AppHandle, owner: &str, owner_window: Option<&WebviewWindow>, id: u
         }
         thread::sleep(TICK);
         let Some(frame) = capture() else { continue };
-        let stable = frame == previous;
-        previous = frame;
-        if !stable {
+        if frame != previous {
+            previous = frame;
+            tried = false;
             continue;
         }
-        if previous != tried {
-            tried = previous.clone();
-            match stitcher.push(previous.clone()) {
+        if !tried {
+            tried = true;
+            match stitcher.push(frame) {
                 Step::Added(shift) => {
                     frames += 1;
                     still = 0;

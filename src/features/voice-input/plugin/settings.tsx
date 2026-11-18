@@ -1,10 +1,13 @@
+import { FeaturePageLink } from "../../../components/settings/FeaturePageLink";
 import { useTranslation } from "../../../i18n";
-import { settingsRunners } from "../../plugin-kernel/settingsSlots";
-import { useReportShortcutOwners } from "../../../lib/shortcut/useReportShortcutOwners";
-import { useVoiceInputSettings } from "../useVoiceInputSettings";
-import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
-import { VoiceInputSettingsPage } from "../VoiceInputSettingsPage";
 import type { IslandSettings } from "../../../lib/settings/types";
+import { useReportShortcutOwners } from "../../../lib/shortcut/useReportShortcutOwners";
+import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
+import { settingsRunners, shortcutSections, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
+import { useVoiceInputSettings } from "../useVoiceInputSettings";
+import { VoiceInputSettingsPage } from "../VoiceInputSettingsPage";
+import { VoiceInputShortcutGroup } from "../VoiceInputShortcutGroup";
+import { OWNER } from "./owner.ts";
 
 type PageProps = {
   settings: IslandSettings;
@@ -19,6 +22,18 @@ function VoiceInputShortcutOwners() {
   return null;
 }
 
-settingsRunners.add({ id: "voice-input.shortcut-owners", component: VoiceInputShortcutOwners });
+function VoiceInputShortcutsSection({ onOpenPage, takenBy }: ShortcutsSectionProps) {
+  const [voice, setVoice] = useVoiceInputSettings();
+  return (
+    <VoiceInputShortcutGroup
+      action={<FeaturePageLink page="voiceInput" onOpenPage={onOpenPage} />}
+      settings={voice}
+      onSettingsChange={setVoice}
+      takenBy={(shortcut) => takenBy(shortcut, "voiceInput")}
+    />
+  );
+}
 
-addSettingsCategory("voiceInput", ({ settings }: PageProps) => <VoiceInputSettingsPage settings={settings} />);
+settingsRunners.add({ id: "voice-input.shortcut-owners", component: VoiceInputShortcutOwners }, OWNER);
+shortcutSections.add({ id: "shortcuts.voice-input", category: "shortcuts", order: 35, component: VoiceInputShortcutsSection }, OWNER);
+addSettingsCategory("voiceInput", ({ settings }: PageProps) => <VoiceInputSettingsPage settings={settings} />, OWNER);

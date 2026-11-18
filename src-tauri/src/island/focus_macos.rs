@@ -1,14 +1,15 @@
-use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Once;
 use tauri::{AppHandle, Listener, Manager, WebviewWindow};
 
 use super::banner_hit::ISLAND_BANNER_HOVER_CHANGED_EVENT;
+use super::focus_slots::FocusSlots;
 use super::{main_window, WINDOW_LABEL};
 use crate::macos::{apps, input, island_panel};
 
 const ISLAND_HOVER_CHANGED_EVENT: &str = "island-hover-changed";
 
-static PREVIOUS_APP: AtomicI32 = AtomicI32::new(0);
+static FOCUS_SLOTS: FocusSlots = FocusSlots::new();
 static ON_ISLAND: AtomicBool = AtomicBool::new(false);
 static ON_BANNER: AtomicBool = AtomicBool::new(false);
 static FOLLOW_HOVER: Once = Once::new();
@@ -35,6 +36,10 @@ fn other_frontmost_app() -> Option<i32> {
     apps::frontmost_pid().filter(|pid| Some(*pid) != own)
 }
 
+fn other_frontmost_target() -> isize {
+    other_frontmost_app().map_or(0, |pid| pid as isize)
+}
+
 #[tauri::command]
 pub fn take_island_hover_focus(app: AppHandle) -> Result<bool, String> {
     if input::is_left_button_down() {
@@ -44,7 +49,7 @@ pub fn take_island_hover_focus(app: AppHandle) -> Result<bool, String> {
         return Ok(true);
     }
     if let Some(pid) = other_frontmost_app() {
-        PREVIOUS_APP.store(pid, Ordering::SeqCst);
+        FOCUS_SLOTS.note_hover(pid as isize);
     }
     let handle = app.clone();
     app.run_on_main_thread(move || {
@@ -61,8 +66,10 @@ pub fn release_island_hover_focus(app: AppHandle) -> Result<bool, String> {
     if input::is_left_button_down() {
         return Ok(false);
     }
-    let previous = PREVIOUS_APP.swap(0, Ordering::SeqCst);
-    if previous == 0 || !island_has_real_key(&app) {
+    let Some(previous) = FOCUS_SLOTS.take_hover().and_then(|pid| i32::try_from(pid).ok()) else {
+        return Ok(true);
+    };
+    if !island_has_real_key(&app) {
         return Ok(true);
     }
     let handle = app.clone();
@@ -83,7 +90,21 @@ pub fn take_island_click_focus() -> Result<bool, String> {
 
 pub(crate) fn set_click_activation(_window: &WebviewWindow, _activates: bool) {}
 
-pub(crate) fn island_mode_synced(_window: &WebviewWindow, _expanded: bool) {}
+pub(crate) fn island_mode_synced(window: &WebviewWindow, expanded: bool) {
+    super::watch::note_interaction_ready();
+    if expanded {
+        return;
+    }
+    let Some(previous) = FOCUS_SLOTS.take_expanded().and_then(|pid| i32::try_from(pid).ok()) else {
+        return;
+    };
+    let app = window.app_handle().clone();
+    let _ = window.run_on_main_thread(move || {
+        if island_has_real_key(&app) {
+            island_panel::hand_key_back(&app, WINDOW_LABEL, previous);
+        }
+    });
+}
 
 pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), String> {
     let app = window.app_handle().clone();
@@ -96,14 +117,41 @@ pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), Strin
                     eprintln!("could not show the island at startup: {error}");
                 }
             }
+            crate::tray::refresh_now(&app);
+        })
+        .map_err(|error| error.to_string())
+}
+
+pub(crate) fn show_island(window: &WebviewWindow) -> Result<(), String> {
+    let app = window.app_handle().clone();
+    follow_hover(&app);
+    FOCUS_SLOTS.note_expanded(other_frontmost_target());
+    let fallback = window.clone();
+    window
+        .run_on_main_thread(move || {
+            if !island_panel::show_panel_without_key(&app, WINDOW_LABEL) {
+                if let Err(error) = fallback.show() {
+                    eprintln!("could not show the island: {error}");
+                }
+            }
+            let _ = island_panel::make_island_key(&app, WINDOW_LABEL);
+            crate::tray::refresh_now(&app);
         })
         .map_err(|error| error.to_string())
 }
 
 pub(crate) fn focus_island_for_shortcut(window: &WebviewWindow) {
-    let previous = other_frontmost_app();
-    let _ = window.set_focus();
-    if let Some(pid) = previous {
-        PREVIOUS_APP.store(pid, Ordering::SeqCst);
-    }
+    let app = window.app_handle().clone();
+    follow_hover(&app);
+    FOCUS_SLOTS.note_expanded(other_frontmost_target());
+    let fallback = window.clone();
+    let _ = window.run_on_main_thread(move || {
+        if !island_panel::show_panel_without_key(&app, WINDOW_LABEL) {
+            let _ = fallback.show();
+        }
+        if let Err(error) = island_panel::make_island_key(&app, WINDOW_LABEL) {
+            eprintln!("{error}");
+            let _ = fallback.set_focus();
+        }
+    });
 }

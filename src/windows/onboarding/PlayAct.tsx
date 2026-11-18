@@ -10,6 +10,7 @@ import { ActHeading } from "./ActHeading";
 import type { OnboardingModule } from "./personas";
 import "./PlayAct.css";
 import { isMacOS } from "../../lib/platform";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { openShortcutLabel } from "../../features/clipboard/shortcut";
 
 const SHELF_POLL_MS = 800;
@@ -34,10 +35,10 @@ function useShelfGotFile(watch: boolean, onFile: () => void) {
         })
         .catch(() => undefined);
     read();
-    const timer = window.setInterval(read, SHELF_POLL_MS);
+    const stop = visibilityInterval(read, SHELF_POLL_MS);
     return () => {
       stopped = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, [watch, onFile]);
 }

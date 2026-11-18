@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
-import { VERSION, check, run } from "../src/index.mjs";
+import { VERSION, check, dev, run } from "../src/index.mjs";
 import { REVIEW_FIXTURES, capture, copyFixture, editJson, tempDir, writeFiles } from "./helpers.mjs";
 
 test("help, version and bad arguments", async () => {
@@ -89,6 +89,76 @@ test("check --market still refuses experimental interfaces, from the manifest an
   assert.ok(errors.some((issue) => issue.code === "review:manifest" && issue.message.includes("fuyu.experimental")), JSON.stringify(errors));
 });
 
+test("check rejects unknown slot names, allows experimental slots in dev mode, and refuses them under --market", async () => {
+  const typoDir = copyFixture("hello", (root) => {
+    editJson(join(root, "package.json"), (pkg) => {
+      pkg.fuyu.slots = ["island.dev/v1", "island.nonexistent/v1"];
+    });
+  });
+  const typoResult = await check(typoDir);
+  assert.equal(typoResult.ok, false);
+  const slotError = typoResult.errors.find((issue) => issue.code === "unknown-slot");
+  assert.ok(slotError, JSON.stringify(typoResult.errors));
+  assert.equal(slotError.path, "fuyu.slots[1]");
+  assert.match(slotError.message, /island\.nonexistent\/v1/);
+  assert.match(slotError.message, /island\.page\/v1/);
+
+  const expSlotDir = copyFixture("hello", (root) => {
+    writeFiles(root, {
+      "src/island.tsx": readFileSync(join(root, "src/island.tsx"), "utf8").replace("island.dev/v1", "island.future/v1"),
+    });
+    editJson(join(root, "package.json"), (pkg) => {
+      pkg.fuyu.slots = ["island.future/v1"];
+      pkg.fuyu.experimental = ["island.future/v1"];
+    });
+  });
+  const devResult = await check(expSlotDir);
+  assert.equal(devResult.ok, true, JSON.stringify(devResult.errors));
+  assert.deepEqual(devResult.errors, []);
+
+  const marketOut = capture(expSlotDir);
+  assert.equal(await run(["check", "--market", "--json"], marketOut.io), 1);
+  const marketJson = JSON.parse(marketOut.stdout());
+  assert.equal(marketJson.ok, false);
+  assert.ok(marketJson.errors.some((issue) => issue.code === "unknown-slot" && issue.path === "fuyu.slots[0]"), JSON.stringify(marketJson.errors));
+  assert.ok(marketJson.errors.some((issue) => issue.code === "experimental"), JSON.stringify(marketJson.errors));
+});
+
+test("check validates service names in provides, replaces and inject while allowing custom versioned services and seams", async () => {
+  const validCustom = copyFixture("hello", (root) => {
+    editJson(join(root, "package.json"), (pkg) => {
+      pkg.fuyu.provides = ["weather/v1", "weather.forecast/v2"];
+      pkg.fuyu.replaces = ["lyrics/v1"];
+      pkg.fuyu.inject = {
+        required: ["clients", "translator.engines", "weather/v1"],
+        optional: ["reminders/v1", "clipboard.actions"],
+      };
+    });
+  });
+  const validResult = await check(validCustom);
+  assert.equal(validResult.ok, true, JSON.stringify(validResult.errors));
+
+  const badServices = copyFixture("hello", (root) => {
+    editJson(join(root, "package.json"), (pkg) => {
+      pkg.fuyu.provides = ["weather"];
+      pkg.fuyu.replaces = ["Translator/v1"];
+      pkg.fuyu.inject = {
+        required: ["clients", "timers/v0"],
+        optional: ["translator.engine"],
+      };
+    });
+  });
+  const badResult = await check(badServices);
+  assert.equal(badResult.ok, false);
+  const serviceErrors = badResult.errors.filter((issue) => issue.code === "service-name").map((issue) => issue.path);
+  assert.deepEqual(serviceErrors, [
+    "fuyu.provides[0]",
+    "fuyu.replaces[0]",
+    "fuyu.inject.required[1]",
+    "fuyu.inject.optional[0]",
+  ]);
+});
+
 test("review prints Markdown or JSON and exits 1 only on red", async () => {
   const fixture = (version) => join(REVIEW_FIXTURES, `weather-${version}`);
   const markdown = capture(tempDir());
@@ -100,4 +170,28 @@ test("review prints Markdown or JSON and exits 1 only on red", async () => {
   assert.ok(existsSync(join(json.io.cwd, "report.md")));
   const usage = capture(tempDir());
   assert.equal(await run(["review", fixture("1.0.0")], usage.io), 2);
+});
+
+test("dev builds the plugin, registers source: dev in plugins.yml, rebuilds on change and cleans up", async () => {
+  const dir = copyFixture();
+  const dataDir = tempDir();
+  const out = capture(dir);
+  assert.equal(await run(["dev", "--once", "--data-dir", dataDir], out.io), 0, out.stderr());
+  assert.match(out.stdout(), /dev @someone\/fuyu-hello/);
+  const yml = readFileSync(join(dataDir, "plugins.yml"), "utf8");
+  assert.match(yml, /- id: "@someone\/fuyu-hello"/);
+  assert.match(yml, /source: dev/);
+
+  let rebuilt = 0;
+  const session = await dev(dir, {
+    dataDir,
+    debounceMs: 20,
+    onRebuild: () => {
+      rebuilt += 1;
+    },
+  });
+  await session.rebuild();
+  assert.equal(rebuilt, 1);
+  await session.close({ clean: true });
+  assert.equal(readFileSync(join(dataDir, "plugins.yml"), "utf8").trim(), "[]");
 });

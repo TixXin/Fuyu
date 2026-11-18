@@ -1,6 +1,7 @@
 import { Camera, Mic } from "lucide-react";
 import { useTranslation } from "../../i18n";
-import { openDevicePrivacySettings, type DeviceUse } from "./api";
+import { openDevicePrivacySettings } from "../../lib/system-permissions/api";
+import type { DeviceUse } from "./api";
 import { devicesInUse } from "./deviceUse";
 import "./DeviceUseIndicator.css";
 

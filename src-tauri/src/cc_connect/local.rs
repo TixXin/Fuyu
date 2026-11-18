@@ -66,7 +66,7 @@ pub async fn get_cc_connect_status(path: Option<String>) -> Result<CcConnectStat
             exe: found.as_ref().map(|(exe, _)| exe.display().to_string()),
             exe_source: found.map(|(_, source)| source),
             exe_error,
-            running: crate::win32::process::running_executable(&[locate::EXE_NAME]).is_some(),
+            running: crate::platform::process::running_executable(&[locate::EXE_NAME]).is_some(),
             runner: run.key(),
             runner_error: run.error(),
             projects: chats::read_projects(&data_dir, config.as_deref()),

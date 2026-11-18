@@ -18,8 +18,9 @@ export function PushAct({ step, onSkip }: { step: number; onSkip: () => void }) 
   const [agreed, setAgreed] = useState(false);
   const [platform, setPlatform] = useState<PushPlatform>("feishu");
   const [connected, setConnected] = useState<ReadonlySet<string>>(new Set());
+  const [scanning, setScanning] = useState<string | null>(null);
   const plan = useMemo(() => planProjects(targets.entries, edits), [targets.entries, edits]);
-  const chosen = chosenProjects(plan, targets.entries, connected);
+  const chosen = chosenProjects(plan, targets.entries, connected, scanning);
 
   const changeProject = (next: PlannedProject) => setEdits([...plan.filter((project) => project.key !== next.key), next]);
   const markConnected = (key: string) => {
@@ -40,7 +41,7 @@ export function PushAct({ step, onSkip }: { step: number; onSkip: () => void }) 
       {step === 0 && <InstallStep targets={targets} />}
       {step === 1 && <ProjectsStep entries={targets.entries} plan={plan} agreed={agreed} onAgree={() => setAgreed(true)} onChange={changeProject} />}
       {step === 2 && <PlatformStep platform={platform} onChange={setPlatform} />}
-      {step === 3 && <ConnectStep entries={targets.entries} projects={agreed ? chosen : []} platform={platform} connected={connected} onConnected={markConnected} />}
+      {step === 3 && <ConnectStep entries={targets.entries} projects={agreed ? chosen : []} platform={platform} connected={connected} scanning={scanning} onScanning={setScanning} onConnected={markConnected} />}
       {step === 4 && <TestStep entries={targets.entries} projects={chosen.filter((project) => connected.has(project.key))} />}
       {step < PUSH_STEPS - 1 && (
         <button className="push-act__skip" type="button" onClick={onSkip}>

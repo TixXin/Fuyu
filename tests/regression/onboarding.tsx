@@ -5,8 +5,11 @@ import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
+import catalog from "../../src/features/builtins.json";
+import { BUILTIN_PLUGINS_CHANGED, type BuiltinPlugin } from "../../src/features/plugin-kernel/api";
 import { OnboardingWindow } from "../../src/windows/onboarding/OnboardingWindow";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
+import { until } from "./pollUntil";
 
 const query = new URLSearchParams(location.search);
 const automated = query.has("test");
@@ -17,10 +20,27 @@ let clipboard: Record<string, unknown> = { enabled: true, winV: false, shortcut:
 let launchAtStartup = false;
 let marker = false;
 let shelfItems: { id: string; addedAt: number }[] = [{ id: "earlier", addedAt: 1 }];
+let builtins: BuiltinPlugin[] = catalog.plugins.map(({ id, kind }) => ({
+  id,
+  kind: kind === "essential" ? "essential" : "builtin",
+  enabled: id !== "screenshot",
+  background: [],
+  config: id === "messages" ? { qq: true, wechat: true, mail: true } : {},
+}));
+const pluginOn = (id: string) => builtins.find((plugin) => plugin.id === id)?.enabled;
 mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   commands.push({ command, args });
   switch (command) {
+    case "get_builtin_plugins": return builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } }));
+    case "set_builtin_plugin_enabled":
+      builtins = builtins.map((plugin) => (plugin.id === String(args.id) ? { ...plugin, enabled: Boolean(args.enabled) } : plugin));
+      void emit(BUILTIN_PLUGINS_CHANGED, builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } })));
+      return builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } }));
+    case "set_builtin_plugin_config":
+      builtins = builtins.map((plugin) => (plugin.id === String(args.id) ? { ...plugin, config: { ...plugin.config, [String(args.key)]: args.value } } : plugin));
+      void emit(BUILTIN_PLUGINS_CHANGED, builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } })));
+      return builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } }));
     case "get_clipboard_history": return { settings: clipboard, items: [] };
     case "set_clipboard_history_settings":
       clipboard = { ...clipboard, ...(args.settings as object) };
@@ -98,7 +118,7 @@ if (!automated) {
 } else {
   try {
     await act(async () => { mount(); });
-    await wait(30);
+    await until(() => commands.some(({ command }) => command === "show_onboarding_window"));
     check(commands.some(({ command }) => command === "show_onboarding_window"), "The overlay is shown once the page has painted");
     check(welcome().kind === "hello", "The island is asked to say hello as the guide opens");
     check(JSON.parse(localStorage.getItem("fuyu-onboarding-demo") ?? "{}").until > Date.now(), "The island's demo runs while the guide is open");
@@ -139,19 +159,19 @@ if (!automated) {
     check(!removed(), "Nothing is listed as taken off before an answer");
     await act(async () => { persona(4).click(); });
     await wait(20);
-    check(stored().musicEnabled === true && stored().agentStatusEnabled === false && stored().todoEnabled === false && clipboard.enabled === false,
+    check(pluginOn("music") === true && pluginOn("agents") === false && pluginOn("todos") === false && pluginOn("clipboard") === false && clipboard.enabled === false,
       "Answering Leisure keeps music and the shelf and takes the rest off");
     check(document.querySelectorAll(".onboarding__dot").length === 5, "Without AI Agent there is no push act");
     check(removed() === "已卸下：待办、AI Agent、翻译、邮箱、剪贴板。点贴纸就能装回，以后在设置里也行。", "The card says what the answer took off");
     await act(async () => { persona(4).click(); });
     await wait(20);
-    check(stored().todoEnabled === true && stored().agentStatusEnabled === true && stored().screenshotEnabled === false && clipboard.enabled === true && !removed(),
+    check(pluginOn("todos") === true && pluginOn("agents") === true && pluginOn("screenshot") === false && pluginOn("clipboard") === true && clipboard.enabled === true && !removed(),
       "Taking the answer back restores the modules that were on before it");
     await act(async () => { persona(4).click(); });
     await wait(20);
     await press("剪贴板");
     await press("AI Agent");
-    check(clipboard.enabled === true && stored().agentStatusEnabled === true, "Clicking a sticker puts that module on");
+    check(clipboard.enabled === true && pluginOn("clipboard") === true && pluginOn("agents") === true, "Clicking a sticker puts that module on");
     check(removed().startsWith("已卸下：待办、翻译、邮箱。"), "A sticker put back leaves the taken-off list");
     await press("下一步");
     await press("上一步");
@@ -168,15 +188,15 @@ if (!automated) {
     await placeIsland(open);
     check(stars() === 1 && document.querySelector(".onboarding-spotlight--open"), "Opening the real island earns a star, and the light grows with it");
     check(parseFloat(card().style.top || "0") !== closed.height + 28, "The card moves out of the way of the open island");
-    await wait(900);
+    await until(() => commands.some(({ command }) => command === "get_file_shelf"));
     shelfItems = [{ id: "dropped", addedAt: 2 }];
-    await wait(900);
+    await until(() => stars() === 2);
     check(stars() === 2, "A file landing on the shelf earns a star, even when the shelf holds as many entries as before");
     await act(async () => { await emit("clipboard-popup-opened"); });
-    await wait(10);
+    await until(() => stars() === 3);
     check(stars() === 3 && document.querySelector(".onboarding__lead")?.textContent === "全部完成，你已经会用了。", "The real clipboard popup opening earns the last star");
     await act(async () => { document.querySelector<HTMLInputElement>("#onboarding-winv")!.click(); });
-    await wait(10);
+    await until(() => clipboard.winV === true);
     check(clipboard.winV === true, "Win+V is saved in the clipboard settings");
     await placeIsland(closed);
 

@@ -53,11 +53,11 @@ fn pinned_origin(settings: &ClipboardHistorySettings, screens: &[(i32, i32, i32,
 }
 
 pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Result<(), String> {
-    let window = popup_window(app)?;
+    let window = super::background::ensure_popup_window(app)?;
     if window.is_visible().unwrap_or(false) {
         return hide(app);
     }
-    let _ = window.set_content_protected(settings.hide_from_capture);
+    let _ = window.set_content_protected(super::wanted_capture_protection(settings.hide_from_capture));
     super::sequence::stop();
     let own = i32::try_from(std::process::id()).ok();
     *TARGET_APP.lock().unwrap_or_else(PoisonError::into_inner) = apps::frontmost_pid().filter(|pid| Some(*pid) != own);
@@ -94,7 +94,11 @@ pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Re
 
 pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     super::preview_window::hide(app, false);
-    popup_window(app)?.hide().map_err(|error| error.to_string())
+    super::background::schedule_preview_close_after_popup(app);
+    let Some(window) = app.get_webview_window(WINDOW_LABEL) else {
+        return Ok(());
+    };
+    window.hide().map_err(|error| error.to_string())
 }
 
 pub(super) fn refocus(app: &AppHandle) -> Result<(), String> {
@@ -116,6 +120,8 @@ pub(super) fn outer_position(app: &AppHandle) -> Option<(i32, i32)> {
     let position = screen::window_position(&popup_window(app).ok()?).ok()?;
     Some((position.x, position.y))
 }
+
+pub(super) fn sync_taskbar(_app: &AppHandle, _pinned: bool) {}
 
 pub(super) fn note_target(_app: &AppHandle) {
     let own = i32::try_from(std::process::id()).ok();

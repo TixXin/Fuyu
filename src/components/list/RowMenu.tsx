@@ -10,6 +10,7 @@ export type RowMenuItem = {
   danger?: boolean;
   disabled?: boolean;
   keepOpen?: boolean;
+  confirming?: boolean;
   onSelect: () => void;
 };
 
@@ -107,6 +108,7 @@ export function RowMenu({ label, items, onOpenChange, buttonClassName, children 
               type="button"
               role="menuitem"
               disabled={item.disabled}
+              data-confirm-control={item.confirming ? "true" : undefined}
               onClick={() => {
                 item.onSelect();
                 if (!item.keepOpen) setMenuOpen(false);

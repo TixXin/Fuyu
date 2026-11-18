@@ -2,7 +2,7 @@ use std::{fs, path::Path};
 
 use serde::{Deserialize, Serialize};
 
-use crate::agent_status::remote_hosts::is_valid_alias;
+use crate::{agent_status::remote_hosts::is_valid_alias, user_error::UserError};
 
 pub(super) const FILE_NAME: &str = "ssh-tunnels.json";
 const MAX_HOSTS: usize = 32;
@@ -41,27 +41,38 @@ pub(super) fn read(app_dir: &Path) -> Vec<HostTunnel> {
     hosts
 }
 
-pub(super) fn set(app_dir: &Path, host: &str, enabled: bool, remote_port: Option<u16>) -> Result<Vec<HostTunnel>, String> {
+pub(super) fn set(app_dir: &Path, host: &str, enabled: bool, remote_port: Option<u16>) -> Result<Vec<HostTunnel>, UserError> {
     let host = host.trim();
     if !is_valid_alias(host) {
-        return Err(format!("\"{host}\" is not an SSH host name"));
+        return Err(UserError::new("remoteHosts.host", format!("\"{host}\" is not an SSH host name.")).arg("host", host));
     }
     let mut hosts = read(app_dir);
     let index = hosts.iter().position(|known| known.host == host);
     match (remote_port, index) {
-        (None, _) if enabled => return Err(format!("Set the port on {host} first")),
+        (None, _) if enabled => {
+            return Err(UserError::new("sshTunnel.needPort", format!("Set the port on {host} first.")).arg("host", host));
+        }
         (None, Some(index)) => {
             hosts.remove(index);
         }
         (None, None) => {}
-        (Some(port), _) if port < MIN_REMOTE_PORT => return Err(format!("The port on the server must be {MIN_REMOTE_PORT}–65535")),
+        (Some(port), _) if port < MIN_REMOTE_PORT => {
+            return Err(UserError::new("sshTunnel.remotePort", format!("The port on the server must be {MIN_REMOTE_PORT}–65535.")).arg("min", MIN_REMOTE_PORT));
+        }
         (Some(remote_port), Some(index)) => hosts[index] = HostTunnel { host: host.to_string(), enabled, remote_port },
-        (Some(_), None) if hosts.len() >= MAX_HOSTS => return Err(format!("At most {MAX_HOSTS} hosts")),
+        (Some(_), None) if hosts.len() >= MAX_HOSTS => {
+            return Err(UserError::new("sshTunnel.tooMany", format!("At most {MAX_HOSTS} hosts.")).arg("max", MAX_HOSTS));
+        }
         (Some(remote_port), None) => hosts.push(HostTunnel { host: host.to_string(), enabled, remote_port }),
     }
-    let text = serde_json::to_string_pretty(&TunnelsFile { hosts: hosts.clone() }).map_err(|error| error.to_string())?;
-    fs::create_dir_all(app_dir).map_err(|error| format!("Failed to create the app data folder: {error}"))?;
+    let text = serde_json::to_string_pretty(&TunnelsFile { hosts: hosts.clone() })
+        .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
+    fs::create_dir_all(app_dir).map_err(|error| {
+        UserError::new("file.create", format!("Could not create {}.", app_dir.display()))
+            .arg("path", app_dir.display().to_string())
+            .detail(error)
+    })?;
     crate::fs_write::replace_file(&app_dir.join(FILE_NAME), text.as_bytes())
-        .map_err(|error| format!("Failed to save the tunnels: {error}"))?;
+        .map_err(|error| UserError::new("sshTunnel.save", "Could not save the SSH tunnels.").detail(error))?;
     Ok(hosts)
 }

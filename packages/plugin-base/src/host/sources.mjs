@@ -93,10 +93,10 @@ export function sourceOf(options, { dir, appVersion }) {
   if (!SOURCES.includes(source)) throw rejection(`source is ${JSON.stringify(source)}; use ${SOURCES.join(", ")}`);
   if (source === "dev") {
     const root = devRoot(options.path, dir);
-    return { source, root, ...readManifest(root, { allowExperimental: true }) };
+    return { source, root, ...readManifest(root, { allowExperimental: true, official: true }) };
   }
   const root = installedRoot(id, join(dir, PACKAGES_DIR));
-  const manifest = readManifest(root, { allowExperimental: false, appVersion });
+  const manifest = readManifest(root, { allowExperimental: false, appVersion, official: source === "market" });
   if (manifest.package !== id) throw rejection(`the package in ${root} is ${manifest.package}, not ${id}`);
   return { source, root, ...manifest };
 }

@@ -27,11 +27,19 @@ function IslandReference() {
   );
 }
 
-function ReferenceSheetSection(props: ShortcutsSectionProps) {
+function ClipboardReference() {
+  const text = useTranslation().settings.shortcuts;
   return (
-    <div className="shortcut-sheet">
-      <SlotView slot={shortcutReferences} group="shortcutsReference" props={props} />
-    </div>
+    <ShortcutReferenceGroup
+      title={text.clipboardWindowTitle}
+      rows={[
+        [text.clipboardPreview, "Space"],
+        [text.clipboardSnippetsTab, "Tab"],
+        [text.clipboardPlainPaste, "Shift+Enter"],
+        [text.clipboardAiRewrite, isMacOS ? "Cmd+I" : "Ctrl+I"],
+        [text.clipboardQuickPick, "Alt+1–9"],
+      ]}
+    />
   );
 }
 
@@ -41,8 +49,8 @@ function PluginsSection({ onOpenPage, takenBy, refreshPlugins }: ShortcutsSectio
 
 shortcutSections.add({ id: "shortcuts.plugins", category: "shortcuts", order: 50, component: PluginsSection });
 shortcutSections.add({ id: "shortcutsIsland.pages", category: "shortcutsIsland", order: 10, component: PageKeysSection });
-shortcutSections.add({ id: "shortcutsIsland.reference", category: "shortcutsIsland", order: 20, component: ReferenceSheetSection });
 shortcutReferences.add({ id: "shortcutsReference.island", category: "shortcutsReference", order: 10, component: IslandReference });
+shortcutReferences.add({ id: "shortcutsReference.clipboard", category: "shortcutsReference", order: 15, component: ClipboardReference });
 
 export function ShortcutsSettingsPage({
   tab,
@@ -50,7 +58,7 @@ export function ShortcutsSettingsPage({
   onSettingsChange,
   onOpenPage,
 }: {
-  tab: "shortcuts" | "shortcutsIsland";
+  tab: "shortcuts" | "shortcutsIsland" | "shortcutsReference";
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
   onOpenPage: (page: SettingsCategory) => void;
@@ -60,8 +68,14 @@ export function ShortcutsSettingsPage({
 
   return (
     <>
-      <ShortcutFinder owners={[...owners, ...finderOnly]} onOpenPage={onOpenPage} />
-      <SlotView slot={shortcutSections} group={tab} props={props} />
+      {tab !== "shortcutsReference" && <ShortcutFinder owners={[...owners, ...finderOnly]} onOpenPage={onOpenPage} />}
+      {tab === "shortcutsReference" ? (
+        <div className="shortcut-sheet">
+          <SlotView slot={shortcutReferences} group="shortcutsReference" props={props} />
+        </div>
+      ) : (
+        <SlotView slot={shortcutSections} group={tab} props={props} />
+      )}
     </>
   );
 }

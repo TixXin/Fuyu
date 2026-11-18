@@ -12,6 +12,9 @@ export type SettingsTranslationText = {
   autoTranslateHint: string;
   selectionShortcut: string;
   selectionShortcutHint: string;
+  shortcutOff: string;
+  setShortcut: string;
+  turnOffShortcut: (action: string) => string;
 };
 
 export const zhCN: SettingsTranslationText = {
@@ -28,6 +31,9 @@ export const zhCN: SettingsTranslationText = {
   autoTranslateHint: "原文停止输入约半秒后自动翻译。未配置密钥时不发送。",
   selectionShortcut: "翻译选中文字",
   selectionShortcutHint: "在其他窗口选中文字后按下。会临时复制选中内容再还原剪贴板，不记入剪贴板历史。没有选中时翻译剪贴板里的文字。",
+  shortcutOff: "未设置",
+  setShortcut: "设置快捷键",
+  turnOffShortcut: (action) => `关闭「${action}」的快捷键`,
 };
 
 export const en: SettingsTranslationText = {
@@ -44,4 +50,7 @@ export const en: SettingsTranslationText = {
   autoTranslateHint: "Translate about half a second after the source stops changing. Nothing is sent without an API key.",
   selectionShortcut: "Translate selected text",
   selectionShortcutHint: "Press it after selecting text in another window. The selection is copied and the clipboard is restored, and it is not added to clipboard history. With nothing selected, the clipboard text is translated.",
+  shortcutOff: "Not set",
+  setShortcut: "Set shortcut",
+  turnOffShortcut: (action) => `Turn off the shortcut for ${action}`,
 };

@@ -354,7 +354,7 @@ mod tests {
 
     #[test]
     fn changed_files_are_written_with_the_remote_time_and_dropped_ones_removed() {
-        let root = std::env::temp_dir().join(format!("focusd-remote-mirror-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("fuyu-remote-mirror-{}", std::process::id()));
         let path = ".claude/projects/p/s.jsonl".to_string();
         let changed = Reply::Changed {
             path: path.clone(),

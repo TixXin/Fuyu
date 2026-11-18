@@ -161,6 +161,7 @@ pub(super) fn settle(window: &WebviewWindow, monitor: &Monitor, state: IslandWin
         });
     }
     if previous.notch != notch {
+        super::glass::refresh_glass(window);
         let _ = window.emit(ISLAND_NOTCH_CHANGED_EVENT, notch);
     }
     if previous.shown_auto_form != auto_form {
@@ -178,14 +179,6 @@ pub fn get_island_auto_form() -> Option<AutoForm> {
 pub fn get_island_notch() -> Option<Notch> {
     read_window_state().notch
 }
-
-#[cfg(target_os = "macos")]
-pub(crate) fn start_notch_watch(window: WebviewWindow) {
-    super::screen_watch::start(window);
-}
-
-#[cfg(not(target_os = "macos"))]
-pub(crate) fn start_notch_watch(_window: WebviewWindow) {}
 
 #[cfg(test)]
 mod tests {

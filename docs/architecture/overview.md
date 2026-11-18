@@ -8,7 +8,7 @@
 ┌──────────────────────── WebView2（同一前端包，按 ?window= 分发）────────────────────────┐
 │  main：悬浮岛    translation：快捷翻译    clipboard：剪贴板    settings：设置    screenshot-<n>：截图 │
 │  onboarding：新手引导（新装第一次启动时打开）                                             │
-│  drag-grid：拖岛时的中线辅助线（透明、鼠标穿透，第一次拖岛时创建）                      │
+│  drag-grid：拖岛时的中线辅助线（透明、鼠标穿透，拖岛时创建、松手销毁）                    │
 └────────────┬─────────────────────────────────────────────────────────────────────────┘
              │ invoke（命令，请求/响应）        ▲ emit / emit_to（事件，后端主动推送）
              ▼                                │
@@ -54,7 +54,7 @@
 main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、styles/
 ```
 
-功能之间不直接 import（插件平台第 3 版的要求，见 [v3-phase3-plan.md](plugins/v3-phase3-plan.md)「关键设计」第 4 条）。不属于任何一个功能的共享代码在 E36.3.24 上提了：岛屿设置的模型在 `lib/settings/`，主题、强调色和动效在 `lib/theme/`，快捷键工具在 `lib/shortcut/`，设置文件和备份在 `lib/settings-backup/`，系统权限在 `lib/system-permissions/`，设置页共用的分节在 `windows/settings/sections/`，岛的「第一次」提示在 `windows/island/first-hints/`；原来的 `features/appearance`、`settings-backup`、`system-permissions`、`first-hints` 不再存在。`lib/settings/` 是唯一反过来 import 功能的地方：日历、歌词、待办项目、Agent（`features/agent-status/agentSettings.ts`）那一份设置留在功能里，由它汇总成 `IslandSettings`。还剩的跨功能 import 记在 `scripts/feature-boundary-allowlist.json`，由 `tests/unit/feature-boundaries.test.mjs` 检查，只减不增，第 3 阶段结束时清零；每条要去掉的边在 `removedBy` 里记着由哪个任务去掉，任务归档了边还在时测试会失败。
+功能之间不直接 import（插件平台第 3 版的要求，见 [v3-phase3-plan.md](plugins/v3-phase3-plan.md)「关键设计」第 4 条）。不属于任何一个功能的共享代码在 E36.3.24 与 E36.3.50 上提了：岛屿设置的模型（含日历 `calendarSettings.ts`、歌词 `lyricsSettings.ts`、Agent `agentSettings.ts` 的设置字段与默认值）在 `lib/settings/`，待办项目的类型与规整在 `lib/todo-projects/`，主题、强调色和动效在 `lib/theme/`，快捷键工具在 `lib/shortcut/`，设置文件和备份在 `lib/settings-backup/`，系统权限在 `lib/system-permissions/`，设置页共用的分节在 `windows/settings/sections/`，岛的「第一次」提示在 `windows/island/first-hints/`；原来的 `features/appearance`、`settings-backup`、`system-permissions`、`first-hints` 不再存在。`scripts/feature-boundary-allowlist.json` 已在 E36.3.50 清零，由 `tests/unit/feature-boundaries.test.mjs` 守住零跨功能 import 和零下层反向 import。
 
 ## 仓库目录
 

@@ -5,18 +5,21 @@ use std::{
 };
 
 use super::{
+    backend::Backend,
     backend_folder::FolderBackend,
     categories::{
-        links,
+        clip_favorites, links,
         settings::{self, Local, Part},
         snippets, todos, Category,
     },
     config::SyncCategory,
+    crypto::DataKey,
     layout::{DeviceInfo, Doc},
     round::{Clockwork, Options, Round, RoundResult},
     settings_meta::{self, SettingsMeta},
     Clock, Hlc, Tombstone,
 };
+use crate::clipboard_history::ClipboardHistoryItem;
 
 pub(super) const START: u64 = 1_800_000_000_000;
 
@@ -133,6 +136,32 @@ impl Category for MemSettings {
     }
 }
 
+pub(super) struct MemFavorites {
+    pub items: Vec<ClipboardHistoryItem>,
+    pub tombstones: Vec<Tombstone>,
+    pub enabled: bool,
+    device: String,
+}
+
+impl Category for MemFavorites {
+    fn kind(&self) -> SyncCategory {
+        SyncCategory::ClipFavorites
+    }
+
+    fn load(&mut self) -> Result<Option<Doc>, String> {
+        Ok(Some(clip_favorites::to_doc(&self.items, &self.tombstones, &self.device)))
+    }
+
+    fn store(&mut self, merged: &Doc) -> Result<(), String> {
+        (self.items, self.tombstones) = clip_favorites::apply(&self.items, merged, 1024 * 1024);
+        Ok(())
+    }
+
+    fn tidy(&self, doc: &mut Doc, tick: &mut dyn FnMut() -> Hlc) {
+        clip_favorites::tidy(doc, tick);
+    }
+}
+
 pub(super) struct Device {
     pub id: String,
     pub clock: TestClock,
@@ -142,6 +171,8 @@ pub(super) struct Device {
     pub links: MemRecords,
     pub settings: MemSettings,
     pub presets: MemSettings,
+    pub favorites: MemFavorites,
+    pub key: Option<DataKey>,
     pub backups: usize,
 }
 
@@ -162,6 +193,8 @@ impl Device {
             links: records(SyncCategory::Links),
             settings: MemSettings { part: Part::Settings, local: empty.clone(), device: id.into(), groups: Vec::new() },
             presets: MemSettings { part: Part::Presets, local: empty, device: id.into(), groups: Vec::new() },
+            favorites: MemFavorites { items: Vec::new(), tombstones: Vec::new(), enabled: false, device: id.into() },
+            key: None,
             backups: 0,
         }
     }
@@ -171,17 +204,29 @@ impl Device {
         self.clock.tick()
     }
 
-    pub(super) fn sync_with(&mut self, folder: &Path, options: Options) -> RoundResult {
-        let backend = FolderBackend::new(folder.to_path_buf());
+    pub(super) fn sync_backend(&mut self, backend: &dyn Backend, options: Options) -> RoundResult {
         let me = DeviceInfo { device_id: self.id.clone(), name: format!("{} pc", self.id), platform: "test".into(), app_version: "1.0.0".into(), last_sync_at: 0 };
         let backups = &mut self.backups;
         let mut backup = || {
             *backups += 1;
             Ok(())
         };
-        let mut categories: [&mut dyn Category; 5] = [&mut self.todos, &mut self.snippets, &mut self.links, &mut self.settings, &mut self.presets];
-        let mut round = Round { backend: &backend, me: &me, state_dir: &self.state, clock: &mut self.clock, options, backup: &mut backup };
-        round.run(&mut categories, &[])
+        let favorites_on = self.favorites.enabled;
+        let mut categories: Vec<&mut dyn Category> = vec![&mut self.todos, &mut self.snippets, &mut self.links, &mut self.settings, &mut self.presets];
+        let disabled: Vec<SyncCategory> = if favorites_on {
+            categories.push(&mut self.favorites);
+            Vec::new()
+        } else {
+            vec![SyncCategory::ClipFavorites]
+        };
+        let unlocked_key = self.key.as_ref();
+        let mut round = Round { backend, me: &me, state_dir: &self.state, clock: &mut self.clock, options, unlocked_key, backup: &mut backup };
+        round.run(&mut categories, &disabled)
+    }
+
+    pub(super) fn sync_with(&mut self, folder: &Path, options: Options) -> RoundResult {
+        let backend = FolderBackend::new(folder.to_path_buf());
+        self.sync_backend(&backend, options)
     }
 
     pub(super) fn sync(&mut self, folder: &Path) -> RoundResult {

@@ -132,7 +132,7 @@ export function UpdatePanel() {
           aria-valuemax={100}
           aria-valuenow={percent ?? undefined}
         >
-          <span className="update-status__fill" style={percent === null ? undefined : { width: `${percent}%` }} />
+          <span className="update-status__fill" style={percent === null ? undefined : { transform: `scaleX(${percent / 100})` }} />
         </div>
       )}
       {(offersUpdate || stage === "downloading") && <UpdateNotes notes={notes} version={nextVersion} />}

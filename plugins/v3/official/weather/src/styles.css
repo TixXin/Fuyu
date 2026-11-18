@@ -1,0 +1,276 @@
+.fuyu-weather,
+.fuyu-weather-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-weather-settings {
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-weather__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-weather__place-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fuyu-weather__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-weather__sub {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-weather__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-weather__hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-weather__temp {
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-weather__hero-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fuyu-weather__cond {
+  font-weight: 600;
+}
+
+.fuyu-weather__stats {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-weather__block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fuyu-weather__heading {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-weather__hours {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.fuyu-weather__hour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  font-size: 11px;
+}
+
+.fuyu-weather__hour-time {
+  color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-weather__hour-cond {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-weather__hour-temp {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-weather__days {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fuyu-weather__day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  font-size: 12px;
+}
+
+.fuyu-weather__day-date {
+  width: 52px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-weather__day-cond {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-weather__day-range {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-weather__button {
+  max-width: 100%;
+  padding: 5px 12px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  color: var(--fuyu-plugin-on-accent);
+  background: var(--fuyu-plugin-accent);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-weather__button--secondary {
+  border: 1px solid var(--fuyu-plugin-border);
+  color: var(--fuyu-plugin-text);
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-weather__button:disabled {
+  color: var(--fuyu-plugin-text-muted);
+  background: var(--fuyu-plugin-surface-hover);
+  cursor: default;
+}
+
+.fuyu-weather__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-weather__source {
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-weather-bar {
+  display: inline-flex;
+  align-items: center;
+  max-width: 96px;
+  padding: 1px 6px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text);
+  font-family: var(--fuyu-plugin-font);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-weather-settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fuyu-weather-settings__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.fuyu-weather-settings__label {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-weather-settings__input {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+}
+
+.fuyu-weather-settings__check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.fuyu-weather-settings__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}

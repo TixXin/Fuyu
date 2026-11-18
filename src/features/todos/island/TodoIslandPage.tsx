@@ -52,6 +52,10 @@ export function TodoIslandPage(props: TodoPageProps) {
           onStartTodo={props.onStartTodo}
           onDeleteTodo={props.onDeleteTodo}
           onReorderTodo={props.onReorderTodo}
+          onAddSubtask={props.onAddSubtask}
+          onToggleSubtask={props.onToggleSubtask}
+          onDeleteSubtask={props.onDeleteSubtask}
+          onUpdateTodoNote={props.onUpdateTodoNote}
         />
       )}
       {pageMode === "daily" && (

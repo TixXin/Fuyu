@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Play } from "lucide-react";
+import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
@@ -107,7 +108,7 @@ export function SoundSettingsSection() {
       )}
 
       {settings.enabled && (
-        <SettingsGroup title={text.quietTitle} footer={text.quietFooter}>
+        <SettingsGroup title={text.quietTitle} footer={<SettingsFootnote text={text.quietFooter} />}>
           <SettingsToggleRow
             title={text.quietWhenInFront}
             description={text.quietWhenInFrontHint}

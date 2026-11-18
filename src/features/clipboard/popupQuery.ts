@@ -34,8 +34,18 @@ export function parsePopupQuery(query: string): PopupQuery {
 
 export type PinyinOf = (text: string) => { full: string; initials: string };
 
+const ASCII_WORD = /^[a-z]+$/;
+
 let pinyinOf: PinyinOf | null = null;
 let loading: Promise<PinyinOf | null> | null = null;
+
+export function isPinyinLoaded(): boolean {
+  return pinyinOf !== null;
+}
+
+export function queryNeedsPinyin(query: PopupQuery): boolean {
+  return query.words.some((word) => ASCII_WORD.test(word));
+}
 
 export function loadPinyin(): Promise<PinyinOf | null> {
   loading ??= import("pinyin-pro")
@@ -100,6 +110,6 @@ function ruleMatches(item: ClipboardHistoryItem, rule: QueryRule, now: number): 
 export function matchesPopupQuery(item: ClipboardHistoryItem, query: PopupQuery, now: number, pinyin: PinyinOf | null = pinyinOf): boolean {
   if (!query.rules.every((rule) => ruleMatches(item, rule, now))) return false;
   return query.words.every((word) =>
-    matchesClipboardQuery(item, word) || (pinyin !== null && /^[a-z]+$/.test(word) && pinyinMatches(item, word, pinyin)),
+    matchesClipboardQuery(item, word) || (pinyin !== null && ASCII_WORD.test(word) && pinyinMatches(item, word, pinyin)),
   );
 }

@@ -6,7 +6,8 @@ use std::{
 use serde_json::{json, Value};
 
 use super::claude_hooks::{
-    command_hook_entry, install_claude_code_hook_events, turn_hook_entries, APPROVAL_HOOK_TIMEOUT_SECONDS,
+    command_hook_entry, install_claude_code_hook_events, turn_hook_entries, uninstall_nested_json_hooks,
+    APPROVAL_HOOK_TIMEOUT_SECONDS,
 };
 use super::codex_hooks::{agent_running_command_with, agent_status_command};
 use super::harness::{Harness, HookEnv, Hooks, StatusLight};
@@ -30,6 +31,7 @@ pub(super) const HARNESS: Harness = Harness {
     hooks: Some(Hooks {
         install: install_hooks,
         check: hooks_state,
+        uninstall: uninstall_hooks,
     }),
     status_light: Some(StatusLight {
         running_marker: "agent-workbuddy-running.flag",
@@ -194,6 +196,12 @@ fn hooks_state(env: &HookEnv) -> HookInstallState {
 
 pub(super) fn install_hooks(env: &HookEnv) -> Result<(), String> {
     installed_dirs(env.home_dir).iter().try_for_each(|dir| install_hooks_in(env, dir))
+}
+
+pub(super) fn uninstall_hooks(env: &HookEnv) -> Result<(), String> {
+    data_dirs(env.home_dir)
+        .iter()
+        .try_for_each(|dir| uninstall_nested_json_hooks(&dir.join("settings.json"), "WorkBuddy", "settings.json"))
 }
 
 fn install_hooks_in(env: &HookEnv, dir: &Path) -> Result<(), String> {

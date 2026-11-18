@@ -11,4 +11,4 @@ export declare class PackageError extends Error {
 
 export declare function createZip(entries: readonly PackageEntry[]): Uint8Array;
 export declare function readZip(zip: Uint8Array, limits: { maxFiles: number; maxUnpackedBytes: number }): PackageEntry[];
-export declare function zipEntryNames(data: Uint8Array): string[];
+export { zipEntryNames } from "./executable.mjs";

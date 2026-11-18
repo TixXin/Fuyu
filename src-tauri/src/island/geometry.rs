@@ -1,6 +1,6 @@
 use std::{
     sync::{
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         Mutex, PoisonError,
     },
     thread,
@@ -9,7 +9,7 @@ use std::{
 use tauri::{LogicalSize, Monitor, PhysicalPosition, Size, WebviewWindow};
 
 use super::screen;
-use super::state::{CornerShape, Edge, IslandMode, IslandPosition, IslandWindowState, MonitorFollow};
+use super::state::{CornerShape, Edge, IslandMode, IslandPosition, IslandWindowState, MonitorFollow, TuckStyle};
 
 pub(super) const STAGE_WINDOW_WIDTH: f64 = 820.0;
 pub(super) const STAGE_WINDOW_HEIGHT: f64 = 460.0;
@@ -36,7 +36,7 @@ const MAX_TOP_FILLET_RADIUS: f64 = 12.0;
 pub(super) fn max_expanded_width(scale: f64) -> f64 {
     (((STAGE_WINDOW_WIDTH - 4.0) / scale).floor() - 2.0 * MAX_TOP_FILLET_RADIUS).max(EXPANDED_ISLAND_WIDTH)
 }
-pub(super) const DEFAULT_EXPANDED_ISLAND_HEIGHT: f64 = 306.0;
+pub(super) const DEFAULT_EXPANDED_ISLAND_HEIGHT: f64 = 360.0;
 pub(super) const MIN_EXPANDED_ISLAND_HEIGHT: f64 = 72.0;
 pub(super) const EXPANDED_ISLAND_HEIGHT_RANGE: f64 = 350.0;
 pub(super) const EXPANDED_RADIUS: f64 = 30.0;
@@ -44,7 +44,109 @@ pub(super) const MIN_CORNER_RADIUS: f64 = 16.0;
 pub(super) const MAX_CORNER_RADIUS: f64 = 40.0;
 pub(super) const STAGE_WINDOW_PADDING_Y: f64 = 24.0;
 pub(super) const TUCKED_VISIBLE_EDGE_HEIGHT: f64 = 10.0;
+pub(super) const TUCKED_VISIBLE_LINE_HEIGHT: f64 = 4.0;
+pub(super) const TUCKED_HIDDEN_HOTZONE_HEIGHT: f64 = 2.0;
 pub(super) const POSITION_ANIMATION_DURATION: Duration = Duration::from_millis(320);
+
+pub(super) fn tucked_top_offset(collapsed_scale: f64, scale: f64, tuck_style: TuckStyle) -> i32 {
+    let height = COLLAPSED_ISLAND_HEIGHT * collapsed_scale;
+    match tuck_style {
+        TuckStyle::Edge => -((height - TUCKED_VISIBLE_EDGE_HEIGHT).max(0.0) * scale).round() as i32,
+        TuckStyle::Line => -((height - TUCKED_VISIBLE_LINE_HEIGHT).max(0.0) * scale).round() as i32,
+        TuckStyle::Hidden => -(height * scale).ceil() as i32,
+    }
+}
+pub(super) const PASSTHROUGH_FAST_TICK: Duration = Duration::from_millis(12);
+pub(super) const PASSTHROUGH_IDLE_TICK: Duration = Duration::from_millis(48);
+pub(super) const PASSTHROUGH_HIDDEN_TICK: Duration = Duration::from_millis(240);
+const PASSTHROUGH_WAKE_MARGIN: f64 = 120.0;
+pub(super) const DIM_WAKE_MARGIN: f64 = 24.0;
+pub(super) const DIM_CURSOR_MOVE_THRESHOLD: f64 = 2.0;
+
+#[derive(Debug, Default, Clone, Copy)]
+pub(super) struct DimWakeTracker {
+    active: bool,
+    parked_near: bool,
+    last_near: bool,
+    dimmed_at: Option<(f64, f64)>,
+}
+
+impl DimWakeTracker {
+    pub(super) fn poll(&mut self, dimmed: bool, near_or_inside: bool, cursor: Option<(f64, f64)>) -> bool {
+        if !dimmed {
+            self.active = false;
+            self.parked_near = false;
+            self.last_near = near_or_inside;
+            self.dimmed_at = None;
+            return false;
+        }
+        if !self.active {
+            self.active = true;
+            if near_or_inside && !self.last_near {
+                self.active = false;
+                self.last_near = true;
+                return true;
+            }
+            self.parked_near = near_or_inside;
+            self.last_near = near_or_inside;
+            self.dimmed_at = cursor;
+            return false;
+        }
+        self.last_near = near_or_inside;
+        if !near_or_inside {
+            self.parked_near = false;
+            return false;
+        }
+        let woke = if !self.parked_near {
+            true
+        } else if let (Some((x, y)), Some((ox, oy))) = (cursor, self.dimmed_at) {
+            (x - ox).hypot(y - oy) >= DIM_CURSOR_MOVE_THRESHOLD
+        } else {
+            false
+        };
+        if woke {
+            self.active = false;
+            self.parked_near = false;
+            self.dimmed_at = None;
+        }
+        woke
+    }
+}
+
+pub(super) fn should_ignore_cursor(state: IslandWindowState, is_inside: bool, is_on_banner: bool) -> bool {
+    if is_on_banner {
+        return false;
+    }
+    if state.dimmed_passthrough() {
+        return true;
+    }
+    !is_inside
+}
+
+pub(super) fn cursor_near_stage(
+    window_left: f64,
+    window_top: f64,
+    window_width: f64,
+    window_height: f64,
+    cursor_x: f64,
+    cursor_y: f64,
+) -> bool {
+    let margin = PASSTHROUGH_WAKE_MARGIN * (window_width / STAGE_WINDOW_WIDTH).max(1.0);
+    cursor_x >= window_left - margin
+        && cursor_x <= window_left + window_width + margin
+        && cursor_y >= window_top - margin
+        && cursor_y <= window_top + window_height + margin
+}
+
+pub(super) fn passthrough_sleep_duration(visible: bool, active: bool) -> Duration {
+    if !visible {
+        PASSTHROUGH_HIDDEN_TICK
+    } else if active {
+        PASSTHROUGH_FAST_TICK
+    } else {
+        PASSTHROUGH_IDLE_TICK
+    }
+}
 
 pub(super) static POSITION_ANIMATION_GENERATION: AtomicU64 = AtomicU64::new(0);
 static RUNNING_SLIDE: Mutex<Option<(u64, (i32, i32))>> = Mutex::new(None);
@@ -54,14 +156,62 @@ pub(super) fn continues_slide(running: Option<(u64, (i32, i32))>, current_genera
 }
 const STAGE_SHRINK_DELAY: Duration = Duration::from_millis(600);
 static STAGE_SHRINK_GENERATION: AtomicU64 = AtomicU64::new(0);
+static STAGE_GEOMETRY_SYNCED: AtomicBool = AtomicBool::new(false);
+
+pub(super) fn stage_geometry_synced() -> bool {
+    STAGE_GEOMETRY_SYNCED.load(Ordering::SeqCst)
+}
+
+pub(super) fn stage_height_for(state: IslandWindowState) -> f64 {
+    STAGE_WINDOW_HEIGHT
+        .max((state.expanded_height * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y)
+}
+
+fn side_stage_height_key(state: IslandWindowState) -> Option<(Edge, u64)> {
+    let edge = state
+        .custom_position
+        .and_then(|position| super::side::stored_side(position).map(|(edge, _)| edge))
+        .or_else(|| state.side())?;
+    let mut sided = state;
+    sided.attached_edge = Some(edge);
+    Some((edge, (sided.base_size().1 * sided.active_scale()).to_bits()))
+}
+
+pub(super) fn stage_geometry_inputs_changed(
+    previous: &IslandWindowState,
+    next: &IslandWindowState,
+) -> bool {
+    stage_height_for(*previous).to_bits() != stage_height_for(*next).to_bits()
+        || side_stage_height_key(*previous) != side_stage_height_key(*next)
+        || previous.is_tucked != next.is_tucked
+        || previous.tuck_style != next.tuck_style
+        || previous.collapsed_scale.to_bits() != next.collapsed_scale.to_bits()
+        || previous.margin_y.to_bits() != next.margin_y.to_bits()
+        || previous.under_menu_bar != next.under_menu_bar
+        || previous.custom_position != next.custom_position
+        || previous.out_at_top != next.out_at_top
+        || previous.is_dragging != next.is_dragging
+        || previous.attached_edge != next.attached_edge
+        || previous.monitor_follow != next.monitor_follow
+        || previous.followed_monitor != next.followed_monitor
+        || previous.fit_notch != next.fit_notch
+        || previous.auto_form != next.auto_form
+}
+
+pub(super) fn should_apply_stage_geometry(
+    previous: &IslandWindowState,
+    next: &IslandWindowState,
+    stage_synced: bool,
+) -> bool {
+    !stage_synced || stage_geometry_inputs_changed(previous, next)
+}
 
 pub(crate) fn apply_stage_geometry(
     window: &WebviewWindow,
     state: IslandWindowState,
     animate_position: bool,
 ) -> Result<(), String> {
-    let stage_height = STAGE_WINDOW_HEIGHT
-        .max((state.expanded_height * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y);
+    let stage_height = stage_height_for(state);
     let anchored_below = state.attached_edge == Some(Edge::Bottom)
         || state.custom_position.is_some_and(super::bottom_edge::is_bottom);
 
@@ -69,6 +219,19 @@ pub(crate) fn apply_stage_geometry(
     if state.is_dragging {
         return Ok(());
     }
+    let result = apply_stage_position(window, state, stage_height, animate_position);
+    if result.is_ok() {
+        STAGE_GEOMETRY_SYNCED.store(true, Ordering::SeqCst);
+    }
+    result
+}
+
+fn apply_stage_position(
+    window: &WebviewWindow,
+    state: IslandWindowState,
+    stage_height: f64,
+    animate_position: bool,
+) -> Result<(), String> {
 
     let current_monitor = window
         .current_monitor()
@@ -95,10 +258,7 @@ pub(crate) fn apply_stage_geometry(
     let monitor_size = screen::monitor_size(&monitor);
     let physical_width = (STAGE_WINDOW_WIDTH * scale).round() as i32;
     let physical_top_offset = (state.margin_y * scale).round() as i32;
-    let tucked_top_offset =
-        -((COLLAPSED_ISLAND_HEIGHT * state.collapsed_scale - TUCKED_VISIBLE_EDGE_HEIGHT).max(0.0)
-            * scale)
-            .round() as i32;
+    let tucked_top_offset = tucked_top_offset(state.collapsed_scale, scale, state.tuck_style);
     let top_inset = super::top_edge::top_edge(&monitor, super::notch::under_menu_bar(window, &monitor, state)).y - monitor_position.y;
     let centered_x = crate::dev_lane::stage_x(
         (monitor_position.x, monitor_position.y + top_inset, monitor_size.width as i32),
@@ -396,6 +556,35 @@ pub(super) fn stage_point(window_left: f64, window_top: f64, window_width: f64, 
     (round((cursor_x - window_left) / physical_scale), round((cursor_y - window_top) / physical_scale))
 }
 
+const GAZE_NEAR_STEP: f64 = 4.0;
+const GAZE_FAR_STEP: f64 = 24.0;
+
+pub(super) fn gaze_cursor_point((x, y): (f64, f64), near_stage: bool) -> (f64, f64) {
+    let step = if near_stage { GAZE_NEAR_STEP } else { GAZE_FAR_STEP };
+    ((x / step).round() * step, (y / step).round() * step)
+}
+
+pub(super) fn cursor_near_island(
+    window_left: f64,
+    window_top: f64,
+    window_width: f64,
+    window_height: f64,
+    cursor_x: f64,
+    cursor_y: f64,
+    state: IslandWindowState,
+) -> bool {
+    if state.is_tucked {
+        return cursor_on_island(window_left, window_top, window_width, window_height, cursor_x, cursor_y, state);
+    }
+    let rect = island_rect(window_left, window_top, window_width, window_height, state);
+    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
+    let margin = DIM_WAKE_MARGIN * physical_scale;
+    cursor_x >= rect.left - margin
+        && cursor_x <= rect.left + rect.width + margin
+        && cursor_y >= rect.top - margin
+        && cursor_y <= rect.top + rect.height + margin
+}
+
 pub(super) fn cursor_on_island(
     window_left: f64,
     window_top: f64,
@@ -423,6 +612,20 @@ pub(super) fn cursor_on_island(
             _ => local_x - island_left,
         };
         return point_in_notch(local_y, depth, 0.0, 0.0, island_height, island_width, radius, 0.0, state.corner_shape);
+    }
+
+    if state.is_tucked && state.tuck_style == TuckStyle::Hidden && state.notch.is_none() {
+        if local_x < island_left || local_x > island_left + island_width {
+            return false;
+        }
+        let hotzone = TUCKED_HIDDEN_HOTZONE_HEIGHT * physical_scale;
+        let hidden_depth = island_height.ceil();
+        return if state.attached_edge == Some(Edge::Bottom) {
+            let edge_y = (window_height - hidden_depth).max(0.0);
+            local_y >= edge_y - hotzone && local_y <= window_height
+        } else {
+            local_y >= 0.0 && local_y <= hidden_depth + hotzone
+        };
     }
 
     if state.attached_edge == Some(Edge::Bottom) {

@@ -6,18 +6,27 @@
   --island-top-fillet-size: 6;
   --island-shell-height: var(--island-notch-height);
   --island-shell-bottom-corner: calc(14px * var(--island-scale, 1));
-  background: var(--color-black, #000);
+  --island-shell-fill: var(--color-black, #000);
+  background: var(--island-shell-fill);
   box-shadow: none;
 }
 
 :root[data-island-notch] .island--appearance-liquidGlass.island--collapsed,
 :root[data-island-notch] .island--appearance-liquidGlass.island--collapsed:has(:focus-visible) {
-  background: var(--color-black, #000);
+  --island-shell-fill: var(--color-black, #000);
+  background: var(--island-shell-fill);
   box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 :root[data-island-notch] .island--collapsed .island__glass {
   opacity: 0;
+}
+
+:root[data-island-notch] .island--collapsed .island__glass::before,
+:root[data-island-notch] .island--collapsed .island__glass-highlight {
+  display: none;
 }
 
 :root[data-island-notch] .island--collapsed .island__collapsed {
@@ -100,7 +109,7 @@
   background:
     linear-gradient(
       var(--color-black, #000) calc(var(--island-notch-height) - 2px),
-      var(--island-fill, var(--island-background-color)) calc(var(--island-notch-height) + 14px)
+      var(--island-shell-fill) calc(var(--island-notch-height) + 14px)
     );
 }
 

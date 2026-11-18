@@ -1,4 +1,5 @@
 import { useEffect, useState, type Dispatch, type KeyboardEvent, type SetStateAction } from "react";
+import { X } from "lucide-react";
 import { ShortcutKeys } from "../../components/controls/ShortcutKeys";
 import { ShortcutResetButton } from "../../components/controls/ShortcutResetButton";
 import { useErrorText, useTranslation } from "../../i18n";
@@ -53,7 +54,7 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
   };
 
   const apply = (target: TranslationShortcutTarget, shortcut: string) => {
-    const owner = takenBy(shortcut, target);
+    const owner = shortcut ? takenBy(shortcut, target) : null;
     if (owner) { setError(target, t.settings.shortcuts.taken(shortcutLabel(shortcut), owner)); return; }
     const register = target === "window" ? setTranslationShortcut : setTranslationSelectionShortcut;
     void register(shortcut)
@@ -76,10 +77,15 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
       <div className="shortcut-control">
         <div className="shortcut-control__meta">
           <span>{label}</span>
-          <strong>{shortcutLabel(value)}</strong>
+          <strong>{value ? shortcutLabel(value) : t.settings.translation.shortcutOff}</strong>
         </div>
         <div className="shortcut-control__actions">
           <ShortcutResetButton label={t.settings.shortcuts.reset(shortcutLabel(fallback))} isDefault={value === fallback} onReset={() => apply(target, fallback)} />
+          {value && (
+            <button className="shortcut-reset-button" type="button" aria-label={t.settings.translation.turnOffShortcut(label)} onClick={() => apply(target, "")}>
+              <X size={14} strokeWidth={2.3} aria-hidden="true" />
+            </button>
+          )}
           <button
             className={`shortcut-record-button${recording === target ? " shortcut-record-button--recording" : ""}`}
             type="button"
@@ -87,7 +93,7 @@ export function TranslationShortcutRows({ settings, onSettingsChange, takenBy }:
             onKeyDown={record}
             onBlur={() => setRecording((current) => (current === target ? null : current))}
           >
-            <ShortcutKeys prompt={recording === target ? t.translator.pressShortcut : null} label={shortcutLabel(value)} />
+            <ShortcutKeys prompt={recording === target ? t.translator.pressShortcut : value ? null : t.settings.translation.setShortcut} label={shortcutLabel(value)} />
           </button>
         </div>
       </div>

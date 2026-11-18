@@ -1,19 +1,20 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { CC_CONNECT_AGENT_LABELS } from "../../../lib/cc-connect/labels";
 import { useTranslation } from "../../../i18n";
 import { ConnectRow } from "./ConnectRow";
 import type { PlannedProject, TargetEntry } from "./plan";
 import type { PushPlatform } from "./platforms";
 
-export function ConnectStep({ entries, projects, platform, connected, onConnected }: {
+export function ConnectStep({ entries, projects, platform, connected, scanning, onScanning, onConnected }: {
   entries: readonly TargetEntry[];
   projects: readonly PlannedProject[];
   platform: PushPlatform;
   connected: ReadonlySet<string>;
+  scanning: string | null;
+  onScanning: (key: string | null) => void;
   onConnected: (key: string) => void;
 }) {
   const text = useTranslation().onboarding.push;
-  const [scanning, setScanning] = useState<string | null>(null);
   const prepared = useRef(new Set<string>());
   if (projects.length === 0) return <p className="push-act__lead">{text.connect.none}</p>;
 
@@ -38,7 +39,7 @@ export function ConnectStep({ entries, projects, platform, connected, onConnecte
               platform={platform}
               connected={connected.has(project.key)}
               scanning={scanning}
-              onScanning={setScanning}
+              onScanning={onScanning}
               prepare={prepare}
               onConnected={() => onConnected(project.key)}
             />

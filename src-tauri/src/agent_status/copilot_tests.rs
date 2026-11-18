@@ -124,11 +124,20 @@ fn the_hooks_file_uses_copilot_fields() {
     assert_eq!(events, ["PermissionRequest", "PreToolUse", "Stop", "UserPromptSubmit"]);
     let permission = hooks["PermissionRequest"].as_array().unwrap();
     assert_eq!(permission.len(), 2);
-    assert_eq!(permission[0]["bash"], r#"/bin/sh '/data/it'\''s/fuyu-agent-running.sh' copilot notification"#);
-    assert_eq!(permission[0]["powershell"], "& '/data/it''s/fuyu-agent-running.sh' copilot notification");
-    assert!(permission[1]["bash"].as_str().unwrap().ends_with(" copilot permission"));
+    assert_eq!(
+        permission[0]["bash"],
+        r#"[ -f '/data/it'\''s/fuyu-agent-running.sh' ] && exec /bin/sh '/data/it'\''s/fuyu-agent-running.sh' copilot notification || exit 0"#
+    );
+    assert_eq!(
+        permission[0]["powershell"],
+        "if (Test-Path -LiteralPath '/data/it''s/fuyu-agent-running.sh') { & '/data/it''s/fuyu-agent-running.sh' copilot notification; exit $LASTEXITCODE } else { exit 0 }"
+    );
+    assert!(permission[1]["bash"].as_str().unwrap().contains(" copilot permission"));
     assert_eq!(permission[1]["timeoutSec"], crate::agent_status::claude_hooks::APPROVAL_HOOK_TIMEOUT_SECONDS);
-    assert!(hooks["Stop"][0]["powershell"].as_str().unwrap().starts_with("powershell.exe -NoProfile -ExecutionPolicy Bypass -File '/data/fuyu-agent-status.sh' copilot completed"));
+    assert!(hooks["Stop"][0]["powershell"]
+        .as_str()
+        .unwrap()
+        .contains("powershell.exe -NoProfile -ExecutionPolicy Bypass -File '/data/fuyu-agent-status.sh' copilot completed"));
     for list in hooks.values() {
         for entry in list.as_array().unwrap() {
             let keys: Vec<&str> = entry.as_object().unwrap().keys().map(String::as_str).collect();

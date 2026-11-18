@@ -7,6 +7,7 @@ import { mainCheckout, targetDir } from "./build-dirs.mjs";
 import { backgroundBuildEnv, lowerPriority } from "./build-load.mjs";
 
 export const EXE_NAME = "fuyu.exe";
+export const BUILD_EXE_ARGS = Object.freeze(["tauri", "build", "--no-bundle"]);
 const OLD_PREFIX = `${EXE_NAME}.old-`;
 
 export function isInUse(file) {
@@ -144,7 +145,7 @@ function build(releaseDir) {
   removeOldExes(releaseDir);
   const aside = moveAsideIfRunning(exe);
   if (aside) console.log(`[build:exe] the island is running; moved its exe aside to ${path.basename(aside)}. It keeps running; the next start uses the new build.`);
-  const status = spawnSync("pnpm tauri build --no-bundle", {
+  const status = spawnSync(`pnpm ${BUILD_EXE_ARGS.join(" ")}`, {
     shell: true,
     stdio: "inherit",
     env: { ...process.env, CARGO_TARGET_DIR: targetDir(mainCheckout()), ...backgroundBuildEnv() },

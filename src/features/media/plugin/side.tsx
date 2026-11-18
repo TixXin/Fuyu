@@ -34,7 +34,7 @@ function MusicRow({ onOpenPage }: SideContext) {
       </button>
     );
   }
-  return <MusicWaveButton isAvailable isPlaying={playing} audioPeak={mediaState.audioPeak} label={t.island.openMusic} onClick={() => onOpenPage("music")} />;
+  return <MusicWaveButton isAvailable isPlaying={playing} audioPeak={mediaState.audioPeak > 0 ? mediaState.audioPeak : undefined} label={t.island.openMusic} onClick={() => onOpenPage("music")} />;
 }
 
 sideSlot.add({ id: "music", order: 40, component: MusicRow }, OWNER);

@@ -3,7 +3,7 @@ import { useTranslation } from "../../i18n";
 import { REMINDER_ICONS } from "./reminderIcons";
 import { dismissIslandReminder, snoozeIslandReminder } from "./reminders";
 import type { ShownReminder } from "./useIslandReminder";
-import "../screenshot/ScreenshotNotice.css";
+import "../../components/notice/IslandNotice.css";
 
 export function ReminderNotice({ reminder }: { reminder: ShownReminder }) {
   const t = useTranslation().timer.breaks;

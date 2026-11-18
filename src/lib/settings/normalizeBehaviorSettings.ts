@@ -1,18 +1,25 @@
 import { clamp } from "../../utils/number.ts";
-import { normalizeLyricsSettings } from "../../features/media/lyrics/lyricsSettings.ts";
-import { normalizeCalendarSettings } from "../../features/calendar/calendarSettings.ts";
-import { normalizeTodoProjects } from "../../features/todos/project.ts";
+import { normalizeLyricsSettings } from "./lyricsSettings.ts";
+import { normalizeCalendarSettings } from "./calendarSettings.ts";
+import { normalizeTodoProjects } from "../todo-projects/prefix.ts";
 import { DEFAULT_PAGE_NEXT_SHORTCUT, DEFAULT_PAGE_PREVIOUS_SHORTCUT, normalizePageCycleShortcut, normalizePageDigitModifiers } from "./pageShortcuts.ts";
 import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
-  MAX_AUTO_TUCK_RETRACT_DELAY_MS, MAX_HOVER_COLLAPSE_DELAY_MS, MAX_HOVER_EXPAND_DELAY_MS, MAX_HOVER_SWITCH_DELAY_MS, MAX_SHELF_ITEMS,
-  MIN_AUTO_TUCK_RETRACT_DELAY_MS, MIN_HOVER_COLLAPSE_DELAY_MS, MIN_HOVER_EXPAND_DELAY_MS, MIN_HOVER_SWITCH_DELAY_MS, MIN_SHELF_ITEMS,
-  MESSAGE_NOTICES, MESSAGE_PANEL_SECONDS, SHELF_CLEANUP_DAYS, oneOf,
+  MAX_AUTO_TUCK_RETRACT_DELAY_MS, MAX_HOVER_COLLAPSE_DELAY_MS, MAX_HOVER_EXPAND_DELAY_MS, MAX_HOVER_SWITCH_DELAY_MS, MAX_IDLE_DIM_OPACITY, MAX_SHELF_ITEMS,
+  MIN_AUTO_TUCK_RETRACT_DELAY_MS, MIN_HOVER_COLLAPSE_DELAY_MS, MIN_HOVER_EXPAND_DELAY_MS, MIN_HOVER_SWITCH_DELAY_MS, MIN_IDLE_DIM_OPACITY, MIN_SHELF_ITEMS,
+  MESSAGE_NOTICES, MESSAGE_PANEL_SECONDS, SHELF_CLEANUP_DAYS, TUCK_STYLES, oneOf,
 } from "./settingsLimits.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
 export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null | undefined) {
   return {
+    idleDim: settings?.idleDim === true,
+    idleDimSeconds: typeof settings?.idleDimSeconds === "number" && Number.isFinite(settings.idleDimSeconds)
+      ? clamp(Math.round(settings.idleDimSeconds), 1, 3_600)
+      : DEFAULT_SETTINGS.idleDimSeconds,
+    idleDimOpacity: typeof settings?.idleDimOpacity === "number" && Number.isFinite(settings.idleDimOpacity)
+      ? clamp(Math.round(settings.idleDimOpacity), MIN_IDLE_DIM_OPACITY, MAX_IDLE_DIM_OPACITY)
+      : DEFAULT_SETTINGS.idleDimOpacity,
     showIdleTodoCount:
       typeof settings?.showIdleTodoCount === "boolean"
         ? settings.showIdleTodoCount
@@ -46,6 +53,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     messageNotice: oneOf(MESSAGE_NOTICES, settings?.messageNotice, LEGACY_FALLBACKS.messageNotice),
     messagePanelSeconds: oneOf(MESSAGE_PANEL_SECONDS, settings?.messagePanelSeconds, DEFAULT_SETTINGS.messagePanelSeconds),
     expandTrigger: settings?.expandTrigger === "hover" ? "hover" : "click",
+    clickCollapseOnLeave: settings?.clickCollapseOnLeave === true,
     hoverExpandDelayMs: typeof settings?.hoverExpandDelayMs === "number" && Number.isFinite(settings.hoverExpandDelayMs)
       ? clamp(Math.round(settings.hoverExpandDelayMs), MIN_HOVER_EXPAND_DELAY_MS, MAX_HOVER_EXPAND_DELAY_MS)
       : LEGACY_FALLBACKS.hoverExpandDelayMs,
@@ -58,6 +66,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
       : DEFAULT_SETTINGS.hoverSwitchDelayMs,
     minimizeAction: settings?.minimizeAction === "tuck" ? "tuck" : "tray",
     tuckedHoverAction: settings?.tuckedHoverAction === "expand" ? "expand" : "reveal",
+    tuckStyle: oneOf(TUCK_STYLES, settings?.tuckStyle, DEFAULT_SETTINGS.tuckStyle),
     pageDigitModifiers: normalizePageDigitModifiers(settings?.pageDigitModifiers),
     pageNextShortcut: normalizePageCycleShortcut(settings?.pageNextShortcut, DEFAULT_PAGE_NEXT_SHORTCUT),
     pagePreviousShortcut: normalizePageCycleShortcut(settings?.pagePreviousShortcut, DEFAULT_PAGE_PREVIOUS_SHORTCUT),

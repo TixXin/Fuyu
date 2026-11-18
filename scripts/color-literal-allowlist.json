@@ -39,7 +39,7 @@
     "src/features/todos/TodoDatePicker.css": 3,
     "src/features/translation/TranslationPanel.css": 2,
     "src/features/updater/ProjectSettingsSection.css": 1,
-    "src/windows/island/IslandApp.css": 4,
+    "src/windows/island/IslandApp.css": 1,
     "src/windows/island/IslandCollapsedBar.css": 4,
     "src/windows/island/IslandGlass.css": 7,
     "src/windows/island/IslandShell.css": 1,

@@ -38,8 +38,8 @@ const ITEMS: ClipboardHistoryItem[] = [
 const SHELF: FileShelfItem[] = [
   { id: "s1", path: "D:\\Work\\Design\\设计稿-v3.fig", name: "设计稿-v3.fig", isDir: false, size: 18_400_000, addedAt: now, pinned: true, missing: false, unreachable: false },
   { id: "s2", path: "C:\\Users\\me\\Desktop\\周报-2026-11-09.docx", name: "周报-2026-11-09.docx", isDir: false, size: 86_000, addedAt: now, pinned: false, missing: false, unreachable: false },
-  { id: "s3", path: "C:\\Users\\me\\Downloads\\fly-island-screenshots", name: "fly-island-screenshots", isDir: true, size: 0, addedAt: now, pinned: false, missing: false, unreachable: false },
-  { id: "s4", path: "E:\\Projects\\fly-island\\docs\\assets\\demo-preview.gif", name: "demo-preview.gif", isDir: false, size: 3_100_000, addedAt: now, pinned: false, missing: false, unreachable: false },
+  { id: "s3", path: "C:\\Users\\me\\Downloads\\fuyu-screenshots", name: "fuyu-screenshots", isDir: true, size: 0, addedAt: now, pinned: false, missing: false, unreachable: false },
+  { id: "s4", path: "E:\\Projects\\fuyu\\docs\\assets\\demo-preview.gif", name: "demo-preview.gif", isDir: false, size: 3_100_000, addedAt: now, pinned: false, missing: false, unreachable: false },
   { id: "s5", path: "C:\\Users\\me\\Downloads\\old-installer.exe", name: "old-installer.exe", isDir: false, size: 0, addedAt: now, pinned: false, missing: true, unreachable: false },
   { id: "s6", path: "\\\\NAS\\共享\\合同扫描.pdf", name: "合同扫描.pdf", isDir: false, size: 0, addedAt: now, pinned: false, missing: false, unreachable: true },
 ];
@@ -69,7 +69,7 @@ function renderAll() {
     onToggleFavorite={(id) => { calls.push(`star:${id}`); }}
     onUpdateNote={() => true}
     onDeleteItem={(id) => { calls.push(`delete:${id}`); items = items.filter((item) => item.id !== id); renderAll(); }}
-    onClear={() => {}}
+    onClear={() => { calls.push("clear"); items = items.filter((item) => item.favorite); renderAll(); }}
   />;
   const pages = [clip, clip, <FileShelfPanel shelf={shelf(SHELF)} isDropTarget={false} revealOnDoubleClick={false} />, <FileShelfPanel shelf={shelf(SHELF)} isDropTarget={false} revealOnDoubleClick={false} />, <FileShelfPanel shelf={shelf([])} isDropTarget={false} revealOnDoubleClick={false} />];
   ["clip-dark", "clip-light", "shelf-dark", "shelf-light", "shelf-empty"].forEach((id, index) => {
@@ -85,7 +85,15 @@ function check(condition: unknown, label: string) {
 }
 const $ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector);
 const $$ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => [...root.querySelectorAll<T>(selector)];
-const click = (element: Element | null | undefined) => act(async () => { (element as HTMLElement | null)?.click(); });
+const click = async (element: Element | null | undefined) => {
+  if (!element) return;
+  await act(async () => {
+    element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true }));
+  });
+  await act(async () => {
+    (element as HTMLElement).click();
+  });
+};
 const chip = (root: ParentNode, label: string) => $$("button.island-list-chip", root).find((button) => button.textContent === label);
 const menuItem = (label: string) => $$("button.row-menu__item").find((button) => button.textContent?.includes(label));
 const row = (root: ParentNode, id: string) => $(`[data-clipboard-id="${id}"], [data-shelf-id="${id}"]`, root) ?? $$(".island-list-row", root).find((item) => item.textContent?.includes(id));
@@ -100,7 +108,8 @@ async function runChecks() {
     check($$(".island-list-row", clip).length === ITEMS.length, "每条记录一行");
     check($(".island-list-row__meta", first)?.textContent?.includes("VS Code") && $(".island-list-row__meta", first)?.textContent?.includes("刚刚"), "第二行写来源程序和时间");
     const image = $$(".island-list-row", clip)[2];
-    check($(".island-list-row__main", image)?.textContent === "图片 770×148" && $("img", image), "图片写成「图片 宽×高」，行首是缩略图");
+    const thumbImg = $("img", image);
+    check($(".island-list-row__main", image)?.textContent === "图片 770×148" && thumbImg && thumbImg.getAttribute("loading") === "lazy" && thumbImg.getAttribute("decoding") === "async", "图片写成「图片 宽×高」，行首是懒加载异步解码缩略图");
     check($(".island-list-search kbd", clip)?.textContent === "Ctrl+Shift+W", "搜索框一直显示，带打开剪贴板的快捷键");
     const list = $(".island-list", clip)!;
     const short = $$(".island-list-row", clip).filter((item) => item.getBoundingClientRect().height + 0.5 < $(".island-list-row__text", item)!.getBoundingClientRect().height + 14);
@@ -125,8 +134,26 @@ async function runChecks() {
     await click($('button[aria-haspopup="menu"]', $$(".island-list-row", clip)[0]));
     await click(menuItem("删除剪贴记录"));
     check(menuItem("再点一次删除") && !calls.includes("delete:t1"), "删除先要再点一次确认");
-    await click(menuItem("再点一次删除"));
-    check(calls.includes("delete:t1") && !row(clip, "t1"), "确认后删除");
+    await click($(".island-list-count", clip));
+    check(!$(".row-menu"), "点击菜单外部关闭菜单");
+    await click($('button[aria-haspopup="menu"]', $$(".island-list-row", clip)[0]));
+    check(menuItem("删除剪贴记录") && !menuItem("再点一次删除"), "点击菜单外部后删除确认态重置");
+    await click(menuItem("删除剪贴记录"));
+    check(menuItem("再点一次删除") && !calls.includes("delete:t1"), "再次进入单条删除确认态");
+    await click($("span", menuItem("再点一次删除")!));
+    check(calls.includes("delete:t1") && !row(clip, "t1") && !$(".row-menu"), "确认后删除并关闭菜单");
+
+    const savedBeforeClear = items;
+    await click($('header button[aria-haspopup="menu"]', clip));
+    await click(menuItem("清空剪贴板历史"));
+    check(menuItem("确认清空") && !calls.includes("clear"), "清空历史先进入二次确认态");
+    check(await until(() => Boolean(menuItem("清空剪贴板历史")), 4000), "超过 3 秒未点自动重置清空确认态");
+    await click(menuItem("清空剪贴板历史"));
+    check(menuItem("确认清空") && !calls.includes("clear"), "超时后再次点击重新进入清空确认态");
+    await click(menuItem("确认清空"));
+    check(calls.includes("clear") && $$(".island-list-row", clip).length === 1 && Boolean(row(clip, "t2")) && !$(".row-menu"), "二次确认后清空非收藏记录并关闭菜单");
+    items = savedBeforeClear;
+    await act(async () => renderAll());
 
     const color = row(clip, "c1")!;
     check($(".clipboard-swatch", color) && $(".island-list-row__meta", color)?.textContent?.startsWith("颜色"), "颜色：行首是色块，第二行标「颜色」");
@@ -172,6 +199,26 @@ async function runChecks() {
     const empty = document.getElementById("shelf-empty")!;
     check($(".island-list-empty strong", empty)?.textContent === "把文件拖到岛上暂存" && $(".island-list-empty small", empty), "空的时候是图标加两行说明");
     check(await until(() => !$(".island-list-row__meta--accent"), 3000) && $(".island-list-row__meta", row(clip, "t2")!)?.textContent?.includes("Windows Terminal"), "「已复制」过一会儿变回来源和时间");
+
+    const savedItems = items;
+    items = Array.from({ length: 200 }, (_, index) => ({ ...base, id: `v${index}`, kind: "text" as const, copiedAt: now - index * 1000, preview: `批量剪贴记录 ${index}` }));
+    await act(async () => renderAll());
+    const mountedCount = $$(".island-list-row", clip).length;
+    check(mountedCount > 0 && mountedCount < 40, `200 条记录只按视口虚拟挂载 ${mountedCount} 行`);
+    const virtualList = $(".island-list", clip)!;
+    await act(async () => {
+      virtualList.scrollTop = virtualList.scrollHeight;
+      virtualList.dispatchEvent(new Event("scroll"));
+    });
+    check(await until(() => Boolean(row(clip, "v199")) && !row(clip, "v0")), "滚到底部后挂载末尾记录并卸载顶部记录");
+    items = savedItems;
+    await act(async () => renderAll());
+    await act(async () => {
+      const restoredList = $(".island-list", clip)!;
+      restoredList.scrollTop = 0;
+      restoredList.dispatchEvent(new Event("scroll"));
+    });
+    check(await until(() => $$(".island-list-row", clip).length === savedItems.length), "恢复原记录后列表行完整显示");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

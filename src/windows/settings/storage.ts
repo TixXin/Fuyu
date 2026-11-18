@@ -2,9 +2,9 @@ import { writeJson } from "../../lib/storage.ts";
 
 export const SETTINGS_FOCUS_STORAGE_KEY = "fuyu-settings-focus";
 
-export type SettingsFocusSection = "savePath" | "translation" | "music" | "calendar" | "mail" | "updates" | "agentConnect" | "general" | "voiceInput";
+export type SettingsFocusSection = "savePath" | "translation" | "music" | "calendar" | "mail" | "updates" | "agentConnect" | "general" | "voiceInput" | "pluginsV3";
 
-const FOCUS_SECTIONS: readonly SettingsFocusSection[] = ["savePath", "translation", "music", "calendar", "mail", "updates", "agentConnect", "general", "voiceInput"];
+const FOCUS_SECTIONS: readonly SettingsFocusSection[] = ["savePath", "translation", "music", "calendar", "mail", "updates", "agentConnect", "general", "voiceInput", "pluginsV3"];
 
 export const FOCUS_REQUEST_MAX_AGE_MS = 10_000;
 
@@ -67,9 +67,23 @@ export const PANEL_PREVIEW_STORAGE_KEY = "fuyu-panel-preview";
 export type PanelPreviewMode = "expanded" | "collapsed";
 
 const PANEL_PREVIEW_MAX_AGE_MS = 2_000;
+export const PANEL_PREVIEW_THROTTLE_MS = 350;
 
-export function requestPanelPreview(mode: PanelPreviewMode) {
-  writeJson(PANEL_PREVIEW_STORAGE_KEY, { mode, requestedAt: Date.now() });
+let lastPreviewMode: PanelPreviewMode | null = null;
+let lastPreviewAt = -Infinity;
+
+export function requestPanelPreview(mode: PanelPreviewMode, now = Date.now()) {
+  if (
+    lastPreviewMode === mode &&
+    now >= lastPreviewAt &&
+    now - lastPreviewAt < PANEL_PREVIEW_THROTTLE_MS
+  ) {
+    return;
+  }
+  if (writeJson(PANEL_PREVIEW_STORAGE_KEY, { mode, requestedAt: now })) {
+    lastPreviewMode = mode;
+    lastPreviewAt = now;
+  }
 }
 
 export function parsePanelPreview(stored: string | null, now = Date.now()): PanelPreviewMode | null {

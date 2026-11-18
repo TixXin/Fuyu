@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useErrorText } from "../../../i18n";
+import { visibilityInterval } from "../../../lib/useVisibilityInterval";
 import type { TargetEntry } from "./plan";
 import { listPushTargets, type PushTarget, type PushTargetState } from "./targets";
 
@@ -46,8 +47,7 @@ export function usePushTargets(): PushTargets {
   useEffect(() => {
     if (targets.length === 0) return;
     void refresh();
-    const timer = window.setInterval(() => void refresh(), REFRESH_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => void refresh(), REFRESH_MS);
   }, [targets, refresh]);
 
   return { entries: targets.map((target) => ({ target, state: states[target.id] ?? null })), errors, loaded, refresh };

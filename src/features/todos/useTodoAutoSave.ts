@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react";
-import { getTodoSignature } from "./markdown";
-import { loadLastSavedSignature } from "./storage";
-import type { SaveState, TodoItem } from "./types";
+import { getTodoSignature, type TodoMarkdownOptions } from "./markdown.ts";
+import { loadLastSavedSignature } from "./storage.ts";
+import type { SaveState, TodoItem } from "./types.ts";
 
 type TodoAutoSaveOptions = {
   currentTodoDate: string;
   todos: TodoItem[];
   dailyNote: string;
   saveDirectory: string;
+  markdownOptions?: TodoMarkdownOptions;
   saveTodosToDisk: (date: string, todoList: TodoItem[], nextDailyNote: string) => Promise<unknown>;
   setSaveState: (state: SaveState) => void;
 };
@@ -17,6 +18,7 @@ export function useTodoAutoSave({
   todos,
   dailyNote,
   saveDirectory,
+  markdownOptions,
   saveTodosToDisk,
   setSaveState,
 }: TodoAutoSaveOptions) {
@@ -35,20 +37,13 @@ export function useTodoAutoSave({
       autoSaveTimer.current = null;
     }
 
-    if (!saveDirectory.trim()) {
-      return;
-    }
+    if (!saveDirectory.trim()) return;
 
-    const signature = getTodoSignature(currentTodoDate, todos, dailyNote);
+    const signature = getTodoSignature(currentTodoDate, todos, dailyNote, markdownOptions);
     const lastSavedSignature = loadLastSavedSignature();
 
-    if (!todos.length && !dailyNote.trim() && !lastSavedSignature) {
-      return;
-    }
-
-    if (signature === lastSavedSignature) {
-      return;
-    }
+    if (!todos.length && !dailyNote.trim() && !lastSavedSignature) return;
+    if (signature === lastSavedSignature) return;
 
     const timer = window.setTimeout(() => {
       autoSaveTimer.current = null;
@@ -72,14 +67,7 @@ export function useTodoAutoSave({
         autoSaveTimer.current = null;
       }
     };
-  }, [
-    currentTodoDate,
-    dailyNote,
-    saveDirectory,
-    saveTodosToDisk,
-    setSaveState,
-    todos,
-  ]);
+  }, [currentTodoDate, dailyNote, markdownOptions, saveDirectory, saveTodosToDisk, setSaveState, todos]);
 
   useEffect(
     () => () => {

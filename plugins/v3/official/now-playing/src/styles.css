@@ -1,0 +1,116 @@
+.fuyu-now-playing {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-now-playing__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fuyu-now-playing__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-now-playing__subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-now-playing__card {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-now-playing__track {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-now-playing__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.fuyu-now-playing__toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fuyu-now-playing__label {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-now-playing__desc {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-now-playing__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-now-playing__button {
+  max-width: 100%;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  color: var(--fuyu-plugin-on-accent);
+  background: var(--fuyu-plugin-accent);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-now-playing__button:disabled {
+  color: var(--fuyu-plugin-text-muted);
+  background: var(--fuyu-plugin-surface-hover);
+  cursor: default;
+}
+
+.fuyu-now-playing__note {
+  margin: 0;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}

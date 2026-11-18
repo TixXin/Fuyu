@@ -1,11 +1,24 @@
 import type { TodoTags } from "./tags";
+import type { TodoProject } from "../../lib/todo-projects/prefix";
 
-export type TodoProject = { id: string; name: string };
+export type { TodoProject };
 
 export type TodoPriority = "high" | "medium" | "low";
 export type TodoColor = "red" | "orange" | "yellow" | "green" | "blue" | "purple";
+export type TodoRecurrenceKind = "daily" | "workdays" | "weekly" | "monthly";
+
+export type TodoRecurrence = {
+  kind: TodoRecurrenceKind;
+  interval?: number;
+};
 
 export type TodoPageMode = "today" | "daily" | "archive" | "review" | "upcoming";
+
+export type TodoSubtask = {
+  id: string;
+  title: string;
+  completed: boolean;
+};
 
 export type TodoItem = {
   id: string;
@@ -16,6 +29,10 @@ export type TodoItem = {
   startedAt?: number;
   priority?: TodoPriority;
   color?: TodoColor;
+  recurrence?: TodoRecurrence;
+  subtasks?: TodoSubtask[];
+  note?: string;
+  focusMinutes?: number;
   updatedAt?: string;
   deviceId?: string;
 };
@@ -28,6 +45,7 @@ export type ScheduledTodo = {
   project?: string;
   priority?: TodoPriority;
   color?: TodoColor;
+  recurrence?: TodoRecurrence;
   updatedAt?: string;
   deviceId?: string;
 };
@@ -74,6 +92,10 @@ export type TodoPageProps = {
   onStartTodo: (id: string) => void;
   onDeleteTodo: (id: string) => void;
   onReorderTodo: (sourceId: string, targetId: string) => void;
+  onAddSubtask?: (todoId: string, title: string) => void;
+  onToggleSubtask?: (todoId: string, subtaskId: string) => void;
+  onDeleteSubtask?: (todoId: string, subtaskId: string) => void;
+  onUpdateTodoNote?: (todoId: string, note: string) => void;
   onSaveToday: () => void;
   onShowArchive: () => void;
   onShowDaily: () => void;

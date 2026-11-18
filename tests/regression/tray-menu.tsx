@@ -178,7 +178,7 @@ async function runChecks() {
 
     const tiles = () => $$(".tray-card__entry-main > button", card()).length;
     const strip = () => $$(".tray-card__strip .tray-card__icon-button", card()).length;
-    check(tiles() === 4 && strip() === 5 && $$("[role=switch]", card()).length === 3, "功能都开着时入口齐全");
+    check(tiles() === 4 && strip() === 5 && $$("[role=switch]", card()).length === 3 && $$(".tray-card__knob", card()).every((knob) => getComputedStyle(knob).transitionProperty === "transform"), "功能都开着时入口齐全");
     await act(async () => { await emit("builtin-plugins-changed", builtinList(new Set(["file-shelf", "translation", "clipboard", "music"]))); });
     await settle();
     check(tiles() === 2 && strip() === 4 && $$("[role=switch]", card()).length === 2, "关掉一个功能后入口消失：A 版藏掉文件中转、翻译、剪贴板和暂停记录");

@@ -4,6 +4,7 @@ import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
 import { SettingsWindow } from "../../src/windows/settings/SettingsWindow";
+import { isSearchIndexLoaded } from "../../src/windows/settings/SettingsSidebar";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import searchIndex from "../../src/windows/settings/searchIndex.json";
@@ -27,7 +28,7 @@ localStorage.setItem("fuyu-save-directory", "");
 localStorage.setItem("fuyu-qq-notification-access-requested", "true");
 if (query.get("state") === "on") {
   const allOn = Object.fromEntries(Object.entries(DEFAULT_SETTINGS).map(([key, value]) => [key, typeof value === "boolean" ? true : value]));
-  localStorage.setItem("fuyu-settings", JSON.stringify({ ...allOn, appearanceMode: "liquidGlass", glassColorSource: "custom" }));
+  localStorage.setItem("fuyu-settings", JSON.stringify({ ...allOn, expandTrigger: "click", appearanceMode: "liquidGlass", glassColorSource: "custom" }));
   localStorage.setItem("fuyu-agent-push", JSON.stringify({ enabled: true }));
   localStorage.setItem("fuyu-voice-input", JSON.stringify({ enabled: true }));
   localStorage.setItem("fuyu-agent-approval", JSON.stringify({ onIsland: true, whenInFront: true }));
@@ -76,7 +77,14 @@ function rowsOnPage(): SettingsRowText[] {
 const type = async (value: string) => {
   const input = document.querySelector<HTMLInputElement>(".settings-sidebar__search input")!;
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
-  await act(async () => { setter.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); });
+  await act(async () => {
+    input.focus();
+    setter.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  for (let spent = 0; value.trim() !== "" && !isSearchIndexLoaded() && spent < 2000; spent += 20) {
+    await wait(20);
+  }
 };
 const pressEnter = () => act(async () => {
   document.querySelector<HTMLInputElement>(".settings-sidebar__search input")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
@@ -118,7 +126,7 @@ try {
     check(text(found?.querySelector(".settings-row__title")) === "会话来源", "…and marks the row it found");
 
     await type("弹出提醒");
-    check(document.querySelector(".settings-sidebar__hit--tab[data-tab='agentAlerts']") && categories().includes("agents"),
+    check(document.querySelector(".settings-sidebar__hit--tab[data-tab='agentAlerts']") && categories().includes("agentAlerts"),
       "Words written together find a page whose keywords have them apart, shown as a tab under its sidebar item");
     await type("隐藏已退出的会话");
     check(hits("agentSessions").includes("隐藏已退出的会话"), "A switch's title finds it");

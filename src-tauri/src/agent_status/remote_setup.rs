@@ -16,7 +16,7 @@ use remote_reply_marker::Change;
 pub(super) const REMOTE_NOTIFICATIONS_DIR: &str = ".fuyu/agent-notifications";
 pub(super) const LEGACY_REMOTE_NOTIFICATIONS_DIR: &str = ".focusd-island/agent-notifications";
 const SETTINGS_PATH: &str = ".claude/settings.json";
-const END_OF_TEXT: &str = "FOCUSD_ISLAND_END_OF_TEXT";
+const END_OF_TEXT: &str = "FUYU_ISLAND_END_OF_TEXT";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -122,8 +122,8 @@ pub(super) fn write_script_at(file: &str, shown: &str, text: &str) -> Result<Str
     let body = text.strip_suffix('\n').unwrap_or(text);
     Ok(format!(
         "set -e\numask 077\nf={file}\nif [ -L \"$f\" ]; then echo \"{shown} is a symlink to $(readlink \"$f\"); the island does not change it\" >&2; exit 4; fi\nmkdir -p \"$(dirname \"$f\")\"\n\
-         cat > \"$f.focusd-tmp\" <<'{END_OF_TEXT}'\n{body}\n{END_OF_TEXT}\n\
-         cat \"$f.focusd-tmp\" > \"$f\"\nrm -f \"$f.focusd-tmp\"\n"
+         cat > \"$f.fuyu-tmp\" <<'{END_OF_TEXT}'\n{body}\n{END_OF_TEXT}\n\
+         cat \"$f.fuyu-tmp\" > \"$f\"\nrm -f \"$f.fuyu-tmp\"\n"
     ))
 }
 
@@ -160,6 +160,48 @@ pub(super) fn install_hooks(app_dir: &Path) -> Vec<RemoteResult> {
         let antigravity = super::antigravity_remote::install(target, approval.as_ref()).map_err(|error| format!("Antigravity: {error}"));
         let marker = remote_reply_marker::sync(target, Change::Repair).map_err(|error| format!("Reply marker: {error}"));
         let errors: Vec<String> = [claude, antigravity, marker].into_iter().filter_map(Result::err).collect();
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors.join("; "))
+        }
+    })
+}
+
+pub(super) fn without_remote_hooks(text: &str) -> Result<String, String> {
+    if text.trim().is_empty() {
+        return Ok(text.to_string());
+    }
+    let original: Value = serde_json::from_str(text)
+        .map_err(|error| format!("Failed to parse ~/{SETTINGS_PATH}: {error}"))?;
+    let mut config = original.clone();
+    let root = config
+        .as_object_mut()
+        .ok_or_else(|| format!("~/{SETTINGS_PATH} must contain a JSON object"))?;
+    if let Some(Value::Object(hooks)) = root.get_mut("hooks") {
+        install_claude_code_hook_events(hooks, Vec::new());
+    }
+    if Some(&*root) == original.as_object() {
+        return Ok(text.to_string());
+    }
+    if root.get("hooks").and_then(Value::as_object).is_some_and(serde_json::Map::is_empty) {
+        root.remove("hooks");
+    }
+    serde_json::to_string_pretty(&config).map_err(|error| error.to_string())
+}
+
+pub(super) fn uninstall_hooks(app_dir: &Path) -> Vec<RemoteResult> {
+    for_each_remote(app_dir, &|_, target| {
+        let claude = edit(target, SETTINGS_PATH, &without_remote_hooks);
+        let antigravity = super::antigravity_remote::uninstall(target).map_err(|error| format!("Antigravity: {error}"));
+        let cleanup = run_ssh(
+            target,
+            &format!(
+                "rm -rf \"$HOME/{REMOTE_NOTIFICATIONS_DIR}\" \"$HOME/{LEGACY_REMOTE_NOTIFICATIONS_DIR}\" \"$HOME/{APPROVAL_PORT_FILE}\"\n"
+            ),
+        )
+        .map(|_| ());
+        let errors: Vec<String> = [claude, antigravity, cleanup].into_iter().filter_map(Result::err).collect();
         if errors.is_empty() {
             Ok(())
         } else {
@@ -207,7 +249,7 @@ mod tests {
     fn a_forwarded_approval_hook_reaches_the_island_and_the_port_file_goes_with_the_connection() {
         use super::super::remote_fetch::{write_island_config, Connection, Forward};
         use std::io::{Read, Write};
-        let Ok(host) = std::env::var("FOCUSD_SSH_TEST_HOST") else { return };
+        let Ok(host) = std::env::var("FUYU_SSH_TEST_HOST") else { return };
         let target = SshTarget { destination: host, port: None };
         let listener = std::net::TcpListener::bind("127.0.0.1:47839").unwrap();
         let seen = std::thread::spawn(move || {
@@ -234,7 +276,7 @@ mod tests {
         let port_file = format!("cat \"$HOME/{APPROVAL_PORT_FILE}\" 2>/dev/null; echo end\n");
         let run = |script: &str| String::from_utf8(run_ssh(&target, script).unwrap()).unwrap().trim().to_string();
 
-        let app_dir = std::env::temp_dir().join(format!("focusd-ssh-config-{}", std::process::id()));
+        let app_dir = std::env::temp_dir().join(format!("fuyu-ssh-config-{}", std::process::id()));
         let config = write_island_config(&app_dir, "test", &target, Some(47_839)).unwrap();
         let forward = Forward { port: 47_839, token: "ab12".into() };
         let mut connection = Connection::open(&target, Some(&config), Some(forward)).unwrap();
@@ -286,9 +328,9 @@ mod tests {
     #[test]
     fn the_write_script_carries_the_text_whole_and_refuses_its_own_end_line() {
         let script = write_script(".claude/CLAUDE.md", "# Rules\n\n$HOME and `ticks` stay\n").unwrap();
-        assert!(script.contains("<<'FOCUSD_ISLAND_END_OF_TEXT'\n# Rules\n\n$HOME and `ticks` stay\nFOCUSD_ISLAND_END_OF_TEXT\n"));
-        assert!(script.contains("cat \"$f.focusd-tmp\" > \"$f\""));
+        assert!(script.contains("<<'FUYU_ISLAND_END_OF_TEXT'\n# Rules\n\n$HOME and `ticks` stay\nFUYU_ISLAND_END_OF_TEXT\n"));
+        assert!(script.contains("cat \"$f.fuyu-tmp\" > \"$f\""));
         assert!(script.starts_with("set -e\numask 077\n"));
-        assert!(write_script(".claude/CLAUDE.md", "a\nFOCUSD_ISLAND_END_OF_TEXT\nb").is_err());
+        assert!(write_script(".claude/CLAUDE.md", "a\nFUYU_ISLAND_END_OF_TEXT\nb").is_err());
     }
 }

@@ -12,8 +12,21 @@ export type UsageReport = {
   error: string | null;
 };
 
-const SOURCES = new Set(["hud", "api", "magpie", "codex", "glm", "kimi"]);
-const ERRORS = new Set(["noCredentials", "tokenExpired", "loginRequired", "forbidden", "rateLimited", "noProxy", "network", "http", "invalidResponse"]);
+const SOURCES = new Set(["hud", "api", "magpie", "codex", "glm", "kimi", "antigravity", "antigravityCloud"]);
+const ERRORS = new Set([
+  "noCredentials",
+  "tokenExpired",
+  "loginRequired",
+  "forbidden",
+  "rateLimited",
+  "noProxy",
+  "network",
+  "http",
+  "invalidResponse",
+  "endpointChanged",
+  "noSessions",
+  "customEndpoint",
+]);
 
 export function usageFromReport(report: UsageReport | null): AgentUsage | null {
   if (!report) return null;

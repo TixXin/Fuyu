@@ -1,15 +1,30 @@
 import { agentsV1, fileShelfV1, type AgentSessionEntry } from "@fuyu/plugin-services";
-import { useEffect, useState, type PointerEvent } from "react";
+import { useEffect, useState, useSyncExternalStore, type PointerEvent } from "react";
 import { Menu } from "@tauri-apps/api/menu";
 import { useErrorText, useTranslation } from "../../i18n";
 import { windowServices } from "../plugin-kernel/services";
 import { dragScreenshot, pasteScreenshotToFront, type ScreenshotTaken } from "./api";
+import { screenshotActions, subscribeScreenshotActions, type ScreenshotActionItem } from "./host/actions.mjs";
 import { serviceFailed } from "./serviceErrors";
 import type { ScreenshotCardState } from "./useScreenshotCard";
 
 const agents = windowServices.get(agentsV1);
 const shelf = windowServices.get(fileShelfV1);
 const NO_SESSIONS: readonly AgentSessionEntry[] = [];
+const NO_ACTIONS: readonly ScreenshotActionItem[] = [];
+let cachedActions: readonly ScreenshotActionItem[] = NO_ACTIONS;
+let cachedKey = "";
+
+function readActions(): readonly ScreenshotActionItem[] {
+  const list = screenshotActions.list();
+  if (list.length === 0) return NO_ACTIONS;
+  const key = JSON.stringify(list);
+  if (key !== cachedKey) {
+    cachedKey = key;
+    cachedActions = list;
+  }
+  return cachedActions;
+}
 
 function sessionName(session: AgentSessionEntry) {
   const folder = session.cwd?.split(/[\\/]/).filter(Boolean).pop();
@@ -100,7 +115,20 @@ export function useScreenshotNotice(card: ScreenshotCardState) {
   };
 
   const text = taken && message?.path === taken.path ? message.text : taken?.saved ? t.card.saved : t.card.copied;
-  return { taken, text, canSend: local.length > 0, sendToAgent, shelve, drag, card };
+  const extraActions = useSyncExternalStore(subscribeScreenshotActions, readActions, readActions);
+
+  const runAction = (id: string) => {
+    if (!taken) return;
+    void screenshotActions.run(id, { path: taken.path, saved: taken.saved, thumbnail: taken.thumbnail ?? null }).then(
+      (result) => {
+        if (result.message) setMessage({ path: taken.path, text: result.message });
+        if (result.dismiss) card.dismiss();
+      },
+      report,
+    );
+  };
+
+  return { taken, text, canSend: local.length > 0, sendToAgent, shelve, drag, card, extraActions, runAction };
 }
 
 export type ScreenshotNoticeState = ReturnType<typeof useScreenshotNotice>;

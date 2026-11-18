@@ -2,9 +2,10 @@ import { ENGINE, devDependencies } from "./versions.mjs";
 
 export const SLOTS_USED = Object.freeze(["island.page/v1", "settings.section/v1"]);
 export const SERVICES_USED = Object.freeze(["clients", "timers/v1"]);
-export const EXPERIMENTAL = Object.freeze([...SERVICES_USED, ...SLOTS_USED]);
+export const EXPERIMENTAL = Object.freeze([]);
 
 export function packageJson(options) {
+  const experimental = Array.isArray(options.experimental) ? options.experimental : EXPERIMENTAL;
   const manifest = {
     name: options.packageName,
     version: "0.1.0",
@@ -15,6 +16,7 @@ export function packageJson(options) {
     repository: options.repository,
     engines: { fuyu: ENGINE },
     scripts: {
+      dev: "fuyu-plugin dev",
       build: "fuyu-plugin build",
       check: "fuyu-plugin check",
       package: "fuyu-plugin pack",
@@ -32,7 +34,7 @@ export function packageJson(options) {
       client: { island: "dist/island.js", settings: "dist/settings.js" },
       inject: { required: [...SERVICES_USED] },
       slots: [...SLOTS_USED],
-      experimental: [...EXPERIMENTAL],
+      ...(experimental.length > 0 ? { experimental: [...experimental] } : {}),
     },
   };
   return `${JSON.stringify(manifest, null, 2)}\n`;

@@ -1,7 +1,10 @@
 use serde_json::Value;
 use std::{
     collections::{HashMap, HashSet},
-    sync::{Mutex, OnceLock},
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        Mutex, OnceLock,
+    },
     thread,
     time::Duration,
 };
@@ -67,8 +70,31 @@ pub(super) fn listen(app: &AppHandle) {
     });
 }
 
+static WAKEABLE_MASK: AtomicU32 = AtomicU32::new(0);
+
+pub(super) fn set_wakeable_events(mut matches: impl FnMut(&'static str) -> bool) {
+    let mut mask = 0u32;
+    for (index, (name, _)) in EVENTS.iter().copied().enumerate() {
+        if matches(name) {
+            mask |= 1u32 << index;
+        }
+    }
+    WAKEABLE_MASK.store(mask, Ordering::Release);
+}
+
+fn is_wakeable(name: &str) -> bool {
+    let Some(index) = EVENTS.iter().position(|(event, _)| *event == name) else {
+        return false;
+    };
+    (WAKEABLE_MASK.load(Ordering::Acquire) & (1u32 << index)) != 0
+}
+
 pub(super) fn anyone_subscribed(name: &str) -> bool {
     host().is_ok_and(|host| lock(&host.supervisors).values().any(|supervisor| supervisor.is_subscribed(name)))
+}
+
+pub(super) fn has_interest(name: &str) -> bool {
+    is_wakeable(name) || anyone_subscribed(name)
 }
 
 pub(super) fn publish_known(name: &str, payload: Value) {
@@ -78,6 +104,9 @@ pub(super) fn publish_known(name: &str, payload: Value) {
 }
 
 fn publish(name: &'static str, payload: Value) {
+    if !has_interest(name) {
+        return;
+    }
     if !add_pending(&mut lock(pending()), name, payload) {
         return;
     }
@@ -108,4 +137,24 @@ fn deliver(name: &'static str, payload: &Value) {
         }
     }
     lifecycle::wake_for_event(name, payload);
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::{has_interest, lock, pending, publish_known, set_wakeable_events};
+
+    #[test]
+    fn publish_skips_queue_and_spawn_when_nothing_listens() {
+        set_wakeable_events(|_| false);
+        assert!(!has_interest("clipboard.changed"));
+        publish_known("clipboard.changed", json!({}));
+        assert!(!lock(pending()).contains_key("clipboard.changed"));
+
+        set_wakeable_events(|event| event == "todos.changed");
+        assert!(has_interest("todos.changed"));
+        assert!(!has_interest("media.changed"));
+        set_wakeable_events(|_| false);
+    }
 }

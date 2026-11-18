@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
+import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { entryOf, entryTabs, isCategoryAvailable, type SettingsCategory, type TabbedCategory } from "./categories";
+import { categorySlot } from "./slots/categorySlot";
+import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import "./SettingsTabs.css";
 
 export function SettingsTabs({ category, onCategoryChange }: { category: SettingsCategory; onCategoryChange: (category: SettingsCategory) => void }) {
   const text = useTranslation().settings.categories;
   const unsupported = useUnsupportedFeatures();
+  const pluginsV3 = usePluginsV3Enabled();
+  useSlotEntries(categorySlot);
   const entry = entryOf(category);
   const bar = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: false, end: false });
@@ -14,6 +19,7 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
   useEffect(() => {
     const node = bar.current;
     if (!node) return;
+    let frame = 0;
     const measure = () => {
       const box = node.getBoundingClientRect();
       const first = node.firstElementChild?.getBoundingClientRect();
@@ -22,12 +28,20 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
       const end = last ? last.right > box.right + 1 : false;
       setEdges((old) => (old.start === start && old.end === end ? old : { start, end }));
     };
+    const onScroll = () => {
+      if (frame !== 0) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        measure();
+      });
+    };
     measure();
-    node.addEventListener("scroll", measure, { passive: true });
+    node.addEventListener("scroll", onScroll, { passive: true });
     const observer = new ResizeObserver(measure);
     observer.observe(node);
     return () => {
-      node.removeEventListener("scroll", measure);
+      if (frame !== 0) window.cancelAnimationFrame(frame);
+      node.removeEventListener("scroll", onScroll);
       observer.disconnect();
     };
   }, [entry]);
@@ -37,7 +51,7 @@ export function SettingsTabs({ category, onCategoryChange }: { category: Setting
   }, [category]);
 
   if (!entry) return null;
-  const tabs = entryTabs(entry).filter((tab) => isCategoryAvailable(tab, unsupported, isMacOS));
+  const tabs = entryTabs(entry).filter((tab) => isCategoryAvailable(tab, unsupported, isMacOS, pluginsV3));
   const move = (from: TabbedCategory, step: number) => {
     const next = tabs[(tabs.indexOf(from) + step + tabs.length) % tabs.length];
     onCategoryChange(next);

@@ -15,6 +15,7 @@ pub struct DataHome {
     home: String,
     default_home: String,
     source: Source,
+    crash_log: Option<String>,
 }
 
 fn app_data(app: &AppHandle) -> Result<PathBuf, UserError> {
@@ -27,10 +28,13 @@ fn current(app: &AppHandle) -> Result<PathBuf, UserError> {
 
 #[tauri::command]
 pub fn get_data_home(app: AppHandle) -> Result<DataHome, UserError> {
+    let home = current(&app)?;
+    let crash_log = super::panic_log::latest_crash_log(&home).map(|path| path.display().to_string());
     Ok(DataHome {
-        home: current(&app)?.display().to_string(),
+        home: home.display().to_string(),
         default_home: super::default_home().unwrap_or_default().display().to_string(),
         source: super::source(),
+        crash_log,
     })
 }
 

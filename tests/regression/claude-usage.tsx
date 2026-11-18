@@ -9,11 +9,13 @@ import type { PluginNotificationsController } from "../../src/features/messages/
 
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 import { ClaudeUsageGauge } from "../../src/features/claude-usage/ClaudeUsageGauge";
+import { HoverOnlyUsageGauge } from "../../src/features/claude-usage/HoverOnlyUsageGauge";
+import type { HoverUsage } from "../../src/features/claude-usage/api";
 import { isPlan, PlanKeyField } from "../../src/features/claude-usage/PlanKeyFields";
 import "../../src/features/agent-status/plugin/services.ts";
 import "../../src/windows/settings/LayoutEditor.css";
 import type { AgentUsage } from "../../src/features/agent-status/api";
-import { CLAUDE_USAGE_GAUGE_WIDTH, USAGE_COLORS, USAGE_PROVIDERS } from "../../src/features/claude-usage/usageRing";
+import { CLAUDE_USAGE_GAUGE_WIDTH, HOVER_USAGE_PROVIDERS, USAGE_COLORS, USAGE_PROVIDERS } from "../../src/features/claude-usage/usageRing";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
@@ -42,12 +44,41 @@ const snapshot = (overrides: Partial<AgentUsage> = {}): AgentUsage => ({
 let current: AgentUsage | null = snapshot();
 const others: Record<string, AgentUsage> = {
   codex: snapshot({ source: "codex", plan: "Plus", fiveHour: { name: "", used: 18, resetsAt: at(200) }, sevenDay: { name: "", used: 40, resetsAt: at(5000) } }),
+  antigravity: snapshot({
+    source: "antigravity",
+    plan: "Pro",
+    fiveHour: { name: "", used: 8, resetsAt: at(294) },
+    sevenDay: { name: "", used: 2, resetsAt: at(6 * 1440) },
+    models: [{ name: "3p5h", used: 15, resetsAt: at(300) }],
+  }),
   glm: snapshot({ source: "glm", plan: "GLM Coding Pro", fiveHour: { name: "", used: 35, resetsAt: at(90.5) }, sevenDay: { name: "", used: 52, resetsAt: at(2 * 1440 + 18 * 60 - 0.5) }, models: [{ name: "mcpMonth", used: 8, resetsAt: null }] }),
   kimi: snapshot({ source: "kimi", fiveHour: { name: "", used: 60, resetsAt: at(45) }, sevenDay: null, models: [{ name: "month", used: 30, resetsAt: at(20000) }] }),
+};
+const hoverData: Record<string, HoverUsage> = {
+  workbuddy: {
+    provider: "workbuddy",
+    updatedAt: Date.now() - 2 * MINUTE,
+    source: "workbuddy",
+    available: null,
+    credits: { today: 12.5, sevenDay: 40, total: 88, totalTokens: 20_000, sessions: 3 },
+    wallets: [],
+    error: null,
+  },
+  dsh: {
+    provider: "dsh",
+    updatedAt: Date.now() - 2 * MINUTE,
+    source: "dshApi",
+    available: true,
+    credits: null,
+    wallets: [{ currency: "CNY", total: "63.88", toppedUp: "63.88", granted: "0.00" }],
+    error: null,
+  },
 };
 let reads = 0;
 let refreshes = 0;
 const planReads: string[] = [];
+const antigravityReads: boolean[] = [];
+const hoverReads: string[] = [];
 const keyWrites: string[] = [];
 const savedKeys = new Set<string>();
 mockIPC((command, payload) => {
@@ -60,6 +91,16 @@ mockIPC((command, payload) => {
     return savedKeys.has(provider);
   }
   if (command === "get_codex_usage") return others.codex;
+  if (command === "get_antigravity_usage") {
+    const { refresh } = payload as { refresh: boolean };
+    antigravityReads.push(refresh);
+    return others.antigravity;
+  }
+  if (command === "get_hover_usage") {
+    const { provider, refresh } = payload as { provider: string; refresh: boolean };
+    hoverReads.push(`${provider}:${refresh}`);
+    return hoverData[provider];
+  }
   if (command === "get_plan_usage") {
     const { provider, refresh } = payload as { provider: string; refresh: boolean };
     planReads.push(`${provider}:${refresh}`);
@@ -79,20 +120,24 @@ mockIPC((command, payload) => {
   }
 }, { shouldMockEvents: true });
 
-function Fixture({ all = false }: { all?: boolean }) {
+function Fixture({ all = false, hoverOnly = false }: { all?: boolean; hoverOnly?: boolean }) {
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const preview = useLatestMessagePreview(qq, wechat, qqMail, NO_PLUGIN_NOTIFICATIONS);
   const providers = all ? USAGE_PROVIDERS : USAGE_PROVIDERS.slice(0, 1);
-  const sideWidth = providers.length * CLAUDE_USAGE_GAUGE_WIDTH;
+  const gauges = hoverOnly
+    ? [{ id: "usage:hover", node: <HoverOnlyUsageGauge providers={HOVER_USAGE_PROVIDERS} /> }]
+    : providers.map((provider) => ({ id: `usage:${provider.id}`, node: <ClaudeUsageGauge key={provider.id} provider={provider} /> }));
+  const sideWidth = gauges.length * CLAUDE_USAGE_GAUGE_WIDTH;
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: preview }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
-  return <div className={`stage${all ? " stage--all" : ""}`} style={{ "--collapsed-island-width": `${280 + sideWidth}px` } as CSSProperties}>
+  const cls = hoverOnly ? "stage stage--hover-only" : `stage${all ? " stage--all" : ""}`;
+  return <div className={cls} style={{ "--collapsed-island-width": `${280 + sideWidth}px` } as CSSProperties}>
     <IslandShell
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: false, clipboard: true, shelf: true, qq: false, wechat: false, qqMail: false, agents: false, translation: false, calendar: false, screenshots: false, timer: false }}
-      collapsedSlots={{ gauges: providers.map((provider) => ({ id: `usage:${provider.id}`, node: <ClaudeUsageGauge key={provider.id} provider={provider} /> })), sideWidth }}
+      collapsedSlots={{ gauges, sideWidth }}
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
@@ -195,21 +240,39 @@ async function runChecks() {
     check(!card(), "失去焦点后卡片消失");
 
     const all = [...document.querySelectorAll<HTMLButtonElement>(".stage--all .claude-usage-gauge")];
-    check(all.map((gauge) => gauge.dataset.provider).join() === "claudeCode,codex,glm,kimi", "四个环按 Claude Code、Codex、GLM、Kimi 排列");
+    check(all.map((gauge) => gauge.dataset.provider).join() === "claudeCode,codex,antigravity,glm,kimi", "五个环按 Claude Code、Codex、Antigravity、GLM、Kimi 排列");
     const colorsOf = (gauge: HTMLElement) => [...gauge.querySelectorAll(".mini-ring__arc")].map((arc) => (arc as SVGElement).style.stroke);
-    check(USAGE_PROVIDERS.slice(1).every((provider, index) => colorsOf(all[index + 1]).every((color) => color === provider.color)), "Codex、GLM、Kimi 各用自己的颜色");
+    await until(() => all.slice(1).every((gauge) => colorsOf(gauge).length > 0));
+    check(USAGE_PROVIDERS.slice(1).every((provider, index) => colorsOf(all[index + 1]).every((color) => color === provider.color)), "Codex、Antigravity、GLM、Kimi 各用自己的颜色");
     const allIsland = document.querySelector(".stage--all .island")!.getBoundingClientRect();
     const boxes = all.map((gauge) => gauge.getBoundingClientRect());
     check(boxes.every((box) => box.width === 24 && box.height === 24), "用量环 24px，和会话环的分段环一样大");
-    check(boxes.every((box, index) => box.right <= allIsland.right && (index === 0 || box.left >= boxes[index - 1].right)), "四个环都在胶囊里，互不重叠");
-    check(planReads.includes("glm:false") && planReads.includes("kimi:false"), "GLM 和 Kimi 的环按各自的 provider 读用量");
-    await act(async () => all[2].click());
+    check(boxes.every((box, index) => box.right <= allIsland.right && (index === 0 || box.left >= boxes[index - 1].right)), "五个环都在胶囊里，互不重叠");
+    check(antigravityReads.includes(false) && planReads.includes("glm:false") && planReads.includes("kimi:false"), "Antigravity、GLM 和 Kimi 的环按各自接口读用量");
+
+    const agyAnchor = all[2].parentElement!;
+    await act(async () => { agyAnchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
+    await shownCard();
+    check(cardLines().join(" / ").includes("Antigravity · Pro / 5 小时 8%") && cardLines().join(" / ").includes("Claude / GPT 5 小时 15%"), `Antigravity 卡片：${cardLines().join(" / ")}`);
+    await act(async () => { agyAnchor.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body })); });
+
+    await act(async () => all[3].click());
     check(await until(() => planReads.includes("glm:true")), "点击 GLM 的环会重新向 GLM 查询");
-    const glmAnchor = all[2].parentElement!;
+    const glmAnchor = all[3].parentElement!;
     await act(async () => { glmAnchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
     await shownCard();
     check(cardLines().join(" / ") === "GLM · GLM Coding Pro / 5 小时 35% · 1 小时 31 分后重置 / 7 天 52% · 2 天 18 小时后重置 / MCP 本月 8% / 2 分钟前更新 · 来自智谱开放平台", `GLM 卡片：${cardLines().join(" / ")}`);
     await act(async () => { glmAnchor.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body })); });
+
+    const hoverBtn = document.querySelector<HTMLButtonElement>(".stage--hover-only .claude-usage-gauge")!;
+    await until(() => hoverReads.includes("workbuddy:false") && hoverReads.includes("dsh:false"));
+    check(hoverBtn.dataset.provider === "hover" && hoverBtn.querySelectorAll(".mini-ring__arc").length === 0, "WorkBuddy 和 DSH 不画百分比圆环");
+    const hoverAnchor = hoverBtn.parentElement!;
+    await act(async () => { hoverAnchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
+    await shownCard();
+    const hoverCardText = cardLines().join(" / ");
+    check(hoverCardText.includes("WorkBuddy / 今日已用 12.5 积分") && hoverCardText.includes("DeepSeek Harness / 余额 ¥63.88"), `悬停卡片显示 WorkBuddy 积分和 DSH 余额：${hoverCardText}`);
+    await act(async () => { hoverAnchor.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body })); });
 
     const inputs = [...document.querySelectorAll<HTMLInputElement>("#plan-keys input[data-plan-key]")];
     check(inputs.map((field) => field.dataset.planKey).join() === "glm", "只为打开的 GLM 显示 API Key 输入框");
@@ -240,7 +303,7 @@ async function runChecks() {
   }
 }
 
-await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><Fixture /><Fixture all /></StrictMode>); });
+await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><Fixture /><Fixture all /><Fixture hoverOnly /></StrictMode>); });
 const keysHost = Object.assign(document.createElement("div"), { id: "plan-keys" });
 document.getElementById("fixture")!.after(keysHost);
 const keyProviders = USAGE_PROVIDERS.filter(isPlan).filter((provider) => provider.id === "glm" || !automated);
@@ -250,5 +313,5 @@ else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
   await new Promise((resolve) => setTimeout(resolve, 50));
   anchor().dispatchEvent(new PointerEvent("pointerover", { bubbles: true }));
-  results.textContent = "演示：仪表槽位里的用量同心双环（外 5 小时、内 7 天）和悬停卡片，下面是四家同时打开。加 ?test=1 运行检查。";
+  results.textContent = "演示：仪表槽位里的用量同心双环（外 5 小时、内 7 天）和悬停卡片，下面是五家圆环与 WorkBuddy / DSH 悬停项。加 ?test=1 运行检查。";
 }

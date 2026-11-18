@@ -53,7 +53,6 @@
   width: calc(90% * var(--glass-blob-scale, 1));
   aspect-ratio: 1;
   border-radius: var(--radius-circle, 50%);
-  will-change: transform;
   animation: glassBlob1 var(--glass-flow-duration, 23s) var(--motion-ease-in-out) infinite alternate;
   animation-name: var(--glass-blob, glassBlob1);
 }

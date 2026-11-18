@@ -11,23 +11,24 @@ function strokePath(context: CanvasRenderingContext2D, points: readonly { x: num
   context.stroke();
 }
 
+const mosaicScratch = document.createElement("canvas");
+
 function drawMosaic(context: CanvasRenderingContext2D, picture: CanvasImageSource, rect: PixelRect, block: number) {
   const x = Math.round(rect.x);
   const y = Math.round(rect.y);
   const width = Math.round(rect.width);
   const height = Math.round(rect.height);
   if (width < 1 || height < 1) return;
-  const small = document.createElement("canvas");
-  small.width = Math.max(1, Math.ceil(width / block));
-  small.height = Math.max(1, Math.ceil(height / block));
-  const shrink = small.getContext("2d");
+  mosaicScratch.width = Math.max(1, Math.ceil(width / block));
+  mosaicScratch.height = Math.max(1, Math.ceil(height / block));
+  const shrink = mosaicScratch.getContext("2d");
   if (!shrink) return;
   shrink.imageSmoothingEnabled = true;
   shrink.imageSmoothingQuality = "high";
-  shrink.drawImage(picture, x, y, width, height, 0, 0, small.width, small.height);
+  shrink.drawImage(picture, x, y, width, height, 0, 0, mosaicScratch.width, mosaicScratch.height);
   context.save();
   context.imageSmoothingEnabled = false;
-  context.drawImage(small, 0, 0, small.width, small.height, x, y, width, height);
+  context.drawImage(mosaicScratch, 0, 0, mosaicScratch.width, mosaicScratch.height, x, y, width, height);
   context.restore();
 }
 
@@ -124,5 +125,8 @@ export function composeArea(picture: HTMLCanvasElement, area: PixelRect, selecti
   context.translate(-area.x, -area.y);
   context.drawImage(picture, area.x, area.y, area.width, area.height, area.x, area.y, area.width, area.height);
   drawAnnotations(context, items, picture, selection);
-  return context.getImageData(0, 0, area.width, area.height);
+  const result = context.getImageData(0, 0, area.width, area.height);
+  canvas.width = 0;
+  canvas.height = 0;
+  return result;
 }

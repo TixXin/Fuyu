@@ -53,4 +53,3 @@ const clipboardPage = (tab: ComponentProps<typeof ClipboardSettingsPage>["tab"])
 addSettingsCategory("clipboard", clipboardPage("clipboard"), OWNER);
 addSettingsCategory("clipboardHistory", clipboardPage("clipboardHistory"), OWNER);
 addSettingsCategory("clipboardSnippets", clipboardPage("clipboardSnippets"), OWNER);
-addSettingsCategory("clipboardData", clipboardPage("clipboardData"), OWNER);

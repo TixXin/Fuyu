@@ -67,13 +67,21 @@ pub async fn screenshot_configure(app: AppHandle, enabled: bool, shortcuts: Opti
         history::set_keep_days(days);
         output::prune_at_start(&app);
     }
-    if is_enabled() {
-        session::prepare(&app);
-    }
 }
 
 pub(crate) fn is_capturing() -> bool {
     session::id().is_some()
+}
+
+pub(super) fn is_capturable_own_window(label: &str) -> bool {
+    matches!(
+        label,
+        crate::translation::WINDOW_LABEL
+            | crate::clipboard_history::POPUP_WINDOW_LABEL
+            | crate::clipboard_history::preview_window::WINDOW_LABEL
+            | crate::settings_window::WINDOW_LABEL
+            | crate::tray_menu::WINDOW_LABEL
+    ) || label.starts_with(PIN_PREFIX)
 }
 
 pub(crate) fn start_from_tray(app: &AppHandle) {
@@ -200,6 +208,7 @@ pub async fn screenshot_finish(app: AppHandle, window: WebviewWindow, request: t
                 system_audio: flag("x-system-audio"),
                 microphone: flag("x-microphone"),
                 gif: Some(header("x-format") == Some("gif")),
+                own_windows: flag("x-own-windows"),
                 folder_name,
             };
             crate::recording::begin(&app, request);
@@ -289,9 +298,15 @@ pub fn screenshot_long_end(action: String, folder: Option<String>, folder_name: 
 
 fn remember(app: &AppHandle, picture: &Picture) {
     let app = app.clone();
-    let copy = Picture { width: picture.width, height: picture.height, rgba: picture.rgba.clone() };
+    let png = match output::encode_png(picture) {
+        Ok(png) => png,
+        Err(error) => {
+            eprintln!("screenshot not kept in the history: {error}");
+            return;
+        }
+    };
     std::thread::spawn(move || {
-        match output::encode_png(&copy).and_then(|png| output::keep_png(&app, &png)) {
+        match output::keep_png(&app, &png) {
             Ok(_) => {
                 let _ = app.emit(HISTORY_EVENT, ());
             }

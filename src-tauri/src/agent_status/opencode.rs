@@ -4,7 +4,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
     sync::{Mutex, PoisonError},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use rusqlite::{params, Connection, OpenFlags, OptionalExtension};
@@ -49,10 +49,64 @@ pub(super) struct Stored {
     pub(super) from_service: bool,
 }
 
-type Stamp = (u64, Option<std::time::SystemTime>, u64, Option<std::time::SystemTime>);
-type Cached = (PathBuf, Stamp, i64, Vec<Stored>);
+const MAX_CACHED_DBS: usize = 8;
+const DB_CACHE_TTL: Duration = Duration::from_secs(30 * 60);
 
-static CACHE: Mutex<Vec<Cached>> = Mutex::new(Vec::new());
+type Stamp = (u64, Option<std::time::SystemTime>, u64, Option<std::time::SystemTime>);
+
+struct CachedDb {
+    path: PathBuf,
+    stamp: Stamp,
+    since: i64,
+    rows: Vec<Stored>,
+    touched_at: Instant,
+}
+
+static CACHE: Mutex<Vec<CachedDb>> = Mutex::new(Vec::new());
+
+fn prune_cache(cache: &mut Vec<CachedDb>, now: Instant) {
+    cache.retain(|entry| now.saturating_duration_since(entry.touched_at) <= DB_CACHE_TTL);
+}
+
+fn lookup_cache(
+    cache: &mut Vec<CachedDb>,
+    db: &Path,
+    stamp: &Stamp,
+    since: i64,
+    now: Instant,
+) -> Option<Vec<Stored>> {
+    prune_cache(cache, now);
+    let entry = cache.iter_mut().find(|entry| entry.path == db)?;
+    if entry.stamp == *stamp && entry.since <= since {
+        entry.touched_at = now;
+        return Some(
+            entry
+                .rows
+                .iter()
+                .filter(|row| row.summary.updated_at >= since)
+                .cloned()
+                .collect(),
+        );
+    }
+    None
+}
+
+fn store_cache(
+    cache: &mut Vec<CachedDb>,
+    db: PathBuf,
+    stamp: Stamp,
+    since: i64,
+    rows: Vec<Stored>,
+    now: Instant,
+) {
+    prune_cache(cache, now);
+    cache.retain(|entry| entry.path != db);
+    if cache.len() >= MAX_CACHED_DBS {
+        cache.sort_by_key(|entry| entry.touched_at);
+        cache.drain(..cache.len() + 1 - MAX_CACHED_DBS);
+    }
+    cache.push(CachedDb { path: db, stamp, since, rows, touched_at: now });
+}
 
 pub(super) fn running_app() -> Option<String> {
     platform::process::running_executable(&DESKTOP_EXES).map(|exe| app_name(&exe))
@@ -70,18 +124,22 @@ fn sessions(home_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSessionSummar
 }
 
 pub(super) fn cached_rows(db: &Path, since: i64) -> Vec<Stored> {
+    let now = Instant::now();
     let Some(stamp) = stamp(db) else {
+        let mut cache = CACHE.lock().unwrap_or_else(PoisonError::into_inner);
+        prune_cache(&mut cache, now);
+        cache.retain(|entry| entry.path != db);
         return Vec::new();
     };
-    let mut cache = CACHE.lock().unwrap_or_else(PoisonError::into_inner);
-    if let Some((_, known, known_since, rows)) = cache.iter().find(|(path, ..)| path == db) {
-        if *known == stamp && *known_since <= since {
-            return rows.iter().filter(|row| row.summary.updated_at >= since).cloned().collect();
+    {
+        let mut cache = CACHE.lock().unwrap_or_else(PoisonError::into_inner);
+        if let Some(rows) = lookup_cache(&mut cache, db, &stamp, since, now) {
+            return rows;
         }
     }
     let rows = read_database(db, since).unwrap_or_default();
-    cache.retain(|(path, ..)| path != db);
-    cache.push((db.to_path_buf(), stamp, since, rows.clone()));
+    let mut cache = CACHE.lock().unwrap_or_else(PoisonError::into_inner);
+    store_cache(&mut cache, db.to_path_buf(), stamp, since, rows.clone(), Instant::now());
     rows
 }
 
@@ -534,9 +592,36 @@ fn text(value: &Value) -> Option<String> {
 #[path = "opencode_remote.rs"]
 mod remote;
 
+#[path = "opencode_plugin.rs"]
+mod plugin;
+
 #[cfg(test)]
 #[path = "opencode_tests.rs"]
 mod tests;
 
-#[path = "opencode_plugin.rs"]
-mod plugin;
+#[cfg(test)]
+mod cache_tests {
+    use super::*;
+
+    #[test]
+    fn db_cache_expires_stale_entries_and_caps_capacity() {
+        let mut cache = Vec::new();
+        let t0 = Instant::now();
+        let stamp: Stamp = (10, None, 0, None);
+        store_cache(&mut cache, PathBuf::from("/tmp/old.db"), stamp, 0, Vec::new(), t0);
+        assert!(lookup_cache(&mut cache, Path::new("/tmp/old.db"), &stamp, 0, t0 + Duration::from_secs(5)).is_some());
+
+        let expired = t0 + DB_CACHE_TTL + Duration::from_secs(6);
+        assert!(lookup_cache(&mut cache, Path::new("/tmp/old.db"), &stamp, 0, expired).is_none());
+        assert!(cache.is_empty());
+
+        for index in 0..(MAX_CACHED_DBS + 3) {
+            let at = expired + Duration::from_secs(index as u64 + 1);
+            store_cache(&mut cache, PathBuf::from(format!("/tmp/db-{index}.sqlite")), stamp, 0, Vec::new(), at);
+        }
+        assert_eq!(cache.len(), MAX_CACHED_DBS);
+        assert!(!cache.iter().any(|entry| entry.path == Path::new("/tmp/db-0.sqlite")));
+        assert!(!cache.iter().any(|entry| entry.path == Path::new("/tmp/db-2.sqlite")));
+        assert!(cache.iter().any(|entry| entry.path == Path::new("/tmp/db-3.sqlite")));
+    }
+}

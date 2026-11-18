@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { GripVertical, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Trash2 } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import type { MediaState } from "./api";
 import type { KnownMediaSource } from "./storage";
@@ -104,10 +104,12 @@ export function MusicSourceList({
         <div className="music-source-empty">{t.music.noSources}</div>
       ) : (
         <div className="music-source-list" role="list">
-          {sourcePriority.map((source) => {
+          {sourcePriority.map((source, index) => {
             const live = liveSessions.find(
               (session) => session.id === source.id,
             );
+            const prev = index > 0 ? sourcePriority[index - 1] : undefined;
+            const next = index < sourcePriority.length - 1 ? sourcePriority[index + 1] : undefined;
             return (
               <div
                 key={source.id}
@@ -151,6 +153,28 @@ export function MusicSourceList({
                 <span className="music-source-label">
                   {source.label}
                 </span>
+                {sourcePriority.length > 1 && (
+                  <span className="music-source-move">
+                    <button
+                      className="music-source-step"
+                      type="button"
+                      disabled={!prev}
+                      aria-label={t.music.moveSourceUp(source.label)}
+                      onClick={() => prev && onReorderSource(source.id, prev.id)}
+                    >
+                      <ArrowUp size={13} strokeWidth={2.2} />
+                    </button>
+                    <button
+                      className="music-source-step"
+                      type="button"
+                      disabled={!next}
+                      aria-label={t.music.moveSourceDown(source.label)}
+                      onClick={() => next && onReorderSource(source.id, next.id)}
+                    >
+                      <ArrowDown size={13} strokeWidth={2.2} />
+                    </button>
+                  </span>
+                )}
                 <button
                   className="music-source-remove"
                   type="button"

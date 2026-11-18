@@ -1,6 +1,6 @@
 use std::{
     sync::{
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         Mutex, PoisonError,
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
@@ -23,6 +23,8 @@ const COUNTDOWN: u32 = 3;
 static ACTIVE: Mutex<Option<Recording>> = Mutex::new(None);
 static STATE: Mutex<State> = Mutex::new(State { phase: Phase::Idle, countdown: 0, paused: false, elapsed_ms: 0, since_ms: 0 });
 static HIDDEN: Mutex<Vec<String>> = Mutex::new(Vec::new());
+static HIDING_OWN_WINDOWS: AtomicBool = AtomicBool::new(false);
+static RECORDING_OWN_WINDOWS: AtomicBool = AtomicBool::new(false);
 static RUN: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -37,6 +39,7 @@ pub struct Request {
     pub(crate) system_audio: Option<bool>,
     pub(crate) microphone: Option<bool>,
     pub(crate) gif: Option<bool>,
+    pub(crate) own_windows: Option<bool>,
     pub(crate) folder_name: String,
 }
 
@@ -72,7 +75,34 @@ pub(crate) fn is_busy() -> bool {
     state().phase != Phase::Idle
 }
 
-fn hide_own_windows(app: &AppHandle) {
+pub(crate) fn hides_own_windows() -> bool {
+    HIDING_OWN_WINDOWS.load(Ordering::SeqCst)
+}
+
+pub(crate) fn records_own_windows() -> bool {
+    RECORDING_OWN_WINDOWS.load(Ordering::SeqCst)
+}
+
+pub(crate) fn apply_to_window(window: &tauri::WebviewWindow) {
+    let label = window.label();
+    if !hides_own_windows() || label.starts_with(crate::screenshot::WINDOW_PREFIX) || label.starts_with(crate::screenshot::PIN_PREFIX) {
+        return;
+    }
+    if window.hwnd().is_ok_and(|hwnd| win32::window::exclude_from_capture(hwnd, true)) {
+        let mut hidden = HIDDEN.lock().unwrap_or_else(PoisonError::into_inner);
+        if !hidden.iter().any(|item| item == label) {
+            hidden.push(label.to_string());
+        }
+    }
+}
+
+fn prepare_own_windows(app: &AppHandle, own_windows: bool) {
+    HIDING_OWN_WINDOWS.store(!own_windows, Ordering::SeqCst);
+    RECORDING_OWN_WINDOWS.store(own_windows, Ordering::SeqCst);
+    if own_windows {
+        crate::clipboard_history::unprotect_for_recording(app);
+        return;
+    }
     let mut hidden = HIDDEN.lock().unwrap_or_else(PoisonError::into_inner);
     for (label, window) in app.webview_windows() {
         if label.starts_with(crate::screenshot::WINDOW_PREFIX) || label.starts_with(crate::screenshot::PIN_PREFIX) {
@@ -84,12 +114,18 @@ fn hide_own_windows(app: &AppHandle) {
     }
 }
 
-fn show_own_windows(app: &AppHandle) {
+fn restore_own_windows(app: &AppHandle) {
+    HIDING_OWN_WINDOWS.store(false, Ordering::SeqCst);
+    RECORDING_OWN_WINDOWS.store(false, Ordering::SeqCst);
     for label in HIDDEN.lock().unwrap_or_else(PoisonError::into_inner).drain(..) {
+        if crate::clipboard_history::is_clipboard_window(&label) {
+            continue;
+        }
         if let Some(hwnd) = app.get_webview_window(&label).and_then(|window| window.hwnd().ok()) {
             win32::window::exclude_from_capture(hwnd, false);
         }
     }
+    crate::clipboard_history::restore_capture_protection(app);
 }
 
 pub(crate) fn start_now(app: &AppHandle, request: Request) -> Result<String, UserError> {
@@ -115,11 +151,11 @@ pub(crate) fn start_now(app: &AppHandle, request: Request) -> Result<String, Use
         path: video,
         gif: gif.then(|| path.clone()),
     };
-    hide_own_windows(app);
+    prepare_own_windows(app, request.own_windows.unwrap_or(false));
     match Recording::start(options) {
         Ok(recording) => *active = Some(recording),
         Err(error) => {
-            show_own_windows(app);
+            restore_own_windows(app);
             return Err(failed(error));
         }
     }
@@ -169,7 +205,7 @@ pub(crate) fn stop(app: &AppHandle) -> Result<Option<Summary>, UserError> {
         return if counting { Ok(None) } else { Err(idle()) };
     };
     let result = recording.stop().map_err(failed);
-    show_own_windows(app);
+    restore_own_windows(app);
     set(app, State::default());
     let finished = match &result {
         Ok(summary) => Finished { summary: Some(summary.clone()), error: None },

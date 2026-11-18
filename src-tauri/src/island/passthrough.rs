@@ -2,7 +2,6 @@ use serde::Serialize;
 use std::{
     sync::atomic::{AtomicBool, Ordering},
     thread,
-    time::Duration,
 };
 use tauri::{Emitter, WebviewWindow};
 use windows::Win32::Foundation::HWND;
@@ -10,8 +9,12 @@ use windows::Win32::Foundation::HWND;
 use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
     modifier::{self, ModifierTarget},
-    geometry::{cursor_on_island, island_rect, stage_point, IslandOnScreen},
-    state::{read_window_state, IslandMode},
+    geometry::{
+        cursor_near_island, cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect,
+        passthrough_sleep_duration, should_ignore_cursor, stage_point, DimWakeTracker, IslandOnScreen,
+    },
+    state::{mutate_window_state, read_window_state, IslandMode, IslandWindowState},
+    ISLAND_DIM_WAKE_EVENT,
 };
 use crate::win32;
 
@@ -47,11 +50,25 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
         let hwnd = window.hwnd().ok();
         let mut tick: u32 = 0;
         let mut last_cursor: Option<CursorPoint> = None;
+        let mut dim_wake = DimWakeTracker::default();
 
         loop {
-            let is_inside = hwnd.is_none_or(cursor_is_inside_island);
+            if !window.is_visible().unwrap_or(true) {
+                dim_wake = DimWakeTracker::default();
+                thread::sleep(passthrough_sleep_duration(false, false));
+                continue;
+            }
+            let (mut state, raw_inside, is_near_island, raw_cursor) = read_pointer_state(hwnd);
+            if dim_wake.poll(state.dimmed_passthrough(), is_near_island, raw_cursor) {
+                state = mutate_window_state(|current| {
+                    current.is_dimmed = false;
+                    *current
+                });
+                let _ = window.emit(ISLAND_DIM_WAKE_EVENT, ());
+            }
+            let is_inside = raw_inside && !state.dimmed_passthrough();
             let is_on_banner = hwnd.is_some_and(cursor_is_on_banner);
-            let should_ignore = !is_inside && !is_on_banner;
+            let should_ignore = should_ignore_cursor(state, raw_inside, is_on_banner);
 
             if should_ignore != ignoring_cursor
                 && window.set_ignore_cursor_events(should_ignore).is_ok()
@@ -79,26 +96,35 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 was_move_armed = is_move_armed;
                 let _ = window.emit(ISLAND_MOVE_ARMED_CHANGED_EVENT, is_move_armed);
             }
-            let held = modifier::is_resizing() || (alt && matches!(read_window_state().mode, IslandMode::Expanded));
+            let held = modifier::is_resizing() || (alt && matches!(state.mode, IslandMode::Expanded));
             if held != was_held {
                 was_held = held;
                 let _ = window.emit(ISLAND_HOLD_CHANGED_EVENT, held);
             }
 
+            let near = hwnd.is_none_or(cursor_is_near_stage);
             tick = tick.wrapping_add(1);
-            if !CURSOR_TRACKING.load(Ordering::Relaxed) {
+            let tracking = CURSOR_TRACKING.load(Ordering::Relaxed);
+            if !tracking || is_inside || state.is_tucked {
                 last_cursor = None;
             } else if tick.is_multiple_of(CURSOR_EVENT_EVERY_TICKS) {
-                let point = hwnd.and_then(cursor_in_window);
+                let point = hwnd.and_then(|handle| gaze_cursor_in_window(handle, near));
                 if point.is_some() && point != last_cursor {
                     last_cursor = point;
                     let _ = window.emit(ISLAND_CURSOR_MOVED_EVENT, point);
                 }
             }
 
-            thread::sleep(Duration::from_millis(12));
+            let active = is_inside || is_on_banner || held || near;
+            thread::sleep(passthrough_sleep_duration(true, active));
         }
     });
+}
+
+fn gaze_cursor_in_window(hwnd: HWND, near_stage: bool) -> Option<CursorPoint> {
+    let point = cursor_in_window(hwnd)?;
+    let (x, y) = gaze_cursor_point((point.x, point.y), near_stage);
+    Some(CursorPoint { x, y })
 }
 
 fn cursor_in_window(hwnd: HWND) -> Option<CursorPoint> {
@@ -132,21 +158,41 @@ pub(crate) fn island_on_screen(window: &WebviewWindow) -> Option<IslandOnScreen>
     Some(island_rect(window_rect.left as f64, window_rect.top as f64, window_width, window_height, read_window_state()))
 }
 
-pub(super) fn cursor_is_inside_island(hwnd: HWND) -> bool {
+fn read_pointer_state(hwnd: Option<HWND>) -> (IslandWindowState, bool, bool, Option<(f64, f64)>) {
+    let state = read_window_state();
+    let Some(hwnd) = hwnd else {
+        return (state, !state.dimmed_passthrough(), false, None);
+    };
+    let Some(window_rect) = win32::window::window_rect(hwnd) else {
+        return (state, !state.dimmed_passthrough(), false, None);
+    };
+    let Some(cursor) = win32::window::cursor_position() else {
+        return (state, !state.dimmed_passthrough(), false, None);
+    };
+    let left = window_rect.left as f64;
+    let top = window_rect.top as f64;
+    let width = (window_rect.right - window_rect.left).max(1) as f64;
+    let height = (window_rect.bottom - window_rect.top).max(1) as f64;
+    let cx = cursor.x as f64;
+    let cy = cursor.y as f64;
+    let inside = cursor_on_island(left, top, width, height, cx, cy, state);
+    let near = inside || cursor_near_island(left, top, width, height, cx, cy, state);
+    (state, inside, near, Some((cx, cy)))
+}
+
+fn cursor_is_near_stage(hwnd: HWND) -> bool {
     let Some(window_rect) = win32::window::window_rect(hwnd) else {
         return true;
     };
     let Some(cursor) = win32::window::cursor_position() else {
         return true;
     };
-
-    cursor_on_island(
+    cursor_near_stage(
         window_rect.left as f64,
         window_rect.top as f64,
         (window_rect.right - window_rect.left).max(1) as f64,
         (window_rect.bottom - window_rect.top).max(1) as f64,
         cursor.x as f64,
         cursor.y as f64,
-        read_window_state(),
     )
 }

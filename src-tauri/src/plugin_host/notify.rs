@@ -13,6 +13,7 @@ use crate::{island, media_control};
 const NOTIFICATION_EVENT: &str = "plugin-notification";
 pub(super) const RATE_LIMIT: usize = 6;
 const RATE_WINDOW: Duration = Duration::from_secs(60);
+const MAX_TRACKED_PLUGINS: usize = 128;
 const MAX_TITLE: usize = 80;
 const MAX_BODY: usize = 200;
 const MAX_ACTIONS: usize = 2;
@@ -126,7 +127,7 @@ pub(super) fn parse_notification(params: &Value) -> Result<Notification, String>
 }
 
 pub(super) fn take_slot(times: &mut VecDeque<Instant>, now: Instant) -> bool {
-    while times.front().is_some_and(|time| now.duration_since(*time) >= RATE_WINDOW) {
+    while times.front().is_some_and(|time| now.saturating_duration_since(*time) >= RATE_WINDOW) {
         times.pop_front();
     }
     if times.len() >= RATE_LIMIT {
@@ -136,6 +137,29 @@ pub(super) fn take_slot(times: &mut VecDeque<Instant>, now: Instant) -> bool {
     true
 }
 
+fn take_plugin_slot(
+    shown: &mut HashMap<String, VecDeque<Instant>>,
+    plugin_id: &str,
+    now: Instant,
+) -> bool {
+    for times in shown.values_mut() {
+        while times.front().is_some_and(|time| now.saturating_duration_since(*time) >= RATE_WINDOW) {
+            times.pop_front();
+        }
+    }
+    shown.retain(|_, times| !times.is_empty());
+    if !shown.contains_key(plugin_id) && shown.len() >= MAX_TRACKED_PLUGINS {
+        if let Some(oldest_id) = shown
+            .iter()
+            .min_by(|left, right| left.1.back().cmp(&right.1.back()).then_with(|| left.0.cmp(right.0)))
+            .map(|(id, _)| id.clone())
+        {
+            shown.remove(&oldest_id);
+        }
+    }
+    take_slot(shown.entry(plugin_id.to_string()).or_default(), now)
+}
+
 fn shown_times() -> &'static Mutex<HashMap<String, VecDeque<Instant>>> {
     static SHOWN: OnceLock<Mutex<HashMap<String, VecDeque<Instant>>>> = OnceLock::new();
     SHOWN.get_or_init(Mutex::default)
@@ -143,7 +167,7 @@ fn shown_times() -> &'static Mutex<HashMap<String, VecDeque<Instant>>> {
 
 pub(super) fn show(app: &AppHandle, plugin_id: &str, params: &Value) -> Result<Value, (u16, String)> {
     let notification = parse_notification(params).map_err(|message| (400, message))?;
-    if !take_slot(lock(shown_times()).entry(plugin_id.to_string()).or_default(), Instant::now()) {
+    if !take_plugin_slot(&mut lock(shown_times()), plugin_id, Instant::now()) {
         return Err((429, format!("At most {RATE_LIMIT} notifications a minute.")));
     }
     let host = host().map_err(|message| (500, message))?;
@@ -163,4 +187,31 @@ pub(super) fn show(app: &AppHandle, plugin_id: &str, params: &Value) -> Result<V
         let _ = app.emit_to(island::WINDOW_LABEL, NOTIFICATION_EVENT, payload);
     }
     Ok(json!({ "muted": muted }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn shown_times_drops_expired_plugins_and_caps_capacity() {
+        let mut shown = HashMap::new();
+        let t0 = Instant::now();
+        assert!(take_plugin_slot(&mut shown, "old-plugin", t0));
+        assert!(shown.contains_key("old-plugin"));
+
+        let after_window = t0 + RATE_WINDOW + Duration::from_secs(1);
+        assert!(take_plugin_slot(&mut shown, "fresh-plugin", after_window));
+        assert!(!shown.contains_key("old-plugin"));
+        assert!(shown.contains_key("fresh-plugin"));
+
+        for index in 0..(MAX_TRACKED_PLUGINS + 4) {
+            let at = after_window + Duration::from_millis(index as u64 + 1);
+            assert!(take_plugin_slot(&mut shown, &format!("p-{index:03}"), at));
+        }
+        assert_eq!(shown.len(), MAX_TRACKED_PLUGINS);
+        assert!(!shown.contains_key("fresh-plugin"));
+        assert!(!shown.contains_key("p-000"));
+        assert!(shown.contains_key(&format!("p-{:03}", MAX_TRACKED_PLUGINS + 3)));
+    }
 }

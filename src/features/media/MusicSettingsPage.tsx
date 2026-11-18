@@ -1,6 +1,5 @@
 import type { IslandSettings } from "../../lib/settings/types";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
-import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { MusicSourceSettingsSection } from "./MusicSourceSettingsSection";
 import { MusicBarSettingsSection } from "./MusicBarSettingsSection";
@@ -45,7 +44,13 @@ function KaraokeSection({ settings, onSettingsChange }: MusicSectionProps) {
     <LyricsKaraokeSettingsSection settings={settings} onSettingsChange={onSettingsChange} />
   ) : (
     <SettingsGroup title={text.karaoke.title}>
-      <SettingsRow searchable={false} title={text.onIsland} description={text.styleNeedsIsland} />
+      <SettingsToggleRow
+        searchable={false}
+        title={text.onIsland}
+        description={text.styleNeedsIsland}
+        checked={false}
+        onChange={(lyricsOnIsland) => onSettingsChange({ ...settings, lyricsOnIsland })}
+      />
     </SettingsGroup>
   );
 }
@@ -64,7 +69,7 @@ sections.add({ id: "musicLyricsStyle.karaoke", category: "musicLyricsStyle", ord
 export function MusicSettingsPage({ tab, ...props }: MusicSectionProps & { tab: MusicTab }) {
   return (
     <>
-      {tab === "music" && <FeatureHeader feature="music" icon={settingsCategoryIcon("music")} />}
+      <FeatureHeader feature="music" icon={settingsCategoryIcon("music")} />
       <SlotView slot={sections} group={tab} props={props} />
     </>
   );

@@ -40,9 +40,16 @@ export type AgentHooksInstallResult = {
 
 export type RemoteResult = { host: string; error: string | null };
 
+export type RemoteSetupResult = RemoteResult;
+
+export interface AgentHooksUninstallResult {
+  removedAt: number;
+  remotes: RemoteSetupResult[];
+}
+
 export type HookInstallState = "absent" | "notInstalled" | "outdated" | "current";
 
-export type AgentHooksState = Partial<Record<AgentProvider, HookInstallState>> & {
+export type AgentHooksState = Partial<Record<SessionProvider, HookInstallState>> & {
   scriptsOutdated: boolean;
 };
 
@@ -213,6 +220,19 @@ export function listenEditorExtensionMissing(onMissing: (editor: EditorExtension
   return listen<EditorExtensionMissing>(EDITOR_EXTENSION_MISSING_EVENT, (event) => onMissing(event.payload));
 }
 
+const FOCUS_WINDOW_ONLY_EVENT = "agent-focus-window-only";
+
+export type AgentFocusWindowOnly = {
+  provider: SessionProvider;
+  sessionId: string;
+  app: string;
+  name: string;
+};
+
+export function listenAgentFocusWindowOnly(onWindowOnly: (focused: AgentFocusWindowOnly) => void) {
+  return listen<AgentFocusWindowOnly>(FOCUS_WINDOW_ONLY_EVENT, (event) => onWindowOnly(event.payload));
+}
+
 export function agentSessionsInFront(sessions: Pick<AgentSessionSummary, "provider" | "sessionId">[]) {
   return invoke<string[]>("agent_sessions_in_front", {
     sessions: sessions.map(({ provider, sessionId }) => ({ provider, sessionId })),
@@ -243,6 +263,10 @@ export function clearAgentProviderStatus(provider: string) {
 
 export function installAgentStatusHooks() {
   return invoke<AgentHooksInstallResult>("install_agent_status_hooks");
+}
+
+export function uninstallAgentStatusHooks() {
+  return invoke<AgentHooksUninstallResult>("uninstall_agent_status_hooks");
 }
 
 export function listAgentEffortLabels() {

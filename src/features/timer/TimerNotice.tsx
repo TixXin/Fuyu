@@ -2,7 +2,7 @@ import { BellRing, Plus, X } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { dismissRinging, extendRinging } from "./store";
 import { clockText, type Timer } from "./timers";
-import "../screenshot/ScreenshotNotice.css";
+import "../../components/notice/IslandNotice.css";
 
 export function TimerNotice({ ringing }: { ringing: readonly Timer[] }) {
   const t = useTranslation().timer;

@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { backgroundBuildEnv } from "../build-load.mjs";
 import { pruneMainTarget } from "../prune-build-cache.mjs";
-import { acquire, HEAVY_ENV, laneOf } from "./queue.mjs";
+import { acquire, DEFAULT_CARGO_TARGET_DIR, explicitCargoTargetDir, HEAVY_ENV, isCargoBuild, laneOf, queueDir, slotCount } from "./queue.mjs";
 
 export function parseArgs(argv) {
   const split = argv.indexOf("--");
@@ -17,17 +17,27 @@ export function parseArgs(argv) {
   return { label: label ?? command.join(" ").slice(0, 60), lane, command };
 }
 
-export function run(argv, env = process.env, { afterJob = () => pruneMainTarget({ quiet: true }) } = {}) {
+export function run(argv, env = process.env, { afterJob = () => pruneMainTarget({ quiet: true }), spawn = spawnSync, log = console.log } = {}) {
   const { label, lane, command } = parseArgs(argv);
   if (!command.length) {
     console.error("用法：pnpm heavy [--label <名字>] [--lane <构建目录>] -- <命令…>");
     return 2;
   }
-  const options = { stdio: "inherit", shell: process.platform === "win32", env: { ...env, [HEAVY_ENV]: "1", ...backgroundBuildEnv(env) } };
-  if (env[HEAVY_ENV] === "1") return spawnSync(command[0], command.slice(1), options).status ?? 1;
-  const release = acquire({ label, lane: lane ?? laneOf(command, env) });
+  const defaultTarget = isCargoBuild(command) && !explicitCargoTargetDir(command, env);
+  if (defaultTarget) {
+    log(`[heavy] 未指定构建目录，默认设 CARGO_TARGET_DIR=${DEFAULT_CARGO_TARGET_DIR}`);
+  }
+  const jobEnv = {
+    ...env,
+    [HEAVY_ENV]: "1",
+    ...backgroundBuildEnv(env),
+    ...(defaultTarget ? { CARGO_TARGET_DIR: DEFAULT_CARGO_TARGET_DIR } : {}),
+  };
+  const options = { stdio: "inherit", shell: process.platform === "win32", env: jobEnv };
+  if (env[HEAVY_ENV] === "1") return spawn(command[0], command.slice(1), options).status ?? 1;
+  const release = acquire({ label, lane: lane ?? laneOf(command, jobEnv), dir: queueDir(jobEnv), slots: slotCount(jobEnv), log });
   try {
-    const result = spawnSync(command[0], command.slice(1), options);
+    const result = spawn(command[0], command.slice(1), options);
     if (result.error) console.error(`[heavy] 启动失败：${result.error.message}`);
     return result.status ?? 1;
   } finally {

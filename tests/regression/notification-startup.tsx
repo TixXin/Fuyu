@@ -98,7 +98,7 @@ try {
   await act(async () => { await qq!.setEnabled(false); await wechat!.setEnabled(false); });
   await settled(() => !qq!.snapshot.enabled && !wechat!.snapshot.enabled);
   check(config.qq === false && config.wechat === false, "关闭写进插件设置");
-  check(keys.slice(0, 2).every((key) => localStorage.getItem(key) === "false"), "关闭偏好镜像到原有存储键");
+  check(keys.slice(0, 2).every((key) => localStorage.getItem(key) === null), "关闭不再镜像回写旧存储键");
   await mount();
   await settled(() => !qq!.busy && !wechat!.busy);
   check(!qq!.snapshot.enabled && !wechat!.snapshot.enabled && requests() === 1, "关闭后重启仍关闭，不申请授权");

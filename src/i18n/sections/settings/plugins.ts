@@ -1,3 +1,6 @@
+import { isMacOS } from "../../../lib/platform.ts";
+import { en as pluginViewsEn, zhCN as pluginViewsZh, type PluginSensitivePromptText } from "../pluginViews.ts";
+
 export type SettingsPluginsText = {
   allowThirdParty: string;
   warning: string;
@@ -40,17 +43,7 @@ export type SettingsPluginsText = {
   permission: Record<"todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write" | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control" | "shelf:read" | "shelf:write" | "windows", string>;
   needsApproval: string;
   keybindingConflict: (shortcuts: string) => string;
-  sensitive: {
-    prompt: (plugin: string, action: string) => string;
-    allow: string;
-    once: string;
-    deny: string;
-    action: Record<
-      | "todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write"
-      | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control"
-      | "shelf:read" | "shelf:write" | "windows" | "uri",
-      string
-    >;
+  sensitive: PluginSensitivePromptText & {
     title: string;
     hint: string;
     allowed: string;
@@ -127,7 +120,6 @@ export type SettingsPluginsText = {
     infoWhenRunning: string;
     settings: string;
     noSettings: string;
-    pets: { unset: string; none: string; failed: string; loading: string; missing: (id: string) => string; app: string };
     actions: string;
     copy: string;
     copied: string;
@@ -300,6 +292,12 @@ export type SettingsPluginsText = {
     };
   };
   sshTunnel: {
+    group: string;
+    groupHint: string;
+    localProxy: string;
+    localProxyHint: string;
+    localProxyOptions: Record<"auto" | "clash-verge" | "v2rayn" | "custom", string>;
+    customPort: string;
     title: string;
     hint: string;
     empty: string;
@@ -315,11 +313,23 @@ export type SettingsPluginsText = {
     no: string;
     proxy: {
       label: string;
+      current: string;
       looking: string;
       found: Record<"clashVerge" | "v2rayN" | "systemProxy" | "clashVergeDefault" | "v2rayNDefault" | "custom", string>;
       listening: string;
       notListening: string;
     };
+  };
+  centerPattern: {
+    group: string;
+    groupHint: string;
+    pattern: string;
+    patterns: Record<"eyes" | "bird" | "orb" | "cat" | "mark" | "pet", string>;
+    pet: string;
+    petHint: string;
+    size: string;
+    sizeHint: string;
+    pets: { unset: string; none: string; failed: string; loading: string; missing: (id: string) => string; app: string };
   };
 };
 
@@ -382,28 +392,7 @@ export const zhCN: SettingsPluginsText = {
   needsApproval: "新版本需要更多权限，已暂停。关掉再打开开关即可授权。",
   keybindingConflict: (shortcuts: string) => `快捷键已被其他程序占用：${shortcuts}`,
   sensitive: {
-    prompt: (plugin: string, action: string) => `${plugin} 想${action}`,
-    allow: "允许",
-    once: "本次",
-    deny: "拒绝",
-    action: {
-      "todos:read": "读取待办",
-      "todos:write": "修改待办",
-      "notes:read": "读取笔记",
-      "notes:write": "修改笔记",
-      "agent-status:read": "读取 AI Agent 状态",
-      "agent-status:write": "报告 AI Agent 状态",
-      "island:notify": "在岛上显示通知",
-      secrets: "保存自己的密钥",
-      "media:control": "控制媒体播放",
-      "clipboard:read": "读取剪贴板历史",
-      "messages:read": "读取消息提醒",
-      "media:read": "读取正在播放的内容",
-      "shelf:read": "读取文件中转列表",
-      "shelf:write": "修改文件中转列表",
-      windows: "新建自己的窗口",
-      uri: "处理网页或其他程序打开的 fuyu:// 链接",
-    },
+    ...pluginViewsZh.sensitivePrompt,
     title: "需要询问的权限",
     hint: "插件第一次使用敏感权限、申请可选权限或收到链接时，岛上会询问你。撤销后，下次会再问一次。",
     allowed: "已允许",
@@ -487,14 +476,6 @@ export const zhCN: SettingsPluginsText = {
     infoWhenRunning: "插件运行后，会在这里显示它提供的信息。",
     settings: "设置",
     noSettings: "这个插件没有可以调整的设置。",
-    pets: {
-      unset: "未选择（显示眼睛）",
-      none: "没有找到宠物（显示眼睛）",
-      failed: "读不到宠物列表（显示眼睛）",
-      loading: "正在读取宠物…",
-      missing: (id) => `${id}（已找不到）`,
-      app: "本应用",
-    },
     actions: "操作",
     copy: "复制",
     copied: "已复制",
@@ -614,7 +595,9 @@ export const zhCN: SettingsPluginsText = {
     group: "cc-connect 手机连接",
     groupHint: "让手机推送经 cc-connect 的机器人发到 Telegram、Discord 或飞书：Agent 等你时把问题、计划或回复连同接管命令发到手机，在手机上回 /cd、/switch 就能接着这个会话答。没装 cc-connect 也行：这里可以下载它、一步步建好机器人，并由岛让它一直运行。在 设置 → 插件（第 3 版）里关掉内置插件「cc-connect 手机连接」，这一节和推送的 cc-connect 通道一起停用。",
     path: "cc-connect 程序路径",
-    pathHint: "留空自动找：正在运行的 cc-connect、PATH（npm i -g cc-connect 装在这里）、这里下载的那份，再看 C、D 盘 Program Files 和 Program Files (x86) 下的 cc-connect 文件夹。不搜全盘。",
+    pathHint: isMacOS
+      ? "留空自动找：正在运行的 cc-connect、PATH（npm i -g cc-connect 装在这里）、这里下载的那份，再看 ~/.local/bin、/opt/homebrew/bin、/usr/local/bin 和登录 shell 的 PATH。不搜全盘。"
+      : "留空自动找：正在运行的 cc-connect、PATH（npm i -g cc-connect 装在这里）、这里下载的那份，再看 C、D 盘 Program Files 和 Program Files (x86) 下的 cc-connect 文件夹。不搜全盘。",
     run: "由岛启动 cc-connect",
     runHint: "岛开着时让 cc-connect 在后台一直运行（不弹窗口，退出岛时一起退出）。已经在别处运行的 cc-connect 不接管。",
     title: "找到的 cc-connect",
@@ -702,9 +685,20 @@ export const zhCN: SettingsPluginsText = {
     },
   },
   sshTunnel: {
-    title: "主机",
-    hint: "主机来自 ~/.ssh/config 和 AI Agent → 远程电脑里添加的电脑。每台填一个服务器上的端口（1024–65535，别和别人的隧道重复），打开后在服务器上运行下面那行 export 就能用这里的代理。",
-    empty: "没有主机：在 ~/.ssh/config 里写 Host，或在 AI Agent → 远程电脑里添加。",
+    group: "SSH 代理隧道",
+    groupHint: "把这台电脑的代理借给 SSH 服务器：为下面打开的每台主机常驻一条 ssh 反向隧道（服务器上的 127.0.0.1:端口 → 这里的本地代理），服务器上设好 http_proxy 就能经这里上网。只用密钥登录，断开后自动重连；在 设置 → 插件（第 3 版）里关掉内置插件「SSH 代理隧道」或退出岛屿时，隧道一起结束。",
+    localProxy: "本地代理",
+    localProxyHint: "自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和 Windows 系统代理，再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。",
+    localProxyOptions: {
+      auto: "自动检测",
+      "clash-verge": "Clash Verge（默认 7897）",
+      v2rayn: "v2rayN（默认 10808）",
+      custom: "自定义端口",
+    },
+    customPort: "本地端口",
+    title: "隧道主机",
+    hint: "主机来自 ~/.ssh/config 和上面添加的主机。每台填一个服务器上的端口（1024–65535，别和别人的隧道重复），打开后在服务器上运行下面那行 export 就能用这里的代理。",
+    empty: "没有主机：在 ~/.ssh/config 里写 Host，或在上面添加一台。",
     port: "服务器端口",
     portInvalid: "端口要是 1024–65535 的整数",
     needsPort: "先填服务器端口",
@@ -724,6 +718,7 @@ export const zhCN: SettingsPluginsText = {
     no: "否",
     proxy: {
       label: "本地代理",
+      current: "当前转发到",
       looking: "正在查找本地代理…",
       found: {
         clashVerge: "端口来自 Clash Verge 的设置",
@@ -735,6 +730,31 @@ export const zhCN: SettingsPluginsText = {
       },
       listening: "，代理正在监听。",
       notListening: "，但现在没有程序在监听这个端口：请打开代理软件。",
+    },
+  },
+  centerPattern: {
+    group: "中心图案",
+    groupHint: "收起的岛上没有文字时，在中间显示一个小动画（只有剩余待办数时排在待办数前面）；显示 Agent 标题时，宠物或悬岛标志站在标题前代替 Agent 图标。在 设置 → 插件（第 3 版）里关掉内置插件「中心图案」可停用。",
+    pattern: "图案",
+    patterns: {
+      eyes: "眼睛",
+      bird: "小鸟",
+      orb: "光点",
+      cat: "小猫",
+      mark: "悬岛",
+      pet: "宠物",
+    },
+    pet: "宠物",
+    petHint: "图案选「宠物」时显示哪一只，默认小八（xiaoba）。宠物包（pet.json + spritesheet）放在 ~/.codex/pets 或应用数据目录的 pets 文件夹里；找不到时显示眼睛。",
+    size: "大小（像素）",
+    sizeHint: "图案的高度，默认 24，和收起条上的环一样高；悬岛量的是胶囊，宠物比它高 4。",
+    pets: {
+      unset: "未选择（显示眼睛）",
+      none: "没有找到宠物（显示眼睛）",
+      failed: "读不到宠物列表（显示眼睛）",
+      loading: "正在读取宠物…",
+      missing: (id) => `${id}（已找不到）`,
+      app: "本应用",
     },
   },
 };
@@ -798,28 +818,7 @@ export const en: SettingsPluginsText = {
   needsApproval: "The new version asks for more permissions, so it is paused. Switch it off and on to allow them.",
   keybindingConflict: (shortcuts: string) => `Shortcut already in use by another app: ${shortcuts}`,
   sensitive: {
-    prompt: (plugin: string, action: string) => `${plugin} wants to ${action}`,
-    allow: "Allow",
-    once: "Once",
-    deny: "Deny",
-    action: {
-      "todos:read": "read your todos",
-      "todos:write": "change your todos",
-      "notes:read": "read your note",
-      "notes:write": "change your note",
-      "agent-status:read": "read AI agent statuses",
-      "agent-status:write": "report AI agent statuses",
-      "island:notify": "show notifications on the island",
-      secrets: "keep its own secrets",
-      "media:control": "control media playback",
-      "clipboard:read": "read your clipboard history",
-      "messages:read": "read your message alerts",
-      "media:read": "see what is playing",
-      "shelf:read": "read the file shelf",
-      "shelf:write": "change the file shelf",
-      windows: "open windows of its own",
-      uri: "handle a fuyu:// link opened by a web page or another app",
-    },
+    ...pluginViewsEn.sensitivePrompt,
     title: "Permissions the island asks about",
     hint: "The island asks you the first time a plugin uses a sensitive permission, asks for an optional one, or receives a link. After you revoke an answer, it asks again.",
     allowed: "Allowed",
@@ -903,14 +902,6 @@ export const en: SettingsPluginsText = {
     infoWhenRunning: "Once the plugin runs, what it shares appears here.",
     settings: "Settings",
     noSettings: "This plugin has no settings.",
-    pets: {
-      unset: "None (shows the eyes)",
-      none: "No pets found (shows the eyes)",
-      failed: "Could not read the pets (shows the eyes)",
-      loading: "Reading pets…",
-      missing: (id) => `${id} (missing)`,
-      app: "this app",
-    },
     actions: "Actions",
     copy: "Copy",
     copied: "Copied",
@@ -1030,7 +1021,9 @@ export const en: SettingsPluginsText = {
     group: "cc-connect phone link",
     groupHint: "Sends the phone push through cc-connect's bots on Telegram, Discord or Feishu: when an agent waits for you, its question, plan or reply goes to your phone with the commands to take the session over there (/cd, /switch). No cc-connect yet? Download it here, set a bot up step by step, and the island keeps it running. Switching off the built-in plugin \"cc-connect phone link\" under Settings → Plugins (v3) turns this section and the push's cc-connect channel off.",
     path: "cc-connect program",
-    pathHint: "Leave empty to find it: the running cc-connect, PATH (where npm i -g cc-connect puts it), the one downloaded here, then a cc-connect folder in Program Files or Program Files (x86) on C: and D:. The disks are not searched.",
+    pathHint: isMacOS
+      ? "Leave empty to find it: the running cc-connect, PATH (where npm i -g cc-connect puts it), the one downloaded here, then ~/.local/bin, /opt/homebrew/bin, /usr/local/bin and a login shell's PATH. The disk is not searched."
+      : "Leave empty to find it: the running cc-connect, PATH (where npm i -g cc-connect puts it), the one downloaded here, then a cc-connect folder in Program Files or Program Files (x86) on C: and D:. The disks are not searched.",
     run: "Keep cc-connect running",
     runHint: "While the island runs, cc-connect runs in the background too (no window, it ends with the island). A cc-connect started elsewhere is left alone.",
     title: "cc-connect found",
@@ -1118,9 +1111,20 @@ export const en: SettingsPluginsText = {
     },
   },
   sshTunnel: {
-    title: "Hosts",
-    hint: "Hosts come from ~/.ssh/config and the computers added under AI Agent → Remote computers. Give each a port on the server (1024–65535, not one another tunnel uses); once it is on, run the export line below on the server to use the proxy here.",
-    empty: "No hosts: add a Host to ~/.ssh/config, or a computer under AI Agent → Remote computers.",
+    group: "SSH proxy tunnel",
+    groupHint: "Lends this computer's proxy to SSH servers: for each host switched on below, a resident ssh reverse tunnel (127.0.0.1:port on the server to the local proxy here), so the server reaches the internet through here once http_proxy is set there. Key login only, and it reconnects after a drop; switching off the built-in plugin \"SSH proxy tunnel\" under Settings → Plugins (v3) or quitting the island ends the tunnels.",
+    localProxy: "Local proxy",
+    localProxyHint: "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the Windows system proxy, then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none.",
+    localProxyOptions: {
+      auto: "Auto",
+      "clash-verge": "Clash Verge (7897 by default)",
+      v2rayn: "v2rayN (10808 by default)",
+      custom: "Custom port",
+    },
+    customPort: "Local port",
+    title: "Tunnel hosts",
+    hint: "Hosts come from ~/.ssh/config and the hosts added above. Give each a port on the server (1024–65535, not one another tunnel uses); once it is on, run the export line below on the server to use the proxy here.",
+    empty: "No hosts: add a Host to ~/.ssh/config, or add one above.",
     port: "Server port",
     portInvalid: "The port must be a whole number from 1024 to 65535",
     needsPort: "Set the server port first",
@@ -1140,6 +1144,7 @@ export const en: SettingsPluginsText = {
     no: "No",
     proxy: {
       label: "Local proxy",
+      current: "Forwarding to",
       looking: "Looking for the local proxy…",
       found: {
         clashVerge: "Port from Clash Verge's settings",
@@ -1151,6 +1156,31 @@ export const en: SettingsPluginsText = {
       },
       listening: "; the proxy is listening.",
       notListening: ", but nothing listens on it now: start the proxy app.",
+    },
+  },
+  centerPattern: {
+    group: "Center pattern",
+    groupHint: "When the collapsed island shows no text, a small animation sits in its middle (ahead of an idle to-do count when that is all there is); while an agent title shows, the pet or the island mark stands before it in place of the agent icon. Switch off the built-in plugin \"Center pattern\" under Settings → Plugins (v3) to turn this off.",
+    pattern: "Pattern",
+    patterns: {
+      eyes: "Eyes",
+      bird: "Bird",
+      orb: "Light",
+      cat: "Cat",
+      mark: "Island mark",
+      pet: "Pet",
+    },
+    pet: "Pet",
+    petHint: "Which pet the Pet pattern shows; xiaoba by default. Pet packs (pet.json + spritesheet) go in ~/.codex/pets or the pets folder of the app data directory; without one the eyes show.",
+    size: "Size (px)",
+    sizeHint: "How tall the pattern is; 24 by default, as tall as the rings on the collapsed bar. For the island mark it is the pill; a pet is 4 taller.",
+    pets: {
+      unset: "None (shows the eyes)",
+      none: "No pets found (shows the eyes)",
+      failed: "Could not read the pets (shows the eyes)",
+      loading: "Reading pets…",
+      missing: (id) => `${id} (missing)`,
+      app: "this app",
     },
   },
 };

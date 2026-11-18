@@ -11,6 +11,7 @@ use std::{
 use crate::{
     agent_status::{remote_fetch::write_island_config, remote_hosts::SshTarget},
     system::CREATE_NO_WINDOW,
+    user_error::UserError,
     win32::job::{self, Job},
 };
 
@@ -85,9 +86,9 @@ pub(super) fn hear(line: &str) -> Heard {
 pub(super) const PORT_CHECK_SCRIPT: &str =
     "PATH=\"$PATH:/usr/sbin:/sbin\"\nss -ltn 2>/dev/null || netstat -ltn 2>/dev/null || echo FUYU_NO_PORT_TOOL\n";
 
-pub(super) fn port_listening(output: &str, port: u16) -> Result<bool, String> {
+pub(super) fn port_listening(output: &str, port: u16) -> Result<bool, UserError> {
     if output.contains("FUYU_NO_PORT_TOOL") {
-        return Err("Neither ss nor netstat runs on the server".into());
+        return Err(UserError::new("sshTunnel.noPortTool", "Neither ss nor netstat runs on the server."));
     }
     let suffix = format!(":{port}");
     Ok(output.lines().any(|line| line.split_whitespace().any(|field| field.ends_with(&suffix))))

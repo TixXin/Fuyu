@@ -14,6 +14,8 @@
 .settings-overview [data-feature="clipboard"] { --feature-tone: #f5b544; }
 .settings-overview [data-feature="shelf"] { --feature-tone: #3cc8c8; }
 .settings-overview [data-feature="screenshot"] { --feature-tone: #a98bff; }
+.settings-overview [data-feature="voiceInput"] { --feature-tone: #4fd1c5; }
+.settings-overview [data-feature="behaviorAlerts"] { --feature-tone: #f78c6c; }
 .settings-overview [data-feature="agents"] { --feature-tone: #ff9f43; }
 .settings-overview [data-feature="messages"] { --feature-tone: #6fd26b; }
 

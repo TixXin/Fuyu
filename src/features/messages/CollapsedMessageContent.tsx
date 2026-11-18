@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { isImSource } from "./im-sources/imSourcesState";
 import { MessageSourceIcon } from "./MessageSourceIcon";
 import { messagePreviewText, type MessagePreview } from "./messagePreview";
 import { useTranslation } from "../../i18n";
@@ -15,16 +16,17 @@ type ContentTransition = {
 
 function MessageContent({ preview, bodyOnly }: { preview: MessagePreview; bodyOnly: boolean }) {
   const t = useTranslation();
+  const richIm = preview.source !== "plugin" && isImSource(preview.source) && preview.kind !== "flash";
   if (bodyOnly) {
-    const ownBody = preview.source === "qq" || (preview.source === "wechat" && preview.chat) || (preview.source === "plugin" && preview.body.trim());
+    const ownBody = preview.source === "qq" || richIm || (preview.source === "wechat" && preview.chat) || (preview.source === "plugin" && preview.body.trim());
     const body = ownBody ? preview.body.trim() || t.messages.newMessage : messagePreviewText(preview, t.messages);
     return <span className="island-message-preview__body">{body}</span>;
   }
   return <>
     <MessageSourceIcon source={preview.source} size={16} account={preview.account} iconUrl={preview.iconUrl} />
-    {preview.source === "qq" || (preview.source === "plugin" && preview.body.trim()) ? (
+    {preview.source === "qq" || richIm || (preview.source === "plugin" && preview.body.trim()) ? (
       <span className="island-message-preview__text">
-        <strong className="island-message-preview__sender">{preview.title.trim() || "QQ"}</strong>
+        <strong className="island-message-preview__sender">{preview.title.trim() || (preview.source === "qq" ? "QQ" : t.messages.sourceLabels[preview.source])}</strong>
         <span className="island-message-preview__separator" aria-hidden="true">·</span>
         <span className="island-message-preview__body">{preview.body.trim() || t.messages.newMessage}</span>
       </span>

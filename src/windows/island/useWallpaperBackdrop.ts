@@ -5,11 +5,16 @@ import { contrastBoost, sampleBox, wallpaperPlacement, type ScreenRect } from ".
 import { frostImage, loadImage, regionLuminance, type Frosted } from "./wallpaperFrost";
 
 type Island = ScreenRect & { scale: number };
+type LocalBox = { left: number; top: number; width: number; height: number; scale: number };
 
 function colorLuminance(hex: string) {
   const value = Number.parseInt(hex.slice(1), 16);
   const linear = (channel: number) => (channel / 255) ** 2.2;
   return 0.2126 * linear((value >> 16) & 255) + 0.7152 * linear((value >> 8) & 255) + 0.0722 * linear(value & 255);
+}
+
+function sameIsland(a: Island | null, b: Island): boolean {
+  return a !== null && a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height && a.scale === b.scale;
 }
 
 export type WallpaperBackdrop = Record<string, string>;
@@ -68,32 +73,66 @@ export function useWallpaperBackdrop({
     if (!enabled || !element) return;
     const appWindow = getCurrentWindow();
     let origin = { x: 0, y: 0 };
+    let localBox: LocalBox | null = null;
+    let needsBox = true;
+    let frame = 0;
     let alive = true;
-    const measure = () => {
-      if (!alive) return;
+
+    const readBox = () => {
       const box = element.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
       const scale = element.offsetWidth ? box.width / element.offsetWidth : 1;
-      setIsland({ x: origin.x + box.left * dpr, y: origin.y + box.top * dpr, width: box.width * dpr, height: box.height * dpr, scale: scale * dpr });
+      localBox = { left: box.left, top: box.top, width: box.width, height: box.height, scale };
+      needsBox = false;
     };
-    const moveTo = (position: { x: number; y: number } | undefined) => {
+
+    const commit = () => {
+      if (!alive) return;
+      if (needsBox || !localBox) readBox();
+      if (!localBox) return;
+      const dpr = window.devicePixelRatio || 1;
+      const next: Island = {
+        x: origin.x + localBox.left * dpr,
+        y: origin.y + localBox.top * dpr,
+        width: localBox.width * dpr,
+        height: localBox.height * dpr,
+        scale: localBox.scale * dpr,
+      };
+      setIsland((prev) => (sameIsland(prev, next) ? prev : next));
+    };
+
+    const schedule = (reReadBox: boolean) => {
+      if (reReadBox) needsBox = true;
+      if (frame !== 0) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        commit();
+      });
+    };
+
+    const initPosition = (position: { x: number; y: number } | undefined) => {
       origin = position ? { x: position.x, y: position.y } : origin;
-      measure();
+      commit();
     };
-    void appWindow.innerPosition().then(moveTo, () => moveTo(undefined));
-    const stopMoved = appWindow.onMoved(({ payload }) => moveTo(payload));
-    const stopScale = appWindow.onScaleChanged(() => measure());
-    const observer = new ResizeObserver(measure);
+    const onLayoutChange = () => schedule(true);
+
+    void appWindow.innerPosition().then(initPosition, () => initPosition(undefined));
+    const stopMoved = appWindow.onMoved(({ payload }) => {
+      if (payload) origin = { x: payload.x, y: payload.y };
+      schedule(false);
+    });
+    const stopScale = appWindow.onScaleChanged(onLayoutChange);
+    const observer = new ResizeObserver(onLayoutChange);
     observer.observe(element);
-    document.addEventListener("transitionend", measure);
-    document.addEventListener("animationend", measure);
+    document.addEventListener("transitionend", onLayoutChange);
+    document.addEventListener("animationend", onLayoutChange);
     return () => {
       alive = false;
+      if (frame !== 0) window.cancelAnimationFrame(frame);
       void stopMoved.then((unlisten) => unlisten(), () => {});
       void stopScale.then((unlisten) => unlisten(), () => {});
       observer.disconnect();
-      document.removeEventListener("transitionend", measure);
-      document.removeEventListener("animationend", measure);
+      document.removeEventListener("transitionend", onLayoutChange);
+      document.removeEventListener("animationend", onLayoutChange);
     };
   }, [enabled, target]);
 

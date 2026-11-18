@@ -26,6 +26,7 @@ import type { OnboardingText } from "./sections/onboarding";
 import type { ErrorsText } from "./sections/errors";
 import type { VoiceInputText } from "./sections/voiceInput";
 import type { TrayMenuText } from "./sections/trayMenu";
+import type { SyncText } from "./sections/sync";
 
 export type LocaleCode = "zh-CN" | "en";
 
@@ -71,4 +72,5 @@ export type Translations = {
   errors: ErrorsText;
   voiceInput: VoiceInputText;
   trayMenu: TrayMenuText;
+  sync: SyncText;
 };

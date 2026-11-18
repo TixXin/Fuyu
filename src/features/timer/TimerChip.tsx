@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BellRing, Timer as TimerIcon, Watch } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { requestTimerPage, useTimers } from "./store";
 import { clockText, shownMs, shownTimer, type Timer } from "./timers";
 import "./TimerChip.css";
@@ -18,8 +19,7 @@ export function TimerChip({ paused }: { paused: boolean }) {
   useEffect(() => {
     setNow(Date.now());
     if (paused) return;
-    const id = window.setInterval(() => setNow(Date.now()), 500);
-    return () => window.clearInterval(id);
+    return visibilityInterval(() => setNow(Date.now()), 500);
   }, [paused, timers]);
   const timer = shownTimer(timers, now);
   if (!timer) return null;

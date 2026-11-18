@@ -7,6 +7,7 @@ import type { CalendarEvent, CalendarSnapshot } from "../../src/features/calenda
 import { CalendarPanel } from "../../src/features/calendar/CalendarPanel";
 import { MeetingLine } from "../../src/features/calendar/MeetingLine";
 import { CalendarSourcesSection } from "../../src/features/calendar/CalendarSourcesSection";
+import { until } from "./pollUntil";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const at = (dayOffset: number, hours: number, minutes = 0) => {
@@ -54,7 +55,6 @@ function check(condition: unknown, label: string) {
   if (!condition) throw new Error(label);
   messages.push(`PASS ${label}`);
 }
-const wait = () => new Promise((resolve) => setTimeout(resolve, 40));
 const setInput = (input: HTMLInputElement, value: string) => {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
   setter.call(input, value);
@@ -67,7 +67,6 @@ try {
   const panel = createRoot(document.getElementById("panel")!);
   await act(async () => {
     panel.render(<StrictMode><I18nProvider><CalendarPanel snapshot={SNAPSHOT} now={now} onRefresh={() => (refreshed += 1)} onOpenSettings={() => (settingsOpened += 1)} /></I18nProvider></StrictMode>);
-    await wait();
   });
   const days = [...document.querySelectorAll<HTMLElement>(".calendar-day")];
   const titles = (day: HTMLElement) => [...day.querySelectorAll(".calendar-event__title")].map((title) => title.textContent);
@@ -81,7 +80,8 @@ try {
   check(title.scrollWidth > title.clientWidth && document.getElementById("panel")!.scrollWidth <= 640, "长标题单行省略，不撑宽页面");
   const joinButton = rows[2].querySelector<HTMLButtonElement>(".calendar-event__join")!;
   check(joinButton.getAttribute("aria-label") === "加入「设计评审：日历页、会前倒计时和加入会议按钮的最终方案确认与排期」的会议", "加入按钮的读屏文字说明是哪个会议");
-  await act(async () => { joinButton.click(); await wait(); });
+  await act(async () => { joinButton.click(); });
+  await until(() => calls.some((call) => call.command === "plugin:opener|open_url" && JSON.stringify(call.payload).includes("vc.feishu.cn/j/123")));
   check(calls.some((call) => call.command === "plugin:opener|open_url" && JSON.stringify(call.payload).includes("vc.feishu.cn/j/123")), "点加入打开会议链接");
   check(refreshed >= 1, "打开日历页时重新读取日历");
   check(document.querySelector(".calendar-panel__status")?.textContent === "1 个日历没读到，到设置里看看", "有日历读不到时在顶部提示");
@@ -93,16 +93,16 @@ try {
   const lastCell = cells()[41].getBoundingClientRect();
   check(lastCell.bottom <= panelRect.bottom + 0.5 && lastCell.right <= panelRect.right + 0.5, "月历整个放得下，不溢出面板");
   const tomorrowCell = cells()[cells().indexOf(todayCell()) + 1];
-  await act(async () => { tomorrowCell.click(); await wait(); });
+  await act(async () => { tomorrowCell.click(); });
   const picked = [...document.querySelectorAll<HTMLElement>(".calendar-day")];
   check(picked.length === 1 && !picked[0].querySelector("h3")?.textContent?.startsWith("今天") && titles(picked[0]).join("|") === "1:1", "点某一天，左边只列那天的日程");
   const back = document.querySelector<HTMLButtonElement>(".calendar-month__today")!;
   check(back?.textContent === "今天", "离开今天后出现回到今天的按钮");
   const monthTitle = () => document.querySelector(".calendar-month__title")?.textContent;
   const shownMonth = monthTitle();
-  await act(async () => { document.querySelectorAll<HTMLButtonElement>(".calendar-month__turn")[1].click(); await wait(); });
+  await act(async () => { document.querySelectorAll<HTMLButtonElement>(".calendar-month__turn")[1].click(); });
   check(monthTitle() !== shownMonth, "可以翻到下个月");
-  await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-month__today")!.click(); await wait(); });
+  await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-month__today")!.click(); });
   check(monthTitle() === shownMonth && document.querySelectorAll(".calendar-day").length === 2, "回到今天：月份和今天、明天两组都回来");
 
   const dateOf = (offset: number) => { const day = new Date(at(offset, 0)); return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`; };
@@ -111,7 +111,6 @@ try {
   await act(async () => {
     panel.render(<StrictMode><I18nProvider><CalendarPanel snapshot={SNAPSHOT} now={now} onRefresh={() => {}} onOpenSettings={() => {}}
       todos={{ scheduled, onAdd: (title, date) => addedTodos.push(`${date} ${title}`) }} /></I18nProvider></StrictMode>);
-    await wait();
   });
   const tomorrowGroup = document.querySelectorAll<HTMLElement>(".calendar-day")[1];
   const todoRows = [...tomorrowGroup.querySelectorAll<HTMLElement>(".calendar-event--todo")];
@@ -121,46 +120,47 @@ try {
   check(todayCell().nextElementSibling?.querySelector(".calendar-month__dot") || tomorrowCell.querySelector(".calendar-month__dot"), "月历上有计划待办的日子有圆点");
   const todoInputs = () => [...document.querySelectorAll<HTMLInputElement>(".calendar-todo-input input")];
   check(todoInputs().length === 2 && todoInputs()[1].getAttribute("aria-label")?.startsWith("给 明天 · "), "今天和明天下面各有一行添加待办，读屏写出是哪天");
-  await act(async () => { setInput(todoInputs()[1], "交周报"); await wait(); });
-  await act(async () => { todoInputs()[1].form!.requestSubmit(); await wait(); });
-  await act(async () => { setInput(todoInputs()[0], "  "); await wait(); });
-  await act(async () => { todoInputs()[0].form!.requestSubmit(); await wait(); });
+  await act(async () => { setInput(todoInputs()[1], "交周报"); });
+  await act(async () => { todoInputs()[1].form!.requestSubmit(); });
+  await act(async () => { setInput(todoInputs()[0], "  "); });
+  await act(async () => { todoInputs()[0].form!.requestSubmit(); });
   check(addedTodos.join("|") === `${dateOf(1)} 交周报` && todoInputs()[1].value === "", "回车把待办加到那一天，输入框清空；空白不加");
   const yesterdayCell = cells()[cells().indexOf(todayCell()) - 1];
-  await act(async () => { yesterdayCell.click(); await wait(); });
+  await act(async () => { yesterdayCell.click(); });
   check(document.querySelectorAll(".calendar-day").length === 1 && todoInputs().length === 0, "过去的日子没有添加待办");
-  await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-month__today")!.click(); await wait(); });
+  await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-month__today")!.click(); });
 
   let added = 0;
   const empty = { ...SNAPSHOT, events: [], problems: [], sourceCount: 0 };
   await act(async () => {
     panel.render(<StrictMode><I18nProvider><CalendarPanel snapshot={empty} now={now} onRefresh={() => (added += 1)} onOpenSettings={() => (settingsOpened += 1)} /></I18nProvider></StrictMode>);
-    await wait();
   });
   const emptyButtons = [...document.querySelectorAll<HTMLButtonElement>(".calendar-empty__actions button")];
   check(document.querySelector(".calendar-empty strong")?.textContent === "还没有日历" && emptyButtons.map((button) => button.textContent).join("|") === "订阅中国节假日|添加工作日历",
     "没加日历时，日历页说明怎么加，并能一键订阅节假日");
   const before = added;
-  await act(async () => { emptyButtons[0].click(); await wait(); await wait(); });
+  await act(async () => { emptyButtons[0].click(); });
+  await until(() => added > before);
   check(calls.some((call) => call.command === "add_calendar_source" && call.payload.secret === "https://calendars.icloud.com/holidays/cn_zh.ics") && added > before, "点订阅节假日后重新读取日历");
-  await act(async () => { emptyButtons[1].click(); await wait(); });
+  await act(async () => { emptyButtons[1].click(); });
   check(settingsOpened >= 1, "点添加工作日历打开设置");
   sources = sources.filter((source) => source.host !== "calendars.icloud.com");
 
   const line = createRoot(document.getElementById("line")!);
   const upcoming = { event: EVENTS[2], minutes: 8 };
-  await act(async () => { line.render(<I18nProvider><MeetingLine meeting={upcoming} showTitle /></I18nProvider>); await wait(); });
+  await act(async () => { line.render(<I18nProvider><MeetingLine meeting={upcoming} showTitle /></I18nProvider>); });
   const lineTitle = document.querySelector<HTMLElement>(".island-meeting__title")!;
   check(lineTitle.scrollWidth > lineTitle.clientWidth && document.querySelector(".island-meeting__when")?.textContent === "· 8 分钟后", "收起的岛上：标题省略，倒计时始终完整");
-  await act(async () => { line.render(<I18nProvider><MeetingLine meeting={{ event: EVENTS[2], minutes: 0 }} showTitle={false} /></I18nProvider>); await wait(); });
+  await act(async () => { line.render(<I18nProvider><MeetingLine meeting={{ event: EVENTS[2], minutes: 0 }} showTitle={false} /></I18nProvider>); });
   check(document.querySelector(".island-meeting")?.textContent === "会议· 已开始" && document.querySelector(".island-meeting--started"), "不显示标题时只写「会议」，开始后写「已开始」");
 
   const settings = createRoot(document.getElementById("settings")!);
-  await act(async () => { settings.render(<I18nProvider><CalendarSourcesSection /></I18nProvider>); await wait(); });
+  await act(async () => { settings.render(<I18nProvider><CalendarSourcesSection /></I18nProvider>); });
+  await until(() => document.querySelector(".settings-row__title")?.textContent === "飞书");
   check(document.querySelector(".settings-row__title")?.textContent === "飞书" && document.body.textContent?.includes("u_abc · caldav.feishu.cn"), "列出已添加的日历，只显示账号和网站");
   check(!document.querySelector(".calendar-form"), "已经有日历时，添加表单先收着");
   const openForm = async () => {
-    if (!document.querySelector(".calendar-form")) await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "添加日历")!.click(); await wait(); });
+    if (!document.querySelector(".calendar-form")) await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "添加日历")!.click(); });
   };
   await openForm();
   const addButton = () => document.querySelector<HTMLButtonElement>(".calendar-form__add")!;
@@ -169,37 +169,43 @@ try {
   const steps = () => document.querySelector(".calendar-form__steps")?.textContent ?? "";
   const pick = async (label: string) => {
     await openForm();
-    await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-form .select-control__trigger, .settings-row .select-control__trigger")!.click(); await wait(); });
+    await act(async () => { document.querySelector<HTMLButtonElement>(".calendar-form .select-control__trigger, .settings-row .select-control__trigger")!.click(); });
     const option = [...document.querySelectorAll<HTMLElement>(".select-control__option")].find((item) => item.textContent?.startsWith(label))!;
-    await act(async () => { option.click(); await wait(); });
+    await act(async () => { option.click(); });
   };
   check(labels() === "账号|密码|名称（可不填）" && steps().includes("CalDAV 同步") && addButton().disabled, "默认选飞书：服务器自动填好，只要账号和密码，并写出在飞书里怎么拿");
-  await act(async () => { setInput(inputs()[0], "u_new"); setInput(inputs()[1], "pw"); await wait(); });
-  await act(async () => { addButton().click(); await wait(); await wait(); });
+  await act(async () => { setInput(inputs()[0], "u_new"); setInput(inputs()[1], "pw"); });
+  await act(async () => { addButton().click(); });
+  await until(() => !document.querySelector(".calendar-form"));
   const feishu = calls.filter((call) => call.command === "add_calendar_source").pop()!.payload;
   check(feishu.kind === "caldav" && feishu.url === "https://caldav.feishu.cn" && feishu.name === "飞书" && feishu.secret === "pw", "选飞书时自动用飞书的服务器，名称不填就叫飞书");
   await pick("企业微信");
   check(labels() === "服务器地址|账号|密码|名称（可不填）", "企业微信的服务器要从企业微信里复制，所以多一个服务器地址");
   await pick("Google");
   check(labels() === "订阅链接|名称（可不填）" && inputs()[0].type === "password" && steps().includes("iCal"), "Google 日历只要订阅链接，链接像密码一样遮住");
-  await act(async () => { setInput(inputs()[0], "wrong"); await wait(); });
-  await act(async () => { addButton().click(); await wait(); });
+  await act(async () => { setInput(inputs()[0], "wrong"); });
+  await act(async () => { addButton().click(); });
+  await until(() => Boolean(document.querySelector(".calendar-form__error")));
   check(document.querySelector(".calendar-form__error")?.textContent === "日历账号或密码不对。" && inputs()[0].value === "wrong", "读不到时说明原因，填的内容保留");
-  await act(async () => { setInput(inputs()[0], "webcal://calendar.google.com/x.ics"); await wait(); });
-  await act(async () => { addButton().click(); await wait(); await wait(); });
+  await act(async () => { setInput(inputs()[0], "webcal://calendar.google.com/x.ics"); });
+  await act(async () => { addButton().click(); });
+  await until(() => !document.querySelector(".calendar-form"));
   check(!document.querySelector(".calendar-form__error") && document.body.textContent?.includes("订阅 · calendar.google.com") && !document.querySelector(".calendar-form"), "添加成功后出现在列表里，表单收起");
   await pick("其他");
-  await act(async () => { setInput(inputs()[0], "https://dav.example.com"); await wait(); });
+  await act(async () => { setInput(inputs()[0], "https://dav.example.com"); });
   check(labels() === "地址或链接|账号|密码|名称（可不填）", "其他：粘贴服务器地址时要账号和密码");
-  await act(async () => { setInput(inputs()[0], "https://example.com/team.ics"); await wait(); });
+  await act(async () => { setInput(inputs()[0], "https://example.com/team.ics"); });
   check(labels() === "地址或链接|名称（可不填）", "其他：粘贴 .ics 链接时就不要账号密码");
   const holidays = [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((button) => button.textContent === "订阅中国节假日")!;
-  await act(async () => { holidays.click(); await wait(); await wait(); });
+  const beforeHolidays = calls.filter((call) => call.command === "add_calendar_source").length;
+  await act(async () => { holidays.click(); });
+  await until(() => calls.filter((call) => call.command === "add_calendar_source").length > beforeHolidays);
   const subscribed = calls.filter((call) => call.command === "add_calendar_source").pop()!.payload;
   check(subscribed.secret === "https://calendars.icloud.com/holidays/cn_zh.ics" && subscribed.name === "中国节假日", "一键订阅中国节假日，不用账号");
   const removeButton = document.querySelector<HTMLButtonElement>(".calendar-source__remove")!;
   check(removeButton.getAttribute("aria-label") === "删除日历「飞书」", "删除按钮的读屏文字说明删哪个日历");
-  await act(async () => { removeButton.click(); await wait(); await wait(); });
+  await act(async () => { removeButton.click(); });
+  await until(() => !document.body.textContent?.includes("u_abc"));
   check(!document.body.textContent?.includes("u_abc"), "删除后从列表消失");
 
   results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;

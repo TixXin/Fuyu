@@ -1,6 +1,5 @@
 import type { Translations } from "../../i18n";
-import { createTodoId } from "../../features/todos/index.ts";
-import { DEFAULT_SETTINGS, getDefaultSettingPresets, mergeWithDefaultSettingPresets, normalizeSettings } from "./settings.ts";
+import { createPresetId, DEFAULT_SETTINGS, getDefaultSettingPresets, mergeWithDefaultSettingPresets, normalizeSettings } from "./settings.ts";
 import { ISLAND_SETTINGS_KEY } from "./installState.ts";
 import { readString } from "../storage.ts";
 import type { IslandPreset, IslandSettings } from "./types";
@@ -58,7 +57,7 @@ export function loadSettingPresets(t: Translations): IslandPreset[] {
         id:
           typeof preset.id === "string" && preset.id
             ? preset.id
-            : createTodoId(),
+            : createPresetId(),
         name:
           typeof preset.name === "string" && preset.name.trim()
             ? preset.name.trim()

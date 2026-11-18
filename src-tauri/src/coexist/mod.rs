@@ -100,6 +100,8 @@ fn refresh_owners() {
     crate::agent_status::approval_hotkeys::coexist_refresh();
     crate::plugin_host::coexist_refresh();
     crate::timer::coexist_refresh();
+    crate::todos::coexist_refresh();
+    crate::calendar::coexist_refresh();
 }
 
 fn refresh_again_later() {

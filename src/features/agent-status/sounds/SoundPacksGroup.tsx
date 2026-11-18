@@ -1,6 +1,8 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { FolderOpen } from "lucide-react";
+import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
+import { SettingsInlineConfirm } from "../../../components/settings/SettingsInlineConfirm";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { useErrorText, useLocale, useTranslation } from "../../../i18n";
@@ -61,7 +63,6 @@ export function SoundPacksGroup({
   };
 
   const remove = (pack: SoundPack) => {
-    if (!window.confirm(text.confirmRemove(pack.name))) return;
     void removeSoundPack(pack.id)
       .then(() => onChanged())
       .catch((error: unknown) => setStatus({ kind: "error", text: errorText(error) }));
@@ -73,7 +74,7 @@ export function SoundPacksGroup({
 
   const footer = (
     <>
-      <p>{text.packsFooter}</p>
+      <SettingsFootnote text={text.packsFooter} />
       {status.kind === "done" && <p role="status">{status.text}</p>}
       {status.kind === "error" && <p className="sound-packs__error" role="alert">{status.text}</p>}
     </>
@@ -93,7 +94,16 @@ export function SoundPacksGroup({
                 <FolderOpen size={13} strokeWidth={2.2} aria-hidden="true" />
                 {isMacOS ? text.openFolderMac : text.openFolder}
               </SettingsLinkButton>
-              {!pack.fromPlugin && <SettingsLinkButton tone="danger" onClick={() => remove(pack)}>{text.removePack}</SettingsLinkButton>}
+              {!pack.fromPlugin && (
+                <SettingsInlineConfirm
+                  tone="danger"
+                  confirmLabel={text.removePackConfirm}
+                  hint={text.confirmRemove(pack.name)}
+                  onConfirm={() => remove(pack)}
+                >
+                  {text.removePack}
+                </SettingsInlineConfirm>
+              )}
             </span>
           }
         />

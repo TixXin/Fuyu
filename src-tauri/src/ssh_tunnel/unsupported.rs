@@ -1,15 +1,23 @@
+#[path = "background.rs"]
+mod background;
+
 use serde_json::{Map, Value};
 use tauri::AppHandle;
 
 pub fn init(_app: &AppHandle) -> Result<(), String> {
+    background::init();
     Ok(())
 }
 
-pub(crate) fn start(_settings: &Map<String, Value>) -> Result<(), String> {
-    Err(crate::user_error::unsupported().to_string())
+pub(super) fn start(_settings: &Map<String, Value>) -> Result<(), String> {
+    Ok(())
 }
 
-pub(crate) fn stop() {}
+pub(super) fn stop() {}
+
+pub(super) fn running() -> bool {
+    false
+}
 
 pub(crate) fn remote_proxy(_host: &str) -> Option<String> {
     None

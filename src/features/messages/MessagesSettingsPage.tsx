@@ -16,6 +16,9 @@ import { MailConnectForm } from "./mail/MailConnectForm";
 import { MAX_MAIL_ACCOUNTS } from "./mail/mailAccounts";
 import { loadMailAccounts } from "./mail/storage";
 import { useMailAccounts } from "./mail/useMailAccounts";
+import { ImSourcesSettingsSection } from "./im-sources/ImSourcesSettingsSection";
+import { IM_SOURCE_IDS } from "./im-sources/imSourcesState";
+import type { ImSourcesController } from "./im-sources/useImSources";
 import type { QQNotificationsController } from "./qq-notifications/QQNotifications";
 import { useMessageControllers } from "./settingsControllers";
 import type { WeChatRemindersController } from "./wechat/WeChatReminders";
@@ -27,11 +30,13 @@ import { SlotView } from "../plugin-kernel/SlotView";
 import { settingsSections } from "../plugin-kernel/settingsSlots";
 import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 import { OWNER } from "./plugin/owner.ts";
+import { setMessageOtpCopyEnabled, setSourceEnabled, useMailEnabled, useMessageOtpCopyEnabled } from "./plugin/useSourceSwitches";
 
 type MessagesSectionProps = {
   settings: IslandSettings;
   qqNotifications: QQNotificationsController;
   wechatReminders: WeChatRemindersController;
+  imSources: ImSourcesController;
   unsupported: ReadonlySet<PlatformFeature>;
   onSettingsChange: (settings: IslandSettings) => void;
 };
@@ -39,6 +44,7 @@ type MessagesSectionProps = {
 function NoticeSection({ settings, onSettingsChange }: MessagesSectionProps) {
   const t = useTranslation();
   const labels = t.settings.messageSources;
+  const otpCopyEnabled = useMessageOtpCopyEnabled();
 
   return (
     <SettingsGroup title={labels.noticeTitle} footer={<SettingsFootnote text={labels.noticeHint} />}>
@@ -68,6 +74,12 @@ function NoticeSection({ settings, onSettingsChange }: MessagesSectionProps) {
           }
         />
       )}
+      <SettingsToggleRow
+        title={labels.otpCopyLabel}
+        description={labels.otpCopyDescription}
+        checked={otpCopyEnabled}
+        onChange={(on) => void setMessageOtpCopyEnabled(on)}
+      />
     </SettingsGroup>
   );
 }
@@ -122,26 +134,39 @@ function WeChatSection({ wechatReminders, unsupported }: MessagesSectionProps) {
   );
 }
 
-const sections = settingsSections<MessagesSectionProps, "messages">();
+function ImOthersSection({ imSources }: MessagesSectionProps) {
+  return <ImSourcesSettingsSection imSources={imSources} />;
+}
+
+export type MessagesTab = "messages" | "messagesIm" | "messagesMail";
+
+const sections = settingsSections<MessagesSectionProps, MessagesTab>();
 
 sections.add({ id: "messages.notice", category: "messages", order: 10, component: NoticeSection }, OWNER);
-sections.add({ id: "messages.qq", category: "messages", order: 20, component: QQSection }, OWNER);
-sections.add({ id: "messages.wechat", category: "messages", order: 30, component: WeChatSection }, OWNER);
-sections.add({ id: "messages.mail", category: "messages", order: 40, component: MailGroups }, OWNER);
+sections.add({ id: "messagesIm.qq", category: "messagesIm", order: 20, component: QQSection }, OWNER);
+sections.add({ id: "messagesIm.wechat", category: "messagesIm", order: 30, component: WeChatSection }, OWNER);
+sections.add({ id: "messagesIm.others", category: "messagesIm", order: 35, component: ImOthersSection }, OWNER);
+sections.add({ id: "messagesMail.mail", category: "messagesMail", order: 40, component: MailGroups }, OWNER);
 
-export function MessagesSettingsPage(page: Omit<MessagesSectionProps, "qqNotifications" | "wechatReminders">) {
+export function MessagesSettingsPage({ tab, ...page }: Omit<MessagesSectionProps, "qqNotifications" | "wechatReminders" | "imSources"> & { tab: MessagesTab }) {
   const controllers = useMessageControllers();
   const t = useTranslation();
+  const mailOn = useMailEnabled(page.settings.mailEnabled);
   if (!controllers) return null;
   const props = { ...page, ...controllers };
-  const { settings, qqNotifications, wechatReminders, unsupported } = props;
+  const { qqNotifications, wechatReminders, imSources, unsupported } = props;
   const labels = t.settings.messageSources;
-  const sourcesOn = [!unsupported.has("qq") && qqNotifications.snapshot.enabled, !unsupported.has("wechat") && wechatReminders.snapshot.enabled, settings.mailEnabled].filter(Boolean).length;
+  const sourcesOn = [
+    !unsupported.has("qq") && qqNotifications.snapshot.enabled,
+    !unsupported.has("wechat") && wechatReminders.snapshot.enabled,
+    mailOn,
+    ...IM_SOURCE_IDS.map((id) => imSources.snapshots[id].enabled),
+  ].filter(Boolean).length;
 
   return (
     <>
       <FeatureHeader feature="messages" icon={settingsCategoryIcon("messages")} aside={labels.sourcesOn(sourcesOn)} />
-      <SlotView slot={sections} group="messages" props={props} />
+      <SlotView slot={sections} group={tab} props={props} />
     </>
   );
 }
@@ -189,8 +214,9 @@ function QQGroup({ controller, title, hint }: { controller: QQNotificationsContr
   );
 }
 
-function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; onSettingsChange: (settings: IslandSettings) => void }) {
+function MailGroups({ settings }: { settings: IslandSettings }) {
   const t = useTranslation();
+  const mailEnabled = useMailEnabled(settings.mailEnabled);
   const { mailboxes, busy, actionError, connect, setEnabled, disconnect, openHelp } = useMailAccounts({ restore: false });
   const [reauthorizing, setReauthorizing] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -201,14 +227,14 @@ function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; 
 
   return (
     <>
-      <SettingsGroup title={t.settings.categories.mail} footer={settings.mailEnabled ? <Problem error={actionError} hint={isMacOS ? t.mail.accountsHintMac : t.mail.accountsHint} /> : undefined}>
+      <SettingsGroup title={t.settings.categories.mail} footer={mailEnabled ? <Problem error={actionError} hint={isMacOS ? t.mail.accountsHintMac : t.mail.accountsHint} /> : undefined}>
         <SettingsToggleRow
           title={<SettingsIconTitle icon={<Mail size={15} strokeWidth={1.9} />} tone="var(--warning-text, #f2d27a)">{t.settings.modules.mail}</SettingsIconTitle>}
-          description={settings.mailEnabled ? labels.mailCount(mailboxes.length) : t.settings.modules.hint}
-          checked={settings.mailEnabled}
-          onChange={(mailEnabled) => onSettingsChange({ ...settings, mailEnabled })}
+          description={mailEnabled ? labels.mailCount(mailboxes.length) : t.settings.modules.hint}
+          checked={mailEnabled}
+          onChange={(on) => void setSourceEnabled("mail", on)}
         />
-        {settings.mailEnabled && mailboxes.length > 0 && (
+        {mailEnabled && mailboxes.length > 0 && (
           <div className="messages-settings__mailboxes">
             <MailAccountList
               mailboxes={mailboxes}
@@ -223,7 +249,7 @@ function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; 
             />
           </div>
         )}
-        {settings.mailEnabled && (target || adding) && !(full && !target) && (
+        {mailEnabled && (target || adding) && !(full && !target) && (
           <SettingsRow searchable={false} title={target ? t.mail.reauthorizeTitle(target) : t.mail.addTitle}>
             <MailConnectForm
               reauthorizing={target}
@@ -238,11 +264,24 @@ function MailGroups({ settings, onSettingsChange }: { settings: IslandSettings; 
             />
           </SettingsRow>
         )}
-        {settings.mailEnabled && !target && !adding && (
+        {mailEnabled && !target && !adding && (
           <SettingsRow
             searchable={false}
-            title={full ? <span className="messages-settings__muted">{t.mail.limitReached(MAX_MAIL_ACCOUNTS)}</span> : ""}
-            control={full ? null : <SettingsLinkButton onClick={() => setAdding(true)}><Plus size={13} strokeWidth={2.2} aria-hidden="true" />{t.mail.addTitle}</SettingsLinkButton>}
+            title={
+              full
+                ? <span className="messages-settings__muted">{t.mail.limitReached(MAX_MAIL_ACCOUNTS)}</span>
+                : mailboxes.length === 0
+                  ? <span className="messages-settings__muted">{t.mail.noMailbox}</span>
+                  : ""
+            }
+            control={
+              !full ? (
+                <SettingsLinkButton onClick={() => setAdding(true)}>
+                  <Plus size={13} strokeWidth={2.2} aria-hidden="true" />
+                  {t.mail.addTitle}
+                </SettingsLinkButton>
+              ) : undefined
+            }
           />
         )}
       </SettingsGroup>

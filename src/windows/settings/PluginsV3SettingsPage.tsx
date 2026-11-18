@@ -1,170 +1,250 @@
-import { useTranslation } from "../../i18n";
-import type { PluginV3State } from "../../i18n/sections/settings/pluginsV3";
-import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
-import { SettingsGroup } from "../../components/settings/SettingsGroup";
-import { SettingsRow } from "../../components/settings/SettingsRow";
-import { useState } from "react";
-import { exitPluginSafeMode } from "../../features/plugin-kernel/api";
-import { BuiltinPluginsGroup } from "./BuiltinPluginsGroup";
-import { PluginHostNodeRow } from "./PluginHostNodeRow";
-import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginStatusV3 } from "./usePluginHostStatus";
+import { useCallback, useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { Search, X } from "lucide-react";
+import { useErrorText, useTranslation } from "../../i18n";
+import { onPluginPackageOpen, takePendingPluginPackage, type BuiltinPlugin } from "../../features/plugin-kernel/api";
+import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
+import { BuiltinPluginsGroup, stateOf } from "./BuiltinPluginsGroup";
+import type { SettingsCategory } from "./categories";
+import { PluginBisectBar } from "./PluginBisectBar";
+import { PluginDetailModal } from "./PluginDetailModal";
+import { HostSummaryBar, megabytes, PluginDiagnosticsTab } from "./PluginDiagnosticsTab";
+import { PluginMarketV3Tab, type OpenedPluginPackage } from "./PluginMarketV3Tab";
+import { V2PluginMigrationCard } from "./V2PluginMigrationCard";
+import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView } from "./usePluginHostStatus";
 import "./PluginsV3SettingsPage.css";
 
-const STATES: readonly PluginV3State[] = ["running", "waiting", "failed", "disabled", "auto-disabled", "safe-mode", "loading", "stopped", "unloading"];
+export type PluginsV3Tab = "plugins" | "market" | "diagnostics";
 
-const TONES: Record<PluginV3State, string> = {
-  running: "ok",
-  waiting: "warn",
-  loading: "warn",
-  failed: "bad",
-  "auto-disabled": "bad",
-  "safe-mode": "info",
-  disabled: "off",
-  stopped: "off",
-  unloading: "off",
-};
+const TAB_ORDER: readonly PluginsV3Tab[] = ["plugins", "market", "diagnostics"];
 
-function stateOf(plugin: PluginStatusV3): PluginV3State {
-  return (STATES as readonly string[]).includes(plugin.state) ? (plugin.state as PluginV3State) : "loading";
-}
-
-function megabytes(bytes: number) {
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
-function milliseconds(ms: number) {
-  return ms >= 1000 ? `${(ms / 1000).toFixed(2)} s` : `${ms.toFixed(ms < 10 ? 2 : ms < 100 ? 1 : 0)} ms`;
-}
-
-function duration(ms: number) {
-  const seconds = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${seconds % 60}s` : `${seconds}s`;
-}
-
-function PluginCard({ plugin }: { plugin: PluginStatusV3 }) {
+function SearchInput({ query, onChange }: { query: string; onChange: (next: string) => void }) {
   const text = useTranslation().settings.pluginsV3;
-  const state = stateOf(plugin);
-  const usage = plugin.usage;
-  const blocked = plugin.blocked;
-  const detail =
-    state === "waiting" && plugin.waitingFor?.length ? text.waitingFor(plugin.waitingFor.join(", "))
-    : blocked?.by === "errors" ? text.autoDisabled(blocked.errors, Math.round(blocked.windowMs / 1000))
-    : blocked?.by === "safe-mode" ? text.heldBySafeMode(text.safeModes[blocked.mode])
-    : plugin.reason ?? plugin.error ?? null;
   return (
-    <div className={`plugins-v3__plugin plugins-v3__plugin--${TONES[state]}`} data-plugin={plugin.id} data-state={state}>
-      <div className="plugins-v3__plugin-head">
-        <span className="plugins-v3__plugin-name" title={plugin.name}>{plugin.id}</span>
-        {plugin.kind ? <span className="plugins-v3__kind">{text.kinds[plugin.kind]}</span> : null}
-        <span className="plugins-v3__state">{text.states[state]}</span>
-      </div>
-      {detail ? <p className="plugins-v3__detail">{detail}</p> : null}
-      {usage ? (
-        <dl className="plugins-v3__usage">
-          <div><dt>{text.cpu}</dt><dd title={text.calls(usage.calls)}>{milliseconds(usage.cpuMs)}</dd></div>
-          <div><dt>{text.apply}</dt><dd>{usage.applyMs === null ? "–" : milliseconds(usage.applyMs)}</dd></div>
-          <div><dt>{text.timers}</dt><dd>{usage.timers}</dd></div>
-          <div><dt>{text.listeners}</dt><dd>{usage.listeners}</dd></div>
-          <div><dt>{text.services}</dt><dd>{usage.services}</dd></div>
-          <div><dt>{text.clients}</dt><dd>{usage.clients}</dd></div>
-          <div className={usage.errors > 0 ? "plugins-v3__errors" : undefined}><dt>{text.errors}</dt><dd>{usage.errors}</dd></div>
-        </dl>
+    <label className="plugins-v3__search">
+      <Search size={13} strokeWidth={2.2} aria-hidden="true" />
+      <input
+        type="search"
+        value={query}
+        placeholder={text.searchPlaceholder}
+        aria-label={text.searchPlaceholder}
+        onChange={(event) => onChange(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && query) {
+            event.preventDefault();
+            onChange("");
+          }
+        }}
+      />
+      {query ? (
+        <button className="plugins-v3__search-clear" type="button" aria-label={text.closeDetail} onClick={() => onChange("")}>
+          <X size={12} strokeWidth={2.2} aria-hidden="true" />
+        </button>
       ) : null}
-      {plugin.lastError ? (
-        <details className="plugins-v3__last-error">
-          <summary>{text.lastError}</summary>
-          <pre>{plugin.lastError.text}</pre>
-        </details>
-      ) : null}
-    </div>
+    </label>
   );
 }
 
-function SafeModeRow({ view, mode }: { view: PluginHostView; mode: "third-party" | "minimal" }) {
-  const text = useTranslation().settings.pluginsV3;
-  const [leaving, setLeaving] = useState(false);
-  const safe = view.safeMode?.mode === mode ? view.safeMode : null;
-  const cause = safe === null ? undefined : safe.cause === "failures" ? text.safeCauses.failures(safe.failures) : text.safeCauses[safe.cause];
-  const canLeave = safe !== null && safe.cause !== "variable";
-  const leave = () => {
-    setLeaving(true);
-    void exitPluginSafeMode().catch(() => setLeaving(false));
-  };
-  return (
-    <SettingsRow
-      searchable={false}
-      className="plugins-v3__safe"
-      title={`${text.safeMode} · ${text.safeModes[mode]}`}
-      description={cause}
-      control={canLeave ? <button className="plugins-v3__leave" type="button" disabled={leaving} onClick={leave}>{text.leaveSafeMode}</button> : undefined}
-    />
-  );
+let bufferedPackage: OpenedPluginPackage | null = null;
+let inFlightPackage: Promise<{ pkg: OpenedPluginPackage | null; error: string | null }> | null = null;
+let nextPackageSeq = 0;
+
+function consumeBufferedPackage(seq: number) {
+  if (bufferedPackage?.seq === seq) bufferedPackage = null;
 }
 
-export function PluginsV3View({ view, now = Date.now() }: { view: PluginHostView; now?: number }) {
+function pullPendingPackage(formatError: (error: unknown) => string): Promise<{ pkg: OpenedPluginPackage | null; error: string | null }> {
+  if (inFlightPackage) return inFlightPackage;
+  inFlightPackage = takePendingPluginPackage()
+    .then((taken) => {
+      if (taken) {
+        nextPackageSeq += 1;
+        bufferedPackage = { seq: nextPackageSeq, fileName: taken.fileName, base64: taken.base64 };
+      }
+      return { pkg: bufferedPackage, error: null };
+    })
+    .catch((failure: unknown) => ({ pkg: null, error: formatError(failure) }))
+    .finally(() => {
+      inFlightPackage = null;
+    });
+  return inFlightPackage;
+}
+
+export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins, onOpenPage }: {
+  view: PluginHostView;
+  now?: number;
+  builtins?: readonly BuiltinPlugin[] | null;
+  onOpenPage?: (page: SettingsCategory) => void;
+}) {
   const text = useTranslation().settings.pluginsV3;
+  const errorText = useErrorText();
+  const loadedBuiltins = useBuiltinPlugins();
+  const builtins = givenBuiltins === undefined ? loadedBuiltins : givenBuiltins;
+  const [tab, setTab] = useState<PluginsV3Tab>("plugins");
+  const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [openedPackage, setOpenedPackage] = useState<OpenedPluginPackage | null>(null);
+  const [openedError, setOpenedError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let stop: (() => void) | null = null;
+    const syncPending = () => {
+      void pullPendingPackage(errorText).then(({ pkg, error }) => {
+        if (cancelled) return;
+        if (pkg) {
+          setOpenedError(null);
+          setOpenedPackage(pkg);
+          setTab("market");
+        } else if (error) {
+          setOpenedError(error);
+          setTab("market");
+        }
+      });
+    };
+    syncPending();
+    void onPluginPackageOpen(syncPending)
+      .then((unlisten) => {
+        if (cancelled) unlisten();
+        else stop = unlisten;
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, [errorText]);
+
+  const handleConsumeOpenedPackage = useCallback((seq: number) => {
+    consumeBufferedPackage(seq);
+    setOpenedPackage((prev) => (prev?.seq === seq ? null : prev));
+  }, []);
+
   const { host, plugins, connection, memory } = view;
   const measured = memory && host && memory.pid === host.pid ? memory : null;
   const open = connection === "open";
+  const builtinIds = new Set(builtins?.map((item) => item.id) ?? []);
+  const extras = (plugins ?? []).filter((item) => !builtinIds.has(item.id));
+  const totalCount = (builtins?.length ?? 0) + extras.length;
+  const hostById = new Map((plugins ?? []).map((item) => [item.id, item]));
+  const runningCount =
+    (builtins ?? []).filter((b) => {
+      const hp = hostById.get(b.id);
+      return hp ? stateOf(hp) === "running" : b.enabled;
+    }).length + extras.filter((p) => stateOf(p) === "running").length;
+  const selectedBuiltin = builtins?.find((b) => b.id === selectedId);
+  const selectedHost = selectedId ? hostById.get(selectedId) : undefined;
+
+  const switchTabKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const index = TAB_ORDER.indexOf(tab);
+    const delta = event.key === "ArrowRight" ? 1 : TAB_ORDER.length - 1;
+    const next = TAB_ORDER[(index + delta) % TAB_ORDER.length];
+    setTab(next);
+    const parent = event.currentTarget;
+    requestAnimationFrame(() => parent.querySelector<HTMLButtonElement>(`[data-tab='${next}']`)?.focus());
+  };
+
   return (
     <>
-      <SettingsGroup title={text.host}>
-        <SettingsRow
-          searchable={false}
-          title={<span className={`plugins-v3__connection plugins-v3__connection--${connection}`} data-connection={connection}>{text.connection[connection]}</span>}
-          description={open && host ? text.hostDetail(host.pid, host.node) : undefined}
-        />
-        <PluginHostNodeRow watching={!open} />
-        {open && host ? (
-          <>
-            <SettingsRow
-              searchable={false}
-              title={measured ? text.memoryTitles[measured.measure] : text.memoryTitles.rss}
-              description={measured ? text.memoryNotes[measured.measure] : text.memoryNotes.rss}
-              control={<span className="plugins-v3__value" data-measure={measured?.measure ?? "rss"}>{megabytes(measured ? measured.bytes : host.rssBytes)}</span>}
-            />
-            <SettingsRow searchable={false} title={text.hostCpu} control={<span className="plugins-v3__value">{milliseconds(host.cpuMs)}</span>} />
-            <SettingsRow searchable={false} title={text.uptime} control={<span className="plugins-v3__value">{duration(now - host.startedAt)}</span>} />
-            {host.safe ? <SafeModeRow key={host.pid} view={view} mode={host.safe} /> : null}
-            {host.dev ? <SettingsRow searchable={false} title={text.devMode} /> : null}
-          </>
-        ) : null}
-      </SettingsGroup>
-      <SettingsGroup title={text.plugins} footer={<SettingsFootnote text={text.cpuNote} />}>
-        {plugins === null ? (
-          <p className="plugins-v3__empty">{text.waitingHost}</p>
-        ) : plugins.length === 0 ? (
-          <p className="plugins-v3__empty">{text.empty}</p>
-        ) : (
-          <div className={`plugins-v3__list${open ? "" : " plugins-v3__list--stale"}`}>
-            {plugins.map((plugin) => <PluginCard key={plugin.id} plugin={plugin} />)}
-          </div>
-        )}
-      </SettingsGroup>
+      <div className="plugins-v3__tabs-bar">
+        <div className="plugins-v3__tabs" role="tablist" onKeyDown={switchTabKey}>
+          <button
+            className={`plugins-v3__tab${tab === "plugins" ? " plugins-v3__tab--active" : ""}`}
+            type="button"
+            role="tab"
+            tabIndex={tab === "plugins" ? 0 : -1}
+            aria-selected={tab === "plugins"}
+            data-tab="plugins"
+            onClick={() => setTab("plugins")}
+          >
+            <span>{text.tabs.plugins(totalCount)}</span>
+          </button>
+          <button
+            className={`plugins-v3__tab${tab === "market" ? " plugins-v3__tab--active" : ""}`}
+            type="button"
+            role="tab"
+            tabIndex={tab === "market" ? 0 : -1}
+            aria-selected={tab === "market"}
+            data-tab="market"
+            onClick={() => setTab("market")}
+          >
+            <span>{text.tabs.market}</span>
+          </button>
+          <button
+            className={`plugins-v3__tab${tab === "diagnostics" ? " plugins-v3__tab--active" : ""}`}
+            type="button"
+            role="tab"
+            tabIndex={tab === "diagnostics" ? 0 : -1}
+            aria-selected={tab === "diagnostics"}
+            data-tab="diagnostics"
+            onClick={() => setTab("diagnostics")}
+          >
+            <span className={`plugins-v3__tab-dot plugins-v3__tab-dot--${connection}`} />
+            <span>{text.tabs.diagnostics}</span>
+            {open && host ? <span className="plugins-v3__tab-pill">{megabytes(measured ? measured.bytes : host.rssBytes)}</span> : null}
+          </button>
+        </div>
+        <SearchInput query={query} onChange={setQuery} />
+      </div>
+
+      {tab === "plugins" ? (
+        <>
+          <HostSummaryBar view={view} runningCount={runningCount} onOpenDiagnostics={() => setTab("diagnostics")} />
+          <V2PluginMigrationCard onOpenMarketTab={() => setTab("market")} onOpenPage={onOpenPage} />
+          {open ? <PluginBisectBar thirdPartyIds={extras.filter((p) => p.kind === "third-party" || !p.kind).map((p) => p.id)} onBisect={view.bisect} /> : null}
+          <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
+        </>
+      ) : tab === "market" ? (
+        <PluginMarketV3Tab connected={open} query={query} openedPackage={openedPackage} openedError={openedError} onConsumeOpenedPackage={handleConsumeOpenedPackage} />
+      ) : (
+        <PluginDiagnosticsTab view={view} now={now} builtins={builtins} hostPlugins={plugins} query={query} onSelectPlugin={setSelectedId} />
+      )}
+
+      {selectedId ? <PluginDetailModal builtin={selectedBuiltin} hostPlugin={selectedHost} hostPlugins={plugins} builtins={builtins} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
     </>
   );
 }
 
-function HostStatus({ connect }: { connect?: PluginHostConnector }) {
+function HostConnectedPage({ connect, builtins, onOpenPage }: { connect?: PluginHostConnector; builtins: readonly BuiltinPlugin[] | null; onOpenPage?: (page: SettingsCategory) => void }) {
   const view = usePluginHostStatus(connect);
-  return <PluginsV3View view={view} />;
+  return <PluginsV3View view={view} builtins={builtins} onOpenPage={onOpenPage} />;
 }
 
-export function PluginsV3SettingsPage({ connect }: { connect?: PluginHostConnector }) {
+export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
   const text = useTranslation().settings.pluginsV3;
   const hostEnabled = usePluginHostEnabled();
+  const builtins = useBuiltinPlugins();
+  const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedBuiltin = builtins?.find((b) => b.id === selectedId);
   return (
     <div className="plugins-v3">
-      <SettingsFootnote text={text.preview} />
-      <BuiltinPluginsGroup />
-      {hostEnabled === true ? <HostStatus connect={connect} /> : null}
+      {hostEnabled === true ? <HostConnectedPage connect={connect} builtins={builtins} onOpenPage={onOpenPage} /> : null}
       {hostEnabled === false ? (
-        <SettingsGroup title={text.host}>
-          <SettingsRow searchable={false} title={<span className="plugins-v3__connection plugins-v3__connection--closed" data-connection="off">{text.hostOff}</span>} description={text.hostOffNote} />
-        </SettingsGroup>
+        <>
+          <div className="plugins-v3__tabs-bar">
+            <div className="plugins-v3__tabs" role="tablist">
+              <button className="plugins-v3__tab plugins-v3__tab--active" type="button" role="tab" aria-selected={true} data-tab="plugins">
+                <span>{text.tabs.plugins(builtins?.length ?? 0)}</span>
+              </button>
+            </div>
+            <SearchInput query={query} onChange={setQuery} />
+          </div>
+          <section className="plugins-v3__host-bar settings-group" aria-label={text.host}>
+            <div className="plugins-v3__host-bar-row">
+              <div className="plugins-v3__host-bar-left">
+                <span className="plugins-v3__connection plugins-v3__connection--closed" data-connection="off">{text.hostOff}</span>
+                <span className="plugins-v3__dock-note">{text.hostOffNote}</span>
+              </div>
+            </div>
+          </section>
+          <V2PluginMigrationCard onOpenPage={onOpenPage} />
+          <BuiltinPluginsGroup builtins={builtins} hostEnabled={false} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} />
+          {selectedId ? <PluginDetailModal builtin={selectedBuiltin} onClose={() => setSelectedId(null)} onOpenPage={onOpenPage} /> : null}
+        </>
       ) : null}
+      {hostEnabled === null ? <BuiltinPluginsGroup builtins={builtins} hostEnabled={null} query={query} onSelectPlugin={setSelectedId} onOpenPage={onOpenPage} /> : null}
     </div>
   );
 }

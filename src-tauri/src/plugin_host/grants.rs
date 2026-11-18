@@ -84,7 +84,7 @@ pub(super) fn sync_processes() -> Result<(), String> {
     let _one_at_a_time = lock(&SYNC);
     let host = host()?;
     let mut candidates: Vec<(Activation, LaunchSpec)> = Vec::new();
-    {
+    let allow_third_party = {
         let state = lock(&host.state);
         for plugin in lock(&host.installed).iter() {
             let Ok(manifest) = &plugin.manifest else { continue };
@@ -132,7 +132,19 @@ pub(super) fn sync_processes() -> Result<(), String> {
                 },
             ));
         }
+        state.allow_third_party
+    };
+    if allow_third_party {
+        super::ensure_updates_worker();
     }
+    if !candidates.is_empty() {
+        super::ensure_process_workers();
+    }
+    super::events::set_wakeable_events(|event_name| {
+        candidates
+            .iter()
+            .any(|(activation, _)| !activation.is_eager() && activation.on_event(event_name))
+    });
     lifecycle::set_runnable(candidates.iter().map(|(activation, spec)| (spec.plugin_id.clone(), activation.clone())).collect());
     let mut wanted: HashMap<String, LaunchSpec> = HashMap::new();
     for (activation, mut spec) in candidates {
@@ -176,7 +188,9 @@ pub(super) fn sync_processes() -> Result<(), String> {
     }
     drop(supervisors);
     sync_builtins(host);
-    keybindings::refresh();
+    if super::process_workers_started() {
+        keybindings::refresh();
+    }
     Ok(())
 }
 

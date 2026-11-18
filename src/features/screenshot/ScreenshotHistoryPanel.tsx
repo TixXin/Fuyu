@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
-import { Check, Copy, Images, Pin, Trash2 } from "lucide-react";
-import { useErrorText, useTranslation } from "../../i18n";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
+import { Check, Copy, Images, Pin, Sparkles, Trash2 } from "lucide-react";
+import { useErrorText, useLocale, useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { copyHistoryScreenshot, deleteHistoryScreenshot, dragScreenshot, pinHistoryScreenshot, type HistoryItem } from "./api";
+import { screenshotActions, subscribeScreenshotActions, type ScreenshotActionItem } from "./host/actions.mjs";
 import { clockTime, groupByDay, type HistoryDay } from "./historyDays";
 import { useScreenshotHistory } from "./useScreenshotHistory";
 import "../../components/list/IslandList.css";
@@ -10,12 +12,28 @@ import "./ScreenshotHistoryPanel.css";
 const NOTICE_MS = 1800;
 const DRAG_DISTANCE = 5;
 const CLOCK_MS = 60_000;
+const NO_ACTIONS: readonly ScreenshotActionItem[] = [];
+let cachedHistoryActions: readonly ScreenshotActionItem[] = NO_ACTIONS;
+let cachedHistoryKey = "";
+
+function readHistoryActions(): readonly ScreenshotActionItem[] {
+  const list = screenshotActions.list();
+  if (list.length === 0) return NO_ACTIONS;
+  const key = JSON.stringify(list);
+  if (key !== cachedHistoryKey) {
+    cachedHistoryKey = key;
+    cachedHistoryActions = list;
+  }
+  return cachedHistoryActions;
+}
 
 export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolean }) {
   const t = useTranslation();
+  const { locale } = useLocale();
   const text = t.screenshot.history;
   const errorText = useErrorText();
   const { items, error, forget } = useScreenshotHistory();
+  const extraActions = useSyncExternalStore(subscribeScreenshotActions, readHistoryActions, readHistoryActions);
   const [notice, setNotice] = useState<string | null>(null);
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -24,8 +42,7 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
   const thisYear = new Date(now).getFullYear();
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), CLOCK_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setNow(Date.now()), CLOCK_MS);
   }, []);
 
   useEffect(() => {
@@ -96,7 +113,7 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
                       onPointerUp={() => { pressed.current = null; }}
                       onClick={() => void copy(item)}
                     >
-                      {item.thumbnail ? <img src={item.thumbnail} alt="" draggable={false} /> : <Images size={22} aria-hidden="true" />}
+                      {item.thumbnail ? <img src={item.thumbnail} alt="" loading="lazy" decoding="async" draggable={false} /> : <Images size={22} aria-hidden="true" />}
                       <span className="screenshot-history__time">{clockTime(item.takenAt)}</span>
                       {copiedPath === item.path && (
                         <span className="screenshot-history__copied" role="status">
@@ -112,6 +129,25 @@ export function ScreenshotHistoryPanel({ embedded = false }: { embedded?: boolea
                       <button type="button" aria-label={text.pin} title={text.pin} onClick={() => void pin(item)}>
                         <Pin size={13} aria-hidden="true" />
                       </button>
+                      {extraActions.map((action) => {
+                        const label = action.label[locale];
+                        return (
+                          <button
+                            key={action.id}
+                            type="button"
+                            aria-label={label}
+                            title={action.disabled && action.disabledTitle ? action.disabledTitle[locale] : label}
+                            disabled={action.disabled}
+                            onClick={() =>
+                              void screenshotActions
+                                .run(action.id, { path: item.path, saved: true, thumbnail: item.thumbnail ?? null })
+                                .then((result) => result.message && setNotice(result.message), report)
+                            }
+                          >
+                            <Sparkles size={13} aria-hidden="true" />
+                          </button>
+                        );
+                      })}
                       <button className="screenshot-history__danger" type="button" aria-label={text.remove} title={text.remove} onClick={() => remove(item)}>
                         <Trash2 size={13} aria-hidden="true" />
                       </button>

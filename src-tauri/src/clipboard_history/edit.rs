@@ -29,7 +29,7 @@ pub(super) fn remember(edit: Edit) {
     *LAST_EDIT.lock().unwrap_or_else(PoisonError::into_inner) = Some(edit);
 }
 
-pub(super) fn text_hash(text: &str) -> String {
+pub(crate) fn text_hash(text: &str) -> String {
     hash_bytes([b"text:", text.as_bytes()].concat().as_slice())
 }
 
@@ -97,15 +97,28 @@ pub(super) fn apply_undo(items: &mut [ClipboardHistoryItem], id: &str, edit: &Ed
 pub fn edit_clipboard_history_text(id: String, text: String) -> Result<ClipboardHistorySnapshot, String> {
     let service = service()?;
     let mut state = service.state.lock().map_err(|error| error.to_string())?;
-    let (secrets, limit) = (state.settings.secrets, state.settings.privacy.max_text_bytes());
-    let Some(edit) = apply_edit(&mut state.items, &id, &text, secrets, limit, current_unix_millis())? else {
+    let state_ref = &mut *state;
+    let (secrets, limit) = (state_ref.settings.secrets, state_ref.settings.privacy.max_text_bytes());
+    let Some(edit) = apply_edit(&mut state_ref.items, &id, &text, secrets, limit, current_unix_millis())? else {
         return Ok(super::ClipboardHistoryService::snapshot_locked(&state));
     };
+    let sync_changed = state_ref
+        .items
+        .iter_mut()
+        .find(|item| item.id == id)
+        .is_some_and(|after| {
+            crate::sync::clock::with(|clock, wall| {
+                super::favorites_sync::on_item_edited(edit.before(), after, &mut state_ref.favorite_tombstones, clock, wall)
+            })
+        });
     service.persist_locked(&state)?;
     let snapshot = super::ClipboardHistoryService::snapshot_locked(&state);
     drop(state);
     remember(edit);
     service.emit_changed();
+    if sync_changed {
+        crate::sync::notify_local_change();
+    }
     Ok(snapshot)
 }
 
@@ -115,13 +128,26 @@ pub fn undo_clipboard_history_edit(id: String) -> Result<ClipboardHistorySnapsho
     let mut last = LAST_EDIT.lock().unwrap_or_else(PoisonError::into_inner);
     let edit = last.as_ref().ok_or_else(|| "There is no edit to undo.".to_string())?;
     let mut state = service.state.lock().map_err(|error| error.to_string())?;
-    let undone = apply_undo(&mut state.items, &id, edit, current_unix_millis())?;
+    let state_ref = &mut *state;
+    let undone = apply_undo(&mut state_ref.items, &id, edit, current_unix_millis())?;
+    let sync_changed = state_ref
+        .items
+        .iter_mut()
+        .find(|item| item.id == id)
+        .is_some_and(|after| {
+            crate::sync::clock::with(|clock, wall| {
+                super::favorites_sync::on_item_edited(&undone, after, &mut state_ref.favorite_tombstones, clock, wall)
+            })
+        });
     *last = None;
     drop(last);
     service.persist_locked(&state)?;
     let snapshot = super::ClipboardHistoryService::snapshot_locked(&state);
     drop(state);
     service.emit_changed();
+    if sync_changed {
+        crate::sync::notify_local_change();
+    }
     if let Some(image) = undone.image {
         super::edit_image::remove_if_unused(&image);
     }

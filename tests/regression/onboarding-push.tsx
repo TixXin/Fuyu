@@ -8,6 +8,7 @@ import "../../src/windows/onboarding/OnboardingWindow.css";
 import { PushAct } from "../../src/windows/onboarding/push/PushAct";
 import { PUSH_STEPS } from "../../src/windows/onboarding/push/plan";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
+import { until } from "./pollUntil";
 
 const query = new URLSearchParams(location.search);
 const automated = query.has("test");
@@ -16,7 +17,7 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: automated }
 const QR = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
 const commands: { command: string; args: Record<string, unknown> }[] = [];
 const plugin = { id: "cc-connect", kind: "builtin", enabled: false, background: [], config: {} as Record<string, unknown> };
-const tunnelPlugin = { id: "focusd.ssh-proxy-tunnel", builtin: true, enabled: false, status: "stopped", settings: {} as Record<string, unknown> };
+const tunnelPlugin = { id: "ssh-tunnel", kind: "builtin", enabled: false, background: [], config: {} as Record<string, unknown> };
 const tunnel = { host: "devbox", enabled: false, remotePort: null as number | null, state: "off", error: null };
 const remote = { exe: null as string | null, running: false, projects: [] as typeof local.projects };
 const local = {
@@ -40,15 +41,16 @@ mockIPC((command, payload) => {
   const args = (payload ?? {}) as Record<string, unknown>;
   commands.push({ command, args });
   switch (command) {
-    case "list_plugins": return { plugins: [tunnelPlugin] };
-    case "get_builtin_plugins": return [plugin];
-    case "set_builtin_plugin_enabled":
-      plugin.enabled = Boolean(args.enabled);
-      return [plugin];
+    case "get_builtin_plugins": return [plugin, tunnelPlugin];
+    case "set_builtin_plugin_enabled": {
+      const target = args.id === tunnelPlugin.id ? tunnelPlugin : plugin;
+      target.enabled = Boolean(args.enabled);
+      return [plugin, tunnelPlugin];
+    }
     case "set_builtin_plugin_config":
       plugin.config = { ...plugin.config, [String(args.key)]: args.value };
       if (args.key === "run") local.running = true;
-      return [plugin];
+      return [plugin, tunnelPlugin];
     case "get_agent_remote_hosts": return [{ host: "devbox", fetchedAt: 1, error: null, fetching: false }];
     case "get_cc_connect_status": return local;
     case "get_cc_connect_remote_status": return remote;
@@ -69,10 +71,6 @@ mockIPC((command, payload) => {
       local.exe = "C:\\Users\\me\\Fuyu\\cc-connect\\cc-connect.exe";
       local.exeSource = "downloaded";
       return local.exe;
-    case "set_plugin_enabled":
-      tunnelPlugin.enabled = Boolean(args.enabled);
-      tunnelPlugin.status = "running";
-      return { plugins: [tunnelPlugin] };
     case "check_cc_connect_bot": return { name: "fuyu_bot", inviteUrl: null, senders: [{ id: "4242", name: "Me" }] };
     case "add_cc_connect_project":
       local.configProjects = [...local.configProjects, String(args.project)];
@@ -142,7 +140,7 @@ if (!automated) {
 } else {
   try {
     await act(async () => { mount(); });
-    await wait(60);
+    await until(() => Boolean(rowOf('[data-target="local"]') && rowOf('[data-target="ssh:devbox"]')));
     check(document.querySelector(".onboarding__title")?.textContent === "推送到手机" && active() === "安装", "The act opens on the install step");
     check(document.querySelectorAll(".push-act__step").length === 5, "The progress shows five steps");
     const localRow = rowOf('[data-target="local"]');
@@ -152,12 +150,12 @@ if (!automated) {
     const tunnelSwitch = () => document.querySelector<HTMLInputElement>('[data-tunnel="devbox"] input[type="checkbox"]');
     check(tunnelSwitch() && !tunnelSwitch()!.checked && rowOf('[data-tunnel="devbox"]')?.textContent?.includes("自己能上网"), "The install step asks whether the remote computer needs the SSH proxy tunnel");
     await act(async () => { tunnelSwitch()!.click(); });
-    await wait(60);
+    await until(() => called("set_ssh_tunnel").length > 0 && Boolean(rowOf('[data-tunnel="devbox"]')?.textContent?.includes("37897")));
     const saved = called("set_ssh_tunnel")[0]?.args;
     check(tunnelPlugin.enabled && saved?.host === "devbox" && saved.enabled === true && saved.remotePort === 37897, "Turning it on starts the tunnel plugin and opens port 37897 for that computer");
     check(rowOf('[data-tunnel="devbox"]')?.textContent?.includes("37897"), "The row shows the tunnel's remote port");
     await press(localRow?.querySelector("button") ?? undefined, "安装");
-    await wait(30);
+    await until(() => Boolean(rowOf('[data-target="local"]')?.textContent?.includes("已安装")));
     check(called("install_cc_connect").length === 1 && rowOf('[data-target="local"]')?.textContent?.includes("已安装"), "Install downloads cc-connect and the row turns installed");
     check(fits(), "The install step fits a narrow card");
 
@@ -190,7 +188,7 @@ if (!automated) {
     check(added?.project === "local-claudecode" && added.platform === "feishu" && added.agent === "claudecode" && added.workDir === local.defaultWorkDir, "Scanning adds the project for Feishu");
     check(claude().querySelector("img") && rowOf('[data-project="my-codex"]')!.querySelector<HTMLButtonElement>(".onboarding__button--primary")?.disabled,
       "The QR code shows in the row, and the other row waits for it");
-    await wait(1200);
+    await until(() => Boolean(claude().textContent?.includes("已接上")));
     check(claude().textContent?.includes("已接上"), "The row is connected once the scan is done");
 
     await nav("back");
@@ -210,7 +208,7 @@ if (!automated) {
     check(active() === "测试" && document.querySelectorAll(".push-act__list > li").length === 2, "The test step lists the connected projects");
     check(!button("发测试消息") && claude().textContent?.includes("还没收到"), "Without a message from the phone there is nothing to send to");
     local.projects = local.projects.map((project) => project.name === "my-codex" ? { ...project, chats: [{ key: "telegram:4242:4242", platform: "telegram", userName: "Me" }] } : project);
-    await wait(5200);
+    await until(() => Boolean(codex().textContent?.includes("已收到手机发来的消息")), 6000);
     check(codex().textContent?.includes("已收到手机发来的消息"), "A message from the phone ticks the row");
     await press(button("发测试消息"), "send");
     const sent = called("send_cc_connect_message")[0]?.args;
@@ -224,7 +222,7 @@ if (!automated) {
 
     for (let at = 0; at < PUSH_STEPS - 1; at += 1) await nav("back");
     await press(rowOf('[data-target="ssh:devbox"]')?.querySelector("button") ?? undefined, "install remote");
-    await wait(30);
+    await until(() => Boolean(rowOf('[data-target="ssh:devbox"]')?.textContent?.includes("已安装")));
     check(called("install_cc_connect_remote")[0]?.args.host === "devbox" && rowOf('[data-target="ssh:devbox"]')?.textContent?.includes("已安装"), "Install puts cc-connect on the remote computer");
     await nav("next");
     check(names().map((input) => input.value).join(",") === "local-claudecode,my-codex,devbox-claudecode", "The remote computer gets a project only for the agent found there");
@@ -234,7 +232,7 @@ if (!automated) {
     await type(devbox().querySelector<HTMLInputElement>('input[type="password"]')!, "456:def");
     await type(devbox().querySelector<HTMLInputElement>('input:not([type="password"])')!, "4242");
     await press(devbox().querySelector<HTMLButtonElement>(".onboarding__button--primary") ?? undefined, "connect remote");
-    await wait(30);
+    await until(() => Boolean(devbox().textContent?.includes("已接上")));
     const remoteAdded = called("add_cc_connect_remote_project")[0]?.args;
     check(remoteAdded?.host === "devbox" && remoteAdded.platform === "telegram" && remoteAdded.workDir === "~" && remoteAdded.token === "456:def", "A remote Telegram project goes in the remote home folder");
     check(called("restart_cc_connect_remote")[0]?.args.host === "devbox" && devbox().textContent?.includes("已接上"), "cc-connect there restarts and the row is connected");

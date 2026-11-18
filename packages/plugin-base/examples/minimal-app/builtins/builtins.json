@@ -1,0 +1,11 @@
+{
+  "format": 1,
+  "plugins": [
+    {
+      "id": "notes",
+      "kind": "builtin",
+      "root": "notes",
+      "host": "host.mjs"
+    }
+  ]
+}

@@ -3,6 +3,8 @@ import { settingsRunners, type SettingsRunnerProps } from "../../plugin-kernel/s
 import { useReportShortcutOwners } from "../../../lib/shortcut/useReportShortcutOwners";
 import { useTranslationSettings } from "../useTranslationSettings";
 import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
+import { isBuiltinEnabled, switchBuiltinPlugin } from "../../plugin-kernel/builtinSwitches";
+import { useBuiltinPlugins } from "../../plugin-kernel/useBuiltinPlugins";
 import { FeaturePageLink } from "../../../components/settings/FeaturePageLink";
 import { ShortcutReferenceGroup } from "../../../components/settings/ShortcutReferenceGroup";
 import { shortcutReferences, shortcutSections, type ShortcutsSectionProps } from "../../plugin-kernel/settingsSlots";
@@ -23,24 +25,25 @@ function TranslationShortcutOwners({ settings }: SettingsRunnerProps) {
   useReportShortcutOwners("translation", 10, settings.translationEnabled ? [
     { id: "window", label: t.settings.shortcuts.openTranslation, shortcut: translation.shortcut, home: "translation" },
     { id: "selection", label: t.settings.translation.selectionShortcut, shortcut: translation.selectionShortcut, home: "translation" },
-  ] : []);
+  ].filter((owner) => Boolean(owner.shortcut)) : []);
   return null;
 }
 
 settingsRunners.add({ id: "translation.shortcut-owners", component: TranslationShortcutOwners }, OWNER);
 
-function TranslationShortcutsSection({ settings, onSettingsChange, onOpenPage, takenBy }: ShortcutsSectionProps) {
+function TranslationShortcutsSection({ settings, onOpenPage, takenBy }: ShortcutsSectionProps) {
   const t = useTranslation();
+  const plugins = useBuiltinPlugins();
   const [translation, setTranslation] = useTranslationSettings();
   return (
     <TranslationShortcutGroup
       title={t.settings.categories.translation}
       action={<FeaturePageLink page="translation" onOpenPage={onOpenPage} />}
-      enabled={settings.translationEnabled}
+      enabled={isBuiltinEnabled(plugins, OWNER, settings.translationEnabled)}
       translation={translation}
       onTranslationChange={setTranslation}
       takenBy={takenBy}
-      onTurnOn={() => onSettingsChange({ ...settings, translationEnabled: true })}
+      onTurnOn={() => void switchBuiltinPlugin(OWNER, true)}
     />
   );
 }

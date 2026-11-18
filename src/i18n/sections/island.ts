@@ -43,6 +43,11 @@ export type IslandText = {
     connectTools: string;
     gotIt: string;
   };
+  v2Migration: {
+    notice: (count: number) => string;
+    viewGuide: string;
+    gotIt: string;
+  };
 };
 
 export const zhCN: IslandText = {
@@ -93,6 +98,11 @@ export const zhCN: IslandText = {
     connectTools: "连接更多工具",
     gotIt: "知道了",
   },
+  v2Migration: {
+    notice: (count) => `检测到 ${count} 个旧第 2 版插件，官方插件已升级至 @fuyu/*`,
+    viewGuide: "查看迁移说明",
+    gotIt: "知道了",
+  },
 };
 
 export const en: IslandText = {
@@ -141,6 +151,11 @@ export const en: IslandText = {
     message: "When a message comes in, click the island",
     tuck: "Hiding at the top edge; touch it to bring it back",
     connectTools: "Connect more tools",
+    gotIt: "Got it",
+  },
+  v2Migration: {
+    notice: (count) => `${count} legacy v2 ${count === 1 ? "plugin" : "plugins"} found; official plugins moved to @fuyu/*`,
+    viewGuide: "View upgrade guide",
     gotIt: "Got it",
   },
 };

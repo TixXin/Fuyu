@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { listenIslandHover } from "./api";
+import { isIslandHeld } from "./islandHold";
 import { isEditingText } from "./useHoverExpand";
 
 const PEEK_RETRACT_DELAY_MS = 300;
@@ -46,7 +47,7 @@ export function useTuckPeek(isPeeking: boolean, onRetract: () => void, delayMs: 
     if (!isPeeking || isHovering || isPressing) return;
     let timer: number | undefined;
     const retract = () => {
-      if (isEditingText()) {
+      if (isEditingText() || isIslandHeld()) {
         timer = window.setTimeout(retract, Math.max(delayMs, 200));
         return;
       }

@@ -8,10 +8,9 @@ export {
   centerWidth,
 } from "./CollapsedCenter";
 export { CenterPattern } from "./CenterPattern";
-export { CENTER_PATTERN_PET_KEY, CENTER_PATTERN_PLUGIN_ID, centerPatternChoice, centerPatternSize, petChoices, type AgentActivity } from "./centerSettings";
+export { centerConfig, centerPatternChoice, centerPatternSize, petChoices, storedCenterValue, type AgentActivity, type CenterConfig, type CenterConfigKey, type CenterPatternSelection } from "./centerSettings";
 export { PetSprite } from "./PetSprite";
 export { usePageHidden } from "../../lib/usePageHidden";
 export { usePetChoices } from "./usePetChoices";
 export { usePetMood } from "./usePetMood";
 export { usePetSheet } from "./usePetSheet";
-

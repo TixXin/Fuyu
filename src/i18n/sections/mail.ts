@@ -9,6 +9,12 @@ export type MailText = {
   reader: string;
   back: string;
   openWeb: string;
+  copyBody: string;
+  copied: string;
+  copyLink: string;
+  codeLabel: string;
+  copyShort: string;
+  copyCode: (code: string) => string;
   markRead: string;
   markAllRead: string;
   compose: string;
@@ -96,6 +102,12 @@ export const zhCN: MailText = {
   reader: "邮件阅读",
   back: "返回列表",
   openWeb: "在网页打开",
+  copyBody: "复制正文",
+  copied: "已复制",
+  copyLink: "复制链接地址",
+  codeLabel: "验证码",
+  copyShort: "复制",
+  copyCode: (code: string) => `复制验证码 ${code}`,
   markRead: "标为已读",
   markAllRead: "这个邮箱全部标为已读（邮箱里也会变成已读，不删邮件）",
   compose: "写邮件",
@@ -183,6 +195,12 @@ export const en: MailText = {
   reader: "Mail reader",
   back: "Back to list",
   openWeb: "Open in browser",
+  copyBody: "Copy text",
+  copied: "Copied",
+  copyLink: "Copy link address",
+  codeLabel: "Code",
+  copyShort: "Copy",
+  copyCode: (code: string) => `Copy code ${code}`,
   markRead: "Mark as read",
   markAllRead: "Mark everything in this mailbox as read (also read in the mailbox itself; nothing is deleted)",
   compose: "Write mail",

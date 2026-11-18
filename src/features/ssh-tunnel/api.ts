@@ -1,7 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
 
-export const SSH_TUNNEL_PLUGIN_ID = "focusd.ssh-proxy-tunnel";
-
 export type SshTunnelState = "off" | "connecting" | "connected" | "portInUse" | "error";
 
 export type SshTunnelHost = {

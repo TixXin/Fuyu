@@ -1,5 +1,6 @@
 import { useEffect, useId, useState, type CSSProperties } from "react";
 import { ChevronRight } from "lucide-react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { useTranslation } from "../../i18n";
 import type { AgentSessionSummary, AgentSubagent } from "./api";
 import { durationParts } from "./sessionList";
@@ -28,8 +29,7 @@ export function AgentSubagents({
   useEffect(() => {
     if (!open) return;
     setNow(Date.now());
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setNow(Date.now()), 1000);
   }, [open]);
 
   if (agents.length === 0) return null;

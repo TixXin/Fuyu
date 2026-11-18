@@ -24,4 +24,4 @@
 
 ## 数据
 
-计时存在 `localStorage` 的 `fuyu-timers`（只在本机，不进设置备份）。逻辑在 `src/features/timer/timers.ts`（纯函数，单元测试 `tests/unit/timer.test.mjs`），状态和提醒在 `store.ts`，回归页 `tests/regression/timer.tsx`。插件的部分在 `src/features/timer/plugin/`（岛页、收起条、提示、设置、`island.runner/v1`，`services.ts` 里的窗口服务 `reminders/v1`，拥有者 `OWNER = "timer"`），关掉后的残留由回归页 `builtins-off?only=timer` 查。
+计时由内置插件宿主经 `timers/v1` 存在 `plugins-v3/data/timer/timers.json`（只在本机，不进设置备份，所有窗口关闭时仍在宿主里继续计时，宿主重启后按实际时间恢复；2026-11-17 起，[E36.3.48](/docs/tasks/0-archive/E/E36.3.48.md)，issue #596）。升级后首次连上宿主时，将旧版 `localStorage` 的 `fuyu-timers` 一次性并入宿主并写入迁移标记 `fuyu-timers-migrated-v1`，旧 key 保留不删供降级兼容；宿主未启用时回退到窗口内读写 `fuyu-timers`。纯规则在 `src/features/timer/timers.ts` 与 `host/rules.mjs`（单元测试 `tests/unit/timer.test.mjs`、`tests/unit/timer-host.test.mjs`、`tests/unit/timer-store.test.mjs`），窗口状态和迁移在 `timerController.ts`、`store.ts`，回归页 `tests/regression/timer.tsx`。插件的部分在 `src/features/timer/plugin/`（岛页、收起条、提示、设置、`island.runner/v1`，`services.ts` 里的窗口服务 `reminders/v1`，拥有者 `OWNER = "timer"`），关掉后的残留由回归页 `builtins-off?only=timer` 查。

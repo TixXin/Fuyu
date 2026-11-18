@@ -28,7 +28,7 @@ export function heavyGate(command, env = process.env) {
   if (!HEAVY.test(text)) return null;
   const own = ownTargets(text);
   if (own.length) {
-    return `这条命令把 Rust 编译结果放进了自己的目录（${own.join("、")}），会从零编译、和别的会话抢 CPU。改用共用的 src-tauri/target/agents（不写 CARGO_TARGET_DIR 时 pnpm heavy 和 build:exe 默认就用它），见 AGENTS.md「多会话的构建」。`;
+    return `这条命令把 Rust 编译结果放进了自己的目录（${own.join("、")}），会从零编译、和别的会话抢 CPU。改用共用的 src-tauri/target/agents（不写 CARGO_TARGET_DIR 时 pnpm heavy -- cargo … 和 pnpm verify 默认就用它；build:exe 用 target/release），见 docs/architecture/workflow.md「Rust 构建」。`;
   }
   if (inCopy(text)) {
     return "不要在临时目录里的仓库副本上跑 cargo / tauri build：副本没有 rust-toolchain.toml、编译缓存也用不上，每份都从零编译。在主工作区里用 pnpm heavy -- <命令> 跑，别的会话没提交的改动让检查报错时，在交接里写明哪些失败不是你造成的。";

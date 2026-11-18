@@ -9,6 +9,10 @@ test("collapsed previews use source-specific copy and blank-content fallbacks", 
   assert.equal(messagePreviewText({ source: "qqMail", title: "发件人", body: " 项目周报 ", receivedAt: 0 }), "项目周报");
   assert.equal(messagePreviewText({ source: "qq", title: " ", body: " ", receivedAt: 0 }), "QQ：收到一条新消息");
   assert.equal(messagePreviewText({ source: "qqMail", title: "", body: "", receivedAt: 0 }), "收到一封新邮件");
+  assert.equal(messagePreviewText({ source: "telegram", kind: "toast", title: "Alice", body: "Deploy ready", receivedAt: 0 }), "Alice：Deploy ready");
+  assert.equal(messagePreviewText({ source: "telegram", kind: "flash", title: "Telegram", body: "", receivedAt: 0 }), "有新提醒");
+  assert.equal(messagePreviewText({ source: "feishu", kind: "toast", title: " ", body: " ", receivedAt: 0 }), "飞书：收到一条新消息");
+  assert.equal(messagePreviewText({ source: "wecom", kind: "badge", title: "企业微信", body: "3 条未读", receivedAt: 0 }), "企业微信：3 条未读");
 });
 
 test("QQ, WeChat and mail share the preview by most recent arrival", () => {

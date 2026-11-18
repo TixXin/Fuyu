@@ -1,5 +1,5 @@
-use crate::user_error::UserError;
 use crate::system::CommandExt;
+use crate::user_error::UserError;
 use std::{
     fs::{self, File},
     io::{Read, Seek, SeekFrom},
@@ -14,8 +14,8 @@ use serde_json::{Map, Value};
 
 use super::locate::{self, EXE_NAME, FOLDER};
 use crate::{
+    platform::job::{self, Job},
     system::CREATE_NO_WINDOW,
-    win32::job::{self, Job},
 };
 
 const LOG_NAME: &str = "cc-connect.log";
@@ -145,7 +145,7 @@ fn run_once(setting: Option<&str>, app_dir: &Path, config: &Path, status: &Mutex
     if !config.is_file() {
         return Ended::Waiting(RunState::NoConfig);
     }
-    if crate::win32::process::running_executable(&[EXE_NAME]).is_some() {
+    if crate::platform::process::running_executable(&[EXE_NAME]).is_some() {
         return Ended::Waiting(RunState::External);
     }
     let exe = match locate::find(setting, Some(app_dir)) {
@@ -154,7 +154,7 @@ fn run_once(setting: Option<&str>, app_dir: &Path, config: &Path, status: &Mutex
         Err(error) => return Ended::Waiting(RunState::Failed(error)),
     };
     let log = app_dir.join(FOLDER).join(LOG_NAME);
-    let (mut child, _job) = match start(&exe, config, &log) {
+    let (mut child, job) = match start(&exe, config, &log) {
         Ok(started) => started,
         Err(error) => return Ended::Waiting(RunState::Failed(error)),
     };
@@ -166,18 +166,21 @@ fn run_once(setting: Option<&str>, app_dir: &Path, config: &Path, status: &Mutex
             other => {
                 let _ = child.kill();
                 let _ = child.wait();
+                drop(job);
                 return if other.is_ok() { Ended::Restart } else { Ended::Stopped };
             }
         }
         match child.try_wait() {
             Ok(None) => {}
             Ok(Some(exit)) => {
+                drop(job);
                 let reason = UserError::new("ccConnect.exited", format!("cc-connect stopped ({exit}).")).detail(last_line(&log).unwrap_or_default());
                 return Ended::Exited { stable: started.elapsed() >= STABLE, reason };
             }
             Err(error) => {
                 let _ = child.kill();
                 let _ = child.wait();
+                drop(job);
                 return Ended::Exited { stable: false, reason: UserError::new("ccConnect.lost", "Lost track of cc-connect.").detail(error) };
             }
         }
@@ -198,6 +201,11 @@ fn start(exe: &Path, config: &Path, log: &Path) -> Result<(Child, Job), UserErro
         .stdout(out)
         .stderr(err)
         .creation_flags(CREATE_NO_WINDOW | job::START_SUSPENDED);
+    #[cfg(unix)]
+    {
+        std::os::unix::process::CommandExt::process_group(&mut command, 0);
+        command.env("PATH", locate::child_path());
+    }
     if let Some(dir) = config.parent() {
         command.current_dir(dir);
     }
@@ -242,5 +250,39 @@ mod tests {
         fs::write(&log, "").unwrap();
         assert_eq!(last_line(&log), None);
         let _ = fs::remove_file(&log);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn dropping_the_started_job_ends_cc_connect_and_its_children() {
+        use std::{os::unix::fs::PermissionsExt, thread, time::Instant};
+        let dir = std::env::temp_dir().join(format!("fuyu-cc-connect-runner-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let exe = dir.join("fake-cc-connect");
+        fs::write(&exe, b"#!/bin/sh\nsleep 30 &\necho $!\nwait\n").unwrap();
+        fs::set_permissions(&exe, fs::Permissions::from_mode(0o755)).unwrap();
+        let config = dir.join("config.toml");
+        fs::write(&config, "").unwrap();
+        let log = dir.join("cc-connect.log");
+        let (mut child, job) = super::start(&exe, &config, &log).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(3);
+        let grandchild: u32 = loop {
+            if let Some(pid) = last_line(&log).and_then(|line| line.parse().ok()) {
+                break pid;
+            }
+            assert!(Instant::now() < deadline, "fake cc-connect did not write grandchild pid");
+            thread::sleep(Duration::from_millis(20));
+        };
+        assert!(crate::platform::process::image_path(grandchild).is_some());
+        let _ = child.kill();
+        let _ = child.wait();
+        drop(job);
+        let stop_deadline = Instant::now() + Duration::from_secs(2);
+        while crate::platform::process::image_path(grandchild).is_some() && Instant::now() < stop_deadline {
+            thread::sleep(Duration::from_millis(20));
+        }
+        assert!(crate::platform::process::image_path(grandchild).is_none());
+        let _ = fs::remove_dir_all(&dir);
     }
 }

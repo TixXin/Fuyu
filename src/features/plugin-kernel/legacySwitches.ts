@@ -1,8 +1,6 @@
 import type { IslandSettings } from "../../lib/settings/types";
 import type { BuiltinPlugin } from "./api.ts";
 
-export type SwitchTarget = string | { readonly plugin: string; readonly key: string };
-
 export const LEGACY_SWITCHES = {
   todoEnabled: "todos",
   translationEnabled: "translation",
@@ -14,28 +12,17 @@ export const LEGACY_SWITCHES = {
   deviceAlerts: "device-events",
   levelPopup: "system-levels",
   deviceUseIndicator: "device-use",
-  mailEnabled: { plugin: "messages", key: "mail" },
-} as const satisfies Partial<Record<keyof IslandSettings, SwitchTarget>>;
+} as const satisfies Partial<Record<keyof IslandSettings, string>>;
 
 export type LegacySwitch = keyof typeof LEGACY_SWITCHES;
 
-type Switches = Partial<Record<LegacySwitch, boolean>>;
+type Switches = Partial<Record<LegacySwitch | "mailEnabled", boolean>>;
 
 const FIELDS = Object.keys(LEGACY_SWITCHES) as LegacySwitch[];
 
-const TARGETS: Record<LegacySwitch, SwitchTarget> = LEGACY_SWITCHES;
-
-function pluginOf(plugins: readonly BuiltinPlugin[] | null, target: SwitchTarget) {
-  const id = typeof target === "string" ? target : target.plugin;
-  return plugins?.find((plugin) => plugin.id === id);
-}
-
 export function switchOf(plugins: readonly BuiltinPlugin[] | null, field: LegacySwitch): boolean | undefined {
-  const target = TARGETS[field];
-  const plugin = pluginOf(plugins, target);
-  if (!plugin || typeof target === "string") return plugin?.enabled;
-  const value = plugin.config[target.key];
-  return typeof value === "boolean" ? value : undefined;
+  const id = LEGACY_SWITCHES[field];
+  return plugins?.find((plugin) => plugin.id === id)?.enabled;
 }
 
 export function withSwitches<S extends Switches>(settings: S, plugins: readonly BuiltinPlugin[] | null): S {
@@ -44,47 +31,32 @@ export function withSwitches<S extends Switches>(settings: S, plugins: readonly 
     const on = switchOf(plugins, field);
     if (on !== undefined && settings[field] !== on) next = { ...next, [field]: on };
   }
+  const mail = plugins?.find((plugin) => plugin.id === "messages")?.config.mail;
+  if (typeof mail === "boolean" && "mailEnabled" in settings && settings.mailEnabled !== mail) {
+    next = { ...next, mailEnabled: mail };
+  }
   return next;
 }
 
-export function switchChanges(before: Switches, after: Switches): [SwitchTarget, boolean][] {
-  return FIELDS.filter((field) => typeof after[field] === "boolean" && after[field] !== before[field]).map((field) => [TARGETS[field], after[field] as boolean]);
-}
-
-export interface ReconcileState {
-  stored: Switches;
-  switched: Switches;
-}
-
-export interface Reconciled {
-  switch: [SwitchTarget, boolean][];
-  mirror: Partial<Record<LegacySwitch, boolean>>;
+export interface MigratedLegacySwitches {
+  switch: [string, boolean][];
   migrated: LegacySwitch[];
-  seen: ReconcileState;
 }
 
-export function reconcile(settings: Switches, plugins: readonly BuiltinPlugin[], seen: ReconcileState | null, migrated: ReadonlySet<string>): Reconciled {
-  const result: Reconciled = { switch: [], mirror: {}, migrated: [], seen: { stored: {}, switched: {} } };
+export function migrateLegacySwitches(
+  settings: Partial<Record<LegacySwitch, boolean>>,
+  plugins: readonly BuiltinPlugin[],
+  migrated: ReadonlySet<string>,
+): MigratedLegacySwitches {
+  const result: MigratedLegacySwitches = { switch: [], migrated: [] };
   for (const field of FIELDS) {
+    if (migrated.has(field)) continue;
     const stored = settings[field];
-    const on = switchOf(plugins, field);
-    result.seen.stored[field] = stored;
-    result.seen.switched[field] = on;
-    if (typeof stored !== "boolean" || !pluginOf(plugins, TARGETS[field])) continue;
-    if (on === undefined) {
-      result.switch.push([TARGETS[field], stored]);
-      if (!migrated.has(field)) result.migrated.push(field);
-      continue;
-    }
-    if (!migrated.has(field)) {
-      result.migrated.push(field);
-      if (!stored && on) result.switch.push([TARGETS[field], false]);
-      else if (stored !== on) result.mirror[field] = on;
-      continue;
-    }
-    if (stored === on) continue;
-    if (seen && stored !== seen.stored[field]) result.switch.push([TARGETS[field], stored]);
-    else result.mirror[field] = on;
+    const id = LEGACY_SWITCHES[field];
+    const plugin = plugins.find((item) => item.id === id);
+    if (typeof stored !== "boolean" || !plugin) continue;
+    result.migrated.push(field);
+    if (!stored && plugin.enabled) result.switch.push([id, false]);
   }
   return result;
 }

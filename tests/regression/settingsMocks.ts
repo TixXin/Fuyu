@@ -1,9 +1,39 @@
+import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
+import catalog from "../../src/features/builtins.json";
+import { IM_SOURCE_IDS, type ImSourceId } from "../../src/features/messages/im-sources/imSourcesState";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
+import { BUILTIN_PLUGINS_CHANGED, type BuiltinPlugin } from "../../src/features/plugin-kernel/api";
 import { DEMO_CURRENT_VERSION } from "./updateDemo";
 import { updateRuntimeMock } from "./updateRuntimeMock";
 
-const demoUpdate = Boolean((globalThis as { focusdDemoUpdate?: boolean }).focusdDemoUpdate);
+let builtins: BuiltinPlugin[] | null = null;
+const INSTALLED_MOCK_IM_SOURCES = new Set<ImSourceId>(["telegram", "feishu"]);
+
+export function mockBuiltinPlugins(): BuiltinPlugin[] {
+  if (!builtins) {
+    const stored = JSON.parse(globalThis.localStorage?.getItem("fuyu-settings") ?? "{}") as Record<string, unknown>;
+    const voice = JSON.parse(globalThis.localStorage?.getItem("fuyu-voice-input") ?? "{}") as Record<string, unknown>;
+    const allOn = new URLSearchParams(globalThis.location?.search ?? "").get("state") === "on";
+    builtins = catalog.plugins.map(({ id, kind }) => ({
+      id,
+      kind: kind === "essential" ? "essential" : "builtin",
+      enabled: id === "screenshot" ? stored.screenshotEnabled === true : id === "voice-input" ? voice.enabled === true : true,
+      background: [],
+      config: id === "messages"
+        ? {
+            qq: true,
+            wechat: true,
+            mail: stored.mailEnabled !== false,
+            ...(allOn ? Object.fromEntries(IM_SOURCE_IDS.map((source) => [source, true])) : {}),
+          }
+        : {},
+    }));
+  }
+  return builtins.map((plugin) => ({ ...plugin, config: { ...plugin.config } }));
+}
+
+const demoUpdate = Boolean((globalThis as { fuyuDemoUpdate?: boolean }).fuyuDemoUpdate);
 let revision = 0;
 export const commands: string[] = [];
 export const revokedPermissions: string[] = [];
@@ -47,6 +77,23 @@ mockIPC((command, payload) => {
     command = "list_plugins";
   }
   switch (command) {
+    case "get_builtin_plugins": return mockBuiltinPlugins();
+    case "set_builtin_plugin_enabled": {
+      const list = mockBuiltinPlugins();
+      builtins = list.map((plugin) => (plugin.id === String(args.id) ? { ...plugin, enabled: Boolean(args.enabled) } : plugin));
+      void emit(BUILTIN_PLUGINS_CHANGED, mockBuiltinPlugins());
+      return mockBuiltinPlugins();
+    }
+    case "set_builtin_plugin_config": {
+      const list = mockBuiltinPlugins();
+      builtins = list.map((plugin) => (
+        plugin.id === String(args.id)
+          ? { ...plugin, config: { ...plugin.config, [String(args.key)]: args.value } }
+          : plugin
+      ));
+      void emit(BUILTIN_PLUGINS_CHANGED, mockBuiltinPlugins());
+      return mockBuiltinPlugins();
+    }
     case "get_reply_marker_state": return replyMarker();
     case "get_editor_extension_states":
       return [
@@ -60,6 +107,23 @@ mockIPC((command, payload) => {
     case "get_local_api_info": return { running: true, url: "http://127.0.0.1:39271/v1", configPath: "C:\\Users\\demo\\.fuyu\\local-api.json" };
     case "copy_local_api_token": return null;
     case "get_data_home": return { home: "C:\\Users\\demo\\.fuyu", defaultHome: "C:\\Users\\demo\\.fuyu", source: "default" };
+    case "get_sync_status":
+    case "set_sync_config":
+      return {
+        phase: "off",
+        folder: null,
+        deviceId: "demo-device-id",
+        lastSyncAt: null,
+        lastError: null,
+        confirm: null,
+        categories: ["todos", "snippets", "links", "settings", "presets"].map((category) => ({ category, state: "waiting", message: null, lastSyncAt: null })),
+        optionalGroups: [],
+        devices: [],
+        skippedFiles: [],
+      };
+    case "sync_now":
+    case "confirm_sync_deletions":
+      return null;
     case "update_backup_list": return {
       backups: [{ id: "pre-update-0.3.9-20261115-100000", fromVersion: "0.3.9", toVersion: "0.4.0", createdAt: Date.UTC(2026, 10, 15, 2), size: 245760, files: 12, skipped: [] }],
       brokenFiles: [],
@@ -84,6 +148,39 @@ mockIPC((command, payload) => {
       return next;
     }
     case "get_qq_notification_state": return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+    case "get_im_sources_state": {
+      const msgConfig = mockBuiltinPlugins().find((plugin) => plugin.id === "messages")?.config ?? {};
+      const target = typeof args.source === "string" ? (args.source as ImSourceId) : null;
+      const ids = target ? [target] : IM_SOURCE_IDS;
+      return ids.map((source) => {
+        const enabled = msgConfig[source] === true;
+        return {
+          source,
+          revision: ++revision,
+          enabled,
+          installed: INSTALLED_MOCK_IM_SOURCES.has(source),
+          status: enabled ? "listening" : "disabled",
+          items: [],
+          error: null,
+        };
+      });
+    }
+    case "set_im_source_auto_clear": {
+      const source = String(args.source) as ImSourceId;
+      const msgConfig = mockBuiltinPlugins().find((plugin) => plugin.id === "messages")?.config ?? {};
+      const enabled = msgConfig[source] === true;
+      return {
+        source,
+        revision: ++revision,
+        enabled,
+        installed: INSTALLED_MOCK_IM_SOURCES.has(source),
+        status: enabled ? "listening" : "disabled",
+        items: [],
+        error: null,
+      };
+    }
+    case "request_im_notification_access": return "allowed";
+    case "open_im_notification_settings": return null;
     case "set_wechat_expose_ui": case "set_wechat_hide_taskbar_button": return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
     case "has_translation_secret": return args.provider === "deepseek";
     case "set_translation_shortcut": return args.shortcut;
@@ -98,7 +195,7 @@ mockIPC((command, payload) => {
     case "updater_diagnostics": return updateRuntimeMock(command, args, demoUpdate);
     case "get_cached_plugin_market": return null;
     case "list_plugin_views": return { views: [], status: [], statusItems: [{ pluginId: "dev.example.todo-sync", pluginName: { "zh-CN": "待办同步示例", en: "Todo sync example" }, itemId: "count" }] };
-    case "get_theme_market": return [{ id: "focusd.midnight", name: { "zh-CN": "午夜蓝", en: "Midnight" }, author: "TixXin", appearance: { islandBackgroundColor: "#0f1a2e", islandCornerRadius: 28 } }, { id: "someone.dusk", name: { "zh-CN": "黄昏", en: "Dusk" }, description: { "zh-CN": "一句话", en: "One line" }, author: "someone", appearance: { islandBackgroundColor: "#1b1020", collapsedScale: 1.3 } }];
+    case "get_theme_market": return [{ id: "fuyu.midnight", name: { "zh-CN": "午夜蓝", en: "Midnight" }, author: "TixXin", appearance: { islandBackgroundColor: "#0f1a2e", islandCornerRadius: 28 } }, { id: "fuyu.polar", name: { "zh-CN": "极光霜", en: "Polar" }, description: { "zh-CN": "深浅两套配色", en: "Dark and light sets" }, author: "TixXin", appearance: { opacity: 92, dark: { islandBackgroundColor: "#141b26", taskTextColor: "#edf2fa", pulseColor: "#4ee0a0" }, light: { islandBackgroundColor: "#eef3fa", taskTextColor: "#18212e", pulseColor: "#188f59" } } }, { id: "someone.dusk", name: { "zh-CN": "黄昏", en: "Dusk" }, description: { "zh-CN": "一句话", en: "One line" }, author: "someone", appearance: { islandBackgroundColor: "#1b1020", collapsedScale: 1.3 } }];
     case "get_plugin_market_likes": return { "dev.example.new": { count: 12, url: "https://github.com/TixXin/fuyu-plugins/discussions/9" }, "dev.example.todo-sync": { count: 3, url: "https://github.com/TixXin/fuyu-plugins/discussions/8" } };
     case "get_plugin_market": return {
       indexUrl: "https://raw.githubusercontent.com/TixXin/fuyu-plugins/main/index.json",
@@ -107,7 +204,7 @@ mockIPC((command, payload) => {
       trustedPublishers: [],
       officialPublisher: "TixXin",
       plugins: [
-        { id: "dev.example.todo-sync", name: { "zh-CN": "待办同步示例", en: "Todo sync example" }, description: null, version: "1.1.0", apiVersion: 1, minAppVersion: null, author: "FocuSD", homepage: "", permissions: ["todos:read"], runtime: "powershell", download: { url: "https://example.com/a.zip", sha256: "0".repeat(64), size: 1 }, publisher: null, repo: "TixXin/fuyu", categories: ["todos", "productivity"], readme: "# 待办同步\n\n每 **5 分钟**同步一次，见 [文档](https://example.com/docs)。\n\n- 读取待办\n- 写入日志", changelog: "## 1.1.0\n\n- 新增同步间隔设置", installedVersion: "1.0.0", incompatible: null, revoked: null, signedBy: "0123456789abcdef", signingKeyChanged: true },
+        { id: "dev.example.todo-sync", name: { "zh-CN": "待办同步示例", en: "Todo sync example" }, description: null, version: "1.1.0", apiVersion: 1, minAppVersion: null, author: "Fuyu", homepage: "", permissions: ["todos:read"], runtime: "powershell", download: { url: "https://example.com/a.zip", sha256: "0".repeat(64), size: 1 }, publisher: null, repo: "TixXin/fuyu", categories: ["todos", "productivity"], readme: "# 待办同步\n\n每 **5 分钟**同步一次，见 [文档](https://example.com/docs)。\n\n- 读取待办\n- 写入日志", changelog: "## 1.1.0\n\n- 新增同步间隔设置", installedVersion: "1.0.0", incompatible: null, revoked: null, signedBy: "0123456789abcdef", signingKeyChanged: true },
         { id: "dev.example.new", name: { "zh-CN": "新插件", en: "New plugin" }, description: { "zh-CN": "还没安装。", en: "Not installed yet." }, version: "0.1.0", apiVersion: 1, minAppVersion: null, author: "", homepage: "", permissions: [], runtime: "node", download: { url: "https://example.com/b.zip", sha256: "0".repeat(64), size: 1 }, publisher: "someone-with-a-long-github-name", repo: null, categories: ["developer"], installedVersion: null, incompatible: null, revoked: null, signedBy: null, signingKeyChanged: false, verified: { via: "domain", domain: "plugins.example.com" } },
       ],
     };
@@ -122,8 +219,8 @@ mockIPC((command, payload) => {
       brokenStateBackup: "C:\\Users\\demo\\.fuyu\\plugins.broken-20261114-101500.json",
       pluginsDir: "C:\\Users\\demo\\AppData\\Roaming\\com.tixxin.fuyu\\plugins",
       plugins: [
-        { ...base, id: "focusd.local-api", builtin: true, invalidReason: null, name: { "zh-CN": "本地接口", en: "Local API" }, description: { "zh-CN": "让脚本通过 HTTP 读写待办。", en: "Lets scripts read and change todos over HTTP." }, version: "1.0.0", author: "FocuSD", homepage: "", permissions: ["todos:read", "todos:write"], commands: [{ id: "reset-token", title: { "zh-CN": "重新生成令牌", en: "Regenerate token" } }], runtime: "builtin", hasProcess: true, enabled: true, needsApproval: false, status: "running", error: null, log: [], settingsSchema: [{ key: "allowWrite", type: "boolean", title: { "zh-CN": "允许修改", en: "Allow changes" }, default: false }], settings: { allowWrite: false }, info: [{ label: { "zh-CN": "地址", en: "Address" }, value: "http://127.0.0.1:39271/v1", copy: true, secret: false }, { label: { "zh-CN": "访问令牌", en: "Access token" }, value: "", hasValue: true, copy: true, secret: true }] },
-        { ...base, activation: "onDemand", activationEvents: ["onCommand:sync-now", "onUri"], sensitive: { uri: "allowed" }, preReleaseAvailable: "1.1.0-beta.1", startupMs: 120, resources: { memoryBytes: 24 * 1024 * 1024, runtimeBytes: 20 * 1024 * 1024, processes: [{ name: "node.exe", memoryBytes: 24 * 1024 * 1024, workingSetBytes: 31 * 1024 * 1024 }], cpuPercent: 0.4, highCpu: false }, id: "dev.example.todo-sync", builtin: false, invalidReason: null, name: { "zh-CN": "待办同步示例", en: "Todo sync example" }, description: { "zh-CN": "每 5 分钟把待办数量写进日志，同步完成后可以在岛上提醒，也可以读取剪贴板里的待办文本并自动拆成多条待办。这段描述故意写长，用来检查两行截断。", en: "Logs the todo count every 5 minutes, can notify on the island after a sync, and can read todo text from the clipboard and split it into several todos. Long on purpose to check the two-line clamp." }, version: "1.0.0", author: "FocuSD", homepage: "https://github.com/flyl1u/fly-island", permissions: ["todos:read", "todos:write", "notes:write", "island:notify", "clipboard:read"], commands: [{ id: "sync-now", title: { "zh-CN": "立即同步", en: "Sync now" }, keybinding: "Ctrl+Alt+S" }], runtime: "node", hasProcess: true, enabled: true, needsApproval: false, status: "running", error: null, log: ["started", "3 open todos"], settingsSchema: [{ key: "interval", type: "number", title: { "zh-CN": "同步间隔（分钟）", en: "Sync every (minutes)" }, min: 1, max: 60, default: 5 }, { key: "notify", type: "boolean", title: { "zh-CN": "同步后提醒", en: "Notify after sync" } }], settings: { interval: 5, notify: false }, info: [{ label: { "zh-CN": "上次同步", en: "Last sync" }, value: "10:30", copy: false, secret: false }, { label: { "zh-CN": "令牌", en: "Token" }, value: "", hasValue: true, copy: true, secret: true }] },
+        { ...base, id: "focusd.local-api", builtin: true, invalidReason: null, name: { "zh-CN": "本地接口", en: "Local API" }, description: { "zh-CN": "让脚本通过 HTTP 读写待办。", en: "Lets scripts read and change todos over HTTP." }, version: "1.0.0", author: "Fuyu", homepage: "", permissions: ["todos:read", "todos:write"], commands: [{ id: "reset-token", title: { "zh-CN": "重新生成令牌", en: "Regenerate token" } }], runtime: "builtin", hasProcess: true, enabled: true, needsApproval: false, status: "running", error: null, log: [], settingsSchema: [{ key: "allowWrite", type: "boolean", title: { "zh-CN": "允许修改", en: "Allow changes" }, default: false }], settings: { allowWrite: false }, info: [{ label: { "zh-CN": "地址", en: "Address" }, value: "http://127.0.0.1:39271/v1", copy: true, secret: false }, { label: { "zh-CN": "访问令牌", en: "Access token" }, value: "", hasValue: true, copy: true, secret: true }] },
+        { ...base, activation: "onDemand", activationEvents: ["onCommand:sync-now", "onUri"], sensitive: { uri: "allowed" }, preReleaseAvailable: "1.1.0-beta.1", startupMs: 120, resources: { memoryBytes: 24 * 1024 * 1024, runtimeBytes: 20 * 1024 * 1024, processes: [{ name: "node.exe", memoryBytes: 24 * 1024 * 1024, workingSetBytes: 31 * 1024 * 1024 }], cpuPercent: 0.4, highCpu: false }, id: "dev.example.todo-sync", builtin: false, invalidReason: null, name: { "zh-CN": "待办同步示例", en: "Todo sync example" }, description: { "zh-CN": "每 5 分钟把待办数量写进日志，同步完成后可以在岛上提醒，也可以读取剪贴板里的待办文本并自动拆成多条待办。这段描述故意写长，用来检查两行截断。", en: "Logs the todo count every 5 minutes, can notify on the island after a sync, and can read todo text from the clipboard and split it into several todos. Long on purpose to check the two-line clamp." }, version: "1.0.0", author: "Fuyu", homepage: "https://github.com/TixXin/fuyu", permissions: ["todos:read", "todos:write", "notes:write", "island:notify", "clipboard:read"], commands: [{ id: "sync-now", title: { "zh-CN": "立即同步", en: "Sync now" }, keybinding: "Ctrl+Alt+S" }], runtime: "node", hasProcess: true, enabled: true, needsApproval: false, status: "running", error: null, log: ["started", "3 open todos"], settingsSchema: [{ key: "interval", type: "number", title: { "zh-CN": "同步间隔（分钟）", en: "Sync every (minutes)" }, min: 1, max: 60, default: 5 }, { key: "notify", type: "boolean", title: { "zh-CN": "同步后提醒", en: "Notify after sync" } }], settings: { interval: 5, notify: false }, info: [{ label: { "zh-CN": "上次同步", en: "Last sync" }, value: "10:30", copy: false, secret: false }, { label: { "zh-CN": "令牌", en: "Token" }, value: "", hasValue: true, copy: true, secret: true }] },
         { ...base, id: "broken.plugin", builtin: false, invalidReason: "focusd-plugin.json is not valid: expected value at line 1 column 1", name: null, description: null, version: "", author: "", homepage: "", permissions: [], commands: [], runtime: "none", hasProcess: false, enabled: false, needsApproval: false, status: "stopped", error: null, log: [], settingsSchema: [], settings: {}, info: [] },
       ],
       };
@@ -139,7 +236,11 @@ mockIPC((command, payload) => {
     ];
     case "list_ssh_hosts": return ["devbox", "nas"]; case "get_agent_remote_hosts": return [{ host: "devbox", fetchedAt: 0, error: null, fetching: false }];
     case "get_agent_hooks_state": return { codex: "notInstalled", claudeCode: "notInstalled", scriptsOutdated: false };
+    case "uninstall_agent_status_hooks": return { removedAt: 1700000000000, remotes: [] };
     case "list_sound_packs": return [{ id: "chimes-1", name: "Chimes", author: "Ann", license: "CC0-1.0", sounds: { complete: "complete.wav", error: "error.wav" } }];
+    case "get_v2_plugin_migration":
+    case "dismiss_v2_plugin_migration":
+      return { official: [], other: [], islandPending: false, settingsPending: false };
     default: return null;
   }
 }, { shouldMockEvents: true });

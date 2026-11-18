@@ -3,6 +3,7 @@ import { defineSlot } from "../../plugin-kernel/slots";
 import { islandContributions } from "../../plugin-kernel/useIslandContributions";
 import { useBackgroundUpdateCheck } from "../useBackgroundUpdateCheck";
 import { useIslandAutoUpdate } from "../useIslandAutoUpdate";
+import { OWNER } from "./owner";
 import { useUpdateContributions } from "./updateIsland";
 
 type RunnerProps = {
@@ -22,4 +23,4 @@ function UpdaterRunner({ mode, openSettings }: RunnerProps) {
   return null;
 }
 
-runnerSlot.add({ id: "updater.runner", component: UpdaterRunner });
+runnerSlot.add({ id: "updater.runner", component: UpdaterRunner }, OWNER);

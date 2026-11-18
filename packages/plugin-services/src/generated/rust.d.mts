@@ -18,7 +18,7 @@ export type AppEcho = { echo: JsonValue, };
 
 export type AppVersion = { version: string, platform: string, };
 
-export type CalendarEvent = { uid: string, title: string, startMs: number, endMs: number, allDay: boolean, location: string | null, meetingLink: string | null, calendar: string, };
+export type CalendarEvent = { uid: string, title: string, startMs: number, endMs: number, allDay: boolean, location: string | null, meetingLink: string | null, calendar: string, declined: boolean, free: boolean, };
 
 export type CalendarEvents = { events: Array<CalendarEvent>, problems: Array<CalendarProblem>, fetchedAt: number, fromMs: number, toMs: number, sourceCount: number, };
 

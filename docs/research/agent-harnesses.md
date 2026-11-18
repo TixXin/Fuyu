@@ -1,5 +1,7 @@
 # 接入更多 AI 代理：Antigravity、WorkBuddy、DeepSeek Harness、opencode
 
+> 2026-11-17 追加五家代理（Grok CLI、Factory Droid、Kimi Code、DeepSeek Harness、TRAE / TRAE CN）岛上审批全网调研与开源项目横向对比（issue #737），见文末「五家代理岛上审批复查与开源项目横向对比」一节。
+
 > 2026-11-15 追加豆包（issue #312，任务 B29），见下面「豆包」一节，结论在那一节开头。其他国内编程代理（Qoder、CodeBuddy Code、Qwen Code、ZCode、Kimi Code 等）见 [china-coding-agents.md](china-coding-agents.md)。
 
 > 2026-11-14 追加 opencode（issue #349，任务 B30），见下面「opencode」一节，结论在那一节开头。
@@ -61,7 +63,7 @@
 **会话文件**：
 
 - 记录在 `<数据目录>/brain/<conversationId>/.system_generated/logs/transcript.jsonl` [1]；CLI 1.5.8 实测文件名是 `transcript_full.jsonl`。每行的格式没找到文档，B23.3 要做成读不懂的记录就跳过。
-- 标题：CLI 有 `conversation_summaries.db`（SQLite，表 `conversation_summaries` 有 `title`、`status`、`last_modified_time`）和 `annotations/<id>.pbtxt`（`title:"..."`）[12]（未核实）。App 和 IDE 的 `conversations/*.pb` 是加密的 protobuf，新版 IDE 改成 `*.db` [13]（未核实）。为了不读加密文件、不加 SQLite 依赖，标题先用第一条用户输入，读不到就用文件夹名，和 Claude Code 没有标题时的做法一样。
+- 标题：2026-11-17 在 macOS 桌面版和 CLI 核实，主会话都在各自数据目录的 `annotations/<id>.pbtxt` 里实时写入 `title:"..."`（手动改名和自动生成的标题同步更新，归档时带 `archived:true`），`conversation_summaries.db` 的 `title` 与之一致；子代理会话（`parent_conversation_id` 非空）没有标题，且 `transcript.jsonl` 第 0 步固定是 `SYSTEM_MESSAGE`（主会话第 0 步是带 `<USER_REQUEST>` 的 `USER_INPUT`）。钩子的 `lastUserInput` 只给最新一轮输入，多轮回复「继续」时会被覆盖，所以标题应优先读 `annotations/<id>.pbtxt`，还没生成时退回 transcript 首条 `USER_INPUT`。
 
 **用量**：`/usage` 按模型组（Gemini、第三方模型）给出 5 小时和每周两个窗口，显示剩余量 [2]，和现在的用量环正好对得上。Atoll 的做法 [14]：
 
@@ -69,7 +71,7 @@
 2. `POST http(s)://127.0.0.1:<端口>/exa.language_server_pb.LanguageServerService/RetrieveUserQuotaSummary`（失败再试 `GetUserStatus`），请求头带 `x-codeium-csrf-token`，返回 `groups[].buckets[]`，每个桶有 `bucketId`（`gemini-5h`、`gemini-weekly`、`3p-5h`、`3p-weekly`）、`remainingFraction`、`resetTime`。
 3. 岛没开时用凭据里的 token 调 `cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary`。
 
-这些都是内部接口，随版本可能失效，而且在 Windows 上没人验证过。用户定这一轮不做，等有人能实测时再新增 `UsageSource::Antigravity`。
+这些都是内部接口，随版本可能失效。2026-11-17（B25，#170）在 macOS 真机（Antigravity 2.32.2）核实并落地：`language_server` 同时监听本地 HTTP 与 HTTPS 环回端口，明文 HTTP 端口可直接响应 `RetrieveUserQuotaSummary`（`gemini-5h`、`gemini-weekly`、`3p-5h`、`3p-weekly`）与 `GetUserStatus`（套餐名如 `Pro`）；未运行时只读 `~/.gemini/jetski-standalone-oauth-token` 或 `~/.gemini/oauth_creds.json` 调 `daily-cloudcode-pa.googleapis.com`（`retrieveUserQuotaSummary` 只回 `3p-*` 时补调 `fetchAvailableModels` 取 Gemini 5 小时配额），接口变更时提示「接口失效」而不显示 `0%`。
 
 **Linux**：CLI 用 `install.sh` 装到 `~/.local/bin/agy` [3]。官方只给 App 和 IDE 写了 Linux 要求（glibc ≥ 2.28）[4]，社区说 CLI 也要 2.28，另有说法是 2.17 也行，互相矛盾（未核实）。zcm6 是 CentOS 7、glibc 2.17，大概率跑不了。
 
@@ -280,6 +282,128 @@ opencode 现在有两条线同时在发：**2.x**（2.0 在 2026-10 初发布，
 - **豆包工作**：办公代理，有自己的桌面客户端，和飞书打通，Mac 上能控制电脑；没找到本地数据的说明，未核实。不是编程代理，不接。
 - **用豆包模型跑别家代理**：火山方舟的编程套餐让 Claude Code、Codex 等用豆包模型，这种情况岛已经按 Claude Code / Codex 显示，不用另接。
 
+## pi（pi-coding-agent / PiDeck）（2026-11-17 追加）
+
+> 日期：2026-11-17。问题：Agent 页接入 `@earendil-works/pi-coding-agent`（仓库 `earendil-works/pi`）及基于它的桌面端 `PiDeck` / `PiCove`（issue #745），摸清形态、会话 JSONL 格式、extension 生命周期、全局提示词、窗口跳转及通用第三方代理接入方式。范围：`earendil-works/pi` 文档与源码、pi.dev 扩展文档、PiDeck / PiCove 仓库说明、#745 用户提供的 Windows 11 + pi 1.5.2 真实会话首行样本。本机没装 pi，**按文档与用户样本，未实测**。相关任务：B71。
+
+### 结论
+
+- **形态**：开源终端 CLI（`@earendil-works/pi-coding-agent`，命令 `pi`），以及把它当内核用的开源 Electron 桌面客户端 `PiDeck`（后改名 `PiCove`）[52][55]。两种形态共用同一套会话与配置目录 `~/.pi/agent`（环境变量 `PI_CODING_AGENT_DIR` 直接指向该目录，而非父级 `~/.pi`）[52][53]。
+- **会话**：树状 JSONL，路径 `~/.pi/agent/sessions/<编码后的 cwd>/<ISO 时间>_<session-id>.jsonl` [52][54]：
+  - 首行 `{"type":"session","version":3,"id":"<uuid>","timestamp":"<ISO>","cwd":"<路径>"}`。
+  - 标题记录 `{"type":"session_info","id":"...","parentId":"...","timestamp":"...","name":"<自定义标题>"}`（对应 `/name`、`--name` 或 `pi.setSessionName()`）[54]。
+  - 模型与思考档位记录：`{"type":"model_change","provider":"...","modelId":"...","model":"..."}`、`{"type":"thinking_level_change","thinkingLevel":"low|medium|high|max|auto"}` [52][54]。
+  - 上下文压缩记录：`{"type":"compaction",...}` [54]。
+  - 消息记录：`{"type":"message","id":"...","parentId":"...","timestamp":"...","message":{"role":"user"|"assistant"|"toolResult",...},"stopReason":"toolUse"|"stop"|"end_turn"|"error",...}`。助手工具调用块为 `{"type":"toolCall","id":"...","name":"bash|read|write|edit","arguments":{...}}`；工具结果为 `role: "toolResult"`（带 `toolCallId`、`toolName`、`content`、`isError`）；token 统计在 `usage`（`input`、`output`、`cacheRead`、`cacheWrite`、`totalTokens`）[54]。
+- **扩展（钩子）**：全局扩展目录 `~/.pi/agent/extensions/*.ts` 或 `*.js`（由 `jiti` 加载）[53]。默认导出 `export default function (pi)`，通过 `pi.on(event, handler)` 订阅生命周期 [53]：
+  - `session_start`（`event.reason` 为 `startup` / `new` / `resume` / `fork` / `reload`，`ctx.cwd`、`ctx.sessionManager.getSessionId()` / `getSessionFile()`）
+  - `agent_start`、`agent_end`
+  - `tool_call`（`event.toolName`、`event.toolCallId`、`event.input`，返回 `{ block: true, reason }` 可阻断工具执行；注意 pi 核心默认不设每次工具调用的确认弹窗，`tool_call` 对所有工具调用都会触发，岛上阻塞审批需按显式开关 `FUYU_PI_APPROVAL=1` 启用，避免默认拦下每次 `read`）
+  - `session_shutdown`（`event.reason` 为 `quit` / `reload` / `new` / `resume` / `fork`）
+- **全局提示词文件**：`~/.pi/agent/AGENTS.md`（或 `PI_CODING_AGENT_DIR/AGENTS.md`）[52]。
+- **用量**：自带多模型 BYOK，无统一官方订阅额度接口，会话内只计 token 与估算 `cost` [54]。
+- **SSH 远程**：Node CLI 可跑在 Linux 服务器上，会话是纯 `.jsonl` 文件，可直接加入 `RemoteFiles` 拉取 `~/.pi/agent/sessions`。
+- **跳转**：扩展在 `session_start` / `session_shutdown` 写 `agent-sessions/<id>.json`（记 `process.pid`），可沿进程链定位终端；无进程链时优先找运行中的 `PiDeck` / `PiCove` 桌面窗口，否则按目录名和标题匹配终端。
+
+## 五家代理岛上审批复查与开源项目横向对比（2026-11-17 追加，issue #737）
+
+> 日期：2026-11-17。问题：issue #737 提出为 Grok CLI（B57）、Factory Droid（B58）、Kimi Code（B52）补上岛上审批，为 DeepSeek Harness（DSH）补上「允许」，并为 TRAE / TRAE CN 扩充拦截工具、解决手动确认模式下还要在 TRAE 里再点一次的问题。本节通过全网搜索与开源灵动岛 / 桌宠项目源码对比，核实每家的上游源码与协议边界。范围：上游仓库 `deepseek-ai/deepseek-harness`、`MoonshotAI/kimi-code`，官方文档 `docs.factory.com`、`docs.trae.ai` / `docs.trae.cn`，本机 Grok CLI 1.0.77 随附文档 `~/.grok/docs/user-guide/`，以及五个主流开源同类项目（查询日期均为 2026-11-17）：`wxtsky/CodeIsland`（2,585 star）[56]、`Octane0411/open-vibe-island`（2,084 star）[57]、`erha19/ping-island`（1,145 star）[58]、`rullerzhou-afk/clawd-on-desk` [59]、`cdxiaodong/dsh-island` [60]。
+
+### 结论与横向对比总表
+
+先看五个开源项目与浮屿在这五家代理上的「岛上审批」实况对比：
+
+| 代理 | CodeIsland (2.5k★) [56] | Open Island (2.0k★) [57] | Ping Island (1.1k★) [58] | Clawd on Desk [59] | 浮屿现状 | 全网调研后的结论与建议 |
+|---|---|---|---|---|---|---|
+| **DeepSeek Harness (DSH)** | **支持允许 / 拒绝 / 交回**（靠 Cordis 插件 `dsh-island` 监听 `approval/request` waterfall）[60] | 未接入 | 未接入 | **支持允许 / 拒绝 / 交回**（靠内置 Cordis 插件 `dsh-clawd-bridge` 监听 `approval/request` waterfall）[59] | 仅拒绝 / 交回（挂官方实验桥接包 `dsh-hooks-claude-code` 拦 `PreToolUse`） | **强烈建议升级**：放弃官方 `dsh-hooks-claude-code`（DSH 0.2.1+ 已不再默认内置，且源码只认 `deny`/`ask`）[61]，改由浮屿在 `~/.fuyu/dsh-plugin/` 生成几十行原生 Cordis 插件监听 `approval/request`（`prepend: true`），即可完整支持 **`allowed-once`（允许）/ `rejected`（拒绝）/ `next()`（交回 DSH）**，且只在真需要审批时触发 [62] |
+| **Factory Droid (B58)** | 无审批（只按 5s 超时挂 `PreToolUse`，且 `HookServer` 只把 `PermissionRequest` 路由到审批卡）[56] | 无审批（CLI 只对 `PermissionRequest` 等 24h，而 Droid 无此事件）[57] | 未接入 | 未接入 | 只亮「等你」 | **可做（建议补上）**：Droid 官方文档支持在 `PreToolUse` 返回 `hookSpecificOutput.permissionDecision: "allow" \| "deny" \| "ask"`，其中 `allow` 明确跳过用户确认框 [63]。浮屿 `claude_compat.rs` 已有 `Reply::PreToolUse`，对副作用工具（如 `Bash\|Execute\|Edit\|Write\|MultiEdit`）开启即可 |
+| **TRAE / TRAE CN (B29)** | **IDE 版无审批**（`.trae/hooks.json` 全部 5s 超时，不路由 `PreToolUse`；仅企业版 `traecli-next` 有 `PermissionRequest`）[56] | 仅作为终端跳转目标，未接钩子 [57] | 仅窗口跳转，未接审批 [58] | **无审批**（明确标 `State-only: stdout is always {}`）[59] | 已支持 `RunCommand` 的 `PreToolUse` 审批（`allow`/`deny`/`ask`） | **浮屿已领先同类**：<br>1. **扩工具**：将 `trae.rs` 的 `APPROVED_TOOLS` 从 `RunCommand` 扩至写/改/删文件与 MCP 工具（不拦只读工具）。<br>2. **免二次点击**：TRAE 官方文档写明工具设为「手动确认」时钩子 `allow` 无法跳过 IDE 确认框 [42]；需在设置/文档引导用户将 TRAE 设为「自动执行」，由岛的 `PreToolUse` 充当唯一审批门（Allow 直接跑、Deny 拦、交回 TRAE 回 `ask` 才在 IDE 弹窗）。<br>3. **顺手修一个坑**：CodeIsland PR #341 实测发现 TRAE 主会话所有事件都带 `agent_id`（如 `solo_agent`、`builder_v3`）[47]，浮屿应忽略 TRAE 的 `agent_id` 以免被误判为子代理 |
+| **Grok CLI (B57)** | **无审批**（`hooks/codeisland.json` 全事件 5s 超时，只观察）[56] | **无审批**（文档写明 `PreToolUse` fire-and-forget，`no permission round-trip`）[57] | 未接入 | **无审批**（文档写明 `Grok has no blocking PermissionRequest hook, so Allow/Deny stays in the Grok TUI`）[59] | 只亮「等你」 | **建议不做（维持现状）**：所有开源项目一致放弃。原因已在本机 Grok 1.0.77 文档核实：① 无 `PermissionRequest`；② `PreToolUse` 的 `allow` 仅代表「钩子不拦」，**不会替用户批准**，默认模式下终端照样弹框；③ Grok 的 `ls`、`git status` 等只读命令也走 `run_terminal_command`（在步骤 4 才免确认，而 `PreToolUse` 在步骤 1），挂阻塞钩子会导致每次只读命令都卡在岛上 [64] |
+| **Kimi Code (B52)** | **无审批**（`ConfigInstaller.swift` 注释写明无阻塞 `PermissionRequest`，`PreToolUse` 5s 超时只观察）[56] | **无审批**（不装 `PermissionRequest`，45s 超时）[57] | **无审批**（只做状态跟踪，另有 `KimiAppHookGuard` 守护桌面版配置）[58] | **无审批**（`kimi-hook.js` 将 `PermissionRequest` 映射为 `notification` 动画，无 Allow/Deny）[59] | 只亮「等你」 | **建议不做（维持现状）**：所有开源项目一致放弃。核对了 `MoonshotAI/kimi-code` 最新源码：① `agentExternalHooksService.ts` 中 `PermissionRequest` 是 `fireAndForget`；② `runHook.ts` 的 `structuredOutput()` 里 `if (hookSpecificOutput?.permissionDecision !== 'deny')` 一律只返回普通放行，继续走 `AgentPermissionGate` 弹终端确认框；③ Kimi 插件系统（`docs/en/customization/plugins.md`）只打包 Skills / Agents / MCP / 同样的 Hooks，没有进程内权限拦截 API [65] |
+
+---
+
+### 逐家源码级证据与实现细节
+
+#### 1. DeepSeek Harness（DSH）：为什么换成原生 Cordis 插件就能彻底解决「允许」
+
+1. **现有方案为什么卡死在「只能拒绝」**：
+   - 浮屿目前生成的 `fuyu-dsh-hooks.json` 依赖 `@deepseek-ai/dsh-hooks-claude-code` 桥接包。
+   - 查 `deepseek-ai/deepseek-harness` 主分支 `packages/experimental/hooks-claude-code/src/index.ts`（第 251–258 行）[61]：
+     ```ts
+     ctx.on('tools/pre-execute', async (exec, next): Promise<PreToolDecision> => {
+       const merged = await runPoint('PreToolUse', exec.name, preToolPayload(exec), ...)
+       if (merged.decision === 'deny') return { kind: 'deny', ... }
+       if (merged.decision === 'ask') return { kind: 'ask', ... }
+       return next()
+     })
+     ```
+     桥接包监听的是 `tools/pre-execute`（工具执行前），而不是审批服务；且它只处理 `deny` 和 `ask`，返回 `allow` 时只调 `next()` 进入后续流程，因此根本无法替用户批准审批。
+   - 此外，DSH `v0.2.1-alpha.1` 升级指南写明：CLI 与运行时已不再默认捆绑 `@deepseek-ai/dsh-hooks-claude-code`，用户若想挂载它还必须手动安装两个实验包（`dsh-hooks-claude-code` 与 `dsh-hook-protocol`）[61]。
+2. **开源项目验证过的正确路径（原生 Cordis 插件接入 `approval/request`）**：
+   - 查 `deepseek-ai/deepseek-harness` 的 `packages/interaction/user-approval/src/types.ts` [62]：DSH 的审批服务通过 Cordis waterfall 事件 `'approval/request'` 分发，签名为 `(req: ApprovalRequestEvent, next: () => Promise<ApprovalOutcome>) => Promise<ApprovalOutcome>`，返回值枚举为 `'allowed-once' | 'rejected' | 'cancelled' | 'unavailable'`。
+   - `rullerzhou-afk/clawd-on-desk`（`hooks/dsh-clawd-bridge/lib/index.js`）[59] 与 `cdxiaodong/dsh-island`（`src/index.ts`）[60] 均直接写了一个极简 Cordis 插件：
+     - 用 `ctx.inject(['approval'], (approvalCtx) => { approvalCtx.on('approval/request', handler, { prepend: true }) })` 挂在审批链最前面；
+     - 当 DSH 真正需要用户审批时才触发（携带 `req.toolName`、`req.callId`、`req.reason`、`req.agent?.session?.id`、`req.agent?.session?.header?.cwd` 以及 `req.signal`）；
+     - 岛上点「允许」返回 `'allowed-once'`，点「拒绝」返回 `'rejected'`，点「交回 DSH」或超时/未开审批则调用 `next()` 无缝落回 DSH 自己的网页或桌面审批弹窗；
+     - 若用户在 DSH 界面里先点了或者取消了回合，`req.signal` 会立刻触发 `abort`，插件即可中断向岛发起的 HTTP 请求，关闭岛上卡片。
+3. **对浮屿的落地建议**：
+   - 像 `opencode` 1.x（`fuyu-opencode-plugin.js`）和 `pi`（`fuyu-island.js`）一样，由浮屿「安装/修复」在 `~/.fuyu/dsh-plugin/` 下写出 `package.json` 和 `index.js`（纯 ESM，零外部 npm 依赖），既可由用户或 `dsh plugin add` 挂载到 profile，也能保留 `session/created`、`session/event`、`turn/end` 的状态灯写入，把 DSH 的岛上审批补齐为完整的「允许 / 拒绝 / 交回 DSH」。
+
+#### 2. Factory Droid（B58）：唯一一家适合直接用 `Reply::PreToolUse` 补齐的 CLI
+
+1. **上游与同类项目核实**：
+   - Factory 官方文档 `docs.factory.com/cli/configuration/hooks-guide` [63] 明确规定：Droid 的 `PreToolUse` 支持在 stdout 输出：
+     ```json
+     {
+       "hookSpecificOutput": {
+         "hookEventName": "PreToolUse",
+         "permissionDecision": "allow",
+         "permissionDecisionReason": "..."
+       }
+     }
+     ```
+     其中 `"allow"` 会**直接放行工具并跳过用户的交互确认框**（与 Claude Code 的 `PreToolUse` 语义相同，而与 Grok CLI 不同），`"deny"` 阻断并将原因传回模型，`"ask"` 交回终端让用户确认。
+   - `wxtsky/CodeIsland` 和 `Octane0411/open-vibe-island` 之所以没给 Droid 做审批，是因为它们的通用 Claude 适配只把 `PermissionRequest` 路由到审批卡，而 Droid 没有 `PermissionRequest` 事件 [56][57]。
+2. **对浮屿的落地建议**：
+   - 浮屿在 B56 已经在 `claude_compat.rs` 中预留了 `Reply::PreToolUse(&'static str)` 和 `pre_tool_use_response`（见 `src-tauri/src/agent_approval/decision.rs` 第 286 行）。
+   - 只需在 `droid.rs` 将 `SPEC.reply` 设为 `Reply::PreToolUse("^(Bash|Execute|RunCommand|Edit|Write|MultiEdit)$")`（只拦命令与写文件类工具，不拦 `Read`/`Grep`/`Glob`），并在 `decision.rs` 的 `Agent` 枚举和 `hooks/fuyu-agent-approval.*` 脚本中加入 `droid`，即可支持「允许 / 拒绝 / 交回终端」。
+
+#### 3. TRAE / TRAE CN（B29）：扩充工具范围 + 避免 `agent_id` 误判 + 说明自动模式配合法
+
+1. **同类项目对比**：
+   - `wxtsky/CodeIsland`（对 TRAE IDE 只设 5 秒超时观察）和 `rullerzhou-afk/clawd-on-desk`（stdout 固定回 `{}`）都**没有**给 TRAE IDE 做岛上审批 [56][59]，浮屿目前已支持 `RunCommand` 的 `PreToolUse` 审批，走在最前面。
+   - 但 `CodeIsland` 的 PR #341（`TraeHookPayloadTests.swift`）[47] 揭示了一个重要的真机细节：**TRAE 和 TRAE CN 的主会话在每个钩子事件里都会附带 `agent_id`**（例如内置的 `"solo_agent"`、`"builder_v3"` 或自定义 agent id）。在 Claude Code 里 `agent_id` 只在子代理事件出现；浮屿的 `decision.rs`（`HookInput::from_value`）和 `Activity::parse` 会读取 `agent_id`，需要确保 TRAE 路由下不会因为 `agent_id` 把主会话的审批或完成事件误当成子代理。
+2. **关于 #737 提的两个诉求**：
+   - **「覆盖其他工具调用」**：可以把 `src-tauri/src/agent_status/trae.rs` 的 `APPROVED_TOOLS` 从 `"RunCommand"` 扩充为覆盖命令、写改删文件与 MCP 的正则（例如 `"^(RunCommand|Bash|Write|Edit|MultiEdit|StrReplace|CreateFile|DeleteFile|WriteToFile|ReplaceInFile|mcp__.*)$"`），同时避开 `Read`/`View`/`Grep`/`Glob`/`List` 等只读工具，防止每次读文件都弹窗。
+   - **「手动确认模式下 TRAE 里还要再点一下」**：核查 TRAE 官方文档（`docs.trae.ai` / `docs.trae.cn`）[42]，TRAE 的权限优先级规定：当用户在 TRAE 内把工具设为「手动确认」时，`PreToolUse` 钩子返回 `allow` 只代表钩子通过，**TRAE 仍会弹出 IDE 确认框**（只有 `deny` 能直接拦住）。这是 TRAE 客户端自身的安全限制，任何外部钩子回包都无法强行绕过。但反过来，只要用户在 TRAE 里开启**「自动执行（Auto Run）」**并打开浮屿的「在岛上审批」：
+     - 每次匹配的工具调用先停在浮屿岛上；
+     - 在岛上点 **允许**（回 `allow`）→ TRAE 自动执行，**不再需要去 TRAE 里点第二次**；
+     - 在岛上点 **拒绝**（回 `deny`）→ 直接拦截；
+     - 在岛上点 **交回 TRAE**（回 `ask`）→ 触发 TRAE 的确认框（因为 `ask` 优先级高于自动执行）。
+     建议在文档与设置提示里把这一配对用法写清楚。
+
+#### 4. Grok CLI（B57）：全网一致不做，上游机制决定无法替批
+
+1. **上游文档与开源实现双重确认**：
+   - 本机 Grok CLI `1.0.77` 的官方文档 `~/.grok/docs/user-guide/10-hooks.md`（第 415 行）与 `22-permissions-and-safety.md`（第 125–138 行）[64] 写得非常明确：
+     1. Grok 没有 `PermissionRequest` 钩子；
+     2. `PreToolUse` 在权限流水线第 1 步执行，返回 `allow` **只表示「钩子不拦截（not blocked）」，绝不会替用户自动批准原本需要确认的调用**（第 5 步照常弹终端确认框）；
+     3. Grok 的只读 shell 命令（`ls`、`cat`、`git status`、`git diff`、`rg` 等）全部走同一个 `run_terminal_command`（别名 `Bash`）工具，要到流水线第 4 步才按内置只读白名单免确认。如果在第 1 步 `PreToolUse` 挂岛上阻塞审批，连每一次 `ls` 和 `git status` 都会把会话卡死在岛上等用户点，而真正危险的命令在岛上点完「允许」后回终端还要再点一次。
+   - `CodeIsland`、`Open Island`、`Clawd on Desk` 三家开源项目全部因此将 Grok CLI 设为只观察状态 + `Notification(permission_prompt)` 提醒，不做岛上审批 [56][57][59]。
+2. **结论**：维持现状（只亮「等你」），不在 `PreToolUse` 硬挂阻塞审批。
+
+#### 5. Kimi Code（B52）：全网一致不做，上游源码确认不支持外部批准
+
+1. **上游源码与插件系统核查**：
+   - 查 `MoonshotAI/kimi-code` 最新主分支源码 [65]：
+     1. `packages/agent-core-v2/src/features/externalHooks/agent/agentExternalHooksService.ts`（第 467–480 行）：`PermissionApprovalRequested` 事件触发 `PermissionRequest` 钩子时调用的是 `this.fireAndForget('PermissionRequest', ...)`，完全不读取钩子输出；
+     2. `packages/agent-core-v2/src/features/externalHooks/internal/runHook.ts`（第 180–211 行）：`PreToolUse` 调用的 `structuredOutput()` 中写死 `if (hookSpecificOutput?.permissionDecision !== 'deny') return result;`，即除了 `deny`（和退出码 2）变成 `action: 'block'` 外，返回 `allow` 或任何其他值都只算「钩子未阻断」，随后进入 `AgentPermissionGate`（`permissionGateService.ts` 第 61 行）继续执行 `this.toolApproval.requestToolApproval(...)` 弹出终端确认框；
+     3. 查 `docs/en/customization/plugins.md` [65]：Kimi Code 的插件系统仅用于分发 `SKILL.md`、自定义 agent、MCP server 和与 `config.toml` 同构的外部命令钩子，**没有**提供像 opencode / DSH / pi 那样的进程内 JS 权限拦截扩展点。
+   - `CodeIsland`、`Open Island`、`Ping Island`、`Clawd on Desk` 四家开源项目在 Kimi Code 上也全部只做状态展示与等待提醒，没有任何一家做出 Allow 审批 [56][57][58][59]。
+   - （附注：`erha19/ping-island` 的 `KimiAppHookGuard.swift` [58] 发现 Kimi 桌面版内置的 `kimi-code` 内核配置在 `~/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/kimi-code/config.toml`，且每次启动会被 `daimon` 重写，这是桌面版状态接入的参考线索，但同样不能做审批。）
+2. **结论**：维持现状（只亮「等你」），在 #737 回复中附上 `MoonshotAI/kimi-code` 的源码依据。
+
 ## 来源
 
 1. Antigravity Hooks 文档：https://antigravity.google/docs/hooks/
@@ -333,3 +457,17 @@ opencode 现在有两条线同时在发：**2.x**（2.0 在 2026-10 初发布，
 49. tokscale README（Trae 用量同步）：https://github.com/junhoyeo/tokscale
 50. trae-agent 仓库与钩子提案 #397：https://github.com/bytedance/trae-agent ，https://github.com/bytedance/trae-agent/issues/397
 51. TRAE CN 个人规则 `user_rules.md`（第三方文章，路径未经官方核实）：https://gitcode.csdn.net/6aa0de041a35784c84208747.html
+52. pi (`@earendil-works/pi-coding-agent`) 仓库与配置目录文档（查询日期 2026-11-17）：https://github.com/earendil-works/pi ，https://pi.dev
+53. pi Extension API（`session_start`、`agent_start`、`agent_end`、`tool_call`、`session_shutdown`）：https://pi.dev/docs/extensions
+54. pi SessionManager 与树状 JSONL 事件结构（`session`、`session_info`、`model_change`、`thinking_level_change`、`message`）：https://github.com/TixXin/fuyu/issues/745
+55. PiDeck / PiCove 桌面端：https://github.com/earendil-works/pi
+56. CodeIsland 仓库（`Sources/CodeIsland/ConfigInstaller.swift`、`Sources/CodeIsland/HookServer.swift`、`Sources/CodeIslandCore/HookIntake.swift`、`Tests/CodeIslandCoreTests/TraeHookPayloadTests.swift`，查询日期 2026-11-17）：https://github.com/wxtsky/CodeIsland
+57. Open Island (`open-vibe-island`) 仓库（`docs/hooks.md`、`Sources/OpenIslandHooks/OpenIslandHooksCLI.swift`、`Sources/OpenIslandCore/GrokHooks.swift`、`Sources/OpenIslandCore/KimiHookInstaller.swift`，查询日期 2026-11-17）：https://github.com/Octane0411/open-vibe-island
+58. Ping Island 仓库（`PingIsland/Models/ClientProfile.swift`、`PingIsland/Services/Hooks/KimiAppHookGuard.swift`、`PingIslandTests/KimiIntegrationTests.swift`，查询日期 2026-11-17）：https://github.com/erha19/ping-island
+59. Clawd on Desk 仓库（`docs/guides/supported-agents.md`、`docs/guides/dsh-setup.md`、`hooks/dsh-clawd-bridge/lib/index.js`、`hooks/kimi-hook.js`、`hooks/grok-hook.js`、`hooks/traecode-hook.js`，查询日期 2026-11-17）：https://github.com/rullerzhou-afk/clawd-on-desk
+60. dsh-island 仓库（`src/index.ts`、`README.md`，查询日期 2026-11-17）：https://github.com/cdxiaodong/dsh-island
+61. DeepSeek Harness `hooks-claude-code` 源码与 0.2.1 升级指南（`packages/experimental/hooks-claude-code/src/index.ts`、`docs/upgrade-guide/v0.2.1-alpha.1/experimental-package-composition/guide.zh.md`，查询日期 2026-11-17）：https://github.com/deepseek-ai/deepseek-harness/blob/main/packages/experimental/hooks-claude-code/src/index.ts
+62. DeepSeek Harness `user-approval` 服务源码（`packages/interaction/user-approval/src/types.ts`、`src/index.ts`、`README.md`，查询日期 2026-11-17）：https://github.com/deepseek-ai/deepseek-harness/blob/main/packages/interaction/user-approval/src/types.ts
+63. Factory Droid Hooks 文档（`PreToolUse` 与 `permissionDecision`）：https://docs.factory.com/cli/configuration/hooks-guide
+64. Grok CLI 1.0.77 本地文档（`~/.grok/docs/user-guide/10-hooks.md` 第 415 行、`22-permissions-and-safety.md` 第 125–180 行，查询日期 2026-11-17）
+65. Kimi Code CLI 源码与插件文档（`packages/agent-core-v2/src/features/externalHooks/agent/agentExternalHooksService.ts`、`internal/runHook.ts`、`src/agent/permissionGate/permissionGateService.ts`、`docs/en/customization/hooks.md`、`docs/en/customization/plugins.md`，查询日期 2026-11-17）：https://github.com/MoonshotAI/kimi-code

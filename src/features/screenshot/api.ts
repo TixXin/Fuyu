@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen, type EventCallback } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { open } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { OcrWord } from "./redact";
 import type { PixelRect } from "./selection";
@@ -105,6 +106,7 @@ export function finishScreenshot(selection: PixelRect, patch: ScreenshotPatch | 
     headers["x-quality"] = save.record.quality;
     headers["x-system-audio"] = String(save.record.systemAudio);
     headers["x-microphone"] = String(save.record.microphone);
+    headers["x-own-windows"] = String(save.record.ownWindows);
   }
   return invoke<string | null>("screenshot_finish", patch ? rawBytes(patch.image) : new Uint8Array(0), { headers });
 }
@@ -273,6 +275,7 @@ export type RecordingRequest = {
   fps?: number;
   systemAudio?: boolean;
   microphone?: boolean;
+  ownWindows?: boolean;
 };
 
 export type RecordingSummary = {
@@ -324,4 +327,9 @@ export function listenRecordingFinished(handler: EventCallback<RecordingFinished
 
 export function revealRecording(path: string) {
   return revealItemInDir(path);
+}
+
+export async function pickSaveFolder(title: string) {
+  const picked = await open({ directory: true, multiple: false, title });
+  return typeof picked === "string" ? picked : null;
 }

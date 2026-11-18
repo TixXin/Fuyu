@@ -1,5 +1,5 @@
 use serde::Serialize;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 
 use crate::macos::capture_targets;
 
@@ -23,16 +23,29 @@ pub(crate) struct LocalTarget {
     height: u32,
 }
 
-pub(super) fn windows_on_screen() -> (Vec<Target>, Vec<()>) {
-    let targets = capture_targets::shown_windows()
+pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<()>) {
+    let mut targets: Vec<Target> = app
+        .webview_windows()
         .into_iter()
-        .enumerate()
-        .map(|(index, area)| {
-            let (left, top) = (area.x.round() as i32, area.y.round() as i32);
-            let (right, bottom) = ((area.x + area.width).round() as i32, (area.y + area.height).round() as i32);
-            Target { window: index as u32, element: false, rect: (left, top, right, bottom) }
+        .filter(|(label, window)| super::is_capturable_own_window(label) && window.is_visible().unwrap_or(false))
+        .filter_map(|(_, window)| {
+            let pos = crate::island::screen::window_position(&window).ok()?;
+            let size = crate::island::screen::window_size(&window).ok()?;
+            (size.width >= 8 && size.height >= 8).then_some(Target {
+                window: 0,
+                element: false,
+                rect: (pos.x, pos.y, pos.x + size.width as i32, pos.y + size.height as i32),
+            })
         })
         .collect();
+    targets.extend(capture_targets::shown_windows().into_iter().map(|area| {
+        let (left, top) = (area.x.round() as i32, area.y.round() as i32);
+        let (right, bottom) = ((area.x + area.width).round() as i32, (area.y + area.height).round() as i32);
+        Target { window: 0, element: false, rect: (left, top, right, bottom) }
+    }));
+    for (index, target) in targets.iter_mut().enumerate() {
+        target.window = index as u32;
+    }
     (targets, Vec::new())
 }
 

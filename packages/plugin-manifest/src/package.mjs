@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { EXECUTABLE_EXTENSIONS, executableKind } from "./executable.mjs";
 import { isSafeRelativePath } from "./manifest.mjs";
-import { PackageError, createZip, readZip, zipEntryNames } from "./zip.mjs";
+import { PackageError, createZip, readZip } from "./zip.mjs";
 
+export { EXECUTABLE_EXTENSIONS, executableKind } from "./executable.mjs";
 export { PackageError } from "./zip.mjs";
 
 export const DEFAULT_NAMESPACE = "fuyu";
@@ -12,7 +14,7 @@ export const MAX_UNPACKED_BYTES = 100 * 1024 * 1024;
 export const MAX_FILES = 5000;
 export const MANIFEST_FILE = "package.json";
 export const TEXT_EXTENSIONS = [".js", ".mjs", ".cjs", ".json", ".css", ".html", ".htm", ".md", ".txt", ".svg", ".map", ".yml", ".yaml", ".xml", ".csv"];
-export const BLOCKED_EXTENSIONS = [".node", ".exe", ".dll", ".sys", ".scr", ".com", ".msi", ".so", ".dylib", ".bin", ".elf", ".app", ".appimage", ".deb", ".rpm", ".pkg", ".dmg", ".wasm", ".jar", ".class"];
+export const BLOCKED_EXTENSIONS = [".node", ...EXECUTABLE_EXTENSIONS];
 
 const extensionOf = (path) => {
   const base = path.slice(path.lastIndexOf("/") + 1).toLowerCase();
@@ -39,21 +41,6 @@ export function checkPackagePath(path) {
   const extension = extensionOf(path);
   if (extension === ".node") return { code: "native", message: "native Node addons (.node) are not allowed" };
   if (BLOCKED_EXTENSIONS.includes(extension)) return { code: "executable", message: `${extension} files are not allowed` };
-  return null;
-}
-
-const MACHO = new Set([0xfeedface, 0xfeedfacf, 0xcefaedfe, 0xcffaedfe, 0xbebafeca, 0xcafebabf, 0xbfbafeca]);
-const isJarEntry = (name) => name === "META-INF/MANIFEST.MF" || name.toLowerCase().endsWith(".class");
-
-export function executableKind(data) {
-  if (data.length >= 2 && data[0] === 0x4d && data[1] === 0x5a) return "PE";
-  if (data.length < 4) return null;
-  const magic = data.readUInt32BE(0);
-  if (magic === 0x7f454c46) return "ELF";
-  if (magic === 0xcafebabe) return data.length >= 8 && data.readUInt32BE(4) >= 45 ? "Java class" : "Mach-O";
-  if (MACHO.has(magic)) return "Mach-O";
-  if (magic === 0x0061736d) return "WebAssembly";
-  if (magic === 0x504b0304 && zipEntryNames(data).some(isJarEntry)) return "Java archive";
   return null;
 }
 

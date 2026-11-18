@@ -8,6 +8,9 @@ import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings";
 import { entryOf, settingsCategoryFor, sidebarItemOf, type SettingsCategory } from "../../src/windows/settings/categories";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { checkGlassLooks } from "./settings-glass-looks";
+import { checkIdleDimSettings } from "./settings-idle-dim";
+import { checkImMessageSources } from "./settings-im-sources";
+import { checkThemeMarket } from "./settings-theme-market";
 import { commands, keybindingCalls, mailCalls, marketInstalls, openedUrls, REPLY_MARKER, replyMarkerCalls, revokedPermissions } from "./settingsMocks";
 
 const query = new URLSearchParams(location.search);
@@ -50,6 +53,7 @@ const type = async (input: HTMLInputElement, value: string) => {
   await act(async () => { setter.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); });
 };
 const texts = (selector: string) => [...document.querySelectorAll(selector)].map((found) => found.textContent ?? "").join("|");
+const settingRow = (title: string) => [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === title);
 const backButton = () => document.querySelector<HTMLButtonElement>(".plugin-dialog__close");
 const onPluginPage = () => Boolean(backButton());
 const backToList = () => act(async () => { backButton()?.click(); });
@@ -78,7 +82,7 @@ if (!automated) {
     await act(async () => { mount(); });
     check(categories().length > 0, "The sidebar lists the settings pages");
 
-    const pages = [...categories(), "theme", "themeMarket", "agentSessions", "agentAlerts", "sounds", "agentApprovals", "agentConnect", "agentRemote"];
+    const pages = [...categories(), "generalData", "generalSync", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket", "behaviorTuck", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "messagesMail", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote"];
     for (const category of pages) {
       await openPage(category as SettingsCategory);
       const item = element(`.settings-sidebar__item[data-category='${sidebarItemOf(category as SettingsCategory)}']`);
@@ -101,8 +105,9 @@ if (!automated) {
     check(cardNames() === "本地接口" && texts(".plugins-list__title") === "内置（1）", "Search finds installed plugins by their name in either language");
     await type(element<HTMLInputElement>(".plugins-toolbar input"), "");
     await act(async () => { document.querySelector<HTMLElement>(".plugins-list__grid .plugin-card--openable .plugin-card__title")?.click(); });
-    check(onPluginPage(), "Clicking a plugin's card opens its page");
-    await backToList();
+    const pluginModal = document.querySelector<HTMLElement>(".plugin-dialog[role='dialog'][aria-modal='true']");
+    check(onPluginPage() && pluginModal && document.activeElement === pluginModal.querySelector(".plugin-dialog__close") && Boolean(pluginModal.querySelector(".plugin-card__switch input")), "Clicking a plugin's card opens its modal dialog with focus on Close and its switch in the header");
+    await act(async () => { pluginModal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); }); check(!onPluginPage(), "Esc closes the plugin dialog");
     const runLine = [...document.querySelectorAll<HTMLElement>(".plugin-card__facts")].find((hint) => hint.textContent?.startsWith("内存"));
     check(runLine?.textContent?.split(" · ")[0] === "内存 4.0 MB", "A plugin's card shows only the plugin's own memory, without the runtime");
     check(runLine && !runLine.hasAttribute("title"), "The run line has no hover tooltip");
@@ -206,39 +211,36 @@ if (!automated) {
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-group__header .settings-link-button")].find((link) => link.textContent === "全部快捷键 ›")?.click(); });
     check(element(".settings-page__title").textContent === "快捷键", "A feature page's shortcut group links back to all shortcuts");
     await openPage("behavior");
-    check(texts(".settings-tabs__tab") === "展开与收起|贴边隐藏|系统提示" && !texts(".settings-group__title").includes("页面切换") && texts(".settings-cards__label") === "点击|鼠标悬停", "Behavior has three tabs; opening is chosen from two picture cards, and page keys are no longer repeated here");
+    check(texts(".settings-tabs__tab") === "展开与收起|贴边隐藏" && !texts(".settings-group__title").includes("页面切换") && texts(".settings-cards__label") === "点击|鼠标悬停", "Behavior has two tabs; opening is chosen from two picture cards, and page keys are no longer repeated here");
+    const leaveSwitch = () => settingRow("鼠标移开后自动收起")?.querySelector<HTMLInputElement>("input");
+    check(leaveSwitch()?.checked === false && !settingRow("鼠标移开后收起前等待"), "Click mode offers close-on-leave, off by default without the delay slider");
+    await act(async () => { leaveSwitch()!.click(); }); check(leaveSwitch()?.checked === true && Boolean(settingRow("鼠标移开后收起前等待")) && (JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { clickCollapseOnLeave?: boolean }).clickCollapseOnLeave === true, "Turning close-on-leave on saves it and shows the collapse delay slider"); await act(async () => { leaveSwitch()!.click(); });
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "去设置")?.click(); });
-    check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2
-      && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps, fixed keys in a two-column sheet");
-    await openPage("behaviorAlerts");
-    check(texts(".settings-group__title") === "在小岛上提示|休息提醒|计时器" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示|休息提醒|到点响一声" && !document.querySelector(".break-reminder-row"), "Volume, headphones and camera alerts are one group on the System alerts tab, then break reminders, off with no items shown, then the timer's sound");
-    await openPage("general");
-    check(texts(".settings-group__title") === "启动与语言|位置|数据|升级前的备份|本机接口" && document.querySelector(".position-diagram__screen--active .position-diagram__island") && !texts(".settings-row__title").includes("最小化按钮") && document.querySelectorAll(".settings-footnote__toggle").length === 4 && texts(".settings-row__title").includes("0.3.9 → 0.4.0") && !document.querySelector(".settings-backup__status--error"), "General is four groups and the local API: position draws the screens, data folder and backup are one group, then backups made before updates with their versions and no restore warning while data reads fine; long notes fold");
+    check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps");
+    await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
+    await openPage("timerAlerts"); check(texts(".settings-tabs__tab") === "计时与休息|系统提示" && texts(".settings-group__title") === "计时器|休息提醒" && texts(".settings-row__title") === "到点响一声|休息提醒" && !document.querySelector(".break-reminder-row"), "Timer & alerts has two tabs starting with the timer's sound and break reminders");
+    await openPage("behaviorAlerts"); check(texts(".settings-group__title") === "在小岛上提示" && texts(".settings-row__title") === "音量与亮度|耳机与充电|摄像头和麦克风使用提示", "Volume, headphones and camera alerts are one group on the System alerts tab");
+    await openPage("general"); check(texts(".settings-group__title") === "启动与语言" && !texts(".settings-row__title").includes("最小化按钮"), "General opens on startup and language");
+    await openPage("generalData"); check(texts(".settings-group__title") === "数据|升级前的备份" && texts(".settings-row__title").includes("0.3.9 → 0.4.0") && !document.querySelector(".settings-backup__status--error"), "Data and backup tab shows data folder, backup and pre-update backups");
+    await openPage("generalApi");
     const localApi = [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.startsWith("本机接口")); await act(async () => { [...(localApi?.querySelectorAll<HTMLButtonElement>(".settings-row") ?? [])].find((row) => row.textContent?.startsWith("访问令牌"))?.querySelector("button")?.click(); });
     check(Boolean(localApi?.textContent?.includes("http://127.0.0.1:39271/v1")) && commands.includes("copy_local_api_token") && !/[0-9a-f]{64}/.test(localApi?.textContent ?? ""), "The local API group shows the address, copies the token through Rust and never shows it");
 
     const storedSettings = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean; autoTuckHoldMusic?: boolean; autoTuckHoldMessages?: boolean };
     check(!document.querySelector(".appearance-reset"), "Reset appearance is not offered outside the theme page");
-    await openPage("appearance");
-    check(document.querySelector(".collapsed-items") && !document.querySelector(".preset-name-input"),
-      "Appearance keeps sizes and the collapsed bar; the look and the saved themes moved to Theme (C26)");
+    await openPage("appearance"); check(document.querySelector(".position-diagram__screen--active .position-diagram__island") && !document.querySelector(".preset-name-input"), "Appearance > Position and size draws the screens and sizes; the look and the saved themes are in their own tabs");
     const layoutReset = () => [...document.querySelectorAll<HTMLButtonElement>(".appearance-reset")].find((button) => button.textContent === "恢复默认外观");
     const stored = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { opacity?: number; showTitle?: boolean };
-    const before = stored();
-    await act(async () => { layoutReset()!.click(); });
-    await click(".appearance-reset--danger");
+    const before = stored(); await act(async () => { layoutReset()!.click(); }); await click(".appearance-reset--danger");
     check(stored().opacity === before.opacity && stored().showTitle === DEFAULT_SETTINGS.showTitle, "Appearance has its own reset, for sizes and display only");
-    await openPage("theme");
-    await click(".appearance-reset");
+    await openPage("theme"); await click(".appearance-reset");
     check(storedSettings().opacity === 60, "The first reset click only asks for confirmation");
     await click(".appearance-reset__confirm .appearance-reset:not(.appearance-reset--danger)");
     check(storedSettings().opacity === 60 && document.querySelector(".appearance-reset"), "Cancelling keeps the appearance");
-    await click(".appearance-reset");
-    await click(".appearance-reset--danger");
-    check(storedSettings().opacity === DEFAULT_SETTINGS.opacity, "Confirming resets the appearance");
-    check(storedSettings().carryOverIncompleteTodos === false, "Resetting the appearance keeps todo settings");
-    await checkGlassLooks(check);
-    await openPage("appearance");
+    await click(".appearance-reset"); await click(".appearance-reset--danger");
+    check(storedSettings().opacity === DEFAULT_SETTINGS.opacity && storedSettings().carryOverIncompleteTodos === false, "Confirming resets the appearance and keeps todo settings");
+    await openPage("themeStyle"); await checkIdleDimSettings(check); await checkGlassLooks(check);
+    await openPage("appearanceCollapsed");
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
     const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean }[] } | null;
@@ -253,36 +255,22 @@ if (!automated) {
     check(savedItems() === null && zoneRows("左侧").join("|") === "Agent 状态灯", "Reset to default clears the saved order");
 
     await openPage("themeMarket");
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
-    const card = (id: string) => document.querySelector<HTMLElement>(`.theme-market__item[data-theme-id="${id}"]`)!;
-    const cardButton = (id: string, label: string) => [...card(id).querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === label);
-    check(document.querySelectorAll(".theme-market__item").length === 2 && card("focusd.midnight").querySelector(".island-preview--compact")
-      && card("focusd.midnight").querySelector(".plugin-market__badge--official") && card("someone.dusk").textContent?.includes("作者 someone"),
-      "The theme market lists each theme with a preview, Official for the island's own");
-    const scaleBefore = JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}").collapsedScale;
-    await act(async () => { cardButton("someone.dusk", "应用")!.click(); });
-    const afterApply = JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { islandBackgroundColor?: string; collapsedScale?: number };
-    check(afterApply.islandBackgroundColor === "#1b1020" && afterApply.collapsedScale === scaleBefore && cardButton("someone.dusk", "使用中")?.disabled,
-      "Apply changes the look, not the size, and the card says it is in use");
-    await act(async () => { cardButton("focusd.midnight", "保存到我的主题")!.click(); });
-    check(cardButton("focusd.midnight", "已保存")?.disabled && (localStorage.getItem("fuyu-setting-presets") ?? "").includes("午夜蓝"),
-      "Save adds the theme to the saved themes");
+    await checkThemeMarket(check);
 
     await openPage("music");
-    const waveRow = [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "在收起的岛上显示音乐波形");
-    const waveSwitch = () => waveRow?.querySelector<HTMLInputElement>("input");
+    const waveSwitch = () => settingRow("在收起的岛上显示音乐波形")?.querySelector<HTMLInputElement>("input");
     check(waveSwitch()?.checked === true && savedItems() === null, "The music wave shows on the collapsed bar by default");
     await act(async () => { waveSwitch()!.click(); });
     check(waveSwitch()?.checked === false && savedItems()?.items.find((item) => item.id === "music")?.hidden === true, "Turning the music wave off hides the bar's music item");
     await act(async () => { waveSwitch()!.click(); }); check(waveSwitch()?.checked === true && !savedItems()?.items.find((item) => item.id === "music")?.hidden, "Turning it on shows it again"); localStorage.removeItem("fuyu-collapsed-items");
 
     await openPage("behaviorTuck");
-    const holdRow = (title: string) => [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === title)?.querySelector<HTMLInputElement>("input");
+    const holdRow = (title: string) => settingRow(title)?.querySelector<HTMLInputElement>("input");
     check(!holdRow("有正在进行的待办时不收起"), "Idle tuck holds are hidden while idle tuck is off");
     await act(async () => { holdRow("闲置时贴边隐藏")!.click(); });
     check(holdRow("有正在进行的待办时不收起")?.checked === true && holdRow("Agent 在等你时不收起")?.checked === true && holdRow("音乐播放中不收起")?.checked === false && holdRow("有未读消息时不收起")?.checked === true,
       "Idle tuck holds: todo, agent and unread messages on, music off by default");
-    const tuckedHover = [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "鼠标移到隐藏的岛上");
+    const tuckedHover = settingRow("鼠标移到隐藏的岛上");
     const tuckedHoverButton = (label: string) => [...(tuckedHover?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === label);
     check(tuckedHoverButton("只露出岛屿")?.getAttribute("aria-pressed") === "true", "Hovering a tucked island only slides it out by default");
     await act(async () => { tuckedHoverButton("展开面板")?.click(); });
@@ -308,7 +296,8 @@ if (!automated) {
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 1_500)); });
     check(document.querySelector(".save-path-panel .save-path-saved"), "The saved confirmation stays long enough to notice");
 
-    await openPage("messages");
+    await checkImMessageSources(check, openPage);
+    await openPage("messagesMail");
     const rows = () => [...document.querySelectorAll<HTMLElement>(".mail-settings__account")];
     check(rows().length === 2 && rows()[0].textContent?.includes("demo@qq.com"), "The mail page lists every mailbox");
     const rowButton = (row: number, text: string) => [...rows()[row].querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent?.includes(text));
@@ -333,9 +322,9 @@ if (!automated) {
       "The typed server is saved with the mailbox");
 
     await openPage("agentConnect");
-    check(texts(".settings-tabs__tab") === "岛上显示|会话列表|提醒|声音|审批|连接|SSH 远程" && texts(".settings-page__title") === "AI Agent"
+    check(texts(".settings-tabs__tab") === "钩子与代理|连接与扩展|审批" && texts(".settings-page__title") === "Agent"
       && element(".settings-sidebar__item--active").dataset.category === "agents",
-      "AI Agent is one sidebar item whose page has tabs for on the island, session list, alerts, sounds, approvals, connection and SSH remote");
+      "Agent is the first item in the AI Agent group, with tabs for hooks and agents, connection and approvals");
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     const connectGroups = [...document.querySelectorAll<HTMLElement>(".settings-group")];
     const markerGroup = connectGroups.find((group) => group.textContent?.includes("回复状态标记"));
@@ -348,7 +337,7 @@ if (!automated) {
     check(replyMarkerCalls.join() === "true" && markerSwitch!.checked, "Switching the reply status marker on writes it");
 
     await openPage("agentRemote"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
-    check(/devbox.*nas/s.test(element(".editor-panel").textContent ?? ""), "The remote computers page lists the SSH hosts to read sessions from");
+    check(/devbox.*nas/s.test(element(".editor-panel").textContent ?? "") && texts(".settings-group__title").includes("SSH 代理隧道"), "The SSH remote page lists both the remote hosts and the SSH proxy tunnel section");
     await openPage("agents"); await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
     check(agentPolls() > pollsAway, "The on-the-island page reads the agents' state");
     const agentGroups = [...document.querySelectorAll<HTMLElement>(".editor-panel .settings-group")], hooksGroup = agentGroups.find((group) => group.textContent?.includes("AI Agent 状态灯"));
@@ -356,6 +345,9 @@ if (!automated) {
     check(hooksLink && agentGroups.indexOf(hooksGroup!) <= 1 && hooksGroup!.querySelector(".agent-hooks-message--attention"), "The on-the-island page opens with the status light card, which says the hooks are missing and has Install/repair");
     await act(async () => { hooksLink!.click(); await new Promise(resolve => setTimeout(resolve, 20)); });
     check(commands.includes("install_agent_status_hooks") && element(".settings-tabs__tab--active").dataset.tab === "agents", "Install/repair on the on-the-island page installs the hooks there");
+    const primaryCards = [...document.querySelectorAll<HTMLElement>(".agent-provider-grid:not(.agent-provider-grid--more) .agent-provider-card")], moreToggle = element<HTMLButtonElement>(".agent-providers__more-toggle");
+    check(primaryCards.map((card) => card.dataset.provider).join("|") === "codex|claudeCode" && moreToggle.getAttribute("aria-expanded") === "false", "Detected agents are shown in the primary grid while undetected ones start folded");
+    await act(async () => { moreToggle.click(); }); check(moreToggle.getAttribute("aria-expanded") === "true" && document.querySelectorAll(".agent-provider-grid--more .agent-provider-card").length > 0, "Expanding more agents reveals the rest of the supported agents");
     localStorage.removeItem("fuyu-agent-session-filters");
     await openPage("agentSessions");
     const filterGroup = () => [...document.querySelectorAll<HTMLElement>(".settings-group")].find((group) => group.textContent?.includes("隐藏会话"))!;
@@ -370,10 +362,10 @@ if (!automated) {
 
     await openPage("about");
     const hero = element(".about-hero");
-    check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && hero.getBoundingClientRect().height >= hero.scrollHeight - 1,
-      "About opens with the app's hero card, not clipped");
-    check(document.querySelectorAll(".about-links .project-link").length === 4
-      && texts(".settings-group__title").includes("帮助|重置与退出"), "Links are four tiles; help, then reset and quit, come last");
+    check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && Boolean(hero.querySelector(".about-hero__emblem")) && Boolean(document.querySelector(".about-logo-pill")) && hero.getBoundingClientRect().height >= hero.scrollHeight - 1,
+      "About opens with the app's emblem hero card and logo call pill, not clipped");
+    check(document.querySelectorAll(".about-workbench__col").length === 2 && document.querySelectorAll(".about-links .project-link").length === 4
+      && texts(".settings-group__title").includes("帮助|重置与退出"), "About lays out version and changelog alongside the four link tiles, help, and reset and quit");
     const aboutLink = (label: string) =>
       [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((button) => button.textContent === label);
     await act(async () => { aboutLink("重置")!.click(); });

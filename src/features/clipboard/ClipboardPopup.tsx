@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Search } from "lucide-react";
-import { useTranslation } from "../../i18n";
+import { useLocale, useTranslation } from "../../i18n";
 import { type ClipboardAiPrompt, type ClipboardCaptureStatus, type ClipboardCopyAs, type ClipboardHistoryItem, type ClipboardPeek, type ClipboardSnippet } from "./api";
 import { ClipboardActionPanel, type PanelPage } from "./ClipboardActionPanel";
 import { ClipboardEditor } from "./ClipboardEditor";
@@ -8,14 +8,15 @@ import { ClipboardPauseBar, ClipboardPopupFooter, pausedNow, type MergeSeparator
 import { ClipboardPopupPreview } from "./ClipboardPopupPreview";
 import { ClipboardPopupList } from "./ClipboardPopupList";
 import { dayGroupStarts } from "./dayGroup";
+import { getClipboardActions, subscribeClipboardActions } from "./host/actions.mjs";
 import { deletedLabel, withoutPending } from "./pendingItems";
 import { withListActions } from "./listActions";
 import { recentItems, type RecentRange } from "./recentRange";
-import { mergedText, popupActions } from "./popupActions";
+import { mergedText, popupActions, withPluginClipboardActions } from "./popupActions";
 import { popupFilterLabel } from "./popupFilterLabel";
 import { filterPopupItems, nextPopupFilter, popupFilters, popupTags, type PopupFilter } from "./popupFilters";
 import { popupIndexAfterKey, toggleQueued } from "./popupKeys";
-import { loadPinyin, parsePopupQuery } from "./popupQuery";
+import { isPinyinLoaded, loadPinyin, parsePopupQuery, queryNeedsPinyin } from "./popupQuery";
 import { isPrimaryKey } from "../../lib/shortcut/shortcut";
 import { usePopupHandlers } from "./usePopupHandlers";
 import { usePopupPins } from "./usePopupPins";
@@ -46,6 +47,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   onPeek?: (peek: ClipboardPeek | null) => void;
 }) {
   const t = useTranslation();
+  const locale = useLocale().locale === "en" ? "en" : "zh";
   const text = t.clipboard.popup;
   const [filter, setFilter] = useState<PopupFilter>("all");
   const [query, setQuery] = useState("");
@@ -55,7 +57,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const [mode, setMode] = useState<Mode>("list");
   const [panelPage, setPanelPage] = useState<PanelPage>("actions");
   const [now, setNow] = useState(() => Date.now());
-  const [pinyinReady, setPinyinReady] = useState(false);
+  const [pinyinReady, setPinyinReady] = useState(() => isPinyinLoaded());
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
   const scrollRef = useRef<((index: number) => void) | null>(null);
@@ -89,16 +91,19 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
     };
   }, []);
 
-  useEffect(() => {
-    void loadPinyin().then((pinyin) => setPinyinReady(pinyin !== null));
-  }, []);
-
   const pending = deletion.pending;
   const visible = useMemo(() => withoutPending(items, pending), [items, pending]);
   const tags = useMemo(() => popupTags(visible), [visible]);
   const filters = popupFilters(tags);
   const onSnippets = filter === "snippets";
   const parsed = useMemo(() => parsePopupQuery(query), [query]);
+  const needsPinyin = !onSnippets && queryNeedsPinyin(parsed);
+  useEffect(() => {
+    if (!needsPinyin || pinyinReady) return;
+    let cancelled = false;
+    void loadPinyin().then((pinyin) => { if (!cancelled) setPinyinReady(pinyin !== null); });
+    return () => { cancelled = true; };
+  }, [needsPinyin, pinyinReady]);
   const needle = query.trim().toLowerCase();
   const filteredItems = useMemo(
     () => (onSnippets ? [] : filterPopupItems(visible, filter, parsed)),
@@ -118,7 +123,12 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const isText = item?.kind === "text";
   const { removeMany } = deletion;
   const recent = useMemo(() => ({ count: (range: RecentRange) => recentItems(visible, range, now).length, remove: (range: RecentRange) => removeMany(recentItems(visible, range, Date.now())) }), [visible, now, removeMany]);
-  const actions = useMemo(() => withListActions(popupActions(item, capture, handlers, text.actions), item, t.clipboardList, recent), [item, capture, handlers, text.actions, t.clipboardList, recent]);
+  const pluginActions = useSyncExternalStore(subscribeClipboardActions, getClipboardActions);
+  const actions = useMemo(
+    () => withPluginClipboardActions(withListActions(popupActions(item, capture, handlers, text.actions), item, t.clipboardList, recent), item, locale, { pasteText }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [item, capture, handlers, text.actions, t.clipboardList, recent, locale, pasteText, pluginActions],
+  );
 
   useEffect(() => {
     if (pointerPickRef.current) {

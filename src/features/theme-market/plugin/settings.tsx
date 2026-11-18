@@ -3,6 +3,7 @@ import { buildTheme } from "../../../lib/theme/theme";
 import { ThemeMarketPage } from "../ThemeMarketPage";
 import type { IslandSettings } from "../../../lib/settings/types";
 import type { LocaleCode } from "../../../i18n";
+import { OWNER } from "./owner.ts";
 
 type PageProps = {
   settings: IslandSettings;
@@ -17,4 +18,4 @@ addSettingsCategory("themeMarket", ({ settings, locale, presets, onSettingsChang
     onSettingsChange={onSettingsChange}
     onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
   />
-));
+), OWNER);

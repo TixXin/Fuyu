@@ -8,7 +8,7 @@ mod tests;
 
 use serde::Serialize;
 use std::{
-    sync::{mpsc, Arc, Mutex, OnceLock},
+    sync::{mpsc, Arc, Mutex, OnceLock, PoisonError},
     time::Duration,
 };
 use tauri::{AppHandle, Emitter, Manager};
@@ -19,10 +19,11 @@ use windows::UI::Notifications::Management::{
 
 use history::NotificationBuffer;
 use launcher::{activate_existing_qq, qq_executable};
-use listener::monitor;
+use listener::{handle_poll, QQ_APP_ID};
 
-use crate::messages_plugin::{self, SourceWorker};
-use crate::plugin_kernel::worker::Worker;
+use crate::messages_plugin::{self, SourceSwitch};
+use crate::toast_notifications::{self, Subscription, ToastMatcher};
+use crate::user_error::UserError;
 
 pub(crate) use plugin_view::plugin_messages;
 
@@ -57,7 +58,7 @@ pub struct NotificationSnapshot {
     enabled: bool,
     status: NotificationStatus,
     items: Vec<QQNotification>,
-    error: Option<String>,
+    error: Option<UserError>,
 }
 
 impl Default for NotificationSnapshot {
@@ -104,6 +105,12 @@ impl MonitorState {
     }
 }
 
+#[derive(Default)]
+struct RepairState {
+    generation: Option<u64>,
+    error: Option<UserError>,
+}
+
 fn now_ms() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -127,6 +134,7 @@ fn forget_seen(service: &NotificationService, at: i64) {
 struct NotificationService {
     app: AppHandle,
     state: Mutex<MonitorState>,
+    repair: Mutex<RepairState>,
 }
 
 pub fn init(app: &AppHandle) -> Result<(), String> {
@@ -136,42 +144,73 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     let service = Arc::new(NotificationService {
         app: app.clone(),
         state: Mutex::new(MonitorState::default()),
+        repair: Mutex::new(RepairState::default()),
     });
     if SERVICE.set(service.clone()).is_err() {
         return Ok(());
     }
-    let listening = service.clone();
-    let worker = Worker::new("qq-notifications", move |stop| monitor(listening.clone(), &stop));
-    messages_plugin::register(
+    let polled = service.clone();
+    let foregrounded = service.clone();
+    toast_notifications::subscribe(Subscription {
+        source: messages_plugin::QQ,
+        matchers: vec![ToastMatcher::AumidExact(QQ_APP_ID.into())],
+        executables: vec!["QQ.exe".into()],
+        on_poll: Arc::new(move |poll| handle_poll(&polled, poll)),
+        on_foreground: Arc::new(move |at| forget_seen(&foregrounded, at)),
+    });
+    let switched = service.clone();
+    let checked = service;
+    let switch = SourceSwitch::new(
         messages_plugin::QQ,
-        SourceWorker::new(messages_plugin::QQ, worker, move |enabled| set_enabled(&service, enabled)),
+        move |enabled| {
+            set_enabled(&switched, enabled);
+            toast_notifications::set_enabled(messages_plugin::QQ, enabled);
+        },
+        move || {
+            checked
+                .state
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .snapshot
+                .enabled
+                && toast_notifications::is_source_running(messages_plugin::QQ)
+        },
     );
+    messages_plugin::register(messages_plugin::QQ, switch);
     Ok(())
 }
 
-fn ready(app: &AppHandle) -> Result<&'static Arc<NotificationService>, String> {
+fn ready(app: &AppHandle) -> Result<&'static Arc<NotificationService>, UserError> {
     init(app)?;
     service()
 }
 
-fn service() -> Result<&'static Arc<NotificationService>, String> {
+fn service() -> Result<&'static Arc<NotificationService>, UserError> {
     SERVICE
         .get()
-        .ok_or_else(|| "QQ 通知服务尚未就绪。".to_string())
+        .ok_or_else(|| UserError::new("qq.notReady", "The QQ notification service is not ready yet."))
+}
+
+fn unavailable() -> UserError {
+    UserError::new("qq.unavailable", "The QQ notification state is unavailable.")
 }
 
 #[tauri::command]
-pub fn get_qq_notification_state(app: AppHandle) -> Result<NotificationSnapshot, String> {
+pub fn get_qq_notification_state(app: AppHandle) -> Result<NotificationSnapshot, UserError> {
     Ok(ready(&app)?
         .state
         .lock()
-        .map_err(|_| "QQ 通知状态不可用。")?
+        .map_err(|_| unavailable())?
         .snapshot
         .clone())
 }
 
 pub(crate) fn diagnostic_state() -> Result<serde_json::Value, String> {
-    let state = service()?.state.lock().map_err(|_| "QQ 通知状态不可用。")?;
+    let state = service()
+        .map_err(|error| error.to_string())?
+        .state
+        .lock()
+        .map_err(|_| unavailable().to_string())?;
     Ok(notification_diagnostics(&state.snapshot))
 }
 
@@ -206,21 +245,28 @@ fn set_enabled(service: &NotificationService, enabled: bool) {
         };
         state.snapshot.clone()
     };
+    if !enabled {
+        let mut repair = service
+            .repair
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
+        *repair = RepairState::default();
+    }
     publish(service, snapshot, None);
 }
 
 #[tauri::command]
-pub fn set_qq_auto_clear(app: AppHandle, enabled: bool) -> Result<NotificationSnapshot, String> {
-    let mut state = ready(&app)?.state.lock().map_err(|_| "QQ 通知状态不可用。")?;
+pub fn set_qq_auto_clear(app: AppHandle, enabled: bool) -> Result<NotificationSnapshot, UserError> {
+    let mut state = ready(&app)?.state.lock().map_err(|_| unavailable())?;
     state.auto_clear = enabled;
     Ok(state.snapshot.clone())
 }
 
 #[tauri::command]
-pub fn clear_qq_notifications() -> Result<NotificationSnapshot, String> {
+pub fn clear_qq_notifications() -> Result<NotificationSnapshot, UserError> {
     let service = service()?;
     let snapshot = {
-        let mut state = service.state.lock().map_err(|_| "QQ 通知状态不可用。")?;
+        let mut state = service.state.lock().map_err(|_| unavailable())?;
         state.buffer.items.clear();
         state.snapshot.items.clear();
         state.snapshot.revision += 1;
@@ -231,7 +277,7 @@ pub fn clear_qq_notifications() -> Result<NotificationSnapshot, String> {
 }
 
 #[tauri::command]
-pub async fn request_qq_notification_access(app: AppHandle) -> Result<String, String> {
+pub async fn request_qq_notification_access(app: AppHandle) -> Result<String, UserError> {
     let (sender, receiver) = mpsc::sync_channel(1);
     app.run_on_main_thread(move || {
         let operation = (|| {
@@ -246,17 +292,17 @@ pub async fn request_qq_notification_access(app: AppHandle) -> Result<String, St
         })();
         let _ = sender.send(operation);
     })
-    .map_err(|error| format!("无法发起通知授权：{error}"))?;
+    .map_err(|error| UserError::new("qq.requestAccessStart", "Could not start the notification permission request.").detail(error))?;
     let (access, operation) =
         tauri::async_runtime::spawn_blocking(move || receiver.recv_timeout(Duration::from_secs(5)))
             .await
-            .map_err(|error| format!("通知授权线程失败：{error}"))?
-            .map_err(|error| format!("无法发起通知授权：{error}"))?
-            .map_err(|error| format!("无法请求 Windows 通知权限：{error}"))?;
+            .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+            .map_err(|error| UserError::new("qq.requestAccessStart", "Could not start the notification permission request.").detail(error))?
+            .map_err(|error| UserError::new("qq.requestAccess", "Could not request Windows notification permission.").detail(error))?;
     let access = match operation {
         Some(operation) => operation
             .await
-            .map_err(|error| format!("Windows 通知授权失败：{error}"))?,
+            .map_err(|error| UserError::new("qq.accessFailed", "Windows notification authorization failed.").detail(error))?,
         None => access,
     };
     Ok(match access {
@@ -268,7 +314,7 @@ pub async fn request_qq_notification_access(app: AppHandle) -> Result<String, St
 }
 
 #[tauri::command]
-pub fn open_qq_notification_settings(app: AppHandle, access: bool) -> Result<(), String> {
+pub fn open_qq_notification_settings(app: AppHandle, access: bool) -> Result<(), UserError> {
     let url = if access {
         "ms-settings:privacy-notifications"
     } else {
@@ -276,7 +322,7 @@ pub fn open_qq_notification_settings(app: AppHandle, access: bool) -> Result<(),
     };
     app.opener()
         .open_url(url, None::<&str>)
-        .map_err(|error| format!("无法打开 Windows 通知设置：{error}"))
+        .map_err(|error| UserError::new("qq.openSettings", "Could not open Windows notification settings.").detail(error))
 }
 
 fn publish(
@@ -306,11 +352,11 @@ fn publish(
 }
 
 #[tauri::command]
-pub async fn open_qq() -> Result<(), String> {
+pub async fn open_qq() -> Result<(), UserError> {
     let asked_at = now_ms();
     tauri::async_runtime::spawn_blocking(|| activate_existing_qq(&qq_executable()?))
         .await
-        .map_err(|error| format!("打开 QQ 的线程失败：{error}"))??;
+        .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))??;
     if let Ok(service) = service() {
         forget_seen(service, asked_at);
     }

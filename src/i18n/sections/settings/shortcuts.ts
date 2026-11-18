@@ -28,6 +28,12 @@ export type SettingsShortcutsText = {
   translate: string;
   newLine: string;
   pasteClipboard: string;
+  clipboardWindowTitle: string;
+  clipboardPreview: string;
+  clipboardSnippetsTab: string;
+  clipboardPlainPaste: string;
+  clipboardAiRewrite: string;
+  clipboardQuickPick: string;
   taken: (shortcut: string, owner: string) => string;
   reset: (shortcut: string) => string;
   pluginTitle: string;
@@ -40,6 +46,12 @@ export type SettingsShortcutsText = {
   pluginTurnOff: string;
   pluginClear: string;
   pluginInUse: string;
+  todoQuickAdd: string;
+  todoQuickAddHint: (suggested: string) => string;
+  calendarJoinMeeting: string;
+  calendarJoinMeetingHint: (suggested: string) => string;
+  shortcutProblem: Record<"invalid" | "taken", string>;
+  shortcutInvalidMac: string;
 };
 
 export const zhCN: SettingsShortcutsText = {
@@ -72,6 +84,12 @@ export const zhCN: SettingsShortcutsText = {
   translate: "翻译",
   newLine: "换行",
   pasteClipboard: "填入剪贴板（独立窗口）",
+  clipboardWindowTitle: "剪贴板独立窗口",
+  clipboardPreview: "空格大图 / 全文预览",
+  clipboardSnippetsTab: "切换历史与常用语",
+  clipboardPlainPaste: "粘贴为纯文本",
+  clipboardAiRewrite: "AI 改写或总结",
+  clipboardQuickPick: "快速粘贴第 1–9 条",
   taken: (shortcut, owner) => `${shortcut} 已被「${owner}」使用，请换一个。`,
   reset: (shortcut) => `恢复默认（${shortcut}）`,
   pluginTitle: "插件快捷键",
@@ -84,6 +102,12 @@ export const zhCN: SettingsShortcutsText = {
   pluginTurnOff: "关闭这个快捷键",
   pluginClear: "清除快捷键",
   pluginInUse: "这个快捷键已被其他程序占用，没有生效，请换一个。",
+  todoQuickAdd: "快速添加待办",
+  todoQuickAddHint: (suggested) => `在任何地方按下都会展开岛并把光标放进待办输入框（推荐 ${suggested}）；回车添加或按 Esc 后自动收起并回到刚才的窗口。`,
+  calendarJoinMeeting: "一键加入当前会议",
+  calendarJoinMeetingHint: (suggested) => `当前有即将开始或正在进行的会议且含会议链接时，不展开岛即可直接打开链接入会（推荐 ${suggested}）；没有会议时不打扰。`,
+  shortcutProblem: { invalid: "这个快捷键用不了，换一个带修饰键的组合。", taken: "这个快捷键被别的程序占用了，换一个。" },
+  shortcutInvalidMac: "这个快捷键在 Mac 上用不了，换一个带 Control、Option 或 Command 的组合。",
 };
 
 export const en: SettingsShortcutsText = {
@@ -116,6 +140,12 @@ export const en: SettingsShortcutsText = {
   translate: "Translate",
   newLine: "New line",
   pasteClipboard: "Fill from the clipboard (window only)",
+  clipboardWindowTitle: "Clipboard window",
+  clipboardPreview: "Spacebar peek",
+  clipboardSnippetsTab: "Switch history and snippets",
+  clipboardPlainPaste: "Paste as plain text",
+  clipboardAiRewrite: "AI rewrite or summary",
+  clipboardQuickPick: "Quick paste entry 1–9",
   taken: (shortcut, owner) => `${shortcut} is already used by "${owner}". Choose another.`,
   reset: (shortcut) => `Reset to default (${shortcut})`,
   pluginTitle: "Plugin shortcuts",
@@ -128,4 +158,10 @@ export const en: SettingsShortcutsText = {
   pluginTurnOff: "Turn this shortcut off",
   pluginClear: "Clear the shortcut",
   pluginInUse: "Another app already uses this shortcut, so it does not work. Choose another.",
+  todoQuickAdd: "Quickly add a todo",
+  todoQuickAddHint: (suggested) => `Pressed anywhere, it expands the island with the cursor in the todo box (try ${suggested}); Enter adds the todo and Esc closes the island, returning focus to your previous window.`,
+  calendarJoinMeeting: "Join current meeting",
+  calendarJoinMeetingHint: (suggested) => `When an upcoming or ongoing meeting has a link, opens it right away without expanding the island (try ${suggested}); does nothing when there is no meeting.`,
+  shortcutProblem: { invalid: "This shortcut cannot be used; pick one with a modifier key.", taken: "Another app is using this shortcut; pick another." },
+  shortcutInvalidMac: "This shortcut cannot be used on a Mac; pick one with Control, Option or Command.",
 };

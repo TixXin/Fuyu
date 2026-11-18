@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { SettingsChoice } from "../../../components/settings/SettingsChoice";
+import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../../components/settings/SettingsInput";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
+import { SettingsSecretRow } from "../../../components/settings/SettingsSecretRow";
 import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useErrorText, useTranslation } from "../../../i18n";
@@ -74,7 +77,7 @@ export function AgentPushSettings() {
   const channelOptions = AGENT_PUSH_CHANNELS.map((channel) => ({ value: channel, label: text.channels[channel] }));
 
   return (
-    <SettingsGroup title={text.title} footer={bark ? text.hint : text.ccConnectHint}>
+    <SettingsGroup title={text.title} footer={<SettingsFootnote text={bark ? text.hint : text.ccConnectHint} />}>
       <SettingsToggleRow title={text.enabled} description={text.enabledHint} checked={settings.enabled} onChange={(enabled) => setSettings({ ...settings, enabled })} />
       {settings.enabled && (
         <>
@@ -82,11 +85,11 @@ export function AgentPushSettings() {
             indent
             title={text.channel}
             control={
-              <SettingsSelect
+              <SettingsChoice<AgentPushChannel>
                 value={settings.channel}
                 options={channelOptions}
                 ariaLabel={text.channel}
-                onChange={(channel: AgentPushChannel) => setSettings({ ...settings, channel })}
+                onChange={(channel) => setSettings({ ...settings, channel })}
               />
             }
           />
@@ -105,32 +108,21 @@ export function AgentPushSettings() {
                   onChange={(event) => setSettings({ ...settings, server: event.target.value })}
                 />
               </SettingsRow>
-              <SettingsRow
+              <SettingsSecretRow
                 indent
                 title={text.key}
                 description={keySaved ? (isMacOS ? text.keyIsSavedMac : text.keyIsSaved) : text.keyHint}
-                control={
-                  keySaved ? (
-                    <SettingsLinkButton tone="danger" disabled={busy} onClick={() => void clearKey()}>{text.clearKey}</SettingsLinkButton>
-                  ) : (
-                    <SettingsLinkButton disabled={busy || !keyInput.trim()} onClick={() => void saveKey()}>{text.saveKey}</SettingsLinkButton>
-                  )
-                }
-              >
-                {!keySaved && (
-                  <SettingsInput
-                    monospace
-                    type="password"
-                    value={keyInput}
-                    placeholder={text.keyPlaceholder}
-                    aria-label={text.key}
-                    onChange={(event) => setKeyInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" && keyInput.trim()) void saveKey();
-                    }}
-                  />
-                )}
-              </SettingsRow>
+                value={keyInput}
+                placeholder={keySaved ? `${text.keyPlaceholder} · ${text.saveKey}` : text.keyPlaceholder}
+                ariaLabel={text.key}
+                hasSecret={Boolean(keySaved)}
+                saving={busy}
+                saveLabel={text.saveKey}
+                deleteLabel={text.clearKey}
+                onChange={setKeyInput}
+                onSave={() => void saveKey()}
+                onDelete={() => void clearKey()}
+              />
             </>
           )}
           {AGENT_PUSH_EVENTS.map((event) => (

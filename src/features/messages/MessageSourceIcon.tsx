@@ -1,5 +1,12 @@
 import qqIcon from "../../assets/brands/qq.png";
 import wechatIcon from "../../assets/brands/wechat.png";
+import telegramIcon from "../../assets/brands/telegram.svg";
+import discordIcon from "../../assets/brands/discord.svg";
+import whatsappIcon from "../../assets/brands/whatsapp.svg";
+import timIcon from "../../assets/brands/tim.png";
+import feishuIcon from "../../assets/brands/feishu.svg";
+import dingtalkIcon from "../../assets/brands/dingtalk.png";
+import wecomIcon from "../../assets/brands/wecom.png";
 import mailIcon from "../../assets/brands/mail.png";
 import qqMailIcon from "../../assets/brands/mail-qq.png";
 import neteaseMailIcon from "../../assets/brands/mail-netease.png";
@@ -14,6 +21,13 @@ const SOURCE_ICONS: Record<MessageSource, string> = {
   qq: qqIcon,
   wechat: wechatIcon,
   qqMail: mailIcon,
+  telegram: telegramIcon,
+  discord: discordIcon,
+  whatsapp: whatsappIcon,
+  tim: timIcon,
+  feishu: feishuIcon,
+  dingtalk: dingtalkIcon,
+  wecom: wecomIcon,
 };
 
 const MAIL_PROVIDER_ICONS: Record<MailProvider, string> = {

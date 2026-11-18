@@ -12,6 +12,7 @@ if /I "%PROVIDER%"=="kimiCode" goto known
 if /I "%PROVIDER%"=="grok" goto known
 if /I "%PROVIDER%"=="copilot" goto known
 if /I "%PROVIDER%"=="droid" goto known
+if /I "%PROVIDER%"=="pi" goto known
 if /I "%PROVIDER%"=="codebuddy" goto known
 if /I "%PROVIDER%"=="qwen" goto known
 if /I "%PROVIDER%"=="antigravity" (
@@ -20,7 +21,13 @@ if /I "%PROVIDER%"=="antigravity" (
 )
 if /I "%PROVIDER%"=="trae" goto trae
 if /I "%PROVIDER%"=="traeCn" goto trae
-exit /b 2
+if /I "%PROVIDER%"=="" exit /b 2
+if /I "%PROVIDER%"=="updatedAt" exit /b 2
+if /I "%PROVIDER%"=="statusPath" exit /b 2
+if /I "%PROVIDER%"=="others" exit /b 2
+echo(%PROVIDER%| findstr /R "^[A-Za-z][A-Za-z0-9_-]*$" >nul
+if errorlevel 1 exit /b 2
+goto known
 
 :trae
 if /I not "%~2"=="running" if /I not "%~2"=="stop" if /I not "%~2"=="notification" exit /b 2

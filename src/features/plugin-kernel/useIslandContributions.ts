@@ -1,6 +1,13 @@
 import { useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { disabledBuiltinIds, subscribeBuiltinPlugins } from "./builtinSwitches.ts";
-import { createIslandContributions, lineBelow, type IslandContributed, type IslandContribution, type IslandLineContribution } from "./islandContributions.ts";
+import {
+  createIslandContributions,
+  lineBelow,
+  selectContributed,
+  type IslandContributed,
+  type IslandContribution,
+  type IslandLineContribution,
+} from "./islandContributions.ts";
 
 export const islandContributions = createIslandContributions();
 
@@ -24,12 +31,26 @@ export function useSettleIslandContributions() {
   useLayoutEffect(() => islandContributions.settle(), []);
 }
 
-export function useIslandContributed(): IslandContributed {
-  return useSyncExternalStore(islandContributions.subscribe, islandContributions.snapshot, islandContributions.snapshot);
+export function useIslandContributed(): IslandContributed;
+export function useIslandContributed<T>(
+  selector: (state: IslandContributed) => T,
+  isEqual?: (a: T, b: T) => boolean,
+): T;
+export function useIslandContributed<T = IslandContributed>(
+  selector?: (state: IslandContributed) => T,
+  isEqual: (a: T, b: T) => boolean = Object.is,
+): T {
+  const cache = useRef<{ state: IslandContributed; value: T } | null>(null);
+  const getSnapshot = () => {
+    const next = selectContributed(islandContributions.snapshot(), cache.current, selector, isEqual);
+    cache.current = next;
+    return next.value;
+  };
+  return useSyncExternalStore(islandContributions.subscribe, getSnapshot, getSnapshot);
 }
 
 export function useLineBelow(priority: number): IslandLineContribution | null {
-  const { lines } = useIslandContributed();
+  const lines = useIslandContributed((state) => state.lines);
   return useMemo(() => lineBelow(lines, priority), [lines, priority]);
 }
 

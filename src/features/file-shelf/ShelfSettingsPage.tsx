@@ -1,3 +1,5 @@
+import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -36,7 +38,7 @@ function BehaviorSection({ settings, onSettingsChange }: ShelfSectionProps) {
       <SettingsRow
         title={labels.doubleClick}
         control={
-          <SettingsSelect<ShelfDoubleClick>
+          <SettingsChoice<ShelfDoubleClick>
             value={settings.shelfDoubleClick}
             options={doubleClickOptions}
             ariaLabel={labels.doubleClick}
@@ -59,7 +61,7 @@ function CleanupSection({ settings, onSettingsChange }: ShelfSectionProps) {
   }));
 
   return (
-    <SettingsGroup title={labels.cleanupTitle} footer={labels.cleanupHint}>
+    <SettingsGroup title={labels.cleanupTitle} footer={<SettingsFootnote text={labels.cleanupHint} />}>
       <SettingsRow
         title={labels.autoCleanup}
         control={

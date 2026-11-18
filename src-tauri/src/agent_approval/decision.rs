@@ -20,6 +20,8 @@ pub enum Agent {
     Zcode,
     Mimo,
     Copilot,
+    Droid,
+    Pi,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -32,7 +34,7 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 14] = [
+const AGENTS: [Agent; 16] = [
     Agent::ClaudeCode,
     Agent::Codex,
     Agent::Workbuddy,
@@ -47,11 +49,16 @@ const AGENTS: [Agent; 14] = [
     Agent::Zcode,
     Agent::Mimo,
     Agent::Copilot,
+    Agent::Droid,
+    Agent::Pi,
 ];
 
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
     if path == QUESTION_PATH {
         return Some((Agent::ClaudeCode, Kind::Question));
+    }
+    if path == "/dsh/pre-tool-use" {
+        return Some((Agent::Dsh, Kind::Permission));
     }
     AGENTS
         .into_iter()
@@ -66,9 +73,10 @@ impl Agent {
             Self::Codex => "/codex/permission-request",
             Self::Workbuddy => "/workbuddy/permission-request",
             Self::Antigravity => "/antigravity/pre-tool-use",
-            Self::Dsh => "/dsh/pre-tool-use",
+            Self::Dsh => "/dsh/permission",
             Self::Opencode => "/opencode/permission",
             Self::Mimo => "/mimo/permission",
+            Self::Pi => "/pi/permission",
             Self::Qoder => "/qoder/permission-request",
             Self::Zcode => "/zcode/permission-request",
             Self::Codebuddy => "/codebuddy/permission-request",
@@ -76,6 +84,7 @@ impl Agent {
             Self::Trae => "/trae/pre-tool-use",
             Self::TraeCn => "/traeCn/pre-tool-use",
             Self::Copilot => "/copilot/permission-request",
+            Self::Droid => "/droid/pre-tool-use",
         }
     }
 
@@ -88,6 +97,7 @@ impl Agent {
             Self::Dsh => "dsh",
             Self::Opencode => "opencode",
             Self::Mimo => "mimo",
+            Self::Pi => "pi",
             Self::Qoder => "qoder",
             Self::Zcode => "zcode",
             Self::Codebuddy => "codebuddy",
@@ -95,11 +105,12 @@ impl Agent {
             Self::Trae => "trae",
             Self::TraeCn => "traeCn",
             Self::Copilot => "copilot",
+            Self::Droid => "droid",
         }
     }
 
     pub(super) fn lacks_waiting_event(self) -> bool {
-        matches!(self, Self::Antigravity | Self::Dsh | Self::Trae | Self::TraeCn)
+        matches!(self, Self::Antigravity | Self::Dsh | Self::Trae | Self::TraeCn | Self::Droid)
     }
 }
 
@@ -136,7 +147,14 @@ impl HookInput {
     pub(super) fn parse_for(agent: Agent, body: &[u8]) -> Result<Self, &'static str> {
         match agent {
             Agent::Antigravity => {}
-            Agent::Opencode | Agent::Mimo => return super::opencode::plugin_input(body),
+            Agent::Opencode | Agent::Mimo | Agent::Pi => return super::opencode::plugin_input(body),
+            Agent::Trae | Agent::TraeCn => {
+                let mut input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
+                if let Some(fields) = input.as_object_mut() {
+                    fields.remove("agent_id");
+                }
+                return Self::from_value(&input);
+            }
             _ => {
                 let mut input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
                 compat_input(agent.id(), &mut input);
@@ -263,7 +281,17 @@ pub(super) fn permission_response(
             Some(Decision::Terminal) => json!({ "decision": "ask" }).to_string(),
         },
         Agent::Dsh => match decision {
+            Some(Decision::Allow | Decision::AllowAlways) => json!({
+                "outcome": "allowed-once",
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "allow",
+                }
+            })
+            .to_string(),
             Some(Decision::Deny) => json!({
+                "outcome": "rejected",
+                "reason": reason(),
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
                     "permissionDecision": "deny",
@@ -273,9 +301,9 @@ pub(super) fn permission_response(
             .to_string(),
             _ => "{}".to_string(),
         },
-        Agent::Trae | Agent::TraeCn => pre_tool_use_response(decision, reason()),
+        Agent::Trae | Agent::TraeCn | Agent::Droid => pre_tool_use_response(decision, reason()),
         Agent::Copilot => behavior_response(decision, reason()),
-        Agent::Opencode | Agent::Mimo => super::opencode::plugin_response(decision, message),
+        Agent::Opencode | Agent::Mimo | Agent::Pi => super::opencode::plugin_response(decision, message),
     }
 }
 

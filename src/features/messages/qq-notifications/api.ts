@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type EventCallback } from "@tauri-apps/api/event";
+import type { NativeError } from "../../../i18n/nativeError";
 
 export type QQNotification = {
   id: string;
@@ -14,7 +15,7 @@ export type QQNotificationSnapshot = {
   enabled: boolean;
   status: "disabled" | "waiting" | "listening" | "permissionDenied" | "permissionRequired" | "error";
   items: QQNotification[];
-  error: string | null;
+  error: NativeError | string | null;
 };
 
 export type QQNotificationEvent = {

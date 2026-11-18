@@ -9,6 +9,20 @@ pub(crate) const PLUGIN_ID: &str = "messages";
 pub(crate) const QQ: &str = "qq";
 pub(crate) const WECHAT: &str = "wechat";
 pub(crate) const MAIL: &str = "mail";
+#[allow(dead_code)]
+pub(crate) const TELEGRAM: &str = "telegram";
+#[allow(dead_code)]
+pub(crate) const DISCORD: &str = "discord";
+#[allow(dead_code)]
+pub(crate) const WHATSAPP: &str = "whatsapp";
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(crate) const TIM: &str = "tim";
+#[allow(dead_code)]
+pub(crate) const FEISHU: &str = "feishu";
+#[allow(dead_code)]
+pub(crate) const DINGTALK: &str = "dingtalk";
+#[allow(dead_code)]
+pub(crate) const WECOM: &str = "wecom";
 
 pub(crate) fn source_on(config: &Map<String, Value>, source: &str) -> bool {
     matches!(config.get(source), Some(Value::Bool(true)))
@@ -16,7 +30,9 @@ pub(crate) fn source_on(config: &Map<String, Value>, source: &str) -> bool {
 
 type Apply = Box<dyn Fn(bool) + Send + Sync>;
 type Cleanup = Box<dyn Fn() + Send + Sync>;
+type Running = Box<dyn Fn() -> bool + Send + Sync>;
 
+#[cfg_attr(not(windows), allow(dead_code))]
 pub(crate) struct SourceWorker {
     source: &'static str,
     worker: Worker,
@@ -24,12 +40,21 @@ pub(crate) struct SourceWorker {
     after_stop: Option<Cleanup>,
 }
 
+#[cfg_attr(not(windows), allow(dead_code))]
 impl SourceWorker {
-    pub(crate) fn new(source: &'static str, worker: Worker, apply: impl Fn(bool) + Send + Sync + 'static) -> Self {
-        Self { source, worker, apply: Box::new(apply), after_stop: None }
+    pub(crate) fn new(
+        source: &'static str,
+        worker: Worker,
+        apply: impl Fn(bool) + Send + Sync + 'static,
+    ) -> Self {
+        Self {
+            source,
+            worker,
+            apply: Box::new(apply),
+            after_stop: None,
+        }
     }
 
-    #[cfg_attr(not(windows), allow(dead_code))]
     pub(crate) fn after_stop(mut self, cleanup: impl Fn() + Send + Sync + 'static) -> Self {
         self.after_stop = Some(Box::new(cleanup));
         self
@@ -78,6 +103,52 @@ impl Background for SourceWorker {
     }
 }
 
+pub(crate) struct SourceSwitch {
+    source: &'static str,
+    apply: Apply,
+    running: Running,
+}
+
+impl SourceSwitch {
+    pub(crate) fn new(
+        source: &'static str,
+        apply: impl Fn(bool) + Send + Sync + 'static,
+        running: impl Fn() -> bool + Send + Sync + 'static,
+    ) -> Self {
+        Self {
+            source,
+            apply: Box::new(apply),
+            running: Box::new(running),
+        }
+    }
+
+    fn follow(&self, config: &Map<String, Value>) {
+        (self.apply)(source_on(config, self.source));
+    }
+}
+
+impl Background for SourceSwitch {
+    fn start(&self) -> Result<(), String> {
+        self.follow(&builtins::config(PLUGIN_ID));
+        Ok(())
+    }
+
+    fn stop(&self) {
+        (self.apply)(false);
+    }
+
+    fn running(&self) -> bool {
+        (self.running)()
+    }
+
+    fn configure(&self, config: &Map<String, Value>) {
+        if !builtins::is_enabled(PLUGIN_ID) {
+            return;
+        }
+        self.follow(config);
+    }
+}
+
 pub(crate) fn register(name: &'static str, background: impl Background + 'static) {
     if let Err(error) = builtins::register(PLUGIN_ID, name, std::sync::Arc::new(background)) {
         eprintln!("[plugins-v3] {error}");
@@ -103,10 +174,26 @@ mod tests {
     }
 
     #[test]
-    fn the_three_sources_are_the_background_listed_for_messages() {
+    fn all_ten_sources_are_the_background_listed_for_messages() {
         let catalog = builtins::catalog();
         let plugin = catalog.iter().find(|plugin| plugin.id == PLUGIN_ID).expect("messages is a built-in plugin");
-        assert_eq!(plugin.background.as_deref(), Some(&[QQ.to_owned(), WECHAT.to_owned(), MAIL.to_owned()][..]));
+        assert_eq!(
+            plugin.background.as_deref(),
+            Some(
+                &[
+                    QQ.to_owned(),
+                    WECHAT.to_owned(),
+                    MAIL.to_owned(),
+                    TELEGRAM.to_owned(),
+                    DISCORD.to_owned(),
+                    WHATSAPP.to_owned(),
+                    TIM.to_owned(),
+                    FEISHU.to_owned(),
+                    DINGTALK.to_owned(),
+                    WECOM.to_owned(),
+                ][..]
+            )
+        );
     }
 
     #[test]
@@ -137,5 +224,25 @@ mod tests {
         source.stop();
         assert!(!source.running());
         assert!(!on.load(Ordering::SeqCst));
+    }
+
+    #[test]
+    fn shared_source_switch_reports_hub_running_and_turns_off_on_stop() {
+        let active = Arc::new(AtomicBool::new(false));
+        let applied = active.clone();
+        let running = active.clone();
+        let switch = SourceSwitch::new(
+            QQ,
+            move |value| applied.store(value, Ordering::SeqCst),
+            move || running.load(Ordering::SeqCst),
+        );
+        switch.follow(&config(json!({ "qq": true })));
+        assert!(switch.running());
+        switch.follow(&config(json!({ "qq": false })));
+        assert!(!switch.running());
+        switch.follow(&config(json!({ "qq": true })));
+        assert!(switch.running());
+        switch.stop();
+        assert!(!switch.running());
     }
 }

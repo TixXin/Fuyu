@@ -60,6 +60,7 @@ export function ClipboardPanelHeader({
             danger: true,
             disabled: itemCount === 0,
             keepOpen: !isConfirmingClear,
+            confirming: isConfirmingClear,
             onSelect: onClear,
           },
         ]}

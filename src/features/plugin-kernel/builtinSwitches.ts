@@ -1,9 +1,12 @@
+import { registerBackupSwitches, type BuiltinSwitchSnapshot } from "../../lib/settings-backup/storage.ts";
 import { getBuiltinPlugins, onBuiltinPluginsChanged, setBuiltinPluginConfig, setBuiltinPluginEnabled, type BuiltinConfigValue, type BuiltinPlugin } from "./api.ts";
+import { loadMigratedSwitches, saveMigratedSwitches } from "./storage.ts";
 
 type Listener = (plugins: readonly BuiltinPlugin[] | null) => void;
 
 let current: readonly BuiltinPlugin[] | null = null;
-let started = false;
+let listening = false;
+let loading = false;
 let version = 0;
 const listeners = new Set<Listener>();
 
@@ -42,16 +45,38 @@ export function disabledBuiltinIds(plugins: readonly BuiltinPlugin[] | null): st
   return (plugins ?? []).filter((plugin) => !plugin.enabled).map((plugin) => plugin.id);
 }
 
+export function isBuiltinEnabled(plugins: readonly BuiltinPlugin[] | null, id: string, fallback = true): boolean {
+  if (!plugins) return fallback;
+  return plugins.find((plugin) => plugin.id === id)?.enabled ?? fallback;
+}
+
+export function builtinConfigBoolean(plugins: readonly BuiltinPlugin[] | null, id: string, key: string): boolean | undefined {
+  const value = plugins?.find((plugin) => plugin.id === id)?.config[key];
+  return typeof value === "boolean" ? value : undefined;
+}
+
 export function startBuiltinSwitches() {
-  if (started) return;
-  started = true;
-  const asked = version;
-  void onBuiltinPluginsChanged(publish).catch(() => undefined);
-  void getBuiltinPlugins()
-    .then((plugins) => {
-      if (version === asked) publish(plugins);
-    })
-    .catch(() => undefined);
+  if (!listening) {
+    listening = true;
+    void Promise.resolve()
+      .then(() => onBuiltinPluginsChanged(publish))
+      .catch(() => {
+        listening = false;
+      });
+  }
+  if (!current && !loading) {
+    loading = true;
+    const asked = version;
+    void Promise.resolve()
+      .then(() => getBuiltinPlugins())
+      .then((plugins) => {
+        if (version === asked) publish(plugins);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        loading = false;
+      });
+  }
 }
 
 export function builtinPlugins(): readonly BuiltinPlugin[] | null {
@@ -73,3 +98,39 @@ export async function switchBuiltinPlugin(id: string, enabled: boolean): Promise
 export async function setBuiltinConfig(id: string, key: string, value: BuiltinConfigValue | null): Promise<void> {
   publish(await setBuiltinPluginConfig(id, key, value));
 }
+
+function snapshotForBackup(): BuiltinSwitchSnapshot | null {
+  if (!current) return null;
+  return {
+    enabled: Object.fromEntries(current.map((plugin) => [plugin.id, plugin.enabled])),
+    config: Object.fromEntries(current.map((plugin) => [plugin.id, plugin.config])),
+  };
+}
+
+registerBackupSwitches({
+  snapshot: snapshotForBackup,
+  apply(restored) {
+    if (restored.migrated.length > 0) {
+      saveMigratedSwitches([...loadMigratedSwitches(), ...restored.migrated]);
+    }
+    for (const [id, enabled] of restored.plugins) {
+      if (current?.find((plugin) => plugin.id === id)?.enabled === enabled) continue;
+      void switchBuiltinPlugin(id, enabled).catch((error: unknown) => {
+        console.error(`Could not restore the built-in plugin ${id}`, error);
+      });
+    }
+    for (const [id, key, value] of restored.configs) {
+      if (current?.find((plugin) => plugin.id === id)?.config[key] === value) continue;
+      void setBuiltinConfig(id, key, value).catch((error: unknown) => {
+        console.error(`Could not restore ${id}.${key}`, error);
+      });
+    }
+  },
+  subscribe(listener) {
+    const notify: Listener = () => listener();
+    listeners.add(notify);
+    return () => {
+      listeners.delete(notify);
+    };
+  },
+});

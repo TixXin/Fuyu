@@ -15,7 +15,6 @@ export type OnboardingPushText = {
     install: string;
     installing: string;
     reading: string;
-    macLocal: string;
   };
   tunnel: {
     lead: string;
@@ -89,7 +88,6 @@ export const zhCN: OnboardingPushText = {
     install: "安装",
     installing: "正在安装…",
     reading: "正在读取…",
-    macLocal: "Mac 本机暂不支持，可以给远程电脑配。",
   },
   tunnel: {
     lead: "远程电脑上不了外网时，cc-connect 连不上飞书或 Telegram。打开 SSH 代理隧道，借这台电脑的网络（要这台电脑开着代理软件）：",
@@ -168,7 +166,6 @@ export const en: OnboardingPushText = {
     install: "Install",
     installing: "Installing…",
     reading: "Reading…",
-    macLocal: "Not supported on this Mac yet; you can set up remote computers.",
   },
   tunnel: {
     lead: "If a remote computer can't reach the internet, cc-connect there can't reach Feishu or Telegram. Turn on the SSH proxy tunnel to lend it this computer's connection (a proxy app must be running here):",

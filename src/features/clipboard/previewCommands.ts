@@ -13,7 +13,8 @@ export type ClipboardPreviewReport =
   | { type: "pointer"; inside: boolean }
   | { type: "pinned"; pinned: boolean }
   | { type: "close" }
-  | { type: "edited"; id: string };
+  | { type: "edited"; id: string }
+  | { type: "ready" };
 
 export const PREVIEW_SIZES: readonly Exclude<ClipboardPreviewSize, "custom">[] = ["standard", "medium", "full"];
 

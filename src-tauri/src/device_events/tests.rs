@@ -125,12 +125,12 @@ fn alerts_reach_the_island_as_tagged_json() {
 #[test]
 #[ignore = "reads the real devices of the computer it runs on"]
 fn probe_this_computer() {
-    let _com = crate::win32::com::ComApartment::multithreaded().expect("com");
+    let mut thread = super::start_thread().expect("com");
     for info in crate::win32::audio_outputs::active_outputs().expect("outputs") {
         let container = crate::win32::devnode::container_id(&format!(r"SWD\MMDEVAPI\{}", info.id));
         println!("{} | form factor {} | {} | {:?}", info.name, info.form_factor, info.enumerator, container);
     }
-    println!("announced: {:?}", super::read_outputs());
+    println!("announced: {:?}", super::read_outputs(&mut thread));
     println!("batteries: {:?}", crate::win32::devnode::bluetooth_batteries());
     println!("power: {:?}", crate::win32::power::power_source());
 }

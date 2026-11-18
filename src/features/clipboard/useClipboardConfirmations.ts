@@ -81,7 +81,7 @@ export function useClipboardConfirmations(
         .some(
           (node) =>
             node instanceof Element &&
-            node.matches("[data-clipboard-confirm-control='true']"),
+            node.matches("[data-confirm-control='true'], [data-clipboard-confirm-control='true']"),
         );
 
       if (isConfirmControl) {

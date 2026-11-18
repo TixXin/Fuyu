@@ -384,3 +384,144 @@ fn an_optional_group_stays_on_this_device_until_it_is_turned_on() {
         assert!(pushed.contains("qq-mail") && !pushed.contains("hunter2"), "{pushed}");
     }
 }
+
+fn clip_item(id: &str, text: &str, favorite: bool, note: &str, pin_key: Option<&str>, stamp: Option<&Hlc>) -> crate::clipboard_history::ClipboardHistoryItem {
+    let hash = crate::clipboard_history::text_clipboard_hash(text);
+    let mut value = json!({
+        "id": id,
+        "kind": "text",
+        "hash": hash,
+        "createdAt": 1_000,
+        "copiedAt": 1_000,
+        "favorite": favorite,
+        "note": note,
+        "preview": text,
+        "text": text,
+    });
+    if let Some(key) = pin_key {
+        value["pinKey"] = json!(key);
+    }
+    if let Some(hlc) = stamp {
+        value["updatedAt"] = json!(hlc.to_string());
+        value["deviceId"] = json!(hlc.device);
+    }
+    serde_json::from_value(value).expect("clip item")
+}
+
+#[test]
+fn clipboard_favorites_start_off_by_default_and_merge_by_content_hash_when_enabled() {
+    assert!(!super::config::SyncConfig::default().enabled(SyncCategory::ClipFavorites));
+    let (folder, mut a, mut b) = pair("clip-fav-hash");
+    let s1 = a.stamp();
+    a.favorites.items = vec![clip_item("100-a", "same phrase", true, "old note", None, Some(&s1))];
+    settle(&folder, &mut a, &mut b);
+    assert!(!folder.join("fuyu-sync/devices/deva/clip-favorites.json").exists());
+    assert!(b.favorites.items.is_empty());
+
+    a.favorites.enabled = true;
+    b.favorites.enabled = true;
+    b.clock.wall = a.clock.wall + 2_000;
+    let s2 = b.stamp();
+    let s3 = b.stamp();
+    b.favorites.items = vec![
+        clip_item("999-b", "same phrase", true, "newer note", None, Some(&s2)),
+        clip_item("999-only-b", "only on B", true, "", None, Some(&s3)),
+    ];
+    settle(&folder, &mut a, &mut b);
+
+    assert_eq!(a.favorites.items.iter().filter(|item| item.is_favorite()).count(), 2);
+    assert_eq!(b.favorites.items.iter().filter(|item| item.is_favorite()).count(), 2);
+    let a_same: Value = serde_json::to_value(a.favorites.items.iter().find(|item| item.id() == "100-a").expect("kept local id on A")).expect("json");
+    let b_same: Value = serde_json::to_value(b.favorites.items.iter().find(|item| item.id() == "999-b").expect("kept local id on B")).expect("json");
+    assert_eq!(a_same["note"], "newer note");
+    assert_eq!(b_same["note"], "newer note");
+}
+
+#[test]
+fn unfavoriting_and_deleting_clipboard_favorites_propagate_to_the_other_device() {
+    let (folder, mut a, mut b) = pair("clip-fav-remove");
+    a.favorites.enabled = true;
+    b.favorites.enabled = true;
+    let (s1, s2) = (a.stamp(), a.stamp());
+    let first = clip_item("a-1", "unfav me", true, "", None, Some(&s1));
+    let second = clip_item("a-2", "delete me", true, "", None, Some(&s2));
+    let hash1 = crate::clipboard_history::text_clipboard_hash("unfav me");
+    let hash2 = crate::clipboard_history::text_clipboard_hash("delete me");
+    a.favorites.items = vec![first, second];
+    settle(&folder, &mut a, &mut b);
+    assert_eq!(b.favorites.items.len(), 2);
+
+    b.clock.wall = a.clock.wall + 2_000;
+    let unfav_at = b.stamp();
+    let mut b_unfav: Value = serde_json::to_value(&b.favorites.items[0]).expect("json");
+    let target_hash = b_unfav["hash"].as_str().expect("hash").to_string();
+    b_unfav["favorite"] = json!(false);
+    b_unfav["fromSync"] = json!(false);
+    b_unfav.as_object_mut().expect("obj").remove("updatedAt");
+    b.favorites.items[0] = serde_json::from_value(b_unfav).expect("item");
+    b.favorites.tombstones.push(Tombstone::new(&target_hash, unfav_at));
+    settle(&folder, &mut a, &mut b);
+
+    let a_target: Value = serde_json::to_value(a.favorites.items.iter().find(|item| {
+        serde_json::to_value(item).expect("v")["hash"] == target_hash
+    }).expect("local copy kept on A")).expect("json");
+    assert_eq!(a_target["favorite"], false);
+
+    a.clock.wall = b.clock.wall + 2_000;
+    let remaining_hash = if target_hash == hash1 { hash2 } else { hash1 };
+    let del_at = a.stamp();
+    a.favorites.items.retain(|item| serde_json::to_value(item).expect("v")["hash"] != remaining_hash);
+    a.favorites.tombstones.push(Tombstone::new(&remaining_hash, del_at));
+    settle(&folder, &mut a, &mut b);
+
+    assert_eq!(a.favorites.items.iter().filter(|item| item.is_favorite()).count(), 0);
+    assert_eq!(b.favorites.items.iter().filter(|item| item.is_favorite()).count(), 0);
+}
+
+#[test]
+fn duplicate_pin_keys_resolve_by_hlc_and_sensitive_entries_never_leave_or_get_overwritten() {
+    let (folder, mut a, mut b) = pair("clip-fav-pin-privacy");
+    a.favorites.enabled = true;
+    b.favorites.enabled = true;
+
+    let early = a.stamp();
+    b.clock.wall = a.clock.wall + 3_000;
+    let late = b.stamp();
+
+    let mut private_item: Value = serde_json::to_value(clip_item("priv-1", "internal memo", true, "local private", Some("P"), Some(&early))).expect("json");
+    private_item["private"] = json!(true);
+    let mut masked_item: Value = serde_json::to_value(clip_item("mask-1", "normal looking note", true, "masked local", None, Some(&early))).expect("json");
+    masked_item["masked"] = json!(true);
+    let secret_item = clip_item("sec-1", "sk-ant-api03-AbCdEfGhIjKlMnOpQrStUvWxYz0123456789", true, "api key", None, Some(&early));
+
+    a.favorites.items = vec![
+        clip_item("a-k", "alpha command", true, "", Some("K"), Some(&early)),
+        serde_json::from_value(private_item).expect("private"),
+        serde_json::from_value(masked_item).expect("masked"),
+        secret_item,
+    ];
+    let private_hash = crate::clipboard_history::text_clipboard_hash("internal memo");
+    b.favorites.items = vec![clip_item("b-k", "beta command", true, "", Some("K"), Some(&late))];
+    b.favorites.tombstones.push(Tombstone::new(&private_hash, late.clone()));
+
+    settle(&folder, &mut a, &mut b);
+
+    let pushed_a = fs::read_to_string(folder.join("fuyu-sync/devices/deva/clip-favorites.json")).expect("pushed clip-favorites");
+    assert!(!pushed_a.contains("internal memo") && !pushed_a.contains("normal looking note") && !pushed_a.contains("sk-ant-api03"), "{pushed_a}");
+
+    for device in [&a, &b] {
+        let alpha: Value = serde_json::to_value(device.favorites.items.iter().find(|item| {
+            serde_json::to_value(item).expect("v")["text"] == "alpha command"
+        }).expect("alpha")).expect("json");
+        let beta: Value = serde_json::to_value(device.favorites.items.iter().find(|item| {
+            serde_json::to_value(item).expect("v")["text"] == "beta command"
+        }).expect("beta")).expect("json");
+        assert!(alpha.get("pinKey").is_none(), "{alpha}");
+        assert_eq!(beta["pinKey"], "K");
+    }
+
+    let kept_private: Value = serde_json::to_value(a.favorites.items.iter().find(|item| item.id() == "priv-1").expect("private preserved")).expect("json");
+    assert_eq!(kept_private["favorite"], true);
+    assert_eq!(kept_private["note"], "local private");
+    assert_eq!(kept_private["pinKey"], "P");
+}

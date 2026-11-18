@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Archive } from "lucide-react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { ArchivedNotice } from "./ArchivedNotice";
 import { EditorExtensionHint } from "./EditorExtensionHint";
 import { useEditorExtensionHint } from "./useEditorExtensionHint";
@@ -10,11 +11,11 @@ import { useTranslation } from "../../i18n";
 import { AgentSessionCard } from "./AgentSessionCard";
 import { AgentUsageBar } from "./AgentUsageBar";
 import type { AgentUsages } from "./usage";
-import { focusAgentWindow, type AgentSessionSummary } from "./api";
+import { focusAgentWindow, listenAgentFocusWindowOnly, type AgentSessionSummary } from "./api";
 import { arrangeSessions, isActivePhase, modelLabel, sessionAge, sessionProject } from "./sessionList";
 import { shownEffort } from "./effortLabels";
 import { useEffortLabels } from "./useEffortLabels";
-import { AGENT_PROVIDER_LABELS } from "./status";
+import { getAgentProviderLabel } from "./status";
 import { useScrollFade } from "./useScrollFade";
 import { asksUser, sessionKey } from "./unseen";
 import type { UnseenSessions } from "./useUnseenSessions";
@@ -128,10 +129,7 @@ export function AgentSessionsPanel({
     keepSubagents(new Set(listed.filter((session) => listedSubagents(session).length > 0).map(sessionKey)));
   }, [listed, keepSubagents]);
 
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), AGE_REFRESH_MS);
-    return () => window.clearInterval(timer);
-  }, []);
+  useEffect(() => visibilityInterval(() => setNow(Date.now()), AGE_REFRESH_MS), []);
 
   useEffect(() => {
     if (!rowNotice) return;
@@ -144,6 +142,20 @@ export function AgentSessionsPanel({
     const timer = window.setTimeout(() => setNotFoundId(null), NOT_FOUND_NOTICE_MS);
     return () => window.clearTimeout(timer);
   }, [notFoundId]);
+
+  const windowOnlyText = t.agent.sessions.windowOnly;
+  useEffect(() => {
+    if (reveal) return;
+    let disposed = false;
+    const unlisten = listenAgentFocusWindowOnly((payload) => {
+      if (disposed) return;
+      setRowNotice({ key: `${payload.provider}:${payload.sessionId}`, text: windowOnlyText });
+    }).catch(() => undefined);
+    return () => {
+      disposed = true;
+      void unlisten.then((stop) => stop?.());
+    };
+  }, [reveal, windowOnlyText]);
 
 
   const keyboard = useSessionKeyboard(
@@ -222,7 +234,7 @@ export function AgentSessionsPanel({
           ...members.flatMap((root) => [root, ...shownChildren(sessionKey(root)).map((child) => child.session)]).map((session) => {
           const depth = Math.min(childDepth.get(sessionKey(session)) ?? 0, MAX_CHILD_DEPTH);
           const project = sessionProject(session.cwd);
-          const title = session.title ?? project ?? AGENT_PROVIDER_LABELS[session.provider];
+          const title = session.title ?? project ?? getAgentProviderLabel(session.provider);
           const model = modelLabel(session.model, shownEffort(session.provider, session.effort, effortLabels));
           const key = sessionKey(session);
           const notFound = notFoundId === session.sessionId
@@ -294,6 +306,7 @@ export function AgentSessionsPanel({
               showElapsed={showElapsed}
               showModel={showModel}
               showActivity={showActivity}
+              effects={cardEffects}
               unseen={unseen}
               subagents={
                 reveal || (listedSubagents(session).length === 0 && !nested.children.has(key)) ? undefined : (

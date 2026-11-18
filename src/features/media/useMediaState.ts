@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getMediaState, sendMediaCommand, type MediaCommand, type MediaPlaybackStatus, type MediaSessionChange, type MediaState } from "./api";
-import { AUDIO_ACTIVE_THRESHOLD, DEFAULT_MEDIA_STATE, isSameMediaState } from "./mediaState";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
+import { getMediaState, sendMediaCommand, type AudioLevel, type MediaCommand, type MediaPlaybackStatus, type MediaSessionChange, type MediaState } from "./api";
+import { audioPeakStore } from "./audioPeakStore";
+import { DEFAULT_MEDIA_STATE, isSameMediaState } from "./mediaState";
 import { playbackPosition } from "./lyrics/lrc";
 import { alignClock, clockPosition, hasTimeline, holdIntentTimeline, keepIslandTimeline, NO_CLOCK, settleClockAt, startClockAt, type TrackClock } from "./trackClock";
-import { useAudioLevel } from "./useAudioLevel";
 import { useMediaSessionChanges } from "./useMediaSessionChanges";
+import { pickEffectiveMediaTarget } from "./sourcePriority";
 import { useMusicSourcePriority } from "./useMusicSourcePriority";
+
+const FALLBACK_POLL_MS = 30_000;
 
 export function useMediaState(enabled = true) {
   const [mediaState, setMediaState] =
@@ -14,6 +18,8 @@ export function useMediaState(enabled = true) {
   const [mediaCommandError, setMediaCommandError] = useState<string | null>(
     null,
   );
+  const mediaStateRef = useRef(mediaState);
+  mediaStateRef.current = mediaState;
   const mediaTargetRef = useRef<string | null>(null);
   const isRefreshingMediaState = useRef(false);
   const isRunningMediaCommand = useRef(false);
@@ -66,20 +72,18 @@ export function useMediaState(enabled = true) {
         ? { positionMs: clockPosition(trackClock.current, now), updatedAt: now, positionEstimate: trackClock.current.fromStart ? "timed" as const : "unsure" as const }
         : {};
 
-      setMediaState((currentState) => {
-        const nextPeak = Math.max(
-          currentState.audioPeak * 0.82,
-          nextMediaState.audioPeak,
-        );
-        const audioActive = playbackStatus !== "paused" &&
-          (nextMediaState.audioActive || nextPeak > AUDIO_ACTIVE_THRESHOLD);
-        const audioPeak = audioActive ? nextPeak : 0;
+      const audioActive = audioPeakStore.mergeSnapshot(
+        nextMediaState.audioPeak,
+        nextMediaState.audioActive,
+        playbackStatus === "paused",
+      );
 
+      setMediaState((currentState) => {
         const merged: MediaState = {
           ...(holdPosition ? holdIntentTimeline(nextMediaState, currentState) : nextMediaState),
           ...timeline,
           audioActive,
-          audioPeak,
+          audioPeak: 0,
           playbackStatus,
         };
 
@@ -91,6 +95,7 @@ export function useMediaState(enabled = true) {
       });
     } catch (error) {
       console.error("Failed to read media state", error);
+      audioPeakStore.set(0);
       setMediaState(DEFAULT_MEDIA_STATE);
     } finally {
       isRefreshingMediaState.current = false;
@@ -125,13 +130,15 @@ export function useMediaState(enabled = true) {
         };
 
         if (isPlayPause) {
+          if (intendedStatus === "paused") {
+            audioPeakStore.set(0);
+          }
           setMediaState((currentState) => ({
             ...currentState,
             available: intendedStatus === "playing" || currentState.available,
             audioActive:
               intendedStatus === "playing" && currentState.audioActive,
-            audioPeak:
-              intendedStatus === "paused" ? 0 : currentState.audioPeak,
+            audioPeak: 0,
             playbackStatus: intendedStatus,
             positionMs: Math.round(playbackPosition(currentState, Date.now())),
             updatedAt: Date.now(),
@@ -146,12 +153,22 @@ export function useMediaState(enabled = true) {
         const nextMediaState = await sendMediaCommand(command, target);
 
         if (!isTransport) {
-          setMediaState((currentState) =>
-            isSameMediaState(currentState, keepIslandTimeline(nextMediaState, currentState))
-              ? currentState
-              : keepIslandTimeline(nextMediaState, currentState),
+          audioPeakStore.mergeSnapshot(
+            nextMediaState.audioPeak,
+            nextMediaState.audioActive,
+            nextMediaState.playbackStatus === "paused",
           );
+          setMediaState((currentState) => {
+            const settled = { ...keepIslandTimeline(nextMediaState, currentState), audioPeak: 0 };
+            return isSameMediaState(currentState, settled) ? currentState : settled;
+          });
           return;
+        }
+
+        if (intendedStatus === "paused") {
+          audioPeakStore.set(0);
+        } else {
+          audioPeakStore.mergeSnapshot(nextMediaState.audioPeak, nextMediaState.audioActive, false);
         }
 
         setMediaState((currentState) => {
@@ -170,10 +187,7 @@ export function useMediaState(enabled = true) {
             ...settled,
             audioActive:
               nextMediaState.audioActive || currentState.audioActive,
-            audioPeak: Math.max(
-              nextMediaState.audioPeak,
-              currentState.audioPeak * 0.82,
-            ),
+            audioPeak: 0,
             playbackStatus: intendedStatus,
           };
         });
@@ -190,50 +204,54 @@ export function useMediaState(enabled = true) {
     [mediaState.playbackStatus, refreshMediaState],
   );
 
-  useAudioLevel(
-    setMediaState,
-    mediaPlaybackIntent,
-    enabled && (mediaState.playbackStatus === "playing" || mediaState.audioActive),
-  );
+  const applyAudioLevel = useCallback((audioLevel: AudioLevel) => {
+    const intent = mediaPlaybackIntent.current;
+    const isPauseIntent =
+      intent !== null &&
+      Date.now() < intent.expiresAt &&
+      intent.status === "paused";
+    const current = mediaStateRef.current;
+
+    if (current.playbackStatus === "paused" || isPauseIntent) {
+      audioPeakStore.set(0);
+      if (current.playbackStatus === "paused" && !current.audioActive) {
+        return;
+      }
+      setMediaState((prev) =>
+        prev.playbackStatus === "paused" && !prev.audioActive
+          ? prev
+          : { ...prev, audioActive: false, audioPeak: 0, playbackStatus: "paused" },
+      );
+      return;
+    }
+
+    const audioActive = audioPeakStore.sample(audioLevel.peak, audioLevel.active);
+    if (current.audioActive === audioActive) {
+      return;
+    }
+    setMediaState((prev) => (prev.audioActive === audioActive ? prev : { ...prev, audioActive, audioPeak: 0 }));
+  }, []);
 
   useMediaSessionChanges(enabled, refreshMediaState);
 
   useEffect(() => {
     if (!enabled) {
+      audioPeakStore.set(0);
       setMediaState(DEFAULT_MEDIA_STATE);
       return;
     }
 
     void refreshMediaState();
 
-    const interval = window.setInterval(() => {
+    return visibilityInterval(() => {
       void refreshMediaState();
-    }, 1500);
-
-    return () => window.clearInterval(interval);
+    }, FALLBACK_POLL_MS);
   }, [enabled, refreshMediaState]);
 
-  const effectiveMediaTarget = useMemo(() => {
-    if (mediaState.sessions.length === 0) {
-      return null;
-    }
-
-    const present = new Map(
-      mediaState.sessions.map((session) => [session.id, session]),
-    );
-
-    for (const source of musicSourcePriority) {
-      if (present.get(source.id)?.playing) {
-        return source.id;
-      }
-    }
-    for (const source of musicSourcePriority) {
-      if (present.has(source.id)) {
-        return source.id;
-      }
-    }
-    return null;
-  }, [musicSourcePriority, mediaState.sessions]);
+  const effectiveMediaTarget = useMemo(
+    () => pickEffectiveMediaTarget(mediaState.sessions, musicSourcePriority),
+    [musicSourcePriority, mediaState.sessions],
+  );
 
   useEffect(() => {
     if (!enabled || mediaTargetRef.current === effectiveMediaTarget) {
@@ -251,14 +269,25 @@ export function useMediaState(enabled = true) {
     setMediaState((current) => ({ ...current, positionMs: Math.max(0, positionMs), updatedAt: now, positionEstimate: "timed" }));
   }, []);
 
-  return {
+  return useMemo(() => ({
     mediaState,
     alignPosition,
+    applyAudioLevel,
     isMediaTrackChanging,
     mediaCommandError,
     musicSourcePriority,
     runMediaCommand,
     reorderMusicSource,
     removeMusicSource,
-  };
+  }), [
+    mediaState,
+    alignPosition,
+    applyAudioLevel,
+    isMediaTrackChanging,
+    mediaCommandError,
+    musicSourcePriority,
+    runMediaCommand,
+    reorderMusicSource,
+    removeMusicSource,
+  ]);
 }

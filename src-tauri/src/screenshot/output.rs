@@ -146,8 +146,16 @@ pub(super) fn thumbnail(picture: &Picture) -> Option<String> {
     const BOX: (u32, u32) = (192, 108);
     let scale = (f64::from(BOX.0) / f64::from(picture.width)).min(f64::from(BOX.1) / f64::from(picture.height)).min(1.0);
     let size = (((f64::from(picture.width) * scale).round() as u32).max(1), ((f64::from(picture.height) * scale).round() as u32).max(1));
-    let image = image::RgbaImage::from_raw(picture.width, picture.height, picture.rgba.clone())?;
-    let small = image::imageops::thumbnail(&image, size.0, size.1);
+    let row = picture.width as usize * 4;
+    if picture.rgba.len() < row * picture.height as usize {
+        return None;
+    }
+    let small = image::RgbaImage::from_fn(size.0, size.1, |x, y| {
+        let sx = ((f64::from(x) + 0.5) / scale).min(f64::from(picture.width - 1)) as usize;
+        let sy = ((f64::from(y) + 0.5) / scale).min(f64::from(picture.height - 1)) as usize;
+        let at = sy * row + sx * 4;
+        image::Rgba([picture.rgba[at], picture.rgba[at + 1], picture.rgba[at + 2], picture.rgba[at + 3]])
+    });
     let png = encode_png(&Picture { width: size.0, height: size.1, rgba: small.into_raw() }).ok()?;
     Some(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(png)))
 }

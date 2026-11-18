@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { useErrorText } from "../../i18n";
 import {
   addAgentRemoteHost,
@@ -50,8 +51,7 @@ export function useRemoteHosts() {
       .then((next) => setCustom(Array.isArray(next) ? next : []))
       .catch((reason: unknown) => console.error("Failed to read added remote hosts", reason));
     refreshStatuses();
-    const timer = window.setInterval(refreshStatuses, STATUS_POLL_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(refreshStatuses, STATUS_POLL_MS);
   }, [errorText, refreshStatuses]);
 
   const chosen = statuses.map((status) => status.host);

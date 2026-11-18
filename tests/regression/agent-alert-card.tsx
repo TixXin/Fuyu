@@ -10,6 +10,7 @@ import type { IslandSettings } from "../../src/lib/settings/types";
 import { useIslandAgentAlerts } from "../../src/features/agent-status/useIslandAgentAlerts";
 import { islandHost } from "../../src/windows/island/islandHost";
 import type { IslandPage } from "../../src/windows/island/types";
+import { until } from "./pollUntil";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 localStorage.setItem(AGENT_APPROVAL_STORAGE_KEY, JSON.stringify({ onIsland: true, whenInFront: false }));
@@ -62,7 +63,6 @@ function Harness() {
   return null;
 }
 
-const wait = (ms: number) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)); });
 const press = (id: string) => act(async () => { document.getElementById(id)!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); });
 const messages: string[] = [];
 function check(condition: unknown, label: string) {
@@ -73,42 +73,38 @@ const results = document.getElementById("results")!;
 
 async function waitThenCard(id: number) {
   await act(async () => setSessions([session("running")]));
-  await wait(50);
   await act(async () => setSessions([session("waiting")]));
-  await wait(50);
   await act(async () => { await emit("agent-approval-requested", request(id)); });
-  await wait(50);
+  await until(() => decide !== null);
   await press("card");
 }
 
 try {
   await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><Harness /></StrictMode>); });
-  await wait(50);
 
   await act(async () => setSessions([session("completed")]));
-  await wait(80);
+  await until(() => island.mode === "expanded" && watchingOutside);
   check(island.mode === "expanded" && watchingOutside, "会话完成弹出提醒时，开始留意岛屿外的点击");
   await act(async () => { await emit("island-outside-click", null); });
-  await wait(50);
+  await until(() => island.mode === "collapsed" && !watchingOutside);
   check(island.mode === "collapsed" && !watchingOutside, "点了岛屿外面，提醒收起，停止留意");
 
   await waitThenCard(1);
   check(island.mode === "expanded" && island.page === "agents" && decide, "会话等待确认时弹出 Agent 页，审批卡片出现");
   check(!watchingOutside, "有审批卡片时不因为点外面就关（请求还在等）");
-  await wait(600);
   await act(async () => decide?.("allow"));
-  await wait(50);
+  await until(() => decisions.includes("1:allow") && island.mode === "collapsed");
   check(decisions.includes("1:allow") && island.mode === "collapsed", "在卡片上选了以后，岛屿收起");
 
   await waitThenCard(2);
   await act(async () => { await emit("agent-approval-closed", { id: 2, reason: "disconnected" }); });
-  await wait(50);
+  await until(() => island.mode === "collapsed");
   check(island.mode === "collapsed", "在终端里处理了（卡片撤掉），岛屿收起");
 
   await waitThenCard(3);
   await press("elsewhere");
   await act(async () => { await emit("agent-approval-closed", { id: 3, reason: "handedBack" }); });
-  await wait(50);
+  await until(() => decide === null);
   check(island.mode === "expanded", "点了卡片以外的地方（接管了岛屿），卡片结束后不替你收起");
 
   results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;

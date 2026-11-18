@@ -32,7 +32,7 @@ window.addEventListener("beforeunload", () => {
 
 const NOW = Date.now();
 const session = (sessionId: string, phase: string, light: string, title: string, minutesAgo = 0, unseen = false): AgentSessionEntry => ({
-  key: `claudeCode:${sessionId}`, provider: "claudeCode", sessionId, cwd: "F:\\code\\fly-island", title, phase, light,
+  key: `claudeCode:${sessionId}`, provider: "claudeCode", sessionId, cwd: "F:\\code\\fuyu", title, phase, light,
   updatedAt: NOW - minutesAgo * 60_000, remoteHost: null, listed: true, unseen,
 });
 const BUSY = [

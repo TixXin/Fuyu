@@ -111,7 +111,7 @@
 | `plugin_host`（keybindings、system_events、webviews、uri） | 热键、会话通知、WebView2 页面、注册 `fuyu://` | 快捷键、系统事件换实现（G1.8 已做，在原文件里按平台分开）；网页视图暂不支持；`uri` 注册换实现（Mac 上不做，等 Info.plist） | G1.4、G1.8 |
 | `media_control` | SMTC、音频峰值、程序图标 | 换实现（G1.9 已做）：`service_macos.rs`、`events_macos.rs`、`adapter_macos.rs`（mediaremote-adapter）、`applescript_macos.rs`（兜底）；状态类型在共用的 `state.rs` | G1.9 |
 | `qq_notifications`、`wechat_reminders`、`messenger_activation` | 通知监听、窗口闪烁、UIA | QQ、微信换实现（G1.10 已做：`qq_notifications/macos.rs`、`wechat_reminders/macos.rs`，平台层 `macos/dock_badges.rs`，插件动态复用 `plugin_view.rs`）；`messenger_activation` 仍暂不支持 | G1.10 |
-| `cc_connect`、`ssh_tunnel` | 作业对象、注册表代理、程序查找 | 暂不支持（内置插件在 Mac 上开不起来） | G1.8 |
+| `cc_connect`、`ssh_tunnel` | 作业对象、注册表代理、程序查找 | `cc_connect` 本机换实现（G1.28 已做：`darwin` tar.gz 下载校验、`~/.local/bin` / Homebrew / 登录 shell `PATH` 查找、进程组看护与飞书扫码，新手引导放开本机）；`ssh_tunnel` 仍暂不支持 | G1.8、G1.28 |
 | `rename_migration` | 注册表、凭据、卸载旧版 | 暂不支持（Mac 上没有旧版可迁移）；`data_dirs::copy_tree` 照常给 `home_dir` 用 | 不做 |
 | `examples/` 四个探测程序 | 全部 | Mac 上只打印「只能在 Windows 上运行」 | 不做 |
 
@@ -121,6 +121,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 
 | 日期 | 子任务 | 提交 | 改了什么 | 验证 |
 |---|---|---|---|---|
+| 2026-11-17 | G1.28 Mac 本机运行 cc-connect（#569） | （本次提交） | `cc_connect` 本机模块在 Mac 上启用：`install.rs` 下载 `darwin-{arm64,amd64}.tar.gz`、核对 `checksums.txt` 并解出 `0755` 的 `cc-connect`；`locate.rs` 支持 `~/` 展开与 `~/.local/bin`、`/opt/homebrew/bin`、`/usr/local/bin`、登录 shell `PATH` 查找，并向托管子进程注入扩展 `PATH`；`runner.rs` 与 `feishu.rs` 改用 `platform::job::Job` + `process_group(0)`；新手引导「推送到手机」去掉 Mac 本机拦截，并修飞书扫码期间轮询刷新卸掉扫码行的竞态 | Mac：`cc_connect` 59 项单测 + GitHub 真实 `v1.5.2` `darwin-arm64.tar.gz` 下载与运行 `--version` 通过、前端单测与 `onboarding-push` 回归页通过；Windows / Mac CI `check` |
 | 2026-11-13 | — | — | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
 | 2026-11-13 | G1.1 | 3ccc9b6c | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
 | 2026-11-13 | G1.13 第一个带 Mac 版的发布 | v0.3.8-beta.2 | Windows 上 `pnpm release` 触发 Mac 构建，草稿里有 dmg、`.app.tar.gz` 和 `.sig`，`latest.json` 有 `darwin-aarch64`；Windows 冒烟测试通过后公开（beta 通道）。随后 README 写上 Mac 版的下载与放行，仓库简介加 macOS、标签去掉 AI 类换成灵动岛相关 | 读回草稿的 `latest.json` 核对 darwin 条目；用户在 Mac 上下载安装、第一次放行、自动更新还没走一遍 |
@@ -229,6 +230,7 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 - [ ] 停用插件或退出浮屿后 `ps` 里没有残留的插件进程
 - [ ] `.exe` 插件标为只支持 Windows
 - [ ] 插件的快捷键能触发；锁屏、解锁、合盖再打开后插件收到对应事件
+- [ ] Mac 本机 cc-connect（G1.28，#569）：设置 → AI Agent → 提醒里点「下载 cc-connect」并打开「由岛启动 cc-connect」，关掉开关或退出岛后 `ps` 里无残留 `cc-connect` 进程；设置页与新手引导「推送到手机」里对「本机」做飞书真机扫码建机器人、手机发一句话后发测试消息收到推送
 
 ### G1.9 媒体与亮度
 

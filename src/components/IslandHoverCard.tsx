@@ -31,21 +31,44 @@ export function IslandHoverCard({
   const anchorRef = useRef<HTMLSpanElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | undefined>(undefined);
+  const moveFrameRef = useRef(0);
+  const pendingMoveRef = useRef(false);
+  const cardWidthRef = useRef<number | null>(null);
   const [place, setPlace] = useState<Place | null>(null);
+  const placeRef = useRef<Place | null>(null);
+  placeRef.current = place;
   const [left, setLeft] = useState<number | null>(null);
   const pointerRef = useRef<number | null>(null);
-  const [pointerX, setPointerX] = useState<number | null>(null);
+
+  const cancelMove = () => {
+    if (moveFrameRef.current !== 0) {
+      window.cancelAnimationFrame(moveFrameRef.current);
+      moveFrameRef.current = 0;
+    }
+    pendingMoveRef.current = false;
+  };
+
+  const syncLeft = (pointerX: number | null) => {
+    const currentPlace = placeRef.current;
+    const width = cardWidthRef.current;
+    if (!currentPlace || width === null) return;
+    const next = cardLeft(currentPlace.center, width, window.innerWidth, pointerX);
+    setLeft((prev) => (prev === next ? prev : next));
+  };
 
   const show = () => {
     const anchor = anchorRef.current;
     if (!anchor) return;
+    cancelMove();
+    cardWidthRef.current = null;
     const rect = (anchor.closest(alignTo) ?? anchor).getBoundingClientRect();
     setLeft(null);
-    setPointerX(pointerRef.current);
     setPlace({ top: rect.bottom + CARD_OFFSET, center: rect.left + rect.width / 2, root: anchor.closest(portalTo) ?? document.body });
   };
   const hide = () => {
     window.clearTimeout(timerRef.current);
+    cancelMove();
+    cardWidthRef.current = null;
     pointerRef.current = null;
     setPlace(null);
   };
@@ -55,7 +78,19 @@ export function IslandHoverCard({
   };
   const onPointerMove = (event: PointerEvent) => {
     pointerRef.current = event.clientX;
-    if (place) setPointerX(event.clientX);
+    if (!placeRef.current || cardWidthRef.current === null) return;
+    if (moveFrameRef.current === 0) {
+      syncLeft(event.clientX);
+      moveFrameRef.current = window.requestAnimationFrame(() => {
+        moveFrameRef.current = 0;
+        if (pendingMoveRef.current) {
+          pendingMoveRef.current = false;
+          syncLeft(pointerRef.current);
+        }
+      });
+    } else {
+      pendingMoveRef.current = true;
+    }
   };
   const schedule = () => {
     window.clearTimeout(timerRef.current);
@@ -68,15 +103,23 @@ export function IslandHoverCard({
   useEffect(() => {
     if (!suppressed) return;
     window.clearTimeout(timerRef.current);
+    cancelMove();
+    cardWidthRef.current = null;
     setPlace(null);
   }, [suppressed]);
-  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+  useEffect(() => () => {
+    window.clearTimeout(timerRef.current);
+    cancelMove();
+  }, []);
 
   useLayoutEffect(() => {
     const card = cardRef.current;
     if (!place || !card) return;
-    setLeft(cardLeft(place.center, card.getBoundingClientRect().width, window.innerWidth, pointerX));
-  }, [place, lines, pointerX]);
+    const width = card.getBoundingClientRect().width;
+    cardWidthRef.current = width;
+    const next = cardLeft(place.center, width, window.innerWidth, pointerRef.current);
+    setLeft((prev) => (prev === next ? prev : next));
+  }, [place, lines]);
 
   const open = place !== null && !suppressed && lines.length > 0;
   return (

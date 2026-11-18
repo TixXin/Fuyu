@@ -26,9 +26,15 @@ $dir = $entry.InstallLocation.Trim('"')
 $exe = Join-Path $dir "fuyu.exe"
 if (-not (Test-Path $exe)) { Fail "No fuyu.exe in $dir" }
 Write-Host "Installed $($entry.DisplayVersion) to $dir"
-foreach ($file in @("plugins-v3\host\main.mjs", "plugins-v3\builtins\builtins.json")) {
-  if (-not (Test-Path (Join-Path $dir $file))) { Fail "No $file in $dir" }
-}
+node scripts/plugins-v3/release-resources.mjs --verify $dir
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+$desktops = @([Environment]::GetFolderPath("Desktop"), [Environment]::GetFolderPath("CommonDesktopDirectory")) | Where-Object { $_ -and (Test-Path $_) }
+$shortcutName = "$([char]0x6D6E)$([char]0x5C7F).lnk"
+$shortcut = $desktops | ForEach-Object { Join-Path $_ $shortcutName } | Where-Object { Test-Path $_ } | Select-Object -First 1
+if (-not $shortcut) { Fail "No $shortcutName on the desktop" }
+$oldShortcut = $desktops | ForEach-Object { Join-Path $_ "Fuyu.lnk" } | Where-Object { Test-Path $_ } | Select-Object -First 1
+if ($oldShortcut) { Fail "Old shortcut $oldShortcut exists on the desktop" }
 
 $data = Join-Path $env:USERPROFILE ".fuyu"
 foreach ($old in @($data, (Join-Path $env:APPDATA "com.tixxin.fuyu"))) {

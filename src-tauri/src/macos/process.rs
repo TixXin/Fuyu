@@ -12,6 +12,18 @@ pub(crate) fn running_executable(file_names: &[&str]) -> Option<String> {
     })
 }
 
+pub(crate) fn pids_matching_name(needle: &str) -> Vec<u32> {
+    let needle = needle.to_ascii_lowercase();
+    proc_info::all_pids()
+        .into_iter()
+        .filter(|&pid| {
+            proc_info::executable_path(pid)
+                .and_then(|path| Path::new(&path).file_name()?.to_str().map(|name| name.to_ascii_lowercase()))
+                .is_some_and(|name| name.contains(&needle))
+        })
+        .collect()
+}
+
 pub(crate) fn app_bundle_running(bundle_id: &str) -> bool {
     let Some(bundle) = apps::path_for_bundle_id(bundle_id) else {
         return false;

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { compareSnapshot, lineDiff, settledSnapshot, snapshotFile } from "../../scripts/regression/snapshots.mjs";
+import { recordSnapshotOutcome } from "../../scripts/run-regression.mjs";
 
 test("snapshot files are named after the page, light ones get a suffix", () => {
   assert.equal(snapshotFile("/r", "collapsed-slots.html?test=1", "dark"), path.join("/r", "tests/regression/snapshots/collapsed-slots.html"));
@@ -70,7 +71,7 @@ function captures(...values) {
   return { capture: async () => values[Math.min(calls++, values.length - 1)], sleep: async (ms) => { waits.push(ms); }, waits, count: () => calls };
 }
 
-test("a capture that differs is taken once more after a wait, and passes when the page had only settled late", async () => {
+test("a capture that differs is taken once more after a wait, warns locally when it settled late, and fails on CI", async () => {
   const root = mkdtempSync(path.join(tmpdir(), "fuyu-snap-"));
   try {
     compareSnapshot(root, "s.html", "dark", "settled\n", true);
@@ -83,6 +84,16 @@ test("a capture that differs is taken once more after a wait, and passes when th
     assert.equal(settled.late, true);
     assert.equal(settled.actual, "settled\n");
     assert.deepEqual(late.waits, [1000]);
+    const localLogs = [];
+    const localTally = { same: 0, created: 0, updated: 0, removed: 0 };
+    assert.equal(recordSnapshotOutcome("s.html", "dark", settled, localTally, { ci: false, log: (line) => localLogs.push(line) }), true);
+    assert.equal(localTally.same, 1);
+    assert.match(localLogs.join("\n"), /snapshot settled late/);
+    const ciLogs = [];
+    const ciTally = { same: 0, created: 0, updated: 0, removed: 0 };
+    assert.equal(recordSnapshotOutcome("s.html", "dark", settled, ciTally, { ci: true, log: (line) => ciLogs.push(line) }), false);
+    assert.equal(ciTally.same, 0);
+    assert.match(ciLogs.join("\n"), /^✗ s\.html  snapshot settled late:/);
     const wrong = await settledSnapshot({ root, page: "s.html", variant: "dark", update: false, darkActual: null, ...captures("other\n") });
     assert.equal(wrong.status, "changed");
     assert.equal(wrong.late, false);

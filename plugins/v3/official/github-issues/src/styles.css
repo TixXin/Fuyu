@@ -1,0 +1,211 @@
+.fuyu-gh-issues,
+.fuyu-gh-issues-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-gh-issues-settings {
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-gh-issues__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-gh-issues__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-gh-issues__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-gh-issues__input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+}
+
+.fuyu-gh-issues__button {
+  flex-shrink: 0;
+  max-width: 100%;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  color: var(--fuyu-plugin-on-accent);
+  background: var(--fuyu-plugin-accent);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-gh-issues__button--secondary {
+  border: 1px solid var(--fuyu-plugin-border);
+  color: var(--fuyu-plugin-text);
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-gh-issues__button:disabled {
+  color: var(--fuyu-plugin-text-muted);
+  background: var(--fuyu-plugin-surface-hover);
+  cursor: default;
+}
+
+.fuyu-gh-issues__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fuyu-gh-issues__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fuyu-gh-issues__group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-gh-issues__repo {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fuyu-plugin-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-gh-issues__badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-gh-issues__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fuyu-gh-issues__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text);
+  text-decoration: none;
+}
+
+.fuyu-gh-issues__row:hover {
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-gh-issues__row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fuyu-gh-issues__row-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-gh-issues__row-meta {
+  min-width: 0;
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-gh-issues__comments {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-gh-issues__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-gh-issues-settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fuyu-gh-issues-settings__label {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-gh-issues-settings__check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.fuyu-gh-issues-settings__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}

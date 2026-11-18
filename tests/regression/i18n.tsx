@@ -1,11 +1,12 @@
-import { act, StrictMode } from "react";
+import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { IslandApp } from "../../src/windows/island/IslandApp";
+import { PluginPermissionPrompt } from "../../src/features/plugins/PluginPermissionPrompt";
 import { TranslationWindow } from "../../src/windows/translation/TranslationWindow";
 import { SettingsWindow } from "../../src/windows/settings/SettingsWindow";
-import { I18nProvider, LOCALE_STORAGE_KEY, TRANSLATIONS, useLocale } from "../../src/i18n";
+import { I18nProvider, LOCALE_STORAGE_KEY, preloadI18n, TRANSLATIONS, useLocale } from "../../src/i18n";
 
 const query = new URLSearchParams(location.search);
 const automated = query.has("test");
@@ -34,6 +35,7 @@ if (!translation) {
 let revision = 0;
 let reads = 0;
 let clipboardText = "用户复制的文本";
+let v2MigrationIslandPending = false;
 const commands: string[] = [];
 mockIPC((command, payload) => {
   commands.push(command);
@@ -56,6 +58,12 @@ mockIPC((command, payload) => {
     case "has_translation_secret": return false;
     case "set_translation_shortcut": return args.shortcut;
     case "read_translation_clipboard": return clipboardText;
+    case "get_v2_plugin_migration": return {
+      official: [{ v2Id: "dev.focusd.weather", v3Id: "@fuyu/weather", title: { "zh-CN": "天气", en: "Weather" }, enabledInV2: true, configMigrated: true, installedInV3: false, registeredInYml: false }],
+      other: [],
+      islandPending: v2MigrationIslandPending,
+      settingsPending: false,
+    };
     case "plugin:window|is_visible": return true;
     default: return null;
   }
@@ -63,13 +71,34 @@ mockIPC((command, payload) => {
 mockWindows(translation ? "translation" : "main");
 
 let changeLocale: ReturnType<typeof useLocale>["setLocale"];
+let toggleExtraUi: (next: { settings: boolean; prompt: boolean }) => void;
 function Fixture() {
   const { setLocale } = useLocale();
+  const [extra, setExtra] = useState({ settings: !automated, prompt: false });
+  toggleExtraUi = setExtra;
   changeLocale = setLocale;
-  return translation ? <TranslationWindow /> : <><IslandApp /><SettingsWindow /></>;
+  return translation ? (
+    <TranslationWindow />
+  ) : (
+    <>
+      <IslandApp />
+      {extra.prompt && (
+        <PluginPermissionPrompt
+          prompts={{
+            current: { requestId: 1, pluginId: "demo.plugin", pluginName: { "zh-CN": "演示插件", en: "Demo plugin" }, permission: "clipboard:read", timeoutMs: 30_000 },
+            answer: () => {},
+          }}
+        />
+      )}
+      {extra.settings && <SettingsWindow />}
+    </>
+  );
 }
-const root = createRoot(document.getElementById("root")!);
-const mount = () => root.render(<StrictMode><I18nProvider><Fixture /></I18nProvider></StrictMode>);
+let root: ReturnType<typeof createRoot> | null = null;
+const mount = () => {
+  root ??= createRoot(document.getElementById("root")!);
+  root.render(<StrictMode><I18nProvider><Fixture /></I18nProvider></StrictMode>);
+};
 const messages: string[] = [];
 const check = (condition: unknown, message: string) => {
   if (!condition) throw new Error(message);
@@ -88,13 +117,26 @@ const switchTo = async (locale: string) => {
   const menu = document.querySelector(LANGUAGE_TRIGGER)?.closest(".select-control");
   const option = menu?.querySelector<HTMLElement>(`.select-control__option[data-value='${locale}']`);
   if (!option) throw new Error(`Missing language option ${locale}`);
-  await act(async () => { option.click(); });
+  await act(async () => {
+    option.click();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+  });
 };
 
 if (!automated) mount();
 else {
   try {
+    await preloadI18n("zh-CN", null);
+    v2MigrationIslandPending = true;
     await act(async () => { mount(); });
+    await act(async () => { toggleExtraUi({ settings: false, prompt: true }); await new Promise((resolve) => setTimeout(resolve, 40)); });
+    check(document.querySelector(".island") !== null, "Main island mounts with only core and onboarding i18n slices");
+    check(document.querySelector(".first-hint__text")?.textContent?.includes("检测到 1 个旧第 2 版插件") === true, "Island v2 migration notice renders without settings slice");
+    check(document.querySelector(".plugin-permission-prompt__text")?.textContent === "演示插件 想读取剪贴板历史", "Island permission prompt renders without settings slice");
+    await click(".first-hint__action:last-child");
+    v2MigrationIslandPending = false;
+    await preloadI18n("zh-CN", "settings");
+    await act(async () => { toggleExtraUi({ settings: true, prompt: false }); });
     await click(".island__open-button");
     check(document.querySelector(LANGUAGE_TRIGGER)?.getAttribute("aria-label") === "界面语言", "Chinese language control is reachable");
     const dataKeys = ["fuyu-todos", "fuyu-daily-note", "fuyu-archives", "fuyu-settings", "fuyu-setting-presets"];
@@ -129,7 +171,7 @@ else {
     check(document.documentElement.lang === "zh-CN" && reads === 1, "Switching back keeps mail requests stable");
     await act(async () => { localStorage.setItem(LOCALE_STORAGE_KEY, "en"); window.dispatchEvent(new StorageEvent("storage", { key: LOCALE_STORAGE_KEY, newValue: "en", storageArea: localStorage })); });
     check(document.documentElement.lang === "en", "The provider accepts language changes from another window");
-    await act(async () => { root.unmount(); });
+    await act(async () => { root?.unmount(); });
     clipboardText = "";
     const translationRoot = createRoot(document.getElementById("root")!);
     await act(async () => { translationRoot.render(<I18nProvider><TranslationWindow /></I18nProvider>); });

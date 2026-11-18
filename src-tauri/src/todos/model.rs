@@ -4,6 +4,24 @@ use serde_json::Number;
 use crate::sync::{clock, Hlc, Tombstone};
 
 pub(crate) const FILE_VERSION: u32 = 2;
+pub(crate) const MAX_SUBTASKS: usize = 50;
+pub(crate) const MAX_NOTE_CHARS: usize = 1000;
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TodoSubtask {
+    pub id: String,
+    pub title: String,
+    pub completed: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TodoRecurrence {
+    pub kind: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interval: Option<u32>,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -20,6 +38,14 @@ pub struct TodoItem {
     pub priority: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recurrence: Option<TodoRecurrence>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub subtasks: Vec<TodoSubtask>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub focus_minutes: Option<u32>,
     #[serde(default, deserialize_with = "clock::lenient", skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<Hlc>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -51,6 +77,8 @@ pub struct ScheduledTodo {
     pub priority: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recurrence: Option<TodoRecurrence>,
     #[serde(default, deserialize_with = "clock::lenient", skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<Hlc>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -108,7 +136,7 @@ pub struct TodosFile {
 
 pub(crate) fn validate(data: &TodosData) -> Result<(), String> {
     for todo in &data.todos {
-        check_item(&todo.id, &todo.title)?;
+        check_todo(todo)?;
     }
     for todo in &data.scheduled {
         check_item(&todo.id, &todo.title)?;
@@ -121,11 +149,32 @@ pub(crate) fn validate(data: &TodosData) -> Result<(), String> {
             return Err("An archive has no date.".into());
         }
         for todo in &archive.todos {
-            check_item(&todo.id, &todo.title)?;
+            check_todo(todo)?;
         }
     }
     if data.active_todo_id.as_deref() == Some("") {
         return Err("The active todo id is empty.".into());
+    }
+    Ok(())
+}
+
+fn check_todo(todo: &TodoItem) -> Result<(), String> {
+    check_item(&todo.id, &todo.title)?;
+    if todo.subtasks.len() > MAX_SUBTASKS {
+        return Err(format!("Todo {} has more than {MAX_SUBTASKS} subtasks.", todo.id));
+    }
+    for subtask in &todo.subtasks {
+        if subtask.id.trim().is_empty() {
+            return Err(format!("A subtask of todo {} has no id.", todo.id));
+        }
+        if subtask.title.trim().is_empty() {
+            return Err(format!("Subtask {} of todo {} has an empty title.", subtask.id, todo.id));
+        }
+    }
+    if let Some(note) = &todo.note {
+        if note.chars().count() > MAX_NOTE_CHARS {
+            return Err(format!("Todo {} has a note longer than {MAX_NOTE_CHARS} characters.", todo.id));
+        }
     }
     Ok(())
 }

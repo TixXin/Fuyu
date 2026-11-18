@@ -1,13 +1,12 @@
 .ssh-tunnel__host {
   display: grid;
   gap: 6px;
-  padding-top: 8px;
-  border-top: 1px solid var(--color-white-a08);
+  padding: 12px 16px;
 }
 
 .ssh-tunnel__head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px auto;
+  grid-template-columns: minmax(0, 1fr) 116px auto;
   align-items: center;
   gap: 10px;
 }
@@ -16,8 +15,8 @@
   min-width: 0;
   overflow: hidden;
   color: var(--color-text);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -27,7 +26,7 @@
   gap: 2px;
   margin: 0;
   color: rgba(var(--overlay-rgb, 248, 246, 240), 0.62);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .ssh-tunnel__state--connected {
@@ -40,6 +39,15 @@
   color: var(--warning-text, rgba(255, 210, 120, 0.95));
 }
 
+.ssh-tunnel__error {
+  color: var(--error-text, #ff8a9a);
+}
+
+.ssh-tunnel__proxy-code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color: var(--color-text);
+}
+
 .ssh-tunnel__reason {
   overflow-wrap: anywhere;
   opacity: 0.8;
@@ -49,7 +57,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 6px 8px;
   color: var(--color-text);
   background: rgba(255, 210, 120, 0.1);

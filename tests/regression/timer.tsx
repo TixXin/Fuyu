@@ -2,9 +2,14 @@ import { act, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
+import { createServiceProxy } from "@fuyu/plugin-base/client";
+import { timersV1 } from "@fuyu/plugin-services";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
-import { configureTimers, TIMERS_KEY, useTimers } from "../../src/features/timer/store";
+import { windowServices } from "../../src/features/plugin-kernel/services";
+import { adoptTimers, changeTimer, idOf, ringDue, startTimer } from "../../src/features/timer/host/rules.mjs";
+import { nextDueIn, type Timer } from "../../src/features/timer/timers";
+import { configureTimers, TIMERS_KEY, TIMERS_MIGRATED_KEY, useTimers } from "../../src/features/timer/store";
 import { TimerPanel } from "../../src/features/timer/TimerPanel";
 import { TimerChip } from "../../src/features/timer/TimerChip";
 import { TimerNotice, TimerNoticeActions } from "../../src/features/timer/TimerNotice";
@@ -16,8 +21,79 @@ import { useIslandReminder } from "../../src/features/timer/useIslandReminder";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 localStorage.removeItem(BREAK_REMINDERS_KEY);
+localStorage.removeItem(TIMERS_KEY);
+localStorage.removeItem(TIMERS_MIGRATED_KEY);
 mockIPC((command) => (command === "get_foreground_fullscreen" ? { active: false, onIslandMonitor: false } : null), { shouldMockEvents: true });
 mockWindows("main");
+
+const hostState: { timers: readonly Timer[]; counter: number; alarm: number } = { timers: [], counter: 0, alarm: 0 };
+
+const hostProxy = createServiceProxy(async (method, payload) => {
+  if (method !== "service.call") return true;
+  const { service, method: callMethod, params } = payload as { service: string; method: string; params: unknown };
+  if (service !== timersV1.name) throw Object.assign(new Error("unknown service"), { code: "not-ready" });
+  const scheduleHost = () => {
+    window.clearTimeout(hostState.alarm);
+    hostState.alarm = 0;
+    const wait = nextDueIn(hostState.timers, Date.now());
+    if (wait === null) return;
+    hostState.alarm = window.setTimeout(() => {
+      hostState.alarm = 0;
+      const now = Date.now();
+      const rung = ringDue(hostState.timers, now);
+      if (rung.due.length > 0) commitHost(rung.timers, now, rung.due);
+      else scheduleHost();
+    }, Math.max(0, wait));
+  };
+  const commitHost = (next: readonly Timer[], now: number, due: Timer[] = []) => {
+    hostState.timers = next;
+    for (const timer of due) hostProxy.deliver({ service: timersV1.name, event: "due", data: { timer, at: now } });
+    hostProxy.deliver({ service: timersV1.name, event: "changed", data: { timers: [...next], at: now } });
+    scheduleHost();
+  };
+  switch (callMethod) {
+    case "list": return { timers: [...hostState.timers], at: Date.now() };
+    case "start": {
+      const now = Date.now();
+      hostState.counter += 1;
+      const next = startTimer(hostState.timers, params, now, `${now.toString(36)}-${hostState.counter}`);
+      commitHost(next.timers, now);
+      return { timer: next.timer };
+    }
+    case "pause":
+    case "resume":
+    case "extend": {
+      const now = Date.now();
+      const next = changeTimer(hostState.timers, callMethod, params, now);
+      if (next.timers !== hostState.timers) commitHost(next.timers, now);
+      return { timer: next.timer };
+    }
+    case "remove": {
+      const id = idOf(params, "remove");
+      const next = hostState.timers.filter((timer) => timer.id !== id);
+      if (next.length === hostState.timers.length) return { removed: false };
+      commitHost(next, Date.now());
+      return { removed: true };
+    }
+    case "dismissRinging": {
+      const next = hostState.timers.filter((timer) => !timer.alerted);
+      const removed = hostState.timers.length - next.length;
+      if (removed > 0) commitHost(next, Date.now());
+      return { removed };
+    }
+    case "adopt": {
+      const now = Date.now();
+      const next = adoptTimers(hostState.timers, params, now);
+      if (next.added > 0) commitHost(next.timers, now, next.due);
+      return { timers: [...hostState.timers], added: next.added, at: now };
+    }
+    default:
+      throw Object.assign(new Error(`no method ${callMethod}`), { code: "no-method" });
+  }
+});
+
+hostProxy.update([{ name: timersV1.name, plugin: "timer", methods: Object.keys(timersV1.methods), events: Object.keys(timersV1.events) }]);
+windowServices.attach(hostProxy);
 
 function Harness() {
   const ringing = useTimers().timers.filter((timer) => timer.alerted);
@@ -94,8 +170,7 @@ async function runChecks() {
     await click(button("继续", rows()[0]));
     check(button("暂停", rows()[0]), "…and resumed");
 
-    const saved = JSON.parse(localStorage.getItem(TIMERS_KEY) ?? "[]") as { kind: string }[];
-    check(saved.map((timer) => timer.kind).join() === "countdown,stopwatch", "Timers are kept in fuyu-timers so they survive a restart");
+    check(hostState.timers.map((timer) => timer.kind).join() === "countdown,stopwatch", "Timers are kept in the host's timers/v1 service so they survive closing the window");
 
     await click(button("取消", rows()[1]));
     check(rows().length === 1, "Cancel removes a timer");

@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { gazeOffset, petRow, petSheetRows, petSpriteLayout } from "../../src/features/center-pattern/patterns.ts";
-import { PET_DONE_HOLD_MS, centerPatternChoice, centerPatternSize, petChoices, petMoodChangesAt, petMoodFor } from "../../src/features/center-pattern/centerSettings.ts";
+import {
+  PET_DONE_HOLD_MS,
+  centerConfig,
+  centerPatternChoice,
+  centerPatternSize,
+  petChoices,
+  petMoodChangesAt,
+  petMoodFor,
+  storedCenterValue,
+} from "../../src/features/center-pattern/centerSettings.ts";
 
 test("pet moods map to petdex rows and their frame counts", () => {
   assert.deepEqual(petRow("idle"), { row: 0, frames: 6, durationMs: 1100 });
@@ -56,10 +65,24 @@ test("the size setting is 24 px like the rings, kept within what the bar fits", 
 test("plugin settings pick a pattern, falling back to the eyes", () => {
   assert.deepEqual(centerPatternChoice({ pattern: "cat" }), { pattern: "cat", petId: null });
   assert.deepEqual(centerPatternChoice({ pattern: "mark" }), { pattern: "mark", petId: null });
+  assert.deepEqual(centerPatternChoice({ pattern: "pet" }), { pattern: "pet", petId: "xiaoba" });
   assert.deepEqual(centerPatternChoice({ pattern: "pet", pet: " noir " }), { pattern: "pet", petId: "noir" });
   assert.deepEqual(centerPatternChoice({ pattern: "pet", pet: "" }), { pattern: "eyes", petId: null });
   assert.deepEqual(centerPatternChoice({ pattern: "dragon" }), { pattern: "eyes", petId: null });
   assert.deepEqual(centerPatternChoice({}), { pattern: "eyes", petId: null });
+});
+
+test("v3 config normalizes malformed values and omits defaults when saving", () => {
+  assert.deepEqual(centerConfig({}), { pattern: "eyes", pet: "xiaoba", size: 24 });
+  assert.deepEqual(centerConfig({ pattern: "dragon", pet: 12, size: "big" }), { pattern: "eyes", pet: "xiaoba", size: 24 });
+  assert.deepEqual(centerConfig({ pattern: "pet", pet: " noir ", size: 18 }), { pattern: "pet", pet: "noir", size: 18 });
+  assert.equal(storedCenterValue("pattern", "eyes"), null);
+  assert.equal(storedCenterValue("pattern", "cat"), "cat");
+  assert.equal(storedCenterValue("pet", "xiaoba"), null);
+  assert.equal(storedCenterValue("pet", ""), "");
+  assert.equal(storedCenterValue("pet", " noir "), "noir");
+  assert.equal(storedCenterValue("size", 24), null);
+  assert.equal(storedCenterValue("size", 99), 30);
 });
 
 test("the pet acts out the agents: waiting > running > failed > just done > idle", () => {

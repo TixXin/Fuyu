@@ -1,16 +1,17 @@
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
+import { LightStyleArt } from "./AgentAppearanceGlyphs";
 import { AgentHooksSettingsSection } from "./AgentHooksSettingsSection";
 import { AgentProviderSwitches } from "./AgentProviderSwitches";
 import { useAgentStatusSettings } from "./useAgentStatusSettings";
 import type { AgentLightStyle, AgentTitleMode, IslandSettings } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
-import { FeatureHeader } from "../../components/settings/FeatureHeader";
 import { SlotView } from "../plugin-kernel/SlotView";
 import { settingsSections } from "../plugin-kernel/settingsSlots";
-import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 
 type AgentSectionProps = {
   settings: IslandSettings;
@@ -18,85 +19,80 @@ type AgentSectionProps = {
 };
 
 function SessionTitleSection({ settings, onSettingsChange }: AgentSectionProps) {
-  const t = useTranslation();
+  const text = useTranslation().settings.agent;
 
   return (
-    <SettingsGroup title={t.settings.agent.sessionTitleSection}>
-      <SettingsToggleRow
-        title={t.settings.agent.sessionTitle}
-        description={t.settings.agent.sessionTitleHint}
-        checked={settings.agentTitleEnabled}
-        onChange={(agentTitleEnabled) => onSettingsChange({ ...settings, agentTitleEnabled })}
-      />
-      {settings.agentTitleEnabled && (
-        <SettingsRow
-          indent
-          title={t.settings.agent.titleMode}
-          description={t.settings.agent.titleModeHint}
-          control={
-            <SettingsChoice<AgentTitleMode>
-              value={settings.agentTitleMode}
-              ariaLabel={t.settings.agent.titleMode}
-              options={[
-                { value: "changes", label: t.settings.agent.titleModeOptions.changes },
-                { value: "running", label: t.settings.agent.titleModeOptions.running },
-              ]}
-              onChange={(agentTitleMode) => onSettingsChange({ ...settings, agentTitleMode })}
-            />
-          }
-        />
-      )}
-      <SettingsRow
-        title={t.settings.agent.lightStyle}
-        description={t.settings.agent.lightStyleHint}
-        control={
-          <SettingsChoice<AgentLightStyle>
+    <>
+      <SettingsGroup title={text.lightSectionTitle} footer={<SettingsFootnote text={text.lightStyleHint} />}>
+        <SettingsRow title={text.lightStyle}>
+          <SettingsChoiceCards<AgentLightStyle>
             value={settings.agentLightStyle}
-            ariaLabel={t.settings.agent.lightStyle}
+            ariaLabel={text.lightStyle}
             options={[
-              { value: "mark", label: t.settings.agent.lightStyleOptions.mark },
-              { value: "dot", label: t.settings.agent.lightStyleOptions.dot },
+              {
+                value: "mark",
+                label: text.lightStyleOptions.mark,
+                hint: text.lightStyleHints.mark,
+                art: <LightStyleArt style="mark" />,
+              },
+              {
+                value: "dot",
+                label: text.lightStyleOptions.dot,
+                hint: text.lightStyleHints.dot,
+                art: <LightStyleArt style="dot" />,
+              },
             ]}
             onChange={(agentLightStyle) => onSettingsChange({ ...settings, agentLightStyle })}
           />
-        }
-      />
-    </SettingsGroup>
-  );
-}
-
-function SessionPageSection({ settings, onSettingsChange }: AgentSectionProps) {
-  const t = useTranslation();
-
-  return (
-    <SettingsGroup title={t.settings.agent.agentPageSection}>
-      <SettingsToggleRow
-        title={t.settings.agent.expandChildren}
-        description={t.settings.agent.expandChildrenHint}
-        checked={settings.agentExpandChildren}
-        onChange={(agentExpandChildren) => onSettingsChange({ ...settings, agentExpandChildren })}
-      />
-    </SettingsGroup>
-  );
-}
-
-function HooksSection() {
-  const agentStatus = useAgentStatusSettings();
-  return <AgentHooksSettingsSection {...agentStatus} />;
-}
-
-const sections = settingsSections<AgentSectionProps, "agents">();
-
-sections.add({ id: "agents.hooks", category: "agents", order: 10, component: HooksSection });
-sections.add({ id: "agents.session-title", category: "agents", order: 20, component: SessionTitleSection });
-sections.add({ id: "agents.session-page", category: "agents", order: 25, component: SessionPageSection });
-sections.add({ id: "agents.providers", category: "agents", order: 30, component: AgentProviderSwitches });
-
-export function AgentSettingsPage(props: AgentSectionProps) {
-  return (
-    <>
-      <FeatureHeader feature="agents" icon={settingsCategoryIcon("agents")} />
-      <SlotView slot={sections} group="agents" props={props} />
+        </SettingsRow>
+      </SettingsGroup>
+      <SettingsGroup title={text.sessionTitleSection}>
+        <SettingsToggleRow
+          title={text.sessionTitle}
+          description={text.sessionTitleHint}
+          checked={settings.agentTitleEnabled}
+          onChange={(agentTitleEnabled) => onSettingsChange({ ...settings, agentTitleEnabled })}
+        />
+        {settings.agentTitleEnabled && (
+          <SettingsRow
+            indent
+            title={text.titleMode}
+            description={text.titleModeHint}
+            control={
+              <SettingsChoice<AgentTitleMode>
+                value={settings.agentTitleMode}
+                ariaLabel={text.titleMode}
+                options={[
+                  { value: "changes", label: text.titleModeOptions.changes },
+                  { value: "running", label: text.titleModeOptions.running },
+                ]}
+                onChange={(agentTitleMode) => onSettingsChange({ ...settings, agentTitleMode })}
+              />
+            }
+          />
+        )}
+      </SettingsGroup>
     </>
   );
+}
+
+function HooksAndProvidersSection({ settings, onSettingsChange }: AgentSectionProps) {
+  const agentStatus = useAgentStatusSettings();
+  return (
+    <>
+      <AgentHooksSettingsSection {...agentStatus} />
+      <AgentProviderSwitches settings={settings} onSettingsChange={onSettingsChange} {...agentStatus} />
+    </>
+  );
+}
+
+export type AgentTab = "agents" | "agentAppearance" | "agentRings";
+
+const sections = settingsSections<AgentSectionProps, AgentTab>();
+
+sections.add({ id: "agents.hooks", category: "agents", order: 10, component: HooksAndProvidersSection });
+sections.add({ id: "agentAppearance.session-title", category: "agentAppearance", order: 20, component: SessionTitleSection });
+
+export function AgentSettingsPage({ tab, ...props }: AgentSectionProps & { tab: AgentTab }) {
+  return <SlotView slot={sections} group={tab} props={props} />;
 }

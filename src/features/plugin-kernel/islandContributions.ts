@@ -99,7 +99,36 @@ export interface IslandContributionStore {
   byOwner(): Readonly<Record<string, readonly IslandContribution[]>>;
 }
 
-export function aggregateContributions(lists: readonly (readonly IslandContribution[])[], settled: boolean): IslandContributed {
+function sameRecord<T extends Record<string, unknown>>(a: T, b: T): boolean {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  return keysA.length === keysB.length && keysA.every((key) => Object.prototype.hasOwnProperty.call(b, key) && Object.is(a[key], b[key]));
+}
+
+function sameArray<T>(a: readonly T[], b: readonly T[], eq: (x: T, y: T) => boolean = Object.is): boolean {
+  return a.length === b.length && a.every((item, index) => eq(item, b[index]));
+}
+
+function sameSet<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean {
+  if (a.size !== b.size) return false;
+  for (const item of a) if (!b.has(item)) return false;
+  return true;
+}
+
+function sameMap<K, V extends Record<string, unknown>>(a: ReadonlyMap<K, V>, b: ReadonlyMap<K, V>): boolean {
+  if (a.size !== b.size) return false;
+  for (const [key, value] of a) {
+    const other = b.get(key);
+    if (!other || !sameRecord(value, other)) return false;
+  }
+  return true;
+}
+
+export function aggregateContributions(
+  lists: readonly (readonly IslandContribution[])[],
+  settled: boolean,
+  prev: IslandContributed | null = null,
+): IslandContributed {
   const lines: IslandLineContribution[] = [];
   const trails: string[] = [];
   const alerts = new Set<string>();
@@ -150,7 +179,63 @@ export function aggregateContributions(lists: readonly (readonly IslandContribut
     }
   }
   lines.sort((a, b) => b.priority - a.priority);
-  return { lines, trails, alerts, notices, preview, summary, reveal, hold, side, status, popups, style: { vars, classNames, tint }, busy, hints, pages, badges, settled };
+  if (!prev) {
+    return { lines, trails, alerts, notices, preview, summary, reveal, hold, side, status, popups, style: { vars, classNames, tint }, busy, hints, pages, badges, settled };
+  }
+  const nextLines = sameArray(lines, prev.lines, sameRecord) ? prev.lines : lines;
+  const nextTrails = sameArray(trails, prev.trails) ? prev.trails : trails;
+  const nextAlerts = sameSet(alerts, prev.alerts) ? prev.alerts : alerts;
+  const nextHints = sameSet(hints, prev.hints) ? prev.hints : hints;
+  const nextNotices = sameMap(notices, prev.notices) ? prev.notices : notices;
+  const nextSide = sameMap(side, prev.side) ? prev.side : side;
+  const nextPopups = sameMap(popups, prev.popups) ? prev.popups : popups;
+  const nextBadges = sameMap(badges, prev.badges) ? prev.badges : badges;
+  const nextPages = sameRecord(pages, prev.pages) ? prev.pages : pages;
+  const nextReveal = sameRecord(reveal, prev.reveal) ? prev.reveal : reveal;
+  const nextPreview = preview && prev.preview && sameRecord(preview, prev.preview) ? prev.preview : preview;
+  const nextStatus = status && prev.status && sameRecord(status, prev.status) ? prev.status : status;
+  const nextVars = sameRecord(vars, prev.style.vars) ? prev.style.vars : vars;
+  const nextClassNames = sameArray(classNames, prev.style.classNames) ? prev.style.classNames : classNames;
+  const nextStyle = nextVars === prev.style.vars && nextClassNames === prev.style.classNames && tint === prev.style.tint
+    ? prev.style
+    : { vars: nextVars, classNames: nextClassNames, tint };
+  const next: IslandContributed = {
+    lines: nextLines,
+    trails: nextTrails,
+    alerts: nextAlerts,
+    notices: nextNotices,
+    preview: nextPreview,
+    summary,
+    reveal: nextReveal,
+    hold,
+    side: nextSide,
+    status: nextStatus,
+    popups: nextPopups,
+    style: nextStyle,
+    busy,
+    hints: nextHints,
+    pages: nextPages,
+    badges: nextBadges,
+    settled,
+  };
+  return sameRecord(next, prev) ? prev : next;
+}
+
+export function selectContributed<T = IslandContributed>(
+  state: IslandContributed,
+  prev: { state: IslandContributed; value: T } | null,
+  selector?: (state: IslandContributed) => T,
+  isEqual: (a: T, b: T) => boolean = Object.is,
+): { state: IslandContributed; value: T } {
+  if (!selector) {
+    const value = state as unknown as T;
+    return prev && prev.state === state ? prev : { state, value };
+  }
+  const next = selector(state);
+  if (prev && isEqual(prev.value, next)) {
+    return prev.state === state ? prev : { state, value: prev.value };
+  }
+  return { state, value: next };
 }
 
 export function topLine(lines: readonly IslandLineContribution[]): IslandLineContribution | null {
@@ -187,6 +272,7 @@ export function createIslandContributions(): IslandContributionStore {
   let off = new Set<string>();
   let seq = 0;
   let settled = false;
+  let last: IslandContributed | null = null;
   let cached: IslandContributed | null = null;
 
   const live = () => [...entries.values()].filter((entry) => !off.has(entry.owner)).sort((a, b) => a.seq - b.seq);
@@ -223,7 +309,10 @@ export function createIslandContributions(): IslandContributionStore {
       return () => listeners.delete(listener);
     },
     snapshot() {
-      cached ??= aggregateContributions(live().map((entry) => entry.list), settled);
+      if (!cached) {
+        cached = aggregateContributions(live().map((entry) => entry.list), settled, last);
+        last = cached;
+      }
       return cached;
     },
     byOwner() {

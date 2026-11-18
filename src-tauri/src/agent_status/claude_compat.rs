@@ -10,7 +10,7 @@ use serde_json::{json, Value};
 
 use super::claude_hooks::{
     claude_code_match_all_hook_entry, command_hook_entry, install_claude_code_hook_events, turn_hook_entries,
-    APPROVAL_HOOK_TIMEOUT_SECONDS,
+    uninstall_nested_json_hooks, APPROVAL_HOOK_TIMEOUT_SECONDS,
 };
 use super::codex_hooks::{agent_running_command_with, agent_status_command};
 use super::harness::{HookEnv, ScanRoots};
@@ -42,7 +42,6 @@ pub(super) enum Waiting {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Reply {
     PermissionRequest,
-    #[cfg_attr(not(test), expect(dead_code))]
     PreToolUse(&'static str),
     Behavior,
     None,
@@ -66,7 +65,14 @@ pub(super) struct Compat {
     pub(super) aliases: &'static [(&'static str, &'static str)],
 }
 
-const SPECS: [&Compat; 5] = [&super::qoder::SPEC, &super::codebuddy::SPEC, &super::qwen::SPEC, &super::grok::SPEC, &super::copilot::SPEC];
+const SPECS: [&Compat; 6] = [
+    &super::qoder::SPEC,
+    &super::codebuddy::SPEC,
+    &super::qwen::SPEC,
+    &super::grok::SPEC,
+    &super::copilot::SPEC,
+    &super::droid::SPEC,
+];
 
 fn spec(provider: &str) -> Option<&'static Compat> {
     SPECS.into_iter().find(|spec| spec.provider == provider)
@@ -192,6 +198,13 @@ pub(super) fn install_hooks(spec: &Compat, env: &HookEnv) -> Result<(), String> 
 pub(super) fn install_hooks_with(spec: &Compat, env: &HookEnv, entries: &[(&'static str, Value)]) -> Result<(), String> {
     for home in present_homes(spec, env.home_dir) {
         install_into(spec, &home, entries.to_vec())?;
+    }
+    Ok(())
+}
+
+pub(super) fn uninstall_hooks(spec: &Compat, env: &HookEnv) -> Result<(), String> {
+    for home in home_dirs(spec, env.home_dir) {
+        uninstall_nested_json_hooks(&home.join(spec.hooks_file), spec.label, spec.hooks_file)?;
     }
     Ok(())
 }

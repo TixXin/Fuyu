@@ -1,5 +1,141 @@
+.theme-market .plugin-market__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding: 12px 16px;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-lg);
+}
+
+.theme-market__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-market__search {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  color: var(--color-text-muted);
+  background: var(--color-white-a06);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-pill);
+}
+
+.theme-market__search input {
+  width: 148px;
+  min-width: 0;
+  color: var(--color-text);
+  background: transparent;
+  border: 0;
+  outline: none;
+  font: inherit;
+  font-size: 12px;
+}
+
+.theme-market__search input::placeholder {
+  color: var(--color-text-subtle);
+}
+
+.theme-market__search:focus-within {
+  border-color: var(--color-focus-ring);
+}
+
+.theme-market .plugin-market__status {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theme-market .plugin-card__button {
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  color: var(--color-text);
+  background: var(--color-white-a08);
+  border: 1px solid var(--color-white-a10);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.theme-market .plugin-card__button:hover {
+  background: var(--color-white-a10);
+}
+
+.theme-market .plugin-market__refresh {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  justify-content: center;
+  padding: 0;
+}
+
+.theme-market .plugin-market__spin {
+  animation: theme-market-spin 0.9s linear infinite;
+}
+
+@keyframes theme-market-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-market .plugin-market__spin {
+    animation: none;
+  }
+}
+
+.theme-market .plugin-card__error {
+  margin: 0;
+  color: var(--error-text, #ffb4a8);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.theme-market .plugin-market__badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  color: var(--color-text);
+  background: var(--color-white-a08);
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.theme-market .plugin-market__badge--official {
+  color: var(--color-accent, #74d6ff);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.theme-market__badge--dual {
+  color: var(--color-text-muted);
+  background: var(--color-white-a06);
+  border: 1px solid var(--color-white-a08);
+}
+
 .theme-market__grid {
+  display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
 }
 
 .theme-market__item {
@@ -50,8 +186,53 @@
 .theme-market__actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 6px;
+}
+
+.theme-market__tones {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: auto;
+  padding: 2px;
+  background: var(--color-white-a06);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-pill);
+}
+
+.theme-market__tone {
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 7px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+
+.theme-market__tone:hover {
+  color: var(--color-text);
+}
+
+.theme-market__tone[aria-pressed="true"] {
+  color: var(--color-text);
+  background: var(--color-white-a12);
+}
+
+.theme-market__tone:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
 }
 
 .theme-market__apply[aria-pressed="true"] {

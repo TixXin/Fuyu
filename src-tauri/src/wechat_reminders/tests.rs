@@ -303,3 +303,99 @@ fn a_reply_written_while_a_flash_was_being_read_is_not_news() {
         Flash::Messages(_)
     ));
 }
+
+#[test]
+fn shell_matcher_supports_exact_paths_and_case_insensitive_executable_lists() {
+    let exact = source::ShellMatcher::exact_path(r"\\?\C:/Program Files/Tencent/Weixin/Weixin.exe");
+    assert!(exact.matches_path(r"c:\program files\tencent\weixin\WEIXIN.EXE"));
+    assert!(!exact.matches_path(r"D:\Portable\Weixin.exe"));
+
+    let names = source::ShellMatcher::file_names(&["Feishu.exe", "Lark.exe"]);
+    assert!(names.matches_path(r"C:\Users\demo\AppData\Local\Feishu\feishu.exe"));
+    assert!(names.matches_path(r"D:/Apps/Lark/LARK.EXE"));
+    assert!(!names.matches_path(r"C:\Apps\MyFeishu.exe"));
+}
+
+#[test]
+fn multi_source_shell_routing_isolates_flash_suppression_and_activation() {
+    use source::{route_multi_signals, ShellMatcher, TargetWindow};
+
+    let wechat = ShellMatcher::exact_path(r"C:\Tencent\Weixin\Weixin.exe");
+    let telegram = ShellMatcher::file_names(&["Telegram.exe"]);
+    let feishu = ShellMatcher::file_names(&["Feishu.exe", "Lark.exe"]);
+    let matchers = [(0, &wechat), (1, &telegram), (2, &feishu)];
+
+    let tg_win = TargetWindow::Path(r"D:\Tools\Telegram\telegram.exe".into());
+    assert_eq!(
+        route_multi_signals(
+            ReminderSignal::Attention,
+            &tg_win,
+            Some(r"C:\Tencent\Weixin\Weixin.exe"),
+            matchers,
+        ),
+        vec![(1, ReminderSignal::Attention)]
+    );
+    assert!(
+        route_multi_signals(
+            ReminderSignal::Attention,
+            &tg_win,
+            Some(r"D:\Other\Telegram.exe"),
+            matchers,
+        )
+        .is_empty()
+    );
+    assert_eq!(
+        route_multi_signals(ReminderSignal::Activated, &tg_win, None, matchers),
+        vec![
+            (0, ReminderSignal::ActivatedElsewhere),
+            (1, ReminderSignal::Activated),
+            (2, ReminderSignal::ActivatedElsewhere),
+        ]
+    );
+    assert_eq!(
+        route_multi_signals(
+            ReminderSignal::Activated,
+            &TargetWindow::Invalid,
+            None,
+            matchers
+        ),
+        vec![
+            (0, ReminderSignal::ActivatedElsewhere),
+            (1, ReminderSignal::ActivatedElsewhere),
+            (2, ReminderSignal::ActivatedElsewhere),
+        ]
+    );
+    assert!(
+        route_multi_signals(
+            ReminderSignal::Activated,
+            &TargetWindow::Unreadable,
+            None,
+            matchers
+        )
+        .is_empty()
+    );
+}
+
+#[test]
+fn shared_shell_hub_starts_on_first_subscriber_and_stops_when_last_drops() {
+    assert!(!shell_hub::is_running());
+    let first = shell_hub::subscribe_executables(&["Telegram.exe"], |_| {}).unwrap();
+    assert!(shell_hub::is_running());
+    let second = shell_hub::subscribe_executables(&["Feishu.exe", "Lark.exe"], |_| {}).unwrap();
+    assert!(shell_hub::is_running());
+    drop(first);
+    assert!(shell_hub::is_running());
+    drop(second);
+    assert!(!shell_hub::is_running());
+}
+
+#[test]
+fn source_errors_carry_stable_error_codes() {
+    use source::SourceError;
+    assert_eq!(shell_hub::source_user_error(SourceError::NotInstalled).code(), "wechat.notInstalled");
+    assert_eq!(shell_hub::source_user_error(SourceError::Canonicalize("x".into())).code(), "wechat.verifyPath");
+    assert_eq!(shell_hub::source_user_error(SourceError::AlreadyRunning).code(), "shellAttention.alreadyRunning");
+    assert_eq!(shell_hub::source_user_error(SourceError::RegisterEvent("x".into())).code(), "shellAttention.registerEvent");
+    assert_eq!(shell_hub::source_user_error(SourceError::CreateReceiver("x".into())).code(), "shellAttention.createReceiver");
+    assert_eq!(shell_hub::source_user_error(SourceError::Listen("x".into())).code(), "shellAttention.listen");
+}

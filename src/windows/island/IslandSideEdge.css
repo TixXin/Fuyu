@@ -139,3 +139,10 @@
   border-radius: 50%;
   background: var(--color-accent);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-island-edge="left"] .message-banner,
+  :root[data-island-edge="right"] .message-banner {
+    animation: none;
+  }
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import type { MediaState } from "./api";
 import { playbackPosition } from "./lyrics/lrc";
 import "./MusicProgress.css";
@@ -18,8 +19,7 @@ export function MusicProgress({ mediaState }: { mediaState: MediaState }) {
   useEffect(() => {
     setNow(Date.now());
     if (!playing) return;
-    const timer = window.setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setNow(Date.now()), TICK_MS);
   }, [playing, mediaState.updatedAt]);
 
   const position = playbackPosition(mediaState, now);

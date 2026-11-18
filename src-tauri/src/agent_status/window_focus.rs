@@ -18,8 +18,18 @@ const EDITORS: &[&str] = &[
     "cursor",
     "windsurf",
     "trae",
+    "trae cn",
     "kiro",
     "vscodium",
+    "zed",
+    "intellij idea",
+    "pycharm",
+    "webstorm",
+    "rustrover",
+    "idea64",
+    "pycharm64",
+    "webstorm64",
+    "rustrover64",
     "antigravity",
     "antigravity ide",
     "antigravity-ide",
@@ -27,6 +37,7 @@ const EDITORS: &[&str] = &[
 const TERMINALS: &[&str] = &[
     "terminal",
     "iterm",
+    "iterm2",
     "ghostty",
     "wezterm",
     "windowsterminal",
@@ -180,12 +191,34 @@ pub(super) fn open_app_exe(app: &str) -> Option<String> {
     crate::macos::apps::regular_apps().into_iter().map(|(_, path)| path).find(|path| app_name(path) == app)
 }
 
+#[cfg(any(target_os = "macos", test))]
+pub(super) fn should_query_ax_windows(
+    app: &str,
+    pid: u32,
+    chain_hits: bool,
+    prefer_hits: bool,
+    chain: &[u32],
+    prefer_apps: &[String],
+) -> bool {
+    if NOT_SESSION_HOSTS.contains(&app) {
+        return false;
+    }
+    if chain_hits {
+        return chain.contains(&pid);
+    }
+    if prefer_hits {
+        return prefer_apps.iter().any(|wanted| wanted == app);
+    }
+    EDITORS.contains(&app) || TERMINALS.contains(&app) || CODEX_APPS.contains(&app)
+}
+
 #[cfg(target_os = "macos")]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct FocusedWindow {
     pub(super) process_id: u32,
     pub(super) app: String,
     pub(super) in_front: bool,
+    pub(super) window_raised: bool,
 }
 
 #[cfg(target_os = "macos")]
@@ -194,27 +227,84 @@ pub(super) fn focus_session_window(
     chain: &[u32],
     prefer_apps: &[String],
 ) -> Option<FocusedWindow> {
-    use crate::macos::apps;
-    let apps_running = apps::regular_apps();
-    let owner = chain
+    use crate::macos::{accessibility, apps};
+    let own_pid = std::process::id();
+    let apps_running: Vec<(u32, String)> = apps::regular_apps()
+        .into_iter()
+        .filter(|(pid, path)| *pid != own_pid && !NOT_SESSION_HOSTS.contains(&app_name(path).as_str()))
+        .collect();
+    let chain_hits = chain
         .iter()
-        .find_map(|pid| apps_running.iter().find(|(owner, path)| owner == pid && !NOT_SESSION_HOSTS.contains(&app_name(path).as_str())))
-        .or_else(|| prefer_apps.iter().find_map(|wanted| apps_running.iter().find(|(_, path)| app_name(path) == *wanted)))
-        .or_else(|| {
-            let candidates: Vec<WindowCandidate> = apps_running.iter().map(|(_, path)| WindowCandidate { title: String::new(), app: app_name(path) }).collect();
-            best_window(&candidates, hints).and_then(|index| apps_running.get(index))
-        })?;
-    let (process_id, path) = owner.clone();
-    let in_front = i32::try_from(process_id).is_ok_and(apps::activate);
-    Some(FocusedWindow { process_id, app: app_name(&path), in_front })
+        .any(|pid| apps_running.iter().any(|(owner, _)| owner == pid));
+    let prefer_hits = !chain_hits
+        && prefer_apps
+            .iter()
+            .any(|wanted| apps_running.iter().any(|(_, path)| app_name(path) == *wanted));
+
+    let mut entries: Vec<(u32, Option<accessibility::Element>)> = Vec::new();
+    let mut candidates: Vec<WindowCandidate> = Vec::new();
+    for (pid, path) in &apps_running {
+        let app = app_name(path);
+        let ax_windows = if should_query_ax_windows(&app, *pid, chain_hits, prefer_hits, chain, prefer_apps) {
+            i32::try_from(*pid).ok().map(accessibility::app_windows).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+        if ax_windows.is_empty() {
+            entries.push((*pid, None));
+            candidates.push(WindowCandidate { title: String::new(), app });
+        } else {
+            for (window, title) in ax_windows {
+                entries.push((*pid, Some(window)));
+                candidates.push(WindowCandidate { title, app: app.clone() });
+            }
+        }
+    }
+
+    let owners: Vec<u32> = entries.iter().map(|&(pid, _)| pid).collect();
+    let index = window_of_process_chain(&candidates, &owners, chain, hints)
+        .or_else(|| preferred_window(&candidates, hints, prefer_apps))
+        .or_else(|| best_window(&candidates, hints))?;
+    let (process_id, ref ax_window) = entries[index];
+    let window_raised = ax_window.as_ref().is_some_and(accessibility::Element::raise_window);
+    let in_front = i32::try_from(process_id).is_ok_and(|pid| {
+        if window_raised {
+            let activated = apps::activate_main_window(pid);
+            if let Some(window) = ax_window {
+                let _ = window.perform("AXRaise");
+            }
+            activated
+        } else {
+            apps::activate(pid)
+        }
+    });
+    Some(FocusedWindow {
+        process_id,
+        app: candidates[index].app.clone(),
+        in_front,
+        window_raised,
+    })
 }
 
 #[cfg(target_os = "macos")]
-pub(super) fn select_mac_terminal_tab(focused: &FocusedWindow, chain: &[u32]) -> Option<bool> {
-    if !matches!(focused.app.as_str(), "terminal" | "iterm") {
+pub(super) fn session_tty(chain: &[u32], override_tty: Option<&str>) -> Option<String> {
+    override_tty
+        .map(str::to_string)
+        .or_else(|| chain.iter().find_map(|pid| crate::macos::proc_info::tty_path(*pid)))
+}
+
+#[cfg(target_os = "macos")]
+pub(super) fn select_mac_terminal_tab(
+    focused: &FocusedWindow,
+    chain: &[u32],
+    override_tty: Option<&str>,
+) -> Option<bool> {
+    if !crate::macos::terminal_tabs::supports(&focused.app) {
         return None;
     }
-    let tty = chain.iter().find_map(|pid| crate::macos::proc_info::tty_path(*pid))?;
+    let Some(tty) = session_tty(chain, override_tty) else {
+        return Some(false);
+    };
     Some(crate::macos::terminal_tabs::select(&focused.app, &tty))
 }
 

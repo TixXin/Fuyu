@@ -94,6 +94,7 @@ try {
     onCall: (method, params, window) => {
       if (method === "status") return host.status();
       if (method === "host") return host.info();
+      if (method === "bisect") return host.bisect(params?.off);
       if (method === "plugin.call") return host.ctx.clients.call(params?.plugin, params?.method, params?.params, window);
       if (SERVICE_CALLS.includes(method)) return host.serviceHub.windowCall(method, params, window);
       throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });

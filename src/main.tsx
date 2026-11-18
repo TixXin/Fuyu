@@ -7,14 +7,25 @@ import ReactDOM from "react-dom/client";
 import "./styles/tokens.css";
 import "./styles/fonts.css";
 import "./styles/base.css";
-import { I18nProvider } from "./i18n";
+import { I18nProvider, loadLocale, preloadI18n } from "./i18n/runtime";
 import { loadSettingsFile } from "./lib/settings-backup/loadSettingsFile";
+import { serviceFeaturesForWindow } from "./windowServicesMap";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
 import { trackIslandNotch } from "./windows/island/notch";
 import { trackAutoIslandForm } from "./windows/island/autoIslandForm";
 
 blockBrowserDefaults({ mac: isMacOS, dev: import.meta.env.DEV });
-import.meta.glob("./features/*/plugin/services.ts", { eager: true });
+const serviceModules = import.meta.glob("./features/*/plugin/services.ts");
+
+async function loadWindowServices(kind: string | null): Promise<void> {
+  const features = serviceFeaturesForWindow(kind);
+  await Promise.all(
+    features.map((feature) => {
+      const load = serviceModules[`./features/${feature}/plugin/services.ts`];
+      return load ? load() : Promise.resolve();
+    }),
+  );
+}
 
 const windowKind = new URLSearchParams(window.location.search).get("window");
 
@@ -94,7 +105,12 @@ async function loadWindow(): Promise<ReactNode> {
   }
 }
 
-void Promise.all([loadWindow(), loadSettingsFile()]).then(([content]) => {
+void Promise.all([
+  loadWindowServices(windowKind),
+  loadWindow(),
+  loadSettingsFile(),
+  preloadI18n(loadLocale(), windowKind),
+]).then(([, content]) => {
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement, devRootOptions).render(
     <React.StrictMode>
       <I18nProvider>{content}</I18nProvider>

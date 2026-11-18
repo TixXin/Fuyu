@@ -12,7 +12,7 @@ function session(overrides = {}) {
   return {
     provider: "claudeCode",
     sessionId: "s1",
-    cwd: "E:\\Projects\\fly-island",
+    cwd: "E:\\Projects\\fuyu",
     title: "设置界面完善思路",
     model: "Opus 5.5",
     effort: "medium",
@@ -32,7 +32,7 @@ test("a running session from the session list is picked", () => {
 });
 
 test("a session without a title is named by its project folder", () => {
-  assert.equal(pickAgentSession([session({ title: null })], undefined, NOW)?.title, "fly-island");
+  assert.equal(pickAgentSession([session({ title: null })], undefined, NOW)?.title, "fuyu");
   assert.equal(pickAgentSession([session({ title: "  ", cwd: null })], undefined, NOW), null);
 });
 

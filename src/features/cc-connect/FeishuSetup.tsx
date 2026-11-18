@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useErrorText, useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { cancelCcConnectFeishuSetup, getCcConnectFeishuSetup, openCcConnectLink, type CcConnectFeishuSetup } from "./api";
 
 const POLL_MS = 1_000;
@@ -18,10 +19,10 @@ export function FeishuSetup({ onEnd }: { onEnd: () => void }) {
         .then((next) => alive && setState(next))
         .catch((error: unknown) => console.error("Failed to read the Feishu setup", error));
     void read();
-    const timer = window.setInterval(() => void read(), POLL_MS);
+    const stop = visibilityInterval(() => void read(), POLL_MS);
     return () => {
       alive = false;
-      window.clearInterval(timer);
+      stop();
     };
   }, [running]);
 

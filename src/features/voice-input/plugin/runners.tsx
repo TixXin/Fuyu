@@ -1,8 +1,9 @@
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandContributions } from "../../plugin-kernel/useIslandContributions";
-import { todosIsland } from "../../todos/plugin/islandState";
 import { useIslandVoiceInput } from "../useIslandVoiceInput";
 import { voiceNotice } from "./islandState";
+import { OWNER } from "./owner.ts";
+import "./voiceSwitch.ts";
 
 type RunnerProps = {
   openSettings: (section: "voiceInput") => void;
@@ -12,10 +13,10 @@ type RunnerProps = {
 const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
 
 function VoiceInputRunner({ openSettings, takeClickFocus }: RunnerProps) {
-  const notice = useIslandVoiceInput(todosIsland.use(), { openSettings, takeClickFocus });
+  const notice = useIslandVoiceInput({ openSettings, takeClickFocus });
   voiceNotice.useProvide(notice);
-  useIslandContributions("builtin", "voice-input.notice", notice ? [{ kind: "notice", item: "voice" }] : []);
+  useIslandContributions(OWNER, "voice-input.notice", notice ? [{ kind: "notice", item: "voice" }] : []);
   return null;
 }
 
-runnerSlot.add({ id: "voice-input.runner", component: VoiceInputRunner });
+runnerSlot.add({ id: "voice-input.runner", component: VoiceInputRunner }, OWNER);
