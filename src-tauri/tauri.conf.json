@@ -166,6 +166,15 @@
     "active": true,
     "targets": "all",
     "homepage": "https://fuyu.ing",
+    "fileAssociations": [
+      {
+        "ext": ["fuyu"],
+        "name": "Fuyu Plugin Package",
+        "description": "Fuyu Plugin Package",
+        "role": "Viewer",
+        "mimeType": "application/vnd.fuyu.plugin+zip"
+      }
+    ],
     "windows": {
       "nsis": {
         "template": "windows/installer.nsi",

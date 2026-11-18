@@ -5,6 +5,8 @@ export type MarketLocalizedText = {
   en: string;
 };
 
+export type MarketTrustChange = "unendorsed-key" | "endorsed-key" | "repo-changed";
+
 export type PluginInstallConfirmation = {
   unreviewed: boolean;
   official?: boolean;
@@ -15,6 +17,8 @@ export type PluginInstallConfirmation = {
   provides: string[];
   replaces: string[];
   slots: string[];
+  trustChange?: MarketTrustChange;
+  requiredPlugins?: string[];
 };
 
 export type MarketVersionCandidate = {
@@ -26,6 +30,7 @@ export type MarketVersionCandidate = {
   cooled?: boolean;
   warned?: boolean;
   urgent?: boolean;
+  trustChange?: MarketTrustChange;
   confirmation: PluginInstallConfirmation;
 };
 

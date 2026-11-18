@@ -6,6 +6,7 @@ mod containment;
 pub(crate) mod diagnostics;
 mod methods;
 mod node_status;
+pub(crate) mod package_open;
 pub(crate) mod protocol;
 mod safe_mode;
 mod v2_builtins;
@@ -460,6 +461,7 @@ macro_rules! tauri_commands {
             crate::plugin_kernel::builtins::set_builtin_plugin_config,
             crate::plugin_kernel::v2_migration::get_v2_plugin_migration,
             crate::plugin_kernel::v2_migration::dismiss_v2_plugin_migration,
+            crate::plugin_kernel::package_open::take_pending_plugin_package,
         ] $($rest)*)
     };
 }

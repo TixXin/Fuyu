@@ -133,3 +133,18 @@ export function onV2PluginMigrationChanged(handler: (snapshot: V2MigrationSnapsh
     handler(normalizeV2MigrationSnapshot(event.payload));
   });
 }
+
+export const PLUGIN_PACKAGE_OPEN = "plugin-package-open";
+
+export interface PendingPluginPackage {
+  fileName: string;
+  base64: string;
+}
+
+export function takePendingPluginPackage(): Promise<PendingPluginPackage | null> {
+  return invoke<PendingPluginPackage | null>("take_pending_plugin_package");
+}
+
+export function onPluginPackageOpen(listener: () => void): Promise<UnlistenFn> {
+  return listen(PLUGIN_PACKAGE_OPEN, () => listener());
+}

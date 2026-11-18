@@ -128,7 +128,17 @@ export function PluginInstallConfirmModal({
         </div>
 
         {confirmation.unreviewed ? <p className="plugins-v3__warn-banner">{copy.sourceManualWarn}</p> : null}
+        {confirmation.trustChange ? (
+          <p className="plugins-v3__warn-banner" data-trust-change={confirmation.trustChange}>
+            {copy.trustChangeWarn}
+          </p>
+        ) : null}
         {description ? <p className="plugins-v3__note">{description}</p> : null}
+        {confirmation.requiredPlugins && confirmation.requiredPlugins.length > 0 ? (
+          <p className="plugins-v3__detail plugins-v3__detail--info" data-required-plugins={confirmation.requiredPlugins.join(",")}>
+            {copy.requiresNote(confirmation.requiredPlugins.join(", "))}
+          </p>
+        ) : null}
 
         <dl className="plugins-v3__caps">
           <CapabilityRow label={copy.networkLabel} items={confirmation.network} emptyText={copy.networkNone} />
