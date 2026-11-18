@@ -82,9 +82,62 @@ export type MarketInstallResult = {
   confirmation: PluginInstallConfirmation;
 };
 
+export type MarketPluginScreenshot = {
+  url: string;
+  caption?: Record<string, string>;
+};
+
+export type MarketPluginCommand = {
+  id: string;
+  title: Record<string, string>;
+  keybinding?: string;
+};
+
+export type MarketPluginVersionSummary = {
+  version: string;
+  publishedAt?: string | null;
+  size?: number | null;
+  reviewed?: boolean;
+  urgent?: boolean;
+  enginesFuyu?: string | null;
+};
+
+export type MarketPluginDetails = {
+  name: string;
+  displayName?: Record<string, string>;
+  description?: Record<string, string>;
+  official: boolean;
+  publisherName?: string;
+  author?: string | null;
+  license?: string | null;
+  homepage?: string | null;
+  repository?: string | null;
+  bugs?: string | null;
+  funding?: string | null;
+  keywords: string[];
+  categories: string[];
+  platforms: string[];
+  preview: boolean;
+  likes: number | null;
+  installedVersion: string | null;
+  latestVersion: string | null;
+  readme: string | null;
+  changelog: string | null;
+  screenshots: MarketPluginScreenshot[];
+  commands: MarketPluginCommand[];
+  slots: string[];
+  provides: string[];
+  replaces: string[];
+  network: string[];
+  nodeApis: string[];
+  requires: Record<string, string>;
+  versions: MarketPluginVersionSummary[];
+};
+
 export type MarketMethods = {
   catalog(): MarketCatalogSnapshot;
   refresh(): MarketCatalogSnapshot;
+  details(params: { name: string; locale?: string }): MarketPluginDetails;
   inspectPackage(params: { base64: string }): MarketInspectedPackage;
   installMarket(params: { name: string; version?: string }): MarketInstallResult;
   installFile(params: { base64: string; expectedSha256?: string }): MarketInstallResult;

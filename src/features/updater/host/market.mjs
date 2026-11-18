@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { compareVersions, mergeRevoked, openIndex, openRevoked, selectVersions, verifyVersionSignature } from "../../../../packages/plugin-market/src/index.mjs";
 import { applyRevocationsToDir, inspectPackage as inspectFuyuPackage, installPackage, uninstallPackage, writeInstalledToYml } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { marketV1 } from "../../../../packages/plugin-services/src/services/market.mjs";
+import { getMarketPluginDetails } from "./marketDetails.mjs";
 import {
   INDEX_FILE, INDEX_SIG_FILE, buildMarketSnapshot, confirmationFromManifest, decodeBase64, detectTrustChange, isObject,
   marketError, parseAppVersionFromArgv, planRequiredDependencies, readInstalledPackages, readState, readVerifiedCachedIndex,
@@ -123,6 +124,8 @@ export function createMarketService(options = {}) {
     },
 
     catalog: async () => snapshot(),
+
+    details: (params) => getMarketPluginDetails(params, { dataDir, pluginsDir, appVersion, platform, trust, fetchImpl, now: nowFn() }),
 
     autoUpdate: async () => {
       const state = readState(dataDir);
@@ -352,6 +355,7 @@ export function provideMarketService(ctx, options = {}) {
   const provider = ctx.services.provide(marketV1, {
     catalog: () => service.catalog(),
     refresh: (params) => service.refresh(params),
+    details: (params) => service.details(params),
     inspectPackage: (params) => service.inspectPackage(params),
     installMarket: (params) => service.installMarket(params),
     installFile: (params) => service.installFile(params),

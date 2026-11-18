@@ -4,6 +4,7 @@ export const marketV1 = defineService("market/v1", {
   methods: {
     catalog: true,
     refresh: true,
+    details: true,
     inspectPackage: true,
     installMarket: true,
     installFile: true,
