@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
+import { AppWindow } from "lucide-react";
+import { IslandGlyph } from "../../components/settings/IslandGlyph";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
@@ -24,22 +28,18 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
 
   return (
     <>
-      <SettingsGroup title={text.openTitle}>
-        <SettingsRow
-          title={text.openIn}
-          description={text.openInHint}
-          control={
-            <SettingsChoice<ClipboardOpenIn>
-              value={clipboardSettings.openIn}
-              ariaLabel={text.openIn}
-              options={[
-                { value: "window", label: text.openInOptions.window },
-                { value: "island", label: text.openInOptions.island },
-              ]}
-              onChange={(openIn) => change({ openIn })}
-            />
-          }
-        />
+      <SettingsGroup title={text.openTitle} footer={<SettingsFootnote text={text.openInHint} />}>
+        <SettingsRow title={text.openIn}>
+          <SettingsChoiceCards<ClipboardOpenIn>
+            value={clipboardSettings.openIn}
+            ariaLabel={text.openIn}
+            options={[
+              { value: "window", label: text.openInOptions.window, art: <AppWindow size={30} strokeWidth={1.4} /> },
+              { value: "island", label: text.openInOptions.island, art: <IslandGlyph state="expanded" /> },
+            ]}
+            onChange={(openIn) => change({ openIn })}
+          />
+        </SettingsRow>
         {inWindow && (
           <SettingsRow
             indent
@@ -75,9 +75,11 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
             }
           />
         )}
+      </SettingsGroup>
+
+      <SettingsGroup title={text.pasteTitle}>
         {inWindow && (
           <SettingsToggleRow
-            indent
             title={listText.pinFavorites}
             description={listText.pinFavoritesHint(ALT_KEY.replace("+", ""))}
             checked={clipboardSettings.pinFavorites !== false}
@@ -86,7 +88,6 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
         )}
         {inWindow && (
           <SettingsToggleRow
-            indent
             title={text.autoPaste}
             description={isMacOS ? text.autoPasteHintMac : text.autoPasteHint}
             checked={clipboardSettings.autoPaste}
@@ -113,16 +114,14 @@ export function ClipboardSettingsSection({ clipboardSettings, onClipboardSetting
         )}
         {inWindow && (
           <SettingsToggleRow
-            indent
             title={text.hideFromCapture}
             description={text.hideFromCaptureHint}
-            checked={clipboardSettings.hideFromCapture !== false}
+            checked={clipboardSettings.hideFromCapture === true}
             onChange={(hideFromCapture) => change({ hideFromCapture })}
           />
         )}
         {inWindow && (
           <SettingsToggleRow
-            indent
             title={text.linkPreview}
             description={text.linkPreviewHint}
             checked={clipboardSettings.linkPreview === true}

@@ -1,14 +1,11 @@
 import { useState, type Dispatch, type SetStateAction } from "react";
-import { FolderOpen } from "lucide-react";
+import { SettingsFolderRow } from "../../components/settings/SettingsFolderRow";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
-import { SettingsInput } from "../../components/settings/SettingsInput";
-import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import type { IslandSettings } from "../../lib/settings/types";
-import { revealFolder } from "../../lib/settings-backup/api";
-import { pickSaveFolder } from "./api";
 import { ScreenshotShortcutRows } from "./ScreenshotShortcutRows";
 import { CARD_SECONDS, HISTORY_DAYS, type CardSeconds, type HistoryDays, type ScreenshotSettings } from "./settings";
 import { RecordSettingsGroup } from "./RecordSettingsGroup";
@@ -37,7 +34,11 @@ type ScreenshotSectionProps = {
 function ShortcutsSection({ onOpenShortcuts, screenshot, onScreenshotChange: setScreenshot, takenBy }: ScreenshotSectionProps) {
   const text = useTranslation().settings.screenshot;
   return (
-    <SettingsGroup title={text.shortcutsTitle} footer={isMacOS ? text.shortcutsHintMac : text.shortcutsHint} action={<AllShortcutsLink onOpen={onOpenShortcuts} />}>
+    <SettingsGroup
+      title={text.shortcutsTitle}
+      footer={<SettingsFootnote text={isMacOS ? text.shortcutsHintMac : text.shortcutsHint} />}
+      action={<AllShortcutsLink onOpen={onOpenShortcuts} />}
+    >
       <ScreenshotShortcutRows
         settings={screenshot}
         onSettingsChange={setScreenshot}
@@ -73,45 +74,27 @@ function AfterSection({ screenshot, onScreenshotChange: setScreenshot, folderDra
   const settingsText = useTranslation().settings;
   const text = settingsText.screenshot;
   const dataHome = settingsText.dataHome;
-  const pickFolder = () => {
-    void pickSaveFolder(text.saveFolder).then((picked) => {
-      if (!picked) return;
-      onFolderDraftChange(picked);
-      setScreenshot({ ...screenshot, saveFolder: picked });
-    });
-  };
   return (
     <SettingsGroup title={text.afterTitle}>
-      <SettingsRow
+      <SettingsFolderRow
         title={text.saveFolder}
         description={isMacOS ? text.saveFolderHintMac : text.saveFolderHint}
-        control={
-          <>
-            {folderDraft.trim() ? (
-              <SettingsLinkButton onClick={() => void revealFolder(folderDraft.trim())}>
-                <FolderOpen size={13} strokeWidth={2.2} aria-hidden="true" />
-                {isMacOS ? dataHome.revealMac : dataHome.reveal}
-              </SettingsLinkButton>
-            ) : null}
-            {folderDraft.trim() ? (
-              <SettingsLinkButton onClick={() => { onFolderDraftChange(""); setScreenshot({ ...screenshot, saveFolder: "" }); }}>
-                {dataHome.useDefault}
-              </SettingsLinkButton>
-            ) : null}
-            <SettingsLinkButton onClick={pickFolder}>{dataHome.change}</SettingsLinkButton>
-          </>
-        }
-      >
-        <SettingsInput
-          monospace
-          value={folderDraft}
-          placeholder={text.saveFolderPlaceholder}
-          aria-label={text.saveFolder}
-          onChange={(event) => onFolderDraftChange(event.target.value)}
-          onBlur={onSaveFolder}
-          onKeyDown={(event) => { if (event.key === "Enter") onSaveFolder(); }}
-        />
-      </SettingsRow>
+        value={folderDraft}
+        placeholder={text.saveFolderPlaceholder}
+        ariaLabel={text.saveFolder}
+        revealPath={folderDraft.trim() || null}
+        revealLabel={isMacOS ? dataHome.revealMac : dataHome.reveal}
+        browseTitle={text.saveFolder}
+        browseLabel={dataHome.change}
+        resetLabel={folderDraft.trim() ? dataHome.useDefault : undefined}
+        onChange={onFolderDraftChange}
+        onSubmit={onSaveFolder}
+        onPick={(picked) => {
+          onFolderDraftChange(picked);
+          setScreenshot({ ...screenshot, saveFolder: picked });
+        }}
+        onReset={folderDraft.trim() ? () => { onFolderDraftChange(""); setScreenshot({ ...screenshot, saveFolder: "" }); } : undefined}
+      />
       <SettingsRow
         title={text.cardSeconds}
         description={text.cardSecondsHint}
@@ -148,9 +131,9 @@ type ScreenshotTab = "screenshot" | "screenshotRecord";
 
 const sections = settingsSections<ScreenshotSectionProps, ScreenshotTab>();
 
-sections.add({ id: "screenshot.shortcuts", category: "screenshot", order: 10, component: ShortcutsSection });
-sections.add({ id: "screenshot.capturing", category: "screenshot", order: 20, component: CapturingSection });
-sections.add({ id: "screenshot.after", category: "screenshot", order: 30, component: AfterSection });
+sections.add({ id: "screenshot.capturing", category: "screenshot", order: 10, component: CapturingSection });
+sections.add({ id: "screenshot.after", category: "screenshot", order: 20, component: AfterSection });
+sections.add({ id: "screenshot.shortcuts", category: "screenshot", order: 30, component: ShortcutsSection });
 sections.add({ id: "screenshotRecord.record", category: "screenshotRecord", order: 10, component: RecordSection });
 
 export function ScreenshotSettingsPage({
