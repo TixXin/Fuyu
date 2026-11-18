@@ -3240,7 +3240,7 @@
     {
       "page": "agentRings",
       "zh-CN": {
-        "group": "用量环",
+        "group": "显示口径与直连查询",
         "title": "环和悬停卡片显示",
         "options": [
           "已用",
@@ -3248,7 +3248,7 @@
         ]
       },
       "en": {
-        "group": "Usage rings",
+        "group": "Display and direct query",
         "title": "Rings and card show",
         "options": [
           "Used",
@@ -3259,12 +3259,12 @@
     {
       "page": "agentRings",
       "zh-CN": {
-        "group": "用量环",
+        "group": "显示口径与直连查询",
         "title": "Claude Code：直接向 Anthropic 查询",
         "description": "打开后读取本机 Claude Code 保存的登录令牌（~/.claude/.credentials.json，只读，不刷新、不改写，也不会发给 Anthropic 以外的地方），按下面的间隔经代理请求 api.anthropic.com 的用量接口。这个接口没有公开文档，可能随时失效，失效时退回 claude-hud 的快照。Agent 页顶部的用量也会用这份数据。"
       },
       "en": {
-        "group": "Usage rings",
+        "group": "Display and direct query",
         "title": "Claude Code: ask Anthropic directly",
         "description": "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too."
       }
@@ -3376,12 +3376,24 @@
       "zh-CN": {
         "group": "用量额度",
         "title": "额度提醒",
-        "description": "Claude 或 Codex 的 5 小时、7 天用量到这条线时，在收起的岛屿上提醒一次；额度刷新后再提醒一次"
+        "description": "Claude 或 Codex 的 5 小时、7 天用量到这条线时，在收起的岛屿上提醒一次；额度刷新后再提醒一次",
+        "options": [
+          "不提醒",
+          "用到 70%",
+          "用到 80%",
+          "用到 90%"
+        ]
       },
       "en": {
         "group": "Quota",
         "title": "Usage alert",
-        "description": "When Claude's or Codex's 5-hour or 7-day usage reaches this level, say so once on the collapsed island, and again when it resets"
+        "description": "When Claude's or Codex's 5-hour or 7-day usage reaches this level, say so once on the collapsed island, and again when it resets",
+        "options": [
+          "Off",
+          "at 70%",
+          "at 80%",
+          "at 90%"
+        ]
       }
     },
     {
