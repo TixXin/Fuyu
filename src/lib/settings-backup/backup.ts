@@ -27,6 +27,8 @@ export const BACKUP_KEYS = [
   "fuyu-lyrics-offsets",
   "fuyu-tray-menu-layout",
   "fuyu-voice-input",
+  "fuyu-todo-prefs",
+  "fuyu-calendar-prefs",
 ] as const;
 
 export type BackupKey = (typeof BACKUP_KEYS)[number];

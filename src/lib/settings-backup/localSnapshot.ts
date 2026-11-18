@@ -5,6 +5,7 @@ export const SNAPSHOT_EXCLUDED_KEYS = [
   "fuyu-panel-preview",
   "fuyu-onboarding-demo",
   "fuyu-todo-project-edit",
+  "fuyu-calendar-refresh-at",
 ] as const;
 
 export type StorageLike = {
