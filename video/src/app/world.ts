@@ -1,3 +1,4 @@
+import { AGENTS } from "../../../src/features/agent-status/agents";
 import type { AgentSessionSummary, AgentStatusSnapshot, AgentUsage } from "../../../src/features/agent-status/api";
 import type { AgentApprovalRequest } from "../../../src/features/agent-status/approvals/api";
 import type { CalendarEvent } from "../../../src/features/calendar/api";
@@ -7,6 +8,9 @@ import type { Lyrics } from "../../../src/features/media/lyrics/api";
 import type { MailContent, MailSnapshot } from "../../../src/features/messages/mail/api";
 import type { QQNotificationSnapshot } from "../../../src/features/messages/qq-notifications/api";
 import type { ReminderSnapshot } from "../../../src/features/messages/wechat/api";
+import type { BuiltinPlugin } from "../../../src/features/plugin-kernel/api";
+import type { MarketSnapshot } from "../../../src/features/plugins/api";
+import type { PluginViewsSnapshot } from "../../../src/features/plugin-views/api";
 import type { TodosData } from "../../../src/features/todos/api";
 
 export type World = {
@@ -19,6 +23,8 @@ export type World = {
   sessions: AgentSessionSummary[];
   agentStatus: AgentStatusSnapshot;
   usage: AgentUsage | null;
+  codexUsage: AgentUsage | null;
+  builtins: BuiltinPlugin[] | null;
   approvals: AgentApprovalRequest[];
   qq: QQNotificationSnapshot;
   wechat: ReminderSnapshot;
@@ -27,6 +33,9 @@ export type World = {
   calendar: CalendarEvent[];
   translations: Record<string, string>;
   settings: Record<string, unknown>;
+  plugins: PluginViewsSnapshot;
+  wallpaper: string | null;
+  market: MarketSnapshot | null;
   calls: { command: string; args: Record<string, unknown> }[];
 };
 
@@ -48,10 +57,12 @@ export function createWorld(): World {
     clipboard: [],
     sessions: [],
     agentStatus: {
-      codex: { phase: "idle", updatedAt: 0 }, claudeCode: { phase: "idle", updatedAt: 0 },
+      ...Object.fromEntries(Object.keys(AGENTS).map((agent) => [agent, { phase: "idle", updatedAt: 0 }])),
       updatedAt: 0, statusPath: "",
-    },
+    } as AgentStatusSnapshot,
     usage: null,
+    codexUsage: null,
+    builtins: null,
     approvals: [],
     qq: { revision: 1, enabled: true, status: "listening", items: [], error: null },
     wechat: {
@@ -66,6 +77,9 @@ export function createWorld(): World {
     calendar: [],
     translations: {},
     settings: {},
+    plugins: { views: [], status: [], statusItems: [] },
+    wallpaper: null,
+    market: null,
     calls: [],
   };
 }

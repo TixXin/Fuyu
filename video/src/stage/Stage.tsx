@@ -14,6 +14,7 @@ type StageProps = {
   endCard: EndCardCopy;
   backdrop?: ReactNode;
   scenery?: ReactNode;
+  overlay?: ReactNode;
   look: "promo" | "recording" | "editorial";
 };
 
@@ -28,7 +29,7 @@ function useFit() {
   return fit;
 }
 
-export function Stage({ lang, windows, endCard, backdrop, scenery, look }: StageProps) {
+export function Stage({ lang, windows, endCard, backdrop, scenery, overlay, look }: StageProps) {
   const state = useStore(stage);
   const fit = useFit();
   const { camera } = state;
@@ -51,7 +52,11 @@ export function Stage({ lang, windows, endCard, backdrop, scenery, look }: Stage
             <iframe
               id="island-frame"
               className={`island-frame${state.islandVisible ? " island-frame--in" : ""}`}
-              style={{ left: (STAGE_WIDTH - ISLAND_FRAME_WIDTH) / 2 }}
+              style={{
+                left: (STAGE_WIDTH - ISLAND_FRAME_WIDTH) / 2 + state.islandShift.x,
+                top: state.islandShift.y,
+                transition: `transform 720ms cubic-bezier(0.34, 1.4, 0.5, 1), left ${state.islandShift.ms}ms cubic-bezier(0.3, 0.9, 0.3, 1), top ${state.islandShift.ms}ms cubic-bezier(0.3, 0.9, 0.3, 1)`,
+              }}
               title="island"
               src={`/app.html?lang=${lang}&format=${FORMAT}`}
               width={ISLAND_FRAME_WIDTH}
@@ -60,6 +65,7 @@ export function Stage({ lang, windows, endCard, backdrop, scenery, look }: Stage
             <Cursor cursor={state.cursor} />
           </div>
           <Caption caption={state.caption} />
+          {overlay}
         </div>
         <EndCard copy={endCard} visible={state.endCard} />
       </div>

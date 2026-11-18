@@ -20,6 +20,7 @@ export type StageState = {
   caption: { id: number; kicker: string; text: string } | null;
   cursor: { x: number; y: number; ms: number; visible: boolean; pressed: boolean };
   islandVisible: boolean;
+  islandShift: { x: number; y: number; ms: number };
   clutter: "hidden" | "in" | "back" | "front" | "absorbed";
   dim: number;
   endCard: boolean;
@@ -33,6 +34,7 @@ export const stage = createStore<StageState>({
   caption: null,
   cursor: { x: STAGE_WIDTH * 0.7, y: SCREEN_HEIGHT * 0.72, ms: 0, visible: false, pressed: false },
   islandVisible: false,
+  islandShift: { x: 0, y: 0, ms: 0 },
   clutter: "hidden",
   dim: 0,
   endCard: false,

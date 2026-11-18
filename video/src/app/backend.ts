@@ -26,6 +26,7 @@ function clipboard(world: World) {
 
 function handlers(world: World): Record<string, (args: Args) => unknown> {
   const now = () => Date.now();
+  const plugins = () => ({ allowThirdParty: world.market !== null, nodeAvailable: true, powershellAvailable: true, pluginsDir: "", plugins: [], autoUpdate: false, trustedPublishers: world.market?.trustedPublishers ?? [], brokenStateBackup: null });
   return {
     "plugin:app|version": () => packageJson.version,
     updater_configured: () => false,
@@ -39,9 +40,13 @@ function handlers(world: World): Record<string, (args: Args) => unknown> {
     save_todo_markdown: (args) => ({ filePath: `${String(args.directory)}\\${String(args.date)}.md` }),
     get_legacy_todo_save_directory: () => "",
     get_default_todo_save_directory: () => "C:\\Users\\fuyu\\Documents\\Fuyu",
-    list_plugin_views: () => ({ views: [], status: [], statusItems: [] }),
+    list_plugin_views: () => world.plugins,
     list_plugin_menu: () => [],
-    list_plugins: () => ({ allowThirdParty: false, nodeAvailable: true, pluginsDir: "", plugins: [], autoUpdate: false, trustedPublishers: [] }),
+    list_plugins: plugins,
+    get_plugin_market: () => world.market,
+    get_cached_plugin_market: () => world.market,
+    get_plugin_market_likes: () => ({}),
+    install_market_plugin: plugins,
     get_media_state: () => {
       const { media } = world;
       if (media.playbackStatus !== "playing") return media;
@@ -55,7 +60,8 @@ function handlers(world: World): Record<string, (args: Args) => unknown> {
     list_agent_effort_labels: () => ({}),
     get_agent_host_icon: () => null,
     get_agent_usage: () => world.usage,
-    get_codex_usage: () => null,
+    get_codex_usage: () => world.codexUsage,
+    get_builtin_plugins: () => world.builtins,
     agent_approval_pending: () => world.approvals,
     agent_approval_decide: (args) => {
       world.approvals = world.approvals.filter((request) => request.id !== args.id);
@@ -80,6 +86,14 @@ function handlers(world: World): Record<string, (args: Args) => unknown> {
     translate_text: (args) => new Promise((resolve) => {
       window.setTimeout(() => resolve(world.translations[String(args.text).trim()] ?? ""), 520);
     }),
+    get_wallpapers: () => {
+      if (!world.wallpaper) return null;
+      const dpr = window.devicePixelRatio || 1;
+      const width = new URLSearchParams(location.search).get("format") === "vertical" ? 720 : 1280;
+      const left = (width - window.innerWidth) / 2;
+      return { fit: "fill", color: "#1a2940", monitors: [{ x: -left * dpr, y: 0, width: width * dpr, height: window.innerHeight * dpr, image: world.wallpaper }] };
+    },
+    voice_input_state: () => ({ phase: "idle" }),
     island_is_foreground: () => true,
     release_island_hover_focus: () => true,
   };
@@ -87,7 +101,8 @@ function handlers(world: World): Record<string, (args: Args) => unknown> {
 
 export function installBackend(world: World) {
   Object.assign(globalThis, { isTauri: true });
-  mockWindows("main");
+  if (new URLSearchParams(location.search).get("window") === "settings") mockWindows("settings", "main");
+  else mockWindows("main");
   const table = handlers(world);
   mockIPC((command, payload) => {
     const args = (payload ?? {}) as Args;
