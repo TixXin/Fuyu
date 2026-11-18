@@ -34,11 +34,11 @@ mockIPC((command) => {
 }, { shouldMockEvents: true });
 mockWindows("main");
 
-type State = { expanded: boolean; tucked: boolean; quiet: boolean; settings: Partial<IslandSettings> };
+type State = { expanded: boolean; tucked: boolean; quiet: boolean; nativeGlassState?: "active" | "css-fallback" | "disabled"; settings: Partial<IslandSettings> };
 const changes: ((next: Partial<State>) => void)[] = [];
 
 function GlassIsland({ background, light }: { background: string; light: boolean }) {
-  const [state, setState] = useState<State>({ expanded: false, tucked: false, quiet: false, settings: { glassBackdrop: "none" } });
+  const [state, setState] = useState<State>({ expanded: false, tucked: false, quiet: false, nativeGlassState: "css-fallback", settings: { glassBackdrop: "none" } });
   changes.push((next) => setState((current) => ({ ...current, ...next })));
   const settings: IslandSettings = { ...DEFAULT_SETTINGS, appearanceMode: "liquidGlass", islandBackgroundColor: background, ...state.settings };
   const mode = state.expanded ? "expanded" : "collapsed";
@@ -57,7 +57,7 @@ function GlassIsland({ background, light }: { background: string; light: boolean
   return <div className={`stage${light ? " island-light" : ""}`} data-tone={light ? "light" : "dark"} style={stageStyle}>
     <IslandShell
       mode={mode} page="todo" isTucked={false} isDetached={false} showTitle={false}
-      showCollapsedText appearanceMode="liquidGlass" nativeGlassState="css-fallback" glass={glass}
+      showCollapsedText appearanceMode="liquidGlass" nativeGlassState={state.nativeGlassState ?? "css-fallback"} glass={glass}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
@@ -163,7 +163,25 @@ async function runChecks() {
       const boost = Number(island.style.getPropertyValue("--glass-backdrop-boost"));
       check(tone === "dark" ? boost > 0 : boost === 0, `${tone}：白壁纸上${tone === "dark" ? "加深" : "不加深"}底色（${boost}）`);
     }
-    await set({ settings: { glassStyle: "static", glassBackdrop: "none" } });
+    await set({ expanded: false, nativeGlassState: "active", settings: { glassStyle: "static", glassBackdrop: "native", glassIntensity: 25 } });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 450)); });
+    for (const island of islands()) {
+      const tone = island.closest<HTMLElement>(".stage")!.dataset.tone;
+      check(island.classList.contains("island--glass-active"), `${tone}：原生透出激活时挂上 island--glass-active`);
+      check(getComputedStyle(island).backdropFilter === "none", `${tone}：原生透出激活时关闭重复的 CSS backdrop-filter`);
+      const fill = getComputedStyle(island).getPropertyValue("--island-shell-fill").trim();
+      check(fill.includes("/") || fill.startsWith("rgba("), `${tone}：原生透出激活时主壳底色改为半透明（${fill}）`);
+    }
+    document.documentElement.dataset.islandNotch = "on";
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 450)); });
+    for (const island of islands()) {
+      const cs = getComputedStyle(island);
+      check(cs.backgroundColor === "rgb(0, 0, 0)" && cs.backgroundImage === "none", `原生透出在刘海折叠时仍保持纯黑 (${cs.backgroundColor} | ${cs.backgroundImage})`);
+    }
+    delete document.documentElement.dataset.islandNotch;
+
+    await set({ expanded: true, nativeGlassState: "css-fallback", settings: { glassStyle: "static", glassBackdrop: "none", glassIntensity: DEFAULT_SETTINGS.glassIntensity } });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 600)); });
     check(islands().every((island) => !("glassWallpaper" in island.dataset) && !island.style.getPropertyValue("--glass-wallpaper")), "关掉后退回纯色玻璃");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;

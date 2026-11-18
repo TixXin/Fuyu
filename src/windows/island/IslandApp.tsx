@@ -11,6 +11,7 @@ import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useMigrateLegacySwitches, useSettingsWithBuiltinSwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { IslandShell } from "./IslandShell";
 import { useIslandWindow } from "./useIslandWindow";
+import { useNativeGlassSync } from "./useNativeGlassSync";
 import { getExpandedIslandHeight } from "./expandedHeight";
 import { getIslandStageStyle } from "./stageStyle";
 import { useDevicePixelRatio } from "./useDevicePixelRatio";
@@ -178,12 +179,15 @@ export function IslandApp() {
     isDimmed,
     settings,
     setSettings,
+    backgroundColor: look.islandBackgroundColor,
     expandedIslandHeight,
     expandedIslandWidth,
     collapsedIslandWidth,
     ready: settled,
     onCollapse: collapseIsland,
   });
+
+  useNativeGlassSync(settings.appearanceMode === "liquidGlass" && settings.glassBackdrop === "native");
 
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
     preview: contributedPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),

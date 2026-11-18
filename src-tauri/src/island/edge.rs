@@ -20,6 +20,7 @@ pub(crate) fn set_attached(window: &WebviewWindow, edge: Option<Edge>) {
     if previous == edge {
         return;
     }
+    super::glass::refresh_glass(window);
     let _ = window.emit(EDGE_CHANGED_EVENT, edge);
     let is_top = edge == Some(Edge::Top);
     if (previous == Some(Edge::Top)) != is_top {

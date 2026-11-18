@@ -9,6 +9,8 @@ import { islandMarginY } from "./islandForm";
 import { useSettingsPositionReset } from "./useSettingsPositionReset";
 import { useClickFocus } from "./useClickFocus";
 import { useCollapseOnBlur } from "./useCollapseOnBlur";
+import { readIslandGlassFrame } from "./useNativeGlassSync";
+import { isMacOS } from "../../lib/platform";
 import type { IslandMode, NativeGlassState } from "./types";
 
 const SHOW_RETRY_DELAYS_MS = [0, 300, 1000, 3000];
@@ -24,6 +26,7 @@ type IslandWindowOptions = {
   isDimmed?: boolean;
   settings: IslandSettings;
   setSettings: (settings: IslandSettings) => void;
+  backgroundColor?: string;
   expandedIslandHeight: number;
   expandedIslandWidth: number;
   collapsedIslandWidth: number;
@@ -37,6 +40,7 @@ export function useIslandWindow({
   isDimmed = false,
   settings,
   setSettings,
+  backgroundColor,
   expandedIslandHeight,
   expandedIslandWidth,
   collapsedIslandWidth,
@@ -60,8 +64,13 @@ export function useIslandWindow({
       nextCollapsedWidth: number,
       nextIsTucked: boolean,
       nextIsDimmed: boolean,
+      nextBackgroundColor?: string,
     ) => {
       try {
+        const glassEnabled = nextSettings.appearanceMode === "liquidGlass";
+        const glassFrame = isMacOS && glassEnabled && nextSettings.glassBackdrop === "native"
+          ? readIslandGlassFrame(false)
+          : null;
         const glassState = await islandApi.setIslandInteraction({
           mode: nextMode,
           collapsedScale: nextSettings.collapsedScale,
@@ -74,9 +83,12 @@ export function useIslandWindow({
           isTucked: nextIsTucked,
           isDimmed: nextIsDimmed,
           animatePosition: !reducedMotion,
-          glassEnabled: nextSettings.appearanceMode === "liquidGlass",
+          glassEnabled,
           glassIntensity: nextSettings.glassIntensity,
-          glassTint: nextSettings.islandBackgroundColor,
+          glassTint: nextBackgroundColor ?? nextSettings.islandBackgroundColor,
+          glassBackdrop: nextSettings.glassBackdrop,
+          topFilletRadius: nextSettings.topFilletRadius,
+          glassFrame,
           cornerRadius: nextSettings.islandCornerRadius,
           cornerShape: nextSettings.islandCornerShape,
           monitorFollow: nextSettings.islandMonitor,
@@ -156,6 +168,7 @@ export function useIslandWindow({
       collapsedIslandWidth,
       isTucked,
       isDimmed,
+      backgroundColor,
     );
     void Promise.race([synced, wait(SYNC_WAIT_BEFORE_SHOW_MS)]).finally(() => {
       void showReadyIsland();
@@ -169,11 +182,14 @@ export function useIslandWindow({
     isTucked,
     isDimmed,
     mode,
+    backgroundColor,
     settings.marginY,
     settings.islandForm,
     settings.appearanceMode,
+    settings.glassBackdrop,
     settings.glassIntensity,
     settings.islandBackgroundColor,
+    settings.topFilletRadius,
     settings.collapsedScale,
     settings.expandedScale,
     settings.islandCornerRadius,

@@ -19,8 +19,9 @@ mod edge;
 mod geometry;
 pub(crate) mod notch;
 pub(crate) mod side;
-#[cfg_attr(not(windows), path = "glass_unsupported.rs")]
-mod glass;
+#[cfg_attr(target_os = "macos", path = "glass_macos.rs")]
+#[cfg_attr(not(any(windows, target_os = "macos")), path = "glass_unsupported.rs")]
+pub(crate) mod glass;
 #[cfg_attr(not(windows), path = "modifier_unsupported.rs")]
 pub(crate) mod modifier;
 #[cfg_attr(not(windows), path = "outside_click_unsupported.rs")]
@@ -57,7 +58,10 @@ use geometry::{
 use glass::apply_glass_material;
 #[cfg(windows)]
 use crate::win32;
-use state::{mutate_window_state, read_window_state, window_state, CornerShape, IslandMode, MonitorFollow, TuckStyle};
+use state::{
+    mutate_window_state, parse_hex_rgb, read_window_state, window_state, CornerShape,
+    IslandGlassFrame, IslandMode, MonitorFollow, TuckStyle,
+};
 
 pub(crate) use geometry::apply_stage_geometry;
 #[cfg(debug_assertions)]
@@ -146,12 +150,14 @@ pub fn set_island_interaction(
     glass_enabled: Option<bool>,
     glass_intensity: Option<f64>,
     glass_tint: Option<String>,
+    glass_backdrop: Option<String>,
+    top_fillet_radius: Option<f64>,
+    glass_frame: Option<IslandGlassFrame>,
     corner_radius: Option<f64>,
     corner_shape: Option<String>,
     monitor_follow: Option<String>,
     tuck_style: Option<String>,
 ) -> Result<String, String> {
-    let _ = (glass_intensity, glass_tint);
     let window = main_window(&app)?;
     let mode = IslandMode::from_value(&mode)?;
     let previous_state = read_window_state();
@@ -195,6 +201,18 @@ pub fn set_island_interaction(
             state.custom_position = restored_custom_position;
         }
         state.glass_enabled = glass_enabled.unwrap_or(false);
+        if let Some(backdrop) = glass_backdrop.as_deref() {
+            state.glass_native = backdrop == "native";
+        }
+        if let Some(intensity) = glass_intensity {
+            state.glass_intensity = intensity.clamp(0.0, 100.0);
+        }
+        if let Some(rgb) = glass_tint.as_deref().and_then(parse_hex_rgb) {
+            state.glass_tint_rgb = rgb;
+        }
+        if let Some(fillet) = top_fillet_radius {
+            state.top_fillet_radius = fillet.clamp(0.0, 12.0);
+        }
         if let Some(corner_radius) = corner_radius {
             state.corner_radius = corner_radius.clamp(MIN_CORNER_RADIUS, MAX_CORNER_RADIUS);
         }
@@ -223,7 +241,7 @@ pub fn set_island_interaction(
     if !state.is_dragging {
         focus::island_mode_synced(&window, matches!(state.mode, IslandMode::Expanded));
     }
-    apply_glass_material(&window, state)
+    apply_glass_material(&window, state, glass_frame)
 }
 
 #[tauri::command]
@@ -456,6 +474,7 @@ macro_rules! tauri_commands {
         $next!([$($done)*
             crate::island::set_island_layout,
             crate::island::set_island_interaction,
+            crate::island::glass::sync_island_glass_frame,
             crate::island::start_island_drag,
             crate::island::start_island_modifier_drag,
             crate::island::reset_island_position,

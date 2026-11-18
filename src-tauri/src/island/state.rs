@@ -119,6 +119,10 @@ pub(crate) struct IslandWindowState {
     pub(super) is_dragging: bool,
     pub(super) attached_edge: Option<Edge>,
     pub(super) glass_enabled: bool,
+    pub(super) glass_native: bool,
+    pub(super) glass_intensity: f64,
+    pub(super) glass_tint_rgb: (u8, u8, u8),
+    pub(super) top_fillet_radius: f64,
     pub(super) corner_radius: f64,
     pub(super) corner_shape: CornerShape,
     pub(super) monitor_follow: MonitorFollow,
@@ -216,6 +220,21 @@ pub struct IslandPosition {
     pub(super) along: Option<f64>,
 }
 
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IslandGlassFrame {
+    pub left: f64,
+    pub top: f64,
+    pub width: f64,
+    pub height: f64,
+    pub top_radius: f64,
+    pub bottom_radius: f64,
+    pub fillet_radius: f64,
+    #[serde(default)]
+    pub active_transition: bool,
+}
+
 impl IslandPosition {
     pub(super) fn at(x: i32, y: i32) -> Self {
         Self { x, y, edge: None, along: None }
@@ -241,6 +260,10 @@ impl Default for IslandWindowState {
             is_dragging: false,
             attached_edge: Some(Edge::Top),
             glass_enabled: false,
+            glass_native: false,
+            glass_intensity: 72.0,
+            glass_tint_rgb: (47, 47, 55),
+            top_fillet_radius: 8.0,
             corner_radius: EXPANDED_RADIUS,
             corner_shape: CornerShape::Squircle,
             monitor_follow: MonitorFollow::Primary,
@@ -284,4 +307,28 @@ pub(crate) fn record_dragged_position(position: PhysicalPosition<i32>) {
         }
         *state
     });
+}
+
+pub(super) fn parse_hex_rgb(hex: &str) -> Option<(u8, u8, u8)> {
+    let trimmed = hex.trim().strip_prefix('#').unwrap_or(hex.trim());
+    if trimmed.len() != 6 || !trimmed.is_ascii() {
+        return None;
+    }
+    let r = u8::from_str_radix(&trimmed[0..2], 16).ok()?;
+    let g = u8::from_str_radix(&trimmed[2..4], 16).ok()?;
+    let b = u8::from_str_radix(&trimmed[4..6], 16).ok()?;
+    Some((r, g, b))
+}
+
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+pub(super) fn is_light_rgb((r, g, b): (u8, u8, u8)) -> bool {
+    let linear = |channel: u8| {
+        let c = f64::from(channel) / 255.0;
+        if c <= 0.03928 {
+            c / 12.92
+        } else {
+            ((c + 0.055) / 1.055).powf(2.4)
+        }
+    };
+    0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b) > 0.18
 }
