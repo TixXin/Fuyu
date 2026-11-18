@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::sync::{Mutex, PoisonError};
 
 pub(super) const MAX_BACKSTEP_MS: i64 = 1_500;
+const MAX_SESSIONS: usize = 32;
+const SESSION_TTL_MS: i64 = 6 * 60 * 60 * 1_000;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(super) struct Published {
@@ -86,7 +88,29 @@ impl TimelineClock {
             session.to_string(),
             Entry { track: track.to_string(), published, position_ms: position, at_ms: now_ms, playing, trust_next },
         );
+        self.prune(session, now_ms);
         position
+    }
+
+    fn prune(&mut self, keep: &str, now_ms: i64) {
+        self.entries.retain(|key, entry| {
+            key == keep || now_ms.saturating_sub(entry.at_ms) <= SESSION_TTL_MS
+        });
+        if self.entries.len() > MAX_SESSIONS {
+            let mut order: Vec<(String, i64)> = self
+                .entries
+                .iter()
+                .filter(|(key, _)| key.as_str() != keep)
+                .map(|(key, entry)| (key.clone(), entry.at_ms))
+                .collect();
+            order.sort_by(|left, right| left.1.cmp(&right.1).then_with(|| left.0.cmp(&right.0)));
+            for (key, _) in order.into_iter().take(self.entries.len() - MAX_SESSIONS) {
+                self.entries.remove(&key);
+            }
+        }
+        if self.last_session.as_ref().is_some_and(|last| !self.entries.contains_key(last)) {
+            self.last_session = None;
+        }
     }
 
     pub(super) fn seeked(&mut self, session: Option<&str>, position_ms: i64, now_ms: i64) {
@@ -120,3 +144,31 @@ pub(super) fn track_key(title: Option<&str>, artist: Option<&str>, album: Option
 #[cfg(test)]
 #[path = "timeline_clock_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+mod eviction_tests {
+    use super::{Published, TimelineClock, MAX_SESSIONS, SESSION_TTL_MS};
+
+    fn published(at_ms: i64) -> Published {
+        Published { position_ms: 1_000, updated_ms: Some(at_ms), rate: 1.0, duration_ms: 120_000 }
+    }
+
+    #[test]
+    fn expired_sessions_and_overflow_entries_are_evicted() {
+        let mut clock = TimelineClock::default();
+        let t0 = 1_800_000_000_000;
+        clock.sample("stale", "song", published(t0), false, t0);
+        clock.sample("fresh", "song", published(t0 + SESSION_TTL_MS + 1), false, t0 + SESSION_TTL_MS + 1);
+        assert!(!clock.entries.contains_key("stale"));
+        assert!(clock.entries.contains_key("fresh"));
+
+        for index in 0..(MAX_SESSIONS + 6) {
+            let now = t0 + SESSION_TTL_MS + 100 + index as i64;
+            clock.sample(&format!("s-{index:02}"), "song", published(now), false, now);
+        }
+        assert_eq!(clock.entries.len(), MAX_SESSIONS);
+        assert!(!clock.entries.contains_key("fresh"));
+        assert!(!clock.entries.contains_key("s-00"));
+        assert!(clock.entries.contains_key(&format!("s-{:02}", MAX_SESSIONS + 5)));
+    }
+}

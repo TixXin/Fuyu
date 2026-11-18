@@ -29,6 +29,7 @@ export function getIslandStageStyle(
     "--island-pixel-nudge": Number.isInteger(devicePixelRatio) ? "0px" : "0.001px",
     "--island-corner-radius-size": settings.islandCornerRadius,
     "--island-corner-shape": settings.islandCornerShape,
+    "--island-corner-k": settings.islandCornerShape === "round" ? 0.5523 : 0.9192,
     "--task-text-color": settings.taskTextColor,
     "--island-pulse-color": settings.pulseColor,
     "--island-pulse-glow-color": hexToRgba(settings.pulseColor, 0.72),

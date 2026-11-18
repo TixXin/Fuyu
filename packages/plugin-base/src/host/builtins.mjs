@@ -8,7 +8,7 @@ export const BUILTINS_FORMAT = 1;
 export const BUILTIN_KINDS = ["essential", "builtin"];
 export const BUILTIN_PREFIX = "builtin";
 export const BUILTIN_ID = /^[a-z0-9][a-z0-9.-]{0,63}$/;
-const FILE_KEYS = ["disabled", "config"];
+const FILE_KEYS = ["disabled", "config", "disabledServices"];
 
 function safeRelative(path) {
   if (typeof path !== "string" || !path || path.includes("\\") || path.includes("\0") || path.startsWith("/") || /^[A-Za-z]:/.test(path)) return false;
@@ -54,7 +54,8 @@ export function readBuiltins(dir) {
     if (plugin.host === undefined) return { id: plugin.id, kind, root, ...fromPackage(root, at) };
     const host = real(join(root, ...plugin.host.split("/")), "the host file");
     if (!inside(root, host)) throw new Error(`${at}: the host file ${host} is outside ${root}`);
-    return { id: plugin.id, kind, root, host: pathToFileURL(host).href, clients: [], declared: null };
+    const provides = Array.isArray(plugin.provides) ? plugin.provides.filter((item) => typeof item === "string" && item.trim() !== "") : [];
+    return { id: plugin.id, kind, root, host: pathToFileURL(host).href, clients: [], declared: null, ...(provides.length ? { provides } : {}) };
   });
   return { dir: base, plugins };
 }
@@ -62,18 +63,25 @@ export function readBuiltins(dir) {
 function fromPackage(root, at) {
   try {
     const manifest = readManifest(root, { official: true });
-    return { host: manifest.host && pathToFileURL(manifest.host).href, clients: manifest.clients, declared: manifest.declared };
+    return {
+      host: manifest.host && pathToFileURL(manifest.host).href,
+      clients: manifest.clients,
+      declared: manifest.declared,
+      displayName: manifest.displayName,
+      commands: manifest.commands,
+      configSchema: manifest.configSchema,
+    };
   } catch (error) {
     throw new Error(`${at}: there is no host in the list, and ${error.message}`);
   }
 }
 
 export function builtinEntries(plugins = []) {
-  return plugins.map(({ id, host, kind, root, clients = [], declared = null }) => ({
+  return plugins.map(({ id, host, kind, root, clients = [], declared = null, provides, displayName = null, commands = [], configSchema = null }) => ({
     id,
     name: host ?? CLIENT_ONLY,
     kind,
-    [SOURCE]: { source: "builtin", root, clients, declared },
+    [SOURCE]: { source: "builtin", root, clients, declared, displayName, commands, configSchema, ...(provides?.length ? { provides } : {}) },
   }));
 }
 
@@ -99,14 +107,29 @@ export function withBuiltins(entries, builtins, warn = () => {}) {
   const builtinIds = new Set(builtins.map((entry) => entry.id));
   const switches = new Map();
   const rest = [];
+  const replacedByThirdParty = new Set();
   for (const options of list) {
-    if (typeof options?.id === "string" && builtinIds.has(options.id)) switches.set(options.id, options);
-    else rest.push(...thirdParty(options, builtinIds, warn, false));
+    if (typeof options?.id === "string" && builtinIds.has(options.id)) {
+      switches.set(options.id, options);
+    } else {
+      if (options && typeof options === "object" && options.disabled !== true && Array.isArray(options.replaces)) {
+        for (const svc of options.replaces) {
+          if (typeof svc === "string") replacedByThirdParty.add(svc);
+        }
+      }
+      rest.push(...thirdParty(options, builtinIds, warn, false));
+    }
   }
   const merged = builtins.map((builtin) => {
     const entry = { ...builtin };
     const written = switches.get(builtin.id);
     for (const key of FILE_KEYS) if (written && written[key] !== undefined) entry[key] = written[key];
+    const builtinProvides = builtin[SOURCE]?.provides ?? [];
+    const autoDisabled = builtinProvides.filter((svc) => replacedByThirdParty.has(svc));
+    if (autoDisabled.length > 0) {
+      const existing = Array.isArray(entry.disabledServices) ? entry.disabledServices : [];
+      entry.disabledServices = [...new Set([...existing, ...autoDisabled])];
+    }
     return entry;
   });
   return [...merged, ...rest.filter((options) => !leftoverSwitch(options, warn))];

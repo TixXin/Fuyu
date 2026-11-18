@@ -1,17 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BadgeCheck, Check, RefreshCcw } from "lucide-react";
+import { BadgeCheck, Check, Moon, RefreshCcw, Search, Sun } from "lucide-react";
 import { IslandPreview } from "../../components/island-preview/IslandPreview";
+import { SettingsChoice } from "../../components/settings/SettingsChoice";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
+import { activeTone, resolveThemeColors, type ThemeTone } from "../../lib/theme/themeMode";
+import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useLocale, useTranslation } from "../../i18n";
 import { getThemeMarket } from "./api";
-import { isThemeInUse, readMarketThemes, withMarketTheme, type MarketTheme } from "./model";
-import "../plugins/PluginMarketSection.css";
-import "../plugins/PluginCard.css";
+import { isDualMarketTheme, isThemeInUse, readMarketThemes, withMarketTheme, type MarketTheme } from "./model";
 import "./ThemeMarketPage.css";
 
 const OFFICIAL = "TixXin";
 
 let lastThemes: MarketTheme[] | null = null;
+
+type Filter = "all" | "official" | "dual";
 
 export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
   settings: IslandSettings;
@@ -21,10 +25,15 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
   const t = useTranslation();
   const text = t.settings.themeMarket;
   const { locale } = useLocale();
+  const systemDark = useSystemDark();
+  const defaultTone = activeTone(settings.themeMode, systemDark);
   const [themes, setThemes] = useState<MarketTheme[] | null>(lastThemes);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [saved, setSaved] = useState<ReadonlySet<string>>(new Set());
+  const [previewTones, setPreviewTones] = useState<Readonly<Record<string, ThemeTone>>>({});
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -41,27 +50,62 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
   }, []);
   useEffect(() => { void refresh(); }, [refresh]);
 
-  const looks = useMemo(() => (themes ?? []).map((theme) => ({ theme, applied: withMarketTheme(settings, theme) })), [themes, settings]);
+  const looks = useMemo(() => (themes ?? []).map((theme) => ({ theme, dual: isDualMarketTheme(theme), applied: withMarketTheme(settings, theme) })), [themes, settings]);
+  const shownLooks = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return looks.filter(({ theme, dual }) => {
+      if (filter === "official" && theme.author !== OFFICIAL) return false;
+      if (filter === "dual" && !dual) return false;
+      if (!q) return true;
+      const haystack = [theme.id, theme.name["zh-CN"], theme.name.en, theme.author ?? "", theme.description?.["zh-CN"] ?? "", theme.description?.en ?? ""].join(" ").toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [looks, query, filter]);
   const status = loading ? text.refreshing : themes ? text.status(themes.length) : "";
 
   return (
     <section className="settings-section settings-section--list plugins-panel theme-market">
       <div className="plugin-market__header">
         <span className="plugin-market__status" aria-live="polite">{status}</span>
-        <button className="plugin-card__button plugin-market__refresh" type="button" aria-label={text.refresh} disabled={loading} onClick={() => void refresh()}>
-          <RefreshCcw className={loading ? "plugin-market__spin" : undefined} size={12} strokeWidth={2.4} />
-        </button>
+        <div className="theme-market__toolbar">
+          <label className="theme-market__search">
+            <Search size={13} strokeWidth={2.2} aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              placeholder={text.searchPlaceholder}
+              aria-label={text.searchPlaceholder}
+              onChange={(event) => setQuery(event.currentTarget.value)}
+            />
+          </label>
+          <SettingsChoice<Filter>
+            value={filter}
+            ariaLabel={text.filterAll}
+            options={[
+              { value: "all", label: text.filterAll },
+              { value: "official", label: text.filterOfficial },
+              { value: "dual", label: text.filterDual },
+            ]}
+            onChange={setFilter}
+          />
+          <button className="plugin-card__button plugin-market__refresh" type="button" aria-label={text.refresh} disabled={loading} onClick={() => void refresh()}>
+            <RefreshCcw className={loading ? "plugin-market__spin" : undefined} size={12} strokeWidth={2.4} />
+          </button>
+        </div>
       </div>
       {failed ? <p className="plugin-card__error" role="alert">{text.loadFailed}</p> : null}
       {themes === null && loading ? <p className="settings-section__hint">{text.loading}</p> : null}
       {themes !== null && themes.length === 0 && !failed ? <p className="settings-section__hint">{text.empty}</p> : null}
+      {themes !== null && themes.length > 0 && shownLooks.length === 0 ? <p className="settings-section__hint">{text.noMatches}</p> : null}
       <div className="plugin-market__grid theme-market__grid">
-        {looks.map(({ theme, applied }) => {
+        {shownLooks.map(({ theme, dual, applied }) => {
           const inUse = isThemeInUse(settings, theme);
           const official = theme.author === OFFICIAL;
+          const tone: ThemeTone = dual ? (previewTones[theme.id] ?? defaultTone) : (applied.themeMode === "light" ? "light" : "dark");
+          const preview = { ...resolveThemeColors(applied, tone === "dark", tone), collapsedDark: false };
           return (
-            <article className="theme-market__item" key={theme.id} data-theme-id={theme.id}>
-              <IslandPreview settings={applied} compact />
+            <article className="theme-market__item" key={theme.id} data-theme-id={theme.id} data-dual={dual ? "true" : undefined}>
+              <IslandPreview settings={preview} compact />
               <div className="theme-market__text">
                 <span className="theme-market__title">
                   <strong>{theme.name[locale]}</strong>
@@ -71,10 +115,35 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
                       {text.official}
                     </span>
                   ) : theme.author ? <span className="theme-market__author">{text.by(theme.author)}</span> : null}
+                  {dual ? <span className="plugin-market__badge theme-market__badge--dual">{text.dualBadge}</span> : null}
                 </span>
                 {theme.description ? <span className="theme-market__description">{theme.description[locale]}</span> : null}
               </div>
               <div className="theme-market__actions">
+                {dual ? (
+                  <div className="theme-market__tones" role="group" aria-label={text.dualBadge}>
+                    <button
+                      className="theme-market__tone"
+                      type="button"
+                      aria-label={text.previewDark}
+                      aria-pressed={tone === "dark"}
+                      onClick={() => setPreviewTones((current) => ({ ...current, [theme.id]: "dark" }))}
+                    >
+                      <Moon size={11} strokeWidth={2.2} aria-hidden="true" />
+                      {text.darkTone}
+                    </button>
+                    <button
+                      className="theme-market__tone"
+                      type="button"
+                      aria-label={text.previewLight}
+                      aria-pressed={tone === "light"}
+                      onClick={() => setPreviewTones((current) => ({ ...current, [theme.id]: "light" }))}
+                    >
+                      <Sun size={11} strokeWidth={2.2} aria-hidden="true" />
+                      {text.lightTone}
+                    </button>
+                  </div>
+                ) : null}
                 <button
                   className="plugin-card__button"
                   type="button"
@@ -100,7 +169,9 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
           );
         })}
       </div>
-      <p className="settings-section__hint">{text.hint}</p>
+      <div className="settings-group__footer">
+        <SettingsFootnote text={text.hint} />
+      </div>
     </section>
   );
 }

@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import { I18nProvider, LOCALE_STORAGE_KEY, TRANSLATIONS } from "../../src/i18n";
+import { marketV1, pluginConfigV1, pluginWindowsV1, type MarketCatalogPlugin, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { HostInfoV3, PluginHostConnector, PluginHostHandlers, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
 
@@ -26,6 +27,16 @@ let retryCalls = 0;
 const catalog = (await import("../../src/features/builtins.json")).default as { plugins: { id: string; kind: "builtin" | "essential" }[] };
 let builtins = catalog.plugins.map(({ id, kind }) => ({ id, kind, enabled: id !== "clipboard", background: [] as { name: string; registered: boolean; running: boolean }[], config: {} }));
 const switchCalls: { id: string; enabled: boolean }[] = [];
+const migrationDismissCalls: string[] = [];
+let migrationReply = {
+  official: [
+    { v2Id: "dev.focusd.weather", v3Id: "@fuyu/weather", title: { "zh-CN": "天气", en: "Weather" }, enabledInV2: true, configMigrated: true, installedInV3: false, registeredInYml: false },
+    { v2Id: "dev.focusd.pomodoro", v3Id: "@fuyu/pomodoro", title: { "zh-CN": "番茄钟", en: "Pomodoro" }, enabledInV2: true, configMigrated: false, installedInV3: true, registeredInYml: true },
+  ],
+  other: [{ id: "com.example.custom", title: { "zh-CN": "自定义小插件", en: "Custom gadget" }, enabledInV2: true }],
+  islandPending: false,
+  settingsPending: true,
+};
 
 mockIPC((command, payload) => {
   if (command === "get_builtin_plugins") return builtins;
@@ -40,14 +51,97 @@ mockIPC((command, payload) => {
   if (command === "get_plugin_host_connection") return { enabled: true, port: 1, token: "t", generation: 1, safeMode: safeReply, node: nodeReply };
   if (command === "retry_plugin_host_node") return (retryCalls += 1, nodeReply = { state: "checking" }, true);
   if (command === "get_platform_support") return { os: "windows", unsupported: [], devBuild: true };
+  if (command === "get_v2_plugin_migration") return migrationReply;
+  if (command === "dismiss_v2_plugin_migration") {
+    const { target } = payload as { target: string };
+    migrationDismissCalls.push(target);
+    migrationReply = { ...migrationReply, settingsPending: false };
+    return migrationReply;
+  }
+  if (command === "take_pending_plugin_package") return null;
   return null;
 });
 
 const { SettingsSidebar } = await import("../../src/windows/settings/SettingsSidebar");
 await import("../../src/windows/settings/slots/categories");
 const { PluginsV3SettingsPage } = await import("../../src/windows/settings/PluginsV3SettingsPage");
+const { windowServices } = await import("../../src/features/plugin-kernel/services");
 const { windowSlots } = await import("../../src/features/plugin-kernel/slots");
 const { NODE_EVERY_MS } = await import("../../src/windows/settings/usePluginHostNode");
+
+let manualAllowed = false;
+let weatherInstalled: string | null = null;
+const marketCalls: string[] = [];
+const makeMarketEntry = (name: string, official: boolean, fresh: boolean, zh: string, en: string, network: string[], slots: string[]): MarketCatalogPlugin => {
+  const confirmation = { unreviewed: false, official, displayName: { "zh-CN": zh, en }, description: { "zh-CN": zh, en }, network, nodeApis: official ? [] : ["node:crypto"], provides: official ? [] : ["clock/v1"], replaces: [], slots };
+  const installedVersion = name === "@fuyu/weather" ? weatherInstalled : null;
+  return {
+    name, official, publisher: { github: official ? "TixXin" : "someone", official },
+    displayName: { "zh-CN": zh, en }, description: { "zh-CN": zh, en }, categories: ["utilities"],
+    installedVersion, enabled: Boolean(installedVersion), source: installedVersion ? "market" : null, revoked: false,
+    install: { version: "1.0.0", sha256: "a".repeat(64), size: 2048, publishedAt: "2026-11-18T00:00:00Z", fresh, confirmation },
+    manual: null, autoUpdate: null,
+  };
+};
+const marketSnapshot = () => ({
+  plugins: [
+    makeMarketEntry("@fuyu/weather", true, false, "天气", "Weather", ["api.open-meteo.com"], ["island.page/v1"]),
+    makeMarketEntry("@someone/clock", false, true, "时钟", "Clock", [], ["island.collapsed/v1"]),
+  ],
+  installed: [], updatedAt: null, manualAllowed, error: null,
+});
+let emitMarketChanged: (() => void) | undefined;
+const marketProvider = windowServices.provide(marketV1, {
+  catalog: () => marketSnapshot(),
+  refresh: () => (marketCalls.push("refresh"), marketSnapshot()),
+  details: ({ name }) => ({
+    name, displayName: { "zh-CN": "天气", en: "Weather" }, description: { "zh-CN": "天气预报", en: "Forecast" },
+    official: name === "@fuyu/weather", publisherName: "TixXin", author: "TixXin", license: "MIT",
+    homepage: "https://github.com/TixXin/fuyu-plugins", repository: "https://github.com/TixXin/fuyu-plugins", bugs: null, funding: null,
+    keywords: ["weather"], categories: ["utilities"], platforms: ["win32", "darwin"], preview: false, likes: 42,
+    installedVersion: name === "@fuyu/weather" ? weatherInstalled : null, latestVersion: "1.0.0",
+    readme: "### Hourly forecast\nLive temperature on the island.", changelog: "### 1.0.0\nInitial release.",
+    screenshots: [], commands: [{ id: "refresh", title: { "zh-CN": "刷新天气", en: "Refresh weather" }, keybinding: "Alt+W" }],
+    slots: ["island.page/v1"], provides: [], replaces: [], network: ["api.open-meteo.com"], nodeApis: [], requires: {},
+    versions: [{ version: "1.0.0", publishedAt: "2026-11-18T00:00:00Z", size: 2048, reviewed: true, urgent: false, enginesFuyu: ">=0.9.0" }],
+  }),
+  inspectPackage: () => { throw new Error("unexpected inspectPackage"); },
+  installMarket: ({ name, version }) => {
+    marketCalls.push(`installMarket:${name}@${version ?? ""}`);
+    if (name === "@fuyu/weather") weatherInstalled = version ?? "1.0.0";
+    emitMarketChanged?.();
+    return { id: name, version: version ?? "1.0.0", source: "market" as const, sha256: "a".repeat(64), confirmation: marketSnapshot().plugins[0].install!.confirmation };
+  },
+  installFile: () => { throw new Error("unexpected installFile"); },
+  setManualAllowed: ({ allowed }) => (manualAllowed = allowed, marketCalls.push(`manual:${allowed}`), emitMarketChanged?.(), { manualAllowed }),
+  setEnabled: ({ id, enabled }) => (marketCalls.push(`setEnabled:${id}=${enabled}`), { id, enabled }),
+  uninstall: ({ id, removeData }) => (marketCalls.push(`uninstall:${id}:${Boolean(removeData)}`), { id, removed: true as const }),
+});
+emitMarketChanged = () => { marketProvider.emit("changed", {}); };
+
+const weatherSchema = {
+  type: "object" as const,
+  properties: {
+    autoRefresh: { type: "boolean" as const, title: { "zh-CN": "自动刷新", en: "Auto refresh" }, default: true },
+    unit: { type: "string" as const, title: { "zh-CN": "单位", en: "Unit" }, enum: ["celsius", "fahrenheit"], default: "celsius" },
+  },
+};
+const weatherDefaults: PluginConfigValues = { autoRefresh: true, unit: "celsius" };
+let weatherConfig: PluginConfigValues = { ...weatherDefaults };
+const configCalls: string[] = [];
+windowServices.provide(pluginConfigV1, {
+  list: () => ({ items: [] }),
+  get: ({ id }) => (id === "@fuyu/weather" ? { id, schema: weatherSchema, values: { ...weatherConfig }, defaults: weatherDefaults } : { id, schema: null, values: {}, defaults: {} }),
+  set: ({ id, values }) => (weatherConfig = { ...weatherConfig, ...values }, configCalls.push(`set:${id}:${JSON.stringify(values)}`), { id, schema: weatherSchema, values: { ...weatherConfig }, defaults: weatherDefaults }),
+  reset: ({ id }) => (weatherConfig = { ...weatherDefaults }, configCalls.push(`reset:${id}`), { id, schema: weatherSchema, values: { ...weatherConfig }, defaults: weatherDefaults }),
+});
+let weatherRules: PluginWindowRules = { disallowAlwaysOnTop: false, disallowClickThrough: false, hideAll: false };
+const ruleCalls: string[] = [];
+windowServices.provide(pluginWindowsV1, {
+  getRules: () => ({ ...weatherRules }),
+  setRules: ({ id, ...patch }) => (weatherRules = { ...weatherRules, ...patch }, ruleCalls.push(`rules:${id}:${JSON.stringify(patch)}`), { ...weatherRules }),
+  list: () => ({ items: [] }),
+});
 
 const text = TRANSLATIONS[locale].settings.pluginsV3;
 const usage = (more: Partial<NonNullable<PluginStatusV3["usage"]>> = {}) => ({ cpuMs: 0, calls: 0, applyMs: 0.4, timers: 0, listeners: 0, services: 0, clients: 0, errors: 0, ...more });
@@ -100,7 +194,7 @@ try {
   });
   await settle();
 
-  check(document.querySelector(".settings-sidebar__item[data-category='pluginsV3']"), "With the v3 switch on, the sidebar lists the Plugins (v3) page");
+  check(document.querySelector(".settings-sidebar__item[data-category='pluginsV3']"), "The sidebar always lists the Plugins (v3) page");
   const builtinRow = (id: string) => page.querySelector<HTMLElement>(`.plugins-v3__builtin[data-builtin='${id}']`);
   const builtinSwitch = (id: string) => builtinRow(id)?.querySelector<HTMLInputElement>("input");
   check(page.querySelectorAll(".plugins-v3__builtin").length === 22 && catalog.plugins.every(({ id }) => builtinRow(id)?.textContent?.includes(text.builtinNames[id as keyof typeof text.builtinNames])), "The page lists all 22 built-in plugins by name, before the host has answered");
@@ -197,11 +291,104 @@ try {
     narrowHandlers.onState("open");
     narrowHandlers.onSnapshot({ plugins: PLUGINS, host: HOST });
   });
-  const overflowing = [...narrow.querySelectorAll<HTMLElement>(".plugins-v3__plugin, .plugins-v3__plugin-head, .settings-row")].filter((element) => element.scrollWidth > element.clientWidth + 1);
+  const overflowing = [...narrow.querySelectorAll<HTMLElement>(".plugins-v3__plugin, .plugins-v3__plugin-head, .plugins-v3__migration-item, .settings-row")].filter((element) => element.scrollWidth > element.clientWidth + 1);
   check(narrow.querySelectorAll(".plugins-v3__plugin").length > 0 && overflowing.length === 0, "In a 300 px wide window nothing spills out sideways");
   await act(async () => narrowRoot.unmount());
   check(side.fake.open === 0, "Leaving the page closes its connection");
   await send((given) => given.onSnapshot({ plugins: PLUGINS, host: HOST }));
+
+  await act(async () => card("counter")!.click());
+  const modal = page.querySelector<HTMLElement>("[role='dialog']");
+  check(modal?.textContent?.includes("counter") && document.activeElement === modal.querySelector(".plugins-v3__modal-close"), "Clicking a plugin card opens its detail dialog and focuses the close button");
+  await act(async () => { modal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+  check(!page.querySelector("[role='dialog']"), "and Escape dismisses the dialog");
+
+  const searchInput = page.querySelector<HTMLInputElement>(".plugins-v3__search input")!;
+  const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+  await act(async () => { valueSetter.call(searchInput, "local api"); searchInput.dispatchEvent(new Event("input", { bubbles: true })); });
+  check(page.querySelectorAll(".plugins-v3__builtin").length === 1 && Boolean(builtinRow("local-api")), "Search finds built-in plugins by name across languages and ignores spaces or hyphens");
+  await act(async () => page.querySelector<HTMLButtonElement>(".plugins-v3__search-clear")!.click());
+  check(page.querySelectorAll(".plugins-v3__builtin").length === 22, "Clearing the search brings back all 22 built-in plugins");
+
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='diagnostics']")!.click());
+  check(page.querySelectorAll(".plugins-v3__diag-table tbody tr").length === 29, "The diagnostics tab lists all built-in and host plugins in a comparison table");
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='plugins']")!.click());
+  check(page.querySelectorAll(".plugins-v3__builtin").length === 22, "Switching back to the plugins tab restores the grouped card grid");
+
+  const migrationCard = page.querySelector<HTMLElement>(".plugins-v3__migration");
+  check(
+    Boolean(migrationCard)
+      && migrationCard!.textContent!.includes("dev.focusd.weather → @fuyu/weather")
+      && migrationCard!.textContent!.includes(text.v2Migration.configCarried)
+      && migrationCard!.textContent!.includes(text.v2Migration.switchedToV3)
+      && migrationCard!.textContent!.includes("com.example.custom"),
+    "The v2 migration guide lists mapped @fuyu/* official plugins, carried-over settings, and other legacy v2 plugins",
+  );
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-action='migration-open-market']")!.click());
+  await settle();
+  check(page.querySelector("[data-tab='market']")?.getAttribute("aria-selected") === "true", "Clicking Open Plugin Market on the v2 migration card switches straight to the v3 market tab");
+  check(
+    Boolean(page.querySelector("[data-market-plugin='@fuyu/weather']"))
+      && page.querySelector("[data-market-plugin='@fuyu/weather']")!.textContent!.includes(text.market.officialBadge)
+      && page.querySelector("[data-market-plugin='@someone/clock']")!.textContent!.includes(text.market.cooldownBadge)
+      && !page.querySelector("[data-market-plugin='@someone/clock']")!.textContent!.includes(text.market.cooldownHint)
+      && !page.querySelector("[data-market-plugin='@someone/clock'] .plugins-v3__pill--warn")
+      && !page.querySelector("[data-action='market-install-file']"),
+    "The v3 market tab lists official and calm New badges without warning banners and hides local .fuyu import while manual install is off",
+  );
+  await act(async () => page.querySelector<HTMLInputElement>(".plugins-v3__manual-toggle input")!.click());
+  await settle();
+  check(manualAllowed && Boolean(page.querySelector("[data-action='market-install-file']")), "Turning on manual .fuyu installation reveals the file import button");
+  await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@someone/clock']")!.querySelector<HTMLButtonElement>("[data-action='market-install']")!.click());
+  await settle();
+  const clockModal = page.querySelector<HTMLElement>("[data-install-modal='@someone/clock']");
+  check(Boolean(clockModal) && clockModal!.textContent!.includes(text.market.confirmModal.cooldownInstallNote), "Clicking Install on a fresh plugin shows the cooldown note inside the confirmation modal");
+  await act(async () => { clockModal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+  await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@fuyu/weather']")!.querySelector<HTMLButtonElement>("[data-action='market-open-detail']")!.click());
+  await settle();
+  const marketDetail = page.querySelector<HTMLElement>("[data-market-detail-modal='@fuyu/weather']");
+  check(Boolean(marketDetail) && marketDetail!.textContent!.includes("Hourly forecast") && marketDetail!.textContent!.includes("MIT") && Boolean(marketDetail!.querySelector("[data-market-likes='42']")), "Clicking a market plugin title opens the rich detail modal with README, license, and likes");
+  await act(async () => marketDetail!.querySelector<HTMLButtonElement>("[data-detail-tab='capabilities']")!.click());
+  check(marketDetail!.textContent!.includes("Alt+W") && marketDetail!.textContent!.includes("api.open-meteo.com"), "Switching to Capabilities in the market detail modal lists commands, default keybindings, and network domains");
+  await act(async () => { marketDetail!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+  check(!page.querySelector("[data-market-detail-modal='@fuyu/weather']"), "Escape closes the market detail modal");
+  await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@fuyu/weather']")!.querySelector<HTMLButtonElement>("[data-action='market-install']")!.click());
+  await settle();
+  const installModal = page.querySelector<HTMLElement>("[data-install-modal='@fuyu/weather']");
+  check(Boolean(installModal) && !installModal!.textContent!.includes(text.market.confirmModal.cooldownInstallNote) && installModal!.textContent!.includes("api.open-meteo.com") && installModal!.textContent!.includes("island.page/v1") && installModal!.textContent!.includes(text.market.confirmModal.hostSecurityNote), "Clicking Install opens the confirmation modal with declared network domains, UI slots, and the host credential note");
+  await act(async () => installModal!.querySelector<HTMLButtonElement>("[data-action='confirm-install']")!.click());
+  await settle();
+  check(
+    marketCalls.includes("installMarket:@fuyu/weather@1.0.0")
+      && !page.querySelector("[data-install-modal='@fuyu/weather']")
+      && page.querySelector("[data-market-plugin='@fuyu/weather']")!.textContent!.includes(text.market.installedBadge("1.0.0")),
+    "Confirming installs the market plugin and marks the card as installed",
+  );
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='plugins']")!.click());
+  await settle();
+
+  await send((given) => given.onSnapshot({ plugins: [...PLUGINS, { id: "@fuyu/weather", name: "Weather", state: "running", kind: "third-party", source: "market" }], host: HOST }));
+  await settle();
+  await act(async () => card("@fuyu/weather")!.querySelector<HTMLInputElement>("input")!.click());
+  await settle();
+  check(marketCalls.includes("setEnabled:@fuyu/weather=false"), "Toggling a market-installed plugin card calls market/v1 setEnabled");
+  await act(async () => card("@fuyu/weather")!.click());
+  await settle();
+  await act(async () => page.querySelector<HTMLElement>("[data-schema-field='autoRefresh'] input")!.click());
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-action='reset-plugin-config']")!.click());
+  await act(async () => page.querySelector<HTMLElement>("[data-window-rule='disallowAlwaysOnTop'] input")!.click());
+  await settle();
+  check(configCalls.includes("set:@fuyu/weather:{\"autoRefresh\":false}") && configCalls.includes("reset:@fuyu/weather") && ruleCalls.includes("rules:@fuyu/weather:{\"disallowAlwaysOnTop\":true}"), "Plugin detail modal renders JSON Schema settings and window guardrail switches wired to plugin-config/v1 and plugin-windows/v1");
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-action='uninstall-plugin']")!.click());
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-action='confirm-uninstall-plugin']")!.click());
+  await settle();
+  check(marketCalls.includes("uninstall:@fuyu/weather:false") && !page.querySelector("[role='dialog']"), "Confirming uninstall in the detail modal removes the plugin via market/v1 and closes the modal");
+  await send((given) => given.onSnapshot({ plugins: PLUGINS, host: HOST }));
+  await settle();
+
+  await act(async () => page.querySelector<HTMLButtonElement>(".plugins-v3__migration-dismiss")!.click());
+  await settle();
+  check(migrationDismissCalls.join() === "settings" && !page.querySelector(".plugins-v3__migration"), "Dismissing the v2 migration guide persists once and hides the banner without repeating");
 
   results.textContent = messages.join("\n");
   document.documentElement.dataset.testResult = "passed";

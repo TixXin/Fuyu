@@ -78,11 +78,13 @@ test("arguments before -- are the wrapper's own, the rest is the command", () =>
 });
 
 test("cargo jobs are put in the lane of the build folder they lock", () => {
-  assert.equal(laneOf(["cargo", "test"], {}), "target:debug");
-  assert.equal(laneOf(["cargo", "build", "--release"], {}), "target:release");
+  assert.equal(laneOf(["cargo", "test"], {}), "target:agents");
+  assert.equal(laneOf(["cargo", "build", "--release"], {}), "target:agents/release");
+  assert.equal(laneOf(["cargo", "+1.99.1", "clippy"], {}), "target:agents");
   assert.equal(laneOf(["cargo", "test"], { CARGO_TARGET_DIR: "/r/src-tauri/target/agents" }), "target:agents");
   assert.equal(laneOf(["cargo", "clippy", "--target-dir=/r/src-tauri/target/agents", "-r"], {}), "target:agents/release");
   assert.equal(laneOf(["cargo", "test", "--target-dir", "/r/src-tauri/target"], {}), "target:debug");
+  assert.equal(laneOf(["cargo", "build", "--target-dir", "/r/src-tauri/target", "--release"], {}), "target:release");
   assert.equal(laneOf(["node", "scripts/x.mjs"], { CARGO_TARGET_DIR: "/r/agents" }), null);
 });
 

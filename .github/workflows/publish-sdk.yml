@@ -1,8 +1,7 @@
-# Publishes the plugin SDK packages (packages/fuyu-plugin and
-# packages/create-fuyu-plugin) to npm when a tag like sdk-v0.2.1 is
-# pushed. It uses npm Trusted Publishing (OIDC): no npm token is stored
-# anywhere; npmjs.com trusts this workflow file in this repository. Setup and
-# the release steps: docs/architecture/plugins/sdk-release.md.
+# Publishes the plugin SDK packages (fuyu-plugin and create-fuyu-plugin) to npm
+# when a tag like sdk-v2.0.0 is pushed. It uses npm Trusted Publishing (OIDC):
+# no npm token is stored anywhere; npmjs.com trusts this workflow file in this
+# repository. Setup and release steps: docs/architecture/plugins/sdk-release.md.
 name: Publish SDK
 
 on:
@@ -40,22 +39,47 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check the tag, versions and generated files
-        run: node scripts/plugins/check-sdk-release.mjs "${GITHUB_REF_NAME}"
-
-      - name: Test the SDK packages
+      - name: Check, test, pack and publish SDK
         run: |
-          pnpm --filter fuyu-plugin test
-          pnpm --filter create-fuyu-plugin test
-
-      - name: Publish
-        run: |
-          for dir in packages/fuyu-plugin packages/create-fuyu-plugin; do
-            name=$(node -p "require('./$dir/package.json').name")
-            version=$(node -p "require('./$dir/package.json').version")
-            if npm view "$name@$version" version >/dev/null 2>&1; then
-              echo "$name@$version is already on npm; skipped."
-            else
-              (cd "$dir" && npm publish --access public --provenance)
-            fi
-          done
+          case "${GITHUB_REF_NAME}" in
+            sdk-v[2-9].* | sdk-v[1-9][0-9].*)
+              VERSION="${GITHUB_REF_NAME#sdk-v}"
+              node -e '
+                const fs = require("node:fs");
+                const wanted = process.argv[1];
+                for (const file of ["packages/plugin-cli/package.json", "packages/create-plugin/package.json"]) {
+                  const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+                  if (pkg.version !== wanted) {
+                    console.error(`error: ${file} has version ${pkg.version}, expected ${wanted}`);
+                    process.exit(1);
+                  }
+                }
+                console.log(`ok: v3 SDK packages match ${wanted}`);
+              ' "$VERSION"
+              node --test "packages/plugin-*/test/**/*.test.mjs" "packages/create-plugin/test/**/*.test.mjs" tests/scripts/pack-npm-sdk.test.mjs
+              node scripts/plugins-v3/pack-npm-sdk.mjs --version "$VERSION" --out node_modules/.cache/npm-sdk
+              for dir in node_modules/.cache/npm-sdk/fuyu-plugin node_modules/.cache/npm-sdk/create-fuyu-plugin; do
+                name=$(node -p "JSON.parse(require('node:fs').readFileSync('$dir/package.json', 'utf8')).name")
+                version=$(node -p "JSON.parse(require('node:fs').readFileSync('$dir/package.json', 'utf8')).version")
+                if npm view "$name@$version" version >/dev/null 2>&1; then
+                  echo "$name@$version is already on npm; skipped."
+                else
+                  (cd "$dir" && npm publish --access public --provenance)
+                fi
+              done
+              ;;
+            *)
+              node scripts/plugins/check-sdk-release.mjs "${GITHUB_REF_NAME}"
+              pnpm --filter fuyu-plugin test
+              pnpm --filter create-fuyu-plugin test
+              for dir in packages/fuyu-plugin packages/create-fuyu-plugin; do
+                name=$(node -p "require('./$dir/package.json').name")
+                version=$(node -p "require('./$dir/package.json').version")
+                if npm view "$name@$version" version >/dev/null 2>&1; then
+                  echo "$name@$version is already on npm; skipped."
+                else
+                  (cd "$dir" && npm publish --access public --provenance)
+                fi
+              done
+              ;;
+          esac

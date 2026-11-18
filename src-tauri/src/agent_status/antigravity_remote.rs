@@ -15,16 +15,20 @@ const SAVED_DIR: &str = ".fuyu/agent-antigravity";
 const HOOK_NAME: &str = "fuyu";
 
 pub(super) const REMOTE_FILES: RemoteFiles = RemoteFiles {
-    find: &["find .fuyu/agent-antigravity -maxdepth 1 -type f -name '*.json' -mmin -\"$W\" 2>/dev/null"],
+    find: &[
+        "for j in $(find .fuyu/agent-antigravity -maxdepth 1 -type f -name '*.json' -mmin -\"$W\" 2>/dev/null); do \
+         echo \"$j\"; c=${j##*/}; c=${c#*-}; c=${c%.json}; \
+         f=\".gemini/antigravity-cli/annotations/$c.pbtxt\"; [ -f \"$f\" ] && echo \"$f\"; done",
+    ],
     session_dirs: &[],
     files: &[],
-    checkpoint_dirs: &[".fuyu/agent-antigravity/"],
+    checkpoint_dirs: &[".fuyu/agent-antigravity/", ".gemini/antigravity-cli/annotations/"],
 };
 
 pub(super) fn read_sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
     match roots.local_app_dir {
-        Some(app_dir) => antigravity::sessions(app_dir, now, window_ms),
-        None => antigravity::sessions(&roots.home_dir.join(MIRRORED_APP_DIR), now, window_ms),
+        Some(app_dir) => antigravity::sessions_at(app_dir, Some(roots.home_dir), true, now, window_ms),
+        None => antigravity::sessions_at(&roots.home_dir.join(MIRRORED_APP_DIR), Some(roots.home_dir), false, now, window_ms),
     }
 }
 
@@ -81,6 +85,25 @@ pub(super) fn install(target: &SshTarget, approval: Option<&RemoteApproval>) -> 
         return Ok(());
     }
     edit(target, HOOKS_PATH, &|text| with_remote_hooks(text, approval))
+}
+
+pub(super) fn without_remote_hooks(text: &str) -> Result<String, String> {
+    if text.trim().is_empty() {
+        return Ok(text.to_string());
+    }
+    let mut config: Value =
+        serde_json::from_str(text).map_err(|error| format!("Failed to parse ~/{HOOKS_PATH}: {error}"))?;
+    let root = config
+        .as_object_mut()
+        .ok_or_else(|| format!("~/{HOOKS_PATH} must contain a JSON object"))?;
+    if root.remove(HOOK_NAME).is_none() {
+        return Ok(text.to_string());
+    }
+    serde_json::to_string_pretty(&config).map_err(|error| error.to_string())
+}
+
+pub(super) fn uninstall(target: &SshTarget) -> Result<(), String> {
+    edit(target, HOOKS_PATH, &without_remote_hooks)
 }
 
 #[cfg(test)]

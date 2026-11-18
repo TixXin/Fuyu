@@ -64,7 +64,6 @@
   animation:
     agent-band-drift-a 16s linear infinite,
     agent-band-twinkle 2.6s var(--motion-ease-in-out) infinite;
-  will-change: transform, opacity;
 }
 
 .agent-card__band::after {
@@ -115,11 +114,77 @@
   --wash: color-mix(in srgb, var(--card-color) 26%, transparent);
 }
 
+.agent-card--orbit,
+.agent-session--orbit {
+  position: relative;
+  isolation: isolate;
+}
+
+.agent-card--orbit {
+  border-color: transparent;
+}
+
+.agent-orbit-ring {
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(var(--color-black) 0 0) content-box,
+    linear-gradient(var(--color-black) 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(var(--color-black) 0 0) content-box,
+    linear-gradient(var(--color-black) 0 0);
+  mask-composite: exclude;
+}
+
+.agent-orbit-ring::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 220%;
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 36deg,
+    color-mix(in srgb, var(--color-light-needs) 85%, transparent) 92deg,
+    var(--color-agent-waiting) 144deg,
+    var(--pie-4) 196deg,
+    var(--usage-glm) 248deg,
+    var(--color-accent) 300deg,
+    transparent 344deg 360deg
+  );
+  animation: agent-orbit-spin 3.6s linear infinite;
+}
+
+@keyframes agent-orbit-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .agent-card--sparkle.agent-card--lively,
   .agent-card__band::before,
-  .agent-card__band::after {
+  .agent-card__band::after,
+  .agent-orbit-ring::before {
     animation: none;
+  }
+
+  .agent-orbit-ring::before {
+    background: linear-gradient(
+      90deg,
+      var(--color-light-needs),
+      var(--color-agent-waiting),
+      var(--pie-4),
+      var(--usage-glm),
+      var(--color-accent)
+    );
   }
 
   .agent-card__band::before,

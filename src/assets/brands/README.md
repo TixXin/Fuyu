@@ -6,6 +6,13 @@
 | --- | --- | --- |
 | `qq.png` | [QQ](https://im.qq.com/index) | [官网图标](https://static-res.qq.com/static-res/imqq/qq-logo.png) |
 | `wechat.png` | [微信 Windows](https://pc.weixin.qq.com/) | [官网 Apple Touch 图标](https://res.wx.qq.com/a/wx_fed/assets/res/OTE0YTAw.png) |
+| `telegram.svg` | [Telegram](https://telegram.org/) | [官网站点图标](https://telegram.org/img/website_icon.svg)，2026-11-17 取得 |
+| `discord.svg` | [Discord](https://discord.com/branding) | [官方品牌页图标](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/66e3d80db9971f10a9757c99_Symbol.svg)，2026-11-17 取得 |
+| `whatsapp.svg` | [WhatsApp](https://www.whatsapp.com/) | [官网站点图标](https://static.whatsapp.net/rsrc.php/y1/r/FJbTMJqMap7.svg)，2026-11-17 取得 |
+| `tim.png` | [TIM](https://office.qq.com/) | [官网图标](https://mma.qq.com/timtest/img/logo-tim.png)（60×60），2026-11-17 取得 |
+| `feishu.svg` | [飞书](https://open.feishu.cn/) | [开放平台站点图标](https://lf-package-cn.feishucdn.com/obj/feishu-static/lark/open/website/favicon-logo.svg)，2026-11-17 取得 |
+| `dingtalk.png` | [钉钉](https://www.dingtalk.com/) | [官网站点图标](https://gw.alicdn.com/imgextra/i3/O1CN014ZbI6ZTEhdC0ttN2_!!6000000003783-2-tps-444-444.png)（444×444，缩到 180×180），2026-11-17 取得 |
+| `wecom.png` | [企业微信](https://work.weixin.qq.com/) | [官网站点图标](https://wwcdn.weixin.qq.com/node/wwnl/wwnl/style/images/independent/favicon/favicon_48h$c976bd14.png)（48×48），2026-11-17 取得 |
 
 邮箱图标跟着邮箱地址的域名走（`src/features/messages/mail/mailProvider.ts`）：以下几家显示自己的图标，其他邮箱显示 `mail.png`。2026-11-09 取得：
 
@@ -38,5 +45,6 @@
 | `kimi-code.png` | [Kimi Code](https://github.com/MoonshotAI/kimi-code)（MIT） | 仓库里 VS Code 扩展的图标 `apps/vscode/resources/kimi-icon-storefront.png`（128×128），2026-11-15 取得 |
 | `copilot.png` | [GitHub Copilot CLI](https://github.com/features/copilot/cli) | 官方仓库 [github/copilot-sdk](https://github.com/github/copilot-sdk) 的 `assets/copilot.png`（256×256，深色图案、透明底）；深色岛上看不见，垫了白底并缩成 64×64，2026-11-15 取得 |
 | `droid.png` | [Factory Droid](https://factory.ai/) | 官网图标 [favicon.svg](https://factory.ai/favicon.svg)（自带黑底），渲染成 64×64 PNG，2026-11-15 取得 |
+| `pi.svg` | [pi (`pi-coding-agent`)](https://pi.dev/)（MIT） | 按 pi 命令行标识绘制的深色底 `π` 矢量图标，2026-11-17 制作 |
 
-QQ、微信、QQ 邮箱的品牌标识及相关权利归腾讯及对应权利人所有；网易邮箱标识归网易所有，Gmail、Antigravity 标识归 Google 所有，Outlook 标识归 Microsoft 所有；Claude 标识归 Anthropic 所有，OpenAI 标识归 OpenAI 所有，WorkBuddy、CodeBuddy 标识归腾讯所有，Qoder、Qwen 标识归阿里巴巴所有，TRAE 标识归字节跳动所有，DeepSeek 标识归杭州深度求索所有，opencode 标识归 opencode 项目所有，ZCode 标识归北京智谱华章科技所有，MiMo 标识归小米所有，Kimi 标识归北京月之暗面科技所有，Grok 标识归 xAI 所有，GitHub Copilot 标识归 GitHub 所有，Factory / Droid 标识归 Factory 所有。图标随应用打包，不在运行时请求远程图片。
+QQ、微信、TIM、企业微信、QQ 邮箱的品牌标识及相关权利归腾讯及对应权利人所有；Telegram 标识归 Telegram Messenger Inc. 所有，Discord 标识归 Discord Inc. 所有，WhatsApp 标识归 WhatsApp LLC / Meta 所有，飞书（Feishu / Lark）与 TRAE 标识归字节跳动所有，钉钉（DingTalk）、Qoder、Qwen 标识归阿里巴巴所有；网易邮箱标识归网易所有，Gmail、Antigravity 标识归 Google 所有，Outlook 标识归 Microsoft 所有；Claude 标识归 Anthropic 所有，OpenAI 标识归 OpenAI 所有，WorkBuddy、CodeBuddy 标识归腾讯所有，DeepSeek 标识归杭州深度求索所有，opencode 标识归 opencode 项目所有，ZCode 标识归北京智谱华章科技所有，MiMo 标识归小米所有，Kimi 标识归北京月之暗面科技所有，Grok 标识归 xAI 所有，GitHub Copilot 标识归 GitHub 所有，Factory / Droid 标识归 Factory 所有，pi 标识归 pi-coding-agent 项目所有。图标随应用打包，不在运行时请求远程图片。

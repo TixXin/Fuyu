@@ -4,6 +4,9 @@
   height: 100%;
   color: var(--color-page-text);
   background: #131417;
+  transition:
+    background-color var(--motion-medium) var(--motion-ease),
+    color var(--motion-medium) var(--motion-ease);
 }
 
 .settings-stage--light {

@@ -42,13 +42,13 @@ test("the native side gets every action in order, and an empty folder means the 
 });
 
 test("recording settings default to MP4 at 30 fps with system sound, and bad values fall back", () => {
-  assert.deepEqual(normalizeScreenshotSettings({}).record, { fps: 30, quality: "standard", systemAudio: true, microphone: false, format: "mp4" });
+  assert.deepEqual(normalizeScreenshotSettings({}).record, { fps: 30, quality: "standard", systemAudio: true, microphone: false, format: "mp4", ownWindows: false });
   assert.deepEqual(
-    normalizeScreenshotSettings({ record: { fps: 60, quality: "high", systemAudio: false, microphone: true, format: "gif" } }).record,
-    { fps: 60, quality: "high", systemAudio: false, microphone: true, format: "gif" },
+    normalizeScreenshotSettings({ record: { fps: 60, quality: "high", systemAudio: false, microphone: true, format: "gif", ownWindows: true } }).record,
+    { fps: 60, quality: "high", systemAudio: false, microphone: true, format: "gif", ownWindows: true },
   );
   assert.deepEqual(
-    normalizeScreenshotSettings({ record: { fps: 24, quality: "ultra", systemAudio: "yes", microphone: "yes", format: "webm" } }).record,
-    { fps: 30, quality: "standard", systemAudio: true, microphone: false, format: "mp4" },
+    normalizeScreenshotSettings({ record: { fps: 24, quality: "ultra", systemAudio: "yes", microphone: "yes", format: "webm", ownWindows: "yes" } }).record,
+    { fps: 30, quality: "standard", systemAudio: true, microphone: false, format: "mp4", ownWindows: false },
   );
 });

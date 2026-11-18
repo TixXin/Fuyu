@@ -1,0 +1,19 @@
+.usage-settings__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.usage-settings__swatch {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.usage-settings__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}

@@ -14,6 +14,7 @@ pub(crate) mod fullscreen;
 pub(crate) mod hotkeys;
 pub(crate) mod icon;
 pub(crate) mod input;
+pub(crate) mod island_glass;
 pub(crate) mod island_panel;
 pub(crate) mod job;
 pub(crate) mod login_item;

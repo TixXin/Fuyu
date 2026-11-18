@@ -22,6 +22,7 @@ const MAX_SCALE: f64 = 8.0;
 const MIN_SIDE: f64 = 16.0;
 const HANDOFF_TIMEOUT: Duration = Duration::from_millis(600);
 const SWAP_DELAY: Duration = Duration::from_millis(50);
+const MAX_PINS: usize = 20;
 
 struct Pin {
     picture: Arc<Picture>,
@@ -38,16 +39,11 @@ pub(crate) struct PinInfo {
 }
 
 static PINS: Mutex<BTreeMap<String, Pin>> = Mutex::new(BTreeMap::new());
-static SPARE: Mutex<Option<String>> = Mutex::new(None);
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 static HIDDEN: AtomicBool = AtomicBool::new(false);
 
 fn pins() -> MutexGuard<'static, BTreeMap<String, Pin>> {
     PINS.lock().unwrap_or_else(PoisonError::into_inner)
-}
-
-fn spare() -> MutexGuard<'static, Option<String>> {
-    SPARE.lock().unwrap_or_else(PoisonError::into_inner)
 }
 
 fn build(app: &AppHandle) -> Result<WebviewWindow, String> {
@@ -67,27 +63,6 @@ fn build(app: &AppHandle) -> Result<WebviewWindow, String> {
         .map_err(|error| error.to_string())?;
     capture::prepare_pin(&window);
     Ok(window)
-}
-
-pub(super) fn prepare(app: &AppHandle) {
-    let app = app.clone();
-    thread::spawn(move || {
-        if spare().is_some() {
-            return;
-        }
-        match build(&app) {
-            Ok(window) => *spare() = Some(window.label().to_string()),
-            Err(error) => eprintln!("failed to prepare a pin window: {error}"),
-        }
-    });
-}
-
-fn take_window(app: &AppHandle) -> Result<WebviewWindow, String> {
-    let ready = spare().take().and_then(|label| app.get_webview_window(&label));
-    match ready {
-        Some(window) => Ok(window),
-        None => build(app),
-    }
 }
 
 pub(super) fn open(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session: Option<u64>) {
@@ -131,7 +106,7 @@ fn place(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session:
     if HIDDEN.swap(false, Ordering::SeqCst) {
         set_all_visible(app, true);
     }
-    let window = take_window(app)?;
+    let window = build(app)?;
     let label = window.label().to_string();
     let units = capture::units_per_css(scale);
     let margin = (MARGIN * units).round().max(0.0) as u32;
@@ -139,7 +114,25 @@ fn place(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session:
     let info = PinInfo { width: picture.width, height: picture.height };
     let shown = shown_size((picture.width, picture.height), density);
     let (width, height) = (shown.0 + margin * 2, shown.1 + margin * 2);
-    pins().insert(label.clone(), Pin { picture: Arc::new(picture), margin, density, session });
+    let evicted = {
+        let mut guard = pins();
+        let mut to_remove = Vec::new();
+        while guard.len() >= MAX_PINS {
+            if let Some(oldest) = guard.keys().next().cloned() {
+                guard.remove(&oldest);
+                to_remove.push(oldest);
+            } else {
+                break;
+            }
+        }
+        guard.insert(label.clone(), Pin { picture: Arc::new(picture), margin, density, session });
+        to_remove
+    };
+    for old_label in evicted {
+        if let Some(old) = app.get_webview_window(&old_label) {
+            let _ = old.destroy();
+        }
+    }
     let placed = screen::set_window_position(&window, PhysicalPosition::new(at.0 - margin as i32, at.1 - margin as i32))
         .and_then(|()| screen::set_window_size(&window, PhysicalSize::new(width, height)));
     if let Err(error) = placed {
@@ -148,7 +141,6 @@ fn place(app: &AppHandle, picture: Picture, at: (i32, i32), scale: f64, session:
         return Err(error);
     }
     let _ = app.emit_to(label.as_str(), ASSIGNED_EVENT, info);
-    prepare(app);
     Ok(())
 }
 
@@ -177,10 +169,6 @@ pub(super) fn ready(app: &AppHandle, window: &WebviewWindow) {
 
 pub(crate) fn forget(label: &str) {
     pins().remove(label);
-    let mut spare = spare();
-    if spare.as_deref() == Some(label) {
-        *spare = None;
-    }
 }
 
 pub(super) fn shown_size((width, height): (u32, u32), density: f64) -> (u32, u32) {

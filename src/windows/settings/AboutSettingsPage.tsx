@@ -8,8 +8,6 @@ import { AboutHero } from "../../features/updater/AboutHero";
 import { ProjectLinksSection } from "../../features/updater/ProjectSettingsSection";
 import { UpdateDiagnosticsRow } from "../../features/updater/UpdateDiagnosticsRow";
 import { getUpdateState, subscribeToUpdate } from "../../features/updater/updaterController";
-import { UpdateSettingsSection } from "../../features/updater/UpdateSettingsSection";
-import { VersionHistory } from "../../features/updater/VersionHistory";
 import { useTranslation } from "../../i18n";
 import { openOnboardingWindow } from "../onboarding/api";
 import { QuitIslandRow } from "./QuitIslandRow";
@@ -19,10 +17,6 @@ import { settingsSections } from "./slots/sectionSlot";
 const CONFIRM_TIMEOUT_MS = 4_000;
 
 type AboutSectionProps = { onSettingsChange: (settings: IslandSettings) => void };
-
-function HistorySection() {
-  return <VersionHistory />;
-}
 
 function HelpSection() {
   const text = useTranslation().settings.project;
@@ -81,12 +75,6 @@ function SystemSection({ onSettingsChange }: AboutSectionProps) {
 
 const sections = settingsSections<AboutSectionProps, "about">();
 
-sections.add({ id: "about.updates", category: "about", order: 10, component: UpdateSettingsSection });
-sections.add({ id: "about.history", category: "about", order: 20, component: HistorySection });
-sections.add({ id: "about.links", category: "about", order: 30, component: ProjectLinksSection });
-sections.add({ id: "about.help", category: "about", order: 40, component: HelpSection });
-sections.add({ id: "about.system", category: "about", order: 50, component: SystemSection });
-
 export function AboutSettingsPage(props: AboutSectionProps) {
   const text = useTranslation().settings.project;
   const version = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
@@ -94,7 +82,16 @@ export function AboutSettingsPage(props: AboutSectionProps) {
   return (
     <>
       <AboutHero />
-      <SlotView slot={sections} group="about" props={props} />
+      <div className="about-workbench">
+        <div className="about-workbench__col">
+          <SlotView slot={sections} group="about" props={props} />
+        </div>
+        <div className="about-workbench__col">
+          <ProjectLinksSection />
+          <HelpSection />
+          <SystemSection onSettingsChange={props.onSettingsChange} />
+        </div>
+      </div>
       <p className="about-colophon">{text.colophon(version)}</p>
     </>
   );

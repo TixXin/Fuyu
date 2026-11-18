@@ -114,8 +114,13 @@ fn client(total: Duration) -> Result<reqwest::Client, String> {
 }
 
 fn release_error(failure: &Failure) -> UserError {
-    let code = if failure.kind == FailureKind::Timeout { "inflink.releaseTimeout" } else { "inflink.releaseUnreachable" };
-    UserError::new(code, "Could not get the latest InfLink-rs release from api.github.com.").detail(&failure.message)
+    let message = "Could not get the latest InfLink-rs release from api.github.com.";
+    let error = if failure.kind == FailureKind::Timeout {
+        UserError::new("inflink.releaseTimeout", message)
+    } else {
+        UserError::new("inflink.releaseUnreachable", message)
+    };
+    error.detail(&failure.message)
 }
 
 async fn latest_release(client: &reqwest::Client) -> Result<Release, UserError> {

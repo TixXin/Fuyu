@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { getUserIdleSeconds, isSessionLocked } from "../../lib/api";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import {
   downloadInBackground, getUpdateState, installUpdate, subscribeToUpdate,
 } from "./updaterController";
@@ -39,7 +40,6 @@ export function useIslandAutoUpdate({ mode, agentsBusy }: { mode: string; agents
         running = false;
       }
     };
-    const timer = window.setInterval(() => void tryInstall(), IDLE_CHECK_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => void tryInstall(), IDLE_CHECK_MS);
   }, []);
 }

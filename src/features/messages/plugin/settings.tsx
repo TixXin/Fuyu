@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo } from "react";
 import { settingsRunners } from "../../plugin-kernel/settingsSlots";
+import { useImSources } from "../im-sources/useImSources";
 import { useQQNotifications } from "../qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../wechat/WeChatReminders";
 import { announceMessageControllers, holdMessageControllers } from "../settingsControllers";
@@ -18,7 +19,8 @@ type PageProps = {
 function MessagesRunner() {
   const qqNotifications = useQQNotifications(false);
   const wechatReminders = useWeChatReminders(false);
-  const controllers = useMemo(() => ({ qqNotifications, wechatReminders }), [qqNotifications, wechatReminders]);
+  const imSources = useImSources(false);
+  const controllers = useMemo(() => ({ qqNotifications, wechatReminders, imSources }), [qqNotifications, wechatReminders, imSources]);
   holdMessageControllers(controllers);
   useLayoutEffect(() => {
     holdMessageControllers(controllers);
@@ -33,4 +35,11 @@ function MessagesRunner() {
 
 settingsRunners.add({ id: "messages.controllers", component: MessagesRunner }, OWNER);
 
-addSettingsCategory("messages", ({ settings, unsupported, onSettingsChange }: PageProps) => <MessagesSettingsPage settings={settings} unsupported={unsupported} onSettingsChange={onSettingsChange} />, OWNER);
+const messagesPage = (tab: "messages" | "messagesIm" | "messagesMail") =>
+  function MessagesPage({ settings, unsupported, onSettingsChange }: PageProps) {
+    return <MessagesSettingsPage tab={tab} settings={settings} unsupported={unsupported} onSettingsChange={onSettingsChange} />;
+  };
+
+addSettingsCategory("messages", messagesPage("messages"), OWNER);
+addSettingsCategory("messagesIm", messagesPage("messagesIm"), OWNER);
+addSettingsCategory("messagesMail", messagesPage("messagesMail"), OWNER);

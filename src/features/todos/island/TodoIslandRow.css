@@ -198,6 +198,219 @@
   color: var(--color-light-needs);
 }
 
+.todo-island-row__action--expanded {
+  opacity: 1;
+  color: var(--todo-accent);
+  background: rgba(var(--todo-accent-rgb), 0.14);
+}
+
+.todo-island-row--expanded {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.todo-island-row__headline {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.todo-island-row__meta {
+  flex: none;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  color: var(--text-3);
+  background: rgba(var(--todo-ink), 0.07);
+  border: 0;
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  cursor: pointer;
+  transition: color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
+}
+
+.todo-island-row__meta:hover {
+  color: var(--text-1);
+  background: rgba(var(--todo-ink), 0.13);
+}
+
+.todo-island-row__meta--static {
+  cursor: default;
+}
+
+.todo-island-row__note-icon {
+  display: inline-grid;
+  place-items: center;
+}
+
+.todo-island-row__details {
+  flex: 0 0 100%;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding: 2px 4px 2px 28px;
+}
+
+.todo-island-row--reorderable .todo-island-row__details {
+  padding-left: 38px;
+}
+
+.todo-subtask-list {
+  display: grid;
+  gap: 2px;
+}
+
+.todo-subtask {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+
+.todo-subtask:hover {
+  background: rgba(var(--todo-ink), 0.05);
+}
+
+.todo-subtask__check {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  color: var(--color-surface-dark);
+  background: transparent;
+  border: 1.4px solid rgba(var(--todo-ink), 0.36);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
+}
+
+.todo-subtask__check:hover:not(:disabled) {
+  border-color: var(--text-1);
+}
+
+.todo-subtask__check[aria-pressed="true"] {
+  background: var(--color-light-working);
+  border-color: var(--color-light-working);
+}
+
+.todo-subtask__check:disabled {
+  cursor: default;
+}
+
+.todo-subtask__title {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: 12.5px;
+  line-height: 17px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.todo-subtask--done .todo-subtask__title {
+  color: var(--text-3);
+  text-decoration: line-through;
+  text-decoration-color: rgba(var(--todo-ink), 0.32);
+}
+
+.todo-subtask__delete {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  color: var(--text-3);
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
+}
+
+.todo-subtask:hover .todo-subtask__delete,
+.todo-subtask:focus-within .todo-subtask__delete {
+  opacity: 1;
+}
+
+.todo-subtask__delete:hover {
+  color: var(--color-light-needs);
+  background: rgba(var(--todo-ink), 0.08);
+}
+
+.todo-subtask-composer,
+.todo-subtask-note {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  color: var(--text-3);
+  background: rgba(var(--todo-ink), 0.04);
+  border: 1px solid rgba(var(--todo-ink), 0.08);
+  border-radius: 6px;
+  transition: border-color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
+}
+
+.todo-subtask-composer:focus-within,
+.todo-subtask-note:focus-within {
+  background: rgba(var(--todo-ink), 0.07);
+  border-color: rgba(var(--todo-accent-rgb), 0.45);
+}
+
+.todo-subtask-composer__input,
+.todo-subtask-note__input {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 0;
+  color: var(--text-1);
+  background: transparent;
+  border: 0;
+  outline: none;
+  font: inherit;
+  font-size: 12px;
+}
+
+.todo-subtask-composer__input::placeholder,
+.todo-subtask-note__input::placeholder {
+  color: var(--text-3);
+}
+
+.todo-subtask-note--readonly {
+  background: transparent;
+  border-color: transparent;
+  padding: 2px 4px;
+}
+
+.todo-subtask-note__text {
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 16px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.todo-island-row__meta:focus-visible,
+.todo-subtask__check:focus-visible,
+.todo-subtask__delete:focus-visible {
+  outline: 1.5px solid rgba(var(--todo-accent-rgb), 0.7);
+  outline-offset: 1px;
+}
+
 .todo-island-row__stop {
   height: 24px;
   display: inline-flex;
@@ -211,6 +424,7 @@
   font: inherit;
   font-size: 12px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   cursor: pointer;
   transition: color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
@@ -264,7 +478,12 @@
   .todo-island-row,
   .todo-island-row__action,
   .todo-island-row__grip,
-  .todo-island-row__check {
+  .todo-island-row__check,
+  .todo-island-row__meta,
+  .todo-subtask__check,
+  .todo-subtask__delete,
+  .todo-subtask-composer,
+  .todo-subtask-note {
     transition: none;
   }
 }

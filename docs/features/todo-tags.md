@@ -1,8 +1,8 @@
-# 待办的优先级和颜色
+# 待办的优先级、颜色与效率偏好
 
-> 任务：[C72](/docs/tasks/C/C72.md)，issue #323。代码在 `src/features/todos/`（`tags.ts`、`dueReminders.ts`、`island/TodoTagMenu.tsx`）。
+> 任务：[C72](/docs/tasks/0-archive/C/C72.md)（issue #323）、[C114.1](/docs/tasks/0-archive/C/C114.1.md)（issue #828）。代码在 `src/features/todos/`（`tags.ts`、`todoPrefs.ts`、`useTodoPrefs.ts`、`inlineSyntax.ts`、`dueReminders.ts`、`island/TodoTagMenu.tsx`）。
 
-## 怎么用
+## 优先级与颜色标签
 
 - 岛上待办页每一行标题右边有一面小旗子（平时隐藏，光标移上去出现），点开菜单设：
   - 优先级：高、中、低，或「不设优先级」；
@@ -11,14 +11,32 @@
 - 「已安排」页（以后日期的待办）每一项也有同样的按钮。回看归档时只显示，不能改。
 - 定时待办到了那天移进今天时，优先级和颜色跟着带过去；未完成的待办顺延到第二天也一样。
 
+## 行内快捷语法与列表排序
+
+- **行内轻语法**（默认开启，可在「设置 → 待办 → 快速录入与轻语法」开关）：新建待办回车提交时自动识别并从标题剥离：
+  - 项目：`#项目名`（纯数字如 `#40` 保持原样不识别为项目）；
+  - 优先级：`!1` / `!2` / `!3`、`p1` / `p2` / `p3`（不区分大小写）或中文 `！1` / `！2` / `！3`，对应 `high` / `medium` / `low`；
+  - 计划日期：`@今天`、`@明天`、`@后天`、`@下周一`..`@下周日`、`@MM-DD`（早于今天时自动顺延至下一年）或 `@YYYY-MM-DD`，未来日期自动归入「已安排」。
+  - 若剥离标记后正文为空（如只输入 `#论文` 或 `!1`），保留原文不剥离。
+- **插入位置与列表排序**：新建待办默认插入列表底部（可选列表顶部）；今日列表默认保持手动顺序，也可切换为「优先级优先（高 → 低，同优先级保持原顺序）」或「创建时间（新 → 旧）」。
+
+## 进行中用时、完成音效与跨天归档
+
+- **进行中已用时长**：点击「开始」记录 `startedAt` 后，进行中的待办在列表行与收起的小岛上按分钟刷新显示已用时长（如 `18m`、`1h 05m`），可在设置页关闭。
+- **完成轻音效**：从未完成勾选为完成时用 Web Audio API 合成双音轻提示（异常时静默降级），设置页支持开关与「试听」。
+- **新一天开始时间**：支持将跨天结算点设为 `00:00`（默认）或凌晨 `02:00`–`06:00`，在设定整点前仍归属前一天逻辑日期，避免熬夜过零点提前触发清空归档。
+- **已完成展示与归档保留**：已完成待办支持「收起在底部折叠栏」（默认）、「保持原位划掉」或「从今日列表隐藏」（仍计入右上角进度与归档）；应用内归档列表可选保留 90 天 / 180 天 / 1 年 / 永久保留，只裁剪应用内归档列表，不删除磁盘已导出的 `.md` 文件。
+
 ## 高优先级到期提醒
 
 高优先级的定时待办到了那一天（包括岛没开着、过了日子才打开的），移进今天的同时在岛上提醒一次：「高优先级待办今天到期 · <标题>」，旗子图标，可以「5 分钟后再提醒」或「跳过」。用的是休息提醒（C78）的通用提醒队列（见 [break-reminders.md](break-reminders.md)「通用提醒队列」），来源是 `todo-due`，提醒 id 是 `todo-due:<日期>:<待办 id>`。同一项同一天只推一次（记在内存里，定时待办移进今天后就不在已安排里了，重开岛也不会再推）。前台全屏时照常推迟到退出全屏。
 
 只到日期，不设时刻（2026-11-15 用户定）。
 
-## 数据
+## 数据与 Markdown 导出
 
-待办（`todos`、归档里的 `todos`）和定时待办（`scheduled`）多了两个可选字段：`priority`（`high` / `medium` / `low`）、`color`（`red` / `orange` / `yellow` / `green` / `blue` / `purple`）。没设时不写字段；读到别的值当作没设。`todos.json` 的版本仍是 1，Rust 侧（`src-tauri/src/todos/model.rs`）原样读写这两个字段。导出的 Markdown 不变，不写优先级和颜色。契约见 [contracts.md](../architecture/contracts.md)「待办的优先级和颜色」。
+- 待办（`todos`、归档里的 `todos`）和定时待办（`scheduled`）包含可选字段 `priority`（`high` / `medium` / `low`）与 `color`（`red` / `orange` / `yellow` / `green` / `blue` / `purple`），`todos.json` 结构与版本不变。
+- 待办效率偏好保存在 `localStorage` 的 `fuyu-todo-prefs` 中（经 `normalizeTodoPrefs` 容错回退默认值，跨窗口与同窗口实时同步）。
+- 每日 Markdown 导出在设置页默认附带优先级标记（`[!高]` / `[!中]` / `[!低]`），也可按需开启附带进行中已用时长；`formatTodosAsMarkdown` 无参调用保持无标记兼容。
 
-测试：`tests/unit/todo-tags.test.mjs`（旧数据兼容、Markdown 不变、到期只推一次），回归页 `tests/regression/todo-island.tsx` 的「优先级和颜色」两帧。
+测试：`tests/unit/todo-tags.test.mjs`、`tests/unit/todo-prefs-and-syntax.test.mjs`，回归页 `tests/regression/todo-island.tsx`。

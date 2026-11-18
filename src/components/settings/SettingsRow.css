@@ -13,6 +13,9 @@
   padding: 9px 14px;
   background: var(--color-white-a04);
   border-left: 2px solid var(--color-white-a12);
+  transition:
+    background-color var(--motion-medium) var(--motion-ease),
+    border-color var(--motion-medium) var(--motion-ease);
 }
 
 .settings-row--indent-2 {
@@ -61,6 +64,7 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 1.35;
+  transition: color var(--motion-medium) var(--motion-ease);
 }
 
 label.settings-row__title {
@@ -71,6 +75,7 @@ label.settings-row__title {
   color: var(--color-text-subtle);
   font-size: 12px;
   line-height: 1.5;
+  transition: color var(--motion-medium) var(--motion-ease);
 }
 
 .settings-row__control {

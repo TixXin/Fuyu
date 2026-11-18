@@ -7,6 +7,7 @@ use serde_json::Value;
 use tauri::http::{header, HeaderValue, Method, Request, Response, StatusCode};
 
 pub(crate) const SCHEME: &str = "fuyu-plugin";
+pub(crate) const CSP: &str = "default-src 'none'; script-src 'self' fuyu-plugin: http://fuyu-plugin.localhost; style-src 'self' 'unsafe-inline' fuyu-plugin: http://fuyu-plugin.localhost; img-src 'self' data: blob: fuyu-plugin: http://fuyu-plugin.localhost https:; font-src 'self' data: fuyu-plugin: http://fuyu-plugin.localhost; media-src 'self' data: blob: fuyu-plugin: http://fuyu-plugin.localhost";
 const CLIENTS: &str = "clients";
 const PACKAGES: &str = "packages";
 const PRIVATE_DIR: &str = "data";
@@ -160,6 +161,8 @@ fn respond_with(status: StatusCode, content_type: &'static str, body: Vec<u8>, h
     headers.insert(header::CONTENT_TYPE, HeaderValue::from_static(content_type));
     headers.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, HeaderValue::from_static("*"));
     headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
+    headers.insert(header::CONTENT_SECURITY_POLICY, HeaderValue::from_static(CSP));
+    headers.insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
     if let Ok(value) = HeaderValue::from_str(&length.to_string()) {
         headers.insert(header::CONTENT_LENGTH, value);
     }

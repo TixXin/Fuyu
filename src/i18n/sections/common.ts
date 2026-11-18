@@ -1,5 +1,7 @@
 export type CommonText = {
   close: string;
+  cancel: string;
+  confirm: string;
   retry: string;
   refresh: string;
   clear: string;
@@ -10,10 +12,17 @@ export type CommonText = {
   more: string;
   learnMore: string;
   showLess: string;
+  chooseFolder: string;
+  openFolder: string;
+  openFolderMac: string;
+  showSecret: string;
+  hideSecret: string;
 };
 
 export const zhCN: CommonText = {
   close: "关闭",
+  cancel: "取消",
+  confirm: "确认",
   retry: "重试",
   refresh: "刷新",
   clear: "清空",
@@ -24,10 +33,17 @@ export const zhCN: CommonText = {
   more: "更多操作",
   learnMore: "了解更多",
   showLess: "收起",
+  chooseFolder: "选择文件夹…",
+  openFolder: "打开文件夹",
+  openFolderMac: "在访达中打开",
+  showSecret: "显示密钥",
+  hideSecret: "隐藏密钥",
 };
 
 export const en: CommonText = {
   close: "Close",
+  cancel: "Cancel",
+  confirm: "Confirm",
   retry: "Retry",
   refresh: "Refresh",
   clear: "Clear",
@@ -38,4 +54,9 @@ export const en: CommonText = {
   more: "More actions",
   learnMore: "Learn more",
   showLess: "Show less",
+  chooseFolder: "Choose folder…",
+  openFolder: "Open folder",
+  openFolderMac: "Open in Finder",
+  showSecret: "Show key",
+  hideSecret: "Hide key",
 };

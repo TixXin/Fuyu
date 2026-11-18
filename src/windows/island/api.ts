@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type EventCallback, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import type { IslandCornerShape, IslandMonitor } from "../../lib/settings/types";
+import type { IslandCornerShape, IslandMonitor, TuckStyle } from "../../lib/settings/types";
 import type { IslandPosition } from "./storage";
 import type { IslandMode, NativeGlassState } from "./types";
 
@@ -73,6 +73,12 @@ export function listenIslandRevealRequested(handler: () => void): Promise<Unlist
   return listen(ISLAND_REVEAL_REQUESTED_EVENT, () => handler());
 }
 
+export const ISLAND_DIM_WAKE_EVENT = "island-dim-wake";
+
+export function listenIslandDimWake(handler: () => void): Promise<UnlistenFn> {
+  return listen(ISLAND_DIM_WAKE_EVENT, () => handler());
+}
+
 export const ISLAND_MOVE_ARMED_CHANGED_EVENT = "island-move-armed-changed";
 
 export type IslandModifierTarget = "none" | "move" | "left" | "right" | "bottom" | "bottomLeft" | "bottomRight";
@@ -89,7 +95,7 @@ export function listenIslandHideHints(handler: () => void): Promise<UnlistenFn> 
   return listen(ISLAND_HIDE_HINTS_EVENT, () => handler());
 }
 
-const ISLAND_HOLD_CHANGED_EVENT = "island-hold-changed";
+export const ISLAND_HOLD_CHANGED_EVENT = "island-hold-changed";
 
 export function listenIslandHold(handler: (held: boolean) => void): Promise<UnlistenFn> {
   return listen<boolean>(ISLAND_HOLD_CHANGED_EVENT, ({ payload }) => handler(payload));
@@ -109,7 +115,18 @@ export function listenIslandResize(handler: (delta: IslandResizeDelta) => void):
 
 export const ISLAND_POSITION_CHANGED_EVENT = "island-position-changed";
 
-export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; autoForm: boolean; animate?: boolean; dragGrid?: boolean };
+export type IslandLayout = { collapsedScale: number; expandedScale: number; marginY: number; underMenuBar: boolean; fitNotch: boolean; autoForm: boolean; animate?: boolean; dragGrid?: boolean; tuckStyle?: TuckStyle };
+
+export type IslandGlassFrame = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  topRadius: number;
+  bottomRadius: number;
+  filletRadius: number;
+  activeTransition?: boolean;
+};
 
 export type IslandInteraction = {
   mode: IslandMode;
@@ -125,9 +142,14 @@ export type IslandInteraction = {
   glassEnabled: boolean;
   glassIntensity: number;
   glassTint: string;
+  glassBackdrop?: string;
+  topFilletRadius?: number;
+  glassFrame?: IslandGlassFrame | null;
   cornerRadius: number;
   cornerShape: IslandCornerShape;
   monitorFollow: IslandMonitor;
+  tuckStyle?: TuckStyle;
+  isDimmed?: boolean;
 };
 
 export function setIslandLayout(layout: IslandLayout) {
@@ -136,6 +158,10 @@ export function setIslandLayout(layout: IslandLayout) {
 
 export function setIslandInteraction(interaction: IslandInteraction) {
   return invoke<NativeGlassState>("set_island_interaction", interaction);
+}
+
+export function syncIslandGlassFrame(frame: IslandGlassFrame) {
+  return invoke<void>("sync_island_glass_frame", { frame });
 }
 
 export function showReadyIsland() {
@@ -219,7 +245,29 @@ export function setTrayLanguage(locale: string) {
 
 export type IslandBannerRect = { x: number; y: number; width: number; height: number };
 
+let activeBannerRect: IslandBannerRect | null = null;
+let activeSideBubbleRect: IslandBannerRect | null = null;
+const bannerPresenceListeners = new Set<(active: boolean) => void>();
+
+function notifyBannerPresence() {
+  const active = activeBannerRect !== null || activeSideBubbleRect !== null;
+  bannerPresenceListeners.forEach((listener) => listener(active));
+}
+
+export function hasActiveIslandBanner(): boolean {
+  return activeBannerRect !== null || activeSideBubbleRect !== null;
+}
+
+export function subscribeIslandBannerPresence(listener: (active: boolean) => void): () => void {
+  bannerPresenceListeners.add(listener);
+  return () => {
+    bannerPresenceListeners.delete(listener);
+  };
+}
+
 export function setIslandBannerRect(rect: IslandBannerRect | null) {
+  activeBannerRect = rect;
+  notifyBannerPresence();
   return invoke<void>("set_island_banner_rect", { rect });
 }
 
@@ -238,6 +286,8 @@ export function setIslandSideColumn(height: number) {
 }
 
 export function setIslandSideBubbleRect(rect: IslandBannerRect | null) {
+  activeSideBubbleRect = rect;
+  notifyBannerPresence();
   return invoke<void>("set_island_side_bubble_rect", { rect });
 }
 

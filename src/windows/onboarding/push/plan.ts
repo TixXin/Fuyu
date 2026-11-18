@@ -23,7 +23,7 @@ export function defaultProjectName(slug: string, agent: PushAgent) {
 }
 
 export function readyTargets(entries: readonly TargetEntry[]) {
-  return entries.filter((entry) => entry.target.blocked === null && entry.state?.installed);
+  return entries.filter((entry) => Boolean(entry.state?.installed));
 }
 
 export function planProjects(entries: readonly TargetEntry[], previous: readonly PlannedProject[]): PlannedProject[] {
@@ -43,10 +43,10 @@ export function nameProblem(project: PlannedProject, plan: readonly PlannedProje
   return null;
 }
 
-export function chosenProjects(plan: readonly PlannedProject[], entries: readonly TargetEntry[], connected: ReadonlySet<string>) {
+export function chosenProjects(plan: readonly PlannedProject[], entries: readonly TargetEntry[], connected: ReadonlySet<string>, scanning: string | null = null) {
   return plan.filter((project) => {
     if (!project.on) return false;
-    if (connected.has(project.key)) return true;
+    if (connected.has(project.key) || scanning === project.key) return true;
     const taken = entries.find((entry) => entry.target.id === project.targetId)?.state?.taken ?? [];
     return nameProblem(project, plan, taken) === null;
   });

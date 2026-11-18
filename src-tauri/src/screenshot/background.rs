@@ -33,9 +33,6 @@ fn ours(label: &str) -> bool {
 
 impl Background for Windows {
     fn start(&self) -> Result<(), String> {
-        if hotkeys::is_enabled() {
-            session::prepare(&self.0);
-        }
         Ok(())
     }
 

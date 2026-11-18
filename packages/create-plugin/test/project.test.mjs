@@ -18,7 +18,7 @@ test("a generated project type-checks, passes its own lint rules, builds and pas
   const built = await build(dir, { outDir: join(tempDir("built"), "package") });
   assert.deepEqual(built.warnings, []);
   assert.deepEqual(built.manifest.fuyu.nodeApis, []);
-  assert.deepEqual(built.manifest.fuyu.experimental, [...EXPERIMENTAL]);
+  assert.equal(built.manifest.fuyu.experimental, undefined);
   assert.equal(built.manifest.devDependencies, undefined);
   const host = readFileSync(join(built.outDir, "dist", "host.js"), "utf8");
   const imports = [...host.matchAll(/^import .* from "([^"]+)";$/gm)].map(([, specifier]) => specifier);
@@ -31,7 +31,7 @@ test("a generated project type-checks, passes its own lint rules, builds and pas
   assert.deepEqual(result.errors, [], JSON.stringify(result.errors, null, 2));
   assert.equal(result.ok, true);
   const market = await check(dir, { allowExperimental: false });
-  assert.equal(market.ok, false);
+  assert.equal(market.ok, true);
 });
 
 test("the styles only use the slot's theme variables", () => {

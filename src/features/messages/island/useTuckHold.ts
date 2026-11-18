@@ -1,15 +1,18 @@
 import { useState } from "react";
 import type { IslandSettings } from "../../../lib/settings/types";
+import { imUnreadTotal } from "../im-sources/imSourcesState";
 import { hasNewUnreadMail, hasUnreadMessages, holdsTuck, mailSeen, nextMailBaselines, sameBaselines, type MailBaselines } from "./tuckHold";
 import type { useIslandNotices } from "./useIslandNotices";
 
-type Notices = Pick<ReturnType<typeof useIslandNotices>, "qqNotifications" | "wechatReminders" | "qqMail" | "preview">;
+type Notices = Pick<ReturnType<typeof useIslandNotices>, "qqNotifications" | "wechatReminders" | "qqMail" | "preview"> & {
+  imSources?: ReturnType<typeof useIslandNotices>["imSources"];
+};
 
 export function useTuckHold(settings: IslandSettings, { messagesOpen, notices }: {
   messagesOpen: boolean;
   notices: Notices;
 }): boolean {
-  const { qqNotifications: qq, wechatReminders: wechat, qqMail: mail, preview } = notices;
+  const { qqNotifications: qq, wechatReminders: wechat, qqMail: mail, imSources, preview } = notices;
   const [mailBaselines, setMailBaselines] = useState<MailBaselines>({});
   const baselines = nextMailBaselines(mailBaselines, mail.mailboxes, mailSeen({ messagesOpen, previewSource: preview?.source ?? null }));
   if (!sameBaselines(baselines, mailBaselines)) setMailBaselines(baselines);
@@ -17,6 +20,7 @@ export function useTuckHold(settings: IslandSettings, { messagesOpen, notices }:
     qq: { enabled: qq.snapshot.enabled, count: qq.snapshot.items.length },
     wechat: { enabled: wechat.snapshot.enabled, pending: wechat.snapshot.pending },
     mail: { enabled: settings.mailEnabled, newUnread: hasNewUnreadMail(baselines, mail.mailboxes) },
+    im: { unread: imSources ? imUnreadTotal(imSources.snapshots) : 0 },
   });
   return holdsTuck(settings, { todoInProgress: false, agentWaiting: false, musicPlaying: false, messagesUnread });
 }

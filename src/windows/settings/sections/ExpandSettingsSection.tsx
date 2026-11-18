@@ -1,6 +1,7 @@
 import { useTranslation } from "../../../i18n";
 import { SettingsChoiceCards } from "../../../components/settings/SettingsChoiceCards";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
+import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
@@ -22,9 +23,11 @@ import type { ExpandTrigger, IslandSettings } from "../../../lib/settings/types"
 export function ExpandSettingsSection({
   settings,
   onSettingsChange,
+  onOpenPageKeys,
 }: {
   settings: IslandSettings;
   onSettingsChange: (settings: IslandSettings) => void;
+  onOpenPageKeys?: () => void;
 }) {
   const t = useTranslation();
   const layout = t.settings.layout;
@@ -47,32 +50,41 @@ export function ExpandSettingsSection({
           />
         </SettingsRow>
         {settings.expandTrigger === "hover" && (
-          <>
-            <SettingsSliderRow
-              indent
-              title={expand.hoverDelay}
-              value={settings.hoverExpandDelayMs}
-              min={MIN_HOVER_EXPAND_DELAY_MS}
-              max={MAX_HOVER_EXPAND_DELAY_MS}
-              step={50}
-              format={delay}
-              defaultValue={DEFAULT_HOVER_EXPAND_DELAY_MS}
-              resetLabel={layout.resetToDefault}
-              onChange={(hoverExpandDelayMs) => update({ hoverExpandDelayMs })}
-            />
-            <SettingsSliderRow
-              indent
-              title={expand.hoverCollapseDelay}
-              value={settings.hoverCollapseDelayMs}
-              min={MIN_HOVER_COLLAPSE_DELAY_MS}
-              max={MAX_HOVER_COLLAPSE_DELAY_MS}
-              step={50}
-              format={delay}
-              defaultValue={DEFAULT_HOVER_COLLAPSE_DELAY_MS}
-              resetLabel={layout.resetToDefault}
-              onChange={(hoverCollapseDelayMs) => update({ hoverCollapseDelayMs })}
-            />
-          </>
+          <SettingsSliderRow
+            indent
+            title={expand.hoverDelay}
+            value={settings.hoverExpandDelayMs}
+            min={MIN_HOVER_EXPAND_DELAY_MS}
+            max={MAX_HOVER_EXPAND_DELAY_MS}
+            step={50}
+            format={delay}
+            defaultValue={DEFAULT_HOVER_EXPAND_DELAY_MS}
+            resetLabel={layout.resetToDefault}
+            onChange={(hoverExpandDelayMs) => update({ hoverExpandDelayMs })}
+          />
+        )}
+        {settings.expandTrigger === "click" && (
+          <SettingsToggleRow
+            indent
+            title={expand.clickCollapseOnLeave}
+            description={expand.clickCollapseOnLeaveHint}
+            checked={settings.clickCollapseOnLeave}
+            onChange={(clickCollapseOnLeave) => update({ clickCollapseOnLeave })}
+          />
+        )}
+        {(settings.expandTrigger === "hover" || settings.clickCollapseOnLeave) && (
+          <SettingsSliderRow
+            indent
+            title={expand.hoverCollapseDelay}
+            value={settings.hoverCollapseDelayMs}
+            min={MIN_HOVER_COLLAPSE_DELAY_MS}
+            max={MAX_HOVER_COLLAPSE_DELAY_MS}
+            step={50}
+            format={delay}
+            defaultValue={DEFAULT_HOVER_COLLAPSE_DELAY_MS}
+            resetLabel={layout.resetToDefault}
+            onChange={(hoverCollapseDelayMs) => update({ hoverCollapseDelayMs })}
+          />
         )}
         <SettingsToggleRow
           title={expand.hoverSwitchPage}
@@ -92,6 +104,14 @@ export function ExpandSettingsSection({
             defaultValue={DEFAULT_HOVER_SWITCH_DELAY_MS}
             resetLabel={layout.resetToDefault}
             onChange={(hoverSwitchDelayMs) => update({ hoverSwitchDelayMs })}
+          />
+        )}
+        {onOpenPageKeys && (
+          <SettingsRow
+            searchable={false}
+            title={expand.pageKeys}
+            description={expand.pageKeysHint}
+            control={<SettingsLinkButton onClick={onOpenPageKeys}>{expand.pageKeysOpen}</SettingsLinkButton>}
           />
         )}
       </SettingsGroup>

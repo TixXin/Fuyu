@@ -35,9 +35,23 @@ function checkDefinition(definition) {
 const eventKey = (name, event) => `service:${name}:${event}`;
 const declared = (table, member) => typeof member === "string" && Object.hasOwn(table, member);
 
+function disabledServicesOf(ctx) {
+  for (let fiber = ctx.fiber; fiber; ) {
+    if (fiber.entry) {
+      const list = fiber.entry.options?.disabledServices;
+      return Array.isArray(list) ? list : [];
+    }
+    const parent = fiber.parent?.fiber;
+    if (!parent || parent === fiber) break;
+    fiber = parent;
+  }
+  return [];
+}
+
 export class Services {
   constructor() {
     this.providers = new Map();
+    this.builtins = new Map();
     this.interest = new Map();
     this.watchers = new Set();
     this.windows = null;
@@ -57,12 +71,39 @@ export class Services {
     });
   }
 
+  provideBuiltin(ctx, definition, impl) {
+    checkDefinition(definition);
+    const methods = {};
+    for (const method of Object.keys(definition.methods)) {
+      if (typeof impl?.[method] !== "function") throw new TypeError(`the provider of ${definition.name} has no method ${method}`);
+      methods[method] = impl[method];
+    }
+    const provider = { definition, impl, methods, plugin: "host", ctx, pending: new Set(), active: true };
+    const handle = {
+      emit: (event, data) => this.emit(provider, event, data),
+      dispose: () => Promise.all([unregister(), unprovide()]).then(() => {}),
+    };
+    const unprovide = ctx.provide(definition.name, Object.freeze({ service: definition.name }));
+    const unregister = ctx.effect(() => {
+      this.builtins.set(definition.name, provider);
+      return () => {
+        provider.active = false;
+        if (this.builtins.get(definition.name) === provider) this.builtins.delete(definition.name);
+        for (const call of [...provider.pending]) call.fail(serviceError("peer-gone", `the provider of ${definition.name} went away before ${call.method} answered`, { service: definition.name, method: call.method }));
+      };
+    }, `builtins.provide(${definition.name})`);
+    return Object.freeze(handle);
+  }
+
   provide(ctx, definition, impl) {
     checkDefinition(definition);
     const methods = {};
     for (const method of Object.keys(definition.methods)) {
       if (typeof impl?.[method] !== "function") throw new TypeError(`the provider of ${definition.name} has no method ${method}`);
       methods[method] = impl[method];
+    }
+    if (disabledServicesOf(ctx).includes(definition.name)) {
+      return Object.freeze({ emit: () => false, dispose: () => Promise.resolve() });
     }
     const provider = { definition, impl, methods, plugin: pluginId(ctx), ctx, pending: new Set(), active: true };
     const handle = {
@@ -103,7 +144,7 @@ export class Services {
     } catch (error) {
       return Promise.reject(error);
     }
-    const provider = this.providers.get(name);
+    const provider = this.providers.get(name) ?? this.builtins.get(name);
     if (!provider) return Promise.reject(serviceError("not-ready", `the service ${name} has no provider right now`, { service: name }));
     if (!declared(provider.definition.methods, method)) return Promise.reject(serviceError("no-method", `${name} declares no method ${String(method)}`, { service: name }));
     const declaredMs = provider.definition.methods[method].timeoutMs ?? SERVICE_TIMEOUT_MS;
@@ -141,7 +182,8 @@ export class Services {
   emit(provider, event, data) {
     const name = provider.definition.name;
     if (!declared(provider.definition.events, event)) throw serviceError("no-event", `${name} declares no event ${String(event)}`);
-    if (!provider.active || this.providers.get(name) !== provider) return false;
+    const current = this.providers.get(name) ?? this.builtins.get(name);
+    if (!provider.active || current !== provider) return false;
     provider.ctx.emit(eventKey(name, event), data);
     this.toWindows(name, event, data);
     return true;
@@ -177,7 +219,7 @@ export class Services {
       if (wanted && !wanted.size) this.interest.delete(key);
       return true;
     }
-    const provider = this.providers.get(params.service);
+    const provider = this.providers.get(params.service) ?? this.builtins.get(params.service);
     if (provider && !declared(provider.definition.events, params.event)) throw serviceError("no-event", `${params.service} declares no event ${params.event}`);
     if (!this.interest.has(key)) this.interest.set(key, new Set());
     this.interest.get(key).add(window);

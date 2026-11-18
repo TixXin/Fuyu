@@ -8,17 +8,21 @@ import { Context } from "cordis";
 import { HOST_SHARED_MODULES } from "../protocol.mjs";
 import { builtinMounts, readBuiltins } from "./builtins.mjs";
 import { Clients } from "./clients.mjs";
+import { Commands } from "./commands.mjs";
 import { DATA_DIR, installDataDir } from "./data.mjs";
-import { DEV_WATCHED, watchBuiltins } from "./reload.mjs";
-import { Services } from "./services.mjs";
-import { DEV_PREFIX, SOURCE } from "./sources.mjs";
-import { recordLogs } from "./logs.mjs";
-import { RustBridge } from "./rust.mjs";
-import { shareModules } from "./share.mjs";
 import { Gate } from "./gate.mjs";
-import { Timers } from "./timer.mjs";
+import { ControlledHttp } from "./http.mjs";
+import { recordLogs } from "./logs.mjs";
+import { PluginConfig } from "./plugin-config.mjs";
+import { DEV_WATCHED, watchBuiltins } from "./reload.mjs";
+import { RustBridge } from "./rust.mjs";
+import { Services } from "./services.mjs";
+import { shareModules } from "./share.mjs";
+import { DEV_PREFIX, SOURCE } from "./sources.mjs";
 import { INTERNAL, pluginStatus, trackImportErrors, watchStatus } from "./status.mjs";
+import { Timers } from "./timer.mjs";
 import { Usage } from "./usage.mjs";
+import { PluginWindows } from "./windows.mjs";
 
 const API = new URL("../index.mjs", import.meta.url).href;
 const SHARED_FILES = { "@fuyu/plugin-base/services": new URL("../services.mjs", import.meta.url).href };
@@ -59,7 +63,7 @@ function hostInfo(startedAt, safe, dev) {
   return { pid: process.pid, node: process.versions.node, startedAt, safe, dev, rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, cpuMs: Math.round((cpu.user + cpu.system) / 1000) };
 }
 
-export async function startHost({ dir, config = "plugins.yml", builtins = null, dataDir = null, appVersion = null, apiNames = [], watch = false, dev = false, safe = null, bisect = [], faultLimit, onLog, rpc = null } = {}) {
+export async function startHost({ dir, config = "plugins.yml", builtins = null, dataDir = null, appVersion = null, apiNames = [], watch = false, dev = false, safe = null, bisect = [], faultLimit, onLog, rpc = null, fetchImpl = globalThis.fetch } = {}) {
   if (!dir) throw new Error("startHost needs the directory that holds the plugin configuration");
   const startedAt = Date.now();
   const catalog = builtins ? readBuiltins(builtins) : null;
@@ -74,13 +78,24 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   usage.install(ctx);
   const timers = new Timers(usage);
   timers.install(ctx);
-  installDataDir(ctx, dataDir ?? join(dir, DATA_DIR));
+  const dataRoot = dataDir ?? join(dir, DATA_DIR);
+  installDataDir(ctx, dataRoot);
   await ctx.plugin(Clients, { root: dir, mounts: builtinMounts(catalog) });
   const services = new Services();
   services.install(ctx);
   const rust = new RustBridge(usage);
   rust.install(ctx);
   if (rpc) rust.attach(rpc);
+  const commands = new Commands({ dir, services, usage });
+  commands.install(ctx);
+  if (rpc) commands.attach(rpc);
+  const pluginConfig = new PluginConfig({ dataRoot, services, usage });
+  pluginConfig.install(ctx);
+  const http = new ControlledHttp({ fetchImpl });
+  http.install(ctx);
+  const windows = new PluginWindows({ dir, services, usage });
+  windows.install(ctx);
+  if (rpc) windows.attach(rpc);
   await ctx.use(Loader);
   trackImportErrors(ctx);
   gate.install(ctx);
@@ -91,13 +106,21 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   }
   const id = await ctx.loader.create({ name: PLUGINS_FILE, config: { path: config, builtins: catalog?.plugins ?? [], dir, appVersion } });
   if (watch) await watchConfig(ctx, id);
+  if (rpc) void commands.syncIfChanged();
   const report = () => usage.report(ctx, timers.counts(), (plugin) => gate.report(plugin), rust.counts());
   const extras = {
     gate,
     usage: report,
     services: () => services.list(),
     clients: () => ctx.clients.list(),
-    subscribe: (listener) => [services.watch(listener), ctx.clients.watch(listener)],
+    undeclaredCommands: (plugin) => commands.undeclaredOf(plugin),
+    undeclaredNetwork: (plugin) => http.undeclaredOf(plugin),
+    subscribe: (listener) => [
+      services.watch(listener),
+      ctx.clients.watch(listener),
+      commands.watch(listener),
+      http.watch(listener),
+    ],
   };
   return {
     ctx,

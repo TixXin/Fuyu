@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+const sharedExecutable = realpathSync(fileURLToPath(new URL("../../plugin-manifest/src/executable.mjs", import.meta.url)));
 const ALLOWED = [/^node:/, /^\.\.?\//, /^@fuyu\/plugin-(manifest|review)(\/|$)/];
 
 function files(dir) {
@@ -20,7 +21,9 @@ test("@fuyu/plugin-review imports nothing from the app, only Node and the allowe
   for (const file of files(join(root, "src"))) {
     const text = readFileSync(file, "utf8");
     for (const [, specifier] of text.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)) {
-      const outside = specifier.startsWith(".") && relative(root, join(file, "..", specifier)).startsWith("..");
+      const resolved = specifier.startsWith(".") ? join(file, "..", specifier) : null;
+      const allowedShared = resolved !== null && existsSync(resolved) && realpathSync(resolved) === sharedExecutable;
+      const outside = resolved !== null && !allowedShared && relative(root, resolved).startsWith("..");
       if (outside || !ALLOWED.some((pattern) => pattern.test(specifier))) strays.push(`${relative(root, file)}: ${specifier}`);
     }
   }

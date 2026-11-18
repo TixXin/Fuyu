@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { listAgentEffortLabels } from "./api";
 import type { AgentEffortLabels } from "./effortLabels";
 
@@ -22,10 +23,10 @@ export function useEffortLabels(): AgentEffortLabels {
         .catch((error: unknown) => console.error("Failed to read the plugins' effort labels", error));
     };
     refresh();
-    const timer = window.setInterval(refresh, REFRESH_MS);
+    const stop = visibilityInterval(refresh, REFRESH_MS);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, []);
 

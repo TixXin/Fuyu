@@ -406,9 +406,20 @@ fn place_or_create(window: tauri::WebviewWindow, key: Key, spec: PageSpec, rect:
     });
     let Some(generation) = generation else { return };
     let created = window.with_webview(move |platform| {
+        let still_wanted = PAGES.with(|pages| {
+            pages.borrow().get(&key).is_some_and(|slot| slot.generation == generation)
+        });
+        if !still_wanted {
+            return;
+        }
         if let Err(error) = start_page(&platform.environment(), &platform.controller(), key.clone(), spec, generation) {
             eprintln!("plugin page {}/{} failed: {error}", key.0, key.1);
-            PAGES.with(|pages| pages.borrow_mut().remove(&key));
+            PAGES.with(|pages| {
+                let mut pages = pages.borrow_mut();
+                if pages.get(&key).is_some_and(|slot| slot.generation == generation) {
+                    pages.remove(&key);
+                }
+            });
         }
     });
     if let Err(error) = created {
@@ -437,7 +448,12 @@ fn start_page(
             Ok(page) => page,
             Err(error) => {
                 eprintln!("plugin page {}/{} failed: {error}", key.0, key.1);
-                PAGES.with(|pages| pages.borrow_mut().remove(&key));
+                PAGES.with(|pages| {
+                    let mut pages = pages.borrow_mut();
+                    if pages.get(&key).is_some_and(|slot| slot.generation == generation) {
+                        pages.remove(&key);
+                    }
+                });
                 return;
             }
         };

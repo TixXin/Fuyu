@@ -7,7 +7,53 @@ export type KnownMediaSource = {
 export const SOURCE_EXPIRE_MS = 60 * 24 * 60 * 60 * 1000;
 export const SOURCE_TOUCH_MS = 60 * 60 * 1000;
 
-type LiveSession = { id: string; label: string };
+type LiveSession = { id: string; label: string; playing?: boolean };
+
+export function pickEffectiveMediaTarget(
+  sessions: LiveSession[],
+  priority: KnownMediaSource[],
+): string | null {
+  if (sessions.length === 0) {
+    return null;
+  }
+  const present = new Map(sessions.map((session) => [session.id, session]));
+  for (const source of priority) {
+    if (present.get(source.id)?.playing) {
+      return source.id;
+    }
+  }
+  for (const session of sessions) {
+    if (session.playing) {
+      return session.id;
+    }
+  }
+  for (const source of priority) {
+    if (present.has(source.id)) {
+      return source.id;
+    }
+  }
+  return sessions[0]?.id ?? null;
+}
+
+export function mergeSessionsWithCustomPlayers(
+  liveSessions: { id: string; label: string; playing: boolean }[],
+  customPlayers: { id: string; label: string }[],
+): { id: string; label: string; playing: boolean }[] {
+  if (customPlayers.length === 0) {
+    return liveSessions;
+  }
+  const merged = [...liveSessions];
+  const seen = new Set(liveSessions.map((session) => session.id.toLowerCase()));
+  for (const player of customPlayers) {
+    const key = player.id.toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    merged.push({ id: player.id, label: player.label, playing: false });
+  }
+  return merged;
+}
 
 export function parseMusicSourcePriority(
   raw: unknown,

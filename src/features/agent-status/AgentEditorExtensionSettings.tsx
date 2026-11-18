@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -45,8 +46,8 @@ export function AgentEditorExtensionSettings() {
       title={text.title}
       footer={
         <>
-          {text.hint}
-          {message ? <><br />{message}</> : null}
+          <SettingsFootnote text={text.hint} />
+          {message ? <p role="status">{message}</p> : null}
         </>
       }
     >

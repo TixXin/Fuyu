@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { lyricsV1 } from "@fuyu/plugin-services";
+import { windowServices } from "../../plugin-kernel/services";
+import "../plugin/services";
 import type { MediaState } from "../api";
-import { getLyrics } from "./api";
 import { parseLrc, trackKey, withTranslations, type LyricLine } from "./lrc";
 
 export type LyricsSettings = { lyricsFolder: string; lyricsOnline: boolean; lyricsChinese?: boolean };
@@ -10,13 +12,23 @@ export function useLyrics(mediaState: MediaState, settings: LyricsSettings): { l
   const folder = settings.lyricsFolder.trim();
   const active = Boolean(key) && (folder !== "" || settings.lyricsOnline);
   const [found, setFound] = useState<{ key: string; lines: LyricLine[] } | null>(null);
+  const [sourceRevision, setSourceRevision] = useState(0);
   const { title, artist, album, durationMs, trackId } = mediaState;
   const chinese = settings.lyricsOnline && settings.lyricsChinese === true;
 
   useEffect(() => {
+    const stop = windowServices.get(lyricsV1).on("changed", () => setSourceRevision((rev) => rev + 1));
+    return () => {
+      void stop();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!active || !key || !title) return;
     let cancelled = false;
-    void getLyrics({ title, artist: artist ?? "", album: album ?? "", durationMs, folder, online: settings.lyricsOnline, chinese, trackId: trackId ?? null })
+    void windowServices
+      .get(lyricsV1)
+      .lookup({ title, artist: artist ?? "", album: album ?? "", durationMs, folder, online: settings.lyricsOnline, chinese, trackId: trackId ?? null })
       .then((lyrics) => {
         const parsed = lyrics ? parseLrc(lyrics.lrc).filter((line, index, all) => line.text || index < all.length - 1) : [];
         const lines = withTranslations(parsed, lyrics?.translation ? parseLrc(lyrics.translation) : []);
@@ -30,7 +42,7 @@ export function useLyrics(mediaState: MediaState, settings: LyricsSettings): { l
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, key, folder, settings.lyricsOnline, chinese]);
+  }, [active, key, folder, settings.lyricsOnline, chinese, sourceRevision]);
 
   if (!active || !found || found.key !== key) return { lines: null, notFound: false };
   return found.lines.length === 0 ? { lines: null, notFound: true } : { lines: found.lines, notFound: false };

@@ -6,7 +6,7 @@ import { disabledBuiltinIds, subscribeBuiltinPlugins } from "./builtinSwitches.t
 import { installIpcLedger, type IpcInternals } from "./ipcLedger.ts";
 
 export type { SlotName };
-export type SlotWindow = "island" | "settings";
+export type SlotWindow = "island" | "settings" | "plugin-window";
 
 export type SlotInput<Props extends object, Meta extends object> = Meta & {
   id: string;
@@ -86,6 +86,11 @@ export interface SettingsSectionMeta<Category extends string = string> {
   category: Category;
 }
 
+export interface PluginWindowViewMeta {
+  windowId?: string;
+  title?: string;
+}
+
 const SLOT_NAMES = Object.keys(SLOTS) as SlotName[];
 
 function rulesOf(window: SlotWindow): Record<string, SlotRule> {
@@ -95,6 +100,7 @@ function rulesOf(window: SlotWindow): Record<string, SlotRule> {
 const registries: Record<SlotWindow, SlotRegistry> = {
   island: createSlots(rulesOf("island")),
   settings: createSlots(rulesOf("settings")),
+  "plugin-window": createSlots(rulesOf("plugin-window")),
 };
 
 export function windowSlots(window: SlotWindow): SlotRegistry {

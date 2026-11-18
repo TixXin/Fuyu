@@ -1,16 +1,19 @@
 import { useId, useState } from "react";
 import { CirclePlus, Server, Trash2 } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { useFlash } from "../../components/settings/useFlash";
 import { useTranslation } from "../../i18n";
+import { SlotView } from "../plugin-kernel/SlotView";
+import { settingsSections } from "../plugin-kernel/settingsSlots";
 import { RemoteHostForm } from "./RemoteHostForm";
 import { customAddress, useRemoteHosts, type RemoteHostEntry } from "./useRemoteHosts";
 import "./AgentRemoteHostsSettings.css";
 
-export function AgentRemoteHostsSettings() {
+function RemoteHostsSection() {
   const text = useTranslation().settings.agent;
   const remote = useRemoteHosts();
   const [adding, setAdding] = useState(false);
@@ -29,10 +32,12 @@ export function AgentRemoteHostsSettings() {
     <>
       <SettingsGroup>
         <div className="agent-remote__intro">
-          <Server size={18} strokeWidth={2} aria-hidden="true" />
-          <div>
+          <span className="agent-remote__icon" aria-hidden="true">
+            <Server size={18} strokeWidth={2} />
+          </span>
+          <div className="agent-remote__copy">
             <p>{text.remoteIntro}</p>
-            <p>{text.remoteRequirements}</p>
+            <SettingsFootnote text={text.remoteRequirements} />
           </div>
         </div>
       </SettingsGroup>
@@ -61,18 +66,33 @@ export function AgentRemoteHostsSettings() {
   );
 }
 
+const sections = settingsSections<Record<never, never>, "agentRemote">();
+
+sections.add({ id: "agentRemote.hosts", category: "agentRemote", order: 10, component: RemoteHostsSection });
+
+export function AgentRemoteHostsSettings() {
+  return <SlotView slot={sections} group="agentRemote" />;
+}
+
 function HostRow({ entry, onToggle, onRemove }: { entry: RemoteHostEntry; onToggle: (on: boolean) => void; onRemove: () => void }) {
   const text = useTranslation().settings.agent;
   const id = useId();
   const { status } = entry;
   const origin = entry.custom ? customAddress(entry.custom) : text.remoteFromConfig;
+  const dotTone = status === null ? "off" : status.error ? "error" : status.fetching ? "busy" : "ok";
   let state: string | null = null;
   if (status?.error) state = text.remoteFailed(status.error);
   else if (status?.fetchedAt != null) state = text.remoteFetchedAt(new Date(status.fetchedAt).toLocaleTimeString(), status.sessions ?? 0);
   else if (status) state = text.remoteFetching;
   return (
-    <SettingsRow searchable={false}
-      title={entry.name}
+    <SettingsRow
+      searchable={false}
+      title={
+        <span className="agent-remote__host-title">
+          <span className={`agent-remote__dot agent-remote__dot--${dotTone}`} aria-hidden="true" />
+          {entry.name}
+        </span>
+      }
       labelFor={id}
       description={
         <>

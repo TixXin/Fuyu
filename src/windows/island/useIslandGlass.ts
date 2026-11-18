@@ -41,7 +41,7 @@ export function useIslandGlass({
 }) {
   const hidden = usePageHidden();
   const { glassColorSource, glassColor1, glassColor2, glassColor3, glassBackdrop } = settings;
-  const glassContrastGuard = settings.glassContrastGuard && glassBackdrop !== "wallpaper";
+  const glassContrastGuard = settings.glassContrastGuard && glassBackdrop === "none";
   const palette = useMemo(
     () => glassPalette({
       settings: { glassColorSource, glassColor1, glassColor2, glassColor3, glassContrastGuard },
@@ -58,7 +58,7 @@ export function useIslandGlass({
   );
   const paused = glassPaused(settings, { mode, isTucked, quiet, hidden, reducedMotion });
   const glass: IslandGlassView = {
-    className: glassClassNames(settings, paused),
+    className: glassClassNames(settings, paused, hidden),
     palette,
     shader: settings.glassStyle === "shader",
     specular: settings.glassSpecular,

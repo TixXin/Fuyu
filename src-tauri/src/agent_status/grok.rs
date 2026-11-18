@@ -46,7 +46,7 @@ pub(super) const SPEC: Compat = Compat {
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
-    hooks: Some(Hooks { install, check }),
+    hooks: Some(Hooks { install, check, uninstall }),
     status_light: Some(StatusLight {
         running_marker: "agent-grok-running.flag",
         running_hold: "agent-grok-running-hold.flag",
@@ -72,6 +72,13 @@ fn install(env: &HookEnv) -> Result<(), String> {
 
 fn check(env: &HookEnv) -> HookInstallState {
     claude_compat::hooks_state_with(&SPEC, env, &hook_entries(env))
+}
+
+fn uninstall(env: &HookEnv) -> Result<(), String> {
+    for home in claude_compat::home_dirs(&SPEC, env.home_dir) {
+        super::uninstall::remove_file_if_exists(&home.join(SPEC.hooks_file))?;
+    }
+    Ok(())
 }
 
 pub(super) fn prompt_files(home_dir: &Path) -> Vec<PathBuf> {

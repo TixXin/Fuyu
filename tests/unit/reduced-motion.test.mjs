@@ -37,30 +37,104 @@ function blocks(css) {
 }
 
 const moving = (body) => /(^|[;\s])animation(-name)?\s*:\s*(?!none\b)[^;]+/.test(body);
+const calmsAnimation = (body) => /(^|[;\s])(animation(-name|-duration|-play-state|-timing-function)?|visibility|display)\s*:/.test(body);
 
-test("every animation stops or calms down when Windows asks for less motion", () => {
-  const sheets = cssFiles(SRC).map((file) => {
-    const all = blocks(readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, ""));
-    const own = all
-      .filter((block) => /prefers-reduced-motion:\s*reduce/.test(block.prelude))
-      .map((block) => block.body)
-      .join("\n");
-    return { file, all, own };
-  });
-  const reduced = sheets.map((sheet) => sheet.own).join("\n");
+function parseRules(css, media = []) {
+  const out = [];
+  for (const block of blocks(css)) {
+    if (block.prelude.startsWith("@keyframes")) continue;
+    if (block.prelude.startsWith("@")) {
+      out.push(...parseRules(block.body, [...media, block.prelude]));
+    } else {
+      const selectors = block.prelude.split(",").map((part) => part.trim()).filter(Boolean);
+      out.push({ selectors, body: block.body, media });
+    }
+  }
+  return out;
+}
+
+function selectorMatches(animated, reduced) {
+  if (reduced === "*" || /\s\*\s*$/.test(reduced)) return true;
+  if (animated === reduced) return true;
+  if (animated.endsWith(` ${reduced}`) || animated.endsWith(`>${reduced}`)) {
+    return !animated.startsWith(":root[");
+  }
+  return false;
+}
+
+export function missingReducedMotionSelectors(sheets) {
+  const parsed = sheets.map(({ file, css }) => ({
+    file,
+    rules: parseRules(css.replace(/\/\*[\s\S]*?\*\//g, "")),
+  }));
+  const globalWildcard = parsed.some(({ rules }) =>
+    rules.some(
+      (rule) =>
+        rule.media.some((item) => /prefers-reduced-motion:\s*reduce/.test(item)) &&
+        calmsAnimation(rule.body) &&
+        rule.selectors.includes("*"),
+    ),
+  );
+  if (globalWildcard) return [];
+
   const missing = [];
-  for (const { file, all, own } of sheets) {
-    if (/\s\*\s*[,{]/.test(own)) continue;
-    for (const block of all) {
-      if (block.prelude.startsWith("@") || !moving(block.body)) continue;
-      for (const selector of block.prelude.split(",").map((part) => part.trim())) {
-        const element = selector.split(/\s+/).pop();
-        if (COLOUR_ONLY.has(selector) || reduced.includes(selector) || reduced.includes(element)) continue;
-        missing.push(`${path.relative(SRC, file)}: ${selector}`);
+  for (const { file, rules } of parsed) {
+    const reducedSelectors = rules
+      .filter((rule) => rule.media.some((item) => /prefers-reduced-motion:\s*reduce/.test(item)) && calmsAnimation(rule.body))
+      .flatMap((rule) => rule.selectors);
+    for (const rule of rules) {
+      if (rule.media.some((item) => /prefers-reduced-motion:\s*(reduce|no-preference)/.test(item))) continue;
+      if (!moving(rule.body)) continue;
+      for (const selector of rule.selectors) {
+        if (COLOUR_ONLY.has(selector)) continue;
+        if (reducedSelectors.some((reduced) => selectorMatches(selector, reduced))) continue;
+        missing.push(`${file}: ${selector}`);
       }
     }
   }
-  assert.deepEqual(missing, []);
+  return missing;
+}
+
+test("every animation stops or calms down when Windows asks for less motion", () => {
+  const sheets = cssFiles(SRC).map((file) => ({
+    file: path.relative(SRC, file).replaceAll("\\", "/"),
+    css: readFileSync(file, "utf8"),
+  }));
+  assert.deepEqual(missingReducedMotionSelectors(sheets), []);
+});
+
+test("nested @-rules and substring selector collisions are caught while no-preference and global rules pass", () => {
+  assert.deepEqual(
+    missingReducedMotionSelectors([
+      {
+        file: "a.css",
+        css: "@container (min-width: 100px) { .toast { animation: pop 160ms; } } @media (prefers-reduced-motion: reduce) { .toast-close { animation: none; } }",
+      },
+    ]),
+    ["a.css: .toast"],
+  );
+  assert.deepEqual(
+    missingReducedMotionSelectors([
+      {
+        file: "a.css",
+        css: "@media (prefers-reduced-motion: no-preference) { .drawer { animation: open 160ms; } }",
+      },
+    ]),
+    [],
+  );
+  assert.deepEqual(
+    missingReducedMotionSelectors([
+      {
+        file: "base.css",
+        css: "@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; } }",
+      },
+      {
+        file: "feature.css",
+        css: ".badge { animation: pulse 1s infinite; }",
+      },
+    ]),
+    [],
+  );
 });
 
 const reducedRules = (file) => {
@@ -92,7 +166,39 @@ test("the island shell still opens and closes when Windows asks for less motion"
   const shell = reducedRules("windows/island/IslandShell.css").find((rule) => rule.selectors.includes(".island"));
   assert.ok(shell, "IslandShell.css lets the shell transition through");
   const kept = list(shell.declarations["transition-property"] ?? "");
-  for (const variable of ["--island-shell-width", "--island-shell-height", "--island-shell-top-corner", "--island-shell-bottom-corner"]) {
+  for (const variable of ["--island-shell-width", "--island-shell-height", "--island-shell-top-corner", "--island-shell-bottom-corner", "--island-shell-fill", "--island-shell-opacity"]) {
     assert.ok(kept.includes(variable), variable);
+  }
+  assert.ok(kept.every((prop) => prop.startsWith("--")), "WebKit drops regular transitions on an element that transitions @property variables");
+});
+
+function splitTransitionItems(value) {
+  const items = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < value.length; i++) {
+    if (value[i] === "(") depth++;
+    else if (value[i] === ")") depth--;
+    else if (value[i] === "," && depth === 0) {
+      items.push(value.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  items.push(value.slice(start).trim());
+  return items.filter(Boolean);
+}
+
+test("the island shell transitions only @property variables so colour crossfades work on WebKit too (C33.8)", () => {
+  const css = readFileSync(path.join(SRC, "windows/island/IslandShell.css"), "utf8");
+  const registered = new Set([...css.matchAll(/@property\s+(--[\w-]+)/g)].map((match) => match[1]));
+  assert.ok(registered.has("--island-shell-fill"), "--island-shell-fill is registered with @property");
+  const shellRule = parseRules(css).find((rule) => rule.media.length === 0 && rule.selectors.length === 1 && rule.selectors[0] === ".island");
+  assert.ok(shellRule, ".island rule exists");
+  const transitionMatch = shellRule.body.match(/(?:^|[;\s])transition\s*:\s*([^;]+)/);
+  assert.ok(transitionMatch, ".island declares transition");
+  const props = splitTransitionItems(transitionMatch[1]).map((item) => item.split(/\s+/)[0]);
+  assert.ok(props.includes("--island-shell-fill"), ".island transitions --island-shell-fill");
+  for (const prop of props) {
+    assert.ok(registered.has(prop), `${prop} must be a registered @property so WebKit does not ignore sibling transitions`);
   }
 });

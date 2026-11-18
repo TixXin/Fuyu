@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BellRing, Pause, Play, Plus, Timer as TimerIcon, Watch, X } from "lucide-react";
 import { useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { cancelTimer, extendTimer, pauseTimer, resumeTimer, startCountdown, startStopwatch, useTimers } from "./store";
-import { clockText, isFinished, parseDuration, shownMs, type Timer } from "./timers";
+import { clockText, isFinished, MAX_TIMERS, parseDuration, shownMs, type Timer } from "./timers";
 import "../../components/list/IslandList.css";
 import "./TimerPanel.css";
 
@@ -13,8 +14,7 @@ function useNow(running: boolean) {
   useEffect(() => {
     setNow(Date.now());
     if (!running) return;
-    const id = window.setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => window.clearInterval(id);
+    return visibilityInterval(() => setNow(Date.now()), TICK_MS);
   }, [running]);
   return now;
 }
@@ -38,14 +38,28 @@ export function TimerPanel({ isOpen }: { isOpen: boolean }) {
       setProblem(t.invalid);
       return;
     }
-    if (!startCountdown(length)) {
+    if (timers.length >= MAX_TIMERS) {
       setProblem(t.full);
       return;
     }
-    setText("");
-    setProblem(null);
+    void startCountdown(length).then((result) => {
+      if (result === "ok") {
+        setText("");
+        setProblem(null);
+      } else {
+        setProblem(result === "limit" ? t.full : t.unavailable);
+      }
+    });
   };
-  const stopwatch = () => setProblem(startStopwatch() ? null : t.full);
+  const stopwatch = () => {
+    if (timers.length >= MAX_TIMERS) {
+      setProblem(t.full);
+      return;
+    }
+    void startStopwatch().then((result) => {
+      setProblem(result === "ok" ? null : result === "limit" ? t.full : t.unavailable);
+    });
+  };
 
   return (
     <section className="island-list-page timer-panel" aria-label={t.countdown}>

@@ -3,6 +3,10 @@ export type SettingsAgentText = {
   install: string;
   installing: string;
   installed: string;
+  uninstall: string;
+  uninstalling: string;
+  uninstalled: string;
+  hooksRemoved: string;
   currentStatus: string;
   clearing: string;
   clearStatus: string;
@@ -13,9 +17,11 @@ export type SettingsAgentText = {
   titleMode: string;
   titleModeHint: string;
   titleModeOptions: { changes: string; running: string };
+  lightSectionTitle: string;
   lightStyle: string;
   lightStyleHint: string;
   lightStyleOptions: { mark: string; dot: string };
+  lightStyleHints: { mark: string; dot: string };
   agentPageSection: string;
   expandChildren: string;
   expandChildrenHint: string;
@@ -25,12 +31,13 @@ export type SettingsAgentText = {
   sessionView: string;
   sessionViewHint: string;
   sessionViewOptions: { list: string; cards: string; compact: string };
+  sessionViewHints: { list: string; cards: string; compact: string };
   archiveMotion: string;
   archiveMotionHint: string;
   archiveMotionOptions: { slide: string; dissolve: string };
   cardEffects: string;
   cardEffectsHint: string;
-  cardEffectsOptions: { off: string; sparkle: string; gradient: string };
+  cardEffectsOptions: { off: string; sparkle: string; gradient: string; orbit: string };
   hostDisplayHint: string;
   hostDisplayHintMac: string;
   sessionHours: string;
@@ -64,7 +71,15 @@ export type SettingsAgentText = {
   remoteSave: string;
   remoteCancel: string;
   agentsSection: string;
+  agentsEnabledCount: (enabled: number, total: number) => string;
+  moreAgents: (count: number) => string;
   showAgentsHint: string;
+  hooksReady: string;
+  hookBadgeOutdated: string;
+  hookBadgeNotInstalled: string;
+  notDetectedBadge: string;
+  sessionOnlyBadge: string;
+  externalBadge: string;
   hideFinished: string;
   hideFinishedHint: string;
   hideClosed: string;
@@ -89,6 +104,7 @@ export type SettingsAgentText = {
     remind: string;
     remindDescription: string;
     remindValue: (seconds: number) => string;
+    quotaSectionTitle: string;
     quota: string;
     quotaDescription: string;
     quotaValue: (percent: number) => string;
@@ -166,6 +182,17 @@ export type SettingsAgentText = {
     title: string;
     toggle: string;
     hint: string;
+    legendTurn: string;
+    legendTurnHint: string;
+    legendBg: string;
+    legendBgHint: string;
+    legendDone: string;
+    legendDoneHint: string;
+    filesTitle: string;
+    fileInstalled: string;
+    fileOutdated: string;
+    filePending: string;
+    fileError: string;
     linked: (target: string) => string;
     noFiles: string;
     outdated: string;
@@ -193,6 +220,10 @@ export const zhCN: SettingsAgentText = {
   install: "安装/修复",
   installing: "安装中",
   installed: "已安装",
+  uninstall: "移除钩子",
+  uninstalling: "移除中",
+  uninstalled: "已移除",
+  hooksRemoved: "已从各家 AI Agent 配置中移除浮屿钩子与脚本；正在运行的 AI Agent 重启后生效。",
   currentStatus: "当前状态",
   clearing: "清除中",
   clearStatus: "清除状态",
@@ -203,9 +234,11 @@ export const zhCN: SettingsAgentText = {
   titleMode: "什么时候显示",
   titleModeHint: "有变化时：会话开始、跑完或出错时显示 4 秒，等你确认时一直显示到你处理，其余时间留给待办和中心图案。运行时一直显示：有 Agent 在运行就显示，结束 3 秒后恢复待办。",
   titleModeOptions: { changes: "有变化时", running: "运行时一直显示" },
+  lightSectionTitle: "状态灯",
   lightStyle: "状态灯样式",
   lightStyleHint: "收起条上 Agent 状态灯的样子。悬岛：应用图标的白胶囊，和条上的环一样高；绿点呼吸，运行时短横换成三个依次亮起的点，等你确认时变黄闪烁，失败或可能中断时变红，跑完打勾。圆点：原来的小圆点。",
   lightStyleOptions: { mark: "悬岛", dot: "圆点" },
+  lightStyleHints: { mark: "白胶囊配呼吸状态点与动态横条", dot: "简洁的传统小圆点呼吸灯" },
   agentPageSection: "Agent 页",
   expandChildren: "子 Agent / 子会话默认展开",
   expandChildrenHint: "会话行下面的子 Agent 列表和 Claude 桌面版的子会话一打开就展开。手动展开或收起过的行照你点的来。",
@@ -215,12 +248,13 @@ export const zhCN: SettingsAgentText = {
   sessionView: "显示方式",
   sessionViewHint: "卡片：每个会话一张按状态颜色描边的卡片，第二行写它在做什么和上下文大小。紧凑：每个会话一行，只有状态色条、标题、状态和时间。",
   sessionViewOptions: { list: "列表", cards: "卡片", compact: "紧凑" },
+  sessionViewHints: { list: "状态点、标题与最多两行回复", cards: "状态描边卡片，附工具与上下文", compact: "单行状态色条，同屏容纳更多" },
   archiveMotion: "归档动画",
   archiveMotionHint: "滑出：会话向右滑出再收起。粒子消散：会话从左到右化成状态颜色的粒子散开再收起。系统要求减少动画时直接移除。",
   archiveMotionOptions: { slide: "滑出", dissolve: "粒子消散" },
   cardEffects: "卡片光效",
-  cardEffectsHint: "只在「卡片」和「紧凑」显示方式下生效。粒子流苏：边框按状态颜色发光，进行中和等你处理的会呼吸，左侧飘着一条粒子流苏。渐变带：从右端铺开一层状态颜色的渐变，进行中和等你处理的更亮。",
-  cardEffectsOptions: { off: "关", sparkle: "粒子流苏", gradient: "渐变带" },
+  cardEffectsHint: "粒子流苏与渐变带只在「卡片」和「紧凑」显示方式下生效；流光边框在三种显示方式下都只给等你确认的会话加上绕边框流动的光带，减少动画时静止。",
+  cardEffectsOptions: { off: "关", sparkle: "粒子流苏", gradient: "渐变带", orbit: "流光边框" },
   hostDisplayHint: "会话在哪个程序里运行，比如 Orca、Windows Terminal、VS Code、Codex。正在运行的 Claude Code 会话会自动识别；岛屿启动前就结束的会话没有来源。",
   hostDisplayHintMac: "会话在哪个程序里运行，比如 Orca、终端、iTerm、VS Code、Codex。正在运行的 Claude Code 会话会自动识别；岛屿启动前就结束的会话没有来源。",
   sessionHours: "列出多久内的会话",
@@ -254,7 +288,15 @@ export const zhCN: SettingsAgentText = {
   remoteSave: "添加",
   remoteCancel: "取消",
   agentsSection: "显示哪些 Agent",
+  agentsEnabledCount: (enabled, total) => `已启用 ${enabled} / ${total}`,
+  moreAgents: (count) => `更多支持的 Agent（${count}）`,
   showAgentsHint: "关掉的 Agent 不出现在 Agent 页，也不算进岛上的运行数量。",
+  hooksReady: "钩子已就绪，状态灯与岛上审批可正常工作。",
+  hookBadgeOutdated: "钩子待更新",
+  hookBadgeNotInstalled: "未装钩子",
+  notDetectedBadge: "未检测到",
+  sessionOnlyBadge: "会话记录",
+  externalBadge: "外部上报",
   hideFinished: "只显示进行中的会话",
   hideFinishedHint: "隐藏已完成和失败的会话，只留正在运行、等待确认和可能中断的。",
   hideClosed: "隐藏已退出的会话",
@@ -279,6 +321,7 @@ export const zhCN: SettingsAgentText = {
     remind: "没处理时再提醒",
     remindDescription: "等你确认或回答的会话过了这么久还在等，再弹一次并再响一次；每次等待只补一次",
     remindValue: (seconds) => (seconds === 0 ? "不再提醒" : seconds < 60 ? `${seconds} 秒后` : `${seconds / 60} 分钟后`),
+    quotaSectionTitle: "用量额度",
     quota: "额度提醒",
     quotaDescription: "Claude 或 Codex 的 5 小时、7 天用量到这条线时，在收起的岛屿上提醒一次；额度刷新后再提醒一次",
     quotaValue: (percent) => (percent === 0 ? "不提醒" : `用到 ${percent}%`),
@@ -338,8 +381,8 @@ export const zhCN: SettingsAgentText = {
     onIsland: "在岛上允许或拒绝 Agent 的操作",
     whenInFront: "终端在前台时也在岛上弹出",
     whenInFrontHint: "关闭时，会话所在的终端或编辑器窗口在前台，就直接在终端里审批。",
-    hint: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 Ctrl+Alt+Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。",
-    hintMac: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 ⌃⌥Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。",
+    hint: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 Ctrl+Alt+Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
+    hintMac: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 ⌃⌥Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先点下方的“安装/修复”。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
   },
   filters: {
     title: "隐藏会话",
@@ -355,7 +398,18 @@ export const zhCN: SettingsAgentText = {
   replyMarker: {
     title: "回复状态标记",
     toggle: "让 AI 代理在回复末尾标出在等什么（推荐打开）",
-    hint: "打开后，会在各家 AI 代理的全局提示词文件末尾追加一段说明（Claude Code 的 CLAUDE.md，Codex、opencode 和 DeepSeek Harness 的 AGENTS.md，Antigravity 的 GEMINI.md，WorkBuddy 和 CodeBuddy 的 CODEBUDDY.md，Qoder 的 AGENTS.md，Qwen Code 的 QWEN.md，Kimi Code 的 ~/.kimi-code/AGENTS.md，GitHub Copilot CLI 的 ~/.copilot/copilot-instructions.md，Droid 的 ~/.factory/AGENTS.md；只动这一段，文件其他内容不动），让它每次回复的最后一行写一个符号：↩ 等你回复、⋯ 在等它自己启动的后台任务、✓ 做完了。岛屿据此区分“等你回复”和“做完了”：Agent 页、会话环，以及提醒和音效（等你回复按“等你确认或回答”弹出、用提问音效；等后台任务时不弹不响）。这一行会出现在回复里。文件是软链时写在它指向的文件里，几家指向同一份文件时只写一段。SSH 远程页里打开的电脑也会写上。只对之后开始的会话生效；关掉时删掉这一段。本机写到的文件：",
+    hint: "打开后，会在各家 AI 代理的全局提示词文件末尾追加一段说明（Claude Code 的 CLAUDE.md，Codex、opencode 和 DeepSeek Harness 的 AGENTS.md，Antigravity 的 GEMINI.md，WorkBuddy 和 CodeBuddy 的 CODEBUDDY.md，Qoder 的 AGENTS.md，Qwen Code 的 QWEN.md，Kimi Code 的 ~/.kimi-code/AGENTS.md，GitHub Copilot CLI 的 ~/.copilot/copilot-instructions.md，Droid 的 ~/.factory/AGENTS.md，pi 的 ~/.pi/agent/AGENTS.md；只动这一段，文件其他内容不动），让它每次回复的最后一行写一个符号：↩ 等你回复、⋯ 在等它自己启动的后台任务、✓ 做完了。岛屿据此区分“等你回复”和“做完了”：Agent 页、会话环，以及提醒和音效（等你回复按“等你确认或回答”弹出、用提问音效；等后台任务时不弹不响）。这一行会出现在回复里。文件是软链时写在它指向的文件里，几家指向同一份文件时只写一段。SSH 远程页里打开的电脑也会写上。只对之后开始的会话生效；关掉时删掉这一段。",
+    legendTurn: "等你回复",
+    legendTurnHint: "弹出提醒 · 提问音效",
+    legendBg: "等后台任务",
+    legendBgHint: "保持运行 · 不打扰",
+    legendDone: "做完了",
+    legendDoneHint: "标为完成 · 完成提醒",
+    filesTitle: "本机全局提示词文件",
+    fileInstalled: "已写入",
+    fileOutdated: "待更新",
+    filePending: "未写入",
+    fileError: "异常",
     linked: (target) => `软链，写在 ${target}`,
     noFiles: "本机没有找到这几家 AI 代理。",
     outdated: "说明是旧版本，或者还在旧的规则文件 rules/fuyu-reply-marker.md 里，或者有一家还没写上；关掉再打开，或点上面的“安装/修复”即可更新。",
@@ -373,7 +427,7 @@ export const zhCN: SettingsAgentText = {
   },
   hooksOutdated: "已安装的钩子是旧版本，“等待确认”状态等新功能不会生效。请点“安装/修复”，然后重启正在用的 AI Agent。",
   hooksMissing: "还没有安装钩子。点“安装/修复”后重启正在用的 AI Agent，状态灯和会话标题才会工作。",
-  dshBridge: "DeepSeek Harness 还没挂上钩子桥。把下面几行加到 DSH 配置目录 profiles 下的 cordis.patch.yml 末尾，重启 DSH 后再点一次“安装/修复”：",
+  dshBridge: "DeepSeek Harness 已有自定义 cordis.patch.yml，岛屿没有直接覆盖。把下面几行加到 DSH 家目录（或 profiles/<名字>）下的 cordis.patch.yml 末尾，重启 DSH 后再点一次“安装/修复”：",
   hooksDevBuild: "开发版读的是正式版的 Agent 状态。在这里点“安装/修复”装的是正式版的钩子：脚本放在正式版的数据目录，审批走正式版的端口，开发版关掉后照样能用。",
   remoteResult: (host, error) => (error ? `SSH 远程 ${host}：失败，${error}` : `SSH 远程 ${host}：已完成`),
 };
@@ -383,6 +437,10 @@ export const en: SettingsAgentText = {
   install: "Install/repair",
   installing: "Installing",
   installed: "Installed",
+  uninstall: "Remove hooks",
+  uninstalling: "Removing",
+  uninstalled: "Removed",
+  hooksRemoved: "Removed Fuyu's hooks and scripts from the AI agent configs; restart running AI agents to finish.",
   currentStatus: "Status",
   clearing: "Clearing",
   clearStatus: "Clear status",
@@ -393,9 +451,11 @@ export const en: SettingsAgentText = {
   titleMode: "When to show it",
   titleModeHint: "On changes: for 4 seconds when a session starts, finishes or fails, and while it waits for your approval; otherwise the todo and the center pattern stay. While running: the whole time an agent runs, then the todo again 3 seconds after it finishes.",
   titleModeOptions: { changes: "On changes", running: "While running" },
+  lightSectionTitle: "Status light",
   lightStyle: "Status light",
   lightStyleHint: "How the Agent status light looks on the collapsed bar. Island mark: the app icon's white pill, as tall as the rings on the bar; its light breathes, three dots take the dash's place while running, it turns yellow and blinks while waiting for you, red when failed or possibly stopped, and shows a tick when done. Dot: the original small dot.",
   lightStyleOptions: { mark: "Island mark", dot: "Dot" },
+  lightStyleHints: { mark: "White pill with breathing dot and animated dash", dot: "Minimal breathing status dot" },
   agentPageSection: "Agent page",
   expandChildren: "Expand subagents and child sessions",
   expandChildrenHint: "Subagent lists under a session and Claude desktop child sessions start expanded. Rows you open or close yourself stay the way you left them.",
@@ -405,12 +465,13 @@ export const en: SettingsAgentText = {
   sessionView: "Layout",
   sessionViewHint: "Cards: one card per session, framed in its state's colour, with what it is doing and its context size on the second line. Compact: one line per session with only the state bar, title, state and time.",
   sessionViewOptions: { list: "List", cards: "Cards", compact: "Compact" },
+  sessionViewHints: { list: "Status dot, title and two-line reply", cards: "State-framed card with tool and context", compact: "Single-line bar for denser lists" },
   archiveMotion: "Archive animation",
   archiveMotionHint: "Slide: the session slides out to the right, then folds away. Dissolve: it turns into dust in its state's colour from left to right, then folds away. When Windows asks for less motion it goes at once.",
   archiveMotionOptions: { slide: "Slide", dissolve: "Dissolve" },
   cardEffects: "Card light effects",
-  cardEffectsHint: "Only in the Cards and Compact layouts. Sparkle band: cards glow in their state's colour, breathing while working or waiting on you, with a drifting band of sparks on the left. Gradient: a wash in that colour from the right end, brighter while working or waiting on you.",
-  cardEffectsOptions: { off: "Off", sparkle: "Sparkle band", gradient: "Gradient" },
+  cardEffectsHint: "Sparkle band and Gradient apply in Cards and Compact; Flowing border adds an orbiting light ribbon only to sessions waiting for your approval across all three layouts, staying still under reduced motion.",
+  cardEffectsOptions: { off: "Off", sparkle: "Sparkle band", gradient: "Gradient", orbit: "Flowing border" },
   hostDisplayHint: "The program a session runs in, such as Orca, Windows Terminal, VS Code or Codex. Running Claude Code sessions are recognized automatically; sessions that ended before the island started have no source.",
   hostDisplayHintMac: "The program a session runs in, such as Orca, Terminal, iTerm, VS Code or Codex. Running Claude Code sessions are recognized automatically; sessions that ended before the island started have no source.",
   sessionHours: "List sessions from the last",
@@ -444,7 +505,15 @@ export const en: SettingsAgentText = {
   remoteSave: "Add",
   remoteCancel: "Cancel",
   agentsSection: "Agents shown",
+  agentsEnabledCount: (enabled, total) => `${enabled} / ${total} on`,
+  moreAgents: (count) => `${count} more supported agents`,
   showAgentsHint: "Agents switched off are left out of the Agent page and the island's running count.",
+  hooksReady: "Hooks are ready for the status light and approvals on the island.",
+  hookBadgeOutdated: "Hooks outdated",
+  hookBadgeNotInstalled: "No hooks yet",
+  notDetectedBadge: "Not detected",
+  sessionOnlyBadge: "Session log",
+  externalBadge: "External",
   hideFinished: "Only sessions in progress",
   hideFinishedHint: "Hide finished and failed sessions; keep running, waiting and possibly stalled ones.",
   hideClosed: "Hide sessions that have quit",
@@ -469,6 +538,7 @@ export const en: SettingsAgentText = {
     remind: "Remind again",
     remindDescription: "If a session is still waiting for your approval or answer this long, pop up and sound once more; once per wait",
     remindValue: (seconds) => (seconds === 0 ? "Never" : seconds < 60 ? `after ${seconds} s` : `after ${seconds / 60} min`),
+    quotaSectionTitle: "Quota",
     quota: "Usage alert",
     quotaDescription: "When Claude's or Codex's 5-hour or 7-day usage reaches this level, say so once on the collapsed island, and again when it resets",
     quotaValue: (percent) => (percent === 0 ? "Off" : `at ${percent}%`),
@@ -528,8 +598,8 @@ export const en: SettingsAgentText = {
     onIsland: "Allow or deny agent actions on the island",
     whenInFront: "Also while the terminal is in front",
     whenInFrontHint: "Off, a request from a session whose terminal or editor window is in front is approved in that terminal.",
-    hint: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (Ctrl+Alt+Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up.",
-    hintMac: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (⌃⌥Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up.",
+    hint: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (Ctrl+Alt+Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
+    hintMac: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (⌃⌥Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Click Install/repair below first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
   },
   filters: {
     title: "Hide sessions",
@@ -545,7 +615,18 @@ export const en: SettingsAgentText = {
   replyMarker: {
     title: "Reply status marker",
     toggle: "Have the agents mark what they wait for at the end of each reply (recommended)",
-    hint: "When on, the island appends a section to the end of each AI agent's global prompt file (CLAUDE.md for Claude Code, AGENTS.md for Codex, opencode and DeepSeek Harness, GEMINI.md for Antigravity, CODEBUDDY.md for WorkBuddy and CodeBuddy, AGENTS.md for Qoder, QWEN.md for Qwen Code, ~/.kimi-code/AGENTS.md for Kimi Code, ~/.copilot/copilot-instructions.md for GitHub Copilot CLI, ~/.factory/AGENTS.md for Droid; only that section changes, the rest of the file stays as it is), asking the agent to end every reply with one symbol on its own line: ↩ your turn, ⋯ waiting on a background task it started, ✓ done. The island uses it to tell \"your turn\" from \"done\": on the Agent page, the session ring, and in alerts and sounds (your turn pops up as waiting for you, with the question sound; waiting on a background task neither pops up nor sounds). The line shows in the replies. When a file is a link, the section goes into the file it points to, and agents sharing one file get one section. Computers switched on under SSH remote get it too. It applies to sessions started from then on; switching off removes the section. Files on this computer:",
+    hint: "When on, the island appends a section to the end of each AI agent's global prompt file (CLAUDE.md for Claude Code, AGENTS.md for Codex, opencode and DeepSeek Harness, GEMINI.md for Antigravity, CODEBUDDY.md for WorkBuddy and CodeBuddy, AGENTS.md for Qoder, QWEN.md for Qwen Code, ~/.kimi-code/AGENTS.md for Kimi Code, ~/.copilot/copilot-instructions.md for GitHub Copilot CLI, ~/.factory/AGENTS.md for Droid, ~/.pi/agent/AGENTS.md for pi; only that section changes, the rest of the file stays as it is), asking the agent to end every reply with one symbol on its own line: ↩ your turn, ⋯ waiting on a background task it started, ✓ done. The island uses it to tell \"your turn\" from \"done\": on the Agent page, the session ring, and in alerts and sounds (your turn pops up as waiting for you, with the question sound; waiting on a background task neither pops up nor sounds). The line shows in the replies. When a file is a link, the section goes into the file it points to, and agents sharing one file get one section. Computers switched on under SSH remote get it too. It applies to sessions started from then on; switching off removes the section.",
+    legendTurn: "Your turn",
+    legendTurnHint: "Pop-up alert · question sound",
+    legendBg: "Background task",
+    legendBgHint: "Stays running · quiet",
+    legendDone: "Finished",
+    legendDoneHint: "Marked done · done alert",
+    filesTitle: "Global prompt files on this computer",
+    fileInstalled: "Written",
+    fileOutdated: "Outdated",
+    filePending: "Not written",
+    fileError: "Error",
     linked: (target) => `a link; written in ${target}`,
     noFiles: "None of these AI agents was found on this computer.",
     outdated: "The instruction is an older version, still in the old rules file rules/fuyu-reply-marker.md, or missing for one of the agents; switch off and on again, or click Install/repair above, to update it.",
@@ -563,7 +644,7 @@ export const en: SettingsAgentText = {
   },
   hooksOutdated: "The installed hooks are from an older version, so newer features such as the waiting-for-you state won't work. Click Install/repair, then restart the AI agents you use.",
   hooksMissing: "No hooks installed yet. Click Install/repair, then restart the AI agents you use, for the status light and session titles to work.",
-  dshBridge: "DeepSeek Harness has no hook bridge yet. Add these lines to the end of cordis.patch.yml under profiles in the DSH home, restart DSH, then click Install/repair again:",
+  dshBridge: "DeepSeek Harness already has a custom cordis.patch.yml, so Fuyu kept it as is. Add these lines to the end of cordis.patch.yml in the DSH home (or under profiles/<name>), restart DSH, then click Install/repair again:",
   hooksDevBuild: "The development build reads the installed Fuyu's agent status. Install/repair here sets up the installed Fuyu's hooks: the scripts go to its data folder and approvals go to its port, so they keep working after the development build closes.",
   remoteResult: (host, error) => (error ? `SSH remote ${host}: failed, ${error}` : `SSH remote ${host}: done`),
 };

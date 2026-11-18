@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsRow } from "../../components/settings/SettingsRow";
@@ -25,7 +26,7 @@ export function CcConnectSettings() {
 
   return (
     <>
-      <SettingsGroup title={t.group} footer={t.groupHint}>
+      <SettingsGroup title={t.group} footer={<SettingsFootnote text={t.groupHint} />}>
         <SettingsRow title={t.path} description={t.pathHint}>
           <SettingsInput
             monospace

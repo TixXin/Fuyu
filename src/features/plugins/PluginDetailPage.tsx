@@ -3,8 +3,6 @@ import { Eraser, ExternalLink, Play } from "lucide-react";
 import { SelectControl } from "../../components/controls/SelectControl";
 import { ToggleControl } from "../../components/controls/ToggleControl";
 import { useLocale, useTranslation } from "../../i18n";
-import { CENTER_PATTERN_PET_KEY, CENTER_PATTERN_PLUGIN_ID, petChoices, usePetChoices } from "../center-pattern";
-import { SSH_TUNNEL_PLUGIN_ID, SshTunnelHosts, useSshTunnelProxy } from "../ssh-tunnel";
 import { openPluginHomepage, PLUGIN_MEMORY_LIMITS_MB, type PluginInfo, type PluginWindowRules } from "./api";
 import { pluginHealth } from "./installedFilter";
 import { PluginDialog } from "./PluginDialog";
@@ -58,10 +56,6 @@ export function PluginDetailPage({
   const t = useTranslation();
   const { locale } = useLocale();
   const running = plugin.status === "running";
-  const pets = usePetChoices(plugin.id === CENTER_PATTERN_PLUGIN_ID);
-  const tunnelShowsProxy = plugin.builtin && plugin.id === SSH_TUNNEL_PLUGIN_ID && plugin.enabled;
-  const tunnelProxy = useSshTunnelProxy(tunnelShowsProxy);
-  const proxyText = t.settings.plugins.sshTunnel.proxy;
   const [confirmingClear, setConfirmingClear] = useState(false);
   const name = plugin.name?.[locale] ?? plugin.id;
   const description = plugin.description?.[locale];
@@ -74,9 +68,6 @@ export function PluginDetailPage({
   ]
     .filter(Boolean)
     .join(" · ");
-  const shown = plugin.settingsSchema.filter(
-    (spec) => !(plugin.id === SSH_TUNNEL_PLUGIN_ID && spec.key === "customPort" && plugin.settings.localProxy !== "custom"),
-  );
 
   const header = (
     <>
@@ -121,28 +112,7 @@ export function PluginDetailPage({
           <div className="settings-section__header">
             <span>{t.settings.plugins.detail.info}</span>
           </div>
-          {tunnelShowsProxy ? (
-            tunnelProxy ? (
-              <>
-                <PluginInfoList
-                  items={[
-                    {
-                      label: { "zh-CN": proxyText.label, en: proxyText.label },
-                      value: `127.0.0.1:${tunnelProxy.port}`,
-                      copy: true,
-                      secret: false,
-                    },
-                  ]}
-                />
-                <p className={tunnelProxy.listening ? "settings-section__hint" : "plugin-card__error"}>
-                  {proxyText.found[tunnelProxy.found]}
-                  {tunnelProxy.listening ? proxyText.listening : proxyText.notListening}
-                </p>
-              </>
-            ) : (
-              <p className="settings-section__hint">{proxyText.looking}</p>
-            )
-          ) : plugin.info.length > 0 ? (
+          {plugin.info.length > 0 ? (
             <PluginInfoList items={plugin.info} pluginId={plugin.id} />
           ) : (
             <p className="settings-section__hint">{t.settings.plugins.detail.infoWhenRunning}</p>
@@ -157,24 +127,17 @@ export function PluginDetailPage({
         {plugin.settingsSchema.length === 0 ? (
           <p className="settings-section__hint">{t.settings.plugins.detail.noSettings}</p>
         ) : (
-          shown.map((spec) => (
+          plugin.settingsSchema.map((spec) => (
             <PluginSettingField
               key={spec.key}
               spec={spec}
               value={plugin.settings[spec.key]}
-              disabled={busy || (pets === "loading" && spec.key === CENTER_PATTERN_PET_KEY)}
+              disabled={busy}
               onChange={(value) => onSettingChange(spec.key, value)}
-              choices={
-                pets && spec.key === CENTER_PATTERN_PET_KEY
-                  ? petChoices(pets, String(plugin.settings[spec.key] ?? ""), t.settings.plugins.detail.pets)
-                  : undefined
-              }
             />
           ))
         )}
       </section>
-
-      {plugin.builtin && plugin.id === SSH_TUNNEL_PLUGIN_ID ? <SshTunnelHosts /> : null}
 
       {plugin.permissions.includes("island:notify") ? (
         <section className="settings-section plugins-panel">

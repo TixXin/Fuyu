@@ -1,24 +1,27 @@
+import { memo, useCallback, useSyncExternalStore } from "react";
 import { BookmarkPlus, Braces, Check, Copy, FileImage, ImageIcon, Link2, Pencil, ScanText, Sparkles, SquareTerminal, Star, Trash2, WandSparkles, X } from "lucide-react";
 import { RowMenu, type RowMenuItem } from "../../components/list/RowMenu";
 import { formatAgo } from "../../components/list/formatAgo";
-import { useTranslation } from "../../i18n";
-import type { ClipboardCopyAs, ClipboardHistoryItem, ClipboardLink } from "./api";
+import { useLocale, useTranslation } from "../../i18n";
+import type { ClipboardCopyAs, ClipboardHistoryItem } from "./api";
 import { ClipboardEntryIcon } from "./ClipboardEntryIcon";
 import { contentKind, linkLabel } from "./contentKind";
 import { fileFolder, fileImageLabel, sourceName } from "./fileEntry";
+import { getClipboardActions, getClipboardActionsForItem, resolveClipboardActionLabel, subscribeClipboardActions } from "./host/actions.mjs";
 import { formatBytes } from "../../utils/bytes";
 import { isMacOS } from "../../lib/platform";
 
-export function ClipboardHistoryItemRow({
+export const ClipboardHistoryItemRow = memo(function ClipboardHistoryItemRow({
   item,
   now,
-  elementRef,
+  onElementRef,
   isEditingNote,
   noteDraft,
   isSavingNote,
   isConfirmingDelete,
   copied,
   menuOpen,
+  isBookmarked = false,
   onMenuOpenChange,
   onCopy,
   onToggleFavorite,
@@ -29,19 +32,19 @@ export function ClipboardHistoryItemRow({
   onDelete,
   onTag,
   onTools,
-  bookmarks,
   onBookmark,
 }: {
   item: ClipboardHistoryItem;
   now: number;
-  elementRef: (node: HTMLElement | null) => void;
+  onElementRef: (id: string, node: HTMLElement | null) => void;
   isEditingNote: boolean;
   noteDraft: string;
   isSavingNote: boolean;
   isConfirmingDelete: boolean;
   copied: ClipboardCopyAs | null;
   menuOpen: boolean;
-  onMenuOpenChange: (open: boolean) => void;
+  isBookmarked?: boolean;
+  onMenuOpenChange: (id: string, open: boolean) => void;
   onCopy: (id: string, copyAs?: ClipboardCopyAs) => void;
   onToggleFavorite: (id: string) => void;
   onStartEditNote: (item: ClipboardHistoryItem) => void;
@@ -50,13 +53,15 @@ export function ClipboardHistoryItemRow({
   onCancelEditNote: () => void;
   onDelete: (id: string) => void;
   onTag?: (tag: string) => void;
-  onTools?: (page: "transforms" | "ai") => void;
-  bookmarks?: readonly ClipboardLink[];
+  onTools?: (id: string, page: "transforms" | "ai") => void;
   onBookmark?: (url: string) => void;
 }) {
   const t = useTranslation();
+  const locale = useLocale().locale === "en" ? "en" : "zh";
   const text = t.clipboard;
   const copyText = text.popup.actions.copy;
+  useSyncExternalStore(subscribeClipboardActions, getClipboardActions);
+  const pluginActions = getClipboardActionsForItem(item);
   const image = item.kind === "image" ? item.image : undefined;
   const kind = contentKind(item);
   const main = item.kind === "image" && image ? text.imageLabel(image.width, image.height) : kind?.kind === "link" ? linkLabel(kind.url) : item.preview;
@@ -73,13 +78,24 @@ export function ClipboardHistoryItemRow({
   ].filter((part): part is string => Boolean(part));
 
   const linkUrl = kind?.kind === "link" ? kind.url.href : null;
-  const linkSaved = linkUrl !== null && (bookmarks?.some((link) => link.url === linkUrl) ?? false);
+  const handleRef = useCallback(
+    (node: HTMLElement | null) => {
+      onElementRef(item.id, node);
+    },
+    [item.id, onElementRef],
+  );
+  const handleMenuOpenChange = useCallback(
+    (open: boolean) => {
+      onMenuOpenChange(item.id, open);
+    },
+    [item.id, onMenuOpenChange],
+  );
   const menu: RowMenuItem[] = [
     { key: "note", label: text.noteAction, icon: <Pencil size={14} strokeWidth={2} />, onSelect: () => onStartEditNote(item) },
     ...(item.kind === "text" && onTools
       ? [
-          { key: "transforms", label: copyText.transform, icon: <WandSparkles size={14} strokeWidth={2} />, onSelect: () => onTools("transforms") },
-          ...(item.masked ? [] : [{ key: "ai", label: copyText.ai, icon: <Sparkles size={14} strokeWidth={2} />, onSelect: () => onTools("ai") }]),
+          { key: "transforms", label: copyText.transform, icon: <WandSparkles size={14} strokeWidth={2} />, onSelect: () => onTools(item.id, "transforms") },
+          ...(item.masked ? [] : [{ key: "ai", label: copyText.ai, icon: <Sparkles size={14} strokeWidth={2} />, onSelect: () => onTools(item.id, "ai") }]),
         ]
       : []),
     ...(item.kind === "image"
@@ -90,27 +106,34 @@ export function ClipboardHistoryItemRow({
         ]
       : []),
     ...(linkUrl && onBookmark
-      ? [{ key: "bookmark", label: linkSaved ? text.links.bookmarked : text.links.bookmark, icon: <BookmarkPlus size={14} strokeWidth={2} />, disabled: linkSaved, onSelect: () => onBookmark(linkUrl) }]
+      ? [{ key: "bookmark", label: isBookmarked ? text.links.bookmarked : text.links.bookmark, icon: <BookmarkPlus size={14} strokeWidth={2} />, disabled: isBookmarked, onSelect: () => onBookmark(linkUrl) }]
       : []),
+    ...pluginActions.map((spec) => ({
+      key: `plugin:${spec.id}`,
+      label: resolveClipboardActionLabel(spec.label, locale),
+      icon: <WandSparkles size={14} strokeWidth={2} />,
+      onSelect: () => void Promise.resolve(spec.run({ item, locale })).catch((error: unknown) => console.error(`Clipboard action ${spec.id} failed`, error)),
+    })),
     {
       key: "delete",
       label: isConfirmingDelete ? text.confirmDelete : text.deleteItem,
       icon: <Trash2 size={14} strokeWidth={2} />,
       danger: true,
       keepOpen: !isConfirmingDelete,
+      confirming: isConfirmingDelete,
       onSelect: () => onDelete(item.id),
     },
   ];
 
   const className = ["island-list-row", menuOpen ? "island-list-row--menu" : ""].filter(Boolean).join(" ");
   return (
-    <article className={className} role="listitem" ref={elementRef} data-clipboard-id={item.kind === "text" ? item.id : undefined}>
+    <article className={className} role="listitem" ref={handleRef} data-clipboard-id={item.kind === "text" ? item.id : undefined}>
       <button className="island-list-row__hit" type="button" aria-label={`${text.copyBack}: ${main}`} onClick={() => onCopy(item.id)} />
       <span className="island-list-row__lead" aria-hidden="true">
         {item.kind === "image" ? (
-          image?.thumbnailDataUrl ? <img src={image.thumbnailDataUrl} alt="" /> : <ImageIcon size={16} strokeWidth={1.8} />
+          image?.thumbnailDataUrl ? <img src={image.thumbnailDataUrl} alt="" loading="lazy" decoding="async" /> : <ImageIcon size={16} strokeWidth={1.8} />
         ) : item.kind === "files" && item.fileImage ? (
-          <img src={item.fileImage.thumbnailDataUrl} alt="" />
+          <img src={item.fileImage.thumbnailDataUrl} alt="" loading="lazy" decoding="async" />
         ) : kind?.kind === "color" ? (
           <span className="clipboard-swatch" style={{ background: `rgba(${kind.color.r}, ${kind.color.g}, ${kind.color.b}, ${kind.color.a})` }} />
         ) : kind?.kind === "link" ? (
@@ -190,8 +213,8 @@ export function ClipboardHistoryItemRow({
         <button className="island-list-icon-button" type="button" aria-label={text.copyBack} title={text.copyBack} onClick={() => onCopy(item.id)}>
           {copied === "original" ? <Check className="save-check-icon" size={14} strokeWidth={2.6} /> : <Copy size={14} strokeWidth={2.2} />}
         </button>
-        <RowMenu label={t.common.more} items={menu} onOpenChange={onMenuOpenChange} />
+        <RowMenu label={t.common.more} items={menu} onOpenChange={handleMenuOpenChange} />
       </span>
     </article>
   );
-}
+});

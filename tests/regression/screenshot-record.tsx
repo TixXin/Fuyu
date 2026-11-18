@@ -64,7 +64,14 @@ async function runChecks() {
     check(decodeURIComponent(finish.headers["x-folder-name"]) === "浮屿录屏", "…into the recordings folder named in the current language");
     check(!document.querySelector(".screenshot-overlay__toolbar"), "No toolbar shows in record mode");
     check(finish.headers["x-format"] === "gif", "…as a GIF, since G was on");
-    check(finish.headers["x-fps"] === "30" && finish.headers["x-quality"] === "standard" && finish.headers["x-system-audio"] === "true" && finish.headers["x-microphone"] === "false", "…with the recording settings (default 30 fps, standard quality, system sound, no microphone)");
+    check(
+      finish.headers["x-fps"] === "30"
+        && finish.headers["x-quality"] === "standard"
+        && finish.headers["x-system-audio"] === "true"
+        && finish.headers["x-microphone"] === "false"
+        && finish.headers["x-own-windows"] === "false",
+      "…with the recording settings (default 30 fps, standard quality, system sound, no microphone, own windows off)",
+    );
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";

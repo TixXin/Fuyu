@@ -1,26 +1,12 @@
 import type { ReactNode } from "react";
-import { IslandHoverCard, type HoverCardLine } from "../../components/IslandHoverCard";
+import { IslandHoverCard } from "../../components/IslandHoverCard";
 import { useTranslation } from "../../i18n";
 import type { AgentSessionSummary } from "./api";
+import { sessionHoverLines } from "./focusHint";
 
 const HOVER_DELAY_MS = 600;
-const PROMPT_CHARS = 240;
 
-function clip(value: string) {
-  const flat = value.replace(/\s+/g, " ").trim();
-  return flat.length > PROMPT_CHARS ? `${flat.slice(0, PROMPT_CHARS)}…` : flat;
-}
-
-export function sessionHoverLines(session: AgentSessionSummary, title: string, text: ReturnType<typeof useTranslation>["agent"]["sessions"]["hover"]): HoverCardLine[] {
-  const prompt = session.lastPrompt ? clip(session.lastPrompt) : "";
-  const host = session.host?.name ?? session.remoteHost ?? null;
-  return [
-    { text: title },
-    ...(prompt ? [{ text: text.prompt(prompt) }] : []),
-    ...(session.cwd ? [{ text: session.remoteHost ? text.remoteFolder(session.remoteHost, session.cwd) : text.folder(session.cwd), muted: true }] : []),
-    ...(host ? [{ text: text.host(host), muted: true }] : []),
-  ];
-}
+export { sessionHoverLines };
 
 export function AgentSessionHoverCard({
   session,

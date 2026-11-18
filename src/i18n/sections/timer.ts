@@ -4,6 +4,7 @@ export type TimerText = {
   stopwatch: string;
   invalid: string;
   full: string;
+  unavailable: string;
   empty: string;
   countdown: string;
   stopwatchLabel: string;
@@ -63,6 +64,7 @@ export const zhCN: TimerText = {
   stopwatch: "开始秒表",
   invalid: "看不懂这个时长，试试 10、10m、1h30m 或 90s（最长 24 小时）",
   full: "最多同时 12 个计时",
+  unavailable: "插件宿主还没就绪，稍后再试",
   empty: "输入时长开始倒计时，或开一个秒表",
   countdown: "倒计时",
   stopwatchLabel: "秒表",
@@ -123,6 +125,7 @@ export const en: TimerText = {
   stopwatch: "Start stopwatch",
   invalid: "Couldn't read that; try 10, 10m, 1h30m or 90s (up to 24 hours)",
   full: "Up to 12 timers at once",
+  unavailable: "The plugin host isn't ready yet; try again in a moment",
   empty: "Type a length to start a countdown, or start a stopwatch",
   countdown: "Countdown",
   stopwatchLabel: "Stopwatch",

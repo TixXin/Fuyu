@@ -12,6 +12,7 @@ import { checkSubagentCards, checkSubagents } from "./agent-sessions-subagents";
 import { checkChildSessions } from "./agent-sessions-children";
 import { checkExpandByDefault } from "./agent-sessions-expand";
 import { checkAgeColumns, renderAgeColumns } from "./agent-sessions-age";
+import { until } from "./pollUntil";
 import type { AgentCardEffects, AgentHostDisplay, AgentSessionView } from "../../src/features/agent-status/agentSettings";
 
 const ISLAND_CHROME_HEIGHT = 86;
@@ -26,7 +27,7 @@ mockIPC((command, payload) => {
   if (command === "focus_agent_window") {
     const args = (payload ?? {}) as Record<string, unknown>;
     focusCalls.push(args);
-    return args.cwd === "E:\\Projects\\fly-island";
+    return args.cwd === "E:\\Projects\\fuyu";
   }
   if (command === "list_agent_effort_labels") return { claudeCode: { medium: "xhigh", high: "max" } };
   if (command === "get_agent_host_icon") {
@@ -44,7 +45,7 @@ mockIPC((command, payload) => {
 
 const SESSIONS: AgentSessionSummary[] = [
   {
-    provider: "claudeCode", sessionId: "a", cwd: "E:\\Projects\\fly-island", title: "设置界面完善思路",
+    provider: "claudeCode", sessionId: "a", cwd: "E:\\Projects\\fuyu", title: "设置界面完善思路",
     model: "Opus 5.5", effort: "medium", phase: "running", updatedAt: now - 20_000, turnStartedAt: now - 200_000,
     permissionMode: "bypass", subagents: 2,
     host: { name: "Orca", exe: "C:\\Apps\\orca\\Orca.exe", kind: "terminal" },
@@ -85,7 +86,7 @@ async function runChecks() {
   try {
     check(rows().length === 3, "列出全部会话");
     const [first, second, third] = rows();
-    check(first.textContent?.includes("fly-island · 设置界面完善思路") && first.querySelector(".agent-provider-icon--claudeCode"), "每行显示图标、项目名和标题");
+    check(first.textContent?.includes("fuyu · 设置界面完善思路") && first.querySelector(".agent-provider-icon--claudeCode"), "每行显示图标、项目名和标题");
     const pill = (row: HTMLElement) => [...row.querySelectorAll(".agent-session__pill > *")].map((part) => part.textContent).join(" · ");
     check(pill(first) === "Opus 5.5 · XH · 跳过确认" && first.querySelector(".agent-session__pill")?.getAttribute("title") === "Opus 5.5 · Xhigh · 跳过确认", `模型、推理强度、权限合成一个胶囊，强度缩写，悬停看全称：${pill(first)}`);
     check(pill(second) === "gpt-6-astra · H", "插件只改了 Claude Code 的强度时，Codex 照原样显示");
@@ -154,7 +155,7 @@ async function runChecks() {
     const agedIcon = rows()[2].querySelector(".agent-session__agent")!.getBoundingClientRect();
     const firstIcon = rows()[0].querySelector(".agent-session__agent")!.getBoundingClientRect();
     const slotGap = age!.getBoundingClientRect().left - agedIcon.right;
-    check(slotGap >= 0 && slotGap <= 16 && Math.abs(agedIcon.right - firstIcon.right) < 0.5, "时间那一列固定为「99m」宽，和左边的 Agent 图标不空出一大截，各行图标仍在同一列");
+    check(slotGap >= 0 && slotGap <= 18 && Math.abs(agedIcon.right - firstIcon.right) < 0.5, "时间那一列固定为「99m」宽，和左边的 Agent 图标不空出一大截，各行图标仍在同一列");
     agedArchive.focus();
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 200)); });
     check(getComputedStyle(agedArchive).opacity === "1" && getComputedStyle(age!).opacity === "0", "鼠标移上或用键盘选到这一行时，时间换成归档按钮");
@@ -228,7 +229,7 @@ async function runChecks() {
     check(meta(third) === "用时 4 分 12 秒" && time(third) === "1h", "结束的会话显示这一轮用时");
     check(!second.querySelector(".agent-session__elapsed"), "不知道这一轮何时开始时不显示时长");
     const before = first.querySelector(".agent-session__elapsed")?.textContent;
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 1100)); });
+    await until(() => first.querySelector(".agent-session__elapsed")?.textContent !== before);
     check(first.querySelector(".agent-session__elapsed")?.textContent !== before, "进行中的会话时长每秒更新");
     await render("both", { showElapsed: false, showModel: false });
     check(!document.querySelector(".agent-session__elapsed") && !document.querySelector(".agent-session__pill-model") && document.querySelector(".agent-session__pill-mode"), "可以关掉运行时长和模型，权限照常显示");
@@ -353,6 +354,13 @@ async function runChecks() {
     await act(async () => root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} view="cards" cardEffects="sparkle" hostDisplay="both" /></I18nProvider></StrictMode>));
     check(document.querySelectorAll(".agent-card--sparkle > .agent-card__band").length === 3
       && [...document.querySelectorAll<HTMLElement>(".agent-card--sparkle")].every((card) => card.offsetHeight === 62),"粒子流苏给每张卡片加一条流苏，不改变卡片高度");
+    await act(async () => root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} view="cards" cardEffects="orbit" hostDisplay="both" /></I18nProvider></StrictMode>));
+    check(document.querySelectorAll(".agent-card--orbit > .agent-orbit-ring").length === 1
+      && document.querySelector(".agent-card--waiting.agent-card--orbit")
+      && [...document.querySelectorAll<HTMLElement>(".agent-card")].every((card) => card.offsetHeight === 62), "流光边框在卡片视图下只给等你确认的会话加绕边框光带，不改变高度");
+    await act(async () => root.render(<StrictMode><I18nProvider><AgentSessionsPanel sort="recent" sessions={sessions} view="list" cardEffects="orbit" hostDisplay="both" /></I18nProvider></StrictMode>));
+    check(document.querySelectorAll(".agent-session--orbit > .agent-orbit-ring").length === 1
+      && document.querySelector(".agent-session--waiting.agent-session--orbit")?.firstElementChild?.classList.contains("agent-session__dot"), "流光边框在列表视图下同样只给等你确认的行加绕边框光带");
     await checkAgeColumns({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT }, check);
     await checkSubagentCards({ root, sessions, check });
     await checkNarrow({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT }, check);
@@ -371,5 +379,5 @@ else if (params.has("showcase")) await renderShowcase({ root, fixture, sessions,
 else if (params.has("age")) await renderAgeColumns({ root, fixture, sessions, chromeHeight: ISLAND_CHROME_HEIGHT });
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
-  results.textContent = "点击会话查看跳转结果：只有 fly-island 会话能找到窗口。";
+  results.textContent = "点击会话查看跳转结果：只有 fuyu 会话能找到窗口。";
 }

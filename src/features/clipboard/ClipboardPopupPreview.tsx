@@ -1,9 +1,10 @@
+import { Fragment } from "react";
 import { useTranslation } from "../../i18n";
 import type { ClipboardHistoryItem, ClipboardSnippet } from "./api";
 import { ClipboardImageViewer } from "./ClipboardImageViewer";
 import { ClipboardKindPane } from "./ClipboardKindPane";
 import { contentKind } from "./contentKind";
-import { sourceName } from "./fileEntry";
+import { previewMetaRows } from "./previewMeta";
 
 export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, imageZoom = false, onPasteText }: {
   entry?: ClipboardHistoryItem;
@@ -35,6 +36,16 @@ export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, ima
       ? text.files(item.files?.length ?? 1)
       : `${kindName ? `${kindName} · ` : ""}${text.text([...fullText].length)}`;
   const copiedAt = new Intl.DateTimeFormat(t.localeTag, { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(item.copiedAt);
+  const metaRows = previewMetaRows(item, copiedAt, {
+    source: text.source,
+    copiedAt: text.copiedAt,
+    note: text.note,
+    tags: text.tags,
+    none: text.none,
+    appName: t.settings.project.appName,
+    screenshotSource: t.clipboard.popup.screenshotSource,
+    otherDevice: t.clipboardPrivacy.otherDevice,
+  });
 
   return (
     <aside className="clipboard-popup__pane" aria-label={text.label}>
@@ -58,12 +69,12 @@ export function ClipboardPopupPreview({ entry, snippet, linkPreview = false, ima
         </div>
       )}
       <dl className="clipboard-popup__pane-meta">
-        <dt>{text.source}</dt>
-        <dd>{sourceName(item, t.settings.project.appName, t.clipboard.popup.screenshotSource, t.clipboardPrivacy.otherDevice) ?? text.none}</dd>
-        <dt>{text.copiedAt}</dt>
-        <dd>{copiedAt}</dd>
-        <dt>{text.tags}</dt>
-        <dd>{item.tags?.length ? item.tags.map((tag) => `#${tag}`).join(" ") : text.none}</dd>
+        {metaRows.map((row) => (
+          <Fragment key={row.key}>
+            <dt>{row.label}</dt>
+            <dd className={row.multiline ? "clipboard-popup__pane-meta-note" : undefined}>{row.value}</dd>
+          </Fragment>
+        ))}
       </dl>
     </aside>
   );

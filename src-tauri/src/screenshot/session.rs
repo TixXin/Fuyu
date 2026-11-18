@@ -1,7 +1,7 @@
 use std::{
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
-        Condvar, Mutex,
+        Arc, Condvar, Mutex,
     },
     thread,
     time::{Duration, Instant},
@@ -15,7 +15,6 @@ use crate::island::screen;
 
 pub(crate) const WINDOW_PREFIX: &str = "screenshot-";
 const SESSION_EVENT: &str = "screenshot-session";
-const ENDED_EVENT: &str = "screenshot-ended";
 const CAPTURE_SETTLE: Duration = Duration::from_millis(80);
 const CAPTURE_WAIT: Duration = Duration::from_secs(5);
 
@@ -55,7 +54,7 @@ struct Frame {
     width: u32,
     height: u32,
     scale: f64,
-    rgba: Vec<u8>,
+    rgba: Arc<Vec<u8>>,
 }
 
 struct Session {
@@ -124,14 +123,14 @@ fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
         let shots: Vec<_> = monitors.iter().map(|monitor| scope.spawn(move || super::capture::monitor(monitor))).collect();
         shots.into_iter().map(|shot| shot.join().ok().flatten()).collect()
     });
-    let (window_targets, window_handles) = targets::windows_on_screen();
+    let (window_targets, window_handles) = targets::windows_on_screen(app);
     finish_capture(app, id, grabs, window_targets);
     targets::read_controls(app, id, window_handles);
     Ok(())
 }
 
 fn grabbed(index: usize, grab: super::capture::Grab) -> Frame {
-    Frame { label: label(index), origin: grab.origin, width: grab.width, height: grab.height, scale: grab.scale, rgba: grab.rgba }
+    Frame { label: label(index), origin: grab.origin, width: grab.width, height: grab.height, scale: grab.scale, rgba: Arc::new(grab.rgba) }
 }
 
 fn announce(app: &AppHandle, id: u64) {
@@ -194,8 +193,7 @@ fn finish_capture(app: &AppHandle, id: u64, grabs: Vec<Option<super::capture::Gr
     };
     for label in &failed {
         if let Some(window) = app.get_webview_window(label) {
-            let _ = window.hide();
-            crate::webview_memory::hidden(&window);
+            super::capture::close_overlay(app, window);
         }
     }
     hold_overlays(app, false);
@@ -240,7 +238,7 @@ fn place_windows(app: &AppHandle, monitors: &[Monitor]) -> Result<(), String> {
     for (name, window) in app.webview_windows() {
         let index = name.strip_prefix(WINDOW_PREFIX).and_then(|index| index.parse::<usize>().ok());
         if index.is_some_and(|index| index >= monitors.len()) {
-            let _ = window.destroy();
+            super::capture::close_overlay(app, window);
         }
     }
     Ok(())
@@ -277,17 +275,6 @@ fn overlay_window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String>
     Ok(window)
 }
 
-pub(crate) fn prepare(app: &AppHandle) {
-    let app = app.clone();
-    thread::spawn(move || {
-        let placed = app.available_monitors().map_err(|error| error.to_string()).and_then(|monitors| place_windows(&app, &monitors));
-        if let Err(error) = placed {
-            eprintln!("failed to prepare the screenshot windows: {error}");
-        }
-        super::pin::prepare(&app);
-    });
-}
-
 pub(crate) fn current(label: &str) -> Option<OverlaySession> {
     let guard = session();
     let session = guard.as_ref()?;
@@ -317,7 +304,9 @@ pub(super) fn add_targets(id: u64, more: Vec<Target>) -> Option<Vec<String>> {
 }
 
 pub(crate) fn frame(label: &str) -> Option<Vec<u8>> {
-    session().as_ref()?.frames.iter().find(|frame| frame.label == label && !frame.rgba.is_empty()).map(|frame| frame.rgba.clone())
+    let guard = session();
+    let frame = guard.as_ref()?.frames.iter().find(|frame| frame.label == label && !frame.rgba.is_empty())?;
+    Some(Arc::unwrap_or_clone(Arc::clone(&frame.rgba)))
 }
 
 pub(crate) fn overlay_ready(window: &WebviewWindow, id: u64) {
@@ -406,9 +395,7 @@ pub(crate) fn end(app: &AppHandle) {
     CAPTURED.notify_all();
     for (name, window) in app.webview_windows() {
         if name.starts_with(WINDOW_PREFIX) {
-            let _ = window.hide();
-            crate::webview_memory::hidden(&window);
-            let _ = app.emit_to(name.as_str(), ENDED_EVENT, ());
+            super::capture::close_overlay(app, window);
         }
     }
     if ended {

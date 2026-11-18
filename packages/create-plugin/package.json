@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/create-plugin",
-  "version": "2.0.0-dev.0",
+  "version": "2.0.0",
   "private": true,
   "description": "Plugin platform v3: creates a Fuyu plugin project in TypeScript (published later as create-fuyu-plugin 2.0)",
   "license": "MIT",

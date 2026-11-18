@@ -20,7 +20,7 @@ export function PluginsSettingsPage({
   onOpenShortcuts: () => void;
 }) {
   const { takenBy, refreshPlugins } = useShortcutOwners(settings);
-  if (tab === "pluginsDev") return <PluginDevSection />;
+  if (tab === "pluginsDev") return <PluginDevSection defaultOpen />;
   if (tab === "pluginsUpdates") return <PluginUpdatesTab />;
   if (tab === "pluginsPages") {
     return (

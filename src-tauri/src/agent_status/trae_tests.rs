@@ -117,9 +117,21 @@ fn installs_into_each_editions_hooks_json() {
     assert!(command(&hooks["Notification"][0]).contains("traeCn notification"));
     assert_eq!(hooks["Notification"][0]["matcher"], "*");
     let approval = hooks["PreToolUse"].as_array().unwrap().iter().find(|entry| entry["matcher"] == APPROVED_TOOLS).unwrap();
+    assert!(APPROVED_TOOLS.contains("RunCommand") && APPROVED_TOOLS.contains("Edit") && APPROVED_TOOLS.contains("mcp__.*"));
     assert!(command(approval).contains("fuyu-agent-approval") && command(approval).contains("traeCn permission"));
     assert_eq!(approval["hooks"][0]["timeout"], APPROVAL_HOOK_TIMEOUT_SECONDS);
     assert!(hooks["Stop"].as_array().unwrap().iter().any(|entry| command(entry).contains("traeCn stop")));
+
+    let mut legacy = config.clone();
+    for entry in legacy["hooks"]["PreToolUse"].as_array_mut().unwrap() {
+        if entry["matcher"] == APPROVED_TOOLS {
+            entry["matcher"] = json!("RunCommand");
+        }
+    }
+    fs::write(hooks_path(&TRAE_CN, &home), legacy.to_string()).unwrap();
+    assert_eq!(hooks_state(&TRAE_CN, &env), HookInstallState::Outdated);
+    install_hooks(&TRAE_CN, &env).unwrap();
+    assert_eq!(hooks_state(&TRAE_CN, &env), HookInstallState::Current);
 
     fs::remove_file(hooks_path(&TRAE_CN, &home)).unwrap();
     install_hooks(&TRAE_CN, &env).unwrap();

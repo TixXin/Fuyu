@@ -77,55 +77,58 @@ Fuyu (浮屿, «islote flotante») es una isla flotante ligera, sin bordes y sie
 
 ## Qué hay en la isla
 
-<p align="center">
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/todo-en.webp" alt="La isla desplegada con las tareas de hoy; las terminadas aparecen tachadas abajo" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/music-en.webp" alt="La página de música de la isla: portada, letra sincronizada, barra de progreso y controles de reproducción" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/messages-en.webp" alt="Mensajes nuevos que bajan desde la isla: un correo, un mensaje de WeChat y uno de QQ" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/clipboard-en.webp" alt="El historial del portapapeles en la isla: un comando, un enlace, un texto y una imagen, cada uno con la app de la que salió" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/translate-en.webp" alt="La página de traducción de la isla: el texto original a la izquierda y la traducción a la derecha" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="Una solicitud de aprobación de Claude Code en la isla: el comando que quiere ejecutar y los botones Rechazar y Permitir" width="398" height="224"></a>
-  <br>
-  <sub>Haz clic en cualquier imagen para probar la isla tú mismo en el sitio web</sub>
-</p>
+<p><sub>Haz clic en una función para abrirla o cerrarla; haz clic en una animación para probar la isla tú mismo en la web</sub></p>
 
-<table>
-  <tr>
-    <td valign="top"><code>01</code></td>
-    <td><b>Tareas y notas</b><br>Las tareas del día, aquella en la que te estás concentrando, una nota diaria y el archivo de días anteriores.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>02</code></td>
-    <td><b>Música</b><br>Controla lo que se está reproduciendo, con forma de onda de audio y letra sincronizada.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>03</code></td>
-    <td><b>Mensajes</b><br>Los mensajes nuevos de Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu y DingTalk aparecen en la isla y abren la app con un clic; además, varias cuentas de correo; puedes leer y responder los correos desde la isla.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>04</code></td>
-    <td><b>Portapapeles y bandeja de archivos</b><br>Historial del portapapeles con texto e imágenes; suelta archivos en la isla y arrástralos después a otra app.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>05</code></td>
-    <td><b>Traducción rápida</b><br>Se abre con un atajo de teclado y admite varios servicios de traducción basados en LLM.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>06</code></td>
-    <td><b>Agentes de IA</b><br>El estado y el consumo de tus sesiones de Claude Code y Codex; aprueba solicitudes directamente en la isla, haz clic para saltar a la ventana correspondiente y recibe avisos en Telegram, Discord, Feishu o Bark cuando no estés en la computadora, y sigue dirigiendo al agente desde el chat.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>07</code></td>
-    <td><b>Calendario</b><br>Los eventos de hoy y de mañana, un calendario mensual con fechas lunares y feriados, una cuenta regresiva en la isla antes de cada reunión y unión con un solo clic.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>08</code></td>
-    <td><b>Avisos del sistema</b><br>Cambios de volumen y brillo, y qué app está usando la cámara o el micrófono.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>09</code></td>
-    <td><b>Plugins y temas</b><br>Amplía la isla con plugins del mercado (los datos sensibles requieren tu permiso aparte) y elige un aspecto listo para usar en el mercado de temas.</td>
-  </tr>
-</table>
+<details open>
+<summary><b>01 · Tareas y notas</b></summary>
+<p>Las tareas del día, aquella en la que te estás concentrando, una nota diaria y el archivo de días anteriores.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/todo-en.webp" alt="La isla desplegada con las tareas de hoy; las terminadas aparecen tachadas abajo" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>02 · Música</b></summary>
+<p>Controla lo que se está reproduciendo, con forma de onda de audio y letra sincronizada.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/music-en.webp" alt="La página de música de la isla: portada, letra sincronizada, barra de progreso y controles de reproducción" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>03 · Mensajes</b></summary>
+<p>Los mensajes nuevos de Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu y DingTalk aparecen en la isla y abren la app con un clic; además, varias cuentas de correo; puedes leer y responder los correos desde la isla.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/messages-en.webp" alt="Mensajes nuevos que bajan desde la isla: un correo, un mensaje de WeChat y uno de QQ" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>04 · Portapapeles y bandeja de archivos</b></summary>
+<p>Historial del portapapeles con texto e imágenes; suelta archivos en la isla y arrástralos después a otra app.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/clipboard-en.webp" alt="El historial del portapapeles en la isla: un comando, un enlace, un texto y una imagen, cada uno con la app de la que salió" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>05 · Traducción rápida</b></summary>
+<p>Se abre con un atajo de teclado y admite varios servicios de traducción basados en LLM.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/translate-en.webp" alt="La página de traducción de la isla: el texto original a la izquierda y la traducción a la derecha" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>06 · Agentes de IA</b></summary>
+<p>El estado y el consumo de tus sesiones de Claude Code y Codex; aprueba solicitudes directamente en la isla, haz clic para saltar a la ventana correspondiente y recibe avisos en Telegram, Discord, Feishu o Bark cuando no estés en la computadora, y sigue dirigiendo al agente desde el chat.</p>
+<p><a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="Una solicitud de aprobación de Claude Code en la isla: el comando que quiere ejecutar y los botones Rechazar y Permitir" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>07 · Calendario</b></summary>
+<p>Los eventos de hoy y de mañana, un calendario mensual con fechas lunares y feriados, una cuenta regresiva en la isla antes de cada reunión y unión con un solo clic.</p>
+</details>
+
+<details>
+<summary><b>08 · Avisos del sistema</b></summary>
+<p>Cambios de volumen y brillo, y qué app está usando la cámara o el micrófono.</p>
+</details>
+
+<details>
+<summary><b>09 · Plugins y temas</b></summary>
+<p>Amplía la isla con plugins del mercado (los datos sensibles requieren tu permiso aparte) y elige un aspecto listo para usar en el mercado de temas.</p>
+</details>
 
 El aspecto, el tamaño, la forma de recogerse, los atajos y cada función se ajustan en la ventana de Configuración, y la app se actualiza sola. Todos tus datos se quedan en tu computadora.
 
@@ -182,7 +185,7 @@ Tecnologías: Tauri 2, React 19 + TypeScript y Rust. Las versiones y las actuali
 
 ## Comunidad
 
-¿Tienes dudas, ideas o solo quieres conversar? Escanea el código para unirte a nuestro grupo de usuarios en WeChat (sobre todo en chino):
+¿Tienes dudas, ideas o solo quieres conversar? Únete a nuestro [servidor de Discord](https://discord.gg/azu5aZFuRY) o escanea el código para unirte a nuestro grupo de usuarios en WeChat (sobre todo en chino):
 
 <p align="center">
   <img src="../assets/readme/wechat-group.png" alt="Código QR del grupo de usuarios de Fuyu en WeChat" width="220">

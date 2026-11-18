@@ -250,6 +250,9 @@ where
     let mut state = store.state.lock().map_err(|error| error.to_string())?;
     let mut next = state.clone();
     change(&mut next)?;
+    if next == *state {
+        return Ok(next);
+    }
     let next = clock::with(|clock, wall| restamp(&state, next, clock, wall));
     save(&store.path, &next)?;
     *state = next.clone();
@@ -368,7 +371,7 @@ pub fn set_clipboard_link_settings(app: AppHandle, settings: ClipboardLinkSettin
 #[tauri::command]
 pub async fn export_clipboard_links(app: AppHandle) -> Result<String, UserError> {
     let links = get_clipboard_links(app)?;
-    Ok(super::links_transfer::export(&links)?)
+    super::links_transfer::export(&links)
 }
 
 #[tauri::command]

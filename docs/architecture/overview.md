@@ -8,7 +8,7 @@
 ┌──────────────────────── WebView2（同一前端包，按 ?window= 分发）────────────────────────┐
 │  main：悬浮岛    translation：快捷翻译    clipboard：剪贴板    settings：设置    screenshot-<n>：截图 │
 │  onboarding：新手引导（新装第一次启动时打开）                                             │
-│  drag-grid：拖岛时的中线辅助线（透明、鼠标穿透，第一次拖岛时创建）                      │
+│  drag-grid：拖岛时的中线辅助线（透明、鼠标穿透，拖岛时创建、松手销毁）                    │
 └────────────┬─────────────────────────────────────────────────────────────────────────┘
              │ invoke（命令，请求/响应）        ▲ emit / emit_to（事件，后端主动推送）
              ▼                                │
@@ -30,7 +30,7 @@
    macOS（适配中，G1）：平台层 macos/；暂不支持的模块编译成 unsupported 空实现
 ```
 
-插件平台第 3 版（E36，开发中，正式版默认关）：测试版（版本号带 `-`，如 `0.3.10-beta.2`）和开发版默认启动、设 `FUYU_PLUGINS_V3=0` 关掉，正式版设 `FUYU_PLUGINS_V3=1` 才启动（E36.3.52、E36.3.47）；正式版用安装包资源目录里的 `plugins-v3/host` 和 `plugins-v3/builtins`，开发版和 `pnpm build:exe` 用仓库里的源码。Rust 的 `plugin_kernel` 用基座 crate `src-tauri/crates/plugin-base` 找电脑上的 Node（没有就下载到数据目录的 `runtime/`，下载进度和失败显示在设置的插件页，失败了在那里重试），拉起没有界面的宿主进程（`packages/plugin-base` 的 host，跑 `vendor/cordis` 内核），标准输入输出上走 JSON-RPC、心跳、退避重启，用作业对象 / 进程组管住它。窗口经本机 WebSocket（令牌、来源核对、快照和序号）连宿主，插件的界面文件和 React 转接模块由自定义协议 `fuyu-plugin` 提供，前端一侧在 `src/features/plugin-kernel/`。协议和边界见 [v3-boundary.md](plugins/v3-boundary.md)，进度见 [v3-progress.md](plugins/v3-progress.md)。旧的 `plugin_host` 冻结，只修 bug。
+插件平台第 3 版（E36）：开发版、测试版和正式版均默认启动宿主，设 `FUYU_PLUGINS_V3=0` 关掉（E54）；正式版用安装包资源目录里的 `plugins-v3/host` 和 `plugins-v3/builtins`，开发版和 `pnpm build:exe` 用仓库里的源码。Rust 的 `plugin_kernel` 用基座 crate `src-tauri/crates/plugin-base` 找电脑上的 Node（没有就下载到数据目录的 `runtime/`，下载进度和失败显示在设置的插件页，失败了在那里重试），拉起没有界面的宿主进程（`packages/plugin-base` 的 host，跑 `vendor/cordis` 内核），标准输入输出上走 JSON-RPC、心跳、退避重启，用作业对象 / 进程组管住它。窗口经本机 WebSocket（令牌、来源核对、快照和序号）连宿主，插件的界面文件和 React 转接模块由自定义协议 `fuyu-plugin` 提供，前端一侧在 `src/features/plugin-kernel/`。协议和边界见 [v3-boundary.md](plugins/v3-boundary.md)，进度见 [v3-progress.md](plugins/v3-progress.md)。旧的 `plugin_host` 冻结，只修 bug。
 
 岛和设置窗口的界面经插槽拼装（E36.2，第 2 阶段）：`src/features/plugin-kernel/slots.ts` 给每个窗口一份不依赖宿主的注册表，设置窗口的部分（E36.3.26 起）在各功能的 `features/<领域>/plugin/settings.tsx`（分类、分节、快捷键页的分节和 `settings.runner/v1` 的接线），由 `windows/settings/slots/categories.tsx` 用 glob 收进来，窗口自己的页面留在那里；岛上的部分（E36.3.25 起）在各功能的 `features/<领域>/plugin/island.tsx`（展开页、页头按钮、收起条、刘海提醒、提示）和 `runners.tsx`（不画界面的接线），由 `windows/island/slots/pluginFiles.ts` 用 glob 收进来（窗口 import 的是 `slots/builtins.ts`：它先载外壳的样式，再载 `pluginFiles.ts`，插件里同优先级的规则才压得过外壳），外壳自己的项（状态灯、重置位置、最小化、设置按钮、第一次提示）留在 `windows/island/slots/`；岛的形状（收起条主行和宽度、贴边保持、弹出、侧边岛的行、提醒）由各功能的 runner 往 `plugin-kernel/islandContributions.ts` 的贡献表里交，外壳只读汇总，不 import 功能（E36.3.51，规则见 [v3-boundary.md](plugins/v3-boundary.md)「岛的贡献表」）；功能只从 `features/plugin-kernel/`（`slots.ts`、`settingsSlots.ts`、`settingsCategories.ts`）拿句柄，不 import 窗口（`tests/unit/feature-boundaries.test.mjs` 检查）；由 `SlotView` 渲染（内置项不加外层，第三方插件的项包 `.plugin-slot`，每项有自己的错误边界）。不设 `FUYU_PLUGINS_V3` 时也走这条路。插槽的名单和规则在 `@fuyu/plugin-base/protocol` 的 `SLOTS`，见 [v3-boundary.md](plugins/v3-boundary.md)「插槽」。
 
@@ -54,7 +54,7 @@
 main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、styles/
 ```
 
-功能之间不直接 import（插件平台第 3 版的要求，见 [v3-phase3-plan.md](plugins/v3-phase3-plan.md)「关键设计」第 4 条）。不属于任何一个功能的共享代码在 E36.3.24 上提了：岛屿设置的模型在 `lib/settings/`，主题、强调色和动效在 `lib/theme/`，快捷键工具在 `lib/shortcut/`，设置文件和备份在 `lib/settings-backup/`，系统权限在 `lib/system-permissions/`，设置页共用的分节在 `windows/settings/sections/`，岛的「第一次」提示在 `windows/island/first-hints/`；原来的 `features/appearance`、`settings-backup`、`system-permissions`、`first-hints` 不再存在。`lib/settings/` 是唯一反过来 import 功能的地方：日历、歌词、待办项目、Agent（`features/agent-status/agentSettings.ts`）那一份设置留在功能里，由它汇总成 `IslandSettings`。还剩的跨功能 import 记在 `scripts/feature-boundary-allowlist.json`，由 `tests/unit/feature-boundaries.test.mjs` 检查，只减不增，第 3 阶段结束时清零；每条要去掉的边在 `removedBy` 里记着由哪个任务去掉，任务归档了边还在时测试会失败。
+功能之间不直接 import（插件平台第 3 版的要求，见 [v3-phase3-plan.md](plugins/v3-phase3-plan.md)「关键设计」第 4 条）。不属于任何一个功能的共享代码在 E36.3.24 与 E36.3.50 上提了：岛屿设置的模型（含日历 `calendarSettings.ts`、歌词 `lyricsSettings.ts`、Agent `agentSettings.ts` 的设置字段与默认值）在 `lib/settings/`，待办项目的类型与规整在 `lib/todo-projects/`，主题、强调色和动效在 `lib/theme/`，快捷键工具在 `lib/shortcut/`，设置文件和备份在 `lib/settings-backup/`，系统权限在 `lib/system-permissions/`，设置页共用的分节在 `windows/settings/sections/`，岛的「第一次」提示在 `windows/island/first-hints/`；原来的 `features/appearance`、`settings-backup`、`system-permissions`、`first-hints` 不再存在。`scripts/feature-boundary-allowlist.json` 已在 E36.3.50 清零，由 `tests/unit/feature-boundaries.test.mjs` 守住零跨功能 import 和零下层反向 import。
 
 ## 仓库目录
 

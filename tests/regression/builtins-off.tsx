@@ -87,9 +87,9 @@ const check = (condition: unknown, message: string) => {
 };
 
 try {
+  const owners = ownersOfItems();
   await mount();
   const baseline = await walk();
-  const owners = ownersOfItems();
   await unmount();
   check(baseline.size > 20 && [...baseline.keys()].some((label) => label.startsWith("island page")) && [...baseline.keys()].some((label) => label.startsWith("settings")), `The walk reaches the collapsed island, its pages and the settings pages (${baseline.size} places)`);
   check(seenIn(baseline, domains.classes, "timer").length > 0 && seenIn(baseline, domains.classes, "translation").length > 0, "With everything on, the walk sees the timer's and the translation's own classes");

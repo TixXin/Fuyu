@@ -15,6 +15,7 @@ import type { IslandMode, IslandPage } from "../../src/windows/island/types";
 import { MessageArrivalsPanel } from "../../src/features/messages/arrivals/MessageArrivalsPanel";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
+import { useImSources } from "../../src/features/messages/im-sources/useImSources";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
 import type { MailSnapshot } from "../../src/features/messages/mail/api";
 import type { MessageSource } from "../../src/features/messages/messagePreview";
@@ -47,6 +48,17 @@ mockIPC((command, payload) => {
   commands.push({ command, args });
   if (command === "request_qq_notification_access") return "allowed";
   if (command === "get_qq_notification_state") return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
+  if (command === "get_im_sources_state") return [];
+  if (command === "open_im_source") {
+    const source = String(args.source);
+    void emit("im-sources-changed", {
+      source,
+      snapshot: { source, revision: ++revision, enabled: true, installed: true, status: "listening", items: [], error: null },
+      newestId: null,
+      windowVisible: true,
+    });
+    return null;
+  }
   if (command === "set_wechat_expose_ui" || command === "set_wechat_hide_taskbar_button") return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
   if (command === "get_qq_mail_state") return [mail];
   if (command === "clear_qq_notifications") return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
@@ -60,16 +72,12 @@ mockIPC((command, payload) => {
 
 const DURATION_MS = automated ? 700 : 8000;
 const mediaPresses: string[] = [];
-const PLAYER = {
-  playing: true,
-  onPrevious: () => mediaPresses.push("previous"),
-  onPlayPause: () => mediaPresses.push("playPause"),
-  onNext: () => mediaPresses.push("next"),
-};
+const PLAYER = { playing: true, onPrevious: () => mediaPresses.push("previous"), onPlayPause: () => mediaPresses.push("playPause"), onNext: () => mediaPresses.push("next") };
 let state = { mode: "collapsed" as IslandMode, page: "todo" as IslandPage };
 let openedSource: MessageSource | null = null;
 let setUserMode: (mode: IslandMode) => void;
 let latestPreview: unknown = null;
+const expandedHeights: number[] = [];
 
 function Fixture() {
   const [mode, setMode] = useState<IslandMode>("collapsed");
@@ -82,23 +90,21 @@ function Fixture() {
   const wechat = useWeChatReminders(canPreview);
   const qqMail = useMail(canPreview);
   const plugins = usePluginNotifications(canPreview);
-  const preview = useLatestMessagePreview(qq, wechat, qqMail, plugins);
+  const imSources = useImSources(canPreview);
+  const preview = useLatestMessagePreview(qq, wechat, qqMail, plugins, imSources);
   latestPreview = preview;
   const openIslandPage = useCallback((next: IslandPage) => { setPage(next); setMode("expanded"); }, []);
   const collapseIsland = useCallback(() => setMode("collapsed"), []);
   const panel = useIslandMessagePanel({
     enabled: true, durationMs: DURATION_MS,
-    notices: { preview, qqNotifications: qq, wechatReminders: wechat, qqMail, pluginNotifications: plugins, setMessagePanelOpen },
+    notices: { preview, qqNotifications: qq, wechatReminders: wechat, qqMail, pluginNotifications: plugins, imSources, setMessagePanelOpen },
     mode, page, openIslandPage, collapseIsland,
     onOpenMessages: (source) => { openedSource = source; openIslandPage("qq"); },
     host: islandHost,
   });
   const { popup, expandedIslandWidth } = useIslandPopup(mode, panel.arrivals !== null);
-  const height = getExpandedIslandHeight({
-    maxPanelHeight: 490,
-    panel: page === "qq" && panel.arrivals ? { height: messageArrivalsPanelHeight(panel.height, 490) } : undefined,
-    popup,
-  });
+  const height = getExpandedIslandHeight({ maxPanelHeight: 490, panel: page === "qq" && panel.arrivals ? { height: messageArrivalsPanelHeight(panel.height, 490) } : undefined, popup });
+  if (mode === "expanded") expandedHeights.push(height);
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: plugins, preview: null, open: (source) => { openedSource = source; openIslandPage("qq"); } }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className="stage" style={{ "--collapsed-island-width": "300px", "--expanded-island-height": `${height}px`, "--expanded-island-width": `${expandedIslandWidth}px` } as CSSProperties}>
     <IslandShell
@@ -162,8 +168,10 @@ const results = document.getElementById("results")!;
 
 async function runChecks() {
   try {
+    expandedHeights.length = 0;
     await notify("qq");
     await waitFor(() => state.mode === "expanded" && rows().length === 1, "展开到消息页");
+    check(expandedHeights.length > 0 && expandedHeights.every((h) => h > 80 && h < 220), `弹出首帧直接落入卡片高度区间无 490/28 抽搐（${expandedHeights.join("→")}）`);
     check(state.page === "qq" && senders()[0] === "小林", "QQ 新消息让收起的岛展开到消息页，只列这一条");
     const islandBox = () => document.querySelector(".island")!.getBoundingClientRect();
     const headerShown = () => getComputedStyle(document.querySelector(".island__header")!).display !== "none";
@@ -304,6 +312,60 @@ async function runChecks() {
     check(rows().length === 1 && document.querySelector(".message-arrivals--inline"), "同一插件带按钮的提示替换旧的，不叠两行");
     await wait(DURATION_MS + 400);
     check(rows().length === 0, "按过播放按钮后仍按时长自己收起");
+
+    const flashId = "feishu:flash:9000";
+    const toastId = "feishu:toast:3:1";
+    await update(async () => {
+      await emit("im-sources-changed", {
+        source: "feishu",
+        snapshot: { source: "feishu", revision: ++revision, enabled: true, installed: true, status: "listening", items: [{ id: flashId, kind: "flash", title: "Feishu", body: "", createdAt: Date.now() }], error: null },
+        newestId: flashId,
+        windowVisible: true,
+      });
+    });
+    await waitFor(() => rows().length === 1 && senders()[0] === "飞书", "飞书闪烁提醒弹出到达面板");
+    await update(async () => {
+      await emit("im-sources-changed", {
+        source: "feishu",
+        snapshot: { source: "feishu", revision: ++revision, enabled: true, installed: true, status: "listening", items: [{ id: toastId, kind: "toast", title: "张工", body: "版本评审通过", createdAt: Date.now() }], error: null },
+        newestId: toastId,
+        replacedId: flashId,
+        windowVisible: true,
+      });
+    });
+    await waitFor(() => senders()[0] === "张工", "飞书真实 Toast 升级到达面板条目");
+    check(rows().length === 1 && rows()[0].querySelector(".message-brand-icon--feishu") !== null, "闪烁提醒经 replacedId 合并为单条真实 Toast，不留重复空提醒");
+    await act(async () => {
+      rows()[0].querySelector(".message-arrivals__row")!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      rows()[0].querySelector<HTMLButtonElement>(".message-arrivals__row")!.click();
+    });
+    await waitFor(() => commands.some((entry) => entry.command === "open_im_source" && entry.args.source === "feishu") && state.mode === "collapsed", "点飞书到达项唤起飞书并收起面板");
+    await update(async () => {
+      await emit("im-sources-changed", {
+        source: "feishu",
+        snapshot: { source: "feishu", revision: ++revision, enabled: false, installed: true, status: "disabled", items: [], error: null },
+        newestId: null,
+        windowVisible: true,
+      });
+    });
+    await wait(500);
+
+    await update(async () => {
+      const receivedAt = Date.now();
+      await emit("qq-notifications-changed", {
+        snapshot: { revision: ++revision, enabled: true, status: "listening", items: [{ id: `qq-otp-${revision}`, title: "验证服务", body: "您的动态码是 904812，请勿告知他人。", createdAt: receivedAt }], error: null },
+        newestId: `qq-otp-${revision}`, windowVisible: true,
+      });
+    });
+    await waitFor(() => rows().length === 1, "含验证码的通知弹出到达面板");
+    const otpAction = rows()[0].querySelector<HTMLButtonElement>(".message-arrivals__action");
+    check(otpAction?.textContent === "复制 904812", "到达面板显示一键复制验证码按钮");
+    await act(async () => {
+      otpAction!.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      otpAction!.click();
+    });
+    await waitFor(() => commands.some((entry) => entry.command === "copy_message_text" && entry.args.text === "904812") && state.mode === "collapsed", "复制验证码后自动收起");
+    check(rows().length === 0, "点到达面板复制验证码后移除提醒并收起");
 
     results.textContent = messages.join("\n");
     results.dataset.result = "passed";

@@ -39,7 +39,10 @@ export interface PluginStatus {
   lastError?: { at: number; text: string };
   usage?: PluginUsage;
   source?: PluginSource;
-  undeclared?: { provides?: string[]; client?: string[]; slots?: string[] };
+  undeclared?: { provides?: string[]; client?: string[]; slots?: string[]; commands?: string[]; network?: string[] };
+  disabledServices?: string[];
+  provides?: string[];
+  replacedServices?: Array<{ service: string; by: string }>;
 }
 
 export type PluginSource = "builtin" | "market" | "manual" | "dev" | "file";
@@ -131,6 +134,7 @@ export interface HostOptions {
   faultLimit?: Partial<FaultLimit>;
   onLog?: (entry: LogEntry) => void;
   rpc?: HostRpc | null;
+  fetchImpl?: (input: any, init?: any) => Promise<any>;
 }
 
 export interface Host {
@@ -189,6 +193,9 @@ export interface DeclaredUse {
   provides: string[];
   client: string[];
   slots: string[];
+  commands: string[];
+  network: string[];
+  experimental: string[];
 }
 
 export interface BuiltinPlugin {
@@ -198,13 +205,21 @@ export interface BuiltinPlugin {
   host: string | null;
   clients: PluginWindowFile[];
   declared: DeclaredUse | null;
+  displayName?: Record<string, string> | null;
+  commands?: Array<{ id: string; title: Record<string, string>; keybinding?: string }>;
+  configSchema?: Record<string, unknown> | null;
 }
 
 export interface PluginPackage {
   package: string;
   version: string;
+  displayName: Record<string, string> | null;
   host: string | null;
   clients: PluginWindowFile[];
+  commands: Array<{ id: string; title: Record<string, string>; keybinding?: string }>;
+  network: string[];
+  experimental: string[];
+  configSchema: Record<string, unknown> | null;
   declared: DeclaredUse;
 }
 
@@ -224,3 +239,8 @@ export const DEV_PREFIX: "dev";
 export const INSTALLED_SOURCES: readonly ["market", "manual"];
 export const SOURCES: readonly ["market", "manual", "dev"];
 export function readManifest(root: string, options: ValidateManifestOptions): PluginPackage;
+export const KEYBINDINGS_FILE: "keybindings.json";
+export const CONFIG_FILE: "config.json";
+export const WINDOW_RULES_FILE: "window-rules.json";
+export const MAX_WINDOWS_PER_PLUGIN: 8;
+export const MAX_WINDOWS_TOTAL: 24;

@@ -1,18 +1,14 @@
 use crate::user_error::UserError;
-use std::time::Duration;
-#[cfg(any(windows, test))]
 use std::{
     fs::{self, File},
     io::{self, Cursor, Read},
-    path::Path,
+    path::{Path, PathBuf},
+    time::Duration,
 };
-#[cfg(windows)]
-use std::path::PathBuf;
 
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
-#[cfg(windows)]
 use super::locate::{EXE_NAME, FOLDER};
 use crate::system::updater::reqwest_proxy;
 
@@ -20,7 +16,6 @@ const LATEST: &str = "https://api.github.com/repos/chenhg5/cc-connect/releases/l
 const DOWNLOADS: &str = "https://github.com/chenhg5/cc-connect/releases/download/";
 const MAX_TEXT: u64 = 1 << 20;
 const MAX_ZIP: u64 = 100 << 20;
-#[cfg(any(windows, test))]
 const MAX_EXE: u64 = 300 << 20;
 const TIMEOUT: Duration = Duration::from_secs(600);
 
@@ -71,7 +66,6 @@ pub(super) async fn download(client: &reqwest::Client, release: &Release, name: 
     Ok(Package { sha256: actual, bytes })
 }
 
-#[cfg(windows)]
 pub(super) async fn install(app_dir: PathBuf) -> Result<PathBuf, UserError> {
     let client = client()?;
     let release = latest(&client).await?;
@@ -80,8 +74,8 @@ pub(super) async fn install(app_dir: PathBuf) -> Result<PathBuf, UserError> {
     if exe.is_file() {
         return Ok(exe);
     }
-    let zip_name = asset_name(&release.tag_name, std::env::consts::ARCH)?;
-    let package = download(&client, &release, &zip_name).await?;
+    let archive_name = asset_name(&release.tag_name, std::env::consts::OS, std::env::consts::ARCH)?;
+    let package = download(&client, &release, &archive_name).await?;
     tauri::async_runtime::spawn_blocking(move || unpack(&package.bytes, &dir, &exe).map(|()| exe))
         .await
         .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
@@ -112,14 +106,17 @@ async fn get(client: &reqwest::Client, url: &str, limit: u64) -> Result<Vec<u8>,
     Ok(bytes.to_vec())
 }
 
-#[cfg(any(windows, test))]
-fn asset_name(tag: &str, arch: &str) -> Result<String, UserError> {
+fn asset_name(tag: &str, os: &str, arch: &str) -> Result<String, UserError> {
     let arch = match arch {
         "x86_64" => "amd64",
         "aarch64" => "arm64",
-        other => return Err(UserError::new("ccConnect.arch", format!("cc-connect has no Windows build for {other}.")).arg("arch", other)),
+        other => return Err(UserError::new("ccConnect.arch", format!("cc-connect has no build for {other}.")).arg("arch", other)),
     };
-    Ok(format!("cc-connect-{tag}-windows-{arch}.zip"))
+    match os {
+        "windows" => Ok(format!("cc-connect-{tag}-windows-{arch}.zip")),
+        "macos" => Ok(format!("cc-connect-{tag}-darwin-{arch}.tar.gz")),
+        other => Err(UserError::new("ccConnect.arch", format!("cc-connect has no build for {other}.")).arg("arch", other)),
+    }
 }
 
 fn checksum_for(sums: &str, name: &str) -> Option<String> {
@@ -130,35 +127,83 @@ fn checksum_for(sums: &str, name: &str) -> Option<String> {
     })
 }
 
+#[cfg(windows)]
+fn unpack(bytes: &[u8], dir: &Path, exe: &Path) -> Result<(), UserError> {
+    unpack_zip(bytes, dir, exe)
+}
+
+#[cfg(not(windows))]
+fn unpack(bytes: &[u8], dir: &Path, exe: &Path) -> Result<(), UserError> {
+    unpack_tar_gz(bytes, dir, exe)
+}
+
 #[cfg(any(windows, test))]
-fn unpack(zip: &[u8], dir: &Path, exe: &Path) -> Result<(), UserError> {
-    let mut archive = zip::ZipArchive::new(Cursor::new(zip)).map_err(|error| UserError::new("ccConnect.zip", "Could not read the cc-connect zip.").detail(error))?;
+fn unpack_zip(zip: &[u8], dir: &Path, exe: &Path) -> Result<(), UserError> {
+    let mut archive = zip::ZipArchive::new(Cursor::new(zip)).map_err(|error| UserError::new("ccConnect.zip", "Could not read the cc-connect package.").detail(error))?;
     let index = (0..archive.len())
         .find(|&index| {
             archive
                 .by_index(index)
                 .is_ok_and(|file| file.is_file() && file.name().is_ok_and(|name| name.to_ascii_lowercase().ends_with(".exe")))
         })
-        .ok_or_else(|| UserError::new("ccConnect.zipEmpty", "The cc-connect zip has no program in it."))?;
-    let file = archive.by_index(index).map_err(|error| UserError::new("ccConnect.zip", "Could not read the cc-connect zip.").detail(error))?;
+        .ok_or_else(|| UserError::new("ccConnect.zipEmpty", "The cc-connect package has no program in it."))?;
+    let file = archive.by_index(index).map_err(|error| UserError::new("ccConnect.zip", "Could not read the cc-connect package.").detail(error))?;
     if file.size() > MAX_EXE {
         return Err(UserError::new("ccConnect.zipLarge", "The cc-connect program is unusually large; gave up."));
     }
+    write_program(file, dir, exe)
+}
+
+#[cfg(any(not(windows), test))]
+fn unpack_tar_gz(tgz: &[u8], dir: &Path, exe: &Path) -> Result<(), UserError> {
+    let unreadable = |error: io::Error| UserError::new("ccConnect.zip", "Could not read the cc-connect package.").detail(error);
+    let mut archive = tar::Archive::new(flate2::read::GzDecoder::new(Cursor::new(tgz)));
+    for entry in archive.entries().map_err(unreadable)? {
+        let entry = entry.map_err(unreadable)?;
+        if !entry.header().entry_type().is_file() {
+            continue;
+        }
+        let path = entry.path().map_err(unreadable)?.into_owned();
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else { continue };
+        if !is_tar_program(name) {
+            continue;
+        }
+        if entry.size() > MAX_EXE {
+            return Err(UserError::new("ccConnect.zipLarge", "The cc-connect program is unusually large; gave up."));
+        }
+        return write_program(entry, dir, exe);
+    }
+    Err(UserError::new("ccConnect.zipEmpty", "The cc-connect package has no program in it."))
+}
+
+#[cfg(any(not(windows), test))]
+fn is_tar_program(name: &str) -> bool {
+    let lower = name.to_ascii_lowercase();
+    (name == "cc-connect" || name.starts_with("cc-connect-"))
+        && ![".md", ".txt", ".json", ".sha256", ".sig"].iter().any(|ext| lower.ends_with(ext))
+}
+
+fn write_program(reader: impl Read, dir: &Path, exe: &Path) -> Result<(), UserError> {
     fs::create_dir_all(dir).map_err(|error| UserError::new("file.create", format!("Could not create {}.", dir.display())).arg("path", dir.display().to_string()).detail(error))?;
     let part = exe.with_file_name(format!("{}.part", exe.file_name().map(|name| name.to_string_lossy()).unwrap_or_default()));
     let mut out = File::create(&part).map_err(|error| UserError::new("file.write", format!("Could not write {}.", part.display())).arg("path", part.display().to_string()).detail(error))?;
-    io::copy(&mut file.take(MAX_EXE), &mut out).map_err(|error| UserError::new("ccConnect.unpack", "Could not unpack cc-connect.").detail(error))?;
+    io::copy(&mut reader.take(MAX_EXE), &mut out).map_err(|error| UserError::new("ccConnect.unpack", "Could not unpack cc-connect.").detail(error))?;
     drop(out);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&part, fs::Permissions::from_mode(0o755))
+            .map_err(|error| UserError::new("file.write", format!("Could not write {}.", part.display())).arg("path", part.display().to_string()).detail(error))?;
+    }
     fs::rename(&part, exe).map_err(|error| UserError::new("file.write", format!("Could not write {}.", exe.display())).arg("path", exe.display().to_string()).detail(error))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{asset_name, checksum_for, unpack};
+    use super::{asset_name, checksum_for, unpack_tar_gz, unpack_zip};
     use std::{fs, io::Write};
 
     #[test]
-    #[cfg(windows)]
     #[ignore = "downloads cc-connect from GitHub"]
     fn downloads_the_latest_release_and_it_runs() {
         use super::install;
@@ -171,10 +216,13 @@ mod tests {
     }
 
     #[test]
-    fn the_windows_zip_for_this_cpu() {
-        assert_eq!(asset_name("v1.5.0", "x86_64").unwrap(), "cc-connect-v1.5.0-windows-amd64.zip");
-        assert_eq!(asset_name("v1.5.0", "aarch64").unwrap(), "cc-connect-v1.5.0-windows-arm64.zip");
-        assert!(asset_name("v1.5.0", "x86").is_err());
+    fn the_release_archive_matches_os_and_cpu() {
+        assert_eq!(asset_name("v1.5.0", "windows", "x86_64").unwrap(), "cc-connect-v1.5.0-windows-amd64.zip");
+        assert_eq!(asset_name("v1.5.0", "windows", "aarch64").unwrap(), "cc-connect-v1.5.0-windows-arm64.zip");
+        assert_eq!(asset_name("v1.5.2", "macos", "aarch64").unwrap(), "cc-connect-v1.5.2-darwin-arm64.tar.gz");
+        assert_eq!(asset_name("v1.5.2", "macos", "x86_64").unwrap(), "cc-connect-v1.5.2-darwin-amd64.tar.gz");
+        assert!(asset_name("v1.5.0", "windows", "x86").is_err());
+        assert!(asset_name("v1.5.0", "freebsd", "x86_64").is_err());
     }
 
     #[test]
@@ -200,9 +248,33 @@ mod tests {
         let bytes = zip.finish().unwrap().into_inner();
         let dir = std::env::temp_dir().join(format!("fuyu-cc-connect-unpack-{}", std::process::id()));
         let exe = dir.join("cc-connect.exe");
-        unpack(&bytes, &dir, &exe).unwrap();
+        unpack_zip(&bytes, &dir, &exe).unwrap();
         assert_eq!(fs::read(&exe).unwrap(), b"MZ program");
         assert!(!dir.join("cc-connect.exe.part").exists());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn the_tarball_s_program_lands_as_executable_cc_connect() {
+        let mut builder = tar::Builder::new(flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast()));
+        for (name, data) in [("README.md", &b"hello"[..]), ("cc-connect-v1.5.2-darwin-arm64", &b"#!/bin/sh\necho ok\n"[..])] {
+            let mut header = tar::Header::new_gnu();
+            header.set_size(data.len() as u64);
+            header.set_mode(0o644);
+            header.set_cksum();
+            builder.append_data(&mut header, name, data).unwrap();
+        }
+        let bytes = builder.into_inner().unwrap().finish().unwrap();
+        let dir = std::env::temp_dir().join(format!("fuyu-cc-connect-unpack-tgz-{}", std::process::id()));
+        let exe = dir.join("cc-connect");
+        unpack_tar_gz(&bytes, &dir, &exe).unwrap();
+        assert_eq!(fs::read(&exe).unwrap(), b"#!/bin/sh\necho ok\n");
+        assert!(!dir.join("cc-connect.part").exists());
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            assert_eq!(fs::metadata(&exe).unwrap().permissions().mode() & 0o111, 0o111);
+        }
         let _ = fs::remove_dir_all(&dir);
     }
 }

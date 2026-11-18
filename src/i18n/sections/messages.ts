@@ -1,3 +1,21 @@
+export type ImSourceText = {
+  desktopOnly: (name: string) => string;
+  receive: (name: string) => string;
+  title: (name: string) => string;
+  navLabel: (name: string) => string;
+  recent: (name: string) => string;
+  list: (name: string) => string;
+  open: (name: string) => string;
+  refresh: (name: string) => string;
+  clear: (name: string) => string;
+  allowLabel: (name: string) => string;
+  retryLabel: (name: string) => string;
+  openNotification: (name: string, title: string) => string;
+  autoClearDescription: (name: string) => string;
+  autoClearDescriptionMac: (name: string) => string;
+  flashBody: string;
+};
+
 export type MessagesText = {
   title: string;
   sources: string;
@@ -16,14 +34,25 @@ export type MessagesText = {
     qq: string;
     wechat: string;
     qqMail: string;
+    telegram: string;
+    discord: string;
+    whatsapp: string;
+    tim: string;
+    feishu: string;
+    dingtalk: string;
+    wecom: string;
     plugin: string;
   };
+  im: ImSourceText;
   collapsedTask: (title: string) => string;
   expand: (label: string) => string;
   openPreview: (text: string, source: string) => string;
-  badge: (count: number, wechat: boolean) => string;
+  badge: (count: number, wechat: boolean, extraCount?: number) => string;
   label: (text: string) => string;
   qqPreview: (title: string, body: string) => string;
+  copyText: string;
+  copied: string;
+  copyCode: (code: string) => string;
   banner: {
     more: (count: number) => string;
     close: string;
@@ -35,6 +64,12 @@ export type MessagesText = {
     clearAll: string;
     clearAllHint: string;
   };
+};
+
+const zhJoin = (prefix: string, name: string, suffix = "") => {
+  const lead = prefix && /^[A-Za-z0-9]/.test(name) ? " " : "";
+  const trail = suffix && /[A-Za-z0-9]$/.test(name) ? " " : "";
+  return `${prefix}${lead}${name}${trail}${suffix}`;
 };
 
 export const zhCN: MessagesText = {
@@ -55,14 +90,41 @@ export const zhCN: MessagesText = {
     qq: "QQ",
     wechat: "微信",
     qqMail: "邮箱",
+    telegram: "Telegram",
+    discord: "Discord",
+    whatsapp: "WhatsApp",
+    tim: "TIM",
+    feishu: "飞书",
+    dingtalk: "钉钉",
+    wecom: "企业微信",
     plugin: "插件",
+  },
+  im: {
+    desktopOnly: (name) => zhJoin("请在桌面版中使用", name, "消息。"),
+    receive: (name) => zhJoin("接收", name, "消息"),
+    title: (name) => zhJoin("", name, "消息"),
+    navLabel: (name) => zhJoin("", name, "通知"),
+    recent: (name) => zhJoin("", name, "最近通知"),
+    list: (name) => zhJoin("最近收到的", name, "通知"),
+    open: (name) => zhJoin("打开", name),
+    refresh: (name) => zhJoin("刷新", name, "通知状态"),
+    clear: (name) => zhJoin("清空岛内", name, "通知"),
+    allowLabel: (name) => zhJoin("允许", name, "通知访问"),
+    retryLabel: (name) => zhJoin("重试", name, "通知授权"),
+    openNotification: (name, title) => `${zhJoin("打开", name)}：${title}`,
+    autoClearDescription: (name) => `${zhJoin("", name, "被切到前台")}、或${zhJoin("在岛上点开", name, "后")}，去掉在那之前到的消息；之后到的留着。`,
+    autoClearDescriptionMac: (name) => `${zhJoin("", name, "被切到前台")}、程序坞上的未读角标消失、或${zhJoin("在岛上点开", name, "后")}，去掉在那之前到的消息；之后到的留着。`,
+    flashBody: "收到任务栏闪烁提醒；在软件设置内开启系统通知后可显示发送人和消息内容。",
   },
   collapsedTask: (title) => `待办：${title}`,
   expand: (label) => `${label}，点击展开`,
   openPreview: (text, source) => `${text}，点击打开${source}`,
-  badge: (count, wechat) => `QQ ${count} 条通知${wechat ? "，微信有新提醒" : ""}`,
+  badge: (count, wechat, extraCount = 0) => `QQ ${count} 条通知${wechat ? "，微信有新提醒" : ""}${extraCount > 0 ? `，其他聊天 ${extraCount} 条提醒` : ""}`,
   label: (text) => `消息：${text}`,
   qqPreview: (title, body) => `${title}：${body}`,
+  copyText: "复制内容",
+  copied: "已复制",
+  copyCode: (code) => `复制 ${code}`,
   banner: {
     more: (count) => `另有 ${count} 条`,
     close: "关闭通知",
@@ -72,7 +134,7 @@ export const zhCN: MessagesText = {
     title: "新消息",
     showAll: "全部消息",
     clearAll: "清除提醒",
-    clearAllHint: "清除岛上的所有提醒，不打开应用；这里列出的邮件会在邮箱里标为已读，微信、QQ 里的消息不变",
+    clearAllHint: "清除岛上的所有提醒，不打开应用；这里列出的邮件会在邮箱里标为已读，微信、QQ 等聊天应用里的消息不变",
   },
 };
 
@@ -94,14 +156,41 @@ export const en: MessagesText = {
     qq: "QQ",
     wechat: "WeChat",
     qqMail: "Mail",
+    telegram: "Telegram",
+    discord: "Discord",
+    whatsapp: "WhatsApp",
+    tim: "TIM",
+    feishu: "Feishu",
+    dingtalk: "DingTalk",
+    wecom: "WeCom",
     plugin: "Plugin",
+  },
+  im: {
+    desktopOnly: (name) => `Use the desktop app for ${name} notifications.`,
+    receive: (name) => `Receive ${name} messages`,
+    title: (name) => `${name} messages`,
+    navLabel: (name) => `${name} notifications`,
+    recent: (name) => `Recent ${name} notifications`,
+    list: (name) => `Recently received ${name} notifications`,
+    open: (name) => `Open ${name}`,
+    refresh: (name) => `Refresh ${name} notifications`,
+    clear: (name) => `Clear ${name} notifications in the island`,
+    allowLabel: (name) => `Allow access to ${name} notifications`,
+    retryLabel: (name) => `Retry ${name} notification authorization`,
+    openNotification: (name, title) => `Open ${name}: ${title}`,
+    autoClearDescription: (name) => `When ${name} comes to the front or you open it from the island, messages that arrived before then are removed; later ones stay.`,
+    autoClearDescriptionMac: (name) => `When ${name} comes to the front, its unread badge in the Dock disappears, or you open it from the island, messages that arrived before then are removed; later ones stay.`,
+    flashBody: "Taskbar flash detected; turn on system notifications in the app's settings to show the sender and message.",
   },
   collapsedTask: (title) => `Task: ${title}`,
   expand: (label) => `${label}, click to expand`,
   openPreview: (text, source) => `${text}, click to open ${source}`,
-  badge: (count, wechat) => `${count} QQ notification${count === 1 ? "" : "s"}${wechat ? ", new WeChat reminder" : ""}`,
+  badge: (count, wechat, extraCount = 0) => `${count} QQ notification${count === 1 ? "" : "s"}${wechat ? ", new WeChat reminder" : ""}${extraCount > 0 ? `, ${extraCount} other chat reminder${extraCount === 1 ? "" : "s"}` : ""}`,
   label: (text) => `Messages: ${text}`,
   qqPreview: (title, body) => `${title}: ${body}`,
+  copyText: "Copy message",
+  copied: "Copied",
+  copyCode: (code) => `Copy ${code}`,
   banner: {
     more: (count) => `${count} more`,
     close: "Dismiss notification",
@@ -111,6 +200,6 @@ export const en: MessagesText = {
     title: "New messages",
     showAll: "All messages",
     clearAll: "Clear reminders",
-    clearAllHint: "Clears every reminder on the island without opening an app; the mails listed here are marked read in the mailbox, WeChat and QQ are left as they are",
+    clearAllHint: "Clears every reminder on the island without opening an app; the mails listed here are marked read in the mailbox, chat apps are left as they are",
   },
 };

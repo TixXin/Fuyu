@@ -142,6 +142,7 @@ async function openStage(browser, url, size, virtualStart) {
   page.on("console", (message) => { if (message.type() === "error") problems.push(message.text().slice(0, 400)); });
   page.on("pageerror", (error) => problems.push(String(error).slice(0, 400)));
   await cdp.send("Emulation.setDeviceMetricsOverride", { ...size, deviceScaleFactor: 0, mobile: false });
+  await cdp.send("Emulation.setTimezoneOverride", { timezoneId: "Asia/Shanghai" });
   await cdp.send("Emulation.setVirtualTimePolicy", { policy: "pause", initialVirtualTime: virtualStart });
   const advance = (ms) => new Promise((resolve) => {
     cdp.once("Emulation.virtualTimeBudgetExpired", resolve);

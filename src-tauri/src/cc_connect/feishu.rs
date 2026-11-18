@@ -1,5 +1,5 @@
-use crate::user_error::UserError;
 use crate::system::CommandExt;
+use crate::user_error::UserError;
 use std::{
     fs,
     io::{BufRead, BufReader, Read},
@@ -15,8 +15,8 @@ use serde::Serialize;
 
 use super::{config_file, locate::FOLDER};
 use crate::{
+    platform::job::{self, Job},
     system::CREATE_NO_WINDOW,
-    win32::job::{self, Job},
 };
 
 #[derive(Serialize, Default, Debug, PartialEq)]
@@ -90,7 +90,8 @@ fn spawn(exe: &Path, config: &Path, project: &str, qr: &Path) -> Result<(Child, 
     if let Some(dir) = qr.parent() {
         fs::create_dir_all(dir).map_err(|error| UserError::new("file.create", format!("Could not create {}.", dir.display())).arg("path", dir.display().to_string()).detail(error))?;
     }
-    let mut child = Command::new(exe)
+    let mut command = Command::new(exe);
+    command
         .args(["feishu", "new", "--config"])
         .arg(config)
         .args(["--project", project, "--qr-image"])
@@ -99,7 +100,10 @@ fn spawn(exe: &Path, config: &Path, project: &str, qr: &Path) -> Result<(Child, 
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .creation_flags(CREATE_NO_WINDOW | job::START_SUSPENDED)
+        .creation_flags(CREATE_NO_WINDOW | job::START_SUSPENDED);
+    #[cfg(unix)]
+    std::os::unix::process::CommandExt::process_group(&mut command, 0);
+    let mut child = command
         .spawn()
         .map_err(|error| UserError::new("ccConnect.run", "Could not run cc-connect.").detail(error))?;
     match Job::new().and_then(|job| job.assign(&child).map(|()| job)).and_then(|job| job::resume(child.id()).map(|()| job)) {
@@ -180,18 +184,29 @@ mod tests {
         let config = dir.join("config.toml");
         let begin = |program: &str, args: &[&str], said: &[&str]| {
             fs::write(&config, "with the app").unwrap();
-            let child = Command::new(program).args(args).stdout(Stdio::null()).creation_flags(CREATE_NO_WINDOW).spawn().unwrap();
+            let mut command = Command::new(program);
+            command.args(args).stdout(Stdio::null()).creation_flags(CREATE_NO_WINDOW);
+            #[cfg(unix)]
+            std::os::unix::process::CommandExt::process_group(&mut command, 0);
+            let child = command.spawn().unwrap();
+            let job = Job::new().unwrap();
+            job.assign(&child).unwrap();
             let output = Arc::new(Mutex::new(said.iter().map(|line| line.to_string()).collect()));
             let qr = dir.join("qr.png");
-            *setup() = Some(Setup { child, _job: Job::new().unwrap(), output, qr, config: config.clone(), original: Some("before".into()), ended: None });
+            *setup() = Some(Setup { child, _job: job, output, qr, config: config.clone(), original: Some("before".into()), ended: None });
         };
 
-        begin("cmd", &["/c", "exit 0"], &["✅ Feishu app created"]);
+        #[cfg(windows)]
+        let (done_prog, done_args, wait_prog, wait_args): (&str, &[&str], &str, &[&str]) = ("cmd", &["/c", "exit 0"], "ping", &["-n", "30", "127.0.0.1"]);
+        #[cfg(unix)]
+        let (done_prog, done_args, wait_prog, wait_args): (&str, &[&str], &str, &[&str]) = ("/bin/sh", &["-c", "exit 0"], "/bin/sh", &["-c", "sleep 30"]);
+
+        begin(done_prog, done_args, &["✅ Feishu app created"]);
         setup().as_mut().unwrap().child.wait().unwrap();
         cancel();
         assert_eq!(fs::read_to_string(&config).unwrap(), "with the app");
 
-        begin("ping", &["-n", "30", "127.0.0.1"], &["URL: https://open.feishu.cn/x"]);
+        begin(wait_prog, wait_args, &["URL: https://open.feishu.cn/x"]);
         cancel();
         assert_eq!(fs::read_to_string(&config).unwrap(), "before");
         assert!(setup().is_none());

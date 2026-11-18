@@ -1,45 +1,27 @@
-import { useCallback, useEffect, useMemo, useRef, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useMemo } from "react";
 import type { IslandSettings } from "../../lib/settings/types";
-import { setBuiltinConfig, switchBuiltinPlugin } from "./builtinSwitches.ts";
-import { reconcile, switchChanges, withSwitches, type ReconcileState, type SwitchTarget } from "./legacySwitches.ts";
+import { switchBuiltinPlugin } from "./builtinSwitches.ts";
+import { migrateLegacySwitches, withSwitches } from "./legacySwitches.ts";
 import { loadMigratedSwitches, saveMigratedSwitches } from "./storage.ts";
 import { useBuiltinPlugins } from "./useBuiltinPlugins.ts";
 
-type Pair = readonly [IslandSettings, Dispatch<SetStateAction<IslandSettings>>];
-
-function flip(target: SwitchTarget, on: boolean) {
-  const write = typeof target === "string" ? switchBuiltinPlugin(target, on) : setBuiltinConfig(target.plugin, target.key, on);
-  const name = typeof target === "string" ? target : `${target.plugin}.${target.key}`;
-  void write.catch((error: unknown) => console.error(`Could not switch the built-in plugin ${name}`, error));
-}
-
-function useReconcile(settings: IslandSettings, setSettings: Pair[1], plugins: ReturnType<typeof useBuiltinPlugins>, active: boolean) {
-  const seen = useRef<ReconcileState | null>(null);
-  useEffect(() => {
-    if (!active || !plugins) return;
-    const migrated = loadMigratedSwitches();
-    const result = reconcile(settings, plugins, seen.current, migrated);
-    seen.current = result.seen;
-    if (result.migrated.length) saveMigratedSwitches([...migrated, ...result.migrated]);
-    for (const [target, on] of result.switch) flip(target, on);
-    if (Object.keys(result.mirror).length) setSettings((current) => ({ ...current, ...result.mirror }));
-  }, [active, plugins, settings, setSettings]);
-}
-
-export function useLegacySwitches([stored, setStored]: Pair, options: { reconcile?: boolean } = {}): Pair {
+export function useSettingsWithBuiltinSwitches(stored: IslandSettings): IslandSettings {
   const plugins = useBuiltinPlugins();
-  const settings = useMemo(() => withSwitches(stored, plugins), [stored, plugins]);
-  const latest = useRef({ settings, plugins });
-  latest.current = { settings, plugins };
-  useReconcile(stored, setStored, plugins, options.reconcile === true);
-  const setSettings = useCallback<Pair[1]>((next) => {
-    const before = latest.current.settings;
-    const after = typeof next === "function" ? next(before) : next;
-    for (const [target, on] of switchChanges(before, after)) flip(target, on);
-    setStored((current) => {
-      const base = withSwitches(current, latest.current.plugins);
-      return typeof next === "function" ? next(base) : next;
-    });
-  }, [setStored]);
-  return [settings, setSettings] as const;
+  return useMemo(() => withSwitches(stored, plugins), [stored, plugins]);
+}
+
+export function useMigrateLegacySwitches(stored: IslandSettings) {
+  const plugins = useBuiltinPlugins();
+  useEffect(() => {
+    if (!plugins) return;
+    const migrated = loadMigratedSwitches();
+    const result = migrateLegacySwitches(stored, plugins, migrated);
+    if (result.migrated.length === 0 && result.switch.length === 0) return;
+    if (result.migrated.length > 0) saveMigratedSwitches([...migrated, ...result.migrated]);
+    for (const [id, on] of result.switch) {
+      void switchBuiltinPlugin(id, on).catch((error: unknown) => {
+        console.error(`Could not migrate the built-in plugin ${id}`, error);
+      });
+    }
+  }, [plugins, stored]);
 }

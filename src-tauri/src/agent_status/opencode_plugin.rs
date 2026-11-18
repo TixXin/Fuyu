@@ -13,7 +13,7 @@ pub(in crate::agent_status) const PLUGIN_FILE_NAME: &str = "fuyu-island.js";
 const PLUGIN_TEMPLATE: &str = include_str!("hooks/fuyu-opencode-plugin.js");
 const DIR_PLACEHOLDER: &str = "\"__FUYU_DIR__\"";
 
-pub(super) const HOOKS: Hooks = Hooks { install: install_hooks, check: hooks_state };
+pub(super) const HOOKS: Hooks = Hooks { install: install_hooks, check: hooks_state, uninstall: uninstall_hooks };
 
 fn process_env(name: &str) -> Option<OsString> {
     std::env::var_os(name)
@@ -42,6 +42,14 @@ fn install_hooks(env: &HookEnv) -> Result<(), String> {
 
 fn hooks_state(env: &HookEnv) -> HookInstallState {
     state_with(env, &process_env)
+}
+
+fn uninstall_hooks(env: &HookEnv) -> Result<(), String> {
+    uninstall_with(env, &process_env)
+}
+
+pub(super) fn uninstall_with(env: &HookEnv, vars: &impl Fn(&str) -> Option<OsString>) -> Result<(), String> {
+    super::super::uninstall::remove_file_if_exists(&plugin_path(env.home_dir, vars))
 }
 
 pub(super) fn install_with(env: &HookEnv, vars: &impl Fn(&str) -> Option<OsString>) -> Result<(), String> {

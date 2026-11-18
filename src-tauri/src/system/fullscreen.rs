@@ -58,7 +58,7 @@ pub(crate) fn start(app: &AppHandle) {
             std::mem::replace(&mut *state, next) != next
         };
         if changed {
-            let _ = app.emit(FOREGROUND_FULLSCREEN_CHANGED_EVENT, next);
+            let _ = app.emit_to(island::WINDOW_LABEL, FOREGROUND_FULLSCREEN_CHANGED_EVENT, next);
         }
         thread::sleep(POLL_INTERVAL);
     });

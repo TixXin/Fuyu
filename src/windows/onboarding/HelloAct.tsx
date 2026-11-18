@@ -1,7 +1,7 @@
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { LOCALE_CODES, TRANSLATIONS, useLocale, useTranslation } from "../../i18n";
+import { LOCALE_CODES, LOCALE_LABELS, useLocale, useTranslation } from "../../i18n";
 import { ActHeading } from "./ActHeading";
 
 export function HelloAct() {
@@ -19,7 +19,7 @@ export function HelloAct() {
             <SettingsChoice
               value={locale}
               ariaLabel={text.language}
-              options={LOCALE_CODES.map((code) => ({ value: code, label: TRANSLATIONS[code].localeLabel }))}
+              options={LOCALE_CODES.map((code) => ({ value: code, label: LOCALE_LABELS[code] }))}
               onChange={setLocale}
             />
           }

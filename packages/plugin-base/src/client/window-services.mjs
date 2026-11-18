@@ -23,10 +23,22 @@ export function createWindowServices({ remote = null, owner: defaultOwner = "bui
   const remoteOff = new Map();
   const watchers = new Set();
   let disabled = new Set();
+  let disabledServices = new Set();
   let host = remote;
+  let unwatchHost = null;
 
-  const live = (provider) => provider.active && !disabled.has(provider.owner) && providers.get(provider.definition.name)?.includes(provider);
-  const current = (name) => providers.get(name)?.find((provider) => !disabled.has(provider.owner)) ?? null;
+  const replacedOnHost = (provider) => {
+    const remoteList = typeof host?.list === "function" ? host.list() : [];
+    const remoteEntry = remoteList.find((entry) => entry?.name === provider.definition.name);
+    return Boolean(remoteEntry && typeof remoteEntry.plugin === "string" && remoteEntry.plugin !== provider.owner);
+  };
+  const isProviderDisabled = (provider) =>
+    disabled.has(provider.owner) ||
+    disabledServices.has(provider.definition.name) ||
+    disabledServices.has(`${provider.owner}:${provider.definition.name}`) ||
+    replacedOnHost(provider);
+  const live = (provider) => provider.active && !isProviderDisabled(provider) && providers.get(provider.definition.name)?.includes(provider);
+  const current = (name) => providers.get(name)?.find((provider) => !isProviderDisabled(provider)) ?? null;
 
   function changed() {
     const list = table.list();
@@ -177,13 +189,17 @@ export function createWindowServices({ remote = null, owner: defaultOwner = "bui
 
     attach(proxy) {
       if (proxy === host) return;
+      unwatchHost?.();
+      unwatchHost = null;
       for (const key of [...remoteOff.keys()]) void dropRemote(key);
       host = proxy ?? null;
+      if (typeof host?.watch === "function") unwatchHost = host.watch(() => changed());
       for (const key of listeners.keys()) {
         const [name, event] = key.split("\n");
         const definition = definitions.get(name);
         if (definition) hearRemote(definition, event);
       }
+      changed();
     },
 
     setDisabledOwners(ids) {
@@ -195,9 +211,22 @@ export function createWindowServices({ remote = null, owner: defaultOwner = "bui
       changed();
     },
 
+    setDisabledServices(names) {
+      const next = new Set(names);
+      for (const list of providers.values()) {
+        for (const provider of list) {
+          const wasOff = disabledServices.has(provider.definition.name) || disabledServices.has(`${provider.owner}:${provider.definition.name}`);
+          const nowOff = next.has(provider.definition.name) || next.has(`${provider.owner}:${provider.definition.name}`);
+          if (nowOff && !wasOff) failPending(provider, "yielded its service");
+        }
+      }
+      disabledServices = next;
+      changed();
+    },
+
     list() {
       return [...providers.values()]
-        .flatMap((list) => list.filter((provider) => !disabled.has(provider.owner)).slice(0, 1))
+        .flatMap((list) => list.filter((provider) => !isProviderDisabled(provider)).slice(0, 1))
         .map(({ definition, owner }) => ({ name: definition.name, plugin: owner, methods: Object.keys(definition.methods), events: Object.keys(definition.events) }))
         .sort((a, b) => a.name.localeCompare(b.name));
     },
@@ -217,5 +246,6 @@ export function createWindowServices({ remote = null, owner: defaultOwner = "bui
       return () => watchers.delete(watcher);
     },
   };
+  if (typeof host?.watch === "function") unwatchHost = host.watch(() => changed());
   return Object.freeze(table);
 }

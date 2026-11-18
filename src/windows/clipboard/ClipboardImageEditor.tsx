@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { reportClipboardPreview, saveClipboardHistoryImage, type ClipboardHistoryItem } from "../../features/clipboard/api";
 import { imageEditKey, toImagePoint, type ImageSize } from "../../features/clipboard/imageEdit";
 import { usePreviewEditSession } from "../../features/clipboard/usePreviewEditSession";
@@ -40,10 +40,22 @@ export function ClipboardImageEditor({ item, onDone }: { item: ClipboardHistoryI
   const stage = useRef<HTMLDivElement>(null);
   const picture = useRef<HTMLDivElement>(null);
   const layer = useRef<HTMLCanvasElement>(null);
+  const stageRectRef = useRef<DOMRect | null>(null);
+  const activePointerRef = useRef(false);
+  const moveFrameRef = useRef(0);
+  const pendingClientRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (base) picture.current?.replaceChildren(base);
   }, [base]);
+
+  useEffect(() => {
+    stageRectRef.current = null;
+  }, [base, frame.size.width, frame.size.height]);
+
+  useEffect(() => () => {
+    if (moveFrameRef.current !== 0) window.cancelAnimationFrame(moveFrameRef.current);
+  }, []);
 
   useEffect(() => {
     const canvas = layer.current;
@@ -97,10 +109,36 @@ export function ClipboardImageEditor({ item, onDone }: { item: ClipboardHistoryI
     return () => window.removeEventListener("keydown", onKey, true);
   }, []);
 
-  const at = (event: PointerEvent) => {
-    const rect = stage.current?.getBoundingClientRect();
-    return rect && base ? toImagePoint({ x: event.clientX, y: event.clientY }, rect, base) : { x: 0, y: 0 };
+  const pointAt = (client: { x: number; y: number }, rect: DOMRect | null) =>
+    rect && base ? toImagePoint(client, rect, base) : { x: 0, y: 0 };
+
+  const latestMoveRef = useRef<(client: { x: number; y: number }) => void>(() => {});
+  latestMoveRef.current = (client: { x: number; y: number }) => {
+    const rect = stageRectRef.current ?? stage.current?.getBoundingClientRect() ?? null;
+    stageRectRef.current = rect;
+    editor.pointerMove(pointAt(client, rect));
   };
+
+  const flushMove = () => {
+    if (moveFrameRef.current !== 0) {
+      window.cancelAnimationFrame(moveFrameRef.current);
+      moveFrameRef.current = 0;
+    }
+    const next = pendingClientRef.current;
+    if (next) {
+      pendingClientRef.current = null;
+      latestMoveRef.current(next);
+    }
+  };
+
+  const finishPointer = () => {
+    if (!activePointerRef.current) return;
+    flushMove();
+    activePointerRef.current = false;
+    stageRectRef.current = null;
+    editor.pointerUp();
+  };
+
   const style = base ? ({ width: base.width, height: base.height, "--image-fit": editor.fit } as CSSProperties) : undefined;
   const cursor = editor.cropping || (annotations.tool && annotations.tool !== "text") ? " clipboard-image-editor__stage--draw" : annotations.tool === "text" ? " clipboard-image-editor__stage--text" : "";
 
@@ -115,16 +153,37 @@ export function ClipboardImageEditor({ item, onDone }: { item: ClipboardHistoryI
             className={`clipboard-image-editor__stage${cursor}`}
             style={style}
             onPointerDown={(event) => {
-              if (event.button !== 0 || !editor.pointerDown(at(event))) return;
+              if (event.button !== 0) return;
+              flushMove();
+              const rect = stage.current?.getBoundingClientRect() ?? null;
+              stageRectRef.current = rect;
+              if (!editor.pointerDown(pointAt({ x: event.clientX, y: event.clientY }, rect))) {
+                stageRectRef.current = null;
+                return;
+              }
+              activePointerRef.current = true;
               try {
                 event.currentTarget.setPointerCapture(event.pointerId);
               } catch {
                 return;
               }
             }}
-            onPointerMove={(event) => editor.pointerMove(at(event))}
-            onPointerUp={() => editor.pointerUp()}
-            onPointerCancel={() => editor.pointerUp()}
+            onPointerMove={(event) => {
+              if (!activePointerRef.current) return;
+              pendingClientRef.current = { x: event.clientX, y: event.clientY };
+              if (moveFrameRef.current === 0) {
+                moveFrameRef.current = window.requestAnimationFrame(() => {
+                  moveFrameRef.current = 0;
+                  const next = pendingClientRef.current;
+                  if (next) {
+                    pendingClientRef.current = null;
+                    latestMoveRef.current(next);
+                  }
+                });
+              }
+            }}
+            onPointerUp={finishPointer}
+            onPointerCancel={finishPointer}
           >
             <div ref={picture} className="clipboard-image-editor__picture" />
             <canvas ref={layer} className="clipboard-image-editor__layer" />

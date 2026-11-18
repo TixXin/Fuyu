@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { ShortcutKeys } from "../../../components/controls/ShortcutKeys";
 import { ShortcutResetButton } from "../../../components/controls/ShortcutResetButton";
+import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../../i18n";
@@ -87,7 +88,11 @@ export function PageShortcutSection({
     <SettingsGroup
       title={t.settings.pageShortcuts.title}
       action={action}
-      footer={conflict ? <span className="shortcut-control__error" role="alert">{conflict}</span> : isMacOS ? t.settings.pageShortcuts.hintMac : t.settings.pageShortcuts.hint}
+      footer={
+        conflict
+          ? <span className="shortcut-control__error" role="alert">{conflict}</span>
+          : <SettingsFootnote text={isMacOS ? t.settings.pageShortcuts.hintMac : t.settings.pageShortcuts.hint} />
+      }
     >
       {rows.map(([field, label, display, value, fallback]) => (
         <div className="shortcut-control" key={field}>

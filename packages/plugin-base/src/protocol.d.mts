@@ -24,6 +24,7 @@ export interface SlotDefinition {
   readonly perPlugin: number;
   readonly groupBy?: string;
   readonly meta: readonly string[];
+  readonly experimental?: boolean;
 }
 export type SlotName =
   | "island.page/v1"
@@ -39,5 +40,6 @@ export type SlotName =
   | "island.dev/v1"
   | "settings.category/v1"
   | "settings.section/v1"
-  | "settings.runner/v1";
+  | "settings.runner/v1"
+  | "plugin-window.view/v1";
 export declare const SLOTS: { readonly [Name in SlotName]: SlotDefinition };

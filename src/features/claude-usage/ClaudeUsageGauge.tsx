@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { IslandHoverCard } from "../../components/IslandHoverCard";
+import { IslandHoverCard, type HoverCardLine } from "../../components/IslandHoverCard";
 import { MiniRing } from "../../components/MiniRing";
 import { useTranslation } from "../../i18n";
 import { CLAUDE_USAGE_RING_SIZE, USAGE_PROVIDERS, usageCardLines, usageRings, type UsageProvider } from "./usageRing";
@@ -10,16 +10,25 @@ type ClaudeUsageGaugeProps = {
   provider?: UsageProvider;
   islandHovered?: boolean;
   showRemaining?: boolean;
+  extraLines?: readonly HoverCardLine[];
+  onRefreshExtra?: () => void;
 };
 
-export function ClaudeUsageGauge({ provider = USAGE_PROVIDERS[0], islandHovered = true, showRemaining = false }: ClaudeUsageGaugeProps) {
+export function ClaudeUsageGauge({
+  provider = USAGE_PROVIDERS[0],
+  islandHovered = true,
+  showRemaining = false,
+  extraLines,
+  onRefreshExtra,
+}: ClaudeUsageGaugeProps) {
   const t = useTranslation();
   const { usage, agentsOff, now, refresh } = useClaudeUsage(provider.id);
   const rings = useMemo(() => usageRings(usage, now, showRemaining, provider.color), [usage, now, showRemaining, provider]);
   const lines = useMemo(() => {
     const card = usageCardLines(usage, now, t.claudeUsage, showRemaining, provider);
-    return agentsOff ? [card[0], { text: t.claudeUsage.needsAgents, muted: true }] : card;
-  }, [usage, agentsOff, now, t, showRemaining, provider]);
+    const base = agentsOff ? [card[0], { text: t.claudeUsage.needsAgents, muted: true }] : card;
+    return extraLines && extraLines.length > 0 ? [...base, ...extraLines] : base;
+  }, [usage, agentsOff, now, t, showRemaining, provider, extraLines]);
   const label = t.claudeUsage.ringLabel(lines.map((line) => line.text).join("; "));
 
   return (
@@ -32,6 +41,7 @@ export function ClaudeUsageGauge({ provider = USAGE_PROVIDERS[0], islandHovered 
         onClick={(event) => {
           event.stopPropagation();
           refresh();
+          onRefreshExtra?.();
         }}
       >
         <MiniRing rings={rings} size={CLAUDE_USAGE_RING_SIZE} ariaLabel={label} />

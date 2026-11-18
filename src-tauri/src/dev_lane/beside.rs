@@ -1,12 +1,11 @@
 use std::{
     sync::{Mutex, PoisonError},
-    thread,
     time::Duration,
 };
 
 use tauri::WebviewWindow;
 
-const LOOK_EVERY: Duration = Duration::from_secs(3);
+pub(super) const LOOK_EVERY: Duration = Duration::from_secs(3);
 const WIDTH_TOLERANCE: f64 = 2.0;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -67,25 +66,22 @@ pub(super) fn decide(centred: Rect, scale: f64) -> bool {
     steps_aside(&installed, &centred)
 }
 
-pub(super) fn start_watch(window: WebviewWindow) {
-    let _ = thread::Builder::new().name("dev-lane-beside".into()).spawn(move || loop {
-        thread::sleep(LOOK_EVERY);
-        let Some(stage) = SEEN.lock().unwrap_or_else(PoisonError::into_inner).stage else {
-            continue;
-        };
-        let installed = look(stage.logical_width);
-        let changed = {
-            let mut seen = SEEN.lock().unwrap_or_else(PoisonError::into_inner);
-            let before = seen.installed.as_ref().map(|old| steps_aside(old, &stage.centred));
-            seen.installed = Some(installed.clone());
-            before != Some(steps_aside(&installed, &stage.centred))
-        };
-        if changed {
-            if let Err(error) = crate::island::refit(&window) {
-                eprintln!("Failed to move the development island beside the installed one: {error}");
-            }
+pub(super) fn poll(window: &WebviewWindow) {
+    let Some(stage) = SEEN.lock().unwrap_or_else(PoisonError::into_inner).stage else {
+        return;
+    };
+    let installed = look(stage.logical_width);
+    let changed = {
+        let mut seen = SEEN.lock().unwrap_or_else(PoisonError::into_inner);
+        let before = seen.installed.as_ref().map(|old| steps_aside(old, &stage.centred));
+        seen.installed = Some(installed.clone());
+        before != Some(steps_aside(&installed, &stage.centred))
+    };
+    if changed {
+        if let Err(error) = crate::island::refit(window) {
+            eprintln!("Failed to move the development island beside the installed one: {error}");
         }
-    });
+    }
 }
 
 fn look(logical_width: f64) -> Installed {

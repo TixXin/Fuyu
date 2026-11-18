@@ -1,6 +1,10 @@
+mod antigravity;
 mod background;
+mod dsh;
+mod dsh_credentials;
 mod plan;
 mod source;
+mod workbuddy;
 #[cfg(test)]
 mod tests;
 
@@ -8,6 +12,7 @@ pub(crate) use background::init;
 use serde::Serialize;
 use source::{FetchError, Limits};
 use std::{
+    path::PathBuf,
     sync::{mpsc, Mutex, MutexGuard, OnceLock, PoisonError},
     thread,
     time::{Duration, Instant, SystemTime},
@@ -17,6 +22,12 @@ const MIN_INTERVAL_MINUTES: u64 = 5;
 const MAX_INTERVAL_MINUTES: u64 = 120;
 const MAX_BACKOFF: Duration = Duration::from_secs(60 * 60);
 const MANUAL_MIN_GAP: Duration = Duration::from_secs(60);
+
+pub(super) fn home_dir() -> Option<PathBuf> {
+    ["USERPROFILE", "HOME"]
+        .into_iter()
+        .find_map(|key| std::env::var_os(key).filter(|value| !value.is_empty()).map(PathBuf::from))
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct UsageWindow {
@@ -36,11 +47,17 @@ pub enum UsageErrorKind {
     Network,
     Http,
     InvalidResponse,
+    EndpointChanged,
+    NoSessions,
+    CustomEndpoint,
 }
 
 impl UsageErrorKind {
     fn is_local(self) -> bool {
-        matches!(self, Self::NoCredentials | Self::TokenExpired | Self::NoProxy)
+        matches!(
+            self,
+            Self::NoCredentials | Self::TokenExpired | Self::NoProxy | Self::NoSessions | Self::CustomEndpoint
+        )
     }
 }
 
@@ -48,6 +65,37 @@ impl UsageErrorKind {
 pub struct UsageError {
     pub kind: UsageErrorKind,
     pub message: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkbuddyCredits {
+    pub today: f64,
+    pub seven_day: f64,
+    pub total: f64,
+    pub total_tokens: u64,
+    pub sessions: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DshWallet {
+    pub currency: String,
+    pub total: String,
+    pub topped_up: String,
+    pub granted: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HoverUsage {
+    pub provider: String,
+    pub updated_at: Option<i64>,
+    pub source: Option<String>,
+    pub available: Option<bool>,
+    pub credits: Option<WorkbuddyCredits>,
+    pub wallets: Vec<DshWallet>,
+    pub error: Option<UsageError>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -242,6 +290,20 @@ pub async fn get_plan_usage(provider: String, refresh: bool) -> Result<crate::ag
 }
 
 #[tauri::command]
+pub async fn get_antigravity_usage(refresh: bool) -> Result<crate::agent_status::usage::AgentUsage, String> {
+    Ok(antigravity::read(refresh).await)
+}
+
+#[tauri::command]
+pub async fn get_hover_usage(provider: String, refresh: bool) -> Result<HoverUsage, String> {
+    match provider.as_str() {
+        "workbuddy" => Ok(workbuddy::read(refresh).await),
+        "dsh" => Ok(dsh::read(refresh).await),
+        _ => Err(format!("Unknown hover usage provider {provider}.")),
+    }
+}
+
+#[tauri::command]
 pub async fn set_plan_key(provider: String, key: String) -> Result<bool, crate::user_error::UserError> {
     let provider = plan::PlanProvider::parse(&provider)?;
     tauri::async_runtime::spawn_blocking(move || plan::save_key(provider, &key))
@@ -262,6 +324,8 @@ macro_rules! tauri_commands {
         $next!([$($done)*
             crate::claude_usage::refresh_claude_usage,
             crate::claude_usage::get_plan_usage,
+            crate::claude_usage::get_antigravity_usage,
+            crate::claude_usage::get_hover_usage,
             crate::claude_usage::set_plan_key,
             crate::claude_usage::has_plan_key,
         ] $($rest)*)

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useErrorText } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import {
   forgetDevPlugin,
   getPluginDevState,
@@ -46,10 +47,10 @@ export function usePluginDev(open: boolean) {
         .then((next) => !didCancel && setState(next))
         .catch((nextError: unknown) => !didCancel && setError(errorText(nextError)));
     refresh();
-    const timer = window.setInterval(refresh, TRACE_REFRESH_MS * 2);
+    const stop = visibilityInterval(refresh, TRACE_REFRESH_MS * 2);
     return () => {
       didCancel = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, [errorText, open]);
 
@@ -63,10 +64,10 @@ export function usePluginDev(open: boolean) {
         .then((next) => !didCancel && setTrace(next))
         .catch(() => undefined);
     refresh();
-    const timer = window.setInterval(refresh, TRACE_REFRESH_MS);
+    const stop = visibilityInterval(refresh, TRACE_REFRESH_MS);
     return () => {
       didCancel = true;
-      window.clearInterval(timer);
+      stop();
     };
   }, [open, shown]);
 

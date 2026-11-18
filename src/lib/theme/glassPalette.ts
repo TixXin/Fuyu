@@ -139,6 +139,7 @@ export function glassPaused(settings: Pick<GlassSettingValues, "glassStyle" | "g
 export function glassClassNames(
   settings: Pick<GlassSettingValues, "glassStyle" | "glassRim" | "glassSheen" | "glassSpecular" | "glassMorph">,
   paused: boolean,
+  hidden = false,
 ) {
   return [
     `island--glass-style-${settings.glassStyle}`,
@@ -147,6 +148,7 @@ export function glassClassNames(
     settings.glassSheen ? "island--glass-sheen" : "",
     settings.glassSpecular ? "island--glass-specular" : "",
     paused ? "island--glass-paused" : "",
+    hidden ? "island--glass-hidden" : "",
   ].filter(Boolean).join(" ");
 }
 

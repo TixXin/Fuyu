@@ -5,6 +5,7 @@ import { ISLAND_SIDE_COVER_HEIGHT, ISLAND_SIDE_ROW_HEIGHT, type IslandContributi
 import { defineSlot } from "../../plugin-kernel/slots";
 import { useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { useAudible } from "../useAudible";
+import { useAudioLevel } from "../useAudioLevel";
 import { coverAccentVariables, useCoverColor } from "../useCoverColor";
 import { useIslandLyrics } from "../useIslandLyrics";
 import { useMediaState } from "../useMediaState";
@@ -34,6 +35,11 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   const media = useMemo(() => (demoState && live.mediaState.playbackStatus !== "playing" ? { ...live, mediaState: demoState } : live), [demoState, live]);
   const { mediaState, runMediaCommand } = media;
   const { lyrics, lyricLine } = useIslandLyrics(settings, mediaState, { page, barShown: mode === "collapsed" && !isTucked && barText });
+  const waveformVisible = !isTucked && (mode === "collapsed" || (page === "music" && !lyrics.lines));
+  useAudioLevel(
+    live.applyAudioLevel,
+    settings.musicEnabled && waveformVisible && (live.mediaState.playbackStatus === "playing" || live.mediaState.audioActive),
+  );
   const audible = useAudible(mediaState.audioActive);
   const playing = mediaState.playbackStatus === "playing";
   const coverOn = settings.musicEnabled && settings.lyricsCoverColor;

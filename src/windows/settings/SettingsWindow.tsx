@@ -10,23 +10,23 @@ import "./slots/categories";
 import "./slots/runners";
 import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
 import { listenSettingsWindowReopened, showSettingsWindow } from "./api";
-import { DEFAULT_SETTINGS, isSameSettings, withLayoutFrom, withThemeFrom } from "../../lib/settings/settings";
-import { STORAGE_KEY, loadSettings, saveSettings } from "../../lib/settings/storage";
+import { DEFAULT_SETTINGS, withLayoutFrom, withThemeFrom } from "../../lib/settings/settings";
+import { useIslandSettings } from "../../lib/settings/useIslandSettings";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { ResetAppearanceButton } from "./sections/ResetAppearanceButton";
-import type { IslandSettings } from "../../lib/settings/types";
 import { useSettingPresets } from "../../lib/settings/useSettingPresets";
-import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
-import { usePluginsV3Enabled } from "./usePluginHostStatus";
+import { useSettingsWithBuiltinSwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { useMarketInstallRequest } from "../../features/plugins/market-link/useMarketInstallRequest";
 import { useLocale, useTranslation } from "../../i18n";
 import { activeTone } from "../../lib/theme/themeMode";
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
+import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { categorySlot } from "./slots/categorySlot";
 import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
 import { focusSection } from "../../lib/settings/sectionFocus";
+import { AboutLogoCallLink } from "../../features/updater/AboutHero";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -35,15 +35,15 @@ const SETTINGS_LIGHT_FILL = "#eceef2";
 export function SettingsWindow() {
   const t = useTranslation();
   const { locale, setLocale } = useLocale();
-  const [storedSettings, setStoredSettings] = useState<IslandSettings>(loadSettings);
-  const [settings, setSettings] = useLegacySwitches([storedSettings, setStoredSettings]);
+  const [storedSettings, setSettings, reloadSettings] = useIslandSettings({ coalesceInputFrames: true });
+  const settings = useSettingsWithBuiltinSwitches(storedSettings);
   useWindowAccent(settings);
   const systemDark = useSystemDark();
   const presets = useSettingPresets(settings, setSettings);
   const [chosenCategory, setCategory] = useState<SettingsCategory>(DEFAULT_SETTINGS_CATEGORY);
   const unsupported = useUnsupportedFeatures();
-  const pluginsV3 = usePluginsV3Enabled();
-  const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS, pluginsV3) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
+  useSlotEntries(categorySlot);
+  const category = isCategoryAvailable(chosenCategory, unsupported, isMacOS) ? chosenCategory : DEFAULT_SETTINGS_CATEGORY;
   const features = useFeatureSwitches(settings, setSettings);
   const offFeature = features.hiddenPages.has(category) ? featureOf(category) : undefined;
   const page = offFeature ? null : category;
@@ -73,35 +73,23 @@ export function SettingsWindow() {
   }, [t]);
 
   useEffect(() => {
-    saveSettings(storedSettings);
-  }, [storedSettings]);
-
-  useEffect(() => {
     focusRequestedSection();
 
-    const syncFromIsland = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
-        const nextSettings = loadSettings();
-        setStoredSettings((current) =>
-          isSameSettings(current, nextSettings) ? current : nextSettings,
-        );
-      }
-
+    const syncFocusFromIsland = (event: StorageEvent) => {
       if (event.key === SETTINGS_FOCUS_STORAGE_KEY && event.newValue !== null) {
         focusRequestedSection();
       }
     };
 
-    window.addEventListener("storage", syncFromIsland);
-    return () => window.removeEventListener("storage", syncFromIsland);
+    window.addEventListener("storage", syncFocusFromIsland);
+    return () => window.removeEventListener("storage", syncFocusFromIsland);
   }, [focusRequestedSection]);
 
   useEffect(() => {
     let stop: (() => void) | undefined;
     let cancelled = false;
     const reopened = () => {
-      const nextSettings = loadSettings();
-      setStoredSettings((current) => (isSameSettings(current, nextSettings) ? current : nextSettings));
+      reloadSettings();
       focusRequestedSection();
     };
     void listenSettingsWindowReopened(reopened)
@@ -111,7 +99,7 @@ export function SettingsWindow() {
       cancelled = true;
       stop?.();
     };
-  }, [focusRequestedSection]);
+  }, [focusRequestedSection, reloadSettings]);
 
   const resetAppearance = useCallback(() => {
     setSettings((current) => withThemeFrom(current, DEFAULT_SETTINGS));
@@ -148,12 +136,22 @@ export function SettingsWindow() {
         hidden={features.hiddenPages}
         onCategoryChange={changeCategory}
         titleAction={
-          category === "theme" ? <ResetAppearanceButton onReset={resetAppearance} />
-          : category === "appearance" ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
-          : null
+          category === "theme" || category === "themeStyle"
+            ? <ResetAppearanceButton onReset={resetAppearance} />
+            : category === "appearance" || category === "appearanceCollapsed"
+            ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
+            : category === "about"
+            ? <AboutLogoCallLink />
+            : null
         }
       >
-        {offFeature && <FeatureOffPage feature={offFeature} onOpenOverview={() => changeCategory("overview")} />}
+        {offFeature && (
+          <FeatureOffPage
+            feature={offFeature}
+            onEnable={() => features.switches[offFeature].set(true)}
+            onOpenOverview={() => changeCategory("overview")}
+          />
+        )}
         <SlotView
           slot={categorySlot}
           props={{

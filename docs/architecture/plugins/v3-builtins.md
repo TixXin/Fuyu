@@ -65,20 +65,17 @@ Rust 拉宿主时传 `--builtins`：开发版和 `build:exe` 是 `<仓库>/src/f
 
 - 清单在编译时读进 Rust（`include_str!`），启动时读 `plugins.yml` 里内置插件的 `disabled`；之后只经命令 `set_builtin_plugin_enabled` 写，写的格式就是上表「关掉内置的计时器」那样（`builtins_file.rs`，只改那一条，别的条目和注释不动）。宿主在跑时监视这个文件，Rust 写完它自己重读，不另发通知。
 - 有后台的模块在自己的 `init` 里调 `plugin_kernel::builtins::register(<插件 id>, <名字>, Arc<dyn Background>)`，`Background` 有 `start` / `stop` / `running`；名字要写进清单这个插件的 `background`。开关表在启动时和开关变化时调它们（锁外调，`start` 里可以再读开关）。`builtins::init` 在 `lib.rs` 的 setup 最前面，早于各模块的 `init`；之前登记的先记着，`init` 读完文件再起。
-- 窗口用 `get_builtin_plugins` 读、听 `builtin-plugins-changed`（`features/plugin-kernel/builtinSwitches.ts`、`useBuiltinPlugins.ts`）；岛和设置窗口的插槽注册表按它调 `setDisabledOwners`，关掉的插件拥有的项不出现。设置 → 插件（第 3 版）列出全部内置插件、能开关；这一页在开发版里总会出现，正式版要设 `FUYU_PLUGINS_V3=1`。
+- 窗口用 `get_builtin_plugins` 读、听 `builtin-plugins-changed`（`features/plugin-kernel/builtinSwitches.ts`、`useBuiltinPlugins.ts`）；岛和设置窗口的插槽注册表按它调 `setDisabledOwners`，关掉的插件拥有的项不出现。设置 → 插件（第 3 版）始终列出全部内置插件并可开关，即使设 `FUYU_PLUGINS_V3=0` 关掉宿主也保留入口。
 - 通用测试：Rust 的 `builtins_tests.rs` 按清单逐个关、逐个开，核对登记的后台都停了、又起来了；`tests/unit/builtin-switches.test.mjs` 用 Rust 写的格式让宿主逐个关掉计时器和翻译再打开。
 
-### 旧开关（`fuyu-settings` 里的字段，E36.3.29）
+### 旧开关（`fuyu-settings` 里的字段，E36.3.29 起，E36.3.50 收口）
 
-第 1 版用 `fuyu-settings` 的布尔字段当功能开关（翻译的 `translationEnabled`），备份、同步、概览卡片都读它。开关迁进 `plugins.yml` 后，这些字段留作镜像，到 E36.3.50 收口时去掉：
+第 1 版用 `fuyu-settings` 的布尔字段当功能开关（如 `translationEnabled`、`todoEnabled`）。迁进 `plugins.yml` 期间（E36.3.29–E36.3.46）曾做双向镜像；**2026-11-17 起（E36.3.50）去掉运行时双向镜像回写**：
 
-- 每个功能任务只在 `features/plugin-kernel/legacySwitches.ts` 的 `LEGACY_SWITCHES` 加一行（字段名 → 插件 id），别的不用改。
-- 岛、设置窗口、引导页都用 `useLegacySwitches(...)` 包一层：读的时候字段换成开关表的值（开关表还没到时用存的值）；写字段时换成 `set_builtin_plugin_enabled`。
-- 只有岛做对账（`reconcile`，纯函数）：
-  - 第一次见到某个字段时，存的是关、开关是开，就把插件关掉（升级前关了的升级后还是关的）；然后记进 `fuyu-legacy-switches`，以后不再迁。
-  - 以后存的值变了（恢复备份、同步、别的窗口写的）而和开关不同，就照存的值开关插件；没变则把开关的值镜像进存的设置。
-  - 只在两边不同时才写，写一次之后再看就一致了，不会来回打架（`tests/unit/legacy-switches.test.mjs` 逐条核对：启动时旧值是关的、恢复备份、两个窗口同时改、开关表还没到、不循环）。
-- 各自存储里的开关（剪贴板、语音、QQ、微信）和第 2 版 `plugins.json` 的启用状态不走这张表，各任务自己在 Rust 里一次性迁移。
+- `IslandFeatures`、设置概览（`useFeatureSwitches`）、系统提示（`SystemAlertsGroup`）和新手引导直接从内置插件开关表（`useBuiltinPlugins` / `builtinSwitches`）读并调 `set_builtin_plugin_enabled`、`set_builtin_plugin_config` 写，运行时不再往 `fuyu-settings`、`fuyu-qq-notifications-enabled`、`fuyu-wechat-reminders-enabled` 回写镜像；仅在内存中用 `withSwitches` 投影一份快照传给读取 `IslandSettings` 的组件。
+- **首次升级一次性迁移保留**：主窗口启动时 `useMigrateLegacySwitches` 对照 `LEGACY_SWITCHES` 检查尚未记入 `fuyu-legacy-switches` 的旧字段，旧值是 `false` 就关掉对应的内置插件并记入 `fuyu-legacy-switches`，之后不再迁；消息的三个来源（`qq`、`wechat`、`mail`）统一在 `messages/plugin/sourceSwitches.ts` 的 `migrateSources` 里于 `messages.config` 缺少该键时从旧值补写一次。
+- **设置备份与 `settings.json` 桥接**：`builtinSwitches.ts` 向 `lib/settings-backup/storage.ts` 注册 `registerBackupSwitches`，导出备份和写 `settings.json` 时把当前内置插件开关、消息三个来源开关和语音输入开关拍进对应字段，恢复备份时由 `switchesFromBackup` 同步调回 `switchBuiltinPlugin` / `setBuiltinConfig`。
+- 剪贴板（Rust 维护 `clipboard-history.json` 兼容字段）、语音输入（`fuyu-voice-input`）和第 2 版 `plugins.json`（`v2_builtins.rs`）的迁移规则见 [contracts.md](../contracts.md)。
 
 ## 关掉后不留界面、不跑后台：三层检查（E36.3.27）
 

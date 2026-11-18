@@ -1,36 +1,49 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { reconcileSources, sourceSwitch } from "../../src/features/messages/plugin/sourceSwitches.ts";
+import {
+  IM_SOURCE_IDS,
+  imSourceEnabled,
+  isImAutoClearEnabled,
+  MESSAGE_SOURCES,
+  migrateSources,
+  sourceSwitch,
+} from "../../src/features/messages/plugin/sourceSwitches.ts";
 
-const stored = (qq, wechat) => ({ qq, wechat });
-
-test("a source the plugin settings do not have yet takes the old stored value, on or off", () => {
-  const result = reconcileSources(stored(false, true), {}, null);
-  assert.deepEqual(result.write, [["qq", false], ["wechat", true]]);
-  assert.deepEqual(result.mirror, []);
+test("all ten message sources are unified under messages.config", () => {
+  assert.deepEqual(MESSAGE_SOURCES, [
+    "qq",
+    "wechat",
+    "mail",
+    "telegram",
+    "discord",
+    "whatsapp",
+    "tim",
+    "feishu",
+    "dingtalk",
+    "wecom",
+  ]);
 });
 
-test("a new install with no old values writes both sources on, so the listeners start", () => {
-  const result = reconcileSources(stored(true, true), { mail: true }, null);
-  assert.deepEqual(result.write, [["qq", true], ["wechat", true]]);
+test("legacy sources migrate once while the 7 new IM sources stay off on fresh installs and upgrades", () => {
+  const write = migrateSources({ qq: false, wechat: true, mail: false }, {});
+  assert.deepEqual(write, [["qq", false], ["wechat", true], ["mail", false]]);
+  for (const id of IM_SOURCE_IDS) {
+    assert.equal(imSourceEnabled({}, id), false);
+    assert.equal(imSourceEnabled({ [id]: "true" }, id), false);
+    assert.equal(imSourceEnabled({ [id]: true }, id), true);
+    assert.equal(isImAutoClearEnabled({}, id), true);
+    assert.equal(isImAutoClearEnabled({ [`${id}AutoClear`]: false }, id), false);
+  }
 });
 
-test("once moved, the plugin settings win and are mirrored back to the old place", () => {
-  const result = reconcileSources(stored(true, true), { qq: false, wechat: true }, null);
-  assert.deepEqual(result.write, []);
-  assert.deepEqual(result.mirror, [["qq", false]]);
+test("sources already present in messages.config are kept without overwriting or mirroring back", () => {
+  const write = migrateSources({ qq: true, wechat: true, mail: true }, { qq: false, mail: false });
+  assert.deepEqual(write, [["wechat", true]]);
 });
 
-test("an old value changed from outside (restored backup, onboarding) goes into the plugin settings", () => {
-  const seen = stored(true, true);
-  const result = reconcileSources(stored(true, false), { qq: true, wechat: true }, seen);
-  assert.deepEqual(result.write, [["wechat", false]]);
-  assert.deepEqual(result.mirror, []);
-});
-
-test("only a true or false in the plugin settings counts as a switch", () => {
+test("only a boolean in messages.config counts as a source switch", () => {
   assert.equal(sourceSwitch({ qq: true }, "qq"), true);
-  assert.equal(sourceSwitch({ qq: false }, "qq"), false);
+  assert.equal(sourceSwitch({ mail: false }, "mail"), false);
   assert.equal(sourceSwitch({ qq: "false" }, "qq"), undefined);
   assert.equal(sourceSwitch({}, "wechat"), undefined);
 });

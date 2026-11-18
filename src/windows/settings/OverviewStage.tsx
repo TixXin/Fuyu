@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useReducedMotion } from "../../lib/theme/useReducedMotion";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { resolveThemeColors, surfaceThemeColors } from "../../lib/theme/themeMode";
 import type { IslandSettings } from "../../lib/settings/types";
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
@@ -9,7 +10,7 @@ import { FEATURE_PAGES, type SettingsFeature } from "./categories";
 import { CATEGORY_ICONS } from "./SettingsSidebar";
 import "./OverviewStage.css";
 
-export type StageFeature = SettingsFeature | "messages";
+export type StageFeature = SettingsFeature | "behaviorAlerts" | "messages";
 
 const CYCLE_MS = 2_800;
 
@@ -23,12 +24,11 @@ export function OverviewStage({ settings, spot, playing, onCount }: { settings: 
 
   useEffect(() => {
     if (!cycling) return;
-    const timer = window.setInterval(() => setTurn((value) => value + 1), CYCLE_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setTurn((value) => value + 1), CYCLE_MS);
   }, [cycling]);
 
   const shown = spot ?? (playing.length > 0 ? playing[turn % playing.length] : null);
-  const Icon = shown ? CATEGORY_ICONS[shown === "messages" ? "messages" : FEATURE_PAGES[shown][0]] : null;
+  const Icon = shown ? CATEGORY_ICONS[shown === "messages" ? "messages" : shown === "behaviorAlerts" ? "behaviorAlerts" : FEATURE_PAGES[shown][0]] : null;
   const colors = surfaceThemeColors(resolveThemeColors(settings, systemDark), "collapsed");
   const island = {
     "--stage-fill": colors.islandBackgroundColor,

@@ -1,30 +1,68 @@
-import { useCallback, useLayoutEffect, useState, type RefObject } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { visibleRows, visibleSlots } from "./virtualRows";
 
 const OVERSCAN = 6;
 
-function useScrollView(container: RefObject<HTMLElement | null>) {
-  const [view, setView] = useState({ top: 0, height: 600 });
+type Range = { start: number; end: number };
+
+function useVirtualRange(
+  container: RefObject<HTMLElement | null>,
+  compute: (top: number, height: number) => Range,
+): Range {
+  const [, setTick] = useState(0);
+  const scrollRef = useRef({ top: 0, height: 600 });
+  const computeRef = useRef(compute);
+  computeRef.current = compute;
+
+  const element = container.current;
+  const top = element ? element.scrollTop : scrollRef.current.top;
+  scrollRef.current.top = top;
+  const current = compute(top, scrollRef.current.height);
+  const renderedRef = useRef<Range>(current);
+  renderedRef.current = current;
 
   useLayoutEffect(() => {
-    const element = container.current;
-    if (!element) return;
-    const measure = () => setView({ top: element.scrollTop, height: element.clientHeight || 600 });
-    measure();
-    element.addEventListener("scroll", measure, { passive: true });
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
-    observer?.observe(element);
+    const node = container.current;
+    if (!node) return;
+
+    const checkRange = () => {
+      const next = computeRef.current(scrollRef.current.top, scrollRef.current.height);
+      const prev = renderedRef.current;
+      if (next.start !== prev.start || next.end !== prev.end) {
+        renderedRef.current = next;
+        setTick((value) => value + 1);
+      }
+    };
+
+    const onScroll = () => {
+      scrollRef.current.top = node.scrollTop;
+      checkRange();
+    };
+
+    const onResize = () => {
+      scrollRef.current.top = node.scrollTop;
+      scrollRef.current.height = node.clientHeight || 600;
+      checkRange();
+    };
+
+    onResize();
+    node.addEventListener("scroll", onScroll, { passive: true });
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(onResize);
+    observer?.observe(node);
     return () => {
-      element.removeEventListener("scroll", measure);
+      node.removeEventListener("scroll", onScroll);
       observer?.disconnect();
     };
   }, [container]);
 
-  return view;
+  return current;
 }
 
 export function useVirtualRows(container: RefObject<HTMLElement | null>, count: number, rowHeight: number) {
-  const view = useScrollView(container);
+  const { start, end } = useVirtualRange(
+    container,
+    (top, height) => visibleRows(count, rowHeight, top, height, OVERSCAN),
+  );
 
   const scrollToIndex = useCallback((index: number) => {
     const element = container.current;
@@ -34,12 +72,14 @@ export function useVirtualRows(container: RefObject<HTMLElement | null>, count: 
     else if (top + rowHeight > element.scrollTop + element.clientHeight) element.scrollTop = top + rowHeight - element.clientHeight;
   }, [container, rowHeight]);
 
-  const { start, end } = visibleRows(count, rowHeight, view.top, view.height, OVERSCAN);
   return { start, end, before: start * rowHeight, after: (count - end) * rowHeight, scrollToIndex };
 }
 
 export function useVirtualSlots(container: RefObject<HTMLElement | null>, offsets: readonly number[], inset: number) {
-  const view = useScrollView(container);
+  const { start, end } = useVirtualRange(
+    container,
+    (top, height) => visibleSlots(offsets, Math.max(0, top - inset), height, OVERSCAN),
+  );
 
   const scrollToIndex = useCallback((index: number) => {
     const element = container.current;
@@ -50,6 +90,5 @@ export function useVirtualSlots(container: RefObject<HTMLElement | null>, offset
     else if (bottom > element.scrollTop + element.clientHeight) element.scrollTop = bottom - element.clientHeight;
   }, [container, offsets, inset]);
 
-  const { start, end } = visibleSlots(offsets, Math.max(0, view.top - inset), view.height, OVERSCAN);
   return { start, end, scrollToIndex };
 }

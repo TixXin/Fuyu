@@ -95,6 +95,36 @@
   text-overflow: ellipsis;
 }
 
+.music-source-move {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.music-source-step {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  color: var(--text-3);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.music-source-step:hover:not(:disabled) {
+  color: var(--text-1);
+  background: var(--color-white-a08);
+}
+
+.music-source-step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .music-source-remove {
   flex: 0 0 auto;
   width: 28px;
@@ -118,6 +148,7 @@
 }
 
 .music-source-drag:focus-visible,
+.music-source-step:focus-visible,
 .music-source-remove:focus-visible {
   outline: 2px solid rgba(232, 242, 248, 0.6);
   outline-offset: 2px;

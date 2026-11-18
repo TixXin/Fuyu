@@ -8,13 +8,22 @@
 
 .message-sources {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   gap: var(--space-xs);
   min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.message-sources::-webkit-scrollbar {
+  display: none;
 }
 
 .message-sources button {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
@@ -31,6 +40,15 @@
   transition: color var(--motion-base) var(--motion-ease), background var(--motion-base) var(--motion-ease);
 }
 
+.message-sources--crowded {
+  gap: 2px;
+}
+
+.message-sources--crowded button {
+  gap: 5px;
+  padding: 5px 7px;
+}
+
 .message-sources button:hover {
   color: var(--text-1);
 }
@@ -42,7 +60,7 @@
 
 .message-sources button:focus-visible {
   outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
 .message-source-count {

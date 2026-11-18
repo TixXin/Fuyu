@@ -11,6 +11,7 @@ def main():
     parser.add_argument("--bpm", type=int, default=100)
     parser.add_argument("--duration", type=float, default=60)
     parser.add_argument("--seeds", default="5,31")
+    parser.add_argument("--offload", action="store_true")
     args = parser.parse_args()
 
     ace = Path(args.ace).resolve()
@@ -23,7 +24,10 @@ def main():
 
     seeds = [int(seed) for seed in args.seeds.split(",") if seed]
     handler = AceStepHandler()
-    status = handler.initialize_service(project_root=str(ace), config_path="acestep-v15-turbo", device="cuda")
+    status = handler.initialize_service(
+        project_root=str(ace), config_path="acestep-v15-turbo", device="cuda",
+        offload_to_cpu=args.offload, offload_dit_to_cpu=args.offload,
+    )
     print(status)
     params = GenerationParams(
         caption=args.caption, lyrics="[Instrumental]", instrumental=True, bpm=args.bpm, duration=args.duration,

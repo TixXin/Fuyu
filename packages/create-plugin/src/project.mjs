@@ -2,9 +2,10 @@ import { ENGINE, devDependencies } from "./versions.mjs";
 
 export const SLOTS_USED = Object.freeze(["island.page/v1", "settings.section/v1"]);
 export const SERVICES_USED = Object.freeze(["clients", "timers/v1"]);
-export const EXPERIMENTAL = Object.freeze([...SERVICES_USED, ...SLOTS_USED]);
+export const EXPERIMENTAL = Object.freeze([]);
 
 export function packageJson(options) {
+  const experimental = Array.isArray(options.experimental) ? options.experimental : EXPERIMENTAL;
   const manifest = {
     name: options.packageName,
     version: "0.1.0",
@@ -15,13 +16,14 @@ export function packageJson(options) {
     repository: options.repository,
     engines: { fuyu: ENGINE },
     scripts: {
+      dev: "fuyu-plugin dev",
       build: "fuyu-plugin build",
       check: "fuyu-plugin check",
       package: "fuyu-plugin pack",
       typecheck: "tsc",
       lint: "eslint .",
     },
-    devDependencies: devDependencies(options.checkout),
+    devDependencies: devDependencies(options.checkout, options.sdkVersion),
     fuyu: {
       manifest: 1,
       displayName: options.displayName,
@@ -32,13 +34,16 @@ export function packageJson(options) {
       client: { island: "dist/island.js", settings: "dist/settings.js" },
       inject: { required: [...SERVICES_USED] },
       slots: [...SLOTS_USED],
-      experimental: [...EXPERIMENTAL],
+      ...(experimental.length > 0 ? { experimental: [...experimental] } : {}),
     },
   };
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }
 
 export function readme(options) {
+  const checkoutNote = options.checkout
+    ? `\n\`devDependencies\` link Fuyu's packages from a checkout of [TixXin/fuyu](https://github.com/TixXin/fuyu) (\`file:\` paths).\n`
+    : "";
   return `# ${options.displayName.en}
 
 ${options.displayName["zh-CN"]}: a [Fuyu](https://github.com/TixXin/fuyu) plugin for plugin platform v3.
@@ -53,36 +58,17 @@ It has the three parts a plugin usually has:
 
 \`fuyu.client\` in \`package.json\` tells Fuyu which window loads which built file. \`src/timers.ts\` is shared
 by both sides; \`src/styles.css\` is added to the windows by the build.
-
-## Experimental
-
-Plugin platform v3 is still being built. Every interface this project uses is listed in
-\`fuyu.experimental\` in \`package.json\`, so the plugin loads only from a development folder
-and the market does not take it yet. The template changes once the interfaces are settled.
-
-Until \`fuyu-plugin\` 2.0 is on npm, \`devDependencies\` link Fuyu's packages from a checkout of
-[TixXin/fuyu](https://github.com/TixXin/fuyu) (\`file:\` paths).
-
+${checkoutNote}
 ## Develop
 
 \`\`\`sh
 npm install
 npm run typecheck   # tsc
 npm run lint        # eslint, with the rules below
-npm run build       # writes build/package/
+npm run dev         # build, register in plugins.yml and rebuild on changes
 npm run check       # what the market would stop, without running the plugin
+npm run package     # build a signed or unsigned .fuyu archive
 \`\`\`
-
-To try it, add the built folder to \`plugins.yml\` in Fuyu's data folder (\`plugins-v3/\`):
-
-\`\`\`yaml
-- id: ${options.packageName}
-  source: dev
-  path: <this folder>/build/package
-\`\`\`
-
-The island and the settings window cannot load window parts from a development folder yet;
-\`fuyu-plugin dev\` will load this folder directly and reload it on changes.
 
 ## Rules
 

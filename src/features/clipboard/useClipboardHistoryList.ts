@@ -18,6 +18,8 @@ function inView(item: ClipboardHistoryItem, view: ClipboardView) {
   return true;
 }
 
+const MAX_FLIP_ITEMS = 20;
+
 export function useClipboardHistoryList(items: ClipboardHistoryItem[]) {
   const [query, setQuery] = useState("");
   const [clipboardView, setClipboardView] = useState<ClipboardView>("all");
@@ -29,49 +31,61 @@ export function useClipboardHistoryList(items: ClipboardHistoryItem[]) {
     [items],
   );
   const viewedItems = useMemo(() => (clipboardView === "favorites" ? favoriteItems : items.filter((item) => inView(item, clipboardView))), [clipboardView, favoriteItems, items]);
+  const parsedQuery = useMemo(() => (normalizedQuery ? parsePopupQuery(normalizedQuery) : null), [normalizedQuery]);
+  const needsPinyin = useMemo(() => parsedQuery !== null && parsedQuery.words.some((w) => /^[a-z]+$/.test(w)), [parsedQuery]);
   const [pinyinReady, setPinyinReady] = useState(false);
   useEffect(() => {
-    if (!normalizedQuery || pinyinReady) return;
+    if (!needsPinyin || pinyinReady) return;
     let cancelled = false;
     void loadPinyin().then((pinyin) => { if (!cancelled) setPinyinReady(pinyin !== null); });
     return () => { cancelled = true; };
-  }, [normalizedQuery, pinyinReady]);
+  }, [needsPinyin, pinyinReady]);
   const filteredItems = useMemo(() => {
-    if (!normalizedQuery) {
+    if (!parsedQuery) {
       return viewedItems;
     }
 
-    const parsed = parsePopupQuery(normalizedQuery);
     const now = Date.now();
-    return viewedItems.filter((item) => matchesPopupQuery(item, parsed, now));
+    return viewedItems.filter((item) => matchesPopupQuery(item, parsedQuery, now));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [normalizedQuery, viewedItems, pinyinReady]);
+  }, [parsedQuery, viewedItems, pinyinReady]);
 
   useLayoutEffect(() => {
-    const visibleIds = new Set(filteredItems.map((item) => item.id));
     const nextPositions = new Map<string, DOMRect>();
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+    if (prefersReducedMotion) {
+      itemPositionsRef.current = nextPositions;
+      return;
+    }
 
-    itemElementsRef.current.forEach((element, id) => {
-      if (!visibleIds.has(id)) {
-        return;
+    let measured = 0;
+    for (const item of filteredItems) {
+      if (measured >= MAX_FLIP_ITEMS) {
+        break;
       }
-
+      const element = itemElementsRef.current.get(item.id);
+      if (!element) {
+        continue;
+      }
+      measured += 1;
       const nextRect = element.getBoundingClientRect();
-      const previousRect = itemPositionsRef.current.get(id);
-      nextPositions.set(id, nextRect);
+      if (nextRect.width === 0 && nextRect.height === 0) {
+        continue;
+      }
+      const previousRect = itemPositionsRef.current.get(item.id);
+      nextPositions.set(item.id, nextRect);
 
-      if (!previousRect || prefersReducedMotion) {
-        return;
+      if (!previousRect) {
+        continue;
       }
 
       const deltaX = previousRect.left - nextRect.left;
       const deltaY = previousRect.top - nextRect.top;
 
       if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) {
-        return;
+        continue;
       }
 
       element.getAnimations().forEach((animation) => animation.cancel());
@@ -85,7 +99,7 @@ export function useClipboardHistoryList(items: ClipboardHistoryItem[]) {
           easing: MOTION_EASE,
         },
       );
-    });
+    }
 
     itemPositionsRef.current = nextPositions;
   }, [filteredItems]);

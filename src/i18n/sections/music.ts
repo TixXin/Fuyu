@@ -25,9 +25,18 @@ export type MusicText = {
   openSettings: string;
   closeSettings: string;
   reorderSource: string;
+  moveSourceUp: (name: string) => string;
+  moveSourceDown: (name: string) => string;
   removeSource: string;
   removeLiveSourceNote: string;
   noSources: string;
+  customPlayer: {
+    add: string;
+    placeholder: string;
+    submit: string;
+    cancel: string;
+    running: string;
+  };
 };
 
 export const zhCN: MusicText = {
@@ -66,9 +75,18 @@ export const zhCN: MusicText = {
   openSettings: "来源设置",
   closeSettings: "返回播放器",
   reorderSource: "调整来源顺序",
+  moveSourceUp: (name) => `上移「${name}」`,
+  moveSourceDown: (name) => `下移「${name}」`,
   removeSource: "移除来源",
   removeLiveSourceNote: "该播放器仍在运行，已重新排到末尾；退出播放器后才会真正消失。",
   noSources: "尚未检测到音频来源。",
+  customPlayer: {
+    add: "添加音乐软件",
+    placeholder: "输入进程名，如 xtMusic.exe",
+    submit: "添加",
+    cancel: "取消",
+    running: "正在运行：",
+  },
 };
 
 export const en: MusicText = {
@@ -107,7 +125,16 @@ export const en: MusicText = {
   openSettings: "Source settings",
   closeSettings: "Back to player",
   reorderSource: "Reorder source",
+  moveSourceUp: (name) => `Move ${name} up`,
+  moveSourceDown: (name) => `Move ${name} down`,
   removeSource: "Remove source",
   removeLiveSourceNote: "That player is still running, so it was added back at the end. It disappears once it quits.",
   noSources: "No audio sources detected yet.",
+  customPlayer: {
+    add: "Add music app",
+    placeholder: "Process name, e.g. xtMusic.exe",
+    submit: "Add",
+    cancel: "Cancel",
+    running: "Running:",
+  },
 };

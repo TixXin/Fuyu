@@ -67,6 +67,21 @@ fn local_api_config(grant: &Grant) -> Vec<(&'static str, Value)> {
     grant.settings.get("allowWrite").filter(|value| value.is_boolean()).map(|value| ("allowWrite", value.clone())).into_iter().collect()
 }
 
+fn ssh_tunnel_config(grant: &Grant) -> Vec<(&'static str, Value)> {
+    let settings = &grant.settings;
+    let proxy = settings.get("localProxy").filter(|value| value.is_string()).map(|value| ("localProxy", value.clone()));
+    let port = settings.get("customPort").filter(|value| value.is_number()).map(|value| ("customPort", value.clone()));
+    proxy.into_iter().chain(port).collect()
+}
+
+fn center_pattern_config(grant: &Grant) -> Vec<(&'static str, Value)> {
+    let settings = &grant.settings;
+    let pattern = settings.get("pattern").filter(|value| value.is_string()).map(|value| ("pattern", value.clone()));
+    let pet = settings.get("pet").filter(|value| value.is_string()).map(|value| ("pet", value.clone()));
+    let size = settings.get("size").filter(|value| value.is_number()).map(|value| ("size", value.clone()));
+    pattern.into_iter().chain(pet).chain(size).collect()
+}
+
 const LOCAL_API_V2: &str = "focusd.local-api";
 const LOCAL_API_FILE: &str = "local-api.json";
 
@@ -89,6 +104,8 @@ pub(crate) const MIGRATIONS: &[Migration] = &[
     Migration { v2: "focusd.cc-connect", v3: "cc-connect", config: cc_connect_config, off_without_grant: true },
     Migration { v2: "focusd.session-ring", v3: "session-ring", config: session_ring_config, off_without_grant: true },
     Migration { v2: LOCAL_API_V2, v3: "local-api", config: local_api_config, off_without_grant: true },
+    Migration { v2: "focusd.ssh-proxy-tunnel", v3: "ssh-tunnel", config: ssh_tunnel_config, off_without_grant: true },
+    Migration { v2: "focusd.center-pattern", v3: "center-pattern", config: center_pattern_config, off_without_grant: true },
 ];
 
 #[derive(Debug, Default, Serialize, Deserialize)]

@@ -357,3 +357,233 @@ fn a_bottom_docked_island_sits_at_the_bottom_of_its_stage() {
     assert!(on(left + width / 2.0, 460.0 - height + 0.5));
     assert!(!on(left + width / 2.0, 10.0));
 }
+
+#[test]
+fn passthrough_polling_slows_down_when_hidden_or_far_from_stage() {
+    assert_eq!(passthrough_sleep_duration(false, true), PASSTHROUGH_HIDDEN_TICK);
+    assert_eq!(passthrough_sleep_duration(false, false), PASSTHROUGH_HIDDEN_TICK);
+    assert_eq!(passthrough_sleep_duration(true, true), PASSTHROUGH_FAST_TICK);
+    assert_eq!(passthrough_sleep_duration(true, false), PASSTHROUGH_IDLE_TICK);
+
+    assert!(cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, 100.0, 0.0));
+    assert!(cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, -20.0, 580.0));
+    assert!(!cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, -21.0, 580.0));
+    assert!(!cursor_near_stage(100.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, 100.0, 581.0));
+
+    assert_eq!(gaze_cursor_point((121.4, 38.9), true), (120.0, 40.0));
+    assert_eq!(gaze_cursor_point((121.9, 39.8), true), (120.0, 40.0));
+    assert_eq!(gaze_cursor_point((950.0, 520.0), false), (960.0, 528.0));
+    assert_eq!(gaze_cursor_point((965.0, 534.0), false), (960.0, 528.0));
+}
+
+#[test]
+fn tuck_styles_position_and_hit_test_across_dpi_scales() {
+    assert_eq!(TuckStyle::from_value("edge"), Some(TuckStyle::Edge));
+    assert_eq!(TuckStyle::from_value("line"), Some(TuckStyle::Line));
+    assert_eq!(TuckStyle::from_value("hidden"), Some(TuckStyle::Hidden));
+    assert_eq!(TuckStyle::from_value("custom"), None);
+    assert_eq!(IslandWindowState::default().tuck_style, TuckStyle::Edge);
+
+    for scale in [1.0, 1.25, 1.5, 2.0] {
+        let stage_width = (STAGE_WINDOW_WIDTH * scale).round();
+        let stage_height = (STAGE_WINDOW_HEIGHT * scale).round();
+        let center_x = stage_width / 2.0;
+        let island_width = COLLAPSED_ISLAND_WIDTH * scale;
+        let island_left = (stage_width - island_width) / 2.0;
+
+        let mut top_state = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+        top_state.is_tucked = true;
+        top_state.attached_edge = Some(Edge::Top);
+
+        top_state.tuck_style = TuckStyle::Edge;
+        let top_edge_y = f64::from(tucked_top_offset(1.0, scale, TuckStyle::Edge));
+        assert!(cursor_on_island(0.0, top_edge_y, stage_width, stage_height, center_x, 1.0 * scale, top_state));
+        assert!(cursor_on_island(0.0, top_edge_y, stage_width, stage_height, center_x, 9.0 * scale, top_state));
+        assert!(!cursor_on_island(0.0, top_edge_y, stage_width, stage_height, center_x, 11.0 * scale, top_state));
+
+        top_state.tuck_style = TuckStyle::Line;
+        let top_line_y = f64::from(tucked_top_offset(1.0, scale, TuckStyle::Line));
+        assert!(cursor_on_island(0.0, top_line_y, stage_width, stage_height, center_x, 1.0 * scale, top_state));
+        assert!(cursor_on_island(0.0, top_line_y, stage_width, stage_height, center_x, 3.5 * scale, top_state));
+        assert!(!cursor_on_island(0.0, top_line_y, stage_width, stage_height, center_x, 5.0 * scale, top_state));
+
+        top_state.tuck_style = TuckStyle::Hidden;
+        let top_hidden_y = f64::from(tucked_top_offset(1.0, scale, TuckStyle::Hidden));
+        assert_eq!(top_hidden_y, -(COLLAPSED_ISLAND_HEIGHT * scale).ceil());
+        assert!(cursor_on_island(0.0, top_hidden_y, stage_width, stage_height, center_x, 0.0, top_state));
+        assert!(cursor_on_island(0.0, top_hidden_y, stage_width, stage_height, island_left + 0.5, 1.5 * scale, top_state));
+        assert!(cursor_on_island(0.0, top_hidden_y, stage_width, stage_height, center_x, 2.0 * scale, top_state));
+        assert!(!cursor_on_island(0.0, top_hidden_y, stage_width, stage_height, center_x, 2.5 * scale, top_state));
+        assert!(!cursor_on_island(0.0, top_hidden_y, stage_width, stage_height, island_left - 1.0, 1.0 * scale, top_state));
+
+        let work_bottom = 1040.0 * scale;
+        let mut bottom_state = top_state;
+        bottom_state.attached_edge = Some(Edge::Bottom);
+
+        bottom_state.tuck_style = TuckStyle::Edge;
+        let bottom_edge_y = work_bottom - stage_height - f64::from(tucked_top_offset(1.0, scale, TuckStyle::Edge));
+        assert!(cursor_on_island(0.0, bottom_edge_y, stage_width, stage_height, center_x, work_bottom - 1.0 * scale, bottom_state));
+        assert!(cursor_on_island(0.0, bottom_edge_y, stage_width, stage_height, center_x, work_bottom - 9.0 * scale, bottom_state));
+        assert!(!cursor_on_island(0.0, bottom_edge_y, stage_width, stage_height, center_x, work_bottom - 11.0 * scale, bottom_state));
+
+        bottom_state.tuck_style = TuckStyle::Line;
+        let bottom_line_y = work_bottom - stage_height - f64::from(tucked_top_offset(1.0, scale, TuckStyle::Line));
+        assert!(cursor_on_island(0.0, bottom_line_y, stage_width, stage_height, center_x, work_bottom - 1.0 * scale, bottom_state));
+        assert!(cursor_on_island(0.0, bottom_line_y, stage_width, stage_height, center_x, work_bottom - 3.5 * scale, bottom_state));
+        assert!(!cursor_on_island(0.0, bottom_line_y, stage_width, stage_height, center_x, work_bottom - 5.0 * scale, bottom_state));
+
+        bottom_state.tuck_style = TuckStyle::Hidden;
+        let bottom_hidden_y = work_bottom - stage_height - f64::from(tucked_top_offset(1.0, scale, TuckStyle::Hidden));
+        assert!(cursor_on_island(0.0, bottom_hidden_y, stage_width, stage_height, center_x, work_bottom, bottom_state));
+        assert!(cursor_on_island(0.0, bottom_hidden_y, stage_width, stage_height, island_left + island_width - 0.5, work_bottom - 1.5 * scale, bottom_state));
+        assert!(cursor_on_island(0.0, bottom_hidden_y, stage_width, stage_height, center_x, work_bottom - 2.0 * scale, bottom_state));
+        assert!(!cursor_on_island(0.0, bottom_hidden_y, stage_width, stage_height, center_x, work_bottom - 2.5 * scale, bottom_state));
+        assert!(!cursor_on_island(0.0, bottom_hidden_y, stage_width, stage_height, island_left + island_width + 1.0, work_bottom - 1.0 * scale, bottom_state));
+    }
+}
+
+#[test]
+fn shortcut_focus_survives_hover_release_and_restores_on_collapse() {
+    use super::focus_slots::FocusSlots;
+
+    let slots = FocusSlots::new();
+    slots.note_hover(0);
+    slots.note_expanded(0);
+    assert_eq!(slots.take_hover(), None);
+    assert_eq!(slots.take_expanded(), None);
+
+    slots.note_expanded(41);
+    assert_eq!(slots.take_hover(), None);
+    assert_eq!(slots.take_hover(), None);
+    slots.note_expanded(0);
+    assert_eq!(slots.take_expanded(), Some(41));
+    assert_eq!(slots.take_expanded(), None);
+
+    slots.note_hover(52);
+    assert_eq!(slots.take_hover(), Some(52));
+    assert_eq!(slots.take_hover(), None);
+    assert_eq!(slots.take_expanded(), None);
+
+    slots.note_hover(63);
+    slots.note_expanded(0);
+    assert_eq!(slots.take_hover(), None);
+    assert_eq!(slots.take_expanded(), Some(63));
+
+    slots.note_hover(63);
+    slots.note_expanded(74);
+    assert_eq!(slots.take_hover(), None);
+    assert_eq!(slots.take_expanded(), Some(74));
+}
+
+#[test]
+fn dimmed_passthrough_ignores_island_clicks_only_while_collapsed_and_untucked() {
+    let mut current = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+    assert!(!current.dimmed_passthrough());
+    assert!(!should_ignore_cursor(current, true, false));
+    assert!(should_ignore_cursor(current, false, false));
+
+    current.is_dimmed = true;
+    assert!(current.dimmed_passthrough());
+    assert!(should_ignore_cursor(current, true, false));
+    assert!(should_ignore_cursor(current, false, false));
+    assert!(!should_ignore_cursor(current, false, true));
+
+    let mut expanded = current;
+    expanded.mode = IslandMode::Expanded;
+    assert!(!expanded.dimmed_passthrough());
+    assert!(!should_ignore_cursor(expanded, true, false));
+
+    let mut tucked = current;
+    tucked.is_tucked = true;
+    assert!(!tucked.dimmed_passthrough());
+    assert!(!should_ignore_cursor(tucked, true, false));
+
+    let mut dragging = current;
+    dragging.is_dragging = true;
+    assert!(!dragging.dimmed_passthrough());
+    assert!(!should_ignore_cursor(dragging, true, false));
+}
+
+#[test]
+fn cursor_near_island_and_dim_wake_tracker_handle_approach_and_parked_cursor() {
+    for scale in [1.0, 1.25, 1.5, 2.0] {
+        let stage_width = (STAGE_WINDOW_WIDTH * scale).round();
+        let stage_height = (STAGE_WINDOW_HEIGHT * scale).round();
+        let center_x = stage_width / 2.0;
+        let collapsed = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+        let bottom_y = COLLAPSED_ISLAND_HEIGHT * scale;
+
+        assert!(cursor_near_island(0.0, 0.0, stage_width, stage_height, center_x, bottom_y + (DIM_WAKE_MARGIN - 1.0) * scale, collapsed));
+        assert!(!cursor_near_island(0.0, 0.0, stage_width, stage_height, center_x, bottom_y + (DIM_WAKE_MARGIN + 2.0) * scale, collapsed));
+    }
+
+    let mut tracker = DimWakeTracker::default();
+    assert!(!tracker.poll(false, false, Some((10.0, 200.0))));
+    assert!(!tracker.poll(true, false, Some((10.0, 200.0))));
+    assert!(tracker.poll(true, true, Some((400.0, 50.0))));
+
+    let mut parked = DimWakeTracker::default();
+    assert!(!parked.poll(false, true, Some((410.0, 18.0))));
+    assert!(!parked.poll(true, true, Some((410.0, 18.0))));
+    assert!(!parked.poll(true, true, Some((411.0, 18.5))));
+    assert!(parked.poll(true, true, Some((413.0, 18.0))));
+
+    let mut reenter = DimWakeTracker::default();
+    assert!(!reenter.poll(false, true, Some((410.0, 18.0))));
+    assert!(!reenter.poll(true, true, Some((410.0, 18.0))));
+    assert!(!reenter.poll(true, false, Some((410.0, 120.0))));
+    assert!(reenter.poll(true, true, Some((410.0, 18.0))));
+}
+
+#[test]
+fn ordinary_open_and_close_skip_stage_geometry_until_stage_inputs_change() {
+    assert_eq!(DEFAULT_EXPANDED_ISLAND_HEIGHT, 360.0);
+
+    let collapsed = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+    assert!(should_apply_stage_geometry(&collapsed, &collapsed, false));
+    assert!(!should_apply_stage_geometry(&collapsed, &collapsed, true));
+
+    let mut expanded = collapsed;
+    expanded.mode = IslandMode::Expanded;
+    expanded.collapsed_width = 312.0;
+    expanded.expanded_width = 800.0;
+    expanded.is_dimmed = true;
+    expanded.corner_radius = 24.0;
+    expanded.corner_shape = CornerShape::Round;
+    expanded.top_fillet_radius = 4.0;
+    expanded.glass_enabled = true;
+    expanded.glass_native = true;
+    expanded.glass_intensity = 45.0;
+    expanded.glass_tint_rgb = (18, 22, 30);
+    expanded.expanded_height = 130.0;
+    assert!(!stage_geometry_inputs_changed(&collapsed, &expanded));
+    assert!(!should_apply_stage_geometry(&collapsed, &expanded, true));
+
+    let mut taller = expanded;
+    taller.expanded_height = 490.0;
+    assert!(stage_geometry_inputs_changed(&collapsed, &taller));
+    assert!(!stage_geometry_inputs_changed(
+        &state(IslandMode::Collapsed, 1.0, 490.0),
+        &taller,
+    ));
+
+    let mut tucked = collapsed;
+    tucked.is_tucked = true;
+    assert!(stage_geometry_inputs_changed(&collapsed, &tucked));
+
+    let mut margined = collapsed;
+    margined.margin_y = 12.0;
+    assert!(stage_geometry_inputs_changed(&collapsed, &margined));
+
+    let mut side_collapsed = collapsed;
+    side_collapsed.attached_edge = Some(Edge::Left);
+    side_collapsed.custom_position = Some(IslandPosition {
+        x: 0,
+        y: 420,
+        edge: Some(Edge::Left),
+        along: Some(0.5),
+    });
+    let mut side_expanded = side_collapsed;
+    side_expanded.mode = IslandMode::Expanded;
+    assert!(stage_geometry_inputs_changed(&side_collapsed, &side_expanded));
+}

@@ -123,3 +123,97 @@ export declare function defineService<M extends MethodTable<M>, E extends EventT
 ): ServiceDefinition<M, E, P>;
 
 export declare function isServiceDefinition(value: unknown): value is ServiceDefinition;
+
+export type CommandItem = {
+  pluginId: string;
+  pluginName: Record<string, string> | null;
+  id: string;
+  title: Record<string, string>;
+  defaultKeybinding: string | null;
+  keybinding: string | null;
+  active: boolean;
+  conflicts: string[];
+};
+
+export type CommandsMethods = {
+  list(): { items: CommandItem[] };
+  run(params: { plugin: string; command: string; args?: Json }): Json;
+  setKeybinding(params: { plugin: string; command: string; keybinding: string | null }): { items: CommandItem[] };
+};
+
+export type CommandsEvents = {
+  changed: { items: CommandItem[] };
+};
+
+export declare const commandsV1: ServiceDefinition<CommandsMethods, CommandsEvents, {}>;
+
+export type PluginConfigPropertySchema = {
+  type: "boolean" | "string" | "number" | "integer";
+  title?: string | Record<string, string>;
+  description?: string | Record<string, string>;
+  default?: boolean | string | number;
+  enum?: Array<string | number>;
+  minimum?: number;
+  maximum?: number;
+};
+
+export type PluginConfigSchema = {
+  type?: "object";
+  properties?: Record<string, PluginConfigPropertySchema>;
+  [key: string]: Json | undefined;
+};
+
+export type PluginConfigValues = Record<string, Json>;
+
+export type PluginConfigEntry = {
+  id: string;
+  schema: PluginConfigSchema | null;
+  values: PluginConfigValues;
+  defaults: PluginConfigValues;
+};
+
+export type PluginConfigMethods = {
+  list(): { items: PluginConfigEntry[] };
+  get(params: { id: string }): PluginConfigEntry;
+  set(params: { id: string; values: PluginConfigValues }): PluginConfigEntry;
+  reset(params: { id: string }): PluginConfigEntry;
+};
+
+export type PluginConfigEvents = {
+  changed: { id: string; values: PluginConfigValues };
+};
+
+export declare const pluginConfigV1: ServiceDefinition<PluginConfigMethods, PluginConfigEvents, {}>;
+
+export type PluginWindowRules = {
+  disallowAlwaysOnTop: boolean;
+  disallowClickThrough: boolean;
+  hideAll: boolean;
+};
+
+export type PluginWindowState = {
+  pluginId: string;
+  id: string;
+  title: string;
+  kind: string;
+  width: number;
+  height: number;
+  x: number | null;
+  y: number | null;
+  alwaysOnTop: boolean;
+  clickThrough: boolean;
+  resizable: boolean;
+  visible: boolean;
+};
+
+export type PluginWindowsMethods = {
+  getRules(params: { id: string }): PluginWindowRules;
+  setRules(params: { id: string; disallowAlwaysOnTop?: boolean; disallowClickThrough?: boolean; hideAll?: boolean }): PluginWindowRules;
+  list(params?: { id?: string }): { items: PluginWindowState[] };
+};
+
+export type PluginWindowsEvents = {
+  changed: { items: PluginWindowState[]; rules?: { id: string } & PluginWindowRules };
+};
+
+export declare const pluginWindowsV1: ServiceDefinition<PluginWindowsMethods, PluginWindowsEvents, {}>;

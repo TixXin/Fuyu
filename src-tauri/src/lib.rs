@@ -10,9 +10,12 @@ mod dev_lane;
 mod device_events;
 #[cfg_attr(target_os = "macos", path = "device_use/macos.rs")]
 mod device_use;
+#[cfg(any(debug_assertions, test))]
+mod emit_diagnostics;
 mod file_shelf;
 mod fs_write;
 mod home_dir;
+mod im_sources;
 mod island;
 mod local_api;
 mod lyrics;
@@ -43,6 +46,8 @@ mod sync;
 mod system;
 mod system_levels;
 mod timer;
+#[cfg(any(windows, test))]
+mod toast_notifications;
 mod todos;
 mod translation;
 mod tray;
@@ -50,6 +55,7 @@ mod tray_menu;
 #[cfg(target_os = "macos")]
 mod tray_mark;
 mod tray_visibility;
+mod uninstall_cleanup;
 mod user_error;
 mod voice_input;
 #[cfg_attr(not(windows), path = "wallpaper/unsupported.rs")]
@@ -80,6 +86,9 @@ macro_rules! collect_commands {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    if uninstall_cleanup::maybe_run_from_args() {
+        std::process::exit(0);
+    }
     let mut context = tauri::generate_context!();
     if let Some(identifier) = notification_diagnostics::verification_identifier() {
         context.config_mut().identifier = identifier;
@@ -102,8 +111,10 @@ pub fn run() {
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());
     let result = builder
-        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            if let Some(link) = plugin_host::find_link(&args) {
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            if let Some(package) = plugin_kernel::package_open::find_in_args(args.iter().skip(1), Some(std::path::Path::new(&cwd))) {
+                plugin_kernel::package_open::open(app, package, false);
+            } else if let Some(link) = plugin_host::find_link(&args) {
                 let _ = island::show_island(app);
                 plugin_host::open_link(app, link, false);
             } else {
@@ -122,6 +133,9 @@ pub fn run() {
         .on_page_load(|webview, _| {
             webview_recovery::attach(webview);
             webview_memory::page_loaded(webview);
+            if let Some(window) = webview.app_handle().get_webview_window(webview.label()) {
+                recording::apply_to_window(&window);
+            }
         })
         .on_window_event(|window, event| {
             if window.label() == translation::WINDOW_LABEL
@@ -157,13 +171,33 @@ pub fn run() {
 
         })
         .setup(move |app| {
+            #[cfg(debug_assertions)]
+            emit_diagnostics::start(app.handle());
             system::update_backup::apply_pending_restore();
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             tray::build_tray(app)?;
-            tray_menu::prebuild(app.handle());
             plugin_kernel::builtins::init(app.handle());
             coexist::init(app.handle());
+            if let Ok(window) = island::main_window(app.handle()) {
+                #[cfg(target_os = "macos")]
+                if let Err(error) = macos::island_panel::make_panel(&window) {
+                    eprintln!("failed to make the island a panel: {error}");
+                }
+                #[cfg(target_os = "macos")]
+                macos::island_panel::refresh_top_space(&window);
+                let stage = window.clone();
+                let sized = app.handle().run_on_main_thread(move || {
+                    if let Err(error) = island::apply_stage_geometry(&stage, island::IslandWindowState::default(), false) {
+                        eprintln!("failed to size and position island window: {error}");
+                    }
+                });
+                if let Err(error) = sized {
+                    eprintln!("failed to size and position island window: {error}");
+                }
+                island::start_window_watch(window.clone());
+                island::start_cursor_passthrough_loop(window);
+            }
             if let Err(error) = clipboard_history::init(app.handle()) {
                 eprintln!("failed to initialize clipboard history: {error}");
             }
@@ -171,6 +205,7 @@ pub fn run() {
             screenshot::init(app.handle());
             voice_input::init(app.handle());
             timer::init(app.handle());
+            calendar::init(app.handle());
             claude_usage::init();
             if let Err(error) = file_shelf::init(app.handle()) {
                 eprintln!("failed to initialize the file shelf: {error}");
@@ -203,9 +238,14 @@ pub fn run() {
             if let Err(error) = plugin_kernel::init(app.handle()) {
                 eprintln!("failed to start the plugin platform v3 host: {error}");
             }
-            let args: Vec<String> = std::env::args().collect();
-            if let Some(link) = plugin_host::find_link(&args) {
-                plugin_host::open_link(app.handle(), link, true);
+            plugin_kernel::package_open::mark_started();
+            if let Some(package) = plugin_kernel::package_open::find_in_args(std::env::args_os().skip(1), None) {
+                plugin_kernel::package_open::open(app.handle(), package, true);
+            } else {
+                let args: Vec<String> = std::env::args().collect();
+                if let Some(link) = plugin_host::find_link(&args) {
+                    plugin_host::open_link(app.handle(), link, true);
+                }
             }
             mail::init();
             if let Err(error) = qq_notifications::init(app.handle()) {
@@ -214,29 +254,11 @@ pub fn run() {
             if let Err(error) = wechat_reminders::init(app.handle()) {
                 eprintln!("failed to initialize WeChat reminders: {error}");
             }
+            if let Err(error) = im_sources::init(app.handle()) {
+                eprintln!("failed to initialize IM sources: {error}");
+            }
             if let Err(error) = notification_diagnostics::start(app.handle()) {
                 eprintln!("failed to initialize notification diagnostics: {error}");
-            }
-            if let Ok(window) = island::main_window(app.handle()) {
-                #[cfg(target_os = "macos")]
-                if let Err(error) = macos::island_panel::make_panel(&window) {
-                    eprintln!("failed to make the island a panel: {error}");
-                }
-                #[cfg(target_os = "macos")]
-                macos::island_panel::keep_in_top_space(window.clone());
-                let stage = window.clone();
-                let sized = app.handle().run_on_main_thread(move || {
-                    if let Err(error) = island::apply_stage_geometry(&stage, island::IslandWindowState::default(), false) {
-                        eprintln!("failed to size and position island window: {error}");
-                    }
-                });
-                if let Err(error) = sized {
-                    eprintln!("failed to size and position island window: {error}");
-                }
-                island::start_monitor_follow_loop(window.clone());
-                island::start_notch_watch(window.clone());
-                dev_lane::watch_installed_island(window.clone());
-                island::start_cursor_passthrough_loop(window);
             }
             system::fullscreen::start(app.handle());
             media_control::init(app.handle());
@@ -254,6 +276,7 @@ pub fn run() {
             mail;
             wechat_reminders;
             qq_notifications;
+            im_sources;
             island;
             todos;
             system;
@@ -292,11 +315,17 @@ pub fn run() {
                 tauri::RunEvent::Exit => {
                     plugin_kernel::shutdown();
                     agent_approval::shutdown();
+                    clipboard_history::shutdown();
                     home_dir::before_exit();
                     wechat_reminders::shutdown();
                 }
                 #[cfg(target_os = "macos")]
-                tauri::RunEvent::Opened { urls } => plugin_host::open_opened_links(_app, &urls),
+                tauri::RunEvent::Opened { urls } => {
+                    let rest = plugin_kernel::package_open::open_opened_urls(_app, &urls);
+                    if !rest.is_empty() {
+                        plugin_host::open_opened_links(_app, &rest);
+                    }
+                }
                 #[cfg(target_os = "macos")]
                 tauri::RunEvent::Reopen { .. } => tray_visibility::reopen(_app),
                 _ => {}

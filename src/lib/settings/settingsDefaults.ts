@@ -1,11 +1,11 @@
-import { DEFAULT_AGENT_SETTINGS, LEGACY_AGENT_FALLBACKS } from "../../features/agent-status/agentSettings.ts";
-import { DEFAULT_LYRICS_SETTINGS } from "../../features/media/lyrics/lyricsSettings.ts";
-import { DEFAULT_CALENDAR_SETTINGS } from "../../features/calendar/calendarSettings.ts";
+import { DEFAULT_AGENT_SETTINGS, LEGACY_AGENT_FALLBACKS } from "./agentSettings.ts";
+import { DEFAULT_LYRICS_SETTINGS } from "./lyricsSettings.ts";
+import { DEFAULT_CALENDAR_SETTINGS } from "./calendarSettings.ts";
 import { DEFAULT_GLASS_SETTINGS } from "./glassSettings.ts";
 import { DEFAULT_PAGE_DIGIT_MODIFIERS, DEFAULT_PAGE_NEXT_SHORTCUT, DEFAULT_PAGE_PREVIOUS_SHORTCUT } from "./pageShortcuts.ts";
 import {
   DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, DEFAULT_HOVER_COLLAPSE_DELAY_MS,
-  DEFAULT_HOVER_EXPAND_DELAY_MS, DEFAULT_HOVER_SWITCH_DELAY_MS, DEFAULT_ISLAND_CORNER_RADIUS, DEFAULT_MAX_PANEL_HEIGHT, DEFAULT_PANEL_WIDTH, DEFAULT_SHELF_ITEMS, DEFAULT_TASK_TEXT_COLOR,
+  DEFAULT_HOVER_EXPAND_DELAY_MS, DEFAULT_HOVER_SWITCH_DELAY_MS, DEFAULT_IDLE_DIM_OPACITY, DEFAULT_IDLE_DIM_SECONDS, DEFAULT_ISLAND_CORNER_RADIUS, DEFAULT_ISLAND_OPACITY, DEFAULT_MAX_PANEL_HEIGHT, DEFAULT_PANEL_WIDTH, DEFAULT_SHELF_ITEMS, DEFAULT_TASK_TEXT_COLOR,
 } from "./settingsLimits.ts";
 import { isMacOS } from "../platform.ts";
 import type { IslandSettings } from "./types";
@@ -16,6 +16,10 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   fontFamily: "system",
   glassIntensity: 25,
   opacity: 100,
+  islandOpacity: DEFAULT_ISLAND_OPACITY,
+  idleDim: false,
+  idleDimSeconds: DEFAULT_IDLE_DIM_SECONDS,
+  idleDimOpacity: DEFAULT_IDLE_DIM_OPACITY,
   collapsedScale: 1,
   expandedScale: 1,
   marginY: 0,
@@ -70,12 +74,14 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   messageNotice: "panel",
   messagePanelSeconds: 8,
   expandTrigger: "hover",
+  clickCollapseOnLeave: false,
   hoverExpandDelayMs: DEFAULT_HOVER_EXPAND_DELAY_MS,
   hoverCollapseDelayMs: DEFAULT_HOVER_COLLAPSE_DELAY_MS,
   hoverSwitchPage: true,
   hoverSwitchDelayMs: DEFAULT_HOVER_SWITCH_DELAY_MS,
   minimizeAction: "tuck",
   tuckedHoverAction: "reveal",
+  tuckStyle: "edge",
   pageDigitModifiers: DEFAULT_PAGE_DIGIT_MODIFIERS,
   pageNextShortcut: DEFAULT_PAGE_NEXT_SHORTCUT,
   pagePreviousShortcut: DEFAULT_PAGE_PREVIOUS_SHORTCUT,

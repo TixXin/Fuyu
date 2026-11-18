@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Fuyu",
-  "version": "0.3.11-beta.2",
+  "version": "0.3.11-beta.4",
   "identifier": "com.tixxin.fuyu",
   "build": {
     "beforeDevCommand": "node scripts/stop-running-island.mjs && pnpm dev",
@@ -40,7 +40,6 @@
         "transparent": true,
         "resizable": true,
         "alwaysOnTop": true,
-        "skipTaskbar": true,
         "visible": false,
         "shadow": false
       },
@@ -147,7 +146,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self' ipc: http://ipc.localhost tauri: http://tauri.localhost https://tauri.localhost asset: http://asset.localhost fuyu-plugin: http://fuyu-plugin.localhost fuyu-clip: http://fuyu-clip.localhost data: blob:; script-src 'self' fuyu-plugin: http://fuyu-plugin.localhost blob:; style-src 'self' 'unsafe-inline' fuyu-plugin: http://fuyu-plugin.localhost; img-src 'self' asset: http://asset.localhost fuyu-plugin: http://fuyu-plugin.localhost fuyu-clip: http://fuyu-clip.localhost data: blob: https: http:; media-src 'self' asset: http://asset.localhost fuyu-plugin: http://fuyu-plugin.localhost data: blob:; font-src 'self' fuyu-plugin: http://fuyu-plugin.localhost data:; connect-src 'self' ipc: http://ipc.localhost ws://127.0.0.1:* http://127.0.0.1:* ws://localhost:* http://localhost:* fuyu-plugin: http://fuyu-plugin.localhost fuyu-clip: http://fuyu-clip.localhost https: http:; object-src 'none'; base-uri 'self'"
     }
   },
   "plugins": {
@@ -167,6 +166,15 @@
     "active": true,
     "targets": "all",
     "homepage": "https://fuyu.ing",
+    "fileAssociations": [
+      {
+        "ext": ["fuyu"],
+        "name": "Fuyu Plugin Package",
+        "description": "Fuyu Plugin Package",
+        "role": "Viewer",
+        "mimeType": "application/vnd.fuyu.plugin+zip"
+      }
+    ],
     "windows": {
       "nsis": {
         "template": "windows/installer.nsi",

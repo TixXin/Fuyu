@@ -5,10 +5,13 @@ use std::{
 };
 use windows::Win32::Foundation::HWND;
 
-use crate::win32::{
-    process,
-    process_memory::{self, ProcessMemory},
-    uia_list,
+use crate::{
+    user_error::UserError,
+    win32::{
+        process,
+        process_memory::{self, ProcessMemory},
+        uia_list,
+    },
 };
 
 const CORE_STRING: &[u8] = b"qt.accessibility.core";
@@ -48,7 +51,7 @@ pub(super) struct Keeper {
     gate: Option<Gate>,
     failed: Option<u32>,
     next: Option<Instant>,
-    pub(super) status: Option<String>,
+    pub(super) status: Option<UserError>,
 }
 
 impl Keeper {
@@ -87,15 +90,18 @@ impl Keeper {
         self.set_status(None)
     }
 
-    fn set_status(&mut self, status: Option<String>) -> bool {
+    fn set_status(&mut self, status: Option<UserError>) -> bool {
         let changed = self.status != status;
         self.status = status;
         changed
     }
 
-    fn keep_on(&mut self, window: Option<HWND>) -> String {
+    fn keep_on(&mut self, window: Option<HWND>) -> UserError {
         let Some(window) = window else {
-            return "没找到微信主窗口，微信启动后会自动公开。".into();
+            return UserError::new(
+                "wechat.exposeWaiting",
+                "WeChat main window not found; its UI will be exposed automatically once WeChat starts.",
+            );
         };
         let process_id = process::window_process_id(window);
         if self.gate.is_none() {
@@ -106,7 +112,7 @@ impl Keeper {
             .as_ref()
             .is_some_and(|gate| gate.process_id == process_id && gate.is_on())
         {
-            return ON.into();
+            return exposed_status();
         }
         self.gate = None;
         if let Some(error) = self
@@ -117,24 +123,32 @@ impl Keeper {
             return error;
         }
         if uia_list::shows_qt_controls(window) {
-            return "微信界面已被别的程序（例如读屏软件）公开。".into();
+            return UserError::new(
+                "wechat.exposeExternal",
+                "WeChat's UI is already exposed by another program (such as a screen reader).",
+            );
         }
         match activate(process_id, &self.folder, || {
             uia_list::shows_qt_controls(window)
         }) {
             Ok(gate) => {
                 self.gate = Some(gate);
-                ON.into()
+                exposed_status()
             }
             Err(error) => {
                 self.failed = Some(process_id);
-                format!("没能公开微信界面：{error}")
+                error
             }
         }
     }
 }
 
-const ON: &str = "已公开微信界面。微信关在托盘里时读不到会话列表，最小化可以。";
+fn exposed_status() -> UserError {
+    UserError::new(
+        "wechat.exposeOn",
+        "WeChat's UI is exposed. The chat list cannot be read while WeChat is closed to the tray, though minimizing works.",
+    )
+}
 
 fn adopt(process_id: u32, folder: &Path) -> Option<Gate> {
     let marker = folder.join("gate-on.json");
@@ -153,11 +167,19 @@ fn adopt(process_id: u32, folder: &Path) -> Option<Gate> {
     })
 }
 
-fn activate(process_id: u32, folder: &Path, exposed: impl Fn() -> bool) -> Result<Gate, String> {
-    let (base, dll) = process_memory::module(process_id, "Weixin.dll")
-        .ok_or("微信进程里没有 Weixin.dll（不是 4.x 版？）")?;
-    let memory = ProcessMemory::open(process_id)
-        .ok_or("打不开微信进程（微信以管理员身份运行时，岛也要以管理员身份运行）")?;
+fn activate(process_id: u32, folder: &Path, exposed: impl Fn() -> bool) -> Result<Gate, UserError> {
+    let (base, dll) = process_memory::module(process_id, "Weixin.dll").ok_or_else(|| {
+        UserError::new(
+            "wechat.exposeNoDll",
+            "Could not expose WeChat's UI: Weixin.dll was not found in the WeChat process (not version 4.x?).",
+        )
+    })?;
+    let memory = ProcessMemory::open(process_id).ok_or_else(|| {
+        UserError::new(
+            "wechat.exposeOpenProcess",
+            "Could not expose WeChat's UI: could not open the WeChat process (if WeChat runs as administrator, run Fuyu as administrator too).",
+        )
+    })?;
     let cache_path = folder.join("gate-cache.json");
     let mut cache = std::fs::read(&cache_path)
         .ok()
@@ -173,8 +195,9 @@ fn activate(process_id: u32, folder: &Path, exposed: impl Fn() -> bool) -> Resul
             .filter_map(|rva| rva.as_u64().map(|rva| rva as u32))
             .collect(),
         None => {
-            let data =
-                std::fs::read(&dll).map_err(|error| format!("读不到 Weixin.dll：{error}"))?;
+            let data = std::fs::read(&dll).map_err(|error| {
+                UserError::new("wechat.exposeReadDll", "Could not expose WeChat's UI: could not read Weixin.dll.").detail(error)
+            })?;
             let found = scan(&data);
             cache[&identity] = json!({ "candidates": found });
             save(&cache_path, &cache);
@@ -189,7 +212,10 @@ fn activate(process_id: u32, folder: &Path, exposed: impl Fn() -> bool) -> Resul
             .take(MAX_TRIES),
     );
     if candidates.is_empty() {
-        return Err("这个版本的微信里没找到辅助功能开关".into());
+        return Err(UserError::new(
+            "wechat.exposeNoSwitch",
+            "Could not expose WeChat's UI: could not find the accessibility switch in this WeChat version.",
+        ));
     }
     for rva in candidates {
         let address = base + rva as usize;
@@ -217,7 +243,10 @@ fn activate(process_id: u32, folder: &Path, exposed: impl Fn() -> bool) -> Resul
             memory.write_byte(address, original);
         }
     }
-    Err("改了开关，微信的界面仍然没有公开".into())
+    Err(UserError::new(
+        "wechat.exposeStillHidden",
+        "Could not expose WeChat's UI: toggled the switch, yet WeChat's UI is still not exposed.",
+    ))
 }
 
 fn wait_for(done: &impl Fn() -> bool, limit: Duration) -> bool {

@@ -41,19 +41,23 @@ function normalizeModels(value: unknown): TranslationSettings["models"] {
   );
 }
 
+function normalizeShortcut(value: unknown, fallback: string, legacyDefaults?: ReadonlySet<string>): string {
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return legacyDefaults?.has(trimmed) ? fallback : trimmed;
+}
+
 export function normalizeTranslationSettings(stored: unknown): TranslationSettings {
   if (typeof stored !== "object" || stored === null) return DEFAULT_SETTINGS;
   const value = stored as Record<string, unknown>;
-  const shortcut = typeof value.shortcut === "string" ? value.shortcut : DEFAULT_SETTINGS.shortcut;
   return {
-    shortcut: LEGACY_DEFAULT_SHORTCUTS.has(shortcut) ? DEFAULT_SETTINGS.shortcut : shortcut,
+    shortcut: normalizeShortcut(value.shortcut, DEFAULT_SETTINGS.shortcut, LEGACY_DEFAULT_SHORTCUTS),
     direction: value.direction === "zh-en" || value.direction === "en-zh" ? value.direction : "auto",
     provider: isTranslationProvider(value.provider) ? value.provider : LEGACY_TRANSLATION_PROVIDER,
     customBaseUrl: typeof value.customBaseUrl === "string" ? value.customBaseUrl : "",
     models: normalizeModels(value.models),
-    selectionShortcut: typeof value.selectionShortcut === "string" && value.selectionShortcut
-      ? value.selectionShortcut
-      : DEFAULT_SELECTION_SHORTCUT,
+    selectionShortcut: normalizeShortcut(value.selectionShortcut, DEFAULT_SELECTION_SHORTCUT),
     pasteClipboardOnOpen: value.pasteClipboardOnOpen !== false,
     autoTranslate: value.autoTranslate === true,
   };

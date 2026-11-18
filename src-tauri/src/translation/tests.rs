@@ -1,6 +1,9 @@
-use super::provider::find_provider;
-use super::request::{request, Translated};
-use super::{address, engines_with, EngineSecret, TranslatorEngines};
+use super::provider::{completions_url, find_provider};
+use super::request::{request, resolve_secret, Translated};
+use super::{
+    address, engines_with, parse_optional_shortcut, EngineSecret, TranslatorEngines, WantedBinding,
+    DEFAULT_SELECTION_SHORTCUT, DEFAULT_SHORTCUT,
+};
 use crate::user_error::UserError;
 use plugin_base::{Rpc, Serve, ServiceFailure};
 use reqwest::Url;
@@ -47,7 +50,12 @@ fn engine(status: &str, kind: &str, body: &str) -> (Url, mpsc::Receiver<String>)
 
 fn ask(endpoint: Url, pieces: Option<&(dyn Fn(String) -> bool + Send + Sync)>) -> Result<Translated, UserError> {
     let provider = find_provider(Some("custom")).unwrap();
-    tauri::async_runtime::block_on(request(provider, endpoint, "test-model", SECRET, "Translate.", "hello", pieces))
+    tauri::async_runtime::block_on(request(provider, endpoint, "test-model", Some(SECRET), "Translate.", "hello", pieces))
+}
+
+fn ask_without_secret(endpoint: Url) -> Result<Translated, UserError> {
+    let provider = find_provider(Some("custom")).unwrap();
+    tauri::async_runtime::block_on(request(provider, endpoint, "test-model", None, "Translate.", "hello", None))
 }
 
 fn only_in_the_header(request: &str) {
@@ -132,7 +140,7 @@ fn user_errors_reach_the_host_with_their_own_code_args_and_detail() {
 
 #[test]
 fn engines_list_every_engine_with_only_whether_it_has_a_secret() {
-    let listed = engines_with(|provider| Ok(provider.id == "deepseek")).unwrap();
+    let listed = engines_with(|provider| Ok(provider.id == "deepseek"), || Ok(None)).unwrap();
     let json = serde_json::to_value(&listed).unwrap();
     let engines = json["engines"].as_array().unwrap();
     assert_eq!(engines.len(), 7);
@@ -140,9 +148,52 @@ fn engines_list_every_engine_with_only_whether_it_has_a_secret() {
     assert!(engines.iter().all(|entry| entry.as_object().unwrap().keys().map(String::as_str).eq(["engine", "hasSecret"])));
     assert!(engines[1..].iter().all(|entry| entry["hasSecret"] == false));
     assert_eq!(engines.last().unwrap()["engine"], "custom");
-    let none: TranslatorEngines = engines_with(|_| Ok(false)).unwrap();
+    let none: TranslatorEngines = engines_with(|_| Ok(false), || Ok(Some("https://api.example.com/v1".into()))).unwrap();
     assert!(!none.engines.contains(&EngineSecret { engine: "deepseek", has_secret: true }));
-    assert_eq!(engines_with(|_| Err(UserError::new("credential.read", "Could not read."))).unwrap_err().code(), "credential.read");
+    assert!(!none.engines.contains(&EngineSecret { engine: "custom", has_secret: true }));
+    let local: TranslatorEngines = engines_with(|_| Ok(false), || Ok(Some("http://localhost:11434/v1".into()))).unwrap();
+    assert!(local.engines.contains(&EngineSecret { engine: "custom", has_secret: true }));
+    assert_eq!(engines_with(|_| Err(UserError::new("credential.read", "Could not read.")), || Ok(None)).unwrap_err().code(), "credential.read");
+}
+
+#[test]
+fn loopback_custom_endpoints_work_without_a_key_and_remote_ones_still_require_it() {
+    let custom = find_provider(Some("custom")).unwrap();
+    let deepseek = find_provider(Some("deepseek")).unwrap();
+    for raw in ["http://localhost:11434/v1", "http://127.0.0.1:8080", "http://[::1]:11434/v1"] {
+        let url = completions_url(custom, Some(raw)).unwrap();
+        assert_eq!(resolve_secret(custom, &url, |_| Ok(None)).unwrap(), None);
+        assert_eq!(resolve_secret(custom, &url, |_| Ok(Some(format!(" {SECRET} ")))).unwrap().as_deref(), Some(SECRET));
+    }
+    let remote = completions_url(custom, Some("https://api.example.com/v1")).unwrap();
+    assert_eq!(resolve_secret(custom, &remote, |_| Ok(None)).unwrap_err().code(), "translation.noKey");
+    assert_eq!(resolve_secret(custom, &remote, |_| Ok(Some("   ".into()))).unwrap_err().code(), "translation.noKey");
+    assert_eq!(resolve_secret(custom, &remote, |_| Ok(Some(SECRET.into()))).unwrap().as_deref(), Some(SECRET));
+    let builtin_loopback = Url::parse("http://127.0.0.1:8080/chat/completions").unwrap();
+    assert_eq!(resolve_secret(deepseek, &builtin_loopback, |_| Ok(None)).unwrap_err().code(), "translation.noKey");
+
+    let (endpoint, seen) = engine("200 OK", "application/json", r#"{"choices":[{"message":{"content":"免密译文"},"finish_reason":"stop"}]}"#);
+    let translated = ask_without_secret(endpoint).unwrap();
+    assert_eq!(translated, Translated { text: "免密译文".into(), engine: "custom" });
+    let wire = seen.recv().unwrap();
+    assert!(!wire.to_ascii_lowercase().contains("authorization:"), "{wire}");
+}
+
+#[test]
+fn empty_translation_shortcuts_turn_the_hotkey_off_without_falling_back_to_defaults() {
+    assert!(parse_optional_shortcut("").unwrap().is_none());
+    assert!(parse_optional_shortcut("   ").unwrap().is_none());
+    assert_eq!(parse_optional_shortcut("Ctrl+Shift+F").unwrap().map(|binding| binding.label), Some("Ctrl+Shift+F".into()));
+    assert_eq!(parse_optional_shortcut("F").err().unwrap().code(), "shortcut.invalid");
+
+    assert_eq!(WantedBinding::Default.resolve(DEFAULT_SHORTCUT).map(|binding| binding.label), Some("Ctrl+Shift+F".into()));
+    assert_eq!(WantedBinding::Default.resolve(DEFAULT_SELECTION_SHORTCUT).map(|binding| binding.label), Some("Ctrl+Alt+T".into()));
+    let off = WantedBinding::from_option(None);
+    assert!(matches!(off, WantedBinding::Off));
+    assert!(off.resolve(DEFAULT_SHORTCUT).is_none());
+    assert!(off.resolve(DEFAULT_SELECTION_SHORTCUT).is_none());
+    let custom = parse_optional_shortcut("Ctrl+Alt+Q").unwrap();
+    assert_eq!(WantedBinding::from_option(custom).resolve(DEFAULT_SHORTCUT).map(|binding| binding.label), Some("Ctrl+Alt+Q".into()));
 }
 
 #[test]

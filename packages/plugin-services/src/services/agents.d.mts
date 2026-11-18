@@ -1,5 +1,5 @@
 import type { ServiceDefinition } from "../define.mjs";
-import type { AgentFocus, AgentRemoteHosts, AgentSessions, AgentUsages } from "../generated/rust.mjs";
+import type { AgentFocus, AgentRemoteHosts, AgentSessions, AgentUsageReport, AgentUsages } from "../generated/rust.mjs";
 
 export type {
   AgentFocus,
@@ -13,9 +13,13 @@ export type {
   RemoteHostStatus,
 } from "../generated/rust.mjs";
 
+export type AgentsUsageResult = AgentUsages & {
+  extra?: Record<string, AgentUsageReport | null>;
+};
+
 export type AgentsMethods = {
   sessions(): AgentSessions;
-  usage(): AgentUsages;
+  usage(): AgentsUsageResult;
   focus(params: { provider: string; sessionId?: string; cwd?: string; title?: string }): AgentFocus;
   remoteHosts(): AgentRemoteHosts;
 };

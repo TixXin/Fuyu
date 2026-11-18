@@ -25,7 +25,7 @@ const TOOL_DETAIL_MAX_CHARS: usize = 80;
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
-    hooks: Some(Hooks { install: kimi_hooks::install, check: kimi_hooks::check }),
+    hooks: Some(Hooks { install: kimi_hooks::install, check: kimi_hooks::check, uninstall: kimi_hooks::uninstall }),
     status_light: Some(StatusLight {
         running_marker: "agent-kimiCode-running.flag",
         running_hold: "agent-kimiCode-running-hold.flag",

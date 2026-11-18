@@ -1,0 +1,220 @@
+.agent-glyph {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 6px 12px;
+}
+
+.agent-glyph__capsule {
+  width: 122px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 7px;
+  background: var(--color-surface-dark);
+  border: 1px solid var(--color-white-a12);
+  border-radius: var(--radius-pill);
+}
+
+.island-light .agent-glyph__capsule {
+  background: var(--color-white);
+  border-color: var(--color-white-a16);
+}
+
+.agent-glyph__mark {
+  flex: none;
+  height: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 5px;
+  background: var(--color-white);
+  border-radius: var(--radius-pill);
+}
+
+.island-light .agent-glyph__mark {
+  background: var(--color-ink);
+}
+
+.agent-glyph__mark-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-circle);
+  background: var(--color-light-working);
+}
+
+.agent-glyph__mark-dots {
+  width: 9px;
+  height: 2.5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-ink-muted);
+}
+
+.island-light .agent-glyph__mark-dots {
+  background: var(--color-white-a18);
+}
+
+.agent-glyph__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin-left: 2px;
+  border-radius: var(--radius-circle);
+  background: var(--color-light-working);
+}
+
+.agent-glyph__title-line {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-white-a18);
+}
+
+.island-light .agent-glyph__title-line {
+  background: var(--color-white-a18);
+}
+
+.agent-glyph__ring {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-circle);
+}
+
+.agent-glyph--stack {
+  align-content: center;
+  gap: 4px;
+}
+
+.agent-glyph__card {
+  width: 134px;
+  display: grid;
+  gap: 6px;
+  padding: 7px 9px;
+  background: var(--color-white-a06);
+  border: 1px solid color-mix(in srgb, var(--color-light-working) 55%, transparent);
+  border-radius: var(--radius-md);
+}
+
+.agent-glyph__card-top,
+.agent-glyph__card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.agent-glyph__pill {
+  flex: none;
+  width: 24px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-white-a16);
+}
+
+.agent-glyph__state-chip {
+  flex: none;
+  width: 18px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--color-light-working);
+}
+
+.agent-glyph__bar {
+  display: block;
+  flex: 1;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-white-a18);
+}
+
+.agent-glyph__bar--strong {
+  background: var(--color-text-muted);
+}
+
+.agent-glyph__bar--mid {
+  max-width: 72%;
+}
+
+.agent-glyph__bar--short {
+  max-width: 55%;
+}
+
+.agent-glyph__bar--soft {
+  max-width: 64%;
+  height: 3px;
+  background: var(--color-white-a12);
+}
+
+.agent-glyph__list-row {
+  width: 134px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px;
+  background: var(--color-white-a04);
+  border-radius: var(--radius-sm);
+}
+
+.agent-glyph__list-dot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-circle);
+}
+
+.agent-glyph__list-dot--work {
+  background: var(--color-light-working);
+}
+
+.agent-glyph__list-dot--turn {
+  background: var(--color-light-your-turn);
+}
+
+.agent-glyph__list-lines {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.agent-glyph__compact-row {
+  width: 134px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  background: var(--color-white-a04);
+  border-radius: 4px;
+}
+
+.agent-glyph__stripe {
+  flex: none;
+  width: 2.5px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+}
+
+.agent-glyph__stripe--needs {
+  background: var(--color-light-needs);
+}
+
+.agent-glyph__stripe--turn {
+  background: var(--color-light-your-turn);
+}
+
+.agent-glyph__stripe--work {
+  background: var(--color-light-working);
+}
+
+.agent-glyph__time {
+  flex: none;
+  width: 12px;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--color-white-a12);
+}

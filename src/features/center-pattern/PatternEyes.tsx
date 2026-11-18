@@ -2,8 +2,11 @@ import { useEffect, useRef } from "react";
 import { acquireIslandCursor, canTrackIslandCursor, listenIslandCursor, releaseIslandCursor, type CursorPoint } from "./api";
 import { gazeOffset } from "./patterns";
 import { useReducedMotion } from "../../lib/theme/useReducedMotion";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
+import { throttle } from "../../utils/throttle.ts";
 
 const MAX_PUPIL_OFFSET = 2.6;
+const MOUSE_THROTTLE_MS = 16;
 const WANDER_AFTER_MS = 4000;
 const WANDER_EVERY_MS = 2600;
 const WANDER_GLANCES = [
@@ -35,10 +38,11 @@ export function PatternEyes({ paused }: { paused: boolean }) {
         pupil.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
       });
     };
-    const onMouseMove = (event: MouseEvent) => lookAt({ x: event.clientX, y: event.clientY });
+    const throttledLookAt = throttle(lookAt, MOUSE_THROTTLE_MS);
+    const onMouseMove = (event: MouseEvent) => throttledLookAt({ x: event.clientX, y: event.clientY });
     window.addEventListener("mousemove", onMouseMove);
 
-    const wander = window.setInterval(() => {
+    const stopWander = visibilityInterval(() => {
       if (performance.now() - lastPointAt < WANDER_AFTER_MS) return;
       svg.dataset.gaze = "wander";
       glance = (glance + 1 + Math.floor(Math.random() * (WANDER_GLANCES.length - 1))) % WANDER_GLANCES.length;
@@ -51,7 +55,10 @@ export function PatternEyes({ paused }: { paused: boolean }) {
     const native = canTrackIslandCursor();
     if (native) {
       acquireIslandCursor();
-      void listenIslandCursor(lookAt).then((stop) => {
+      void listenIslandCursor((point) => {
+        throttledLookAt.cancel();
+        lookAt(point);
+      }).then((stop) => {
         if (disposed) stop();
         else unlisten = stop;
       }).catch(() => undefined);
@@ -59,8 +66,9 @@ export function PatternEyes({ paused }: { paused: boolean }) {
 
     return () => {
       disposed = true;
+      throttledLookAt.cancel();
       window.removeEventListener("mousemove", onMouseMove);
-      window.clearInterval(wander);
+      stopWander();
       unlisten?.();
       if (native) releaseIslandCursor();
     };

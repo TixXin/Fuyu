@@ -380,3 +380,25 @@ fn the_poller_is_the_background_listed_for_claude_usage() {
     let usage = catalog.iter().find(|plugin| plugin.id == PLUGIN_ID).expect("claude-usage is a built-in plugin");
     assert_eq!(usage.background.as_deref(), Some(&[POLLER.to_owned()][..]));
 }
+
+#[test]
+#[ignore = "Queries real local Antigravity, WorkBuddy and DSH accounts on this machine"]
+fn live_antigravity_workbuddy_and_dsh_usage() {
+    let agy = tauri::async_runtime::block_on(super::antigravity::read(true));
+    println!(
+        "antigravity: source={:?} plan={:?} five_hour={:?} seven_day={:?} models={:?} error={:?}",
+        agy.source, agy.plan, agy.five_hour, agy.seven_day, agy.models, agy.error
+    );
+    assert!(agy.error.is_none(), "antigravity error: {:?}", agy.error);
+    assert!(agy.five_hour.is_some() || agy.seven_day.is_some());
+
+    let wb = tauri::async_runtime::block_on(super::workbuddy::read(true));
+    println!("workbuddy: credits={:?} error={:?}", wb.credits, wb.error);
+    assert!(wb.error.is_none(), "workbuddy error: {:?}", wb.error);
+    assert!(wb.credits.is_some());
+
+    let dsh = tauri::async_runtime::block_on(super::dsh::read(true));
+    println!("dsh: source={:?} available={:?} wallets={:?} error={:?}", dsh.source, dsh.available, dsh.wallets, dsh.error);
+    assert!(dsh.error.is_none(), "dsh error: {:?}", dsh.error);
+    assert!(!dsh.wallets.is_empty());
+}

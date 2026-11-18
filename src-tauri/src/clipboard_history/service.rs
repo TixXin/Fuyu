@@ -1,6 +1,5 @@
-use base64::{engine::general_purpose, Engine as _};
 use image::RgbaImage;
-use std::{fs, path::Path, time::Duration};
+use std::{collections::HashSet, fs, path::Path, time::Duration};
 use tauri::{Emitter, Manager};
 
 use super::clipboard_io::{
@@ -38,14 +37,7 @@ pub(super) fn remove_files_older_than(dir: &Path, age: Duration) {
     }
 }
 
-pub(super) fn remove_unreferenced_images(dir: &Path, items: &[ClipboardHistoryItem]) {
-    let name = |path: &str| Path::new(path).file_name().map(|name| name.to_string_lossy().to_lowercase());
-    let kept: std::collections::HashSet<String> = items
-        .iter()
-        .filter_map(|item| item.image.as_ref())
-        .flat_map(|image| [name(&image.original_path), name(&image.thumbnail_path)])
-        .flatten()
-        .collect();
+pub(super) fn remove_unreferenced_images(dir: &Path, kept: &HashSet<String>) {
     let Ok(entries) = fs::read_dir(dir) else { return };
     for entry in entries.flatten() {
         let path = entry.path();
@@ -60,6 +52,28 @@ const PATH_CAPTURE_PAUSE: Duration = Duration::from_millis(800);
 
 
 impl ClipboardHistoryService {
+    pub(super) fn ensure_loaded(&self) -> bool {
+        *self.loaded.get_or_init(|| {
+            let persisted = super::store::load_history(&self.history_path);
+            let stored_enabled = persisted.settings.enabled;
+            let referenced = super::store::referenced_image_names(&persisted.items);
+            if !referenced.is_empty() {
+                let dir = self.image_dir.clone();
+                let _ = std::thread::Builder::new()
+                    .name("clipboard-image-sweep".into())
+                    .spawn(move || remove_unreferenced_images(&dir, &referenced));
+            }
+            if let Ok(mut state) = self.state.lock() {
+                state.settings = persisted.settings.normalized();
+                state.items = persisted.items;
+                state.snippets = persisted.snippets;
+                state.snippet_tombstones = persisted.snippet_tombstones;
+                state.favorite_tombstones = persisted.favorite_tombstones;
+            }
+            stored_enabled
+        })
+    }
+
     pub(super) fn snapshot(&self) -> Result<ClipboardHistorySnapshot, String> {
         let state = self.state.lock().map_err(|error| error.to_string())?;
         Ok(Self::snapshot_locked(&state))
@@ -151,6 +165,7 @@ impl ClipboardHistoryService {
         {
             let mut moved_item = state.items.remove(index);
             moved_item.copied_at = current_unix_millis();
+            moved_item.from_sync = false;
             state.items.insert(0, moved_item);
             self.persist_locked(&state)?;
         }
@@ -163,17 +178,24 @@ impl ClipboardHistoryService {
 
     pub(super) fn toggle_favorite(&self, id: &str) -> Result<ClipboardHistorySnapshot, String> {
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
-        let item = state
+        let state_ref = &mut *state;
+        let item = state_ref
             .items
             .iter_mut()
             .find(|item| item.id == id)
             .ok_or_else(|| "Clipboard history item was not found.".to_string())?;
         item.favorite = !item.favorite;
+        let sync_changed = crate::sync::clock::with(|clock, wall| {
+            super::favorites_sync::on_favorite_toggled(item, &mut state_ref.favorite_tombstones, clock, wall)
+        });
         self.persist_locked(&state)?;
         let snapshot = Self::snapshot_locked(&state);
         drop(state);
 
         self.emit_changed();
+        if sync_changed {
+            crate::sync::notify_local_change();
+        }
         Ok(snapshot)
     }
 
@@ -188,14 +210,21 @@ impl ClipboardHistoryService {
             .iter_mut()
             .find(|item| item.id == id)
             .ok_or_else(|| "Clipboard history item was not found.".to_string())?;
+        let (old_note, old_tags) = (item.note.clone(), item.tags.clone());
         let (note, tags) = super::split_note_tags(note);
         item.note = note;
         item.tags = tags;
+        let sync_changed = crate::sync::clock::with(|clock, wall| {
+            super::favorites_sync::on_note_changed(item, &old_note, &old_tags, clock, wall)
+        });
         self.persist_locked(&state)?;
         let snapshot = Self::snapshot_locked(&state);
         drop(state);
 
         self.emit_changed();
+        if sync_changed {
+            crate::sync::notify_local_change();
+        }
         Ok(snapshot)
     }
 
@@ -208,6 +237,7 @@ impl ClipboardHistoryService {
         self.persist_locked(&state)?;
         let snapshot = Self::snapshot_locked(&state);
         drop(state);
+        self.flush_persisted()?;
 
         self.emit_changed();
         Ok(snapshot)
@@ -241,7 +271,8 @@ impl ClipboardHistoryService {
         if !settings.enabled {
             return;
         }
-        if settings.skip_sensitive && super::system::is_marked_private() {
+        let private_capture = super::system::is_marked_private();
+        if settings.skip_sensitive && private_capture {
             return;
         }
         if settings.privacy.forget_cleared() && super::system::is_empty() {
@@ -274,12 +305,16 @@ impl ClipboardHistoryService {
         }
         let masked = secret && settings.secrets == SecretHandling::Mask;
 
-        if let Err(error) = self.insert_capture(capture, source, masked) {
+        if let Err(error) = self.insert_capture_inner(capture, source, masked, private_capture) {
             eprintln!("failed to store clipboard history item: {error}");
         }
     }
 
     pub(super) fn insert_capture(&self, capture: ClipboardCapture, source: Option<ClipboardSource>, masked: bool) -> Result<(), String> {
+        self.insert_capture_inner(capture, source, masked, false)
+    }
+
+    fn insert_capture_inner(&self, capture: ClipboardCapture, source: Option<ClipboardSource>, masked: bool, private: bool) -> Result<(), String> {
         let now = current_unix_millis();
         let hash = capture.hash().to_string();
         let mut state = self.state.lock().map_err(|error| error.to_string())?;
@@ -300,6 +335,10 @@ impl ClipboardHistoryService {
         if let Some(index) = state.items.iter().position(|item| item.hash == hash) {
             let mut item = state.items.remove(index);
             item.copied_at = now;
+            item.from_sync = false;
+            if private {
+                item.private = true;
+            }
             let id = item.id.clone();
             state.items.insert(0, item);
             self.persist_locked(&state)?;
@@ -332,6 +371,10 @@ impl ClipboardHistoryService {
             pin_order: None,
             truncated: false,
             edited_at: None,
+            private,
+            from_sync: false,
+            updated_at: None,
+            device_id: None,
         };
         let item = match capture {
             ClipboardCapture::Text { hash, text, preview, html } => {
@@ -463,10 +506,7 @@ impl ClipboardHistoryService {
             byte_size: original_bytes.len() as u64,
             original_path: original_path.to_string_lossy().to_string(),
             thumbnail_path: thumbnail_path.to_string_lossy().to_string(),
-            thumbnail_data_url: Some(format!(
-                "data:image/png;base64,{}",
-                general_purpose::STANDARD.encode(thumbnail_bytes)
-            )),
+            thumbnail_data_url: None,
         })
     }
 
@@ -498,17 +538,21 @@ impl ClipboardHistoryService {
     }
 
     pub(super) fn persist_locked(&self, state: &ClipboardHistoryState) -> Result<(), String> {
+        let mut items = state.items.clone();
+        super::store::strip_disk_backed_thumbnails(&mut items);
         let history = PersistedClipboardHistory {
             version: super::store::HISTORY_VERSION,
             settings: state.settings.clone(),
-            items: state.items.clone(),
+            items,
             snippets: state.snippets.clone(),
             snippet_tombstones: state.snippet_tombstones.clone(),
+            favorite_tombstones: state.favorite_tombstones.clone(),
         };
-        let content = serde_json::to_string_pretty(&history)
-            .map_err(|error| format!("Failed to serialize clipboard history: {error}"))?;
-        crate::fs_write::replace_file(&self.history_path, content.as_bytes())
-            .map_err(|error| format!("Failed to write clipboard history: {error}"))
+        self.writer.schedule(history)
+    }
+
+    pub(super) fn flush_persisted(&self) -> Result<(), String> {
+        self.writer.flush()
     }
 
     pub(super) fn remove_item_files(&self, item: &ClipboardHistoryItem) {
@@ -521,7 +565,7 @@ impl ClipboardHistoryService {
     pub(super) fn snapshot_locked(state: &ClipboardHistoryState) -> ClipboardHistorySnapshot {
         ClipboardHistorySnapshot {
             settings: state.settings.clone(),
-            items: state.items.clone(),
+            items: state.items.iter().map(super::store::item_with_protocol_thumbnail).collect(),
             snippets: state.snippets.clone(),
             capture: super::capture_pause::status(current_unix_millis()),
         }
@@ -564,23 +608,23 @@ pub(super) fn read_image_text(path: &str) -> Option<String> {
 }
 
 pub(super) fn fill_file_images(only: Option<String>) {
-    let Ok(service) = super::service() else {
-        return;
-    };
-    let wanted: Vec<(String, String)> = match service.state.lock() {
-        Ok(state) => state
-            .items
-            .iter()
-            .filter(|item| only.as_ref().is_none_or(|id| *id == item.id))
-            .filter_map(|item| super::file_image::single_image_file(item).map(|path| (item.id.clone(), path.to_string())))
-            .take(super::file_image::BACKFILL_LIMIT)
-            .collect(),
-        Err(_) => return,
-    };
-    if wanted.is_empty() {
-        return;
-    }
     std::thread::spawn(move || {
+        let Ok(service) = super::service() else {
+            return;
+        };
+        let wanted: Vec<(String, String)> = match service.state.lock() {
+            Ok(state) => state
+                .items
+                .iter()
+                .filter(|item| only.as_ref().is_none_or(|id| *id == item.id))
+                .filter_map(|item| super::file_image::single_image_file(item).map(|path| (item.id.clone(), path.to_string())))
+                .take(super::file_image::BACKFILL_LIMIT)
+                .collect(),
+            Err(_) => return,
+        };
+        if wanted.is_empty() {
+            return;
+        }
         let found: Vec<_> = wanted
             .into_iter()
             .filter_map(|(id, path)| super::file_image::read(&path).map(|image| (id, image)))
@@ -656,7 +700,8 @@ fn only_images_no_entry_refers_to_are_swept() {
         "image": { "width": 1, "height": 1, "byteSize": 1, "originalPath": old("Kept.png"), "thumbnailPath": old("kept-thumb.png") }
     }))
     .expect("item");
-    remove_unreferenced_images(&dir, &[item]);
+    let kept = super::store::referenced_image_names(&[item]);
+    remove_unreferenced_images(&dir, &kept);
     let mut left: Vec<String> = fs::read_dir(&dir).expect("read").flatten().map(|entry| entry.file_name().to_string_lossy().into_owned()).collect();
     left.sort();
     let _ = fs::remove_dir_all(&dir);

@@ -1,23 +1,26 @@
 import type { LocaleCode } from "../../i18n";
 import { BehaviorSettingsSection } from "./sections/BehaviorSettingsSection";
-import { PositionSettingsSection } from "./sections/PositionSettingsSection";
+import { CrashLogsSection } from "./sections/CrashLogsSection";
 import { DataSettingsSection } from "./sections/DataSettingsSection";
 import { SystemPermissionsSection } from "./sections/SystemPermissionsSection";
 import { loadSaveDirectory, saveSaveDirectory } from "../../features/todos/storage";
 import { sameDirectory } from "../../features/todos/saveDirectory";
-
-function moveTodoFolder(from: string, to: string) {
-  const join = (home: string) => `${home.replace(/[\\/]+$/, "")}\\todo`;
-  if (sameDirectory(loadSaveDirectory(), join(from))) saveSaveDirectory(join(to));
-}
 import type { IslandSettings } from "../../lib/settings/types";
-import { requestIslandPositionReset } from "./storage";
 import { useLaunchAtStartup } from "./useLaunchAtStartup";
 import { useTrayIconVisible } from "./useTrayIconVisible";
-import { QuitIslandRow } from "./QuitIslandRow";
-import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";
+
+function moveTodoFolder(from: string, to: string) {
+  const join = (home: string) => {
+    const trimmed = home.replace(/[\\/]+$/, "");
+    const sep = trimmed.includes("/") && !trimmed.includes("\\") ? "/" : "\\";
+    return `${trimmed}${sep}todo`;
+  };
+  if (sameDirectory(loadSaveDirectory(), join(from))) saveSaveDirectory(join(to));
+}
+
+export type GeneralTab = "general" | "generalData";
 
 type GeneralSectionProps = {
   locale: LocaleCode;
@@ -42,36 +45,17 @@ function StartupSection({ locale, onLocaleChange }: GeneralSectionProps) {
   );
 }
 
-function PositionSection({ settings, onSettingsChange }: GeneralSectionProps) {
-  return (
-    <PositionSettingsSection
-      settings={settings}
-      onSettingsChange={onSettingsChange}
-      onResetPosition={requestIslandPositionReset}
-    />
-  );
-}
-
 function DataSection() {
   return <DataSettingsSection onMoved={moveTodoFolder} />;
 }
 
-function QuitSection() {
-  return (
-    <SettingsGroup>
-      <QuitIslandRow />
-    </SettingsGroup>
-  );
-}
-
-const sections = settingsSections<GeneralSectionProps, "general">();
+const sections = settingsSections<GeneralSectionProps, GeneralTab>();
 
 sections.add({ id: "general.startup", category: "general", order: 10, component: StartupSection });
-sections.add({ id: "general.position", category: "general", order: 20, component: PositionSection });
 sections.add({ id: "general.permissions", category: "general", order: 30, component: SystemPermissionsSection });
-sections.add({ id: "general.data", category: "general", order: 40, component: DataSection });
-sections.add({ id: "general.quit", category: "general", order: 50, component: QuitSection });
+sections.add({ id: "generalData.data", category: "generalData", order: 10, component: DataSection });
+sections.add({ id: "generalData.crashLogs", category: "generalData", order: 20, component: CrashLogsSection });
 
-export function GeneralSettingsPage(props: GeneralSectionProps) {
-  return <SlotView slot={sections} group="general" props={props} />;
+export function GeneralSettingsPage({ tab, ...props }: GeneralSectionProps & { tab: GeneralTab }) {
+  return <SlotView slot={sections} group={tab} props={props} />;
 }

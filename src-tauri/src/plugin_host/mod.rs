@@ -64,7 +64,7 @@ use std::{
     collections::{HashMap, HashSet},
     fs,
     path::PathBuf,
-    sync::{Arc, Mutex, MutexGuard, OnceLock, PoisonError},
+    sync::{Arc, Mutex, MutexGuard, Once, OnceLock, PoisonError},
 };
 use tauri::{AppHandle, Manager};
 
@@ -133,12 +133,27 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         }
     }
     events::listen(app);
-    system_events::start();
-    keybindings::start();
-    lifecycle::start();
-    updates::start();
     dev::start_in_debug_build();
     sync_processes()
+}
+
+static PROCESS_WORKERS: Once = Once::new();
+static UPDATES_WORKER: Once = Once::new();
+
+pub(super) fn ensure_process_workers() {
+    PROCESS_WORKERS.call_once(|| {
+        system_events::start();
+        keybindings::start();
+        lifecycle::start();
+    });
+}
+
+pub(super) fn process_workers_started() -> bool {
+    PROCESS_WORKERS.is_completed()
+}
+
+pub(super) fn ensure_updates_worker() {
+    UPDATES_WORKER.call_once(updates::start);
 }
 
 pub(crate) fn publish_event(name: &str, payload: serde_json::Value) {

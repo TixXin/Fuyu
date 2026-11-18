@@ -1,5 +1,5 @@
-import type { CSSProperties, ReactNode } from "react";
-import type { AppearanceMode } from "../../lib/settings/types";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import type { AppearanceMode, TuckStyle } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
@@ -12,6 +12,7 @@ import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import type { PluginViewEntry } from "../../features/plugin-views/api";
 import type { CollapsedSlots, IslandMode, IslandPage, NativeGlassState } from "./types";
 import { useGlassPointer } from "./useGlassPointer";
+import { PREWARM_HOLD_MS, PREWARM_LEAVE_MS } from "./panelAwake";
 import { useIslandPreparing } from "./useIslandPreparing";
 import { usePageFadeIn } from "./usePageFadeIn";
 import { DevWatermark } from "../../components/DevWatermark";
@@ -26,6 +27,8 @@ import { AlertPopup, useActiveAlert } from "./NotchAlert";
 import { IslandDragHint } from "./IslandDragHint";
 import { sideBubbleTop } from "./sideColumn";
 import type { IslandSide } from "./useIslandSide";
+import { ISLAND_OUTLINE_STYLE } from "./islandOutline";
+import "./IslandOutline.css";
 
 type IslandShellProps = {
   mode: IslandMode;
@@ -36,6 +39,8 @@ type IslandShellProps = {
   nativeGlassState: NativeGlassState;
   glass?: IslandGlassView;
   isTucked: boolean;
+  isDimmed?: boolean;
+  tuckStyle?: TuckStyle;
   isDetached: boolean;
   side?: IslandSide | null;
   showTitle: boolean;
@@ -65,6 +70,59 @@ type IslandShellProps = {
 };
 
 const NO_SOURCES = {};
+const IslandPreparingContext = createContext({ isPreparing: false, isPrewarmed: false });
+
+export function useIslandShellPreparing() {
+  return useContext(IslandPreparingContext).isPreparing;
+}
+
+export function useIslandShellPrewarmed() {
+  return useContext(IslandPreparingContext).isPrewarmed;
+}
+
+function useCollapsedPrewarm(isExpanded: boolean) {
+  const [isPrewarmed, setIsPrewarmed] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  const wake = useCallback(() => {
+    if (isExpanded) return;
+    clearTimer();
+    setIsPrewarmed(true);
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
+      setIsPrewarmed(false);
+    }, PREWARM_HOLD_MS);
+  }, [clearTimer, isExpanded]);
+
+  const leave = useCallback(() => {
+    if (isExpanded) return;
+    clearTimer();
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null;
+      setIsPrewarmed(false);
+    }, PREWARM_LEAVE_MS);
+  }, [clearTimer, isExpanded]);
+
+  if (isExpanded && isPrewarmed) {
+    setIsPrewarmed(false);
+  }
+
+  useEffect(() => {
+    if (isExpanded) {
+      clearTimer();
+    }
+    return clearTimer;
+  }, [clearTimer, isExpanded]);
+
+  return { isPrewarmed: isPrewarmed && !isExpanded, wake, leave };
+}
 
 export function IslandShell({
   mode,
@@ -75,6 +133,8 @@ export function IslandShell({
   nativeGlassState,
   glass,
   isTucked,
+  isDimmed = false,
+  tuckStyle = "edge",
   isDetached,
   side = null,
   showTitle,
@@ -108,6 +168,11 @@ export function IslandShell({
   const isLiquidGlass = appearanceMode === "liquidGlass";
   const { handleGlassPointerMove, resetGlassPointer } = useGlassPointer(isLiquidGlass && glass?.specular !== false);
   const isPreparing = useIslandPreparing(isExpanded);
+  const prewarm = useCollapsedPrewarm(isExpanded);
+  const preparingContext = useMemo(
+    () => ({ isPreparing: isPreparing && !isExpanded, isPrewarmed: prewarm.isPrewarmed }),
+    [isExpanded, isPreparing, prewarm.isPrewarmed],
+  );
   const contentRef = usePageFadeIn<HTMLDivElement>(page, mode);
   const contributed = useIslandContributed();
   const { status } = contributed;
@@ -126,6 +191,8 @@ export function IslandShell({
     isPreparing && !isExpanded ? "island--preparing" : "",
     isDetached ? "island--detached" : "island--docked",
     isTucked ? "island--tucked" : "",
+    isTucked && tuckStyle === "hidden" ? "island--tucked-hidden" : "",
+    isDimmed ? "island--dimmed" : "",
     side ? `island--side island--side-${side}` : "",
     popup ? "island--popup" : "",
     isLiquidGlass ? `island--glass-${nativeGlassState}` : "",
@@ -142,15 +209,20 @@ export function IslandShell({
   return (
     <section
       className={className}
-      style={side ? ({ "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : undefined}
+      style={side ? ({ ...ISLAND_OUTLINE_STYLE, "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : (ISLAND_OUTLINE_STYLE as CSSProperties)}
       aria-label={collapsedLabel}
       onClick={(event) => {
         if (!isExpanded && event.target === event.currentTarget) {
           onOpenPage(leadPage);
         }
       }}
+      onPointerEnter={prewarm.wake}
+      onPointerDown={prewarm.wake}
       onPointerMove={handleGlassPointerMove}
-      onPointerLeave={resetGlassPointer}
+      onPointerLeave={(event) => {
+        resetGlassPointer(event);
+        prewarm.leave();
+      }}
       onMouseEnter={() => {
         if (isTucked) {
           onReveal();
@@ -221,7 +293,9 @@ export function IslandShell({
             hoverSwitchDelayMs={hoverSwitchDelayMs}
             pluginPageButtons={pluginPageButtons}
           />
-          <div ref={contentRef} className="island__content">{children}</div>
+          <div ref={contentRef} className="island__content">
+            <IslandPreparingContext.Provider value={preparingContext}>{children}</IslandPreparingContext.Provider>
+          </div>
         </div>
         {overlay}
       </div>

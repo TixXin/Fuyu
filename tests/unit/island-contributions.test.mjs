@@ -8,6 +8,7 @@ import {
   lineBelow,
   LINE_PRIORITY,
   measuredLine,
+  selectContributed,
   shownLine,
   visibleLines,
 } from "../../src/features/plugin-kernel/islandContributions.ts";
@@ -100,4 +101,42 @@ test("the other kinds are folded into one view", () => {
   assert.equal(view.preview?.hot, "mail");
   assert.equal(view.summary, "messages.summary");
   assert.equal(view.badges.get("settings")?.label, "New v2");
+});
+
+test("updating one contribution reuses unchanged style.vars and slot collections", () => {
+  const store = createIslandContributions();
+  store.set("media", "style", [
+    { kind: "style", vars: { "--cover": "#123456" }, className: "cover-color", tint: "#123456" },
+    { kind: "side", item: "music", height: 40 },
+    { kind: "hint", key: "media.playing" },
+  ]);
+  store.set("todos", "bar", [line("todos.title", 20, { label: "First" })]);
+  store.set("system", "alerts", [{ kind: "alert", item: "level" }, { kind: "page", page: "todo", enabled: true }]);
+  const first = store.snapshot();
+
+  store.set("todos", "bar", [line("todos.title", 20, { label: "Second" })]);
+  const second = store.snapshot();
+
+  assert.notEqual(second, first);
+  assert.notEqual(second.lines, first.lines);
+  assert.equal(second.style, first.style);
+  assert.equal(second.style.vars, first.style.vars);
+  assert.equal(second.style.classNames, first.style.classNames);
+  assert.equal(second.side, first.side);
+  assert.equal(second.hints, first.hints);
+  assert.equal(second.alerts, first.alerts);
+  assert.equal(second.pages, first.pages);
+  assert.equal(second.reveal, first.reveal);
+  assert.equal(second.notices, first.notices);
+  assert.equal(second.popups, first.popups);
+  assert.equal(second.badges, first.badges);
+  assert.equal(second.trails, first.trails);
+
+  const selectedStyle = selectContributed(first, null, (state) => state.style);
+  const nextSelectedStyle = selectContributed(second, selectedStyle, (state) => state.style);
+  assert.equal(nextSelectedStyle.value, selectedStyle.value);
+
+  const customSelected = selectContributed(first, null, (state) => ({ hold: state.hold, hasMusic: state.hints.has("media.playing") }), (a, b) => a.hold === b.hold && a.hasMusic === b.hasMusic);
+  const nextCustomSelected = selectContributed(second, customSelected, (state) => ({ hold: state.hold, hasMusic: state.hints.has("media.playing") }), (a, b) => a.hold === b.hold && a.hasMusic === b.hasMusic);
+  assert.equal(nextCustomSelected.value, customSelected.value);
 });

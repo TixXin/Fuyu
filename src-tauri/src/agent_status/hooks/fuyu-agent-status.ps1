@@ -1,6 +1,6 @@
 param(
   [Parameter(Mandatory = $true, Position = 0)]
-  [ValidateSet("codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid")]
+  [ValidatePattern("^(?!updatedAt$|statusPath$|others$)[A-Za-z][A-Za-z0-9_-]{0,31}$")]
   [string]$Provider,
 
   [Parameter(Mandatory = $true, Position = 1)]
@@ -76,7 +76,7 @@ function Get-DefaultStatusPath {
   return Join-Path $PSScriptRoot "agent-status.json"
 }
 
-$Providers = @("codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid")
+$Providers = @("codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid", "pi")
 
 function Get-AgentMarkerNames {
   param(
@@ -136,7 +136,7 @@ $hasLock = $false
 try {
   $hasLock = $mutex.WaitOne([TimeSpan]::FromSeconds(5))
   if (-not $hasLock) {
-    throw "Timed out waiting for the FocuSD agent status file lock."
+    throw "Timed out waiting for the Fuyu agent status file lock."
   }
 
   $now = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
@@ -151,6 +151,11 @@ try {
       foreach ($name in $Providers) {
         $state[$name] = Copy-AgentTaskStatus -Source $existing.$name
       }
+      foreach ($prop in $existing.PSObject.Properties) {
+        if ($prop.Name -notin $Providers -and $prop.Name -ne "updatedAt" -and $null -ne $prop.Value) {
+          $state[$prop.Name] = $prop.Value
+        }
+      }
     } catch {
       foreach ($name in $Providers) {
         $state[$name] = New-AgentTaskStatus
@@ -158,11 +163,7 @@ try {
     }
   }
 
-  foreach ($name in $Providers) {
-    if ($name -eq $Provider) {
-      $state[$name] = New-AgentTaskStatus -Phase $Phase -TaskId $TaskId -UpdatedAt $now
-    }
-  }
+  $state[$Provider] = New-AgentTaskStatus -Phase $Phase -TaskId $TaskId -UpdatedAt $now
   $state.updatedAt = $now
 
   $statusDirectory = Split-Path -Parent $StatusPath

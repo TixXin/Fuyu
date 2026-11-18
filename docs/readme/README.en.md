@@ -75,55 +75,58 @@ Fuyu (浮屿, "floating islet") is a lightweight, borderless, always-on-top floa
 
 ## What is on the island
 
-<p align="center">
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/todo-en.webp" alt="The expanded island showing today's tasks, with the finished ones struck through below" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/music-en.webp" alt="The music page on the island: cover art, synced lyrics, a progress bar and playback controls" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/messages-en.webp" alt="New messages dropping down from the island: a mail, a WeChat message and a QQ message" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/clipboard-en.webp" alt="Clipboard history on the island: a command, a link, a line of text and an image, each with the app it came from" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/translate-en.webp" alt="The translation page on the island: the source text on the left, the translation on the right" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="An approval request from Claude Code on the island: the command it wants to run, with Deny and Allow buttons" width="398" height="224"></a>
-  <br>
-  <sub>Click any picture to try the island yourself on the website</sub>
-</p>
+<p><sub>Click a feature to open or close it; click an animation to try the island yourself on the website</sub></p>
 
-<table>
-  <tr>
-    <td valign="top"><code>01</code></td>
-    <td><b>Tasks and notes</b><br>Today's tasks, the one you are focused on, a daily note and past archives.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>02</code></td>
-    <td><b>Music</b><br>Control what is playing, with a live audio waveform and synced lyrics.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>03</code></td>
-    <td><b>Messages</b><br>New messages from Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu and DingTalk pop up on the island and open the app in one click; plus several mailboxes, with mail you can read and answer on the island.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>04</code></td>
-    <td><b>Clipboard and file shelf</b><br>Text and image clipboard history; drop files on the island and drag them into another app later.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>05</code></td>
-    <td><b>Quick translation</b><br>One shortcut away, with a choice of LLM translation services.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>06</code></td>
-    <td><b>AI agents</b><br>The state and usage of your Claude Code and Codex sessions; approve a request right on the island, click a session to jump to its window, and get alerts on Telegram, Discord, Feishu or Bark while you are away, then keep steering the agent from the chat.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>07</code></td>
-    <td><b>Calendar</b><br>Today's and tomorrow's events next to a month view with lunar dates and holidays, a countdown on the island before a meeting, and one-click join.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>08</code></td>
-    <td><b>System hints</b><br>Volume and brightness changes, and which app is using your camera or microphone.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>09</code></td>
-    <td><b>Plugins and themes</b><br>Extend the island from the plugin market (sensitive data needs your permission), and pick a ready-made look from the theme market.</td>
-  </tr>
-</table>
+<details open>
+<summary><b>01 · Tasks and notes</b></summary>
+<p>Today's tasks, the one you are focused on, a daily note and past archives.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/todo-en.webp" alt="The expanded island showing today's tasks, with the finished ones struck through below" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>02 · Music</b></summary>
+<p>Control what is playing, with a live audio waveform and synced lyrics.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/music-en.webp" alt="The music page on the island: cover art, synced lyrics, a progress bar and playback controls" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>03 · Messages</b></summary>
+<p>New messages from Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu and DingTalk pop up on the island and open the app in one click; plus several mailboxes, with mail you can read and answer on the island.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/messages-en.webp" alt="New messages dropping down from the island: a mail, a WeChat message and a QQ message" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>04 · Clipboard and file shelf</b></summary>
+<p>Text and image clipboard history; drop files on the island and drag them into another app later.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/clipboard-en.webp" alt="Clipboard history on the island: a command, a link, a line of text and an image, each with the app it came from" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>05 · Quick translation</b></summary>
+<p>One shortcut away, with a choice of LLM translation services.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/translate-en.webp" alt="The translation page on the island: the source text on the left, the translation on the right" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>06 · AI agents</b></summary>
+<p>The state and usage of your Claude Code and Codex sessions; approve a request right on the island, click a session to jump to its window, and get alerts on Telegram, Discord, Feishu or Bark while you are away, then keep steering the agent from the chat.</p>
+<p><a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="An approval request from Claude Code on the island: the command it wants to run, with Deny and Allow buttons" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>07 · Calendar</b></summary>
+<p>Today's and tomorrow's events next to a month view with lunar dates and holidays, a countdown on the island before a meeting, and one-click join.</p>
+</details>
+
+<details>
+<summary><b>08 · System hints</b></summary>
+<p>Volume and brightness changes, and which app is using your camera or microphone.</p>
+</details>
+
+<details>
+<summary><b>09 · Plugins and themes</b></summary>
+<p>Extend the island from the plugin market (sensitive data needs your permission), and pick a ready-made look from the theme market.</p>
+</details>
 
 The look, size, tucking, shortcuts and every feature can be adjusted in the Settings window, and the app updates itself. Your data stays on your computer.
 
@@ -180,7 +183,7 @@ Built with Tauri 2, React 19 + TypeScript and Rust. Releases and in-app updates 
 
 ## Community
 
-Questions, ideas, or just want to chat? Scan to join our WeChat user group (mostly in Chinese):
+Questions, ideas, or just want to chat? Join our [Discord server](https://discord.gg/azu5aZFuRY), or scan to join our WeChat user group (mostly in Chinese):
 
 <p align="center">
   <img src="../assets/readme/wechat-group.png" alt="QR code of the Fuyu WeChat user group" width="220">

@@ -1,0 +1,67 @@
+{
+  "name": "@fuyu/weather",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Current weather, hourly and 7-day forecast from Open-Meteo, with island collapsed bar status and rain alerts.",
+  "license": "MIT",
+  "author": "TixXin",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev --official",
+    "build": "fuyu-plugin build --official",
+    "check": "fuyu-plugin check --official --market",
+    "package": "fuyu-plugin pack --official",
+    "typecheck": "tsc",
+    "lint": "eslint ."
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "天气",
+      "en": "Weather"
+    },
+    "description": {
+      "zh-CN": "在岛展开页与收起条显示所选城市的实时天气与未来预报，即将下雨时在岛上提醒；未填写城市时不发起任何网络请求。",
+      "en": "Shows current weather and forecasts on the island page and collapsed bar, with rain alerts; stays offline until a city is set."
+    },
+    "icon": "assets/icon.svg",
+    "categories": [
+      "information"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
+    },
+    "inject": {
+      "required": [
+        "messages/v1"
+      ]
+    },
+    "slots": [
+      "island.page/v1",
+      "island.collapsed/v1",
+      "settings.section/v1"
+    ],
+    "commands": [
+      {
+        "id": "refresh",
+        "title": {
+          "zh-CN": "立即刷新",
+          "en": "Refresh now"
+        }
+      }
+    ],
+    "network": [
+      "api.open-meteo.com",
+      "geocoding-api.open-meteo.com"
+    ]
+  }
+}

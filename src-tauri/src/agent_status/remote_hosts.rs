@@ -2,6 +2,8 @@ use std::{fs, path::Path};
 
 use serde::{Deserialize, Serialize};
 
+use crate::user_error::UserError;
+
 pub(super) const FILE_NAME: &str = "agent-remote-hosts.json";
 const MAX_HOSTS: usize = 8;
 const MAX_CUSTOM: usize = 16;
@@ -60,11 +62,16 @@ fn read_file(app_dir: &Path) -> RemoteHostsFile {
     file
 }
 
-fn save(app_dir: &Path, file: &RemoteHostsFile) -> Result<(), String> {
-    let text = serde_json::to_string_pretty(file).map_err(|error| error.to_string())?;
-    fs::create_dir_all(app_dir).map_err(|error| format!("Failed to create the app data folder: {error}"))?;
+fn save(app_dir: &Path, file: &RemoteHostsFile) -> Result<(), UserError> {
+    let text = serde_json::to_string_pretty(file)
+        .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
+    fs::create_dir_all(app_dir).map_err(|error| {
+        UserError::new("file.create", format!("Could not create {}.", app_dir.display()))
+            .arg("path", app_dir.display().to_string())
+            .detail(error)
+    })?;
     crate::fs_write::replace_file(&app_dir.join(FILE_NAME), text.as_bytes())
-        .map_err(|error| format!("Failed to save the remote computers: {error}"))
+        .map_err(|error| UserError::new("remoteHosts.save", "Could not save the remote computers.").detail(error))
 }
 
 pub(super) fn read(app_dir: &Path) -> Vec<String> {
@@ -98,52 +105,58 @@ fn target_in(custom: &[CustomHost], name: &str) -> SshTarget {
     }
 }
 
-pub(super) fn write(app_dir: &Path, hosts: &[String]) -> Result<Vec<String>, String> {
+pub(super) fn write(app_dir: &Path, hosts: &[String]) -> Result<Vec<String>, UserError> {
     let mut chosen: Vec<String> = Vec::new();
     for host in hosts.iter().map(|host| host.trim()) {
         if !is_valid_alias(host) {
-            return Err(format!("\"{host}\" is not an SSH host name"));
+            return Err(UserError::new("remoteHosts.host", format!("\"{host}\" is not an SSH host name.")).arg("host", host));
         }
         if !chosen.iter().any(|known| known == host) {
             chosen.push(host.to_string());
         }
     }
     if chosen.len() > MAX_HOSTS {
-        return Err(format!("At most {MAX_HOSTS} computers"));
+        return Err(UserError::new("remoteHosts.tooMany", format!("At most {MAX_HOSTS} computers.")).arg("max", MAX_HOSTS));
     }
     let custom = read_file(app_dir).custom;
     save(app_dir, &RemoteHostsFile { hosts: chosen.clone(), custom })?;
     Ok(chosen)
 }
 
-fn check(custom: &CustomHost) -> Result<CustomHost, String> {
+fn check(custom: &CustomHost) -> Result<CustomHost, UserError> {
     let host = custom.host.trim().to_string();
     if !is_valid_host_name(&host) {
-        return Err(format!("\"{host}\" is not a host name or address"));
+        return Err(UserError::new("remoteHosts.address", format!("\"{host}\" is not a host name or address.")).arg("host", host.as_str()));
     }
     let name = match custom.name.trim() {
         "" => host.clone(),
         name => name.to_string(),
     };
     if !is_valid_alias(&name) {
-        return Err(format!("\"{name}\" cannot be a name: use letters, digits, . _ - or @"));
+        return Err(UserError::new(
+            "remoteHosts.name",
+            format!("\"{name}\" cannot be a name: use letters, digits, . _ - or @."),
+        )
+        .arg("name", name.as_str()));
     }
     let user = custom.user.as_deref().map(str::trim).filter(|user| !user.is_empty());
     if let Some(user) = user.filter(|user| !is_valid_user(user)) {
-        return Err(format!("\"{user}\" is not a user name"));
+        return Err(UserError::new("remoteHosts.user", format!("\"{user}\" is not a user name.")).arg("user", user));
     }
     if custom.port == Some(0) {
-        return Err("The port must be 1–65535".into());
+        return Err(UserError::new("remoteHosts.port", "The port must be 1–65535."));
     }
     Ok(CustomHost { name, user: user.map(str::to_string), host, port: custom.port })
 }
 
-pub(super) fn add_custom(app_dir: &Path, custom: &CustomHost) -> Result<Vec<CustomHost>, String> {
+pub(super) fn add_custom(app_dir: &Path, custom: &CustomHost) -> Result<Vec<CustomHost>, UserError> {
     let custom = check(custom)?;
     let mut file = read_file(app_dir);
     match file.custom.iter().position(|known| known.name == custom.name) {
         Some(index) => file.custom[index] = custom.clone(),
-        None if file.custom.len() >= MAX_CUSTOM => return Err(format!("At most {MAX_CUSTOM} added computers")),
+        None if file.custom.len() >= MAX_CUSTOM => {
+            return Err(UserError::new("remoteHosts.tooManyCustom", format!("At most {MAX_CUSTOM} added computers.")).arg("max", MAX_CUSTOM));
+        }
         None => file.custom.push(custom.clone()),
     }
     if !file.hosts.contains(&custom.name) && file.hosts.len() < MAX_HOSTS {
@@ -153,7 +166,7 @@ pub(super) fn add_custom(app_dir: &Path, custom: &CustomHost) -> Result<Vec<Cust
     Ok(file.custom)
 }
 
-pub(super) fn remove_custom(app_dir: &Path, name: &str) -> Result<Vec<CustomHost>, String> {
+pub(super) fn remove_custom(app_dir: &Path, name: &str) -> Result<Vec<CustomHost>, UserError> {
     let mut file = read_file(app_dir);
     file.custom.retain(|custom| custom.name != name);
     file.hosts.retain(|host| host != name);
@@ -185,7 +198,7 @@ mod tests {
     use super::*;
 
     fn temp_dir(tag: &str) -> std::path::PathBuf {
-        std::env::temp_dir().join(format!("focusd-remote-hosts-{tag}-{}", std::process::id()))
+        std::env::temp_dir().join(format!("fuyu-remote-hosts-{tag}-{}", std::process::id()))
     }
 
     fn cleanup(dir: &Path) {
@@ -213,7 +226,7 @@ mod tests {
         let dir = temp_dir("write");
         assert_eq!(write(&dir, &["zcm6".into(), " zcm6 ".into(), "nc-e".into()]).unwrap(), ["zcm6", "nc-e"]);
         assert_eq!(read(&dir), ["zcm6", "nc-e"]);
-        assert!(write(&dir, &["-x".into()]).is_err());
+        assert_eq!(write(&dir, &["-x".into()]).unwrap_err().code(), "remoteHosts.host");
         cleanup(&dir);
     }
 
@@ -243,11 +256,11 @@ mod tests {
     fn added_computers_that_ssh_could_misread_are_refused() {
         let dir = temp_dir("refuse");
         let with = |user: Option<&str>, host: &str, port| CustomHost { name: String::new(), user: user.map(Into::into), host: host.into(), port };
-        assert!(add_custom(&dir, &with(None, "-oProxyCommand=calc", None)).is_err());
-        assert!(add_custom(&dir, &with(Some("-l"), "host", None)).is_err());
-        assert!(add_custom(&dir, &with(None, "a b", None)).is_err());
-        assert!(add_custom(&dir, &with(None, "host", Some(0))).is_err());
-        assert!(add_custom(&dir, &with(None, "fe80::1", None)).is_err());
+        assert_eq!(add_custom(&dir, &with(None, "-oProxyCommand=calc", None)).unwrap_err().code(), "remoteHosts.address");
+        assert_eq!(add_custom(&dir, &with(Some("-l"), "host", None)).unwrap_err().code(), "remoteHosts.user");
+        assert_eq!(add_custom(&dir, &with(None, "a b", None)).unwrap_err().code(), "remoteHosts.address");
+        assert_eq!(add_custom(&dir, &with(None, "host", Some(0))).unwrap_err().code(), "remoteHosts.port");
+        assert_eq!(add_custom(&dir, &with(None, "fe80::1", None)).unwrap_err().code(), "remoteHosts.name");
         cleanup(&dir);
     }
 

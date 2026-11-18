@@ -24,6 +24,11 @@ test("a draft keeps the focus while the panel stays open", () => {
   assert.equal(hoverFocusAction(state({ hovering: false, editing: true })), "none");
 });
 
+test("an active text selection keeps the focus while the panel stays open", () => {
+  assert.equal(hoverFocusAction(state({ hovering: false, selecting: true })), "none");
+  assert.equal(hoverFocusAction(state({ expanded: false, hovering: false, selecting: true })), "release");
+});
+
 test("game mode stops the island taking the focus but still lets it go", () => {
   assert.equal(hoverFocusAction(state({ blocked: true })), "none");
   assert.equal(hoverFocusAction(state({ blocked: true, hovering: false })), "release");

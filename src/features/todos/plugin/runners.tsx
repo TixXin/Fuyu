@@ -12,13 +12,16 @@ import { todoLine, todosIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 import { announceTodosChanged, todoApi } from "./todoApi";
 import { todoLineContributions } from "./todoLines";
+import { useTodoQuickAddRunner } from "./useTodoQuickAddRunner";
 
 type RunnerProps = {
   mode: string;
+  page: string;
   isTucked: boolean;
   barText: boolean;
   settings: IslandSettings;
   setSettings: Dispatch<SetStateAction<IslandSettings>>;
+  openEnabledPage: (page: "todo") => void;
   collapseIsland: () => void;
   openSettings: (section: "savePath") => void;
 };
@@ -26,7 +29,7 @@ type RunnerProps = {
 const NO_TODOS: TodoItem[] = [];
 const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
 
-function TodosRunner({ mode, isTucked, barText, settings, setSettings, collapseIsland, openSettings }: RunnerProps) {
+function TodosRunner({ mode, page, isTucked, barText, settings, setSettings, openEnabledPage, collapseIsland, openSettings }: RunnerProps) {
   const t = useTranslation();
   const openSavePathSettings = useCallback(() => openSettings("savePath"), [openSettings]);
   const saveProjects = useCallback((todoProjects: IslandSettings["todoProjects"]) => {
@@ -39,6 +42,18 @@ function TodosRunner({ mode, isTucked, barText, settings, setSettings, collapseI
     onStartTodo: collapseIsland,
     onMissingSaveDirectory: openSavePathSettings,
   });
+  const on = settings.todoEnabled;
+  useTodoQuickAddRunner({
+    enabled: on,
+    mode,
+    page,
+    pageMode: notebookProps.pageMode,
+    todos,
+    scheduledTodos: notebookProps.scheduledTodos,
+    onShowToday: notebookProps.onShowToday,
+    openEnabledPage,
+    collapseIsland,
+  });
   todoApi.useProvide(apiHandlers);
   const date = notebookProps.currentDate;
   const fromRust = todoFileData() !== null;
@@ -47,7 +62,6 @@ function TodosRunner({ mode, isTucked, barText, settings, setSettings, collapseI
   useEffect(() => announceTodosChanged(date), [date, todos, notebookProps.scheduledTodos, activeTodoId, notebookProps.dailyNote]);
   todosIsland.useProvide(useMemo(() => ({ todos, activeTodoId, notebookProps, addTodoOn }), [todos, activeTodoId, notebookProps, addTodoOn]));
   const previewing = useIslandContributed().preview !== null;
-  const on = settings.todoEnabled;
   const { collapsedTaskTitle: title, collapsedTodoCount: count } = useCollapsedTodo(
     on ? todos : NO_TODOS,
     on ? activeTodoId : null,

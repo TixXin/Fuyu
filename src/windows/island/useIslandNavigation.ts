@@ -5,6 +5,7 @@ export function useIslandNavigation() {
   const [mode, setMode] = useState<IslandMode>("collapsed");
   const [isTucked, setIsTucked] = useState(false);
   const [isPeekTuck, setIsPeekTuck] = useState(false);
+  const [openedByHover, setOpenedByHover] = useState(false);
   const [peekRetractDelayMs, setPeekRetractDelayMs] = useState<number | null>(null);
   const [page, setPage] = useState<IslandPage>("todo");
   const clipboardShortcutToggleAt = useRef(0);
@@ -13,11 +14,13 @@ export function useIslandNavigation() {
     setMode(nextMode);
     setIsTucked(false);
     setIsPeekTuck(false);
+    setOpenedByHover(false);
   }, []);
 
   const collapseIsland = useCallback(() => {
     setMode("collapsed");
     setIsTucked(false);
+    setOpenedByHover(false);
   }, []);
 
   const tuckIsland = useCallback(() => {
@@ -51,10 +54,15 @@ export function useIslandNavigation() {
   const endPeek = useCallback(() => {
     setMode("collapsed");
     setIsTucked(true);
+    setOpenedByHover(false);
   }, []);
 
   const resumePeek = useCallback(() => {
     setIsPeekTuck(true);
+  }, []);
+
+  const markHoverOpen = useCallback(() => {
+    setOpenedByHover(true);
   }, []);
 
   const openIslandPage = useCallback((nextPage: IslandPage) => {
@@ -62,6 +70,7 @@ export function useIslandNavigation() {
     setMode("expanded");
     setIsTucked(false);
     setIsPeekTuck(false);
+    setOpenedByHover(false);
   }, []);
 
   const openClipboardHistory = useCallback(() => {
@@ -89,6 +98,7 @@ export function useIslandNavigation() {
     mode,
     isTucked,
     isPeeking: isPeekTuck && !isTucked,
+    openedByHover: mode === "expanded" && openedByHover,
     retractsAfterPeek: isPeekTuck,
     peekRetractDelayMs,
     page,
@@ -101,6 +111,7 @@ export function useIslandNavigation() {
     peekIsland,
     endPeek,
     resumePeek,
+    markHoverOpen,
     openIslandPage,
     toggleClipboardHistory,
   };

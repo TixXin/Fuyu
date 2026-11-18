@@ -14,13 +14,18 @@ export function todoEvents(todos: readonly { id: string; title: string; complete
 
 export const SCHEDULED_TODO_UID = "scheduled:";
 
-export function scheduledTodoEvents(todos: readonly { id: string; title: string; date: string }[], calendarName: string): CalendarEvent[] {
+export function scheduledTodoEvents(
+  todos: readonly { id: string; title: string; date: string }[],
+  calendarName: string,
+  includeTimed = true,
+): CalendarEvent[] {
   return todos.flatMap((todo) => {
     const [year, month, day] = todo.date.split("-").map(Number);
     if (!year || !month || !day) return [];
     const start = new Date(year, month - 1, day).getTime();
     const uid = `${SCHEDULED_TODO_UID}${todo.id}`;
-    return [timedEvent(uid, todo.title, start, calendarName) ?? {
+    const timed = includeTimed ? timedEvent(uid, todo.title, start, calendarName) : null;
+    return [timed ?? {
       uid, title: todo.title, startMs: start, endMs: new Date(year, month - 1, day + 1).getTime(),
       allDay: true, location: null, meetingLink: null, calendar: calendarName,
     }];

@@ -55,7 +55,7 @@ const models = {
   detail: { title: long, markdown: hostile, meta: [{ label: "State", value: "open" }, { label: long, value: long }], actions: [{ id: "close", title: "Close issue", icon: "circle-check" }] },
   detailEmpty: {},
   form: { submitTitle: "Save", message: "Changes are kept by the plugin", fields: [
-    { key: "repo", type: "string", title: "Repository", value: "TixXin/fly-island" },
+    { key: "repo", type: "string", title: "Repository", value: "TixXin/fuyu" },
     { key: "count", type: "number", title: "How many", min: 1, max: 50, value: 10 },
     { key: "on", type: "boolean", title: long, value: true },
     { key: "sort", type: "select", title: "Sort", options: [{ value: "new", title: "Newest" }, { value: "old", title: "Oldest" }] },

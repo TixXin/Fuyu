@@ -37,7 +37,25 @@ function declaredOf(app) {
     provides: [...(app.provides ?? []), ...(app.replaces ?? [])],
     client: Object.keys(app.client ?? {}),
     slots: [...(app.slots ?? [])],
+    commands: (app.commands ?? []).map((command) => command.id),
+    network: [...(app.network ?? [])],
+    experimental: [...(app.experimental ?? [])],
   };
+}
+
+function readConfigSchema(root, configPath) {
+  if (configPath === undefined) return null;
+  const file = entryFile(root, configPath, "fuyu.config");
+  let parsed;
+  try {
+    parsed = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    throw rejection(`fuyu.config (${configPath}) is not valid JSON: ${error?.message ?? error}`);
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw rejection(`fuyu.config (${configPath}) must be a JSON object`);
+  }
+  return parsed;
 }
 
 export function readManifest(root, options) {
@@ -61,7 +79,19 @@ export function readManifest(root, options) {
     if (!WINDOW.test(window)) throw rejection(`fuyu.client.${window}: ${window} is not a window name`);
     return { window, file: entryFile(root, path, `fuyu.client.${window}`) };
   });
-  return { package: pkg.name, version: pkg.version, host, clients, declared: declaredOf(app) };
+  const configSchema = readConfigSchema(root, app.config);
+  return {
+    package: pkg.name,
+    version: pkg.version,
+    displayName: app.displayName ?? null,
+    host,
+    clients,
+    commands: app.commands ?? [],
+    network: app.network ?? [],
+    experimental: app.experimental ?? [],
+    configSchema,
+    declared: declaredOf(app),
+  };
 }
 
 function installedRoot(id, packages) {
@@ -93,10 +123,10 @@ export function sourceOf(options, { dir, appVersion }) {
   if (!SOURCES.includes(source)) throw rejection(`source is ${JSON.stringify(source)}; use ${SOURCES.join(", ")}`);
   if (source === "dev") {
     const root = devRoot(options.path, dir);
-    return { source, root, ...readManifest(root, { allowExperimental: true }) };
+    return { source, root, ...readManifest(root, { allowExperimental: true, official: true }) };
   }
   const root = installedRoot(id, join(dir, PACKAGES_DIR));
-  const manifest = readManifest(root, { allowExperimental: false, appVersion });
+  const manifest = readManifest(root, { allowExperimental: false, appVersion, official: source === "market" });
   if (manifest.package !== id) throw rejection(`the package in ${root} is ${manifest.package}, not ${id}`);
   return { source, root, ...manifest };
 }

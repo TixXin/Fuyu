@@ -3,6 +3,7 @@ mod chats;
 mod gate;
 mod plugin_view;
 mod reader;
+mod shell_hub;
 mod source;
 
 #[cfg(test)]
@@ -10,11 +11,9 @@ mod tests;
 
 use reader::{ChatReader, Flash, Listing, PlainReason};
 use serde::Serialize;
-use source::{installed_executable, ReminderListener, ReminderSignal};
+use source::installed_executable;
 use std::{
-    cell::RefCell,
     path::Path,
-    rc::Rc,
     sync::{Arc, Mutex, OnceLock},
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
@@ -23,9 +22,17 @@ use tauri::{AppHandle, Emitter, Manager};
 use windows::Win32::Foundation::HWND;
 
 pub(crate) use plugin_view::plugin_messages;
+#[allow(unused_imports)]
+pub(crate) use shell_hub::{
+    is_running as is_shell_attention_running, subscribe as subscribe_shell_attention,
+    subscribe_executables as subscribe_executable_attention, ShellSubscription,
+};
+#[allow(unused_imports)]
+pub(crate) use source::{ReminderSignal, ShellMatcher};
 
 use crate::messages_plugin::{self, SourceWorker};
 use crate::plugin_kernel::worker::{Stop, Worker};
+use crate::user_error::UserError;
 use crate::win32;
 
 const EVENT_NAME: &str = "wechat-reminder-changed";
@@ -40,11 +47,11 @@ pub struct ReminderSnapshot {
     status: String,
     pending: bool,
     last_attention_at: Option<u64>,
-    error: Option<String>,
+    error: Option<UserError>,
     message: Option<ChatMessage>,
     items: Vec<ReminderItem>,
     expose_ui: bool,
-    expose_status: Option<String>,
+    expose_status: Option<UserError>,
     hide_taskbar_button: bool,
 }
 
@@ -129,7 +136,7 @@ impl ReminderState {
         true
     }
 
-    fn set_expose_status(&mut self, status: Option<String>) -> bool {
+    fn set_expose_status(&mut self, status: Option<UserError>) -> bool {
         if self.snapshot.expose_status == status {
             return false;
         }
@@ -246,8 +253,10 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     let listening = service.clone();
     let worker = Worker::new("wechat-reminders", move |stop| monitor(listening.clone(), &stop));
     let switched = service.clone();
-    let source = SourceWorker::new(messages_plugin::WECHAT, worker, move |enabled| set_enabled(&switched, enabled))
-        .after_stop(move || release(&service));
+    let source = SourceWorker::new(messages_plugin::WECHAT, worker, move |enabled| {
+        set_enabled(&switched, enabled)
+    })
+    .after_stop(move || release(&service));
     messages_plugin::register(messages_plugin::WECHAT, source);
     Ok(())
 }
@@ -257,13 +266,19 @@ fn release(service: &ReminderService) {
     let _ = service.button.lock().map(|mut button| button.restore());
 }
 
-fn ready(app: &AppHandle) -> Result<&'static Arc<ReminderService>, String> {
+fn ready(app: &AppHandle) -> Result<&'static Arc<ReminderService>, UserError> {
     init(app)?;
     service()
 }
 
-fn service() -> Result<&'static Arc<ReminderService>, String> {
-    SERVICE.get().ok_or_else(|| "微信提醒服务尚未就绪。".into())
+fn service() -> Result<&'static Arc<ReminderService>, UserError> {
+    SERVICE
+        .get()
+        .ok_or_else(|| UserError::new("wechat.notReady", "The WeChat reminder service is not ready yet."))
+}
+
+fn unavailable() -> UserError {
+    UserError::new("wechat.unavailable", "The WeChat reminder state is unavailable.")
 }
 
 fn publish(service: &ReminderService, snapshot: ReminderSnapshot) {
@@ -286,10 +301,11 @@ fn publish(service: &ReminderService, snapshot: ReminderSnapshot) {
 }
 
 pub(crate) fn diagnostic_state() -> Result<serde_json::Value, String> {
-    let state = service()?
+    let state = service()
+        .map_err(|error| error.to_string())?
         .state
         .lock()
-        .map_err(|_| "微信提醒状态不可用。")?;
+        .map_err(|_| unavailable().to_string())?;
     Ok(serde_json::json!({
         "enabled": state.snapshot.enabled,
         "status": state.snapshot.status,
@@ -304,13 +320,13 @@ fn set_enabled(service: &ReminderService, enabled: bool) {
 }
 
 #[tauri::command]
-pub fn set_wechat_expose_ui(app: AppHandle, enabled: bool) -> Result<ReminderSnapshot, String> {
+pub fn set_wechat_expose_ui(app: AppHandle, enabled: bool) -> Result<ReminderSnapshot, UserError> {
     let service = ready(&app)?;
     if !enabled {
         let _ = service.gate.lock().map(|mut gate| gate.off());
     }
     let (snapshot, changed) = {
-        let mut state = service.state.lock().map_err(|_| "微信提醒状态不可用。")?;
+        let mut state = service.state.lock().map_err(|_| unavailable())?;
         let mut changed = state.set_expose_ui(enabled);
         if !enabled {
             changed |= state.set_expose_status(None);
@@ -324,10 +340,13 @@ pub fn set_wechat_expose_ui(app: AppHandle, enabled: bool) -> Result<ReminderSna
 }
 
 #[tauri::command]
-pub fn set_wechat_hide_taskbar_button(app: AppHandle, enabled: bool) -> Result<ReminderSnapshot, String> {
+pub fn set_wechat_hide_taskbar_button(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<ReminderSnapshot, UserError> {
     let service = ready(&app)?;
     let (snapshot, changed) = {
-        let mut state = service.state.lock().map_err(|_| "微信提醒状态不可用。")?;
+        let mut state = service.state.lock().map_err(|_| unavailable())?;
         let changed = state.set_hide_taskbar_button(enabled);
         (state.snapshot.clone(), changed)
     };
@@ -338,17 +357,17 @@ pub fn set_wechat_hide_taskbar_button(app: AppHandle, enabled: bool) -> Result<R
 }
 
 #[tauri::command]
-pub fn set_wechat_auto_clear(app: AppHandle, enabled: bool) -> Result<ReminderSnapshot, String> {
-    let mut state = ready(&app)?.state.lock().map_err(|_| "微信提醒状态不可用。")?;
+pub fn set_wechat_auto_clear(app: AppHandle, enabled: bool) -> Result<ReminderSnapshot, UserError> {
+    let mut state = ready(&app)?.state.lock().map_err(|_| unavailable())?;
     state.auto_clear = enabled;
     Ok(state.snapshot.clone())
 }
 
 #[tauri::command]
-pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, String> {
+pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, UserError> {
     let service = service()?;
     let snapshot = {
-        let mut state = service.state.lock().map_err(|_| "微信提醒状态不可用。")?;
+        let mut state = service.state.lock().map_err(|_| unavailable())?;
         if !state.clear() {
             return Ok(state.snapshot.clone());
         }
@@ -435,7 +454,7 @@ fn look(executable: &Path) -> Listing {
     }
 }
 
-fn connection(service: &ReminderService, generation: u64, error: Option<String>) {
+fn connection(service: &ReminderService, generation: u64, error: Option<UserError>) {
     let snapshot = {
         let Ok(mut state) = service.state.lock() else {
             return;
@@ -471,16 +490,26 @@ fn monitor(service: Arc<ReminderService>, stop: &Stop) {
             }
             continue;
         }
-        let events = Rc::new(RefCell::new(Vec::new()));
+        let events = Arc::new(Mutex::new(Vec::new()));
         let sink = events.clone();
-        let listener = installed_executable().and_then(|executable| {
-            ReminderListener::new(executable.clone(), move |event| {
-                sink.borrow_mut().push(event)
+        let subscription = installed_executable()
+            .map_err(shell_hub::source_user_error)
+            .and_then(|executable| {
+                executable
+                    .canonicalize()
+                    .map_err(|error| UserError::new("wechat.verifyPath", "Could not verify the WeChat installation path.").detail(error))
             })
-            .map(|listener| (listener, executable))
-        });
-        match listener {
-            Ok((listener, executable)) => {
+            .and_then(|executable| {
+                let matcher = ShellMatcher::exact_path(&executable.to_string_lossy());
+                shell_hub::subscribe_typed(matcher, move |event| {
+                    if let Ok(mut pending) = sink.lock() {
+                        pending.push(event);
+                    }
+                })
+                .map(|sub| (sub, executable))
+            });
+        match subscription {
+            Ok((_subscription, executable)) => {
                 connection(&service, generation, None);
                 let allowed = || service.state.lock().is_ok_and(|state| state.snapshot.expose_ui);
                 let mut reader = ChatReader::new(|| look(&executable), allowed());
@@ -499,10 +528,12 @@ fn monitor(service: Arc<ReminderService>, stop: &Stop) {
                     }
                     keep_button(&service, &executable);
                     reader.set_allowed(allowed());
-                    listener.poll();
-                    let _ = listener.stats();
+                    let batch = events
+                        .lock()
+                        .map(|mut pending| std::mem::take(&mut *pending))
+                        .unwrap_or_default();
                     let now = Instant::now();
-                    for event in events.take() {
+                    for event in batch {
                         match event {
                             ReminderSignal::Attention => reader.flashed(now),
                             ReminderSignal::ActivatedElsewhere => reader.activated(false, now),
@@ -548,10 +579,10 @@ fn monitor(service: Arc<ReminderService>, stop: &Stop) {
 }
 
 #[tauri::command]
-pub async fn open_wechat(chat: Option<String>) -> Result<(), String> {
+pub async fn open_wechat(chat: Option<String>) -> Result<(), UserError> {
     let asked_at = now_ms();
     tauri::async_runtime::spawn_blocking(move || {
-        let executable = installed_executable()?;
+        let executable = installed_executable().map_err(shell_hub::source_user_error)?;
         if activate_existing_wechat(&executable)? {
             if let Some(chat) = chat {
                 thread::sleep(Duration::from_millis(300));
@@ -559,7 +590,9 @@ pub async fn open_wechat(chat: Option<String>) -> Result<(), String> {
                     .ok_or("no main window")
                     .and_then(|window| chats::open(window, &chat));
                 if let Err(why) = opened {
-                    eprintln!("WeChat reminders: could not open the chat ({why}); WeChat shows its last chat");
+                    eprintln!(
+                        "WeChat reminders: could not open the chat ({why}); WeChat shows its last chat"
+                    );
                 }
             }
             if let Ok(service) = service() {
@@ -567,10 +600,13 @@ pub async fn open_wechat(chat: Option<String>) -> Result<(), String> {
             }
             return Ok(());
         }
-        Err("未找到正在运行的微信窗口，请先打开并登录桌面版微信。".into())
+        Err(UserError::new(
+            "wechat.notRunning",
+            "No running WeChat window was found; open and sign in to desktop WeChat first.",
+        ))
     })
     .await
-    .map_err(|error| format!("打开微信的线程失败：{error}"))?
+    .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
 struct WeChatWindow {
@@ -623,27 +659,35 @@ fn main_window(executable: &Path) -> Option<HWND> {
     preferred_window(&search.found).map(|window| window.handle)
 }
 
-fn existing_wechat_windows(executable: &std::path::Path) -> Result<WindowSearch, String> {
+fn existing_wechat_windows(executable: &std::path::Path) -> Result<WindowSearch, UserError> {
     let mut search = WindowSearch {
         executable: executable.to_string_lossy().into_owned(),
         found: Vec::new(),
         running: false,
     };
     win32::window::for_each_top_level_window(|window| find_wechat_window(&mut search, window))
-        .map_err(|error| format!("无法查找已运行的微信窗口：{error}"))?;
+        .map_err(|error| UserError::new("wechat.findWindow", "Could not look up running WeChat windows.").detail(error))?;
     Ok(search)
 }
 
-fn activate_existing_wechat(executable: &std::path::Path) -> Result<bool, String> {
+fn activate_existing_wechat(executable: &std::path::Path) -> Result<bool, UserError> {
     let search = existing_wechat_windows(executable)?;
     if !search.running {
         return Ok(false);
     }
-    let original = preferred_window(&search.found)
-        .ok_or("微信已在运行，但未定位到主窗口，请先从系统托盘打开并登录微信。")?;
+    let original = preferred_window(&search.found).ok_or_else(|| {
+        UserError::new(
+            "wechat.noMainWindow",
+            "WeChat is running, but no main window was found; open and sign in to WeChat from the system tray first.",
+        )
+    })?;
     let expected_process = win32::process::window_process_id(original.handle);
     tauri_plugin_opener::open_url("weixin://", None::<&str>).map_err(|error| {
-        format!("无法通过微信注册入口唤回客户端，请从系统托盘打开微信：{error}")
+        UserError::new(
+            "wechat.openProtocol",
+            "Could not bring WeChat back via its registered protocol; open WeChat from the system tray.",
+        )
+        .detail(error)
     })?;
     for _ in 0..40 {
         thread::sleep(Duration::from_millis(50));
@@ -658,7 +702,10 @@ fn activate_existing_wechat(executable: &std::path::Path) -> Result<bool, String
             }
         }
     }
-    Err("微信未能恢复原来的主窗口，请双击系统托盘中的微信图标。".into())
+    Err(UserError::new(
+        "wechat.restoreFailed",
+        "WeChat did not restore its main window; double-click the WeChat icon in the system tray.",
+    ))
 }
 
 macro_rules! tauri_commands {

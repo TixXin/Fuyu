@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MAX_ARRIVALS, addArrival, arrivalKey, removeArrival } from "../../src/features/messages/arrivals/messageArrivals.ts";
+import {
+  MAX_ARRIVALS,
+  addArrival,
+  arrivalKey,
+  estimateArrivalsHeight,
+  removeArrival,
+} from "../../src/features/messages/arrivals/messageArrivals.ts";
 
 const message = (source, receivedAt, title = "小林") => ({ source, title, body: "下午一起开会吗？", receivedAt, actions: [] });
 
@@ -14,6 +20,9 @@ test("arrivals go on top, newest first", () => {
 test("the same arrival seen again leaves the list as it is", () => {
   const list = addArrival([], message("qq", 100));
   assert.equal(addArrival(list, message("qq", 100)), list);
+  const updated = addArrival(list, { ...message("qq", 100), actions: [{ id: "copy-otp:849201", title: "复制 849201" }] });
+  assert.equal(updated.length, 1);
+  assert.equal(updated[0].actions[0]?.id, "copy-otp:849201");
 });
 
 test("WeChat keeps a single row, moved up by a newer reminder", () => {
@@ -38,4 +47,43 @@ test("the list keeps the newest few and drops a row on request", () => {
   assert.equal(list[0].receivedAt, MAX_ARRIVALS + 2);
   const key = arrivalKey(list[0]);
   assert.equal(removeArrival(list, key).length, MAX_ARRIVALS - 1);
+});
+
+test("replacedId swaps out a temporary taskbar-flash arrival when the real toast arrives", () => {
+  let list = addArrival([], {
+    source: "feishu",
+    id: "feishu:flash:1000",
+    kind: "flash",
+    title: "Feishu",
+    body: "",
+    receivedAt: 1000,
+    actions: [],
+  });
+  list = addArrival(list, message("qq", 1100));
+  list = addArrival(list, {
+    source: "feishu",
+    id: "feishu:toast:7:1",
+    replacedId: "feishu:flash:1000",
+    kind: "toast",
+    title: "张工",
+    body: "发布完成",
+    receivedAt: 1250,
+    actions: [],
+  });
+  assert.deepEqual(list.map((item) => item.id ?? `${item.source}:${item.receivedAt}`), [
+    "feishu:toast:7:1",
+    "qq:1100",
+  ]);
+});
+
+test("estimated arrivals height avoids zero-height collapse before ResizeObserver runs", () => {
+  assert.equal(estimateArrivalsHeight([]), 0);
+  const single = estimateArrivalsHeight([message("qq", 100)]);
+  assert.ok(single >= 70 && single <= 120, String(single));
+  const withActions = estimateArrivalsHeight([
+    { ...message("qq", 100), actions: [{ id: "copy-otp:123456", title: "复制 123456" }] },
+  ]);
+  assert.ok(withActions > single, `${withActions} > ${single}`);
+  const inline = estimateArrivalsHeight([{ ...message("plugin", 100), inline: true }]);
+  assert.ok(inline >= 40 && inline < single, `${inline} vs ${single}`);
 });

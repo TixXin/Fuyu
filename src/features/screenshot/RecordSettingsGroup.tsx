@@ -1,6 +1,6 @@
+import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
-import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import {
   RECORD_FORMATS,
@@ -24,11 +24,11 @@ export function RecordSettingsGroup({ screenshot, onChange }: { screenshot: Scre
         title={text.recordFormat}
         description={text.recordFormatHint}
         control={
-          <SettingsSelect
+          <SettingsChoice<RecordFormat>
             value={record.format}
             options={RECORD_FORMATS.map((format) => ({ value: format, label: text.recordFormats[format] }))}
             ariaLabel={text.recordFormat}
-            onChange={(format) => set({ format: format as RecordFormat })}
+            onChange={(format) => set({ format })}
           />
         }
       />
@@ -36,7 +36,7 @@ export function RecordSettingsGroup({ screenshot, onChange }: { screenshot: Scre
         title={text.recordFps}
         description={text.recordFpsHint}
         control={
-          <SettingsSelect
+          <SettingsChoice
             value={String(record.fps)}
             options={RECORD_FPS.map((fps) => ({ value: String(fps), label: text.recordFpsOption(fps) }))}
             ariaLabel={text.recordFps}
@@ -48,11 +48,11 @@ export function RecordSettingsGroup({ screenshot, onChange }: { screenshot: Scre
         title={text.recordQuality}
         description={text.recordQualityHint}
         control={
-          <SettingsSelect
+          <SettingsChoice<RecordQuality>
             value={record.quality}
             options={RECORD_QUALITIES.map((quality) => ({ value: quality, label: text.recordQualities[quality] }))}
             ariaLabel={text.recordQuality}
-            onChange={(quality) => set({ quality: quality as RecordQuality })}
+            onChange={(quality) => set({ quality })}
           />
         }
       />
@@ -67,6 +67,12 @@ export function RecordSettingsGroup({ screenshot, onChange }: { screenshot: Scre
         description={text.recordMicrophoneHint}
         checked={record.microphone}
         onChange={(microphone) => set({ microphone })}
+      />
+      <SettingsToggleRow
+        title={text.recordOwnWindows}
+        description={text.recordOwnWindowsHint}
+        checked={record.ownWindows}
+        onChange={(ownWindows) => set({ ownWindows })}
       />
     </SettingsGroup>
   );

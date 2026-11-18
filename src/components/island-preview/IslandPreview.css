@@ -32,6 +32,11 @@
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
   color: rgb(var(--preview-ink));
   transform-origin: top center;
+  transition:
+    background-color var(--motion-medium) var(--motion-ease),
+    color var(--motion-medium) var(--motion-ease),
+    border-color var(--motion-medium) var(--motion-ease),
+    box-shadow var(--motion-medium) var(--motion-ease);
 }
 
 .island-preview__island--glass {
@@ -86,12 +91,16 @@
   background: var(--preview-pulse);
   box-shadow: 0 0 8px var(--preview-pulse-glow);
   filter: brightness(var(--preview-pulse-brightness));
+  transition:
+    background-color var(--motion-medium) var(--motion-ease),
+    box-shadow var(--motion-medium) var(--motion-ease);
 }
 
 .island-preview__task {
   flex: 1;
   color: var(--preview-text);
   white-space: nowrap;
+  transition: color var(--motion-medium) var(--motion-ease);
 }
 
 .island-preview__provider {

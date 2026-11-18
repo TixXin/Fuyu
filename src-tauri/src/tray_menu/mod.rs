@@ -8,7 +8,7 @@ use tauri::{AppHandle, Emitter};
 
 use crate::{island, settings_window, translation};
 
-pub(crate) use window::{hide, prebuild, toggle, WINDOW_LABEL};
+pub(crate) use window::{hide, toggle, WINDOW_LABEL};
 
 const STATE_EVENT: &str = "tray-menu-state";
 const OPEN_PAGE_EVENT: &str = "tray-menu-open-page";
@@ -117,7 +117,7 @@ fn run(app: &AppHandle, action: Action) {
         hide(app);
     }
     match action {
-        Action::ToggleIsland => crate::tray::toggle_island(app),
+        Action::ToggleIsland => crate::tray::toggle_island_from_card(app),
         Action::Screenshot => crate::screenshot::start_from_tray(app),
         Action::Translate => translation::open_translator(app),
         Action::Clipboard => crate::clipboard_history::open_from_tray(),

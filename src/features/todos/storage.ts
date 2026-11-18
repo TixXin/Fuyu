@@ -1,6 +1,6 @@
 import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
 import type { LocalTodoKeys } from "./api";
-import { readString, removeItem, writeString } from "../../lib/storage.ts";
+import { readJson, readString, removeItem, writeJson, writeString } from "../../lib/storage.ts";
 import {
   createTodoId,
   normalizeTodo,
@@ -9,6 +9,7 @@ import {
   parseTodoArchives,
   parseTodos,
 } from "./normalize.ts";
+import { normalizeTodoPrefs, type TodoPrefs } from "./todoPrefs.ts";
 import { queueTodoChange, todoFileData } from "./todoStore.ts";
 
 export { createTodoId, normalizeTodo };
@@ -23,6 +24,15 @@ export const TODOS_MIGRATED_STORAGE_KEY = "fuyu-todos-migrated-v1";
 export const TODO_SAVE_DIRECTORY_STORAGE_KEY = "fuyu-save-directory";
 export const TODO_LAST_SAVED_SIGNATURE_STORAGE_KEY =
   "fuyu-last-saved-signature";
+export const TODO_PREFS_STORAGE_KEY = "fuyu-todo-prefs";
+
+export function loadTodoPrefs(): TodoPrefs {
+  return normalizeTodoPrefs(readJson(TODO_PREFS_STORAGE_KEY));
+}
+
+export function saveTodoPrefs(prefs: TodoPrefs) {
+  return writeJson(TODO_PREFS_STORAGE_KEY, normalizeTodoPrefs(prefs));
+}
 
 export function readLocalTodoKeys(): LocalTodoKeys {
   return {
@@ -58,8 +68,8 @@ export function loadActiveTodoId() {
   return file ? file.activeTodoId : readString(ACTIVE_TODO_STORAGE_KEY);
 }
 
-export function loadCurrentTodoDate() {
-  return todoFileData()?.date ?? parseCurrentTodoDate(readString(TODO_DATE_STORAGE_KEY));
+export function loadCurrentTodoDate(dayStartHour = 0) {
+  return todoFileData()?.date ?? parseCurrentTodoDate(readString(TODO_DATE_STORAGE_KEY), dayStartHour);
 }
 
 export function loadTodoArchives(): TodoArchive[] {

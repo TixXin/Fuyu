@@ -34,11 +34,11 @@ mockIPC((command) => {
 }, { shouldMockEvents: true });
 mockWindows("main");
 
-type State = { expanded: boolean; tucked: boolean; quiet: boolean; settings: Partial<IslandSettings> };
+type State = { expanded: boolean; tucked: boolean; quiet: boolean; nativeGlassState?: "active" | "css-fallback" | "disabled"; settings: Partial<IslandSettings> };
 const changes: ((next: Partial<State>) => void)[] = [];
 
 function GlassIsland({ background, light }: { background: string; light: boolean }) {
-  const [state, setState] = useState<State>({ expanded: false, tucked: false, quiet: false, settings: { glassBackdrop: "none" } });
+  const [state, setState] = useState<State>({ expanded: false, tucked: false, quiet: false, nativeGlassState: "css-fallback", settings: { glassBackdrop: "none" } });
   changes.push((next) => setState((current) => ({ ...current, ...next })));
   const settings: IslandSettings = { ...DEFAULT_SETTINGS, appearanceMode: "liquidGlass", islandBackgroundColor: background, ...state.settings };
   const mode = state.expanded ? "expanded" : "collapsed";
@@ -49,7 +49,7 @@ function GlassIsland({ background, light }: { background: string; light: boolean
   const stageStyle = {
     "--collapsed-island-width": "340px", "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1,
     "--expanded-island-width": "560px", "--expanded-island-height": "306px", "--island-top-fillet-size": 8,
-    "--glass-intensity": settings.glassIntensity / 100, "--island-background-color": background, "--glass-tint-color": background, "--glass-collapsed-tint-color": background,
+    "--glass-intensity": settings.glassIntensity / 100, "--glass-panel-blur": `${10 + (settings.glassIntensity / 100) * 9}px`, "--island-background-color": background, "--glass-tint-color": background, "--glass-collapsed-tint-color": background,
     ...(light ? { "--island-ink-rgb": "24, 24, 30", "--task-text-color": "#1c1c1f" } : {}),
     ...glassStyle,
   } as CSSProperties;
@@ -57,7 +57,7 @@ function GlassIsland({ background, light }: { background: string; light: boolean
   return <div className={`stage${light ? " island-light" : ""}`} data-tone={light ? "light" : "dark"} style={stageStyle}>
     <IslandShell
       mode={mode} page="todo" isTucked={false} isDetached={false} showTitle={false}
-      showCollapsedText appearanceMode="liquidGlass" nativeGlassState="css-fallback" glass={glass}
+      showCollapsedText appearanceMode="liquidGlass" nativeGlassState={state.nativeGlassState ?? "css-fallback"} glass={glass}
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
@@ -110,10 +110,10 @@ async function runChecks() {
 
     for (const notch of ["on", "simulated"]) {
       document.documentElement.dataset.islandNotch = notch;
-      check(islands().every((island) => playState(island) === "paused"), `刘海形态（${notch}）下折叠岛的玻璃停下`);
+      check(islands().every((island) => playState(island) === "paused" && getComputedStyle(island).backdropFilter === "none" && getComputedStyle(island.querySelector(".island__glass-highlight")!).display === "none"), `刘海形态（${notch}）下折叠岛的玻璃停下并关闭实时模糊`);
     }
     delete document.documentElement.dataset.islandNotch;
-    check(islands().every((island) => playState(island) === "running"), "离开刘海形态后接着流动");
+    check(islands().every((island) => playState(island) === "running" && getComputedStyle(island).backdropFilter !== "none" && getComputedStyle(island.querySelector(".island__glass-highlight")!).display === "block" && getComputedStyle(island.querySelector(".island__glass-highlight")!).transitionProperty === "transform" && getComputedStyle(island.querySelector(".island__glass")!, "::before").transitionProperty === "transform"), "离开刘海形态后接着流动并恢复模糊与合成层高光");
 
     await set({ tucked: true });
     check(islands().every((island) => island.classList.contains("island--glass-paused") && playState(island) === "paused"), "收到边缘时停下");
@@ -141,7 +141,8 @@ async function runChecks() {
 
     await set({ settings: { glassRim: true, glassSheen: true, glassSpecular: false, glassMorph: "liquid" } });
     for (const island of islands()) {
-      check(getComputedStyle(island.querySelector(".island__glass-rim")!).display === "block", "打开油膜边后画出边");
+      const rim = getComputedStyle(island, "::after");
+      check(rim.backgroundImage.startsWith("conic-gradient(") && rim.clipPath.startsWith("shape(evenodd") && rim.animationName === "glassRimSpin", "打开油膜边后画出边，和反向弧是同一圈");
       check(getComputedStyle(island.querySelector(".island__glass-sheen")!).display === "block", "打开扫光后画出扫光");
       check(getComputedStyle(island.querySelector(".island__glass-highlight")!).display === "none", "关掉镜面高光后不画高光");
       check(island.classList.contains("island--glass-morph-liquid"), "形变设成液体");
@@ -155,13 +156,32 @@ async function runChecks() {
     for (const island of islands()) {
       const tone = island.closest<HTMLElement>(".stage")!.dataset.tone;
       check(island.style.getPropertyValue("--glass-wallpaper").startsWith('url("data:image/jpeg'), `${tone}：选了壁纸后岛的底子换成磨砂过的壁纸`);
+      check(getComputedStyle(island).backdropFilter === "none", `${tone}：选了壁纸后关闭主壳实时 backdrop-filter`);
       check(getComputedStyle(island).backgroundImage.includes("data:image/jpeg"), `${tone}：岛本体（含贴顶圆角继承的背景）画出壁纸`);
       check(island.querySelector(".island__glass-noise"), `${tone}：加了噪点层`);
       check(getComputedStyle(island, "::before").backgroundImage.includes("data:image/jpeg"), `${tone}：贴顶圆角继承同一块磨砂壁纸`);
       const boost = Number(island.style.getPropertyValue("--glass-backdrop-boost"));
       check(tone === "dark" ? boost > 0 : boost === 0, `${tone}：白壁纸上${tone === "dark" ? "加深" : "不加深"}底色（${boost}）`);
     }
-    await set({ settings: { glassStyle: "static", glassBackdrop: "none" } });
+    await set({ expanded: false, nativeGlassState: "active", settings: { glassStyle: "static", glassBackdrop: "native", glassIntensity: 25 } });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 450)); });
+    for (const island of islands()) {
+      const tone = island.closest<HTMLElement>(".stage")!.dataset.tone;
+      check(island.classList.contains("island--glass-active"), `${tone}：原生透出激活时挂上 island--glass-active`);
+      check(getComputedStyle(island).backdropFilter === "none", `${tone}：原生透出激活时关闭重复的 CSS backdrop-filter`);
+      const fill = getComputedStyle(island).getPropertyValue("--island-shell-fill").trim();
+      check(fill.includes("/") || fill.startsWith("rgba("), `${tone}：原生透出激活时主壳底色改为半透明（${fill}）`);
+    }
+    document.documentElement.dataset.islandNotch = "on";
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 450)); });
+    for (const island of islands()) {
+      const cs = getComputedStyle(island);
+      check(cs.backgroundColor === "rgb(0, 0, 0)" && cs.backgroundImage === "none", `原生透出在刘海折叠时仍保持纯黑 (${cs.backgroundColor} | ${cs.backgroundImage})`);
+    }
+    delete document.documentElement.dataset.islandNotch;
+
+    await set({ expanded: true, nativeGlassState: "css-fallback", settings: { glassStyle: "static", glassBackdrop: "none", glassIntensity: DEFAULT_SETTINGS.glassIntensity } });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 600)); });
     check(islands().every((island) => !("glassWallpaper" in island.dataset) && !island.style.getPropertyValue("--glass-wallpaper")), "关掉后退回纯色玻璃");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;

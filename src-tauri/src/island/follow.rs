@@ -1,4 +1,4 @@
-use std::{thread, time::Duration};
+use std::time::Duration;
 use tauri::{Emitter, WebviewWindow};
 
 use super::{
@@ -13,35 +13,40 @@ use super::{
 
 pub(crate) const ISLAND_POSITION_CLEARED_EVENT: &str = "island-position-cleared";
 
-const POLL_INTERVAL: Duration = Duration::from_millis(300);
+pub(super) const FOLLOW_INTERVAL: Duration = Duration::from_millis(300);
 const SETTLE_POLLS: u32 = 2;
 
-pub(crate) fn start_monitor_follow_loop(window: WebviewWindow) {
-    thread::spawn(move || {
-        let mut pending: Option<(Bounds, u32)> = None;
-        loop {
-            thread::sleep(POLL_INTERVAL);
-            let state = read_window_state();
-            let Some(target) = followed_point(&window, state) else {
-                pending = None;
-                continue;
-            };
-            let Some(bounds) = monitor_bounds(&window, target) else {
-                continue;
-            };
-            if island_bounds(&window).is_some_and(|island| island == bounds) {
-                pending = None;
-                continue;
-            }
-            let seen = polls_on(pending, bounds);
-            pending = Some((bounds, seen));
-            if seen < SETTLE_POLLS || !may_move(state) {
-                continue;
-            }
-            pending = None;
-            move_to(&window, (bounds.0 + bounds.2 / 2, bounds.1 + bounds.3 / 2));
+#[derive(Default)]
+pub(super) struct MonitorFollower {
+    pending: Option<(Bounds, u32)>,
+}
+
+impl MonitorFollower {
+    pub(super) fn poll(&mut self, window: &WebviewWindow) {
+        let state = read_window_state();
+        let Some(target) = followed_point(window, state) else {
+            self.pending = None;
+            return;
+        };
+        let Some(bounds) = monitor_bounds(window, target) else {
+            return;
+        };
+        if island_bounds(window).is_some_and(|island| island == bounds) {
+            self.pending = None;
+            return;
         }
-    });
+        let seen = polls_on(self.pending, bounds);
+        self.pending = Some((bounds, seen));
+        if seen < SETTLE_POLLS || !may_move(state) {
+            return;
+        }
+        self.pending = None;
+        move_to(window, (bounds.0 + bounds.2 / 2, bounds.1 + bounds.3 / 2));
+    }
+
+    pub(super) fn reset(&mut self) {
+        self.pending = None;
+    }
 }
 
 type Bounds = (i32, i32, i32, i32);

@@ -22,8 +22,10 @@ pub(super) fn claude_tool_call(content: &Value) -> Option<ToolCall> {
     let input = &block["input"];
     let text = |key: &str| input[key].as_str().map(str::to_string);
     let detail = match name.as_str() {
-        "Bash" | "PowerShell" => text("command"),
-        "Read" | "Edit" | "Write" | "MultiEdit" => text("file_path").map(|path| file_name(&path)),
+        "Bash" | "PowerShell" | "bash" | "shell" => text("command"),
+        "Read" | "Edit" | "Write" | "MultiEdit" | "read" | "edit" | "write" => {
+            text("file_path").or_else(|| text("path")).or_else(|| text("filePath")).map(|path| file_name(&path))
+        }
         "NotebookEdit" => text("notebook_path").map(|path| file_name(&path)),
         "Grep" | "Glob" => text("pattern"),
         "WebFetch" | "browser_navigate" => text("url"),

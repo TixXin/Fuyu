@@ -18,20 +18,27 @@ npm 包 `fuyu-plugin`（SDK、命令行工具、模拟宿主）和 `create-fuyu-
 
 工作流跑在 GitHub 的 `npm` 环境里，第一次运行时会自动创建。想在每次发布前人工批准，就到仓库 Settings → Environments → `npm` 加上 Required reviewers。
 
-## 发布一个版本
+## 发布第 3 版 SDK（`2.0.0` 及以上）
 
-1. 把 `packages/fuyu-plugin/package.json` 和 `packages/create-fuyu-plugin/package.json` 改成同一个新版本号，运行 `pnpm sdk:build`，在 [更新日志](../../plugins/changelog.md) 当前开发中的岛屿版本下写上这次的变化，注明 npm 包版本，提交后 `pnpm mq:land --yes`。
-2. 给合入后的提交打标签并推送：
+从 `2.0.0` 起，`fuyu-plugin` 与 `create-fuyu-plugin` 面向插件平台第 3 版，由 [`scripts/plugins-v3/pack-npm-sdk.mjs`](../../../scripts/plugins-v3/pack-npm-sdk.mjs) 从工作区内的 `@fuyu/plugin-base`、`@fuyu/plugin-services`、`@fuyu/plugin-cli`、`@fuyu/plugin-manifest`、`@fuyu/plugin-market`、`@fuyu/plugin-review` 与 `@fuyu/create-plugin` 组装为零 `workspace:*` 依赖、带完整 `.d.mts` 类型声明的自包含发布目录：
+
+1. 把 `packages/plugin-cli/package.json` 和 `packages/create-plugin/package.json` 的 `version` 改成同一个新版本号（保持 `"private": true`），在 [更新日志](../../plugins/changelog.md) 写明本次变化与 npm 包版本。
+2. 本地验证组装与端到端测试：
 
    ```sh
-   git tag sdk-v0.2.1 origin/main
-   git push origin sdk-v0.2.1
+   node --test "packages/plugin-*/test/**/*.test.mjs" "packages/create-plugin/test/**/*.test.mjs" tests/scripts/pack-npm-sdk.test.mjs
    ```
 
-3. 工作流会先核对：标签里的版本号和两个包一致、生成的 SDK 文件是最新的（`scripts/plugins/check-sdk-release.mjs`），然后跑两个包的测试，再发布。npm 上已经有的版本会跳过，所以重推同一个标签不会出错。
-4. 发布后用 `npm view fuyu-plugin version` 确认；包页面会显示 provenance（来自哪个仓库的哪次运行）。
-5. 升级插件市场的依赖：在 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 把 `package.json` 里的 `fuyu-plugin` 改成刚发的版本，`npm install` 更新锁文件，提 PR 合入。市场 CI 用它检查提交的插件，不升级的话新加的校验在市场上不生效。
+3. 提交并经 `pnpm mq:land --yes` 合入 `main`，再给合入后的提交打标签并推送：
 
-单文件 SDK（`plugins/sdk/node/fuyu.mjs`、`plugins/sdk/powershell/fuyu.ps1`）由 `pnpm sdk:build` 写入包的版本号（`SDK_VERSION`、`$script:FuyuSdkVersion`），`validate` 拿它和自己的版本比，插件里复制的副本旧了就告警。所以改了版本号一定要重新跑 `pnpm sdk:build`。
+   ```sh
+   git tag sdk-v2.0.0 origin/main
+   git push origin sdk-v2.0.0
+   ```
 
-PowerShell 模块 `Fuyu.Plugin` 不在这个工作流里，仍按 [packages/powershell/Fuyu.Plugin](../../../packages/powershell/Fuyu.Plugin) 手动发布到 PowerShell Gallery。
+4. 工作流识别 `sdk-v2.*` 标签后，会核对 `packages/plugin-cli` 与 `packages/create-plugin` 的版本号、运行全部 v3 包单测与独立临时目录端到端单测，调用 `pack-npm-sdk.mjs` 生成 `/tmp/npm-sdk/fuyu-plugin` 与 `/tmp/npm-sdk/create-fuyu-plugin`，并通过 `npm publish --access public --provenance` 发布（已存在的版本自动跳过）。
+5. 发布后用 `npm view fuyu-plugin version` 与 `npm view create-fuyu-plugin version` 确认 provenance；随后在 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 更新 `market/v3/tools.json`（及市场校验依赖）并提 PR 合入。
+
+## 旧第 2 版补丁（`0.x` / `1.x`）
+
+旧第 2 版目录 `packages/fuyu-plugin` 与 `packages/create-fuyu-plugin` 已冻结（只修严重安全问题）。若需发 `sdk-v0.*` / `sdk-v1.*` 补丁，工作流仍保留旧分支：同步两处 `package.json` 版本号、运行 `pnpm sdk:build`、通过 `scripts/plugins/check-sdk-release.mjs` 与单测后发布。PowerShell 模块 `Fuyu.Plugin` 已随第 2 版冻结。

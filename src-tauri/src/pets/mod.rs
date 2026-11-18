@@ -58,12 +58,16 @@ struct Pet {
 
 #[tauri::command]
 pub async fn list_pets(app: AppHandle) -> Result<Vec<PetInfo>, String> {
-    Ok(list_pets_in(&pet_roots(&app)))
+    tauri::async_runtime::spawn_blocking(move || list_pets_in(&pet_roots(&app)))
+        .await
+        .map_err(|error| format!("Failed to join the list pets task: {error}"))
 }
 
 #[tauri::command]
 pub async fn get_pet_spritesheet(app: AppHandle, id: String) -> Result<String, String> {
-    read_spritesheet_in(&pet_roots(&app), &id)
+    tauri::async_runtime::spawn_blocking(move || read_spritesheet_in(&pet_roots(&app), &id))
+        .await
+        .map_err(|error| format!("Failed to join the pet spritesheet task: {error}"))?
 }
 
 macro_rules! tauri_commands {

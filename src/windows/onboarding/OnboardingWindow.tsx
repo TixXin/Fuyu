@@ -4,7 +4,9 @@ import { X } from "lucide-react";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { activeTone } from "../../lib/theme/themeMode";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
-import { useLegacySwitches } from "../../features/plugin-kernel/useLegacySwitches";
+import { setBuiltinConfig, switchBuiltinPlugin } from "../../features/plugin-kernel/builtinSwitches";
+import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
+import { useSettingsWithBuiltinSwitches } from "../../features/plugin-kernel/useLegacySwitches";
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { useClipboardSettings } from "../../features/clipboard/useClipboardSettings";
@@ -17,7 +19,7 @@ import { AgentConnectAct } from "./AgentConnectAct";
 import { showOnboardingWindow } from "./api";
 import { HelloAct } from "./HelloAct";
 import { OutfitAct } from "./OutfitAct";
-import { NO_ANSWER, enabledModules, withModules, type OnboardingModule } from "./personas";
+import { NO_ANSWER, enabledModules, moduleSwitchChanges, withModules, type OnboardingModule } from "./personas";
 import { cardPlacement } from "./placement";
 import { neededPermissions, PermissionsAct } from "./PermissionsAct";
 import { PlayAct } from "./PlayAct";
@@ -75,14 +77,16 @@ function useViewport() {
 export function OnboardingWindow() {
   const t = useTranslation();
   const text = t.onboarding;
-  const [settings, setSettings] = useLegacySwitches(useIslandSettings());
+  const [storedSettings, setSettings] = useIslandSettings();
+  const plugins = useBuiltinPlugins();
+  const settings = useSettingsWithBuiltinSwitches(storedSettings);
   const [clipboard, updateClipboard] = useClipboardSettings();
   const [launchAtStartup, updateLaunchAtStartup] = useLaunchAtStartup();
   const [index, setIndex] = useState(0);
   const [pushStep, setPushStep] = useState(0);
   const [answer, setAnswer] = useState(NO_ANSWER);
   const light = activeTone(settings.themeMode, useSystemDark()) === "light";
-  const modules = enabledModules(settings, clipboard.enabled);
+  const modules = enabledModules(settings, clipboard.enabled, plugins);
   const permissionKinds = isMacOS ? neededPermissions(modules) : [];
   const acts: readonly Act[] = ACTS.filter((name) => (name !== "permissions" || permissionKinds.length > 0) && (!AGENT_ACTS.includes(name) || modules.has("agents")));
   const act = acts[Math.min(index, acts.length - 1)];
@@ -115,7 +119,17 @@ export function OnboardingWindow() {
   }, []);
 
   const changeModules = (next: ReadonlySet<OnboardingModule>) => {
-    setSettings(withModules(settings, next));
+    if (!plugins) {
+      setSettings(withModules(storedSettings, next));
+    } else {
+      const changes = moduleSwitchChanges(modules, next);
+      for (const [id, enabled] of changes.plugins) {
+        void switchBuiltinPlugin(id, enabled).catch((error: unknown) => console.error(`Could not switch the built-in plugin ${id}`, error));
+      }
+      if (changes.mail !== undefined) {
+        void setBuiltinConfig("messages", "mail", changes.mail).catch((error: unknown) => console.error("Could not switch the mail source", error));
+      }
+    }
     if (next.has("clipboard") !== clipboard.enabled) void updateClipboard({ ...clipboard, enabled: next.has("clipboard") });
   };
   const finish = () => {

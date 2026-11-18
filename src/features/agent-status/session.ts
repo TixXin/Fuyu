@@ -1,11 +1,11 @@
 import type { AgentSessionSummary, AgentTaskStatus, ExternalAgentStatus, SessionProvider } from "./api";
 import { sessionProject } from "./sessionList.ts";
-import { AGENT_PROVIDER_LABELS } from "./status.ts";
+import { getAgentProviderLabel } from "./status.ts";
 
 export const COMPLETED_TITLE_HOLD_MS = 3000;
 
 export type AgentSession = {
-  provider: SessionProvider | null;
+  provider: SessionProvider | string | null;
   label: string;
   title: string;
 };
@@ -15,7 +15,7 @@ type Candidate = { session: AgentSession; phase: AgentTaskStatus["phase"]; updat
 export function sessionName(summary: AgentSessionSummary): AgentSession {
   return {
     provider: summary.provider,
-    label: AGENT_PROVIDER_LABELS[summary.provider],
+    label: getAgentProviderLabel(summary.provider),
     title: (summary.title ?? sessionProject(summary.cwd) ?? "").trim(),
   };
 }

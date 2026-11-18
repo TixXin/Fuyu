@@ -111,10 +111,11 @@
 
 .plugin-status-chip__charge {
   width: 100%;
-  min-height: 1px;
+  height: 100%;
   background: currentColor;
   border-radius: 1px;
-  transition: height var(--motion-medium) var(--motion-ease);
+  transform-origin: center bottom;
+  transition: transform var(--motion-medium) var(--motion-ease);
 }
 
 .plugin-status-chip__battery--neutral:nth-child(4n + 1) {

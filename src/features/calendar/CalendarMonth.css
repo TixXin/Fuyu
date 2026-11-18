@@ -193,3 +193,17 @@
     display: none;
   }
 }
+
+.calendar-month--weeks .calendar-month__weekdays,
+.calendar-month--weeks .calendar-month__grid {
+  grid-template-columns: 20px repeat(7, 1fr);
+}
+
+.calendar-month__week-head,
+.calendar-month__week {
+  display: inline-grid;
+  place-items: center;
+  color: rgba(var(--calendar-ink), 0.36);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}

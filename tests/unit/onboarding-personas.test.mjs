@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings.ts";
-import { MODULES, NO_ANSWER, PERSONAS, enabledModules, modulesFor, personaModules, takenOff, togglePersona, withModules } from "../../src/windows/onboarding/personas.ts";
+import { MODULES, NO_ANSWER, PERSONAS, enabledModules, moduleSwitchChanges, modulesFor, personaModules, takenOff, togglePersona, withModules } from "../../src/windows/onboarding/personas.ts";
 
 test("each answer picks its own set, and several answers take every module any of them uses", () => {
   assert.deepEqual([...modulesFor(["fun"])].sort(), ["music", "shelf"]);
@@ -52,4 +52,24 @@ test("the modules on now are read back the same way", () => {
   assert.deepEqual(enabledModules(withModules(DEFAULT_SETTINGS, chosen), true), chosen);
   assert.ok(!enabledModules(withModules(DEFAULT_SETTINGS, chosen), false).has("clipboard"));
   assert.equal(enabledModules(withModules(DEFAULT_SETTINGS, new Set(MODULES)), true).size, MODULES.length);
+});
+
+test("onboarding reads and diffs built-in plugin switches and mail source directly when plugins are loaded", () => {
+  const plugins = [
+    { id: "todos", kind: "builtin", enabled: false, background: [], config: {} },
+    { id: "music", kind: "builtin", enabled: true, background: [], config: {} },
+    { id: "agents", kind: "builtin", enabled: false, background: [], config: {} },
+    { id: "translation", kind: "builtin", enabled: true, background: [], config: {} },
+    { id: "file-shelf", kind: "builtin", enabled: true, background: [], config: {} },
+    { id: "screenshot", kind: "builtin", enabled: false, background: [], config: {} },
+    { id: "clipboard", kind: "builtin", enabled: false, background: [], config: {} },
+    { id: "messages", kind: "builtin", enabled: true, background: [], config: { mail: false } },
+  ];
+  const current = enabledModules(DEFAULT_SETTINGS, true, plugins);
+  assert.deepEqual([...current].sort(), ["music", "shelf", "translation"]);
+  const changes = moduleSwitchChanges(current, new Set(["music", "agents", "mail", "clipboard"]));
+  assert.deepEqual(changes, {
+    plugins: [["agents", true], ["translation", false], ["file-shelf", false], ["clipboard", true]],
+    mail: true,
+  });
 });

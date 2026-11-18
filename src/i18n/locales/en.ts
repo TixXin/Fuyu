@@ -1,74 +1,13 @@
 import type { Translations } from "../types";
-import * as common from "../sections/common.ts";
-import * as messages from "../sections/messages.ts";
-import * as qq from "../sections/qq.ts";
-import * as wechat from "../sections/wechat.ts";
-import * as mail from "../sections/mail.ts";
-import * as translator from "../sections/translator.ts";
-import * as island from "../sections/island.ts";
-import * as agent from "../sections/agent.ts";
-import * as claudeUsage from "../sections/claudeUsage.ts";
-import * as sessionRing from "../sections/sessionRing.ts";
-import * as notebook from "../sections/notebook.ts";
-import * as archive from "../sections/archive.ts";
-import * as todoIsland from "../sections/todoIsland.ts";
-import * as music from "../sections/music.ts";
-import * as calendar from "../sections/calendar.ts";
-import * as todo from "../sections/todo.ts";
-import * as clipboard from "../sections/clipboard.ts";
-import * as clipboardList from "../sections/clipboardList.ts";
-import * as clipboardPrivacy from "../sections/clipboardPrivacy.ts";
-import * as fileShelf from "../sections/fileShelf.ts";
-import * as screenshot from "../sections/screenshot.ts";
-import * as timer from "../sections/timer.ts";
-import * as pluginViews from "../sections/pluginViews.ts";
-import * as settings from "../sections/settings/index.ts";
-import * as onboarding from "../sections/onboarding.ts";
-import * as errors from "../sections/errors.ts";
-import * as voiceInput from "../sections/voiceInput.ts";
-import * as trayMenu from "../sections/trayMenu.ts";
+import { coreEn } from "./core-en.ts";
+import { onboarding } from "./onboarding-en.ts";
+import { settings, sync } from "./settings-en.ts";
 
 const en: Translations = {
-  localeLabel: "English",
-  localeTag: "en",
-
-  common: common.en,
-  messages: messages.en,
-  qq: qq.en,
-  wechat: wechat.en,
-  mail: mail.en,
-  translator: translator.en,
-
-  island: island.en,
-
-  agent: agent.en,
-  claudeUsage: claudeUsage.en,
-  sessionRing: sessionRing.en,
-
-  notebook: notebook.en,
-
-  archive: archive.en,
-  todoIsland: todoIsland.en,
-
-  music: music.en,
-  calendar: calendar.en,
-
-  todo: todo.en,
-
-  clipboard: clipboard.en,
-  clipboardList: clipboardList.en,
-  clipboardPrivacy: clipboardPrivacy.en,
-
-  fileShelf: fileShelf.en,
-  screenshot: screenshot.en,
-  timer: timer.en,
-
-  pluginViews: pluginViews.en,
-  settings: settings.en,
-  onboarding: onboarding.en,
-  errors: errors.en,
-  voiceInput: voiceInput.en,
-  trayMenu: trayMenu.en,
+  ...coreEn,
+  settings,
+  onboarding,
+  sync,
 };
 
 export default en;

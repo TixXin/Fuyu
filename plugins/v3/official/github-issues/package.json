@@ -1,0 +1,65 @@
+{
+  "name": "@fuyu/github-issues",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Lists open public issues from one or more GitHub repositories grouped on an island page.",
+  "license": "MIT",
+  "author": "TixXin",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev --official",
+    "build": "fuyu-plugin build --official",
+    "check": "fuyu-plugin check --official --market",
+    "package": "fuyu-plugin pack --official",
+    "typecheck": "tsc",
+    "lint": "eslint ."
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "GitHub Issue",
+      "en": "GitHub issues"
+    },
+    "description": {
+      "zh-CN": "在设置中配置一个或多个 owner/repo 仓库，拉取公开未关闭的 issue 并在岛展开页分组展示。",
+      "en": "Configure one or more owner/repo repositories in settings and browse their open public issues grouped on an island page."
+    },
+    "icon": "assets/icon.svg",
+    "categories": [
+      "developer"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
+    },
+    "inject": {
+      "required": [
+        "messages/v1"
+      ]
+    },
+    "slots": [
+      "island.page/v1",
+      "settings.section/v1"
+    ],
+    "commands": [
+      {
+        "id": "refresh",
+        "title": {
+          "zh-CN": "立即刷新",
+          "en": "Refresh now"
+        }
+      }
+    ],
+    "network": [
+      "api.github.com"
+    ]
+  }
+}

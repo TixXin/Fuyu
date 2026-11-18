@@ -93,12 +93,14 @@
         "messageNotice": "sync",
         "messagePanelSeconds": "sync",
         "expandTrigger": "sync",
+        "clickCollapseOnLeave": "sync",
         "hoverExpandDelayMs": "sync",
         "hoverCollapseDelayMs": "sync",
         "hoverSwitchPage": "sync",
         "hoverSwitchDelayMs": "sync",
         "minimizeAction": "sync",
         "tuckedHoverAction": "sync",
+        "tuckStyle": "sync",
         "pageDigitModifiers": "local",
         "pageNextShortcut": "local",
         "pagePreviousShortcut": "local",
@@ -165,7 +167,11 @@
         "mailEnabled": "firstMergeOnly",
         "gameDoNotDisturb": "local",
         "gameAutoTuck": "local",
-        "hoverTakesKeyboard": "local"
+        "hoverTakesKeyboard": "local",
+        "idleDim": "sync",
+        "idleDimOpacity": "sync",
+        "idleDimSeconds": "sync",
+        "islandOpacity": "sync"
       }
     },
     "fuyu-setting-presets": "byId",
@@ -236,6 +242,14 @@
       }
     },
     "fuyu-lyrics-offsets": "sync",
-    "fuyu-tray-menu-layout": "sync"
+    "fuyu-tray-menu-layout": "sync",
+    "fuyu-voice-input": {
+      "fields": {
+        "enabled": "firstMergeOnly",
+        "shortcut": "local"
+      }
+    },
+    "fuyu-calendar-prefs": "sync",
+    "fuyu-todo-prefs": "sync"
   }
 }

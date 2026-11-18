@@ -1,4 +1,5 @@
 import { agentsV1 } from "@fuyu/plugin-services";
+import { createAgentSourceRegistry, normalizeReportEntry, normalizeSessionEntry, normalizeUsageReport } from "./sources.mjs";
 
 export const name = "agents";
 
@@ -7,7 +8,6 @@ const FOCUS_FIELDS = new Set(["provider", "sessionId", "cwd", "title"]);
 
 const isObject = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 const text = (value) => (typeof value === "string" && value.length > 0 ? value : null);
-const number = (value) => (typeof value === "number" && Number.isFinite(value) ? value : null);
 
 function agentsError(code, message, data) {
   return Object.assign(new Error(message), { code, ...(data ? { data } : {}) });
@@ -33,52 +33,60 @@ export function focusParams(params) {
 }
 
 export function sessionEntry(session, { listed, unseen, light }) {
-  const provider = String(session?.provider ?? "");
-  const sessionId = String(session?.sessionId ?? "");
-  return {
-    key: `${provider}:${sessionId}`,
-    provider,
-    sessionId,
-    title: text(session?.title),
-    cwd: text(session?.cwd),
-    phase: String(session?.phase ?? "completed"),
-    light: text(light) ?? "done",
-    updatedAt: number(session?.updatedAt) ?? 0,
-    remoteHost: text(session?.remoteHost),
-    listed: listed === true,
-    unseen: unseen === true,
-  };
+  return normalizeSessionEntry({ ...session, listed: listed === true, unseen: unseen === true, light: text(light) ?? "done" });
 }
 
 export function reportEntry(report) {
-  return { id: String(report?.id ?? ""), name: String(report?.name ?? ""), phase: String(report?.phase ?? "idle"), updatedAt: number(report?.updatedAt) ?? 0 };
+  return normalizeReportEntry(report);
 }
 
-const usageWindow = (window) => (isObject(window) ? { name: String(window.name ?? ""), used: number(window.used) ?? 0, resetsAt: number(window.resetsAt) } : null);
-
 export function usageReport(usage) {
-  if (!isObject(usage)) return null;
-  return {
-    updatedAt: number(usage.updatedAt),
-    fiveHour: usageWindow(usage.fiveHour),
-    sevenDay: usageWindow(usage.sevenDay),
-    models: Array.isArray(usage.models) ? usage.models.map(usageWindow).filter(Boolean) : [],
-    plan: text(usage.plan),
-    source: text(usage.source) ?? "hud",
-    error: text(usage.error?.kind),
-  };
+  return normalizeUsageReport(usage);
 }
 
 export function apply(ctx) {
+  const registry = createAgentSourceRegistry();
   const call = (method, params) =>
     ctx.rust.call(`agents.${method}`, params).catch((error) => {
       throw fromRust(error);
     });
 
-  ctx.services.provide(agentsV1, {
-    sessions: () => call("sessions", null),
-    usage: () => call("usage", null),
-    focus: (params) => call("focus", focusParams(params)),
+  const provider = ctx.services.provide(agentsV1, {
+    sessions: async () => {
+      const base = await call("sessions", null);
+      return registry.mergeSessions(base);
+    },
+    usage: async () => {
+      const base = await call("usage", null);
+      return registry.mergeUsage(base);
+    },
+    focus: async (params) => {
+      const normalized = focusParams(params);
+      const custom = await registry.tryFocus(normalized);
+      if (custom) return custom;
+      return call("focus", normalized);
+    },
     remoteHosts: () => call("remoteHosts", null),
   });
+
+  const unsub = registry.subscribe(() => {
+    void registry
+      .mergeSessions({ sessions: [], others: [] })
+      .then((merged) => provider.emit("changed", { count: merged.sessions.length + merged.others.length }));
+  });
+  ctx.effect(() => unsub, "agents.sources.watch");
+  const stopAccessor = ctx.reflect.accessor("agentSources", {
+    get() {
+      const caller = this;
+      return Object.freeze({
+        register: (spec) => {
+          const off = registry.register(spec);
+          caller.effect(() => off, `agentSources.register(${spec?.provider ?? ""})`);
+          return off;
+        },
+      });
+    },
+  });
+  ctx.effect(() => stopAccessor, "agentSources.accessor");
+  ctx.provide("agents.sources", Object.freeze({ register: (spec) => registry.register(spec) }));
 }

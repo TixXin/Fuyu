@@ -42,7 +42,7 @@ const ITEMS: ClipboardHistoryItem[] = [
   { ...base, id: "t1", kind: "text", copiedAt: now - 20_000, preview: "主题从此不包含尺寸和显示内容，可以吗", text: "主题从此不包含尺寸和显示内容，可以吗", source: { path: "C:\\code.exe", name: "VS Code" } },
   { ...base, id: "t2", kind: "text", copiedAt: now - 2 * minute, preview: "pnpm test:regression clipboard && git status --short", favorite: true, source: { path: "C:\\wt.exe", name: "终端" } },
   { ...base, id: "i1", kind: "image", copiedAt: now - 5 * minute, preview: "770 x 148 image", ocrText: "已不在", image: { width: 770, height: 148, byteSize: 43_000, originalPath: "", thumbnailPath: "", thumbnailDataUrl: thumb }, source: { path: "C:\\weixin.exe", name: "微信" } },
-  { ...base, id: "t3", kind: "text", copiedAt: now - 12 * minute, preview: "题市场放在「扩展」组和插件市场挨着，还是放在「基础」组紧跟「主题」？", tags: ["设置"], source: { path: "C:\\msedge.exe", name: "Edge" } },
+  { ...base, id: "t3", kind: "text", copiedAt: now - 12 * minute, preview: "题市场放在「扩展」组和插件市场挨着，还是放在「基础」组紧跟「主题」？", note: "设计评审定稿：先放在扩展组和插件市场并排对比，确认窄窗与宽版都不遮挡说明文字", tags: ["设置"], source: { path: "C:\\msedge.exe", name: "Edge" } },
   { ...base, id: "t4", kind: "text", copiedAt: now - 20 * minute, preview: "ghp_8f3a••••••••••••••••", masked: true, text: "ghp_8f3aSECRETSECRETSECRET" },
   { ...base, id: "f1", kind: "files", copiedAt: now - 70 * minute, preview: "release-notes-0.3.5.md", files: ["C:\\a\\release-notes-0.3.5.md", "C:\\a\\b.md", "C:\\a\\c.md"], source: { path: "C:\\explorer.exe", name: "资源管理器" } },
   { ...base, id: "c1", kind: "text", copiedAt: now - 80 * minute, preview: "#E86A92", text: "#E86A92", source: { path: "C:\\figma.exe", name: "Figma" } },
@@ -186,11 +186,15 @@ async function runChecks() {
     check($$("wide", ".clipboard-popup__section")[0]?.textContent === "今天", "宽版：列表按今天、昨天、更早分段");
 
     check($("wide", ".clipboard-popup__pane-body")?.textContent === ITEMS[0].text, "宽版：右边是选中这条的完整内容");
+    check(!$("wide", ".clipboard-popup__pane-meta-note"), "宽版：无备注条目不显示空备注行");
+    check($("wide", ".clipboard-popup__list")!.clientWidth >= $("dark", ".clipboard-popup__list")!.clientWidth, "宽版：左侧列表可视宽度不窄于标准版");
     await key("wide", { key: "ArrowDown" });
     await key("wide", { key: "ArrowDown" });
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
     check($<HTMLImageElement>("wide", ".clipboard-picture__thumb")?.src.startsWith("data:image/svg") && $<HTMLImageElement>("wide", ".clipboard-picture__full")?.src === "http://fuyu-clip.localhost/i1" && $("wide", ".clipboard-popup__pane-image p")?.textContent?.includes("已不在"), "宽版选中图片：先显示缩略图，原图按记录 id 直接读，下面是识别出的文字");
     await key("wide", { key: "ArrowDown" });
+    const wideNote = $("wide", ".clipboard-popup__pane-meta-note");
+    check(wideNote?.textContent === ITEMS[3].note && getComputedStyle(wideNote!).whiteSpace === "pre-wrap", "宽版右侧详情栏完整展示条目长备注并支持自动折行");
     await key("wide", { key: "ArrowDown" });
     check($("wide", ".clipboard-popup__pane-body")?.textContent?.startsWith("ghp_8f3a••") && !$("wide", ".clipboard-popup__pane")?.textContent?.includes("SECRET"), "宽版：打码的密钥不露原文");
     await key("wide", { key: "ArrowDown" });

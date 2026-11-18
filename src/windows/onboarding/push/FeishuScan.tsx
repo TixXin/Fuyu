@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { openCcConnectLink, type CcConnectFeishuSetup } from "../../../features/cc-connect/api";
 import { useErrorText, useTranslation } from "../../../i18n";
+import { visibilityInterval } from "../../../lib/useVisibilityInterval";
 import type { PushTarget } from "./targets";
 
 const POLL_MS = 1_000;
@@ -22,10 +23,10 @@ export function FeishuScan({ target, onDone, onEnd }: { target: PushTarget; onDo
         .then((next) => alive && setState(next))
         .catch((error: unknown) => console.error("Failed to read the Feishu setup", error));
     void read();
-    const timer = window.setInterval(() => void read(), POLL_MS);
+    const stop = visibilityInterval(() => void read(), POLL_MS);
     return () => {
       alive = false;
-      window.clearInterval(timer);
+      stop();
     };
   }, [running, target]);
 

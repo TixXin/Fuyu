@@ -8,7 +8,10 @@ use std::{
 use serde::{Deserialize, Serialize};
 use tauri::{ipc::Response, AppHandle, Manager};
 
-use crate::plugin_host::{plugin_sound_packs, PluginSoundPack};
+use crate::{
+    plugin_host::{plugin_sound_packs, PluginSoundPack},
+    user_error::UserError,
+};
 
 const PACKS_DIR: &str = "sound-packs";
 const MANIFEST: &str = "pack.json";
@@ -68,10 +71,10 @@ pub struct SoundPackFile {
     bytes: Vec<u8>,
 }
 
-fn packs_dir(app: &AppHandle) -> Result<PathBuf, String> {
+fn packs_dir(app: &AppHandle) -> Result<PathBuf, UserError> {
     crate::home_dir::fuyu_home(app.path())
         .map(|dir| dir.join(PACKS_DIR))
-        .map_err(|error| format!("找不到应用数据目录：{error}"))
+        .map_err(|error| UserError::new("soundPack.noDataDir", "Could not find the app data folder.").detail(error))
 }
 
 fn clean_text(value: &str) -> String {
@@ -106,23 +109,29 @@ pub(crate) fn sound_extension(name: &str) -> Option<String> {
 
 type PackFile = (String, Vec<u8>);
 
-pub(crate) fn plan_import(pack: SoundPackImport, id: String) -> Result<(SoundPack, Vec<PackFile>), String> {
+pub(crate) fn plan_import(pack: SoundPackImport, id: String) -> Result<(SoundPack, Vec<PackFile>), UserError> {
     let mut sounds = BTreeMap::new();
     let mut files = Vec::new();
     for file in pack.files {
         if !SOUND_EVENTS.contains(&file.event.as_str()) || sounds.contains_key(&file.event) {
             continue;
         }
-        let extension = sound_extension(&file.name).ok_or_else(|| format!("不支持的音效格式：{}", file.name))?;
+        let extension = sound_extension(&file.name).ok_or_else(|| {
+            UserError::new("soundPack.format", format!("Unsupported sound format: {}", file.name)).arg("name", file.name.as_str())
+        })?;
         if file.bytes.is_empty() || file.bytes.len() > MAX_FILE_BYTES {
-            return Err(format!("音效文件太大或是空的：{}（最大 4 MB）", file.name));
+            return Err(UserError::new(
+                "soundPack.sizeOrEmpty",
+                format!("The sound file is empty or too large: {} (at most 4 MB).", file.name),
+            )
+            .arg("name", file.name.as_str()));
         }
         let stored = format!("{}.{extension}", file.event);
         sounds.insert(file.event, stored.clone());
         files.push((stored, file.bytes));
     }
     if sounds.is_empty() {
-        return Err("这个文件夹里没有能用的音效。".into());
+        return Err(UserError::new("soundPack.empty", "There are no usable sounds in this folder."));
     }
     let name = clean_text(&pack.name);
     let pack = SoundPack {
@@ -143,86 +152,125 @@ fn read_pack(dir: &Path) -> Option<SoundPack> {
     (pack.id == folder_id && is_valid_id(&pack.id)).then_some(pack)
 }
 
-#[tauri::command]
-pub async fn list_sound_packs(app: AppHandle) -> Result<Vec<SoundPack>, String> {
-    let dir = packs_dir(&app)?;
-    let mut packs: Vec<SoundPack> = fs::read_dir(&dir)
-        .map(|entries| entries.flatten().filter_map(|entry| read_pack(&entry.path())).collect())
-        .unwrap_or_default();
-    packs.extend(plugin_sound_packs().into_iter().map(|pack| plugin_pack(pack).0));
-    packs.sort_by_key(|pack| pack.name.to_lowercase());
-    Ok(packs)
-}
-
-#[tauri::command]
-pub async fn import_sound_pack(app: AppHandle, pack: SoundPackImport) -> Result<SoundPack, String> {
-    let now_ms = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or_default();
-    let id = pack_id(&pack.name, now_ms);
-    let (pack, files) = plan_import(pack, id)?;
-    let dir = packs_dir(&app)?;
-    let staging = dir.join(format!("{}.importing", pack.id));
-    let write = || -> Result<(), String> {
-        fs::create_dir_all(&staging).map_err(|error| format!("无法创建 {}：{error}", staging.display()))?;
-        for (name, bytes) in &files {
-            fs::write(staging.join(name), bytes).map_err(|error| format!("无法写入音效 {name}：{error}"))?;
-        }
-        let manifest = serde_json::to_vec_pretty(&pack).map_err(|error| error.to_string())?;
-        fs::write(staging.join(MANIFEST), manifest).map_err(|error| format!("无法写入 {MANIFEST}：{error}"))?;
-        fs::rename(&staging, dir.join(&pack.id)).map_err(|error| format!("无法保存音效包：{error}"))
-    };
-    if let Err(error) = write() {
-        let _ = fs::remove_dir_all(&staging);
-        return Err(error);
-    }
-    Ok(pack)
-}
-
-#[tauri::command]
-pub async fn remove_sound_pack(app: AppHandle, id: String) -> Result<(), String> {
+fn resolve_pack(app: &AppHandle, id: &str) -> Result<(SoundPack, PathBuf), UserError> {
     if id.starts_with(PLUGIN_PACK_PREFIX) {
-        return Err("这个音效包来自插件，请在插件页关闭或卸载它。".into());
+        find_plugin_pack(id).ok_or_else(|| {
+            UserError::new("soundPack.pluginGone", "This sound pack was not found; the plugin may be disabled or uninstalled.")
+        })
+    } else if is_valid_id(id) {
+        let dir = packs_dir(app)?.join(id);
+        let pack = read_pack(&dir).ok_or_else(|| UserError::new("soundPack.notFound", "This sound pack was not found."))?;
+        Ok((pack, dir))
+    } else {
+        Err(UserError::new("soundPack.badId", "The sound pack id is not valid."))
     }
-    if !is_valid_id(&id) {
-        return Err("音效包 id 无效。".into());
-    }
-    let dir = packs_dir(&app)?.join(&id);
-    if read_pack(&dir).is_none() {
-        return Err("找不到这个音效包。".into());
-    }
-    fs::remove_dir_all(&dir).map_err(|error| format!("无法删除音效包：{error}"))
 }
 
 #[tauri::command]
-pub async fn open_sound_pack_folder(app: AppHandle, id: String) -> Result<(), String> {
-    let dir = if id.starts_with(PLUGIN_PACK_PREFIX) {
-        find_plugin_pack(&id).ok_or("找不到这个音效包，插件可能已关闭或卸载。")?.1
-    } else if is_valid_id(&id) {
-        let dir = packs_dir(&app)?.join(&id);
-        read_pack(&dir).ok_or("找不到这个音效包。")?;
-        dir
-    } else {
-        return Err("音效包 id 无效。".into());
-    };
-    tauri_plugin_opener::open_path(&dir, None::<&str>).map_err(|error| format!("无法打开文件夹：{error}"))
+pub async fn list_sound_packs(app: AppHandle) -> Result<Vec<SoundPack>, UserError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let dir = packs_dir(&app)?;
+        let mut packs: Vec<SoundPack> = fs::read_dir(&dir)
+            .map(|entries| entries.flatten().filter_map(|entry| read_pack(&entry.path())).collect())
+            .unwrap_or_default();
+        packs.extend(plugin_sound_packs().into_iter().map(|pack| plugin_pack(pack).0));
+        packs.sort_by_key(|pack| pack.name.to_lowercase());
+        Ok(packs)
+    })
+    .await
+    .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
 #[tauri::command]
-pub async fn read_sound_pack_file(app: AppHandle, id: String, file: String) -> Result<Response, String> {
-    let (pack, dir) = if id.starts_with(PLUGIN_PACK_PREFIX) {
-        find_plugin_pack(&id).ok_or("找不到这个音效包，插件可能已关闭或卸载。")?
-    } else if is_valid_id(&id) {
+pub async fn import_sound_pack(app: AppHandle, pack: SoundPackImport) -> Result<SoundPack, UserError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let now_ms = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or_default();
+        let id = pack_id(&pack.name, now_ms);
+        let (pack, files) = plan_import(pack, id)?;
+        let dir = packs_dir(&app)?;
+        let staging = dir.join(format!("{}.importing", pack.id));
+        let write = || -> Result<(), UserError> {
+            fs::create_dir_all(&staging).map_err(|error| {
+                UserError::new("file.create", format!("Could not create {}.", staging.display()))
+                    .arg("path", staging.display().to_string())
+                    .detail(error)
+            })?;
+            for (name, bytes) in &files {
+                fs::write(staging.join(name), bytes).map_err(|error| {
+                    UserError::new("soundPack.writeSound", format!("Could not write sound {name}."))
+                        .arg("name", name.as_str())
+                        .detail(error)
+                })?;
+            }
+            let manifest = serde_json::to_vec_pretty(&pack)
+                .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
+            fs::write(staging.join(MANIFEST), manifest).map_err(|error| {
+                UserError::new("file.write", format!("Could not write {MANIFEST}.")).arg("path", MANIFEST).detail(error)
+            })?;
+            fs::rename(&staging, dir.join(&pack.id))
+                .map_err(|error| UserError::new("soundPack.save", "Could not save the sound pack.").detail(error))
+        };
+        if let Err(error) = write() {
+            let _ = fs::remove_dir_all(&staging);
+            return Err(error);
+        }
+        Ok(pack)
+    })
+    .await
+    .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub async fn remove_sound_pack(app: AppHandle, id: String) -> Result<(), UserError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        if id.starts_with(PLUGIN_PACK_PREFIX) {
+            return Err(UserError::new(
+                "soundPack.fromPlugin",
+                "This sound pack comes from a plugin; disable or uninstall it on the Plugins page.",
+            ));
+        }
+        if !is_valid_id(&id) {
+            return Err(UserError::new("soundPack.badId", "The sound pack id is not valid."));
+        }
         let dir = packs_dir(&app)?.join(&id);
-        (read_pack(&dir).ok_or("找不到这个音效包。")?, dir)
-    } else {
-        return Err("音效包 id 无效。".into());
-    };
-    if !pack.sounds.values().any(|listed| listed == &file) {
-        return Err("音效包里没有这个文件。".into());
-    }
-    let bytes = fs::read(dir.join(&file)).map_err(|error| format!("无法读取音效 {file}：{error}"))?;
-    if bytes.len() > MAX_FILE_BYTES {
-        return Err(format!("音效文件太大：{file}（最大 4 MB）"));
-    }
+        if read_pack(&dir).is_none() {
+            return Err(UserError::new("soundPack.notFound", "This sound pack was not found."));
+        }
+        fs::remove_dir_all(&dir)
+            .map_err(|error| UserError::new("soundPack.delete", "Could not delete the sound pack.").detail(error))
+    })
+    .await
+    .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub async fn open_sound_pack_folder(app: AppHandle, id: String) -> Result<(), UserError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let (_, dir) = resolve_pack(&app, &id)?;
+        tauri_plugin_opener::open_path(&dir, None::<&str>)
+            .map_err(|error| UserError::new("soundPack.openFolder", "Could not open the folder.").detail(error))
+    })
+    .await
+    .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
+}
+
+#[tauri::command]
+pub async fn read_sound_pack_file(app: AppHandle, id: String, file: String) -> Result<Response, UserError> {
+    let bytes = tauri::async_runtime::spawn_blocking(move || -> Result<Vec<u8>, UserError> {
+        let (pack, dir) = resolve_pack(&app, &id)?;
+        if !pack.sounds.values().any(|listed| listed == &file) {
+            return Err(UserError::new("soundPack.fileMissing", "This file is not in the sound pack."));
+        }
+        let bytes = fs::read(dir.join(&file)).map_err(|error| {
+            UserError::new("soundPack.readSound", format!("Could not read sound {file}.")).arg("name", file.as_str()).detail(error)
+        })?;
+        if bytes.len() > MAX_FILE_BYTES {
+            return Err(UserError::new("soundPack.tooLarge", format!("The sound file is too large: {file} (at most 4 MB).")).arg("name", file.as_str()));
+        }
+        Ok(bytes)
+    })
+    .await
+    .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))??;
     Ok(Response::new(bytes))
 }
 
@@ -266,8 +314,8 @@ mod tests {
     #[test]
     fn imports_refuse_unknown_formats_large_files_and_empty_packs() {
         let pack = |files| SoundPackImport { name: "p".into(), author: String::new(), license: String::new(), files };
-        assert!(plan_import(pack(vec![file("start", "a.exe", 10)]), "p-1".into()).is_err());
-        assert!(plan_import(pack(vec![file("start", "a.wav", MAX_FILE_BYTES + 1)]), "p-1".into()).is_err());
-        assert!(plan_import(pack(vec![file("lunch", "a.wav", 10)]), "p-1".into()).is_err());
+        assert_eq!(plan_import(pack(vec![file("start", "a.exe", 10)]), "p-1".into()).unwrap_err().code(), "soundPack.format");
+        assert_eq!(plan_import(pack(vec![file("start", "a.wav", MAX_FILE_BYTES + 1)]), "p-1".into()).unwrap_err().code(), "soundPack.sizeOrEmpty");
+        assert_eq!(plan_import(pack(vec![file("lunch", "a.wav", 10)]), "p-1".into()).unwrap_err().code(), "soundPack.empty");
     }
 }

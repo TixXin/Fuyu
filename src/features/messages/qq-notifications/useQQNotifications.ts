@@ -1,5 +1,5 @@
 import { useErrorText, useTranslation } from "../../../i18n";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { isTauri } from "@tauri-apps/api/core";
 import { nextQQPreview, type QQPreviewTiming } from "../qqNotificationTiming";
 import { setSourceEnabled } from "../plugin/useSourceSwitches";
@@ -141,9 +141,13 @@ export function useQQNotifications(canPreview: boolean) {
   }), [run]);
 
   const dismissPreview = useCallback(() => setPreviewWindow(null), []);
+  const localizedSnapshot = useMemo(
+    () => ({ ...snapshot, error: snapshot.error ? errorText(snapshot.error) : null }),
+    [errorText, snapshot],
+  );
 
   return {
-    snapshot, busy, actionError, setEnabled, requestAccess, openSettings, refresh, clear, openQQ, dismissPreview, ...autoClear,
+    snapshot: localizedSnapshot, busy, actionError, setEnabled, requestAccess, openSettings, refresh, clear, openQQ, dismissPreview, ...autoClear,
     previewReceivedAt: canPreview ? previewWindow?.receivedAt ?? null : null,
     preview: canPreview && previewWindow
       ? snapshot.items.find((item) => item.id === previewWindow.id) ?? null

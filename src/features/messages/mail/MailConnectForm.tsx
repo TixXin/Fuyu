@@ -4,6 +4,13 @@ import { useTranslation } from "../../../i18n";
 import { hasQQMailHelp } from "./mailDomain";
 import "./MailSettings.css";
 
+const MAIL_PRESETS = [
+  { label: "@qq.com", domain: "qq.com", host: "imap.qq.com" },
+  { label: "@163.com", domain: "163.com", host: "imap.163.com" },
+  { label: "@gmail.com", domain: "gmail.com", host: "imap.gmail.com" },
+  { label: "@outlook.com", domain: "outlook.com", host: "outlook.office365.com" },
+] as const;
+
 export function MailConnectForm({ reauthorizing, busy, onConnect, onHelp, onCancel }: {
   reauthorizing: string | null;
   busy: boolean;
@@ -31,6 +38,24 @@ export function MailConnectForm({ reauthorizing, busy, onConnect, onHelp, onCanc
         <span>{t.mail.email}</span>
         <input type="email" autoComplete="username" placeholder={t.mail.emailPlaceholder} required maxLength={80} value={email} disabled={busy || reauthorizing !== null} onChange={(event) => setEmail(event.currentTarget.value)} />
       </label>
+      {reauthorizing === null && !email.includes("@") && (
+        <div className="mail-settings__presets">
+          {MAIL_PRESETS.map((preset) => (
+            <button
+              key={preset.domain}
+              className="mail-settings__preset"
+              type="button"
+              disabled={busy}
+              onClick={() => {
+                setEmail(`${email.trim()}${preset.label}`);
+                if (!host.trim()) setHost(preset.host);
+              }}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      )}
       <label className="mail-settings__row">
         <span>{t.mail.authorizationCode}</span>
         <input type="password" autoComplete="off" placeholder={t.mail.authorizationPlaceholder} required maxLength={256} value={authorizationCode} disabled={busy} onChange={(event) => setAuthorizationCode(event.currentTarget.value)} />

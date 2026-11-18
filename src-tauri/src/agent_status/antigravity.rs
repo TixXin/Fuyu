@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
-    fs,
+    fs::{self, File},
+    io::{BufRead, BufReader, Read},
     path::{Path, PathBuf},
 };
 
@@ -15,7 +16,7 @@ use super::reply_text::reply_ending;
 use super::session_scan::{pick_title, read_tail};
 use super::sessions::{session_phase, AgentSessionSummary, TurnState};
 use super::snapshot::system_time_to_unix_millis;
-use super::title::{folder_title, prompt_title};
+use super::title::{display_title, folder_title, prompt_title, tag_content};
 use super::tool_call::{antigravity_tool_call, ToolCall};
 use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME};
 
@@ -25,6 +26,8 @@ const DATA_DIRS: [&str; 3] = ["antigravity", "antigravity-ide", "antigravity-cli
 const HOOK_NAME: &str = "fuyu";
 pub(super) const APPROVED_TOOLS: &str = "run_command";
 const MAX_AGE_MS: i64 = 24 * 60 * 60 * 1000;
+const HEAD_READ_BYTES: u64 = 512 * 1024;
+const HEAD_READ_LINES: usize = 16;
 const EFFORTS: [&str; 6] = ["minimal", "low", "medium", "high", "xhigh", "max"];
 
 pub(super) const HARNESS: Harness = Harness {
@@ -32,6 +35,7 @@ pub(super) const HARNESS: Harness = Harness {
     hooks: Some(Hooks {
         install: install_hooks,
         check: hooks_state,
+        uninstall: uninstall_hooks,
     }),
     status_light: Some(StatusLight {
         running_marker: "agent-antigravity-running.flag",
@@ -49,7 +53,18 @@ struct Saved {
     path: PathBuf,
 }
 
+#[cfg(test)]
 pub(super) fn sessions(app_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
+    sessions_at(app_dir, None, true, now, window_ms)
+}
+
+pub(super) fn sessions_at(
+    app_dir: &Path,
+    home_dir: Option<&Path>,
+    local: bool,
+    now: i64,
+    window_ms: i64,
+) -> Vec<AgentSessionSummary> {
     let mut newest: HashMap<String, Saved> = HashMap::new();
     let discard = |path: &Path| {
         if super::may_change_hook_files() {
@@ -92,12 +107,22 @@ pub(super) fn sessions(app_dir: &Path, now: i64, window_ms: i64) -> Vec<AgentSes
     newest
         .into_iter()
         .filter(|(_, saved)| now - saved.at <= window_ms)
-        .map(|(id, saved)| summary(id, &saved, now))
+        .filter_map(|(id, saved)| summary(id, &saved, home_dir, local, now))
         .collect()
 }
 
-fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
+fn summary(
+    session_id: String,
+    saved: &Saved,
+    home_dir: Option<&Path>,
+    local: bool,
+    now: i64,
+) -> Option<AgentSessionSummary> {
     let input = &saved.input;
+    let annotation = read_annotation(input, &session_id, home_dir, local);
+    if annotation.archived {
+        return None;
+    }
     let cwd = text(&input["cwd"]).or_else(|| {
         input["workspacePaths"]
             .as_array()
@@ -105,12 +130,18 @@ fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
             .map(|path| path.strip_prefix("file:///").map(str::to_string).unwrap_or(path))
     });
     let prompt = input["lastUserInput"].as_str().and_then(prompt_title);
-    let (title, title_source) = pick_title(None, None, prompt.clone(), cwd.as_deref().and_then(folder_title));
+    let first_prompt = match (&annotation.title, local.then(|| read_transcript_head(input)).flatten()) {
+        (Some(_), _) => None,
+        (None, Some(HeadKind::Subagent)) => return None,
+        (None, Some(HeadKind::Prompt(first))) => first,
+        (None, None) => prompt.clone(),
+    };
+    let (title, title_source) = pick_title(None, annotation.title, first_prompt, cwd.as_deref().and_then(folder_title));
     let state = if saved.running { TurnState::Working } else { TurnState::Done };
-    let transcript = transcript(input);
+    let transcript = local.then(|| transcript(input)).flatten();
     let reply = transcript.as_deref().and_then(last_reply).map(|reply| reply_ending(&reply)).unwrap_or_default();
     let (model, effort) = text(&input["modelName"]).map(|name| model_and_effort(&name)).unzip();
-    AgentSessionSummary {
+    Some(AgentSessionSummary {
         provider: PROVIDER,
         session_id,
         cwd,
@@ -136,7 +167,214 @@ fn summary(session_id: String, saved: &Saved, now: i64) -> AgentSessionSummary {
         remote_host: None,
         parent_id: None,
         context_tokens: transcript.as_deref().and_then(context_tokens),
+    })
+}
+
+#[derive(Default)]
+struct Annotation {
+    title: Option<String>,
+    archived: bool,
+}
+
+enum HeadKind {
+    Subagent,
+    Prompt(Option<String>),
+}
+
+fn brain_root(path: &str) -> Option<PathBuf> {
+    Path::new(path)
+        .ancestors()
+        .find(|ancestor| ancestor.file_name().is_some_and(|name| name == "brain"))
+        .and_then(Path::parent)
+        .map(Path::to_path_buf)
+}
+
+fn read_annotation(input: &Value, session_id: &str, home_dir: Option<&Path>, local: bool) -> Annotation {
+    if session_id.is_empty() || session_id == "." || session_id == ".." || session_id.contains(['/', '\\', ':']) {
+        return Annotation::default();
     }
+    let file_name = format!("{session_id}.pbtxt");
+    let mut dirs = Vec::new();
+    if local {
+        if let Some(dir) = text(&input["artifactDirectoryPath"])
+            .as_deref()
+            .and_then(brain_root)
+            .or_else(|| text(&input["transcriptPath"]).as_deref().and_then(brain_root))
+        {
+            dirs.push(dir);
+        }
+    }
+    if let Some(home) = home_dir {
+        let gemini = home.join(".gemini");
+        for name in DATA_DIRS {
+            let dir = gemini.join(name);
+            if !dirs.contains(&dir) {
+                dirs.push(dir);
+            }
+        }
+    }
+    dirs.into_iter()
+        .find_map(|dir| fs::read_to_string(dir.join("annotations").join(&file_name)).ok())
+        .map(|content| parse_annotation(&content))
+        .unwrap_or_default()
+}
+
+fn parse_annotation(text: &str) -> Annotation {
+    let bytes = text.as_bytes();
+    let mut out = Annotation::default();
+    let mut index = 0;
+    let mut depth = 0usize;
+    while let Some(&byte) = bytes.get(index) {
+        if byte.is_ascii_whitespace() {
+            index += 1;
+        } else if byte == b'{' {
+            depth += 1;
+            index += 1;
+        } else if byte == b'}' {
+            depth = depth.saturating_sub(1);
+            index += 1;
+        } else if byte == b'"' || byte == b'\'' {
+            let _ = read_pbtxt_string(bytes, &mut index);
+        } else if depth == 0 && (byte.is_ascii_alphabetic() || byte == b'_') {
+            let key = read_ident(bytes, &mut index);
+            skip_ws(bytes, &mut index);
+            if bytes.get(index) == Some(&b':') {
+                index += 1;
+                skip_ws(bytes, &mut index);
+            }
+            if key == "title" && matches!(bytes.get(index), Some(b'"' | b'\'')) {
+                let raw = read_pbtxt_string(bytes, &mut index);
+                out.title = display_title(&raw);
+            } else if key == "archived" && read_ident(bytes, &mut index) == "true" {
+                out.archived = true;
+            }
+        } else {
+            index += 1;
+        }
+    }
+    out
+}
+
+fn skip_ws(bytes: &[u8], index: &mut usize) {
+    while bytes.get(*index).is_some_and(u8::is_ascii_whitespace) {
+        *index += 1;
+    }
+}
+
+fn read_ident<'a>(bytes: &'a [u8], index: &mut usize) -> &'a str {
+    let start = *index;
+    while bytes
+        .get(*index)
+        .is_some_and(|byte| byte.is_ascii_alphanumeric() || *byte == b'_')
+    {
+        *index += 1;
+    }
+    std::str::from_utf8(&bytes[start..*index]).unwrap_or_default()
+}
+
+fn read_pbtxt_string(bytes: &[u8], index: &mut usize) -> String {
+    let Some(&quote) = bytes.get(*index) else {
+        return String::new();
+    };
+    *index += 1;
+    let mut out = Vec::new();
+    while let Some(&byte) = bytes.get(*index) {
+        *index += 1;
+        if byte == quote {
+            break;
+        }
+        if byte != b'\\' {
+            out.push(byte);
+            continue;
+        }
+        let Some(&esc) = bytes.get(*index) else {
+            out.push(b'\\');
+            break;
+        };
+        match esc {
+            b'n' => {
+                *index += 1;
+                out.push(b'\n');
+            }
+            b'r' => {
+                *index += 1;
+                out.push(b'\r');
+            }
+            b't' => {
+                *index += 1;
+                out.push(b'\t');
+            }
+            b'\\' | b'"' | b'\'' => {
+                *index += 1;
+                out.push(esc);
+            }
+            b'x' | b'X' => {
+                *index += 1;
+                let decoded = bytes
+                    .get(*index..*index + 2)
+                    .and_then(|pair| std::str::from_utf8(pair).ok())
+                    .and_then(|hex| u8::from_str_radix(hex, 16).ok());
+                if let Some(hex) = decoded {
+                    *index += 2;
+                    out.push(hex);
+                } else {
+                    out.push(esc);
+                }
+            }
+            b'0'..=b'7' => {
+                let mut value = 0u32;
+                let mut digits = 0;
+                while digits < 3 {
+                    let Some(&digit @ b'0'..=b'7') = bytes.get(*index) else {
+                        break;
+                    };
+                    value = value * 8 + u32::from(digit - b'0');
+                    *index += 1;
+                    digits += 1;
+                }
+                if let Ok(decoded) = u8::try_from(value) {
+                    out.push(decoded);
+                }
+            }
+            _ => {
+                *index += 1;
+                out.push(esc);
+            }
+        }
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+fn read_transcript_head(input: &Value) -> Option<HeadKind> {
+    let raw_path = text(&input["transcriptPath"])?;
+    let path = Path::new(&raw_path);
+    let file = File::open(path)
+        .or_else(|_| File::open(path.with_file_name("transcript.jsonl")))
+        .ok()?;
+    let mut saw_record = false;
+    for line in BufReader::new(file.take(HEAD_READ_BYTES))
+        .lines()
+        .take(HEAD_READ_LINES)
+        .map_while(Result::ok)
+    {
+        let Ok(record) = serde_json::from_str::<Value>(&line) else {
+            continue;
+        };
+        if !saw_record {
+            saw_record = true;
+            if record["type"] == "SYSTEM_MESSAGE" {
+                return Some(HeadKind::Subagent);
+            }
+        }
+        if record["type"] == "USER_INPUT" {
+            let first = record["content"]
+                .as_str()
+                .map(|content| tag_content(content, "USER_REQUEST").unwrap_or(content))
+                .and_then(prompt_title);
+            return Some(HeadKind::Prompt(first));
+        }
+    }
+    saw_record.then_some(HeadKind::Prompt(None))
 }
 
 fn transcript(input: &Value) -> Option<String> {
@@ -271,135 +509,30 @@ pub(super) fn install_hooks(env: &HookEnv) -> Result<(), String> {
     write_text_file(&path, &content)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::time::{Duration, SystemTime};
-
-    fn temp_dir(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("fuyu-antigravity-{name}-{}", std::process::id()));
-        let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(&dir).unwrap();
-        dir
+pub(super) fn uninstall_hooks(env: &HookEnv) -> Result<(), String> {
+    let path = hooks_path(env.home_dir);
+    let content = match fs::read_to_string(&path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(format!("Failed to read Antigravity hooks.json: {error}")),
+    };
+    let trimmed = content.trim_start_matches('\u{feff}').trim();
+    if trimmed.is_empty() {
+        return Ok(());
     }
-
-    fn save(app_dir: &Path, name: &str, input: &str, ago_ms: u64) {
-        let dir = app_dir.join(SAVED_DIR);
-        fs::create_dir_all(&dir).unwrap();
-        let path = dir.join(name);
-        fs::write(&path, input).unwrap();
-        let file = fs::File::options().write(true).open(&path).unwrap();
-        file.set_modified(SystemTime::now() - Duration::from_millis(ago_ms)).unwrap();
+    let mut config: Value = serde_json::from_str(trimmed)
+        .map_err(|error| format!("Failed to parse Antigravity hooks.json: {error}"))?;
+    let root = config
+        .as_object_mut()
+        .ok_or_else(|| "Antigravity hooks.json must contain a JSON object.".to_string())?;
+    if root.remove(HOOK_NAME).is_none() {
+        return Ok(());
     }
-
-    const CLI_STOP: &str = r#"{"conversationId":"a2706318","cwd":"C:\\work\\demo","workspacePaths":["C:/work/demo"],"hookEventName":"Stop","fullyIdle":true,"terminationReason":"NO_TOOL_CALL","lastUserInput":"Reply with the single word: pong","modelName":"gemini-3.8-flash-high"}"#;
-    const INPUT: &str = r#"{"conversationId":"c1","workspacePaths":["D:\\work\\demo"],"modelName":"Gemini 3.8 Flash","lastUserInput":"fix the login page"}"#;
-
-    #[test]
-    fn the_newest_hook_input_of_each_conversation_decides() {
-        let app_dir = temp_dir("sessions");
-        let now = system_time_to_unix_millis(SystemTime::now()).unwrap();
-        save(&app_dir, "running-1.json", INPUT, 5_000);
-        save(&app_dir, "stop-2.json", INPUT, 1_000);
-        save(&app_dir, "running-3.json", &INPUT.replace("c1", "c2").replace(r"D:\\work", "file:///D:/work"), 1_000);
-        save(&app_dir, "running-4.json", &INPUT.replace("c1", "c3"), 2 * 60 * 60 * 1000);
-        save(&app_dir, "other-5.json", INPUT, 1_000);
-        let mut listed = sessions(&app_dir, now, 60 * 60 * 1000);
-        listed.sort_by(|a, b| a.session_id.cmp(&b.session_id));
-        let phases: Vec<(&str, &str)> = listed.iter().map(|s| (s.session_id.as_str(), s.phase)).collect();
-        assert_eq!(phases, [("c1", "completed"), ("c2", "running")]);
-        let first = &listed[0];
-        assert_eq!(first.provider, PROVIDER);
-        assert_eq!(first.cwd.as_deref(), Some(r"D:\work\demo"));
-        assert_eq!(first.title.as_deref(), Some("fix the login page"));
-        assert_eq!(first.model.as_deref(), Some("Gemini 3.8 Flash"));
-        assert_eq!(listed[1].cwd.as_deref(), Some(r"D:/work\demo"));
-        assert!(!app_dir.join(SAVED_DIR).join("running-1.json").exists());
-        save(&app_dir, "stop-6.json", CLI_STOP, 1_000);
-        let cli = sessions(&app_dir, now, 60 * 60 * 1000).into_iter().find(|s| s.session_id == "a2706318").unwrap();
-        assert_eq!((cli.phase, cli.cwd.as_deref()), ("completed", Some(r"C:\work\demo")));
-        assert_eq!(cli.reply_marker, None);
-        fs::remove_dir_all(&app_dir).unwrap();
-    }
-
-    #[test]
-    fn the_last_reply_comes_from_the_transcript() {
-        let app_dir = temp_dir("transcript");
-        let now = system_time_to_unix_millis(SystemTime::now()).unwrap();
-        let transcript = app_dir.join("transcript_full.jsonl");
-        let line = |kind: &str, content: &str| json!({ "type": kind, "status": "DONE", "content": content }).to_string();
-        let lines = [
-            line("USER_INPUT", "<USER_REQUEST>\nfix it\n</USER_REQUEST>"),
-            line("PLANNER_RESPONSE", "Looking."),
-            line("GENERIC", ""),
-            line("PLANNER_RESPONSE", "Fixed the **login** page.\n\n✓"),
-            line("PLANNER_RESPONSE", ""),
-        ];
-        fs::write(&transcript, lines.join("\n")).unwrap();
-        let mut input: Value = serde_json::from_str(CLI_STOP).unwrap();
-        input["transcriptPath"] = json!(transcript.to_string_lossy());
-        save(&app_dir, "stop-1.json", &input.to_string(), 1_000);
-        let listed = sessions(&app_dir, now, 60 * 60 * 1000);
-        assert_eq!((listed[0].reply_marker, listed[0].last_message.as_deref()), (Some("done"), Some("Fixed the login page.")));
-        assert_eq!(last_reply(&[lines[0].clone(), lines[1].clone(), line("USER_INPUT", "again")].join("\n")), None);
-        fs::remove_dir_all(&app_dir).unwrap();
-    }
-
-    #[test]
-    fn splits_the_thinking_level_off_the_model_and_reads_the_running_tool() {
-        let split = |name: &str| model_and_effort(name);
-        assert_eq!(split("gemini-3.8-flash-high"), ("gemini-3.8-flash".into(), Some("high".into())));
-        assert_eq!(split("Gemini 3.8 Flash (Medium)"), ("Gemini 3.8 Flash".into(), Some("medium".into())));
-        assert_eq!(split("Gemini 3.8 Flash"), ("Gemini 3.8 Flash".into(), None));
-        assert_eq!(split("claude-opus-5-5"), ("claude-opus-5-5".into(), None));
-        let call = |name: &str, args: Value| json!({ "type": "PLANNER_RESPONSE", "input_tokens": 3000, "cache_read_tokens": 15000,
-            "output_tokens": 500, "tool_calls": [{ "name": name, "args": args }] }).to_string();
-        let user = json!({ "type": "USER_INPUT", "content": "go" }).to_string();
-        let generic = json!({ "type": "GENERIC", "status": "RUNNING" }).to_string();
-        let tail = [user.clone(), call("view_file", json!({ "AbsolutePath": "/w/src/main.rs" })), call("run_command", json!({ "CommandLine": "cargo test" })), generic].join("\n");
-        let tool = running_tool(&tail).unwrap();
-        assert_eq!((tool.name.as_str(), tool.detail.as_deref()), ("run_command", Some("cargo test")));
-        assert_eq!(context_tokens(&tail), Some(18_500));
-        assert_eq!(running_tool(&[call("read_file", json!({ "Path": "a.rs" })), user].join("\n")), None);
-        let read = running_tool(&call("read_file", json!({ "Path": "C:\\w\\a.rs" }))).unwrap();
-        assert_eq!(read.detail.as_deref(), Some("a.rs"));
-    }
-
-    #[test]
-    fn installs_its_own_hook_group_only_where_antigravity_lives() {
-        let home = temp_dir("hooks");
-        let running = home.join(".fuyu").join(crate::agent_status::AGENT_RUNNING_SCRIPT_FILE_NAME);
-        let status = home.join(".fuyu").join(crate::agent_status::AGENT_STATUS_SCRIPT_FILE_NAME);
-        let env = HookEnv { home_dir: &home, running_script: &running, status_script: &status };
-        install_hooks(&env).unwrap();
-        assert!(!hooks_path(&home).exists());
-        assert_eq!(hooks_state(&env), HookInstallState::Absent);
-
-        fs::create_dir_all(home.join(".gemini").join("antigravity-cli")).unwrap();
-        assert_eq!(hooks_state(&env), HookInstallState::NotInstalled);
-        fs::create_dir_all(hooks_path(&home).parent().unwrap()).unwrap();
-        fs::write(hooks_path(&home), r#"{"mine":{"enabled":true,"Stop":[{"type":"command","command":"x"}]}}"#).unwrap();
-        install_hooks(&env).unwrap();
-        install_hooks(&env).unwrap();
-        assert_eq!(hooks_state(&env), HookInstallState::Current);
-        let config: Value = serde_json::from_str(&fs::read_to_string(hooks_path(&home)).unwrap()).unwrap();
-        assert_eq!(config["mine"]["Stop"][0]["command"], "x");
-        let group = &config[HOOK_NAME];
-        assert_eq!(group["enabled"], true);
-        let command = |value: &Value| value["command"].as_str().unwrap().to_string();
-        assert!(command(&group["SessionStart"][0]).contains("antigravity start"));
-        assert!(command(&group["PreInvocation"][0]).contains("antigravity running"));
-        assert!(command(&group["Stop"][0]).contains("antigravity stop"));
-        assert!(command(&group["Stop"][1]).contains("fuyu-agent-status"));
-        assert_eq!(group["PreToolUse"][0]["matcher"], APPROVED_TOOLS);
-        let approval = &group["PreToolUse"][0]["hooks"][0];
-        assert!(command(approval).contains("fuyu-agent-approval") && command(approval).contains("antigravity permission"));
-        assert_eq!(approval["timeout"], APPROVAL_HOOK_TIMEOUT_SECONDS);
-
-        let mut stale = config.clone();
-        stale[HOOK_NAME]["PreToolUse"] = json!([]);
-        fs::write(hooks_path(&home), stale.to_string()).unwrap();
-        assert_eq!(hooks_state(&env), HookInstallState::Outdated);
-        fs::remove_dir_all(&home).unwrap();
-    }
+    let serialized = serde_json::to_string_pretty(&config)
+        .map_err(|error| format!("Failed to serialize Antigravity hooks.json: {error}"))?;
+    write_text_file(&path, &serialized)
 }
+
+#[cfg(test)]
+#[path = "antigravity_tests.rs"]
+mod tests;

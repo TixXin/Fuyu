@@ -43,6 +43,7 @@ pub(super) fn apply_agent_running_markers(app_dir: &Path, snapshot: &mut AgentSt
             status.updated_at = marker_status.updated_at;
         }
     }
+    super::third_party::apply_running_markers(app_dir, snapshot, now);
 }
 
 pub(super) fn active_agent_running_marker_status(

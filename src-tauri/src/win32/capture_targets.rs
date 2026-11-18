@@ -14,11 +14,12 @@ fn has_area(rect: &RECT) -> bool {
     rect.right > rect.left && rect.bottom > rect.top
 }
 
-pub(crate) fn shown_windows() -> Vec<ShownWindow> {
+pub(crate) fn shown_windows(own_allowed: &[isize]) -> Vec<ShownWindow> {
     let own = std::process::id();
     let mut shown = Vec::new();
     let _ = window::for_each_top_level_window(|handle| {
-        if !window::is_visible(handle) || window::is_minimized(handle) || dwm::is_cloaked(handle) || process::window_process_id(handle) == own {
+        let disallowed_own = process::window_process_id(handle) == own && !own_allowed.contains(&(handle.0 as isize));
+        if !window::is_visible(handle) || window::is_minimized(handle) || dwm::is_cloaked(handle) || disallowed_own {
             return;
         }
         if let Some(rect) = dwm::frame_bounds(handle).or_else(|| window::window_rect(handle)).filter(has_area) {

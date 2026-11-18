@@ -20,6 +20,8 @@ export const THEME_COLOR_KEYS = {
 export const AUTO_INK = { darkInkColor: "", lightInkColor: "", inkColor: "" } as const satisfies Partial<IslandSettings>;
 
 const COLOR_NAMES = ["islandBackgroundColor", "taskTextColor", "pulseColor", "inkColor"] as const;
+const MAIN_COLOR_NAMES = ["islandBackgroundColor", "taskTextColor", "pulseColor"] as const;
+const SINGLE_COLOR_KEYS = new Set<string>(["themeMode", ...COLOR_NAMES]);
 
 export function activeTone(mode: ThemeMode, systemDark: boolean): ThemeTone {
   return mode === "system" ? (systemDark ? "dark" : "light") : mode;
@@ -75,6 +77,55 @@ export function themeSetsFromSingleColors(source: Partial<Record<string, unknown
 
 export function hasThemeSets(source: Partial<Record<string, unknown>>) {
   return Object.values(THEME_COLOR_KEYS).some((keys) => Object.values(keys).some((key) => key in source));
+}
+
+export function expandNestedThemeColors(source: Record<string, unknown>): Record<string, unknown> {
+  const expanded: Record<string, unknown> = {};
+  for (const tone of ["dark", "light"] as const) {
+    const nested = source[tone];
+    if (typeof nested !== "object" || nested === null) continue;
+    const record = nested as Record<string, unknown>;
+    const keys = THEME_COLOR_KEYS[tone];
+    for (const name of COLOR_NAMES) {
+      if (name in record && !(keys[name] in source)) expanded[keys[name]] = record[name];
+    }
+  }
+  return { ...expanded, ...source };
+}
+
+export function hasToneColors(source: Partial<Record<string, unknown>>, tone: ThemeTone) {
+  const keys = THEME_COLOR_KEYS[tone];
+  return MAIN_COLOR_NAMES.some((name) => typeof source[keys[name]] === "string" && HEX_COLOR_PATTERN.test(source[keys[name]] as string));
+}
+
+export function hasDualThemeColors(source: Partial<Record<string, unknown>>) {
+  return hasToneColors(source, "dark") && hasToneColors(source, "light");
+}
+
+export function themeAppearanceDefaults(current: IslandSettings, picked: Partial<Record<string, unknown>>): Partial<IslandSettings> {
+  const hasDark = hasToneColors(picked, "dark");
+  const hasLight = hasToneColors(picked, "light");
+  const validMode = picked.themeMode === "dark" || picked.themeMode === "light" || picked.themeMode === "system" ? picked.themeMode : null;
+  if (hasDark && hasLight) {
+    return {
+      ...flatten("dark", THEME_COLORS.dark),
+      ...flatten("light", THEME_COLORS.light),
+      ...AUTO_INK,
+      themeMode: validMode ?? current.themeMode,
+    };
+  }
+  if (hasDark || hasLight) {
+    return {
+      ...flatten("dark", THEME_COLORS.dark),
+      ...flatten("light", THEME_COLORS.light),
+      ...AUTO_INK,
+      themeMode: validMode ?? (hasLight ? "light" : "dark"),
+    };
+  }
+  if (Object.keys(picked).some((key) => SINGLE_COLOR_KEYS.has(key))) {
+    return { ...AUTO_INK, ...themeSetsFromSingleColors({ ...current, ...AUTO_INK, themeMode: "custom", ...picked }) };
+  }
+  return {};
 }
 
 function flatten(tone: ThemeTone, colors: ThemeColors): Partial<IslandSettings> {

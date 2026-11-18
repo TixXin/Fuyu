@@ -5,6 +5,7 @@ import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import { useAgentAlerts, type AlertedSession } from "../../src/features/agent-status/useAgentAlerts";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
 import type { AgentAlertStarted } from "../../src/features/agent-status/agentSettings";
+import { until } from "./pollUntil";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const DURATION_MS = 300;
@@ -73,10 +74,10 @@ try {
   check(island.mode === "collapsed", "打开时已有的会话不弹");
 
   await act(async () => setSessions([session("a", "completed"), session("b", "running")]));
-  await wait(50);
+  await until(() => island.mode === "expanded" && island.page === "agents" && latestAlert()?.key === "claudeCode:a");
   const opened = latestAlert();
   check(island.mode === "expanded" && island.page === "agents" && opened?.key === "claudeCode:a" && opened.kind === "completed", "会话完成时打开 Agent 页，并指向这个会话");
-  await wait(DURATION_MS + 100);
+  await until(() => island.mode === "collapsed");
   check(island.mode === "collapsed", "停留时间到了自动收起");
 
   inFront = ["b"];
@@ -100,17 +101,17 @@ try {
 
   await act(async () => setSessions([session("a", "running"), session("b", "running")]));
   await act(async () => setSessions([session("a", "completed"), session("b", "running")]));
-  await wait(50);
+  await until(() => island.mode === "expanded");
   hovering = true;
   await wait(DURATION_MS + 100);
   check(island.mode === "expanded", "鼠标停在岛上时不收起");
   hovering = false;
-  await wait(1100);
+  await until(() => island.mode === "collapsed");
   check(island.mode === "collapsed", "鼠标离开后再收起");
 
   await act(async () => setSessions([session("a", "running"), session("b", "running")]));
   await act(async () => setSessions([session("a", "completed"), session("b", "running")]));
-  await wait(50);
+  await until(() => island.mode === "expanded");
   const press = (target: EventTarget) => act(async () => { target.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); });
   await press(document.getElementById("row")!);
   await wait(DURATION_MS + 100);
@@ -122,31 +123,31 @@ try {
 
   await act(async () => setSessions([session("a", "running"), session("b", "running")]));
   await act(async () => setSessions([session("a", "running"), session("b", "failed")]));
-  await wait(50);
+  await until(() => latestAlert()?.key === "claudeCode:b");
   check(latestAlert()?.key === "claudeCode:b", "下一条提醒只显示它自己的会话");
   await act(async () => setIsland({ mode: "expanded", page: "todo" }));
   check(latestAlert() === null, "切到别的页后不再是单会话视图");
   await act(async () => setIsland({ mode: "collapsed", page: "todo" }));
   await act(async () => setSessions([session("a", "running"), session("b", "running")]));
   await act(async () => setSessions([session("a", "completed"), session("b", "running")]));
-  await wait(DURATION_MS + 100);
+  await until(() => island.mode === "collapsed" && latestAlert() === null);
   check(island.mode === "collapsed" && latestAlert() === null, "提醒自动收起后，下次打开 Agent 页是完整列表");
 
   await act(async () => setStarted("everyTurn"));
   await act(async () => setSessions([session("a", "running"), session("b", "running")]));
-  await wait(50);
+  await until(() => island.mode === "expanded" && latestAlert()?.key === "claudeCode:a");
   check(island.mode === "expanded" && latestAlert()?.key === "claudeCode:a" && latestAlert()?.kind === "started", "会话开始新一轮时弹出，只显示这个会话");
-  await wait(DURATION_MS + 100);
+  await until(() => island.mode === "collapsed");
   await act(async () => setSessions([session("a", "completed"), session("b", "running")]));
-  await wait(DURATION_MS + 100);
+  await until(() => island.mode === "collapsed" && latestAlert() === null);
   await act(async () => setStarted("newSession"));
   await act(async () => setSessions([session("a", "running"), session("b", "running")]));
   await wait(50);
   check(island.mode === "collapsed", "设为只在新会话时，已有会话的新一轮不弹");
   await act(async () => setSessions([session("a", "running"), session("b", "running"), session("n", "running")]));
-  await wait(50);
+  await until(() => island.mode === "expanded" && latestAlert()?.key === "claudeCode:n");
   check(island.mode === "expanded" && latestAlert()?.key === "claudeCode:n" && latestAlert()?.kind === "started", "新会话开始时弹出");
-  await wait(DURATION_MS + 100);
+  await until(() => island.mode === "collapsed");
 
   const REMIND_MS = 800;
   const settle = async (ms: number) => { for (let waited = 0; waited < ms; waited += 25) await wait(25); };

@@ -62,19 +62,22 @@ function describe(entry, logs, gate) {
 
 export const INTERNAL = new Set([new URL("./plugins-file.mjs", import.meta.url).href, import.meta.resolve("@cordisjs/hmr")]);
 
-function undeclaredOf(entry, services, clients) {
+function undeclaredOf(entry, services, clients, commands, network) {
   const declared = entry.options[SOURCE]?.declared;
   if (!declared) return null;
   const { id } = entry.options;
+  const declaredCommands = declared.commands ?? [];
   const found = {
     provides: services.filter((service) => service.plugin === id && !declared.provides.includes(service.name)).map((service) => service.name),
     client: [...new Set(clients.filter((client) => client.plugin === id && !declared.client.includes(client.window)).map((client) => client.window))],
+    commands: (commands?.(id) ?? []).filter((cmd) => !declaredCommands.includes(cmd)),
+    network: network?.(id) ?? [],
   };
   const listed = Object.entries(found).filter(([, names]) => names.length > 0);
   return listed.length ? Object.fromEntries(listed) : null;
 }
 
-export function pluginStatus(ctx, logs = [], { gate, usage, services, clients } = {}) {
+export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, undeclaredCommands, undeclaredNetwork } = {}) {
   const report = usage?.();
   const provided = services?.() ?? [];
   const windows = clients?.() ?? [];
@@ -87,14 +90,26 @@ export function pluginStatus(ctx, logs = [], { gate, usage, services, clients } 
       if (report) extra.usage = report(status.id);
       const last = gate?.report(status.id).last;
       if (last) extra.lastError = last;
-      const undeclared = undeclaredOf(entry, provided, windows);
+      const undeclared = undeclaredOf(entry, provided, windows, undeclaredCommands, undeclaredNetwork);
       if (undeclared) extra.undeclared = undeclared;
+      const disabledServices = Array.isArray(entry.options.disabledServices) ? entry.options.disabledServices.filter((s) => typeof s === "string") : [];
+      if (disabledServices.length > 0) extra.disabledServices = disabledServices;
+      const declaredProvides = entry.options[SOURCE]?.provides ?? entry.options[SOURCE]?.declared?.provides ?? [];
+      if (declaredProvides.length > 0) extra.provides = declaredProvides;
+      const replacedServices = declaredProvides
+        .map((svc) => {
+          const active = provided.find((item) => item.name === svc);
+          if (active && active.plugin !== status.id) return { service: svc, by: active.plugin };
+          return null;
+        })
+        .filter(Boolean);
+      if (replacedServices.length > 0) extra.replacedServices = replacedServices;
       return { ...status, ...extra };
     });
 }
 
-export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gate, usage, services, clients, subscribe } = {}) {
-  const read = () => pluginStatus(ctx, logs, { gate, usage, services, clients });
+export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gate, usage, services, clients, undeclaredCommands, undeclaredNetwork, subscribe } = {}) {
+  const read = () => pluginStatus(ctx, logs, { gate, usage, services, clients, undeclaredCommands, undeclaredNetwork });
   let last = JSON.stringify(read());
   let timer = null;
   const check = () => {

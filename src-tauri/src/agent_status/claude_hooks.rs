@@ -58,6 +58,44 @@ pub(super) fn install_claude_code_status_hooks(
     write_text_file(config_path, &json)
 }
 
+pub(super) fn uninstall_claude_code_status_hooks(config_path: &Path) -> Result<(), String> {
+    uninstall_nested_json_hooks(config_path, "Claude Code", "settings.json")
+}
+
+pub(super) fn uninstall_nested_json_hooks(
+    config_path: &Path,
+    label: &str,
+    file_label: &str,
+) -> Result<(), String> {
+    let content = match fs::read_to_string(config_path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(format!("Failed to read {label} {file_label}: {error}")),
+    };
+    let trimmed = content.trim_start_matches('\u{feff}').trim();
+    if trimmed.is_empty() {
+        return Ok(());
+    }
+    let original: Value = serde_json::from_str(trimmed)
+        .map_err(|error| format!("Failed to parse {label} {file_label}: {error}"))?;
+    let mut config = original.clone();
+    let Some(root) = config.as_object_mut() else {
+        return Err(format!("{label} {file_label} must contain a JSON object."));
+    };
+    if let Some(Value::Object(hooks)) = root.get_mut("hooks") {
+        install_claude_code_hook_events(hooks, Vec::new());
+    }
+    if Some(&*root) == original.as_object() {
+        return Ok(());
+    }
+    if root.get("hooks").and_then(Value::as_object).is_some_and(Map::is_empty) {
+        root.remove("hooks");
+    }
+    let json = serde_json::to_string_pretty(&config)
+        .map_err(|error| format!("Failed to serialize {label} {file_label}: {error}"))?;
+    write_text_file(config_path, &json)
+}
+
 pub(super) const CLAUDE_CODE_WAITING_NOTIFICATIONS: &str =
     "permission_prompt|elicitation_dialog|agent_needs_input";
 
@@ -149,17 +187,40 @@ pub(super) fn claude_code_installed_entries(
 const CURL: (&str, &str) = ("curl.exe", "NUL");
 #[cfg(not(windows))]
 const CURL: (&str, &str) = ("/usr/bin/curl", "/dev/null");
-#[cfg(windows)]
-const SCRIPT_RUNNERS: (&str, &[&str], &str, &[&str]) = ("cmd.exe", &["/d", "/c"], "powershell.exe", &["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"]);
 #[cfg(not(windows))]
-const SCRIPT_RUNNERS: (&str, &[&str], &str, &[&str]) = ("/bin/sh", &[], "/bin/sh", &[]);
+const UNIX_GUARD: &str = "[ -f \"$1\" ] && exec /bin/sh \"$@\" || exit 0";
 
-fn script_args(prefix: &[&str], script_path: &Path, rest: &[&str]) -> Vec<String> {
-    prefix
-        .iter()
-        .map(|arg| arg.to_string())
+#[cfg(windows)]
+fn guarded_running_args(script_path: &Path, rest: &[&str]) -> Vec<String> {
+    let script = script_path.to_string_lossy().to_string();
+    ["/d", "/c", "if", "exist"]
+        .into_iter()
+        .map(str::to_string)
+        .chain([script.clone(), script])
+        .chain(rest.iter().map(|arg| (*arg).to_string()))
+        .collect()
+}
+
+#[cfg(windows)]
+fn guarded_ps1_args(script_path: &Path, rest: &[&str]) -> Vec<String> {
+    let script = script_path.to_string_lossy().to_string();
+    ["/d", "/c", "if", "exist"]
+        .into_iter()
+        .map(str::to_string)
+        .chain(std::iter::once(script.clone()))
+        .chain(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"].into_iter().map(str::to_string))
+        .chain(std::iter::once(script))
+        .chain(rest.iter().map(|arg| (*arg).to_string()))
+        .collect()
+}
+
+#[cfg(not(windows))]
+fn guarded_sh_args(script_path: &Path, rest: &[&str]) -> Vec<String> {
+    ["-c", UNIX_GUARD, "sh"]
+        .into_iter()
+        .map(str::to_string)
         .chain(std::iter::once(script_path.to_string_lossy().to_string()))
-        .chain(rest.iter().map(|arg| arg.to_string()))
+        .chain(rest.iter().map(|arg| (*arg).to_string()))
         .collect()
 }
 
@@ -226,7 +287,7 @@ fn install_hook_events(hooks: &mut Map<String, Value>, entries: Vec<(&'static st
     }
     let others: Vec<String> = hooks.keys().filter(|name| !cleared.contains(&name.as_str())).cloned().collect();
     for event_name in others {
-        if !matches!(hooks.get(&event_name), Some(Value::Array(list)) if list.iter().any(value_contains_focusd_hook_signature)) {
+        if !matches!(hooks.get(&event_name), Some(Value::Array(list)) if list.iter().any(value_contains_island_hook_signature)) {
             continue;
         }
         let kept = unmanaged_entries(hooks, &event_name, keep_approval);
@@ -266,7 +327,7 @@ fn remove_managed(mut entry: Value, keep_approval: bool) -> Option<Value> {
         return Some(entry);
     };
 
-    hooks.retain(|hook| !value_contains_focusd_hook_signature(hook) || (keep_approval && is_approval_hook(hook)));
+    hooks.retain(|hook| !value_contains_island_hook_signature(hook) || (keep_approval && is_approval_hook(hook)));
     if hooks.is_empty() {
         None
     } else {
@@ -274,11 +335,14 @@ fn remove_managed(mut entry: Value, keep_approval: bool) -> Option<Value> {
     }
 }
 
-pub(super) fn value_contains_focusd_hook_signature(value: &Value) -> bool {
+pub(super) fn value_contains_island_hook_signature(value: &Value) -> bool {
     match value {
-        Value::String(text) => super::is_island_hook_text(text),
-        Value::Array(values) => values.iter().any(value_contains_focusd_hook_signature),
-        Value::Object(values) => values.values().any(value_contains_focusd_hook_signature),
+        Value::String(text) => super::is_island_hook_text(text) || text.contains(APPROVAL_HOOK_MARKER_HEADER),
+        Value::Array(values) => values.iter().any(value_contains_island_hook_signature),
+        Value::Object(values) => {
+            values.keys().any(|key| key == APPROVAL_HOOK_MARKER_HEADER)
+                || values.values().any(value_contains_island_hook_signature)
+        }
         _ => false,
     }
 }
@@ -291,19 +355,34 @@ pub(super) fn claude_code_match_all_hook_entry(mut entry: Value) -> Value {
     entry
 }
 
+#[cfg(windows)]
 pub(super) fn claude_code_running_hook_entry(script_path: &Path) -> Value {
-    let (runner, prefix, _, _) = SCRIPT_RUNNERS;
-    claude_code_hook_entry(runner, script_args(prefix, script_path, &["claudeCode"]), 1)
+    claude_code_hook_entry("cmd.exe", guarded_running_args(script_path, &["claudeCode"]), 1)
 }
 
+#[cfg(not(windows))]
+pub(super) fn claude_code_running_hook_entry(script_path: &Path) -> Value {
+    claude_code_hook_entry("/bin/sh", guarded_sh_args(script_path, &["claudeCode"]), 1)
+}
+
+#[cfg(windows)]
 pub(super) fn claude_code_status_hook_entry(script_path: &Path, phase: &str) -> Value {
-    let (_, _, runner, prefix) = SCRIPT_RUNNERS;
-    claude_code_hook_entry(runner, script_args(prefix, script_path, &["claudeCode", phase]), 5)
+    claude_code_hook_entry("cmd.exe", guarded_ps1_args(script_path, &["claudeCode", phase]), 5)
 }
 
+#[cfg(not(windows))]
+pub(super) fn claude_code_status_hook_entry(script_path: &Path, phase: &str) -> Value {
+    claude_code_hook_entry("/bin/sh", guarded_sh_args(script_path, &["claudeCode", phase]), 5)
+}
+
+#[cfg(windows)]
 pub(super) fn claude_code_session_hook_entry(script_path: &Path, event: &str) -> Value {
-    let (_, _, runner, prefix) = SCRIPT_RUNNERS;
-    claude_code_hook_entry(runner, script_args(prefix, script_path, &["claudeCode", event]), 15)
+    claude_code_hook_entry("cmd.exe", guarded_ps1_args(script_path, &["claudeCode", event]), 15)
+}
+
+#[cfg(not(windows))]
+pub(super) fn claude_code_session_hook_entry(script_path: &Path, event: &str) -> Value {
+    claude_code_hook_entry("/bin/sh", guarded_sh_args(script_path, &["claudeCode", event]), 15)
 }
 
 pub(super) fn claude_code_hook_entry(command: &str, args: Vec<String>, timeout: i64) -> Value {
@@ -344,16 +423,16 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn running_hook_passes_script_path_as_unquoted_argument() {
-        let path = Path::new(r"C:\Users\a b\focusd-agent-running.cmd");
+        let path = Path::new(r"C:\Users\a b\fuyu-agent-running.cmd");
         let entry = claude_code_running_hook_entry(path);
         let args = entry["hooks"][0]["args"].as_array().unwrap();
 
         assert_eq!(
             args,
             &vec![
-                json!("/d"),
-                json!("/c"),
-                json!(r"C:\Users\a b\focusd-agent-running.cmd"),
+                json!("/d"), json!("/c"), json!("if"), json!("exist"),
+                json!(r"C:\Users\a b\fuyu-agent-running.cmd"),
+                json!(r"C:\Users\a b\fuyu-agent-running.cmd"),
                 json!("claudeCode"),
             ]
         );
@@ -363,8 +442,8 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn only_waiting_notifications_save_their_input() {
-        let running = Path::new(r"C:\focusd-agent-running.cmd");
-        let status = Path::new(r"C:\focusd-agent-status.ps1");
+        let running = Path::new(r"C:\fuyu-agent-running.cmd");
+        let status = Path::new(r"C:\fuyu-agent-status.ps1");
         let mut hooks = Map::new();
         install_claude_code_hook_events(&mut hooks, claude_code_hook_entries(running, status));
 
@@ -387,9 +466,11 @@ mod tests {
         assert_eq!(hooks["SessionStart"][0]["hooks"][0]["async"], json!(true));
         assert_eq!(last_arg("SessionEnd"), Some(json!("end")));
         assert!(hooks["SessionEnd"][0]["hooks"][0].get("async").is_none());
-        assert!(hooks["SessionStart"][0]["hooks"][0]["args"][4]
-            .as_str()
-            .is_some_and(|path| path.ends_with("fuyu-agent-session.ps1")));
+        assert!(hooks["SessionStart"][0]["hooks"][0]["args"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|arg| arg.as_str().is_some_and(|path| path.ends_with("fuyu-agent-session.ps1"))));
         assert_eq!(last_arg("PermissionRequest"), Some(json!("notification")));
         assert!(hooks["PermissionRequest"][0].get("matcher").is_none());
     }
@@ -397,8 +478,8 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn approval_hook_sits_beside_the_status_hook_and_repair_replaces_it() {
-        let running = Path::new(r"C:\focusd-agent-running.cmd");
-        let status = Path::new(r"C:\focusd-agent-status.ps1");
+        let running = Path::new(r"C:\fuyu-agent-running.cmd");
+        let status = Path::new(r"C:\fuyu-agent-status.ps1");
         let approval = |port: u16| ApprovalHook {
             url: format!("http://127.0.0.1:{port}/claude/permission-request"),
             question_url: Some(format!("http://127.0.0.1:{port}/claude/ask-user-question")),
@@ -421,7 +502,7 @@ mod tests {
         assert_eq!(hook["url"], json!("http://127.0.0.1:51000/claude/permission-request"));
         assert_eq!(hook["headers"]["Authorization"], json!("Bearer t"));
         assert_eq!(hook["timeout"], json!(APPROVAL_HOOK_TIMEOUT_SECONDS));
-        assert!(value_contains_focusd_hook_signature(hook));
+        assert!(value_contains_island_hook_signature(hook));
 
         let pre_tool = hooks["PreToolUse"].as_array().unwrap();
         assert_eq!(pre_tool.len(), 2, "the status hook and the question hook");
@@ -430,13 +511,13 @@ mod tests {
         let question = &pre_tool[1]["hooks"][0];
         assert_eq!(question["url"], json!("http://127.0.0.1:51000/claude/ask-user-question"));
         assert_eq!(question["timeout"], json!(APPROVAL_HOOK_TIMEOUT_SECONDS));
-        assert!(value_contains_focusd_hook_signature(question));
+        assert!(value_contains_island_hook_signature(question));
 
         for event in ACTIVITY_EVENTS {
             let activity = &hooks[event].as_array().unwrap().last().unwrap()["hooks"][0];
             assert_eq!((activity["command"].as_str(), activity["async"].as_bool()), (Some("curl.exe"), Some(true)), "{event}");
             assert_eq!(activity["args"].as_array().unwrap().last(), Some(&json!("http://127.0.0.1:51000/claude/activity")));
-            assert!(activity["args"].as_array().unwrap().contains(&json!("@-")) && value_contains_focusd_hook_signature(activity));
+            assert!(activity["args"].as_array().unwrap().contains(&json!("@-")) && value_contains_island_hook_signature(activity));
         }
         assert_eq!(hooks["Stop"].as_array().unwrap().len(), 2, "the status hook and one activity hook");
         assert_eq!(hooks["PostToolUse"].as_array().unwrap().len(), 1);
@@ -457,14 +538,14 @@ mod tests {
         install_claude_code_hook_events(&mut hooks, claude_code_hook_entries(running, status));
         let hook = |event: &str| hooks[event][0]["hooks"][0].clone();
         assert_eq!(hook("UserPromptSubmit")["command"], json!("/bin/sh"));
-        assert_eq!(hook("UserPromptSubmit")["args"], json!(["/Users/a b/.fuyu/fuyu-agent-running.sh", "claudeCode"]));
-        assert_eq!(hook("Notification")["args"], json!(["/Users/a b/.fuyu/fuyu-agent-running.sh", "claudeCode", "notification"]));
-        assert_eq!(hook("Stop")["args"], json!(["/Users/a b/.fuyu/fuyu-agent-status.sh", "claudeCode", "completed"]));
-        assert_eq!(hook("SessionStart")["args"], json!(["/Users/a b/.fuyu/fuyu-agent-session.sh", "claudeCode", "start"]));
+        assert_eq!(hook("UserPromptSubmit")["args"], json!(["-c", UNIX_GUARD, "sh", "/Users/a b/.fuyu/fuyu-agent-running.sh", "claudeCode"]));
+        assert_eq!(hook("Notification")["args"], json!(["-c", UNIX_GUARD, "sh", "/Users/a b/.fuyu/fuyu-agent-running.sh", "claudeCode", "notification"]));
+        assert_eq!(hook("Stop")["args"], json!(["-c", UNIX_GUARD, "sh", "/Users/a b/.fuyu/fuyu-agent-status.sh", "claudeCode", "completed"]));
+        assert_eq!(hook("SessionStart")["args"], json!(["-c", UNIX_GUARD, "sh", "/Users/a b/.fuyu/fuyu-agent-session.sh", "claudeCode", "start"]));
         let activity = claude_code_activity_hook_entry("http://127.0.0.1:1/claude/activity", "t");
         assert_eq!(activity["hooks"][0]["command"], json!("/usr/bin/curl"));
         assert!(activity["hooks"][0]["args"].as_array().unwrap().contains(&json!("/dev/null")));
-        assert!(value_contains_focusd_hook_signature(&hook("Stop")));
+        assert!(value_contains_island_hook_signature(&hook("Stop")));
     }
 
 }

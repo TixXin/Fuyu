@@ -2,6 +2,7 @@ use std::{fs, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+use crate::user_error::UserError;
 use super::{
     current_unix_millis,
     links::{ClipboardLink, ClipboardLinks},
@@ -35,13 +36,18 @@ struct ImportFile {
     links: Vec<ImportEntry>,
 }
 
-pub(super) fn export(links: &ClipboardLinks) -> Result<String, String> {
+pub(super) fn export(links: &ClipboardLinks) -> Result<String, UserError> {
     let file = ExportFile { app: APP, version: VERSION, exported_at: current_unix_millis(), links: &links.links };
-    let content = serde_json::to_string_pretty(&file).map_err(|error| format!("Failed to write the export: {error}"))?;
-    let dir = crate::system::downloads_dir().ok_or("找不到下载文件夹。")?;
+    let content = serde_json::to_string_pretty(&file)
+        .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
+    let dir = crate::system::downloads_dir().ok_or_else(|| UserError::new("file.noDownloads", "The Downloads folder was not found."))?;
     let stamp = chrono::Local::now().format("%Y-%m-%d-%H%M").to_string();
     let path = free_path(&dir, &stamp);
-    fs::write(&path, content).map_err(|error| format!("Could not write {}: {error}", path.display()))?;
+    fs::write(&path, content).map_err(|error| {
+        UserError::new("file.write", format!("Could not write {}.", path.display()))
+            .arg("path", path.display().to_string())
+            .detail(error)
+    })?;
     Ok(path.to_string_lossy().into_owned())
 }
 

@@ -51,7 +51,11 @@ const MIRRORED_HOMES: [&str; 3] = [".dsh", ".dsh-beta", ".dsh-home"];
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
-    hooks: Some(Hooks { install: super::dsh_hooks::install_hooks, check: super::dsh_hooks::hooks_state }),
+    hooks: Some(Hooks {
+        install: super::dsh_hooks::install_hooks,
+        check: super::dsh_hooks::hooks_state,
+        uninstall: super::dsh_hooks::uninstall_hooks,
+    }),
     status_light: Some(StatusLight {
         running_marker: "agent-dsh-running.flag",
         running_hold: "agent-dsh-running-hold.flag",

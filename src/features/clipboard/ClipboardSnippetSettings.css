@@ -1,3 +1,7 @@
+.clipboard-snippet__empty {
+  color: var(--color-text-muted);
+}
+
 .clipboard-snippet__actions {
   display: flex;
   gap: var(--space-xs);

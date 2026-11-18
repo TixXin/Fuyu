@@ -18,7 +18,7 @@ src-tauri/src/
 │                            #   reply_marker.rs：可选的回复状态标记（B9），增删 CLAUDE.md 里岛屿自己的那段说明、识别回复末行的标记
 ├── phone_push.rs            # 手机推送（Bark）：设备 Key 凭据存取、发送推送、锁屏与空闲时间查询命令
 ├── claude_usage/            # 用量环（内置插件 claude-usage）：可选的「直接向 Anthropic 查询」只读 Claude Code 凭据、经 http(s) 代理（插件配置 → HTTPS_PROXY → Windows 系统代理，从不直连）请求 oauth/usage，后台轮询与退避（background.rs 把轮询登记成插件的后台 poller，关掉插件就停）；结果由 agent_status 的 get_agent_usage 合并（source.rs 为取数与解析）；plan.rs 是 GLM、Kimi 的用量和 Key（命令 get_plan_usage、set_plan_key、has_plan_key）
-├── ssh_tunnel/              # SSH 代理隧道（内置插件 focusd.ssh-proxy-tunnel）：ssh-tunnels.json（config.rs），每台主机一条常驻 ssh -R、作业对象、退避重连（tunnel.rs），服务器端口占用检查，本地代理端口自动检测（local_proxy.rs）
+├── ssh_tunnel/              # SSH 代理隧道（第 3 版内置插件 ssh-tunnel，background.rs 把本地代理探测和反向隧道登记成后台 tunnels，关掉插件就停）：ssh-tunnels.json（config.rs），每台主机一条常驻 ssh -R、作业对象、退避重连（tunnel.rs），服务器端口占用检查，本地代理端口自动检测（local_proxy.rs）
 ├── cc_connect/              # cc-connect 手机连接（第 3 版内置插件 cc-connect，background.rs 把看护线程登记成后台 runner，关掉插件就停）：找程序（插件设置 → 正在运行 → PATH → 岛下载的 → C/D 盘 Program Files，locate.rs）、下载并核对发布包（install.rs）、只读会话列表（chats.rs）、检查机器人 token（bots.rs）、往 config.toml 追加项目（config_file.rs）、飞书扫码（feishu.rs）、看护岛启动的 cc-connect（runner.rs）、经 cc-connect send 发消息
 ├── system/                  # 开机自启（注册表）、更新代理与配置、待办 Markdown 导出；update_runtime.rs 为跨窗口更新状态与互斥，update_notifications.rs 为更新系统通知与白名单诊断
 ├── rename_migration/        # 改名迁移（D17）：首次启动时把改名前的数据目录、凭据、开机自启、hook 迁移到 com.tixxin.fuyu，并静默卸载旧安装；各处旧名兼容的清单见 docs/architecture/contracts.md「改名兼容（D17）」
@@ -29,8 +29,8 @@ src-tauri/src/
 ├── recording/               # 录屏（C41.11）：命令、倒计时、暂停计时和浮屿窗口排除在录像外（control.rs，状态在 state.rs，发 recording-state / recording-finished 给岛），录制线程（session.rs：WGC 帧经有界队列交给编码线程，满了丢帧计数）、帧节奏（pacing.rs，静止 3 个间隔才补重复帧，暂停扣时长）、尺寸码率和文件名（format.rs）、声音（audio.rs 接采集、按视频时间轴放；mixer.rs 混成 48 kHz 立体声）、GIF（gif.rs：每 1/15 秒挑一帧读回内存交给 gifski 线程）；声音采集在 win32/audio_capture.rs，画面采集在 win32/graphics_capture.rs，编码写 MP4 在 win32/video_writer.rs
 ├── pets/                    # Codex Pets（petdex）：只读列出 ~/.codex/pets 与 <app data>/pets，校验后以 data URL 返回图集
 ├── local_api/               # 本地接口（第 3 版内置插件 local-api，background.rs 把 HTTP 服务登记成后台 server，关掉插件就停）：127.0.0.1 HTTP（tiny_http）、鉴权与路由、转给 main 窗口的桥、local-api.json；switches.rs 让转给待办、Agent、剪贴板的请求在那个插件关着时回 503；settings.rs 是设置页的命令（令牌只由 Rust 复制）
-├── plugin_kernel/           # 插件平台第 3 版的宿主（E36.1）：测试版（版本号带 -）和开发版默认启动、设成 0 关掉，正式版设 FUYU_PLUGINS_V3=1 才启动，安装包里用资源目录里的宿主；找 Node（找下载的状态和重试在 node_status.rs）、在数据目录的 plugins-v3/ 下拉起 packages/plugin-base 的宿主，用 platform::job 管住它（containment.rs）。看管宿主的通用部分在 crates/plugin-base
-├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、插件自己的窗口（windows/，实验接口，E34）、内置插件（builtin.rs）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）
+├── plugin_kernel/           # 插件平台第 3 版的宿主：默认启动（设 FUYU_PLUGINS_V3=0 关掉），正式安装包用资源目录里的宿主；找 Node（找下载的状态和重试在 node_status.rs）、在数据目录的 plugins-v3/ 下拉起 packages/plugin-base 的宿主，用 platform::job 管住它（containment.rs）；keybindings.rs 同步第 3 版插件全局热键，plugin_windows.rs 管理实验独立窗口（plugin-window-<n>）。看管宿主的通用部分在 crates/plugin-base
+├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、插件自己的窗口（windows/，实验接口，E34）、内置插件（builtin.rs，已全部迁到第 3 版）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）
 ├── media_control/
 ├── calendar/                # 日历：CalDAV（caldav.rs）和 ICS 订阅链接，iCalendar 解析和重复日程展开（ics.rs，rrule），会议链接识别（meeting_link.rs），来源配置与凭据（sources.rs）
 ├── lyrics/                  # 音乐页歌词：本地 .lrc 文件夹（local.rs）、LRCLIB（lrclib.rs，用户开启才联网）、按歌名歌手时长匹配（matching.rs），在线结果缓存在 lyrics-cache/

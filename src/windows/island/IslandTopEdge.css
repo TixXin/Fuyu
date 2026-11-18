@@ -171,9 +171,10 @@
 :root:not([data-island-top-edge]) .island--docked.island--appearance-liquidGlass.island--expanded {
   box-shadow:
     0 18px 46px rgba(0, 0, 0, var(--glass-shadow-alpha)),
-    inset 0 -1px 0 rgba(8, 18, 28, 0.16),
-    inset 1px 0 0 rgba(130, 224, 255, var(--glass-cyan-alpha)),
-    inset -1px 0 0 rgba(255, 158, 230, var(--glass-magenta-alpha));
+    var(--island-edge-lines,
+      inset 0 -1px 0 rgba(8, 18, 28, 0.16),
+      inset 1px 0 0 rgba(130, 224, 255, var(--glass-cyan-alpha)),
+      inset -1px 0 0 rgba(255, 158, 230, var(--glass-magenta-alpha)));
 }
 
 :root[data-island-top-edge="attached"]
@@ -182,9 +183,10 @@
   .island--docked.island--appearance-liquidGlass.island--collapsed:not(:has(:focus-visible)) {
   box-shadow:
     0 12px 34px rgba(0, 0, 0, 0.18),
-    inset 0 -1px 0 rgba(8, 22, 32, 0.18),
-    inset 1px 0 0 rgba(116, 214, 255, 0.14),
-    inset -1px 0 0 rgba(255, 156, 224, 0.08);
+    var(--island-edge-lines,
+      inset 0 -1px 0 rgba(8, 22, 32, 0.18),
+      inset 1px 0 0 rgba(116, 214, 255, 0.14),
+      inset -1px 0 0 rgba(255, 156, 224, 0.08));
 }
 
 :root[data-island-top-edge="attached"] .island--collapsed:has(:focus-visible),

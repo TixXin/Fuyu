@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Copy, ListTodo, NotebookPen, Settings, ShieldCheck, Square, X } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
+import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { voiceClock } from "./settings";
 import type { VoiceInputController } from "./useVoiceInput";
 import "./VoiceInputNotice.css";
@@ -17,8 +18,7 @@ export type VoiceDraftActions = {
 function Clock({ startedAtMs }: { startedAtMs: number }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 500);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setNow(Date.now()), 500);
   }, []);
   return <span className="voice-notice__clock">{voiceClock(now - startedAtMs)}</span>;
 }

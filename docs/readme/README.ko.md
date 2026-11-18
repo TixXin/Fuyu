@@ -76,55 +76,58 @@ Fuyu(浮屿, '떠 있는 작은 섬')는 가볍고 테두리 없이 항상 맨 �
 
 ## 섬에 있는 것
 
-<p align="center">
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/todo-en.webp" alt="펼친 섬에 오늘의 할 일이 있고, 완료한 항목은 줄이 그어져 아래에 모여 있습니다" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/music-en.webp" alt="섬의 음악 페이지: 앨범 커버, 동기화된 가사, 진행 바와 재생 컨트롤" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/messages-en.webp" alt="섬 아래로 펼쳐진 새 메시지: 메일 한 통, WeChat 메시지 하나, QQ 메시지 하나" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/clipboard-en.webp" alt="섬의 클립보드 기록: 명령어, 링크, 텍스트 한 줄과 이미지 한 장, 각각 출처 앱이 표시되어 있습니다" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#day"><img src="../assets/readme/translate-en.webp" alt="섬의 번역 페이지: 왼쪽은 원문, 오른쪽은 번역문" width="398" height="224"></a>
-  <a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="섬에 뜬 Claude Code의 승인 요청: 실행하려는 명령어와 거부, 허용 버튼" width="398" height="224"></a>
-  <br>
-  <sub>아무 그림이나 누르면 웹사이트에서 섬을 직접 눌러 볼 수 있습니다</sub>
-</p>
+<p><sub>기능 이름을 누르면 펼치거나 접습니다. 애니메이션을 누르면 웹사이트에서 섬을 직접 만져 볼 수 있습니다</sub></p>
 
-<table>
-  <tr>
-    <td valign="top"><code>01</code></td>
-    <td><b>할 일과 노트</b><br>오늘의 할 일, 지금 집중하는 항목, 데일리 노트와 지난 기록 보관.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>02</code></td>
-    <td><b>음악</b><br>재생 중인 미디어를 제어하고, 오디오 파형과 동기화된 가사를 보여 줍니다.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>03</code></td>
-    <td><b>메시지</b><br>Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu, DingTalk의 새 메시지를 섬에서 알려 주고, 클릭하면 해당 앱이 열립니다. 여러 메일 계정도 지원합니다. 메일은 섬에서 바로 읽고 답장할 수 있습니다.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>04</code></td>
-    <td><b>클립보드와 파일 임시 보관</b><br>텍스트와 이미지 클립보드 기록. 파일을 섬에 끌어다 놓아 잠시 보관했다가 다른 프로그램으로 끌어 옮길 수 있습니다.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>05</code></td>
-    <td><b>빠른 번역</b><br>단축키 하나로 열리고, 여러 LLM 번역 서비스를 지원합니다.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>06</code></td>
-    <td><b>AI 에이전트</b><br>Claude Code와 Codex 세션의 실행 상태와 사용량을 보여 줍니다. 확인이 필요할 때 섬에서 바로 승인하고, 한 번 클릭으로 해당 창으로 전환합니다. 자리를 비웠을 때는 Telegram, Discord, Feishu, Bark로 알림을 받고, 채팅에서 바로 에이전트에게 계속 지시할 수 있습니다.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>07</code></td>
-    <td><b>캘린더</b><br>오늘과 내일의 일정, 음력과 공휴일이 표시된 월간 달력. 회의가 곧 시작되면 섬에서 카운트다운하고, 클릭 한 번으로 참여할 수 있습니다.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>08</code></td>
-    <td><b>시스템 알림</b><br>볼륨과 밝기 변화, 그리고 어떤 프로그램이 카메라와 마이크를 사용 중인지 보여 줍니다.</td>
-  </tr>
-  <tr>
-    <td valign="top"><code>09</code></td>
-    <td><b>플러그인과 테마</b><br>플러그인 마켓에서 플러그인을 설치해 섬을 확장합니다. 민감한 데이터는 따로 허용해야 합니다. 테마 마켓에서 미리 만들어진 외관을 고를 수 있습니다.</td>
-  </tr>
-</table>
+<details open>
+<summary><b>01 · 할 일과 노트</b></summary>
+<p>오늘의 할 일, 지금 집중하는 항목, 데일리 노트와 지난 기록 보관.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/todo-en.webp" alt="펼친 섬에 오늘의 할 일이 있고, 완료한 항목은 줄이 그어져 아래에 모여 있습니다" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>02 · 음악</b></summary>
+<p>재생 중인 미디어를 제어하고, 오디오 파형과 동기화된 가사를 보여 줍니다.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/music-en.webp" alt="섬의 음악 페이지: 앨범 커버, 동기화된 가사, 진행 바와 재생 컨트롤" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>03 · 메시지</b></summary>
+<p>Telegram, Discord, WhatsApp, QQ, WeChat, WeCom, TIM, Feishu, DingTalk의 새 메시지를 섬에서 알려 주고, 클릭하면 해당 앱이 열립니다. 여러 메일 계정도 지원합니다. 메일은 섬에서 바로 읽고 답장할 수 있습니다.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/messages-en.webp" alt="섬 아래로 펼쳐진 새 메시지: 메일 한 통, WeChat 메시지 하나, QQ 메시지 하나" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>04 · 클립보드와 파일 임시 보관</b></summary>
+<p>텍스트와 이미지 클립보드 기록. 파일을 섬에 끌어다 놓아 잠시 보관했다가 다른 프로그램으로 끌어 옮길 수 있습니다.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/clipboard-en.webp" alt="섬의 클립보드 기록: 명령어, 링크, 텍스트 한 줄과 이미지 한 장, 각각 출처 앱이 표시되어 있습니다" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>05 · 빠른 번역</b></summary>
+<p>단축키 하나로 열리고, 여러 LLM 번역 서비스를 지원합니다.</p>
+<p><a href="https://fuyu.ing/#day"><img src="../assets/readme/translate-en.webp" alt="섬의 번역 페이지: 왼쪽은 원문, 오른쪽은 번역문" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>06 · AI 에이전트</b></summary>
+<p>Claude Code와 Codex 세션의 실행 상태와 사용량을 보여 줍니다. 확인이 필요할 때 섬에서 바로 승인하고, 한 번 클릭으로 해당 창으로 전환합니다. 자리를 비웠을 때는 Telegram, Discord, Feishu, Bark로 알림을 받고, 채팅에서 바로 에이전트에게 계속 지시할 수 있습니다.</p>
+<p><a href="https://fuyu.ing/#agent"><img src="../assets/readme/agents-en.webp" alt="섬에 뜬 Claude Code의 승인 요청: 실행하려는 명령어와 거부, 허용 버튼" width="800" height="450"></a></p>
+</details>
+
+<details>
+<summary><b>07 · 캘린더</b></summary>
+<p>오늘과 내일의 일정, 음력과 공휴일이 표시된 월간 달력. 회의가 곧 시작되면 섬에서 카운트다운하고, 클릭 한 번으로 참여할 수 있습니다.</p>
+</details>
+
+<details>
+<summary><b>08 · 시스템 알림</b></summary>
+<p>볼륨과 밝기 변화, 그리고 어떤 프로그램이 카메라와 마이크를 사용 중인지 보여 줍니다.</p>
+</details>
+
+<details>
+<summary><b>09 · 플러그인과 테마</b></summary>
+<p>플러그인 마켓에서 플러그인을 설치해 섬을 확장합니다. 민감한 데이터는 따로 허용해야 합니다. 테마 마켓에서 미리 만들어진 외관을 고를 수 있습니다.</p>
+</details>
 
 섬의 외관, 크기, 접히는 방식, 단축키와 각 기능은 모두 설정 창에서 조정할 수 있고, 앱 내 자동 업데이트를 지원합니다. 데이터는 모두 내 컴퓨터에 저장됩니다.
 
@@ -181,7 +184,7 @@ pnpm tauri build    # 설치 프로그램 빌드
 
 ## 사용자 커뮤니티
 
-쓰다가 문제가 있거나 아이디어가 있거나, 그냥 이야기를 나누고 싶다면 QR 코드를 스캔해 WeChat 그룹에 들어오세요(주로 중국어로 대화합니다):
+쓰다가 문제가 있거나 아이디어가 있거나, 그냥 이야기를 나누고 싶다면 [Discord 서버](https://discord.gg/azu5aZFuRY)에 참여하거나 QR 코드를 스캔해 WeChat 그룹에 들어오세요(주로 중국어로 대화합니다):
 
 <p align="center">
   <img src="../assets/readme/wechat-group.png" alt="Fuyu 사용자 WeChat 그룹 QR 코드" width="220">

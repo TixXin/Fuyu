@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import type { MessageBanner } from "../../src/features/messages/banner/MessageBanner";
+import type { ImSourcesController } from "../../src/features/messages/im-sources/useImSources";
 import type { useIslandMessagePanel } from "../../src/features/messages/island/useIslandMessagePanel";
 import type { MailController } from "../../src/features/messages/mail/MailPanel";
 import type { MessagePreview, MessageSource } from "../../src/features/messages/messagePreview";
@@ -13,6 +14,7 @@ export type FixtureMessages = {
   wechat: WeChatRemindersController;
   mail: MailController;
   plugin?: PluginNotificationsController;
+  im?: ImSourcesController;
   preview?: MessagePreview | null;
   open?: (source: MessageSource) => void;
   panel?: ReturnType<typeof useIslandMessagePanel> | null;
@@ -30,6 +32,7 @@ export function useFixtureMessages(messages: FixtureMessages | null) {
     wechat: messages.wechat,
     mail: messages.mail,
     plugin: messages.plugin ?? NO_PLUGIN_NOTIFICATIONS,
+    im: messages.im,
     preview: messages.preview ?? null,
     source: "qq" as const,
     open: messages.open ?? ignoreOpen,

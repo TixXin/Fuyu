@@ -11,6 +11,7 @@ export type VoiceInputText = {
   close: string;
   savedTodo: string;
   savedNote: string;
+  todosOff: string;
   copied: string;
   openSettings: string;
   openPrivacy: string;
@@ -51,6 +52,7 @@ export const zhCN: VoiceInputText = {
   close: "关闭",
   savedTodo: "已存为待办",
   savedNote: "已追加到今天的笔记",
+  todosOff: "待办已关闭",
   copied: "已复制",
   openSettings: "打开设置",
   openPrivacy: "打开隐私设置",
@@ -91,6 +93,7 @@ export const en: VoiceInputText = {
   close: "Close",
   savedTodo: "Saved as a todo",
   savedNote: "Added to today's note",
+  todosOff: "Todos are turned off",
   copied: "Copied",
   openSettings: "Open Settings",
   openPrivacy: "Open privacy settings",

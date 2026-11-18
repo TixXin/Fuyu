@@ -6,6 +6,8 @@ use std::{
 
 use tauri::AppHandle;
 
+use crate::user_error::UserError;
+
 const MAX_BACKUP_BYTES: usize = 2 * 1024 * 1024;
 const MAX_NAME_TRIES: u32 = 50;
 
@@ -25,7 +27,7 @@ pub(crate) fn is_backup_content(content: &str) -> bool {
         })
 }
 
-pub(crate) fn write_new_file(dir: &Path, file_name: &str, content: &str) -> Result<PathBuf, String> {
+pub(crate) fn write_new_file(dir: &Path, file_name: &str, content: &str) -> Result<PathBuf, UserError> {
     let stem = file_name.trim_end_matches(".json");
     for attempt in 1..=MAX_NAME_TRIES {
         let path = if attempt == 1 {
@@ -35,27 +37,40 @@ pub(crate) fn write_new_file(dir: &Path, file_name: &str, content: &str) -> Resu
         };
         match OpenOptions::new().write(true).create_new(true).open(&path) {
             Ok(mut file) => {
-                file.write_all(content.as_bytes())
-                    .map_err(|error| format!("Could not write {}: {error}", path.display()))?;
+                file.write_all(content.as_bytes()).map_err(|error| {
+                    UserError::new("file.write", format!("Could not write {}.", path.display()))
+                        .arg("path", path.display().to_string())
+                        .detail(error)
+                })?;
                 return Ok(path);
             }
             Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
-            Err(error) => return Err(format!("Could not create {}: {error}", path.display())),
+            Err(error) => {
+                return Err(UserError::new("file.create", format!("Could not create {}.", path.display()))
+                    .arg("path", path.display().to_string())
+                    .detail(error));
+            }
         }
     }
-    Err(format!("Too many files named {stem} in {}.", dir.display()))
+    Err(UserError::new("settingsBackup.tooManyNames", format!("Too many files named {stem} in {}.", dir.display()))
+        .arg("name", stem)
+        .arg("dir", dir.display().to_string()))
 }
 
 #[tauri::command]
-pub fn save_settings_backup(file_name: String, content: String) -> Result<String, String> {
+pub fn save_settings_backup(file_name: String, content: String) -> Result<String, UserError> {
     if !is_backup_file_name(&file_name) {
-        return Err("Not a settings backup file name.".into());
+        return Err(UserError::new("settingsBackup.badName", "Not a settings backup file name."));
     }
     if !is_backup_content(&content) {
-        return Err("Not a settings backup.".into());
+        return Err(UserError::new("settingsBackup.badContent", "Not a settings or theme backup."));
     }
-    let dir = crate::system::downloads_dir().ok_or("找不到下载文件夹。")?;
-    fs::create_dir_all(&dir).map_err(|error| format!("Could not create {}: {error}", dir.display()))?;
+    let dir = crate::system::downloads_dir().ok_or_else(|| UserError::new("file.noDownloads", "The Downloads folder was not found."))?;
+    fs::create_dir_all(&dir).map_err(|error| {
+        UserError::new("file.create", format!("Could not create {}.", dir.display()))
+            .arg("path", dir.display().to_string())
+            .detail(error)
+    })?;
     write_new_file(&dir, &file_name, &content).map(|path| path.to_string_lossy().to_string())
 }
 
@@ -81,6 +96,11 @@ mod tests {
         assert!(!is_backup_file_name("fly-island-theme-dark.json"));
         assert!(is_backup_content(r#"{"app":"fly-island","kind":"theme","version":1,"appearance":{}}"#));
         assert!(!is_backup_content(r#"{"app":"fly-island","kind":"theme","appearance":"x"}"#));
+        assert_eq!(save_settings_backup("bad.json".into(), "{}".into()).unwrap_err().code(), "settingsBackup.badName");
+        assert_eq!(
+            save_settings_backup("fly-island-settings-1.json".into(), "{}".into()).unwrap_err().code(),
+            "settingsBackup.badContent"
+        );
     }
 
     #[test]

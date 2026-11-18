@@ -57,15 +57,38 @@ pub(crate) fn island_visible(app: &AppHandle) -> bool {
         .unwrap_or(true)
 }
 
+fn next_shown_state(
+    current: (TrayLanguage, bool),
+    language: Option<TrayLanguage>,
+    island_visible: bool,
+) -> Option<(TrayLanguage, bool)> {
+    let next = (language.unwrap_or(current.0), island_visible);
+    (current != next).then_some(next)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ToggleStep {
+    Hide,
+    ShowFocused,
+    ShowWithoutFocus,
+}
+
+fn plan_toggle(island_visible: bool, from_card: bool) -> ToggleStep {
+    match (island_visible, from_card) {
+        (true, _) => ToggleStep::Hide,
+        (false, false) => ToggleStep::ShowFocused,
+        (false, true) => ToggleStep::ShowWithoutFocus,
+    }
+}
+
 fn refresh(app: &AppHandle, language: Option<TrayLanguage>) {
     crate::tray_menu::push_state(app);
     let Some(menu) = app.try_state::<TrayMenu>() else { return };
     let visible = island_visible(app);
     let mut shown = menu.shown.lock().unwrap_or_else(PoisonError::into_inner);
-    let next = (language.unwrap_or(shown.0), visible);
-    if *shown == next {
+    let Some(next) = next_shown_state(*shown, language, visible) else {
         return;
-    }
+    };
     let [toggle, settings, quit] = labels(next.0, next.1);
     let _ = menu.toggle.set_text(toggle);
     let _ = menu.settings.set_text(settings);
@@ -80,13 +103,26 @@ pub(crate) fn refresh_now(app: &AppHandle) {
     refresh(app, None);
 }
 
-pub(crate) fn toggle_island(app: &AppHandle) {
-    if island_visible(app) {
-        island::hide_island(app);
-    } else {
-        let _ = island::show_island(app);
+fn run_toggle(app: &AppHandle, from_card: bool) {
+    let result = match plan_toggle(island_visible(app), from_card) {
+        ToggleStep::Hide => {
+            island::hide_island(app);
+            Ok(())
+        }
+        ToggleStep::ShowFocused => island::show_island(app),
+        ToggleStep::ShowWithoutFocus => island::show_island_without_focus(app),
+    };
+    if result.is_err() {
+        refresh(app, None);
     }
-    refresh(app, None);
+}
+
+pub(crate) fn toggle_island(app: &AppHandle) {
+    run_toggle(app, false);
+}
+
+pub(crate) fn toggle_island_from_card(app: &AppHandle) {
+    run_toggle(app, true);
 }
 
 pub(crate) fn pop_up_native_menu(app: &AppHandle) {
@@ -159,7 +195,7 @@ pub(crate) use tauri_commands;
 
 #[cfg(test)]
 mod tests {
-    use super::{labels, TrayLanguage};
+    use super::{labels, next_shown_state, plan_toggle, ToggleStep, TrayLanguage};
 
     #[test]
     fn the_menu_follows_the_language_and_names_what_the_toggle_will_do() {
@@ -179,5 +215,29 @@ mod tests {
         assert_eq!(super::tooltip(TrayLanguage::English, false), "Fuyu");
         assert_eq!(super::tooltip(TrayLanguage::Chinese, true), "Fuyu 开发版");
         assert_eq!(super::tooltip(TrayLanguage::English, true), "Fuyu Dev");
+    }
+
+    #[test]
+    fn tray_refresh_preserves_language_and_skips_unchanged_state() {
+        assert_eq!(
+            next_shown_state((TrayLanguage::English, true), None, true),
+            None,
+        );
+        assert_eq!(
+            next_shown_state((TrayLanguage::English, true), None, false),
+            Some((TrayLanguage::English, false)),
+        );
+        assert_eq!(
+            next_shown_state((TrayLanguage::Chinese, false), Some(TrayLanguage::English), false),
+            Some((TrayLanguage::English, false)),
+        );
+    }
+
+    #[test]
+    fn tray_card_toggle_reveals_island_without_stealing_focus() {
+        assert_eq!(plan_toggle(true, false), ToggleStep::Hide);
+        assert_eq!(plan_toggle(true, true), ToggleStep::Hide);
+        assert_eq!(plan_toggle(false, false), ToggleStep::ShowFocused);
+        assert_eq!(plan_toggle(false, true), ToggleStep::ShowWithoutFocus);
     }
 }

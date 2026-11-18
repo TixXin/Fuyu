@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "../../../i18n";
+import { visibilityInterval } from "../../../lib/useVisibilityInterval";
 import type { MediaState } from "../api";
 import { lineIndexAt, playbackPosition, type LyricLine } from "./lrc";
 import { KaraokeText } from "./KaraokeText";
@@ -25,8 +26,7 @@ export function LyricsView({ lines, mediaState, offsetMs, intro = "todo", onPick
   useEffect(() => {
     setNow(Date.now());
     if (!playing) return;
-    const timer = window.setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => window.clearInterval(timer);
+    return visibilityInterval(() => setNow(Date.now()), TICK_MS);
   }, [playing, mediaState.updatedAt]);
 
   const position = playbackPosition(mediaState, now) - offsetMs;

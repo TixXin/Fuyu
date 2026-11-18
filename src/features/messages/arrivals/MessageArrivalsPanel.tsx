@@ -1,6 +1,8 @@
 import { CheckCheck, ChevronRight } from "lucide-react";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "../../../i18n";
+import { copyMessageText } from "../../../lib/api";
+import { notificationCopyableText } from "../messageCopy";
 import { MessageSourceIcon } from "../MessageSourceIcon";
 import { ArrivalMediaControls, type ArrivalMedia } from "./ArrivalMediaControls";
 import { messagePreviewText } from "../messagePreview";
@@ -27,6 +29,9 @@ export function MessageArrivalsPanel({
 }) {
   const t = useTranslation().messages;
   const ref = useRef<HTMLElement | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const copyTimerRef = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
 
   useLayoutEffect(() => {
     const element = ref.current;
@@ -57,25 +62,44 @@ export function MessageArrivalsPanel({
       )}
       <ul className="message-arrivals__list">
         {arrivals.map((message) => {
+          const isFlash = message.kind === "flash";
+          const isBadge = message.kind === "badge";
           const plainWeChat = message.source === "wechat" && !message.chat;
-          const title = plainWeChat ? t.wechat : message.title.trim() || (message.source === "qq" ? "QQ" : t.sourceLabels[message.source]);
+          const title = plainWeChat ? t.wechat
+            : isFlash ? t.sourceLabels[message.source]
+              : message.title.trim() || (message.source === "qq" ? "QQ" : t.sourceLabels[message.source]);
           const body = plainWeChat ? t.wechatPreview
-            : message.source === "qqMail" ? message.body.trim() || t.newMail
-              : message.source === "plugin" ? message.body.trim() : message.body.trim() || t.newMessage;
+            : isFlash ? t.newReminder
+              : message.source === "qqMail" ? message.body.trim() || t.newMail
+                : message.source === "plugin" ? message.body.trim() : message.body.trim() || t.newMessage;
           const controls = message.mediaControls && media ? media : null;
+          const key = arrivalKey(message);
+          const copyable = plainWeChat || isFlash || isBadge ? "" : notificationCopyableText(message.title, message.body);
+          const copied = copiedKey === key;
           return (
-            <li className={`message-arrivals__item${controls ? " message-arrivals__item--media" : ""}`} key={arrivalKey(message)}>
+            <li className={`message-arrivals__item${controls ? " message-arrivals__item--media" : ""}`} key={key}>
               <button
                 className="message-arrivals__row"
                 type="button"
                 aria-label={t.openPreview(messagePreviewText(message, t), t.sourceLabels[message.source])}
                 onClick={() => onOpen(message)}
+                onContextMenu={(event) => {
+                  if (event.defaultPrevented || !copyable) return;
+                  event.preventDefault();
+                  void copyMessageText(copyable).then(() => {
+                    setCopiedKey(key);
+                    window.clearTimeout(copyTimerRef.current);
+                    copyTimerRef.current = window.setTimeout(() => setCopiedKey((current) => (current === key ? null : current)), 1200);
+                  }).catch(() => undefined);
+                }}
               >
                 <MessageSourceIcon source={message.source} size={inline ? 32 : 20} account={message.account} iconUrl={message.iconUrl} />
                 <span className="message-arrivals__text">
                   <span className="message-arrivals__head">
                     <strong className="message-arrivals__sender">{title}</strong>
-                    {!controls && <time className="message-arrivals__time" dateTime={new Date(message.receivedAt).toISOString()}>{bannerClock(message.receivedAt)}</time>}
+                    {!controls && (copied
+                      ? <span className="message-arrivals__copied">{t.copied}</span>
+                      : <time className="message-arrivals__time" dateTime={new Date(message.receivedAt).toISOString()}>{bannerClock(message.receivedAt)}</time>)}
                   </span>
                   {body && <span className="message-arrivals__body">{body}</span>}
                 </span>

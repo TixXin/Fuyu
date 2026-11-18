@@ -15,7 +15,7 @@ import { shownEffort } from "../../src/features/agent-status/effortLabels.ts";
 const session = (overrides = {}) => ({
   provider: "claudeCode",
   sessionId: "s1",
-  cwd: "E:\\Projects\\fly-island",
+  cwd: "E:\\Projects\\fuyu",
   title: "设置界面完善思路",
   model: "Opus 5.5",
   effort: "medium",
@@ -47,11 +47,11 @@ test("a poll with nothing new shown keeps the same list", () => {
 });
 
 test("labels for the session rows", () => {
-  assert.equal(sessionProject("E:\\Projects\\fly-island\\"), "fly-island");
+  assert.equal(sessionProject("E:\\Projects\\fuyu\\"), "fuyu");
   assert.equal(sessionProject("/home/me/repo"), "repo");
   assert.equal(sessionProject(null), null);
-  assert.equal(sessionProject("E:\\Projects\\fly-island-lanes\\3"), "fly-island");
-  assert.equal(sessionProject("E:\\Projects\\fly-island-lane-2"), "fly-island");
+  assert.equal(sessionProject("E:\\Projects\\fuyu-lanes\\3"), "fuyu");
+  assert.equal(sessionProject("E:\\Projects\\fuyu-lane-2"), "fuyu");
   assert.equal(sessionProject("/home/me/repo/.claude/worktrees/fix-tabs"), "repo");
   assert.equal(sessionProject("E:\\Projects\\-lanes\\3"), "3");
   assert.equal(sessionProject("E:\\Projects\\build\\3"), "3");
@@ -93,6 +93,7 @@ test("Agent page rows and the Agent settings", async () => {
   assert.equal(normalizeSettings({ agentArchiveMotion: "explode" }).agentArchiveMotion, "dissolve");
   assert.equal(DEFAULT_SETTINGS.agentCardEffects, "sparkle");
   assert.equal(normalizeSettings({ agentCardEffects: "off" }).agentCardEffects, "off");
+  assert.equal(normalizeSettings({ agentCardEffects: "orbit" }).agentCardEffects, "orbit");
   assert.equal(normalizeSettings({ agentCardEffects: "rainbow" }).agentCardEffects, "sparkle");
 
   assert.equal("agentVisibleRows" in normalizeSettings({ agentVisibleRows: 4 }), false);
@@ -123,8 +124,8 @@ test("sessions arrange by light or time, under computer, project or no headings"
   const sessions = [
     s("done", 50),
     s("asks", 10, "completed", { replyAsks: true }),
-    s("waits", 20, "waiting", { remoteHost: "zcm6", cwd: "/home/u/fly-island" }),
-    s("runs", 40, "running", { cwd: "E:/fly-island-lanes/3" }),
+    s("waits", 20, "waiting", { remoteHost: "zcm6", cwd: "/home/u/fuyu" }),
+    s("runs", 40, "running", { cwd: "E:/fuyu-lanes/3" }),
     s("old", 30, "running", { remoteHost: "nc-e" }),
   ];
   assert.deepEqual(ids(arrangeSessions(sessions, "status", "computer")), [
@@ -134,9 +135,9 @@ test("sessions arrange by light or time, under computer, project or no headings"
   ]);
   assert.deepEqual(ids(arrangeSessions(sessions, "recent", "none")), [[null, null, ["done", "runs", "old", "waits", "asks"]]]);
   assert.deepEqual(ids(arrangeSessions(sessions, "status", "project")), [
-    ["zcm6", "fly-island", ["waits"]],
+    ["zcm6", "fuyu", ["waits"]],
     [null, null, ["asks", "done"]],
-    [null, "fly-island", ["runs"]],
+    [null, "fuyu", ["runs"]],
     ["nc-e", null, ["old"]],
   ]);
   assert.deepEqual(ids(arrangeSessions([s("x", 1, "running", { remoteHost: "zcm6" })], "status", "computer")), [["zcm6", null, ["x"]]]);

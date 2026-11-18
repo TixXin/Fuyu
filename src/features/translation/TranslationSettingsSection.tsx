@@ -1,15 +1,17 @@
-import { useEffect, useState, type Dispatch, type SetStateAction, type ReactNode } from "react";
+import { useState, type Dispatch, type SetStateAction, type ReactNode } from "react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
-import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsSecretRow } from "../../components/settings/SettingsSecretRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
-import { deleteTranslationSecret, hasTranslationSecret, saveTranslationSecret } from "./api";
-import { DEFAULT_PROVIDER_MODELS, TRANSLATION_PROVIDERS } from "./providers";
+import { deleteTranslationSecret, saveTranslationSecret, translateText } from "./api";
+import { isLoopbackCustomBaseUrl } from "./providers";
 import type { TranslationSettings } from "./storage";
+import { useTranslatorEngines } from "./useTranslatorEngines";
 import "./TranslationSettingsSection.css";
 import { isMacOS } from "../../lib/platform";
 
@@ -21,21 +23,13 @@ export function TranslationSettingsSection({ settings, setSettings, lead, useFoo
 }) {
   const t = useTranslation();
   const errorText = useErrorText();
-  const [hasSecret, setHasSecret] = useState(false);
   const [secretDraft, setSecretDraft] = useState("");
   const [savingSecret, setSavingSecret] = useState(false);
-  const [serviceError, setServiceError] = useState("");
+  const [testingSecret, setTestingSecret] = useState(false);
   const [secretNotice, flashSecret] = useFlash<string>();
   const provider = settings.provider;
-  const defaultModel = DEFAULT_PROVIDER_MODELS[provider];
-
-  useEffect(() => {
-    let didCancel = false;
-    void hasTranslationSecret(provider)
-      .then((saved) => { if (!didCancel) setHasSecret(saved); })
-      .catch((failure) => { if (!didCancel) setServiceError(errorText(failure)); });
-    return () => { didCancel = true; };
-  }, [provider, errorText]);
+  const { options, hasStoredSecret, setHasSecret, error: serviceError, setError: setServiceError, isBuiltin, defaultModel } = useTranslatorEngines(provider, true, 0, settings.customBaseUrl);
+  const optionalLocalSecret = provider === "custom" && isLoopbackCustomBaseUrl(settings.customBaseUrl);
 
   const saveSecret = async () => {
     if (!secretDraft.trim()) return;
@@ -59,7 +53,33 @@ export function TranslationSettingsSection({ settings, setSettings, lead, useFoo
     } catch (failure) { setServiceError(errorText(failure)); }
   };
 
-  const footer = serviceError ? <span className="translation-settings__error" role="alert">{serviceError}</span> : isMacOS ? t.translator.credentialHintMac : t.translator.credentialHint;
+  const testSecret = async () => {
+    setTestingSecret(true);
+    setServiceError("");
+    try {
+      if (secretDraft.trim()) {
+        await saveTranslationSecret(secretDraft, provider);
+        setSecretDraft("");
+        setHasSecret(true);
+      }
+      await translateText("Hello", "en-zh", {
+        provider,
+        baseUrl: provider === "custom" ? settings.customBaseUrl.trim() || null : null,
+        model: settings.models[provider]?.trim() || null,
+      });
+      flashSecret(t.translator.testOk);
+    } catch (failure) {
+      setServiceError(errorText(failure));
+    } finally {
+      setTestingSecret(false);
+    }
+  };
+
+  const footer = serviceError ? (
+    <span className="translation-settings__error" role="alert">{serviceError}</span>
+  ) : (
+    <SettingsFootnote text={isMacOS ? t.translator.credentialHintMac : t.translator.credentialHint} />
+  );
 
   return (
     <>
@@ -74,7 +94,7 @@ export function TranslationSettingsSection({ settings, setSettings, lead, useFoo
           control={
             <SettingsSelect
               value={provider}
-              options={TRANSLATION_PROVIDERS.map((id) => ({ value: id, label: t.translator.providers[id] }))}
+              options={options}
               ariaLabel={t.translator.provider}
               onChange={(next) => {
                 setSecretDraft("");
@@ -92,18 +112,25 @@ export function TranslationSettingsSection({ settings, setSettings, lead, useFoo
         <SettingsRow title={t.translator.model}>
           <SettingsInput monospace autoComplete="off" aria-label={t.translator.model} value={settings.models[provider] ?? ""} placeholder={defaultModel ? t.translator.modelDefault(defaultModel) : t.translator.modelRequired} onChange={(event) => { const model = event.currentTarget.value; setSettings((current) => ({ ...current, models: { ...current.models, [provider]: model } })); }} />
         </SettingsRow>
-        <SettingsRow
-          title={t.translator.secret}
-          description={secretNotice ? <span role="status">{secretNotice}</span> : hasSecret ? t.common.saved : undefined}
-          control={
-            <>
-              <SettingsLinkButton disabled={!secretDraft.trim() || savingSecret} onClick={() => void saveSecret()}>{t.translator.saveSecret}</SettingsLinkButton>
-              {hasSecret && <SettingsLinkButton tone="danger" onClick={() => void removeSecret()}>{t.translator.deleteSecret}</SettingsLinkButton>}
-            </>
-          }
-        >
-          <SettingsInput type="password" autoComplete="off" aria-label={t.translator.secret} value={secretDraft} onChange={(event) => setSecretDraft(event.currentTarget.value)} onKeyDown={(event) => { if (event.key === "Enter") void saveSecret(); }} placeholder={hasSecret ? t.translator.replaceSecret : t.translator.enterSecret} />
-        </SettingsRow>
+        {isBuiltin && (
+          <SettingsSecretRow
+            title={t.translator.secret}
+            description={secretNotice ? <span role="status">{secretNotice}</span> : hasStoredSecret ? t.common.saved : optionalLocalSecret ? t.translator.optionalLocalSecret : undefined}
+            value={secretDraft}
+            placeholder={hasStoredSecret ? t.translator.replaceSecret : optionalLocalSecret ? t.translator.enterOptionalSecret : t.translator.enterSecret}
+            ariaLabel={t.translator.secret}
+            hasSecret={hasStoredSecret}
+            saving={savingSecret}
+            testing={testingSecret}
+            saveLabel={t.translator.saveSecret}
+            deleteLabel={t.translator.deleteSecret}
+            testLabel={testingSecret ? t.translator.testingSecret : t.translator.testSecret}
+            onChange={setSecretDraft}
+            onSave={() => void saveSecret()}
+            onDelete={() => void removeSecret()}
+            onTest={hasStoredSecret || optionalLocalSecret || Boolean(secretDraft.trim()) ? () => void testSecret() : undefined}
+          />
+        )}
       </SettingsGroup>
     </>
   );

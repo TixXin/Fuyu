@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 
-use super::Hlc;
+use super::{crypto::EncryptionMeta, Hlc};
 
 pub(crate) const SCHEMA_VERSION: u32 = 1;
 pub(crate) const APP: &str = "fuyu";
@@ -25,13 +25,21 @@ pub struct Meta {
     pub app: String,
     #[serde(default)]
     pub created_at: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub encryption: Option<EncryptionMeta>,
     #[serde(flatten)]
     pub extra: BTreeMap<String, Value>,
 }
 
 impl Meta {
     pub(crate) fn new(now_ms: u64) -> Self {
-        Self { schema_version: SCHEMA_VERSION, app: APP.into(), created_at: now_ms, extra: BTreeMap::new() }
+        Self {
+            schema_version: SCHEMA_VERSION,
+            app: APP.into(),
+            created_at: now_ms,
+            encryption: None,
+            extra: BTreeMap::new(),
+        }
     }
 }
 

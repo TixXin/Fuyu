@@ -34,7 +34,6 @@ export function AgentApprovalCard({ approvals, sessions }: { approvals: AgentApp
   const title = session?.title ?? project ?? AGENT_PROVIDER_LABELS[request.agent];
   const preview = approvalPreview(request.toolInput);
   const rule = request.agent === "claudeCode" ? alwaysAllowRule(request.permissionSuggestions) : null;
-  const canAllow = request.agent !== "dsh";
 
   const toTerminal = () => {
     approvals.decide("terminal");
@@ -44,7 +43,7 @@ export function AgentApprovalCard({ approvals, sessions }: { approvals: AgentApp
   };
   actRef.current = (action) => {
     if (action === "terminal") toTerminal();
-    else if (action === "allow" ? canAllow : action !== "allowAlways" || rule) approvals.decide(action);
+    else if (action !== "allowAlways" || rule) approvals.decide(action);
   };
   const keyOf = (action: AgentApprovalDecision) => APPROVAL_HOTKEYS.find((hotkey) => hotkey.action === action)?.shortcut;
 
@@ -88,12 +87,10 @@ export function AgentApprovalCard({ approvals, sessions }: { approvals: AgentApp
             <span className="agent-approval__label">{labels.allowAlways}</span>
           </button>
         )}
-        {canAllow && (
-          <button className="agent-approval__button agent-approval__button--allow" type="button" disabled={!armed} title={shortcutTitle(keyOf("allow"))} aria-keyshortcuts={ariaShortcut(keyOf("allow"))} onClick={() => approvals.decide("allow")}>
-            <span className="agent-approval__label">{labels.allow}</span>
-            <ApprovalShortcut shortcut={keyOf("allow")} />
-          </button>
-        )}
+        <button className="agent-approval__button agent-approval__button--allow" type="button" disabled={!armed} title={shortcutTitle(keyOf("allow"))} aria-keyshortcuts={ariaShortcut(keyOf("allow"))} onClick={() => approvals.decide("allow")}>
+          <span className="agent-approval__label">{labels.allow}</span>
+          <ApprovalShortcut shortcut={keyOf("allow")} />
+        </button>
       </div>
     </section>
   );

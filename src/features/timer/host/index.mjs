@@ -3,7 +3,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { timersV1 } from "@fuyu/plugin-services";
 import { nextDueIn } from "../timers.ts";
 import { DATA_FILE, readTimers, writeTimers } from "./dataFile.mjs";
-import { changeTimer, idOf, ringDue, startTimer } from "./rules.mjs";
+import { adoptTimers, changeTimer, idOf, ringDue, startTimer } from "./rules.mjs";
 
 export const name = "timer";
 export const RECHECK_MS = 60_000;
@@ -87,6 +87,12 @@ export function apply(ctx) {
       const removed = timers.length - next.length;
       if (removed > 0) commit(next, Date.now());
       return { removed };
+    },
+    adopt: (params) => {
+      const now = Date.now();
+      const next = adoptTimers(timers, params, now);
+      if (next.added > 0) commit(next.timers, now, next.due);
+      return { timers, added: next.added, at: now };
     },
   });
 

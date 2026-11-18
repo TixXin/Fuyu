@@ -1,0 +1,61 @@
+{
+  "name": "@fuyu/todo-digest",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Tracks open todos in real time and appends a digest of open items to today's note",
+  "author": "TixXin",
+  "license": "MIT",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev",
+    "build": "fuyu-plugin build",
+    "check": "fuyu-plugin check --market",
+    "package": "fuyu-plugin pack",
+    "typecheck": "tsc"
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "待办摘要",
+      "en": "Todo digest"
+    },
+    "description": {
+      "zh-CN": "监听待办变化实时统计未完成待办数，一键将当前未完成清单追加写入今日笔记并在岛上提示。",
+      "en": "Counts open todos whenever they change and appends a formatted digest of open items to today's daily note with an island notification."
+    },
+    "icon": "assets/icon.svg",
+    "categories": [
+      "todos",
+      "productivity"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "settings": "dist/settings.js"
+    },
+    "inject": {
+      "required": [
+        "todos/v1",
+        "messages/v1"
+      ]
+    },
+    "slots": [
+      "settings.section/v1"
+    ],
+    "commands": [
+      {
+        "id": "write-digest",
+        "title": {
+          "zh-CN": "写入摘要",
+          "en": "Write digest"
+        }
+      }
+    ]
+  }
+}

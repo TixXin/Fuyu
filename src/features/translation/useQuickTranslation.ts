@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useErrorText, useTranslation } from "../../i18n";
 import { hasTranslationSecret, listenTranslationSelection, translateText } from "./api";
+import { isLoopbackCustomBaseUrl } from "./providers";
 import { loadSettings } from "./storage";
 import { saveTranslationHandoff } from "../../lib/translation-handoff/storage";
 
@@ -44,7 +45,8 @@ export function useQuickTranslation(enabled: boolean) {
         return;
       }
       const settings = loadSettings();
-      void hasTranslationSecret(settings.provider)
+      const localCustom = settings.provider === "custom" && isLoopbackCustomBaseUrl(settings.customBaseUrl);
+      void (localCustom ? Promise.resolve(true) : hasTranslationSecret(settings.provider))
         .then(async (saved) => {
           if (!saved) {
             saveTranslationHandoff(text, "");

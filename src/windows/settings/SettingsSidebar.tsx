@@ -4,15 +4,28 @@ import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { entryOf, entryPages, isCategoryAvailable, isEntry, searchCategories, settingsGroups, sidebarItemOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
-import searchIndex from "./searchIndex.json";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
 import { BUILTIN_CATEGORIES, categorySlot } from "./slots/categorySlot";
-import { usePluginsV3Enabled } from "./usePluginHostStatus";
 import "./SettingsSidebar.css";
 
 export const CATEGORY_ICONS = Object.fromEntries(BUILTIN_CATEGORIES.map((item) => [item.id, item.icon])) as Record<SettingsCategory, LucideIcon>;
 
-const SEARCH_ENTRIES = searchIndex.entries as SettingsSearchEntry[];
+const EMPTY_SEARCH_ENTRIES: SettingsSearchEntry[] = [];
+let cachedSearchEntries: SettingsSearchEntry[] | null = null;
+let loadingSearchEntries: Promise<SettingsSearchEntry[]> | null = null;
+
+export function isSearchIndexLoaded(): boolean {
+  return cachedSearchEntries !== null;
+}
+
+function loadSearchEntries(): Promise<SettingsSearchEntry[]> {
+  if (cachedSearchEntries) return Promise.resolve(cachedSearchEntries);
+  loadingSearchEntries ??= import("./searchIndex.json").then((mod) => {
+    cachedSearchEntries = mod.default.entries as SettingsSearchEntry[];
+    return cachedSearchEntries;
+  });
+  return loadingSearchEntries;
+}
 
 const GROUP_ICONS: Record<SettingsGroup, LucideIcon> = {
   basics: Settings2,
@@ -25,7 +38,7 @@ const NO_PAGES: ReadonlySet<SettingsCategory> = new Set();
 
 export function SettingsSidebar({
   category,
-  hidden = NO_PAGES,
+  hidden,
   onCategoryChange,
   onRowOpen,
 }: {
@@ -37,11 +50,12 @@ export function SettingsSidebar({
   const t = useTranslation();
   const { locale } = useLocale();
   const unsupported = useUnsupportedFeatures();
-  const pluginsV3 = usePluginsV3Enabled();
   const slotItems = useSlotEntries(categorySlot);
-  const groups = settingsGroups(slotItems);
+  const hiddenSet = hidden ?? NO_PAGES;
+  const groups = settingsGroups(hidden && slotItems.length > 0 ? undefined : slotItems);
   const text = t.settings.categories;
   const [query, setQuery] = useState("");
+  const [searchEntries, setSearchEntries] = useState<SettingsSearchEntry[]>(() => cachedSearchEntries ?? EMPTY_SEARCH_ENTRIES);
   const [folded, setFolded] = useState<ReadonlySet<SettingsGroup>>(() => new Set());
   const toggle = (group: SettingsGroup) => {
     const next = new Set(folded);
@@ -61,19 +75,37 @@ export function SettingsSidebar({
     listRef.current?.querySelector(".settings-sidebar__item--active")?.scrollIntoView({ block: "nearest" });
   }, [category, folded]);
   const searching = query.trim() !== "";
+  useEffect(() => {
+    if (!onRowOpen || !searching || cachedSearchEntries) return;
+    let cancelled = false;
+    void loadSearchEntries().then((entries) => {
+      if (!cancelled) setSearchEntries(entries);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [onRowOpen, searching]);
+  const ensureSearchIndex = () => {
+    if (!onRowOpen) return;
+    if (cachedSearchEntries) {
+      if (searchEntries !== cachedSearchEntries) setSearchEntries(cachedSearchEntries);
+      return;
+    }
+    void loadSearchEntries().then(setSearchEntries);
+  };
   const matches = searchCategories(query, describe);
-  const hits = onRowOpen && searching ? searchSettingsRows(query, SEARCH_ENTRIES, locale, LOCALE_CODES, describe) : [];
-  const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported, isMacOS, pluginsV3);
+  const hits = onRowOpen && searching ? searchSettingsRows(query, searchEntries, locale, LOCALE_CODES, describe) : [];
+  const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported, isMacOS);
   const pagesOf = (item: SettingsCategory) => entryPages(item).filter(available);
   const found = (page: SettingsCategory) => matches.includes(page) || hits.some((hit) => hit.page === page);
   const shown = (item: SettingsCategory) =>
-    pagesOf(item).some((page) => (searching ? found(page) : page === category || !hidden.has(page)));
-  const anyHidden = !searching && [...hidden].some((page) => page !== category && available(page));
+    pagesOf(item).some((page) => (searching ? found(page) : page === category || !hiddenSet.has(page)));
+  const anyHidden = !searching && [...hiddenSet].some((page) => page !== category && available(page));
   const current = sidebarItemOf(category);
   const openHit = (hit: SettingsRowHit) => onRowOpen?.(hit.page, hit.text.title);
   const openItem = (item: SettingsCategory) => {
     const pages = pagesOf(item);
-    onCategoryChange(pages.find((page) => !hidden.has(page)) ?? pages[0] ?? item);
+    onCategoryChange(pages.find((page) => !hiddenSet.has(page)) ?? pages[0] ?? item);
   };
   const openBest = () => {
     if (isTitleHit(hits[0], query)) openHit(hits[0]);
@@ -109,7 +141,7 @@ export function SettingsSidebar({
   };
 
   const item = (entry: SettingsCategory, nested = false) => {
-    const Icon = slotItems.find((other) => other.id === entry)?.icon;
+    const Icon = slotItems.find((other) => other.id === entry)?.icon ?? CATEGORY_ICONS[entry];
     const isActive = entry === current;
     return (
       <li key={entry}>
@@ -181,6 +213,7 @@ export function SettingsSidebar({
           placeholder={text.search.placeholder}
           aria-label={text.search.placeholder}
           spellCheck={false}
+          onFocus={ensureSearchIndex}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === "Enter" && searching) openBest();

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { visibilityInterval } from "../../../lib/useVisibilityInterval";
 import { useTranslation } from "../../../i18n";
 import { detectAlerts, phasesOf, type SessionPhases } from "../alerts";
 import type { AgentSessionSummary } from "../api";
@@ -41,9 +42,8 @@ export function useAgentPush(sessions: AgentSessionSummary[], enabled: boolean, 
   }, [sessions, flush]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    return visibilityInterval(() => {
       if (queueRef.current.size > 0) void flush();
     }, RECHECK_MS);
-    return () => window.clearInterval(timer);
   }, [flush]);
 }

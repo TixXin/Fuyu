@@ -155,8 +155,8 @@ fn the_hook_block_is_flat_toml_with_four_fields() {
     }
     #[cfg(not(windows))]
     {
-        assert!(block.contains(r#"command = "/bin/sh '/data/fuyu-agent-running.sh' kimiCode notification""#));
-        assert!(block.contains(r#"command = "/bin/sh '/data/fuyu-agent-status.sh' kimiCode failed""#));
+        assert!(block.contains(r#"command = "[ -f '/data/fuyu-agent-running.sh' ] && exec /bin/sh '/data/fuyu-agent-running.sh' kimiCode notification || exit 0""#));
+        assert!(block.contains(r#"command = "[ -f '/data/fuyu-agent-status.sh' ] && exec /bin/sh '/data/fuyu-agent-status.sh' kimiCode failed || exit 0""#));
     }
 }
 

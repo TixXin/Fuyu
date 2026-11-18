@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::codex_hooks::install_codex_status_hooks;
+use super::codex_hooks::{install_codex_status_hooks, uninstall_codex_status_hooks};
 use super::codex_version::codex_runs_async_hooks;
 use super::harness::{Harness, HookEnv, Hooks, RemoteFiles, StatusLight};
 use super::hooks_state::{codex_hooks_state, HookInstallState};
@@ -18,6 +18,7 @@ pub(super) const HARNESS: Harness = Harness {
     hooks: Some(Hooks {
         install,
         check: hooks_state,
+        uninstall,
     }),
     status_light: Some(StatusLight {
         running_marker: CODEX_RUNNING_MARKER_FILE_NAME,
@@ -51,6 +52,10 @@ fn install(env: &HookEnv) -> Result<(), String> {
         env.status_script,
         codex_runs_async_hooks(env.home_dir) == Some(true),
     )
+}
+
+fn uninstall(env: &HookEnv) -> Result<(), String> {
+    uninstall_codex_status_hooks(&config_path(env.home_dir))
 }
 
 fn hooks_state(env: &HookEnv) -> HookInstallState {

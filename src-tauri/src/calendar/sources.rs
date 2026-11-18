@@ -17,6 +17,14 @@ pub enum SourceKind {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SubCalendar {
+    pub(super) name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(super) color: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CalendarSource {
     pub(super) id: String,
     pub(super) kind: SourceKind,
@@ -26,6 +34,8 @@ pub struct CalendarSource {
     pub(super) host: String,
     #[serde(default)]
     pub(super) username: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(super) calendars: Vec<SubCalendar>,
 }
 
 pub(super) fn read(app_dir: &Path) -> Vec<CalendarSource> {
@@ -107,6 +117,7 @@ mod tests {
             url: "https://caldav.feishu.cn".into(),
             host: "caldav.feishu.cn".into(),
             username: "u_abc".into(),
+            calendars: Vec::new(),
         };
         write(&dir, std::slice::from_ref(&source)).unwrap();
         assert_eq!(read(&dir), [source]);

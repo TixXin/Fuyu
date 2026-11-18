@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   arrangeCollapsedItems,
+  filterCollapsedItemEntries,
   isCollapsedItemHidden,
   moveCollapsedItem,
   setCollapsedItemHidden,
@@ -48,4 +49,23 @@ test("changing sides puts the item last on the other side; hiding keeps its plac
   assert.ok(isCollapsedItemHidden(hidden, "status-light"));
   assert.deepEqual(zoneIds(hidden, "left", offered), ["session-count"]);
   assert.deepEqual(setCollapsedItemHidden(hidden, "status-light", false), placements);
+});
+
+test("switching a built-in plugin or mail source off filters its collapsed item out while keeping saved placements", () => {
+  const entries = [
+    ["status-light", "Status light"],
+    ["mail", "Mail"],
+    ["update", "Update"],
+    ["plugin:dev.a/clock", "Clock"],
+    ["device-use", "Camera"],
+    ["shelf", "Shelf"],
+    ["music", "Music"],
+    ["session-count", "Sessions"],
+  ];
+  const filtered = filterCollapsedItemEntries(entries, new Set(["music", "agents", "file-shelf"]), false);
+  assert.deepEqual(filtered.map(([id]) => id), ["status-light", "update", "plugin:dev.a/clock", "device-use"]);
+  const saved = [{ id: "music", zone: "left" }, { id: "status-light", zone: "left" }];
+  const whileOff = arrangeCollapsedItems(filtered.map(([id]) => id), saved);
+  assert.deepEqual(zoneIds(whileOff, "left", filtered.map(([id]) => id)), ["status-light"]);
+  assert.deepEqual(zoneIds(whileOff, "left", entries.map(([id]) => id)), ["music", "status-light"]);
 });

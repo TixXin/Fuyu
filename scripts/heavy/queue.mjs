@@ -92,11 +92,35 @@ export function canRun({ slots, held, ahead, laneBusy = false }) {
   return !laneBusy && free > 0 && ahead < free;
 }
 
+export const DEFAULT_CARGO_TARGET_DIR = "src-tauri/target/agents";
+const CARGO_BIN = /(^|[\\/])cargo(\.exe)?$/i;
+const CARGO_SUBCOMMANDS = new Set(["build", "test", "check", "clippy", "nextest", "run", "bench"]);
+
+export function isCargoBuild(command) {
+  const words = command.map(String);
+  const cargoAt = words.findIndex((word) => CARGO_BIN.test(word));
+  if (cargoAt === -1) return false;
+  for (let index = cargoAt + 1; index < words.length; index += 1) {
+    const word = words[index];
+    if (word.startsWith("+") || word.startsWith("-")) continue;
+    return CARGO_SUBCOMMANDS.has(word);
+  }
+  return false;
+}
+
+export function explicitCargoTargetDir(command, env = process.env) {
+  const words = command.map(String);
+  const at = words.findIndex((word) => word === "--target-dir" || word.startsWith("--target-dir="));
+  if (at !== -1) {
+    return words[at].includes("=") ? words[at].slice(words[at].indexOf("=") + 1) : words[at + 1];
+  }
+  return env.CARGO_TARGET_DIR || null;
+}
+
 export function laneOf(command, env = process.env) {
   const words = command.map(String);
-  if (!words.some((word) => /(^|[\\/])cargo(\.exe)?$/.test(word))) return null;
-  const at = words.findIndex((word) => word === "--target-dir" || word.startsWith("--target-dir="));
-  const dir = at === -1 ? env.CARGO_TARGET_DIR : words[at].includes("=") ? words[at].slice(words[at].indexOf("=") + 1) : words[at + 1];
+  if (!words.some((word) => CARGO_BIN.test(word))) return null;
+  const dir = explicitCargoTargetDir(words, env) ?? (isCargoBuild(words) ? DEFAULT_CARGO_TARGET_DIR : null);
   const base = dir ? path.basename(path.resolve(dir)) : "target";
   const release = words.includes("--release") || words.includes("-r");
   if (base === "target") return `target:${release ? "release" : "debug"}`;

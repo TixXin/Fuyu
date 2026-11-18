@@ -10,6 +10,9 @@ export type SettingsClipboardText = {
   noShortcut: string;
   pressKeys: string;
   openTitle: string;
+  pasteTitle: string;
+  privacyTitle: string;
+  storageTitle: string;
   openIn: string;
   openInHint: string;
   openInOptions: Record<"window" | "island", string>;
@@ -77,6 +80,7 @@ export type SettingsClipboardText = {
     hintTitle: string;
     hintTitleMac: string;
     hint: string;
+    empty: string;
     add: string;
     adding: string;
     editing: string;
@@ -91,6 +95,7 @@ export type SettingsClipboardText = {
     title: string;
     hintTitle: string;
     hint: string;
+    empty: string;
     add: string;
     adding: string;
     editing: string;
@@ -115,6 +120,9 @@ export const zhCN: SettingsClipboardText = {
   noShortcut: "两个都关着时，只能从岛屿或托盘菜单打开剪贴板。",
   pressKeys: "按下组合键",
   openTitle: "打开方式",
+  pasteTitle: "粘贴与显示",
+  privacyTitle: "隐私与过滤",
+  storageTitle: "容量与清理",
   openIn: "快捷键打开",
   openInHint: "独立窗口在鼠标旁弹出，选中一条直接粘贴到原来的窗口；岛上页面和以前一样，展开岛的剪贴板页。",
   openInOptions: { window: "独立窗口", island: "岛上页面" },
@@ -182,6 +190,7 @@ export const zhCN: SettingsClipboardText = {
     hintTitle: "剪贴板窗口里 Ctrl+I 的改写",
     hintTitleMac: "剪贴板窗口里 ⌘I 的改写",
     hint: "除了总结、润色、改错字、中英互译，再加自己的，比如「改成正式的邮件语气」「提取里面的待办」。用快捷翻译设置的服务、Key 和模型。",
+    empty: "还没有自定义提示词。",
     add: "添加提示词",
     adding: "新提示词",
     editing: "修改提示词",
@@ -196,6 +205,7 @@ export const zhCN: SettingsClipboardText = {
     title: "常用语",
     hintTitle: "在剪贴板窗口按 Tab 切到「常用语」",
     hint: "粘贴时会填好这些变量：{date} 日期、{time} 时间、{datetime} 日期和时间、{weekday} 星期、{clipboard} 剪贴板里现在的文字。",
+    empty: "还没有保存常用语。",
     add: "新建常用语",
     adding: "新建常用语",
     editing: "修改常用语",
@@ -220,6 +230,9 @@ export const en: SettingsClipboardText = {
   noShortcut: "With both off, the clipboard only opens from the island or the tray menu.",
   pressKeys: "Press keys",
   openTitle: "Opening",
+  pasteTitle: "Pasting and display",
+  privacyTitle: "Privacy and filtering",
+  storageTitle: "Limits and cleanup",
   openIn: "The shortcut opens",
   openInHint: "The window pops up by the pointer and pastes what you pick into the window you were in; the island page opens the island's clipboard page as before.",
   openInOptions: { window: "A window", island: "The island page" },
@@ -287,6 +300,7 @@ export const en: SettingsClipboardText = {
     hintTitle: "Ctrl+I rewrites in the clipboard window",
     hintTitleMac: "⌘I rewrites in the clipboard window",
     hint: "Besides summarize, polish, fix grammar and translate, add your own, such as \"make it a formal email\" or \"list the to-dos in it\". Uses the quick translation's service, key and model.",
+    empty: "No custom prompts yet.",
     add: "Add a prompt",
     adding: "New prompt",
     editing: "Edit prompt",
@@ -301,6 +315,7 @@ export const en: SettingsClipboardText = {
     title: "Snippets",
     hintTitle: "Press Tab in the clipboard window for Snippets",
     hint: "When pasted, these are filled in: {date}, {time}, {datetime}, {weekday} and {clipboard} (the text on the clipboard now).",
+    empty: "No snippets saved yet.",
     add: "New snippet",
     adding: "New snippet",
     editing: "Edit snippet",

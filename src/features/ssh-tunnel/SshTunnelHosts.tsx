@@ -1,6 +1,12 @@
 import { useId, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
+import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsInput } from "../../components/settings/SettingsInput";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
+import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
+import { useFlash } from "../../components/settings/useFlash";
 import { useTranslation } from "../../i18n";
 import type { SshTunnelHost } from "./api";
 import { exportLine, parseRemotePort } from "./tunnelPort";
@@ -12,12 +18,8 @@ export function SshTunnelHosts() {
   const tunnels = useSshTunnels();
 
   return (
-    <section className="settings-section plugins-panel">
-      <div className="settings-section__header">
-        <span>{t.title}</span>
-      </div>
-      <p className="settings-section__hint">{t.hint}</p>
-      {tunnels.hosts?.length === 0 ? <p className="settings-section__hint">{t.empty}</p> : null}
+    <SettingsGroup title={t.title} footer={tunnels.error ? <span className="ssh-tunnel__error">{tunnels.error}</span> : <SettingsFootnote text={t.hint} />}>
+      {tunnels.hosts?.length === 0 ? <SettingsRow searchable={false} title={t.empty} /> : null}
       {tunnels.hosts?.map((entry) => (
         <HostRow
           key={entry.host}
@@ -29,8 +31,7 @@ export function SshTunnelHosts() {
           onAnswer={tunnels.answer}
         />
       ))}
-      {tunnels.error ? <p className="plugin-card__error">{tunnels.error}</p> : null}
-    </section>
+    </SettingsGroup>
   );
 }
 
@@ -54,7 +55,7 @@ function HostRow({
   const id = useId();
   const field = useRef<HTMLInputElement>(null);
   const [invalid, setInvalid] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, flashCopied] = useFlash<true>();
   const typed = (then: (port: number | null) => void) => {
     const port = parseRemotePort(field.current?.value ?? "");
     setInvalid(port === "invalid");
@@ -79,10 +80,10 @@ function HostRow({
     <div className="ssh-tunnel__host">
       <div className="ssh-tunnel__head">
         <label htmlFor={id}>{entry.host}</label>
-        <input
+        <SettingsInput
           key={entry.remotePort ?? ""}
           ref={field}
-          className="plugin-setting__input ssh-tunnel__port"
+          className="ssh-tunnel__port"
           inputMode="numeric"
           placeholder={t.port}
           aria-label={`${entry.host} ${t.port}`}
@@ -100,30 +101,17 @@ function HostRow({
       {asked !== null ? (
         <div className="ssh-tunnel__confirm" role="alertdialog" aria-label={asked}>
           <span>{asked}</span>
-          <button className="plugin-card__button" type="button" onClick={() => onAnswer(true)}>
-            {t.yes}
-          </button>
-          <button className="plugin-card__button" type="button" onClick={() => onAnswer(false)}>
-            {t.no}
-          </button>
+          <SettingsLinkButton onClick={() => onAnswer(true)}>{t.yes}</SettingsLinkButton>
+          <SettingsLinkButton onClick={() => onAnswer(false)}>{t.no}</SettingsLinkButton>
         </div>
       ) : null}
       {line ? (
         <div className="ssh-tunnel__export">
           <code>{line}</code>
-          <button
-            className="plugin-card__button"
-            type="button"
-            onClick={() =>
-              void navigator.clipboard.writeText(line).then(() => {
-                setCopied(true);
-                window.setTimeout(() => setCopied(false), 1500);
-              })
-            }
-          >
-            {copied ? <Check size={12} strokeWidth={2.6} /> : <Copy size={12} strokeWidth={2.4} />}
-            <span>{copied ? text.detail.copied : text.detail.copy}</span>
-          </button>
+          <SettingsLinkButton onClick={() => void navigator.clipboard.writeText(line).then(() => flashCopied(true))}>
+            {copied ? <Check size={12} strokeWidth={2.6} /> : <Copy size={12} strokeWidth={2.4} />}{" "}
+            {copied ? text.detail.copied : text.detail.copy}
+          </SettingsLinkButton>
         </div>
       ) : null}
     </div>

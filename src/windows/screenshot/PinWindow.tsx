@@ -51,12 +51,16 @@ function usePinPicture() {
     let made: string | null = null;
     getPinImage()
       .then(async (png) => {
-        made = URL.createObjectURL(new Blob([png], { type: "image/png" }));
+        const url = URL.createObjectURL(new Blob([png], { type: "image/png" }));
         const image = new Image();
-        image.src = made;
+        image.src = url;
         await image.decode();
-        if (cancelled) return;
-        setUrl(made);
+        if (cancelled) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        made = url;
+        setUrl(url);
       })
       .catch((error: unknown) => console.error("Failed to show the pin", getErrorMessage(error)));
     return () => {

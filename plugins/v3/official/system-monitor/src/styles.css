@@ -1,0 +1,251 @@
+.fuyu-sysmon,
+.fuyu-sysmon-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-sysmon-settings {
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-sysmon__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-sysmon__head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fuyu-sysmon__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-sysmon__sub {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-sysmon__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.fuyu-sysmon__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-sysmon__card-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.fuyu-sysmon__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-sysmon__value {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-sysmon__track,
+.fuyu-sysmon__core-track {
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-sysmon__core-track {
+  height: 4px;
+}
+
+.fuyu-sysmon__fill {
+  height: 100%;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-accent);
+}
+
+.fuyu-sysmon__detail {
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-sysmon__block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fuyu-sysmon__heading {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-sysmon__cores {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  max-height: 112px;
+  overflow-y: auto;
+}
+
+.fuyu-sysmon__core {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 6px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-sysmon__core-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-sysmon__core-id {
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-sysmon__core-pct {
+  font-weight: 600;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-sysmon__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fuyu-sysmon__button {
+  max-width: 100%;
+  padding: 5px 12px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  font: inherit;
+  color: var(--fuyu-plugin-on-accent);
+  background: var(--fuyu-plugin-accent);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-sysmon__button--secondary {
+  border: 1px solid var(--fuyu-plugin-border);
+  color: var(--fuyu-plugin-text);
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-sysmon__note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-sysmon-bar {
+  display: inline-flex;
+  align-items: center;
+  max-width: 124px;
+  padding: 1px 6px;
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text);
+  font-family: var(--fuyu-plugin-font);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-sysmon-settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fuyu-sysmon-settings__label {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-sysmon-settings__input {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+}
+
+.fuyu-sysmon-settings__check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.fuyu-sysmon-settings__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}

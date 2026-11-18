@@ -26,10 +26,10 @@ function TraceList({ entries, empty }: { entries: PluginTraceEntry[]; empty: str
   );
 }
 
-export function PluginDevSection() {
+export function PluginDevSection({ defaultOpen = false }: { defaultOpen?: boolean } = {}) {
   const t = useTranslation();
   const text = t.settings.plugins.dev;
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [path, setPath] = useState("");
   const [eventName, setEventName] = useState<string>(PLUGIN_EVENT_NAMES[0]);
   const [payload, setPayload] = useState("{}");

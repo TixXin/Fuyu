@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
-import path from "node:path";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { errorText, isNativeError } from "../../src/i18n/nativeError.ts";
 import * as errors from "../../src/i18n/sections/errors.ts";
@@ -8,6 +7,7 @@ import { getErrorMessage } from "../../src/utils/error.ts";
 
 const zh = { errors: errors.zhCN };
 const en = { errors: errors.en };
+const nativeCodes = JSON.parse(readFileSync(new URL("../../src-tauri/src/user_error_codes.json", import.meta.url), "utf8"));
 
 test("a native error is worded in the island's language, what the service said after it", () => {
   const error = { code: "bark.status", args: { status: 500 }, detail: "busy", message: "Bark answered 500." };
@@ -34,17 +34,6 @@ test("both languages word every code", () => {
 });
 
 test("every code the native side sends has its wording", () => {
-  const sent = new Set();
-  const walk = (dir) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const file = path.join(dir, entry.name);
-      if (entry.isDirectory()) walk(file);
-      else if (entry.name.endsWith(".rs")) {
-        for (const match of readFileSync(file, "utf8").matchAll(/UserError::new\("([A-Za-z.]+)"/g)) sent.add(match[1]);
-      }
-    }
-  };
-  walk("src-tauri/src");
-  const missing = [...sent].filter((code) => code !== "plain" && !(code in errors.en.codes));
-  assert.deepEqual(missing, []);
+  assert.equal(new Set(nativeCodes).size, nativeCodes.length);
+  assert.deepEqual([...nativeCodes].sort(), Object.keys(errors.en.codes).sort());
 });

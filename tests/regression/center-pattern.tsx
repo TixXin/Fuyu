@@ -3,36 +3,16 @@ import { createRoot } from "react-dom/client";
 import { emit } from "@tauri-apps/api/event";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
-import { CenterPattern } from "../../src/features/center-pattern/CenterPattern";
-import { PetSprite } from "../../src/features/center-pattern/PetSprite";
-import { ISLAND_CURSOR_MOVED_EVENT } from "../../src/features/center-pattern/api";
-import { CENTER_PATTERNS, type CenterPatternId, type PetMood } from "../../src/features/center-pattern/patterns";
+import type { PetInfo } from "../../src/features/center-pattern/api";
+import type { CenterPatternId, PetMood } from "../../src/features/center-pattern/patterns";
 import type { AgentActivity } from "../../src/features/center-pattern";
-import { useCenterDecor } from "../../src/features/center-pattern/useCenterDecor";
-import "../../src/features/center-pattern/plugin/island";
-import "../../src/windows/island/IslandCollapsedBar.css";
 
+const OWNER = "center-pattern";
 const MOODS: PetMood[] = ["idle", "running", "waiting", "failed", "done"];
 const params = new URLSearchParams(location.search);
 const petsBase = params.get("petsBase") ?? "/node_modules/.cache/codex-pets";
 const petIds = (params.get("pets") ?? "").split(",").filter(Boolean);
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
-const trackingCalls: boolean[] = [];
-let centerPlugin = { enabled: true, settings: { pattern: "eyes", pet: "" } as Record<string, unknown> };
-mockIPC((command, payload) => {
-  if (command === "set_island_cursor_tracking") trackingCalls.push(Boolean((payload as { enabled?: boolean }).enabled));
-  if (command === "list_plugins")
-    return { plugins: [{ id: "focusd.center-pattern", builtin: true, status: "running", ...centerPlugin }] };
-  if (command === "get_pet_spritesheet") {
-    const id = (payload as { id: string }).id;
-    if (id === "synthetic") return SHEET;
-    if (petIds.includes(id)) return `${petsBase}/${id}/spritesheet.webp`;
-    throw new Error(`no pet ${id}`);
-  }
-}, { shouldMockEvents: true });
-mockWindows("main");
 
 function syntheticSheet(rows = 9): string {
   const canvas = document.createElement("canvas");
@@ -55,13 +35,62 @@ function syntheticSheet(rows = 9): string {
 }
 
 const SHEET = syntheticSheet();
+
+Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
+const trackingCalls: boolean[] = [];
+const configCalls: { id: string; key: string; value: unknown }[] = [];
+let centerPlugin = { enabled: true, config: { pattern: "eyes", pet: "" } as Record<string, unknown> };
+const petList: PetInfo[] = [
+  { id: "xiaoba", displayName: "小八", source: "codex" },
+  { id: "synthetic", displayName: "Synthetic", source: "app" },
+];
+const builtinReply = () => [{ id: OWNER, kind: "builtin" as const, enabled: centerPlugin.enabled, background: [], config: { ...centerPlugin.config } }];
+
+mockIPC((command, payload) => {
+  const args = (payload ?? {}) as Record<string, unknown>;
+  if (command === "set_island_cursor_tracking") trackingCalls.push(Boolean(args.enabled));
+  if (command === "get_builtin_plugins") return builtinReply();
+  if (command === "set_builtin_plugin_config") {
+    const id = String(args.id);
+    const key = String(args.key);
+    const value = args.value ?? null;
+    configCalls.push({ id, key, value });
+    if (value === null) delete centerPlugin.config[key];
+    else centerPlugin.config[key] = value;
+    return builtinReply();
+  }
+  if (command === "list_pets") return petList;
+  if (command === "get_pet_spritesheet") {
+    const id = String(args.id);
+    if (id === "synthetic" || id === "xiaoba") return SHEET;
+    if (petIds.includes(id)) return `${petsBase}/${id}/spritesheet.webp`;
+    throw new Error(`no pet ${id}`);
+  }
+  return null;
+}, { shouldMockEvents: true });
+mockWindows("main");
+
+const { CenterPattern } = await import("../../src/features/center-pattern/CenterPattern");
+const { CenterPatternSettingsGroup } = await import("../../src/features/center-pattern/CenterPatternSettingsGroup");
+const { PetSprite } = await import("../../src/features/center-pattern/PetSprite");
+const { ISLAND_CURSOR_MOVED_EVENT } = await import("../../src/features/center-pattern/api");
+const { CENTER_PATTERNS } = await import("../../src/features/center-pattern/patterns");
+const { useCenterDecor } = await import("../../src/features/center-pattern/useCenterDecor");
+await import("../../src/features/center-pattern/plugin/island");
+const { BUILTIN_PLUGINS_CHANGED } = await import("../../src/features/plugin-kernel/api");
+const { useBuiltinConfig, useBuiltinEnabled } = await import("../../src/features/plugin-kernel/useBuiltinPlugins");
+const { I18nProvider } = await import("../../src/i18n");
+await import("../../src/windows/island/IslandCollapsedBar.css");
+
 const fixture = document.getElementById("fixture")!;
 const results = document.getElementById("results")!;
 const messages: string[] = [];
 const root = createRoot(fixture);
 
 function Slot({ agents = [], paused = false, markLight = false }: { agents?: AgentActivity[]; paused?: boolean; markLight?: boolean }) {
-  const slots = useCenterDecor({ paused, agents, markLight });
+  const enabled = useBuiltinEnabled(OWNER);
+  const config = useBuiltinConfig(OWNER);
+  const slots = useCenterDecor({ paused, agents, markLight, enabled, settings: config });
   return <div className="cp-island cp-slot">
     {slots.statusLight ? <span className="cp-light">{slots.statusLight}</span> : null}
     {slots.center ? <span className="island__center-slot">{slots.center}</span> : null}
@@ -131,14 +160,17 @@ const waitFor = async (check: () => boolean, label: string) => {
   for (let i = 0; i < 100 && !check(); i += 1) await new Promise((resolve) => setTimeout(resolve, 20));
   if (!check()) throw new Error(label);
 };
+const syncSwitch = async (enabled: boolean, config: Record<string, unknown>) => {
+  centerPlugin = { enabled, config: { ...config } };
+  await act(async () => { await emit(BUILTIN_PLUGINS_CHANGED, builtinReply()); });
+};
 
 async function runChecks() {
-
   const pass = (label: string) => messages.push(`PASS ${label}`);
   const expect = (ok: boolean, label: string) => { if (!ok) throw new Error(label); pass(label); };
-  const slotWith = async (settings: Record<string, unknown>, agents: AgentActivity[] = [], enabled = true) => {
-    centerPlugin = { enabled, settings };
-    await render(<Slot key={JSON.stringify([settings, agents, enabled])} agents={agents} />);
+  const slotWith = async (config: Record<string, unknown>, agents: AgentActivity[] = [], enabled = true) => {
+    await syncSwitch(enabled, config);
+    await render(<Slot key={JSON.stringify([config, agents, enabled])} agents={agents} />);
   };
 
   await slotWith({ pattern: "bird", pet: "" });
@@ -187,15 +219,41 @@ async function runChecks() {
   const smaller = pill(".cp-slot .island__center-slot");
   expect(smaller !== undefined && Math.abs(smaller.height - 18) < 0.6, `大小设成 18 时悬岛胶囊 18px 高（${smaller?.height.toFixed(1)}px）`);
 
-  centerPlugin = { enabled: false, settings: { pattern: "cat", pet: "" } };
+  await syncSwitch(false, { pattern: "cat", pet: "" });
   await render(<Slot key="light" markLight agents={[{ phase: "waiting", updatedAt: Date.now() }]} />);
   const lightPill = fixture.querySelector(".cp-light .center-mark-pill rect")?.getBoundingClientRect();
   expect(fixture.querySelector<HTMLElement>(".cp-light .center-mark")?.dataset.mood === "waiting" && lightPill !== undefined && Math.abs(lightPill.height - 24) < 0.6,
     "悬岛状态灯：中心图案关着也跟随 Agent，胶囊 24px 高");
-  centerPlugin = { enabled: true, settings: { pattern: "mark", pet: "" } };
+  await syncSwitch(true, { pattern: "mark", pet: "" });
   await render(<Slot key="light-and-center" markLight />);
   expect(fixture.querySelector(".cp-slot .island__center-slot .center-mark") !== null && !fixture.querySelector(".cp-agent-icon"),
     "状态灯已是悬岛时，标题前不再放第二个悬岛");
+
+  configCalls.length = 0;
+  await syncSwitch(true, {});
+  await render(<I18nProvider><CenterPatternSettingsGroup /></I18nProvider>);
+  await waitFor(() => !fixture.querySelector<HTMLButtonElement>(".select-control__trigger[disabled]"), "宠物下拉列表加载完成");
+  const triggers = fixture.querySelectorAll<HTMLButtonElement>(".select-control__trigger");
+  expect(triggers.length === 2 && fixture.querySelectorAll(".settings-row").length === 3, "第 3 版外观设置分节渲染图案、宠物、大小三行");
+  await act(async () => { triggers[0].click(); });
+  await act(async () => { fixture.querySelector<HTMLElement>(".select-control__option[data-value='pet']")!.click(); });
+  await act(async () => { triggers[1].click(); });
+  await act(async () => { fixture.querySelector<HTMLElement>(".select-control__option[data-value='synthetic']")!.click(); });
+  const sizeInput = fixture.querySelector<HTMLInputElement>("input[type='number']")!;
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(sizeInput, "20");
+    sizeInput.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await act(async () => {
+    sizeInput.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  });
+  expect(
+    configCalls.length === 3
+      && configCalls[0].id === OWNER && configCalls[0].key === "pattern" && configCalls[0].value === "pet"
+      && configCalls[1].key === "pet" && configCalls[1].value === "synthetic"
+      && configCalls[2].key === "size" && configCalls[2].value === 20,
+    "外观设置分节把图案、宠物和大小写进内置插件 center-pattern 的配置",
+  );
 
   await render(<Gallery paused={false} />);
   for (const pattern of CENTER_PATTERNS) {
@@ -274,7 +332,7 @@ if (params.has("test")) {
   });
 } else {
   if (params.has("slot")) {
-    centerPlugin.settings = { pattern: params.get("slot") || "eyes", pet: params.get("pet") ?? "synthetic" };
+    centerPlugin.config = { pattern: params.get("slot") || "eyes", pet: params.get("pet") ?? "synthetic" };
     void render(<Slot agents={params.has("waiting") ? [{ phase: "waiting", updatedAt: Date.now() }] : []} />);
   } else void render(<Gallery paused={params.has("paused")} mood={(params.get("mood") as PetMood) || undefined} />);
   results.textContent = `prefers-reduced-motion: ${reducedMotion ? "reduce" : "no-preference"}。?paused 暂停，?mood=running 只看一个状态，?slot=pet&pet=<id> 看折叠栏槽位。`;

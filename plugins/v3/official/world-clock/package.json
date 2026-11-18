@@ -1,0 +1,49 @@
+{
+  "name": "@fuyu/world-clock",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Multi-timezone world clock with relative hour offsets, day/night state, and collapsed-bar city clock",
+  "author": "TixXin",
+  "license": "MIT",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev",
+    "build": "fuyu-plugin build",
+    "check": "fuyu-plugin check --market",
+    "package": "fuyu-plugin pack",
+    "typecheck": "tsc"
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "世界时钟",
+      "en": "World Clock"
+    },
+    "description": {
+      "zh-CN": "查看全球多个城市与时区的实时时间、昼夜状态及与本机的时差，支持将关注城市显示在收起条。",
+      "en": "View live times, day/night state, and hour offsets across world cities and IANA time zones, with an optional collapsed-bar clock."
+    },
+    "icon": "assets/icon.svg",
+    "categories": [
+      "utilities",
+      "information"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
+    },
+    "slots": [
+      "island.page/v1",
+      "island.collapsed/v1",
+      "settings.section/v1"
+    ]
+  }
+}

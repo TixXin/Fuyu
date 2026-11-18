@@ -5,9 +5,11 @@ import type { ServiceEntry } from "@fuyu/plugin-base/services";
 import { installShared } from "@fuyu/plugin-base/client/react";
 import type { SlotRegistry } from "@fuyu/plugin-base/client/slots";
 import { isMacOS } from "../../lib/platform";
+import { islandNoticesV1 } from "../../lib/island-notices/service";
 import { getPluginHostConnection } from "./api";
 import { windowServices } from "./services.ts";
 import { windowSlots, type SlotWindow } from "./slots";
+import { createWaitingMonitor, type WaitingPluginInput } from "./waitingMonitor.ts";
 
 export interface PluginRuntime {
   registry: SlotRegistry;
@@ -34,16 +36,34 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
   const loader = createLoader({ registry, base: PLUGIN_BASE, bridge });
   const services = createServiceProxy((method, params, options) => connection?.call(method, params, options) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
   windowServices.attach(services);
+  const waitingMonitor = window === "island"
+    ? createWaitingMonitor({
+        onOverdue: ({ id, waitingFor }) => {
+          void windowServices
+            .get(islandNoticesV1)
+            .notify({
+              pluginId: id,
+              pluginName: null,
+              title: `插件 ${id} 仍在等待依赖`,
+              body: `等待服务：${waitingFor.join(", ")}`,
+              durationMs: 6000,
+              actions: [],
+            })
+            .catch(() => undefined);
+        },
+      })
+    : null;
   let clients: ClientEntry[] = [];
   const sync = () => {
     void loader.sync(clients.filter((entry) => entry.window === window));
   };
-  connection = connectHost<{ clients?: ClientEntry[]; services?: ServiceEntry[] }>({
+  connection = connectHost<{ clients?: ClientEntry[]; services?: ServiceEntry[]; plugins?: WaitingPluginInput[] }>({
     resolve: target,
     window,
     onSnapshot: (snapshot, { fresh }) => {
       clients = snapshot.clients ?? [];
       services.update(snapshot.services ?? []);
+      if (snapshot.plugins) waitingMonitor?.update(snapshot.plugins);
       if (fresh) void services.resubscribe();
       sync();
     },
@@ -51,6 +71,7 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
       if (name === "plugin") bridge.deliver(data as PluginMessage);
       if (name === "service") services.deliver(data as ServiceEventMessage);
       if (name === "services") services.update(data as ServiceEntry[]);
+      if (name === "plugins" && Array.isArray(data)) waitingMonitor?.update(data as WaitingPluginInput[]);
       if (name !== "clients") return;
       clients = data as ClientEntry[];
       sync();

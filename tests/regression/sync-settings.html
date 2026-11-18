@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fuyu sync settings regression</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+      .sync-fixture {
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .layout {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 24px;
+      }
+      #wide {
+        width: 820px;
+        max-width: 100%;
+        display: grid;
+        gap: 14px;
+      }
+      #narrow {
+        width: 340px;
+        display: grid;
+        gap: 14px;
+      }
+      #results {
+        margin: 16px 0 0;
+        font: 12px/1.6 monospace;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="settings-stage sync-fixture">
+      <div class="layout">
+        <div id="wide"></div>
+        <div id="narrow"></div>
+      </div>
+      <pre id="results"></pre>
+    </main>
+    <script type="module" src="/tests/regression/sync-settings.tsx"></script>
+  </body>
+</html>

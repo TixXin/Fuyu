@@ -1,8 +1,8 @@
-import type { AgentSettingValues } from "../../features/agent-status/agentSettings";
-import type { CalendarSettingValues } from "../../features/calendar/calendarSettings";
+import type { AgentSettingValues } from "./agentSettings";
+import type { CalendarSettingValues } from "./calendarSettings";
 import type { GlassSettingValues } from "./glassSettings";
-import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "../../features/media/lyrics/lyricsSettings";
-import type { TodoProject } from "../../features/todos/types";
+import type { LyricsIntro, LyricsIslandPriority, LyricsKaraokeColor, LyricsKaraokeFallback, LyricsKaraokeFill } from "./lyricsSettings";
+import type { TodoProject } from "../todo-projects/prefix";
 
 export type TranslationTarget = "window" | "island";
 
@@ -20,6 +20,7 @@ export type IslandForm = "auto" | "top" | "pill" | "notch";
 export type ExpandTrigger = "click" | "hover";
 export type MinimizeAction = "tray" | "tuck";
 export type TuckedHoverAction = "reveal" | "expand";
+export type TuckStyle = "edge" | "line" | "hidden";
 
 export type MessageNotice = "line" | "banner" | "panel";
 export type IslandMotion = "spring" | "smooth" | "fast" | "bouncy" | "none";
@@ -31,6 +32,10 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   fontFamily: IslandFont;
   glassIntensity: number;
   opacity: number;
+  islandOpacity: number;
+  idleDim: boolean;
+  idleDimSeconds: number;
+  idleDimOpacity: number;
   collapsedScale: number;
   expandedScale: number;
   marginY: number;
@@ -84,12 +89,14 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   messageNotice: MessageNotice;
   messagePanelSeconds: number;
   expandTrigger: ExpandTrigger;
+  clickCollapseOnLeave: boolean;
   hoverExpandDelayMs: number;
   hoverCollapseDelayMs: number;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
   minimizeAction: MinimizeAction;
   tuckedHoverAction: TuckedHoverAction;
+  tuckStyle: TuckStyle;
   pageDigitModifiers: string;
   pageNextShortcut: string;
   pagePreviousShortcut: string;

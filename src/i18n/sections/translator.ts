@@ -24,8 +24,13 @@ export type TranslatorText = {
   secret: string;
   replaceSecret: string;
   enterSecret: string;
+  enterOptionalSecret: string;
+  optionalLocalSecret: string;
   saveSecret: string;
   deleteSecret: string;
+  testSecret: string;
+  testingSecret: string;
+  testOk: string;
   secretSaved: string;
   secretDeleted: string;
   shortcut: string;
@@ -97,8 +102,13 @@ export const zhCN: TranslatorText = {
   secret: "API 密钥",
   replaceSecret: "输入新密钥以替换",
   enterSecret: "输入 API 密钥",
+  enterOptionalSecret: "本机服务可留空",
+  optionalLocalSecret: "本机服务无需密钥；若开启了鉴权也可保存",
   saveSecret: "保存密钥",
   deleteSecret: "删除已保存密钥",
+  testSecret: "测试连接",
+  testingSecret: "测试中…",
+  testOk: "连接正常",
   secretSaved: "新密钥已保存",
   secretDeleted: "密钥已删除",
   shortcut: "全局快捷键",
@@ -170,8 +180,13 @@ export const en: TranslatorText = {
   secret: "API key",
   replaceSecret: "Enter a new key to replace it",
   enterSecret: "Enter your API key",
+  enterOptionalSecret: "Optional for local services",
+  optionalLocalSecret: "Optional for local services; save one if auth is enabled",
   saveSecret: "Save key",
   deleteSecret: "Delete saved key",
+  testSecret: "Test",
+  testingSecret: "Testing…",
+  testOk: "Connected",
   secretSaved: "New key saved",
   secretDeleted: "Key deleted",
   shortcut: "Global shortcut",

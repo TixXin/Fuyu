@@ -1,7 +1,8 @@
 ; Fuyu: Tauri's NSIS template from tauri-cli v2.12.4 (crates/tauri-bundler/src/bundle/windows/nsis/
-; installer.nsi), changed only so the shortcuts carry the app's Chinese name instead of the product
-; name Fuyu; old Fuyu.lnk shortcuts are renamed on update and removed on uninstall. Every change is
-; marked "Fuyu:". When @tauri-apps/cli is upgraded, copy that version's template and redo them
+; installer.nsi), changed so the shortcuts carry the app's Chinese name instead of the product name
+; Fuyu (old Fuyu.lnk shortcuts are renamed on update and removed on uninstall) and so a real
+; uninstall runs --uninstall-cleanup before deleting the binary or $APPDATA. Every change is marked
+; "Fuyu:". When @tauri-apps/cli is upgraded, copy that version's template and redo them
 ; (tests/scripts/nsis-template.test.mjs fails until the version above matches).
 
 Unicode true
@@ -82,6 +83,8 @@ Var UpdateMode
 Var NoShortcutMode
 Var WixMode
 Var OldMainBinaryName
+; Fuyu: set when uninstall.exe is launched during an upgrade, downgrade or passive reinstall.
+Var ReinstallMode
 
 Name "${PRODUCTNAME}"
 
@@ -404,6 +407,13 @@ Function PageLeaveReinstall
       ReadRegStr $4 SHCTX "${MANUPRODUCTKEY}" ""
       ReadRegStr $R1 SHCTX "${UNINSTKEY}" "UninstallString"
       ${IfThen} $UpdateMode = 1 ${|} StrCpy $R1 "$R1 /UPDATE" ${|} ; append /UPDATE
+      ; Fuyu: tell uninstall.exe this is an upgrade, downgrade or passive reinstall so it skips hook/data cleanup.
+      ${If} $UpdateMode <> 1
+        ${If} $R0 <> 0
+        ${OrIf} $PassiveMode = 1
+          StrCpy $R1 "$R1 /REINSTALL"
+        ${EndIf}
+      ${EndIf}
       ${IfThen} $PassiveMode = 1 ${|} StrCpy $R1 "$R1 /P" ${|} ; append /P
       StrCpy $R1 "$R1 _?=$4" ; append uninstall directory
       ExecWait '$R1' $0
@@ -848,6 +858,12 @@ Function un.onInit
   ${IfNot} ${Errors}
     StrCpy $UpdateMode 1
   ${EndIf}
+
+  ; Fuyu: skip external hook and app-data cleanup when uninstall.exe is run by the installer during reinstall/upgrade.
+  ${GetOptions} $CMDLINE "/REINSTALL" $ReinstallMode
+  ${IfNot} ${Errors}
+    StrCpy $ReinstallMode 1
+  ${EndIf}
 FunctionEnd
 
 Section Uninstall
@@ -857,6 +873,18 @@ Section Uninstall
   !endif
 
   !insertmacro CheckIfAppIsRunning "$INSTDIR\${MAINBINARYNAME}.exe" "${PRODUCTNAME}"
+
+  ; Fuyu: remove external AI agent hooks, reply markers, credentials and Fuyu home before deleting
+  ; the main executable or $APPDATA\${BUNDLEID}\home.json; skip during updates and reinstalls.
+  ${If} $UpdateMode <> 1
+  ${AndIf} $ReinstallMode <> 1
+  ${AndIf} ${FileExists} "$INSTDIR\${MAINBINARYNAME}.exe"
+    ${If} $DeleteAppDataCheckboxState = 1
+      ExecWait '"$INSTDIR\${MAINBINARYNAME}.exe" --uninstall-cleanup --delete-data'
+    ${Else}
+      ExecWait '"$INSTDIR\${MAINBINARYNAME}.exe" --uninstall-cleanup'
+    ${EndIf}
+  ${EndIf}
 
   ; Delete the app directory and its content from disk
   ; Copy main executable
