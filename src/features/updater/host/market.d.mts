@@ -1,4 +1,6 @@
-import type { MarketCatalogSnapshot, MarketMethods } from "../../../../packages/plugin-services/src/services/market.mjs";
+import type { MarketCatalogSnapshot, MarketMethods, MarketPluginDetails } from "../../../../packages/plugin-services/src/services/market.mjs";
+
+export type { MarketPluginDetails };
 
 export interface MarketTrustKey {
   keyId: string;

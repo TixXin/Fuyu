@@ -8,6 +8,7 @@ export interface PendingPluginInstall {
   id: string;
   version: string;
   isUpdate?: boolean;
+  fresh?: boolean;
   confirmation: PluginInstallConfirmation;
 }
 
@@ -55,7 +56,7 @@ export function PluginInstallConfirmModal({
     return () => before?.focus();
   }, []);
 
-  const { id, version, isUpdate, confirmation } = pending;
+  const { id, version, isUpdate, fresh, confirmation } = pending;
   const displayName = resolvePluginText(confirmation.displayName, locale, id);
   const description = resolvePluginText(confirmation.description, locale, "");
   const title = isUpdate ? copy.titleUpdate : copy.titleInstall;
@@ -134,6 +135,11 @@ export function PluginInstallConfirmModal({
           </p>
         ) : null}
         {description ? <p className="plugins-v3__note">{description}</p> : null}
+        {fresh ? (
+          <p className="plugins-v3__detail" data-cooldown-note="">
+            {isUpdate ? copy.cooldownUpdateNote : copy.cooldownInstallNote}
+          </p>
+        ) : null}
         {confirmation.requiredPlugins && confirmation.requiredPlugins.length > 0 ? (
           <p className="plugins-v3__detail plugins-v3__detail--info" data-required-plugins={confirmation.requiredPlugins.join(",")}>
             {copy.requiresNote(confirmation.requiredPlugins.join(", "))}

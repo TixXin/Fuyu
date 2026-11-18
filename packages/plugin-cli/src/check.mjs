@@ -8,6 +8,10 @@ import { createScratch, snapshotDirectory } from "./sources.mjs";
 const KNOWN_SLOTS = Object.freeze(Object.keys(SLOTS));
 const KNOWN_INJECT = Object.freeze([
   "clients",
+  "commands",
+  "config",
+  "http",
+  "windows",
   "translator.engines",
   "lyrics.sources",
   "calendar.sources",
@@ -47,7 +51,17 @@ function checkInterfaces(pkg, appKey, allowExperimental) {
   if (Array.isArray(app.slots)) {
     app.slots.forEach((slot, index) => {
       if (typeof slot !== "string" || slot.trim() === "") return;
-      if (Object.hasOwn(SLOTS, slot)) return;
+      if (Object.hasOwn(SLOTS, slot)) {
+        if (SLOTS[slot].experimental === true) {
+          if (allowExperimental && (experimental.has(slot) || experimental.has("windows/v1"))) return;
+          issues.push({
+            path: `${appKey}.slots[${index}]`,
+            code: "experimental",
+            message: `"${slot}" is an experimental slot and requires ${appKey}.experimental to include "${slot}" or "windows/v1"`,
+          });
+        }
+        return;
+      }
       if (allowExperimental && experimental.has(slot)) return;
       issues.push({
         path: `${appKey}.slots[${index}]`,
@@ -75,6 +89,15 @@ function checkInterfaces(pkg, appKey, allowExperimental) {
       if (!Array.isArray(list)) continue;
       list.forEach((name, index) => {
         if (typeof name !== "string" || name.trim() === "") return;
+        if (name === "windows") {
+          if (allowExperimental && (experimental.has("windows") || experimental.has("windows/v1"))) return;
+          issues.push({
+            path: `${appKey}.inject.${kind}[${index}]`,
+            code: "experimental",
+            message: `"windows" is experimental and requires ${appKey}.experimental to include "windows/v1"`,
+          });
+          return;
+        }
         if (SERVICE_NAME.test(name) || KNOWN_INJECT_SET.has(name)) return;
         if (allowExperimental && experimental.has(name)) return;
         issues.push({

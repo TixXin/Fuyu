@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import { I18nProvider, LOCALE_STORAGE_KEY, TRANSLATIONS } from "../../src/i18n";
-import { marketV1, type MarketCatalogPlugin } from "@fuyu/plugin-services";
+import { marketV1, pluginConfigV1, pluginWindowsV1, type MarketCatalogPlugin, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { HostInfoV3, PluginHostConnector, PluginHostHandlers, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
 
@@ -30,32 +30,10 @@ const switchCalls: { id: string; enabled: boolean }[] = [];
 const migrationDismissCalls: string[] = [];
 let migrationReply = {
   official: [
-    {
-      v2Id: "dev.focusd.weather",
-      v3Id: "@fuyu/weather",
-      title: { "zh-CN": "天气", en: "Weather" },
-      enabledInV2: true,
-      configMigrated: true,
-      installedInV3: false,
-      registeredInYml: false,
-    },
-    {
-      v2Id: "dev.focusd.pomodoro",
-      v3Id: "@fuyu/pomodoro",
-      title: { "zh-CN": "番茄钟", en: "Pomodoro" },
-      enabledInV2: true,
-      configMigrated: false,
-      installedInV3: true,
-      registeredInYml: true,
-    },
+    { v2Id: "dev.focusd.weather", v3Id: "@fuyu/weather", title: { "zh-CN": "天气", en: "Weather" }, enabledInV2: true, configMigrated: true, installedInV3: false, registeredInYml: false },
+    { v2Id: "dev.focusd.pomodoro", v3Id: "@fuyu/pomodoro", title: { "zh-CN": "番茄钟", en: "Pomodoro" }, enabledInV2: true, configMigrated: false, installedInV3: true, registeredInYml: true },
   ],
-  other: [
-    {
-      id: "com.example.custom",
-      title: { "zh-CN": "自定义小插件", en: "Custom gadget" },
-      enabledInV2: true,
-    },
-  ],
+  other: [{ id: "com.example.custom", title: { "zh-CN": "自定义小插件", en: "Custom gadget" }, enabledInV2: true }],
   islandPending: false,
   settingsPending: true,
 };
@@ -116,6 +94,17 @@ let emitMarketChanged: (() => void) | undefined;
 const marketProvider = windowServices.provide(marketV1, {
   catalog: () => marketSnapshot(),
   refresh: () => (marketCalls.push("refresh"), marketSnapshot()),
+  details: ({ name }) => ({
+    name, displayName: { "zh-CN": "天气", en: "Weather" }, description: { "zh-CN": "天气预报", en: "Forecast" },
+    official: name === "@fuyu/weather", publisherName: "TixXin", author: "TixXin", license: "MIT",
+    homepage: "https://github.com/TixXin/fuyu-plugins", repository: "https://github.com/TixXin/fuyu-plugins", bugs: null, funding: null,
+    keywords: ["weather"], categories: ["utilities"], platforms: ["win32", "darwin"], preview: false, likes: 42,
+    installedVersion: name === "@fuyu/weather" ? weatherInstalled : null, latestVersion: "1.0.0",
+    readme: "### Hourly forecast\nLive temperature on the island.", changelog: "### 1.0.0\nInitial release.",
+    screenshots: [], commands: [{ id: "refresh", title: { "zh-CN": "刷新天气", en: "Refresh weather" }, keybinding: "Alt+W" }],
+    slots: ["island.page/v1"], provides: [], replaces: [], network: ["api.open-meteo.com"], nodeApis: [], requires: {},
+    versions: [{ version: "1.0.0", publishedAt: "2026-11-18T00:00:00Z", size: 2048, reviewed: true, urgent: false, enginesFuyu: ">=0.9.0" }],
+  }),
   inspectPackage: () => { throw new Error("unexpected inspectPackage"); },
   installMarket: ({ name, version }) => {
     marketCalls.push(`installMarket:${name}@${version ?? ""}`);
@@ -129,6 +118,30 @@ const marketProvider = windowServices.provide(marketV1, {
   uninstall: ({ id, removeData }) => (marketCalls.push(`uninstall:${id}:${Boolean(removeData)}`), { id, removed: true as const }),
 });
 emitMarketChanged = () => { marketProvider.emit("changed", {}); };
+
+const weatherSchema = {
+  type: "object" as const,
+  properties: {
+    autoRefresh: { type: "boolean" as const, title: { "zh-CN": "自动刷新", en: "Auto refresh" }, default: true },
+    unit: { type: "string" as const, title: { "zh-CN": "单位", en: "Unit" }, enum: ["celsius", "fahrenheit"], default: "celsius" },
+  },
+};
+const weatherDefaults: PluginConfigValues = { autoRefresh: true, unit: "celsius" };
+let weatherConfig: PluginConfigValues = { ...weatherDefaults };
+const configCalls: string[] = [];
+windowServices.provide(pluginConfigV1, {
+  list: () => ({ items: [] }),
+  get: ({ id }) => (id === "@fuyu/weather" ? { id, schema: weatherSchema, values: { ...weatherConfig }, defaults: weatherDefaults } : { id, schema: null, values: {}, defaults: {} }),
+  set: ({ id, values }) => (weatherConfig = { ...weatherConfig, ...values }, configCalls.push(`set:${id}:${JSON.stringify(values)}`), { id, schema: weatherSchema, values: { ...weatherConfig }, defaults: weatherDefaults }),
+  reset: ({ id }) => (weatherConfig = { ...weatherDefaults }, configCalls.push(`reset:${id}`), { id, schema: weatherSchema, values: { ...weatherConfig }, defaults: weatherDefaults }),
+});
+let weatherRules: PluginWindowRules = { disallowAlwaysOnTop: false, disallowClickThrough: false, hideAll: false };
+const ruleCalls: string[] = [];
+windowServices.provide(pluginWindowsV1, {
+  getRules: () => ({ ...weatherRules }),
+  setRules: ({ id, ...patch }) => (weatherRules = { ...weatherRules, ...patch }, ruleCalls.push(`rules:${id}:${JSON.stringify(patch)}`), { ...weatherRules }),
+  list: () => ({ items: [] }),
+});
 
 const text = TRANSLATIONS[locale].settings.pluginsV3;
 const usage = (more: Partial<NonNullable<PluginStatusV3["usage"]>> = {}) => ({ cpuMs: 0, calls: 0, applyMs: 0.4, timers: 0, listeners: 0, services: 0, clients: 0, errors: 0, ...more });
@@ -318,22 +331,31 @@ try {
     Boolean(page.querySelector("[data-market-plugin='@fuyu/weather']"))
       && page.querySelector("[data-market-plugin='@fuyu/weather']")!.textContent!.includes(text.market.officialBadge)
       && page.querySelector("[data-market-plugin='@someone/clock']")!.textContent!.includes(text.market.cooldownBadge)
+      && !page.querySelector("[data-market-plugin='@someone/clock']")!.textContent!.includes(text.market.cooldownHint)
+      && !page.querySelector("[data-market-plugin='@someone/clock'] .plugins-v3__pill--warn")
       && !page.querySelector("[data-action='market-install-file']"),
-    "The v3 market tab lists official and cooldown badges and hides local .fuyu import while manual install is off",
+    "The v3 market tab lists official and calm New badges without warning banners and hides local .fuyu import while manual install is off",
   );
   await act(async () => page.querySelector<HTMLInputElement>(".plugins-v3__manual-toggle input")!.click());
   await settle();
   check(manualAllowed && Boolean(page.querySelector("[data-action='market-install-file']")), "Turning on manual .fuyu installation reveals the file import button");
+  await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@someone/clock']")!.querySelector<HTMLButtonElement>("[data-action='market-install']")!.click());
+  await settle();
+  const clockModal = page.querySelector<HTMLElement>("[data-install-modal='@someone/clock']");
+  check(Boolean(clockModal) && clockModal!.textContent!.includes(text.market.confirmModal.cooldownInstallNote), "Clicking Install on a fresh plugin shows the cooldown note inside the confirmation modal");
+  await act(async () => { clockModal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+  await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@fuyu/weather']")!.querySelector<HTMLButtonElement>("[data-action='market-open-detail']")!.click());
+  await settle();
+  const marketDetail = page.querySelector<HTMLElement>("[data-market-detail-modal='@fuyu/weather']");
+  check(Boolean(marketDetail) && marketDetail!.textContent!.includes("Hourly forecast") && marketDetail!.textContent!.includes("MIT") && Boolean(marketDetail!.querySelector("[data-market-likes='42']")), "Clicking a market plugin title opens the rich detail modal with README, license, and likes");
+  await act(async () => marketDetail!.querySelector<HTMLButtonElement>("[data-detail-tab='capabilities']")!.click());
+  check(marketDetail!.textContent!.includes("Alt+W") && marketDetail!.textContent!.includes("api.open-meteo.com"), "Switching to Capabilities in the market detail modal lists commands, default keybindings, and network domains");
+  await act(async () => { marketDetail!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+  check(!page.querySelector("[data-market-detail-modal='@fuyu/weather']"), "Escape closes the market detail modal");
   await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@fuyu/weather']")!.querySelector<HTMLButtonElement>("[data-action='market-install']")!.click());
   await settle();
   const installModal = page.querySelector<HTMLElement>("[data-install-modal='@fuyu/weather']");
-  check(
-    Boolean(installModal)
-      && installModal!.textContent!.includes("api.open-meteo.com")
-      && installModal!.textContent!.includes("island.page/v1")
-      && installModal!.textContent!.includes(text.market.confirmModal.hostSecurityNote),
-    "Clicking Install opens the confirmation modal with declared network domains, UI slots, and the host credential note",
-  );
+  check(Boolean(installModal) && !installModal!.textContent!.includes(text.market.confirmModal.cooldownInstallNote) && installModal!.textContent!.includes("api.open-meteo.com") && installModal!.textContent!.includes("island.page/v1") && installModal!.textContent!.includes(text.market.confirmModal.hostSecurityNote), "Clicking Install opens the confirmation modal with declared network domains, UI slots, and the host credential note");
   await act(async () => installModal!.querySelector<HTMLButtonElement>("[data-action='confirm-install']")!.click());
   await settle();
   check(
@@ -352,6 +374,11 @@ try {
   check(marketCalls.includes("setEnabled:@fuyu/weather=false"), "Toggling a market-installed plugin card calls market/v1 setEnabled");
   await act(async () => card("@fuyu/weather")!.click());
   await settle();
+  await act(async () => page.querySelector<HTMLElement>("[data-schema-field='autoRefresh'] input")!.click());
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-action='reset-plugin-config']")!.click());
+  await act(async () => page.querySelector<HTMLElement>("[data-window-rule='disallowAlwaysOnTop'] input")!.click());
+  await settle();
+  check(configCalls.includes("set:@fuyu/weather:{\"autoRefresh\":false}") && configCalls.includes("reset:@fuyu/weather") && ruleCalls.includes("rules:@fuyu/weather:{\"disallowAlwaysOnTop\":true}"), "Plugin detail modal renders JSON Schema settings and window guardrail switches wired to plugin-config/v1 and plugin-windows/v1");
   await act(async () => page.querySelector<HTMLButtonElement>("[data-action='uninstall-plugin']")!.click());
   await act(async () => page.querySelector<HTMLButtonElement>("[data-action='confirm-uninstall-plugin']")!.click());
   await settle();

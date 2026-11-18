@@ -44,6 +44,18 @@ export type NowPlaying = { available: boolean, playing: boolean, audible: boolea
 
 export type PlatformSupport = { os: string, unsupported: Array<string>, devBuild: boolean, };
 
+export type PluginHotkeyBindings = Array<PluginHotkeySpec>;
+
+export type PluginHotkeySpec = { pluginId: string, command: string, shortcut: string, };
+
+export type PluginHotkeySyncResult = { conflicts: { [key in string]: Array<string> }, };
+
+export type PluginWindowInfo = { pluginId: string, windowId: string, label: string, kind: string, title: string, width: number, height: number, x: number | null, y: number | null, visible: boolean, focused: boolean, alwaysOnTop: boolean, resizable: boolean, clickThrough: boolean, };
+
+export type PluginWindowList = { windows: Array<PluginWindowInfo>, };
+
+export type PluginWindowOpenSpec = { pluginId: string, windowId: string, kind: string, title?: string | null, width: number, height: number, x?: number | null, y?: number | null, alwaysOnTop?: boolean | null, resizable?: boolean | null, visible?: boolean | null, clickThrough?: boolean | null, };
+
 export type RemoteHostStatus = { host: string, fetchedAt: number | null, error: string | null, fetching: boolean, sessions: number, approvalError: string | null, };
 
 export type Translated = { text: string, engine: string, };
@@ -68,6 +80,10 @@ export type RustMethods = {
   "media.playPause": { params: Record<string, never> | null; result: NowPlaying };
   "media.previous": { params: Record<string, never> | null; result: NowPlaying };
   "media.seek": { params: { positionMs: number }; result: NowPlaying };
+  "pluginKernel.syncHotkeys": { params: { bindings: PluginHotkeyBindings }; result: PluginHotkeySyncResult };
+  "pluginKernel.windowControl": { params: { pluginId: string; windowId?: string | null; action: string; title?: string | null; width?: number | null; height?: number | null; x?: number | null; y?: number | null; alwaysOnTop?: boolean | null; resizable?: boolean | null; clickThrough?: boolean | null }; result: PluginWindowInfo | null };
+  "pluginKernel.windowList": { params: { pluginId?: string | null }; result: PluginWindowList };
+  "pluginKernel.windowOpen": { params: { spec: PluginWindowOpenSpec }; result: PluginWindowInfo };
   "todos.add": { params: { title?: JsonValue | null; date?: JsonValue | null; project?: JsonValue | null }; result: JsonValue };
   "todos.days": { params: { from?: JsonValue | null; to?: JsonValue | null }; result: JsonValue };
   "todos.list": { params: { date?: JsonValue | null }; result: JsonValue };
@@ -80,4 +96,4 @@ export type RustMethods = {
   "translator.translate": { params: { text: string; direction: string; provider?: string | null; model?: string | null }; result: Translated };
 };
 
-export declare const RUST_METHODS: readonly ["agents.focus", "agents.remoteHosts", "agents.sessions", "agents.usage", "app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "clipboard.history", "fileShelf.add", "fileShelf.list", "media.next", "media.nowPlaying", "media.playPause", "media.previous", "media.seek", "todos.add", "todos.days", "todos.list", "todos.note", "todos.remove", "todos.setNote", "todos.update", "translator.engines", "translator.rewrite", "translator.translate"];
+export declare const RUST_METHODS: readonly ["agents.focus", "agents.remoteHosts", "agents.sessions", "agents.usage", "app.echo", "app.platformSupport", "app.version", "calendar.events", "calendar.sources", "clipboard.history", "fileShelf.add", "fileShelf.list", "media.next", "media.nowPlaying", "media.playPause", "media.previous", "media.seek", "pluginKernel.syncHotkeys", "pluginKernel.windowControl", "pluginKernel.windowList", "pluginKernel.windowOpen", "todos.add", "todos.days", "todos.list", "todos.note", "todos.remove", "todos.setNote", "todos.update", "translator.engines", "translator.rewrite", "translator.translate"];

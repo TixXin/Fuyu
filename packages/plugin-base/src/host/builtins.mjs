@@ -63,18 +63,25 @@ export function readBuiltins(dir) {
 function fromPackage(root, at) {
   try {
     const manifest = readManifest(root, { official: true });
-    return { host: manifest.host && pathToFileURL(manifest.host).href, clients: manifest.clients, declared: manifest.declared };
+    return {
+      host: manifest.host && pathToFileURL(manifest.host).href,
+      clients: manifest.clients,
+      declared: manifest.declared,
+      displayName: manifest.displayName,
+      commands: manifest.commands,
+      configSchema: manifest.configSchema,
+    };
   } catch (error) {
     throw new Error(`${at}: there is no host in the list, and ${error.message}`);
   }
 }
 
 export function builtinEntries(plugins = []) {
-  return plugins.map(({ id, host, kind, root, clients = [], declared = null, provides }) => ({
+  return plugins.map(({ id, host, kind, root, clients = [], declared = null, provides, displayName = null, commands = [], configSchema = null }) => ({
     id,
     name: host ?? CLIENT_ONLY,
     kind,
-    [SOURCE]: { source: "builtin", root, clients, declared, ...(provides?.length ? { provides } : {}) },
+    [SOURCE]: { source: "builtin", root, clients, declared, displayName, commands, configSchema, ...(provides?.length ? { provides } : {}) },
   }));
 }
 

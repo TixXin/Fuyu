@@ -13,11 +13,14 @@
 | `agents/v1` | `agentsV1` | `agents` | `sessions()`、`usage()`、`focus({ provider, sessionId?, cwd?, title? })`、`remoteHosts()` | `changed` | AI 代理会话列表、额度用量、跳到对应终端或编辑器窗口、SSH 远程电脑列表 |
 | `calendar/v1` | `calendarV1` | `calendar` | `events({ refresh? })`、`sources()` | `changed` | 读取上月初至下月底的日程列表与失败源诊断（`problems`），不含订阅链接与密码 |
 | `clipboard/v1` | `clipboardV1` | `clipboard` | `history({ limit? })`、`copyText({ text })`、`pasteText({ text, enter? })` | 无 | 读取最近复制的文本记录（1–50 条）、写入剪贴板历史、向当前前台窗口粘贴文本 |
+| `commands/v1` | `commandsV1` | 宿主内核 | `list()`、`run({ plugin, command, args? })`、`setKeybinding({ plugin, command, keybinding })` | `changed` | 列出已声明与运行中注册的插件命令、执行命令、修改或恢复全局快捷键及查询冲突状态 |
 | `file-shelf/v1` | `fileShelfV1` | `file-shelf` | `list()`、`add({ paths })` | 无 | 读取文件中转列表、将 1–20 个本地绝对路径加入文件中转 |
 | `lyrics/v1` | `lyricsV1` | `music` | `lookup(query)`、`sources()` | `changed` | 查询当前曲目的 LRC 同步歌词与双语翻译、列出已登记的歌词来源 |
 | `market/v1` | `marketV1` | `updater` | `catalog()`、`refresh()`、`inspectPackage({ base64 })`、`installMarket({ name, version? })`、`installFile({ base64, expectedSha256? })`、`setManualAllowed({ allowed })`、`setEnabled({ id, enabled })`、`uninstall({ id, removeData? })` | `changed` | 第 3 版插件市场索引拉取与验签、3 天冷静期筛选、`.fuyu` 包预检与安装、撤销停用、第三方插件启停与卸载 |
 | `media/v1` | `mediaV1` | `music` | `nowPlaying()`、`playPause()`、`next()`、`previous()`、`seek({ positionMs })` | 无 | 读取当前系统媒体播放状态与控制播放/上曲/下曲/跳转进度 |
 | `messages/v1` | `messagesV1` | `messages` | `sources()`、`notify(notice)`、`clear({ source? })` | `changed`、`arrived`、`action` | 查询各消息来源未读状态、推送结构化新消息通知（进收起条预览、横幅与到达面板）、清理未读 |
+| `plugin-config/v1` | `pluginConfigV1` | 宿主内核 | `list()`、`get({ id })`、`set({ id, values })`、`reset({ id })` | `changed` | 按插件 `fuyu.config` JSON Schema 读取、校验、持久化与重置插件配置（`<dataDir>/<id>/config.json`） |
+| `plugin-windows/v1` | `pluginWindowsV1` | 宿主内核 | `getRules({ id })`、`setRules({ id, disallowAlwaysOnTop?, disallowClickThrough?, hideAll? })`、`list({ id? })` | `changed` | 查询当前实验性独立插件窗口状态，以及读写「禁止置顶 / 禁止点击穿透 / 隐藏全部窗口」护栏规则 |
 | `reminders/v1` | `remindersV1` | `timer`（主窗口） | `push({ id, source, icon, title, detail?, snoozable? })` | 无 | 往主窗口提醒队列推送一条提醒卡片 |
 | `timers/v1` | `timersV1` | `timer` | `list()`、`start(params)`、`pause({ id })`、`resume({ id })`、`extend({ id, seconds })`、`remove({ id })`、`dismissRinging()`、`adopt({ timers })` | `changed`、`due` | 倒计时、番茄钟与秒表的增删改查及到点事件 |
 | `todos/v1` | `todosV1` | `todos` | `list({ date? })`、`days({ from, to })`、`add({ title, date?, project? })`、`update({ id, title?, completed? })`、`remove({ id })`、`note({ date? })`、`setNote({ note } \| { append })` | `changed` | 今日待办、未来排期、历史归档与每日笔记读写 |
@@ -61,6 +64,7 @@
 | `settings.category/v1` | `settings` | `list` | 2 | `group`, `icon`, `tabs`, `available`, `feature`, `aliases` | 设置窗口左侧导航栏的一级分类 |
 | `settings.section/v1` | `settings` | `list` | 4 | `category`（按 `category` 分组） | 设置窗口某个分类页内的配置分组卡片 |
 | `settings.runner/v1` | `settings` | `list` | 1 | 无 | 设置窗口无界面挂钩 |
+| `plugin-window.view/v1` | `plugin-window` | `list` | 8 | `windowId`, `title` | 实验性独立插件窗口（需声明 `fuyu.experimental: ["windows/v1"]`）的内容视图插槽 |
 
 ### 插槽主题变量（`SLOT_THEME`）
 

@@ -21,9 +21,11 @@ import {
   isManagedThirdParty,
   stateOf,
 } from "./BuiltinPluginsGroup";
+import { PluginSchemaForm } from "./PluginSchemaForm";
+import { PluginWindowRulesGroup } from "./PluginWindowRulesGroup";
 import type { PluginStatusV3 } from "./usePluginHostStatus";
 
-const FOCUSABLE = "button:not(:disabled), input:not(:disabled), summary, [tabindex]:not([tabindex='-1'])";
+const FOCUSABLE = "button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href], summary, [tabindex]:not([tabindex='-1'])";
 const marketClient = windowServices.get(marketV1);
 
 export function PluginDetailModal({
@@ -170,6 +172,12 @@ export function PluginDetailModal({
         {detail ? <p className={`plugins-v3__detail plugins-v3__detail--${tone}`}>{detail}</p> : null}
         {actionError ? <p className="plugins-v3__error-banner">{actionError}</p> : null}
         {hostPlugin ? <PluginLastErrorDetails plugin={hostPlugin} defaultOpen /> : null}
+        {!builtin && hostPlugin ? (
+          <>
+            <PluginSchemaForm pluginId={id} />
+            <PluginWindowRulesGroup plugin={hostPlugin} />
+          </>
+        ) : null}
         {hostPlugin?.usage ? <><PluginUsageList plugin={hostPlugin} /><SettingsFootnote text={text.cpuNote} /></> : null}
 
         {managedThirdParty ? (

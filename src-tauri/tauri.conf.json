@@ -146,7 +146,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self' ipc: http://ipc.localhost tauri: http://tauri.localhost https://tauri.localhost asset: http://asset.localhost fuyu-plugin: http://fuyu-plugin.localhost fuyu-clip: http://fuyu-clip.localhost data: blob:; script-src 'self' fuyu-plugin: http://fuyu-plugin.localhost blob:; style-src 'self' 'unsafe-inline' fuyu-plugin: http://fuyu-plugin.localhost; img-src 'self' asset: http://asset.localhost fuyu-plugin: http://fuyu-plugin.localhost fuyu-clip: http://fuyu-clip.localhost data: blob: https: http:; media-src 'self' asset: http://asset.localhost fuyu-plugin: http://fuyu-plugin.localhost data: blob:; font-src 'self' fuyu-plugin: http://fuyu-plugin.localhost data:; connect-src 'self' ipc: http://ipc.localhost ws://127.0.0.1:* http://127.0.0.1:* ws://localhost:* http://localhost:* fuyu-plugin: http://fuyu-plugin.localhost fuyu-clip: http://fuyu-clip.localhost https: http:; object-src 'none'; base-uri 'self'"
     }
   },
   "plugins": {

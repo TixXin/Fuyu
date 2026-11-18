@@ -37,6 +37,7 @@ export type SettingsShortcutsText = {
   taken: (shortcut: string, owner: string) => string;
   reset: (shortcut: string) => string;
   pluginTitle: string;
+  pluginV3Title: string;
   pluginHint: string;
   pluginNone: string;
   pluginNotSet: string;
@@ -93,6 +94,7 @@ export const zhCN: SettingsShortcutsText = {
   taken: (shortcut, owner) => `${shortcut} 已被「${owner}」使用，请换一个。`,
   reset: (shortcut) => `恢复默认（${shortcut}）`,
   pluginTitle: "插件快捷键",
+  pluginV3Title: "插件快捷键（第 3 版）",
   pluginHint: "已开启的插件的命令。可以改成别的组合键、关闭，或者恢复插件自带的快捷键；没有快捷键的命令也可以设一个。",
   pluginNone: "已开启的插件都没有命令。",
   pluginNotSet: "未设置",
@@ -149,6 +151,7 @@ export const en: SettingsShortcutsText = {
   taken: (shortcut, owner) => `${shortcut} is already used by "${owner}". Choose another.`,
   reset: (shortcut) => `Reset to default (${shortcut})`,
   pluginTitle: "Plugin shortcuts",
+  pluginV3Title: "Plugin shortcuts (v3)",
   pluginHint: "Commands of the plugins that are on. Change a shortcut, turn it off, or go back to the plugin's own; commands without one can get one too.",
   pluginNone: "None of the plugins that are on has commands.",
   pluginNotSet: "Not set",
