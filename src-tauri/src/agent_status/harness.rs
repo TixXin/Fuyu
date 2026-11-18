@@ -50,6 +50,7 @@ pub(super) struct HookEnv<'a> {
 pub(super) struct Hooks {
     pub(super) install: fn(&HookEnv) -> Result<(), String>,
     pub(super) check: fn(&HookEnv) -> HookInstallState,
+    pub(super) uninstall: fn(&HookEnv) -> Result<(), String>,
 }
 
 pub(super) struct StatusLight {

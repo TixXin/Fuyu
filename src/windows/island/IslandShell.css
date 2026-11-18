@@ -23,8 +23,8 @@
 }
 
 .island {
-  --glass-pointer-x: 50%;
-  --glass-pointer-y: 18%;
+  --glass-pointer-x: 0.5;
+  --glass-pointer-y: 0.18;
   --glass-page-accent: var(--color-accent);
   --island-radius: calc(var(--island-corner-radius-size, 30) * 1px);
   --island-radius-collapsed: calc(var(--island-radius) * 22 / 30);

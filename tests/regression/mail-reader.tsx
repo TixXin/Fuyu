@@ -129,6 +129,8 @@ try {
     await until(() => button("接收微信提醒").getAttribute("aria-checked") === "true");
     await click("QQ 通知");
     check(view! === "qq" && document.querySelector('[aria-label="QQ 最近通知"]'), "切回 QQ 显示自己的通知列表");
+    await click("复制内容");
+    check(calls.some(call => call.command === "copy_message_text" && call.args.text === "新版界面已准备好，方便时看一下。") && !calls.some(call => call.command === "open_qq") && Boolean(document.querySelector('button[aria-label="已复制"]')), "QQ 通知项可单独复制正文且不唤起 QQ");
     await click("邮箱");
     const list = document.querySelector<HTMLDivElement>('.qq-mail-list')!;
     list.scrollTop = 120;
@@ -151,6 +153,13 @@ try {
     check(!body.querySelector('a[href^="javascript"]'), "邮件不能执行危险链接");
     check(!Reflect.get(window, "readerPwned"), "邮件脚本没有执行");
     const reportLink = body.querySelector<HTMLAnchorElement>('a[href="https://example.com/report"]')!;
+    check(getComputedStyle(document.querySelector(".qq-mail-reader__subject")!).userSelect === "text" && getComputedStyle(document.querySelector(".qq-mail-reader__meta")!).userSelect === "text", "阅读页标题和发件人允许框选复制");
+    await click("复制正文");
+    check(calls.some(call => call.command === "copy_message_text" && String(call.args.text).includes("保留正文") && !String(call.args.text).includes("<h2")), "阅读页工具栏可一键复制净化后的纯文本正文");
+    await act(async () => { reportLink.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 120, clientY: 120 })); });
+    check(Boolean(document.querySelector(".qq-mail-link-menu")), "右键正文链接弹出复制链接菜单");
+    await click("复制链接地址");
+    check(!document.querySelector(".qq-mail-link-menu") && calls.some(call => call.command === "copy_message_text" && call.args.text === "https://example.com/report") && !calls.some(call => call.command === "plugin:opener|open_url"), "复制链接地址写入剪贴板且不打开浏览器");
     await act(async () => { root.render(<StrictMode><Fixture /></StrictMode>); });
     check(reportLink.isConnected, "重新渲染不重写正文，按住的链接不会被换掉（issue #18）");
     await act(async () => { reportLink.click(); });
@@ -161,9 +170,16 @@ try {
     check((document.activeElement as HTMLElement)?.dataset.mailId === "7:20", "返回列表时恢复原邮件的键盘焦点");
 
     await click("邮箱");
-    readBehavior = async id => ({ id, attachments: [], contentType: "text/plain", content: '<img src=x onerror=alert(1)>\n纯文本邮件' });
+    readBehavior = async id => ({ id, attachments: [], contentType: "text/plain", content: '<img src=x onerror=alert(1)>\n纯文本邮件\n您的登录验证码为 618402，5 分钟内有效。' });
     await click("阅读邮件：项目周报与下周安排，未读");
     check(document.querySelector(".qq-mail-body--text")?.textContent?.includes("<img") && !document.querySelector(".qq-mail-body img"), "纯文本邮件按文字显示，不解释为 HTML");
+    check(document.querySelector(".qq-mail-otp__value")?.textContent === "618402", "阅读页识别出正文中的验证码并显示胶囊条");
+    await click("复制验证码 618402");
+    check(calls.some(call => call.command === "copy_message_text" && call.args.text === "618402"), "点击阅读页验证码复制按钮把验证码写入剪贴板");
+    await act(async () => { sources = { ...sources, otpCopy: false }; await emit("builtin-plugins-changed", plugins()); });
+    check(!document.querySelector(".qq-mail-otp"), "关闭识别验证码开关后隐藏阅读页验证码胶囊条");
+    await act(async () => { sources = { ...sources, otpCopy: true }; await emit("builtin-plugins-changed", plugins()); });
+    check(document.querySelector(".qq-mail-otp__value")?.textContent === "618402", "重新开启后恢复显示验证码胶囊条");
     await click("返回列表");
     check(view! === "qqMail", "从邮箱列表进入后返回邮箱列表");
     check((document.activeElement as HTMLElement)?.dataset.mailId === "7:20", "返回邮箱列表时恢复原邮件的键盘焦点");

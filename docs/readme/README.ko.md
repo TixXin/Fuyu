@@ -181,7 +181,7 @@ pnpm tauri build    # 설치 프로그램 빌드
 
 ## 사용자 커뮤니티
 
-쓰다가 문제가 있거나 아이디어가 있거나, 그냥 이야기를 나누고 싶다면 QR 코드를 스캔해 WeChat 그룹에 들어오세요(주로 중국어로 대화합니다):
+쓰다가 문제가 있거나 아이디어가 있거나, 그냥 이야기를 나누고 싶다면 [Discord 서버](https://discord.gg/azu5aZFuRY)에 참여하거나 QR 코드를 스캔해 WeChat 그룹에 들어오세요(주로 중국어로 대화합니다):
 
 <p align="center">
   <img src="../assets/readme/wechat-group.png" alt="Fuyu 사용자 WeChat 그룹 QR 코드" width="220">

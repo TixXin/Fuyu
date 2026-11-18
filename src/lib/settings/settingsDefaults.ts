@@ -70,6 +70,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   messageNotice: "panel",
   messagePanelSeconds: 8,
   expandTrigger: "hover",
+  clickCollapseOnLeave: false,
   hoverExpandDelayMs: DEFAULT_HOVER_EXPAND_DELAY_MS,
   hoverCollapseDelayMs: DEFAULT_HOVER_COLLAPSE_DELAY_MS,
   hoverSwitchPage: true,

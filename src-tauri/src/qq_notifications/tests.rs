@@ -128,7 +128,7 @@ fn window_activation_reuses_the_existing_qq_process() {
             result
                 .as_ref()
                 .err()
-                .is_none_or(|error| error.contains("未能切换到前台")),
+                .is_none_or(|error| error.code() == "messenger.foreground"),
             "{result:?}"
         );
         let after = existing_qq_windows(&executable).unwrap();
@@ -143,7 +143,7 @@ fn window_activation_reuses_the_existing_qq_process() {
         assert!(!unsafe { IsIconic(window.handle) }.as_bool());
         assert!(is_interactive_window(window.handle));
         if let Err(error) = result {
-            assert!(error.contains("未能切换到前台"), "{error}");
+            assert_eq!(error.code(), "messenger.foreground", "{error}");
             assert_ne!(
                 unsafe { windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow() },
                 window.handle
@@ -242,18 +242,23 @@ fn registration_repair_only_handles_missing_sender_records() {
 #[test]
 fn blocked_notification_channels_report_the_actionable_cause() {
     assert!(registration_error(Ok(NotificationSetting::Enabled)).is_none());
-    assert!(
+    assert_eq!(
         registration_error(Ok(NotificationSetting::DisabledForApplication))
             .unwrap()
-            .contains("QQ 的 Windows 通知已关闭")
+            .code(),
+        "qq.disabledForApp"
     );
-    assert!(registration_error(Ok(NotificationSetting::DisabledForUser))
-        .unwrap()
-        .contains("Windows 系统通知已关闭"));
-    assert!(
+    assert_eq!(
+        registration_error(Ok(NotificationSetting::DisabledForUser))
+            .unwrap()
+            .code(),
+        "qq.disabledForUser"
+    );
+    assert_eq!(
         registration_error(Ok(NotificationSetting::DisabledByGroupPolicy))
             .unwrap()
-            .contains("管理员")
+            .code(),
+        "qq.disabledByPolicy"
     );
 }
 

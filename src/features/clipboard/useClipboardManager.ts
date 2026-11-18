@@ -4,7 +4,7 @@ import { deleteClipboardItems, restoreClipboardItems, type ClipboardHistoryItem 
 import { clickSelection, EMPTY_SELECTION, selectAll, visibleSelection, type ManageSelection } from "./manageSelection";
 import { withoutPending } from "./pendingItems";
 import { filterPopupItems, popupFilters, popupTags, type PopupFilter } from "./popupFilters";
-import { loadPinyin, parsePopupQuery } from "./popupQuery";
+import { isPinyinLoaded, loadPinyin, parsePopupQuery, queryNeedsPinyin } from "./popupQuery";
 import { usePendingDelete } from "./usePendingDelete";
 
 const CLOCK_MS = 30_000;
@@ -17,14 +17,11 @@ export function useClipboardManager(items: readonly ClipboardHistoryItem[]) {
   const [selection, setSelection] = useState<ManageSelection>(EMPTY_SELECTION);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const [pinyinReady, setPinyinReady] = useState(false);
+  const [pinyinReady, setPinyinReady] = useState(() => isPinyinLoaded());
   const [failed, setFailed] = useState(false);
   const searched = useDeferredValue(query);
 
-  useEffect(() => {
-    void loadPinyin().then((pinyin) => setPinyinReady(pinyin !== null));
-    return visibilityInterval(() => setNow(Date.now()), CLOCK_MS);
-  }, []);
+  useEffect(() => visibilityInterval(() => setNow(Date.now()), CLOCK_MS), []);
 
   const report = useCallback((action: string) => (error: unknown) => {
     console.error(`Failed to ${action}`, error);
@@ -38,6 +35,13 @@ export function useClipboardManager(items: readonly ClipboardHistoryItem[]) {
   const visible = useMemo(() => withoutPending(items, deletion.pending), [items, deletion.pending]);
   const filters = useMemo(() => popupFilters(popupTags(visible)).filter((chip) => chip !== "snippets"), [visible]);
   const parsed = useMemo(() => parsePopupQuery(searched), [searched]);
+  const needsPinyin = queryNeedsPinyin(parsed);
+  useEffect(() => {
+    if (!needsPinyin || pinyinReady) return;
+    let cancelled = false;
+    void loadPinyin().then((pinyin) => { if (!cancelled) setPinyinReady(pinyin !== null); });
+    return () => { cancelled = true; };
+  }, [needsPinyin, pinyinReady]);
   const shown = useMemo(
     () => filterPopupItems(visible, filter, parsed, now),
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -28,6 +28,8 @@
     "gen:rust-types": "node scripts/plugins-v3/gen-rust-types.mjs",
     "check:tasks": "node scripts/tasks/tasks.mjs check",
     "tasks": "node scripts/tasks/tasks.mjs",
+    "downloads": "node scripts/downloads.mjs",
+    "dls": "node scripts/downloads.mjs",
     "issue": "node scripts/issues/issues.mjs",
     "progress": "node scripts/progress/progress.mjs",
     "task:claim": "node scripts/tasks/tasks.mjs claim",

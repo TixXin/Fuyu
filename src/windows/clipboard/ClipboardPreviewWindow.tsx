@@ -47,22 +47,26 @@ export function ClipboardPreviewWindow() {
     let cancelled = false;
     const stops: (() => void)[] = [];
     const keep = (stop: () => void) => (cancelled ? stop() : stops.push(stop));
-    void listenClipboardPreviewItem((next) => {
-      setPayload(next);
-      prefetch(next.prefetch);
-    }).then(keep);
-    void listenClipboardPreviewOpened((next) => {
-      setSide(next);
-      setClosing(false);
-      setPinned(false);
-      setEditing(false);
-      setOpened((count) => count + 1);
-    }).then(keep);
-    void listenClipboardPreviewLayout((layout) => {
-      setSide(layout.side);
-      setSize(layout.size);
-    }).then(keep);
-    void listenClipboardPreviewClosing(() => setClosing(true)).then(keep);
+    void Promise.all([
+      listenClipboardPreviewItem((next) => {
+        setPayload(next);
+        prefetch(next.prefetch);
+      }).then(keep),
+      listenClipboardPreviewOpened((next) => {
+        setSide(next);
+        setClosing(false);
+        setPinned(false);
+        setEditing(false);
+        setOpened((count) => count + 1);
+      }).then(keep),
+      listenClipboardPreviewLayout((layout) => {
+        setSide(layout.side);
+        setSize(layout.size);
+      }).then(keep),
+      listenClipboardPreviewClosing(() => setClosing(true)).then(keep),
+    ]).then(() => {
+      if (!cancelled) report({ type: "ready" });
+    });
     return () => {
       cancelled = true;
       stops.forEach((stop) => stop());

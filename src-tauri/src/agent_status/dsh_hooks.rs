@@ -237,6 +237,148 @@ pub(super) fn bridge_lines(env: &HookEnv) -> Option<String> {
     home_patch_snippet(&entry)
 }
 
+fn line_indent(line: &str) -> usize {
+    line.bytes().take_while(|byte| *byte == b' ').count()
+}
+
+fn item_is_fuyu_block(lines: &[&str]) -> bool {
+    lines.iter().any(|line| {
+        let trimmed = line.trim().trim_start_matches('-').trim();
+        matches!(trimmed, "id: fuyu-island" | "id: \"fuyu-island\"" | "id: 'fuyu-island'")
+            || (trimmed.starts_with('{') && trimmed.contains("id:") && trimmed.contains(PLUGIN_ID))
+            || trimmed.contains(PLUGIN_PACKAGE_NAME)
+            || trimmed.contains(LEGACY_BRIDGE_PACKAGE)
+            || trimmed.contains(LEGACY_HOOKS_FILE_NAME)
+    })
+}
+
+pub(super) fn remove_fuyu_from_patch(text: &str) -> String {
+    let crlf = text.contains("\r\n");
+    let normalized = text.replace("\r\n", "\n");
+    let lines: Vec<&str> = normalized.lines().collect();
+    let mut kept_first: Vec<&str> = Vec::new();
+    let mut index = 0;
+    while index < lines.len() {
+        let line = lines[index];
+        let trimmed = line.trim();
+        let indent = line_indent(line);
+        let is_seq_item = trimmed == "-" || trimmed.starts_with("- ");
+        let is_insert_header = trimmed == "- insert:" || trimmed.starts_with("- insert: ");
+        if is_seq_item && !is_insert_header {
+            let mut end = index + 1;
+            while end < lines.len() {
+                let next_trimmed = lines[end].trim();
+                if !next_trimmed.is_empty() && line_indent(lines[end]) <= indent {
+                    break;
+                }
+                end += 1;
+            }
+            let mut body_end = end;
+            while body_end > index + 1 && lines[body_end - 1].trim().is_empty() {
+                body_end -= 1;
+            }
+            if item_is_fuyu_block(&lines[index..body_end]) {
+                index = end;
+                continue;
+            }
+        }
+        kept_first.push(line);
+        index += 1;
+    }
+
+    let mut kept: Vec<&str> = Vec::new();
+    let mut pos = 0;
+    while pos < kept_first.len() {
+        let line = kept_first[pos];
+        let trimmed = line.trim();
+        let indent = line_indent(line);
+        if trimmed == "- insert:" {
+            let mut child = pos + 1;
+            let mut has_child = false;
+            while child < kept_first.len() {
+                let child_trimmed = kept_first[child].trim();
+                if !child_trimmed.is_empty() {
+                    if line_indent(kept_first[child]) > indent {
+                        has_child = true;
+                    }
+                    break;
+                }
+                child += 1;
+            }
+            if !has_child {
+                pos = child;
+                continue;
+            }
+        }
+        kept.push(line);
+        pos += 1;
+    }
+
+    if kept == lines {
+        return text.to_string();
+    }
+    let newline = if crlf { "\r\n" } else { "\n" };
+    let joined = kept.join(newline);
+    let trimmed_out = joined.trim_end();
+    if trimmed_out.is_empty() {
+        String::new()
+    } else {
+        format!("{trimmed_out}{newline}")
+    }
+}
+
+pub(super) fn uninstall_hooks(env: &HookEnv) -> Result<(), String> {
+    let dir = plugin_dir(env);
+    match fs::remove_dir_all(&dir) {
+        Ok(()) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(format!("Failed to remove {}: {error}", dir.display())),
+    }
+    super::uninstall::remove_file_if_exists(&legacy_hooks_file(env))?;
+
+    for home in installed_homes(env.home_dir) {
+        let home_patch = home.join(PATCH_FILE_NAME);
+        if let Ok(existing) = fs::read_to_string(&home_patch) {
+            if is_fuyu_managed_home_patch(&existing) {
+                super::uninstall::remove_file_if_exists(&home_patch)?;
+            } else {
+                let next = remove_fuyu_from_patch(&existing);
+                if next != existing {
+                    if next.trim().is_empty() {
+                        super::uninstall::remove_file_if_exists(&home_patch)?;
+                    } else {
+                        write_text_file(&home_patch, &next)?;
+                    }
+                }
+            }
+        }
+        for profile_patch in profile_patch_files(&home) {
+            if let Ok(existing) = fs::read_to_string(&profile_patch) {
+                let next = remove_fuyu_from_patch(&existing);
+                if next != existing {
+                    write_text_file(&profile_patch, &next)?;
+                }
+            }
+        }
+        for manifest_path in profile_manifests(&home) {
+            if let Ok(text) = fs::read_to_string(&manifest_path) {
+                if let Ok(mut manifest) = serde_json::from_str::<Value>(&text) {
+                    if let Some(bundles) = manifest["dsh"]["profile"]["bundles"].as_array_mut() {
+                        let before = bundles.len();
+                        bundles.retain(|item| item.as_str() != Some(PLUGIN_PACKAGE_NAME));
+                        if bundles.len() != before {
+                            let serialized = serde_json::to_string_pretty(&manifest)
+                                .map_err(|error| format!("Failed to serialize {}: {error}", manifest_path.display()))?;
+                            write_text_file(&manifest_path, &serialized)?;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

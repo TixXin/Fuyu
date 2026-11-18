@@ -1,6 +1,7 @@
 pub(crate) mod commands;
 mod lock;
 mod migration;
+pub(crate) mod panic_log;
 
 use serde::{Deserialize, Serialize};
 use std::{
@@ -125,6 +126,7 @@ pub(crate) fn init(identifier: &str) {
         }
     };
     let _ = HOME.set(chosen);
+    panic_log::install();
 }
 
 pub(crate) fn current() -> Option<&'static Path> {

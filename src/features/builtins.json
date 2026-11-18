@@ -17,7 +17,7 @@
     { "id": "ssh-tunnel", "kind": "builtin", "root": "ssh-tunnel", "host": "host/index.mjs", "background": ["tunnels"] },
     { "id": "local-api", "kind": "builtin", "root": "local-api", "host": "host/index.mjs", "background": ["server"] },
     { "id": "center-pattern", "kind": "builtin", "root": "center-pattern", "host": "host/index.mjs", "background": [] },
-    { "id": "messages", "kind": "builtin", "root": "messages", "host": "host/index.mjs", "background": ["qq", "wechat", "mail"], "provides": ["messages/v1", "island-notices/v1"] },
+    { "id": "messages", "kind": "builtin", "root": "messages", "host": "host/index.mjs", "background": ["qq", "wechat", "mail", "telegram", "discord", "whatsapp", "tim", "feishu", "dingtalk", "wecom"], "provides": ["messages/v1", "island-notices/v1"] },
     { "id": "device-events", "kind": "builtin", "root": "device-events", "host": "host/index.mjs", "background": ["watcher"] },
     { "id": "system-levels", "kind": "builtin", "root": "system-levels", "host": "host/index.mjs", "background": ["watcher"] },
     { "id": "device-use", "kind": "builtin", "root": "device-use", "host": "host/index.mjs", "background": [] },

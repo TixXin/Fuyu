@@ -1,23 +1,27 @@
 use std::{
     collections::HashMap,
     ffi::c_void,
-    sync::atomic::{AtomicU32, Ordering},
+    sync::{
+        atomic::{AtomicU32, AtomicU64, Ordering},
+        Arc,
+    },
 };
 use windows::{
-    core::{GUID, HRESULT, IUnknown, IUnknown_Vtbl, Interface, Result},
+    core::{GUID, HRESULT, IUnknown, IUnknown_Vtbl, Interface, Result, PCWSTR},
     Win32::{
-        Foundation::{E_NOINTERFACE, E_POINTER, S_OK},
+        Foundation::{E_NOINTERFACE, E_POINTER, PROPERTYKEY, S_OK},
         Media::Audio::{
-            eCommunications, eConsole, eMultimedia, eRender, AudioSessionStateActive,
-            AudioSessionStateExpired, ERole,
+            eConsole, eMultimedia, eRender, AudioSessionStateActive, AudioSessionStateExpired,
+            DEVICE_STATE, EDataFlow, ERole,
             Endpoints::{
                 IAudioEndpointVolume, IAudioEndpointVolumeCallback,
                 IAudioEndpointVolumeCallback_Vtbl, IAudioMeterInformation,
             },
             IAudioSessionControl2, IAudioSessionManager2, IMMDevice, IMMDeviceEnumerator,
-            MMDeviceEnumerator, AUDIO_VOLUME_NOTIFICATION_DATA,
+            IMMNotificationClient, IMMNotificationClient_Vtbl, MMDeviceEnumerator,
+            AUDIO_VOLUME_NOTIFICATION_DATA,
         },
-        System::Com::{CoCreateInstance, CLSCTX_ALL},
+        System::Com::{CoCreateInstance, CLSCTX_ALL, CLSCTX_INPROC_SERVER},
     },
 };
 
@@ -25,7 +29,6 @@ use windows::{
 pub(crate) enum OutputRole {
     Multimedia,
     Console,
-    Communications,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -40,20 +43,45 @@ impl OutputRole {
         match self {
             Self::Multimedia => eMultimedia,
             Self::Console => eConsole,
-            Self::Communications => eCommunications,
         }
     }
 }
 
-pub(crate) struct AudioDevices(IMMDeviceEnumerator);
+pub(crate) struct AudioDevices(pub(super) IMMDeviceEnumerator);
 
 impl AudioDevices {
     pub(crate) fn open() -> Result<Self> {
-        unsafe { CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL) }.map(Self)
+        unsafe { CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_INPROC_SERVER) }.map(Self)
     }
 
     pub(crate) fn default_output(&self, role: OutputRole) -> Result<AudioOutput> {
         unsafe { self.0.GetDefaultAudioEndpoint(eRender, role.erole()) }.map(AudioOutput)
+    }
+
+    pub(crate) fn default_render_output(&self) -> Result<AudioOutput> {
+        self.default_output(OutputRole::Multimedia)
+            .or_else(|_| self.default_output(OutputRole::Console))
+    }
+
+    pub(crate) fn subscribe_endpoints(
+        &self,
+    ) -> Result<(EndpointNotificationSubscription, Arc<EndpointEpochs>)> {
+        let epochs = Arc::new(EndpointEpochs::new());
+        let boxed = Box::new(RawEndpointNotificationClient {
+            vtable: &ENDPOINT_NOTIFICATION_VTBL,
+            refs: AtomicU32::new(1),
+            epochs: Arc::clone(&epochs),
+        });
+        let raw = Box::into_raw(boxed) as *mut c_void;
+        let callback = unsafe { IMMNotificationClient::from_raw(raw) };
+        unsafe { self.0.RegisterEndpointNotificationCallback(&callback) }?;
+        Ok((
+            EndpointNotificationSubscription {
+                enumerator: self.0.clone(),
+                callback,
+            },
+            epochs,
+        ))
     }
 
     pub(crate) fn process_sessions(&self) -> Vec<ProcessAudioSession> {
@@ -79,16 +107,21 @@ impl AudioDevices {
 pub(crate) struct AudioOutput(IMMDevice);
 
 impl AudioOutput {
+    fn activate<T: Interface>(&self) -> Result<T> {
+        unsafe { self.0.Activate::<T>(CLSCTX_INPROC_SERVER, None) }
+            .or_else(|_| unsafe { self.0.Activate::<T>(CLSCTX_ALL, None) })
+    }
+
     pub(crate) fn volume(&self) -> Result<OutputVolume> {
-        unsafe { self.0.Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None) }.map(OutputVolume)
+        self.activate::<IAudioEndpointVolume>().map(OutputVolume)
     }
 
     pub(crate) fn peak_meter(&self) -> Result<PeakMeter> {
-        unsafe { self.0.Activate::<IAudioMeterInformation>(CLSCTX_ALL, None) }.map(PeakMeter)
+        self.activate::<IAudioMeterInformation>().map(PeakMeter)
     }
 
     pub(crate) fn sessions(&self) -> Vec<ProcessAudioSession> {
-        let Ok(manager) = (unsafe { self.0.Activate::<IAudioSessionManager2>(CLSCTX_ALL, None) }) else {
+        let Ok(manager) = self.activate::<IAudioSessionManager2>() else {
             return Vec::new();
         };
         let Ok(enumerator) = (unsafe { manager.GetSessionEnumerator() }) else {
@@ -133,6 +166,252 @@ impl AudioOutput {
             });
         }
         list
+    }
+}
+
+pub(crate) struct EndpointEpochs {
+    default_render: AtomicU64,
+    topology: AtomicU64,
+}
+
+impl EndpointEpochs {
+    fn new() -> Self {
+        Self {
+            default_render: AtomicU64::new(1),
+            topology: AtomicU64::new(1),
+        }
+    }
+
+    pub(crate) fn default_render_epoch(&self) -> u64 {
+        self.default_render.load(Ordering::Acquire)
+    }
+
+    pub(crate) fn topology_epoch(&self) -> u64 {
+        self.topology.load(Ordering::Acquire)
+    }
+}
+
+pub(crate) struct EndpointNotificationSubscription {
+    enumerator: IMMDeviceEnumerator,
+    callback: IMMNotificationClient,
+}
+
+impl Drop for EndpointNotificationSubscription {
+    fn drop(&mut self) {
+        let _ = unsafe { self.enumerator.UnregisterEndpointNotificationCallback(&self.callback) };
+    }
+}
+
+#[repr(C)]
+struct RawEndpointNotificationClient {
+    vtable: *const IMMNotificationClient_Vtbl,
+    refs: AtomicU32,
+    epochs: Arc<EndpointEpochs>,
+}
+
+static ENDPOINT_NOTIFICATION_VTBL: IMMNotificationClient_Vtbl = IMMNotificationClient_Vtbl {
+    base__: IUnknown_Vtbl {
+        QueryInterface: endpoint_query_interface,
+        AddRef: endpoint_add_ref,
+        Release: endpoint_release,
+    },
+    OnDeviceStateChanged: endpoint_on_state_changed,
+    OnDeviceAdded: endpoint_on_device_added,
+    OnDeviceRemoved: endpoint_on_device_removed,
+    OnDefaultDeviceChanged: endpoint_on_default_changed,
+    OnPropertyValueChanged: endpoint_on_property_changed,
+};
+
+unsafe extern "system" fn endpoint_query_interface(
+    this: *mut c_void,
+    iid: *const GUID,
+    interface: *mut *mut c_void,
+) -> HRESULT {
+    if interface.is_null() || iid.is_null() {
+        return E_POINTER;
+    }
+    let requested = unsafe { &*iid };
+    if *requested == IUnknown::IID || *requested == IMMNotificationClient::IID {
+        unsafe {
+            *interface = this;
+            endpoint_add_ref(this);
+        }
+        S_OK
+    } else {
+        unsafe {
+            *interface = std::ptr::null_mut();
+        }
+        E_NOINTERFACE
+    }
+}
+
+unsafe extern "system" fn endpoint_add_ref(this: *mut c_void) -> u32 {
+    let raw = unsafe { &*(this as *const RawEndpointNotificationClient) };
+    raw.refs.fetch_add(1, Ordering::Relaxed) + 1
+}
+
+unsafe extern "system" fn endpoint_release(this: *mut c_void) -> u32 {
+    let raw = unsafe { &*(this as *const RawEndpointNotificationClient) };
+    let prev = raw.refs.fetch_sub(1, Ordering::Release);
+    if prev == 1 {
+        std::sync::atomic::fence(Ordering::Acquire);
+        unsafe {
+            drop(Box::from_raw(this as *mut RawEndpointNotificationClient));
+        }
+    }
+    prev - 1
+}
+
+unsafe extern "system" fn endpoint_on_state_changed(
+    this: *mut c_void,
+    _device_id: PCWSTR,
+    _new_state: DEVICE_STATE,
+) -> HRESULT {
+    let raw = unsafe { &*(this as *const RawEndpointNotificationClient) };
+    raw.epochs.topology.fetch_add(1, Ordering::AcqRel);
+    raw.epochs.default_render.fetch_add(1, Ordering::AcqRel);
+    S_OK
+}
+
+unsafe extern "system" fn endpoint_on_device_added(
+    this: *mut c_void,
+    _device_id: PCWSTR,
+) -> HRESULT {
+    let raw = unsafe { &*(this as *const RawEndpointNotificationClient) };
+    raw.epochs.topology.fetch_add(1, Ordering::AcqRel);
+    S_OK
+}
+
+unsafe extern "system" fn endpoint_on_device_removed(
+    this: *mut c_void,
+    _device_id: PCWSTR,
+) -> HRESULT {
+    let raw = unsafe { &*(this as *const RawEndpointNotificationClient) };
+    raw.epochs.topology.fetch_add(1, Ordering::AcqRel);
+    raw.epochs.default_render.fetch_add(1, Ordering::AcqRel);
+    S_OK
+}
+
+unsafe extern "system" fn endpoint_on_default_changed(
+    this: *mut c_void,
+    flow: EDataFlow,
+    role: ERole,
+    _default_device_id: PCWSTR,
+) -> HRESULT {
+    if flow == eRender {
+        let raw = unsafe { &*(this as *const RawEndpointNotificationClient) };
+        raw.epochs.topology.fetch_add(1, Ordering::AcqRel);
+        if role == eMultimedia || role == eConsole {
+            raw.epochs.default_render.fetch_add(1, Ordering::AcqRel);
+        }
+    }
+    S_OK
+}
+
+unsafe extern "system" fn endpoint_on_property_changed(
+    _this: *mut c_void,
+    _device_id: PCWSTR,
+    _key: PROPERTYKEY,
+) -> HRESULT {
+    S_OK
+}
+
+pub(crate) struct CachedRenderAudio {
+    meter: Option<PeakMeter>,
+    meter_epoch: u64,
+    volume: Option<OutputVolume>,
+    volume_epoch: u64,
+    subscription: Option<EndpointNotificationSubscription>,
+    epochs: Option<Arc<EndpointEpochs>>,
+    devices: AudioDevices,
+}
+
+impl CachedRenderAudio {
+    pub(crate) fn open() -> Result<Self> {
+        let devices = AudioDevices::open()?;
+        let (subscription, epochs) = match devices.subscribe_endpoints() {
+            Ok((sub, ep)) => (Some(sub), Some(ep)),
+            Err(_) => (None, None),
+        };
+        Ok(Self {
+            meter: None,
+            meter_epoch: 0,
+            volume: None,
+            volume_epoch: 0,
+            subscription,
+            epochs,
+            devices,
+        })
+    }
+
+    pub(crate) fn devices(&self) -> &AudioDevices {
+        &self.devices
+    }
+
+    fn current_epoch(&self) -> Option<u64> {
+        if self.subscription.is_some() {
+            self.epochs.as_ref().map(|epochs| epochs.default_render_epoch())
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn peak(&mut self) -> Result<f32> {
+        let epoch = self.current_epoch();
+        if let (Some(current), Some(meter)) = (epoch, self.meter.as_ref()) {
+            if self.meter_epoch == current {
+                match meter.peak() {
+                    Ok(value) => return Ok(value.clamp(0.0, 1.0)),
+                    Err(_) => self.meter = None,
+                }
+            }
+        }
+        let meter = self.devices.default_render_output()?.peak_meter()?;
+        let value = meter.peak()?.clamp(0.0, 1.0);
+        if let Some(current) = epoch {
+            self.meter = Some(meter);
+            self.meter_epoch = current;
+        }
+        Ok(value)
+    }
+
+    pub(crate) fn master_volume(&mut self) -> Result<f32> {
+        let epoch = self.current_epoch();
+        if let (Some(current), Some(volume)) = (epoch, self.volume.as_ref()) {
+            if self.volume_epoch == current {
+                match volume.level() {
+                    Ok(value) => return Ok(value.clamp(0.0, 1.0)),
+                    Err(_) => self.volume = None,
+                }
+            }
+        }
+        let volume = self.devices.default_render_output()?.volume()?;
+        let value = volume.level()?.clamp(0.0, 1.0);
+        if let Some(current) = epoch {
+            self.volume = Some(volume);
+            self.volume_epoch = current;
+        }
+        Ok(value)
+    }
+
+    pub(crate) fn set_master_volume(&mut self, level: f32) -> Result<()> {
+        let clamped = level.clamp(0.0, 1.0);
+        let epoch = self.current_epoch();
+        if let (Some(current), Some(volume)) = (epoch, self.volume.as_ref()) {
+            if self.volume_epoch == current {
+                match volume.set_level(clamped) {
+                    Ok(()) => return Ok(()),
+                    Err(_) => self.volume = None,
+                }
+            }
+        }
+        let volume = self.devices.default_render_output()?.volume()?;
+        volume.set_level(clamped)?;
+        if let Some(current) = epoch {
+            self.volume = Some(volume);
+            self.volume_epoch = current;
+        }
+        Ok(())
     }
 }
 

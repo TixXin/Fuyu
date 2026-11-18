@@ -78,6 +78,9 @@ test("clipboard settings clamp the item limit and normalize the shortcut", () =>
   assert.equal(normalizeClipboardSettings({ ...base, shortcut: "alt+shift+c" }).shortcut, "Alt+Shift+C");
   assert.equal(normalizeClipboardSettings({ ...base, shortcutEnabled: undefined }).shortcutEnabled, true);
   assert.equal(normalizeClipboardSettings({ ...base, shortcutEnabled: false }).shortcutEnabled, false);
+  assert.equal(base.hideFromCapture, false);
+  assert.equal(normalizeClipboardSettings({ ...base, hideFromCapture: undefined }).hideFromCapture, false);
+  assert.equal(normalizeClipboardSettings({ ...base, hideFromCapture: true }).hideFromCapture, true);
 });
 
 test("the clipboard window takes Command as well as Control on macOS only", () => {

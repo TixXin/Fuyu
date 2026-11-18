@@ -1,0 +1,35 @@
+.sticky-island-preview__sentinel {
+  min-width: 0;
+}
+
+.sticky-island-preview--compact,
+.sticky-island-preview__bar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  margin: -4px 0;
+  padding: 4px 0 6px;
+  background: color-mix(in srgb, var(--settings-card, #1b1d22) 84%, transparent);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+}
+
+.sticky-island-preview__bar {
+  animation: sticky-island-preview-in var(--motion-fast) var(--motion-ease);
+}
+
+.sticky-island-preview__bar .island-preview--compact .island-preview__desktop {
+  min-height: 60px;
+}
+
+@keyframes sticky-island-preview-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticky-island-preview__bar {
+    animation: none;
+  }
+}

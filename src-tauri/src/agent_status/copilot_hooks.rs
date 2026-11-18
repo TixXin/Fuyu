@@ -56,7 +56,12 @@ pub(super) fn hooks_config(env: &HookEnv) -> Value {
 
 fn bash_command(script: &Path, args: &[&str]) -> String {
     let quoted = format!("'{}'", script.to_string_lossy().replace('\'', "'\\''"));
-    [format!("/bin/sh {quoted} {PROVIDER}")].into_iter().chain(args.iter().map(|arg| (*arg).to_string())).collect::<Vec<_>>().join(" ")
+    let run = [format!("/bin/sh {quoted} {PROVIDER}")]
+        .into_iter()
+        .chain(args.iter().map(|arg| (*arg).to_string()))
+        .collect::<Vec<_>>()
+        .join(" ");
+    format!("[ -f {quoted} ] && exec {run} || exit 0")
 }
 
 fn powershell_command(kind: Script, script: &Path, args: &[&str]) -> String {
@@ -67,7 +72,8 @@ fn powershell_command(kind: Script, script: &Path, args: &[&str]) -> String {
             format!("powershell.exe -NoProfile -ExecutionPolicy Bypass -File {quoted} {PROVIDER}")
         }
     };
-    [head].into_iter().chain(args.iter().map(|arg| (*arg).to_string())).collect::<Vec<_>>().join(" ")
+    let run = [head].into_iter().chain(args.iter().map(|arg| (*arg).to_string())).collect::<Vec<_>>().join(" ");
+    format!("if (Test-Path -LiteralPath {quoted}) {{ {run}; exit $LASTEXITCODE }} else {{ exit 0 }}")
 }
 
 pub(super) fn install(env: &HookEnv) -> Result<(), String> {
@@ -76,6 +82,10 @@ pub(super) fn install(env: &HookEnv) -> Result<(), String> {
         return Ok(());
     }
     install_into(&dir, &hooks_config(env))
+}
+
+pub(super) fn uninstall(env: &HookEnv) -> Result<(), String> {
+    super::uninstall::remove_file_if_exists(&home(env.home_dir).join(HOOKS_FILE))
 }
 
 pub(super) fn install_into(dir: &Path, config: &Value) -> Result<(), String> {

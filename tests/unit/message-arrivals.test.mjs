@@ -14,6 +14,9 @@ test("arrivals go on top, newest first", () => {
 test("the same arrival seen again leaves the list as it is", () => {
   const list = addArrival([], message("qq", 100));
   assert.equal(addArrival(list, message("qq", 100)), list);
+  const updated = addArrival(list, { ...message("qq", 100), actions: [{ id: "copy-otp:849201", title: "复制 849201" }] });
+  assert.equal(updated.length, 1);
+  assert.equal(updated[0].actions[0]?.id, "copy-otp:849201");
 });
 
 test("WeChat keeps a single row, moved up by a newer reminder", () => {

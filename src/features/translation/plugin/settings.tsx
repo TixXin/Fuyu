@@ -25,7 +25,7 @@ function TranslationShortcutOwners({ settings }: SettingsRunnerProps) {
   useReportShortcutOwners("translation", 10, settings.translationEnabled ? [
     { id: "window", label: t.settings.shortcuts.openTranslation, shortcut: translation.shortcut, home: "translation" },
     { id: "selection", label: t.settings.translation.selectionShortcut, shortcut: translation.selectionShortcut, home: "translation" },
-  ] : []);
+  ].filter((owner) => Boolean(owner.shortcut)) : []);
   return null;
 }
 

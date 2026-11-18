@@ -15,6 +15,15 @@ export function useMailEnabled(fallback = true): boolean {
   return sourceSwitch(config, "mail") ?? fallback;
 }
 
+export function useMessageOtpCopyEnabled(): boolean {
+  const config = useBuiltinConfig(OWNER);
+  return sourceSwitch(config, "otpCopy") ?? true;
+}
+
+export async function setMessageOtpCopyEnabled(on: boolean): Promise<void> {
+  await setBuiltinConfig(OWNER, "otpCopy", on);
+}
+
 function write(source: MessageSource, on: boolean) {
   void setBuiltinConfig(OWNER, source, on).catch((error: unknown) => console.error(`Could not save the ${source} message source switch`, error));
 }

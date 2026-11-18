@@ -371,7 +371,7 @@ pub fn set_clipboard_link_settings(app: AppHandle, settings: ClipboardLinkSettin
 #[tauri::command]
 pub async fn export_clipboard_links(app: AppHandle) -> Result<String, UserError> {
     let links = get_clipboard_links(app)?;
-    Ok(super::links_transfer::export(&links)?)
+    super::links_transfer::export(&links)
 }
 
 #[tauri::command]

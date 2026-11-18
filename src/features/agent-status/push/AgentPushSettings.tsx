@@ -5,6 +5,7 @@ import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../../components/settings/SettingsInput";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
+import { SettingsSecretRow } from "../../../components/settings/SettingsSecretRow";
 import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { useErrorText, useTranslation } from "../../../i18n";
@@ -107,32 +108,21 @@ export function AgentPushSettings() {
                   onChange={(event) => setSettings({ ...settings, server: event.target.value })}
                 />
               </SettingsRow>
-              <SettingsRow
+              <SettingsSecretRow
                 indent
                 title={text.key}
                 description={keySaved ? (isMacOS ? text.keyIsSavedMac : text.keyIsSaved) : text.keyHint}
-                control={
-                  keySaved ? (
-                    <SettingsLinkButton tone="danger" disabled={busy} onClick={() => void clearKey()}>{text.clearKey}</SettingsLinkButton>
-                  ) : (
-                    <SettingsLinkButton disabled={busy || !keyInput.trim()} onClick={() => void saveKey()}>{text.saveKey}</SettingsLinkButton>
-                  )
-                }
-              >
-                {!keySaved && (
-                  <SettingsInput
-                    monospace
-                    type="password"
-                    value={keyInput}
-                    placeholder={text.keyPlaceholder}
-                    aria-label={text.key}
-                    onChange={(event) => setKeyInput(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" && keyInput.trim()) void saveKey();
-                    }}
-                  />
-                )}
-              </SettingsRow>
+                value={keyInput}
+                placeholder={keySaved ? `${text.keyPlaceholder} · ${text.saveKey}` : text.keyPlaceholder}
+                ariaLabel={text.key}
+                hasSecret={Boolean(keySaved)}
+                saving={busy}
+                saveLabel={text.saveKey}
+                deleteLabel={text.clearKey}
+                onChange={setKeyInput}
+                onSave={() => void saveKey()}
+                onDelete={() => void clearKey()}
+              />
             </>
           )}
           {AGENT_PUSH_EVENTS.map((event) => (

@@ -72,7 +72,12 @@
         </div>
       </div>
       <div class="settings-group__footer">
-        把这台电脑的代理借给 SSH 服务器：为下面打开的每台主机常驻一条 ssh 反向隧道（服务器上的 127.0.0.1:端口 → 这里的本地代理），服务器上设好 http_proxy 就能经这里上网。只用密钥登录，断开后自动重连；在 设置 → 插件（第 3 版）里关掉内置插件「SSH 代理隧道」或退出岛屿时，隧道一起结束。
+        <p class="settings-footnote">
+          把这台电脑的代理借给 SSH 服务器：为下面打开的每台主机常驻一条 ssh 反向隧道（服务器上的 127.0.0.1:端口 → 这里的本地代理），服务器上设好 http_proxy 就能经这里上网。
+          <button aria-expanded="false" class="settings-footnote__toggle" type="button">
+            了解更多
+          </button>
+        </p>
       </div>
     </section>
     <section class="settings-group">
@@ -222,7 +227,12 @@
         </div>
       </div>
       <div class="settings-group__footer">
-        主机来自 ~/.ssh/config 和上面添加的主机。每台填一个服务器上的端口（1024–65535，别和别人的隧道重复），打开后在服务器上运行下面那行 export 就能用这里的代理。
+        <p class="settings-footnote">
+          主机来自 ~/.ssh/config 和上面添加的主机。
+          <button aria-expanded="false" class="settings-footnote__toggle" type="button">
+            了解更多
+          </button>
+        </p>
       </div>
     </section>
   </div>

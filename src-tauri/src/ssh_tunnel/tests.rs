@@ -86,10 +86,10 @@ fn hosts_keep_their_port_when_switched_off_and_lose_it_when_cleared() {
 #[test]
 fn bad_hosts_and_ports_are_refused() {
     let dir = temp_dir("refuse");
-    assert!(config::set(&dir, "-oProxyCommand=calc", true, Some(10_089)).is_err());
-    assert!(config::set(&dir, "a b", true, Some(10_089)).is_err());
-    assert!(config::set(&dir, "zcm6", true, Some(1023)).is_err());
-    assert!(config::set(&dir, "zcm6", true, None).is_err());
+    assert_eq!(config::set(&dir, "-oProxyCommand=calc", true, Some(10_089)).unwrap_err().code(), "remoteHosts.host");
+    assert_eq!(config::set(&dir, "a b", true, Some(10_089)).unwrap_err().code(), "remoteHosts.host");
+    assert_eq!(config::set(&dir, "zcm6", true, Some(1023)).unwrap_err().code(), "sshTunnel.remotePort");
+    assert_eq!(config::set(&dir, "zcm6", true, None).unwrap_err().code(), "sshTunnel.needPort");
     assert!(config::read(&dir).is_empty());
     cleanup(&dir);
 }
@@ -147,7 +147,7 @@ fn listening_ports_are_read_from_netstat_and_ss() {
     assert_eq!(port_listening(ss, 10_089), Ok(true));
     assert_eq!(port_listening(ss, 20_089), Ok(true));
     assert_eq!(port_listening(ss, 128), Ok(false));
-    assert!(port_listening("FUYU_NO_PORT_TOOL\n", 10_089).is_err());
+    assert_eq!(port_listening("FUYU_NO_PORT_TOOL\n", 10_089).unwrap_err().code(), "sshTunnel.noPortTool");
 }
 
 #[test]

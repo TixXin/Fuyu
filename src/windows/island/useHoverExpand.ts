@@ -6,7 +6,8 @@ import type { IslandMode } from "./types";
 const OWN_ACTION_SELECTOR = ".island__collapsed button:not(.island__open-button):hover";
 
 type HoverExpandOptions = {
-  enabled: boolean;
+  expandOnHover: boolean;
+  collapseOnLeave: boolean;
   delayMs: number;
   paused: boolean;
   collapseDelayMs: number;
@@ -25,7 +26,12 @@ export function isEditingText() {
   );
 }
 
-export function useHoverExpand({ enabled, delayMs, paused, collapseDelayMs, mode, isTucked, onExpand, onCollapse }: HoverExpandOptions) {
+export function hasTextSelection() {
+  const selection = window.getSelection();
+  return Boolean(selection && !selection.isCollapsed && selection.toString().length > 0);
+}
+
+export function useHoverExpand({ expandOnHover, collapseOnLeave, delayMs, paused, collapseDelayMs, mode, isTucked, onExpand, onCollapse }: HoverExpandOptions) {
   const [isHovering, setIsHovering] = useState(false);
   const isHoveringRef = useRef(false);
   const modeRef = useRef(mode);
@@ -118,7 +124,7 @@ export function useHoverExpand({ enabled, delayMs, paused, collapseDelayMs, mode
   }, [isTucked]);
 
   useEffect(() => {
-    if (!enabled || !isHovering || mode !== "collapsed" || isTucked || !armedRef.current) {
+    if (!expandOnHover || !isHovering || mode !== "collapsed" || isTucked || !armedRef.current) {
       return;
     }
     if (paused) {
@@ -137,16 +143,16 @@ export function useHoverExpand({ enabled, delayMs, paused, collapseDelayMs, mode
 
     expandTimerRef.current = window.setTimeout(open, delayMs);
     return () => window.clearTimeout(expandTimerRef.current);
-  }, [delayMs, enabled, isHovering, isTucked, mode, onExpand, paused]);
+  }, [delayMs, expandOnHover, isHovering, isTucked, mode, onExpand, paused]);
 
   useEffect(() => {
-    if (!enabled || isHovering || mode !== "expanded" || !enteredRef.current) {
+    if (!collapseOnLeave || isHovering || isTucked || mode !== "expanded" || !enteredRef.current) {
       return;
     }
 
     let timer: number | undefined;
     const close = () => {
-      if (pressingRef.current || isEditingText() || isIslandHeld()) {
+      if (pressingRef.current || isEditingText() || hasTextSelection() || isIslandHeld()) {
         timer = window.setTimeout(close, Math.max(collapseDelayMs, 200));
         return;
       }
@@ -155,5 +161,5 @@ export function useHoverExpand({ enabled, delayMs, paused, collapseDelayMs, mode
 
     timer = window.setTimeout(close, collapseDelayMs);
     return () => window.clearTimeout(timer);
-  }, [collapseDelayMs, enabled, isHovering, mode, onCollapse]);
+  }, [collapseDelayMs, collapseOnLeave, isHovering, isTucked, mode, onCollapse]);
 }

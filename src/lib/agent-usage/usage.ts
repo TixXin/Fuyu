@@ -29,11 +29,27 @@ export function liveUsage(usage: AgentUsage, now: number): AgentUsage {
 
 export function usageSourceLines(usage: AgentUsage, now: number, text: ClaudeUsageText): HoverCardLine[] {
   const lines: HoverCardLine[] = [];
-  const plan = usage.source === "glm" || usage.source === "kimi";
-  if (usage.error) lines.push({ text: (plan ? text.planErrors : text.errors)[usage.error.kind] });
+  if (usage.error) {
+    const table =
+      usage.source === "glm" || usage.source === "kimi"
+        ? text.planErrors
+        : usage.source === "antigravity" || usage.source === "antigravityCloud"
+          ? text.antigravityErrors
+          : text.errors;
+    lines.push({ text: table[usage.error.kind] });
+  }
   if (usage.updatedAt !== null) {
     const kind = usage.source ?? "hud";
-    const source = { api: text.fromApi, magpie: text.fromMagpie, codex: text.fromCodex, hud: text.fromHud, glm: text.fromGlm, kimi: text.fromKimi }[kind];
+    const source = {
+      api: text.fromApi,
+      magpie: text.fromMagpie,
+      codex: text.fromCodex,
+      hud: text.fromHud,
+      glm: text.fromGlm,
+      kimi: text.fromKimi,
+      antigravity: text.fromAntigravity,
+      antigravityCloud: text.fromAntigravityCloud,
+    }[kind];
     const ago = formatAge(Math.max(0, now - usage.updatedAt), text.ago);
     if (isStale(usage, now)) {
       lines.push({ text: text.staleUpdated(ago, source) });

@@ -2,7 +2,7 @@ import { translatorV1, type EngineChoice, type TranslationEngine } from "@fuyu/p
 import { windowServices } from "../../plugin-kernel/services";
 import { isNativeError } from "../../../i18n/nativeError";
 import { hasTranslationSecret, rewriteText, translateText, type TranslationService } from "../api";
-import { isBuiltinTranslationProvider, TRANSLATION_PROVIDERS, translationEngines, type BuiltinTranslationProvider } from "../providers";
+import { isBuiltinTranslationProvider, isLoopbackCustomBaseUrl, TRANSLATION_PROVIDERS, translationEngines, type BuiltinTranslationProvider } from "../providers";
 import { loadSettings } from "../storage";
 import { fromRust } from "../host/index.mjs";
 import { OWNER } from "./owner.ts";
@@ -62,8 +62,12 @@ const provider = windowServices.provide(translatorV1, {
     return { text: await rewriteText(text, task, service, { prompt, onChunk }).catch(failed), engine: service.provider };
   },
   engines: async () => {
+    const customAddress = loadSettings().customBaseUrl;
     const [builtins, extra] = await Promise.all([
-      Promise.all(TRANSLATION_PROVIDERS.map(async (engine) => ({ engine, hasSecret: await hasTranslationSecret(engine).catch(failed) }))),
+      Promise.all(TRANSLATION_PROVIDERS.map(async (engine) => {
+        const stored = await hasTranslationSecret(engine).catch(failed);
+        return { engine, hasSecret: stored || (engine === "custom" && isLoopbackCustomBaseUrl(customAddress)) };
+      })),
       translationEngines.entries(),
     ]);
     return { engines: [...builtins, ...extra] };

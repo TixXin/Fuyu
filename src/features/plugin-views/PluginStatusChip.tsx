@@ -62,7 +62,7 @@ export function PluginStatusChip({ status, onOpen }: { status: PluginStatusEntry
         <span className="plugin-status-chip__batteries" aria-hidden="true">
           {batteries.map((battery, index) => (
             <span key={index} className={`plugin-status-chip__battery plugin-status-chip__battery--${battery.tone}`}>
-              <span className="plugin-status-chip__charge" style={{ height: `${Math.round(battery.level * 100)}%` }} />
+              <span className="plugin-status-chip__charge" style={{ transform: `scaleY(${Math.max(0.1, Math.min(1, battery.level))})` }} />
             </span>
           ))}
         </span>

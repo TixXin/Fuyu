@@ -5,6 +5,10 @@ export type SettingsThemeMarketText = {
   loading: string;
   loadFailed: string;
   empty: string;
+  searchPlaceholder: string;
+  filterAll: string;
+  filterOfficial: string;
+  noMatches: string;
   official: string;
   by: (author: string) => string;
   apply: string;
@@ -21,6 +25,10 @@ export const zhCN: SettingsThemeMarketText = {
   loading: "正在读取主题市场…",
   loadFailed: "读不到主题市场，检查一下网络后点刷新。",
   empty: "主题市场里还没有主题。",
+  searchPlaceholder: "搜索主题或作者…",
+  filterAll: "全部",
+  filterOfficial: "官方",
+  noMatches: "没有匹配的主题。",
   official: "官方",
   by: (author) => `作者 ${author}`,
   apply: "应用",
@@ -37,6 +45,10 @@ export const en: SettingsThemeMarketText = {
   loading: "Reading the theme market…",
   loadFailed: "Could not read the theme market. Check the network, then refresh.",
   empty: "No themes in the market yet.",
+  searchPlaceholder: "Search themes or authors…",
+  filterAll: "All",
+  filterOfficial: "Official",
+  noMatches: "No matching themes.",
   official: "Official",
   by: (author) => `by ${author}`,
   apply: "Apply",

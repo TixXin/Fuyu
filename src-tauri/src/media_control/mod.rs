@@ -7,6 +7,7 @@ mod audio;
 #[cfg(windows)]
 mod audio_fallback;
 mod background;
+mod cache;
 #[cfg_attr(target_os = "macos", path = "events_macos.rs")]
 mod events;
 mod host;

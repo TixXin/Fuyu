@@ -180,7 +180,7 @@ Built with Tauri 2, React 19 + TypeScript and Rust. Releases and in-app updates 
 
 ## Community
 
-Questions, ideas, or just want to chat? Scan to join our WeChat user group (mostly in Chinese):
+Questions, ideas, or just want to chat? Join our [Discord server](https://discord.gg/azu5aZFuRY), or scan to join our WeChat user group (mostly in Chinese):
 
 <p align="center">
   <img src="../assets/readme/wechat-group.png" alt="QR code of the Fuyu WeChat user group" width="220">

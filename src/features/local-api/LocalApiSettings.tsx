@@ -1,5 +1,7 @@
 import { Check, Copy, FolderOpen } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsInlineConfirm } from "../../components/settings/SettingsInlineConfirm";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
@@ -40,7 +42,7 @@ export function LocalApiSettings() {
   const address = info?.running ? info.url : t.notRunning;
 
   return (
-    <SettingsGroup title={t.title} footer={failure ?? error ?? t.hint}>
+    <SettingsGroup title={t.title} footer={<SettingsFootnote text={failure ?? error ?? t.hint} />}>
       <SettingsToggleRow title={t.allowWrite} description={t.allowWriteHint} checked={allowWrite} onChange={saveAllowWrite} />
       <SettingsRow
         title={t.address}
@@ -52,7 +54,15 @@ export function LocalApiSettings() {
         description={t.tokenHint}
         control={<CopyButton copied={copied === "token"} label={t.copy} copiedLabel={t.copied} onClick={() => copy("token", copyLocalApiToken)} />}
       />
-      <SettingsRow title={t.resetToken} description={t.resetTokenHint} control={<SettingsLinkButton tone="danger" onClick={() => void resetToken()}>{t.resetToken}</SettingsLinkButton>} />
+      <SettingsRow
+        title={t.resetToken}
+        description={t.resetTokenHint}
+        control={
+          <SettingsInlineConfirm tone="danger" confirmLabel={t.resetTokenConfirm} hint={t.resetTokenHint} onConfirm={() => void resetToken()}>
+            {t.resetToken}
+          </SettingsInlineConfirm>
+        }
+      />
       <SettingsRow
         title={t.configFile}
         description={info?.configPath ?? ""}

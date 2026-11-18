@@ -40,9 +40,16 @@ export type AgentHooksInstallResult = {
 
 export type RemoteResult = { host: string; error: string | null };
 
+export type RemoteSetupResult = RemoteResult;
+
+export interface AgentHooksUninstallResult {
+  removedAt: number;
+  remotes: RemoteSetupResult[];
+}
+
 export type HookInstallState = "absent" | "notInstalled" | "outdated" | "current";
 
-export type AgentHooksState = Partial<Record<AgentProvider, HookInstallState>> & {
+export type AgentHooksState = Partial<Record<SessionProvider, HookInstallState>> & {
   scriptsOutdated: boolean;
 };
 
@@ -256,6 +263,10 @@ export function clearAgentProviderStatus(provider: string) {
 
 export function installAgentStatusHooks() {
   return invoke<AgentHooksInstallResult>("install_agent_status_hooks");
+}
+
+export function uninstallAgentStatusHooks() {
+  return invoke<AgentHooksUninstallResult>("uninstall_agent_status_hooks");
 }
 
 export function listAgentEffortLabels() {

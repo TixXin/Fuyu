@@ -2,6 +2,7 @@ use base64::{engine::general_purpose, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, fs, path::PathBuf};
 
+use crate::user_error::UserError;
 use super::{
     current_unix_millis, snippets::ClipboardSnippet, ClipboardHistoryItem, ClipboardHistoryItemKind,
     ClipboardHistoryService,
@@ -47,19 +48,24 @@ fn free_path(dir: &std::path::Path, stamp: &str) -> PathBuf {
         .unwrap_or_else(|| dir.join(format!("{base}.json")))
 }
 
-fn parse_export(content: &str) -> Result<ExportFile, String> {
-    let file: ExportFile = serde_json::from_str(content).map_err(|_| "这不是岛屿导出的剪贴板文件。".to_string())?;
+fn parse_export(content: &str) -> Result<ExportFile, UserError> {
+    let file: ExportFile = serde_json::from_str(content)
+        .map_err(|_| UserError::new("clipboard.notExport", "This is not a clipboard file exported from Fuyu."))?;
     let known = file.app == APP || LEGACY_APPS.contains(&file.app.as_str());
     if !known || file.version > VERSION {
-        return Err("这不是岛屿导出的剪贴板文件，或者来自更新的版本。".into());
+        return Err(UserError::new(
+            "clipboard.newerExport",
+            "This is not a clipboard file exported from Fuyu, or it comes from a newer version.",
+        ));
     }
     Ok(file)
 }
 
 impl ClipboardHistoryService {
-    pub(super) fn export(&self) -> Result<String, String> {
+    pub(super) fn export(&self) -> Result<String, UserError> {
+        let _ = self.flush_persisted();
         let (items, snippets) = {
-            let state = self.state.lock().map_err(|error| error.to_string())?;
+            let state = self.state.lock().map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
             (state.items.clone(), state.snippets.clone())
         };
         let items = items
@@ -74,23 +80,27 @@ impl ClipboardHistoryService {
             })
             .collect();
         let file = ExportFile { app: APP.into(), version: VERSION, exported_at: current_unix_millis(), items, snippets };
-        let content = serde_json::to_string(&file).map_err(|error| format!("Failed to write the export: {error}"))?;
-        let dir = crate::system::downloads_dir().ok_or("找不到下载文件夹。")?;
+        let content = serde_json::to_string(&file).map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
+        let dir = crate::system::downloads_dir().ok_or_else(|| UserError::new("file.noDownloads", "The Downloads folder was not found."))?;
         let stamp = chrono::Local::now().format("%Y-%m-%d-%H%M").to_string();
         let path = free_path(&dir, &stamp);
-        fs::write(&path, content).map_err(|error| format!("Could not write {}: {error}", path.display()))?;
+        fs::write(&path, content).map_err(|error| {
+            UserError::new("file.write", format!("Could not write {}.", path.display()))
+                .arg("path", path.display().to_string())
+                .detail(error)
+        })?;
         Ok(path.to_string_lossy().into_owned())
     }
 
-    pub(super) fn import(&self, content: &str) -> Result<ImportReport, String> {
+    pub(super) fn import(&self, content: &str) -> Result<ImportReport, UserError> {
         if content.len() > MAX_IMPORT_BYTES {
-            return Err("The file is too large.".into());
+            return Err(UserError::new("clipboard.importTooLarge", "The clipboard file is too large."));
         }
         let file = parse_export(content)?;
         let mut seen: HashSet<String> = self
             .state
             .lock()
-            .map_err(|error| error.to_string())?
+            .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
             .items
             .iter()
             .map(|item| item.hash.clone())
@@ -115,7 +125,7 @@ impl ClipboardHistoryService {
             added.push(item);
         }
 
-        let mut state = self.state.lock().map_err(|error| error.to_string())?;
+        let mut state = self.state.lock().map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?;
         let items = added.len();
         state.items.extend(added);
         state.items.sort_by_key(|item| std::cmp::Reverse(item.copied_at));
@@ -132,6 +142,7 @@ impl ClipboardHistoryService {
         self.enforce_limit_locked(&mut state);
         self.persist_locked(&state)?;
         drop(state);
+        self.flush_persisted()?;
         self.emit_changed();
         Ok(ImportReport { items, snippets })
     }
@@ -164,8 +175,8 @@ mod tests {
 
     #[test]
     fn rejects_unknown_apps_and_newer_versions() {
-        assert!(parse_export(&file("other-clipboard", 1)).is_err());
-        assert!(parse_export(&file("fuyu-clipboard", 2)).is_err());
-        assert!(parse_export("not json").is_err());
+        assert_eq!(parse_export(&file("other-clipboard", 1)).err().map(|e| e.code()), Some("clipboard.newerExport"));
+        assert_eq!(parse_export(&file("fuyu-clipboard", 2)).err().map(|e| e.code()), Some("clipboard.newerExport"));
+        assert_eq!(parse_export("not json").err().map(|e| e.code()), Some("clipboard.notExport"));
     }
 }

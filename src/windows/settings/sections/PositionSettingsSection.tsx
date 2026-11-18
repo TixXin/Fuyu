@@ -1,3 +1,4 @@
+import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsLinkButton } from "../../../components/settings/SettingsLinkButton";
@@ -61,7 +62,7 @@ export function PositionSettingsSection({
       <SettingsRow
         title={t.settings.position.monitor}
         control={
-          <SettingsSelect<IslandMonitor>
+          <SettingsChoice<IslandMonitor>
             value={settings.islandMonitor}
             options={monitorOptions}
             ariaLabel={t.settings.position.monitor}
@@ -74,7 +75,7 @@ export function PositionSettingsSection({
           title={t.settings.position.menuBar}
           searchable={false}
           control={
-            <SettingsSelect<MenuBarPlacement>
+            <SettingsChoice<MenuBarPlacement>
               value={settings.menuBarPlacement}
               options={menuBarOptions}
               ariaLabel={t.settings.position.menuBar}

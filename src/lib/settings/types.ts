@@ -84,6 +84,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   messageNotice: MessageNotice;
   messagePanelSeconds: number;
   expandTrigger: ExpandTrigger;
+  clickCollapseOnLeave: boolean;
   hoverExpandDelayMs: number;
   hoverCollapseDelayMs: number;
   hoverSwitchPage: boolean;

@@ -10,6 +10,7 @@ export type SettingsBackupText = {
   reveal: string;
   revealMac: string;
   confirmRestore: string;
+  confirmRestoreAction: string;
   restored: (count: number) => string;
   restart: string;
   problems: { notJson: string; notBackup: string; newerVersion: string; empty: string };
@@ -43,6 +44,7 @@ export const zhCN: SettingsBackupText = {
   reveal: "在文件夹中显示",
   revealMac: "在访达中显示",
   confirmRestore: "用这个文件里的设置替换当前设置？当前设置不会另外保存，需要的话请先导出一份。",
+  confirmRestoreAction: "确认恢复",
   restored: (count) => `已恢复 ${count} 项设置。大部分立即生效，个别设置重启岛屿后生效。`,
   restart: "立即重启岛屿",
   problems: {
@@ -81,6 +83,7 @@ export const en: SettingsBackupText = {
   reveal: "Show in folder",
   revealMac: "Show in Finder",
   confirmRestore: "Replace the current settings with the ones in this file? The current settings are not saved separately; export them first if you need them.",
+  confirmRestoreAction: "Confirm restore",
   restored: (count) => `Restored ${count} settings. Most apply now; a few apply after the island restarts.`,
   restart: "Restart the island",
   problems: {

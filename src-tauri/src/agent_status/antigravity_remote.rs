@@ -87,6 +87,25 @@ pub(super) fn install(target: &SshTarget, approval: Option<&RemoteApproval>) -> 
     edit(target, HOOKS_PATH, &|text| with_remote_hooks(text, approval))
 }
 
+pub(super) fn without_remote_hooks(text: &str) -> Result<String, String> {
+    if text.trim().is_empty() {
+        return Ok(text.to_string());
+    }
+    let mut config: Value =
+        serde_json::from_str(text).map_err(|error| format!("Failed to parse ~/{HOOKS_PATH}: {error}"))?;
+    let root = config
+        .as_object_mut()
+        .ok_or_else(|| format!("~/{HOOKS_PATH} must contain a JSON object"))?;
+    if root.remove(HOOK_NAME).is_none() {
+        return Ok(text.to_string());
+    }
+    serde_json::to_string_pretty(&config).map_err(|error| error.to_string())
+}
+
+pub(super) fn uninstall(target: &SshTarget) -> Result<(), String> {
+    edit(target, HOOKS_PATH, &without_remote_hooks)
+}
+
 #[cfg(test)]
 #[path = "antigravity_remote_tests.rs"]
 mod tests;

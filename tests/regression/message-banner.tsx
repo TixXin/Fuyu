@@ -45,7 +45,7 @@ mockIPC((command, payload) => {
   if (command === "get_qq_notification_state") return { revision: ++revision, enabled: true, status: "listening", items: [], error: null };
   if (command === "set_wechat_expose_ui" || command === "set_wechat_hide_taskbar_button") return { revision: ++revision, enabled: true, status: "listening", pending: false, lastAttentionAt: null, error: null };
   if (command === "get_qq_mail_state") return [mail];
-  if (command === "read_qq_mail") return { id: args.messageId, content: "本周项目进度已更新", contentType: "text/plain", attachments: [] };
+  if (command === "read_qq_mail") return { id: args.messageId, content: String(args.messageId).startsWith("otp-mail-") ? "Verification code: 849201" : "本周项目进度已更新", contentType: "text/plain", attachments: [] };
 }, { shouldMockEvents: true });
 
 let changeNotice: (notice: MessageNotice) => void;
@@ -172,10 +172,36 @@ async function runChecks() {
     check(!banner(), "鼠标离开后按时收回");
 
     await notify("qq", "老王");
+    await act(async () => { banner()!.querySelector<HTMLButtonElement>(".message-banner__main")!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })); });
+    await waitFor(() => commands.some((entry) => entry.command === "copy_message_text" && String(entry.args.text).includes("设计方案")), "右键复制横幅文本");
+    check(banner()?.querySelector(".message-banner__copied")?.textContent === "已复制", "右键横幅复制消息文本并显示已复制反馈");
     await act(async () => banner()!.querySelector<HTMLButtonElement>(".message-banner__close")!.click());
     check(!banner(), "关闭按钮收回横幅");
     await act(async () => banner()?.querySelector<HTMLButtonElement>(".message-banner__main")?.click());
     check(!commands.some((entry) => entry.command === "open_qq"), "关闭不会打开 QQ");
+
+    await update(async () => {
+      const receivedAt = Date.now();
+      await emit("qq-notifications-changed", {
+        snapshot: { revision: ++revision, enabled: true, status: "listening", items: [{ id: `qq-otp-${revision}`, title: "安全中心", body: "您的登录验证码为 356407，5 分钟内有效。", createdAt: receivedAt }], error: null },
+        newestId: `qq-otp-${revision}`, windowVisible: true,
+      });
+    });
+    const qqOtpBtn = banner()?.querySelector<HTMLButtonElement>(".message-banner__action");
+    check(qqOtpBtn?.textContent === "复制 356407", "含验证码的 QQ 通知横幅显示一键复制按钮");
+    await act(async () => qqOtpBtn!.click());
+    await waitFor(() => commands.some((entry) => entry.command === "copy_message_text" && entry.args.text === "356407"), "复制 QQ 验证码");
+    check(!banner() && !commands.some((entry) => entry.command === "open_qq"), "点横幅复制验证码后收回且不唤起 QQ");
+
+    await update(async () => {
+      const receivedAt = Date.now();
+      mail = { ...mail, revision: ++revision, unreadCount: 1, items: [{ id: `otp-mail-${revision}`, uid: revision, sender: "GitHub <noreply@github.com>", subject: "[GitHub] Please verify your device", unread: true, receivedAt }] };
+      await emit("qq-mail-changed", { snapshot: mail, newestId: `otp-mail-${revision}`, windowVisible: true });
+    });
+    await waitFor(() => banner()?.querySelector<HTMLButtonElement>(".message-banner__action")?.textContent === "复制 849201", "按需预取邮件正文验证码");
+    await act(async () => banner()!.querySelector<HTMLButtonElement>(".message-banner__action")!.click());
+    await waitFor(() => commands.some((entry) => entry.command === "copy_message_text" && entry.args.text === "849201"), "复制邮件正文验证码");
+    check(!banner(), "点邮件横幅复制验证码后收回");
 
     await act(async () => changeNotice("line"));
     await notify("qq", "小张");

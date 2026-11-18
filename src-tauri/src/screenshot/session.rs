@@ -123,7 +123,7 @@ fn open(app: &AppHandle, mode: Mode) -> Result<(), String> {
         let shots: Vec<_> = monitors.iter().map(|monitor| scope.spawn(move || super::capture::monitor(monitor))).collect();
         shots.into_iter().map(|shot| shot.join().ok().flatten()).collect()
     });
-    let (window_targets, window_handles) = targets::windows_on_screen();
+    let (window_targets, window_handles) = targets::windows_on_screen(app);
     finish_capture(app, id, grabs, window_targets);
     targets::read_controls(app, id, window_handles);
     Ok(())

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useTranslation } from "../../i18n";
 import { deleteClipboardSnippet, getClipboardHistory, listenClipboardHistoryChanged, saveClipboardSnippet, type ClipboardSnippet } from "./api";
@@ -46,8 +48,21 @@ export function ClipboardSnippetSettings() {
   };
 
   return (
-    <SettingsGroup title={text.title}>
-      <SettingsRow title={text.hintTitle} description={text.hint} searchable={false} />
+    <SettingsGroup
+      title={text.title}
+      footer={<SettingsFootnote text={`${text.hintTitle}。${text.hint}`} />}
+      action={
+        !draft ? (
+          <SettingsLinkButton onClick={() => setDraft({ id: null, title: "", text: "" })}>
+            <Plus size={13} strokeWidth={2.2} aria-hidden="true" />
+            {text.add}
+          </SettingsLinkButton>
+        ) : undefined
+      }
+    >
+      {snippets.length === 0 && !draft ? (
+        <SettingsRow searchable={false} title={<span className="clipboard-snippet__empty">{text.empty}</span>} />
+      ) : null}
       {snippets.map((snippet) => (
         <SettingsRow
           key={snippet.id}
@@ -85,17 +100,7 @@ export function ClipboardSnippetSettings() {
             </div>
           </div>
         </SettingsRow>
-      ) : (
-        <SettingsRow
-          title={text.add}
-          searchable={false}
-          control={
-            <button type="button" className="clipboard-snippet__add" aria-label={text.add} onClick={() => setDraft({ id: null, title: "", text: "" })}>
-              <Plus size={14} strokeWidth={1.5} absoluteStrokeWidth />
-            </button>
-          }
-        />
-      )}
+      ) : null}
     </SettingsGroup>
   );
 }

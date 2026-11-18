@@ -7,7 +7,8 @@ use std::{
 use serde_json::{json, Value};
 
 use super::claude_hooks::{
-    claude_code_match_all_hook_entry, command_hook_entry, install_claude_code_hook_events, APPROVAL_HOOK_TIMEOUT_SECONDS,
+    claude_code_match_all_hook_entry, command_hook_entry, install_claude_code_hook_events,
+    uninstall_nested_json_hooks, APPROVAL_HOOK_TIMEOUT_SECONDS,
 };
 use super::codex_hooks::{agent_running_command_with, agent_status_command};
 use super::harness::{Harness, HookEnv, Hooks, ScanRoots, StatusLight};
@@ -46,6 +47,7 @@ pub(super) const HARNESS: Harness = Harness {
     hooks: Some(Hooks {
         install: |env| install_hooks(&TRAE, env),
         check: |env| hooks_state(&TRAE, env),
+        uninstall: |env| uninstall_hooks(&TRAE, env),
     }),
     status_light: Some(StatusLight {
         running_marker: "agent-trae-running.flag",
@@ -61,6 +63,7 @@ pub(super) const CN_HARNESS: Harness = Harness {
     hooks: Some(Hooks {
         install: |env| install_hooks(&TRAE_CN, env),
         check: |env| hooks_state(&TRAE_CN, env),
+        uninstall: |env| uninstall_hooks(&TRAE_CN, env),
     }),
     status_light: Some(StatusLight {
         running_marker: "agent-traeCn-running.flag",
@@ -143,6 +146,10 @@ pub(super) fn install_hooks(edition: &Edition, env: &HookEnv) -> Result<(), Stri
     let content = serde_json::to_string_pretty(&config)
         .map_err(|error| format!("Failed to serialize {label} hooks.json: {error}"))?;
     write_text_file(&path, &content)
+}
+
+pub(super) fn uninstall_hooks(edition: &Edition, env: &HookEnv) -> Result<(), String> {
+    uninstall_nested_json_hooks(&hooks_path(edition, env.home_dir), edition.label, "hooks.json")
 }
 
 struct Saved {

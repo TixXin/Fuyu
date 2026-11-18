@@ -21,7 +21,7 @@ const PLUGIN_SWAPS: [(&str, &str); 2] =
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
-    hooks: Some(Hooks { install: install_hooks, check: hooks_state }),
+    hooks: Some(Hooks { install: install_hooks, check: hooks_state, uninstall: uninstall_hooks }),
     status_light: None,
     sessions: Some(|roots, now, window_ms| match roots.local_app_dir {
         Some(_) => database_path(roots.home_dir, process_env).map_or_else(Vec::new, |db| sessions(&db, now, window_ms)),
@@ -93,6 +93,14 @@ fn install_hooks(env: &HookEnv) -> Result<(), String> {
 
 fn hooks_state(env: &HookEnv) -> HookInstallState {
     state_with(env, &process_env)
+}
+
+fn uninstall_hooks(env: &HookEnv) -> Result<(), String> {
+    uninstall_with(env, &process_env)
+}
+
+pub(super) fn uninstall_with(env: &HookEnv, vars: &impl Fn(&str) -> Option<OsString>) -> Result<(), String> {
+    super::uninstall::remove_file_if_exists(&plugin_path(env.home_dir, vars))
 }
 
 fn install_with(env: &HookEnv, vars: &impl Fn(&str) -> Option<OsString>) -> Result<(), String> {

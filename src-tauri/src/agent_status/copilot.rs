@@ -38,7 +38,7 @@ pub(super) const SPEC: Compat = Compat {
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
-    hooks: Some(Hooks { install: copilot_hooks::install, check: copilot_hooks::check }),
+    hooks: Some(Hooks { install: copilot_hooks::install, check: copilot_hooks::check, uninstall: copilot_hooks::uninstall }),
     status_light: Some(StatusLight {
         running_marker: "agent-copilot-running.flag",
         running_hold: "agent-copilot-running-hold.flag",

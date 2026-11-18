@@ -1,10 +1,40 @@
 import { useCallback, useEffect, useState } from "react";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { useErrorText } from "../../i18n";
-import { clearAgentProviderStatus, getAgentHooksState, getAgentStatus, installAgentStatusHooks, type AgentHooksInstallResult, type AgentHooksState, type AgentStatusSnapshot } from "./api";
-import { AGENT_PROVIDERS, DEFAULT_AGENT_STATUS, type AgentHooksInstallState } from "./status";
+import {
+  clearAgentProviderStatus,
+  getAgentHooksState,
+  getAgentStatus,
+  installAgentStatusHooks,
+  uninstallAgentStatusHooks,
+  type AgentHooksInstallResult,
+  type AgentHooksState,
+  type AgentHooksUninstallResult,
+  type AgentStatusSnapshot,
+} from "./api";
+import {
+  AGENT_PROVIDERS,
+  DEFAULT_AGENT_STATUS,
+  type AgentHooksInstallState,
+  type AgentHooksUninstallState,
+} from "./status";
 
 const AGENT_STATUS_POLL_MS = 1_000;
+
+type HooksInstallFlow = {
+  state: AgentHooksInstallState;
+  result: AgentHooksInstallResult | null;
+  error: string;
+};
+
+type HooksUninstallFlow = {
+  state: AgentHooksUninstallState;
+  result: AgentHooksUninstallResult | null;
+  error: string;
+};
+
+const IDLE_INSTALL_FLOW: HooksInstallFlow = { state: "idle", result: null, error: "" };
+const IDLE_UNINSTALL_FLOW: HooksUninstallFlow = { state: "idle", result: null, error: "" };
 
 export function useAgentStatusSettings() {
   const errorText = useErrorText();
@@ -12,11 +42,8 @@ export function useAgentStatusSettings() {
     useState<AgentStatusSnapshot>(DEFAULT_AGENT_STATUS);
   const [clearingAgentProvider, setClearingAgentProvider] =
     useState<string | null>(null);
-  const [agentHooksInstallState, setAgentHooksInstallState] =
-    useState<AgentHooksInstallState>("idle");
-  const [agentHooksInstallResult, setAgentHooksInstallResult] =
-    useState<AgentHooksInstallResult | null>(null);
-  const [agentHooksInstallError, setAgentHooksInstallError] = useState("");
+  const [installFlow, setInstallFlow] = useState<HooksInstallFlow>(IDLE_INSTALL_FLOW);
+  const [uninstallFlow, setUninstallFlow] = useState<HooksUninstallFlow>(IDLE_UNINSTALL_FLOW);
   const [agentHooksState, setAgentHooksState] = useState<AgentHooksState | null>(null);
 
   const refreshAgentHooksState = useCallback(async () => {
@@ -69,30 +96,47 @@ export function useAgentStatusSettings() {
   }, []);
 
   const installAgentHooks = useCallback(async () => {
-    setAgentHooksInstallState("installing");
-    setAgentHooksInstallError("");
+    setUninstallFlow(IDLE_UNINSTALL_FLOW);
+    setInstallFlow({ state: "installing", result: null, error: "" });
 
     try {
       const result = await installAgentStatusHooks();
-      setAgentHooksInstallResult(result);
-      setAgentHooksInstallState("installed");
+      setInstallFlow({ state: "installed", result, error: "" });
       void refreshAgentStatus();
       void refreshAgentHooksState();
     } catch (error) {
       console.error("Failed to install agent status hooks", error);
-      setAgentHooksInstallError(errorText(error));
-      setAgentHooksInstallState("error");
+      setInstallFlow({ state: "error", result: null, error: errorText(error) });
+    }
+  }, [errorText, refreshAgentHooksState, refreshAgentStatus]);
+
+  const uninstallAgentHooks = useCallback(async () => {
+    setInstallFlow(IDLE_INSTALL_FLOW);
+    setUninstallFlow({ state: "uninstalling", result: null, error: "" });
+
+    try {
+      const result = await uninstallAgentStatusHooks();
+      setUninstallFlow({ state: "uninstalled", result, error: "" });
+      void refreshAgentStatus();
+      void refreshAgentHooksState();
+    } catch (error) {
+      console.error("Failed to uninstall agent status hooks", error);
+      setUninstallFlow({ state: "error", result: null, error: errorText(error) });
     }
   }, [errorText, refreshAgentHooksState, refreshAgentStatus]);
 
   return {
     agentStatus,
     clearingAgentProvider,
-    agentHooksInstallState,
-    agentHooksInstallResult,
-    agentHooksInstallError,
+    agentHooksInstallState: installFlow.state,
+    agentHooksInstallResult: installFlow.result,
+    agentHooksInstallError: installFlow.error,
+    agentHooksUninstallState: uninstallFlow.state,
+    agentHooksUninstallResult: uninstallFlow.result,
+    agentHooksUninstallError: uninstallFlow.error,
     agentHooksState,
     onClearAgentStatus: clearAgentStatus,
     onInstallAgentHooks: installAgentHooks,
+    onUninstallAgentHooks: uninstallAgentHooks,
   };
 }

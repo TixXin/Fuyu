@@ -24,6 +24,9 @@ export type MessagesText = {
   badge: (count: number, wechat: boolean) => string;
   label: (text: string) => string;
   qqPreview: (title: string, body: string) => string;
+  copyText: string;
+  copied: string;
+  copyCode: (code: string) => string;
   banner: {
     more: (count: number) => string;
     close: string;
@@ -63,6 +66,9 @@ export const zhCN: MessagesText = {
   badge: (count, wechat) => `QQ ${count} 条通知${wechat ? "，微信有新提醒" : ""}`,
   label: (text) => `消息：${text}`,
   qqPreview: (title, body) => `${title}：${body}`,
+  copyText: "复制内容",
+  copied: "已复制",
+  copyCode: (code) => `复制 ${code}`,
   banner: {
     more: (count) => `另有 ${count} 条`,
     close: "关闭通知",
@@ -102,6 +108,9 @@ export const en: MessagesText = {
   badge: (count, wechat) => `${count} QQ notification${count === 1 ? "" : "s"}${wechat ? ", new WeChat reminder" : ""}`,
   label: (text) => `Messages: ${text}`,
   qqPreview: (title, body) => `${title}: ${body}`,
+  copyText: "Copy message",
+  copied: "Copied",
+  copyCode: (code) => `Copy ${code}`,
   banner: {
     more: (count) => `${count} more`,
     close: "Dismiss notification",

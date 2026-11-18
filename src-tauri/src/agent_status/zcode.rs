@@ -21,7 +21,7 @@ const DB_ENV: &str = "ZCODE_SESSION_DB_PATH";
 
 pub(super) const HARNESS: Harness = Harness {
     id: PROVIDER,
-    hooks: Some(Hooks { install: install_hooks, check: hooks_state }),
+    hooks: Some(Hooks { install: install_hooks, check: hooks_state, uninstall: uninstall_hooks }),
     status_light: Some(StatusLight {
         running_marker: "agent-zcode-running.flag",
         running_hold: "agent-zcode-running-hold.flag",
@@ -105,6 +105,44 @@ fn install_hooks(env: &HookEnv) -> Result<(), String> {
     let content =
         serde_json::to_string_pretty(&config).map_err(|error| format!("Failed to serialize {LABEL} config.json: {error}"))?;
     write_text_file(&path, &content)
+}
+
+pub(super) fn uninstall_hooks(env: &HookEnv) -> Result<(), String> {
+    let path = config_path(env.home_dir);
+    let content = match fs::read_to_string(&path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(format!("Failed to read {LABEL} config.json: {error}")),
+    };
+    let trimmed = content.trim_start_matches('\u{feff}').trim();
+    if trimmed.is_empty() {
+        return Ok(());
+    }
+    let original: Value = serde_json::from_str(trimmed)
+        .map_err(|error| format!("Failed to parse {LABEL} config.json: {error}"))?;
+    let mut config = original.clone();
+    let root = config
+        .as_object_mut()
+        .ok_or_else(|| format!("{LABEL} config.json must contain a JSON object."))?;
+    if let Some(Value::Object(hooks)) = root.get_mut("hooks") {
+        if let Some(Value::Object(events)) = hooks.get_mut("events") {
+            install_claude_code_hook_events(events, Vec::new());
+        }
+    }
+    if Some(&*root) == original.as_object() {
+        return Ok(());
+    }
+    if let Some(Value::Object(hooks)) = root.get_mut("hooks") {
+        if hooks.get("events").and_then(Value::as_object).is_some_and(Map::is_empty) {
+            hooks.remove("events");
+            if hooks.is_empty() || (hooks.len() == 1 && hooks.contains_key("enabled")) {
+                root.remove("hooks");
+            }
+        }
+    }
+    let serialized =
+        serde_json::to_string_pretty(&config).map_err(|error| format!("Failed to serialize {LABEL} config.json: {error}"))?;
+    write_text_file(&path, &serialized)
 }
 
 fn object_entry<'a>(parent: &'a mut Map<String, Value>, key: &str) -> Option<&'a mut Map<String, Value>> {

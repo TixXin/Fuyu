@@ -193,6 +193,7 @@ mockIPC((command, payload) => {
     ];
     case "list_ssh_hosts": return ["devbox", "nas"]; case "get_agent_remote_hosts": return [{ host: "devbox", fetchedAt: 0, error: null, fetching: false }];
     case "get_agent_hooks_state": return { codex: "notInstalled", claudeCode: "notInstalled", scriptsOutdated: false };
+    case "uninstall_agent_status_hooks": return { removedAt: 1700000000000, remotes: [] };
     case "list_sound_packs": return [{ id: "chimes-1", name: "Chimes", author: "Ann", license: "CC0-1.0", sounds: { complete: "complete.wav", error: "error.wav" } }];
     default: return null;
   }

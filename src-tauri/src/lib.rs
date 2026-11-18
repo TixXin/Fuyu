@@ -15,6 +15,7 @@ mod emit_diagnostics;
 mod file_shelf;
 mod fs_write;
 mod home_dir;
+mod im_sources;
 mod island;
 mod local_api;
 mod lyrics;
@@ -126,6 +127,9 @@ pub fn run() {
         .on_page_load(|webview, _| {
             webview_recovery::attach(webview);
             webview_memory::page_loaded(webview);
+            if let Some(window) = webview.app_handle().get_webview_window(webview.label()) {
+                recording::apply_to_window(&window);
+            }
         })
         .on_window_event(|window, event| {
             if window.label() == translation::WINDOW_LABEL
@@ -238,6 +242,9 @@ pub fn run() {
             if let Err(error) = wechat_reminders::init(app.handle()) {
                 eprintln!("failed to initialize WeChat reminders: {error}");
             }
+            if let Err(error) = im_sources::init(app.handle()) {
+                eprintln!("failed to initialize IM sources: {error}");
+            }
             if let Err(error) = notification_diagnostics::start(app.handle()) {
                 eprintln!("failed to initialize notification diagnostics: {error}");
             }
@@ -257,6 +264,7 @@ pub fn run() {
             mail;
             wechat_reminders;
             qq_notifications;
+            im_sources;
             island;
             todos;
             system;
@@ -295,6 +303,7 @@ pub fn run() {
                 tauri::RunEvent::Exit => {
                     plugin_kernel::shutdown();
                     agent_approval::shutdown();
+                    clipboard_history::shutdown();
                     home_dir::before_exit();
                     wechat_reminders::shutdown();
                 }

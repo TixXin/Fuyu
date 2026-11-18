@@ -3,7 +3,7 @@ use std::{fs, path::Path};
 use serde_json::{json, Value};
 
 use super::claude_compat;
-use super::claude_hooks::install_claude_code_hook_events;
+use super::claude_hooks::{install_claude_code_hook_events, uninstall_nested_json_hooks};
 use super::droid::{home, SPEC};
 use super::harness::HookEnv;
 use super::hooks_state::{hook_entries_state, HookInstallState};
@@ -51,6 +51,37 @@ pub(super) fn install_into(dir: &Path, entries: Vec<(&'static str, Value)>) -> R
     install_claude_code_hook_events(hooks, entries);
     let content = serde_json::to_string_pretty(&config).map_err(|error| format!("Failed to serialize Droid hooks: {error}"))?;
     write_text_file(&path, &content)
+}
+
+pub(super) fn uninstall(env: &HookEnv) -> Result<(), String> {
+    uninstall_from(&home(env.home_dir))
+}
+
+pub(super) fn uninstall_from(dir: &Path) -> Result<(), String> {
+    uninstall_nested_json_hooks(&dir.join(SETTINGS_FILE), "Droid", SETTINGS_FILE)?;
+    let hooks_path = dir.join(HOOKS_FILE);
+    let content = match fs::read_to_string(&hooks_path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(format!("Failed to read Droid {HOOKS_FILE}: {error}")),
+    };
+    let trimmed = content.trim_start_matches('\u{feff}').trim();
+    if trimmed.is_empty() {
+        return Ok(());
+    }
+    let original: Value = serde_json::from_str(trimmed)
+        .map_err(|error| format!("Failed to parse Droid {HOOKS_FILE}: {error}"))?;
+    let mut config = original.clone();
+    let root = config
+        .as_object_mut()
+        .ok_or_else(|| format!("Droid {HOOKS_FILE} must contain a JSON object."))?;
+    install_claude_code_hook_events(root, Vec::new());
+    if config == original {
+        return Ok(());
+    }
+    let serialized = serde_json::to_string_pretty(&config)
+        .map_err(|error| format!("Failed to serialize Droid {HOOKS_FILE}: {error}"))?;
+    write_text_file(&hooks_path, &serialized)
 }
 
 pub(super) fn check(env: &HookEnv) -> HookInstallState {

@@ -27,6 +27,7 @@ export type SettingsSoundsText = {
   importing: string;
   imported: (name: string) => string;
   removePack: string;
+  removePackConfirm: string;
   openFolder: string;
   openFolderMac: string;
   fromPlugin: string;
@@ -73,6 +74,7 @@ export const zhCN: SettingsSoundsText = {
   importing: "正在导入…",
   imported: (name) => `已导入「${name}」。`,
   removePack: "删除",
+  removePackConfirm: "确认删除",
   openFolder: "打开文件夹",
   openFolderMac: "在访达中打开",
   fromPlugin: "来自插件，在插件页关闭或卸载",
@@ -119,6 +121,7 @@ export const en: SettingsSoundsText = {
   importing: "Importing…",
   imported: (name) => `Imported "${name}".`,
   removePack: "Remove",
+  removePackConfirm: "Confirm remove",
   openFolder: "Open folder",
   openFolderMac: "Open in Finder",
   fromPlugin: "From a plugin; switch it off or uninstall it on the Plugins page",

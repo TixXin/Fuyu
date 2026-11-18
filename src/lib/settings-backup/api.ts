@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { open } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { takeSnapshot } from "./localSnapshot.ts";
 
@@ -45,6 +46,11 @@ export function revealFolder(path: string) {
 
 export function revealBackup(path: string) {
   return revealItemInDir(path);
+}
+
+export async function pickFolder(title?: string) {
+  const picked = await open({ directory: true, multiple: false, title });
+  return typeof picked === "string" ? picked : null;
 }
 
 export type UpdateBackup = {

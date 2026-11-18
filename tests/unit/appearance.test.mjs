@@ -113,6 +113,10 @@ test("expand trigger, hover delays and max panel height default for older settin
   assert.equal(older.maxPanelHeight, 490);
   assert.equal(normalizeSettings({ expandTrigger: "hover" }).expandTrigger, "hover");
   assert.equal(normalizeSettings({ expandTrigger: "doubleClick" }).expandTrigger, "click");
+  assert.equal(DEFAULT_SETTINGS.clickCollapseOnLeave, false);
+  assert.equal(older.clickCollapseOnLeave, false);
+  assert.equal(normalizeSettings({ clickCollapseOnLeave: true }).clickCollapseOnLeave, true);
+  assert.equal(normalizeSettings({ clickCollapseOnLeave: "yes" }).clickCollapseOnLeave, false);
   assert.equal(normalizeSettings({ hoverExpandDelayMs: -50 }).hoverExpandDelayMs, 0);
   assert.equal(normalizeSettings({ hoverExpandDelayMs: 5_000 }).hoverExpandDelayMs, 1_000);
   assert.equal(normalizeSettings({ hoverExpandDelayMs: "600" }).hoverExpandDelayMs, 300);

@@ -16,7 +16,7 @@ import { mergedText, popupActions, withPluginClipboardActions } from "./popupAct
 import { popupFilterLabel } from "./popupFilterLabel";
 import { filterPopupItems, nextPopupFilter, popupFilters, popupTags, type PopupFilter } from "./popupFilters";
 import { popupIndexAfterKey, toggleQueued } from "./popupKeys";
-import { loadPinyin, parsePopupQuery } from "./popupQuery";
+import { isPinyinLoaded, loadPinyin, parsePopupQuery, queryNeedsPinyin } from "./popupQuery";
 import { isPrimaryKey } from "../../lib/shortcut/shortcut";
 import { usePopupHandlers } from "./usePopupHandlers";
 import { usePopupPins } from "./usePopupPins";
@@ -57,7 +57,7 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
   const [mode, setMode] = useState<Mode>("list");
   const [panelPage, setPanelPage] = useState<PanelPage>("actions");
   const [now, setNow] = useState(() => Date.now());
-  const [pinyinReady, setPinyinReady] = useState(false);
+  const [pinyinReady, setPinyinReady] = useState(() => isPinyinLoaded());
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLUListElement | null>(null);
   const scrollRef = useRef<((index: number) => void) | null>(null);
@@ -91,16 +91,19 @@ export function ClipboardPopup({ items, snippets, openCount, wide, ownsWindow = 
     };
   }, []);
 
-  useEffect(() => {
-    void loadPinyin().then((pinyin) => setPinyinReady(pinyin !== null));
-  }, []);
-
   const pending = deletion.pending;
   const visible = useMemo(() => withoutPending(items, pending), [items, pending]);
   const tags = useMemo(() => popupTags(visible), [visible]);
   const filters = popupFilters(tags);
   const onSnippets = filter === "snippets";
   const parsed = useMemo(() => parsePopupQuery(query), [query]);
+  const needsPinyin = !onSnippets && queryNeedsPinyin(parsed);
+  useEffect(() => {
+    if (!needsPinyin || pinyinReady) return;
+    let cancelled = false;
+    void loadPinyin().then((pinyin) => { if (!cancelled) setPinyinReady(pinyin !== null); });
+    return () => { cancelled = true; };
+  }, [needsPinyin, pinyinReady]);
   const needle = query.trim().toLowerCase();
   const filteredItems = useMemo(
     () => (onSnippets ? [] : filterPopupItems(visible, filter, parsed)),

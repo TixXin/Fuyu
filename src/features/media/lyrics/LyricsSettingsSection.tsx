@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "../../../i18n";
+import { SettingsFolderRow } from "../../../components/settings/SettingsFolderRow";
 import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
@@ -72,20 +73,21 @@ export function LyricsSettingsSection({
 
   return (
     <SettingsGroup title={text.title} footer={<SettingsFootnote text={text.hint} />}>
-      <SettingsRow title={text.folder} description={text.folderHint}>
-        <input
-          className="lyrics-folder-input"
-          value={folder}
-          placeholder={text.folderPlaceholder}
-          aria-label={text.folder}
-          spellCheck={false}
-          onChange={(event) => setFolder(event.currentTarget.value)}
-          onBlur={saveFolder}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") saveFolder();
-          }}
-        />
-      </SettingsRow>
+      <SettingsFolderRow
+        title={text.folder}
+        description={text.folderHint}
+        value={folder}
+        placeholder={text.folderPlaceholder}
+        ariaLabel={text.folder}
+        revealPath={folder.trim() || null}
+        browseTitle={text.folder}
+        onChange={setFolder}
+        onSubmit={saveFolder}
+        onPick={(picked) => {
+          setFolder(picked);
+          onSettingsChange({ ...settings, lyricsFolder: picked });
+        }}
+      />
       <SettingsToggleRow
         title={text.online}
         description={text.onlineHint}

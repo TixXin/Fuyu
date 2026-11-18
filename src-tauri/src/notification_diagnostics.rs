@@ -1,4 +1,4 @@
-use crate::{qq_notifications, wechat_reminders};
+use crate::{qq_notifications, user_error::UserError, wechat_reminders};
 use serde_json::{json, Value};
 use std::{
     fs, thread,
@@ -17,17 +17,19 @@ pub fn verification_identifier() -> Option<String> {
     Some(format!("com.tixxin.fuyu.verification.{run_id}"))
 }
 
-pub fn start(app: &AppHandle) -> Result<(), String> {
+pub fn start(app: &AppHandle) -> Result<(), UserError> {
     if std::env::var("FUYU_VERIFY_NOTIFICATIONS").as_deref() != Ok("1") {
         return Ok(());
     }
-    let identifier =
-        verification_identifier().ok_or("通知验收必须提供独立的 32 位十六进制运行标识。")?;
+    let identifier = verification_identifier().ok_or_else(|| {
+        UserError::new("notificationVerify.badId", "Notification verification requires an isolated 32-digit hex run ID.")
+    })?;
     if app.config().identifier != identifier {
-        return Err("通知验收未隔离应用数据目录。".into());
+        return Err(UserError::new("notificationVerify.unisolated", "Notification verification did not isolate the app data folder."));
     }
+    let internal = |error: &dyn std::fmt::Display| UserError::new("internal", "Something went wrong inside the island.").detail(error);
     let run_id =
-        std::env::var("FUYU_NOTIFICATION_VERIFICATION_ID").map_err(|error| error.to_string())?;
+        std::env::var("FUYU_NOTIFICATION_VERIFICATION_ID").map_err(|error| internal(&error))?;
     let seconds = std::env::var("FUYU_VERIFY_NOTIFICATION_SECONDS")
         .ok()
         .and_then(|value| value.parse::<u64>().ok())
@@ -35,10 +37,10 @@ pub fn start(app: &AppHandle) -> Result<(), String> {
         .clamp(10, 300);
     let started_at = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map_err(|error| error.to_string())?
+        .map_err(|error| internal(&error))?
         .as_millis();
     let directory = std::env::temp_dir().join("Fuyu-notification-verification");
-    fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
+    fs::create_dir_all(&directory).map_err(|error| internal(&error))?;
     let path = directory.join(format!("{run_id}.json"));
     let app = app.clone();
     thread::Builder::new().name("notification-diagnostics".into()).spawn(move || {
@@ -85,6 +87,6 @@ pub fn start(app: &AppHandle) -> Result<(), String> {
             if completed { return; }
             thread::sleep(Duration::from_millis(500));
         }
-    }).map_err(|error| format!("无法启动通知验收记录：{error}"))?;
+    }).map_err(|error| UserError::new("notificationVerify.start", "Could not start recording notification verification.").detail(error))?;
     Ok(())
 }

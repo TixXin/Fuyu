@@ -8,6 +8,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const TEMPLATE_PATH = join(ROOT, "src-tauri/src/agent_status/hooks/fuyu-dsh-plugin.js");
+const OPENCODE_TEMPLATE_PATH = join(ROOT, "src-tauri/src/agent_status/hooks/fuyu-opencode-plugin.js");
+const PI_TEMPLATE_PATH = join(ROOT, "src-tauri/src/agent_status/hooks/fuyu-pi-extension.js");
 
 function createMockCordisContext() {
   const listeners = new Map();
@@ -196,5 +198,64 @@ test("fuyu-dsh-plugin handles allow, deny, hand-back, cancellation, and status f
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await rm(fuyuDir, { recursive: true, force: true });
+  }
+});
+
+async function loadTemplateWithDir(templatePath, scratchDir, fuyuDir) {
+  const template = await readFile(templatePath, "utf8");
+  const code = template.replace("\"__FUYU_DIR__\"", JSON.stringify(fuyuDir));
+  const pluginPath = join(scratchDir, `plugin-${Date.now()}-${Math.random().toString(16).slice(2)}.mjs`);
+  await writeFile(pluginPath, code, "utf8");
+  return import(pathToFileURL(pluginPath).href);
+}
+
+test("external JS plugins stay silent and never recreate a deleted FUYU_DIR", async () => {
+  const scratchDir = await mkdtemp(join(tmpdir(), "fuyu-js-plugins-missing-dir-"));
+  const missingFuyuDir = join(scratchDir, "deleted-fuyu-home");
+
+  try {
+    const dshPlugin = await loadTemplateWithDir(TEMPLATE_PATH, scratchDir, missingFuyuDir);
+    const dshHarness = createMockCordisContext();
+    dshPlugin.apply(dshHarness.ctx);
+    const session = { id: "s-1", header: { id: "s-1", cwd: "/work" } };
+    dshHarness.emit("session/event", session, { type: "turn/start" });
+    dshHarness.emit("session/event", session, { type: "turn/end", data: { reason: "completed" } });
+    const dshApproval = await dshHarness.approvalHandler(
+      { agent: { session }, toolName: "shell", callId: "c-1" },
+      async () => "delegated-ok",
+    );
+    assert.equal(dshApproval, "delegated-ok");
+    dshHarness.dispose();
+
+    const opencodeModule = await loadTemplateWithDir(OPENCODE_TEMPLATE_PATH, scratchDir, missingFuyuDir);
+    const opencodeHooks = await opencodeModule.default.server({ client: {}, directory: "/work" });
+    await opencodeHooks.event({
+      event: {
+        type: "permission.asked",
+        properties: { id: "perm-1", sessionID: "sess-1", permission: "bash", patterns: ["ls"] },
+      },
+    });
+    await opencodeHooks.event({
+      event: { type: "session.deleted", properties: { sessionID: "sess-1" } },
+    });
+
+    const piModule = await loadTemplateWithDir(PI_TEMPLATE_PATH, scratchDir, missingFuyuDir);
+    const piHandlers = new Map();
+    piModule.default({
+      on(event, fn) {
+        piHandlers.set(event, fn);
+      },
+    });
+    const piCtx = { cwd: "/work", sessionManager: { getSessionId: () => "pi-session-1" } };
+    await piHandlers.get("session_start")?.({ reason: "startup" }, piCtx);
+    await piHandlers.get("agent_start")?.({}, piCtx);
+    await piHandlers.get("tool_call")?.({ toolCallId: "tc-1", toolName: "bash", input: {} }, piCtx);
+    await piHandlers.get("agent_end")?.({}, piCtx);
+    await piHandlers.get("session_shutdown")?.({ reason: "quit" }, piCtx);
+
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    await assert.rejects(() => stat(missingFuyuDir), { code: "ENOENT" });
+  } finally {
+    await rm(scratchDir, { recursive: true, force: true });
   }
 });

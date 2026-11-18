@@ -14,7 +14,10 @@ use crate::plugin_kernel::{
     builtins,
     worker::{Stop, Worker},
 };
-use readers::{brightness_percent, open_brightness, open_volume, start_thread, volume_reading, OutputVolume};
+use readers::{
+    brightness_percent, open_brightness, open_volume, should_reopen_volume, start_thread,
+    volume_reading, OutputVolume,
+};
 
 pub(crate) const LEVEL_CHANGED_EVENT: &str = "system-level-changed";
 const PLUGIN_ID: &str = "system-levels";
@@ -22,6 +25,7 @@ const WATCHER: &str = "watcher";
 
 const VOLUME_POLL: Duration = Duration::from_millis(100);
 const BRIGHTNESS_POLL: Duration = Duration::from_millis(400);
+const ENDPOINT_CHECK: Duration = Duration::from_secs(1);
 const DEVICE_REFRESH: Duration = Duration::from_secs(5);
 const BRIGHTNESS_RETRY: Duration = Duration::from_secs(60);
 
@@ -50,7 +54,7 @@ impl<T: PartialEq + Copy> LevelTracker<T> {
 }
 
 fn watch(app: &AppHandle, stop: &Stop) {
-    let Some(_thread) = start_thread() else {
+    let Some(mut thread) = start_thread() else {
         return;
     };
     let emit = |change: LevelChange| {
@@ -64,10 +68,14 @@ fn watch(app: &AppHandle, stop: &Stop) {
     let mut brightness_read = Instant::now() - BRIGHTNESS_POLL;
     let mut has_brightness = true;
     loop {
-        if volume_opened.elapsed() >= DEVICE_REFRESH {
+        if should_reopen_volume(
+            &mut thread,
+            volume.is_some(),
+            volume_opened.elapsed() >= DEVICE_REFRESH,
+        ) {
             let tracker = Arc::clone(&volume_tracker);
             let handle = app.clone();
-            let next_volume = open_volume(move |percent, muted| {
+            let next_volume = open_volume(&thread, move |percent, muted| {
                 let changed = tracker
                     .lock()
                     .unwrap_or_else(PoisonError::into_inner)
@@ -113,7 +121,7 @@ fn watch(app: &AppHandle, stop: &Stop) {
             }
         }
         let sleep_for = if subscribed {
-            wait.min(DEVICE_REFRESH)
+            wait.min(ENDPOINT_CHECK)
         } else {
             VOLUME_POLL
         };

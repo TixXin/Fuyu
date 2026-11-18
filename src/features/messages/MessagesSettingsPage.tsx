@@ -27,7 +27,7 @@ import { SlotView } from "../plugin-kernel/SlotView";
 import { settingsSections } from "../plugin-kernel/settingsSlots";
 import { settingsCategoryIcon } from "../plugin-kernel/settingsCategories";
 import { OWNER } from "./plugin/owner.ts";
-import { setSourceEnabled, useMailEnabled } from "./plugin/useSourceSwitches";
+import { setMessageOtpCopyEnabled, setSourceEnabled, useMailEnabled, useMessageOtpCopyEnabled } from "./plugin/useSourceSwitches";
 
 type MessagesSectionProps = {
   settings: IslandSettings;
@@ -40,6 +40,7 @@ type MessagesSectionProps = {
 function NoticeSection({ settings, onSettingsChange }: MessagesSectionProps) {
   const t = useTranslation();
   const labels = t.settings.messageSources;
+  const otpCopyEnabled = useMessageOtpCopyEnabled();
 
   return (
     <SettingsGroup title={labels.noticeTitle} footer={<SettingsFootnote text={labels.noticeHint} />}>
@@ -69,6 +70,12 @@ function NoticeSection({ settings, onSettingsChange }: MessagesSectionProps) {
           }
         />
       )}
+      <SettingsToggleRow
+        title={labels.otpCopyLabel}
+        description={labels.otpCopyDescription}
+        checked={otpCopyEnabled}
+        onChange={(on) => void setMessageOtpCopyEnabled(on)}
+      />
     </SettingsGroup>
   );
 }
@@ -246,7 +253,21 @@ function MailGroups({ settings }: { settings: IslandSettings }) {
         {mailEnabled && !target && !adding && (
           <SettingsRow
             searchable={false}
-            title={full ? <span className="messages-settings__muted">{t.mail.limitReached(MAX_MAIL_ACCOUNTS)}</span> : <SettingsLinkButton onClick={() => setAdding(true)}><Plus size={13} strokeWidth={2.2} aria-hidden="true" />{t.mail.addTitle}</SettingsLinkButton>}
+            title={
+              full
+                ? <span className="messages-settings__muted">{t.mail.limitReached(MAX_MAIL_ACCOUNTS)}</span>
+                : mailboxes.length === 0
+                  ? <span className="messages-settings__muted">{t.mail.noMailbox}</span>
+                  : ""
+            }
+            control={
+              !full ? (
+                <SettingsLinkButton onClick={() => setAdding(true)}>
+                  <Plus size={13} strokeWidth={2.2} aria-hidden="true" />
+                  {t.mail.addTitle}
+                </SettingsLinkButton>
+              ) : undefined
+            }
           />
         )}
       </SettingsGroup>

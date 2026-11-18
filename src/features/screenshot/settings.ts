@@ -20,6 +20,7 @@ export type RecordSettings = {
   systemAudio: boolean;
   microphone: boolean;
   format: RecordFormat;
+  ownWindows: boolean;
 };
 
 export type ScreenshotSettings = {
@@ -49,7 +50,7 @@ export const DEFAULT_SCREENSHOT_SETTINGS: ScreenshotSettings = {
   saveFolder: "",
   cardSeconds: 3,
   historyDays: 7,
-  record: { fps: 30, quality: "standard", systemAudio: true, microphone: false, format: "mp4" },
+  record: { fps: 30, quality: "standard", systemAudio: true, microphone: false, format: "mp4", ownWindows: false },
   version: 2,
 };
 
@@ -68,6 +69,7 @@ function recordOf(value: unknown): RecordSettings {
     systemAudio: typeof saved.systemAudio === "boolean" ? saved.systemAudio : fallback.systemAudio,
     microphone: saved.microphone === true,
     format: oneOf(RECORD_FORMATS, saved.format, fallback.format),
+    ownWindows: saved.ownWindows === true,
   };
 }
 

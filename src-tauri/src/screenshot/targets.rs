@@ -1,7 +1,7 @@
 use std::{thread, time::Instant};
 
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use windows::Win32::Foundation::{HWND, RECT};
 
 use super::session;
@@ -30,8 +30,14 @@ pub(crate) struct LocalTarget {
     height: u32,
 }
 
-pub(super) fn windows_on_screen() -> (Vec<Target>, Vec<(u32, isize, RECT)>) {
-    let shown = capture_targets::shown_windows();
+pub(super) fn windows_on_screen(app: &AppHandle) -> (Vec<Target>, Vec<(u32, isize, RECT)>) {
+    let own: Vec<isize> = app
+        .webview_windows()
+        .into_iter()
+        .filter(|(label, _)| super::is_capturable_own_window(label))
+        .filter_map(|(_, window)| window.hwnd().ok().map(|hwnd| hwnd.0 as isize))
+        .collect();
+    let shown = capture_targets::shown_windows(&own);
     let targets = shown
         .iter()
         .enumerate()

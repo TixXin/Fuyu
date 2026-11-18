@@ -239,7 +239,107 @@ export type ErrorCode =
   | "voiceInput.modelBroken"
   | "voiceInput.micFailed"
   | "voiceInput.micDenied"
-  | "voiceInput.noModel";
+  | "voiceInput.noModel"
+  | "file.noDownloads"
+  | "clipboard.notExport"
+  | "clipboard.newerExport"
+  | "clipboard.importTooLarge"
+  | "settingsBackup.badName"
+  | "settingsBackup.badContent"
+  | "settingsBackup.tooManyNames"
+  | "notificationVerify.badId"
+  | "notificationVerify.unisolated"
+  | "notificationVerify.start"
+  | "messenger.notInteractive"
+  | "messenger.foreground"
+  | "remoteHosts.save"
+  | "remoteHosts.host"
+  | "remoteHosts.tooMany"
+  | "remoteHosts.address"
+  | "remoteHosts.name"
+  | "remoteHosts.user"
+  | "remoteHosts.port"
+  | "remoteHosts.tooManyCustom"
+  | "remoteHosts.unknown"
+  | "sshTunnel.notReady"
+  | "sshTunnel.start"
+  | "sshTunnel.needPort"
+  | "sshTunnel.remotePort"
+  | "sshTunnel.tooMany"
+  | "sshTunnel.save"
+  | "sshTunnel.noPortTool"
+  | "sshTunnel.portCheck"
+  | "soundPack.noDataDir"
+  | "soundPack.format"
+  | "soundPack.sizeOrEmpty"
+  | "soundPack.empty"
+  | "soundPack.writeSound"
+  | "soundPack.save"
+  | "soundPack.fromPlugin"
+  | "soundPack.badId"
+  | "soundPack.notFound"
+  | "soundPack.delete"
+  | "soundPack.pluginGone"
+  | "soundPack.openFolder"
+  | "soundPack.fileMissing"
+  | "soundPack.readSound"
+  | "soundPack.tooLarge"
+  | "toast.init"
+  | "toast.unavailable"
+  | "toast.checkAccess"
+  | "toast.read"
+  | "qq.notReady"
+  | "qq.unavailable"
+  | "qq.requestAccessStart"
+  | "qq.requestAccess"
+  | "qq.accessFailed"
+  | "qq.openSettings"
+  | "qq.openApp"
+  | "qq.notInstalled"
+  | "qq.findWindow"
+  | "qq.noMainWindow"
+  | "qq.notRunning"
+  | "qq.noTrayEntry"
+  | "qq.multipleTrays"
+  | "qq.trayTimeout"
+  | "qq.multipleTrayIcons"
+  | "qq.trayNotReady"
+  | "qq.trayNoResponse"
+  | "qq.restoreFailed"
+  | "qq.disabledForApp"
+  | "qq.disabledForUser"
+  | "qq.disabledByPolicy"
+  | "qq.unsupportedInstall"
+  | "qq.channelNotReady"
+  | "qq.repairToolMissing"
+  | "qq.repairStart"
+  | "qq.repairUnfinished"
+  | "qq.repairFailed"
+  | "qq.repairStopped"
+  | "wechat.notReady"
+  | "wechat.unavailable"
+  | "wechat.notInstalled"
+  | "wechat.verifyPath"
+  | "wechat.notRunning"
+  | "wechat.findWindow"
+  | "wechat.noMainWindow"
+  | "wechat.openProtocol"
+  | "wechat.restoreFailed"
+  | "wechat.openApp"
+  | "wechat.exposeWaiting"
+  | "wechat.exposeExternal"
+  | "wechat.exposeOn"
+  | "wechat.exposeNoDll"
+  | "wechat.exposeOpenProcess"
+  | "wechat.exposeReadDll"
+  | "wechat.exposeNoSwitch"
+  | "wechat.exposeStillHidden"
+  | "shellAttention.alreadyRunning"
+  | "shellAttention.registerEvent"
+  | "shellAttention.createReceiver"
+  | "shellAttention.listen"
+  | "shellAttention.startThread"
+  | "shellAttention.startTimeout";
 
 export type ErrorsText = {
   withDetail: (text: string, detail: string) => string;
@@ -485,6 +585,106 @@ export const zhCN: ErrorsText = {
     "voiceInput.micFailed": "用不了麦克风；检查有没有接麦克风，以及系统隐私设置里是否允许浮屿使用麦克风。",
     "voiceInput.micDenied": "浮屿没有麦克风权限；在系统设置 → 隐私与安全性 → 麦克风里打开。",
     "voiceInput.noModel": "先在设置 → 语音输入里下载语音模型。",
+    "file.noDownloads": "找不到下载文件夹。",
+    "clipboard.notExport": "这不是岛屿导出的剪贴板文件。",
+    "clipboard.newerExport": "这不是岛屿导出的剪贴板文件，或者来自更新的版本。",
+    "clipboard.importTooLarge": "剪贴板文件太大。",
+    "settingsBackup.badName": "备份文件名无效。",
+    "settingsBackup.badContent": "这不是有效的设置或主题备份。",
+    "settingsBackup.tooManyNames": ({ name, dir }) => `${dir} 里叫 ${name} 的文件太多，请清理后重试。`,
+    "notificationVerify.badId": "通知验收必须提供独立的 32 位十六进制运行标识。",
+    "notificationVerify.unisolated": "通知验收未隔离应用数据目录。",
+    "notificationVerify.start": "无法启动通知验收记录。",
+    "messenger.notInteractive": ({ name }) => `${name}尚未恢复可交互的主窗口，请从系统托盘打开。`,
+    "messenger.foreground": ({ name }) => `已找到${name}窗口，但未能切换到前台，请点击任务栏或托盘中的${name}。`,
+    "remoteHosts.save": "没能保存远程电脑设置。",
+    "remoteHosts.host": ({ host }) => `「${host}」不是 SSH 主机名。`,
+    "remoteHosts.tooMany": ({ max }) => `最多选择 ${max} 台电脑。`,
+    "remoteHosts.address": ({ host }) => `「${host}」不是有效的主机名或地址。`,
+    "remoteHosts.name": ({ name }) => `「${name}」不能用作显示名：只能用字母、数字、. _ - 或 @。`,
+    "remoteHosts.user": ({ user }) => `「${user}」不是有效的用户名。`,
+    "remoteHosts.port": "端口要是 1–65535。",
+    "remoteHosts.tooManyCustom": ({ max }) => `最多添加 ${max} 台电脑。`,
+    "remoteHosts.unknown": ({ host }) => `找不到 SSH 电脑「${host}」。`,
+    "sshTunnel.notReady": "SSH 代理隧道尚未准备好。",
+    "sshTunnel.start": ({ host }) => `无法启动到 ${host} 的隧道。`,
+    "sshTunnel.needPort": ({ host }) => `先填 ${host} 上的服务器端口。`,
+    "sshTunnel.remotePort": ({ min }) => `服务器上的端口要是 ${min}–65535。`,
+    "sshTunnel.tooMany": ({ max }) => `最多设置 ${max} 台主机。`,
+    "sshTunnel.save": "没能保存 SSH 隧道设置。",
+    "sshTunnel.noPortTool": "服务器上既没有 ss 也没有 netstat。",
+    "sshTunnel.portCheck": "检查服务器端口失败。",
+    "soundPack.noDataDir": "找不到应用数据目录。",
+    "soundPack.format": ({ name }) => `不支持的音效格式：${name}`,
+    "soundPack.sizeOrEmpty": ({ name }) => `音效文件太大或是空的：${name}（最大 4 MB）`,
+    "soundPack.empty": "这个文件夹里没有能用的音效。",
+    "soundPack.writeSound": ({ name }) => `无法写入音效 ${name}。`,
+    "soundPack.save": "无法保存音效包。",
+    "soundPack.fromPlugin": "这个音效包来自插件，请在插件页关闭或卸载它。",
+    "soundPack.badId": "音效包 id 无效。",
+    "soundPack.notFound": "找不到这个音效包。",
+    "soundPack.delete": "无法删除音效包。",
+    "soundPack.pluginGone": "找不到这个音效包，插件可能已关闭或卸载。",
+    "soundPack.openFolder": "无法打开文件夹。",
+    "soundPack.fileMissing": "音效包里没有这个文件。",
+    "soundPack.readSound": ({ name }) => `无法读取音效 ${name}。`,
+    "soundPack.tooLarge": ({ name }) => `音效文件太大：${name}（最大 4 MB）`,
+    "toast.init": "无法初始化 Windows 通知。",
+    "toast.unavailable": "Windows 通知监听不可用。",
+    "toast.checkAccess": "无法检查通知权限。",
+    "toast.read": "无法读取 Windows 通知。",
+    "qq.notReady": "QQ 通知服务尚未就绪。",
+    "qq.unavailable": "QQ 通知状态不可用。",
+    "qq.requestAccessStart": "无法发起通知授权。",
+    "qq.requestAccess": "无法请求 Windows 通知权限。",
+    "qq.accessFailed": "Windows 通知授权失败。",
+    "qq.openSettings": isMacOS ? "无法打开系统辅助功能设置。" : "无法打开 Windows 通知设置。",
+    "qq.openApp": "无法打开 QQ。",
+    "qq.notInstalled": "未找到 QQ 安装路径。请先打开 QQ，再试一次。",
+    "qq.findWindow": "无法查找已运行的 QQ 窗口。",
+    "qq.noMainWindow": "QQ 已在运行，但未找到可用的主窗口，请从系统托盘打开 QQ。",
+    "qq.notRunning": "未找到正在运行的 QQ 窗口，请先打开并登录桌面版 QQ。",
+    "qq.noTrayEntry": "未找到 QQ 的托盘唤回入口，请双击系统托盘中的 QQ 图标。",
+    "qq.multipleTrays": "QQ 有多个托盘入口，无法确认主入口，请从系统托盘打开 QQ。",
+    "qq.trayTimeout": "查询 QQ 托盘图标超时，请从系统托盘打开 QQ。",
+    "qq.multipleTrayIcons": "QQ 有多个托盘图标，无法确认主入口，请双击系统托盘中的 QQ 图标。",
+    "qq.trayNotReady": "QQ 托盘图标尚未就绪，请从系统托盘打开 QQ。",
+    "qq.trayNoResponse": "QQ 没有响应托盘唤回请求，请从系统托盘打开。",
+    "qq.restoreFailed": "QQ 未能恢复可交互的主窗口，请双击系统托盘中的 QQ 图标。",
+    "qq.disabledForApp": "QQ 的 Windows 通知已关闭，请在系统通知设置中开启。",
+    "qq.disabledForUser": "Windows 系统通知已关闭，请在系统通知设置中开启。",
+    "qq.disabledByPolicy": "管理员策略禁止了 Windows 通知，请联系管理员。",
+    "qq.unsupportedInstall": "QQ 当前安装方式不支持系统通知，请检查或更新 QQ。",
+    "qq.channelNotReady": "QQ 通知通道尚未就绪，请确认已安装 QQ；可关闭后重新开启接收以重试。",
+    "qq.repairToolMissing": "无法定位 Windows 通知修复工具。",
+    "qq.repairStart": "无法启动 QQ 通知自动修复。",
+    "qq.repairUnfinished": "QQ 通知自动修复未完成，请确认 QQ 安装正常；可关闭后重新开启接收以重试。",
+    "qq.repairFailed": "QQ 通知自动修复失败。",
+    "qq.repairStopped": "QQ 通知自动修复已停止或超时，可关闭后重新开启接收以重试。",
+    "wechat.notReady": "微信提醒服务尚未就绪。",
+    "wechat.unavailable": "微信提醒状态不可用。",
+    "wechat.notInstalled": "未找到微信安装路径。打开微信后会自动连接。",
+    "wechat.verifyPath": "无法确认微信安装路径。",
+    "wechat.notRunning": "未找到正在运行的微信窗口，请先打开并登录桌面版微信。",
+    "wechat.findWindow": "无法查找已运行的微信窗口。",
+    "wechat.noMainWindow": "微信已在运行，但未定位到主窗口，请先从系统托盘打开并登录微信。",
+    "wechat.openProtocol": "无法通过微信注册入口唤回客户端，请从系统托盘打开微信。",
+    "wechat.restoreFailed": "微信未能恢复原来的主窗口，请双击系统托盘中的微信图标。",
+    "wechat.openApp": "无法打开微信。",
+    "wechat.exposeWaiting": "没找到微信主窗口，微信启动后会自动公开。",
+    "wechat.exposeExternal": "微信界面已被别的程序（例如读屏软件）公开。",
+    "wechat.exposeOn": "已公开微信界面。微信关在托盘里时读不到会话列表，最小化可以。",
+    "wechat.exposeNoDll": "没能公开微信界面：微信进程里没有 Weixin.dll（不是 4.x 版？）",
+    "wechat.exposeOpenProcess": "没能公开微信界面：打不开微信进程（微信以管理员身份运行时，岛也要以管理员身份运行）",
+    "wechat.exposeReadDll": "没能公开微信界面：读不到 Weixin.dll。",
+    "wechat.exposeNoSwitch": "没能公开微信界面：这个版本的微信里没找到辅助功能开关",
+    "wechat.exposeStillHidden": "没能公开微信界面：改了开关，微信的界面仍然没有公开",
+    "shellAttention.alreadyRunning": "任务栏提醒监听器已在此线程运行。",
+    "shellAttention.registerEvent": "无法注册任务栏提醒事件。",
+    "shellAttention.createReceiver": "无法创建任务栏提醒接收器。",
+    "shellAttention.listen": "无法监听任务栏提醒。",
+    "shellAttention.startThread": "无法启动任务栏提醒监听线程。",
+    "shellAttention.startTimeout": "任务栏提醒监听线程启动超时。",
   },
 };
 
@@ -727,5 +927,105 @@ export const en: ErrorsText = {
     "voiceInput.micFailed": "Could not use the microphone; check that one is connected and that Fuyu may use it in the system privacy settings.",
     "voiceInput.micDenied": "Fuyu may not use the microphone; allow it in System Settings → Privacy & Security → Microphone.",
     "voiceInput.noModel": "Download the speech model in Settings → Voice input first.",
+    "file.noDownloads": "The Downloads folder was not found.",
+    "clipboard.notExport": "This is not a clipboard file exported from Fuyu.",
+    "clipboard.newerExport": "This is not a clipboard file exported from Fuyu, or it comes from a newer version.",
+    "clipboard.importTooLarge": "The clipboard file is too large.",
+    "settingsBackup.badName": "Not a settings backup file name.",
+    "settingsBackup.badContent": "Not a settings or theme backup.",
+    "settingsBackup.tooManyNames": ({ name, dir }) => `Too many files named ${name} in ${dir}; clear some and try again.`,
+    "notificationVerify.badId": "Notification verification requires an isolated 32-digit hex run ID.",
+    "notificationVerify.unisolated": "Notification verification did not isolate the app data folder.",
+    "notificationVerify.start": "Could not start recording notification verification.",
+    "messenger.notInteractive": ({ name }) => `${name} has not restored an interactive main window yet; open it from the system tray.`,
+    "messenger.foreground": ({ name }) => `Found the ${name} window, but could not bring it to the front; click ${name} in the taskbar or tray.`,
+    "remoteHosts.save": "Could not save the remote computers.",
+    "remoteHosts.host": ({ host }) => `"${host}" is not an SSH host name.`,
+    "remoteHosts.tooMany": ({ max }) => `At most ${max} computers.`,
+    "remoteHosts.address": ({ host }) => `"${host}" is not a host name or address.`,
+    "remoteHosts.name": ({ name }) => `"${name}" cannot be a name: use letters, digits, . _ - or @.`,
+    "remoteHosts.user": ({ user }) => `"${user}" is not a user name.`,
+    "remoteHosts.port": "The port must be 1–65535.",
+    "remoteHosts.tooManyCustom": ({ max }) => `At most ${max} added computers.`,
+    "remoteHosts.unknown": ({ host }) => `Unknown SSH computer ${host}.`,
+    "sshTunnel.notReady": "The SSH proxy tunnel is not set up yet.",
+    "sshTunnel.start": ({ host }) => `Could not start the tunnel to ${host}.`,
+    "sshTunnel.needPort": ({ host }) => `Set the port on ${host} first.`,
+    "sshTunnel.remotePort": ({ min }) => `The port on the server must be ${min}–65535.`,
+    "sshTunnel.tooMany": ({ max }) => `At most ${max} hosts.`,
+    "sshTunnel.save": "Could not save the SSH tunnels.",
+    "sshTunnel.noPortTool": "Neither ss nor netstat runs on the server.",
+    "sshTunnel.portCheck": "Could not check the port on the server.",
+    "soundPack.noDataDir": "Could not find the app data folder.",
+    "soundPack.format": ({ name }) => `Unsupported sound format: ${name}`,
+    "soundPack.sizeOrEmpty": ({ name }) => `The sound file is empty or too large: ${name} (at most 4 MB).`,
+    "soundPack.empty": "There are no usable sounds in this folder.",
+    "soundPack.writeSound": ({ name }) => `Could not write sound ${name}.`,
+    "soundPack.save": "Could not save the sound pack.",
+    "soundPack.fromPlugin": "This sound pack comes from a plugin; disable or uninstall it on the Plugins page.",
+    "soundPack.badId": "The sound pack id is not valid.",
+    "soundPack.notFound": "This sound pack was not found.",
+    "soundPack.delete": "Could not delete the sound pack.",
+    "soundPack.pluginGone": "This sound pack was not found; the plugin may be disabled or uninstalled.",
+    "soundPack.openFolder": "Could not open the folder.",
+    "soundPack.fileMissing": "This file is not in the sound pack.",
+    "soundPack.readSound": ({ name }) => `Could not read sound ${name}.`,
+    "soundPack.tooLarge": ({ name }) => `The sound file is too large: ${name} (at most 4 MB).`,
+    "toast.init": "Could not initialize Windows notifications.",
+    "toast.unavailable": "Windows notification listener is unavailable.",
+    "toast.checkAccess": "Could not check notification permission.",
+    "toast.read": "Could not read Windows notifications.",
+    "qq.notReady": "The QQ notification service is not ready yet.",
+    "qq.unavailable": "The QQ notification state is unavailable.",
+    "qq.requestAccessStart": "Could not start the notification permission request.",
+    "qq.requestAccess": "Could not request Windows notification permission.",
+    "qq.accessFailed": "Windows notification authorization failed.",
+    "qq.openSettings": isMacOS ? "Could not open Accessibility settings." : "Could not open Windows notification settings.",
+    "qq.openApp": "Could not open QQ.",
+    "qq.notInstalled": "QQ installation path was not found. Open QQ first and try again.",
+    "qq.findWindow": "Could not look up running QQ windows.",
+    "qq.noMainWindow": "QQ is running, but no main window was found; open QQ from the system tray.",
+    "qq.notRunning": "No running QQ window was found; open and sign in to desktop QQ first.",
+    "qq.noTrayEntry": "Could not find QQ's tray entry; double-click the QQ icon in the system tray.",
+    "qq.multipleTrays": "QQ has multiple tray entries; open QQ from the system tray.",
+    "qq.trayTimeout": "Looking up the QQ tray icon timed out; open QQ from the system tray.",
+    "qq.multipleTrayIcons": "QQ has multiple tray icons; double-click the QQ icon in the system tray.",
+    "qq.trayNotReady": "The QQ tray icon is not ready yet; open QQ from the system tray.",
+    "qq.trayNoResponse": "QQ did not respond to the tray activation request; open it from the system tray.",
+    "qq.restoreFailed": "QQ did not restore an interactive main window; double-click the QQ icon in the system tray.",
+    "qq.disabledForApp": "Windows notifications for QQ are turned off; enable them in system notification settings.",
+    "qq.disabledForUser": "Windows system notifications are turned off; enable them in system notification settings.",
+    "qq.disabledByPolicy": "Windows notifications are disabled by administrator policy; contact your administrator.",
+    "qq.unsupportedInstall": "This QQ installation does not support system notifications; check or update QQ.",
+    "qq.channelNotReady": "The QQ notification channel is not ready yet; make sure QQ is installed, or turn receiving off and on again to retry.",
+    "qq.repairToolMissing": "Could not locate PowerShell to repair Windows notifications.",
+    "qq.repairStart": "Could not start the automatic QQ notification repair.",
+    "qq.repairUnfinished": "Automatic QQ notification repair did not finish; check your QQ installation, or turn receiving off and on again to retry.",
+    "qq.repairFailed": "Automatic QQ notification repair failed.",
+    "qq.repairStopped": "Automatic QQ notification repair stopped or timed out; turn receiving off and on again to retry.",
+    "wechat.notReady": "The WeChat reminder service is not ready yet.",
+    "wechat.unavailable": "The WeChat reminder state is unavailable.",
+    "wechat.notInstalled": "WeChat installation path was not found. It will connect automatically once WeChat opens.",
+    "wechat.verifyPath": "Could not verify the WeChat installation path.",
+    "wechat.notRunning": "No running WeChat window was found; open and sign in to desktop WeChat first.",
+    "wechat.findWindow": "Could not look up running WeChat windows.",
+    "wechat.noMainWindow": "WeChat is running, but no main window was found; open and sign in to WeChat from the system tray first.",
+    "wechat.openProtocol": "Could not bring WeChat back via its registered protocol; open WeChat from the system tray.",
+    "wechat.restoreFailed": "WeChat did not restore its main window; double-click the WeChat icon in the system tray.",
+    "wechat.openApp": "Could not open WeChat.",
+    "wechat.exposeWaiting": "WeChat main window not found; its UI will be exposed automatically once WeChat starts.",
+    "wechat.exposeExternal": "WeChat's UI is already exposed by another program (such as a screen reader).",
+    "wechat.exposeOn": "WeChat's UI is exposed. The chat list cannot be read while WeChat is closed to the tray, though minimizing works.",
+    "wechat.exposeNoDll": "Could not expose WeChat's UI: Weixin.dll was not found in the WeChat process (not version 4.x?).",
+    "wechat.exposeOpenProcess": "Could not expose WeChat's UI: could not open the WeChat process (if WeChat runs as administrator, run Fuyu as administrator too).",
+    "wechat.exposeReadDll": "Could not expose WeChat's UI: could not read Weixin.dll.",
+    "wechat.exposeNoSwitch": "Could not expose WeChat's UI: could not find the accessibility switch in this WeChat version.",
+    "wechat.exposeStillHidden": "Could not expose WeChat's UI: toggled the switch, yet WeChat's UI is still not exposed.",
+    "shellAttention.alreadyRunning": "The taskbar attention listener is already running on this thread.",
+    "shellAttention.registerEvent": "Could not register the taskbar attention event.",
+    "shellAttention.createReceiver": "Could not create the taskbar attention receiver.",
+    "shellAttention.listen": "Could not listen for taskbar attention.",
+    "shellAttention.startThread": "Could not start the taskbar attention listener thread.",
+    "shellAttention.startTimeout": "Starting the taskbar attention listener thread timed out.",
   },
 };

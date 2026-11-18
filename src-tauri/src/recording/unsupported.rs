@@ -13,6 +13,7 @@ pub(crate) struct Request {
     pub(crate) system_audio: Option<bool>,
     pub(crate) microphone: Option<bool>,
     pub(crate) gif: Option<bool>,
+    pub(crate) own_windows: Option<bool>,
     pub(crate) folder_name: String,
 }
 
@@ -21,6 +22,16 @@ struct Finished {
     summary: Option<()>,
     error: crate::user_error::UserError,
 }
+
+pub(crate) fn hides_own_windows() -> bool {
+    false
+}
+
+pub(crate) fn records_own_windows() -> bool {
+    false
+}
+
+pub(crate) fn apply_to_window(_window: &tauri::WebviewWindow) {}
 
 pub(crate) fn is_busy() -> bool {
     false

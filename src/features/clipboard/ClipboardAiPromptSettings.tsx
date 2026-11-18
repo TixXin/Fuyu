@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
@@ -30,8 +32,21 @@ export function ClipboardAiPromptSettings({ clipboardSettings, onChange }: {
   };
 
   return (
-    <SettingsGroup title={text.title}>
-      <SettingsRow title={isMacOS ? text.hintTitleMac : text.hintTitle} description={text.hint} searchable={false} />
+    <SettingsGroup
+      title={text.title}
+      footer={<SettingsFootnote text={`${isMacOS ? text.hintTitleMac : text.hintTitle}。${text.hint}`} />}
+      action={
+        !draft && prompts.length < 20 ? (
+          <SettingsLinkButton onClick={() => setDraft({ id: null, title: "", prompt: "" })}>
+            <Plus size={13} strokeWidth={2.2} aria-hidden="true" />
+            {text.add}
+          </SettingsLinkButton>
+        ) : undefined
+      }
+    >
+      {prompts.length === 0 && !draft ? (
+        <SettingsRow searchable={false} title={<span className="clipboard-snippet__empty">{text.empty}</span>} />
+      ) : null}
       {prompts.map((prompt) => (
         <SettingsRow
           key={prompt.id}
@@ -69,17 +84,7 @@ export function ClipboardAiPromptSettings({ clipboardSettings, onChange }: {
             </div>
           </div>
         </SettingsRow>
-      ) : prompts.length < 20 && (
-        <SettingsRow
-          title={text.add}
-          searchable={false}
-          control={
-            <button type="button" className="clipboard-snippet__add" aria-label={text.add} onClick={() => setDraft({ id: null, title: "", prompt: "" })}>
-              <Plus size={14} strokeWidth={1.5} absoluteStrokeWidth />
-            </button>
-          }
-        />
-      )}
+      ) : null}
     </SettingsGroup>
   );
 }

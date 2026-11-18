@@ -142,12 +142,12 @@ fn arrange(app: &AppHandle, preview: &WebviewWindow) -> Result<Layout, String> {
 
 fn show(app: &AppHandle) -> Result<Side, String> {
     GENERATION.fetch_add(1, Ordering::SeqCst);
-    let preview = preview_window(app)?;
+    let preview = super::background::ensure_preview_window(app)?;
     let hidden = super::service()
         .and_then(|service| service.snapshot())
         .map(|snapshot| snapshot.settings.hide_from_capture)
-        .unwrap_or(true);
-    let _ = preview.set_content_protected(hidden);
+        .unwrap_or(false);
+    let _ = preview.set_content_protected(super::wanted_capture_protection(hidden));
     let layout = arrange(app, &preview)?;
     show_without_focus(&preview)?;
     keep_below_popup(app, &preview);
@@ -217,10 +217,12 @@ pub(crate) fn hide(app: &AppHandle, animate: bool) {
         take_keys(&window, false);
     }
     if !window.is_visible().unwrap_or(false) {
+        super::background::schedule_preview_idle_destroy(app);
         return;
     }
     if !animate {
         hide_now(&window);
+        super::background::schedule_preview_idle_destroy(app);
         return;
     }
     let _ = window.emit_to(WINDOW_LABEL, CLOSING_EVENT, ());
@@ -230,6 +232,7 @@ pub(crate) fn hide(app: &AppHandle, animate: bool) {
         if GENERATION.load(Ordering::SeqCst) == generation {
             if let Ok(window) = preview_window(&app) {
                 hide_now(&window);
+                super::background::schedule_preview_idle_destroy(&app);
             }
         }
     });

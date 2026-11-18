@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { useTranslation } from "../../i18n";
@@ -242,7 +243,7 @@ export function AgentProviderSwitches({
         </div>
       ) : null}
       <div className="settings-group__footer">
-        <p>{text.showAgentsHint}</p>
+        <SettingsFootnote text={text.showAgentsHint} />
       </div>
     </section>
   );

@@ -1,4 +1,4 @@
-import { LOCALE_CODES, TRANSLATIONS, isLocaleCode, useTranslation, type LocaleCode } from "../../../i18n";
+import { LOCALE_CODES, LOCALE_LABELS, isLocaleCode, useTranslation, type LocaleCode } from "../../../i18n";
 import { isMacOS, useDevBuild } from "../../../lib/platform";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
@@ -6,7 +6,7 @@ import { SettingsSelect } from "../../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { TrayCardLayoutRow } from "./TrayCardLayoutRow";
 
-const LOCALE_OPTIONS = LOCALE_CODES.map((code) => ({ value: code, label: TRANSLATIONS[code].localeLabel }));
+const LOCALE_OPTIONS = LOCALE_CODES.map((code) => ({ value: code, label: LOCALE_LABELS[code] }));
 
 export function BehaviorSettingsSection({
   launchAtStartup,

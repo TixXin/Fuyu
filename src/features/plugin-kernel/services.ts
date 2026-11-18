@@ -1,8 +1,23 @@
 import { createWindowServices } from "@fuyu/plugin-base/client/window-services";
 import { disabledBuiltinIds, subscribeBuiltinPlugins } from "./builtinSwitches.ts";
 
-export const windowServices = createWindowServices();
+const raw = createWindowServices();
+let syncing = false;
 
-if (typeof window !== "undefined") {
-  subscribeBuiltinPlugins((plugins) => windowServices.setDisabledOwners(disabledBuiltinIds(plugins)));
+function ensureSync() {
+  if (syncing || typeof window === "undefined") return;
+  syncing = true;
+  subscribeBuiltinPlugins((plugins) => raw.setDisabledOwners(disabledBuiltinIds(plugins)));
 }
+
+export const windowServices: typeof raw = {
+  ...raw,
+  provide(service, impl, options) {
+    ensureSync();
+    return raw.provide(service, impl, options);
+  },
+  attach(proxy) {
+    ensureSync();
+    raw.attach(proxy);
+  },
+};

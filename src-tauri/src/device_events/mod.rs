@@ -26,7 +26,7 @@ const POWER_POLL: Duration = Duration::from_secs(2);
 const PERIPHERAL_POLL: Duration = Duration::from_secs(15);
 
 fn watch(app: &AppHandle, stop: &Stop) {
-    let Some(_thread) = start_thread() else {
+    let Some(mut thread) = start_thread() else {
         return;
     };
     let emit = |alert: DeviceAlert| {
@@ -40,7 +40,7 @@ fn watch(app: &AppHandle, stop: &Stop) {
     let mut power_read: Option<Instant> = None;
     let mut peripherals_read: Option<Instant> = None;
     loop {
-        let current = read_outputs();
+        let current = read_outputs(&mut thread);
         let has_bluetooth = current.iter().any(|output| output.bluetooth);
         let battery_due = batteries_read.is_none_or(|at| at.elapsed() >= BATTERY_POLL);
         if outputs.wants_batteries() || (has_bluetooth && battery_due) {

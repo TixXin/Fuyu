@@ -155,9 +155,22 @@ export function CalendarSourcesSection() {
                   {state.error}
                 </p>
               )}
-              <button className="calendar-form__add" type="button" disabled={!ready || state.busy} onClick={() => void add()}>
-                {state.busy ? text.adding : text.addButton}
-              </button>
+              <div className="calendar-form__actions">
+                <button className="calendar-form__add" type="button" disabled={!ready || state.busy} onClick={() => void add()}>
+                  {state.busy ? text.adding : text.addButton}
+                </button>
+                {sources.length > 0 && (
+                  <SettingsLinkButton
+                    disabled={state.busy}
+                    onClick={() => {
+                      setAdding(false);
+                      setState({ busy: false, error: "" });
+                    }}
+                  >
+                    {text.cancelAdd}
+                  </SettingsLinkButton>
+                )}
+              </div>
             </div>
           </>
         )}

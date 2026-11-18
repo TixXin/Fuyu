@@ -113,7 +113,7 @@ async function runChecks() {
       check(islands().every((island) => playState(island) === "paused" && getComputedStyle(island).backdropFilter === "none" && getComputedStyle(island.querySelector(".island__glass-highlight")!).display === "none"), `刘海形态（${notch}）下折叠岛的玻璃停下并关闭实时模糊`);
     }
     delete document.documentElement.dataset.islandNotch;
-    check(islands().every((island) => playState(island) === "running" && getComputedStyle(island).backdropFilter !== "none" && getComputedStyle(island.querySelector(".island__glass-highlight")!).display === "block" && getComputedStyle(island.querySelector(".island__glass-highlight")!).transitionProperty === "transform"), "离开刘海形态后接着流动并恢复模糊与合成层高光");
+    check(islands().every((island) => playState(island) === "running" && getComputedStyle(island).backdropFilter !== "none" && getComputedStyle(island.querySelector(".island__glass-highlight")!).display === "block" && getComputedStyle(island.querySelector(".island__glass-highlight")!).transitionProperty === "transform" && getComputedStyle(island.querySelector(".island__glass")!, "::before").transitionProperty === "transform"), "离开刘海形态后接着流动并恢复模糊与合成层高光");
 
     await set({ tucked: true });
     check(islands().every((island) => island.classList.contains("island--glass-paused") && playState(island) === "paused"), "收到边缘时停下");

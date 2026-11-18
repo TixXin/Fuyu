@@ -9,19 +9,19 @@ use super::{
     cache::{AppInfoCache, ToastApp},
     router::{matches_any, ticks_to_unix_ms, PollBatch, ToastItem, ToastMatcher},
 };
-use crate::win32;
+use crate::{user_error::UserError, win32};
 
 pub(super) fn poll_once(
     cache: &mut AppInfoCache,
     active_matchers: &[ToastMatcher],
-) -> Result<PollBatch, String> {
+) -> Result<PollBatch, UserError> {
     let _apartment = win32::com::WinRtApartment::multithreaded()
-        .map_err(|error| format!("无法初始化 Windows 通知：{error}"))?;
+        .map_err(|error| UserError::new("toast.init", "Could not initialize Windows notifications.").detail(error))?;
     let listener = UserNotificationListener::Current()
-        .map_err(|error| format!("Windows 通知监听不可用：{error}"))?;
+        .map_err(|error| UserError::new("toast.unavailable", "Windows notification listener is unavailable.").detail(error))?;
     let access = listener
         .GetAccessStatus()
-        .map_err(|error| format!("无法检查通知权限：{error}"))?;
+        .map_err(|error| UserError::new("toast.checkAccess", "Could not check notification permission.").detail(error))?;
     if access != UserNotificationListenerAccessStatus::Allowed {
         cache.clear_active();
         return Ok(if access == UserNotificationListenerAccessStatus::Denied {
@@ -32,9 +32,9 @@ pub(super) fn poll_once(
     }
     let operation = listener
         .GetNotificationsAsync(NotificationKinds::Toast)
-        .map_err(|error| format!("无法读取 Windows 通知：{error}"))?;
-    let notifications =
-        pollster::block_on(operation).map_err(|error| format!("无法读取 Windows 通知：{error}"))?;
+        .map_err(|error| UserError::new("toast.read", "Could not read Windows notifications.").detail(error))?;
+    let notifications = pollster::block_on(operation)
+        .map_err(|error| UserError::new("toast.read", "Could not read Windows notifications.").detail(error))?;
     let mut active_ids = HashSet::new();
     let mut items = Vec::new();
     for notification in notifications {

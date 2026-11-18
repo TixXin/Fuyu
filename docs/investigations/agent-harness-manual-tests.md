@@ -169,14 +169,17 @@
 - [ ] `cmd.exe /d /s /c ""…fuyu-agent-running.cmd" workbuddy"` 这种写法 WorkBuddy 能跑（B27）
 - [ ] 会话卡片：用 TodoWrite 做多步任务时显示进度；看会话 JSONL 的 `providerData.rawUsage` 有没有 token 字段，有就记下来（B44）
 - [ ] WorkBuddy AI（`WorkBuddyAI.exe`、`%USERPROFILE%\.workbuddy-ai`）：会话列出来，开着、关掉时「已退出」对；「安装/修复」写进 `.workbuddy-ai\settings.json`；点会话切到它的窗口（B49）
+- [ ] 用量悬停卡片（设置 → AI Agent → 用量环 → 打开 WorkBuddy）：读 `%USERPROFILE%\.workbuddy\projects` 与 `%USERPROFILE%\.workbuddy-ai\projects` 会话记录，悬停卡片显示今日 / 近 7 天 / 累计已用积分，不进百分比圆环；只开它而关掉五个圆环源时，折叠岛显示独立悬停用量图标（B25）
 
 ### Antigravity
 
 - [ ] 上面 Mac 一节的「安装/修复」和审批各项在 Windows 上再测一次（B27）
+- [ ] 用量环（设置 → AI Agent → 用量环 → 打开 Antigravity）：Antigravity 桌面版或 IDE 开着时，岛经 PEB 命令行（`--csrf_token`）与 `netstat -ano -p tcp` 发现本地 `language_server_windows_*.exe` 环回端口，显示同心双环（Gemini 5h / 7d）且悬停附带套餐名与 Claude / GPT 5h / 7d；关掉 Antigravity 后退回只读 `%USERPROFILE%\.gemini\` 登录令牌走 Cloud Code 查询（B25）
 
 ### DeepSeek Harness
 
 - [ ] Windows 上生成的 `%USERPROFILE%\.fuyu\dsh-plugin\index.js`（反斜杠路径 JSON 转义）在 DSH Desktop / `dsh web` 启动时能经 `%USERPROFILE%\.dsh\cordis.patch.yml` 正常加载并驱动状态灯与岛上审批（允许、拒绝、交回 DSH、取消）（B72.1）
+- [ ] 用量悬停卡片（设置 → AI Agent → 用量环 → 打开 DeepSeek Harness）：默认官方路由下只读活跃 DSH 数据目录的 `.credentials.yaml` 查询账户或 API 余额，悬停卡片显示 `¥xx.xx`（不进圆环）；`cordis*.yml` 配了第三方自定义网关时显示「自定义网关，未查询官方余额」而不发请求（B25）
 - [ ] 数据目录（B32）。每项在那个目录里开会话、发一句话，看列表里有没有、三态对不对：
   - [ ] 系统环境变量 `DSH_HOME=D:\dsh-data`（设好后重启岛），`npx @deepseek-ai/dsh web` 开会话
   - [ ] `DSH_HOME=~\dsh-alt` 读 `%USERPROFILE%\dsh-alt`

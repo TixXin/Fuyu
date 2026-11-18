@@ -3,6 +3,10 @@ export type SettingsAgentText = {
   install: string;
   installing: string;
   installed: string;
+  uninstall: string;
+  uninstalling: string;
+  uninstalled: string;
+  hooksRemoved: string;
   currentStatus: string;
   clearing: string;
   clearStatus: string;
@@ -216,6 +220,10 @@ export const zhCN: SettingsAgentText = {
   install: "安装/修复",
   installing: "安装中",
   installed: "已安装",
+  uninstall: "移除钩子",
+  uninstalling: "移除中",
+  uninstalled: "已移除",
+  hooksRemoved: "已从各家 AI Agent 配置中移除浮屿钩子与脚本；正在运行的 AI Agent 重启后生效。",
   currentStatus: "当前状态",
   clearing: "清除中",
   clearStatus: "清除状态",
@@ -429,6 +437,10 @@ export const en: SettingsAgentText = {
   install: "Install/repair",
   installing: "Installing",
   installed: "Installed",
+  uninstall: "Remove hooks",
+  uninstalling: "Removing",
+  uninstalled: "Removed",
+  hooksRemoved: "Removed Fuyu's hooks and scripts from the AI agent configs; restart running AI agents to finish.",
   currentStatus: "Status",
   clearing: "Clearing",
   clearStatus: "Clear status",

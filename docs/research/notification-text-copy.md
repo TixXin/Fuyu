@@ -1,6 +1,6 @@
 # 消息与邮件通知的文本复制及验证码提取调研
 
-> 日期：2026-11-17。问题：[flyl1u/fly-island#83](https://github.com/flyl1u/fly-island/issues/83)（「建议：邮箱消息通知支持复制文本」，含验证码、链接、地址、订单号及任意段落复制）是否也是浮屿的问题；全网操作系统、开源通知中心、验证码提取工具与刘海岛竞品是怎么做的；浮屿应该怎么看、怎么做。范围：本仓 `src/features/messages/`、`src/windows/island/`、`src-tauri/src/` 代码核查；GitHub 搜索与 REST API（`verification code mail copy`、`MessAuto`、`SmsCode`、`SwayNotificationCenter`、`dunst`、`raycast/extensions`、`PowerToys`、`boring.notch`、`Atoll`）；Windows 11 / macOS Sonoma+ 系统通知机制文档与社区反馈。相关任务：待定（等拍板后建单）
+> 日期：2026-11-17。问题：[flyl1u/fly-island#83](https://github.com/flyl1u/fly-island/issues/83)（「建议：邮箱消息通知支持复制文本」，含验证码、链接、地址、订单号及任意段落复制）是否也是浮屿的问题；全网操作系统、开源通知中心、验证码提取工具与刘海岛竞品是怎么做的；浮屿应该怎么看、怎么做。范围：本仓 `src/features/messages/`、`src/windows/island/`、`src-tauri/src/` 代码核查；GitHub 搜索与 REST API（`verification code mail copy`、`MessAuto`、`SmsCode`、`SwayNotificationCenter`、`dunst`、`raycast/extensions`、`PowerToys`、`boring.notch`、`Atoll`）；Windows 11 / macOS Sonoma+ 系统通知机制文档与社区反馈。相关任务：C109（[#809](https://github.com/TixXin/fuyu/issues/809)）
 
 ## 结论
 

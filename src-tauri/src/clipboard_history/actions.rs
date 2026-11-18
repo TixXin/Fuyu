@@ -13,7 +13,10 @@ pub async fn paste_clipboard_text(app: AppHandle, text: String, enter: Option<bo
     if text.is_empty() {
         return Err("Nothing to paste.".into());
     }
-    popup::paste_text(&app, &text, enter.unwrap_or(false))
+    let enter = enter.unwrap_or(false);
+    tauri::async_runtime::spawn_blocking(move || popup::paste_text(&app, &text, enter))
+        .await
+        .map_err(|error| format!("Failed to join clipboard paste task: {error}"))?
 }
 
 #[tauri::command]

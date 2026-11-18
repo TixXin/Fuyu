@@ -10,6 +10,7 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::macos::dock_badges::{self, Badge, DockSource};
 use crate::messages_plugin::{self, SourceSwitch};
+use crate::user_error::UserError;
 
 pub(crate) use plugin_view::plugin_messages;
 
@@ -37,11 +38,11 @@ pub struct ReminderSnapshot {
     status: &'static str,
     pending: bool,
     last_attention_at: Option<u64>,
-    error: Option<String>,
+    error: Option<UserError>,
     message: Option<()>,
     items: Vec<ReminderItem>,
     expose_ui: bool,
-    expose_status: Option<String>,
+    expose_status: Option<UserError>,
     hide_taskbar_button: bool,
 }
 
@@ -94,10 +95,14 @@ fn now_ms() -> u64 {
         .unwrap_or_default()
 }
 
-fn service() -> Result<&'static Arc<ReminderService>, String> {
+fn service() -> Result<&'static Arc<ReminderService>, UserError> {
     SERVICE
         .get()
-        .ok_or_else(|| "The WeChat reminder service is not ready yet.".to_string())
+        .ok_or_else(|| UserError::new("wechat.notReady", "The WeChat reminder service is not ready yet."))
+}
+
+fn unavailable() -> UserError {
+    UserError::new("wechat.unavailable", "The WeChat reminder state is unavailable.")
 }
 
 fn publish(service: &ReminderService, snapshot: ReminderSnapshot) {
@@ -237,10 +242,11 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
 }
 
 pub(crate) fn diagnostic_state() -> Result<serde_json::Value, String> {
-    let state = service()?
+    let state = service()
+        .map_err(|error| error.to_string())?
         .state
         .lock()
-        .map_err(|_| "The WeChat reminder state is unavailable.".to_string())?;
+        .map_err(|_| unavailable().to_string())?;
     Ok(serde_json::json!({
         "enabled": state.snapshot.enabled,
         "status": state.snapshot.status,
@@ -250,13 +256,13 @@ pub(crate) fn diagnostic_state() -> Result<serde_json::Value, String> {
     }))
 }
 
-fn update(change: impl FnOnce(&mut ReminderState) -> bool) -> Result<ReminderSnapshot, String> {
+fn update(change: impl FnOnce(&mut ReminderState) -> bool) -> Result<ReminderSnapshot, UserError> {
     let service = service()?;
     let (snapshot, changed) = {
         let mut state = service
             .state
             .lock()
-            .map_err(|_| "The WeChat reminder state is unavailable.".to_string())?;
+            .map_err(|_| unavailable())?;
         let changed = change(&mut state);
         if changed {
             state.snapshot.revision += 1;
@@ -270,19 +276,19 @@ fn update(change: impl FnOnce(&mut ReminderState) -> bool) -> Result<ReminderSna
 }
 
 #[tauri::command]
-pub fn set_wechat_expose_ui(enabled: bool) -> Result<ReminderSnapshot, String> {
+pub fn set_wechat_expose_ui(enabled: bool) -> Result<ReminderSnapshot, UserError> {
     let _ = enabled;
     update(|_| false)
 }
 
 #[tauri::command]
-pub fn set_wechat_hide_taskbar_button(enabled: bool) -> Result<ReminderSnapshot, String> {
+pub fn set_wechat_hide_taskbar_button(enabled: bool) -> Result<ReminderSnapshot, UserError> {
     let _ = enabled;
     update(|_| false)
 }
 
 #[tauri::command]
-pub fn set_wechat_auto_clear(enabled: bool) -> Result<ReminderSnapshot, String> {
+pub fn set_wechat_auto_clear(enabled: bool) -> Result<ReminderSnapshot, UserError> {
     update(|state| {
         state.auto_clear = enabled;
         false
@@ -290,7 +296,7 @@ pub fn set_wechat_auto_clear(enabled: bool) -> Result<ReminderSnapshot, String> 
 }
 
 #[tauri::command]
-pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, String> {
+pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, UserError> {
     update(|state| {
         let had = !state.snapshot.items.is_empty() || state.snapshot.pending;
         state.snapshot.items.clear();
@@ -300,15 +306,18 @@ pub fn clear_wechat_reminders() -> Result<ReminderSnapshot, String> {
 }
 
 #[tauri::command]
-pub async fn open_wechat(chat: Option<String>) -> Result<(), String> {
+pub async fn open_wechat(chat: Option<String>) -> Result<(), UserError> {
     let _ = chat;
     if !crate::macos::accessibility::is_trusted() {
         let _ = dock_badges::open_accessibility_settings();
     }
     let asked_at = now_ms();
-    tauri::async_runtime::spawn_blocking(|| dock_badges::open_app(BUNDLE_ID))
-        .await
-        .map_err(|error| error.to_string())??;
+    tauri::async_runtime::spawn_blocking(|| {
+        dock_badges::open_app(BUNDLE_ID)
+            .map_err(|error| UserError::new("wechat.openApp", "Could not open WeChat.").detail(error))
+    })
+    .await
+    .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))??;
     update(|state| state.forget_seen(asked_at)).map(|_| ())
 }
 

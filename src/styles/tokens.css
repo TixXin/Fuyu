@@ -10,8 +10,11 @@
 
   --usage-claude: #ffb27a;
   --usage-codex: #e6e6eb;
+  --usage-antigravity: #5eead4;
   --usage-glm: #a99bff;
   --usage-kimi: #6aabff;
+  --usage-workbuddy: #5cd68d;
+  --usage-dsh: #4fc3f7;
   --usage-warn: #f5e06e;
   --usage-danger: #ff7a7a;
   --usage-stale: #a3a3aa;
@@ -82,8 +85,11 @@
 .island-light {
   --usage-claude: #93400f;
   --usage-codex: #3a3a42;
+  --usage-antigravity: #0f766e;
   --usage-glm: #5b47e0;
   --usage-kimi: #1666d6;
+  --usage-workbuddy: #1b7f46;
+  --usage-dsh: #0b6aa2;
   --usage-warn: #8a6400;
   --usage-danger: #c42b2b;
   --usage-stale: #6a6a72;

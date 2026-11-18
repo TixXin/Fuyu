@@ -10,6 +10,8 @@ export type SettingsAppearanceText = {
   styleTitle: string;
   glass: {
     title: string;
+    refractionTitle: string;
+    detailsTitle: string;
     reset: string;
     look: string;
     looks: { clear: string; tinted: string; flow: string; material: string; mica: string; custom: string };
@@ -68,6 +70,8 @@ export const zhCN: SettingsAppearanceText = {
   styleTitle: "质感与形状",
   glass: {
     title: "液态玻璃",
+    refractionTitle: "背景折射与色彩",
+    detailsTitle: "流光与高光细节",
     reset: "恢复液态玻璃默认",
     look: "预设",
     looks: { clear: "iOS 26 透明", tinted: "iOS 26 着色", flow: "流彩毛玻璃", material: "iOS 18 毛玻璃", mica: "Win11 Mica", custom: "自定义" },
@@ -126,6 +130,8 @@ export const en: SettingsAppearanceText = {
   styleTitle: "Look and shape",
   glass: {
     title: "Liquid glass",
+    refractionTitle: "Refraction and colours",
+    detailsTitle: "Flow and highlights",
     reset: "Restore liquid glass defaults",
     look: "Preset",
     looks: { clear: "iOS 26 clear", tinted: "iOS 26 tinted", flow: "Frosted flow", material: "iOS 18 frosted", mica: "Windows 11 Mica", custom: "Custom" },

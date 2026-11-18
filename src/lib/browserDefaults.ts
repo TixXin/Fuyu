@@ -1,3 +1,5 @@
+import { copyMessageText } from "./api.ts";
+
 export type ShortcutKeys = {
   key: string;
   code?: string;
@@ -25,8 +27,24 @@ export function blockedShortcut(event: ShortcutKeys, options: { mac: boolean; de
   return PRIMARY_BLOCKED.has(key);
 }
 
+export function isEditableTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && Boolean(target.closest("input, textarea, select, [contenteditable=''], [contenteditable='true']"));
+}
+
+export function macSelectionCopyText(
+  event: ShortcutKeys,
+  options: { mac: boolean },
+  editable: boolean,
+  selectedText: string,
+): string | null {
+  if (!options.mac || editable) return null;
+  if (!event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return null;
+  if (event.key.toLowerCase() !== "c") return null;
+  return selectedText.length > 0 ? selectedText : null;
+}
+
 export function keepsNativeMenu(target: EventTarget | null, selection: Selection | null): boolean {
-  if (target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable=''], [contenteditable='true']")) return true;
+  if (isEditableTarget(target)) return true;
   if (!selection || selection.isCollapsed || !(target instanceof Node)) return false;
   for (let index = 0; index < selection.rangeCount; index += 1) {
     if (selection.getRangeAt(index).intersectsNode(target)) return true;
@@ -42,7 +60,17 @@ export function blockBrowserDefaults(options: { mac: boolean; dev: boolean }) {
   window.addEventListener(
     "keydown",
     (event) => {
-      if (blockedShortcut(event, options)) event.preventDefault();
+      if (blockedShortcut(event, options)) {
+        event.preventDefault();
+        return;
+      }
+      const selection = window.getSelection();
+      const selectedText = selection && !selection.isCollapsed ? selection.toString() : "";
+      const copyText = macSelectionCopyText(event, options, isEditableTarget(event.target), selectedText);
+      if (copyText !== null) {
+        event.preventDefault();
+        void copyMessageText(copyText).catch(() => undefined);
+      }
     },
     true,
   );

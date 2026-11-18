@@ -8,7 +8,8 @@ macOS 上（G1.4，2026-11-13 起）：家目录同样是 `FUYU_HOME`、指针�
 |---|---|---|
 | 设置、预设、各功能开关、语言 | WebView2 的 `localStorage`（页面读写的地方）；2026-11-12 起（D30.2）`BACKUP_KEYS` 里的设置还整份写到应用数据目录的 `settings.json`，格式同设置备份，手动改了它下次启动生效 | 前端各 feature 的 `storage.ts`；`settings_file`（Rust）、`lib/settings-backup/settingsFile.ts` |
 | 托盘 / 菜单栏图标是否显示（设置 → 通用「在托盘显示图标」，默认显示；C82，2026-11-15） | 应用数据目录（`tray-icon.json`，`{"visible": false}`；文件不存在、读不出或不是布尔值都按显示）；放在原生侧是因为建托盘时页面还没加载 | `tray_visibility`（Rust） |
-| WebView 渲染进程崩溃记录（D66，2026-11-15，只在 Windows 上） | 数据目录（`webview-crashes.log`，一行一次：时间、窗口 label、失败类型、退出码、是否重载；超过 64 KB 删掉前一半） | `webview_recovery`（Rust），WebView2 事件在 `win32/webview_crash.rs` |
+| WebView 进程崩溃记录（D66，2026-11-15；D100，2026-11-17 补 `gpu-process-exited`，只在 Windows 上） | 数据目录（`webview-crashes.log`，一行一次：时间、窗口 label、失败类型 `render-process-exited` / `render-process-unresponsive` / `gpu-process-exited`、退出码、是否重载；同一窗口每分钟最多自动重载 3 次，文件超过 64 KB 删掉前一半） | `webview_recovery`（Rust），WebView2 事件在 `win32/webview_crash.rs` |
+| 宿主原生 Rust `panic` 崩溃记录（D100，2026-11-17） | 数据目录（`crash.log`，一行一次：本地时间、应用版本、线程名、源码位置 `file:line:col`、过滤换行并截断到 240 字符的脱敏摘要，不记录环境变量或用户数据；超过 64 KB 删掉前一半；设置 → 通用 → 数据页在存在崩溃日志时可直接定位最新日志文件） | `home_dir/panic_log.rs`、`home_dir/commands.rs`（Rust），设置入口在 `windows/settings/sections/CrashLogsSection.tsx` |
 | 窗口打开打点（D82，2026-11-16，默认不写；设置窗口，D83 的托盘卡片照用） | 数据目录（`window-open-trace.log`，只有设了环境变量 `FUYU_WINDOW_TRACE=1` 才写：每次打开一行各段毫秒数；超过 256 KB 清空重写；格式见 contracts.md） | `settings_window/open_trace.rs`（Rust），托盘卡片在 `tray_menu/window.rs` 里调用 |
 | 剪贴板窗口唤起打点（D79，2026-11-16，只在 Windows 上，默认不写） | 数据目录（`clipboard-open-trace.log`，只有设了环境变量 `FUYU_CLIPBOARD_TRACE=1` 才写：每次唤起一行各段毫秒数，前端第一帧一行；超过 256 KB 清空重写；格式见 contracts.md） | `clipboard_history/open_trace.rs`（Rust） |
 | 更新的检查、下载进度、候选版本和后台下载好的安装包（D16、D18，2026-11-10 起） | 原生进程内存，不落盘；重启岛屿后从头开始，偏好（频率、提醒方式、上次成功检查）仍在 `fuyu-update-preferences` | `system/update_runtime.rs` |

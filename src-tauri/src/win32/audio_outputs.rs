@@ -3,15 +3,19 @@ use windows::{
     Win32::{
         Devices::FunctionDiscovery::{PKEY_Device_EnumeratorName, PKEY_Device_FriendlyName},
         Foundation::PROPERTYKEY,
-        Media::Audio::{eRender, IMMDevice, IMMDeviceEnumerator, MMDeviceEnumerator, PKEY_AudioEndpoint_FormFactor, DEVICE_STATE_ACTIVE},
+        Media::Audio::{eRender, IMMDevice, PKEY_AudioEndpoint_FormFactor, DEVICE_STATE_ACTIVE},
         System::Com::{
-            CoCreateInstance, CoTaskMemFree,
-            StructuredStorage::{PropVariantClear, PropVariantToStringAlloc, PropVariantToUInt32, PROPVARIANT},
-            CLSCTX_ALL, STGM_READ,
+            CoTaskMemFree,
+            StructuredStorage::{
+                PropVariantClear, PropVariantToStringAlloc, PropVariantToUInt32, PROPVARIANT,
+            },
+            STGM_READ,
         },
         UI::Shell::PropertiesSystem::IPropertyStore,
     },
 };
+
+use super::audio::AudioDevices;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct AudioOutputInfo {
@@ -22,9 +26,13 @@ pub(crate) struct AudioOutputInfo {
 }
 
 pub(crate) fn active_outputs() -> Result<Vec<AudioOutputInfo>> {
+    let devices = AudioDevices::open()?;
+    active_outputs_from(&devices)
+}
+
+pub(crate) fn active_outputs_from(devices: &AudioDevices) -> Result<Vec<AudioOutputInfo>> {
     unsafe {
-        let devices: IMMDeviceEnumerator = CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL)?;
-        let collection = devices.EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE)?;
+        let collection = devices.0.EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE)?;
         let count = collection.GetCount()?;
         let mut outputs = Vec::with_capacity(count as usize);
         for index in 0..count {
@@ -41,7 +49,10 @@ fn describe(device: &IMMDevice) -> Result<AudioOutputInfo> {
         let raw = device.GetId()?;
         let id = raw.to_string();
         CoTaskMemFree(Some(raw.0 as *const _));
-        (id.map_err(|_| windows::core::Error::empty())?, device.OpenPropertyStore(STGM_READ)?)
+        (
+            id.map_err(|_| windows::core::Error::empty())?,
+            device.OpenPropertyStore(STGM_READ)?,
+        )
     };
     Ok(AudioOutputInfo {
         id,
@@ -51,7 +62,11 @@ fn describe(device: &IMMDevice) -> Result<AudioOutputInfo> {
     })
 }
 
-fn read<T>(store: &IPropertyStore, key: &PROPERTYKEY, convert: impl FnOnce(&PROPVARIANT) -> Option<T>) -> Option<T> {
+fn read<T>(
+    store: &IPropertyStore,
+    key: &PROPERTYKEY,
+    convert: impl FnOnce(&PROPVARIANT) -> Option<T>,
+) -> Option<T> {
     unsafe {
         let mut value = store.GetValue(key).ok()?;
         let result = convert(&value);
@@ -61,13 +76,11 @@ fn read<T>(store: &IPropertyStore, key: &PROPERTYKEY, convert: impl FnOnce(&PROP
 }
 
 fn read_string(store: &IPropertyStore, key: &PROPERTYKEY) -> Option<String> {
-    read(store, key, |value| {
-        unsafe {
-            let text: PWSTR = PropVariantToStringAlloc(value).ok()?;
-            let copy = text.to_string().ok();
-            CoTaskMemFree(Some(text.0 as *const _));
-            copy
-        }
+    read(store, key, |value| unsafe {
+        let text: PWSTR = PropVariantToStringAlloc(value).ok()?;
+        let copy = text.to_string().ok();
+        CoTaskMemFree(Some(text.0 as *const _));
+        copy
     })
 }
 

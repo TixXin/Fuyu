@@ -41,6 +41,8 @@ pub enum UsageSource {
     Codex,
     Glm,
     Kimi,
+    Antigravity,
+    AntigravityCloud,
 }
 
 pub(super) fn snapshot_path(claude_dir: &Path, home_dir: &Path) -> Option<PathBuf> {

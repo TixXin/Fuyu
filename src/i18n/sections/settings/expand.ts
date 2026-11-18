@@ -3,6 +3,8 @@ export type SettingsExpandText = {
   trigger: string;
   click: string;
   hover: string;
+  clickCollapseOnLeave: string;
+  clickCollapseOnLeaveHint: string;
   hoverDelay: string;
   hoverCollapseDelay: string;
   hoverSwitchPage: string;
@@ -47,6 +49,8 @@ export const zhCN: SettingsExpandText = {
   trigger: "展开方式",
   click: "点击",
   hover: "鼠标悬停",
+  clickCollapseOnLeave: "鼠标移开后自动收起",
+  clickCollapseOnLeaveHint: "点开面板看完后，鼠标移出就自动收起，不用再点外部",
   hoverDelay: "悬停多久后展开",
   hoverCollapseDelay: "鼠标移开后收起前等待",
   hoverSwitchPage: "悬停切换页面",
@@ -91,6 +95,8 @@ export const en: SettingsExpandText = {
   trigger: "Open the island by",
   click: "Click",
   hover: "Hover",
+  clickCollapseOnLeave: "Close when pointer leaves",
+  clickCollapseOnLeaveHint: "Closes the panel after the pointer leaves, without clicking outside",
   hoverDelay: "Hover time before opening",
   hoverCollapseDelay: "Wait before closing after leaving",
   hoverSwitchPage: "Switch pages on hover",

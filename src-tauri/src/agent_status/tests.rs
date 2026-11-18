@@ -588,7 +588,7 @@ fn hooks_state_matches_what_the_installers_write() {
         codex_hooks_state(Some(&current), running, status, None),
         HookInstallState::Current
     );
-    let old = current.replace(" codex\\\"", " codex capture\\\"");
+    let old = current.replace(" codex)", " codex capture)");
     assert_ne!(old, current);
     assert_eq!(
         codex_hooks_state(Some(&old), running, status, None),

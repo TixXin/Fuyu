@@ -17,7 +17,10 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 use tauri::{AppHandle, Manager};
 
-use crate::agent_status::{remote_fetch::run_ssh, remote_hosts};
+use crate::{
+    agent_status::{remote_fetch::run_ssh, remote_hosts},
+    user_error::UserError,
+};
 use local_proxy::{Choice, LocalProxy};
 use tunnel::{Spec, Status};
 
@@ -59,8 +62,11 @@ pub(crate) fn remote_proxy(host: &str) -> Option<String> {
     config::read(&dir).into_iter().find(|tunnel| tunnel.enabled && tunnel.host == host).map(|tunnel| format!("http://127.0.0.1:{}", tunnel.remote_port))
 }
 
-fn app_dir() -> Result<PathBuf, String> {
-    APP_DIR.get().cloned().ok_or_else(|| "The SSH proxy tunnel is not set up yet".to_string())
+fn app_dir() -> Result<PathBuf, UserError> {
+    APP_DIR
+        .get()
+        .cloned()
+        .ok_or_else(|| UserError::new("sshTunnel.notReady", "The SSH proxy tunnel is not set up yet."))
 }
 
 pub(super) fn start(settings: &Map<String, Value>) -> Result<(), String> {
@@ -116,7 +122,7 @@ fn watch_proxy(woken: &mpsc::Receiver<()>) {
     }
 }
 
-fn apply(state: &mut State) -> Result<(), String> {
+fn apply(state: &mut State) -> Result<(), UserError> {
     let app_dir = app_dir()?;
     let wanted: Vec<Spec> = match state.proxy {
         Some(LocalProxy { port: local_port, .. }) => config::read(&app_dir)
@@ -142,7 +148,11 @@ fn apply(state: &mut State) -> Result<(), String> {
         thread::Builder::new()
             .name(format!("ssh-tunnel-{}", spec.host))
             .spawn(move || tunnel::supervise(&dir, &thread_spec, &thread_status, &stopped))
-            .map_err(|error| format!("Could not start the tunnel to {}: {error}", spec.host))?;
+            .map_err(|error| {
+                UserError::new("sshTunnel.start", format!("Could not start the tunnel to {}.", spec.host))
+                    .arg("host", spec.host.as_str())
+                    .detail(error)
+            })?;
         state.tunnels.insert(spec.host.clone(), Tunnel { spec, status, _stop: stop });
     }
     Ok(())
@@ -158,7 +168,7 @@ pub struct TunnelHost {
     error: Option<String>,
 }
 
-fn listing() -> Result<Vec<TunnelHost>, String> {
+fn listing() -> Result<Vec<TunnelHost>, UserError> {
     let app_dir = app_dir()?;
     let saved = config::read(&app_dir);
     let ssh_config = crate::system::windows_home_dir()
@@ -194,37 +204,42 @@ fn listing() -> Result<Vec<TunnelHost>, String> {
 }
 
 #[tauri::command]
-pub async fn get_ssh_tunnels() -> Result<Vec<TunnelHost>, String> {
+pub async fn get_ssh_tunnels() -> Result<Vec<TunnelHost>, UserError> {
     listing()
 }
 
 #[tauri::command]
-pub async fn set_ssh_tunnel(host: String, enabled: bool, remote_port: Option<u16>) -> Result<Vec<TunnelHost>, String> {
+pub async fn set_ssh_tunnel(host: String, enabled: bool, remote_port: Option<u16>) -> Result<Vec<TunnelHost>, UserError> {
     config::set(&app_dir()?, &host, enabled, remote_port)?;
     apply(&mut state())?;
     listing()
 }
 
 #[tauri::command]
-pub async fn get_ssh_tunnel_proxy() -> Result<Option<LocalProxy>, String> {
+pub async fn get_ssh_tunnel_proxy() -> Result<Option<LocalProxy>, UserError> {
     Ok(state().proxy)
 }
 
 #[tauri::command]
-pub async fn check_ssh_tunnel_port(host: String, remote_port: u16) -> Result<bool, String> {
+pub async fn check_ssh_tunnel_port(host: String, remote_port: u16) -> Result<bool, UserError> {
     if !remote_hosts::is_valid_alias(&host) {
-        return Err(format!("\"{host}\" is not an SSH host name"));
+        return Err(UserError::new("remoteHosts.host", format!("\"{host}\" is not an SSH host name.")).arg("host", host.as_str()));
     }
     if remote_port < config::MIN_REMOTE_PORT {
-        return Err(format!("The port on the server must be {}–65535", config::MIN_REMOTE_PORT));
+        return Err(UserError::new(
+            "sshTunnel.remotePort",
+            format!("The port on the server must be {}–65535.", config::MIN_REMOTE_PORT),
+        )
+        .arg("min", config::MIN_REMOTE_PORT));
     }
     let target = remote_hosts::target(&app_dir()?, &host);
     tauri::async_runtime::spawn_blocking(move || {
-        let output = run_ssh(&target, tunnel::PORT_CHECK_SCRIPT)?;
+        let output = run_ssh(&target, tunnel::PORT_CHECK_SCRIPT)
+            .map_err(|error| UserError::new("sshTunnel.portCheck", "Could not check the port on the server.").detail(error))?;
         tunnel::port_listening(&String::from_utf8_lossy(&output), remote_port)
     })
     .await
-    .map_err(|error| format!("The port check failed: {error}"))?
+    .map_err(|error| UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
 macro_rules! tauri_commands {

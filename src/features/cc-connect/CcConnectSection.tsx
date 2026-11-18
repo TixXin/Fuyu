@@ -1,9 +1,13 @@
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
-import { SelectControl } from "../../components/controls/SelectControl";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
+import { SettingsGroup } from "../../components/settings/SettingsGroup";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
+import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { useErrorText, useTranslation } from "../../i18n";
 import { installCcConnect, type CcConnectStatus } from "./api";
-import { chatsOf, InfoRow, projectLabel } from "./CcConnectInfo";
+import { chatsOf, projectLabel } from "./CcConnectInfo";
 import { CcConnectRemote } from "./CcConnectRemote";
 import { CcConnectSetup } from "./CcConnectSetup";
 import type { useCcConnect } from "./useCcConnect";
@@ -34,32 +38,37 @@ export function CcConnectSection({ cc }: { cc: ReturnType<typeof useCcConnect> }
 
   return (
     <>
-      <section className="settings-section plugins-panel">
-        <div className="settings-section__header">
-          <span>{t.title}</span>
-          <button className="plugin-card__button" type="button" onClick={() => void (host ? remote.read(host) : refresh())} aria-label={t.refresh} title={t.refresh}>
-            <RefreshCw size={12} strokeWidth={2.4} />
-          </button>
-        </div>
-        <p className="settings-section__hint">{t.hint}</p>
+      <SettingsGroup
+        title={t.title}
+        action={
+          <SettingsLinkButton onClick={() => void (host ? remote.read(host) : refresh())}>
+            <RefreshCw size={12} strokeWidth={2.2} aria-hidden="true" />
+            {t.refresh}
+          </SettingsLinkButton>
+        }
+        footer={
+          <>
+            <SettingsFootnote text={t.hint} />
+            {downloadError ? <p className="plugin-card__error" role="alert">{downloadError}</p> : null}
+            {error ? <p className="plugin-card__error" role="alert">{error}</p> : null}
+          </>
+        }
+      >
         {remote.hosts.length > 0 ? (
-          <div className="plugin-setting">
-            <label className="plugin-setting__row">
-              <span>{t.computer}</span>
-              <SelectControl value={host} options={hosts} ariaLabel={t.computer} onChange={setHost} />
-            </label>
-          </div>
+          <SettingsRow
+            searchable={false}
+            title={t.computer}
+            control={<SettingsSelect value={host} options={hosts} ariaLabel={t.computer} onChange={setHost} />}
+          />
         ) : null}
         {host ? (
-          <CcConnectRemote host={host} remote={remote} />
-        ) : (
-          <>
-            {status ? <LocalStatus status={status} downloading={downloading} onDownload={() => void download()} /> : null}
-            {downloadError ? <p className="plugin-card__error">{downloadError}</p> : null}
-            {error ? <p className="plugin-card__error">{error}</p> : null}
-          </>
-        )}
-      </section>
+          <SettingsRow searchable={false} title={host}>
+            <CcConnectRemote host={host} remote={remote} />
+          </SettingsRow>
+        ) : status ? (
+          <LocalStatus status={status} downloading={downloading} onDownload={() => void download()} />
+        ) : null}
+      </SettingsGroup>
       {host ? null : <CcConnectSetup cc={cc} />}
     </>
   );
@@ -68,31 +77,43 @@ export function CcConnectSection({ cc }: { cc: ReturnType<typeof useCcConnect> }
 function LocalStatus({ status, downloading, onDownload }: { status: CcConnectStatus; downloading: boolean; onDownload: () => void }) {
   const t = useTranslation().settings.plugins.ccConnect;
   const errorText = useErrorText();
+  const names = projectNames(status);
   return (
     <>
-      <div className="plugin-info">
-        {status.exe ? <InfoRow label={t.program} value={`${status.exe} · ${t.source[status.exeSource ?? "path"]}`} /> : null}
-        {status.exe && status.running ? <InfoRow label={t.state} value={t.running} /> : null}
-        {status.runner !== "off" ? (
-          <InfoRow label={t.runnerLabel} value={[t.runner[status.runner], status.runnerError && errorText(status.runnerError)].filter(Boolean).join(" · ")} />
-        ) : null}
-        {projectNames(status).map((name) => (
-          <InfoRow key={name} label={projectLabel(status.projects, name)} value={chatsOf(status.projects, name, t.platforms) || t.noChats} />
-        ))}
-      </div>
-      {status.exe ? null : (
-        <>
-          <p className="plugin-card__error">{status.exeError ? errorText(status.exeError) : t.notFound}</p>
-          <p className="settings-section__hint">{t.downloadHint}</p>
-          <div>
-            <button className="plugin-card__button" type="button" disabled={downloading} onClick={onDownload}>
+      {status.exe ? (
+        <SettingsRow searchable={false} title={t.program} description={`${status.exe} · ${t.source[status.exeSource ?? "path"]}`} />
+      ) : (
+        <SettingsRow
+          searchable={false}
+          title={t.program}
+          description={<>{status.exeError ? errorText(status.exeError) : t.notFound} · {t.downloadHint}</>}
+          control={
+            <SettingsLinkButton disabled={downloading} onClick={onDownload}>
               {downloading ? t.downloading : t.download}
-            </button>
-          </div>
-        </>
+            </SettingsLinkButton>
+          }
+        />
       )}
-      {status.exe && !status.running && status.runner === "off" ? <p className="plugin-card__error">{t.notRunning}</p> : null}
-      {status.projects.length === 0 ? <p className="settings-section__hint">{t.noProjects}</p> : null}
+      {status.exe && status.running ? <SettingsRow searchable={false} title={t.state} description={t.running} /> : null}
+      {status.exe && !status.running && status.runner === "off" ? (
+        <SettingsRow searchable={false} title={t.state} description={<span className="plugin-card__error">{t.notRunning}</span>} />
+      ) : null}
+      {status.runner !== "off" ? (
+        <SettingsRow
+          searchable={false}
+          title={t.runnerLabel}
+          description={[t.runner[status.runner], status.runnerError && errorText(status.runnerError)].filter(Boolean).join(" · ")}
+        />
+      ) : null}
+      {names.length === 0 ? <SettingsRow searchable={false} title={t.noProjects} /> : null}
+      {names.map((name) => (
+        <SettingsRow
+          key={name}
+          searchable={false}
+          title={projectLabel(status.projects, name)}
+          description={chatsOf(status.projects, name, t.platforms) || t.noChats}
+        />
+      ))}
     </>
   );
 }

@@ -372,6 +372,19 @@ pub async fn disconnect_qq_mail(email: String) -> Result<MailSnapshot, UserError
     .map_err(|_| UserError::new("mail.disconnect", "Could not disconnect the mailbox."))?
 }
 
+#[tauri::command]
+pub async fn copy_message_text(text: String) -> Result<(), String> {
+    if text.is_empty() {
+        return Ok(());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut clipboard = arboard::Clipboard::new().map_err(|error| format!("Could not open the clipboard: {error}"))?;
+        clipboard.set_text(text).map_err(|error| format!("Could not write the clipboard: {error}"))
+    })
+    .await
+    .map_err(|error| format!("Could not finish copying text: {error}"))?
+}
+
 async fn await_reply<T: Send + 'static>(
     receiver: mpsc::Receiver<Result<T, UserError>>,
 ) -> Result<T, UserError> {
@@ -398,6 +411,7 @@ macro_rules! tauri_commands {
             crate::mail::get_qq_mail_reply,
             crate::mail::send_qq_mail,
             crate::mail::disconnect_qq_mail,
+            crate::mail::copy_message_text,
         ] $($rest)*)
     };
 }

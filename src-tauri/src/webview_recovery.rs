@@ -1,18 +1,17 @@
 use std::{
     collections::{HashMap, VecDeque},
-    fs::{self, OpenOptions},
-    io::Write,
-    path::Path,
     sync::{Mutex, MutexGuard, OnceLock},
     time::{Duration, Instant},
 };
 
 use tauri::{Manager, Runtime, Webview, WindowEvent};
 
-use crate::win32::webview_crash::{self, Failure, FailureKind};
+use crate::{
+    home_dir::panic_log::{self, append_capped, now_text},
+    win32::webview_crash::{self, Failure, FailureKind},
+};
 
 pub(crate) const FILE_NAME: &str = "webview-crashes.log";
-const MAX_BYTES: u64 = 64 * 1024;
 const LIMIT_WINDOW: Duration = Duration::from_secs(60);
 const MAX_RELOADS: usize = 3;
 
@@ -28,6 +27,7 @@ fn state() -> MutexGuard<'static, State> {
 }
 
 pub(crate) fn attach<R: Runtime>(webview: &Webview<R>) {
+    panic_log::install();
     let label = webview.label().to_string();
     let window = webview.window();
     let app = webview.app_handle().clone();
@@ -74,14 +74,11 @@ fn record_crash(crashes: &mut HashMap<String, VecDeque<Instant>>, label: &str, n
     recent.len() <= MAX_RELOADS
 }
 
-fn now_text() -> String {
-    chrono::Local::now().format("%Y-%m-%d %H:%M:%S%:z").to_string()
-}
-
 fn kind_name(kind: FailureKind) -> &'static str {
     match kind {
         FailureKind::RendererExited => "render-process-exited",
         FailureKind::RendererUnresponsive => "render-process-unresponsive",
+        FailureKind::GpuExited => "gpu-process-exited",
     }
 }
 
@@ -91,22 +88,10 @@ fn log_line(time: &str, label: &str, failure: Failure, reloaded: bool) -> String
     format!("{time} {label} {} exit={exit} {action}\n", kind_name(failure.kind))
 }
 
-fn append_capped(path: &Path, line: &str) {
-    if fs::metadata(path).is_ok_and(|metadata| metadata.len() > MAX_BYTES) {
-        if let Ok(text) = fs::read_to_string(path) {
-            let half = text.len() / 2;
-            let cut = text.get(half..).and_then(|tail| tail.find('\n')).map_or(text.len(), |at| half + at + 1);
-            let _ = fs::write(path, text.get(cut..).unwrap_or_default());
-        }
-    }
-    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) {
-        let _ = file.write_all(line.as_bytes());
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[test]
     fn reloads_three_times_a_minute_then_gives_up() {
@@ -139,6 +124,11 @@ mod tests {
         );
         let hung = Failure { kind: FailureKind::RendererUnresponsive, exit_code: None };
         assert_eq!(log_line("t", "pin-2", hung, false), "t pin-2 render-process-unresponsive exit=- gave-up\n");
+        let gpu = Failure { kind: FailureKind::GpuExited, exit_code: Some(1) };
+        assert_eq!(
+            log_line("2026-11-17 08:12:00+08:00", "clipboard", gpu, true),
+            "2026-11-17 08:12:00+08:00 clipboard gpu-process-exited exit=0x00000001 reloaded\n"
+        );
     }
 
     #[test]

@@ -61,6 +61,7 @@ export type ClipboardText = {
       masked: string;
       source: string;
       copiedAt: string;
+      note: string;
       tags: string;
       ocr: string;
       none: string;
@@ -150,6 +151,7 @@ export const zhCN: ClipboardText = {
       masked: "疑似密钥，已打码；粘贴时是原文",
       source: "来源",
       copiedAt: "复制于",
+      note: "备注",
       tags: "标签",
       ocr: "识别出的文字",
       none: "—",
@@ -239,6 +241,7 @@ export const en: ClipboardText = {
       masked: "Looks like a key, so it is masked; it pastes as it is",
       source: "From",
       copiedAt: "Copied",
+      note: "Note",
       tags: "Tags",
       ocr: "Text in the image",
       none: "—",

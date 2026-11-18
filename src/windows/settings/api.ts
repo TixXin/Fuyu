@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { requestSettingsFocus, type SettingsFocusSection } from "./storage";
 
 export function settingsWindowOpening(section?: SettingsFocusSection): Promise<void> {
@@ -62,4 +63,17 @@ export function readTrayIconVisible() {
 
 export function saveTrayIconVisible(visible: boolean) {
   return invoke<void>("set_tray_icon_visible", { visible });
+}
+
+export type CrashLogsHome = {
+  home: string;
+  crashLog?: string | null;
+};
+
+export function readCrashLogsHome() {
+  return invoke<CrashLogsHome>("get_data_home");
+}
+
+export function revealCrashLogPath(path: string) {
+  return revealItemInDir(path);
 }

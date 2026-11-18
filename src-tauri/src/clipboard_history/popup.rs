@@ -25,6 +25,7 @@ fn popup_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 
 pub(super) fn toggle(app: &AppHandle, settings: &ClipboardHistorySettings) -> Result<(), String> {
     let mut trace = Trace::begin(app);
+    let _ = super::background::ensure_popup_window(app)?;
     let foreground = win32::window::foreground_window().0 as isize;
     let pointer = win32::window::cursor_position().map(|point| (point.x, point.y));
     let settings = settings.clone();
@@ -53,7 +54,10 @@ fn toggle_on_main(
         trace.mark("hide");
         return hidden;
     }
-    let _ = window.set_content_protected(settings.hide_from_capture);
+    let _ = window.set_content_protected(super::wanted_capture_protection(settings.hide_from_capture));
+    if !settings.popup_pinned {
+        let _ = window.set_skip_taskbar(true);
+    }
     super::sequence::stop();
     let own = window.hwnd().map(|hwnd| hwnd.0 as isize).unwrap_or_default();
     if let Ok(mut target) = TARGET_WINDOW.lock() {
@@ -67,6 +71,9 @@ fn toggle_on_main(
     trace.mark("emit");
     crate::webview_memory::showing(&window);
     window.show().map_err(|error| error.to_string())?;
+    if settings.popup_pinned {
+        let _ = window.set_skip_taskbar(false);
+    }
     trace.shown();
     trace.mark("show");
     let _ = window.set_focus();
@@ -113,7 +120,10 @@ fn place(app: &AppHandle, window: &WebviewWindow, settings: &ClipboardHistorySet
 
 pub(super) fn hide(app: &AppHandle) -> Result<(), String> {
     super::preview_window::hide(app, false);
-    let window = popup_window(app)?;
+    super::background::schedule_preview_close_after_popup(app);
+    let Some(window) = app.get_webview_window(WINDOW_LABEL) else {
+        return Ok(());
+    };
     window.hide().map_err(|error| error.to_string())?;
     crate::webview_memory::hidden(&window);
     Ok(())
@@ -130,6 +140,12 @@ pub(super) fn refocus(app: &AppHandle) -> Result<(), String> {
 pub(super) fn outer_position(app: &AppHandle) -> Option<(i32, i32)> {
     let position = popup_window(app).ok()?.outer_position().ok()?;
     Some((position.x, position.y))
+}
+
+pub(super) fn sync_taskbar(app: &AppHandle, pinned: bool) {
+    if let Some(window) = app.get_webview_window(WINDOW_LABEL) {
+        let _ = window.set_skip_taskbar(!pinned);
+    }
 }
 
 pub(super) fn note_target(app: &AppHandle) {

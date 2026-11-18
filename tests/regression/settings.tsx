@@ -50,6 +50,7 @@ const type = async (input: HTMLInputElement, value: string) => {
   await act(async () => { setter.call(input, value); input.dispatchEvent(new Event("input", { bubbles: true })); });
 };
 const texts = (selector: string) => [...document.querySelectorAll(selector)].map((found) => found.textContent ?? "").join("|");
+const settingRow = (title: string) => [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === title);
 const backButton = () => document.querySelector<HTMLButtonElement>(".plugin-dialog__close");
 const onPluginPage = () => Boolean(backButton());
 const backToList = () => act(async () => { backButton()?.click(); });
@@ -208,6 +209,9 @@ if (!automated) {
     check(element(".settings-page__title").textContent === "快捷键", "A feature page's shortcut group links back to all shortcuts");
     await openPage("behavior");
     check(texts(".settings-tabs__tab") === "展开与收起|贴边隐藏" && !texts(".settings-group__title").includes("页面切换") && texts(".settings-cards__label") === "点击|鼠标悬停", "Behavior has two tabs; opening is chosen from two picture cards, and page keys are no longer repeated here");
+    const leaveSwitch = () => settingRow("鼠标移开后自动收起")?.querySelector<HTMLInputElement>("input");
+    check(leaveSwitch()?.checked === false && !settingRow("鼠标移开后收起前等待"), "Click mode offers close-on-leave, off by default without the delay slider");
+    await act(async () => { leaveSwitch()!.click(); }); check(leaveSwitch()?.checked === true && Boolean(settingRow("鼠标移开后收起前等待")) && (JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { clickCollapseOnLeave?: boolean }).clickCollapseOnLeave === true, "Turning close-on-leave on saves it and shows the collapse delay slider"); await act(async () => { leaveSwitch()!.click(); });
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "去设置")?.click(); });
     check(element(".settings-tabs__tab--active").dataset.tab === "shortcutsIsland" && texts(".settings-group__title").includes("页面切换") && texts(".shortcut-record-button .shortcut-keys__cap").startsWith("Alt|1–9"), "Its link opens Shortcuts > On the island: page keys on top as key caps");
     await openPage("shortcutsReference"); check(document.querySelectorAll(".shortcut-sheet .settings-group").length >= 2, "Shortcuts > Reference shows fixed keys in a two-column sheet");
@@ -264,20 +268,19 @@ if (!automated) {
       "Save adds the theme to the saved themes");
 
     await openPage("music");
-    const waveRow = [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "在收起的岛上显示音乐波形");
-    const waveSwitch = () => waveRow?.querySelector<HTMLInputElement>("input");
+    const waveSwitch = () => settingRow("在收起的岛上显示音乐波形")?.querySelector<HTMLInputElement>("input");
     check(waveSwitch()?.checked === true && savedItems() === null, "The music wave shows on the collapsed bar by default");
     await act(async () => { waveSwitch()!.click(); });
     check(waveSwitch()?.checked === false && savedItems()?.items.find((item) => item.id === "music")?.hidden === true, "Turning the music wave off hides the bar's music item");
     await act(async () => { waveSwitch()!.click(); }); check(waveSwitch()?.checked === true && !savedItems()?.items.find((item) => item.id === "music")?.hidden, "Turning it on shows it again"); localStorage.removeItem("fuyu-collapsed-items");
 
     await openPage("behaviorTuck");
-    const holdRow = (title: string) => [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === title)?.querySelector<HTMLInputElement>("input");
+    const holdRow = (title: string) => settingRow(title)?.querySelector<HTMLInputElement>("input");
     check(!holdRow("有正在进行的待办时不收起"), "Idle tuck holds are hidden while idle tuck is off");
     await act(async () => { holdRow("闲置时贴边隐藏")!.click(); });
     check(holdRow("有正在进行的待办时不收起")?.checked === true && holdRow("Agent 在等你时不收起")?.checked === true && holdRow("音乐播放中不收起")?.checked === false && holdRow("有未读消息时不收起")?.checked === true,
       "Idle tuck holds: todo, agent and unread messages on, music off by default");
-    const tuckedHover = [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "鼠标移到隐藏的岛上");
+    const tuckedHover = settingRow("鼠标移到隐藏的岛上");
     const tuckedHoverButton = (label: string) => [...(tuckedHover?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === label);
     check(tuckedHoverButton("只露出岛屿")?.getAttribute("aria-pressed") === "true", "Hovering a tucked island only slides it out by default");
     await act(async () => { tuckedHoverButton("展开面板")?.click(); });

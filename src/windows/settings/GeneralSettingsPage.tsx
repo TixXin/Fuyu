@@ -1,5 +1,6 @@
 import type { LocaleCode } from "../../i18n";
 import { BehaviorSettingsSection } from "./sections/BehaviorSettingsSection";
+import { CrashLogsSection } from "./sections/CrashLogsSection";
 import { DataSettingsSection } from "./sections/DataSettingsSection";
 import { SystemPermissionsSection } from "./sections/SystemPermissionsSection";
 import { loadSaveDirectory, saveSaveDirectory } from "../../features/todos/storage";
@@ -53,6 +54,7 @@ const sections = settingsSections<GeneralSectionProps, GeneralTab>();
 sections.add({ id: "general.startup", category: "general", order: 10, component: StartupSection });
 sections.add({ id: "general.permissions", category: "general", order: 30, component: SystemPermissionsSection });
 sections.add({ id: "generalData.data", category: "generalData", order: 10, component: DataSection });
+sections.add({ id: "generalData.crashLogs", category: "generalData", order: 20, component: CrashLogsSection });
 
 export function GeneralSettingsPage({ tab, ...props }: GeneralSectionProps & { tab: GeneralTab }) {
   return <SlotView slot={sections} group={tab} props={props} />;

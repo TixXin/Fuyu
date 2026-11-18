@@ -106,6 +106,7 @@ export function finishScreenshot(selection: PixelRect, patch: ScreenshotPatch | 
     headers["x-quality"] = save.record.quality;
     headers["x-system-audio"] = String(save.record.systemAudio);
     headers["x-microphone"] = String(save.record.microphone);
+    headers["x-own-windows"] = String(save.record.ownWindows);
   }
   return invoke<string | null>("screenshot_finish", patch ? rawBytes(patch.image) : new Uint8Array(0), { headers });
 }
@@ -274,6 +275,7 @@ export type RecordingRequest = {
   fps?: number;
   systemAudio?: boolean;
   microphone?: boolean;
+  ownWindows?: boolean;
 };
 
 export type RecordingSummary = {

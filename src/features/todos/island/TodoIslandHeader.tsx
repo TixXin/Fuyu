@@ -11,7 +11,7 @@ function Progress({ done, total, label }: { done: number; total: number; label: 
   if (total === 0) return null;
   return (
     <span className="todo-island__progress" aria-label={label}>
-      <span className="todo-island__progress-track" aria-hidden="true"><span style={{ width: `${(done / total) * 100}%` }} /></span>
+      <span className="todo-island__progress-track" aria-hidden="true"><span style={{ transform: `scaleX(${done / total})` }} /></span>
       <span aria-hidden="true">{label}</span>
     </span>
   );

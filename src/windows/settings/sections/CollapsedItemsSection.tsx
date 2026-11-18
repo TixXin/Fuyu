@@ -3,7 +3,7 @@ import { ArrowDown, ArrowLeftRight, ArrowUp } from "lucide-react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsSwitch } from "../../../components/settings/SettingsSwitch";
 import { useLocale, useTranslation } from "../../../i18n";
-import { shownUsageProviders, usageItemId } from "../../../features/claude-usage/usageRing";
+import { HOVER_ONLY_ITEM_ID, needsHoverOnlyGauge, shownUsageProviders, usageItemId } from "../../../features/claude-usage/usageRing";
 import { pluginStatusItemId } from "../../../features/plugin-views/usePluginStatusItems";
 import { usePluginStatusItemList } from "../../../features/plugin-views/usePluginViews";
 import { OWNER as CLAUDE_USAGE } from "../../../features/claude-usage/plugin/owner";
@@ -26,6 +26,7 @@ export function CollapsedItemsSection() {
   const t = useTranslation();
   const { locale } = useLocale();
   const text = t.settings.collapsedItems;
+  const hoverOnlyItemName = t.claudeUsage.hoverOnlyItemName;
   const { placements: saved, save } = useCollapsedPlacements();
   const plugins = useBuiltinPlugins();
   const usageOn = isBuiltinEnabled(plugins, CLAUDE_USAGE);
@@ -48,10 +49,11 @@ export function CollapsedItemsSection() {
     entries.push(["device-use", text.item.deviceUse], ["shelf", text.item.shelf], ["music", text.item.music]);
     if (usageOn) {
       for (const provider of shownUsageProviders(usageConfig)) entries.push([usageItemId(provider), text.item.usage(provider.name)]);
+      if (needsHoverOnlyGauge(usageConfig)) entries.push([HOVER_ONLY_ITEM_ID, text.item.usage(hoverOnlyItemName)]);
     }
     entries.push(["session-count", text.item.sessionCount]);
     return new Map(filterCollapsedItemEntries(entries, disabled, mailOn));
-  }, [declared, locale, plugins, text, usageOn, usageConfig]);
+  }, [declared, hoverOnlyItemName, locale, plugins, text, usageOn, usageConfig]);
 
   const listed = useMemo(() => [...names.keys()], [names]);
   const placements = useMemo(() => arrangeCollapsedItems(listed, saved), [listed, saved]);

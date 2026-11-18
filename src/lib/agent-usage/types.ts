@@ -10,7 +10,7 @@ export type AgentUsage = {
   sevenDay: UsageWindow | null;
   models: UsageWindow[];
   plan: string | null;
-  source?: "hud" | "api" | "magpie" | "codex" | "glm" | "kimi";
+  source?: "hud" | "api" | "magpie" | "codex" | "glm" | "kimi" | "antigravity" | "antigravityCloud";
   error?: AgentUsageError | null;
 };
 
@@ -23,6 +23,9 @@ export type AgentUsageErrorKind =
   | "noProxy"
   | "network"
   | "http"
-  | "invalidResponse";
+  | "invalidResponse"
+  | "endpointChanged"
+  | "noSessions"
+  | "customEndpoint";
 
 export type AgentUsageError = { kind: AgentUsageErrorKind; message: string };

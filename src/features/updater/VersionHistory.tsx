@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useState, useSyncExternalStore } from "react";
 import { ChevronDown } from "lucide-react";
+import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { useLocale, useTranslation } from "../../i18n";
 import { BUNDLED_RELEASES, type BundledRelease } from "./bundledReleases";
@@ -115,7 +116,7 @@ export function VersionHistory({ releases = BUNDLED_RELEASES }: { releases?: rea
   const hidden = groups.length - RECENT_COUNT;
 
   return (
-    <SettingsGroup title={text.title} footer={<p>{text.footnote}</p>}>
+    <SettingsGroup title={text.title} footer={<SettingsFootnote text={text.footnote} />}>
       <div className="version-history">
         {visible.map((group) => (
           <ReleaseItem

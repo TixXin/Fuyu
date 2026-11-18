@@ -12,6 +12,8 @@ export type SettingsMessageSourcesText = {
   mailCount: (count: number) => string;
   panelSeconds: string;
   panelSecondsValue: (seconds: number) => string;
+  otpCopyLabel: string;
+  otpCopyDescription: string;
   qqTitle: string;
   qqHint: string;
   qqHintMac: string;
@@ -34,6 +36,8 @@ export const zhCN: SettingsMessageSourcesText = {
   mailCount: (count) => (count === 0 ? "还没有添加邮箱" : `${count} 个邮箱`),
   panelSeconds: "面板停留时间",
   panelSecondsValue: (seconds) => `${seconds} 秒`,
+  otpCopyLabel: "识别通知中的验证码",
+  otpCopyDescription: "新邮件或通知含有验证码时，在横幅、弹出面板和阅读页显示一键复制按钮",
   qqTitle: "QQ 通知",
   qqHint: "通过 Windows 通知读取 QQ 消息的标题和预览，只保留在本次运行的内存中。需要 QQ 已登录并开启系统通知。",
   wechatTitle: "微信提醒",
@@ -56,6 +60,8 @@ export const en: SettingsMessageSourcesText = {
   mailCount: (count) => (count === 0 ? "No mailboxes yet" : count === 1 ? "1 mailbox" : `${count} mailboxes`),
   panelSeconds: "Panel stays for",
   panelSecondsValue: (seconds) => `${seconds} s`,
+  otpCopyLabel: "Detect verification codes",
+  otpCopyDescription: "Show a one-click copy button on banners, arrival cards and the mail reader when a verification code is found",
   qqTitle: "QQ notifications",
   qqHint: "Reads the title and preview of QQ messages from Windows notifications and keeps them in memory for this run only. QQ must be signed in with system notifications on.",
   wechatTitle: "WeChat reminders",

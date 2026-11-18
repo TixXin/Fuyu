@@ -37,6 +37,14 @@ function noteFile(id) {
   return join(NOTES_DIR, `pi-${cleanId(id)}.json`);
 }
 
+async function fuyuDirExists() {
+  try {
+    return (await stat(FUYU_DIR)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 async function writeAtomic(target, text) {
   const tmp = `${target}.${process.pid}.tmp`;
   await writeFile(tmp, text, "utf8");
@@ -45,7 +53,7 @@ async function writeAtomic(target, text) {
 
 async function markRunning() {
   try {
-    await mkdir(FUYU_DIR, { recursive: true });
+    if (!(await fuyuDirExists())) return;
     await writeFile(RUNNING_FILE, "", "utf8");
     await rm(HOLD_FILE, { force: true });
   } catch {}
@@ -54,7 +62,7 @@ async function markRunning() {
 async function markFinished(phase) {
   const now = Date.now();
   try {
-    await mkdir(FUYU_DIR, { recursive: true });
+    if (!(await fuyuDirExists())) return;
     let visibleUntil = 0;
     try {
       const info = await stat(RUNNING_FILE);
@@ -79,6 +87,7 @@ async function recordSession(ctx, source, endedReason) {
   const sessionId = sessionIdOf(ctx);
   if (!sessionId) return;
   try {
+    if (!(await fuyuDirExists())) return;
     await mkdir(SESSIONS_DIR, { recursive: true });
     const file = join(SESSIONS_DIR, `${sessionId}.json`);
     const now = Date.now();
@@ -195,6 +204,7 @@ export default function fuyuIslandExtension(pi) {
     const controller = new AbortController();
     open.set(callId, { controller, sessionId });
     try {
+      if (!(await fuyuDirExists())) return;
       await mkdir(NOTES_DIR, { recursive: true });
       await writeFile(
         noteFile(callId),

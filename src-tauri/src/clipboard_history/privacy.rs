@@ -4,9 +4,10 @@ use std::{
     thread,
     time::Duration,
 };
+use tauri::{AppHandle, Manager};
 
 use super::workers::Ticker;
-use super::{current_unix_millis, ClipboardHistoryItem, ClipboardHistoryService, ClipboardSource};
+use super::{current_unix_millis, popup, preview_window, ClipboardHistoryItem, ClipboardHistoryService, ClipboardSource};
 
 pub(super) const FORGET_WINDOW_MS: i64 = 2 * 60 * 1000;
 const CLEARED_CONFIRM_DELAY: Duration = Duration::from_millis(500);
@@ -183,6 +184,55 @@ impl ClipboardHistoryService {
         drop(state);
         self.emit_changed();
     }
+}
+
+pub(crate) fn effective_capture_protection(hide_from_capture: bool, recording_hides: bool, recording_shows: bool) -> bool {
+    recording_hides || (!recording_shows && hide_from_capture)
+}
+
+pub(crate) fn wanted_capture_protection(hide_from_capture: bool) -> bool {
+    effective_capture_protection(hide_from_capture, crate::recording::hides_own_windows(), crate::recording::records_own_windows())
+}
+
+#[cfg(windows)]
+pub(crate) fn is_clipboard_window(label: &str) -> bool {
+    label == popup::WINDOW_LABEL || label == preview_window::WINDOW_LABEL
+}
+
+pub(crate) fn restore_capture_protection(app: &AppHandle) {
+    let hidden = super::service().and_then(|service| service.snapshot()).map(|snapshot| snapshot.settings.hide_from_capture).unwrap_or(false);
+    let protected = wanted_capture_protection(hidden);
+    for label in [popup::WINDOW_LABEL, preview_window::WINDOW_LABEL] {
+        if let Some(window) = app.get_webview_window(label) {
+            let _ = window.set_content_protected(protected);
+        }
+    }
+}
+
+#[cfg(windows)]
+pub(crate) fn unprotect_for_recording(app: &AppHandle) {
+    for label in [popup::WINDOW_LABEL, preview_window::WINDOW_LABEL] {
+        if let Some(hwnd) = app.get_webview_window(label).and_then(|window| window.hwnd().ok()) {
+            crate::win32::window::exclude_from_capture(hwnd, false);
+        }
+    }
+}
+
+pub(crate) fn refocus_popup(app: &AppHandle) {
+    restore_capture_protection(app);
+    if let Err(error) = popup::refocus(app) {
+        eprintln!("failed to give the clipboard window its focus back: {error}");
+    }
+}
+
+pub(crate) fn show_popup_in_screenshot(app: &AppHandle) -> bool {
+    let mut shown = false;
+    for label in [popup::WINDOW_LABEL, preview_window::WINDOW_LABEL] {
+        if let Some(window) = app.get_webview_window(label).filter(|window| window.is_visible().unwrap_or(false)) {
+            shown |= window.set_content_protected(false).is_ok();
+        }
+    }
+    shown
 }
 
 #[cfg(test)]

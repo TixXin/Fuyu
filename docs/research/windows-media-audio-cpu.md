@@ -1,6 +1,6 @@
 # Windows 媒体控制与音频峰值轮询高 CPU / 线程膨胀调研与修复计划
 
-> 日期：2026-11-17。问题：`flyl1u/fly-island#75`（播放音乐时持续占用整机 ~25% CPU / 约 4 核、10 分钟线程数从 204 涨到 653）是否也是浮屿（`TixXin/fuyu`）的问题？同类开源项目和 Windows 官方文档是怎么处理 WASAPI 峰值表与 GSMTC 媒体会话的？我们的修复计划是什么？范围：上游 `flyl1u/fly-island`（#65、#75、提交 `98fcde91`）、本仓库当前 `HEAD` 源码逐行对照、Microsoft Learn（Core Audio `IMMNotificationClient` / `IAudioMeterInformation` / `CLSCTX`、`Windows.Media.Control`）、GitHub 同类开源桌面壳与音频工具（Seelen-UI、Zebar、Rainmeter、EarTrumpet、Yasb、FluentFlyout、Komorebi）。相关任务：[D98](/docs/tasks/D/D98.md)（[#804](https://github.com/TixXin/Fuyu/issues/804)）、[D52](/docs/tasks/0-archive/D/D52.md)、[D86](/docs/tasks/D/D86.md)、[D97](/docs/tasks/D/D97.md)（特别是 [D97.4](/docs/tasks/D/D97.4.md)）
+> 日期：2026-11-17。问题：`flyl1u/fly-island#75`（播放音乐时持续占用整机 ~25% CPU / 约 4 核、10 分钟线程数从 204 涨到 653）是否也是浮屿（`TixXin/fuyu`）的问题？同类开源项目和 Windows 官方文档是怎么处理 WASAPI 峰值表与 GSMTC 媒体会话的？我们的修复计划是什么？范围：上游 `flyl1u/fly-island`（#65、#75、提交 `98fcde91`）、本仓库当前 `HEAD` 源码逐行对照、Microsoft Learn（Core Audio `IMMNotificationClient` / `IAudioMeterInformation` / `CLSCTX`、`Windows.Media.Control`）、GitHub 同类开源桌面壳与音频工具（Seelen-UI、Zebar、Rainmeter、EarTrumpet、Yasb、FluentFlyout、Komorebi）。相关任务：[D98](/docs/tasks/0-archive/D/D98.md)（[#804](https://github.com/TixXin/Fuyu/issues/804)）、[D102](/docs/tasks/D/D102.md)（[#821](https://github.com/TixXin/Fuyu/issues/821)）、[D52](/docs/tasks/0-archive/D/D52.md)、[D86](/docs/tasks/D/D86.md)、[D97](/docs/tasks/D/D97.md)（特别是 [D97.4](/docs/tasks/D/D97.4.md)）
 
 ## 结论
 

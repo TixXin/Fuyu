@@ -27,6 +27,22 @@ function IslandReference() {
   );
 }
 
+function ClipboardReference() {
+  const text = useTranslation().settings.shortcuts;
+  return (
+    <ShortcutReferenceGroup
+      title={text.clipboardWindowTitle}
+      rows={[
+        [text.clipboardPreview, "Space"],
+        [text.clipboardSnippetsTab, "Tab"],
+        [text.clipboardPlainPaste, "Shift+Enter"],
+        [text.clipboardAiRewrite, isMacOS ? "Cmd+I" : "Ctrl+I"],
+        [text.clipboardQuickPick, "Alt+1–9"],
+      ]}
+    />
+  );
+}
+
 function PluginsSection({ onOpenPage, takenBy, refreshPlugins }: ShortcutsSectionProps) {
   return <PluginShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={<FeaturePageLink page="plugins" onOpenPage={onOpenPage} />} />;
 }
@@ -34,6 +50,7 @@ function PluginsSection({ onOpenPage, takenBy, refreshPlugins }: ShortcutsSectio
 shortcutSections.add({ id: "shortcuts.plugins", category: "shortcuts", order: 50, component: PluginsSection });
 shortcutSections.add({ id: "shortcutsIsland.pages", category: "shortcutsIsland", order: 10, component: PageKeysSection });
 shortcutReferences.add({ id: "shortcutsReference.island", category: "shortcutsReference", order: 10, component: IslandReference });
+shortcutReferences.add({ id: "shortcutsReference.clipboard", category: "shortcutsReference", order: 15, component: ClipboardReference });
 
 export function ShortcutsSettingsPage({
   tab,

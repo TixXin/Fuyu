@@ -42,7 +42,7 @@ export function TranslationWindow() {
     : settings.direction === "en-zh"
       ? t.translator.chinese
       : t.translator.bilingual;
-  const { hasSecret, error: engineError, providerLabel: providerTitle, defaultModel } = useTranslatorEngines(settings.provider, true, secretCheck);
+  const { hasSecret, error: engineError, providerLabel: providerTitle, defaultModel } = useTranslatorEngines(settings.provider, true, secretCheck, settings.customBaseUrl);
 
   useEffect(() => {
     if (engineError) setError(engineError);
@@ -173,7 +173,7 @@ export function TranslationWindow() {
         <header className="translation-window__header" onPointerDown={startWindowDrag}>
           <span className="translation-window__mark" aria-hidden="true"><Languages size={18} /></span>
           <div className="translation-window__heading"><h1>{t.translator.title}</h1></div>
-          <kbd className="translation-window__shortcut">{shortcutLabel(settings.shortcut)}</kbd>
+          {settings.shortcut && <kbd className="translation-window__shortcut">{shortcutLabel(settings.shortcut)}</kbd>}
           <div className="translation-window__actions">
             <button type="button" aria-label={t.translator.settings} onClick={openSettings}><Settings2 size={18} /></button>
             <button type="button" aria-label={t.translator.closeLabel} onClick={close}><X size={18} /></button>

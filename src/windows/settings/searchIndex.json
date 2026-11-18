@@ -83,6 +83,17 @@
       }
     },
     {
+      "page": "generalData",
+      "zh-CN": {
+        "group": "",
+        "title": "崩溃诊断日志"
+      },
+      "en": {
+        "group": "",
+        "title": "Crash logs"
+      }
+    },
+    {
       "page": "generalSync",
       "zh-CN": {
         "group": "同步方式",
@@ -579,11 +590,23 @@
       "page": "themeStyle",
       "zh-CN": {
         "group": "液态玻璃",
-        "title": "风格"
+        "title": "风格",
+        "options": [
+          "静态",
+          "慢流动",
+          "极光",
+          "着色器（实验）"
+        ]
       },
       "en": {
         "group": "Liquid glass",
-        "title": "Style"
+        "title": "Style",
+        "options": [
+          "Still",
+          "Slow flow",
+          "Aurora",
+          "Shader (experimental)"
+        ]
       }
     },
     {
@@ -600,7 +623,7 @@
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "背景折射与色彩",
         "title": "玻璃背后",
         "description": "透出岛正后方的壁纸并磨砂，「玻璃强度」决定盖在上面的底色有多浓。背后有窗口挡着时仍显示壁纸；系统关掉「透明效果」或读不到壁纸时照旧用纯色玻璃。",
         "options": [
@@ -609,7 +632,7 @@
         ]
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Refraction and colours",
         "title": "Behind the glass",
         "description": "Shows the wallpaper right behind the island, frosted; glass strength sets how thick the tint over it is. Windows behind the island are not shown; with Transparency effects off or no wallpaper to read, the glass stays solid.",
         "options": [
@@ -621,40 +644,40 @@
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "背景折射与色彩",
         "title": "模糊"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Refraction and colours",
         "title": "Blur"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "背景折射与色彩",
         "title": "饱和度"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Refraction and colours",
         "title": "Saturation"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "背景折射与色彩",
         "title": "噪点"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Refraction and colours",
         "title": "Grain"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "背景折射与色彩",
         "title": "颜色来源",
         "options": [
           "主题色",
@@ -663,7 +686,7 @@
         ]
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Refraction and colours",
         "title": "Colours from",
         "options": [
           "Accent",
@@ -675,73 +698,73 @@
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "背景折射与色彩",
         "title": "颜色 1"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Refraction and colours",
         "title": "Colour 1"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "背景折射与色彩",
         "title": "颜色 2"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Refraction and colours",
         "title": "Colour 2"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "背景折射与色彩",
         "title": "颜色 3"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Refraction and colours",
         "title": "Colour 3"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "背景折射与色彩",
         "title": "色彩浓度"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Refraction and colours",
         "title": "Colour strength"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "流光与高光细节",
         "title": "流动速度"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Flow and highlights",
         "title": "Flow speed"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "流光与高光细节",
         "title": "色块大小"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Flow and highlights",
         "title": "Blob size"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "流光与高光细节",
         "title": "折叠时流动",
         "options": [
           "一直",
@@ -749,7 +772,7 @@
         ]
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Flow and highlights",
         "title": "Flow when collapsed",
         "options": [
           "Always",
@@ -760,45 +783,45 @@
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "流光与高光细节",
         "title": "油膜边"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Flow and highlights",
         "title": "Oil-film rim"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "流光与高光细节",
         "title": "边宽"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Flow and highlights",
         "title": "Rim width"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "流光与高光细节",
         "title": "扫光"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Flow and highlights",
         "title": "Sheen"
       }
     },
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "流光与高光细节",
         "title": "镜面高光",
         "description": "高光跟着鼠标走。"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Flow and highlights",
         "title": "Specular highlight",
         "description": "The highlight follows the pointer."
       }
@@ -806,7 +829,7 @@
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "流光与高光细节",
         "title": "展开收起",
         "options": [
           "平滑",
@@ -815,7 +838,7 @@
         ]
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Flow and highlights",
         "title": "Expand and collapse",
         "options": [
           "Smooth",
@@ -827,12 +850,12 @@
     {
       "page": "themeStyle",
       "zh-CN": {
-        "group": "液态玻璃",
+        "group": "流光与高光细节",
         "title": "文字保护",
         "description": "自动压暗或提亮色块，让文字始终看得清。"
       },
       "en": {
-        "group": "Liquid glass",
+        "group": "Flow and highlights",
         "title": "Keep text readable",
         "description": "Darkens or lightens the colours so text always stays readable."
       }
@@ -852,11 +875,21 @@
       "page": "appearance",
       "zh-CN": {
         "group": "位置",
-        "title": "显示在"
+        "title": "显示在",
+        "options": [
+          "主显示器",
+          "鼠标所在的显示器",
+          "前台窗口所在的显示器"
+        ]
       },
       "en": {
         "group": "Position",
-        "title": "Show on"
+        "title": "Show on",
+        "options": [
+          "Primary display",
+          "Display with the pointer",
+          "Display with the active window"
+        ]
       }
     },
     {
@@ -1050,11 +1083,13 @@
       "page": "behavior",
       "zh-CN": {
         "group": "展开",
-        "title": "悬停多久后展开"
+        "title": "鼠标移开后自动收起",
+        "description": "点开面板看完后，鼠标移出就自动收起，不用再点外部"
       },
       "en": {
         "group": "Opening",
-        "title": "Hover time before opening"
+        "title": "Close when pointer leaves",
+        "description": "Closes the panel after the pointer leaves, without clicking outside"
       }
     },
     {
@@ -1097,12 +1132,26 @@
       "zh-CN": {
         "group": "开合动画",
         "title": "动画曲线",
-        "description": "弹性同官网；Q 弹冲出去再轻轻回一下，高度也会弹；平滑和快速收起更快、不回弹"
+        "description": "弹性同官网；Q 弹冲出去再轻轻回一下，高度也会弹；平滑和快速收起更快、不回弹",
+        "options": [
+          "弹性（同官网）",
+          "平滑",
+          "快速",
+          "Q 弹",
+          "无动画"
+        ]
       },
       "en": {
         "group": "Open and close",
         "title": "Animation curve",
-        "description": "Spring moves as the website's island; Bouncy springs out and back, its height bounces too; Smooth and Fast close quicker, without a bounce"
+        "description": "Spring moves as the website's island; Bouncy springs out and back, its height bounces too; Smooth and Fast close quicker, without a bounce",
+        "options": [
+          "Spring (as the website)",
+          "Smooth",
+          "Fast",
+          "Bouncy",
+          "None"
+        ]
       }
     },
     {
@@ -1374,6 +1423,61 @@
       "en": {
         "group": "On the island",
         "title": "Resize the panel (it stays open while Alt is held)"
+      }
+    },
+    {
+      "page": "shortcutsReference",
+      "zh-CN": {
+        "group": "剪贴板独立窗口",
+        "title": "空格大图 / 全文预览"
+      },
+      "en": {
+        "group": "Clipboard window",
+        "title": "Spacebar peek"
+      }
+    },
+    {
+      "page": "shortcutsReference",
+      "zh-CN": {
+        "group": "剪贴板独立窗口",
+        "title": "切换历史与常用语"
+      },
+      "en": {
+        "group": "Clipboard window",
+        "title": "Switch history and snippets"
+      }
+    },
+    {
+      "page": "shortcutsReference",
+      "zh-CN": {
+        "group": "剪贴板独立窗口",
+        "title": "粘贴为纯文本"
+      },
+      "en": {
+        "group": "Clipboard window",
+        "title": "Paste as plain text"
+      }
+    },
+    {
+      "page": "shortcutsReference",
+      "zh-CN": {
+        "group": "剪贴板独立窗口",
+        "title": "AI 改写或总结"
+      },
+      "en": {
+        "group": "Clipboard window",
+        "title": "AI rewrite or summary"
+      }
+    },
+    {
+      "page": "shortcutsReference",
+      "zh-CN": {
+        "group": "剪贴板独立窗口",
+        "title": "快速粘贴第 1–9 条"
+      },
+      "en": {
+        "group": "Clipboard window",
+        "title": "Quick paste entry 1–9"
       }
     },
     {
@@ -1762,7 +1866,7 @@
     {
       "page": "musicLyricsStyle",
       "zh-CN": {
-        "group": "岛上的歌词样式",
+        "group": "高亮与外观",
         "title": "高亮颜色",
         "options": [
           "跟随岛屿",
@@ -1771,7 +1875,7 @@
         ]
       },
       "en": {
-        "group": "Lyrics on the island",
+        "group": "Highlight and look",
         "title": "Highlight colour",
         "options": [
           "Island text",
@@ -1783,12 +1887,12 @@
     {
       "page": "musicLyricsStyle",
       "zh-CN": {
-        "group": "岛上的歌词样式",
+        "group": "高亮与外观",
         "title": "没唱到的字",
         "description": "亮度越低，高亮越显眼。"
       },
       "en": {
-        "group": "Lyrics on the island",
+        "group": "Highlight and look",
         "title": "Words not sung yet",
         "description": "The dimmer, the more the highlight stands out."
       }
@@ -1796,12 +1900,12 @@
     {
       "page": "musicLyricsStyle",
       "zh-CN": {
-        "group": "岛上的歌词样式",
+        "group": "高亮与外观",
         "title": "发光",
         "description": "整句带一圈柔和的光，颜色跟高亮颜色走。"
       },
       "en": {
-        "group": "Lyrics on the island",
+        "group": "Highlight and look",
         "title": "Glow",
         "description": "A soft glow around the line, in the highlight colour."
       }
@@ -1809,12 +1913,12 @@
     {
       "page": "musicLyricsStyle",
       "zh-CN": {
-        "group": "岛上的歌词样式",
+        "group": "高亮与外观",
         "title": "长句跟着滚动",
         "description": "一句比岛宽时，唱到右边缘附近整句往左移，正在唱的字一直看得见。关掉则在末尾用省略号截断。"
       },
       "en": {
-        "group": "Lyrics on the island",
+        "group": "Highlight and look",
         "title": "Scroll long lines",
         "description": "A line wider than the island slides left as the singing nears the edge, so the word being sung stays in view. Off, it ends in an ellipsis."
       }
@@ -1893,21 +1997,11 @@
       "page": "clipboard",
       "zh-CN": {
         "group": "打开方式",
-        "title": "快捷键打开",
-        "description": "独立窗口在鼠标旁弹出，选中一条直接粘贴到原来的窗口；岛上页面和以前一样，展开岛的剪贴板页。",
-        "options": [
-          "独立窗口",
-          "岛上页面"
-        ]
+        "title": "快捷键打开"
       },
       "en": {
         "group": "Opening",
-        "title": "The shortcut opens",
-        "description": "The window pops up by the pointer and pastes what you pick into the window you were in; the island page opens the island's clipboard page as before.",
-        "options": [
-          "A window",
-          "The island page"
-        ]
+        "title": "The shortcut opens"
       }
     },
     {
@@ -1953,12 +2047,12 @@
     {
       "page": "clipboard",
       "zh-CN": {
-        "group": "打开方式",
+        "group": "粘贴与显示",
         "title": "收藏的条目置顶",
         "description": "剪贴板窗口的「全部」里，收藏的条目排在最上面，可拖动排序；数字键 1–9 跳过它们。动作面板里「设固定键」后按 Alt + 字母直接粘贴。"
       },
       "en": {
-        "group": "Opening",
+        "group": "Pasting and display",
         "title": "Pin favorites to the top",
         "description": "In the clipboard window's \"All\", favorites come first and can be dragged into order; the 1–9 keys skip them. Set a pin key from the action panel to paste with Alt + a letter."
       }
@@ -1966,12 +2060,12 @@
     {
       "page": "clipboard",
       "zh-CN": {
-        "group": "打开方式",
+        "group": "粘贴与显示",
         "title": "选中后自动粘贴",
         "description": "关掉时只复制，回到原来的窗口自己按 Ctrl+V。"
       },
       "en": {
-        "group": "Opening",
+        "group": "Pasting and display",
         "title": "Paste what you pick",
         "description": "Off: it is only copied, and you press Ctrl+V back in your window."
       }
@@ -1979,12 +2073,12 @@
     {
       "page": "clipboard",
       "zh-CN": {
-        "group": "打开方式",
+        "group": "粘贴与显示",
         "title": "粘贴图片到终端时贴文件路径",
         "description": "Windows Terminal 等终端里粘贴图片时改贴它的文件路径，Claude Code 会把路径当成图片附上（直接粘贴位图常常贴不上）。"
       },
       "en": {
-        "group": "Opening",
+        "group": "Pasting and display",
         "title": "Paste images into terminals as their path",
         "description": "In Windows Terminal and other terminals an image is pasted as its file path, which Claude Code attaches as an image (pasting the bitmap often fails there)."
       }
@@ -1992,12 +2086,12 @@
     {
       "page": "clipboard",
       "zh-CN": {
-        "group": "打开方式",
+        "group": "粘贴与显示",
         "title": "多行命令贴到终端时合成一行",
         "description": "带 续行的多行命令粘贴到终端时去掉续行，合成一行；剪贴板窗口的「转换后粘贴」里也能手动选。"
       },
       "en": {
-        "group": "Opening",
+        "group": "Pasting and display",
         "title": "Paste multi-line commands into terminals as one line",
         "description": "A command continued over lines with goes into a terminal as one line. Also available by hand under \"Paste transformed\" in the clipboard window."
       }
@@ -2005,12 +2099,12 @@
     {
       "page": "clipboard",
       "zh-CN": {
-        "group": "打开方式",
+        "group": "粘贴与显示",
         "title": "共享屏幕时隐藏",
         "description": "开会共享屏幕、录屏、用别的软件截图时，剪贴板窗口显示为空白，不露出历史；浮屿自己的截图照样截得到它。"
       },
       "en": {
-        "group": "Opening",
+        "group": "Pasting and display",
         "title": "Hide while sharing the screen",
         "description": "Screen sharing, recordings and other apps' screenshots show the clipboard window as blank; Fuyu's own screenshots still include it."
       }
@@ -2018,12 +2112,12 @@
     {
       "page": "clipboard",
       "zh-CN": {
-        "group": "打开方式",
+        "group": "粘贴与显示",
         "title": "读取链接标题和图标",
         "description": "列表里的网址显示网站图标，宽版里再显示网页标题。会访问那个网址，默认关。"
       },
       "en": {
-        "group": "Opening",
+        "group": "Pasting and display",
         "title": "Read link titles and icons",
         "description": "Copied links show the site's icon in the list, and the page title in the wide window. This visits the address; off by default."
       }
@@ -2031,12 +2125,12 @@
     {
       "page": "clipboard",
       "zh-CN": {
-        "group": "打开方式",
+        "group": "粘贴与显示",
         "title": "岛上的复制卡片",
         "description": "在剪贴板窗口或岛上的剪贴板页复制一条后，浮屿顶部显示刚复制的内容。自动粘贴时不显示。鼠标停在上面时不会收起。"
       },
       "en": {
-        "group": "Opening",
+        "group": "Pasting and display",
         "title": "Copy card on the island",
         "description": "After you copy an entry from the clipboard window or the island's clipboard page, the island shows what was copied. Not shown when it is pasted for you. It stays while the pointer is on it."
       }
@@ -2118,12 +2212,12 @@
     {
       "page": "clipboardHistory",
       "zh-CN": {
-        "group": "剪贴板历史",
+        "group": "隐私与过滤",
         "title": "不记录密码",
         "description": "密码管理器（KeePass、Bitwarden、1Password 等）复制的密码带着「不要记录」的标记，和系统剪贴板历史一样跳过它们。"
       },
       "en": {
-        "group": "Clipboard history",
+        "group": "Privacy and filtering",
         "title": "Do not record passwords",
         "description": "Password managers (KeePass, Bitwarden, 1Password...) mark the passwords they copy; like Windows' own clipboard history, these are skipped."
       }
@@ -2131,12 +2225,12 @@
     {
       "page": "clipboardHistory",
       "zh-CN": {
-        "group": "剪贴板历史",
+        "group": "隐私与过滤",
         "title": "剪贴板被清空时删掉刚记下的那条",
         "description": "密码管理器复制密码后过一会儿会清空剪贴板；刚记下 2 分钟内的那条（不含收藏）跟着从历史里删掉。"
       },
       "en": {
-        "group": "Clipboard history",
+        "group": "Privacy and filtering",
         "title": "Forget the last entry when the clipboard is cleared",
         "description": "Password managers clear the clipboard a while after copying a password; the entry recorded in the last 2 minutes (unless starred) is removed from history too."
       }
@@ -2144,7 +2238,7 @@
     {
       "page": "clipboardHistory",
       "zh-CN": {
-        "group": "剪贴板历史",
+        "group": "隐私与过滤",
         "title": "密钥和令牌",
         "description": "看起来像 API Key、GitHub 令牌、私钥的内容：打码显示（粘贴时仍是原文）、不记录，或照常记录。",
         "options": [
@@ -2154,7 +2248,7 @@
         ]
       },
       "en": {
-        "group": "Clipboard history",
+        "group": "Privacy and filtering",
         "title": "Keys and tokens",
         "description": "What looks like an API key, GitHub token or private key: shown masked (pasted as it is), not recorded, or recorded as usual.",
         "options": [
@@ -2167,12 +2261,12 @@
     {
       "page": "clipboardHistory",
       "zh-CN": {
-        "group": "剪贴板历史",
+        "group": "隐私与过滤",
         "title": "打码的条目自动删除",
         "description": "按最后一次复制的时间算，收藏的不删。"
       },
       "en": {
-        "group": "Clipboard history",
+        "group": "Privacy and filtering",
         "title": "Delete masked entries",
         "description": "Counted from the last copy; starred entries are kept."
       }
@@ -2180,12 +2274,12 @@
     {
       "page": "clipboardHistory",
       "zh-CN": {
-        "group": "剪贴板历史",
+        "group": "隐私与过滤",
         "title": "不记录这些程序复制的内容",
         "description": "填程序名，逗号分隔，比如 keepass.exe。每条记录旁边会显示它来自哪个程序。"
       },
       "en": {
-        "group": "Clipboard history",
+        "group": "Privacy and filtering",
         "title": "Do not record copies from these programs",
         "description": "Program names separated by commas, such as keepass.exe. Each entry shows the program it came from."
       }
@@ -2193,25 +2287,12 @@
     {
       "page": "clipboardHistory",
       "zh-CN": {
-        "group": "剪贴板历史",
-        "title": "单条文字大小上限",
-        "description": "超过的只记前面一段并标「已截断」，贴回去的不是完整原文；格式（HTML）超过上限时不记。"
-      },
-      "en": {
-        "group": "Clipboard history",
-        "title": "Size limit per text entry",
-        "description": "Longer text keeps only its beginning and is marked “Truncated”, so pasting it back is not the full original; formatting (HTML) over the limit is dropped."
-      }
-    },
-    {
-      "page": "clipboardHistory",
-      "zh-CN": {
-        "group": "剪贴板历史",
+        "group": "隐私与过滤",
         "title": "允许本地接口读取历史",
         "description": "开了以后，AI 工具可以通过本地接口 GET /v1/clipboard 读取最近的文字记录（打码的仍是打码）。默认关。"
       },
       "en": {
-        "group": "Clipboard history",
+        "group": "Privacy and filtering",
         "title": "Let the local API read the history",
         "description": "AI tools can read recent text entries with GET /v1/clipboard on the local API (masked keys stay masked). Off by default."
       }
@@ -2219,23 +2300,36 @@
     {
       "page": "clipboardHistory",
       "zh-CN": {
-        "group": "剪贴板历史",
+        "group": "容量与清理",
+        "title": "单条文字大小上限",
+        "description": "超过的只记前面一段并标「已截断」，贴回去的不是完整原文；格式（HTML）超过上限时不记。"
+      },
+      "en": {
+        "group": "Limits and cleanup",
+        "title": "Size limit per text entry",
+        "description": "Longer text keeps only its beginning and is marked “Truncated”, so pasting it back is not the full original; formatting (HTML) over the limit is dropped."
+      }
+    },
+    {
+      "page": "clipboardHistory",
+      "zh-CN": {
+        "group": "容量与清理",
         "title": "最大历史条数"
       },
       "en": {
-        "group": "Clipboard history",
+        "group": "Limits and cleanup",
         "title": "Max entries"
       }
     },
     {
       "page": "clipboardHistory",
       "zh-CN": {
-        "group": "剪贴板历史",
+        "group": "容量与清理",
         "title": "自动清理",
         "description": "超过这个时间没再复制过的记录自动删除，收藏的不删。"
       },
       "en": {
-        "group": "Clipboard history",
+        "group": "Limits and cleanup",
         "title": "Clean up",
         "description": "Entries not copied again for this long are deleted; favourites stay."
       }
@@ -2365,11 +2459,19 @@
       "page": "shelf",
       "zh-CN": {
         "group": "文件中转",
-        "title": "双击文件"
+        "title": "双击文件",
+        "options": [
+          "打开文件",
+          "在文件夹中显示"
+        ]
       },
       "en": {
         "group": "File shelf",
-        "title": "Double-click a file"
+        "title": "Double-click a file",
+        "options": [
+          "Open it",
+          "Show in folder"
+        ]
       }
     },
     {
@@ -2430,19 +2532,6 @@
     {
       "page": "screenshot",
       "zh-CN": {
-        "group": "快捷键",
-        "title": "按 PrintScreen 截图",
-        "description": "单独按 PrintScreen 时打开浮屿的截图，不再交给系统截图工具。Alt+PrintScreen 等组合键不受影响。"
-      },
-      "en": {
-        "group": "Shortcuts",
-        "title": "Screenshot with PrintScreen",
-        "description": "PrintScreen on its own opens Fuyu's screenshot instead of the Windows snipping tool. Alt+PrintScreen and other combinations are left alone."
-      }
-    },
-    {
-      "page": "screenshot",
-      "zh-CN": {
         "group": "截图时",
         "title": "显示辅助线",
         "description": "虚线贯穿整个屏幕，方便对齐边缘：一横一竖跟着鼠标（选好区域后隐藏），选区的四条边也各延长一条。"
@@ -2493,16 +2582,37 @@
       }
     },
     {
+      "page": "screenshot",
+      "zh-CN": {
+        "group": "快捷键",
+        "title": "按 PrintScreen 截图",
+        "description": "单独按 PrintScreen 时打开浮屿的截图，不再交给系统截图工具。Alt+PrintScreen 等组合键不受影响。"
+      },
+      "en": {
+        "group": "Shortcuts",
+        "title": "Screenshot with PrintScreen",
+        "description": "PrintScreen on its own opens Fuyu's screenshot instead of the Windows snipping tool. Alt+PrintScreen and other combinations are left alone."
+      }
+    },
+    {
       "page": "screenshotRecord",
       "zh-CN": {
         "group": "录屏",
         "title": "默认格式",
-        "description": "录屏时选区之前按 G 可以临时换成另一种。视频放在「视频 › 浮屿录屏」。"
+        "description": "录屏时选区之前按 G 可以临时换成另一种。视频放在「视频 › 浮屿录屏」。",
+        "options": [
+          "MP4 视频",
+          "GIF 动图"
+        ]
       },
       "en": {
         "group": "Screen recording",
         "title": "Default format",
-        "description": "Press G before choosing the area to switch for one recording. Videos go to Videos › Fuyu Recordings."
+        "description": "Press G before choosing the area to switch for one recording. Videos go to Videos › Fuyu Recordings.",
+        "options": [
+          "MP4 video",
+          "GIF animation"
+        ]
       }
     },
     {
@@ -2510,12 +2620,20 @@
       "zh-CN": {
         "group": "录屏",
         "title": "帧率",
-        "description": "60 帧更流畅，文件大一些。GIF 固定 15 帧。"
+        "description": "60 帧更流畅，文件大一些。GIF 固定 15 帧。",
+        "options": [
+          "30 帧/秒",
+          "60 帧/秒"
+        ]
       },
       "en": {
         "group": "Screen recording",
         "title": "Frame rate",
-        "description": "60 is smoother and makes bigger files. GIFs are always 15."
+        "description": "60 is smoother and makes bigger files. GIFs are always 15.",
+        "options": [
+          "30 fps",
+          "60 fps"
+        ]
       }
     },
     {
@@ -2523,12 +2641,20 @@
       "zh-CN": {
         "group": "录屏",
         "title": "画质",
-        "description": "高画质的码率是标准的两倍，文字和细线更清楚，文件也大一倍。"
+        "description": "高画质的码率是标准的两倍，文字和细线更清楚，文件也大一倍。",
+        "options": [
+          "标准",
+          "高"
+        ]
       },
       "en": {
         "group": "Screen recording",
         "title": "Quality",
-        "description": "High uses twice the bitrate of standard: sharper text and thin lines, files twice as big."
+        "description": "High uses twice the bitrate of standard: sharper text and thin lines, files twice as big.",
+        "options": [
+          "Standard",
+          "High"
+        ]
       }
     },
     {
@@ -2555,6 +2681,19 @@
         "group": "Screen recording",
         "title": "Record the microphone",
         "description": "Uses the default microphone. Windows shows that the microphone is in use while it is on."
+      }
+    },
+    {
+      "page": "screenshotRecord",
+      "zh-CN": {
+        "group": "录屏",
+        "title": "录制浮屿自己的窗口",
+        "description": "把剪贴板、快捷翻译、设置和悬浮岛也录进视频里。默认关，只录贴图。"
+      },
+      "en": {
+        "group": "Screen recording",
+        "title": "Record Fuyu's own windows",
+        "description": "Include the clipboard, translator, Settings and the island in recordings. Off by default, when only pins appear."
       }
     },
     {
@@ -2655,6 +2794,19 @@
       "en": {
         "group": "New messages",
         "title": "Panel stays for"
+      }
+    },
+    {
+      "page": "messages",
+      "zh-CN": {
+        "group": "新消息提示",
+        "title": "识别通知中的验证码",
+        "description": "新邮件或通知含有验证码时，在横幅、弹出面板和阅读页显示一键复制按钮"
+      },
+      "en": {
+        "group": "New messages",
+        "title": "Detect verification codes",
+        "description": "Show a one-click copy button on banners, arrival cards and the mail reader when a verification code is found"
       }
     },
     {
@@ -2773,6 +2925,17 @@
     {
       "page": "agentAppearance",
       "zh-CN": {
+        "group": "状态灯",
+        "title": "状态灯样式"
+      },
+      "en": {
+        "group": "Status light",
+        "title": "Status light"
+      }
+    },
+    {
+      "page": "agentAppearance",
+      "zh-CN": {
         "group": "小岛显示",
         "title": "在小岛显示会话标题",
         "description": "在待办的位置显示 Agent 图标和会话标题。标题直接读取 Claude Code 和 Codex 的会话记录，不需要安装钩子。"
@@ -2805,24 +2968,100 @@
       }
     },
     {
-      "page": "agentAppearance",
+      "page": "agentSessions",
       "zh-CN": {
-        "group": "小岛显示",
-        "title": "状态灯样式",
-        "description": "收起条上 Agent 状态灯的样子。悬岛：应用图标的白胶囊，和条上的环一样高；绿点呼吸，运行时短横换成三个依次亮起的点，等你确认时变黄闪烁，失败或可能中断时变红，跑完打勾。圆点：原来的小圆点。",
+        "group": "会话卡片",
+        "title": "显示方式",
+        "description": "卡片：每个会话一张按状态颜色描边的卡片，第二行写它在做什么和上下文大小。紧凑：每个会话一行，只有状态色条、标题、状态和时间。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Layout",
+        "description": "Cards: one card per session, framed in its state's colour, with what it is doing and its context size on the second line. Compact: one line per session with only the state bar, title, state and time."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "卡片光效",
+        "description": "粒子流苏与渐变带只在「卡片」和「紧凑」显示方式下生效；流光边框在三种显示方式下都只给等你确认的会话加上绕边框流动的光带，减少动画时静止。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Card light effects",
+        "description": "Sparkle band and Gradient apply in Cards and Compact; Flowing border adds an orbiting light ribbon only to sessions waiting for your approval across all three layouts, staying still under reduced motion."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "归档动画",
+        "description": "滑出：会话向右滑出再收起。粒子消散：会话从左到右化成状态颜色的粒子散开再收起。系统要求减少动画时直接移除。",
         "options": [
-          "悬岛",
-          "圆点"
+          "滑出",
+          "粒子消散"
         ]
       },
       "en": {
-        "group": "On the island",
-        "title": "Status light",
-        "description": "How the Agent status light looks on the collapsed bar. Island mark: the app icon's white pill, as tall as the rings on the bar; its light breathes, three dots take the dash's place while running, it turns yellow and blinks while waiting for you, red when failed or possibly stopped, and shows a tick when done. Dot: the original small dot.",
+        "group": "Session cards",
+        "title": "Archive animation",
+        "description": "Slide: the session slides out to the right, then folds away. Dissolve: it turns into dust in its state's colour from left to right, then folds away. When Windows asks for less motion it goes at once.",
         "options": [
-          "Island mark",
-          "Dot"
+          "Slide",
+          "Dissolve"
         ]
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "会话来源",
+        "description": "会话在哪个程序里运行，比如 Orca、Windows Terminal、VS Code、Codex。正在运行的 Claude Code 会话会自动识别；岛屿启动前就结束的会话没有来源。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Session source",
+        "description": "The program a session runs in, such as Orca, Windows Terminal, VS Code or Codex. Running Claude Code sessions are recognized automatically; sessions that ended before the island started have no source."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "显示模型和推理强度"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Show the model and effort"
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "显示最近提问和正在用的工具",
+        "description": "进行中的会话在回复上方显示你最近一次的提问，运行时显示它正在调用的工具（如 Bash 命令、正在改的文件）。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Show the latest prompt and the tool in use",
+        "description": "Sessions in progress show your latest prompt above the reply and, while running, the tool they are calling (a Bash command, the file being edited)."
+      }
+    },
+    {
+      "page": "agentSessions",
+      "zh-CN": {
+        "group": "会话卡片",
+        "title": "显示运行时长",
+        "description": "进行中的会话显示\"已运行多久\"，每秒更新；结束的显示这一轮\"用时多久\"。从最近一次提问开始算。"
+      },
+      "en": {
+        "group": "Session cards",
+        "title": "Show how long it has run",
+        "description": "A session in progress shows how long it has been running, updated every second; a finished one shows how long its last turn took. Counted from the latest prompt."
       }
     },
     {
@@ -2893,101 +3132,20 @@
     {
       "page": "agentSessions",
       "zh-CN": {
-        "group": "会话卡片",
-        "title": "显示方式",
-        "description": "卡片：每个会话一张按状态颜色描边的卡片，第二行写它在做什么和上下文大小。紧凑：每个会话一行，只有状态色条、标题、状态和时间。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Layout",
-        "description": "Cards: one card per session, framed in its state's colour, with what it is doing and its context size on the second line. Compact: one line per session with only the state bar, title, state and time."
-      }
-    },
-    {
-      "page": "agentSessions",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "归档动画",
-        "description": "滑出：会话向右滑出再收起。粒子消散：会话从左到右化成状态颜色的粒子散开再收起。系统要求减少动画时直接移除。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Archive animation",
-        "description": "Slide: the session slides out to the right, then folds away. Dissolve: it turns into dust in its state's colour from left to right, then folds away. When Windows asks for less motion it goes at once."
-      }
-    },
-    {
-      "page": "agentSessions",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "卡片光效",
-        "description": "粒子流苏与渐变带只在「卡片」和「紧凑」显示方式下生效；流光边框在三种显示方式下都只给等你确认的会话加上绕边框流动的光带，减少动画时静止。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Card light effects",
-        "description": "Sparkle band and Gradient apply in Cards and Compact; Flowing border adds an orbiting light ribbon only to sessions waiting for your approval across all three layouts, staying still under reduced motion."
-      }
-    },
-    {
-      "page": "agentSessions",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "会话来源",
-        "description": "会话在哪个程序里运行，比如 Orca、Windows Terminal、VS Code、Codex。正在运行的 Claude Code 会话会自动识别；岛屿启动前就结束的会话没有来源。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Session source",
-        "description": "The program a session runs in, such as Orca, Windows Terminal, VS Code or Codex. Running Claude Code sessions are recognized automatically; sessions that ended before the island started have no source."
-      }
-    },
-    {
-      "page": "agentSessions",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "显示模型和推理强度"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Show the model and effort"
-      }
-    },
-    {
-      "page": "agentSessions",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "显示最近提问和正在用的工具",
-        "description": "进行中的会话在回复上方显示你最近一次的提问，运行时显示它正在调用的工具（如 Bash 命令、正在改的文件）。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Show the latest prompt and the tool in use",
-        "description": "Sessions in progress show your latest prompt above the reply and, while running, the tool they are calling (a Bash command, the file being edited)."
-      }
-    },
-    {
-      "page": "agentSessions",
-      "zh-CN": {
-        "group": "会话卡片",
-        "title": "显示运行时长",
-        "description": "进行中的会话显示\"已运行多久\"，每秒更新；结束的显示这一轮\"用时多久\"。从最近一次提问开始算。"
-      },
-      "en": {
-        "group": "Session cards",
-        "title": "Show how long it has run",
-        "description": "A session in progress shows how long it has been running, updated every second; a finished one shows how long its last turn took. Counted from the latest prompt."
-      }
-    },
-    {
-      "page": "agentSessions",
-      "zh-CN": {
         "group": "隐藏会话",
-        "title": "添加规则"
+        "title": "添加规则",
+        "options": [
+          "所在目录",
+          "标题或提示词包含"
+        ]
       },
       "en": {
         "group": "Hide sessions",
-        "title": "Add a rule"
+        "title": "Add a rule",
+        "options": [
+          "In folder",
+          "Title or prompt contains"
+        ]
       }
     },
     {
@@ -3012,6 +3170,19 @@
         "group": "Usage rings",
         "title": "Codex",
         "description": "Reads the limits in Codex's session logs on this computer (sessions under CODEX_HOME or ~/.codex), with no network access. Numbers appear after Codex has run a turn."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "Antigravity",
+        "description": "优先查询本机运行中的 Antigravity 本地服务，未运行时只读 ~/.gemini 下的登录令牌向 Cloud Code 查询 Gemini 与 Claude / GPT 的 5 小时和每周额度。这是未公开的内部接口，随版本可能失效（失效时提示「接口失效」）。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Antigravity",
+        "description": "Queries the running local Antigravity server first, or falls back to ~/.gemini login tokens (read-only) to ask Cloud Code for Gemini and Claude / GPT 5-hour and weekly limits. Uses undocumented internal endpoints that may break across updates (reported as \"Endpoint changed\")."
       }
     },
     {
@@ -3044,6 +3215,32 @@
       "page": "agentRings",
       "zh-CN": {
         "group": "用量环",
+        "title": "WorkBuddy",
+        "description": "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "WorkBuddy",
+        "description": "Reads credit consumption from local ~/.workbuddy and ~/.workbuddy-ai session logs (offline, not shown as a ring) and lists today's, 7-day and total credits in the hover card."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "用量环",
+        "title": "DeepSeek Harness",
+        "description": "只读本机 DeepSeek Harness 的 .credentials.yaml（仅在官方默认路由下生效，凭据只在内存中使用，不进圆环），每分钟最多一次查询官方账户或 API 余额并在悬停卡片中显示。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "DeepSeek Harness",
+        "description": "Reads DeepSeek Harness's local .credentials.yaml (official default routes only; credentials stay in Rust memory, not shown as a ring) to query the official wallet balance at most once a minute for the hover card."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "显示口径与直连查询",
         "title": "环和悬停卡片显示",
         "options": [
           "已用",
@@ -3051,7 +3248,7 @@
         ]
       },
       "en": {
-        "group": "Usage rings",
+        "group": "Display and direct query",
         "title": "Rings and card show",
         "options": [
           "Used",
@@ -3062,12 +3259,12 @@
     {
       "page": "agentRings",
       "zh-CN": {
-        "group": "用量环",
+        "group": "显示口径与直连查询",
         "title": "Claude Code：直接向 Anthropic 查询",
         "description": "打开后读取本机 Claude Code 保存的登录令牌（~/.claude/.credentials.json，只读，不刷新、不改写，也不会发给 Anthropic 以外的地方），按下面的间隔经代理请求 api.anthropic.com 的用量接口。这个接口没有公开文档，可能随时失效，失效时退回 claude-hud 的快照。Agent 页顶部的用量也会用这份数据。"
       },
       "en": {
-        "group": "Usage rings",
+        "group": "Display and direct query",
         "title": "Claude Code: ask Anthropic directly",
         "description": "When on, the island reads the login token Claude Code saved on this computer (~/.claude/.credentials.json; read only, never renewed or rewritten, sent nowhere but Anthropic) and asks api.anthropic.com's usage endpoint through a proxy at the interval below. The endpoint is undocumented and may stop working at any time; the island then falls back to claude-hud's snapshot. The Agent page's usage line uses these numbers too."
       }
@@ -3100,11 +3297,21 @@
       "page": "agentAlerts",
       "zh-CN": {
         "group": "弹出提醒",
-        "title": "会话开始时"
+        "title": "会话开始时",
+        "options": [
+          "每一轮开始",
+          "只在新会话开始",
+          "不弹"
+        ]
       },
       "en": {
         "group": "Pop-up alerts",
-        "title": "When a session starts"
+        "title": "When a session starts",
+        "options": [
+          "Every turn",
+          "New sessions only",
+          "Off"
+        ]
       }
     },
     {
@@ -3157,24 +3364,36 @@
       "page": "agentAlerts",
       "zh-CN": {
         "group": "弹出提醒",
-        "title": "额度提醒",
-        "description": "Claude 或 Codex 的 5 小时、7 天用量到这条线时，在收起的岛屿上提醒一次；额度刷新后再提醒一次"
-      },
-      "en": {
-        "group": "Pop-up alerts",
-        "title": "Usage alert",
-        "description": "When Claude's or Codex's 5-hour or 7-day usage reaches this level, say so once on the collapsed island, and again when it resets"
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "弹出提醒",
         "title": "停留时间"
       },
       "en": {
         "group": "Pop-up alerts",
         "title": "Stays open for"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "用量额度",
+        "title": "额度提醒",
+        "description": "Claude 或 Codex 的 5 小时、7 天用量到这条线时，在收起的岛屿上提醒一次；额度刷新后再提醒一次",
+        "options": [
+          "不提醒",
+          "用到 70%",
+          "用到 80%",
+          "用到 90%"
+        ]
+      },
+      "en": {
+        "group": "Quota",
+        "title": "Usage alert",
+        "description": "When Claude's or Codex's 5-hour or 7-day usage reaches this level, say so once on the collapsed island, and again when it resets",
+        "options": [
+          "Off",
+          "at 70%",
+          "at 80%",
+          "at 90%"
+        ]
       }
     },
     {
@@ -3407,11 +3626,19 @@
       "page": "agentPush",
       "zh-CN": {
         "group": "手机推送",
-        "title": "推送通道"
+        "title": "推送通道",
+        "options": [
+          "Bark",
+          "cc-connect 机器人"
+        ]
       },
       "en": {
         "group": "Phone push",
-        "title": "Channel"
+        "title": "Channel",
+        "options": [
+          "Bark",
+          "cc-connect bot"
+        ]
       }
     },
     {
@@ -3608,6 +3835,17 @@
         "group": "Reset and quit",
         "title": "Quit the island",
         "description": "Same as Quit in the tray menu; start it again from the Start menu or a desktop shortcut."
+      }
+    },
+    {
+      "page": "behavior",
+      "zh-CN": {
+        "group": "展开",
+        "title": "悬停多久后展开"
+      },
+      "en": {
+        "group": "Opening",
+        "title": "Hover time before opening"
       }
     }
   ]
