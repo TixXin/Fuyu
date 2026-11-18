@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { executableKind as manifestExecutableKind } from "../../plugin-manifest/src/executable.mjs";
 import { executableKind, review } from "../src/index.mjs";
 
 const clean = fileURLToPath(new URL("./fixtures/weather-1.0.0", import.meta.url));
@@ -37,6 +38,7 @@ function fatMachO() {
 }
 
 test("executableKind follows the @fuyu/plugin-manifest rules", () => {
+  assert.equal(executableKind, manifestExecutableKind);
   assert.equal(executableKind(Buffer.from("MZ")), "PE");
   assert.equal(executableKind(Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2])), "ELF");
   assert.equal(executableKind(classFile(52)), "Java class");
