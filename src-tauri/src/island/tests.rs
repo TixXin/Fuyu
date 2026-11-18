@@ -474,3 +474,63 @@ fn shortcut_focus_survives_hover_release_and_restores_on_collapse() {
     assert_eq!(slots.take_hover(), None);
     assert_eq!(slots.take_expanded(), Some(74));
 }
+
+#[test]
+fn dimmed_passthrough_ignores_island_clicks_only_while_collapsed_and_untucked() {
+    let mut current = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+    assert!(!current.dimmed_passthrough());
+    assert!(!should_ignore_cursor(current, true, false));
+    assert!(should_ignore_cursor(current, false, false));
+
+    current.is_dimmed = true;
+    assert!(current.dimmed_passthrough());
+    assert!(should_ignore_cursor(current, true, false));
+    assert!(should_ignore_cursor(current, false, false));
+    assert!(!should_ignore_cursor(current, false, true));
+
+    let mut expanded = current;
+    expanded.mode = IslandMode::Expanded;
+    assert!(!expanded.dimmed_passthrough());
+    assert!(!should_ignore_cursor(expanded, true, false));
+
+    let mut tucked = current;
+    tucked.is_tucked = true;
+    assert!(!tucked.dimmed_passthrough());
+    assert!(!should_ignore_cursor(tucked, true, false));
+
+    let mut dragging = current;
+    dragging.is_dragging = true;
+    assert!(!dragging.dimmed_passthrough());
+    assert!(!should_ignore_cursor(dragging, true, false));
+}
+
+#[test]
+fn cursor_near_island_and_dim_wake_tracker_handle_approach_and_parked_cursor() {
+    for scale in [1.0, 1.25, 1.5, 2.0] {
+        let stage_width = (STAGE_WINDOW_WIDTH * scale).round();
+        let stage_height = (STAGE_WINDOW_HEIGHT * scale).round();
+        let center_x = stage_width / 2.0;
+        let collapsed = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+        let bottom_y = COLLAPSED_ISLAND_HEIGHT * scale;
+
+        assert!(cursor_near_island(0.0, 0.0, stage_width, stage_height, center_x, bottom_y + (DIM_WAKE_MARGIN - 1.0) * scale, collapsed));
+        assert!(!cursor_near_island(0.0, 0.0, stage_width, stage_height, center_x, bottom_y + (DIM_WAKE_MARGIN + 2.0) * scale, collapsed));
+    }
+
+    let mut tracker = DimWakeTracker::default();
+    assert!(!tracker.poll(false, false, Some((10.0, 200.0))));
+    assert!(!tracker.poll(true, false, Some((10.0, 200.0))));
+    assert!(tracker.poll(true, true, Some((400.0, 50.0))));
+
+    let mut parked = DimWakeTracker::default();
+    assert!(!parked.poll(false, true, Some((410.0, 18.0))));
+    assert!(!parked.poll(true, true, Some((410.0, 18.0))));
+    assert!(!parked.poll(true, true, Some((411.0, 18.5))));
+    assert!(parked.poll(true, true, Some((413.0, 18.0))));
+
+    let mut reenter = DimWakeTracker::default();
+    assert!(!reenter.poll(false, true, Some((410.0, 18.0))));
+    assert!(!reenter.poll(true, true, Some((410.0, 18.0))));
+    assert!(!reenter.poll(true, false, Some((410.0, 120.0))));
+    assert!(reenter.poll(true, true, Some((410.0, 18.0))));
+}

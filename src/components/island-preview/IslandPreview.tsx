@@ -79,6 +79,7 @@ function surfaceStyle(settings: IslandSettings) {
     "--preview-pulse-glow": hexToRgba(settings.pulseColor, 0.72),
     "--preview-text": settings.taskTextColor,
     "--preview-ink": islandInkRgb(settings),
+    ...(settings.islandOpacity < 100 ? { opacity: settings.islandOpacity / 100 } : {}),
     ...(settings.appearanceMode === "liquidGlass" ? glassVariables(settings, glassPalette({
       settings,
       accent: settings.accentMode === "pick" ? settings.accentColor : null,

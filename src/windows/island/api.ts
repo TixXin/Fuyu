@@ -73,6 +73,12 @@ export function listenIslandRevealRequested(handler: () => void): Promise<Unlist
   return listen(ISLAND_REVEAL_REQUESTED_EVENT, () => handler());
 }
 
+export const ISLAND_DIM_WAKE_EVENT = "island-dim-wake";
+
+export function listenIslandDimWake(handler: () => void): Promise<UnlistenFn> {
+  return listen(ISLAND_DIM_WAKE_EVENT, () => handler());
+}
+
 export const ISLAND_MOVE_ARMED_CHANGED_EVENT = "island-move-armed-changed";
 
 export type IslandModifierTarget = "none" | "move" | "left" | "right" | "bottom" | "bottomLeft" | "bottomRight";
@@ -129,6 +135,7 @@ export type IslandInteraction = {
   cornerShape: IslandCornerShape;
   monitorFollow: IslandMonitor;
   tuckStyle?: TuckStyle;
+  isDimmed?: boolean;
 };
 
 export function setIslandLayout(layout: IslandLayout) {
@@ -220,7 +227,29 @@ export function setTrayLanguage(locale: string) {
 
 export type IslandBannerRect = { x: number; y: number; width: number; height: number };
 
+let activeBannerRect: IslandBannerRect | null = null;
+let activeSideBubbleRect: IslandBannerRect | null = null;
+const bannerPresenceListeners = new Set<(active: boolean) => void>();
+
+function notifyBannerPresence() {
+  const active = activeBannerRect !== null || activeSideBubbleRect !== null;
+  bannerPresenceListeners.forEach((listener) => listener(active));
+}
+
+export function hasActiveIslandBanner(): boolean {
+  return activeBannerRect !== null || activeSideBubbleRect !== null;
+}
+
+export function subscribeIslandBannerPresence(listener: (active: boolean) => void): () => void {
+  bannerPresenceListeners.add(listener);
+  return () => {
+    bannerPresenceListeners.delete(listener);
+  };
+}
+
 export function setIslandBannerRect(rect: IslandBannerRect | null) {
+  activeBannerRect = rect;
+  notifyBannerPresence();
   return invoke<void>("set_island_banner_rect", { rect });
 }
 
@@ -239,6 +268,8 @@ export function setIslandSideColumn(height: number) {
 }
 
 export function setIslandSideBubbleRect(rect: IslandBannerRect | null) {
+  activeSideBubbleRect = rect;
+  notifyBannerPresence();
   return invoke<void>("set_island_side_bubble_rect", { rect });
 }
 

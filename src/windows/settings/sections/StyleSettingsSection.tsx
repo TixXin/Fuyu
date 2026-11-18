@@ -4,7 +4,7 @@ import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
 import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRow";
 import { useTranslation } from "../../../i18n";
-import { DEFAULT_SETTINGS } from "../../../lib/settings/settings";
+import { DEFAULT_SETTINGS, MAX_ISLAND_OPACITY, MIN_ISLAND_OPACITY } from "../../../lib/settings/settings";
 import type { AppearanceMode, IslandFont, IslandSettings } from "../../../lib/settings/types";
 
 const percent = (value: number) => `${Math.round(value)}%`;
@@ -55,6 +55,7 @@ export function StyleSettingsSection({
       />
       <SettingsSliderRow
         title={t.settings.layout.opacity}
+        description={t.settings.layout.opacityHint}
         value={settings.opacity}
         min={50}
         max={100}
@@ -63,6 +64,18 @@ export function StyleSettingsSection({
         defaultValue={DEFAULT_SETTINGS.opacity}
         resetLabel={t.settings.layout.resetToDefault}
         onChange={(opacity) => onSettingsChange({ ...settings, opacity })}
+      />
+      <SettingsSliderRow
+        title={t.settings.layout.islandOpacity}
+        description={t.settings.layout.islandOpacityHint}
+        value={settings.islandOpacity}
+        min={MIN_ISLAND_OPACITY}
+        max={MAX_ISLAND_OPACITY}
+        step={1}
+        format={percent}
+        defaultValue={DEFAULT_SETTINGS.islandOpacity}
+        resetLabel={t.settings.layout.resetToDefault}
+        onChange={(islandOpacity) => onSettingsChange({ ...settings, islandOpacity })}
       />
       {children}
     </SettingsGroup>

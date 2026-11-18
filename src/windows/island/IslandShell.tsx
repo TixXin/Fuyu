@@ -38,6 +38,7 @@ type IslandShellProps = {
   nativeGlassState: NativeGlassState;
   glass?: IslandGlassView;
   isTucked: boolean;
+  isDimmed?: boolean;
   tuckStyle?: TuckStyle;
   isDetached: boolean;
   side?: IslandSide | null;
@@ -83,6 +84,7 @@ export function IslandShell({
   nativeGlassState,
   glass,
   isTucked,
+  isDimmed = false,
   tuckStyle = "edge",
   isDetached,
   side = null,
@@ -136,6 +138,7 @@ export function IslandShell({
     isDetached ? "island--detached" : "island--docked",
     isTucked ? "island--tucked" : "",
     isTucked && tuckStyle === "hidden" ? "island--tucked-hidden" : "",
+    isDimmed ? "island--dimmed" : "",
     side ? `island--side island--side-${side}` : "",
     popup ? "island--popup" : "",
     isLiquidGlass ? `island--glass-${nativeGlassState}` : "",

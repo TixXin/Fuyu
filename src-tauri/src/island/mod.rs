@@ -75,6 +75,7 @@ pub(crate) use state::{record_dragged_position, IslandPosition, IslandWindowStat
 
 pub(crate) const WINDOW_LABEL: &str = "main";
 const ISLAND_REVEAL_REQUESTED_EVENT: &str = "island-reveal-requested";
+pub(crate) const ISLAND_DIM_WAKE_EVENT: &str = "island-dim-wake";
 const ISLAND_POSITION_CHANGED_EVENT: &str = "island-position-changed";
 
 static USER_HIDDEN_ISLAND: AtomicBool = AtomicBool::new(false);
@@ -140,6 +141,7 @@ pub fn set_island_interaction(
     expanded_width: Option<f64>,
     custom_position: Option<IslandPosition>,
     is_tucked: Option<bool>,
+    is_dimmed: Option<bool>,
     animate_position: Option<bool>,
     glass_enabled: Option<bool>,
     glass_intensity: Option<f64>,
@@ -165,6 +167,10 @@ pub fn set_island_interaction(
         let (was_tucked, was_expanded) = (state.is_tucked, matches!(state.mode, IslandMode::Expanded));
         state.mode = mode;
         state.is_tucked = is_tucked.unwrap_or(false);
+        state.is_dimmed = is_dimmed.unwrap_or(false)
+            && matches!(state.mode, IslandMode::Collapsed)
+            && !state.is_tucked
+            && !state.is_dragging;
         state.out_at_top = out_at_top_after(state.out_at_top, was_tucked, was_expanded, state.is_tucked, mode);
         state.collapsed_scale = collapsed_scale.clamp(0.75, 1.4);
         state.expanded_scale = expanded_scale.clamp(0.75, 1.4);
@@ -277,6 +283,7 @@ fn drag_island(window: WebviewWindow, current_state: IslandWindowState) -> Resul
         state.custom_position = Some(IslandPosition::at(position.x, position.y));
         state.out_at_top = false;
         state.is_dragging = true;
+        state.is_dimmed = false;
         *state
     });
     if current_state.attached_edge == Some(state::Edge::Top) {
@@ -363,9 +370,14 @@ pub fn show_ready_island(app: AppHandle) -> Result<(), String> {
 pub(crate) fn show_island_without_focus(app: &AppHandle) -> Result<(), String> {
     USER_HIDDEN_ISLAND.store(false, Ordering::SeqCst);
     let window = main_window(app)?;
-    apply_stage_geometry(&window, read_window_state(), false)?;
+    let previous = read_window_state();
+    let state = mutate_window_state(|state| {
+        state.is_dimmed = false;
+        *state
+    });
+    apply_stage_geometry(&window, state, false)?;
     focus::show_island_at_startup(&window)?;
-    if read_window_state().is_tucked {
+    if previous.is_tucked || previous.is_dimmed {
         let _ = window.emit(ISLAND_REVEAL_REQUESTED_EVENT, ());
     }
     Ok(())
@@ -383,9 +395,14 @@ pub(crate) fn main_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 pub(crate) fn show_island(app: &AppHandle) -> Result<(), String> {
     USER_HIDDEN_ISLAND.store(false, Ordering::SeqCst);
     let window = main_window(app)?;
-    apply_stage_geometry(&window, read_window_state(), false)?;
+    let previous = read_window_state();
+    let state = mutate_window_state(|state| {
+        state.is_dimmed = false;
+        *state
+    });
+    apply_stage_geometry(&window, state, false)?;
     focus::show_island(&window)?;
-    if read_window_state().is_tucked {
+    if previous.is_tucked || previous.is_dimmed {
         let _ = window.emit(ISLAND_REVEAL_REQUESTED_EVENT, ());
     }
     Ok(())
@@ -394,6 +411,10 @@ pub(crate) fn show_island(app: &AppHandle) -> Result<(), String> {
 pub(crate) fn hide_island(app: &AppHandle) {
     USER_HIDDEN_ISLAND.store(true, Ordering::SeqCst);
     POSITION_ANIMATION_GENERATION.fetch_add(1, Ordering::SeqCst);
+    mutate_window_state(|state| {
+        state.is_dimmed = false;
+        *state
+    });
     let Ok(window) = main_window(app) else {
         crate::tray::refresh_now(app);
         return;

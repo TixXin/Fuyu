@@ -278,6 +278,10 @@ test("taking the appearance from other settings keeps todo and tuck behavior", (
   const current = {
     ...DEFAULT_SETTINGS,
     opacity: 60,
+    islandOpacity: 75,
+    idleDim: true,
+    idleDimSeconds: 45,
+    idleDimOpacity: 25,
     pulseColor: "#123456",
     showTitle: true,
     carryOverIncompleteTodos: true,
@@ -291,11 +295,17 @@ test("taking the appearance from other settings keeps todo and tuck behavior", (
   const next = withThemeFrom(current, DEFAULT_SETTINGS);
 
   assert.equal(next.opacity, DEFAULT_SETTINGS.opacity);
+  assert.equal(next.islandOpacity, DEFAULT_SETTINGS.islandOpacity);
+  assert.equal(next.idleDim, true);
+  assert.equal(next.idleDimSeconds, 45);
+  assert.equal(next.idleDimOpacity, 25);
   assert.equal(next.pulseColor, DEFAULT_SETTINGS.pulseColor);
   assert.equal(next.showTitle, true);
   const layout = withLayoutFrom(current, DEFAULT_SETTINGS);
   assert.equal(layout.showTitle, DEFAULT_SETTINGS.showTitle);
   assert.equal(layout.opacity, 60);
+  assert.equal(layout.islandOpacity, 75);
+  assert.equal(layout.idleDim, true);
   assert.equal(layout.pulseColor, "#123456");
   assert.equal(next.carryOverIncompleteTodos, true);
   assert.equal(next.rotateTodos, true);

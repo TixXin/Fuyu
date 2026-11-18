@@ -60,6 +60,68 @@ pub(super) const PASSTHROUGH_FAST_TICK: Duration = Duration::from_millis(12);
 pub(super) const PASSTHROUGH_IDLE_TICK: Duration = Duration::from_millis(48);
 pub(super) const PASSTHROUGH_HIDDEN_TICK: Duration = Duration::from_millis(240);
 const PASSTHROUGH_WAKE_MARGIN: f64 = 120.0;
+pub(super) const DIM_WAKE_MARGIN: f64 = 24.0;
+pub(super) const DIM_CURSOR_MOVE_THRESHOLD: f64 = 2.0;
+
+#[derive(Debug, Default, Clone, Copy)]
+pub(super) struct DimWakeTracker {
+    active: bool,
+    parked_near: bool,
+    last_near: bool,
+    dimmed_at: Option<(f64, f64)>,
+}
+
+impl DimWakeTracker {
+    pub(super) fn poll(&mut self, dimmed: bool, near_or_inside: bool, cursor: Option<(f64, f64)>) -> bool {
+        if !dimmed {
+            self.active = false;
+            self.parked_near = false;
+            self.last_near = near_or_inside;
+            self.dimmed_at = None;
+            return false;
+        }
+        if !self.active {
+            self.active = true;
+            if near_or_inside && !self.last_near {
+                self.active = false;
+                self.last_near = true;
+                return true;
+            }
+            self.parked_near = near_or_inside;
+            self.last_near = near_or_inside;
+            self.dimmed_at = cursor;
+            return false;
+        }
+        self.last_near = near_or_inside;
+        if !near_or_inside {
+            self.parked_near = false;
+            return false;
+        }
+        let woke = if !self.parked_near {
+            true
+        } else if let (Some((x, y)), Some((ox, oy))) = (cursor, self.dimmed_at) {
+            (x - ox).hypot(y - oy) >= DIM_CURSOR_MOVE_THRESHOLD
+        } else {
+            false
+        };
+        if woke {
+            self.active = false;
+            self.parked_near = false;
+            self.dimmed_at = None;
+        }
+        woke
+    }
+}
+
+pub(super) fn should_ignore_cursor(state: IslandWindowState, is_inside: bool, is_on_banner: bool) -> bool {
+    if is_on_banner {
+        return false;
+    }
+    if state.dimmed_passthrough() {
+        return true;
+    }
+    !is_inside
+}
 
 pub(super) fn cursor_near_stage(
     window_left: f64,
@@ -439,6 +501,27 @@ const GAZE_FAR_STEP: f64 = 24.0;
 pub(super) fn gaze_cursor_point((x, y): (f64, f64), near_stage: bool) -> (f64, f64) {
     let step = if near_stage { GAZE_NEAR_STEP } else { GAZE_FAR_STEP };
     ((x / step).round() * step, (y / step).round() * step)
+}
+
+pub(super) fn cursor_near_island(
+    window_left: f64,
+    window_top: f64,
+    window_width: f64,
+    window_height: f64,
+    cursor_x: f64,
+    cursor_y: f64,
+    state: IslandWindowState,
+) -> bool {
+    if state.is_tucked {
+        return cursor_on_island(window_left, window_top, window_width, window_height, cursor_x, cursor_y, state);
+    }
+    let rect = island_rect(window_left, window_top, window_width, window_height, state);
+    let physical_scale = window_width / STAGE_WINDOW_WIDTH;
+    let margin = DIM_WAKE_MARGIN * physical_scale;
+    cursor_x >= rect.left - margin
+        && cursor_x <= rect.left + rect.width + margin
+        && cursor_y >= rect.top - margin
+        && cursor_y <= rect.top + rect.height + margin
 }
 
 pub(super) fn cursor_on_island(

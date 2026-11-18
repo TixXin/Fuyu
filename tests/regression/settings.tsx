@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from "../../src/lib/settings/settings";
 import { entryOf, settingsCategoryFor, sidebarItemOf, type SettingsCategory } from "../../src/windows/settings/categories";
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { checkGlassLooks } from "./settings-glass-looks";
+import { checkIdleDimSettings } from "./settings-idle-dim";
 import { checkImMessageSources } from "./settings-im-sources";
 import { checkThemeMarket } from "./settings-theme-market";
 import { commands, keybindingCalls, mailCalls, marketInstalls, openedUrls, REPLY_MARKER, replyMarkerCalls, revokedPermissions } from "./settingsMocks";
@@ -238,7 +239,7 @@ if (!automated) {
     check(storedSettings().opacity === 60 && document.querySelector(".appearance-reset"), "Cancelling keeps the appearance");
     await click(".appearance-reset"); await click(".appearance-reset--danger");
     check(storedSettings().opacity === DEFAULT_SETTINGS.opacity && storedSettings().carryOverIncompleteTodos === false, "Confirming resets the appearance and keeps todo settings");
-    await openPage("themeStyle"); await checkGlassLooks(check);
+    await openPage("themeStyle"); await checkIdleDimSettings(check); await checkGlassLooks(check);
     await openPage("appearanceCollapsed");
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);

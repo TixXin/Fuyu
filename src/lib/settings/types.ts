@@ -32,6 +32,10 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   fontFamily: IslandFont;
   glassIntensity: number;
   opacity: number;
+  islandOpacity: number;
+  idleDim: boolean;
+  idleDimSeconds: number;
+  idleDimOpacity: number;
   collapsedScale: number;
   expandedScale: number;
   marginY: number;
