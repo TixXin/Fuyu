@@ -3230,6 +3230,96 @@
       }
     },
     {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收 Telegram 消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive Telegram messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "看过后从岛上去掉",
+        "description": "Telegram 被切到前台、或在岛上点开 Telegram 后，去掉在那之前到的消息；之后到的留着。"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Remove once seen",
+        "description": "When Telegram comes to the front or you open it from the island, messages that arrived before then are removed; later ones stay."
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收飞书消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive Feishu messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收 Discord 消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive Discord messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收 WhatsApp 消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive WhatsApp messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收 TIM 消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive TIM messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收钉钉消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive DingTalk messages"
+      }
+    },
+    {
+      "page": "messagesIm",
+      "zh-CN": {
+        "group": "更多聊天软件",
+        "title": "接收企业微信消息"
+      },
+      "en": {
+        "group": "More chat apps",
+        "title": "Receive WeCom messages"
+      }
+    },
+    {
       "page": "messagesMail",
       "zh-CN": {
         "group": "邮箱",
