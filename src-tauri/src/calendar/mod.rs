@@ -214,7 +214,7 @@ fn discovered_sub_calendars(source: &CalendarSource, feeds: &[caldav::CalendarFe
             .as_deref()
             .map(str::trim)
             .filter(|name| !name.is_empty())
-            .unwrap_or_else(|| source.name.as_str())
+            .unwrap_or(source.name.as_str())
             .to_string();
         if name.is_empty() {
             continue;
