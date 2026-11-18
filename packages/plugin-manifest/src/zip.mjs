@@ -1,5 +1,7 @@
 import { crc32, deflateRawSync, inflateRawSync } from "node:zlib";
 
+export { zipEntryNames } from "./executable.mjs";
+
 const LOCAL = 0x04034b50;
 const CENTRAL = 0x02014b50;
 const END = 0x06054b50;
@@ -62,17 +64,6 @@ export function createZip(entries) {
   end.writeUInt32LE(directory.length, 12);
   end.writeUInt32LE(offset, 16);
   return Buffer.concat([...locals, directory, end]);
-}
-
-export function zipEntryNames(data) {
-  const names = new Set();
-  for (const [signature, nameAt, lengthAt] of [[Buffer.from([0x50, 0x4b, 0x03, 0x04]), 30, 26], [Buffer.from([0x50, 0x4b, 0x01, 0x02]), 46, 28]]) {
-    for (let at = data.indexOf(signature); at >= 0 && at + nameAt <= data.length; at = data.indexOf(signature, at + 4)) {
-      const length = data.readUInt16LE(at + lengthAt);
-      if (at + nameAt + length <= data.length) names.add(data.toString("utf8", at + nameAt, at + nameAt + length));
-    }
-  }
-  return [...names];
 }
 
 function findEnd(zip) {

@@ -35,7 +35,9 @@ html.island-move-armed .island-resize-hints {
 }
 
 html.island-resizing .island {
-  transition: background-color var(--motion-slow) var(--motion-ease);
+  transition:
+    --island-shell-fill var(--motion-slow) var(--motion-ease),
+    --island-shell-opacity var(--island-opacity-duration, var(--motion-base)) var(--motion-ease);
 }
 
 html.island-resizing .island--expanded .island__expanded {

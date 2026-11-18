@@ -72,16 +72,12 @@ mockIPC((command, payload) => {
 
 const DURATION_MS = automated ? 700 : 8000;
 const mediaPresses: string[] = [];
-const PLAYER = {
-  playing: true,
-  onPrevious: () => mediaPresses.push("previous"),
-  onPlayPause: () => mediaPresses.push("playPause"),
-  onNext: () => mediaPresses.push("next"),
-};
+const PLAYER = { playing: true, onPrevious: () => mediaPresses.push("previous"), onPlayPause: () => mediaPresses.push("playPause"), onNext: () => mediaPresses.push("next") };
 let state = { mode: "collapsed" as IslandMode, page: "todo" as IslandPage };
 let openedSource: MessageSource | null = null;
 let setUserMode: (mode: IslandMode) => void;
 let latestPreview: unknown = null;
+const expandedHeights: number[] = [];
 
 function Fixture() {
   const [mode, setMode] = useState<IslandMode>("collapsed");
@@ -107,11 +103,8 @@ function Fixture() {
     host: islandHost,
   });
   const { popup, expandedIslandWidth } = useIslandPopup(mode, panel.arrivals !== null);
-  const height = getExpandedIslandHeight({
-    maxPanelHeight: 490,
-    panel: page === "qq" && panel.arrivals ? { height: messageArrivalsPanelHeight(panel.height, 490) } : undefined,
-    popup,
-  });
+  const height = getExpandedIslandHeight({ maxPanelHeight: 490, panel: page === "qq" && panel.arrivals ? { height: messageArrivalsPanelHeight(panel.height, 490) } : undefined, popup });
+  if (mode === "expanded") expandedHeights.push(height);
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: plugins, preview: null, open: (source) => { openedSource = source; openIslandPage("qq"); } }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
   return <div className="stage" style={{ "--collapsed-island-width": "300px", "--expanded-island-height": `${height}px`, "--expanded-island-width": `${expandedIslandWidth}px` } as CSSProperties}>
     <IslandShell
@@ -175,8 +168,10 @@ const results = document.getElementById("results")!;
 
 async function runChecks() {
   try {
+    expandedHeights.length = 0;
     await notify("qq");
     await waitFor(() => state.mode === "expanded" && rows().length === 1, "展开到消息页");
+    check(expandedHeights.length > 0 && expandedHeights.every((h) => h > 80 && h < 220), `弹出首帧直接落入卡片高度区间无 490/28 抽搐（${expandedHeights.join("→")}）`);
     check(state.page === "qq" && senders()[0] === "小林", "QQ 新消息让收起的岛展开到消息页，只列这一条");
     const islandBox = () => document.querySelector(".island")!.getBoundingClientRect();
     const headerShown = () => getComputedStyle(document.querySelector(".island__header")!).display !== "none";

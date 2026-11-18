@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MAX_ARRIVALS, addArrival, arrivalKey, removeArrival } from "../../src/features/messages/arrivals/messageArrivals.ts";
+import {
+  MAX_ARRIVALS,
+  addArrival,
+  arrivalKey,
+  estimateArrivalsHeight,
+  removeArrival,
+} from "../../src/features/messages/arrivals/messageArrivals.ts";
 
 const message = (source, receivedAt, title = "小林") => ({ source, title, body: "下午一起开会吗？", receivedAt, actions: [] });
 
@@ -68,4 +74,16 @@ test("replacedId swaps out a temporary taskbar-flash arrival when the real toast
     "feishu:toast:7:1",
     "qq:1100",
   ]);
+});
+
+test("estimated arrivals height avoids zero-height collapse before ResizeObserver runs", () => {
+  assert.equal(estimateArrivalsHeight([]), 0);
+  const single = estimateArrivalsHeight([message("qq", 100)]);
+  assert.ok(single >= 70 && single <= 120, String(single));
+  const withActions = estimateArrivalsHeight([
+    { ...message("qq", 100), actions: [{ id: "copy-otp:123456", title: "复制 123456" }] },
+  ]);
+  assert.ok(withActions > single, `${withActions} > ${single}`);
+  const inline = estimateArrivalsHeight([{ ...message("plugin", 100), inline: true }]);
+  assert.ok(inline >= 40 && inline < single, `${inline} vs ${single}`);
 });

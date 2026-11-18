@@ -1,6 +1,6 @@
 use std::{
     sync::{
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         Mutex, PoisonError,
     },
     thread,
@@ -36,7 +36,7 @@ const MAX_TOP_FILLET_RADIUS: f64 = 12.0;
 pub(super) fn max_expanded_width(scale: f64) -> f64 {
     (((STAGE_WINDOW_WIDTH - 4.0) / scale).floor() - 2.0 * MAX_TOP_FILLET_RADIUS).max(EXPANDED_ISLAND_WIDTH)
 }
-pub(super) const DEFAULT_EXPANDED_ISLAND_HEIGHT: f64 = 306.0;
+pub(super) const DEFAULT_EXPANDED_ISLAND_HEIGHT: f64 = 360.0;
 pub(super) const MIN_EXPANDED_ISLAND_HEIGHT: f64 = 72.0;
 pub(super) const EXPANDED_ISLAND_HEIGHT_RANGE: f64 = 350.0;
 pub(super) const EXPANDED_RADIUS: f64 = 30.0;
@@ -156,14 +156,62 @@ pub(super) fn continues_slide(running: Option<(u64, (i32, i32))>, current_genera
 }
 const STAGE_SHRINK_DELAY: Duration = Duration::from_millis(600);
 static STAGE_SHRINK_GENERATION: AtomicU64 = AtomicU64::new(0);
+static STAGE_GEOMETRY_SYNCED: AtomicBool = AtomicBool::new(false);
+
+pub(super) fn stage_geometry_synced() -> bool {
+    STAGE_GEOMETRY_SYNCED.load(Ordering::SeqCst)
+}
+
+pub(super) fn stage_height_for(state: IslandWindowState) -> f64 {
+    STAGE_WINDOW_HEIGHT
+        .max((state.expanded_height * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y)
+}
+
+fn side_stage_height_key(state: IslandWindowState) -> Option<(Edge, u64)> {
+    let edge = state
+        .custom_position
+        .and_then(|position| super::side::stored_side(position).map(|(edge, _)| edge))
+        .or_else(|| state.side())?;
+    let mut sided = state;
+    sided.attached_edge = Some(edge);
+    Some((edge, (sided.base_size().1 * sided.active_scale()).to_bits()))
+}
+
+pub(super) fn stage_geometry_inputs_changed(
+    previous: &IslandWindowState,
+    next: &IslandWindowState,
+) -> bool {
+    stage_height_for(*previous).to_bits() != stage_height_for(*next).to_bits()
+        || side_stage_height_key(*previous) != side_stage_height_key(*next)
+        || previous.is_tucked != next.is_tucked
+        || previous.tuck_style != next.tuck_style
+        || previous.collapsed_scale.to_bits() != next.collapsed_scale.to_bits()
+        || previous.margin_y.to_bits() != next.margin_y.to_bits()
+        || previous.under_menu_bar != next.under_menu_bar
+        || previous.custom_position != next.custom_position
+        || previous.out_at_top != next.out_at_top
+        || previous.is_dragging != next.is_dragging
+        || previous.attached_edge != next.attached_edge
+        || previous.monitor_follow != next.monitor_follow
+        || previous.followed_monitor != next.followed_monitor
+        || previous.fit_notch != next.fit_notch
+        || previous.auto_form != next.auto_form
+}
+
+pub(super) fn should_apply_stage_geometry(
+    previous: &IslandWindowState,
+    next: &IslandWindowState,
+    stage_synced: bool,
+) -> bool {
+    !stage_synced || stage_geometry_inputs_changed(previous, next)
+}
 
 pub(crate) fn apply_stage_geometry(
     window: &WebviewWindow,
     state: IslandWindowState,
     animate_position: bool,
 ) -> Result<(), String> {
-    let stage_height = STAGE_WINDOW_HEIGHT
-        .max((state.expanded_height * state.expanded_scale).ceil() + STAGE_WINDOW_PADDING_Y);
+    let stage_height = stage_height_for(state);
     let anchored_below = state.attached_edge == Some(Edge::Bottom)
         || state.custom_position.is_some_and(super::bottom_edge::is_bottom);
 
@@ -171,6 +219,19 @@ pub(crate) fn apply_stage_geometry(
     if state.is_dragging {
         return Ok(());
     }
+    let result = apply_stage_position(window, state, stage_height, animate_position);
+    if result.is_ok() {
+        STAGE_GEOMETRY_SYNCED.store(true, Ordering::SeqCst);
+    }
+    result
+}
+
+fn apply_stage_position(
+    window: &WebviewWindow,
+    state: IslandWindowState,
+    stage_height: f64,
+    animate_position: bool,
+) -> Result<(), String> {
 
     let current_monitor = window
         .current_monitor()

@@ -89,6 +89,76 @@ test("check --market still refuses experimental interfaces, from the manifest an
   assert.ok(errors.some((issue) => issue.code === "review:manifest" && issue.message.includes("fuyu.experimental")), JSON.stringify(errors));
 });
 
+test("check rejects unknown slot names, allows experimental slots in dev mode, and refuses them under --market", async () => {
+  const typoDir = copyFixture("hello", (root) => {
+    editJson(join(root, "package.json"), (pkg) => {
+      pkg.fuyu.slots = ["island.dev/v1", "island.nonexistent/v1"];
+    });
+  });
+  const typoResult = await check(typoDir);
+  assert.equal(typoResult.ok, false);
+  const slotError = typoResult.errors.find((issue) => issue.code === "unknown-slot");
+  assert.ok(slotError, JSON.stringify(typoResult.errors));
+  assert.equal(slotError.path, "fuyu.slots[1]");
+  assert.match(slotError.message, /island\.nonexistent\/v1/);
+  assert.match(slotError.message, /island\.page\/v1/);
+
+  const expSlotDir = copyFixture("hello", (root) => {
+    writeFiles(root, {
+      "src/island.tsx": readFileSync(join(root, "src/island.tsx"), "utf8").replace("island.dev/v1", "island.future/v1"),
+    });
+    editJson(join(root, "package.json"), (pkg) => {
+      pkg.fuyu.slots = ["island.future/v1"];
+      pkg.fuyu.experimental = ["island.future/v1"];
+    });
+  });
+  const devResult = await check(expSlotDir);
+  assert.equal(devResult.ok, true, JSON.stringify(devResult.errors));
+  assert.deepEqual(devResult.errors, []);
+
+  const marketOut = capture(expSlotDir);
+  assert.equal(await run(["check", "--market", "--json"], marketOut.io), 1);
+  const marketJson = JSON.parse(marketOut.stdout());
+  assert.equal(marketJson.ok, false);
+  assert.ok(marketJson.errors.some((issue) => issue.code === "unknown-slot" && issue.path === "fuyu.slots[0]"), JSON.stringify(marketJson.errors));
+  assert.ok(marketJson.errors.some((issue) => issue.code === "experimental"), JSON.stringify(marketJson.errors));
+});
+
+test("check validates service names in provides, replaces and inject while allowing custom versioned services and seams", async () => {
+  const validCustom = copyFixture("hello", (root) => {
+    editJson(join(root, "package.json"), (pkg) => {
+      pkg.fuyu.provides = ["weather/v1", "weather.forecast/v2"];
+      pkg.fuyu.replaces = ["lyrics/v1"];
+      pkg.fuyu.inject = {
+        required: ["clients", "translator.engines", "weather/v1"],
+        optional: ["reminders/v1", "clipboard.actions"],
+      };
+    });
+  });
+  const validResult = await check(validCustom);
+  assert.equal(validResult.ok, true, JSON.stringify(validResult.errors));
+
+  const badServices = copyFixture("hello", (root) => {
+    editJson(join(root, "package.json"), (pkg) => {
+      pkg.fuyu.provides = ["weather"];
+      pkg.fuyu.replaces = ["Translator/v1"];
+      pkg.fuyu.inject = {
+        required: ["clients", "timers/v0"],
+        optional: ["translator.engine"],
+      };
+    });
+  });
+  const badResult = await check(badServices);
+  assert.equal(badResult.ok, false);
+  const serviceErrors = badResult.errors.filter((issue) => issue.code === "service-name").map((issue) => issue.path);
+  assert.deepEqual(serviceErrors, [
+    "fuyu.provides[0]",
+    "fuyu.replaces[0]",
+    "fuyu.inject.required[1]",
+    "fuyu.inject.optional[0]",
+  ]);
+});
+
 test("review prints Markdown or JSON and exits 1 only on red", async () => {
   const fixture = (version) => join(REVIEW_FIXTURES, `weather-${version}`);
   const markdown = capture(tempDir());

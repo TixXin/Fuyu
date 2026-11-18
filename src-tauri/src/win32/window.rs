@@ -2,7 +2,7 @@ use windows::{
     core::BOOL,
     Win32::{
         Foundation::{HWND, LPARAM, POINT, RECT, WPARAM},
-        Graphics::Gdi::{MonitorFromWindow, SetWindowRgn, MONITOR_DEFAULTTONEAREST},
+        Graphics::Gdi::{MonitorFromWindow, MONITOR_DEFAULTTONEAREST},
         System::Threading::{AttachThreadInput, GetCurrentThreadId},
         UI::{
             Input::KeyboardAndMouse::IsWindowEnabled,
@@ -127,11 +127,6 @@ pub(crate) fn exclude_from_capture(window: HWND, excluded: bool) -> bool {
     unsafe { SetWindowDisplayAffinity(window, affinity) }.is_ok()
 }
 
-pub(crate) fn clear_window_region(window: HWND) -> bool {
-    let result = unsafe { SetWindowRgn(window, None, true) };
-    result != 0
-}
-
 pub(crate) fn is_interactive(window: HWND) -> bool {
     unsafe {
         let style = GetWindowLongPtrW(window, GWL_EXSTYLE) as u32;
@@ -248,7 +243,6 @@ mod tests {
     fn invalid_windows_have_no_rect_and_are_not_interactive() {
         assert_eq!(window_rect(HWND::default()).map(|_| ()), None);
         assert!(!is_interactive(HWND::default()));
-        assert!(!clear_window_region(HWND::default()));
         assert_eq!(window_text(HWND::default(), 32), "");
         assert_eq!(class_name(HWND::default()), "");
         assert!(!has_owner(HWND::default()));

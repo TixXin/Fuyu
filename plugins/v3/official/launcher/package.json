@@ -1,0 +1,58 @@
+{
+  "name": "@fuyu/launcher",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Search and launch installed desktop applications from the island, with acronym matching, keyboard navigation, and recent-apps ranking.",
+  "license": "MIT",
+  "author": "TixXin",
+  "repository": "https://github.com/TixXin/fuyu",
+  "engines": {
+    "fuyu": ">=0.3.10"
+  },
+  "scripts": {
+    "dev": "fuyu-plugin dev --official",
+    "build": "fuyu-plugin build --official",
+    "check": "fuyu-plugin check --official --market",
+    "package": "fuyu-plugin pack --official",
+    "typecheck": "tsc",
+    "lint": "eslint ."
+  },
+  "fuyu": {
+    "manifest": 1,
+    "displayName": {
+      "zh-CN": "应用启动台",
+      "en": "App Launcher"
+    },
+    "description": {
+      "zh-CN": "在岛上搜索并快速启动本机应用，支持大小写不敏感子串与首字母缩写过滤、键盘上下选择与最近启动置顶。",
+      "en": "Search and launch installed apps from the island with case-insensitive substring and acronym matching, keyboard navigation, and recent-apps ranking."
+    },
+    "icon": "assets/icon.svg",
+    "categories": [
+      "productivity",
+      "utilities"
+    ],
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "host": "dist/host.js",
+    "client": {
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
+    },
+    "slots": [
+      "island.page/v1",
+      "settings.section/v1"
+    ],
+    "commands": [
+      {
+        "id": "rescan",
+        "title": {
+          "zh-CN": "重新扫描应用",
+          "en": "Rescan applications"
+        }
+      }
+    ]
+  }
+}

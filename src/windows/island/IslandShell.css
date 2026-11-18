@@ -125,6 +125,7 @@
   top: 0;
   left: calc((round(nearest, (100cqw - var(--layer-width) * var(--layer-zoom)) / 2, var(--island-device-pixel, 1px)) - var(--island-shell-left) + 2 * var(--island-pixel-nudge, 0.001px)) / var(--layer-zoom));
   z-index: 2;
+  contain: layout style;
   transition: opacity var(--island-motion-layer, 120ms) ease;
 }
 
@@ -191,9 +192,7 @@
 .island--expanded .island__expanded {
   pointer-events: auto;
   opacity: 1;
-  transition:
-    opacity var(--island-motion-fade, 250ms) ease var(--island-motion-fade-delay, 120ms),
-    height var(--island-motion-height, 500ms) var(--island-motion-height-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  transition: opacity var(--island-motion-fade, 250ms) ease var(--island-motion-fade-delay, 120ms);
 }
 
 .island--popup .island__header {
@@ -207,6 +206,7 @@
 .island__content {
   min-height: 0;
   flex: 1;
+  contain: layout style;
 }
 
 @media (prefers-reduced-motion: reduce) {

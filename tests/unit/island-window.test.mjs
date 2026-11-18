@@ -198,3 +198,101 @@ test("a first-run hint widens the island past the usual cap, up to 460px", async
   assert.equal(getNoticeIslandWidth("短", 0), 280);
   assert.equal(getNoticeIslandWidth("x".repeat(200), 0, 12), 472);
 });
+
+test("single-flight frame queue coalesces bursts, trails in-flight work, and flushes on dispose", async () => {
+  const { createSingleFlightFrameQueue } = await import("../../src/windows/island/windowSync.ts");
+  const frames = [];
+  let nextId = 1;
+  const sent = [];
+  const resolvers = [];
+  const queue = createSingleFlightFrameQueue(
+    (item) => {
+      sent.push(item);
+      return new Promise((resolve) => {
+        resolvers.push(resolve);
+      });
+    },
+    {
+      requestFrame: (cb) => {
+        const id = nextId++;
+        frames.push({ id, cb });
+        return id;
+      },
+      cancelFrame: (id) => {
+        const index = frames.findIndex((entry) => entry.id === id);
+        if (index >= 0) frames.splice(index, 1);
+      },
+    },
+  );
+
+  const p1 = queue.schedule("a");
+  const p2 = queue.schedule("b");
+  assert.equal(frames.length, 1);
+  assert.deepEqual(sent, []);
+
+  frames.shift().cb();
+  assert.deepEqual(sent, ["b"]);
+  assert.equal(frames.length, 0);
+
+  queue.schedule("c");
+  queue.schedule("d");
+  assert.equal(frames.length, 0);
+
+  resolvers.shift()();
+  await Promise.all([p1, p2]);
+  assert.equal(frames.length, 1);
+
+  queue.dispose();
+  assert.equal(frames.length, 0);
+  assert.deepEqual(sent, ["b", "d"]);
+  resolvers.shift()();
+});
+
+test("external resize tracker enters resizing mode only on rapid geometry StorageEvents and settles cleanly", async () => {
+  const {
+    EXTERNAL_RESIZE_BURST_MS,
+    EXTERNAL_RESIZE_SETTLE_MS,
+    createExternalResizeTracker,
+  } = await import("../../src/windows/island/windowSync.ts");
+  const states = [];
+  const timers = [];
+  let nextTimerId = 1;
+  const tracker = createExternalResizeTracker(
+    { panelWidth: 560, maxPanelHeight: 360, islandCornerRadius: 32, opacity: 80 },
+    {
+      setResizing: (active) => states.push(active),
+      setTimer: (cb, ms) => {
+        const id = nextTimerId++;
+        timers.push({ id, cb, ms });
+        return id;
+      },
+      clearTimer: (id) => {
+        const index = timers.findIndex((entry) => entry.id === id);
+        if (index >= 0) timers.splice(index, 1);
+      },
+    },
+  );
+
+  tracker.onStorageValue(JSON.stringify({ panelWidth: 560, maxPanelHeight: 360, islandCornerRadius: 32, opacity: 90 }), 1000);
+  tracker.onStorageValue(JSON.stringify({ panelWidth: 560, maxPanelHeight: 360, islandCornerRadius: 32, opacity: 95 }), 1030);
+  assert.deepEqual(states, []);
+
+  tracker.onStorageValue(JSON.stringify({ panelWidth: 580, maxPanelHeight: 360, islandCornerRadius: 32, opacity: 95 }), 2000);
+  assert.deepEqual(states, []);
+
+  tracker.onStorageValue(JSON.stringify({ panelWidth: 600, maxPanelHeight: 360, islandCornerRadius: 32, opacity: 95 }), 2000 + EXTERNAL_RESIZE_BURST_MS + 20);
+  assert.deepEqual(states, []);
+
+  tracker.onStorageValue(JSON.stringify({ panelWidth: 620, maxPanelHeight: 360, islandCornerRadius: 32, opacity: 95 }), 2000 + EXTERNAL_RESIZE_BURST_MS + 60);
+  assert.deepEqual(states, [true]);
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0].ms, EXTERNAL_RESIZE_SETTLE_MS);
+
+  tracker.onStorageValue(JSON.stringify({ panelWidth: 640, maxPanelHeight: 360, islandCornerRadius: 32, opacity: 95 }), 2000 + EXTERNAL_RESIZE_BURST_MS + 90);
+  assert.deepEqual(states, [true]);
+  assert.equal(timers.length, 1);
+
+  timers.shift().cb();
+  assert.deepEqual(states, [true, false]);
+  assert.equal(tracker.isActive(), false);
+});
