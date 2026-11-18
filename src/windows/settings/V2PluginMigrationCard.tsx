@@ -8,8 +8,10 @@ import type { SettingsCategory } from "./categories";
 import "./V2PluginMigrationCard.css";
 
 export function V2PluginMigrationCard({
+  onOpenMarketTab,
   onOpenPage,
 }: {
+  onOpenMarketTab?: () => void;
   onOpenPage?: (page: SettingsCategory) => void;
 }) {
   const copy = useTranslation().settings.pluginsV3.v2Migration;
@@ -92,11 +94,12 @@ export function V2PluginMigrationCard({
       ) : null}
 
       <div className="plugins-v3__migration-actions">
-        {onOpenPage && needsMarketInstall ? (
+        {(onOpenMarketTab || onOpenPage) && needsMarketInstall ? (
           <button
             type="button"
             className="plugins-v3__migration-btn plugins-v3__migration-btn--primary"
-            onClick={() => onOpenPage("market")}
+            data-action="migration-open-market"
+            onClick={() => (onOpenMarketTab ? onOpenMarketTab() : onOpenPage?.("market"))}
           >
             {copy.openMarket}
           </button>

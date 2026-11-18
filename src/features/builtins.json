@@ -22,6 +22,6 @@
     { "id": "system-levels", "kind": "builtin", "root": "system-levels", "host": "host/index.mjs", "background": ["watcher"] },
     { "id": "device-use", "kind": "builtin", "root": "device-use", "host": "host/index.mjs", "background": [] },
     { "id": "theme-market", "kind": "builtin", "root": "theme-market", "host": "host/index.mjs", "background": [] },
-    { "id": "updater", "kind": "essential", "root": "updater", "host": "host/index.mjs", "background": [] }
+    { "id": "updater", "kind": "essential", "root": "updater", "host": "host/index.mjs", "background": [], "provides": ["market/v1"] }
   ]
 }

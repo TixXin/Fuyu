@@ -38,6 +38,7 @@ export type SettingsPluginsV3Text = {
   noMatches: string;
   tabs: {
     plugins: (count: number) => string;
+    market: string;
     diagnostics: string;
   };
   openDiagnostics: string;
@@ -130,6 +131,52 @@ export type SettingsPluginsV3Text = {
     openMarket: string;
     dismiss: string;
   };
+  market: {
+    count: (count: number) => string;
+    empty: string;
+    loading: string;
+    hostDisconnected: string;
+    updatedAt: (time: string) => string;
+    refresh: string;
+    refreshing: string;
+    manualAllow: string;
+    installFromFile: string;
+    officialBadge: string;
+    reviewedBadge: string;
+    cooldownBadge: string;
+    cooldownHint: string;
+    revokedBadge: string;
+    installedBadge: (version: string) => string;
+    installBtn: string;
+    installingBtn: string;
+    updateBtn: (version: string) => string;
+    installedBtn: string;
+    unavailableBtn: string;
+    uninstallBtn: string;
+    uninstallPrompt: (id: string) => string;
+    uninstallRemoveData: string;
+    uninstallConfirmBtn: string;
+    uninstallingBtn: string;
+    cancelBtn: string;
+    confirmModal: {
+      titleInstall: string;
+      titleUpdate: string;
+      sourceOfficial: string;
+      sourceMarket: string;
+      sourceManualWarn: string;
+      networkLabel: string;
+      networkNone: string;
+      nodeApisLabel: string;
+      nodeApisNone: string;
+      providesLabel: string;
+      replacesLabel: string;
+      slotsLabel: string;
+      capabilityNone: string;
+      hostSecurityNote: string;
+      confirmBtn: string;
+      cancelBtn: string;
+    };
+  };
 };
 
 export const zhCN: SettingsPluginsV3Text = {
@@ -138,6 +185,7 @@ export const zhCN: SettingsPluginsV3Text = {
   noMatches: "没有匹配的插件。",
   tabs: {
     plugins: (count) => `功能与插件 (${count})`,
+    market: "插件市场",
     diagnostics: "宿主与运行诊断",
   },
   openDiagnostics: "查看运行诊断 ›",
@@ -314,6 +362,52 @@ export const zhCN: SettingsPluginsV3Text = {
     openMarket: "前往插件市场",
     dismiss: "知道了，不再提示",
   },
+  market: {
+    count: (count) => `共 ${count} 个上架插件`,
+    empty: "暂无上架插件。可点击「刷新索引」拉取最新市场目录，或开启手动安装后从本地导入 .fuyu 包。",
+    loading: "正在读取市场目录…",
+    hostDisconnected: "等宿主连上后即可浏览插件市场与管理 .fuyu 插件包。",
+    updatedAt: (time) => `上次同步：${time}`,
+    refresh: "刷新索引",
+    refreshing: "正在刷新…",
+    manualAllow: "允许手动安装 .fuyu 包",
+    installFromFile: "从文件安装 .fuyu…",
+    officialBadge: "官方",
+    reviewedBadge: "市场已审核",
+    cooldownBadge: "冷静期新发",
+    cooldownHint: "发布未满 3 天冷静期，暂不自动升级，可手动确认安装",
+    revokedBadge: "已撤销",
+    installedBadge: (version) => `已安装 v${version}`,
+    installBtn: "安装",
+    installingBtn: "安装中…",
+    updateBtn: (version) => `更新至 v${version}`,
+    installedBtn: "已安装",
+    unavailableBtn: "当前不可安装",
+    uninstallBtn: "卸载插件",
+    uninstallPrompt: (id) => `确定要卸载 ${id} 吗？卸载后插件代码与注册项会立即移除。`,
+    uninstallRemoveData: "同时删除本插件的数据目录",
+    uninstallConfirmBtn: "确认卸载",
+    uninstallingBtn: "卸载中…",
+    cancelBtn: "取消",
+    confirmModal: {
+      titleInstall: "确认安装插件",
+      titleUpdate: "确认更新插件",
+      sourceOfficial: "官方插件（@fuyu/*）",
+      sourceMarket: "市场已审核",
+      sourceManualWarn: "未经市场审核：来自本地 .fuyu 文件，请确认插件作者与来源可信后再安装。",
+      networkLabel: "联网域名",
+      networkNone: "不联网",
+      nodeApisLabel: "Node 内置模块",
+      nodeApisNone: "无",
+      providesLabel: "提供服务",
+      replacesLabel: "接管服务",
+      slotsLabel: "界面插槽",
+      capabilityNone: "无",
+      hostSecurityNote: "宿主侧插件运行在本机 Node 进程中，可访问本插件数据目录与系统凭据管理器。",
+      confirmBtn: "确认安装",
+      cancelBtn: "取消",
+    },
+  },
 };
 
 export const en: SettingsPluginsV3Text = {
@@ -322,6 +416,7 @@ export const en: SettingsPluginsV3Text = {
   noMatches: "No matching plugins.",
   tabs: {
     plugins: (count) => `Features & plugins (${count})`,
+    market: "Plugin market",
     diagnostics: "Host & diagnostics",
   },
   openDiagnostics: "View diagnostics ›",
@@ -497,5 +592,51 @@ export const en: SettingsPluginsV3Text = {
     installInMarket: "Install v3 in Market",
     openMarket: "Open Plugin Market",
     dismiss: "Got it, don't show again",
+  },
+  market: {
+    count: (count) => `${count} listed ${count === 1 ? "plugin" : "plugins"}`,
+    empty: "No plugins listed yet. Click Refresh index to fetch the market catalog, or turn on manual installation to import a local .fuyu package.",
+    loading: "Loading market catalog…",
+    hostDisconnected: "Once the plugin host connects, you can browse the market and manage .fuyu packages.",
+    updatedAt: (time) => `Synced: ${time}`,
+    refresh: "Refresh index",
+    refreshing: "Refreshing…",
+    manualAllow: "Allow manual .fuyu installation",
+    installFromFile: "Install .fuyu from file…",
+    officialBadge: "Official",
+    reviewedBadge: "Market reviewed",
+    cooldownBadge: "New · 3d cooldown",
+    cooldownHint: "Published within the 3-day cooldown; auto-update waits, manual install available",
+    revokedBadge: "Revoked",
+    installedBadge: (version) => `Installed v${version}`,
+    installBtn: "Install",
+    installingBtn: "Installing…",
+    updateBtn: (version) => `Update to v${version}`,
+    installedBtn: "Installed",
+    unavailableBtn: "Unavailable",
+    uninstallBtn: "Uninstall",
+    uninstallPrompt: (id) => `Uninstall ${id}? Its unpacked files and registration will be removed immediately.`,
+    uninstallRemoveData: "Also delete this plugin's data folder",
+    uninstallConfirmBtn: "Confirm uninstall",
+    uninstallingBtn: "Uninstalling…",
+    cancelBtn: "Cancel",
+    confirmModal: {
+      titleInstall: "Confirm plugin installation",
+      titleUpdate: "Confirm plugin update",
+      sourceOfficial: "Official plugin (@fuyu/*)",
+      sourceMarket: "Reviewed in market",
+      sourceManualWarn: "Unreviewed package: imported from a local .fuyu file. Only install if you trust the author.",
+      networkLabel: "Network domains",
+      networkNone: "No network access",
+      nodeApisLabel: "Node built-in modules",
+      nodeApisNone: "None",
+      providesLabel: "Provides services",
+      replacesLabel: "Replaces services",
+      slotsLabel: "UI slots",
+      capabilityNone: "None",
+      hostSecurityNote: "Host-side plugins run in a local Node process with access to their own data folder and the OS credential manager.",
+      confirmBtn: "Install",
+      cancelBtn: "Cancel",
+    },
   },
 };

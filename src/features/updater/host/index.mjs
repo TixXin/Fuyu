@@ -1,3 +1,7 @@
+import { provideMarketService } from "./market.mjs";
+
 export const name = "updater";
 
-export function apply() {}
+export function apply(ctx) {
+  provideMarketService(ctx);
+}

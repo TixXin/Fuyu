@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { connectHost, type ConnectionState } from "@fuyu/plugin-base/client";
+import { connectHost, createServiceProxy, type ConnectionState, type ServiceEventMessage, type SnapshotInfo } from "@fuyu/plugin-base/client";
+import type { ServiceEntry } from "@fuyu/plugin-base/services";
 import { getPluginHostConnection, getPluginHostMemory, type HostMemory, type HostSafeMode } from "../../features/plugin-kernel/api";
+import { windowServices } from "../../features/plugin-kernel/services";
 import { loadDevBuild } from "../../lib/platform";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 
@@ -49,10 +51,11 @@ export interface HostInfoV3 {
 export interface PluginHostSnapshot {
   plugins?: PluginStatusV3[];
   host?: HostInfoV3;
+  services?: ServiceEntry[];
 }
 
 export interface PluginHostHandlers {
-  onSnapshot: (snapshot: PluginHostSnapshot) => void;
+  onSnapshot: (snapshot: PluginHostSnapshot, info?: SnapshotInfo) => void;
   onEvent: (name: string, data: unknown) => void;
   onState: (state: ConnectionState) => void;
 }
@@ -61,7 +64,7 @@ export type PluginV3StateWithBisect = "bisect";
 
 export type PluginHostConnector = (handlers: PluginHostHandlers) => {
   close(): void;
-  call?: (method: string, params?: unknown) => Promise<unknown>;
+  call?: (method: string, params?: unknown, options?: { timeoutMs?: number }) => Promise<unknown>;
 };
 
 export interface PluginHostView {
@@ -123,22 +126,38 @@ const MEMORY_EVERY_MS = 5000;
 export function usePluginHostStatus(connect: PluginHostConnector = connectSettingsToHost): PluginHostView {
   const [view, setView] = useState<PluginHostView>(START);
   useEffect(() => {
+    let callRef: ((method: string, params?: unknown, options?: { timeoutMs?: number }) => Promise<unknown>) | null = null;
+    const proxy = createServiceProxy((method, params, options) => callRef!(method, params, options));
     const connection = connect({
-      onSnapshot: (snapshot) => setView((current) => ({ ...current, plugins: snapshot.plugins ?? [], host: snapshot.host ?? null })),
+      onSnapshot: (snapshot, info) => {
+        setView((current) => ({ ...current, plugins: snapshot.plugins ?? [], host: snapshot.host ?? null }));
+        if (snapshot.services) proxy.update(snapshot.services);
+        if (info?.fresh && callRef) void proxy.resubscribe();
+      },
       onEvent: (name, data) => {
         if (name === "plugins") setView((current) => ({ ...current, plugins: data as PluginStatusV3[] }));
         if (name === "host") setView((current) => ({ ...current, host: data as HostInfoV3 }));
+        if (name === "service") proxy.deliver(data as ServiceEventMessage);
+        if (name === "services") proxy.update(data as ServiceEntry[]);
       },
       onState: (state) => setView((current) => ({ ...current, connection: state })),
     });
-    const runBisect = typeof connection.call === "function"
+    const attached = typeof connection.call === "function";
+    if (attached) {
+      callRef = (method, params, options) => connection.call!(method, params, options);
+      windowServices.attach(proxy);
+    }
+    const runBisect = attached
       ? async (off: readonly string[]) => {
           const res = (await connection.call!("bisect", { off: [...off] })) as { off?: string[]; unknown?: string[] } | null;
           return { off: res?.off ?? [...off], unknown: res?.unknown ?? [] };
         }
       : undefined;
     setView((current) => ({ ...current, bisect: runBisect }));
-    return () => connection.close();
+    return () => {
+      if (attached) windowServices.attach(null);
+      connection.close();
+    };
   }, [connect]);
   const pid = view.connection === "open" ? view.host?.pid ?? null : null;
   useEffect(() => {
