@@ -6,7 +6,7 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{bisect, containment, node_status::{NodeGate, NodeStatus}, safe_mode::{self, Cause, Tracker}, enabled, host_args, is_prerelease, on_by_default, host_env, host_files, host_origins, host_script, memory_of, window_origins, HostFiles, HostMode, MEMORY_MEASURE};
+use super::{bisect, containment, node_status::{NodeGate, NodeStatus}, safe_mode::{self, Cause, Tracker}, enabled, host_args, on_by_default, host_env, host_files, host_origins, host_script, memory_of, window_origins, HostFiles, HostMode, MEMORY_MEASURE};
 
 #[test]
 fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
@@ -34,21 +34,37 @@ fn a_release_build_starts_the_host_only_when_the_switch_is_exactly_1() {
 }
 
 #[test]
-fn a_prerelease_is_what_the_release_script_publishes_as_one() {
-    for (version, prerelease) in [("0.3.10", false), ("0.3.10-beta.2", true), ("0.3.10-rc.1", true), ("1.0.0", false), ("1.2-beta", false), ("v0.3.10-beta.1", false), ("0.3.x-beta", false)] {
-        assert_eq!(is_prerelease(version), prerelease, "{version}");
-    }
-}
-
-#[test]
-fn development_and_beta_builds_start_the_host_by_default_and_stable_ones_do_not() {
+fn every_build_starts_the_host_by_default_and_zero_turns_it_off() {
     assert!(on_by_default(true, "0.3.10"));
     assert!(on_by_default(false, "0.3.10-beta.2"));
     assert!(on_by_default(false, "0.4.0-rc.1"));
-    assert!(!on_by_default(false, "0.3.10"));
+    assert!(on_by_default(false, "0.3.10"));
+    assert!(on_by_default(false, "0.4.0"));
+    assert!(enabled(on_by_default(false, "0.4.0"), None));
     assert!(enabled(on_by_default(false, "0.3.10-beta.2"), None));
-    assert!(!enabled(on_by_default(false, "0.3.10-beta.2"), Some("0")), "0 turns it off on the beta channel too");
-    assert!(!enabled(on_by_default(false, "0.3.10"), None), "stable versions still need FUYU_PLUGINS_V3=1");
+    assert!(!enabled(on_by_default(false, "0.4.0"), Some("0")));
+    assert!(!enabled(on_by_default(false, "0.3.10-beta.2"), Some("0")));
+}
+
+#[test]
+fn tauri_config_enforces_a_csp_without_eval_or_remote_scripts() {
+    let config_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tauri.conf.json");
+    let config: Value = serde_json::from_str(&std::fs::read_to_string(config_path).unwrap()).unwrap();
+    let csp = config["app"]["security"]["csp"].as_str().expect("app.security.csp must be a string");
+    let directives: std::collections::BTreeMap<&str, Vec<&str>> = csp
+        .split(';')
+        .filter_map(|part| {
+            let mut tokens = part.split_whitespace();
+            Some((tokens.next()?, tokens.collect()))
+        })
+        .collect();
+    let scripts = &directives["script-src"];
+    assert!(!scripts.contains(&"'unsafe-eval'"));
+    assert!(!scripts.contains(&"'unsafe-inline'"));
+    assert!(!scripts.iter().any(|item| *item == "https:" || *item == "http:"));
+    assert!(scripts.contains(&"'self'") && scripts.contains(&"fuyu-plugin:") && scripts.contains(&"http://fuyu-plugin.localhost"));
+    assert_eq!(directives["object-src"], ["'none'"]);
+    assert!(directives["connect-src"].contains(&"ipc:") && directives["connect-src"].contains(&"ws://127.0.0.1:*"));
 }
 
 #[test]
@@ -446,7 +462,15 @@ const GENERATED: &str = "../packages/plugin-services/src/generated";
 #[test]
 fn the_apps_own_rust_methods_are_registered_once() {
     let serve = super::methods::registered().unwrap();
-    for name in ["app.echo", "app.platformSupport", "app.version"] {
+    for name in [
+        "app.echo",
+        "app.platformSupport",
+        "app.version",
+        "pluginKernel.syncHotkeys",
+        "pluginKernel.windowControl",
+        "pluginKernel.windowList",
+        "pluginKernel.windowOpen",
+    ] {
         assert!(serve.names().contains(&name), "{name} is missing from {:?}", serve.names());
     }
 }

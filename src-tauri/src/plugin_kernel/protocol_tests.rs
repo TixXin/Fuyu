@@ -2,7 +2,7 @@ use plugin_base::{Event, HostState};
 use serde_json::json;
 use tauri::http::{Method, Request, Response, StatusCode};
 
-use super::{client_paths, observe, registered, serve, Allowed};
+use super::{client_paths, observe, registered, serve, Allowed, CSP};
 
 fn get(root: Option<&std::path::Path>, allowed: &Allowed, path: &str, method: Method) -> Response<Vec<u8>> {
     let request = Request::builder().method(method).uri(format!("fuyu-plugin://localhost{path}")).body(Vec::new()).unwrap();
@@ -214,6 +214,37 @@ fn before_the_host_sends_its_list_only_shared_modules_and_packages_load() {
     assert_eq!(status(&dir, &nothing, "/packages/@acme/clock/dist/island.js"), StatusCode::OK);
     for path in ["/hello/island.js", "/solo-island.js", "/loose/island.js"] {
         assert_eq!(status(&dir, &nothing, path), StatusCode::NOT_FOUND, "{path}");
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn every_plugin_protocol_response_sets_strict_csp_and_nosniff_headers() {
+    let dir = scratch("csp");
+    let allowed = demo();
+    for (path, method) in [
+        ("/hello/island.js", Method::GET),
+        ("/__shared/react.js", Method::GET),
+        ("/hello/missing.js", Method::GET),
+        ("/hello/island.js", Method::POST),
+    ] {
+        let response = get(Some(&dir), &allowed, path, method.clone());
+        let csp = response.headers()["content-security-policy"].to_str().unwrap();
+        assert_eq!(csp, CSP, "{method} {path}");
+        assert_eq!(response.headers()["x-content-type-options"], "nosniff", "{method} {path}");
+        let directives: std::collections::BTreeMap<&str, Vec<&str>> = csp
+            .split(';')
+            .filter_map(|part| {
+                let mut tokens = part.split_whitespace();
+                Some((tokens.next()?, tokens.collect()))
+            })
+            .collect();
+        assert_eq!(directives["default-src"], ["'none'"]);
+        let scripts = &directives["script-src"];
+        assert!(!scripts.contains(&"'unsafe-eval'"));
+        assert!(!scripts.contains(&"'unsafe-inline'"));
+        assert!(!scripts.iter().any(|source| source.starts_with("https:") || *source == "http:"));
+        assert!(scripts.contains(&"'self'") && scripts.contains(&"fuyu-plugin:") && scripts.contains(&"http://fuyu-plugin.localhost"));
     }
     let _ = std::fs::remove_dir_all(&dir);
 }
