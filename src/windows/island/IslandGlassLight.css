@@ -3,7 +3,7 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 96px),
     linear-gradient(145deg, rgba(255, 255, 255, calc(var(--glass-soft-alpha) * 4)), transparent 42%),
     linear-gradient(165deg, transparent 42%, rgba(30, 40, 60, 0.06)),
-    var(--glass-tint-color);
+    var(--island-shell-fill);
   box-shadow:
     0 18px 46px rgba(30, 40, 60, calc(var(--glass-shadow-alpha) * 0.7)),
     var(--island-edge-lines,
@@ -18,7 +18,7 @@
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.5), transparent 42%),
     linear-gradient(165deg, transparent 40%, rgba(30, 40, 60, 0.08)),
-    var(--glass-tint-color);
+    var(--island-shell-fill);
 }
 
 .island-light .island__glass::after {

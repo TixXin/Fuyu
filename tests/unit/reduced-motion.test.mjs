@@ -166,7 +166,39 @@ test("the island shell still opens and closes when Windows asks for less motion"
   const shell = reducedRules("windows/island/IslandShell.css").find((rule) => rule.selectors.includes(".island"));
   assert.ok(shell, "IslandShell.css lets the shell transition through");
   const kept = list(shell.declarations["transition-property"] ?? "");
-  for (const variable of ["--island-shell-width", "--island-shell-height", "--island-shell-top-corner", "--island-shell-bottom-corner"]) {
+  for (const variable of ["--island-shell-width", "--island-shell-height", "--island-shell-top-corner", "--island-shell-bottom-corner", "--island-shell-fill"]) {
     assert.ok(kept.includes(variable), variable);
+  }
+  assert.ok(kept.every((prop) => prop.startsWith("--")), "WebKit drops regular transitions on an element that transitions @property variables");
+});
+
+function splitTransitionItems(value) {
+  const items = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < value.length; i++) {
+    if (value[i] === "(") depth++;
+    else if (value[i] === ")") depth--;
+    else if (value[i] === "," && depth === 0) {
+      items.push(value.slice(start, i).trim());
+      start = i + 1;
+    }
+  }
+  items.push(value.slice(start).trim());
+  return items.filter(Boolean);
+}
+
+test("the island shell transitions only @property variables so colour crossfades work on WebKit too (C33.8)", () => {
+  const css = readFileSync(path.join(SRC, "windows/island/IslandShell.css"), "utf8");
+  const registered = new Set([...css.matchAll(/@property\s+(--[\w-]+)/g)].map((match) => match[1]));
+  assert.ok(registered.has("--island-shell-fill"), "--island-shell-fill is registered with @property");
+  const shellRule = parseRules(css).find((rule) => rule.media.length === 0 && rule.selectors.length === 1 && rule.selectors[0] === ".island");
+  assert.ok(shellRule, ".island rule exists");
+  const transitionMatch = shellRule.body.match(/(?:^|[;\s])transition\s*:\s*([^;]+)/);
+  assert.ok(transitionMatch, ".island declares transition");
+  const props = splitTransitionItems(transitionMatch[1]).map((item) => item.split(/\s+/)[0]);
+  assert.ok(props.includes("--island-shell-fill"), ".island transitions --island-shell-fill");
+  for (const prop of props) {
+    assert.ok(registered.has(prop), `${prop} must be a registered @property so WebKit does not ignore sibling transitions`);
   }
 });

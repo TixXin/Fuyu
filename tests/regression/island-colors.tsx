@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
+import "../../src/windows/island/IslandShell.css";
 import { I18nProvider } from "../../src/i18n";
 import { IslandPreview } from "../../src/components/island-preview/IslandPreview";
 import { BUILTIN_THEME_IDS, BUILTIN_THEMES, builtinThemeInUse, withBuiltinTheme, type BuiltinThemeId } from "../../src/lib/theme/builtinThemes";
@@ -145,6 +146,21 @@ async function runChecks() {
     check(old.darkInkColor === "" && old.lightInkColor === "" && old.inkColor === "", "Settings saved before C33.9 read as auto ink");
     const system = withBuiltinTheme({ ...DEFAULT_SETTINGS, themeMode: "system" }, "frostedWarm" satisfies BuiltinThemeId);
     check(system.themeMode === "system", "Following the system stays on");
+
+    const probe = document.createElement("div");
+    probe.className = "island";
+    probe.style.setProperty("--island-fill", "rgba(0, 0, 0, 1)");
+    document.body.append(probe);
+    const startFill = parse(getComputedStyle(probe).backgroundColor);
+    probe.style.setProperty("--island-fill", "rgba(242, 242, 245, 1)");
+    void getComputedStyle(probe).backgroundColor;
+    const fillTransition = probe.getAnimations().find((item) => "transitionProperty" in item && item.transitionProperty === "--island-shell-fill");
+    fillTransition?.pause();
+    if (fillTransition) fillTransition.currentTime = 210;
+    const midFill = parse(getComputedStyle(probe).backgroundColor);
+    probe.remove();
+    check(Boolean(fillTransition) && startFill[0] === 0 && midFill[0] > 0 && midFill[0] < 242,
+      `Switching palette interpolates the island shell fill smoothly (${startFill[0]} -> ${Math.round(midFill[0])} -> 242)`);
 
     if (automated) document.querySelector<HTMLElement>('[data-swatch="custom-dark"]')!.hidden = true;
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;

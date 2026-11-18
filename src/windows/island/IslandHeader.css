@@ -51,11 +51,13 @@
   font-size: 15px;
   font-weight: 700;
   line-height: 1;
+  transition: color var(--motion-medium) var(--motion-ease);
 }
 
 .island__title svg {
   flex: 0 0 auto;
   color: var(--color-accent);
+  transition: color var(--motion-medium) var(--motion-ease);
 }
 
 .island--todo .island__title {
@@ -181,4 +183,7 @@
   background: var(--color-accent);
   box-shadow: 0 0 0 2px var(--island-background-color);
   pointer-events: none;
+  transition:
+    background-color var(--motion-medium) var(--motion-ease),
+    box-shadow var(--motion-medium) var(--motion-ease);
 }
