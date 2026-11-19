@@ -90,6 +90,7 @@ const plugin = (id: string, state: string): PluginStatusV3 => ({ id, name: id, s
 const entry = (id: string, title: string, state: string): InstalledEntry => ({
   id, title, icons: [], plugin: plugin(id, state), description: null, version: "1.0.0", publisher: "someone", source: "market", managed: true, removable: true,
   enabled: state !== "disabled", status: { dot: state === "running" ? "ok" : state === "disabled" ? "off" : "wait", label: state === "running" ? null : state === "disabled" ? "off" : "waiting", note: null, attention: false },
+  reach: null, marketVersion: null, settings: null, places: [],
 });
 const clock = entry(CLOCK, "世界时钟", "running");
 const weather = entry("@fuyu/weather", "天气", "running");

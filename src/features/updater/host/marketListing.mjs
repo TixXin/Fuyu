@@ -46,3 +46,11 @@ export function packageIcon(raw) {
   if (parts.some((part) => !part || part === "." || part === "..")) return undefined;
   return parts.join("/");
 }
+
+const names = (value) => (Array.isArray(value) ? value.filter((item) => typeof item === "string" && item) : []);
+
+export function packageReach(fuyu) {
+  const inject = fuyu?.inject;
+  const services = Array.isArray(inject) ? names(inject) : isObject(inject) ? [...names(inject.required), ...names(inject.optional)] : [];
+  return { slots: names(fuyu?.slots), services, config: fuyu?.config !== undefined && fuyu?.config !== null };
+}

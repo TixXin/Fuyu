@@ -73,6 +73,12 @@ export type MarketCatalogPlugin = {
   autoUpdateHeld?: MarketAutoUpdateHeld | null;
 };
 
+export type InstalledPluginReach = {
+  slots: string[];
+  services: string[];
+  config: boolean;
+};
+
 export type InstalledMarketPlugin = {
   id: string;
   version: string;
@@ -82,6 +88,7 @@ export type InstalledMarketPlugin = {
   displayName?: MarketLocalizedText | string;
   description?: MarketLocalizedText | string;
   icon?: string;
+  reach?: InstalledPluginReach;
 };
 
 export type MarketRevocationWarning = "network" | "bad-signature" | "bad-trust" | "invalid" | "older-serial" | "expired" | "behind";

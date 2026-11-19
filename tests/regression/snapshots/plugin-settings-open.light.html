@@ -14,38 +14,6 @@
           1 个已停用
         </span>
       </div>
-      <div class="plugin-page__toolbar">
-        <label class="plugin-search">
-          <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-          <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
-        </label>
-        <div aria-label="筛选" class="plugin-page__filters" role="group">
-          <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
-            全部
-            <span class="plugin-chip__count">
-              4
-            </span>
-          </button>
-          <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
-            已启用
-            <span class="plugin-chip__count">
-              3
-            </span>
-          </button>
-          <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
-            已停用
-            <span class="plugin-chip__count">
-              1
-            </span>
-          </button>
-          <button aria-pressed="false" class="plugin-chip" data-filter="attention" disabled="" type="button">
-            需处理
-            <span class="plugin-chip__count">
-              0
-            </span>
-          </button>
-        </div>
-      </div>
       <div class="plugin-list">
         <div class="plugin-row" data-dot="ok" data-plugin="@someone/clock">
           <span aria-hidden="true" class="plugin-icon">
@@ -57,16 +25,17 @@
               <button class="plugin-row__name" title="世界时钟" type="button">
                 世界时钟
               </button>
-              <span class="plugin-row__version">
-                v
-                2.0.0
+              <span class="plugin-row__version" title="v2.0.0">
+                v2.0.0
               </span>
             </div>
             <p class="plugin-row__desc">
               收起时显示另一个时区的时间
             </p>
             <div class="plugin-row__facts">
-              someone · 插件市场
+              <span class="plugin-row__origin" data-origin="market">
+                someone
+              </span>
             </div>
           </div>
           <div class="plugin-row__aside">
@@ -99,17 +68,13 @@
               <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
                 <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
               </span>
-              <span class="plugin-row__version">
-                v
-                1.2.0
+              <span class="plugin-row__version" title="v1.2.0">
+                v1.2.0
               </span>
             </div>
             <p class="plugin-row__desc">
               在岛上看实时气温和逐小时预报
             </p>
-            <div class="plugin-row__facts">
-              插件市场 · 官方
-            </div>
           </div>
           <div class="plugin-row__aside">
             <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
@@ -147,7 +112,9 @@
               </span>
             </div>
             <div class="plugin-row__facts">
-              me · 本地文件（未经审核）
+              <span class="plugin-row__origin plugin-row__origin--warn" data-origin="manual">
+                从文件安装
+              </span>
             </div>
           </div>
           <div class="plugin-row__aside">
@@ -179,7 +146,9 @@
               </button>
             </div>
             <div class="plugin-row__facts">
-              本地开发
+              <span class="plugin-row__origin" data-origin="local">
+                从文件夹加载
+              </span>
             </div>
           </div>
           <div class="plugin-row__aside">
@@ -194,6 +163,75 @@
           </div>
         </div>
       </div>
+      <section class="plugin-suggest" data-suggestions="true">
+        <h3 class="plugin-page__heading">
+          <span>
+            还可以装这些
+          </span>
+          <button class="plugin-link plugin-suggest__all" data-action="all-plugins" type="button">
+            全部 8 个 ›
+          </button>
+        </h3>
+        <div class="plugin-suggest__grid">
+          <div class="plugin-suggest__card" data-suggest="@fuyu/countdown">
+            <div class="plugin-suggest__head">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                倒
+              </span>
+              <b title="倒数日">
+                倒数日
+              </b>
+            </div>
+            <p>
+              离重要的日子还有几天
+            </p>
+            <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="install-suggested" type="button">
+              安装
+            </button>
+          </div>
+          <div class="plugin-suggest__card" data-suggest="@someone/stocks">
+            <div class="plugin-suggest__head">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                股
+              </span>
+              <b title="股票行情">
+                股票行情
+              </b>
+            </div>
+            <p>
+              自选股涨跌一眼看到
+            </p>
+            <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="install-suggested" type="button">
+              安装
+            </button>
+          </div>
+          <div class="plugin-suggest__card" data-suggest="@someone/notes">
+            <div class="plugin-suggest__head">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                便
+              </span>
+              <b title="便签">
+                便签
+              </b>
+            </div>
+            <p>
+              随手记一句
+            </p>
+            <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="install-suggested" type="button">
+              安装
+            </button>
+          </div>
+          <button class="plugin-suggest__card plugin-suggest__browse" data-action="browse-market" type="button">
+            <svg aria-hidden="true" class="lucide lucide-store" fill="none" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"></svg>
+            <b>
+              浏览插件市场
+            </b>
+            <span>
+              按分类看全部插件
+            </span>
+          </button>
+        </div>
+      </section>
       <p class="plugin-foot" data-footnote="true">
         浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
         <button class="plugin-link" data-action="open-overview" type="button">

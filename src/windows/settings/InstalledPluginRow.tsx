@@ -10,6 +10,8 @@ import { capabilityItems, localized } from "./pluginMarketModel";
 import { OfficialMark } from "./OfficialMark";
 import { PluginLogo } from "./PluginLogo";
 import { PluginMenu, type PluginMenuItem } from "./PluginMenu";
+import { PluginPlaceTags } from "./PluginPlaceTags";
+import { versionStanding } from "./pluginReach";
 import type { RowNote } from "./pluginRowStatus";
 
 export type RowAction = "restart" | "log" | "turnOnProvider" | "uninstall" | "review" | "update" | "whatsNew";
@@ -132,6 +134,20 @@ function rowMenu(entry: InstalledEntry, stale: boolean, text: SettingsPluginPage
   return items;
 }
 
+export function useVersionText(entry: InstalledEntry): { text: string; strong: boolean } | null {
+  const versions = useTranslation().settings.pluginsV3.page.versions;
+  if (!entry.version) return null;
+  if (entry.source === "manual" && versionStanding(entry.version, entry.marketVersion) === "newer") return { text: versions.localNewer(entry.version), strong: true };
+  return { text: `v${entry.version}`, strong: false };
+}
+
+export function useOriginText(entry: InstalledEntry): { text: string; warn: boolean } | null {
+  const text = useTranslation().settings.pluginsV3.page;
+  if (entry.source === "manual") return { text: text.sources.manual, warn: true };
+  if (entry.source === "local") return { text: text.sources.local, warn: false };
+  return entry.publisher ? { text: entry.publisher, warn: false } : null;
+}
+
 export function InstalledPluginRow({ entry, stale, onOpen, onAction }: {
   entry: InstalledEntry;
   stale: boolean;
@@ -140,7 +156,8 @@ export function InstalledPluginRow({ entry, stale, onOpen, onAction }: {
 }) {
   const text = useTranslation().settings.pluginsV3.page;
   const { status } = entry;
-  const facts = [entry.publisher, text.sources[entry.source]].filter(Boolean).join(" · ");
+  const version = useVersionText(entry);
+  const origin = useOriginText(entry);
   const open = (event: MouseEvent<HTMLElement>) => {
     if (!(event.target as Element).closest(INTERACTIVE)) onOpen();
   };
@@ -155,17 +172,24 @@ export function InstalledPluginRow({ entry, stale, onOpen, onAction }: {
           <button className="plugin-row__name" type="button" title={entry.title} onClick={() => onOpen()}>{entry.title}</button>
           {entry.source === "official" ? <OfficialMark /> : null}
           {entry.source === "manual" ? <span className="plugin-badge plugin-badge--warn">{text.badges.unreviewed}</span> : null}
-          {entry.version ? <span className="plugin-row__version">v{entry.version}</span> : null}
+          {version ? <span className={`plugin-row__version${version.strong ? " plugin-row__version--strong" : ""}`} title={version.text}>{version.text}</span> : null}
           {status.label ? <span className={`plugin-row__state${labelTone}`}>· {text.labels[status.label]}</span> : null}
         </div>
         {entry.description ? <p className="plugin-row__desc">{entry.description}</p> : null}
-        {facts ? <div className="plugin-row__facts">{facts}</div> : null}
+        {entry.places.length > 0 || origin ? (
+          <div className="plugin-row__facts">
+            <PluginPlaceTags entry={entry} stale={stale} onOpenSettings={() => onOpen("settings")} />
+            {origin ? <span className={`plugin-row__origin${origin.warn ? " plugin-row__origin--warn" : ""}`} data-origin={entry.source}>{entry.places.length > 0 ? "· " : ""}{origin.text}</span> : null}
+          </div>
+        ) : null}
         {status.note ? <PluginRowNote note={status.note} onAction={onAction} /> : null}
       </div>
       <div className="plugin-row__aside">
-        <button className="plugin-icon-btn" type="button" title={text.actions.settings} aria-label={text.actions.settings} data-action="open-settings" onClick={() => onOpen("settings")}>
-          <Settings size={15} strokeWidth={2} aria-hidden="true" />
-        </button>
+        {entry.settings === false ? null : (
+          <button className="plugin-icon-btn" type="button" title={text.actions.settings} aria-label={text.actions.settings} data-action="open-settings" onClick={() => onOpen("settings")}>
+            <Settings size={15} strokeWidth={2} aria-hidden="true" />
+          </button>
+        )}
         <PluginMenu label={text.moreActions} items={rowMenu(entry, stale, text, onAction)} />
         <PluginEnableSwitch entry={entry} stale={stale} />
       </div>

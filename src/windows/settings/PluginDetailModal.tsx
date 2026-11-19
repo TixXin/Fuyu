@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import { Store, Trash2, X } from "lucide-react";
+import { Info, Store, Trash2, X } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
-import { PluginEnableSwitch, PluginRowNote, type RowAction } from "./InstalledPluginRow";
+import { PluginEnableSwitch, PluginRowNote, useVersionText, type RowAction } from "./InstalledPluginRow";
 import { OfficialMark } from "./OfficialMark";
 import { PluginLogo } from "./PluginLogo";
 import { PluginActivityTab, PluginCommandsTab, PluginOverviewExtras, PluginSettingsTab } from "./PluginDetailTabs";
 import type { InstalledEntry } from "./pluginEntries";
 import { marketClient } from "./pluginMarketActions";
 import type { PluginDetailTab } from "./pluginPageHandoff";
+import { PluginWhereLine } from "./PluginPlaceTags";
+import { versionStanding } from "./pluginReach";
 import { detailText } from "./pluginServiceStatus";
 import "./PluginDetailModal.css";
 import "./InstalledPlugins.css";
@@ -30,7 +32,8 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
   const errorText = useErrorText();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [tab, setTab] = useState<PluginDetailTab>(initialTab);
+  const tabs = entry.settings === false ? TABS.filter((key) => key !== "settings") : TABS;
+  const [tab, setTab] = useState<PluginDetailTab>(tabs.includes(initialTab) ? initialTab : "overview");
   const [confirming, setConfirming] = useState(startUninstall);
   const [removeData, setRemoveData] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -45,8 +48,13 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
   const { status } = entry;
   const dev = !entry.managed;
   const technical = detailText(entry.plugin, t);
+  const version = useVersionText(entry);
+  const manual = entry.source === "manual";
+  const fromDisk = manual || entry.source === "local";
+  const newer = manual && versionStanding(entry.version, entry.marketVersion) === "newer";
   const facts: [string, string][] = [
-    [text.detail.facts.version, entry.version ? `v${entry.version}` : "–"],
+    [text.detail.facts.version, entry.version ? (manual ? text.versions.local(entry.version) : `v${entry.version}`) : "–"],
+    ...(manual && entry.marketVersion ? [[text.detail.facts.marketVersion, `v${entry.marketVersion}`] as [string, string]] : []),
     [text.detail.facts.source, text.sources[entry.source]],
     ...(entry.publisher ? [[text.detail.facts.publisher, entry.publisher] as [string, string]] : []),
     [text.detail.facts.state, status.label ? text.labels[status.label] : text.running],
@@ -76,8 +84,8 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
   const onTabKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
-    const index = TABS.indexOf(tab);
-    const next = TABS[(index + (event.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
+    const index = tabs.indexOf(tab);
+    const next = tabs[(index + (event.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
     setTab(next);
     const list = event.currentTarget;
     requestAnimationFrame(() => list.querySelector<HTMLButtonElement>(`[data-tab='${next}']`)?.focus());
@@ -97,7 +105,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
               {entry.source === "manual" ? <span className="plugin-badge plugin-badge--warn">{text.badges.unreviewed}</span> : null}
             </div>
             <span className="plugin-dialog__sub">
-              {[entry.publisher, entry.version ? `v${entry.version}` : null, status.label ? text.labels[status.label] : text.running].filter(Boolean).join(" · ")}
+              {[fromDisk ? null : entry.publisher, version?.text, fromDisk ? text.sources[entry.source] : null, status.label ? text.labels[status.label] : text.running].filter(Boolean).join(" · ")}
             </span>
           </div>
           <div className="plugin-dialog__head-actions">
@@ -108,7 +116,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
           </div>
         </div>
         <div className="plugin-tabs" role="tablist" onKeyDown={onTabKey}>
-          {TABS.map((key) => (
+          {tabs.map((key) => (
             <button key={key} className="plugin-tabs__tab" type="button" role="tab" data-tab={key} aria-selected={tab === key} tabIndex={tab === key ? 0 : -1} onClick={() => setTab(key)}>
               {text.detail.tabs[key]}
             </button>
@@ -119,11 +127,18 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
             <>
               {status.note ? <PluginRowNote note={status.note} onAction={onAction} full /> : null}
               {entry.description ? <p className="plugin-dialog__desc">{entry.description}</p> : null}
+              <PluginWhereLine entry={entry} stale={stale} onOpenSettings={() => setTab("settings")} />
               <div className="plugin-facts">
                 {facts.map(([label, value]) => (
                   <div key={label}><span>{label}</span><b title={value}>{value}</b></div>
                 ))}
               </div>
+              {newer && entry.version && entry.marketVersion ? (
+                <p className="plugin-callout plugin-callout--info" data-newer-than-market>
+                  <Info size={15} strokeWidth={2.2} aria-hidden="true" />
+                  <span>{text.detail.newerThanMarket(entry.version, entry.marketVersion)}</span>
+                </p>
+              ) : null}
               {technical ? (
                 <p className="plugin-callout"><b>{text.detail.technical}</b> {technical}</p>
               ) : null}

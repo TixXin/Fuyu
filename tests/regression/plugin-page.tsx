@@ -16,6 +16,8 @@ const { takeMarketViewRequest } = await import("../../src/windows/settings/plugi
 
 const t = TRANSLATIONS[locale].settings.pluginsV3.page;
 market.revocationCases = true;
+market.reach = true;
+market.manualInstalled["@me/gadget"] = "0.2.0";
 Object.assign(market.installed, { "@someone/sketchy": "0.5.0", "@someone/translator": "1.0.0" });
 const REVOCATION = [...NORMAL, PLUGIN.shady, PLUGIN.sketchy, PLUGIN.translator];
 const open = (plugins: PluginHostView["plugins"], more: Partial<PluginHostView> = {}): PluginHostView => ({ connection: "open", plugins, host: HOST, memory: null, safeMode: null, ...more });
@@ -24,7 +26,9 @@ const safeHost = { ...HOST, safe: "third-party" as const };
 interface Stage { key: string; title: string; view: PluginHostView; node?: HostNodeStatus | null; hostOff?: boolean; detail?: PluginDetailRequest; migration?: boolean; narrow?: boolean; head?: boolean }
 const STAGES: Stage[] = [
   { key: "settings", title: "插件设置 / Plugin settings", view: open(NORMAL), detail: { id: "@fuyu/weather", tab: "settings" } },
-  { key: "normal", title: "已安装若干 / Installed", view: open([...NORMAL, PLUGIN.hello]), head: true },
+  { key: "normal", title: "已安装若干 / Installed", view: open(NORMAL), head: true },
+  { key: "fewBad", title: "少而有问题 / Few with a problem", view: open([PLUGIN.weather, PLUGIN.feeds]) },
+  { key: "many", title: "装了 6 个 / Six installed", view: open([PLUGIN.weather, PLUGIN.clock, PLUGIN.local, PLUGIN.pomodoro, PLUGIN.feeds, PLUGIN.sketchy]) },
   { key: "empty", title: "空状态 / Empty", view: open([PLUGIN.counter]) },
   { key: "update", title: "有可更新 / Update", view: open([...NORMAL, PLUGIN.pomodoro]) },
   { key: "error", title: "出错 / Error", view: open([...NORMAL, PLUGIN.feeds, PLUGIN.flaky, PLUGIN.linked]) },
@@ -117,21 +121,64 @@ try {
   await click(weather.querySelector("[data-tab='settings']"));
   await settle();
 
-  check(all("normal", ".plugin-row").length === 5 && !gallery.querySelector("[data-stage='normal'] .plugin-banner"), "Normal: five installed plugins and no banner");
+  check(all("normal", ".plugin-row").length === 4 && !gallery.querySelector("[data-stage='normal'] .plugin-banner"), "Normal: four installed plugins and no banner");
   const titles = all("normal", ".plugin-row__name").map((element) => element.textContent!.trim());
   check(titles.join("|") === [...titles].sort((a, b) => a.localeCompare(b, locale)).join("|"), "Rows are sorted by name");
   check(row("normal", "@fuyu/weather")?.querySelector("[data-official]") && row("normal", "@fuyu/weather")?.querySelector(".plugin-icon__img") && !row("normal", "@me/gadget")?.querySelector("[data-official]") && row("normal", "@me/gadget")?.querySelector(".plugin-badge--warn") && row("normal", "@me/gadget")?.classList.contains("plugin-row--off"), "Official plugins carry a check mark, file installs carry an unreviewed badge, and a switched-off plugin is dimmed");
-  const chip = (filter: string) => within("normal", `[data-filter='${filter}']`) as HTMLButtonElement;
-  check(chip("all").textContent!.includes("5") && chip("on").textContent!.includes("4") && chip("off").textContent!.includes("1") && chip("attention").disabled, "Filter chips count all, on and off, and the attention chip is disabled at zero");
-  await click(chip("off"));
-  check(all("normal", ".plugin-row").length === 1 && chip("off").getAttribute("aria-pressed") === "true", "The off chip leaves only the switched-off plugin");
+  check(!within("normal", ".plugin-page__toolbar") && !within("normal", ".plugin-search"), "Fewer than six plugins: no search box and no filter chips");
+  check(!within("fewBad", ".plugin-search") && all("fewBad", "[data-filter]").map((item) => item.dataset.filter).join() === "attention", "With few plugins and a problem, only the attention chip shows");
+  await click(within("fewBad", "[data-filter='attention']"));
+  check(all("fewBad", ".plugin-row").length === 1, "and it narrows the list to the broken plugin");
+  await click(within("fewBad", "[data-filter='attention']"));
+  check(all("fewBad", ".plugin-row").length === 2, "Clicking it again shows every plugin");
+  const chip = (filter: string) => within("many", `[data-filter='${filter}']`);
+  check(within("many", ".plugin-search") && chip("all")?.textContent!.includes("6") && chip("on")?.textContent!.includes("6") && !chip("off") && chip("attention")?.textContent!.includes("2"), "Six plugins bring the search box; chips with nothing to show are hidden");
+  await click(chip("attention"));
+  check(all("many", ".plugin-row").length === 2 && chip("attention")?.getAttribute("aria-pressed") === "true", "The attention chip leaves only the plugins that need a look");
   await click(chip("all"));
-  await type(within("normal", ".plugin-search input") as HTMLInputElement, "zzz");
-  check(within("normal", "[data-no-match]") && all("normal", ".plugin-row").length === 0, "A search with no match says so");
-  await click(within("normal", "[data-action='search-market']"));
-  check(opened.includes("normal:pluginMarket") && takeMarketViewRequest()?.query === "zzz", "and offers to search the market for the same words");
-  await click(within("normal", ".plugin-search__clear"));
-  check(all("normal", ".plugin-row").length === 5, "Clearing the search brings every row back");
+  await type(within("many", ".plugin-search input") as HTMLInputElement, "zzz");
+  check(within("many", "[data-no-match]") && all("many", ".plugin-row").length === 0, "A search with no match says so");
+  await click(within("many", "[data-action='search-market']"));
+  check(opened.includes("many:pluginMarket") && takeMarketViewRequest()?.query === "zzz", "and offers to search the market for the same words");
+  await click(within("many", ".plugin-search__clear"));
+  check(all("many", ".plugin-row").length === 6, "Clearing the search brings every row back");
+
+  const weatherRow = row("normal", "@fuyu/weather")!;
+  check([...weatherRow.querySelectorAll<HTMLElement>("[data-place]")].map((item) => item.dataset.place).join() === "page,bar,alerts,settings" && !weatherRow.querySelector(".plugin-row__facts")?.textContent!.includes(locale === "en" ? "Plugin market" : "插件市场"), "The second line says where the plugin shows up on the island, not the market");
+  await click(weatherRow.querySelector("button[data-place='page']"));
+  check(ipc.calls.includes(`emit:island-open-plugin-page:{"pluginId":"@fuyu/weather"}`), "Clicking Island page asks the island to expand on that plugin's page");
+  check(weatherRow.querySelector("[data-action='open-settings']") && !row("normal", "@someone/clock")?.querySelector("[data-action='open-settings']") && row("normal", "my-local-tool")?.querySelector("[data-action='open-settings']"), "A plugin with no settings has no gear; one we cannot read still has it");
+  const gadgetRow = row("normal", "@me/gadget")!;
+  check(gadgetRow.querySelector(".plugin-row__version")?.textContent === t.versions.localNewer("0.2.0") && gadgetRow.querySelector("[data-origin='manual']")?.textContent!.includes(t.sources.manual) && gadgetRow.querySelector("span[data-place='page']") && !gadgetRow.querySelector("button[data-place='page']"), "A file install newer than the market says so and where it came from; a switched-off plugin's page tag is not a link");
+  check(row("normal", "my-local-tool")?.querySelector("[data-origin='local']")?.textContent === t.sources.local, "A plugin loaded from a folder says so");
+  await click(row("normal", "@someone/clock")?.querySelector(".plugin-row__name"));
+  await settle();
+  const clockDetail = dialog("@someone/clock")!;
+  check(clockDetail && !clockDetail.querySelector("[data-tab='settings']") && clockDetail.querySelector("[data-where] [data-place='bar']"), "Its detail has no settings tab and lists where it shows up");
+  await press(clockDetail, "Escape");
+  await click(gadgetRow.querySelector(".plugin-row__name"));
+  await settle();
+  const gadgetDetail = dialog("@me/gadget")!;
+  check(gadgetDetail.querySelector("[data-newer-than-market]") && gadgetDetail.textContent!.includes(t.detail.facts.marketVersion) && gadgetDetail.textContent!.includes(t.versions.local("0.2.0")) && gadgetDetail.textContent!.includes(t.sources.manual) && !gadgetDetail.querySelector("[data-official]"), "The detail of a newer file install gives both versions, the source and why there is no check mark");
+  await press(gadgetDetail, "Escape");
+  await click(weatherRow.querySelector("button[data-place='settings']"));
+  await settle();
+  const weatherDetails = [...document.querySelectorAll<HTMLElement>("[data-plugin-detail='@fuyu/weather']")];
+  const weatherDetail = weatherDetails[weatherDetails.length - 1];
+  check(weatherDetails.length === 2 && weatherDetail.querySelector("[data-tab='settings']")?.getAttribute("aria-selected") === "true", "Has settings opens the detail on its settings tab");
+  await click(weatherDetail.querySelector("[data-tab='overview']"));
+  await click(weatherDetail.querySelector("[data-action='open-on-island']"));
+  check(ipc.calls.filter((call) => call.startsWith("emit:island-open-plugin-page")).length === 2, "The detail's Open on the island does the same");
+  await press(weatherDetail, "Escape");
+
+  check(all("normal", "[data-suggest]").map((item) => item.dataset.suggest).join() === "@fuyu/countdown,@someone/stocks,@someone/notes" && within("normal", "[data-suggestions] [data-action='browse-market']"), "Below the list: three plugins not installed yet, official first, then a card to the market");
+  await click(within("normal", "[data-action='install-suggested']"));
+  await settle();
+  const suggestModal = document.querySelector<HTMLElement>("[data-install-modal='@fuyu/countdown']");
+  check(suggestModal, "A suggested plugin installs through the usual confirmation");
+  await press(suggestModal!, "Escape");
+  await click(within("normal", "[data-suggestions] [data-action='browse-market']"));
+  check(opened.includes("normal:pluginMarket"), "The last card opens the market");
   await click(row("normal", "@someone/clock")?.querySelector("input[role='switch'], .settings-switch input"));
   await settle();
   check(market.calls.includes("enabled:@someone/clock=false"), "A row's switch turns the plugin off through the market service");
@@ -147,29 +194,9 @@ try {
   await click(row("normal", "my-local-tool")?.querySelector("[data-action='open-settings']"));
   await settle();
   const local = dialog("my-local-tool")!;
-  check(local && local.querySelector("[data-action='uninstall-plugin']")?.textContent === t.detail.remove && local.querySelector("[data-tab='settings']")?.getAttribute("aria-selected") === "true", "The gear opens settings; a plugin listed by file path offers remove from Fuyu");
-  await click(local.querySelector("[data-action='uninstall-plugin']"));
-  check(local.querySelector("[data-uninstall-confirm]")?.textContent!.includes(t.detail.removeNoteFile), "and its confirmation says only the plugins.yml entry goes");
+  check(local && !local.querySelector("[data-action='uninstall-plugin']") && local.querySelector("[data-tab='settings']")?.getAttribute("aria-selected") === "true", "The gear opens settings; a plugin loaded from a folder has no uninstall button");
   await press(local, "Escape");
   check(!dialog("my-local-tool"), "Escape closes the detail dialog");
-  const helloRow = row("normal", "hello");
-  check(helloRow?.querySelector(".plugin-row__facts")?.textContent === t.sources.local && !helloRow.querySelector(".plugin-row__switch"), "A plugin from fuyu-plugin dev is labelled local development and has no switch");
-  await click(helloRow!.querySelector(".plugin-row__name"));
-  await settle();
-  const helloFoot = dialog("hello")?.querySelector("[data-action='uninstall-plugin']");
-  check(helloFoot?.textContent === t.detail.remove, "Its detail dialog offers remove from Fuyu instead of uninstall");
-  await press(dialog("hello")!, "Escape");
-  const helloMenu = await openRowMenu("normal", "hello");
-  const helloRemove = helloMenu.find((item) => item.dataset.menuItem === "uninstall");
-  check(helloMenu.map((item) => item.dataset.menuItem).join() === "restart,log,uninstall" && helloRemove?.textContent === t.actions.remove && helloMenu[0].hasAttribute("disabled"), "Its row menu keeps restart off and offers remove from Fuyu");
-  await click(helloRemove);
-  await settle();
-  const hello = dialog("hello")!;
-  check(hello.querySelector("[data-uninstall-confirm]")?.textContent!.includes(t.detail.removeNote) && hello.querySelector("[data-action='confirm-uninstall-plugin']")?.textContent === t.detail.confirmRemove, "The confirmation says the plugin folder stays and fuyu-plugin dev brings it back");
-  await click(hello.querySelector(".plugin-check input"));
-  await click(hello.querySelector("[data-action='confirm-uninstall-plugin']"));
-  await settle();
-  check(market.calls.includes("uninstall:hello:true") && !dialog("hello"), "Confirming removes it with its data when ticked and closes the dialog");
   await click(within("normal", "[data-action='open-overview']"));
   check(opened.includes("normal:overview"), "The footnote links to the overview page");
   await click(within("normal", "[data-action='open-market']"));
@@ -262,7 +289,7 @@ try {
   check(within("hostOff", "[data-banner='host-off']") && !within("hostOff", ".plugin-row") && !within("hostOff", "[data-empty]"), "Plugins off: one banner explains it and no list is shown");
   check(within("loading", ".plugin-list[aria-busy='true']") && !within("loading", ".plugin-banner"), "Loading: a skeleton list and no banner");
 
-  const spills = [...gallery.querySelectorAll<HTMLElement>(".gallery__stage--narrow :is(.plugin-row, .plugin-banner, .plugin-page__toolbar, .plugin-note, .plugin-page__summary)")].filter((element) => element.scrollWidth > element.clientWidth + 1);
+  const spills = [...gallery.querySelectorAll<HTMLElement>(".gallery__stage--narrow :is(.plugin-row, .plugin-banner, .plugin-page__toolbar, .plugin-note, .plugin-page__summary, .plugin-row__facts, .plugin-suggest__grid, .plugin-suggest__card)")].filter((element) => element.scrollWidth > element.clientWidth + 1);
   check(spills.length === 0, spills.length ? `Narrow: ${spills.map((element) => element.className).join(", ")} spill out sideways at 340 px` : "Narrow: nothing spills out sideways at 340 px");
 
   results.textContent = messages.join("\n");

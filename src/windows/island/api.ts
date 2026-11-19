@@ -193,6 +193,10 @@ export function showReadyIsland() {
   return invoke("show_ready_island");
 }
 
+export function islandWindowVisible() {
+  return getCurrentWindow().isVisible();
+}
+
 export function minimizeIsland() {
   return invoke("minimize_island");
 }

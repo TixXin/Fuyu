@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
-import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { emit, emitTo, listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { ISLAND_PLUGIN_PAGE_EVENT, islandPluginPageRequest, readIslandPluginPageRequest, type IslandPluginPageRequest } from "./islandPageRequest.ts";
 import {
   normalizeV2MigrationSnapshot,
   type V2MigrationDismissTarget,
@@ -147,4 +148,15 @@ export function takePendingPluginPackage(): Promise<PendingPluginPackage | null>
 
 export function onPluginPackageOpen(listener: () => void): Promise<UnlistenFn> {
   return listen(PLUGIN_PACKAGE_OPEN, () => listener());
+}
+
+export function requestIslandPluginPage(pluginId: string, page?: string): Promise<void> {
+  return emitTo("main", ISLAND_PLUGIN_PAGE_EVENT, islandPluginPageRequest(pluginId, page));
+}
+
+export function listenIslandPluginPageRequest(handler: (request: IslandPluginPageRequest) => void): Promise<UnlistenFn> {
+  return listen<unknown>(ISLAND_PLUGIN_PAGE_EVENT, ({ payload }) => {
+    const request = readIslandPluginPageRequest(payload);
+    if (request) handler(request);
+  });
 }
