@@ -57,7 +57,7 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
         .then((text) => { if (!didCancel && text && !latest.current.input.trim()) fillSource(text, ""); })
         .catch(() => {});
     }
-    const frame = window.requestAnimationFrame(() => inputRef.current?.focus());
+    const frame = window.requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
     return () => { didCancel = true; window.cancelAnimationFrame(frame); };
   }, [fillSource, isOpen]);
 
@@ -66,7 +66,7 @@ export function TranslationPanel({ isOpen, onOpenSettings }: { isOpen: boolean; 
       const text = await readTranslationClipboard();
       if (text) fillSource(text, "");
       else setError(t.translator.emptyClipboard);
-      inputRef.current?.focus();
+      inputRef.current?.focus({ preventScroll: true });
     } catch (failure) { setError(errorText(failure)); }
   };
 
