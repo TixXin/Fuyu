@@ -8,7 +8,7 @@ export const BUILTIN_PAGES: Record<BuiltinPluginName, SettingsCategory> = {
   agents: "agents", "session-ring": "agentRings", "claude-usage": "agentRings", "cc-connect": "agentPush",
   "ssh-tunnel": "agentRemote", "local-api": "generalApi", "center-pattern": "appearanceCollapsed",
   "device-events": "behaviorAlerts", "system-levels": "behaviorAlerts", "device-use": "behaviorAlerts",
-  "theme-market": "themeMarket", updater: "about",
+  "theme-market": "theme", updater: "about",
 };
 
 export function milliseconds(ms: number) {

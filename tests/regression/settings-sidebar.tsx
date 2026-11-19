@@ -72,7 +72,7 @@ try {
   check(group("features").getAttribute("aria-expanded") === "false" && !listed().includes("todos") && listed().includes("agents"),
     "Folding Features hides only its pages");
   await act(async () => { group("basics").click(); });
-  check(listed().filter((item) => ["general", "behavior", "appearance", "theme", "themeMarket", "shortcuts"].includes(item)).join() === "general",
+  check(listed().filter((item) => ["general", "behavior", "appearance", "theme", "shortcuts"].includes(item)).join() === "general",
     "A folded group keeps the open page listed");
   check(group("basics").getAttribute("aria-label") === "展开「基础」", "The row says what clicking it does");
 
