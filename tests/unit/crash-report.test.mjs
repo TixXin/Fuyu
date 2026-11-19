@@ -7,7 +7,7 @@ import {
   isNoise,
   summarizeError,
 } from "../../src/lib/crash-report/errorSummary.ts";
-import { CRASH_RELOAD_WINDOW_MS, crashVariant, nextCrashStep, parseReloadAt } from "../../src/lib/crash-report/recovery.ts";
+import { CRASH_RELOAD_WINDOW_MS, RETRY_MEMORY_MS, crashVariant, nextCrashStep, parseReloadAt, retryFailed } from "../../src/lib/crash-report/recovery.ts";
 
 test("the first crash reloads, a crash right after a reload shows the fallback, a later one reloads again", () => {
   const at = 1_800_000_000_000;
@@ -28,6 +28,16 @@ test("the dev build never reloads by itself, the broken code would crash again",
 test("a missing or broken stored reload time counts as never reloaded", () => {
   for (const raw of [null, "", "  ", "abc", "-5", "0", "NaN", "Infinity"]) assert.equal(parseReloadAt(raw), null, String(raw));
   assert.equal(parseReloadAt("1800000000000"), 1_800_000_000_000);
+});
+
+test("a crash soon after the user's own reload counts as a failed retry, a crash much later starts over", () => {
+  const at = 1_800_000_000_000;
+  assert.equal(retryFailed({ now: at, lastRetryAt: null }), false);
+  assert.equal(retryFailed({ now: at + 3000, lastRetryAt: at }), true);
+  assert.equal(retryFailed({ now: at + RETRY_MEMORY_MS - 1, lastRetryAt: at }), true);
+  assert.equal(retryFailed({ now: at + RETRY_MEMORY_MS, lastRetryAt: at }), false);
+  assert.equal(retryFailed({ now: at - 5000, lastRetryAt: at }), false);
+  assert.ok(RETRY_MEMORY_MS > CRASH_RELOAD_WINDOW_MS, "the island's own reload every minute must not make the pill forget the user's retry");
 });
 
 test("the island gets the pill, the click-through drag grid shows nothing, other windows get the card", () => {

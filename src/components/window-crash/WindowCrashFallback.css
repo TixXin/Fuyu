@@ -36,16 +36,17 @@
 .window-crash__pill {
   display: flex;
   align-items: center;
-  gap: 10px;
   max-width: min(340px, calc(100% - 16px));
   height: 36px;
   padding: 0 5px 0 14px;
+  gap: 6px;
   border-radius: var(--radius-pill);
   font-size: 12px;
 }
 
 .window-crash__text {
   min-width: 0;
+  margin-right: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -74,9 +75,25 @@
   overflow-wrap: anywhere;
 }
 
+.window-crash__error {
+  display: -webkit-box;
+  overflow: hidden;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-white-a06);
+  color: var(--text-2);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  user-select: text;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .window-crash__actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: 8px;
   margin-top: 6px;
 }
@@ -111,4 +128,27 @@
 .window-crash__button:focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
+}
+
+.window-crash__button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.window-crash__button--icon {
+  width: 26px;
+  padding: 0;
+  justify-content: center;
+}
+
+.window-crash__button--link {
+  margin-right: auto;
+  padding: 0 4px;
+  background: transparent;
+  color: var(--text-2);
+}
+
+.window-crash__button--link:hover {
+  background: transparent;
+  color: var(--text-1);
 }

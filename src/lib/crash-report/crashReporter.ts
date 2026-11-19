@@ -1,23 +1,24 @@
-import { closeCurrentWindow, reportFrontendError, type FrontendErrorKind } from "./api";
+import { closeCurrentWindow, reportFrontendError, restartApp, revealCrashLog, type FrontendErrorKind } from "./api";
 import { createReportLimiter, isNoise, summarizeError } from "./errorSummary";
-import { nextCrashStep, parseReloadAt, type CrashStep } from "./recovery";
+import { nextCrashStep, parseReloadAt, retryFailed, type CrashOutcome, type CrashStep } from "./recovery";
 
 const RELOAD_AT = "fuyuCrashReloadAt";
+const RETRY_AT = "fuyuCrashRetryAt";
 const MAX_REPORTS = 20;
 const RELOAD_GRACE_MS = 400;
 const allow = createReportLimiter(MAX_REPORTS);
 
-function readReloadAt(): number | null {
+function readTime(key: string): number | null {
   try {
-    return parseReloadAt(sessionStorage.getItem(RELOAD_AT));
+    return parseReloadAt(sessionStorage.getItem(key));
   } catch {
     return null;
   }
 }
 
-function writeReloadAt(at: number) {
+function writeTime(key: string, at: number) {
   try {
-    sessionStorage.setItem(RELOAD_AT, String(at));
+    sessionStorage.setItem(key, String(at));
   } catch {
     return;
   }
@@ -34,8 +35,21 @@ export function reportCrash(kind: FrontendErrorKind, error: unknown, componentSt
 }
 
 export function reloadWindow() {
-  writeReloadAt(Date.now());
+  writeTime(RELOAD_AT, Date.now());
   window.location.reload();
+}
+
+export function retryWindow() {
+  writeTime(RETRY_AT, Date.now());
+  reloadWindow();
+}
+
+export function restartFuyu() {
+  void restartApp().catch((error: unknown) => console.error("Failed to restart the app", error));
+}
+
+export function openCrashLog() {
+  void revealCrashLog().catch((error: unknown) => console.error("Failed to show the error log", error));
 }
 
 export function closeWindow() {
@@ -44,12 +58,17 @@ export function closeWindow() {
 
 export function handleCrash(kind: FrontendErrorKind, error: unknown, componentStack?: string | null): CrashStep {
   const sent = reportCrash(kind, error, componentStack);
-  const step = nextCrashStep({ now: Date.now(), lastReloadAt: readReloadAt(), dev: Boolean(import.meta.hot) });
+  const step = nextCrashStep({ now: Date.now(), lastReloadAt: readTime(RELOAD_AT), dev: Boolean(import.meta.hot) });
   if (step === "reload") {
     const grace = new Promise<void>((resolve) => window.setTimeout(resolve, RELOAD_GRACE_MS));
     void Promise.race([sent, grace]).then(reloadWindow);
   }
   return step;
+}
+
+export function crashOutcome(kind: FrontendErrorKind, error: unknown, componentStack?: string | null): CrashOutcome {
+  const retried = retryFailed({ now: Date.now(), lastRetryAt: readTime(RETRY_AT) });
+  return { step: handleCrash(kind, error, componentStack), retried };
 }
 
 export function installCrashReporting() {
