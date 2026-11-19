@@ -26,22 +26,21 @@ D104（#835，需要用户本人）是 Windows 真机验收单，第 1 项正好
 |---|---|---|---|
 | `[C127] 歌词源加 QQ、酷狗本地缓存和网易逐字` | C127 | 是（cargo） | `src-tauri/src/lyrics/,src/features/media/host/lyricsSources.mjs,src/features/media/lyrics/,src/i18n/sections/settings/lyrics.ts,docs/research/lyrics-sources.md`（要加 crate 时再加 `src-tauri/Cargo.toml,src-tauri/Cargo.lock`，热点文件，改完单独先提交） |
 | `[C122] 微信会话定位重试和翻译页不跳` | C122 + C123 | 是（cargo，Windows 交叉 clippy） | C122：`src-tauri/src/wechat_reminders/chats.rs`（`uia_list` 在平台层 `src-tauri/src/win32/`，归 Win 适配，尽量不动；非动不可时先问组长，组长和 `[任务] Win 适配零散` 对过再加）；C123：`src/features/translation/TranslationPanel.tsx,src/features/translation/useTranslationRequest.ts,docs/tasks/D/D104.md` |
-| `[C124] 收起条长消息自适应展开` | C124 | 是（cargo + 回归页） | `src/features/messages/CollapsedMessageContent.tsx,src/features/messages/CollapsedMessageContent.css,src/features/messages/island/,src-tauri/src/island/state.rs,tests/regression/collapsed-message-animation.*,tests/regression/snapshots/collapsed-message-animation.html`，岛壳收起条样式的具体文件等和 UI 外观对完再定（见下） |
+| `[C124] 收起条长消息自适应展开` | C124 | 是（cargo + 回归页） | `src/features/messages/CollapsedMessageContent.tsx,src/features/messages/CollapsedMessageContent.css,src/features/messages/island/,src-tauri/src/island/state.rs,tests/regression/collapsed-message-animation.*,tests/regression/snapshots/collapsed-message-animation.html`，另加 `notch.rs`、`geometry.rs`，岛壳收起条样式的文件由会话找到后再加（见下） |
 
 ### 顺序
 
 - **第 1 批（并行）**：C127、C122+C123。两个要编译的会话，正好是上限。三者互不依赖，文件不重叠。
-- **第 2 批**：C124。UI 外观已确认不重叠；等第 1 批有一个做完（编译和回归页名额）就派，原生部分按下一节先和 Mac 适配对 G1.33。
+- **第 2 批**：C124。UI 外观已确认不重叠；等第 1 批有一个做完（编译和回归页名额）就派。
 - C127 的工作量最大（三个源加排序），可能跨好几轮；C122+C123 一轮能完。
 
 ### 和 UI 外观的文件重叠（C124）
 
 2026-11-18 问过 `Fuyu-[总控] UI 外观`，回复：**不重叠，C124 可以先做**。它近期只有 C125（#898，闲置贴边的岛叫回来），改 `src/windows/island/useIslandNavigation.ts`、`useIslandTucking.ts`、新文件 `tuckRecall.ts` 和 `tests/unit/tuck-recall.test.mjs`，不碰收起条样式、收起宽度、`messages/`、`state.rs`、`notch.rs`。C124 不要动这四个文件。
 
-要注意的是 Mac 组的 **G1.33**（#725，刘海屏融合，owner `g1-33`，状态「待用户确认」）：认领范围里有 `src-tauri/src/island/state.rs`、`notch.rs`、`geometry.rs`、`mod.rs`、`src/windows/island/IslandApp.tsx`、`useNativeLayout.ts` 等。工作区里这些文件现在没有没提交的改动，但任务没结束，用户验收时可能还要回头改。所以 C124：
-- 先把前端（收起条的排版、停留不消失、回归页）做完提交；
-- 要改 `state.rs` / `notch.rs` / `geometry.rs` 之前，由组长先问 `Fuyu-[总控] Mac 适配`（G1.33 的会话 `[任务] Mac 适配零散修复` 在不在跑由它判断）G1.33 还会不会改这些文件，对完再加进 C124 的 `--scope`；认领时 `task:claim` 报范围重叠，就先只认领前端部分。
-- 这样 C124 不必等编译名额才开工，前端部分不用编译 Rust（回归页除外）。
+Mac 组的 **G1.33**（#725，刘海屏融合）认领范围里有 `src-tauri/src/island/state.rs`、`notch.rs`、`geometry.rs`。2026-11-18 问过 `Fuyu-[总控] Mac 适配`，回复：**G1.33 已改完并合入，只等用户在 Mac 上验收，C124 可以直接认领这三个文件**；用户验收时如果还要改 `notch.rs`，Mac 适配会先找组长协调，不直接动。认领时 `task:claim` 若因 G1.33 的旧范围报重叠，用 `--force`，并在 issue 回复里写明已协调。
+
+C124 的 `--scope` 因此定为：`src/features/messages/CollapsedMessageContent.tsx,src/features/messages/CollapsedMessageContent.css,src/features/messages/island/,src-tauri/src/island/state.rs,src-tauri/src/island/notch.rs,src-tauri/src/island/geometry.rs,tests/regression/collapsed-message-animation.tsx,tests/regression/snapshots/collapsed-message-animation.html`，岛壳收起条样式的文件由任务会话找到后报给组长再加。不碰 C125 的 `useIslandNavigation.ts`、`useIslandTucking.ts`、`tuckRecall.ts`。
 
 ### 每个任务怎样算做完
 
