@@ -67,9 +67,9 @@ export function createMarketDownloader({ fetchImpl, now = () => Date.now(), pref
     }
   };
 
-  const run = async (url, attempt, what = "the file") => {
+  const run = async (url, attempt, what = "the file", { mirrors = true } = {}) => {
     const failures = [];
-    for (const source of ordered(url)) {
+    for (const source of mirrors ? ordered(url) : ordered(url).filter((item) => item.name === DIRECT)) {
       try {
         const value = await attempt({ name: source.name, get: (target, options) => get(source, target, options) });
         const at = now();

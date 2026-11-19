@@ -68,6 +68,31 @@ test("the manifest summary is checked", () => {
   ]);
 });
 
+test("search keywords and document hashes are optional, and checked when present", () => {
+  const listed = version("@someone/weather", author);
+  listed.manifest = { ...listed.manifest, keywords: ["天气预报", "forecast"] };
+  listed.docs = { "README.md": "d".repeat(64), "README.zh-CN.md": "e".repeat(64), "CHANGELOG.md": "f".repeat(64) };
+  assert.deepEqual(paths(index([plugin({ author, versions: [listed] })])), []);
+
+  const bad = version("@someone/weather", author);
+  bad.manifest = { ...bad.manifest, keywords: ["ok", ""] };
+  bad.docs = { "README.md": "D".repeat(64), "readme.md": "d".repeat(64), "../README.md": "d".repeat(64), "dist/host.js": "d".repeat(64), "LICENSE": "d".repeat(64) };
+  assert.deepEqual(paths(index([plugin({ author, versions: [bad] })])), [
+    "plugins[0].versions[0].manifest.keywords",
+    "plugins[0].versions[0].docs.README.md",
+    "plugins[0].versions[0].docs.readme.md",
+    "plugins[0].versions[0].docs.../README.md",
+    "plugins[0].versions[0].docs.dist/host.js",
+    "plugins[0].versions[0].docs.LICENSE",
+  ]);
+
+  const crowded = version("@someone/weather", author);
+  crowded.manifest = { ...crowded.manifest, keywords: Array.from({ length: 33 }, (_, i) => `k${i}`) };
+  crowded.docs = Object.fromEntries(Array.from({ length: 17 }, (_, i) => [`README.l${String.fromCharCode(97 + i)}.md`, "d".repeat(64)]));
+  assert.deepEqual(paths(index([plugin({ author, versions: [crowded] })])), ["plugins[0].versions[0].manifest.keywords", "plugins[0].versions[0].docs"]);
+  assert.deepEqual(paths(index([plugin({ author, versions: [{ ...version("@someone/weather", author), docs: [] }] })])), ["plugins[0].versions[0].docs"]);
+});
+
 test("a third-party repository must belong to the name's scope", () => {
   const p = plugin({ author, versions: [version("@someone/weather", author, { repository: "https://github.com/impostor/weather" })] });
   assert.deepEqual(paths(index([p])), ["plugins[0].versions[0].repository"]);

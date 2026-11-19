@@ -2,10 +2,10 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PACKAGES_SUBDIR } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { compareVersions, selectVersions } from "../../../../packages/plugin-market/src/index.mjs";
+import { docHashes, fetchFirstRemoteDoc } from "./marketDocs.mjs";
 import { createMarketDownloader } from "./marketSources.mjs";
 import { isObject, marketError, readState, readVerifiedCachedIndex } from "./marketStore.mjs";
 
-const REMOTE_DOC_TIMEOUT_MS = 4000;
 const SCOPED_PACKAGE_RE = /^@([a-z0-9][a-z0-9._~-]*)\/([a-z0-9][a-z0-9._~-]*)$/i;
 const GITHUB_SHORTHAND_RE = /^github:([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?\/?$/i;
 const GITHUB_URL_RE = /^(?:git\+)?https?:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+?)(?:\.git)?(?:\/.*)?$/i;
@@ -168,26 +168,6 @@ function readLocalDocFile(dir, candidates) {
   return null;
 }
 
-async function fetchRemoteText(downloader, url) {
-  try {
-    return await downloader.run(url, async (source) => {
-      const res = await source.get(url, { timeoutMs: REMOTE_DOC_TIMEOUT_MS });
-      return res.missing ? null : res.text;
-    }, "the document");
-  } catch {
-    return null;
-  }
-}
-
-async function fetchFirstRemoteDoc(downloader, rawBase, candidates) {
-  if (!rawBase) return null;
-  for (const filename of candidates) {
-    const text = await fetchRemoteText(downloader, `${rawBase}${filename}`);
-    if (text !== null) return text;
-  }
-  return null;
-}
-
 function resolveScreenshots({ versionEntry, entryManifest, localFuyu, rawBase }) {
   const entryShots = Array.isArray(versionEntry?.screenshots) ? versionEntry.screenshots : null;
   const manifestShots = Array.isArray(entryManifest?.screenshots)
@@ -290,9 +270,10 @@ export async function getMarketPluginDetails(params, context) {
     readme = readLocalDocFile(localInstalled.dir, readmeCandidates);
     changelog = readLocalDocFile(localInstalled.dir, changelogCandidates);
   } else if (rawBase) {
+    const hashes = docHashes(latestEntry);
     [readme, changelog] = await Promise.all([
-      fetchFirstRemoteDoc(downloader, rawBase, readmeCandidates),
-      fetchFirstRemoteDoc(downloader, rawBase, changelogCandidates),
+      fetchFirstRemoteDoc(downloader, rawBase, readmeCandidates, hashes),
+      fetchFirstRemoteDoc(downloader, rawBase, changelogCandidates, hashes),
     ]);
   }
 

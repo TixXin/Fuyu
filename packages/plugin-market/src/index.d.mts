@@ -18,6 +18,7 @@ export type ManifestSummary = {
   readonly description: Localized;
   readonly license: string;
   readonly categories?: readonly string[];
+  readonly keywords?: readonly string[];
   readonly preview?: boolean;
   readonly requires?: Readonly<Record<string, string>>;
   readonly nodeApis: readonly string[];
@@ -45,6 +46,7 @@ export type VersionEntry = {
   readonly manifest: ManifestSummary;
   readonly icon: Asset;
   readonly screenshots?: readonly Screenshot[];
+  readonly docs?: Readonly<Record<string, string>>;
 };
 
 export type Publisher = {
@@ -119,6 +121,9 @@ export declare function checkAuthor(input: { plugin: PluginEntry; entry: Version
 export declare const FORMAT: 3;
 export declare const PLATFORMS: readonly Platform[];
 export declare const MAX_SCREENSHOTS: number;
+export declare const MAX_KEYWORDS: number;
+export declare const MAX_DOCS: number;
+export declare const DOC_NAME: RegExp;
 export declare const DEFAULT_MARKET: Required<MarketOptions>;
 export declare function parseName(name: unknown): { scope: string; name: string } | null;
 export declare function validateIndex(doc: unknown, options?: MarketOptions): Problem[];
