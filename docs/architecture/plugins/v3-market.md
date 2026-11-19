@@ -127,6 +127,40 @@
 - 哈希由市场 CI 在构建后从包里算。包里的文件是从那个提交检出的，所以和 `raw.githubusercontent.com` 上的字节相同；仓库用 `.gitattributes` 把这些文件检出成另一种换行时两边对不上，文档就不显示。
 - 已装的插件读本地安装目录里的文件，不联网。
 
+### 套装：`bundles`
+
+索引顶层可以有 `bundles`（E77.8，2026-11-19 起），把几个搭配着用的插件列成一组，市场页显示成「套装」，一次确认装好。没有这个字段的索引和这之前的岛屿都不受影响：旧岛屿忽略它。
+
+```json
+"bundles": [
+  {
+    "id": "pomodoro-flow",
+    "displayName": { "zh-CN": "番茄工作法", "en": "Pomodoro flow" },
+    "description": { "zh-CN": "番茄钟、待办进度环和每日小结", "en": "A pomodoro timer, a to-do ring and a daily digest" },
+    "plugins": ["@fuyu/pomodoro", "@fuyu/todo-ring", "@fuyu/todo-digest"],
+    "onboarding": true
+  }
+]
+```
+
+| 字段 | 必填 | 说明 |
+|---|---|---|
+| `id` | 是 | 小写字母、数字和短横线，最多 64 个字符，索引内不重复 |
+| `displayName`、`description` | 是 | 中英文都要有 |
+| `plugins` | 是 | 2 到 6 个插件名，都必须在这份索引的 `plugins` 里，不能重复 |
+| `onboarding` | 否 | `true` 表示新手引导可以推荐它；默认不推荐 |
+
+- 套装只由维护者合入市场仓库，随索引一起签名；第一批只收官方插件。套装不带版本、不带哈希：装的是成员各自按「选版本」规则选出的那个版本，签名和 SHA-256 校验同单个安装。
+- 套装只是一张清单。装完之后每个插件各自更新、停用、卸载，本机不记录「装过哪个套装」，套装改了成员也不会替用户补装或卸载。
+- 格式由 `validateIndex` 校验（`packages/plugin-market/src/bundles.mjs`）；上限和下限是 `MIN_BUNDLE_PLUGINS`、`MAX_BUNDLE_PLUGINS`。
+
+宿主怎么用（`src/features/updater/host/marketBundles.mjs`）：
+
+- `market/v1` 的 `catalog` / `refresh` 快照多 `bundles`：`[{ id, displayName, description, onboarding, members: [{ name, state, reason? }] }]`。`state` 是 `installed`（装着并开着）、`disabled`（装着但关了）、`available`（没装，市场有能直接装的版本）或 `unavailable`；`unavailable` 时 `reason` 是 `platform`、`engines`、`revoked`、`warned`（市场给这个版本挂了警告，要到它自己的详情里装）、`missing`（索引里没有）或 `other`。
+- 成员里不是 `unavailable` 的不到 2 个时，这个套装不出现在快照里。
+- `installBundle({ id })` → `{ id, installed: [{ name, version }], failed: [{ name, code, message }] }`，只应答设置窗口。按清单顺序逐个安装 `available` 的成员，装着的不动，前面的成员作为依赖顺带装上的也跳过；一个失败不影响其余的，已经装上的留着，再调一次只装还没装上的。装上至少一个之后插件只重新加载一次。套装不存在回 `not-found`，参数不对回 `bad-params`。
+- 没审核的、作者密钥变了的版本没有能直接装的候选，在套装里算 `unavailable`，不会被一键装上。
+
 ## `revoked.v3.json`
 
 ```json

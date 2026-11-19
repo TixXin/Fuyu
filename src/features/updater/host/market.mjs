@@ -6,6 +6,7 @@ import { applyRevocationsToDir, inspectPackage as inspectFuyuPackage, installPac
 import { marketV1 } from "../../../../packages/plugin-services/src/services/market.mjs";
 import { dismissAutoUpdated, mergeAutoUpdated } from "./marketAutoUpdated.mjs";
 import { getMarketPluginDetails } from "./marketDetails.mjs";
+import { createBundleInstaller } from "./marketBundles.mjs";
 import { fetchVerifiedIndex } from "./marketIndex.mjs";
 import { createMarketInstaller } from "./marketInstall.mjs";
 import { createMarketMedia } from "./marketMedia.mjs";
@@ -49,6 +50,58 @@ export function createMarketService(options = {}) {
   const media = createMarketMedia({ dataDir, downloader, readDoc: () => readVerifiedCachedIndex(dataDir, trust, nowFn()).doc });
 
   const { verifyMarketStep, downloadAndInstallSteps, runSilentAutoUpdates } = createMarketInstaller({ pluginsDir, appVersion, platform, downloader });
+
+  const announceInstalled = async () => {
+    if (onConfigChanged) await onConfigChanged();
+    notifyChanged();
+  };
+
+  const installOne = async (params, { announce = true } = {}) => {
+    if (!isObject(params) || typeof params.name !== "string" || !params.name) {
+      throw marketError("bad-params", "installMarket expects { name, version? }");
+    }
+    const state = readState(dataDir);
+    const now = nowFn();
+    const { doc, error } = readVerifiedCachedIndex(dataDir, trust, now);
+    if (!doc) throw marketError(error ?? "no-index", "Market index is not available; refresh first");
+    const pluginEntry = doc.plugins.find((item) => item.name === params.name);
+    if (!pluginEntry) throw marketError("not-found", `Plugin ${params.name} is not in the market index`);
+    let versionEntry = null;
+    if (typeof params.version === "string" && params.version) {
+      versionEntry = pluginEntry.versions.find((item) => item.version === params.version) ?? null;
+    } else {
+      const selected = selectVersions(pluginEntry, { fuyuVersion: appVersion, platform, now, revocations: state.revocations });
+      versionEntry = selected.install?.entry ?? selected.manual?.entry ?? null;
+    }
+    if (!versionEntry) throw marketError("not-found", `No matching version found for ${params.name}`);
+
+    const installedById = new Map(readInstalledPackages(pluginsDir).map((item) => [item.id, item]));
+    const currentInst = installedById.get(pluginEntry.name) ?? null;
+    const currentPin = currentInst ? resolvePinnedAuthor(pluginEntry, currentInst.version, state.trustedAuthors) : null;
+    const isUpgrade = Boolean(currentInst) && compareVersions(versionEntry.version, currentInst.version) > 0;
+    const trustChange = isUpgrade ? detectTrustChange(pluginEntry, versionEntry, currentPin) : null;
+
+    const depPlan = planRequiredDependencies({ doc, rootName: pluginEntry.name, rootEntry: versionEntry, installedById, appVersion, platform, now, revocations: state.revocations, strict: true });
+    const steps = [...depPlan.map((dep) => verifyMarketStep(dep.plugin, dep.entry)), verifyMarketStep(pluginEntry, versionEntry)];
+    const { lastInstalled, trustedAuthors } = await downloadAndInstallSteps(steps, state.revocations, state.trustedAuthors);
+    writeState(dataDir, { ...state, trustedAuthors });
+    if (announce) await announceInstalled();
+    return {
+      id: lastInstalled.id,
+      version: lastInstalled.version,
+      source: "market",
+      sha256: lastInstalled.sha256,
+      confirmation: confirmationFromManifest(versionEntry.manifest, { unreviewed: false, official: pluginEntry.publisher?.official === true, trustChange, requiredPlugins: depPlan.map((dep) => dep.name) }),
+    };
+  };
+
+  const installBundle = createBundleInstaller({
+    snapshot,
+    installOne,
+    installedIds: () => new Set(readInstalledPackages(pluginsDir).map((item) => item.id)),
+    afterInstall: announceInstalled,
+    fail: marketError,
+  });
 
   return {
     subscribe: (listener) => {
@@ -136,45 +189,9 @@ export function createMarketService(options = {}) {
       };
     },
 
-    installMarket: async (params) => {
-      if (!isObject(params) || typeof params.name !== "string" || !params.name) {
-        throw marketError("bad-params", "installMarket expects { name, version? }");
-      }
-      const state = readState(dataDir);
-      const now = nowFn();
-      const { doc, error } = readVerifiedCachedIndex(dataDir, trust, now);
-      if (!doc) throw marketError(error ?? "no-index", "Market index is not available; refresh first");
-      const pluginEntry = doc.plugins.find((item) => item.name === params.name);
-      if (!pluginEntry) throw marketError("not-found", `Plugin ${params.name} is not in the market index`);
-      let versionEntry = null;
-      if (typeof params.version === "string" && params.version) {
-        versionEntry = pluginEntry.versions.find((item) => item.version === params.version) ?? null;
-      } else {
-        const selected = selectVersions(pluginEntry, { fuyuVersion: appVersion, platform, now, revocations: state.revocations });
-        versionEntry = selected.install?.entry ?? selected.manual?.entry ?? null;
-      }
-      if (!versionEntry) throw marketError("not-found", `No matching version found for ${params.name}`);
+    installMarket: (params) => installOne(params),
 
-      const installedById = new Map(readInstalledPackages(pluginsDir).map((item) => [item.id, item]));
-      const currentInst = installedById.get(pluginEntry.name) ?? null;
-      const currentPin = currentInst ? resolvePinnedAuthor(pluginEntry, currentInst.version, state.trustedAuthors) : null;
-      const isUpgrade = Boolean(currentInst) && compareVersions(versionEntry.version, currentInst.version) > 0;
-      const trustChange = isUpgrade ? detectTrustChange(pluginEntry, versionEntry, currentPin) : null;
-
-      const depPlan = planRequiredDependencies({ doc, rootName: pluginEntry.name, rootEntry: versionEntry, installedById, appVersion, platform, now, revocations: state.revocations, strict: true });
-      const steps = [...depPlan.map((dep) => verifyMarketStep(dep.plugin, dep.entry)), verifyMarketStep(pluginEntry, versionEntry)];
-      const { lastInstalled, trustedAuthors } = await downloadAndInstallSteps(steps, state.revocations, state.trustedAuthors);
-      writeState(dataDir, { ...state, trustedAuthors });
-      if (onConfigChanged) await onConfigChanged();
-      notifyChanged();
-      return {
-        id: lastInstalled.id,
-        version: lastInstalled.version,
-        source: "market",
-        sha256: lastInstalled.sha256,
-        confirmation: confirmationFromManifest(versionEntry.manifest, { unreviewed: false, official: pluginEntry.publisher?.official === true, trustChange, requiredPlugins: depPlan.map((dep) => dep.name) }),
-      };
-    },
+    installBundle,
 
     installFile: async (params) => {
       if (!isObject(params)) throw marketError("bad-params", "installFile expects { base64, expectedSha256? }");
@@ -268,7 +285,7 @@ export function createMarketService(options = {}) {
 }
 
 export const SETTINGS_WINDOW = "settings";
-export const SETTINGS_ONLY_METHODS = Object.freeze(["refresh", "installMarket", "installFile", "setManualAllowed", "setEnabled", "uninstall", "dismissAutoUpdated"]);
+export const SETTINGS_ONLY_METHODS = Object.freeze(["refresh", "installMarket", "installBundle", "installFile", "setManualAllowed", "setEnabled", "uninstall", "dismissAutoUpdated"]);
 
 export function assertSettingsWindow(method, caller) {
   if (caller?.window === SETTINGS_WINDOW && caller.plugin === undefined) return;
