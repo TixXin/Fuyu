@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
 <title>水母方案预览：原稿做图标，B 上岛（issue #281）</title>
 <style>
   :root {
@@ -16,7 +17,8 @@
     --motion-slow: 420ms;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 24px 32px 80px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; padding: 24px 32px 80px; overflow-x: hidden; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif; }
   h1 { font-size: 22px; margin: 0 0 4px; }
   h2 { font-size: 16px; margin: 40px 0 6px; }
   p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 980px; }
@@ -38,12 +40,12 @@
   th { background: #1b1c1f; color: #e8e8ea; font-weight: 600; white-space: nowrap; }
   td:first-child { white-space: nowrap; color: #e8e8ea; }
 
-  .stage { display: grid; grid-template-columns: minmax(260px, 420px) minmax(280px, 1fr); gap: 16px; max-width: 1100px; }
-  .big { display: flex; align-items: center; justify-content: center; height: 300px; border-radius: 16px; background: #000; cursor: pointer; user-select: none; touch-action: none; }
+  .stage { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 16px; max-width: 1100px; }
+  .big { display: flex; align-items: center; justify-content: center; height: 300px; border-radius: 16px; background: #000; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   .big svg { display: block; height: 208px; width: auto; }
   .side { display: flex; flex-direction: column; gap: 12px; background: #1b1c1f; border-radius: 16px; padding: 16px; min-width: 0; }
   .track { position: relative; height: 62px; border-radius: 12px; background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); overflow: hidden; }
-  .track .bar { position: absolute; top: 12px; left: 16px; cursor: grab; touch-action: none; user-select: none; }
+  .track .bar { position: absolute; top: 12px; left: 16px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
   .track .bar.dragging { cursor: grabbing; }
   .hint { margin: 0; min-height: 22px; color: #6abf9b; font-size: 13px; }
   .side ul { margin: 0; padding-left: 18px; color: #c8c8cc; font-size: 13px; }
@@ -59,16 +61,19 @@
   .bar.center { justify-content: space-between; width: 300px; }
   .bar.center .slot svg { height: 22px; }
 
-  .states { --z: 1; display: grid; grid-template-columns: 132px repeat(5, max-content); gap: 10px 14px; align-items: center; width: max-content; }
-  .states .lab { color: #c8c8cc; font-size: 12.5px; line-height: 1.4; }
-  .states .lab small { display: block; color: #7d7e85; font-size: 11.5px; }
-  .states .col { color: #9a9aa0; font-size: 12px; text-align: center; }
+  .states { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 12px; max-width: 1100px; margin-bottom: 14px; }
+  .state { display: flex; flex-direction: column; align-items: center; gap: 12px; background: #1b1c1f; border-radius: 12px; padding: 14px 12px 12px; }
+  .state > b { align-self: flex-start; font-size: 13.5px; }
+  .state .minis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+  .state .minis span { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #7d7e85; font-size: 11px; text-align: center; line-height: 1.3; }
+  .state .minis .chip { min-width: 0; width: 100%; max-width: 76px; padding: 0 6px; }
   .chip { --z: 1; display: inline-flex; align-items: center; justify-content: center; justify-self: center; min-width: 76px; height: calc(38px * var(--z)); padding: 0 calc(8px * var(--z)); border-radius: calc(19px * var(--z)); background: #000; }
   .chip.z3 { --z: 3; }
+  .chip.z3 { min-width: 0; width: 100%; max-width: 172px; }
   .chip.light { background: #f4f2ec; }
   .chip svg { display: block; width: auto; height: calc(24px * var(--z)); }
 
-  .places { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; max-width: 1100px; }
+  .places { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 14px; max-width: 1100px; }
   .place { background: #1b1c1f; border-radius: 12px; padding: 14px 16px 16px; min-width: 0; }
   .place b { display: block; font-size: 13.5px; }
   .place > span { display: block; color: #9a9aa0; font-size: 12.5px; margin: 2px 0 12px; }
@@ -101,7 +106,7 @@
   .taskbars .head { min-height: 0; padding-top: 6px; padding-bottom: 6px; font-size: 12px; color: #9a9aa0; }
   .taskbars .head.light { color: #55565c; }
   .taskbars .head i { font-style: normal; text-align: center; }
-  .menus { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 14px; max-width: 1100px; }
+  .menus { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 14px; max-width: 1100px; }
   .menu { display: flex; align-items: center; justify-content: flex-end; gap: 18px; height: 34px; padding: 0 16px; border-radius: 8px; font-size: 13px; }
   .menu.l { background: #e6e6ea; color: #1d1d1f; }
   .menu.d { background: #2a2b31; color: #f2f2f4; }
@@ -182,9 +187,46 @@
   }
   body:not(.motion) .jf-leg, body:not(.motion) .jf-body, body:not(.motion) .jf-head, body:not(.motion) .jf-face, body:not(.motion) .jf-lids, body:not(.motion) .jf-eye-open { transition-property: opacity, fill, stroke; }
 
+  .rows { display: none; }
+
   @media (max-width: 760px) {
-    body { padding: 16px 16px 60px; }
-    .stage, .menus { grid-template-columns: 1fr; }
+    body { padding: 16px 16px 60px; font-size: 14px; }
+    h1 { font-size: 20px; }
+    h2 { margin-top: 32px; }
+    .controls { flex-wrap: nowrap; overflow-x: auto; gap: 18px; margin-left: -16px; margin-right: -16px; padding: 8px 16px; border-radius: 0; scrollbar-width: none; }
+    .controls::-webkit-scrollbar { display: none; }
+    .group { flex-wrap: nowrap; white-space: nowrap; }
+    .stage { grid-template-columns: 1fr; }
+    .big { height: 220px; }
+    .big svg { height: 150px; }
+    .side { padding: 14px; }
+    .states { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .state { padding: 12px 8px 10px; gap: 10px; }
+    .chip.z3 { --z: 2.2; }
+    .state .minis { gap: 4px; }
+    .grid-table { display: none; }
+    .rows { display: grid; gap: 10px; }
+    .rows section { background: #1b1c1f; border-radius: 12px; padding: 12px 14px; }
+    .rows h3 { margin: 0 0 6px; font-size: 14px; }
+    .rows dl { display: grid; grid-template-columns: 5.5em 1fr; gap: 4px 10px; margin: 0; font-size: 13px; }
+    .rows dt { color: #7d7e85; }
+    .rows dd { margin: 0; color: #c8c8cc; }
+    ul.plain { padding-left: 18px; }
+    .place { padding: 12px; }
+    .place .demo { padding: 12px; }
+    .topbar { gap: 8px; padding: 0 12px; }
+    .topbar i:nth-of-type(n+4):not(.round) { display: none; }
+    .empty { width: 100%; }
+    .iconrow { gap: 16px; }
+    .iconrow figure:first-child .ico { width: 120px !important; height: 120px !important; }
+    .scroll:has(.taskbars) { overflow: visible; }
+    .taskbars { grid-template-columns: 1fr; min-width: 0; }
+    .taskbars > div { gap: 12px; padding: 10px 14px; min-height: 60px; }
+    .taskbars .lab { min-height: 0; padding: 8px 14px 4px; }
+    .taskbars .lab.head, .taskbars .head.light { display: none; }
+    .taskbars .head.dark { border-radius: 12px 12px 0 0; }
+    .desk { height: 190px; }
+    .desk .bar { max-width: calc(100% - 24px); }
   }
 </style>
 </head>
@@ -206,7 +248,7 @@
   <div class="side">
     <div class="track" id="track"></div>
     <p class="hint" id="hint">把鼠标移过来试试。</p>
-    <ul>
+    <ul id="tips">
       <li><b>鼠标靠近</b>：眼睛看向鼠标；4 秒没动就自己四处看。</li>
       <li><b>按下</b>：闭眼，松开睁开。不缩放（动效约定：按下不缩放）。</li>
       <li><b>点击</b>：打开 Agent 页，和现在点状态灯一样。</li>
@@ -218,18 +260,10 @@
 </div>
 
 <h2>2. 五种状态</h2>
-<p class="note">不只靠颜色：每种状态的<b>颜色、眼睛、姿态</b>三样都不同，色弱或只用余光也分得开。空闲和运行中同色，靠触手动不动来分。最后一行是系统开了「减少动画」时的样子，全部不动。</p>
-<div class="scroll"><div class="states" id="states"></div></div>
-<div class="scroll">
-<table>
-  <tr><th>状态</th><th>颜色</th><th>眼睛</th><th>姿态</th><th>进入时（只播一次）</th><th>持续期间</th></tr>
-  <tr><td>空闲</td><td>本色</td><td>睁开，约 6 秒眨一次，会看鼠标</td><td>触手下垂</td><td>颜色和姿态 240ms 过渡回来</td><td>每 10 秒游一下（约 1 秒），其余时间不动</td></tr>
-  <tr><td>运行中</td><td>本色</td><td>略向下，左右来回看（2.4 秒一轮）</td><td>三根触手依次收缩，身体跟着轻轻上浮</td><td>240ms 过渡</td><td>1.2 秒一轮，和悬岛的三个点同节奏；状态结束就停</td></tr>
-  <tr><td>等你</td><td>黄</td><td>向上看，照常眨眼</td><td>歪着头，触手垂直挂着</td><td>外圈扩散一次（420ms）</td><td>跳两下、停一下，2.4 秒一轮；状态结束就停</td></tr>
-  <tr><td>失败 / 可能中断</td><td>红</td><td>下垂的两条线</td><td>伞面压低，触手散开</td><td>左右晃两下（420ms）</td><td>不动</td></tr>
-  <tr><td>完成</td><td>薄荷绿</td><td>弯弯的笑眼</td><td>触手收短</td><td>上浮 2 像素再落回（420ms）</td><td>不动，3 秒后回到空闲（和现在的宠物一样）</td></tr>
-</table>
-</div>
+<p class="note">不只靠颜色：每种状态的<b>颜色、眼睛、姿态</b>三样都不同，色弱或只用余光也分得开。空闲和运行中同色，靠触手动不动来分。每张卡片上面是放大的样子，下面三个是实际大小：深色岛、浅色岛，以及系统开了「减少动画」时（不动）。</p>
+<div class="states" id="states"></div>
+<div class="scroll grid-table" id="grid-table"></div>
+<div class="rows" id="rows"></div>
 <ul class="plain">
   <li><b>曲线和时长</b>都用动效约定里的档位：过渡用 <code>--motion-ease</code>，进场用 <code>--motion-ease-out</code>，循环用 <code>--motion-ease-in-out</code>；时长是 120 / 160 / 240 / 420ms 四档。</li>
   <li><b>循环只给状态</b>：只有运行中、等你有持续的循环。空闲只有眨眼和 10 秒一次的游动，和现在悬岛的呼吸、宠物的眨眼是同一档。</li>
@@ -267,6 +301,15 @@
 
 <script>
 const STATES = [["idle", "空闲"], ["running", "运行中"], ["waiting", "等你"], ["failed", "失败"], ["done", "完成"]];
+const SPEC_HEAD = ["颜色", "眼睛", "姿态", "进入时（只播一次）", "持续期间"];
+const SPEC = [
+  ["空闲", "本色", "睁开，约 6 秒眨一次，会看鼠标", "触手下垂", "颜色和姿态 240ms 过渡回来", "每 10 秒游一下（约 1 秒），其余时间不动"],
+  ["运行中", "本色", "略向下，左右来回看（2.4 秒一轮）", "三根触手依次收缩，身体跟着轻轻上浮", "240ms 过渡", "1.2 秒一轮，和悬岛的三个点同节奏；状态结束就停"],
+  ["等你", "黄", "向上看，照常眨眼", "歪着头，触手垂直挂着", "外圈扩散一次（420ms）", "跳两下、停一下，2.4 秒一轮；状态结束就停"],
+  ["失败 / 可能中断", "红", "下垂的两条线", "伞面压低，触手散开", "左右晃两下（420ms）", "不动"],
+  ["完成", "薄荷绿", "弯弯的笑眼", "触手收短", "上浮 2 像素再落回（420ms）", "不动，3 秒后回到空闲（和现在的宠物一样）"],
+];
+const TOUCH = window.matchMedia("(hover: none)").matches;
 const TITLES = { idle: "Claude Code · 空闲", running: "Claude Code · 正在改 3 个文件", waiting: "Claude Code · 等你确认", failed: "Claude Code · 出错了", done: "Claude Code · 已完成" };
 const BELL = "M5 15a13 13 0 0 1 26 0v.5a2.5 2.5 0 0 1-2.5 2.5h-21A2.5 2.5 0 0 1 5 15.5Z";
 const LEG_X = [10.5, 18, 25.5];
@@ -303,12 +346,13 @@ function build() {
   document.getElementById("big").innerHTML = jf({ follow: true, gaze: true });
   document.getElementById("track").innerHTML = bar({ gaze: true, id: "dragbar" });
 
-  const row = (name, sub, cell) => `<span class="lab">${name}${sub ? `<small>${sub}</small>` : ""}</span>${STATES.map(([state]) => cell(state)).join("")}`;
-  document.getElementById("states").innerHTML = `<span></span>${STATES.map(([, text]) => `<span class="col">${text}</span>`).join("")}`
-    + row("实际大小", "24 像素高", (state) => `<span class="chip">${jf({ state })}</span>`)
-    + row("放大 3 倍", "", (state) => `<span class="chip z3">${jf({ state })}</span>`)
-    + row("浅色主题", "实际大小", (state) => `<span class="chip light">${jf({ state, cls: "on-light" })}</span>`)
-    + row("减少动画", "不动，放大 3 倍", (state) => `<span class="chip z3">${jf({ state, live: false })}</span>`);
+  document.getElementById("states").innerHTML = STATES.map(([state, name]) => `<div class="state"><b>${name}</b><span class="chip z3">${jf({ state })}</span><div class="minis"><span><span class="chip">${jf({ state })}</span>深色</span><span><span class="chip light">${jf({ state, cls: "on-light" })}</span>浅色</span><span><span class="chip">${jf({ state, live: false })}</span>减少动画</span></div></div>`).join("");
+  document.getElementById("grid-table").innerHTML = `<table><tr><th>状态</th>${SPEC_HEAD.map((h) => `<th>${h}</th>`).join("")}</tr>${SPEC.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</table>`;
+  document.getElementById("rows").innerHTML = SPEC.map(([name, ...cells]) => `<section><h3>${name}</h3><dl>${cells.map((c, i) => `<dt>${SPEC_HEAD[i].replace("（只播一次）", "")}</dt><dd>${c}</dd>`).join("")}</dl></section>`).join("");
+  if (TOUCH) {
+    document.getElementById("hint").textContent = "手指在大水母上滑一滑，或者按住收起条拖一拖。";
+    document.getElementById("tips").innerHTML = "<li><b>手指滑过</b>：眼睛跟着手指；放开 4 秒后自己四处看。电脑上是跟着鼠标。</li><li><b>按住</b>：闭眼，松开睁开。不缩放（动效约定：按下不缩放）。</li><li><b>轻点</b>：打开 Agent 页，和现在点状态灯一样。</li><li><b>按住收起条左右拖</b>：触手往反方向拖尾，松手回正。</li><li><b>来新消息</b>：眼睛朝消息那边看一眼再回来。</li>";
+  }
 
   const place = (name, text, demo) => `<div class="place"><b>${name}</b><span>${text}</span><div class="demo">${demo}</div></div>`;
   document.getElementById("places").innerHTML = [
@@ -509,8 +553,9 @@ segs(document.getElementById("ctl-motion"), [[false, "关"], [true, "开"]], (re
 pressable(document.getElementById("big"), () => { document.getElementById("hint").textContent = "点击：打开 Agent 页。"; });
 draggable(document.getElementById("dragbar"), document.getElementById("track"));
 document.getElementById("btn-msg").addEventListener("click", glance);
+window.addEventListener("pointerdown", (event) => { lastMoveAt = performance.now(); lookAt(event.clientX, event.clientY); });
 let pending = null;
-window.addEventListener("mousemove", (event) => {
+window.addEventListener("pointermove", (event) => {
   lastMoveAt = performance.now();
   if (pending) { pending = event; return; }
   pending = event;
