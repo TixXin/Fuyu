@@ -1,6 +1,6 @@
-# 第 3 版插件（开发中）
+# 第 3 版插件
 
-> **还在开发，接口是实验的。** 插件平台第 3 版（[#289](https://github.com/TixXin/fuyu/issues/289)）正在做，这组文档跟着实现一起写。第 5 阶段（[#295](https://github.com/TixXin/fuyu/issues/295)）结束时接口转正，转正之前清单字段、命令和流程都还可能改。现在的浮屿还装不了第三方的第 3 版插件，第 3 版的市场也还没开放上架。第 2 版已于 2026-11 下线（E36.6），它的文档只留作参考：[第 2 版的文档](../README.md)。
+> 插件平台第 3 版（[#289](https://github.com/TixXin/fuyu/issues/289)）从 2026-11-18（E54）起默认开启，设 `FUYU_PLUGINS_V3=0` 可以关掉。第 5 阶段（[#295](https://github.com/TixXin/fuyu/issues/295)）已经结束，[服务、接缝与插槽](services-and-slots.md)已转正，之后只增不改；各篇顶上仍写「实验」的，是那一页还没跟上。浮屿能从市场或 `.fuyu` 文件装第三方插件，官方市场 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 已经上架了 12 个官方插件。第 2 版已于 2026-11 下线（E36.6），它的文档只留作参考：[第 2 版的文档](../README.md)。
 
 ## 第 3 版有什么不同
 
@@ -24,7 +24,7 @@
 | [服务、接缝与插槽参考](services-and-slots.md) | 11 个公开服务、7 个扩展接缝与 14 个界面插槽的完整参考 | 已定 |
 | [从第 2 版迁移](migrate-from-v2.md) | 第 2 版的插件要改什么 | 提纲 |
 
-还没有的：概念和教程、每个服务和插槽的参考（从类型声明生成）、脚手架 `create-fuyu-plugin` 的第 3 版模板、开发模式（从文件夹加载、改了代码自动重载）。它们要等服务和插槽的接口在第 3、4 阶段定下来再写。
+还没有的：概念和教程、从类型声明生成的参考；第 2 版文档的入口换成这里由 E58（[#905](https://github.com/TixXin/fuyu/issues/905)）做。
 
 ## 现在能做什么
 
@@ -32,10 +32,10 @@
 |---|---|
 | 读规则，照格式写清单 | 能 |
 | 用审核分析器看自己的两个版本落在哪一档 | 能，在浮屿仓库里跑，见[审核看什么](review.md#提交前先自查) |
-| 命令行 `fuyu-plugin` 2.0（`build`、`pack`、`check`、`review`、签名） | 能，还没发到 npm，在浮屿仓库里跑，见[命令行](cli.md#怎么运行) |
-| 脚手架的第 3 版模板 | 还没有（[#485](https://github.com/TixXin/fuyu/issues/485)） |
-| 向市场提交第 3 版插件 | 还不行：市场 CI 在 `fuyu-plugins` 的草稿 PR [#25](https://github.com/TixXin/fuyu-plugins/pull/25) 上，合入后开放，流程见[发布](publish.md) |
-| 在浮屿里安装 `.fuyu`、开发模式 | 还不行，要等第 2–4 阶段做完 |
+| 命令行 `fuyu-plugin` 2.0（`build`、`pack`、`check`、`review`、`dev`、签名） | 能，npm 上的 `fuyu-plugin` 2.0.0，见[命令行](cli.md#怎么运行) |
+| 脚手架的第 3 版模板 | 能，`npm create fuyu-plugin@latest`（npm 上的 `create-fuyu-plugin` 2.0.0） |
+| 向市场提交第 3 版插件 | 能，市场 CI 已在 `fuyu-plugins` 合入（[#25](https://github.com/TixXin/fuyu-plugins/pull/25)），流程见[发布](publish.md) |
+| 在浮屿里安装 `.fuyu`、开发模式 | 能：从市场装，或在设置里打开手动安装后双击 `.fuyu`（见[清单和安装包](package.md)）；`fuyu-plugin dev` 把文件夹登记进浮屿，改了自动重新构建 |
 
 ## 想了解内部设计
 
