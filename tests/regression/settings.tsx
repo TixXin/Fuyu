@@ -308,7 +308,7 @@ if (!automated) {
     localStorage.removeItem("fuyu-about-tab");
     await click(".settings-sidebar__item[data-category='about']");
     const aboutTab = () => document.querySelector(".settings-tabs__tab--active")?.getAttribute("data-tab");
-    check(texts(".settings-tabs__tab") === "概览|更新日志|帮助" && aboutTab() === "about", "About starts on the overview, with the changelog and help as tabs beside it");
+    check(texts(".settings-tabs__tab") === "概览|更新日志|帮助和交流群" && aboutTab() === "about", "About starts on the overview, with the changelog, the plugin system and help as tabs beside it");
     const hero = element(".about-hero");
     check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && hero.getBoundingClientRect().height >= hero.scrollHeight - 1, "The overview shows the app's card, not clipped");
     check(document.querySelectorAll(".about-hero__links .about-hero__link").length === 4 && !document.querySelector(".about-logo-pill") && texts(".settings-group__title").includes("重置与退出") && !document.querySelector(".version-history__row"),
