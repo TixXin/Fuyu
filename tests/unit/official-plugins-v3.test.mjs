@@ -27,8 +27,6 @@ const OFFICIAL_PLUGINS = [
 const scratch = mkdtempSync(join(tmpdir(), "fuyu-official-plugins-v3-"));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 
-const AWAITING_SLOT_THEME = ["--fuyu-plugin-warning", "--fuyu-plugin-danger"];
-
 function withoutAllowedColors(css) {
   return css
     .replace(/light-dark\([^()]*\)/gi, "light-dark()")
@@ -122,7 +120,7 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
       );
       const vars = [...css.matchAll(/var\(\s*(--[\w-]+)/g)].map(([, name]) => name);
       assert.ok(vars.some((name) => SLOT_THEME.includes(name)), `${expectedId} (${cssFile}) should use --fuyu-plugin-* theme variables`);
-      const invalidVars = vars.filter((name) => !SLOT_THEME.includes(name) && !AWAITING_SLOT_THEME.includes(name) && !ownProperties.has(name));
+      const invalidVars = vars.filter((name) => !SLOT_THEME.includes(name) && !ownProperties.has(name));
       assert.deepEqual(invalidVars, [], `${expectedId} (${cssFile}) uses non-SLOT_THEME variables: ${invalidVars.join(", ")}`);
     }
 

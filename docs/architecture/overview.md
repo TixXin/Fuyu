@@ -1,32 +1,40 @@
 # 架构总览
 
-本文描述 浮屿 / Fuyu 的运行时架构、目标代码结构、从现有文件到目标位置的迁移映射，以及对外契约清单。编码规则见 [AGENTS.md](../../AGENTS.md)、[src/AGENTS.md](../../src/AGENTS.md) 和 [src-tauri/AGENTS.md](../../src-tauri/AGENTS.md)，迁移步骤见 [refactor-plan.md](history/refactor-plan.md)，插件系统设计见 [v1-design.md](plugins/v1-design.md) 与 [v2-platform.md](plugins/v2-platform.md)。
+本文描述 浮屿 / Fuyu 的运行时架构、目标代码结构、从现有文件到目标位置的迁移映射，以及对外契约清单。编码规则见 [AGENTS.md](../../AGENTS.md)、[src/AGENTS.md](../../src/AGENTS.md) 和 [src-tauri/AGENTS.md](../../src-tauri/AGENTS.md)，迁移步骤见 [refactor-plan.md](history/refactor-plan.md)，插件系统（第 3 版，万物皆插件）的方案见 [v3-everything-plugin.md](plugins/v3-everything-plugin.md)，协议和边界见 [v3-boundary.md](plugins/v3-boundary.md)。
 
 ## 运行时架构
 
 ```text
-┌──────────────────────── WebView2（同一前端包，按 ?window= 分发）────────────────────────┐
-│  main：悬浮岛    translation：快捷翻译    clipboard：剪贴板    settings：设置    screenshot-<n>：截图 │
-│  onboarding：新手引导（新装第一次启动时打开）                                             │
-│  drag-grid：拖岛时的中线辅助线（透明、鼠标穿透，拖岛时创建、松手销毁）                    │
-└────────────┬─────────────────────────────────────────────────────────────────────────┘
+┌──────────── WebView2 / WKWebView（同一前端包，按 ?window= 分发）────────────┐
+│  main：悬浮岛    translation：快捷翻译    settings：设置                        │
+│  clipboard：剪贴板    clipboard-preview：剪贴板的空格预览（不抢焦点）           │
+│  onboarding：新手引导（新装第一次启动时打开）    tray-menu：托盘 / 菜单栏卡片   │
+│  screenshot-<n>：截图选区（每个显示器一个）    pin-<n>：贴到屏幕上的截图        │
+│  drag-grid：拖岛时的中线辅助线（透明、鼠标穿透，拖岛时创建、松手销毁）          │
+│  plugin-window-<n>：第 3 版插件的独立窗口（实验能力 windows/v1）                │
+└────────────┬───────────────────────────────────────────────────────────────┘
              │ invoke（命令，请求/响应）        ▲ emit / emit_to（事件，后端主动推送）
              ▼                                │
 ┌──────────────────────────────── Rust（Tauri 2）──────────────────────────────────────┐
 │  lib.rs 组装：插件 / setup / 托盘 / collect_commands!（汇总各模块的 tauri_commands!） │
-│  领域模块：island · todos · calendar · media_control · lyrics · clipboard_history     │
-│           file_shelf · screenshot · agent_status · agent_approval · phone_push       │
-│           pets（只读的 Codex Pets 宠物包）· claude_usage（可选经代理查 oauth/usage）  │
+│  plugin_kernel：第 3 版插件宿主的看护（找 Node、拉起宿主、内置插件开关、后台起停）    │
+│  领域模块：island · todos · calendar · timer（计时器快捷键）· media_control · lyrics  │
+│           clipboard_history · file_shelf · screenshot · recording（录屏）            │
+│           voice_input（本机语音识别）· sync（跨设备同步）· wallpaper（壁纸，玻璃采样）│
+│           agent_status · agent_approval · phone_push · claude_usage（用量环）       │
+│           pets（只读的 Codex Pets 宠物包）                                          │
 │           ssh_tunnel（内置插件：每台主机一条常驻 ssh -R，把本机代理借给服务器）      │
 │           cc_connect（内置插件：找 cc-connect、读它的会话列表，经它把推送发到手机）  │
 │           local_api（127.0.0.1 HTTP，内置插件 local-api）                            │
-│           mail · qq_notifications · wechat_reminders · translation · settings_window │
-│           device_use · system_levels · device_events · system · rename_migration     │
+│           mail · qq_notifications · wechat_reminders · im_sources（其他聊天软件）    │
+│           toast_notifications（系统通知的共享轮询）· translation · settings_window  │
+│           tray_menu · onboarding_window · device_use · system_levels · device_events │
+│           system · rename_migration                                                  │
 │  后台服务：IMAP IDLE 收信、剪贴板监听、通知监听、微信窗口闪烁检测、鼠标穿透循环        │
 └────────────┬─────────────────────────────────────────────────────────────────────────┘
              ▼
    Windows：Win32 / WinRT（SMTC 媒体、音频端点、通知监听、注册表、窗口）、凭据管理器
-   macOS（适配中，G1）：平台层 macos/；暂不支持的模块编译成 unsupported 空实现
+   macOS（适配中，G1）：平台层 macos/、钥匙串；暂不支持的模块编译成 unsupported 空实现
 ```
 
 插件平台第 3 版（E36）：开发版、测试版和正式版均默认启动宿主，设 `FUYU_PLUGINS_V3=0` 关掉（E54）；正式版用安装包资源目录里的 `plugins-v3/host` 和 `plugins-v3/builtins`，开发版和 `pnpm build:exe` 用仓库里的源码。Rust 的 `plugin_kernel` 用基座 crate `src-tauri/crates/plugin-base` 找电脑上的 Node（没有就下载到数据目录的 `runtime/`，下载进度和失败显示在设置的插件页，失败了在那里重试），拉起没有界面的宿主进程（`packages/plugin-base` 的 host，跑 `vendor/cordis` 内核），标准输入输出上走 JSON-RPC、心跳、退避重启，用作业对象 / 进程组管住它。窗口经本机 WebSocket（令牌、来源核对、快照和序号）连宿主，插件的界面文件和 React 转接模块由自定义协议 `fuyu-plugin` 提供，前端一侧在 `src/features/plugin-kernel/`。协议和边界见 [v3-boundary.md](plugins/v3-boundary.md)，进度见 [v3-progress.md](plugins/v3-progress.md)。第 2 版插件宿主（`plugin_host`）已删除，只剩 `plugin_kernel/v2_migration.rs`（第 2 版插件）和 `v2_builtins.rs`（第 2 版里内置功能的开关和配置）读旧数据帮老用户迁移。
