@@ -268,6 +268,9 @@ pub fn init() {
                 if let Err(error) = restore_hooks_after_reinstall(&app_dir, &home_dir) {
                     eprintln!("failed to restore hooks after reinstall: {error}");
                 }
+                if let Err(error) = claude_code::upgrade_exec_form_hooks(&app_dir, &home_dir) {
+                    eprintln!("failed to rewrite the Claude Code hooks: {error}");
+                }
             }
             reply_marker::upgrade_installed();
         });

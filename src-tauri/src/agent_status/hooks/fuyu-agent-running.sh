@@ -2,15 +2,16 @@
 provider=$1
 case "$provider" in
   codex|claudeCode|workbuddy|dsh|qoder|codebuddy|qwen|zcode|kimiCode|grok|copilot|droid|pi|cursor) ;;
-  antigravity) case "$2" in start|running|stop) ;; *) exit 2 ;; esac ;;
-  trae|traeCn) case "$2" in running|stop|notification) ;; *) exit 2 ;; esac ;;
-  updatedAt|statusPath|others|"") exit 2 ;;
+  antigravity) case "$2" in start|running|stop) ;; *) exit 1 ;; esac ;;
+  trae|traeCn) case "$2" in running|stop|notification) ;; *) exit 1 ;; esac ;;
+  updatedAt|statusPath|others|"") exit 1 ;;
   [A-Za-z]*)
-    case "$provider" in *[!A-Za-z0-9_-]*) exit 2 ;; esac
-    [ "${#provider}" -le 32 ] || exit 2
+    case "$provider" in *[!A-Za-z0-9_-]*) exit 1 ;; esac
+    [ "${#provider}" -le 32 ] || exit 1
     ;;
-  *) exit 2 ;;
+  *) exit 1 ;;
 esac
+[ "$provider" = claudeCode ] && [ -n "$CURSOR_VERSION" ] && exit 0
 marker="agent-$provider-running.flag"
 hold="agent-$provider-running-hold.flag"
 
@@ -41,6 +42,8 @@ elif [ "$2" = notification ]; then
   mode=notification
 elif [ "$2" = session ]; then
   mode=session
+elif [ "$2" = activity ]; then
+  mode=activity
 fi
 
 case "$mode" in
@@ -59,6 +62,9 @@ case "$mode" in
     terminals="$dir/agent-terminals"
     mkdir -p "$terminals" 2>/dev/null
     cat > "$terminals/$ORCA_TERMINAL_HANDLE.tmp" 2>/dev/null && mv -f "$terminals/$ORCA_TERMINAL_HANDLE.tmp" "$terminals/$ORCA_TERMINAL_HANDLE.json"
+    ;;
+  activity)
+    /usr/bin/curl -s -o /dev/null --connect-timeout 1 -m 5 -H "Authorization: Bearer $4" -H "Content-Type: application/json" -H "X-Fuyu-Hook: fuyu-agent-activity" --data-binary @- "$3" >/dev/null 2>&1
     ;;
 esac
 exit 0
