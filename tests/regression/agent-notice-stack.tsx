@@ -107,6 +107,7 @@ async function runChecks() {
 
     const single = frame("stack-peek-1");
     check(!single.querySelector(".agent-notice-stack__slivers, .agent-notice__count, .agent-notice-stack__pile"), "只有一个会话时不叠、不计数");
+    for (const thumb of document.querySelectorAll<HTMLElement>(".agent-notice-message__thumb")) thumb.removeAttribute("style");
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
