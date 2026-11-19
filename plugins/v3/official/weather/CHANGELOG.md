@@ -16,6 +16,7 @@
 - 岛的页头有了中英文标题；说明和截图更新。
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
 - 还没选城市时，浮屿的插件页会标出「待设置」，并带一个去设置的按钮（需要较新的浮屿）。
+- 市场页的截图换成了新的，多了一张收起条的。
 
 Fuller settings; quieter on the island by default.
 
@@ -31,6 +32,7 @@ Fuller settings; quieter on the island by default.
 - The island header has a title in Chinese and English; the description and screenshots are updated.
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
 - Until you pick a city, Fuyu's plugin page marks the plugin as "Needs setup" with a button that opens its settings (needs a newer Fuyu).
+- New screenshots on the market page, with one more for the collapsed bar.
 
 ## 1.0.0
 

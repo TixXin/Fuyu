@@ -8,6 +8,7 @@
 - 插件自己的收起项因此默认打开，收起条上只有一个倒计时；在设置里关过的保持关。较早的浮屿不支持这样计时，那时照旧由内置计时器显示，番茄钟自己的收起项默认关。
 - 到点、停止、切到休息或下一轮时都会清掉旧的计时；启动时发现番茄钟以前留下、已经不用的计时也会清掉。
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
+- 市场页的截图换成了新的：岛上页面和收起条。
 
 Only one countdown on the collapsed bar.
 
@@ -15,6 +16,7 @@ Only one countdown on the collapsed bar.
 - So the plugin's own collapsed bar item is now on by default and the bar shows a single countdown; if you turned it off, it stays off. Older Fuyu versions cannot keep a timer out of the built-in timer; there the built-in timer still shows it and the plugin's own item stays off by default.
 - Old timers are removed when a round ends, when you stop, and when switching to a break or the next round; leftover pomodoro timers from earlier runs are cleared on start.
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
+- New screenshots on the market page: the island page and the collapsed bar.
 
 ## 1.1.0
 

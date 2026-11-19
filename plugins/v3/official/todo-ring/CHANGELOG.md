@@ -3,8 +3,10 @@
 ## 1.1.1
 
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
+- 市场页的截图换成了新的，更清楚。
 
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
+- New, sharper screenshots on the market page.
 
 ## 1.1.0
 

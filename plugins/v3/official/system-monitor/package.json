@@ -47,6 +47,22 @@
       "en": "CPU, GPU, memory, network, battery and the busiest programs on the island; the bar changes color when readings run high."
     },
     "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/page.png",
+        "caption": {
+          "zh-CN": "岛上页面：CPU、GPU、内存、网速和最占资源的程序",
+          "en": "Island page: CPU, GPU, memory, network and the busiest programs"
+        }
+      },
+      {
+        "path": "screenshots/bar.png",
+        "caption": {
+          "zh-CN": "收起条：CPU 和内存占用",
+          "en": "Collapsed bar: CPU and memory use"
+        }
+      }
+    ],
     "categories": [
       "utilities",
       "information"

@@ -44,15 +44,15 @@
       {
         "path": "screenshots/page.png",
         "caption": {
-          "zh-CN": "岛上页面：最近的日子和其他日子",
-          "en": "Island page: the nearest date and the rest"
+          "zh-CN": "岛上页面：置顶的日子和其他日子",
+          "en": "Island page: the pinned date and the rest"
         }
       },
       {
         "path": "screenshots/bar.png",
         "caption": {
-          "zh-CN": "收起条：还剩几天",
-          "en": "Collapsed bar: days left"
+          "zh-CN": "收起条：还剩几天，可以带上名称",
+          "en": "Collapsed bar: days left, with the name if you like"
         }
       }
     ],

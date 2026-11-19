@@ -43,7 +43,7 @@
     "icon": "assets/icon.svg",
     "screenshots": [
       {
-        "path": "screenshots/recent.png",
+        "path": "screenshots/page.png",
         "caption": {
           "zh-CN": "最近用过的应用排在最前，回车就能打开",
           "en": "Recently used apps come first; press Enter to open"

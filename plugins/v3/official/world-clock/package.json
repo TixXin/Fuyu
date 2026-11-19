@@ -46,6 +46,13 @@
           "zh-CN": "岛上页面：几个城市的时间和时差",
           "en": "Island page: times and offsets in several cities"
         }
+      },
+      {
+        "path": "screenshots/bar.png",
+        "caption": {
+          "zh-CN": "收起条：关注城市的时间",
+          "en": "Collapsed bar: the time in your starred city"
+        }
       }
     ],
     "categories": [

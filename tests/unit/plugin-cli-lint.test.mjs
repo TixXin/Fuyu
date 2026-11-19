@@ -9,7 +9,7 @@ import { check, lintListing, run } from "../../packages/plugin-cli/src/index.mjs
 const HELLO = fileURLToPath(new URL("../../packages/plugin-cli/test/fixtures/hello", import.meta.url));
 const OFFICIAL_ROOT = fileURLToPath(new URL("../../plugins/v3/official", import.meta.url));
 const PENDING = {
-  "listing:screenshots": ["ecdict", "now-playing", "system-monitor", "todo-digest"],
+  "listing:screenshots": ["ecdict", "now-playing", "todo-digest"],
 };
 
 const scratch = mkdtempSync(join(tmpdir(), "plugin-cli-lint-"));

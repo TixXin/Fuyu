@@ -49,6 +49,13 @@
         }
       },
       {
+        "path": "screenshots/bar.png",
+        "caption": {
+          "zh-CN": "收起条：未关闭 issue 的总数",
+          "en": "Collapsed bar: the total number of open issues"
+        }
+      },
+      {
         "path": "screenshots/settings.png",
         "caption": {
           "zh-CN": "设置：添加要关注的仓库",
