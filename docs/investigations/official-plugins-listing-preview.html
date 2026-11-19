@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>官方插件上架前预览</title>
+<style>
+  :root { --bg: #f5f5f7; --panel: #ffffff; --text: #1d1d1f; --dim: #6e6e73; --line: #d9d9de; --accent: #0a66d8; --ok: #1a7f37; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #111113; --panel: #1b1b1f; --text: #f2f2f4; --dim: #9a9aa2; --line: #2e2e35; --accent: #6ab0ff; --ok: #5fcf80; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.6 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  header { padding: 22px 24px 6px; max-width: 1280px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  h2 { font-size: 16px; margin: 26px 0 8px; }
+  p { margin: 6px 0; }
+  .dim { color: var(--dim); }
+  .ok { color: var(--ok); }
+  code { font: 12px/1.5 ui-monospace, "SF Mono", Consolas, monospace; background: color-mix(in srgb, var(--text) 8%, transparent); padding: 1px 5px; border-radius: 4px; }
+  main { max-width: 1280px; margin: 0 auto; padding: 0 24px 40px; }
+  .wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 13px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--dim); font-weight: 600; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  .viewer { display: grid; grid-template-columns: 210px 1fr; gap: 14px; margin-top: 10px; }
+  .list { display: flex; flex-direction: column; gap: 4px; position: sticky; top: 12px; align-self: start; }
+  .item { text-align: left; border: 1px solid transparent; background: transparent; color: inherit; border-radius: 8px; padding: 7px 10px; cursor: pointer; font: inherit; }
+  .item:hover { background: color-mix(in srgb, var(--text) 6%, transparent); }
+  .item.on { background: var(--panel); border-color: var(--line); }
+  .item .n { display: block; font-weight: 600; }
+  .item .v { display: block; font-size: 12px; color: var(--dim); }
+  iframe { width: 100%; height: 1500px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  .bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .bar a { color: var(--accent); }
+  ol { margin: 6px 0; padding-left: 22px; }
+  @media (max-width: 760px) { .viewer { grid-template-columns: 1fr; } .list { position: static; flex-direction: row; flex-wrap: wrap; } header, main { padding-left: 16px; padding-right: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>官方插件上架前预览</h1>
+  <p class="dim">E77.6 · 12 个官方插件补齐截图、封面、关键词和「待设置」之后，在市场里的样子。还没上架，等你点头。</p>
+</header>
+<main>
+  <h2>这次每个插件改了什么</h2>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>插件</th><th>市场上 → 要上架</th><th>截图（第一张是封面）</th><th>待设置</th><th>搜索关键词</th><th>上架信息检查</th></tr></thead>
+      <tbody>
+        <tr><td><b>闹钟</b><br><code>@fuyu/alarm</code></td><td>1.1.0 → <b>1.1.1</b></td><td><code>page.png</code> <code>bar.png</code> <code>ringing.png</code><br><span class="dim">fuyu-plugin shots</span></td><td><span class="dim">不需要</span></td><td class="dim">闹钟、闹铃、起床、提醒、贪睡、alarm 等 10 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>倒数日</b><br><code>@fuyu/countdown</code></td><td>1.1.0 → <b>1.1.1</b></td><td><code>page.png</code> <code>bar.png</code><br><span class="dim">fuyu-plugin shots</span></td><td>没有日期时</td><td class="dim">倒数日、倒计时、纪念日、生日、截止日、还有几天 等 11 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>离线词典</b><br><code>@fuyu/ecdict</code></td><td>1.0.0 → <b>1.0.1</b></td><td><code>lookup.png</code> <code>inflection.png</code> <code>reverse.png</code><br><span class="dim">翻译窗口（真组件 + 插件查出的结果）</span></td><td><span class="dim">不需要</span></td><td class="dim">词典、字典、查词、单词、英汉、离线 等 12 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>GitHub Issues</b><br><code>@fuyu/github-issues</code></td><td>1.0.0 → <b>1.1.0</b></td><td><code>page.png</code> <code>bar.png</code> <code>settings.png</code><br><span class="dim">fuyu-plugin shots</span></td><td>没加仓库时</td><td class="dim">GitHub、issue、issues、工单、问题、仓库 等 10 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>应用启动台</b><br><code>@fuyu/launcher</code></td><td>1.0.0 → <b>1.1.0</b></td><td><code>page.png</code><br><span class="dim">fuyu-plugin shots</span></td><td><span class="dim">不需要</span></td><td class="dim">启动台、启动器、应用、打开应用、搜索应用、快速启动 等 11 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>换歌提示</b><br><code>@fuyu/now-playing</code></td><td>1.1.0 → <b>1.2.0</b></td><td><code>card.png</code><br><span class="dim">换歌卡片（真组件 + 示例数据）</span></td><td><span class="dim">不需要</span></td><td class="dim">换歌、切歌、歌名、歌曲、音乐、正在播放 等 11 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>番茄钟</b><br><code>@fuyu/pomodoro</code></td><td>1.1.0 → <b>1.1.1</b></td><td><code>page.png</code> <code>bar.png</code><br><span class="dim">fuyu-plugin shots</span></td><td><span class="dim">不需要</span></td><td class="dim">番茄钟、番茄工作法、专注、计时、休息、pomodoro 等 10 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>系统监控</b><br><code>@fuyu/system-monitor</code></td><td>1.1.0 → <b>1.1.1</b></td><td><code>page.png</code> <code>bar.png</code><br><span class="dim">fuyu-plugin shots</span></td><td><span class="dim">不需要</span></td><td class="dim">系统监控、性能、任务管理器、活动监视器、CPU、GPU 等 17 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>待办摘要</b><br><code>@fuyu/todo-digest</code></td><td>1.0.0 → <b>1.1.0</b></td><td><code>preview.png</code> <code>settings.png</code> <code>notice.png</code><br><span class="dim">详情里的设置页和岛上提示（真组件 + 插件算出的数据）</span></td><td><span class="dim">不需要</span></td><td class="dim">待办、摘要、日报、总结、笔记、收工 等 12 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>待办进度环</b><br><code>@fuyu/todo-ring</code></td><td>1.1.0 → <b>1.1.1</b></td><td><code>page.png</code> <code>bar.png</code><br><span class="dim">fuyu-plugin shots</span></td><td><span class="dim">不需要</span></td><td class="dim">待办、进度、圆环、完成度、今日任务、todo 等 10 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>天气</b><br><code>@fuyu/weather</code></td><td>1.0.0 → <b>1.1.0</b></td><td><code>page.png</code> <code>bar.png</code><br><span class="dim">fuyu-plugin shots</span></td><td>没选城市时</td><td class="dim">天气、天气预报、气温、温度、下雨、降水 等 10 个</td><td><span class="ok">没有告警</span></td></tr>
+        <tr><td><b>世界时钟</b><br><code>@fuyu/world-clock</code></td><td>1.1.0 → <b>1.1.1</b></td><td><code>page.png</code> <code>bar.png</code><br><span class="dim">fuyu-plugin shots</span></td><td><span class="dim">不需要</span></td><td class="dim">世界时钟、时区、时差、时间、城市时间、world clock 等 10 个</td><td><span class="ok">没有告警</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>市场卡片和详情页</h2>
+  <p class="dim">每个插件一页，深色、浅色、中文、英文各一份，由 <code>fuyu-plugin preview</code> 画。卡片封面就是清单里第一张截图放在主色浅底上，只露出顶上一段。</p>
+  <div class="viewer">
+    <nav class="list">
+      <button class="item on" data-name="alarm"><span class="n">闹钟</span><span class="v">1.1.1 · 3 张图</span></button>
+      <button class="item" data-name="countdown"><span class="n">倒数日</span><span class="v">1.1.1 · 2 张图 · 待设置</span></button>
+      <button class="item" data-name="ecdict"><span class="n">离线词典</span><span class="v">1.0.1 · 3 张图</span></button>
+      <button class="item" data-name="github-issues"><span class="n">GitHub Issues</span><span class="v">1.1.0 · 3 张图 · 待设置</span></button>
+      <button class="item" data-name="launcher"><span class="n">应用启动台</span><span class="v">1.1.0 · 1 张图</span></button>
+      <button class="item" data-name="now-playing"><span class="n">换歌提示</span><span class="v">1.2.0 · 1 张图</span></button>
+      <button class="item" data-name="pomodoro"><span class="n">番茄钟</span><span class="v">1.1.1 · 2 张图</span></button>
+      <button class="item" data-name="system-monitor"><span class="n">系统监控</span><span class="v">1.1.1 · 2 张图</span></button>
+      <button class="item" data-name="todo-digest"><span class="n">待办摘要</span><span class="v">1.1.0 · 3 张图</span></button>
+      <button class="item" data-name="todo-ring"><span class="n">待办进度环</span><span class="v">1.1.1 · 2 张图</span></button>
+      <button class="item" data-name="weather"><span class="n">天气</span><span class="v">1.1.0 · 2 张图 · 待设置</span></button>
+      <button class="item" data-name="world-clock"><span class="n">世界时钟</span><span class="v">1.1.1 · 2 张图</span></button>
+    </nav>
+    <div>
+      <div class="bar"><a id="open" href="official-plugins-listing-preview/alarm.html" target="_blank" rel="noopener">在新标签页打开这一页</a><span class="dim">右边空白？12 份预览页一共 10 MB 左右，没进仓库，按下面的命令重新生成。</span></div>
+      <iframe id="frame" title="插件预览" src="official-plugins-listing-preview/alarm.html"></iframe>
+    </div>
+  </div>
+
+  <h2>重新生成</h2>
+  <p>在仓库根目录跑，每个插件一条（<code>&lt;名字&gt;</code> 换成插件文件夹名）：</p>
+  <p><code>node packages/plugin-cli/bin/fuyu-plugin.mjs preview plugins/v3/official/&lt;名字&gt; --out docs/investigations/official-plugins-listing-preview/&lt;名字&gt;.html</code></p>
+
+  <h2>和真的市场差在哪</h2>
+  <ol>
+    <li>卡片按默认大小的设置窗口里的宽度画；包的大小、更新日期、点赞数、权限清单、命令列表、更新记录页签只有真市场有。</li>
+    <li>外面那层岛是照默认外观画的；翻译窗口、设置页、岛上提示和换歌卡片那几张是用浮屿的真组件截的，数据来自插件自己的代码或示例，没有在真岛上截。</li>
+    <li>「待设置」的标记在插件页（已安装的那一页）上，这里看不到；它的测试在 <code>tests/unit/e66-weather</code>、<code>e66-github-issues</code>、<code>e66-countdown</code>。</li>
+  </ol>
+</main>
+<script>
+  const frame = document.getElementById("frame");
+  const open = document.getElementById("open");
+  for (const item of document.querySelectorAll(".item")) {
+    item.addEventListener("click", () => {
+      for (const other of document.querySelectorAll(".item")) other.classList.toggle("on", other === item);
+      const url = "official-plugins-listing-preview/" + item.dataset.name + ".html";
+      frame.src = url;
+      open.href = url;
+    });
+  }
+</script>
+</body>
+</html>
