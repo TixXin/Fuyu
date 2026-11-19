@@ -9,10 +9,6 @@
   color: var(--fuyu-plugin-text);
 }
 
-.fuyu-countdown__file {
-  display: none;
-}
-
 .fuyu-countdown__hero {
   border-radius: var(--fuyu-plugin-radius);
   background: color-mix(in srgb, var(--fuyu-plugin-accent) 18%, var(--fuyu-plugin-surface));
@@ -27,7 +23,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 12px 14px;
 }
 
 .fuyu-countdown__hero--image .fuyu-countdown__hero-shade {
@@ -57,53 +53,15 @@
 
 .fuyu-countdown__hero-days {
   flex-shrink: 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--fuyu-plugin-accent);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.fuyu-countdown__form {
-  display: flex;
-  gap: 6px;
-  min-width: 0;
-}
-
-.fuyu-countdown__input,
-.fuyu-countdown__date {
-  padding: 4px 8px;
-  border: 1px solid var(--fuyu-plugin-border);
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
-  color: var(--fuyu-plugin-text);
-  font: inherit;
-}
-
-.fuyu-countdown__input {
-  flex: 1;
-  min-width: 0;
-}
-
-.fuyu-countdown__date {
-  flex-shrink: 0;
-}
-
-.fuyu-countdown__button {
-  flex-shrink: 0;
-  padding: 4px 12px;
-  border: none;
-  border-radius: var(--fuyu-plugin-radius);
-  font: inherit;
-  font-weight: 500;
-  color: var(--fuyu-plugin-on-accent);
-  background: var(--fuyu-plugin-accent);
-  cursor: pointer;
-}
-
-.fuyu-countdown__button:disabled {
+.fuyu-countdown__hero.is-dim .fuyu-countdown__hero-days {
   color: var(--fuyu-plugin-text-muted);
-  background: var(--fuyu-plugin-surface);
-  cursor: default;
 }
 
 .fuyu-countdown__list {
@@ -118,79 +76,67 @@
 .fuyu-countdown__row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
-  padding: 6px 8px;
+  min-width: 0;
+  padding: 6px 10px;
   border-radius: var(--fuyu-plugin-radius);
   background: var(--fuyu-plugin-surface);
 }
 
-.fuyu-countdown__row:hover {
-  background: var(--fuyu-plugin-surface-hover);
-}
-
-.fuyu-countdown__row-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+.fuyu-countdown__row.is-dim {
+  opacity: 0.55;
 }
 
 .fuyu-countdown__row-title {
-  font-weight: 500;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.fuyu-countdown__row-sub {
+.fuyu-countdown__row-date {
+  flex-shrink: 0;
   font-size: 12px;
-  color: var(--fuyu-plugin-text-secondary);
+  color: var(--fuyu-plugin-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
-.fuyu-countdown__row-actions {
-  display: flex;
+.fuyu-countdown__row-days {
   flex-shrink: 0;
-  gap: 4px;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.fuyu-countdown__mini {
-  padding: 2px 6px;
-  border: 1px solid var(--fuyu-plugin-border);
+.fuyu-countdown__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-countdown__manage {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border: none;
   border-radius: var(--fuyu-plugin-radius);
   background: transparent;
   color: var(--fuyu-plugin-text-secondary);
   font: inherit;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
 }
 
-.fuyu-countdown__mini:hover,
-.fuyu-countdown__mini--active {
-  border-color: var(--fuyu-plugin-accent);
+.fuyu-countdown__manage:hover {
+  background: var(--fuyu-plugin-surface-hover);
   color: var(--fuyu-plugin-text);
-}
-
-.fuyu-countdown__settings-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.fuyu-countdown__section-title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.fuyu-countdown__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  cursor: pointer;
 }
 
 .fuyu-countdown__note {
@@ -203,13 +149,23 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  max-width: 110px;
+  min-width: 0;
   font-family: var(--fuyu-plugin-font);
   font-size: 12px;
   color: var(--fuyu-plugin-accent);
   white-space: nowrap;
 }
 
+.fuyu-countdown-chip__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fuyu-plugin-text-secondary);
+  text-overflow: ellipsis;
+}
+
 .fuyu-countdown-chip__days {
+  flex-shrink: 0;
   font-variant-numeric: tabular-nums;
   color: var(--fuyu-plugin-text);
 }
