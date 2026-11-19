@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { firstPublishedAt, marketSince, packageIcon, pluginIcon, pluginScreenshots, versionScreenshots } from "../../src/features/updater/host/marketListing.mjs";
+import { createMarketWorld } from "./market-v3-fixtures.mjs";
 
 const icon = (name) => ({ url: `https://example.com/${name}.svg`, sha256: "a".repeat(64) });
 const version = (v, publishedAt, more = {}) => ({ version: v, publishedAt, ...more });
@@ -44,4 +45,28 @@ test("market screenshots come from the offered version, fall back to any version
   assert.deepEqual(versionScreenshots({ screenshots: [{ url: "http://insecure.example/a.png" }, "nope", shot("ok")] }), [{ url: "https://example.com/ok.png" }]);
   assert.equal(versionScreenshots({ screenshots: Array.from({ length: 9 }, (_, i) => shot(`s${i}`)) }).length, 6);
   assert.deepEqual(pluginScreenshots({}, null), []);
+});
+
+test("a catalog entry carries the keywords of the offered version, trimmed and without junk", async () => {
+  const world = createMarketWorld("fuyu-catalog-keywords-");
+  try {
+    const tagged = world.version({ name: "@someone/clock", version: "1.0.0" });
+    tagged.manifest.keywords = [" clock ", "world time", 7, ""];
+    const loose = world.version({ name: "@someone/alarm", version: "1.0.0" });
+    loose.keywords = ["wake up"];
+    world.putIndex(1, [
+      { name: "@someone/clock", versions: [tagged] },
+      { name: "@someone/alarm", versions: [loose] },
+      { name: "@someone/plain", versions: [world.version({ name: "@someone/plain", version: "1.0.0" })] },
+    ]);
+    world.putRevoked(1, []);
+    const { plugins } = await world.market.refresh();
+    assert.deepEqual(Object.fromEntries(plugins.map((plugin) => [plugin.name, plugin.keywords])), {
+      "@someone/clock": ["clock", "world time"],
+      "@someone/alarm": ["wake up"],
+      "@someone/plain": [],
+    });
+  } finally {
+    world.cleanup();
+  }
 });

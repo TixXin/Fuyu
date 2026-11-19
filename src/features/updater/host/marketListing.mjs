@@ -7,6 +7,10 @@ const timeOf = (value) => {
   return Number.isFinite(time) ? time : null;
 };
 
+export function pluginKeywords(raw) {
+  return Array.isArray(raw) ? raw.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim()) : [];
+}
+
 export function versionIcon(entry) {
   const url = isObject(entry?.icon) ? entry.icon.url : null;
   return typeof url === "string" && url.startsWith("https://") ? url : null;

@@ -59,6 +59,7 @@ export type MarketCatalogPlugin = {
   displayName: MarketLocalizedText;
   description: MarketLocalizedText;
   categories: string[];
+  keywords?: string[];
   icon?: string | null;
   screenshots?: MarketPluginScreenshot[];
   firstPublishedAt?: string | null;
