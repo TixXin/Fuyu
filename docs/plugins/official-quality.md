@@ -32,8 +32,11 @@
 - **至少一张截图**（2026-11-19 用户定）：每个官方插件写 1 到 3 张截图进 `fuyu.screenshots`（`path` 指向包里的 png / jpg / webp，`caption` 中英文一句话）。没有自己界面的插件截它起作用的地方，例如词典截翻译窗口里的查词结果。以深色岛为主，第一张最能说明用处（市场卡片的缩略图用它），后面是收起条、提醒或设置；顺序参考插件页预览的「截图」一节。截图是真界面，不用 CSS 画的示意图。
   - 岛上页面和收起条可以用 `fuyu-plugin shots` 截：插件带一份示例数据 `shots/sample.ts`，命令把真的组件渲染出来截图，见[截图和封面](screenshots.md)。提醒、设置分节和没有自己界面的插件在真岛上截。
   - 一张都没有时 `fuyu-plugin check` 给警告 `listing:screenshots`，第三方插件不会因此被拒；加 `--strict` 当错误。
-  - 官方插件由 `tests/unit/plugin-cli-lint.test.mjs` 拦住：除了文件开头 `PENDING` 里登记的几个（等 E77.6 补图），有一个没截图测试就失败。`PENDING` 只减不增，补完一个删一个。
+  - 官方插件由 `tests/unit/plugin-cli-lint.test.mjs` 拦住：除了文件开头 `PENDING` 里登记的几个（等 E77.6 补图），有一个没截图测试就失败。`PENDING` 只减不增，补完一个删一个。名字和说明的检查也登记在同一个 `PENDING` 里，见本节最后一条。
 - README 按「怎么用 / 设置 / 开销和数据来源 / 用到的系统程序（有的话）」写，中英文各一份。
+- **这一节由 `fuyu-plugin check` 查**（E77.4）：说明两行放不下、说明里写了实现方式、顶层 `description` 和英文说明不一样、没有 README、README 标题或岛页标题里的名字和清单不一样，各有一条 `listing:` 告警，清单见[命令行](cli.md#check)。设置分节的标题读不出来，要自己对。
+  - 第三方插件只是告警；`fuyu-plugin check --strict` 把它们当错误，官方插件上架前跑这一条。
+  - 官方插件由 `tests/unit/plugin-cli-lint.test.mjs` 拦住：每一条告警在 `PENDING` 里登记着还没改好的插件（现在是没截图的 4 个，和说明太长、两处说明不一致的 `system-monitor`），不在登记里的插件出了告警测试就失败，改好了不删登记也失败。E77.6 改完一个删一个，删空的那一行整行去掉。
 
 ## 5. 图标
 

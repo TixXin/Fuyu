@@ -138,6 +138,14 @@ fuyu-plugin check [文件夹] [--market] [--strict] [--json] [--config <文件>]
 | 告警 | 什么时候 |
 |---|---|
 | `listing:screenshots` | `fuyu.screenshots` 一张都没有。至少放一张；没有自己界面的插件截它起作用的地方 |
+| `listing:description-length` | `fuyu.description` 的某个语言在市场卡片上两行放不下（卡片最多显示两行，后面的被截掉）。按宽度估：一个汉字算 1，一个拉丁字母、数字或空格算 0.46，超过 58 告警。这是照默认大小的设置窗口量的，窗口拉宽能多放几个字 |
+| `listing:description-how` | 说明里写了怎么做的或怎么配置：「基于…」「API Key」「免注册」「在设置中配置…」「owner/repo」「原生接口」，英文的 based on、powered by、built with、configure … in settings。说明只说对用户有什么用，其余写进 README |
+| `listing:description-mismatch` | `package.json` 顶层的 `description` 和 `fuyu.description.en` 不一样，npm 和市场上会是两种说法 |
+| `listing:readme` | 没有 `README.md`，市场详情页的「说明」页签是空的 |
+| `listing:name-readme` | README 的第一个一级标题里没有插件的名字（`fuyu.displayName` 的中文或英文有一个就行；`README.zh-CN.md` 这类带语言的要有那个语言的名字） |
+| `listing:name-page` | 岛上页面（`island.page/v1`）的 `title` 和 `fuyu.displayName` 不一样 |
+
+名字的检查只读源码、不运行插件：岛上页面的 `title` 写成字面量、`{ "zh-CN": …, en: … }`，或指向同一个插件里的常量和它的属性（`PAGE_TITLE`、`zhCN.title`）时读得出来；运行时算出来的标题读不出，这一条就不检查。设置分节的标题画在插件自己的组件里，读不出来，不检查，照[官方插件标准](official-quality.md)自己对一遍。
 
 | 选项 | 作用 |
 |---|---|
