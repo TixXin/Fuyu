@@ -12,6 +12,7 @@
 - 收起条：默认只显示「12天」，不带图标；可选「图标 + 12天」「名称 + 12天」，可选显示置顶项或最近的一项，可以关掉；点收起条打开倒数日页（需要浮屿支持）。
 - 背景图不再随每分钟的更新广播，岛上显示卡片时才读取。
 - 最多 200 个日期，满了会提示；原来重启后超过 50 个的日期会被悄悄丢掉。
+- 岛上还没有日期时，「去设置里添加」直接打开倒数日的设置；有日期时页面底部的「管理」也一样（需要浮屿支持，老版本显示文字提示）。
 - 岛的页头按钮有了中英文标题。
 - 原来的日期、置顶、背景图和「在收起条显示」照旧保留，新设置取默认值。
 
@@ -25,6 +26,7 @@ Renamed to Day counter in English; dates are managed in the settings and the isl
 - Collapsed bar: just "12d" by default with no icon; optional "icon + 12d" or "name + 12d", the starred or the nearest date, and a switch to turn it off. Clicking it opens the Day counter page (when Fuyu supports it).
 - Background pictures are no longer broadcast with every minute's update; they are read only when the island shows the card.
 - Up to 200 dates, with a notice when the list is full; before, dates past the 50th were silently dropped after a restart.
+- With no dates yet, "Add in settings" on the island opens Day counter's settings, as does "Manage" at the bottom of the page once there are dates (when Fuyu supports it; older versions show a hint instead).
 - The island header button has a title in Chinese and English.
 - Your dates, star, backgrounds and collapsed bar switch carry over; the new settings start at their defaults.
 

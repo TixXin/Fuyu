@@ -67,9 +67,16 @@ export default function apply(ctx: Context) {
             )}
           </>
         ) : (
-          <p className="fuyu-countdown__note">{text.empty}</p>
+          <div className="fuyu-countdown__empty">
+            <p className="fuyu-countdown__note">{openSettings ? text.noItems : text.empty}</p>
+            {openSettings && (
+              <button type="button" className="fuyu-countdown__go" onClick={() => void openSettings()}>
+                {text.goSettings}
+              </button>
+            )}
+          </div>
         )}
-        {(openSettings || view.hidden > 0) && (
+        {view.hero && (openSettings || view.hidden > 0) && (
           <div className="fuyu-countdown__foot">
             <span className="fuyu-countdown__note">{view.hidden > 0 ? text.more(view.hidden) : ""}</span>
             {openSettings && (
