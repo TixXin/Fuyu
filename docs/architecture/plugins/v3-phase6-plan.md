@@ -90,4 +90,5 @@
   - 第 2 版市场冻结：`scripts/plugins/` 只剩重签用的 `plugin-signing.mjs`、`package-signing.mjs`（从第 2 版 SDK 搬来的包签名，域串不变）和 `resign-market.mjs`（`pnpm plugins:resign`，按原样重签索引和撤销名单，不再从示例重建，取代 `pnpm plugins:index`）；`build-plugin-index.mjs`、`build-plugin-sdk.mjs`、`check-sdk-release.mjs`、`plugin-api-doc.mjs` 删除。签名脚本的 `FOCUSD_PLUGIN_SIGNING_KEY`、`FOCUSD_PLUGIN_AUTHOR_KEY`、`FOCUSD_DPAPI_INPUT` 改名为 `FUYU_*`。测试 `tests/scripts/plugin-market-v2.test.mjs` 守住冻结文件的签名和哈希。
   - `pnpm lab`（`scripts/island-lab/server.mjs`）原来借第 2 版 SDK 找岛屿的家目录，改成自己找。
   - `docs/plugins/` 下第 2 版的作者文档（也显示在官网）这次不删，每篇顶上加了「已下线、只留作参考」；换成第 3 版另开任务。`docs/features/local-api.md` 的 MCP 命令改成 `npx -y fuyu-plugin@0.7.0 mcp`（npm 上 2.0 是第 3 版命令行，没有 `mcp`），开发模式路径一节标为已删除。
-  - **没做**：`packages/plugin-cli/src/keys.mjs` 的 `~/.fly-island-plugin/` 旧私钥位置兼容，等用户确认 Windows 那台的旧私钥已迁走后删，挂在跟进任务里。
+  - **没做**：`packages/plugin-cli/src/keys.mjs` 的旧私钥位置兼容（`~/.fly-island-plugin/`、`FLY_ISLAND_PLUGIN_SIGNING_KEY`），等用户在 Windows 上确认私钥已迁走后删，见独立任务 E57（#903）。
+  - **E36 没有归档**：代码都做完了，但两台机器的真岛验收和 Windows 的测量还没做，E36 改成「待用户确认」（见 v3-progress「当前状态」）。作者文档换成第 3 版、MCP 搬进第 3 版命令行另开了 E58（#905）、E59（#906）。
