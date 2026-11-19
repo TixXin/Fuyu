@@ -358,5 +358,6 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
     error: indexError ?? state.lastError ?? null,
     revocationWarning: state.revocationWarning ?? null,
     lastSource: lastSource ?? state.lastSource ?? null,
+    autoUpdated: state.autoUpdated ?? null,
   };
 }

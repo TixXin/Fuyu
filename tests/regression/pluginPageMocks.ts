@@ -1,5 +1,5 @@
 import { mockIPC } from "@tauri-apps/api/mocks";
-import { commandsV1, marketV1, pluginConfigV1, pluginWindowsV1, type CommandItem, type InstalledPluginReach, type MarketCatalogPlugin, type MarketInspectedPackage, type MarketPluginDetails, type MarketVersionCandidate, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
+import { commandsV1, marketV1, pluginConfigV1, pluginWindowsV1, type CommandItem, type InstalledPluginReach, type MarketAutoUpdated, type MarketCatalogPlugin, type MarketInspectedPackage, type MarketPluginDetails, type MarketVersionCandidate, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
 import { LOCALE_STORAGE_KEY } from "../../src/i18n";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { HostInfoV3, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
@@ -90,6 +90,7 @@ export const market = {
   details: {} as Record<string, MarketPluginDetails>,
   media: {} as Record<string, string>,
   inspected: null as MarketInspectedPackage | null,
+  autoUpdated: null as MarketAutoUpdated | null,
   reach: false,
   manualInstalled: {} as Record<string, string>,
 };
@@ -131,7 +132,7 @@ const marketPlugins = (): MarketCatalogPlugin[] => {
     ...(market.manualInstalled["@me/gadget"] ? [entry("@me/gadget", "小工具", "Gadget", "试验用的小工具", "A gadget for trying things", { install: candidate("0.1.0", false) })] : []),
   ].map(with_);
 };
-export const marketSnapshot = () => ({ plugins: marketPlugins(), installed: installedList(), updatedAt: null, manualAllowed: market.manualAllowed, error: null });
+export const marketSnapshot = () => ({ plugins: marketPlugins(), installed: installedList(), updatedAt: null, manualAllowed: market.manualAllowed, error: null, autoUpdated: market.autoUpdated });
 let emitMarket: () => void = () => {};
 const marketProvider = windowServices.provide(marketV1, {
   catalog: () => marketSnapshot(),
@@ -156,6 +157,12 @@ const marketProvider = windowServices.provide(marketV1, {
     return { id: name, version: version ?? "1.0.0", source: "market" as const, sha256: "a".repeat(64), confirmation: candidate("1.0.0", true).confirmation };
   },
   installFile: ({ expectedSha256 }) => (market.calls.push(`installFile:${expectedSha256 ?? ""}`), { id: "@me/gadget", version: "0.1.0", source: "manual" as const, sha256: "b".repeat(64), confirmation: candidate("0.1.0", false).confirmation }),
+  dismissAutoUpdated: ({ at }) => {
+    market.calls.push(`dismissAutoUpdated:${at}`);
+    if (market.autoUpdated && market.autoUpdated.at <= at) market.autoUpdated = null;
+    emitMarket();
+    return { dismissed: true as const };
+  },
   setManualAllowed: ({ allowed }) => (market.manualAllowed = allowed, market.calls.push(`manual:${allowed}`), emitMarket(), { manualAllowed: allowed }),
   setEnabled: ({ id, enabled }) => {
     market.calls.push(`enabled:${id}=${enabled}`);

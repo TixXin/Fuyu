@@ -100,6 +100,18 @@ export type MarketDownloadSource = {
   at: number;
 };
 
+export type MarketAutoUpdatedPlugin = {
+  name: string;
+  displayName?: Record<string, string>;
+  from: string;
+  to: string;
+};
+
+export type MarketAutoUpdated = {
+  at: number;
+  plugins: MarketAutoUpdatedPlugin[];
+};
+
 export type MarketCatalogSnapshot = {
   plugins: MarketCatalogPlugin[];
   installed: InstalledMarketPlugin[];
@@ -109,6 +121,7 @@ export type MarketCatalogSnapshot = {
   error: string | null;
   revocationWarning?: MarketRevocationWarning | null;
   lastSource?: MarketDownloadSource | null;
+  autoUpdated?: MarketAutoUpdated | null;
 };
 
 export type MarketInspectedPackage = {
@@ -194,6 +207,7 @@ export type MarketMethods = {
   setManualAllowed(params: { allowed: boolean }): { manualAllowed: boolean };
   setEnabled(params: { id: string; enabled: boolean }): { id: string; enabled: boolean };
   uninstall(params: { id: string; removeData?: boolean }): { id: string; removed: true };
+  dismissAutoUpdated(params: { at: number }): { dismissed: true };
 };
 
 export type MarketEvents = {

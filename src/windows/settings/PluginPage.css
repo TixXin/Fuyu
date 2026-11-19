@@ -140,6 +140,12 @@
 .plugin-banner__progress { grid-column: 2; height: 5px; margin-top: 6px; overflow: hidden; background: var(--color-white-a10); border-radius: 5px; }
 .plugin-banner__progress i { display: block; height: 100%; background: var(--color-accent); border-radius: 5px; transition: width var(--motion-medium) var(--motion-ease); }
 .plugin-banner__meta { grid-column: 2; display: flex; justify-content: space-between; gap: 10px; color: var(--text-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.plugin-banner__updates { grid-column: 2; min-width: 0; display: grid; gap: 8px; margin-top: 6px; }
+.plugin-banner__update { min-width: 0; padding: 8px 10px; border: 1px solid var(--color-white-a08); border-radius: var(--radius-lg); }
+.plugin-banner__update-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; color: var(--text-1); font-size: 12.5px; }
+.plugin-banner__update-head span { color: var(--text-3); font-variant-numeric: tabular-nums; }
+.plugin-banner__update-note { margin: 4px 0 0; color: var(--text-3); font-size: 12px; }
+.plugin-banner__changes { margin-top: 4px; color: var(--text-2); font-size: 12.5px; overflow-wrap: anywhere; }
 
 .plugin-menu { position: relative; flex: none; }
 .plugin-menu__list {
@@ -180,6 +186,7 @@
 .plugin-page :is(.plugin-btn, .plugin-icon-btn, .plugin-link, .plugin-search__clear):focus-visible,
 .plugin-menu :is(.plugin-icon-btn):focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
 .settings-stage--light :is(.plugin-banner:not(.plugin-banner--warn, .plugin-banner--bad), .plugin-metric) { background: var(--settings-card, var(--color-white)); border-color: var(--settings-card-line, var(--color-white-a08)); }
+.settings-stage--light .plugin-banner__update { border-color: var(--settings-card-line, var(--color-white-a08)); }
 
 @media (max-width: 620px) {
   .plugin-page__action-label { display: none; }

@@ -99,6 +99,13 @@ export type SettingsPluginPageText = {
     howToTurnOn: string;
     updates: (count: number) => string;
     updatesBody: (names: string) => string;
+    autoUpdated: (count: number) => string;
+    autoUpdatedBody: (names: string, time: string) => string;
+    autoUpdatedShow: string;
+    autoUpdatedHide: string;
+    autoUpdatedDismiss: string;
+    autoUpdatedLoading: string;
+    autoUpdatedNoChanges: string;
     problems: (count: number) => string;
     problemsBody: string;
     attention: (count: number) => string;
@@ -299,6 +306,13 @@ export const zhCN: SettingsPluginPageText = {
     howToTurnOn: "怎么打开？",
     updates: (count) => `${count} 个插件有新版本`,
     updatesBody: (names) => `${names}。官方插件平时会自动更新，刚上架的版本等 3 天。`,
+    autoUpdated: (count) => `已自动更新 ${count} 个插件`,
+    autoUpdatedBody: (names, time) => `${names}。更新于 ${time}。`,
+    autoUpdatedShow: "看看改了什么",
+    autoUpdatedHide: "收起",
+    autoUpdatedDismiss: "知道了",
+    autoUpdatedLoading: "正在读取更新记录…",
+    autoUpdatedNoChanges: "这几版没有写更新记录。",
     problems: (count) => `${count} 个插件出了问题`,
     problemsBody: "每个插件的处理按钮在下面那一行上。",
     attention: (count) => `${count} 个插件等你处理`,
@@ -499,6 +513,13 @@ export const en: SettingsPluginPageText = {
     howToTurnOn: "How to turn it back on?",
     updates: (count) => `${count} ${count === 1 ? "plugin has an update" : "plugins have updates"}`,
     updatesBody: (names) => `${names}. Official plugins update automatically; brand-new versions wait 3 days.`,
+    autoUpdated: (count) => `${count} ${count === 1 ? "plugin was" : "plugins were"} updated automatically`,
+    autoUpdatedBody: (names, time) => `${names}. Updated ${time}.`,
+    autoUpdatedShow: "What changed",
+    autoUpdatedHide: "Hide",
+    autoUpdatedDismiss: "Got it",
+    autoUpdatedLoading: "Loading the changelog…",
+    autoUpdatedNoChanges: "No changelog for these versions.",
     problems: (count) => `${count} ${count === 1 ? "plugin ran" : "plugins ran"} into problems`,
     problemsBody: "Fix buttons are on each row below.",
     attention: (count) => `${count} ${count === 1 ? "plugin needs" : "plugins need"} you`,
