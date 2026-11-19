@@ -103,29 +103,16 @@ pub(super) fn claude_code_hook_entries(
     running_script_path: &Path,
     status_script_path: &Path,
 ) -> Vec<(&'static str, Value)> {
-    let mut notification = claude_code_running_hook_entry(running_script_path);
-    if let Some(args) = notification["hooks"][0]["args"].as_array_mut() {
-        args.push(Value::String(AGENT_RUNNING_NOTIFICATION_ARG.to_string()));
-    }
+    let notification_arg = [AGENT_RUNNING_NOTIFICATION_ARG];
+    let mut notification = claude_code_running_hook_entry_with(running_script_path, &notification_arg);
     if let Value::Object(object) = &mut notification {
         object.insert(
             "matcher".to_string(),
             Value::String(CLAUDE_CODE_WAITING_NOTIFICATIONS.to_string()),
         );
     }
-
-    let mut permission = claude_code_running_hook_entry(running_script_path);
-    if let Some(args) = permission["hooks"][0]["args"].as_array_mut() {
-        args.push(Value::String(AGENT_RUNNING_NOTIFICATION_ARG.to_string()));
-    }
-
-    let compaction = || {
-        let mut entry = claude_code_running_hook_entry(running_script_path);
-        if let Some(args) = entry["hooks"][0]["args"].as_array_mut() {
-            args.push(Value::String(AGENT_RUNNING_NOTIFICATION_ARG.to_string()));
-        }
-        entry
-    };
+    let permission = claude_code_running_hook_entry_with(running_script_path, &notification_arg);
+    let compaction = || claude_code_running_hook_entry_with(running_script_path, &notification_arg);
 
     let session_script_path = status_script_path.with_file_name(AGENT_SESSION_SCRIPT_FILE_NAME);
     let mut session_start = claude_code_session_hook_entry(&session_script_path, "start");
@@ -176,74 +163,60 @@ pub(super) fn claude_code_installed_entries(
         }
         if let Some(activity_url) = &approval.activity_url {
             for event_name in ACTIVITY_EVENTS {
-                entries.push((event_name, claude_code_activity_hook_entry(activity_url, &approval.token)));
+                entries.push((event_name, claude_code_activity_hook_entry(running_script_path, activity_url, &approval.token)));
             }
         }
     }
     entries
 }
 
-#[cfg(windows)]
-const CURL: (&str, &str) = ("curl.exe", "NUL");
-#[cfg(not(windows))]
-const CURL: (&str, &str) = ("/usr/bin/curl", "/dev/null");
-#[cfg(not(windows))]
-const UNIX_GUARD: &str = "[ -f \"$1\" ] && exec /bin/sh \"$@\" || exit 0";
+pub(super) const ACTIVITY_ARG: &str = "activity";
 
 #[cfg(windows)]
-fn guarded_running_args(script_path: &Path, rest: &[&str]) -> Vec<String> {
-    let script = script_path.to_string_lossy().to_string();
-    ["/d", "/c", "if", "exist"]
-        .into_iter()
-        .map(str::to_string)
-        .chain([script.clone(), script])
-        .chain(rest.iter().map(|arg| (*arg).to_string()))
-        .collect()
+fn quoted_script(path: &Path) -> String {
+    let text = path.to_string_lossy().replace('\\', "/");
+    if text.contains('$') || text.contains('`') {
+        format!("'{text}'")
+    } else {
+        format!("\"{text}\"")
+    }
 }
 
 #[cfg(windows)]
-fn guarded_ps1_args(script_path: &Path, rest: &[&str]) -> Vec<String> {
-    let script = script_path.to_string_lossy().to_string();
-    ["/d", "/c", "if", "exist"]
-        .into_iter()
-        .map(str::to_string)
-        .chain(std::iter::once(script.clone()))
-        .chain(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File"].into_iter().map(str::to_string))
-        .chain(std::iter::once(script))
-        .chain(rest.iter().map(|arg| (*arg).to_string()))
-        .collect()
+pub(super) fn claude_code_running_command(script_path: &Path, rest: &[&str]) -> String {
+    std::iter::once(quoted_script(script_path)).chain(rest.iter().map(|arg| (*arg).to_string())).collect::<Vec<_>>().join(" ")
+}
+
+#[cfg(windows)]
+fn claude_code_powershell_command(script_path: &Path, rest: &[&str]) -> String {
+    let mut command = format!("powershell.exe -NoProfile -ExecutionPolicy Bypass -File {}", quoted_script(script_path));
+    for arg in rest {
+        command.push(' ');
+        command.push_str(arg);
+    }
+    command
 }
 
 #[cfg(not(windows))]
-fn guarded_sh_args(script_path: &Path, rest: &[&str]) -> Vec<String> {
-    ["-c", UNIX_GUARD, "sh"]
-        .into_iter()
-        .map(str::to_string)
-        .chain(std::iter::once(script_path.to_string_lossy().to_string()))
-        .chain(rest.iter().map(|arg| (*arg).to_string()))
-        .collect()
+fn shell_quoted(text: &str) -> String {
+    format!("'{}'", text.replace('\'', "'\\''"))
 }
 
-fn claude_code_activity_hook_entry(url: &str, token: &str) -> Value {
-    let args = [
-        "-s",
-        "-o",
-        CURL.1,
-        "--connect-timeout",
-        "1",
-        "-m",
-        "5",
-        "-H",
-        &format!("Authorization: Bearer {token}"),
-        "-H",
-        "Content-Type: application/json",
-        "-H",
-        &format!("{APPROVAL_HOOK_MARKER_HEADER}: {AGENT_HOOK_SIGNATURE}activity"),
-        "--data-binary",
-        "@-",
-        url,
-    ];
-    let mut entry = claude_code_hook_entry(CURL.0, args.iter().map(|arg| arg.to_string()).collect(), 10);
+#[cfg(not(windows))]
+pub(super) fn claude_code_running_command(script_path: &Path, rest: &[&str]) -> String {
+    let script = shell_quoted(&script_path.to_string_lossy());
+    let rest: String = rest.iter().map(|arg| format!(" {}", shell_quoted(arg))).collect();
+    format!("[ -f {script} ] && exec /bin/sh {script}{rest} || exit 0")
+}
+
+#[cfg(not(windows))]
+fn claude_code_powershell_command(script_path: &Path, rest: &[&str]) -> String {
+    claude_code_running_command(script_path, rest)
+}
+
+fn claude_code_activity_hook_entry(running_script_path: &Path, url: &str, token: &str) -> Value {
+    let command = claude_code_running_command(running_script_path, &[super::claude_code::PROVIDER, ACTIVITY_ARG, url, token]);
+    let mut entry = command_hook_entry(command, 10);
     if let Some(hook) = entry["hooks"][0].as_object_mut() {
         hook.insert("async".to_string(), Value::Bool(true));
     }
@@ -311,7 +284,8 @@ fn unmanaged_entries(hooks: &mut Map<String, Value>, event_name: &str, keep_appr
 }
 
 fn is_approval_hook(hook: &Value) -> bool {
-    hook.to_string().contains(APPROVAL_HOOK_MARKER_HEADER)
+    let text = hook.to_string();
+    text.contains(APPROVAL_HOOK_MARKER_HEADER) || text.contains("/claude/activity")
 }
 
 fn remove_managed(mut entry: Value, keep_approval: bool) -> Option<Value> {
@@ -355,46 +329,26 @@ pub(super) fn claude_code_match_all_hook_entry(mut entry: Value) -> Value {
     entry
 }
 
-#[cfg(windows)]
 pub(super) fn claude_code_running_hook_entry(script_path: &Path) -> Value {
-    claude_code_hook_entry("cmd.exe", guarded_running_args(script_path, &["claudeCode"]), 1)
+    claude_code_running_hook_entry_with(script_path, &[])
 }
 
-#[cfg(not(windows))]
-pub(super) fn claude_code_running_hook_entry(script_path: &Path) -> Value {
-    claude_code_hook_entry("/bin/sh", guarded_sh_args(script_path, &["claudeCode"]), 1)
+fn claude_code_running_hook_entry_with(script_path: &Path, rest: &[&str]) -> Value {
+    let args: Vec<&str> = std::iter::once(super::claude_code::PROVIDER).chain(rest.iter().copied()).collect();
+    command_hook_entry(claude_code_running_command(script_path, &args), 5)
 }
 
-#[cfg(windows)]
 pub(super) fn claude_code_status_hook_entry(script_path: &Path, phase: &str) -> Value {
-    claude_code_hook_entry("cmd.exe", guarded_ps1_args(script_path, &["claudeCode", phase]), 5)
+    command_hook_entry(claude_code_powershell_command(script_path, &[super::claude_code::PROVIDER, phase]), 5)
 }
 
-#[cfg(not(windows))]
-pub(super) fn claude_code_status_hook_entry(script_path: &Path, phase: &str) -> Value {
-    claude_code_hook_entry("/bin/sh", guarded_sh_args(script_path, &["claudeCode", phase]), 5)
-}
-
-#[cfg(windows)]
 pub(super) fn claude_code_session_hook_entry(script_path: &Path, event: &str) -> Value {
-    claude_code_hook_entry("cmd.exe", guarded_ps1_args(script_path, &["claudeCode", event]), 15)
+    command_hook_entry(claude_code_powershell_command(script_path, &[super::claude_code::PROVIDER, event]), 15)
 }
 
-#[cfg(not(windows))]
-pub(super) fn claude_code_session_hook_entry(script_path: &Path, event: &str) -> Value {
-    claude_code_hook_entry("/bin/sh", guarded_sh_args(script_path, &["claudeCode", event]), 15)
-}
-
-pub(super) fn claude_code_hook_entry(command: &str, args: Vec<String>, timeout: i64) -> Value {
-    json!({
-        "hooks": [
-            {
-                "type": "command",
-                "command": command,
-                "args": args,
-                "timeout": timeout
-            }
-        ]
+pub(super) fn has_exec_form_hooks(hooks: &Value) -> bool {
+    hooks.as_object().is_some_and(|events| {
+        events.values().filter_map(Value::as_array).flatten().filter_map(|entry| entry["hooks"].as_array()).flatten().any(|hook| hook.get("args").is_some() && value_contains_island_hook_signature(hook))
     })
 }
 
@@ -417,135 +371,5 @@ pub(super) fn turn_hook_entries(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[cfg(windows)]
-    #[test]
-    fn running_hook_passes_script_path_as_unquoted_argument() {
-        let path = Path::new(r"C:\Users\a b\fuyu-agent-running.cmd");
-        let entry = claude_code_running_hook_entry(path);
-        let args = entry["hooks"][0]["args"].as_array().unwrap();
-
-        assert_eq!(
-            args,
-            &vec![
-                json!("/d"), json!("/c"), json!("if"), json!("exist"),
-                json!(r"C:\Users\a b\fuyu-agent-running.cmd"),
-                json!(r"C:\Users\a b\fuyu-agent-running.cmd"),
-                json!("claudeCode"),
-            ]
-        );
-        assert!(args.iter().all(|arg| !arg.as_str().unwrap().contains('"')));
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn only_waiting_notifications_save_their_input() {
-        let running = Path::new(r"C:\fuyu-agent-running.cmd");
-        let status = Path::new(r"C:\fuyu-agent-status.ps1");
-        let mut hooks = Map::new();
-        install_claude_code_hook_events(&mut hooks, claude_code_hook_entries(running, status));
-
-        let last_arg = |event: &str| {
-            hooks[event][0]["hooks"][0]["args"]
-                .as_array()
-                .unwrap()
-                .last()
-                .cloned()
-        };
-        assert_eq!(last_arg("UserPromptSubmit"), Some(json!("claudeCode")));
-        assert_eq!(last_arg("PreToolUse"), Some(json!("claudeCode")));
-        assert_eq!(last_arg("Notification"), Some(json!("notification")));
-        assert_eq!(
-            hooks["Notification"][0]["matcher"],
-            json!("permission_prompt|elicitation_dialog|agent_needs_input")
-        );
-        assert_eq!(last_arg("Stop"), Some(json!("completed")));
-        assert_eq!(last_arg("SessionStart"), Some(json!("start")));
-        assert_eq!(hooks["SessionStart"][0]["hooks"][0]["async"], json!(true));
-        assert_eq!(last_arg("SessionEnd"), Some(json!("end")));
-        assert!(hooks["SessionEnd"][0]["hooks"][0].get("async").is_none());
-        assert!(hooks["SessionStart"][0]["hooks"][0]["args"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|arg| arg.as_str().is_some_and(|path| path.ends_with("fuyu-agent-session.ps1"))));
-        assert_eq!(last_arg("PermissionRequest"), Some(json!("notification")));
-        assert!(hooks["PermissionRequest"][0].get("matcher").is_none());
-    }
-
-    #[cfg(windows)]
-    #[test]
-    fn approval_hook_sits_beside_the_status_hook_and_repair_replaces_it() {
-        let running = Path::new(r"C:\fuyu-agent-running.cmd");
-        let status = Path::new(r"C:\fuyu-agent-status.ps1");
-        let approval = |port: u16| ApprovalHook {
-            url: format!("http://127.0.0.1:{port}/claude/permission-request"),
-            question_url: Some(format!("http://127.0.0.1:{port}/claude/ask-user-question")),
-            activity_url: Some(format!("http://127.0.0.1:{port}/claude/activity")),
-            token: "t".to_string(),
-        };
-        let mine = json!({ "hooks": [{ "type": "command", "command": "my-own-hook" }] });
-        let mut hooks = Map::new();
-        hooks.insert("PermissionRequest".to_string(), json!([mine]));
-
-        install_claude_code_hook_events(&mut hooks, claude_code_installed_entries(running, status, Some(&approval(47830))));
-        install_claude_code_hook_events(&mut hooks, claude_code_installed_entries(running, status, Some(&approval(51000))));
-
-        let entries = hooks["PermissionRequest"].as_array().unwrap();
-        assert_eq!(entries.len(), 3, "the user's hook, the status hook and the approval hook");
-        assert_eq!(entries[0], mine);
-        assert_eq!(entries[1]["hooks"][0]["type"], json!("command"));
-        let hook = &entries[2]["hooks"][0];
-        assert_eq!(hook["type"], json!("http"));
-        assert_eq!(hook["url"], json!("http://127.0.0.1:51000/claude/permission-request"));
-        assert_eq!(hook["headers"]["Authorization"], json!("Bearer t"));
-        assert_eq!(hook["timeout"], json!(APPROVAL_HOOK_TIMEOUT_SECONDS));
-        assert!(value_contains_island_hook_signature(hook));
-
-        let pre_tool = hooks["PreToolUse"].as_array().unwrap();
-        assert_eq!(pre_tool.len(), 2, "the status hook and the question hook");
-        assert_eq!(pre_tool[0]["matcher"], json!("*"));
-        assert_eq!(pre_tool[1]["matcher"], json!("AskUserQuestion"));
-        let question = &pre_tool[1]["hooks"][0];
-        assert_eq!(question["url"], json!("http://127.0.0.1:51000/claude/ask-user-question"));
-        assert_eq!(question["timeout"], json!(APPROVAL_HOOK_TIMEOUT_SECONDS));
-        assert!(value_contains_island_hook_signature(question));
-
-        for event in ACTIVITY_EVENTS {
-            let activity = &hooks[event].as_array().unwrap().last().unwrap()["hooks"][0];
-            assert_eq!((activity["command"].as_str(), activity["async"].as_bool()), (Some("curl.exe"), Some(true)), "{event}");
-            assert_eq!(activity["args"].as_array().unwrap().last(), Some(&json!("http://127.0.0.1:51000/claude/activity")));
-            assert!(activity["args"].as_array().unwrap().contains(&json!("@-")) && value_contains_island_hook_signature(activity));
-        }
-        assert_eq!(hooks["Stop"].as_array().unwrap().len(), 2, "the status hook and one activity hook");
-        assert_eq!(hooks["PostToolUse"].as_array().unwrap().len(), 1);
-
-        install_claude_code_hook_events(&mut hooks, claude_code_installed_entries(running, status, None));
-        assert_eq!(hooks["PermissionRequest"].as_array().unwrap().len(), 2);
-        assert_eq!(hooks["PreToolUse"].as_array().unwrap().len(), 1);
-        assert_eq!(hooks["Stop"].as_array().unwrap().len(), 1);
-        assert!(hooks.get("PostToolUse").is_none() && hooks.get("PermissionDenied").is_none(), "emptied events are dropped");
-    }
-
-    #[cfg(not(windows))]
-    #[test]
-    fn mac_hooks_run_the_shell_scripts_with_absolute_paths() {
-        let running = Path::new("/Users/a b/.fuyu/fuyu-agent-running.sh");
-        let status = Path::new("/Users/a b/.fuyu/fuyu-agent-status.sh");
-        let mut hooks = Map::new();
-        install_claude_code_hook_events(&mut hooks, claude_code_hook_entries(running, status));
-        let hook = |event: &str| hooks[event][0]["hooks"][0].clone();
-        assert_eq!(hook("UserPromptSubmit")["command"], json!("/bin/sh"));
-        assert_eq!(hook("UserPromptSubmit")["args"], json!(["-c", UNIX_GUARD, "sh", "/Users/a b/.fuyu/fuyu-agent-running.sh", "claudeCode"]));
-        assert_eq!(hook("Notification")["args"], json!(["-c", UNIX_GUARD, "sh", "/Users/a b/.fuyu/fuyu-agent-running.sh", "claudeCode", "notification"]));
-        assert_eq!(hook("Stop")["args"], json!(["-c", UNIX_GUARD, "sh", "/Users/a b/.fuyu/fuyu-agent-status.sh", "claudeCode", "completed"]));
-        assert_eq!(hook("SessionStart")["args"], json!(["-c", UNIX_GUARD, "sh", "/Users/a b/.fuyu/fuyu-agent-session.sh", "claudeCode", "start"]));
-        let activity = claude_code_activity_hook_entry("http://127.0.0.1:1/claude/activity", "t");
-        assert_eq!(activity["hooks"][0]["command"], json!("/usr/bin/curl"));
-        assert!(activity["hooks"][0]["args"].as_array().unwrap().contains(&json!("/dev/null")));
-        assert!(value_contains_island_hook_signature(&hook("Stop")));
-    }
-
-}
+#[path = "claude_hooks_tests.rs"]
+mod tests;

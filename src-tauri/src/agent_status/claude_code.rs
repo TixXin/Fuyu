@@ -3,7 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::claude_hooks::{install_claude_code_status_hooks, uninstall_claude_code_status_hooks, ApprovalHook};
+use super::claude_hooks::{has_exec_form_hooks, install_claude_code_status_hooks, uninstall_claude_code_status_hooks, ApprovalHook};
 use super::harness::{Harness, HookEnv, Hooks, RemoteFiles, StatusLight};
 use super::hooks_state::{claude_code_hooks_state, HookInstallState};
 use super::markers::{
@@ -57,6 +57,23 @@ fn install(env: &HookEnv) -> Result<(), String> {
         approval_hook().as_ref(),
         crate::agent_approval::hook_endpoint_unknown(),
     )
+}
+
+pub(super) fn upgrade_exec_form_hooks(app_dir: &Path, home_dir: &Path) -> Result<bool, String> {
+    let Ok(text) = fs::read_to_string(settings_path(home_dir)) else {
+        return Ok(false);
+    };
+    let Ok(config) = serde_json::from_str::<serde_json::Value>(text.trim_start_matches('\u{feff}')) else {
+        return Ok(false);
+    };
+    if !has_exec_form_hooks(&config["hooks"]) {
+        return Ok(false);
+    }
+    super::install_agent_hook_scripts(app_dir)?;
+    let running_script = app_dir.join(super::AGENT_RUNNING_SCRIPT_FILE_NAME);
+    let status_script = app_dir.join(super::AGENT_STATUS_SCRIPT_FILE_NAME);
+    install(&HookEnv { home_dir, running_script: &running_script, status_script: &status_script })?;
+    Ok(true)
 }
 
 fn uninstall(env: &HookEnv) -> Result<(), String> {
