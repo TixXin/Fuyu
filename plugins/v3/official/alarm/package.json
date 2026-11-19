@@ -2,7 +2,7 @@
   "name": "@fuyu/alarm",
   "version": "1.1.0",
   "type": "module",
-  "description": "Set one-time or weekly alarms that remind you on the island and ring, with snooze and adjustable volume and ring length.",
+  "description": "Rings on the island at the time you set, repeats on the weekdays you pick, and lets you snooze.",
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",
@@ -23,10 +23,33 @@
       "en": "Alarm"
     },
     "description": {
-      "zh-CN": "设置单次或按星期重复的闹钟，到点在岛上提醒并响铃，可以贪睡、调音量和响铃时长。",
-      "en": "Set one-time or weekly alarms that remind you on the island and ring, with snooze and adjustable volume and ring length."
+      "zh-CN": "到点在岛上响铃提醒，可以按星期重复，没睡醒就贪睡几分钟。",
+      "en": "Rings on the island at the time you set, repeats on the weekdays you pick, and lets you snooze."
     },
     "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/page.png",
+        "caption": {
+          "zh-CN": "岛上页面：添加闹钟，看全部闹钟",
+          "en": "Island page: add alarms and see them all"
+        }
+      },
+      {
+        "path": "screenshots/ringing.png",
+        "caption": {
+          "zh-CN": "到点在岛上响铃，可以贪睡",
+          "en": "Rings on the island, with snooze"
+        }
+      },
+      {
+        "path": "screenshots/bar.png",
+        "caption": {
+          "zh-CN": "收起条：响铃时显示闹钟时间",
+          "en": "Collapsed bar: the alarm's time while it rings"
+        }
+      }
+    ],
     "categories": [
       "productivity",
       "utilities"
