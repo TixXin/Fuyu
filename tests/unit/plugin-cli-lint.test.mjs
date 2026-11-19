@@ -10,8 +10,6 @@ const HELLO = fileURLToPath(new URL("../../packages/plugin-cli/test/fixtures/hel
 const OFFICIAL_ROOT = fileURLToPath(new URL("../../plugins/v3/official", import.meta.url));
 const PENDING = {
   "listing:screenshots": ["ecdict", "now-playing", "system-monitor", "todo-digest"],
-  "listing:description-length": ["system-monitor"],
-  "listing:description-mismatch": ["system-monitor"],
 };
 
 const scratch = mkdtempSync(join(tmpdir(), "plugin-cli-lint-"));

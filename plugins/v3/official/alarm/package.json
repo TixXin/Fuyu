@@ -3,6 +3,18 @@
   "version": "1.1.1",
   "type": "module",
   "description": "Rings on the island at the time you set, repeats on the weekdays you pick, and lets you snooze.",
+  "keywords": [
+    "闹钟",
+    "闹铃",
+    "起床",
+    "提醒",
+    "贪睡",
+    "alarm",
+    "alarm clock",
+    "wake up",
+    "reminder",
+    "snooze"
+  ],
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",

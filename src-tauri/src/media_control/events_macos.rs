@@ -20,7 +20,7 @@ pub(super) fn start(app: &AppHandle) -> Result<(), String> {
     adapter::start(app, move |change| {
         let kind = match change {
             Change::Track => "track",
-            Change::Playback | Change::Other => "playback",
+            Change::Playback | Change::Artwork | Change::Other => "playback",
         };
         let change = SessionChange { kind, at: current_unix_millis(), session_id: None };
         if let Ok(data) = serde_json::to_value(&change) {

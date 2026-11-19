@@ -19,17 +19,19 @@ export function AgentQuestionCard({
   approvals,
   sessions,
   options = DEFAULT_AGENT_NOTICE_OPTIONS,
+  preview = false,
 }: {
   approvals: AgentApprovals;
   sessions: AgentSessionSummary[];
   options?: AgentNoticeOptions;
+  preview?: boolean;
 }) {
   const t = useTranslation();
   const request = approvals.current;
   const id = request?.id;
   const questions = useMemo(() => parseQuestions(request?.toolInput), [request?.toolInput]);
   const [picks, setPicks] = useState<QuestionPick[]>([]);
-  const { armed, cardRef, actRef } = useApprovalCard(approvals, QUESTION_HOTKEYS);
+  const { armed, cardRef, actRef } = useApprovalCard(approvals, QUESTION_HOTKEYS, !preview);
 
   useEffect(() => {
     setPicks([]);
@@ -43,6 +45,7 @@ export function AgentQuestionCard({
   const toTerminal = () => {
     if (!request) return;
     approvals.decide("terminal");
+    if (preview) return;
     void focusAgentWindow(request.agent, cwd, session?.title ?? null, request.remoteHost ? "" : request.sessionId).catch((error: unknown) =>
       console.error("Failed to focus the agent window", error),
     );
@@ -67,7 +70,7 @@ export function AgentQuestionCard({
 
   const activeIndex = Math.max(0, questions.findIndex((_, index) => !answerOf(picks[index])));
   useEffect(() => {
-    if (!armed) return;
+    if (!armed || preview) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.altKey || event.metaKey) return;
       if (event.target instanceof HTMLElement && event.target.matches("input, textarea")) return;

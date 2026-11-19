@@ -3,6 +3,18 @@
   "version": "1.1.0",
   "type": "module",
   "description": "See the open issues of the GitHub repositories you follow, grouped by repository, right on the island.",
+  "keywords": [
+    "GitHub",
+    "issue",
+    "issues",
+    "工单",
+    "问题",
+    "仓库",
+    "开源",
+    "repository",
+    "repo",
+    "bug tracker"
+  ],
   "license": "MIT",
   "author": "TixXin",
   "repository": "https://github.com/TixXin/fuyu",

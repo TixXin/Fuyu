@@ -2,7 +2,26 @@
   "name": "@fuyu/system-monitor",
   "version": "1.1.1",
   "type": "module",
-  "description": "CPU, GPU, memory, network, battery and the busiest programs on the island, with 5-minute charts and a collapsed bar that turns yellow or red when readings run high.",
+  "description": "CPU, GPU, memory, network, battery and the busiest programs on the island; the bar changes color when readings run high.",
+  "keywords": [
+    "系统监控",
+    "性能",
+    "任务管理器",
+    "活动监视器",
+    "CPU",
+    "GPU",
+    "内存",
+    "网速",
+    "电池",
+    "温度",
+    "system monitor",
+    "performance",
+    "memory",
+    "RAM",
+    "network speed",
+    "battery",
+    "task manager"
+  ],
   "license": "MIT",
   "author": "TixXin",
   "repository": "https://github.com/TixXin/fuyu",
@@ -24,8 +43,8 @@
       "en": "System monitor"
     },
     "description": {
-      "zh-CN": "在岛上看 CPU、GPU、内存、网速、电池和最占资源的程序，带 5 分钟曲线；收起条读数偏高变黄、过高变红。会运行系统自带的程序取数（Windows 上是 PowerShell，Mac 上是 vm_stat、ps 等），不联网。",
-      "en": "CPU, GPU, memory, network, battery and the busiest programs on the island, with 5-minute charts; the collapsed bar turns yellow or red when readings run high. Runs built-in system programs to read them (PowerShell on Windows; vm_stat, ps and others on Mac), with no network access."
+      "zh-CN": "在岛上看 CPU、GPU、内存、网速、电池和最占资源的程序，读数偏高时收起条会变色提醒。",
+      "en": "CPU, GPU, memory, network, battery and the busiest programs on the island; the bar changes color when readings run high."
     },
     "icon": "assets/icon.svg",
     "categories": [

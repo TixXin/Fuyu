@@ -1,3 +1,4 @@
+import { barItemName } from "../../features/plugin-kernel/barUsage.ts";
 import { arrangeCollapsedItems, setCollapsedItemHidden, type CollapsedPlacement } from "../../lib/settings/collapsedItems.ts";
 
 export type CollapsedMenuEntry = { id: string; owner: string; external: boolean; group?: string; hideable?: boolean };
@@ -34,7 +35,6 @@ export function collapsedItemName(entry: CollapsedMenuEntry, entries: readonly C
   const label = labels.get(entry.id);
   if (label) return label;
   if (!entry.external) return builtin[entry.id] ?? entry.id;
-  const plugin = plugins.get(entry.owner) ?? entry.owner;
   const siblings = collapsedMenuIds(entries.filter((other) => other.external && other.owner === entry.owner));
-  return siblings.length > 1 ? `${plugin} · ${entry.id}` : plugin;
+  return barItemName(entry, siblings.length, null, plugins.get(entry.owner));
 }

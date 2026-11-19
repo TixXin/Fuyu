@@ -1,0 +1,78 @@
+.agent-reminder-frame,
+.agent-reminder-pill {
+  --island-notch-width: 150px;
+  --island-notch-height: 32px;
+  --island-expanded-scale: 1;
+  --text-1: rgba(var(--agent-ink), 0.96);
+  --text-2: rgba(var(--agent-ink), 0.68);
+  --text-3: rgba(var(--agent-ink), 0.54);
+  box-sizing: border-box;
+  color: var(--text-1);
+  text-align: left;
+  box-shadow: 0 8px 24px var(--agent-reminder-shadow, rgba(0, 0, 0, 0.28));
+}
+
+.agent-reminder-frame {
+  position: relative;
+  width: 380px;
+  padding: 4px 6px;
+  overflow: hidden;
+  border-radius: 0 0 18px 18px;
+}
+
+.agent-reminder-frame--notch-band {
+  padding-top: 0;
+}
+
+.agent-reminder-frame--notch-below {
+  padding-top: calc(var(--island-notch-height) + 4px);
+}
+
+.agent-reminder-frame__notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: var(--island-notch-width);
+  height: var(--island-notch-height);
+  margin-left: calc(var(--island-notch-width) / -2);
+  background: var(--agent-reminder-notch, #000);
+  border-radius: 0 0 10px 10px;
+}
+
+.agent-reminder-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 320px;
+  height: 30px;
+  padding: 0 14px;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 0 0 15px 15px;
+}
+
+.agent-reminder-pill--notch {
+  min-width: calc(var(--island-notch-width) + 120px);
+  height: var(--island-notch-height);
+  justify-content: space-between;
+}
+
+.agent-reminder-pill__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--agent-reminder-working, #34c759);
+  border-radius: 50%;
+}
+
+.agent-reminder-pill__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-reminder-pill__state {
+  flex: none;
+  color: var(--text-2);
+}

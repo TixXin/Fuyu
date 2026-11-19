@@ -3,6 +3,18 @@
   "version": "1.1.1",
   "type": "module",
   "description": "A ring shows how much of today's to-do list is done, with what's next listed beside it.",
+  "keywords": [
+    "待办",
+    "进度",
+    "圆环",
+    "完成度",
+    "今日任务",
+    "todo",
+    "to-do",
+    "progress",
+    "ring",
+    "tasks"
+  ],
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",

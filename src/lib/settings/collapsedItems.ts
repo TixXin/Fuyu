@@ -23,6 +23,7 @@ export const COLLAPSED_ITEM_PLUGINS: Readonly<Record<string, string>> = {
   shelf: "file-shelf",
   music: "music",
   "session-count": "agents",
+  timer: "timer",
 };
 
 export function filterCollapsedItemEntries(
