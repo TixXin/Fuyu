@@ -235,13 +235,17 @@ struct Running {
     _guard: Box<dyn Send>,
 }
 
-fn launch(inner: &Arc<Inner>, spec: &HostSpec, containment: &dyn Containment) -> Result<Running, String> {
-    let mut command = Command::new(&spec.program);
+fn host_command(spec: &HostSpec) -> Command {
+    let mut command = crate::node::node_command(&spec.program);
     command.args(&spec.args).envs(spec.env.iter().map(|(key, value)| (key, value))).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
     if let Some(dir) = &spec.current_dir {
         command.current_dir(dir);
     }
-    crate::node::hide_window(&mut command);
+    command
+}
+
+fn launch(inner: &Arc<Inner>, spec: &HostSpec, containment: &dyn Containment) -> Result<Running, String> {
+    let mut command = host_command(spec);
     containment.prepare(&mut command);
     let mut child = command.spawn().map_err(|error| format!("could not start {}: {error}", spec.program.display()))?;
     let guard = match containment.adopt(&child) {
@@ -426,9 +430,14 @@ fn supervise(inner: &Arc<Inner>, mut spec_for: impl FnMut(u32) -> HostSpec, cont
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
+    use std::{
+        collections::BTreeMap,
+        ffi::{OsStr, OsString},
+        time::Duration,
+    };
 
-    use super::Timing;
+    use super::{host_command, HostSpec, Timing};
+    use crate::node::NODE_ENV_NOT_INHERITED;
 
     #[test]
     fn the_first_restart_is_immediate_then_the_wait_doubles_up_to_the_cap() {
@@ -436,5 +445,23 @@ mod tests {
         let waits: Vec<u128> = (0..10).map(|failures| timing.backoff(failures).as_millis()).collect();
         assert_eq!(waits, [0, 250, 500, 1000, 2000, 4000, 8000, 16000, 30000, 30000]);
         assert_eq!(timing.backoff(u32::MAX), Duration::from_secs(30));
+    }
+
+    #[test]
+    fn the_host_does_not_inherit_variables_that_change_how_node_runs_but_keeps_its_own() {
+        let spec = HostSpec {
+            program: "node".into(),
+            args: vec!["host.mjs".into()],
+            env: vec![("FUYU_PLUGIN_HOST".into(), "1".into()), ("NODE_PATH".into(), "/set/by/fuyu".into())],
+            current_dir: None,
+        };
+        let command = host_command(&spec);
+        let envs: BTreeMap<OsString, Option<OsString>> = command.get_envs().map(|(key, value)| (key.to_os_string(), value.map(OsStr::to_os_string))).collect();
+        for name in NODE_ENV_NOT_INHERITED.iter().filter(|name| **name != "NODE_PATH") {
+            assert_eq!(envs.get(OsStr::new(name)), Some(&None), "{name} should be removed");
+        }
+        assert_eq!(envs.get(OsStr::new("NODE_PATH")), Some(&Some("/set/by/fuyu".into())));
+        assert_eq!(envs.get(OsStr::new("FUYU_PLUGIN_HOST")), Some(&Some("1".into())));
+        assert!(!envs.contains_key(OsStr::new("NODE_EXTRA_CA_CERTS")));
     }
 }

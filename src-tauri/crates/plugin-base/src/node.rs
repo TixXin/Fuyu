@@ -105,9 +105,8 @@ pub fn probe(path: &Path) -> Result<NodeVersion, String> {
     if !path.is_file() {
         return Err("not there".into());
     }
-    let mut command = Command::new(path);
+    let mut command = node_command(path);
     command.arg("--version").stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::null());
-    hide_window(&mut command);
     let mut child = command.spawn().map_err(|error| format!("could not run it: {error}"))?;
     let started = Instant::now();
     loop {
@@ -128,6 +127,17 @@ pub fn probe(path: &Path) -> Result<NodeVersion, String> {
         let _ = std::io::Read::read_to_string(&mut stdout, &mut text);
     }
     NodeVersion::parse(&text).ok_or_else(|| format!("`--version` printed {:?}", text.trim()))
+}
+
+pub(crate) const NODE_ENV_NOT_INHERITED: [&str; 7] = ["NODE_OPTIONS", "NODE_PATH", "NODE_CHANNEL_FD", "NODE_CHANNEL_SERIALIZATION_MODE", "NODE_UNIQUE_ID", "NODE_V8_COVERAGE", "NODE_PRESERVE_SYMLINKS"];
+
+pub(crate) fn node_command(program: &Path) -> Command {
+    let mut command = Command::new(program);
+    for name in NODE_ENV_NOT_INHERITED {
+        command.env_remove(name);
+    }
+    hide_window(&mut command);
+    command
 }
 
 #[cfg(windows)]
@@ -173,7 +183,7 @@ pub fn describe_failure(tried: &[(PathBuf, String)], minimum: NodeVersion) -> St
 mod tests {
     use std::path::{Path, PathBuf};
 
-    use super::{find_with, NodeSearch, NodeVersion};
+    use super::{find_with, node_command, NodeSearch, NodeVersion, NODE_ENV_NOT_INHERITED};
 
     #[test]
     fn versions_parse_from_what_node_prints() {
@@ -231,5 +241,17 @@ mod tests {
         let tried = failed.unwrap_err();
         assert_eq!(tried.len(), 2, "a missing file is not worth reporting");
         assert!(tried[0].1.contains("older than 22.15.0"));
+    }
+
+    #[test]
+    fn node_runs_without_the_users_node_options_and_module_paths() {
+        let command = node_command(Path::new("node"));
+        let mut removed: Vec<String> = command.get_envs().filter(|(_, value)| value.is_none()).map(|(key, _)| key.to_string_lossy().into_owned()).collect();
+        removed.sort();
+        let mut expected: Vec<&str> = NODE_ENV_NOT_INHERITED.to_vec();
+        expected.sort();
+        assert_eq!(removed, expected);
+        assert!(expected.contains(&"NODE_OPTIONS") && expected.contains(&"NODE_PATH"));
+        assert!(command.get_envs().all(|(key, _)| key != "NODE_EXTRA_CA_CERTS"));
     }
 }
