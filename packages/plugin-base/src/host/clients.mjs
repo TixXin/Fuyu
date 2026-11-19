@@ -53,27 +53,44 @@ export class Clients extends Service {
   }
 
   recheck() {
-    const key = JSON.stringify(this.declared().map(({ id, path, version }) => [id, path, version]));
+    const key = JSON.stringify([this.declared().map(({ id, path, version }) => [id, path, version]), this.unreachable()]);
     if (key === this.declaredKey) return;
     this.declaredKey = key;
     this.changed();
   }
 
-  declared() {
+  declaredFiles() {
     return this.sources()
       .filter((source) => source.active)
-      .flatMap(({ id, clients }) =>
-        clients.flatMap(({ window, file }) => {
-          const path = this.locate(file);
-          let stat;
-          try {
-            stat = statSync(file);
-          } catch {
-            return [];
-          }
-          return path ? [{ id: `${id}#${window}`, plugin: id, window, path, version: `${stat.size}-${Math.round(stat.mtimeMs)}` }] : [];
-        }),
-      );
+      .flatMap(({ id, clients }) => clients.map(({ window, file }) => ({ plugin: id, window, file, path: this.locate(file) })));
+  }
+
+  declared() {
+    return this.declaredFiles().flatMap(({ plugin, window, file, path }) => {
+      if (!path) return [];
+      let stat;
+      try {
+        stat = statSync(file);
+      } catch {
+        return [];
+      }
+      return [{ id: `${plugin}#${window}`, plugin, window, path, version: `${stat.size}-${Math.round(stat.mtimeMs)}` }];
+    });
+  }
+
+  unreachable() {
+    return this.declaredFiles()
+      .filter(({ path }) => !path)
+      .map(({ plugin, window, file }) => ({ plugin, window, file }));
+  }
+
+  roots(entries = this.list()) {
+    const used = (prefix) => entries.some((entry) => entry.path.startsWith(`${prefix}/`));
+    const roots = new Map();
+    for (const { prefix, dir } of this.sources()) {
+      if (prefix && !roots.has(prefix) && used(prefix)) roots.set(prefix, dir);
+    }
+    return [...roots].map(([prefix, dir]) => ({ prefix, dir }));
   }
 
   handle(method, handler) {

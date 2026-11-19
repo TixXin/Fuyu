@@ -102,7 +102,7 @@ try {
   });
   host.watchStatus((plugins) => windows.publish("plugins", plugins), USAGE_TICK_MS);
   setInterval(() => windows.publish("host", host.info()), HOST_TICK_MS).unref();
-  const tellRust = (clients) => rpc.notify("clients", { paths: [...new Set(clients.map((entry) => entry.path))] });
+  const tellRust = (clients) => rpc.notify("clients", { paths: [...new Set(clients.map((entry) => entry.path))], roots: host.clientRoots(clients) });
   host.watchClients((clients) => {
     tellRust(clients);
     windows.publish("clients", clients);
