@@ -1,8 +1,8 @@
 {
   "name": "@fuyu/pomodoro",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "Pomodoro timer linked to today's todos, with finished-round tracking and island notifications",
+  "description": "Focus in rounds with breaks in between, optionally on one of today's todos, and keep count of today's rounds.",
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",
@@ -23,8 +23,8 @@
       "en": "Pomodoro"
     },
     "description": {
-      "zh-CN": "选择一条未完成待办或直接开启 25 分钟番茄钟，记录今日完成轮数，到点在岛上提醒，并在展开页和收起条显示倒计时。",
-      "en": "Start a 25-minute pomodoro on an open todo or on its own, track finished rounds today, notify on the island when done, and show the countdown on the island page and collapsed bar."
+      "zh-CN": "按轮专注、轮间休息，可以挑一条今天的待办来做，到点在岛上提醒，并记下今天完成了几轮。",
+      "en": "Focus in rounds with breaks in between, optionally on one of today's todos, and keep count of today's rounds."
     },
     "icon": "assets/icon.svg",
     "categories": [
@@ -37,10 +37,12 @@
     ],
     "host": "dist/host.js",
     "client": {
-      "island": "dist/island.js"
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
     },
     "inject": {
       "required": [
+        "commands",
         "timers/v1",
         "todos/v1",
         "messages/v1"
@@ -48,7 +50,8 @@
     },
     "slots": [
       "island.page/v1",
-      "island.collapsed/v1"
+      "island.collapsed/v1",
+      "settings.section/v1"
     ],
     "commands": [
       {
@@ -64,6 +67,13 @@
         "title": {
           "zh-CN": "停止番茄钟",
           "en": "Stop pomodoro"
+        }
+      },
+      {
+        "id": "pause",
+        "title": {
+          "zh-CN": "暂停 / 继续番茄钟",
+          "en": "Pause or resume pomodoro"
         }
       }
     ]

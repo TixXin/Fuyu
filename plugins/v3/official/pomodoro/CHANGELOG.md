@@ -1,0 +1,33 @@
+# 更新记录 · Changelog
+
+## 1.1.0
+
+能调时长、有休息和暂停，岛上更清爽。
+
+- 新的设置分节：专注时长（25 分钟）、短休息（5）、长休息（15）、几轮后长休息（4）、专注结束后自动开始休息和休息结束后自动开始下一轮（都关）、到点提示音（关，可以试听）、每日目标轮数（0 = 不设）、待办列表默认展开（关）、收起条显示剩余时间（开）。改了马上生效。
+- 专注结束后有短休息和长休息；可以暂停、继续。
+- 到点的提醒带按钮：专注结束是「休息一下」「再来一轮」，休息结束是「再来一轮」（接着做刚才那条待办）。
+- 岛上的页面：待办列表折成一行「选一条待办 ›」，点开才出；按钮只留开始、暂停 / 继续、停止；设了每日目标时显示「今日 3/8」。
+- 收起条：休息时前面写「休息」，暂停时变灰；点一下打开番茄钟页（需要浮屿支持）。
+- 命令「开始番茄钟」「停止番茄钟」真正接上了，新增「暂停 / 继续番茄钟」；暂停时按 Ctrl+Alt+P 是继续。岛的页头按钮有了中英文标题。
+- 过了零点，待办列表和今天的轮数自动换到新的一天。
+- 描述不再写死「25 分钟」。
+- 从 1.0.0 升级：今天的轮数和正在走的那一轮照旧，新设置取默认值。
+
+Adjustable lengths, breaks and pause, and a quieter island page.
+
+- New settings section: focus length (25 min), short break (5), long break (15), long break after (4 rounds), start the break and the next round automatically (both off), a sound when time is up (off, with a test button), daily goal (0 = none), todo list expanded (off), and time left on the collapsed bar (on). Changes apply right away.
+- Short and long breaks after focus rounds; pause and resume.
+- Notifications have buttons: "Take a break" and "One more round" after focus, "One more round" after a break (it picks up the same todo).
+- Island page: the todo list folds into one "Pick a todo ›" line until you click it; the buttons are just Start, Pause / Resume and Stop; with a daily goal it shows "Today 3/8".
+- Collapsed bar: shows "Break" during a break and greys out while paused; clicking it opens the Pomodoro page (when Fuyu supports it).
+- The "Start pomodoro" and "Stop pomodoro" commands now actually work, plus a new "Pause or resume pomodoro"; Ctrl+Alt+P resumes a paused round. The island header button has a title in Chinese and English.
+- After midnight the todo list and today's rounds move to the new day.
+- The description no longer hard-codes 25 minutes.
+- Coming from 1.0.0: today's rounds and a running round carry over; the new settings start at their defaults.
+
+## 1.0.0
+
+首个版本。
+
+First release.
