@@ -66,7 +66,7 @@
 |---|---|---|
 | `manifest` | 是 | 清单格式的版本，现在是 `1` |
 | `displayName`、`description` | 是 | 名字和一句话介绍，按语言写，要有 `zh-CN` 和 `en` |
-| `icon` | 是 | 包内的 `.png` 或 `.svg`。方形，至少 256 像素，深色和浅色的岛上都要看得清 |
+| `icon` | 是 | 包内的 `.png` 或 `.svg`。方形，至少 256 像素，深色和浅色的岛上都要看得清。`fuyu-plugin icon` 能按官方插件的样式生成一个（见[命令行](cli.md#icon)） |
 | `categories` | 是 | 市场分类，至少一个，从 `productivity`、`todos`、`developer`、`media`、`messages`、`information`、`utilities` 里选。**第一项是主分类**：市场的分类片按它计数和筛选，一个插件只算一次；搜索时所有分类都算 |
 | `screenshots` | 否 | 详情页的截图，最多 6 张，`{ path, caption? }`，图片是 `.png`、`.jpg`、`.jpeg` 或 `.webp`，说明按语言写。第一张也是市场卡片右侧的缩略图，放最能说明用处的那张 |
 | `preview` | 否 | `true` 表示还不稳定，市场上标「预览」 |

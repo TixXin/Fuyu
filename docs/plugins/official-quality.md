@@ -46,7 +46,9 @@
 - **图形**：一个 lucide 图标的路径原样放进 `<g>`（lucide 没有合适的，就按它的 24 格、线宽 2、圆头圆角自己画）；只描边不填充，描边用主色，靠 `<g>` 的 `transform` 缩到 56% 居中。不放文字、位图、渐变和阴影。
 - **主色**：每个插件一个，和下表已有的拉开；选深色底和浅色底上都看得清的中等亮度颜色，不用白、黑、灰。
 - 图形和插件在岛上的页面图标（`island.page/v1` 的 `icon`）表达同一个意思。
-- `pnpm test`（`tests/unit/official-plugin-icons.test.mjs`）检查每个官方插件的图标是这个结构、主色不重复。换图标也是一次改动，照「发版」加版本号、写更新记录。
+- **用命令生成**：`fuyu-plugin icon --glyph <lucide 名> --color <#rrggbb>` 写出这个骨架的 `assets/icon.svg`，主色和下表某个插件相同或太近时给告警（用法见[命令行](cli.md#icon)）。自己画的图形存成一个 SVG，用 `--glyph <文件.svg>` 套进同一个骨架。
+- `pnpm test`（`tests/unit/official-plugin-icons.test.mjs`）检查每个官方插件的图标是这个结构、主色不重复，并且用命令重新生成 lucide 的那 10 个，结果和仓库里的文件逐字节相同。换图标也是一次改动，照「发版」加版本号、写更新记录。
+- 新增官方插件或换主色时，下表和命令行里的 `OFFICIAL_ICONS`（`packages/plugin-cli/src/icon/tones.mjs`）一起改，测试会核对两边。
 
 | 插件 | 主色 | lucide 图标 |
 |---|---|---|

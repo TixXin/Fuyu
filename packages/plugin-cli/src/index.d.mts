@@ -114,6 +114,39 @@ export interface CheckOptions extends BuildOptions {
 }
 
 export declare function check(dir: string, options?: CheckOptions): Promise<CheckResult>;
+export interface IconOptions {
+  /** A lucide icon name (or one of its older names), or the path of an .svg file with your own line drawing. */
+  glyph: string;
+  /** The plugin's colour as #rrggbb or #rgb. */
+  color: string;
+  /** Where to write; defaults to the manifest's `fuyu.icon`, else `assets/icon.svg`. */
+  out?: string;
+  appKey?: string;
+}
+
+export interface IconResult {
+  file: string;
+  glyph: string;
+  color: string;
+  replaced: boolean;
+  /** Hints about the colour: too light, too dark, grey, or close to an official plugin's. */
+  notes: Issue[];
+}
+
+export declare const DEFAULT_ICON_FILE: "assets/icon.svg";
+/** The colour and lucide glyph of each official plugin; `glyph` is null where the icon is drawn by hand. */
+export declare const OFFICIAL_ICONS: Readonly<Record<string, { color: string; glyph: string | null }>>;
+/** Write the plugin icon: a rounded tile tinted with the colour, and the glyph as a line drawing in that colour. */
+export declare function icon(dir: string, options: IconOptions): Promise<IconResult>;
+/** The icon file's text for a glyph body (the SVG shapes) and a colour. */
+export declare function renderIcon(input: { body: string; color: string }): string;
+export declare function findGlyph(name: string): Promise<{ name: string; body: string } | null>;
+export declare function searchGlyphs(word: string, limit?: number): Promise<string[]>;
+export declare function glyphFromSvg(text: string): { body: string | null; problem: string | null };
+export declare function normalizeColor(value: unknown): string | null;
+/** Distance between two colours in OKLab; under 0.05 they read as the same colour on a plugin list. */
+export declare function toneDistance(a: string, b: string): number;
+export declare function assessTone(color: string, options?: { except?: string | null; taken?: Record<string, { color: string }> }): Issue[];
 /** The listing checks on their own: what a user would notice on the market card and the plugin page. */
 export declare function lintListing(dir: string, manifest: Record<string, unknown> | null, options?: { appKey?: string }): Issue[];
 export declare function resolveBuildOptions(options?: BuildOptions): Required<Omit<BuildOptions, "outDir">>;

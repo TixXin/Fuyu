@@ -6,6 +6,8 @@ import { VERSION, build, realPath } from "./build.mjs";
 import { check } from "./check.mjs";
 import { dev } from "./dev.mjs";
 import { BuildError, formatIssue } from "./errors.mjs";
+import { icon } from "./icon.mjs";
+import { searchGlyphs } from "./icon/glyphs.mjs";
 import { KEY_ENV, generateSigningKey, loadSigningKey } from "./keys.mjs";
 import { pack } from "./pack.mjs";
 import { reviewSources } from "./review.mjs";
@@ -29,6 +31,12 @@ Commands:
     --market             check as the market does (no experimental interfaces)
     --strict             listing warnings (screenshots, description, names) count as errors
     --json               print the result as JSON
+  icon [folder]        Write the plugin icon (assets/icon.svg): a tinted rounded tile with a line
+                       glyph in the same colour, as official plugins have
+    --glyph <name>       a lucide icon name (https://lucide.dev/icons), or an .svg file you drew
+    --color <#rrggbb>    the plugin's colour
+    --out <file>         write somewhere else (default: the manifest's icon, else assets/icon.svg)
+    --search <word>      list lucide icon names that contain the word, then exit
   review <old> <new>   Compare two versions like the market review. Each side is a folder or a
                        git commit; the old side is - for a first release
     --repo <folder>      git repository for commits (default: the current folder)
@@ -60,6 +68,7 @@ const OPTIONS = {
   build: { ...BUILD, out: { type: "string" } },
   pack: { ...BUILD, out: { type: "string" }, sign: { type: "boolean" }, key: { type: "string" } },
   check: { ...BUILD, market: { type: "boolean" }, strict: { type: "boolean" }, json: { type: "boolean" } },
+  icon: { glyph: { type: "string" }, color: { type: "string" }, out: { type: "string" }, search: { type: "string" } },
   review: {
     repo: { type: "string" },
     path: { type: "string" },
@@ -139,6 +148,22 @@ const commands = {
     result.warnings.forEach(out.warn);
     out.out(result.ok ? `ok${result.warnings.length ? ` with ${result.warnings.length} warning(s)` : ""}` : `${result.errors.length} error(s)`);
     return result.ok ? 0 : 1;
+  },
+
+  async icon({ values, positionals }, io, out) {
+    if (values.search !== undefined) {
+      const names = await searchGlyphs(values.search);
+      if (names.length === 0) out.error(`no lucide icon name contains "${values.search}"`);
+      else out.out(names.join("\n"));
+      return names.length === 0 ? 1 : 0;
+    }
+    if (!values.glyph || !values.color) throw new UsageError("icon needs --glyph <lucide name | file.svg> and --color <#rrggbb>");
+    const dir = resolve(io.cwd, positionals[0] ?? ".");
+    const glyph = values.glyph.toLowerCase().endsWith(".svg") ? resolve(io.cwd, values.glyph) : values.glyph;
+    const result = await icon(dir, { glyph, color: values.color, out: values.out ? resolve(io.cwd, values.out) : undefined });
+    result.notes.forEach(out.warn);
+    out.out(`${result.replaced ? "replaced" : "wrote"} ${out.show(result.file)} (${result.glyph}, ${result.color})`);
+    return 0;
   },
 
   async review({ values, positionals }, io, out) {

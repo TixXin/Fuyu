@@ -18,6 +18,7 @@ fuyu-plugin <命令> [插件文件夹] [选项]
 | [`build [文件夹]`](#build) | 构建到 `build/package/`：带 `nodeApis`、`builtWith` 的 `package.json`，`dist/`，图标、README 等 |
 | [`pack [文件夹]`](#pack) | 先构建，再打成 `build/<作用域>-<名字>-<版本>.fuyu` |
 | [`check [文件夹]`](#check) | 不运行插件的静态检查：清单、试构建、审核分析器的扫描 |
+| [`icon [文件夹]`](#icon) | 按官方插件的样式写出图标 `assets/icon.svg`：主色浅底的圆角方块加同色线条图标 |
 | [`review <旧> <新>`](#review) | 和市场一样比较两个版本，给出绿 / 黄 / 红三档 |
 | [`keygen`](#keygen) | 生成作者签名密钥（只做一次），打印要登记给市场的公钥 |
 | [`sign [文件夹]`](#sign) | 给提交号签名，输出市场提交要的内容 |
@@ -146,6 +147,27 @@ fuyu-plugin check [文件夹] [--market] [--strict] [--json] [--config <文件>]
 
 有错误时退出码是 1。提交市场前建议跑 `check --market`。
 
+## icon
+
+```bash
+fuyu-plugin icon [文件夹] --glyph <lucide 名 | 文件.svg> --color <#rrggbb> [--out <文件>]
+fuyu-plugin icon --search <词>
+```
+
+写出和官方插件同一个样式的图标：铺满的圆角方块填主色的 16%，上面一个同色的线条图标，缩到 56% 居中（规则见[官方插件标准](official-quality.md#5-图标)）。脚手架生成的项目自带一个这样的图标，换图形和颜色用这条命令。
+
+| 选项 | 作用 |
+|---|---|
+| `--glyph <名字>` | [lucide](https://lucide.dev/icons) 的图标名，例如 `alarm-clock`；lucide 改过名的旧名字也认 |
+| `--glyph <文件.svg>` | 自己画的图形：一个 24 格的 SVG，只用 `path`、`circle`、`rect`、`line`、`polyline`、`polygon`、`ellipse`，不写 `fill`、`stroke`、`style`（颜色由图标给）。lucide 里没有合适的图形时用 |
+| `--color <#rrggbb>` | 插件的主色，`#rgb` 也认 |
+| `--out <文件>` | 写到别处。默认写清单的 `fuyu.icon`（要是 `.svg`），清单没写就是 `assets/icon.svg`；已有的文件会被换掉 |
+| `--search <词>` | 列出名字里带这个词的 lucide 图标，不写文件 |
+
+主色有这几种情况时给告警，文件照写：和某个官方插件的主色相同（`icon:same-colour`）或太近（`icon:close-colour`，OKLab 距离小于 0.05）；太浅（`icon:light`）、太深（`icon:dark`）、接近灰色（`icon:grey`），这三种在深色或浅色底上看不清。
+
+lucide 的图形数据随命令行一起带（`packages/plugin-cli/src/icon/lucide.json`，1.23.0 版，ISC 许可证见同目录的 `LUCIDE-LICENSE`），不用另装 lucide。要更新到新版 lucide，在浮屿仓库里跑 `node packages/plugin-cli/scripts/gen-lucide.mjs`。
+
 ## review
 
 ```bash
@@ -238,7 +260,7 @@ fuyu-plugin sign <文件.fuyu> [--key <文件>] [--out <文件>]
 命令也能当函数调用，类型声明在 `packages/plugin-cli/src/index.d.mts`：
 
 ```js
-import { build, pack, check, reviewSources, signCommitAt, loadSigningKey } from "@fuyu/plugin-cli";
+import { build, pack, check, icon, reviewSources, signCommitAt, loadSigningKey } from "@fuyu/plugin-cli";
 
 const result = await build("path/to/plugin", { outDir });
 const packed = await pack("path/to/plugin", { signingKey });
