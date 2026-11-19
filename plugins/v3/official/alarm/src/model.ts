@@ -1,3 +1,5 @@
+import type { AlarmSettings } from "./settingsModel.ts";
+
 export type AlarmTone = "chime" | "bell" | "digital" | "mute";
 
 export const ALARM_TONES: readonly AlarmTone[] = ["chime", "bell", "digital", "mute"];
@@ -20,13 +22,34 @@ export type RingingAlarm = {
   firedAt: number;
 };
 
+export type RingPayload = RingingAlarm & {
+  volume: number;
+  fadeIn: boolean;
+  ringMs: number;
+};
+
+export type SnoozedAlarm = {
+  dueAt: number;
+  alarm: RingingAlarm;
+};
+
 export type AlarmSnapshot = {
   alarms: AlarmItem[];
   ringing: RingingAlarm | null;
-  defaultTone: AlarmTone;
-  showInBar: boolean;
+  snoozed: SnoozedAlarm | null;
+  settings: AlarmSettings;
   at: number;
 };
+
+export type AlarmDraft = {
+  time: string;
+  label: string;
+  days: number[];
+  tone: AlarmTone;
+};
+
+export const MAX_ALARMS = 40;
+export const MAX_LABEL = 60;
 
 export const TOPICS = {
   snapshot: "alarm:snapshot",
@@ -36,6 +59,7 @@ export const TOPICS = {
 export const METHODS = {
   snapshot: "alarm:get",
   add: "alarm:add",
+  update: "alarm:update",
   toggle: "alarm:toggle",
   remove: "alarm:remove",
   dismiss: "alarm:dismiss",
@@ -101,4 +125,84 @@ export function nextScheduledAlarm(alarms: readonly AlarmItem[], at: number): { 
     }
   }
   return best;
+}
+
+function occurrenceAt(at: number, hhmm: string): number {
+  const [h, m] = hhmm.split(":").map(Number);
+  const dt = new Date(at);
+  dt.setHours(h, m, 0, 0);
+  return dt.getTime();
+}
+
+export type MissedAlarm = { alarm: AlarmItem; at: number; key: string };
+
+export function missedAlarms(alarms: readonly AlarmItem[], from: number, to: number): MissedAlarm[] {
+  if (!(to > from)) return [];
+  const missed: MissedAlarm[] = [];
+  for (const alarm of alarms) {
+    if (!alarm.enabled || !isValidTime(alarm.time)) continue;
+    for (let back = 0; back <= 7; back += 1) {
+      const day = new Date(to);
+      day.setDate(day.getDate() - back);
+      const at = occurrenceAt(day.getTime(), alarm.time);
+      if (at > to) continue;
+      if (at <= from) break;
+      if (alarm.days.length > 0 && !alarm.days.includes(new Date(at).getDay())) continue;
+      const key = minuteKey(at).key;
+      if (alarm.lastFiredMinute !== key) missed.push({ alarm, at, key });
+      break;
+    }
+  }
+  return missed.sort((a, b) => a.at - b.at);
+}
+
+export function normalizeDraft(raw: unknown, fallbackTone: AlarmTone): AlarmDraft | null {
+  const src = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const time = typeof src.time === "string" ? src.time.trim() : "";
+  if (!isValidTime(time)) return null;
+  return {
+    time,
+    label: typeof src.label === "string" ? src.label.trim().slice(0, MAX_LABEL) : "",
+    days: normalizeDays(src.days),
+    tone: normalizeTone(src.tone, fallbackTone),
+  };
+}
+
+export function normalizeAlarms(raw: unknown, fallbackTone: AlarmTone): AlarmItem[] {
+  if (!Array.isArray(raw)) return [];
+  const out: AlarmItem[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const src = item as Record<string, unknown>;
+    if (typeof src.id !== "string") continue;
+    const draft = normalizeDraft(src, fallbackTone);
+    if (!draft) continue;
+    out.push({
+      id: src.id,
+      ...draft,
+      enabled: src.enabled !== false,
+      lastFiredMinute: typeof src.lastFiredMinute === "string" ? src.lastFiredMinute : null,
+    });
+    if (out.length >= MAX_ALARMS) break;
+  }
+  return out;
+}
+
+export function normalizeSnoozed(raw: unknown): SnoozedAlarm | null {
+  if (!raw || typeof raw !== "object") return null;
+  const src = raw as Record<string, unknown>;
+  const alarm = src.alarm as Record<string, unknown> | undefined;
+  if (typeof src.dueAt !== "number" || !Number.isFinite(src.dueAt) || !alarm || typeof alarm.id !== "string") return null;
+  const time = typeof alarm.time === "string" && isValidTime(alarm.time) ? alarm.time : null;
+  if (!time) return null;
+  return {
+    dueAt: src.dueAt,
+    alarm: {
+      id: alarm.id,
+      time,
+      label: typeof alarm.label === "string" ? alarm.label.slice(0, MAX_LABEL) : "",
+      tone: normalizeTone(alarm.tone),
+      firedAt: typeof alarm.firedAt === "number" ? alarm.firedAt : src.dueAt,
+    },
+  };
 }

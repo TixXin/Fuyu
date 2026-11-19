@@ -2,11 +2,11 @@ import { currentLocale } from "./locale.ts";
 
 const en = {
   isZh: false,
-  title: "World Clock",
+  title: "World clock",
   empty: "No cities yet.",
   addCity: "Add city",
   cancel: "Cancel",
-  showPage: "Show the World Clock page on the island",
+  showPage: "Show the World clock page on the island",
   local: "Local time",
   same: "Same as local",
   ahead: (h: number) => `${h}h ahead`,

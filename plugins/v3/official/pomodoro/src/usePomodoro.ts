@@ -17,18 +17,16 @@ export function usePomodoro(ctx: Context) {
     };
   }, [ctx]);
 
-  const start = useCallback(
-    (todoId: string | null) => {
+  const invoke = useCallback(
+    (method: string, params?: unknown) => {
       setError(null);
-      ctx.host.call<PomodoroSnapshot>(METHODS.start, { todoId }).then(setState, (reason: unknown) => setError(errorText(reason)));
+      ctx.host
+        .call<PomodoroSnapshot>(method, params)
+        .then((next) => setState((prev) => (next.at >= prev.at ? next : prev)))
+        .catch((reason: unknown) => setError(errorText(reason)));
     },
     [ctx],
   );
 
-  const stop = useCallback(() => {
-    setError(null);
-    ctx.host.call<PomodoroSnapshot>(METHODS.stop).then(setState, (reason: unknown) => setError(errorText(reason)));
-  }, [ctx]);
-
-  return { state, error, start, stop };
+  return { state, error, invoke };
 }

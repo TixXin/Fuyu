@@ -4,54 +4,36 @@ import type { Context } from "@fuyu/plugin-base";
 import { messagesV1, timersV1, todosV1, type Timer } from "@fuyu/plugin-services";
 import {
   METHODS,
-  POMODORO_MS,
   TOPICS,
+  isPaused,
   isTicking,
+  msUntilNextDay,
+  nextBreak,
+  normalizeSettings,
+  normalizeStored,
+  phaseMinutes,
   remainingMs,
+  settingsOf,
+  todayKey,
+  type BreakKind,
   type OpenTodoItem,
+  type Phase,
+  type PomodoroSettings,
   type PomodoroSnapshot,
+  type StoredPomodoro,
 } from "./model.ts";
+import { COMMAND_TITLES, text } from "./text.ts";
 
 export const name = "@fuyu/pomodoro";
-export const inject = ["clients", "timers/v1", "todos/v1", "messages/v1"];
+export const inject = ["clients", "commands", "timers/v1", "todos/v1", "messages/v1"];
 
-type StoredState = {
-  date: string;
-  rounds: number;
-  activeTimerId: string | null;
-  activeTodoId: string | null;
-  activeLabel: string;
-};
+const T = text.notice;
 
-function todayKey(now = new Date()): string {
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function isZhHost(): boolean {
+function readStored(file: string): StoredPomodoro {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().locale.toLowerCase().startsWith("zh");
+    return normalizeStored(JSON.parse(readFileSync(file, "utf8")));
   } catch {
-    return true;
-  }
-}
-
-function readStored(file: string): StoredState {
-  const today = todayKey();
-  try {
-    const parsed = JSON.parse(readFileSync(file, "utf8")) as Partial<StoredState>;
-    const sameDay = parsed.date === today;
-    return {
-      date: today,
-      rounds: sameDay && typeof parsed.rounds === "number" && parsed.rounds >= 0 ? Math.floor(parsed.rounds) : 0,
-      activeTimerId: typeof parsed.activeTimerId === "string" ? parsed.activeTimerId : null,
-      activeTodoId: typeof parsed.activeTodoId === "string" ? parsed.activeTodoId : null,
-      activeLabel: typeof parsed.activeLabel === "string" ? parsed.activeLabel : "",
-    };
-  } catch {
-    return { date: today, rounds: 0, activeTimerId: null, activeTodoId: null, activeLabel: "" };
+    return normalizeStored(null);
   }
 }
 
@@ -61,18 +43,23 @@ export function apply(ctx: Context) {
   const messages = ctx.services.get(messagesV1);
   const stateFile = join(ctx.dataDir, "pomodoro.json");
 
-  const stored = readStored(stateFile);
+  let stored = readStored(stateFile);
   let activeTimer: Timer | null = null;
   let openTodos: OpenTodoItem[] = [];
   let stopTick: (() => Promise<void>) | null = null;
   let completing = false;
 
-  function saveStored() {
+  function rollDay() {
     const today = todayKey();
-    if (stored.date !== today) {
-      stored.date = today;
-      stored.rounds = 0;
-    }
+    if (stored.date === today) return;
+    stored.date = today;
+    stored.rounds = 0;
+    stored.streak = 0;
+    stored.breakDue = null;
+  }
+
+  function save() {
+    rollDay();
     try {
       mkdirSync(ctx.dataDir, { recursive: true });
       writeFileSync(stateFile, `${JSON.stringify(stored, null, 2)}\n`, "utf8");
@@ -80,15 +67,17 @@ export function apply(ctx: Context) {
   }
 
   function snapshot(at = Date.now()): PomodoroSnapshot {
-    const today = todayKey();
-    const rounds = stored.date === today ? stored.rounds : 0;
+    rollDay();
     return {
       timer: activeTimer,
       at,
+      phase: stored.activeTimerId ? stored.phase : null,
       activeTodoId: stored.activeTodoId,
       activeLabel: stored.activeLabel,
-      rounds,
+      rounds: stored.rounds,
+      breakDue: stored.breakDue,
       openTodos,
+      settings: settingsOf(stored),
     };
   }
 
@@ -102,37 +91,137 @@ export function apply(ctx: Context) {
     }
   }
 
-  function publish(at = Date.now()) {
+  function publish(at = Date.now()): PomodoroSnapshot {
     syncTicker(at);
-    ctx.clients.publish(TOPICS.snapshot, snapshot(at));
+    const next = snapshot(at);
+    ctx.clients.publish(TOPICS.snapshot, next);
+    return next;
   }
 
-  async function completeRound(timerId: string) {
+  function clearActive() {
+    stored.phase = null;
+    stored.activeTimerId = null;
+    stored.activeTodoId = null;
+    stored.activeLabel = "";
+    activeTimer = null;
+  }
+
+  async function removeActive() {
+    const previous = stored.activeTimerId;
+    clearActive();
+    if (previous) await timers.remove({ id: previous }).catch(() => {});
+  }
+
+  async function loadTodos() {
+    const day = await todos.list({});
+    openTodos = day.todos.filter((item) => !item.completed).map((item) => ({ id: item.id, title: item.title }));
+  }
+
+  async function refreshTodos() {
+    try {
+      await loadTodos();
+      publish();
+    } catch {}
+  }
+
+  async function findTodo(todoId: unknown): Promise<OpenTodoItem | null> {
+    const wanted = typeof todoId === "string" ? todoId.trim() : "";
+    if (!wanted) return null;
+    let match = openTodos.find((item) => item.id === wanted);
+    if (!match) {
+      await loadTodos().catch(() => {});
+      match = openTodos.find((item) => item.id === wanted);
+    }
+    return match ?? null;
+  }
+
+  async function startPhase(phase: Phase, todoId: unknown = null): Promise<PomodoroSnapshot> {
+    await removeActive();
+    rollDay();
+    const todo = phase === "focus" ? await findTodo(todoId) : null;
+    const started = await timers.start({ kind: "countdown", durationMs: phaseMinutes(phase, stored) * 60_000 });
+    stored.phase = phase;
+    stored.activeTimerId = started.timer.id;
+    stored.activeTodoId = todo?.id ?? null;
+    stored.activeLabel = todo?.title ?? "";
+    stored.breakDue = null;
+    if (phase === "focus") stored.lastTodoId = todo?.id ?? null;
+    if (phase === "long") stored.streak = 0;
+    activeTimer = started.timer;
+    save();
+    return publish();
+  }
+
+  function startBreak(): Promise<PomodoroSnapshot> {
+    return startPhase(stored.breakDue ?? nextBreak(stored.streak, stored));
+  }
+
+  async function setPaused(paused: boolean): Promise<PomodoroSnapshot> {
+    const id = stored.activeTimerId;
+    const at = Date.now();
+    if (id && (paused ? isTicking(activeTimer, at) : isPaused(activeTimer, at))) {
+      const result = await (paused ? timers.pause({ id }) : timers.resume({ id }));
+      activeTimer = result.timer;
+    }
+    return publish();
+  }
+
+  async function stop(): Promise<PomodoroSnapshot> {
+    await removeActive();
+    save();
+    return publish();
+  }
+
+  function notify(title: string, body: string, actions: string[]) {
+    return messages.notify({ source: name, pluginId: name, title, body, durationMs: 10_000, actions }).catch(() => {});
+  }
+
+  function countText() {
+    const goal = stored.dailyGoal;
+    const count = T.count(stored.rounds, goal);
+    return goal > 0 && stored.rounds === goal ? `${count} · ${T.goalReached}` : count;
+  }
+
+  async function finishFocus(label: string) {
+    stored.rounds += 1;
+    stored.streak += 1;
+    const kind: BreakKind = nextBreak(stored.streak, stored);
+    const count = countText();
+    const body = label ? `${label} · ${count}` : count;
+    if (stored.autoStartBreak) {
+      await startPhase(kind);
+      await notify(T.focusDone, `${body} · ${T.breakStarted(kind, phaseMinutes(kind, stored))}`, [T.again]);
+      return;
+    }
+    stored.breakDue = kind;
+    save();
+    publish();
+    await notify(T.focusDone, body, [T.takeBreak, T.again]);
+  }
+
+  async function finishBreak() {
+    if (stored.autoStartFocus) {
+      await startPhase("focus", stored.lastTodoId);
+      await notify(T.breakDone, T.focusStarted(stored.rounds + 1), []);
+      return;
+    }
+    save();
+    publish();
+    await notify(T.breakDone, countText(), [T.again]);
+  }
+
+  async function completePhase(timerId: string) {
     if (completing || stored.activeTimerId !== timerId) return;
     completing = true;
     try {
-      const today = todayKey();
-      stored.rounds = (stored.date === today ? stored.rounds : 0) + 1;
-      stored.date = today;
-      const finishedLabel = stored.activeLabel;
-      stored.activeTimerId = null;
-      stored.activeTodoId = null;
-      stored.activeLabel = "";
-      activeTimer = null;
-      saveStored();
-      publish();
+      rollDay();
+      const phase = stored.phase ?? "focus";
+      const label = stored.activeLabel;
+      clearActive();
       await timers.remove({ id: timerId }).catch(() => {});
-      const zh = isZhHost();
-      const title = zh ? "番茄钟已完成" : "Pomodoro finished";
-      const countText = zh ? `今日已完成 ${stored.rounds} 轮` : `Rounds today: ${stored.rounds}`;
-      const body = finishedLabel ? `${finishedLabel} · ${countText}` : countText;
-      await messages.notify({
-        source: name,
-        pluginId: name,
-        title,
-        body,
-        durationMs: 8000,
-      });
+      if (stored.sound) ctx.clients.publish(TOPICS.chime, { at: Date.now() });
+      if (phase === "focus") await finishFocus(label);
+      else await finishBreak();
     } finally {
       completing = false;
     }
@@ -146,86 +235,65 @@ export function apply(ctx: Context) {
     }
     const found = list.timers.find((item) => item.id === stored.activeTimerId) ?? null;
     if (!found) {
-      stored.activeTimerId = null;
-      stored.activeTodoId = null;
-      stored.activeLabel = "";
-      activeTimer = null;
-      saveStored();
+      clearActive();
+      save();
       publish(list.at);
       return;
     }
     activeTimer = found;
     if (found.alerted || remainingMs(found, list.at) <= 0) {
-      void completeRound(found.id);
+      void completePhase(found.id);
       return;
     }
     publish(list.at);
   }
 
-  async function refreshTodos() {
-    try {
-      const day = await todos.list({});
-      openTodos = day.todos.filter((item) => !item.completed).map((item) => ({ id: item.id, title: item.title }));
-      publish();
-    } catch {}
+  function scheduleDayRoll() {
+    ctx.setTimeout(() => {
+      save();
+      void refreshTodos();
+      scheduleDayRoll();
+    }, msUntilNextDay());
   }
 
   timers.on("changed", handleTimers);
   timers.on("due", ({ timer }) => {
-    if (timer.id === stored.activeTimerId) void completeRound(timer.id);
+    if (timer.id === stored.activeTimerId) void completePhase(timer.id);
   });
   todos.on("changed", () => {
     void refreshTodos();
   });
+  messages.on("action", ({ pluginId, action }) => {
+    if (pluginId !== name) return;
+    if (action === T.again) void startPhase("focus", stored.lastTodoId).catch(() => {});
+    else if (action === T.takeBreak) void startBreak().catch(() => {});
+  });
 
   void timers.list().then(handleTimers, () => {});
   void refreshTodos();
+  scheduleDayRoll();
+
+  const startCommand = (args?: { todoId?: unknown }) => {
+    const at = Date.now();
+    if (isPaused(activeTimer, at)) return setPaused(false);
+    if (stored.phase === "focus" && isTicking(activeTimer, at)) return snapshot(at);
+    return startPhase("focus", args?.todoId ?? null);
+  };
+  const togglePause = () => setPaused(isTicking(activeTimer, Date.now()));
+
+  ctx.commands.register("start", startCommand, { title: COMMAND_TITLES.start, keybinding: "Ctrl+Alt+P" });
+  ctx.commands.register("stop", stop, { title: COMMAND_TITLES.stop });
+  ctx.commands.register("pause", togglePause, { title: COMMAND_TITLES.pause });
 
   ctx.clients.handle(METHODS.snapshot, () => snapshot());
-
-  ctx.clients.handle(METHODS.start, async (params?: { todoId?: string | null }) => {
-    if (stored.activeTimerId) {
-      const previous = stored.activeTimerId;
-      stored.activeTimerId = null;
-      activeTimer = null;
-      await timers.remove({ id: previous }).catch(() => {});
-    }
-    let todoId: string | null = null;
-    let label = "";
-    const wantedId = typeof params?.todoId === "string" && params.todoId.trim() !== "" ? params.todoId.trim() : null;
-    if (wantedId) {
-      let match = openTodos.find((item) => item.id === wantedId);
-      if (!match) {
-        const day = await todos.list({}).catch(() => null);
-        if (day) {
-          openTodos = day.todos.filter((item) => !item.completed).map((item) => ({ id: item.id, title: item.title }));
-          match = openTodos.find((item) => item.id === wantedId);
-        }
-      }
-      if (match) {
-        todoId = match.id;
-        label = match.title;
-      }
-    }
-    const started = await timers.start({ kind: "countdown", durationMs: POMODORO_MS });
-    stored.activeTimerId = started.timer.id;
-    stored.activeTodoId = todoId;
-    stored.activeLabel = label;
-    activeTimer = started.timer;
-    saveStored();
-    publish();
-    return snapshot();
-  });
-
-  ctx.clients.handle(METHODS.stop, async () => {
-    const previous = stored.activeTimerId;
-    stored.activeTimerId = null;
-    stored.activeTodoId = null;
-    stored.activeLabel = "";
-    activeTimer = null;
-    saveStored();
-    if (previous) await timers.remove({ id: previous }).catch(() => {});
-    publish();
-    return snapshot();
+  ctx.clients.handle(METHODS.start, (params?: { todoId?: unknown }) => startPhase("focus", params?.todoId ?? null));
+  ctx.clients.handle(METHODS.startBreak, () => startBreak());
+  ctx.clients.handle(METHODS.pause, () => setPaused(true));
+  ctx.clients.handle(METHODS.resume, () => setPaused(false));
+  ctx.clients.handle(METHODS.stop, () => stop());
+  ctx.clients.handle(METHODS.setSettings, (params?: Partial<PomodoroSettings>) => {
+    stored = { ...stored, ...normalizeSettings(params, settingsOf(stored)) };
+    save();
+    return publish();
   });
 }
