@@ -1,6 +1,6 @@
 import type { WindowServices } from "@fuyu/plugin-base/client/window-services";
 import { timersV1 } from "@fuyu/plugin-services";
-import { adoptTimers, changeTimer, idOf, ringDue, startTimer } from "./host/rules.mjs";
+import { adoptTimers, changeTimer, dismissRung, idOf, ringDue, startTimer } from "./host/rules.mjs";
 import { OWNER } from "./plugin/owner.ts";
 import { loadLegacyTimers, saveFallbackTimers } from "./storage.ts";
 import { nextDueIn, type Timer } from "./timers.ts";
@@ -77,7 +77,7 @@ export function provideLocalTimers(services: WindowServices): () => void {
       return { removed: true };
     },
     dismissRinging: () => {
-      const next = timers.filter((timer) => !timer.alerted);
+      const next = dismissRung(timers);
       const removed = timers.length - next.length;
       if (removed > 0) commit(next, Date.now());
       return { removed };

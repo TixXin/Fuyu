@@ -154,3 +154,41 @@ test("timers keep advancing while the window is closed and across a host restart
   const tenMin = controller.getSnapshot().timers.find((t) => !t.alerted);
   assert.ok(tenMin && remainingOf(tenMin, Date.now()) < 10 * MINUTE - 1000);
 });
+
+test("a plugin's hidden timer stays out of the island's list and does not ring when due", async () => {
+  const dir = makeSpace();
+  const services = import.meta.resolve("@fuyu/plugin-services");
+  writeFileSync(join(dir, "starter.mjs"), `import { timersV1 } from ${JSON.stringify(services)};
+export const name = "timer-starter";
+export const inject = ["timers/v1"];
+export function apply(ctx) {
+  globalThis.storeStarter = ctx.services.get(timersV1);
+}
+`);
+  writeFileSync(join(dir, "plugins.yml"), "- id: timer-starter\n  name: ./starter.mjs\n");
+  globalThis.storeStarter = null;
+  const host = await openHost(dir);
+  const windowServices = createWindowServices();
+  const bridge = bridgeWindowToHost(windowServices);
+  let rings = 0;
+  const controller = createTimerController({ services: windowServices, migration: fakeMigration().migration, onRing: () => { rings += 1; } });
+  controller.configure(true, true);
+  await bridge.connect(host);
+  assert.ok(await until(() => globalThis.storeStarter !== null));
+
+  const heard = [];
+  globalThis.storeStarter.on("due", ({ timer }) => heard.push(timer.id));
+  const hidden = (await globalThis.storeStarter.start({ kind: "countdown", durationMs: 1000, hidden: true })).timer;
+  const shown = (await globalThis.storeStarter.start({ kind: "countdown", durationMs: 30 * MINUTE })).timer;
+  assert.ok(await until(() => controller.getSnapshot().timers.some((timer) => timer.id === shown.id)));
+  assert.deepEqual(controller.getSnapshot().timers.map((timer) => [timer.id, timer.owner]), [[shown.id, "timer-starter"]]);
+  assert.ok(await until(() => heard.includes(hidden.id), 3000), "the plugin did not hear due for its hidden timer");
+  await controller.sync();
+  await sleep(50);
+  assert.equal(rings, 0);
+  assert.equal(controller.getSnapshot().timers.some((timer) => timer.id === hidden.id), false);
+
+  assert.equal(await controller.startCountdown(1000), "ok");
+  assert.ok(await until(() => rings === 1, 3000), "the user's own countdown did not ring");
+  assert.equal(controller.getSnapshot().timers.filter((timer) => timer.alerted).length, 1);
+});

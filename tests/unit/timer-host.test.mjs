@@ -21,6 +21,14 @@ export function apply(ctx) {
 }
 `;
 
+const STARTER = `import { timersV1 } from ${JSON.stringify(SERVICES)};
+export const name = "timer-starter";
+export const inject = ["timers/v1"];
+export function apply(ctx) {
+  globalThis.timerStarter = ctx.services.get(timersV1);
+}
+`;
+
 const cleanup = [];
 after(async () => {
   for (const step of cleanup.reverse()) await step();
@@ -29,6 +37,7 @@ after(async () => {
 function space() {
   const dir = mkdtempSync(join(tmpdir(), "timer-host-"));
   writeFileSync(join(dir, "listener.mjs"), LISTENER);
+  writeFileSync(join(dir, "starter.mjs"), STARTER);
   cleanup.push(() => rmSync(dir, { recursive: true, force: true }));
   return dir;
 }
@@ -36,9 +45,10 @@ function space() {
 const dataFile = (dir) => join(dir, "data", "timer", "timers.json");
 const readData = (dir) => JSON.parse(readFileSync(dataFile(dir), "utf8"));
 
-async function open(dir, { listener = false, disabled = false } = {}) {
+async function open(dir, { listener = false, disabled = false, starter = false } = {}) {
   const entries = disabled ? ["- id: timer\n  disabled: true\n"] : [];
   if (listener) entries.push("- id: timer-listener\n  name: ./listener.mjs\n");
+  if (starter) entries.push("- id: timer-starter\n  name: ./starter.mjs\n");
   writeFileSync(join(dir, "plugins.yml"), entries.length ? entries.join("") : "[]\n");
   const host = await startHost({ dir, builtins: BUILTINS });
   cleanup.push(() => host.stop());
@@ -259,4 +269,51 @@ test("adopt brings legacy timers into timers.json once and rings any countdown t
   const second = await win.call("adopt", { timers: legacy });
   assert.equal(second.added, 0);
   assert.equal(win.events("changed").length, changesBefore);
+});
+
+test("the host fills in which plugin started a timer, and a hidden one only sends due", async () => {
+  const dir = space();
+  globalThis.timerStarter = null;
+  const host = await open(dir, { starter: true });
+  const win = window(host);
+  assert.ok(await until(() => globalThis.timerStarter !== null));
+  const plugin = globalThis.timerStarter;
+  const shown = (await plugin.start({ kind: "countdown", durationMs: 30 * MINUTE, owner: "someone-else" })).timer;
+  assert.equal(shown.owner, "timer-starter");
+  assert.equal("hidden" in shown, false);
+  const hidden = (await plugin.start({ kind: "countdown", durationMs: 1000, hidden: true })).timer;
+  assert.equal(hidden.owner, "timer-starter");
+  assert.equal(hidden.hidden, true);
+  const mine = (await win.call("start", { kind: "stopwatch", owner: "timer-starter" })).timer;
+  assert.equal("owner" in mine, false);
+  assert.equal("hidden" in mine, false);
+  await assert.rejects(plugin.start({ kind: "stopwatch", hidden: "yes" }), { code: "bad-params" });
+
+  assert.ok(await until(() => win.events("due").length === 1, 3000), "the hidden countdown sent no due event");
+  const [due] = win.events("due");
+  assert.equal(due.timer.id, hidden.id);
+  assert.equal(due.timer.hidden, true);
+  assert.equal(due.timer.alerted, true);
+  assert.deepEqual(await win.call("dismissRinging"), { removed: 0 });
+  assert.equal((await win.call("list")).timers.length, 3);
+  assert.deepEqual(await plugin.remove({ id: hidden.id }), { removed: true });
+
+  await host.stop();
+  const again = await open(dir);
+  const listed = (await window(again).call("list")).timers;
+  assert.deepEqual(listed.map((timer) => [timer.id, timer.owner ?? null]), [[shown.id, "timer-starter"], [mine.id, null]]);
+});
+
+test("adopt ignores owner and hidden in what it is given and gives the caller's plugin instead", async () => {
+  const dir = space();
+  globalThis.timerStarter = null;
+  const host = await open(dir, { starter: true });
+  const win = window(host);
+  assert.ok(await until(() => globalThis.timerStarter !== null));
+  const now = Date.now();
+  const forged = (id) => ({ id, kind: "stopwatch", durationMs: 0, elapsedMs: 0, runningSince: now, alerted: false, owner: "someone-else", hidden: true });
+  const fromWindow = await win.call("adopt", { timers: [forged("legacy")] });
+  assert.deepEqual(fromWindow.timers.map((timer) => [timer.id, timer.owner ?? null, timer.hidden ?? false]), [["legacy", null, false]]);
+  const fromPlugin = await globalThis.timerStarter.adopt({ timers: [forged("plugin-kept")] });
+  assert.deepEqual(fromPlugin.timers.at(-1), { id: "plugin-kept", kind: "stopwatch", durationMs: 0, elapsedMs: 0, runningSince: now, alerted: false, owner: "timer-starter" });
 });
