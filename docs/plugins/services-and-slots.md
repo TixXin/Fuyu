@@ -52,7 +52,7 @@
 |---|---|---|---|---|---|
 | `island.page/v1` | `island` | `list` | 2 | `title`, `icon`, `shortcutOrder`, `headerDot`, `enabled`, `fallback`, `fold` | 悬浮岛展开态的独立页面，插件的页面在页头有按钮（见下面「插件的岛页面」） |
 | `island.header/v1` | `island` | `list` | 1 | `enabled` | 悬浮岛展开态顶栏右侧操作按钮 |
-| `island.collapsed/v1` | `island` | `list` | 2 | `group`, `width`, `hideable`, `shown` | 悬浮岛收起条左翼 / 右翼状态项 |
+| `island.collapsed/v1` | `island` | `list` | 2 | `group`, `width`, `hideable`, `shown`, `opens` | 悬浮岛收起条左翼 / 右翼状态项 |
 | `island.collapsed-center/v1` | `island` | `single` | 1 | `width`, `shown` | 悬浮岛收起条正中央图案 / 宠物 |
 | `island.alert/v1` | `island` | `list` | 1 | `trailing`, `popup` | 刘海双翼提醒与收起态临时提示（音量、设备、额度等） |
 | `island.notice/v1` | `island` | `list` | 1 | `active`, `actions` | 收起态通知横条（计时到点、截图完成等） |
@@ -82,6 +82,12 @@ ctx.slots.add("island.page/v1", {
 - `icon`：接受 `size`、`strokeWidth` 的组件（lucide 图标或自己的 SVG）。不写或渲染出错时显示标题的第一个字，页头照常显示。
 - `headerDot: false`：不进页头，只能用 `Alt+数字` 和切页到达。
 - `shortcutOrder`：只在插件页面之间排序，插件页面总在内置页面之后。
+- 收起条上的 `island.collapsed/v1` 项写 `opens: "<页面 id>"`，点它就打开那一页：宿主把整项做成一个可以聚焦的按钮，有焦点时按 Enter 或空格也能打开。只能指向同一个插件注册的 `island.page/v1`，写了别的插件或内置页的 id 时忽略，控制台记一条告警；项里插件自己的按钮、链接照常收到点击，不会顺带打开页面。不写 `opens` 时和以前一样。
+
+  ```ts
+  ctx.slots.add("island.collapsed/v1", { id: "world-clock-bar", opens: "world-clock", component: WorldClockChip });
+  ```
+
 - 收起条上的 `island.collapsed/v1` 项：现在 `width` 只对 `group: "gauges"` 的项计入岛宽，插件的收起项不写 `group` 时声明的 `width` 不起作用，空间不够时可能被压短；按实际渲染宽度算岛宽是 E60.8 的事。
 
 ### 插槽主题变量（`SLOT_THEME`）
@@ -91,4 +97,7 @@ ctx.slots.add("island.page/v1", {
 - 文字：`--fuyu-plugin-text`、`--fuyu-plugin-text-secondary`、`--fuyu-plugin-text-muted`
 - 表面与边框：`--fuyu-plugin-surface`、`--fuyu-plugin-surface-hover`、`--fuyu-plugin-border`
 - 强调色：`--fuyu-plugin-accent`、`--fuyu-plugin-on-accent`
+- 状态色：`--fuyu-plugin-warning`（警告，深色岛是亮黄，浅色岛是深琥珀）、`--fuyu-plugin-danger`（危险、超限，深色岛是浅红，浅色岛是深红），都是能直接当文字色的深浅
 - 字体与圆角：`--fuyu-plugin-font`、`--fuyu-plugin-radius`
+
+主题容器还设了 `color-scheme`：深色岛是 `dark`，浅色岛是 `light`，插件的元素会继承它（容器是 `display: contents`，不影响布局，继承照常）。所以插件可以直接写 `light-dark(浅色岛的值, 深色岛的值)`，跟着岛的深浅变；岛上、设置窗口和插件独立窗口里都一样。
