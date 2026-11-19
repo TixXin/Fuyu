@@ -192,17 +192,7 @@ export default function apply(ctx: Context) {
     );
   }
 
-  let barWidth = 0;
-  const syncBar = (snapshot: AlarmSnapshot | null) => {
-    const width = snapshot && displayFor(snapshot.settings).twelve ? 76 : 54;
-    if (width === barWidth) return;
-    barWidth = width;
-    ctx.slots.add("island.collapsed/v1", { id: "alarm-bar", width, hideable: true, opens: PAGE_ID, component: AlarmCollapsed });
-  };
-
   ctx.slots.add("island.runner/v1", { id: "alarm-runner", component: AlarmRunner });
   ctx.slots.add("island.page/v1", { id: PAGE_ID, title: PAGE_TITLE, component: AlarmPage, icon: AlarmIcon });
-  syncBar(null);
-  ctx.host.on(TOPICS.snapshot, syncBar);
-  ctx.host.call<AlarmSnapshot>(METHODS.snapshot).then(syncBar, () => {});
+  ctx.slots.add("island.collapsed/v1", { id: "alarm-bar", hideable: true, opens: PAGE_ID, component: AlarmCollapsed });
 }
