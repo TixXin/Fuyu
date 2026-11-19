@@ -213,7 +213,7 @@ export function IslandApp() {
         resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${settings.maxPanelHeight}` : null}
         appearanceMode={settings.appearanceMode}
         nativeGlassState={nativeGlassState}
-        glass={glass}
+        glass={{ ...glass, nativeState: nativeGlassState }}
         isTucked={isTucked}
         isDimmed={isDimmed}
         tuckStyle={settings.tuckStyle}

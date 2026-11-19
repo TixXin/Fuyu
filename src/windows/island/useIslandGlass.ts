@@ -4,7 +4,7 @@ import { glassClassNames, glassPalette, glassPaused, glassVariables, type GlassP
 import { isLightIsland } from "../../utils/color";
 import type { IslandSettings } from "../../lib/settings/types";
 import { usePageHidden } from "../../lib/usePageHidden";
-import type { IslandMode } from "./types";
+import type { IslandMode, NativeGlassState } from "./types";
 import { INITIAL_GLASS_LAYER, sameGlassLayer, type GlassBackdropChoice, type GlassLayerState } from "./glassStatus";
 
 export type IslandGlassView = {
@@ -20,6 +20,7 @@ export type IslandGlassView = {
   contrastGuard: boolean;
   light: boolean;
   onLayerState?: (state: GlassLayerState) => void;
+  nativeState?: NativeGlassState;
 };
 
 export function useIslandGlass({

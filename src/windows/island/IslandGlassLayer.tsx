@@ -2,7 +2,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { isMacOS } from "../../lib/platform";
 import { IslandGlassShader } from "./IslandGlassShader";
 import type { LiveBackdropState } from "./glassStatus";
-import type { NativeGlassState } from "./types";
 import { useGlassCapture } from "./useGlassCapture";
 import type { IslandGlassView } from "./useIslandGlass";
 import { useReducedTransparency } from "./useIslandGlassStatus";
@@ -16,7 +15,7 @@ import "./IslandGlassWallpaper.css";
 const MAC_FAILED: LiveBackdropState = { state: "failed", reason: "unsupported" };
 const MAC_LIVE: LiveBackdropState = { state: "live" };
 
-export function IslandGlassLayer({ glass, nativeGlassState }: { glass?: IslandGlassView; nativeGlassState?: NativeGlassState }) {
+export function IslandGlassLayer({ glass }: { glass?: IslandGlassView }) {
   const [shaderFailed, setShaderFailed] = useState(false);
   const shader = glass?.shader === true && !shaderFailed;
   const fail = useCallback(() => setShaderFailed(true), []);
@@ -32,7 +31,7 @@ export function IslandGlassLayer({ glass, nativeGlassState }: { glass?: IslandGl
     contrastGuard: glass?.contrastGuard !== false,
     lightIsland: glass?.light === true,
   });
-  const live = isMacOS ? (nativeGlassState === "css-fallback" ? MAC_FAILED : MAC_LIVE) : captured;
+  const live = isMacOS ? (glass?.nativeState === "css-fallback" ? MAC_FAILED : MAC_LIVE) : captured;
   const wallpaperWanted = choice === "wallpaper" || (choice === "native" && live.state === "failed");
   const { variables: wallpaper, unavailable } = useWallpaperBackdrop({
     target: layer,
