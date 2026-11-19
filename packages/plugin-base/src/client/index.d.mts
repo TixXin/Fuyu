@@ -86,6 +86,7 @@ export function createLoader(options: {
   registry: SlotRegistry;
   bridge?: Bridge;
   base: string;
+  openSettings?: ((plugin: string) => Promise<void> | void) | null;
   importModule?: (url: string) => Promise<any>;
   checkFile?: (url: string) => Promise<void>;
   onStatus?: (status: Map<string, ClientStatus>) => void;

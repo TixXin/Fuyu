@@ -6,6 +6,7 @@ npm 包 `fuyu-plugin`（SDK、命令行工具、测试宿主）和 `create-fuyu-
 
 ## 下一版
 
+- 新接口 `ctx.settings.open()`：打开设置窗口，落到本插件详情弹窗的「设置」标签，窗口代码和宿主代码都能调，宿主代码要在 `inject` 里写 `settings`。见 [服务、接缝与插槽参考](services-and-slots.md)「四、打开自己的设置」。
 - npm 包页的 README 和 `homepage` 链到 [插件文档](README.md)（之前指向已经挪走的 `docs/plugins/v3/`）。
 
 ## 2.0.0

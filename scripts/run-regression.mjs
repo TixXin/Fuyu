@@ -55,6 +55,7 @@ export const PAGES = [
   "settings-search.html",
   "settings-feature-off.html",
   "sync-settings.html",
+  "plugin-settings-open.html",
   "agent-remote.html",
   "ssh-tunnel.html",
   "tucked-hover.html",

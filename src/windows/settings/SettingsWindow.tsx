@@ -28,6 +28,7 @@ import { focusSection } from "../../lib/settings/sectionFocus";
 import { AboutLogoCallLink } from "../../features/updater/AboutHero";
 import { PluginMarketHeaderActions } from "./PluginMarketHeaderActions";
 import { PluginPageActions } from "./PluginPageActions";
+import { requestPluginDetail } from "./pluginPageHandoff";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -50,7 +51,9 @@ export function SettingsWindow() {
   const page = offFeature ? null : category;
 
   const focusRequestedSection = useCallback(() => {
-    const section = takeFocusRequest();
+    const request = takeFocusRequest();
+    const section = request?.section ?? null;
+    if (request?.plugin) requestPluginDetail(request.plugin, "settings");
     if (section === "savePath") {
       setCategory("todos");
       focusSection(section);

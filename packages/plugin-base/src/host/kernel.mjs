@@ -17,6 +17,7 @@ import { PluginConfig } from "./plugin-config.mjs";
 import { DEV_WATCHED, watchBuiltins } from "./reload.mjs";
 import { RustBridge } from "./rust.mjs";
 import { Services } from "./services.mjs";
+import { SettingsOpener } from "./settings.mjs";
 import { shareModules } from "./share.mjs";
 import { DEV_PREFIX, SOURCE } from "./sources.mjs";
 import { INTERNAL, pluginStatus, trackImportErrors, watchStatus } from "./status.mjs";
@@ -91,6 +92,8 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   if (rpc) commands.attach(rpc);
   const pluginConfig = new PluginConfig({ dataRoot, services, usage });
   pluginConfig.install(ctx);
+  const settings = new SettingsOpener();
+  settings.install(ctx);
   const http = new ControlledHttp({ fetchImpl });
   http.install(ctx);
   const windows = new PluginWindows({ dir, services, usage });
@@ -138,6 +141,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     rustListeners: () => rust.counts(),
     watchClients: (onChange) => ctx.clients.watch(onChange),
     serviceHub: services,
+    settingsOpener: settings,
     services: () => services.list(),
     watchServices: (onChange) => services.watch(onChange),
     settle: () => Promise.all(ctx.loader.getTasks()),

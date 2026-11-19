@@ -11,6 +11,7 @@ const KNOWN_INJECT = Object.freeze([
   "commands",
   "config",
   "http",
+  "settings",
   "windows",
   "translator.engines",
   "lyrics.sources",

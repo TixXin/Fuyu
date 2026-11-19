@@ -78,6 +78,17 @@ declare module "cordis" {
       reset<T extends Record<string, any> = Record<string, Json>>(): Promise<T>;
       onChange<T extends Record<string, any> = Record<string, Json>>(listener: (values: T) => void): () => Promise<void>;
     };
+    /**
+     * The plugin's own page in Fuyu's settings. `open()` opens the settings window (or brings it to the front) on
+     * this plugin's detail dialog, on its settings tab: the same place the gear on the plugin's row goes to. It
+     * takes no arguments, because a plugin opens only its own settings; Fuyu fills in the plugin id. Window code
+     * can call it in any window. Host code lists `settings` in `inject` and fails with `not-ready` while the island
+     * window is not connected. Use it for a "Go to settings" button in an empty state, or when a notification
+     * about a missing setting is clicked.
+     */
+    settings: {
+      open(): Promise<void>;
+    };
     http: {
       fetch: HttpFetch;
     };
