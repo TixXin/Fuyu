@@ -85,6 +85,7 @@ const keyWrites: string[] = [];
 const savedKeys = new Set<string>();
 mockIPC((command, payload) => {
   if (command === "has_plan_key") return savedKeys.has((payload as { provider: string }).provider);
+  if (command === "has_plan_config_key") return (payload as { provider: string }).provider === "kimi";
   if (command === "set_plan_key") {
     const { provider, key } = payload as { provider: string; key: string };
     keyWrites.push(`${provider}:${key}`);
@@ -306,6 +307,12 @@ async function runChecks() {
     await until(() => hint() === "未保存");
     check(keyWrites[keyWrites.length - 1] === "glm:" && hint() === "未保存", "删除时传空 Key，回到未保存");
 
+    const configInput = document.querySelector<HTMLInputElement>("#plan-keys-config input[data-plan-key]")!;
+    const configRow = configInput.closest<HTMLElement>(".settings-row")!;
+    const configHint = () => configRow.querySelector("[data-plan-key-status]")?.textContent;
+    await until(() => configHint() === "已从 Claude Code 配置读取，不用手填");
+    check(configInput.placeholder === "已从 Claude Code 读取；粘贴别的 Key 可改用它" && [...configRow.querySelectorAll("button")].map((button) => button.textContent).join() === "保存", "Claude Code 配置里有 Key 时说明不用手填，也不给删除按钮");
+
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
   } catch (error) {
@@ -320,6 +327,10 @@ const keysHost = Object.assign(document.createElement("div"), { id: "plan-keys" 
 document.getElementById("fixture")!.after(keysHost);
 const keyProviders = USAGE_PROVIDERS.filter(isPlan).filter((provider) => provider.id === "glm" || !automated);
 await act(async () => { createRoot(keysHost).render(<>{keyProviders.map((provider) => <PlanKeyField key={provider.id} provider={provider} />)}</>); });
+const configKeysHost = Object.assign(document.createElement("div"), { id: "plan-keys-config" });
+keysHost.after(configKeysHost);
+const kimi = USAGE_PROVIDERS.filter(isPlan).find((provider) => provider.id === "kimi")!;
+if (automated) await act(async () => { createRoot(configKeysHost).render(<PlanKeyField provider={kimi} />); });
 if (automated) await runChecks();
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
