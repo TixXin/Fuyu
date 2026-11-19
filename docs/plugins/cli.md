@@ -20,6 +20,7 @@ fuyu-plugin <命令> [插件文件夹] [选项]
 | [`check [文件夹]`](#check) | 不运行插件的静态检查：清单、试构建、审核分析器的扫描 |
 | [`icon [文件夹]`](#icon) | 按官方插件的样式写出图标 `assets/icon.svg`：主色浅底的圆角方块加同色线条图标 |
 | [`shots [文件夹]`](#shots) | 用示例数据把岛上页面和收起条渲染出来截图，并合成封面 |
+| [`preview [文件夹]`](#preview) | 在本地画出这个插件在市场卡片和详情页里的样子，深色、浅色各一份 |
 | [`review <旧> <新>`](#review) | 和市场一样比较两个版本，给出绿 / 黄 / 红三档 |
 | [`keygen`](#keygen) | 生成作者签名密钥（只做一次），打印要登记给市场的公钥 |
 | [`sign [文件夹]`](#sign) | 给提交号签名，输出市场提交要的内容 |
@@ -200,6 +201,38 @@ fuyu-plugin shots [文件夹] [--out <文件夹>] [--sample <文件>] [--theme d
 - 报错并退出 1：组件渲染失败；收起条在这份示例数据下什么也没显示；插件没有岛上部分。
 - 截好的图要自己写进清单的 `fuyu.screenshots`。
 
+## preview
+
+```bash
+fuyu-plugin preview [文件夹] [--out <文件>] [--theme dark|light] [--locale zh-CN|en] [--png] [--open]
+```
+
+上架前在本地看这个插件在插件市场里的样子：市场卡片和详情页，深色、浅色、中文、英文各一份，画在一个网页里（默认 `build/preview.html`，图标和截图都嵌在文件里，可以直接发给别人）。它只读清单、图标、`fuyu.screenshots` 列的图和 README，不构建、不运行插件。
+
+| 选项 | 作用 |
+|---|---|
+| `--out <文件>` | 网页写到别处 |
+| `--theme`、`--locale` | 只画这一种主题或语言，默认都画 |
+| `--png` | 再把每一份存成 `preview-<主题>-<语言>.png`（和网页放一起），要本机有 Chrome、Edge 或 Chromium |
+| `--open` | 写完用默认浏览器打开 |
+
+命令顺带跑一遍 `check` 的上架信息检查（`listing:`），告警打在终端里，也列在网页顶上。清单里写了但找不到的图标、截图给告警 `preview:icon`、`preview:screenshot`。
+
+### 和真的市场差在哪
+
+样式是浮屿自己的：市场卡片、详情页、按钮、Markdown 用到的 CSS 规则和主题变量由 `packages/plugin-cli/scripts/gen-preview-styles.mjs` 从 `src/` 抽成 `packages/plugin-cli/src/preview/app-styles.json`，随命令行一起带。README 的渲染规则也和详情页一样（标题从三级开始；表格、图片、HTML 不渲染，图片只留说明文字；只有 `http(s)` 链接能点），所以 README 里写了表格，在这里和在市场里都是一串竖线。
+
+照着画的是结构（HTML），和真的有这些差别：
+
+- 卡片按默认大小的设置窗口里的宽度画（403px，两列中的一列）；窗口拉宽、拉窄时真卡片跟着变。
+- 详情页真的最高 760px、里面滚动，这里整页展开。
+- 只有市场才知道的不显示：包的大小、更新日期、点赞数、「会做什么」的权限清单、命令列表、更新日志和版本两个页签。
+- 按钮是「安装」这一种状态，点了没反应；截图不能点开放大。
+- 发布者：`@fuyu/` 下的包显示官方标记和「浮屿团队」，别的显示 `package.json` 的 `author`，没有就用仓库地址或包名里的账号名；真市场上是提交插件的 GitHub 账号。
+- 字体用浏览器里的系统界面字体，Windows 上和设置窗口一致，Mac 上略有出入。
+
+浮屿改了市场的样式后，`tests/unit/plugin-cli-preview.test.mjs` 会失败，照提示跑 `node packages/plugin-cli/scripts/gen-preview-styles.mjs` 并提交生成的文件。
+
 ## review
 
 ```bash
@@ -299,7 +332,7 @@ const packed = await pack("path/to/plugin", { signingKey });
 const { ok, errors, warnings } = await check("path/to/plugin", { allowExperimental: false });
 ```
 
-截图和图标也能调：`await shots("path/to/plugin", { outDir })`、`await icon("path/to/plugin", { glyph: "rocket", color: "#e0a020" })`。
+截图、图标和预览也能调：`await shots("path/to/plugin", { outDir })`、`await icon("path/to/plugin", { glyph: "rocket", color: "#e0a020" })`、`await preview("path/to/plugin", { png: true })`。
 
 `check()` 默认不做上架信息的检查，`listing: "warn"` 或 `"error"` 打开；单独要这部分结果用 `lintListing(dir, manifest)`。
 

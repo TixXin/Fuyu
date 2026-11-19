@@ -22,7 +22,7 @@ const FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*\.png$/;
 const FIRST_RECT_FILL = /<rect\b[^>]*?\sfill=["'](#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})["']/;
 const STATE = "window.__fuyuShots ? JSON.stringify(window.__fuyuShots) : null";
 
-function iconColor(root, app) {
+export function iconColor(root, app) {
   if (typeof app.icon !== "string" || !app.icon.toLowerCase().endsWith(".svg")) return null;
   const file = join(root, app.icon);
   if (!existsSync(file)) return null;

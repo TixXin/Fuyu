@@ -80,4 +80,5 @@
 
 - 每次改动 `version` 加一档（新功能加次版本号，只修问题加修订号），写 `CHANGELOG.md`。
 - 跑插件自己的 `typecheck`、`lint`（有的话）、`check`、`build`，以及 `pnpm test`（含官方插件套件 `tests/unit/official-plugins-v3.test.mjs`）。
+- `fuyu-plugin preview` 看一眼市场卡片和详情页：说明有没有被截掉、封面和截图的裁切、README 排出来的样子（用法见[命令行](cli.md#preview)）。
 - 打包装进开发版，在真岛上看过深色、浅色、窄面板，再交给插件开发总控上架（流程见[发布](publish.md)）。
