@@ -21,7 +21,7 @@ export type PluginInstallConfirmation = {
   requiredPlugins?: string[];
 };
 
-export type MarketPermissionSet = {
+export type MarketCapabilitySet = {
   nodeApis: string[];
   network: string[];
   replaces: string[];
@@ -29,8 +29,8 @@ export type MarketPermissionSet = {
 
 export type MarketAutoUpdateHeld = {
   version: string;
-  reason: "permissions";
-  addedPermissions: MarketPermissionSet;
+  reason: "new-capabilities";
+  newCapabilities: MarketCapabilitySet;
 };
 
 export type MarketVersionCandidate = {
@@ -43,7 +43,7 @@ export type MarketVersionCandidate = {
   warned?: boolean;
   urgent?: boolean;
   trustChange?: MarketTrustChange;
-  addedPermissions?: MarketPermissionSet;
+  newCapabilities?: MarketCapabilitySet;
   confirmation: PluginInstallConfirmation;
 };
 
