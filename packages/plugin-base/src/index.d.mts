@@ -136,6 +136,14 @@ declare module "cordis" {
        * has focus and Enter or Space is pressed; the host makes the whole item one focusable button. The id must
        * be one of this plugin's own `island.page/v1` pages: an id of another plugin's page or a built-in page is
        * ignored with a warning in the console. Clicks on the item's own buttons and links still go to them.
+       *
+       * An `island.collapsed/v1` item widens the collapsed island by the width it actually renders at, so
+       * readings that change need no `width`. `width` (pixels, or a function of the bar's context) is a floor,
+       * used until the item is measured. The island grows at once and shrinks only when the item is 32px
+       * narrower, so a reading that changes every second does not resize the window back and forth. The bar is
+       * at most 520px wide; past that the island's own text gives way first, then the item is faded out at its
+       * right edge. Do not stretch the item with `width: 100%` or `flex: 1`: it is measured at its max-content
+       * width.
        */
       add(name: SlotName, item: { id: string; order?: number; component: unknown; [meta: string]: unknown }): () => Promise<void>;
     };

@@ -49,6 +49,7 @@ export const PAGES = [
   "plugin-slot.html",
   "plugin-detail-settings.html",
   "plugin-island-page.html",
+  "plugin-collapsed-width.html",
   "settings.html?test=1",
   "settings-sidebar.html",
   "settings-search.html",

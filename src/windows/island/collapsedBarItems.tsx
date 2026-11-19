@@ -2,6 +2,8 @@ import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { openSettingsWindow } from "../settings/api";
+import { CollapsedFit } from "./CollapsedFit";
+import { fitFloor } from "./collapsedFitStore";
 import { collapsedOpensTarget, warnCollapsedOpens } from "./collapsedOpens";
 import { collapsedBarSlot, type CollapsedBarContext } from "./slots/collapsed";
 import { pageSlot } from "./slots/pageSlot";
@@ -42,7 +44,8 @@ export function useCollapsedBarItems(input: Omit<CollapsedBarContext, "onOpenSet
       if (!gaugesPlaced) for (const gauge of context.slots.gauges ?? []) items.push({ ...gauge, group: "gauges" });
       gaugesPlaced = true;
     } else if (entry.shown?.(context) ?? true) {
-      const node = <SlotView slot={collapsedBarSlot} props={context} select={(all) => all.filter((item) => item.id === entry.id)} />;
+      const view = <SlotView slot={collapsedBarSlot} props={context} select={(all) => all.filter((item) => item.id === entry.id)} />;
+      const node = entry.external ? <CollapsedFit id={entry.id} floor={fitFloor(entry.width, context)}>{view}</CollapsedFit> : view;
       const { page, warning } = collapsedOpensTarget(entry, pages);
       warnCollapsedOpens(warning);
       items.push({ id: entry.id, node: page === null ? node : <OpensPage page={page} onOpenPage={context.onOpenPage}>{node}</OpensPage> });

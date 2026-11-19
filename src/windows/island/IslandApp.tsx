@@ -97,6 +97,7 @@ export function IslandApp() {
     widthExtra: settings.collapsedWidthExtra,
     peeking: contributedPreview !== null || contributedLines.some((line) => line.drop === true),
     slots: collapsedSlots,
+    collapsedScale: settings.collapsedScale,
   });
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
   useIslandTucking({ settings, navigation });
