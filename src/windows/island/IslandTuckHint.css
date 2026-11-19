@@ -1,0 +1,124 @@
+.island-tuck-hint {
+  --tuck-hint-edge: calc(38px * var(--island-collapsed-scale, 1));
+  --tuck-hint-core: var(--color-white, #ffffff);
+  --tuck-hint-ring: var(--tuck-hint-ring-dark, rgba(0, 0, 0, 0.38));
+  --tuck-hint-halo: var(--tuck-hint-halo-white, rgba(255, 255, 255, 0.55));
+  --tuck-hint-halo-soft: var(--tuck-hint-halo-white-soft, rgba(255, 255, 255, 0.22));
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  background: var(--tuck-hint-core);
+  animation: island-tuck-hint-in var(--motion-medium) var(--motion-ease-out) var(--motion-medium) backwards;
+}
+
+.island-tuck-hint--island {
+  --tuck-hint-core: var(--island-background-color, #2f2f37);
+  --tuck-hint-ring: var(--tuck-hint-ring-light, rgba(255, 255, 255, 0.5));
+  --tuck-hint-halo: var(--tuck-hint-halo-cool, rgba(150, 170, 220, 0.55));
+  --tuck-hint-halo-soft: var(--tuck-hint-halo-cool-soft, rgba(150, 170, 220, 0.22));
+}
+
+.island-light .island-tuck-hint--island {
+  --tuck-hint-ring: var(--tuck-hint-ring-dark-soft, rgba(0, 0, 0, 0.3));
+}
+
+.island-tuck-hint--custom {
+  --tuck-hint-core: var(--tuck-hint-custom, #74d6ff);
+  --tuck-hint-ring: var(--tuck-hint-ring-light, rgba(255, 255, 255, 0.5));
+  --tuck-hint-halo: color-mix(in srgb, var(--tuck-hint-core) 60%, transparent);
+  --tuck-hint-halo-soft: color-mix(in srgb, var(--tuck-hint-core) 25%, transparent);
+}
+
+.island-tuck-hint--custom.island-tuck-hint--light-core {
+  --tuck-hint-ring: var(--tuck-hint-ring-dark, rgba(0, 0, 0, 0.38));
+}
+
+.island-tuck-hint--dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--tuck-hint-ring), 0 1px 3px var(--tuck-hint-shadow, rgba(0, 0, 0, 0.35));
+  left: calc(50% - 3.5px);
+  top: calc(var(--tuck-hint-edge) + 3px);
+}
+
+.island-tuck-hint--glow {
+  width: 38px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  box-shadow: 0 0 0 0.5px var(--tuck-hint-ring), 0 0 8px 2px var(--tuck-hint-halo), 0 0 18px 4px var(--tuck-hint-halo-soft);
+  left: calc(50% - 19px);
+  top: var(--tuck-hint-edge);
+}
+
+:root[data-island-edge="bottom"] .island-tuck-hint--dot {
+  top: auto;
+  bottom: calc(var(--tuck-hint-edge) + 3px);
+}
+
+:root[data-island-edge="bottom"] .island-tuck-hint--glow {
+  top: auto;
+  bottom: var(--tuck-hint-edge);
+  border-radius: 3px 3px 0 0;
+}
+
+.island-tuck-hint[class*="--side-"] {
+  --tuck-hint-middle: calc(36px * var(--island-collapsed-scale, 1));
+}
+
+.island-tuck-hint--dot[class*="--side-"] {
+  top: calc(var(--tuck-hint-middle) - 3.5px);
+  bottom: auto;
+}
+
+.island-tuck-hint--glow[class*="--side-"] {
+  width: 3px;
+  height: 38px;
+  top: calc(var(--tuck-hint-middle) - 19px);
+  bottom: auto;
+}
+
+.island-tuck-hint--dot.island-tuck-hint--side-left {
+  left: 3px;
+}
+
+.island-tuck-hint--dot.island-tuck-hint--side-right {
+  left: auto;
+  right: 3px;
+}
+
+.island-tuck-hint--glow.island-tuck-hint--side-left {
+  left: 0;
+  border-radius: 0 3px 3px 0;
+}
+
+.island-tuck-hint--glow.island-tuck-hint--side-right {
+  left: auto;
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+.island-tuck-hint--breathe {
+  animation:
+    island-tuck-hint-in var(--motion-medium) var(--motion-ease-out) var(--motion-medium) backwards,
+    island-tuck-hint-breathe 2.8s var(--motion-ease-in-out) var(--motion-slow) infinite;
+}
+
+@keyframes island-tuck-hint-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes island-tuck-hint-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-tuck-hint,
+  .island-tuck-hint--breathe {
+    animation: island-tuck-hint-in var(--motion-base) var(--motion-ease) backwards;
+  }
+}

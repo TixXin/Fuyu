@@ -9,6 +9,7 @@ import { SettingsSliderRow } from "../../../components/settings/SettingsSliderRo
 import { SettingsToggleRow } from "../../../components/settings/SettingsToggleRow";
 import { DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS, MAX_AUTO_TUCK_RETRACT_DELAY_MS, MIN_AUTO_TUCK_RETRACT_DELAY_MS } from "../../../lib/settings/settings";
 import { IslandGlyph } from "../../../components/settings/IslandGlyph";
+import { TuckHintRows } from "./TuckHintRows";
 import type { IslandSettings, MinimizeAction, TuckedHoverAction, TuckStyle } from "../../../lib/settings/types";
 import "./TuckSettingsSection.css";
 
@@ -127,6 +128,7 @@ export function TuckSettingsSection({
             />
           }
         />
+        {settings.tuckStyle === "hidden" && <TuckHintRows settings={settings} update={update} />}
       </SettingsGroup>
 
       <SettingsGroup title={expand.revealTitle}>

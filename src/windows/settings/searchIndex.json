@@ -1420,6 +1420,74 @@
     {
       "page": "behaviorTuck",
       "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "隐身提示",
+        "description": "贴边隐身时在屏幕边缘留一个很小的记号，表示岛还在运行；记号不挡鼠标",
+        "options": [
+          "无",
+          "小圆点",
+          "光晕"
+        ]
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Hidden hint",
+        "description": "Leaves a tiny mark at the screen edge while the island is hidden, so you know it is still running; clicks pass through it",
+        "options": [
+          "None",
+          "Dot",
+          "Glow"
+        ]
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "提示颜色",
+        "options": [
+          "白色描边",
+          "跟随岛色",
+          "自选"
+        ]
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Hint color",
+        "options": [
+          "White",
+          "Island",
+          "Custom"
+        ]
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "自选颜色"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Custom color"
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
+        "group": "贴边隐藏",
+        "title": "提示呼吸",
+        "description": "提示慢慢明暗变化；系统开了减少动画时一直常亮"
+      },
+      "en": {
+        "group": "Tuck to edge",
+        "title": "Breathing hint",
+        "description": "The hint slowly fades in and out; it stays steady when the system reduces motion"
+      }
+    },
+    {
+      "page": "behaviorTuck",
+      "zh-CN": {
         "group": "露出",
         "title": "鼠标移到隐藏的岛上",
         "options": [

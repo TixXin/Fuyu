@@ -24,6 +24,7 @@ import { IslandSideColumn, useSideColumnRows } from "./IslandSideColumn";
 import { IslandSideBubble } from "./IslandSideBubble";
 import { AlertPopup, useActiveAlert } from "./NotchAlert";
 import { IslandDragHint } from "./IslandDragHint";
+import { IslandTuckHint, type TuckHintSettings } from "./IslandTuckHint";
 import { sideBubbleTop } from "./sideColumn";
 import type { IslandSide } from "./useIslandSide";
 import { ISLAND_OUTLINE_STYLE } from "./islandOutline";
@@ -40,6 +41,7 @@ type IslandShellProps = {
   isTucked: boolean;
   isDimmed?: boolean;
   tuckStyle?: TuckStyle;
+  tuckHint?: TuckHintSettings;
   isDetached: boolean;
   side?: IslandSide | null;
   showTitle: boolean;
@@ -131,6 +133,7 @@ export function IslandShell({
   isTucked,
   isDimmed = false,
   tuckStyle = "edge",
+  tuckHint,
   isDetached,
   side = null,
   showTitle,
@@ -198,109 +201,113 @@ export function IslandShell({
   const collapsedLabel = (showCollapsedText ? labelLine(lines)?.label : null) ?? t.island.appName;
   const lead = leadLine(lines);
   const leadPage = (lead?.page ?? page) as IslandPage;
+  const showTuckHint = isTucked && tuckStyle === "hidden" && !notch && !isExpanded && tuckHint !== undefined && tuckHint.tuckHintStyle !== "none";
 
   return (
-    <section
-      className={className}
-      style={side ? ({ ...ISLAND_OUTLINE_STYLE, "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : (ISLAND_OUTLINE_STYLE as CSSProperties)}
-      aria-label={collapsedLabel}
-      onClick={(event) => {
-        if (!isExpanded && event.target === event.currentTarget) {
-          onOpenPage(leadPage);
-        }
-      }}
-      onPointerEnter={prewarm.wake}
-      onPointerDown={prewarm.wake}
-      onPointerMove={handleGlassPointerMove}
-      onPointerLeave={(event) => {
-        resetGlassPointer(event);
-        prewarm.leave();
-      }}
-      onMouseEnter={() => {
-        if (isTucked) {
-          onReveal();
-        }
-      }}
-    >
-      <div className="island__surface">
-        {isLiquidGlass && <IslandGlassLayer glass={glass} />}
-        {side && (
-          <IslandSideHandle
-            label={collapsedLabel}
-            agentVisualState={agentVisualState}
-            badge={contributed.hints.has("side.badge")}
-            onOpen={() => onOpenPage(lead?.handle ? leadPage : page)}
-            onWindowDragStart={onWindowDragStart}
-          />
-        )}
-        {side && (
-          <IslandSideColumn
-            label={collapsedLabel}
-            hot={sideBubble ? sideHot : null}
-            layout={sideLayout}
-            onOpen={() => onOpenPage(page)}
-            onWindowDragStart={onWindowDragStart}
-          />
-        )}
-        <IslandCollapsedBar
-          slots={collapsedSlots}
-          page={page}
-          isExpanded={isExpanded}
-          isTucked={isTucked}
-          showTitle={showTitle}
-          showCollapsedText={showCollapsedText}
-          collapsedLabel={collapsedLabel}
-          agentVisualState={agentVisualState}
-          onOpenPage={onOpenPage}
-          notice={notice}
-          onWindowDragStart={onWindowDragStart}
-          onTuck={onTuck}
-        />
-
-        <div
-          id="island-panel"
-          className="island__expanded"
-          aria-hidden={!isExpanded}
-          inert={!isExpanded}
-        >
-          <DevWatermark place="panel" />
-          {popup && notch && <NotchPopupBand page={page} agentVisualState={agentVisualState} onCollapse={onCollapse} />}
-          <IslandHeader
+    <>
+      <section
+        className={className}
+        style={side ? ({ ...ISLAND_OUTLINE_STYLE, "--island-side-column-height": `${sideLayout.height}px` } as CSSProperties) : (ISLAND_OUTLINE_STYLE as CSSProperties)}
+        aria-label={collapsedLabel}
+        onClick={(event) => {
+          if (!isExpanded && event.target === event.currentTarget) {
+            onOpenPage(leadPage);
+          }
+        }}
+        onPointerEnter={prewarm.wake}
+        onPointerDown={prewarm.wake}
+        onPointerMove={handleGlassPointerMove}
+        onPointerLeave={(event) => {
+          resetGlassPointer(event);
+          prewarm.leave();
+        }}
+        onMouseEnter={() => {
+          if (isTucked) {
+            onReveal();
+          }
+        }}
+      >
+        <div className="island__surface">
+          {isLiquidGlass && <IslandGlassLayer glass={glass} />}
+          {side && (
+            <IslandSideHandle
+              label={collapsedLabel}
+              agentVisualState={agentVisualState}
+              badge={contributed.hints.has("side.badge")}
+              onOpen={() => onOpenPage(lead?.handle ? leadPage : page)}
+              onWindowDragStart={onWindowDragStart}
+            />
+          )}
+          {side && (
+            <IslandSideColumn
+              label={collapsedLabel}
+              hot={sideBubble ? sideHot : null}
+              layout={sideLayout}
+              onOpen={() => onOpenPage(page)}
+              onWindowDragStart={onWindowDragStart}
+            />
+          )}
+          <IslandCollapsedBar
+            slots={collapsedSlots}
             page={page}
-            features={features}
+            isExpanded={isExpanded}
+            isTucked={isTucked}
             showTitle={showTitle}
-            isDetached={isDetached}
+            showCollapsedText={showCollapsedText}
+            collapsedLabel={collapsedLabel}
             agentVisualState={agentVisualState}
-            agentStatusLabel={agentStatusLabel}
-            onPageChange={onPageChange}
-            onCollapse={onCollapse}
-            onOpenSettings={onOpenSettings}
-            onOpenTranslator={onOpenTranslator}
-            onResetPosition={onResetPosition}
-            minimizesToTray={minimizesToTray}
-            onMinimize={onMinimize}
-            pageDigitModifiers={pageDigitModifiers}
-            hoverSwitchPage={hoverSwitchPage}
-            hoverSwitchDelayMs={hoverSwitchDelayMs}
+            onOpenPage={onOpenPage}
+            notice={notice}
+            onWindowDragStart={onWindowDragStart}
+            onTuck={onTuck}
           />
-          <div ref={contentRef} className="island__content">
-            <IslandPreparingContext.Provider value={preparingContext}>{children}</IslandPreparingContext.Provider>
+
+          <div
+            id="island-panel"
+            className="island__expanded"
+            aria-hidden={!isExpanded}
+            inert={!isExpanded}
+          >
+            <DevWatermark place="panel" />
+            {popup && notch && <NotchPopupBand page={page} agentVisualState={agentVisualState} onCollapse={onCollapse} />}
+            <IslandHeader
+              page={page}
+              features={features}
+              showTitle={showTitle}
+              isDetached={isDetached}
+              agentVisualState={agentVisualState}
+              agentStatusLabel={agentStatusLabel}
+              onPageChange={onPageChange}
+              onCollapse={onCollapse}
+              onOpenSettings={onOpenSettings}
+              onOpenTranslator={onOpenTranslator}
+              onResetPosition={onResetPosition}
+              minimizesToTray={minimizesToTray}
+              onMinimize={onMinimize}
+              pageDigitModifiers={pageDigitModifiers}
+              hoverSwitchPage={hoverSwitchPage}
+              hoverSwitchDelayMs={hoverSwitchDelayMs}
+            />
+            <div ref={contentRef} className="island__content">
+              <IslandPreparingContext.Provider value={preparingContext}>{children}</IslandPreparingContext.Provider>
+            </div>
           </div>
+          {overlay}
         </div>
-        {overlay}
-      </div>
-      {sideBubble && (
-        <IslandSideBubble
-          top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}
-          summary={contributed.summary}
-          previewing={contributed.preview !== null}
-          alert={activeAlert && <AlertPopup alert={activeAlert} sources={NO_SOURCES} />}
-          onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(page))}
-        />
-      )}
-      <IslandDragHint />
-      <IslandResizeHints isExpanded={isExpanded} popup={popup} sizeLabel={resizeLabel} />
-      <IconButtonTooltip />
-    </section>
+        {sideBubble && (
+          <IslandSideBubble
+            top={sideBubbleTop(sideLayout.height, sideHotIndex >= 0 ? sideLayout.offsets[sideHotIndex] + sideLayout.shown[sideHotIndex].height / 2 : null, 22)}
+            summary={contributed.summary}
+            previewing={contributed.preview !== null}
+            alert={activeAlert && <AlertPopup alert={activeAlert} sources={NO_SOURCES} />}
+            onOpenPreview={() => (contributed.preview?.open ? runIslandAction(contributed.preview.open) : onOpenPage(page))}
+          />
+        )}
+        <IslandDragHint />
+        <IslandResizeHints isExpanded={isExpanded} popup={popup} sizeLabel={resizeLabel} />
+        <IconButtonTooltip />
+      </section>
+      {showTuckHint && <IslandTuckHint hint={tuckHint} side={side} />}
+    </>
   );
 }

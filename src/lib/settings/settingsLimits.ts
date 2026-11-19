@@ -2,6 +2,8 @@ export const AGENT_ALERT_SECONDS = [3, 5, 8, 15, 30] as const;
 export const MESSAGE_PANEL_SECONDS = AGENT_ALERT_SECONDS;
 export const MESSAGE_NOTICES = ["line", "banner", "panel"] as const;
 export const TUCK_STYLES = ["edge", "line", "hidden"] as const;
+export const TUCK_HINT_STYLES = ["none", "dot", "glow"] as const;
+export const TUCK_HINT_COLORS = ["contrast", "island", "custom"] as const;
 
 export const MAX_CUSTOM_SETTING_PRESETS = 6;
 export const MIN_TOP_FILLET_RADIUS = 0;

@@ -1,4 +1,5 @@
 import { clamp } from "../../utils/number.ts";
+import { getColorSetting } from "../../utils/color.ts";
 import { normalizeLyricsSettings } from "./lyricsSettings.ts";
 import { normalizeCalendarSettings } from "./calendarSettings.ts";
 import { normalizeTodoProjects } from "../todo-projects/prefix.ts";
@@ -7,7 +8,7 @@ import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
   MAX_AUTO_TUCK_RETRACT_DELAY_MS, MAX_HOVER_COLLAPSE_DELAY_MS, MAX_HOVER_EXPAND_DELAY_MS, MAX_HOVER_SWITCH_DELAY_MS, MAX_IDLE_DIM_OPACITY, MAX_SHELF_ITEMS,
   MIN_AUTO_TUCK_RETRACT_DELAY_MS, MIN_HOVER_COLLAPSE_DELAY_MS, MIN_HOVER_EXPAND_DELAY_MS, MIN_HOVER_SWITCH_DELAY_MS, MIN_IDLE_DIM_OPACITY, MIN_SHELF_ITEMS,
-  MESSAGE_NOTICES, MESSAGE_PANEL_SECONDS, SHELF_CLEANUP_DAYS, TUCK_STYLES, oneOf,
+  MESSAGE_NOTICES, MESSAGE_PANEL_SECONDS, SHELF_CLEANUP_DAYS, TUCK_HINT_COLORS, TUCK_HINT_STYLES, TUCK_STYLES, oneOf,
 } from "./settingsLimits.ts";
 import type { IslandSettings, LegacyIslandSettings } from "./types";
 
@@ -67,6 +68,10 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     minimizeAction: settings?.minimizeAction === "tuck" ? "tuck" : "tray",
     tuckedHoverAction: settings?.tuckedHoverAction === "expand" ? "expand" : "reveal",
     tuckStyle: oneOf(TUCK_STYLES, settings?.tuckStyle, DEFAULT_SETTINGS.tuckStyle),
+    tuckHintStyle: oneOf(TUCK_HINT_STYLES, settings?.tuckHintStyle, DEFAULT_SETTINGS.tuckHintStyle),
+    tuckHintColor: oneOf(TUCK_HINT_COLORS, settings?.tuckHintColor, DEFAULT_SETTINGS.tuckHintColor),
+    tuckHintCustomColor: getColorSetting(settings?.tuckHintCustomColor, DEFAULT_SETTINGS.tuckHintCustomColor),
+    tuckHintBreathe: settings?.tuckHintBreathe === true,
     pageDigitModifiers: normalizePageDigitModifiers(settings?.pageDigitModifiers),
     pageNextShortcut: normalizePageCycleShortcut(settings?.pageNextShortcut, DEFAULT_PAGE_NEXT_SHORTCUT),
     pagePreviousShortcut: normalizePageCycleShortcut(settings?.pagePreviousShortcut, DEFAULT_PAGE_PREVIOUS_SHORTCUT),
