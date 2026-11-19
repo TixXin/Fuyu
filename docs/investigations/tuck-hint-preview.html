@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>贴边隐身提示预览</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+    --motion-base: 160ms;
+    --motion-medium: 240ms;
+    --motion-slow: 420ms;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 64px; background: #111214; color: #e8e8ea; font: 14px/1.65 -apple-system, "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 8px; }
+  h3 { font-size: 15px; margin: 18px 0 6px; }
+  p, li { max-width: 1120px; }
+  .note { color: #9a9aa0; }
+  code { background: #232428; padding: 1px 6px; border-radius: 4px; font-size: 12.5px; }
+  table { border-collapse: collapse; max-width: 1120px; margin: 8px 0 14px; }
+  th, td { border: 1px solid #2c2d32; padding: 7px 10px; text-align: left; vertical-align: top; color: #c8c8cc; }
+  th { background: #1b1c1f; color: #e8e8ea; font-weight: 600; }
+  tr.pick td { background: #18221a; }
+  .controls { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; background: #1b1c1fee; backdrop-filter: blur(8px); padding: 12px 16px; border-radius: 10px; margin: 12px 0; max-width: 1180px; border: 1px solid #2a2b30; }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .group > span { color: #9a9aa0; margin-right: 2px; }
+  button.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; border-radius: 6px; padding: 2px 10px; font: inherit; cursor: pointer; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+  button.act { background: #24304a; color: #cfe2ff; border: 1px solid #3a4f7a; border-radius: 6px; padding: 2px 12px; font: inherit; cursor: pointer; }
+  .q { background: #1a1d26; border: 1px solid #2d3550; border-radius: 10px; padding: 12px 18px; max-width: 1120px; }
+  .q li { margin: 6px 0; }
+
+  .matrix { display: grid; grid-template-columns: 130px repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 1180px; align-items: center; }
+  .matrix .head { color: #9a9aa0; font-size: 13px; text-align: center; }
+  .matrix .rowhead { color: #c8c8cc; font-size: 13px; }
+
+  .desk { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 10px; overflow: hidden; }
+  .desk.big { max-width: 1180px; }
+  .desk.dark { background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .desk.light { background: radial-gradient(120% 140% at 20% 0%, #fbfaf6 0%, #e9eef5 55%, #d6dfeb 100%); }
+  .desk.busy.dark { background: linear-gradient(135deg, #2b1f3a, #0f3a3f 50%, #3a2a12); }
+  .desk.busy.light { background: linear-gradient(135deg, #fff5d6, #d9f2ff 50%, #ffe1ef); }
+
+  .bar { position: absolute; left: 0; right: 0; z-index: 2; }
+  .desk.win .bar.task { bottom: 0; height: 7%; background: #1c1d22e6; border-top: 1px solid #ffffff12; }
+  .desk.win.light .bar.task { background: #eef0f4e6; border-top-color: #0000000d; }
+  .desk.mac .bar.menu { top: 0; height: 4.2%; background: #0000003a; backdrop-filter: blur(12px); }
+  .desk.mac.light .bar.menu { background: #ffffff8c; }
+  .desk.mac .bar.dock { bottom: 1.6%; left: 28%; right: 28%; height: 8%; border-radius: 14px; background: #ffffff22; border: 1px solid #ffffff22; }
+  .desk.mac.light .bar.dock { background: #ffffff88; border-color: #0000000f; }
+  .browser { position: absolute; left: 6%; right: 6%; top: 0; bottom: 7%; background: #1e1f24; z-index: 1; }
+  .desk.light .browser { background: #fbfbfd; }
+  .desk.mac .browser { top: 4.2%; bottom: 0; }
+  .browser .tabs { height: 9%; background: #2a2b31; display: flex; gap: 4px; padding: 6px 10px 0; }
+  .desk.light .browser .tabs { background: #e8e9ee; }
+  .browser .tabs i { flex: 0 0 15%; border-radius: 8px 8px 0 0; background: #3a3b42; }
+  .desk.light .browser .tabs i { background: #ffffff; }
+  .desk.noapp .browser { display: none; }
+
+  .area { position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 5; pointer-events: none; }
+  .desk.win .area { bottom: 7%; }
+  .desk.mac .area { top: 4.2%; }
+
+  .isl { position: absolute; z-index: 6; background: var(--isl-fill); transition: transform var(--motion-slow) var(--motion-ease-out), opacity var(--motion-base) var(--motion-ease); }
+  .desk.win .isl { --isl-fill: #16171bcc; backdrop-filter: blur(16px) saturate(1.4); box-shadow: inset 0 0 0 1px #ffffff14, 0 6px 20px #0004; }
+  .desk.win.light .isl { --isl-fill: #f6f6f8cc; box-shadow: inset 0 0 0 1px #0000000f, 0 6px 20px #0002; }
+  .desk.mac .isl { --isl-fill: #000; }
+  .isl.top { left: 50%; top: 0; width: 22%; height: 7%; margin-left: -11%; border-radius: 0 0 18px 18px; }
+  .isl.bottom { left: 50%; bottom: 0; width: 22%; height: 7%; margin-left: -11%; border-radius: 18px 18px 0 0; }
+  .isl.left { left: 0; top: 38%; width: 2.2%; height: 16%; border-radius: 0 10px 10px 0; }
+  .isl.right { right: 0; top: 38%; width: 2.2%; height: 16%; border-radius: 10px 0 0 10px; }
+  .tucked .isl.top { transform: translateY(-100%); }
+  .tucked .isl.bottom { transform: translateY(100%); }
+  .tucked .isl.left { transform: translateX(-100%); }
+  .tucked .isl.right { transform: translateX(100%); }
+
+  .hint { position: absolute; z-index: 7; opacity: 0; transition: opacity var(--motion-medium) var(--motion-ease-out); --core: #ffffff; --halo: 255, 255, 255; --ring: rgba(0, 0, 0, .38); }
+  .desk.light .hint { --ring: rgba(0, 0, 0, .28); }
+  .hint.follow { --core: #1b1c20; --halo: 30, 32, 40; --ring: rgba(255, 255, 255, .55); }
+  .desk.dark .hint.follow { --core: #0a0a0c; --ring: rgba(255, 255, 255, .5); --halo: 150, 170, 220; }
+  .desk.win.light .hint.follow { --core: #f6f6f8; --ring: rgba(0, 0, 0, .3); --halo: 120, 140, 180; }
+  .tucked .hint { opacity: 1; transition-delay: var(--motion-medium); }
+  .hint.none { display: none; }
+
+  .hint.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--core); box-shadow: 0 0 0 1px var(--ring), 0 1px 3px rgba(0, 0, 0, .35); }
+  .hint.dot.top { left: 50%; top: 3px; margin-left: -3.5px; }
+  .hint.dot.bottom { left: 50%; bottom: 3px; margin-left: -3.5px; }
+  .hint.dot.left { left: 3px; top: 46%; margin-top: -3.5px; }
+  .hint.dot.right { right: 3px; top: 46%; margin-top: -3.5px; }
+
+  .hint.glow { background: var(--core); box-shadow: 0 0 0 .5px var(--ring), 0 0 8px 2px rgba(var(--halo), .55), 0 0 18px 4px rgba(var(--halo), .22); }
+  .hint.glow.top { left: 50%; top: 0; width: 38px; height: 3px; margin-left: -19px; border-radius: 0 0 3px 3px; }
+  .hint.glow.bottom { left: 50%; bottom: 0; width: 38px; height: 3px; margin-left: -19px; border-radius: 3px 3px 0 0; }
+  .hint.glow.left { left: 0; top: 46%; width: 3px; height: 38px; margin-top: -19px; border-radius: 0 3px 3px 0; }
+  .hint.glow.right { right: 0; top: 46%; width: 3px; height: 38px; margin-top: -19px; border-radius: 3px 0 0 3px; }
+
+  @keyframes tuck-hint-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+  @keyframes tuck-hint-breathe-glow { 0%, 100% { filter: brightness(1); opacity: 1; } 50% { filter: brightness(.85); opacity: .55; } }
+  .breathe.tucked .hint.dot { animation: tuck-hint-breathe 2.8s var(--motion-ease-in-out) infinite; animation-delay: var(--motion-slow); animation-fill-mode: backwards; }
+  .breathe.tucked .hint.glow { animation: tuck-hint-breathe-glow 2.8s var(--motion-ease-in-out) infinite; animation-delay: var(--motion-slow); animation-fill-mode: backwards; }
+  .forcereduce .hint { animation: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    .hint { animation: none !important; }
+    .isl { transition: opacity var(--motion-base) var(--motion-ease); }
+  }
+
+  .zones .hot { position: absolute; z-index: 8; background: rgba(255, 70, 70, .75); }
+  .zones .pass { position: absolute; z-index: 8; outline: 1px dashed rgba(80, 230, 140, .95); outline-offset: 2px; }
+  .zones .hot.top { left: 39%; right: 39%; top: 0; height: 2px; }
+  .zones .hot.bottom { left: 39%; right: 39%; bottom: 0; height: 2px; }
+  .zones .hot.left, .zones .hot.right { top: 38%; height: 16%; width: 2.2%; }
+  .zones .hot.left { left: 0; }
+  .zones .hot.right { right: 0; }
+  .zone-off .zones { display: none; }
+  .legend { display: inline-flex; gap: 14px; color: #9a9aa0; font-size: 12.5px; }
+  .legend b { display: inline-block; width: 14px; height: 4px; vertical-align: middle; margin-right: 4px; }
+
+  .zoom { display: flex; gap: 14px; flex-wrap: wrap; max-width: 1180px; }
+  .zoom .desk { width: 260px; aspect-ratio: 2 / 1; }
+  .zoom .desk .area { transform: scale(3); transform-origin: 50% 0; }
+  .zoom .cap { color: #9a9aa0; font-size: 12.5px; margin-top: 4px; }
+
+  @media (max-width: 760px) {
+    body { padding: 16px; }
+    .matrix { grid-template-columns: 80px repeat(3, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<h1>贴边隐身时的「还在运行」提示（C132 / #864）</h1>
+<p class="note">「贴边隐身」（C111，露出 0px）收起后岛完全看不见，用户以为软件关了。这里比较三种提示样式：无 / 小圆点 / 光晕，以及提示画在哪。上面的开关会同时作用于下面所有画面。2026-11-19。</p>
+
+<h2>一、隐身时有没有像素能画提示</h2>
+<p><b>有，不用另开窗口。</b>岛的窗口（舞台）比岛本身大得多：逻辑尺寸约 820 × 岛高 + 上下留白。贴边隐身时 Rust 只把窗口往上推「岛的高度」（<code>geometry.rs</code> 的 <code>tucked_top_offset</code>：<code>-(height × scale).ceil()</code>），岛整个出了屏幕，但舞台下面那一大块透明区域还在屏幕里，紧贴屏幕顶边的那一行像素正好就是「岛原来的位置的下沿」。底边贴靠时对称，窗口往下推。</p>
+<p>鼠标穿透是按「岛的形状」判断的（<code>passthrough.rs</code> → <code>geometry.rs</code> 的 <code>cursor_on_island</code>）：隐身档里只有贴边那条 2px 的唤醒热区算「在岛里」，舞台其余部分都穿透。所以提示画在舞台里、热区之外的部分天然穿透，不用改穿透逻辑；和 2px 热区重叠的那一点本来就是唤醒用的，不算新挡住东西。Mac 上隐身时原生玻璃已经关掉（<code>glass_macos.rs</code> 的 <code>tucked_hidden</code>），提示画在网页层里，Windows 和 Mac 是同一份 CSS。</p>
+<p>现在隐身是给 <code>.island</code> 整个设 <code>opacity: 0</code>（<code>IslandShell.css</code> 的 <code>.island--tucked-hidden</code>），所以提示要做成岛外壳的兄弟元素，不能放在 <code>.island</code> 里面。</p>
+
+<table>
+  <tr><th>放在哪</th><th>好处</th><th>坏处</th></tr>
+  <tr class="pick"><td><b>A. 画在现有岛窗口里，贴着屏幕边（推荐）</b></td><td>不加窗口、不加契约；穿透逻辑不用改；位置和收起、露出、换边、换屏天然同步；收起时岛滑走、提示淡入可以在同一个窗口里接上</td><td>提示被限制在舞台范围内（够用）；顶边有刘海的 Mac 不走隐身档（<code>notch.is_none()</code>），那时不显示提示，和现在一样</td></tr>
+  <tr><td>B. 另开一个很小的穿透窗口</td><td>和岛完全解耦，想画在屏幕任何位置都行</td><td>多一个窗口 label（对外契约）、多一套置顶 / 多屏 / DPI / 托盘隐藏的处理，和岛的滑动不同步，Windows 上置顶顺序也要再调；收益只有「位置更自由」，这里用不上</td></tr>
+  <tr><td>C. 不隐身，岛留几像素</td><td>零开发</td><td>这就是已有的「极简细线」（4px），用户选隐身就是嫌它挡浏览器标签页（#849），不解决问题</td></tr>
+</table>
+
+<h3>顺带发现（不在本任务里修）</h3>
+<p class="note">贴<b>左右侧边</b>时，收起后岛变成 12×72 的小把手，窗口不推出屏幕。选了「贴边隐身」时把手只是 <code>opacity: 0</code>，但 Rust 的穿透判断里侧边没有走隐身分支，整个 12×72 的把手区域仍然接鼠标：屏幕侧边有一块看不见、却点不穿的地方。本任务可以顺手让侧边隐身时只保留 2px 热区（改 <code>geometry.rs</code> 的侧边分支），或者另开任务，请一起定。</p>
+
+<h2>二、看样式</h2>
+<div class="controls" id="controls">
+  <div class="group" data-key="edge"><span>贴边</span>
+    <button class="seg on" data-v="top">顶边</button><button class="seg" data-v="left">左侧</button><button class="seg" data-v="right">右侧</button><button class="seg" data-v="bottom">底边</button>
+  </div>
+  <div class="group" data-key="os"><span>系统</span>
+    <button class="seg on" data-v="win">Windows</button><button class="seg" data-v="mac">Mac</button>
+  </div>
+  <div class="group" data-key="color"><span>颜色</span>
+    <button class="seg on" data-v="contrast">白芯 + 描边</button><button class="seg" data-v="follow">跟随岛色</button>
+  </div>
+  <div class="group" data-key="breathe"><span>呼吸</span>
+    <button class="seg" data-v="on">呼吸</button><button class="seg on" data-v="off">常亮</button>
+  </div>
+  <div class="group" data-key="reduce"><span>减少动画</span>
+    <button class="seg on" data-v="system">跟系统</button><button class="seg" data-v="force">模拟开启</button>
+  </div>
+  <div class="group" data-key="zones"><span>热区</span>
+    <button class="seg" data-v="on">显示</button><button class="seg on" data-v="off">隐藏</button>
+  </div>
+  <button class="act" id="replay">重放收起</button>
+</div>
+<p class="legend"><span><b style="background:rgba(255,70,70,.75)"></b>2px 唤醒热区（接鼠标，现状不变）</span><span><b style="outline:1px dashed rgba(80,230,140,.95);background:none"></b>提示（穿透）</span></p>
+
+<h3>样式 × 壁纸</h3>
+<div class="matrix" id="matrix"></div>
+
+<h3>放大 3 倍看边缘</h3>
+<div class="zoom" id="zoom"></div>
+
+<h3>大图（有浏览器窗口时，看会不会挡标签页）</h3>
+<div class="group" data-key="bigstyle" style="margin:6px 0"><span>样式</span>
+  <button class="seg" data-v="none">无</button><button class="seg on" data-v="dot">小圆点</button><button class="seg" data-v="glow">光晕</button>
+  <span style="margin-left:14px">壁纸</span>
+</div>
+<div class="group" data-key="bigwall" style="margin:0 0 8px">
+  <button class="seg on" data-v="dark">深色</button><button class="seg" data-v="light">浅色</button><button class="seg" data-v="busy">花哨（深）</button><button class="seg" data-v="busylight">花哨（浅）</button>
+</div>
+<div id="big"></div>
+
+<h2>三、三种样式</h2>
+<table>
+  <tr><th>样式</th><th>长什么样</th><th>尺寸</th></tr>
+  <tr><td>无</td><td>和现在一样，什么都不画</td><td>—</td></tr>
+  <tr><td>小圆点</td><td>贴边居中一个实心小圆点，离屏幕边 3px；侧边时在原把手的位置</td><td>直径 7px，最多占边缘 10px</td></tr>
+  <tr><td>光晕</td><td>贴边一条短白条，带一圈柔光（用户提的「带光晕的小白条」）</td><td>38 × 3px，光晕向外约 18px，光晕本身不接鼠标</td></tr>
+</table>
+<p class="note">颜色两种都给了：「白芯 + 描边」是白色本体加一圈半透明深色描边，深浅壁纸都看得见；「跟随岛色」用岛的底色（Windows 玻璃 / Mac 黑），描边反过来，和岛的外观更一致但在同色壁纸上弱一些。动画：收起时岛滑出（沿用现有收起），提示在 <code>--motion-medium</code> 后用 <code>--motion-ease-out</code> 淡入；呼吸是 2.8s 一个来回、<code>--motion-ease-in-out</code>，和 Agent 卡片的呼吸同节奏；系统开了减少动画时不呼吸，常亮。按 <code>motion.md</code>「底线」第 4 条，循环只给表示状态的东西，「隐身中、还在运行」算状态，但它会一直挂着，所以默认建议常亮，呼吸做成可选或不做。</p>
+
+<h2>四、请用户定</h2>
+<ol class="q">
+  <li><b>默认样式</b>：无 / 小圆点 / 光晕？（建议：小圆点。选了隐身的老用户升级后会多出一个 7px 的点，正好解决「以为关了」；不想要可以选「无」。）</li>
+  <li><b>呼吸还是常亮</b>？（建议：常亮。一直挂在屏幕边上的东西一直闪会分心；也可以加一个「呼吸」开关，默认关。）</li>
+  <li><b>颜色</b>：白芯 + 描边，还是跟随岛色？（建议：白芯 + 描边，深浅壁纸都稳。）</li>
+  <li><b>画在哪</b>：A 画在现有岛窗口里（建议），还是 B 另开小窗口？</li>
+  <li><b>侧边的「看不见但点不穿」</b>：本任务顺手修（会动 <code>geometry.rs</code>），还是另开任务？</li>
+</ol>
+
+<script>
+  const state = { edge: "top", os: "win", color: "contrast", breathe: "off", reduce: "system", zones: "off", bigstyle: "dot", bigwall: "dark" };
+  const styles = [["none", "无"], ["dot", "小圆点"], ["glow", "光晕"]];
+  const walls = [["dark", "深色壁纸"], ["light", "浅色壁纸"], ["busy", "花哨深色"], ["busylight", "花哨浅色"]];
+
+  function deskClasses(wall, extra) {
+    const tone = wall === "light" || wall === "busylight" ? "light" : "dark";
+    const busy = wall.startsWith("busy") ? " busy" : "";
+    return ["desk", tone + busy, state.os, "tucked", state.breathe === "on" ? "breathe" : "", state.reduce === "force" ? "forcereduce" : "", state.zones === "on" ? "" : "zone-off", extra || ""].join(" ");
+  }
+
+  function desk(wall, style, extra) {
+    const e = state.edge;
+    const hintCls = ["hint", style, e, state.color === "follow" ? "follow" : ""].join(" ");
+    const bars = state.os === "win" ? '<div class="bar task"></div>' : '<div class="bar menu"></div><div class="bar dock"></div>';
+    return '<div class="' + deskClasses(wall, extra) + '">' +
+      '<div class="browser"><div class="tabs"><i></i><i></i><i></i></div></div>' + bars +
+      '<div class="area"><div class="isl ' + e + '"></div><div class="' + hintCls + '"></div>' +
+      '<div class="zones"><div class="hot ' + e + '"></div>' + (style === "none" ? "" : '<div class="pass ' + hintCls.replace("hint", "") + '" style="opacity:1"></div>') + '</div></div></div>';
+  }
+
+  function render() {
+    const m = document.getElementById("matrix");
+    let html = '<div></div>' + styles.map(([, n]) => '<div class="head">' + n + '</div>').join("");
+    for (const [w, wn] of walls) {
+      html += '<div class="rowhead">' + wn + '</div>' + styles.map(([s]) => desk(w, s, "noapp")).join("");
+    }
+    m.innerHTML = html;
+    m.querySelectorAll(".zones .pass").forEach(copyHintBox);
+    const z = document.getElementById("zoom");
+    z.innerHTML = ["dark", "light"].flatMap((w) => styles.filter(([s]) => s !== "none").map(([s, n]) =>
+      '<div>' + desk(w, s, "noapp") + '<div class="cap">' + n + " · " + (w === "dark" ? "深色" : "浅色") + '</div></div>')).join("");
+    z.querySelectorAll(".area").forEach((a) => {
+      const e = state.edge;
+      a.style.transformOrigin = e === "top" ? "50% 0" : e === "bottom" ? "50% 100%" : e === "left" ? "0 46%" : "100% 46%";
+    });
+    z.querySelectorAll(".zones .pass").forEach(copyHintBox);
+    document.getElementById("big").innerHTML = desk(state.bigwall, state.bigstyle, "big");
+    document.querySelectorAll("#big .zones .pass").forEach(copyHintBox);
+  }
+
+  function copyHintBox(pass) {
+    const hint = pass.parentElement.parentElement.querySelector(".hint");
+    pass.className = "pass";
+    requestAnimationFrame(() => {
+      const area = pass.parentElement.parentElement;
+      const a = area.getBoundingClientRect();
+      const h = hint.getBoundingClientRect();
+      const s = a.width / area.offsetWidth || 1;
+      Object.assign(pass.style, { left: (h.left - a.left) / s + "px", top: (h.top - a.top) / s + "px", width: h.width / s + "px", height: h.height / s + "px" });
+    });
+  }
+
+  document.querySelectorAll(".group[data-key]").forEach((g) => {
+    g.addEventListener("click", (ev) => {
+      const b = ev.target.closest("button.seg");
+      if (!b) return;
+      g.querySelectorAll("button.seg").forEach((x) => x.classList.toggle("on", x === b));
+      state[g.dataset.key] = b.dataset.v;
+      render();
+    });
+  });
+
+  document.getElementById("replay").addEventListener("click", () => {
+    const desks = document.querySelectorAll(".desk");
+    desks.forEach((d) => d.classList.remove("tucked"));
+    setTimeout(() => desks.forEach((d) => d.classList.add("tucked")), 900);
+  });
+
+  render();
+</script>
+</body>
+</html>
