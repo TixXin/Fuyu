@@ -168,7 +168,6 @@ export default function apply(ctx: Context) {
   ctx.slots.add("island.page/v1", { id: PAGE_ID, title: PAGE_TITLE, component: TodoRingPage, icon: RingIcon });
   ctx.slots.add("island.collapsed/v1", {
     id: "todo-ring-bar",
-    width: 60,
     hideable: true,
     opens: PAGE_ID,
     component: TodoRingCollapsed,
