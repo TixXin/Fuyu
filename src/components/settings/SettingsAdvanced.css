@@ -13,6 +13,10 @@
   transition: color var(--motion-fast) var(--motion-ease);
 }
 
+.settings-advanced--indent > .settings-advanced__toggle {
+  padding-left: 44px;
+}
+
 .settings-advanced__toggle::-webkit-details-marker {
   display: none;
 }
