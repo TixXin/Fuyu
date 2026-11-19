@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ExternalLink, Search, Upload } from "lucide-react";
 import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
 import type { PluginMarketSort } from "../../i18n/sections/settings/pluginMarket";
@@ -7,7 +8,8 @@ import { PluginLogo } from "./PluginLogo";
 import { PluginMarketCard, type MarketCardHandlers } from "./PluginMarketCard";
 import { PluginMarketEmpty } from "./PluginMarketEmpty";
 import { openPluginDocs } from "./pluginMarketActions";
-import { browseList, categoryCounts, categoryNameMap, hasUpdate, inCategory, localized, matchesQuery, sortPlugins } from "./pluginMarketModel";
+import { PluginMarketInstalled } from "./PluginMarketInstalled";
+import { browseSections, categoryCounts, categoryNameMap, inCategory, localized, matchesQuery, sortPlugins } from "./pluginMarketModel";
 import { marketActionCandidate } from "./pluginRowStatus";
 
 export function PluginMarketBrowse({ plugins, newNames, query, category, sort, categoryName, handlers, onCategory, onInstallFile }: {
@@ -23,6 +25,7 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
 }) {
   const text = useTranslation().settings.pluginsV3.marketPage;
   const { locale } = useLocale();
+  const [ownedOpen, setOwnedOpen] = useState<boolean | null>(null);
   const grid = (list: readonly MarketCatalogPlugin[]) => (
     <div className="market-grid">
       {list.map((plugin) => <PluginMarketCard key={plugin.name} plugin={plugin} categoryName={categoryName} isNew={newNames.has(plugin.name)} {...handlers} />)}
@@ -69,8 +72,7 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
     );
   }
 
-  const updates = plugins.filter(hasUpdate);
-  const rest = browseList(plugins, sort);
+  const { updates, fresh, owned } = browseSections(plugins, sort);
   return (
     <>
       {updates.length > 0 ? (
@@ -98,10 +100,15 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
           </div>
         </section>
       ) : null}
-      <section className="market-section" data-market-section="all">
-        {updates.length > 0 ? <h3 className="plugin-page__heading">{text.allCategories}<span className="plugin-page__heading-meta">{text.sections.count(rest.length)}</span></h3> : null}
-        {grid(rest)}
-      </section>
+      {fresh.length > 0 ? (
+        <section className="market-section" data-market-section="fresh">
+          {updates.length > 0 || owned.length > 0 ? <h3 className="plugin-page__heading">{text.sections.fresh}<span className="plugin-page__heading-meta">{text.sections.count(fresh.length)}</span></h3> : null}
+          {grid(fresh)}
+        </section>
+      ) : (
+        <p className="plugin-foot" data-market-allset>{text.sections.allInstalled}</p>
+      )}
+      {owned.length > 0 ? <PluginMarketInstalled plugins={owned} open={ownedOpen ?? fresh.length === 0} onToggle={setOwnedOpen} categoryName={categoryName} handlers={handlers} /> : null}
     </>
   );
 }

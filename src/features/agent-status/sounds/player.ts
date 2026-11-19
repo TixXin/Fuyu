@@ -8,6 +8,7 @@ import question from "../../../assets/sounds/thumb-piano/question.wav";
 import quotaLow from "../../../assets/sounds/thumb-piano/quotaLow.wav";
 import quotaReset from "../../../assets/sounds/thumb-piano/quotaReset.wav";
 import start from "../../../assets/sounds/thumb-piano/start.wav";
+import { forgetSound, playSound } from "../../../lib/sound/playSound";
 import { listSoundPacks, readSoundPackFile, type SoundPack } from "./api";
 import type { AgentSoundEvent } from "./events";
 import { isQuietTime } from "./quietHours";
@@ -22,7 +23,13 @@ const packUrls = new Map<string, Promise<string | null>>();
 
 export function forgetSoundPacks() {
   packs = null;
-  for (const url of packUrls.values()) void url.then((value) => value && URL.revokeObjectURL(value));
+  for (const url of packUrls.values()) {
+    void url.then((value) => {
+      if (!value) return;
+      forgetSound(value);
+      URL.revokeObjectURL(value);
+    });
+  }
   packUrls.clear();
 }
 
@@ -59,9 +66,7 @@ async function soundUrl(packId: string, event: AgentSoundEvent): Promise<string>
 }
 
 export async function previewAgentSound(event: AgentSoundEvent, packId: string, volume: number) {
-  const audio = new Audio(await soundUrl(packId, event));
-  audio.volume = Math.min(1, Math.max(0, volume / 100));
-  await audio.play().catch((reason: unknown) => console.error(`Failed to play the ${event} sound`, reason));
+  await playSound(await soundUrl(packId, event), volume / 100).catch((reason: unknown) => console.error(`Failed to play the ${event} sound`, reason));
 }
 
 export function playAgentSound(event: AgentSoundEvent, settings: AgentSoundSettings, now = new Date()) {

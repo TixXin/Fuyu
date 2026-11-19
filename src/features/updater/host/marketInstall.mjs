@@ -1,9 +1,12 @@
 import { compareVersions, selectVersions, verifyVersionSignature } from "../../../../packages/plugin-market/src/index.mjs";
 import { commitStaged, discardStaged, stagePackage } from "../../../../packages/plugin-cli/src/installer.mjs";
+import { sha256Hex } from "../../../../packages/plugin-manifest/src/index.mjs";
 import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
 import { detectTrustChange, marketError, planRequiredDependencies, readInstalledPackages, resolvePinnedAuthor } from "./marketStore.mjs";
 
-export function createMarketInstaller({ pluginsDir, appVersion, platform, fetchImpl }) {
+export const PACKAGE_TIMEOUT_MS = 120 * 1000;
+
+export function createMarketInstaller({ pluginsDir, appVersion, platform, downloader }) {
   const verifyMarketStep = (pluginEntry, versionEntry) => {
     if (!versionEntry.platforms?.includes(platform)) {
       throw marketError("unsupported-platform", `${pluginEntry.name}@${versionEntry.version} does not support ${platform}`);
@@ -19,9 +22,17 @@ export function createMarketInstaller({ pluginsDir, appVersion, platform, fetchI
   const downloadAndInstallSteps = async (steps, revocations, trustedAuthors, checkStaged = null) => {
     const downloaded = [];
     for (const step of steps) {
-      const res = await fetchImpl(step.versionEntry.url);
-      if (!res?.ok) throw marketError("network", `Failed to download ${step.pluginEntry.name}@${step.versionEntry.version} (${res?.status ?? "err"})`);
-      downloaded.push({ ...step, buf: Buffer.from(await res.arrayBuffer()) });
+      const label = `${step.pluginEntry.name}@${step.versionEntry.version}`;
+      const buf = await downloader.run(step.versionEntry.url, async (source) => {
+        const res = await source.get(step.versionEntry.url, { timeoutMs: PACKAGE_TIMEOUT_MS, as: "bytes" });
+        if (res.missing) throw marketError("network", "answered 404");
+        const sha256 = sha256Hex(res.bytes);
+        if (typeof step.versionEntry.sha256 !== "string" || sha256 !== step.versionEntry.sha256.toLowerCase()) {
+          throw marketError("bad-sha256", `Package SHA-256 mismatch: expected ${step.versionEntry.sha256}, got ${sha256}`);
+        }
+        return res.bytes;
+      }, label);
+      downloaded.push({ ...step, buf });
     }
     const staged = [];
     try {

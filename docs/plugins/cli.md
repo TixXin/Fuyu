@@ -18,6 +18,8 @@ fuyu-plugin <命令> [插件文件夹] [选项]
 | [`build [文件夹]`](#build) | 构建到 `build/package/`：带 `nodeApis`、`builtWith` 的 `package.json`，`dist/`，图标、README 等 |
 | [`pack [文件夹]`](#pack) | 先构建，再打成 `build/<作用域>-<名字>-<版本>.fuyu` |
 | [`check [文件夹]`](#check) | 不运行插件的静态检查：清单、试构建、审核分析器的扫描 |
+| [`icon [文件夹]`](#icon) | 按官方插件的样式写出图标 `assets/icon.svg`：主色浅底的圆角方块加同色线条图标 |
+| [`shots [文件夹]`](#shots) | 用示例数据把岛上页面和收起条渲染出来截图，并合成封面 |
 | [`review <旧> <新>`](#review) | 和市场一样比较两个版本，给出绿 / 黄 / 红三档 |
 | [`keygen`](#keygen) | 生成作者签名密钥（只做一次），打印要登记给市场的公钥 |
 | [`sign [文件夹]`](#sign) | 给提交号签名，输出市场提交要的内容 |
@@ -146,6 +148,50 @@ fuyu-plugin check [文件夹] [--market] [--strict] [--json] [--config <文件>]
 
 有错误时退出码是 1。提交市场前建议跑 `check --market`。
 
+## icon
+
+```bash
+fuyu-plugin icon [文件夹] --glyph <lucide 名 | 文件.svg> --color <#rrggbb> [--out <文件>]
+fuyu-plugin icon --search <词>
+```
+
+写出和官方插件同一个样式的图标：铺满的圆角方块填主色的 16%，上面一个同色的线条图标，缩到 56% 居中（规则见[官方插件标准](official-quality.md#5-图标)）。脚手架生成的项目自带一个这样的图标，换图形和颜色用这条命令。
+
+| 选项 | 作用 |
+|---|---|
+| `--glyph <名字>` | [lucide](https://lucide.dev/icons) 的图标名，例如 `alarm-clock`；lucide 改过名的旧名字也认 |
+| `--glyph <文件.svg>` | 自己画的图形：一个 24 格的 SVG，只用 `path`、`circle`、`rect`、`line`、`polyline`、`polygon`、`ellipse`，不写 `fill`、`stroke`、`style`（颜色由图标给）。lucide 里没有合适的图形时用 |
+| `--color <#rrggbb>` | 插件的主色，`#rgb` 也认 |
+| `--out <文件>` | 写到别处。默认写清单的 `fuyu.icon`（要是 `.svg`），清单没写就是 `assets/icon.svg`；已有的文件会被换掉 |
+| `--search <词>` | 列出名字里带这个词的 lucide 图标，不写文件 |
+
+主色有这几种情况时给告警，文件照写：和某个官方插件的主色相同（`icon:same-colour`）或太近（`icon:close-colour`，OKLab 距离小于 0.05）；太浅（`icon:light`）、太深（`icon:dark`）、接近灰色（`icon:grey`），这三种在深色或浅色底上看不清。
+
+lucide 的图形数据随命令行一起带（`packages/plugin-cli/src/icon/lucide.json`，1.23.0 版，ISC 许可证见同目录的 `LUCIDE-LICENSE`），不用另装 lucide。要更新到新版 lucide，在浮屿仓库里跑 `node packages/plugin-cli/scripts/gen-lucide.mjs`。
+
+## shots
+
+```bash
+fuyu-plugin shots [文件夹] [--out <文件夹>] [--sample <文件>] [--theme dark|light] [--locale zh-CN|en] [--color <#rrggbb>] [--no-cover] [--scale 1|2|3]
+```
+
+把插件自己的岛上页面（`island.page/v1`）和收起条（`island.collapsed/v1`）组件渲染进岛的外壳，用本机的 Chrome、Edge 或 Chromium 无界面截图，写进 `screenshots/`，再合成一张 `cover.png`。页面要的数据来自插件带的示例数据 `shots/sample.ts`，不启动浮屿、不运行宿主部分。示例数据的写法、外壳和真岛的差别、封面怎么用见[截图和封面](screenshots.md)。
+
+| 选项 | 作用 |
+|---|---|
+| `--out <文件夹>` | 图写到别处，默认插件文件夹里的 `screenshots/` |
+| `--sample <文件>` | 用这个示例数据文件，不用 `shots/sample.*` |
+| `--theme`、`--locale` | 示例数据里没写主题、语言的图用这个，默认 `dark`、`zh-CN` |
+| `--color <#rrggbb>` | 封面的主色，默认取图标里圆角方块的颜色 |
+| `--no-cover` | 不合成封面 |
+| `--scale <1\|2\|3>` | 每个点几个像素，默认 2（展开页是 1584 × 720） |
+
+- 找浏览器：环境变量 `CHROME_PATH`，否则常见的安装位置。找不到就报错。
+- 渲染组件要 `react` 和 `react-dom`：先在插件项目里找，没有就用命令行自己带的；两处都没有时报错，提示在项目里装。
+- 告警：示例数据没应答的宿主调用（`shots:unanswered`，逐个列出方法名）；8 秒后界面还在变（`shots:unsettled`）；图标里取不到主色（`shots:cover-colour`）。
+- 报错并退出 1：组件渲染失败；收起条在这份示例数据下什么也没显示；插件没有岛上部分。
+- 截好的图要自己写进清单的 `fuyu.screenshots`。
+
 ## review
 
 ```bash
@@ -238,12 +284,14 @@ fuyu-plugin sign <文件.fuyu> [--key <文件>] [--out <文件>]
 命令也能当函数调用，类型声明在 `packages/plugin-cli/src/index.d.mts`：
 
 ```js
-import { build, pack, check, reviewSources, signCommitAt, loadSigningKey } from "@fuyu/plugin-cli";
+import { build, pack, check, icon, reviewSources, signCommitAt, loadSigningKey } from "@fuyu/plugin-cli";
 
 const result = await build("path/to/plugin", { outDir });
 const packed = await pack("path/to/plugin", { signingKey });
 const { ok, errors, warnings } = await check("path/to/plugin", { allowExperimental: false });
 ```
+
+截图和图标也能调：`await shots("path/to/plugin", { outDir })`、`await icon("path/to/plugin", { glyph: "rocket", color: "#e0a020" })`。
 
 `check()` 默认不做上架信息的检查，`listing: "warn"` 或 `"error"` 打开；单独要这部分结果用 `lintListing(dir, manifest)`。
 

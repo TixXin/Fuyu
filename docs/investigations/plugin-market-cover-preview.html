@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>插件市场卡片的截图封面（E77.2）</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 28px 32px 60px; background: #0c0d0f; color: #e9e7e1; font: 14px/1.6 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  h1 { margin: 0 0 6px; font-size: 22px; }
+  h2 { margin: 44px 0 4px; font-size: 17px; }
+  h2 small { margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: #1f6f43; color: #d6ffe6; font-size: 12px; font-weight: 600; vertical-align: 2px; }
+  p { margin: 6px 0; max-width: 920px; color: #b9b6ae; }
+  p b, li b { color: #e9e7e1; }
+  ul { margin: 6px 0; padding-left: 20px; max-width: 920px; color: #b9b6ae; }
+  table { margin: 12px 0; border-collapse: collapse; max-width: 980px; font-size: 13px; }
+  th, td { padding: 7px 12px; border: 1px solid #2a2c31; text-align: left; vertical-align: top; }
+  th { background: #17181b; color: #e9e7e1; font-weight: 600; }
+  td { color: #b9b6ae; }
+  code { padding: 1px 5px; border-radius: 4px; background: #1c1d21; font-size: 12.5px; }
+
+  .row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 18px; margin-top: 12px; }
+  .stage { padding: 14px 18px 18px; border-radius: 12px; }
+  .stage > h3 { margin: 0 0 10px; font-size: 12px; font-weight: 600; color: var(--t3); }
+  .stage.wide { width: 700px; }
+  .stage.narrow { width: 340px; }
+  .dark { --bg: #131417; --card: rgba(255,255,255,.04); --line: rgba(255,255,255,.06); --t1: rgba(248,246,240,.96); --t2: rgba(248,246,240,.68); --t3: rgba(248,246,240,.54); --accent: #74d6ff; --btn: rgba(116,214,255,.14); --mix: 22%; --shot-line: rgba(255,255,255,.10); background: var(--bg); }
+  .light { --bg: #eceef2; --card: #fff; --line: rgba(0,0,0,.08); --t1: rgba(24,24,30,.94); --t2: rgba(24,24,30,.7); --t3: rgba(24,24,30,.56); --accent: #0a7fd1; --btn: rgba(10,127,209,.10); --mix: 14%; --shot-line: rgba(0,0,0,.10); background: var(--bg); }
+
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .narrow .grid { grid-template-columns: minmax(0, 1fr); }
+  .card { min-width: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 8px; padding: 12px 14px; overflow: hidden; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+  .main { min-width: 0; display: grid; align-content: start; gap: 8px; }
+  .head { min-width: 0; display: flex; align-items: center; gap: 10px; }
+  .head img { flex: none; width: 40px; height: 40px; border-radius: 10px; }
+  .title { min-width: 0; display: grid; gap: 1px; }
+  .name { overflow: hidden; color: var(--t1); font-size: 13.5px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+  .name i { display: inline-grid; place-items: center; width: 14px; height: 14px; margin-left: 5px; border-radius: 50%; background: var(--accent); color: var(--bg); font-size: 9px; font-style: normal; vertical-align: 1px; }
+  .sub { overflow: hidden; color: var(--t3); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+  .desc { display: -webkit-box; margin: 0; overflow: hidden; color: var(--t2); font-size: 12.5px; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 2; max-width: none; }
+  .foot { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid var(--line); color: var(--t3); font-size: 12px; }
+  .btn { padding: 3px 10px; border-radius: 8px; background: var(--btn); color: var(--accent); font-size: 12px; font-weight: 600; }
+  .count { position: absolute; right: 6px; bottom: 6px; padding: 0 6px; border-radius: 999px; background: rgba(0,0,0,.62); color: #fff; font-size: 10px; line-height: 16px; }
+
+  .now .card.has { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
+  .now .cover { position: relative; width: 108px; align-self: start; }
+  .now .cover img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border: 1px solid var(--shot-line); border-radius: 8px; }
+  .now .card:not(.has) .cover { display: none; }
+
+  .cover { position: relative; overflow: hidden; background: color-mix(in srgb, var(--tint) var(--mix), var(--card)); }
+  .cover .shot { display: block; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.28); outline: 1px solid var(--shot-line); }
+  .cover .glyph { position: absolute; inset: 0; margin: auto; width: 52px; height: 52px; }
+
+  .a .card.has { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
+  .a .cover { width: 132px; align-self: stretch; min-height: 78px; border-radius: 10px; }
+  .a .cover .shot { position: absolute; left: 10px; top: 10px; width: 250px; max-width: none; border-radius: 6px; }
+  .a .card:not(.has) .cover { display: none; }
+  .a.narrow .cover { width: 104px; }
+
+  .b .card, .c .card { grid-template-rows: auto minmax(0, 1fr) auto; }
+  .b .cover, .c .cover { height: 104px; margin: -12px -14px 2px; border-bottom: 1px solid var(--line); }
+  .b .cover .shot { position: absolute; left: 14px; right: 14px; top: 14px; width: calc(100% - 28px); border-radius: 9px 9px 0 0; }
+  .c .cover { display: grid; place-items: center; padding: 12px; }
+  .c .cover .shot { max-width: 100%; max-height: 100%; border-radius: 6px; }
+  .b .cover .count, .c .cover .count { bottom: 7px; right: 8px; }
+</style>
+</head>
+<body>
+<h1>插件市场卡片的截图封面</h1>
+<p>E77.2 第 2 件。现在卡片右侧的缩略图只有 108 像素宽，深色岛的截图（约 794×360）按 16:10 裁到这么小，看到的是一块黑。下面三种做法都把截图放在<b>插件主色的浅底</b>上（主色读图标 SVG 第一个 <code>&lt;rect&gt;</code> 的 <code>fill</code>，和图标是同一个颜色；读不到的第三方图标用中性灰底），区别在封面放哪、截图露多少。每种都画了深色、浅色和窄窗口（一行一张）。图和图标直接用仓库里官方插件的文件。</p>
+
+<h2>现在的样子（对照）</h2>
+<div class="row" data-variant="now"></div>
+
+<h2>A · 右侧封面，截图只露左上角</h2>
+<p>位置和现在一样在右侧，卡片不变高。封面加宽到 132，占满标题和说明的高度；截图不缩成一整张，而是按 250 宽放进去，只露左上角一块，所以里面的字看得清。</p>
+<div class="row" data-variant="a"></div>
+
+<h2>B · 顶部封面条，截图从底边升起 <small>推荐</small></h2>
+<p>封面是卡片顶上一整条（高 104），截图几乎占满宽度，上半截露出来、下半截被封面底边裁掉。没有截图的插件在同一条主色底上放一个大图标，一行里的卡片高度一致。</p>
+<div class="row" data-variant="b"></div>
+
+<h2>C · 顶部封面条，整张截图居中</h2>
+<p>同样是顶上一条，但把整张截图按比例缩进去。能看到岛的整体形状，里面的内容比 B 小一半左右。</p>
+<div class="row" data-variant="c"></div>
+
+<h2>取舍和推荐</h2>
+<table>
+  <tr><th></th><th>A 右侧封面</th><th>B 顶部封面条（推荐）</th><th>C 整张居中</th></tr>
+  <tr><td>截图里的字看不看得清</td><td>看得清，但只有左上一小块（约 120×60）</td><td>看得清，露出页面上半截（约 300×90）</td><td>勉强，整页缩到约 180 宽</td></tr>
+  <tr><td>卡片高度</td><td>不变</td><td>每张高约 106 像素</td><td>每张高约 106 像素</td></tr>
+  <tr><td>没截图的插件</td><td>不留位置，说明占满整行（和现在一样）</td><td>主色底上放大图标，高度和别的卡片一致</td><td>同 B</td></tr>
+  <tr><td>和新图标的呼应</td><td>色块小，呼应弱</td><td>一整条主色，一眼能分出是哪个插件</td><td>同 B</td></tr>
+  <tr><td>窄窗口</td><td>封面缩到 104 宽，更挤</td><td>一行一张，截图反而更大</td><td>同 B</td></tr>
+</table>
+<p><b>推荐 B。</b>理由：</p>
+<ul>
+  <li>问题是「看不清」，B 给截图的面积是现在的六倍多，而且不用把整页硬缩进去。</li>
+  <li>第一件事已经把已装的插件收到底部，卡片列表短了一截，卡片变高的代价比以前小。</li>
+  <li>主色铺成一整条，和 16% 主色底的新图标是同一个做法，12 个官方插件各一个颜色。</li>
+  <li>有没有截图的卡片一样高，两列对得齐；A 里有截图和没截图的卡片排版不一样。</li>
+</ul>
+<p>B 的细节（实现时照这个做）：封面高 104；主色按深色 22%、浅色 14% 混进卡片底色；截图左右各留 14，离顶 14，上面两个角圆角 9，带一圈细线和阴影，下半截被裁掉；多于一张时右下角照旧压「共 N 张」；截图加载失败时退回大图标；读不到主色时用中性灰底。点封面和点卡片一样打开详情。</p>
+
+<script>
+const base = "../../plugins/v3/official/";
+const plugins = [
+  { id: "weather", name: "天气", sub: "资讯 · v1.0.0", tint: "#22a8ee", shot: "page.png", shots: 1, desc: "在岛上看现在的天气和未来几天的预报，快下雨时提醒你带伞。", net: "联网" },
+  { id: "countdown", name: "倒数日", sub: "效率 · v1.1.0", tint: "#6f7dfa", shot: "page.png", shots: 2, desc: "记着生日、纪念日和截止日，每年自动续上，收起条上一眼看到还剩几天。", net: "不联网" },
+  { id: "github-issues", name: "GitHub 议题", sub: "开发 · v1.0.2", tint: "#9575f5", shot: "page.png", shots: 2, desc: "在岛上看分给你的议题和拉取请求，有新动静时提醒。", net: "联网" },
+  { id: "ecdict", name: "离线词典", sub: "工具 · v1.0.1", tint: "#3b94f5", shot: null, shots: 0, desc: "不联网也能查英文单词，给快捷翻译当词典用。", net: "不联网" },
+];
+const card = (p, variant) => {
+  const icon = `${base}${p.id}/assets/icon.svg`;
+  const cover = `<div class="cover" style="--tint:${p.tint}">${p.shot ? `<img class="shot" src="${base}${p.id}/screenshots/${p.shot}" alt="">` : variant === "b" || variant === "c" ? `<img class="glyph" src="${icon}" alt="">` : ""}${p.shots > 1 ? `<span class="count">共 ${p.shots} 张</span>` : ""}</div>`;
+  const main = `<div class="main"><div class="head"><img src="${icon}" alt=""><div class="title"><div class="name">${p.name}<i>✓</i></div><div class="sub">${p.sub}</div></div></div><p class="desc">${p.desc}</p></div>`;
+  const foot = `<div class="foot"><span>${p.net}</span><span class="btn">安装</span></div>`;
+  const top = variant === "b" || variant === "c";
+  return `<article class="card${p.shot ? " has" : ""}">${top ? cover + main : main + cover}${foot}</article>`;
+};
+for (const row of document.querySelectorAll("[data-variant]")) {
+  const variant = row.dataset.variant;
+  const stage = (theme, size, title, list) => `<section class="stage ${theme} ${size} ${variant}"><h3>${title}</h3><div class="grid">${list.map((p) => card(p, variant)).join("")}</div></section>`;
+  row.innerHTML = stage("dark", "wide", "深色", plugins) + stage("light", "wide", "浅色", plugins) + stage("dark", "narrow", "深色 · 窄窗口", plugins.slice(0, 2).concat(plugins[3])) + stage("light", "narrow", "浅色 · 窄窗口", plugins.slice(0, 2).concat(plugins[3]));
+}
+</script>
+</body>
+</html>

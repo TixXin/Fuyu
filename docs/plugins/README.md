@@ -9,6 +9,8 @@
 - **清单就是 `package.json`**，浮屿的字段放在 `fuyu` 下。安装包是 `.fuyu` 文件，内容是 zip，双击打开安装确认。
 - **市场从源码构建。** 作者把一个提交号交给官方市场 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins)，市场按这个提交的源码构建出 `.fuyu`，用户装的就是市场构建的包。每个版本都要维护者批准才上架，上架 3 天后才自动更新到用户那里。
 
+这套插件平台的底座单独开源了：[tauri-cordis](https://github.com/TixXin/tauri-cordis)（MIT）。想在自己的 Tauri 应用里做同样的插件体系，或者想看宿主、服务、插槽是怎么实现的，去那边看。
+
 插件和浮屿同权，所以**市场的审核是唯一真正的防线**，签名、冷静期、撤销都是辅助。每一项管得住什么、管不住什么，见[市场规则](market-rules.md#每项保护管什么不管什么)。
 
 ## 开始写
@@ -24,7 +26,8 @@ npm create fuyu-plugin@latest
 | 文档 | 内容 |
 |---|---|
 | [清单和安装包](package.md) | `package.json` 的字段、`.fuyu` 包里有什么、有哪些限制、三种装法 |
-| [命令行](cli.md) | `fuyu-plugin`：源码怎么放、开发联调（`dev`）、构建、打包、检查、比较版本、签名 |
+| [命令行](cli.md) | `fuyu-plugin`：源码怎么放、开发联调（`dev`）、构建、打包、检查、图标、截图、比较版本、签名 |
+| [截图和封面](screenshots.md) | `fuyu-plugin shots`：示例数据怎么写，岛上页面和收起条怎么截，封面怎么合成 |
 | [服务、接缝与插槽参考](services-and-slots.md) | 公开服务、扩展接缝与界面插槽的完整参考 |
 | [发布](publish.md) | 签名、提交文件、市场怎么构建和上架、手动分发 |
 | [市场规则](market-rules.md) | 上架即同意：代码、名字、开源、作者签名、换人换密钥、所有权转移、下架和撤销、报告安全问题 |

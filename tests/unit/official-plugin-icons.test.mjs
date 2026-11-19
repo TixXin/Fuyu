@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { OFFICIAL_ICONS, findGlyph, renderIcon } from "../../packages/plugin-cli/src/index.mjs";
 
 const OFFICIAL_ROOT = fileURLToPath(new URL("../../plugins/v3/official", import.meta.url));
 
@@ -44,4 +45,18 @@ test("every official plugin icon is a tinted rounded tile with a line glyph in t
     tones.set(tile.attrs.fill, id);
   }
   assert.ok(tones.size > 0);
+});
+
+test("fuyu-plugin icon knows every official plugin's colour and redraws the lucide ones byte for byte", async () => {
+  const dirs = readdirSync(OFFICIAL_ROOT).sort();
+  assert.deepEqual(Object.keys(OFFICIAL_ICONS).sort(), dirs.map((dir) => `@fuyu/${dir}`));
+  for (const dir of dirs) {
+    const { id, tags } = readIcon(dir);
+    const { color, glyph } = OFFICIAL_ICONS[id];
+    assert.equal(tags[1].attrs.fill, color, `${id} colour`);
+    if (glyph === null) continue;
+    const pkg = JSON.parse(readFileSync(join(OFFICIAL_ROOT, dir, "package.json"), "utf8"));
+    const current = readFileSync(join(OFFICIAL_ROOT, dir, pkg.fuyu.icon), "utf8").replaceAll("\r\n", "\n");
+    assert.equal(renderIcon({ body: (await findGlyph(glyph)).body, color }), current, `${id} drawn from ${glyph}`);
+  }
 });

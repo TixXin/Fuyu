@@ -16,9 +16,13 @@ export function normalizeTrustedAuthors(raw) {
   return out;
 }
 
+export function normalizeLastSource(raw) {
+  return isObject(raw) && typeof raw.name === "string" && raw.name && typeof raw.at === "number" ? { name: raw.name, at: raw.at } : null;
+}
+
 export function readState(dataDir) {
   const statePath = join(dataDir, STATE_FILE);
-  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, updatedAt: null, lastError: null, revocationWarning: null });
+  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, updatedAt: null, lastError: null, revocationWarning: null, lastSource: null });
   if (!existsSync(statePath)) return empty();
   try {
     const raw = JSON.parse(readFileSync(statePath, "utf8"));
@@ -30,6 +34,7 @@ export function readState(dataDir) {
       updatedAt: typeof raw?.updatedAt === "number" ? raw.updatedAt : null,
       lastError: typeof raw?.lastError === "string" ? raw.lastError : null,
       revocationWarning: typeof raw?.revocationWarning === "string" ? raw.revocationWarning : null,
+      lastSource: normalizeLastSource(raw?.lastSource),
     };
   } catch {
     return empty();

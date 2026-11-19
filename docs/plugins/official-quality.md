@@ -30,6 +30,7 @@
 - `fuyu.displayName` 的中英文、岛页 `title`、设置分节的标题、README 的标题、市场和插件页上用同一个名字（统一后的名字见 [插件页预览](../investigations/plugin-pages-preview.html) 的「名字」表）。
 - `fuyu.description` 一句话说对用户有什么用，不写实现方式（不写「基于 Node 原生接口」「免 API Key」「在设置中配置 owner/repo」这类）；市场卡片上最多显示两行，要放得下。英文和中文意思一致，`package.json` 顶层的 `description` 和英文描述相同。示例见插件页预览「说明」一节。
 - **至少一张截图**（2026-11-19 用户定）：每个官方插件写 1 到 3 张截图进 `fuyu.screenshots`（`path` 指向包里的 png / jpg / webp，`caption` 中英文一句话）。没有自己界面的插件截它起作用的地方，例如词典截翻译窗口里的查词结果。以深色岛为主，第一张最能说明用处（市场卡片的缩略图用它），后面是收起条、提醒或设置；顺序参考插件页预览的「截图」一节。截图是真界面，不用 CSS 画的示意图。
+  - 岛上页面和收起条可以用 `fuyu-plugin shots` 截：插件带一份示例数据 `shots/sample.ts`，命令把真的组件渲染出来截图，见[截图和封面](screenshots.md)。提醒、设置分节和没有自己界面的插件在真岛上截。
   - 一张都没有时 `fuyu-plugin check` 给警告 `listing:screenshots`，第三方插件不会因此被拒；加 `--strict` 当错误。
   - 官方插件由 `tests/unit/plugin-cli-lint.test.mjs` 拦住：除了文件开头 `PENDING` 里登记的几个（等 E77.6 补图），有一个没截图测试就失败。`PENDING` 只减不增，补完一个删一个。
 - README 按「怎么用 / 设置 / 开销和数据来源 / 用到的系统程序（有的话）」写，中英文各一份。
@@ -46,7 +47,9 @@
 - **图形**：一个 lucide 图标的路径原样放进 `<g>`（lucide 没有合适的，就按它的 24 格、线宽 2、圆头圆角自己画）；只描边不填充，描边用主色，靠 `<g>` 的 `transform` 缩到 56% 居中。不放文字、位图、渐变和阴影。
 - **主色**：每个插件一个，和下表已有的拉开；选深色底和浅色底上都看得清的中等亮度颜色，不用白、黑、灰。
 - 图形和插件在岛上的页面图标（`island.page/v1` 的 `icon`）表达同一个意思。
-- `pnpm test`（`tests/unit/official-plugin-icons.test.mjs`）检查每个官方插件的图标是这个结构、主色不重复。换图标也是一次改动，照「发版」加版本号、写更新记录。
+- **用命令生成**：`fuyu-plugin icon --glyph <lucide 名> --color <#rrggbb>` 写出这个骨架的 `assets/icon.svg`，主色和下表某个插件相同或太近时给告警（用法见[命令行](cli.md#icon)）。自己画的图形存成一个 SVG，用 `--glyph <文件.svg>` 套进同一个骨架。
+- `pnpm test`（`tests/unit/official-plugin-icons.test.mjs`）检查每个官方插件的图标是这个结构、主色不重复，并且用命令重新生成 lucide 的那 10 个，结果和仓库里的文件逐字节相同。换图标也是一次改动，照「发版」加版本号、写更新记录。
+- 新增官方插件或换主色时，下表和命令行里的 `OFFICIAL_ICONS`（`packages/plugin-cli/src/icon/tones.mjs`）一起改，测试会核对两边。
 
 | 插件 | 主色 | lucide 图标 |
 |---|---|---|

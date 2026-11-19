@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import complete from "../../assets/sounds/thumb-piano/complete.wav";
+import { playSound } from "../../lib/sound/playSound.ts";
 import { windowServices } from "../plugin-kernel/services.ts";
 import { hasLegacyTimers, isTimersMigrated, loadLegacyTimers, markTimersMigrated, TIMERS_KEY, TIMERS_MIGRATED_KEY } from "./storage.ts";
 import { createTimerController, type StartTimerResult, type TimerSnapshot } from "./timerController.ts";
@@ -8,7 +9,7 @@ export { TIMERS_KEY, TIMERS_MIGRATED_KEY };
 export type { StartTimerResult, TimerSnapshot };
 
 export function playRingSound() {
-  void new Audio(complete).play().catch((error: unknown) => console.error("Failed to play the timer sound", error));
+  void playSound(complete).catch((error: unknown) => console.error("Failed to play the timer sound", error));
 }
 
 const controller = createTimerController({

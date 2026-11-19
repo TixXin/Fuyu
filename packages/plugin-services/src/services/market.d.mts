@@ -94,6 +94,11 @@ export type InstalledMarketPlugin = {
 
 export type MarketRevocationWarning = "network" | "bad-signature" | "bad-trust" | "invalid" | "older-serial" | "expired" | "behind";
 
+export type MarketDownloadSource = {
+  name: string;
+  at: number;
+};
+
 export type MarketCatalogSnapshot = {
   plugins: MarketCatalogPlugin[];
   installed: InstalledMarketPlugin[];
@@ -102,6 +107,7 @@ export type MarketCatalogSnapshot = {
   manualAllowed: boolean;
   error: string | null;
   revocationWarning?: MarketRevocationWarning | null;
+  lastSource?: MarketDownloadSource | null;
 };
 
 export type MarketInspectedPackage = {

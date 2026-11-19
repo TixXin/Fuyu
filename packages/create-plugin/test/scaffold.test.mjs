@@ -5,6 +5,7 @@ import { test } from "node:test";
 import { validateManifest } from "@fuyu/plugin-manifest";
 import { SHARED_MODULES, SLOTS } from "@fuyu/plugin-base/protocol";
 import { SERVICES, timersV1 } from "@fuyu/plugin-services";
+import { assessTone, findGlyph, renderIcon } from "@fuyu/plugin-cli";
 import { EXPERIMENTAL, FUYU_PACKAGES, SDK_VERSION, SERVICES_USED, SLOTS_USED, TOOLS, devDependencies, findCheckout, main, normalizeOptions, projectFiles, scaffold } from "@fuyu/create-plugin";
 import { OPTIONS, REPO_ROOT, tempDir } from "./helpers.mjs";
 
@@ -36,6 +37,12 @@ test("every placeholder is filled, and display names are escaped inside the code
   assert.match(files.get("src/text.ts"), /title: "Say \\"hi\\" \\\\ now"/);
   assert.match(files.get("src/styles.css"), /^\.fuyu-pomodoro \{/);
   assert.deepEqual([...files.keys()], [".gitignore", "assets/icon.svg", "eslint.config.mjs", "LICENSE", "package.json", "README.md", "src/host.ts", "src/island.tsx", "src/settings.tsx", "src/styles.css", "src/text.ts", "src/timers.ts", "src/useTimers.ts", "tsconfig.json"]);
+});
+
+test("a new project starts with an icon in the official style, in a colour no official plugin uses", async () => {
+  const icon = projectFiles(normalizeOptions({ ...OPTIONS, dir: "x" })).get("assets/icon.svg").replaceAll("\r\n", "\n");
+  assert.equal(icon, renderIcon({ body: (await findGlyph("timer")).body, color: "#c76be0" }));
+  assert.deepEqual(assessTone("#c76be0"), []);
 });
 
 test("the manifest passes as source in both development and market modes, and links Fuyu's packages from the checkout", () => {

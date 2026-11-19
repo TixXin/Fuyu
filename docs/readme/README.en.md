@@ -166,6 +166,8 @@ npm create fuyu-plugin@latest
 - **Write one**: generate a project with the command above, then run `npm run dev` in it to load it into the running island and rebuild on every change; the [plugin docs](../plugins/README.md) and the [command line](../plugins/cli.md) cover the rest (both in Chinese).
 - **Share one**: hand a commit to the [plugin market](https://github.com/TixXin/fuyu-plugins), which builds it from source and reviews every version before it goes live; or pack a `.fuyu` file and send it yourself. See [publishing](../plugins/publish.md) (in Chinese).
 
+The base under this plugin platform is open source on its own as [tauri-cordis](https://github.com/TixXin/tauri-cordis) (MIT): the supervised host process, versioned services, UI slots, and the packaging and market tools. Other Tauri apps can use it to get the same kind of plugin system. Its kernel is [Cordis](https://github.com/cordiverse/cordis).
+
 ## Build from source
 
 - **Windows**: you need Windows 10/11, Node.js, pnpm, Rust, Visual Studio C++ Build Tools and WebView2 Runtime.

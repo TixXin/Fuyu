@@ -1,6 +1,7 @@
 import type { ClipboardHistoryItem } from "./api";
 import { matchesClipboardQuery } from "./clipboardSearch.ts";
 import { contentKind } from "./contentKind.ts";
+import { isPinyinLoaded, loadedPinyin, loadPinyin, type PinyinOf } from "../../lib/pinyin/pinyin.ts";
 
 export type PopupQuery = { words: string[]; rules: QueryRule[] };
 
@@ -32,33 +33,12 @@ export function parsePopupQuery(query: string): PopupQuery {
   return { words, rules };
 }
 
-export type PinyinOf = (text: string) => { full: string; initials: string };
+export { isPinyinLoaded, loadPinyin, type PinyinOf };
 
 const ASCII_WORD = /^[a-z]+$/;
 
-let pinyinOf: PinyinOf | null = null;
-let loading: Promise<PinyinOf | null> | null = null;
-
-export function isPinyinLoaded(): boolean {
-  return pinyinOf !== null;
-}
-
 export function queryNeedsPinyin(query: PopupQuery): boolean {
   return query.words.some((word) => ASCII_WORD.test(word));
-}
-
-export function loadPinyin(): Promise<PinyinOf | null> {
-  loading ??= import("pinyin-pro")
-    .then(({ pinyin }) => {
-      const options = { toneType: "none", type: "array", nonZh: "removed", v: true } as const;
-      pinyinOf = (text) => ({
-        full: pinyin(text, options).join("").toLowerCase(),
-        initials: pinyin(text, { ...options, pattern: "first" }).join("").toLowerCase(),
-      });
-      return pinyinOf;
-    })
-    .catch(() => null);
-  return loading;
 }
 
 const pinyinCache = new Map<string, { full: string; initials: string }>();
@@ -107,7 +87,7 @@ function ruleMatches(item: ClipboardHistoryItem, rule: QueryRule, now: number): 
   }
 }
 
-export function matchesPopupQuery(item: ClipboardHistoryItem, query: PopupQuery, now: number, pinyin: PinyinOf | null = pinyinOf): boolean {
+export function matchesPopupQuery(item: ClipboardHistoryItem, query: PopupQuery, now: number, pinyin: PinyinOf | null = loadedPinyin()): boolean {
   if (!query.rules.every((rule) => ruleMatches(item, rule, now))) return false;
   return query.words.every((word) =>
     matchesClipboardQuery(item, word) || (pinyin !== null && ASCII_WORD.test(word) && pinyinMatches(item, word, pinyin)),

@@ -287,7 +287,7 @@ export function revocationView(revocations, name, version) {
   return rev ? { level: rev.level, reasons: rev.entries.map((entry) => entry.reason) } : null;
 }
 
-export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform, trust, now }) {
+export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform, trust, now, lastSource = null }) {
   const state = readState(dataDir);
   const installedRaw = readInstalledPackages(pluginsDir);
   const installedById = new Map(installedRaw.map((item) => [item.id, item]));
@@ -356,5 +356,6 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
     manualAllowed: state.manualAllowed === true,
     error: indexError ?? state.lastError ?? null,
     revocationWarning: state.revocationWarning ?? null,
+    lastSource: lastSource ?? state.lastSource ?? null,
   };
 }

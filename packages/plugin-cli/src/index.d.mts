@@ -114,6 +114,114 @@ export interface CheckOptions extends BuildOptions {
 }
 
 export declare function check(dir: string, options?: CheckOptions): Promise<CheckResult>;
+export interface IconOptions {
+  /** A lucide icon name (or one of its older names), or the path of an .svg file with your own line drawing. */
+  glyph: string;
+  /** The plugin's colour as #rrggbb or #rgb. */
+  color: string;
+  /** Where to write; defaults to the manifest's `fuyu.icon`, else `assets/icon.svg`. */
+  out?: string;
+  appKey?: string;
+}
+
+export interface IconResult {
+  file: string;
+  glyph: string;
+  color: string;
+  replaced: boolean;
+  /** Hints about the colour: too light, too dark, grey, or close to an official plugin's. */
+  notes: Issue[];
+}
+
+export declare const DEFAULT_ICON_FILE: "assets/icon.svg";
+/** The colour and lucide glyph of each official plugin; `glyph` is null where the icon is drawn by hand. */
+export declare const OFFICIAL_ICONS: Readonly<Record<string, { color: string; glyph: string | null }>>;
+/** Write the plugin icon: a rounded tile tinted with the colour, and the glyph as a line drawing in that colour. */
+export declare function icon(dir: string, options: IconOptions): Promise<IconResult>;
+/** The icon file's text for a glyph body (the SVG shapes) and a colour. */
+export declare function renderIcon(input: { body: string; color: string }): string;
+export declare function findGlyph(name: string): Promise<{ name: string; body: string } | null>;
+export declare function searchGlyphs(word: string, limit?: number): Promise<string[]>;
+export declare function glyphFromSvg(text: string): { body: string | null; problem: string | null };
+export declare function normalizeColor(value: unknown): string | null;
+/** Distance between two colours in OKLab; under 0.05 they read as the same colour on a plugin list. */
+export declare function toneDistance(a: string, b: string): number;
+export declare function assessTone(color: string, options?: { except?: string | null; taken?: Record<string, { color: string }> }): Issue[];
+export type ShotSlot = "island.page/v1" | "island.collapsed/v1";
+
+export interface ShotSpec {
+  slot: ShotSlot;
+  /** File name inside the output folder, ending in .png. */
+  file: string;
+  /** The item's `id` when the plugin registers more than one in the slot; the first one otherwise. */
+  id?: string;
+  theme?: "dark" | "light";
+  locale?: "zh-CN" | "en";
+  /** Size of the expanded island shell, 792 x 360 by default. */
+  width?: number;
+  height?: number;
+}
+
+/** The default export of `shots/sample.ts`: what the island part is fed while `fuyu-plugin shots` captures it. */
+export interface ShotsSample {
+  /** Freezes `Date.now()` and `new Date()` in the page at this moment. */
+  now?: string | number;
+  host?: {
+    /** Answers to `ctx.host.call(method, params)`: the data, or a function of the params. */
+    calls?: Record<string, unknown | ((params: any) => unknown)>;
+    /** Sent to `ctx.host.on(topic, …)` once the component is mounted. */
+    events?: { topic: string; data: unknown }[];
+  };
+  /** Which screenshots to take; by default page.png and bar.png for the slots the plugin uses. */
+  shots?: ShotSpec[];
+}
+
+export interface ShotsOptions {
+  /** Output folder, `screenshots/` in the plugin by default. */
+  outDir?: string;
+  /** A sample file to use instead of `shots/sample.*`. */
+  sample?: string;
+  theme?: "dark" | "light";
+  locale?: "zh-CN" | "en";
+  /** The cover's colour; the icon's tile colour by default. */
+  color?: string;
+  /** `false` skips the cover. */
+  cover?: boolean;
+  coverFile?: string;
+  coverSize?: { width?: number; height?: number };
+  /** Pixels per point: 1, 2 (default) or 3. */
+  scale?: number;
+  env?: Record<string, string | undefined>;
+  appKey?: string;
+}
+
+export interface ShotsResult {
+  dir: string;
+  outDir: string;
+  sample: string | null;
+  files: { file: string; slot: ShotSlot; theme: "dark" | "light"; locale: string; width: number; height: number }[];
+  cover: { file: string; color: string; from: string; width: number; height: number } | null;
+  warnings: Issue[];
+}
+
+export declare const DEFAULT_SHOTS_DIR: "screenshots";
+export declare const DEFAULT_COVER_FILE: "cover.png";
+export declare const DEFAULT_COVER_SIZE: Readonly<{ width: number; height: number }>;
+export declare const SHOT_SLOTS: readonly ShotSlot[];
+export declare const SAMPLE_DIR: "shots";
+export declare const BROWSER_ENV: "CHROME_PATH";
+/**
+ * Render the plugin's island page and collapsed item with its sample data in a headless Chrome, Edge or
+ * Chromium, write the screenshots and compose a cover. Needs such a browser on this machine.
+ */
+export declare function shots(dir: string, options?: ShotsOptions): Promise<ShotsResult>;
+export declare function planShots(
+  listed: { items: { slot: string; id?: string }[]; shots: unknown[] | null },
+  defaults?: { theme?: "dark" | "light"; locale?: "zh-CN" | "en" },
+): Required<ShotSpec>[];
+export declare function findSample(dir: string): string | null;
+export declare function findBrowser(env?: Record<string, string | undefined>): string;
+export declare function bundleShots(input: { dir: string; client: string; sample: string | null; target?: string }): Promise<{ js: string; css: string; warnings: Issue[] }>;
 /** The listing checks on their own: what a user would notice on the market card and the plugin page. */
 export declare function lintListing(dir: string, manifest: Record<string, unknown> | null, options?: { appKey?: string }): Issue[];
 export declare function resolveBuildOptions(options?: BuildOptions): Required<Omit<BuildOptions, "outDir">>;

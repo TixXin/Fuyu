@@ -121,6 +121,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
         <div className="market-grid" aria-busy="true" data-market-loading>
           {[46, 38, 52, 30, 44, 36].map((width) => (
             <div key={width} className="market-card market-card--skeleton">
+              <div className="market-cover" />
               <div className="market-card__head">
                 <span className="plugin-icon" />
                 <div className="market-card__title"><span className="plugin-skeleton" style={{ width: `${width}%` }} /><span className="plugin-skeleton plugin-skeleton--thin" style={{ width: `${width - 14}%` }} /></div>

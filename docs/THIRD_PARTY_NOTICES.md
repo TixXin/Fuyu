@@ -63,3 +63,10 @@ The code in `gate.rs` was rewritten in Rust and changed (address cache, restorin
 - Used in: the `doc-preview` skill for coding agents (`.claude/skills/doc-preview/vendor/marked.umd.js`, the UMD build of marked v16.4.2). The script inlines it into the HTML pages it generates so they can render Markdown offline. It is a development tool and is not shipped with the app.
 - 用于：给编程代理用的 `doc-preview` skill（`.claude/skills/doc-preview/vendor/marked.umd.js`，marked v16.4.2 的 UMD 构建产物）。脚本把它内嵌进生成的 HTML 页面，离线也能渲染 Markdown。它是开发工具，不随应用发布。
 - License: MIT. The original notice is kept next to the file / 原声明保留在文件旁边：`.claude/skills/doc-preview/vendor/marked-LICENSE.md`. Source: https://github.com/markedjs/marked
+
+## Cordis (Shigma and the Cordiverse contributors)
+
+- Used in: the kernel of the plugin platform (`vendor/cordis/`, the npm builds of `cordis` 4.0.0-rc.13 and five `@cordisjs/*` packages, with the local changes listed in `vendor/README.md`). The same copy ships in the open-source base, [tauri-cordis](https://github.com/TixXin/tauri-cordis).
+- 用于：插件平台的内核（`vendor/cordis/`，`cordis` 4.0.0-rc.13 和五个 `@cordisjs/*` 包在 npm 上的构建产物，本地改动记在 `vendor/README.md`）。开源基座 [tauri-cordis](https://github.com/TixXin/tauri-cordis) 里带的是同一份。
+- License: MIT. The original notice is kept next to the code / 原声明保留在代码旁边：`vendor/cordis/LICENSE`. Source: https://github.com/cordiverse/cordis
+

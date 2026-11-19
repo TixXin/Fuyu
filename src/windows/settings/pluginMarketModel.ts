@@ -111,8 +111,9 @@ export function categoryNameMap(plugins: readonly MarketCatalogPlugin[], categor
 }
 
 function rank(plugin: MarketCatalogPlugin): number {
-  if (plugin.blocked || (plugin.revoked && !plugin.installedVersion)) return 3;
-  if (!marketActionCandidate(plugin) && !plugin.installedVersion) return 2;
+  if (plugin.blocked || (plugin.revoked && !plugin.installedVersion)) return 4;
+  if (plugin.installedVersion && !hasUpdate(plugin)) return 2;
+  if (!marketActionCandidate(plugin) && !plugin.installedVersion) return 3;
   return plugin.official ? 0 : 1;
 }
 
@@ -152,8 +153,19 @@ export function sortPlugins(plugins: readonly MarketCatalogPlugin[], sort: Plugi
   return indexed.map(({ plugin }) => plugin);
 }
 
-export function browseList(plugins: readonly MarketCatalogPlugin[], sort: PluginMarketSort): MarketCatalogPlugin[] {
-  return sortPlugins(plugins.filter((plugin) => !hasUpdate(plugin)), sort);
+export interface BrowseSections {
+  updates: MarketCatalogPlugin[];
+  fresh: MarketCatalogPlugin[];
+  owned: MarketCatalogPlugin[];
+}
+
+export function browseSections(plugins: readonly MarketCatalogPlugin[], sort: PluginMarketSort): BrowseSections {
+  const rest = sortPlugins(plugins.filter((plugin) => !hasUpdate(plugin)), sort);
+  return {
+    updates: plugins.filter(hasUpdate),
+    fresh: rest.filter((plugin) => !plugin.installedVersion),
+    owned: rest.filter((plugin) => Boolean(plugin.installedVersion)),
+  };
 }
 
 export function formatMarketTime(timestamp: number, locale: string, now = Date.now()): string {
