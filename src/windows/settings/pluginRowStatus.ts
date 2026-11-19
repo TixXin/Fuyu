@@ -11,6 +11,7 @@ export type RowNote =
   | { kind: "failed"; text: string }
   | { kind: "paused"; errors: number; seconds: number }
   | { kind: "waiting"; service: string; provider: BuiltinPluginName | null; providerOff: boolean }
+  | { kind: "unreachable"; windows: string[] }
   | { kind: "revoked" }
   | { kind: "trust"; version: string }
   | { kind: "update"; version: string; fresh: boolean };
@@ -28,7 +29,7 @@ export interface RowContext {
   builtins?: readonly { id: string; enabled: boolean }[] | null;
 }
 
-const ATTENTION_NOTES = new Set<RowNote["kind"]>(["failed", "paused", "waiting", "revoked", "trust"]);
+const ATTENTION_NOTES = new Set<RowNote["kind"]>(["failed", "paused", "waiting", "unreachable", "revoked", "trust"]);
 
 export function marketActionCandidate(plugin: MarketCatalogPlugin): { candidate: MarketVersionCandidate; isUpdate: boolean } | null {
   if (!plugin.installedVersion) {
@@ -85,7 +86,7 @@ function hostPart(plugin: PluginStatusV3, context: RowContext): Pick<RowStatus, 
     case "unloading":
       return { dot: "off", label: "stopped", note: null };
     default:
-      return { dot: "ok", label: null, note: null };
+      return plugin.unreachableClients?.length ? { dot: "bad", label: null, note: { kind: "unreachable", windows: plugin.unreachableClients } } : { dot: "ok", label: null, note: null };
   }
 }
 

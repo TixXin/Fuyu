@@ -172,6 +172,7 @@ export const PLUGIN = {
   flaky: { id: "@someone/flaky-plugin-with-a-really-long-identifier-that-should-not-overflow", name: "Flaky", state: "auto-disabled", kind: "third-party", source: "market", blocked: { by: "errors", errors: 5, windowMs: 60000 }, lastError: { at: 1, text: "Error: flaky broke\n    at apply (flaky.mjs:3:11)" }, usage: usage({ errors: 5 }) },
   todoSync: { id: "@someone/todo-sync", name: "Todo sync", state: "waiting", kind: "third-party", source: "market", waitingFor: ["todos/v1"], usage: usage({ applyMs: null }) },
   shady: { id: "@someone/shady", name: "Shady", state: "running", kind: "third-party", source: "market", usage: usage() },
+  linked: { id: "@me/linked", name: "Linked", state: "running", kind: "third-party", source: "manual", unreachableClients: ["island", "settings"], usage: usage() },
 } satisfies Record<string, PluginStatusV3>;
 export const NORMAL: PluginStatusV3[] = [PLUGIN.weather, PLUGIN.clock, PLUGIN.gadget, PLUGIN.local, PLUGIN.counter];
 export const HOST: HostInfoV3 = { pid: 4242, node: "22.15.0", startedAt: Date.now() - 65_000, safe: null, dev: false, rssBytes: 42 * MB, heapUsedBytes: 9 * MB, cpuMs: 830 };

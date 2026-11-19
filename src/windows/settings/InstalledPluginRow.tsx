@@ -13,7 +13,7 @@ export type RowAction = "restart" | "log" | "turnOnProvider" | "uninstall" | "re
 const INTERACTIVE = "button, input, label, a, .settings-switch";
 
 const NOTE_TONES: Record<RowNote["kind"], "bad" | "warn" | "info"> = {
-  failed: "bad", paused: "bad", waiting: "info", revoked: "bad", trust: "warn", update: "info",
+  failed: "bad", paused: "bad", waiting: "info", unreachable: "bad", revoked: "bad", trust: "warn", update: "info",
 };
 
 export function pluginInitial(title: string): string {
@@ -35,6 +35,8 @@ export function useNoteParts(note: RowNote): { text: string; icon: ReactNode; ac
         icon: <Info size={13} strokeWidth={2.2} />,
         actions: providerName && note.providerOff ? [["turnOnProvider", page.actions.turnOn(providerName), false]] : [],
       };
+    case "unreachable":
+      return { text: page.notes.unreachable(note.windows.join(", ")), icon: <AlertCircle size={13} strokeWidth={2.2} />, actions: [] };
     case "revoked":
       return { text: page.notes.revoked, icon: <ShieldAlert size={13} strokeWidth={2.2} />, actions: [["uninstall", page.actions.uninstall, false]] };
     case "trust":
