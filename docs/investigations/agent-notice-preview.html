@@ -72,9 +72,19 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .mbox{background:var(--chip);border-radius:6px;padding:4px 7px;min-width:0}
 .txt.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:17px;word-break:break-all;max-height:calc(var(--n,2)*17px)}
 .lbl{color:var(--fg2);font-size:12px}
-.msg{color:var(--fg2);font-size:12.5px;line-height:1.5;max-height:calc(var(--n,4)*1.5em);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--fg3) transparent;overflow-wrap:anywhere}
-.msg.ov{-webkit-mask-image:linear-gradient(#000 calc(100% - 16px),transparent);mask-image:linear-gradient(#000 calc(100% - 16px),transparent)}
-.msg.ov:hover{-webkit-mask-image:none;mask-image:none}
+.msg{color:var(--fg2);font-size:12.5px;line-height:1.5;max-height:calc(var(--n,4)*1.5em);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;overflow-wrap:anywhere;--ft:0px;--fb:0px}
+.msg::-webkit-scrollbar{display:none}
+.msg[data-ft]{--ft:12px}.msg[data-fb]{--fb:20px}
+.msg:is([data-ft],[data-fb]){-webkit-mask-image:linear-gradient(to bottom,transparent,#000 var(--ft),#000 calc(100% - var(--fb)),transparent);mask-image:linear-gradient(to bottom,transparent,#000 var(--ft),#000 calc(100% - var(--fb)),transparent)}
+.msgwrap{position:relative;min-width:0}
+.sb{position:absolute;top:0;right:-9px;width:3px;height:0;border-radius:3px;background:var(--sbc);opacity:0;pointer-events:none;transition:opacity var(--motion-medium) var(--motion-ease),width var(--motion-fast) var(--motion-ease),right var(--motion-fast) var(--motion-ease)}
+.msgwrap.can .sb{pointer-events:auto;cursor:default}
+.msgwrap.can:hover .sb{opacity:.45}
+.msgwrap .sb.on{opacity:1;transition-duration:var(--motion-fast)}
+.msgwrap .sb:hover,.msgwrap .sb.drag{opacity:1;width:5px;right:-10px}
+.isl.dark{--sbc:rgba(255,255,255,.42)}.isl.light{--sbc:rgba(0,0,0,.34)}
+body.rm .sb{transition:none}
+@media (prefers-reduced-motion:reduce){.sb{transition:none}}
 .msg.full{max-height:24em}
 .msg p{margin:0 0 4px}.msg p:last-child{margin-bottom:0}
 .msg ul,.msg ol{margin:2px 0 5px;padding-left:18px}.msg li{color:inherit;margin:1px 0}
@@ -221,6 +231,21 @@ td:first-child{white-space:nowrap;color:var(--ink);font-weight:500}
 <p class="sub">一条 6 个文件、带列表和代码块的长回复。上面是平时（到行数上限后在卡片里滚动，底部渐隐表示还有，鼠标移上去可以直接滚），下面是悬停（展开到约 16 行，再长才滚动）。</p>
 <div class="cols" data-sec="longmsg"></div>
 
+<h2>3c · 长消息滚动</h2>
+<p class="sub">正文到行数上限后在卡片里滚动。下面四个都是推荐的 B，深浅色 × Windows / Mac 刘海。鼠标移上去用滚轮或触控板滚，或者拖右边的细条；也可以点「演示滚动」。</p>
+<div class="ctrl" style="margin:6px 0 8px"><button class="go" id="scrolldemo">▶ 演示滚动</button></div>
+<div class="combo" id="scrollgrid"></div>
+<div class="col" style="margin-top:12px"><h3>滚动条的规矩</h3><ul class="note" style="padding-left:18px">
+<li><b>叠加式细条</b>：3px，悬停在细条上变 5px；画在卡片右侧内边距里，不占正文宽度。系统滚动条完全隐藏（<code>scrollbar-width: none</code> 加 <code>::-webkit-scrollbar { display: none }</code>，Agent 页会话列表 <code>AgentSessionsPanel.css</code> 的 <code>.agent-sessions__list</code> 就是这样隐藏的）。</li>
+<li><b>什么时候看得见</b>：平时不显示；鼠标停在卡片上时淡淡地显示（不透明度 0.45）；滚动时完全显示，停下 0.7 秒后淡出。淡入用 <code>--motion-fast</code>，淡出用 <code>--motion-medium</code>，曲线 <code>--motion-ease</code>。</li>
+<li><b>颜色</b>：跟岛的深浅走，不用强调色：深色岛白色 42% 不透明，浅色岛黑色 34% 不透明。仓库里细滚动条用的是 <code>rgba(ink, 0.2)</code>（剪贴板 <code>ClipboardPopup.css</code>、列表 <code>IslandList.css</code>、待办 <code>TodoIslandPage.css</code>），那是常驻的系统细条；这里平时隐藏、只在滚动时出现，所以调深一些才看得清。</li>
+<li><b>上下渐隐</b>：上面还有内容时顶部 12px 渐隐，下面还有时底部 20px 渐隐，滚到头那一边的渐隐消失。做法照搬 Agent 页的 <code>useScrollFade.ts</code>（<code>data-fade-top</code> / <code>data-fade-bottom</code> 切换 <code>mask-image</code>），列表那边是 20 / 32px，卡片只有 6 行，所以减半。</li>
+<li><b>滚轮顺滑</b>：鼠标滚轮（一格一跳的那种，Windows 上最常见）由页面接管，用逐帧逼近的方式在约 150ms 内滑到位；触控板和 Mac 的惯性滚动本身已经顺滑，不接管，直接跟手。</li>
+<li><b>不把滚动传给岛</b>：<code>overscroll-behavior: contain</code>；正文能滚时滚轮事件在卡片里就停下（<code>preventDefault</code> + <code>stopPropagation</code>），滚到头也不会让岛切页或收起。正文不需要滚时才把滚轮交给岛。</li>
+<li><b>Windows 和 Mac</b>：两边画法一样，不用系统滚动条（Windows 的滚动条粗而且常驻，Mac 的会随系统设置变成常驻），这样两边看起来一致。</li>
+<li><b>减少动画</b>：细条直接出现、直接消失，不淡入淡出；滚轮不做平滑，一格直接跳到位。</li>
+</ul></div>
+
 <h2>4 · 多个会话同时来</h2>
 <p class="sub">三个会话：Codex 等你确认、Kimi Code 出错、Claude Code 运行中。上面是平时，下面是悬停（或点了叠放提示）后。</p>
 <div class="cols" data-sec="stack"></div>
@@ -332,7 +357,24 @@ function md(src){
   if(l.trim())out.push('<p>'+inl(l)+'</p>');i++}
  return out.join('');
 }
-function markOverflow(root){root.querySelectorAll('.msg').forEach(m=>m.classList.toggle('ov',m.scrollHeight>m.clientHeight+2))}
+const reduced=()=>document.body.classList.contains('rm')||matchMedia('(prefers-reduced-motion: reduce)').matches;
+function initScrollers(root){root.querySelectorAll('.msgwrap').forEach(w=>{
+ if(w.dataset.init)return;w.dataset.init='1';
+ const m=w.querySelector('.msg'),sb=w.querySelector('.sb');let target=null,raf=0,timer=0,thumb=0;
+ const max=()=>m.scrollHeight-m.clientHeight;
+ const upd=()=>{const mx=max(),can=mx>2;w.classList.toggle('can',can);m.toggleAttribute('data-ft',can&&m.scrollTop>2);m.toggleAttribute('data-fb',can&&m.scrollTop<mx-2);if(!can)return;thumb=Math.max(18,m.clientHeight*m.clientHeight/m.scrollHeight);sb.style.height=thumb+'px';sb.style.transform=`translateY(${(m.clientHeight-thumb)*m.scrollTop/mx}px)`};
+ const flash=()=>{sb.classList.add('on');clearTimeout(timer);timer=setTimeout(()=>sb.classList.remove('on'),700)};
+ m.addEventListener('scroll',()=>{upd();flash()});
+ m.addEventListener('wheel',e=>{const mx=max();if(mx<=2)return;e.preventDefault();e.stopPropagation();
+  const dy=e.deltaY*(e.deltaMode===1?18:e.deltaMode===2?m.clientHeight:1);
+  if(reduced()||(e.deltaMode===0&&Math.abs(dy)<50)){cancelAnimationFrame(raf);target=null;m.scrollTop+=dy;return}
+  target=Math.max(0,Math.min(mx,(target??m.scrollTop)+dy));cancelAnimationFrame(raf);
+  const step=()=>{const d=target-m.scrollTop;if(Math.abs(d)<0.5){m.scrollTop=target;target=null;return}m.scrollTop+=d*0.24;raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)},{passive:false});
+ sb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();sb.setPointerCapture(e.pointerId);sb.classList.add('drag');const y0=e.clientY,t0=m.scrollTop,k=max()/Math.max(1,m.clientHeight-thumb);
+  const mv=ev=>{m.scrollTop=t0+(ev.clientY-y0)*k};const up=()=>{sb.classList.remove('drag');sb.removeEventListener('pointermove',mv);sb.removeEventListener('pointerup',up)};
+  sb.addEventListener('pointermove',mv);sb.addEventListener('pointerup',up)});
+ new ResizeObserver(upd).observe(m);upd();
+})}
 const MSG={
  zh:{
   yourTurn:"两种做法，选一个：\n1. **刘海两边放图标和状态**，正文从刘海下面开始\n2. **整条往下弹**，两翼空着\n我倾向 **1**：两翼本来就空着，而且和消息提醒（`macos.md` 第 3 步）一致。要改的是 `IslandShell.tsx` 和 `AgentAlert.css` 两个文件，大约 80 行。\n你选哪种？选 1 的话我顺手把贴边收起也按刘海形态改。",
@@ -355,7 +397,7 @@ const acts=(o,t)=>`<div class="acts"><button><span class="lab">${t.deny}</span><
 function bodyOf(s,t,n,o){
  if(s.light==='working')return `<div class="tool2"><b class="chip">${esc(s.tool.name)}</b><div class="mbox"><div class="txt mono" style="--n:${o&&o.hover?8:n.cmd}">${esc(s.tool.h+s.tool.t)}</div></div></div>`;
  if(s.light==='needs')return `<div class="lbl">${t.wants(s.tool.name)}</div><div class="mbox"><div class="txt mono" style="--n:${o&&o.hover?8:n.cmd+1}">${esc(s.tool.h+s.tool.t)}</div></div>`;
- return `<div class="msg${o&&o.hover?' full':''}" style="--n:${n.msg}">${md(s.text)}</div>`;
+ return `<div class="msgwrap"><div class="msg${o&&o.hover?' full':''}" style="--n:${n.msg}">${md(s.text)}</div><i class="sb" aria-hidden="true"></i></div>`;
 }
 function hoverCard(s,o,t){
  const pill=[s.model,s.effort,s.mode].filter(Boolean).join(' · ');
@@ -477,10 +519,13 @@ function render(){
  document.getElementById('current').innerHTML=current();
  document.querySelectorAll('[data-sec]').forEach(el=>{const k=el.dataset.sec;el.innerHTML=['A','B','C'].map(sc=>col(sc,SEC[k](sc),NOTES[k][sc])).join('')});
  document.querySelectorAll('[data-stage]').forEach(initStage);
- markOverflow(document);
+ renderScrollGrid();
+ initScrollers(document);
 }
 
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function renderScrollGrid(){const ss=sessions(S.lang);document.getElementById('scrollgrid').innerHTML=[['dark','win','深色 · Windows'],['light','win','浅色 · Windows'],['dark','mac','深色 · Mac 刘海'],['light','mac','浅色 · Mac 刘海']].map(([th,pl,cap])=>scr(island('B',ss.long,{theme:th,plat:pl,width:Math.min(S.width,360)}),cap)).join('');initScrollers(document.getElementById('scrollgrid'))}
+async function demoScroll(){const ms=[...document.querySelectorAll('#scrollgrid .msg')];for(const y of [60,140,9999,0]){ms.forEach(m=>{const mx=m.scrollHeight-m.clientHeight;const t=Math.min(mx,y);if(reduced()){m.scrollTop=t;return}const go=()=>{const d=t-m.scrollTop;if(Math.abs(d)<0.5){m.scrollTop=t;return}m.scrollTop+=d*0.2;requestAnimationFrame(go)};go()});await wait(1100)}}
 function initStage(el){
  const sc=el.dataset.stage;const shell=el.querySelector('.shell');const log=el.querySelector('.log');
  let cur=null,run=0;
@@ -496,7 +541,7 @@ function initStage(el){
   const was=cur;cur=s;
   if(!was){shell.className=c.cls;shell.innerHTML=c.html;shell.style.borderRadius='0 0 18px 18px';void shell.offsetHeight;shell.style.width=S.width+'px';shell.style.height=h+'px';await wait(sc==='C'?240:300);if(my!==run)return;shell.querySelector('.fade').classList.remove('hide');}
   else{const f=shell.querySelector('.fade');f&&f.classList.add('hide');await wait(120);if(my!==run)return;shell.className=c.cls+' upd';shell.innerHTML=c.html;if(s.light==='needs'&&was.light!=='needs')shell.classList.add('pulse');shell.style.width=S.width+'px';shell.style.height=h+'px';void shell.offsetHeight;shell.querySelector('.fade').classList.remove('hide');}
-  markOverflow(shell);const bar=shell.querySelector('.cdrun');if(bar)bar.addEventListener('animationend',()=>{if(my===run)hide()});
+  initScrollers(shell);const bar=shell.querySelector('.cdrun');if(bar)bar.addEventListener('animationend',()=>{if(my===run)hide()});
  }
  async function hide(){const my=++run;if(!cur)return;const f=shell.querySelector('.fade');f&&f.classList.add('hide');await wait(120);if(my!==run)return;shell.classList.add('out');shell.style.width=collapsedW()+'px';shell.style.height=collapsedH()+'px';shell.style.borderRadius=S.plat==='mac'?'0 0 14px 14px':'0 0 15px 15px';await wait(sc==='C'?360:240);if(my!==run)return;cur=null;collapsed();}
  const ss=()=>sessions(S.lang);
@@ -518,6 +563,7 @@ function initStage(el){
 
 document.querySelectorAll('.seg').forEach(g=>g.addEventListener('click',e=>{const v=e.target.dataset.v;if(!v)return;S[g.dataset.k]=v;save();render()}));
 document.querySelector('[data-k=width]').addEventListener('input',e=>{S.width=+e.target.value;save();render()});
+document.getElementById('scrolldemo').addEventListener('click',demoScroll);
 document.getElementById('rm').addEventListener('change',e=>document.body.classList.toggle('rm',e.target.checked));
 render();
 </script>
