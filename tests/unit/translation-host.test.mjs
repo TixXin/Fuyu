@@ -193,7 +193,7 @@ test("turning the translation plugin off fails its waiting calls, cancels them i
   assert.ok(!host.services().some((service) => service.name === "translator/v1"));
   await assert.rejects(translator.translate({ text: "again", direction: "auto" }), { code: "not-ready" });
   assert.equal(hooks(host, "service:"), 0);
-  assert.deepEqual(host.rustListeners(), {});
+  assert.equal(host.rustListeners().translation, undefined);
   assert.equal(liveTimers(host), 0);
 });
 

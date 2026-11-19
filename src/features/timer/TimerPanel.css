@@ -118,6 +118,25 @@
   white-space: nowrap;
 }
 
+.timer-panel__label--sourced {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.timer-panel__kind,
+.timer-panel__source {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timer-panel__source {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
 .timer-panel__time {
   flex: none;
   font-size: 15px;

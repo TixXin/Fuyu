@@ -282,6 +282,13 @@ pub(crate) fn notify_window_event(payload: serde_json::Value) {
     }
 }
 
+pub(crate) fn emit_to_host(name: &str, data: serde_json::Value) {
+    let Some(supervisor) = supervisor().filter(|supervisor| ready_generation(supervisor).is_some()) else {
+        return;
+    };
+    let _ = supervisor.emit(name, data);
+}
+
 fn cleanup_host_resources() {
     keybindings::clear();
     if let Some(app) = APP.get() {

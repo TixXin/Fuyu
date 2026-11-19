@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent 通知重设计预览</title>
+<style>
+:root{
+  --motion-ease:cubic-bezier(0.2,0.8,0.2,1);
+  --motion-ease-out:cubic-bezier(0.22,1,0.36,1);
+  --motion-ease-in-out:cubic-bezier(0.45,0,0.55,1);
+  --motion-fast:120ms;--motion-base:160ms;--motion-medium:240ms;--motion-slow:420ms;
+  --pg:#f3f3f5;--pg2:#ffffff;--ink:#1c1c1f;--ink2:#5b5b63;--ink3:#8a8a93;--rule:#e2e2e7;--acc:#0a7cff;
+  --scr-a:#9aa3ad;--scr-b:#c9ced4;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{--pg:#141416;--pg2:#1d1d20;--ink:#ececf0;--ink2:#a9a9b2;--ink3:#7a7a83;--rule:#2c2c31;--acc:#4ea1ff;--scr-a:#3a414a;--scr-b:#5a636d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--pg);color:var(--ink);font-size:14px;line-height:1.55}
+main{max-width:1320px;margin:0 auto;padding:0 16px 80px}
+h1{font-size:24px;margin:28px 0 4px}
+h2{font-size:18px;margin:44px 0 6px;padding-top:12px;border-top:1px solid var(--rule)}
+h3{font-size:15px;margin:0 0 6px}
+p,li{color:var(--ink2)}
+.sub{color:var(--ink3);margin:0 0 16px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;background:var(--pg2);padding:1px 4px;border-radius:4px}
+.bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--pg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--rule);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:0 -16px}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--pg2)}
+.seg button{border:0;background:transparent;color:var(--ink2);padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--acc);color:#fff}
+.bar label{font-size:13px;color:var(--ink2);display:inline-flex;align-items:center;gap:6px}
+.bar input[type=range]{width:120px}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:1100px){.cols{grid-template-columns:1fr}}
+.col{background:var(--pg2);border:1px solid var(--rule);border-radius:12px;padding:12px;min-width:0}
+.col>.tag{display:inline-block;font-size:12px;font-weight:600;color:#fff;background:var(--acc);border-radius:6px;padding:1px 7px;margin-bottom:6px}
+.col .note{font-size:13px;margin:10px 0 0}
+.col .note li{margin:2px 0}
+.col .note ul{padding-left:18px;margin:4px 0}
+.pros{color:#2a8c4a}.cons{color:#c24a2a}
+@media (prefers-color-scheme:dark){.pros{color:#5fd37f}.cons{color:#ff8a6a}}
+.screen{position:relative;background:linear-gradient(180deg,var(--scr-a),var(--scr-b));border-radius:8px;padding:0 0 8px;display:flex;flex-direction:column;align-items:center;overflow:hidden;margin:6px 0}
+.screen+.screen{margin-top:10px}
+.screen .cap{align-self:flex-start;font-size:11px;color:rgba(255,255,255,.9);padding:8px 10px 0;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.scroll{overflow-x:auto;max-width:100%}
+
+.isl{container-type:inline-size;position:relative;max-width:100%;border-radius:0 0 18px 18px;background:var(--bg);color:var(--fg);font-size:13px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.28);overflow:hidden;cursor:default;text-align:left}
+.isl.dark{--bg:#0c0c0e;--fg:#f2f2f5;--fg2:rgba(255,255,255,.66);--fg3:rgba(255,255,255,.42);--chip:rgba(255,255,255,.1);--line:rgba(255,255,255,.09);--btn:rgba(255,255,255,.1);--btnh:rgba(255,255,255,.18);--needs:#ff9f0a;--turn:#9cc3dc;--work:#34c759;--done:#8e8e93;--fail:#ff453a;--toolc:#6cb6ff;--acc:#74d6ff;--acc-ink:#03222e}
+.isl.light{--bg:#f8f8fa;--fg:#17171a;--fg2:rgba(0,0,0,.62);--fg3:rgba(0,0,0,.42);--chip:rgba(0,0,0,.06);--line:rgba(0,0,0,.08);--btn:rgba(0,0,0,.06);--btnh:rgba(0,0,0,.11);--needs:#d97706;--turn:#3f7298;--work:#1f9d47;--done:#7c7c84;--fail:#d92d20;--toolc:#0a66d1;--acc:#0a7fd1;--acc-ink:#fff}
+.l-needs{--c:var(--needs)}.l-yourTurn{--c:var(--turn)}.l-working{--c:var(--work)}.l-done{--c:var(--done)}.l-failed{--c:var(--fail)}
+.c-needs{color:var(--needs)}.c-yourTurn{color:var(--turn)}.c-working{color:var(--work)}.c-done{color:var(--fg2)}.c-failed{color:var(--fail)}
+.pad{padding:10px 14px 12px}
+.row{display:flex;align-items:center;gap:8px;min-width:0}
+.ttl{flex:1 1 auto;min-width:2.5em;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttl.wrap{white-space:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.meta{flex:none;color:var(--fg3);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.st{flex:none;font-size:12px;font-weight:600;white-space:nowrap}
+.more{flex:none;font-size:11px;font-weight:700;color:var(--fg2);background:var(--chip);border-radius:9px;padding:0 6px;line-height:18px}
+.pi{flex:none;width:var(--s);height:var(--s);border-radius:calc(var(--s)*.26);display:inline-grid;place-items:center;font-size:calc(var(--s)*.6);font-weight:800;line-height:1;font-family:ui-rounded,-apple-system,sans-serif}
+.pi svg{width:72%;height:72%}
+.ib{position:relative;flex:none;display:inline-flex}
+.badge{position:absolute;right:-3px;bottom:-3px;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px var(--bg)}
+.dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--c)}
+.l-working .badge,.l-working.dot,.ring.l-working::after{animation:breathe 1.6s var(--motion-ease-in-out) infinite alternate}
+@keyframes breathe{from{opacity:1}to{opacity:.45}}
+.tool{display:flex;align-items:center;gap:6px;min-width:0}
+.chip{flex:none;font-size:11px;font-weight:700;color:var(--toolc);background:var(--chip);border-radius:5px;padding:0 5px;line-height:18px}
+.cmd{display:flex;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--fg2)}
+.cmd .h{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmd .t{flex:0 1 auto;max-width:62%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.txt{color:var(--fg2);display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:var(--n,2)}
+.mbox{background:var(--chip);border-radius:6px;padding:4px 7px;min-width:0}
+.txt.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:17px;word-break:break-all;max-height:calc(var(--n,2)*17px)}
+.lbl{color:var(--fg2);font-size:12px}
+.msg{color:var(--fg2);font-size:12.5px;line-height:1.5;max-height:calc(var(--n,4)*1.5em);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;overflow-wrap:anywhere;--ft:0px;--fb:0px}
+.msg::-webkit-scrollbar{display:none}
+.msg[data-ft]{--ft:12px}.msg[data-fb]{--fb:20px}
+.msg:is([data-ft],[data-fb]){-webkit-mask-image:linear-gradient(to bottom,transparent,#000 var(--ft),#000 calc(100% - var(--fb)),transparent);mask-image:linear-gradient(to bottom,transparent,#000 var(--ft),#000 calc(100% - var(--fb)),transparent)}
+.msgwrap{position:relative;min-width:0}
+.sb{position:absolute;top:0;right:-9px;width:3px;height:0;border-radius:3px;background:var(--sbc);opacity:0;pointer-events:none;transition:opacity var(--motion-medium) var(--motion-ease),width var(--motion-fast) var(--motion-ease),right var(--motion-fast) var(--motion-ease)}
+.msgwrap.can .sb{pointer-events:auto;cursor:default}
+.msgwrap.can:hover .sb{opacity:.45}
+.msgwrap .sb.on{opacity:1;transition-duration:var(--motion-fast)}
+.msgwrap .sb:hover,.msgwrap .sb.drag{opacity:1;width:5px;right:-10px}
+.sb-always .msgwrap.can .sb{opacity:.45}
+.metal{font-size:11.5px;color:var(--fg3);margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nokeys kbd{display:none}
+.setwrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:14px;align-items:start}
+@media (max-width:1000px){.setwrap{grid-template-columns:1fr}}
+.setp{background:var(--pg2);border:1px solid var(--rule);border-radius:12px;padding:6px 14px 12px}
+.setp h4{margin:12px 0 4px;font-size:12px;color:var(--ink3);font-weight:600;letter-spacing:.04em}
+.sr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.sr:last-child{border-bottom:0}
+.sr>span{color:var(--ink);min-width:0}
+.sr small{display:block;color:var(--ink3);font-size:11.5px}
+.sr select{font:inherit;font-size:12.5px;max-width:52%;padding:3px 6px;border-radius:7px;border:1px solid var(--rule);background:var(--pg);color:var(--ink)}
+.sr .def{font-size:11px;color:var(--acc);margin-left:4px}
+.livep{position:sticky;top:60px}
+.isl.dark{--sbc:rgba(255,255,255,.42)}.isl.light{--sbc:rgba(0,0,0,.34)}
+body.rm .sb{transition:none}
+@media (prefers-reduced-motion:reduce){.sb{transition:none}}
+.msg.full{max-height:24em}
+.msg p{margin:0 0 4px}.msg p:last-child{margin-bottom:0}
+.msg ul,.msg ol{margin:2px 0 5px;padding-left:18px}.msg li{color:inherit;margin:1px 0}
+.msg strong{color:var(--fg);font-weight:600}
+.msg code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;background:var(--chip);border-radius:4px;padding:0 4px}
+.msg pre{margin:4px 0 6px;background:var(--chip);border-radius:6px;padding:5px 8px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.45;white-space:pre-wrap;word-break:break-all}
+.msg pre code{background:none;padding:0}
+.tool2{display:flex;gap:6px;align-items:flex-start;min-width:0}
+.tool2 .chip{margin-top:3px}
+.tool2 .mbox{flex:1 1 auto}
+.scrollhint{font-size:11px;color:var(--fg3);margin-top:3px}
+.acts{display:flex;gap:6px;margin-top:9px}
+.acts button{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:5px;height:28px;border:0;border-radius:8px;background:var(--btn);color:var(--fg);font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background var(--motion-fast) var(--motion-ease)}
+.acts button:hover{background:var(--btnh)}
+.acts button.pri{background:var(--acc);color:var(--acc-ink)}
+.acts button.pri:hover{background:color-mix(in srgb,var(--acc) 86%,var(--fg))}
+.acts kbd{font:inherit;font-size:10px;font-weight:500;opacity:.6}
+.acts .ico{display:none;font-size:14px}
+@container (max-width:340px){.acts kbd{display:none}}
+@container (max-width:300px){.sc-A .acts .term{display:none}.sc-B .acts .lab{display:none}.sc-B .acts .ico{display:inline}}
+.band{display:flex;align-items:center;height:32px;background:#000;color:#f2f2f5;--fg2:rgba(255,255,255,.66);--fg3:rgba(255,255,255,.45);--needs:#ff9f0a;--turn:#9cc3dc;--work:#34c759;--done:#8e8e93;--fail:#ff453a;--chip:rgba(255,255,255,.1);--bg:#000}
+.band .wl,.band .wr{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:6px;padding:0 10px;overflow:hidden;white-space:nowrap;font-size:12px}
+.band .wr{justify-content:flex-end}
+.band .notch{flex:none;width:150px;height:32px;border-radius:0 0 12px 12px;background:#000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);position:relative}
+.band .notch::after{content:"";position:absolute;left:50%;top:12px;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:#16161a}
+.band.win{background:var(--bg);color:var(--fg);--fg2:inherit}
+.isl.dark .band.win{--fg2:rgba(255,255,255,.66)}
+.isl.light .band.win{--fg2:rgba(0,0,0,.62);--fg3:rgba(0,0,0,.42);--needs:#d97706;--turn:#3f7298;--work:#1f9d47;--done:#7c7c84;--fail:#d92d20;--chip:rgba(0,0,0,.06);--bg:#f8f8fa}
+.band.win .wc{flex:1 1 auto;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;font-size:12.5px}
+.band.win .wl,.band.win .wr{flex:none}
+.cluster{display:flex;gap:7px;padding-left:2px}
+.ring{position:relative;display:inline-grid;place-items:center;border-radius:50%;flex:none}
+.ring::after{content:"";position:absolute;inset:-2px;border-radius:calc(var(--s)*.26 + 2px);box-shadow:0 0 0 2px var(--c)}
+.ring.big::after{inset:-3px;border-radius:calc(var(--s)*.26 + 3px)}
+.sc-B .bw{display:flex;gap:11px;align-items:flex-start}
+.sc-B .bm{flex:1 1 auto;min-width:0}
+.sc-B .hl{flex:1 1 auto;min-width:0;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-B .bt{font-size:12px;color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.sc-B .bt.wrap{white-space:normal}
+.sc-B .bb{margin-top:5px}
+.slivers{display:flex;flex-direction:column;align-items:center;margin-top:-1px}
+.slivers i{display:block;height:7px;border-radius:0 0 9px 9px;background:var(--sbg);border-bottom:2px solid var(--c);box-shadow:0 4px 10px rgba(0,0,0,.2)}
+.dark-s{--sbg:#232327}.light-s{--sbg:#e4e4ea}
+.sc-C .cb{padding:2px 14px 12px;border-top:1px solid var(--line)}
+.sc-C .ct{font-weight:600;padding-top:8px}
+.sc-C .ct.wrap{white-space:normal}
+.lst{border-top:1px solid var(--line);padding:4px 6px 6px}
+.lr{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;min-width:0}
+.lr.on{background:var(--chip)}
+.lr .ttl{font-weight:500}
+.hc{margin-top:8px;width:min(100%,340px);background:var(--pg2);color:var(--ink);border:1px solid var(--rule);border-radius:10px;padding:8px 11px;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.hc div{color:var(--ink2);margin:2px 0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.hc b{color:var(--ink)}
+.pill{display:inline-flex;gap:4px;font-size:11px;border:1px solid var(--rule);border-radius:6px;padding:0 5px;color:var(--ink2)}
+.cd{position:absolute;left:0;bottom:0;height:2px;background:var(--c,var(--fg3));opacity:.6;width:100%;transform-origin:left}
+.dev{position:absolute;top:0;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.12em;color:var(--fg3)}
+
+.cur .isl{width:420px}
+.cur .h1{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.cur .pill2{font-size:11px;border:1px solid var(--line);border-radius:6px;padding:0 6px;color:var(--fg2);flex:none}
+.anno{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px 18px;margin:10px 0 0;padding:0;list-style:none}
+.anno li{font-size:13px}.anno b{color:var(--ink)}
+
+.stage .screen{min-height:250px;justify-content:flex-start}
+.ctrl{display:flex;flex-wrap:wrap;gap:6px}
+.ctrl button{font:inherit;font-size:12px;border:1px solid var(--rule);background:var(--pg);color:var(--ink);border-radius:7px;padding:3px 9px;cursor:pointer}
+.ctrl button.go{background:var(--acc);border-color:var(--acc);color:#fff}
+.log{font-size:12px;color:var(--ink3);min-height:18px;margin-top:4px}
+.shell{transition:width var(--motion-slow) var(--motion-ease-out),height var(--motion-slow) var(--motion-ease-out),border-radius var(--motion-slow) var(--motion-ease-out)}
+.shell.upd{transition-duration:var(--motion-medium)}
+.shell.out{transition-duration:var(--motion-medium)}
+.sc-C.shell{transition:width var(--motion-slow) var(--motion-ease-out),height var(--motion-medium) var(--motion-ease-out) var(--motion-fast),border-radius var(--motion-slow) var(--motion-ease-out)}
+.sc-C.shell.out{transition:width var(--motion-medium) var(--motion-ease-out) var(--motion-fast),height var(--motion-medium) var(--motion-ease-out),border-radius var(--motion-medium) var(--motion-ease-out)}
+.fade{opacity:1;transition:opacity var(--motion-base) var(--motion-ease)}
+.fade.hide{opacity:0;transition-duration:var(--motion-fast)}
+.pulse .badge,.pulse .ring::after,.pulse .dot{animation:pulse var(--motion-medium) var(--motion-ease-out) 2}
+@keyframes pulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 45%,transparent),0 0 0 2px var(--c)}}
+.cdrun{animation:cd var(--dwell,5s) linear backwards}
+@keyframes cd{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.shell:hover .cdrun{animation-play-state:paused}
+.collapsedbar{display:flex;align-items:center;justify-content:center;gap:8px;height:100%;color:var(--fg2);font-size:12px;white-space:nowrap}
+body.rm .shell{transition:none!important}
+body.rm .l-working .badge,body.rm .l-working.dot,body.rm .ring.l-working::after,body.rm .pulse *{animation:none!important}
+@media (prefers-reduced-motion:reduce){.shell{transition-duration:var(--motion-base)!important}.l-working .badge,.l-working.dot,.ring.l-working::after,.pulse .badge,.pulse .ring::after,.pulse .dot{animation:none}}
+
+table{border-collapse:collapse;width:100%;font-size:13px;background:var(--pg2);border-radius:10px;overflow:hidden}
+th,td{border-bottom:1px solid var(--rule);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:color-mix(in srgb,var(--acc) 10%,var(--pg2));font-weight:600}
+td:first-child{white-space:nowrap;color:var(--ink);font-weight:500}
+.tblwrap{overflow-x:auto}
+.combo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:700px){.combo{grid-template-columns:1fr}}
+.rec{background:var(--pg2);border:2px solid var(--acc);border-radius:12px;padding:14px 18px}
+.qs li{margin:6px 0}
+.summary .col p{margin:4px 0}
+</style>
+</head>
+<body>
+<main>
+<div class="bar">
+  <span class="seg" data-k="lang"><button data-v="zh">中文</button><button data-v="en">English</button></span>
+  <span class="seg" data-k="theme"><button data-v="dark">深色岛</button><button data-v="light">浅色岛</button></span>
+  <span class="seg" data-k="plat"><button data-v="win">Windows</button><button data-v="mac">Mac 刘海</button></span>
+  <label>岛宽 <input type="range" min="260" max="460" step="10" data-k="width"> <b id="wv"></b>px</label>
+  <label><input type="checkbox" id="rm"> 模拟「减少动画」</label>
+</div>
+
+<h1>Agent 通知重设计：三套方案</h1>
+<p class="sub">C137 · issue #991 · 2026-11-19 · 只是预览，不改实现。上面的开关对整页生效（第 6、9 节另有固定组合的并排）。图标是示意色块，不是正式品牌图标。<br><b>第二版（2026-11-19，按用户意见）</b>：橙色只给「等你确认」，只用在状态字和图标的环上；「允许」等主按钮用强调色 <code>--color-accent</code>；「等你回复」换成安静的灰蓝（强调色系、降饱和）；出错仍是红色。Agent 的最后一条消息尽量显示全：等你回复、完成、出错时 A / C 给 4 行、B 给 6 行，超出在卡片里滚动（底部渐隐提示还有），悬停展开全文；按 Markdown 显示列表、代码块和行内代码；运行中的命令换行显示 2～3 行。模型、用时、「你：」都收进悬停卡片。</p>
+
+<h2>0 · 现状</h2>
+<div class="cols cur" style="grid-template-columns:1fr">
+  <div class="col"><div class="screen"><div id="current"></div></div>
+  <ul class="anno">
+    <li><b>第一行塞了五样</b>：状态点、「项目 · 标题」、模型胶囊、已运行时长、提供方图标，标题只剩挤剩下的宽度，被截成「Fuyu ·［任…」。</li>
+    <li><b>「项目 ·」前缀吃掉标题</b>：AI 标题已经说清是什么，前面再拼项目名，最先被截掉的反而是标题本身。</li>
+    <li><b>状态不是主角</b>：「运行中 / 等你确认」只靠一个 8px 的点区分，离远了看不出要不要管。</li>
+    <li><b>第二行「你：…」</b>是你自己刚说的话，通知里重复给你看用处小，却占一整行。</li>
+    <li><b>多会话</b>：一次只弹一个，其余的看不出有几个在排队。</li>
+    <li><b>审批</b>是另一张卡片（结构、标题行都不一样），从通知切过去时整块跳变。</li>
+  </ul></div>
+</div>
+
+<h2>三套方案一句话</h2>
+<div class="cols summary">
+  <div class="col"><span class="tag">A · 精简两行</span><h3>保留现在的行结构，砍到「谁 + 在干嘛」两行</h3><p>第一行只放图标（带状态角标）、标题、状态字；第二行只放正在做的一件事。模型、时长、「你：」全进悬停卡片。</p><p class="pros">改动最小，和 Agent 页的会话行一脉相承。</p><p class="cons">本质还是一行列表，状态依旧不够醒目；多会话只看到「+2」。</p></div>
+  <div class="col"><span class="tag">B · 状态优先</span><h3>大字写「现在要你做什么」，标题降为副标题</h3><p>左边是带状态环的大图标，右边第一行是状态句（「等你确认 · Bash」），第二行是会话标题，第三块是正文；多会话叠成卡片堆。</p><p class="pros">一眼看懂要不要管，标题独占一行不再被挤；审批和通知同一结构。</p><p class="cons">比现在高约 14px；状态句和标题分两行，信息总量不减。</p></div>
+  <div class="col"><span class="tag">C · 两翼 + 下拉</span><h3>平时只占两翼，需要你时才往下长</h3><p>左翼是会话图标（叠放、带状态环），右翼是状态字；运行中不展开，等你确认 / 回复、出错、完成才往下长出正文和按钮。</p><p class="pros">最安静，Mac 刘海和 Windows 最一致，像 iPhone 灵动岛。</p><p class="cons">运行中看不到在跑什么命令；Windows 上两翼中间只放得下很短的标题。</p></div>
+</div>
+
+<h2>1 · 信息层级：一眼看到的 / 悬停再看的</h2>
+<p class="sub">每列上面是平时（运行中），下面是鼠标停在通知上时：外壳长高看全标题，岛下面出悬停卡片。</p>
+<div class="cols" data-sec="layers"></div>
+
+<h2>2 · 标题被截断时</h2>
+<p class="sub">同一个很长的标题，在当前岛宽下的样子；下面是悬停后的样子。把顶上的岛宽拉到 280 看最挤的情况。</p>
+<div class="cols" data-sec="trunc"></div>
+
+<h2>3 · 五种状态</h2>
+<p class="sub">运行中、等你确认（能直接审批）、等你回复、完成、出错。按钮上的快捷键跟着平台变（Windows 写 Ctrl+Alt+Y，Mac 写 ⌃⌥Y）。</p>
+<div class="cols" data-sec="states"></div>
+
+<h2>3b · Agent 的消息尽量显示全</h2>
+<p class="sub">一条 6 个文件、带列表和代码块的长回复。上面是平时（到行数上限后在卡片里滚动，底部渐隐表示还有，鼠标移上去可以直接滚），下面是悬停（展开到约 16 行，再长才滚动）。</p>
+<div class="cols" data-sec="longmsg"></div>
+
+<h2>3c · 长消息滚动</h2>
+<p class="sub">正文到行数上限后在卡片里滚动。下面四个都是推荐的 B，深浅色 × Windows / Mac 刘海。鼠标移上去用滚轮或触控板滚，或者拖右边的细条；也可以点「演示滚动」。</p>
+<div class="ctrl" style="margin:6px 0 8px"><button class="go" id="scrolldemo">▶ 演示滚动</button></div>
+<div class="combo" id="scrollgrid"></div>
+<div class="col" style="margin-top:12px"><h3>滚动条的规矩</h3><ul class="note" style="padding-left:18px">
+<li><b>叠加式细条</b>：3px，悬停在细条上变 5px；画在卡片右侧内边距里，不占正文宽度。系统滚动条完全隐藏（<code>scrollbar-width: none</code> 加 <code>::-webkit-scrollbar { display: none }</code>，Agent 页会话列表 <code>AgentSessionsPanel.css</code> 的 <code>.agent-sessions__list</code> 就是这样隐藏的）。</li>
+<li><b>什么时候看得见</b>：平时不显示；鼠标停在卡片上时淡淡地显示（不透明度 0.45）；滚动时完全显示，停下 0.7 秒后淡出。淡入用 <code>--motion-fast</code>，淡出用 <code>--motion-medium</code>，曲线 <code>--motion-ease</code>。</li>
+<li><b>颜色</b>：跟岛的深浅走，不用强调色：深色岛白色 42% 不透明，浅色岛黑色 34% 不透明。仓库里细滚动条用的是 <code>rgba(ink, 0.2)</code>（剪贴板 <code>ClipboardPopup.css</code>、列表 <code>IslandList.css</code>、待办 <code>TodoIslandPage.css</code>），那是常驻的系统细条；这里平时隐藏、只在滚动时出现，所以调深一些才看得清。</li>
+<li><b>上下渐隐</b>：上面还有内容时顶部 12px 渐隐，下面还有时底部 20px 渐隐，滚到头那一边的渐隐消失。做法照搬 Agent 页的 <code>useScrollFade.ts</code>（<code>data-fade-top</code> / <code>data-fade-bottom</code> 切换 <code>mask-image</code>），列表那边是 20 / 32px，卡片只有 6 行，所以减半。</li>
+<li><b>滚轮顺滑</b>：鼠标滚轮（一格一跳的那种，Windows 上最常见）由页面接管，用逐帧逼近的方式在约 150ms 内滑到位；触控板和 Mac 的惯性滚动本身已经顺滑，不接管，直接跟手。</li>
+<li><b>不把滚动传给岛</b>：<code>overscroll-behavior: contain</code>；正文能滚时滚轮事件在卡片里就停下（<code>preventDefault</code> + <code>stopPropagation</code>），滚到头也不会让岛切页或收起。正文不需要滚时才把滚轮交给岛。</li>
+<li><b>Windows 和 Mac</b>：两边画法一样，不用系统滚动条（Windows 的滚动条粗而且常驻，Mac 的会随系统设置变成常驻），这样两边看起来一致。</li>
+<li><b>减少动画</b>：细条直接出现、直接消失，不淡入淡出；滚轮不做平滑，一格直接跳到位。</li>
+</ul></div>
+
+<h2>4 · 多个会话同时来</h2>
+<p class="sub">三个会话：Codex 等你确认、Kimi Code 出错、Claude Code 运行中。上面是平时，下面是悬停（或点了叠放提示）后。</p>
+<div class="cols" data-sec="stack"></div>
+
+<h2>5 · 多家 harness、长命令、多行文本</h2>
+<div class="cols" data-sec="harness"></div>
+
+<h2>6 · 浅色 / 深色岛，Windows / Mac 刘海</h2>
+<p class="sub">固定四种组合并排，用「等你确认」举例（不受顶上主题和平台开关影响）。Mac 刘海时最上面一条是纯黑的刘海带，摄像头那一段不放东西。</p>
+<div class="cols" data-sec="combos"></div>
+
+<h2>7 · 动效：出现、更新、消失（能播放）</h2>
+<p class="sub">外壳宽高用 <code>--motion-slow</code> + <code>--motion-ease-out</code> 示意（真岛走「开合动画」预设，≤560ms）；文字只淡入淡出，不位移不缩放：淡出 <code>--motion-fast</code>、淡入 <code>--motion-base</code>；更新时外壳高度变化用 <code>--motion-medium</code>；变成等你确认时状态标记脉冲两下（无文字的装饰层）；底下 2px 的细条是停留倒计时，鼠标停在岛上就停住。勾上顶上「模拟减少动画」看减少动画时的样子：外壳直接跳，文字照旧淡入淡出，循环停下。</p>
+<div class="cols" data-sec="motion"></div>
+
+<h2>8 · 停留多久、悬停、点了去哪</h2>
+<div class="tblwrap"><table>
+<thead><tr><th></th><th>现状</th><th>A · 精简两行</th><th>B · 状态优先</th><th>C · 两翼 + 下拉</th></tr></thead>
+<tbody>
+<tr><td>开始新一轮</td><td>弹出 5 秒</td><td>不弹，收起条上显示标题 4 秒（和现在「有变化时」一致）</td><td>不弹，同 A</td><td>不往下长，两翼亮起 3 秒：左翼图标 + 绿环，右翼用时</td></tr>
+<tr><td>等你确认</td><td>审批卡片，一直留到处理</td><td>一直留到处理</td><td>一直留到处理</td><td>一直留到处理</td></tr>
+<tr><td>等你回复</td><td>5 秒</td><td>15 秒后收起，收起条保留回复色的点和标题；过「再提醒」时间再弹一次</td><td>留到你看过（悬停过它，或切到那个终端窗口）</td><td>正文 15 秒后收回，左翼回复色的环保留到看过</td></tr>
+<tr><td>完成</td><td>5 秒（3–30 可调）</td><td>5 秒（沿用设置）</td><td>5 秒（沿用设置）</td><td>4 秒，回复只露一行</td></tr>
+<tr><td>出错</td><td>5 秒</td><td>10 秒</td><td>留到你看过</td><td>正文 8 秒，左翼红环保留到看过</td></tr>
+<tr><td>鼠标停在上面</td><td>不收起</td><td colspan="3">倒计时停住；移开后接着剩下的时间走，至少再留 2 秒（三套相同）</td></tr>
+<tr><td>点通知本体</td><td>打开 Agent 页</td><td>切到会话所在的终端 / 编辑器窗口；行尾「›」打开 Agent 页</td><td>切到会话窗口；右上角「↗」打开 Agent 页</td><td>点正文切到会话窗口；点两翼打开 Agent 页</td></tr>
+<tr><td>点多会话提示</td><td>—</td><td>点「+2」下拉列表，点一行换到那条</td><td>点下面露出的边，整叠展开成列表</td><td>悬停左翼的图标堆，正文换成列表</td></tr>
+<tr><td>点别处</td><td>收起</td><td colspan="3">等你确认不收起（必须处理或交回终端）；其余立即收起</td></tr>
+</tbody></table></div>
+
+<h2>9 · 窄宽度、中英文</h2>
+<p class="sub">固定 280px，左右分别是中文和英文，用「等你确认」和「等你回复」举例。规则：A 窄于 340 去掉快捷键字、窄于 300 把「到终端」收起；B 窄于 300 按钮只剩 ✕ &gt;_ ✓ 图标；C 窄时中间标题先让位。</p>
+<div class="cols" data-sec="narrow"></div>
+
+<h2>10 · 设置项（用户已定：三套都做成设置，默认按推荐）</h2>
+<p class="sub">设置 → AI Agent → 通知。左边每一项都能改，右边实时预览；带「默认」字样的是出厂值，也就是上面推荐的组合。「等你确认」始终留到你处理，不做成设置；原有的「完成时停留几秒」和「没处理时再提醒」保留。</p>
+<div class="setwrap">
+ <div class="setp" id="setp"></div>
+ <div class="livep"><div class="ctrl" id="scen"></div><div id="live"></div><div class="ctrl" style="margin-top:6px"><button id="setreset">恢复默认</button></div></div>
+</div>
+
+<h2>结论（用户 2026-11-19 定）</h2>
+<div class="rec">
+<p><b style="color:var(--ink)">三套都做，做成设置让用户自己选；默认值按推荐：B 状态优先，Mac 刘海用两翼标题带，开始新一轮不弹出。</b>各项和默认值见上面第 10 节。</p>
+<ul>
+<li><b>颜色</b>：橙色只给「等你确认」，只用在状态字和图标的环上；主按钮用 <code>--color-accent</code>；「等你回复」用安静的灰蓝；出错红色。（不做成设置）</li>
+<li><b>消息</b>：默认 6 行，按 Markdown 显示，超出在卡片里用叠加式细滚动条滚动，悬停展开全文；运行中命令默认 3 行。</li>
+<li><b>元信息</b>：模型、用时、「你：」默认只在悬停卡片里，可以改成通知里也显示。</li>
+<li><b>停留</b>：等你确认留到处理（固定）；等你回复、出错默认留到看过；完成默认 5 秒；鼠标停在岛上暂停。</li>
+<li><b>点通知</b>：默认切到会话所在的窗口，右上角 ↗ 打开 Agent 页；可以对调。</li>
+<li><b>多会话</b>：默认叠放露边，可选一次一条加 +n、左翼图标堆。</li>
+<li><b>审批按钮</b>：默认「拒绝 · 到终端 · 允许」，允许在最右用强调色；可以对调，可以不显示快捷键。</li>
+</ul>
+<p>下一步：由组长按这页写实现计划（按文件切分，验证 <code>pnpm check</code>、<code>pnpm build</code>、<code>pnpm test:regression</code>），再派会话做。</p>
+</div>
+</main>
+
+<script>
+const S={lang:'zh',theme:'dark',plat:'win',width:380};
+try{Object.assign(S,JSON.parse(localStorage.getItem('c137-preview')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('c137-preview',JSON.stringify(S))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const T={
+ zh:{st:{working:'运行中',needs:'等你确认',yourTurn:'等你回复',done:'完成',failed:'出错'},
+  hl:{working:e=>'运行中 · '+e,needs:t=>'等你确认 · '+t,yourTurn:()=>'等你回复',done:()=>'这一轮完成了',failed:()=>'出错了'},
+  wants:t=>'想运行 '+t+'：',deny:'拒绝',term:'到终端',allow:'允许',agent:'AI Agent',more:n=>'还有 '+n+' 个',you:'你：',dir:'目录：',host:h=>'在 '+h+' 里运行',ctx:k=>'上下文 '+k,collapsed:'14:32 · 3 项待办'},
+ en:{st:{working:'Running',needs:'Approve?',yourTurn:'Your turn',done:'Done',failed:'Failed'},
+  hl:{working:e=>'Running · '+e,needs:t=>'Approve '+t+'?',yourTurn:()=>'Waiting for you',done:()=>'Turn finished',failed:()=>'Failed'},
+  wants:t=>'Wants to run '+t+':',deny:'Deny',term:'Terminal',allow:'Allow',agent:'AI Agent',more:n=>n+' more',you:'You: ',dir:'Folder: ',host:h=>'Running in '+h,ctx:k=>'Context '+k,collapsed:'14:32 · 3 todos'}
+};
+const CLAUDE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>';
+const PROV={
+ claudeCode:{name:'Claude Code',bg:'#d97757',fg:'#fff',g:CLAUDE},
+ codex:{name:'Codex',bg:'#111',fg:'#fff',g:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/></svg>'},
+ cursor:{name:'Cursor',bg:'#26262b',fg:'#fff',g:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l14 8-6 1.6L10 20z"/></svg>'},
+ kimiCode:{name:'Kimi Code',bg:'#0b0b0b',fg:'#fff',g:'K'},
+ copilot:{name:'GitHub Copilot CLI',bg:'#6e40c9',fg:'#fff',g:'C'},
+ qwen:{name:'Qwen Code',bg:'#615ced',fg:'#fff',g:'Q'},
+ opencode:{name:'opencode',bg:'#f2f2f2',fg:'#111',g:'oc'}
+};
+const SC={dark:{needs:'#ff9f0a',yourTurn:'#9cc3dc',working:'#34c759',done:'#8e8e93',failed:'#ff453a'},light:{needs:'#d97706',yourTurn:'#3f7298',working:'#1f9d47',done:'#7c7c84',failed:'#d92d20'}};
+const icon=(p,s=16)=>{const d=PROV[p];return `<span class="pi" style="--s:${s}px;background:${d.bg};color:${d.fg}" title="${d.name}">${d.g}</span>`};
+const ring=(p,l,s=16,big)=>`<span class="ring l-${l}${big?' big':''}" style="--s:${s}px">${icon(p,s)}</span>`;
+const ib=(p,l,s=16)=>`<span class="ib l-${l}">${icon(p,s)}<i class="badge"></i></span>`;
+
+function sessions0(lang){
+ const zh=lang==='zh';
+ return {
+  working:{prov:'claudeCode',light:'working',project:'Fuyu',title:zh?'[任务] Agent 通知重设计：出预览页挑方向':'[Task] Agent notice redesign: preview page',elapsed:zh?'18 分 21 秒':'18m 21s',model:'Opus 5.5',effort:'XH',mode:zh?'自动':'Auto',prompt:zh?'继续完善其他官方插件，按预览页的，派会话并行':'Keep polishing the official plugins per the preview page, in parallel sessions',tool:{name:'Bash',h:'git show --stat a8696e60 | head -40 ~/projects/Fuyu/plugins/v3/official/',t:'alarm/manifest.json'},cwd:'~/Desktop/projects/Fuyu',host:'Windows Terminal',ctx:'82k'},
+  needs:{prov:'codex',light:'needs',project:'Fuyu',title:zh?'修复剪贴板图片粘贴失败':'Fix clipboard image paste',elapsed:zh?'4 分 02 秒':'4m 02s',model:'GPT-5.5',effort:'H',mode:zh?'询问':'Ask',prompt:zh?'粘贴图片时报错，查一下':'Pasting images fails, take a look',tool:{name:'Bash',h:'rm -rf src-tauri/target/agents/debug/incremental/fuyu-',t:'3k2j9/'},cwd:'~/Desktop/projects/Fuyu',host:'VS Code',ctx:'41k'},
+  yourTurn:{prov:'claudeCode',light:'yourTurn',project:'Fuyu',title:zh?'Mac 刘海形态的弹出卡片':'Pop-up cards on the Mac notch',elapsed:zh?'刚刚':'just now',model:'Sonnet 5.5',effort:'M',mode:zh?'自动':'Auto',prompt:zh?'刘海两边空着，怎么放？':'The notch wings are empty, how should we use them?',text:zh?'两种做法：A 刘海两边放图标和状态，正文在下面；B 整条往下弹、两翼空着。我倾向 A，因为两翼本来就空着，而且和消息提醒一致。你选哪种？':'Two options: A puts the icon and state in the notch wings with the body below; B drops everything below and leaves the wings empty. I lean towards A since the wings are empty anyway and it matches message alerts. Which one?',cwd:'~/Desktop/projects/Fuyu',host:'iTerm',ctx:'120k'},
+  done:{prov:'cursor',light:'done',project:'Fuyu',title:zh?'README 英文版同步':'Sync the English README',elapsed:zh?'刚刚':'just now',model:'Composer 2',effort:'',mode:'',prompt:zh?'把中文 README 的改动同步到英文版':'Sync the Chinese README changes into English',text:zh?'已更新 docs/readme/README.en.md 的安装和截图两节，链接按 docs/readme/ 的位置改好了；pnpm check 通过，没有提交，等你看过再提交。':'Updated the install and screenshots sections of docs/readme/README.en.md and fixed the links for docs/readme/; pnpm check passes. Nothing committed yet, waiting for your review.',cwd:'~/Desktop/projects/Fuyu',host:'Cursor',ctx:'33k'},
+  failed:{prov:'kimiCode',light:'failed',project:'Fuyu',title:zh?'发布 0.3.11 候选版':'Release 0.3.11 RC',elapsed:zh?'刚刚':'just now',model:'K2.5',effort:'',mode:'',prompt:zh?'发个候选版':'Ship a release candidate',text:zh?'pnpm release 失败：签名私钥没找到（TAURI_SIGNING_PRIVATE_KEY 为空），安装包已经打好但没上传。':'pnpm release failed: signing key not found (TAURI_SIGNING_PRIVATE_KEY is empty). Bundles were built but not uploaded.',cwd:'~/Desktop/projects/Fuyu-release',host:'Ghostty',ctx:'58k'}
+ };
+}
+function md(src){
+ const inl=x=>esc(x).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+ const out=[];const lines=src.split('\n');let i=0;
+ while(i<lines.length){const l=lines[i];
+  if(l.startsWith('```')){const b=[];i++;while(i<lines.length&&!lines[i].startsWith('```'))b.push(lines[i++]);i++;out.push('<pre><code>'+esc(b.join('\n'))+'</code></pre>');continue}
+  if(/^- /.test(l)){const b=[];while(i<lines.length&&/^- /.test(lines[i]))b.push('<li>'+inl(lines[i++].slice(2))+'</li>');out.push('<ul>'+b.join('')+'</ul>');continue}
+  if(/^\d+\. /.test(l)){const b=[];while(i<lines.length&&/^\d+\. /.test(lines[i]))b.push('<li>'+inl(lines[i++].replace(/^\d+\. /,''))+'</li>');out.push('<ol>'+b.join('')+'</ol>');continue}
+  if(l.trim())out.push('<p>'+inl(l)+'</p>');i++}
+ return out.join('');
+}
+const reduced=()=>document.body.classList.contains('rm')||matchMedia('(prefers-reduced-motion: reduce)').matches;
+function initScrollers(root){root.querySelectorAll('.msgwrap').forEach(w=>{
+ if(w.dataset.init)return;w.dataset.init='1';
+ const m=w.querySelector('.msg'),sb=w.querySelector('.sb');let target=null,raf=0,timer=0,thumb=0;
+ const max=()=>m.scrollHeight-m.clientHeight;
+ const upd=()=>{const mx=max(),can=mx>2;w.classList.toggle('can',can);m.toggleAttribute('data-ft',can&&m.scrollTop>2);m.toggleAttribute('data-fb',can&&m.scrollTop<mx-2);if(!can)return;thumb=Math.max(18,m.clientHeight*m.clientHeight/m.scrollHeight);sb.style.height=thumb+'px';sb.style.transform=`translateY(${(m.clientHeight-thumb)*m.scrollTop/mx}px)`};
+ const flash=()=>{sb.classList.add('on');clearTimeout(timer);timer=setTimeout(()=>sb.classList.remove('on'),700)};
+ m.addEventListener('scroll',()=>{upd();flash()});
+ m.addEventListener('wheel',e=>{const mx=max();if(mx<=2)return;e.preventDefault();e.stopPropagation();
+  const dy=e.deltaY*(e.deltaMode===1?18:e.deltaMode===2?m.clientHeight:1);
+  if(reduced()||(e.deltaMode===0&&Math.abs(dy)<50)){cancelAnimationFrame(raf);target=null;m.scrollTop+=dy;return}
+  target=Math.max(0,Math.min(mx,(target??m.scrollTop)+dy));cancelAnimationFrame(raf);
+  const step=()=>{const d=target-m.scrollTop;if(Math.abs(d)<0.5){m.scrollTop=target;target=null;return}m.scrollTop+=d*0.24;raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)},{passive:false});
+ sb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();sb.setPointerCapture(e.pointerId);sb.classList.add('drag');const y0=e.clientY,t0=m.scrollTop,k=max()/Math.max(1,m.clientHeight-thumb);
+  const mv=ev=>{m.scrollTop=t0+(ev.clientY-y0)*k};const up=()=>{sb.classList.remove('drag');sb.removeEventListener('pointermove',mv);sb.removeEventListener('pointerup',up)};
+  sb.addEventListener('pointermove',mv);sb.addEventListener('pointerup',up)});
+ new ResizeObserver(upd).observe(m);upd();
+})}
+const MSG={
+ zh:{
+  yourTurn:"两种做法，选一个：\n1. **刘海两边放图标和状态**，正文从刘海下面开始\n2. **整条往下弹**，两翼空着\n我倾向 **1**：两翼本来就空着，而且和消息提醒（`macos.md` 第 3 步）一致。要改的是 `IslandShell.tsx` 和 `AgentAlert.css` 两个文件，大约 80 行。\n你选哪种？选 1 的话我顺手把贴边收起也按刘海形态改。",
+  done:"已同步 `docs/readme/README.en.md`：\n- 安装一节按中文版重写，补了 Mac 的 `.dmg` 说明\n- 截图换成新的 4 张，路径改成 `../assets/readme/…`\n- 顶部语言切换行加了日语\n验证：\n```\npnpm check          ✓\npnpm readme:assets  ✓\n```\n没有提交，等你看过再提交。",
+  failed:"`pnpm release` 在上传前失败：\n```\nError: TAURI_SIGNING_PRIVATE_KEY is empty\n    at sign (scripts/release/sign.mjs:42)\n```\n安装包已经打好在 `src-tauri/target/release/bundle/`，**没有上传**，`latest.json` 也没改。\n要继续：在钥匙串里补上签名私钥，再跑 `pnpm release --resume`。",
+  long:"这一轮做完了，改了 6 个文件：\n1. `AgentSessionRow.tsx`：标题行去掉模型胶囊，挪进悬停卡\n2. `SessionBody.tsx`：最后一条消息改成按 Markdown 显示\n3. `AgentAlert.css`：消息最多 6 行，超出在卡片里滚动\n4. `useIslandAgentAlerts.ts`：悬停时停住倒计时\n5. 两个回归页的快照\n验证：\n```\npnpm check            ✓\npnpm test:regression  ✓ 14 页\n```\n**还没做**：Mac 刘海形态的标题带，等你定方向。\n另外发现 `useAgentAlerts.ts` 里完成提醒的 5 秒是写死的，没读设置，顺手记成了任务 C138。\n没有提交。"
+ },
+ en:{
+  yourTurn:"Two options, pick one:\n1. **Icon and state in the notch wings**, body starts below the notch\n2. **Drop everything below**, wings stay empty\nI lean towards **1**: the wings are empty anyway and it matches message alerts (`macos.md` step 3). It touches `IslandShell.tsx` and `AgentAlert.css`, about 80 lines.\nWhich one? If 1, I'll also make tuck-away follow the notch form.",
+  done:"Synced `docs/readme/README.en.md`:\n- rewrote the install section to match the Chinese one, with the Mac `.dmg` steps\n- swapped in the 4 new screenshots, paths now `../assets/readme/…`\n- added Japanese to the language bar\nChecks:\n```\npnpm check          ✓\npnpm readme:assets  ✓\n```\nNothing committed yet, waiting for your review.",
+  failed:"`pnpm release` failed before upload:\n```\nError: TAURI_SIGNING_PRIVATE_KEY is empty\n    at sign (scripts/release/sign.mjs:42)\n```\nBundles are built in `src-tauri/target/release/bundle/` but **not uploaded**, and `latest.json` is untouched.\nTo continue: add the signing key to the keychain, then run `pnpm release --resume`.",
+  long:"Turn finished, 6 files changed:\n1. `AgentSessionRow.tsx`: model pill moved from the title row to the hover card\n2. `SessionBody.tsx`: last message now renders Markdown\n3. `AgentAlert.css`: up to 6 lines, scrolls inside the card beyond that\n4. `useIslandAgentAlerts.ts`: hover pauses the countdown\n5. snapshots for two regression pages\nChecks:\n```\npnpm check            ✓\npnpm test:regression  ✓ 14 pages\n```\n**Not done yet**: the Mac notch title band, waiting on your call.\nAlso noticed the 5 s done alert in `useAgentAlerts.ts` is hard-coded instead of read from settings; filed as C138.\nNothing committed."
+ }
+};
+function sessions(lang){const ss=sessions0(lang);const m=MSG[lang];['yourTurn','done','failed'].forEach(k=>ss[k].text=m[k]);ss.long=Object.assign({},ss.done,{prov:'claudeCode',model:'Opus 5.5',effort:'XH',host:'Windows Terminal',title:lang==='zh'?'[任务] Agent 通知：消息尽量显示全':'[Task] Agent notice: show the whole message',text:m.long});return ss}
+function longTitle(lang){return lang==='zh'?'[任务] Agent 通知重设计：从信息层级、截断、状态、叠放、动效各方面考虑，先出预览页给用户挑方向':'[Task] Redesign the agent notice: hierarchy, truncation, states, stacking and motion, preview page first'}
+const key=(o,k)=>o.plat==='mac'?'⌃⌥'+k:'Ctrl+Alt+'+k;
+const cmd=t=>`<span class="tool"><b class="chip">${esc(t.name)}</b><span class="cmd"><span class="h">${esc(t.h)}</span><span class="t">${esc(t.t)}</span></span></span>`;
+const acts=(o,t)=>{const b=[`<button><span class="lab">${t.deny}</span><span class="ico">✕</span><kbd>${key(o,'N')}</kbd></button>`,`<button class="term"><span class="lab">${t.term}</span><span class="ico" style="font-family:ui-monospace,Menlo,monospace;font-size:12px">&gt;_</span><kbd>${key(o,'T')}</kbd></button>`,`<button class="pri"><span class="lab">${t.allow}</span><span class="ico">✓</span><kbd>${key(o,'Y')}</kbd></button>`];if(o.allowLeft)b.reverse();return `<div class="acts${o.noKeys?' nokeys':''}">${b.join('')}</div>`};
+function bodyOf(s,t,n,o){
+ n=Object.assign({},n);if(o&&o.msgLines)n.msg=o.msgLines==='all'?40:+o.msgLines;if(o&&o.cmdLines)n.cmd=+o.cmdLines;
+ const meta=o&&o.metaInline?`<div class="metal">${esc([s.model,s.effort,s.mode,s.elapsed].filter(Boolean).join(' · '))} · ${t.you}${esc(s.prompt)}</div>`:'';
+ return meta+bodyOf0(s,t,n,o)}
+function bodyOf0(s,t,n,o){
+ if(s.light==='working')return `<div class="tool2"><b class="chip">${esc(s.tool.name)}</b><div class="mbox"><div class="txt mono" style="--n:${o&&o.hover?8:n.cmd}">${esc(s.tool.h+s.tool.t)}</div></div></div>`;
+ if(s.light==='needs')return `<div class="lbl">${t.wants(s.tool.name)}</div><div class="mbox"><div class="txt mono" style="--n:${o&&o.hover?8:n.cmd+1}">${esc(s.tool.h+s.tool.t)}</div></div>`;
+ return `<div class="msgwrap"><div class="msg${o&&o.hover?' full':''}" style="--n:${n.msg}">${o&&o.plain?esc(s.text).replace(/\n/g,'<br>'):md(s.text)}</div><i class="sb" aria-hidden="true"></i></div>`;
+}
+function hoverCard(s,o,t){
+ const pill=[s.model,s.effort,s.mode].filter(Boolean).join(' · ');
+ return `<div class="hc"><div><b>${esc(s.project)} · ${esc(s.title)}</b></div>${pill?`<div><span class="pill">${esc(pill)}</span> · ${esc(s.elapsed)} · ${t.ctx(s.ctx)}</div>`:''}<div>${t.you}${esc(s.prompt)}</div><div>${t.dir}${esc(s.cwd)}</div><div>${t.host(s.host)}</div></div>`;
+}
+const listRows=(arr,t)=>`<div class="lst">${arr.map((s,i)=>`<div class="lr l-${s.light}${i?'':' on'}"><i class="dot"></i>${icon(s.prov,14)}<span class="ttl">${esc(s.title)}</span><span class="st c-${s.light}">${t.st[s.light]}</span></div>`).join('')}</div>`;
+
+const R={
+ A(s,o){const t=T[o.lang];const mac=o.plat==='mac';
+  const right=`<span class="st c-${s.light}">${t.st[s.light]}</span>`;
+  const more=o.stack?`<span class="more">+${o.stack.length-1}</span>`:'';
+  const head=`<div class="row">${mac?'':ib(s.prov,s.light)}<span class="ttl${o.hover?' wrap':''}">${esc(s.title)}</span>${mac?'':right}${more}</div>`;
+  const body=`<div style="margin-top:4px">${bodyOf(s,t,{cmd:2,msg:4},o)}</div>`;
+  return {bl:ib(s.prov,s.light,14)+`<span style="color:var(--fg2)">${t.agent}</span>`,br:right,
+   body:`<div class="pad">${head}${body}${s.light==='needs'?acts(o,t):''}</div>${o.hover&&o.stack?listRows(o.stack,t):''}`,
+   after:o.hover&&!o.stack?hoverCard(s,o,t):''};
+ },
+ B(s,o){const t=T[o.lang];const mac=o.plat==='mac';
+  const hl=t.hl[s.light](s.tool?s.tool.name:'');
+  const time='';
+  const cnt=o.stack?`<span class="more">1/${o.stack.length}</span>`:'';
+  const main=`<div class="bw">${mac?'':ring(s.prov,s.light,26,true)}<div class="bm"><div class="row"><span class="hl c-${s.light}">${esc(hl)}</span>${mac?'':time+cnt}</div><div class="bt${o.hover?' wrap':''}">${esc(s.title)}</div><div class="bb">${bodyOf(s,t,{cmd:3,msg:6},o)}</div></div></div>`;
+  let after='';
+  if(o.stack&&!o.hover){after=`<div class="slivers ${o.theme}-s">${o.stack.slice(1,3).map((x,i)=>`<i class="l-${x.light}" style="width:${o.width*(i?0.84:0.92)}px;--c:${SC[o.theme][x.light]}"></i>`).join('')}</div>`}
+  else if(o.hover&&!o.stack)after=hoverCard(s,o,t);
+  return {bl:ring(s.prov,s.light,14)+`<span style="color:var(--fg2)">${t.agent}</span>`,br:cnt,
+   body:`<div class="pad">${main}${s.light==='needs'?acts(o,t):''}</div>${o.hover&&o.stack?listRows(o.stack,t):''}`,after,sliverVars:true};
+ },
+ C(s,o){const t=T[o.lang];
+  const arr=o.stack||[s];
+  const cl=`<span class="cluster">${arr.slice(0,3).map(x=>ring(x.prov,x.light,16)).join('')}</span>${arr.length>3?`<span class="more">+${arr.length-3}</span>`:''}`;
+  const right=`<span class="st c-${s.light}">${t.st[s.light]}</span>`;
+  const open=s.light!=='working'||o.hover;
+  let body='';
+  if(o.hover&&o.stack)body=listRows(o.stack,t);
+  else if(open)body=`<div class="cb"><div class="ttl ct${o.hover?' wrap':''}">${esc(s.title)}</div><div style="margin-top:3px">${bodyOf(s,t,{cmd:2,msg:4},o)}</div>${s.light==='needs'?acts(o,t):''}</div>`;
+  return {wing:true,bl:cl,bc:o.plat==='mac'||open?'':esc(s.title),br:right,body,after:o.hover&&!o.stack?hoverCard(s,o,t):''};
+ }
+};
+function parts(sc,s,o){
+ const r=R[sc](s,o);const mac=o.plat==='mac';
+ let band='';
+ if(mac)band=`<div class="band"><div class="wl">${r.bl}</div><div class="notch"></div><div class="wr">${r.br}</div></div>`;
+ else if(r.wing)band=`<div class="band win"><div class="wl">${r.bl}</div><div class="wc">${r.bc}</div><div class="wr">${r.br}</div></div>`;
+ return {cls:`isl ${o.theme} ${o.plat} sc-${sc} l-${s.light}${o.sbAlways?' sb-always':''}`,inner:band+r.body,after:r.after||''};
+}
+function island(sc,s,o){
+ o=Object.assign({},S,o);const p=parts(sc,s,o);
+ return `<div class="${p.cls}" style="width:${o.width}px">${p.inner}</div>${p.after}`;
+}
+const scr=(html,cap)=>`<div class="screen"><div class="scroll" style="display:flex;flex-direction:column;align-items:center;width:100%">${html}</div>${cap?`<div class="cap">${cap}</div>`:''}</div>`;
+const NAMES={A:'A · 精简两行',B:'B · 状态优先',C:'C · 两翼 + 下拉'};
+const col=(sc,html,note)=>`<div class="col"><span class="tag">${NAMES[sc]}</span>${html}<div class="note">${note}</div></div>`;
+
+const NOTES={
+ layers:{
+  A:'<ul><li><b>一眼</b>：图标（右下角状态角标）、标题、状态字、正在做的事（命令换行显示 2 行）。</li><li><b>悬停</b>：标题折行看全；岛下出悬停卡：完整「项目 · 标题」、模型胶囊、你最后一句话、目录、宿主、上下文。</li><li><b>拿掉</b>：「你：」行、模型胶囊、「项目 ·」前缀。</li></ul>',
+  B:'<ul><li><b>一眼</b>：状态句（最大字，带工具名）、标题（第二行）、正文（命令 3 行，消息 6 行）。</li><li><b>悬停</b>：标题折行看全，悬停卡同 A。</li><li><b>拿掉</b>：「你：」行、模型胶囊、用时、行尾提供方小图标（变成左边的大图标）。</li></ul>',
+  C:'<ul><li><b>一眼</b>：左翼图标 + 状态环，右翼状态字；Windows 中间放标题。运行中只有这些，岛不往下长。</li><li><b>悬停</b>：往下长出正文：完整标题、当前命令；再停 0.6 秒出悬停卡。</li><li><b>拿掉</b>：通知里的一切细节，默认都在悬停里。</li></ul>'},
+ trunc:{
+  A:'标题独占第一行剩下的宽度，不再和模型胶囊、用时抢；有 AI 标题时不拼「项目 ·」前缀。仍放不下就末尾省略，悬停时折成最多 3 行（外壳长高，文字只淡入）。',
+  B:'标题降为第二行小字、独占整行，末尾省略；状态句短，永远完整。悬停时标题折行看全。',
+  C:'Windows 标题夹在两翼中间，最窄；Mac 标题不进刘海带，只在正文第一行。运行中根本不显示标题，悬停才长出来。'},
+ states:{
+  A:'状态只靠右上角的状态字和图标角标区分；等你回复、完成、出错的消息最多 4 行，超出在卡片里滚动。',
+  B:'五种状态同一结构，只换状态句和颜色；等你回复、完成、出错的消息最多 6 行（Markdown 照样显示），超出在卡片里滚动，悬停展开全文。',
+  C:'运行中只剩两翼（和收起条一样高）；其余四种往下长出正文，消息最多 4 行。'},
+ stack:{
+  A:'一次一条，按紧急程度排：等你确认 > 出错 > 等你回复 > 完成；其余记在右上角「+2」，悬停展开列表。同一会话的新状态直接替换，不排队。',
+  B:'最紧急的在最前，后面两个各露出一条带状态色的边；悬停整叠展开成列表，滚轮或 ↑↓ 切换。处理掉最前面一张，下一张淡入补位。',
+  C:'左翼叠最多 3 个图标，各带状态环，多了写「+n」；正文只给最紧急的那个；悬停正文变成列表。'},
+ harness:{
+  A:'Agent 只有图标，不写名字（悬停卡写全称）；长命令换行显示 2 行，再长才省略；回复最多 4 行。',
+  B:'图标放大到 26px 作主视觉，状态环包在外面，多家图标最容易认；长命令换行显示 3 行；回复最多 6 行。',
+  C:'图标是唯一的身份信号，16px 叠在左翼；长命令只在悬停正文里看（2 行）；消息最多 4 行。'},
+ combos:{
+  A:'Mac 刘海时，第一行的图标和状态字放进刘海两翼，标题从刘海下面开始。',
+  B:'Mac 刘海带左边「图标 AI Agent」，右边「1/3」（只有多个会话时）；大图标在刘海模式下让给刘海带，正文不变。',
+  C:'本来就是两翼结构，Windows 和 Mac 最一致；Windows 中间那段放标题。'},
+ motion:{
+  A:'出现：外壳从收起条长成卡片，文字在外壳快到位时淡入。更新：只换变的那一行（旧字淡出 fast、新字淡入 base），外壳高度 medium。变等你确认：角标脉冲两下，按钮那行随外壳长出。消失：文字先淡出，外壳收回。',
+  B:'同 A；变等你确认时状态句换色、大图标的状态环脉冲两下；运行中状态环呼吸（表示状态的循环，减少动画时停）。',
+  C:'两段：先两翼变宽（slow），再往下长出正文（medium，延后 fast）；消失反过来，正文先收，两翼再缩回。运行中只有两翼，「更新」时两翼不动，命令只在悬停正文里换。'},
+ longmsg:{
+  A:'平时 4 行（约 75 字）滚动看余下；悬停展开到约 16 行。标题行和消息之间没有别的东西，空间都给消息。',
+  B:'平时 6 行，列表、代码块按 Markdown 显示；悬停展开到约 16 行，超出再滚。状态句和标题只占两行，其余高度都给消息。推荐方案就按这条做。',
+  C:'正文 4 行；悬停展开全文。两翼占掉一行高度，所以同样的岛高下消息比 B 少两行。'},
+ narrow:{
+  A:'窄于 340 去掉按钮上的快捷键；窄于 300 「到终端」收起（Enter 仍可用快捷键）。标题最少留 2.5 个字。',
+  B:'窄于 300 按钮只剩 ✕ &gt;_ ✓ 图标；状态句英文用短写「Approve Bash?」。',
+  C:'窄时中间标题先让位；Mac 刘海宽固定，岛窄时两翼只放图标和一个词。'}
+};
+
+const SEC={
+ layers(sc){const ss=sessions(S.lang);return scr(island(sc,ss.working,{}),'平时')+scr(island(sc,ss.working,{hover:true}),'悬停')},
+ trunc(sc){const ss=sessions(S.lang);const s=Object.assign({},ss.needs,{title:longTitle(S.lang)});const w=Object.assign({},ss.working,{title:longTitle(S.lang)});return scr(island(sc,w,{}),'运行中')+scr(island(sc,s,{}),'等你确认')+scr(island(sc,w,{hover:true}),'悬停')},
+ states(sc){const ss=sessions(S.lang);return ['working','needs','yourTurn','done','failed'].map(k=>scr(island(sc,ss[k],{}),T.zh.st[k])).join('')},
+ longmsg(sc){const ss=sessions(S.lang);return scr(island(sc,ss.long,{}),'平时')+scr(island(sc,ss.long,{hover:true}),'悬停：展开全文')},
+ stack(sc){const ss=sessions(S.lang);const st=[ss.needs,ss.failed,ss.working];return scr(island(sc,ss.needs,{stack:st}),'平时')+scr(island(sc,ss.needs,{stack:st,hover:true}),'悬停 / 点开')},
+ harness(sc){const ss=sessions(S.lang);const zh=S.lang==='zh';
+  const a=Object.assign({},ss.working,{prov:'codex',title:zh?'回归页快照更新':'Update regression snapshots',tool:{name:'Bash',h:'cd /Users/tixxin/Desktop/projects/Fuyu && node scripts/regression/',t:'run-regression.mjs agent-sessions --update-snapshots'}});
+  const b=Object.assign({},ss.done,{prov:'qwen',title:zh?'整理插件市场的分类':'Tidy plugin market categories',text:(zh?'改了 5 个文件：\n1. plugins/v3/official/index.json 加了「效率」分类\n2. 市场页按分类分组\n3. 搜索也能搜分类名\n4. 补了两条单元测试\n5. 文档 docs/features/plugins.md 同步':'Changed 5 files:\n1. added an "Productivity" category to index.json\n2. grouped the market page by category\n3. search matches category names\n4. two new unit tests\n5. synced docs/features/plugins.md')});
+  const c=Object.assign({},ss.yourTurn,{prov:'copilot',title:'Copilot CLI'});
+  const d=Object.assign({},ss.needs,{prov:'opencode',title:zh?'清理旧的 lane 目录':'Clean up old lane folders',tool:{name:'Bash',h:'find ~/Desktop/projects -maxdepth 2 -name "Fuyu-lane-*" -type d -mtime +3 -exec rm -rf {} +',t:''}});
+  return scr(island(sc,a,{}),'Codex · 长命令')+scr(island(sc,b,{}),'Qwen Code · 多行回复')+scr(island(sc,c,{}),'Copilot CLI · 等你回复')+scr(island(sc,d,{}),'opencode · 长审批命令')},
+ combos(sc){const ss=sessions(S.lang);return `<div class="combo">${[['dark','win','深色 · Windows'],['light','win','浅色 · Windows'],['dark','mac','深色 · Mac 刘海'],['light','mac','浅色 · Mac 刘海']].map(([th,pl,cap])=>scr(island(sc,ss.needs,{theme:th,plat:pl,width:Math.min(S.width,340)}),cap)).join('')}</div>`+scr(island(sc,ss.working,{plat:'mac'}),'Mac 刘海 · 运行中（当前主题）')},
+ narrow(sc){const zh=sessions('zh'),en=sessions('en');return `<div class="combo">${scr(island(sc,zh.needs,{lang:'zh',width:280}),'280 · 中文')+scr(island(sc,en.needs,{lang:'en',width:280}),'280 · English')+scr(island(sc,zh.yourTurn,{lang:'zh',width:280}),'280 · 中文')+scr(island(sc,en.yourTurn,{lang:'en',width:280}),'280 · English')}</div>`},
+ motion(sc){return `<div class="stage" data-stage="${sc}"><div class="ctrl"><button class="go" data-a="play">▶ 自动播放</button><button data-a="show">出现</button><button data-a="update">更新命令</button><button data-a="needs">变成等你确认</button><button data-a="done">完成</button><button data-a="hide">消失</button></div><div class="screen"><div class="isl shell" style="width:200px;height:30px"></div></div><div class="log"></div></div>`}
+};
+
+function current(){
+ const ss=sessions(S.lang);const s=ss.working;const zh=S.lang==='zh';
+ return `<div class="isl ${S.theme}" style="width:420px"><span class="dev">DEV</span><div class="pad" style="padding-top:16px"><div class="cur"><div class="h1"><i class="dot l-working"></i><span class="ttl">Fuyu · ${esc(s.title)}</span><span class="pill2">Opus 5.5 · ${zh?'自动':'Auto'}</span><span class="meta">${zh?'已运行 18 分 21 秒':'running 18m 21s'}</span>${icon('claudeCode',14)}</div><div class="txt" style="--n:1;margin-top:3px">${T[S.lang].you}${esc(s.prompt)}</div><div style="margin-top:3px">${cmd(s.tool)}</div></div></div></div>`;
+}
+
+function render(){
+ document.querySelectorAll('.seg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.classList.toggle('on',S[g.dataset.k]===b.dataset.v)));
+ document.querySelector('[data-k=width]').value=S.width;document.getElementById('wv').textContent=S.width;
+ document.getElementById('current').innerHTML=current();
+ document.querySelectorAll('[data-sec]').forEach(el=>{const k=el.dataset.sec;el.innerHTML=['A','B','C'].map(sc=>col(sc,SEC[k](sc),NOTES[k][sc])).join('')});
+ document.querySelectorAll('[data-stage]').forEach(initStage);
+ renderScrollGrid();
+ renderSettings();
+ initScrollers(document);
+}
+
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function renderScrollGrid(){const ss=sessions(S.lang);document.getElementById('scrollgrid').innerHTML=[['dark','win','深色 · Windows'],['light','win','浅色 · Windows'],['dark','mac','深色 · Mac 刘海'],['light','mac','浅色 · Mac 刘海']].map(([th,pl,cap])=>scr(island('B',ss.long,{theme:th,plat:pl,width:Math.min(S.width,360)}),cap)).join('');initScrollers(document.getElementById('scrollgrid'))}
+async function demoScroll(){const ms=[...document.querySelectorAll('#scrollgrid .msg')];for(const y of [60,140,9999,0]){ms.forEach(m=>{const mx=m.scrollHeight-m.clientHeight;const t=Math.min(mx,y);if(reduced()){m.scrollTop=t;return}const go=()=>{const d=t-m.scrollTop;if(Math.abs(d)<0.5){m.scrollTop=t;return}m.scrollTop+=d*0.2;requestAnimationFrame(go)};go()});await wait(1100)}}
+const SETS=[
+ ['外观'],
+ ['style','通知样式',[['B','状态优先'],['A','精简两行'],['C','两翼 + 下拉']],'B','三套方案任选'],
+ ['notch','Mac 刘海时',[['band','刘海两边放标题带'],['below','整条放在刘海下面']],'band','只在 Mac 有刘海时出现'],
+ ['msgLines','消息正文最多显示',[['4','4 行'],['6','6 行'],['8','8 行'],['12','12 行'],['all','随内容长高']],'6','超出在卡片里滚动；「随内容长高」到岛的最大高度为止'],
+ ['cmdLines','运行中的命令最多显示',[['1','1 行'],['2','2 行'],['3','3 行'],['5','5 行']],'3',''],
+ ['markdown','消息按 Markdown 显示',[['on','开'],['off','关（纯文字）']],'on','列表、代码块、行内代码'],
+ ['meta','模型、用时、「你：」',[['hover','只在悬停卡片里'],['inline','通知里也显示']],'hover',''],
+ ['sb','滚动条',[['auto','滚动时出现'],['always','一直显示']],'auto',''],
+ ['行为'],
+ ['newTurn','开始新一轮时',[['title','只在收起条显示标题'],['pop','弹出通知'],['none','不显示']],'title',''],
+ ['yourTurn','等你回复的通知',[['seen','留到看过'],['15','15 秒后收起'],['30','30 秒后收起']],'seen','看过 = 悬停过它，或切到了那个窗口'],
+ ['failed','出错的通知',[['seen','留到看过'],['10','10 秒后收起'],['30','30 秒后收起']],'seen',''],
+ ['done','完成的通知停留',[['3','3 秒'],['5','5 秒'],['10','10 秒'],['30','30 秒']],'5','现有设置，3–30 秒'],
+ ['hoverHold','鼠标停在岛上时暂停倒计时',[['on','开'],['off','关']],'on',''],
+ ['click','点通知',[['window','切到会话所在的窗口'],['page','打开 Agent 页']],'window','另一个去处放在右上角的小按钮'],
+ ['stack','多个会话同时来',[['B','叠放，露出后面的边'],['A','一次一条，右上角 +n'],['C','左翼图标堆']],'B','悬停都能展开成列表'],
+ ['审批'],
+ ['order','按钮顺序',[['right','拒绝 · 到终端 · 允许'],['left','允许 · 到终端 · 拒绝']],'right',''],
+ ['keys','按钮上显示快捷键',[['on','显示'],['off','不显示']],'on','窄岛上会自动隐藏']
+];
+const DEF=Object.fromEntries(SETS.filter(x=>x.length>1).map(x=>[x[0],x[3]]));
+let SET=Object.assign({},DEF);try{Object.assign(SET,JSON.parse(localStorage.getItem('c137-settings')||'{}'))}catch(e){}
+const SCEN=[['working','运行中'],['needs','等你确认'],['yourTurn','等你回复'],['long','长消息'],['failed','出错'],['stack','多个会话']];
+let scen='needs';
+function renderSettings(){
+ document.getElementById('setp').innerHTML=SETS.map(x=>x.length===1?`<h4>${x[0]}</h4>`:`<label class="sr"><span>${x[1]}${x[4]?`<small>${x[4]}</small>`:''}</span><select data-set="${x[0]}">${x[2].map(([v,l])=>`<option value="${v}"${SET[x[0]]===v?' selected':''}>${l}${v===x[3]?'（默认）':''}</option>`).join('')}</select></label>`).join('');
+ document.getElementById('scen').innerHTML=SCEN.map(([k,l])=>`<button class="${k===scen?'go':''}" data-scen="${k}">${l}</button>`).join('');
+ renderLive();
+}
+function renderLive(){
+ const ss=sessions(S.lang);
+ const o={msgLines:SET.msgLines,cmdLines:SET.cmdLines,plain:SET.markdown==='off',metaInline:SET.meta==='inline',sbAlways:SET.sb==='always',allowLeft:SET.order==='left',noKeys:SET.keys==='off'};
+ if(S.plat==='mac'&&SET.notch==='below')o.plat='win';
+ let html,cap;
+ if(scen==='stack'){html=island(SET.stack,ss.needs,Object.assign(o,{stack:[ss.needs,ss.failed,ss.working]}));cap='多个会话（按「多个会话同时来」的选项画）'}
+ else{const s=ss[scen];html=island(SET.style,s,o);cap=SCEN.find(x=>x[0]===scen)[1]}
+ const notes=[];
+ if(scen==='working'&&SET.newTurn!=='pop')notes.push(SET.newTurn==='title'?'按当前设置，开始新一轮不弹出，只在收起条显示标题；这里画的是悬停或点开时的样子。':'按当前设置，开始新一轮什么都不显示；这里画的是悬停或点开时的样子。');
+ if(S.plat==='mac'&&SET.notch==='below')notes.push('「整条放在刘海下面」：刘海那一段留黑，通知从刘海下沿开始（预览里按无刘海画）。');
+ const dw={yourTurn:SET.yourTurn==='seen'?'留到看过':SET.yourTurn+' 秒后收起',failed:SET.failed==='seen'?'留到看过':SET.failed+' 秒后收起',needs:'留到处理',long:SET.done+' 秒后收起',working:'—',stack:'按最前面那条'}[scen];
+ notes.push(`停留：${dw}${SET.hoverHold==='on'?'，鼠标停在岛上暂停':''}；点通知：${SET.click==='window'?'切到会话窗口（右上角 ↗ 开 Agent 页）':'打开 Agent 页（右上角 ↗ 切到会话窗口）'}。`);
+ document.getElementById('live').innerHTML=scr(html,cap)+`<p class="sub" style="margin-top:6px">${notes.join('<br>')}</p>`;
+ initScrollers(document.getElementById('live'));
+}
+document.addEventListener('change',e=>{const k=e.target.dataset&&e.target.dataset.set;if(!k)return;SET[k]=e.target.value;try{localStorage.setItem('c137-settings',JSON.stringify(SET))}catch(x){}renderLive()});
+document.addEventListener('click',e=>{const k=e.target.dataset&&e.target.dataset.scen;if(k){scen=k;renderSettings();return}if(e.target.id==='setreset'){SET=Object.assign({},DEF);try{localStorage.removeItem('c137-settings')}catch(x){}renderSettings()}});
+function initStage(el){
+ const sc=el.dataset.stage;const shell=el.querySelector('.shell');const log=el.querySelector('.log');
+ let cur=null,run=0;
+ const o=()=>Object.assign({},S);
+ const collapsedW=()=>S.plat==='mac'?150+2*60:200;const collapsedH=()=>S.plat==='mac'?32:30;
+ function collapsed(){shell.className=`isl ${S.theme} ${S.plat} sc-${sc} shell`;shell.style.width=collapsedW()+'px';shell.style.height=collapsedH()+'px';shell.style.borderRadius=S.plat==='mac'?'0 0 14px 14px':'0 0 15px 15px';shell.innerHTML=S.plat==='mac'?'<div class="band"><div class="wl"></div><div class="notch"></div><div class="wr"></div></div>':`<div class="collapsedbar">${T[S.lang].collapsed}</div>`}
+ collapsed();
+ function measure(html,cls){const probe=document.createElement('div');probe.className=cls;probe.style.cssText=`position:absolute;visibility:hidden;width:${S.width}px;height:auto`;probe.innerHTML=html;shell.parentNode.appendChild(probe);const h=probe.offsetHeight;probe.remove();return h}
+ function content(s,dwell){const p=parts(sc,s,o());return {cls:p.cls+' shell',html:`<div class="fade hide">${p.inner}</div>${dwell?`<i class="cd cdrun l-${s.light}" style="--dwell:${dwell}ms;background:var(--c)"></i>`:''}`,inner:p.inner}}
+ async function show(s,dwell){
+  const my=++run;const c=content(s,dwell);
+  const h=measure(c.inner,c.cls.replace(' shell',''));
+  const was=cur;cur=s;
+  if(!was){shell.className=c.cls;shell.innerHTML=c.html;shell.style.borderRadius='0 0 18px 18px';void shell.offsetHeight;shell.style.width=S.width+'px';shell.style.height=h+'px';await wait(sc==='C'?240:300);if(my!==run)return;shell.querySelector('.fade').classList.remove('hide');}
+  else{const f=shell.querySelector('.fade');f&&f.classList.add('hide');await wait(120);if(my!==run)return;shell.className=c.cls+' upd';shell.innerHTML=c.html;if(s.light==='needs'&&was.light!=='needs')shell.classList.add('pulse');shell.style.width=S.width+'px';shell.style.height=h+'px';void shell.offsetHeight;shell.querySelector('.fade').classList.remove('hide');}
+  initScrollers(shell);const bar=shell.querySelector('.cdrun');if(bar)bar.addEventListener('animationend',()=>{if(my===run)hide()});
+ }
+ async function hide(){const my=++run;if(!cur)return;const f=shell.querySelector('.fade');f&&f.classList.add('hide');await wait(120);if(my!==run)return;shell.classList.add('out');shell.style.width=collapsedW()+'px';shell.style.height=collapsedH()+'px';shell.style.borderRadius=S.plat==='mac'?'0 0 14px 14px':'0 0 15px 15px';await wait(sc==='C'?360:240);if(my!==run)return;cur=null;collapsed();}
+ const ss=()=>sessions(S.lang);
+ const dw={A:{done:5000},B:{done:5000},C:{done:4000}}[sc];
+ const act={
+  show:()=>{log.textContent='出现：新一轮开始（真实规则下 A/B 不弹，这里为了演示）';return show(ss().working)},
+  update:()=>{const s=Object.assign({},ss().working,{tool:{name:'Edit',h:'src/features/agent-status/',t:'AgentSessionRow.tsx'},elapsed:S.lang==='zh'?'18 分 40 秒':'18m 40s'});log.textContent='更新：工具从 Bash 换成 Edit，只换那一行';return show(s)},
+  needs:()=>{const s=Object.assign({},ss().needs,{prov:'claudeCode',title:ss().working.title});log.textContent='变成等你确认：状态标记脉冲两下，按钮那一行长出来；不倒计时';return show(s)},
+  done:()=>{const s=Object.assign({},ss().done,{prov:'claudeCode',title:ss().working.title});log.textContent=`完成：停留 ${dw.done/1000} 秒，鼠标停在岛上倒计时暂停`;return show(s,dw.done)},
+  hide:()=>{log.textContent='消失：文字先淡出，外壳收回';return hide()}
+ };
+ el.querySelector('.ctrl').onclick=async e=>{const a=e.target.dataset&&e.target.dataset.a;if(!a)return;
+  if(a!=='play')return act[a]();
+  const token=++el._play||(el._play=1);el._play=token;
+  for(const step of ['show','update','needs','done']){if(el._play!==token)return;await act[step]();await wait(step==='done'?0:1800)}
+ };
+ el.addEventListener('click',e=>{if(e.target.closest('.acts')){act.done()}});
+}
+
+document.querySelectorAll('.seg').forEach(g=>g.addEventListener('click',e=>{const v=e.target.dataset.v;if(!v)return;S[g.dataset.k]=v;save();render()}));
+document.querySelector('[data-k=width]').addEventListener('input',e=>{S.width=+e.target.value;save();render()});
+document.getElementById('scrolldemo').addEventListener('click',demoScroll);
+document.getElementById('rm').addEventListener('change',e=>document.body.classList.toggle('rm',e.target.checked));
+render();
+</script>
+</body>
+</html>

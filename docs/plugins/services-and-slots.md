@@ -17,14 +17,16 @@
 | `file-shelf/v1` | `fileShelfV1` | `file-shelf` | `list()`、`add({ paths })` | 无 | 读取文件中转列表、将 1–20 个本地绝对路径加入文件中转 |
 | `lyrics/v1` | `lyricsV1` | `music` | `lookup(query)`、`sources()` | `changed` | 查询当前曲目的 LRC 同步歌词与双语翻译、列出已登记的歌词来源 |
 | `market/v1` | `marketV1` | `updater` | `catalog()`、`refresh()`、`inspectPackage({ base64 })`、`installMarket({ name, version? })`、`installFile({ base64, expectedSha256? })`、`setManualAllowed({ allowed })`、`setEnabled({ id, enabled })`、`uninstall({ id, removeData? })` | `changed` | 插件市场索引拉取与验签、3 天冷静期筛选、`.fuyu` 包预检与安装、撤销停用、第三方插件启停与卸载 |
-| `media/v1` | `mediaV1` | `music` | `nowPlaying()`、`playPause()`、`next()`、`previous()`、`seek({ positionMs })` | 无 | 读取当前系统媒体播放状态与控制播放/上曲/下曲/跳转进度 |
+| `media/v1` | `mediaV1` | `music` | `nowPlaying()`、`playPause()`、`next()`、`previous()`、`seek({ positionMs })` | `changed` | 读取当前系统媒体播放状态与控制播放/上曲/下曲/跳转进度；换歌或播放状态变化时发 `changed` |
 | `messages/v1` | `messagesV1` | `messages` | `sources()`、`notify(notice)`、`clear({ source? })` | `changed`、`arrived`、`action` | 查询各消息来源未读状态、推送结构化新消息通知（进收起条预览、横幅与到达面板）、清理未读 |
 | `plugin-config/v1` | `pluginConfigV1` | 宿主内核 | `list()`、`get({ id })`、`set({ id, values })`、`reset({ id })` | `changed` | 按插件 `fuyu.config` JSON Schema 读取、校验、持久化与重置插件配置（`<dataDir>/<id>/config.json`） |
 | `plugin-windows/v1` | `pluginWindowsV1` | 宿主内核 | `getRules({ id })`、`setRules({ id, disallowAlwaysOnTop?, disallowClickThrough?, hideAll? })`、`list({ id? })` | `changed` | 查询当前实验性独立插件窗口状态，以及读写「禁止置顶 / 禁止点击穿透 / 隐藏全部窗口」护栏规则 |
 | `reminders/v1` | `remindersV1` | `timer`（主窗口） | `push({ id, source, icon, title, detail?, snoozable? })` | 无 | 往主窗口提醒队列推送一条提醒卡片 |
-| `timers/v1` | `timersV1` | `timer` | `list()`、`start(params)`、`pause({ id })`、`resume({ id })`、`extend({ id, seconds })`、`remove({ id })`、`dismissRinging()`、`adopt({ timers })` | `changed`、`due` | 倒计时、番茄钟与秒表的增删改查及到点事件 |
+| `timers/v1` | `timersV1` | `timer` | `list()`、`start({ kind, durationMs?, hidden? })`、`pause({ id })`、`resume({ id })`、`extend({ id, byMs? })`、`remove({ id })`、`dismissRinging()`、`adopt({ timers })` | `changed`、`due` | 倒计时、番茄钟与秒表的增删改查及到点事件。插件建的计时带 `owner`（宿主按调用方填，传了也不认；用户建的没有），不隐藏的在计时器页标出插件名；`hidden: true` 的不进计时器页和收起条，到点不响铃、不弹提醒，只发 `due`，`dismissRinging()` 也不删它，插件自己 `remove` |
 | `todos/v1` | `todosV1` | `todos` | `list({ date? })`、`days({ from, to })`、`add({ title, date?, project? })`、`update({ id, title?, completed? })`、`remove({ id })`、`note({ date? })`、`setNote({ note } \| { append })` | `changed` | 今日待办、未来排期、历史归档与每日笔记读写 |
 | `translator/v1` | `translatorV1` | `translation` | `translate(params)`、`rewrite(params)`（流式 `progress`）、`engines()` | `changed` | 文本翻译、流式 AI 改写、查询已配置引擎列表（不含密钥与自定义地址） |
+
+`media/v1` 的 `changed`：载荷和 `nowPlaying()` 的返回值同一个形状（带 `playing`）。系统媒体会话换歌、暂停或继续、换了播放器时发；短时间里连续来的几次变化合并成一次（约 150 ms），曲目、播放状态、播放器和可用的控制都没变时不发，所以只跳了进度不会收到。要显示进度的插件用载荷里的 `positionMs` 和 `updatedAt` 自己往前推，跳转后再 `nowPlaying()` 一次。
 
 ---
 

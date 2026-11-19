@@ -7,7 +7,8 @@ import { timersV1 } from "@fuyu/plugin-services";
 import "../../src/styles/tokens.css";
 import { I18nProvider } from "../../src/i18n";
 import { windowServices } from "../../src/features/plugin-kernel/services";
-import { adoptTimers, changeTimer, idOf, ringDue, startTimer } from "../../src/features/timer/host/rules.mjs";
+import { adoptTimers, changeTimer, dismissRung, idOf, ringDue, startTimer } from "../../src/features/timer/host/rules.mjs";
+import { updatePluginNames } from "../../src/features/plugin-kernel/pluginNames";
 import { nextDueIn, type Timer } from "../../src/features/timer/timers";
 import { configureTimers, TIMERS_KEY, TIMERS_MIGRATED_KEY, useTimers } from "../../src/features/timer/store";
 import { TimerPanel } from "../../src/features/timer/TimerPanel";
@@ -76,7 +77,7 @@ const hostProxy = createServiceProxy(async (method, payload) => {
       return { removed: true };
     }
     case "dismissRinging": {
-      const next = hostState.timers.filter((timer) => !timer.alerted);
+      const next = dismissRung(hostState.timers);
       const removed = hostState.timers.length - next.length;
       if (removed > 0) commitHost(next, Date.now());
       return { removed };
@@ -184,6 +185,7 @@ async function runChecks() {
     await click(button("再加 5 分钟", document.querySelector<HTMLElement>(".bar")!));
     check(!document.querySelector(".timer-notice") && rows().some((row) => row.textContent?.includes("05:00")), "Five more minutes takes the alert away and starts it again");
 
+    await checkPluginTimers();
     await checkBreakReminders();
 
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
@@ -192,6 +194,30 @@ async function runChecks() {
     results.textContent = `${messages.join("\n")}\nFAIL ${String(error)}`;
     results.dataset.result = "failed";
   }
+}
+
+async function checkPluginTimers() {
+  const deliver = (event: "changed" | "due", data: unknown) => act(async () => { hostProxy.deliver({ service: timersV1.name, event, data }); });
+  const before = rows().length;
+  const now = Date.now();
+  updatePluginNames([{ id: "pomodoro", displayName: { "zh-CN": "番茄钟", en: "Pomodoro" } }]);
+  const shown = startTimer(hostState.timers, { kind: "countdown", durationMs: 25 * 60_000 }, now, "plugin-shown", "pomodoro").timer;
+  const hidden = startTimer([], { kind: "countdown", durationMs: 1000, hidden: true }, now, "plugin-hidden", "pomodoro").timer;
+  hostState.timers = [...hostState.timers, shown, hidden];
+  await deliver("changed", { timers: [...hostState.timers], at: now });
+  check(rows().length === before + 1, "A plugin's hidden timer stays off the timer page");
+  const last = () => rows()[rows().length - 1];
+  check(last()?.querySelector(".timer-panel__source")?.textContent === "来自 番茄钟", `A plugin's visible timer names the plugin (${last()?.textContent})`);
+  check(!text(".timer-chip__time").startsWith("00:0"), `The collapsed bar does not pick the hidden one even though it ends first (${text(".timer-chip__time")})`);
+  const rung = ringDue(hostState.timers, now + 2000);
+  hostState.timers = rung.timers;
+  await deliver("due", { timer: rung.due[0], at: now + 2000 });
+  await deliver("changed", { timers: [...hostState.timers], at: now + 2000 });
+  check(rung.due.length === 1 && rung.due[0].id === "plugin-hidden" && !document.querySelector(".timer-notice"), "When the hidden timer is due the island shows no notice");
+  await click(button("暂停", last()));
+  check(hostState.timers.find((timer) => timer.id === "plugin-shown")?.runningSince === null, "The user can still pause a plugin's visible timer");
+  hostState.timers = hostState.timers.filter((timer) => timer.id !== "plugin-hidden");
+  await deliver("changed", { timers: [...hostState.timers], at: Date.now() });
 }
 
 async function checkBreakReminders() {

@@ -4,7 +4,7 @@ import { playChime } from "./chime.ts";
 import { CheckIcon, ChevronIcon, PomodoroIcon } from "./icons.tsx";
 import { METHODS, TOPICS, formatMs, isPaused, isTicking, phaseMinutes, remainingMs, type OpenTodoItem, type PomodoroSnapshot } from "./model.ts";
 import { PAGE_TITLE, text } from "./text.ts";
-import { usePomodoro } from "./usePomodoro.ts";
+import { useNow, usePomodoro } from "./usePomodoro.ts";
 import "./styles.css";
 
 const PAGE_ID = "pomodoro";
@@ -56,11 +56,12 @@ export default function apply(ctx: Context) {
     const { state, error, invoke } = usePomodoro(ctx);
     const [chosenId, setChosenId] = useState<string | null>(null);
     const { settings } = state;
-    const running = isTicking(state.timer, state.at);
-    const paused = isPaused(state.timer, state.at);
+    const now = useNow(Boolean(state.timer && state.timer.runningSince !== null), state.at);
+    const running = isTicking(state.timer, now);
+    const paused = isPaused(state.timer, now);
     const active = state.phase !== null && (running || paused);
     const totalMs = state.timer ? Math.max(1, state.timer.durationMs) : phaseMinutes("focus", settings) * 60_000;
-    const leftMs = active && state.timer ? remainingMs(state.timer, state.at) : totalMs;
+    const leftMs = active && state.timer ? remainingMs(state.timer, now) : totalMs;
     const progress = active ? Math.min(100, Math.max(0, Math.round(((totalMs - leftMs) / totalMs) * 100))) : 0;
     const chosen = state.openTodos.find((item) => item.id === chosenId) ?? null;
     const goalMet = settings.dailyGoal > 0 && state.rounds >= settings.dailyGoal;
@@ -113,20 +114,21 @@ export default function apply(ctx: Context) {
 
   function PomodoroCollapsed() {
     const { state } = usePomodoro(ctx);
-    const running = isTicking(state.timer, state.at);
-    const paused = isPaused(state.timer, state.at);
+    const now = useNow(Boolean(state.timer && state.timer.runningSince !== null), state.at);
+    const running = isTicking(state.timer, now);
+    const paused = isPaused(state.timer, now);
     if (!state.settings.showInBar || !state.timer || !state.phase || !(running || paused)) return null;
     const onBreak = state.phase !== "focus";
     const className = ["fuyu-pomodoro-chip", paused ? "is-paused" : "", onBreak ? "is-break" : ""].filter(Boolean).join(" ");
     return (
       <span className={className} title={subtitleOf(state, paused)}>
         {onBreak ? <span className="fuyu-pomodoro-chip__lead">{text.barBreak}</span> : <PomodoroIcon size={12} />}
-        <span className="fuyu-pomodoro-chip__time">{formatMs(remainingMs(state.timer, state.at))}</span>
+        <span className="fuyu-pomodoro-chip__time">{formatMs(remainingMs(state.timer, now))}</span>
       </span>
     );
   }
 
   ctx.host.on(TOPICS.chime, () => playChime());
   ctx.slots.add("island.page/v1", { id: PAGE_ID, title: PAGE_TITLE, component: PomodoroPage, icon: PomodoroIcon });
-  ctx.slots.add("island.collapsed/v1", { id: "pomodoro-bar", width: 72, hideable: true, opens: PAGE_ID, component: PomodoroCollapsed });
+  ctx.slots.add("island.collapsed/v1", { id: "pomodoro-bar", hideable: true, opens: PAGE_ID, component: PomodoroCollapsed });
 }

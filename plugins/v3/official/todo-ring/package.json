@@ -27,6 +27,22 @@
       "en": "A ring shows how much of today's to-do list is done, with what's next listed beside it."
     },
     "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/page.png",
+        "caption": {
+          "zh-CN": "岛上页面：完成进度和接下来的待办",
+          "en": "Island page: progress and what's next"
+        }
+      },
+      {
+        "path": "screenshots/bar.png",
+        "caption": {
+          "zh-CN": "收起条：小圆环和完成数",
+          "en": "Collapsed bar: a small ring and the count"
+        }
+      }
+    ],
     "categories": [
       "todos",
       "productivity"

@@ -27,6 +27,22 @@
       "en": "Keeps track of birthdays, anniversaries and deadlines year after year, with the days left on the collapsed bar."
     },
     "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/page.png",
+        "caption": {
+          "zh-CN": "岛上页面：最近的日子和其他日子",
+          "en": "Island page: the nearest date and the rest"
+        }
+      },
+      {
+        "path": "screenshots/bar.png",
+        "caption": {
+          "zh-CN": "收起条：还剩几天",
+          "en": "Collapsed bar: days left"
+        }
+      }
+    ],
     "categories": [
       "productivity",
       "utilities"

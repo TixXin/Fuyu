@@ -14,6 +14,7 @@ export type TimerText = {
   extend: string;
   dismiss: string;
   ended: string;
+  from: (name: string) => string;
   timeUp: (length: string) => string;
   moreUp: (count: number) => string;
   chip: string;
@@ -74,6 +75,7 @@ export const zhCN: TimerText = {
   extend: "再加 5 分钟",
   dismiss: "知道了",
   ended: "到点了",
+  from: (name) => `来自 ${name}`,
   timeUp: (length) => `${length} 的计时到了`,
   moreUp: (count) => `还有 ${count} 个也到了`,
   chip: "打开计时器",
@@ -135,6 +137,7 @@ export const en: TimerText = {
   extend: "5 more minutes",
   dismiss: "Done",
   ended: "Time's up",
+  from: (name) => `from ${name}`,
   timeUp: (length) => `Your ${length} timer is up`,
   moreUp: (count) => `${count} more ${count === 1 ? "is" : "are"} up too`,
   chip: "Open the timer",

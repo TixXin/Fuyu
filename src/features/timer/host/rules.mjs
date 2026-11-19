@@ -1,4 +1,4 @@
-import { EXTEND_MS, MAX_DURATION_MS, MAX_TIMERS, dueTimers, extended, newCountdown, newStopwatch, normalizeTimers, paused, resumed } from "../timers.ts";
+import { EXTEND_MS, MAX_DURATION_MS, MAX_TIMERS, dueTimers, extended, isShown, newCountdown, newStopwatch, normalizeTimers, originOf, paused, resumed, withoutOrigin } from "../timers.ts";
 
 export function timersError(code, message) {
   return Object.assign(new Error(message), { code });
@@ -18,11 +18,13 @@ export function idOf(params, method) {
   return params.id;
 }
 
-export function startTimer(timers, params, now, id) {
+export function startTimer(timers, params, now, id, owner) {
   if (!isObject(params) || (params.kind !== "countdown" && params.kind !== "stopwatch")) {
     throw timersError("bad-params", 'timers/v1 start needs { kind: "countdown", durationMs } or { kind: "stopwatch" }');
   }
-  const timer = params.kind === "countdown" ? newCountdown(id, duration(params.durationMs, "durationMs"), now) : newStopwatch(id, now);
+  if (params.hidden !== undefined && typeof params.hidden !== "boolean") throw timersError("bad-params", "timers/v1 start takes hidden as true or false");
+  const origin = originOf({ owner, hidden: params.hidden });
+  const timer = params.kind === "countdown" ? newCountdown(id, duration(params.durationMs, "durationMs"), now, origin) : newStopwatch(id, now, origin);
   if (timers.length >= MAX_TIMERS) throw timersError("limit", `there are already ${MAX_TIMERS} timers, the most there can be`);
   return { timers: [...timers, timer], timer };
 }
@@ -54,11 +56,17 @@ export function ringDue(timers, now) {
   return { timers: next, due: next.filter((timer) => due.has(timer.id)) };
 }
 
-export function adoptTimers(timers, params, now) {
+export function dismissRung(timers) {
+  return timers.filter((timer) => !timer.alerted || !isShown(timer));
+}
+
+export function adoptTimers(timers, params, now, owner) {
   if (!isObject(params) || !Array.isArray(params.timers)) {
     throw timersError("bad-params", "timers/v1 adopt needs { timers } with a list of timers");
   }
-  const merged = normalizeTimers([...timers, ...normalizeTimers(params.timers)]);
+  const origin = originOf({ owner });
+  const incoming = normalizeTimers(params.timers).map((timer) => ({ ...withoutOrigin(timer), ...origin }));
+  const merged = normalizeTimers([...timers, ...incoming]);
   const added = merged.length - timers.length;
   if (added === 0) return { timers, due: [], added: 0 };
   const rung = ringDue(merged, now);

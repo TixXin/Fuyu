@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BellRing, Pause, Play, Plus, Timer as TimerIcon, Watch, X } from "lucide-react";
-import { useTranslation } from "../../i18n";
+import { useLocale, useTranslation } from "../../i18n";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
+import { usePluginNames } from "../plugin-kernel/pluginNames";
+import { localizedTitle, packageLabel } from "../plugin-kernel/slotTitle";
 import { cancelTimer, extendTimer, pauseTimer, resumeTimer, startCountdown, startStopwatch, useTimers } from "./store";
 import { clockText, isFinished, MAX_TIMERS, parseDuration, shownMs, type Timer } from "./timers";
 import "../../components/list/IslandList.css";
@@ -95,16 +97,33 @@ export function TimerPanel({ isOpen }: { isOpen: boolean }) {
   );
 }
 
+function useOwnerName(owner: string | undefined): string | null {
+  const names = usePluginNames();
+  const { locale } = useLocale();
+  if (!owner) return null;
+  return localizedTitle(names.get(owner), locale) ?? packageLabel(owner);
+}
+
 function TimerRow({ timer, now }: { timer: Timer; now: number }) {
   const t = useTranslation().timer;
+  const ownerName = useOwnerName(timer.owner);
   const done = isFinished(timer, now);
   const running = timer.runningSince !== null;
   const Icon = done ? BellRing : timer.kind === "countdown" ? TimerIcon : Watch;
   const label = timer.kind === "countdown" ? `${t.countdown} · ${clockText(timer.durationMs, true)}` : t.stopwatchLabel;
+  const source = ownerName ? t.from(ownerName) : null;
+  const kind = done ? t.ended : label;
   return (
     <li className={`timer-panel__row${done ? " timer-panel__row--done" : ""}${running ? "" : " timer-panel__row--paused"}`}>
       <Icon className="timer-panel__icon" size={15} strokeWidth={2} aria-hidden="true" />
-      <span className="timer-panel__label">{done ? t.ended : label}</span>
+      {source ? (
+        <span className="timer-panel__label timer-panel__label--sourced" title={`${kind} · ${source}`}>
+          <span className="timer-panel__kind">{kind}</span>
+          <span className="timer-panel__source">{source}</span>
+        </span>
+      ) : (
+        <span className="timer-panel__label">{kind}</span>
+      )}
       <span className="timer-panel__time">{clockText(shownMs(timer, now), timer.kind === "countdown")}</span>
       <span className="timer-panel__actions">
         {done ? (

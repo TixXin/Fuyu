@@ -5,6 +5,7 @@ use super::adapter_macos::{self as adapter, Change};
 use super::state::current_unix_millis;
 
 pub(crate) const MEDIA_SESSION_CHANGED_EVENT: &str = "media-session-changed";
+const MEDIA_CHANGED_HOST_EVENT: &str = "media.changed";
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -21,7 +22,11 @@ pub(super) fn start(app: &AppHandle) -> Result<(), String> {
             Change::Track => "track",
             Change::Playback | Change::Other => "playback",
         };
-        let _ = events.emit(MEDIA_SESSION_CHANGED_EVENT, SessionChange { kind, at: current_unix_millis(), session_id: None });
+        let change = SessionChange { kind, at: current_unix_millis(), session_id: None };
+        if let Ok(data) = serde_json::to_value(&change) {
+            crate::plugin_kernel::emit_to_host(MEDIA_CHANGED_HOST_EVENT, data);
+        }
+        let _ = events.emit(MEDIA_SESSION_CHANGED_EVENT, change);
     })
 }
 

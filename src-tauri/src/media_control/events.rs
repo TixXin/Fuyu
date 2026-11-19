@@ -28,6 +28,7 @@ use super::session::{
 use crate::win32::{self, audio::CachedRenderAudio};
 
 pub(crate) const MEDIA_SESSION_CHANGED_EVENT: &str = "media-session-changed";
+const MEDIA_CHANGED_HOST_EVENT: &str = "media.changed";
 
 const FALLBACK_WATCH_STEP: Duration = Duration::from_millis(1200);
 const QUIET_GRACE: Duration = Duration::from_millis(300);
@@ -411,12 +412,13 @@ fn sound_onset(audio: &mut Option<CachedRenderAudio>, changed_at: i64) -> i64 {
 }
 
 fn emit(app: &AppHandle, kind: &'static str, at: i64, session_id: Option<String>) {
-    let _ = app.emit(
-        MEDIA_SESSION_CHANGED_EVENT,
-        SessionChange {
-            kind,
-            at,
-            session_id,
-        },
-    );
+    let change = SessionChange {
+        kind,
+        at,
+        session_id,
+    };
+    if let Ok(data) = serde_json::to_value(&change) {
+        crate::plugin_kernel::emit_to_host(MEDIA_CHANGED_HOST_EVENT, data);
+    }
+    let _ = app.emit(MEDIA_SESSION_CHANGED_EVENT, change);
 }

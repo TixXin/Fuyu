@@ -3,7 +3,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { timersV1 } from "@fuyu/plugin-services";
 import { nextDueIn } from "../timers.ts";
 import { DATA_FILE, readTimers, writeTimers } from "./dataFile.mjs";
-import { adoptTimers, changeTimer, idOf, ringDue, startTimer } from "./rules.mjs";
+import { adoptTimers, changeTimer, dismissRung, idOf, ringDue, startTimer } from "./rules.mjs";
 
 export const name = "timer";
 export const RECHECK_MS = 60_000;
@@ -66,9 +66,9 @@ export function apply(ctx) {
 
   const provider = ctx.services.provide(timersV1, {
     list: () => ({ timers, at: Date.now() }),
-    start: (params) => {
+    start: (params, caller) => {
       const now = Date.now();
-      const next = startTimer(timers, params, now, nextId(now));
+      const next = startTimer(timers, params, now, nextId(now), caller?.plugin);
       commit(next.timers, now);
       return { timer: next.timer };
     },
@@ -83,14 +83,14 @@ export function apply(ctx) {
       return { removed: true };
     },
     dismissRinging: () => {
-      const next = timers.filter((timer) => !timer.alerted);
+      const next = dismissRung(timers);
       const removed = timers.length - next.length;
       if (removed > 0) commit(next, Date.now());
       return { removed };
     },
-    adopt: (params) => {
+    adopt: (params, caller) => {
       const now = Date.now();
-      const next = adoptTimers(timers, params, now);
+      const next = adoptTimers(timers, params, now, caller?.plugin);
       if (next.added > 0) commit(next.timers, now, next.due);
       return { timers, added: next.added, at: now };
     },

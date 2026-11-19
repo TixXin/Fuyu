@@ -99,7 +99,7 @@ export default function apply(ctx: Context) {
         <Group title={S.displayTitle}>
           <Flag name="todosExpanded" label={S.todosExpanded} {...field} />
         </Group>
-        <Group title={S.barTitle}>
+        <Group title={S.barTitle} hint={S.barHint}>
           <Flag name="showInBar" label={S.showInBar} {...field} />
         </Group>
         {error && <p className="fuyu-pomodoro-set__hint">{error}</p>}

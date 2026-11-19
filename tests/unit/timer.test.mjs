@@ -82,3 +82,17 @@ test("countdowns show whole seconds rounded up, stopwatches rounded down", () =>
   assert.equal(clockText(59_999, false), "00:59");
   assert.equal(clockText(3_725_000, false), "1:02:05");
 });
+
+test("saved timers keep who started them and whether they are hidden; older ones have neither", () => {
+  const base = { kind: "stopwatch", durationMs: 0, elapsedMs: 0, runningSince: null, alerted: false };
+  const read = normalizeTimers([
+    { ...base, id: "old" },
+    { ...base, id: "plugin", owner: "pomodoro", hidden: true },
+    { ...base, id: "odd", owner: "", hidden: "yes" },
+  ]);
+  assert.deepEqual(read.map((timer) => [timer.id, "owner" in timer ? timer.owner : null, "hidden" in timer ? timer.hidden : null]), [["old", null, null], ["plugin", "pomodoro", true], ["odd", null, null]]);
+  const kept = extended(paused(read[1], 0), 0);
+  assert.equal(kept.owner, "pomodoro");
+  assert.equal(kept.hidden, true);
+  assert.deepEqual(newCountdown("c", MIN, 0, { owner: "x", hidden: false }), { id: "c", kind: "countdown", durationMs: MIN, elapsedMs: 0, runningSince: 0, alerted: false, owner: "x" });
+});

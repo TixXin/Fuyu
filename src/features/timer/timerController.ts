@@ -1,6 +1,6 @@
 import type { WindowServices } from "@fuyu/plugin-base/client/window-services";
 import { timersV1 } from "@fuyu/plugin-services";
-import { MAX_TIMERS, type Timer } from "./timers.ts";
+import { isShown, MAX_TIMERS, type Timer } from "./timers.ts";
 
 export type StartTimerResult = "ok" | "limit" | "not-ready";
 
@@ -45,7 +45,7 @@ export function createTimerController({
   const client = services.get(timersV1);
   const listeners = new Set<() => void>();
   let snapshot: TimerSnapshot = {
-    timers: migration.isMigrated() ? [] : migration.loadLegacy(),
+    timers: migration.isMigrated() ? [] : migration.loadLegacy().filter(isShown),
     openRequest: null,
   };
   let enabled = false;
@@ -60,11 +60,12 @@ export function createTimerController({
   }
 
   function setTimers(timers: readonly Timer[]) {
-    emit({ ...snapshot, timers });
+    emit({ ...snapshot, timers: timers.filter(isShown) });
   }
 
   function upsertLocal(timer: Timer) {
     syncToken += 1;
+    if (!isShown(timer)) return;
     const exists = snapshot.timers.some((item) => item.id === timer.id);
     setTimers(exists ? snapshot.timers.map((item) => (item.id === timer.id ? timer : item)) : [...snapshot.timers, timer]);
   }
@@ -115,8 +116,8 @@ export function createTimerController({
       syncToken += 1;
       setTimers(timers);
     });
-    const offDue = client.on("due", () => {
-      if (enabled && sound) onRing();
+    const offDue = client.on("due", ({ timer }) => {
+      if (enabled && sound && isShown(timer)) onRing();
     });
     const offWatch = services.watch(() => {
       if (enabled) void sync();

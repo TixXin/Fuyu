@@ -9,7 +9,7 @@ import {
   isTicking,
   msUntilNextDay,
   nextBreak,
-  normalizeSettings,
+  applySettings,
   normalizeStored,
   phaseMinutes,
   remainingMs,
@@ -28,6 +28,8 @@ export const name = "@fuyu/pomodoro";
 export const inject = ["clients", "commands", "timers/v1", "todos/v1", "messages/v1"];
 
 const T = text.notice;
+
+const ASK_HIDDEN = false;
 
 function readStored(file: string): StoredPomodoro {
   try {
@@ -139,7 +141,9 @@ export function apply(ctx: Context) {
     await removeActive();
     rollDay();
     const todo = phase === "focus" ? await findTodo(todoId) : null;
-    const started = await timers.start({ kind: "countdown", durationMs: phaseMinutes(phase, stored) * 60_000 });
+    const durationMs = phaseMinutes(phase, stored) * 60_000;
+    const started = await timers.start(ASK_HIDDEN ? ({ kind: "countdown", durationMs, hidden: true } as { kind: "countdown"; durationMs: number }) : { kind: "countdown", durationMs });
+    if (ASK_HIDDEN) stored.timersHidden = (started.timer as Timer & { hidden?: unknown }).hidden === true;
     stored.phase = phase;
     stored.activeTimerId = started.timer.id;
     stored.activeTodoId = todo?.id ?? null;
@@ -292,7 +296,7 @@ export function apply(ctx: Context) {
   ctx.clients.handle(METHODS.resume, () => setPaused(false));
   ctx.clients.handle(METHODS.stop, () => stop());
   ctx.clients.handle(METHODS.setSettings, (params?: Partial<PomodoroSettings>) => {
-    stored = { ...stored, ...normalizeSettings(params, settingsOf(stored)) };
+    stored = applySettings(stored, params);
     save();
     return publish();
   });

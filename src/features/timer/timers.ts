@@ -7,7 +7,11 @@ export type Timer = {
   elapsedMs: number;
   runningSince: number | null;
   alerted: boolean;
+  owner?: string;
+  hidden?: boolean;
 };
+
+export type TimerOrigin = { owner?: string; hidden?: boolean };
 
 export const MAX_DURATION_MS = 24 * 60 * 60 * 1000;
 export const EXTEND_MS = 5 * 60 * 1000;
@@ -56,12 +60,30 @@ export function remainingOf(timer: Timer, now: number): number {
   return Math.max(0, timer.durationMs - elapsedOf(timer, now));
 }
 
-export function newCountdown(id: string, durationMs: number, now: number): Timer {
-  return { id, kind: "countdown", durationMs, elapsedMs: 0, runningSince: now, alerted: false };
+export function originOf(value: { owner?: unknown; hidden?: unknown }): TimerOrigin {
+  const origin: TimerOrigin = {};
+  if (typeof value.owner === "string" && value.owner) origin.owner = value.owner;
+  if (value.hidden === true) origin.hidden = true;
+  return origin;
 }
 
-export function newStopwatch(id: string, now: number): Timer {
-  return { id, kind: "stopwatch", durationMs: 0, elapsedMs: 0, runningSince: now, alerted: false };
+export function withoutOrigin(timer: Timer): Timer {
+  const rest = { ...timer };
+  delete rest.owner;
+  delete rest.hidden;
+  return rest;
+}
+
+export function isShown(timer: Timer): boolean {
+  return timer.hidden !== true;
+}
+
+export function newCountdown(id: string, durationMs: number, now: number, origin: TimerOrigin = {}): Timer {
+  return { id, kind: "countdown", durationMs, elapsedMs: 0, runningSince: now, alerted: false, ...originOf(origin) };
+}
+
+export function newStopwatch(id: string, now: number, origin: TimerOrigin = {}): Timer {
+  return { id, kind: "stopwatch", durationMs: 0, elapsedMs: 0, runningSince: now, alerted: false, ...originOf(origin) };
 }
 
 export function paused(timer: Timer, now: number): Timer {
@@ -131,7 +153,7 @@ export function normalizeTimers(value: unknown): Timer[] {
     if (!finite(raw.elapsedMs, 0, Number.MAX_SAFE_INTEGER)) continue;
     const runningSince = finite(raw.runningSince, 0, Number.MAX_SAFE_INTEGER) ? (raw.runningSince as number) : null;
     seen.add(raw.id);
-    timers.push({ id: raw.id, kind: raw.kind, durationMs: durationMs as number, elapsedMs: raw.elapsedMs as number, runningSince, alerted: raw.alerted === true });
+    timers.push({ id: raw.id, kind: raw.kind, durationMs: durationMs as number, elapsedMs: raw.elapsedMs as number, runningSince, alerted: raw.alerted === true, ...originOf(raw) });
     if (timers.length >= MAX_TIMERS) break;
   }
   return timers;

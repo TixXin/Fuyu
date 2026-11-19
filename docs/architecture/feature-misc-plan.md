@@ -139,3 +139,5 @@ QQ 音乐、网易 yrc 是在线接口，Mac 上就能测。
 - `--scope`：`src/lib/settings/lyricsSettings.ts,src/features/media/lyrics/LyricsKaraokeSettingsSection.tsx,src/i18n/sections/settings/lyrics.ts,tests/unit/lyrics-karaoke.test.mjs,tests/regression/music-lyrics.tsx,tests/regression/snapshots/music-lyrics.html`
 - 顺带确认设置窗口改了以后岛上即时生效（跨窗口同步），不生效就一起修。
 - 验证：`pnpm check`、`pnpm build`、`pnpm test:regression music settings-search`（改了文案就先 `pnpm settings:index`）。纯前端，不用 Windows CI。
+
+**C136 完成**：3e98d1b6（main 上 917bcc20），#993 合入，#989 已关，会话已归档。跨窗口同步本来就正常，没改。

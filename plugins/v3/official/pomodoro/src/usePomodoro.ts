@@ -30,3 +30,19 @@ export function usePomodoro(ctx: Context) {
 
   return { state, error, invoke };
 }
+
+export function useNow(active: boolean, fallback: number): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const at = Date.now();
+      setNow(at);
+      timer = setTimeout(tick, 1000 - (at % 1000) + 5);
+    };
+    tick();
+    return () => clearTimeout(timer);
+  }, [active]);
+  return active ? now : fallback;
+}

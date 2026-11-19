@@ -172,6 +172,10 @@
   color: var(--fuyu-plugin-text-secondary);
 }
 
+.fuyu-todo-ring__hint {
+  min-width: 0;
+}
+
 .fuyu-todo-ring__undo-btn {
   flex-shrink: 0;
   padding: 2px 8px;

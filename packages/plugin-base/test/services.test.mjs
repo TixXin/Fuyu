@@ -99,6 +99,23 @@ test("a plugin provides a declared service and another calls it and hears its ev
   assert.throws(() => client.on("shouted", () => {}), { code: "no-event" });
 });
 
+test("a listener for an event the provider never declared fails at once, or warns when the provider arrives later", async () => {
+  const started = await host();
+  const quietV1 = defineService("demo.quiet/v1", { methods: { ping: true } });
+  const loudV1 = defineService("demo.quiet/v1", { methods: { ping: true }, events: { rang: true } });
+  let early;
+  await plugin(started, "early", (ctx) => {
+    early = ctx.services.get(loudV1);
+    early.on("rang", () => {});
+  });
+  await plugin(started, "quiet", (ctx) => void ctx.services.provide(quietV1, { ping: () => "pong" }));
+  assert.ok(started.logs.some((entry) => entry.type === "warn" && /the provider of demo\.quiet\/v1 \(quiet\) declares no event rang/.test(entry.text)));
+  let late;
+  await plugin(started, "late", (ctx) => void (late = ctx.services.get(loudV1)));
+  assert.throws(() => late.on("rang", () => {}), (error) => error.code === "no-event" && error.data.provider === "quiet" && /would never run/.test(error.message));
+  assert.equal(await late.ping(), "pong");
+});
+
 test("only declared methods can be called, from a window or from a plugin", async () => {
   const started = await host();
   await plugin(started, "echoer", (ctx) => void ctx.services.provide(echoV1, ECHO));
@@ -232,6 +249,7 @@ test("providing, subscribing and unloading 1000 times leaves no providers, liste
   assert.equal(serviceHooks(started.ctx), hooks);
   assert.equal(services.watchers.size, watchers);
   assert.equal(services.interest.size, 0);
+  assert.equal(services.listening.size, 0);
   assert.deepEqual(started.services(), []);
   assert.deepEqual(started.timers(), {});
 });

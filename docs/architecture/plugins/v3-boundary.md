@@ -50,6 +50,12 @@
 | `event` | `{ name, data }` | Rust 推给宿主的事件（`Supervisor::emit`）。插件用 `ctx.rust.on(名字, 监听器)` 收；监听器记在宿主的 Rust 桥（`rust.mjs` 的 `RustBridge`）自己的表里，只交给经 `ctx.rust.on` 登记的监听器，不发到公共事件总线，`ctx.on("rust:…")` 收不到。登记是插件 ctx 上的一个 `ctx.effect`，插件停用时自动撤掉；监听器的耗时、出错和个数照常算进这个插件的 `cpuMs`、`errors`、`listeners`。宿主没在跑时 `emit` 返回 `peer-gone` |
 | `progress` | `{ id, data }` | 宿主发出的第 `id` 个调用的流式片段（见下面「流式」） |
 
+现在 Rust 推的事件（Rust 侧经 `plugin_kernel::emit_to_host`，宿主没就绪时直接丢掉）：
+
+| 事件名 | `data` | 谁收 |
+|---|---|---|
+| `media.changed` | `{ kind: "track" \| "playback", at, sessionId }`，和窗口事件 `media-session-changed` 同一份 | 内置插件 `music`：合并、去重后读一次 `media.nowPlaying`，经 `media/v1` 的 `changed` 转给插件（E72） |
+
 ### 宿主发给 Rust 的请求
 
 宿主里的插件用 `ctx.rust.call(方法, 参数, { timeoutMs?, onProgress? })`（`Context` 上的 `rust`，类型 `RustApi`）。方法名是点分的小驼峰（`app.version`），参数是一个 JSON 值，没有就是 `null`。

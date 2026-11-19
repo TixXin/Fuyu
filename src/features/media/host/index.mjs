@@ -1,5 +1,6 @@
 import { lyricsV1, mediaV1 } from "@fuyu/plugin-services";
 import { createLyricsSourceRegistry } from "./lyricsSources.mjs";
+import { createNowPlayingFeed } from "./nowPlayingFeed.mjs";
 
 export const name = "music";
 
@@ -56,13 +57,19 @@ export function apply(ctx) {
     });
   const answer = async (method, params) => serviceNowPlaying(await call(method, params));
 
-  ctx.services.provide(mediaV1, {
+  const mediaProvider = ctx.services.provide(mediaV1, {
     nowPlaying: () => answer("nowPlaying", null),
     playPause: () => answer("playPause", null),
     next: () => answer("next", null),
     previous: () => answer("previous", null),
     seek: (params) => answer("seek", { positionMs: positionOf(params) }),
   });
+  const feed = createNowPlayingFeed({
+    read: () => answer("nowPlaying", null),
+    emit: (state) => mediaProvider.emit("changed", state),
+  });
+  ctx.effect(() => feed.stop, "media.changed.feed");
+  ctx.rust.on("media.changed", () => feed.signal());
 
   let lyricsProvider = null;
   const lyricsSources = createLyricsSourceRegistry({
