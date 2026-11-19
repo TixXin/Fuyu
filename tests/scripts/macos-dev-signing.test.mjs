@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { planInvocation } from "../../scripts/macos/dev-cargo.mjs";
-import { DEV_IDENTIFIER, DEV_IDENTITY, devSigningDir, parseSha1Fingerprint, signedByDevIdentity } from "../../scripts/macos/dev-signing.mjs";
+import { cargoOriginal, DEV_IDENTIFIER, DEV_IDENTITY, devSigningDir, parseSha1Fingerprint, signedByDevIdentity } from "../../scripts/macos/dev-signing.mjs";
 import { IDENTITY } from "../../scripts/macos/self-signed-cert.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -54,6 +54,19 @@ test("the development identity is its own certificate, apart from the release on
   assert.throws(() => parseSha1Fingerprint("nothing"));
   assert.equal(signedByDevIdentity(`Identifier=${DEV_IDENTIFIER}\nAuthority=${DEV_IDENTITY}\n`), true);
   assert.equal(signedByDevIdentity("Identifier=fuyu-2f0e931a\nSignature=adhoc\n"), false);
+});
+
+test("the original that cargo copies the binary from is found in deps, so the copy it makes again is signed", () => {
+  const debug = mkdtempSync(path.join(tmpdir(), "fuyu-deps-"));
+  mkdirSync(path.join(debug, "deps"));
+  const binary = path.join(debug, "fuyu");
+  writeFileSync(binary, "second");
+  writeFileSync(path.join(debug, "deps", "fuyu-0123456789abcdef"), "first!");
+  writeFileSync(path.join(debug, "deps", "fuyu-fedcba9876543210"), "second");
+  writeFileSync(path.join(debug, "deps", "fuyu-fedcba9876543210.d"), "second");
+  assert.equal(cargoOriginal(binary), path.join(debug, "deps", "fuyu-fedcba9876543210"));
+  writeFileSync(binary, "other!");
+  assert.equal(cargoOriginal(binary), null);
 });
 
 test("the runner builds before run, then hands over to cargo run, and passes exit codes back", { skip: process.platform === "win32" }, () => {

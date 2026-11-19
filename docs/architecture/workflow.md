@@ -266,6 +266,7 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 Mac 上开发版的签名（G1.34）：钥匙串条目的「始终允许」认的是读它的程序的签名。链接器给 `target/debug/fuyu` 的是 ad-hoc 签名，指定要求是 `cdhash`，每次重编都变，日历、Bark、套餐用量、Claude Code 凭据这些钥匙串条目就每次重编后都弹授权框。所以 `tauri.macos.conf.json` 的 `build.runner` 指向 `scripts/macos/dev-cargo.sh`：tauri 调它代替 cargo（`tauri dev` 传 `run …`，`tauri build` 传 `build …`），debug 的 `run` 先编译、用固定的开发证书重签 `target/debug/fuyu`（标识 `com.tixxin.fuyu.dev`，指定要求 `identifier "com.tixxin.fuyu.dev" and certificate leaf = H"…"`，重编后不变），再交给 `cargo run`；debug 的 `build` 编译后重签；release 原样交给 cargo，不重签，`pnpm build:exe` 和发布的签名照旧。
 
 - 开发证书第一次用时自动生成，和它专用的钥匙串文件、两个随机密码一起放在 `~/.tauri/fuyu/macos-dev/`，和发布用的自签名证书（`~/.tauri/fuyu/macos/`）分开；不导入登录钥匙串，不改钥匙串搜索列表，证书不用设为受信任，全程不弹框。删掉这个目录会生成一张新证书，钥匙串条目要再点一次「始终允许」。
+- 签的是 cargo 的原件 `target/debug/deps/fuyu-<hash>`，再复制成 `target/debug/fuyu`：cargo 每次编译或 `cargo run` 都会从 deps 重新复制一份盖过它，只签外面那份会被冲掉。
 - 已经是这张证书签的（cargo 没重新链接）就跳过；任何一步失败只打一行 `[dev-signing]` 警告，保留 ad-hoc 签名照常启动。
 - 换到这套签名后，每个钥匙串条目第一次被读时还会弹一次（ACL 里记的是旧的 cdhash），点「始终允许」，之后重编不再弹。
 - `cargo test`、Windows 上的 `tauri dev` / `tauri build` 都不经过它。
