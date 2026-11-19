@@ -30,6 +30,18 @@ export type SettingsExpandText = {
   tuckStyleEdge: string;
   tuckStyleLine: string;
   tuckStyleHidden: string;
+  tuckHint: string;
+  tuckHintHint: string;
+  tuckHintNone: string;
+  tuckHintDot: string;
+  tuckHintGlow: string;
+  tuckHintColor: string;
+  tuckHintColorContrast: string;
+  tuckHintColorIsland: string;
+  tuckHintColorCustom: string;
+  tuckHintCustomColor: string;
+  tuckHintBreathe: string;
+  tuckHintBreatheHint: string;
   motion: string;
   motionHint: string;
   motionSpring: string;
@@ -81,6 +93,18 @@ export const zhCN: SettingsExpandText = {
   tuckStyleEdge: "标准露边",
   tuckStyleLine: "极简细线",
   tuckStyleHidden: "贴边隐身",
+  tuckHint: "隐身提示",
+  tuckHintHint: "贴边隐身时在屏幕边缘留一个很小的记号，表示岛还在运行；记号不挡鼠标",
+  tuckHintNone: "无",
+  tuckHintDot: "小圆点",
+  tuckHintGlow: "光晕",
+  tuckHintColor: "提示颜色",
+  tuckHintColorContrast: "白色描边",
+  tuckHintColorIsland: "跟随岛色",
+  tuckHintColorCustom: "自选",
+  tuckHintCustomColor: "自选颜色",
+  tuckHintBreathe: "提示呼吸",
+  tuckHintBreatheHint: "提示慢慢明暗变化；系统开了减少动画时一直常亮",
   motion: "开合动画",
   motionHint: "弹性同官网；Q 弹冲出去再轻轻回一下，高度也会弹；平滑和快速收起更快、不回弹",
   motionSpring: "弹性（同官网）",
@@ -132,6 +156,18 @@ export const en: SettingsExpandText = {
   tuckStyleEdge: "Standard edge",
   tuckStyleLine: "Thin line",
   tuckStyleHidden: "Hidden",
+  tuckHint: "Hidden hint",
+  tuckHintHint: "Leaves a tiny mark at the screen edge while the island is hidden, so you know it is still running; clicks pass through it",
+  tuckHintNone: "None",
+  tuckHintDot: "Dot",
+  tuckHintGlow: "Glow",
+  tuckHintColor: "Hint color",
+  tuckHintColorContrast: "White",
+  tuckHintColorIsland: "Island",
+  tuckHintColorCustom: "Custom",
+  tuckHintCustomColor: "Custom color",
+  tuckHintBreathe: "Breathing hint",
+  tuckHintBreatheHint: "The hint slowly fades in and out; it stays steady when the system reduces motion",
   motion: "Open and close",
   motionHint: "Spring moves as the website's island; Bouncy springs out and back, its height bounces too; Smooth and Fast close quicker, without a bounce",
   motionSpring: "Spring (as the website)",

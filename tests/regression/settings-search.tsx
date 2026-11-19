@@ -28,7 +28,7 @@ localStorage.setItem("fuyu-save-directory", "");
 localStorage.setItem("fuyu-qq-notification-access-requested", "true");
 if (query.get("state") === "on") {
   const allOn = Object.fromEntries(Object.entries(DEFAULT_SETTINGS).map(([key, value]) => [key, typeof value === "boolean" ? true : value]));
-  localStorage.setItem("fuyu-settings", JSON.stringify({ ...allOn, expandTrigger: "click", appearanceMode: "liquidGlass", glassColorSource: "custom" }));
+  localStorage.setItem("fuyu-settings", JSON.stringify({ ...allOn, expandTrigger: "click", appearanceMode: "liquidGlass", glassColorSource: "custom", tuckStyle: "hidden", tuckHintColor: "custom" }));
   localStorage.setItem("fuyu-agent-push", JSON.stringify({ enabled: true }));
   localStorage.setItem("fuyu-voice-input", JSON.stringify({ enabled: true }));
   localStorage.setItem("fuyu-agent-approval", JSON.stringify({ onIsland: true, whenInFront: true }));
