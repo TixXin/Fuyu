@@ -103,10 +103,12 @@ try {
   await click(weather.querySelector("[data-tab='commands']"));
   await settle();
   check(weather.querySelectorAll("[data-command]").length === 2 && weather.querySelector("[data-command='refresh'] .plugin-kbd") && weather.textContent!.includes(locale === "en" ? "Refresh weather" : "刷新天气"), "The commands tab lists the plugin's commands with their shortcuts");
-  await click(weather.querySelector("[data-tab='permissions']"));
+  check(!weather.querySelector("[data-tab='permissions']") && !/权限|permission/i.test(weather.querySelector("[role='tablist']")?.textContent ?? ""), "There is no permissions tab");
+  await click(weather.querySelector("[data-tab='overview']"));
   await settle();
-  check(weather.textContent!.includes("api.open-meteo.com") && weather.querySelector(".plugin-perm--sensitive"), "The permissions tab lists network access and flags sensitive system access");
+  check(weather.querySelector("[data-plugin-capabilities] [data-capability='network']") && weather.textContent!.includes("api.open-meteo.com") && weather.querySelector(".plugin-cap--sensitive"), "The overview says what the plugin does: the addresses it connects to and the system abilities it uses, marked");
   check(weather.querySelector("[data-plugin-window-rules='@fuyu/weather']"), "and holds the separate-window rules");
+  check(!/权限|permission/i.test(weather.textContent ?? ""), "and never talks about permissions");
   await click(weather.querySelector("[data-tab='settings']"));
   await settle();
 

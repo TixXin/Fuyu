@@ -3,29 +3,29 @@ import type { PluginMarketDetailTab } from "../../i18n/sections/settings/pluginM
 import { Markdown } from "../../components/markdown/Markdown";
 import { useLocale, useTranslation } from "../../i18n";
 import { openHttpUrl } from "./pluginMarketActions";
-import { PluginMarketPermissions } from "./PluginMarketPermissions";
-import { formatBytes, localized, permissionItems } from "./pluginMarketModel";
+import { PluginCapabilities } from "./PluginCapabilities";
+import { formatBytes, localized } from "./pluginMarketModel";
 
-export function PluginMarketDetailTabBody({ tab, details, fallback, nameOf }: {
+export function PluginMarketDetailTabBody({ tab, details, fallback }: {
   tab: PluginMarketDetailTab;
   details: MarketPluginDetails;
   fallback: string;
-  nameOf: (id: string) => string;
 }) {
   const text = useTranslation().settings.pluginsV3.marketPage;
   const copy = text.detail;
   const { locale } = useLocale();
 
-  if (tab === "readme" || tab === "changelog") {
-    const body = (tab === "readme" ? details.readme?.trim() || fallback : details.changelog?.trim()) ?? "";
-    return body ? <Markdown className="market-markdown" text={body} onOpenLink={openHttpUrl} /> : <p className="plugin-callout">{tab === "readme" ? copy.noReadme : copy.noChangelog}</p>;
+  if (tab === "changelog") {
+    const body = details.changelog?.trim() ?? "";
+    return body ? <Markdown className="market-markdown" text={body} onOpenLink={openHttpUrl} /> : <p className="plugin-callout">{copy.noChangelog}</p>;
   }
 
-  if (tab === "permissions") {
-    const items = permissionItems({ ...details, requiredPlugins: Object.keys(details.requires) });
+  if (tab === "readme") {
+    const body = details.readme?.trim() || fallback;
     return (
       <>
-        <PluginMarketPermissions items={items} nameOf={nameOf} ownData />
+        {body ? <Markdown className="market-markdown" text={body} onOpenLink={openHttpUrl} /> : <p className="plugin-callout">{copy.noReadme}</p>}
+        <PluginCapabilities caps={details} />
         {details.commands.length > 0 ? (
           <>
             <h3 className="plugin-page__heading">{copy.commands}</h3>

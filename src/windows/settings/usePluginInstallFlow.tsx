@@ -1,9 +1,9 @@
 import { useState } from "react";
 import type { MarketCatalogPlugin, MarketInspectedPackage } from "@fuyu/plugin-services";
-import { useErrorText, useLocale } from "../../i18n";
+import { useErrorText } from "../../i18n";
 import { PluginInstallConfirmModal, type PendingPluginInstall } from "./PluginInstallConfirmModal";
 import { marketClient } from "./pluginMarketActions";
-import { isFirstFromPublisher, localized } from "./pluginMarketModel";
+import { isFirstFromPublisher } from "./pluginMarketModel";
 import { marketActionCandidate } from "./pluginRowStatus";
 
 type PendingAction =
@@ -12,7 +12,6 @@ type PendingAction =
 
 export function usePluginInstallFlow(onInstalled?: () => void, catalog?: { plugins: readonly MarketCatalogPlugin[]; manualAllowed: boolean } | null) {
   const errorText = useErrorText();
-  const { locale } = useLocale();
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,17 +67,11 @@ export function usePluginInstallFlow(onInstalled?: () => void, catalog?: { plugi
       .finally(() => setBusy(false));
   };
 
-  const nameOf = (id: string) => {
-    const found = catalog?.plugins.find((plugin) => plugin.name === id);
-    return found ? localized(found.displayName, locale, id) : id;
-  };
-
   const modal = pending ? (
     <PluginInstallConfirmModal
       pending={pending.modal}
       busy={busy}
       error={error}
-      nameOf={nameOf}
       onConfirm={confirm}
       onCancel={() => {
         if (!busy) setPending(null);

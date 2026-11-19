@@ -10,7 +10,7 @@ import { PluginMarketDialog } from "./PluginMarketDialog";
 import { isHttpUrl, marketClient, openHttpUrl } from "./pluginMarketActions";
 import { formatBytes, localized, offeredCandidate } from "./pluginMarketModel";
 
-const TABS: readonly PluginMarketDetailTab[] = ["readme", "changelog", "permissions", "versions"];
+const TABS: readonly PluginMarketDetailTab[] = ["readme", "changelog", "versions"];
 const LINKS = ["repository", "homepage", "bugs", "funding"] as const;
 
 export function PluginMarketDetailModal({ plugin, categoryName, nameOf, onClose, ...handlers }: Omit<MarketCardHandlers, "onOpen"> & {
@@ -117,7 +117,7 @@ export function PluginMarketDetailModal({ plugin, categoryName, nameOf, onClose,
                 ))}
               </div>
               <div className="market-detail__panel" role="tabpanel">
-                <PluginMarketDetailTabBody tab={tab} details={details} fallback={fallback} nameOf={nameOf} />
+                <PluginMarketDetailTabBody tab={tab} details={details} fallback={fallback} />
               </div>
             </div>
             <aside className="market-detail__aside">
