@@ -8,6 +8,7 @@ import { FALLBACK_LOCALE, getLoadedI18n, loadLocale } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import { islandNoticesV1 } from "../../lib/island-notices/service";
 import { getPluginHostConnection } from "./api";
+import { answerIslandRequest, islandControlFor } from "./islandControl.ts";
 import { updatePluginNames, type PluginNameInput } from "./pluginNames.ts";
 import { openPluginSettings } from "./settingsOpener.ts";
 import { windowServices } from "./services.ts";
@@ -46,7 +47,8 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
   const registry = windowSlots(window);
   let connection: Connection | null = null;
   const bridge = createBridge((method, params) => connection?.call(method, params) ?? Promise.reject(new Error("the plugin host is not connected")));
-  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge, openSettings: openPluginSettings });
+  const callHost = (method: string, params?: unknown) => connection?.call(method, params) ?? Promise.reject(new HostCallError("not-ready", "the plugin host is not connected"));
+  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge, openSettings: openPluginSettings, island: islandControlFor(window, callHost) });
   const services = createServiceProxy((method, params, options) => connection?.call(method, params, options) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
   windowServices.attach(services);
   const waitingMonitor = window === "island"
@@ -90,6 +92,7 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
       if (name === "service") services.deliver(data as ServiceEventMessage);
       if (name === "services") services.update(data as ServiceEntry[]);
       if (name === "settings.open" && window === "island") openFromHost(data);
+      if (name === "island.request" && window === "island") void answerIslandRequest(data, callHost).catch((error: unknown) => console.error("Failed to answer an island request from the plugin host", error));
       if (name === "plugins" && Array.isArray(data)) {
         waitingMonitor?.update(data as WaitingPluginInput[]);
         updatePluginNames(data as PluginNameInput[]);

@@ -96,6 +96,8 @@ try {
       if (method === "host") return host.info();
       if (method === "bisect") return host.bisect(params?.off);
       if (method === "plugin.call") return host.ctx.clients.call(params?.plugin, params?.method, params?.params, window);
+      if (method === "island.open" || method === "island.collapse") return host.islandControl.request(method.slice("island.".length), params?.plugin, params?.page);
+      if (method === "island.result") return host.islandControl.settle(params, window);
       if (SERVICE_CALLS.includes(method)) return host.serviceHub.windowCall(method, params, window);
       throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });
     },
@@ -110,6 +112,7 @@ try {
   host.watchServices((services) => windows.publish("services", services));
   host.serviceHub.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
   host.settingsOpener.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
+  host.islandControl.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
   host.ctx.clients.onMessage((message) => windows.publish("plugin", message));
   tellRust(host.clients());
   rpc.notify("ready", {

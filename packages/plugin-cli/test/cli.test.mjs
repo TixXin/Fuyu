@@ -130,7 +130,7 @@ test("check validates service names in provides, replaces and inject while allow
       pkg.fuyu.provides = ["weather/v1", "weather.forecast/v2"];
       pkg.fuyu.replaces = ["lyrics/v1"];
       pkg.fuyu.inject = {
-        required: ["clients", "commands", "config", "http", "settings", "translator.engines", "weather/v1"],
+        required: ["clients", "commands", "config", "http", "island", "settings", "translator.engines", "weather/v1"],
         optional: ["reminders/v1", "clipboard.actions"],
       };
     });

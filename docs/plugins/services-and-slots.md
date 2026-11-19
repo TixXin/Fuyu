@@ -128,3 +128,32 @@ export function apply(ctx) {
 - 不带参数，只能打开自己的设置：插件 id 由窗口的加载器（窗口代码）或宿主（宿主代码）按调用方填，传进去的参数一概忽略。
 - 返回 `Promise<void>`。宿主代码里调用时，宿主转给岛窗口去打开；岛窗口没连上宿主时失败，错误码 `not-ready`。
 - 插件没有设置项、或还没在运行时，弹窗照常落到「设置」标签，显示对应的提示（「这个插件没有可以改的设置」或「插件运行时，这里才会显示它自己的设置」）。
+
+## 五、打开自己的岛页面、收起岛（`ctx.island`）
+
+插件用 `island.page/v1` 注册了岛页面后，可以自己把岛切到这一页，在用户用完时把岛收起来。例如应用启动台：点收起条上的按钮打开启动台页，启动一个应用后收起岛。
+
+```ts
+// 窗口代码（岛上、设置窗口、插件独立窗口都能调）
+<button type="button" onClick={() => void ctx.island.open()}>打开启动台</button>
+<button type="button" onClick={() => void ctx.island.open("launchpad-recent")}>最近用过</button>
+
+async function launch(app) {
+  await ctx.host.call("launch", app);
+  await ctx.island.collapse();
+}
+
+// 宿主代码：代码的 inject 和 package.json 的 fuyu.inject 里写 "island"，只有 open
+export const inject = ["commands", "island"];
+export function apply(ctx) {
+  ctx.commands.register("show", () => ctx.island.open());
+}
+```
+
+- `open(page?)`：岛在托盘里或贴边藏着时先唤出，再展开、切到这一页、拿到焦点；已经展开在别的页上也直接切过去。`page` 是注册 `island.page/v1` 时写的 `id`，不写时打开本插件注册的第一个页面。返回 `Promise<void>`，打开不了时失败，错误码：
+  - `not-owner`：`page` 是别的插件或浮屿自己的页面。插件 id 由窗口的加载器（窗口代码）或宿主（宿主代码）按调用方填，插件只能打开自己的页面。
+  - `not-found`：本插件没有叫这个 `id` 的页面。
+  - `no-page`：本插件现在没有岛页面（没注册，或岛上的那部分还没加载完）。
+  - `not-ready`：岛窗口还没连上宿主；`timeout`：岛 10 秒没回答；`bad-params`：`page` 不是非空字符串。
+- `collapse()`：只给窗口代码。岛展开着、当前是本插件的页面时收起岛，返回 `true`；岛已经收起、或用户正在看别的页面时什么也不做，返回 `false`，不会关掉用户在看的东西。宿主代码里没有 `collapse`：宿主不知道用户此刻在不在看岛，收起应该跟着用户在插件界面上的操作走；确实需要时，宿主用 `ctx.clients.publish` 通知窗口部分，由窗口代码调。
+- 老版本的浮屿没有 `ctx.island`：窗口代码用 `ctx.island?.open` 判断接口在不在；宿主代码 inject 了 `island` 的插件在老版本上会一直停在「等待」，要么只在窗口代码里用，要么用 `package.json` 的 `engines.fuyu` 限定版本。

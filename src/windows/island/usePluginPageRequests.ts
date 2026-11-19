@@ -5,7 +5,7 @@ import { islandWindowVisible, showReadyIsland, takeIslandClickFocus } from "./ap
 import { pageSlot } from "./slots/pageSlot";
 import type { IslandPage } from "./types";
 
-async function showIfHidden() {
+export async function showIfHidden() {
   const visible = await islandWindowVisible().catch(() => true);
   if (!visible) await showReadyIsland();
 }
