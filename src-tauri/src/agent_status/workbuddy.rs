@@ -21,7 +21,7 @@ use super::{write_text_file, AGENT_APPROVAL_SCRIPT_FILE_NAME, AGENT_RUNNING_NOTI
 pub(super) const PROVIDER: &str = "workbuddy";
 const DIRS: [&str; 2] = [".workbuddy", ".workbuddy-ai"];
 #[cfg(not(target_os = "macos"))]
-const EXES: [&str; 2] = ["WorkBuddy.exe", "WorkBuddyAI.exe"];
+pub(super) const EXES: [&str; 2] = ["WorkBuddy.exe", "WorkBuddyAI.exe"];
 #[cfg(target_os = "macos")]
 const BUNDLES: [(&str, &str); 1] = [("com.workbuddy.workbuddy-ai", "workbuddy ai")];
 const INTERRUPTED: &str = "Interrupted by user";

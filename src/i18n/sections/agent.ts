@@ -19,6 +19,7 @@ export type AgentText = {
     focus: (title: string) => string;
     notFound: string;
     notFoundEnded: string;
+    notFoundReason: Record<"notRunning" | "hidden", (app: string) => string>;
     windowOnly: string;
     yourPrompt: (prompt: string) => string;
     activeCount: (count: number) => string;
@@ -136,6 +137,10 @@ export const zhCN: AgentText = {
     focus: (title) => `切换到「${title}」所在的窗口`,
     notFound: "没找到对应的窗口",
     notFoundEnded: "没找到对应的窗口，会话可能已经关掉了",
+    notFoundReason: {
+      notRunning: (app) => `${app} 没有打开`,
+      hidden: (app) => `${app} 收在托盘里，没能唤出窗口`,
+    },
     windowOnly: "已切到窗口，请选会话",
     yourPrompt: (prompt) => `你：${prompt}`,
     activeCount: (count) => `${count} 个 Agent 会话正在运行，点击查看`,
@@ -260,6 +265,10 @@ export const en: AgentText = {
     focus: (title) => `Switch to the window running "${title}"`,
     notFound: "No matching window found",
     notFoundEnded: "No matching window; the session may have been closed",
+    notFoundReason: {
+      notRunning: (app) => `${app} is not open`,
+      hidden: (app) => `${app} is in the tray; could not show its window`,
+    },
     windowOnly: "Window focused; pick session",
     yourPrompt: (prompt) => `You: ${prompt}`,
     activeCount: (count) => (count === 1 ? "1 agent session running; click to view" : `${count} agent sessions running; click to view`),

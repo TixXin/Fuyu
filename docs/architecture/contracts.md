@@ -106,6 +106,7 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
 | `agent-approval-closed`（载荷 `{ id, reason }`，`reason` 为 `decided` / `timeout` / `disconnected` / `handedBack` / `shutdown`） | `agent_approval/mod.rs` | 广播 |
 | `agent-editor-extension-missing`（载荷 `{ app, name }`：点会话跳到的编辑器（`code` / `cursor` …，显示名 `VS Code` …）没装岛屿的扩展，Agent 页提示安装，A9） | `agent_status/mod.rs` | `main` |
 | `agent-focus-window-only`（载荷 `{ provider, sessionId, app, name }`：点会话只把宿主窗口调到前台、没能切到具体会话或标签页，Agent 页在该行提示手动选会话，A12） | `agent_status/mod.rs` | `main` |
+| `agent-focus-not-found`（载荷 `{ provider, sessionId, reason }`，`reason` 为 `notRunning` / `hidden`：点会话没找到窗口时说明原因，Agent 页在该行显示「没有打开」或「收在托盘里」，目前只有 WorkBuddy 发，A16） | `agent_status/mod.rs` | `main` |
 | `local-api-request`（载荷 `{ id, method, params }`，前端用 `answer_local_api_request` 回复） | `local_api/bridge.rs` | `main` |
 | `todos-changed`（载荷 `{ revision, data, fields, reason }`：插件或本地接口改了 `todos.json`，主窗口只采纳 `fields` 列出的字段） | `todos/service.rs` | `main` |
 | `file-shelf-changed`（无载荷：插件改了文件中转列表，主窗口重新读取；2026-11-15 起宿主的 `fileShelf.add` 也发，E36.3.32） | `file_shelf/host.rs`（第 2 版插件那一处 `file_shelf/plugin_view.rs` 已随 E36.6.5 删除） | `main` |
