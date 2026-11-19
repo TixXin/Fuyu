@@ -253,7 +253,7 @@ export function decodeBase64(base64) {
 
 export function readState(dataDir) {
   const statePath = join(dataDir, STATE_FILE);
-  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, updatedAt: null, lastError: null });
+  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, updatedAt: null, lastError: null, revocationWarning: null });
   if (!existsSync(statePath)) return empty();
   try {
     const raw = JSON.parse(readFileSync(statePath, "utf8"));
@@ -264,6 +264,7 @@ export function readState(dataDir) {
       trustedAuthors: normalizeTrustedAuthors(raw?.trustedAuthors),
       updatedAt: typeof raw?.updatedAt === "number" ? raw.updatedAt : null,
       lastError: typeof raw?.lastError === "string" ? raw.lastError : null,
+      revocationWarning: typeof raw?.revocationWarning === "string" ? raw.revocationWarning : null,
     };
   } catch {
     return empty();
@@ -352,5 +353,12 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
     ...(displayName !== undefined ? { displayName } : {}),
     ...(description !== undefined ? { description } : {}),
   }));
-  return { plugins, installed, updatedAt: state.updatedAt, manualAllowed: state.manualAllowed === true, error: indexError ?? state.lastError ?? null };
+  return {
+    plugins,
+    installed,
+    updatedAt: state.updatedAt,
+    manualAllowed: state.manualAllowed === true,
+    error: indexError ?? state.lastError ?? null,
+    revocationWarning: state.revocationWarning ?? null,
+  };
 }

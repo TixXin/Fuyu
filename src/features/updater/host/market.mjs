@@ -1,9 +1,10 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { compareVersions, mergeRevoked, openIndex, openRevoked, selectVersions, verifyVersionSignature } from "../../../../packages/plugin-market/src/index.mjs";
+import { compareVersions, openIndex, selectVersions, verifyVersionSignature } from "../../../../packages/plugin-market/src/index.mjs";
 import { applyRevocationsToDir, commitStaged, discardStaged, inspectPackage as inspectFuyuPackage, installPackage, stagePackage, uninstallPackage, writeInstalledToYml } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { marketV1 } from "../../../../packages/plugin-services/src/services/market.mjs";
 import { getMarketPluginDetails } from "./marketDetails.mjs";
+import { refreshRevocations } from "./marketRevocations.mjs";
 import {
   INDEX_FILE, INDEX_SIG_FILE, buildMarketSnapshot, confirmationFromManifest, decodeBase64, detectTrustChange, isObject,
   marketError, parseAppVersionFromArgv, planRequiredDependencies, readInstalledPackages, readState, readVerifiedCachedIndex,
@@ -169,35 +170,8 @@ export function createMarketService(options = {}) {
         throw marketError(opened.reason ?? opened.status, `Market index rejected: ${opened.reason ?? opened.status}`);
       }
 
-      let nextRevocations = state.revocations;
-      let hasRevocationUpdate = false;
-      const revokedRes = await fetchImpl(revokedUrl);
-      if (revokedRes && revokedRes.status !== 404) {
-        if (!revokedRes.ok) throw marketError("network", `Failed to fetch revocation list (${revokedRes.status})`);
-        const revokedText = await revokedRes.text();
-        const revokedSigRes = await fetchImpl(`${revokedUrl}.sig`);
-        if (!revokedSigRes?.ok) throw marketError("bad-signature", `Missing revocation signature (${revokedSigRes?.status ?? "err"})`);
-        let revokedSig;
-        try {
-          revokedSig = JSON.parse(await revokedSigRes.text());
-        } catch {
-          throw marketError("bad-signature", "Revocation signature is not valid JSON");
-        }
-        const revOpened = openRevoked({
-          text: revokedText,
-          signature: revokedSig,
-          trust,
-          lastSerial: (state.revocations?.serial ?? -1) >= 0 ? state.revocations.serial : undefined,
-          now,
-        });
-        if (revOpened.status !== "ok") {
-          throw marketError(revOpened.reason ?? revOpened.status, `Revocation list rejected: ${revOpened.reason ?? revOpened.status}`);
-        }
-        const merged = mergeRevoked(state.revocations, revOpened.doc);
-        if (!merged.ok) throw marketError(merged.reason, `Revocation merge rejected: ${merged.reason}`);
-        nextRevocations = merged.state;
-        hasRevocationUpdate = true;
-      }
+      const revoked = await refreshRevocations({ fetchImpl, revokedUrl, trust, saved: state.revocations, now, index: opened.doc });
+      const nextRevocations = revoked.revocations;
 
       mkdirSync(dataDir, { recursive: true });
       writeFileSync(join(dataDir, INDEX_FILE), indexText, "utf8");
@@ -212,7 +186,7 @@ export function createMarketService(options = {}) {
       }
 
       let disabledCount = 0;
-      if (hasRevocationUpdate) {
+      if (revoked.updated) {
         disabledCount = applyRevocationsToDir(pluginsDir, nextRevocations, { installed: readInstalledPackages(pluginsDir) }).disabled.length;
       }
 
@@ -223,6 +197,7 @@ export function createMarketService(options = {}) {
         trustedAuthors: nextTrustedAuthors,
         updatedAt: toTimestamp(now),
         lastError: null,
+        revocationWarning: revoked.warning,
       });
       if ((disabledCount > 0 || upgradedCount > 0) && onConfigChanged) await onConfigChanged();
       notifyChanged();
