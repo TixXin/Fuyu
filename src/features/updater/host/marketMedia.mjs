@@ -37,7 +37,7 @@ export function indexAssets(doc) {
   return assets;
 }
 
-export function createMarketMedia({ dataDir, fetchImpl, readDoc }) {
+export function createMarketMedia({ dataDir, downloader, readDoc }) {
   const dir = join(dataDir, MEDIA_DIR);
   const pending = new Map();
   const waiting = [];
@@ -60,17 +60,17 @@ export function createMarketMedia({ dataDir, fetchImpl, readDoc }) {
   };
 
   const download = async (url, sha256) => {
-    if (typeof fetchImpl !== "function") return false;
     if (active >= MAX_PARALLEL) await new Promise((resolve) => waiting.push(resolve));
     active += 1;
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), MEDIA_TIMEOUT_MS);
     try {
-      const res = await fetchImpl(url, { signal: controller.signal });
-      if (!res?.ok) return false;
-      const buf = Buffer.from(await res.arrayBuffer());
-      if (buf.length === 0 || buf.length > MAX_MEDIA_BYTES) return false;
-      if (createHash("sha256").update(buf).digest("hex") !== sha256) return false;
+      const buf = await downloader.run(url, async (source) => {
+        const res = await source.get(url, { timeoutMs: MEDIA_TIMEOUT_MS, as: "bytes", maxBytes: MAX_MEDIA_BYTES });
+        if (res.missing) return null;
+        if (res.bytes.length === 0) throw marketError("invalid", "the image is empty");
+        if (createHash("sha256").update(res.bytes).digest("hex") !== sha256) throw marketError("bad-sha256", "the image does not match the SHA-256 in the index");
+        return res.bytes;
+      }, "the image");
+      if (!buf) return false;
       mkdirSync(dir, { recursive: true });
       const temp = join(dir, `${sha256}.${process.pid}.tmp`);
       writeFileSync(temp, buf);
@@ -79,7 +79,6 @@ export function createMarketMedia({ dataDir, fetchImpl, readDoc }) {
     } catch {
       return false;
     } finally {
-      clearTimeout(timer);
       active -= 1;
       waiting.shift()?.();
     }

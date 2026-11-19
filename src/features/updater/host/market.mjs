@@ -1,13 +1,15 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { compareVersions, openIndex, selectVersions } from "../../../../packages/plugin-market/src/index.mjs";
+import { compareVersions, selectVersions } from "../../../../packages/plugin-market/src/index.mjs";
 import { DATA_DIR, dataDirOf } from "../../../../packages/plugin-base/src/host/data.mjs";
 import { applyRevocationsToDir, inspectPackage as inspectFuyuPackage, installPackage, removeInstalledFromYml, uninstallPackage, writeInstalledToYml } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { marketV1 } from "../../../../packages/plugin-services/src/services/market.mjs";
 import { getMarketPluginDetails } from "./marketDetails.mjs";
+import { fetchVerifiedIndex } from "./marketIndex.mjs";
 import { createMarketInstaller } from "./marketInstall.mjs";
 import { createMarketMedia } from "./marketMedia.mjs";
 import { refreshRevocations } from "./marketRevocations.mjs";
+import { createMarketDownloader } from "./marketSources.mjs";
 import {
   INDEX_FILE, INDEX_SIG_FILE, buildMarketSnapshot, confirmationFromManifest, decodeBase64, detectTrustChange, isObject,
   marketError, parseAppVersionFromArgv, planRequiredDependencies, readInstalledPackages, readState, readYmlEntries, readVerifiedCachedIndex,
@@ -41,10 +43,11 @@ export function createMarketService(options = {}) {
   const notifyChanged = () => {
     for (const fn of [...listeners]) fn({});
   };
-  const snapshot = () => buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform, trust, now: nowFn() });
-  const media = createMarketMedia({ dataDir, fetchImpl, readDoc: () => readVerifiedCachedIndex(dataDir, trust, nowFn()).doc });
+  const downloader = createMarketDownloader({ fetchImpl, now: () => toTimestamp(nowFn()) });
+  const snapshot = () => buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform, trust, now: nowFn(), lastSource: downloader.last() });
+  const media = createMarketMedia({ dataDir, downloader, readDoc: () => readVerifiedCachedIndex(dataDir, trust, nowFn()).doc });
 
-  const { verifyMarketStep, downloadAndInstallSteps, runSilentAutoUpdates } = createMarketInstaller({ pluginsDir, appVersion, platform, fetchImpl });
+  const { verifyMarketStep, downloadAndInstallSteps, runSilentAutoUpdates } = createMarketInstaller({ pluginsDir, appVersion, platform, downloader });
 
   return {
     subscribe: (listener) => {
@@ -54,7 +57,7 @@ export function createMarketService(options = {}) {
 
     catalog: async () => snapshot(),
 
-    details: (params) => getMarketPluginDetails(params, { dataDir, pluginsDir, appVersion, platform, trust, fetchImpl, now: nowFn() }),
+    details: (params) => getMarketPluginDetails(params, { dataDir, pluginsDir, appVersion, platform, trust, downloader, now: nowFn() }),
 
     media: (params) => media.get(params),
 
@@ -76,23 +79,12 @@ export function createMarketService(options = {}) {
       const shouldAutoUpdate = !isObject(params) || params.autoUpdate !== false;
       const state = readState(dataDir);
       const now = nowFn();
-      const [indexRes, indexSigRes] = await Promise.all([fetchImpl(indexUrl), fetchImpl(`${indexUrl}.sig`)]);
-      if (!indexRes?.ok || !indexSigRes?.ok) {
-        throw marketError("network", `Failed to fetch market index (${indexRes?.status ?? "err"}/${indexSigRes?.status ?? "err"})`);
-      }
-      const indexText = await indexRes.text();
-      let indexSig;
-      try {
-        indexSig = JSON.parse(await indexSigRes.text());
-      } catch {
-        throw marketError("bad-signature", "Market index signature is not valid JSON");
-      }
-      const opened = openIndex({ text: indexText, signature: indexSig, trust, lastSerial: state.lastIndexSerial ?? undefined, now });
-      if (opened.status !== "ok") {
-        throw marketError(opened.reason ?? opened.status, `Market index rejected: ${opened.reason ?? opened.status}`);
-      }
+      const fetched = await fetchVerifiedIndex({ downloader, indexUrl, trust, lastSerial: state.lastIndexSerial ?? undefined, now });
+      const opened = { doc: fetched.doc };
+      const indexText = fetched.text;
+      const indexSig = fetched.signature;
 
-      const revoked = await refreshRevocations({ fetchImpl, revokedUrl, trust, saved: state.revocations, now, index: opened.doc });
+      const revoked = await refreshRevocations({ downloader, revokedUrl, trust, saved: state.revocations, now, index: opened.doc });
       const nextRevocations = revoked.revocations;
 
       mkdirSync(dataDir, { recursive: true });
@@ -120,6 +112,7 @@ export function createMarketService(options = {}) {
         updatedAt: toTimestamp(now),
         lastError: null,
         revocationWarning: revoked.warning,
+        lastSource: downloader.last() ?? state.lastSource,
       });
       if ((disabledCount > 0 || upgradedCount > 0) && onConfigChanged) await onConfigChanged();
       notifyChanged();

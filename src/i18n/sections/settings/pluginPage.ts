@@ -184,6 +184,7 @@ export type SettingsPluginPageText = {
     showAll: (count: number) => string;
     showLess: string;
     footnote: string;
+    marketSource: (name: string, time: string) => string;
   };
 };
 
@@ -383,6 +384,7 @@ export const zhCN: SettingsPluginPageText = {
     showAll: (count) => `显示全部 ${count} 个`,
     showLess: "收起",
     footnote: "CPU 是近似值：只算登记过的回调（事件、定时器、启动）的同步部分。点一行打开那个插件；内置模块的开关在各自的设置页。",
+    marketSource: (name, time) => `插件市场最近一次下载走的是 ${name}（${time}）。连不上 GitHub 时会自动换镜像，校验照旧。`,
   },
 };
 
@@ -582,5 +584,6 @@ export const en: SettingsPluginPageText = {
     showAll: (count) => `Show all ${count}`,
     showLess: "Show less",
     footnote: "CPU is approximate: only the synchronous part of registered callbacks (events, timers, startup). Click a row to open that plugin; built-in modules are switched on their own settings pages.",
+    marketSource: (name, time) => `The plugin market last downloaded through ${name} (${time}). When GitHub can't be reached it switches to a mirror; everything is still verified.`,
   },
 };

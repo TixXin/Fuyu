@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PACKAGES_SUBDIR } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { compareVersions, selectVersions } from "../../../../packages/plugin-market/src/index.mjs";
+import { createMarketDownloader } from "./marketSources.mjs";
 import { isObject, marketError, readState, readVerifiedCachedIndex } from "./marketStore.mjs";
 
 const REMOTE_DOC_TIMEOUT_MS = 4000;
@@ -167,26 +168,21 @@ function readLocalDocFile(dir, candidates) {
   return null;
 }
 
-async function fetchRemoteText(fetchImpl, url, timeoutMs = REMOTE_DOC_TIMEOUT_MS) {
-  if (typeof fetchImpl !== "function") return null;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  timer.unref?.();
+async function fetchRemoteText(downloader, url) {
   try {
-    const res = await fetchImpl(url, { signal: controller.signal });
-    if (!res?.ok || typeof res.text !== "function") return null;
-    return await res.text();
+    return await downloader.run(url, async (source) => {
+      const res = await source.get(url, { timeoutMs: REMOTE_DOC_TIMEOUT_MS });
+      return res.missing ? null : res.text;
+    }, "the document");
   } catch {
     return null;
-  } finally {
-    clearTimeout(timer);
   }
 }
 
-async function fetchFirstRemoteDoc(fetchImpl, rawBase, candidates) {
+async function fetchFirstRemoteDoc(downloader, rawBase, candidates) {
   if (!rawBase) return null;
   for (const filename of candidates) {
-    const text = await fetchRemoteText(fetchImpl, `${rawBase}${filename}`);
+    const text = await fetchRemoteText(downloader, `${rawBase}${filename}`);
     if (text !== null) return text;
   }
   return null;
@@ -256,7 +252,8 @@ export async function getMarketPluginDetails(params, context) {
   }
   const name = params.name.trim();
   const locale = typeof params.locale === "string" ? params.locale : "";
-  const { dataDir, pluginsDir, appVersion, platform, trust, fetchImpl, now } = context;
+  const { dataDir, pluginsDir, appVersion, platform, trust, now } = context;
+  const downloader = context.downloader ?? createMarketDownloader({ fetchImpl: context.fetchImpl });
 
   const state = readState(dataDir);
   const { doc } = readVerifiedCachedIndex(dataDir, trust, now);
@@ -294,8 +291,8 @@ export async function getMarketPluginDetails(params, context) {
     changelog = readLocalDocFile(localInstalled.dir, changelogCandidates);
   } else if (rawBase) {
     [readme, changelog] = await Promise.all([
-      fetchFirstRemoteDoc(fetchImpl, rawBase, readmeCandidates),
-      fetchFirstRemoteDoc(fetchImpl, rawBase, changelogCandidates),
+      fetchFirstRemoteDoc(downloader, rawBase, readmeCandidates),
+      fetchFirstRemoteDoc(downloader, rawBase, changelogCandidates),
     ]);
   }
 

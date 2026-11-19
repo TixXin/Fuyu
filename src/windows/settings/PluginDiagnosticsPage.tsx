@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { MarketDownloadSource } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
 import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginsV3";
 import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
@@ -7,12 +8,14 @@ import type { SettingsCategory } from "./categories";
 import { PluginBisectCard } from "./PluginBisectCard";
 import { BUILTIN_PAGES, megabytes, milliseconds } from "./pluginDisplay";
 import { installedEntries } from "./pluginEntries";
+import { formatMarketTime } from "./pluginMarketModel";
 import { RuntimeBanner, SafeBanner } from "./PluginPageBanners";
 import { requestPluginDetail } from "./pluginPageHandoff";
 import { stateOf } from "./pluginServiceStatus";
 import type { RowDot } from "./pluginRowStatus";
 import { usePluginHostNode } from "./usePluginHostNode";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView, type PluginUsageV3 } from "./usePluginHostStatus";
+import { usePluginMarketCatalog } from "./usePluginMarketCatalog";
 import "./PluginPage.css";
 import "./PluginDiagnosticsPage.css";
 
@@ -60,11 +63,12 @@ function ProcessCard({ view, hostOff, now }: { view: PluginHostView; hostOff: bo
   );
 }
 
-export function PluginDiagnosticsView({ view, hostOff = false, now = Date.now(), builtins: givenBuiltins, onOpenPage }: {
+export function PluginDiagnosticsView({ view, hostOff = false, now = Date.now(), builtins: givenBuiltins, marketSource = null, onOpenPage }: {
   view: PluginHostView;
   hostOff?: boolean;
   now?: number;
   builtins?: readonly BuiltinPlugin[] | null;
+  marketSource?: MarketDownloadSource | null;
   onOpenPage?: (page: SettingsCategory) => void;
 }) {
   const t = useTranslation().settings.pluginsV3;
@@ -162,13 +166,15 @@ export function PluginDiagnosticsView({ view, hostOff = false, now = Date.now(),
         ) : null}
       </div>
       <p className="plugin-foot">{text.footnote}</p>
+      {marketSource ? <p className="plugin-foot" data-market-source={marketSource.name}>{text.marketSource(marketSource.name, formatMarketTime(marketSource.at, locale, now))}</p> : null}
     </div>
   );
 }
 
 function ConnectedDiagnostics({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
   const view = usePluginHostStatus(connect);
-  return <PluginDiagnosticsView view={view} onOpenPage={onOpenPage} />;
+  const catalog = usePluginMarketCatalog(view.connection === "open");
+  return <PluginDiagnosticsView view={view} marketSource={catalog.snapshot?.lastSource} onOpenPage={onOpenPage} />;
 }
 
 const OFF_VIEW: PluginHostView = { connection: "closed", plugins: [], host: null, memory: null, safeMode: null };
