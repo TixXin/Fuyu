@@ -1,5 +1,7 @@
 # 和 VS Code 插件系统的对比
 
+> **第 2 版插件已下线（2026-11，E36.6）**：岛屿不再运行第 2 版插件，第 2 版的 SDK、脚手架、PowerShell 模块和示例插件已从仓库删除（npm 上的 `fuyu-plugin` / `create-fuyu-plugin` 0.x 停在 0.7.0），文中指向它们的链接已失效。本文只留作参考；写新插件看[第 3 版的文档](v3/README.md)。
+
 浮屿的插件系统参考了 VS Code 的扩展：清单里的 `contributes`、激活事件、按需启动、事件订阅、`globalState` / `secrets` 式的存储，都能在 VS Code 里找到对应的东西。本文说明两边哪里一样、哪里不一样，以及为什么。浮屿一侧是现在的插件 API 第 2 版；VS Code 一侧依据它的扩展 API：扩展跑在独立的 Extension Host 进程里，通过 `package.json` 的 `contributes` 声明能力，用 `vscode` 模块调用编辑器。
 
 两边相同的是：插件不跑在画界面的那个进程里，所以一个插件卡死或崩溃，不至于直接拖垮主界面；能力都在清单的 `contributes` 里声明。其余差别很大。VS Code 是一个可编程的编辑器平台；岛屿是一条较窄的协议，界面大多由岛屿按模板绘制。

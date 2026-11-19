@@ -1,5 +1,7 @@
 # 清单 fuyu-plugin.json
 
+> **第 2 版插件已下线（2026-11，E36.6）**：岛屿不再运行第 2 版插件，第 2 版的 SDK、脚手架、PowerShell 模块和示例插件已从仓库删除（npm 上的 `fuyu-plugin` / `create-fuyu-plugin` 0.x 停在 0.7.0），文中指向它们的链接已失效。本文只留作参考；写新插件看[第 3 版的文档](v3/README.md)。
+
 每个插件文件夹里都有一份清单。它告诉岛屿：插件叫什么、要启动哪个程序、什么时候启动、要哪些权限，以及在岛上放哪些东西。机器可读的完整定义是 [`plugins/schema/manifest.schema.json`](../../plugins/schema/manifest.schema.json)，`npx fuyu-plugin validate` 按它检查。
 
 ## 文件夹

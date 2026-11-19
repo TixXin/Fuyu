@@ -8,5 +8,5 @@
     "noEmit": true,
     "types": []
   },
-  "include": ["create-plugin/src/**/*.d.mts", "fuyu-plugin/src/**/*.d.mts", "fuyu-plugin/test/types.check.mts", "plugin-base/src/**/*.d.mts", "plugin-base/test/types.check.mts", "plugin-cli/src/**/*.d.mts", "plugin-manifest/src/**/*.d.mts", "plugin-market/src/**/*.d.mts", "plugin-review/src/**/*.d.mts", "plugin-services/src/**/*.d.mts", "plugin-services/test/types.check.mts"]
+  "include": ["create-plugin/src/**/*.d.mts", "plugin-base/src/**/*.d.mts", "plugin-base/test/types.check.mts", "plugin-cli/src/**/*.d.mts", "plugin-manifest/src/**/*.d.mts", "plugin-market/src/**/*.d.mts", "plugin-review/src/**/*.d.mts", "plugin-services/src/**/*.d.mts", "plugin-services/test/types.check.mts"]
 }
