@@ -298,19 +298,6 @@
       "page": "generalSync",
       "zh-CN": {
         "group": "可选同步",
-        "title": "插件岛上页面顺序与隐藏",
-        "description": "默认关闭：各台电脑安装的插件集合不同，页面列表未必一致。"
-      },
-      "en": {
-        "group": "Optional sync",
-        "title": "Plugin island page order and visibility",
-        "description": "Off by default: different computers may have different plugins installed."
-      }
-    },
-    {
-      "page": "generalSync",
-      "zh-CN": {
-        "group": "可选同步",
         "title": "更新通道（稳定版 / 测试版）",
         "description": "默认关闭：便于在一台电脑尝鲜测试版，另一台主力机保持稳定版。"
       },
