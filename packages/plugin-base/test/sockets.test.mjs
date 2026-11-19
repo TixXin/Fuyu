@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { after, test } from "node:test";
 import WebSocket from "ws";
-import { connectHost } from "@fuyu/plugin-base/client";
+import { connectHost, createServiceProxy } from "@fuyu/plugin-base/client";
 import { openWindowSocket } from "@fuyu/plugin-base/host";
 import { CLOSE } from "@fuyu/plugin-base/protocol";
+import { defineService } from "@fuyu/plugin-base/services";
 import { until } from "./workspace.mjs";
 
 const ORIGIN = "tauri://localhost";
@@ -137,4 +138,39 @@ test("a window that misses an event asks for a snapshot instead of going on with
   deliver({ type: "event", seq: 9, name: "e", data: 9 });
   assert.deepEqual(snapshots, ["s5", "s8"]);
   assert.deepEqual(events, [6, 9]);
+});
+
+test("service events a window asked for before it connected, or before the host restarted, are asked for again from the snapshot handler", async () => {
+  const asked = [];
+  const record = (host) => (method, params) => {
+    asked.push([host, method, params]);
+    return null;
+  };
+  const first = await serve(() => ({}), record("first"));
+  let target = { port: first.port, token: first.token };
+  let connection = null;
+  const proxy = createServiceProxy((method, params, options) => connection?.call(method, params, options) ?? Promise.reject(new Error("not connected yet")));
+  const notes = proxy.get(defineService("notes/v1", { methods: { list: true }, events: { added: true } }));
+  notes.on("added", () => {});
+  connection = connectHost({
+    resolve: async () => target,
+    window: "main",
+    open,
+    retryMs: [0, 20, 50],
+    onSnapshot: (snapshot, { fresh }) => {
+      if (fresh) void proxy.resubscribe();
+    },
+  });
+  try {
+    const wanted = { service: "notes/v1", event: "added" };
+    assert.ok(await until(() => asked.length === 1), "the first host was asked for the event");
+    assert.deepEqual(asked, [["first", "service.on", wanted]]);
+    const second = await serve(() => ({}), record("second"));
+    target = { port: second.port, token: second.token };
+    await first.close();
+    assert.ok(await until(() => asked.length === 2), "the restarted host was asked for the event again");
+    assert.deepEqual(asked[1], ["second", "service.on", wanted]);
+  } finally {
+    connection.close();
+  }
 });
