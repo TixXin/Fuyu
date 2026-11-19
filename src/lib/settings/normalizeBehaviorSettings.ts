@@ -70,6 +70,7 @@ export function normalizeBehaviorSettings(settings: LegacyIslandSettings | null 
     pageDigitModifiers: normalizePageDigitModifiers(settings?.pageDigitModifiers),
     pageNextShortcut: normalizePageCycleShortcut(settings?.pageNextShortcut, DEFAULT_PAGE_NEXT_SHORTCUT),
     pagePreviousShortcut: normalizePageCycleShortcut(settings?.pagePreviousShortcut, DEFAULT_PAGE_PREVIOUS_SHORTCUT),
+    islandLayerShortcut: typeof settings?.islandLayerShortcut === "string" ? settings.islandLayerShortcut.trim() : DEFAULT_SETTINGS.islandLayerShortcut,
     todoEnabled: settings?.todoEnabled !== false,
     musicEnabled: settings?.musicEnabled !== false,
     agentStatusEnabled: settings?.agentStatusEnabled !== false,

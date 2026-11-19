@@ -100,6 +100,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   pageDigitModifiers: string;
   pageNextShortcut: string;
   pagePreviousShortcut: string;
+  islandLayerShortcut: string;
   todoEnabled: boolean;
   musicEnabled: boolean;
   agentStatusEnabled: boolean;
