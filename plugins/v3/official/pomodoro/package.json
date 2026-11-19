@@ -3,6 +3,18 @@
   "version": "1.1.1",
   "type": "module",
   "description": "Pick a to-do and focus; the island counts down, tells you when to take a break, and counts today's rounds.",
+  "keywords": [
+    "番茄钟",
+    "番茄工作法",
+    "专注",
+    "计时",
+    "休息",
+    "pomodoro",
+    "focus",
+    "timer",
+    "break",
+    "tomato"
+  ],
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",

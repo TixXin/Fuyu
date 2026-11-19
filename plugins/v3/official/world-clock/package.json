@@ -3,6 +3,18 @@
   "version": "1.1.1",
   "type": "module",
   "description": "See the time and offset in several cities at once, so scheduling across time zones takes no maths.",
+  "keywords": [
+    "世界时钟",
+    "时区",
+    "时差",
+    "时间",
+    "城市时间",
+    "world clock",
+    "time zone",
+    "timezone",
+    "time difference",
+    "UTC"
+  ],
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",

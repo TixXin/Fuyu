@@ -3,6 +3,18 @@
   "version": "1.1.0",
   "type": "module",
   "description": "Current weather and the next few days' forecast on the island, with a heads-up before it rains.",
+  "keywords": [
+    "天气",
+    "天气预报",
+    "气温",
+    "温度",
+    "下雨",
+    "降水",
+    "weather",
+    "forecast",
+    "temperature",
+    "rain"
+  ],
   "license": "MIT",
   "author": "TixXin",
   "repository": "https://github.com/TixXin/fuyu",
