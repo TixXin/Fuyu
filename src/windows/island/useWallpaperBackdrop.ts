@@ -4,7 +4,7 @@ import { getWallpapers, listenWallpaperChanged, type Wallpapers } from "../../li
 import { contrastBoost, sampleBox, wallpaperPlacement, type ScreenRect } from "../../lib/theme/wallpaperSlice";
 import { frostImage, loadImage, regionLuminance, type Frosted } from "./wallpaperFrost";
 
-type Island = ScreenRect & { scale: number };
+type Island = ScreenRect & { scale: number; originX: number; originY: number };
 type LocalBox = { left: number; top: number; width: number; height: number; scale: number };
 
 function colorLuminance(hex: string) {
@@ -14,7 +14,7 @@ function colorLuminance(hex: string) {
 }
 
 function sameIsland(a: Island | null, b: Island): boolean {
-  return a !== null && a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height && a.scale === b.scale;
+  return a !== null && a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height && a.scale === b.scale && a.originX === b.originX && a.originY === b.originY;
 }
 
 export type WallpaperBackdrop = Record<string, string>;
@@ -76,6 +76,7 @@ export function useWallpaperBackdrop({
     let localBox: LocalBox | null = null;
     let needsBox = true;
     let frame = 0;
+    let settle = 0;
     let alive = true;
 
     const readBox = () => {
@@ -96,6 +97,8 @@ export function useWallpaperBackdrop({
         width: localBox.width * dpr,
         height: localBox.height * dpr,
         scale: localBox.scale * dpr,
+        originX: origin.x,
+        originY: origin.y,
       };
       setIsland((prev) => (sameIsland(prev, next) ? prev : next));
     };
@@ -114,6 +117,10 @@ export function useWallpaperBackdrop({
       commit();
     };
     const onLayoutChange = () => schedule(true);
+    const onResize = () => {
+      window.clearTimeout(settle);
+      settle = window.setTimeout(onLayoutChange, 120);
+    };
 
     void appWindow.innerPosition().then(initPosition, () => initPosition(undefined));
     const stopMoved = appWindow.onMoved(({ payload }) => {
@@ -121,18 +128,19 @@ export function useWallpaperBackdrop({
       schedule(false);
     });
     const stopScale = appWindow.onScaleChanged(onLayoutChange);
-    const observer = new ResizeObserver(onLayoutChange);
+    const observer = new ResizeObserver(onResize);
     observer.observe(element);
-    document.addEventListener("transitionend", onLayoutChange);
-    document.addEventListener("animationend", onLayoutChange);
+    document.addEventListener("transitionend", onResize);
+    document.addEventListener("animationend", onResize);
     return () => {
       alive = false;
       if (frame !== 0) window.cancelAnimationFrame(frame);
+      window.clearTimeout(settle);
       void stopMoved.then((unlisten) => unlisten(), () => {});
       void stopScale.then((unlisten) => unlisten(), () => {});
       observer.disconnect();
-      document.removeEventListener("transitionend", onLayoutChange);
-      document.removeEventListener("animationend", onLayoutChange);
+      document.removeEventListener("transitionend", onResize);
+      document.removeEventListener("animationend", onResize);
     };
   }, [enabled, target]);
 
@@ -150,9 +158,20 @@ export function useWallpaperBackdrop({
   const source = placement?.image ?? null;
   useEffect(() => {
     if (!image || !source) return;
-    const timer = window.setTimeout(() => setFrosted(frostImage(image, source, imageBlur, saturation / 100)), 0);
-    return () => window.clearTimeout(timer);
+    let alive = true;
+    const timer = window.setTimeout(() => void frostImage(image, source, imageBlur, saturation / 100).then((next) => {
+      if (alive) setFrosted(next);
+      else URL.revokeObjectURL(next.url);
+    }), 0);
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
   }, [image, source, imageBlur, saturation]);
+
+  useEffect(() => () => {
+    if (frosted) URL.revokeObjectURL(frosted.url);
+  }, [frosted]);
 
   if (!placement || !island) return null;
   const ready = placement.image ? frosted?.source === placement.image ? frosted : null : null;
@@ -163,8 +182,8 @@ export function useWallpaperBackdrop({
     "--glass-wallpaper": ready ? `url("${ready.url}")` : "none",
     "--glass-wallpaper-color": placement.color,
     "--glass-wallpaper-size": `${local(placement.target.width)} ${local(placement.target.height)}`,
-    "--glass-wallpaper-x": local(placement.target.x - island.x),
-    "--glass-wallpaper-y": local(placement.target.y - island.y),
+    "--glass-wallpaper-x": local(placement.target.x - island.originX),
+    "--glass-wallpaper-y": local(placement.target.y - island.originY),
     "--glass-backdrop-boost": String(contrastGuard && luminance !== null ? contrastBoost(luminance, lightIsland) : 0),
   };
 }

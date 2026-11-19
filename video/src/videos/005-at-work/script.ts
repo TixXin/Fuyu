@@ -2,7 +2,7 @@ import type { GlassLookId } from "../../../../src/lib/theme/glassLooks";
 import type { Director } from "../../stage/director";
 import { island } from "../../stage/island";
 import { sound } from "../../stage/sound";
-import { ZOOM, hideCaption, moveCamera, showCaption, stage } from "../../stage/stageState";
+import { FORMAT, ISLAND_FRAME_WIDTH, STAGE_WIDTH, ZOOM, hideCaption, moveCamera, showCaption, stage } from "../../stage/stageState";
 import type { Lang } from "../types";
 import {
   applySettings, frameWindow, glass, hideStageCursor, hover, islandHovered, mailArrives, messagesArrive, nativeTip, patchSession,
@@ -37,7 +37,11 @@ function sessionIndex(title: string) {
 export function script(director: Director, lang: Lang) {
   const copy = copyFor(lang);
   const { at } = director;
-  const caption = (pair: string[]) => showCaption(pair[0], pair[1]);
+  const caption = (pair: string[]) => {
+    showCaption(pair[0], pair[1]);
+    if (FORMAT === "vertical") stage.set({ title: pair[0] });
+  };
+  const wide = STAGE_WIDTH / 1280;
   VOICE.forEach(([line, ms]) => at(ms, () => sound(`voice:${line}`)));
 
   at(BEAT.desk - 700, () => scene.set({ cover: "out" }));
@@ -197,7 +201,7 @@ export function script(director: Director, lang: Lang) {
   at(BEAT.look + 2200, () => applySettings({ themeMode: "light" }));
   at(BEAT.look + 3600, () => applySettings({ themeMode: "dark" }));
   GLASS_ORDER.forEach((look, index) => at(BEAT.look + 4900 + index * 1300, () => {
-    showCaption(copy.captions.glass[0], copy.captions.glassLooks[look]);
+    caption([copy.captions.glass[0], copy.captions.glassLooks[look]]);
     glass(look);
   }));
 
@@ -223,10 +227,10 @@ export function script(director: Director, lang: Lang) {
     shiftTo(0, 0, 0, true);
     void island.emit("island-position-changed", { x: 400, y: 260 });
   });
-  drag(BEAT.edge + 2000, [0, 0], [-120, 240], 1200);
-  drag(BEAT.edge + 3700, [-120, 240], [-380, 260], 840);
+  drag(BEAT.edge + 2000, [0, 0], [-120 * wide, 240], 1200);
+  drag(BEAT.edge + 3700, [-120 * wide, 240], [-380 * wide, 260], 840);
   at(BEAT.edge + 4700, () => {
-    stage.set((current) => ({ islandShift: { x: -230, y: 200, ms: 1000 }, cursor: { ...current.cursor, pressed: false } }));
+    stage.set((current) => ({ islandShift: { x: (ISLAND_FRAME_WIDTH - STAGE_WIDTH) / 2, y: 200, ms: 1000 }, cursor: { ...current.cursor, pressed: false } }));
     void island.emit("island-position-cleared", null);
     void island.emit("island-edge-changed", "left");
   });
@@ -282,6 +286,6 @@ export function script(director: Director, lang: Lang) {
   });
   at(BEAT.end, () => {
     moveCamera(1, 900);
-    stage.set({ dim: 0.86, endCard: true });
+    stage.set({ dim: 0.86, endCard: true, title: "" });
   });
 }
