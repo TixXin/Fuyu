@@ -757,6 +757,104 @@ fn a_session_quit_mid_turn_is_no_longer_waiting() {
     assert_eq!(list_sessions(&home, None, &asked, ACTIVE_WINDOW_MS)[0].phase, "waiting");
 }
 
+fn live_record(provider: &str) -> String {
+    let pid = std::process::id();
+    let started = crate::platform::process_times::start_time(pid).unwrap();
+    json!({"provider": provider, "startedAt": 1, "pid": pid, "pidStarted": started}).to_string()
+}
+
+fn quiet_for(path: &Path, minutes: u64) {
+    let file = fs::File::options().write(true).open(path).unwrap();
+    file.set_modified(std::time::SystemTime::now() - std::time::Duration::from_secs(minutes * 60)).unwrap();
+}
+
+#[test]
+fn a_codex_turn_thinking_past_ten_minutes_keeps_running_while_its_process_lives() {
+    use super::session_records::DIR_NAME;
+    use super::session_scan::{list_sessions, ACTIVE_WINDOW_MS};
+
+    let (home, app) = temp_dirs();
+    let day = home.join(".codex").join("sessions").join("2026").join("11").join("18");
+    fs::create_dir_all(&day).unwrap();
+    let rollout = day.join("rollout-think.jsonl");
+    let started = [
+        line(json!({"type": "session_meta", "payload": {"id": "c-think", "cwd": "E:\\p"}})),
+        line(json!({"type": "event_msg", "payload": {"type": "task_started"}})),
+        line(json!({"type": "event_msg", "payload": {"type": "user_message", "message": "想清楚再改"}})),
+        line(json!({"type": "response_item", "payload": {"type": "reasoning", "summary": []}})),
+    ]
+    .concat();
+    fs::write(&rollout, &started).unwrap();
+    quiet_for(&rollout, 11);
+    let transcript = home.join(".claude").join("projects").join("E--p").join("claude-busy.jsonl");
+    fs::write(
+        &transcript,
+        line(json!({"type": "assistant", "sessionId": "claude-busy", "cwd": "E:\\p",
+            "message": {"model": "claude-opus-5-5", "stop_reason": "tool_use", "content": [{"type": "tool_use", "name": "Bash"}]}})),
+    )
+    .unwrap();
+    quiet_for(&transcript, 11);
+
+    let records = app.join(DIR_NAME);
+    fs::create_dir_all(&records).unwrap();
+    let phase = |id: &str| {
+        list_sessions(&home, Some(&app), &WaitingNotifications::new(), ACTIVE_WINDOW_MS)
+            .into_iter()
+            .find(|session| session.session_id == id)
+            .unwrap()
+            .phase
+    };
+
+    assert_eq!(phase("c-think"), "stale", "without a session record the process is unknown");
+    fs::write(records.join("c-think.json"), live_record("codex")).unwrap();
+    fs::write(records.join("claude-busy.json"), live_record("claudeCode")).unwrap();
+    assert_eq!(phase("c-think"), "running");
+    assert_eq!(phase("claude-busy"), "stale", "other agents keep the ten-minute rule");
+
+    let done = line(json!({"type": "event_msg", "payload": {"type": "task_complete", "last_agent_message": "改好了", "error": null}}));
+    fs::write(&rollout, format!("{started}{done}")).unwrap();
+    quiet_for(&rollout, 11);
+    assert_eq!(phase("c-think"), "completed");
+
+    fs::write(&rollout, &started).unwrap();
+    quiet_for(&rollout, 12);
+    assert_eq!(phase("c-think"), "running");
+    fs::write(records.join("c-think.json"), r#"{"provider":"codex","startedAt":1,"pid":4294967292}"#).unwrap();
+    assert_eq!(phase("c-think"), "completed", "a process that exited ends the turn");
+}
+
+#[test]
+fn the_codex_status_light_stays_on_past_ten_minutes_while_a_codex_process_lives() {
+    use super::markers::{apply_agent_running_markers, CLAUDE_CODE_RUNNING_MARKER_FILE_NAME, CODEX_RUNNING_MARKER_FILE_NAME};
+    use super::session_records::DIR_NAME;
+    use super::snapshot::{AgentStatusSnapshot, AgentTaskStatus};
+
+    let (_home, app) = temp_dirs();
+    for marker in [CODEX_RUNNING_MARKER_FILE_NAME, CLAUDE_CODE_RUNNING_MARKER_FILE_NAME] {
+        fs::write(app.join(marker), "").unwrap();
+        quiet_for(&app.join(marker), 11);
+    }
+    let phases = || {
+        let mut snapshot = AgentStatusSnapshot {
+            agents: ["codex", "claudeCode"].into_iter().map(|id| (id, AgentTaskStatus::default())).collect(),
+            updated_at: 0,
+            status_path: String::new(),
+            others: Vec::new(),
+        };
+        apply_agent_running_markers(&app, &mut snapshot);
+        (snapshot.agents["codex"].phase.clone(), snapshot.agents["claudeCode"].phase.clone())
+    };
+
+    assert_eq!(phases(), ("stale".to_string(), "stale".to_string()));
+    let records = app.join(DIR_NAME);
+    fs::create_dir_all(&records).unwrap();
+    fs::write(records.join("c-live.json"), live_record("codex")).unwrap();
+    fs::write(records.join("claude-live.json"), live_record("claudeCode")).unwrap();
+    assert_eq!(phases(), ("running".to_string(), "stale".to_string()));
+    fs::write(records.join("c-live.json"), r#"{"provider":"codex","startedAt":1,"pid":4294967292}"#).unwrap();
+    assert_eq!(phases(), ("stale".to_string(), "stale".to_string()));
+}
+
 #[cfg(windows)]
 #[test]
 fn a_claude_session_gone_from_its_registry_is_no_longer_running() {
