@@ -16,11 +16,11 @@
 Fuller settings; the island page just shows the time.
 
 - The island page drops the old add form and the Pin and Remove buttons: it shows city names and times, without time zone names or UTC offsets by default. "Add city" at the bottom searches and adds a city; hover a row and click ✕ to remove it.
-- New setting "Show the World Clock page on the island": turn it off to hide the page while the collapsed bar keeps working.
+- New setting "Show the World clock page on the island": turn it off to hide the page while the collapsed bar keeps working.
 - The page keeps time on its own: every second when seconds are shown, otherwise right on the minute (it used to lag up to 15 seconds).
 - Manage cities in the settings: search to add (about 100 built-in cities by Chinese or English name or code, plus every time zone the system knows), remove, drag to reorder, rename, and ★ the city for the collapsed bar; optionally a local time row at the top.
 - New display settings: time format (system, 24-hour, 12-hour), seconds, date (only Tomorrow / Yesterday, always, or hidden), offset from local (3h ahead, +3, or hidden), day / night icon, and time zone name with UTC offset.
-- Three collapsed bar styles: city + time (default), code + time, or time only; clicking it opens the World Clock page (when Fuyu supports it).
+- Three collapsed bar styles: city + time (default), code + time, or time only; clicking it opens the World clock page (when Fuyu supports it).
 - The island header button has a title in Chinese and English.
 - Your cities, the starred city and the collapsed bar switch carry over; the new settings start at their defaults.
 

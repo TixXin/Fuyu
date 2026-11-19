@@ -1,8 +1,8 @@
 {
   "name": "@fuyu/countdown",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "Day countdowns and anniversaries with custom card backgrounds and a collapsed-bar day counter",
+  "description": "Keeps track of birthdays, anniversaries and deadlines year after year, with the days left on the collapsed bar.",
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",
@@ -20,11 +20,11 @@
     "manifest": 1,
     "displayName": {
       "zh-CN": "倒数日",
-      "en": "Countdown"
+      "en": "Day counter"
     },
     "description": {
-      "zh-CN": "管理重要日期与纪念日，支持自定义卡片背景图，并在收起条显示最近一项的剩余天数。",
-      "en": "Track upcoming milestones and anniversaries with custom card backgrounds and a day counter on the collapsed bar."
+      "zh-CN": "记着生日、纪念日和截止日，每年自动续上，收起条上一眼看到还剩几天。",
+      "en": "Keeps track of birthdays, anniversaries and deadlines year after year, with the days left on the collapsed bar."
     },
     "icon": "assets/icon.svg",
     "categories": [
@@ -39,6 +39,11 @@
     "client": {
       "island": "dist/island.js",
       "settings": "dist/settings.js"
+    },
+    "inject": {
+      "optional": [
+        "messages/v1"
+      ]
     },
     "slots": [
       "island.page/v1",

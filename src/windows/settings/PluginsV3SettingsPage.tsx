@@ -12,7 +12,7 @@ import { installedEntries, type InstalledEntry, type InstalledFilter } from "./p
 import { restartPlugin } from "./pluginMarketActions";
 import { PluginPageBanners } from "./PluginPageBanners";
 import { usePluginFilePicker } from "./PluginPageActions";
-import { pullPendingPackage, requestMarketView, takePluginDetailRequest, type PluginDetailRequest, type PluginDetailTab } from "./pluginPageHandoff";
+import { onPluginDetailRequest, pullPendingPackage, requestMarketView, takePluginDetailRequest, type PluginDetailRequest, type PluginDetailTab } from "./pluginPageHandoff";
 import { usePluginHostNode } from "./usePluginHostNode";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView } from "./usePluginHostStatus";
 import { usePluginInstallFlow } from "./usePluginInstallFlow";
@@ -25,6 +25,8 @@ interface OpenDetail {
   id: string;
   tab: PluginDetailTab;
   uninstall: boolean;
+  request?: PluginDetailRequest;
+  nonce?: number;
 }
 
 const OFF_VIEW: PluginHostView = { connection: "closed", plugins: [], host: null, memory: null, safeMode: null };
@@ -70,7 +72,10 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
   const install = usePluginInstallFlow(catalog.reload);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<InstalledFilter>("all");
-  const [detail, setDetail] = useState<OpenDetail | null>(initialDetail ? { ...initialDetail, uninstall: false } : null);
+  const [detail, setDetail] = useState<OpenDetail | null>(initialDetail ? { ...initialDetail, uninstall: false, request: initialDetail } : null);
+  useEffect(() => {
+    if (initialDetail) setDetail((current) => (current?.request === initialDetail ? current : { ...initialDetail, uninstall: false, request: initialDetail, nonce: (current?.nonce ?? 0) + 1 }));
+  }, [initialDetail]);
   const [actionError, setActionError] = useState<string | null>(null);
   const errorText = useErrorText();
   const file = usePluginFilePicker(() => onOpenPage?.("pluginMarket"));
@@ -161,7 +166,7 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
       {file.input}
       {selected && detail ? (
         <PluginDetailModal
-          key={`${selected.id}:${detail.tab}:${detail.uninstall}`}
+          key={`${selected.id}:${detail.tab}:${detail.uninstall}:${detail.nonce ?? 0}`}
           entry={selected}
           initialTab={detail.tab}
           startUninstall={detail.uninstall}
@@ -183,7 +188,15 @@ function HostConnectedPage({ connect, initialDetail, onOpenPage }: { connect?: P
 
 export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
   const hostEnabled = usePluginHostEnabled();
-  const [initialDetail] = useState(takePluginDetailRequest);
+  const [initialDetail, setInitialDetail] = useState(takePluginDetailRequest);
+  useEffect(
+    () =>
+      onPluginDetailRequest(() => {
+        const request = takePluginDetailRequest();
+        if (request) setInitialDetail(request);
+      }),
+    [],
+  );
   usePackageRedirect(onOpenPage);
   if (hostEnabled === null) return <PluginsV3View view={LOADING_VIEW} node={null} onOpenPage={onOpenPage} />;
   return hostEnabled ? <HostConnectedPage connect={connect} initialDetail={initialDetail} onOpenPage={onOpenPage} /> : <PluginsV3View view={OFF_VIEW} hostOff node={null} onOpenPage={onOpenPage} />;

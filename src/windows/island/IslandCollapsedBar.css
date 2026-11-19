@@ -313,3 +313,22 @@
   outline: 2px solid var(--color-focus-ring-soft);
   outline-offset: 2px;
 }
+
+.island__collapsed-fit {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.island__collapsed-fit[data-clipped] {
+  mask-image: linear-gradient(to right, black calc(100% - 14px), transparent);
+}
+
+.island__collapsed-fit-inner {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  width: max-content;
+}
