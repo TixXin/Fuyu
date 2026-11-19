@@ -32,7 +32,7 @@ export function TodoWeekSummary({ archives, todos, currentDate }: { archives: To
           {summary.days.map((day, index) => {
             const label = text.dayDone(weekday.format(new Date(`${day.date}T00:00:00`)), day.done);
             return (
-              <li className={day.today ? "todo-week__day todo-week__day--today" : "todo-week__day"} key={day.date} data-done={day.done} aria-label={label} aria-current={day.today ? "date" : undefined} title={label}>
+              <li className={day.today ? "todo-week__day todo-week__day--today" : "todo-week__day"} key={day.date} data-done={day.done} aria-label={label} aria-current={day.today ? "date" : undefined}>
                 <i style={{ height: `${Math.max(EMPTY_BAR_PERCENT, Math.round((day.done / tallest) * 100))}%` }} />
                 <span aria-hidden="true">{names[index]}</span>
               </li>
