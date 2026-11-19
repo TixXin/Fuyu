@@ -3,7 +3,7 @@ use std::path::Path;
 use super::hooks_state::HookInstallState;
 use super::sessions::AgentSessionSummary;
 use super::notifications::{is_waiting, saved_notifications, NOTIFICATIONS_DIR};
-use super::{antigravity, claude_code, codebuddy, codex, copilot, droid, dsh, grok, kimi_code, mimo, opencode, pi, qoder, qwen, third_party, trae, workbuddy, zcode};
+use super::{antigravity, claude_code, codebuddy, codex, copilot, cursor, droid, dsh, grok, kimi_code, mimo, opencode, pi, qoder, qwen, third_party, trae, workbuddy, zcode};
 
 pub(super) const HARNESSES: &[Harness] = &[
     codex::HARNESS,
@@ -24,6 +24,7 @@ pub(super) const HARNESSES: &[Harness] = &[
     copilot::HARNESS,
     droid::HARNESS,
     pi::HARNESS,
+    cursor::HARNESS,
 ];
 
 pub(super) struct Harness {
@@ -146,11 +147,11 @@ mod tests {
         assert_eq!(ids.len(), HARNESSES.len());
         assert_eq!(
             with_status_light().map(|(id, _)| id).collect::<Vec<_>>(),
-            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid", "pi"]
+            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid", "pi", "cursor"]
         );
         assert_eq!(
             with_hooks().map(|(id, _)| id).collect::<Vec<_>>(),
-            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "opencode", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "mimo", "grok", "copilot", "droid", "pi"]
+            ["codex", "claudeCode", "workbuddy", "antigravity", "dsh", "opencode", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "mimo", "grok", "copilot", "droid", "pi", "cursor"]
         );
         assert_eq!(remote_ids(), ["codex", "claudeCode", "antigravity", "dsh", "opencode", "pi"]);
     }

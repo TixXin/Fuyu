@@ -72,6 +72,7 @@ mod droid_hooks;
 mod kimi_hooks;
 mod mimo;
 mod pi;
+mod cursor;
 mod third_party;
 mod uninstall;
 
