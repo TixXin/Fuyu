@@ -16,6 +16,16 @@ export type RowMenuItem = {
 
 const MENU_WIDTH = 200;
 const EDGE = 8;
+const MENU_AREA = ".island__surface";
+
+function menuArea(anchor: HTMLElement) {
+  const box = anchor.closest(MENU_AREA)?.getBoundingClientRect();
+  const top = Math.max(0, box?.top ?? 0) + EDGE;
+  const bottom = Math.min(window.innerHeight, box?.bottom ?? window.innerHeight) - EDGE;
+  const left = Math.max(0, box?.left ?? 0) + EDGE;
+  const right = Math.max(left + MENU_WIDTH, Math.min(window.innerWidth, box?.right ?? window.innerWidth) - EDGE);
+  return { top, bottom: Math.max(top, bottom), left, right };
+}
 
 export function RowMenu({ label, items, onOpenChange, buttonClassName, children }: {
   label: string;
@@ -25,7 +35,7 @@ export function RowMenu({ label, items, onOpenChange, buttonClassName, children 
   children?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const [place, setPlace] = useState<{ left: number; top: number; ink: string; fill: string } | null>(null);
+  const [place, setPlace] = useState<{ left: number; top: number; maxHeight: number; ink: string; fill: string } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -38,12 +48,20 @@ export function RowMenu({ label, items, onOpenChange, buttonClassName, children 
     if (!open || !buttonRef.current) return;
     const button = buttonRef.current.getBoundingClientRect();
     const height = menuRef.current?.offsetHeight ?? 0;
-    const up = button.bottom + 4 + height > window.innerHeight - EDGE && button.top - 4 - height > EDGE;
-    const left = Math.max(EDGE, Math.min(button.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - EDGE));
+    const area = menuArea(buttonRef.current);
+    const below = button.bottom + 4;
+    const above = button.top - 4 - height;
+    const top = below + height <= area.bottom
+      ? below
+      : above >= area.top
+        ? above
+        : Math.max(area.top, area.bottom - height);
+    const left = Math.max(area.left, Math.min(button.right - MENU_WIDTH, area.right - MENU_WIDTH));
     const style = getComputedStyle(buttonRef.current);
     setPlace({
       left,
-      top: up ? button.top - 4 - height : button.bottom + 4,
+      top,
+      maxHeight: area.bottom - area.top,
       ink: style.getPropertyValue("--island-ink-rgb").trim() || "241, 240, 246",
       fill: style.getPropertyValue("--island-background-color").trim() || "#000",
     });
@@ -98,7 +116,7 @@ export function RowMenu({ label, items, onOpenChange, buttonClassName, children 
           className="row-menu"
           role="menu"
           aria-label={label}
-          style={{ left: place?.left ?? -9999, top: place?.top ?? -9999, width: MENU_WIDTH, "--row-menu-ink": place?.ink, "--row-menu-fill": place?.fill } as CSSProperties}
+          style={{ left: place?.left ?? -9999, top: place?.top ?? -9999, maxHeight: place?.maxHeight, width: MENU_WIDTH, "--row-menu-ink": place?.ink, "--row-menu-fill": place?.fill } as CSSProperties}
           onClick={(event) => event.stopPropagation()}
         >
           {items.map((item) => (

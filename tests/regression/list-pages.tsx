@@ -184,6 +184,21 @@ async function runChecks() {
     check(menuItem("转换后复制") && !menuItem("AI 改写后复制"), "打码的密钥不能发给 AI");
     await click($('button[aria-haspopup="menu"]', row(clip, "t4")!));
 
+    const bottomList = $(".island-list", clip)!;
+    await act(async () => {
+      const scrolled = new Promise((resolve) => bottomList.addEventListener("scroll", resolve, { once: true }));
+      bottomList.scrollTop = bottomList.scrollHeight;
+      await scrolled;
+    });
+    const listBottom = bottomList.getBoundingClientRect().bottom;
+    check(await until(() => Math.abs((row(clip, "l1")?.getBoundingClientRect().bottom ?? 0) - listBottom) < 24), "列表滚到底，最后一行贴着面板底边");
+    await click($('button[aria-haspopup="menu"]', row(clip, "l1")!));
+    check(await until(() => Boolean($(".row-menu"))), "最后一行的「⋯」打开菜单");
+    const frameBox = clip.getBoundingClientRect();
+    const menuBox = $(".row-menu")!.getBoundingClientRect();
+    check(menuItem("删除剪贴记录") && menuBox.top >= frameBox.top && menuBox.bottom <= frameBox.bottom && menuBox.left >= frameBox.left && menuBox.right <= frameBox.right, "最后一行的「⋯」菜单收在面板里，删除点得到");
+    await click($(".island-list-count", clip));
+
     const shelfPage = document.getElementById("shelf-dark")!;
     const desk = row(shelfPage, "s2")!;
     check(/^C:\\Users\\me\\Desktop· \d+ KB$/.test($(".island-list-row__meta", desk)?.textContent ?? ""), "文件中转第二行写所在文件夹和大小");
