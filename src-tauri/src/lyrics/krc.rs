@@ -4,13 +4,16 @@ use base64::{engine::general_purpose::STANDARD, Engine};
 use flate2::read::ZlibDecoder;
 use serde_json::Value;
 
-use super::found::word_tag;
+use super::found::{from_lines, word_tag, FoundLyrics};
 
 const KEY: [u8; 16] = [0x40, 0x47, 0x61, 0x77, 0x5e, 0x32, 0x74, 0x47, 0x51, 0x36, 0x31, 0x2d, 0xce, 0xd2, 0x6e, 0x69];
 const MAX_TEXT_BYTES: u64 = 1024 * 1024;
 
 pub(super) fn decrypt(content: &str) -> Option<String> {
-    let raw = STANDARD.decode(content.trim()).ok()?;
+    decrypt_bytes(&STANDARD.decode(content.trim()).ok()?)
+}
+
+pub(super) fn decrypt_bytes(raw: &[u8]) -> Option<String> {
     let body = raw.strip_prefix(b"krc1")?;
     let unmasked: Vec<u8> = body.iter().enumerate().map(|(index, byte)| byte ^ KEY[index % KEY.len()]).collect();
     let mut text = String::new();
@@ -92,6 +95,18 @@ fn timed_words(words: &str) -> Vec<KrcWord> {
         .collect()
 }
 
+pub(super) fn header<'a>(krc: &'a str, name: &str) -> Option<&'a str> {
+    krc.lines().find_map(|line| {
+        let (key, value) = line.trim().strip_prefix('[')?.strip_suffix(']')?.split_once(':')?;
+        (key == name).then(|| value.trim())
+    })
+}
+
+pub(super) fn to_lyrics(krc: &str, title: &str) -> Option<FoundLyrics> {
+    let lines: Vec<(u64, String)> = lines(krc).iter().map(|line| (line.start_ms, line.timed_text())).collect();
+    from_lines(&lines, translations(krc).as_deref(), title)
+}
+
 pub(super) fn translations(krc: &str) -> Option<Vec<String>> {
     let start = krc.find("[language:")? + "[language:".len();
     let encoded = &krc[start..start + krc[start..].find(']')?];
@@ -134,5 +149,7 @@ mod tests {
         assert_eq!(translations(&text), Some(vec!["哦 我相信昨天".to_string(), String::new()]));
         assert_eq!(translations("[language:eyJjb250ZW50IjpbXSwidmVyc2lvbiI6MX0=]"), None);
         assert_eq!(decrypt("bm90IGtyYw=="), None);
+        assert_eq!(header(&text, "ar"), Some("The Beatles"));
+        assert_eq!(header(&text, "ti"), None);
     }
 }

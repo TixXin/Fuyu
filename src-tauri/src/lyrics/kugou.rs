@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-use super::found::{browser_client, from_lines, FoundLyrics};
+use super::found::{browser_client, FoundLyrics};
 use super::krc;
 use super::matching::same_track;
 
@@ -65,8 +65,7 @@ pub(super) async fn fetch(title: &str, artist: &str, duration_ms: i64) -> Result
     let Some(text) = download["content"].as_str().and_then(krc::decrypt) else {
         return Ok(None);
     };
-    let lines: Vec<(u64, String)> = krc::lines(&text).iter().map(|line| (line.start_ms, line.timed_text())).collect();
-    Ok(from_lines(&lines, krc::translations(&text).as_deref(), title))
+    Ok(krc::to_lyrics(&text, title))
 }
 
 #[cfg(all(test, windows))]

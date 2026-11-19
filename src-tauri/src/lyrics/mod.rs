@@ -3,10 +3,13 @@ mod found;
 mod inflink;
 mod krc;
 mod kugou;
+mod kugou_cache;
 mod local;
 mod lrclib;
 mod matching;
 mod netease;
+mod qq;
+mod qrc;
 mod ttml;
 
 use std::{
@@ -18,7 +21,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
-use found::FoundLyrics;
+use found::{has_word_times, FoundLyrics};
 pub use inflink::InflinkState;
 use matching::{cache_key, named_in_simplified, stable_hash, traditional_chars};
 #[cfg(windows)]
@@ -32,6 +35,7 @@ fn to_simplified(_text: &str) -> Option<String> {
 const CACHE_DIR_NAME: &str = "lyrics-cache";
 const MISSING_TTL: Duration = Duration::from_secs(7 * 24 * 60 * 60);
 const MAX_CACHED: usize = 2000;
+const CHINESE_KEY: &str = "\u{1f}cn";
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -72,6 +76,8 @@ struct CacheEntry {
     translation: Option<String>,
     #[serde(default)]
     word_times: bool,
+    #[serde(default)]
+    words_first: bool,
     fetched_at: u64,
 }
 
@@ -81,6 +87,7 @@ fn source_name(name: &str) -> &'static str {
     match name {
         "kugou" => "kugou",
         "netease" => "netease",
+        "qq" => "qq",
         _ => "lrclib",
     }
 }
@@ -100,6 +107,7 @@ fn read_cache(dir: &Path, key: &str, now: u64) -> Option<Option<Answer>> {
     }
     match entry.lrc {
         Some(_) if entry.source.as_deref() == Some("kugou") && !entry.word_times => None,
+        Some(lrc) if key.ends_with(CHINESE_KEY) && !entry.words_first && !has_word_times(&lrc) => None,
         Some(lrc) => {
             let source = source_name(entry.source.as_deref().unwrap_or_default());
             Some(Some((source, FoundLyrics { lrc, translation: entry.translation })))
@@ -119,6 +127,7 @@ fn write_cache(dir: &Path, key: &str, answer: Option<&Answer>, now: u64) {
         source: answer.map(|(source, _)| (*source).to_string()),
         translation: answer.and_then(|(_, found)| found.translation.clone()),
         word_times: true,
+        words_first: true,
         fetched_at: now,
     };
     if let Ok(text) = serde_json::to_string(&entry) {
@@ -161,9 +170,9 @@ fn source_order(query: &LyricsQuery) -> Vec<&'static str> {
     }
     let chinese_named = format!("{}{}", query.title, query.artist).chars().any(|c| ('\u{4E00}'..='\u{9FFF}').contains(&c));
     match (netease::track_id(query.track_id.as_deref()).is_some(), chinese_named) {
-        (true, _) => vec!["netease", "kugou", "lrclib"],
-        (false, true) => vec!["kugou", "netease", "lrclib"],
-        (false, false) => vec!["lrclib", "kugou", "netease"],
+        (true, _) => vec!["netease", "kugou", "qq", "lrclib"],
+        (false, true) => vec!["kugou", "qq", "netease", "lrclib"],
+        (false, false) => vec!["lrclib", "kugou", "qq", "netease"],
     }
 }
 
@@ -171,21 +180,28 @@ async fn fetch_online(query: &LyricsQuery) -> Result<Option<Answer>, String> {
     let (title, artist) = (query.title.as_str(), query.artist.as_str());
     let mut errors = Vec::new();
     let mut answered = false;
+    let mut line_timed = None;
     for source in source_order(query) {
         let result = match source {
             "kugou" => kugou::fetch(title, artist, query.duration_ms).await,
+            "qq" => qq::fetch(title, artist, query.duration_ms).await,
             "netease" => netease::fetch(title, artist, query.duration_ms, query.track_id.as_deref()).await,
             _ => lrclib::fetch(title, artist, &query.album, query.duration_ms)
                 .await
                 .map(|lrc| lrc.map(|lrc| FoundLyrics { lrc, translation: None })),
         };
         match result {
-            Ok(Some(found)) => return Ok(Some((source, found))),
+            Ok(Some(found)) if !query.chinese || has_word_times(&found.lrc) => return Ok(Some((source, found))),
+            Ok(Some(found)) => {
+                line_timed.get_or_insert((source, found));
+            }
             Ok(None) => answered = true,
             Err(error) => errors.push(error),
         }
     }
-    if answered {
+    if line_timed.is_some() {
+        Ok(line_timed)
+    } else if answered {
         Ok(None)
     } else {
         Err(errors.join("; "))
@@ -207,13 +223,20 @@ pub async fn get_lyrics(app: AppHandle, query: LyricsQuery) -> Result<Option<Lyr
             return Ok(Some(for_display("local", found, &query.title, &query.artist)));
         }
     }
+    if query.chinese {
+        let (title, artist, duration_ms) = (query.title.clone(), query.artist.clone(), query.duration_ms);
+        let cached = tauri::async_runtime::spawn_blocking(move || kugou_cache::find(&title, &artist, duration_ms)).await.ok().flatten();
+        if let Some(found) = cached {
+            return Ok(Some(for_display("kugou-local", found, &query.title, &query.artist)));
+        }
+    }
     if !query.online {
         return Ok(None);
     }
     let cache_dir = crate::home_dir::fuyu_home(app.path()).map_err(|error| error.to_string())?.join(CACHE_DIR_NAME);
     let mut key = cache_key(&query.title, &query.artist, query.duration_ms);
     if query.chinese {
-        key.push_str("\u{1f}cn");
+        key.push_str(CHINESE_KEY);
     }
     let answer = match read_cache(&cache_dir, &key, now_secs()) {
         Some(cached) => cached,
@@ -269,6 +292,16 @@ mod tests {
         assert_eq!(read_cache(&dir, "old", now), Some(Some(("lrclib", found("[00:01.00]y", None)))));
         fs::write(cache_path(&dir, "k"), r#"{"key":"k","lrc":"[00:01.00]z","source":"kugou","fetchedAt":1}"#).unwrap();
         assert_eq!(read_cache(&dir, "k", now), None);
+        let line = |key: &str| format!(r#"{{"key":"{key}","lrc":"[00:01.00]n","source":"netease","wordTimes":true,"fetchedAt":1}}"#);
+        fs::write(cache_path(&dir, "n\u{1f}cn"), line("n\u{1f}cn")).unwrap();
+        assert_eq!(read_cache(&dir, "n\u{1f}cn", now), None);
+        fs::write(cache_path(&dir, "n"), line("n")).unwrap();
+        assert_eq!(read_cache(&dir, "n", now), Some(Some(("netease", found("[00:01.00]n", None)))));
+        let timed = r#"{"key":"t","lrc":"[00:01.00]<00:01.00>t<00:02.00>","source":"netease","wordTimes":true,"fetchedAt":1}"#;
+        fs::write(cache_path(&dir, "t"), timed).unwrap();
+        assert_eq!(read_cache(&dir, "t", now).unwrap().unwrap().0, "netease");
+        write_cache(&dir, "q", Some(&("qq", found("[00:01.00]q", None))), now);
+        assert_eq!(read_cache(&dir, "q", now), Some(Some(("qq", found("[00:01.00]q", None)))));
         fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -295,9 +328,9 @@ mod tests {
             track_id: track_id.map(Into::into),
         };
         assert_eq!(source_order(&query("余香", false, None)), ["lrclib"]);
-        assert_eq!(source_order(&query("余香", true, None)), ["kugou", "netease", "lrclib"]);
-        assert_eq!(source_order(&query("Yesterday", true, None)), ["lrclib", "kugou", "netease"]);
-        assert_eq!(source_order(&query("Yesterday", true, Some("NCM-1"))), ["netease", "kugou", "lrclib"]);
+        assert_eq!(source_order(&query("余香", true, None)), ["kugou", "qq", "netease", "lrclib"]);
+        assert_eq!(source_order(&query("Yesterday", true, None)), ["lrclib", "kugou", "qq", "netease"]);
+        assert_eq!(source_order(&query("Yesterday", true, Some("NCM-1"))), ["netease", "kugou", "qq", "lrclib"]);
     }
 
     #[test]
