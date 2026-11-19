@@ -28,6 +28,7 @@ import { AgentSessionRow } from "./AgentSessionRow";
 import { AgentSessionRowMenu } from "./AgentSessionRowMenu";
 import { AgentSessionHoverCard } from "./AgentSessionHoverCard";
 import { useSessionKeyboard } from "./useSessionKeyboard";
+import { useFocusNotFoundReason } from "./useFocusNotFoundReason";
 import { AgentSubagents, listedSubagents } from "./AgentSubagents";
 import { AgentSessionChildren } from "./AgentSessionChildren";
 import { nestSessions, type NestedSessions } from "./sessionChildren";
@@ -87,6 +88,7 @@ export function AgentSessionsPanel({
   const openSubagents = useRowExpansion(expandChildren);
   const openChildren = useRowExpansion(expandChildren);
   const extensionHint = useEditorExtensionHint();
+  const notFoundReason = useFocusNotFoundReason(!reveal);
   const list = useScrollFade<HTMLUListElement>(sessions);
   const motion = useArchiveMotion(list.element, removal, archiveMotion);
   const nested: NestedSessions = view === "list" && !reveal ? nestSessions(sessions) : { roots: sessions, children: new Map() };
@@ -170,6 +172,7 @@ export function AgentSessionsPanel({
   const focus = (session: AgentSessionSummary) => {
     setNotFoundId(null);
     setRowNotice(null);
+    notFoundReason.clear();
     unseen?.markSeen(session);
     void focusAgentWindow(session.provider, session.cwd, session.title, session.remoteHost ? "" : session.sessionId)
       .then((found) => {
@@ -237,8 +240,11 @@ export function AgentSessionsPanel({
           const title = session.title ?? project ?? getAgentProviderLabel(session.provider);
           const model = modelLabel(session.model, shownEffort(session.provider, session.effort, effortLabels));
           const key = sessionKey(session);
+          const reason = notFoundReason.reasonFor(session.sessionId);
           const notFound = notFoundId === session.sessionId
-            ? session.remoteHost ? t.agent.sessions.remoteOnly(session.remoteHost) : isActivePhase(session.phase) ? t.agent.sessions.notFound : t.agent.sessions.notFoundEnded
+            ? session.remoteHost ? t.agent.sessions.remoteOnly(session.remoteHost)
+              : reason ? t.agent.sessions.notFoundReason[reason](getAgentProviderLabel(session.provider))
+              : isActivePhase(session.phase) ? t.agent.sessions.notFound : t.agent.sessions.notFoundEnded
             : rowNotice?.key === key ? rowNotice.text : null;
           const menu = !reveal && (
             <AgentSessionRowMenu
