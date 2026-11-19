@@ -18,11 +18,11 @@ npm 包 `fuyu-plugin`（SDK、命令行工具、模拟宿主）和 `create-fuyu-
 
 工作流跑在 GitHub 的 `npm` 环境里，第一次运行时会自动创建。想在每次发布前人工批准，就到仓库 Settings → Environments → `npm` 加上 Required reviewers。
 
-## 发布第 3 版 SDK（`2.0.0` 及以上）
+## 发布 SDK（`2.0.0` 及以上）
 
-从 `2.0.0` 起，`fuyu-plugin` 与 `create-fuyu-plugin` 面向插件平台第 3 版，由 [`scripts/plugins-v3/pack-npm-sdk.mjs`](../../../scripts/plugins-v3/pack-npm-sdk.mjs) 从工作区内的 `@fuyu/plugin-base`、`@fuyu/plugin-services`、`@fuyu/plugin-cli`、`@fuyu/plugin-manifest`、`@fuyu/plugin-market`、`@fuyu/plugin-review` 与 `@fuyu/create-plugin` 组装为零 `workspace:*` 依赖、带完整 `.d.mts` 类型声明的自包含发布目录：
+从 `2.0.0` 起，`fuyu-plugin` 与 `create-fuyu-plugin` 面向现在的插件（2026-11 之前的旧版插件只到 0.x），由 [`scripts/plugins-v3/pack-npm-sdk.mjs`](../../../scripts/plugins-v3/pack-npm-sdk.mjs) 从工作区内的 `@fuyu/plugin-base`、`@fuyu/plugin-services`、`@fuyu/plugin-cli`、`@fuyu/plugin-manifest`、`@fuyu/plugin-market`、`@fuyu/plugin-review` 与 `@fuyu/create-plugin` 组装为零 `workspace:*` 依赖、带完整 `.d.mts` 类型声明的自包含发布目录：
 
-1. 把 `packages/plugin-cli/package.json` 和 `packages/create-plugin/package.json` 的 `version` 改成同一个新版本号（保持 `"private": true`），在 [更新日志](../../plugins/changelog.md) 写明本次变化与 npm 包版本。
+1. 把 `packages/plugin-cli/package.json` 和 `packages/create-plugin/package.json` 的 `version` 改成同一个新版本号（保持 `"private": true`），在 [`docs/plugins/changelog.md`](../../plugins/changelog.md) 最前面加一节，标题是 npm 包的版本号，写明插件作者能感到的变化（新命令、新导出、改了默认行为的地方）。这份更新日志只记 `2.0.0` 起的 SDK；两个包不各带 CHANGELOG，npm 包页的 README 链到插件文档。
 2. 本地验证组装与端到端测试：
 
    ```sh
@@ -36,9 +36,9 @@ npm 包 `fuyu-plugin`（SDK、命令行工具、模拟宿主）和 `create-fuyu-
    git push origin sdk-v2.0.0
    ```
 
-4. 工作流识别 `sdk-v2.*` 标签后，会核对 `packages/plugin-cli` 与 `packages/create-plugin` 的版本号、运行全部 v3 包单测与独立临时目录端到端单测，调用 `pack-npm-sdk.mjs` 生成 `/tmp/npm-sdk/fuyu-plugin` 与 `/tmp/npm-sdk/create-fuyu-plugin`，并通过 `npm publish --access public --provenance` 发布（已存在的版本自动跳过）。
+4. 工作流识别 `sdk-v2.*` 标签后，会核对 `packages/plugin-cli` 与 `packages/create-plugin` 的版本号、运行全部插件包的单测与独立临时目录端到端单测，调用 `pack-npm-sdk.mjs` 生成 `/tmp/npm-sdk/fuyu-plugin` 与 `/tmp/npm-sdk/create-fuyu-plugin`，并通过 `npm publish --access public --provenance` 发布（已存在的版本自动跳过）。
 5. 发布后用 `npm view fuyu-plugin version` 与 `npm view create-fuyu-plugin version` 确认 provenance；随后在 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 更新 `market/v3/tools.json`（及市场校验依赖）并提 PR 合入。
 
-## 旧第 2 版（`0.x`）
+## 旧版（`0.x`）
 
-第 2 版的 `packages/fuyu-plugin`、`packages/create-fuyu-plugin` 和 PowerShell 模块 `Fuyu.Plugin` 已在 E36.6.6 删除，npm 上停在 0.7.0，不再发补丁。工作流收到 `sdk-v0.*`、`sdk-v1.*` 标签时直接报错退出。
+旧版插件的 `packages/fuyu-plugin`、`packages/create-fuyu-plugin` 和 PowerShell 模块 `Fuyu.Plugin` 已在 E36.6.6 删除，npm 上停在 0.7.0，不再发补丁。工作流收到 `sdk-v0.*`、`sdk-v1.*` 标签时直接报错退出。
