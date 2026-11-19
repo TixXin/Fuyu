@@ -1,4 +1,4 @@
-import type { MarketCatalogPlugin, MarketCatalogSnapshot, MarketInspectedPackage, MarketPluginDetails, MarketVersionCandidate, PluginInstallConfirmation } from "@fuyu/plugin-services";
+import type { MarketCatalogBundle, MarketCatalogPlugin, MarketCatalogSnapshot, MarketInspectedPackage, MarketPluginDetails, MarketVersionCandidate, PluginInstallConfirmation } from "@fuyu/plugin-services";
 
 const loc = (zh: string, en: string) => ({ "zh-CN": zh, en });
 const caps = (more: Partial<PluginInstallConfirmation> = {}): PluginInstallConfirmation => ({ unreviewed: false, network: [], nodeApis: [], provides: [], replaces: [], slots: ["island.page/v1"], ...more });
@@ -63,6 +63,15 @@ export const MARKET_INSTALLED: MarketCatalogSnapshot["installed"] = [
   { id: "@fuyu/weather", version: "1.2.0", source: "market", enabled: true, reach: { slots: ["island.page/v1", "island.collapsed/v1"], services: [], config: true } },
   { id: "@fuyu/github-notify", version: "2.0.1", source: "market", enabled: true, reach: { slots: [], services: ["messages/v1"], config: true } },
   { id: "@lin-dev/pomo-stats", version: "0.4.2", source: "market", enabled: true, reach: { slots: ["island.page/v1"], services: [], config: false } },
+];
+
+export const MARKET_BUNDLES: MarketCatalogBundle[] = [
+  { id: "starter", displayName: loc("资讯三件套", "Stay informed"), description: loc("订阅、摘要和配对，早上打开电脑先看一眼", "Feeds, summaries and pairing for a first look in the morning"), onboarding: true,
+    members: [{ name: "@fuyu/rss", state: "available" }, { name: "@fuyu/page-summary", state: "available" }, { name: "@fuyu/devices", state: "available" }] },
+  { id: "focus", displayName: loc("专注套装", "Deep focus"), description: loc("白噪音、专注统计和跨设备剪贴板，坐下来就能开始", "Focus sounds, focus stats and a shared clipboard, ready when you sit down"), onboarding: false,
+    members: [{ name: "@nori/focus-sounds", state: "available" }, { name: "@lin-dev/pomo-stats", state: "installed" }, { name: "@ryo/clip-sync", state: "available" }, { name: "@mio/focus-sync", state: "unavailable", reason: "platform" }] },
+  { id: "daily", displayName: loc("每日两件", "Daily pair"), description: loc("天气和 GitHub 通知", "Weather and GitHub notifications"), onboarding: false,
+    members: [{ name: "@fuyu/weather", state: "installed" }, { name: "@fuyu/github-notify", state: "installed" }] },
 ];
 
 export const UPDATED_AT = new Date(2026, 10, 18, 20, 14).getTime();

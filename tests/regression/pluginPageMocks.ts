@@ -1,5 +1,5 @@
 import { mockIPC } from "@tauri-apps/api/mocks";
-import { commandsV1, marketV1, pluginConfigV1, pluginWindowsV1, type CommandItem, type InstalledPluginReach, type MarketAutoUpdated, type MarketCatalogPlugin, type MarketInspectedPackage, type MarketPluginDetails, type MarketVersionCandidate, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
+import { commandsV1, marketV1, pluginConfigV1, pluginWindowsV1, type CommandItem, type InstalledPluginReach, type MarketAutoUpdated, type MarketBundleInstallResult, type MarketCatalogPlugin, type MarketInspectedPackage, type MarketPluginDetails, type MarketVersionCandidate, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
 import { LOCALE_STORAGE_KEY } from "../../src/i18n";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { HostInfoV3, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
@@ -93,6 +93,7 @@ export const market = {
   autoUpdated: null as MarketAutoUpdated | null,
   reach: false,
   manualInstalled: {} as Record<string, string>,
+  bundleResults: [] as MarketBundleInstallResult[],
 };
 export const REACH: Record<string, InstalledPluginReach> = {
   "@fuyu/weather": { slots: ["island.page/v1", "island.collapsed/v1", "settings.section/v1"], services: ["messages/v1"], config: true },
@@ -156,6 +157,7 @@ const marketProvider = windowServices.provide(marketV1, {
     emitMarket();
     return { id: name, version: version ?? "1.0.0", source: "market" as const, sha256: "a".repeat(64), confirmation: candidate("1.0.0", true).confirmation };
   },
+  installBundle: ({ id }) => (market.calls.push(`installBundle:${id}`), market.bundleResults.shift() ?? { id, installed: [], failed: [] }),
   installFile: ({ expectedSha256 }) => (market.calls.push(`installFile:${expectedSha256 ?? ""}`), { id: "@me/gadget", version: "0.1.0", source: "manual" as const, sha256: "b".repeat(64), confirmation: candidate("0.1.0", false).confirmation }),
   dismissAutoUpdated: ({ at }) => {
     market.calls.push(`dismissAutoUpdated:${at}`);

@@ -114,6 +114,29 @@ export type SettingsPluginMarketText = {
     confirmFile: string;
     installing: string;
   };
+  bundles: {
+    heading: string;
+    hint: string;
+    count: (count: number) => string;
+    owned: (owned: number, total: number) => string;
+    installAll: string;
+    installRest: (count: number) => string;
+    installUsable: (count: number) => string;
+    done: string;
+    doneUsable: string;
+    title: (name: string) => string;
+    willInstall: string;
+    disabled: string;
+    warned: string;
+    failed: string;
+    outside: (publishers: string) => string;
+    fresh: string;
+    note: string;
+    confirm: (count: number) => string;
+    installedResult: (count: number) => string;
+    retry: string;
+    close: string;
+  };
 };
 
 export const zhCN: SettingsPluginMarketText = {
@@ -263,6 +286,29 @@ export const zhCN: SettingsPluginMarketText = {
     confirmFile: "仍然安装",
     installing: "正在安装…",
   },
+  bundles: {
+    heading: "套装",
+    hint: "搭配着用的几个插件，一次装好",
+    count: (count) => `${count} 个插件`,
+    owned: (owned, total) => `已装 ${owned} / ${total}`,
+    installAll: "全部安装",
+    installRest: (count) => `安装其余 ${count} 个`,
+    installUsable: (count) => `安装可用的 ${count} 个`,
+    done: "已全部安装",
+    doneUsable: "能装的都装了",
+    title: (name) => `安装套装「${name}」？`,
+    willInstall: "将安装",
+    disabled: "已安装，已停用",
+    warned: "市场有提示，请单独安装",
+    failed: "没装上",
+    outside: (publishers) => `其中有不是浮屿团队发布的插件，发布者：${publishers}。市场核对过它们的签名。`,
+    fresh: "其中有上架不到 3 天的版本。浮屿平时等 3 天再自动推送新版本，你现在装就是立刻装。",
+    note: "装完后每个插件各自更新、停用和卸载，不会留下「套装」。",
+    confirm: (count) => `安装 ${count} 个插件`,
+    installedResult: (count) => `装好了 ${count} 个，在插件页能看到。`,
+    retry: "重试没装上的",
+    close: "完成",
+  },
 };
 
 export const en: SettingsPluginMarketText = {
@@ -411,5 +457,28 @@ export const en: SettingsPluginMarketText = {
     confirmKey: "It's the author, update",
     confirmFile: "Install anyway",
     installing: "Installing…",
+  },
+  bundles: {
+    heading: "Bundles",
+    hint: "Plugins that go together, installed in one go",
+    count: (count) => `${count} plugins`,
+    owned: (owned, total) => `${owned} of ${total} installed`,
+    installAll: "Install all",
+    installRest: (count) => (count === 1 ? "Install the other one" : `Install the other ${count}`),
+    installUsable: (count) => `Install the ${count} available`,
+    done: "All installed",
+    doneUsable: "Installed what works here",
+    title: (name) => `Install the “${name}” bundle?`,
+    willInstall: "Will install",
+    disabled: "Installed, turned off",
+    warned: "Flagged by the market; install it on its own",
+    failed: "Not installed",
+    outside: (publishers) => `Some of these are not from the Fuyu team. Publishers: ${publishers}. The market checked their signatures.`,
+    fresh: "Some of these versions were listed less than 3 days ago. Fuyu normally waits 3 days before pushing new versions; installing now skips that wait.",
+    note: "Afterwards each plugin updates, turns off and uninstalls on its own; no bundle is kept.",
+    confirm: (count) => (count === 1 ? "Install 1 plugin" : `Install ${count} plugins`),
+    installedResult: (count) => (count === 1 ? "Installed 1 plugin. It is on the plugin page." : `Installed ${count} plugins. They are on the plugin page.`),
+    retry: "Retry what failed",
+    close: "Done",
   },
 };

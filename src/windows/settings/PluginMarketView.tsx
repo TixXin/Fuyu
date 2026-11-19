@@ -5,6 +5,7 @@ import type { PluginMarketSort } from "../../i18n/sections/settings/pluginMarket
 import { requestIslandPluginPage } from "../../features/plugin-kernel/api";
 import { useLocale, useTranslation } from "../../i18n";
 import type { SettingsCategory } from "./categories";
+import { PluginBundleModal } from "./PluginBundleModal";
 import { PluginMarketBrowse } from "./PluginMarketBrowse";
 import { PluginMarketDetailModal } from "./PluginMarketDetailModal";
 import { PluginMarketEmpty } from "./PluginMarketEmpty";
@@ -46,6 +47,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
   const [category, setCategory] = useState<string | null>(null);
   const [sort, setSort] = useState<PluginMarketSort>("recommended");
   const [detailName, setDetailName] = useState<string | null>(initialDetail);
+  const [bundleId, setBundleId] = useState<string | null>(null);
   const [packageError, setPackageError] = useState<string | null>(null);
   useEffect(() => {
     if (!followRequests) return;
@@ -57,6 +59,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
     });
   }, [followRequests]);
   const plugins = snapshot?.plugins ?? [];
+  const bundles = snapshot?.bundles ?? [];
   const [openedAt] = useState(Date.now);
   const newNames = newListings(plugins, snapshot?.marketSince, openedAt);
   const flow = usePluginInstallFlow(onReload, snapshot ? { plugins, manualAllowed: snapshot.manualAllowed } : null);
@@ -98,6 +101,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
     setQuery("");
     setCategory((current) => (current === id ? null : id));
   };
+  const openBundle = bundleId ? bundles.find((bundle) => bundle.id === bundleId) ?? null : null;
   const detailPlugin = detailName ? plugins.find((plugin) => plugin.name === detailName) ?? null : null;
   const marketError = failure ?? snapshot?.error ?? null;
   const shownError = packageError ?? openedError ?? null;
@@ -174,7 +178,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
           {onOpenPage && installed > 0 ? <button className="plugin-link" type="button" data-action="market-installed" onClick={() => onOpenPage("pluginsV3")}>{text.installedLink(installed)}</button> : null}
         </div>
         <PluginMarketToolbar query={query} category={category} sort={sort} total={plugins.length} categories={categoryCounts(plugins)} categoryName={categoryName} onQuery={setQuery} onCategory={pickCategory} onSort={setSort} />
-        <PluginMarketBrowse plugins={plugins} newNames={newNames} query={query} category={category} sort={sort} categoryName={categoryName} handlers={handlers} onCategory={pickCategory} onInstallFile={file.pick} />
+        <PluginMarketBrowse plugins={plugins} bundles={bundles} newNames={newNames} query={query} category={category} sort={sort} categoryName={categoryName} handlers={handlers} onCategory={pickCategory} onInstallFile={file.pick} onOpenBundle={setBundleId} />
         <p className="plugin-foot market-trust"><ShieldCheck size={13} strokeWidth={2.2} aria-hidden="true" />{text.trustLine}</p>
       </>
     );
@@ -186,6 +190,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
       {body}
       {file.input}
       {detailPlugin ? <PluginMarketDetailModal plugin={detailPlugin} isNew={newNames.has(detailPlugin.name)} categoryName={categoryName} nameOf={nameOf} onClose={() => setDetailName(null)} onInstall={handlers.onInstall} onManage={handlers.onManage} onGoUpdate={handlers.onGoUpdate} canOpenOnIsland={handlers.canOpenOnIsland} onOpenOnIsland={handlers.onOpenOnIsland} /> : null}
+      {openBundle ? <PluginBundleModal key={openBundle.id} bundle={openBundle} plugins={plugins} onClose={() => setBundleId(null)} onInstalled={onReload} /> : null}
       {flow.modal}
     </div>
   );

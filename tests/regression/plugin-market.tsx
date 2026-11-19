@@ -5,7 +5,7 @@ import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
 import "../../src/windows/settings/SettingsWindow.css";
 import { ipc, locale, market, NORMAL, HOST } from "./pluginPageMocks";
-import { ICON_SVG, MARKET_PLUGINS, marketFixture, REMOTE_ICON, RSS_DETAILS, TOOLBOX_PACKAGE } from "./pluginMarketFixtures";
+import { ICON_SVG, MARKET_BUNDLES, MARKET_PLUGINS, marketFixture, REMOTE_ICON, RSS_DETAILS, TOOLBOX_PACKAGE } from "./pluginMarketFixtures";
 import { I18nProvider, TRANSLATIONS } from "../../src/i18n";
 import type { PluginHostConnector } from "../../src/windows/settings/usePluginHostStatus";
 import type { PluginMarketViewProps } from "../../src/windows/settings/PluginMarketView";
@@ -156,6 +156,41 @@ try {
   check(category.stage.querySelector(".market-toolbar [data-market-category='productivity']")?.getAttribute("aria-pressed") === "true" && cards(category.stage, "category:productivity").length === 4 && !cards(category.stage, "category:productivity").includes("@fuyu/page-summary"), "Picking a category shows the plugins whose first category it is");
   await type(category.stage.querySelector<HTMLInputElement>(".market-toolbar input")!, zh ? "效率" : "productivity");
   check(cards(category.stage, "results").includes("@fuyu/page-summary"), "Searching a category name still finds plugins that list it second");
+
+  const withBundles = { snapshot: marketFixture({ bundles: MARKET_BUNDLES }), onReload: () => market.calls.push("view-reload") };
+  const bundleCard = (root: ParentNode, id: string) => root.querySelector<HTMLElement>(`[data-market-bundle='${id}']`);
+  const member = (root: ParentNode, name: string) => root.querySelector<HTMLElement>(`[data-bundle-member='${name}']`);
+  const bundles = await view("bundles", zh ? "套装" : "Bundles", withBundles);
+  const bundleSection = bundles.stage.querySelector<HTMLElement>("[data-market-section='bundles']")!;
+  check(bundles.stage.querySelector("[data-market-section='updates']")!.compareDocumentPosition(bundleSection) === Node.DOCUMENT_POSITION_FOLLOWING && bundleSection.compareDocumentPosition(bundles.stage.querySelector("[data-market-section='fresh']")!) === Node.DOCUMENT_POSITION_FOLLOWING && cards(bundles.stage, "fresh").length === 9, "Bundles sit between the updates and the plugins that are not installed, and take no plugin out of that list");
+  check(bundleCard(bundleSection, "starter")?.querySelector("[data-action='bundle-install']")?.textContent === text.bundles.installAll && bundleCard(bundleSection, "starter")?.textContent!.includes(text.bundles.count(3)), "A bundle with nothing installed says how many plugins it has and offers to install them all");
+  check(bundleCard(bundleSection, "focus")?.querySelector("[data-action='bundle-install']")?.textContent === text.bundles.installRest(2) && bundleCard(bundleSection, "focus")?.textContent!.includes(text.bundles.owned(1, 4)), "A bundle that is partly installed says how many you have and offers the ones still missing, not counting one this computer cannot run");
+  check(!bundleCard(bundleSection, "daily")?.querySelector("[data-action='bundle-install']") && bundleCard(bundleSection, "daily")?.textContent!.includes(text.bundles.done), "A bundle that is all installed has no install button");
+  await click(bundleCard(bundleSection, "focus")?.querySelector("[data-action='bundle-install']"));
+  const focus = await modal("[data-stage='bundles'] [data-bundle-modal='focus']");
+  check(!market.calls.some((call) => call.startsWith("installBundle")) && focus.querySelector("[data-action='confirm-bundle']")?.textContent === text.bundles.confirm(2), "The install button opens a confirmation that says how many plugins it will install, and installs nothing yet");
+  check(["@nori/focus-sounds:available", "@lin-dev/pomo-stats:installed", "@ryo/clip-sync:available", "@mio/focus-sync:unavailable"].every((pair) => member(focus, pair.split(":")[0])?.dataset.state === pair.split(":")[1]) && member(focus, "@mio/focus-sync")?.textContent!.includes(text.card.platform) && member(focus, "@lin-dev/pomo-stats")?.textContent!.includes(text.card.installed), "The confirmation lists every plugin in the bundle: which will be installed, which you already have, and which this computer cannot run and why");
+  check(focus.querySelector("[data-callout='outside']")?.textContent!.includes("nori") && focus.querySelector("[data-callout='outside']")?.textContent!.includes("ryo") && focus.querySelector("[data-callout='fresh']") && focus.querySelector("[data-bundle-note]")?.textContent!.includes(text.confirm.securityNote) && !/权限|permission/i.test(focus.textContent ?? ""), "It names the publishers outside the Fuyu team, warns about a version still in its waiting period, and says what plugins can do without talking about permissions");
+  market.bundleResults.push({ id: "focus", installed: [{ name: "@nori/focus-sounds", version: "1.3.2" }], failed: [{ name: "@ryo/clip-sync", code: "download-failed", message: "fetch failed: ECONNRESET" }] });
+  await click(focus.querySelector("[data-action='confirm-bundle']"));
+  await waitFor(() => member(focus, "@ryo/clip-sync")?.dataset.state === "failed", "the failed plugin to be marked");
+  check(market.calls.includes("installBundle:focus") && market.calls.includes("view-reload") && member(focus, "@nori/focus-sounds")?.dataset.state === "installed" && focus.querySelector("[data-callout='installed']")?.textContent!.includes(text.bundles.installedResult(1)), "Confirming installs the bundle in one request; the plugins that made it are kept and counted");
+  check(member(focus, "@ryo/clip-sync")?.querySelector("[role='alert']")?.textContent!.includes("ECONNRESET") && focus.querySelector("[data-action='confirm-bundle']")?.textContent === text.bundles.retry, "The one that failed says why, and the button turns into a retry for what is left");
+  market.bundleResults.push({ id: "focus", installed: [{ name: "@ryo/clip-sync", version: "1.1.0" }], failed: [] });
+  await click(focus.querySelector("[data-action='confirm-bundle']"));
+  await waitFor(() => focus.dataset.bundleAction === "done", "the bundle to finish");
+  check(!focus.querySelector("[data-action='confirm-bundle']") && focus.querySelector("[data-action='close-bundle']")?.textContent === text.bundles.close && member(focus, "@mio/focus-sync")?.dataset.state === "unavailable", "After the retry there is nothing left to install and the only button closes the dialog");
+
+  const narrowBundles = await view("bundles-narrow", zh ? "套装（窄窗口）" : "Bundles (narrow window)", withBundles, true);
+  await click(bundleCard(narrowBundles.stage, "starter"));
+  const starter = await modal("[data-stage='bundles-narrow'] [data-bundle-modal='starter']");
+  check(starter.querySelectorAll("[data-bundle-member]").length === 3 && !starter.querySelector("[data-callout='outside']") && [...starter.querySelectorAll<HTMLElement>("[data-bundle-member]")].every((row) => row.scrollWidth <= row.clientWidth), "Clicking the card opens the same confirmation; a bundle of Fuyu's own plugins names no outside publisher, and its rows fit a narrow window");
+
+  const bundleSearch = await view("bundles-search", zh ? "搜索到套装" : "Search finds a bundle", { ...withBundles, initialQuery: zh ? "专注套装" : "deep focus" });
+  check(bundleCard(bundleSearch.stage, "focus") && !bundleCard(bundleSearch.stage, "starter") && !bundleSearch.stage.querySelector("[data-market-empty]") && cards(bundleSearch.stage, "results").length === 0, "Searching a bundle's name shows that bundle, even when no single plugin matches");
+  await click(bundleSearch.stage.querySelector(".plugin-search__clear"));
+  await click(bundleSearch.stage.querySelector(".market-toolbar [data-market-category='productivity']"));
+  check(!bundleSearch.stage.querySelector("[data-market-section='bundles']") && cards(bundleSearch.stage, "category:productivity").length === 4, "Picking a category shows only that category's plugins, without the bundles");
 
   const detail = await view("detail", zh ? "插件详情" : "Plugin detail", { initialDetail: "@fuyu/rss" });
   const rss = await waitFor(() => detail.stage.querySelector<HTMLElement>("[data-market-detail-modal='@fuyu/rss'] .market-markdown"), "the RSS readme")
