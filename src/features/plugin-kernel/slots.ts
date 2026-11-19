@@ -58,6 +58,7 @@ export interface IslandCollapsedMeta<Context = unknown> {
   width?: SlotWidth<Context>;
   hideable?: boolean;
   shown?: (context: Context) => boolean;
+  opens?: string;
 }
 
 export interface IslandCollapsedCenterMeta<Context = unknown> {
