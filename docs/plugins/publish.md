@@ -1,10 +1,10 @@
 # 发布
 
-> 第 3 版，实验。**第 3 版的市场还没开放上架**：市场 CI 在 `TixXin/fuyu-plugins` 的草稿 PR [#25](https://github.com/TixXin/fuyu-plugins/pull/25) 上，合入后才能提交。下面是那个 PR 定下的流程，开放前细节还可能改。内部设计见 [v3-market-ci.md](../../architecture/plugins/v3-market-ci.md)。
+> 市场 CI 在 `TixXin/fuyu-plugins`（[#25](https://github.com/TixXin/fuyu-plugins/pull/25)，2026-11-15 合入）。内部设计见[市场 CI](../architecture/plugins/v3-market-ci.md)。
 
 插件进浮屿有三条路：从市场装、手动装一个 `.fuyu` 文件、开发时从文件夹加载，区别见[清单和安装包](package.md#三种装法)。这一页讲前两条。
 
-命令行 `fuyu-plugin` 2.0 还没发到 npm，下文的 `fuyu-plugin` 怎么运行见[命令行](cli.md#怎么运行)。
+下文的 `fuyu-plugin` 是 npm 上的命令行，怎么运行见[命令行](cli.md#怎么运行)。
 
 ## 上架之前
 
@@ -118,11 +118,9 @@
 | 包里的文件 | README、CHANGELOG |
 | 市场 | 发布者和它的身份怎么核实的、作者签了没有、哪个版本被人审核过、包大小、上架时间、历史版本、是否被撤销 |
 
-安装确认写明「这个插件拥有和浮屿一样的权限，能读写你的文件、运行程序」。浮屿里的这些界面还在做。
+安装确认写明「这个插件拥有和浮屿一样的权限，能读写你的文件、运行程序」。
 
 ## 待补
 
-- 市场开放上架的时间：草稿 PR [#25](https://github.com/TixXin/fuyu-plugins/pull/25) 合入、`main` 的规则集加上之后。
 - `fuyu-plugin publish`：一条命令完成签名和开 PR，还没做。
-- `fuyu-plugin` 2.0 发到 npm 后的包名和安装方式。
-- 点赞、安装链接这些第 2 版有的功能，第 3 版怎么做。
+- 点赞、安装链接这些旧版市场有的功能，现在的市场怎么做。

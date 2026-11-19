@@ -4,7 +4,7 @@
 
 ## 开启
 
-本地接口是一个**内置插件**（`local-api`，2026-11-16 起是插件平台第 3 版的内置插件，E36.3.43；以前是第 2 版的 `focusd.local-api`）：它随岛屿一起安装，不需要下载。
+本地接口是一个**内置插件**（`local-api`，2026-11-16 起，E36.3.43；以前是旧版插件平台的 `focusd.local-api`）：它随岛屿一起安装，不需要下载。
 
 1. 设置 → 插件，打开 **本机接口**。关掉时 HTTP 服务停止监听。
 2. 设置 → 通用 → **本机接口**（插件关着时这一节不显示）：
@@ -15,7 +15,7 @@
 
 默认关闭。地址只监听 `127.0.0.1`，优先使用端口 `39271`，被占用时自动换一个空闲端口。
 
-> 从旧版本升级：第一次启动新版本时，第 2 版插件页上的开关和"允许修改"会自动搬过来（存进 `plugins-v3/plugins.yml`）；更早在"设置 → 待办"里打开过本地接口的也一样。地址、端口、令牌都不变，已有的脚本不用修改。
+> 从旧版本升级：第一次启动新版本时，旧版插件页上的开关和"允许修改"会自动搬过来（存进 `plugins-v3/plugins.yml`）；更早在"设置 → 待办"里打开过本地接口的也一样。地址、端口、令牌都不变，已有的脚本不用修改。
 
 脚本也可以直接读取配置文件来获取端口和令牌，路径为 `%APPDATA%\com.tixxin.fuyu\local-api.json`：
 
@@ -65,11 +65,11 @@
 | `/v1/agent-status/{source}` | AI Agent `agents` | `AI Agent is switched off in Fuyu.` |
 | `/v1/clipboard` | 剪贴板 `clipboard` | `The clipboard is switched off in Fuyu.` |
 
-先查开关再查「允许修改」，所以关着的功能上写请求也是 503。`/v1/health` 不看这些开关。数据不受影响，打开插件后照常读写。以前（E36.3.38 起）待办关着时接口照旧读写待办，文件中转、音乐关着时第 2 版插件接口却回 503，现在统一成一条。
+先查开关再查「允许修改」，所以关着的功能上写请求也是 503。`/v1/health` 不看这些开关。数据不受影响，打开插件后照常读写。以前（E36.3.38 起）待办关着时接口照旧读写待办，文件中转、音乐关着时旧版插件接口却回 503，现在统一成一条。
 
 ## 开发模式（已删除）
 
-第 2 版插件的开发模式路径 `/v1/dev/plugins…`（给第 2 版的 `fuyu-plugin dev` 用）随第 2 版插件宿主一起删除（E36.6.5，2026-11-18）。第 3 版插件的开发联调见 [命令行](../plugins/v3/cli.md)。
+旧版插件的开发模式路径 `/v1/dev/plugins…`（给旧版 `fuyu-plugin` 1.x 的 `dev` 用）随旧版插件宿主一起删除（E36.6.5，2026-11-18）。现在插件的开发联调见[命令行](../plugins/cli.md#dev)。
 
 ## 开发版专用：岛屿实验台
 
@@ -108,7 +108,7 @@ claude mcp add fuyu -- npx -y fuyu-plugin@0.7.0 mcp
 
 其他工具在 MCP 配置里写命令 `npx`、参数 `["-y", "fuyu-plugin@0.7.0", "mcp"]`。
 
-> 它是第 2 版 SDK `fuyu-plugin` 0.7.0 里的旧实现，源码随第 2 版 SDK 从仓库删除（E36.6.6），不再维护；npm 上的 `fuyu-plugin` 2.0 是第 3 版的命令行，没有 `mcp`，所以命令里要写明 `@0.7.0`。
+> 它是旧版 SDK `fuyu-plugin` 0.7.0 里的旧实现，源码随旧版 SDK 从仓库删除（E36.6.6），不再维护；npm 上的 `fuyu-plugin` 2.0 起是现在插件的命令行，没有 `mcp`，所以命令里要写明 `@0.7.0`。
 
 ## 示例
 
@@ -145,4 +145,4 @@ AI Agent 状态由 Rust 直接处理（`src-tauri/src/agent_status/external.rs`�
 
 界面会实时刷新，修改也会和手动操作一样被保存。待办插件关着时这些路由回 503（见上面「功能关着时」）。
 
-HTTP 服务是内置插件 `local-api` 的后台 `server`（`src-tauri/src/local_api/background.rs`），由插件开关表起停；「功能关着时」的规则在 `local_api/switches.rs`；设置页的命令（`get_local_api_info`、`reset_local_api_token`、`copy_local_api_token`）在 `local_api/settings.rs`，令牌只由 Rust 写进剪贴板，不回窗口。岛上接 `local-api-request` 的桥在 `src/features/island-bridge/`（不是插件，runner 的拥有者是 `builtin`）：这座桥还给第 2 版插件的待办调用和岛屿实验台用，所以不归本机接口，关掉本机接口不撤它。
+HTTP 服务是内置插件 `local-api` 的后台 `server`（`src-tauri/src/local_api/background.rs`），由插件开关表起停；「功能关着时」的规则在 `local_api/switches.rs`；设置页的命令（`get_local_api_info`、`reset_local_api_token`、`copy_local_api_token`）在 `local_api/settings.rs`，令牌只由 Rust 写进剪贴板，不回窗口。岛上接 `local-api-request` 的桥在 `src/features/island-bridge/`（不是插件，runner 的拥有者是 `builtin`）：这座桥还给旧版插件的待办调用和岛屿实验台用，所以不归本机接口，关掉本机接口不撤它。

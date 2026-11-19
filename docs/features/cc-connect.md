@@ -1,6 +1,6 @@
 # cc-connect：本机与远程电脑
 
-内置插件 `cc-connect`（2026-11-16 起是第 3 版内置插件，之前是第 2 版的 `focusd.cc-connect`，E36.3.41）用 [cc-connect](https://github.com/chenhg5/cc-connect) 把 AI 代理接到飞书、Telegram、Discord 机器人上，手机推送也走它。Rust 在 `src-tauri/src/cc_connect/`（看护岛启动的 cc-connect 是插件的后台 `runner`），前端封装在 `src/features/cc-connect/api.ts`；设置在 设置 → AI Agent → 提醒 的「cc-connect 手机连接」一节，开关在 设置 → 插件（第 3 版）。手机推送不直接调这些命令，经窗口服务 `cc-connect/v1`（`targets`、`send`，见 [v3-services.md](../architecture/plugins/v3-services.md)）。
+内置插件 `cc-connect`（2026-11-16 起，E36.3.41；之前是旧版插件平台的 `focusd.cc-connect`）用 [cc-connect](https://github.com/chenhg5/cc-connect) 把 AI 代理接到飞书、Telegram、Discord 机器人上，手机推送也走它。Rust 在 `src-tauri/src/cc_connect/`（看护岛启动的 cc-connect 是插件的后台 `runner`），前端封装在 `src/features/cc-connect/api.ts`；设置在 设置 → AI Agent → 提醒 的「cc-connect 手机连接」一节，开关在 设置 → 插件。手机推送不直接调这些命令，经窗口服务 `cc-connect/v1`（`targets`、`send`，见[插件服务的设计](../architecture/plugins/v3-services.md)）。
 
 ## 两个平台各有什么
 
