@@ -60,12 +60,15 @@ export type InstalledMarketPlugin = {
   description?: MarketLocalizedText | string;
 };
 
+export type MarketRevocationWarning = "network" | "bad-signature" | "bad-trust" | "invalid" | "older-serial" | "expired" | "behind";
+
 export type MarketCatalogSnapshot = {
   plugins: MarketCatalogPlugin[];
   installed: InstalledMarketPlugin[];
   updatedAt: number | null;
   manualAllowed: boolean;
   error: string | null;
+  revocationWarning?: MarketRevocationWarning | null;
 };
 
 export type MarketInspectedPackage = {

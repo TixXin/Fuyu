@@ -293,7 +293,7 @@ test("market/v1 verifies signed index, enforces cooldown, installs, toggles, gat
 
     routes.set(revokedUrl, () => textResponse("{}", 200));
     routes.set(`${revokedUrl}.sig`, () => textResponse("{}", 200));
-    await assert.rejects(() => market.refresh(), /bad-signature/);
+    assert.equal((await market.refresh()).revocationWarning, "bad-signature");
 
     const revokedDoc = {
       format: 3,
