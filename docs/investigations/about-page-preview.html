@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>关于页新方案</title>
+<style>
+:root {
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-medium: 240ms;
+  --motion-slow: 420ms;
+  --radius-md: 8px;
+  --radius-xl: 12px;
+
+  --bg: #131417;
+  --doc-bg: #0e0f11;
+  --card: #1b1d22;
+  --group: rgba(255, 255, 255, 0.04);
+  --group-line: rgba(255, 255, 255, 0.06);
+  --text: #f8f6f0;
+  --t1: rgba(248, 246, 240, 0.96);
+  --t2: rgba(248, 246, 240, 0.68);
+  --t3: rgba(248, 246, 240, 0.54);
+  --a04: rgba(255, 255, 255, 0.04);
+  --a06: rgba(255, 255, 255, 0.06);
+  --a08: rgba(255, 255, 255, 0.08);
+  --a10: rgba(255, 255, 255, 0.1);
+  --a12: rgba(255, 255, 255, 0.12);
+  --a16: rgba(255, 255, 255, 0.16);
+  --accent: #74d6ff;
+  --on-accent: #06202c;
+  --err: #ff9aa9;
+  --danger: #ff7a7a;
+  --warn: #ffd166;
+  --ok: #7ee2b8;
+  --ok-dot: #35e985;
+  --busy: #6aabff;
+  --violet: #b9a6ff;
+  --focus: rgba(143, 216, 255, 0.88);
+  --shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+  --emblem-bg: #0b0c0e;
+  color-scheme: dark;
+}
+:root.light {
+  --bg: #eceef2;
+  --doc-bg: #f6f7f9;
+  --card: #ffffff;
+  --group: #ffffff;
+  --group-line: rgba(0, 0, 0, 0.08);
+  --text: #18181e;
+  --t1: rgba(24, 24, 30, 0.94);
+  --t2: rgba(24, 24, 30, 0.7);
+  --t3: rgba(24, 24, 30, 0.56);
+  --a04: rgba(0, 0, 0, 0.04);
+  --a06: rgba(0, 0, 0, 0.05);
+  --a08: rgba(0, 0, 0, 0.06);
+  --a10: rgba(0, 0, 0, 0.08);
+  --a12: rgba(0, 0, 0, 0.09);
+  --a16: rgba(0, 0, 0, 0.12);
+  --accent: #0a7fd1;
+  --on-accent: #ffffff;
+  --err: #c0283f;
+  --danger: #c42b2b;
+  --warn: #9a6700;
+  --ok: #1f8a5b;
+  --ok-dot: #2fae74;
+  --busy: #1666d6;
+  --violet: #5b47e0;
+  --focus: rgba(10, 127, 209, 0.8);
+  --shadow: 0 18px 48px rgba(20, 24, 40, 0.18);
+  --emblem-bg: #18181e;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: var(--font-ui); font-size: 14px; line-height: 1.6; color: var(--t1); background: var(--doc-bg); transition: background-color var(--motion-medium) var(--motion-ease), color var(--motion-medium) var(--motion-ease); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+code { font-family: var(--font-mono); font-size: 0.92em; padding: 1px 5px; border-radius: 5px; background: var(--a08); }
+
+.topbar { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 24px; background: color-mix(in srgb, var(--doc-bg) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--a08); }
+.topbar h1 { margin: 0; font-size: 15px; font-weight: 650; color: var(--text); }
+.ctl { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--t3); }
+.seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: var(--radius-md); background: var(--a06); border: 1px solid var(--a08); }
+.seg button { border: 0; background: transparent; padding: 2px 9px; border-radius: 6px; font-size: 12.5px; color: var(--t2); white-space: nowrap; transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease); }
+.seg button:hover { color: var(--text); }
+.seg button[aria-pressed="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.18); }
+.seg button:disabled { opacity: .4; cursor: default; }
+.seg.scheme button { font-weight: 600; padding: 2px 12px; }
+
+.doc { max-width: 1180px; margin: 0 auto; padding: 20px 24px 80px; }
+.doc h2 { margin: 0 0 6px; font-size: 21px; color: var(--text); }
+.doc h3 { margin: 22px 0 8px; font-size: 15px; color: var(--text); }
+.doc p { margin: 6px 0; color: var(--t2); }
+.lead { max-width: 920px; }
+.muted { color: var(--t3); }
+.tag { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: var(--a08); color: var(--t2); white-space: nowrap; }
+.tag.rec { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+.problems { margin: 10px 0 0; padding-left: 20px; color: var(--t2); font-size: 13px; columns: 2 340px; column-gap: 28px; }
+.problems li { break-inside: avoid; margin-bottom: 2px; }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--a08); border-radius: var(--radius-xl); background: var(--group); margin-top: 12px; }
+table.cmp { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.cmp th, table.cmp td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--a08); }
+table.cmp th { color: var(--t3); font-weight: 600; white-space: nowrap; }
+table.cmp td { color: var(--t2); }
+table.cmp td:first-child { color: var(--text); font-weight: 600; white-space: nowrap; }
+table.cmp tr:last-child td { border-bottom: 0; }
+
+.plan { margin-top: 22px; display: grid; gap: 16px; }
+.plan-note { border: 1px solid var(--a08); border-radius: var(--radius-xl); background: var(--group); padding: 14px 16px; font-size: 12.5px; }
+.plan-note .cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 0 22px; }
+@media (max-width: 900px) { .plan-note .cols { grid-template-columns: minmax(0, 1fr); } }
+.plan-note h4 { margin: 0 0 4px; font-size: 15px; color: var(--text); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.plan-note .idea { color: var(--t1); margin: 4px 0 10px; }
+.plan-note h5 { margin: 12px 0 4px; font-size: 12px; color: var(--t3); font-weight: 600; }
+.plan-note ul { margin: 0; padding-left: 18px; color: var(--t2); }
+.plan-note li { margin-bottom: 3px; }
+.plan-note .pro li::marker { content: "＋ "; color: var(--ok); }
+.plan-note .con li::marker { content: "－ "; color: var(--err); }
+.win-scroll { overflow-x: auto; padding: 2px 0 8px; }
+
+.win { position: relative; width: 860px; height: 820px; margin: 0 auto; display: grid; grid-template-columns: 228px minmax(0, 1fr); overflow: hidden; border-radius: 10px; background: var(--bg); color: var(--text); box-shadow: var(--shadow), 0 0 0 1px var(--a10); font-size: 13px; line-height: 1.5; }
+.win.wide { width: 1080px; }
+.win.narrow { width: 580px; grid-template-columns: 68px minmax(0, 1fr); }
+.wctl { position: absolute; top: 0; right: 0; display: flex; z-index: 5; }
+.wctl span { width: 46px; height: 32px; display: grid; place-items: center; color: var(--t3); }
+.lights { position: absolute; top: 18px; left: 18px; display: flex; gap: 8px; z-index: 5; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+.lights i:nth-child(2) { background: #febc2e; }
+.lights i:nth-child(3) { background: #28c840; }
+.win.narrow .lights { left: 10px; gap: 5px; }
+.win.narrow .lights i { width: 10px; height: 10px; }
+
+.side { padding: 8px; min-height: 0; display: grid; }
+.side-card { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: 10px 8px 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--a06); }
+.side-search { position: relative; margin: 0 2px 8px; color: var(--t3); }
+.side-search svg { position: absolute; left: 9px; top: 8.5px; }
+.side-search div { height: 30px; padding: 0 10px 0 29px; display: flex; align-items: center; border-radius: var(--radius-md); background: var(--a06); border: 1px solid var(--a08); font-size: 12.5px; color: var(--t3); }
+.side-list { overflow: hidden; display: grid; align-content: start; gap: 1px; }
+.s-item { width: 100%; min-height: 29px; display: flex; align-items: center; gap: 9px; padding: 0 10px; border-radius: var(--radius-md); color: var(--t2); font-size: 13px; white-space: nowrap; }
+.s-item span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.s-item svg { flex: none; opacity: .8; }
+.s-item.active { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--text); position: relative; font-weight: 600; }
+.s-item.active svg { color: var(--accent); opacity: 1; }
+.s-item.active::before { content: ""; position: absolute; left: -4px; top: 7px; bottom: 7px; width: 3px; border-radius: 3px; background: var(--accent); }
+.s-group { margin-top: 8px; }
+.s-sub { display: grid; gap: 1px; margin-left: 17px; padding-left: 8px; border-left: 1px solid var(--a08); }
+.s-sub .s-item { padding-left: 8px; }
+.side-bottom { border-top: 1px solid var(--a06); padding-top: 6px; margin-top: 6px; }
+.win.narrow .side-card { padding: 8px 6px; }
+.win.narrow .side-search { height: 30px; display: grid; place-items: center; }
+.win.narrow .side-search div { display: none; }
+.win.narrow .side-search svg { position: static; }
+.win.narrow .s-item { justify-content: center; padding: 0; min-height: 32px; }
+.win.narrow .s-item span, .win.narrow .s-item .chev { display: none; }
+.win.narrow .s-sub { margin: 0; padding: 0; border: 0; }
+.win.narrow .s-group { margin-top: 5px; padding-top: 5px; border-top: 1px solid var(--a06); }
+.win.narrow .s-group > .s-item { display: none; }
+.win.mac .side { padding: 0; }
+.win.mac .side-card { padding-top: 50px; background: transparent; border: 0; border-radius: 0; box-shadow: inset -1px 0 0 var(--group-line); }
+.win.mac .main { background: var(--bg); }
+.win.mac { background: color-mix(in srgb, var(--bg) 70%, var(--card)); grid-template-columns: 220px minmax(0, 1fr); }
+.win.mac.narrow { grid-template-columns: 52px minmax(0, 1fr); }
+.win.mac.narrow .side-card { padding: 40px 6px 8px; }
+.win.mac .s-item.active { background: var(--accent); color: #fff; font-weight: 500; }
+.win.mac .s-item.active::before { display: none; }
+.win.mac .s-item.active svg { color: inherit; }
+:root:not(.light) .win.mac .s-item.active { color: var(--on-accent); }
+
+.main { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.ph { flex: none; min-height: 52px; display: flex; align-items: center; gap: 10px; padding: 8px 146px 0 24px; }
+.win.mac .ph { padding: 14px 24px 0 28px; }
+.ph h1 { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.2; }
+.body { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 28px 28px 24px; scrollbar-width: thin; }
+.win.mac .body { padding-left: 28px; }
+.win.narrow .ph { padding-left: 16px; padding-right: 100px; }
+.win.mac.narrow .ph { padding-right: 16px; }
+.win.narrow .body { padding: 8px 14px 22px 16px; }
+.body-in { max-width: 860px; display: grid; gap: 18px; align-content: start; }
+.body-in.enter { animation: fade-in var(--motion-medium) var(--motion-ease-out) backwards; }
+@keyframes fade-in { from { opacity: 0; } }
+
+.group { display: grid; gap: 8px; min-width: 0; }
+.group-h { min-height: 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; }
+.group-h h3 { margin: 0; font-size: 13px; font-weight: 600; color: var(--text); }
+.card { min-width: 0; background: var(--group); border: 1px solid var(--group-line); border-radius: var(--radius-xl); }
+.card > .row + .row, .card > .row + .sub, .card > .sub + .row { border-top: 1px solid var(--group-line); }
+.row { display: flex; align-items: center; gap: 14px; padding: 11px 16px; min-height: 52px; }
+.row .rt { flex: 1; min-width: 0; }
+.row .rt b { display: block; font-weight: 400; color: var(--text); font-size: 13px; }
+.row .rt small { display: block; color: var(--t3); font-size: 12px; line-height: 1.45; }
+.row .rc { flex: none; display: flex; align-items: center; gap: 10px; }
+.sub { margin: 0 12px 12px 28px; padding: 0 0 0 12px; border-left: 2px solid var(--a10); border-top: 0 !important; }
+.sub .row { padding: 8px 4px; min-height: 40px; }
+.foot { margin: 0; padding: 0 4px; font-size: 12px; color: var(--t3); line-height: 1.55; }
+.foot a, .lnk { color: var(--accent); text-decoration: none; border: 0; background: transparent; padding: 0; font-size: inherit; white-space: nowrap; }
+.lnk.danger { color: var(--danger); }
+.lnk.quiet { color: var(--t3); }
+.lnk.quiet:hover { color: var(--danger); }
+.btn { height: 30px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; border-radius: var(--radius-md); border: 1px solid var(--a12); background: var(--a06); color: var(--text); font-size: 12.5px; font-weight: 500; white-space: nowrap; transition: background-color var(--motion-fast) var(--motion-ease); }
+.btn:hover { background: var(--a10); }
+.btn.primary { background: var(--accent); border-color: transparent; color: var(--on-accent); font-weight: 600; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.block { width: 100%; }
+.switch { position: relative; flex: none; width: 34px; height: 20px; border-radius: 999px; background: var(--accent); }
+.switch::after { content: ""; position: absolute; left: 16px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.select { color: var(--t2); font-size: 12.5px; white-space: nowrap; }
+.select::after { content: " ⌄"; color: var(--t3); }
+.mseg { display: inline-flex; padding: 2px; gap: 2px; border-radius: var(--radius-md); background: var(--a06); border: 1px solid var(--a08); }
+.mseg span { padding: 2px 10px; border-radius: 6px; font-size: 12px; color: var(--t2); white-space: nowrap; }
+.mseg span.on { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.18); }
+.mseg.dis { opacity: .5; }
+
+.vtag { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 6px; font-size: 11.5px; font-weight: 600; color: var(--t2); background: var(--a08); white-space: nowrap; font-family: var(--font-mono); }
+.ctag { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 6px; font-size: 11.5px; font-weight: 600; white-space: nowrap; color: var(--t2); border: 1px solid var(--a12); }
+.ctag.beta, .ctag.dev { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); background: color-mix(in srgb, var(--warn) 10%, transparent); }
+
+.dot { display: inline-block; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--t3); }
+.dot.ok { background: var(--ok-dot); }
+.dot.new { background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.dot.busy { background: var(--busy); animation: breathe 1.4s var(--motion-ease-in-out) infinite; }
+.dot.error { background: var(--danger); }
+.dot.muted { background: var(--t3); }
+@keyframes breathe { 50% { opacity: .35; } }
+.status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text); white-space: nowrap; min-width: 0; }
+.status span { overflow: hidden; text-overflow: ellipsis; }
+.status.tone-error span { color: var(--danger); }
+.prog { height: 4px; border-radius: 999px; background: var(--a10); overflow: hidden; }
+.prog i { display: block; height: 100%; width: 42%; border-radius: inherit; background: var(--busy); transition: width var(--motion-medium) var(--motion-ease); }
+
+.emblem { position: relative; flex: none; width: 52px; height: 52px; border-radius: 14px; background: var(--emblem-bg); display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+.emblem::before { content: ""; width: 30px; height: 11px; border-radius: 999px; background: #000; box-shadow: 0 0 0 1px rgba(255,255,255,.12); }
+.emblem::after { content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -11px; border-radius: 50%; background: var(--ok-dot); }
+.emblem.lg { width: 72px; height: 72px; border-radius: 19px; }
+.emblem.lg::before { width: 42px; height: 15px; }
+.emblem.lg::after { margin-left: -15px; width: 5px; height: 5px; }
+.emblem.sm { width: 40px; height: 40px; border-radius: 11px; }
+.emblem.sm::before { width: 24px; height: 9px; }
+.emblem.sm::after { margin-left: -9px; width: 3px; height: 3px; }
+.emblem.call { box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 0 0 2px var(--bg), 0 0 0 3px color-mix(in srgb, var(--violet) 60%, transparent); }
+.call-badge { position: absolute; right: -8px; bottom: -7px; height: 17px; padding: 0 5px; border-radius: 999px; font-size: 10px; font-weight: 700; line-height: 17px; color: #fff; background: var(--violet); white-space: nowrap; box-shadow: 0 0 0 2px var(--card); }
+
+.hero { position: relative; overflow: hidden; border-radius: 14px; border: 1px solid var(--group-line); background: var(--group); }
+.hero.ch-stable { background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 55%), var(--group); }
+.hero.ch-beta { background: radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--warn) 15%, transparent), transparent 55%), var(--group); }
+.hero.ch-dev { border-style: dashed; border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+.idn { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.idn .nm { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.2; margin-right: 2px; }
+.desc { margin: 2px 0 0; color: var(--t2); font-size: 12.5px; }
+
+.A-hero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 16px; align-items: center; padding: 16px 18px; }
+.A-hero .side2 { display: grid; justify-items: end; gap: 6px; }
+.A-hero .subl { font-size: 12px; color: var(--t3); text-align: right; max-width: 320px; }
+.A-hero .acts { display: flex; align-items: center; gap: 12px; }
+.A-hero .prog { grid-column: 1 / -1; margin-top: 6px; }
+.win.narrow .A-hero { grid-template-columns: auto minmax(0, 1fr); }
+.win.narrow .A-hero .side2 { grid-column: 1 / -1; justify-items: start; padding-top: 8px; border-top: 1px solid var(--group-line); grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.win.narrow .A-hero .subl { text-align: left; grid-column: 1; }
+.win.narrow .A-hero .acts { grid-row: 1 / span 2; grid-column: 2; }
+.A-links { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.A-links a { display: flex; align-items: center; justify-content: center; gap: 7px; height: 42px; color: var(--t1); text-decoration: none; font-size: 12.5px; white-space: nowrap; min-width: 0; }
+.A-links a + a { border-left: 1px solid var(--group-line); }
+.A-links a svg { flex: none; }
+.A-links a:hover { background: var(--a04); }
+.win.narrow .A-links { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.win.narrow .A-links a:nth-child(3) { border-left: 0; }
+.win.narrow .A-links a:nth-child(n+3) { border-top: 1px solid var(--group-line); }
+.ico-c1 { color: #5ac8fa; } .ico-c2 { color: #7ee2b8; } .ico-c3 { color: #b9a6ff; } .ico-c4 { color: #ffc35a; }
+:root.light .ico-c1 { color: #0a7fd1; } :root.light .ico-c2 { color: #1f8a5b; } :root.light .ico-c3 { color: #5b47e0; } :root.light .ico-c4 { color: #b7791f; }
+.danger-zone { margin-top: 10px; padding-top: 18px; border-top: 1px dashed var(--a12); }
+.colophon { text-align: center; font-size: 11.5px; color: var(--t3); margin: 4px 0 0; }
+.colophon a { color: var(--violet); text-decoration: none; }
+
+.log .vrow { display: flex; align-items: center; gap: 8px; padding: 10px 16px; min-height: 44px; cursor: pointer; }
+.log .vrow:hover { background: var(--a04); }
+.log > * + * { border-top: 1px solid var(--group-line); }
+.log .vn { font-weight: 600; color: var(--text); font-family: var(--font-mono); font-size: 13px; }
+.log .vc { color: var(--t3); font-size: 12px; }
+.log .vd { margin-left: auto; color: var(--t3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.log .chev { color: var(--t3); transition: transform var(--motion-base) var(--motion-ease); }
+.log .open .chev { transform: rotate(180deg); }
+.cur { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 5px; font-size: 11px; font-weight: 600; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); }
+.btag { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 5px; font-size: 11px; font-weight: 600; color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.notes { padding: 4px 16px 14px; animation: fade-in var(--motion-base) var(--motion-ease-out) backwards; }
+.notes.cap { max-height: 300px; overflow-y: auto; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.chips button { height: 22px; padding: 0 9px; border-radius: 999px; border: 1px solid var(--a12); background: transparent; color: var(--t2); font-size: 11.5px; }
+.chips button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--text); }
+.notes h6 { margin: 10px 0 2px; font-size: 12.5px; font-weight: 600; color: var(--text); }
+.notes h6:first-of-type { margin-top: 2px; }
+.notes ul { margin: 0; padding-left: 18px; color: var(--t2); font-size: 12.5px; }
+.notes li { margin: 2px 0; }
+.notes li b { color: var(--text); font-weight: 600; }
+.notes .omit { color: var(--t3); font-size: 12px; margin: 4px 0 0; }
+.log .older { display: block; width: 100%; padding: 10px; text-align: center; color: var(--accent); border: 0; background: transparent; font-size: 12.5px; }
+.log.cur-bg .vrow.is-cur { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+
+.B-grid { display: grid; grid-template-columns: 268px minmax(0, 1fr); gap: 20px; align-items: start; }
+.B-left { position: sticky; top: 0; display: grid; gap: 12px; }
+.B-id { padding: 18px 16px 14px; display: grid; gap: 10px; }
+.B-id .top { display: flex; align-items: center; gap: 14px; }
+.B-id .nm { font-size: 20px; }
+.B-id .status { white-space: normal; align-items: flex-start; }
+.B-id .status .dot { margin-top: 6px; }
+.B-id .subl { font-size: 12px; color: var(--t3); margin-top: -6px; padding-left: 15px; }
+.B-id .skip { display: flex; justify-content: space-between; font-size: 12px; }
+.B-id hr { border: 0; border-top: 1px solid var(--group-line); margin: 2px 0; width: 100%; }
+.B-id .kv { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--text); }
+.B-id .more { font-size: 12px; }
+.B-id .opts { display: grid; gap: 6px; padding: 8px 0 0 10px; border-left: 2px solid var(--a10); animation: fade-in var(--motion-base) var(--motion-ease-out) backwards; }
+.B-id .opts .kv { font-size: 12px; color: var(--t2); }
+.B-list a, .B-list button.li { display: flex; align-items: center; gap: 9px; width: 100%; height: 34px; padding: 0 12px; color: var(--t1); text-decoration: none; border: 0; background: transparent; font-size: 12.5px; text-align: left; }
+.B-list a:hover, .B-list button.li:hover { background: var(--a04); }
+.B-list > * + * { border-top: 1px solid var(--group-line); }
+.B-list a .ext, .B-list .li .ext { margin-left: auto; color: var(--t3); }
+.B-list > :first-child { border-radius: 12px 12px 0 0; }
+.B-list > :last-child { border-radius: 0 0 12px 12px; }
+.B-danger { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; font-size: 12px; padding: 2px 0; }
+.B-right { display: grid; gap: 12px; min-width: 0; }
+.win.narrow .B-grid { grid-template-columns: minmax(0, 1fr); }
+.win.narrow .B-left { position: static; }
+.win.narrow .B-id .top .emblem { order: 0; }
+.B-links2 { display: none; }
+.win.narrow .B-left .B-list.links { display: none; }
+.win.narrow .B-links2 { display: grid; }
+
+.C-hero { padding: 26px 20px 20px; display: grid; justify-items: center; text-align: center; gap: 8px; }
+.C-hero .idn { justify-content: center; }
+.C-hero .nm { font-size: 24px; }
+.C-hero .desc { max-width: 460px; }
+.C-pill { display: inline-flex; align-items: center; gap: 12px; margin-top: 6px; padding: 6px 6px 6px 14px; border-radius: 999px; background: var(--a06); border: 1px solid var(--a10); max-width: 100%; }
+.C-pill .btn { border-radius: 999px; height: 28px; }
+.C-pill.solo { padding-right: 14px; }
+.C-hero .subl { font-size: 12px; color: var(--t3); }
+.C-hero .prog { width: min(360px, 100%); }
+.C-tabs { display: flex; justify-content: center; }
+.C-tabs .seg button { padding: 4px 16px; font-size: 13px; }
+.C-view { display: grid; gap: 18px; animation: fade-in var(--motion-base) var(--motion-ease-out) backwards; }
+.C-links .row { min-height: 46px; padding: 9px 16px; }
+.C-links .ibox { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--a06); flex: none; }
+
+html.rm *, html.rm *::before, html.rm *::after { animation: none !important; transition-duration: 0s !important; }
+@media (prefers-reduced-motion: reduce) {
+  .body-in.enter, .notes, .C-view, .B-id .opts { animation: none; }
+  .dot.busy { animation: none; }
+  .log .chev { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="topbar" id="topbar"></div>
+<main class="doc">
+  <section>
+    <h2>关于页新方案（C138）</h2>
+    <p class="lead">三套差别明显的排法，都画在仿真的设置窗口里。上面的开关能切方案、通道（开发版 / 测试版 / 正式版）、更新状态、窗口宽窄、深浅色、中英文和 Win / Mac；更新日志的版本行能点开收起，测试版小胶囊能切，「重置」点了会变成确认。右边写每套的思路、解决了哪几条、取舍和代价。</p>
+    <p class="muted" style="font-size:13px">现状的问题（任务 C138）：</p>
+    <ol class="problems">
+      <li><b>双栏不齐</b>：右栏长，左栏「更新日志」下面空一大块。</li>
+      <li><b>重复抢眼</b>：标题右边「Logo 设计：征集中」胶囊和横幅的名字、版本挤在同一屏顶部。</li>
+      <li><b>日志藏着</b>：更新日志是主要内容，却只列版本号，要点开才看到。</li>
+      <li><b>链接卡太大</b>：四张两行的卡片占了右栏一半。</li>
+      <li><b>危险操作</b>：「重置与退出」要和别的区分，但不要太醒目。</li>
+      <li><b>状态</b>：三种通道和检查中 / 下载中 / 有新版本 / 已下载 / 失败时横幅怎么变。</li>
+      <li><b>适配</b>：最小宽 580、浅色深色、中英文、Win 和 Mac。</li>
+    </ol>
+    <div class="tbl-wrap">
+      <table class="cmp">
+        <thead><tr><th>方案</th><th>排法</th><th>更新状态和操作</th><th>更新日志</th><th>链接</th><th>Logo 征集</th><th>重置与退出</th></tr></thead>
+        <tbody>
+          <tr><td>A 单栏阅读 <span class="tag rec">推荐</span></td><td>单栏，宽度收到 720，从上往下读</td><td>并进横幅：右边状态 + 唯一主按钮，原「版本」卡去掉</td><td>第二块，当前版本默认展开（最高 300，内部滚动）</td><td>一条四格的横条，高 42</td><td>挪到页尾落款里</td><td>页尾虚线分隔后一组普通卡片，只有按钮是红字</td></tr>
+          <tr><td>B 名片 + 日志</td><td>左 268 名片列吸顶，右边整列是日志</td><td>名片里：状态、整宽主按钮、通道、自动检查</td><td>右栏全部，当前版本展开、不限高</td><td>名片下一张列表卡，一行 34</td><td>Logo 位外圈紫环加「征集」小标</td><td>名片最底下两个灰色文字链接，悬停变红</td></tr>
+          <tr><td>C 名片居中 + 分段</td><td>居中的大名片 + 三个分段：更新日志 / 更新设置 / 链接与帮助</td><td>名片下一颗胶囊：状态 + 主按钮</td><td>默认分段，当前版本展开</td><td>「链接与帮助」分段里一组列表</td><td>「链接与帮助」里一行</td><td>「链接与帮助」最底下一组，按钮红字</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="plan">
+    <aside class="plan-note" id="note"></aside>
+    <div class="win-scroll"><div id="win"></div></div>
+  </section>
+</main>
+<script>
+const ICONS = {
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  compass: '<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/>',
+  sliders: '<path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M2 14h4"/><path d="M10 8h4"/><path d="M18 16h4"/>',
+  layout: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
+  sparkle: '<path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/><path d="m5.6 5.6 2.1 2.1"/><path d="m16.3 16.3 2.1 2.1"/>',
+  keyboard: '<rect width="20" height="14" x="2" y="5" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M7 15h10"/>',
+  grid: '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+  list: '<path d="M11 6h10M11 12h10M11 18h10"/><path d="m3 6 1.5 1.5L7 5"/><path d="m3 12 1.5 1.5L7 11"/>',
+  calendar: '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  languages: '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+  clipboard: '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+  inbox: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  crop: '<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/>',
+  mic: '<rect width="6" height="12" x="9" y="2" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/>',
+  timer: '<path d="M10 2h4"/><path d="M12 14l3-3"/><circle cx="12" cy="14" r="8"/>',
+  msg: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  bot: '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+  palette: '<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H16a6 6 0 0 0 6-6c0-4.9-4.5-8.6-10-8.6z"/>',
+  bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  server: '<rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><path d="M6 6h.01M6 18h.01"/>',
+  blocks: '<rect width="7" height="7" x="14" y="3" rx="1"/><path d="M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H3"/>',
+  store: '<path d="M2 7h20"/><path d="m2 7 4.4-4.4A2 2 0 0 1 7.8 2h8.4a2 2 0 0 1 1.4.6L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>',
+  info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  chevD: '<path d="m6 9 6 6 6-6"/>',
+  chevR: '<path d="m9 18 6-6-6-6"/>',
+  globe: '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>',
+  tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r=".5"/>',
+  help: '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+  star: '<path d="M11.5 2.3a.5.5 0 0 1 1 0l2.3 4.7a2 2 0 0 0 1.5 1.1l5.2.8a.5.5 0 0 1 .3.9l-3.8 3.6a2 2 0 0 0-.6 1.8l.9 5.2a.5.5 0 0 1-.8.5l-4.6-2.5a2 2 0 0 0-1.9 0l-4.6 2.5a.5.5 0 0 1-.8-.5l.9-5.2a2 2 0 0 0-.6-1.8L1.9 9.8a.5.5 0 0 1 .3-.9l5.2-.8A2 2 0 0 0 8.9 7z"/>',
+  ext: '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+  book: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  pen: '<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/>',
+  minus: '<path d="M5 12h14"/>',
+  square: '<rect width="14" height="14" x="5" y="5" rx="1"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
+};
+const ic = (n, s = 14, cls = "") => `<svg class="${cls}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ""}</svg>`;
+
+const TX = {
+  zh: {
+    page: "关于", name: "浮屿", desc: "在屏幕顶部集中待办、剪贴板、音乐、快捷翻译、AI 状态和消息提醒。",
+    stable: "稳定版", beta: "测试版", dev: "DEV 开发版", search: "搜索设置",
+    st: { dev: "开发版 · 不自动更新", idle: "还没检查更新", checking: "正在检查更新…", latest: "已是最新版本", available: (v) => `发现新版本 v${v}`, downloading: "正在下载 42%", ready: (v) => `v${v} 已下载`, error: "检查更新失败" },
+    sub: {
+      dev: "这是开发版，不检查也不安装更新。新版本请在安装的正式版里更新。",
+      idle: (v) => `当前版本 v${v} · 还没有检查过`, checking: (v) => `当前版本 v${v}`,
+      latest: (v) => `当前版本 v${v} · 上次成功检查：今天 14:02`,
+      available: (a, b) => `v${a} → v${b}`, downloading: (a, b) => `v${a} → v${b} · 本次下载源：GitHub`,
+      ready: () => "空闲时自动安装，也可以现在就装；安装时小岛会重启一次",
+      error: () => "原因：连接 github.com 超时，国内镜像也没连上"
+    },
+    act: { check: "检查更新", checking: "检查中", download: "下载并安装", install: "立即安装", retry: "重试", latestRelease: "查看最新版本", skip: "跳过这个版本", recheck: "重新检查" },
+    updTitle: "更新设置", channel: "更新通道", chStable: "稳定版", chBeta: "测试版（beta）",
+    autoCheck: "自动检查更新", autoCheckHint: "在应用运行时按所选频率检查；退出期间错过的检查会在下次启动后补查一次。",
+    freq: "检查频率", freqV: "每 6 小时", remind: "更新提醒方式", remindV: "仅岛上标记", autoUpd: "自动更新", autoUpdV: "自动下载，空闲时安装",
+    updMore: "检查频率、提醒和自动更新", updFoot: "上次成功检查：今天 14:02 · 下次检查：今天 20:02",
+    logTitle: "更新日志", current: "当前", betaTag: "测试版", betaCount: (n) => `含 ${n} 个测试版`, stableChip: "正式版", betaChip: (n) => `测试版 ${n}`,
+    older: (n) => `显示更早的 ${n} 个版本`, logFoot: "说明随应用一起安装，不联网也能看。", omit: "（预览里省略，实际显示这一版的完整说明）",
+    links: "链接", website: "官网", websiteHint: "fuyu.ing：功能介绍和下载", releases: "版本历史", releasesHint: "在官网查看每个版本的更新说明和下载",
+    issues: "反馈与社区", issuesHint: "到官网社区反馈问题、交流想法", star: "GitHub Star", starLong: "觉得小岛还不错？", starHint: "去 GitHub 给小岛一颗 Star",
+    help: "帮助", guide: "新手引导", guideHint: "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。", guideAct: "打开",
+    diag: "诊断信息", diagHint: "预览并复制应用版本、系统和更新状态，便于反馈问题。", diagAct: "预览",
+    danger: "重置与退出", reset: "重置所有设置", resetHint: "外观、行为和各功能的设置恢复默认。待办、笔记、邮箱、插件、密钥、样式预设和界面语言都保留。",
+    resetAct: "重置", resetConfirm: "确认重置", cancel: "取消",
+    quit: "退出岛屿", quitWin: "和托盘菜单里的「退出」一样；要再打开，从开始菜单或桌面快捷方式启动。", quitMac: "和菜单栏图标菜单里的「退出」一样；要再打开，从「应用程序」文件夹或启动台打开。", quitAct: "退出",
+    logoRow: "Logo 设计", logoRowHint: "还没有 Logo，被采用的设计者署名在这里", logoCall: "Logo 征集中，来画一个 →", logoBadge: "征集",
+    colophon: (v) => `浮屿 v${v} · 以 AGPL-3.0 开源 · 用 Tauri 和 React 构建`,
+    tabs: { log: "更新日志", update: "更新设置", more: "链接与帮助" },
+    side: { overview: "概览", about: "关于" }
+  },
+  en: {
+    page: "About", name: "Fuyu", desc: "Todos, clipboard, music, quick translation, AI status, and message alerts, gathered at the top of the screen.",
+    stable: "Stable", beta: "Beta", dev: "DEV build", search: "Search settings",
+    st: { dev: "Dev build · updates off", idle: "Not checked yet", checking: "Checking for updates…", latest: "You're on the latest version", available: (v) => `Version v${v} is available`, downloading: "Downloading 42%", ready: (v) => `v${v} downloaded`, error: "Update check failed" },
+    sub: {
+      dev: "This is a dev build, so it doesn't check for or install updates. Update the installed release instead.",
+      idle: (v) => `Version v${v} · Not checked yet`, checking: (v) => `Version v${v}`,
+      latest: (v) => `Version v${v} · Last successful check: today 14:02`,
+      available: (a, b) => `v${a} → v${b}`, downloading: (a, b) => `v${a} → v${b} · Downloaded from GitHub`,
+      ready: () => "Installs when the computer is idle, or install now; the island restarts once",
+      error: () => "Reason: github.com timed out, and the mirror didn't answer either"
+    },
+    act: { check: "Check for updates", checking: "Checking", download: "Download & install", install: "Install now", retry: "Try again", latestRelease: "View latest release", skip: "Skip this version", recheck: "Check again" },
+    updTitle: "Update settings", channel: "Update channel", chStable: "Stable", chBeta: "Beta",
+    autoCheck: "Check for updates automatically", autoCheckHint: "Check at the selected frequency while the app is running. A missed check runs once after the next launch.",
+    freq: "Check frequency", freqV: "Every 6 hours", remind: "Update reminders", remindV: "Island markers only", autoUpd: "Automatic updates", autoUpdV: "Download, install when idle",
+    updMore: "Frequency, reminders and auto-update", updFoot: "Last successful check: today 14:02 · Next check: today 20:02",
+    logTitle: "Changelog", current: "Current", betaTag: "Beta", betaCount: (n) => (n === 1 ? "1 beta" : `${n} betas`), stableChip: "Release", betaChip: (n) => `Beta ${n}`,
+    older: (n) => `Show ${n} older versions`, logFoot: "Notes come with the app, so they open offline too.", omit: "(Shortened in this preview; the app shows this build's full notes)",
+    links: "Links", website: "Website", websiteHint: "fuyu.ing: features and downloads", releases: "Version history", releasesHint: "Every version's notes and downloads on the website",
+    issues: "Feedback and community", issuesHint: "Report a problem or share ideas on the website's community page", star: "Star on GitHub", starLong: "Enjoying your little island?", starHint: "Give it a Star on GitHub",
+    help: "Help", guide: "Welcome guide", guideHint: "The window shown on first start: language, appearance, modules and a few common choices.", guideAct: "Open",
+    diag: "Diagnostics", diagHint: "Preview and copy the app version, system and update status for a bug report.", diagAct: "Preview",
+    danger: "Reset and quit", reset: "Reset all settings", resetHint: "Appearance, behaviour and every feature's settings go back to their defaults. Todos, notes, mailboxes, plugins, keys, style presets and the interface language are kept.",
+    resetAct: "Reset", resetConfirm: "Reset", cancel: "Cancel",
+    quit: "Quit the island", quitWin: "Same as Quit in the tray menu; start it again from the Start menu or a desktop shortcut.", quitMac: "Same as Quit in the menu bar icon's menu; open it again from the Applications folder or Launchpad.", quitAct: "Quit",
+    logoRow: "Logo", logoRowHint: "No logo yet. The chosen designer is credited here", logoCall: "Logo call is open, draw one →", logoBadge: "Open call",
+    colophon: (v) => `Fuyu v${v} · open source under AGPL-3.0 · built with Tauri and React`,
+    tabs: { log: "Changelog", update: "Update settings", more: "Links & help" },
+    side: { overview: "Overview", about: "About" }
+  }
+};
+
+const SIDE = [
+  { icon: "sliders", zh: "基础", en: "Basics", items: [["sliders", "通用", "General"], ["layout", "外观", "Appearance"], ["sparkle", "行为", "Behavior"], ["keyboard", "快捷键", "Shortcuts"]] },
+  { icon: "grid", zh: "功能", en: "Features", items: [["list", "待办", "Todos"], ["calendar", "日历", "Calendar"], ["music", "音乐", "Music"], ["languages", "翻译", "Translate"], ["clipboard", "剪贴板", "Clipboard"], ["inbox", "文件中转", "File shelf"], ["crop", "截图", "Screenshot"], ["mic", "语音输入", "Voice input"], ["timer", "计时与提醒", "Timers"], ["msg", "消息", "Messages"]] },
+  { icon: "bot", zh: "AI Agent", en: "AI Agent", items: [["bot", "Agent", "Agents"], ["palette", "外观", "Appearance"], ["bell", "提醒", "Alerts"], ["server", "SSH 远程", "SSH remote"]] },
+  { icon: "blocks", zh: "扩展", en: "Extensions", items: [["blocks", "插件", "Plugins"], ["store", "插件市场", "Plugin market"]] }
+];
+
+const NOTES_B4 = {
+  zh: [["待办", ["**子任务清单**：待办支持添加子步骤，以清单形式展示，逐项勾选；全部勾选后可自动完成主待办。", "**行内备注**：每条待办可以展开写备注，不用离开岛屿。", "**专注倒计时联动**：开始一条待办时自动拉起倒计时，到点后把时长累加到该待办的专注记录上。", "**准点提醒**：标题以时刻开头（如 `15:00 回电话`）的待办到点弹出岛屿提醒横幅，支持推迟。"]], ["日历", ["**会议横幅**：即将开始的会议在岛上显示横幅提醒，一键加入会议链接。", "**会议时自动暂停媒体**：进入会议时自动暂停正在播放的音乐，会议结束后恢复。", "**日程视图**：日历新增按日程列表浏览的视图。"]]],
+  en: [["Todos", ["**Subtask checklists**: add steps to a todo and tick them off; finishing them all can complete the todo.", "**Inline notes**: expand a todo to write a note without leaving the island.", "**Focus timer link**: starting a todo starts a countdown, and the time adds up on that todo.", "**On-time reminders**: a todo whose title starts with a time (like `15:00 call back`) pops a reminder banner, with snooze."]], ["Calendar", ["**Meeting banner**: upcoming meetings show a banner on the island with a one-click join link.", "**Pause media in meetings**: music pauses when a meeting starts and resumes after.", "**Agenda view**: browse the calendar as an agenda list."]]]
+};
+const NOTES_310 = {
+  zh: [["更新内容", ["**液态玻璃**：岛换上了流动的彩色液态玻璃，颜色取自主题色、正在放的歌的封面，或者自己挑。", "**岛的形态**：外观 → 尺寸与位置 →「形态」可以选贴顶、悬空药丸或刘海。", "**托盘卡片**：点托盘 / 菜单栏图标弹出浮屿自己的卡片，有入口型、状态型、精简型三种。", "**剪贴板的空格预览能编辑了**：预览可以一直开着、钉住、调大小，图片能裁剪和标注。"]]],
+  en: [["What's new", ["**Liquid glass**: the island gets flowing colourful liquid glass, tinted by the theme, the album art, or your pick.", "**Island shape**: Appearance → Size and position → Shape offers top-attached, floating pill or notch.", "**Tray card**: clicking the tray / menu bar icon opens Fuyu's own card, in three styles.", "**Editable space preview**: the clipboard preview can stay open, be pinned and resized; images can be cropped and annotated."]]]
+};
+const VERSIONS = [
+  { v: "0.3.11", date: "2026-11-19", betas: 4, beta: true },
+  { v: "0.3.10", date: "2026-11-16", betas: 2 },
+  { v: "0.3.9", date: "2026-11-15", betas: 3 },
+  { v: "0.3.8", date: "2026-11-14", betas: 4 },
+  { v: "0.3.7", date: "2026-11-13", betas: 4 }
+];
+
+const PLANS = {
+  A: {
+    title: "A 单栏阅读", rec: true,
+    idea: "去掉双栏，按「我是谁、要不要更新、这版改了什么、其他」从上往下排成一列，更新日志成为页面主体。",
+    solves: [
+      "<b>双栏不齐</b>：只有一栏，没有空白块；内容宽收到 720，日志读起来不费眼。",
+      "<b>重复抢眼</b>：标题右边的征集胶囊去掉，挪到页尾落款里；顶部只剩横幅一处身份信息。",
+      "<b>日志藏着</b>：当前版本默认展开，说明直接可读（最高 300，长了内部滚动）。",
+      "<b>链接卡太大</b>：四个链接压成一条四格横条，高 42，窄窗口变 2×2。",
+      "<b>危险操作</b>：页尾虚线分隔后的普通卡片，没有红底，只有「重置」「退出」是红字。",
+      "<b>状态</b>：横幅 = 身份 + 状态 + 唯一主按钮，原来横幅里的小岛和「版本」状态卡合成一处；通道看标签和横幅淡光（正式版强调色、测试版黄、开发版虚线框无光）。"
+    ],
+    pros: ["改动最小：组件都是现成的（分组列表、状态卡逻辑、日志列表），只是换位置", "窄窗口几乎不用另外排，单栏天然能缩", "和其他设置页的读法一致"],
+    cons: ["页面变长，「帮助」「重置与退出」要往下滚才看到", "横幅不再画海面和会浮动的小岛，戳一戳问候彩蛋要么去掉、要么挪到 Logo 上", "Logo 征集挪到页尾，曝光变少"]
+  },
+  B: {
+    title: "B 名片 + 日志",
+    idea: "保留双栏，但让两栏各管一件事：左边一张吸顶的名片（身份、更新、链接、帮助），右边整列都是更新日志。",
+    solves: [
+      "<b>双栏不齐</b>：左栏吸顶，右边日志往下滚时左栏一直在，不会露出空白；右栏变长反而是对的。",
+      "<b>重复抢眼</b>：没有横幅，名片就是唯一的身份处；Logo 征集变成 Logo 位外圈的紫环和「征集」小标，点 Logo 打开征集页。",
+      "<b>日志藏着</b>：右栏整列都是日志，当前版本展开且不限高，像读发布说明一样。",
+      "<b>链接卡太大</b>：一行 34 的列表，四个链接共 136 高。",
+      "<b>危险操作</b>：名片最底下两个灰色小字链接「重置所有设置 · 退出岛屿」，悬停才变红，点了再确认。",
+      "<b>状态</b>：名片里状态一行、说明一行、整宽主按钮，下载时按钮换成进度条；通道是名片里的分段选择。"
+    ],
+    pros: ["日志最好读，版本多时也不挤", "更新相关的都在左边一张卡里，状态和操作一眼看全", "保留了「工作台」的感觉，宽窗口不空"],
+    cons: ["「检查频率、提醒、自动更新」三行塞不进名片，要点「检查频率、提醒和自动更新」展开", "重置、退出藏得深，第一次找的人可能找不到", "窄于 760 时退回单栏，名片在上、日志在下，和宽窗口的观感差别大", "吸顶要改滚动容器，实现比 A 多一点"]
+  },
+  C: {
+    title: "C 名片居中 + 分段",
+    idea: "像 macOS 的「关于本机」：上面一张居中的大名片带状态胶囊，下面用分段切换三块内容，每块都短。",
+    solves: [
+      "<b>双栏不齐</b>：没有双栏，每个分段都是一列短内容。",
+      "<b>重复抢眼</b>：首屏只有名片；Logo 征集挪进「链接与帮助」分段里的一行。",
+      "<b>日志藏着</b>：默认停在「更新日志」分段，当前版本展开。",
+      "<b>链接卡太大</b>：「链接与帮助」里的一组列表，每行带一个小图标。",
+      "<b>危险操作</b>：「链接与帮助」分段最底下一组，普通卡片红字按钮，平时不在视线里。",
+      "<b>状态</b>：名片下面一颗胶囊：状态点 + 一句话 + 主按钮，下载时下面多一条进度条。"
+    ],
+    pros: ["首屏最干净、最有「关于」的仪式感", "每个分段都短，窄窗口和英文长文案都好排", "名片居中，Win 和 Mac 观感一致"],
+    cons: ["和 2026-11-17 定的「关于页不要顶部标签」相反，多一次点击才能看到设置和链接", "设置搜索跳到「更新通道」这类行时要先切分段", "大名片占首屏 220 高，宽窗口两边留白多"]
+  }
+};
+
+const S = { plan: "A", channel: "beta", stage: "latest", width: "wide", light: false, lang: "zh", os: "win", rm: false, open: 0, chip: 4, cTab: "log", bOpts: false, confirm: false };
+let enterAnim = true;
+let confirmTimer = 0;
+
+const t = () => TX[S.lang];
+const curVer = () => (S.channel === "stable" ? "0.3.10" : "0.3.11-beta.4");
+const nextVer = () => (S.channel === "stable" ? "0.3.11" : "0.3.11-beta.5");
+const stage = () => (S.channel === "dev" ? "dev" : S.stage);
+const md = (s) => s.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>");
+
+function status() {
+  const x = t(), st = stage(), a = curVer(), b = nextVer();
+  const tone = { dev: "ok", idle: "muted", checking: "busy", latest: "ok", available: "new", downloading: "busy", ready: "new", error: "error" }[st];
+  const line = typeof x.st[st] === "function" ? x.st[st](b) : x.st[st];
+  const subFn = x.sub[st];
+  const sub = typeof subFn === "function" ? subFn(a, b) : subFn;
+  let primary = "", secondary = "";
+  if (st === "dev") secondary = `<button class="lnk">${x.act.latestRelease} ↗</button>`;
+  else if (st === "idle" || st === "latest") primary = `<button class="btn">${x.act.check}</button>`;
+  else if (st === "checking") primary = `<button class="btn" disabled>${x.act.checking}</button>`;
+  else if (st === "available") { primary = `<button class="btn primary">${x.act.download}</button>`; secondary = `<button class="lnk">${x.act.skip}</button>`; }
+  else if (st === "ready") { primary = `<button class="btn primary">${x.act.install}</button>`; secondary = `<button class="lnk">${x.act.recheck}</button>`; }
+  else if (st === "error") primary = `<button class="btn">${x.act.retry}</button>`;
+  const prog = st === "downloading" ? `<div class="prog"><i></i></div>` : "";
+  return { tone, line, sub, primary, secondary, prog };
+}
+
+function tags() {
+  const x = t();
+  const ch = S.channel === "dev" ? `<span class="ctag dev">${x.dev}</span>` : S.channel === "beta" ? `<span class="ctag beta">${x.beta}</span>` : `<span class="ctag">${x.stable}</span>`;
+  return `<span class="vtag">v${curVer()}</span>${ch}`;
+}
+
+function statusLine(s) {
+  return `<span class="status tone-${s.tone}" role="status"><i class="dot ${s.tone}"></i><span>${s.line}</span></span>`;
+}
+
+function changelog(opts = {}) {
+  const x = t();
+  const curIdx = S.channel === "stable" ? 1 : 0;
+  const list = VERSIONS.map((ver, i) => {
+    const isOpen = S.open === i;
+    const isCur = i === curIdx;
+    const badges = (isCur ? `<span class="cur">${x.current}</span>` : "") + (ver.beta && S.channel !== "stable" ? `<span class="btag">${x.betaTag}</span>` : "");
+    const count = ver.beta && S.channel === "stable" ? "" : `<span class="vc">${x.betaCount(ver.betas)}</span>`;
+    if (ver.beta && S.channel === "stable") return "";
+    let notes = "";
+    if (isOpen) {
+      const chips = [];
+      if (!ver.beta) chips.push([0, x.stableChip]);
+      for (let n = ver.betas; n >= 1; n -= 1) chips.push([n, x.betaChip(n)]);
+      const sel = chips.some((c) => c[0] === S.chip) ? S.chip : chips[0][0];
+      const src = ver.v === "0.3.11" ? NOTES_B4 : NOTES_310;
+      const full = (ver.v === "0.3.11" && sel === 4) || (ver.v !== "0.3.11" && sel === 0 && i === 1);
+      const body = src[S.lang].map(([h, items], k) => `<h6>${h}</h6><ul>${(full ? items : items.slice(0, k === 0 ? 2 : 0)).map((li) => `<li>${md(li)}</li>`).join("")}</ul>`).join("");
+      notes = `<div class="notes${opts.cap ? " cap" : ""}"><div class="chips">${chips.map(([n, l]) => `<button class="${n === sel ? "on" : ""}" data-chip="${n}">${l}</button>`).join("")}</div>${body}${full ? "" : `<p class="omit">${x.omit}</p>`}</div>`;
+    }
+    return `<div class="${isOpen ? "open" : ""}"><div class="vrow${isCur ? " is-cur" : ""}" data-ver="${i}" role="button" tabindex="0" aria-expanded="${isOpen}"><span class="vn">v${ver.v}</span>${badges}${count}<span class="vd">${ver.date}</span>${ic("chevD", 14, "chev")}</div>${notes}</div>`;
+  }).join("");
+  return `<div class="card log cur-bg">${list}<button class="older">${x.older(15)}</button></div>`;
+}
+
+function group(title, inner, foot = "") {
+  return `<div class="group"><div class="group-h"><h3>${title}</h3></div>${inner}${foot ? `<p class="foot">${foot}</p>` : ""}</div>`;
+}
+function row(title, hint, ctrl) {
+  return `<div class="row"><div class="rt"><b>${title}</b>${hint ? `<small>${hint}</small>` : ""}</div><div class="rc">${ctrl}</div></div>`;
+}
+function channelSeg() {
+  const x = t();
+  const busy = ["checking", "downloading"].includes(stage());
+  return `<span class="mseg${busy || S.channel === "dev" ? " dis" : ""}"><span class="${S.channel === "stable" ? "on" : ""}">${x.chStable}</span><span class="${S.channel !== "stable" ? "on" : ""}">${x.chBeta}</span></span>`;
+}
+function resetCtrl(quiet) {
+  const x = t();
+  if (S.confirm) return `<button class="lnk" data-act="cancel">${x.cancel}</button><button class="lnk danger" data-act="confirm">${x.resetConfirm}</button>`;
+  return `<button class="lnk ${quiet ? "quiet" : "danger"}" data-act="reset">${quiet ? x.reset : x.resetAct}</button>`;
+}
+function updateSettings(withSub) {
+  const x = t();
+  if (S.channel === "dev") return group(x.updTitle, `<div class="card">${row(x.act.latestRelease, x.sub.dev, `<button class="lnk">↗</button>`)}</div>`);
+  const sub = withSub ? `<div class="sub">${row(x.freq, "", `<span class="select">${x.freqV}</span>`)}${row(x.remind, "", `<span class="select">${x.remindV}</span>`)}${row(x.autoUpd, "", `<span class="select">${x.autoUpdV}</span>`)}</div>` : "";
+  return group(x.updTitle, `<div class="card">${row(x.channel, "", channelSeg())}${row(x.autoCheck, x.autoCheckHint, `<span class="switch" role="switch" aria-checked="true"></span>`)}${sub}</div>`, x.updFoot);
+}
+function helpGroup() {
+  const x = t();
+  return group(x.help, `<div class="card">${row(x.guide, x.guideHint, `<button class="lnk">${x.guideAct}</button>`)}${row(x.diag, x.diagHint, `<button class="lnk">${x.diagAct}</button>`)}</div>`);
+}
+function dangerGroup() {
+  const x = t();
+  return group(x.danger, `<div class="card">${row(x.reset, x.resetHint, resetCtrl(false))}${row(x.quit, S.os === "mac" ? x.quitMac : x.quitWin, `<button class="lnk danger">${x.quitAct}</button>`)}</div>`);
+}
+const LINKS = () => {
+  const x = t();
+  return [["globe", x.website, x.websiteHint, "ico-c1"], ["tag", x.releases, x.releasesHint, "ico-c2"], ["help", x.issues, x.issuesHint, "ico-c3"], ["star", x.star, x.starHint, "ico-c4"]];
+};
+
+function planA() {
+  const x = t(), s = status();
+  const hero = `<section class="hero A-hero ch-${S.channel}"><span class="emblem"></span><div><div class="idn"><span class="nm">${x.name}</span>${tags()}</div><p class="desc">${x.desc}</p></div><div class="side2">${statusLine(s)}<div class="subl">${s.sub}</div>${s.primary || s.secondary ? `<div class="acts">${s.secondary}${s.primary}</div>` : ""}</div>${s.prog}</section>`;
+  const links = `<div class="card A-links">${LINKS().map(([i, l, , c]) => `<a href="#" title="${l}">${ic(i, 15, c)}<span>${l}</span>${ic("ext", 11)}</a>`).join("")}</div>`;
+  return `<div style="max-width:720px;display:grid;gap:18px">${hero}${group(x.logTitle, changelog({ cap: true }), x.logFoot)}${links}${updateSettings(false)}${helpGroup()}<div class="danger-zone">${dangerGroup()}</div><p class="colophon">${x.colophon(curVer())} · <a href="#">${x.logoCall}</a></p></div>`;
+}
+
+function planB() {
+  const x = t(), s = status();
+  const dev = S.channel === "dev";
+  const action = s.prog ? s.prog : s.primary ? s.primary.replace('class="btn', 'class="btn block') : "";
+  const opts = S.bOpts ? `<div class="opts"><div class="kv"><span>${x.freq}</span><span class="select">${x.freqV}</span></div><div class="kv"><span>${x.remind}</span><span class="select">${x.remindV}</span></div><div class="kv"><span>${x.autoUpd}</span><span class="select">${x.autoUpdV}</span></div></div>` : "";
+  const settings = dev ? "" : `<hr><div class="kv"><span>${x.channel}</span>${channelSeg().replace(x.chBeta, x.chBeta.replace("（beta）", ""))}</div><div class="kv"><span>${x.autoCheck}</span><span class="switch" role="switch" aria-checked="true"></span></div><button class="lnk more" data-act="bopts">${x.updMore} ${S.bOpts ? "▾" : "▸"}</button>${opts}`;
+  const idCard = `<section class="card hero B-id ch-${S.channel}"><div class="top"><a href="#" class="emblem call" title="${x.logoCall}"><span class="call-badge">${x.logoBadge}</span></a><div><div class="idn"><span class="nm">${x.name}</span></div><div class="idn" style="margin-top:4px">${tags()}</div></div></div>${statusLine(s)}<div class="subl">${s.sub}</div>${action}${s.secondary ? `<div class="skip">${s.secondary}</div>` : ""}${settings}</section>`;
+  const linkList = `<div class="card B-list links">${LINKS().map(([i, l, , c]) => `<a href="#">${ic(i, 15, c)}<span>${l}</span>${ic("ext", 12, "ext")}</a>`).join("")}</div>`;
+  const help = `<div class="card B-list"><button class="li">${ic("book", 15)}<span>${x.guide}</span>${ic("chevR", 12, "ext")}</button><button class="li">${ic("activity", 15)}<span>${x.diag}</span>${ic("chevR", 12, "ext")}</button></div>`;
+  const danger = `<div class="B-danger">${resetCtrl(true)}<span class="muted">·</span><button class="lnk quiet">${x.quit}</button></div>`;
+  const links2 = `<div class="card A-links B-links2">${LINKS().map(([i, l, , c]) => `<a href="#">${ic(i, 15, c)}<span>${l}</span></a>`).join("")}</div>`;
+  const narrow = S.width === "narrow";
+  const left = narrow ? `<div class="B-left">${idCard}${links2}</div>` : `<div class="B-left">${idCard}${linkList}${help}${danger}</div>`;
+  const tail = narrow ? `${help}${danger}` : "";
+  return `<div class="B-grid">${left}<div class="B-right">${group(x.logTitle, changelog(), x.logFoot)}${tail}<p class="colophon">${x.colophon(curVer())}</p></div></div>`;
+}
+
+function planC() {
+  const x = t(), s = status();
+  const pill = `<div class="C-pill${s.primary ? "" : " solo"}">${statusLine(s)}${s.primary}</div>`;
+  const hero = `<section class="hero C-hero ch-${S.channel}"><span class="emblem lg"></span><div class="idn"><span class="nm">${x.name}</span>${tags()}</div><p class="desc">${x.desc}</p>${pill}${s.prog}<div class="subl">${s.sub}${s.secondary ? ` · ${s.secondary}` : ""}</div></section>`;
+  const tabs = `<div class="C-tabs"><div class="seg" role="tablist">${["log", "update", "more"].map((k) => `<button role="tab" aria-pressed="${S.cTab === k}" data-ctab="${k}">${x.tabs[k]}</button>`).join("")}</div></div>`;
+  let view = "";
+  if (S.cTab === "log") view = group(x.logTitle, changelog(), x.logFoot);
+  else if (S.cTab === "update") view = updateSettings(true);
+  else {
+    const links = `<div class="card C-links">${LINKS().map(([i, l, h, c]) => `<div class="row"><span class="ibox">${ic(i, 15, c)}</span><div class="rt"><b>${l}</b><small>${h}</small></div><div class="rc">${ic("ext", 13)}</div></div>`).join("")}<div class="row"><span class="ibox">${ic("pen", 15, "ico-c3")}</span><div class="rt"><b>${x.logoRow}</b><small>${x.logoRowHint}</small></div><div class="rc"><button class="lnk" style="color:var(--violet)">${x.logoCall}</button></div></div></div>`;
+    view = `${group(x.links, links)}${helpGroup()}${dangerGroup()}`;
+  }
+  return `<div style="max-width:760px;display:grid;gap:16px;margin:0 auto;width:100%">${hero}${tabs}<div class="C-view" data-k="${S.cTab}">${view}</div><p class="colophon">${x.colophon(curVer())}</p></div>`;
+}
+
+function sidebar() {
+  const x = t(), L = S.lang;
+  const groups = SIDE.map((g) => `<div class="s-group"><div class="s-item">${ic(g.icon, 15)}<span>${g[L]}</span>${ic("chevD", 12, "chev")}</div><div class="s-sub">${g.items.map(([i, z, e]) => `<div class="s-item">${ic(i, 15)}<span>${L === "zh" ? z : e}</span></div>`).join("")}</div></div>`).join("");
+  return `<div class="side"><div class="side-card"><div><div class="side-search">${ic("search", 13)}<div><span>${x.search}</span></div></div></div><div class="side-list"><div class="s-item">${ic("compass", 15)}<span>${x.side.overview}</span></div>${groups}</div><div class="side-bottom"><div class="s-item active">${ic("info", 15)}<span>${x.side.about}</span></div></div></div></div>`;
+}
+
+function renderWin() {
+  const x = t();
+  const body = S.plan === "A" ? planA() : S.plan === "B" ? planB() : planC();
+  const cls = ["win", S.width, S.os].join(" ");
+  const chrome = S.os === "win" ? `<div class="wctl">${ic("minus", 13)}${ic("square", 11)}${ic("x", 13)}</div>`.replace(/<svg/g, "<span><svg").replace(/<\/svg>/g, "</svg></span>") : `<div class="lights"><i></i><i></i><i></i></div>`;
+  const old = document.querySelector("#win .body");
+  const top = old && !enterAnim ? old.scrollTop : 0;
+  document.getElementById("win").innerHTML = `<div class="${cls}" lang="${S.lang === "zh" ? "zh-CN" : "en"}">${chrome}${sidebar()}<div class="main"><div class="ph"><h1>${x.page}</h1></div><div class="body"><div class="body-in${enterAnim ? " enter" : ""}">${body}</div></div></div></div>`;
+  document.querySelector("#win .body").scrollTop = top;
+  enterAnim = false;
+}
+
+function renderNote() {
+  const p = PLANS[S.plan];
+  document.getElementById("note").innerHTML = `<h4>${p.title}${p.rec ? ' <span class="tag rec">推荐</span>' : ""}</h4><p class="idea">${p.idea}</p><div class="cols"><div><h5>解决了哪几条</h5><ul>${p.solves.map((s) => `<li>${s}</li>`).join("")}</ul></div><div><h5>好处</h5><ul class="pro">${p.pros.map((s) => `<li>${s}</li>`).join("")}</ul><h5>取舍和代价</h5><ul class="con">${p.cons.map((s) => `<li>${s}</li>`).join("")}</ul></div><div><h5>三套都一样的</h5><ul><li>标题行只有「关于」，没有右边的胶囊</li><li>组标题加粗、行标题常规字重，颜色只用现有变量</li><li>动效：切方案淡入（<code>--motion-medium</code> + 进场曲线），展开日志淡入（<code>--motion-base</code>），检查中 / 下载中的点呼吸（状态结束就停），减少动画时都不动</li><li>Mac 上没有右上角三个按钮，侧栏选中项是强调色实底</li><li>窄于 760 时侧栏收成图标列（现有做法），页面跟着变成单栏</li></ul></div></div>`;
+}
+
+function segCtl(label, key, opts, disabledFn) {
+  return `<span class="ctl">${label}<span class="seg${key === "plan" ? " scheme" : ""}">${opts.map(([v, l]) => `<button data-k="${key}" data-v="${v}" aria-pressed="${String(S[key]) === String(v)}"${disabledFn && disabledFn(v) ? " disabled" : ""}>${l}</button>`).join("")}</span></span>`;
+}
+function renderTop() {
+  document.getElementById("topbar").innerHTML = `<h1>关于页新方案</h1>${segCtl("方案", "plan", [["A", "A 单栏"], ["B", "B 名片+日志"], ["C", "C 居中+分段"]])}${segCtl("通道", "channel", [["dev", "开发版"], ["beta", "测试版"], ["stable", "正式版"]])}${segCtl("状态", "stage", [["idle", "未检查"], ["checking", "检查中"], ["latest", "最新"], ["available", "有新版本"], ["downloading", "下载中"], ["ready", "已下载"], ["error", "失败"]], () => S.channel === "dev")}${segCtl("宽度", "width", [["wide", "1080"], ["mid", "860"], ["narrow", "580"]])}${segCtl("配色", "light", [[false, "深色"], [true, "浅色"]])}${segCtl("语言", "lang", [["zh", "中文"], ["en", "English"]])}${segCtl("系统", "os", [["win", "Win"], ["mac", "Mac"]])}${segCtl("动画", "rm", [[false, "正常"], [true, "减少"]])}`;
+}
+
+function render() {
+  document.documentElement.classList.toggle("light", S.light);
+  document.documentElement.classList.toggle("rm", S.rm);
+  renderTop();
+  renderWin();
+  renderNote();
+}
+
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button, [data-ver], a");
+  if (!b) return;
+  if (b.tagName === "A") e.preventDefault();
+  if (b.dataset.k) {
+    const k = b.dataset.k;
+    const v = b.dataset.v === "true" ? true : b.dataset.v === "false" ? false : b.dataset.v;
+    S[k] = v;
+    if (k === "plan") enterAnim = true;
+    if (k === "channel") { S.open = v === "stable" ? 1 : 0; S.chip = v === "stable" ? 0 : 4; }
+    render();
+    return;
+  }
+  if (b.dataset.ver !== undefined) { const i = Number(b.dataset.ver); S.open = S.open === i ? -1 : i; S.chip = i === 0 ? 4 : 0; renderWin(); return; }
+  if (b.dataset.chip !== undefined) { S.chip = Number(b.dataset.chip); renderWin(); return; }
+  if (b.dataset.ctab) { S.cTab = b.dataset.ctab; renderWin(); return; }
+  const act = b.dataset.act;
+  if (act === "bopts") { S.bOpts = !S.bOpts; renderWin(); }
+  if (act === "reset") { S.confirm = true; clearTimeout(confirmTimer); confirmTimer = setTimeout(() => { S.confirm = false; renderWin(); }, 4000); renderWin(); }
+  if (act === "cancel" || act === "confirm") { S.confirm = false; clearTimeout(confirmTimer); renderWin(); }
+});
+document.addEventListener("keydown", (e) => {
+  const r = e.target.closest && e.target.closest("[data-ver]");
+  if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); r.click(); }
+});
+render();
+</script>
+</body>
+</html>
