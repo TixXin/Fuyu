@@ -3,7 +3,7 @@ import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { useErrorText, useTranslation } from "../../i18n";
-import { hasPlanKey, setPlanKey, type PlanProvider } from "./api";
+import { hasPlanConfigKey, hasPlanKey, setPlanKey, type PlanProvider } from "./api";
 import type { UsageProvider } from "./usageRing";
 
 type PlanUsageProvider = UsageProvider & { id: PlanProvider };
@@ -15,6 +15,7 @@ export function PlanKeyField({ provider }: { provider: PlanUsageProvider }) {
   const text = t.claudeUsage.keys;
   const errorText = useErrorText();
   const [saved, setSaved] = useState<boolean | null>(null);
+  const [fromConfig, setFromConfig] = useState(false);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -24,6 +25,9 @@ export function PlanKeyField({ provider }: { provider: PlanUsageProvider }) {
     hasPlanKey(provider.id)
       .then((has) => !cancelled && setSaved(has))
       .catch((failure: unknown) => !cancelled && setError(errorText(failure)));
+    hasPlanConfigKey(provider.id)
+      .then((found) => !cancelled && setFromConfig(found))
+      .catch(() => !cancelled && setFromConfig(false));
     return () => {
       cancelled = true;
     };
@@ -41,7 +45,7 @@ export function PlanKeyField({ provider }: { provider: PlanUsageProvider }) {
       .finally(() => setSaving(false));
   };
   const label = text.label(provider.name);
-  const status = error ?? (saved === null ? undefined : saved ? text.saved : text.notSaved);
+  const status = error ?? (saved === null ? undefined : saved ? text.saved : fromConfig ? text.fromConfig : text.notSaved);
 
   return (
     <SettingsRow
@@ -61,7 +65,7 @@ export function PlanKeyField({ provider }: { provider: PlanUsageProvider }) {
         autoComplete="off"
         aria-label={label}
         data-plan-key={provider.id}
-        placeholder={saved ? text.savedPlaceholder : text.emptyPlaceholder}
+        placeholder={saved ? text.savedPlaceholder : fromConfig ? text.configPlaceholder : text.emptyPlaceholder}
         value={draft}
         disabled={saving}
         onChange={(event) => setDraft(event.currentTarget.value)}

@@ -75,6 +75,8 @@ export type ClaudeUsageText = {
     clear: string;
     saved: string;
     notSaved: string;
+    fromConfig: string;
+    configPlaceholder: string;
   };
 };
 
@@ -133,8 +135,8 @@ export const zhCN: ClaudeUsageText = {
   noUsage: {
     codex: "暂无 Codex 用量（Codex 跑过一轮后，会话记录里才有额度）",
     antigravity: "暂无 Antigravity 用量（请打开 Antigravity 或先在 Antigravity 中登录）",
-    glm: "暂无 GLM 用量（在设置 → AI Agent 的用量环里保存 GLM Coding Plan 的 API Key）",
-    kimi: "暂无 Kimi 用量（在设置 → AI Agent 的用量环里保存 Kimi Code 的 API Key）",
+    glm: "暂无 GLM 用量（Claude Code 已配好 GLM 时自动读取它的 Key，否则在设置 → AI Agent 的用量环里保存 API Key）",
+    kimi: "暂无 Kimi 用量（Claude Code 已配好 Kimi 时自动读取它的 Key，否则在设置 → AI Agent 的用量环里保存 API Key）",
     cursor: "暂无 Cursor 用量（请先在 Cursor 中登录）",
     workbuddy: "暂无 WorkBuddy 积分记录（运行过 WorkBuddy 会话后自动统计）",
     dsh: "暂无 DeepSeek Harness 余额（需要先在 DSH 中登录或配置官方 API Key）",
@@ -161,7 +163,7 @@ export const zhCN: ClaudeUsageText = {
   },
   dshEmpty: "余额不足，当前不可用",
   planErrors: {
-    noCredentials: "还没有保存 API Key，请在设置 → AI Agent 的用量环里填写",
+    noCredentials: "没有保存 API Key，Claude Code 的配置里也没找到，请在设置 → AI Agent 的用量环里填写",
     tokenExpired: "API Key 已过期，请在设置 → AI Agent 的用量环里重新保存",
     loginRequired: "API Key 无效或已过期，请在设置 → AI Agent 的用量环里重新保存",
     forbidden: "这个 API Key 没有 Coding Plan 套餐",
@@ -237,10 +239,10 @@ export const zhCN: ClaudeUsageText = {
     footer: "在收起条上给有额度窗口的 Agent 显示同心双环（外环 5 小时，内环 7 天或本月），悬停显示详情，点击刷新；用到 70% 和 90% 时统一变黄、变红。WorkBuddy 和 DeepSeek Harness 没有百分比窗口，不画圆环，只在悬停卡片中显示已用积分或账户余额。联网查询项默认均关闭，凭据只在 Rust 进程内存中使用。",
     codexHint: "读本机 Codex 会话记录里的额度（CODEX_HOME 或 ~/.codex 下的 sessions），不联网。Codex 跑过一轮后才有数据。",
     antigravityHint: "优先查询本机运行中的 Antigravity 本地服务，未运行时只读 ~/.gemini 下的登录令牌向 Cloud Code 查询 Gemini 与 Claude / GPT 的 5 小时和每周额度。这是未公开的内部接口，随版本可能失效（失效时提示「接口失效」）。",
-    glmHint: "用下面保存的智谱开放平台 API Key，每分钟最多一次直连 open.bigmodel.cn 查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Key 存在 Windows 凭据管理器里，只发给智谱。",
-    glmHintMac: "用下面保存的智谱开放平台 API Key，每分钟最多一次直连 open.bigmodel.cn 查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Key 存在钥匙串里，只发给智谱。",
-    kimiHint: "用下面保存的 Kimi Code API Key，每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Key 存在 Windows 凭据管理器里，只发给 Kimi。",
-    kimiHintMac: "用下面保存的 Kimi Code API Key，每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Key 存在钥匙串里，只发给 Kimi。",
+    glmHint: "每分钟最多一次直连 open.bigmodel.cn（z.ai 的 Key 查 api.z.ai）查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Claude Code 已配好 GLM（settings.json 里的 ANTHROPIC_BASE_URL 指向 bigmodel 或 z.ai）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在Windows 凭据管理器里。Key 只发给智谱，不回到界面。",
+    glmHintMac: "每分钟最多一次直连 open.bigmodel.cn（z.ai 的 Key 查 api.z.ai）查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Claude Code 已配好 GLM（settings.json 里的 ANTHROPIC_BASE_URL 指向 bigmodel 或 z.ai）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在钥匙串里。Key 只发给智谱，不回到界面。",
+    kimiHint: "每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Claude Code 已配好 Kimi（settings.json 里的 ANTHROPIC_BASE_URL 指向 kimi.com 或 moonshot.cn）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在Windows 凭据管理器里。Key 只发给 Kimi，不回到界面。",
+    kimiHintMac: "每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Claude Code 已配好 Kimi（settings.json 里的 ANTHROPIC_BASE_URL 指向 kimi.com 或 moonshot.cn）就直接用它的 Key，不用手填；手动保存的 Key 优先，存在钥匙串里。Key 只发给 Kimi，不回到界面。",
     cursorHint: "只读本机 Cursor 保存的登录（state.vscdb，不刷新、不改写），最多每 5 分钟一次直连 api2.cursor.sh 查询本计费周期已用的比例（内环本月）。这是未公开的内部接口，随版本可能失效。没装 Cursor、没登录或查不到时不显示这个环。",
     workbuddyHint: "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分。",
     dshHint: "只读本机 DeepSeek Harness 的 .credentials.yaml（仅在官方默认路由下生效，凭据只在内存中使用，不进圆环），每分钟最多一次查询官方账户或 API 余额并在悬停卡片中显示。",
@@ -263,6 +265,8 @@ export const zhCN: ClaudeUsageText = {
     clear: "删除",
     saved: "已保存",
     notSaved: "未保存",
+    fromConfig: "已从 Claude Code 配置读取，不用手填",
+    configPlaceholder: "已从 Claude Code 读取；粘贴别的 Key 可改用它",
   },
   errors: {
     noCredentials: "未找到 Claude Code 的订阅登录，请先在 Claude Code 里登录",
@@ -314,8 +318,8 @@ export const en: ClaudeUsageText = {
   noUsage: {
     codex: "No Codex usage yet (Codex's session logs carry it after a turn)",
     antigravity: "No Antigravity usage yet (open Antigravity or sign in first)",
-    glm: "No GLM usage yet (save a GLM Coding Plan API key under Settings → AI Agent → Usage rings)",
-    kimi: "No Kimi usage yet (save a Kimi Code API key under Settings → AI Agent → Usage rings)",
+    glm: "No GLM usage yet (read from Claude Code when it runs on GLM; otherwise save an API key under Settings → AI Agent → Usage rings)",
+    kimi: "No Kimi usage yet (read from Claude Code when it runs on Kimi; otherwise save an API key under Settings → AI Agent → Usage rings)",
     cursor: "No Cursor usage yet (sign in to Cursor first)",
     workbuddy: "No WorkBuddy credit records yet (counted once WorkBuddy runs a session)",
     dsh: "No DeepSeek Harness balance yet (sign in or set an official API key in DSH first)",
@@ -342,7 +346,7 @@ export const en: ClaudeUsageText = {
   },
   dshEmpty: "Balance depleted",
   planErrors: {
-    noCredentials: "No API key saved; add one under Settings → AI Agent → Usage rings",
+    noCredentials: "No API key saved or found in the Claude Code settings; add one under Settings → AI Agent → Usage rings",
     tokenExpired: "The API key expired; save it again under Settings → AI Agent → Usage rings",
     loginRequired: "The API key is invalid or expired; save it again under Settings → AI Agent → Usage rings",
     forbidden: "This API key has no coding plan",
@@ -418,10 +422,10 @@ export const en: ClaudeUsageText = {
     footer: "Gives each agent with quota windows two rings on the collapsed bar (5 hours outside, 7 days or the month inside), with details on hover and a refresh on click; 70% and 90% turn yellow and red. WorkBuddy and DeepSeek Harness have no percentage windows, so they stay out of the rings and show credits or wallet balance on hover. Network lookups default to off and credentials stay in Rust memory.",
     codexHint: "Reads the limits in Codex's session logs on this computer (sessions under CODEX_HOME or ~/.codex), with no network access. Numbers appear after Codex has run a turn.",
     antigravityHint: "Queries the running local Antigravity server first, or falls back to ~/.gemini login tokens (read-only) to ask Cloud Code for Gemini and Claude / GPT 5-hour and weekly limits. Uses undocumented internal endpoints that may break across updates (reported as \"Endpoint changed\").",
-    glmHint: "Asks open.bigmodel.cn directly, at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits with the Zhipu open platform API key saved below. The key lives in the Windows Credential Manager and goes to Zhipu only.",
-    glmHintMac: "Asks open.bigmodel.cn directly, at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits with the Zhipu open platform API key saved below. The key lives in the keychain and goes to Zhipu only.",
-    kimiHint: "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits with the Kimi Code API key saved below. The key lives in the Windows Credential Manager and goes to Kimi only.",
-    kimiHintMac: "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits with the Kimi Code API key saved below. The key lives in the keychain and goes to Kimi only.",
+    glmHint: "Asks open.bigmodel.cn directly (api.z.ai for a z.ai key), at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits. If Claude Code already runs on GLM (ANTHROPIC_BASE_URL in its settings.json points to bigmodel or z.ai), its key is used and you don't need to paste one; a key saved below wins and lives in the Windows Credential Manager. The key goes to Zhipu only and never back to the window.",
+    glmHintMac: "Asks open.bigmodel.cn directly (api.z.ai for a z.ai key), at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits. If Claude Code already runs on GLM (ANTHROPIC_BASE_URL in its settings.json points to bigmodel or z.ai), its key is used and you don't need to paste one; a key saved below wins and lives in the keychain. The key goes to Zhipu only and never back to the window.",
+    kimiHint: "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits. If Claude Code already runs on Kimi (ANTHROPIC_BASE_URL in its settings.json points to kimi.com or moonshot.cn), its key is used and you don't need to paste one; a key saved below wins and lives in the Windows Credential Manager. The key goes to Kimi only and never back to the window.",
+    kimiHintMac: "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits. If Claude Code already runs on Kimi (ANTHROPIC_BASE_URL in its settings.json points to kimi.com or moonshot.cn), its key is used and you don't need to paste one; a key saved below wins and lives in the keychain. The key goes to Kimi only and never back to the window.",
     cursorHint: "Reads the login Cursor saved on this computer (state.vscdb, read-only, never refreshed or rewritten) and asks api2.cursor.sh directly, at most every 5 minutes, how much of this billing cycle is used (inner ring: this month). Uses an undocumented internal endpoint that may break across updates. The ring stays hidden when Cursor isn't installed, isn't signed in or has no usage.",
     workbuddyHint: "Reads credit consumption from local ~/.workbuddy and ~/.workbuddy-ai session logs (offline, not shown as a ring) and lists today's, 7-day and total credits in the hover card.",
     dshHint: "Reads DeepSeek Harness's local .credentials.yaml (official default routes only; credentials stay in Rust memory, not shown as a ring) to query the official wallet balance at most once a minute for the hover card.",
@@ -444,6 +448,8 @@ export const en: ClaudeUsageText = {
     clear: "Remove",
     saved: "Saved",
     notSaved: "Not saved",
+    fromConfig: "Read from the Claude Code settings; no need to paste it",
+    configPlaceholder: "Read from Claude Code; paste another key to use that instead",
   },
   errors: {
     noCredentials: "No Claude Code subscription login found; sign in to Claude Code first",
