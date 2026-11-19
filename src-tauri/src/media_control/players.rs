@@ -58,7 +58,7 @@ pub(crate) const KNOWN_PLAYERS: &[KnownPlayer] = &[
     known(&["kugou"], "KuGou", &["酷狗音乐", "酷狗概念版", "KuGou"], true, false, false),
     known(&["kuwo", "kwmusic"], "Kuwo", &["酷我音乐", "Kuwo"], true, false, false),
     known(&["sodamusic", "qishui", "汽水音乐", "soda.music"], "汽水音乐", &["汽水音乐", "Soda Music", "SodaMusic"], true, true, false),
-    known(&["lx-music", "lxmusic", "洛雪音乐"], "LX Music", &["洛雪音乐", "洛雪音乐助手", "LX Music", "lx-music-desktop"], true, false, false),
+    known(&["lx-music", "lxmusic", "洛雪音乐", "toside.music"], "LX Music", &["洛雪音乐", "洛雪音乐助手", "LX Music", "lx-music-desktop"], true, false, false),
     known(&["musicfree"], "MusicFree", &["MusicFree"], true, false, false),
     known(&["listen1", "listen 1"], "Listen 1", &["Listen 1", "Listen1"], true, true, false),
     known(&["tongzhong", "铜钟"], "铜钟", &["铜钟", "Tongzhong"], true, true, false),

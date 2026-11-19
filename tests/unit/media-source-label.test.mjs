@@ -22,7 +22,7 @@ test("nothing playing gives no name", () => {
   assert.equal(sourceLabel(state(null, ""), "  ", "en"), null);
 });
 
-test("the six Chinese platforms read in the interface language, the rest keep one name", () => {
+test("players with a Chinese and an English name read in the interface language, the rest keep one name", () => {
   const cases = [
     ["NetEase Music", "网易云音乐", "NetEase Cloud Music"],
     ["QQ Music", "QQ音乐", "QQ Music"],
@@ -30,6 +30,13 @@ test("the six Chinese platforms read in the interface language, the rest keep on
     ["Kuwo", "酷我音乐", "Kuwo Music"],
     ["汽水音乐", "汽水音乐", "Soda Music"],
     ["咪咕音乐", "咪咕音乐", "Migu Music"],
+    ["LX Music", "洛雪音乐", "LX Music"],
+    ["Salt Player", "椒盐音乐", "Salt Player"],
+    ["HiBy Music", "海贝音乐", "HiBy Music"],
+    ["音流", "音流", "Stream Music"],
+    ["铜钟", "铜钟", "Tongzhong"],
+    ["Groove", "Groove 音乐", "Groove Music"],
+    ["foobar2000", "foobar2000", "foobar2000"],
     ["Spotify", "Spotify", "Spotify"],
     ["Apple Music", "Apple Music", "Apple Music"],
     ["YouTube Music", "YouTube Music", "YouTube Music"],

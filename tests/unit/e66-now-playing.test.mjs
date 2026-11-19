@@ -134,6 +134,10 @@ test("track change notice content, apps and icon", () => {
   assert.equal(appLabel("cloudmusic.exe"), "NetEase Cloud Music");
   assert.equal(appLabel("com.tencent.QQMusicMac", "zh-CN"), "QQ音乐");
   assert.equal(appLabel("AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"), "Apple Music");
+  assert.equal(appLabel("com.foobar2000.mac"), "foobar2000");
+  assert.equal(appLabel("org.videolan.vlc"), "vlc");
+  assert.equal(appLabel("cn.toside.music.desktop", "zh-CN"), "洛雪音乐");
+  assert.equal(appLabel("com.example.desktop"), "example");
   assert.equal(appLabel("Microsoft.ZuneMusic_8wekyb3d8bbwe!Microsoft.ZuneMusic"), "ZuneMusic");
   assert.equal(appLabel("QQ音乐"), "QQ音乐");
 
