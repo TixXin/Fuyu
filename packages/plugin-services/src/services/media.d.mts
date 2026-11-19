@@ -11,4 +11,8 @@ export type MediaMethods = {
   seek(params: { positionMs: number }): NowPlaying;
 };
 
-export const mediaV1: ServiceDefinition<MediaMethods, {}, {}>;
+export type MediaEvents = {
+  changed: NowPlaying;
+};
+
+export const mediaV1: ServiceDefinition<MediaMethods, MediaEvents, {}>;

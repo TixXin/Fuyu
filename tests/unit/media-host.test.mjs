@@ -11,6 +11,7 @@ import { lyricsV1, mediaV1 } from "@fuyu/plugin-services";
 import { connect } from "../../packages/plugin-base/src/host/rpc.mjs";
 import { fromRust, positionOf, serviceNowPlaying } from "../../src/features/media/host/index.mjs";
 import { lyricsQueryOf, normalizeLyricsResult } from "../../src/features/media/host/lyricsSources.mjs";
+import { CHANGE_SETTLE_MS } from "../../src/features/media/host/nowPlayingFeed.mjs";
 
 const BUILTINS = fileURLToPath(new URL("../../src/features/", import.meta.url));
 
@@ -37,7 +38,11 @@ function fakeRust(methods) {
     }
   });
   const rpc = connect({ input: toHost, write: (text) => fromHost.write(text) });
-  return { rpc, asked: (method) => seen.filter((message) => message.method === method).map((message) => message.params) };
+  return {
+    rpc,
+    asked: (method) => seen.filter((message) => message.method === method).map((message) => message.params),
+    send: (name, data) => write({ method: "event", params: { name, data } }),
+  };
 }
 
 async function open(methods) {
@@ -118,6 +123,73 @@ test("a switched-off player is peer-gone, and a stopped music plugin is not-read
   [...host.ctx.loader.entries()].find((candidate) => candidate.options.id === "music").update({ disabled: true });
   assert.ok(await until(() => !host.services().some((service) => service.name === "media/v1")));
   await assert.rejects(media.nowPlaying(), { code: "not-ready" });
+});
+
+async function listen(host, name) {
+  const heard = [];
+  const fiber = host.ctx.plugin({
+    name,
+    apply: (ctx) => void ctx.services.get(mediaV1).on("changed", (state) => heard.push(state)),
+  });
+  await fiber;
+  return { heard, fiber };
+}
+
+const SETTLED = CHANGE_SETTLE_MS * 3;
+const TRACK = { kind: "track", at: 1, sessionId: "Spotify.exe" };
+
+test("one change from Rust reaches a listener once, with what nowPlaying() answers", async () => {
+  let current = PLAYING;
+  const { host, rust, media } = await open({ "media.nowPlaying": () => current });
+  const { heard } = await listen(host, "listener");
+  current = { ...PLAYING, title: "Next Song" };
+  rust.send("media.changed", TRACK);
+  await sleep(SETTLED);
+  assert.deepEqual(heard, [await media.nowPlaying()]);
+  current = { ...current, playing: false };
+  rust.send("media.changed", { ...TRACK, kind: "playback" });
+  await sleep(SETTLED);
+  assert.equal(heard.length, 2);
+  assert.equal(heard[1].playing, false);
+});
+
+test("a burst of changes turns into one event, and a position-only change sends none", async () => {
+  let current = PLAYING;
+  const { host, rust } = await open({ "media.nowPlaying": () => current });
+  const { heard } = await listen(host, "listener");
+  for (const title of ["One", "Two", "Three", "Four"]) {
+    current = { ...PLAYING, title };
+    rust.send("media.changed", TRACK);
+  }
+  await sleep(SETTLED);
+  assert.deepEqual(heard.map((state) => state.title), ["Four"]);
+  current = { ...current, positionMs: 90_000, updatedAt: 20 };
+  rust.send("media.changed", { ...TRACK, kind: "playback" });
+  await sleep(SETTLED);
+  assert.equal(heard.length, 1);
+  assert.ok(rust.asked("media.nowPlaying").length <= 3);
+});
+
+test("a stopped listener hears nothing more, and a stopped music plugin stops asking Rust", async () => {
+  let current = PLAYING;
+  const { host, rust } = await open({ "media.nowPlaying": () => current });
+  const { heard, fiber } = await listen(host, "listener");
+  const other = await listen(host, "other");
+  fiber.dispose();
+  await host.settle();
+  current = { ...PLAYING, title: "After" };
+  rust.send("media.changed", TRACK);
+  await sleep(SETTLED);
+  assert.equal(heard.length, 0);
+  assert.equal(other.heard.length, 1);
+  [...host.ctx.loader.entries()].find((candidate) => candidate.options.id === "music").update({ disabled: true });
+  assert.ok(await until(() => !host.services().some((service) => service.name === "media/v1")));
+  const asked = rust.asked("media.nowPlaying").length;
+  current = { ...PLAYING, title: "Off" };
+  rust.send("media.changed", TRACK);
+  await sleep(SETTLED);
+  assert.equal(rust.asked("media.nowPlaying").length, asked);
+  assert.equal(other.heard.length, 1);
 });
 
 test("the window's media state and the host's answer turn into the same shape", () => {

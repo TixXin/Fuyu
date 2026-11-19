@@ -36,6 +36,11 @@ function checkDefinition(definition) {
 const eventKey = (name, event) => `service:${name}:${event}`;
 const declared = (table, member) => typeof member === "string" && Object.hasOwn(table, member);
 
+function undeclaredEvent(provider, event) {
+  const name = provider.definition.name;
+  return serviceError("no-event", `the provider of ${name} (${provider.plugin}) declares no event ${String(event)}, so this listener would never run`, { service: name, event: String(event), provider: provider.plugin });
+}
+
 function entryOptionsOf(ctx) {
   for (let fiber = ctx.fiber; fiber; ) {
     if (fiber.entry) return fiber.entry.options ?? {};
@@ -55,6 +60,7 @@ export class Services {
     this.builtins = new Map();
     this.yielded = new Map();
     this.interest = new Map();
+    this.listening = new Map();
     this.watchers = new Set();
     this.windows = null;
   }
@@ -88,6 +94,7 @@ export class Services {
     const unprovide = ctx.provide(definition.name, Object.freeze({ service: definition.name }));
     const unregister = ctx.effect(() => {
       this.builtins.set(definition.name, provider);
+      this.checkListening(provider);
       return () => {
         provider.active = false;
         if (this.builtins.get(definition.name) === provider) this.builtins.delete(definition.name);
@@ -148,7 +155,14 @@ export class Services {
     const name = provider.definition.name;
     provider.unprovide = provider.ctx.provide(name, Object.freeze({ service: name }));
     this.providers.set(name, provider);
+    this.checkListening(provider);
     this.changed();
+  }
+
+  checkListening(provider) {
+    for (const { ctx, event } of this.listening.get(provider.definition.name) ?? []) {
+      if (!declared(provider.definition.events, event)) ctx.logger("services").warn(undeclaredEvent(provider, event).message);
+    }
   }
 
   step(provider, why) {
@@ -191,7 +205,19 @@ export class Services {
     }
     client.on = (event, listener) => {
       if (!declared(definition.events, event)) throw serviceError("no-event", `${definition.name} declares no event ${String(event)}`);
-      return ctx.on(eventKey(definition.name, event), listener);
+      const provider = this.providers.get(definition.name) ?? this.builtins.get(definition.name);
+      if (provider && !declared(provider.definition.events, event)) throw undeclaredEvent(provider, event);
+      return ctx.effect(() => {
+        const off = ctx.on(eventKey(definition.name, event), listener);
+        const listening = { ctx, event };
+        const all = this.listening.get(definition.name) ?? new Set();
+        this.listening.set(definition.name, all.add(listening));
+        return () => {
+          all.delete(listening);
+          if (!all.size && this.listening.get(definition.name) === all) this.listening.delete(definition.name);
+          off();
+        };
+      }, `ctx.services.get(${definition.name}).on(${event})`);
     };
     return Object.freeze(client);
   }
