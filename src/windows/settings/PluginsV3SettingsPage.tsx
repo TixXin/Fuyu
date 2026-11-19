@@ -5,9 +5,8 @@ import { onPluginPackageOpen, takePendingPluginPackage, type BuiltinPlugin } fro
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { BuiltinPluginsGroup, isExternalPlugin, stateOf } from "./BuiltinPluginsGroup";
 import type { SettingsCategory } from "./categories";
-import { PluginBisectBar } from "./PluginBisectBar";
 import { PluginDetailModal } from "./PluginDetailModal";
-import { HostSummaryBar, megabytes, PluginDiagnosticsTab } from "./PluginDiagnosticsTab";
+import { HostSummaryBar, PluginDiagnosticsTab } from "./PluginDiagnosticsTab";
 import { PluginMarketV3Tab, type OpenedPluginPackage } from "./PluginMarketV3Tab";
 import { V2PluginMigrationCard } from "./V2PluginMigrationCard";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView } from "./usePluginHostStatus";
@@ -36,7 +35,7 @@ function SearchInput({ query, onChange }: { query: string; onChange: (next: stri
         }}
       />
       {query ? (
-        <button className="plugins-v3__search-clear" type="button" aria-label={text.closeDetail} onClick={() => onChange("")}>
+        <button className="plugins-v3__search-clear" type="button" aria-label={text.clearSearch} onClick={() => onChange("")}>
           <X size={12} strokeWidth={2.2} aria-hidden="true" />
         </button>
       ) : null}
@@ -119,8 +118,7 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
     setOpenedPackage((prev) => (prev?.seq === seq ? null : prev));
   }, []);
 
-  const { host, plugins, connection, memory } = view;
-  const measured = memory && host && memory.pid === host.pid ? memory : null;
+  const { host, plugins, connection } = view;
   const open = connection === "open";
   const builtinIds = new Set(builtins?.map((item) => item.id) ?? []);
   const extras = (plugins ?? []).filter((item) => isExternalPlugin(item, builtinIds));
@@ -179,7 +177,6 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
           >
             <span className={`plugins-v3__tab-dot plugins-v3__tab-dot--${connection}`} />
             <span>{text.tabs.diagnostics}</span>
-            {open && host ? <span className="plugins-v3__tab-pill">{megabytes(measured ? measured.bytes : host.rssBytes)}</span> : null}
           </button>
         </div>
         <SearchInput query={query} onChange={setQuery} />
@@ -191,7 +188,6 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
             <HostSummaryBar view={view} runningCount={runningCount} showRunning={installedCount > 0} onOpenDiagnostics={() => setTab("diagnostics")} />
           ) : null}
           <V2PluginMigrationCard onOpenMarketTab={() => setTab("market")} />
-          {open ? <PluginBisectBar thirdPartyIds={extras.map((p) => p.id)} onBisect={view.bisect} /> : null}
           <BuiltinPluginsGroup builtins={builtins} hostPlugins={plugins} hostEnabled={true} stale={!open} query={query} onSelectPlugin={setSelectedId} onOpenMarketTab={() => setTab("market")} />
         </>
       ) : tab === "market" ? (

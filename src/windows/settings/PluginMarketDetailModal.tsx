@@ -7,6 +7,7 @@ import { Markdown } from "../../components/markdown/Markdown";
 import { windowServices } from "../../features/plugin-kernel/services";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { resolvePluginText } from "./PluginInstallConfirmModal";
+import { marketActionCandidate } from "./PluginMarketCard";
 
 type DetailTab = "readme" | "changelog" | "capabilities";
 
@@ -202,8 +203,9 @@ export function PluginMarketDetailModal({
   const official = details?.official ?? plugin.official;
   const publisher = details?.publisherName || details?.author || plugin.publisher.github;
   const installedVersion = details?.installedVersion ?? plugin.installedVersion;
-  const installCandidate = !plugin.installedVersion ? (plugin.install ?? plugin.manual) : null;
-  const updateCandidate = plugin.installedVersion ? (plugin.manual ?? plugin.autoUpdate) : null;
+  const action = marketActionCandidate(plugin);
+  const installCandidate = action && !action.isUpdate ? action.candidate : null;
+  const updateCandidate = action?.isUpdate ? action.candidate : null;
   const latestVersion = details?.latestVersion ?? updateCandidate?.version ?? installCandidate?.version ?? null;
 
   const links: { key: keyof typeof detailCopy.links; url: string }[] = [];
