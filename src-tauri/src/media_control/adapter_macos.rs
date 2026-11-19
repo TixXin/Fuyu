@@ -39,6 +39,7 @@ pub(super) struct Snapshot {
 pub(super) enum Change {
     Track,
     Playback,
+    Artwork,
     Other,
 }
 
@@ -91,6 +92,8 @@ pub(super) fn merge(current: &mut Map<String, Value>, line: &str) -> Option<Chan
         Change::Track
     } else if differs(&["playing", "playbackRate"]) {
         Change::Playback
+    } else if differs(&["artworkData"]) {
+        Change::Artwork
     } else {
         Change::Other
     })
@@ -258,6 +261,9 @@ mod tests {
         assert_eq!(merge(&mut info, full), Some(Change::Track));
         assert_eq!(merge(&mut info, r#"{"type":"data","diff":true,"payload":{"playing":false}}"#), Some(Change::Playback));
         assert_eq!(merge(&mut info, r#"{"type":"data","diff":true,"payload":{"elapsedTime":5}}"#), Some(Change::Other));
+        assert_eq!(merge(&mut info, r#"{"type":"data","diff":true,"payload":{"artworkData":"AAAA","artworkMimeType":"image/jpeg"}}"#), Some(Change::Artwork));
+        assert_eq!(merge(&mut info, r#"{"type":"data","diff":true,"payload":{"artworkData":"AAAA","elapsedTime":6}}"#), Some(Change::Other));
+        assert_eq!(merge(&mut info, r#"{"type":"data","diff":true,"payload":{"title":"B","artworkData":"BBBB"}}"#), Some(Change::Track));
         assert_eq!(merge(&mut info, r#"{"type":"data","diff":true,"payload":{"artist":null}}"#), Some(Change::Track));
         assert!(!info.contains_key("artist"));
         assert_eq!(merge(&mut info, r#"{"type":"data","diff":false,"payload":{}}"#), Some(Change::Track));
