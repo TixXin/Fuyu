@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { planInvocation } from "../../scripts/macos/dev-cargo.mjs";
-import { cargoOriginal, replaceWithCopy, DEV_IDENTIFIER, DEV_IDENTITY, devSigningDir, parseSha1Fingerprint, signedByDevIdentity } from "../../scripts/macos/dev-signing.mjs";
+import { cargoOriginal, replaceWithCopy, DEV_IDENTIFIER, DEV_IDENTITY, devSigningDir, parseSha1Fingerprint, pickAppleDevelopment, signedBy } from "../../scripts/macos/dev-signing.mjs";
 import { IDENTITY } from "../../scripts/macos/self-signed-cert.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -52,8 +52,30 @@ test("the development identity is its own certificate, apart from the release on
   assert.equal(devSigningDir("/home/.tauri/fuyu"), path.join("/home/.tauri/fuyu", "macos-dev"));
   assert.equal(parseSha1Fingerprint("sha1 Fingerprint=AB:cd:01\n"), "ABCD01");
   assert.throws(() => parseSha1Fingerprint("nothing"));
-  assert.equal(signedByDevIdentity(`Identifier=${DEV_IDENTIFIER}\nAuthority=${DEV_IDENTITY}\n`), true);
-  assert.equal(signedByDevIdentity("Identifier=fuyu-2f0e931a\nSignature=adhoc\n"), false);
+});
+
+const APPLE = "Apple Development: dev@example.com (ABCDE12345)";
+
+test("an Apple Development identity is picked first, so the keychain partition records the team and not the cdhash", () => {
+  const listing = [
+    '  1) 1111111111111111111111111111111111111111 "Fuyu Self-Signed Code Signing"',
+    `  2) 2222222222222222222222222222222222222222 "${APPLE}"`,
+    '  3) 3333333333333333333333333333333333333333 "Apple Development: other@example.com (FFFFF00000)"',
+    "     3 valid identities found",
+  ].join("\n");
+  assert.deepEqual(pickAppleDevelopment(listing), { sha1: "2222222222222222222222222222222222222222", name: APPLE }, "the first valid one in the listing");
+  assert.equal(pickAppleDevelopment('  1) 1111111111111111111111111111111111111111 "Developer ID Application: X (Y)"\n     1 valid identities found'), null);
+  assert.equal(pickAppleDevelopment("     0 valid identities found"), null);
+});
+
+test("a binary counts as signed only by the identity that would sign it now", () => {
+  const selfSigned = `Identifier=${DEV_IDENTIFIER}\nAuthority=${DEV_IDENTITY}\nTeamIdentifier=not set\n`;
+  const apple = `Identifier=${DEV_IDENTIFIER}\nAuthority=${APPLE}\nAuthority=Apple Worldwide Developer Relations Certification Authority\nTeamIdentifier=RDQ7JWUGXY\n`;
+  assert.equal(signedBy(selfSigned, DEV_IDENTITY), true);
+  assert.equal(signedBy(apple, APPLE), true);
+  assert.equal(signedBy(selfSigned, APPLE), false, "a certificate set up later replaces the self-signed signature");
+  assert.equal(signedBy("Identifier=fuyu-2f0e931a\nSignature=adhoc\n", DEV_IDENTITY), false);
+  assert.equal(signedBy(`Identifier=${DEV_IDENTIFIER}.other\nAuthority=${APPLE}\n`, APPLE), false);
 });
 
 test("the original that cargo copies the binary from is found in deps, so the copy it makes again is signed", () => {

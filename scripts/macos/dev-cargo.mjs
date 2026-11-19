@@ -39,8 +39,9 @@ function cargo(args) {
 
 function sign(binary) {
   try {
-    const { signed, message } = signDevBinary(binary);
+    const { signed, message, warning } = signDevBinary(binary);
     if (signed) console.error(`[dev-signing] ${message}`);
+    if (warning) console.error(`[dev-signing] ${warning}`);
   } catch (error) {
     console.error(`[dev-signing] kept the ad-hoc signature, so the keychain may ask again: ${error.message}`);
   }
