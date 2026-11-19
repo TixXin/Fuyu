@@ -11,6 +11,7 @@ import {
   DEFAULT_CONFIG,
   MUSIC_ICON_URL,
   appAllowed,
+  isBrowser,
   appLabel,
   isHeard,
   pollDelay,
@@ -57,7 +58,9 @@ async function until(check, ms = 2000) {
 
 test("track change notice config: new installs notify, a saved off stays off, junk falls back", () => {
   assert.equal(readStoredConfig(null).autoNotify, true);
-  assert.equal(DEFAULT_CONFIG.durationSec, 6);
+  assert.equal(DEFAULT_CONFIG.durationSec, 3);
+  assert.equal(DEFAULT_CONFIG.skipFrontmost, true);
+  assert.equal(DEFAULT_CONFIG.browsers, false);
   assert.equal(DEFAULT_CONFIG.content, "title-artist");
   assert.equal(DEFAULT_CONFIG.showControls, true);
   assert.equal(DEFAULT_CONFIG.lastOnly, true);
@@ -65,15 +68,38 @@ test("track change notice config: new installs notify, a saved off stays off, ju
 
   const old = readStoredConfig({ autoNotify: false, locale: "zh-CN" });
   assert.equal(old.autoNotify, false);
-  assert.equal(old.durationSec, 6);
+  assert.equal(old.durationSec, 3);
   assert.equal("locale" in old, false);
   assert.equal(readStoredConfig({ locale: "en" }).autoNotify, true);
 
   const patched = normalizeConfig({ durationSec: 7, content: "lyrics", appMode: "some", apps: ["a", "a", 3, " b "] }, old);
-  assert.equal(patched.durationSec, 6);
+  assert.equal(patched.durationSec, 3);
   assert.equal(patched.content, "title-artist");
   assert.deepEqual(patched.apps, ["a", "b"]);
   assert.equal(patched.autoNotify, false);
+});
+
+test("track change notice config: the old default of 6 seconds becomes 3 once, a chosen length is kept", () => {
+  assert.equal(readStoredConfig({ autoNotify: true, durationSec: 6 }).durationSec, 3);
+  assert.equal(readStoredConfig({ autoNotify: true, durationSec: 10 }).durationSec, 10);
+  assert.equal(readStoredConfig({ autoNotify: true, durationSec: 15, version: 1 }).durationSec, 15);
+  const migrated = readStoredConfig({ autoNotify: true, durationSec: 6 });
+  assert.equal(migrated.version, 2);
+  assert.equal(readStoredConfig({ ...migrated, durationSec: 6 }).durationSec, 6);
+  assert.equal(readStoredConfig(JSON.parse(JSON.stringify(migrated))).durationSec, 3);
+});
+
+test("track change notice apps: browsers are left out unless switched on or ticked", () => {
+  for (const app of ["chrome.exe", "MSEdge", "com.google.Chrome", "com.apple.Safari", "org.mozilla.firefox", "company.thebrowser.Browser", "308046B0AF4A39CB", "Google Chrome"]) {
+    assert.equal(isBrowser(app), true, app);
+    assert.equal(appAllowed(app, DEFAULT_CONFIG), false, app);
+    assert.equal(appAllowed(app, { ...DEFAULT_CONFIG, browsers: true }), true, app);
+  }
+  for (const app of ["Spotify.exe", "com.soda.music", "汽水音乐", "cloudmusic.exe", "com.apple.Music", "QQMusic.exe", "Searcher.exe", null]) {
+    assert.equal(isBrowser(app), false, String(app));
+    assert.equal(appAllowed(app, DEFAULT_CONFIG), true, String(app));
+  }
+  assert.equal(appAllowed("chrome.exe", { ...DEFAULT_CONFIG, appMode: "some", apps: ["chrome.exe"] }), true);
 });
 
 test("track change notice content, apps and icon", () => {
@@ -81,7 +107,7 @@ test("track change notice content, apps and icon", () => {
   assert.deepEqual(buildNotice(song, DEFAULT_CONFIG), {
     title: "Song",
     body: "Singer",
-    durationMs: 6000,
+    durationMs: 3000,
     iconUrl: MUSIC_ICON_URL,
     layout: "inline",
     controls: "media",
@@ -117,7 +143,7 @@ async function startWithPlugin(name, { config, emits }) {
   const result = await check(PLUGIN_DIR, { official: true, allowExperimental: false });
   assert.deepEqual(result.errors, []);
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, `${name}-built`), packDir: join(scratch, `${name}-packed`) });
-  assert.equal(packed.manifest.version, "1.1.1");
+  assert.equal(packed.manifest.version, "1.2.0");
   assert.equal(packed.manifest.fuyu.displayName.en, "Track change notice");
 
   const hostDir = join(scratch, name);
@@ -224,7 +250,7 @@ test("track change notice host: a saved off stays off; polling notifies, skips p
   try {
     const first = await run.call("getState");
     assert.equal(first.config.autoNotify, false);
-    assert.equal(first.config.durationSec, 6);
+    assert.equal(first.config.durationSec, 3);
     run.change(track("Second", "B"));
     await wait(300);
     assert.equal(run.state.notices.length, 0);
@@ -240,19 +266,33 @@ test("track change notice host: a saved off stays off; polling notifies, skips p
     await wait(3000);
     assert.equal(run.state.notices.length, 1);
 
+    run.change(track("In front", "E", { sourceFrontmost: true }));
+    await wait(3000);
+    assert.equal(run.state.notices.length, 1);
+    run.change(track("In a browser", "E", { sourceApp: "com.google.Chrome" }));
+    await wait(3000);
+    assert.equal(run.state.notices.length, 1);
+    await run.call("setConfig", { skipFrontmost: false, browsers: true });
+    run.change(track("In front again", "E", { sourceFrontmost: true }));
+    assert.ok(await until(() => run.state.notices.length === 2, 6000));
+    run.change(track("In a browser again", "E", { sourceApp: "com.google.Chrome" }));
+    assert.ok(await until(() => run.state.notices.length === 3, 6000));
+    await run.call("setConfig", { skipFrontmost: true, browsers: false });
+
     await run.call("setConfig", { appMode: "some", apps: ["Spotify.exe"] });
     run.change(track("Fifth", "F"));
     await wait(3000);
-    assert.equal(run.state.notices.length, 1);
+    assert.equal(run.state.notices.length, 3);
 
     const shown = await run.call("showNow");
-    assert.equal(run.state.notices.length, 2);
+    assert.equal(run.state.notices.length, 4);
     assert.equal(typeof shown.note, "string");
 
     const saved = JSON.parse(readFileSync(join(run.hostDir, "data", "@fuyu", "now-playing", "config.json"), "utf8"));
     assert.equal(saved.autoNotify, true);
     assert.deepEqual(saved.apps, ["Spotify.exe"]);
-    assert.deepEqual(saved.seenApps, ["com.spotify.client"]);
+    assert.deepEqual(saved.seenApps, ["com.google.Chrome", "com.spotify.client"]);
+    assert.equal(saved.version, 2);
   } finally {
     await run.stop();
   }

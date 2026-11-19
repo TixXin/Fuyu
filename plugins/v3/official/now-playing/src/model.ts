@@ -4,11 +4,14 @@ export type ContentMode = "title-artist" | "title" | "title-artist-album";
 export type AppMode = "all" | "some";
 
 export interface NoticeConfig {
+  version: number;
   autoNotify: boolean;
   durationSec: number;
   content: ContentMode;
   showControls: boolean;
   lastOnly: boolean;
+  skipFrontmost: boolean;
+  browsers: boolean;
   appMode: AppMode;
   apps: string[];
   seenApps: string[];
@@ -38,6 +41,8 @@ export const METHODS = {
 
 export const TOPICS = { state: "state" } as const;
 
+export const CONFIG_VERSION = 2;
+export const OLD_DEFAULT_DURATION = 6;
 export const DURATIONS = [3, 6, 10, 15];
 export const CONTENT_MODES: ContentMode[] = ["title-artist", "title", "title-artist-album"];
 export const POLL_MS = 2500;
@@ -49,11 +54,14 @@ export const MAX_SEEN_APPS = 12;
 export const HEARD_GRACE_MS = 8000;
 
 export const DEFAULT_CONFIG: NoticeConfig = Object.freeze({
+  version: CONFIG_VERSION,
   autoNotify: true,
-  durationSec: 6,
+  durationSec: 3,
   content: "title-artist",
   showControls: true,
   lastOnly: true,
+  skipFrontmost: true,
+  browsers: false,
   appMode: "all",
   apps: [],
   seenApps: [],
@@ -87,13 +95,16 @@ function strings(value: unknown, limit: number): string[] {
 
 export function normalizeConfig(patch: unknown, base: NoticeConfig = DEFAULT_CONFIG): NoticeConfig {
   const raw = isObject(patch) ? patch : {};
-  const flag = (key: "autoNotify" | "showControls" | "lastOnly") => (typeof raw[key] === "boolean" ? (raw[key] as boolean) : base[key]);
+  const flag = (key: "autoNotify" | "showControls" | "lastOnly" | "skipFrontmost" | "browsers") => (typeof raw[key] === "boolean" ? (raw[key] as boolean) : base[key]);
   return {
+    version: CONFIG_VERSION,
     autoNotify: flag("autoNotify"),
     durationSec: DURATIONS.includes(raw.durationSec as number) ? (raw.durationSec as number) : base.durationSec,
     content: CONTENT_MODES.includes(raw.content as ContentMode) ? (raw.content as ContentMode) : base.content,
     showControls: flag("showControls"),
     lastOnly: flag("lastOnly"),
+    skipFrontmost: flag("skipFrontmost"),
+    browsers: flag("browsers"),
     appMode: raw.appMode === "all" || raw.appMode === "some" ? raw.appMode : base.appMode,
     apps: "apps" in raw ? strings(raw.apps, 50) : [...base.apps],
     seenApps: "seenApps" in raw ? strings(raw.seenApps, MAX_SEEN_APPS) : [...base.seenApps],
@@ -101,7 +112,9 @@ export function normalizeConfig(patch: unknown, base: NoticeConfig = DEFAULT_CON
 }
 
 export function readStoredConfig(stored: unknown): NoticeConfig {
-  return normalizeConfig(stored, DEFAULT_CONFIG);
+  const config = normalizeConfig(stored, DEFAULT_CONFIG);
+  const old = isObject(stored) && stored.version !== CONFIG_VERSION;
+  return old && stored.durationSec === OLD_DEFAULT_DURATION ? { ...config, durationSec: DEFAULT_CONFIG.durationSec } : config;
 }
 
 export function trackKey(track: Partial<NowPlaying> | null | undefined): string | null {
@@ -120,9 +133,17 @@ export function isHeard(track: Pick<NowPlaying, "playing">, lastHeardAt: number,
   return track.playing || now - lastHeardAt <= HEARD_GRACE_MS;
 }
 
+const BROWSER_WORDS = new Set(["chrome", "chromium", "msedge", "edge", "edgemac", "firefox", "safari", "brave", "opera", "vivaldi", "arc", "browser", "thebrowser", "308046b0af4a39cb"]);
+
+export function isBrowser(sourceApp: string | null | undefined): boolean {
+  if (typeof sourceApp !== "string") return false;
+  return sourceApp.toLowerCase().split(/[^a-z0-9]+/).some((word) => BROWSER_WORDS.has(word));
+}
+
 export function appAllowed(sourceApp: string | null | undefined, config: NoticeConfig): boolean {
-  if (config.appMode === "all") return true;
-  return typeof sourceApp === "string" && config.apps.includes(sourceApp.trim());
+  const app = typeof sourceApp === "string" ? sourceApp.trim() : "";
+  if (config.appMode === "some") return app !== "" && config.apps.includes(app);
+  return config.browsers || !isBrowser(app);
 }
 
 export function rememberApp(config: NoticeConfig, sourceApp: string | null | undefined): NoticeConfig | null {

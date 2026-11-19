@@ -100,6 +100,7 @@ export function apply(ctx: Context) {
     if (!key || key === lastKey) return;
     lastKey = key;
     if (!config.autoNotify || !appAllowed(track.sourceApp, config)) return;
+    if (config.skipFrontmost && track.sourceFrontmost === true) return;
     cancelWait();
     if (!config.lastOnly) {
       void show(track).catch(() => undefined);
