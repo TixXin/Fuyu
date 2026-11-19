@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Store, Trash2, X } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
 import { PluginEnableSwitch, PluginRowNote, pluginInitial, type RowAction } from "./InstalledPluginRow";
-import { PluginActivityTab, PluginCommandsTab, PluginPermissionsTab, PluginSettingsTab } from "./PluginDetailTabs";
+import { PluginActivityTab, PluginCommandsTab, PluginOverviewExtras, PluginSettingsTab } from "./PluginDetailTabs";
 import type { InstalledEntry } from "./pluginEntries";
 import { marketClient } from "./pluginMarketActions";
 import type { PluginDetailTab } from "./pluginPageHandoff";
@@ -12,7 +12,7 @@ import "./PluginDetailModal.css";
 import "./InstalledPlugins.css";
 
 const FOCUSABLE = "button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href], summary, [tabindex]:not([tabindex='-1'])";
-const TABS: readonly PluginDetailTab[] = ["overview", "settings", "commands", "permissions", "activity"];
+const TABS: readonly PluginDetailTab[] = ["overview", "settings", "commands", "activity"];
 
 export function PluginDetailModal({ entry, initialTab = "overview", startUninstall = false, stale, onClose, onAction, onOpenShortcuts }: {
   entry: InstalledEntry;
@@ -125,13 +125,12 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
               {technical ? (
                 <p className="plugin-callout"><b>{text.detail.technical}</b> {technical}</p>
               ) : null}
+              <PluginOverviewExtras entry={entry} />
             </>
           ) : tab === "settings" ? (
             <PluginSettingsTab entry={entry} />
           ) : tab === "commands" ? (
             <PluginCommandsTab entry={entry} stale={stale} onOpenShortcuts={onOpenShortcuts} />
-          ) : tab === "permissions" ? (
-            <PluginPermissionsTab entry={entry} />
           ) : (
             <PluginActivityTab entry={entry} restartDisabled={stale || !entry.managed || !entry.enabled} onRestart={() => onAction("restart")} />
           )}

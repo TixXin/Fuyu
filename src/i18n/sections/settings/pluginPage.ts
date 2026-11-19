@@ -1,6 +1,6 @@
 export type PluginPageRowLabel = "off" | "failed" | "paused" | "waiting" | "safe" | "unknown" | "bisect" | "starting" | "stopped" | "waitingRuntime";
 
-export type PluginPageDetailTab = "overview" | "settings" | "commands" | "permissions" | "activity";
+export type PluginPageDetailTab = "overview" | "settings" | "commands" | "activity";
 
 export type SettingsPluginPageText = {
   browseMarket: string;
@@ -124,18 +124,6 @@ export type SettingsPluginPageText = {
     shortcutsBefore: string;
     shortcutsLink: string;
     shortcutsAfter: string;
-    itCan: string;
-    permsLoading: string;
-    permsUnknown: string;
-    network: string;
-    noNetwork: string;
-    nodeApis: string;
-    nodeApisSensitive: string;
-    provides: string;
-    replaces: string;
-    slots: string;
-    ownData: string;
-    ownDataNote: string;
     windows: string;
     lastError: string;
     noErrors: string;
@@ -291,7 +279,7 @@ export const zhCN: SettingsPluginPageText = {
     dismiss: "知道了，不再提示",
   },
   detail: {
-    tabs: { overview: "概览", settings: "设置", commands: "命令与快捷键", permissions: "权限", activity: "运行情况" },
+    tabs: { overview: "概览", settings: "设置", commands: "命令与快捷键", activity: "运行情况" },
     close: "关闭",
     facts: { version: "版本", source: "来源", publisher: "发布者", state: "状态", id: "标识" },
     technical: "细节",
@@ -311,18 +299,6 @@ export const zhCN: SettingsPluginPageText = {
     shortcutsBefore: "所有插件的快捷键也在",
     shortcutsLink: "「快捷键」",
     shortcutsAfter: "页里。",
-    itCan: "它可以",
-    permsLoading: "正在读取它要的权限…",
-    permsUnknown: "这个插件不是从市场装的，读不到它声明的权限。",
-    network: "联网",
-    noNetwork: "不联网",
-    nodeApis: "用 Node 自带的模块",
-    nodeApisSensitive: "能运行程序、读写文件",
-    provides: "给别的插件用",
-    replaces: "接管浮屿的功能",
-    slots: "在岛上和设置里显示",
-    ownData: "存自己的数据",
-    ownDataNote: "它自己的数据目录、系统凭据管理器里它自己的条目",
     windows: "独立窗口",
     lastError: "最近一次出错",
     noErrors: "这次启动以来没有出过错。",
@@ -478,7 +454,7 @@ export const en: SettingsPluginPageText = {
     dismiss: "Got it, don't show again",
   },
   detail: {
-    tabs: { overview: "Overview", settings: "Settings", commands: "Commands & shortcuts", permissions: "Permissions", activity: "Activity" },
+    tabs: { overview: "Overview", settings: "Settings", commands: "Commands & shortcuts", activity: "Activity" },
     close: "Close",
     facts: { version: "Version", source: "Source", publisher: "Publisher", state: "State", id: "ID" },
     technical: "Details",
@@ -498,18 +474,6 @@ export const en: SettingsPluginPageText = {
     shortcutsBefore: "All plugin shortcuts are also on the ",
     shortcutsLink: "Shortcuts",
     shortcutsAfter: " page.",
-    itCan: "It can",
-    permsLoading: "Reading the permissions it asks for…",
-    permsUnknown: "This plugin wasn't installed from the market, so its declared permissions can't be read.",
-    network: "Use the network",
-    noNetwork: "No network",
-    nodeApis: "Use Node's built-in modules",
-    nodeApisSensitive: "Can run programs and read or write files",
-    provides: "Offer services",
-    replaces: "Take over Fuyu features",
-    slots: "Show on the island and in settings",
-    ownData: "Keep its own data",
-    ownDataNote: "Its data folder and its own entries in the system credential store",
     windows: "Separate windows",
     lastError: "Last error",
     noErrors: "No errors since Fuyu started.",

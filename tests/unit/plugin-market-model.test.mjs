@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { browseList, categoryCounts, hasUpdate, isFirstFromPublisher, matchesQuery, permissionItems, permissionSummary, sortPlugins } from "../../src/windows/settings/pluginMarketModel.ts";
+import { browseList, capabilityItems, categoryCounts, hasUpdate, isFirstFromPublisher, matchesQuery, sortPlugins } from "../../src/windows/settings/pluginMarketModel.ts";
 
 const caps = (more = {}) => ({ unreviewed: false, network: [], nodeApis: [], provides: [], replaces: [], slots: [], ...more });
 const candidate = (version, more = {}) => ({ version, sha256: "a", size: 1, publishedAt: "2026-11-10T00:00:00Z", confirmation: caps(), ...more });
@@ -13,19 +13,19 @@ const plugin = (name, more = {}) => {
   };
 };
 
-test("running programs, touching files and taking over services are flagged as sensitive, with or without the node: prefix", () => {
-  const items = permissionItems(caps({ network: ["api.example.com"], nodeApis: ["node:child_process", "fs/promises", "node:crypto"], replaces: ["todos/v1"], slots: ["island.page/v1"] }));
+test("what a plugin does is listed from its manifest, with running programs, touching files and replacing services marked, with or without the node: prefix", () => {
+  const items = capabilityItems(caps({ network: ["api.example.com"], nodeApis: ["node:child_process", "fs/promises", "node:crypto"], replaces: ["todos/v1"], slots: ["island.page/v1"] }));
+  assert.deepEqual(items.map((item) => item.kind), ["replaces", "network", "runPrograms", "files", "nodeApis"]);
   const byKind = Object.fromEntries(items.map((item) => [item.kind, item]));
   assert.deepEqual(byKind.runPrograms, { kind: "runPrograms", detail: ["child_process"], sensitive: true });
   assert.deepEqual(byKind.files, { kind: "files", detail: ["fs/promises"], sensitive: true });
   assert.deepEqual(byKind.nodeApis, { kind: "nodeApis", detail: ["crypto"], sensitive: false });
+  assert.deepEqual(byKind.network, { kind: "network", detail: ["api.example.com"], sensitive: false });
   assert.equal(byKind.replaces.sensitive, true);
-  assert.deepEqual(permissionSummary(caps({ network: ["api.example.com"], nodeApis: ["node:child_process"] })), { network: true, count: 2, sensitive: true });
 });
 
-test("a plugin that asks for nothing says it stays offline and counts no permissions", () => {
-  assert.deepEqual(permissionItems(caps()).map((item) => item.kind), ["noNetwork"]);
-  assert.deepEqual(permissionSummary(caps({ requiredPlugins: ["@fuyu/devices"] })), { network: false, count: 0, sensitive: false });
+test("a plugin that declares nothing lists nothing", () => {
+  assert.deepEqual(capabilityItems(caps({ slots: ["island.page/v1"], provides: ["x/v1"], requiredPlugins: ["@fuyu/devices"] })), []);
 });
 
 test("the first-publisher notice only shows for a third-party publisher the user has nothing installed from", () => {

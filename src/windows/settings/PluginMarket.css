@@ -63,7 +63,6 @@
 .market-dialog--small { width: min(540px, 100%); }
 .market-dialog__title { white-space: normal; }
 .market-mono { font-family: var(--font-mono, Consolas, "Cascadia Mono", monospace); }
-.market-perms { overflow: hidden; }
 
 .market-shots { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
 .market-shot { flex: none; width: 220px; margin: 0; display: grid; gap: 6px; }
