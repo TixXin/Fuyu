@@ -6,6 +6,7 @@ import { SettingsSelect } from "../../components/settings/SettingsSelect";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import type { IslandSettings } from "../../lib/settings/types";
+import { TodoNewTaskSettingsRows } from "./TodoNewTaskSettingsRows";
 import type { TodoInsertPosition, TodoSortBy } from "./todoPrefs.ts";
 import { useTodoPrefs } from "./useTodoPrefs";
 
@@ -94,6 +95,7 @@ export function TodoSettingsSection({ settings, onSettingsChange }: {
             />
           }
         />
+        <TodoNewTaskSettingsRows projects={settings.todoProjects} />
       </SettingsGroup>
     </>
   );

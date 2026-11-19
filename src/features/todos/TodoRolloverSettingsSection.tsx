@@ -15,10 +15,22 @@ import {
   type TodoArchiveRetentionDays,
   type TodoDayStartHour,
   type TodoDoneDisplay,
+  type TodoPrefs,
 } from "./todoPrefs.ts";
+import { TodoNoteTemplateRow } from "./TodoNoteTemplateRow";
 import { useTodoPrefs } from "./useTodoPrefs";
+import "./TodoRolloverSettingsSection.css";
 
-type MarkdownMetaKey = "priority" | "elapsed";
+type MarkdownMetaKey = "project" | "priority" | "subtasks" | "note" | "elapsed";
+
+const MARKDOWN_META_PREFS: Readonly<Record<MarkdownMetaKey, keyof TodoPrefs & `markdown${string}`>> = {
+  project: "markdownProject",
+  priority: "markdownPriority",
+  subtasks: "markdownSubtasks",
+  note: "markdownNote",
+  elapsed: "markdownElapsed",
+};
+const MARKDOWN_META_KEYS = Object.keys(MARKDOWN_META_PREFS) as MarkdownMetaKey[];
 type DayStartOptionValue = `${TodoDayStartHour}`;
 type RetentionOptionValue = `${TodoArchiveRetentionDays}`;
 
@@ -42,15 +54,12 @@ export function TodoRolloverSettingsSection({ settings, onSettingsChange }: {
     { value: "hide", label: text.doneDisplayOptions.hide },
   ];
 
-  const markdownMetaValues: MarkdownMetaKey[] = [
-    ...(prefs.markdownPriority ? ["priority" as const] : []),
-    ...(prefs.markdownElapsed ? ["elapsed" as const] : []),
-  ];
+  const markdownMetaValues = MARKDOWN_META_KEYS.filter((key) => prefs[MARKDOWN_META_PREFS[key]]);
 
-  const markdownMetaOptions: readonly { value: MarkdownMetaKey; label: string }[] = [
-    { value: "priority", label: text.markdownMetaOptions.priority },
-    { value: "elapsed", label: text.markdownMetaOptions.elapsed },
-  ];
+  const markdownMetaOptions: readonly { value: MarkdownMetaKey; label: string }[] = MARKDOWN_META_KEYS.map((key) => ({
+    value: key,
+    label: text.markdownMetaOptions[key],
+  }));
 
   const retentionOptions: readonly { value: RetentionOptionValue; label: string }[] = [
     { value: "0", label: text.archiveRetentionOptions.forever },
@@ -95,6 +104,13 @@ export function TodoRolloverSettingsSection({ settings, onSettingsChange }: {
         checked={settings.carryOverIncompleteTodos}
         onChange={(carryOverIncompleteTodos) => onSettingsChange({ ...settings, carryOverIncompleteTodos })}
       />
+      <SettingsToggleRow
+        title={text.recurrenceHolidayAware}
+        description={text.recurrenceHolidayAwareHint}
+        checked={prefs.recurrenceHolidayAware}
+        onChange={(recurrenceHolidayAware) => setPrefs((current) => ({ ...current, recurrenceHolidayAware }))}
+      />
+      <TodoNoteTemplateRow />
       <SettingsRow
         title={text.doneDisplay}
         control={
@@ -106,19 +122,16 @@ export function TodoRolloverSettingsSection({ settings, onSettingsChange }: {
           />
         }
       />
-      <SettingsRow
-        title={text.markdownMeta}
-        control={
+      <SettingsRow title={text.markdownMeta}>
+        <div className="settings-row__control todo-markdown-meta">
           <SettingsMultiChoice
             values={markdownMetaValues}
             options={markdownMetaOptions}
             ariaLabel={text.markdownMeta}
-            onToggle={(key, selected) =>
-              setPrefs((current) => (key === "priority" ? { ...current, markdownPriority: selected } : { ...current, markdownElapsed: selected }))
-            }
+            onToggle={(key, selected) => setPrefs((current) => ({ ...current, [MARKDOWN_META_PREFS[key]]: selected }))}
           />
-        }
-      />
+        </div>
+      </SettingsRow>
       <SettingsRow
         title={text.archiveRetention}
         description={text.archiveRetentionHint}

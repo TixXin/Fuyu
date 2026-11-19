@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getTodoSignature, type TodoMarkdownOptions } from "./markdown.ts";
+import { hasNoteContent } from "./newTodoDefaults.ts";
 import { isDateString } from "./schedule.ts";
 import { clearLastSavedSignature, createTodoId, loadLastSavedSignature, saveLastSavedSignature } from "./storage.ts";
 import { getLogicalTodoDate } from "./todoPrefs.ts";
@@ -10,6 +11,7 @@ type TodoRolloverOptions = {
   currentTodoDate: string;
   dayStartHour?: number;
   markdownOptions?: TodoMarkdownOptions;
+  noteTemplate?: string;
   todos: TodoItem[];
   dailyNote: string;
   carryOverIncompleteTodos: boolean;
@@ -23,6 +25,7 @@ export function useTodoRollover({
   currentTodoDate,
   dayStartHour = 0,
   markdownOptions,
+  noteTemplate = "",
   todos,
   dailyNote,
   carryOverIncompleteTodos,
@@ -49,7 +52,7 @@ export function useTodoRollover({
             }))
         : [];
 
-      if ((todos.length > 0 || dailyNote.trim()) && signature !== lastSavedSignature) {
+      if ((todos.length > 0 || hasNoteContent(dailyNote, noteTemplate)) && signature !== lastSavedSignature) {
         if (saveDirectory.trim()) {
           try {
             await saveTodosToDisk(currentTodoDate, todos, dailyNote);
@@ -67,10 +70,10 @@ export function useTodoRollover({
       if (carriedTodos.length > 0) {
         clearLastSavedSignature();
       } else {
-        saveLastSavedSignature(getTodoSignature(nextDate, [], "", markdownOptions));
+        saveLastSavedSignature(getTodoSignature(nextDate, [], noteTemplate, markdownOptions));
       }
     },
-    [carryOverIncompleteTodos, currentTodoDate, dailyNote, markdownOptions, onStartDay, saveDirectory, saveTodosToDisk, todos, upsertArchive],
+    [carryOverIncompleteTodos, currentTodoDate, dailyNote, markdownOptions, noteTemplate, onStartDay, saveDirectory, saveTodosToDisk, todos, upsertArchive],
   );
 
   useEffect(() => {

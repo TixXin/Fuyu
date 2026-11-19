@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { parseTodoInlineSyntax } from "./inlineSyntax.ts";
+import { defaultProjectName, newTodoPriority } from "./newTodoDefaults.ts";
 import { MAX_TODO_PROJECTS, readProject } from "./project.ts";
 import { hasPendingRecurringSchedule, nextOccurrenceDate } from "./recurrence.ts";
 import { loadCurrentTodoDate, loadDailyNote, saveCurrentTodoDate, saveDailyNote } from "./storage.ts";
@@ -65,7 +66,7 @@ export function useTodos({
   completedRef.current = (todo: TodoItem) => {
     if (!todo.recurrence) return;
     if (hasPendingRecurringSchedule(scheduledTodos, todo.title, todo.project, todo.recurrence, currentTodoDate)) return;
-    const nextDate = nextOccurrenceDate(currentTodoDate, todo.recurrence, holidayMarks);
+    const nextDate = nextOccurrenceDate(currentTodoDate, todo.recurrence, prefs.recurrenceHolidayAware ? holidayMarks : undefined);
     if (nextDate > currentTodoDate) {
       scheduleTodo(todo.title, nextDate, todo.project, {
         priority: todo.priority,
@@ -78,6 +79,7 @@ export function useTodos({
     projects, onProjectsChange, currentDate: currentTodoDate, todos, setTodos, scheduledTodos, setScheduledTodos, archives, setArchives,
   });
   const projectNames = useMemo(() => projects.map((project) => project.name), [projects]);
+  const defaultProject = useMemo(() => defaultProjectName(prefs.defaultProject, projects), [prefs.defaultProject, projects]);
   const createProject = useCallback((value: string) => {
     const name = readProject(value);
     if (!name) return undefined;
@@ -96,31 +98,34 @@ export function useTodos({
     if (!parsed.title) return;
     const project = parsed.project ?? fallback;
     const targetDate = parsed.date ?? draftDate;
-    const tags = parsed.priority || parsed.recurrence
-      ? { ...(parsed.priority ? { priority: parsed.priority } : {}), ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}) }
+    const priority = newTodoPriority(parsed.priority, prefs.defaultPriority);
+    const tags = priority || parsed.recurrence
+      ? { ...(priority ? { priority } : {}), ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}) }
       : undefined;
     if (targetDate && targetDate > currentTodoDate) {
       scheduleTodo(parsed.title, targetDate, project, tags);
     } else {
-      insertItem(parsed.title, project, parsed.priority, parsed.recurrence);
+      insertItem(parsed.title, project, priority, parsed.recurrence);
     }
     setDraftTodo("");
     setDraftDate(null);
-  }, [currentTodoDate, draftDate, draftTodo, insertItem, prefs.inlineSyntax, scheduleTodo, setDraftTodo]);
+  }, [currentTodoDate, draftDate, draftTodo, insertItem, prefs.defaultPriority, prefs.inlineSyntax, scheduleTodo, setDraftTodo]);
 
   const addTodoOn = useCallback((rawTitle: string, date: string) => {
     const parsed = parseTodoInlineSyntax(rawTitle, currentTodoDate, prefs.inlineSyntax);
     if (!parsed.title) return;
     const targetDate = parsed.date ?? date;
-    const tags = parsed.priority || parsed.recurrence
-      ? { ...(parsed.priority ? { priority: parsed.priority } : {}), ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}) }
+    const project = parsed.project ?? defaultProject;
+    const priority = newTodoPriority(parsed.priority, prefs.defaultPriority);
+    const tags = priority || parsed.recurrence
+      ? { ...(priority ? { priority } : {}), ...(parsed.recurrence ? { recurrence: parsed.recurrence } : {}) }
       : undefined;
     if (targetDate > currentTodoDate) {
-      scheduleTodo(parsed.title, targetDate, parsed.project, tags);
+      scheduleTodo(parsed.title, targetDate, project, tags);
       return;
     }
-    insertItem(parsed.title, parsed.project, parsed.priority, parsed.recurrence);
-  }, [currentTodoDate, insertItem, prefs.inlineSyntax, scheduleTodo]);
+    insertItem(parsed.title, project, priority, parsed.recurrence);
+  }, [currentTodoDate, defaultProject, insertItem, prefs.defaultPriority, prefs.inlineSyntax, scheduleTodo]);
 
   const [todoPageMode, setTodoPageMode] = useState<TodoPageMode>("today");
   const [selectedArchiveDate, setSelectedArchiveDate] = useState<string | null>(null);
@@ -129,8 +134,7 @@ export function useTodos({
     currentTodoDate,
     todos,
     dailyNote,
-    markdownPriority: prefs.markdownPriority,
-    markdownElapsed: prefs.markdownElapsed,
+    prefs,
     upsertArchive,
     onMissingSaveDirectory,
   });
@@ -154,16 +158,17 @@ export function useTodos({
   const startDay = useCallback((nextDate: string, carriedTodos: TodoItem[]) => {
     setTodos(carriedTodos);
     stopAllTodos();
-    setDailyNote("");
+    setDailyNote(prefs.noteTemplate);
     setCurrentTodoDate(nextDate);
     setTodoPageMode("today");
     setSelectedArchiveDate(null);
-  }, [setTodos, stopAllTodos]);
+  }, [prefs.noteTemplate, setTodos, stopAllTodos]);
 
   useTodoRollover({
     currentTodoDate,
     dayStartHour: prefs.dayStartHour,
     markdownOptions,
+    noteTemplate: prefs.noteTemplate,
     todos,
     dailyNote,
     carryOverIncompleteTodos,
@@ -202,6 +207,7 @@ export function useTodos({
       onDraftDateChange: setDraftDate,
       onAddTodo: addTodo,
       projects: projectNames,
+      defaultProject,
       canCreateProject: projects.length < MAX_TODO_PROJECTS,
       onCreateProject: createProject,
       onShowUpcoming: showUpcoming,

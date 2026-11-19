@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { getTodoSignature, type TodoMarkdownOptions } from "./markdown.ts";
+import { hasNoteContent } from "./newTodoDefaults.ts";
 import { loadLastSavedSignature } from "./storage.ts";
 import type { SaveState, TodoItem } from "./types.ts";
 
@@ -9,6 +10,7 @@ type TodoAutoSaveOptions = {
   dailyNote: string;
   saveDirectory: string;
   markdownOptions?: TodoMarkdownOptions;
+  noteTemplate?: string;
   saveTodosToDisk: (date: string, todoList: TodoItem[], nextDailyNote: string) => Promise<unknown>;
   setSaveState: (state: SaveState) => void;
 };
@@ -19,6 +21,7 @@ export function useTodoAutoSave({
   dailyNote,
   saveDirectory,
   markdownOptions,
+  noteTemplate = "",
   saveTodosToDisk,
   setSaveState,
 }: TodoAutoSaveOptions) {
@@ -42,7 +45,7 @@ export function useTodoAutoSave({
     const signature = getTodoSignature(currentTodoDate, todos, dailyNote, markdownOptions);
     const lastSavedSignature = loadLastSavedSignature();
 
-    if (!todos.length && !dailyNote.trim() && !lastSavedSignature) return;
+    if (!todos.length && !hasNoteContent(dailyNote, noteTemplate) && !lastSavedSignature) return;
     if (signature === lastSavedSignature) return;
 
     const timer = window.setTimeout(() => {
@@ -67,7 +70,7 @@ export function useTodoAutoSave({
         autoSaveTimer.current = null;
       }
     };
-  }, [currentTodoDate, dailyNote, markdownOptions, saveDirectory, saveTodosToDisk, setSaveState, todos]);
+  }, [currentTodoDate, dailyNote, markdownOptions, noteTemplate, saveDirectory, saveTodosToDisk, setSaveState, todos]);
 
   useEffect(
     () => () => {

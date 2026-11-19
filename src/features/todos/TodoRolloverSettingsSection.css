@@ -1,0 +1,7 @@
+.todo-markdown-meta {
+  margin-top: var(--space-md);
+}
+
+.todo-markdown-meta .settings-choice {
+  flex-wrap: wrap;
+}

@@ -65,14 +65,14 @@
 
 | 设置项 | 控件 | 默认 | 行为 |
 |---|---|---|---|
-| 新待办默认进哪个项目 | 下拉：跟着筛选走 / 临时 / 各项目 | 跟着筛选走 | 快捷键速记和「全部」筛选下加的待办去哪。开头写 `#名字` 仍然最优先 |
+| 新待办默认进哪个项目 | 下拉：临时 / 各项目 | 临时 | 快捷键速记和「全部」筛选下加的待办去哪。筛选了某个项目时仍进那个项目，开头写 `#名字` 仍然最优先。做的时候发现「跟着筛选走」和「临时」是一回事，合成了一项 |
 | 新待办默认优先级 | 分段：无 / 低 / 中 / 高 | 无 | 行内写了 `!1`–`!3` 的以写的为准 |
 | 工作日按调休算 | 开关 | 开 | 「工作日」重复的待办，补班日照常出现、法定假日不出现。现在就是这么做的，只是没有开关；要日历里开着节假日 |
 | Markdown 附带信息 | 多选：项目名 / 优先级 / 子任务 / 备注 / 用时 | 项目名、优先级、子任务、备注 | 从 2 项扩到 5 项，默认等于现在写出的内容 |
 | 每日笔记的开头 | 多行输入 | 空 | 新一天的笔记页先填上这段，比如「今天最重要的三件事」 |
 | 文件名格式（可选） | 下拉：`2026-11-19.md` / `2026-11-19 周四.md` / `2026/11/2026-11-19.md` | 第一种 | 给用 Obsidian 的人。要改 Rust 的导出命令，改名项目时重写往日文件也要跟着认新路径，是这一步里最重的一项，不要可以去掉 |
 
-偏好字段：`defaultProject`（`follow`、`none` 或项目 id）、`defaultPriority`、`recurrenceHolidayAware`、`markdownProject`、`markdownSubtasks`、`markdownNote`、`noteTemplate`、`markdownFileName`。
+偏好字段：`defaultProject`（项目 id，空字符串是「临时」）、`defaultPriority`、`recurrenceHolidayAware`、`markdownProject`、`markdownSubtasks`、`markdownNote`、`noteTemplate`、`markdownFileName`。
 
 分标签的实现：功能目录不能引用设置窗口里的组件，标签条要用 `src/components/settings/` 里共用的，或者照「外观」页的做法；动手时先看它是怎么接的。
 

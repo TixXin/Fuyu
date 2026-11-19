@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import { saveTodoMarkdown } from "./api";
-import { formatTodoDocumentAsMarkdown } from "./markdown";
+import { formatTodoDocumentAsMarkdown, todoMarkdownOptions } from "./markdown";
 import { mapProjects, MAX_TODO_PROJECTS, projectsOf } from "./project";
 import { applyProjectEdit, readTodoProjectEdit, TODO_PROJECT_EDIT_STORAGE_KEY, type TodoProjectEdit } from "./projectEdits";
-import { createTodoId } from "./storage";
+import { createTodoId, loadTodoPrefs } from "./storage";
 import type { ScheduledTodo, TodoArchive, TodoItem, TodoProject } from "./types";
 
 type TodoProjectSyncOptions = {
@@ -77,7 +77,7 @@ function renameInArchives(rename: (name: string) => string, currentDate: string,
   for (const archive of changed) {
     if (!archive.savedToDisk || !archive.filePath || archive.date === currentDate) continue;
     const directory = archive.filePath.slice(0, Math.max(archive.filePath.lastIndexOf("/"), archive.filePath.lastIndexOf("\\")));
-    saveTodoMarkdown(directory, archive.date, formatTodoDocumentAsMarkdown(archive.todos, archive.dailyNote))
+    saveTodoMarkdown(directory, archive.date, formatTodoDocumentAsMarkdown(archive.todos, archive.dailyNote, todoMarkdownOptions(loadTodoPrefs())))
       .catch((error) => console.error(`Failed to rewrite the saved todos of ${archive.date}`, error));
   }
 }
