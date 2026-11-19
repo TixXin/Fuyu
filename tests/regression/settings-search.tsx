@@ -136,6 +136,19 @@ try {
     check(document.querySelector(".settings-sidebar__empty"), "Nothing found says so");
     await type("hide sessions");
     check(hits("agentSessions").includes("隐藏已退出的会话"), "English words find a setting in the Chinese interface, shown in Chinese");
+    await type("");
+    await openPage("themeStyle");
+    await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".editor-panel button")].find((button) => button.textContent === "液态玻璃")!.click(); });
+    await type("扫光");
+    await pressEnter();
+    await wait(120);
+    const folded = document.querySelector<HTMLElement>(".editor-panel .settings-row--found");
+    check(text(folded?.querySelector(".settings-row__title")) === "扫光" && folded?.closest<HTMLDetailsElement>("details.settings-advanced")?.open && folded.checkVisibility(),
+      "A hit inside a folded Advanced group unfolds it and marks the row");
+    await type("");
+    await openPage("themeStyle");
+    await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".editor-panel button")].find((button) => button.textContent === "经典")!.click(); });
+    await openPage("agentSessions");
     await type("外观");
     check(categories().includes("appearance"), "A page's name still finds the page");
     for (let spent = 0; document.querySelector(".settings-row--found") && spent < 4000; spent += 50) await wait(50);

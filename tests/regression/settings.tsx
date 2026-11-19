@@ -186,6 +186,8 @@ if (!automated) {
     await act(async () => { holdRow("闲置时贴边隐藏")!.click(); });
     check(holdRow("有正在进行的待办时不收起")?.checked === true && holdRow("Agent 在等你时不收起")?.checked === true && holdRow("音乐播放中不收起")?.checked === false && holdRow("有未读消息时不收起")?.checked === true,
       "Idle tuck holds: todo, agent and unread messages on, music off by default");
+    check(holdRow("有正在进行的待办时不收起")?.closest<HTMLDetailsElement>("details.settings-advanced")?.open === false && settingRow("鼠标移到隐藏的岛上")?.checkVisibility(),
+      "The tuck holds sit in a closed Advanced fold while the main tuck choices stay in view");
     const tuckedHover = settingRow("鼠标移到隐藏的岛上");
     const tuckedHoverButton = (label: string) => [...(tuckedHover?.querySelectorAll<HTMLButtonElement>("button") ?? [])].find((button) => button.textContent === label);
     check(tuckedHoverButton("只露出岛屿")?.getAttribute("aria-pressed") === "true", "Hovering a tucked island only slides it out by default");

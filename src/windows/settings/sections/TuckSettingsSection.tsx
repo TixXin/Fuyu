@@ -1,5 +1,6 @@
 import { useTranslation } from "../../../i18n";
 import { isMacOS } from "../../../lib/platform";
+import { SettingsAdvanced } from "../../../components/settings/SettingsAdvanced";
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../../components/settings/SettingsRow";
@@ -74,30 +75,32 @@ export function TuckSettingsSection({
                 />
               }
             />
-            <SettingsToggleRow indent title={expand.holdTodo} description={expand.holdTodoHint} checked={settings.autoTuckHoldTodo} onChange={(autoTuckHoldTodo) => update({ autoTuckHoldTodo })} />
-            <SettingsToggleRow indent title={expand.holdAgent} description={expand.holdAgentHint} checked={settings.autoTuckHoldAgent} onChange={(autoTuckHoldAgent) => update({ autoTuckHoldAgent })} />
-            <SettingsToggleRow indent title={expand.holdMusic} description={expand.holdMusicHint} checked={settings.autoTuckHoldMusic} onChange={(autoTuckHoldMusic) => update({ autoTuckHoldMusic })} />
-            <SettingsToggleRow indent title={expand.holdMessages} description={expand.holdMessagesHint} checked={settings.autoTuckHoldMessages} onChange={(autoTuckHoldMessages) => update({ autoTuckHoldMessages })} />
-            <SettingsToggleRow
-              indent
-              title={layout.autoTuckRetract}
-              checked={settings.autoTuckRetract}
-              onChange={(autoTuckRetract) => update({ autoTuckRetract })}
-            />
-            {settings.autoTuckRetract && (
-              <SettingsSliderRow
+            <SettingsAdvanced indent>
+              <SettingsToggleRow indent title={expand.holdTodo} description={expand.holdTodoHint} checked={settings.autoTuckHoldTodo} onChange={(autoTuckHoldTodo) => update({ autoTuckHoldTodo })} />
+              <SettingsToggleRow indent title={expand.holdAgent} description={expand.holdAgentHint} checked={settings.autoTuckHoldAgent} onChange={(autoTuckHoldAgent) => update({ autoTuckHoldAgent })} />
+              <SettingsToggleRow indent title={expand.holdMusic} description={expand.holdMusicHint} checked={settings.autoTuckHoldMusic} onChange={(autoTuckHoldMusic) => update({ autoTuckHoldMusic })} />
+              <SettingsToggleRow indent title={expand.holdMessages} description={expand.holdMessagesHint} checked={settings.autoTuckHoldMessages} onChange={(autoTuckHoldMessages) => update({ autoTuckHoldMessages })} />
+              <SettingsToggleRow
                 indent
-                title={layout.autoTuckRetractDelay}
-                value={settings.autoTuckRetractDelayMs}
-                min={MIN_AUTO_TUCK_RETRACT_DELAY_MS}
-                max={MAX_AUTO_TUCK_RETRACT_DELAY_MS}
-                step={100}
-                format={delay}
-                defaultValue={DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS}
-                resetLabel={layout.resetToDefault}
-                onChange={(autoTuckRetractDelayMs) => update({ autoTuckRetractDelayMs })}
+                title={layout.autoTuckRetract}
+                checked={settings.autoTuckRetract}
+                onChange={(autoTuckRetract) => update({ autoTuckRetract })}
               />
-            )}
+              {settings.autoTuckRetract && (
+                <SettingsSliderRow
+                  indent
+                  title={layout.autoTuckRetractDelay}
+                  value={settings.autoTuckRetractDelayMs}
+                  min={MIN_AUTO_TUCK_RETRACT_DELAY_MS}
+                  max={MAX_AUTO_TUCK_RETRACT_DELAY_MS}
+                  step={100}
+                  format={delay}
+                  defaultValue={DEFAULT_AUTO_TUCK_RETRACT_DELAY_MS}
+                  resetLabel={layout.resetToDefault}
+                  onChange={(autoTuckRetractDelayMs) => update({ autoTuckRetractDelayMs })}
+                />
+              )}
+            </SettingsAdvanced>
           </>
         )}
         <SettingsRow
