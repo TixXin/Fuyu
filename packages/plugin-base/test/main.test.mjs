@@ -95,7 +95,7 @@ export function apply(ctx) {
   assert.deepEqual((await ready).params.plugins.map((entry) => entry.state), ["running"]);
   const before = await next((message) => message.method === "clients" || message.method === "ready", 0);
   assert.equal(before.method, "clients", "the list reaches Rust before ready");
-  assert.deepEqual((await clients).params, { paths: ["painter/island.js"] });
+  assert.deepEqual((await clients).params, { paths: ["painter/island.js"], roots: [] });
 });
 
 test("a built-in plugin calls Rust over stdin and stdout, sees progress, and hears Rust's events", async () => {

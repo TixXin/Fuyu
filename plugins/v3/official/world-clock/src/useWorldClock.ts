@@ -1,8 +1,9 @@
 import type { Context } from "@fuyu/plugin-base";
 import { useCallback, useEffect, useState } from "react";
-import { METHODS, TOPICS, type WorldClockSnapshot } from "./model.ts";
+import { msUntilNextTick } from "./clock.ts";
+import { DEFAULT_SETTINGS, METHODS, TOPICS, type WorldClockSnapshot } from "./model.ts";
 
-const EMPTY: WorldClockSnapshot = { cities: [], showInBar: true, at: 0 };
+const EMPTY: WorldClockSnapshot = { cities: [], settings: DEFAULT_SETTINGS, at: 0 };
 const errorText = (reason: unknown) => (reason instanceof Error ? reason.message : String(reason));
 
 export function useWorldClock(ctx: Context) {
@@ -23,11 +24,26 @@ export function useWorldClock(ctx: Context) {
       setError(null);
       ctx.host
         .call<WorldClockSnapshot>(method, params)
-        .then((next) => setState(next))
+        .then((next) => setState((prev) => (next.at >= prev.at ? next : prev)))
         .catch((reason: unknown) => setError(errorText(reason)));
     },
     [ctx],
   );
 
   return { state, error, setError, invoke };
+}
+
+export function useNow(seconds: boolean): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const at = Date.now();
+      setNow(at);
+      timer = setTimeout(tick, msUntilNextTick(at, seconds));
+    };
+    tick();
+    return () => clearTimeout(timer);
+  }, [seconds]);
+  return now;
 }

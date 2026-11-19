@@ -43,6 +43,7 @@ export type IslandText = {
     connectTools: string;
     gotIt: string;
   };
+  pluginWaiting: { title: (id: string) => string; body: (services: string) => string };
   v2Migration: {
     notice: (count: number) => string;
     viewGuide: string;
@@ -98,6 +99,10 @@ export const zhCN: IslandText = {
     connectTools: "连接更多工具",
     gotIt: "知道了",
   },
+  pluginWaiting: {
+    title: (id) => `插件 ${id} 仍在等待依赖`,
+    body: (services) => `等待服务：${services}`,
+  },
   v2Migration: {
     notice: (count) => `检测到 ${count} 个旧版插件，官方插件已换成新版 @fuyu/*`,
     viewGuide: "查看迁移说明",
@@ -152,6 +157,10 @@ export const en: IslandText = {
     tuck: "Hiding at the top edge; touch it to bring it back",
     connectTools: "Connect more tools",
     gotIt: "Got it",
+  },
+  pluginWaiting: {
+    title: (id) => `Plugin ${id} is still waiting for what it needs`,
+    body: (services) => `Waiting for: ${services}`,
   },
   v2Migration: {
     notice: (count) => `${count} old ${count === 1 ? "plugin" : "plugins"} found; official plugins moved to @fuyu/*`,

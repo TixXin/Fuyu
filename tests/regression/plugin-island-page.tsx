@@ -38,7 +38,7 @@ registry.add("island.page/v1", { id: "world-clock", component: ClockPage, icon: 
 registry.add("island.page/v1", { id: "@test/system-monitor", component: MonitorPage, icon: BrokenIcon }, "@test/system-monitor", external);
 registry.add("island.page/v1", { id: "@test/github-issues", component: IssuesPage }, "@test/github-issues", external);
 registry.add("island.page/v1", { id: "hidden", component: HiddenPage, headerDot: false, title: "Hidden" }, "@test/hidden", external);
-registry.add("island.collapsed/v1", { id: "world-clock-bar", width: 66, hideable: true, component: ClockChip }, "@test/world-clock", external);
+registry.add("island.collapsed/v1", { id: "world-clock-bar", width: 66, hideable: true, opens: "world-clock", component: ClockChip }, "@test/world-clock", external);
 updatePluginNames([{ id: "@test/system-monitor", displayName: { "zh-CN": "系统监控", en: "System Monitor" } }]);
 
 const FEATURES: IslandFeatures = { todo: true, music: false, clipboard: true, shelf: false, qq: false, wechat: false, qqMail: false, agents: true, translation: false, calendar: false, screenshots: false, timer: false };
@@ -46,6 +46,17 @@ const settings = normalizeSettings({ islandMotion: "none" });
 const noop = () => {};
 
 let goTo: (page: IslandPage) => void = noop;
+const opened: IslandPage[] = [];
+const openFromBar = (page: IslandPage) => {
+  opened.push(page);
+  goTo(page);
+};
+const warnings: string[] = [];
+const warn = console.warn;
+console.warn = (...args: unknown[]) => {
+  warnings.push(args.map(String).join(" "));
+  warn(...args);
+};
 
 function Expanded() {
   const [page, setPage] = useState<IslandPage>("todo");
@@ -70,7 +81,7 @@ function Collapsed() {
     <IslandShell
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled" features={FEATURES} collapsedSlots={slots}
-      onOpenPage={noop} onPageChange={noop} onWindowDragStart={noop} onCollapse={noop}
+      onOpenPage={openFromBar} onPageChange={noop} onWindowDragStart={noop} onCollapse={noop}
       onResetPosition={noop} minimizesToTray onMinimize={noop} onOpenSettings={noop} onOpenTranslator={noop} onTuck={noop} onReveal={noop}
       pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       <span />
@@ -141,6 +152,41 @@ async function runChecks() {
     return box.left >= shell.left - 0.5 && box.right <= shell.right + 0.5 && chip.scrollWidth <= chip.clientWidth + 0.5 && box.height <= 24;
   };
   check(fits(".test-clock-chip") && !bar().querySelector(".island__active-task")?.matches(":empty"), "收起条上插件的收起项完整显示，不被挤掉，待办摘要也还在");
+
+  const opener = bar().querySelector<HTMLElement>('.island__collapsed-opener[data-opens-page="world-clock"]')!;
+  check(opener?.contains(bar().querySelector(".test-clock-chip")) && opener.getAttribute("role") === "button" && opener.tabIndex === 0, "写了 opens 的收起项整项是一个能聚焦的按钮");
+  await act(async () => bar().querySelector<HTMLElement>(".test-clock-chip b")!.click());
+  await frame();
+  check(opened.join() === "world-clock" && expandedRoot.querySelector(".test-clock-page"), `点收起项打开自己的岛页面，只打开一次，收起条本身不再顺带打开别的页（${opened.join(" / ")}）`);
+  for (const key of ["Enter", " "]) {
+    await act(async () => goTo("todo"));
+    await act(async () => {
+      opener.focus();
+      opener.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    });
+    await frame();
+    check(expandedRoot.querySelector(".test-clock-page") && opened[opened.length - 1] === "world-clock", `收起项有焦点时按${key === " " ? "空格" : " Enter "}也打开插件页`);
+  }
+  await act(async () => goTo("todo"));
+
+  const MonitorChip = () => <span className="test-monitor-chip">M</span>;
+  const TodoChip = () => <span className="test-todo-chip">T</span>;
+  const strays = await act(async () => [
+    registry.add("island.collapsed/v1", { id: "monitor-bar", opens: "world-clock", component: MonitorChip }, "@test/system-monitor", external),
+    registry.add("island.collapsed/v1", { id: "hidden-bar", opens: "todo", component: TodoChip }, "@test/hidden", external),
+  ]);
+  await frame();
+  const before = opened.length;
+  for (const chip of [".test-monitor-chip", ".test-todo-chip"]) {
+    const element = bar().querySelector<HTMLElement>(chip)!;
+    check(element && !element.closest(".island__collapsed-opener"), `opens 指向别的插件或内置页的收起项照常显示，但不变成按钮（${chip}）`);
+    await act(async () => element.click());
+  }
+  check(opened.length === before && !expandedRoot.querySelector(".test-clock-page"), "点它们什么都不打开");
+  check(warnings.some((line) => line.includes("monitor-bar from @test/system-monitor opens world-clock")) && warnings.some((line) => line.includes("hidden-bar from @test/hidden opens todo")), "两条都在控制台记了告警");
+  await act(async () => {
+    for (const remove of strays) remove();
+  });
   results.textContent = `${messages.join("\n")}\n\nALL PASS (${messages.length})`;
   results.dataset.result = "passed";
 }

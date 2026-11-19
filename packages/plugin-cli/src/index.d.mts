@@ -176,6 +176,7 @@ export type PackageConfirmation = {
   readonly displayName?: Localized;
   readonly description?: Localized;
   readonly nodeApis: readonly string[];
+  readonly network: readonly string[];
   readonly provides: readonly string[];
   readonly replaces: readonly string[];
   readonly slots: readonly string[];
@@ -203,18 +204,48 @@ export type InstalledPackageResult = {
 };
 
 export declare const PACKAGES_SUBDIR: "packages";
-export declare function inspectPackage(
+export type PackageCheckOptions = {
+  source?: "market" | "manual";
+  allowManual?: boolean;
+  /** Validate as an official plugin (`@fuyu/*`). Only callers that know the package is official set this. */
+  official?: boolean;
+  appVersion?: string;
+  expectedSha256?: string;
+  /** Reject the package unless its `package.json` name is exactly this (code `name-mismatch`). */
+  expectedName?: string;
+  /** Reject the package unless its `package.json` version is exactly this (code `version-mismatch`). */
+  expectedVersion?: string;
+};
+
+export type StagedPackage = {
+  readonly id: string;
+  readonly version: string;
+  readonly source: "market" | "manual";
+  readonly digest: string;
+  readonly sha256: string;
+  readonly confirmation: PackageConfirmation;
+  readonly disabled: boolean;
+  readonly target: string;
+  readonly dir: string;
+};
+
+export declare function inspectPackage(zipBuffer: Uint8Array | string, options?: PackageCheckOptions): InspectedPackage;
+/** Check a package and write its files to a staging folder; nothing installed changes until `commitStaged`. */
+export declare function stagePackage(
   zipBuffer: Uint8Array | string,
-  options?: { source?: "market" | "manual"; allowManual?: boolean; appVersion?: string; expectedSha256?: string },
-): InspectedPackage;
+  options: PackageCheckOptions & { dir: string; revocations?: RevocationState | null; disabled?: boolean },
+): StagedPackage;
+/** Swap staged packages into place together; if any step fails, every package and `plugins.yml` go back to how they were. */
+export declare function commitStaged(
+  dir: string,
+  staged: StagedPackage | readonly StagedPackage[],
+  options?: { configFile?: string },
+): InstalledPackageResult[];
+export declare function discardStaged(staged: readonly StagedPackage[]): void;
 export declare function installPackage(
   zipBuffer: Uint8Array | string,
-  options: {
+  options: PackageCheckOptions & {
     dir: string;
-    source?: "market" | "manual";
-    allowManual?: boolean;
-    appVersion?: string;
-    expectedSha256?: string;
     revocations?: RevocationState | null;
     disabled?: boolean;
     configFile?: string;

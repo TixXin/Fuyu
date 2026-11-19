@@ -63,7 +63,6 @@ const KNOWN_EVENTS: &[&str] = &[
     "plugin-host-event",
     "plugin-keybinding",
     "plugin-market-install-requested",
-    "plugin-notification",
     "plugin-open-view",
     "plugin-permission-request",
     "plugin-view-changed",

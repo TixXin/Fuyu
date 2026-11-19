@@ -1,18 +1,15 @@
 import type { MarketCatalogPlugin, MarketLocalizedText, MarketVersionCandidate } from "@fuyu/plugin-services";
-import type { PluginMarketPermissionKind, PluginMarketSort } from "../../i18n/sections/settings/pluginMarket";
+import type { PluginCapabilityKind, PluginMarketSort } from "../../i18n/sections/settings/pluginMarket";
 import { marketActionCandidate } from "./pluginRowStatus.ts";
 
 export interface PluginCapabilities {
   network: readonly string[];
   nodeApis: readonly string[];
-  slots: readonly string[];
-  provides: readonly string[];
   replaces: readonly string[];
-  requiredPlugins?: readonly string[];
 }
 
-export interface PermissionItem {
-  kind: PluginMarketPermissionKind;
+export interface CapabilityItem {
+  kind: PluginCapabilityKind;
   detail: string[];
   sensitive: boolean;
 }
@@ -39,29 +36,21 @@ export function formatBytes(bytes: number): string {
   return `${bytes} B`;
 }
 
-export function permissionItems(caps: PluginCapabilities): PermissionItem[] {
+export function capabilityItems(caps: PluginCapabilities): CapabilityItem[] {
   const modules = caps.nodeApis.map((api) => api.replace(/^node:/, ""));
   const pick = (set: ReadonlySet<string>) => modules.filter((name) => set.has(name));
   const plain = modules.filter((name) => !RUN_PROGRAMS.has(name) && !FILES.has(name) && !LOW_LEVEL.has(name));
-  const items: PermissionItem[] = [];
-  items.push(caps.network.length > 0 ? { kind: "network", detail: [...caps.network], sensitive: false } : { kind: "noNetwork", detail: [], sensitive: false });
-  const add = (kind: PluginMarketPermissionKind, detail: string[], sensitive: boolean) => {
+  const items: CapabilityItem[] = [];
+  const add = (kind: PluginCapabilityKind, detail: string[], sensitive: boolean) => {
     if (detail.length > 0) items.push({ kind, detail, sensitive });
   };
+  add("replaces", [...caps.replaces], true);
+  add("network", [...caps.network], false);
   add("runPrograms", pick(RUN_PROGRAMS), true);
   add("files", pick(FILES), true);
   add("nodeSensitive", pick(LOW_LEVEL), true);
   add("nodeApis", plain, false);
-  add("island", [...caps.slots], false);
-  add("provides", [...caps.provides], false);
-  add("replaces", [...caps.replaces], true);
-  add("alsoInstalls", [...(caps.requiredPlugins ?? [])], false);
   return items;
-}
-
-export function permissionSummary(caps: PluginCapabilities): { network: boolean; count: number; sensitive: boolean } {
-  const items = permissionItems(caps).filter((item) => item.kind !== "noNetwork" && item.kind !== "alsoInstalls");
-  return { network: caps.network.length > 0, count: items.length, sensitive: items.some((item) => item.sensitive) };
 }
 
 export function offeredCandidate(plugin: MarketCatalogPlugin): MarketVersionCandidate | null {

@@ -67,11 +67,11 @@
 
 - [ ] **G1.3 悬浮岛窗口。** Tauri 升到 ≥ 2.12.1（单独提交，M9）；主窗口用 `tauri-nspanel` 转成非激活 NSPanel，`collectionBehavior` 设所有桌面、全屏辅助、不进 Cmd+Tab；`ActivationPolicy::Accessory`；鼠标穿透沿用「轮询 + 整窗开关」；定位改用逻辑坐标，避开多显示器缩放比不同时的坐标 bug（tauri#7890、tao#816）；顶部正中形态（M4；默认压在菜单栏上，设置里可改成贴在菜单栏下面，M5），全屏应用时照常显示还是隐藏做成设置（M6），界面约定见 [design/macos.md](../design/macos.md)。新手引导遮罩和截图选区窗口在 Mac 上可用。验收：Retina 内屏 + 1x 外接屏下定位正确；两种菜单栏设置下位置都正确；全屏应用时两种设置的行为都正确；点岛不抢前台焦点；打成 dmg 后透明窗口不变白（tauri#13415）。
 - [x] **G1.4 系统集成。** 菜单栏图标（模板图）；开机自启用 SMAppService；凭据换 Keychain（`keyring` 的 apple-native）；全局快捷键（2026-11-13 挪到 G1.6：用它的功能在 Mac 上都还没做，随剪贴板一起做）；`fuyu://` 用 Info.plist 声明；单实例；数据目录与家目录在 Mac 上的位置写进 contracts.md 和 data-storage.md。
-- [x] **G1.5 Mac 上的开发流程。** `pnpm dev:lane`、`build:exe`（Mac 上改成把 `.app` 放进 `~/Applications`）、停止运行中岛屿的脚本、`run-regression.mjs` 找浏览器、`prune:target` 等在 Mac 上可用；AGENTS.md 和 lanes.md 补 Mac 上的命令和验证要求。（2026-11-13 已做：单元测试在 Mac 上全过，市场包按解压后的内容比较；`build:exe` 装 `.app`；停止岛屿、回归页找浏览器、`--fresh` 支持 Mac；lane 预览改进程名，WebView 存储和主工作区分开）
+- [x] **G1.5 Mac 上的开发流程。** `pnpm dev:lane`、`build:exe`（Mac 上改成把 `.app` 放进 `~/Applications`）、停止运行中岛屿的脚本、`run-regression.mjs` 找浏览器、`prune:target` 等在 Mac 上可用；AGENTS.md 和 lanes.md 补 Mac 上的命令和验证要求。（2026-11-13 已做：单元测试在 Mac 上全过，市场包按解压后的内容比较；`build:exe` 装 `.app`；停止岛屿、回归页找浏览器、`--fresh` 支持 Mac；lane 预览改进程名，WebView 存储和主工作区分开）。**之后的变化**：`pnpm dev:lane` 随 F32 去掉 lane 删除（2026-11-13），现在用户自己跑 `pnpm tauri dev`，开发版用独立身份 `com.tixxin.fuyu.lane-<N>`（`dev_lane.rs`），见 [workflow.md](workflow.md)「开发版和正式版同时开」；`build:exe` 默认只打出 `src-tauri/target/release/bundle/macos/Fuyu.app`，不再碰 `~/Applications`（设 `FUYU_SYNC_SHORTCUT=1` 才放进去）
 - [x] **G1.34 开发版的固定签名（M1 的开发版部分）。** `tauri dev` 经 `build.runner`（`scripts/macos/dev-cargo.sh`）编出的 `target/debug/fuyu` 用登录钥匙串里免费的 Apple Development 证书重签，标识 `com.tixxin.fuyu.dev`，带 Team ID，钥匙串的分区列表记 `teamid:`，重编后「始终允许」不再失效；没有这张证书时退回 `~/.tauri/fuyu/macos-dev/` 的自签名证书并警告（自签名没有 Team ID，分区列表记 cdhash，照样每次弹）；release 原样交给 cargo。建证书的步骤见 [workflow.md](workflow.md)「开发版和正式版同时开」。
 - [ ] **G1.6 日常功能。** 全局快捷键的 Mac 平台层（Carbon `RegisterEventHotKey`，不劫持系统组合键，剪贴板默认 ⌘⇧V，从 G1.4 挪来）；剪贴板历史（`changeCount` 轮询，隐私提示按 M14）、文件中转（含拖出到 Finder）、截图（ScreenCaptureKit）和 OCR（Vision）、划词翻译（AX 读选中文字）、音量、摄像头 / 麦克风占用、设备插拔与电源、锁屏与空闲、强调色、网络计费、全屏判断。每项需要的权限在首次使用时引导，设置里能看到授权状态。
 - [ ] **G1.7 AI 代理状态。** hook 安装改用 `~/.claude` 等路径和 sh 脚本，命令里写绝对路径（hook 环境的 PATH 不含 `/opt/homebrew/bin`）；点会话跳转支持 Terminal、iTerm2、VS Code（AppleScript / URL scheme / AX）；用量读取的路径。
-- [ ] **G1.8 插件宿主。** 子进程放进独立进程组，退出时 `killpg`，岛屿崩溃时子进程能自己退出；插件网页视图改用 Tauri 的 webview；PowerShell 插件在没装 pwsh 时给出说明；插件清单加平台字段，市场标出插件支持哪些平台。
+- [ ] **G1.8 插件宿主。** 子进程放进独立进程组，退出时 `killpg`，岛屿崩溃时子进程能自己退出。2026-11-18 起（E36.6.5、E36.6.6）第 2 版插件宿主、网页视图、PowerShell 插件和清单的平台字段都已删除，这一项只剩第 3 版：`plugin_kernel/containment.rs` 把 Node 宿主交给平台层的 `Job`（Windows 是 `win32/job.rs` 的作业对象加挂起启动，Mac 是 `macos/job.rs` 的进程组，`Job` 销毁时 `killpg`），插件快捷键在 `plugin_kernel/keybindings.rs` 里按平台分开。
 
 ## 第 2 步：和系统深度绑定的功能
 
@@ -102,14 +102,13 @@
 | `screenshot` | 屏幕截图、热键、钉图窗口、剪贴板 | 换实现（G1.6 已做：`capture_macos.rs`、`clipboard_macos.rs`、`hotkeys_macos.rs`、`targets_macos.rs`，平台层 `macos/screen_capture.rs`、`ocr.rs`、`capture_targets.rs`，选区窗口用 `island_panel::make_overlay_panel`；`session.rs`、`pin.rs`、`long.rs` 两个平台共用，帧里记每个窗口单位几个像素） | G1.6 |
 | `file_shelf` | 剪贴板文件列表、OLE 拖出 | 换实现（G1.6 已做：`transfer_macos.rs`，复制走 `NSPasteboard`，拖出用 `drag` crate）；列表、预览、打开照常 | G1.6 |
 | `device_use`、`device_events`、`system_levels` | 注册表、音频端点、设备节点、WMI 亮度、电源 | `device_events` 换实现（G1.6 已做：`readers_macos.rs`，平台层 `macos/audio_devices.rs`、`bluetooth.rs`、`power.rs`）；音量换实现（G1.6 已做）；`device_use` 换实现（G1.6 已做：`device_use/macos.rs`，平台层 `macos/camera.rs`）；亮度暂不支持 | G1.6、G1.9 |
-| `phone_push` | 锁屏与空闲时间 | 换实现：空闲 None、未锁屏 | G1.6 |
+| `phone_push` | 锁屏与空闲时间 | 换实现（G1.6 已做）：平台层 `macos/session.rs`，空闲读 `CGEventSourceSecondsSinceLastEventType`，锁屏读 `CGSessionCopyCurrentDictionary` 的 `CGSSessionScreenIsLocked`；业务代码经 `platform::session` 调用 | G1.6 |
 | `lyrics` | 繁简转换 | 换实现：Mac 上不转换 | G1.9 |
 | `mail` | 下载文件夹 | 换实现：`system::downloads_dir()` | — |
 | `pets` | `FILE_FLAG_OPEN_REPARSE_POINT` | 换实现：`O_NOFOLLOW` | — |
 | `claude_usage` | 注册表里的系统代理 | 换实现：Mac 上只看插件设置和环境变量；凭据文件不在时读钥匙串（G1.7 已做） | G1.7 |
 | `agent_status`（focus、session_*、window_focus、wezterm、orca、host_icon） | 进程树、进程启动时间与环境变量、窗口枚举与前台、UIA 标签页、程序图标 | 换实现（G1.7 已做）：hook 脚本 `hooks/*.sh`；平台层 `macos/proc_info.rs`（`proc_pidinfo`、`proc_pidpath`、tty）、`process_tree.rs`（launchd 下的进程接到负责进程）、`terminal_tabs.rs`；窗口跳转激活前台应用；`approval_hotkeys_macos.rs`；进程环境变量仍为空 | G1.7 |
-| `plugin_host`（runtime、baseline） | 作业对象、挂起启动 | 平台层：Mac 上 `Job` 管进程组（G1.8 已做：`killpg`，按组统计内存），不挂起启动 | G1.8 |
-| `plugin_host`（keybindings、system_events、webviews、uri） | 热键、会话通知、WebView2 页面、注册 `fuyu://` | 快捷键、系统事件换实现（G1.8 已做，在原文件里按平台分开）；网页视图暂不支持；`uri` 注册换实现（Mac 上不做，等 Info.plist） | G1.4、G1.8 |
+| `plugin_kernel`（containment、keybindings） | 作业对象、挂起启动、热键 | 平台层：`plugin_kernel/containment.rs` 经 `platform::job` 管住 Node 宿主，Windows 是 `win32/job.rs`（作业对象、挂起启动），Mac 是 `macos/job.rs`（进程组，销毁时 `killpg`，不挂起启动）；插件快捷键在 `keybindings.rs` 里按平台分开（Mac 走 `global-hotkey`）。第 2 版的 `plugin_host`（会话通知、WebView2 页面、注册 `fuyu://`）已随 E36.6.5 删除 | G1.8、E36.6.5 |
 | `media_control` | SMTC、音频峰值、程序图标 | 换实现（G1.9 已做）：`service_macos.rs`、`events_macos.rs`、`adapter_macos.rs`（mediaremote-adapter）、`applescript_macos.rs`（兜底）；状态类型在共用的 `state.rs` | G1.9 |
 | `qq_notifications`、`wechat_reminders`、`messenger_activation` | 通知监听、窗口闪烁、UIA | QQ、微信换实现（G1.10 已做：`qq_notifications/macos.rs`、`wechat_reminders/macos.rs`，平台层 `macos/dock_badges.rs`，插件动态复用 `plugin_view.rs`）；`messenger_activation` 仍暂不支持 | G1.10 |
 | `cc_connect`、`ssh_tunnel` | 作业对象、注册表代理、程序查找 | `cc_connect` 本机换实现（G1.28 已做：`darwin` tar.gz 下载校验、`~/.local/bin` / Homebrew / 登录 shell `PATH` 查找、进程组看护与飞书扫码，新手引导放开本机）；`ssh_tunnel` 仍暂不支持 | G1.8、G1.28 |
@@ -229,10 +228,9 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 
 ### G1.8 插件宿主
 
-- [ ] 装一个 Node 插件和一个 PowerShell 插件（装了 pwsh 时）都能跑起来；没装 pwsh 时卡片上出现安装提示
-- [ ] 停用插件或退出浮屿后 `ps` 里没有残留的插件进程
-- [ ] `.exe` 插件标为只支持 Windows
-- [ ] 插件的快捷键能触发；锁屏、解锁、合盖再打开后插件收到对应事件
+- [ ] 装一个第 3 版插件能跑起来（第 2 版的 Node / PowerShell 插件已删除，原来的 pwsh 提示和 `.exe` 平台标记两项不再验）
+- [ ] 退出浮屿或插件宿主重启后 `ps` 里没有残留的 Node 宿主进程
+- [ ] 第 3 版插件声明的快捷键能触发（原来的锁屏、解锁事件是第 2 版的，已删除）
 - [ ] Mac 本机 cc-connect（G1.28，#569）：设置 → AI Agent → 提醒里点「下载 cc-connect」并打开「由岛启动 cc-connect」，关掉开关或退出岛后 `ps` 里无残留 `cc-connect` 进程；设置页与新手引导「推送到手机」里对「本机」做飞书真机扫码建机器人、手机发一句话后发测试消息收到推送
 
 ### G1.9 媒体与亮度

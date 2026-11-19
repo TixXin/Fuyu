@@ -4,7 +4,7 @@ import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
 import "../../src/windows/settings/SettingsWindow.css";
-import { ipc, locale, market, configCalls, PLUGIN, NORMAL, HOST, MB, held } from "./pluginPageMocks";
+import { ipc, locale, market, configCalls, PLUGIN, NORMAL, HOST, MB, REASON, held } from "./pluginPageMocks";
 import { I18nProvider, TRANSLATIONS } from "../../src/i18n";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { PluginHostView } from "../../src/windows/settings/usePluginHostStatus";
@@ -15,6 +15,9 @@ const { PluginPageActions } = await import("../../src/windows/settings/PluginPag
 const { takeMarketViewRequest } = await import("../../src/windows/settings/pluginPageHandoff");
 
 const t = TRANSLATIONS[locale].settings.pluginsV3.page;
+market.revocationCases = true;
+Object.assign(market.installed, { "@someone/sketchy": "0.5.0", "@someone/translator": "1.0.0" });
+const REVOCATION = [...NORMAL, PLUGIN.shady, PLUGIN.sketchy, PLUGIN.translator];
 const open = (plugins: PluginHostView["plugins"], more: Partial<PluginHostView> = {}): PluginHostView => ({ connection: "open", plugins, host: HOST, memory: null, safeMode: null, ...more });
 const safeHost = { ...HOST, safe: "third-party" as const };
 
@@ -24,8 +27,9 @@ const STAGES: Stage[] = [
   { key: "normal", title: "已安装若干 / Installed", view: open([...NORMAL, PLUGIN.hello]), head: true },
   { key: "empty", title: "空状态 / Empty", view: open([PLUGIN.counter]) },
   { key: "update", title: "有可更新 / Update", view: open([...NORMAL, PLUGIN.pomodoro]) },
-  { key: "error", title: "出错 / Error", view: open([...NORMAL, PLUGIN.feeds, PLUGIN.flaky]) },
+  { key: "error", title: "出错 / Error", view: open([...NORMAL, PLUGIN.feeds, PLUGIN.flaky, PLUGIN.linked]) },
   { key: "attention", title: "等依赖 / Attention", view: open([...NORMAL, PLUGIN.todoSync, PLUGIN.shady]) },
+  { key: "revocation", title: "撤销与等确认 / Revoked and held", view: open(REVOCATION) },
   { key: "migration", title: "旧插件迁移 / Migration", view: open(NORMAL), migration: true },
   { key: "nodeDl", title: "运行环境下载中 / Runtime downloading", view: { ...open(null), connection: "connecting", host: null }, node: { state: "downloading", downloaded: 12 * MB, total: 30 * MB } },
   { key: "nodeFail", title: "运行环境下载失败 / Runtime failed", view: { ...open(null), connection: "connecting", host: null }, node: { state: "failed", error: "Node 22.15 or newer was not found; all 3 download sources failed" } },
@@ -36,6 +40,7 @@ const STAGES: Stage[] = [
   { key: "loading", title: "加载中 / Loading", view: { connection: "connecting", plugins: null, host: null, memory: null, safeMode: null } },
   { key: "narrow-error", title: "窄窗口 / Narrow", view: open([...NORMAL, PLUGIN.feeds, PLUGIN.flaky]), narrow: true },
   { key: "narrow-attention", title: "窄窗口 / Narrow", view: open([...NORMAL, PLUGIN.todoSync, PLUGIN.shady, PLUGIN.pomodoro]), narrow: true },
+  { key: "narrow-revocation", title: "窄窗口 / Narrow", view: open(REVOCATION), narrow: true },
 ];
 
 const opened: string[] = [];
@@ -103,10 +108,12 @@ try {
   await click(weather.querySelector("[data-tab='commands']"));
   await settle();
   check(weather.querySelectorAll("[data-command]").length === 2 && weather.querySelector("[data-command='refresh'] .plugin-kbd") && weather.textContent!.includes(locale === "en" ? "Refresh weather" : "刷新天气"), "The commands tab lists the plugin's commands with their shortcuts");
-  await click(weather.querySelector("[data-tab='permissions']"));
+  check(!weather.querySelector("[data-tab='permissions']") && !/权限|permission/i.test(weather.querySelector("[role='tablist']")?.textContent ?? ""), "There is no permissions tab");
+  await click(weather.querySelector("[data-tab='overview']"));
   await settle();
-  check(weather.textContent!.includes("api.open-meteo.com") && weather.querySelector(".plugin-perm--sensitive"), "The permissions tab lists network access and flags sensitive system access");
+  check(weather.querySelector("[data-plugin-capabilities] [data-capability='network']") && weather.textContent!.includes("api.open-meteo.com") && weather.querySelector(".plugin-cap--sensitive"), "The overview says what the plugin does: the addresses it connects to and the system abilities it uses, marked");
   check(weather.querySelector("[data-plugin-window-rules='@fuyu/weather']"), "and holds the separate-window rules");
+  check(!/权限|permission/i.test(weather.textContent ?? ""), "and never talks about permissions");
   await click(weather.querySelector("[data-tab='settings']"));
   await settle();
 
@@ -189,6 +196,8 @@ try {
   const feedsNote = row("error", "@someone/feeds")?.querySelector<HTMLElement>("[data-note='failed']");
   check(feedsNote?.textContent!.includes("Cannot read properties") && !feedsNote.textContent!.includes("at parse"), "The row shows only the first line of the error");
   check(row("error", "@someone/flaky-plugin-with-a-really-long-identifier-that-should-not-overflow")?.querySelector("[data-note='paused']"), "A plugin paused for repeated errors says so");
+  const linkedNote = row("error", "@me/linked")?.querySelector<HTMLElement>("[data-note='unreachable']");
+  check(row("error", "@me/linked")?.dataset.dot === "bad" && Boolean(linkedNote?.textContent!.includes("island, settings")), "A plugin whose window files Fuyu cannot read names those windows");
   await click(rowAction("error", "@someone/feeds", "restart"));
   await settle();
   check(market.calls.indexOf("enabled:@someone/feeds=false") >= 0 && market.calls.indexOf("enabled:@someone/feeds=true") > market.calls.indexOf("enabled:@someone/feeds=false"), "Restart switches the plugin off and on again");
@@ -206,6 +215,31 @@ try {
   check(ipc.calls.includes("builtin:todos=true"), "A plugin waiting on a switched-off feature offers to turn that feature on");
   await click(within("attention", "[data-action='only-attention']"));
   check(all("attention", ".plugin-row").length === 2 && within("attention", "[data-filter='attention']")?.getAttribute("aria-pressed") === "true", "Show only these filters the list to the plugins that need attention");
+
+  const shady = row("revocation", "@someone/shady")!;
+  const shadySwitch = shady.querySelector<HTMLInputElement>(".plugin-row__switch input")!;
+  check(shady.querySelector("[data-note='revoked'] .plugin-note__list")?.textContent!.includes(REASON.shady[locale]) && shady.querySelector("[data-row-action='uninstall']"), "Revoked: the row gives the market's reason and offers to uninstall");
+  check(shadySwitch.disabled && shady.querySelector(".plugin-row__switch")?.getAttribute("title") === t.notes.revokedSwitch, "and its switch is locked, saying why");
+  await click(shadySwitch);
+  await settle();
+  check(!market.calls.includes("enabled:@someone/shady=true"), "Clicking the locked switch does not try to turn it on");
+  const sketchy = row("revocation", "@someone/sketchy")!;
+  check(sketchy.querySelector("[data-note='warned']")?.textContent!.includes(REASON.sketchy[locale]) && sketchy.querySelector("[data-row-action='update']") && sketchy.dataset.dot === "ok", "Warned: a running plugin shows the market's warning and reason, with the newer version to update to");
+  check(!sketchy.querySelector<HTMLInputElement>(".plugin-row__switch input")!.disabled, "and its switch still works");
+  const translator = row("revocation", "@someone/translator")!;
+  const heldList = translator.querySelector("[data-note='held'] .plugin-note__list")?.textContent ?? "";
+  check(["api.deepl.com", "child_process", "translation/v1"].every((item) => heldList.includes(item)) && translator.querySelector("[data-note='held']")?.textContent!.includes(t.notes.held("1.1.0")), "Held: the row says the new version does more and lists the new address, Node module and replaced service");
+  check(!/权限|permission/i.test(stage("revocation").textContent ?? ""), "and none of these states talks about permissions");
+  await click(translator.querySelector("[data-row-action='update']"));
+  await settle();
+  const heldModal = document.querySelector<HTMLElement>("[data-install-modal='@someone/translator']");
+  check(heldModal, "Updating a held plugin opens the usual confirmation");
+  await press(heldModal!, "Escape");
+  market.revokeOnEnable = "@me/gadget";
+  await click(row("revocation", "@me/gadget")?.querySelector(".plugin-row__switch input"));
+  await settle();
+  market.revokeOnEnable = null;
+  check(row("revocation", "@me/gadget")?.querySelector(".plugin-row__switch[data-error]")?.getAttribute("title")?.includes(REASON.shady[locale]), "If turning a plugin on is refused as revoked, the switch gives the market's reason");
 
   check(within("migration", "[data-banner='migration']")?.querySelector("[data-v2-official='dev.focusd.countdown'] [data-action='migration-get']"), "Migration: old official plugins not yet installed offer an install button");
   await click(within("migration", "[data-action='migration-get']"));

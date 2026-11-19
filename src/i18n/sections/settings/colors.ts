@@ -33,6 +33,9 @@ export type SettingsColorsText = {
   builtinHint: string;
   builtinNames: Record<"greyWhite" | "frostedClear" | "frostedWarm", string>;
   builtinHints: Record<"greyWhite" | "frostedClear" | "frostedWarm", string>;
+  builtinGlassHints: Record<"clear" | "tinted" | "flow" | "material" | "mica", string>;
+  builtinCustom: string;
+  builtinCustomHint: string;
 };
 
 export const zhCN: SettingsColorsText = {
@@ -61,11 +64,14 @@ export const zhCN: SettingsColorsText = {
   inkColor: "文字颜色",
   inkReset: "恢复默认",
   inkLowContrast: (ratio) => `和岛屿背景的对比度只有 ${ratio}:1，小字可能看不清。`,
-  builtinTitle: "内置配色",
+  builtinTitle: "主题",
   builtin: "一键换配色",
-  builtinHint: "同时换掉深色、浅色两套颜色和透明度；配色是深色时切到浅色。磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。之后还可以在下面接着调。",
+  builtinHint: "前三套同时换掉深色、浅色两套颜色和透明度，配色是深色时切到浅色；磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。后面几套是液态玻璃，只换材质，颜色不变。之后还可以在下面接着调。",
   builtinNames: { greyWhite: "灰白", frostedClear: "透白磨砂", frostedWarm: "暖白磨砂" },
   builtinHints: { greyWhite: "不透明的浅灰", frostedClear: "86% 的冷白", frostedWarm: "90% 的米白，暖色文字" },
+  builtinGlassHints: { clear: "液态玻璃，几乎全透", tinted: "液态玻璃，带一层着色", flow: "液态玻璃，颜色缓缓流动", material: "液态玻璃，中等模糊", mica: "液态玻璃，重模糊" },
+  builtinCustom: "自定义",
+  builtinCustomHint: "现在的颜色，不是上面哪一套",
   stayDark: "保持深色",
   stayDarkHint: "配色是浅色时，选中的部分仍然用深色那一套。独立窗口指翻译和剪贴板窗口，设置窗口跟随配色。",
   stayDarkNow: "现在是深色，换成浅色后才看得出区别。",
@@ -98,11 +104,14 @@ export const en: SettingsColorsText = {
   inkColor: "Text color",
   inkReset: "Reset",
   inkLowContrast: (ratio) => `Only ${ratio}:1 against the island background; small text may be hard to read.`,
-  builtinTitle: "Built-in colors",
+  builtinTitle: "Themes",
   builtin: "Color sets",
-  builtinHint: "Replaces both the dark and light colors and the opacity; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. You can keep adjusting below.",
+  builtinHint: "The first three replace both the dark and light colors and the opacity; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. The rest are liquid glass: they change the material and keep your colors. You can keep adjusting below.",
   builtinNames: { greyWhite: "Grey white", frostedClear: "Frosted clear", frostedWarm: "Frosted warm" },
   builtinHints: { greyWhite: "Solid light grey", frostedClear: "Cool white at 86%", frostedWarm: "Cream at 90%, warm text" },
+  builtinGlassHints: { clear: "Liquid glass, almost clear", tinted: "Liquid glass with a tint", flow: "Liquid glass, colors drift", material: "Liquid glass, medium blur", mica: "Liquid glass, heavy blur" },
+  builtinCustom: "Custom",
+  builtinCustomHint: "Your current colors, none of the above",
   stayDark: "Keep dark",
   stayDarkHint: "With light colors, the selected parts still use the dark set. Other windows are the translation and clipboard windows; the settings window follows the colors.",
   stayDarkNow: "Colors are dark now; this shows once they turn light.",

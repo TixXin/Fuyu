@@ -3,8 +3,7 @@ import type { PluginInstallConfirmation } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
 import { pluginInitial } from "./InstalledPluginRow";
 import { PluginMarketDialog } from "./PluginMarketDialog";
-import { PluginMarketPermissions } from "./PluginMarketPermissions";
-import { localized, permissionItems } from "./pluginMarketModel";
+import { localized } from "./pluginMarketModel";
 import "./PluginPage.css";
 
 export interface PendingPluginInstall {
@@ -22,11 +21,10 @@ export interface PendingPluginInstall {
 
 const shortHash = (hash: string) => (hash.length > 12 ? `${hash.slice(0, 4)}…${hash.slice(-4)}` : hash);
 
-export function PluginInstallConfirmModal({ pending, busy, error, nameOf, onConfirm, onCancel }: {
+export function PluginInstallConfirmModal({ pending, busy, error, onConfirm, onCancel }: {
   pending: PendingPluginInstall;
   busy: boolean;
   error: string | null;
-  nameOf?: (id: string) => string;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -92,12 +90,7 @@ export function PluginInstallConfirmModal({ pending, busy, error, nameOf, onConf
             <span>{kind === "update" ? copy.freshUpdate : copy.freshInstall}</span>
           </p>
         ) : null}
-        <h3 className="plugin-page__heading">
-          {kind === "update" ? text.perms.newVersionCan : text.perms.itCan}
-          {kind === "update" ? <span className="plugin-page__heading-meta">{copy.updateNote}</span> : null}
-        </h3>
-        <PluginMarketPermissions items={permissionItems(confirmation)} nameOf={nameOf} />
-        <p className="plugin-foot">{copy.securityNote}</p>
+        <p className="plugin-foot" data-install-note>{copy.securityNote}</p>
         {error ? <p className="plugin-callout plugin-callout--bad" role="alert">{error}</p> : null}
       </div>
       <div className="plugin-dialog__foot">

@@ -61,6 +61,10 @@ const { windowServices } = await import("../../src/features/plugin-kernel/servic
 export { windowServices };
 
 const loc = (zh: string, en: string) => ({ "zh-CN": zh, en });
+export const REASON = {
+  shady: loc("会把剪贴板内容上传到作者的服务器", "Uploads clipboard contents to the author's server"),
+  sketchy: loc("0.5.0 在部分电脑上会反复重连，占用网络", "0.5.0 keeps reconnecting on some computers and eats bandwidth"),
+};
 const candidate = (version: string, official: boolean, fresh = false): MarketVersionCandidate => ({
   version, sha256: "a".repeat(64), size: 2048, publishedAt: "2026-11-18T00:00:00Z", fresh,
   confirmation: { unreviewed: false, official, displayName: loc("", ""), description: loc("", ""), network: official ? ["api.open-meteo.com"] : [], nodeApis: official ? [] : ["node:crypto"], provides: [], replaces: [], slots: ["island.page/v1"] },
@@ -79,6 +83,8 @@ export const market = {
   manualAllowed: false,
   calls: [] as string[],
   installed: { "@fuyu/weather": "1.2.0", "@fuyu/pomodoro": "1.0.0", "@someone/clock": "2.0.0", "@someone/shady": "0.3.0" } as Record<string, string>,
+  revokeOnEnable: null as string | null,
+  revocationCases: false,
   details: {} as Record<string, MarketPluginDetails>,
   inspected: null as MarketInspectedPackage | null,
 };
@@ -87,15 +93,23 @@ const marketPlugins = (): MarketCatalogPlugin[] => {
     const installedVersion = market.installed[plugin.name] ?? null;
     return { ...plugin, installedVersion, enabled: Boolean(installedVersion), source: installedVersion ? "market" as const : null };
   };
+  const cases = market.revocationCases ? [
+    entry("@someone/sketchy", "剪贴板同步", "Clipboard sync", "在几台电脑之间同步剪贴板", "Syncs the clipboard between computers", { install: candidate("0.5.1", false), manual: candidate("0.5.1", false), revocation: { level: "warn", reasons: [REASON.sketchy] } }),
+    entry("@someone/translator", "划词翻译", "Selection translator", "选中文字就翻译", "Translates the text you select", {
+      install: candidate("1.1.0", false), manual: candidate("1.1.0", false),
+      autoUpdateHeld: { version: "1.1.0", reason: "new-capabilities", newCapabilities: { network: ["api.deepl.com"], nodeApis: ["node:child_process"], replaces: ["translation/v1"] } },
+    }),
+  ] : [];
   return [
     entry("@fuyu/weather", "天气", "Weather", "在岛上看实时气温和逐小时预报", "Live temperature and an hourly forecast on the island", { install: candidate("1.2.0", true) }),
     entry("@fuyu/pomodoro", "番茄钟", "Pomodoro", "专注 25 分钟，休息 5 分钟", "Focus for 25 minutes, rest for 5", { install: candidate("1.1.0", true), autoUpdate: candidate("1.1.0", true) }),
     entry("@someone/clock", "世界时钟", "World clock", "收起时显示另一个时区的时间", "Shows another time zone while collapsed", { install: candidate("2.0.0", false) }),
-    entry("@someone/shady", "可疑插件", "Shady plugin", "已被市场撤下", "Pulled from the market", { revoked: true }),
+    entry("@someone/shady", "可疑插件", "Shady plugin", "已被市场撤下", "Pulled from the market", { revoked: true, revocation: { level: "disable", reasons: [REASON.shady] } }),
     entry("@someone/stocks", "股票行情", "Stock ticker", "自选股涨跌一眼看到", "Your watchlist at a glance", { install: candidate("1.0.0", false) }),
     entry("@fuyu/countdown", "倒数日", "Countdown", "离重要的日子还有几天", "Days left until the dates that matter"),
     entry("@someone/notes", "便签", "Sticky notes", "随手记一句", "Jot a line down", { install: candidate("0.9.0", false, true) }),
     { ...entry("@someone/old", "旧插件", "Old plugin", "版本不够", "Too old"), install: null, blocked: { reason: "engines" as const, range: ">=9.0.0" } },
+    ...cases,
   ].map(with_);
 };
 export const marketSnapshot = () => ({ plugins: marketPlugins(), installed: [], updatedAt: null, manualAllowed: market.manualAllowed, error: null });
@@ -123,7 +137,11 @@ const marketProvider = windowServices.provide(marketV1, {
   },
   installFile: ({ expectedSha256 }) => (market.calls.push(`installFile:${expectedSha256 ?? ""}`), { id: "@me/gadget", version: "0.1.0", source: "manual" as const, sha256: "b".repeat(64), confirmation: candidate("0.1.0", false).confirmation }),
   setManualAllowed: ({ allowed }) => (market.manualAllowed = allowed, market.calls.push(`manual:${allowed}`), emitMarket(), { manualAllowed: allowed }),
-  setEnabled: ({ id, enabled }) => (market.calls.push(`enabled:${id}=${enabled}`), { id, enabled }),
+  setEnabled: ({ id, enabled }) => {
+    market.calls.push(`enabled:${id}=${enabled}`);
+    if (enabled && id === market.revokeOnEnable) throw Object.assign(new Error(`${id} has been revoked and cannot be turned on`), { code: "revoked", data: { reasons: [REASON.shady] } });
+    return { id, enabled };
+  },
   uninstall: ({ id, removeData }) => (market.calls.push(`uninstall:${id}:${Boolean(removeData)}`), { id, removed: true as const }),
 });
 emitMarket = () => marketProvider.emit("changed", {});
@@ -172,7 +190,10 @@ export const PLUGIN = {
   feeds: { id: "@someone/feeds", name: "RSS feeds", state: "failed", kind: "third-party", source: "market", error: "TypeError: Cannot read properties of undefined (reading 'items')\n    at parse (feeds.mjs:42:17)\n    at refresh (feeds.mjs:12:3)", usage: usage({ errors: 1 }) },
   flaky: { id: "@someone/flaky-plugin-with-a-really-long-identifier-that-should-not-overflow", name: "Flaky", state: "auto-disabled", kind: "third-party", source: "market", blocked: { by: "errors", errors: 5, windowMs: 60000 }, lastError: { at: 1, text: "Error: flaky broke\n    at apply (flaky.mjs:3:11)" }, usage: usage({ errors: 5 }) },
   todoSync: { id: "@someone/todo-sync", name: "Todo sync", state: "waiting", kind: "third-party", source: "market", waitingFor: ["todos/v1"], usage: usage({ applyMs: null }) },
-  shady: { id: "@someone/shady", name: "Shady", state: "running", kind: "third-party", source: "market", usage: usage() },
+  shady: { id: "@someone/shady", name: "Shady", state: "disabled", kind: "third-party", source: "market" },
+  sketchy: { id: "@someone/sketchy", name: "Clipboard sync", state: "running", kind: "third-party", source: "market", usage: usage() },
+  translator: { id: "@someone/translator", name: "Translator", state: "running", kind: "third-party", source: "market", usage: usage() },
+  linked: { id: "@me/linked", name: "Linked", state: "running", kind: "third-party", source: "manual", unreachableClients: ["island", "settings"], usage: usage() },
 } satisfies Record<string, PluginStatusV3>;
 export const NORMAL: PluginStatusV3[] = [PLUGIN.weather, PLUGIN.clock, PLUGIN.gadget, PLUGIN.local, PLUGIN.counter];
 export const HOST: HostInfoV3 = { pid: 4242, node: "22.15.0", startedAt: Date.now() - 65_000, safe: null, dev: false, rssBytes: 42 * MB, heapUsedBytes: 9 * MB, cpuMs: 830 };

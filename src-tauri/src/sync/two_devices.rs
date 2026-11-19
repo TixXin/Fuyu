@@ -385,6 +385,28 @@ fn an_optional_group_stays_on_this_device_until_it_is_turned_on() {
     }
 }
 
+#[test]
+fn removed_plugin_keys_another_device_still_pushes_are_ignored() {
+    let (folder, mut a, mut b) = pair("removed-keys");
+    let mut mine = optional_keys("deepl");
+    mine.insert("fuyu-plugin-market-favorites".into(), Value::String(json!(["@mine/y"]).to_string()));
+    a.set_settings(mine);
+    b.set_settings(optional_keys("google"));
+    settle(&folder, &mut a, &mut b);
+    let path = folder.join("fuyu-sync/devices/devb/settings.json");
+    let mut pushed: Value = serde_json::from_str(&fs::read_to_string(&path).expect("pushed settings")).expect("json");
+    let stamp = b.stamp().to_string();
+    pushed["entries"]["key:fuyu-plugin-pages"] = json!({ "value": json!({ "order": ["plugin:x/main"], "hidden": [] }).to_string(), "updatedAt": stamp });
+    pushed["entries"]["key:fuyu-plugin-market-favorites"] = json!({ "value": json!(["@acme/x"]).to_string(), "updatedAt": stamp });
+    fs::write(&path, pushed.to_string()).expect("old device's settings");
+    a.settings.groups = vec!["pluginPages".into()];
+    done(&a.sync(&folder));
+    assert!(!a.settings.local.keys.contains_key("fuyu-plugin-pages"));
+    assert_eq!(a.settings.local.keys["fuyu-plugin-market-favorites"], Value::String(json!(["@mine/y"]).to_string()));
+    let mine = fs::read_to_string(folder.join("fuyu-sync/devices/deva/settings.json")).expect("own settings");
+    assert!(!mine.contains("fuyu-plugin"), "{mine}");
+}
+
 fn clip_item(id: &str, text: &str, favorite: bool, note: &str, pin_key: Option<&str>, stamp: Option<&Hlc>) -> crate::clipboard_history::ClipboardHistoryItem {
     let hash = crate::clipboard_history::text_clipboard_hash(text);
     let mut value = json!({

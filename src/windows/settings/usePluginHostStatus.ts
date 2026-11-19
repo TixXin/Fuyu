@@ -25,6 +25,7 @@ export interface PluginStatusV3 {
   kind?: PluginKindV3;
   source?: string;
   undeclared?: { provides?: string[]; client?: string[] };
+  unreachableClients?: string[];
   waitingFor?: string[];
   provides?: string[];
   disabledServices?: string[];
@@ -134,9 +135,10 @@ export function usePluginHostStatus(connect: PluginHostConnector = connectSettin
       onState: (state) => setView((current) => ({ ...current, connection: state })),
     });
     const attached = typeof connection.call === "function";
+    let detach: (() => void) | null = null;
     if (attached) {
       callRef = (method, params, options) => connection.call!(method, params, options);
-      windowServices.attach(proxy);
+      detach = windowServices.attach(proxy);
     }
     const runBisect = attached
       ? async (off: readonly string[]) => {
@@ -146,7 +148,7 @@ export function usePluginHostStatus(connect: PluginHostConnector = connectSettin
       : undefined;
     setView((current) => ({ ...current, bisect: runBisect }));
     return () => {
-      if (attached) windowServices.attach(null);
+      detach?.();
       connection.close();
     };
   }, [connect]);

@@ -65,7 +65,7 @@ test("the user's choices hold: screen sizes and shortcuts stay local, module swi
   }
 });
 
-const OPTIONAL_GROUPS = ["agentPushDelivery", "agentSoundOutput", "collapsedItems", "pluginPages", "qqMail", "screenshotCapture", "translationProvider", "updateChannel"];
+const OPTIONAL_GROUPS = ["agentPushDelivery", "agentSoundOutput", "collapsedItems", "qqMail", "screenshotCapture", "translationProvider", "updateChannel"];
 
 const modeOf = (member) => {
   const [key, field] = member.split("/");

@@ -1,11 +1,12 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { Copy, Database, Globe, LayoutPanelTop, Package, Repeat, RotateCcw, TerminalSquare } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Copy, RotateCcw } from "lucide-react";
 import { commandsV1, type CommandItem, type MarketPluginDetails } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
 import { windowServices } from "../../features/plugin-kernel/services";
 import type { InstalledEntry } from "./pluginEntries";
 import { milliseconds } from "./pluginDisplay";
 import { marketClient } from "./pluginMarketActions";
+import { PluginCapabilities } from "./PluginCapabilities";
 import { PluginCommandRow, type RunBlock } from "./PluginCommandRow";
 import { PluginSchemaForm } from "./PluginSchemaForm";
 import { PluginSettingsSections } from "./PluginSettingsSections";
@@ -13,7 +14,6 @@ import { stateOf } from "./pluginServiceStatus";
 import { PluginWindowRulesGroup } from "./PluginWindowRulesGroup";
 
 const commandsClient = windowServices.get(commandsV1);
-const SENSITIVE_NODE_APIS = new Set(["child_process", "fs", "fs/promises", "worker_threads", "cluster", "vm"]);
 
 export function PluginSettingsTab({ entry }: { entry: InstalledEntry }) {
   const text = useTranslation().settings.pluginsV3.page.detail;
@@ -68,56 +68,23 @@ export function PluginCommandsTab({ entry, stale, onOpenShortcuts }: { entry: In
   );
 }
 
-function Permission({ icon, title, sensitive = false, children }: { icon: ReactNode; title: string; sensitive?: boolean; children?: ReactNode }) {
-  return (
-    <div className={`plugin-perm${sensitive ? " plugin-perm--sensitive" : ""}`}>
-      <span className="plugin-perm__icon" aria-hidden="true">{icon}</span>
-      <b>{title}</b>
-      {children ? <span>{children}</span> : null}
-    </div>
-  );
-}
-
-export function PluginPermissionsTab({ entry }: { entry: InstalledEntry }) {
-  const text = useTranslation().settings.pluginsV3.page.detail;
+export function PluginOverviewExtras({ entry }: { entry: InstalledEntry }) {
   const { locale } = useLocale();
   const [details, setDetails] = useState<MarketPluginDetails | null>(null);
-  const [state, setState] = useState<"loading" | "ready" | "unknown">(entry.market ? "loading" : "unknown");
   useEffect(() => {
     if (!entry.market) return;
     let live = true;
     void marketClient
       .details({ name: entry.id, locale })
-      .then((res) => live && (setDetails(res), setState("ready")))
-      .catch(() => live && setState("unknown"));
+      .then((res) => live && setDetails(res))
+      .catch(() => undefined);
     return () => {
       live = false;
     };
   }, [entry.id, entry.market, locale]);
-  const sensitive = details?.nodeApis.filter((api) => SENSITIVE_NODE_APIS.has(api.replace(/^node:/, ""))) ?? [];
   return (
     <>
-      <h3 className="plugin-page__heading">{text.itCan}</h3>
-      <div className="plugin-card">
-        {state === "loading" ? <p className="plugin-detail__pad">{text.permsLoading}</p> : null}
-        {state === "unknown" ? <p className="plugin-detail__pad">{text.permsUnknown}</p> : null}
-        {details ? (
-          <>
-            <Permission icon={<Globe size={14} strokeWidth={2} />} title={details.network.length > 0 ? text.network : text.noNetwork}>
-              {details.network.length > 0 ? details.network.join("、") : null}
-            </Permission>
-            {details.nodeApis.length > 0 ? (
-              <Permission icon={<TerminalSquare size={14} strokeWidth={2} />} title={sensitive.length > 0 ? text.nodeApisSensitive : text.nodeApis} sensitive={sensitive.length > 0}>
-                {details.nodeApis.join("、")}
-              </Permission>
-            ) : null}
-            {details.slots.length > 0 ? <Permission icon={<LayoutPanelTop size={14} strokeWidth={2} />} title={text.slots}>{details.slots.join("、")}</Permission> : null}
-            {details.provides.length > 0 ? <Permission icon={<Package size={14} strokeWidth={2} />} title={text.provides}>{details.provides.join("、")}</Permission> : null}
-            {details.replaces.length > 0 ? <Permission icon={<Repeat size={14} strokeWidth={2} />} title={text.replaces} sensitive>{details.replaces.join("、")}</Permission> : null}
-          </>
-        ) : null}
-        <Permission icon={<Database size={14} strokeWidth={2} />} title={text.ownData}>{text.ownDataNote}</Permission>
-      </div>
+      {details ? <PluginCapabilities caps={details} /> : null}
       <PluginWindowRulesGroup plugin={entry.plugin} />
     </>
   );

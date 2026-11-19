@@ -1,6 +1,6 @@
 export type PluginPageRowLabel = "off" | "failed" | "paused" | "waiting" | "safe" | "unknown" | "bisect" | "starting" | "stopped" | "waitingRuntime";
 
-export type PluginPageDetailTab = "overview" | "settings" | "commands" | "permissions" | "activity";
+export type PluginPageDetailTab = "overview" | "settings" | "commands" | "activity";
 
 export type SettingsPluginPageText = {
   browseMarket: string;
@@ -38,7 +38,13 @@ export type SettingsPluginPageText = {
     waitingOff: (name: string) => string;
     waitingStarting: (name: string) => string;
     waitingNobody: string;
+    unreachable: (windows: string) => string;
     revoked: string;
+    warned: string;
+    held: (version: string) => string;
+    heldItem: (what: string, list: string) => string;
+    revokedSwitch: string;
+    revokedError: (reasons: string) => string;
     trust: (version: string) => string;
     update: (version: string) => string;
     updateFresh: (version: string) => string;
@@ -51,6 +57,7 @@ export type SettingsPluginPageText = {
     updateNow: string;
     whatsNew: string;
     review: string;
+    reviewUpdate: string;
     turnOn: (name: string) => string;
     uninstall: string;
     remove: string;
@@ -125,18 +132,6 @@ export type SettingsPluginPageText = {
     shortcutsBefore: string;
     shortcutsLink: string;
     shortcutsAfter: string;
-    itCan: string;
-    permsLoading: string;
-    permsUnknown: string;
-    network: string;
-    noNetwork: string;
-    nodeApis: string;
-    nodeApisSensitive: string;
-    provides: string;
-    replaces: string;
-    slots: string;
-    ownData: string;
-    ownDataNote: string;
     windows: string;
     lastError: string;
     noErrors: string;
@@ -232,7 +227,13 @@ export const zhCN: SettingsPluginPageText = {
     waitingOff: (name) => `要用「${name}」，但它现在关着`,
     waitingStarting: (name) => `在等「${name}」准备好`,
     waitingNobody: "要用另一个插件提供的功能，现在还没有插件提供它",
-    revoked: "市场撤销了这个插件，建议卸载",
+    unreachable: (windows) => `界面文件（${windows}）不在浮屿能读的文件夹里，这部分界面不会显示`,
+    revoked: "市场撤销了这个版本，它不能再打开，建议卸载",
+    warned: "市场对这个版本发出了提醒，插件照常运行",
+    held: (version) => `新版本 v${version} 会做更多事，需要你确认后再更新`,
+    heldItem: (what, list) => `${what}：${list}`,
+    revokedSwitch: "市场撤销了这个版本，不能打开",
+    revokedError: (reasons) => `市场撤销了这个版本，不能打开：${reasons}`,
     trust: (version) => `作者换了签名密钥，新版本 v${version} 要你确认是本人后才更新`,
     update: (version) => `有新版本 v${version}`,
     updateFresh: (version) => `v${version} 刚上架，3 天后自动更新`,
@@ -245,6 +246,7 @@ export const zhCN: SettingsPluginPageText = {
     updateNow: "现在更新",
     whatsNew: "看更新内容",
     review: "查看",
+    reviewUpdate: "看看再更新",
     turnOn: (name) => `打开「${name}」`,
     uninstall: "卸载…",
     remove: "从浮屿移除…",
@@ -299,7 +301,7 @@ export const zhCN: SettingsPluginPageText = {
     dismiss: "知道了，不再提示",
   },
   detail: {
-    tabs: { overview: "概览", settings: "设置", commands: "命令与快捷键", permissions: "权限", activity: "运行情况" },
+    tabs: { overview: "概览", settings: "设置", commands: "命令与快捷键", activity: "运行情况" },
     close: "关闭",
     facts: { version: "版本", source: "来源", publisher: "发布者", state: "状态", id: "标识" },
     technical: "细节",
@@ -319,18 +321,6 @@ export const zhCN: SettingsPluginPageText = {
     shortcutsBefore: "所有插件的快捷键也在",
     shortcutsLink: "「快捷键」",
     shortcutsAfter: "页里。",
-    itCan: "它可以",
-    permsLoading: "正在读取它要的权限…",
-    permsUnknown: "这个插件不是从市场装的，读不到它声明的权限。",
-    network: "联网",
-    noNetwork: "不联网",
-    nodeApis: "用 Node 自带的模块",
-    nodeApisSensitive: "能运行程序、读写文件",
-    provides: "给别的插件用",
-    replaces: "接管浮屿的功能",
-    slots: "在岛上和设置里显示",
-    ownData: "存自己的数据",
-    ownDataNote: "它自己的数据目录、系统凭据管理器里它自己的条目",
     windows: "独立窗口",
     lastError: "最近一次出错",
     noErrors: "这次启动以来没有出过错。",
@@ -426,7 +416,13 @@ export const en: SettingsPluginPageText = {
     waitingOff: (name) => `Needs ${name}, which is turned off`,
     waitingStarting: (name) => `Waiting for ${name} to be ready`,
     waitingNobody: "Needs a feature from another plugin, and no plugin offers it yet",
-    revoked: "The market revoked this plugin; uninstalling is recommended",
+    unreachable: (windows) => `Its window files (${windows}) are outside the folders Fuyu can read, so those parts won't show`,
+    revoked: "The market revoked this version; it can't be turned on again, and uninstalling is recommended",
+    warned: "The market flagged this version; the plugin keeps running",
+    held: (version) => `v${version} does more than this version, so it waits for you to confirm the update`,
+    heldItem: (what, list) => `${what}: ${list}`,
+    revokedSwitch: "The market revoked this version, so it can't be turned on",
+    revokedError: (reasons) => `The market revoked this version, so it can't be turned on: ${reasons}`,
     trust: (version) => `The author changed their signing key; confirm it's really them before v${version} installs`,
     update: (version) => `v${version} is available`,
     updateFresh: (version) => `v${version} just landed; it auto-updates in 3 days`,
@@ -439,6 +435,7 @@ export const en: SettingsPluginPageText = {
     updateNow: "Update now",
     whatsNew: "What's new",
     review: "Review",
+    reviewUpdate: "Review update",
     turnOn: (name) => `Turn on ${name}`,
     uninstall: "Uninstall…",
     remove: "Remove from Fuyu…",
@@ -493,7 +490,7 @@ export const en: SettingsPluginPageText = {
     dismiss: "Got it, don't show again",
   },
   detail: {
-    tabs: { overview: "Overview", settings: "Settings", commands: "Commands & shortcuts", permissions: "Permissions", activity: "Activity" },
+    tabs: { overview: "Overview", settings: "Settings", commands: "Commands & shortcuts", activity: "Activity" },
     close: "Close",
     facts: { version: "Version", source: "Source", publisher: "Publisher", state: "State", id: "ID" },
     technical: "Details",
@@ -513,18 +510,6 @@ export const en: SettingsPluginPageText = {
     shortcutsBefore: "All plugin shortcuts are also on the ",
     shortcutsLink: "Shortcuts",
     shortcutsAfter: " page.",
-    itCan: "It can",
-    permsLoading: "Reading the permissions it asks for…",
-    permsUnknown: "This plugin wasn't installed from the market, so its declared permissions can't be read.",
-    network: "Use the network",
-    noNetwork: "No network",
-    nodeApis: "Use Node's built-in modules",
-    nodeApisSensitive: "Can run programs and read or write files",
-    provides: "Offer services",
-    replaces: "Take over Fuyu features",
-    slots: "Show on the island and in settings",
-    ownData: "Keep its own data",
-    ownDataNote: "Its data folder and its own entries in the system credential store",
     windows: "Separate windows",
     lastError: "Last error",
     noErrors: "No errors since Fuyu started.",

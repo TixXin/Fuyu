@@ -27,6 +27,20 @@ const OFFICIAL_PLUGINS = [
 const scratch = mkdtempSync(join(tmpdir(), "fuyu-official-plugins-v3-"));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 
+function withoutAllowedColors(css) {
+  return css
+    .replace(/light-dark\([^()]*\)/gi, "light-dark()")
+    .replace(/var\(\s*(--fuyu-plugin-(?:warning|danger))\s*,[^()]*\)/gi, "var($1)");
+}
+
+function declaredProperties(cssFiles) {
+  const names = new Set();
+  for (const cssFile of cssFiles) {
+    for (const [, name] of readFileSync(cssFile, "utf8").matchAll(/(--[\w-]+)\s*:/g)) names.add(name);
+  }
+  return names;
+}
+
 function collectCssFiles(dir) {
   const found = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -56,7 +70,7 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
     const checkResult = await check(dir, { official: true, allowExperimental: false });
     assert.equal(checkResult.ok, true, `${expectedId} check errors: ${JSON.stringify(checkResult.errors)}`);
     assert.deepEqual(checkResult.errors, [], `${expectedId} check errors must be empty`);
-    if (slug === "launcher") {
+    if (slug === "launcher" || slug === "system-monitor") {
       assert.ok(
         checkResult.warnings.every((item) => item.code === "review:sensitive"),
         `${expectedId} check warnings must only contain review:sensitive notices, got ${JSON.stringify(checkResult.warnings)}`,
@@ -78,10 +92,7 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
     assert.ok(packed.file.endsWith(".fuyu"));
     assert.ok(statSync(packed.file).size > 0);
     if (slug === "system-monitor") {
-      assert.ok(
-        Array.isArray(packed.manifest.fuyu.nodeApis) && packed.manifest.fuyu.nodeApis.includes("os"),
-        `@fuyu/system-monitor built manifest must declare "os" in fuyu.nodeApis, got ${JSON.stringify(packed.manifest.fuyu.nodeApis)}`,
-      );
+      assert.deepEqual(packed.manifest.fuyu.nodeApis, ["child_process", "fs", "os", "path"]);
     }
     if (slug === "launcher") {
       assert.deepEqual(packed.manifest.fuyu.nodeApis, ["child_process", "fs", "os", "path"]);
@@ -99,16 +110,17 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
 
     const cssFiles = collectCssFiles(dir);
     assert.ok(cssFiles.length > 0, `${expectedId} should include at least one .css stylesheet`);
+    const ownProperties = declaredProperties(cssFiles);
     for (const cssFile of cssFiles) {
       const css = readFileSync(cssFile, "utf8");
       assert.doesNotMatch(
-        css,
+        withoutAllowedColors(css),
         /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i,
-        `${expectedId} (${cssFile}) must not hardcode #hex, rgb(), or hsl() colors`,
+        `${expectedId} (${cssFile}) must not hardcode #hex, rgb(), or hsl() colors outside light-dark() and warning/danger fallbacks`,
       );
       const vars = [...css.matchAll(/var\(\s*(--[\w-]+)/g)].map(([, name]) => name);
-      assert.ok(vars.length > 0, `${expectedId} (${cssFile}) should use --fuyu-plugin-* theme variables`);
-      const invalidVars = vars.filter((name) => !SLOT_THEME.includes(name));
+      assert.ok(vars.some((name) => SLOT_THEME.includes(name)), `${expectedId} (${cssFile}) should use --fuyu-plugin-* theme variables`);
+      const invalidVars = vars.filter((name) => !SLOT_THEME.includes(name) && !ownProperties.has(name));
       assert.deepEqual(invalidVars, [], `${expectedId} (${cssFile}) uses non-SLOT_THEME variables: ${invalidVars.join(", ")}`);
     }
 
@@ -137,6 +149,7 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
     const installed = installPackage(packed.file, {
       dir: hostDir,
       source: "market",
+      official: true,
       expectedSha256: packed.sha256,
     });
     assert.equal(installed.id, expectedId);
@@ -214,42 +227,44 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
       assert.equal(status.undeclared, undefined, `${id} must have no undeclared capabilities: ${JSON.stringify(status.undeclared)}`);
     }
 
-    const initialState = await host.ctx.clients.call("@fuyu/system-monitor", "getState", { locale: "zh-CN" });
-    assert.equal(initialState.sampling, true);
-    assert.ok(initialState.sample !== null);
-    assert.ok(initialState.sample.cpuPercent >= 0 && initialState.sample.cpuPercent <= 100);
-    assert.ok(Array.isArray(initialState.sample.cores) && initialState.sample.cores.length > 0);
-    assert.ok(initialState.sample.cores.every((pct) => pct >= 0 && pct <= 100));
-    assert.ok(initialState.sample.memoryTotalBytes > 0);
-    assert.ok(initialState.sample.memoryUsedBytes >= 0 && initialState.sample.memoryUsedBytes <= initialState.sample.memoryTotalBytes);
-    assert.ok(initialState.sample.memoryPercent >= 0 && initialState.sample.memoryPercent <= 100);
-    assert.ok(initialState.sample.uptimeSec >= 0);
-    assert.ok(initialState.sample.hostname.length > 0);
-    assert.ok(initialState.sample.arch.length > 0);
-    assert.equal(host.timers()["@fuyu/system-monitor"], 1);
+    const sysmon = (method, params) => host.ctx.clients.call("@fuyu/system-monitor", method, params);
+    const sysmonTimers = () => host.timers()["@fuyu/system-monitor"] ?? 0;
+    const expectedPlatform = { darwin: "macos", win32: "windows" }[process.platform] ?? "other";
+    const initial = await sysmon("getState", { locale: "zh-CN" });
+    assert.equal(initial.sampling, true);
+    const { sample } = initial;
+    assert.ok(sample.cpuPercent >= 0 && sample.cpuPercent <= 100);
+    assert.ok(sample.cores.length > 0 && sample.cores.every((pct) => pct >= 0 && pct <= 100));
+    assert.ok(sample.memoryTotalBytes > 0 && sample.memoryUsedBytes >= 0 && sample.memoryUsedBytes <= sample.memoryTotalBytes);
+    assert.ok(sample.memoryPercent >= 0 && sample.memoryPercent <= 100 && sample.uptimeSec >= 0);
+    assert.ok(sample.hostname.length > 0 && sample.arch.length > 0);
+    assert.deepEqual([initial.platform, sample.platform], [expectedPlatform, expectedPlatform]);
+    assert.equal(initial.features.cpuTemperature, expectedPlatform === "windows");
+    assert.equal(sysmonTimers(), 1);
 
-    const idleState = await host.ctx.clients.call("@fuyu/system-monitor", "setConfig", {
-      showOnBar: false,
-      intervalMs: 5000,
-    });
-    assert.equal(idleState.sampling, false);
-    assert.equal(idleState.config.showOnBar, false);
-    assert.equal(idleState.config.intervalMs, 5000);
-    assert.equal(host.timers()["@fuyu/system-monitor"] ?? 0, 0);
+    const idle = await sysmon("setConfig", { showOnBar: false, intervalMs: 5000 });
+    assert.equal(idle.sampling, true, "CPU is recorded every 5 s even with nothing shown");
+    assert.deepEqual([idle.config.showOnBar, idle.config.intervalMs, idle.config.layout], [false, 5000, "auto"]);
+    assert.equal(sysmonTimers(), 1);
 
-    const watchingState = await host.ctx.clients.call("@fuyu/system-monitor", "watchPage", {
-      viewerId: "page-1",
-      active: true,
-    });
-    assert.equal(watchingState.sampling, true);
-    assert.equal(host.timers()["@fuyu/system-monitor"], 1);
-
-    const closedState = await host.ctx.clients.call("@fuyu/system-monitor", "watchPage", {
-      viewerId: "page-1",
-      active: false,
-    });
-    assert.equal(closedState.sampling, false);
-    assert.equal(host.timers()["@fuyu/system-monitor"] ?? 0, 0);
+    const watching = await sysmon("watchPage", { viewerId: "page-1", active: true });
+    assert.ok(watching.sampling && sysmonTimers() >= 1);
+    for (const key of ["cpuTemperatureC", "gpu", "network", "battery", "programs"]) {
+      const { status } = watching.sample[key];
+      assert.ok(["ok", "pending", "unsupported", "absent", "error"].includes(status), `${key}: ${status}`);
+      if (expectedPlatform === "other") assert.equal(status, "unsupported", key);
+    }
+    if (expectedPlatform === "macos") {
+      assert.equal(watching.sample.cpuTemperatureC.status, "unsupported");
+      assert.ok(watching.sample.programs.value.byMemory.length > 0);
+    }
+    if (expectedPlatform === "windows") assert.equal(watching.sample.programs.status, "pending");
+    const history = await sysmon("getHistory");
+    assert.equal(history.points.at(-1).cpu, watching.sample.cpuPercent);
+    const closed = await sysmon("watchPage", { viewerId: "page-1", active: false });
+    assert.equal(closed.sampling, true);
+    if (expectedPlatform !== "windows") assert.equal(sysmonTimers(), 1);
+    assert.equal((await sysmon("getHistory")).points.length, history.points.length, "closing the page keeps the curve");
 
     if (process.platform === "darwin" || process.platform === "win32") {
       const launcherInitial = await host.ctx.clients.call("@fuyu/launcher", "getState");

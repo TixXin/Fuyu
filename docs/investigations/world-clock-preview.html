@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>世界时钟改版</title>
+<style>
+:root { --page:#f3f3f5; --ink:#1d1d1f; --muted:#6e6e73; --line:#dcdce1; --card:#fff; --accent:#0a84ff; --island:#111214; --itext:#f2f2f2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page:#1b1b1d; --ink:#ececf0; --muted:#9a9aa2; --line:#33333a; --card:#252528; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--page); color:var(--ink); font:14px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+main { max-width:1180px; margin:0 auto; padding:28px 16px 60px; }
+h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:16px; margin:32px 0 10px; } h3 { font-size:14px; margin:0 0 8px; }
+.lead { color:var(--muted); margin:0; }
+.row { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr)); gap:20px; align-items:start; }
+.note { color:var(--muted); font-size:12.5px; margin:6px 0 0; }
+.island { background:var(--island); color:var(--itext); border-radius:22px; padding:14px 18px; font-variant-numeric:tabular-nums; min-height:250px; }
+.dim { opacity:.55; }
+.form { display:flex; gap:6px; margin-bottom:10px; }
+.form span { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:7px; padding:3px 8px; font-size:12px; }
+.form .grow { flex:1; opacity:.5; }
+.old li { display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+ul { list-style:none; margin:0; padding:0; }
+.badge { font-size:10.5px; padding:0 5px; border-radius:4px; background:rgba(255,255,255,.1); margin-left:4px; }
+.mini { font-size:11px; padding:1px 7px; border-radius:6px; background:rgba(255,255,255,.1); margin-left:5px; }
+.mini.on { background:#0a84ff; }
+.big { font-size:20px; font-weight:600; }
+.new li { display:grid; grid-template-columns:22px minmax(0,1fr) auto; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+.new li:last-child { border-bottom:0; }
+.new .name { font-size:14px; font-weight:500; }
+.new .sub { font-size:11.5px; opacity:.55; }
+.new .time { font-size:24px; font-weight:600; letter-spacing:-.5px; text-align:right; }
+.new .time small { font-size:12px; font-weight:500; opacity:.6; margin-left:3px; }
+.new .day { text-align:right; font-size:11px; opacity:.55; }
+.icon { font-size:15px; opacity:.8; text-align:center; }
+.new li.local .name::after { content:"本机"; font-size:10px; padding:0 5px; border-radius:4px; background:rgba(255,255,255,.12); margin-left:6px; }
+.bar { display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 16px; border-radius:16px; background:var(--island); color:var(--itext); font-size:12.5px; font-variant-numeric:tabular-nums; }
+.bar b { font-weight:600; }
+.panel { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+.group { padding:10px 0; border-top:1px solid var(--line); }
+.group:first-of-type { border-top:0; padding-top:0; }
+.group > b { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:600; }
+.field { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:5px 0; flex-wrap:wrap; }
+.field select { font:inherit; padding:3px 6px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--ink); max-width:100%; }
+.seg { display:inline-flex; border:1px solid var(--line); border-radius:7px; overflow:hidden; flex-wrap:wrap; }
+.seg button { all:unset; cursor:pointer; padding:3px 9px; font-size:12.5px; }
+.seg button.on { background:var(--accent); color:#fff; }
+.cities { border:1px solid var(--line); border-radius:8px; }
+.cities div { display:flex; align-items:center; gap:8px; padding:6px 8px; border-top:1px solid var(--line); font-size:13px; }
+.cities div:first-child { border-top:0; }
+.cities .grip { color:var(--muted); cursor:grab; }
+.cities .n { flex:1; } .cities .z { color:var(--muted); font-size:11.5px; }
+.cities .star { cursor:pointer; color:var(--muted); } .cities .star.on { color:#f5a623; }
+.cities .x { color:var(--muted); cursor:pointer; }
+.search { display:flex; gap:6px; margin-top:8px; }
+.search input { flex:1; font:inherit; padding:4px 8px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--ink); min-width:0; }
+.search button { font:inherit; padding:3px 10px; border-radius:6px; border:0; background:var(--accent); color:#fff; }
+.tag { font-size:11px; color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<h1>世界时钟：设置补完整，岛上默认不显示时区</h1>
+<p class="lead">示意图。右边的设置可以点，岛上和收起条会跟着变。计划全文见 <code>docs/investigations/world-clock-plan.md</code>。</p>
+
+<h2>1. 岛上的页面</h2>
+<div class="row">
+  <div>
+    <h3>现在 1.0.0</h3>
+    <div class="island old">
+      <div class="form"><span>东京 (TYO) ▾</span><span class="grow">或输入时区（如 Europe/Berlin）</span><span>添加</span></div>
+      <ul>
+        <li><div><div>东京 <span class="badge">白天</span></div><div class="dim" style="font-size:11.5px">今天 · 快 1 小时</div></div><div><span class="big">15:05</span><span class="mini on">已上岛</span><span class="mini">移除</span></div></li>
+        <li><div><div>伦敦 <span class="badge">白天</span></div><div class="dim" style="font-size:11.5px">今天 · 慢 8 小时</div></div><div><span class="big">06:05</span><span class="mini">上岛</span><span class="mini">移除</span></div></li>
+        <li><div><div>纽约 <span class="badge">夜晚</span></div><div class="dim" style="font-size:11.5px">今天 · 慢 13 小时</div></div><div><span class="big">01:05</span><span class="mini">上岛</span><span class="mini">移除</span></div></li>
+      </ul>
+    </div>
+    <p class="note">岛上有时区下拉框和「输入时区」框，每行带按钮；时间每 15 秒才更新一次。</p>
+  </div>
+  <div>
+    <h3>改后 1.1.0（按右下的设置实时变化）</h3>
+    <div class="island new"><ul id="page"></ul></div>
+    <p class="note">岛上只看时间：没有表单、按钮和时区名；增删排序都在设置里。</p>
+  </div>
+</div>
+
+<h2>2. 收起条</h2>
+<div style="display:grid;gap:10px">
+  <div><span class="tag" style="display:inline-block;width:90px">现在</span><span class="bar"><b>TYO</b> 15:05</span></div>
+  <div><span class="tag" style="display:inline-block;width:90px">改后</span><span class="bar" id="bar"></span></div>
+</div>
+
+<h2>3. 设置（插件详情里的「设置」页）</h2>
+<div class="row">
+  <div class="panel">
+    <div class="group"><b>城市</b>
+      <div class="cities" id="cities"></div>
+      <div class="search"><input placeholder="搜索城市或时区，如 柏林 / Berlin / Europe/Berlin" /><button>添加</button></div>
+      <div class="field"><span>在最上面显示本机时间</span><input type="checkbox" id="local" /></div>
+      <p class="note">拖 ⋮⋮ 排序，点名字改显示名，★ 是关注城市（收起条显示它）。</p>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="group"><b>显示</b>
+      <div class="field"><span>时间格式</span><span class="seg" data-k="fmt"><button data-v="sys" class="on">跟随系统</button><button data-v="24">24 小时</button><button data-v="12">12 小时</button></span></div>
+      <div class="field"><span>显示秒</span><input type="checkbox" id="sec" /></div>
+      <div class="field"><span>日期</span><select id="date"><option value="none">不显示</option><option value="rel" selected>不是今天时显示「明天」「昨天」</option><option value="full">总是显示日期和星期</option></select></div>
+      <div class="field"><span>时差</span><select id="diff"><option value="long" selected>快 1 小时</option><option value="short">+1</option><option value="none">不显示</option></select></div>
+      <div class="field"><span>昼夜标记</span><input type="checkbox" id="dn" checked /></div>
+      <div class="field"><span>显示时区名</span><input type="checkbox" id="tz" /></div>
+    </div>
+    <div class="group"><b>收起条</b>
+      <div class="field"><span>在收起条显示关注城市</span><input type="checkbox" id="inbar" checked /></div>
+      <div class="field"><span>收起条样式</span><select id="barstyle"><option value="name" selected>城市名 + 时间</option><option value="code">三字码 + 时间</option><option value="time">只有时间</option></select></div>
+    </div>
+  </div>
+</div>
+</main>
+<script>
+const now = new Date();
+let cities = [
+  { zh:"东京", code:"TYO", tz:"Asia/Tokyo", star:true },
+  { zh:"伦敦", code:"LON", tz:"Europe/London" },
+  { zh:"纽约", code:"NYC", tz:"America/New_York" },
+  { zh:"旧金山", code:"SFO", tz:"America/Los_Angeles" },
+];
+const st = { fmt:"sys", sec:false, date:"rel", diff:"long", dn:true, tz:false, local:false, inbar:true, barstyle:"name" };
+function parts(tz, d){ const f=new Intl.DateTimeFormat("en-CA",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23",weekday:"short"}).formatToParts(d); const m={}; f.forEach(p=>m[p.type]=p.value); return m; }
+function offsetMin(tz,d){ const p=parts(tz,d); return (Date.UTC(+p.year,p.month-1,+p.day,+p.hour,+p.minute)-d.getTime()+d.getSeconds()*1000+d.getMilliseconds())/60000; }
+function fmtTime(tz,d){ const p=parts(tz,d); let h=+p.hour, suf=""; const twelve = st.fmt==="12"; if(twelve){ suf = h<12?"上午":"下午"; h = h%12||12; } let s=(twelve?String(h):String(h).padStart(2,"0"))+":"+p.minute+(st.sec?":"+p.second:""); return {s, suf, h:+p.hour, p}; }
+function render(){
+  const d=new Date(); const localOff=-d.getTimezoneOffset();
+  const rows=[]; if(st.local) rows.push({zh:"本机",tz:Intl.DateTimeFormat().resolvedOptions().timeZone,local:true});
+  rows.push(...cities);
+  document.getElementById("page").innerHTML = rows.map(c=>{
+    const t=fmtTime(c.tz,d); const off=offsetMin(c.tz,d); const diffH=Math.round((off-localOff)/30)/2;
+    const lp=parts(Intl.DateTimeFormat().resolvedOptions().timeZone,d); const dayDiff=Math.sign(Date.UTC(+t.p.year,t.p.month-1,+t.p.day)-Date.UTC(+lp.year,lp.month-1,+lp.day));
+    const subs=[];
+    if(st.date==="rel" && dayDiff) subs.push(dayDiff>0?"明天":"昨天");
+    if(st.date==="full") subs.push(`${+t.p.month}月${+t.p.day}日 ${{Mon:"周一",Tue:"周二",Wed:"周三",Thu:"周四",Fri:"周五",Sat:"周六",Sun:"周日"}[t.p.weekday]}`);
+    if(!c.local && st.diff!=="none") subs.push(diffH===0?"与本机相同":st.diff==="short"?(diffH>0?"+":"")+diffH:(diffH>0?`快 ${diffH} 小时`:`慢 ${-diffH} 小时`));
+    if(st.tz){ const u=off/60; subs.push(`${c.tz} · UTC${u>=0?"+":""}${u}`); }
+    const icon = st.dn ? (t.h>=6&&t.h<18?"☀︎":"☾") : "";
+    return `<li class="${c.local?"local":""}"><span class="icon">${icon}</span><div><div class="name">${c.zh}</div>${subs.length?`<div class="sub">${subs.join(" · ")}</div>`:""}</div><div class="time">${t.suf?`<small>${t.suf}</small> `:""}${t.s}</div></li>`;
+  }).join("");
+  const star=cities.find(c=>c.star)||cities[0]; const bt=fmtTime(star.tz,d);
+  const bar=document.getElementById("bar");
+  if(!st.inbar){ bar.textContent="（不显示）"; bar.style.opacity=.5; } else { bar.style.opacity=1; bar.innerHTML = (st.barstyle==="name"?`<b>${star.zh}</b> `:st.barstyle==="code"?`<b>${star.code}</b> `:"")+(bt.suf?bt.suf+" ":"")+bt.s; }
+  document.getElementById("cities").innerHTML = cities.map((c,i)=>`<div><span class="grip">⋮⋮</span><span class="n">${c.zh}</span><span class="z">${c.tz}</span><span class="star ${c.star?"on":""}" data-i="${i}" title="关注城市">★</span><span class="x" data-x="${i}" title="删除">✕</span></div>`).join("");
+}
+document.querySelectorAll(".seg").forEach(seg=>seg.addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; seg.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); st[seg.dataset.k]=b.dataset.v; render(); }));
+["sec","dn","tz","local","inbar"].forEach(id=>document.getElementById(id).addEventListener("change",e=>{st[id]=e.target.checked;render();}));
+["date","diff","barstyle"].forEach(id=>document.getElementById(id).addEventListener("change",e=>{st[id]=e.target.value;render();}));
+document.getElementById("cities").addEventListener("click",e=>{ const s=e.target.dataset.i, x=e.target.dataset.x; if(s!==undefined){ cities.forEach((c,i)=>c.star=i==s); render(); } if(x!==undefined && cities.length>1){ cities.splice(+x,1); if(!cities.some(c=>c.star)) cities[0].star=true; render(); } });
+render(); setInterval(render,1000);
+</script>
+</body>
+</html>

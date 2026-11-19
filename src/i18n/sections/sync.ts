@@ -264,10 +264,6 @@ export const zhCN: SyncText = {
         title: "收起条项目与顺序",
         description: "默认关闭：收起条可能包含仅在某一台电脑安装的第三方插件或平台专属项。",
       },
-      pluginPages: {
-        title: "插件岛上页面顺序与隐藏",
-        description: "默认关闭：各台电脑安装的插件集合不同，页面列表未必一致。",
-      },
       updateChannel: {
         title: "更新通道（稳定版 / 测试版）",
         description: "默认关闭：便于在一台电脑尝鲜测试版，另一台主力机保持稳定版。",
@@ -487,10 +483,6 @@ export const en: SyncText = {
       collapsedItems: {
         title: "Collapsed bar items and order",
         description: "Off by default: the bar can include plugins or items only available on one computer.",
-      },
-      pluginPages: {
-        title: "Plugin island page order and visibility",
-        description: "Off by default: different computers may have different plugins installed.",
       },
       updateChannel: {
         title: "Update channel (Stable / Beta)",

@@ -6,7 +6,7 @@ import NodeFs from "@cordisjs/fs-node";
 import Loader from "@cordisjs/loader";
 import { Context } from "cordis";
 import { HOST_SHARED_MODULES } from "../protocol.mjs";
-import { builtinMounts, readBuiltins } from "./builtins.mjs";
+import { builtinMounts, essentialServices, readBuiltins } from "./builtins.mjs";
 import { Clients } from "./clients.mjs";
 import { Commands } from "./commands.mjs";
 import { DATA_DIR, installDataDir } from "./data.mjs";
@@ -81,7 +81,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   const dataRoot = dataDir ?? join(dir, DATA_DIR);
   installDataDir(ctx, dataRoot);
   await ctx.plugin(Clients, { root: dir, mounts: builtinMounts(catalog) });
-  const services = new Services();
+  const services = new Services({ essential: essentialServices(catalog?.plugins) });
   services.install(ctx);
   const rust = new RustBridge(usage);
   rust.install(ctx);
@@ -113,6 +113,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     usage: report,
     services: () => services.list(),
     clients: () => ctx.clients.list(),
+    unreachableClients: () => ctx.clients.unreachable(),
     undeclaredCommands: (plugin) => commands.undeclaredOf(plugin),
     undeclaredNetwork: (plugin) => http.undeclaredOf(plugin),
     subscribe: (listener) => [
@@ -132,6 +133,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     fault: (plugin, error) => gate.fault(plugin, error),
     bisect: (off) => gate.bisect(off),
     clients: (window) => ctx.clients.list(window),
+    clientRoots: (entries) => ctx.clients.roots(entries),
     timers: () => timers.counts(),
     rustListeners: () => rust.counts(),
     watchClients: (onChange) => ctx.clients.watch(onChange),

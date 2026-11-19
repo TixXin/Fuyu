@@ -1,251 +1,395 @@
 .fuyu-sysmon,
-.fuyu-sysmon-settings {
+.fuyu-sysmon-bar {
+  color-scheme: dark;
+  --sysmon-cpu: light-dark(#1a73e8, #4da3ff);
+  --sysmon-gpu: light-dark(#1e9e4a, #34c759);
+  --sysmon-memory: light-dark(#0a84c6, #5ac8fa);
+  --sysmon-down: light-dark(#0a84c6, #64d2ff);
+  --sysmon-up: light-dark(#c76a00, #ff9f0a);
+  --sysmon-warm: var(--fuyu-plugin-warning, #ffd166);
+  --sysmon-hot: var(--fuyu-plugin-danger, #ff7a7a);
+  --sysmon-text: var(--fuyu-plugin-text, currentColor);
+  --sysmon-muted: color-mix(in srgb, var(--sysmon-text) 54%, transparent);
+  --sysmon-track: color-mix(in srgb, var(--sysmon-text) 10%, transparent);
+  --sysmon-hover: color-mix(in srgb, var(--sysmon-text) 6%, transparent);
+  --sysmon-ease: 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:where(.island-light) .fuyu-sysmon,
+:where(.island-light) .fuyu-sysmon-bar {
+  color-scheme: light;
+}
+
+.fuyu-sysmon {
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 22px;
+  padding: 2px 2px 0;
+  overflow: hidden;
+  color: var(--sysmon-text);
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+.fuyu-sysmon *,
+.fuyu-sysmon *::before {
+  box-sizing: border-box;
+}
+
+.fuyu-sysmon--no-programs {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.fuyu-sysmon--single {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+}
+
+.fuyu-sysmon--single.fuyu-sysmon--no-programs {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.fuyu-sysmon--waiting {
+  display: grid;
+  place-items: center;
+}
+
+.fuyu-sysmon__waiting {
+  margin: 0;
+  color: var(--sysmon-muted);
+}
+
+.fuyu-sysmon__stats {
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  min-width: 0;
-  padding: 10px;
-  font-family: var(--fuyu-plugin-font);
-  font-size: 13px;
-  color: var(--fuyu-plugin-text);
+  padding-bottom: 4px;
 }
 
-.fuyu-sysmon-settings {
-  border: 1px solid var(--fuyu-plugin-border);
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
-}
-
-.fuyu-sysmon__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-width: 0;
-}
-
-.fuyu-sysmon__head {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  min-width: 0;
-}
-
-.fuyu-sysmon__title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fuyu-sysmon__sub {
-  font-size: 12px;
-  color: var(--fuyu-plugin-text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fuyu-sysmon__cards {
+.fuyu-sysmon__pair {
+  flex: 3 1 0;
+  min-height: 84px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.fuyu-sysmon__pair--solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.fuyu-sysmon-unit {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(14px, 1.6fr) minmax(18px, 1fr);
+  gap: 6px;
+}
+
+.fuyu-sysmon-unit--no-detail {
+  grid-template-rows: auto minmax(14px, 1fr);
+}
+
+.fuyu-sysmon--single .fuyu-sysmon__pair {
+  flex: 0 0 auto;
+}
+
+.fuyu-sysmon--single .fuyu-sysmon-unit {
+  grid-template-rows: auto 36px 20px;
+}
+
+.fuyu-sysmon--single .fuyu-sysmon-unit--no-detail {
+  grid-template-rows: auto 62px;
+}
+
+.fuyu-sysmon--single .fuyu-sysmon__stats {
+  gap: 8px;
+  padding-bottom: 0;
+}
+
+.fuyu-sysmon-gauge {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
   gap: 8px;
 }
 
-.fuyu-sysmon__card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.fuyu-sysmon-gauge__text {
   min-width: 0;
-  padding: 8px 10px;
-  border: 1px solid var(--fuyu-plugin-border);
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
+  display: grid;
+  gap: 1px;
 }
 
-.fuyu-sysmon__card-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.fuyu-sysmon__label {
-  font-size: 12px;
+.fuyu-sysmon-gauge__value {
+  font-size: 19px;
   font-weight: 600;
-  color: var(--fuyu-plugin-text-secondary);
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
-.fuyu-sysmon__value {
-  font-size: 16px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.fuyu-sysmon-gauge__unit {
+  font-size: 12px;
+  color: var(--sysmon-muted);
 }
 
-.fuyu-sysmon__track,
-.fuyu-sysmon__core-track {
-  width: 100%;
-  height: 6px;
-  overflow: hidden;
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface-hover);
-}
-
-.fuyu-sysmon__core-track {
-  height: 4px;
-}
-
-.fuyu-sysmon__fill {
-  height: 100%;
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-accent);
-}
-
-.fuyu-sysmon__detail {
+.fuyu-sysmon-gauge__value small {
+  margin-left: 6px;
+  color: var(--sysmon-muted);
   font-size: 11px;
-  color: var(--fuyu-plugin-text-muted);
-  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.fuyu-sysmon-gauge__extra {
   overflow: hidden;
+  color: var(--sysmon-muted);
+  font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.fuyu-sysmon__block {
+.fuyu-sysmon-ring {
+  flex: 0 0 auto;
+}
+
+.fuyu-sysmon-ring__track,
+.fuyu-sysmon-ring__arc {
+  fill: none;
+  stroke-width: 3;
+}
+
+.fuyu-sysmon-ring__track {
+  stroke: var(--sysmon-track);
+}
+
+.fuyu-sysmon-ring__arc {
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--sysmon-ease), stroke var(--sysmon-ease);
+}
+
+.fuyu-sysmon-ring--empty .fuyu-sysmon-ring__arc {
+  visibility: hidden;
+}
+
+.fuyu-sysmon-ring__label {
+  fill: var(--sysmon-muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.fuyu-sysmon-ring--cpu .fuyu-sysmon-ring__arc { stroke: var(--sysmon-cpu); }
+.fuyu-sysmon-ring--gpu .fuyu-sysmon-ring__arc { stroke: var(--sysmon-gpu); }
+.fuyu-sysmon-ring--memory .fuyu-sysmon-ring__arc { stroke: var(--sysmon-memory); }
+.fuyu-sysmon-ring--warm .fuyu-sysmon-ring__arc { stroke: var(--sysmon-warm); }
+.fuyu-sysmon-ring--hot .fuyu-sysmon-ring__arc { stroke: var(--sysmon-hot); }
+
+.fuyu-sysmon-spark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.fuyu-sysmon-spark__line {
+  fill: none;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.fuyu-sysmon-spark__fill {
+  opacity: 0.16;
+}
+
+.fuyu-sysmon-spark--cpu { --spark: var(--sysmon-cpu); }
+.fuyu-sysmon-spark--gpu { --spark: var(--sysmon-gpu); }
+.fuyu-sysmon-spark--down { --spark: var(--sysmon-down); }
+.fuyu-sysmon-spark--up { --spark: var(--sysmon-up); }
+.fuyu-sysmon-spark__line { stroke: var(--spark); }
+.fuyu-sysmon-spark__fill { fill: var(--spark); }
+
+.fuyu-sysmon-cores {
+  min-height: 0;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
+  align-items: stretch;
 }
 
-.fuyu-sysmon__heading {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--fuyu-plugin-text-secondary);
+.fuyu-sysmon-cores__core {
+  flex: 1 1 0;
+  min-width: 1px;
+  max-width: 14px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--sysmon-track);
 }
 
-.fuyu-sysmon__cores {
+.fuyu-sysmon-cores__core > span {
+  width: 100%;
+  border-radius: 2px;
+  background: var(--sysmon-cpu);
+  transition: height var(--sysmon-ease);
+}
+
+.fuyu-sysmon-engines {
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
-  max-height: 112px;
-  overflow-y: auto;
+  gap: 6px;
 }
 
-.fuyu-sysmon__core {
+.fuyu-sysmon-engine {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 2px;
+}
+
+.fuyu-sysmon-engine__bar {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 4px 6px;
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
+  align-items: flex-end;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--sysmon-track);
 }
 
-.fuyu-sysmon__core-meta {
+.fuyu-sysmon-engine__bar > span {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 2px;
+  background: var(--sysmon-gpu);
+  transition: height var(--sysmon-ease);
+}
+
+.fuyu-sysmon-engine__name {
+  overflow: hidden;
+  color: var(--sysmon-muted);
+  font-size: 9.5px;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.fuyu-sysmon-line {
+  min-height: 22px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-  font-size: 10px;
-  font-variant-numeric: tabular-nums;
+  gap: 8px;
+  font-size: 12.5px;
 }
 
-.fuyu-sysmon__core-id {
-  color: var(--fuyu-plugin-text-muted);
-}
-
-.fuyu-sysmon__core-pct {
+.fuyu-sysmon-line__value {
+  flex: 0 0 auto;
   font-weight: 600;
-  color: var(--fuyu-plugin-text-secondary);
-}
-
-.fuyu-sysmon__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--fuyu-plugin-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.fuyu-sysmon__button {
-  max-width: 100%;
-  padding: 5px 12px;
-  border: none;
-  border-radius: var(--fuyu-plugin-radius);
-  font: inherit;
-  color: var(--fuyu-plugin-on-accent);
-  background: var(--fuyu-plugin-accent);
-  cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.fuyu-sysmon__button--secondary {
-  border: 1px solid var(--fuyu-plugin-border);
-  color: var(--fuyu-plugin-text);
-  background: var(--fuyu-plugin-surface-hover);
-}
-
-.fuyu-sysmon__note {
-  margin: 0;
+.fuyu-sysmon-line__value small,
+.fuyu-sysmon-line__percent {
+  color: var(--sysmon-muted);
   font-size: 12px;
-  color: var(--fuyu-plugin-text-muted);
+  font-weight: 600;
 }
 
-.fuyu-sysmon-bar {
-  display: inline-flex;
-  align-items: center;
-  max-width: 124px;
-  padding: 1px 6px;
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
-  color: var(--fuyu-plugin-text);
-  font-family: var(--fuyu-plugin-font);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
+.fuyu-sysmon-line__percent {
+  flex: 0 0 34px;
+  text-align: right;
+}
+
+.fuyu-sysmon-meter {
+  flex: 1 1 auto;
+  height: 5px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  border-radius: 999px;
+  background: var(--sysmon-track);
+}
+
+.fuyu-sysmon-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sysmon-memory);
+  transition: width var(--sysmon-ease);
+}
+
+.fuyu-sysmon-meter--warm > span { background: var(--sysmon-warm); }
+.fuyu-sysmon-meter--hot > span { background: var(--sysmon-hot); }
+
+.fuyu-sysmon-net {
+  flex: 1 1 0;
+  min-height: 18px;
+  max-height: 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.fuyu-sysmon--single .fuyu-sysmon-net {
+  flex: 0 0 22px;
+}
+
+.fuyu-sysmon-net__item {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 12px auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.fuyu-sysmon-net__item .fuyu-sysmon-spark {
+  min-height: 14px;
+}
+
+.fuyu-sysmon-net__arrow {
+  font-weight: 700;
+}
+
+.fuyu-sysmon-net__item--down .fuyu-sysmon-net__arrow { color: var(--sysmon-down); }
+.fuyu-sysmon-net__item--up .fuyu-sysmon-net__arrow { color: var(--sysmon-up); }
+
+.fuyu-sysmon-net__rate {
+  min-width: 64px;
+  font-weight: 600;
   white-space: nowrap;
 }
 
-.fuyu-sysmon-settings__field {
+.fuyu-sysmon-extra {
+  min-height: 18px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.fuyu-sysmon-settings__label {
+  align-items: center;
+  gap: 16px;
+  overflow: hidden;
+  color: var(--sysmon-muted);
   font-size: 12px;
-  color: var(--fuyu-plugin-text-secondary);
+  white-space: nowrap;
 }
 
-.fuyu-sysmon-settings__input {
-  min-width: 0;
-  padding: 6px 8px;
-  border: 1px solid var(--fuyu-plugin-border);
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface-hover);
-  color: var(--fuyu-plugin-text);
-  font: inherit;
+.fuyu-sysmon-extra strong {
+  color: var(--sysmon-text);
+  font-weight: 600;
 }
 
-.fuyu-sysmon-settings__check {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.fuyu-sysmon-settings__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+@media (prefers-reduced-motion: reduce) {
+  .fuyu-sysmon-ring__arc,
+  .fuyu-sysmon-cores__core > span,
+  .fuyu-sysmon-engine__bar > span,
+  .fuyu-sysmon-meter > span {
+    transition: none;
+  }
 }

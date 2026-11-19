@@ -120,6 +120,11 @@ declare module "cordis" {
        * `displayName`; without `icon`, the first letter of the title. `headerDot: false` keeps the page out of
        * the header, so only `Alt+number` and the page cycle reach it. `shortcutOrder` orders a plugin's pages
        * among plugin pages only; they always come after the built-in ones.
+       *
+       * An `island.collapsed/v1` item with `opens: "<page id>"` opens that page when it is clicked, or when it
+       * has focus and Enter or Space is pressed; the host makes the whole item one focusable button. The id must
+       * be one of this plugin's own `island.page/v1` pages: an id of another plugin's page or a built-in page is
+       * ignored with a warning in the console. Clicks on the item's own buttons and links still go to them.
        */
       add(name: SlotName, item: { id: string; order?: number; component: unknown; [meta: string]: unknown }): () => Promise<void>;
     };

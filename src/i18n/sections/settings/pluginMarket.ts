@@ -1,6 +1,6 @@
 export type PluginMarketSort = "recommended" | "recent";
-export type PluginMarketDetailTab = "readme" | "changelog" | "permissions" | "versions";
-export type PluginMarketPermissionKind = "network" | "noNetwork" | "runPrograms" | "files" | "nodeSensitive" | "nodeApis" | "island" | "provides" | "replaces" | "alsoInstalls";
+export type PluginMarketDetailTab = "readme" | "changelog" | "versions";
+export type PluginCapabilityKind = "replaces" | "network" | "runPrograms" | "files" | "nodeSensitive" | "nodeApis";
 
 export type SettingsPluginMarketText = {
   count: (count: number) => string;
@@ -35,7 +35,6 @@ export type SettingsPluginMarketText = {
     revoked: string;
     network: string;
     noNetwork: string;
-    permissions: (count: number) => string;
     install: string;
     update: (version: string) => string;
     installed: string;
@@ -69,14 +68,11 @@ export type SettingsPluginMarketText = {
     platforms: Record<string, string>;
     close: string;
   };
-  perms: {
-    itCan: string;
-    newVersionCan: string;
-    titles: Record<PluginMarketPermissionKind, string>;
-    noNetworkDetail: string;
+  capabilities: {
+    heading: string;
+    titles: Record<PluginCapabilityKind, string>;
     usesModules: (list: string) => string;
-    ownData: string;
-    ownDataNote: string;
+    note: string;
   };
   confirm: {
     install: (name: string) => string;
@@ -95,7 +91,6 @@ export type SettingsPluginMarketText = {
     fileBodyUnknown: string;
     manualOff: string;
     manualOn: string;
-    updateNote: string;
     facts: { version: string; sha256: string };
     securityNote: string;
     cancel: string;
@@ -170,7 +165,6 @@ export const zhCN: SettingsPluginMarketText = {
     revoked: "已撤销",
     network: "联网",
     noNetwork: "不联网",
-    permissions: (count) => `${count} 项权限`,
     install: "安装",
     update: (version) => `更新到 v${version}`,
     installed: "已安装",
@@ -187,7 +181,7 @@ export const zhCN: SettingsPluginMarketText = {
   detail: {
     loading: "正在读取插件详情…",
     tabsLabel: "插件详情",
-    tabs: { readme: "说明", changelog: "更新日志", permissions: "权限", versions: "版本" },
+    tabs: { readme: "说明", changelog: "更新日志", versions: "版本" },
     noReadme: "作者没有写说明。",
     noChangelog: "作者没有写更新日志。",
     noVersions: "没有版本记录。",
@@ -204,25 +198,18 @@ export const zhCN: SettingsPluginMarketText = {
     platforms: { win32: "Windows", darwin: "macOS", linux: "Linux" },
     close: "关闭",
   },
-  perms: {
-    itCan: "它可以",
-    newVersionCan: "新版本可以",
+  capabilities: {
+    heading: "它会做什么",
     titles: {
-      network: "联网",
-      noNetwork: "不联网",
+      replaces: "替换浮屿内置的服务",
+      network: "连接这些地址",
       runPrograms: "运行电脑上的程序",
       files: "读写电脑上的文件",
       nodeSensitive: "用到系统底层能力",
       nodeApis: "用到 Node 模块",
-      island: "在岛上显示",
-      provides: "给别的功能提供服务",
-      replaces: "接管浮屿自带的服务",
-      alsoInstalls: "会一起安装",
     },
-    noNetworkDetail: "不连接任何地址",
-    usesModules: (list) => `用到 Node 模块 ${list}`,
-    ownData: "存自己的数据",
-    ownDataNote: "只能读写自己的数据目录和系统凭据管理器里自己的条目",
+    usesModules: (list) => `通过 Node 模块 ${list}`,
+    note: "按插件清单整理。浮屿不会限制插件只做这些。",
   },
   confirm: {
     install: (name) => `安装「${name}」？`,
@@ -241,9 +228,8 @@ export const zhCN: SettingsPluginMarketText = {
     fileBodyUnknown: "它来自本地文件。只在你信任作者时安装：它和市场里的插件有一样的能力。",
     manualOff: "安装时会打开「允许从文件安装插件」；在插件页右上角的 ⋯ 菜单里可以再关掉。",
     manualOn: "「允许从文件安装插件」已经打开；在插件页右上角的 ⋯ 菜单里可以关掉。",
-    updateNote: "下面是新版本声明的全部能力。",
     facts: { version: "版本", sha256: "SHA-256" },
-    securityNote: "插件跑在本机的插件进程里，能读写自己的数据目录和系统凭据管理器里自己的条目。",
+    securityNote: "插件能做浮屿能做的事，比如读写文件、联网、运行程序，浮屿不会替你拦。只装你信任的插件。",
     cancel: "取消",
     notNow: "暂不更新",
     confirmInstall: "安装",
@@ -316,7 +302,6 @@ export const en: SettingsPluginMarketText = {
     revoked: "Revoked",
     network: "Network",
     noNetwork: "Offline",
-    permissions: (count) => `${count} permission${count === 1 ? "" : "s"}`,
     install: "Install",
     update: (version) => `Update to v${version}`,
     installed: "Installed",
@@ -333,7 +318,7 @@ export const en: SettingsPluginMarketText = {
   detail: {
     loading: "Loading plugin details…",
     tabsLabel: "Plugin details",
-    tabs: { readme: "Overview", changelog: "Changelog", permissions: "Permissions", versions: "Versions" },
+    tabs: { readme: "Overview", changelog: "Changelog", versions: "Versions" },
     noReadme: "The author didn't write a description.",
     noChangelog: "The author didn't write a changelog.",
     noVersions: "No version history.",
@@ -350,25 +335,18 @@ export const en: SettingsPluginMarketText = {
     platforms: { win32: "Windows", darwin: "macOS", linux: "Linux" },
     close: "Close",
   },
-  perms: {
-    itCan: "It can",
-    newVersionCan: "The new version can",
+  capabilities: {
+    heading: "What it does",
     titles: {
-      network: "Use the network",
-      noNetwork: "No network",
-      runPrograms: "Run programs on this computer",
-      files: "Read and write files on this computer",
-      nodeSensitive: "Use low-level system features",
-      nodeApis: "Use Node modules",
-      island: "Show on the island",
-      provides: "Provide services to other features",
-      replaces: "Take over a built-in service",
-      alsoInstalls: "Also installs",
+      replaces: "Replaces built-in Fuyu services",
+      network: "Connects to these addresses",
+      runPrograms: "Runs programs on this computer",
+      files: "Reads and writes files on this computer",
+      nodeSensitive: "Uses low-level system features",
+      nodeApis: "Uses Node modules",
     },
-    noNetworkDetail: "Connects to nothing",
-    usesModules: (list) => `Uses the Node modules ${list}`,
-    ownData: "Keep its own data",
-    ownDataNote: "Only its own data folder and its own entries in the system credential store",
+    usesModules: (list) => `Through the Node modules ${list}`,
+    note: "Based on the plugin's manifest. Fuyu doesn't limit plugins to just these.",
   },
   confirm: {
     install: (name) => `Install “${name}”?`,
@@ -387,9 +365,8 @@ export const en: SettingsPluginMarketText = {
     fileBodyUnknown: "It comes from a local file. Only install it if you trust the author: it gets the same abilities as market plugins.",
     manualOff: "Installing turns on “Allow installing from files”; you can turn it off again in the ⋯ menu on the plugin page.",
     manualOn: "“Allow installing from files” is on; you can turn it off in the ⋯ menu on the plugin page.",
-    updateNote: "Below is everything the new version declares.",
     facts: { version: "Version", sha256: "SHA-256" },
-    securityNote: "Plugins run in the local plugin process and can use their own data folder and their own credential-store entries.",
+    securityNote: "A plugin can do anything Fuyu can, such as reading and writing files, using the network or running programs, and Fuyu won't stop it. Only install plugins you trust.",
     cancel: "Cancel",
     notNow: "Not now",
     confirmInstall: "Install",

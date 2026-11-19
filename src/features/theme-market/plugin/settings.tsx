@@ -1,21 +1,25 @@
-import { addSettingsCategory } from "../../plugin-kernel/settingsCategories";
+import { settingsSections } from "../../plugin-kernel/settingsSlots";
 import { buildTheme } from "../../../lib/theme/theme";
 import { ThemeMarketPage } from "../ThemeMarketPage";
 import type { IslandSettings } from "../../../lib/settings/types";
-import type { LocaleCode } from "../../../i18n";
+import { useLocale } from "../../../i18n";
 import { OWNER } from "./owner.ts";
 
-type PageProps = {
+type SectionProps = {
   settings: IslandSettings;
-  locale: LocaleCode;
   presets: { onImportPreset(text: string): unknown };
   onSettingsChange(settings: IslandSettings): void;
 };
 
-addSettingsCategory("themeMarket", ({ settings, locale, presets, onSettingsChange }: PageProps) => (
-  <ThemeMarketPage
-    settings={settings}
-    onSettingsChange={onSettingsChange}
-    onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
-  />
-), OWNER);
+function ThemeMarketSection({ settings, presets, onSettingsChange }: SectionProps) {
+  const { locale } = useLocale();
+  return (
+    <ThemeMarketPage
+      settings={settings}
+      onSettingsChange={onSettingsChange}
+      onSave={(theme, look) => void presets.onImportPreset(JSON.stringify(buildTheme(theme.name[locale], look, new Date())))}
+    />
+  );
+}
+
+settingsSections<SectionProps, "theme">().add({ id: "theme.market", category: "theme", order: 30, component: ThemeMarketSection }, OWNER);

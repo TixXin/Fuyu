@@ -251,9 +251,6 @@
             <button aria-selected="false" class="plugin-tabs__tab" data-tab="commands" role="tab" tabindex="-1" type="button">
               Commands &amp; shortcuts
             </button>
-            <button aria-selected="false" class="plugin-tabs__tab" data-tab="permissions" role="tab" tabindex="-1" type="button">
-              Permissions
-            </button>
             <button aria-selected="false" class="plugin-tabs__tab" data-tab="activity" role="tab" tabindex="-1" type="button">
               Activity
             </button>
@@ -959,7 +956,7 @@
               <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
             </span>
             <div class="plugin-banner__title">
-              2 plugins ran into problems
+              3 plugins ran into problems
             </div>
             <div class="plugin-banner__body">
               Fix buttons are on each row below.
@@ -973,7 +970,7 @@
           </section>
           <div class="plugin-page__summary" data-summary="true">
             <b>
-              6 plugins installed
+              7 plugins installed
             </b>
             <span>
               <i class="plugin-page__dot plugin-page__dot--ok"></i>
@@ -985,7 +982,7 @@
             </span>
             <span class="plugin-page__summary-warn">
               <i class="plugin-page__dot plugin-page__dot--warn"></i>
-              2 need you
+              3 need you
             </span>
           </div>
           <div class="plugin-page__toolbar">
@@ -997,13 +994,13 @@
               <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
                 All
                 <span class="plugin-chip__count">
-                  6
+                  7
                 </span>
               </button>
               <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
                 On
                 <span class="plugin-chip__count">
-                  5
+                  6
                 </span>
               </button>
               <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
@@ -1015,7 +1012,7 @@
               <button aria-pressed="false" class="plugin-chip plugin-chip--warn" data-filter="attention" type="button">
                 Needs you
                 <span class="plugin-chip__count">
-                  2
+                  3
                 </span>
               </button>
             </div>
@@ -1114,6 +1111,51 @@
                 </span>
               </div>
             </div>
+            <div class="plugin-row" data-dot="bad" data-plugin="@me/linked">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                L
+                <span class="plugin-icon__dot plugin-icon__dot--bad"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Linked" type="button">
+                    Linked
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    Unreviewed
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · Local file (unreviewed)
+                </div>
+                <div class="plugin-note plugin-note--bad" data-note="unreachable">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      Its window files (island, settings) are outside the folders Fuyu can read, so those parts won't show
+                    </span>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Linked" checked="" id="_id15_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
             <div class="plugin-row" data-dot="ok" data-plugin="my-local-tool">
               <span aria-hidden="true" class="plugin-icon">
                 M
@@ -1188,7 +1230,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable RSS feeds" checked="" id="_id15_" role="switch" type="checkbox">
+                    <input aria-label="Enable RSS feeds" checked="" id="_id16_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -1230,7 +1272,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Weather" checked="" id="_id16_" role="switch" type="checkbox">
+                    <input aria-label="Enable Weather" checked="" id="_id17_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -1269,7 +1311,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable World clock" checked="" id="_id17_" role="switch" type="checkbox">
+                    <input aria-label="Enable World clock" checked="" id="_id18_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -1315,11 +1357,11 @@
             </b>
             <span>
               <i class="plugin-page__dot plugin-page__dot--ok"></i>
-              4 running
+              3 running
             </span>
             <span>
               <i class="plugin-page__dot plugin-page__dot--off"></i>
-              1 off
+              2 off
             </span>
             <span class="plugin-page__summary-warn">
               <i class="plugin-page__dot plugin-page__dot--warn"></i>
@@ -1341,13 +1383,13 @@
               <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
                 On
                 <span class="plugin-chip__count">
-                  5
+                  4
                 </span>
               </button>
               <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
                 Off
                 <span class="plugin-chip__count">
-                  1
+                  2
                 </span>
               </button>
               <button aria-pressed="true" class="plugin-chip plugin-chip--warn" data-filter="attention" type="button">
@@ -1359,10 +1401,10 @@
             </div>
           </div>
           <div class="plugin-list">
-            <div class="plugin-row" data-dot="ok" data-plugin="@someone/shady">
-              <span aria-hidden="true" class="plugin-icon">
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@someone/shady">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
                 S
-                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
               </span>
               <div class="plugin-row__main">
                 <div class="plugin-row__line">
@@ -1372,6 +1414,10 @@
                   <span class="plugin-row__version">
                     v
                     0.3.0
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    Off
                   </span>
                 </div>
                 <p class="plugin-row__desc">
@@ -1386,7 +1432,7 @@
                       <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
                     </span>
                     <span>
-                      The market revoked this plugin; uninstalling is recommended
+                      The market revoked this version; it can't be turned on again, and uninstalling is recommended
                     </span>
                   </span>
                   <span class="plugin-note__actions">
@@ -1394,6 +1440,11 @@
                       Uninstall…
                     </button>
                   </span>
+                  <ul class="plugin-note__list">
+                    <li>
+                      Uploads clipboard contents to the author's server
+                    </li>
+                  </ul>
                 </div>
               </div>
               <div class="plugin-row__aside">
@@ -1405,9 +1456,9 @@
                     <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
                   </button>
                 </div>
-                <span class="plugin-row__switch">
+                <span class="plugin-row__switch" data-locked="true" title="The market revoked this version, so it can't be turned on">
                   <span class="settings-switch">
-                    <input aria-label="Enable Shady plugin" checked="" id="_id18_" role="switch" type="checkbox">
+                    <input aria-label="Enable Shady plugin" disabled="" id="_id19_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -1458,7 +1509,427 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Todo sync" checked="" id="_id19_" role="switch" type="checkbox">
+                    <input aria-label="Enable Todo sync" checked="" id="_id20_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            Built-in features (to-dos, music, clipboard…) aren't plugins; turn them on or off in
+            <button class="plugin-link" data-action="open-overview" type="button">
+              Overview
+            </button>
+            .
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage" data-stage="revocation">
+      <h2 class="gallery__title">
+        撤销与等确认 / Revoked and held
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <section class="plugin-banner plugin-banner--warn" data-banner="attention">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              3 plugins need you
+            </div>
+            <div class="plugin-banner__body">
+              Updates to confirm, plugins waiting for a feature and plugins the market revoked each have their buttons on their own row.
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn" data-action="only-attention" type="button">
+                Show only these
+              </button>
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              7 plugins installed
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              5 running
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              2 off
+            </span>
+            <span class="plugin-page__summary-warn">
+              <i class="plugin-page__dot plugin-page__dot--warn"></i>
+              3 need you
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="Search installed plugins" placeholder="Search installed plugins" type="search" value="">
+            </label>
+            <div aria-label="Filter" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                All
+                <span class="plugin-chip__count">
+                  7
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                On
+                <span class="plugin-chip__count">
+                  5
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                Off
+                <span class="plugin-chip__count">
+                  2
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip plugin-chip--warn" data-filter="attention" type="button">
+                Needs you
+                <span class="plugin-chip__count">
+                  3
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/sketchy">
+              <span aria-hidden="true" class="plugin-icon">
+                C
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Clipboard sync" type="button">
+                    Clipboard sync
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    0.5.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  Syncs the clipboard between computers
+                </p>
+                <div class="plugin-row__facts">
+                  someone · Plugin market
+                </div>
+                <div class="plugin-note plugin-note--warn" data-note="warned">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      The market flagged this version; the plugin keeps running
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="update" type="button">
+                      Update
+                    </button>
+                  </span>
+                  <ul class="plugin-note__list">
+                    <li>
+                      0.5.0 keeps reconnecting on some computers and eats bandwidth
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Clipboard sync" checked="" id="_id21_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    Unreviewed
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    Off
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · Local file (unreviewed)
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch" data-error="true" title="The market revoked this version, so it can't be turned on: Uploads clipboard contents to the author's server">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Gadget" id="_id22_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                </div>
+                <div class="plugin-row__facts">
+                  Local development
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/translator">
+              <span aria-hidden="true" class="plugin-icon">
+                S
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Selection translator" type="button">
+                    Selection translator
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    1.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  Translates the text you select
+                </p>
+                <div class="plugin-row__facts">
+                  someone · Plugin market
+                </div>
+                <div class="plugin-note plugin-note--info" data-note="held">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      v1.1.0 does more than this version, so it waits for you to confirm the update
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-row-action="update" type="button">
+                      Review update
+                    </button>
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="whatsNew" type="button">
+                      What's new
+                    </button>
+                  </span>
+                  <ul class="plugin-note__list">
+                    <li>
+                      Replaces built-in Fuyu services: translation/v1
+                    </li>
+                    <li>
+                      Connects to these addresses: api.deepl.com
+                    </li>
+                    <li>
+                      Runs programs on this computer: child_process
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Selection translator" checked="" id="_id23_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@someone/shady">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                S
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Shady plugin" type="button">
+                    Shady plugin
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    0.3.0
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    Off
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  Pulled from the market
+                </p>
+                <div class="plugin-row__facts">
+                  someone · Plugin market
+                </div>
+                <div class="plugin-note plugin-note--bad" data-note="revoked">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      The market revoked this version; it can't be turned on again, and uninstalling is recommended
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="uninstall" type="button">
+                      Uninstall…
+                    </button>
+                  </span>
+                  <ul class="plugin-note__list">
+                    <li>
+                      Uploads clipboard contents to the author's server
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch" data-locked="true" title="The market revoked this version, so it can't be turned on">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Shady plugin" disabled="" id="_id24_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon">
+                W
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Weather" type="button">
+                    Weather
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    Official
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  Live temperature and an hourly forecast on the island
+                </p>
+                <div class="plugin-row__facts">
+                  Plugin market · Official
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Weather" checked="" id="_id25_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon">
+                W
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="World clock" type="button">
+                    World clock
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  Shows another time zone while collapsed
+                </p>
+                <div class="plugin-row__facts">
+                  someone · Plugin market
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="Enable World clock" checked="" id="_id26_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -1625,7 +2096,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Gadget" id="_id20_" role="switch" type="checkbox">
+                    <input aria-label="Enable Gadget" id="_id27_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -1693,7 +2164,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Weather" checked="" id="_id21_" role="switch" type="checkbox">
+                    <input aria-label="Enable Weather" checked="" id="_id28_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -1732,7 +2203,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable World clock" checked="" id="_id22_" role="switch" type="checkbox">
+                    <input aria-label="Enable World clock" checked="" id="_id29_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -1957,7 +2428,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Gadget" id="_id23_" role="switch" type="checkbox">
+                    <input aria-label="Enable Gadget" id="_id30_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2033,7 +2504,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Weather" checked="" id="_id24_" role="switch" type="checkbox">
+                    <input aria-label="Enable Weather" checked="" id="_id31_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2076,7 +2547,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable World clock" checked="" id="_id25_" role="switch" type="checkbox">
+                    <input aria-label="Enable World clock" checked="" id="_id32_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2196,7 +2667,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Gadget" id="_id26_" role="switch" type="checkbox">
+                    <input aria-label="Enable Gadget" id="_id33_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2272,7 +2743,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Weather" checked="" id="_id27_" role="switch" type="checkbox">
+                    <input aria-label="Enable Weather" checked="" id="_id34_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2315,7 +2786,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable World clock" checked="" id="_id28_" role="switch" type="checkbox">
+                    <input aria-label="Enable World clock" checked="" id="_id35_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2428,7 +2899,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Clock" checked="" disabled="" id="_id29_" role="switch" type="checkbox">
+                    <input aria-label="Enable Clock" checked="" disabled="" id="_id36_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2467,7 +2938,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Gadget" disabled="" id="_id30_" role="switch" type="checkbox">
+                    <input aria-label="Enable Gadget" disabled="" id="_id37_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2536,7 +3007,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Weather" checked="" disabled="" id="_id31_" role="switch" type="checkbox">
+                    <input aria-label="Enable Weather" checked="" disabled="" id="_id38_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2753,7 +3224,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Flaky" checked="" id="_id32_" role="switch" type="checkbox">
+                    <input aria-label="Enable Flaky" checked="" id="_id39_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2792,7 +3263,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Gadget" id="_id33_" role="switch" type="checkbox">
+                    <input aria-label="Enable Gadget" id="_id40_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2872,7 +3343,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable RSS feeds" checked="" id="_id34_" role="switch" type="checkbox">
+                    <input aria-label="Enable RSS feeds" checked="" id="_id41_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2914,7 +3385,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Weather" checked="" id="_id35_" role="switch" type="checkbox">
+                    <input aria-label="Enable Weather" checked="" id="_id42_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -2953,7 +3424,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable World clock" checked="" id="_id36_" role="switch" type="checkbox">
+                    <input aria-label="Enable World clock" checked="" id="_id43_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -3010,11 +3481,11 @@
             </b>
             <span>
               <i class="plugin-page__dot plugin-page__dot--ok"></i>
-              5 running
+              4 running
             </span>
             <span>
               <i class="plugin-page__dot plugin-page__dot--off"></i>
-              1 off
+              2 off
             </span>
             <span class="plugin-page__summary-warn">
               <i class="plugin-page__dot plugin-page__dot--warn"></i>
@@ -3036,13 +3507,13 @@
               <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
                 On
                 <span class="plugin-chip__count">
-                  6
+                  5
                 </span>
               </button>
               <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
                 Off
                 <span class="plugin-chip__count">
-                  1
+                  2
                 </span>
               </button>
               <button aria-pressed="false" class="plugin-chip plugin-chip--warn" data-filter="attention" type="button">
@@ -3087,7 +3558,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Gadget" id="_id37_" role="switch" type="checkbox">
+                    <input aria-label="Enable Gadget" id="_id44_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -3173,16 +3644,16 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Pomodoro" checked="" id="_id38_" role="switch" type="checkbox">
+                    <input aria-label="Enable Pomodoro" checked="" id="_id45_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
               </div>
             </div>
-            <div class="plugin-row" data-dot="ok" data-plugin="@someone/shady">
-              <span aria-hidden="true" class="plugin-icon">
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@someone/shady">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
                 S
-                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
               </span>
               <div class="plugin-row__main">
                 <div class="plugin-row__line">
@@ -3192,6 +3663,10 @@
                   <span class="plugin-row__version">
                     v
                     0.3.0
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    Off
                   </span>
                 </div>
                 <p class="plugin-row__desc">
@@ -3206,7 +3681,7 @@
                       <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
                     </span>
                     <span>
-                      The market revoked this plugin; uninstalling is recommended
+                      The market revoked this version; it can't be turned on again, and uninstalling is recommended
                     </span>
                   </span>
                   <span class="plugin-note__actions">
@@ -3214,6 +3689,11 @@
                       Uninstall…
                     </button>
                   </span>
+                  <ul class="plugin-note__list">
+                    <li>
+                      Uploads clipboard contents to the author's server
+                    </li>
+                  </ul>
                 </div>
               </div>
               <div class="plugin-row__aside">
@@ -3225,9 +3705,9 @@
                     <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
                   </button>
                 </div>
-                <span class="plugin-row__switch">
+                <span class="plugin-row__switch" data-locked="true" title="The market revoked this version, so it can't be turned on">
                   <span class="settings-switch">
-                    <input aria-label="Enable Shady plugin" checked="" id="_id39_" role="switch" type="checkbox">
+                    <input aria-label="Enable Shady plugin" disabled="" id="_id46_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -3278,7 +3758,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Todo sync" checked="" id="_id40_" role="switch" type="checkbox">
+                    <input aria-label="Enable Todo sync" checked="" id="_id47_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -3320,7 +3800,7 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable Weather" checked="" id="_id41_" role="switch" type="checkbox">
+                    <input aria-label="Enable Weather" checked="" id="_id48_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>
@@ -3359,7 +3839,427 @@
                 </div>
                 <span class="plugin-row__switch">
                   <span class="settings-switch">
-                    <input aria-label="Enable World clock" checked="" id="_id42_" role="switch" type="checkbox">
+                    <input aria-label="Enable World clock" checked="" id="_id49_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            Built-in features (to-dos, music, clipboard…) aren't plugins; turn them on or off in
+            <button class="plugin-link" data-action="open-overview" type="button">
+              Overview
+            </button>
+            .
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage gallery__stage--narrow" data-stage="narrow-revocation">
+      <h2 class="gallery__title">
+        窄窗口 / Narrow
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <section class="plugin-banner plugin-banner--warn" data-banner="attention">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              3 plugins need you
+            </div>
+            <div class="plugin-banner__body">
+              Updates to confirm, plugins waiting for a feature and plugins the market revoked each have their buttons on their own row.
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn" data-action="only-attention" type="button">
+                Show only these
+              </button>
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              7 plugins installed
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              5 running
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              2 off
+            </span>
+            <span class="plugin-page__summary-warn">
+              <i class="plugin-page__dot plugin-page__dot--warn"></i>
+              3 need you
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="Search installed plugins" placeholder="Search installed plugins" type="search" value="">
+            </label>
+            <div aria-label="Filter" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                All
+                <span class="plugin-chip__count">
+                  7
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                On
+                <span class="plugin-chip__count">
+                  5
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                Off
+                <span class="plugin-chip__count">
+                  2
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip plugin-chip--warn" data-filter="attention" type="button">
+                Needs you
+                <span class="plugin-chip__count">
+                  3
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/sketchy">
+              <span aria-hidden="true" class="plugin-icon">
+                C
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Clipboard sync" type="button">
+                    Clipboard sync
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    0.5.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  Syncs the clipboard between computers
+                </p>
+                <div class="plugin-row__facts">
+                  someone · Plugin market
+                </div>
+                <div class="plugin-note plugin-note--warn" data-note="warned">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      The market flagged this version; the plugin keeps running
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="update" type="button">
+                      Update
+                    </button>
+                  </span>
+                  <ul class="plugin-note__list">
+                    <li>
+                      0.5.0 keeps reconnecting on some computers and eats bandwidth
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Clipboard sync" checked="" id="_id50_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    Unreviewed
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    Off
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · Local file (unreviewed)
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Gadget" id="_id51_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                </div>
+                <div class="plugin-row__facts">
+                  Local development
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/translator">
+              <span aria-hidden="true" class="plugin-icon">
+                S
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Selection translator" type="button">
+                    Selection translator
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    1.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  Translates the text you select
+                </p>
+                <div class="plugin-row__facts">
+                  someone · Plugin market
+                </div>
+                <div class="plugin-note plugin-note--info" data-note="held">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      v1.1.0 does more than this version, so it waits for you to confirm the update
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-row-action="update" type="button">
+                      Review update
+                    </button>
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="whatsNew" type="button">
+                      What's new
+                    </button>
+                  </span>
+                  <ul class="plugin-note__list">
+                    <li>
+                      Replaces built-in Fuyu services: translation/v1
+                    </li>
+                    <li>
+                      Connects to these addresses: api.deepl.com
+                    </li>
+                    <li>
+                      Runs programs on this computer: child_process
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Selection translator" checked="" id="_id52_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@someone/shady">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                S
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Shady plugin" type="button">
+                    Shady plugin
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    0.3.0
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    Off
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  Pulled from the market
+                </p>
+                <div class="plugin-row__facts">
+                  someone · Plugin market
+                </div>
+                <div class="plugin-note plugin-note--bad" data-note="revoked">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      The market revoked this version; it can't be turned on again, and uninstalling is recommended
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="uninstall" type="button">
+                      Uninstall…
+                    </button>
+                  </span>
+                  <ul class="plugin-note__list">
+                    <li>
+                      Uploads clipboard contents to the author's server
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch" data-locked="true" title="The market revoked this version, so it can't be turned on">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Shady plugin" disabled="" id="_id53_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon">
+                W
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Weather" type="button">
+                    Weather
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    Official
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  Live temperature and an hourly forecast on the island
+                </p>
+                <div class="plugin-row__facts">
+                  Plugin market · Official
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="Enable Weather" checked="" id="_id54_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon">
+                W
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="World clock" type="button">
+                    World clock
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  Shows another time zone while collapsed
+                </p>
+                <div class="plugin-row__facts">
+                  someone · Plugin market
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="Settings" class="plugin-icon-btn" data-action="open-settings" title="Settings" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="More actions" class="plugin-icon-btn" title="More actions" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="Enable World clock" checked="" id="_id55_" role="switch" type="checkbox">
                     <span aria-hidden="true" class="settings-switch__track"></span>
                   </span>
                 </span>

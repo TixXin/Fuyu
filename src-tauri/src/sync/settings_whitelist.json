@@ -7,7 +7,6 @@
     "agentPushDelivery": ["fuyu-agent-push/enabled", "fuyu-agent-push/channel"],
     "qqMail": ["fuyu-qq-mail-settings"],
     "collapsedItems": ["fuyu-collapsed-items"],
-    "pluginPages": ["fuyu-plugin-pages"],
     "updateChannel": ["fuyu-update-channel"]
   },
   "keys": {
@@ -201,8 +200,8 @@
     "fuyu-qq-mail-settings": "optional",
     "fuyu-qq-mail-remote-images": "sync",
     "fuyu-collapsed-items": "optional",
-    "fuyu-plugin-pages": "optional",
-    "fuyu-plugin-market-favorites": "sync",
+    "fuyu-plugin-pages": "local",
+    "fuyu-plugin-market-favorites": "local",
     "fuyu-screenshot-annotation": "sync",
     "fuyu-screenshot-settings": {
       "fields": {

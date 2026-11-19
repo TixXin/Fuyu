@@ -1,4 +1,4 @@
-import type { InstalledMarketPlugin, MarketCatalogPlugin, MarketCatalogSnapshot, MarketLocalizedText } from "@fuyu/plugin-services";
+import type { InstalledMarketPlugin, MarketCatalogPlugin, MarketCatalogSnapshot, MarketLocalizedText, MarketRevocation } from "@fuyu/plugin-services";
 import { isExternalPlugin } from "./pluginDisplay.ts";
 import { pluginRowStatus, type RowContext, type RowStatus } from "./pluginRowStatus.ts";
 import { stateOf } from "./pluginServiceStatus.ts";
@@ -18,6 +18,7 @@ export interface InstalledEntry {
   managed: boolean;
   removable: boolean;
   enabled: boolean;
+  revocation?: MarketRevocation | null;
   status: RowStatus;
 }
 
@@ -59,6 +60,7 @@ export function installedEntries(
       const market = marketByName.get(plugin.id);
       const installed = installedById.get(plugin.id);
       const source = sourceOf(plugin, market);
+      const revocation = market?.revocation ?? installed?.revocation ?? null;
       return {
         id: plugin.id,
         plugin,
@@ -71,7 +73,8 @@ export function installedEntries(
         managed: plugin.source === "market" || plugin.source === "manual",
         removable: plugin.source === "market" || plugin.source === "manual" || plugin.source === "dev" || plugin.source === "file",
         enabled: stateOf(plugin) !== "disabled",
-        status: pluginRowStatus(plugin, market, context),
+        revocation,
+        status: pluginRowStatus(plugin, market, context, revocation),
       };
     })
     .sort((a, b) => a.title.localeCompare(b.title, locale));

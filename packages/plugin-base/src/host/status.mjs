@@ -77,10 +77,11 @@ function undeclaredOf(entry, services, clients, commands, network) {
   return listed.length ? Object.fromEntries(listed) : null;
 }
 
-export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, undeclaredCommands, undeclaredNetwork } = {}) {
+export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork } = {}) {
   const report = usage?.();
   const provided = services?.() ?? [];
   const windows = clients?.() ?? [];
+  const unreachable = unreachableClients?.() ?? [];
   return [...ctx.loader.entries()]
     .map((entry) => ({ internal: INTERNAL.has(entry.options.name), entry, status: describe(entry, logs, gate) }))
     .filter(({ internal, status }) => !internal || status.state !== "running")
@@ -94,8 +95,8 @@ export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, u
       if (last) extra.lastError = last;
       const undeclared = undeclaredOf(entry, provided, windows, undeclaredCommands, undeclaredNetwork);
       if (undeclared) extra.undeclared = undeclared;
-      const disabledServices = Array.isArray(entry.options.disabledServices) ? entry.options.disabledServices.filter((s) => typeof s === "string") : [];
-      if (disabledServices.length > 0) extra.disabledServices = disabledServices;
+      const blocked = [...new Set(unreachable.filter((client) => client.plugin === status.id).map((client) => client.window))];
+      if (blocked.length > 0) extra.unreachableClients = blocked;
       const declaredProvides = entry.options[SOURCE]?.provides ?? entry.options[SOURCE]?.declared?.provides ?? [];
       if (declaredProvides.length > 0) extra.provides = declaredProvides;
       const replacedServices = declaredProvides
@@ -106,12 +107,15 @@ export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, u
         })
         .filter(Boolean);
       if (replacedServices.length > 0) extra.replacedServices = replacedServices;
+      const written = Array.isArray(entry.options.disabledServices) ? entry.options.disabledServices.filter((s) => typeof s === "string") : [];
+      const disabledServices = [...new Set([...written, ...replacedServices.map((item) => item.service)])];
+      if (disabledServices.length > 0) extra.disabledServices = disabledServices;
       return { ...status, ...extra };
     });
 }
 
-export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gate, usage, services, clients, undeclaredCommands, undeclaredNetwork, subscribe } = {}) {
-  const read = () => pluginStatus(ctx, logs, { gate, usage, services, clients, undeclaredCommands, undeclaredNetwork });
+export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, subscribe } = {}) {
+  const read = () => pluginStatus(ctx, logs, { gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork });
   let last = JSON.stringify(read());
   let timer = null;
   const check = () => {
