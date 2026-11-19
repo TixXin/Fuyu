@@ -3,275 +3,522 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>水母 Logo 对比预览（issue #281）</title>
+<title>水母方案预览：原稿做图标，B 上岛（issue #281）</title>
 <style>
-  :root { color-scheme: dark; }
+  :root {
+    color-scheme: dark;
+    --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --motion-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+    --motion-fast: 120ms;
+    --motion-base: 160ms;
+    --motion-medium: 240ms;
+    --motion-slow: 420ms;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; padding: 24px 32px 72px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  body { margin: 0; padding: 24px 32px 80px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif; }
   h1 { font-size: 22px; margin: 0 0 4px; }
-  h2 { font-size: 16px; margin: 36px 0 6px; }
+  h2 { font-size: 16px; margin: 40px 0 6px; }
   p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 980px; }
-  p.note b { color: #e8e8ea; font-weight: 600; }
+  p.note b, li b { color: #e8e8ea; font-weight: 600; }
+  ul.plain { margin: 0; padding-left: 20px; color: #c8c8cc; max-width: 980px; }
+  ul.plain li { margin: 4px 0; }
+  code { font: 12.5px/1.4 ui-monospace, "Cascadia Code", Menlo, monospace; background: #1b1c1f; padding: 1px 5px; border-radius: 4px; color: #cfd0d6; }
 
-  .controls { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 26px; align-items: center; background: #1b1c1fee; padding: 10px 16px; border-radius: 10px; margin: 14px 0 0; backdrop-filter: blur(8px); }
+  .controls { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 26px; align-items: center; background: #1b1c1fee; padding: 10px 16px; border-radius: 10px; margin: 14px 0 0; backdrop-filter: blur(8px); max-width: 1100px; }
   .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .group > span { color: #9a9aa0; margin-right: 2px; }
   button.seg { font: inherit; cursor: pointer; border-radius: 6px; padding: 2px 10px; background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; }
   button.seg.on { background: #2f4a3f; border-color: #6abf9b; color: #fff; }
   button:focus-visible { outline: 2px solid #6abf9b; outline-offset: 1px; }
 
-  .cands { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 14px; max-width: 1100px; overflow-x: auto; }
-  .cand { background: #1b1c1f; border-radius: 12px; padding: 18px 14px 14px; text-align: center; min-width: 150px; }
-  .cand .art { width: 128px; height: 128px; margin: 0 auto 12px; }
-  .cand .art svg, .cand .art img { display: block; width: 100%; height: 100%; }
-  .cand b { display: block; font-size: 14px; }
-  .cand span { display: block; margin-top: 4px; color: #9a9aa0; font-size: 12.5px; line-height: 1.5; text-align: left; }
-
   .scroll { overflow-x: auto; max-width: 1100px; }
-  .taskbars { display: grid; grid-template-columns: 96px repeat(2, minmax(300px, 1fr)); gap: 0; min-width: 720px; border-radius: 12px; overflow: hidden; }
+  table { border-collapse: collapse; max-width: 1100px; margin: 6px 0 12px; }
+  th, td { border: 1px solid #2c2d32; padding: 6px 10px; text-align: left; vertical-align: top; color: #c8c8cc; font-size: 13px; }
+  th { background: #1b1c1f; color: #e8e8ea; font-weight: 600; white-space: nowrap; }
+  td:first-child { white-space: nowrap; color: #e8e8ea; }
+
+  .stage { display: grid; grid-template-columns: minmax(260px, 420px) minmax(280px, 1fr); gap: 16px; max-width: 1100px; }
+  .big { display: flex; align-items: center; justify-content: center; height: 300px; border-radius: 16px; background: #000; cursor: pointer; user-select: none; touch-action: none; }
+  .big svg { display: block; height: 208px; width: auto; }
+  .side { display: flex; flex-direction: column; gap: 12px; background: #1b1c1f; border-radius: 16px; padding: 16px; min-width: 0; }
+  .track { position: relative; height: 62px; border-radius: 12px; background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); overflow: hidden; }
+  .track .bar { position: absolute; top: 12px; left: 16px; cursor: grab; touch-action: none; user-select: none; }
+  .track .bar.dragging { cursor: grabbing; }
+  .hint { margin: 0; min-height: 22px; color: #6abf9b; font-size: 13px; }
+  .side ul { margin: 0; padding-left: 18px; color: #c8c8cc; font-size: 13px; }
+  .side li { margin: 3px 0; }
+
+  .bar { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 19px; background: #000; color: rgba(248, 246, 240, .94); box-shadow: 0 6px 24px #0008; font-size: 12.5px; white-space: nowrap; }
+  .bar.light { background: #f4f2ec; color: #1c1c1e; }
+  .bar .slot { position: relative; display: inline-flex; align-items: center; justify-content: center; height: 24px; }
+  .bar .slot svg { display: block; width: auto; height: 24px; }
+  .bar .ring { flex: none; width: 24px; height: 24px; }
+  .bar .badge { min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #6abf9b; color: #0c0d12; font-size: 11px; font-weight: 600; line-height: 16px; text-align: center; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+  .bar .badge.on { opacity: 1; }
+  .bar.center { justify-content: space-between; width: 300px; }
+  .bar.center .slot svg { height: 22px; }
+
+  .states { --z: 1; display: grid; grid-template-columns: 132px repeat(5, max-content); gap: 10px 14px; align-items: center; width: max-content; }
+  .states .lab { color: #c8c8cc; font-size: 12.5px; line-height: 1.4; }
+  .states .lab small { display: block; color: #7d7e85; font-size: 11.5px; }
+  .states .col { color: #9a9aa0; font-size: 12px; text-align: center; }
+  .chip { --z: 1; display: inline-flex; align-items: center; justify-content: center; justify-self: center; min-width: 76px; height: calc(38px * var(--z)); padding: 0 calc(8px * var(--z)); border-radius: calc(19px * var(--z)); background: #000; }
+  .chip.z3 { --z: 3; }
+  .chip.light { background: #f4f2ec; }
+  .chip svg { display: block; width: auto; height: calc(24px * var(--z)); }
+
+  .places { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; max-width: 1100px; }
+  .place { background: #1b1c1f; border-radius: 12px; padding: 14px 16px 16px; min-width: 0; }
+  .place b { display: block; font-size: 13.5px; }
+  .place > span { display: block; color: #9a9aa0; font-size: 12.5px; margin: 2px 0 12px; }
+  .place .demo { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; min-height: 76px; padding: 14px; overflow-x: auto; border-radius: 10px; background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .topbar { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border-radius: 16px; background: #000; }
+  .topbar .entry { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9px; background: #ffffff14; }
+  .topbar .entry svg { display: block; height: 15px; width: auto; }
+  .topbar i { width: 16px; height: 16px; border-radius: 5px; background: #ffffff2e; }
+  .topbar i.round { width: 24px; height: 24px; border-radius: 50%; background: #ffffff1c; margin-left: 2px; }
+  .topbar .gap { width: 12px; }
+  .handle { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; width: 12px; height: 72px; border-radius: 6px; background: #000; }
+  .handle svg { display: block; width: 10px; height: auto; }
+  .handle .dot { width: 6px; height: 6px; border-radius: 50%; background: #34c759; }
+  .handle .unread { width: 5px; height: 5px; border-radius: 50%; background: #6abf9b; }
+  .cap { color: #e8e8eacc; font-size: 12px; }
+  .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 280px; height: 150px; border-radius: 18px; background: #0b0b0c; color: #e8e8ea; font-size: 13px; }
+  .empty svg { display: block; height: 52px; width: auto; margin-bottom: 6px; }
+  .empty small { color: #7d7e85; font-size: 12px; }
+
+  .iconrow { display: flex; align-items: flex-end; gap: 28px; flex-wrap: wrap; max-width: 1100px; }
+  .iconrow figure { margin: 0; text-align: center; color: #9a9aa0; font-size: 12.5px; }
+  .iconrow figure > div { margin: 0 auto 8px; }
+  .ico { flex: none; display: block; }
+  .ico svg, .ico img { display: block; width: 100%; height: 100%; }
+  .taskbars { display: grid; grid-template-columns: 150px repeat(2, minmax(280px, 1fr)); min-width: 760px; border-radius: 12px; overflow: hidden; }
   .taskbars > div { display: flex; align-items: center; gap: 22px; padding: 10px 18px; min-height: 68px; }
-  .taskbars .lab { background: #1b1c1f; color: #c8c8cc; font-size: 12.5px; padding: 10px 12px; }
+  .taskbars .lab { background: #1b1c1f; color: #c8c8cc; font-size: 12.5px; padding: 10px 12px; line-height: 1.4; }
   .taskbars .dark { background: #202020; }
   .taskbars .light { background: #f3f3f3; }
   .taskbars .head { min-height: 0; padding-top: 6px; padding-bottom: 6px; font-size: 12px; color: #9a9aa0; }
   .taskbars .head.light { color: #55565c; }
   .taskbars .head i { font-style: normal; text-align: center; }
-  .ico { flex: none; display: block; }
-  .ico svg, .ico img { display: block; width: 100%; height: 100%; }
-
-  .states { --z: 1; display: grid; grid-template-columns: 124px repeat(5, max-content); gap: 10px 14px; align-items: center; width: max-content; }
-  .states .lab { color: #c8c8cc; font-size: 12.5px; line-height: 1.4; }
-  .states .lab small { display: block; color: #7d7e85; font-size: 11.5px; }
-  .states .col { color: #9a9aa0; font-size: 12px; text-align: center; }
-  .chip { display: inline-flex; align-items: center; justify-content: center; min-width: calc(76px * var(--z)); height: calc(38px * var(--z)); padding: 0 calc(12px * var(--z)); border-radius: calc(19px * var(--z)); background: #000; }
-  .chip svg { display: block; width: auto; height: calc(24px * var(--z)); overflow: visible; }
-  .chip .dot, .bar .dot { display: block; width: calc(9px * var(--z, 1)); height: calc(9px * var(--z, 1)); border-radius: 50%; }
-
-  .desk { display: flex; flex-direction: column; gap: 14px; max-width: 1100px; padding: 22px 26px; border-radius: 12px; background: radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
-  .deskrow { display: flex; align-items: center; gap: 16px; }
-  .deskrow > span { flex: 0 0 110px; color: #e8e8eacc; font-size: 12.5px; }
-  .bar { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 19px; background: #000; color: rgba(248, 246, 240, .94); box-shadow: 0 6px 24px #0008; font-size: 12.5px; white-space: nowrap; }
-  .bar .slot { display: inline-flex; align-items: center; justify-content: center; height: 24px; }
-  .bar .slot svg { display: block; width: auto; height: 24px; overflow: visible; }
-  .bar .ring { flex: none; width: 24px; height: 24px; }
-
-  .menus { display: grid; grid-template-columns: repeat(2, minmax(300px, 1fr)); gap: 14px; max-width: 1100px; }
+  .menus { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 14px; max-width: 1100px; }
   .menu { display: flex; align-items: center; justify-content: flex-end; gap: 18px; height: 34px; padding: 0 16px; border-radius: 8px; font-size: 13px; }
   .menu.l { background: #e6e6ea; color: #1d1d1f; }
   .menu.d { background: #2a2b31; color: #f2f2f4; }
-  .menu svg { display: block; width: auto; height: 16px; overflow: visible; }
+  .menu svg { display: block; width: auto; height: 16px; }
   .menu i { flex: none; width: 16px; height: 11px; border-radius: 3px; background: currentColor; opacity: .55; }
-  .menu em { font-style: normal; opacity: .8; font-variant-numeric: tabular-nums; }
-  .menulabs { display: flex; justify-content: flex-end; gap: 18px; padding: 4px 16px 0; color: #7d7e85; font-size: 11.5px; }
+  .menu em { font-style: normal; opacity: .8; }
+  .desk { position: relative; max-width: 1100px; height: 210px; border-radius: 12px; overflow: hidden; background: radial-gradient(260px 180px at 46% 4%, #ff7ab833, transparent 70%), radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .desk .bar { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); }
+  .desk .tb { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; gap: 12px; height: 48px; background: #202020e6; }
+  .desk .tb i { width: 26px; height: 26px; border-radius: 7px; background: #ffffff24; }
+  .desk .tb .ico { width: 30px; height: 30px; }
 
-  svg * { transform-box: view-box; }
-  .j .head { transform-origin: 18px 17.5px; }
-  .j[data-state="waiting"] .leg { transform: rotate(-20deg); }
-  .j[data-state="failed"] .head { transform: scale(1.05, .84); }
-  .j[data-state="failed"] .leg1 { transform: rotate(26deg); }
-  .j[data-state="failed"] .leg2 { transform: scaleY(.7); }
-  .j[data-state="failed"] .leg3 { transform: rotate(-26deg); }
-  .j[data-state="done"] .leg { transform: scaleY(.55); }
+  .jf { --jf-ink: #f2f2f0; --jf-eye: #1c1c1e; --jf-body: var(--jf-ink); overflow: visible; }
+  body[data-tone="lilac"] .jf:not(.mono) { --jf-ink: #b3a0ff; --jf-eye: #ffffff; }
+  .jf.on-light { --jf-ink: #23262c; --jf-eye: #f4f2ec; }
+  .jf.mono { --jf-ink: currentColor; }
+  .jf.dim { opacity: .82; }
+  body .jf[data-state="waiting"]:not(.mono) { --jf-body: #ffd60a; --jf-eye: #1c1c1e; }
+  body .jf[data-state="failed"]:not(.mono) { --jf-body: #ff453a; --jf-eye: #1c1c1e; }
+  body .jf[data-state="done"]:not(.mono) { --jf-body: #6abf9b; --jf-eye: #1c1c1e; }
+  .jf * { transform-box: view-box; }
+  .jf-bell { fill: var(--jf-body); transition: fill var(--motion-medium) var(--motion-ease); }
+  .jf-leg { fill: none; stroke: var(--jf-body); stroke-width: 4.6; stroke-linecap: round; transition: stroke var(--motion-medium) var(--motion-ease), transform var(--motion-medium) var(--motion-ease); }
+  .jf-body, .jf-head { transform-origin: 18px 18px; transition: transform var(--motion-medium) var(--motion-ease); }
+  .jf-legs { transform-origin: 18px 15px; transform: skewX(var(--jf-drag, 0deg)); }
+  .jf-face { transition: transform var(--motion-base) var(--motion-ease); }
+  .jf-lids, .jf-eyes { transform-origin: 18px 11px; }
+  .jf-lids { transition: transform var(--motion-fast) var(--motion-ease); }
+  .jf-eye-open { transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-medium) var(--motion-ease); }
+  .jf-eye-open ellipse { fill: var(--jf-eye); }
+  .jf-eye-happy, .jf-eye-sad { fill: none; stroke: var(--jf-eye); stroke-width: 1.5; stroke-linecap: round; opacity: 0; transition: opacity var(--motion-base) var(--motion-ease); }
+  .jf-ring { fill: none; stroke: #ffd60a; stroke-width: 1.2; opacity: 0; transform-origin: 18px 12px; }
 
-  body.live .j[data-state="idle"] .head { animation: j-swim-head 4.4s ease-in-out infinite; }
-  body.live .j[data-state="idle"] .leg { animation: j-swim-leg 4.4s ease-in-out infinite; }
-  body.live .j[data-state="idle"] .leg2 { animation-delay: .12s; }
-  body.live .j[data-state="idle"] .leg3 { animation-delay: .24s; }
-  body.live .j[data-state="running"] .leg { animation: j-run-leg 1.2s ease-in-out infinite; }
-  body.live .j[data-state="running"] .leg2 { animation-delay: .15s; }
-  body.live .j[data-state="running"] .leg3 { animation-delay: .3s; }
-  body.live .j[data-state="waiting"] .leg { animation: j-wait-leg 1.1s ease-in-out infinite; }
-  body.live .j[data-state="waiting"] .core { animation: j-blink 1.1s ease-in-out infinite; }
-  body.live .j[data-v="b"][data-state="waiting"] .head { animation: j-blink-soft 1.1s ease-in-out infinite; }
-  body.live .j[data-state="idle"] .core, body.live .j[data-state="running"] .core { animation: j-breathe 3.6s ease-in-out infinite; }
-  body.live .j .check { animation: j-pop .32s cubic-bezier(0.23, 1, 0.32, 1) both; }
-  body.live .m[data-state="idle"] .core, body.live .m[data-state="running"] .core { animation: j-breathe 3.6s ease-in-out infinite; }
-  body.live .m[data-state="waiting"] .core { animation: j-blink 1.1s ease-in-out infinite; }
-  body.live .m .typing { animation: j-typing 1.2s ease-in-out infinite; }
-  body.live .m .typing:nth-of-type(2) { animation-delay: .15s; }
-  body.live .m .typing:nth-of-type(3) { animation-delay: .3s; }
-  body.live .dot[data-state="waiting"] { animation: j-blink 1.1s ease-in-out infinite; }
+  .jf[data-state="running"] .jf-leg1, .jf[data-state="running"] .jf-leg3 { transform: scaleY(.68); }
+  .jf[data-state="running"] .jf-eye-open { transform: translateY(.9px); }
+  .jf[data-state="waiting"] .jf-body { transform: rotate(-7deg); }
+  .jf[data-state="waiting"] .jf-leg { transform: rotate(7deg); }
+  .jf[data-state="waiting"] .jf-eye-open { transform: translateY(-1px); }
+  .jf[data-state="failed"] .jf-body { transform: translateY(.8px); }
+  .jf[data-state="failed"] .jf-head { transform: scale(1.04, .88); }
+  .jf[data-state="failed"] .jf-leg1 { transform: rotate(22deg); }
+  .jf[data-state="failed"] .jf-leg2 { transform: scaleY(.75); }
+  .jf[data-state="failed"] .jf-leg3 { transform: rotate(-22deg); }
+  .jf[data-state="done"] .jf-leg { transform: scaleY(.62); }
+  .jf[data-state="done"] .jf-eye-open, .jf[data-state="failed"] .jf-eye-open { opacity: 0; }
+  .jf[data-state="done"] .jf-eye-happy, .jf[data-state="failed"] .jf-eye-sad { opacity: 1; }
+  .pressed .jf-lids { transform: scaleY(.12); }
 
-  @keyframes j-swim-head { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.04, .9); } }
-  @keyframes j-swim-leg { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.78); } }
-  @keyframes j-run-leg { 0%, 60%, 100% { transform: scaleY(1); } 30% { transform: scaleY(.45); } }
-  @keyframes j-wait-leg { 0%, 100% { transform: rotate(-24deg); } 50% { transform: rotate(-12deg); } }
-  @keyframes j-blink { 0%, 100% { opacity: 1; } 50% { opacity: .22; } }
-  @keyframes j-blink-soft { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
-  @keyframes j-breathe { 0%, 100% { opacity: .86; transform: scale(.86); } 50% { opacity: 1; transform: scale(1); } }
-  @keyframes j-typing { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
-  @keyframes j-pop { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: scale(1); } }
+  body.motion .jf.live[data-state="idle"] .jf-body { animation: jf-idle-lift 10s var(--motion-ease-in-out) infinite; }
+  body.motion .jf.live[data-state="idle"] .jf-head { animation: jf-idle-squash 10s var(--motion-ease-in-out) infinite; }
+  body.motion .jf.live[data-state="idle"] .jf-leg { animation: jf-idle-kick 10s var(--motion-ease-in-out) infinite; }
+  body.motion .jf.live[data-state="idle"] .jf-eyes, body.motion .jf.live[data-state="waiting"] .jf-eyes { animation: jf-blink 5.8s infinite; }
+  body.motion .jf.live[data-state="running"] .jf-body { animation: jf-run-bob 1.2s var(--motion-ease-in-out) infinite; }
+  body.motion .jf.live[data-state="running"] .jf-leg { animation: jf-run-leg 1.2s var(--motion-ease-in-out) infinite; }
+  body.motion .jf.live[data-state="running"] .jf-leg2 { animation-delay: .15s; }
+  body.motion .jf.live[data-state="running"] .jf-leg3 { animation-delay: .3s; }
+  body.motion .jf.live[data-state="running"] .jf-eyes { animation: jf-run-scan 2.4s var(--motion-ease-in-out) infinite; }
+  body.motion .jf.live[data-state="waiting"] .jf-body { animation: jf-wait-hop 2.4s var(--motion-ease-in-out) infinite; }
+  body.motion .jf.live[data-state="waiting"] .jf-ring { animation: jf-ring var(--motion-slow) var(--motion-ease-out) 1 backwards; }
+  body.motion .jf.live[data-state="failed"] .jf-body { animation: jf-shake var(--motion-slow) var(--motion-ease) 1 backwards; }
+  body.motion .jf.live[data-state="done"] .jf-body { animation: jf-rise var(--motion-slow) var(--motion-ease-out) 1 backwards; }
+
+  @keyframes jf-idle-lift { 0%, 86%, 100% { transform: translateY(0); } 91% { transform: translateY(-.9px); } }
+  @keyframes jf-idle-squash { 0%, 86%, 96%, 100% { transform: scale(1, 1); } 89.5% { transform: scale(1.05, .9); } }
+  @keyframes jf-idle-kick { 0%, 86%, 97%, 100% { transform: scaleY(1); } 90% { transform: scaleY(.7); } }
+  @keyframes jf-blink { 0%, 92%, 97%, 100% { transform: scaleY(1); } 94.5% { transform: scaleY(.08); } }
+  @keyframes jf-run-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-.7px); } }
+  @keyframes jf-run-leg { 0%, 60%, 100% { transform: scaleY(1); } 30% { transform: scaleY(.5); } }
+  @keyframes jf-run-scan { 0%, 100% { transform: translateX(-1px); } 50% { transform: translateX(1px); } }
+  @keyframes jf-wait-hop { 0%, 40%, 100% { transform: rotate(-7deg) translateY(0); } 10%, 30% { transform: rotate(-7deg) translateY(-1.5px); } 20% { transform: rotate(-7deg) translateY(-.2px); } }
+  @keyframes jf-ring { from { opacity: .75; transform: scale(.7); } to { opacity: 0; transform: scale(1.35); } }
+  @keyframes jf-shake { 0%, 100% { transform: translate(0, .8px); } 20% { transform: translate(-1.6px, .8px); } 45% { transform: translate(1.4px, .8px); } 70% { transform: translate(-.8px, .8px); } }
+  @keyframes jf-rise { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-2.2px); } }
 
   @media (prefers-reduced-motion: reduce) {
-    body.live * { animation: none !important; }
+    .jf *, .jf { animation: none !important; }
+    .jf-leg, .jf-body, .jf-head, .jf-face, .jf-lids, .jf-eye-open { transition-property: opacity, fill, stroke !important; }
   }
+  body:not(.motion) .jf-leg, body:not(.motion) .jf-body, body:not(.motion) .jf-head, body:not(.motion) .jf-face, body:not(.motion) .jf-lids, body:not(.motion) .jf-eye-open { transition-property: opacity, fill, stroke; }
+
   @media (max-width: 760px) {
     body { padding: 16px 16px 60px; }
-    .menus { grid-template-columns: 1fr; }
+    .stage, .menus { grid-template-columns: 1fr; }
   }
 </style>
 </head>
-<body class="live">
-<h1>水母 Logo 对比预览</h1>
-<p class="note">issue #281 的水母原稿，和按浮屿现有配色重画的三版扁平水母，放在同样的位置上比。三版都是草图，只用来比方向，选中后再细画。</p>
+<body class="motion" data-tone="ink">
+<h1>水母方案预览</h1>
+<p class="note">已定的方向：<b>应用图标用 issue #281 的原稿</b>，<b>岛上和其他地方用扁平的 B（圆顶双眼）</b>。这一页把 B 的状态、动效、交互和它会出现的每个位置都摆出来，B 是草图，线条定稿时再细画。</p>
 
 <div class="controls">
-  <div class="group" id="ctl-state"><span>收起条上的状态</span></div>
-  <div class="group" id="ctl-zoom"><span>状态灯大小</span></div>
-  <div class="group" id="ctl-anim"><span>动画</span></div>
+  <div class="group" id="ctl-state"><span>状态</span></div>
+  <div class="group" id="ctl-auto"></div>
+  <div class="group" id="ctl-tone"><span>岛上的身体颜色</span></div>
+  <div class="group" id="ctl-motion"><span>减少动画</span></div>
 </div>
 
-<h2>1. 应用图标</h2>
-<p class="note">128 像素下的五个候选。</p>
-<div class="cands" id="cands"></div>
+<h2>1. 互动台</h2>
+<p class="note">左边是放大 8 倍的 B，右边是实际大小的收起条。两边跟着上面的「状态」一起变。</p>
+<div class="stage">
+  <div class="big" id="big"></div>
+  <div class="side">
+    <div class="track" id="track"></div>
+    <p class="hint" id="hint">把鼠标移过来试试。</p>
+    <ul>
+      <li><b>鼠标靠近</b>：眼睛看向鼠标；4 秒没动就自己四处看。</li>
+      <li><b>按下</b>：闭眼，松开睁开。不缩放（动效约定：按下不缩放）。</li>
+      <li><b>点击</b>：打开 Agent 页，和现在点状态灯一样。</li>
+      <li><b>拖动右边的收起条</b>：触手往反方向拖尾，松手回正。</li>
+      <li><b>来新消息</b>：眼睛朝消息那边看一眼再回来。</li>
+    </ul>
+    <div class="group"><button class="seg" id="btn-msg">来一条消息</button></div>
+  </div>
+</div>
 
-<h2>2. 任务栏上的小尺寸</h2>
-<p class="note">16、24、32、48 像素，左边深色任务栏，右边浅色任务栏。</p>
-<div class="scroll"><div class="taskbars" id="taskbars"></div></div>
-
-<h2>3. 岛上的状态灯</h2>
-<p class="note">默认是实际大小（24 像素高，和收起条上一样）。<b>A 和 C</b> 靠核的颜色加触手姿态区分：运行时三根触手依次收缩，对应悬岛的三个点；等你时触手偏向一边、核变黄闪烁；失败时伞面压扁、触手散开、核变红；完成时触手收短并打勾。<b>B</b> 照原稿靠眼睛区分，等你和失败时整只变色。</p>
+<h2>2. 五种状态</h2>
+<p class="note">不只靠颜色：每种状态的<b>颜色、眼睛、姿态</b>三样都不同，色弱或只用余光也分得开。空闲和运行中同色，靠触手动不动来分。最后一行是系统开了「减少动画」时的样子，全部不动。</p>
 <div class="scroll"><div class="states" id="states"></div></div>
+<div class="scroll">
+<table>
+  <tr><th>状态</th><th>颜色</th><th>眼睛</th><th>姿态</th><th>进入时（只播一次）</th><th>持续期间</th></tr>
+  <tr><td>空闲</td><td>本色</td><td>睁开，约 6 秒眨一次，会看鼠标</td><td>触手下垂</td><td>颜色和姿态 240ms 过渡回来</td><td>每 10 秒游一下（约 1 秒），其余时间不动</td></tr>
+  <tr><td>运行中</td><td>本色</td><td>略向下，左右来回看（2.4 秒一轮）</td><td>三根触手依次收缩，身体跟着轻轻上浮</td><td>240ms 过渡</td><td>1.2 秒一轮，和悬岛的三个点同节奏；状态结束就停</td></tr>
+  <tr><td>等你</td><td>黄</td><td>向上看，照常眨眼</td><td>歪着头，触手垂直挂着</td><td>外圈扩散一次（420ms）</td><td>跳两下、停一下，2.4 秒一轮；状态结束就停</td></tr>
+  <tr><td>失败 / 可能中断</td><td>红</td><td>下垂的两条线</td><td>伞面压低，触手散开</td><td>左右晃两下（420ms）</td><td>不动</td></tr>
+  <tr><td>完成</td><td>薄荷绿</td><td>弯弯的笑眼</td><td>触手收短</td><td>上浮 2 像素再落回（420ms）</td><td>不动，3 秒后回到空闲（和现在的宠物一样）</td></tr>
+</table>
+</div>
+<ul class="plain">
+  <li><b>曲线和时长</b>都用动效约定里的档位：过渡用 <code>--motion-ease</code>，进场用 <code>--motion-ease-out</code>，循环用 <code>--motion-ease-in-out</code>；时长是 120 / 160 / 240 / 420ms 四档。</li>
+  <li><b>循环只给状态</b>：只有运行中、等你有持续的循环。空闲只有眨眼和 10 秒一次的游动，和现在悬岛的呼吸、宠物的眨眼是同一档。</li>
+  <li><b>不回弹</b>：完成的上浮、失败的晃动都不冲过头。</li>
+  <li><b>只动 transform、opacity 和颜色</b>，不触发排版；岛收起到边缘或隐藏时暂停（现有的 <code>data-paused</code>）。</li>
+  <li><b>多个会话</b>时显示哪个状态，规则不变，仍按现在的优先级取最要紧的一个。</li>
+</ul>
 
-<h2>4. 放在收起条上</h2>
-<p class="note">实际大小。用上面的「收起条上的状态」切换。</p>
-<div class="desk" id="bars"></div>
+<h2>3. 岛上的各个位置</h2>
+<p class="note">都跟着上面的「状态」变。</p>
+<div class="places" id="places"></div>
 
-<h2>5. Mac 菜单栏的单色图</h2>
-<p class="note">菜单栏图标是单色模板图，16 像素高，只剩剪影。</p>
+<h2>4. 应用图标</h2>
+<p class="note">原稿是 AI 生成的位图，定稿要重画成矢量。大尺寸直接用；16 到 32 像素建议另出一份<b>小尺寸简化版</b>（去掉高光和外发光、眼睛放大），下面第二行是我画的草图。</p>
+<div class="iconrow" id="iconrow"></div>
+<div class="scroll" style="margin-top:16px"><div class="taskbars" id="taskbars"></div></div>
+
+<h2>5. Mac 菜单栏和托盘</h2>
+<p class="note">菜单栏是单色模板图，用 B 的剪影，16 像素高。Windows 托盘是彩色的，用上面的小尺寸简化版。</p>
 <div class="menus" id="menus"></div>
+
+<h2>6. 图标和岛放在一起</h2>
+<p class="note">图标是蓝紫色。岛上的 B 有两种本色可选，用上面的「岛上的身体颜色」切换：<b>米白、深色眼睛</b>和现有的中心图案一致，但只靠形状和图标呼应；<b>淡紫、白眼睛</b>和图标同一个配色，深色、浅色主题都不用换色。等你、失败、完成时两种都换成状态色。</p>
+<div class="desk" id="desk"></div>
+
+<h2>7. 落地前要定的事</h2>
+<ul class="plain">
+  <li><b>状态灯的设置项</b>：在「悬岛 / 圆点」之外加「水母」并设为新默认，还是直接替换悬岛？已经选了悬岛或圆点的老用户保持原样。中心图案里同样加一项「水母」。</li>
+  <li><b>身体颜色</b>：米白配深色眼睛（和现有图案一致），还是淡紫配白眼睛（和图标同一个配色）。</li>
+  <li><b>贴边把手</b>：12 像素宽放不下眼睛，只剩一个小伞形。保留圆点更清楚，建议把手不换。</li>
+  <li><b>图标的制作</b>：原稿重画成矢量后，替换 <code>src-tauri/icons/</code> 的全部尺寸、Mac 菜单栏的模板图、README 里的小岛图和关于页；小尺寸简化版一起出。</li>
+  <li><b>撞脸检查</b>：凭印象，Phantom 钱包的图标是紫底、白色幽灵、两只椭圆眼，和原稿接近，定稿前查一下。</li>
+  <li><b>署名和 issue</b>：关于页写 ShengLin1001，在 #281 下回复采用结果。</li>
+</ul>
 
 <script>
 const STATES = [["idle", "空闲"], ["running", "运行中"], ["waiting", "等你"], ["failed", "失败"], ["done", "完成"]];
 const TITLES = { idle: "Claude Code · 空闲", running: "Claude Code · 正在改 3 个文件", waiting: "Claude Code · 等你确认", failed: "Claude Code · 出错了", done: "Claude Code · 已完成" };
-const ISLAND = { ink: "rgba(255,255,255,.94)", dark: "#1c1c1e", mint: "#6abf9b", yellow: "#ffd60a", red: "#ff453a" };
-const ICON = { ink: "#F4F5F1", dark: "#23262C", mint: "#6ABF9B", yellow: "#ffd60a", red: "#ff453a" };
-const LEGS = { a: [[9, 22.5], [18, 22.5], [27, 22.5]], b: [[10.5, 22.5], [18, 22.5], [25.5, 22.5]], c: [[10, 21], [18, 23.5], [26, 21]] };
-const BELL = {
-  a: "M2 14V11a9 9 0 0 1 9-9h14a9 9 0 0 1 9 9v3a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3Z",
-  b: "M5 15a13 13 0 0 1 26 0v.5a2.5 2.5 0 0 1-2.5 2.5h-21A2.5 2.5 0 0 1 5 15.5Z",
-  c: "M4 15C4 7.5 10 2 18 2s14 5.5 14 13v.5a2.5 2.5 0 0 1-2.5 2.5h-23A2.5 2.5 0 0 1 4 15.5Z",
-};
-const CANDS = [
-  ["mark", "现在的悬岛", "深灰底、米白胶囊、薄荷绿点。画的就是岛本身。"],
-  ["orig", "#281 原稿", "3D 果冻、蓝紫渐变、外发光。"],
-  ["a", "A 岛水母", "留下悬岛的胶囊，底下长出三根触手。点和短横都在，认得出是原来的标志。"],
-  ["b", "B 圆顶双眼", "原稿的形状，只换成浮屿的配色、去掉高光。用来看只换颜色够不够。"],
-  ["c", "C 发光核", "圆顶、没有眼睛，中间一个薄荷绿的核，状态颜色落在核上。"],
-];
-const LIGHTS = [
-  ["mark", "悬岛", "现在的默认"],
-  ["dot", "圆点", "现在的另一种"],
-  ["a", "A 岛水母", ""],
-  ["b", "B 圆顶双眼", ""],
-  ["c", "C 发光核", ""],
-];
-const DOT = { idle: "#34c759", running: "#0a84ff", waiting: "#ffd60a", failed: "#ff453a", done: "#34c759" };
+const BELL = "M5 15a13 13 0 0 1 26 0v.5a2.5 2.5 0 0 1-2.5 2.5h-21A2.5 2.5 0 0 1 5 15.5Z";
+const LEG_X = [10.5, 18, 25.5];
+const DONE_HOLD_MS = 3000;
+const AUTO_STEPS = [["idle", 2400], ["running", 4200], ["waiting", 4600], ["running", 2600], ["done", 3000], ["idle", 1800], ["running", 2600], ["failed", 3200]];
+const WANDER = [[0, 0], [-0.9, 0.2], [0.9, -0.3], [0, 0.7], [0.6, 0.5], [-0.7, -0.4]];
+let uid = 0;
 
-function stroke(d, color, width, cls) {
-  return `<path${cls ? ` class="${cls}"` : ""} d="${d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
+function jf({ state = "idle", follow = false, gaze = false, live = true, tiny = false, cls = "", style = "" } = {}) {
+  const legs = LEG_X.map((x, i) => `<path class="jf-leg jf-leg${i + 1}" style="transform-origin:${x}px 15px" d="M${x} 15V22.5"/>`).join("");
+  const face = tiny ? "" : `<g class="jf-face"><g class="jf-lids"><g class="jf-eyes"><g class="jf-eye-open"><ellipse cx="13.2" cy="11" rx="1.9" ry="2.8"/><ellipse cx="22.8" cy="11" rx="1.9" ry="2.8"/></g><path class="jf-eye-happy" d="M11.2 12.2a2 2 0 0 1 4 0M20.8 12.2a2 2 0 0 1 4 0"/><path class="jf-eye-sad" d="M11.4 12.3l3.5-1.7M24.6 12.3l-3.5-1.7"/></g></g></g>`;
+  const flags = `${follow ? " data-follow" : ""}${gaze && !tiny ? " data-gaze" : ""}`;
+  return `<svg class="jf${live ? " live" : ""}${cls ? ` ${cls}` : ""}" data-state="${state}"${flags}${style ? ` style="${style}"` : ""} viewBox="0 0 36 26"><circle class="jf-ring" cx="18" cy="12" r="11"/><g class="jf-body"><g class="jf-legs">${legs}</g><g class="jf-head"><path class="jf-bell" d="${BELL}"/>${face}</g></g></svg>`;
 }
 
-function stateColor(state, p) {
-  return state === "waiting" ? p.yellow : state === "failed" ? p.red : null;
+function ring() {
+  return `<svg class="ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="rgba(128,128,128,.3)" stroke-width="3"/><circle cx="12" cy="12" r="8.5" fill="none" stroke="#6abf9b" stroke-width="3" stroke-linecap="round" stroke-dasharray="34 54" transform="rotate(-90 12 12)"/></svg>`;
 }
 
-function jellyParts(v, state, p) {
-  const tint = stateColor(state, p);
-  const body = v === "b" && tint ? tint : p.ink;
-  const core = tint || p.mint;
-  const legs = LEGS[v].map(([x, y], i) => `<path class="leg leg${i + 1}" style="transform-origin:${x}px 15px" d="M${x} 15V${y}" fill="none" stroke="${body}" stroke-width="${v === "c" ? 4 : 4.6}" stroke-linecap="round"/>`).join("");
-  let face = "";
-  if (v === "a") {
-    face = `<circle class="core" style="transform-origin:10.5px 9.6px" cx="10.5" cy="9.6" r="2.7" fill="${core}"/>`;
-    face += state === "done" ? stroke("m18 10 2.3 2.3 4.4-4.6", p.dark, 2.2, "check") : stroke("M18 9.6H26", p.dark, 2.7);
-  } else if (v === "b") {
-    const dx = state === "waiting" ? 1.4 : 0;
-    if (state === "failed") face = stroke("M12 9.5l3 3m0-3-3 3M21 9.5l3 3m0-3-3 3", p.dark, 1.3);
-    else if (state === "done") face = stroke("M11.7 11.8a1.8 1.8 0 0 1 3.6 0M20.7 11.8a1.8 1.8 0 0 1 3.6 0", p.dark, 1.3);
-    else face = `<ellipse cx="${13.5 + dx}" cy="11" rx="1.6" ry="2.4" fill="${p.dark}"/><ellipse cx="${22.5 + dx}" cy="11" rx="1.6" ry="2.4" fill="${p.dark}"/>`;
-  } else {
-    face = state === "done"
-      ? stroke("m14.6 10.8 2.4 2.4 4.6-4.8", p.dark, 2.2, "check")
-      : `<circle class="core" style="transform-origin:18px 10.6px" cx="18" cy="10.6" r="3.2" fill="${core}"/>`;
-  }
-  return `${legs}<g class="head"><path d="${BELL[v]}" fill="${body}"/>${face}</g>`;
+function bar({ light = false, gaze = false, id = "" } = {}) {
+  return `<div class="bar${light ? " light" : ""}"${id ? ` id="${id}"` : ""}><span class="slot">${jf({ follow: true, gaze, cls: light ? "on-light" : "" })}</span><span data-title></span><span class="badge">1</span>${ring()}</div>`;
 }
 
-function jelly(v, state, p) {
-  return `<svg class="j" data-v="${v}" data-state="${state}" viewBox="0 0 36 26">${jellyParts(v, state, p)}</svg>`;
+function iconOriginal() {
+  return `<img src="assets/jellyfish-logo-issue-281.png" alt="issue #281 原稿" />`;
 }
 
-function mark(state, p) {
-  const core = stateColor(state, p) || p.mint;
-  let right = stroke("M18.75 11H26", p.dark, 2.9);
-  if (state === "running") right = [19.4, 22.4, 25.4].map((cx) => `<circle class="typing" cx="${cx}" cy="11" r="1.45" fill="${p.dark}"/>`).join("");
-  if (state === "done") right = stroke("m18.75 11.4 2.4 2.4 4.55-4.8", p.dark, 2.3);
-  return `<svg class="m" data-state="${state}" viewBox="0 2.5 36 17"><rect x="2.75" y="3" width="30.5" height="16" rx="8" fill="${p.ink}"/><circle class="core" style="transform-origin:10.75px 11px" cx="10.75" cy="11" r="2.9" fill="${core}"/>${right}</svg>`;
+function iconSmall() {
+  const n = ++uid;
+  return `<svg viewBox="0 0 64 64"><defs><radialGradient id="bg${n}" cx="50%" cy="45%" r="65%"><stop offset="0" stop-color="#5544f2"/><stop offset="1" stop-color="#2a15ad"/></radialGradient><linearGradient id="jb${n}" gradientUnits="userSpaceOnUse" x1="0" y1="2" x2="0" y2="23"><stop offset="0" stop-color="#b9a4ff"/><stop offset="1" stop-color="#eeaaf2"/></linearGradient></defs><rect x="1" y="1" width="62" height="62" rx="18" fill="url(#bg${n})"/><g transform="translate(8.6 14.5) scale(1.3)"><path d="M10.5 15V22.5M18 15V22.5M25.5 15V22.5" fill="none" stroke="url(#jb${n})" stroke-width="4.6" stroke-linecap="round"/><path d="${BELL}" fill="url(#jb${n})"/><ellipse cx="13" cy="11" rx="2.2" ry="3.2" fill="#f7f1ff"/><ellipse cx="23" cy="11" rx="2.2" ry="3.2" fill="#f7f1ff"/></g></svg>`;
 }
 
-function light(id, state, p) {
-  if (id === "dot") return `<span class="dot" data-state="${state}" style="background:${DOT[state]}"></span>`;
-  if (id === "mark") return mark(state, p);
-  return jelly(id, state, p);
+function build() {
+  document.getElementById("big").innerHTML = jf({ follow: true, gaze: true });
+  document.getElementById("track").innerHTML = bar({ gaze: true, id: "dragbar" });
+
+  const row = (name, sub, cell) => `<span class="lab">${name}${sub ? `<small>${sub}</small>` : ""}</span>${STATES.map(([state]) => cell(state)).join("")}`;
+  document.getElementById("states").innerHTML = `<span></span>${STATES.map(([, text]) => `<span class="col">${text}</span>`).join("")}`
+    + row("实际大小", "24 像素高", (state) => `<span class="chip">${jf({ state })}</span>`)
+    + row("放大 3 倍", "", (state) => `<span class="chip z3">${jf({ state })}</span>`)
+    + row("浅色主题", "实际大小", (state) => `<span class="chip light">${jf({ state, cls: "on-light" })}</span>`)
+    + row("减少动画", "不动，放大 3 倍", (state) => `<span class="chip z3">${jf({ state, live: false })}</span>`);
+
+  const place = (name, text, demo) => `<div class="place"><b>${name}</b><span>${text}</span><div class="demo">${demo}</div></div>`;
+  document.getElementById("places").innerHTML = [
+    place("收起条的状态灯", "最主要的位置，24 像素高，替换悬岛标志。", bar()),
+    place("浅色主题的岛", "米白那版在这里换成深色身体、浅色眼睛；淡紫那版不用换。状态色不变。", bar({ light: true })),
+    place("中心图案", "刘海或条中间的 40×22 位置，22 像素高。", `<div class="bar center"><span data-title-short></span><span class="slot">${jf({ follow: true })}</span>${ring()}</div>`),
+    place("展开后顶部栏的 Agent 入口", "现在是机器人图标、颜色跟状态；换成 15 像素高的 B。其余图标用色块代替。", `<div class="topbar"><span class="entry">${jf({ follow: true, cls: "dim" })}</span><i></i><i></i><i></i><i></i><i></i><span class="gap"></span><i class="round"></i><i class="round"></i></div>`),
+    place("贴边把手", "12×72。左边是现在的圆点，右边换成 B：放不下眼睛，只剩小伞形。", `<span class="handle"><span class="dot" data-dot></span><span class="unread"></span></span><span class="cap">现在</span><span class="handle">${jf({ follow: true, tiny: true })}<span class="unread"></span></span><span class="cap">换成 B</span>`),
+    place("Agent 页的空状态", "没有会话时放一只大的，52 像素高，会看鼠标。", `<div class="empty">${jf({ gaze: true })}<span>没有正在运行的会话</span><small>Agent 开始工作后会出现在这里</small></div>`),
+  ].join("");
+
+  const fig = (size, art, text) => `<figure><div class="ico" style="width:${size}px;height:${size}px">${art}</div>${text}</figure>`;
+  document.getElementById("iconrow").innerHTML = fig(160, iconOriginal(), "原稿 · 160") + fig(96, iconOriginal(), "原稿 · 96") + fig(64, iconOriginal(), "原稿 · 64") + fig(64, iconSmall(), "简化版草图 · 64") + fig(32, iconSmall(), "简化版 · 32");
+
+  const sizes = [16, 20, 24, 32, 48];
+  const head = (cls) => `<div class="head ${cls}">${sizes.map((s) => `<i style="width:${s}px">${s}</i>`).join("")}</div>`;
+  const icons = (art, cls) => `<div class="${cls}">${sizes.map((s) => `<span class="ico" style="width:${s}px;height:${s}px">${art()}</span>`).join("")}</div>`;
+  document.getElementById("taskbars").innerHTML = `<div class="lab head"></div>${head("dark")}${head("light")}`
+    + `<div class="lab">原稿直接缩小</div>${icons(iconOriginal, "dark")}${icons(iconOriginal, "light")}`
+    + `<div class="lab">小尺寸简化版（草图）</div>${icons(iconSmall, "dark")}${icons(iconSmall, "light")}`;
+
+  const strip = (cls, bg) => `<div class="menu ${cls}">${jf({ live: false, cls: "mono", style: `--jf-eye:${bg}` })}<i></i><i></i><em>周四 12:55</em></div>`;
+  document.getElementById("menus").innerHTML = strip("l", "#e6e6ea") + strip("d", "#2a2b31");
+
+  document.getElementById("desk").innerHTML = `${bar()}<div class="tb"><i></i><i></i><span class="ico">${iconOriginal()}</span><i></i><i></i></div>`;
 }
 
-function icon(id) {
-  if (id === "orig") return `<img src="assets/jellyfish-logo-issue-281.png" alt="issue #281 原稿" />`;
-  if (id === "mark") return `<svg viewBox="0 0 64 64"><rect x="1" y="1" width="62" height="62" rx="18" fill="#23262C"/><rect x="11" y="21" width="42" height="22" rx="11" fill="#F4F5F1"/><circle cx="22" cy="32" r="4" fill="#6ABF9B"/><path d="M33 32H43" stroke="#23262C" stroke-width="4" stroke-linecap="round"/></svg>`;
-  return `<svg viewBox="0 0 64 64"><rect x="1" y="1" width="62" height="62" rx="18" fill="#23262C"/><g transform="translate(9.5 15.5) scale(1.25)">${jellyParts(id, "idle", ICON)}</g></svg>`;
-}
+const view = { state: "idle", tone: "ink", reduce: false, auto: false };
+let doneTimer = 0;
+let autoTimer = 0;
+let autoStep = 0;
+let glanceUntil = 0;
+let lastMoveAt = 0;
+let wanderAt = 0;
 
-function mono(id, bg) {
-  const p = { ink: "currentColor", dark: bg, mint: bg, yellow: bg, red: bg };
-  return id === "mark" ? mark("idle", p) : jelly(id, "idle", p);
-}
-
-const view = { state: "running", zoom: 1, anim: true };
-
-function segs(host, options, key) {
+function segs(host, options, onPick) {
   for (const [value, text] of options) {
     const b = document.createElement("button");
     b.className = "seg";
     b.textContent = text;
     b.dataset.value = String(value);
-    b.addEventListener("click", () => { view[key] = value; render(); });
+    b.addEventListener("click", () => onPick(value));
     host.append(b);
   }
 }
 
-function syncSegs(host, value) {
-  for (const b of host.querySelectorAll("button.seg")) b.classList.toggle("on", b.dataset.value === String(value));
+function syncSegs(id, value) {
+  for (const b of document.getElementById(id).querySelectorAll("button.seg")) b.classList.toggle("on", b.dataset.value === String(value));
 }
 
-function renderStatic() {
-  document.getElementById("cands").innerHTML = CANDS.map(([id, name, text]) => `<div class="cand"><div class="art">${icon(id)}</div><b>${name}</b><span>${text}</span></div>`).join("");
-  const sizes = [16, 24, 32, 48];
-  const head = (cls) => `<div class="head ${cls}">${sizes.map((s) => `<i style="width:${s}px">${s}</i>`).join("")}</div>`;
-  const row = (id, cls) => `<div class="${cls}">${sizes.map((s) => `<span class="ico" style="width:${s}px;height:${s}px">${icon(id)}</span>`).join("")}</div>`;
-  document.getElementById("taskbars").innerHTML = `<div class="lab head"></div>${head("dark")}${head("light")}` + CANDS.map(([id, name]) => `<div class="lab">${name}</div>${row(id, "dark")}${row(id, "light")}`).join("");
-  const monos = ["mark", "a", "b", "c"];
-  const strip = (cls, bg) => `<div><div class="menu ${cls}">${monos.map((id) => mono(id, bg)).join("")}<i></i><i></i><em>周四 12:55</em></div><div class="menulabs"><span>从左到右：悬岛、A、B、C</span></div></div>`;
-  document.getElementById("menus").innerHTML = strip("l", "#e6e6ea") + strip("d", "#2a2b31");
+function setFace(svg, x, y) {
+  const face = svg.querySelector(".jf-face");
+  if (face) face.style.transform = x || y ? `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px)` : "";
 }
 
-function render() {
-  document.body.classList.toggle("live", view.anim);
-  syncSegs(document.getElementById("ctl-state"), view.state);
-  syncSegs(document.getElementById("ctl-zoom"), view.zoom);
-  syncSegs(document.getElementById("ctl-anim"), view.anim);
-  const states = document.getElementById("states");
-  states.style.setProperty("--z", String(view.zoom));
-  states.innerHTML = `<span></span>${STATES.map(([, text]) => `<span class="col">${text}</span>`).join("")}` + LIGHTS.map(([id, name, sub]) => `<span class="lab">${name}${sub ? `<small>${sub}</small>` : ""}</span>` + STATES.map(([state]) => `<span class="chip">${light(id, state, ISLAND)}</span>`).join("")).join("");
-  const ring = `<svg class="ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="3"/><circle cx="12" cy="12" r="8.5" fill="none" stroke="#6abf9b" stroke-width="3" stroke-linecap="round" stroke-dasharray="34 54" transform="rotate(-90 12 12)"/></svg>`;
-  document.getElementById("bars").innerHTML = LIGHTS.map(([id, name]) => `<div class="deskrow"><span>${name}</span><div class="bar"><span class="slot">${light(id, view.state, ISLAND)}</span><span>${TITLES[view.state]}</span>${ring}</div></div>`).join("");
+function resetGaze() {
+  for (const svg of document.querySelectorAll(".jf[data-gaze]")) setFace(svg, 0, 0);
 }
 
-segs(document.getElementById("ctl-state"), STATES, "state");
-segs(document.getElementById("ctl-zoom"), [[1, "实际大小"], [3, "放大 3 倍"]], "zoom");
-segs(document.getElementById("ctl-anim"), [[true, "开"], [false, "关"]], "anim");
-renderStatic();
-render();
+function setState(state) {
+  view.state = state;
+  window.clearTimeout(doneTimer);
+  if (state === "done" && !view.auto) doneTimer = window.setTimeout(() => setState("idle"), DONE_HOLD_MS);
+  for (const el of document.querySelectorAll(".jf[data-follow]")) el.dataset.state = state;
+  for (const el of document.querySelectorAll("[data-title]")) el.textContent = TITLES[state];
+  for (const el of document.querySelectorAll("[data-title-short]")) el.textContent = TITLES[state].split(" · ")[1];
+  for (const el of document.querySelectorAll("[data-dot]")) el.style.background = { idle: "#34c759", running: "#0a84ff", waiting: "#ffd60a", failed: "#ff453a", done: "#34c759" }[state];
+  if (state === "failed" || state === "done") resetGaze();
+  syncSegs("ctl-state", state);
+}
+
+function runAuto() {
+  window.clearTimeout(autoTimer);
+  if (!view.auto) return;
+  const [state, ms] = AUTO_STEPS[autoStep % AUTO_STEPS.length];
+  autoStep += 1;
+  setState(state);
+  autoTimer = window.setTimeout(runAuto, ms);
+}
+
+function sync() {
+  document.body.classList.toggle("motion", !view.reduce);
+  document.body.dataset.tone = view.tone;
+  syncSegs("ctl-tone", view.tone);
+  syncSegs("ctl-motion", view.reduce);
+  syncSegs("ctl-auto", view.auto);
+  if (view.reduce) resetGaze();
+}
+
+function gazeOffset(dx, dy, max, reach) {
+  const distance = Math.hypot(dx, dy);
+  if (!Number.isFinite(distance) || distance < 0.5) return { x: 0, y: 0 };
+  const length = max * Math.min(1, distance / reach);
+  return { x: (dx / distance) * length, y: (dy / distance) * length * 0.75 };
+}
+
+function gazeAllowed(svg) {
+  const state = svg.dataset.state;
+  return !view.reduce && state !== "failed" && state !== "done";
+}
+
+function lookAt(x, y) {
+  if (performance.now() < glanceUntil) return;
+  for (const svg of document.querySelectorAll(".jf[data-gaze]")) {
+    if (!gazeAllowed(svg)) continue;
+    const box = svg.getBoundingClientRect();
+    if (!box.height) continue;
+    const unit = box.height / 26;
+    const offset = gazeOffset(x - (box.left + box.width / 2), y - (box.top + box.height * 0.42), 1.1, 90 * Math.max(1, unit / 2));
+    setFace(svg, offset.x, offset.y);
+  }
+}
+
+function wander() {
+  const now = performance.now();
+  if (view.reduce || now - lastMoveAt < 4000 || now - wanderAt < 2600 || now < glanceUntil) return;
+  wanderAt = now;
+  const [x, y] = WANDER[Math.floor(Math.random() * WANDER.length)];
+  for (const svg of document.querySelectorAll(".jf[data-gaze]")) if (svg.dataset.state === "idle") setFace(svg, x, y);
+}
+
+function glance() {
+  const badge = document.querySelector("#dragbar .badge");
+  badge.classList.add("on");
+  document.getElementById("hint").textContent = "来了一条消息：眼睛朝右边看一眼，0.8 秒后回来。";
+  if (!view.reduce) {
+    glanceUntil = performance.now() + 800;
+    for (const svg of document.querySelectorAll(".jf[data-gaze]")) if (gazeAllowed(svg)) setFace(svg, 1.1, 0.1);
+    window.setTimeout(resetGaze, 800);
+  }
+  window.setTimeout(() => badge.classList.remove("on"), 2400);
+}
+
+function pressable(el, onClick) {
+  el.addEventListener("pointerdown", () => el.classList.add("pressed"));
+  for (const type of ["pointerup", "pointerleave", "pointercancel"]) el.addEventListener(type, () => el.classList.remove("pressed"));
+  if (onClick) el.addEventListener("click", onClick);
+}
+
+function draggable(barEl, trackEl) {
+  const hint = document.getElementById("hint");
+  let dragging = false;
+  let startX = 0;
+  let startLeft = 0;
+  let left = 16;
+  let lastX = 0;
+  let velocity = 0;
+  let skew = 0;
+  let moved = 0;
+
+  const tick = () => {
+    const target = dragging && !view.reduce ? Math.max(-26, Math.min(26, -velocity * 2.2)) : 0;
+    skew += (target - skew) * 0.22;
+    velocity *= 0.7;
+    const value = Math.abs(skew) < 0.05 ? "0deg" : `${skew.toFixed(2)}deg`;
+    barEl.querySelector(".jf").style.setProperty("--jf-drag", value);
+    document.querySelector("#big .jf").style.setProperty("--jf-drag", value);
+    window.requestAnimationFrame(tick);
+  };
+  window.requestAnimationFrame(tick);
+
+  barEl.addEventListener("pointerdown", (event) => {
+    dragging = true;
+    moved = 0;
+    startX = lastX = event.clientX;
+    startLeft = left;
+    barEl.classList.add("dragging", "pressed");
+    barEl.setPointerCapture(event.pointerId);
+  });
+  barEl.addEventListener("pointermove", (event) => {
+    if (!dragging) return;
+    velocity = event.clientX - lastX;
+    lastX = event.clientX;
+    moved = Math.max(moved, Math.abs(event.clientX - startX));
+    const max = Math.max(16, trackEl.clientWidth - barEl.offsetWidth - 16);
+    left = Math.max(16, Math.min(max, startLeft + event.clientX - startX));
+    barEl.style.left = `${left}px`;
+    if (moved > 4) {
+      barEl.classList.remove("pressed");
+      hint.textContent = "拖动中：触手往反方向拖尾，跟手、不加过渡。";
+    }
+  });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    barEl.classList.remove("dragging", "pressed");
+    hint.textContent = moved > 4 ? "松手：触手回正。" : "点击：打开 Agent 页。";
+  };
+  barEl.addEventListener("pointerup", end);
+  barEl.addEventListener("pointercancel", end);
+}
+
+build();
+segs(document.getElementById("ctl-state"), STATES, (state) => { view.auto = false; window.clearTimeout(autoTimer); sync(); setState(state); });
+segs(document.getElementById("ctl-auto"), [[true, "自动演示"]], () => { view.auto = !view.auto; autoStep = 0; sync(); runAuto(); });
+segs(document.getElementById("ctl-tone"), [["ink", "米白、深色眼睛"], ["lilac", "淡紫、白眼睛"]], (tone) => { view.tone = tone; sync(); });
+segs(document.getElementById("ctl-motion"), [[false, "关"], [true, "开"]], (reduce) => { view.reduce = reduce; sync(); });
+pressable(document.getElementById("big"), () => { document.getElementById("hint").textContent = "点击：打开 Agent 页。"; });
+draggable(document.getElementById("dragbar"), document.getElementById("track"));
+document.getElementById("btn-msg").addEventListener("click", glance);
+let pending = null;
+window.addEventListener("mousemove", (event) => {
+  lastMoveAt = performance.now();
+  if (pending) { pending = event; return; }
+  pending = event;
+  window.requestAnimationFrame(() => { lookAt(pending.clientX, pending.clientY); pending = null; });
+});
+window.setInterval(wander, 500);
+sync();
+setState("idle");
 </script>
 </body>
 </html>
