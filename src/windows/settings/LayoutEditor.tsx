@@ -1,7 +1,8 @@
 import { useRef, useState, type ReactNode } from "react";
+import { ChevronLeft } from "lucide-react";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
-import { entryOf, type SettingsCategory } from "./categories";
+import { entryOf, parentOf, type SettingsCategory } from "./categories";
 import { DevBar } from "./DevBar";
 import { SettingsTabs } from "./SettingsTabs";
 import { SettingsSidebar } from "./SettingsSidebar";
@@ -28,7 +29,11 @@ export function LayoutEditor({
   const panel = useRef<HTMLDivElement>(null);
   const [found, setFound] = useState<FoundRow | null>(null);
   useFoundRow(found, category, panel);
-  const entry = entryOf(category);
+  const parent = parentOf(category);
+  const pageTitle = (page: SettingsCategory) => {
+    const owner = entryOf(page);
+    return owner ? t.settings.categories.entries[owner] : t.settings.categories[page];
+  };
   return (
     <div className="settings-layout" data-tauri-drag-region>
       {!isMacOS && <WindowControls style="windows" />}
@@ -47,7 +52,18 @@ export function LayoutEditor({
 
       <div className="settings-content">
         <div className="settings-page__header" data-tauri-drag-region>
-          <h1 className="settings-page__title" data-tauri-drag-region>{entry ? t.settings.categories.entries[entry] : t.settings.categories[category]}</h1>
+          {parent ? (
+            <div className="settings-page__crumb" data-tauri-drag-region>
+              <button className="settings-page__crumb-back" type="button" title={t.settings.categories.backTo(pageTitle(parent))} onClick={() => onCategoryChange(parent)}>
+                <ChevronLeft size={18} strokeWidth={2} aria-hidden="true" />
+                <span>{pageTitle(parent)}</span>
+              </button>
+              <span className="settings-page__crumb-sep" aria-hidden="true">/</span>
+              <h1 className="settings-page__title" data-tauri-drag-region>{t.settings.categories[category]}</h1>
+            </div>
+          ) : (
+            <h1 className="settings-page__title" data-tauri-drag-region>{pageTitle(category)}</h1>
+          )}
           {titleAction}
         </div>
         <SettingsTabs category={category} onCategoryChange={onCategoryChange} />

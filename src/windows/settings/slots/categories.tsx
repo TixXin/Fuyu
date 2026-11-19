@@ -8,6 +8,8 @@ import { OverviewSettingsPage } from "../OverviewSettingsPage";
 import { ShortcutsSettingsPage } from "../ShortcutsSettingsPage";
 import { AboutSettingsPage } from "../AboutSettingsPage";
 import { PluginsV3SettingsPage } from "../PluginsV3SettingsPage";
+import { PluginMarketPage } from "../PluginMarketPage";
+import { PluginDiagnosticsPage } from "../PluginDiagnosticsPage";
 import { addSettingsCategory, type SettingsCategory, type SettingsPageProps } from "./categorySlot";
 import "./builtinModuleSwitches";
 import "./featureSettings";
@@ -76,6 +78,8 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   shortcutsIsland: shortcuts("shortcutsIsland"),
   shortcutsReference: shortcuts("shortcutsReference"),
   pluginsV3: ({ onShowPage }) => <PluginsV3SettingsPage onOpenPage={onShowPage} />,
+  pluginDiagnostics: ({ onShowPage }) => <PluginDiagnosticsPage onOpenPage={onShowPage} />,
+  pluginMarket: ({ onShowPage }) => <PluginMarketPage onOpenPage={onShowPage} />,
   about: ({ onSettingsChange }) => <AboutSettingsPage onSettingsChange={onSettingsChange} />,
 };
 

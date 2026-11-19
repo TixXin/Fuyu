@@ -260,6 +260,10 @@ async function runChecks() {
     const box = fixture.querySelector(`[data-cell="${pattern}"] svg`)!.getBoundingClientRect();
     expect(Math.round(box.height) === 22 && box.width > 10 && box.width <= 60, `${pattern} 高 22px、宽不超过 60px（${box.width.toFixed(1)}px）`);
   }
+  const eyesBox = fixture.querySelector('[data-cell="eyes"] svg')!.getBoundingClientRect();
+  const whites = Array.from(fixture.querySelectorAll('[data-cell="eyes"] .center-eyes-white')).map((white) => white.getBoundingClientRect());
+  const eyesMid = (Math.min(...whites.map((box) => box.left)) + Math.max(...whites.map((box) => box.right))) / 2;
+  expect(Math.abs(eyesMid - (eyesBox.left + eyesBox.width / 2)) < 0.5, `两只眼睛的中点就是图案的中心（差 ${(eyesMid - eyesBox.left - eyesBox.width / 2).toFixed(2)}px）`);
   const bird = fixture.querySelector(".center-bird-body")!;
   expect(getComputedStyle(bird).animationName === (reducedMotion ? "none" : "center-bird-peck"), reducedMotion ? "减弱动态时小鸟不动" : "小鸟在播放啄食动画");
 

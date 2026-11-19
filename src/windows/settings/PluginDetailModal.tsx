@@ -1,58 +1,38 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import { Blocks, Trash2, X, type LucideIcon } from "lucide-react";
-import { marketV1 } from "@fuyu/plugin-services";
+import { Store, Trash2, X } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
-import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginsV3";
-import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
-import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
-import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
-import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
-import { windowServices } from "../../features/plugin-kernel/services";
-import type { SettingsCategory } from "./categories";
-import {
-  BUILTIN_ICONS,
-  BUILTIN_PAGES,
-  PluginLastErrorDetails,
-  PluginUsageList,
-  TONES,
-  detailText,
-  isManagedThirdParty,
-  isOfficialMarketPlugin,
-  stateOf,
-} from "./BuiltinPluginsGroup";
-import { PluginSchemaForm } from "./PluginSchemaForm";
-import { PluginWindowRulesGroup } from "./PluginWindowRulesGroup";
-import type { PluginStatusV3 } from "./usePluginHostStatus";
+import { PluginEnableSwitch, PluginRowNote, pluginInitial, type RowAction } from "./InstalledPluginRow";
+import { PluginActivityTab, PluginCommandsTab, PluginPermissionsTab, PluginSettingsTab } from "./PluginDetailTabs";
+import type { InstalledEntry } from "./pluginEntries";
+import { marketClient } from "./pluginMarketActions";
+import type { PluginDetailTab } from "./pluginPageHandoff";
+import { detailText } from "./pluginServiceStatus";
+import "./PluginDetailModal.css";
+import "./InstalledPlugins.css";
 
 const FOCUSABLE = "button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href], summary, [tabindex]:not([tabindex='-1'])";
-const marketClient = windowServices.get(marketV1);
+const TABS: readonly PluginDetailTab[] = ["overview", "settings", "commands", "permissions", "activity"];
 
-export function PluginDetailModal({
-  builtin,
-  hostPlugin,
-  hostPlugins,
-  builtins,
-  onClose,
-  onOpenPage,
-}: {
-  builtin?: BuiltinPlugin;
-  hostPlugin?: PluginStatusV3;
-  hostPlugins?: readonly PluginStatusV3[] | null;
-  builtins?: readonly BuiltinPlugin[] | null;
+export function PluginDetailModal({ entry, initialTab = "overview", startUninstall = false, stale, onClose, onAction, onOpenShortcuts }: {
+  entry: InstalledEntry;
+  initialTab?: PluginDetailTab;
+  startUninstall?: boolean;
+  stale: boolean;
   onClose: () => void;
-  onOpenPage?: (page: SettingsCategory) => void;
+  onAction: (action: RowAction) => void;
+  onOpenShortcuts?: () => void;
 }) {
-  const settingsText = useTranslation().settings;
-  const text = settingsText.pluginsV3;
+  const t = useTranslation().settings.pluginsV3;
+  const text = t.page;
   const errorText = useErrorText();
-  const switchId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [confirmingUninstall, setConfirmingUninstall] = useState(false);
+  const [tab, setTab] = useState<PluginDetailTab>(initialTab);
+  const [confirming, setConfirming] = useState(startUninstall);
   const [removeData, setRemoveData] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const before = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -60,42 +40,23 @@ export function PluginDetailModal({
     return () => before?.focus();
   }, []);
 
-  if (!builtin && !hostPlugin) return null;
-  const id = builtin?.id ?? hostPlugin!.id;
-  const name = (text.builtinNames as Record<string, string | undefined>)[id] ?? hostPlugin?.name ?? id;
-  const Icon = (BUILTIN_ICONS as Record<string, LucideIcon | undefined>)[id] ?? Blocks;
-  const kind = builtin?.kind ?? hostPlugin?.kind;
-  const state = hostPlugin ? stateOf(hostPlugin) : builtin?.enabled ? "running" : "disabled";
-  const tone = TONES[state];
-  const detail = hostPlugin ? detailText(hostPlugin, text, hostPlugins, builtins) : null;
-  const summary =
-    (text.builtinNotes as Record<string, string | undefined>)[id] ??
-    (text.builtinSummaries as Record<string, string | undefined>)[id] ??
-    null;
-  const note = builtin?.kind === "essential" ? `${text.essentialNote}${summary ? ` · ${summary}` : ""}` : summary;
-  const targetPage = builtin ? BUILTIN_PAGES[builtin.id as BuiltinPluginName] : undefined;
-  const managedThirdParty = !builtin && isManagedThirdParty(hostPlugin);
-  const officialMarket = !builtin && isOfficialMarketPlugin(hostPlugin);
-  const thirdPartyEnabled = state !== "disabled";
+  const { status } = entry;
+  const technical = detailText(entry.plugin, t);
+  const facts: [string, string][] = [
+    [text.detail.facts.version, entry.version ? `v${entry.version}` : "–"],
+    [text.detail.facts.source, text.sources[entry.source]],
+    ...(entry.publisher ? [[text.detail.facts.publisher, entry.publisher] as [string, string]] : []),
+    [text.detail.facts.state, status.label ? text.labels[status.label] : text.running],
+    [text.detail.facts.id, entry.id],
+  ];
 
-  const toggleThirdParty = (enabled: boolean) => {
-    if (!hostPlugin) return;
+  const uninstall = () => {
     setBusy(true);
-    setActionError(null);
+    setError(null);
     void marketClient
-      .setEnabled({ id: hostPlugin.id, enabled })
-      .catch((failure: unknown) => setActionError(errorText(failure)))
-      .finally(() => setBusy(false));
-  };
-
-  const runUninstall = () => {
-    if (!hostPlugin) return;
-    setBusy(true);
-    setActionError(null);
-    void marketClient
-      .uninstall({ id: hostPlugin.id, removeData })
-      .then(() => onClose())
-      .catch((failure: unknown) => setActionError(errorText(failure)))
+      .uninstall({ id: entry.id, removeData })
+      .then(onClose)
+      .catch((failure: unknown) => setError(errorText(failure)))
       .finally(() => setBusy(false));
   };
 
@@ -109,117 +70,109 @@ export function PluginDetailModal({
     else if (!event.shiftKey && document.activeElement === last) (event.preventDefault(), first.focus());
   };
 
+  const onTabKey = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const index = TABS.indexOf(tab);
+    const next = TABS[(index + (event.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
+    setTab(next);
+    const list = event.currentTarget;
+    requestAnimationFrame(() => list.querySelector<HTMLButtonElement>(`[data-tab='${next}']`)?.focus());
+  };
+
   return createPortal(
-    <div className="plugins-v3__modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
-      <div
-        ref={dialogRef}
-        className={`plugins-v3__modal plugins-v3__plugin--${tone}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={name}
-        onKeyDown={onKeyDown}
-      >
-        <div className="plugins-v3__modal-head">
-          <span className={`plugins-v3__icon plugins-v3__icon--lg plugins-v3__icon--${tone}`} aria-hidden="true">
-            <Icon size={18} strokeWidth={2} />
-            <span className="plugins-v3__dot" />
+    <div className="plugin-dialog__backdrop" onMouseDown={(event) => event.target === event.currentTarget && !busy && onClose()}>
+      <div ref={dialogRef} className="plugin-dialog" role="dialog" aria-modal="true" aria-label={entry.title} data-plugin-detail={entry.id} onKeyDown={onKeyDown}>
+        <div className="plugin-dialog__head">
+          <span className={`plugin-icon plugin-icon--lg${status.dot === "ok" ? "" : " plugin-icon--dim"}`} aria-hidden="true">
+            {pluginInitial(entry.title)}
+            <span className={`plugin-icon__dot plugin-icon__dot--${status.dot}`} />
           </span>
-          <div className="plugins-v3__title-col">
-            <div className="plugins-v3__title-line">
-              <strong className="plugins-v3__modal-title">{name}</strong>
-              {officialMarket ? (
-                <span className="plugins-v3__pill plugins-v3__pill--official">{text.market.officialBadge}</span>
-              ) : kind ? (
-                <span className="plugins-v3__kind">{text.kinds[kind]}</span>
-              ) : null}
-              {hostPlugin?.source === "manual" && text.unreviewedBadge ? <span className="plugins-v3__kind">{text.unreviewedBadge}</span> : null}
-              <span className="plugins-v3__state">{text.states[state]}</span>
+          <div className="plugin-dialog__heading">
+            <div className="plugin-row__line plugin-row__line--wrap">
+              <span className="plugin-dialog__title">{entry.title}</span>
+              {entry.source === "official" ? <span className="plugin-badge plugin-badge--official">{text.badges.official}</span> : null}
+              {entry.source === "manual" ? <span className="plugin-badge plugin-badge--warn">{text.badges.unreviewed}</span> : null}
             </div>
-            <span className="plugins-v3__id">{id}</span>
+            <span className="plugin-dialog__sub">
+              {[entry.publisher, entry.version ? `v${entry.version}` : null, status.label ? text.labels[status.label] : text.running].filter(Boolean).join(" · ")}
+            </span>
           </div>
-          {targetPage && onOpenPage ? (
-            <SettingsLinkButton onClick={() => { onClose(); onOpenPage(targetPage); }}>
-              {settingsText.shortcuts.openFeaturePage}
-            </SettingsLinkButton>
-          ) : null}
-          {managedThirdParty ? (
-            <div className="plugins-v3__switch">
-              <SettingsSwitch id={switchId} checked={thirdPartyEnabled} disabled={busy} onChange={toggleThirdParty} />
-            </div>
-          ) : null}
-          <button
-            ref={closeRef}
-            className="plugins-v3__modal-close"
-            type="button"
-            disabled={busy}
-            aria-label={text.closeDetail}
-            title={text.closeDetail}
-            onClick={onClose}
-          >
-            <X size={15} strokeWidth={2.2} aria-hidden="true" />
-          </button>
+          <div className="plugin-dialog__head-actions">
+            <PluginEnableSwitch entry={entry} stale={stale} />
+            <button ref={closeRef} className="plugin-icon-btn" type="button" aria-label={text.detail.close} title={text.detail.close} disabled={busy} onClick={onClose}>
+              <X size={15} strokeWidth={2.2} aria-hidden="true" />
+            </button>
+          </div>
         </div>
-
-        {note ? <p className="plugins-v3__note">{note}</p> : null}
-        {detail ? <p className={`plugins-v3__detail plugins-v3__detail--${tone}`}>{detail}</p> : null}
-        {actionError ? <p className="plugins-v3__error-banner">{actionError}</p> : null}
-        {hostPlugin ? <PluginLastErrorDetails plugin={hostPlugin} defaultOpen /> : null}
-        {!builtin && hostPlugin ? (
-          <>
-            <PluginSchemaForm pluginId={id} />
-            <PluginWindowRulesGroup plugin={hostPlugin} />
-          </>
-        ) : null}
-        {hostPlugin?.usage ? <><PluginUsageList plugin={hostPlugin} /><SettingsFootnote text={text.cpuNote} /></> : null}
-
-        {managedThirdParty ? (
-          confirmingUninstall ? (
-            <div className="plugins-v3__uninstall-box">
-              <p className="plugins-v3__uninstall-prompt">{text.market.uninstallPrompt(id)}</p>
-              <label className="plugins-v3__uninstall-check">
-                <input
-                  type="checkbox"
-                  checked={removeData}
-                  disabled={busy}
-                  onChange={(e) => setRemoveData(e.currentTarget.checked)}
-                />
-                <span>{text.market.uninstallRemoveData}</span>
-              </label>
-              <div className="plugins-v3__modal-actions">
-                <button
-                  className="plugins-v3__btn"
-                  type="button"
-                  disabled={busy}
-                  onClick={() => setConfirmingUninstall(false)}
-                >
-                  {text.market.cancelBtn}
-                </button>
-                <button
-                  className="plugins-v3__btn plugins-v3__btn--danger"
-                  type="button"
-                  disabled={busy}
-                  data-action="confirm-uninstall-plugin"
-                  onClick={runUninstall}
-                >
-                  {busy ? text.market.uninstallingBtn : text.market.uninstallConfirmBtn}
-                </button>
+        <div className="plugin-tabs" role="tablist" onKeyDown={onTabKey}>
+          {TABS.map((key) => (
+            <button key={key} className="plugin-tabs__tab" type="button" role="tab" data-tab={key} aria-selected={tab === key} tabIndex={tab === key ? 0 : -1} onClick={() => setTab(key)}>
+              {text.detail.tabs[key]}
+            </button>
+          ))}
+        </div>
+        <div className="plugin-dialog__body" role="tabpanel" data-panel={tab}>
+          {tab === "overview" ? (
+            <>
+              {status.note ? <PluginRowNote note={status.note} onAction={onAction} full /> : null}
+              {entry.description ? <p className="plugin-dialog__desc">{entry.description}</p> : null}
+              <div className="plugin-facts">
+                {facts.map(([label, value]) => (
+                  <div key={label}><span>{label}</span><b title={value}>{value}</b></div>
+                ))}
+              </div>
+              {technical ? (
+                <p className="plugin-callout"><b>{text.detail.technical}</b> {technical}</p>
+              ) : null}
+            </>
+          ) : tab === "settings" ? (
+            <PluginSettingsTab entry={entry} />
+          ) : tab === "commands" ? (
+            <PluginCommandsTab entry={entry} onOpenShortcuts={onOpenShortcuts} />
+          ) : tab === "permissions" ? (
+            <PluginPermissionsTab entry={entry} />
+          ) : (
+            <PluginActivityTab entry={entry} restartDisabled={stale || !entry.managed || !entry.enabled} onRestart={() => onAction("restart")} />
+          )}
+        </div>
+        <div className="plugin-dialog__foot">
+          {confirming ? (
+            <div className="plugin-callout plugin-callout--bad plugin-dialog__confirm" data-uninstall-confirm>
+              <Trash2 size={15} strokeWidth={2.2} aria-hidden="true" />
+              <div>
+                <b>{text.detail.uninstallPrompt(entry.title)}</b> {text.detail.uninstallNote}
+                <label className="plugin-check">
+                  <input type="checkbox" checked={removeData} disabled={busy} onChange={(event) => setRemoveData(event.currentTarget.checked)} />
+                  <span>{text.detail.removeData}</span>
+                </label>
+                {error ? <p className="plugin-dialog__error">{error}</p> : null}
+                <div className="plugin-detail__buttons">
+                  <button className="plugin-btn plugin-btn--sm" type="button" disabled={busy} onClick={() => setConfirming(false)}>{text.detail.cancel}</button>
+                  <button className="plugin-btn plugin-btn--sm plugin-btn--danger-solid" type="button" disabled={busy} data-action="confirm-uninstall-plugin" onClick={uninstall}>
+                    {busy ? text.detail.uninstalling : text.detail.confirmUninstall}
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="plugins-v3__modal-actions">
-              <button
-                className="plugins-v3__btn plugins-v3__btn--danger"
-                type="button"
-                disabled={busy}
-                data-action="uninstall-plugin"
-                onClick={() => setConfirmingUninstall(true)}
-              >
-                <Trash2 size={13} strokeWidth={2.2} aria-hidden="true" />
-                <span>{text.market.uninstallBtn}</span>
-              </button>
-            </div>
-          )
-        ) : null}
+            <>
+              {entry.market ? (
+                <button className="plugin-btn plugin-btn--sm plugin-btn--ghost" type="button" data-action="view-in-market" onClick={() => onAction("whatsNew")}>
+                  <Store size={13} strokeWidth={2.2} aria-hidden="true" />
+                  {text.detail.viewInMarket}
+                </button>
+              ) : null}
+              <span className="plugin-dialog__grow" />
+              {entry.managed ? (
+                <button className="plugin-btn plugin-btn--sm plugin-btn--danger" type="button" data-action="uninstall-plugin" disabled={stale} onClick={() => setConfirming(true)}>
+                  <Trash2 size={13} strokeWidth={2.2} aria-hidden="true" />
+                  {text.detail.uninstall}
+                </button>
+              ) : null}
+            </>
+          )}
+        </div>
       </div>
     </div>,
     document.querySelector(".settings-stage") ?? document.getElementById("page") ?? document.body,

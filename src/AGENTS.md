@@ -13,6 +13,8 @@ src/
 │   ├── screenshot/          # 截图的选区窗口（?window=screenshot，每个显示器一个）：冻结画面、选区拖动（useSelection.ts）、工具栏和放大镜
 │   ├── settings/            # 设置窗口；slots/ 是窗口这一侧的注册：categorySlot.ts（SettingsPageProps 和分类句柄）、categories.tsx（窗口自己的页面，并用 glob 收进各功能的 features/<领域>/plugin/settings.tsx）、runners.ts（窗口自己的 settings.runner/v1 项）；分类清单、句柄和快捷键页分节的类型在 features/plugin-kernel/（settingsCategories.ts、settingsSlots.ts），功能的设置页和注册写在功能里，不加进这里；sections/ 是设置页共用的分节组件（外观、行为、主题、预设、快捷键、数据与备份、系统权限）
 │   ├── onboarding/          # 新手引导（?window=onboarding）：透明遮罩压暗屏幕、照亮真岛，旁边的卡片分幕讲解（有哪几幕、各在什么情况下出现，看 `OnboardingWindow.tsx` 的 `ACTS` 和它下面的筛选）；新装第一次启动时由 island/useFirstRunGuide.ts 打开，设置 → 关于里能再打开；引导开着时岛放演示内容（island/useOnboardingDemo.ts）
+│   ├── tray-menu/           # 托盘卡片（?window=tray-menu）：点托盘 / 菜单栏图标弹出的卡片，几种布局、Agent / 媒体 / 会议块、功能按钮和卡片偏好（窗口的创建和定位在 src-tauri/src/tray_menu/）
+│   ├── drag-grid/           # 拖岛时的中线辅助线（?window=drag-grid）：只画横竖两条线，状态由 Rust 经 api.ts 推来
 │   ├── plugin-window/       # 第 3 版插件的独立窗口（?window=plugin-window，实验能力 windows/v1）：overlay 带宿主受控护栏标题条（显示插件名与关闭按钮），渲染 plugin-window.view/v1 插槽
 │   └── translation/         # 快捷翻译窗口
 ├── features/                # 业务领域，每个领域自包含
@@ -37,6 +39,9 @@ src/
 │   ├── ssh-tunnel/          # 第 3 版内置插件 ssh-tunnel：设置是 AI Agent → SSH 远程 里的一节（SshTunnelSettings.tsx 是本地代理选择、自定义端口与当前转发信息，SshTunnelHosts.tsx 是主机列表、服务器端口、占用确认、隧道状态与 export 行；useSshTunnelProxy.ts 轮询本地代理，tunnelPort.ts、tunnelConfig.ts 为纯校验）
 │   ├── theme-market/        # 设置 → 主题市场：从 TixXin/fuyu-plugins 读取 themes.json，预览并应用或保存为预设
 │   ├── translation/         # 快捷翻译：服务与模型设置、凭据、快捷键的类型化封装，请求与自动翻译 hook，岛内翻译页
+│   ├── timer/               # 第 3 版内置插件 timer：计时器页、秒表、收起条的小块、到点提醒和休息提醒；host/ 是宿主部分（服务 timers/v1），plugin/services.ts 提供窗口服务 reminders/v1（岛上的提醒）；快捷键由 Rust 的 timer/ 注册
+│   ├── voice-input/         # 第 3 版内置插件 voice-input：收起条上的录音和识别结果（存待办、追加笔记、复制）、设置页（下载语音模型、快捷键）
+│   ├── sync/                # 跨设备同步的设置：后端（文件夹、WebDAV）、同步哪些类别、端到端加密、设备列表和状态；页面入口是 windows/settings/SyncSettingsPage.tsx
 │   └── updater/             # 自动更新
 ├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览）
 ├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写；settings/ 是岛屿设置（fuyu-settings）的模型：范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayoutSettings.ts、normalizeBehaviorSettings.ts，日历、歌词、Agent 会话列表和提醒的设置字段与默认值在 calendarSettings.ts、lyricsSettings.ts、agentSettings.ts，待办项目列表在 lib/todo-projects/，新设置加在这几个文件里，settings.ts 只做入口；theme/ 是主题、强调色、玻璃配色和动效（含 useReducedMotion）；shortcut/ 是快捷键的通用工具和录制（剪贴板专用的在 features/clipboard/shortcut.ts）；settings-backup/ 是设置文件、导出和恢复（只含 BACKUP_KEYS 列出的设置 key，并经 registerBackupSwitches 桥接内置插件开关）、升级前的备份；system-permissions/ 是系统权限的查询
@@ -132,7 +137,7 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 
 ## 新增 Tauri 命令清单
 
-1. Rust 侧实现命令，并在 `generate_handler!` 中注册（见 `src-tauri/AGENTS.md`）。
+1. Rust 侧实现命令，加进所在模块的 `tauri_commands!`（由 `lib.rs` 的 `collect_commands!` 汇总，见 `src-tauri/AGENTS.md`「lib.rs 与模块组织」）。
 2. 在对应 feature 的 `api.ts` 中添加类型化封装和返回类型。
 3. 如果用到插件或核心权限，更新 `src-tauri/capabilities/default.json`。
 4. 运行 `pnpm build` 和 Rust 侧要求的验证。

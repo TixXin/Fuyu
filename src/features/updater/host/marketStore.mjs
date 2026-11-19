@@ -289,6 +289,20 @@ export function readVerifiedCachedIndex(dataDir, trust, now) {
   }
 }
 
+export function blockedView(plugin, selected, installed) {
+  if (installed || selected.install || selected.manual || selected.autoUpdate) return null;
+  const skipped = selected.skipped;
+  if (!Array.isArray(skipped) || skipped.length === 0) return null;
+  if (skipped.every((item) => item.reason === "engines")) {
+    const byVersion = new Map((plugin.versions ?? []).map((entry) => [entry.version, entry]));
+    const newest = skipped.map((item) => byVersion.get(item.version)).filter(Boolean).sort((a, b) => compareVersions(b.version, a.version))[0];
+    const range = newest?.engines?.fuyu;
+    return typeof range === "string" && range.trim() ? { reason: "engines", range: range.trim() } : { reason: "engines" };
+  }
+  if (skipped.every((item) => item.reason === "platform")) return { reason: "platform" };
+  return null;
+}
+
 export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform, trust, now }) {
   const state = readState(dataDir);
   const installedRaw = readInstalledPackages(pluginsDir);
@@ -324,6 +338,7 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
       enabled: inst ? inst.enabled : false,
       source: inst?.source ?? null,
       revoked: Boolean(instRevoked || allRevoked),
+      blocked: blockedView(plugin, selected, inst),
       install: candidateView(selected.install, official, selected.install ? { fresh: selected.install.fresh } : {}, installMeta),
       manual: candidateView(selected.manual, official, selected.manual ? { cooled: selected.manual.cooled, fresh: !selected.manual.cooled, warned: selected.manual.warned } : {}, manualMeta),
       autoUpdate: selected.autoUpdate && !autoMeta.trustChange ? candidateView(selected.autoUpdate, official, { urgent: selected.autoUpdate.urgent }, autoMeta) : null,

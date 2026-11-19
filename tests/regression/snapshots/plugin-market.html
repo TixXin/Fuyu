@@ -1,0 +1,335 @@
+<body>
+  <div id="gallery">
+    <section class="gallery__stage settings-stage" data-stage="market">
+      <h2 class="gallery__title">
+        插件市场 / Market
+      </h2>
+      <div>
+        <div class="plugin-page plugins-v3" data-market-page="true">
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索插件名称、ID 或说明…" placeholder="搜索插件名称、ID 或说明…" type="search" value="">
+            </label>
+          </div>
+          <div class="plugins-v3__market">
+            <section aria-label="插件市场" class="plugins-v3__market-bar settings-group">
+              <div class="plugins-v3__market-bar-row">
+                <div class="plugins-v3__market-meta">
+                  <strong>
+                    共 8 个上架插件
+                  </strong>
+                  <button class="plugins-v3__btn" data-action="market-refresh" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-refresh-cw" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span>
+                      刷新索引
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </section>
+            <details class="plugins-v3__manual">
+              <summary>
+                从文件安装 .fuyu…
+              </summary>
+              <div class="plugins-v3__manual-body">
+                <div class="plugins-v3__manual-toggle">
+                  <label for="_id1_">
+                    允许手动安装 .fuyu 包
+                  </label>
+                  <span class="settings-switch">
+                    <input id="_id1_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </div>
+                <input accept=".fuyu" class="plugins-v3__file-input" data-testid="market-file-input" type="file">
+                <button class="plugins-v3__btn plugins-v3__btn--primary" data-action="market-install-file" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-upload" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                  <span>
+                    从文件安装 .fuyu…
+                  </span>
+                </button>
+              </div>
+            </details>
+            <div class="plugins-v3__grid">
+              <article class="plugins-v3__card" data-market-plugin="@fuyu/weather">
+                <div class="plugins-v3__plugin-head">
+                  <span aria-hidden="true" class="plugins-v3__icon plugins-v3__icon--info">
+                    <svg aria-hidden="true" class="lucide lucide-blocks" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="plugins-v3__dot"></span>
+                  </span>
+                  <div class="plugins-v3__title-col">
+                    <div class="plugins-v3__title-line">
+                      <span class="plugins-v3__plugin-name" title="天气">
+                        天气
+                      </span>
+                      <span class="plugins-v3__pill plugins-v3__pill--official">
+                        官方
+                      </span>
+                    </div>
+                    <span class="plugins-v3__id">
+                      @fuyu/weather
+                    </span>
+                  </div>
+                </div>
+                <p class="plugins-v3__note">
+                  在岛上看实时气温和逐小时预报
+                </p>
+                <div class="plugins-v3__card-foot">
+                  <span>
+                    已安装 v1.2.0
+                  </span>
+                  <span class="plugins-v3__foot-actions">
+                    <button class="plugins-v3__btn" disabled="" type="button">
+                      已安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="plugins-v3__card" data-market-plugin="@fuyu/pomodoro">
+                <div class="plugins-v3__plugin-head">
+                  <span aria-hidden="true" class="plugins-v3__icon plugins-v3__icon--info">
+                    <svg aria-hidden="true" class="lucide lucide-blocks" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="plugins-v3__dot"></span>
+                  </span>
+                  <div class="plugins-v3__title-col">
+                    <div class="plugins-v3__title-line">
+                      <span class="plugins-v3__plugin-name" title="番茄钟">
+                        番茄钟
+                      </span>
+                      <span class="plugins-v3__pill plugins-v3__pill--official">
+                        官方
+                      </span>
+                    </div>
+                    <span class="plugins-v3__id">
+                      @fuyu/pomodoro
+                    </span>
+                  </div>
+                </div>
+                <p class="plugins-v3__note">
+                  专注 25 分钟，休息 5 分钟
+                </p>
+                <div class="plugins-v3__card-foot">
+                  <span>
+                    已安装 v1.0.0
+                  </span>
+                  <span class="plugins-v3__foot-actions">
+                    <button class="plugins-v3__btn plugins-v3__btn--primary" data-action="market-update" type="button">
+                      更新至 v1.1.0
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="plugins-v3__card" data-market-plugin="@someone/clock">
+                <div class="plugins-v3__plugin-head">
+                  <span aria-hidden="true" class="plugins-v3__icon plugins-v3__icon--info">
+                    <svg aria-hidden="true" class="lucide lucide-blocks" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="plugins-v3__dot"></span>
+                  </span>
+                  <div class="plugins-v3__title-col">
+                    <div class="plugins-v3__title-line">
+                      <span class="plugins-v3__plugin-name" title="世界时钟">
+                        世界时钟
+                      </span>
+                      <span class="plugins-v3__pill">
+                        市场已审核
+                      </span>
+                    </div>
+                    <span class="plugins-v3__id">
+                      @someone/clock
+                    </span>
+                  </div>
+                </div>
+                <p class="plugins-v3__note">
+                  收起时显示另一个时区的时间
+                </p>
+                <div class="plugins-v3__card-foot">
+                  <span>
+                    已安装 v2.0.0
+                  </span>
+                  <span class="plugins-v3__foot-actions">
+                    <button class="plugins-v3__btn" disabled="" type="button">
+                      已安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="plugins-v3__card" data-market-plugin="@someone/shady">
+                <div class="plugins-v3__plugin-head">
+                  <span aria-hidden="true" class="plugins-v3__icon plugins-v3__icon--info">
+                    <svg aria-hidden="true" class="lucide lucide-blocks" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="plugins-v3__dot"></span>
+                  </span>
+                  <div class="plugins-v3__title-col">
+                    <div class="plugins-v3__title-line">
+                      <span class="plugins-v3__plugin-name" title="可疑插件">
+                        可疑插件
+                      </span>
+                      <span class="plugins-v3__pill">
+                        市场已审核
+                      </span>
+                      <span class="plugins-v3__pill plugins-v3__pill--bad">
+                        已撤销
+                      </span>
+                    </div>
+                    <span class="plugins-v3__id">
+                      @someone/shady
+                    </span>
+                  </div>
+                </div>
+                <p class="plugins-v3__note">
+                  已被市场撤下
+                </p>
+                <div class="plugins-v3__card-foot">
+                  <span>
+                    已安装 v0.3.0
+                  </span>
+                  <span class="plugins-v3__foot-actions">
+                    <button class="plugins-v3__btn" disabled="" type="button">
+                      已安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="plugins-v3__card" data-market-plugin="@someone/stocks">
+                <div class="plugins-v3__plugin-head">
+                  <span aria-hidden="true" class="plugins-v3__icon plugins-v3__icon--info">
+                    <svg aria-hidden="true" class="lucide lucide-blocks" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="plugins-v3__dot"></span>
+                  </span>
+                  <div class="plugins-v3__title-col">
+                    <div class="plugins-v3__title-line">
+                      <span class="plugins-v3__plugin-name" title="股票行情">
+                        股票行情
+                      </span>
+                      <span class="plugins-v3__pill">
+                        市场已审核
+                      </span>
+                    </div>
+                    <span class="plugins-v3__id">
+                      @someone/stocks
+                    </span>
+                  </div>
+                </div>
+                <p class="plugins-v3__note">
+                  自选股涨跌一眼看到
+                </p>
+                <div class="plugins-v3__card-foot">
+                  <span>
+                    已安装 v1.0.0
+                  </span>
+                  <span class="plugins-v3__foot-actions">
+                    <button class="plugins-v3__btn" disabled="" type="button">
+                      已安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="plugins-v3__card" data-market-plugin="@fuyu/countdown">
+                <div class="plugins-v3__plugin-head">
+                  <span aria-hidden="true" class="plugins-v3__icon plugins-v3__icon--info">
+                    <svg aria-hidden="true" class="lucide lucide-blocks" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="plugins-v3__dot"></span>
+                  </span>
+                  <div class="plugins-v3__title-col">
+                    <div class="plugins-v3__title-line">
+                      <span class="plugins-v3__plugin-name" title="倒数日">
+                        倒数日
+                      </span>
+                      <span class="plugins-v3__pill plugins-v3__pill--official">
+                        官方
+                      </span>
+                    </div>
+                    <span class="plugins-v3__id">
+                      @fuyu/countdown
+                    </span>
+                  </div>
+                </div>
+                <p class="plugins-v3__note">
+                  离重要的日子还有几天
+                </p>
+                <div class="plugins-v3__card-foot">
+                  <span>
+                    v1.0.0
+                  </span>
+                  <span class="plugins-v3__foot-actions">
+                    <button class="plugins-v3__btn plugins-v3__btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="plugins-v3__card" data-market-plugin="@someone/notes">
+                <div class="plugins-v3__plugin-head">
+                  <span aria-hidden="true" class="plugins-v3__icon plugins-v3__icon--info">
+                    <svg aria-hidden="true" class="lucide lucide-blocks" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="plugins-v3__dot"></span>
+                  </span>
+                  <div class="plugins-v3__title-col">
+                    <div class="plugins-v3__title-line">
+                      <span class="plugins-v3__plugin-name" title="便签">
+                        便签
+                      </span>
+                      <span class="plugins-v3__pill">
+                        市场已审核
+                      </span>
+                      <span class="plugins-v3__pill" title="上架未满 3 天">
+                        刚上架
+                      </span>
+                    </div>
+                    <span class="plugins-v3__id">
+                      @someone/notes
+                    </span>
+                  </div>
+                </div>
+                <p class="plugins-v3__note">
+                  随手记一句
+                </p>
+                <div class="plugins-v3__card-foot">
+                  <span>
+                    v0.9.0
+                  </span>
+                  <span class="plugins-v3__foot-actions">
+                    <button class="plugins-v3__btn plugins-v3__btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="plugins-v3__card" data-market-plugin="@someone/old">
+                <div class="plugins-v3__plugin-head">
+                  <span aria-hidden="true" class="plugins-v3__icon plugins-v3__icon--info">
+                    <svg aria-hidden="true" class="lucide lucide-blocks" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="plugins-v3__dot"></span>
+                  </span>
+                  <div class="plugins-v3__title-col">
+                    <div class="plugins-v3__title-line">
+                      <span class="plugins-v3__plugin-name" title="旧插件">
+                        旧插件
+                      </span>
+                      <span class="plugins-v3__pill">
+                        市场已审核
+                      </span>
+                    </div>
+                    <span class="plugins-v3__id">
+                      @someone/old
+                    </span>
+                  </div>
+                </div>
+                <p class="plugins-v3__note">
+                  版本不够
+                </p>
+                <div class="plugins-v3__card-foot">
+                  <span>
+                    需要浮屿 &gt;=9.0.0
+                  </span>
+                  <span class="plugins-v3__foot-actions"></span>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>

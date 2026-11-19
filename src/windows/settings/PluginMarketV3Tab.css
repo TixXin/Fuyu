@@ -86,7 +86,7 @@
 }
 
 .plugins-v3__btn--primary {
-  color: var(--color-accent);
+  color: var(--info-text, var(--color-accent));
   border-color: color-mix(in srgb, var(--color-accent) 36%, transparent);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
@@ -247,31 +247,30 @@
   cursor: pointer;
 }
 
-.plugins-v3__name-btn {
+.plugins-v3__manual {
   min-width: 0;
-  max-width: 100%;
-  padding: 0;
-  overflow: hidden;
-  color: var(--text-1);
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius-sm);
-  font: inherit;
-  font-size: 13.5px;
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.plugins-v3__manual summary {
+  width: fit-content;
+  color: var(--info-text, var(--color-accent));
   font-weight: 600;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   cursor: pointer;
 }
 
-.plugins-v3__name-btn:hover {
-  color: var(--color-accent);
-}
-
-.plugins-v3__name-btn:focus-visible {
+.plugins-v3__manual summary:focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
+}
+
+.plugins-v3__manual-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px var(--space-md);
+  margin-top: 8px;
 }
 
 .plugins-v3__market-modal {

@@ -121,8 +121,10 @@ async function runChecks() {
     await set({ task: null, agents: true, count: 2, slots: { center: <span className="test-center">中</span>, gauges: [{ id: "usage:claudeCode", node: <span className="test-gauge" style={{ display: "block", width: 42, height: 20 }} /> }] } });
     const box = (selector: string) => bar().querySelector(selector)!.getBoundingClientRect();
     const [pattern, slot, light, gauges] = [box(".test-center"), box(".island__center-slot"), box(".island__pulse"), box(".island__gauge-slot")];
-    check(Math.abs(pattern.left + pattern.width / 2 - (slot.left + slot.width / 2)) < 1
-      && Math.abs(pattern.top + pattern.height / 2 - (bar().getBoundingClientRect().top + 19)) < 1, "摘要为空时中心图案在剩余空间居中");
+    const shell = bar().getBoundingClientRect();
+    check(light.right - shell.left !== shell.right - gauges.left
+      && Math.abs(pattern.left + pattern.width / 2 - (shell.left + shell.width / 2)) < 1
+      && Math.abs(pattern.top + pattern.height / 2 - (shell.top + 19)) < 1, "摘要为空时中心图案对准岛的中线，不随左右两侧的宽度偏移");
     check(slot.left >= light.right && slot.right <= gauges.left, "中心槽位在状态灯与右侧元素之间，不压住仪表");
     openedPage = null;
     await act(async () => bar().querySelector<HTMLElement>(".test-center")!.click());

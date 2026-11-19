@@ -29,7 +29,7 @@ export const zhCN: SessionRingText = {
   openAgents: (summary) => `${summary}，点击打开 Agent 页`,
   settings: {
     title: "会话环",
-    footer: "在收起条上代替蓝色会话数：等你确认、等你回复、运行、完成各有颜色，悬停列出等你处理的会话，点击打开 Agent 页。显示的就是 Agent 页列出的会话，AI Agent 关闭时不显示。在 设置 → 插件（第 3 版）里关掉内置插件「会话环」，这一节和收起条上的环一起隐藏。",
+    footer: "在收起条上代替蓝色会话数：等你确认、等你回复、运行、完成各有颜色，悬停列出等你处理的会话，点击打开 Agent 页。显示的就是 Agent 页列出的会话，AI Agent 关闭时不显示。关掉这一节的开关，收起条上的环一起隐藏。",
     style: "样式",
     styles: { grid: "像素格", ring: "分段环", bar: "状态条", signal: "信号格" },
     styleHints: { grid: "2×2 或 3×3 状态色点阵", ring: "四色圆环，中间可显总数", bar: "总数加按比例分段横条", signal: "四根竖柱逐格点亮" },
@@ -49,7 +49,7 @@ export const en: SessionRingText = {
   openAgents: (summary) => `${summary}. Click to open the Agent page`,
   settings: {
     title: "Session ring",
-    footer: "Takes the blue session count's place on the collapsed bar: needs you, your turn, running and done each have a colour; hovering lists the sessions waiting on you and a click opens the Agent page. It shows exactly the sessions the Agent page lists and hides while AI Agent is off. Switching off the built-in plugin \"Session ring\" under Settings → Plugins (v3) hides this group and the ring.",
+    footer: "Takes the blue session count's place on the collapsed bar: needs you, your turn, running and done each have a colour; hovering lists the sessions waiting on you and a click opens the Agent page. It shows exactly the sessions the Agent page lists and hides while AI Agent is off. Switching this group off hides the ring too.",
     style: "Style",
     styles: { grid: "Pixel grid", ring: "Segmented ring", bar: "State bar", signal: "Signal bars" },
     styleHints: { grid: "2×2 or 3×3 state matrix", ring: "Four-arc ring with optional count", bar: "Proportional state strip", signal: "Four stacked signal columns" },
