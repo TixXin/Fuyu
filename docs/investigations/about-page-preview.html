@@ -142,7 +142,7 @@ table.cmp tr:last-child td { border-bottom: 0; }
 .side { padding: 8px; min-height: 0; display: grid; }
 .side-card { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: 10px 8px 8px; border-radius: 12px; background: var(--card); border: 1px solid var(--a06); }
 .side-search { position: relative; margin: 0 2px 8px; color: var(--t3); }
-.side-search svg { position: absolute; left: 9px; top: 8.5px; }
+.side-search > svg { position: absolute; left: 9px; top: 8.5px; }
 .side-search div { height: 30px; padding: 0 10px 0 29px; display: flex; align-items: center; border-radius: var(--radius-md); background: var(--a06); border: 1px solid var(--a08); font-size: 12.5px; color: var(--t3); }
 .side-list { overflow: hidden; display: grid; align-content: start; gap: 1px; }
 .s-item { width: 100%; min-height: 29px; display: flex; align-items: center; gap: 9px; padding: 0 10px; border-radius: var(--radius-md); color: var(--t2); font-size: 13px; white-space: nowrap; }
@@ -158,7 +158,7 @@ table.cmp tr:last-child td { border-bottom: 0; }
 .win.narrow .side-card { padding: 8px 6px; }
 .win.narrow .side-search { height: 30px; display: grid; place-items: center; }
 .win.narrow .side-search div { display: none; }
-.win.narrow .side-search svg { position: static; }
+
 .win.narrow .s-item { justify-content: center; padding: 0; min-height: 32px; }
 .win.narrow .s-item span, .win.narrow .s-item .chev { display: none; }
 .win.narrow .s-sub { margin: 0; padding: 0; border: 0; }
@@ -347,9 +347,63 @@ table.cmp tr:last-child td { border-bottom: 0; }
 .C-links .row { min-height: 46px; padding: 9px 16px; }
 .C-links .ibox { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--a06); flex: none; }
 
+.tabsbar { flex: none; display: flex; gap: 2px; overflow-x: auto; margin: 2px 0 10px; padding: 2px 24px 0; border-bottom: 1px solid var(--a06); scrollbar-width: none; max-width: 908px; }
+.win.mac .tabsbar { padding-left: 28px; }
+.win.narrow .tabsbar { padding-left: 16px; }
+.tab { position: relative; flex: none; padding: 8px 10px 10px; color: var(--t3); background: transparent; border: 0; border-radius: 6px 6px 0 0; font-size: 13px; white-space: nowrap; }
+.tab:hover { color: var(--text); background: var(--a04); }
+.tab.on { color: var(--text); font-weight: 600; }
+.tab.on::after { content: ""; position: absolute; right: 10px; bottom: -1px; left: 10px; height: 2px; border-radius: 999px; background: var(--accent); }
+.C-wrap { max-width: 760px; display: grid; gap: 16px; width: 100%; }
+.C-hero { position: relative; }
+.C-linkrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--group-line); width: 100%; }
+.C-linkrow a { display: inline-flex; align-items: center; gap: 5px; color: var(--t2); text-decoration: none; font-size: 12.5px; border-radius: 6px; padding: 1px 4px; }
+.C-linkrow a:hover { color: var(--text); }
+.ibtn { width: 28px; height: 28px; display: inline-grid; place-items: center; padding: 0; border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; color: var(--t2); }
+.ibtn:hover { background: var(--a08); color: var(--text); }
+.card-menu { position: absolute; top: 10px; right: 10px; }
+.pop { position: absolute; top: 42px; right: 10px; z-index: 4; min-width: 230px; padding: 4px; border-radius: 10px; background: var(--card); border: 1px solid var(--a10); box-shadow: var(--shadow); text-align: left; animation: fade-in var(--motion-base) var(--motion-ease-out) backwards; }
+.pop-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 10px; border-radius: 7px; font-size: 12.5px; color: var(--text); }
+.pop-row .lnk + .lnk { margin-left: 8px; }
+.danger-gap { margin-top: 14px; }
+.vrow.is-new { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.newtag { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 5px; font-size: 11px; font-weight: 600; color: var(--on-accent); background: var(--accent); }
+.flash, .flash-g { animation: flash 1.8s var(--motion-ease) forwards; border-radius: 8px; }
+@keyframes flash { from { background: color-mix(in srgb, var(--accent) 22%, transparent); } to { background: transparent; } }
+html.rm .flash, html.rm .flash-g { animation: none !important; background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.side-search input { width: 100%; height: 30px; padding: 0 10px 0 29px; border-radius: var(--radius-md); background: var(--a06); border: 1px solid var(--a08); font-size: 12.5px; color: var(--text); outline: none; }
+.side-search input::placeholder { color: var(--t3); }
+.side-search input:focus { border-color: var(--focus); }
+.side-search-btn { display: none; }
+.s-hits { display: grid; gap: 1px; margin: 2px 0 0 26px; }
+.s-hit { text-align: left; border: 0; background: transparent; padding: 4px 8px; border-radius: 6px; color: var(--t2); font-size: 12px; }
+.s-hit:hover { background: var(--a06); color: var(--text); }
+.s-empty { margin: 6px 10px; font-size: 12px; color: var(--t3); }
+.win.narrow .side-search > svg, .win.narrow .side-search input { display: none; }
+.win.narrow .side-search-btn { display: grid; place-items: center; width: 36px; height: 30px; border: 0; background: transparent; color: var(--t3); border-radius: 8px; }
+.win.narrow .side-card.expanded { position: absolute; z-index: 6; top: 8px; bottom: 8px; left: 8px; width: 220px; padding: 10px 8px 8px; box-shadow: var(--shadow); background: var(--card); }
+.win.mac.narrow .side-card.expanded { top: 0; bottom: 0; left: 0; padding-top: 40px; border-radius: 0 12px 12px 0; }
+.win.narrow .side-card.expanded .side-search > svg, .win.narrow .side-card.expanded .side-search input { display: block; }
+.win.narrow .side-card.expanded .side-search { display: block; height: auto; }
+.win.narrow .side-card.expanded .side-search > svg { position: absolute; }
+.win.narrow .side-card.expanded .side-search-btn { display: none; }
+.win.narrow .side-card.expanded .s-item { justify-content: flex-start; padding: 0 10px; }
+.win.narrow .side-card.expanded .s-item span { display: inline; }
+.jump-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.jump-row .btn { height: 28px; font-size: 12px; }
+.jump-out { font-size: 12.5px; margin: 8px 0 0 !important; }
+.qa { margin: 8px 0 0; padding-left: 20px; color: var(--t2); font-size: 13px; }
+.qa li { margin-bottom: 6px; }
+.qa b { color: var(--text); }
+.spec { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; margin-top: 10px; }
+.spec .panel { border: 1px solid var(--a08); border-radius: var(--radius-xl); background: var(--group); padding: 12px 14px; font-size: 12.5px; }
+.spec .panel h4 { margin: 0 0 6px; font-size: 13.5px; color: var(--text); }
+.spec .panel ul { margin: 0; padding-left: 18px; color: var(--t2); }
+
 html.rm *, html.rm *::before, html.rm *::after { animation: none !important; transition-duration: 0s !important; }
 @media (prefers-reduced-motion: reduce) {
-  .body-in.enter, .notes, .C-view, .B-id .opts { animation: none; }
+  .body-in.enter, .notes, .C-view, .B-id .opts, .pop { animation: none; }
+  .flash, .flash-g { animation: none; background: color-mix(in srgb, var(--accent) 18%, transparent); }
   .dot.busy { animation: none; }
   .log .chev { transition: none; }
 }
@@ -359,9 +413,9 @@ html.rm *, html.rm *::before, html.rm *::after { animation: none !important; tra
 <div class="topbar" id="topbar"></div>
 <main class="doc">
   <section>
-    <h2>关于页新方案（C138）</h2>
-    <p class="lead">三套差别明显的排法，都画在仿真的设置窗口里。上面的开关能切方案、通道（开发版 / 测试版 / 正式版）、更新状态、窗口宽窄、深浅色、中英文和 Win / Mac；更新日志的版本行能点开收起，测试版小胶囊能切，「重置」点了会变成确认。右边写每套的思路、解决了哪几条、取舍和代价。</p>
-    <p class="muted" style="font-size:13px">现状的问题（任务 C138）：</p>
+    <h2>关于页新方案（C138，第二版）</h2>
+    <p class="lead">用户 2026-11-19 选了 C，并要求「把更新日志放在单独 tab，设置和帮助也是」，标签放在关于页顶部、和其他页面的标签一致。之后又说「设置还是放在首页里」。这一版：标题下面一排下划线标签 <b>概览 / 更新日志 / 帮助</b>，概览是首页，放居中名片和更新设置。上面的开关能比较重置与退出的三个位置；A、B 已放弃，留着对比。</p>
+    <details style="margin-top:10px"><summary class="muted" style="cursor:pointer;font-size:13px">第一版的问题清单和三套方案对比（已定，折叠）</summary>
     <ol class="problems">
       <li><b>双栏不齐</b>：右栏长，左栏「更新日志」下面空一大块。</li>
       <li><b>重复抢眼</b>：标题右边「Logo 设计：征集中」胶囊和横幅的名字、版本挤在同一屏顶部。</li>
@@ -375,16 +429,51 @@ html.rm *, html.rm *::before, html.rm *::after { animation: none !important; tra
       <table class="cmp">
         <thead><tr><th>方案</th><th>排法</th><th>更新状态和操作</th><th>更新日志</th><th>链接</th><th>Logo 征集</th><th>重置与退出</th></tr></thead>
         <tbody>
-          <tr><td>A 单栏阅读 <span class="tag rec">推荐</span></td><td>单栏，宽度收到 720，从上往下读</td><td>并进横幅：右边状态 + 唯一主按钮，原「版本」卡去掉</td><td>第二块，当前版本默认展开（最高 300，内部滚动）</td><td>一条四格的横条，高 42</td><td>挪到页尾落款里</td><td>页尾虚线分隔后一组普通卡片，只有按钮是红字</td></tr>
-          <tr><td>B 名片 + 日志</td><td>左 268 名片列吸顶，右边整列是日志</td><td>名片里：状态、整宽主按钮、通道、自动检查</td><td>右栏全部，当前版本展开、不限高</td><td>名片下一张列表卡，一行 34</td><td>Logo 位外圈紫环加「征集」小标</td><td>名片最底下两个灰色文字链接，悬停变红</td></tr>
-          <tr><td>C 名片居中 + 分段</td><td>居中的大名片 + 三个分段：更新日志 / 更新设置 / 链接与帮助</td><td>名片下一颗胶囊：状态 + 主按钮</td><td>默认分段，当前版本展开</td><td>「链接与帮助」分段里一组列表</td><td>「链接与帮助」里一行</td><td>「链接与帮助」最底下一组，按钮红字</td></tr>
+          <tr><td>A 单栏阅读</td><td>单栏，宽度收到 720</td><td>并进横幅</td><td>第二块，当前版本展开</td><td>四格横条</td><td>页尾落款</td><td>页尾，红字按钮</td></tr>
+          <tr><td>B 名片 + 日志</td><td>左名片吸顶，右整列日志</td><td>名片里</td><td>右栏全部</td><td>名片下列表</td><td>Logo 位紫环</td><td>名片底部灰字</td></tr>
+          <tr><td>C 名片 + 分段 → 选定</td><td>第二版改成顶部标签</td><td>概览名片里的胶囊</td><td>单独标签</td><td>名片底下一行文字链接</td><td>页尾落款</td><td>推荐概览底部</td></tr>
         </tbody>
       </table>
     </div>
+    </details>
   </section>
   <section class="plan">
     <aside class="plan-note" id="note"></aside>
+    <div class="panel-ish">
+      <h3 style="margin:4px 0 0">跳转入口和设置搜索（点了在下面的窗口里生效）</h3>
+      <div id="jumps"></div>
+    </div>
     <div class="win-scroll"><div id="win"></div></div>
+  </section>
+  <section>
+    <h3>拟定的做法（实现时要写进文档）</h3>
+    <div class="spec">
+      <div class="panel"><h4>标签就是页名</h4><ul>
+        <li>概览 <code>about</code>（名片 + 更新设置）、更新日志 <code>aboutChangelog</code>、帮助 <code>aboutHelp</code>，和外观、AI Agent 的标签一样，每个标签一个页名。</li>
+        <li>设置搜索的索引按页名记，结果显示「关于 › 概览 › 更新通道」，点了切到那个标签、滚到那一行、强调色铺底 1.8 秒（现有做法）。</li>
+        <li>旧页名 <code>updates</code> 照样能打开关于，落在概览。</li>
+      </ul></div>
+      <div class="panel"><h4>记住上次的标签</h4><ul>
+        <li>新 key <code>fuyu-about-tab</code>：字符串 <code>"overview"</code> / <code>"changelog"</code> / <code>"help"</code>；没有或认不得时按 <code>"overview"</code>。只是界面状态，不进设置备份（不加进 <code>BACKUP_KEYS</code>）。写进 contracts.md。</li>
+        <li>从侧栏点「关于」、关掉设置窗口再打开，都回到上次的标签。</li>
+        <li>预览页真的在写这个 key：当前值 <code id="lsval"></code>（刷新页面能看到被记住）。</li>
+      </ul></div>
+      <div class="panel"><h4>跳转请求</h4><ul>
+        <li>沿用 <code>fuyu-settings-focus</code>，<code>section</code> 还是 <code>"updates"</code>；像 E60.12 给插件加 <code>plugin</code> 那样，加一个可选的 <code>tab</code>（<code>"changelog"</code> / <code>"help"</code>）。不带 <code>tab</code> 时落在概览，因为更新状态、主按钮和更新设置都在概览。</li>
+        <li>跳转打开的标签也会被记住（待定问题 2）。</li>
+      </ul></div>
+    </div>
+  </section>
+  <section>
+    <h3>待你定的问题</h3>
+    <ol class="qa">
+      <li><b>重置与退出放哪</b>：推荐概览最底下，和更新设置一起（重置的是设置，找起来顺），中间隔开一段、只有按钮是红字；也可以放「帮助」底下，或收进名片右上角的「⋯」菜单（最不显眼，但第一次找的人可能找不到）。上面「重置与退出」开关能切。</li>
+      <li><b>跳转要不要改写记住的标签</b>：推荐改写（简单：最后看的就是记住的）；另一种是只有自己点标签才记，跳转只是这一次。</li>
+      <li><b>第一次打开停在哪</b>：推荐「概览」；也可以第一次直接停在「更新日志」，因为日志是主要内容。</li>
+      <li><b>其他页的标签要不要也记住上次</b>：现在外观、AI Agent 等页每次都从第一个标签开始，只有关于页记，行为不一致。推荐先只做关于页，以后要统一再说。</li>
+      <li><b>概览里的海面横幅和戳一戳问候</b>：这版名片是素的（淡光 + Logo 位），没有海面、浮动小岛和问候彩蛋。要不要把小岛和戳一戳放回名片里？</li>
+      <li><b>有新版本时新版本的说明放哪</b>：这版在概览名片下面直接展开「v… 更新内容」，更新设置被挤到下面。也可以收成一行「查看更新内容 ›」，点了跳到更新日志标签最上面。</li>
+    </ol>
   </section>
 </main>
 <script>
@@ -425,7 +514,8 @@ const ICONS = {
   pen: '<path d="M12 20h9"/><path d="M16.4 3.6a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/>',
   minus: '<path d="M5 12h14"/>',
   square: '<rect width="14" height="14" x="5" y="5" rx="1"/>',
-  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'
 };
 const ic = (n, s = 14, cls = "") => `<svg class="${cls}" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ""}</svg>`;
 
@@ -547,30 +637,45 @@ const PLANS = {
     cons: ["「检查频率、提醒、自动更新」三行塞不进名片，要点「检查频率、提醒和自动更新」展开", "重置、退出藏得深，第一次找的人可能找不到", "窄于 760 时退回单栏，名片在上、日志在下，和宽窗口的观感差别大", "吸顶要改滚动容器，实现比 A 多一点"]
   },
   C: {
-    title: "C 名片居中 + 分段",
-    idea: "像 macOS 的「关于本机」：上面一张居中的大名片带状态胶囊，下面用分段切换三块内容，每块都短。",
+    title: "C 顶部标签（用户选定，第二版）", rec: true,
+    idea: "和其他设置页一样，标题下面一排下划线标签：概览 / 更新日志 / 帮助。概览是首页：居中名片（身份、更新状态、主按钮、链接）加更新设置；日志和帮助各一个标签；标签就是页名，搜索、跳转、记住上次都走现成的路。",
     solves: [
-      "<b>双栏不齐</b>：没有双栏，每个分段都是一列短内容。",
-      "<b>重复抢眼</b>：首屏只有名片；Logo 征集挪进「链接与帮助」分段里的一行。",
-      "<b>日志藏着</b>：默认停在「更新日志」分段，当前版本展开。",
-      "<b>链接卡太大</b>：「链接与帮助」里的一组列表，每行带一个小图标。",
-      "<b>危险操作</b>：「链接与帮助」分段最底下一组，普通卡片红字按钮，平时不在视线里。",
-      "<b>状态</b>：名片下面一颗胶囊：状态点 + 一句话 + 主按钮，下载时下面多一条进度条。"
+      "<b>双栏不齐</b>：没有双栏，每个标签是一列短内容。",
+      "<b>重复抢眼</b>：名片是唯一的身份处；Logo 征集挪进页尾落款。",
+      "<b>日志藏着</b>：更新日志单独一个标签，当前版本默认展开；有新版本时概览里直接展开新版本的说明。",
+      "<b>链接卡太大</b>：名片底下一行四个文字链接，不占卡片。",
+      "<b>危险操作</b>：推荐放在概览最底下（更新设置下面，隔开一段），红字按钮、不加红底；上面开关能比较另外两个位置。",
+      "<b>状态</b>：概览名片里一颗胶囊：状态点 + 一句话 + 主按钮，下载时下面一条进度条；通道看标签颜色和名片淡光。状态和更新设置都在概览，所以岛上「去更新」跳概览。"
     ],
-    pros: ["首屏最干净、最有「关于」的仪式感", "每个分段都短，窄窗口和英文长文案都好排", "名片居中，Win 和 Mac 观感一致"],
-    cons: ["和 2026-11-17 定的「关于页不要顶部标签」相反，多一次点击才能看到设置和链接", "设置搜索跳到「更新通道」这类行时要先切分段", "大名片占首屏 220 高，宽窗口两边留白多"]
+    pros: ["标签位置、样式和外观、AI Agent 页一致", "标签当页名（about / aboutChangelog / aboutHelp），设置搜索、`fuyu-settings-focus` 跳转、侧栏高亮都能直接用", "每个标签都短，窄窗口和英文长文案好排"],
+    cons: ["推翻 11-17 定的「关于页不要顶部标签」，实现时要在 settings.md 写明是用户 2026-11-19 定的", "在日志、帮助标签里看不到更新状态", "概览比另两个标签长，窄窗口要往下滚才看到更新设置", "其他设置页的标签不记上次选的，只有关于页记，行为不完全一致（见待定问题 4）"]
   }
 };
 
-const S = { plan: "A", channel: "beta", stage: "latest", width: "wide", light: false, lang: "zh", os: "win", rm: false, open: 0, chip: 4, cTab: "log", bOpts: false, confirm: false };
+const KEY = "fuyu-about-tab";
+const TABS3 = ["changelog", "settings", "help"];
+const TABS4 = ["overview", "changelog", "help"];
+const tabList = () => (S.tabs === 4 ? TABS4 : TABS3);
+function loadTab() { try { return localStorage.getItem(KEY); } catch { return null; } }
+function saveTab(v) { try { localStorage.setItem(KEY, v); } catch {} }
+const S = { plan: "C", sideOpen: false, channel: "beta", stage: "latest", width: "wide", light: false, lang: "zh", os: "win", rm: false, open: 0, chip: 4, cTab: loadTab() || "overview", bOpts: false, confirm: false, tabs: 4, dangerAt: "overview", search: "", flash: null, menu: false, jump: null };
 let enterAnim = true;
 let confirmTimer = 0;
+let flashTimer = 0;
 
 const t = () => TX[S.lang];
 const curVer = () => (S.channel === "stable" ? "0.3.10" : "0.3.11-beta.4");
 const nextVer = () => (S.channel === "stable" ? "0.3.11" : "0.3.11-beta.5");
 const stage = () => (S.channel === "dev" ? "dev" : S.stage);
+const hasNew = () => ["available", "downloading", "ready"].includes(stage());
 const md = (s) => s.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>");
+const fixTab = () => { if (!tabList().includes(S.cTab)) S.cTab = S.tabs === 4 ? "overview" : "changelog"; };
+
+const TABX = {
+  zh: { overview: "概览", changelog: "更新日志", settings: "设置", help: "帮助", newTag: "可更新", newNotes: [["更新内容", ["（示例）新版本的说明从更新清单读，和岛上更新面板里的一样；下载前就能看到这一版改了什么。", "装好以后它变成「当前」，说明改从安装包里读。"]]], menu: "更多", dangerShort: "重置与退出" },
+  en: { overview: "Overview", changelog: "Changelog", settings: "Settings", help: "Help", newTag: "Available", newNotes: [["What's new", ["(Sample) Notes for the new version come from the update manifest, same as the island's update panel, so you can read them before downloading.", "Once installed it becomes Current and its notes are read from the app."]]], menu: "More", dangerShort: "Reset and quit" }
+};
+const tx = () => TABX[S.lang];
 
 function status() {
   const x = t(), st = stage(), a = curVer(), b = nextVer();
@@ -599,15 +704,27 @@ function statusLine(s) {
   return `<span class="status tone-${s.tone}" role="status"><i class="dot ${s.tone}"></i><span>${s.line}</span></span>`;
 }
 
+function notesBlock(src, chips, sel, full, cap) {
+  const x = t();
+  const body = src[S.lang].map(([h, items], k) => `<h6>${h}</h6><ul>${(full ? items : items.slice(0, k === 0 ? 2 : 0)).map((li) => `<li>${md(li)}</li>`).join("")}</ul>`).join("");
+  const chipHtml = chips.length > 1 ? `<div class="chips">${chips.map(([n, l]) => `<button class="${n === sel ? "on" : ""}" data-chip="${n}">${l}</button>`).join("")}</div>` : "";
+  return `<div class="notes${cap ? " cap" : ""}">${chipHtml}${body}${full ? "" : `<p class="omit">${x.omit}</p>`}</div>`;
+}
+
 function changelog(opts = {}) {
   const x = t();
   const curIdx = S.channel === "stable" ? 1 : 0;
+  let top = "";
+  if (opts.withNew && hasNew()) {
+    const isOpen = S.open === "n";
+    top = `<div class="${isOpen ? "open" : ""}"><div class="vrow is-new" data-ver="n" role="button" tabindex="0" aria-expanded="${isOpen}"><span class="vn">v${nextVer()}</span><span class="newtag">${tx().newTag}</span><span class="vd">—</span>${ic("chevD", 14, "chev")}</div>${isOpen ? notesBlock({ [S.lang]: tx().newNotes }, [], 0, true, opts.cap) : ""}</div>`;
+  }
   const list = VERSIONS.map((ver, i) => {
+    if (ver.beta && S.channel === "stable") return "";
     const isOpen = S.open === i;
     const isCur = i === curIdx;
-    const badges = (isCur ? `<span class="cur">${x.current}</span>` : "") + (ver.beta && S.channel !== "stable" ? `<span class="btag">${x.betaTag}</span>` : "");
-    const count = ver.beta && S.channel === "stable" ? "" : `<span class="vc">${x.betaCount(ver.betas)}</span>`;
-    if (ver.beta && S.channel === "stable") return "";
+    const badges = (isCur ? `<span class="cur">${x.current}</span>` : "") + (ver.beta ? `<span class="btag">${x.betaTag}</span>` : "");
+    const count = `<span class="vc">${x.betaCount(ver.betas)}</span>`;
     let notes = "";
     if (isOpen) {
       const chips = [];
@@ -616,19 +733,18 @@ function changelog(opts = {}) {
       const sel = chips.some((c) => c[0] === S.chip) ? S.chip : chips[0][0];
       const src = ver.v === "0.3.11" ? NOTES_B4 : NOTES_310;
       const full = (ver.v === "0.3.11" && sel === 4) || (ver.v !== "0.3.11" && sel === 0 && i === 1);
-      const body = src[S.lang].map(([h, items], k) => `<h6>${h}</h6><ul>${(full ? items : items.slice(0, k === 0 ? 2 : 0)).map((li) => `<li>${md(li)}</li>`).join("")}</ul>`).join("");
-      notes = `<div class="notes${opts.cap ? " cap" : ""}"><div class="chips">${chips.map(([n, l]) => `<button class="${n === sel ? "on" : ""}" data-chip="${n}">${l}</button>`).join("")}</div>${body}${full ? "" : `<p class="omit">${x.omit}</p>`}</div>`;
+      notes = notesBlock(src, chips, sel, full, opts.cap);
     }
     return `<div class="${isOpen ? "open" : ""}"><div class="vrow${isCur ? " is-cur" : ""}" data-ver="${i}" role="button" tabindex="0" aria-expanded="${isOpen}"><span class="vn">v${ver.v}</span>${badges}${count}<span class="vd">${ver.date}</span>${ic("chevD", 14, "chev")}</div>${notes}</div>`;
   }).join("");
-  return `<div class="card log cur-bg">${list}<button class="older">${x.older(15)}</button></div>`;
+  return `<div class="card log cur-bg">${top}${list}<button class="older">${x.older(15)}</button></div>`;
 }
 
-function group(title, inner, foot = "") {
-  return `<div class="group"><div class="group-h"><h3>${title}</h3></div>${inner}${foot ? `<p class="foot">${foot}</p>` : ""}</div>`;
+function group(title, inner, foot = "", id = "") {
+  return `<div class="group${S.flash && S.flash === id ? " flash-g" : ""}"${id ? ` data-row="${id}"` : ""}><div class="group-h"><h3>${title}</h3></div>${inner}${foot ? `<p class="foot">${foot}</p>` : ""}</div>`;
 }
-function row(title, hint, ctrl) {
-  return `<div class="row"><div class="rt"><b>${title}</b>${hint ? `<small>${hint}</small>` : ""}</div><div class="rc">${ctrl}</div></div>`;
+function row(title, hint, ctrl, id = "") {
+  return `<div class="row${S.flash && S.flash === id ? " flash" : ""}"${id ? ` data-row="${id}"` : ""}><div class="rt"><b>${title}</b>${hint ? `<small>${hint}</small>` : ""}</div><div class="rc">${ctrl}</div></div>`;
 }
 function channelSeg() {
   const x = t();
@@ -643,22 +759,21 @@ function resetCtrl(quiet) {
 function updateSettings(withSub) {
   const x = t();
   if (S.channel === "dev") return group(x.updTitle, `<div class="card">${row(x.act.latestRelease, x.sub.dev, `<button class="lnk">↗</button>`)}</div>`);
-  const sub = withSub ? `<div class="sub">${row(x.freq, "", `<span class="select">${x.freqV}</span>`)}${row(x.remind, "", `<span class="select">${x.remindV}</span>`)}${row(x.autoUpd, "", `<span class="select">${x.autoUpdV}</span>`)}</div>` : "";
-  return group(x.updTitle, `<div class="card">${row(x.channel, "", channelSeg())}${row(x.autoCheck, x.autoCheckHint, `<span class="switch" role="switch" aria-checked="true"></span>`)}${sub}</div>`, x.updFoot);
+  const sub = withSub ? `<div class="sub">${row(x.freq, "", `<span class="select">${x.freqV}</span>`, "freq")}${row(x.remind, "", `<span class="select">${x.remindV}</span>`, "remind")}${row(x.autoUpd, "", `<span class="select">${x.autoUpdV}</span>`, "autoupd")}</div>` : "";
+  return group(x.updTitle, `<div class="card">${row(x.channel, "", channelSeg(), "channel")}${row(x.autoCheck, x.autoCheckHint, `<span class="switch" role="switch" aria-checked="true"></span>`, "autocheck")}${sub}</div>`, x.updFoot);
 }
 function helpGroup() {
   const x = t();
-  return group(x.help, `<div class="card">${row(x.guide, x.guideHint, `<button class="lnk">${x.guideAct}</button>`)}${row(x.diag, x.diagHint, `<button class="lnk">${x.diagAct}</button>`)}</div>`);
+  return group(x.help, `<div class="card">${row(x.guide, x.guideHint, `<button class="lnk">${x.guideAct}</button>`, "guide")}${row(x.diag, x.diagHint, `<button class="lnk">${x.diagAct}</button>`, "diag")}</div>`);
 }
 function dangerGroup() {
   const x = t();
-  return group(x.danger, `<div class="card">${row(x.reset, x.resetHint, resetCtrl(false))}${row(x.quit, S.os === "mac" ? x.quitMac : x.quitWin, `<button class="lnk danger">${x.quitAct}</button>`)}</div>`);
+  return group(x.danger, `<div class="card">${row(x.reset, x.resetHint, resetCtrl(false), "reset")}${row(x.quit, S.os === "mac" ? x.quitMac : x.quitWin, `<button class="lnk danger">${x.quitAct}</button>`, "quit")}</div>`);
 }
 const LINKS = () => {
   const x = t();
   return [["globe", x.website, x.websiteHint, "ico-c1"], ["tag", x.releases, x.releasesHint, "ico-c2"], ["help", x.issues, x.issuesHint, "ico-c3"], ["star", x.star, x.starHint, "ico-c4"]];
 };
-
 function planA() {
   const x = t(), s = status();
   const hero = `<section class="hero A-hero ch-${S.channel}"><span class="emblem"></span><div><div class="idn"><span class="nm">${x.name}</span>${tags()}</div><p class="desc">${x.desc}</p></div><div class="side2">${statusLine(s)}<div class="subl">${s.sub}</div>${s.primary || s.secondary ? `<div class="acts">${s.secondary}${s.primary}</div>` : ""}</div>${s.prog}</section>`;
@@ -683,81 +798,201 @@ function planB() {
   return `<div class="B-grid">${left}<div class="B-right">${group(x.logTitle, changelog(), x.logFoot)}${tail}<p class="colophon">${x.colophon(curVer())}</p></div></div>`;
 }
 
-function planC() {
+function heroCard() {
   const x = t(), s = status();
   const pill = `<div class="C-pill${s.primary ? "" : " solo"}">${statusLine(s)}${s.primary}</div>`;
-  const hero = `<section class="hero C-hero ch-${S.channel}"><span class="emblem lg"></span><div class="idn"><span class="nm">${x.name}</span>${tags()}</div><p class="desc">${x.desc}</p>${pill}${s.prog}<div class="subl">${s.sub}${s.secondary ? ` · ${s.secondary}` : ""}</div></section>`;
-  const tabs = `<div class="C-tabs"><div class="seg" role="tablist">${["log", "update", "more"].map((k) => `<button role="tab" aria-pressed="${S.cTab === k}" data-ctab="${k}">${x.tabs[k]}</button>`).join("")}</div></div>`;
-  let view = "";
-  if (S.cTab === "log") view = group(x.logTitle, changelog(), x.logFoot);
-  else if (S.cTab === "update") view = updateSettings(true);
-  else {
-    const links = `<div class="card C-links">${LINKS().map(([i, l, h, c]) => `<div class="row"><span class="ibox">${ic(i, 15, c)}</span><div class="rt"><b>${l}</b><small>${h}</small></div><div class="rc">${ic("ext", 13)}</div></div>`).join("")}<div class="row"><span class="ibox">${ic("pen", 15, "ico-c3")}</span><div class="rt"><b>${x.logoRow}</b><small>${x.logoRowHint}</small></div><div class="rc"><button class="lnk" style="color:var(--violet)">${x.logoCall}</button></div></div></div>`;
-    view = `${group(x.links, links)}${helpGroup()}${dangerGroup()}`;
+  const links = `<div class="C-linkrow">${LINKS().map(([i, l, , c]) => `<a href="#" data-row="${i === "globe" ? "links" : ""}" class="${S.flash === "links" && i === "globe" ? "flash" : ""}">${ic(i, 13, c)}<span>${l}</span></a>`).join("")}</div>`;
+  let menu = "";
+  if (S.dangerAt === "card") {
+    const pop = S.menu ? `<div class="pop" role="menu"><div class="pop-row${S.flash === "reset" ? " flash" : ""}" data-row="reset"><span>${x.reset}</span>${resetCtrl(false)}</div><div class="pop-row${S.flash === "quit" ? " flash" : ""}" data-row="quit"><span>${x.quit}</span><button class="lnk danger">${x.quitAct}</button></div></div>` : "";
+    menu = `<button class="ibtn card-menu" data-act="menu" aria-label="${tx().menu}" aria-expanded="${S.menu}">${ic("more", 15)}</button>${pop}`;
   }
-  return `<div style="max-width:760px;display:grid;gap:16px;margin:0 auto;width:100%">${hero}${tabs}<div class="C-view" data-k="${S.cTab}">${view}</div><p class="colophon">${x.colophon(curVer())}</p></div>`;
+  return `<section class="hero C-hero ch-${S.channel}">${menu}<span class="emblem lg"></span><div class="idn"><span class="nm">${x.name}</span>${tags()}</div><p class="desc">${x.desc}</p>${pill}${s.prog}<div class="subl">${s.sub}${s.secondary ? ` · ${s.secondary}` : ""}</div>${links}</section>`;
+}
+
+function colophon() {
+  const x = t();
+  return `<p class="colophon">${x.colophon(curVer())} · <a href="#">${x.logoCall}</a></p>`;
+}
+
+function planC() {
+  const x = t();
+  fixTab();
+  let view = "";
+  if (S.cTab === "overview") {
+    const notes = hasNew() ? group(S.lang === "zh" ? `v${nextVer()} 更新内容` : `What's new in v${nextVer()}`, `<div class="card log">${notesBlock({ [S.lang]: tx().newNotes }, [], 0, true, false)}</div>`) : "";
+    view = `${heroCard()}${notes}${updateSettings(true)}${S.dangerAt === "overview" ? `<div class="danger-gap">${dangerGroup()}</div>` : ""}`;
+  } else if (S.cTab === "changelog") view = group(x.logTitle, changelog({ withNew: S.tabs === 3 }), x.logFoot, "log");
+  else view = helpGroup() + (S.dangerAt === "help" ? `<div class="danger-gap">${dangerGroup()}</div>` : "");
+  const head = S.tabs === 3 ? heroCard() : "";
+  return `<div class="C-wrap">${head}<div class="C-view" data-k="${S.cTab}">${view}</div>${colophon()}</div>`;
+}
+
+function tabBar() {
+  if (S.plan !== "C") return "";
+  return `<div class="tabsbar" role="tablist">${tabList().map((k) => `<button role="tab" class="tab${S.cTab === k ? " on" : ""}" aria-selected="${S.cTab === k}" data-ctab="${k}">${tx()[k]}</button>`).join("")}</div>`;
+}
+
+const INDEX = [
+  ["channel", "overview", "更新通道", "Update channel"],
+  ["autocheck", "overview", "自动检查更新", "Check for updates automatically"],
+  ["freq", "overview", "检查频率", "Check frequency"],
+  ["remind", "overview", "更新提醒方式", "Update reminders"],
+  ["autoupd", "overview", "自动更新", "Automatic updates"],
+  ["log", "changelog", "更新日志", "Changelog"],
+  ["guide", "help", "新手引导", "Welcome guide"],
+  ["diag", "help", "诊断信息", "Diagnostics"],
+  ["reset", "danger", "重置所有设置", "Reset all settings"],
+  ["quit", "danger", "退出岛屿", "Quit the island"],
+  ["links", "overview", "官网", "Website"]
+];
+const norm = (v) => v.toLowerCase().replace(/[\s\p{P}]/gu, "");
+const hitTab = (tab) => (tab === "danger" ? (S.dangerAt === "card" ? "overview" : S.dangerAt) : tab);
+function hits() {
+  const q = norm(S.search);
+  if (!q) return [];
+  return INDEX.filter((e) => norm(e[2]).includes(q) || norm(e[3]).includes(q)).slice(0, 5);
 }
 
 function sidebar() {
   const x = t(), L = S.lang;
-  const groups = SIDE.map((g) => `<div class="s-group"><div class="s-item">${ic(g.icon, 15)}<span>${g[L]}</span>${ic("chevD", 12, "chev")}</div><div class="s-sub">${g.items.map(([i, z, e]) => `<div class="s-item">${ic(i, 15)}<span>${L === "zh" ? z : e}</span></div>`).join("")}</div></div>`).join("");
-  return `<div class="side"><div class="side-card"><div><div class="side-search">${ic("search", 13)}<div><span>${x.search}</span></div></div></div><div class="side-list"><div class="s-item">${ic("compass", 15)}<span>${x.side.overview}</span></div>${groups}</div><div class="side-bottom"><div class="s-item active">${ic("info", 15)}<span>${x.side.about}</span></div></div></div></div>`;
+  const expanded = S.width === "narrow" && (S.sideOpen || S.search);
+  let list;
+  if (S.search) {
+    const hs = hits();
+    const about = `<div class="s-item">${ic("info", 15)}<span>${x.side.about}</span></div>`;
+    list = hs.length
+      ? `${about}<div class="s-hits">${hs.map((e) => { const tb = hitTab(e[1]); const tbName = S.plan === "C" && !(S.tabs === 3 && tb === "overview") ? ` › ${tx()[tb] || tx().settings}` : ""; return `<button class="s-hit" data-hit="${e[0]}" title="${x.side.about}${tbName} › ${L === "zh" ? e[2] : e[3]}">${L === "zh" ? e[2] : e[3]}</button>`; }).join("")}</div>`
+      : `<p class="s-empty">${L === "zh" ? "没有匹配的设置" : "No matching settings"}</p>`;
+  } else {
+    const groups = SIDE.map((g) => `<div class="s-group"><div class="s-item">${ic(g.icon, 15)}<span>${g[L]}</span>${ic("chevD", 12, "chev")}</div><div class="s-sub">${g.items.map(([i, z, e]) => `<div class="s-item">${ic(i, 15)}<span>${L === "zh" ? z : e}</span></div>`).join("")}</div></div>`).join("");
+    list = `<div class="s-item">${ic("compass", 15)}<span>${x.side.overview}</span></div>${groups}`;
+  }
+  return `<div class="side"><div class="side-card${expanded ? " expanded" : ""}"><div><div class="side-search">${ic("search", 13)}<input id="sq" type="search" placeholder="${x.search}" value="${S.search.replace(/"/g, "&quot;")}" aria-label="${x.search}"><button class="side-search-btn" data-act="sideopen" aria-label="${x.search}">${ic("search", 14)}</button></div></div><div class="side-list" id="slist">${list}</div><div class="side-bottom"><div class="s-item active">${ic("info", 15)}<span>${x.side.about}</span></div></div></div></div>`;
 }
 
 function renderWin() {
   const x = t();
   const body = S.plan === "A" ? planA() : S.plan === "B" ? planB() : planC();
-  const cls = ["win", S.width, S.os].join(" ");
+  const cls = ["win", S.width, S.os, S.plan === "C" ? "has-tabs" : ""].join(" ");
   const chrome = S.os === "win" ? `<div class="wctl">${ic("minus", 13)}${ic("square", 11)}${ic("x", 13)}</div>`.replace(/<svg/g, "<span><svg").replace(/<\/svg>/g, "</svg></span>") : `<div class="lights"><i></i><i></i><i></i></div>`;
   const old = document.querySelector("#win .body");
   const top = old && !enterAnim ? old.scrollTop : 0;
-  document.getElementById("win").innerHTML = `<div class="${cls}" lang="${S.lang === "zh" ? "zh-CN" : "en"}">${chrome}${sidebar()}<div class="main"><div class="ph"><h1>${x.page}</h1></div><div class="body"><div class="body-in${enterAnim ? " enter" : ""}">${body}</div></div></div></div>`;
+  const focused = document.activeElement && document.activeElement.id === "sq";
+  document.getElementById("win").innerHTML = `<div class="${cls}" lang="${S.lang === "zh" ? "zh-CN" : "en"}">${chrome}${sidebar()}<div class="main"><div class="ph"><h1>${x.page}</h1></div>${tabBar()}<div class="body"><div class="body-in${enterAnim ? " enter" : ""}">${body}</div></div></div></div>`;
   document.querySelector("#win .body").scrollTop = top;
+  if (focused) { const i = document.getElementById("sq"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
   enterAnim = false;
+  const k = document.getElementById("lsval");
+  if (k) k.textContent = JSON.stringify(loadTab());
 }
 
 function renderNote() {
   const p = PLANS[S.plan];
-  document.getElementById("note").innerHTML = `<h4>${p.title}${p.rec ? ' <span class="tag rec">推荐</span>' : ""}</h4><p class="idea">${p.idea}</p><div class="cols"><div><h5>解决了哪几条</h5><ul>${p.solves.map((s) => `<li>${s}</li>`).join("")}</ul></div><div><h5>好处</h5><ul class="pro">${p.pros.map((s) => `<li>${s}</li>`).join("")}</ul><h5>取舍和代价</h5><ul class="con">${p.cons.map((s) => `<li>${s}</li>`).join("")}</ul></div><div><h5>三套都一样的</h5><ul><li>标题行只有「关于」，没有右边的胶囊</li><li>组标题加粗、行标题常规字重，颜色只用现有变量</li><li>动效：切方案淡入（<code>--motion-medium</code> + 进场曲线），展开日志淡入（<code>--motion-base</code>），检查中 / 下载中的点呼吸（状态结束就停），减少动画时都不动</li><li>Mac 上没有右上角三个按钮，侧栏选中项是强调色实底</li><li>窄于 760 时侧栏收成图标列（现有做法），页面跟着变成单栏</li></ul></div></div>`;
+  const old = S.plan !== "C" ? '<p class="muted" style="margin:0 0 8px">这一套已经放弃，留着对比。</p>' : "";
+  document.getElementById("note").innerHTML = `<h4>${p.title}${p.rec && S.plan === "C" ? ' <span class="tag rec">用户选定</span>' : ""}</h4>${old}<p class="idea">${p.idea}</p><div class="cols"><div><h5>解决了哪几条</h5><ul>${p.solves.map((s) => `<li>${s}</li>`).join("")}</ul></div><div><h5>好处</h5><ul class="pro">${p.pros.map((s) => `<li>${md(s)}</li>`).join("")}</ul><h5>取舍和代价</h5><ul class="con">${p.cons.map((s) => `<li>${md(s)}</li>`).join("")}</ul></div><div><h5>都一样的</h5><ul><li>标题行只有「关于」，没有右边的胶囊</li><li>组标题加粗、行标题常规字重，颜色只用现有变量</li><li>动效：切方案淡入（<code>--motion-medium</code> + 进场曲线），切标签、展开日志淡入（<code>--motion-base</code>），检查中 / 下载中的点呼吸（状态结束就停），搜索定位的强调色铺底 1.8 秒渐隐；减少动画时都不动，铺底直接出现、到时直接消失</li><li>Mac 上没有右上角三个按钮，侧栏选中项是强调色实底，标签往右让 4px</li><li>窄于 760 时侧栏收成图标列，点放大镜展开成完整菜单盖在页面上</li></ul></div></div>`;
 }
 
 function segCtl(label, key, opts, disabledFn) {
   return `<span class="ctl">${label}<span class="seg${key === "plan" ? " scheme" : ""}">${opts.map(([v, l]) => `<button data-k="${key}" data-v="${v}" aria-pressed="${String(S[key]) === String(v)}"${disabledFn && disabledFn(v) ? " disabled" : ""}>${l}</button>`).join("")}</span></span>`;
 }
 function renderTop() {
-  document.getElementById("topbar").innerHTML = `<h1>关于页新方案</h1>${segCtl("方案", "plan", [["A", "A 单栏"], ["B", "B 名片+日志"], ["C", "C 居中+分段"]])}${segCtl("通道", "channel", [["dev", "开发版"], ["beta", "测试版"], ["stable", "正式版"]])}${segCtl("状态", "stage", [["idle", "未检查"], ["checking", "检查中"], ["latest", "最新"], ["available", "有新版本"], ["downloading", "下载中"], ["ready", "已下载"], ["error", "失败"]], () => S.channel === "dev")}${segCtl("宽度", "width", [["wide", "1080"], ["mid", "860"], ["narrow", "580"]])}${segCtl("配色", "light", [[false, "深色"], [true, "浅色"]])}${segCtl("语言", "lang", [["zh", "中文"], ["en", "English"]])}${segCtl("系统", "os", [["win", "Win"], ["mac", "Mac"]])}${segCtl("动画", "rm", [[false, "正常"], [true, "减少"]])}`;
+  const cOnly = () => S.plan !== "C";
+  document.getElementById("topbar").innerHTML = `<h1>关于页新方案</h1>${segCtl("方案", "plan", [["C", "C 顶部标签"], ["A", "A（已放弃）"], ["B", "B（已放弃）"]])}${segCtl("重置与退出", "dangerAt", [["overview", "概览底部"], ["help", "帮助底部"], ["card", "名片「⋯」"]], cOnly)}${segCtl("通道", "channel", [["dev", "开发版"], ["beta", "测试版"], ["stable", "正式版"]])}${segCtl("状态", "stage", [["idle", "未检查"], ["checking", "检查中"], ["latest", "最新"], ["available", "有新版本"], ["downloading", "下载中"], ["ready", "已下载"], ["error", "失败"]], () => S.channel === "dev")}${segCtl("宽度", "width", [["wide", "1080"], ["mid", "860"], ["narrow", "580"]])}${segCtl("配色", "light", [[false, "深色"], [true, "浅色"]])}${segCtl("语言", "lang", [["zh", "中文"], ["en", "English"]])}${segCtl("系统", "os", [["win", "Win"], ["mac", "Mac"]])}${segCtl("动画", "rm", [[false, "正常"], [true, "减少"]])}`;
+}
+
+const JUMPS = [
+  ["island", "岛上「发现新版本 v0.3.11-beta.5，点击查看」", { section: "updates" }, () => ({ stage: "available", tab: "overview" })],
+  ["notify", "系统通知「浮屿有新版本」", { section: "updates" }, () => ({ stage: "available", tab: "overview" })],
+  ["market", "插件市场「需要浮屿 0.3.11 · 去更新」", { section: "updates" }, () => ({ stage: "available", tab: "overview" })],
+  ["tray", "托盘卡片「检查更新」", { section: "updates", check: true }, () => ({ stage: "checking", tab: "overview" })],
+  ["whatsnew", "（设想）更新完成后岛上「看看这一版改了什么」", { section: "updates", tab: "changelog" }, () => ({ stage: "latest", tab: "changelog" })],
+  ["help", "（设想）岛上报错提示「复制诊断信息」", { section: "updates", tab: "help" }, () => ({ tab: "help" })],
+  ["oldname", "旧页名 / 旧链接打开 updates", { section: "updates" }, () => ({ tab: "overview" })]
+];
+function renderJumps() {
+  const last = S.jump ? `<p class="jump-out">写入 <code>fuyu-settings-focus</code> = <code>${JSON.stringify({ ...S.jump, requestedAt: 1795093861434 })}</code> → 打开关于的「${tx()[S.cTab]}」标签</p>` : `<p class="jump-out muted">点一个入口，看它写什么跳转请求、落到哪个标签。</p>`;
+  document.getElementById("jumps").innerHTML = `<div class="jump-row">${JUMPS.map(([k, l]) => `<button class="btn" data-jump="${k}">${l}</button>`).join("")}<button class="btn" data-act="demo-search">在侧栏搜「更新通道」</button></div>${last}`;
 }
 
 function render() {
   document.documentElement.classList.toggle("light", S.light);
   document.documentElement.classList.toggle("rm", S.rm);
+  fixTab();
   renderTop();
   renderWin();
   renderNote();
+  renderJumps();
 }
 
+function goHit(id) {
+  const e = INDEX.find((r) => r[0] === id);
+  if (!e) return;
+  const tb = hitTab(e[1]);
+  if (S.plan === "C") {
+    if (!(S.tabs === 3 && tb === "overview")) { S.cTab = tb; fixTab(); saveTab(S.cTab); }
+    if (S.cTab === "overview" && S.channel === "dev" && ["channel", "autocheck", "freq", "remind", "autoupd"].includes(id)) S.channel = "beta";
+  }
+  if (e[1] === "danger" && S.dangerAt === "card") S.menu = true;
+  S.flash = id;
+  S.sideOpen = false;
+  render();
+  const el = document.querySelector(`#win [data-row="${id}"]`);
+  const b = document.querySelector("#win .body");
+  if (el && b) b.scrollTop += el.getBoundingClientRect().top - b.getBoundingClientRect().top - 60;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => { S.flash = null; renderWin(); }, 1800);
+}
+
+document.addEventListener("input", (e) => {
+  if (e.target.id !== "sq") return;
+  S.search = e.target.value;
+  renderWin();
+});
 document.addEventListener("click", (e) => {
   const b = e.target.closest("button, [data-ver], a");
-  if (!b) return;
+  if (!b) { if (S.menu && !e.target.closest(".pop")) { S.menu = false; renderWin(); } return; }
   if (b.tagName === "A") e.preventDefault();
   if (b.dataset.k) {
     const k = b.dataset.k;
-    const v = b.dataset.v === "true" ? true : b.dataset.v === "false" ? false : b.dataset.v;
+    const raw = b.dataset.v;
+    const v = raw === "true" ? true : raw === "false" ? false : /^\d+$/.test(raw) ? Number(raw) : raw;
     S[k] = v;
     if (k === "plan") enterAnim = true;
     if (k === "channel") { S.open = v === "stable" ? 1 : 0; S.chip = v === "stable" ? 0 : 4; }
+    if (k === "tabs" || k === "dangerAt") { S.menu = false; fixTab(); }
     render();
     return;
   }
-  if (b.dataset.ver !== undefined) { const i = Number(b.dataset.ver); S.open = S.open === i ? -1 : i; S.chip = i === 0 ? 4 : 0; renderWin(); return; }
+  if (b.dataset.jump) {
+    const j = JUMPS.find((r) => r[0] === b.dataset.jump);
+    const r = j[3]();
+    if (S.channel === "dev" && r.stage) S.channel = "beta";
+    if (r.stage) S.stage = r.stage;
+    S.plan = "C";
+    S.cTab = S.tabs === 3 && r.tab === "overview" ? "changelog" : r.tab;
+    if (S.tabs === 3 && r.stage === "available") S.open = "n";
+    fixTab(); saveTab(S.cTab);
+    S.jump = j[2];
+    render();
+    document.querySelector("#win .body").scrollTop = 0;
+    return;
+  }
+  if (b.dataset.hit) { goHit(b.dataset.hit); return; }
+  if (b.dataset.ver !== undefined) { const i = b.dataset.ver === "n" ? "n" : Number(b.dataset.ver); S.open = S.open === i ? -1 : i; S.chip = i === 0 ? 4 : 0; renderWin(); return; }
   if (b.dataset.chip !== undefined) { S.chip = Number(b.dataset.chip); renderWin(); return; }
-  if (b.dataset.ctab) { S.cTab = b.dataset.ctab; renderWin(); return; }
+  if (b.dataset.ctab) { S.cTab = b.dataset.ctab; saveTab(S.cTab); S.menu = false; renderWin(); document.querySelector("#win .body").scrollTop = 0; return; }
   const act = b.dataset.act;
+  if (act === "demo-search") { S.search = S.lang === "zh" ? "更新通道" : "update channel"; S.sideOpen = true; renderWin(); document.getElementById("win").scrollIntoView({ block: "nearest" }); return; }
+  if (act === "sideopen") { S.sideOpen = !S.sideOpen; renderWin(); return; }
+  if (act === "menu") { S.menu = !S.menu; renderWin(); return; }
   if (act === "bopts") { S.bOpts = !S.bOpts; renderWin(); }
   if (act === "reset") { S.confirm = true; clearTimeout(confirmTimer); confirmTimer = setTimeout(() => { S.confirm = false; renderWin(); }, 4000); renderWin(); }
   if (act === "cancel" || act === "confirm") { S.confirm = false; clearTimeout(confirmTimer); renderWin(); }
 });
 document.addEventListener("keydown", (e) => {
+  if (e.target.id === "sq" && e.key === "Enter") { const h = hits()[0]; if (h) goHit(h[0]); return; }
+  if (e.target.id === "sq" && e.key === "Escape") { S.search = ""; renderWin(); return; }
   const r = e.target.closest && e.target.closest("[data-ver]");
   if (r && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); r.click(); }
 });
