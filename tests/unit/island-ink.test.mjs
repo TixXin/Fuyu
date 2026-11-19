@@ -46,12 +46,15 @@ test("built-in sets apply both tones, keep following the system, and are recogni
     const applied = withBuiltinTheme({ ...DEFAULT_SETTINGS, appearanceMode: "liquidGlass" }, id);
     assert.equal(applied.appearanceMode, "classic");
     assert.equal(applied.opacity, BUILTIN_THEMES[id].opacity);
-    assert.equal(applied.themeMode, "light");
+    assert.equal(applied.themeMode, BUILTIN_THEMES[id].tone);
     assert.equal(applied.lightBackgroundColor, BUILTIN_THEMES[id].light.islandBackgroundColor);
     assert.equal(applied.darkBackgroundColor, BUILTIN_THEMES[id].dark.islandBackgroundColor);
     assert.equal(builtinThemeInUse(normalizeSettings(applied)), id);
   }
   assert.equal(withBuiltinTheme({ ...DEFAULT_SETTINGS, themeMode: "system" }, "greyWhite").themeMode, "system");
-  assert.equal(builtinThemeInUse(DEFAULT_SETTINGS), null);
+  assert.equal(builtinThemeInUse(DEFAULT_SETTINGS), "default", "a fresh install reads as the default set, not custom");
+  const back = withBuiltinTheme(withBuiltinTheme(DEFAULT_SETTINGS, "frostedWarm"), "default");
+  assert.equal(back.themeMode, "dark", "going back to the default set from a light set turns the colors dark again");
+  assert.equal(builtinThemeInUse(normalizeSettings(back)), "default");
   assert.equal(builtinThemeInUse({ ...withBuiltinTheme(DEFAULT_SETTINGS, "frostedClear"), opacity: 70 }), null);
 });
