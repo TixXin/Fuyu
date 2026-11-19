@@ -41,8 +41,36 @@ test("a plugin waiting for a switched-off built-in feature names that feature", 
 test("a switched-off plugin is grey and not something to fix, unless the market revoked it", () => {
   assert.deepEqual(pluginRowStatus(plugin({ state: "disabled" }), market(), live), { dot: "off", label: "off", note: null, attention: false });
   const revoked = pluginRowStatus(plugin({ state: "disabled" }), market({ revoked: true }), live);
-  assert.deepEqual(revoked.note, { kind: "revoked" });
+  assert.deepEqual(revoked.note, { kind: "revoked", reasons: [] });
   assert.ok(revoked.attention);
+});
+
+const reason = { "zh-CN": "会上传剪贴板内容", en: "Uploads clipboard contents" };
+
+test("a version revoked to off carries the market's reasons, from the catalog or from the installed list", () => {
+  const fromCatalog = pluginRowStatus(plugin({ state: "disabled" }), market({ revoked: true, revocation: { level: "disable", reasons: [reason] } }), live);
+  assert.deepEqual(fromCatalog.note, { kind: "revoked", reasons: [reason] });
+  const fromInstalled = pluginRowStatus(plugin({ state: "disabled" }), undefined, live, { level: "disable", reasons: [reason] });
+  assert.deepEqual(fromInstalled.note, { kind: "revoked", reasons: [reason] });
+  assert.ok(fromInstalled.attention);
+});
+
+test("a warn-level revocation shows its reasons on a running plugin and offers a newer version when there is one", () => {
+  const revocation = { level: "warn", reasons: [reason] };
+  const status = pluginRowStatus(plugin(), market({ revocation }), live);
+  assert.deepEqual([status.dot, status.note], ["ok", { kind: "warned", reasons: [reason], update: null }]);
+  assert.ok(status.attention);
+  const withFix = pluginRowStatus(plugin(), market({ revocation, manual: candidate("0.4.3") }), live);
+  assert.deepEqual(withFix.note, { kind: "warned", reasons: [reason], update: "0.4.3" });
+});
+
+test("an update held back because the new version does more names what it adds instead of a plain update", () => {
+  const added = { nodeApis: ["node:child_process"], network: ["api.example.com"], replaces: [] };
+  const status = pluginRowStatus(plugin(), market({ manual: candidate("0.5.0"), autoUpdateHeld: { version: "0.5.0", reason: "new-capabilities", newCapabilities: added } }), live);
+  assert.deepEqual(status.note, { kind: "held", version: "0.5.0", added });
+  assert.ok(status.attention);
+  const trust = pluginRowStatus(plugin(), market({ manual: candidate("0.5.0", { trustChange: "unendorsed-key" }), autoUpdateHeld: { version: "0.5.0", reason: "new-capabilities", newCapabilities: added } }), live);
+  assert.equal(trust.note.kind, "trust");
 });
 
 test("while the plugin process is unreachable the last state is not trusted", () => {

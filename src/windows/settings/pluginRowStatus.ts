@@ -1,4 +1,4 @@
-import type { MarketCatalogPlugin, MarketVersionCandidate } from "@fuyu/plugin-services";
+import type { MarketCapabilitySet, MarketCatalogPlugin, MarketLocalizedText, MarketRevocation, MarketVersionCandidate } from "@fuyu/plugin-services";
 import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginsV3";
 import { BUILTIN_PROVIDES, stateOf } from "./pluginServiceStatus.ts";
 import type { PluginStatusV3 } from "./usePluginHostStatus";
@@ -12,7 +12,9 @@ export type RowNote =
   | { kind: "paused"; errors: number; seconds: number }
   | { kind: "waiting"; service: string; provider: BuiltinPluginName | null; providerOff: boolean }
   | { kind: "unreachable"; windows: string[] }
-  | { kind: "revoked" }
+  | { kind: "revoked"; reasons: MarketLocalizedText[] }
+  | { kind: "warned"; reasons: MarketLocalizedText[]; update: string | null }
+  | { kind: "held"; version: string; added: MarketCapabilitySet }
   | { kind: "trust"; version: string }
   | { kind: "update"; version: string; fresh: boolean };
 
@@ -29,7 +31,7 @@ export interface RowContext {
   builtins?: readonly { id: string; enabled: boolean }[] | null;
 }
 
-const ATTENTION_NOTES = new Set<RowNote["kind"]>(["failed", "paused", "waiting", "unreachable", "revoked", "trust"]);
+const ATTENTION_NOTES = new Set<RowNote["kind"]>(["failed", "paused", "waiting", "unreachable", "revoked", "warned", "trust", "held"]);
 
 export function marketActionCandidate(plugin: MarketCatalogPlugin): { candidate: MarketVersionCandidate; isUpdate: boolean } | null {
   if (!plugin.installedVersion) {
@@ -52,13 +54,18 @@ function waitingNote(plugin: PluginStatusV3, context: RowContext): RowNote | nul
   return { kind: "waiting", service, provider, providerOff };
 }
 
-function marketNote(market: MarketCatalogPlugin | undefined): RowNote | null {
-  if (!market?.installedVersion) return null;
-  if (market.revoked) return { kind: "revoked" };
+function updateCandidate(market: MarketCatalogPlugin): MarketVersionCandidate | null {
   const action = marketActionCandidate(market);
-  if (!action?.isUpdate || action.candidate.version === market.installedVersion) return null;
-  const { candidate } = action;
+  return action?.isUpdate && action.candidate.version !== market.installedVersion ? action.candidate : null;
+}
+
+function marketNote(market: MarketCatalogPlugin | undefined, revocation: MarketRevocation | null): RowNote | null {
+  if (revocation?.level === "disable" || (!revocation && market?.installedVersion && market.revoked)) return { kind: "revoked", reasons: revocation?.reasons ?? [] };
+  const candidate = market?.installedVersion ? updateCandidate(market) : null;
+  if (revocation?.level === "warn") return { kind: "warned", reasons: revocation.reasons, update: candidate?.version ?? null };
+  if (!market || !candidate) return null;
   if (candidate.trustChange || candidate.confirmation.trustChange) return { kind: "trust", version: candidate.version };
+  if (market.autoUpdateHeld) return { kind: "held", version: market.autoUpdateHeld.version, added: market.autoUpdateHeld.newCapabilities };
   return { kind: "update", version: candidate.version, fresh: Boolean(candidate.fresh) };
 }
 
@@ -90,9 +97,9 @@ function hostPart(plugin: PluginStatusV3, context: RowContext): Pick<RowStatus, 
   }
 }
 
-export function pluginRowStatus(plugin: PluginStatusV3, market: MarketCatalogPlugin | undefined, context: RowContext): RowStatus {
+export function pluginRowStatus(plugin: PluginStatusV3, market: MarketCatalogPlugin | undefined, context: RowContext, revocation: MarketRevocation | null = market?.revocation ?? null): RowStatus {
   const host = hostPart(plugin, context);
-  const note = host.note ?? marketNote(market);
+  const note = host.note ?? marketNote(market, revocation);
   const attention = host.dot === "bad" || host.label === "waiting" || (note !== null && ATTENTION_NOTES.has(note.kind));
   return { ...host, note, attention };
 }
