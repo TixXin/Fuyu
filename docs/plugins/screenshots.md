@@ -1,6 +1,6 @@
 # 截图和封面
 
-> `fuyu-plugin shots` 的约定和做法（E77.4，2026-11-19）。命令的选项见[命令行](cli.md#shots)。
+> `fuyu-plugin shots` 的约定和做法（E77.4，2026-11-19），以及 12 个官方插件的截图是怎么截的（E77.6）。命令的选项见[命令行](cli.md#shots)。
 
 市场卡片和详情页要截图，官方插件至少一张（见[官方插件标准](official-quality.md)）。截图是真界面：`shots` 把插件自己的岛上页面和收起条组件渲染出来截图，不画示意图。它不启动浮屿、不运行插件的宿主部分，所以页面要的数据由插件带的一份示例数据给。
 
@@ -84,11 +84,35 @@ export default {
 
 市场卡片上的封面不用这张图：浮屿在卡片上用清单里第一张截图和图标的主色现场拼（`src/windows/settings/PluginMarketCover.tsx`）。`cover.png` 是给 README、发布说明和分享用的，不必写进 `fuyu.screenshots`。
 
-## 给官方插件加截图（E77.6 用）
+## 给官方插件加截图
 
-1. 在插件文件夹里加 `shots/sample.ts`：照这个插件的 `protocol.ts` 写一份好看的状态，`host.calls` 里把岛上页面和收起条启动时调的方法都答上（跑一次 `shots`，没答的方法会列出来）。带时间的写 `now`。
-2. `fuyu-plugin shots`，图写进 `screenshots/`。看一眼图，不对就改示例数据。
-3. 把 `screenshots/page.png`、`screenshots/bar.png` 写进 `fuyu.screenshots`，各配中英文 `caption`；`tsconfig.json` 的 `include` 加上 `shots`。
-4. 从 `tests/unit/plugin-cli-lint.test.mjs` 的 `PENDING` 里删掉这个插件。
+12 个官方插件的截图都是这样来的（E77.6，2026-11-19）。
 
-没有自己界面的插件（例如词典）截不了，在它起作用的地方（翻译窗口）手动截。
+### 有岛上页面或收起条的
+
+1. 在插件文件夹里加 `shots/sample.ts`：照这个插件的 `protocol.ts` 写一份好看的状态，`host.calls` 里把岛上页面和收起条启动时调的方法都答上（跑一次 `shots`，没答的方法会列出来）。带时间的写 `now`。数据写得像一个真用户的一天，不用 foo、test 这类占位。
+2. `fuyu-plugin shots <文件夹> --no-cover`，图写进 `screenshots/`。看一眼图，不对就改示例数据；再加 `--theme light --locale en --out <临时目录>` 截一张浅色英文的，看有没有溢出和看不清的地方，这张不留在仓库里。
+3. 把 `screenshots/page.png`、`screenshots/bar.png` 写进 `fuyu.screenshots`，页面排第一，各配中英文 `caption`；`tsconfig.json` 的 `include` 加上 `shots`。
+4. `fuyu-plugin check <文件夹> --official --strict --market` 和 `fuyu-plugin preview <文件夹>` 看卡片封面露出来的那一段。
+
+做的时候碰到的几件事：
+
+- **第一张图的上半截要说明用处**。市场卡片的封面只露出第一张图顶上一段（792 × 360 的岛上页面露出上面约 54%），再缩到四成左右，所以示例数据要让最要紧的数字、列表的前两三行落在上半截。
+- **默认关着的收起条**：示例数据里把那个设置打开再截（闹钟的 `barMode: "always"`、倒数日的 `barStyle: "title"`）。
+- **世界时钟要固定时区**：`now` 只固定时刻，各城市的时间还按本机时区算。它的示例数据按上海写，重截时加 `TZ=Asia/Shanghai`。
+- **示例数据里的网址**：`check` 也扫 `shots/`，写了清单 `network` 之外的域名会被报出来。示例数据里的链接写成不带域名的路径。
+- **清单里引用的旧图**：真岛上截的图（闹钟的 `ringing.png`、GitHub Issues 的 `settings.png`）可以留在后面当第二、第三张；不再引用的旧图从 `screenshots/` 删掉。
+
+### 没有岛上页面的
+
+`shots` 只会截岛上页面和收起条。离线词典、待办摘要、换歌提示没有岛上页面，它们截的是起作用的地方：翻译窗口、插件详情里的设置、岛上弹出的卡片。做法是回归页那一套：写一个临时的页面，用浮屿自己的窗口组件渲染，数据来自插件自己的代码或一份示例，再用无界面浏览器按 2 倍像素截那个元素，四角透明。
+
+| 插件 | 截的是什么 | 数据 | 怎么重截 |
+|---|---|---|---|
+| `ecdict` | 快捷翻译窗口（`TranslationWindow`）：查词、变形词还原、中文反查 | 执行插件 `src/host.ts` 的 `apply`，用它登记的引擎查真实词表 | `node docs/investigations/plugin-shots/harness/shoot.mjs ecdict` |
+| `todo-digest` | 插件详情对话框的「设置」页（`PluginDetailModal` 加插件自己的设置组件）、写完后岛上的提示 | 执行插件的 `apply`，给它 7 条示例待办，调它登记的 `state` 和 `writeDigest` | `node docs/investigations/plugin-shots/harness/shoot.mjs todo-digest` |
+| `now-playing` | 换歌卡片（`IslandShell` 加 `MessageArrivalsPanel`） | 示例曲目，封面和播放器图标是生成的，不用真实专辑封面和平台图标 | 脚本没进仓库，做法见下 |
+
+`shoot.mjs` 把同目录的页面临时放进 `tests/regression/`、起 vite、截图、删干净，约半分钟；每张图的界面、数据来源和它跟真机的差别写在[那个目录的 README](../investigations/plugin-shots/harness/README.md)。换歌卡片是同样的做法：临时回归页里放真的岛外壳和消息面板，给一条带媒体控制的示例消息，页面渲染完在 `body` 上标 `data-shot-ready`，脚本用 `scripts/run-regression.mjs` 导出的 `withRegressionBrowser` 起浏览器，设 2 倍像素和透明底，取 `.island` 的位置四周留 12 像素截下来。
+
+这样截的图和 `shots` 的一样，是照默认外观渲染的组件，不是真机截图：没有桌面背景和系统阴影，快捷键按截图那台机器的写法显示。发版前在真岛上对一眼。
