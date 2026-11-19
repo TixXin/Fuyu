@@ -1,0 +1,10 @@
+.agent-reminder {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.agent-reminder .settings-row {
+  scroll-margin-top: 220px;
+}

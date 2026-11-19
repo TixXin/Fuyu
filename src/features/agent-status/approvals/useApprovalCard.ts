@@ -4,7 +4,7 @@ import type { AgentApprovals } from "./useAgentApprovals";
 
 export const APPROVAL_ARM_MS = 500;
 
-export function useApprovalCard(approvals: AgentApprovals, hotkeys: typeof APPROVAL_HOTKEYS) {
+export function useApprovalCard(approvals: AgentApprovals, hotkeys: typeof APPROVAL_HOTKEYS, live = true) {
   const [armed, setArmed] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
   const actRef = useRef<(action: AgentApprovalDecision) => void>(() => {});
@@ -18,7 +18,7 @@ export function useApprovalCard(approvals: AgentApprovals, hotkeys: typeof APPRO
   }, [id]);
 
   useEffect(() => {
-    if (!armed || !id) return;
+    if (!armed || !id || !live) return;
     const failed = (error: unknown) => console.error("Failed to set the approval shortcuts", error);
     let stop: (() => void) | undefined;
     let cancelled = false;
@@ -31,7 +31,7 @@ export function useApprovalCard(approvals: AgentApprovals, hotkeys: typeof APPRO
       stop?.();
       void setAgentApprovalHotkeys([]).catch(failed);
     };
-  }, [armed, id, hotkeys]);
+  }, [armed, id, hotkeys, live]);
 
   useLayoutEffect(() => {
     const card = cardRef.current;

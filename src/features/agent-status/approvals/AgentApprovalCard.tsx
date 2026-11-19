@@ -19,16 +19,18 @@ export function AgentApprovalCard({
   approvals,
   sessions,
   options = DEFAULT_AGENT_NOTICE_OPTIONS,
+  preview: inPreview = false,
 }: {
   approvals: AgentApprovals;
   sessions: AgentSessionSummary[];
   options?: AgentNoticeOptions;
+  preview?: boolean;
 }) {
   const t = useTranslation();
   const request = approvals.current;
   const [expanded, setExpanded] = useState(false);
   const id = request?.id;
-  const { armed, cardRef, actRef } = useApprovalCard(approvals, APPROVAL_HOTKEYS);
+  const { armed, cardRef, actRef } = useApprovalCard(approvals, APPROVAL_HOTKEYS, !inPreview);
 
   useEffect(() => {
     setExpanded(false);
@@ -47,6 +49,7 @@ export function AgentApprovalCard({
 
   const toTerminal = () => {
     approvals.decide("terminal");
+    if (inPreview) return;
     void focusAgentWindow(request.agent, cwd, session?.title ?? null, request.remoteHost ? "" : request.sessionId).catch((error: unknown) =>
       console.error("Failed to focus the agent window", error),
     );

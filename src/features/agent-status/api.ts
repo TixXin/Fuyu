@@ -294,3 +294,7 @@ export function emitAgentStatusHostEvent(payload: Record<string, unknown>) {
 export function openAgentLink(url: string) {
   if (/^https?:\/\//i.test(url.trim())) void openUrl(url.trim()).catch((error: unknown) => console.error("Failed to open the link", error));
 }
+
+export function islandHasNotch() {
+  return invoke<{ width: number; height: number } | null>("get_island_notch").then((notch) => notch !== null);
+}

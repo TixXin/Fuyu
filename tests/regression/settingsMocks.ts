@@ -66,6 +66,7 @@ const replyMarker = () => ({
 });
 export const replyMarkerCalls: boolean[] = [];
 export const openedUrls: string[] = [];
+export const islandNotch: { value: { width: number; height: number } | null } = { value: new URLSearchParams(location.search).has("notch") ? { width: 200, height: 32 } : null };
 mockIPC((command, payload) => {
   commands.push(command);
   const args = (payload ?? {}) as Record<string, unknown>;
@@ -95,6 +96,7 @@ mockIPC((command, payload) => {
       return mockBuiltinPlugins();
     }
     case "get_reply_marker_state": return replyMarker();
+    case "get_island_notch": return islandNotch.value;
     case "get_editor_extension_states":
       return [
         { app: "code", name: "VS Code", installed: true, canInstall: true },

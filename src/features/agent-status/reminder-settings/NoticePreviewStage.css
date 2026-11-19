@@ -1,0 +1,224 @@
+.agent-reminder-stage {
+  --agent-reminder-desk: 244px;
+  --agent-reminder-desk-compact: 150px;
+  position: sticky;
+  top: -4px;
+  z-index: 6;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-md);
+  padding: 10px 12px 8px;
+  background: var(--settings-card, #1b1d22);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-xl);
+}
+
+.agent-reminder-stage--compact {
+  margin-bottom: calc(var(--agent-reminder-desk) - var(--agent-reminder-desk-compact));
+}
+
+.agent-reminder-stage__head {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px 12px;
+}
+
+.agent-reminder-stage__chips {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.agent-reminder-stage__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.agent-reminder-stage__chip:hover {
+  background: var(--color-white-a06);
+}
+
+.agent-reminder-stage__chip--active,
+.agent-reminder-stage__chip--active:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 70%, transparent);
+}
+
+.agent-reminder-stage__chip--flash {
+  animation: agent-reminder-flash var(--motion-slow) var(--motion-ease-out) 2;
+}
+
+.agent-reminder-stage__chip:focus-visible,
+.agent-reminder-stage__play:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.agent-reminder-stage__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.agent-reminder-stage__dot--needs { background: var(--agent-reminder-needs, #ff9f0a); }
+.agent-reminder-stage__dot--yourTurn { background: var(--agent-reminder-your-turn, #9cc3dc); }
+.agent-reminder-stage__dot--working { background: var(--agent-reminder-working, #34c759); }
+.agent-reminder-stage__dot--done { background: var(--agent-reminder-done, #8e8e93); }
+.agent-reminder-stage__dot--failed { background: var(--agent-reminder-failed, #ff453a); }
+
+.agent-reminder-stage__play {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 11px;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: 0;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.agent-reminder-stage__desk {
+  position: relative;
+  height: var(--agent-reminder-desk);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--agent-reminder-desk-top, #39424d), var(--agent-reminder-desk-bottom, #5d6772));
+  border-radius: var(--radius-lg);
+}
+
+.agent-reminder-stage--compact .agent-reminder-stage__desk {
+  height: var(--agent-reminder-desk-compact);
+}
+
+.agent-reminder-stage__fit {
+  flex: none;
+  transform-origin: top center;
+}
+
+.agent-reminder-stage__drop--in {
+  animation: agent-reminder-drop var(--motion-slow) var(--motion-ease-out) backwards;
+}
+
+.agent-reminder-stage__drop--out {
+  opacity: 0;
+  clip-path: inset(0 24% 86% 24% round 0 0 14px 14px);
+  animation: agent-reminder-lift var(--motion-medium) var(--motion-ease-out);
+}
+
+.agent-reminder-stage__countdown {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--agent-reminder-on-desk, rgba(255, 255, 255, 0.85));
+  transform: scaleX(var(--countdown-from));
+  transform-origin: left;
+}
+
+.agent-reminder-stage__countdown--running {
+  transform: scaleX(0);
+  animation: agent-reminder-countdown var(--countdown-ms) linear;
+}
+
+.agent-reminder-stage__scale {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  color: var(--agent-reminder-on-desk, rgba(255, 255, 255, 0.85));
+  font-size: 11px;
+  text-shadow: 0 1px 2px var(--agent-reminder-desk-shade, rgba(0, 0, 0, 0.4));
+  pointer-events: none;
+}
+
+.agent-reminder-stage__note {
+  min-height: 18px;
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.agent-reminder-stage__note--playing {
+  color: var(--color-text-muted);
+}
+
+@keyframes agent-reminder-flash {
+  50% {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 55%, transparent);
+  }
+}
+
+@keyframes agent-reminder-drop {
+  from {
+    opacity: 0.5;
+    clip-path: inset(0 24% 86% 24% round 0 0 14px 14px);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0 -40px -60px -40px);
+  }
+}
+
+@keyframes agent-reminder-lift {
+  from {
+    opacity: 1;
+    clip-path: inset(0 -40px -60px -40px);
+  }
+}
+
+@keyframes agent-reminder-countdown {
+  from {
+    transform: scaleX(var(--countdown-from));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-reminder-stage__chip--flash,
+  .agent-reminder-stage__drop--in,
+  .agent-reminder-stage__drop--out {
+    animation: none;
+  }
+
+  .agent-reminder-stage__countdown--running {
+    transform: scaleX(var(--countdown-from));
+    animation: none;
+  }
+}
+
+.island-light .agent-reminder-stage__desk {
+  --agent-reminder-desk-top: #9aa3ad;
+  --agent-reminder-desk-bottom: #c9ced4;
+  --agent-reminder-on-desk: rgba(0, 0, 0, 0.72);
+  --agent-reminder-desk-shade: rgba(255, 255, 255, 0.5);
+}
