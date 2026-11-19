@@ -1,11 +1,24 @@
-import { todoElapsedLabel } from "./todoPrefs.ts";
+import { todoElapsedLabel, type TodoPrefs } from "./todoPrefs.ts";
 import type { TodoItem, TodoPriority } from "./types.ts";
 
 export type TodoMarkdownOptions = {
   markdownPriority?: boolean;
   markdownElapsed?: boolean;
+  markdownProject?: boolean;
+  markdownSubtasks?: boolean;
+  markdownNote?: boolean;
   now?: number;
 };
+
+export function todoMarkdownOptions(prefs: Pick<TodoPrefs, "markdownPriority" | "markdownElapsed" | "markdownProject" | "markdownSubtasks" | "markdownNote">): TodoMarkdownOptions {
+  return {
+    markdownPriority: prefs.markdownPriority,
+    markdownElapsed: prefs.markdownElapsed,
+    markdownProject: prefs.markdownProject,
+    markdownSubtasks: prefs.markdownSubtasks,
+    markdownNote: prefs.markdownNote,
+  };
+}
 
 const PRIORITY_MARKS: Readonly<Record<TodoPriority, string>> = {
   high: "[!高]",
@@ -16,14 +29,17 @@ const PRIORITY_MARKS: Readonly<Record<TodoPriority, string>> = {
 export function getTodoSignature(date: string, todos: TodoItem[], dailyNote: string, options?: TodoMarkdownOptions) {
   const includePriority = Boolean(options?.markdownPriority);
   const includeElapsed = Boolean(options?.markdownElapsed);
+  const includeProject = options?.markdownProject !== false;
+  const includeSubtasks = options?.markdownSubtasks !== false;
+  const includeNote = options?.markdownNote !== false;
   return JSON.stringify({
     date,
     todos: todos.map((todo) => ({
       title: todo.title,
       completed: todo.completed,
-      project: todo.project,
-      ...(todo.note ? { note: todo.note } : {}),
-      ...(todo.subtasks?.length
+      ...(includeProject ? { project: todo.project } : {}),
+      ...(includeNote && todo.note ? { note: todo.note } : {}),
+      ...(includeSubtasks && todo.subtasks?.length
         ? { subtasks: todo.subtasks.map((subtask) => ({ title: subtask.title, completed: subtask.completed })) }
         : {}),
       ...(includePriority && todo.priority ? { priority: todo.priority } : {}),
@@ -42,20 +58,23 @@ function formatFocusBadge(focusMinutes: number | undefined): string | null {
 export function formatTodosAsMarkdown(todos: TodoItem[], options?: TodoMarkdownOptions) {
   const includePriority = Boolean(options?.markdownPriority);
   const includeElapsed = Boolean(options?.markdownElapsed);
+  const includeProject = options?.markdownProject !== false;
+  const includeSubtasks = options?.markdownSubtasks !== false;
+  const includeNote = options?.markdownNote !== false;
   const now = options?.now ?? Date.now();
   return todos
     .map((todo) => {
-      const project = todo.project ? `[${todo.project}] ` : "";
+      const project = includeProject && todo.project ? `[${todo.project}] ` : "";
       const priority = includePriority && todo.priority ? `${PRIORITY_MARKS[todo.priority]} ` : "";
       const elapsed = includeElapsed ? todoElapsedLabel(todo.startedAt, now, true) : null;
       const focus = includeElapsed ? formatFocusBadge(todo.focusMinutes) : null;
       const timeParts = [focus, elapsed].filter((part): part is string => Boolean(part));
       const suffix = timeParts.length > 0 ? ` (${timeParts.join(" · ")})` : "";
       const lines = [`- [${todo.completed ? "x" : " "}] ${project}${priority}${todo.title}${suffix}`];
-      if (todo.note) {
+      if (includeNote && todo.note) {
         lines.push(`  > ${todo.note}`);
       }
-      if (todo.subtasks && todo.subtasks.length > 0) {
+      if (includeSubtasks && todo.subtasks && todo.subtasks.length > 0) {
         for (const subtask of todo.subtasks) {
           lines.push(`  - [${subtask.completed ? "x" : " "}] ${subtask.title}`);
         }

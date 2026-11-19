@@ -3,6 +3,7 @@ import { defineSlot } from "../../plugin-kernel/slots";
 import { islandContributions } from "../../plugin-kernel/useIslandContributions";
 import { useBackgroundUpdateCheck } from "../useBackgroundUpdateCheck";
 import { useIslandAutoUpdate } from "../useIslandAutoUpdate";
+import { useOnboardingBundle } from "../useOnboardingBundle";
 import { usePluginRosterSync } from "../usePluginRosterSync";
 import { OWNER } from "./owner";
 import { useUpdateContributions } from "./updateIsland";
@@ -22,6 +23,7 @@ function UpdaterRunner({ mode, openSettings }: RunnerProps) {
   useIslandAutoUpdate({ mode, agentsBusy: useSyncExternalStore(islandContributions.subscribe, agentsBusy, agentsBusy) });
   useUpdateContributions(openUpdates);
   usePluginRosterSync();
+  useOnboardingBundle();
   return null;
 }
 

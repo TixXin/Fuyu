@@ -46,6 +46,8 @@ pub struct TodoItem {
     pub note: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub focus_minutes: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub focused_at: Option<Number>,
     #[serde(default, deserialize_with = "clock::lenient", skip_serializing_if = "Option::is_none")]
     pub updated_at: Option<Hlc>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

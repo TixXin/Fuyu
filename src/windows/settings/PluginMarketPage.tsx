@@ -62,6 +62,7 @@ function ConnectedMarket({ host, onOpenPage }: { host: PluginMarketHost; onOpenP
       onOpenPage={onOpenPage}
       initialQuery={request?.query}
       initialDetail={request?.detail ?? null}
+      initialBundle={request?.bundle ?? null}
       openedPackage={opened.openedPackage}
       openedError={opened.openedError}
       onConsumePackage={opened.consume}

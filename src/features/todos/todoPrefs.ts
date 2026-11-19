@@ -9,6 +9,7 @@ export type TodoDoneDisplay = "fold" | "inline" | "hide";
 export type TodoArchiveRetentionDays = 0 | 90 | 180 | 365;
 export type TodoReminderLeadMinutes = 0 | 5 | 10 | 15 | 30;
 export type TodoDueReminderScope = "off" | "high" | "highMedium" | "all";
+export type TodoDefaultPriority = "none" | TodoPriority;
 
 export type TodoPrefs = {
   showElapsed: boolean;
@@ -20,6 +21,9 @@ export type TodoPrefs = {
   doneDisplay: TodoDoneDisplay;
   markdownPriority: boolean;
   markdownElapsed: boolean;
+  markdownProject: boolean;
+  markdownSubtasks: boolean;
+  markdownNote: boolean;
   archiveRetentionDays: TodoArchiveRetentionDays;
   autoCompleteFromSubtasks: boolean;
   focusTimerEnabled: boolean;
@@ -29,6 +33,11 @@ export type TodoPrefs = {
   dueReminderScope: TodoDueReminderScope;
   wrapUpReminderEnabled: boolean;
   wrapUpReminderTime: string;
+  defaultProject: string;
+  defaultPriority: TodoDefaultPriority;
+  recurrenceHolidayAware: boolean;
+  noteTemplate: string;
+  showWeekSummary: boolean;
 };
 
 export const TODO_SORT_MODES: readonly TodoSortBy[] = ["manual", "priority", "createdDesc"];
@@ -38,7 +47,10 @@ export const TODO_DONE_DISPLAYS: readonly TodoDoneDisplay[] = ["fold", "inline",
 export const TODO_ARCHIVE_RETENTION_DAYS: readonly TodoArchiveRetentionDays[] = [0, 90, 180, 365];
 export const TODO_REMINDER_LEAD_MINUTES: readonly TodoReminderLeadMinutes[] = [0, 5, 10, 15, 30];
 export const TODO_DUE_REMINDER_SCOPES: readonly TodoDueReminderScope[] = ["off", "high", "highMedium", "all"];
+export const TODO_DEFAULT_PRIORITIES: readonly TodoDefaultPriority[] = ["none", "low", "medium", "high"];
 export const DEFAULT_WRAP_UP_REMINDER_TIME = "18:00";
+export const MAX_NOTE_TEMPLATE_LENGTH = 2000;
+const MAX_PROJECT_ID_LENGTH = 80;
 export const MIN_FOCUS_TIMER_MINUTES = 5;
 export const MAX_FOCUS_TIMER_MINUTES = 120;
 
@@ -52,6 +64,9 @@ export const DEFAULT_TODO_PREFS: TodoPrefs = {
   doneDisplay: "fold",
   markdownPriority: true,
   markdownElapsed: false,
+  markdownProject: true,
+  markdownSubtasks: true,
+  markdownNote: true,
   archiveRetentionDays: 0,
   autoCompleteFromSubtasks: false,
   focusTimerEnabled: false,
@@ -61,6 +76,11 @@ export const DEFAULT_TODO_PREFS: TodoPrefs = {
   dueReminderScope: "high",
   wrapUpReminderEnabled: false,
   wrapUpReminderTime: DEFAULT_WRAP_UP_REMINDER_TIME,
+  defaultProject: "",
+  defaultPriority: "none",
+  recurrenceHolidayAware: true,
+  noteTemplate: "",
+  showWeekSummary: true,
 };
 
 const MIN_REAL_TIMESTAMP_MS = 946_684_800_000;
@@ -88,6 +108,10 @@ function pickClockTime(value: unknown, fallback: string): string {
   return parseClockTime(value) ? (value as string) : fallback;
 }
 
+function pickText(value: unknown, maxLength: number): string {
+  return typeof value === "string" ? [...value].slice(0, maxLength).join("") : "";
+}
+
 export function normalizeTodoPrefs(value: unknown): TodoPrefs {
   const saved = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
   return {
@@ -100,6 +124,9 @@ export function normalizeTodoPrefs(value: unknown): TodoPrefs {
     doneDisplay: pickOne(TODO_DONE_DISPLAYS, saved.doneDisplay, DEFAULT_TODO_PREFS.doneDisplay),
     markdownPriority: pickBoolean(saved.markdownPriority, DEFAULT_TODO_PREFS.markdownPriority),
     markdownElapsed: pickBoolean(saved.markdownElapsed, DEFAULT_TODO_PREFS.markdownElapsed),
+    markdownProject: pickBoolean(saved.markdownProject, DEFAULT_TODO_PREFS.markdownProject),
+    markdownSubtasks: pickBoolean(saved.markdownSubtasks, DEFAULT_TODO_PREFS.markdownSubtasks),
+    markdownNote: pickBoolean(saved.markdownNote, DEFAULT_TODO_PREFS.markdownNote),
     archiveRetentionDays: pickOne(TODO_ARCHIVE_RETENTION_DAYS, saved.archiveRetentionDays, DEFAULT_TODO_PREFS.archiveRetentionDays),
     autoCompleteFromSubtasks: pickBoolean(saved.autoCompleteFromSubtasks, DEFAULT_TODO_PREFS.autoCompleteFromSubtasks),
     focusTimerEnabled: pickBoolean(saved.focusTimerEnabled, DEFAULT_TODO_PREFS.focusTimerEnabled),
@@ -109,6 +136,11 @@ export function normalizeTodoPrefs(value: unknown): TodoPrefs {
     dueReminderScope: pickOne(TODO_DUE_REMINDER_SCOPES, saved.dueReminderScope, DEFAULT_TODO_PREFS.dueReminderScope),
     wrapUpReminderEnabled: pickBoolean(saved.wrapUpReminderEnabled, DEFAULT_TODO_PREFS.wrapUpReminderEnabled),
     wrapUpReminderTime: pickClockTime(saved.wrapUpReminderTime, DEFAULT_TODO_PREFS.wrapUpReminderTime),
+    defaultProject: pickText(saved.defaultProject, MAX_PROJECT_ID_LENGTH).trim(),
+    defaultPriority: pickOne(TODO_DEFAULT_PRIORITIES, saved.defaultPriority, DEFAULT_TODO_PREFS.defaultPriority),
+    recurrenceHolidayAware: pickBoolean(saved.recurrenceHolidayAware, DEFAULT_TODO_PREFS.recurrenceHolidayAware),
+    noteTemplate: pickText(saved.noteTemplate, MAX_NOTE_TEMPLATE_LENGTH),
+    showWeekSummary: pickBoolean(saved.showWeekSummary, DEFAULT_TODO_PREFS.showWeekSummary),
   };
 }
 

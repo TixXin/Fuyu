@@ -5,6 +5,7 @@ mod config;
 mod dev_island;
 #[cfg(debug_assertions)]
 mod lab;
+mod notify;
 mod routes;
 mod server;
 pub(crate) mod settings;
@@ -82,13 +83,14 @@ fn current_config() -> LocalApiConfig {
     SERVICE.get().map(|service| config(service).clone()).unwrap_or_default()
 }
 
-fn start(allow_write: bool) -> Result<LocalApiStatus, String> {
+fn start(allow_write: bool, allow_notify: bool) -> Result<LocalApiStatus, String> {
     let service = service()?;
     {
         let mut config = config(service);
         let port = server::start(service.app.clone(), config.port)?;
         config.enabled = true;
         config.allow_write = allow_write;
+        config.allow_notify = allow_notify;
         config.port = port;
         save_config(&service.path, &config)?;
     }
@@ -99,15 +101,17 @@ fn stop() -> Result<(), String> {
     let service = service()?;
     server::stop();
     crate::agent_status::clear_external_owner(server::LOCAL_API_OWNER);
+    notify::clear();
     let mut config = config(service);
     config.enabled = false;
     save_config(&service.path, &config)
 }
 
-fn set_allow_write(allow_write: bool) -> Result<(), String> {
+fn set_allowed(allow_write: bool, allow_notify: bool) -> Result<(), String> {
     let service = service()?;
     let mut config = config(service);
     config.allow_write = allow_write;
+    config.allow_notify = allow_notify;
     save_config(&service.path, &config)
 }
 

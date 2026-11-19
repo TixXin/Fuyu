@@ -22,6 +22,7 @@ import type { AgentApprovals } from "../../src/features/agent-status/approvals/u
 import { permission, SESSIONS } from "./agentNoticeGallery";
 import { windowSlots } from "../../src/features/plugin-kernel/slots";
 import { collapsedFit } from "../../src/windows/island/collapsedFitStore";
+import { islandSpotlight, SPOTLIGHT_ANIMATION } from "../../src/features/plugin-kernel/islandSpotlight";
 import type { IslandPage } from "../../src/windows/island/types";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -196,6 +197,12 @@ async function runChecks() {
     const gapBox = box(bar().querySelector(".island__notch-gap")!);
     check(box(chip()!).right <= gapBox.left + 0.5 || box(chip()!).left >= gapBox.right - 0.5, "「+N」不压刘海");
     check(box(chip()!).left >= box(island()).left && box(chip()!).right <= box(island()).right && chip() === hit(chip()!), "「+N」在岛上看得见、点得到");
+    const spotlit = () => [...bar().querySelectorAll<HTMLElement>("[data-spotlight]")].filter((element) => getComputedStyle(element).animationName === SPOTLIGHT_ANIMATION);
+    await act(async () => islandSpotlight.request("@test/clock-par"));
+    check(spotlit().length === 1 && spotlit()[0] === chip(), "刚装的插件那一格被收进「+N」时，亮的是「+N」");
+    await act(async () => islandSpotlight.request("@test/clock-tyo"));
+    check(spotlit().length === 1 && spotlit()[0] === clocksShown()[0].closest(".island__collapsed-fit"), "它那一格在岛上时亮的是那一格，「+N」不亮");
+    await act(async () => islandSpotlight.end("@test/clock-tyo"));
     await act(async () => { chip()!.click(); });
     const panel = () => document.querySelector<HTMLElement>(".island-more-panel");
     const rowNames = () => [...(panel()?.querySelectorAll(".island-more-panel__row") ?? [])].map((row) => row.textContent);

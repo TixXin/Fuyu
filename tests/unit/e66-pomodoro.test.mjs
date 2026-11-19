@@ -165,7 +165,7 @@ async function until(check, ms = 3000) {
 
 test("E66.1 pomodoro commands, breaks, pause, and notification buttons in startHost", async () => {
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, "built"), packDir: join(scratch, "packed") });
-  assert.equal(packed.manifest.version, "1.1.1");
+  assert.equal(packed.manifest.version, "1.2.0");
   assert.deepEqual(packed.manifest.fuyu.commands.map((item) => item.id), ["start", "stop", "pause"]);
   const hostDir = join(scratch, "host");
   mkdirSync(hostDir, { recursive: true });
@@ -173,6 +173,7 @@ test("E66.1 pomodoro commands, breaks, pause, and notification buttons in startH
 
   const timers = fakeTimers();
   const notices = [];
+  const todoUpdates = [];
   let messagesProvider = null;
   const host = await startHost({ dir: hostDir, appVersion: "0.4.0" });
   try {
@@ -185,7 +186,10 @@ test("E66.1 pomodoro commands, breaks, pause, and notification buttons in startH
       list: async () => ({ date: "2026-11-19", todos: [{ id: "todo-1", title: "Write report", completed: false }] }),
       days: async () => ({ days: [] }),
       add: async () => ({}),
-      update: async () => ({}),
+      update: async (params) => {
+        todoUpdates.push(params);
+        return {};
+      },
       remove: async () => ({}),
       note: async () => ({ date: "2026-11-19", note: "" }),
       setNote: async () => ({}),
@@ -240,6 +244,7 @@ test("E66.1 pomodoro commands, breaks, pause, and notification buttons in startH
     assert.equal(notices[0].actions.length, 2);
     assert.match(notices[0].body, /Write report/);
     assert.equal(timers.items.has(focusId), false);
+    assert.deepEqual(todoUpdates, [{ id: "todo-1", addFocusMinutes: 25 }]);
 
     messagesProvider.emit("action", { pluginId: "@fuyu/pomodoro", source: "@fuyu/pomodoro", action: notices[0].actions[0] });
     assert.ok(await until(() => [...timers.items.values()].some((timer) => timer.durationMs === 5 * 60_000)));
@@ -257,6 +262,7 @@ test("E66.1 pomodoro commands, breaks, pause, and notification buttons in startH
     assert.equal(stopped.phase, null);
     assert.equal(stopped.rounds, 1);
     assert.equal(timers.items.size, 0);
+    assert.equal(todoUpdates.length, 1);
 
     const saved = JSON.parse(readFileSync(join(hostDir, "data", "@fuyu", "pomodoro", "pomodoro.json"), "utf8"));
     assert.equal(saved.rounds, 1);

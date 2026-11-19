@@ -57,6 +57,27 @@ export type SettingsProjectText = {
     autoCheck: string; interval: string; lastCheck: string; stage: string;
     enabled: string; disabled: string;
   };
+  community: {
+    title: string;
+    loading: string;
+    failed: string;
+    retry: string;
+    openPage: string;
+    empty: string;
+    showQr: string;
+    hideQr: string;
+    openLink: string;
+    copyNumber: string;
+    copied: string;
+    copyFailed: string;
+    number: (number: string) => string;
+    validUntil: (date: string) => string;
+    expired: string;
+    imageFailed: string;
+    scanHint: (app: string) => string;
+    qrAlt: (name: string) => string;
+    platforms: Record<"wechat" | "qq" | "discord" | "telegram" | "other", string>;
+  };
   update: {
     title: string;
     retry: string;
@@ -185,6 +206,27 @@ export const zhCN: SettingsProjectText = {
     autoCheck: "自动检查", interval: "检查频率", lastCheck: "上次成功检查", stage: "更新状态",
     enabled: "开启", disabled: "关闭",
   },
+  community: {
+    title: "交流群",
+    loading: "正在读取群列表…",
+    failed: "读不到群列表，可能是网络不通。",
+    retry: "重试",
+    openPage: "去网页看",
+    empty: "暂时没有交流群。",
+    showQr: "显示二维码",
+    hideQr: "收起",
+    openLink: "打开链接",
+    copyNumber: "复制群号",
+    copied: "已复制",
+    copyFailed: "复制失败",
+    number: (number) => `群号 ${number}`,
+    validUntil: (date) => `有效期到 ${date}`,
+    expired: "二维码已过期，正在换新的，过一两天再来看。",
+    imageFailed: "二维码图片加载不出来，可能是网络不通。",
+    scanHint: (app) => `用${app}扫一扫加入`,
+    qrAlt: (name) => `${name}的二维码`,
+    platforms: { wechat: "微信", qq: "QQ", discord: "Discord", telegram: "Telegram", other: "其他" },
+  },
   update: {
     title: "检查更新",
     retry: "重试",
@@ -312,6 +354,27 @@ export const en: SettingsProjectText = {
     version: "App version", system: "Operating system", architecture: "Architecture", channel: "Update channel",
     autoCheck: "Automatic checks", interval: "Check frequency", lastCheck: "Last successful check", stage: "Update status",
     enabled: "On", disabled: "Off",
+  },
+  community: {
+    title: "Community",
+    loading: "Loading the group list…",
+    failed: "Couldn't load the group list. The network may be down.",
+    retry: "Retry",
+    openPage: "Open on the web",
+    empty: "No groups yet.",
+    showQr: "Show QR code",
+    hideQr: "Hide",
+    openLink: "Open link",
+    copyNumber: "Copy number",
+    copied: "Copied",
+    copyFailed: "Copy failed",
+    number: (number) => `Group ${number}`,
+    validUntil: (date) => `Valid through ${date}`,
+    expired: "This QR code has expired. A new one is on the way; check back in a day or two.",
+    imageFailed: "The QR code image could not be loaded. The network may be down.",
+    scanHint: (app) => `Scan with ${app} to join`,
+    qrAlt: (name) => `QR code for ${name}`,
+    platforms: { wechat: "WeChat", qq: "QQ", discord: "Discord", telegram: "Telegram", other: "Other" },
   },
   update: {
     title: "Check for updates",

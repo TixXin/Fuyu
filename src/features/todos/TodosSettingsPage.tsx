@@ -8,6 +8,7 @@ import { SavePathSettingsSection } from "./SavePathSettingsSection";
 import { useSharedSaveDirectorySetting, type SaveDirectorySetting } from "./saveDirectoryStore";
 import { TodoFocusSettingsSection } from "./TodoFocusSettingsSection";
 import { TodoProjectsSection } from "./TodoProjectsSection";
+import { TodoReminderSettingsSection } from "./TodoReminderSettingsSection";
 import { TodoRolloverSettingsSection } from "./TodoRolloverSettingsSection";
 import { TodoSettingsSection } from "./TodoSettingsSection";
 
@@ -33,22 +34,25 @@ function SavePathSection({ saveDirectory }: TodosSectionProps) {
   );
 }
 
-const sections = settingsSections<TodosSectionProps, "todos">();
+export type TodoSettingsTab = "todos" | "todosReminders" | "todosArchive";
+
+const sections = settingsSections<TodosSectionProps, TodoSettingsTab>();
 
 sections.add({ id: "todos.general", category: "todos", order: 10, component: TodoSettingsSection }, OWNER);
 sections.add({ id: "todos.focus", category: "todos", order: 12, component: TodoFocusSettingsSection }, OWNER);
-sections.add({ id: "todos.rollover", category: "todos", order: 15, component: TodoRolloverSettingsSection }, OWNER);
 sections.add({ id: "todos.projects", category: "todos", order: 20, component: ProjectsSection }, OWNER);
-sections.add({ id: "todos.save-path", category: "todos", order: 30, component: SavePathSection }, OWNER);
+sections.add({ id: "todosReminders.reminders", category: "todosReminders", order: 10, component: TodoReminderSettingsSection }, OWNER);
+sections.add({ id: "todosArchive.rollover", category: "todosArchive", order: 10, component: TodoRolloverSettingsSection }, OWNER);
+sections.add({ id: "todosArchive.save-path", category: "todosArchive", order: 30, component: SavePathSection }, OWNER);
 
-export function TodosSettingsPage(page: Omit<TodosSectionProps, "saveDirectory">) {
+export function TodosSettingsPage({ tab, ...page }: Omit<TodosSectionProps, "saveDirectory"> & { tab: TodoSettingsTab }) {
   const saveDirectory = useSharedSaveDirectorySetting();
   if (!saveDirectory) return null;
   const props = { ...page, saveDirectory };
   return (
     <>
       <FeatureHeader feature="todos" icon={settingsCategoryIcon("todos")} />
-      <SlotView slot={sections} group="todos" props={props} />
+      <SlotView slot={sections} group={tab} props={props} />
     </>
   );
 }

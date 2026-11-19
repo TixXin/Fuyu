@@ -24,7 +24,7 @@ test("a focus request for a plugin carries the plugin and is read once", () => {
   withStorage({}, (store) => {
     requestSettingsFocus("pluginsV3", "@fuyu/weather");
     assert.equal(JSON.parse(store.get(SETTINGS_FOCUS_STORAGE_KEY)).plugin, "@fuyu/weather");
-    assert.deepEqual(takeFocusRequest(), { section: "pluginsV3", plugin: "@fuyu/weather", tab: null });
+    assert.deepEqual(takeFocusRequest(), { section: "pluginsV3", plugin: "@fuyu/weather", tab: null, bundle: null });
     assert.equal(takeFocusRequest(), null);
   });
 });
@@ -33,15 +33,15 @@ test("a request without a plugin keeps the old format and reads with no plugin",
   withStorage({}, (store) => {
     requestSettingsFocus("updates");
     assert.deepEqual(Object.keys(JSON.parse(store.get(SETTINGS_FOCUS_STORAGE_KEY))).sort(), ["requestedAt", "section"]);
-    assert.deepEqual(takeFocusRequest(), { section: "updates", plugin: null, tab: null });
+    assert.deepEqual(takeFocusRequest(), { section: "updates", plugin: null, tab: null, bundle: null });
   });
 });
 
 test("a plugin is only taken with the plugin page, and stale or broken requests are dropped", () => {
   const now = Date.now();
   const stored = (value) => ({ [SETTINGS_FOCUS_STORAGE_KEY]: JSON.stringify(value) });
-  withStorage(stored({ section: "updates", requestedAt: now, plugin: "@fuyu/weather" }), () => assert.deepEqual(takeFocusRequest(), { section: "updates", plugin: null, tab: null }));
-  withStorage(stored({ section: "pluginsV3", requestedAt: now, plugin: 42 }), () => assert.deepEqual(takeFocusRequest(), { section: "pluginsV3", plugin: null, tab: null }));
+  withStorage(stored({ section: "updates", requestedAt: now, plugin: "@fuyu/weather" }), () => assert.deepEqual(takeFocusRequest(), { section: "updates", plugin: null, tab: null, bundle: null }));
+  withStorage(stored({ section: "pluginsV3", requestedAt: now, plugin: 42 }), () => assert.deepEqual(takeFocusRequest(), { section: "pluginsV3", plugin: null, tab: null, bundle: null }));
   withStorage(stored({ section: "pluginsV3", requestedAt: now - FOCUS_REQUEST_MAX_AGE_MS - 1, plugin: "@fuyu/weather" }), () => assert.equal(takeFocusRequest(), null));
   withStorage({ [SETTINGS_FOCUS_STORAGE_KEY]: "{" }, (store) => {
     assert.equal(takeFocusRequest(), null);
@@ -55,10 +55,10 @@ test("an updates request can name an About tab, and only updates keeps it", () =
   withStorage({}, (store) => {
     requestSettingsFocus("updates", undefined, "changelog");
     assert.deepEqual(Object.keys(JSON.parse(store.get(SETTINGS_FOCUS_STORAGE_KEY))).sort(), ["requestedAt", "section", "tab"]);
-    assert.deepEqual(takeFocusRequest(), { section: "updates", plugin: null, tab: "changelog" });
+    assert.deepEqual(takeFocusRequest(), { section: "updates", plugin: null, tab: "changelog", bundle: null });
   });
-  withStorage(stored({ section: "updates", requestedAt: now, tab: "toString" }), () => assert.deepEqual(takeFocusRequest(), { section: "updates", plugin: null, tab: null }));
-  withStorage(stored({ section: "music", requestedAt: now, tab: "help" }), () => assert.deepEqual(takeFocusRequest(), { section: "music", plugin: null, tab: null }));
+  withStorage(stored({ section: "updates", requestedAt: now, tab: "toString" }), () => assert.deepEqual(takeFocusRequest(), { section: "updates", plugin: null, tab: null, bundle: null }));
+  withStorage(stored({ section: "music", requestedAt: now, tab: "help" }), () => assert.deepEqual(takeFocusRequest(), { section: "music", plugin: null, tab: null, bundle: null }));
 });
 
 test("the About page reopens on the last tab and starts on the overview", () => {
@@ -73,4 +73,21 @@ test("the About page reopens on the last tab and starts on the overview", () => 
     assert.equal(store.get(ABOUT_TAB_STORAGE_KEY), "overview");
   });
   withStorage({ [ABOUT_TAB_STORAGE_KEY]: "constructor" }, () => assert.equal(rememberedAboutPage(), "about"));
+});
+
+test("a market request can name a bundle, and only the market page keeps it", () => {
+  const now = Date.now();
+  const stored = (value) => ({ [SETTINGS_FOCUS_STORAGE_KEY]: JSON.stringify(value) });
+  withStorage({}, (store) => {
+    requestSettingsFocus("pluginMarket", undefined, undefined, "pomodoro-flow");
+    assert.deepEqual(Object.keys(JSON.parse(store.get(SETTINGS_FOCUS_STORAGE_KEY))).sort(), ["bundle", "requestedAt", "section"]);
+    assert.deepEqual(takeFocusRequest(), { section: "pluginMarket", plugin: null, tab: null, bundle: "pomodoro-flow" });
+    assert.equal(takeFocusRequest(), null);
+  });
+  withStorage({}, () => {
+    requestSettingsFocus("pluginMarket");
+    assert.deepEqual(takeFocusRequest(), { section: "pluginMarket", plugin: null, tab: null, bundle: null });
+  });
+  withStorage(stored({ section: "pluginsV3", requestedAt: now, bundle: "pomodoro-flow" }), () => assert.deepEqual(takeFocusRequest(), { section: "pluginsV3", plugin: null, tab: null, bundle: null }));
+  withStorage(stored({ section: "pluginMarket", requestedAt: now, bundle: 7 }), () => assert.deepEqual(takeFocusRequest(), { section: "pluginMarket", plugin: null, tab: null, bundle: null }));
 });

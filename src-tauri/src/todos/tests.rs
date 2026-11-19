@@ -410,6 +410,35 @@ mod call_tests {
     }
 
     #[test]
+    fn update_adds_focus_minutes_but_never_more_than_the_time_since_the_last_ones() {
+        const MINUTE: u64 = 60_000;
+        let start = 1_760_000_000_000u64;
+        let add = |from: &TodosData, minutes: Value, now: u64| run("todos.update", &json!({ "id": "a", "addFocusMinutes": minutes }), from, "", now).map(|outcome| (outcome.result, outcome.next));
+
+        let (todo, next) = add(&data(), json!(25), start).expect("first");
+        assert_eq!((todo["focusMinutes"].clone(), todo["focusedAt"].clone()), (json!(25), json!(start)));
+        let first = next.expect("next");
+        assert_eq!((first.todos[0].focus_minutes, first.todos[1].focus_minutes), (Some(25), None));
+
+        let (overlapping, _) = add(&first, json!(25), start + MINUTE).expect("overlapping");
+        assert_eq!((overlapping["focusMinutes"].clone(), overlapping["focusedAt"].clone()), (json!(26), json!(start + MINUTE)));
+        let (same_moment, _) = add(&first, json!(25), start).expect("same moment");
+        assert_eq!((same_moment["focusMinutes"].clone(), same_moment["focusedAt"].clone()), (json!(25), json!(start)));
+        let (back_to_back, _) = add(&first, json!(25), start + 25 * MINUTE - 2000).expect("back to back");
+        assert_eq!(back_to_back["focusMinutes"], 50);
+        let (much_later, _) = add(&first, json!(25), start + 90 * MINUTE).expect("later");
+        assert_eq!(much_later["focusMinutes"], 50);
+        let (clock_moved_back, _) = add(&first, json!(25), start - 60 * MINUTE).expect("clock");
+        assert_eq!(clock_moved_back["focusMinutes"], 50);
+
+        for bad in [json!(0), json!(-5), json!(1.5), json!(601), json!("25"), Value::Null] {
+            assert_eq!(add(&data(), bad.clone(), start).expect_err("bad minutes").0, 400, "{bad}");
+        }
+        let plain = serde_json::to_string(&data()).expect("json");
+        assert!(!plain.contains("focusedAt"));
+    }
+
+    #[test]
     fn several_todos_can_be_in_progress_and_the_newest_left_becomes_active() {
         let mut started = data();
         started.todos.push(serde_json::from_value(json!({ "id": "c", "title": "third", "completed": false, "createdAt": 3, "startedAt": 20 })).expect("c"));

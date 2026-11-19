@@ -5,6 +5,7 @@ const FEATURES: &[(&str, &str, &str)] = &[
     ("note.", "todos", "Todos are switched off in Fuyu."),
     ("agentStatus.", "agents", "AI Agent is switched off in Fuyu."),
     ("clipboard.", "clipboard", "The clipboard is switched off in Fuyu."),
+    ("notify", "messages", "Messages are switched off in Fuyu."),
 ];
 
 pub(super) fn check_with(method: &str, enabled: impl Fn(&str) -> bool) -> Result<(), ApiError> {

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { runTodoApiCall } from "../../src/features/todos/apiCommands.ts";
 import { dispatchLocalApiRequest } from "../../src/features/island-bridge/dispatch.ts";
+import { showLocalApiNotice } from "../../src/features/island-bridge/notice.ts";
 
 const todo = (id, title, completed = false) => ({ id, title, completed, createdAt: 1 });
 const state = (overrides = {}) => ({
@@ -54,6 +55,17 @@ test("todos.update changes only the given fields", () => {
   const renamed = run("todos.update", { id: "b", title: " New " });
   assert.equal(renamed.result.data.title, "New");
   assert.equal(renamed.result.data.completed, true);
+});
+
+test("todos.update adds focus minutes, capped by the time since the last ones were added", () => {
+  const first = run("todos.update", { id: "a", addFocusMinutes: 25 });
+  assert.deepEqual(first.result.data, { ...todo("a", "First"), focusMinutes: 25, focusedAt: 42 });
+  assert.deepEqual(first.change.todos[0], first.result.data);
+  const again = runTodoApiCall("todos.update", { id: "a", addFocusMinutes: 25 }, state({ todos: first.change.todos }), { id: "", now: 42 + 4 * 60_000 });
+  assert.equal(again.result.data.focusMinutes, 29);
+  for (const addFocusMinutes of [0, -5, 1.5, 601, "25", null]) {
+    assert.equal(run("todos.update", { id: "a", addFocusMinutes }).result.status, 400, JSON.stringify(addFocusMinutes));
+  }
 });
 
 test("todos.update and todos.remove report unknown ids and bad fields", () => {
@@ -114,4 +126,48 @@ test("other days come from the archives and the scheduled list, like src-tauri/s
     { date: "2026-11-04", total: 2, completed: 1, hasNote: true, archived: false },
   ]);
   assert.equal(run("todos.days", { from: "2026-11-09", to: "2026-11-01" }, history).result.status, 400);
+});
+
+test("a local API message is shown under its sender's name, and a muted sender is remembered but not shown", async () => {
+  const shown = [];
+  const remembered = [];
+  const deps = (muted) => ({
+    remember: (sender) => remembered.push(sender),
+    muted: (sender) => muted.includes(sender),
+    show: (notice) => (shown.push(notice), { shown: true }),
+    now: () => 77,
+  });
+  const params = { source: "local-api/ci", name: "CI", title: "Build passed", body: "main is green", durationMs: 8000 };
+
+  assert.deepEqual(await showLocalApiNotice(params, deps([])), { ok: true, data: { shown: true, receivedAt: 77 } });
+  assert.deepEqual(shown, [{ pluginId: "local-api/ci", pluginName: { "zh-CN": "CI", en: "CI" }, title: "Build passed", body: "main is green", durationMs: 8000, actions: [] }]);
+
+  assert.deepEqual(await showLocalApiNotice(params, deps(["local-api/ci"])), { ok: true, data: { shown: false, receivedAt: 77 } });
+  assert.equal(shown.length, 1);
+  assert.deepEqual(remembered, ["local-api/ci", "local-api/ci"]);
+
+  const bad = await showLocalApiNotice({ source: "local-api/ci", title: "x" }, deps([]));
+  assert.equal(bad.ok, false);
+  assert.equal(bad.status, 400);
+  assert.equal(shown.length, 1);
+});
+
+test("the settings page lists only the local API's own senders and its example can send a message", async () => {
+  const { localApiSenders } = await import("../../src/features/local-api/senders.ts");
+  const { localApiExample } = await import("../../src/features/local-api/example.ts");
+  assert.deepEqual(
+    localApiSenders("local-api", ["dev.example.sync", "local-api/ci", "local-api/"], ["local-api/backup", "local-api/ci", "other/ci"]),
+    [{ id: "local-api/backup", source: "backup", muted: true }, { id: "local-api/ci", source: "ci", muted: true }],
+  );
+  assert.deepEqual(localApiSenders("local-api", ["local-api/ci"], []), [{ id: "local-api/ci", source: "ci", muted: false }]);
+
+  const input = { url: "http://127.0.0.1:39271/v1", configPath: "/data/local-api.json" };
+  for (const windows of [true, false]) {
+    const health = localApiExample({ ...input, windows });
+    const notice = localApiExample({ ...input, windows, notify: true });
+    assert.ok(health.includes("/v1/health") && !health.includes("/v1/notify"));
+    assert.ok(notice.includes("http://127.0.0.1:39271/v1/notify") && !notice.includes("/v1/health"));
+    assert.deepEqual(JSON.parse(notice.match(/'(\{.*\})'/)[1]), { source: "demo", name: "Demo", title: "Hello from the local API" });
+    assert.ok(notice.includes("/data/local-api.json") && !/[0-9a-f]{64}/.test(notice));
+  }
 });

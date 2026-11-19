@@ -72,6 +72,7 @@ localStorage.setItem(LOCALE_STORAGE_KEY, query.get("locale") === "en" ? "en" : "
 localStorage.removeItem("fuyu-settings");
 localStorage.removeItem("fuyu-onboarding-welcome");
 localStorage.removeItem("fuyu-onboarding-demo");
+localStorage.removeItem("fuyu-onboarding-bundle");
 if (query.has("light")) localStorage.setItem("fuyu-settings", JSON.stringify({ themeMode: "light" }));
 document.body.style.background = "linear-gradient(135deg, #3a3f55, #6a5a7a 50%, #2b4a6a)";
 
@@ -240,7 +241,43 @@ if (!automated) {
     check(welcome().kind === "ready" && localStorage.getItem("fuyu-onboarding-demo") === null, "Get started asks the island to say it is ready and ends the demo");
     check(closes() === 2, "Get started closes the overlay");
 
+    const offer = (value: string | null) => act(async () => {
+      if (value === null) localStorage.removeItem("fuyu-onboarding-bundle");
+      else localStorage.setItem("fuyu-onboarding-bundle", value);
+      window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-onboarding-bundle" }));
+    });
+    const loc = (zh: string, en: string) => ({ "zh-CN": zh, en });
+    const bundle = { id: "pomodoro-flow", displayName: loc("番茄工作法", "Pomodoro flow"), description: loc("番茄钟、待办进度环和每日小结", "A timer, a to-do ring and a daily digest"), members: [{ name: "@fuyu/pomodoro", displayName: loc("番茄钟", "Pomodoro") }, { name: "@fuyu/todo-ring", displayName: loc("待办进度环", "To-do ring") }] };
+    const dots = () => document.querySelectorAll(".onboarding__dot").length;
+    const withoutBundle = dots();
     await act(async () => { root.unmount(); });
+    await offer(JSON.stringify(bundle));
+    const again = createRoot(document.getElementById("root")!);
+    await act(async () => { again.render(<StrictMode><I18nProvider><OnboardingWindow /></I18nProvider></StrictMode>); });
+    await placeIsland(closed);
+    check(dots() === withoutBundle + 1, "When the island has a bundle to recommend, the guide has one more act");
+    for (let step = 0; step < 20 && title() !== "装一组搭配好的插件"; step += 1) await press("下一步");
+    const offered = document.querySelector<HTMLElement>("[data-onboarding-bundle='pomodoro-flow']");
+    check(offered?.textContent?.includes("番茄工作法") && [...offered.querySelectorAll(".onboarding-bundle__member")].map((item) => item.textContent).join() === "番茄钟,待办进度环", "The bundle act names the bundle and the plugins in it");
+    check(button("下一步") && button("跳过") && offered!.scrollWidth <= offered!.clientWidth, "It is not the last act, and it fits the card");
+    await press("下一步");
+    check(title() === "准备好了", "The act that finishes the guide comes right after it");
+    await press("上一步");
+    localStorage.removeItem("fuyu-settings-focus");
+    localStorage.removeItem("fuyu-onboarding-welcome");
+    const opens = () => commands.filter(({ command }) => command === "open_settings_window").length;
+    const before = { opens: opens(), closes: closes() };
+    await press("看看这个套装");
+    const focus = JSON.parse(localStorage.getItem("fuyu-settings-focus") ?? "{}") as { section?: string; bundle?: string };
+    check(focus.section === "pluginMarket" && focus.bundle === "pomodoro-flow" && opens() === before.opens + 1, "Its button opens Settings on the plugin market, asking for this bundle");
+    check(closes() === before.closes + 1 && welcome().kind === "ready" && !commands.some(({ command }) => /install/i.test(command)), "It ends the guide like the other links to Settings, and the guide installs nothing itself");
+    await offer(null);
+    check(dots() === withoutBundle && title() === "准备好了", "When the recommendation goes away, so does the act");
+    await offer("{broken");
+    check(dots() === withoutBundle, "A record that cannot be read adds no act");
+    await offer(null);
+    await act(async () => { again.unmount(); });
+
     document.documentElement.dataset.testResult = "passed";
   } catch (error) {
     document.documentElement.dataset.testResult = "failed";

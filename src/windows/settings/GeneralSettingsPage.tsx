@@ -20,7 +20,7 @@ function moveTodoFolder(from: string, to: string) {
   if (sameDirectory(loadSaveDirectory(), join(from))) saveSaveDirectory(join(to));
 }
 
-export type GeneralTab = "general" | "generalData" | "generalApi";
+export type GeneralTab = "general" | "generalData";
 
 type GeneralSectionProps = {
   locale: LocaleCode;

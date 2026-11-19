@@ -1,0 +1,19 @@
+.todo-note-template {
+  width: 100%;
+  min-height: 84px;
+  margin-top: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-white-a06);
+  color: var(--text-1);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.todo-note-template:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}

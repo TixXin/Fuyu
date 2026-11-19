@@ -1,23 +1,31 @@
+import { useId } from "react";
+import { Volume2 } from "lucide-react";
+import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
+import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import {
   TODO_DUE_REMINDER_SCOPES,
   TODO_REMINDER_LEAD_MINUTES,
   parseClockTime,
+  playTodoCompleteSound,
   type TodoDueReminderScope,
   type TodoReminderLeadMinutes,
 } from "./todoPrefs.ts";
 import { useTodoPrefs } from "./useTodoPrefs";
-import "./TodoReminderSettingsRows.css";
+import "./TodoReminderSettingsSection.css";
 
 type LeadOptionValue = `${TodoReminderLeadMinutes}`;
 
-export function TodoReminderSettingsRows() {
-  const text = useTranslation().settings.todo;
+export function TodoReminderSettingsSection() {
+  const t = useTranslation();
+  const text = t.settings.todo;
   const [prefs, setPrefs] = useTodoPrefs();
+  const soundSwitchId = useId();
 
   const leadOptions: readonly { value: LeadOptionValue; label: string }[] = TODO_REMINDER_LEAD_MINUTES.map((minutes) => ({
     value: `${minutes}`,
@@ -31,6 +39,7 @@ export function TodoReminderSettingsRows() {
 
   return (
     <>
+      <SettingsGroup title={text.reminderGroup}>
       <SettingsToggleRow
         title={text.timedReminder}
         description={text.timedReminderHint}
@@ -65,6 +74,8 @@ export function TodoReminderSettingsRows() {
           />
         }
       />
+      </SettingsGroup>
+      <SettingsGroup title={text.wrapUpGroup}>
       <SettingsToggleRow
         title={text.wrapUpReminder}
         description={text.wrapUpReminderHint}
@@ -89,6 +100,26 @@ export function TodoReminderSettingsRows() {
           }
         />
       )}
+      </SettingsGroup>
+      <SettingsGroup title={text.soundGroup}>
+        <SettingsRow
+          title={text.completionSound}
+          labelFor={soundSwitchId}
+          control={
+            <>
+              <SettingsLinkButton onClick={playTodoCompleteSound}>
+                <Volume2 size={13} strokeWidth={2.2} aria-hidden="true" />
+                {t.settings.sounds.preview}
+              </SettingsLinkButton>
+              <SettingsSwitch
+                id={soundSwitchId}
+                checked={prefs.completionSound}
+                onChange={(completionSound) => setPrefs((current) => ({ ...current, completionSound }))}
+              />
+            </>
+          }
+        />
+      </SettingsGroup>
     </>
   );
 }

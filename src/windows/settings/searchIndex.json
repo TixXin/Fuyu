@@ -308,58 +308,6 @@
       }
     },
     {
-      "page": "generalApi",
-      "zh-CN": {
-        "group": "本机接口",
-        "title": "允许修改待办、笔记和 Agent 状态",
-        "description": "关闭时只能读取，写请求回 403。"
-      },
-      "en": {
-        "group": "Local API",
-        "title": "Allow changes to todos, notes and agent status",
-        "description": "When off, it can only read; writes answer 403."
-      }
-    },
-    {
-      "page": "generalApi",
-      "zh-CN": {
-        "group": "本机接口",
-        "title": "地址",
-        "description": "http://127.0.0.1:39271/v1"
-      },
-      "en": {
-        "group": "Local API",
-        "title": "Address",
-        "description": "http://127.0.0.1:39271/v1"
-      }
-    },
-    {
-      "page": "generalApi",
-      "zh-CN": {
-        "group": "本机接口",
-        "title": "访问令牌",
-        "description": "令牌不在这里显示，复制后粘贴到脚本里。"
-      },
-      "en": {
-        "group": "Local API",
-        "title": "Access token",
-        "description": "The token is not shown here; copy it and paste it into your script."
-      }
-    },
-    {
-      "page": "generalApi",
-      "zh-CN": {
-        "group": "本机接口",
-        "title": "重新生成令牌",
-        "description": "换一个新令牌，用旧令牌的脚本立即失效。"
-      },
-      "en": {
-        "group": "Local API",
-        "title": "Regenerate token",
-        "description": "Switches to a new token; scripts using the old one stop working at once."
-      }
-    },
-    {
       "page": "theme",
       "zh-CN": {
         "group": "主题",
@@ -1818,6 +1766,17 @@
     {
       "page": "todos",
       "zh-CN": {
+        "group": "小岛显示与排序",
+        "title": "已完成任务显示方式"
+      },
+      "en": {
+        "group": "Island display & sorting",
+        "title": "Completed tasks"
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
         "group": "快速录入与轻语法",
         "title": "行内快捷语法识别",
         "description": "回车添加时自动识别并剥离 #项目、!1–!3（或 p1–p3）优先级与 @明天 / @下周一 / @MM-DD 日期。"
@@ -1850,12 +1809,50 @@
     {
       "page": "todos",
       "zh-CN": {
-        "group": "专注联动与提醒",
+        "group": "快速录入与轻语法",
+        "title": "新待办默认进哪个项目",
+        "description": "在「全部」下新建的待办进这个项目。筛选了某个项目时进那个项目，开头写 #名字 的以写的为准。"
+      },
+      "en": {
+        "group": "Quick entry & inline syntax",
+        "title": "Default project for new tasks",
+        "description": "Tasks added under All go to this project. With a project filter on they go to that project, and a leading #name always wins."
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "快速录入与轻语法",
+        "title": "新待办默认优先级",
+        "description": "行内写了 !1–!3 的以写的为准。",
+        "options": [
+          "无",
+          "低",
+          "中",
+          "高"
+        ]
+      },
+      "en": {
+        "group": "Quick entry & inline syntax",
+        "title": "Default priority for new tasks",
+        "description": "An inline !1–!3 always wins.",
+        "options": [
+          "None",
+          "Low",
+          "Medium",
+          "High"
+        ]
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "专注与子任务",
         "title": "开始任务时启动专注倒计时",
         "description": "点击待办的「开始」时自动拉起倒计时，到点后自动累加到该待办的专注时长。"
       },
       "en": {
-        "group": "Focus timer & reminders",
+        "group": "Focus & subtasks",
         "title": "Start focus timer when starting a task",
         "description": "Starts a countdown via the built-in timer when you click Start on a task, and credits focus minutes when due."
       }
@@ -1863,146 +1860,180 @@
     {
       "page": "todos",
       "zh-CN": {
-        "group": "专注联动与提醒",
-        "title": "带时刻（HH:mm）的待办到点提醒",
-        "description": "今日标题以时刻开头（如 15:00 回电话）且未完成的待办，到点弹出岛屿提醒横幅并支持推迟。"
-      },
-      "en": {
-        "group": "Focus timer & reminders",
-        "title": "Remind at scheduled time (HH:mm)",
-        "description": "Shows an island reminder banner with snooze when an unfinished task starting with HH:mm reaches its time."
-      }
-    },
-    {
-      "page": "todos",
-      "zh-CN": {
-        "group": "专注联动与提醒",
-        "title": "提前提醒"
-      },
-      "en": {
-        "group": "Focus timer & reminders",
-        "title": "Remind ahead"
-      }
-    },
-    {
-      "page": "todos",
-      "zh-CN": {
-        "group": "专注联动与提醒",
-        "title": "到期提醒哪些待办",
-        "description": "已安排的待办到了那天、并进今天的列表时，在岛上提醒一次。"
-      },
-      "en": {
-        "group": "Focus timer & reminders",
-        "title": "Remind when scheduled tasks are due",
-        "description": "Shows one island reminder when a scheduled task reaches its day and joins today's list."
-      }
-    },
-    {
-      "page": "todos",
-      "zh-CN": {
-        "group": "专注联动与提醒",
-        "title": "每天收尾提醒",
-        "description": "到点还有没做完的待办时，在岛上提醒一次。都做完了不提醒。"
-      },
-      "en": {
-        "group": "Focus timer & reminders",
-        "title": "End-of-day reminder",
-        "description": "Shows one island reminder at the set time if tasks are still open. Stays quiet when everything is done."
-      }
-    },
-    {
-      "page": "todos",
-      "zh-CN": {
-        "group": "专注联动与提醒",
+        "group": "专注与子任务",
         "title": "子任务全部勾选后自动完成主待办",
         "description": "当至少有一项子步骤且最后一项被勾选完成时，自动将主待办标记为已完成。"
       },
       "en": {
-        "group": "Focus timer & reminders",
+        "group": "Focus & subtasks",
         "title": "Complete main task when all subtasks are checked",
         "description": "Automatically marks the parent task done once its last remaining subtask is checked off."
       }
     },
     {
-      "page": "todos",
+      "page": "todosReminders",
       "zh-CN": {
-        "group": "反馈与跨天归档",
+        "group": "到点和到期",
+        "title": "带时刻（HH:mm）的待办到点提醒",
+        "description": "今日标题以时刻开头（如 15:00 回电话）且未完成的待办，到点弹出岛屿提醒横幅并支持推迟。"
+      },
+      "en": {
+        "group": "Timed and due",
+        "title": "Remind at scheduled time (HH:mm)",
+        "description": "Shows an island reminder banner with snooze when an unfinished task starting with HH:mm reaches its time."
+      }
+    },
+    {
+      "page": "todosReminders",
+      "zh-CN": {
+        "group": "到点和到期",
+        "title": "提前提醒"
+      },
+      "en": {
+        "group": "Timed and due",
+        "title": "Remind ahead"
+      }
+    },
+    {
+      "page": "todosReminders",
+      "zh-CN": {
+        "group": "到点和到期",
+        "title": "到期提醒哪些待办",
+        "description": "已安排的待办到了那天、并进今天的列表时，在岛上提醒一次。"
+      },
+      "en": {
+        "group": "Timed and due",
+        "title": "Remind when scheduled tasks are due",
+        "description": "Shows one island reminder when a scheduled task reaches its day and joins today's list."
+      }
+    },
+    {
+      "page": "todosReminders",
+      "zh-CN": {
+        "group": "每天收尾",
+        "title": "每天收尾提醒",
+        "description": "到点还有没做完的待办时，在岛上提醒一次。都做完了不提醒。"
+      },
+      "en": {
+        "group": "End of day",
+        "title": "End-of-day reminder",
+        "description": "Shows one island reminder at the set time if tasks are still open. Stays quiet when everything is done."
+      }
+    },
+    {
+      "page": "todosReminders",
+      "zh-CN": {
+        "group": "声音",
         "title": "勾选完成时播放轻音效"
       },
       "en": {
-        "group": "Feedback & daily rollover",
+        "group": "Sound",
         "title": "Play subtle sound on completion"
       }
     },
     {
-      "page": "todos",
+      "page": "todosArchive",
       "zh-CN": {
-        "group": "反馈与跨天归档",
+        "group": "跨天",
         "title": "新一天开始时间",
         "description": "到这个时间才把前一天归档并开启新清单，避免熬夜过零点提前翻篇。"
       },
       "en": {
-        "group": "Feedback & daily rollover",
+        "group": "Day change",
         "title": "New day starts at",
         "description": "Waits until this hour before archiving yesterday's list, so late-night work stays on today."
       }
     },
     {
-      "page": "todos",
+      "page": "todosArchive",
       "zh-CN": {
-        "group": "反馈与跨天归档",
+        "group": "跨天",
         "title": "自动将未完成任务写入下一天"
       },
       "en": {
-        "group": "Feedback & daily rollover",
+        "group": "Day change",
         "title": "Carry unfinished tasks to next day"
       }
     },
     {
-      "page": "todos",
+      "page": "todosArchive",
       "zh-CN": {
-        "group": "反馈与跨天归档",
-        "title": "已完成任务显示方式"
+        "group": "跨天",
+        "title": "「工作日」重复按调休算",
+        "description": "补班日照常出现，法定假日不出现。要日历里有节假日数据；关掉后只按周一到周五算。"
       },
       "en": {
-        "group": "Feedback & daily rollover",
-        "title": "Completed tasks"
+        "group": "Day change",
+        "title": "Weekday repeats follow public holidays",
+        "description": "Shows up on make-up workdays and skips public holidays. Needs holiday data in the calendar; when off, only Monday to Friday counts."
       }
     },
     {
-      "page": "todos",
+      "page": "todosArchive",
       "zh-CN": {
-        "group": "反馈与跨天归档",
+        "group": "跨天",
+        "title": "每日笔记的开头",
+        "description": "新的一天开始时先填进每日笔记，从下一个新的一天起生效。只有这段、没写别的内容的笔记不会存成文件。"
+      },
+      "en": {
+        "group": "Day change",
+        "title": "Daily note starter",
+        "description": "Fills the daily note when a new day starts, from the next new day on. A note with only this text is not saved as a file."
+      }
+    },
+    {
+      "page": "todosArchive",
+      "zh-CN": {
+        "group": "Markdown",
         "title": "Markdown 导出附带信息",
         "options": [
+          "项目名",
           "优先级标记",
+          "子任务",
+          "备注",
           "已用时长"
         ]
       },
       "en": {
-        "group": "Feedback & daily rollover",
+        "group": "Markdown",
         "title": "Include in Markdown export",
         "options": [
+          "Project",
           "Priority",
+          "Subtasks",
+          "Notes",
           "Elapsed time"
         ]
       }
     },
     {
-      "page": "todos",
+      "page": "todosArchive",
       "zh-CN": {
-        "group": "反馈与跨天归档",
+        "group": "归档",
         "title": "应用内归档保留时长",
         "description": "只裁剪应用内归档列表，不会删除已保存到文件夹的 Markdown 文件。"
       },
       "en": {
-        "group": "Feedback & daily rollover",
+        "group": "Archive",
         "title": "Keep in-app archives for",
         "description": "Trims older entries in the app's archive list without deleting saved Markdown files."
       }
     },
     {
-      "page": "todos",
+      "page": "todosArchive",
+      "zh-CN": {
+        "group": "归档",
+        "title": "归档页显示本周小结",
+        "description": "归档页最上面的一张卡：本周完成几件、每天一根小柱、专注时长最多的项目。"
+      },
+      "en": {
+        "group": "Archive",
+        "title": "Show the week summary on the archive page",
+        "description": "A card at the top of the archive: tasks done this week, a bar per day and the projects with the most focus time."
+      }
+    },
+    {
+      "page": "todosArchive",
       "zh-CN": {
         "group": "待办清单保存路径",
         "title": "文件夹"
@@ -4609,6 +4640,71 @@
         "group": "SSH proxy tunnel",
         "title": "Local proxy",
         "description": "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the system proxy (Internet settings on Windows, network proxies on a Mac), then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none."
+      }
+    },
+    {
+      "page": "generalApi",
+      "zh-CN": {
+        "group": "本机接口",
+        "title": "地址",
+        "description": "http://127.0.0.1:39271/v1"
+      },
+      "en": {
+        "group": "Local API",
+        "title": "Address",
+        "description": "http://127.0.0.1:39271/v1"
+      }
+    },
+    {
+      "page": "generalApi",
+      "zh-CN": {
+        "group": "本机接口",
+        "title": "访问令牌",
+        "description": "令牌不在这里显示，复制后粘贴到脚本里。"
+      },
+      "en": {
+        "group": "Local API",
+        "title": "Access token",
+        "description": "The token is not shown here; copy it and paste it into your script."
+      }
+    },
+    {
+      "page": "generalApi",
+      "zh-CN": {
+        "group": "本机接口",
+        "title": "重新生成令牌",
+        "description": "换一个新令牌，用旧令牌的脚本立即失效。"
+      },
+      "en": {
+        "group": "Local API",
+        "title": "Regenerate token",
+        "description": "Switches to a new token; scripts using the old one stop working at once."
+      }
+    },
+    {
+      "page": "generalApi",
+      "zh-CN": {
+        "group": "权限",
+        "title": "允许修改待办、笔记和 Agent 状态",
+        "description": "关闭时只能读取，写请求回 403。"
+      },
+      "en": {
+        "group": "Access",
+        "title": "Allow changes to todos, notes and agent status",
+        "description": "When off, it can only read; writes answer 403."
+      }
+    },
+    {
+      "page": "generalApi",
+      "zh-CN": {
+        "group": "权限",
+        "title": "允许弹消息",
+        "description": "打开后脚本和其他程序能在岛上弹一条消息。和「允许修改」分开，关闭时回 403。"
+      },
+      "en": {
+        "group": "Access",
+        "title": "Allow messages",
+        "description": "Lets scripts and other programs pop a message on the island. Separate from “Allow changes”; when off, it answers 403."
       }
     },
     {

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, type ComponentType } from "react";
 import { FeaturePageLink } from "../../../components/settings/FeaturePageLink";
 import { useTranslation } from "../../../i18n";
 import { onSectionFocus } from "../../../lib/settings/sectionFocus";
@@ -11,7 +11,7 @@ import { settingsRunners, settingsSections, shortcutSections, type SettingsRunne
 import { useBuiltinPlugins } from "../../plugin-kernel/useBuiltinPlugins";
 import { announceSaveDirectorySetting, holdSaveDirectorySetting } from "../saveDirectoryStore";
 import { TodoShortcutSection } from "../TodoShortcutSection";
-import { TodosSettingsPage } from "../TodosSettingsPage";
+import { TodosSettingsPage, type TodoSettingsTab } from "../TodosSettingsPage";
 import { useSaveDirectorySetting } from "../useSaveDirectorySetting";
 import { useTodoQuickAddShortcut } from "../useTodoShortcut";
 import { OWNER } from "./owner.ts";
@@ -79,9 +79,16 @@ function TodosShortcutsPageSection({ settings, onSettingsChange, onOpenPage, tak
   );
 }
 
-const todosSections = settingsSections<TodosSectionProps, "todos">();
+const todosSections = settingsSections<TodosSectionProps, TodoSettingsTab>();
 
-addSettingsCategory("todos", ({ settings, onSettingsChange }: PageProps) => <TodosSettingsPage settings={settings} onSettingsChange={onSettingsChange} />, OWNER);
+const todosPage = (tab: TodoSettingsTab): ComponentType<PageProps> =>
+  function TodosPage({ settings, onSettingsChange }) {
+    return <TodosSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} />;
+  };
+
+addSettingsCategory("todos", todosPage("todos"), OWNER);
+addSettingsCategory("todosReminders", todosPage("todosReminders"), OWNER);
+addSettingsCategory("todosArchive", todosPage("todosArchive"), OWNER);
 todosSections.add({ id: "todos.shortcuts", category: "todos", order: 15, component: TodosPageShortcutSection }, OWNER);
 shortcutSections.add({ id: "shortcuts.todos", category: "shortcuts", order: 42, component: TodosShortcutsPageSection }, OWNER);
 settingsRunners.add({ id: "todos.save-directory", component: SaveDirectoryRunner }, OWNER);

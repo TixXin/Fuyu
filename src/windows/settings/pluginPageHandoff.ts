@@ -16,6 +16,7 @@ export interface PluginDetailRequest {
 export interface MarketViewRequest {
   detail?: string;
   query?: string;
+  bundle?: string;
 }
 
 type PendingResult = { pkg: OpenedPluginPackage | null; error: string | null };

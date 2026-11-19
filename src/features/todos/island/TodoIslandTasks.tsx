@@ -4,6 +4,7 @@ import { RowMenu } from "../../../components/list/RowMenu";
 import { useTranslation } from "../../../i18n";
 import { TodoDatePicker } from "../TodoDatePicker";
 import { isInProgress } from "../activeTodos";
+import { composerTarget } from "../newTodoDefaults.ts";
 import { groupByProject, projectsOf } from "../project";
 import type { TodoTags } from "../tags";
 import { sortTodos } from "../todoPrefs.ts";
@@ -26,6 +27,7 @@ export function TodoIslandTasks({
   onDraftDateChange,
   onAddTodo,
   projects: savedProjects,
+  defaultProject,
   onCreateProject,
   onToggleTodo,
   onUpdateTodo,
@@ -50,6 +52,7 @@ export function TodoIslandTasks({
   onDraftDateChange: (date: string | null) => void;
   onAddTodo: (project?: string) => void;
   projects: readonly string[];
+  defaultProject?: string;
   onCreateProject?: (name: string) => string | undefined;
   onToggleTodo: (id: string) => void;
   onUpdateTodo: (id: string, title: string) => void;
@@ -83,8 +86,7 @@ export function TodoIslandTasks({
   const filter = (editable && pickedProject === INBOX) || (pickedProject && projects.includes(pickedProject)) ? pickedProject : null;
   const shown = filter === null ? todos : todos.filter((todo) => (todo.project ?? INBOX) === filter);
   const [pickedTarget, setPickedTarget] = useState<string | null>(null);
-  const wanted = pickedTarget ?? filter ?? INBOX;
-  const target = wanted === INBOX || projects.includes(wanted) ? wanted : INBOX;
+  const target = composerTarget({ picked: pickedTarget, filter, defaultProject, projects });
   const pickFilter = (project: string | null) => {
     setPickedProject(project);
     setPickedTarget(null);

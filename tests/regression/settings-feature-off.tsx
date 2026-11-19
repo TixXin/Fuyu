@@ -127,10 +127,14 @@ try {
   await openPage("generalApi");
   await click(".settings-group__header input[role='switch']");
   await wait(40);
-  check(pluginOn("local-api") === false && tabs().includes("generalApi") && Boolean(document.querySelector(".editor-panel input[role='switch']")), "Turning local-api off keeps the Local API tab under General with an enable switch");
+  check(pluginOn("local-api") === false && active() === "generalApi" && tabs().length === 0 && Boolean(document.querySelector(".editor-panel input[role='switch']")), "Turning local-api off keeps its own page open, with an enable switch");
+  await openPage("general");
+  check(listed().includes("generalApi") && !tabs().includes("generalApi") && !document.querySelector(".settings-sidebar__more"), "Local API stays in the sidebar while it is off: the menu item does not follow the switch, and it is not a tab of General");
+  await openPage("generalApi");
+  check([...document.querySelectorAll(".editor-panel .settings-group__title")].map((title) => title.textContent).join() === "本机接口" && !document.querySelector(".local-api-example"), "While it is off the page shows only the card with the switch");
   await click(".editor-panel input[role='switch']");
   await wait(40);
-  check(pluginOn("local-api") === true && Boolean(document.querySelector(".settings-group__header input[role='switch']")), "Turning local-api back on in General → Local API restores its full settings");
+  check(pluginOn("local-api") === true && Boolean(document.querySelector(".settings-group__header input[role='switch']")), "Turning local-api back on there restores its full settings");
   await openPage("todos");
   check(!document.querySelector(".feature-off") && document.querySelector(".feature-header") && !document.querySelector(".feature-header input"), "The todos page is back, still without a switch");
 

@@ -90,7 +90,7 @@ export type RustMethods = {
   "todos.note": { params: { date?: JsonValue | null }; result: JsonValue };
   "todos.remove": { params: { id?: JsonValue | null }; result: JsonValue };
   "todos.setNote": { params: { note?: JsonValue | null; append?: JsonValue | null }; result: JsonValue };
-  "todos.update": { params: { id?: JsonValue | null; title?: JsonValue | null; completed?: JsonValue | null }; result: JsonValue };
+  "todos.update": { params: { id?: JsonValue | null; title?: JsonValue | null; completed?: JsonValue | null; addFocusMinutes?: JsonValue | null }; result: JsonValue };
   "translator.engines": { params: Record<string, never> | null; result: TranslatorEngines };
   "translator.rewrite": { params: { text: string; task: string; prompt?: string | null; provider?: string | null; model?: string | null }; result: Translated };
   "translator.translate": { params: { text: string; direction: string; provider?: string | null; model?: string | null }; result: Translated };

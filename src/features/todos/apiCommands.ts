@@ -1,4 +1,5 @@
 import { readProject } from "../../lib/todo-projects/prefix.ts";
+import { MAX_FOCUS_CREDIT_MINUTES, addTodoFocusMinutes } from "./normalize.ts";
 import { daysBetween, listDay, noteOfDay } from "./todoHistory.ts";
 import type { ScheduledTodo, TodoArchive, TodoItem } from "./types";
 
@@ -109,7 +110,7 @@ export function runTodoApiCall(
       if (!target) {
         return fail(404, "Todo not found.");
       }
-      const next = { ...target };
+      let next = { ...target };
       if (input.title !== undefined) {
         const title = readTitle(input.title);
         if (!title) {
@@ -122,6 +123,13 @@ export function runTodoApiCall(
           return fail(400, `"completed" must be true or false.`);
         }
         next.completed = input.completed;
+      }
+      if (input.addFocusMinutes !== undefined) {
+        const minutes = input.addFocusMinutes;
+        if (typeof minutes !== "number" || !Number.isInteger(minutes) || minutes < 1 || minutes > MAX_FOCUS_CREDIT_MINUTES) {
+          return fail(400, `"addFocusMinutes" must be a whole number from 1 to ${MAX_FOCUS_CREDIT_MINUTES}.`);
+        }
+        next = addTodoFocusMinutes(next, minutes, create.now);
       }
       return {
         result: ok(next),

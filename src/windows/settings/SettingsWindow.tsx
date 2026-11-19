@@ -27,7 +27,7 @@ import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
 import { focusSection } from "../../lib/settings/sectionFocus";
 import { PluginMarketHeaderActions } from "./PluginMarketHeaderActions";
 import { PluginPageActions } from "./PluginPageActions";
-import { requestPluginDetail } from "./pluginPageHandoff";
+import { requestMarketView, requestPluginDetail } from "./pluginPageHandoff";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -56,8 +56,9 @@ export function SettingsWindow() {
     const request = takeFocusRequest();
     const section = request?.section ?? null;
     if (request?.plugin) requestPluginDetail(request.plugin, "settings");
+    if (request?.bundle) requestMarketView({ bundle: request.bundle });
     if (section === "savePath") {
-      setCategory("todos");
+      setCategory("todosArchive");
       focusSection(section);
     }
     if (section === "updates") {

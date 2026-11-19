@@ -71,6 +71,13 @@ export type OnboardingText = {
     agents: string;
     marker: string;
   };
+  bundle: {
+    title: string;
+    lead: string;
+    contains: string;
+    open: string;
+    later: string;
+  };
   release: {
     title: string;
     lead: string;
@@ -183,6 +190,13 @@ export const zhCN: OnboardingText = {
     remote: "1. SSH 远程电脑（可跳过）",
     agents: "2. 选 AI 代理，点「安装/修复」",
     marker: "3. 回复状态标记（推荐打开）",
+  },
+  bundle: {
+    title: "装一组搭配好的插件",
+    lead: "插件市场里有搭配好的套装：几个一起用的插件，确认一次就装好。这是其中一个。",
+    contains: "里面有",
+    open: "看看这个套装",
+    later: "点一下会结束引导并打开插件市场，在那里确认后才安装。不需要就点下一步，以后在设置 → 插件市场里也找得到。",
   },
   release: {
     title: "准备好了",
@@ -299,6 +313,13 @@ export const en: OnboardingText = {
     remote: "1. SSH remote computers (optional)",
     agents: "2. Pick your agents, click Install/repair",
     marker: "3. Reply status marker (recommended)",
+  },
+  bundle: {
+    title: "Add a set of plugins that go together",
+    lead: "The plugin market has bundles: a few plugins that work together, installed after one confirmation. Here is one.",
+    contains: "It includes",
+    open: "See this bundle",
+    later: "Clicking it ends the guide and opens the plugin market; nothing is installed until you confirm there. If you don't need it, click Next: bundles stay in Settings → Plugin market.",
   },
   release: {
     title: "You're all set",

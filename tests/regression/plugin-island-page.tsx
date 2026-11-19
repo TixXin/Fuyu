@@ -11,6 +11,7 @@ import { pageForAltDigit, type IslandFeatures } from "../../src/windows/island/f
 import type { IslandPage } from "../../src/windows/island/types";
 import { windowSlots } from "../../src/features/plugin-kernel/slots";
 import { updatePluginNames } from "../../src/features/plugin-kernel/pluginNames";
+import { islandSpotlight, SPOTLIGHT_ANIMATION } from "../../src/features/plugin-kernel/islandSpotlight";
 import { normalizeSettings } from "../../src/lib/settings/settings";
 import { useFixtureLines } from "./islandLines";
 
@@ -187,6 +188,22 @@ async function runChecks() {
   await act(async () => {
     for (const remove of strays) remove();
   });
+
+  const cell = () => bar().querySelector<HTMLElement>('.island__collapsed-fit[data-fit-item="world-clock-bar"]')!;
+  const clockDot = () => expandedRoot.querySelector<HTMLElement>('.dot-button[data-page="world-clock"]')!;
+  const marked = () => [...document.querySelectorAll<HTMLElement>("[data-spotlight]")];
+  const lit = () => marked().filter((element) => getComputedStyle(element).animationName === SPOTLIGHT_ANIMATION);
+  const cellWidth = cell().offsetWidth;
+  check(marked().length === 0, "平时岛上没有哪一项被点亮");
+  await act(async () => islandSpotlight.request("@test/system-monitor"));
+  check(lit().length === 1 && lit()[0] === expandedRoot.querySelector('.dot-button[data-page="@test/system-monitor"]'), "刚装的插件只有岛页面时，亮的是页头上它的按钮");
+  await act(async () => islandSpotlight.request("@test/world-clock"));
+  await frame();
+  check(lit().length === 2 && lit().includes(cell()) && lit().includes(clockDot()), `刚装的插件在岛上的位置亮一下：收起时是它那一格，展开时是页头上它的按钮（${lit().length}）`);
+  check(marked().every((element) => element.matches('[data-fit-item="world-clock-bar"], [data-page="world-clock"]')), "别的插件和内置项不亮");
+  check(cell().offsetWidth === cellWidth && getComputedStyle(cell()).outlineStyle === "solid", "亮的是一圈描边，那一格不变宽");
+  for (let waited = 0; marked().length > 0 && waited < 180; waited += 1) await frame();
+  check(marked().length === 0 && islandSpotlight.owner() === null, "亮完两下就结束，之后展开或收起都不再亮");
   results.textContent = `${messages.join("\n")}\n\nALL PASS (${messages.length})`;
   results.dataset.result = "passed";
 }

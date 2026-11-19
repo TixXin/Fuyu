@@ -29,5 +29,5 @@ export function useLocalApiInfo() {
 
   const resetToken = useCallback(() => settle(resetLocalApiToken()), [settle]);
 
-  return { info, error, allowWrite: plugin?.config.allowWrite === true, resetToken };
+  return { info, error, allowWrite: plugin?.config.allowWrite === true, allowNotify: plugin?.config.allowNotify === true, resetToken };
 }

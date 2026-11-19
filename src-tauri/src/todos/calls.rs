@@ -5,6 +5,8 @@ use super::model::{is_date, latest_started, ScheduledTodo, TodoItem, TodosData};
 
 const MAX_TITLE_LENGTH: usize = 500;
 const MAX_PROJECT_LENGTH: usize = 20;
+const MAX_FOCUS_CREDIT_MINUTES: u64 = 600;
+const MAX_FOCUS_MINUTES_TOTAL: u64 = 1_000_000;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct CallOutcome {
@@ -35,6 +37,24 @@ fn read_project(value: Option<&Value>) -> Result<Option<String>, CallError> {
         }
         Some(_) => Err(bad("\"project\" must be a string.")),
     }
+}
+
+pub(crate) fn focus_minutes_to_add(todo: &TodoItem, asked: u64, now: u64) -> u64 {
+    let asked = asked.min(MAX_FOCUS_CREDIT_MINUTES);
+    match todo.focused_at.as_ref().and_then(Number::as_u64) {
+        Some(last) if last <= now => asked.min((now - last + 30_000) / 60_000),
+        _ => asked,
+    }
+}
+
+fn add_focus_minutes(todo: &mut TodoItem, asked: u64, now: u64) {
+    let added = focus_minutes_to_add(todo, asked, now);
+    if added == 0 {
+        return;
+    }
+    let total = (u64::from(todo.focus_minutes.unwrap_or(0)) + added).min(MAX_FOCUS_MINUTES_TOTAL);
+    todo.focus_minutes = u32::try_from(total).ok();
+    todo.focused_at = Some(Number::from(now));
 }
 
 fn read_title(value: Option<&Value>) -> Option<String> {
@@ -91,6 +111,7 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
                         subtasks: Vec::new(),
                         note: None,
                         focus_minutes: None,
+                        focused_at: None,
                         updated_at: None,
                         device_id: None,
                     };
@@ -116,6 +137,13 @@ pub(crate) fn run(method: &str, params: &Value, data: &TodosData, id: &str, now:
                     }
                 }
                 Some(_) => return Err(bad("\"completed\" must be true or false.")),
+            }
+            if let Some(value) = input.get("addFocusMinutes") {
+                let minutes = value
+                    .as_u64()
+                    .filter(|minutes| (1..=MAX_FOCUS_CREDIT_MINUTES).contains(minutes))
+                    .ok_or_else(|| bad(format!("\"addFocusMinutes\" must be a whole number from 1 to {MAX_FOCUS_CREDIT_MINUTES}.")))?;
+                add_focus_minutes(&mut todo, minutes, now);
             }
             let mut next = data.clone();
             next.todos[index] = todo.clone();

@@ -34,20 +34,21 @@ export interface PluginMarketViewProps {
   onOpenPage?: (page: SettingsCategory) => void;
   initialQuery?: string;
   initialDetail?: string | null;
+  initialBundle?: string | null;
   followRequests?: boolean;
   openedPackage?: OpenedPluginPackage | null;
   openedError?: string | null;
   onConsumePackage?: (seq: number) => void;
 }
 
-export function PluginMarketView({ host, snapshot, failure = null, refreshing = false, onRefresh, onReload, onOpenPage, initialQuery = "", initialDetail = null, followRequests = true, openedPackage, openedError, onConsumePackage }: PluginMarketViewProps) {
+export function PluginMarketView({ host, snapshot, failure = null, refreshing = false, onRefresh, onReload, onOpenPage, initialQuery = "", initialDetail = null, initialBundle = null, followRequests = true, openedPackage, openedError, onConsumePackage }: PluginMarketViewProps) {
   const text = useTranslation().settings.pluginsV3.marketPage;
   const { locale } = useLocale();
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState<string | null>(null);
   const [sort, setSort] = useState<PluginMarketSort>("recommended");
   const [detailName, setDetailName] = useState<string | null>(initialDetail);
-  const [bundleId, setBundleId] = useState<string | null>(null);
+  const [bundleId, setBundleId] = useState<string | null>(initialBundle);
   const [packageError, setPackageError] = useState<string | null>(null);
   useEffect(() => {
     if (!followRequests) return;
@@ -56,6 +57,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
       if (!request) return;
       if (request.query !== undefined) setQuery(request.query);
       setDetailName(request.detail ?? null);
+      setBundleId(request.bundle ?? null);
     });
   }, [followRequests]);
   const plugins = snapshot?.plugins ?? [];

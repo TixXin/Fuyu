@@ -1,4 +1,4 @@
-import type { TodoDoneDisplay, TodoDueReminderScope, TodoInsertPosition, TodoSortBy } from "../../../features/todos/todoPrefs";
+import type { TodoDefaultPriority, TodoDoneDisplay, TodoDueReminderScope, TodoInsertPosition, TodoSortBy } from "../../../features/todos/todoPrefs";
 
 export type SettingsTodoText = {
   title: string;
@@ -12,6 +12,12 @@ export type SettingsTodoText = {
   inlineSyntaxHint: string;
   insertPosition: string;
   insertOptions: Record<TodoInsertPosition, string>;
+  defaultProject: string;
+  defaultProjectHint: string;
+  defaultProjectInbox: string;
+  defaultPriority: string;
+  defaultPriorityHint: string;
+  defaultPriorityOptions: Record<TodoDefaultPriority, string>;
   focusGroup: string;
   focusTimer: string;
   focusTimerHint: string;
@@ -19,6 +25,9 @@ export type SettingsTodoText = {
   focusTimerPluginOff: string;
   enableTimerPlugin: string;
   focusTimerMinutes: string;
+  reminderGroup: string;
+  wrapUpGroup: string;
+  soundGroup: string;
   timedReminder: string;
   timedReminderHint: string;
   timedReminderLead: string;
@@ -33,6 +42,8 @@ export type SettingsTodoText = {
   autoCompleteFromSubtasks: string;
   autoCompleteFromSubtasksHint: string;
   rolloverGroup: string;
+  markdownGroup: string;
+  archiveGroup: string;
   completionSound: string;
   dayStartHour: string;
   dayStartHourHint: string;
@@ -40,11 +51,18 @@ export type SettingsTodoText = {
   doneDisplay: string;
   doneDisplayOptions: Record<TodoDoneDisplay, string>;
   markdownMeta: string;
-  markdownMetaOptions: { priority: string; elapsed: string };
+  markdownMetaOptions: { project: string; priority: string; subtasks: string; note: string; elapsed: string };
   archiveRetention: string;
   archiveRetentionHint: string;
   archiveRetentionOptions: { forever: string; days90: string; days180: string; days365: string };
+  showWeekSummary: string;
+  showWeekSummaryHint: string;
   carryOverIncomplete: string;
+  recurrenceHolidayAware: string;
+  recurrenceHolidayAwareHint: string;
+  noteTemplate: string;
+  noteTemplateHint: string;
+  noteTemplatePlaceholder: string;
   enableReorder: string;
   rotateTodos: string;
   rotationSeconds: string;
@@ -78,7 +96,21 @@ export const zhCN: SettingsTodoText = {
     bottom: "列表底部",
     top: "列表顶部",
   },
-  focusGroup: "专注联动与提醒",
+  defaultProject: "新待办默认进哪个项目",
+  defaultProjectHint: "在「全部」下新建的待办进这个项目。筛选了某个项目时进那个项目，开头写 #名字 的以写的为准。",
+  defaultProjectInbox: "临时",
+  defaultPriority: "新待办默认优先级",
+  defaultPriorityHint: "行内写了 !1–!3 的以写的为准。",
+  defaultPriorityOptions: {
+    none: "无",
+    low: "低",
+    medium: "中",
+    high: "高",
+  },
+  focusGroup: "专注与子任务",
+  reminderGroup: "到点和到期",
+  wrapUpGroup: "每天收尾",
+  soundGroup: "声音",
   focusTimer: "开始任务时启动专注倒计时",
   focusTimerHint: "点击待办的「开始」时自动拉起倒计时，到点后自动累加到该待办的专注时长。",
   focusTimerPluginOffHint: "内置「计时器」插件当前未开启，启用后即可联动专注倒计时与准点提醒。",
@@ -103,7 +135,9 @@ export const zhCN: SettingsTodoText = {
   wrapUpReminderTime: "提醒时间",
   autoCompleteFromSubtasks: "子任务全部勾选后自动完成主待办",
   autoCompleteFromSubtasksHint: "当至少有一项子步骤且最后一项被勾选完成时，自动将主待办标记为已完成。",
-  rolloverGroup: "反馈与跨天归档",
+  rolloverGroup: "跨天",
+  markdownGroup: "Markdown",
+  archiveGroup: "归档",
   completionSound: "勾选完成时播放轻音效",
   dayStartHour: "新一天开始时间",
   dayStartHourHint: "到这个时间才把前一天归档并开启新清单，避免熬夜过零点提前翻篇。",
@@ -116,7 +150,10 @@ export const zhCN: SettingsTodoText = {
   },
   markdownMeta: "Markdown 导出附带信息",
   markdownMetaOptions: {
+    project: "项目名",
     priority: "优先级标记",
+    subtasks: "子任务",
+    note: "备注",
     elapsed: "已用时长",
   },
   archiveRetention: "应用内归档保留时长",
@@ -127,7 +164,14 @@ export const zhCN: SettingsTodoText = {
     days180: "180 天",
     days365: "1 年",
   },
+  showWeekSummary: "归档页显示本周小结",
+  showWeekSummaryHint: "归档页最上面的一张卡：本周完成几件、每天一根小柱、专注时长最多的项目。",
   carryOverIncomplete: "自动将未完成任务写入下一天",
+  recurrenceHolidayAware: "「工作日」重复按调休算",
+  recurrenceHolidayAwareHint: "补班日照常出现，法定假日不出现。要日历里有节假日数据；关掉后只按周一到周五算。",
+  noteTemplate: "每日笔记的开头",
+  noteTemplateHint: "新的一天开始时先填进每日笔记，从下一个新的一天起生效。只有这段、没写别的内容的笔记不会存成文件。",
+  noteTemplatePlaceholder: "例如：今天最重要的三件事",
   enableReorder: "允许拖动调整任务顺序",
   rotateTodos: "多任务流动",
   rotationSeconds: "每个任务停留时间（秒）",
@@ -161,7 +205,21 @@ export const en: SettingsTodoText = {
     bottom: "Bottom",
     top: "Top",
   },
-  focusGroup: "Focus timer & reminders",
+  defaultProject: "Default project for new tasks",
+  defaultProjectHint: "Tasks added under All go to this project. With a project filter on they go to that project, and a leading #name always wins.",
+  defaultProjectInbox: "Inbox",
+  defaultPriority: "Default priority for new tasks",
+  defaultPriorityHint: "An inline !1–!3 always wins.",
+  defaultPriorityOptions: {
+    none: "None",
+    low: "Low",
+    medium: "Medium",
+    high: "High",
+  },
+  focusGroup: "Focus & subtasks",
+  reminderGroup: "Timed and due",
+  wrapUpGroup: "End of day",
+  soundGroup: "Sound",
   focusTimer: "Start focus timer when starting a task",
   focusTimerHint: "Starts a countdown via the built-in timer when you click Start on a task, and credits focus minutes when due.",
   focusTimerPluginOffHint: "The built-in Timer plugin is currently off; enable it to use focus countdowns and timed reminders.",
@@ -186,7 +244,9 @@ export const en: SettingsTodoText = {
   wrapUpReminderTime: "Remind at",
   autoCompleteFromSubtasks: "Complete main task when all subtasks are checked",
   autoCompleteFromSubtasksHint: "Automatically marks the parent task done once its last remaining subtask is checked off.",
-  rolloverGroup: "Feedback & daily rollover",
+  rolloverGroup: "Day change",
+  markdownGroup: "Markdown",
+  archiveGroup: "Archive",
   completionSound: "Play subtle sound on completion",
   dayStartHour: "New day starts at",
   dayStartHourHint: "Waits until this hour before archiving yesterday's list, so late-night work stays on today.",
@@ -199,7 +259,10 @@ export const en: SettingsTodoText = {
   },
   markdownMeta: "Include in Markdown export",
   markdownMetaOptions: {
+    project: "Project",
     priority: "Priority",
+    subtasks: "Subtasks",
+    note: "Notes",
     elapsed: "Elapsed time",
   },
   archiveRetention: "Keep in-app archives for",
@@ -210,7 +273,14 @@ export const en: SettingsTodoText = {
     days180: "180 days",
     days365: "1 year",
   },
+  showWeekSummary: "Show the week summary on the archive page",
+  showWeekSummaryHint: "A card at the top of the archive: tasks done this week, a bar per day and the projects with the most focus time.",
   carryOverIncomplete: "Carry unfinished tasks to next day",
+  recurrenceHolidayAware: "Weekday repeats follow public holidays",
+  recurrenceHolidayAwareHint: "Shows up on make-up workdays and skips public holidays. Needs holiday data in the calendar; when off, only Monday to Friday counts.",
+  noteTemplate: "Daily note starter",
+  noteTemplateHint: "Fills the daily note when a new day starts, from the next new day on. A note with only this text is not saved as a file.",
+  noteTemplatePlaceholder: "For example: the three things that matter most today",
   enableReorder: "Drag to reorder tasks",
   rotateTodos: "Rotate through pending tasks",
   rotationSeconds: "Time per task (seconds)",

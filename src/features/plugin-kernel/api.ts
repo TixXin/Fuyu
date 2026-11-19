@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { emit, emitTo, listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { PLUGIN_BAR_USAGE_REPORT, PLUGIN_BAR_USAGE_REQUEST, readBarUsageReport, type BarUsageReport } from "./barUsage.ts";
 import { ISLAND_PLUGIN_PAGE_EVENT, islandPluginPageRequest, readIslandPluginPageRequest, type IslandPluginPageRequest } from "./islandPageRequest.ts";
+import { ISLAND_PLUGIN_SPOTLIGHT_EVENT, readIslandSpotlightRequest, type IslandSpotlightRequest } from "./islandSpotlight.ts";
 import {
   normalizeV2MigrationSnapshot,
   type V2MigrationDismissTarget,
@@ -179,6 +180,18 @@ export function requestIslandPluginPage(pluginId: string, page?: string): Promis
 export function listenIslandPluginPageRequest(handler: (request: IslandPluginPageRequest) => void): Promise<UnlistenFn> {
   return listen<unknown>(ISLAND_PLUGIN_PAGE_EVENT, ({ payload }) => {
     const request = readIslandPluginPageRequest(payload);
+    if (request) handler(request);
+  });
+}
+
+export function requestIslandPluginSpotlight(pluginId: string): Promise<void> {
+  const request: IslandSpotlightRequest = { pluginId };
+  return emitTo("main", ISLAND_PLUGIN_SPOTLIGHT_EVENT, request);
+}
+
+export function listenIslandPluginSpotlight(handler: (request: IslandSpotlightRequest) => void): Promise<UnlistenFn> {
+  return listen<unknown>(ISLAND_PLUGIN_SPOTLIGHT_EVENT, ({ payload }) => {
+    const request = readIslandSpotlightRequest(payload);
     if (request) handler(request);
   });
 }

@@ -10,6 +10,7 @@ import type { IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
 import { usePluginIslandControl } from "./usePluginIslandControl";
 import { usePluginPageRequests } from "./usePluginPageRequests";
+import { usePluginSpotlightRequests } from "./usePluginSpotlight";
 import { useTrayMenuOpenPage } from "./useTrayMenuOpenPage";
 import "./slots/builtins";
 
@@ -97,6 +98,7 @@ const LivePageRunners = memo(function LivePageRunners(props: IslandRunnerProps) 
 export const IslandRunners = memo(function IslandRunners({ page, ...base }: IslandRunnerProps) {
   useTrayMenuOpenPage(base.openEnabledPage);
   usePluginPageRequests(base.openEnabledPage);
+  usePluginSpotlightRequests();
   usePluginIslandControl({ mode: base.mode, page, openEnabledPage: base.openEnabledPage, collapseIsland: base.collapseIsland });
   return (
     <>

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createWindowServices } from "@fuyu/plugin-base/client";
-import { remindersV1, timersV1 } from "@fuyu/plugin-services";
+import { remindersV1 } from "@fuyu/plugin-services";
 import { formatTodoDocumentAsMarkdown, formatTodosAsMarkdown, getTodoSignature } from "../../src/features/todos/markdown.ts";
 import {
   addTodoFocusMinutes,
@@ -12,7 +12,6 @@ import {
   updateTodoNote,
 } from "../../src/features/todos/normalize.ts";
 import { DEFAULT_TODO_PREFS, normalizeTodoPrefs } from "../../src/features/todos/todoPrefs.ts";
-import { createFocusTimerTracker } from "../../src/features/todos/useTodoFocusTimer.ts";
 import {
   TIMED_REMINDER_STARTUP_GRACE_MS,
   TIMED_REMINDER_WINDOW_MS,
@@ -21,6 +20,8 @@ import {
   parseLeadingTodoTime,
   scheduledTodoTimeMs,
 } from "../../src/features/todos/useTodoTimedReminders.ts";
+
+const MINUTE = 60_000;
 
 function makeTodo(overrides = {}) {
   return {
@@ -84,8 +85,13 @@ test("normalizeTodo and note/focus helpers sanitize bounds and omit empty fields
   const longNote = updateTodoNote(dirty, "备".repeat(1200));
   assert.equal(Array.from(longNote.note ?? "").length, 1000);
 
-  const credited = addTodoFocusMinutes(makeTodo(), 25);
-  assert.equal(addTodoFocusMinutes(credited, 15).focusMinutes, 40);
+  const start = 1_760_000_000_000;
+  const credited = addTodoFocusMinutes(makeTodo(), 25, start);
+  assert.deepEqual([credited.focusMinutes, credited.focusedAt], [25, start]);
+  assert.equal(addTodoFocusMinutes(credited, 15, start + 15 * MINUTE).focusMinutes, 40);
+  const kept = normalizeTodo({ id: "t3", title: "x", completed: false, createdAt: 1, focusMinutes: 25, focusedAt: start + 0.5 });
+  assert.equal(kept.focusedAt, start);
+  assert.equal("focusedAt" in normalizeTodo({ id: "t4", title: "x", completed: false, createdAt: 1, focusedAt: start }), false);
   assert.equal(normalizeTodo({ id: "t2", title: "x", completed: false, createdAt: 1, focusMinutes: 0 }).focusMinutes, undefined);
 });
 
@@ -144,67 +150,6 @@ test("Markdown export formats indented notes, subtasks and optional focusMinutes
     { markdownElapsed: true },
   );
   assert.notEqual(sigBefore, sigAfterSubtask);
-});
-
-test("focus timer tracker starts countdown via timers/v1 and credits focusMinutes once on due", async () => {
-  const services = createWindowServices();
-  const startedCalls = [];
-  const provider = services.provide(
-    timersV1,
-    {
-      list: () => ({ timers: [], at: 0 }),
-      start: (params) => {
-        startedCalls.push(params);
-        return {
-          timer: {
-            id: `timer-${startedCalls.length}`,
-            kind: "countdown",
-            durationMs: params.kind === "countdown" ? params.durationMs : 0,
-            elapsedMs: 0,
-            runningSince: 1000,
-            alerted: false,
-          },
-        };
-      },
-      pause: () => { throw new Error("unused"); },
-      resume: () => { throw new Error("unused"); },
-      extend: () => { throw new Error("unused"); },
-      remove: () => ({ removed: true }),
-      dismissRinging: () => ({ removed: 0 }),
-      adopt: () => ({ timers: [], added: 0, at: 0 }),
-    },
-    { owner: "timer" },
-  );
-
-  const completed = [];
-  const tracker = createFocusTimerTracker({
-    services,
-    isTimerPluginEnabled: () => true,
-    onFocusCompleted: (todoId, minutes) => completed.push({ todoId, minutes }),
-  });
-
-  const timerId = await tracker.startFocus("todo-alpha", 30);
-  assert.equal(timerId, "timer-1");
-  assert.deepEqual(startedCalls, [{ kind: "countdown", durationMs: 30 * 60_000 }]);
-
-  provider.emit("due", {
-    timer: { id: "unrelated-timer", kind: "countdown", durationMs: 60_000, elapsedMs: 60_000, runningSince: null, alerted: true },
-    at: 2000,
-  });
-  assert.deepEqual(completed, []);
-
-  provider.emit("due", {
-    timer: { id: "timer-1", kind: "countdown", durationMs: 30 * 60_000, elapsedMs: 30 * 60_000, runningSince: null, alerted: true },
-    at: 3000,
-  });
-  provider.emit("due", {
-    timer: { id: "timer-1", kind: "countdown", durationMs: 30 * 60_000, elapsedMs: 30 * 60_000, runningSince: null, alerted: true },
-    at: 3001,
-  });
-  assert.deepEqual(completed, [{ todoId: "todo-alpha", minutes: 30 }]);
-
-  tracker.dispose();
-  await provider.dispose();
 });
 
 test("leading HH:mm parser and timed todo reminders respect window, startup grace and deduplication", async () => {

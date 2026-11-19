@@ -10,8 +10,8 @@ use tiny_http::{Header, Request, Response, Server};
 use crate::agent_status;
 
 use super::{
-    bridge,
-    routes::{self, ApiError, RequestHeaders, API_VERSION, MAX_BODY_BYTES},
+    bridge, notify,
+    routes::{self, ApiCall, ApiError, RequestHeaders, API_VERSION, MAX_BODY_BYTES},
 };
 
 pub(super) const LOCAL_API_OWNER: &str = "local-api";
@@ -107,7 +107,15 @@ fn answer(app: &AppHandle, request: &mut Request, port: u16) -> Result<Value, Ap
             "version": app.package_info().version.to_string(),
             "apiVersion": API_VERSION,
             "allowWrite": config.allow_write,
+            "allowNotify": config.allow_notify,
         }));
+    }
+    if call.method == notify::METHOD {
+        if !config.allow_notify {
+            return Err(ApiError::new(403, "Messages from the local API are turned off in Fuyu settings."));
+        }
+        let params = notify::prepare(LOCAL_API_OWNER, &call.params)?;
+        return bridge::dispatch(app, ApiCall { method: notify::METHOD, params, writes: false });
     }
     let to_api_error = |(status, message): (u16, String)| ApiError::new(status, message);
     match call.method {

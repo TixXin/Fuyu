@@ -1,4 +1,5 @@
 import { defineSlot } from "../../plugin-kernel/slots";
+import { noticeHandlers } from "../noticeHandlers";
 import { todoHandlers } from "../todoHandlers";
 import { useDevIslandActions } from "../useDevIslandActions";
 import { useLocalApiBridge } from "../useLocalApiBridge";
@@ -17,7 +18,7 @@ function DevIslandActions({ openEnabledPage, collapseIsland, tuckIsland, revealI
   return null;
 }
 
-const handlers = todoHandlers();
+const handlers = { ...todoHandlers(), ...noticeHandlers() };
 
 function LocalApiBridge() {
   useLocalApiBridge(handlers);

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { saveTodoMarkdown } from "./api";
-import { formatTodoDocumentAsMarkdown, getTodoSignature } from "./markdown.ts";
+import { formatTodoDocumentAsMarkdown, getTodoSignature, todoMarkdownOptions } from "./markdown.ts";
 import { saveLastSavedSignature } from "./storage.ts";
+import type { TodoPrefs } from "./todoPrefs.ts";
 import type { SaveState, TodoItem } from "./types.ts";
 import { useTodoAutoSave } from "./useTodoAutoSave";
 import { useTodoSaveDirectory } from "./useTodoSaveDirectory";
@@ -18,8 +19,7 @@ type TodoSavingOptions = {
   currentTodoDate: string;
   todos: TodoItem[];
   dailyNote: string;
-  markdownPriority: boolean;
-  markdownElapsed: boolean;
+  prefs: TodoPrefs;
   upsertArchive: UpsertArchive;
   onMissingSaveDirectory: () => void;
 };
@@ -28,8 +28,7 @@ export function useTodoSaving({
   currentTodoDate,
   todos,
   dailyNote,
-  markdownPriority,
-  markdownElapsed,
+  prefs,
   upsertArchive,
   onMissingSaveDirectory,
 }: TodoSavingOptions) {
@@ -39,9 +38,10 @@ export function useTodoSaving({
     setSaveState((current) => (current === "needs-path" ? "idle" : current));
   }, []);
   const saveDirectory = useTodoSaveDirectory(clearNeedsPath);
+  const { markdownPriority, markdownElapsed, markdownProject, markdownSubtasks, markdownNote } = prefs;
   const markdownOptions = useMemo(
-    () => ({ markdownPriority, markdownElapsed }),
-    [markdownElapsed, markdownPriority],
+    () => todoMarkdownOptions({ markdownPriority, markdownElapsed, markdownProject, markdownSubtasks, markdownNote }),
+    [markdownElapsed, markdownNote, markdownPriority, markdownProject, markdownSubtasks],
   );
 
   const saveTodosToDisk = useCallback(
@@ -95,6 +95,7 @@ export function useTodoSaving({
     dailyNote,
     saveDirectory,
     markdownOptions,
+    noteTemplate: prefs.noteTemplate,
     saveTodosToDisk,
     setSaveState,
   });

@@ -367,6 +367,7 @@ try {
   await settle();
   const toast = () => within("setup", "[data-installed-toast='@fuyu/countdown']");
   check(market.calls.some((call) => call.startsWith("install:@fuyu/countdown@")) && toast()?.textContent!.includes(t.installed.done(countdownName)) && !toast()?.querySelector("[data-action='toast-setup']"), "After an install a notice confirms it, with no set-up button while the plugin has not asked for one");
+  check(ipc.calls.filter((call) => call.startsWith("emit:island-plugin-spotlight")).join() === 'emit:island-plugin-spotlight:{"pluginId":"@fuyu/countdown"}', "and the island is asked, once, to point out where the new plugin sits");
   await showView("setup", open([...NEEDS_SETUP, { ...COUNTDOWN, setup: { hint: COUNTDOWN_HINT } }]));
   check(toast()?.dataset.setup === "needed" && toast()?.textContent!.includes(COUNTDOWN_HINT[locale]) && toast()?.querySelector("[data-action='toast-setup']")?.textContent === t.setup.go, "Once the new plugin says it needs setup, the notice says what is missing and offers Set up");
   await click(toast()?.querySelector("[data-action='toast-setup']"));

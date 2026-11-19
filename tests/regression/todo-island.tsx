@@ -1,7 +1,8 @@
 import "../../src/styles/tokens.css";
-import { act, StrictMode, type CSSProperties } from "react";
+import { act, StrictMode, type CSSProperties, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nProvider } from "../../src/i18n";
+import { TodoIslandArchive } from "../../src/features/todos/island/TodoIslandArchive";
 import { TodoIslandPage } from "../../src/features/todos/island/TodoIslandPage";
 import type { TodoArchive, TodoItem, TodoPageMode, TodoPageProps } from "../../src/features/todos/types";
 import { TODO_ROW_HEIGHT } from "../../src/windows/island/layout";
@@ -19,6 +20,13 @@ const ARCHIVES: TodoArchive[] = [
   { date: "2026-11-07", todos: [todo("p", "发版 0.3.3", true)], dailyNote: "", savedAt: 0, savedToDisk: true },
   { date: "2026-10-30", todos: [], dailyNote: "休息", savedAt: 0, savedToDisk: true },
 ];
+const focused = (id: string, title: string, completed: boolean, focusMinutes: number, project?: string): TodoItem => ({ ...todo(id, title, completed), focusMinutes, ...(project ? { project } : {}) });
+const WEEK_ARCHIVES: TodoArchive[] = [
+  { date: "2026-11-10", todos: [focused("w1", "写引言", true, 50, "论文"), focused("w2", "跑对比", true, 25, "论文"), focused("w3", "回邮件", true, 45), todo("w4", "买菜")], dailyNote: "", savedAt: 0, savedToDisk: true },
+  { date: "2026-11-09", todos: [focused("w5", "做 PPT", true, 30, "组会"), focused("w6", "排版", true, 90, "浮屿"), todo("w7", "洗衣服", true)], dailyNote: "", savedAt: 0, savedToDisk: true },
+  { date: "2026-11-08", todos: [focused("w8", "写周报", true, 300)], dailyNote: "", savedAt: 0, savedToDisk: true },
+];
+const WEEK_TODAY = [focused("w9", "改岛屿", false, 40, "浮屿"), focused("w10", "记账", true, 10, "家务")];
 const calls: string[] = [];
 const tagSpy = (name: string) => (id: string, tags: object) => { calls.push(`${name}:${id}:${JSON.stringify(tags)}`); };
 const spy = (name: string) => (...args: unknown[]) => { calls.push([name, ...args.filter((arg) => typeof arg !== "object")].join(":")); };
@@ -44,6 +52,7 @@ const FRAMES: { id: string; caption: string; props: Props; light?: boolean; tall
   { id: "daily", caption: "笔记", props: props("daily") },
   { id: "upcoming", caption: "已安排", props: props("upcoming") },
   { id: "archive", caption: "归档", props: props("archive") },
+  { id: "week", caption: "归档：本周小结带专注时长（C140.4）", tall: true, props: props("archive", { currentDate: "2026-11-11", archives: WEEK_ARCHIVES, todos: WEEK_TODAY }) },
   { id: "review", caption: "回看某一天", props: props("review") },
   { id: "projects", caption: "按项目分组（issue #44）", tall: true, props: props("today", { activeTodoId: null, projects: ["组会", "论文", "空项目"], todos: [
     { ...todo("p1", "写引言"), project: "论文" }, todo("p2", "买菜"), { ...todo("p3", "做 PPT"), project: "组会" },
@@ -209,6 +218,27 @@ try {
   check(days.length === 3 && days[0].textContent?.includes("写") === false && days[0].textContent?.includes("整理桌面") && days[0].textContent?.includes("2/3"), "每天显示第一件没做完的和完成数");
   await click(days[1]);
   check(calls.includes("select:2026-11-07"), "点某一天打开它");
+
+  const weekDays = (frame: string) => $$(frame, ".todo-week__day");
+  const weekTexts = (frame: string, selector: string) => $$(frame, selector).map((item) => item.textContent).join("|");
+  check($("archive", ".todo-island__archive")?.firstElementChild?.classList.contains("todo-week"), "本周小结在归档列表最上面");
+  check(weekTexts("archive", ".todo-week__sum > *") === "1|本周完成" && !$("archive", ".todo-week__projects"), "没有专注时长：只有今天完成的 1 件，不写专注，没有项目行");
+  check(weekTexts("archive", ".todo-week__day span") === "一|二|三|四|五|六|日" && weekDays("archive").map((day) => day.dataset.done).join() === "1,0,0,0,0,0,0", "中文一周从周一开始，上周日的归档不算进来");
+  check(weekTexts("week", ".todo-week__sum > *") === "7|本周完成 · 专注 4h 50m", "本周完成 7 件，专注一共 4 小时 50 分");
+  check(weekDays("week").map((day) => day.dataset.done).join() === "3,3,1,0,0,0,0" && weekDays("week").map((day) => day.classList.contains("todo-week__day--today")).indexOf(true) === 2, "七根小柱一天一根，今天那根单独标出");
+  check(weekDays("week")[0].getAttribute("aria-label") === "星期一完成 3 件" && weekDays("week")[2].getAttribute("aria-current") === "date", "小柱读得出是哪天、完成几件");
+  check(weekTexts("week", ".todo-week__project") === "浮屿2h 10m|论文1h 15m|临时45m", "专注最多的三个项目，没有项目的算临时，第四名以后不列");
+  const barHeights = weekDays("week").map((day) => day.querySelector("i")!.getBoundingClientRect().height);
+  check(barHeights[0] === barHeights[1] && barHeights[2] < barHeights[0] && barHeights[3] > 0 && barHeights[3] < barHeights[2], "小柱高度跟着件数，没完成的那天留一条短线");
+  const detached = async (node: ReactNode) => {
+    const host = document.createElement("div");
+    await act(async () => { createRoot(host).render(<StrictMode><I18nProvider>{node}</I18nProvider></StrictMode>); });
+    return host;
+  };
+  const off = await detached(<TodoIslandArchive archives={WEEK_ARCHIVES} todos={WEEK_TODAY} currentDate="2026-11-11" showWeekSummary={false} onSelect={spy("select")} />);
+  check(!off.querySelector(".todo-week") && off.querySelectorAll(".todo-island__archive-day").length === 3, "关掉本周小结后归档页只剩每天的列表");
+  const blank = await detached(<TodoIslandArchive archives={[]} todos={[todo("n", "没做完")]} currentDate="2026-11-11" onSelect={spy("select")} />);
+  check(!blank.querySelector(".todo-week") && blank.textContent === "还没有保存过的清单", "本周没完成过、也没有归档时不显示小结");
   check($("review", ".todo-island__back")?.textContent === "2026-11-08" && $("review", ".todo-island__progress")?.textContent === "完成 2/3", "回看某一天：返回按钮、日期和完成数");
   check(!$("review", ".todo-island__composer") && !$("review", ".todo-island-row__action"), "回看时只读，没有输入框和操作");
   await click($("review", ".todo-island__back"));
