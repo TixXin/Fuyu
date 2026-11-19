@@ -4,11 +4,19 @@ import test from "node:test";
 import { SLOT_THEME } from "../../packages/plugin-base/src/protocol.mjs";
 
 const read = (path) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
-const declared = (css) => [...css.matchAll(/^\s*(--fuyu-plugin-[\w-]+)\s*:/gm)].map((match) => match[1]);
+const declared = (css) => [...new Set([...css.matchAll(/^\s*(--fuyu-plugin-[\w-]+)\s*:/gm)].map((match) => match[1]))];
 const used = (source) => [...new Set([...source.matchAll(/var\(\s*(--[\w-]+)/g)].map((match) => match[1]))];
 
 test("the island's plugin slot defines exactly the public theme variables", () => {
   assert.deepEqual(declared(read("src/features/plugin-kernel/PluginSlot.css")).sort(), [...SLOT_THEME].sort());
+});
+
+test("the slot sets color-scheme for the dark island and the light one, so light-dark() follows the island", () => {
+  const css = read("src/features/plugin-kernel/PluginSlot.css");
+  const rule = (selector) => new RegExp(`^${selector.replace(/\./g, "\\.")} \\{([^}]*)\\}`, "m").exec(css)?.[1] ?? "";
+  assert.match(rule(".plugin-slot"), /color-scheme:\s*dark;/);
+  assert.match(rule(".island-light .plugin-slot"), /color-scheme:\s*light;/);
+  assert.deepEqual(declared(rule(".island-light .plugin-slot")).filter((name) => !SLOT_THEME.includes(name)), []);
 });
 
 test("the public theme variables all start with --fuyu-plugin- and are unique", () => {

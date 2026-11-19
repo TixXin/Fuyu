@@ -24,6 +24,7 @@ const Hello = () => (
   <div className="demo" style={style}>
     <span className="greeting" style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>hello island, from the plugin host (pid 4242)</span>
     <span className="count" style={{ flexShrink: 0, color: "var(--fuyu-plugin-text-muted)" }}>#12</span>
+    <i className="scheme-probe" style={{ color: "light-dark(rgb(0, 0, 255), rgb(255, 0, 0))" }} />
   </div>
 );
 const Builtin = () => <div className="builtin">built-in row</div>;
@@ -73,6 +74,11 @@ try {
   check(missing.length === 0, `Every public theme variable is defined on the slot (${SLOT_THEME.length}); missing: ${missing.join(", ") || "none"}`);
   const dark = contrast(demo, { r: 0, g: 0, b: 0 });
   check(dark >= 4.5, `On the dark island the demo row reads at ${dark.toFixed(1)}:1`);
+  const probe = demo.querySelector<HTMLElement>(".scheme-probe")!;
+  const status = () => ["--fuyu-plugin-warning", "--fuyu-plugin-danger"].map((name) => getComputedStyle(probe).getPropertyValue(name).trim());
+  const darkStatus = status();
+  check(darkStatus.every(Boolean), `On the dark island a plugin's element reads the warning and danger colours (${darkStatus.join(", ")})`);
+  check(getComputedStyle(probe).colorScheme === "dark" && getComputedStyle(probe).color === "rgb(255, 0, 0)", "and inherits color-scheme: dark through the display: contents wrapper, so light-dark() picks the dark value");
 
   island.style.width = "300px";
   const lineHeight = parseFloat(getComputedStyle(demo).lineHeight) || 16;
@@ -85,6 +91,9 @@ try {
   island.style.background = "#f2f2f5";
   const light = contrast(demo, { r: 242, g: 242, b: 245 });
   check(light >= 4.5, `On the light island the same row reads at ${light.toFixed(1)}:1 (it was white on light grey before the theme variables)`);
+  const lightStatus = status();
+  check(lightStatus.every(Boolean) && lightStatus.every((value, index) => value !== darkStatus[index]), `On the light island the warning and danger colours switch to the light set (${lightStatus.join(", ")})`);
+  check(getComputedStyle(probe).colorScheme === "light" && getComputedStyle(probe).color === "rgb(0, 0, 255)", "and color-scheme turns light, so light-dark() picks the light value");
   document.documentElement.classList.remove("island-light");
   island.style.background = "";
 
