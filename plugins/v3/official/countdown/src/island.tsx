@@ -105,7 +105,6 @@ export default function apply(ctx: Context) {
   ctx.slots.add("island.page/v1", { id: PAGE_ID, title: PAGE_TITLE, component: CountdownPage, icon: CalendarIcon });
   ctx.slots.add("island.collapsed/v1", {
     id: "countdown-bar",
-    width: 110,
     hideable: true,
     opens: PAGE_ID,
     component: CountdownCollapsed,
