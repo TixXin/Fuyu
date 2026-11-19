@@ -2,7 +2,9 @@ import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent }
 import { createPortal } from "react-dom";
 import { Store, Trash2, X } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
-import { PluginEnableSwitch, PluginRowNote, pluginInitial, type RowAction } from "./InstalledPluginRow";
+import { PluginEnableSwitch, PluginRowNote, type RowAction } from "./InstalledPluginRow";
+import { OfficialMark } from "./OfficialMark";
+import { PluginLogo } from "./PluginLogo";
 import { PluginActivityTab, PluginCommandsTab, PluginOverviewExtras, PluginSettingsTab } from "./PluginDetailTabs";
 import type { InstalledEntry } from "./pluginEntries";
 import { marketClient } from "./pluginMarketActions";
@@ -84,14 +86,13 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
     <div className="plugin-dialog__backdrop" onMouseDown={(event) => event.target === event.currentTarget && !busy && onClose()}>
       <div ref={dialogRef} className="plugin-dialog" role="dialog" aria-modal="true" aria-label={entry.title} data-plugin-detail={entry.id} onKeyDown={onKeyDown}>
         <div className="plugin-dialog__head">
-          <span className={`plugin-icon plugin-icon--lg${status.dot === "ok" ? "" : " plugin-icon--dim"}`} aria-hidden="true">
-            {pluginInitial(entry.title)}
+          <PluginLogo sources={entry.icons} title={entry.title} size="lg" dim={status.dot !== "ok"}>
             <span className={`plugin-icon__dot plugin-icon__dot--${status.dot}`} />
-          </span>
+          </PluginLogo>
           <div className="plugin-dialog__heading">
             <div className="plugin-row__line plugin-row__line--wrap">
               <span className="plugin-dialog__title">{entry.title}</span>
-              {entry.source === "official" ? <span className="plugin-badge plugin-badge--official">{text.badges.official}</span> : null}
+              {entry.source === "official" ? <OfficialMark /> : null}
               {entry.source === "manual" ? <span className="plugin-badge plugin-badge--warn">{text.badges.unreviewed}</span> : null}
             </div>
             <span className="plugin-dialog__sub">

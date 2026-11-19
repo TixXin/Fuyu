@@ -5,7 +5,9 @@ import type { PluginMarketDetailTab } from "../../i18n/sections/settings/pluginM
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { PluginMarketCardAction, type MarketCardHandlers } from "./PluginMarketCard";
 import { PluginMarketDetailTabBody } from "./PluginMarketDetailTabs";
-import { pluginInitial } from "./InstalledPluginRow";
+import { OfficialMark } from "./OfficialMark";
+import { iconSources } from "./pluginIconSources";
+import { PluginLogo } from "./PluginLogo";
 import { PluginMarketDialog } from "./PluginMarketDialog";
 import { isHttpUrl, marketClient, openHttpUrl } from "./pluginMarketActions";
 import { formatBytes, localized, offeredCandidate } from "./pluginMarketModel";
@@ -13,8 +15,9 @@ import { formatBytes, localized, offeredCandidate } from "./pluginMarketModel";
 const TABS: readonly PluginMarketDetailTab[] = ["readme", "changelog", "versions"];
 const LINKS = ["repository", "homepage", "bugs", "funding"] as const;
 
-export function PluginMarketDetailModal({ plugin, categoryName, nameOf, onClose, ...handlers }: Omit<MarketCardHandlers, "onOpen"> & {
+export function PluginMarketDetailModal({ plugin, isNew = false, categoryName, nameOf, onClose, ...handlers }: Omit<MarketCardHandlers, "onOpen"> & {
   plugin: MarketCatalogPlugin;
+  isNew?: boolean;
   categoryName: (id: string) => string;
   nameOf: (id: string) => string;
   onClose: () => void;
@@ -72,12 +75,12 @@ export function PluginMarketDetailModal({ plugin, categoryName, nameOf, onClose,
   return (
     <PluginMarketDialog label={title} size="wide" onClose={onClose} data={{ "data-market-detail-modal": plugin.name }}>
       <div className="plugin-dialog__head">
-        <span className="plugin-icon plugin-icon--lg" aria-hidden="true">{pluginInitial(title)}</span>
+        <PluginLogo sources={iconSources(plugin.icon)} title={title} size="lg" />
         <div className="plugin-dialog__heading">
           <div className="market-card__line">
             <span className="plugin-dialog__title">{title}</span>
-            {plugin.official ? <span className="plugin-badge plugin-badge--official">{text.card.official}</span> : null}
-            {candidate?.fresh && !plugin.installedVersion ? <span className="plugin-badge" title={text.card.freshTitle}>{text.card.fresh}</span> : null}
+            {plugin.official ? <OfficialMark /> : null}
+            {isNew ? <span className="plugin-badge plugin-badge--new" title={text.card.isNewTitle} data-new="true">{text.card.isNew}</span> : null}
           </div>
           <span className="plugin-dialog__sub" title={plugin.name}>{sub}</span>
         </div>

@@ -2,7 +2,9 @@ import type { MouseEvent } from "react";
 import { Check } from "lucide-react";
 import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
-import { pluginInitial } from "./InstalledPluginRow";
+import { OfficialMark } from "./OfficialMark";
+import { iconSources } from "./pluginIconSources";
+import { PluginLogo } from "./PluginLogo";
 import { hasUpdate, localized, offeredCandidate } from "./pluginMarketModel";
 import { marketActionCandidate } from "./pluginRowStatus";
 
@@ -45,7 +47,7 @@ export function PluginMarketCardAction({ plugin, onInstall, onManage, onGoUpdate
   return <button className="plugin-btn plugin-btn--sm plugin-btn--primary" type="button" data-action="market-install" onClick={(event) => stop(event, () => onInstall(plugin))}>{text.install}</button>;
 }
 
-export function PluginMarketCard({ plugin, categoryName, ...handlers }: MarketCardHandlers & { plugin: MarketCatalogPlugin; categoryName: (id: string) => string }) {
+export function PluginMarketCard({ plugin, categoryName, isNew = false, ...handlers }: MarketCardHandlers & { plugin: MarketCatalogPlugin; categoryName: (id: string) => string; isNew?: boolean }) {
   const { locale } = useLocale();
   const text = useTranslation().settings.pluginsV3.marketPage.card;
   const title = localized(plugin.displayName, locale, plugin.name);
@@ -53,16 +55,15 @@ export function PluginMarketCard({ plugin, categoryName, ...handlers }: MarketCa
   const candidate = offeredCandidate(plugin);
   const version = candidate?.version ?? plugin.installedVersion;
   const sub = [plugin.official ? null : plugin.publisher.github, plugin.categories[0] ? categoryName(plugin.categories[0]) : null, version ? `v${version}` : null].filter(Boolean).join(" · ");
-  const fresh = Boolean(candidate?.fresh) && !plugin.installedVersion;
   return (
     <article className="market-card" data-market-plugin={plugin.name} onClick={(event) => !(event.target as Element).closest("button") && handlers.onOpen(plugin)}>
       <div className="market-card__head">
-        <span className="plugin-icon" aria-hidden="true">{pluginInitial(title)}</span>
+        <PluginLogo sources={iconSources(plugin.icon)} title={title} />
         <div className="market-card__title">
           <div className="market-card__line">
             <button className="market-card__name" type="button" title={title} onClick={() => handlers.onOpen(plugin)}>{title}</button>
-            {plugin.official ? <span className="plugin-badge plugin-badge--official">{text.official}</span> : null}
-            {fresh ? <span className="plugin-badge" title={text.freshTitle}>{text.fresh}</span> : null}
+            {plugin.official ? <OfficialMark /> : null}
+            {isNew ? <span className="plugin-badge plugin-badge--new" title={text.isNewTitle} data-new="true">{text.isNew}</span> : null}
             {plugin.revoked && plugin.installedVersion ? <span className="plugin-badge market-badge--bad">{text.revoked}</span> : null}
           </div>
           {sub ? <span className="market-card__sub">{sub}</span> : null}

@@ -5,7 +5,7 @@ import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
 import "../../src/windows/settings/SettingsWindow.css";
 import { ipc, locale, market, NORMAL, HOST } from "./pluginPageMocks";
-import { marketFixture, RSS_DETAILS, TOOLBOX_PACKAGE } from "./pluginMarketFixtures";
+import { ICON_SVG, MARKET_PLUGINS, marketFixture, RSS_DETAILS, TOOLBOX_PACKAGE } from "./pluginMarketFixtures";
 import { I18nProvider, TRANSLATIONS } from "../../src/i18n";
 import type { PluginHostConnector } from "../../src/windows/settings/usePluginHostStatus";
 import type { PluginMarketViewProps } from "../../src/windows/settings/PluginMarketView";
@@ -79,13 +79,26 @@ try {
   check(cards(stage, "all").length === 10 && !stage.querySelector("[data-market-section^='group:']"), "With All selected the rest is one flat list, not grouped by category");
   const grid = getComputedStyle(stage.querySelector(".market-grid")!).gridTemplateColumns.split(" ").length;
   check(grid === 2, `Cards sit two to a row (got ${grid})`);
-  check(card(stage, "@fuyu/rss")?.textContent!.includes(text.card.official) && card(stage, "@ryo/clip-sync")?.textContent!.includes(text.card.fresh), "Cards show the official badge and the calm new badge");
+  check(card(stage, "@fuyu/rss")?.querySelector("[data-official]")?.getAttribute("title") === text.card.officialTitle && !card(stage, "@fuyu/rss")?.querySelector(".plugin-badge"), "Official plugins carry a check mark that says the Fuyu team published them, not an Official badge");
+  check(!card(stage, "@ryo/clip-sync")?.querySelector("[data-official]") && card(stage, "@ryo/clip-sync")?.querySelector(".market-card__sub")?.textContent!.startsWith("ryo"), "Third-party plugins have no check mark and name their publisher");
+  check(!stage.querySelector("[data-new]"), "Before the market has been open a month no plugin is marked new");
+  check(card(stage, "@fuyu/rss")?.querySelector<HTMLImageElement>(".plugin-icon__img")?.getAttribute("src") === ICON_SVG, "A plugin with an icon shows its own icon");
+  await waitFor(() => !card(stage, "@fuyu/weather")?.querySelector(".plugin-icon__img"), "the broken weather icon to fall back");
+  check(card(stage, "@fuyu/weather")?.querySelector(".plugin-icon")?.textContent === (zh ? "天" : "W") && card(stage, "@ryo/clip-sync")?.querySelector(".plugin-icon")?.textContent === (zh ? "剪" : "C"), "A plugin whose icon fails to load, or that has none, shows its first letter");
   check(card(stage, "@fuyu/rss")?.querySelector(".market-card__facts")?.textContent === text.card.network && !/权限|permission/i.test(stage.querySelector(".market-grid")?.textContent ?? ""), "Cards say whether the plugin uses the network and never count permissions");
   check(card(stage, "@kai/vscode-status")?.textContent!.includes(text.card.needsFuyu(">=0.40.0")) && card(stage, "@kai/vscode-status")?.querySelector("[data-action='market-go-update']") && !card(stage, "@kai/vscode-status")?.querySelector("[data-action='market-install']"), "A plugin this Fuyu cannot run says which version it needs and offers to update Fuyu instead of installing");
   await click(card(stage, "@kai/vscode-status")?.querySelector("[data-action='market-go-update']"));
   check(opened.includes("view:about"), "Updating Fuyu opens the About page");
   check(card(stage, "@fuyu/weather")?.querySelector("[data-action='market-manage']"), "An installed plugin offers Manage");
   check(stage.querySelector("[data-market-section='updates']")?.compareDocumentPosition(stage.querySelector("[data-market-section='all']")!) === Node.DOCUMENT_POSITION_FOLLOWING, "Updates come before the full list");
+
+  const DAY = 24 * 60 * 60 * 1000;
+  const ago = (days: number) => new Date(Date.now() - days * DAY).toISOString();
+  const settled = await view("browse-month", zh ? "浏览：市场上线一个多月后" : "Browse: the market has been open over a month", {
+    snapshot: marketFixture({ marketSince: ago(60), plugins: MARKET_PLUGINS.map((item) => ({ ...item, firstPublishedAt: ago(item.name === "@ryo/clip-sync" ? 2 : 40) })) }),
+  });
+  const marked = [...settled.stage.querySelectorAll("[data-new]")].map((item) => item.closest("[data-market-plugin]")?.getAttribute("data-market-plugin"));
+  check(marked.join() === "@ryo/clip-sync" && card(settled.stage, "@ryo/clip-sync")?.querySelector("[data-new]")?.textContent === text.card.isNew, "Once the market is a month old only plugins first listed in the last 14 days are marked new");
 
   const narrow = await view("browse-narrow", zh ? "浏览（窄窗口）" : "Browse (narrow window)", {}, true);
   check(getComputedStyle(narrow.stage.querySelector(".market-grid")!).gridTemplateColumns.split(" ").length === 1, "A narrow window has one card per row");
@@ -103,6 +116,7 @@ try {
   const detail = await view("detail", zh ? "插件详情" : "Plugin detail", { initialDetail: "@fuyu/rss" });
   const rss = await waitFor(() => detail.stage.querySelector<HTMLElement>("[data-market-detail-modal='@fuyu/rss'] .market-markdown"), "the RSS readme")
     .then((node) => node.closest<HTMLElement>("[data-market-detail-modal]")!);
+  check(rss.querySelector("[data-official]") && rss.querySelector(".plugin-dialog__sub")?.textContent!.startsWith(text.detail.official) && rss.querySelector<HTMLImageElement>(".plugin-dialog__head .plugin-icon__img")?.getAttribute("src") === ICON_SVG, "The detail header has the plugin's icon, the check mark and the Fuyu team as publisher");
   check(rss.textContent!.includes(text.detail.likes(212)) && rss.textContent!.includes("MIT") && rss.querySelectorAll(".market-shot").length === 3, "The detail shows likes, license and screenshots");
   check(rss.querySelector("[data-market-link='repository']") && rss.querySelector("[data-action='market-install']"), "and links and an install button");
   check(rss.querySelector("[data-plugin-capabilities] [data-capability='network']") && rss.querySelector("[data-market-commands]") && !rss.querySelector("[data-detail-tab='permissions']"), "The overview lists what the plugin does and its commands, with no permissions tab");

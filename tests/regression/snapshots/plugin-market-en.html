@@ -146,16 +146,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS reader" type="button">
                         RSS reader
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -187,8 +187,8 @@
                       <button class="market-card__name" title="Weather" type="button">
                         Weather
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -224,8 +224,8 @@
                       <button class="market-card__name" title="Page summary" type="button">
                         Page summary
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -257,8 +257,8 @@
                       <button class="market-card__name" title="Device pairing" type="button">
                         Device pairing
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -290,9 +290,6 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · Productivity · v1.1.0
@@ -383,9 +380,6 @@
                       <button class="market-card__name" title="Pet skins" type="button">
                         Pet skins
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · Look · v0.2.0
@@ -469,15 +463,15 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>
       </div>
     </section>
-    <section class="gallery__stage settings-stage gallery__stage--narrow" data-stage="browse-narrow">
+    <section class="gallery__stage settings-stage" data-stage="browse-month">
       <h2 class="gallery__title">
-        Browse (narrow window)
+        Browse: the market has been open over a month
       </h2>
       <div>
         <div class="plugin-page market-page" data-market-page="true">
@@ -621,16 +615,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS reader" type="button">
                         RSS reader
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -662,8 +656,8 @@
                       <button class="market-card__name" title="Weather" type="button">
                         Weather
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -699,8 +693,8 @@
                       <button class="market-card__name" title="Page summary" type="button">
                         Page summary
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -732,8 +726,8 @@
                       <button class="market-card__name" title="Device pairing" type="button">
                         Device pairing
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -765,7 +759,7 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
+                      <span class="plugin-badge plugin-badge--new" data-new="true" title="Listed in the last 14 days">
                         New
                       </span>
                     </div>
@@ -858,9 +852,6 @@
                       <button class="market-card__name" title="Pet skins" type="button">
                         Pet skins
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · Look · v0.2.0
@@ -944,7 +935,476 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage gallery__stage--narrow" data-stage="browse-narrow">
+      <h2 class="gallery__title">
+        Browse (narrow window)
+      </h2>
+      <div>
+        <div class="plugin-page market-page" data-market-page="true">
+          <div class="plugin-page__summary market-meta">
+            <b>
+              12 plugins
+            </b>
+            <span>
+              Index updated 18/11, 20:14
+            </span>
+            <button class="plugin-link" data-action="market-installed" type="button">
+              3 installed ›
+            </button>
+          </div>
+          <div class="market-toolbar">
+            <div class="market-toolbar__search">
+              <label class="plugin-search">
+                <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                <input aria-label="Search plugins, e.g. weather, GitHub, pomodoro" placeholder="Search plugins, e.g. weather, GitHub, pomodoro" type="search" value="">
+              </label>
+            </div>
+            <div class="market-toolbar__row">
+              <div aria-label="Categories" class="market-toolbar__cats" role="group">
+                <button aria-pressed="true" class="plugin-chip" data-market-category="all" type="button">
+                  All
+                  <span class="plugin-chip__count">
+                    12
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="productivity" type="button">
+                  Productivity
+                  <span class="plugin-chip__count">
+                    5
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="developer" type="button">
+                  Developer
+                  <span class="plugin-chip__count">
+                    3
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="information" type="button">
+                  News &amp; info
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="todos" type="button">
+                  To-dos
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="ai" type="button">
+                  AI
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="media" type="button">
+                  Media
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="appearance" type="button">
+                  Look
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="utilities" type="button">
+                  Utilities
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+              </div>
+              <div class="settings-select">
+                <div class="select-control">
+                  <button aria-controls="_id3_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
+                    <span>
+                      Recommended
+                    </span>
+                    <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <section class="market-section" data-market-section="updates">
+            <h3 class="plugin-page__heading">
+              Updates (2)
+            </h3>
+            <div class="plugin-card market-updates">
+              <div class="market-update" data-market-update="@fuyu/github-notify">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  G
+                </span>
+                <div class="market-update__text">
+                  <button class="market-card__name" type="button">
+                    GitHub notifications
+                  </button>
+                  <span>
+                    v2.0.1 → v2.1.0
+                    ·
+                    <span class="market-card__warn">
+                      Urgent fix
+                    </span>
+                  </span>
+                </div>
+                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
+                  Review &amp; update
+                </button>
+              </div>
+              <div class="market-update" data-market-update="@lin-dev/pomo-stats">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  F
+                </span>
+                <div class="market-update__text">
+                  <button class="market-card__name" type="button">
+                    Focus stats
+                  </button>
+                  <span>
+                    v0.4.2 → v0.5.0
+                  </span>
+                </div>
+                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
+                  Review &amp; update
+                </button>
+              </div>
+            </div>
+          </section>
+          <section class="market-section" data-market-section="all">
+            <h3 class="plugin-page__heading">
+              All
+              <span class="plugin-page__heading-meta">
+                10
+              </span>
+            </h3>
+            <div class="market-grid">
+              <article class="market-card" data-market-plugin="@fuyu/rss">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="RSS reader" type="button">
+                        RSS reader
+                      </button>
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      News &amp; info · v1.5.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Follow blogs and news; new headlines scroll on the collapsed bar, click to open
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Network
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/weather">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    W
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Weather" type="button">
+                        Weather
+                      </button>
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      News &amp; info · v1.2.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Shows the weather on the collapsed bar and reminds you to take an umbrella before rain
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Network
+                  </span>
+                  <span class="market-card__action">
+                    <span class="market-card__installed">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                      Installed
+                    </span>
+                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                      Manage
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    P
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Page summary" type="button">
+                        Page summary
+                      </button>
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      AI · v0.9.3
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Copy a link and the island gives a three-sentence summary you can save to notes
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Network
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/devices">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    D
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Device pairing" type="button">
+                        Device pairing
+                      </button>
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      Utilities · v1.0.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Lets two computers running Fuyu recognize each other, for sync plugins
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Offline
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@ryo/clip-sync">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    C
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Clipboard sync" type="button">
+                        Clipboard sync
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      ryo · Productivity · v1.1.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Syncs the clipboard between two computers, end-to-end encrypted
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Network
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@tara/linear">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    L
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Linear issues" type="button">
+                        Linear issues
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      tara · Developer · v0.6.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Syncs Linear issues assigned to you into to-dos and alerts you on status changes
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Network
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@nori/focus-sounds">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    F
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Focus sounds" type="button">
+                        Focus sounds
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      nori · Productivity · v1.3.2
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Rain, café and campfire sounds, one click on the island while you focus
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Offline
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@moe/pet-skins">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    P
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Pet skins" type="button">
+                        Pet skins
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      moe · Look · v0.2.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Twelve new looks for the pet in the middle of the collapsed bar
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Offline
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@kai/vscode-status">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    V
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="VS Code status" type="button">
+                        VS Code status
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      kai · Developer
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Shows what VS Code is debugging or testing right on the island
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts"></span>
+                  <span class="market-card__action">
+                    <span class="market-card__blocked">
+                      Needs Fuyu &gt;=0.40.0
+                    </span>
+                    <button class="plugin-btn plugin-btn--sm" data-action="market-go-update" type="button">
+                      Update
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@mio/focus-sync">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    F
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Focus mode sync" type="button">
+                        Focus mode sync
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      mio · Productivity
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Turns on island do-not-disturb when the system Focus mode is on
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts"></span>
+                  <span class="market-card__action">
+                    <span class="market-card__blocked">
+                      Not for this system
+                    </span>
+                  </span>
+                </div>
+              </article>
+            </div>
+          </section>
+          <p class="plugin-foot market-trust">
+            <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>
@@ -1036,7 +1496,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id3_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id4_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       Recommended
                     </span>
@@ -1061,8 +1521,8 @@
                       <button class="market-card__name" title="Device pairing" type="button">
                         Device pairing
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1094,9 +1554,6 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · Productivity · v1.1.0
@@ -1179,7 +1636,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>
@@ -1271,7 +1728,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id4_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id5_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       Recommended
                     </span>
@@ -1330,7 +1787,7 @@
           </div>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>
@@ -1419,7 +1876,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id5_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       Recommended
                     </span>
@@ -1447,8 +1904,8 @@
                       <button class="market-card__name" title="Page summary" type="button">
                         Page summary
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1510,9 +1967,6 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · Productivity · v1.1.0
@@ -1595,7 +2049,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>
@@ -1684,7 +2138,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id7_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       Recommended
                     </span>
@@ -1747,16 +2201,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS reader" type="button">
                         RSS reader
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1788,8 +2242,8 @@
                       <button class="market-card__name" title="Weather" type="button">
                         Weather
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1825,8 +2279,8 @@
                       <button class="market-card__name" title="Page summary" type="button">
                         Page summary
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1858,8 +2312,8 @@
                       <button class="market-card__name" title="Device pairing" type="button">
                         Device pairing
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1891,9 +2345,6 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · Productivity · v1.1.0
@@ -1984,9 +2435,6 @@
                       <button class="market-card__name" title="Pet skins" type="button">
                         Pet skins
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · Look · v0.2.0
@@ -2070,7 +2518,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
@@ -2079,20 +2527,20 @@
       <div class="plugin-dialog__backdrop">
         <div aria-label="RSS reader" aria-modal="true" class="plugin-dialog market-dialog market-dialog--wide" data-market-detail-modal="@fuyu/rss" role="dialog">
           <div class="plugin-dialog__head">
-            <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
-              R
+            <span aria-hidden="true" class="plugin-icon plugin-icon--lg plugin-icon--img">
+              <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
             </span>
             <div class="plugin-dialog__heading">
               <div class="market-card__line">
                 <span class="plugin-dialog__title">
                   RSS reader
                 </span>
-                <span class="plugin-badge plugin-badge--official">
-                  Official
+                <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                  <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                 </span>
               </div>
               <span class="plugin-dialog__sub" title="@fuyu/rss">
-                Fuyu team · Official · 👍 212 · News &amp; info
+                Fuyu team · 👍 212 · News &amp; info
               </span>
             </div>
             <div class="plugin-dialog__head-actions">
@@ -2350,7 +2798,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id7_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id8_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       Recommended
                     </span>
@@ -2413,16 +2861,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS reader" type="button">
                         RSS reader
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -2454,8 +2902,8 @@
                       <button class="market-card__name" title="Weather" type="button">
                         Weather
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -2491,8 +2939,8 @@
                       <button class="market-card__name" title="Page summary" type="button">
                         Page summary
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -2524,8 +2972,8 @@
                       <button class="market-card__name" title="Device pairing" type="button">
                         Device pairing
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -2557,9 +3005,6 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · Productivity · v1.1.0
@@ -2650,9 +3095,6 @@
                       <button class="market-card__name" title="Pet skins" type="button">
                         Pet skins
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · Look · v0.2.0
@@ -2736,7 +3178,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
@@ -2745,20 +3187,20 @@
       <div class="plugin-dialog__backdrop">
         <div aria-label="RSS reader" aria-modal="true" class="plugin-dialog market-dialog market-dialog--wide" data-market-detail-modal="@fuyu/rss" role="dialog">
           <div class="plugin-dialog__head">
-            <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
-              R
+            <span aria-hidden="true" class="plugin-icon plugin-icon--lg plugin-icon--img">
+              <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
             </span>
             <div class="plugin-dialog__heading">
               <div class="market-card__line">
                 <span class="plugin-dialog__title">
                   RSS reader
                 </span>
-                <span class="plugin-badge plugin-badge--official">
-                  Official
+                <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                  <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                 </span>
               </div>
               <span class="plugin-dialog__sub" title="@fuyu/rss">
-                Fuyu team · Official · 👍 212 · News &amp; info
+                Fuyu team · 👍 212 · News &amp; info
               </span>
             </div>
             <div class="plugin-dialog__head-actions">
@@ -3016,7 +3458,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id8_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id9_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       Recommended
                     </span>
@@ -3079,16 +3521,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS reader" type="button">
                         RSS reader
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3120,8 +3562,8 @@
                       <button class="market-card__name" title="Weather" type="button">
                         Weather
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3157,8 +3599,8 @@
                       <button class="market-card__name" title="Page summary" type="button">
                         Page summary
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3190,8 +3632,8 @@
                       <button class="market-card__name" title="Device pairing" type="button">
                         Device pairing
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3223,9 +3665,6 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · Productivity · v1.1.0
@@ -3316,9 +3755,6 @@
                       <button class="market-card__name" title="Pet skins" type="button">
                         Pet skins
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · Look · v0.2.0
@@ -3402,7 +3838,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
@@ -3547,7 +3983,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id9_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id10_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       Recommended
                     </span>
@@ -3610,16 +4046,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS reader" type="button">
                         RSS reader
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3651,8 +4087,8 @@
                       <button class="market-card__name" title="Weather" type="button">
                         Weather
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3688,8 +4124,8 @@
                       <button class="market-card__name" title="Page summary" type="button">
                         Page summary
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3721,8 +4157,8 @@
                       <button class="market-card__name" title="Device pairing" type="button">
                         Device pairing
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3754,9 +4190,6 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · Productivity · v1.1.0
@@ -3847,9 +4280,6 @@
                       <button class="market-card__name" title="Pet skins" type="button">
                         Pet skins
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · Look · v0.2.0
@@ -3933,7 +4363,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
@@ -4078,521 +4508,6 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id10_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
-                    <span>
-                      Recommended
-                    </span>
-                    <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <section class="market-section" data-market-section="updates">
-            <h3 class="plugin-page__heading">
-              Updates (2)
-            </h3>
-            <div class="plugin-card market-updates">
-              <div class="market-update" data-market-update="@fuyu/github-notify">
-                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
-                  G
-                </span>
-                <div class="market-update__text">
-                  <button class="market-card__name" type="button">
-                    GitHub notifications
-                  </button>
-                  <span>
-                    v2.0.1 → v2.1.0
-                    ·
-                    <span class="market-card__warn">
-                      Urgent fix
-                    </span>
-                  </span>
-                </div>
-                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
-                  Review &amp; update
-                </button>
-              </div>
-              <div class="market-update" data-market-update="@lin-dev/pomo-stats">
-                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
-                  F
-                </span>
-                <div class="market-update__text">
-                  <button class="market-card__name" type="button">
-                    Focus stats
-                  </button>
-                  <span>
-                    v0.4.2 → v0.5.0
-                  </span>
-                </div>
-                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
-                  Review &amp; update
-                </button>
-              </div>
-            </div>
-          </section>
-          <section class="market-section" data-market-section="all">
-            <h3 class="plugin-page__heading">
-              All
-              <span class="plugin-page__heading-meta">
-                10
-              </span>
-            </h3>
-            <div class="market-grid">
-              <article class="market-card" data-market-plugin="@fuyu/rss">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="RSS reader" type="button">
-                        RSS reader
-                      </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      News &amp; info · v1.5.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  Follow blogs and news; new headlines scroll on the collapsed bar, click to open
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    Network
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      Install
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/weather">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    W
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="Weather" type="button">
-                        Weather
-                      </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      News &amp; info · v1.2.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  Shows the weather on the collapsed bar and reminds you to take an umbrella before rain
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    Network
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      Installed
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      Manage
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    P
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="Page summary" type="button">
-                        Page summary
-                      </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      AI · v0.9.3
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  Copy a link and the island gives a three-sentence summary you can save to notes
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    Network
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      Install
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/devices">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    D
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="Device pairing" type="button">
-                        Device pairing
-                      </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      Utilities · v1.0.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  Lets two computers running Fuyu recognize each other, for sync plugins
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    Offline
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      Install
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@ryo/clip-sync">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    C
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="Clipboard sync" type="button">
-                        Clipboard sync
-                      </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      ryo · Productivity · v1.1.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  Syncs the clipboard between two computers, end-to-end encrypted
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    Network
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      Install
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@tara/linear">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    L
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="Linear issues" type="button">
-                        Linear issues
-                      </button>
-                    </div>
-                    <span class="market-card__sub">
-                      tara · Developer · v0.6.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  Syncs Linear issues assigned to you into to-dos and alerts you on status changes
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    Network
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      Install
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@nori/focus-sounds">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    F
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="Focus sounds" type="button">
-                        Focus sounds
-                      </button>
-                    </div>
-                    <span class="market-card__sub">
-                      nori · Productivity · v1.3.2
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  Rain, café and campfire sounds, one click on the island while you focus
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    Offline
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      Install
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@moe/pet-skins">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    P
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="Pet skins" type="button">
-                        Pet skins
-                      </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      moe · Look · v0.2.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  Twelve new looks for the pet in the middle of the collapsed bar
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    Offline
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      Install
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@kai/vscode-status">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    V
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="VS Code status" type="button">
-                        VS Code status
-                      </button>
-                    </div>
-                    <span class="market-card__sub">
-                      kai · Developer
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  Shows what VS Code is debugging or testing right on the island
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts"></span>
-                  <span class="market-card__action">
-                    <span class="market-card__blocked">
-                      Needs Fuyu &gt;=0.40.0
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-go-update" type="button">
-                      Update
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@mio/focus-sync">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    F
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="Focus mode sync" type="button">
-                        Focus mode sync
-                      </button>
-                    </div>
-                    <span class="market-card__sub">
-                      mio · Productivity
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  Turns on island do-not-disturb when the system Focus mode is on
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts"></span>
-                  <span class="market-card__action">
-                    <span class="market-card__blocked">
-                      Not for this system
-                    </span>
-                  </span>
-                </div>
-              </article>
-            </div>
-          </section>
-          <p class="plugin-foot market-trust">
-            <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
-          </p>
-          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
-          <span hidden=""></span>
-        </div>
-      </div>
-      <div class="plugin-dialog__backdrop">
-        <div aria-label="Update “GitHub notifications” to v2.1.0?" aria-modal="true" class="plugin-dialog market-dialog market-dialog--small" data-install-kind="update" data-install-modal="@fuyu/github-notify" role="dialog">
-          <div class="plugin-dialog__head">
-            <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
-              G
-            </span>
-            <div class="plugin-dialog__heading">
-              <span class="plugin-dialog__title market-dialog__title">
-                Update “GitHub notifications” to v2.1.0?
-              </span>
-              <span class="plugin-dialog__sub">
-                Fuyu team · Official · @fuyu/github-notify
-              </span>
-            </div>
-            <div class="plugin-dialog__head-actions">
-              <button aria-label="Close" class="plugin-icon-btn" title="Close" type="button">
-                <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-              </button>
-            </div>
-          </div>
-          <div class="plugin-dialog__body">
-            <p class="plugin-dialog__desc">
-              Pops an island alert when you're mentioned, asked to review, or CI fails
-            </p>
-            <p class="plugin-foot" data-install-note="true">
-              A plugin can do anything Fuyu can, such as reading and writing files, using the network or running programs, and Fuyu won't stop it. Only install plugins you trust.
-            </p>
-          </div>
-          <div class="plugin-dialog__foot">
-            <span class="plugin-dialog__grow"></span>
-            <button class="plugin-btn" data-autofocus="true" type="button">
-              Not now
-            </button>
-            <button class="plugin-btn plugin-btn--primary" data-action="confirm-install" type="button">
-              Update
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-    <section class="gallery__stage settings-stage" data-stage="trust">
-      <h2 class="gallery__title">
-        Update (signing key changed)
-      </h2>
-      <div>
-        <div class="plugin-page market-page" data-market-page="true">
-          <div class="plugin-page__summary market-meta">
-            <b>
-              12 plugins
-            </b>
-            <span>
-              Index updated 18/11, 20:14
-            </span>
-            <button class="plugin-link" data-action="market-installed" type="button">
-              3 installed ›
-            </button>
-          </div>
-          <div class="market-toolbar">
-            <div class="market-toolbar__search">
-              <label class="plugin-search">
-                <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                <input aria-label="Search plugins, e.g. weather, GitHub, pomodoro" placeholder="Search plugins, e.g. weather, GitHub, pomodoro" type="search" value="">
-              </label>
-            </div>
-            <div class="market-toolbar__row">
-              <div aria-label="Categories" class="market-toolbar__cats" role="group">
-                <button aria-pressed="true" class="plugin-chip" data-market-category="all" type="button">
-                  All
-                  <span class="plugin-chip__count">
-                    12
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="productivity" type="button">
-                  Productivity
-                  <span class="plugin-chip__count">
-                    5
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="developer" type="button">
-                  Developer
-                  <span class="plugin-chip__count">
-                    3
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="information" type="button">
-                  News &amp; info
-                  <span class="plugin-chip__count">
-                    2
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="todos" type="button">
-                  To-dos
-                  <span class="plugin-chip__count">
-                    2
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="ai" type="button">
-                  AI
-                  <span class="plugin-chip__count">
-                    1
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="media" type="button">
-                  Media
-                  <span class="plugin-chip__count">
-                    1
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="appearance" type="button">
-                  Look
-                  <span class="plugin-chip__count">
-                    1
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="utilities" type="button">
-                  Utilities
-                  <span class="plugin-chip__count">
-                    1
-                  </span>
-                </button>
-              </div>
-              <div class="settings-select">
-                <div class="select-control">
                   <button aria-controls="_id11_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       Recommended
@@ -4656,16 +4571,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS reader" type="button">
                         RSS reader
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -4697,8 +4612,8 @@
                       <button class="market-card__name" title="Weather" type="button">
                         Weather
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -4734,8 +4649,8 @@
                       <button class="market-card__name" title="Page summary" type="button">
                         Page summary
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -4767,8 +4682,8 @@
                       <button class="market-card__name" title="Device pairing" type="button">
                         Device pairing
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -4800,9 +4715,6 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · Productivity · v1.1.0
@@ -4893,9 +4805,6 @@
                       <button class="market-card__name" title="Pet skins" type="button">
                         Pet skins
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · Look · v0.2.0
@@ -4979,24 +4888,24 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
         </div>
       </div>
       <div class="plugin-dialog__backdrop">
-        <div aria-label="Update “Focus stats” to v0.5.0?" aria-modal="true" class="plugin-dialog market-dialog market-dialog--small" data-install-kind="update" data-install-modal="@lin-dev/pomo-stats" role="dialog">
+        <div aria-label="Update “GitHub notifications” to v2.1.0?" aria-modal="true" class="plugin-dialog market-dialog market-dialog--small" data-install-kind="update" data-install-modal="@fuyu/github-notify" role="dialog">
           <div class="plugin-dialog__head">
             <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
-              F
+              G
             </span>
             <div class="plugin-dialog__heading">
               <span class="plugin-dialog__title market-dialog__title">
-                Update “Focus stats” to v0.5.0?
+                Update “GitHub notifications” to v2.1.0?
               </span>
               <span class="plugin-dialog__sub">
-                lin-dev · @lin-dev/pomo-stats
+                Fuyu team · Official · @fuyu/github-notify
               </span>
             </div>
             <div class="plugin-dialog__head-actions">
@@ -5007,18 +4916,8 @@
           </div>
           <div class="plugin-dialog__body">
             <p class="plugin-dialog__desc">
-              Tracks daily pomodoros and focus time, with a recap every Sunday
+              Pops an island alert when you're mentioned, asked to review, or CI fails
             </p>
-            <div class="plugin-callout plugin-callout--warn" data-callout="key" data-trust-change="unendorsed-key">
-              <svg aria-hidden="true" class="lucide lucide-key-round" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-              <div>
-                <b>
-                  The author changed their signing key
-                </b>
-                <br>
-                The new version is signed with a different key than the one you have. If you're not sure it's really the author, skip this update; the current version keeps running.
-              </div>
-            </div>
             <p class="plugin-foot" data-install-note="true">
               A plugin can do anything Fuyu can, such as reading and writing files, using the network or running programs, and Fuyu won't stop it. Only install plugins you trust.
             </p>
@@ -5029,15 +4928,15 @@
               Not now
             </button>
             <button class="plugin-btn plugin-btn--primary" data-action="confirm-install" type="button">
-              It's the author, update
+              Update
             </button>
           </div>
         </div>
       </div>
     </section>
-    <section class="gallery__stage settings-stage" data-stage="file">
+    <section class="gallery__stage settings-stage" data-stage="trust">
       <h2 class="gallery__title">
-        Install from a .fuyu file
+        Update (signing key changed)
       </h2>
       <div>
         <div class="plugin-page market-page" data-market-page="true">
@@ -5181,16 +5080,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS reader" type="button">
                         RSS reader
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5222,8 +5121,8 @@
                       <button class="market-card__name" title="Weather" type="button">
                         Weather
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5259,8 +5158,8 @@
                       <button class="market-card__name" title="Page summary" type="button">
                         Page summary
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5292,8 +5191,8 @@
                       <button class="market-card__name" title="Device pairing" type="button">
                         Device pairing
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5325,9 +5224,6 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · Productivity · v1.1.0
@@ -5418,9 +5314,6 @@
                       <button class="market-card__name" title="Pet skins" type="button">
                         Pet skins
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · Look · v0.2.0
@@ -5504,7 +5397,526 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+          <span hidden=""></span>
+        </div>
+      </div>
+      <div class="plugin-dialog__backdrop">
+        <div aria-label="Update “Focus stats” to v0.5.0?" aria-modal="true" class="plugin-dialog market-dialog market-dialog--small" data-install-kind="update" data-install-modal="@lin-dev/pomo-stats" role="dialog">
+          <div class="plugin-dialog__head">
+            <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
+              F
+            </span>
+            <div class="plugin-dialog__heading">
+              <span class="plugin-dialog__title market-dialog__title">
+                Update “Focus stats” to v0.5.0?
+              </span>
+              <span class="plugin-dialog__sub">
+                lin-dev · @lin-dev/pomo-stats
+              </span>
+            </div>
+            <div class="plugin-dialog__head-actions">
+              <button aria-label="Close" class="plugin-icon-btn" title="Close" type="button">
+                <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-dialog__body">
+            <p class="plugin-dialog__desc">
+              Tracks daily pomodoros and focus time, with a recap every Sunday
+            </p>
+            <div class="plugin-callout plugin-callout--warn" data-callout="key" data-trust-change="unendorsed-key">
+              <svg aria-hidden="true" class="lucide lucide-key-round" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+              <div>
+                <b>
+                  The author changed their signing key
+                </b>
+                <br>
+                The new version is signed with a different key than the one you have. If you're not sure it's really the author, skip this update; the current version keeps running.
+              </div>
+            </div>
+            <p class="plugin-foot" data-install-note="true">
+              A plugin can do anything Fuyu can, such as reading and writing files, using the network or running programs, and Fuyu won't stop it. Only install plugins you trust.
+            </p>
+          </div>
+          <div class="plugin-dialog__foot">
+            <span class="plugin-dialog__grow"></span>
+            <button class="plugin-btn" data-autofocus="true" type="button">
+              Not now
+            </button>
+            <button class="plugin-btn plugin-btn--primary" data-action="confirm-install" type="button">
+              It's the author, update
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage" data-stage="file">
+      <h2 class="gallery__title">
+        Install from a .fuyu file
+      </h2>
+      <div>
+        <div class="plugin-page market-page" data-market-page="true">
+          <div class="plugin-page__summary market-meta">
+            <b>
+              12 plugins
+            </b>
+            <span>
+              Index updated 18/11, 20:14
+            </span>
+            <button class="plugin-link" data-action="market-installed" type="button">
+              3 installed ›
+            </button>
+          </div>
+          <div class="market-toolbar">
+            <div class="market-toolbar__search">
+              <label class="plugin-search">
+                <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                <input aria-label="Search plugins, e.g. weather, GitHub, pomodoro" placeholder="Search plugins, e.g. weather, GitHub, pomodoro" type="search" value="">
+              </label>
+            </div>
+            <div class="market-toolbar__row">
+              <div aria-label="Categories" class="market-toolbar__cats" role="group">
+                <button aria-pressed="true" class="plugin-chip" data-market-category="all" type="button">
+                  All
+                  <span class="plugin-chip__count">
+                    12
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="productivity" type="button">
+                  Productivity
+                  <span class="plugin-chip__count">
+                    5
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="developer" type="button">
+                  Developer
+                  <span class="plugin-chip__count">
+                    3
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="information" type="button">
+                  News &amp; info
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="todos" type="button">
+                  To-dos
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="ai" type="button">
+                  AI
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="media" type="button">
+                  Media
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="appearance" type="button">
+                  Look
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="utilities" type="button">
+                  Utilities
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+              </div>
+              <div class="settings-select">
+                <div class="select-control">
+                  <button aria-controls="_id13_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
+                    <span>
+                      Recommended
+                    </span>
+                    <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <section class="market-section" data-market-section="updates">
+            <h3 class="plugin-page__heading">
+              Updates (2)
+            </h3>
+            <div class="plugin-card market-updates">
+              <div class="market-update" data-market-update="@fuyu/github-notify">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  G
+                </span>
+                <div class="market-update__text">
+                  <button class="market-card__name" type="button">
+                    GitHub notifications
+                  </button>
+                  <span>
+                    v2.0.1 → v2.1.0
+                    ·
+                    <span class="market-card__warn">
+                      Urgent fix
+                    </span>
+                  </span>
+                </div>
+                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
+                  Review &amp; update
+                </button>
+              </div>
+              <div class="market-update" data-market-update="@lin-dev/pomo-stats">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  F
+                </span>
+                <div class="market-update__text">
+                  <button class="market-card__name" type="button">
+                    Focus stats
+                  </button>
+                  <span>
+                    v0.4.2 → v0.5.0
+                  </span>
+                </div>
+                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
+                  Review &amp; update
+                </button>
+              </div>
+            </div>
+          </section>
+          <section class="market-section" data-market-section="all">
+            <h3 class="plugin-page__heading">
+              All
+              <span class="plugin-page__heading-meta">
+                10
+              </span>
+            </h3>
+            <div class="market-grid">
+              <article class="market-card" data-market-plugin="@fuyu/rss">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="RSS reader" type="button">
+                        RSS reader
+                      </button>
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      News &amp; info · v1.5.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Follow blogs and news; new headlines scroll on the collapsed bar, click to open
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Network
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/weather">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    W
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Weather" type="button">
+                        Weather
+                      </button>
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      News &amp; info · v1.2.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Shows the weather on the collapsed bar and reminds you to take an umbrella before rain
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Network
+                  </span>
+                  <span class="market-card__action">
+                    <span class="market-card__installed">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                      Installed
+                    </span>
+                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                      Manage
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    P
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Page summary" type="button">
+                        Page summary
+                      </button>
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      AI · v0.9.3
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Copy a link and the island gives a three-sentence summary you can save to notes
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Network
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/devices">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    D
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Device pairing" type="button">
+                        Device pairing
+                      </button>
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      Utilities · v1.0.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Lets two computers running Fuyu recognize each other, for sync plugins
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Offline
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@ryo/clip-sync">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    C
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Clipboard sync" type="button">
+                        Clipboard sync
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      ryo · Productivity · v1.1.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Syncs the clipboard between two computers, end-to-end encrypted
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Network
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@tara/linear">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    L
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Linear issues" type="button">
+                        Linear issues
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      tara · Developer · v0.6.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Syncs Linear issues assigned to you into to-dos and alerts you on status changes
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Network
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@nori/focus-sounds">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    F
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Focus sounds" type="button">
+                        Focus sounds
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      nori · Productivity · v1.3.2
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Rain, café and campfire sounds, one click on the island while you focus
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Offline
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@moe/pet-skins">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    P
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Pet skins" type="button">
+                        Pet skins
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      moe · Look · v0.2.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Twelve new looks for the pet in the middle of the collapsed bar
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    Offline
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      Install
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@kai/vscode-status">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    V
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="VS Code status" type="button">
+                        VS Code status
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      kai · Developer
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Shows what VS Code is debugging or testing right on the island
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts"></span>
+                  <span class="market-card__action">
+                    <span class="market-card__blocked">
+                      Needs Fuyu &gt;=0.40.0
+                    </span>
+                    <button class="plugin-btn plugin-btn--sm" data-action="market-go-update" type="button">
+                      Update
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@mio/focus-sync">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    F
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Focus mode sync" type="button">
+                        Focus mode sync
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      mio · Productivity
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  Turns on island do-not-disturb when the system Focus mode is on
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts"></span>
+                  <span class="market-card__action">
+                    <span class="market-card__blocked">
+                      Not for this system
+                    </span>
+                  </span>
+                </div>
+              </article>
+            </div>
+          </section>
+          <p class="plugin-foot market-trust">
+            <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
@@ -5612,7 +6024,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id13_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" disabled="" role="combobox" type="button">
+                  <button aria-controls="_id14_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" disabled="" role="combobox" type="button">
                     <span>
                       Recommended
                     </span>
@@ -5794,7 +6206,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id14_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id15_" aria-expanded="false" aria-haspopup="listbox" aria-label="Sort" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       Recommended
                     </span>
@@ -5857,16 +6269,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS reader" type="button">
                         RSS reader
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5898,8 +6310,8 @@
                       <button class="market-card__name" title="Weather" type="button">
                         Weather
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5935,8 +6347,8 @@
                       <button class="market-card__name" title="Page summary" type="button">
                         Page summary
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5968,8 +6380,8 @@
                       <button class="market-card__name" title="Device pairing" type="button">
                         Device pairing
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        Official
+                      <span aria-label="Published by the Fuyu team" class="plugin-verified" data-official="true" role="img" title="Published by the Fuyu team">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -6001,9 +6413,6 @@
                       <button class="market-card__name" title="Clipboard sync" type="button">
                         Clipboard sync
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · Productivity · v1.1.0
@@ -6094,9 +6503,6 @@
                       <button class="market-card__name" title="Pet skins" type="button">
                         Pet skins
                       </button>
-                      <span class="plugin-badge" title="Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it">
-                        New
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · Look · v0.2.0
@@ -6180,7 +6586,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.
+            Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>

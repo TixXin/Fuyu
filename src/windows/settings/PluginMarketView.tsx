@@ -10,7 +10,7 @@ import { PluginMarketEmpty } from "./PluginMarketEmpty";
 import { PluginMarketToolbar } from "./PluginMarketToolbar";
 import { marketClient } from "./pluginMarketActions";
 import { announceMarketPackage } from "./pluginMarketBus";
-import { categoryCounts, formatMarketTime, localized } from "./pluginMarketModel";
+import { categoryCounts, formatMarketTime, localized, newListings } from "./pluginMarketModel";
 import { usePluginFilePicker } from "./PluginPageActions";
 import { requestPluginDetail, type OpenedPluginPackage } from "./pluginPageHandoff";
 import { usePluginInstallFlow } from "./usePluginInstallFlow";
@@ -45,6 +45,8 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
   const [detailName, setDetailName] = useState<string | null>(initialDetail);
   const [packageError, setPackageError] = useState<string | null>(null);
   const plugins = snapshot?.plugins ?? [];
+  const [openedAt] = useState(Date.now);
+  const newNames = newListings(plugins, snapshot?.marketSince, openedAt);
   const flow = usePluginInstallFlow(onReload, snapshot ? { plugins, manualAllowed: snapshot.manualAllowed } : null);
   const file = usePluginFilePicker(announceMarketPackage);
   const offerFileRef = useRef(flow.offerFile);
@@ -156,7 +158,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
           {onOpenPage && installed > 0 ? <button className="plugin-link" type="button" data-action="market-installed" onClick={() => onOpenPage("pluginsV3")}>{text.installedLink(installed)}</button> : null}
         </div>
         <PluginMarketToolbar query={query} category={category} sort={sort} total={plugins.length} categories={categoryCounts(plugins)} categoryName={categoryName} onQuery={setQuery} onCategory={pickCategory} onSort={setSort} />
-        <PluginMarketBrowse plugins={plugins} query={query} category={category} sort={sort} categoryName={categoryName} handlers={handlers} onCategory={pickCategory} onInstallFile={file.pick} />
+        <PluginMarketBrowse plugins={plugins} newNames={newNames} query={query} category={category} sort={sort} categoryName={categoryName} handlers={handlers} onCategory={pickCategory} onInstallFile={file.pick} />
         <p className="plugin-foot market-trust"><ShieldCheck size={13} strokeWidth={2.2} aria-hidden="true" />{text.trustLine}</p>
       </>
     );
@@ -167,7 +169,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
       {shownError ? <p className="plugin-callout plugin-callout--bad" role="alert">{shownError}</p> : null}
       {body}
       {file.input}
-      {detailPlugin ? <PluginMarketDetailModal plugin={detailPlugin} categoryName={categoryName} nameOf={nameOf} onClose={() => setDetailName(null)} onInstall={handlers.onInstall} onManage={handlers.onManage} onGoUpdate={handlers.onGoUpdate} /> : null}
+      {detailPlugin ? <PluginMarketDetailModal plugin={detailPlugin} isNew={newNames.has(detailPlugin.name)} categoryName={categoryName} nameOf={nameOf} onClose={() => setDetailName(null)} onInstall={handlers.onInstall} onManage={handlers.onManage} onGoUpdate={handlers.onGoUpdate} /> : null}
       {flow.modal}
     </div>
   );
