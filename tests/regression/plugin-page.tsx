@@ -11,6 +11,7 @@ import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { PluginHostView, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
 import type { BarUsageView } from "../../src/windows/settings/usePluginBarUsage";
 import { BAR, BAR_OPEN, ON_BAR, checkBarUsage } from "./pluginPageBar";
+import { checkRoster } from "./pluginPageRoster";
 import type { PluginDetailRequest } from "../../src/windows/settings/pluginPageHandoff";
 
 const { PluginsV3View } = await import("../../src/windows/settings/PluginsV3SettingsPage");
@@ -379,6 +380,7 @@ try {
   await act(async () => { await windowServices.get(marketV1).setManualAllowed({ allowed: market.manualAllowed }); });
   await settle();
 
+  await checkRoster({ check, click, settle, within, text: t.banners.roster });
   await checkBarUsage({ check, click, press, settle, within, all, dialog, opened, text: t.bar, plain: STAGES.filter((item) => !item.bar).map((item) => item.key) });
 
   const spills = [...gallery.querySelectorAll<HTMLElement>(".gallery__stage--narrow :is(.plugin-bar, .plugin-bar__row, .plugin-bar__actions, .plugin-row, .plugin-banner, .plugin-page__toolbar, .plugin-note, .plugin-page__summary, .plugin-row__facts, .plugin-suggest__grid, .plugin-suggest__card)")].filter((element) => element.scrollWidth > element.clientWidth + 1);

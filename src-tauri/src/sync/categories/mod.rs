@@ -1,5 +1,6 @@
 pub(crate) mod clip_favorites;
 pub(crate) mod links;
+pub(crate) mod plugin_roster;
 pub(crate) mod settings;
 pub(crate) mod snippets;
 pub(crate) mod todos;

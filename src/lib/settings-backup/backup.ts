@@ -28,6 +28,7 @@ export const BACKUP_KEYS = [
   "fuyu-voice-input",
   "fuyu-todo-prefs",
   "fuyu-calendar-prefs",
+  "fuyu-market-plugins",
 ] as const;
 
 export type BackupKey = (typeof BACKUP_KEYS)[number];

@@ -268,6 +268,7 @@
       }
     },
     "fuyu-calendar-prefs": "sync",
-    "fuyu-todo-prefs": "sync"
+    "fuyu-todo-prefs": "sync",
+    "fuyu-market-plugins": "byId"
   }
 }
