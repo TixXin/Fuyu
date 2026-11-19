@@ -17,7 +17,6 @@ import { zhCN as mail } from "../sections/mail.ts";
 import { zhCN as messages } from "../sections/messages.ts";
 import { zhCN as music } from "../sections/music.ts";
 import { zhCN as notebook } from "../sections/notebook.ts";
-import { zhCN as pluginViews } from "../sections/pluginViews.ts";
 import { zhCN as qq } from "../sections/qq.ts";
 import { zhCN as screenshot } from "../sections/screenshot.ts";
 import { zhCN as sessionRing } from "../sections/sessionRing.ts";
@@ -66,7 +65,6 @@ export const coreZhCN: Translations = {
   fileShelf,
   screenshot,
   timer,
-  pluginViews,
   settings: coreSettings,
   onboarding: {} as OnboardingText,
   errors,

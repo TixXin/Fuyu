@@ -17,7 +17,7 @@ in `fuyu.experimental`, so it loads only from a development folder until the int
 |---|---|---|
 | This package | `@fuyu/create-plugin` (private, `packages/create-plugin`) | `create-fuyu-plugin` 2.0, so `npm create fuyu-plugin@latest` gives v3 |
 | The command line it sets up | `@fuyu/plugin-cli` | `fuyu-plugin` 2.0 |
-| Plugin platform v2 | `create-fuyu-plugin` 0.x (`packages/create-fuyu-plugin`) | stays at 0.x, no longer updated |
+| Plugin platform v2 | `create-fuyu-plugin` 0.x | stays at 0.7.0 on npm; its source was removed from the repo in E36.6.6 |
 
 Until those are published, run it from a checkout of this repository. The project's `devDependencies`
 link `@fuyu/plugin-base`, `@fuyu/plugin-services` and `@fuyu/plugin-cli` from that checkout (`file:`):

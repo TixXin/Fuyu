@@ -1,5 +1,7 @@
 # 更新日志
 
+> **第 2 版插件已下线（2026-11，E36.6）**：岛屿不再运行第 2 版插件，第 2 版的 SDK、脚手架、PowerShell 模块和示例插件已从仓库删除（npm 上的 `fuyu-plugin` / `create-fuyu-plugin` 0.x 停在 0.7.0），文中指向它们的链接已失效。本文只留作参考；写新插件看[第 3 版的文档](v3/README.md)。
+
 每个浮屿版本给插件带来了什么，最新的在最前。插件要用某一版才有的东西时，按 `initialize.capabilities` 判断宿主有没有这项能力，或者在清单里写 `minAppVersion`；只给已有方法加的可选字段，旧版岛屿会忽略，不用判断。
 
 npm 包 `fuyu-plugin` 和 `create-fuyu-plugin` 的版本单独标在括号里。

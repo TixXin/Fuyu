@@ -29,7 +29,7 @@ test("preloadI18n loads only core copy for lightweight windows and layers settin
   const mainEn = await preloadI18n("en", null);
   assert.equal(typeof mainEn.onboarding.islandName, "string");
   assert.equal(typeof mainEn.island.v2Migration.notice(1), "string");
-  assert.equal(typeof mainEn.pluginViews.sensitivePrompt.prompt("Demo", "read"), "string");
+  assert.equal("pluginViews" in mainEn, false);
   assert.equal("pluginsV3" in mainEn.settings, false);
   assert.equal("plugins" in mainEn.settings, false);
   assert.equal(hasLoadedI18n("en", null), true);
@@ -45,7 +45,6 @@ test("preloadI18n loads only core copy for lightweight windows and layers settin
 
   const upgradedZh = await preloadI18n("zh-CN", null);
   assert.equal(typeof upgradedZh.island.v2Migration.notice(2), "string");
-  assert.equal(typeof upgradedZh.pluginViews.sensitivePrompt.allow, "string");
   assert.equal(typeof upgradedZh.settings.categories.appearance, "string");
   assert.equal(typeof upgradedZh.onboarding.hello.title, "string");
   assert.equal(hasLoadedI18n("zh-CN", "settings"), true);

@@ -5,17 +5,26 @@
 ## 两份索引
 
 - **现行市场**：[`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 根目录的 `index.json`、`revoked.json` 和它们的签名。作者向它提 PR 新增 `plugins/<插件 id>.json`，它的 CI 每小时检查各插件仓库的新 Release，校验后重建索引并签名。
-- **给旧版岛屿的副本**：本仓库的 `plugins/index.json`、`plugins/revoked.json`，只给切换到 `fuyu-plugins` 之前发布的岛屿（它们读 `main`；更早读 `dev` 的版本，2026-11-13 删掉 `dev` 分支后市场打不开，要升级岛屿），只含官方插件，由 `pnpm plugins:index` 生成。
+- **给旧版岛屿的副本**：本仓库的 `plugins/index.json`、`plugins/revoked.json`，只给切换到 `fuyu-plugins` 之前发布的岛屿（它们读 `main`；更早读 `dev` 的版本，2026-11-13 删掉 `dev` 分支后市场打不开，要升级岛屿），只含官方插件。**2026-11-18 起冻结**（E36.6.6，用户定）：第 2 版下线后不再上新版本，内容不改，只在紧急撤销时重签，见下一节。
 
-## 官方插件
+## 冻结的第 2 版官方插件
 
-本仓库 `plugins/examples/` 里的示例插件是官方插件，发布方式不同：
+第 2 版的 7 个官方示例插件（`dev.focusd.*`）的源码随第 2 版 SDK 在 E36.6.6 删除，第 3 版的官方插件在 `plugins/v3/official/`。本仓库留下的第 2 版市场文件冻结，只给旧版岛屿读：`plugins/index.json(.sig)`、`plugins/revoked.json(.sig)`、`plugins/packages/` 里已签名的 zip，以及 `plugins/signing-keys.json`、`plugins/legacy-index-key.json`、`plugins/author-key.json` 三份公钥。`fuyu-plugins` 的 CI 按 `plugins/<id>.json` 的 `path` 读本仓库 `plugins/examples/` 里的清单来追官方插件的新版本（`scripts/lib/official.mjs`）；源码删了以后读不到清单，它按「没有清单」处理（`downloadTextIfPresent` 返回空），继续用原来固定的包，不会报错。
 
-1. 修改插件并提高 `version`，在本机运行 `pnpm plugins:index`（需要旧索引的签名私钥，见下文；以及官方作者密钥 `~/.tauri/fuyu/plugin-author-signing.key`，改名前的 `~/.tauri/fly-island/` 在新目录不存在时照常读，公钥在 `plugins/author-key.json`）。脚本把插件打成 `plugins/packages/<id>-<version>.zip` 并写出作者签名 `<zip>.sig`，重写并签名 `plugins/index.json` 和 `plugins/revoked.json`。文本文件打包时统一成 LF，时间戳固定，所以同一份源码每次得到同一个哈希。
-2. 提交并 land。
-3. 不用再去 `fuyu-plugins` 改地址：它的 CI 定时（名义上每小时，GitHub 不保证准点，2026-11 实测平均 6.7 小时一次、最长 10.9 小时）以及 `main` 有变化时读 `plugins/<id>.json` 的 `path` 里的清单，版本比 `package` 地址里的新，就改用同一文件夹里那个版本的 zip（`fuyu-plugins` 的 `scripts/lib/official.mjs`，2026-11-12 起，E20）。所以 land 之后通常几小时内市场就会更新（急的话推一次 `fuyu-plugins` 的 `main`，或手动运行它的 Update index 工作流）；作者签名照样要通过，要的权限比上一版多时会开 `review-needed` issue，等维护者在 `plugins/<id>.json` 里写 `"approved": "<版本>"`。以前要手动改地址，漏改过两次（系统监控停在 1.2.0、待办进度环停在 1.0.1，见 PR #49）。
+`pnpm test`（`tests/scripts/plugin-market-v2.test.mjs`）检查索引和撤销名单的签名、索引里每个条目的 zip 都在且哈希和大小一致、每个 zip 都有官方作者签名，所以误改了这些文件会被拦下。
 
-`pnpm test` 会检查 `plugins/index.json` 和 zip 是否与示例插件的源码一致。已发布的版本不能修改，同一个版本号的包变了 `pnpm plugins:index` 会报错。
+### 插件签名私钥
+
+两把私钥只在 Windows 那台机器上，用 DPAPI 加密，只有生成它们的 Windows 账户能解开：
+
+- 旧索引密钥 `7ee2729370070df6`：`~/.tauri/fuyu/plugin-index-signing.key`（新目录不存在时读改名前的 `~/.tauri/fly-island/`），给 `index.json`、`revoked.json` 签名；也可以用环境变量 `FUYU_PLUGIN_SIGNING_KEY`（PEM 文本）提供。
+- 官方作者密钥：`~/.tauri/fuyu/plugin-author-signing.key`，公钥在 `plugins/author-key.json`，给 `plugins/packages/` 的 zip 签名（`<zip>.sig`）；也可以用 `FUYU_PLUGIN_AUTHOR_KEY` 提供。Mac 上这个文件存的是 PEM 明文。
+
+E36.6.6 之前这两个环境变量叫 `FOCUSD_PLUGIN_SIGNING_KEY`、`FOCUSD_PLUGIN_AUTHOR_KEY`，旧名字不再认。
+
+### 紧急撤销
+
+要撤销第 2 版官方插件的某个版本时：同时改 `fuyu-plugins` 的 `revoked.json`（格式见下一节）和本仓库的 `plugins/revoked.json`，在 Windows 那台机器上运行 `pnpm plugins:resign`。它按原样重签 `index.json` 和 `revoked.json`（不重建索引），给还没有 `.sig` 的 zip 补作者签名，然后提交并 land。
 
 ## 下架
 

@@ -76,7 +76,7 @@ function Get-DefaultStatusPath {
   return Join-Path $PSScriptRoot "agent-status.json"
 }
 
-$Providers = @("codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid", "pi")
+$Providers = @("codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid", "pi", "cursor")
 
 function Get-AgentMarkerNames {
   param(

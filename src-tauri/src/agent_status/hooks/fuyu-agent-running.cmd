@@ -13,6 +13,7 @@ if /I "%PROVIDER%"=="grok" goto known
 if /I "%PROVIDER%"=="copilot" goto known
 if /I "%PROVIDER%"=="droid" goto known
 if /I "%PROVIDER%"=="pi" goto known
+if /I "%PROVIDER%"=="cursor" goto known
 if /I "%PROVIDER%"=="codebuddy" goto known
 if /I "%PROVIDER%"=="qwen" goto known
 if /I "%PROVIDER%"=="antigravity" (

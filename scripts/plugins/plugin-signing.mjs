@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { signingDir } from "../signing-dir.mjs";
 
 export const KEY_FILE = path.join(signingDir(), "plugin-index-signing.key");
+export const KEY_ENV = "FUYU_PLUGIN_SIGNING_KEY";
 export const TRUSTED_KEYS_PATH = "plugins/signing-keys.json";
 const SPKI_PREFIX = Buffer.from("302a300506032b6570032100", "hex");
 
@@ -34,14 +35,14 @@ export function verifyIndex(text, signature, trustedKeys) {
   return verify(null, signedBytes(text), publicKey, Buffer.from(signature.signature, "base64"));
 }
 
-function dpapi(mode, input) {
+export function dpapi(mode, input) {
   const command = `
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Security
-$data = [Convert]::FromBase64String($env:FOCUSD_DPAPI_INPUT)
+$data = [Convert]::FromBase64String($env:FUYU_DPAPI_INPUT)
 $out = [Security.Cryptography.ProtectedData]::${mode}($data, $null, 'CurrentUser')
 [Console]::Out.Write([Convert]::ToBase64String($out))`;
-  const env = { ...process.env, FOCUSD_DPAPI_INPUT: input.toString("base64") };
+  const env = { ...process.env, FUYU_DPAPI_INPUT: input.toString("base64") };
   delete env.PSModulePath;
   const result = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], {
     encoding: "utf8",
@@ -49,15 +50,15 @@ $out = [Security.Cryptography.ProtectedData]::${mode}($data, $null, 'CurrentUser
     env,
   });
   if (result.error || result.status !== 0) {
-    throw new Error(`DPAPI ${mode} failed. Run as the Windows user who created the key, or set FOCUSD_PLUGIN_SIGNING_KEY.`);
+    throw new Error(`DPAPI ${mode} failed. Run as the Windows user who created the key, or set ${KEY_ENV}.`);
   }
   return Buffer.from(result.stdout.trim(), "base64");
 }
 
 export function loadPrivateKey(env = process.env) {
-  if (env.FOCUSD_PLUGIN_SIGNING_KEY?.trim()) return createPrivateKey(env.FOCUSD_PLUGIN_SIGNING_KEY);
+  if (env[KEY_ENV]?.trim()) return createPrivateKey(env[KEY_ENV]);
   if (!existsSync(KEY_FILE)) {
-    throw new Error(`No plugin signing key: run "pnpm plugins:keygen" once, or set FOCUSD_PLUGIN_SIGNING_KEY.`);
+    throw new Error(`No plugin signing key: run "pnpm plugins:keygen" once, or set ${KEY_ENV}.`);
   }
   const pem = dpapi("Unprotect", Buffer.from(readFileSync(KEY_FILE, "utf8").trim(), "base64"));
   return createPrivateKey(pem.toString("utf8"));
