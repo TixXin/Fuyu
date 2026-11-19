@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { restoreDebugIntegrity } from "./dev-integrity.mjs";
 
 const WINDOWS_IMAGES = ["fuyu.exe"];
 const MAC_PATTERNS = ["\\.app/Contents/MacOS/fuyu$"];
@@ -120,6 +121,8 @@ async function stopEveryIsland() {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   if (devLane() === null) await stopEveryIsland();
-  else await stopSideBuild(path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."));
+  else await stopSideBuild(root);
+  restoreDebugIntegrity(root);
 }
