@@ -223,7 +223,7 @@ export function IslandShell({
       }}
     >
       <div className="island__surface">
-        {isLiquidGlass && <IslandGlassLayer glass={glass} />}
+        {isLiquidGlass && <IslandGlassLayer glass={glass} nativeGlassState={nativeGlassState} />}
         {side && (
           <IslandSideHandle
             label={collapsedLabel}

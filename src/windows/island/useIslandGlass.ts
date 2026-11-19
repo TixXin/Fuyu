@@ -5,7 +5,7 @@ import { isLightIsland } from "../../utils/color";
 import type { IslandSettings } from "../../lib/settings/types";
 import { usePageHidden } from "../../lib/usePageHidden";
 import type { IslandMode } from "./types";
-import { INITIAL_GLASS_LAYER, sameGlassLayer, type GlassLayerState } from "./glassStatus";
+import { INITIAL_GLASS_LAYER, sameGlassLayer, type GlassBackdropChoice, type GlassLayerState } from "./glassStatus";
 
 export type IslandGlassView = {
   className: string;
@@ -14,7 +14,7 @@ export type IslandGlassView = {
   specular: boolean;
   paused: boolean;
   strength: number;
-  backdrop: boolean;
+  choice: GlassBackdropChoice;
   blur: number;
   saturation: number;
   contrastGuard: boolean;
@@ -71,7 +71,7 @@ export function useIslandGlass({
     specular: settings.glassSpecular,
     paused,
     strength: glassColorStrength / 100,
-    backdrop: settings.glassBackdrop === "wallpaper",
+    choice: glassBackdrop,
     blur: glassBlur,
     saturation: glassSaturation,
     contrastGuard: settings.glassContrastGuard,

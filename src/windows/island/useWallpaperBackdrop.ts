@@ -19,6 +19,8 @@ function sameIsland(a: Island | null, b: Island): boolean {
 
 export type WallpaperBackdrop = Record<string, string>;
 
+export type WallpaperBackdropResult = { variables: WallpaperBackdrop | null; unavailable: boolean };
+
 export function useWallpaperBackdrop({
   target,
   enabled,
@@ -33,8 +35,8 @@ export function useWallpaperBackdrop({
   saturation: number;
   contrastGuard: boolean;
   lightIsland: boolean;
-}): WallpaperBackdrop | null {
-  const [wallpapers, setWallpapers] = useState<Wallpapers | null>(null);
+}): WallpaperBackdropResult {
+  const [wallpapers, setWallpapers] = useState<Wallpapers | null | undefined>(undefined);
   const [island, setIsland] = useState<Island | null>(null);
   const [images, setImages] = useState(() => new Map<string, HTMLImageElement | null>());
   const [frosted, setFrosted] = useState<Frosted | null>(null);
@@ -173,12 +175,15 @@ export function useWallpaperBackdrop({
     if (frosted) URL.revokeObjectURL(frosted.url);
   }, [frosted]);
 
-  if (!placement || !island) return null;
+  const unavailable = enabled && (wallpapers === null
+    || (wallpapers !== undefined && island !== null && !placement)
+    || (placement?.image ? images.get(placement.image) === null : false));
+  if (!placement || !island) return { variables: null, unavailable };
   const ready = placement.image ? frosted?.source === placement.image ? frosted : null : null;
-  if (placement.image && !ready) return null;
+  if (placement.image && !ready) return { variables: null, unavailable };
   const luminance = ready ? regionLuminance(ready, sampleBox(placement.target, island)) : colorLuminance(placement.color);
   const local = (value: number) => `${(value / island.scale).toFixed(1)}px`;
-  return {
+  const variables = {
     "--glass-wallpaper": ready ? `url("${ready.url}")` : "none",
     "--glass-wallpaper-color": placement.color,
     "--glass-wallpaper-size": `${local(placement.target.width)} ${local(placement.target.height)}`,
@@ -186,4 +191,5 @@ export function useWallpaperBackdrop({
     "--glass-wallpaper-y": local(placement.target.y - island.originY),
     "--glass-backdrop-boost": String(contrastGuard && luminance !== null ? contrastBoost(luminance, lightIsland) : 0),
   };
+  return { variables, unavailable: false };
 }
