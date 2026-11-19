@@ -17,6 +17,7 @@ import {
   type CollapsedZone,
 } from "../../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../../lib/settings/useCollapsedPlacements";
+import { useCollapsedPluginItems } from "./useCollapsedPluginItems";
 import "./CollapsedItemsSection.css";
 
 export function CollapsedItemsSection() {
@@ -27,6 +28,8 @@ export function CollapsedItemsSection() {
   const plugins = useBuiltinPlugins();
   const usageOn = isBuiltinEnabled(plugins, CLAUDE_USAGE);
   const usageConfig = useBuiltinConfig(CLAUDE_USAGE);
+  const pluginItems = useCollapsedPluginItems();
+  const timerName = t.island.timer;
 
   const names = useMemo(() => {
     const disabled = disabledBuiltinIds(plugins);
@@ -41,9 +44,11 @@ export function CollapsedItemsSection() {
       for (const provider of shownUsageProviders(usageConfig)) entries.push([usageItemId(provider), text.item.usage(provider.name)]);
       if (needsHoverOnlyGauge(usageConfig)) entries.push([HOVER_ONLY_ITEM_ID, text.item.usage(hoverOnlyItemName)]);
     }
-    entries.push(["session-count", text.item.sessionCount]);
-    return new Map(filterCollapsedItemEntries(entries, disabled, mailOn));
-  }, [hoverOnlyItemName, plugins, text, usageOn, usageConfig]);
+    entries.push(["timer", timerName], ["session-count", text.item.sessionCount]);
+    const builtin = new Map(filterCollapsedItemEntries(entries, disabled, mailOn));
+    for (const [id, name] of pluginItems) if (!builtin.has(id)) builtin.set(id, name);
+    return builtin;
+  }, [hoverOnlyItemName, pluginItems, plugins, text, timerName, usageOn, usageConfig]);
 
   const listed = useMemo(() => [...names.keys()], [names]);
   const placements = useMemo(() => arrangeCollapsedItems(listed, saved), [listed, saved]);

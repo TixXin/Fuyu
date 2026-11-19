@@ -1,4 +1,7 @@
-import { barUsageReport, type BarUsageBox, type BarUsageCandidate, type BarUsageReport } from "./barUsage.ts";
+import { loadLocale } from "../../i18n";
+import { barItemName, barUsageReport, type BarUsageBox, type BarUsageCandidate, type BarUsageReport } from "./barUsage.ts";
+import { pluginNames } from "./pluginNames";
+import { localizedTitle } from "./slotTitle";
 import { windowSlots } from "./slots";
 
 const BAR = ".island__collapsed";
@@ -15,5 +18,9 @@ export function measureBarUsage(id: number): BarUsageReport {
     if (!frame || !outer || !(inner instanceof HTMLElement) || inner.getClientRects().length === 0) return null;
     return { left: (outer.getBoundingClientRect().left - frame.left) * ratio, width: outer.clientWidth, wanted: inner.offsetWidth, clipped: outer.hasAttribute("data-clipped") };
   };
-  return barUsageReport(id, windowSlots("island").items(COLLAPSED_SLOT) as readonly BarUsageCandidate[], shown ? bar.offsetWidth : null, boxOf);
+  const locale = loadLocale();
+  const names = pluginNames();
+  const nameOf = (candidate: BarUsageCandidate, siblings: number) =>
+    barItemName(candidate, siblings, localizedTitle(candidate.label, locale), localizedTitle(names.get(candidate.owner), locale));
+  return barUsageReport(id, windowSlots("island").items(COLLAPSED_SLOT) as readonly BarUsageCandidate[], shown ? bar.offsetWidth : null, boxOf, nameOf);
 }

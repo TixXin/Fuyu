@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { barUsageReport, readBarUsageReport } from "../../src/features/plugin-kernel/barUsage.ts";
+import { barItemName, barUsageReport, readBarUsageReport } from "../../src/features/plugin-kernel/barUsage.ts";
 import { barUsageModel, swapBarItems } from "../../src/windows/settings/barUsageRows.ts";
 
 const entry = (id, extra = {}) => ({ id, title: id.toUpperCase(), running: true, declaresBar: true, settings: false, ...extra });
@@ -87,4 +87,31 @@ test("moving swaps a plugin item with the next plugin item on the same side", ()
   assert.deepEqual(swapBarItems(model.placements, "a", "missing"), model.placements);
   const fresh = barUsageModel(entries.slice(0, 2), report([item("a", "a", box(200, 30)), item("b", "b", box(260, 30))]), []);
   assert.deepEqual(fresh.placements, [{ id: "a", zone: "right" }, { id: "b", zone: "right" }]);
+});
+
+test("the island names each plugin item for the settings list, and the name survives the trip between windows (C139.1)", () => {
+  const candidates = [
+    { id: "status-light", owner: "builtin", external: false, label: "never reported" },
+    { id: "weather", owner: "@fuyu/weather", external: true },
+    { id: "clock.home", owner: "@fuyu/world-clock", external: true, label: "Home clock" },
+    { id: "clock.away", owner: "@fuyu/world-clock", external: true },
+    { id: "ring", owner: "@fuyu/world-clock", external: true, group: "gauges" },
+    { id: "blank", owner: "@fuyu/blank", external: true },
+  ];
+  const plugins = new Map([["@fuyu/weather", "天气"], ["@fuyu/world-clock", "世界时钟"]]);
+  const nameOf = (candidate, siblings) => (candidate.id === "blank" ? "   " : barItemName(candidate, siblings, typeof candidate.label === "string" ? candidate.label : null, plugins.get(candidate.owner)));
+  const made = barUsageReport(1, candidates, 400, () => null, nameOf);
+  assert.deepEqual(made.items.map(({ id, name }) => [id, name]), [
+    ["weather", "天气"],
+    ["clock.home", "Home clock"],
+    ["clock.away", "世界时钟 · clock.away"],
+    ["ring", "世界时钟 · ring"],
+    ["blank", undefined],
+  ]);
+  assert.ok(!("name" in made.items[4]));
+  const read = readBarUsageReport(JSON.parse(JSON.stringify({ ...made, items: [...made.items, { id: "long", owner: "@x/long", name: "x".repeat(200) }, { id: "odd", owner: "@x/odd", name: 7 }] })));
+  assert.deepEqual(read.items.slice(0, 3).map(({ name }) => name), ["天气", "Home clock", "世界时钟 · clock.away"]);
+  assert.equal(read.items[5].name.length, 80);
+  assert.ok(!("name" in read.items[6]));
+  assert.equal(barItemName({ id: "a", owner: "@x/unknown" }, 1, null, undefined), "@x/unknown");
 });

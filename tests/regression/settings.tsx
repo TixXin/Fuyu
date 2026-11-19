@@ -163,7 +163,7 @@ if (!automated) {
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
     const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean }[] } | null;
     check(zoneRows("左侧").join("|") === "Agent 状态灯" && zoneRows("右侧")[0] === "新邮件提醒"
-      && zoneRows("右侧")[zoneRows("右侧").length - 1] === "会话数 / 会话环" && savedItems() === null, "The collapsed bar items list the default layout without saving anything");
+      && zoneRows("右侧").slice(-2).join("|") === "会话数 / 会话环|计时器" && savedItems() === null, "The collapsed bar items list the default layout, the timer included, without saving anything");
     await act(async () => { itemButton("移到左侧：会话数 / 会话环")!.click(); });
     await act(async () => { itemButton("上移：会话数 / 会话环")!.click(); });
     check(zoneRows("左侧").join("|") === "会话数 / 会话环|Agent 状态灯" && savedItems()?.items[0].id === "session-count", "An item moves to the other side and up, and the order is saved");
@@ -171,6 +171,9 @@ if (!automated) {
     check(savedItems()?.items.find((item) => item.id === "status-light")?.hidden === true, "The status light can be hidden");
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".collapsed-items__reset")][0].click(); });
     check(savedItems() === null && zoneRows("左侧").join("|") === "Agent 状态灯", "Reset to default clears the saved order");
+    await act(async () => { await (await import("@tauri-apps/api/event")).emit("plugin-bar-usage-report", { id: 1, collapsed: false, barWidth: null, items: [{ id: "weather", owner: "@fuyu/weather", hideable: true, box: null, name: "天气" }, { id: "ring", owner: "@fuyu/todo-ring", hideable: false, box: null, name: "待办环" }] }); await new Promise((resolve) => setTimeout(resolve, 50)); });
+    await act(async () => { itemButton("移到左侧：天气")?.click(); });
+    check(zoneRows("左侧").join("|") === "Agent 状态灯|天气" && !zoneRows("右侧").includes("待办环") && savedItems()?.items.find((item) => item.id === "weather")?.zone === "left", "A plugin item the island reports is listed by name and can change sides; one that cannot be hidden is left out"); localStorage.removeItem("fuyu-collapsed-items");
 
     await openPage("theme");
     await checkThemeMarket(check, () => openPage("overview"));
