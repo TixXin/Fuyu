@@ -4,9 +4,9 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { ISLAND_GLASS_STATUS_EVENT, ISLAND_GLASS_STATUS_REQUEST_EVENT, type IslandGlassStatus } from "../island/glassStatus";
 import { requestSettingsFocus, type SettingsFocusSection } from "./storage";
 
-export function settingsWindowOpening(section?: SettingsFocusSection): Promise<void> {
+export function settingsWindowOpening(section?: SettingsFocusSection, bundle?: string): Promise<void> {
   if (section) {
-    requestSettingsFocus(section);
+    requestSettingsFocus(section, undefined, undefined, bundle);
   }
 
   return invoke<void>("open_settings_window").catch((error) => {

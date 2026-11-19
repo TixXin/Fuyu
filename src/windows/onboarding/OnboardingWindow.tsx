@@ -17,6 +17,7 @@ import { useLaunchAtStartup } from "../settings/useLaunchAtStartup";
 import { AgentCardsAct } from "./AgentCardsAct";
 import { AgentConnectAct } from "./AgentConnectAct";
 import { showOnboardingWindow } from "./api";
+import { BundleAct } from "./BundleAct";
 import { HelloAct } from "./HelloAct";
 import { OutfitAct } from "./OutfitAct";
 import { NO_ANSWER, enabledModules, moduleSwitchChanges, withModules, type OnboardingModule } from "./personas";
@@ -32,10 +33,11 @@ import { endIslandDemo, requestIslandWelcome } from "./storage";
 import { useCardRect } from "./useCardRect";
 import { useDemoHeartbeat } from "./useDemoHeartbeat";
 import { useIslandSpot } from "./useIslandSpot";
+import { useRecommendedBundle } from "./useRecommendedBundle";
 import "./OnboardingWindow.css";
 import { isMacOS } from "../../lib/platform";
 
-const ACTS = ["hello", "shape", "outfit", "play", "permissions", "agentCards", "agentConnect", "push", "release"] as const;
+const ACTS = ["hello", "shape", "outfit", "play", "permissions", "agentCards", "agentConnect", "push", "bundle", "release"] as const;
 const AGENT_ACTS: readonly string[] = ["agentCards", "agentConnect", "push"];
 type Act = (typeof ACTS)[number];
 
@@ -88,7 +90,8 @@ export function OnboardingWindow() {
   const light = activeTone(settings.themeMode, useSystemDark()) === "light";
   const modules = enabledModules(settings, clipboard.enabled, plugins);
   const permissionKinds = isMacOS ? neededPermissions(modules) : [];
-  const acts: readonly Act[] = ACTS.filter((name) => (name !== "permissions" || permissionKinds.length > 0) && (!AGENT_ACTS.includes(name) || modules.has("agents")));
+  const bundle = useRecommendedBundle();
+  const acts: readonly Act[] = ACTS.filter((name) => (name !== "permissions" || permissionKinds.length > 0) && (!AGENT_ACTS.includes(name) || modules.has("agents")) && (name !== "bundle" || bundle !== null));
   const act = acts[Math.min(index, acts.length - 1)];
   const last = act === "release";
   const spot = useIslandSpot();
@@ -138,7 +141,7 @@ export function OnboardingWindow() {
   };
   const forward = () => (act === "push" && pushStep < PUSH_STEPS - 1 ? setPushStep(pushStep + 1) : setIndex(index + 1));
   const backward = () => (act === "push" && pushStep > 0 ? setPushStep(pushStep - 1) : setIndex(index - 1));
-  const leaveForSettings = (section?: SettingsFocusSection) => void settingsWindowOpening(section).then(finish);
+  const leaveForSettings = (section?: SettingsFocusSection, bundleId?: string) => void settingsWindowOpening(section, bundleId).then(finish);
   const cardStyle: CSSProperties = { left: placement.left, width: placement.width, top: placement.top, bottom: placement.bottom, maxHeight: placement.maxHeight };
 
   return (
@@ -175,6 +178,7 @@ export function OnboardingWindow() {
           {act === "agentCards" && <AgentCardsAct settings={settings} onSettingsChange={setSettings} />}
           {act === "agentConnect" && <AgentConnectAct settings={settings} onSettingsChange={setSettings} />}
           {act === "push" && <PushAct step={pushStep} onSkip={() => setIndex(index + 1)} />}
+          {act === "bundle" && bundle && <BundleAct bundle={bundle} onOpen={(id) => leaveForSettings("pluginMarket", id)} />}
           {act === "release" && (
             <ReleaseAct
               modules={modules}

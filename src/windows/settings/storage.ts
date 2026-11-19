@@ -2,9 +2,9 @@ import { readString, writeJson, writeString } from "../../lib/storage.ts";
 
 export const SETTINGS_FOCUS_STORAGE_KEY = "fuyu-settings-focus";
 
-export type SettingsFocusSection = "savePath" | "translation" | "music" | "calendar" | "mail" | "updates" | "agentConnect" | "general" | "voiceInput" | "pluginsV3" | "appearanceCollapsed";
+export type SettingsFocusSection = "savePath" | "translation" | "music" | "calendar" | "mail" | "updates" | "agentConnect" | "general" | "voiceInput" | "pluginsV3" | "appearanceCollapsed" | "pluginMarket";
 
-const FOCUS_SECTIONS: readonly SettingsFocusSection[] = ["savePath", "translation", "music", "calendar", "mail", "updates", "agentConnect", "general", "voiceInput", "pluginsV3", "appearanceCollapsed"];
+const FOCUS_SECTIONS: readonly SettingsFocusSection[] = ["savePath", "translation", "music", "calendar", "mail", "updates", "agentConnect", "general", "voiceInput", "pluginsV3", "appearanceCollapsed", "pluginMarket"];
 
 export const FOCUS_REQUEST_MAX_AGE_MS = 10_000;
 
@@ -12,6 +12,7 @@ export interface SettingsFocusRequest {
   section: SettingsFocusSection;
   plugin: string | null;
   tab: AboutTab | null;
+  bundle: string | null;
 }
 
 export const ABOUT_TAB_STORAGE_KEY = "fuyu-about-tab";
@@ -59,6 +60,7 @@ export function takeFocusRequest(): SettingsFocusRequest | null {
       requestedAt?: unknown;
       plugin?: unknown;
       tab?: unknown;
+      bundle?: unknown;
     };
 
     const section = FOCUS_SECTIONS.find((known) => known === request.section);
@@ -67,16 +69,17 @@ export function takeFocusRequest(): SettingsFocusRequest | null {
     }
     const plugin = section === "pluginsV3" && typeof request.plugin === "string" && request.plugin !== "" ? request.plugin : null;
     const tab = section === "updates" && isAboutTab(request.tab) ? request.tab : null;
-    return { section, plugin, tab };
+    const bundle = section === "pluginMarket" && typeof request.bundle === "string" && request.bundle !== "" ? request.bundle : null;
+    return { section, plugin, tab, bundle };
   } catch {
     return null;
   }
 }
 
-export function requestSettingsFocus(section: SettingsFocusSection, plugin?: string, tab?: AboutTab) {
+export function requestSettingsFocus(section: SettingsFocusSection, plugin?: string, tab?: AboutTab, bundle?: string) {
   window.localStorage.setItem(
     SETTINGS_FOCUS_STORAGE_KEY,
-    JSON.stringify({ section, requestedAt: Date.now(), ...(plugin ? { plugin } : {}), ...(tab ? { tab } : {}) }),
+    JSON.stringify({ section, requestedAt: Date.now(), ...(plugin ? { plugin } : {}), ...(tab ? { tab } : {}), ...(bundle ? { bundle } : {}) }),
   );
 }
 

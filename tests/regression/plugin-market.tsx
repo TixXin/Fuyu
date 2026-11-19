@@ -192,6 +192,12 @@ try {
   await click(bundleSearch.stage.querySelector(".market-toolbar [data-market-category='productivity']"));
   check(!bundleSearch.stage.querySelector("[data-market-section='bundles']") && cards(bundleSearch.stage, "category:productivity").length === 4, "Picking a category shows only that category's plugins, without the bundles");
 
+  const handedBundle = await view("bundles-handed", zh ? "从别处点名一个套装" : "A bundle asked for from elsewhere", { ...withBundles, followRequests: true, initialBundle: "starter" });
+  check(await modal("[data-stage='bundles-handed'] [data-bundle-modal='starter']"), "The market page can open straight on a bundle's confirmation");
+  await act(async () => { requestMarketView({ bundle: "focus" }); });
+  check(await modal("[data-stage='bundles-handed'] [data-bundle-modal='focus']") && !handedBundle.stage.querySelector("[data-bundle-modal='starter']") && !market.calls.includes("installBundle:starter"), "A later request switches to the bundle it names; nothing is installed until it is confirmed");
+  await handedBundle.unmount();
+
   const detail = await view("detail", zh ? "插件详情" : "Plugin detail", { initialDetail: "@fuyu/rss" });
   const rss = await waitFor(() => detail.stage.querySelector<HTMLElement>("[data-market-detail-modal='@fuyu/rss'] .market-markdown"), "the RSS readme")
     .then((node) => node.closest<HTMLElement>("[data-market-detail-modal]")!);
