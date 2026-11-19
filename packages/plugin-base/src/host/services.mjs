@@ -1,6 +1,7 @@
 import { SERVICE_NAME, SERVICE_TIMEOUT_MS } from "../protocol.mjs";
 import { MEMBER_NAME } from "../services.mjs";
 import { pluginId } from "./clients.mjs";
+import { kindOf } from "./gate.mjs";
 
 export function serviceError(code, message, data) {
   return Object.assign(new Error(message), { code, ...(data === undefined ? {} : { data }) });
@@ -35,23 +36,24 @@ function checkDefinition(definition) {
 const eventKey = (name, event) => `service:${name}:${event}`;
 const declared = (table, member) => typeof member === "string" && Object.hasOwn(table, member);
 
-function disabledServicesOf(ctx) {
+function entryOptionsOf(ctx) {
   for (let fiber = ctx.fiber; fiber; ) {
-    if (fiber.entry) {
-      const list = fiber.entry.options?.disabledServices;
-      return Array.isArray(list) ? list : [];
-    }
+    if (fiber.entry) return fiber.entry.options ?? {};
     const parent = fiber.parent?.fiber;
     if (!parent || parent === fiber) break;
     fiber = parent;
   }
-  return [];
+  return null;
 }
 
+const listOf = (value) => (Array.isArray(value) ? value.filter((item) => typeof item === "string") : []);
+
 export class Services {
-  constructor() {
+  constructor({ essential = [] } = {}) {
+    this.essential = new Set(essential);
     this.providers = new Map();
     this.builtins = new Map();
+    this.yielded = new Map();
     this.interest = new Map();
     this.watchers = new Set();
     this.windows = null;
@@ -102,26 +104,82 @@ export class Services {
       if (typeof impl?.[method] !== "function") throw new TypeError(`the provider of ${definition.name} has no method ${method}`);
       methods[method] = impl[method];
     }
-    if (disabledServicesOf(ctx).includes(definition.name)) {
+    const options = entryOptionsOf(ctx);
+    if (listOf(options?.disabledServices).includes(definition.name)) {
       return Object.freeze({ emit: () => false, dispose: () => Promise.resolve() });
     }
-    const provider = { definition, impl, methods, plugin: pluginId(ctx), ctx, pending: new Set(), active: true };
-    const handle = {
-      emit: (event, data) => this.emit(provider, event, data),
-      dispose: () => Promise.all([unregister(), unprovide()]).then(() => {}),
-    };
-    const unprovide = ctx.provide(definition.name, Object.freeze({ service: definition.name }));
+    const kind = options ? kindOf(options) : null;
+    if (kind === "third-party" && this.essential.has(definition.name)) {
+      throw serviceError("reserved", `${definition.name} is provided by the app itself, and a third-party plugin cannot provide or replace it`, { service: definition.name });
+    }
+    const replacing = kind === "third-party" && listOf(options.replaces).includes(definition.name);
+    const provider = { definition, impl, methods, plugin: pluginId(ctx), ctx, kind, replacing, pending: new Set(), active: true, unprovide: null };
     const unregister = ctx.effect(() => {
-      this.providers.set(definition.name, provider);
-      this.changed();
-      return () => {
-        provider.active = false;
-        if (this.providers.get(definition.name) === provider) this.providers.delete(definition.name);
-        for (const call of [...provider.pending]) call.fail(serviceError("peer-gone", `the provider of ${definition.name} went away before ${call.method} answered`, { service: definition.name, method: call.method }));
-        this.changed();
-      };
+      this.enter(provider);
+      return () => this.leave(provider);
     }, `ctx.services.provide(${definition.name})`);
-    return Object.freeze(handle);
+    return Object.freeze({
+      emit: (event, data) => this.emit(provider, event, data),
+      dispose: () => Promise.resolve(unregister()).then(() => {}),
+    });
+  }
+
+  enter(provider) {
+    const name = provider.definition.name;
+    const current = this.providers.get(name);
+    if (current?.replacing && provider.kind === "builtin") {
+      this.yielded.set(name, provider);
+      return;
+    }
+    const yielding = provider.replacing && current?.kind === "builtin" ? current : null;
+    if (yielding) {
+      Promise.resolve(this.step(yielding, `yielded its service to ${provider.plugin}`)).catch((error) => yielding.ctx.logger("services").warn(error));
+    }
+    try {
+      this.attach(provider);
+    } catch (error) {
+      if (yielding) this.attach(yielding);
+      throw error;
+    }
+    if (yielding) this.yielded.set(name, yielding);
+  }
+
+  attach(provider) {
+    const name = provider.definition.name;
+    provider.unprovide = provider.ctx.provide(name, Object.freeze({ service: name }));
+    this.providers.set(name, provider);
+    this.changed();
+  }
+
+  step(provider, why) {
+    const name = provider.definition.name;
+    const unprovide = provider.unprovide;
+    provider.unprovide = null;
+    if (this.providers.get(name) === provider) this.providers.delete(name);
+    for (const call of [...provider.pending]) call.fail(serviceError("peer-gone", `the provider of ${name} ${why} before ${call.method} answered`, { service: name, method: call.method }));
+    return unprovide?.();
+  }
+
+  leave(provider) {
+    const name = provider.definition.name;
+    provider.active = false;
+    if (this.yielded.get(name) === provider) {
+      this.yielded.delete(name);
+      return undefined;
+    }
+    const current = this.providers.get(name) === provider;
+    const task = this.step(provider, "went away");
+    const waiting = current ? this.yielded.get(name) : null;
+    if (waiting) {
+      this.yielded.delete(name);
+      try {
+        if (waiting.active) this.attach(waiting);
+      } catch (error) {
+        waiting.ctx.logger("services").warn("%s could not take %s back: %s", waiting.plugin, name, error?.message ?? error);
+      }
+    }
+    this.changed();
+    return task;
   }
 
   get(ctx, definition) {

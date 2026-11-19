@@ -89,15 +89,26 @@ export function builtinMounts(catalog) {
   return (catalog?.plugins ?? []).map(({ id, root }) => ({ prefix: `${BUILTIN_PREFIX}/${id}`, dir: root }));
 }
 
-function thirdParty(options, builtinIds, warn, nested) {
+export function essentialServices(plugins = []) {
+  return new Set(plugins.filter((plugin) => plugin.kind === "essential").flatMap((plugin) => plugin.provides ?? plugin.declared?.provides ?? []));
+}
+
+function thirdParty(options, builtinIds, essential, warn, nested) {
   if (options === null || typeof options !== "object" || Array.isArray(options)) return [options];
   if (nested && typeof options.id === "string" && builtinIds.has(options.id)) {
     warn(`the entry ${options.id} inside a group has the id of a built-in plugin and is left out`);
     return [];
   }
   const { kind, ...rest } = options;
+  if (Array.isArray(rest.replaces)) {
+    const refused = rest.replaces.filter((service) => essential.has(service));
+    if (refused.length) {
+      warn(`the plugin ${rest.id ?? rest.name} cannot replace ${refused.join(", ")}, which the app itself needs; it keeps the built-in one`);
+      rest.replaces = rest.replaces.filter((service) => !essential.has(service));
+    }
+  }
   if (rest.group === true && Array.isArray(rest.config)) {
-    rest.config = rest.config.flatMap((child) => thirdParty(child, builtinIds, warn, true));
+    rest.config = rest.config.flatMap((child) => thirdParty(child, builtinIds, essential, warn, true));
   }
   return [rest];
 }
@@ -105,31 +116,17 @@ function thirdParty(options, builtinIds, warn, nested) {
 export function withBuiltins(entries, builtins, warn = () => {}) {
   const list = Array.isArray(entries) ? entries : [];
   const builtinIds = new Set(builtins.map((entry) => entry.id));
+  const essential = essentialServices(builtins.map((entry) => ({ kind: entry.kind, ...entry[SOURCE] })));
   const switches = new Map();
   const rest = [];
-  const replacedByThirdParty = new Set();
   for (const options of list) {
-    if (typeof options?.id === "string" && builtinIds.has(options.id)) {
-      switches.set(options.id, options);
-    } else {
-      if (options && typeof options === "object" && options.disabled !== true && Array.isArray(options.replaces)) {
-        for (const svc of options.replaces) {
-          if (typeof svc === "string") replacedByThirdParty.add(svc);
-        }
-      }
-      rest.push(...thirdParty(options, builtinIds, warn, false));
-    }
+    if (typeof options?.id === "string" && builtinIds.has(options.id)) switches.set(options.id, options);
+    else rest.push(...thirdParty(options, builtinIds, essential, warn, false));
   }
   const merged = builtins.map((builtin) => {
     const entry = { ...builtin };
     const written = switches.get(builtin.id);
     for (const key of FILE_KEYS) if (written && written[key] !== undefined) entry[key] = written[key];
-    const builtinProvides = builtin[SOURCE]?.provides ?? [];
-    const autoDisabled = builtinProvides.filter((svc) => replacedByThirdParty.has(svc));
-    if (autoDisabled.length > 0) {
-      const existing = Array.isArray(entry.disabledServices) ? entry.disabledServices : [];
-      entry.disabledServices = [...new Set([...existing, ...autoDisabled])];
-    }
     return entry;
   });
   return [...merged, ...rest.filter((options) => !leftoverSwitch(options, warn))];
