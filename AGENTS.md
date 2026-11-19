@@ -79,6 +79,7 @@
 | 文件行数检查 | `pnpm check:size` |
 | 深色专用颜色检查 | `pnpm check:colors`（CSS 里写死的颜色要写成 `var(--变量, 原值)`；存量记在 `scripts/color-literal-allowlist.json`，只减不增，规则见 `src/AGENTS.md`） |
 | 动效检查 | `pnpm check:motion`（CSS 里写死的曲线和不在档位上的时长要换成 `--motion-*` token；存量记在 `scripts/motion-literal-allowlist.json`，只减不增，规则见 `docs/design/motion.md`） |
+| CSS 括号检查 | `pnpm check:css`（括号、引号、注释没配对的 CSS 文件；少一个括号，打包后它后面的规则全部失效，而构建只报 warning） |
 | 密钥字段检查 | `pnpm check:secrets`（Rust 里带 `Serialize`、字段名像密钥、类型是字符串的字段要登记在 `scripts/secret-fields-allowlist.json` 并写理由，规则见 `src-tauri/AGENTS.md`） |
 | 回归页类型检查 | `pnpm check:tests-types`（`tests/tsconfig.json`，检查 `tests/regression/*.tsx`） |
 | Rust 方法的生成类型 | `pnpm check:rust-types`（不编译，核对 `#[host_service]` 方法名和 `packages/plugin-services/src/generated/` 的清单一致）；加、改这类方法后 `pnpm gen:rust-types` 重写生成文件（见 `docs/architecture/plugins/v3-services.md`「Rust 那条路」） |
@@ -86,7 +87,7 @@
 | 岛屿实验台 | `pnpm lab`（打开 http://127.0.0.1:5199/，点按钮让正在跑的 `pnpm tauri dev` 的岛弹消息、展开收起、模拟刘海、发起 Agent 审批；不用开本地接口，见 `docs/features/island-lab.md`） |
 | README 的 SVG | `pnpm readme:assets`（重新生成 `docs/assets/readme/` 里的小岛和下载按钮；改它们改 `scripts/readme/assets.mjs`，不直接改 SVG） |
 | 设置搜索索引 | `pnpm settings:index`（新增、删除或改名设置项后运行，重写 `src/windows/settings/searchIndex.json`；漏跑时 `settings-search` 回归页会失败） |
-| 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 颜色检查 + 动效检查 + 密钥字段检查 + Rust 生成类型检查 + 任务检查 + 单元测试） |
+| 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 颜色检查 + 动效检查 + CSS 括号检查 + 密钥字段检查 + Rust 生成类型检查 + 任务检查 + 单元测试） |
 | 本机先验一遍 | `pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时再加 Rust 单元测试；自带排队，同一棵代码树通过过就不重跑） |
 | Rust 单元测试 | `cargo test --manifest-path src-tauri/Cargo.toml` |
 | 仅生成 release 可执行文件 | `pnpm build:exe`（写到 `src-tauri/target/release`，岛屿在运行也不用关；Mac 上打成 `Fuyu.app`） |
