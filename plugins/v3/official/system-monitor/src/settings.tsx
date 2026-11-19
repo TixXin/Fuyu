@@ -77,7 +77,8 @@ export default function apply(ctx: Context) {
           </select>
         </label>
 
-        {check("backgroundHistory", copy.backgroundHistory, false, copy.backgroundHistoryHint)}
+        {state.platform === "windows" &&
+          check("backgroundHistory", copy.backgroundHistory, false, copy.backgroundHistoryHint)}
         {check("showOnBar", copy.showOnBar)}
         {check("barCpu", copy.barCpu, !draft.showOnBar)}
         {check("barMemory", copy.barMemory, !draft.showOnBar)}
@@ -114,7 +115,6 @@ export default function apply(ctx: Context) {
           </button>
         </div>
 
-        {!state.sampling && <p className="fuyu-sysmon-settings__note">{copy.idleHint}</p>}
         {error && <p className="fuyu-sysmon-settings__note">{error}</p>}
       </section>
     );

@@ -28,7 +28,7 @@ Mac 的程序 CPU 占用来自系统的 `ps`，是一段时间的平均，比 Wi
 ## 设置
 
 - **排版**：自动（默认，窄时一栏）、一栏、两栏。
-- **后台记录曲线**：默认关。打开后监控页关着时每 5 秒记一次 CPU、GPU 和网速，打开页面时就有最近 5 分钟的曲线。没打开时，关掉页面曲线就清空。
+- **后台记录网速和 GPU 曲线**（只在 Windows 上出现）：默认关。插件一直每 5 秒记一次 CPU（Mac 上还有网速和 GPU），打开监控页就有最近 5 分钟的曲线，关页也不清空。Windows 上网速和 GPU 要靠 PowerShell 读，勾上这项后页关着时也记录；不勾时这两条曲线从打开页面开始画。
 - **在收起条显示实时指标**：默认开。下面可以分别勾选 CPU（默认开）、内存（默认开）、CPU 温度、GPU 温度（后两项只在 Windows 上出现，GPU 温度要 NVIDIA 显卡）。
 - **收起条刷新间隔**：1、2（默认）、5 或 10 秒。监控页开着时固定每秒刷新。
 
@@ -45,7 +45,7 @@ Mac 的程序 CPU 占用来自系统的 `ps`，是一段时间的平均，比 Wi
 
 ## 开销
 
-- 监控页关着、收起条也没开时，插件不采样。
+- 监控页关着、收起条也没开时，插件每 5 秒记一次 CPU 给曲线用：Windows 上不运行任何程序（勾了后台记录网速和 GPU 时除外），Mac 上运行 `vm_stat`、`netstat`、`ioreg` 各一次。
 - 只在收起条看 CPU 和内存：Windows 上不运行任何程序，Mac 上每次只运行一次 `vm_stat`。
 - 监控页开着时每秒读一次；程序列表 3 秒、GPU 2 秒、电池 10 秒。
 - Windows 上监控页开着、收起条勾了 CPU 温度、或开了后台记录曲线时，会常驻一个 PowerShell 进程（约 60–120 MB 内存）；都不需要时 60 秒后自己退出，停用插件时立刻结束。
@@ -57,12 +57,12 @@ Mac 的程序 CPU 占用来自系统的 `ps`，是一段时间的平均，比 Wi
 | 平台 | 程序 | 用来做什么 | 什么时候运行 |
 |---|---|---|---|
 | Windows | `powershell.exe`（系统自带） | 网速、电池、程序列表和图标、CPU 温度、GPU 各引擎，以及打开任务管理器 | 需要时常驻，空闲 60 秒退出 |
-| Windows | `nvidia-smi`（NVIDIA 驱动自带，找不到就不用） | GPU 名称、占用、温度、显存、功耗 | 监控页开着或收起条勾了 GPU 温度时，2 秒一次 |
-| Mac | `vm_stat` | 内存已用 | 每次采样 |
-| Mac | `netstat -ibn` | 网速 | 监控页开着每秒；后台记录时 5 秒一次 |
+| Windows | `nvidia-smi`（NVIDIA 驱动自带，找不到就不用） | GPU 名称、占用、温度、显存、功耗 | 监控页开着或收起条勾了 GPU 温度时 2 秒一次；勾了后台记录时页关着 5 秒一次 |
+| Mac | `vm_stat` | 内存已用 | 每次采样（页关着时 5 秒一次） |
+| Mac | `netstat -ibn` | 网速 | 监控页开着每秒，关着 5 秒一次 |
 | Mac | `ps` | 程序列表 | 监控页开着 3 秒一次 |
 | Mac | `pmset -g batt` | 电池 | 监控页开着 10 秒一次 |
-| Mac | `ioreg` | GPU 占用和已用显存 | 监控页开着 2 秒一次；后台记录时 5 秒一次 |
+| Mac | `ioreg` | GPU 占用和已用显存 | 监控页开着 2 秒一次，关着 5 秒一次 |
 | Mac | `open -b com.apple.ActivityMonitor` | 打开活动监视器 | 点按钮时 |
 
 读到的数据只在岛上显示，不发到任何地方；设置只保存在本机的插件数据目录里。
@@ -99,7 +99,7 @@ On Mac, a program's CPU comes from the system's `ps` and is averaged over a shor
 ### Settings
 
 - **Layout**: auto (default, one column when narrow), one column, two columns.
-- **Record charts in the background**: off by default. While the page is closed, CPU, GPU and network are recorded every 5 seconds, so the last 5 minutes are there when you open it. When off, the charts start over each time the page opens.
+- **Record network and GPU charts in the background** (Windows only): off by default. The plugin always records CPU every 5 seconds (and network and GPU on Mac), so the page opens with the last 5 minutes and closing it keeps them. On Windows network and GPU are read through PowerShell; tick this to record them while the page is closed too. Unticked, those two charts start when the page opens.
 - **Show live metrics on collapsed bar**: on by default, with CPU (on), memory (on), CPU temperature and GPU temperature (the last two on Windows only; GPU temperature needs an NVIDIA card).
 - **Collapsed bar refresh interval**: 1, 2 (default), 5 or 10 seconds. The page always refreshes every second.
 
@@ -116,7 +116,7 @@ When the collapsed bar changes color:
 
 ### Cost
 
-- With the page closed and nothing on the collapsed bar, the plugin doesn't sample at all.
+- With the page closed and nothing on the collapsed bar, the plugin records CPU every 5 seconds for the charts: no programs run on Windows (unless network and GPU background recording is on); on Mac, one `vm_stat`, `netstat` and `ioreg` each time.
 - CPU and memory on the collapsed bar only: no programs run on Windows; on Mac, one `vm_stat` per refresh.
 - With the page open: every second; programs every 3 seconds, GPU every 2, battery every 10.
 - On Windows, one PowerShell process (about 60–120 MB of memory) stays running while the page is open, CPU temperature is on the collapsed bar, or background charts are on; it exits 60 seconds after none of them needs it, and right away when the plugin is turned off.
@@ -128,12 +128,12 @@ To read these figures the plugin runs programs that come with the system, so ins
 | Platform | Program | What for | When |
 |---|---|---|---|
 | Windows | `powershell.exe` (built in) | Network, battery, programs and their icons, CPU temperature, GPU engines, and opening Task Manager | Kept running while needed, exits after 60 idle seconds |
-| Windows | `nvidia-smi` (comes with the NVIDIA driver; skipped if missing) | GPU name, usage, temperature, VRAM and power | Every 2 seconds while the page is open or GPU temperature is on the collapsed bar |
-| Mac | `vm_stat` | Memory used | Every refresh |
-| Mac | `netstat -ibn` | Network speed | Every second with the page open; every 5 seconds when recording in the background |
+| Windows | `nvidia-smi` (comes with the NVIDIA driver; skipped if missing) | GPU name, usage, temperature, VRAM and power | Every 2 seconds while the page is open or GPU temperature is on the collapsed bar; every 5 seconds with the page closed when background recording is on |
+| Mac | `vm_stat` | Memory used | Every refresh (every 5 seconds with the page closed) |
+| Mac | `netstat -ibn` | Network speed | Every second with the page open, every 5 seconds when closed |
 | Mac | `ps` | Programs | Every 3 seconds with the page open |
 | Mac | `pmset -g batt` | Battery | Every 10 seconds with the page open |
-| Mac | `ioreg` | GPU usage and used graphics memory | Every 2 seconds with the page open; every 5 seconds when recording in the background |
+| Mac | `ioreg` | GPU usage and used graphics memory | Every 2 seconds with the page open, every 5 seconds when closed |
 | Mac | `open -b com.apple.ActivityMonitor` | Open Activity Monitor | When you click the button |
 
 What it reads is shown only on the island and sent nowhere; settings stay in the plugin's data folder on your computer.
