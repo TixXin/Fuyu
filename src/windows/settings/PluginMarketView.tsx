@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CloudOff, LoaderCircle, PowerOff, RefreshCw, ShieldCheck, Store, Upload } from "lucide-react";
 import type { MarketCatalogPlugin, MarketCatalogSnapshot } from "@fuyu/plugin-services";
 import type { PluginMarketSort } from "../../i18n/sections/settings/pluginMarket";
@@ -13,7 +13,7 @@ import { marketClient } from "./pluginMarketActions";
 import { announceMarketPackage } from "./pluginMarketBus";
 import { categoryCounts, formatMarketTime, localized, newListings } from "./pluginMarketModel";
 import { usePluginFilePicker } from "./PluginPageActions";
-import { requestPluginDetail, type OpenedPluginPackage } from "./pluginPageHandoff";
+import { onMarketViewRequest, requestPluginDetail, takeMarketViewRequest, type OpenedPluginPackage } from "./pluginPageHandoff";
 import { pluginPlaces } from "./pluginReach";
 import { usePluginInstallFlow } from "./usePluginInstallFlow";
 import { usePluginMarketPackage } from "./usePluginMarketPackage";
@@ -33,12 +33,13 @@ export interface PluginMarketViewProps {
   onOpenPage?: (page: SettingsCategory) => void;
   initialQuery?: string;
   initialDetail?: string | null;
+  followRequests?: boolean;
   openedPackage?: OpenedPluginPackage | null;
   openedError?: string | null;
   onConsumePackage?: (seq: number) => void;
 }
 
-export function PluginMarketView({ host, snapshot, failure = null, refreshing = false, onRefresh, onReload, onOpenPage, initialQuery = "", initialDetail = null, openedPackage, openedError, onConsumePackage }: PluginMarketViewProps) {
+export function PluginMarketView({ host, snapshot, failure = null, refreshing = false, onRefresh, onReload, onOpenPage, initialQuery = "", initialDetail = null, followRequests = true, openedPackage, openedError, onConsumePackage }: PluginMarketViewProps) {
   const text = useTranslation().settings.pluginsV3.marketPage;
   const { locale } = useLocale();
   const [query, setQuery] = useState(initialQuery);
@@ -46,6 +47,15 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
   const [sort, setSort] = useState<PluginMarketSort>("recommended");
   const [detailName, setDetailName] = useState<string | null>(initialDetail);
   const [packageError, setPackageError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!followRequests) return;
+    return onMarketViewRequest(() => {
+      const request = takeMarketViewRequest();
+      if (!request) return;
+      if (request.query !== undefined) setQuery(request.query);
+      setDetailName(request.detail ?? null);
+    });
+  }, [followRequests]);
   const plugins = snapshot?.plugins ?? [];
   const [openedAt] = useState(Date.now);
   const newNames = newListings(plugins, snapshot?.marketSince, openedAt);

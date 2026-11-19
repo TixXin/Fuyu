@@ -255,6 +255,41 @@
   box-shadow: inset 0 0 0 1px var(--color-focus-ring);
 }
 
+.settings-sidebar__market-title {
+  min-height: 29px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  color: rgba(var(--overlay-rgb, 255, 255, 255), 0.72);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.settings-sidebar__market-title > svg {
+  flex: none;
+  opacity: 0.72;
+}
+
+.settings-sidebar__market-title > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-sidebar__hit-tag {
+  flex: none;
+  margin-left: 6px;
+  color: var(--color-text-subtle);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.settings-sidebar__empty + .settings-sidebar__market {
+  margin-top: 4px;
+}
+
 .settings-sidebar__empty {
   margin: 8px 10px;
   color: var(--color-text-muted);

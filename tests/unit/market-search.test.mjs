@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { loadPinyin } from "../../src/lib/pinyin/pinyin.ts";
-import { marketSearchRank, matchesQuery, queryWantsPinyin, searchMarket } from "../../src/windows/settings/marketSearch.ts";
+import { FEW_SETTINGS_RESULTS, marketSearchRank, marketSuggestions, matchesQuery, queryWantsPinyin, searchMarket } from "../../src/windows/settings/marketSearch.ts";
 
 const plugin = (name, zh, en, more = {}) => ({
   name, official: name.startsWith("@fuyu/"), publisher: { github: name.split("/")[0].replace("@", ""), official: false },
@@ -73,4 +73,23 @@ test("results put name matches first, then keywords and pinyin, then publishers 
   assert.equal(marketSearchRank(byKeyword, "晴天"), 1);
   assert.equal(marketSearchRank(pomodoro, "晴天"), 2);
   assert.equal(marketSearchRank(weather, "晴天"), null);
+});
+
+test("settings search suggests market plugins only when the settings themselves found little", async () => {
+  const pinyin = await loadPinyin();
+  const suggest = (query, settingsResults) => marketSuggestions(all, query, settingsResults, {}, pinyin).map((item) => item.name);
+  assert.deepEqual(suggest("天气", 0), ["@fuyu/weather"]);
+  assert.deepEqual(suggest("tianqi", FEW_SETTINGS_RESULTS), ["@fuyu/weather"]);
+  assert.deepEqual(suggest("天气", FEW_SETTINGS_RESULTS + 1), []);
+  assert.deepEqual(suggest("晴天", 0), ["@fuyu/pomodoro"]);
+  assert.deepEqual(suggest("晴天", 1), []);
+  assert.deepEqual(suggest("t", 0), []);
+  assert.deepEqual(suggest("  ", 0), []);
+});
+
+test("suggestions list what is not installed first, leave out plugins pulled from the market and stop at five", () => {
+  const many = Array.from({ length: 8 }, (_, index) => plugin(`@a/clock-${index}`, `时钟 ${index}`, `Clock ${index}`, index === 0 ? { installedVersion: "1.0.0" } : index === 1 ? { revoked: true } : {}));
+  const found = marketSuggestions(many, "时钟", 0).map((item) => item.name);
+  assert.deepEqual(found, ["@a/clock-2", "@a/clock-3", "@a/clock-4", "@a/clock-5", "@a/clock-6"]);
+  assert.deepEqual(marketSuggestions(many.slice(0, 3), "clock", 2).map((item) => item.name), ["@a/clock-2", "@a/clock-0"]);
 });

@@ -61,3 +61,20 @@ export function searchMarket<T extends SearchablePlugin>(plugins: readonly T[], 
     .sort((a, b) => a.rank - b.rank || a.index - b.index)
     .map(({ plugin }) => plugin);
 }
+
+export const FEW_SETTINGS_RESULTS = 4;
+
+export function marketSuggestions<T extends SearchablePlugin>(plugins: readonly T[], query: string, settingsResults: number, categoryNames: Readonly<Record<string, string>> = {}, pinyin: PinyinOf | null = null): T[] {
+  if (squash(query.trim()).length < 2 || settingsResults > FEW_SETTINGS_RESULTS) return [];
+  const nothing = settingsResults === 0;
+  const worst: MarketSearchRank = nothing ? 2 : 1;
+  return plugins
+    .flatMap((plugin, index) => {
+      if (plugin.revoked && !plugin.installedVersion) return [];
+      const rank = marketSearchRank(plugin, query, categoryNames, pinyin);
+      return rank === null || rank > worst ? [] : [{ plugin, index, rank, owned: plugin.installedVersion ? 1 : 0 }];
+    })
+    .sort((a, b) => a.rank - b.rank || a.owned - b.owned || a.index - b.index)
+    .slice(0, nothing ? 5 : 3)
+    .map(({ plugin }) => plugin);
+}
