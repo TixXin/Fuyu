@@ -1,9 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen, type EventCallback, type UnlistenFn } from "@tauri-apps/api/event";
+import { emit, listen, type EventCallback, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { IslandCornerShape, IslandMonitor, TuckStyle } from "../../lib/settings/types";
 import type { IslandPosition } from "./storage";
 import type { IslandMode, NativeGlassState } from "./types";
+import { ISLAND_GLASS_STATUS_EVENT, ISLAND_GLASS_STATUS_REQUEST_EVENT, type IslandGlassStatus } from "./glassStatus";
 
 export const TOP_ATTACHMENT_CHANGED_EVENT = "island-top-attachment-changed";
 
@@ -163,6 +164,14 @@ export function setIslandInteraction(interaction: IslandInteraction) {
 
 export function syncIslandGlassFrame(frame: IslandGlassFrame) {
   return invoke<void>("sync_island_glass_frame", { frame });
+}
+
+export function emitIslandGlassStatus(status: IslandGlassStatus) {
+  return emit(ISLAND_GLASS_STATUS_EVENT, status);
+}
+
+export function listenIslandGlassStatusRequest(handler: () => void): Promise<UnlistenFn> {
+  return listen(ISLAND_GLASS_STATUS_REQUEST_EVENT, () => handler());
 }
 
 export function showReadyIsland() {

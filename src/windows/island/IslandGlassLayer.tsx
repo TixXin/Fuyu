@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { IslandGlassShader } from "./IslandGlassShader";
 import type { IslandGlassView } from "./useIslandGlass";
 import { useWallpaperBackdrop } from "./useWallpaperBackdrop";
@@ -22,6 +22,12 @@ export function IslandGlassLayer({ glass }: { glass?: IslandGlassView }) {
   });
 
   const wallpaperKey = wallpaper ? JSON.stringify(wallpaper) : "";
+  const onLayerState = glass?.onLayerState;
+  const wallpaperState = wallpaper ? "ready" : "loading";
+
+  useEffect(() => {
+    onLayerState?.({ live: { state: "failed", reason: "unsupported" }, wallpaper: wallpaperState });
+  }, [onLayerState, wallpaperState]);
 
   useLayoutEffect(() => {
     const island = layer.current?.closest<HTMLElement>(".island");
