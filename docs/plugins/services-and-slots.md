@@ -156,4 +156,4 @@ export function apply(ctx) {
   - `no-page`：本插件现在没有岛页面（没注册，或岛上的那部分还没加载完）。
   - `not-ready`：岛窗口还没连上宿主；`timeout`：岛 10 秒没回答；`bad-params`：`page` 不是非空字符串。
 - `collapse()`：只给窗口代码。岛展开着、当前是本插件的页面时收起岛，返回 `true`；岛已经收起、或用户正在看别的页面时什么也不做，返回 `false`，不会关掉用户在看的东西。宿主代码里没有 `collapse`：宿主不知道用户此刻在不在看岛，收起应该跟着用户在插件界面上的操作走；确实需要时，宿主用 `ctx.clients.publish` 通知窗口部分，由窗口代码调。
-- 老版本的浮屿没有 `ctx.island`：窗口代码用 `ctx.island?.open` 判断接口在不在；宿主代码 inject 了 `island` 的插件在老版本上会一直停在「等待」，要么只在窗口代码里用，要么用 `package.json` 的 `engines.fuyu` 限定版本。
+- 老版本的浮屿没有 `ctx.island`：窗口代码用 `ctx.island?.open` 判断接口在不在；宿主代码把 `island` 写成可选的：代码里 `export const inject = { commands: null, island: { required: false } }`，`package.json` 写进 `fuyu.inject.optional`，没有时 `ctx.island` 是 `undefined`，插件照常启动（官方插件「应用启动台」就是这样写的）。写成必需的（数组里写 `"island"`）时，插件在老版本上会一直停在「等待」。
