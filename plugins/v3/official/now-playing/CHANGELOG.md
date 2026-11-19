@@ -5,10 +5,12 @@
 - 切歌那一刻读到「在放但没有歌名」时，1.5 秒后再读一次，不会因此漏掉这首。
 - 收到浮屿的换歌事件后，不再完全停止查看，改成每 15 秒看一次兜底，漏掉一次事件也不会很久不更新。
 - 说明：浮屿现在的版本里，插件在后台发的提示还到不了岛上（平台问题，另行修复），修好之前换歌提示仍可能看不到。
+- 图标换成和浮屿设置一致的风格：浅底色加同色线条。
 
 - When the title cannot be read right at a track change, the plugin looks again 1.5 seconds later instead of missing that track.
 - After Fuyu's track change events start arriving, it no longer stops checking altogether: it checks every 15 seconds in case an event is missed.
 - Note: in current Fuyu versions, notices sent by plugins in the background do not reach the island yet (a platform issue being fixed separately), so track change notices may still not appear until then.
+- New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
 
 ## 1.1.0
 

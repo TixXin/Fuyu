@@ -14,6 +14,7 @@
 - 写进笔记的文字和界面一样跟随界面语言。
 - 名字统一成「待办摘要 / To-do digest」，说明改成一句话。
 - 原来没有设置项，升级后全部取默认值。
+- 图标换成和浮屿设置一致的风格：浅底色加同色线条。
 
 Settings at last: write on a schedule, and writing again on the same day replaces the earlier digest instead of piling up.
 
@@ -27,6 +28,7 @@ Settings at last: write on a schedule, and writing again on the same day replace
 - The text written into the note follows the interface language, like the settings.
 - The name is now "To-do digest" everywhere and the description is one sentence.
 - 1.0.0 had no settings, so everything starts at the defaults.
+- New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
 
 ## 1.0.0
 

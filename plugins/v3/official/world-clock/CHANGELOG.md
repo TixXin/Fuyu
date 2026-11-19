@@ -6,11 +6,13 @@
 
 - 收起条不再固定占 120 像素宽，按城市名和时间的长度自动算，只显示时间时更窄。
 - 市场页补上收起条和设置的截图。
+- 图标换成和浮屿设置一致的风格：浅底色加同色线条。
 
 The collapsed bar fits its content; more screenshots for the market.
 
 - The collapsed bar no longer takes a fixed 120 pixels; its width follows the city name and time, so it is narrower when it shows only the time.
 - The market page gets screenshots of the collapsed bar and the settings.
+- New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
 
 ## 1.1.0
 

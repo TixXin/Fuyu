@@ -82,7 +82,7 @@ test("todo-ring host: click to complete is off until turned on, undo reopens, se
   const result = await check(PLUGIN_DIR, { official: true, allowExperimental: false });
   assert.deepEqual(result.errors, []);
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, "built"), packDir: join(scratch, "packed") });
-  assert.equal(packed.manifest.version, "1.1.0");
+  assert.equal(packed.manifest.version, "1.1.1");
   assert.deepEqual(packed.manifest.fuyu.slots, ["island.page/v1", "island.collapsed/v1", "settings.section/v1"]);
 
   const hostDir = join(scratch, "host");

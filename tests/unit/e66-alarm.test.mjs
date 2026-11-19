@@ -140,7 +140,7 @@ async function until(check, ms = 3000) {
 
 test("E66.4 alarm host: old data, missed report, kept snooze, and commands", async () => {
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, "built"), packDir: join(scratch, "packed") });
-  assert.equal(packed.manifest.version, "1.1.0");
+  assert.equal(packed.manifest.version, "1.1.1");
   assert.deepEqual(packed.manifest.fuyu.commands.map((item) => item.id), ["dismiss", "snooze"]);
   const hostDir = join(scratch, "host");
   mkdirSync(hostDir, { recursive: true });
