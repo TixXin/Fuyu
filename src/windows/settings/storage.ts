@@ -17,13 +17,13 @@ export interface SettingsFocusRequest {
 
 export const ABOUT_TAB_STORAGE_KEY = "fuyu-about-tab";
 
-export type AboutTab = "overview" | "changelog" | "help";
+export type AboutTab = "overview" | "changelog" | "plugins" | "help";
 
-const ABOUT_TAB_PAGES = { overview: "about", changelog: "aboutChangelog", help: "aboutHelp" } as const;
+const ABOUT_TAB_PAGES = { overview: "about", changelog: "aboutChangelog", plugins: "aboutPlugins", help: "aboutHelp" } as const;
 
 export type AboutPage = (typeof ABOUT_TAB_PAGES)[AboutTab];
 
-const ABOUT_TABS: readonly AboutTab[] = ["overview", "changelog", "help"];
+const ABOUT_TABS: readonly AboutTab[] = ["overview", "changelog", "plugins", "help"];
 
 const isAboutTab = (value: unknown): value is AboutTab => ABOUT_TABS.some((tab) => tab === value);
 

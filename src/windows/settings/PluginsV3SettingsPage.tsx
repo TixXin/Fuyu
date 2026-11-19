@@ -68,6 +68,7 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
   onOpenPage?: (page: SettingsCategory) => void;
 }) {
   const text = useTranslation().settings.pluginsV3.page;
+  const learnMore = useTranslation().settings.aboutPlugins.learnMore;
   const { locale } = useLocale();
   const loadedBuiltins = useBuiltinPlugins();
   const builtins = givenBuiltins === undefined ? loadedBuiltins : givenBuiltins;
@@ -177,6 +178,8 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
         {text.footnote.before}
         <button className="plugin-link" type="button" data-action="open-overview" onClick={() => onOpenPage?.("overview")}>{text.footnote.link}</button>
         {text.footnote.after}
+        {" "}
+        <button className="plugin-link" type="button" data-action="open-about-plugins" onClick={() => onOpenPage?.("aboutPlugins")}>{learnMore}</button>
       </p>
       {file.input}
       {selected && detail ? (

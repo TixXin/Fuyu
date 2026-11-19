@@ -29,6 +29,7 @@ import type { SettingsPermissionsText } from "./permissions";
 import type { SettingsShortcutsText } from "./shortcuts";
 import type { SettingsPageShortcutsText } from "./pageShortcuts";
 import type { SettingsProjectText } from "./project";
+import type { SettingsAboutPluginsText } from "./aboutPlugins";
 import type { SettingsLanguageText } from "./language";
 import type { SettingsAppearanceText } from "./appearance";
 import type { SettingsLayoutText } from "./layout";
@@ -74,6 +75,7 @@ import * as permissions from "./permissions.ts";
 import * as shortcuts from "./shortcuts.ts";
 import * as pageShortcuts from "./pageShortcuts.ts";
 import * as project from "./project.ts";
+import * as aboutPlugins from "./aboutPlugins.ts";
 import * as language from "./language.ts";
 import * as appearance from "./appearance.ts";
 import * as layout from "./layout.ts";
@@ -130,6 +132,8 @@ export type SettingsText = {
   pageShortcuts: SettingsPageShortcutsText;
 
   project: SettingsProjectText;
+
+  aboutPlugins: SettingsAboutPluginsText;
 
   language: SettingsLanguageText;
 
@@ -198,6 +202,8 @@ export const zhCN: SettingsText = {
 
   project: project.zhCN,
 
+  aboutPlugins: aboutPlugins.zhCN,
+
   language: language.zhCN,
 
   appearance: appearance.zhCN,
@@ -264,6 +270,8 @@ export const en: SettingsText = {
   pageShortcuts: pageShortcuts.en,
 
   project: project.en,
+
+  aboutPlugins: aboutPlugins.en,
 
   language: language.en,
 

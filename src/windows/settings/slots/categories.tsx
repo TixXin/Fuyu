@@ -54,8 +54,8 @@ const shortcuts = (tab: ComponentProps<typeof ShortcutsSettingsPage>["tab"]): Pa
   };
 
 const about = (tab: ComponentProps<typeof AboutSettingsPage>["tab"]): Page =>
-  function AboutPage({ onSettingsChange }) {
-    return <AboutSettingsPage tab={tab} onSettingsChange={onSettingsChange} />;
+  function AboutPage({ onSettingsChange, onShowPage }) {
+    return <AboutSettingsPage tab={tab} onSettingsChange={onSettingsChange} onOpenPage={onShowPage} />;
   };
 
 const localApiSections = settingsSections<{ onOpenPage: (page: SettingsLink) => void }, "generalApi">();
@@ -91,6 +91,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   pluginMarket: ({ onShowPage }) => <PluginMarketPage onOpenPage={onShowPage} />,
   about: about("about"),
   aboutChangelog: about("aboutChangelog"),
+  aboutPlugins: about("aboutPlugins"),
   aboutHelp: about("aboutHelp"),
 };
 

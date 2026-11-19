@@ -11,6 +11,8 @@ import { useOpenInBrowser } from "../../features/updater/useOpenInBrowser";
 import { getUpdateState, subscribeToUpdate } from "../../features/updater/updaterController";
 import { useTranslation } from "../../i18n";
 import { openOnboardingWindow } from "../onboarding/api";
+import { AboutPluginSystem } from "./AboutPluginSystem";
+import type { SettingsCategory } from "./categories";
 import { QuitIslandRow } from "./QuitIslandRow";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { settingsSections } from "./slots/sectionSlot";
@@ -19,7 +21,7 @@ const CONFIRM_TIMEOUT_MS = 4_000;
 
 type AboutSectionProps = { onSettingsChange: (settings: IslandSettings) => void };
 
-type AboutTabPage = "about" | "aboutChangelog" | "aboutHelp";
+type AboutTabPage = "about" | "aboutChangelog" | "aboutPlugins" | "aboutHelp";
 
 function HelpSection() {
   const text = useTranslation().settings.project;
@@ -94,7 +96,7 @@ function Colophon() {
 
 const sections = settingsSections<AboutSectionProps, AboutTabPage>();
 
-export function AboutSettingsPage({ tab, ...props }: AboutSectionProps & { tab: AboutTabPage }) {
+export function AboutSettingsPage({ tab, onOpenPage, ...props }: AboutSectionProps & { tab: AboutTabPage; onOpenPage: (page: SettingsCategory) => void }) {
   return (
     <div className="about-page">
       {tab === "about" && (
@@ -105,6 +107,7 @@ export function AboutSettingsPage({ tab, ...props }: AboutSectionProps & { tab: 
       )}
       <SlotView slot={sections} group={tab} props={props} />
       {tab === "about" && <SystemSection onSettingsChange={props.onSettingsChange} />}
+      {tab === "aboutPlugins" && <AboutPluginSystem onOpenPage={onOpenPage} />}
       {tab === "aboutHelp" && <HelpSection />}
       <Colophon />
     </div>
