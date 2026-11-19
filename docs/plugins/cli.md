@@ -123,7 +123,7 @@ fuyu-plugin pack [文件夹] [--out <文件>] [--sign] [--key <文件>] [--confi
 ## check
 
 ```bash
-fuyu-plugin check [文件夹] [--market] [--json] [--config <文件>] [--official]
+fuyu-plugin check [文件夹] [--market] [--strict] [--json] [--config <文件>] [--official]
 ```
 
 不运行插件，把市场会拦的东西提前报出来：
@@ -131,9 +131,16 @@ fuyu-plugin check [文件夹] [--market] [--json] [--config <文件>] [--officia
 1. 在临时文件夹里试构建一次：清单校验、入口、挑文件、esbuild、声明对照，失败的都算错误。
 2. 对源码和产物跑审核分析器的单版本扫描。红档的（混淆、可执行程序、原生扩展）算错误；实验接口（`fuyu.experimental` 不为空）只在加 `--market` 时算错误，开发时可以用；黄档里对作者有用的（敏感调用、没声明的域名、有依赖却没有锁文件、依赖的安装脚本、新的脚本和二进制文件）算告警。只对首次上架有意义的项不报。
 
+3. 上架信息的检查（代码以 `listing:` 开头），是用户在市场卡片和插件页上会看到的问题。只给告警，市场不会因此拒收；加 `--strict` 当错误。
+
+| 告警 | 什么时候 |
+|---|---|
+| `listing:screenshots` | `fuyu.screenshots` 一张都没有。至少放一张；没有自己界面的插件截它起作用的地方 |
+
 | 选项 | 作用 |
 |---|---|
 | `--market` | 按市场的规则查：`fuyu.experimental` 不为空就报错（清单校验和审核分析器各报一条） |
+| `--strict` | 上架信息的告警当错误。官方插件按这个标准，见[官方插件标准](official-quality.md) |
 | `--json` | 输出 `{ ok, errors, warnings }` |
 | `--config`、`--official` | 同 `build` |
 
@@ -237,6 +244,8 @@ const result = await build("path/to/plugin", { outDir });
 const packed = await pack("path/to/plugin", { signingKey });
 const { ok, errors, warnings } = await check("path/to/plugin", { allowExperimental: false });
 ```
+
+`check()` 默认不做上架信息的检查，`listing: "warn"` 或 `"error"` 打开；单独要这部分结果用 `lintListing(dir, manifest)`。
 
 构建出错时抛 `BuildError`，它的 `issues` 是 `{ code, message, path?, file?, line?, column? }` 的列表。在浮屿仓库里它叫 `@fuyu/plugin-cli`；npm 上的 `fuyu-plugin` 包从根入口导出同样的函数（`import { build, check, pack, dev } from "fuyu-plugin"`）。
 

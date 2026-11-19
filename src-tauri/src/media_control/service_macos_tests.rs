@@ -105,7 +105,8 @@ fn the_same_app_by_player_label_keeps_the_adapter_track() {
     assert_merged(&state);
     let custom = [CustomMediaPlayer { id: "mymusic".to_string(), label: "My Music".to_string() }];
     assert!(same_app(&soda_adapter(None, &[], "mymusic"), &player(9, "MyMusic", "My Music"), &custom));
-    assert!(!same_app(&soda_adapter(None, &[], "com.soda.music"), &player(9, "汽水音乐", "汽水音乐"), &custom));
+    assert!(same_app(&soda_adapter(None, &[], "com.soda.music"), &player(9, "汽水音乐", "汽水音乐"), &custom));
+    assert!(!same_app(&soda_adapter(None, &[], "com.unknown.player"), &player(9, "汽水音乐", "汽水音乐"), &custom));
 }
 
 #[test]

@@ -105,7 +105,17 @@ export declare const LEGACY_KEY_ENV: "FLY_ISLAND_PLUGIN_SIGNING_KEY";
 
 export declare function build(dir: string, options?: BuildOptions): Promise<BuildResult>;
 export declare function pack(dir: string, options?: PackOptions): Promise<PackResult>;
-export declare function check(dir: string, options?: BuildOptions): Promise<CheckResult>;
+export interface CheckOptions extends BuildOptions {
+  /**
+   * What to do with the listing checks (screenshots, description, names): leave them out, report them
+   * as warnings, or as errors. Defaults to "off"; the `check` command uses "warn", and "error" with `--strict`.
+   */
+  listing?: "off" | "warn" | "error";
+}
+
+export declare function check(dir: string, options?: CheckOptions): Promise<CheckResult>;
+/** The listing checks on their own: what a user would notice on the market card and the plugin page. */
+export declare function lintListing(dir: string, manifest: Record<string, unknown> | null, options?: { appKey?: string }): Issue[];
 export declare function resolveBuildOptions(options?: BuildOptions): Required<Omit<BuildOptions, "outDir">>;
 export declare function readManifest(dir: string): Record<string, unknown>;
 export declare function builtManifest(pkg: Record<string, unknown>, appKey: string, nodeApis: string[], builtWith?: string): PluginManifest;

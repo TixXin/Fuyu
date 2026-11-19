@@ -3,6 +3,7 @@ import { SERVICE_NAME, SLOTS } from "@fuyu/plugin-base/protocol";
 import { review } from "@fuyu/plugin-review";
 import { build, readManifest } from "./build.mjs";
 import { BuildError } from "./errors.mjs";
+import { lintListing } from "./lint.mjs";
 import { createScratch, snapshotDirectory } from "./sources.mjs";
 
 const KNOWN_SLOTS = Object.freeze(Object.keys(SLOTS));
@@ -132,7 +133,10 @@ export async function check(dir, options = {}) {
       if (!(error instanceof BuildError)) throw error;
       errors.push({ code: "build", message: error.message }, ...error.issues);
     }
-    errors.push(...checkInterfaces(manifest ?? safeReadManifest(root), appKey, allowExperimental));
+    const source = manifest ?? safeReadManifest(root);
+    errors.push(...checkInterfaces(source, appKey, allowExperimental));
+    const listing = options.listing ?? "off";
+    if (listing !== "off") (listing === "error" ? errors : warnings).push(...lintListing(root, source, { appKey }));
     const report = review({ newDir: snapshotDirectory(root, scratch.dir("source")), newBuilt: built });
     const listed = new Set(report.summary.dependencies.added.map((item) => `${item.name}@${item.versions.join(", ")}`));
     const domains = new Set(warnings.filter((issue) => issue.code === "undeclared-domain").map((issue) => issue.domain));

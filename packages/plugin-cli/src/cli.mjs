@@ -27,6 +27,7 @@ Commands:
   check [folder]       Check without running the plugin: the manifest, a trial build and the
                        review scan the market runs
     --market             check as the market does (no experimental interfaces)
+    --strict             listing warnings (screenshots, description, names) count as errors
     --json               print the result as JSON
   review <old> <new>   Compare two versions like the market review. Each side is a folder or a
                        git commit; the old side is - for a first release
@@ -58,7 +59,7 @@ const BUILD = { config: { type: "string" }, official: { type: "boolean" } };
 const OPTIONS = {
   build: { ...BUILD, out: { type: "string" } },
   pack: { ...BUILD, out: { type: "string" }, sign: { type: "boolean" }, key: { type: "string" } },
-  check: { ...BUILD, market: { type: "boolean" }, json: { type: "boolean" } },
+  check: { ...BUILD, market: { type: "boolean" }, strict: { type: "boolean" }, json: { type: "boolean" } },
   review: {
     repo: { type: "string" },
     path: { type: "string" },
@@ -129,7 +130,7 @@ const commands = {
   },
 
   async check({ values, positionals }, io, out) {
-    const result = await check(resolve(io.cwd, positionals[0] ?? "."), { ...buildOptions(values, io.cwd), allowExperimental: !values.market });
+    const result = await check(resolve(io.cwd, positionals[0] ?? "."), { ...buildOptions(values, io.cwd), allowExperimental: !values.market, listing: values.strict ? "error" : "warn" });
     if (values.json) {
       out.out(JSON.stringify({ ok: result.ok, errors: result.errors, warnings: result.warnings }, null, 2));
       return result.ok ? 0 : 1;

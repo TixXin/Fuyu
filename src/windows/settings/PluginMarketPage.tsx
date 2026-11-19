@@ -43,7 +43,7 @@ function useOpenedPackage() {
 
 function ConnectedMarket({ host, onOpenPage }: { host: PluginMarketHost; onOpenPage?: (page: SettingsCategory) => void }) {
   const [request] = useState(takeMarketViewRequest);
-  const catalog = usePluginMarketCatalog(host === "open");
+  const catalog = usePluginMarketCatalog(host === "open", { fetchWhenEmpty: true });
   const opened = useOpenedPackage();
   const { refresh } = catalog;
   useEffect(() => onMarketRefreshRequest(refresh), [refresh]);

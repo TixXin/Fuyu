@@ -152,7 +152,27 @@ export function rememberApp(config: NoticeConfig, sourceApp: string | null | und
   return { ...config, seenApps: [app, ...config.seenApps].slice(0, MAX_SEEN_APPS) };
 }
 
-export function appLabel(sourceApp: string): string {
+const PLAYERS: readonly [words: readonly string[], zh: string, en: string][] = [
+  [["netease", "cloudmusic", "163music"], "网易云音乐", "NetEase Cloud Music"],
+  [["qqmusic"], "QQ音乐", "QQ Music"],
+  [["kugou"], "酷狗音乐", "KuGou Music"],
+  [["kuwo", "kwmusic"], "酷我音乐", "Kuwo Music"],
+  [["sodamusic", "soda.music", "qishui", "汽水音乐"], "汽水音乐", "Soda Music"],
+  [["migumusic", "咪咕音乐"], "咪咕音乐", "Migu Music"],
+  [["spotify"], "Spotify", "Spotify"],
+  [["applemusic", "com.apple.music"], "Apple Music", "Apple Music"],
+  [["itunes"], "iTunes", "iTunes"],
+  [["youtube-music", "youtube music", "youtubemusic", "app.ytmd"], "YouTube Music", "YouTube Music"],
+  [["amazonmusic", "amazon music", "amazon.music"], "Amazon Music", "Amazon Music"],
+  [["tidal"], "TIDAL", "TIDAL"],
+  [["deezer"], "Deezer", "Deezer"],
+  [["qobuz"], "Qobuz", "Qobuz"],
+];
+
+export function appLabel(sourceApp: string, locale = "en"): string {
+  const lowered = sourceApp.trim().toLowerCase();
+  const known = PLAYERS.find(([words]) => words.some((word) => lowered.includes(word)));
+  if (known) return locale.toLowerCase().startsWith("zh") ? known[1] : known[2];
   let name = sourceApp.trim();
   const bang = name.lastIndexOf("!");
   if (bang >= 0) name = name.slice(bang + 1);

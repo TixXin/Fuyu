@@ -28,6 +28,52 @@ fn recognizes_domestic_and_international_music_players() {
 }
 
 #[test]
+fn names_the_mainstream_platforms_from_their_windows_and_mac_identifiers() {
+    let cases = [
+        ("cloudmusic.exe", "NetEase Music"),
+        ("com.netease.163music", "NetEase Music"),
+        ("QQMusic.exe", "QQ Music"),
+        ("com.tencent.QQMusicMac", "QQ Music"),
+        ("KuGou.exe", "KuGou"),
+        ("com.kugou.mac.Music", "KuGou"),
+        ("kwmusic.exe", "Kuwo"),
+        ("SodaMusic.exe", "汽水音乐"),
+        ("com.soda.music", "汽水音乐"),
+        ("汽水音乐", "汽水音乐"),
+        ("MiguMusic.exe", "咪咕音乐"),
+        ("Spotify.exe", "Spotify"),
+        ("SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify", "Spotify"),
+        ("com.spotify.client", "Spotify"),
+        ("AppleInc.AppleMusicWin_nzyj5cx40ttqa!App", "Apple Music"),
+        ("com.apple.Music", "Apple Music"),
+        ("iTunes.exe", "iTunes"),
+        ("AppleInc.iTunes_nzyj5cx40ttqa!iTunes", "iTunes"),
+        ("YouTube Music.exe", "YouTube Music"),
+        ("com.github.th-ch.youtube-music", "YouTube Music"),
+        ("YouTube Music Desktop App.exe", "YouTube Music"),
+        ("app.ytmd", "YouTube Music"),
+        ("Amazon Music.exe", "Amazon Music"),
+        ("com.amazon.music", "Amazon Music"),
+        ("TIDAL.exe", "TIDAL"),
+        ("com.tidal.desktop", "TIDAL"),
+        ("Deezer.exe", "Deezer"),
+        ("com.deezer.deezer-desktop", "Deezer"),
+        ("Qobuz.exe", "Qobuz"),
+        ("com.qobuz.QobuzDesktop", "Qobuz"),
+    ];
+    for (id, name) in cases {
+        assert_eq!(friendly_app_label_with_custom(id, &[]), name, "{id}");
+    }
+}
+
+#[test]
+fn a_web_player_keeps_its_first_word_as_the_id() {
+    for player in KNOWN_PLAYERS.iter().filter(|player| player.label == "YouTube Music" || player.label == "汽水音乐" || player.label == "Amazon Music") {
+        assert!(!player.needles[0].contains(['.', ' ']), "{}", player.label);
+    }
+}
+
+#[test]
 fn matches_standalone_web_and_custom_music_players() {
     let custom = vec![CustomMediaPlayer {
         id: "mybox.exe".to_string(),
