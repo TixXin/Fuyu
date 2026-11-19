@@ -151,6 +151,7 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
     const installed = installPackage(packed.file, {
       dir: hostDir,
       source: "market",
+      official: true,
       expectedSha256: packed.sha256,
     });
     assert.equal(installed.id, expectedId);

@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { compareVersions, mergeRevoked, openIndex, openRevoked, selectVersions, verifyVersionSignature } from "../../../../packages/plugin-market/src/index.mjs";
-import { applyRevocationsToDir, inspectPackage as inspectFuyuPackage, installPackage, uninstallPackage, writeInstalledToYml } from "../../../../packages/plugin-cli/src/installer.mjs";
+import { applyRevocationsToDir, commitStaged, discardStaged, inspectPackage as inspectFuyuPackage, installPackage, stagePackage, uninstallPackage, writeInstalledToYml } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { marketV1 } from "../../../../packages/plugin-services/src/services/market.mjs";
 import { getMarketPluginDetails } from "./marketDetails.mjs";
 import {
@@ -56,27 +56,35 @@ export function createMarketService(options = {}) {
     for (const step of steps) {
       const res = await fetchImpl(step.versionEntry.url);
       if (!res?.ok) throw marketError("network", `Failed to download ${step.pluginEntry.name}@${step.versionEntry.version} (${res?.status ?? "err"})`);
-      const buf = Buffer.from(await res.arrayBuffer());
-      inspectFuyuPackage(buf, { source: "market", official: step.official, appVersion, expectedSha256: step.versionEntry.sha256 });
-      downloaded.push({ ...step, buf });
+      downloaded.push({ ...step, buf: Buffer.from(await res.arrayBuffer()) });
     }
+    const staged = [];
+    try {
+      for (const item of downloaded) {
+        staged.push(stagePackage(item.buf, {
+          dir: pluginsDir,
+          source: "market",
+          official: item.official,
+          appVersion,
+          expectedSha256: item.versionEntry.sha256,
+          expectedName: item.pluginEntry.name,
+          expectedVersion: item.versionEntry.version,
+          revocations,
+        }));
+      }
+    } catch (error) {
+      discardStaged(staged);
+      throw error;
+    }
+    const installed = commitStaged(pluginsDir, staged);
     const nextTrusted = { ...trustedAuthors };
-    let lastInstalled = null;
     for (const item of downloaded) {
-      lastInstalled = installPackage(item.buf, {
-        dir: pluginsDir,
-        source: "market",
-        official: item.official,
-        appVersion,
-        expectedSha256: item.versionEntry.sha256,
-        revocations,
-      });
       nextTrusted[item.pluginEntry.name] = {
         keyId: item.official ? null : (item.versionEntry.authorSignature?.keyId ?? item.keyId),
         repository: item.versionEntry.repository,
       };
     }
-    return { lastInstalled, trustedAuthors: nextTrusted };
+    return { lastInstalled: installed[installed.length - 1], trustedAuthors: nextTrusted };
   };
 
   const runSilentAutoUpdates = async ({ doc, revocations, trustedAuthors, now }) => {
