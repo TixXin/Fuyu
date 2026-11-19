@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AgentUsage } from "../../lib/agent-usage/types";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { windowServices } from "../plugin-kernel/services";
-import { getAntigravityUsage, getPlanUsage, refreshClaudeUsage } from "./api";
+import { getAntigravityUsage, getCursorUsage, getPlanUsage, refreshClaudeUsage } from "./api";
 import { isServiceOff, usageFromReport } from "./agentUsage.ts";
 import type { UsageProviderId } from "./usageRing";
 
@@ -34,6 +34,7 @@ const READERS: Record<UsageProviderId, (refresh: boolean) => Promise<Reading>> =
   antigravity: async (refresh) => ({ usage: await getAntigravityUsage(refresh), agentsOff: false }),
   glm: fromPlan("glm"),
   kimi: fromPlan("kimi"),
+  cursor: async (refresh) => ({ usage: await getCursorUsage(refresh), agentsOff: false }),
 };
 
 export function useClaudeUsage(provider: UsageProviderId = "claudeCode", enabled = true) {

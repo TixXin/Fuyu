@@ -20,6 +20,7 @@ export type ClaudeUsageText = {
   fromKimi: string;
   fromAntigravity: string;
   fromAntigravityCloud: string;
+  fromCursor: string;
   fromWorkbuddy: string;
   fromDshApi: string;
   fromDshAccount: string;
@@ -30,13 +31,14 @@ export type ClaudeUsageText = {
   hoverOnlyLabel: (details: string) => string;
   hoverOnlyItemName: string;
   noData: string;
-  noUsage: Record<"codex" | "antigravity" | "glm" | "kimi" | "workbuddy" | "dsh", string>;
+  noUsage: Record<"codex" | "antigravity" | "glm" | "kimi" | "cursor" | "workbuddy" | "dsh", string>;
   windowNames: Record<string, string>;
   workbuddyCredits: (today: number, sevenDay: number, total: number, totalTokens: number) => string;
   dshWallet: (currency: string, total: string, toppedUp: string, granted: string) => string;
   dshEmpty: string;
   planErrors: Record<AgentUsageErrorKind, string>;
   antigravityErrors: Record<AgentUsageErrorKind, string>;
+  cursorErrors: Record<AgentUsageErrorKind, string>;
   workbuddyErrors: Record<AgentUsageErrorKind, string>;
   dshErrors: Record<AgentUsageErrorKind, string>;
   errors: Record<AgentUsageErrorKind, string>;
@@ -51,6 +53,7 @@ export type ClaudeUsageText = {
     glmHintMac: string;
     kimiHint: string;
     kimiHintMac: string;
+    cursorHint: string;
     workbuddyHint: string;
     dshHint: string;
     show: string;
@@ -113,6 +116,7 @@ export const zhCN: ClaudeUsageText = {
   fromKimi: "来自 Kimi",
   fromAntigravity: "来自 Antigravity 本地服务",
   fromAntigravityCloud: "来自 Antigravity 云端",
+  fromCursor: "来自 Cursor",
   fromWorkbuddy: "来自 WorkBuddy 会话记录",
   fromDshApi: "来自 DeepSeek 开放平台",
   fromDshAccount: "来自 DeepSeek 账户",
@@ -131,6 +135,7 @@ export const zhCN: ClaudeUsageText = {
     antigravity: "暂无 Antigravity 用量（请打开 Antigravity 或先在 Antigravity 中登录）",
     glm: "暂无 GLM 用量（在设置 → AI Agent 的用量环里保存 GLM Coding Plan 的 API Key）",
     kimi: "暂无 Kimi 用量（在设置 → AI Agent 的用量环里保存 Kimi Code 的 API Key）",
+    cursor: "暂无 Cursor 用量（请先在 Cursor 中登录）",
     workbuddy: "暂无 WorkBuddy 积分记录（运行过 WorkBuddy 会话后自动统计）",
     dsh: "暂无 DeepSeek Harness 余额（需要先在 DSH 中登录或配置官方 API Key）",
   },
@@ -139,6 +144,8 @@ export const zhCN: ClaudeUsageText = {
     mcpMonth: "MCP 本月",
     "3p5h": "Claude / GPT 5 小时",
     "3p7d": "Claude / GPT 7 天",
+    cursorAuto: "Auto 本月",
+    cursorApi: "指定模型本月",
   },
   workbuddyCredits: (today, sevenDay, total, totalTokens) => {
     if (total === 0 && totalTokens > 0) {
@@ -181,6 +188,20 @@ export const zhCN: ClaudeUsageText = {
     noSessions: "未找到 Antigravity 会话",
     customEndpoint: "使用了非官方端点",
   },
+  cursorErrors: {
+    noCredentials: "未找到 Cursor 的登录",
+    tokenExpired: "Cursor 登录已过期，打开 Cursor 后会自动刷新",
+    loginRequired: "Cursor 登录已失效，打开 Cursor 或重新登录",
+    forbidden: "当前账号无权读取 Cursor 用量",
+    rateLimited: "请求过于频繁，稍后自动重试",
+    noProxy: "没有代理",
+    network: "无法连接 Cursor",
+    http: "Cursor 返回了错误",
+    invalidResponse: "接口失效（无法识别 Cursor 返回的用量）",
+    endpointChanged: "接口失效（Cursor 的内部用量接口可能已随版本变更）",
+    noSessions: "未找到 Cursor 会话",
+    customEndpoint: "使用了自定义接口",
+  },
   workbuddyErrors: {
     noCredentials: "未找到 WorkBuddy 数据",
     tokenExpired: "登录已过期",
@@ -220,6 +241,7 @@ export const zhCN: ClaudeUsageText = {
     glmHintMac: "用下面保存的智谱开放平台 API Key，每分钟最多一次直连 open.bigmodel.cn 查询 GLM Coding Plan 的 5 小时、每周和 MCP 月度额度。Key 存在钥匙串里，只发给智谱。",
     kimiHint: "用下面保存的 Kimi Code API Key，每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Key 存在 Windows 凭据管理器里，只发给 Kimi。",
     kimiHintMac: "用下面保存的 Kimi Code API Key，每分钟最多一次直连 api.kimi.com 查询 5 小时、每周或本月额度。Key 存在钥匙串里，只发给 Kimi。",
+    cursorHint: "只读本机 Cursor 保存的登录（state.vscdb，不刷新、不改写），最多每 5 分钟一次直连 api2.cursor.sh 查询本计费周期已用的比例（内环本月）。这是未公开的内部接口，随版本可能失效。没装 Cursor、没登录或查不到时不显示这个环。",
     workbuddyHint: "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分。",
     dshHint: "只读本机 DeepSeek Harness 的 .credentials.yaml（仅在官方默认路由下生效，凭据只在内存中使用，不进圆环），每分钟最多一次查询官方账户或 API 余额并在悬停卡片中显示。",
     show: "环和悬停卡片显示",
@@ -275,6 +297,7 @@ export const en: ClaudeUsageText = {
   fromKimi: "from Kimi",
   fromAntigravity: "from Antigravity's local server",
   fromAntigravityCloud: "from Antigravity Cloud Code",
+  fromCursor: "from Cursor",
   fromWorkbuddy: "from WorkBuddy's session logs",
   fromDshApi: "from DeepSeek API",
   fromDshAccount: "from DeepSeek account",
@@ -293,6 +316,7 @@ export const en: ClaudeUsageText = {
     antigravity: "No Antigravity usage yet (open Antigravity or sign in first)",
     glm: "No GLM usage yet (save a GLM Coding Plan API key under Settings → AI Agent → Usage rings)",
     kimi: "No Kimi usage yet (save a Kimi Code API key under Settings → AI Agent → Usage rings)",
+    cursor: "No Cursor usage yet (sign in to Cursor first)",
     workbuddy: "No WorkBuddy credit records yet (counted once WorkBuddy runs a session)",
     dsh: "No DeepSeek Harness balance yet (sign in or set an official API key in DSH first)",
   },
@@ -301,6 +325,8 @@ export const en: ClaudeUsageText = {
     mcpMonth: "MCP month",
     "3p5h": "Claude / GPT 5h",
     "3p7d": "Claude / GPT 7d",
+    cursorAuto: "Auto this month",
+    cursorApi: "Named models this month",
   },
   workbuddyCredits: (today, sevenDay, total, totalTokens) => {
     if (total === 0 && totalTokens > 0) {
@@ -343,6 +369,20 @@ export const en: ClaudeUsageText = {
     noSessions: "No Antigravity sessions found",
     customEndpoint: "Non-official endpoint configured",
   },
+  cursorErrors: {
+    noCredentials: "No Cursor login found",
+    tokenExpired: "Cursor login expired; open Cursor to refresh it",
+    loginRequired: "Cursor login is no longer valid; open Cursor or sign in again",
+    forbidden: "This account may not read Cursor usage",
+    rateLimited: "Rate limited; retrying later",
+    noProxy: "No proxy",
+    network: "Can't reach Cursor",
+    http: "Cursor returned an error",
+    invalidResponse: "Endpoint changed (unrecognized Cursor usage format)",
+    endpointChanged: "Endpoint changed (Cursor's internal usage API may have changed)",
+    noSessions: "No Cursor sessions found",
+    customEndpoint: "Uses a custom endpoint",
+  },
   workbuddyErrors: {
     noCredentials: "No WorkBuddy data found",
     tokenExpired: "Login expired",
@@ -382,6 +422,7 @@ export const en: ClaudeUsageText = {
     glmHintMac: "Asks open.bigmodel.cn directly, at most once a minute, for the GLM Coding Plan's 5-hour, weekly and monthly MCP limits with the Zhipu open platform API key saved below. The key lives in the keychain and goes to Zhipu only.",
     kimiHint: "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits with the Kimi Code API key saved below. The key lives in the Windows Credential Manager and goes to Kimi only.",
     kimiHintMac: "Asks api.kimi.com directly, at most once a minute, for the 5-hour, weekly or monthly limits with the Kimi Code API key saved below. The key lives in the keychain and goes to Kimi only.",
+    cursorHint: "Reads the login Cursor saved on this computer (state.vscdb, read-only, never refreshed or rewritten) and asks api2.cursor.sh directly, at most every 5 minutes, how much of this billing cycle is used (inner ring: this month). Uses an undocumented internal endpoint that may break across updates. The ring stays hidden when Cursor isn't installed, isn't signed in or has no usage.",
     workbuddyHint: "Reads credit consumption from local ~/.workbuddy and ~/.workbuddy-ai session logs (offline, not shown as a ring) and lists today's, 7-day and total credits in the hover card.",
     dshHint: "Reads DeepSeek Harness's local .credentials.yaml (official default routes only; credentials stay in Rust memory, not shown as a ring) to query the official wallet balance at most once a minute for the hover card.",
     show: "Rings and card show",
