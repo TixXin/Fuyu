@@ -171,15 +171,16 @@ const MAC_OUTPUTS = {
   [MAC_COMMANDS.ioreg[0]]: fixture("mac/ioreg-accelerator.txt"),
 };
 
-test("nothing samples and nothing starts while the page is closed and the bar shows nothing", async () => {
-  for (const kind of ["windows", "macos"]) {
-    const { exec, scheduler, live } = setup(kind, { showOnBar: false }, kind === "macos" ? MAC_OUTPUTS : {});
-    assert.deepEqual(live(), []);
-    assert.equal(scheduler.sampling, false);
-    await scheduler.tick();
-    assert.equal(exec.children.length, 0);
-    assert.deepEqual(exec.runs, []);
-  }
+test("Windows: with the page closed and an empty bar only CPU is recorded every 5 s, and nothing is started", async () => {
+  const { exec, scheduler, live, step } = setup("windows", { showOnBar: false });
+  assert.deepEqual(live(), [5000]);
+  for (let i = 0; i < 4; i += 1) await step(5000);
+  assert.equal(exec.children.length, 0);
+  assert.deepEqual(exec.runs, []);
+  const { points } = scheduler.historySnapshot();
+  assert.equal(points.length, 4);
+  assert.deepEqual(points.slice(1).map((point, index) => point.at - points[index].at), [5000, 5000, 5000]);
+  assert.ok(points.every((point) => point.cpu === 12.5 && point.down === null && point.gpu === null));
 });
 
 test("Windows: a bar with only CPU and memory never starts PowerShell or nvidia-smi", async () => {
@@ -191,7 +192,7 @@ test("Windows: a bar with only CPU and memory never starts PowerShell or nvidia-
   assert.equal(scheduler.sample.cpuPercent, 12.5);
   assert.equal(scheduler.sample.memoryPercent, 75);
   assert.equal(scheduler.sample.network.status, "pending");
-  assert.equal(scheduler.history.size, 0);
+  assert.equal(scheduler.history.size, 4, "one CPU point every 5 s over 20 s");
 });
 
 test("Windows: the bar's CPU temperature starts the helper, the GPU temperature only nvidia-smi", async () => {
@@ -223,9 +224,10 @@ test("Windows: the page starts one helper, which quits 60 s after the page close
   assert.equal(scheduler.sample.programs.status, "pending");
   assert.ok(scheduler.history.size >= 1);
 
+  const recorded = scheduler.history.size;
   scheduler.watch("page", false);
-  assert.deepEqual(live(), []);
-  assert.equal(scheduler.history.size, 0);
+  assert.deepEqual(live(), [5000]);
+  assert.equal(scheduler.history.size, recorded, "closing the page keeps the curve");
   clock.advance(59_000);
   assert.equal(helper.running, true);
   clock.advance(1_500);
@@ -265,8 +267,8 @@ test("Windows: a helper that stops answering is killed and retried, then rested 
   assert.deepEqual(await helper.request("net"), { received: 1000, sent: 100 });
 });
 
-test("background recording keeps one point every 5 s while the page is closed, and hands it to the page", async () => {
-  const { scheduler, live, step, exec } = setup("macos", { showOnBar: false, backgroundHistory: true }, MAC_OUTPUTS);
+test("macOS: the host records CPU, network and GPU every 5 s without the setting, and the page keeps them after it closes", async () => {
+  const { scheduler, live, step, exec } = setup("macos", { showOnBar: false }, MAC_OUTPUTS);
   assert.deepEqual(live(), [5000]);
   for (let i = 0; i < 6; i += 1) await step(5000);
   const { points } = scheduler.historySnapshot();
@@ -282,10 +284,30 @@ test("background recording keeps one point every 5 s while the page is closed, a
   await step(1000);
   assert.equal(scheduler.historySnapshot().points.length, 7);
   scheduler.watch("page", false);
-  assert.equal(scheduler.historySnapshot().points.length, 7, "closing the page keeps the background recording");
+  await step(5000);
+  scheduler.watch("page", true);
+  await step(1000);
+  assert.equal(scheduler.historySnapshot().points.length, 9, "reopening the page continues the same curve");
+  assert.equal(scheduler.historySnapshot().points[8].down, 0, "the network baseline survives the closed page");
+});
+
+test("Windows: network and GPU are recorded with the page closed only when background recording is ticked", async () => {
+  const outputs = { "nvidia-smi": fixture("windows/nvidia-smi.txt") };
+  const { scheduler, step, exec } = setup("windows", { showOnBar: false, backgroundHistory: true }, outputs);
+  for (let i = 0; i < 3; i += 1) await step(5000);
+  assert.equal(exec.children.length, 1);
+  assert.deepEqual([...new Set(exec.children[0].lines.map((line) => line.split(" ")[1]))], ["net"]);
+  const { points } = scheduler.historySnapshot();
+  assert.deepEqual(points.map((point) => point.down), [null, 0, 0]);
+  assert.deepEqual(points.map((point) => point.gpu), [37, 37, 37]);
+
   scheduler.setConfig({ ...DEFAULT_CONFIG, showOnBar: false, backgroundHistory: false });
-  assert.equal(scheduler.historySnapshot().points.length, 0);
-  assert.deepEqual(live(), []);
+  const runs = exec.runs.length;
+  await step(5000);
+  assert.equal(exec.runs.length, runs);
+  assert.equal(exec.children[0].lines.length, 3);
+  assert.equal(scheduler.historySnapshot().points.length, 4, "turning the setting off keeps what was recorded");
+  assert.equal(scheduler.historySnapshot().points[3].down, null);
 });
 
 test("macOS: the page reads memory, network, battery, programs and GPU; CPU temperature is unsupported", async () => {

@@ -94,9 +94,9 @@ export class Scheduler {
   }
 
   setConfig(config: MonitorConfig): void {
-    const wasBackground = this.config.backgroundHistory;
+    const hadExtras = this.backgroundExtras();
     this.config = config;
-    if (wasBackground && !config.backgroundHistory && !this.pageOpen) this.forgetBackground();
+    if (hadExtras && !this.backgroundExtras() && !this.pageOpen) this.forgetNetwork();
     this.sync();
   }
 
@@ -141,10 +141,12 @@ export class Scheduler {
 
   private wantedPeriod(): number {
     if (this.pageOpen) return PAGE_INTERVAL_MS;
-    const periods: number[] = [];
-    if (this.barActive()) periods.push(this.config.intervalMs);
-    if (this.config.backgroundHistory) periods.push(BACKGROUND_INTERVAL_MS);
-    return periods.length > 0 ? Math.min(...periods) : 0;
+    if (this.barActive()) return Math.min(this.config.intervalMs, BACKGROUND_INTERVAL_MS);
+    return BACKGROUND_INTERVAL_MS;
+  }
+
+  private backgroundExtras(): boolean {
+    return this.config.backgroundHistory || this.source.cheapBackground;
   }
 
   private due(key: Cadence, now: number, every: number): boolean {
@@ -154,8 +156,7 @@ export class Scheduler {
   private plan(now: number, force: boolean): Plan {
     const page = this.pageOpen;
     const bar = this.barActive() && (force || this.due("bar", now, this.config.intervalMs));
-    const background =
-      !page && this.config.backgroundHistory && (force || this.due("background", now, BACKGROUND_INTERVAL_MS));
+    const background = !page && (force || this.due("background", now, BACKGROUND_INTERVAL_MS));
     return { page, bar: bar || (force && !page), background };
   }
 
@@ -201,9 +202,10 @@ export class Scheduler {
     } else {
       const barCpuTemperature = plan.bar && config.barCpuTemperature && features.cpuTemperature;
       const barGpuTemperature = plan.bar && config.barGpuTemperature && features.gpuTemperature;
-      if (plan.background && features.network) read("network", () => source.network(now));
+      const extras = plan.background && this.backgroundExtras();
+      if (extras && features.network) read("network", () => source.network(now));
       if (barCpuTemperature) read("cpuTemperatureC", () => source.cpuTemperature());
-      if (features.gpu && (plan.background || barGpuTemperature) && this.due("gpu", now, GPU_INTERVAL_MS)) {
+      if (features.gpu && (extras || barGpuTemperature) && this.due("gpu", now, GPU_INTERVAL_MS)) {
         this.last.gpu = now;
         read("gpu", () => source.gpu({ detail: false }));
       }
@@ -256,11 +258,10 @@ export class Scheduler {
   private pageClosed(): void {
     this.source.resetPrograms();
     this.readings = this.freshReadings();
-    if (!this.config.backgroundHistory) this.forgetBackground();
+    if (!this.backgroundExtras()) this.forgetNetwork();
   }
 
-  private forgetBackground(): void {
-    this.history.clear();
+  private forgetNetwork(): void {
     this.source.resetNetwork();
     this.readings.network = this.features.network ? PENDING : UNSUPPORTED;
   }

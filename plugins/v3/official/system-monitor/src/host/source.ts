@@ -13,6 +13,7 @@ export interface GpuRequest {
 
 export interface Source {
   readonly platform: Platform;
+  readonly cheapBackground: boolean;
   memoryUsedBytes(): Promise<number | null>;
   cpuTemperature(): Promise<Reading<number>>;
   gpu(request: GpuRequest): Promise<Reading<GpuReading>>;
@@ -41,6 +42,7 @@ export function failed(error: unknown): { status: "error"; message: string } {
 export function unsupportedSource(platform: Platform): Source {
   return {
     platform,
+    cheapBackground: false,
     memoryUsedBytes: async () => null,
     cpuTemperature: async () => UNSUPPORTED,
     gpu: async () => UNSUPPORTED,

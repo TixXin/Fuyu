@@ -229,68 +229,44 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
       assert.equal(status.undeclared, undefined, `${id} must have no undeclared capabilities: ${JSON.stringify(status.undeclared)}`);
     }
 
-    const initialState = await host.ctx.clients.call("@fuyu/system-monitor", "getState", { locale: "zh-CN" });
-    assert.equal(initialState.sampling, true);
-    assert.ok(initialState.sample !== null);
-    assert.ok(initialState.sample.cpuPercent >= 0 && initialState.sample.cpuPercent <= 100);
-    assert.ok(Array.isArray(initialState.sample.cores) && initialState.sample.cores.length > 0);
-    assert.ok(initialState.sample.cores.every((pct) => pct >= 0 && pct <= 100));
-    assert.ok(initialState.sample.memoryTotalBytes > 0);
-    assert.ok(initialState.sample.memoryUsedBytes >= 0 && initialState.sample.memoryUsedBytes <= initialState.sample.memoryTotalBytes);
-    assert.ok(initialState.sample.memoryPercent >= 0 && initialState.sample.memoryPercent <= 100);
-    assert.ok(initialState.sample.uptimeSec >= 0);
-    assert.ok(initialState.sample.hostname.length > 0);
-    assert.ok(initialState.sample.arch.length > 0);
-    const expectedPlatform = { darwin: "macos", win32: "windows" }[process.platform] ?? "other";
-    assert.equal(initialState.platform, expectedPlatform);
-    assert.equal(initialState.sample.platform, expectedPlatform);
-    assert.equal(initialState.features.cpuTemperature, expectedPlatform === "windows");
+    const sysmon = (method, params) => host.ctx.clients.call("@fuyu/system-monitor", method, params);
     const sysmonTimers = () => host.timers()["@fuyu/system-monitor"] ?? 0;
+    const expectedPlatform = { darwin: "macos", win32: "windows" }[process.platform] ?? "other";
+    const initial = await sysmon("getState", { locale: "zh-CN" });
+    assert.equal(initial.sampling, true);
+    const { sample } = initial;
+    assert.ok(sample.cpuPercent >= 0 && sample.cpuPercent <= 100);
+    assert.ok(sample.cores.length > 0 && sample.cores.every((pct) => pct >= 0 && pct <= 100));
+    assert.ok(sample.memoryTotalBytes > 0 && sample.memoryUsedBytes >= 0 && sample.memoryUsedBytes <= sample.memoryTotalBytes);
+    assert.ok(sample.memoryPercent >= 0 && sample.memoryPercent <= 100 && sample.uptimeSec >= 0);
+    assert.ok(sample.hostname.length > 0 && sample.arch.length > 0);
+    assert.deepEqual([initial.platform, sample.platform], [expectedPlatform, expectedPlatform]);
+    assert.equal(initial.features.cpuTemperature, expectedPlatform === "windows");
     assert.equal(sysmonTimers(), 1);
 
-    const idleState = await host.ctx.clients.call("@fuyu/system-monitor", "setConfig", {
-      showOnBar: false,
-      intervalMs: 5000,
-    });
-    assert.equal(idleState.sampling, false);
-    assert.equal(idleState.config.showOnBar, false);
-    assert.equal(idleState.config.intervalMs, 5000);
-    assert.equal(idleState.config.layout, "auto");
-    assert.equal(idleState.config.backgroundHistory, false);
-    assert.equal(sysmonTimers(), 0);
+    const idle = await sysmon("setConfig", { showOnBar: false, intervalMs: 5000 });
+    assert.equal(idle.sampling, true, "CPU is recorded every 5 s even with nothing shown");
+    assert.deepEqual([idle.config.showOnBar, idle.config.intervalMs, idle.config.layout], [false, 5000, "auto"]);
+    assert.equal(sysmonTimers(), 1);
 
-    const watchingState = await host.ctx.clients.call("@fuyu/system-monitor", "watchPage", {
-      viewerId: "page-1",
-      active: true,
-    });
-    assert.equal(watchingState.sampling, true);
-    assert.ok(sysmonTimers() >= 1);
-    const readings = ["cpuTemperatureC", "gpu", "network", "battery", "programs"];
-    for (const key of readings) {
-      const { status } = watchingState.sample[key];
+    const watching = await sysmon("watchPage", { viewerId: "page-1", active: true });
+    assert.ok(watching.sampling && sysmonTimers() >= 1);
+    for (const key of ["cpuTemperatureC", "gpu", "network", "battery", "programs"]) {
+      const { status } = watching.sample[key];
       assert.ok(["ok", "pending", "unsupported", "absent", "error"].includes(status), `${key}: ${status}`);
       if (expectedPlatform === "other") assert.equal(status, "unsupported", key);
     }
     if (expectedPlatform === "macos") {
-      assert.equal(watchingState.sample.cpuTemperatureC.status, "unsupported");
-      assert.equal(watchingState.sample.programs.status, "ok");
-      assert.ok(watchingState.sample.programs.value.byMemory.length > 0);
+      assert.equal(watching.sample.cpuTemperatureC.status, "unsupported");
+      assert.ok(watching.sample.programs.value.byMemory.length > 0);
     }
-    if (expectedPlatform === "windows") {
-      assert.equal(watchingState.sample.network.status, "pending");
-      assert.equal(watchingState.sample.programs.status, "pending");
-    }
-    const history = await host.ctx.clients.call("@fuyu/system-monitor", "getHistory");
-    assert.equal(history.points.length, 1);
-    assert.equal(history.points[0].cpu, watchingState.sample.cpuPercent);
-
-    const closedState = await host.ctx.clients.call("@fuyu/system-monitor", "watchPage", {
-      viewerId: "page-1",
-      active: false,
-    });
-    assert.equal(closedState.sampling, false);
-    if (expectedPlatform !== "windows") assert.equal(sysmonTimers(), 0);
-    assert.equal((await host.ctx.clients.call("@fuyu/system-monitor", "getHistory")).points.length, 0);
+    if (expectedPlatform === "windows") assert.equal(watching.sample.programs.status, "pending");
+    const history = await sysmon("getHistory");
+    assert.equal(history.points.at(-1).cpu, watching.sample.cpuPercent);
+    const closed = await sysmon("watchPage", { viewerId: "page-1", active: false });
+    assert.equal(closed.sampling, true);
+    if (expectedPlatform !== "windows") assert.equal(sysmonTimers(), 1);
+    assert.equal((await sysmon("getHistory")).points.length, history.points.length, "closing the page keeps the curve");
 
     if (process.platform === "darwin" || process.platform === "win32") {
       const launcherInitial = await host.ctx.clients.call("@fuyu/launcher", "getState");
