@@ -18,7 +18,7 @@
 | `lyrics/v1` | `lyricsV1` | `music` | `lookup(query)`、`sources()` | `changed` | 查询当前曲目的 LRC 同步歌词与双语翻译、列出已登记的歌词来源 |
 | `market/v1` | `marketV1` | `updater` | `catalog()`、`refresh()`、`inspectPackage({ base64 })`、`installMarket({ name, version? })`、`installFile({ base64, expectedSha256? })`、`setManualAllowed({ allowed })`、`setEnabled({ id, enabled })`、`uninstall({ id, removeData? })` | `changed` | 插件市场索引拉取与验签、3 天冷静期筛选、`.fuyu` 包预检与安装、撤销停用、第三方插件启停与卸载 |
 | `media/v1` | `mediaV1` | `music` | `nowPlaying()`、`playPause()`、`next()`、`previous()`、`seek({ positionMs })` | `changed` | 读取当前系统媒体播放状态与控制播放/上曲/下曲/跳转进度；换歌或播放状态变化时发 `changed` |
-| `messages/v1` | `messagesV1` | `messages` | `sources()`、`notify(notice)`、`clear({ source? })` | `changed`、`arrived`、`action` | 查询各消息来源未读状态、推送结构化新消息通知（进收起条预览、横幅与到达面板）、清理未读 |
+| `messages/v1` | `messagesV1` | `messages` | `sources()`、`notify(notice)`、`clear({ source? })` | `changed`、`arrived`、`action` | 查询各消息来源未读状态、推送结构化新消息通知（进收起条预览、横幅与到达面板）、清理未读。`notify` 返回 `{ shown, receivedAt }`：`shown` 是岛上真的显示了这条通知才为 `true`；岛展开着、用户关了插件通知、岛窗口没开、3 秒内没回话或中途关掉时都是 `false`，不报错。宿主代码和窗口代码调用的结果一样，`shown: false` 时可以换别的方式提醒 |
 | `plugin-config/v1` | `pluginConfigV1` | 宿主内核 | `list()`、`get({ id })`、`set({ id, values })`、`reset({ id })` | `changed` | 按插件 `fuyu.config` JSON Schema 读取、校验、持久化与重置插件配置（`<dataDir>/<id>/config.json`） |
 | `plugin-windows/v1` | `pluginWindowsV1` | 宿主内核 | `getRules({ id })`、`setRules({ id, disallowAlwaysOnTop?, disallowClickThrough?, hideAll? })`、`list({ id? })` | `changed` | 查询当前实验性独立插件窗口状态，以及读写「禁止置顶 / 禁止点击穿透 / 隐藏全部窗口」护栏规则 |
 | `reminders/v1` | `remindersV1` | `timer`（主窗口） | `push({ id, source, icon, title, detail?, snoozable? })` | 无 | 往主窗口提醒队列推送一条提醒卡片 |

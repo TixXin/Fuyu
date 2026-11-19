@@ -182,14 +182,20 @@ export function createMessageSourceRegistry({ onChange, onArrive, config } = {})
       const notice = normalizeArrivalNotice(rawNotice);
       counts.set(notice.source, (counts.get(notice.source) ?? 0) + 1);
       let shown = true;
+      let showing = null;
       if (typeof onArrive === "function") {
         try {
           const res = onArrive(notice);
           if (typeof res === "boolean") shown = res;
+          else if (typeof res?.then === "function") showing = res;
         } catch {}
       }
       notify();
-      return { shown, receivedAt: notice.receivedAt };
+      if (!showing) return { shown, receivedAt: notice.receivedAt };
+      return Promise.resolve(showing).then(
+        (value) => ({ shown: value === true, receivedAt: notice.receivedAt }),
+        () => ({ shown: false, receivedAt: notice.receivedAt }),
+      );
     },
     async clear(rawParams) {
       const { source } = clearParamsOf(rawParams);

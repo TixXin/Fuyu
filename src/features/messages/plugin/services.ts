@@ -1,12 +1,15 @@
 import { messagesV1 } from "@fuyu/plugin-services";
 import { islandNoticesV1, type IslandNotice } from "../../../lib/island-notices/service";
+import { sendIslandNoticeAction, setLocalIslandNotices } from "../../plugin-kernel/islandControl";
 import { windowServices } from "../../plugin-kernel/services";
 import {
   clearMessageSources,
   getMessageSources,
+  normalizeArrivalNotice,
   notifyMessageArrival,
   setMessageArrivalHandler,
   subscribeMessageSources,
+  type NormalizedArrivalNotice,
 } from "../host/sources.mjs";
 import { deliverNotice, setNoticeActionSender } from "./notices";
 import { OWNER } from "./owner.ts";
@@ -17,9 +20,29 @@ function readNotice(params: IslandNotice): IslandNotice {
   return params;
 }
 
+function arrivalNotice(notice: NormalizedArrivalNotice): IslandNotice {
+  return {
+    pluginId: notice.pluginId,
+    pluginName: null,
+    title: notice.title,
+    body: notice.body,
+    durationMs: notice.durationMs,
+    iconUrl: notice.iconUrl,
+    layout: notice.layout === "inline" ? "inline" : "card",
+    controls: notice.controls,
+    actions: notice.actions.map((item) => ({ id: item, title: item })),
+  };
+}
+
+const fromHost = new Set<string>();
+
 if (new URLSearchParams(window.location.search).get("window") === null) {
   const noticesProvider = windowServices.provide(islandNoticesV1, {
-    notify: (params) => ({ shown: deliverNotice(readNotice(params)) }),
+    notify: (params) => {
+      const notice = readNotice(params);
+      fromHost.delete(notice.pluginId);
+      return { shown: deliverNotice(notice) };
+    },
   }, { owner: OWNER });
 
   const messagesProvider = windowServices.provide(messagesV1, {
@@ -29,18 +52,16 @@ if (new URLSearchParams(window.location.search).get("window") === null) {
   }, { owner: OWNER });
 
   setMessageArrivalHandler((notice) => {
-    const shown = deliverNotice({
-      pluginId: notice.pluginId,
-      pluginName: null,
-      title: notice.title,
-      body: notice.body,
-      durationMs: notice.durationMs,
-      iconUrl: notice.iconUrl,
-      layout: notice.layout === "inline" ? "inline" : "card",
-      controls: notice.controls,
-      actions: notice.actions.map((item) => ({ id: item, title: item })),
-    });
+    fromHost.delete(notice.pluginId);
+    const shown = deliverNotice(arrivalNotice(notice));
     messagesProvider.emit("arrived", notice);
+    return shown;
+  });
+
+  setLocalIslandNotices((raw) => {
+    const notice = normalizeArrivalNotice(raw);
+    const shown = deliverNotice(arrivalNotice(notice));
+    if (shown) fromHost.add(notice.pluginId);
     return shown;
   });
 
@@ -49,6 +70,10 @@ if (new URLSearchParams(window.location.search).get("window") === null) {
   });
 
   setNoticeActionSender((pluginId, action) => {
+    if (fromHost.has(pluginId)) {
+      void sendIslandNoticeAction(pluginId, action).catch((error: unknown) => console.error("Failed to send a notice action to the plugin host", error));
+      return;
+    }
     noticesProvider.emit("action", { pluginId, action });
     messagesProvider.emit("action", { pluginId, source: pluginId, action });
   });

@@ -8,7 +8,7 @@ import { FALLBACK_LOCALE, getLoadedI18n, loadLocale } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import { islandNoticesV1 } from "../../lib/island-notices/service";
 import { getPluginHostConnection } from "./api";
-import { answerIslandRequest, islandControlFor } from "./islandControl.ts";
+import { answerIslandRequest, attachIslandHost, islandControlFor } from "./islandControl.ts";
 import { updatePluginNames, type PluginNameInput } from "./pluginNames.ts";
 import { openPluginSettings } from "./settingsOpener.ts";
 import { windowServices } from "./services.ts";
@@ -49,6 +49,7 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
   const bridge = createBridge((method, params) => connection?.call(method, params) ?? Promise.reject(new Error("the plugin host is not connected")));
   const callHost = (method: string, params?: unknown) => connection?.call(method, params) ?? Promise.reject(new HostCallError("not-ready", "the plugin host is not connected"));
   const loader = createLoader({ registry, base: PLUGIN_BASE, bridge, openSettings: openPluginSettings, island: islandControlFor(window, callHost) });
+  if (window === "island") attachIslandHost(callHost);
   const services = createServiceProxy((method, params, options) => connection?.call(method, params, options) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
   windowServices.attach(services);
   const waitingMonitor = window === "island"

@@ -23,12 +23,14 @@ export type MessageSourceSpec = {
   open?: () => void | Promise<void>;
 };
 
+export type MessageArrivalResult = { shown: boolean; receivedAt: number };
+
 export type MessageSourceRegistry = {
   register(spec: MessageSourceSpec): () => void;
   sources(): { sources: readonly MessageSourceStatus[] };
   snapshot(): readonly MessageSourceStatus[];
   subscribe(listener: () => void): () => void;
-  notify(notice: unknown): { shown: boolean; receivedAt: number };
+  notify(notice: unknown): MessageArrivalResult | Promise<MessageArrivalResult>;
   clear(params?: unknown): Promise<{ ok: true }>;
   refresh(): void;
   resetForTest(): void;
@@ -40,7 +42,7 @@ export function clearParamsOf(params: unknown): { source: string | undefined };
 export function createMessageSourceRegistry(options?: {
   config?: Readonly<Record<string, unknown>>;
   onChange?: () => void;
-  onArrive?: (notice: NormalizedArrivalNotice) => boolean | void;
+  onArrive?: (notice: NormalizedArrivalNotice) => boolean | void | Promise<boolean>;
 }): MessageSourceRegistry;
 export function setMessageArrivalHandler(
   handler: ((notice: NormalizedArrivalNotice) => boolean | void) | null,
