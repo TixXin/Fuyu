@@ -37,7 +37,7 @@ export function AgentQuestionCard({
     setPicks([]);
   }, [id]);
 
-  const session = request && sessions.find((item) => item.provider === request.agent && item.sessionId === request.sessionId);
+  const session = request && (approvals.sample ?? sessions.find((item) => item.provider === request.agent && item.sessionId === request.sessionId));
   const cwd = session?.cwd ?? request?.cwd ?? null;
   const answers = answersFor(questions, picks);
   const instant = answersOnPick(questions);
@@ -45,7 +45,7 @@ export function AgentQuestionCard({
   const toTerminal = () => {
     if (!request) return;
     approvals.decide("terminal");
-    if (preview) return;
+    if (preview || approvals.sample) return;
     void focusAgentWindow(request.agent, cwd, session?.title ?? null, request.remoteHost ? "" : request.sessionId).catch((error: unknown) =>
       console.error("Failed to focus the agent window", error),
     );

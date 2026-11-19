@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { agentSessionsInFront } from "../api";
+import { agentSessionsInFront, type AgentSessionSummary } from "../api";
 import {
   decideAgentApproval,
   getPendingAgentApprovals,
@@ -19,6 +19,7 @@ export type AgentApprovals = {
   decide: (decision: AgentApprovalDecision, answers?: AgentQuestionAnswers) => void;
   cardHeight: number;
   measure: (height: number) => void;
+  sample?: AgentSessionSummary;
 };
 
 type AgentApprovalOptions = {

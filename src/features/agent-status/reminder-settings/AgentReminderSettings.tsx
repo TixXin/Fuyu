@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "../../../i18n";
 import type { IslandSettings } from "../../../lib/settings/types";
 import { activeTone } from "../../../lib/theme/themeMode";
@@ -10,7 +10,9 @@ import { useAgentSoundSettings } from "../sounds/useAgentSoundSettings";
 import { NoticeLookGroups } from "./NoticeLookGroups";
 import { NoticePreviewStage } from "./NoticePreviewStage";
 import { PREVIEW_SOUND, focusedEvent, type PreviewEvent } from "./previewEvents";
+import { previewSamples } from "./previewSamples";
 import { ReminderEventRows } from "./ReminderEventRows";
+import { useIslandTest } from "./useIslandTest";
 import { useNoticePlayback } from "./useNoticePlayback";
 import "./AgentReminderSettings.css";
 
@@ -44,12 +46,18 @@ export function AgentReminderSettings({ settings, onSettingsChange }: { settings
     },
   });
 
+  const islandTest = useIslandTest();
+  const sample = t.settings.agentNotice.preview.sample;
+  const samples = useMemo(() => previewSamples(sample), [sample]);
+
   const select = (name: PreviewEvent) => {
     playback.stop();
+    islandTest.clear();
     setEvent(name);
   };
   const update = (patch: Partial<IslandSettings>) => {
     playback.stop();
+    islandTest.clear();
     const next = focusedEvent(event, Object.keys(patch));
     if (next !== event) {
       setEvent(next);
@@ -74,6 +82,8 @@ export function AgentReminderSettings({ settings, onSettingsChange }: { settings
         soundName={audible(event) ? t.settings.sounds.events[PREVIEW_SOUND[event]].title : null}
         onSelect={select}
         onPlay={playback.playing ? playback.stop : playback.start}
+        islandTest={islandTest}
+        onTest={() => islandTest.run(event, samples)}
       />
       <ReminderEventRows settings={settings} event={event} onUpdate={update} onSelect={select} onAudition={audition} />
       <NoticeLookGroups settings={settings} event={event} tone={tone} notch={notch} onUpdate={update} onReset={reset} />

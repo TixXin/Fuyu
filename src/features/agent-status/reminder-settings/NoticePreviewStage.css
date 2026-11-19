@@ -68,6 +68,7 @@
 }
 
 .agent-reminder-stage__chip:focus-visible,
+.agent-reminder-stage__try:focus-visible,
 .agent-reminder-stage__play:focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
@@ -102,6 +103,41 @@
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
+}
+
+.agent-reminder-stage__actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.agent-reminder-stage__try {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  color: var(--color-text);
+  background: var(--color-white-a06);
+  border: 1px solid var(--color-white-a08);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.agent-reminder-stage__try:hover:not(:disabled) {
+  background: var(--color-white-a10);
+}
+
+.agent-reminder-stage__try:disabled {
+  color: var(--color-text-subtle);
+  cursor: default;
+  opacity: 0.6;
 }
 
 .agent-reminder-stage__desk {

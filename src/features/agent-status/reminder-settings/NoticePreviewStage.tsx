@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Play, Square } from "lucide-react";
+import { MonitorUp, Play, Square } from "lucide-react";
 import { useTranslation } from "../../../i18n";
 import type { IslandSettings } from "../../../lib/settings/types";
 import type { ThemeTone } from "../../../lib/theme/themeMode";
 import { NoticePreviewCard, NoticePreviewPill } from "./NoticePreviewCard";
 import { PREVIEW_EVENTS, PREVIEW_TONE, playSeconds, previewShow, previewStay, previewSwitch, type PreviewEvent } from "./previewEvents";
 import { useFitScale } from "./useFitScale";
+import type { IslandTest } from "./useIslandTest";
 import type { NoticePlayback } from "./useNoticePlayback";
 import "./NoticePreviewStage.css";
 
@@ -23,6 +24,8 @@ export function NoticePreviewStage({
   soundName,
   onSelect,
   onPlay,
+  islandTest,
+  onTest,
 }: {
   settings: IslandSettings;
   event: PreviewEvent;
@@ -33,6 +36,8 @@ export function NoticePreviewStage({
   soundName: string | null;
   onSelect: (event: PreviewEvent) => void;
   onPlay: () => void;
+  islandTest: IslandTest;
+  onTest: () => void;
 }) {
   const t = useTranslation();
   const text = t.settings.agentNotice;
@@ -89,6 +94,9 @@ export function NoticePreviewStage({
     }
   };
 
+  const tried = islandTest.result?.event === event ? islandTest.result.outcome : null;
+  const triedNote = tried && preview.tryResult[tried];
+
   const carded = playback.playing ? playback.phase === "shown" || playback.phase === "leaving" : show === "card";
   const titled = show === "title" && (!playback.playing || playback.step === "hidden");
   const dropClass = !playback.playing ? "" : playback.phase === "leaving" ? " agent-reminder-stage__drop--out" : playback.phase === "shown" ? " agent-reminder-stage__drop--in" : "";
@@ -116,10 +124,16 @@ export function NoticePreviewStage({
             );
           })}
         </div>
-        <button className="agent-reminder-stage__play" type="button" aria-pressed={playback.playing} onClick={onPlay}>
-          {playback.playing ? <Square size={11} strokeWidth={2.6} aria-hidden="true" /> : <Play size={12} strokeWidth={2.6} aria-hidden="true" />}
-          {playback.playing ? preview.stop : preview.play}
-        </button>
+        <div className="agent-reminder-stage__actions">
+          <button className="agent-reminder-stage__try" type="button" disabled={show !== "card" || islandTest.sending} title={show === "card" ? preview.tryHint : preview.tryOff} onClick={onTest}>
+            <MonitorUp size={13} strokeWidth={2.2} aria-hidden="true" />
+            {preview.tryOnIsland}
+          </button>
+          <button className="agent-reminder-stage__play" type="button" aria-pressed={playback.playing} onClick={onPlay}>
+            {playback.playing ? <Square size={11} strokeWidth={2.6} aria-hidden="true" /> : <Play size={12} strokeWidth={2.6} aria-hidden="true" />}
+            {playback.playing ? preview.stop : preview.play}
+          </button>
+        </div>
       </div>
       <div ref={boxRef} className="agent-reminder-stage__desk">
         <div ref={contentRef} className="agent-reminder-stage__fit" style={{ transform: `scale(${scale})` }}>
@@ -146,8 +160,8 @@ export function NoticePreviewStage({
         )}
         {carded && percent < 100 && <span className="agent-reminder-stage__scale">{preview.shrunk(percent)}</span>}
       </div>
-      <p className={`agent-reminder-stage__note${playback.playing ? " agent-reminder-stage__note--playing" : ""}`} aria-live="polite">
-        {playback.playing ? playNote() : idleNote()}
+      <p className={`agent-reminder-stage__note${playback.playing || triedNote ? " agent-reminder-stage__note--playing" : ""}`} data-tried={tried ?? undefined} aria-live="polite">
+        {playback.playing ? playNote() : triedNote || idleNote()}
       </p>
     </section>
   );

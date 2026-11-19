@@ -18,6 +18,7 @@ import { useEffortLabels } from "./useEffortLabels";
 import { getAgentProviderLabel } from "./status";
 import { useScrollFade } from "./useScrollFade";
 import { asksUser, sessionKey } from "./unseen";
+import { isTestSession } from "./testNotice";
 import type { UnseenSessions } from "./useUnseenSessions";
 import type { SessionRemoval } from "./useHiddenSessions";
 import type { AlertedSession } from "./useAgentAlerts";
@@ -189,6 +190,7 @@ export function AgentSessionsPanel({
   );
 
   const focus = (session: AgentSessionSummary) => {
+    if (isTestSession(session)) return;
     setNotFoundId(null);
     setRowNotice(null);
     notFoundReason.clear();

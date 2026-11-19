@@ -1,10 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
-import { emit, listen } from "@tauri-apps/api/event";
+import { emit, emitTo, listen } from "@tauri-apps/api/event";
 import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { AgentEffortLabels } from "./effortLabels";
 
 import type { AgentProvider, RemoteProvider, SessionProvider } from "./agents.ts";
 import type { AgentUsage } from "../../lib/agent-usage/types";
+import { readTestNoticeRequest, readTestNoticeResult, type TestNoticeRequest, type TestNoticeResult } from "./testNotice.ts";
 
 export type { AgentProvider, RemoteProvider, SessionProvider } from "./agents.ts";
 export type AgentTaskPhase = "idle" | "running" | "waiting" | "completed" | "failed" | "stale";
@@ -297,4 +298,29 @@ export function openAgentLink(url: string) {
 
 export function islandHasNotch() {
   return invoke<{ width: number; height: number } | null>("get_island_notch").then((notch) => notch !== null);
+}
+
+export const AGENT_TEST_NOTICE_EVENT = "agent-test-notice";
+export const AGENT_TEST_NOTICE_RESULT_EVENT = "agent-test-notice-result";
+
+export function requestAgentTestNotice(request: TestNoticeRequest) {
+  return emitTo("main", AGENT_TEST_NOTICE_EVENT, request);
+}
+
+export function listenAgentTestNotice(onRequest: (request: TestNoticeRequest) => void) {
+  return listen<unknown>(AGENT_TEST_NOTICE_EVENT, ({ payload }) => {
+    const request = readTestNoticeRequest(payload);
+    if (request) onRequest(request);
+  });
+}
+
+export function reportAgentTestNotice(result: TestNoticeResult) {
+  return emitTo("settings", AGENT_TEST_NOTICE_RESULT_EVENT, result);
+}
+
+export function listenAgentTestNoticeResult(onResult: (result: TestNoticeResult) => void) {
+  return listen<unknown>(AGENT_TEST_NOTICE_RESULT_EVENT, ({ payload }) => {
+    const result = readTestNoticeResult(payload);
+    if (result) onResult(result);
+  });
 }

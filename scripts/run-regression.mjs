@@ -14,6 +14,7 @@ export const PAGES = [
   "agent-notice-stack.html?test=1",
   "agent-alerts.html",
   "agent-approvals.html",
+  "agent-test-notice.html",
   "agent-sessions.html?test=1",
   "agent-sessions-interact.html",
   "agent-list-motion.html",

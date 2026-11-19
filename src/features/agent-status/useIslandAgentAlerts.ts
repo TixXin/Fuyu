@@ -4,6 +4,7 @@ import { sessionKey } from "./unseen";
 import { useAgentApprovals } from "./approvals/useAgentApprovals";
 import { useAgentApprovalSettings } from "./approvals/useAgentApprovalSettings";
 import { alertKindsOf, useAgentAlerts } from "./useAgentAlerts";
+import { useAgentTestNotice } from "./useAgentTestNotice";
 import { useAgentSounds } from "./sounds/useAgentSounds";
 import { useAgentPush } from "./push/useAgentPush";
 import { reminderSound } from "./sounds/events";
@@ -73,7 +74,7 @@ export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode
     const event = reminderSound(reminded[reminded.length - 1]);
     if (soundSettings.enabled && soundSettings.events[event]) playAgentSound(event, soundSettings);
   };
-  const { alerted: alertedSession, stack: alertedStack } = useAgentAlerts({
+  const { alerted: alertedSession, stack: alertedStack, showTest, dismissTest } = useAgentAlerts({
     sessions,
     kinds: alertKindsOf(settings),
     dwell: {
@@ -94,9 +95,10 @@ export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode
     looked: (session) => !unseen.has(sessionKey(session)),
     isHovered,
   });
+  const shownApprovals = useAgentTestNotice({ cards: approvalSettings.onIsland, approvals, alerted: alertedSession, showTest, dismissTest, sounds: soundSettings });
   const mustHandle = alertedSession?.session.phase === "waiting";
   useOutsideClick(alertedSession !== null && !mustHandle && !waiting && isOpenOnAgents, collapseIsland, host);
-  const agentCardHeight = approvals.current ? approvals.cardHeight : alertedSession?.rowHeight;
-  const alertPopup = alertedSession !== null && !approvals.current && isOpenOnAgents;
-  return { alertedSession, alertedStack, approvals, agentCardHeight, alertPopup };
+  const agentCardHeight = shownApprovals.current ? shownApprovals.cardHeight : alertedSession?.rowHeight;
+  const alertPopup = alertedSession !== null && !shownApprovals.current && isOpenOnAgents;
+  return { alertedSession, alertedStack, approvals: shownApprovals, agentCardHeight, alertPopup };
 }
