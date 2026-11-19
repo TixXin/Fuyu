@@ -69,7 +69,7 @@ export function TodoIslandPage(props: TodoPageProps) {
         />
       )}
       {pageMode === "upcoming" && <ScheduledTodoList todos={props.scheduledTodos} onDelete={props.onDeleteScheduledTodo} onTag={props.onTagScheduledTodo} />}
-      {pageMode === "archive" && <TodoIslandArchive archives={props.archives} onSelect={props.onSelectArchive} />}
+      {pageMode === "archive" && <TodoIslandArchive archives={props.archives} todos={props.todos} currentDate={props.currentDate} onSelect={props.onSelectArchive} />}
       <TodoDataNotice />
     </section>
   );

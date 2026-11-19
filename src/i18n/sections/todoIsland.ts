@@ -53,7 +53,17 @@ export type TodoIslandText = {
     ahead: (minutes: number) => string;
     wrapUp: (openCount: number) => string;
   };
+  weekSummary: {
+    label: string;
+    done: string;
+    doneWithFocus: (focus: string) => string;
+    duration: (hours: number, minutes: number) => string;
+    dayDone: (weekday: string, count: number) => string;
+    projectsLabel: string;
+  };
 };
+
+const shortDuration = (hours: number, minutes: number) => (hours > 0 ? `${hours}h ${String(minutes).padStart(2, "0")}m` : `${minutes}m`);
 
 export const zhCN: TodoIslandText = {
   tabsLabel: "待办页面",
@@ -113,6 +123,14 @@ export const zhCN: TodoIslandText = {
   reminders: {
     ahead: (minutes) => `${minutes} 分钟后`,
     wrapUp: (openCount) => `今天还有 ${openCount} 件没做完`,
+  },
+  weekSummary: {
+    label: "本周小结",
+    done: "本周完成",
+    doneWithFocus: (focus) => `本周完成 · 专注 ${focus}`,
+    duration: shortDuration,
+    dayDone: (weekday, count) => `${weekday}完成 ${count} 件`,
+    projectsLabel: "本周专注最多的项目",
   },
 };
 
@@ -174,5 +192,13 @@ export const en: TodoIslandText = {
   reminders: {
     ahead: (minutes) => `In ${minutes} min`,
     wrapUp: (openCount) => (openCount === 1 ? "1 task still open today" : `${openCount} tasks still open today`),
+  },
+  weekSummary: {
+    label: "This week",
+    done: "done this week",
+    doneWithFocus: (focus) => `done this week · ${focus} focused`,
+    duration: shortDuration,
+    dayDone: (weekday, count) => `${weekday}: ${count} done`,
+    projectsLabel: "Projects with the most focus time this week",
   },
 };

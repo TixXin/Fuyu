@@ -261,6 +261,11 @@
   scrollbar-color: rgba(var(--todo-ink), 0.2) transparent;
 }
 
+.todo-island__archive-list {
+  display: grid;
+  gap: 4px;
+}
+
 .todo-island__archive-month {
   display: grid;
   gap: 2px;
