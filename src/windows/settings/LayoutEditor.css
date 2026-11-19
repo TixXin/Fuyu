@@ -91,6 +91,36 @@
   transition: color var(--motion-medium) var(--motion-ease);
 }
 
+.settings-page__crumb {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.settings-page__crumb-back {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px 0 0;
+  color: var(--text-2);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+
+.settings-page__crumb-back:hover { color: var(--color-text); }
+.settings-page__crumb-back:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+.settings-page__crumb-sep { color: var(--text-3); font-size: 18px; }
+
 .settings-section {
   position: relative;
   display: grid;

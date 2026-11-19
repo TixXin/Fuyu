@@ -7,6 +7,7 @@ export type SettingsCategoriesText = {
   };
   expand: (group: string) => string;
   collapse: (group: string) => string;
+  backTo: (page: string) => string;
   keywords: Record<
     | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
@@ -78,6 +79,7 @@ export const zhCN: SettingsCategoriesText = {
   },
   expand: (group) => `展开「${group}」`,
   collapse: (group) => `折叠「${group}」`,
+  backTo: (page) => `返回「${page}」`,
   keywords: {
     overview: "概览 开始 新手 入门 常用 功能 开启 关闭 启用",
     general: "开机 自启 登录 语言 托盘 菜单栏 权限",
@@ -240,6 +242,7 @@ export const en: SettingsCategoriesText = {
   },
   expand: (group) => `Expand ${group}`,
   collapse: (group) => `Collapse ${group}`,
+  backTo: (page) => `Back to ${page}`,
   keywords: {
     overview: "overview start beginner getting started common features turn on off enable",
     general: "startup launch login language tray menu bar permissions",
