@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { chmodSync, copyFileSync, existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { signingDir } from "../signing-dir.mjs";
 import { createCertificate } from "./self-signed-cert.mjs";
@@ -78,15 +78,25 @@ export function cargoOriginal(binary) {
   return candidates.find((file) => readFileSync(file).equals(content)) ?? null;
 }
 
+export function replaceWithCopy(source, target) {
+  const incoming = `${target}.signing-${process.pid}`;
+  rmSync(incoming, { force: true });
+  try {
+    copyFileSync(source, incoming);
+    chmodSync(incoming, statSync(source).mode);
+    renameSync(incoming, target);
+  } catch (error) {
+    rmSync(incoming, { force: true });
+    throw error;
+  }
+}
+
 export function signDevBinary(binary, dir = devSigningDir()) {
   if (!existsSync(binary)) return { signed: false, message: `${binary} is missing` };
   if (signedByDevIdentity(codesignDetails(binary))) return { signed: false, message: "already signed" };
   const { keychain, sha1 } = ensureDevIdentity(dir);
   const original = cargoOriginal(binary);
   run("codesign", ["--force", "--sign", sha1, "--keychain", keychain, "--identifier", DEV_IDENTIFIER, original ?? binary]);
-  if (original) {
-    copyFileSync(original, binary);
-    chmodSync(binary, statSync(original).mode);
-  }
+  if (original) replaceWithCopy(original, binary);
   return { signed: true, message: `signed ${binary} as ${DEV_IDENTIFIER}` };
 }
