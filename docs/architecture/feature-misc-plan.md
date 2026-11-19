@@ -31,12 +31,17 @@ D104（#835，需要用户本人）是 Windows 真机验收单，第 1 项正好
 ### 顺序
 
 - **第 1 批（并行）**：C127、C122+C123。两个要编译的会话，正好是上限。三者互不依赖，文件不重叠。
-- **第 2 批**：C124。等两件事：第 1 批里至少一个做完（编译名额）；和 `Fuyu-[总控] UI 外观` 对完文件（岛形态改动可能碰收起条）。UI 外观说没有重叠、而第 1 批有一个先完，就马上派。
+- **第 2 批**：C124。UI 外观已确认不重叠；等第 1 批有一个做完（编译和回归页名额）就派，原生部分按下一节先和 Mac 适配对 G1.33。
 - C127 的工作量最大（三个源加排序），可能跨好几轮；C122+C123 一轮能完。
 
 ### 和 UI 外观的文件重叠（C124）
 
-2026-11-18 已给 `Fuyu-[总控] UI 外观` 发消息，列了 C124 预计要改的文件（`CollapsedMessageContent.*`、`island/useLatestMessagePreview.ts`、岛壳收起条样式和收起宽度、`src-tauri/src/island/state.rs`、`notch.rs`、收起条回归页），问它和它派的会话近期改不改这些文件。**等回复**，结果写在这里，再定 C124 的 `--scope` 和开工时间。
+2026-11-18 问过 `Fuyu-[总控] UI 外观`，回复：**不重叠，C124 可以先做**。它近期只有 C125（#898，闲置贴边的岛叫回来），改 `src/windows/island/useIslandNavigation.ts`、`useIslandTucking.ts`、新文件 `tuckRecall.ts` 和 `tests/unit/tuck-recall.test.mjs`，不碰收起条样式、收起宽度、`messages/`、`state.rs`、`notch.rs`。C124 不要动这四个文件。
+
+要注意的是 Mac 组的 **G1.33**（#725，刘海屏融合，owner `g1-33`，状态「待用户确认」）：认领范围里有 `src-tauri/src/island/state.rs`、`notch.rs`、`geometry.rs`、`mod.rs`、`src/windows/island/IslandApp.tsx`、`useNativeLayout.ts` 等。工作区里这些文件现在没有没提交的改动，但任务没结束，用户验收时可能还要回头改。所以 C124：
+- 先把前端（收起条的排版、停留不消失、回归页）做完提交；
+- 要改 `state.rs` / `notch.rs` / `geometry.rs` 之前，由组长先问 `Fuyu-[总控] Mac 适配`（G1.33 的会话 `[任务] Mac 适配零散修复` 在不在跑由它判断）G1.33 还会不会改这些文件，对完再加进 C124 的 `--scope`；认领时 `task:claim` 报范围重叠，就先只认领前端部分。
+- 这样 C124 不必等编译名额才开工，前端部分不用编译 Rust（回归页除外）。
 
 ### 每个任务怎样算做完
 
