@@ -67,23 +67,16 @@ test("a copy of today saved to the archive is not counted on top of today's list
   assert.equal(summary.focusMinutes, 0);
 });
 
-test("a todo carried over from the day before only adds the focus time gained since", () => {
+test("focus time is what each day recorded, added up day by day", () => {
   const archives = [
-    archive("2026-11-17", [todo("write thesis", false, { project: "thesis", focusMinutes: 50 }), todo("read papers", false, { focusMinutes: 50 })]),
-    archive("2026-11-16", [todo("write thesis", false, { project: "thesis", focusMinutes: 25 }), todo("read papers", false, { focusMinutes: 50 })]),
-    archive("2026-11-13", [todo("read papers", false, { focusMinutes: 50 }), todo("write thesis", true, { project: "thesis", focusMinutes: 25 })]),
+    archive("2026-11-17", [todo("write thesis", false, { project: "thesis", focusMinutes: 25 }), todo("read papers", false, { focusMinutes: 50 })]),
+    archive("2026-11-16", [todo("write thesis", false, { project: "thesis", focusMinutes: 25 })]),
+    archive("2026-11-13", [todo("write thesis", false, { project: "thesis", focusMinutes: 100 })]),
   ];
-  const today = [todo("write thesis", false, { project: "thesis", focusMinutes: 75 }), todo("read papers", false, { focusMinutes: 50 })];
+  const today = [todo("write thesis", false, { project: "thesis", focusMinutes: 25 }), todo("read papers", false)];
   const summary = summarizeWeek(archives, WEDNESDAY, today, 1);
-  assert.deepEqual(summary.projects, [{ project: "thesis", minutes: 75 }]);
-  assert.equal(summary.focusMinutes, 75);
-});
-
-test("a todo with the same title is counted in full when the earlier one was finished or sat in another project", () => {
-  const archives = [archive("2026-11-17", [todo("review", true, { focusMinutes: 25 }), todo("plan", false, { project: "a", focusMinutes: 25 })])];
-  const today = [todo("review", false, { focusMinutes: 25 }), todo("plan", false, { project: "b", focusMinutes: 50 })];
-  const summary = summarizeWeek(archives, WEDNESDAY, today, 1);
-  assert.equal(summary.focusMinutes, 25 + 25 + 25 + 50);
+  assert.deepEqual(summary.projects, [{ project: "thesis", minutes: 75 }, { project: null, minutes: 50 }]);
+  assert.equal(summary.focusMinutes, 125);
 });
 
 test("a date that cannot be read gives an empty summary instead of throwing", () => {

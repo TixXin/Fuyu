@@ -1,5 +1,19 @@
 # 更新记录 · Changelog
 
+## 1.2.0
+
+专注的时间记到待办上。
+
+- 选了待办的一轮专注到点后，这一轮的分钟数会加到那条待办的专注时长里，浮屿归档页的「本周小结」和导出的 Markdown 都能看到。中途停止的一轮不记；没选待办的一轮只算轮数。
+- 同时开着浮屿的「开始任务时启动专注倒计时」也不会重复记：一条待办记下的专注时长不会超过实际经过的时间。
+- 需要浮屿 0.3.11 或更新；较早的浮屿上和以前一样，只计轮数。
+
+Focus time goes onto the todo.
+
+- When a focus round with a todo picked runs to the end, its minutes are added to that todo's focus time, which Fuyu shows in the archive's weekly summary and in the exported Markdown. A round you stop early adds nothing; a round without a todo only counts as a round.
+- Running Fuyu's own "start a focus countdown when a task starts" at the same time does not count twice: a todo never gains more focus time than has actually passed.
+- Needs Fuyu 0.3.11 or later; on older versions it counts rounds as before.
+
 ## 1.1.1
 
 收起条上只剩一个倒计时。

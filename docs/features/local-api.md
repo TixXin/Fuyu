@@ -48,7 +48,7 @@
 | GET | `/v1/health` | — | `{ app, version, apiVersion, allowWrite, allowNotify }` |
 | GET | `/v1/todos` | — | `{ date, todos, scheduled, activeTodoId }` |
 | POST | `/v1/todos` | `{ "title": "...", "date"?: "YYYY-MM-DD", "project"?: "..." }` | 添加到今天列表的顶部；`date` 晚于今天时加入"以后"列表；`project` 是项目名（2026-11-16 起，多于 20 个字截断） |
-| PATCH | `/v1/todos/{id}` | `{ "title"?: "...", "completed"?: true }` | 只修改给出的字段 |
+| PATCH | `/v1/todos/{id}` | `{ "title"?: "...", "completed"?: true, "addFocusMinutes"?: 25 }` | 只修改给出的字段；`addFocusMinutes` 是 1–600 的整数，给这条待办加专注分钟数（0.3.11 起），一次最多加从上次记到现在经过的分钟数，不是这个范围的整数回 400 |
 | DELETE | `/v1/todos/{id}` | — | 删除 |
 | GET | `/v1/note` | — | `{ date, note }` |
 | PUT | `/v1/note` | `{ "note": "..." }` 或 `{ "append": "..." }` | `note` 整体替换；`append` 追加一行 |

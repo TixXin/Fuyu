@@ -12,7 +12,7 @@ import { useTodoApiHandlers } from "./useTodoApiHandlers";
 import { useTodoArchives } from "./useTodoArchives";
 import { useTodoDayReminders } from "./useTodoDayReminders";
 import { useTodoFileField } from "./useTodoFileField";
-import { useTodoFocusTimer } from "./useTodoFocusTimer";
+import { useTodoFocusTimer, type FocusCreditKind } from "./useTodoFocusTimer";
 import { useTodoList } from "./useTodoList";
 import { useTodoPrefs } from "./useTodoPrefs";
 import { useTodoProjectSync } from "./useTodoProjectSync";
@@ -36,18 +36,19 @@ export function useTodos({
 }: TodosOptions) {
   const [prefs] = useTodoPrefs();
   const holidayMarks = useHolidayMarks();
-  const focusDoneRef = useRef<(todoId: string, minutes: number) => void>(() => undefined);
+  const focusDoneRef = useRef<(todoId: string, minutes: number, kind: FocusCreditKind) => void>(() => undefined);
   const completedRef = useRef<(todo: TodoItem) => void>(() => undefined);
-  const startFocusTimer = useTodoFocusTimer({
+  const focusTimer = useTodoFocusTimer({
     enabled: prefs.focusTimerEnabled,
     focusMinutes: prefs.focusTimerMinutes,
-    onFocusCompleted: (todoId, minutes) => focusDoneRef.current(todoId, minutes),
+    onFocusCompleted: (todoId, minutes, kind) => focusDoneRef.current(todoId, minutes, kind),
   });
   const list = useTodoList(onStartTodo, {
     completionSound: prefs.completionSound,
     insertPosition: prefs.insertPosition,
     autoCompleteFromSubtasks: prefs.autoCompleteFromSubtasks,
-    onTodoStarted: startFocusTimer,
+    onTodoStarted: focusTimer.start,
+    onTodoStopped: focusTimer.stop,
     onTodoCompleted: (todo) => completedRef.current(todo),
   });
   focusDoneRef.current = list.addFocusMinutes;

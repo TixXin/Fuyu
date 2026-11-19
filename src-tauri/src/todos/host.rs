@@ -44,8 +44,8 @@ fn add_for_host(title: Option<Value>, date: Option<Value>, project: Option<Value
 }
 
 #[host_service("todos.update")]
-fn update_for_host(id: Option<Value>, title: Option<Value>, completed: Option<Value>) -> Result<Value, ServeError> {
-    run("todos.update", "todos.update", params([("id", id), ("title", title), ("completed", completed)]))
+fn update_for_host(id: Option<Value>, title: Option<Value>, completed: Option<Value>, add_focus_minutes: Option<Value>) -> Result<Value, ServeError> {
+    run("todos.update", "todos.update", params([("id", id), ("title", title), ("completed", completed), ("addFocusMinutes", add_focus_minutes)]))
 }
 
 #[host_service("todos.remove")]

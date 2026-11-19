@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useMemo, useState, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import { adoptActiveTodo, isInProgress, latestStartedId, toggleStarted, withoutStart } from "./activeTodos.ts";
-import { addTodoFocusMinutes, addTodoSubtask, deleteTodoSubtask, toggleTodoSubtask, updateTodoNote } from "./normalize.ts";
+import { addTodoSubtask, creditFocus, deleteTodoSubtask, toggleTodoSubtask, updateTodoNote } from "./normalize.ts";
 import { splitProjectPrefix } from "./project.ts";
 import { createTodoId, loadActiveTodoId, loadTodos, saveActiveTodoId, saveTodos } from "./storage.ts";
 import { withTags, type TodoTags } from "./tags.ts";
 import { insertTodoItem, playTodoCompleteSound, type TodoInsertPosition } from "./todoPrefs.ts";
 import type { TodoItem, TodoPriority, TodoRecurrence } from "./types.ts";
 import { useTodoFileField } from "./useTodoFileField";
+import type { FocusCreditKind, FocusStopReason } from "./useTodoFocusTimer.ts";
 
 export function useTodoList(
   onStartTodo: () => void,
@@ -15,6 +16,7 @@ export function useTodoList(
     insertPosition?: TodoInsertPosition;
     autoCompleteFromSubtasks?: boolean;
     onTodoStarted?: (id: string) => void;
+    onTodoStopped?: (id: string, reason: FocusStopReason) => void;
     onTodoCompleted?: (todo: TodoItem) => void;
   } = {},
 ) {
@@ -23,11 +25,14 @@ export function useTodoList(
     insertPosition = "bottom",
     autoCompleteFromSubtasks = false,
     onTodoStarted,
+    onTodoStopped,
     onTodoCompleted,
   } = options;
   const [todos, setTodos] = useState<TodoItem[]>(() => adoptActiveTodo(loadTodos(), loadActiveTodoId(), Date.now()));
   const [draftTodo, setDraftTodo] = useState("");
   const activeTodoId = useMemo(() => latestStartedId(todos), [todos]);
+  const todosRef = useRef(todos);
+  todosRef.current = todos;
   const adoptOutsideActive = useCallback((value: SetStateAction<string | null>) => {
     if (typeof value === "function") return;
     setTodos((currentTodos) => adoptActiveTodo(currentTodos, value, Date.now()));
@@ -68,12 +73,13 @@ export function useTodoList(
       if (target && !target.completed) {
         if (completionSound) playTodoCompleteSound();
         onTodoCompleted?.(target);
+        onTodoStopped?.(id, "completed");
       }
       setTodos((currentTodos) =>
         currentTodos.map((todo) => (todo.id === id ? withoutStart({ ...todo, completed: !todo.completed }) : todo)),
       );
     },
-    [completionSound, onTodoCompleted, todos],
+    [completionSound, onTodoCompleted, onTodoStopped, todos],
   );
 
   const tagTodo = useCallback((id: string, tags: TodoTags) => {
@@ -92,12 +98,14 @@ export function useTodoList(
       if (!todo || todo.completed) return;
       const wasInProgress = isInProgress(todo);
       setTodos((currentTodos) => toggleStarted(currentTodos, id, Date.now()));
-      if (!wasInProgress) {
+      if (wasInProgress) {
+        onTodoStopped?.(id, "stopped");
+      } else {
         onStartTodo();
         onTodoStarted?.(id);
       }
     },
-    [onStartTodo, onTodoStarted, todos],
+    [onStartTodo, onTodoStarted, onTodoStopped, todos],
   );
 
   const addSubtask = useCallback((todoId: string, title: string) => {
@@ -112,6 +120,7 @@ export function useTodoList(
         if (preview.autoCompleted) {
           if (completionSound) playTodoCompleteSound();
           onTodoCompleted?.(target);
+          onTodoStopped?.(todoId, "completed");
         }
       }
       setTodos((currentTodos) =>
@@ -120,7 +129,7 @@ export function useTodoList(
         ),
       );
     },
-    [autoCompleteFromSubtasks, completionSound, onTodoCompleted, todos],
+    [autoCompleteFromSubtasks, completionSound, onTodoCompleted, onTodoStopped, todos],
   );
 
   const deleteSubtask = useCallback((todoId: string, subtaskId: string) => {
@@ -131,17 +140,20 @@ export function useTodoList(
     setTodos((currentTodos) => currentTodos.map((todo) => (todo.id === todoId ? updateTodoNote(todo, note) : todo)));
   }, []);
 
-  const addFocusMinutes = useCallback((todoId: string, minutes: number) => {
-    setTodos((currentTodos) => currentTodos.map((todo) => (todo.id === todoId ? addTodoFocusMinutes(todo, minutes) : todo)));
+  const addFocusMinutes = useCallback((todoId: string, minutes: number, kind: FocusCreditKind = "stopped") => {
+    const now = Date.now();
+    setTodos((currentTodos) => creditFocus(currentTodos, todoId, minutes, kind, now));
   }, []);
 
   const stopAllTodos = useCallback(() => {
+    for (const todo of todosRef.current) if (isInProgress(todo)) onTodoStopped?.(todo.id, "removed");
     setTodos((currentTodos) => (currentTodos.some(isInProgress) ? currentTodos.map(withoutStart) : currentTodos));
-  }, []);
+  }, [onTodoStopped]);
 
   const deleteTodo = useCallback((id: string) => {
+    onTodoStopped?.(id, "removed");
     setTodos((currentTodos) => currentTodos.filter((todo) => todo.id !== id));
-  }, []);
+  }, [onTodoStopped]);
 
   const reorderTodo = useCallback((sourceId: string, targetId: string) => {
     if (sourceId === targetId) return;

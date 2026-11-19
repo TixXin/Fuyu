@@ -12,6 +12,8 @@ export type TodoEntry = {
   startedAt?: number;
   priority?: TodoPriority;
   color?: TodoColor;
+  /** Minutes of focus recorded on this todo for its day; missing when there are none. A todo carried over to the next day starts again without it. */
+  focusMinutes?: number;
   updatedAt?: string;
   deviceId?: string;
 };
@@ -52,7 +54,12 @@ export type TodosMethods = {
   list(params: { date?: string }): TodosDay;
   days(params: { from: string; to: string }): { days: TodosDaySummary[] };
   add(params: { title: string; date?: string; project?: string }): TodoEntry | ScheduledTodoEntry;
-  update(params: { id: string; title?: string; completed?: boolean }): TodoEntry;
+  /**
+   * `addFocusMinutes` (a whole number from 1 to 600) adds focus time that just ended to the todo. The todo never gains more
+   * minutes than have passed since focus time was last added to it, so two timers running on the same todo do not count twice;
+   * the returned `focusMinutes` says what it holds now. Fuyu before 0.3.11 ignores the field.
+   */
+  update(params: { id: string; title?: string; completed?: boolean; addFocusMinutes?: number }): TodoEntry;
   remove(params: { id: string }): { id: string };
   note(params: { date?: string }): TodosNote;
   setNote(params: { note: string } | { append: string }): TodosNote;

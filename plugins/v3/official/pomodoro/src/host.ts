@@ -193,6 +193,12 @@ export function apply(ctx: Context) {
     return goal > 0 && stored.rounds === goal ? `${count} · ${T.goalReached}` : count;
   }
 
+  async function recordFocus(todoId: string, focusedMs: number) {
+    const minutes = Math.round(focusedMs / 60_000);
+    if (minutes < 1) return;
+    await todos.update({ id: todoId, addFocusMinutes: minutes }).catch(() => {});
+  }
+
   async function finishFocus(label: string) {
     stored.rounds += 1;
     stored.streak += 1;
@@ -228,9 +234,12 @@ export function apply(ctx: Context) {
       rollDay();
       const phase = stored.phase ?? "focus";
       const label = stored.activeLabel;
+      const todoId = stored.activeTodoId;
+      const focusedMs = activeTimer?.id === timerId ? activeTimer.durationMs : phaseMinutes("focus", stored) * 60_000;
       clearActive();
       await timers.remove({ id: timerId }).catch(() => {});
       if (stored.sound) ctx.clients.publish(TOPICS.chime, { at: Date.now() });
+      if (phase === "focus" && todoId) await recordFocus(todoId, focusedMs);
       if (phase === "focus") await finishFocus(label);
       else await finishBreak();
     } finally {

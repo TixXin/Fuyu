@@ -33,6 +33,7 @@ export type TodoItem = {
   subtasks?: TodoSubtask[];
   note?: string;
   focusMinutes?: number;
+  focusedAt?: number;
   updatedAt?: string;
   deviceId?: string;
 };

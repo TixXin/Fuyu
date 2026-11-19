@@ -47,7 +47,7 @@
 
 ## 开销和数据来源
 
-- 读取今天的待办列表（只读，不会改动或勾选你的待办）；过了零点自动换成新一天的列表，今天的轮数从 0 开始。
+- 读取今天的待办列表，不会改标题、不会勾选；选了待办的一轮专注到点后，把这一轮的分钟数加到那条待办的专注时长里（浮屿 0.3.11 起）。过了零点自动换成新一天的列表，今天的轮数从 0 开始。
 - 计时用浮屿自带的计时器，在岛上弹出提醒。
 - 轮数和设置只保存在本机的插件数据目录里。
 - 不联网。
@@ -103,7 +103,7 @@ Changes apply right away; a round already running finishes at the length it star
 
 ### Cost and data
 
-- Reads today's todo list (read only: it never changes or ticks off your todos); after midnight it switches to the new day's list and today's rounds start from 0.
+- Reads today's todo list and never renames or ticks off a todo; when a focus round with a todo picked runs to the end, it adds the round's minutes to that todo's focus time (Fuyu 0.3.11 and later). After midnight it switches to the new day's list and today's rounds start from 0.
 - Uses Fuyu's built-in timers and shows notifications on the island.
 - Rounds and settings are stored only in the plugin's data folder on your computer.
 - No network access.

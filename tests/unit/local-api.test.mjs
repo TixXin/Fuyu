@@ -57,6 +57,17 @@ test("todos.update changes only the given fields", () => {
   assert.equal(renamed.result.data.completed, true);
 });
 
+test("todos.update adds focus minutes, capped by the time since the last ones were added", () => {
+  const first = run("todos.update", { id: "a", addFocusMinutes: 25 });
+  assert.deepEqual(first.result.data, { ...todo("a", "First"), focusMinutes: 25, focusedAt: 42 });
+  assert.deepEqual(first.change.todos[0], first.result.data);
+  const again = runTodoApiCall("todos.update", { id: "a", addFocusMinutes: 25 }, state({ todos: first.change.todos }), { id: "", now: 42 + 4 * 60_000 });
+  assert.equal(again.result.data.focusMinutes, 29);
+  for (const addFocusMinutes of [0, -5, 1.5, 601, "25", null]) {
+    assert.equal(run("todos.update", { id: "a", addFocusMinutes }).result.status, 400, JSON.stringify(addFocusMinutes));
+  }
+});
+
 test("todos.update and todos.remove report unknown ids and bad fields", () => {
   assert.equal(run("todos.update", { id: "zzz", completed: true }).result.status, 404);
   assert.equal(run("todos.update", { id: "a", completed: "yes" }).result.status, 400);

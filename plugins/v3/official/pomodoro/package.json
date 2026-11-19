@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/pomodoro",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "type": "module",
   "description": "Pick a to-do and focus; the island counts down, tells you when to take a break, and counts today's rounds.",
   "keywords": [

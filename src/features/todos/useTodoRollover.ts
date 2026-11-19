@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { getTodoSignature, type TodoMarkdownOptions } from "./markdown.ts";
 import { hasNoteContent } from "./newTodoDefaults.ts";
+import { withoutFocus } from "./normalize.ts";
 import { isDateString } from "./schedule.ts";
 import { clearLastSavedSignature, createTodoId, loadLastSavedSignature, saveLastSavedSignature } from "./storage.ts";
 import { getLogicalTodoDate } from "./todoPrefs.ts";
@@ -45,7 +46,7 @@ export function useTodoRollover({
         ? todos
             .filter((todo) => !todo.completed)
             .map((todo, index) => ({
-              ...todo,
+              ...withoutFocus(todo),
               id: createTodoId(),
               completed: false,
               createdAt: carryOverCreatedAt + index,

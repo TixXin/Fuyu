@@ -11,7 +11,7 @@ export type WeekSummary = {
   projects: WeekSummaryProject[];
 };
 
-type SummaryTodo = Pick<TodoItem, "title" | "completed" | "project" | "focusMinutes">;
+type SummaryTodo = Pick<TodoItem, "completed" | "project" | "focusMinutes">;
 
 export const WEEK_SUMMARY_PROJECTS = 3;
 
@@ -24,16 +24,6 @@ export function weekStartOf(date: string, firstDay: number) {
   return addDays(date, -((weekdayOf(date) - firstDay + 7) % 7));
 }
 
-function focusGained(todos: readonly SummaryTodo[], dayBefore: readonly SummaryTodo[]) {
-  const carried = dayBefore.filter((todo) => !todo.completed && minutesOf(todo) > 0);
-  return todos.map((todo) => {
-    const minutes = minutesOf(todo);
-    const index = carried.findIndex((before) => before.title === todo.title && projectOf(before) === projectOf(todo) && minutesOf(before) <= minutes);
-    const already = index < 0 ? 0 : minutesOf(carried.splice(index, 1)[0]);
-    return { project: projectOf(todo), minutes: minutes - already };
-  });
-}
-
 export function summarizeWeek(archives: readonly TodoArchive[], today: string, todos: readonly TodoItem[], firstDay: number): WeekSummary {
   if (!isDateString(today)) return { days: [], done: 0, focusMinutes: 0, projects: [] };
   const start = weekStartOf(today, firstDay);
@@ -42,7 +32,6 @@ export function summarizeWeek(archives: readonly TodoArchive[], today: string, t
     if (isDateString(archive.date) && archive.date < today) recorded.set(archive.date, archive.todos);
   }
   recorded.set(today, todos);
-  const dates = [...recorded.keys()].sort();
 
   const days = Array.from({ length: 7 }, (_, index) => {
     const date = addDays(start, index);
@@ -50,13 +39,12 @@ export function summarizeWeek(archives: readonly TodoArchive[], today: string, t
   });
 
   const byProject = new Map<string | null, number>();
-  dates.forEach((date, index) => {
-    if (date < start) return;
-    const dayBefore = index > 0 ? recorded.get(dates[index - 1]) ?? [] : [];
-    for (const { project, minutes } of focusGained(recorded.get(date) ?? [], dayBefore)) {
-      if (minutes > 0) byProject.set(project, (byProject.get(project) ?? 0) + minutes);
+  for (const day of days) {
+    for (const todo of recorded.get(day.date) ?? []) {
+      const minutes = minutesOf(todo);
+      if (minutes > 0) byProject.set(projectOf(todo), (byProject.get(projectOf(todo)) ?? 0) + minutes);
     }
-  });
+  }
   const ranked = [...byProject].map(([project, minutes]) => ({ project, minutes })).sort((a, b) => b.minutes - a.minutes);
 
   return {

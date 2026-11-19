@@ -1,7 +1,8 @@
 import type { LocalTodoKeys, TodosData } from "./api";
 import type { ScheduledTodo, TodoArchive, TodoItem, TodoSubtask } from "./types";
+import type { FocusCreditKind } from "./useTodoFocusTimer.ts";
 import { getLocalDateString } from "../../utils/date.ts";
-import { withoutStart } from "./activeTodos.ts";
+import { isInProgress, withoutStart } from "./activeTodos.ts";
 import { readProject } from "./project.ts";
 import { normalizeScheduledTodo, sortScheduledTodos } from "./schedule.ts";
 import { readTags } from "./tags.ts";
@@ -10,6 +11,7 @@ import { getLogicalTodoDate } from "./todoPrefs.ts";
 export const MAX_TODO_SUBTASKS = 50;
 export const MAX_TODO_NOTE_LENGTH = 1000;
 const MAX_FOCUS_MINUTES_TOTAL = 1_000_000;
+export const MAX_FOCUS_CREDIT_MINUTES = 600;
 
 export function createTodoId() {
   if (typeof globalThis.crypto?.randomUUID === "function") {
@@ -43,10 +45,11 @@ export function normalizeTodoNote(value: unknown): { note?: string } {
   return note ? { note } : {};
 }
 
-export function normalizeTodoFocusMinutes(value: unknown): { focusMinutes?: number } {
+export function normalizeTodoFocusMinutes(value: unknown, at?: unknown): { focusMinutes?: number; focusedAt?: number } {
   if (typeof value !== "number" || !Number.isFinite(value)) return {};
   const minutes = Math.min(MAX_FOCUS_MINUTES_TOTAL, Math.floor(value));
-  return minutes > 0 ? { focusMinutes: minutes } : {};
+  if (minutes <= 0) return {};
+  return typeof at === "number" && Number.isFinite(at) && at > 0 ? { focusMinutes: minutes, focusedAt: Math.floor(at) } : { focusMinutes: minutes };
 }
 
 export function normalizeTodo(todo: Partial<TodoItem>): TodoItem {
@@ -60,7 +63,7 @@ export function normalizeTodo(todo: Partial<TodoItem>): TodoItem {
     ...(typeof todo.startedAt === "number" && Number.isFinite(todo.startedAt) && !todo.completed ? { startedAt: todo.startedAt } : {}),
     ...normalizeTodoSubtasks(todo.subtasks),
     ...normalizeTodoNote(todo.note),
-    ...normalizeTodoFocusMinutes(todo.focusMinutes),
+    ...normalizeTodoFocusMinutes(todo.focusMinutes, todo.focusedAt),
   };
 }
 
@@ -127,12 +130,37 @@ export function updateTodoNote(todo: TodoItem, rawNote: string): TodoItem {
   return { ...todo, note: normalized.note };
 }
 
-export function addTodoFocusMinutes(todo: TodoItem, minutes: number): TodoItem {
-  if (!Number.isFinite(minutes)) return todo;
-  const delta = Math.floor(minutes);
+export function focusMinutesToAdd(todo: Pick<TodoItem, "focusedAt">, minutes: number, now: number): number {
+  if (!Number.isFinite(minutes)) return 0;
+  const asked = Math.min(MAX_FOCUS_CREDIT_MINUTES, Math.floor(minutes));
+  if (asked <= 0) return 0;
+  const last = todo.focusedAt;
+  if (typeof last !== "number" || !Number.isFinite(last) || last > now) return asked;
+  return Math.min(asked, Math.round((now - last) / 60_000));
+}
+
+export function addTodoFocusMinutes(todo: TodoItem, minutes: number, now = Date.now()): TodoItem {
+  const delta = focusMinutesToAdd(todo, minutes, now);
   if (delta <= 0) return todo;
   const total = Math.min(MAX_FOCUS_MINUTES_TOTAL, (todo.focusMinutes ?? 0) + delta);
-  return { ...todo, focusMinutes: total };
+  return { ...todo, focusMinutes: total, focusedAt: now };
+}
+
+export function creditFocus(todos: TodoItem[], todoId: string, minutes: number, kind: FocusCreditKind, now: number): TodoItem[] {
+  const index = todos.findIndex((todo) => todo.id === todoId);
+  if (index < 0) return todos;
+  const todo = todos[index];
+  if (kind === "due" && (todo.completed || !isInProgress(todo))) return todos;
+  const credited = addTodoFocusMinutes(todo, minutes, now);
+  return credited === todo ? todos : todos.map((item, at) => (at === index ? credited : item));
+}
+
+export function withoutFocus<T extends Pick<TodoItem, "focusMinutes" | "focusedAt">>(todo: T): T {
+  if (todo.focusMinutes === undefined && todo.focusedAt === undefined) return todo;
+  const rest = { ...todo };
+  delete rest.focusMinutes;
+  delete rest.focusedAt;
+  return rest;
 }
 
 export function withProject(value: unknown): { project?: string } {
