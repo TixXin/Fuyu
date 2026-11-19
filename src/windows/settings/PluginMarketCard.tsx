@@ -1,11 +1,11 @@
-import { useState, type MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import { ArrowUpRight, Check } from "lucide-react";
 import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
-import { MarketImage } from "./MarketImage";
 import { OfficialMark } from "./OfficialMark";
 import { iconSources } from "./pluginIconSources";
 import { PluginLogo } from "./PluginLogo";
+import { PluginMarketCover } from "./PluginMarketCover";
 import { hasUpdate, localized, offeredCandidate } from "./pluginMarketModel";
 import { marketActionCandidate } from "./pluginRowStatus";
 
@@ -57,17 +57,6 @@ export function PluginMarketCardAction({ plugin, compact = false, onInstall, onM
   return <button className="plugin-btn plugin-btn--sm plugin-btn--primary" type="button" data-action="market-install" onClick={(event) => stop(event, () => onInstall(plugin))}>{text.install}</button>;
 }
 
-function MarketCardThumb({ plugin, onFail }: { plugin: MarketCatalogPlugin; onFail: () => void }) {
-  const text = useTranslation().settings.pluginsV3.marketPage.card;
-  const shots = plugin.screenshots ?? [];
-  return (
-    <div className="market-card__thumb" data-market-thumb={shots.length}>
-      <MarketImage url={shots[0].url} lazy alt="" draggable={false} onError={onFail} />
-      {shots.length > 1 ? <span className="market-card__thumb-count">{text.shotCount(shots.length)}</span> : null}
-    </div>
-  );
-}
-
 export function PluginMarketCard({ plugin, categoryName, isNew = false, ...handlers }: MarketCardHandlers & { plugin: MarketCatalogPlugin; categoryName: (id: string) => string; isNew?: boolean }) {
   const { locale } = useLocale();
   const text = useTranslation().settings.pluginsV3.marketPage.card;
@@ -75,11 +64,10 @@ export function PluginMarketCard({ plugin, categoryName, isNew = false, ...handl
   const description = localized(plugin.description, locale, "");
   const candidate = offeredCandidate(plugin);
   const version = candidate?.version ?? plugin.installedVersion;
-  const [thumbFailed, setThumbFailed] = useState(false);
-  const thumbed = !thumbFailed && (plugin.screenshots?.length ?? 0) > 0;
   const sub = [plugin.official ? null : plugin.publisher.github, plugin.categories[0] ? categoryName(plugin.categories[0]) : null, version ? `v${version}` : null].filter(Boolean).join(" · ");
   return (
-    <article className={thumbed ? "market-card market-card--thumbed" : "market-card"} data-market-plugin={plugin.name} onClick={(event) => !(event.target as Element).closest("button") && handlers.onOpen(plugin)}>
+    <article className="market-card" data-market-plugin={plugin.name} onClick={(event) => !(event.target as Element).closest("button") && handlers.onOpen(plugin)}>
+      <PluginMarketCover plugin={plugin} title={title} />
       <div className="market-card__main">
         <div className="market-card__head">
           <PluginLogo sources={iconSources(plugin.icon)} title={title} />
@@ -95,7 +83,6 @@ export function PluginMarketCard({ plugin, categoryName, isNew = false, ...handl
         </div>
         {description ? <p className="market-card__desc">{description}</p> : null}
       </div>
-      {thumbed ? <MarketCardThumb plugin={plugin} onFail={() => setThumbFailed(true)} /> : null}
       <div className="market-card__foot">
         <span className="market-card__facts">
           {candidate ? (candidate.confirmation.network.length > 0 ? text.network : text.noNetwork) : null}

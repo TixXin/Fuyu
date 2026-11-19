@@ -82,7 +82,7 @@ try {
   check(ownedToggle.getAttribute("aria-expanded") === "false" && ownedToggle.textContent!.includes(text.sections.installed(1)) && !card(stage, "@fuyu/weather"), "Installed plugins are folded into one line that says how many there are, not shown as cards again");
   check(stage.querySelector("[data-market-section='updates']")?.compareDocumentPosition(stage.querySelector("[data-market-section='fresh']")!) === Node.DOCUMENT_POSITION_FOLLOWING && stage.querySelector("[data-market-section='fresh']")?.compareDocumentPosition(stage.querySelector("[data-market-section='installed']")!) === Node.DOCUMENT_POSITION_FOLLOWING, "Updates come first, then what is not installed, and the installed line sits at the bottom");
   await click(ownedToggle);
-  check(ownedToggle.getAttribute("aria-expanded") === "true" && card(stage, "@fuyu/weather")?.classList.contains("market-owned__row") && !card(stage, "@fuyu/weather")?.querySelector(".market-card__thumb, .market-card__desc"), "Unfolding it lists installed plugins one to a row");
+  check(ownedToggle.getAttribute("aria-expanded") === "true" && card(stage, "@fuyu/weather")?.classList.contains("market-owned__row") && !card(stage, "@fuyu/weather")?.querySelector(".market-cover, .market-card__desc"), "Unfolding it lists installed plugins one to a row");
   const grid = getComputedStyle(stage.querySelector(".market-grid")!).gridTemplateColumns.split(" ").length;
   check(grid === 2, `Cards sit two to a row (got ${grid})`);
   check(card(stage, "@fuyu/rss")?.querySelector("[data-official]")?.getAttribute("title") === text.card.officialTitle && !card(stage, "@fuyu/rss")?.querySelector(".plugin-badge"), "Official plugins carry a check mark that says the Fuyu team published them, not an Official badge");
@@ -101,12 +101,17 @@ try {
   await click(card(stage, "@fuyu/weather")?.querySelector("[data-action='market-open-on-island']"));
   check(ipc.calls.includes(`emit:island-open-plugin-page:{"pluginId":"@fuyu/weather"}`) && !document.querySelector("[data-market-detail-modal]"), "Open on island asks the island to expand on that plugin's page, without opening the detail");
   const rssCard = card(stage, "@fuyu/rss")!;
-  check(rssCard.querySelector("[data-market-thumb='3'] img") && rssCard.querySelector(".market-card__thumb-count")?.textContent === text.card.shotCount(3), "A card with screenshots shows the first one on the right and how many there are");
-  check(card(stage, "@fuyu/page-summary")?.querySelector("[data-market-thumb='1']") && !card(stage, "@fuyu/page-summary")?.querySelector(".market-card__thumb-count"), "With a single screenshot there is no count");
-  check(!card(stage, "@fuyu/devices")?.querySelector(".market-card__thumb") && !card(stage, "@fuyu/devices")?.classList.contains("market-card--thumbed"), "A card without screenshots leaves no space for one");
-  const thumbBox = rssCard.querySelector(".market-card__thumb")!.getBoundingClientRect();
-  const mainBox = rssCard.querySelector(".market-card__main")!.getBoundingClientRect();
-  check(thumbBox.height <= mainBox.height + 1 && thumbBox.width < mainBox.width, `The thumbnail sits beside the title and description without making the card taller (thumb ${thumbBox.height}px, text ${mainBox.height}px)`);
+  const rssCover = rssCard.querySelector<HTMLElement>(".market-cover")!;
+  const rssShot = await waitFor(() => rssCover.querySelector<HTMLImageElement>("img.market-cover__shot[src]"), "the RSS cover screenshot");
+  check(rssCover.dataset.marketCover === "3" && rssCover.querySelector(".market-cover__count")?.textContent === text.card.shotCount(3), "A card with screenshots shows the first one on its cover and how many there are");
+  check(card(stage, "@fuyu/page-summary")?.querySelector("[data-market-cover='1']") && !card(stage, "@fuyu/page-summary")?.querySelector(".market-cover__count"), "With a single screenshot there is no count");
+  const coverBox = rssCover.getBoundingClientRect();
+  const cardBox = rssCard.getBoundingClientRect();
+  const shotBox = rssShot.getBoundingClientRect();
+  check(coverBox.width >= cardBox.width - 2 && coverBox.bottom <= rssCard.querySelector(".market-card__head")!.getBoundingClientRect().top && shotBox.width >= 240, `The cover runs across the top of the card and shows the screenshot much larger than the old 108px thumbnail (${Math.round(shotBox.width)}px)`);
+  check(rssCover.dataset.tint === "#f59e0b" && rssCover.style.getPropertyValue("--market-tint") === "#f59e0b" && getComputedStyle(rssCover).backgroundColor !== getComputedStyle(card(stage, "@ryo/clip-sync")!.querySelector(".market-cover")!).backgroundColor, "The cover is tinted with the main colour read from the plugin's icon");
+  const plainCover = card(stage, "@fuyu/devices")!.querySelector<HTMLElement>(".market-cover")!;
+  check(plainCover.dataset.marketCover === "0" && !plainCover.dataset.tint && plainCover.querySelector(".plugin-icon")?.textContent === (zh ? "设" : "D") && Math.abs(plainCover.getBoundingClientRect().height - coverBox.height) < 1, "A card without screenshots or an icon keeps a neutral cover of the same height with its first letter");
   const chips = [...stage.querySelectorAll(".market-toolbar [data-market-category]")].map((chip) => ({ id: chip.getAttribute("data-market-category"), count: Number(chip.querySelector(".plugin-chip__count")?.textContent) }));
   const chipSum = chips.filter((chip) => chip.id !== "all").reduce((sum, chip) => sum + chip.count, 0);
   check(chips[0].id === "all" && chips[0].count === MARKET_PLUGINS.length && chipSum === MARKET_PLUGINS.length, `Each plugin counts once, under its first category, so the categories add up to All (${chipSum} of ${MARKET_PLUGINS.length})`);
@@ -123,7 +128,7 @@ try {
   check(getComputedStyle(narrow.stage.querySelector(".market-grid")!).gridTemplateColumns.split(" ").length === 1, "A narrow window has one card per row");
   await click(narrow.stage.querySelector("[data-action='market-toggle-installed']"));
   const narrowRow = card(narrow.stage, "@fuyu/weather")!;
-  check(narrowRow.scrollWidth <= narrowRow.clientWidth && narrowRow.querySelector("[data-action='market-manage']") && narrowRow.querySelector("[data-action='market-open-on-island']") && card(narrow.stage, "@fuyu/rss")?.querySelector(".market-card__thumb"), "In a narrow window the thumbnail stays and an installed row still fits Manage and Open on island");
+  check(narrowRow.scrollWidth <= narrowRow.clientWidth && narrowRow.querySelector("[data-action='market-manage']") && narrowRow.querySelector("[data-action='market-open-on-island']") && card(narrow.stage, "@fuyu/rss")!.querySelector(".market-cover")!.getBoundingClientRect().width <= card(narrow.stage, "@fuyu/rss")!.getBoundingClientRect().width, "In a narrow window the cover stays inside the card and an installed row still fits Manage and Open on island");
 
   const allOwned = await view("browse-all-installed", zh ? "浏览：全都装了" : "Browse: everything installed", {
     snapshot: marketFixture({ plugins: MARKET_PLUGINS.filter((item) => item.install && !item.blocked).map((item) => ({ ...item, installedVersion: item.install!.version, enabled: true, source: "market" as const, autoUpdate: null, manual: null })) }),
