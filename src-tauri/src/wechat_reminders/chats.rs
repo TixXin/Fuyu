@@ -1,6 +1,10 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    thread,
+    time::{Duration, Instant},
+};
 
-use windows::Win32::Foundation::HWND;
+use windows::Win32::Foundation::{HWND, POINT};
 
 use crate::win32::uia_list;
 
@@ -113,16 +117,65 @@ pub(super) fn read(window: HWND) -> Option<Vec<Session>> {
     (!chats.is_empty()).then_some(chats)
 }
 
-pub(super) fn open(window: HWND, key: &str) -> Result<(), &'static str> {
-    let rows = uia_list::list_rows(window, ROW_PREFIX).ok_or("the chat list is not readable")?;
-    let row = rows
+const OPEN_TIMEOUT: Duration = Duration::from_secs(3);
+const OPEN_POLL: Duration = Duration::from_millis(175);
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) enum Sighting {
+    Unreadable,
+    Missing,
+    OutOfView,
+    At(i32, i32),
+}
+
+impl Sighting {
+    pub(super) fn reason(self) -> &'static str {
+        match self {
+            Self::Unreadable => "the chat list is not readable",
+            Self::Missing => "the chat is not in the list",
+            Self::OutOfView => "the chat is scrolled out of view",
+            Self::At(..) => "the chat's row kept moving",
+        }
+    }
+}
+
+pub(super) fn settled(previous: Option<Sighting>, now: Sighting) -> Option<(i32, i32)> {
+    match (previous, now) {
+        (Some(Sighting::At(x0, y0)), Sighting::At(x, y)) if (x0, y0) == (x, y) => Some((x, y)),
+        _ => None,
+    }
+}
+
+fn sight(window: HWND, key: &str) -> Sighting {
+    let Some(rows) = uia_list::list_rows(window, ROW_PREFIX) else {
+        return Sighting::Unreadable;
+    };
+    let Some(row) = rows
         .iter()
         .find(|row| parse(&row.id, &row.name).is_some_and(|chat| chat.key == key))
-        .ok_or("the chat is not in the list")?;
-    let at = row.center.ok_or("the chat is scrolled out of view")?;
-    uia_list::click_in(window, at)
-        .then_some(())
-        .ok_or("the chat's row is covered")
+    else {
+        return Sighting::Missing;
+    };
+    row.center
+        .map_or(Sighting::OutOfView, |at| Sighting::At(at.x, at.y))
+}
+
+pub(super) fn open(window: HWND, key: &str) -> Result<(), &'static str> {
+    let deadline = Instant::now() + OPEN_TIMEOUT;
+    let mut previous = None;
+    loop {
+        let now = sight(window, key);
+        if let Some((x, y)) = settled(previous, now) {
+            return uia_list::click_in(window, POINT { x, y })
+                .then_some(())
+                .ok_or("the chat's row is covered");
+        }
+        if Instant::now() + OPEN_POLL > deadline {
+            return Err(now.reason());
+        }
+        previous = Some(now);
+        thread::sleep(OPEN_POLL);
+    }
 }
 
 fn is_timestamp(line: &str) -> bool {
