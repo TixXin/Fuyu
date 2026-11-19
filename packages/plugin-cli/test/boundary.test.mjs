@@ -6,6 +6,8 @@ import { test } from "node:test";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const ALLOWED = [/^node:/, /^\.\.?\//, /^@fuyu\/plugin-(manifest|market|review)(\/|$)/, /^@fuyu\/plugin-base\/protocol$/, /^esbuild$/];
+const HARNESS = "src/shots/harness.mjs";
+const HARNESS_ALLOWED = [/^react$/, /^react-dom\/client$/, /^fuyu-shots:/];
 
 function files(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -21,7 +23,8 @@ test("@fuyu/plugin-cli imports nothing from the app, only Node and the allowed p
     const text = readFileSync(file, "utf8");
     for (const [, specifier] of text.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)) {
       const outside = specifier.startsWith(".") && relative(root, join(file, "..", specifier)).startsWith("..");
-      if (outside || !ALLOWED.some((pattern) => pattern.test(specifier))) strays.push(`${relative(root, file)}: ${specifier}`);
+      const allowed = relative(root, file).split("\\").join("/") === HARNESS ? [...ALLOWED, ...HARNESS_ALLOWED] : ALLOWED;
+      if (outside || !allowed.some((pattern) => pattern.test(specifier))) strays.push(`${relative(root, file)}: ${specifier}`);
     }
   }
   assert.deepEqual(strays, []);

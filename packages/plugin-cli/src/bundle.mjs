@@ -28,14 +28,14 @@ function hasLocalServices(dir, specifier) {
   }
 }
 
-function resolveServicesFallback(dir, specifier) {
+export function resolveServicesFallback(dir, specifier) {
   if (hasLocalServices(dir, specifier)) return undefined;
   const candidates = specifier === "@fuyu/plugin-base/services" ? BUILTIN_BASE_SERVICES_CANDIDATES : BUILTIN_SERVICES_CANDIDATES;
   const found = candidates.find((candidate) => existsSync(candidate));
   return found ? { path: found } : undefined;
 }
 
-const ASSET_LOADERS = Object.fromEntries(
+export const ASSET_LOADERS = Object.fromEntries(
   [".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".svg", ".woff", ".woff2", ".ttf", ".otf", ".mp3", ".wav", ".ogg"].map((extension) => [extension, "dataurl"]),
 );
 const REQUIRE_KINDS = new Set(["require-call", "require-resolve"]);

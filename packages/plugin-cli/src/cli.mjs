@@ -11,6 +11,7 @@ import { searchGlyphs } from "./icon/glyphs.mjs";
 import { KEY_ENV, generateSigningKey, loadSigningKey } from "./keys.mjs";
 import { pack } from "./pack.mjs";
 import { reviewSources } from "./review.mjs";
+import { shots } from "./shots.mjs";
 import { signCommitAt, signPackageFile } from "./sign.mjs";
 
 const HELP = `Usage: fuyu-plugin <command> [folder] [options]
@@ -37,6 +38,15 @@ Commands:
     --color <#rrggbb>    the plugin's colour
     --out <file>         write somewhere else (default: the manifest's icon, else assets/icon.svg)
     --search <word>      list lucide icon names that contain the word, then exit
+  shots [folder]       Screenshot the island page and the collapsed item with the sample in
+                       shots/sample.ts, in a headless Chrome or Edge, and compose a cover
+    --out <folder>       where the images go (default: screenshots/)
+    --sample <file>      use this sample instead of shots/sample.ts
+    --theme <dark|light>, --locale <zh-CN|en>
+                         for shots that do not say (default: dark, zh-CN)
+    --color <#rrggbb>    the cover's colour (default: the icon's tile colour)
+    --no-cover           skip cover.png
+    --scale <1|2|3>      pixels per point (default 2)
   review <old> <new>   Compare two versions like the market review. Each side is a folder or a
                        git commit; the old side is - for a first release
     --repo <folder>      git repository for commits (default: the current folder)
@@ -69,6 +79,7 @@ const OPTIONS = {
   pack: { ...BUILD, out: { type: "string" }, sign: { type: "boolean" }, key: { type: "string" } },
   check: { ...BUILD, market: { type: "boolean" }, strict: { type: "boolean" }, json: { type: "boolean" } },
   icon: { glyph: { type: "string" }, color: { type: "string" }, out: { type: "string" }, search: { type: "string" } },
+  shots: { out: { type: "string" }, sample: { type: "string" }, theme: { type: "string" }, locale: { type: "string" }, color: { type: "string" }, "no-cover": { type: "boolean" }, scale: { type: "string" } },
   review: {
     repo: { type: "string" },
     path: { type: "string" },
@@ -163,6 +174,24 @@ const commands = {
     const result = await icon(dir, { glyph, color: values.color, out: values.out ? resolve(io.cwd, values.out) : undefined });
     result.notes.forEach(out.warn);
     out.out(`${result.replaced ? "replaced" : "wrote"} ${out.show(result.file)} (${result.glyph}, ${result.color})`);
+    return 0;
+  },
+
+  async shots({ values, positionals }, io, out) {
+    const result = await shots(resolve(io.cwd, positionals[0] ?? "."), {
+      outDir: values.out ? resolve(io.cwd, values.out) : undefined,
+      sample: values.sample ? resolve(io.cwd, values.sample) : undefined,
+      theme: values.theme,
+      locale: values.locale,
+      color: values.color,
+      cover: !values["no-cover"],
+      scale: values.scale === undefined ? undefined : Number(values.scale),
+      env: io.env,
+    });
+    result.warnings.forEach(out.warn);
+    for (const shot of result.files) out.out(`wrote ${out.show(shot.file)} (${shot.width}x${shot.height}, ${shot.slot}, ${shot.theme}, ${shot.locale})`);
+    if (result.cover) out.out(`wrote ${out.show(result.cover.file)} (${result.cover.width}x${result.cover.height}, cover from ${result.cover.from} on ${result.cover.color})`);
+    if (!result.sample) out.out("no shots/sample.ts: the plugin was captured without data");
     return 0;
   },
 

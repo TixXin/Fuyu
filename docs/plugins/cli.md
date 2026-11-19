@@ -19,6 +19,7 @@ fuyu-plugin <命令> [插件文件夹] [选项]
 | [`pack [文件夹]`](#pack) | 先构建，再打成 `build/<作用域>-<名字>-<版本>.fuyu` |
 | [`check [文件夹]`](#check) | 不运行插件的静态检查：清单、试构建、审核分析器的扫描 |
 | [`icon [文件夹]`](#icon) | 按官方插件的样式写出图标 `assets/icon.svg`：主色浅底的圆角方块加同色线条图标 |
+| [`shots [文件夹]`](#shots) | 用示例数据把岛上页面和收起条渲染出来截图，并合成封面 |
 | [`review <旧> <新>`](#review) | 和市场一样比较两个版本，给出绿 / 黄 / 红三档 |
 | [`keygen`](#keygen) | 生成作者签名密钥（只做一次），打印要登记给市场的公钥 |
 | [`sign [文件夹]`](#sign) | 给提交号签名，输出市场提交要的内容 |
@@ -168,6 +169,29 @@ fuyu-plugin icon --search <词>
 
 lucide 的图形数据随命令行一起带（`packages/plugin-cli/src/icon/lucide.json`，1.23.0 版，ISC 许可证见同目录的 `LUCIDE-LICENSE`），不用另装 lucide。要更新到新版 lucide，在浮屿仓库里跑 `node packages/plugin-cli/scripts/gen-lucide.mjs`。
 
+## shots
+
+```bash
+fuyu-plugin shots [文件夹] [--out <文件夹>] [--sample <文件>] [--theme dark|light] [--locale zh-CN|en] [--color <#rrggbb>] [--no-cover] [--scale 1|2|3]
+```
+
+把插件自己的岛上页面（`island.page/v1`）和收起条（`island.collapsed/v1`）组件渲染进岛的外壳，用本机的 Chrome、Edge 或 Chromium 无界面截图，写进 `screenshots/`，再合成一张 `cover.png`。页面要的数据来自插件带的示例数据 `shots/sample.ts`，不启动浮屿、不运行宿主部分。示例数据的写法、外壳和真岛的差别、封面怎么用见[截图和封面](screenshots.md)。
+
+| 选项 | 作用 |
+|---|---|
+| `--out <文件夹>` | 图写到别处，默认插件文件夹里的 `screenshots/` |
+| `--sample <文件>` | 用这个示例数据文件，不用 `shots/sample.*` |
+| `--theme`、`--locale` | 示例数据里没写主题、语言的图用这个，默认 `dark`、`zh-CN` |
+| `--color <#rrggbb>` | 封面的主色，默认取图标里圆角方块的颜色 |
+| `--no-cover` | 不合成封面 |
+| `--scale <1\|2\|3>` | 每个点几个像素，默认 2（展开页是 1584 × 720） |
+
+- 找浏览器：环境变量 `CHROME_PATH`，否则常见的安装位置。找不到就报错。
+- 渲染组件要 `react` 和 `react-dom`：先在插件项目里找，没有就用命令行自己带的；两处都没有时报错，提示在项目里装。
+- 告警：示例数据没应答的宿主调用（`shots:unanswered`，逐个列出方法名）；8 秒后界面还在变（`shots:unsettled`）；图标里取不到主色（`shots:cover-colour`）。
+- 报错并退出 1：组件渲染失败；收起条在这份示例数据下什么也没显示；插件没有岛上部分。
+- 截好的图要自己写进清单的 `fuyu.screenshots`。
+
 ## review
 
 ```bash
@@ -266,6 +290,8 @@ const result = await build("path/to/plugin", { outDir });
 const packed = await pack("path/to/plugin", { signingKey });
 const { ok, errors, warnings } = await check("path/to/plugin", { allowExperimental: false });
 ```
+
+截图和图标也能调：`await shots("path/to/plugin", { outDir })`、`await icon("path/to/plugin", { glyph: "rocket", color: "#e0a020" })`。
 
 `check()` 默认不做上架信息的检查，`listing: "warn"` 或 `"error"` 打开；单独要这部分结果用 `lintListing(dir, manifest)`。
 
