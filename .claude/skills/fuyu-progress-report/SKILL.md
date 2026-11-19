@@ -1,6 +1,6 @@
 ---
 name: fuyu-progress-report
-description: ALWAYS invoke BEFORE reporting the progress of the Fuyu sessions and tasks to the user, when they want to see where every session is, what is waiting for them, or what merged today, including a quick look at one area. Do NOT hand-write a report page or paste a long status list without loading this skill first. Do NOT invoke for the plain terminal summary the user names (pnpm progress), for dispatching or reviewing sessions (fuyu-lead), or for working on one task (fuyu-task). 触发：汇报进度、各会话做到哪了、看看进度、出个进度报告、现在都在干嘛、哪些在等我、今天合了哪些、给我看下整体情况。
+description: ALWAYS invoke BEFORE reporting the progress of the Fuyu sessions and tasks to the user, when they want to see where every session is, what is waiting for them, or what merged today, including a quick look at one area. Do NOT hand-write a report page or paste a long status list without loading this skill first. Do NOT invoke for the plain terminal summary the user names (pnpm progress), or for working on one task (fuyu-task). 触发：汇报进度、各会话做到哪了、看看进度、出个进度报告、现在都在干嘛、哪些在等我、今天合了哪些、给我看下整体情况。
 ---
 
 # 进度报告：一张 HTML 页面
