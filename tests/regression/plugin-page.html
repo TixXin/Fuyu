@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>plugin page states</title>
+    <style>
+      html body { height: auto; min-height: 100%; margin: 0; overflow: auto; background: #0e0f11; font: 14px "Segoe UI", "Microsoft YaHei", sans-serif; }
+      #gallery { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; padding: 20px; }
+      .gallery__stage { position: relative; width: 700px; height: auto; padding: 14px 18px 18px; border-radius: 12px; transform: translateZ(0); }
+      .gallery__stage[data-stage="settings"] { min-height: 660px; }
+      .gallery__stage--narrow { width: 340px; }
+      .gallery__title { margin: 0 0 12px; color: var(--text-3); font-size: 12px; font-weight: 600; }
+      .gallery__head { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+      #results { max-width: 760px; margin: 20px; color: #ccc; font: 12px/1.7 monospace; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <div id="gallery"></div>
+    <pre id="results" role="status"></pre>
+    <script type="module" src="/tests/regression/plugin-page.tsx"></script>
+  </body>
+</html>

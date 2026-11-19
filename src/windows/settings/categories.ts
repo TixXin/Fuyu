@@ -48,8 +48,18 @@ export function entryOf(category: SettingsCategory): SettingsEntry | null {
   return entry ? (entry.id as SettingsEntry) : null;
 }
 
+export function parentOf(category: SettingsCategory): SettingsCategory | null {
+  const parent = find(category)?.parent;
+  return parent ? (parent as SettingsCategory) : null;
+}
+
+export function subPagesOf(item: SettingsCategory, items = registered()): SettingsCategory[] {
+  return items.filter((other) => other.parent === item).map(idOf);
+}
+
 export function sidebarItemOf(category: SettingsCategory): SettingsCategory {
-  return entryOf(category) ?? category;
+  const parent = parentOf(category);
+  return entryOf(category) ?? (parent ? sidebarItemOf(parent) : category);
 }
 
 export function isEntry(item: SettingsCategory): item is SettingsEntry {
@@ -70,6 +80,7 @@ export function settingsGroups(items = registered()): SettingsGroupRow[] {
   const groups: SettingsGroupRow[] = [];
   for (const item of items) {
     const id = idOf(item);
+    if (item.parent) continue;
     const entry = entryIn(id, items);
     if (entry && entry.id !== id) continue;
     const label = item.group ?? null;

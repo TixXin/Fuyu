@@ -2,6 +2,8 @@ export const AGENT_ALERT_SECONDS = [3, 5, 8, 15, 30] as const;
 export const MESSAGE_PANEL_SECONDS = AGENT_ALERT_SECONDS;
 export const MESSAGE_NOTICES = ["line", "banner", "panel"] as const;
 export const TUCK_STYLES = ["edge", "line", "hidden"] as const;
+export const TUCK_HINT_STYLES = ["none", "dot", "glow"] as const;
+export const TUCK_HINT_COLORS = ["contrast", "island", "custom"] as const;
 
 export const MAX_CUSTOM_SETTING_PRESETS = 6;
 export const MIN_TOP_FILLET_RADIUS = 0;
@@ -13,6 +15,7 @@ export const DEFAULT_ISLAND_OPACITY = 100;
 export const MIN_ISLAND_OPACITY = 20;
 export const MAX_ISLAND_OPACITY = 100;
 export const DEFAULT_IDLE_DIM_SECONDS = 30;
+export const DEFAULT_ISLAND_LAYER_SHORTCUT = "Ctrl+Alt+B";
 export const DEFAULT_IDLE_DIM_OPACITY = 35;
 export const MIN_IDLE_DIM_OPACITY = 5;
 export const MAX_IDLE_DIM_OPACITY = 90;

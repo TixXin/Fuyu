@@ -151,7 +151,7 @@ test("with a provider the card starts with its name and plan in its colour", () 
   ]);
   assert.deepEqual(texts(usageCardLines(null, NOW, zhCN, false, provider("codex"))), ["Codex", zhCN.noUsage.codex]);
   const noKey = usage({ source: "glm", fiveHour: null, sevenDay: null, updatedAt: null, plan: null, error: { kind: "noCredentials", message: "" } });
-  assert.deepEqual(texts(usageCardLines(noKey, NOW, zhCN, false, provider("glm"))), ["GLM", zhCN.noUsage.glm, "还没有保存 API Key，请在设置 → AI Agent 的用量环里填写"]);
+  assert.deepEqual(texts(usageCardLines(noKey, NOW, zhCN, false, provider("glm"))), ["GLM", zhCN.noUsage.glm, "没有保存 API Key，Claude Code 的配置里也没找到，请在设置 → AI Agent 的用量环里填写"]);
   for (const kind of Object.keys(zhCN.errors)) {
     assert.ok(zhCN.planErrors[kind] && en.planErrors[kind], kind);
     assert.ok(zhCN.antigravityErrors[kind] && en.antigravityErrors[kind], kind);

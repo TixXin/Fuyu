@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import "./settingsCategorySlot.mjs";
-import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, entryOf, entryPages, isCategoryAvailable, pagesOfFeaturesOff, searchCategories, settingsCategories, settingsCategoryFor, settingsGroups, sidebarItemOf } from "../../src/windows/settings/categories.ts";
+import { DEFAULT_SETTINGS_CATEGORY, FEATURE_PAGES, entryOf, entryPages, isCategoryAvailable, pagesOfFeaturesOff, searchCategories, settingsCategories, settingsCategoryFor, settingsGroups, sidebarItemOf, parentOf, subPagesOf } from "../../src/windows/settings/categories.ts";
 import { categorySlot } from "../../src/windows/settings/slots/categorySlot.ts";
 import { shortcutLabel } from "../../src/lib/shortcut/shortcut.ts";
 import { isTitleHit, normalizeSearchText, searchSettingsRows, searchWords } from "../../src/windows/settings/settingsSearch.ts";
@@ -100,8 +100,24 @@ test("Appearance has 4 tabs, AI Agent is a group of 4 items, and every page is r
   assert.equal(settingsCategoryFor("sync"), "generalSync");
   const listed = SETTINGS_GROUPS.flatMap((group) => group.categories);
   assert.equal(new Set(listed).size, listed.length);
-  const reachable = new Set(listed.flatMap((item) => entryPages(item)));
+  const reachable = new Set(listed.flatMap((item) => [...entryPages(item), ...subPagesOf(item)]));
   assert.deepEqual([...reachable].sort(), [...SETTINGS_CATEGORIES].sort());
+});
+
+test("a sub-page stays out of the sidebar, lights up its parent and is listed under it for search", () => {
+  const remove = categorySlot.add({ id: "demoDetails", parent: "about", component: () => null }, "demo");
+  try {
+    assert.ok(settingsCategories().includes("demoDetails"));
+    assert.ok(!settingsGroups().flatMap((group) => group.categories).includes("demoDetails"));
+    assert.equal(parentOf("demoDetails"), "about");
+    assert.equal(parentOf("about"), null);
+    assert.equal(sidebarItemOf("demoDetails"), "about");
+    assert.deepEqual(subPagesOf("about"), ["demoDetails"]);
+    assert.equal(entryOf("demoDetails"), null);
+  } finally {
+    remove();
+  }
+  assert.deepEqual(subPagesOf("about"), []);
 });
 
 test("a category added to settings.category/v1 brings its own group, tabs, switch, availability and old names", () => {

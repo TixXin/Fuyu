@@ -6,14 +6,15 @@ minimum_visible_ms=800
 
 providers="codex claudeCode workbuddy antigravity dsh qoder codebuddy qwen trae traeCn zcode kimiCode grok copilot droid pi cursor"
 case "$provider" in
-  updatedAt|statusPath|others|"") exit 2 ;;
+  updatedAt|statusPath|others|"") exit 1 ;;
   [A-Za-z]*)
-    case "$provider" in *[!A-Za-z0-9_-]*) exit 2 ;; esac
-    [ "${#provider}" -le 32 ] || exit 2
+    case "$provider" in *[!A-Za-z0-9_-]*) exit 1 ;; esac
+    [ "${#provider}" -le 32 ] || exit 1
     ;;
-  *) exit 2 ;;
+  *) exit 1 ;;
 esac
-case "$phase" in idle|running|completed|failed) ;; *) exit 2 ;; esac
+case "$phase" in idle|running|completed|failed) ;; *) exit 1 ;; esac
+[ "$provider" = claudeCode ] && [ -n "$CURSOR_VERSION" ] && exit 0
 
 status=${FOCUSD_AGENT_STATUS_PATH:-$(cd "$(dirname "$0")" && pwd)/agent-status.json}
 dir=$(dirname "$status")

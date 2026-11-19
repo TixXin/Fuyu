@@ -7,10 +7,11 @@ export type SettingsCategoriesText = {
   };
   expand: (group: string) => string;
   collapse: (group: string) => string;
+  backTo: (page: string) => string;
   keywords: Record<
     | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
-    | "pluginsV3" | "about",
+    | "pluginsV3" | "pluginMarket" | "pluginDiagnostics" | "about",
     string
   >;
   entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string };
@@ -65,6 +66,8 @@ export type SettingsCategoriesText = {
   agentApprovals: string;
   agentConnect: string;
   pluginsV3: string;
+  pluginMarket: string;
+  pluginDiagnostics: string;
   about: string;
 };
 
@@ -77,6 +80,7 @@ export const zhCN: SettingsCategoriesText = {
   },
   expand: (group) => `展开「${group}」`,
   collapse: (group) => `折叠「${group}」`,
+  backTo: (page) => `返回「${page}」`,
   keywords: {
     overview: "概览 开始 新手 入门 常用 功能 开启 关闭 启用",
     general: "开机 自启 登录 语言 托盘 菜单栏 权限",
@@ -98,7 +102,7 @@ export const zhCN: SettingsCategoriesText = {
     appearanceCollapsed: "显示内容 收起条 项目 排序 中心图案 宠物 眼睛",
     theme: "主题 颜色 背景 浅色 深色 配色 强调色 亮点 文字 我的主题 预设 样式 导入 导出 保存 主题市场 皮肤 下载 应用 分享",
     themeStyle: "风格 经典 像素 透明 不透明度 整体不透明度 闲置 变淡 鼠标穿透 点击穿透 字体 圆角 超椭圆 液态玻璃 折射 流光 模糊 高光",
-    shortcuts: "按键 组合键 热键 全局",
+    shortcuts: "按键 组合键 热键 全局 上下层 置顶 最前 退到后面",
     todos: "任务 笔记 归档 待办 项目 标签 保存路径 文件夹 导出 Markdown",
     calendar: "日程 会议 倒计时 提醒 CalDAV ICS 订阅 节假日 日历来源",
     music: "歌词 媒体 播放 波形 酷狗 网易云",
@@ -120,7 +124,9 @@ export const zhCN: SettingsCategoriesText = {
     agentPush: "手机推送 Bark cc-connect 机器人 飞书",
     agentApprovals: "批准 允许 拒绝 权限 提问 回答 审批",
     agentConnect: "回复状态标记 编辑器扩展 VS Code Cursor 连接",
-    pluginsV3: "插件 第 3 版 内核 宿主 状态 占用 CPU 出错 停用 安全模式 开发中",
+    pluginsV3: "插件 已安装 扩展 启用 停用 卸载 重启 出错 设置 权限 命令 快捷键 更新 从文件安装 .fuyu",
+    pluginMarket: "插件市场 扩展 下载 安装 更新 官方 第三方 浏览 .fuyu",
+    pluginDiagnostics: "运行诊断 插件进程 内存 CPU 占用 出错 安全模式 运行环境 Node 排查 二分 卡顿",
     about: "版本 更新 检查更新 测试版 通道 更新日志 版本历史 发行说明 帮助 新手引导 诊断 重置 退出 反馈 Star",
   },
   entries: {
@@ -223,7 +229,9 @@ export const zhCN: SettingsCategoriesText = {
   agentPush: "推送与机器人",
   agentApprovals: "审批",
   agentConnect: "连接与扩展",
-  pluginsV3: "插件（第 3 版）",
+  pluginsV3: "插件",
+  pluginMarket: "插件市场",
+  pluginDiagnostics: "运行诊断",
   about: "关于",
 };
 
@@ -236,6 +244,7 @@ export const en: SettingsCategoriesText = {
   },
   expand: (group) => `Expand ${group}`,
   collapse: (group) => `Collapse ${group}`,
+  backTo: (page) => `Back to ${page}`,
   keywords: {
     overview: "overview start beginner getting started common features turn on off enable",
     general: "startup launch login language tray menu bar permissions",
@@ -257,7 +266,7 @@ export const en: SettingsCategoriesText = {
     appearanceCollapsed: "display collapsed bar items order center pattern pet eyes",
     theme: "themes colour color background light dark tone accent pulse ink my themes preset style import export save theme market skins download apply share",
     themeStyle: "style classic pixel opacity island opacity idle dim fade click through passthrough transparency font corner squircle liquid glass refraction flow blur specular",
-    shortcuts: "keys hotkey keyboard global",
+    shortcuts: "keys hotkey keyboard global layer topmost front back",
     todos: "tasks notes archive todos projects tags save folder export markdown",
     calendar: "events meeting countdown reminder caldav ics subscription holidays calendar sources",
     music: "lyrics media playback waveform kugou netease",
@@ -279,7 +288,9 @@ export const en: SettingsCategoriesText = {
     agentPush: "mobile push bark cc-connect bot feishu",
     agentApprovals: "approve allow deny permission questions answer",
     agentConnect: "reply status marker editor extension vs code cursor connection",
-    pluginsV3: "plugins v3 kernel host status usage cpu errors disabled safe mode preview",
+    pluginsV3: "plugins installed extensions enable disable uninstall restart errors settings permissions commands shortcuts updates install from file .fuyu",
+    pluginMarket: "plugin market store extensions download install update official browse .fuyu",
+    pluginDiagnostics: "diagnostics plugin process memory cpu usage errors safe mode runtime node troubleshoot bisect slow",
     about: "version updates check beta channel changelog version history release notes help onboarding guide diagnostics reset quit feedback star",
   },
   entries: {
@@ -382,6 +393,8 @@ export const en: SettingsCategoriesText = {
   agentPush: "Push and bots",
   agentApprovals: "Approvals",
   agentConnect: "Connection",
-  pluginsV3: "Plugins (v3)",
+  pluginsV3: "Plugins",
+  pluginMarket: "Plugin market",
+  pluginDiagnostics: "Diagnostics",
   about: "About",
 };

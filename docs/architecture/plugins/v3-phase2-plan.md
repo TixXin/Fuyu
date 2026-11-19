@@ -132,7 +132,7 @@
 - 第 2 版插件的状态 id 是动态的，没进注册表，仍按 `PLUGIN_STATUS_ORDER` 插在「更新」和「设备占用」之间；第 2 版插件页也照旧走 `pluginPages`。第 6 阶段随第 2 版一起删。
 - 收起条：用量环和计时器仍由 `useCollapsedSlots` 生成，`island.collapsed/v1` 的组件按 `group` 拿两种 props；收起条加宽只算量表（`gauges`）的宽度。
 - 展开页按平台去掉的页（`withoutUnsupported`）还是写死的列表。
-- 第三方页面项带 `headerDot` 时，页头圆点的标签还没有来源（现在按内置页从文案里取）；第三方设置分类也没有标题元数据，侧栏和页头的名字仍来自 i18n。插件能加页面和分类之前（第 5 阶段）要补元数据。
+- 第三方设置分类没有标题元数据，侧栏的名字仍来自 i18n。（页面的标题 E60.5 已补：`island.page/v1` 的 `title`，插件的页面默认进页头，见 `docs/plugins/services-and-slots.md`「插件的岛页面」。）
 - 设置分节、页头按钮等组件拿到的是各自那一页的 props，形状各不相同；第 5 阶段对第三方开放前要定统一的 props。
 - `SETTINGS_FEATURES`、`FEATURE_PAGES`、`CATEGORY_ICONS` 仍是从内置项算出的常量（概览页、功能页头、回归页在用）。
 - 没改成插槽的设置页：概览、语音输入、第 2 版插件、第 3 版插件、主题市场、插件市场，以及 `SettingsWindow` 直接渲染的单组件页（`agentRemote`、`sounds`、`agentApprovals`）。

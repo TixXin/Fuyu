@@ -161,6 +161,14 @@
   overflow: hidden;
 }
 
+.island__collapsed > .island__open-button--center > .island__center-slot {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .island__gauge-slot {
   display: flex;
   flex: 0 0 auto;

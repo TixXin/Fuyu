@@ -1,6 +1,7 @@
-export type PluginV3State = "running" | "waiting" | "failed" | "disabled" | "auto-disabled" | "safe-mode" | "bisect" | "loading" | "stopped" | "unloading";
+import { en as enPage, zhCN as zhPage, type SettingsPluginPageText } from "./pluginPage.ts";
+import { en as enMarket, zhCN as zhMarket, type SettingsPluginMarketText } from "./pluginMarket.ts";
 
-export type PluginV3Connection = "connecting" | "open" | "reconnecting" | "failed" | "closed";
+export type PluginV3State = "running" | "waiting" | "failed" | "disabled" | "auto-disabled" | "safe-mode" | "bisect" | "loading" | "stopped" | "unloading";
 
 export type HostMemoryMeasureText = "private-working-set" | "phys-footprint" | "rss";
 
@@ -28,62 +29,23 @@ export type BuiltinPluginName =
   | "theme-market"
   | "updater";
 
-export type PluginV3Group = "third-party" | "core" | "ai" | "system";
-
-export type PluginV3Filter = "all" | "core" | "ai" | "system" | "third-party" | "attention" | "off";
-
 export type SettingsPluginsV3Text = {
+  page: SettingsPluginPageText;
+  marketPage: SettingsPluginMarketText;
   searchPlaceholder: string;
   noMatches: string;
-  tabs: {
-    plugins: (count: number) => string;
-    market: string;
-    diagnostics: string;
-  };
-  openDiagnostics: string;
-  groups: Record<PluginV3Group, string>;
-  filters: Record<PluginV3Filter, (count: number) => string>;
   closeDetail: string;
+  clearSearch: string;
   stateCol: string;
-  noResources: string;
-  viewDetail: string;
-  runningSummary: (running: number) => string;
   builtinSummaries: Record<BuiltinPluginName, string>;
-  builtins: string;
-  builtinsNote: string;
-  builtinsLoading: string;
   builtinNames: Record<BuiltinPluginName, string>;
-  builtinNotes: Partial<Record<BuiltinPluginName, string>>;
-  essentialNote: string;
-  hostOff: string;
-  hostOffNote: string;
-  node: {
-    downloading: string;
-    downloadingNote: string;
-    progress: (downloaded: string, total: string) => string;
-    progressUnknown: (downloaded: string) => string;
-    failed: string;
-    failedNote: string;
-    retry: string;
-  };
-  host: string;
-  connection: Record<PluginV3Connection, string>;
-  hostDetail: (pid: number, node: string) => string;
   memoryTitles: Record<HostMemoryMeasureText, string>;
   memoryNotes: Record<HostMemoryMeasureText, string>;
   hostCpu: string;
   uptime: string;
-  safeMode: string;
   safeModes: { "third-party": string; minimal: string };
-  safeCauses: { variable: string; shift: string; failures: (count: number) => string };
-  leaveSafeMode: string;
   devMode: string;
-  plugins: string;
-  empty: string;
-  browseMarket: string;
-  waitingHost: string;
   states: Record<PluginV3State, string>;
-  kinds: { essential: string; builtin: string; "third-party": string };
   waitingFor: (services: string) => string;
   waitingReasons?: {
     noProvider: (service: string) => string;
@@ -92,14 +54,12 @@ export type SettingsPluginsV3Text = {
   };
   serviceReplacedBy?: (service: string, by: string) => string;
   serviceYielded?: (service: string) => string;
-  unreviewedBadge?: string;
   undeclaredBadge?: (items: string) => string;
   bisect?: {
-    start: string;
     testing: (step: number, count: number, ids: string) => string;
     fixed: string;
     stillBroken: string;
-    found: (id: string) => string;
+    found: (name: string) => string;
     clear: string;
     restore: string;
   };
@@ -114,8 +74,6 @@ export type SettingsPluginsV3Text = {
   clients: string;
   resourcesCol: string;
   errors: string;
-  lastError: string;
-  cpuNote: string;
   schemaForm: {
     heading: string;
     resetBtn: string;
@@ -131,127 +89,16 @@ export type SettingsPluginsV3Text = {
     hideAll: string;
     hideAllHint: string;
   };
-  v2Migration: {
-    title: string;
-    summary: string;
-    officialHeading: string;
-    otherHeading: string;
-    otherNote: string;
-    configCarried: string;
-    switchedToV3: string;
-    installInMarket: string;
-    openMarket: string;
-    dismiss: string;
-  };
-  market: {
-    count: (count: number) => string;
-    empty: string;
-    loading: string;
-    hostDisconnected: string;
-    updatedAt: (time: string) => string;
-    refresh: string;
-    refreshing: string;
-    manualAllow: string;
-    installFromFile: string;
-    officialBadge: string;
-    reviewedBadge: string;
-    cooldownBadge: string;
-    cooldownTitle: string;
-    cooldownHint: string;
-    revokedBadge: string;
-    installedBadge: (version: string) => string;
-    installBtn: string;
-    installingBtn: string;
-    updateBtn: (version: string) => string;
-    installedBtn: string;
-    unavailableBtn: string;
-    uninstallBtn: string;
-    uninstallPrompt: (id: string) => string;
-    uninstallRemoveData: string;
-    uninstallConfirmBtn: string;
-    uninstallingBtn: string;
-    cancelBtn: string;
-    confirmModal: {
-      titleInstall: string;
-      titleUpdate: string;
-      sourceOfficial: string;
-      sourceMarket: string;
-      sourceManualWarn: string;
-      trustChangeWarn: string;
-      requiresNote: (plugins: string) => string;
-      cooldownInstallNote: string;
-      cooldownUpdateNote: string;
-      networkLabel: string;
-      networkNone: string;
-      nodeApisLabel: string;
-      nodeApisNone: string;
-      providesLabel: string;
-      replacesLabel: string;
-      slotsLabel: string;
-      capabilityNone: string;
-      hostSecurityNote: string;
-      confirmBtn: string;
-      cancelBtn: string;
-    };
-    detailModal: {
-      loading: string;
-      previewBadge: string;
-      likesCount: (count: number) => string;
-      publisherBy: (name: string) => string;
-      licenseLabel: (spdx: string) => string;
-      platformsLabel: (list: string) => string;
-      links: {
-        repository: string;
-        homepage: string;
-        bugs: string;
-        funding: string;
-      };
-      screenshotsHeading: string;
-      tabs: {
-        readme: string;
-        changelog: string;
-        capabilities: string;
-      };
-      noReadme: string;
-      noChangelog: string;
-      versionsHeading: string;
-      noVersions: string;
-      urgentBadge: string;
-      commandsLabel: string;
-      requiresLabel: string;
-    };
-  };
 };
 
 export const zhCN: SettingsPluginsV3Text = {
+  page: zhPage,
+  marketPage: zhMarket,
   searchPlaceholder: "搜索插件名称、ID 或说明…",
   noMatches: "没有匹配的插件。",
-  tabs: {
-    plugins: (count) => `已安装 (${count})`,
-    market: "插件市场",
-    diagnostics: "宿主与运行诊断",
-  },
-  openDiagnostics: "查看运行诊断 ›",
-  groups: {
-    "third-party": "宿主与第三方插件",
-    core: "岛屿核心功能",
-    ai: "AI Agent 与连接",
-    system: "外观与系统提示",
-  },
-  filters: {
-    all: (count) => `全部 (${count})`,
-    core: (count) => `核心功能 (${count})`,
-    ai: (count) => `AI 与连接 (${count})`,
-    system: (count) => `外观与系统 (${count})`,
-    "third-party": (count) => `第三方 (${count})`,
-    attention: (count) => `需处理 (${count})`,
-    off: (count) => `已关闭 (${count})`,
-  },
   closeDetail: "关闭",
+  clearSearch: "清除搜索",
   stateCol: "状态",
-  noResources: "无常驻资源",
-  viewDetail: "详情 ›",
-  runningSummary: (running) => `${running} 个运行中`,
   builtinSummaries: {
     todos: "待办列表、每日笔记与归档，提供 todos/v1 服务",
     calendar: "日程视图与收起条会前倒计时，提供 calendar/v1 服务",
@@ -269,16 +116,13 @@ export const zhCN: SettingsPluginsV3Text = {
     "ssh-tunnel": "设置在 AI Agent → SSH 远程；只支持 Windows，关掉后反向隧道结束",
     "local-api": "设置在 通用 → 本机接口；转给待办、AI Agent、剪贴板的请求，那个插件关着时回 503",
     "center-pattern": "收起条中心的眼睛动画与随 Agent 状态变表情的宠物",
-    messages: "QQ、微信提醒与多邮箱收信；关掉后，第 2 版插件在岛上的通知也不显示",
+    messages: "QQ、微信提醒与多邮箱收信",
     "device-events": "耳机连接断开、蓝牙低电量与插拔电源时在小岛提示",
     "system-levels": "调节音量或亮度时在收起的小岛或刘海两侧提示",
     "device-use": "应用占用摄像头或麦克风时在收起条显示图标",
     "theme-market": "浏览、预览并应用社区主题或保存为本地预设",
     updater: "后台检查版本更新与应用内安装",
   },
-  builtins: "内置插件",
-  builtinsNote: "开关存在数据目录的 plugins-v3/plugins.yml，宿主没开也生效。关掉的插件撤掉它的界面、停掉它的后台。",
-  builtinsLoading: "正在读取内置插件。",
   builtinNames: {
     todos: "待办",
     calendar: "日历",
@@ -303,49 +147,16 @@ export const zhCN: SettingsPluginsV3Text = {
     "theme-market": "主题市场",
     updater: "自动更新",
   },
-  builtinNotes: { clipboard: "关掉期间打码的密钥条目不按时清理，下次打开时清扫", messages: "关掉后，第 2 版插件在岛上的通知也不显示", "claude-usage": "设置在 AI Agent → 用量环；AI Agent 插件关着时设置组一并隐藏", "cc-connect": "设置在 AI Agent → 提醒；关掉后手机推送的 cc-connect 通道也停用", "ssh-tunnel": "设置在 AI Agent → SSH 远程；只支持 Windows，关掉后反向隧道结束", "session-ring": "设置在 AI Agent → 会话环；读 AI Agent 插件的会话列表", "local-api": "设置在 通用 → 本机接口；转给待办、AI Agent、剪贴板的请求，那个插件关着时回 503", "center-pattern": "设置在 外观 → 中心图案；悬岛和宠物读 AI Agent 插件的会话状态" },
-  essentialNote: "浮屿必需，不能关",
-  hostOff: "宿主没开",
-  hostOffNote: "插件宿主默认启动；当前由环境变量 FUYU_PLUGINS_V3=0 关掉，去掉后重启浮屿即可运行已安装插件。",
-  node: {
-    downloading: "正在下载 Node",
-    downloadingNote: "插件宿主要用 Node，这台电脑上没找到合适的版本。浮屿把它下载到自己的数据目录，只下一次。",
-    progress: (downloaded, total) => `${downloaded} / ${total} MB`,
-    progressUnknown: (downloaded) => `${downloaded} MB`,
-    failed: "没能下载 Node",
-    failedNote: "下载走系统代理。网络好了点「重试」，不用重启浮屿。",
-    retry: "重试",
-  },
-  host: "宿主",
-  connection: {
-    connecting: "正在连接",
-    open: "已连接",
-    reconnecting: "宿主重启中，正在重连",
-    failed: "连不上（协议版本不对）",
-    closed: "已断开",
-  },
-  hostDetail: (pid, node) => `进程 ${pid} · Node ${node}`,
   memoryTitles: { "private-working-set": "内存（私有工作集）", "phys-footprint": "内存（phys_footprint）", rss: "内存（工作集）" },
   memoryNotes: {
     "private-working-set": "和任务管理器「内存」一栏同一个口径，不含和别的进程共享的页。",
     "phys-footprint": "和活动监视器「内存」一栏同一个口径。",
-    rss: "宿主自己报的常驻内存，含共享页，比实际占用大。",
+    rss: "插件进程自己报的常驻内存，含共享页，比实际占用大。",
   },
   hostCpu: "累计 CPU",
   uptime: "已运行",
-  safeMode: "安全模式",
-  safeModes: { "third-party": "只停第三方插件", minimal: "只留最小的一组内置插件" },
-  safeCauses: {
-    variable: "由环境变量 FUYU_PLUGINS_V3_SAFE 打开，去掉这个变量后重启浮屿才会退出。",
-    shift: "启动时按住了 Shift。只管这一次运行，下次正常启动就退出。",
-    failures: (count) => `宿主连续 ${count} 次没能跑满 60 秒。在安全模式下跑满 60 秒后清零，下次启动照常。`,
-  },
-  leaveSafeMode: "退出安全模式",
+  safeModes: { "third-party": "停用你装的插件", minimal: "只留必需的部分" },
   devMode: "开发模式（热重载）",
-  plugins: "插件",
-  empty: "暂未安装任何插件。可前往「插件市场」浏览安装官方或第三方插件。",
-  browseMarket: "前往插件市场",
-  waitingHost: "等宿主连上后显示已安装插件。",
   states: {
     running: "运行中",
     waiting: "等待中",
@@ -358,7 +169,6 @@ export const zhCN: SettingsPluginsV3Text = {
     stopped: "已停止",
     unloading: "正在停止",
   },
-  kinds: { essential: "必需", builtin: "内置", "third-party": "第三方" },
   waitingFor: (services) => `在等服务：${services}`,
   waitingReasons: {
     noProvider: (service) => `没有插件提供 ${service}`,
@@ -367,18 +177,16 @@ export const zhCN: SettingsPluginsV3Text = {
   },
   serviceReplacedBy: (service, by) => `服务 ${service} 已由插件 ${by} 接管`,
   serviceYielded: (service) => `已让出服务 ${service}`,
-  unreviewedBadge: "未经市场审核",
   undeclaredBadge: (items) => `未在清单声明：${items}`,
   bisect: {
-    start: "二分排查问题插件",
-    testing: (step, count, ids) => `第 ${step} 步：已临时停用 ${count} 个第三方插件（${ids}），问题消失了吗？`,
+    testing: (step, count, ids) => `第 ${step} 步：已临时停用 ${count} 个插件（${ids}），问题消失了吗？`,
     fixed: "问题消失了",
     stillBroken: "问题还在",
-    found: (id) => `已定位到问题插件：${id}（当前保持停用）`,
-    clear: "未在第三方插件中复现该问题，已恢复全部插件。",
+    found: (name) => `问题出在「${name}」，先让它保持停用`,
+    clear: "停掉你装的插件后问题还在，所以不是它们引起的，已全部恢复。",
     restore: "结束并恢复全部",
   },
-  autoDisabled: (errors, seconds) => `${seconds} 秒内出错 ${errors} 次，已停用到宿主下次重启；没有改 plugins.yml。`,
+  autoDisabled: (errors, seconds) => `${seconds} 秒内出错 ${errors} 次，先停用到浮屿下次启动；你的开关没变。`,
   heldBySafeMode: (mode) => `安全模式（${mode}）下不启动这个插件。`,
   cpu: "CPU",
   calls: (count) => `${count} 次回调`,
@@ -389,15 +197,13 @@ export const zhCN: SettingsPluginsV3Text = {
   clients: "界面文件",
   resourcesCol: "活跃资源",
   errors: "出错",
-  lastError: "最近一次出错",
-  cpuNote: "CPU 是近似值：只算经内核登记的回调（事件监听、受管定时器、启动）的同步部分，await 之后的不算。",
   schemaForm: {
     heading: "插件设置",
     resetBtn: "恢复默认设置",
     resettingBtn: "正在恢复…",
   },
   windowRules: {
-    heading: "窗口权限守卫",
+    heading: "独立窗口",
     openCount: (count) => `${count} 个活动窗口`,
     disallowAlwaysOnTop: "不允许置顶",
     disallowAlwaysOnTopHint: "禁止此插件的独立窗口始终置顶",
@@ -406,127 +212,16 @@ export const zhCN: SettingsPluginsV3Text = {
     hideAll: "隐藏全部窗口",
     hideAllHint: "立即隐藏并阻止显示此插件的全部独立窗口",
   },
-  v2Migration: {
-    title: "旧第 2 版插件下线与迁移说明",
-    summary: "第 2 版进程与自定义网页插件即将下线。官方插件已按第 3 版跨平台接口重写为 @fuyu/*，原有设置已自动保留到第 3 版数据目录。",
-    officialHeading: "官方插件新版对照",
-    otherHeading: "其他已安装的第 2 版插件",
-    otherNote: "以下插件基于旧第 2 版协议，旧宿主移除后将不再运行，需升级为第 3 版（.fuyu）插件包。",
-    configCarried: "已迁移原配置",
-    switchedToV3: "已切换至 v3",
-    installInMarket: "可在市场安装新版",
-    openMarket: "前往插件市场",
-    dismiss: "知道了，不再提示",
-  },
-  market: {
-    count: (count) => `共 ${count} 个上架插件`,
-    empty: "暂无上架插件。可点击「刷新索引」拉取最新市场目录，或开启手动安装后从本地导入 .fuyu 包。",
-    loading: "正在读取市场目录…",
-    hostDisconnected: "等宿主连上后即可浏览插件市场与管理 .fuyu 插件包。",
-    updatedAt: (time) => `上次同步：${time}`,
-    refresh: "刷新索引",
-    refreshing: "正在刷新…",
-    manualAllow: "允许手动安装 .fuyu 包",
-    installFromFile: "从文件安装 .fuyu…",
-    officialBadge: "官方",
-    reviewedBadge: "市场已审核",
-    cooldownBadge: "刚上架",
-    cooldownTitle: "上架未满 3 天",
-    cooldownHint: "未满 3 天，暂缓自动更新",
-    revokedBadge: "已撤销",
-    installedBadge: (version) => `已安装 v${version}`,
-    installBtn: "安装",
-    installingBtn: "安装中…",
-    updateBtn: (version) => `更新至 v${version}`,
-    installedBtn: "已安装",
-    unavailableBtn: "当前不可安装",
-    uninstallBtn: "卸载插件",
-    uninstallPrompt: (id) => `确定要卸载 ${id} 吗？卸载后插件代码与注册项会立即移除。`,
-    uninstallRemoveData: "同时删除本插件的数据目录",
-    uninstallConfirmBtn: "确认卸载",
-    uninstallingBtn: "卸载中…",
-    cancelBtn: "取消",
-    confirmModal: {
-      titleInstall: "确认安装插件",
-      titleUpdate: "确认更新插件",
-      sourceOfficial: "官方插件（@fuyu/*）",
-      sourceMarket: "市场已审核",
-      sourceManualWarn: "未经市场审核：来自本地 .fuyu 文件，请确认插件作者与来源可信后再安装。",
-      trustChangeWarn: "该插件更换了签名密钥或源码仓库，请确认作者身份后再更新。",
-      requiresNote: (plugins) => `将一并安装依赖插件：${plugins}`,
-      cooldownInstallNote: "该版本上架未满 3 天冷静期，确认后立即安装。",
-      cooldownUpdateNote: "该版本上架未满 3 天冷静期，尚未自动推送，确认后立即更新。",
-      networkLabel: "联网域名",
-      networkNone: "不联网",
-      nodeApisLabel: "Node 内置模块",
-      nodeApisNone: "无",
-      providesLabel: "提供服务",
-      replacesLabel: "接管服务",
-      slotsLabel: "界面插槽",
-      capabilityNone: "无",
-      hostSecurityNote: "宿主侧插件运行在本机 Node 进程中，可访问本插件数据目录与系统凭据管理器。",
-      confirmBtn: "确认安装",
-      cancelBtn: "取消",
-    },
-    detailModal: {
-      loading: "正在读取插件详情…",
-      previewBadge: "预览版",
-      likesCount: (count) => `${count} 赞`,
-      publisherBy: (name) => `发布者：${name}`,
-      licenseLabel: (spdx) => `协议：${spdx}`,
-      platformsLabel: (list) => `平台：${list}`,
-      links: {
-        repository: "源码仓库",
-        homepage: "主页",
-        bugs: "反馈问题",
-        funding: "赞助支持",
-      },
-      screenshotsHeading: "截图预览",
-      tabs: {
-        readme: "说明",
-        changelog: "更新日志",
-        capabilities: "能力声明",
-      },
-      noReadme: "暂无详细说明。",
-      noChangelog: "暂无更新日志。",
-      versionsHeading: "历史版本",
-      noVersions: "暂无版本记录。",
-      urgentBadge: "紧急修复",
-      commandsLabel: "命令与快捷键",
-      requiresLabel: "依赖插件",
-    },
-  },
 };
 
 export const en: SettingsPluginsV3Text = {
+  page: enPage,
+  marketPage: enMarket,
   searchPlaceholder: "Search plugin name, ID or notes…",
   noMatches: "No matching plugins.",
-  tabs: {
-    plugins: (count) => `Installed (${count})`,
-    market: "Plugin market",
-    diagnostics: "Host & diagnostics",
-  },
-  openDiagnostics: "View diagnostics ›",
-  groups: {
-    "third-party": "Host and third-party plugins",
-    core: "Core island features",
-    ai: "AI agents and connections",
-    system: "Appearance and system alerts",
-  },
-  filters: {
-    all: (count) => `All (${count})`,
-    core: (count) => `Core (${count})`,
-    ai: (count) => `AI & Link (${count})`,
-    system: (count) => `System (${count})`,
-    "third-party": (count) => `Third-party (${count})`,
-    attention: (count) => `Attention (${count})`,
-    off: (count) => `Off (${count})`,
-  },
   closeDetail: "Close",
+  clearSearch: "Clear search",
   stateCol: "State",
-  noResources: "No active resources",
-  viewDetail: "Details ›",
-  runningSummary: (running) => `${running} running`,
   builtinSummaries: {
     todos: "To-dos, daily notes and archive; provides todos/v1",
     calendar: "Schedule view and pre-meeting countdown; provides calendar/v1",
@@ -544,16 +239,13 @@ export const en: SettingsPluginsV3Text = {
     "ssh-tunnel": "Settings under AI Agent → SSH remote; Windows only, off ends reverse tunnels",
     "local-api": "Settings under General → Local API; answers 503 when target plugin is off",
     "center-pattern": "Center eye animation and pets that react to AI Agent states",
-    messages: "QQ, WeChat and mail alerts; off also hides v2 plugin notices",
+    messages: "QQ, WeChat and mail alerts",
     "device-events": "Headphone, low battery and power alerts on the collapsed island",
     "system-levels": "Volume and brightness popups on the collapsed island or notch",
     "device-use": "Camera and microphone indicator on the collapsed bar",
     "theme-market": "Browse, preview and apply community themes or save as presets",
     updater: "Background update checks and in-app installation",
   },
-  builtins: "Built-in plugins",
-  builtinsNote: "Switches are saved in plugins-v3/plugins.yml in the data folder and work without the host. A plugin switched off loses its UI and its background work.",
-  builtinsLoading: "Reading the built-in plugins.",
   builtinNames: {
     todos: "To-dos",
     calendar: "Calendar",
@@ -578,49 +270,16 @@ export const en: SettingsPluginsV3Text = {
     "theme-market": "Theme market",
     updater: "Updates",
   },
-  builtinNotes: { clipboard: "While off, masked secret items are not purged on timer until the clipboard is turned back on", messages: "Off also hides version 2 plugins' island notices", "claude-usage": "Settings are under AI Agent → Usage ring; hidden while the AI Agent plugin is off", "cc-connect": "Settings are under AI Agent → Alerts; off also stops the phone push's cc-connect channel", "ssh-tunnel": "Settings are under AI Agent → SSH remote; Windows only, off ends the reverse tunnels", "session-ring": "Settings are under AI Agent → Session ring; reads the AI Agent plugin's session list", "local-api": "Settings are under General → Local API; requests for todos, AI Agent or the clipboard answer 503 while that plugin is off", "center-pattern": "Settings are under Appearance → Center pattern; the island mark and pets read the AI Agent plugin's session states" },
-  essentialNote: "Fuyu needs it; always on",
-  hostOff: "Host not running",
-  hostOffNote: "The plugin host starts by default and is turned off by FUYU_PLUGINS_V3=0; remove it and restart Fuyu to run installed plugins.",
-  node: {
-    downloading: "Downloading Node",
-    downloadingNote: "The plugin host needs Node, and no suitable version was found on this computer. Fuyu downloads it once into its own data folder.",
-    progress: (downloaded, total) => `${downloaded} / ${total} MB`,
-    progressUnknown: (downloaded) => `${downloaded} MB`,
-    failed: "Could not download Node",
-    failedNote: "The download uses the system proxy. Once the network is back, click Retry; no need to restart Fuyu.",
-    retry: "Retry",
-  },
-  host: "Host",
-  connection: {
-    connecting: "Connecting",
-    open: "Connected",
-    reconnecting: "Host restarting, reconnecting",
-    failed: "Can't connect (protocol mismatch)",
-    closed: "Disconnected",
-  },
-  hostDetail: (pid, node) => `Process ${pid} · Node ${node}`,
   memoryTitles: { "private-working-set": "Memory (private working set)", "phys-footprint": "Memory (phys_footprint)", rss: "Memory (working set)" },
   memoryNotes: {
     "private-working-set": "Same measure as Task Manager's Memory column; pages shared with other processes are left out.",
     "phys-footprint": "Same measure as Activity Monitor's Memory column.",
-    rss: "Resident memory reported by the host itself. It includes shared pages, so it reads higher than what the host really uses.",
+    rss: "Resident memory the plugin process reports for itself. It includes shared pages, so it reads higher than what it really uses.",
   },
   hostCpu: "CPU so far",
   uptime: "Up for",
-  safeMode: "Safe mode",
-  safeModes: { "third-party": "Third-party plugins off", minimal: "Minimal built-ins only" },
-  safeCauses: {
-    variable: "Turned on by the FUYU_PLUGINS_V3_SAFE environment variable. Remove it and restart Fuyu to leave.",
-    shift: "Shift was held at startup. It lasts for this run only.",
-    failures: (count) => `The host failed to stay up for 60 seconds ${count} times in a row. The count clears after a minute in safe mode, and the next start is normal.`,
-  },
-  leaveSafeMode: "Leave safe mode",
+  safeModes: { "third-party": "Your plugins off", minimal: "Essentials only" },
   devMode: "Dev mode (hot reload)",
-  plugins: "Plugins",
-  empty: "No plugins installed yet. Open the Plugin market to install official or community plugins.",
-  browseMarket: "Browse Plugin market",
-  waitingHost: "Installed plugins show up once the host is connected.",
   states: {
     running: "Running",
     waiting: "Waiting",
@@ -633,7 +292,6 @@ export const en: SettingsPluginsV3Text = {
     stopped: "Stopped",
     unloading: "Stopping",
   },
-  kinds: { essential: "Essential", builtin: "Built-in", "third-party": "Third-party" },
   waitingFor: (services) => `Waiting for: ${services}`,
   waitingReasons: {
     noProvider: (service) => `No plugin provides ${service}`,
@@ -642,18 +300,16 @@ export const en: SettingsPluginsV3Text = {
   },
   serviceReplacedBy: (service, by) => `Service ${service} is replaced by ${by}`,
   serviceYielded: (service) => `Yielded service ${service}`,
-  unreviewedBadge: "Unreviewed",
   undeclaredBadge: (items) => `Undeclared in manifest: ${items}`,
   bisect: {
-    start: "Bisect plugins",
-    testing: (step, count, ids) => `Step ${step}: Temporarily turned off ${count} third-party plugin(s) (${ids}). Is the problem gone?`,
+    testing: (step, count, ids) => `Step ${step}: Temporarily turned off ${count} plugin(s) (${ids}). Is the problem gone?`,
     fixed: "Problem is gone",
     stillBroken: "Still happening",
-    found: (id) => `Problem traced to plugin: ${id} (kept off for now)`,
-    clear: "Could not reproduce the issue across third-party plugins; all plugins restored.",
+    found: (name) => `The problem comes from ${name}; it stays off for now`,
+    clear: "The problem stayed with your plugins off, so they are not the cause; all are back on.",
     restore: "Finish & restore all",
   },
-  autoDisabled: (errors, seconds) => `${errors} errors within ${seconds} s, so it's off until the host restarts. plugins.yml is unchanged.`,
+  autoDisabled: (errors, seconds) => `${errors} errors within ${seconds} s, so it's off until Fuyu starts again. Your switch is unchanged.`,
   heldBySafeMode: (mode) => `Not started in safe mode (${mode}).`,
   cpu: "CPU",
   calls: (count) => `${count} ${count === 1 ? "call" : "calls"}`,
@@ -664,15 +320,13 @@ export const en: SettingsPluginsV3Text = {
   clients: "UI files",
   resourcesCol: "Resources",
   errors: "Errors",
-  lastError: "Last error",
-  cpuNote: "CPU is approximate: only the synchronous part of callbacks registered through the kernel (listeners, managed timers, start) is counted, not what runs after an await.",
   schemaForm: {
     heading: "Plugin settings",
     resetBtn: "Reset defaults",
     resettingBtn: "Resetting…",
   },
   windowRules: {
-    heading: "Window guardrails",
+    heading: "Separate windows",
     openCount: (count) => `${count} open ${count === 1 ? "window" : "windows"}`,
     disallowAlwaysOnTop: "Disallow always on top",
     disallowAlwaysOnTopHint: "Prevent this plugin's windows from staying above other apps",
@@ -680,95 +334,5 @@ export const en: SettingsPluginsV3Text = {
     disallowClickThroughHint: "Prevent this plugin from making windows ignore mouse clicks",
     hideAll: "Hide all windows",
     hideAllHint: "Immediately hide and keep all windows from this plugin hidden",
-  },
-  v2Migration: {
-    title: "Legacy v2 plugin retirement & migration",
-    summary: "Version 2 process and custom-webview plugins are being retired. Official plugins have been rewritten for Platform v3 as @fuyu/*, and your previous settings have been carried over.",
-    officialHeading: "Official plugin replacements",
-    otherHeading: "Other installed v2 plugins",
-    otherNote: "These plugins use the legacy v2 protocol and will stop running once the v2 host is removed; install or build a v3 (.fuyu) version instead.",
-    configCarried: "Settings carried over",
-    switchedToV3: "Switched to v3",
-    installInMarket: "Install v3 in Market",
-    openMarket: "Open Plugin Market",
-    dismiss: "Got it, don't show again",
-  },
-  market: {
-    count: (count) => `${count} listed ${count === 1 ? "plugin" : "plugins"}`,
-    empty: "No plugins listed yet. Click Refresh index to fetch the market catalog, or turn on manual installation to import a local .fuyu package.",
-    loading: "Loading market catalog…",
-    hostDisconnected: "Once the plugin host connects, you can browse the market and manage .fuyu packages.",
-    updatedAt: (time) => `Synced: ${time}`,
-    refresh: "Refresh index",
-    refreshing: "Refreshing…",
-    manualAllow: "Allow manual .fuyu installation",
-    installFromFile: "Install .fuyu from file…",
-    officialBadge: "Official",
-    reviewedBadge: "Market reviewed",
-    cooldownBadge: "New",
-    cooldownTitle: "Published within the last 3 days",
-    cooldownHint: "Within 3d cooldown · manual update",
-    revokedBadge: "Revoked",
-    installedBadge: (version) => `Installed v${version}`,
-    installBtn: "Install",
-    installingBtn: "Installing…",
-    updateBtn: (version) => `Update to v${version}`,
-    installedBtn: "Installed",
-    unavailableBtn: "Unavailable",
-    uninstallBtn: "Uninstall",
-    uninstallPrompt: (id) => `Uninstall ${id}? Its unpacked files and registration will be removed immediately.`,
-    uninstallRemoveData: "Also delete this plugin's data folder",
-    uninstallConfirmBtn: "Confirm uninstall",
-    uninstallingBtn: "Uninstalling…",
-    cancelBtn: "Cancel",
-    confirmModal: {
-      titleInstall: "Confirm plugin installation",
-      titleUpdate: "Confirm plugin update",
-      sourceOfficial: "Official plugin (@fuyu/*)",
-      sourceMarket: "Reviewed in market",
-      sourceManualWarn: "Unreviewed package: imported from a local .fuyu file. Only install if you trust the author.",
-      trustChangeWarn: "This plugin changed its signing key or source repository. Verify the author's identity before updating.",
-      requiresNote: (plugins) => `Will also install required plugins: ${plugins}`,
-      cooldownInstallNote: "Published within the 3-day cooldown; confirming installs it right away.",
-      cooldownUpdateNote: "Published within the 3-day cooldown (auto-update waits); confirming updates right away.",
-      networkLabel: "Network domains",
-      networkNone: "No network access",
-      nodeApisLabel: "Node built-in modules",
-      nodeApisNone: "None",
-      providesLabel: "Provides services",
-      replacesLabel: "Replaces services",
-      slotsLabel: "UI slots",
-      capabilityNone: "None",
-      hostSecurityNote: "Host-side plugins run in a local Node process with access to their own data folder and the OS credential manager.",
-      confirmBtn: "Install",
-      cancelBtn: "Cancel",
-    },
-    detailModal: {
-      loading: "Loading plugin details…",
-      previewBadge: "Preview",
-      likesCount: (count) => `${count} ${count === 1 ? "like" : "likes"}`,
-      publisherBy: (name) => `By ${name}`,
-      licenseLabel: (spdx) => `License: ${spdx}`,
-      platformsLabel: (list) => `Platforms: ${list}`,
-      links: {
-        repository: "Repository",
-        homepage: "Homepage",
-        bugs: "Report issue",
-        funding: "Sponsor",
-      },
-      screenshotsHeading: "Screenshots",
-      tabs: {
-        readme: "README",
-        changelog: "Changelog",
-        capabilities: "Capabilities",
-      },
-      noReadme: "No README provided.",
-      noChangelog: "No changelog provided.",
-      versionsHeading: "Versions",
-      noVersions: "No version history.",
-      urgentBadge: "Urgent",
-      commandsLabel: "Commands",
-      requiresLabel: "Required plugins",
-    },
   },
 };

@@ -490,27 +490,17 @@ fn fail_open_commands_exit_zero_when_scripts_are_missing_and_run_when_present() 
     }
 
     let claude_entry = crate::agent_status::claude_hooks::claude_code_running_hook_entry(&missing_running);
-    let claude_args: Vec<String> = claude_entry["hooks"][0]["args"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|arg| arg.as_str().unwrap().to_string())
-        .collect();
-    let out = Command::new("/bin/sh").args(&claude_args).output().unwrap();
+    let claude_command = claude_entry["hooks"][0]["command"].as_str().unwrap();
+    let out = Command::new("/bin/sh").arg("-c").arg(claude_command).output().unwrap();
     assert!(out.status.success());
     assert!(out.stdout.is_empty() && out.stderr.is_empty());
 
     let real_script = root.join("fuyu-agent-running.sh");
     fs::write(&real_script, "#!/bin/sh\nread line\nprintf '%s:%s' \"$1\" \"$line\"\n").unwrap();
     let real_entry = crate::agent_status::claude_hooks::claude_code_running_hook_entry(&real_script);
-    let real_args: Vec<String> = real_entry["hooks"][0]["args"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|arg| arg.as_str().unwrap().to_string())
-        .collect();
     let mut child = Command::new("/bin/sh")
-        .args(&real_args)
+        .arg("-c")
+        .arg(real_entry["hooks"][0]["command"].as_str().unwrap())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()

@@ -1,4 +1,5 @@
 import { PageShortcutSection } from "./sections/PageShortcutSection";
+import { IslandLayerShortcutSection } from "./sections/IslandLayerShortcutSection";
 import type { IslandSettings } from "../../lib/settings/types";
 import { PluginV3ShortcutSection } from "./PluginV3ShortcutSection";
 import { useTranslation } from "../../i18n";
@@ -14,6 +15,10 @@ import { shortcutReferences, shortcutSections, type ShortcutsSectionProps } from
 
 function PageKeysSection({ settings, onSettingsChange, takenBy }: ShortcutsSectionProps) {
   return <PageShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} />;
+}
+
+function IslandLayerSection({ settings, onSettingsChange, takenBy }: ShortcutsSectionProps) {
+  return <IslandLayerShortcutSection settings={settings} onSettingsChange={onSettingsChange} takenBy={takenBy} />;
 }
 
 function IslandReference() {
@@ -47,6 +52,7 @@ function PluginsV3Section({ onOpenPage, takenBy, refreshPlugins }: ShortcutsSect
   return <PluginV3ShortcutSection takenBy={takenBy} onChanged={refreshPlugins} action={<FeaturePageLink page="pluginsV3" onOpenPage={onOpenPage} />} />;
 }
 
+shortcutSections.add({ id: "shortcuts.islandLayer", category: "shortcuts", order: 5, component: IslandLayerSection });
 shortcutSections.add({ id: "shortcuts.pluginsV3", category: "shortcuts", order: 48, component: PluginsV3Section });
 shortcutSections.add({ id: "shortcutsIsland.pages", category: "shortcutsIsland", order: 10, component: PageKeysSection });
 shortcutReferences.add({ id: "shortcutsReference.island", category: "shortcutsReference", order: 10, component: IslandReference });

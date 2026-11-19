@@ -3,7 +3,7 @@ import { Blocks, Bot, ChevronRight, Plus, LayoutGrid, Search, Settings2, X, type
 import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
-import { entryOf, entryPages, isCategoryAvailable, isEntry, searchCategories, settingsGroups, sidebarItemOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
+import { entryOf, entryPages, isCategoryAvailable, isEntry, searchCategories, settingsGroups, sidebarItemOf, subPagesOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
 import { BUILTIN_CATEGORIES, categorySlot } from "./slots/categorySlot";
 import "./SettingsSidebar.css";
@@ -97,9 +97,10 @@ export function SettingsSidebar({
   const hits = onRowOpen && searching ? searchSettingsRows(query, searchEntries, locale, LOCALE_CODES, describe) : [];
   const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported, isMacOS);
   const pagesOf = (item: SettingsCategory) => entryPages(item).filter(available);
+  const subsOf = (item: SettingsCategory) => subPagesOf(item).filter(available);
   const found = (page: SettingsCategory) => matches.includes(page) || hits.some((hit) => hit.page === page);
   const shown = (item: SettingsCategory) =>
-    pagesOf(item).some((page) => (searching ? found(page) : page === category || !hiddenSet.has(page)));
+    searching ? [...pagesOf(item), ...subsOf(item)].some(found) : pagesOf(item).some((page) => page === category || !hiddenSet.has(page));
   const anyHidden = !searching && [...hiddenSet].some((page) => page !== category && available(page));
   const current = sidebarItemOf(category);
   const openHit = (hit: SettingsRowHit) => onRowOpen?.(hit.page, hit.text.title);
@@ -114,8 +115,9 @@ export function SettingsSidebar({
   };
   const itemHits = (item: SettingsCategory) => {
     const tabbed = entryPages(item).length > 1;
-    const tabs = tabbed ? pagesOf(item).filter((page) => matches.includes(page)) : [];
-    const rows = pagesOf(item).flatMap((page) => hits.filter((hit) => hit.page === page).slice(0, MAX_HITS_PER_PAGE));
+    const subs = subsOf(item);
+    const tabs = [...(tabbed ? pagesOf(item) : []), ...subs].filter((page) => matches.includes(page));
+    const rows = [...pagesOf(item), ...subs].flatMap((page) => hits.filter((hit) => hit.page === page).slice(0, MAX_HITS_PER_PAGE));
     if (tabs.length === 0 && rows.length === 0) return null;
     return (
       <ul className="settings-sidebar__hits">
@@ -127,7 +129,7 @@ export function SettingsSidebar({
           </li>
         ))}
         {rows.map((hit) => {
-          const path = [itemLabel(item), tabbed ? pageLabel(hit.page) : "", hit.text.group, hit.text.title].filter(Boolean).join(" › ");
+          const path = [itemLabel(item), tabbed || hit.page !== item ? pageLabel(hit.page) : "", hit.text.group, hit.text.title].filter(Boolean).join(" › ");
           return (
             <li key={`${hit.page}/${hit.text.group}/${hit.text.title}`}>
               <button className="settings-sidebar__hit" type="button" title={path} data-page={hit.page} onClick={() => openHit(hit)}>

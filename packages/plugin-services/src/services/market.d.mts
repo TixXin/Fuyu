@@ -45,6 +45,7 @@ export type MarketCatalogPlugin = {
   enabled: boolean;
   source: "market" | "manual" | null;
   revoked: boolean;
+  blocked?: { reason: "engines" | "platform"; range?: string } | null;
   install: MarketVersionCandidate | null;
   manual: MarketVersionCandidate | null;
   autoUpdate: MarketVersionCandidate | null;
