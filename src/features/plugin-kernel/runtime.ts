@@ -4,6 +4,7 @@ import type { ClientEntry, ClientLoader, HostConnection as Connection, PluginMes
 import type { ServiceEntry } from "@fuyu/plugin-base/services";
 import { installShared } from "@fuyu/plugin-base/client/react";
 import type { SlotRegistry } from "@fuyu/plugin-base/client/slots";
+import { FALLBACK_LOCALE, getLoadedI18n, loadLocale } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import { islandNoticesV1 } from "../../lib/island-notices/service";
 import { getPluginHostConnection } from "./api";
@@ -20,6 +21,10 @@ export interface PluginRuntime {
 
 const PLUGIN_BASE = isMacOS ? "fuyu-plugin://localhost" : "http://fuyu-plugin.localhost";
 const runtimes = new Map<SlotWindow, Promise<PluginRuntime | null>>();
+
+function waitingText() {
+  return (getLoadedI18n(loadLocale()) ?? getLoadedI18n(FALLBACK_LOCALE))?.island.pluginWaiting ?? null;
+}
 
 async function target() {
   const connection = await getPluginHostConnection();
@@ -40,13 +45,15 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
   const waitingMonitor = window === "island"
     ? createWaitingMonitor({
         onOverdue: ({ id, waitingFor }) => {
+          const text = waitingText();
+          if (!text) return;
           void windowServices
             .get(islandNoticesV1)
             .notify({
               pluginId: id,
               pluginName: null,
-              title: `插件 ${id} 仍在等待依赖`,
-              body: `等待服务：${waitingFor.join(", ")}`,
+              title: text.title(id),
+              body: text.body(waitingFor.join(", ")),
               durationMs: 6000,
               actions: [],
             })

@@ -6,7 +6,7 @@
 - 修改 `src-tauri/` 时还须遵守 [src-tauri/AGENTS.md](src-tauri/AGENTS.md)（Rust / Tauri 规则）。
 - 目标架构见 [docs/architecture/overview.md](docs/architecture/overview.md)，结构重构的分步记录、验证结果与待人工验收项见 [docs/architecture/history/refactor-plan.md](docs/architecture/history/refactor-plan.md)。
 
-- **插件平台第 3 版（万物皆插件）**的代码已做完，等真岛验收后结束。做它的会话开工先读 [docs/architecture/plugins/v3-progress.md](docs/architecture/plugins/v3-progress.md)（做到哪了），再读 [v3-workflow.md](docs/architecture/plugins/v3-workflow.md)（怎么协作：不开分支、子代理和两台机器的规则）和 [v3-everything-plugin.md](docs/architecture/plugins/v3-everything-plugin.md)（方案）。第 2 版的宿主、前端模块、SDK、脚手架和旧示例都已删除（E36.6.5、E36.6.6），只剩 `src-tauri/src/plugin_kernel/v2_migration.rs` 读取旧数据帮老用户迁移；`plugins/` 里冻结的第 2 版市场文件只给旧岛屿读，内容不再改。
+- **插件平台第 3 版（万物皆插件）**的代码已做完，等真岛验收后结束。做它的会话开工先读 [docs/architecture/plugins/v3-progress.md](docs/architecture/plugins/v3-progress.md)（做到哪了），再读 [v3-workflow.md](docs/architecture/plugins/v3-workflow.md)（怎么协作：不开分支、子代理和两台机器的规则）和 [v3-everything-plugin.md](docs/architecture/plugins/v3-everything-plugin.md)（方案）。第 2 版的宿主、前端模块、SDK、脚手架和旧示例都已删除（E36.6.5、E36.6.6），只剩 `src-tauri/src/plugin_kernel/v2_migration.rs` 和 `v2_builtins.rs` 读取旧数据帮老用户迁移；`plugins/` 里冻结的第 2 版市场文件只给旧岛屿读，内容不再改。
 
 - 做 `docs/tasks` 里的任务或处理 issue：先读 [docs/tasks/README.md](docs/tasks/README.md)；Claude Code 会话先加载 `fuyu-task` skill（从认领到关 issue 的顺序）。
 
