@@ -126,7 +126,14 @@ test("track change notice content, apps and icon", () => {
   assert.equal(rememberApp({ ...DEFAULT_CONFIG, seenApps: ["Spotify.exe"] }, "Spotify.exe"), null);
 
   assert.equal(appLabel("Spotify.exe"), "Spotify");
-  assert.equal(appLabel("com.apple.Music"), "Music");
+  assert.equal(appLabel("com.apple.Music"), "Apple Music");
+  assert.equal(appLabel("com.apple.Podcasts"), "Podcasts");
+  assert.equal(appLabel("com.soda.music", "zh-CN"), "汽水音乐");
+  assert.equal(appLabel("com.soda.music", "en"), "Soda Music");
+  assert.equal(appLabel("com.netease.163music", "zh-CN"), "网易云音乐");
+  assert.equal(appLabel("cloudmusic.exe"), "NetEase Cloud Music");
+  assert.equal(appLabel("com.tencent.QQMusicMac", "zh-CN"), "QQ音乐");
+  assert.equal(appLabel("AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"), "Apple Music");
   assert.equal(appLabel("Microsoft.ZuneMusic_8wekyb3d8bbwe!Microsoft.ZuneMusic"), "ZuneMusic");
   assert.equal(appLabel("QQ音乐"), "QQ音乐");
 

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
-import { useTranslation } from "../../i18n";
+import { useLocale, useTranslation } from "../../i18n";
+import { playerName } from "./playerNames.ts";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import {
   addCustomMediaPlayer,
@@ -48,6 +49,7 @@ function useLiveMediaSessions() {
 
 export function MusicSourceSettingsSection() {
   const t = useTranslation();
+  const { locale } = useLocale();
   const liveSessions = useLiveMediaSessions();
   const [customPlayers, setCustomPlayers] = useState<CustomMediaPlayer[]>([]);
   const [candidates, setCandidates] = useState<CustomMediaPlayer[]>([]);
@@ -194,7 +196,7 @@ export function MusicSourceSettingsSection() {
                       onClick={() => void handleAddPlayer(item.id, item.label)}
                     >
                       <Plus size={11} strokeWidth={2.4} aria-hidden="true" />
-                      <span>{item.label}</span>
+                      <span>{playerName(item.label, locale)}</span>
                     </button>
                   ))}
                 </div>

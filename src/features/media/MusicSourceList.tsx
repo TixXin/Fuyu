@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { ArrowDown, ArrowUp, GripVertical, Trash2 } from "lucide-react";
-import { useTranslation } from "../../i18n";
+import { useLocale, useTranslation } from "../../i18n";
+import { playerName } from "./playerNames.ts";
 import type { MediaState } from "./api";
 import type { KnownMediaSource } from "./storage";
 import "./MusicSourceList.css";
@@ -17,6 +18,7 @@ export function MusicSourceList({
   onRemoveSource: (sourceId: string) => void;
 }) {
   const t = useTranslation();
+  const { locale } = useLocale();
   const [draggedSourceId, setDraggedSourceId] = useState<string | null>(null);
   const [dragOverSourceId, setDragOverSourceId] = useState<string | null>(null);
 
@@ -151,7 +153,7 @@ export function MusicSourceList({
                   aria-hidden="true"
                 />
                 <span className="music-source-label">
-                  {source.label}
+                  {playerName(source.label, locale)}
                 </span>
                 {sourcePriority.length > 1 && (
                   <span className="music-source-move">
@@ -159,7 +161,7 @@ export function MusicSourceList({
                       className="music-source-step"
                       type="button"
                       disabled={!prev}
-                      aria-label={t.music.moveSourceUp(source.label)}
+                      aria-label={t.music.moveSourceUp(playerName(source.label, locale))}
                       onClick={() => prev && onReorderSource(source.id, prev.id)}
                     >
                       <ArrowUp size={13} strokeWidth={2.2} />
@@ -168,7 +170,7 @@ export function MusicSourceList({
                       className="music-source-step"
                       type="button"
                       disabled={!next}
-                      aria-label={t.music.moveSourceDown(source.label)}
+                      aria-label={t.music.moveSourceDown(playerName(source.label, locale))}
                       onClick={() => next && onReorderSource(source.id, next.id)}
                     >
                       <ArrowDown size={13} strokeWidth={2.2} />

@@ -142,7 +142,7 @@ export default function apply(ctx: Context) {
               {config.seenApps.map((app) => (
                 <label key={app} className="fuyu-track-notice__check" title={app}>
                   <input type="checkbox" checked={config.apps.includes(app)} disabled={off} onChange={(event) => toggleApp(app, event.target.checked)} />
-                  <span>{appLabel(app)}</span>
+                  <span>{appLabel(app, currentLocale())}</span>
                 </label>
               ))}
               {config.seenApps.length > 0 && config.apps.length === 0 && <p className="fuyu-track-notice__hint">{copy.appsNoneTicked}</p>}

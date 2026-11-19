@@ -1,5 +1,6 @@
 import { ChevronRight, Music2, Pause, Play, RefreshCcw, Settings, SkipBack, SkipForward } from "lucide-react";
-import { useTranslation } from "../../i18n";
+import { useLocale, useTranslation } from "../../i18n";
+import { playerName } from "./playerNames.ts";
 import type { MediaState } from "./api";
 import { MediaWaveform } from "./MediaWaveform";
 import { MusicProgress } from "./MusicProgress";
@@ -38,6 +39,7 @@ export function MusicPlayerPanel({
   onAlignLyrics?: (positionMs: number) => void;
 }) {
   const t = useTranslation();
+  const { locale } = useLocale();
   const isPlaying = mediaState.playbackStatus === "playing";
   const hasTrack = Boolean(mediaState.title);
   const own = usePlayingLyrics(mediaState, lyricsSettings, !shared);
@@ -45,7 +47,8 @@ export function MusicPlayerPanel({
   const chineseHint = suggestsChineseSources(mediaState, lyricsSettings, notFound);
 
   const estimate = mediaState.positionEstimate;
-  const source = mediaState.sessions.find((session) => session.id === mediaState.activeSessionId)?.label ?? null;
+  const sourceId = mediaState.sessions.find((session) => session.id === mediaState.activeSessionId)?.label ?? null;
+  const source = sourceId === null ? null : playerName(sourceId, locale);
   const trackTitle = mediaState.title ?? (mediaState.available ? source : null) ?? t.music.noMedia;
 
   const prevDisabled = mediaState.available && !mediaState.canPrevious;

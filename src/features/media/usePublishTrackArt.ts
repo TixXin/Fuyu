@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocale } from "../../i18n";
 import { setTrackArt } from "../../lib/now-playing/trackArt";
 import { getMediaSourceApp, type MediaSourceApp, type MediaState } from "./api";
 import { sourceLabel } from "./sourceLabel.ts";
@@ -17,6 +18,7 @@ function sourceApp(source: string): Promise<MediaSourceApp> {
 
 export function usePublishTrackArt(state: MediaState, enabled: boolean) {
   const source = enabled ? state.sourceApp : null;
+  const { locale } = useLocale();
   const [found, setFound] = useState<{ source: string; app: MediaSourceApp } | null>(null);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export function usePublishTrackArt(state: MediaState, enabled: boolean) {
 
   const app = source && found?.source === source ? found.app : UNKNOWN;
   const cover = enabled ? state.thumbnail : null;
-  const label = enabled ? sourceLabel(state, app.name) : null;
+  const label = enabled ? sourceLabel(state, app.name, locale) : null;
 
   useEffect(() => {
     setTrackArt(enabled ? { cover, sourceLabel: label, sourceIcon: app.icon } : null);
