@@ -1,8 +1,7 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   compareVersions,
-  emptyRevocations,
   openIndex,
   revocationOf,
   satisfies,
@@ -13,8 +12,10 @@ import {
 import { PACKAGES_SUBDIR } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
 import { firstPublishedAt, marketSince, packageIcon, packageReach, pluginIcon, pluginScreenshots } from "./marketListing.mjs";
+import { readState } from "./marketState.mjs";
 
-export const STATE_FILE = "market-state.json";
+export { STATE_FILE, normalizeTrustedAuthors, readState, writeState } from "./marketState.mjs";
+
 export const INDEX_FILE = "index.v3.json";
 export const INDEX_SIG_FILE = "index.v3.json.sig";
 
@@ -134,16 +135,6 @@ export function readInstalledPackages(pluginsDir) {
   return list;
 }
 
-export function normalizeTrustedAuthors(raw) {
-  if (!isObject(raw)) return {};
-  const out = {};
-  for (const [name, pin] of Object.entries(raw)) {
-    if (!isObject(pin) || typeof pin.repository !== "string" || !pin.repository) continue;
-    out[name] = { keyId: typeof pin.keyId === "string" && pin.keyId ? pin.keyId : null, repository: pin.repository };
-  }
-  return out;
-}
-
 export function isKeyEndorsedBy(pluginName, newKeyId, authorKeys, oldKeyId) {
   if (!newKeyId || !oldKeyId || !Array.isArray(authorKeys)) return false;
   const seen = new Set();
@@ -261,31 +252,6 @@ export function decodeBase64(base64) {
   const buf = Buffer.from(body, "base64");
   if (buf.length === 0) throw marketError("bad-params", "decoded package is empty");
   return buf;
-}
-
-export function readState(dataDir) {
-  const statePath = join(dataDir, STATE_FILE);
-  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, updatedAt: null, lastError: null, revocationWarning: null });
-  if (!existsSync(statePath)) return empty();
-  try {
-    const raw = JSON.parse(readFileSync(statePath, "utf8"));
-    return {
-      manualAllowed: raw?.manualAllowed === true,
-      lastIndexSerial: Number.isSafeInteger(raw?.lastIndexSerial) ? raw.lastIndexSerial : null,
-      revocations: isObject(raw?.revocations) && Array.isArray(raw.revocations.entries) ? raw.revocations : emptyRevocations(),
-      trustedAuthors: normalizeTrustedAuthors(raw?.trustedAuthors),
-      updatedAt: typeof raw?.updatedAt === "number" ? raw.updatedAt : null,
-      lastError: typeof raw?.lastError === "string" ? raw.lastError : null,
-      revocationWarning: typeof raw?.revocationWarning === "string" ? raw.revocationWarning : null,
-    };
-  } catch {
-    return empty();
-  }
-}
-
-export function writeState(dataDir, state) {
-  mkdirSync(dataDir, { recursive: true });
-  writeFileSync(join(dataDir, STATE_FILE), `${JSON.stringify(state, null, 2)}\n`, "utf8");
 }
 
 export function readVerifiedCachedIndex(dataDir, trust, now) {
