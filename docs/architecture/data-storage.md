@@ -6,7 +6,7 @@ macOS 上（G1.4，2026-11-13 起）：家目录同样是 `FUYU_HOME`、指针�
 
 | 数据 | 位置 | 负责方 |
 |---|---|---|
-| 设置、预设、各功能开关、语言 | WebView2 的 `localStorage`（页面读写的地方）；2026-11-12 起（D30.2）`BACKUP_KEYS` 里的设置还整份写到应用数据目录的 `settings.json`，格式同设置备份，手动改了它下次启动生效 | 前端各 feature 的 `storage.ts`；`settings_file`（Rust）、`lib/settings-backup/settingsFile.ts` |
+| 设置、预设、各功能开关、语言 | WebView2 的 `localStorage`（页面读写的地方）；2026-11-12 起（D30.2）`BACKUP_KEYS` 里的设置还整份写到应用数据目录的 `settings.json`，格式同设置备份，手动改了它下次启动生效；读它和恢复设置备份时不在 `BACKUP_KEYS` 里的键都跳过，第 2 版插件留下的 `fuyu-plugin-pages`、`fuyu-plugin-market-favorites` 在 E71（2026-11-19）删出 `BACKUP_KEYS`，旧文件里有也不报错 | 前端各 feature 的 `storage.ts`；`settings_file`（Rust）、`lib/settings-backup/settingsFile.ts` |
 | 托盘 / 菜单栏图标是否显示（设置 → 通用「在托盘显示图标」，默认显示；C82，2026-11-15） | 应用数据目录（`tray-icon.json`，`{"visible": false}`；文件不存在、读不出或不是布尔值都按显示）；放在原生侧是因为建托盘时页面还没加载 | `tray_visibility`（Rust） |
 | WebView 进程崩溃记录（D66，2026-11-15；D100，2026-11-17 补 `gpu-process-exited`，只在 Windows 上） | 数据目录（`webview-crashes.log`，一行一次：时间、窗口 label、失败类型 `render-process-exited` / `render-process-unresponsive` / `gpu-process-exited`、退出码、是否重载；同一窗口每分钟最多自动重载 3 次，文件超过 64 KB 删掉前一半） | `webview_recovery`（Rust），WebView2 事件在 `win32/webview_crash.rs` |
 | 宿主原生 Rust `panic` 崩溃记录（D100，2026-11-17） | 数据目录（`crash.log`，一行一次：本地时间、应用版本、线程名、源码位置 `file:line:col`、过滤换行并截断到 240 字符的脱敏摘要，不记录环境变量或用户数据；超过 64 KB 删掉前一半；设置 → 通用 → 数据页在存在崩溃日志时可直接定位最新日志文件） | `home_dir/panic_log.rs`、`home_dir/commands.rs`（Rust），设置入口在 `windows/settings/sections/CrashLogsSection.tsx` |

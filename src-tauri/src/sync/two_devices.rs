@@ -386,7 +386,7 @@ fn an_optional_group_stays_on_this_device_until_it_is_turned_on() {
 }
 
 #[test]
-fn removed_plugin_keys_another_device_still_pushes_are_ignored() {
+fn removed_plugin_keys_are_neither_merged_nor_pushed() {
     let (folder, mut a, mut b) = pair("removed-keys");
     let mut mine = optional_keys("deepl");
     mine.insert("fuyu-plugin-market-favorites".into(), Value::String(json!(["@mine/y"]).to_string()));
