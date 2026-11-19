@@ -46,7 +46,8 @@ const en = {
     displayTitle: "Island page",
     todosExpanded: "Show the todo list expanded",
     barTitle: "Collapsed bar",
-    showInBar: "Show the time left on the collapsed bar",
+    showInBar: "Show my own countdown on the collapsed bar",
+    barHint: "The built-in timer on the collapsed bar already shows the pomodoro countdown.",
   },
 };
 
@@ -96,7 +97,8 @@ const zhCN: typeof en = {
     displayTitle: "岛上页面",
     todosExpanded: "待办列表默认展开",
     barTitle: "收起条",
-    showInBar: "运行时在收起条显示剩余时间",
+    showInBar: "收起条显示",
+    barHint: "内置计时器的收起条已经显示番茄钟的倒计时。",
   },
 };
 

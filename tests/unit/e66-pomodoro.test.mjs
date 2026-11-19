@@ -35,6 +35,7 @@ test("E66.1 pomodoro settings default, clamp, and keep 1.0.0 data", () => {
   assert.equal(DEFAULT_SETTINGS.sound, false);
   assert.equal(DEFAULT_SETTINGS.dailyGoal, 0);
   assert.equal(DEFAULT_SETTINGS.todosExpanded, false);
+  assert.equal(DEFAULT_SETTINGS.showInBar, false);
 
   const clamped = normalizeSettings({ focusMinutes: 500, shortBreakMinutes: 0, dailyGoal: "3", sound: "yes", roundsBeforeLong: 2.6 });
   assert.equal(clamped.focusMinutes, 120);

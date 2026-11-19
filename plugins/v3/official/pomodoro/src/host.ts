@@ -29,6 +29,8 @@ export const inject = ["clients", "commands", "timers/v1", "todos/v1", "messages
 
 const T = text.notice;
 
+const TIMER_OPTIONS = {};
+
 function readStored(file: string): StoredPomodoro {
   try {
     return normalizeStored(JSON.parse(readFileSync(file, "utf8")));
@@ -139,7 +141,7 @@ export function apply(ctx: Context) {
     await removeActive();
     rollDay();
     const todo = phase === "focus" ? await findTodo(todoId) : null;
-    const started = await timers.start({ kind: "countdown", durationMs: phaseMinutes(phase, stored) * 60_000 });
+    const started = await timers.start({ kind: "countdown", durationMs: phaseMinutes(phase, stored) * 60_000, ...TIMER_OPTIONS });
     stored.phase = phase;
     stored.activeTimerId = started.timer.id;
     stored.activeTodoId = todo?.id ?? null;

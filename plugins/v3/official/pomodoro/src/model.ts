@@ -41,7 +41,7 @@ export const DEFAULT_SETTINGS: PomodoroSettings = {
   sound: false,
   dailyGoal: 0,
   todosExpanded: false,
-  showInBar: true,
+  showInBar: false,
 };
 
 export const LIMITS = {
