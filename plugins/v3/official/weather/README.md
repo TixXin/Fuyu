@@ -25,7 +25,7 @@
 
 **城市和单位**
 
-- **城市**：留空时插件不联网。
+- **城市**：留空时插件不联网；还没填时，浮屿「设置 → 插件」里这个插件会标出「待设置」（需要较新的浮屿）。
 - **温度单位**：°C（默认）/ °F。
 - **风速单位**：km/h（默认）/ m/s / mph / 级（蒲福风级）。
 - **时间格式**：跟随系统（默认）/ 24 小时 / 12 小时；用在逐小时预报、「更新于」和下雨提醒里。
@@ -88,7 +88,7 @@ Changes apply right away; there is no Save button.
 
 **City and units**
 
-- **City**: while empty, the plugin stays offline.
+- **City**: while empty, the plugin stays offline. Until you set one, Fuyu marks the plugin as "Needs setup" under Settings → Plugins (needs a newer Fuyu).
 - **Temperature**: °C (default) / °F.
 - **Wind speed**: km/h (default) / m/s / mph / Beaufort.
 - **Time format**: System (default) / 24-hour / 12-hour; used for the hourly forecast, "Updated" and rain alerts.
@@ -126,7 +126,7 @@ Weather data by [Open-Meteo](https://open-meteo.com/).
 
 ## 给开发者 · For developers
 
-- 服务：`commands`、`messages/v1`
+- 服务：`commands`、`messages/v1`（必需）、`settings`（可选）
 - 插槽：`island.page/v1`、`island.collapsed/v1`、`settings.section/v1`
 - 命令：`refresh`
 - 联网清单：`api.open-meteo.com`、`geocoding-api.open-meteo.com`

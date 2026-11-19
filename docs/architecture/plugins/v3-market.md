@@ -71,6 +71,7 @@
             "description": { "zh-CN": "…", "en": "…" },
             "license": "MIT",
             "categories": ["information"],
+            "keywords": ["天气预报", "forecast"],
             "preview": false,
             "requires": { "@fuyu/location": "^1.0.0" },
             "nodeApis": ["https"],
@@ -82,7 +83,8 @@
             "commands": [{ "id": "weather.refresh", "title": { "zh-CN": "刷新天气", "en": "Refresh weather" }, "keybinding": "Ctrl+Alt+W" }]
           },
           "icon": { "url": "https://…/icons/weather-1.2.0.png", "sha256": "…" },
-          "screenshots": [{ "url": "https://…/weather-1.png", "sha256": "…", "caption": { "zh-CN": "…", "en": "…" } }]
+          "screenshots": [{ "url": "https://…/weather-1.png", "sha256": "…", "caption": { "zh-CN": "…", "en": "…" } }],
+          "docs": { "README.md": "…", "README.zh-CN.md": "…", "CHANGELOG.md": "…" }
         }
       ]
     }
@@ -109,11 +111,21 @@
 | `reviewedAt` | 是 | 维护者批准的时间 |
 | `urgent` | 否 | 只有维护者能标，必须带中英文原因；岛上的更新说明里显示这个原因 |
 | `authorSignature` | 第三方必填 | 作者对提交号的签名（见下文），`keyId` 必须是 `authorKeys` 里的。官方插件不能有：它的作者证明是「提交在 `TixXin/fuyu` 受保护的 `main` 上」，由 CI 核对 |
-| `manifest` | 是 | 清单摘要，市场页和安装确认用。`displayName`、`description`、`license`、`nodeApis`、`network`、`inject`、`provides`、`replaces`、`slots`、`commands` 必填（列表可以为空），`categories`、`preview`、`requires` 可选 |
+| `manifest` | 是 | 清单摘要，市场页和安装确认用。`displayName`、`description`、`license`、`nodeApis`、`network`、`inject`、`provides`、`replaces`、`slots`、`commands` 必填（列表可以为空），`categories`、`keywords`、`preview`、`requires` 可选。`keywords` 取清单顶层的 `keywords`，最多 32 个，市场搜索用（E77.6） |
 | `icon` | 是 | 图标的地址和 SHA-256。图标和截图不进索引，由 CI 从包里取出放到固定地址 |
 | `screenshots` | 否 | 最多 6 张，地址、SHA-256、可选的说明 |
+| `docs` | 否 | 包顶层的说明和更新记录的 SHA-256：`{ "README.md": "…", "README.zh-CN.md": "…", "CHANGELOG.md": "…" }`。键是文件名（`README` 或 `CHANGELOG`，可带语言，`.md`，不分大小写不能重复），最多 16 个；值是文件原始字节的 SHA-256。详情页按它校验从源码仓库取到的文档，见下文「详情页的文档」（E77.6） |
 
 不认识的字段一律忽略，以后只加可选字段。
+
+### 详情页的文档
+
+详情页的「说明」和「更新记录」不在安装包之外另存：没装的插件由宿主按版本条目的 `repository`、`commit` 从 `raw.githubusercontent.com` 取源码仓库里的 `README*.md`、`CHANGELOG.md`。
+
+- **版本条目有 `docs`**：只取 `docs` 里列出的文件（先按界面语言挑，文件名用 `docs` 里的写法），可以走镜像；取到的字节算 SHA-256，和 `docs` 里的不一样、404、超过 1 MB 都换下一个源，所有源都不对就不显示这份文档。
+- **版本条目没有 `docs`**（2026-11-19 之前上架的版本）：只从 GitHub 直连取，不走镜像，因为没有哈希就查不出镜像改过内容。
+- 哈希由市场 CI 在构建后从包里算。包里的文件是从那个提交检出的，所以和 `raw.githubusercontent.com` 上的字节相同；仓库用 `.gitattributes` 把这些文件检出成另一种换行时两边对不上，文档就不显示。
+- 已装的插件读本地安装目录里的文件，不联网。
 
 ## `revoked.v3.json`
 

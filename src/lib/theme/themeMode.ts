@@ -55,6 +55,10 @@ export function surfaceThemeColors(settings: IslandSettings, surface: DarkSurfac
   return settings[DARK_SURFACE_KEYS[surface]] && isLightIsland(settings.islandBackgroundColor) ? { ...settings, ...themeColors(settings, "dark") } : settings;
 }
 
+export function notchLook(settings: IslandSettings): IslandSettings {
+  return { ...settings, ...themeColors(settings, "dark"), islandBackgroundColor: "#000000", opacity: 100 };
+}
+
 export function surfaceTone(settings: Pick<IslandSettings, "themeMode" | "collapsedDark" | "panelDark" | "windowsDark">, systemDark: boolean, surface: DarkSurface): ThemeTone {
   return settings[DARK_SURFACE_KEYS[surface]] ? "dark" : activeTone(settings.themeMode, systemDark);
 }

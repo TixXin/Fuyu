@@ -364,12 +364,12 @@
       "zh-CN": {
         "group": "主题",
         "title": "一键换配色",
-        "description": "前三套同时换掉深色、浅色两套颜色和透明度，配色是深色时切到浅色；磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。后面几套是液态玻璃，只换材质，颜色不变。之后还可以在下面接着调。"
+        "description": "前四套同时换掉深色、浅色两套颜色和透明度：默认是装好时的黑色岛屿，配色是浅色时切回深色；另外三套是浅色，配色是深色时切到浅色。磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。后面几套是液态玻璃，只换材质，颜色不变。之后还可以在下面接着调。"
       },
       "en": {
         "group": "Themes",
         "title": "Color sets",
-        "description": "The first three replace both the dark and light colors and the opacity; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. The rest are liquid glass: they change the material and keep your colors. You can keep adjusting below."
+        "description": "The first four replace both the dark and light colors and the opacity. Default is the black island you started with; light colors switch back to dark. The other three are light; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. The rest are liquid glass: they change the material and keep your colors. You can keep adjusting below."
       }
     },
     {

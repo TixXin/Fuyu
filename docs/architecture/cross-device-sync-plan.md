@@ -154,9 +154,9 @@ C91.1 ──▶ C91.2 ┐
 
 | 整个 key | 取值 |
 |---|---|
-| sync | `fuyu-settings`（按字段，见下）、`fuyu-locale`、`fuyu-translation-settings`（按字段，见下）、`fuyu-qq-mail-remote-images`、`fuyu-plugin-market-favorites`、`fuyu-screenshot-annotation`、`fuyu-screenshot-settings`（按字段，见下）、`fuyu-agent-sounds`（按字段，见下）、`fuyu-agent-session-filters`、`fuyu-agent-approval`（按字段，见下）、`fuyu-agent-push`（按字段，见下）、`fuyu-lyrics-offsets` |
+| sync | `fuyu-settings`（按字段，见下）、`fuyu-locale`、`fuyu-translation-settings`（按字段，见下）、`fuyu-qq-mail-remote-images`、`fuyu-plugin-market-favorites`（E63.4 改成 `local`，E71 删掉）、`fuyu-screenshot-annotation`、`fuyu-screenshot-settings`（按字段，见下）、`fuyu-agent-sounds`（按字段，见下）、`fuyu-agent-session-filters`、`fuyu-agent-approval`（按字段，见下）、`fuyu-agent-push`（按字段，见下）、`fuyu-lyrics-offsets` |
 | byId | `fuyu-setting-presets` |
-| local | `fuyu-music-sources`、`fuyu-qq-notifications-enabled`、`fuyu-wechat-reminders-enabled`、`fuyu-wechat-expose-ui`、`fuyu-wechat-hide-taskbar-button`、`fuyu-qq-mail-settings`、`fuyu-collapsed-items`、`fuyu-plugin-pages`、`fuyu-save-directory`、`fuyu-update-channel`、`fuyu-update-preferences` |
+| local | `fuyu-music-sources`、`fuyu-qq-notifications-enabled`、`fuyu-wechat-reminders-enabled`、`fuyu-wechat-expose-ui`、`fuyu-wechat-hide-taskbar-button`、`fuyu-qq-mail-settings`、`fuyu-collapsed-items`、`fuyu-plugin-pages`（E71 删掉）、`fuyu-save-directory`、`fuyu-update-channel`、`fuyu-update-preferences` |
 
 | 对象设置 | sync | firstMergeOnly | byId | local |
 |---|---|---|---|---|
@@ -193,7 +193,7 @@ C91.1 ──▶ C91.2 ┐
 | `agentPushDelivery` | `fuyu-agent-push` 的 `enabled`、`channel` |
 | `qqMail` | `fuyu-qq-mail-settings`（同步前确认里面没有密码或令牌，有就剔掉） |
 | `collapsedItems` | `fuyu-collapsed-items` |
-| `pluginPages` | `fuyu-plugin-pages` |
+| `pluginPages` | `fuyu-plugin-pages`（E63.4 删掉这一组） |
 | `updateChannel` | `fuyu-update-channel` |
 
 - 拆分：白名单、`settings_meta.rs` 的 `optional`、引擎按组过滤、本机配置和 `api.ts` 类型归 C92.1；设置页里每组一个开关（默认关，中英文说明各自为什么默认不同步）归 C92.2。

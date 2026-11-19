@@ -3,8 +3,14 @@
 ## 1.1.1
 
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
+- 还没有日期时，设置窗口的插件页会给倒数日标上「待设置」，带「去设置」按钮；添加第一个日期后标记消失（需要浮屿支持）。
+- 市场页的截图换成了新的：岛上页面和收起条。
+- 补了搜索关键词，在市场里搜「纪念日」「生日」「截止日」也能找到。
 
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
+- While there are no dates yet, the plugin page in Fuyu's settings marks Day counter as "Needs setup", with a button that opens its settings; the mark goes away once you add a date (when Fuyu supports it).
+- New screenshots on the market page: the island page and the collapsed bar.
+- Search keywords added, so "anniversary", "birthday" or "deadline" find it in the market.
 
 ## 1.1.0
 

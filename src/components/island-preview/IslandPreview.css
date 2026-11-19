@@ -83,6 +83,17 @@
   border-radius: var(--preview-radius-expanded);
 }
 
+.island-preview__island--notch {
+  min-width: 236px;
+  border-radius: 0 0 14px 14px;
+  corner-shape: round;
+  box-shadow: none;
+}
+
+.island-preview__island--under-notch {
+  background: linear-gradient(var(--color-black, #000) calc(30 * var(--u)), var(--preview-fill) calc(48 * var(--u)));
+}
+
 .island-preview__pulse {
   width: 8px;
   height: 8px;

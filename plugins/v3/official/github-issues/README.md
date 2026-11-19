@@ -22,7 +22,7 @@
 
 **仓库**
 
-- 仓库列表：添加（先核对仓库存在）、删除。只支持公开仓库，不需要登录。
+- 仓库列表：添加（先核对仓库存在）、删除。只支持公开仓库，不需要登录。列表是空的时候，浮屿「设置 → 插件」里这个插件会标出「待设置」（需要较新的浮屿）。
 
 **列表**
 
@@ -80,7 +80,7 @@ When a repository is renamed or moves to a new owner, the plugin follows GitHub'
 
 **Repositories**
 
-- The list: add (checked against GitHub first) and remove. Public repositories only; no sign-in needed.
+- The list: add (checked against GitHub first) and remove. Public repositories only; no sign-in needed. While the list is empty, Fuyu marks the plugin as "Needs setup" under Settings → Plugins (needs a newer Fuyu).
 
 **List**
 
@@ -116,7 +116,7 @@ Upgrading from 1.0.0 turns the repositories in the old text box into the list an
 
 ## 给开发者 · For developers
 
-- 服务：`messages/v1`、`commands`
+- 服务：`messages/v1`、`commands`（必需）、`settings`（可选）
 - 插槽：`island.page/v1`、`island.collapsed/v1`、`settings.section/v1`
 - 命令：`refresh`
 - 联网清单：`api.github.com`

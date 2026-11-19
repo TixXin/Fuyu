@@ -214,8 +214,6 @@
     "fuyu-qq-mail-settings": "optional",
     "fuyu-qq-mail-remote-images": "sync",
     "fuyu-collapsed-items": "optional",
-    "fuyu-plugin-pages": "local",
-    "fuyu-plugin-market-favorites": "local",
     "fuyu-screenshot-annotation": "sync",
     "fuyu-screenshot-settings": {
       "fields": {
@@ -242,6 +240,7 @@
       }
     },
     "fuyu-agent-session-filters": "sync",
+    "fuyu-plugin-notice-mutes": "sync",
     "fuyu-agent-approval": {
       "fields": {
         "onIsland": "sync",

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { IslandPreview } from "../../components/island-preview/IslandPreview";
 import type { IslandSettings } from "../../lib/settings/types";
+import { useIslandNotchShown } from "./useIslandNotchShown";
 import "./StickyIslandPreview.css";
 
 export function StickyIslandPreview({
@@ -13,6 +14,7 @@ export function StickyIslandPreview({
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [stuck, setStuck] = useState(false);
   const [sentinelHeight, setSentinelHeight] = useState(0);
+  const notch = useIslandNotchShown();
 
   useEffect(() => {
     if (compact) {
@@ -41,7 +43,7 @@ export function StickyIslandPreview({
   if (compact) {
     return (
       <div className="sticky-island-preview sticky-island-preview--compact">
-        <IslandPreview settings={settings} compact />
+        <IslandPreview settings={settings} notch={notch} compact />
       </div>
     );
   }
@@ -55,11 +57,11 @@ export function StickyIslandPreview({
         className="sticky-island-preview__sentinel"
         style={collapseSentinel ? { height: `${sentinelHeight}px` } : undefined}
       >
-        {collapseSentinel ? null : <IslandPreview settings={settings} />}
+        {collapseSentinel ? null : <IslandPreview settings={settings} notch={notch} />}
       </div>
       {stuck ? (
         <div className="sticky-island-preview__bar" data-search="off">
-          <IslandPreview settings={settings} compact />
+          <IslandPreview settings={settings} notch={notch} compact />
         </div>
       ) : null}
     </>

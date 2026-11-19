@@ -135,17 +135,85 @@ test("an image is taken from the first source whose bytes match the SHA-256 in t
   }
 });
 
-test("a plugin's README comes through a mirror when GitHub cannot be reached", async () => {
-  const { world, down } = githubWorld("fuyu-mirror-readme-");
-  try {
-    const entry = world.version({ version: "1.0.0" });
-    world.putIndex(1, [{ name: "@someone/clock", versions: [entry] }]);
-    world.putRevoked(1, []);
+function docsWorld(prefix, docs) {
+  const { world, down } = githubWorld(prefix);
+  const entry = world.version({ version: "1.0.0" });
+  if (docs) entry.docs = docs;
+  world.putIndex(1, [{ name: "@someone/clock", versions: [entry] }]);
+  world.putRevoked(1, []);
+  const base = `https://raw.githubusercontent.com/someone/clock/${entry.commit}/`;
+  const details = async (locale = "en") => {
     await world.market.refresh();
-    const readme = `https://raw.githubusercontent.com/someone/clock/${entry.commit}/README.md`;
-    down(readme);
-    world.routes.set(`${FAST}${readme}`, () => textRes("# Clock\n"));
-    assert.equal((await world.market.details({ name: "@someone/clock", locale: "en" })).readme, "# Clock\n");
+    return world.market.details({ name: "@someone/clock", locale });
+  };
+  return { world, down, base, details };
+}
+
+test("a README and a changelog whose SHA-256 is in the catalog come through a mirror when GitHub cannot be reached", async () => {
+  const readme = Buffer.from("# Clock\n");
+  const changelog = Buffer.from("\uFEFF## 1.0.0\n- First\n");
+  const { world, down, base, details } = docsWorld("fuyu-mirror-docs-", { "README.md": sha(readme), "CHANGELOG.md": sha(changelog) });
+  try {
+    down(`${base}README.md`);
+    down(`${base}CHANGELOG.md`);
+    world.routes.set(`${FAST}${base}README.md`, () => binRes(readme));
+    world.routes.set(`${FAST}${base}CHANGELOG.md`, () => binRes(changelog));
+    const result = await details();
+    assert.equal(result.readme, "# Clock\n");
+    assert.equal(result.changelog, "## 1.0.0\n- First\n");
+  } finally {
+    world.cleanup();
+  }
+});
+
+test("a mirror that serves an altered README is skipped, and with no honest source the README is left out", async () => {
+  const readme = Buffer.from("# Clock\n");
+  const forged = Buffer.from("# Clock\n\nInstall this other thing instead.\n");
+  const { world, down, base, details } = docsWorld("fuyu-mirror-docs-forged-", { "README.md": sha(readme) });
+  try {
+    down(`${base}README.md`);
+    world.routes.set(`${FAST}${base}README.md`, () => binRes(forged));
+    world.routes.set(`${PROXY}${base}README.md`, () => binRes(readme));
+    assert.equal((await details()).readme, "# Clock\n");
+    world.routes.set(`${PROXY}${base}README.md`, () => binRes(forged));
+    assert.equal((await details()).readme, null);
+  } finally {
+    world.cleanup();
+  }
+});
+
+test("only the files the catalog lists are asked for, in the reader's language first and under the listed spelling", async () => {
+  const zh = Buffer.from("# 时钟\n");
+  const en = Buffer.from("# Clock\n");
+  const { world, base, details } = docsWorld("fuyu-mirror-docs-listed-", { "Readme.md": sha(en), "README.zh-CN.md": sha(zh) });
+  try {
+    const asked = [];
+    const serve = (name, body) => world.routes.set(`${base}${name}`, () => {
+      asked.push(name);
+      return binRes(body);
+    });
+    serve("Readme.md", en);
+    serve("README.zh-CN.md", zh);
+    serve("README.md", Buffer.from("# Not the listed file\n"));
+    serve("CHANGELOG.md", Buffer.from("## Unlisted\n"));
+    const inChinese = await details("zh-CN");
+    assert.equal(inChinese.readme, "# 时钟\n");
+    assert.equal(inChinese.changelog, null);
+    assert.equal((await details("en")).readme, "# Clock\n");
+    assert.deepEqual(asked, ["README.zh-CN.md", "Readme.md"]);
+  } finally {
+    world.cleanup();
+  }
+});
+
+test("a version listed without document hashes gets its README from GitHub only, never from a mirror", async () => {
+  const { world, down, base, details } = docsWorld("fuyu-mirror-docs-unlisted-", null);
+  try {
+    world.routes.set(`${base}README.md`, () => textRes("# Clock\n"));
+    world.routes.set(`${FAST}${base}README.md`, () => textRes("# From a mirror\n"));
+    assert.equal((await details()).readme, "# Clock\n");
+    down(`${base}README.md`);
+    assert.equal((await details()).readme, null);
   } finally {
     world.cleanup();
   }

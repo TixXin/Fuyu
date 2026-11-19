@@ -23,7 +23,7 @@ export function BuiltinThemesSection({ settings, shown, onApply }: {
     value: id,
     label: text.builtinNames[id],
     hint: text.builtinHints[id],
-    art: <ThemeArt colors={BUILTIN_THEMES[id].light} opacity={BUILTIN_THEMES[id].opacity} />,
+    art: <ThemeArt colors={BUILTIN_THEMES[id][BUILTIN_THEMES[id].tone]} opacity={BUILTIN_THEMES[id].opacity} />,
   }));
   const glass = GLASS_LOOKS.map((id) => ({
     value: `glass-${id}` as const,

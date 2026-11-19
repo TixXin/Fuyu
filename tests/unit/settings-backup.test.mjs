@@ -33,13 +33,12 @@ test("a backup carries the AI Agent approval and phone push choices and lyrics o
     "fuyu-agent-push",
     "fuyu-lyrics-offsets",
     "fuyu-collapsed-items",
-    "fuyu-plugin-market-favorites",
     "fuyu-screenshot-annotation",
     "fuyu-voice-input",
   ]) {
     assert.ok(BACKUP_KEYS.includes(key), key);
   }
-  for (const key of ["fuyu-agent-seen-turns", "fuyu-agent-hidden-sessions"]) {
+  for (const key of ["fuyu-agent-seen-turns", "fuyu-agent-hidden-sessions", "fuyu-plugin-pages", "fuyu-plugin-market-favorites"]) {
     assert.ok(!BACKUP_KEYS.includes(key), key);
   }
 });
@@ -59,6 +58,19 @@ test("restoring takes known text keys and refuses other files", () => {
   assert.deepEqual(parseBackup('{"app":"other","keys":{}}'), { problem: "notBackup" });
   assert.deepEqual(parseBackup('{"app":"fly-island","version":2,"keys":{}}'), { problem: "newerVersion" });
   assert.deepEqual(parseBackup('{"app":"fly-island","version":1,"keys":{"fuyu-todos":"[x]"}}'), { problem: "empty" });
+});
+
+test("an old backup with the removed plugin keys restores the rest and drops them", () => {
+  const old = JSON.stringify({
+    app: "fuyu",
+    version: 1,
+    keys: {
+      "fuyu-locale": "en",
+      "fuyu-plugin-pages": '{"order":["plugin:x/main"],"hidden":[]}',
+      "fuyu-plugin-market-favorites": '["@acme/x"]',
+    },
+  });
+  assert.deepEqual(parseBackup(old), { keys: { "fuyu-locale": "en" } });
 });
 
 test("a backup from before the rename restores under the new key names", () => {

@@ -47,6 +47,13 @@
           "zh-CN": "岛上页面：现在、逐小时和 7 天",
           "en": "Island page: now, hourly and 7 days"
         }
+      },
+      {
+        "path": "screenshots/bar.png",
+        "caption": {
+          "zh-CN": "收起条：天气图标和现在的温度",
+          "en": "Collapsed bar: a weather icon and the current temperature"
+        }
       }
     ],
     "categories": [
@@ -65,6 +72,9 @@
       "required": [
         "commands",
         "messages/v1"
+      ],
+      "optional": [
+        "settings"
       ]
     },
     "slots": [

@@ -133,6 +133,8 @@ export const text = currentLocale() === "zh-CN" ? zhCN : en;
 
 export const PAGE_TITLE = { "zh-CN": zhCN.title, en: en.title };
 
+export const SETUP_HINT = { "zh-CN": "添加要关注的仓库", en: "Add a repository to follow" };
+
 export function hostText() {
   const isZh = currentLocale() === "zh-CN";
   return {

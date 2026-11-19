@@ -16,7 +16,7 @@
 | `commands/v1` | `commandsV1` | 宿主内核 | `list()`、`run({ plugin, command, args? })`、`setKeybinding({ plugin, command, keybinding })` | `changed` | 列出已声明与运行中注册的插件命令、执行命令、修改或恢复全局快捷键及查询冲突状态 |
 | `file-shelf/v1` | `fileShelfV1` | `file-shelf` | `list()`、`add({ paths })` | 无 | 读取文件中转列表、将 1–20 个本地绝对路径加入文件中转 |
 | `lyrics/v1` | `lyricsV1` | `music` | `lookup(query)`、`sources()` | `changed` | 查询当前曲目的 LRC 同步歌词与双语翻译、列出已登记的歌词来源 |
-| `market/v1` | `marketV1` | `updater` | `catalog()`、`refresh()`、`inspectPackage({ base64 })`、`installMarket({ name, version? })`、`installFile({ base64, expectedSha256? })`、`setManualAllowed({ allowed })`、`setEnabled({ id, enabled })`、`uninstall({ id, removeData? })` | `changed` | 插件市场索引拉取与验签、3 天冷静期筛选、`.fuyu` 包预检与安装、撤销停用、第三方插件启停与卸载 |
+| `market/v1` | `marketV1` | `updater` | `catalog()`、`refresh()`、`details({ name, locale? })`、`media({ url })`、`inspectPackage({ base64 })`、`installMarket({ name, version? })`、`installFile({ base64, expectedSha256? })`、`setManualAllowed({ allowed })`、`setEnabled({ id, enabled })`、`uninstall({ id, removeData? })`、`dismissAutoUpdated({ at })` | `changed` | 插件市场索引拉取与验签、3 天冷静期筛选、详情页的资料、`.fuyu` 包预检与安装、撤销停用、第三方插件启停与卸载、自动更新的记录 |
 | `media/v1` | `mediaV1` | `music` | `nowPlaying()`、`playPause()`、`next()`、`previous()`、`seek({ positionMs })` | `changed` | 读取当前系统媒体播放状态与控制播放/上曲/下曲/跳转进度；换歌或播放状态变化时发 `changed` |
 | `messages/v1` | `messagesV1` | `messages` | `sources()`、`notify(notice)`、`clear({ source? })` | `changed`、`arrived`、`action` | 查询各消息来源未读状态、推送结构化新消息通知（进收起条预览、横幅与到达面板）、清理未读。`notify` 返回 `{ shown, receivedAt }`：`shown` 是岛上真的显示了这条通知才为 `true`；岛展开着、用户关了插件通知、岛窗口没开、3 秒内没回话或中途关掉时都是 `false`，不报错。宿主代码和窗口代码调用的结果一样，`shown: false` 时可以换别的方式提醒 |
 | `plugin-config/v1` | `pluginConfigV1` | 宿主内核 | `list()`、`get({ id })`、`set({ id, values })`、`reset({ id })` | `changed` | 按插件 `fuyu.config` JSON Schema 读取、校验、持久化与重置插件配置（`<dataDir>/<id>/config.json`） |
@@ -25,6 +25,15 @@
 | `timers/v1` | `timersV1` | `timer` | `list()`、`start({ kind, durationMs?, hidden? })`、`pause({ id })`、`resume({ id })`、`extend({ id, byMs? })`、`remove({ id })`、`dismissRinging()`、`adopt({ timers })` | `changed`、`due` | 倒计时、番茄钟与秒表的增删改查及到点事件。插件建的计时带 `owner`（宿主按调用方填，传了也不认；用户建的没有），不隐藏的在计时器页标出插件名；`hidden: true` 的不进计时器页和收起条，到点不响铃、不弹提醒，只发 `due`。插件只能 `pause`、`resume`、`extend`、`remove` 自己建的计时（`owner` 是它），别人的当作不存在：前三个报 `not-found`，`remove` 返回 `{ removed: false }`；插件调 `dismissRinging()` 只删它自己在响的计时（含隐藏的），用户关提醒时删在响且不隐藏的。`list()` 和事件照旧给全部计时；`adopt` 只加进新 id，已有的计时原样不动 |
 | `todos/v1` | `todosV1` | `todos` | `list({ date? })`、`days({ from, to })`、`add({ title, date?, project? })`、`update({ id, title?, completed? })`、`remove({ id })`、`note({ date? })`、`setNote({ note } \| { append })` | `changed` | 今日待办、未来排期、历史归档与每日笔记读写 |
 | `translator/v1` | `translatorV1` | `translation` | `translate(params)`、`rewrite(params)`（流式 `progress`）、`engines()` | `changed` | 文本翻译、流式 AI 改写、查询已配置引擎列表（不含密钥与自定义地址） |
+
+数据目录里的 `config.json` 会跟着用户走：从市场装的插件，这个文件的内容进用户的设置备份和跨设备同步，换电脑后在插件页一键装回时带过去。所以设置放 `config.json`（用 `fuyu.config` 表单，或自己读写这个文件都行），别的数据放别的文件。三条要知道的：字段名含 `password`、`passwd`、`token`、`secret`、`authcode`、`apikey`、`credential` 的不带，密钥请起这样的名字；整份超过 16 KB 就不带；用户选了「用那边的设置」时，声明了 `fuyu.config` 的插件按字段收到 `ctx.config.onChange`，没声明的会在文件写好后被重启一次，所以启动时要重新读这个文件。
+
+`market/v1` 补充（类型以 `packages/plugin-services/src/services/market.d.mts` 为准）：
+
+- `catalog()` / `refresh()` 返回的每个插件带 `keywords`（清单顶层的搜索别名，没有时不带）、`icon` 和 `screenshots`（都是 GitHub 上的地址，`screenshots` 每项 `{ url, caption? }`）、`firstPublishedAt`。快照另有 `lastSource`（上一次下载走的哪个源，`{ name, at }`）和 `autoUpdated`（最近一次自动更新了哪些插件，`{ at, plugins: [{ name, displayName?, from, to }] }`，没有或已经知道了时是 `null`）。
+- `details({ name, locale? })`：详情页的资料，含 README 和更新记录的正文（`readme`、`changelog`，取不到是 `null`）、截图、命令、用到的插槽和能力、版本列表。装了的插件读本机文件；没装的从 GitHub 取，索引里带文档哈希的版本可以走下载镜像并校验，不带的只从 GitHub 直连（见 [市场](../architecture/plugins/v3-market.md) 的「详情页的文档」）。
+- `media({ url })`：把图标或截图的地址换成 `data:` 地址（`{ url, data }`，取不到时 `data` 是 `null`），窗口不直接连 GitHub。只认索引里登记了 SHA-256 的图（`catalog()` 给出的图标和截图都是），取回来校验哈希后缓存在数据目录的 `media/`；别的地址 `data` 是 `null`。
+- `dismissAutoUpdated({ at })`：用户看过「已自动更新」的提示后调，`at` 是快照里 `autoUpdated.at`；之后快照的 `autoUpdated` 回到 `null`，直到下一次自动更新。
 
 `media/v1` 的 `changed`：载荷和 `nowPlaying()` 的返回值同一个形状（带 `playing`）。系统媒体会话换歌、暂停或继续、换了播放器时发；短时间里连续来的几次变化合并成一次（约 150 ms），曲目、播放状态、播放器和可用的控制都没变时不发，所以只跳了进度不会收到。要显示进度的插件用载荷里的 `positionMs` 和 `updatedAt` 自己往前推，跳转后再 `nowPlaying()` 一次。
 

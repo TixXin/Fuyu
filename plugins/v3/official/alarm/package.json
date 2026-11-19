@@ -48,17 +48,17 @@
         }
       },
       {
+        "path": "screenshots/bar.png",
+        "caption": {
+          "zh-CN": "收起条：可以常驻显示下一次闹钟",
+          "en": "Collapsed bar: can always show the next alarm"
+        }
+      },
+      {
         "path": "screenshots/ringing.png",
         "caption": {
           "zh-CN": "到点在岛上响铃，可以贪睡",
           "en": "Rings on the island, with snooze"
-        }
-      },
-      {
-        "path": "screenshots/bar.png",
-        "caption": {
-          "zh-CN": "收起条：响铃时显示闹钟时间",
-          "en": "Collapsed bar: the alarm's time while it rings"
         }
       }
     ],

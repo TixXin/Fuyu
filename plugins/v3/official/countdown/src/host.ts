@@ -26,7 +26,9 @@ import { dueReminders, markReminded, type DueReminder } from "./reminders.ts";
 import { text } from "./text.ts";
 
 export const name = "@fuyu/countdown";
-export const inject = ["clients"];
+export const inject = { clients: null, settings: { required: false } };
+
+const SETUP_HINT = { "zh-CN": "添加一个日期", en: "Add a date" };
 
 function readStored(file: string): StoredCountdown {
   try {
@@ -64,8 +66,15 @@ export function apply(ctx: Context) {
     return { items: stored.items.map(toView), settings: settings(), at: Date.now() };
   }
 
+  function reportSetup() {
+    try {
+      ctx.settings?.setup?.({ needed: stored.items.length === 0, hint: SETUP_HINT })?.catch(() => {});
+    } catch {}
+  }
+
   function commit(): CountdownSnapshot {
     save();
+    reportSetup();
     const next = snapshot();
     ctx.clients.publish(TOPICS.snapshot, next);
     return next;
@@ -167,6 +176,7 @@ export function apply(ctx: Context) {
     return commit();
   });
 
+  reportSetup();
   ctx.setTimeout(() => void remind(), 5_000);
   ctx.setInterval(() => void remind(), 60_000);
 }

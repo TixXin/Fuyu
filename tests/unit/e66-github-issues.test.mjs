@@ -37,7 +37,7 @@ function reply(status, body, { headers = {}, url = "", redirected = false } = {}
   return response;
 }
 
-function fakeContext(dataDir) {
+function fakeContext(dataDir, settings) {
   const handlers = new Map();
   const commands = new Map();
   const notices = [];
@@ -49,6 +49,7 @@ function fakeContext(dataDir) {
     setTimeout: () => () => {},
     setInterval: () => async () => {},
   };
+  if (settings) ctx.settings = settings;
   return { ctx, call: (method, params) => handlers.get(method)(params), commands, notices };
 }
 
@@ -159,12 +160,47 @@ test("host: add checks the repo exists, follows renames (301) and registers the 
   assert.equal(seen.length, soft, "opening the page right after a refresh does not fetch again");
 });
 
+test("host: reports that a repository is still needed, and stops once one is added", async () => {
+  globalThis.fetch = async (input) => {
+    const url = String(input);
+    if (url.endsWith("/repos/acme/web-app")) return reply(200, { full_name: "acme/web-app" });
+    if (url.includes("/repos/acme/web-app/issues")) return reply(200, []);
+    throw new Error(`unexpected ${url}`);
+  };
+  const emptyDir = (label) => {
+    const dir = join(scratch, label);
+    mkdirSync(dir, { recursive: true });
+    return dir;
+  };
+
+  const reports = [];
+  const { ctx, call } = fakeContext(emptyDir("setup"), { setup: async (state) => void reports.push(state) });
+  apply(ctx);
+  assert.deepEqual(reports, [{ needed: true, hint: { "zh-CN": "添加要关注的仓库", en: "Add a repository to follow" } }]);
+
+  assert.deepEqual(await call(METHODS.addRepo, { repo: "acme/web-app" }), { ok: true, repo: "acme/web-app" });
+  assert.equal(reports.at(-1).needed, false, "with a repository in the list nothing is missing");
+
+  await call(METHODS.removeRepo, { repo: "acme/web-app" });
+  assert.equal(reports.at(-1).needed, true, "removing the last repository asks for one again");
+
+  const old = fakeContext(emptyDir("setup-old-fuyu"));
+  assert.doesNotThrow(() => apply(old.ctx), "a Fuyu without ctx.settings still starts the plugin");
+  assert.deepEqual(await old.call(METHODS.addRepo, { repo: "acme/web-app" }), { ok: true, repo: "acme/web-app" });
+
+  const failing = fakeContext(emptyDir("setup-failing"), { setup: () => Promise.reject(new Error("not-ready")) });
+  assert.doesNotThrow(() => apply(failing.ctx));
+  assert.deepEqual(await failing.call(METHODS.addRepo, { repo: "acme/web-app" }), { ok: true, repo: "acme/web-app" });
+  await new Promise((resolve) => setImmediate(resolve));
+});
+
 test("manifest: GitHub Issues in both languages, 1.1.0, refresh command wired, check passes", async () => {
   const manifest = JSON.parse(readFileSync(join(PLUGIN_DIR, "package.json"), "utf8"));
   assert.equal(manifest.version, "1.1.0");
   assert.deepEqual(manifest.fuyu.displayName, { "zh-CN": "GitHub Issues", en: "GitHub Issues" });
   assert.equal(manifest.description, manifest.fuyu.description.en);
   assert.ok(manifest.fuyu.inject.required.includes("commands"));
+  assert.deepEqual(manifest.fuyu.inject.optional, ["settings"], "settings stays optional so older versions of Fuyu still start the plugin");
   assert.ok(manifest.fuyu.slots.includes("island.collapsed/v1"));
   assert.ok(manifest.fuyu.screenshots.length >= 1);
   const result = await check(PLUGIN_DIR, { official: true, allowExperimental: false });

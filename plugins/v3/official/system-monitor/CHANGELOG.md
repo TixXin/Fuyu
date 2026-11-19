@@ -3,8 +3,14 @@
 ## 1.1.1
 
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
+- 市场页补上截图：岛上页面和收起条。
+- 说明改成一句话；怎么读数、用到哪些系统程序写在 README 里。
+- 补了搜索关键词，在市场里搜「任务管理器」「性能」「网速」也能找到。
 
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
+- The market page gets screenshots: the island page and the collapsed bar.
+- The description is now one sentence; how the readings are taken and which system programs run are in the README.
+- Search keywords added, so "task manager", "performance" or "network speed" find it in the market.
 
 ## 1.1.0
 

@@ -140,7 +140,7 @@ async function runChecks() {
 
     for (const id of BUILTIN_THEME_IDS) {
       const applied = withBuiltinTheme(DEFAULT_SETTINGS, id);
-      check(builtinThemeInUse(normalizeSettings(applied)) === id && applied.themeMode === "light", `${id} survives saving and reads as in use`);
+      check(builtinThemeInUse(normalizeSettings(applied)) === id && applied.themeMode === BUILTIN_THEMES[id].tone, `${id} survives saving and reads as in use`);
     }
     const old = normalizeSettings({ darkBackgroundColor: "#030303", lightBackgroundColor: "#f2f2f5" });
     check(old.darkInkColor === "" && old.lightInkColor === "" && old.inkColor === "", "Settings saved before C33.9 read as auto ink");

@@ -55,7 +55,7 @@
 | `license` | 是 | SPDX 标识；`UNLICENSED` 不收 |
 | `repository` | 是 | 源码仓库。认 `owner/repo`、`github:owner/repo`、`https://github.com/owner/repo`、`git+https://…`、`{ "url": "…" }` 这些写法。上架市场的要在 GitHub 上 |
 | `engines.fuyu` | 是 | 兼容的浮屿版本范围，npm 的写法（`>=0.4.0`、`^0.4.0`、`0.4.x`……）。不满足的浮屿不装它；旧版浮屿会拿到它能用的最新版本 |
-| `description`、`author`、`homepage`、`bugs`、`funding`、`keywords` | 否 | 市场详情页：作者、主页、报告问题、赞助作者的链接；`keywords` 用于搜索 |
+| `description`、`author`、`homepage`、`bugs`、`funding`、`keywords` | 否 | 市场详情页：作者、主页、报告问题、赞助作者的链接。`keywords` 是搜索用的别名，字符串数组，最多 32 个：市场和插件页的搜索框除了名字和说明也搜它，写用户会搜而名字和说明里没有的词（中英文都写，例如「任务管理器」「task manager」）；详情页不显示成标签以外的东西 |
 | `files` | 否 | 除构建产物外还有哪些文件进包，不写时带 `assets/`；README、CHANGELOG、LICENSE、NOTICE 和清单引用的图标、截图总会带上（见[命令行](cli.md#哪些文件进包)） |
 
 `scripts`、`dependencies`、`exports` 这些 npm 认识的字段照常写；npm 也不认识的顶层字段给告警。
@@ -68,7 +68,7 @@
 | `displayName`、`description` | 是 | 名字和一句话介绍，按语言写，要有 `zh-CN` 和 `en` |
 | `icon` | 是 | 包内的 `.png` 或 `.svg`。方形，至少 256 像素，深色和浅色的岛上都要看得清。`fuyu-plugin icon` 能按官方插件的样式生成一个（见[命令行](cli.md#icon)） |
 | `categories` | 是 | 市场分类，至少一个，从 `productivity`、`todos`、`developer`、`media`、`messages`、`information`、`utilities` 里选。**第一项是主分类**：市场的分类片按它计数和筛选，一个插件只算一次；搜索时所有分类都算 |
-| `screenshots` | 否 | 详情页的截图，最多 6 张，`{ path, caption? }`，图片是 `.png`、`.jpg`、`.jpeg` 或 `.webp`，说明按语言写。第一张也是市场卡片右侧的缩略图，放最能说明用处的那张 |
+| `screenshots` | 否 | 详情页的截图，最多 6 张，`{ path, caption? }`，图片是 `.png`、`.jpg`、`.jpeg` 或 `.webp`，说明按语言写。第一张也是市场卡片的封面：卡片顶上有一条高 104 css 像素的封面，把第一张图放在插件主色的浅底上，只露出图顶上的一段（792 × 360 的岛上页面露出上面约一半，16:10 的图约四成；宽高比大于 3.4 的图，例如收起条，整张显示）。所以第一张放最能说明用处的那张，要紧的内容放在图的上半截，不要放已经带彩色底的合成封面。见[截图和封面](screenshots.md#封面) |
 | `preview` | 否 | `true` 表示还不稳定，市场上标「预览」 |
 | `platforms` | 否 | 能用的系统：`windows`、`macos`、`linux`。不写就是都能用 |
 | `host` | 否 | 宿主部分的入口（`.js` / `.mjs`），跑在 Node 里，可以用 Node 的接口。只加界面的插件可以没有 |

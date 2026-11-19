@@ -4,13 +4,15 @@ import { useTranslation } from "../../i18n";
 import { AgentPagePreview } from "./AgentPagePreview";
 import { glassPalette, glassPaused, glassVariables } from "../../lib/theme/glassPalette";
 import { hexToRgba } from "../../lib/settings/settings";
-import { islandInkRgb, surfaceThemeColors } from "../../lib/theme/themeMode";
+import { islandInkRgb, notchLook, surfaceThemeColors } from "../../lib/theme/themeMode";
+import { isLightIsland } from "../../utils/color";
 import type { IslandSettings } from "../../lib/settings/types";
 import "./IslandPreview.css";
 
-export function IslandPreview({ settings, compact = false }: {
+export function IslandPreview({ settings, compact = false, notch = false }: {
   settings: IslandSettings;
   compact?: boolean;
+  notch?: boolean;
 }) {
   const text = useTranslation().settings.appearance.preview;
   const glass = settings.appearanceMode === "liquidGlass";
@@ -24,13 +26,16 @@ export function IslandPreview({ settings, compact = false }: {
     "--preview-expanded-scale": settings.expandedScale,
   } as CSSProperties;
   const paused = glassPaused(settings, { mode: "expanded", isTucked: false, quiet: false, hidden: false, reducedMotion: false });
-  const collapsedStyle = surfaceStyle(surfaceThemeColors(settings, "collapsed"));
-  const expandedStyle = surfaceStyle(surfaceThemeColors(settings, "panel"));
+  const panelLook = surfaceThemeColors(settings, "panel");
+  const collapsedStyle = surfaceStyle(notch ? notchLook(settings) : surfaceThemeColors(settings, "collapsed"));
+  const expandedStyle = surfaceStyle(panelLook);
   const islandClass = [
     "island-preview__island",
     glass && "island-preview__island--glass",
-    settings.marginY > 0 && "island-preview__island--detached",
+    !notch && settings.marginY > 0 && "island-preview__island--detached",
   ].filter(Boolean).join(" ");
+  const collapsedClass = notch ? "island-preview__island island-preview__island--collapsed island-preview__island--notch" : `${islandClass} island-preview__island--collapsed`;
+  const expandedClass = `${islandClass} island-preview__island--expanded${notch && !isLightIsland(panelLook.islandBackgroundColor) ? " island-preview__island--under-notch" : ""}`;
 
   return (
     <figure
@@ -39,17 +44,17 @@ export function IslandPreview({ settings, compact = false }: {
       aria-label={text.label}
     >
       <div className="island-preview__desktop">
-        <div className={`${islandClass} island-preview__island--collapsed`} style={collapsedStyle}>
-          {glass && <GlassLayers rim={settings.glassRim} />}
+        <div className={collapsedClass} style={collapsedStyle}>
+          {glass && !notch && <GlassLayers rim={settings.glassRim} />}
           <span className="island-preview__pulse" />
           <img className="island-preview__provider" src={claudeCodeIcon} alt="" draggable={false} />
-          {settings.showCollapsedText && <span className="island-preview__task">{text.sessions.needs.title}</span>}
+          {settings.showCollapsedText && !notch && <span className="island-preview__task">{text.sessions.needs.title}</span>}
           <span className="island-preview__ring">1</span>
         </div>
         {compact ? null : <figcaption className="island-preview__caption">{text.collapsed}</figcaption>}
       </div>
       {compact ? null : <div className="island-preview__desktop">
-        <div className={`${islandClass} island-preview__island--expanded`} style={expandedStyle}>
+        <div className={expandedClass} style={expandedStyle}>
           {glass && <GlassLayers rim={settings.glassRim} />}
           <AgentPagePreview />
         </div>

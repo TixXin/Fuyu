@@ -6,12 +6,14 @@
 - 新开关「播放软件在最前面时不提示」，默认开：你正看着播放软件时不再弹。
 - 浏览器里播放的默认不提示（网页视频也会被系统当成换歌），在设置的「音乐软件」里可以打开。
 - 「只提示选中的」列表里，网易云音乐、QQ音乐、酷狗、酷我、汽水音乐、咪咕音乐和 Spotify、Apple Music、YouTube Music、Amazon Music、TIDAL、Deezer、Qobuz 显示各自的名字，不再是包名的一截。
+- 市场页有了截图，补了搜索关键词。
 - 新版浮屿上，提示会显示专辑封面、播放软件的图标和名字，点提示打开岛的音乐页；岛上正显示 Agent 提示或聊天消息时不弹。这些由浮屿提供，0.3.11-beta.4 及更早的版本上提示还是原来的样子。
 
 - Notices now stay for 3 seconds by default (was 6). If you never changed it, it becomes 3 seconds; a choice of 10 or 15 seconds is kept, and you can pick 6 again in the settings.
 - New switch "Skip it while the player is the front app", on by default: no notice while you are looking at the player.
 - Playback in browsers no longer notifies by default (the system reports web videos as track changes too); turn it on under "Music apps" in the settings.
 - In the "only the ticked ones" list, NetEase Cloud Music, QQ Music, KuGou, Kuwo, Soda Music, Migu Music, Spotify, Apple Music, YouTube Music, Amazon Music, TIDAL, Deezer and Qobuz show their own names instead of a piece of the package id.
+- The market page now has a screenshot, and the plugin lists search keywords.
 - On newer Fuyu versions the notice shows the album cover and the player's icon and name, clicking it opens the island's music page, and it stays out of the way while the island is showing an agent notice or a chat message. Fuyu provides these; on 0.3.11-beta.4 and earlier the notice looks as before.
 
 ## 1.1.1

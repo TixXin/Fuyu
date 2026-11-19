@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { after, test } from "node:test";
+import { after, afterEach, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { startHost } from "../../packages/plugin-base/src/host/kernel.mjs";
 import { commandsV1 } from "../../packages/plugin-base/src/services.mjs";
@@ -10,6 +10,7 @@ import { installPackage, pack } from "../../packages/plugin-cli/src/index.mjs";
 import { messagesV1 } from "../../packages/plugin-services/src/index.mjs";
 import { DEFAULT_CONFIG, configFromStored, normalizeConfig } from "../../plugins/v3/official/weather/src/config.ts";
 import { beaufort, formatClock, formatWind, inQuietHours, minutesBetween, weekdayOf } from "../../plugins/v3/official/weather/src/format.ts";
+import { apply } from "../../plugins/v3/official/weather/src/host.ts";
 import { geocodeLanguage } from "../../plugins/v3/official/weather/src/openMeteo.ts";
 import { rainDecision } from "../../plugins/v3/official/weather/src/rain.ts";
 
@@ -18,6 +19,26 @@ const scratch = mkdtempSync(join(tmpdir(), "fuyu-e66-weather-"));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 
 const at = (hh, mm = 0) => new Date(2026, 10, 19, hh, mm).getTime();
+
+const realFetch = globalThis.fetch;
+afterEach(() => {
+  globalThis.fetch = realFetch;
+});
+
+function fakeContext(label, settings) {
+  const dataDir = join(scratch, label);
+  mkdirSync(dataDir, { recursive: true });
+  const handlers = new Map();
+  const ctx = {
+    dataDir,
+    clients: { handle: (method, fn) => handlers.set(method, fn), publish: () => {} },
+    commands: { register: () => {} },
+    services: { get: () => ({ notify: async () => ({ shown: true }) }) },
+    setInterval: () => async () => {},
+  };
+  if (settings) ctx.settings = settings;
+  return { ctx, call: (method, params) => handlers.get(method)(params) };
+}
 
 function forecast(over = {}) {
   return {
@@ -121,6 +142,9 @@ test("E66.9 weather host: 1.0.0 config kept, settings apply, refresh command reg
     assert.equal(host.status().find((item) => item.id === "@fuyu/weather")?.state, "running");
     const call = (method, params) => host.ctx.clients.call("@fuyu/weather", method, params);
 
+    const setupMark = () => host.status().find((item) => item.id === "@fuyu/weather")?.setup;
+    assert.equal(setupMark(), undefined, "a saved city leaves nothing to set up");
+
     const first = await call("getState");
     assert.deepEqual([first.config.showOnBar, first.config.rainAlert, first.config.refreshMinutes], [true, false, 60]);
     assert.equal(first.place.name, "Hangzhou");
@@ -147,7 +171,35 @@ test("E66.9 weather host: 1.0.0 config kept, settings apply, refresh command reg
     const cleared = await call("setConfig", { city: "" });
     assert.equal(cleared.forecast, null);
     assert.equal(cleared.problem, null);
+    assert.deepEqual(setupMark(), { hint: { "zh-CN": "选一个城市", en: "Pick a city" } }, "without a city Fuyu is told a setting is missing");
   } finally {
     await host.stop();
   }
+});
+
+test("weather host: reports that a city is still needed, and stops once one is set", async () => {
+  globalThis.fetch = async () => {
+    throw new Error("offline");
+  };
+
+  const reports = [];
+  const { ctx, call } = fakeContext("setup", { setup: async (state) => void reports.push(state) });
+  apply(ctx);
+  assert.deepEqual(reports, [{ needed: true, hint: { "zh-CN": "选一个城市", en: "Pick a city" } }]);
+
+  const set = await call("setConfig", { city: "杭州" });
+  assert.equal(set.config.city, "杭州");
+  assert.equal(reports.at(-1).needed, false, "with a city nothing is missing");
+
+  await call("setConfig", { city: "" });
+  assert.equal(reports.at(-1).needed, true, "clearing the city asks for one again");
+
+  const old = fakeContext("setup-old-fuyu");
+  assert.doesNotThrow(() => apply(old.ctx), "a Fuyu without ctx.settings still starts the plugin");
+  assert.equal((await old.call("setConfig", { city: "杭州" })).config.city, "杭州");
+
+  const failing = fakeContext("setup-failing", { setup: () => Promise.reject(new Error("not-ready")) });
+  assert.doesNotThrow(() => apply(failing.ctx));
+  assert.equal((await failing.call("setConfig", { city: "杭州" })).config.city, "杭州");
+  await new Promise((resolve) => setImmediate(resolve));
 });

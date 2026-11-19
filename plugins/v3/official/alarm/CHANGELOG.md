@@ -3,8 +3,12 @@
 ## 1.1.1
 
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
+- 市场页的截图换成了新的：岛上页面和收起条。
+- 补了搜索关键词，在市场里搜「起床」「贪睡」也能找到。
 
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
+- New screenshots on the market page: the island page and the collapsed bar.
+- Search keywords added, so "wake up" or "snooze" find it in the market.
 
 ## 1.1.0
 
