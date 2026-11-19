@@ -3,6 +3,7 @@ import { commandsV1, marketV1, pluginConfigV1, pluginWindowsV1, type CommandItem
 import { LOCALE_STORAGE_KEY } from "../../src/i18n";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { HostInfoV3, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
+import { ICON_SVG } from "./pluginMarketFixtures";
 
 export const locale = location.pathname.includes("-en") ? "en" : "zh-CN";
 const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
@@ -101,7 +102,7 @@ const marketPlugins = (): MarketCatalogPlugin[] => {
     }),
   ] : [];
   return [
-    entry("@fuyu/weather", "天气", "Weather", "在岛上看实时气温和逐小时预报", "Live temperature and an hourly forecast on the island", { install: candidate("1.2.0", true) }),
+    entry("@fuyu/weather", "天气", "Weather", "在岛上看实时气温和逐小时预报", "Live temperature and an hourly forecast on the island", { icon: ICON_SVG, install: candidate("1.2.0", true) }),
     entry("@fuyu/pomodoro", "番茄钟", "Pomodoro", "专注 25 分钟，休息 5 分钟", "Focus for 25 minutes, rest for 5", { install: candidate("1.1.0", true), autoUpdate: candidate("1.1.0", true) }),
     entry("@someone/clock", "世界时钟", "World clock", "收起时显示另一个时区的时间", "Shows another time zone while collapsed", { install: candidate("2.0.0", false) }),
     entry("@someone/shady", "可疑插件", "Shady plugin", "已被市场撤下", "Pulled from the market", { revoked: true, revocation: { level: "disable", reasons: [REASON.shady] } }),

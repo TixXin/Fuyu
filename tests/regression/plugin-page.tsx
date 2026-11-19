@@ -120,7 +120,7 @@ try {
   check(all("normal", ".plugin-row").length === 4 && !gallery.querySelector("[data-stage='normal'] .plugin-banner"), "Normal: four installed plugins and no banner");
   const titles = all("normal", ".plugin-row__name").map((element) => element.textContent!.trim());
   check(titles.join("|") === [...titles].sort((a, b) => a.localeCompare(b, locale)).join("|"), "Rows are sorted by name");
-  check(row("normal", "@fuyu/weather")?.querySelector(".plugin-badge--official") && row("normal", "@me/gadget")?.querySelector(".plugin-badge--warn") && row("normal", "@me/gadget")?.classList.contains("plugin-row--off"), "Official plugins carry a badge, file installs carry an unreviewed badge, and a switched-off plugin is dimmed");
+  check(row("normal", "@fuyu/weather")?.querySelector("[data-official]") && row("normal", "@fuyu/weather")?.querySelector(".plugin-icon__img") && !row("normal", "@me/gadget")?.querySelector("[data-official]") && row("normal", "@me/gadget")?.querySelector(".plugin-badge--warn") && row("normal", "@me/gadget")?.classList.contains("plugin-row--off"), "Official plugins carry a check mark, file installs carry an unreviewed badge, and a switched-off plugin is dimmed");
   const chip = (filter: string) => within("normal", `[data-filter='${filter}']`) as HTMLButtonElement;
   check(chip("all").textContent!.includes("4") && chip("on").textContent!.includes("3") && chip("off").textContent!.includes("1") && chip("attention").disabled, "Filter chips count all, on and off, and the attention chip is disabled at zero");
   await click(chip("off"));

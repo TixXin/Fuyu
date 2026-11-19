@@ -29,7 +29,7 @@ export type SettingsPluginPageText = {
   loading: string;
   footnote: { before: string; link: string; after: string };
   empty: { title: string; body: string; popular: string; install: string };
-  badges: { official: string; unreviewed: string };
+  badges: { unreviewed: string };
   sources: { market: string; official: string; manual: string; local: string };
   labels: Record<PluginPageRowLabel, string>;
   running: string;
@@ -200,7 +200,7 @@ export const zhCN: SettingsPluginPageText = {
     popular: "大家都在装",
     install: "安装",
   },
-  badges: { official: "官方", unreviewed: "未经审核" },
+  badges: { unreviewed: "未经审核" },
   sources: { market: "插件市场", official: "插件市场 · 官方", manual: "本地文件（未经审核）", local: "本地开发" },
   labels: {
     off: "已停用",
@@ -382,7 +382,7 @@ export const en: SettingsPluginPageText = {
     popular: "Popular",
     install: "Install",
   },
-  badges: { official: "Official", unreviewed: "Unreviewed" },
+  badges: { unreviewed: "Unreviewed" },
   sources: { market: "Plugin market", official: "Plugin market · Official", manual: "Local file (unreviewed)", local: "Local development" },
   labels: {
     off: "Off",

@@ -1,7 +1,8 @@
 import { Blocks, Store, Upload } from "lucide-react";
 import type { MarketCatalogPlugin, MarketCatalogSnapshot } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
-import { pluginInitial } from "./InstalledPluginRow";
+import { iconSources } from "./pluginIconSources";
+import { PluginLogo } from "./PluginLogo";
 import { localized } from "./pluginEntries";
 import { marketActionCandidate } from "./pluginRowStatus";
 
@@ -46,7 +47,7 @@ export function InstalledPluginsEmpty({ snapshot, onBrowse, onInstallFile, onIns
               const title = localized(plugin.displayName, locale) ?? plugin.name;
               return (
                 <div key={plugin.name} className="plugin-mini" data-popular={plugin.name}>
-                  <span className="plugin-icon plugin-icon--sm" aria-hidden="true">{pluginInitial(title)}</span>
+                  <PluginLogo sources={iconSources(plugin.icon)} title={title} size="sm" />
                   <div className="plugin-mini__text">
                     <b>{title}</b>
                     <span>{localized(plugin.description, locale)}</span>

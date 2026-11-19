@@ -2,15 +2,17 @@ import { ExternalLink, Search, Upload } from "lucide-react";
 import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
 import type { PluginMarketSort } from "../../i18n/sections/settings/pluginMarket";
 import { useLocale, useTranslation } from "../../i18n";
-import { pluginInitial } from "./InstalledPluginRow";
+import { iconSources } from "./pluginIconSources";
+import { PluginLogo } from "./PluginLogo";
 import { PluginMarketCard, type MarketCardHandlers } from "./PluginMarketCard";
 import { PluginMarketEmpty } from "./PluginMarketEmpty";
 import { openPluginDocs } from "./pluginMarketActions";
 import { browseList, categoryCounts, hasUpdate, localized, matchesQuery, sortPlugins } from "./pluginMarketModel";
 import { marketActionCandidate } from "./pluginRowStatus";
 
-export function PluginMarketBrowse({ plugins, query, category, sort, categoryName, handlers, onCategory, onInstallFile }: {
+export function PluginMarketBrowse({ plugins, newNames, query, category, sort, categoryName, handlers, onCategory, onInstallFile }: {
   plugins: readonly MarketCatalogPlugin[];
+  newNames: ReadonlySet<string>;
   query: string;
   category: string | null;
   sort: PluginMarketSort;
@@ -23,7 +25,7 @@ export function PluginMarketBrowse({ plugins, query, category, sort, categoryNam
   const { locale } = useLocale();
   const grid = (list: readonly MarketCatalogPlugin[]) => (
     <div className="market-grid">
-      {list.map((plugin) => <PluginMarketCard key={plugin.name} plugin={plugin} categoryName={categoryName} {...handlers} />)}
+      {list.map((plugin) => <PluginMarketCard key={plugin.name} plugin={plugin} categoryName={categoryName} isNew={newNames.has(plugin.name)} {...handlers} />)}
     </div>
   );
 
@@ -80,7 +82,7 @@ export function PluginMarketBrowse({ plugins, query, category, sort, categoryNam
               const candidate = marketActionCandidate(plugin)?.candidate;
               return (
                 <div key={plugin.name} className="market-update" data-market-update={plugin.name}>
-                  <span className="plugin-icon plugin-icon--sm" aria-hidden="true">{pluginInitial(title)}</span>
+                  <PluginLogo sources={iconSources(plugin.icon)} title={title} size="sm" />
                   <div className="market-update__text">
                     <button className="market-card__name" type="button" onClick={() => handlers.onOpen(plugin)}>{title}</button>
                     <span>

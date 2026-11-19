@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { browseList, capabilityItems, categoryCounts, hasUpdate, isFirstFromPublisher, matchesQuery, sortPlugins } from "../../src/windows/settings/pluginMarketModel.ts";
+import { browseList, capabilityItems, categoryCounts, hasUpdate, isFirstFromPublisher, matchesQuery, newListings, sortPlugins } from "../../src/windows/settings/pluginMarketModel.ts";
 
 const caps = (more = {}) => ({ unreviewed: false, network: [], nodeApis: [], provides: [], replaces: [], slots: [], ...more });
 const candidate = (version, more = {}) => ({ version, sha256: "a", size: 1, publishedAt: "2026-11-10T00:00:00Z", confirmation: caps(), ...more });
@@ -68,4 +68,35 @@ test("search matches names, publishers and the shown category name, ignoring spa
   assert.equal(matchesQuery(rss, "资讯", { information: "资讯" }), true);
   assert.equal(matchesQuery(rss, "tixxin"), true);
   assert.equal(matchesQuery(rss, "天气"), false);
+});
+
+test("newest sorts by when a plugin was first listed, not by its latest release", () => {
+  const veteran = plugin("@a/veteran", { firstPublishedAt: "2026-09-01T00:00:00Z", install: candidate("3.0.0", { publishedAt: "2026-11-18T00:00:00Z" }) });
+  const rookie = plugin("@a/rookie", { firstPublishedAt: "2026-11-12T00:00:00Z", install: candidate("1.0.0", { publishedAt: "2026-11-12T00:00:00Z" }) });
+  const middle = plugin("@a/middle", { firstPublishedAt: "2026-10-01T00:00:00Z" });
+  assert.deepEqual(sortPlugins([veteran, middle, rookie], "newest").map((item) => item.name), ["@a/rookie", "@a/middle", "@a/veteran"]);
+  assert.deepEqual(sortPlugins([veteran, middle, rookie], "recent").map((item) => item.name), ["@a/veteran", "@a/rookie", "@a/middle"]);
+});
+
+const day = 24 * 60 * 60 * 1000;
+const now = Date.parse("2026-12-30T12:00:00Z");
+const listedDaysAgo = (name, days) => plugin(name, { firstPublishedAt: new Date(now - days * day).toISOString() });
+
+test("nothing is new until the market has been open a month, so a young market does not flag every plugin", () => {
+  const plugins = [listedDaysAgo("@a/one", 1), listedDaysAgo("@a/two", 5)];
+  assert.deepEqual([...newListings(plugins, new Date(now - 29 * day).toISOString(), now)], []);
+  assert.deepEqual([...newListings(plugins, null, now)], []);
+  assert.deepEqual([...newListings(plugins, new Date(now - 31 * day).toISOString(), now)].sort(), ["@a/one", "@a/two"]);
+});
+
+test("after the first month only plugins first listed in the last 14 days are new, whatever their latest release", () => {
+  const since = new Date(now - 90 * day).toISOString();
+  const plugins = [
+    listedDaysAgo("@a/fresh", 13),
+    listedDaysAgo("@a/stale", 15),
+    plugin("@a/updated", { firstPublishedAt: new Date(now - 60 * day).toISOString(), install: candidate("2.0.0", { publishedAt: new Date(now - day).toISOString() }) }),
+    plugin("@a/unknown", { firstPublishedAt: null }),
+    listedDaysAgo("@a/future", -2),
+  ];
+  assert.deepEqual([...newListings(plugins, since, now)], ["@a/fresh"]);
 });

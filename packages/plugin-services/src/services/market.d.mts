@@ -59,6 +59,8 @@ export type MarketCatalogPlugin = {
   displayName: MarketLocalizedText;
   description: MarketLocalizedText;
   categories: string[];
+  icon?: string | null;
+  firstPublishedAt?: string | null;
   installedVersion: string | null;
   enabled: boolean;
   source: "market" | "manual" | null;
@@ -79,6 +81,7 @@ export type InstalledMarketPlugin = {
   revocation?: MarketRevocation | null;
   displayName?: MarketLocalizedText | string;
   description?: MarketLocalizedText | string;
+  icon?: string;
 };
 
 export type MarketRevocationWarning = "network" | "bad-signature" | "bad-trust" | "invalid" | "older-serial" | "expired" | "behind";
@@ -86,6 +89,7 @@ export type MarketRevocationWarning = "network" | "bad-signature" | "bad-trust" 
 export type MarketCatalogSnapshot = {
   plugins: MarketCatalogPlugin[];
   installed: InstalledMarketPlugin[];
+  marketSince?: string | null;
   updatedAt: number | null;
   manualAllowed: boolean;
   error: string | null;

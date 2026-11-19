@@ -99,15 +99,36 @@ function rank(plugin: MarketCatalogPlugin): number {
   return plugin.official ? 0 : 1;
 }
 
-function publishedAt(plugin: MarketCatalogPlugin): number {
-  const at = offeredCandidate(plugin)?.publishedAt;
+const DAY = 24 * 60 * 60 * 1000;
+export const NEW_LISTING_DAYS = 14;
+export const MARKET_SETTLE_DAYS = 30;
+
+function timeOf(at: string | null | undefined): number | null {
   const time = at ? Date.parse(at) : NaN;
-  return Number.isFinite(time) ? time : 0;
+  return Number.isFinite(time) ? time : null;
+}
+
+function publishedAt(plugin: MarketCatalogPlugin): number {
+  return timeOf(offeredCandidate(plugin)?.publishedAt) ?? 0;
+}
+
+function firstListedAt(plugin: MarketCatalogPlugin): number {
+  return timeOf(plugin.firstPublishedAt) ?? publishedAt(plugin);
+}
+
+export function newListings(plugins: readonly MarketCatalogPlugin[], marketSince: string | null | undefined, now: number): ReadonlySet<string> {
+  const since = timeOf(marketSince);
+  if (since === null || now - since < MARKET_SETTLE_DAYS * DAY) return new Set();
+  return new Set(plugins.flatMap((plugin) => {
+    const first = timeOf(plugin.firstPublishedAt);
+    return first !== null && first <= now && now - first < NEW_LISTING_DAYS * DAY ? [plugin.name] : [];
+  }));
 }
 
 export function sortPlugins(plugins: readonly MarketCatalogPlugin[], sort: PluginMarketSort): MarketCatalogPlugin[] {
   const indexed = plugins.map((plugin, index) => ({ plugin, index }));
   indexed.sort((a, b) => {
+    if (sort === "newest") return firstListedAt(b.plugin) - firstListedAt(a.plugin) || a.index - b.index;
     if (sort === "recent") return publishedAt(b.plugin) - publishedAt(a.plugin) || a.index - b.index;
     return rank(a.plugin) - rank(b.plugin) || a.index - b.index;
   });
