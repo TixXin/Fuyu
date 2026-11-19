@@ -4,7 +4,8 @@ import { useTranslation } from "../../i18n";
 import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginsV3";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { exitPluginSafeMode, type BuiltinPlugin } from "../../features/plugin-kernel/api";
-import { BUILTIN_ICONS, isOfficialMarketPlugin, matchesPluginQuery, milliseconds, stateOf, TONES } from "./BuiltinPluginsGroup";
+import { BUILTIN_ICONS, isExternalPlugin, isOfficialMarketPlugin, matchesPluginQuery, milliseconds, stateOf, TONES } from "./BuiltinPluginsGroup";
+import { PluginBisectBar } from "./PluginBisectBar";
 import { PluginHostNodeRow } from "./PluginHostNodeRow";
 import type { PluginHostView, PluginStatusV3 } from "./usePluginHostStatus";
 
@@ -106,6 +107,7 @@ export function PluginDiagnosticsTab({
   const builtinIds = new Set(builtins?.map((b) => b.id) ?? []);
   const hostById = new Map((hostPlugins ?? []).map((p) => [p.id, p]));
   const extras = (hostPlugins ?? []).filter((p) => !builtinIds.has(p.id));
+  const thirdPartyIds = (hostPlugins ?? []).filter((item) => isExternalPlugin(item, builtinIds)).map((item) => item.id);
 
   const rows = [
     ...extras.map((p) => ({ id: p.id, name: p.id, extra: p.name, kind: p.kind, official: isOfficialMarketPlugin(p), state: stateOf(p), usage: p.usage, icon: Blocks })),
@@ -158,6 +160,7 @@ export function PluginDiagnosticsTab({
         </div>
         <PluginHostNodeRow watching={!open} />
         {open && host?.safe ? <SafeModeBanner key={host.pid} view={view} mode={host.safe} /> : null}
+        {open ? <PluginBisectBar thirdPartyIds={thirdPartyIds} onBisect={view.bisect} /> : null}
       </section>
 
       <section className="plugins-v3__table-card settings-group" aria-label={text.plugins}>

@@ -3,7 +3,7 @@ import { RefreshCw, Upload } from "lucide-react";
 import { marketV1, type MarketCatalogPlugin, type MarketCatalogSnapshot } from "@fuyu/plugin-services";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { windowServices } from "../../features/plugin-kernel/services";
-import { useErrorText, useTranslation } from "../../i18n";
+import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { PluginInstallConfirmModal, type PendingPluginInstall } from "./PluginInstallConfirmModal";
 import { PluginMarketCard } from "./PluginMarketCard";
 import { PluginMarketDetailModal } from "./PluginMarketDetailModal";
@@ -104,6 +104,7 @@ export function PluginMarketV3Tab({
 }) {
   const text = useTranslation().settings.pluginsV3;
   const copy = text.market;
+  const { locale } = useLocale();
   const errorText = useErrorText();
   const manualSwitchId = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -125,8 +126,8 @@ export function PluginMarketV3Tab({
         setSnapshot(next);
         setBannerError(next.error);
       })
-      .catch(() => undefined);
-  }, [connected]);
+      .catch((failure: unknown) => setBannerError(errorText(failure)));
+  }, [connected, errorText]);
 
   const openFileConfirm = useCallback(async (base64: string) => {
     const inspected = await marketClient.inspectPackage({ base64 });
@@ -257,7 +258,7 @@ export function PluginMarketV3Tab({
           <div className="plugins-v3__market-meta">
             <strong>{copy.count(plugins.length)}</strong>
             {snapshot?.updatedAt ? (
-              <span>{copy.updatedAt(new Date(snapshot.updatedAt).toLocaleTimeString())}</span>
+              <span>{copy.updatedAt(new Date(snapshot.updatedAt).toLocaleString(locale === "en" ? "en" : "zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }))}</span>
             ) : null}
             <button
               className="plugins-v3__btn"
@@ -271,40 +272,44 @@ export function PluginMarketV3Tab({
             </button>
           </div>
 
-          <div className="plugins-v3__market-controls">
-            <div className="plugins-v3__manual-toggle">
-              <label htmlFor={manualSwitchId}>{copy.manualAllow}</label>
-              <SettingsSwitch
-                id={manualSwitchId}
-                checked={manualAllowed}
-                disabled={togglingManual || snapshot === null}
-                onChange={toggleManual}
-              />
-            </div>
-            {manualAllowed ? (
-              <>
-                <input
-                  ref={fileInputRef}
-                  className="plugins-v3__file-input"
-                  type="file"
-                  accept=".fuyu"
-                  data-testid="market-file-input"
-                  onChange={onPickFile}
-                />
-                <button
-                  className="plugins-v3__btn plugins-v3__btn--primary"
-                  type="button"
-                  data-action="market-install-file"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload size={13} strokeWidth={2.2} aria-hidden="true" />
-                  <span>{copy.installFromFile}</span>
-                </button>
-              </>
-            ) : null}
-          </div>
         </div>
       </section>
+
+      <details className="plugins-v3__manual">
+        <summary>{copy.installFromFile}</summary>
+        <div className="plugins-v3__manual-body">
+          <div className="plugins-v3__manual-toggle">
+            <label htmlFor={manualSwitchId}>{copy.manualAllow}</label>
+            <SettingsSwitch
+              id={manualSwitchId}
+              checked={manualAllowed}
+              disabled={togglingManual || snapshot === null}
+              onChange={toggleManual}
+            />
+          </div>
+          {manualAllowed ? (
+            <>
+              <input
+                ref={fileInputRef}
+                className="plugins-v3__file-input"
+                type="file"
+                accept=".fuyu"
+                data-testid="market-file-input"
+                onChange={onPickFile}
+              />
+              <button
+                className="plugins-v3__btn plugins-v3__btn--primary"
+                type="button"
+                data-action="market-install-file"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload size={13} strokeWidth={2.2} aria-hidden="true" />
+                <span>{copy.installFromFile}</span>
+              </button>
+            </>
+          ) : null}
+        </div>
+      </details>
 
       {shownBannerError ? <p className="plugins-v3__error-banner">{shownBannerError}</p> : null}
 

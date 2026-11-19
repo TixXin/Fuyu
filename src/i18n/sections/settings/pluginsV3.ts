@@ -44,6 +44,7 @@ export type SettingsPluginsV3Text = {
   groups: Record<PluginV3Group, string>;
   filters: Record<PluginV3Filter, (count: number) => string>;
   closeDetail: string;
+  clearSearch: string;
   stateCol: string;
   noResources: string;
   viewDetail: string;
@@ -165,6 +166,9 @@ export type SettingsPluginsV3Text = {
     updateBtn: (version: string) => string;
     installedBtn: string;
     unavailableBtn: string;
+    needsFuyu: (range: string) => string;
+    needsNewerFuyu: string;
+    unsupportedPlatform: string;
     uninstallBtn: string;
     uninstallPrompt: (id: string) => string;
     uninstallRemoveData: string;
@@ -248,6 +252,7 @@ export const zhCN: SettingsPluginsV3Text = {
     off: (count) => `已关闭 (${count})`,
   },
   closeDetail: "关闭",
+  clearSearch: "清除搜索",
   stateCol: "状态",
   noResources: "无常驻资源",
   viewDetail: "详情 ›",
@@ -440,6 +445,9 @@ export const zhCN: SettingsPluginsV3Text = {
     updateBtn: (version) => `更新至 v${version}`,
     installedBtn: "已安装",
     unavailableBtn: "当前不可安装",
+    needsFuyu: (range) => `需要浮屿 ${range}`,
+    needsNewerFuyu: "需要更新浮屿后才能安装",
+    unsupportedPlatform: "不支持当前系统",
     uninstallBtn: "卸载插件",
     uninstallPrompt: (id) => `确定要卸载 ${id} 吗？卸载后插件代码与注册项会立即移除。`,
     uninstallRemoveData: "同时删除本插件的数据目录",
@@ -523,6 +531,7 @@ export const en: SettingsPluginsV3Text = {
     off: (count) => `Off (${count})`,
   },
   closeDetail: "Close",
+  clearSearch: "Clear search",
   stateCol: "State",
   noResources: "No active resources",
   viewDetail: "Details ›",
@@ -715,6 +724,9 @@ export const en: SettingsPluginsV3Text = {
     updateBtn: (version) => `Update to v${version}`,
     installedBtn: "Installed",
     unavailableBtn: "Unavailable",
+    needsFuyu: (range) => `Needs Fuyu ${range}`,
+    needsNewerFuyu: "Update Fuyu before installing",
+    unsupportedPlatform: "Not available on this system",
     uninstallBtn: "Uninstall",
     uninstallPrompt: (id) => `Uninstall ${id}? Its unpacked files and registration will be removed immediately.`,
     uninstallRemoveData: "Also delete this plugin's data folder",

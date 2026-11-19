@@ -88,6 +88,13 @@ const marketSnapshot = () => ({
   plugins: [
     makeMarketEntry("@fuyu/weather", true, false, "天气", "Weather", ["api.open-meteo.com"], ["island.page/v1"]),
     makeMarketEntry("@someone/clock", false, true, "时钟", "Clock", [], ["island.collapsed/v1"]),
+    {
+      name: "@someone/old", official: false, publisher: { github: "someone", official: false },
+      displayName: { "zh-CN": "旧插件", en: "Old plugin" }, description: { "zh-CN": "版本不够", en: "Too old" }, categories: [],
+      installedVersion: null, enabled: false, source: null, revoked: false,
+      blocked: { reason: "engines" as const, range: ">=0.9.0" },
+      install: null, manual: null, autoUpdate: null,
+    },
   ],
   installed: [], updatedAt: null, manualAllowed, error: null,
 });
@@ -320,8 +327,10 @@ try {
       && page.querySelector("[data-market-plugin='@someone/clock']")!.textContent!.includes(text.market.cooldownBadge)
       && !page.querySelector("[data-market-plugin='@someone/clock']")!.textContent!.includes(text.market.cooldownHint)
       && !page.querySelector("[data-market-plugin='@someone/clock'] .plugins-v3__pill--warn")
-      && !page.querySelector("[data-action='market-install-file']"),
-    "The v3 market tab lists official and calm New badges without warning banners and hides local .fuyu import while manual install is off",
+      && !page.querySelector("[data-action='market-install-file']")
+      && page.querySelector("[data-market-plugin='@someone/old']")!.textContent!.includes(text.market.needsFuyu(">=0.9.0"))
+      && !page.querySelector("[data-market-plugin='@someone/old'] [data-action='market-install']"),
+    "The v3 market tab lists official and calm New badges without warning banners, hides local .fuyu import while manual install is off, and marks plugins the current Fuyu cannot run",
   );
   await act(async () => page.querySelector<HTMLInputElement>(".plugins-v3__manual-toggle input")!.click());
   await settle();
@@ -331,10 +340,10 @@ try {
   const clockModal = page.querySelector<HTMLElement>("[data-install-modal='@someone/clock']");
   check(Boolean(clockModal) && clockModal!.textContent!.includes(text.market.confirmModal.cooldownInstallNote), "Clicking Install on a fresh plugin shows the cooldown note inside the confirmation modal");
   await act(async () => { clockModal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
-  await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@fuyu/weather']")!.querySelector<HTMLButtonElement>("[data-action='market-open-detail']")!.click());
+  await act(async () => page.querySelector<HTMLElement>("[data-market-plugin='@fuyu/weather']")!.click());
   await settle();
   const marketDetail = page.querySelector<HTMLElement>("[data-market-detail-modal='@fuyu/weather']");
-  check(Boolean(marketDetail) && marketDetail!.textContent!.includes("Hourly forecast") && marketDetail!.textContent!.includes("MIT") && Boolean(marketDetail!.querySelector("[data-market-likes='42']")), "Clicking a market plugin title opens the rich detail modal with README, license, and likes");
+  check(Boolean(marketDetail) && marketDetail!.textContent!.includes("Hourly forecast") && marketDetail!.textContent!.includes("MIT") && Boolean(marketDetail!.querySelector("[data-market-likes='42']")), "Clicking a market plugin card opens the rich detail modal with README, license, and likes");
   await act(async () => marketDetail!.querySelector<HTMLButtonElement>("[data-detail-tab='capabilities']")!.click());
   check(marketDetail!.textContent!.includes("Alt+W") && marketDetail!.textContent!.includes("api.open-meteo.com"), "Switching to Capabilities in the market detail modal lists commands, default keybindings, and network domains");
   await act(async () => { marketDetail!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });

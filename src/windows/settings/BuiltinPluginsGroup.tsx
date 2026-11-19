@@ -162,11 +162,7 @@ export function HostPluginCard({
         </span>
         <div className="plugins-v3__title-col">
           <div className="plugins-v3__title-line">
-            {managed ? (
-              <label className="plugins-v3__plugin-name" htmlFor={switchId} title={title}>{title}</label>
-            ) : (
-              <span className="plugins-v3__plugin-name" title={title}>{title}</span>
-            )}
+            <span className="plugins-v3__plugin-name" title={title}>{title}</span>
             {official ? (
               <span className="plugins-v3__pill plugins-v3__pill--official">{text.market.officialBadge}</span>
             ) : plugin.kind ? (
@@ -186,14 +182,6 @@ export function HostPluginCard({
       {error ? <p className="plugins-v3__detail plugins-v3__detail--bad">{error}</p> : null}
       {detail ? <p className={`plugins-v3__detail plugins-v3__detail--${tone}`}>{detail}</p> : null}
       <PluginLastErrorDetails plugin={plugin} />
-      {onSelect ? (
-        <div className="plugins-v3__card-foot">
-          <span className={`plugins-v3__foot-state plugins-v3__foot-state--${tone}`}>{text.states[state]}</span>
-          <span className="plugins-v3__foot-actions">
-            <button className="plugins-v3__foot-btn" type="button" onClick={onSelect}>{text.viewDetail}</button>
-          </span>
-        </div>
-      ) : null}
     </article>
   );
 }

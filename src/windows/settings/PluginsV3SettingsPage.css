@@ -50,7 +50,6 @@
 .plugins-v3__tab-dot--open { background: var(--mint-text, #7ee2b8); }
 .plugins-v3__tab-dot--failed,
 .plugins-v3__tab-dot--closed { background: var(--error-text, #ff9aa9); }
-.plugins-v3__tab-pill { padding: 1px 7px; color: var(--text-2); background: var(--color-white-a08); border-radius: var(--radius-pill); font-size: 11px; font-variant-numeric: tabular-nums; }
 
 .plugins-v3__host-bar {
   min-width: 0;
@@ -223,12 +222,6 @@
 
 .plugins-v3__card-foot { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--color-white-a06); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; color: var(--text-3); font-size: 11px; font-variant-numeric: tabular-nums; }
 .plugins-v3__foot-actions { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
-.plugins-v3__foot-btn,
-.plugins-v3__foot-link { padding: 0; background: transparent; border: 0; font: inherit; cursor: pointer; white-space: nowrap; }
-.plugins-v3__foot-btn { color: inherit; }
-.plugins-v3__foot-btn:hover { color: var(--text-1); }
-.plugins-v3__foot-link { color: var(--color-accent); font-weight: 600; }
-.plugins-v3__foot-link:hover { text-decoration: underline; }
 .plugins-v3__foot-state--ok { color: var(--mint-text, #7ee2b8); }
 .plugins-v3__foot-state--warn { color: var(--warning-text, #ffd166); }
 .plugins-v3__foot-state--bad { color: var(--error-text, #ff9aa9); }
@@ -291,6 +284,6 @@
 .plugins-v3__schema-input:focus-visible,
 .plugins-v3__schema-select:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 1px; border-color: var(--color-accent); }
 
-.plugins-v3 :is(.plugins-v3__tab, .plugins-v3__filter, .plugins-v3__diag-link, .plugins-v3__foot-btn, .plugins-v3__foot-link, .plugins-v3__leave, .plugins-v3__modal-close):focus-visible,
+.plugins-v3 :is(.plugins-v3__tab, .plugins-v3__filter, .plugins-v3__diag-link, .plugins-v3__leave, .plugins-v3__modal-close):focus-visible,
 .plugins-v3__modal :is(.plugins-v3__tab, .plugins-v3__modal-close):focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
 .settings-stage--light :is(.plugins-v3__card, .plugins-v3__dock, .plugins-v3__host-bar, .plugins-v3__table-scroll) { background: var(--settings-card, var(--color-white)); border-color: var(--settings-card-line, var(--color-white-a08)); }

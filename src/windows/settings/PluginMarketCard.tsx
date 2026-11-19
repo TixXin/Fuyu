@@ -4,6 +4,22 @@ import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
 import { resolvePluginText } from "./PluginInstallConfirmModal";
 
+export function marketActionCandidate(plugin: MarketCatalogPlugin) {
+  if (!plugin.installedVersion) {
+    const candidate = plugin.install ?? plugin.manual;
+    return candidate ? { candidate, isUpdate: false } : null;
+  }
+  const candidate = plugin.autoUpdate ?? plugin.manual;
+  return candidate ? { candidate, isUpdate: true } : null;
+}
+
+function blockedLabel(plugin: MarketCatalogPlugin, copy: { needsFuyu: (range: string) => string; needsNewerFuyu: string; unsupportedPlatform: string }): string | null {
+  const blocked = plugin.blocked;
+  if (!blocked) return null;
+  if (blocked.reason === "platform") return copy.unsupportedPlatform;
+  return blocked.range ? copy.needsFuyu(blocked.range) : copy.needsNewerFuyu;
+}
+
 export function PluginMarketCard({
   plugin,
   onOpenDetail,
@@ -17,11 +33,13 @@ export function PluginMarketCard({
   const copy = useTranslation().settings.pluginsV3.market;
   const title = resolvePluginText(plugin.displayName, locale, plugin.name);
   const desc = resolvePluginText(plugin.description, locale, "");
-  const installCandidate = !plugin.installedVersion ? (plugin.install ?? plugin.manual) : null;
-  const updateCandidate = plugin.installedVersion ? (plugin.manual ?? plugin.autoUpdate) : null;
-  const activeCandidate = updateCandidate ?? installCandidate;
+  const action = marketActionCandidate(plugin);
+  const installCandidate = action && !action.isUpdate ? action.candidate : null;
+  const updateCandidate = action?.isUpdate ? action.candidate : null;
+  const activeCandidate = action?.candidate ?? null;
   const freshInstall = Boolean(installCandidate?.fresh);
   const freshUpdate = Boolean(updateCandidate?.fresh);
+  const blockedText = blockedLabel(plugin, copy);
 
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     if ((event.target as Element).closest("button")) return;
@@ -37,18 +55,7 @@ export function PluginMarketCard({
         </span>
         <div className="plugins-v3__title-col">
           <div className="plugins-v3__title-line">
-            <button
-              className="plugins-v3__name-btn"
-              type="button"
-              title={title}
-              data-action="market-open-detail"
-              onClick={(event) => {
-                event.stopPropagation();
-                onOpenDetail(plugin);
-              }}
-            >
-              {title}
-            </button>
+            <span className="plugins-v3__plugin-name" title={title}>{title}</span>
             {plugin.official ? (
               <span className="plugins-v3__pill plugins-v3__pill--official">{copy.officialBadge}</span>
             ) : (
@@ -67,14 +74,16 @@ export function PluginMarketCard({
 
       <div className="plugins-v3__card-foot">
         <span>
-          {plugin.installedVersion
+          {blockedText
+            ? blockedText
+            : plugin.installedVersion
             ? `${copy.installedBadge(plugin.installedVersion)}${freshUpdate ? ` · ${copy.cooldownHint}` : ""}`
             : activeCandidate
             ? `v${activeCandidate.version}`
             : "–"}
         </span>
         <span className="plugins-v3__foot-actions">
-          {installCandidate ? (
+          {blockedText ? null : installCandidate ? (
             <button
               className="plugins-v3__btn plugins-v3__btn--primary"
               type="button"
