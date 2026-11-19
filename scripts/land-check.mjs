@@ -9,7 +9,7 @@ import { readVersion, VERSION_FILES, writeVersion } from "./release/versions.mjs
 
 const RUST_INPUTS = ["src-tauri/", "plugins/"];
 
-const CHECKED_DOCS = ["docs/plugins/api.md"];
+const CHECKED_DOCS = ["docs/plugins/services-and-slots.md"];
 
 const DOCS_CHECKS = ["pnpm run check:tasks"];
 

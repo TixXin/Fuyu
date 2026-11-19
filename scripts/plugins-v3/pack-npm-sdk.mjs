@@ -88,7 +88,7 @@ export interface StandardSchemaV1<Input = unknown, Output = Input> {
 
 const FUYU_PLUGIN_README = `# fuyu-plugin
 
-SDK, CLI (\`build\`, \`check\`, \`pack\`, \`dev\`, \`review\`, \`keygen\`, \`sign\`) and test host for [Fuyu](https://github.com/TixXin/fuyu) plugin platform v3.
+SDK, CLI (\`build\`, \`check\`, \`pack\`, \`dev\`, \`review\`, \`keygen\`, \`sign\`) and test host for [Fuyu](https://github.com/TixXin/fuyu) plugins.
 
 ## Quick start
 
@@ -107,12 +107,12 @@ npx fuyu-plugin pack
 - \`fuyu-plugin/protocol\`: slot definitions, theme variables and protocol constants
 - \`fuyu-plugin/host\`: \`startHost\` for integration testing plugins in Node.js
 
-Documentation: <https://github.com/TixXin/fuyu/tree/main/docs/plugins/v3>
+Documentation: <https://github.com/TixXin/fuyu/tree/main/docs/plugins>
 `;
 
 const CREATE_FUYU_PLUGIN_README = `# create-fuyu-plugin
 
-Scaffolds a TypeScript + React plugin project for [Fuyu](https://github.com/TixXin/fuyu) plugin platform v3.
+Scaffolds a TypeScript + React plugin project for [Fuyu](https://github.com/TixXin/fuyu).
 
 \`\`\`sh
 npm create fuyu-plugin@latest my-plugin -- --owner <github-user> --name my-plugin
@@ -121,7 +121,7 @@ npm install
 npm run typecheck && npm run lint && npm run check
 \`\`\`
 
-Documentation: <https://github.com/TixXin/fuyu/tree/main/docs/plugins/v3>
+Documentation: <https://github.com/TixXin/fuyu/tree/main/docs/plugins>
 `;
 
 function loadEsbuild() {
@@ -252,12 +252,12 @@ function fuyuPluginManifest(version) {
   return {
     name: "fuyu-plugin",
     version,
-    description: "SDK, CLI (build, check, pack, dev, sign) and test host for Fuyu v3 plugins",
+    description: "SDK, CLI (build, check, pack, dev, sign) and test host for Fuyu plugins",
     keywords: ["fuyu", "plugin", "sdk"],
     license: "MIT",
     type: "module",
     repository: { type: "git", url: "git+https://github.com/TixXin/fuyu.git", directory: "packages/plugin-cli" },
-    homepage: "https://github.com/TixXin/fuyu/tree/main/docs/plugins/v3",
+    homepage: "https://github.com/TixXin/fuyu/tree/main/docs/plugins",
     engines: { node: ">=22.15" },
     bin: { "fuyu-plugin": "bin/fuyu-plugin.mjs" },
     exports: {
@@ -276,12 +276,12 @@ function createFuyuPluginManifest(version) {
   return {
     name: "create-fuyu-plugin",
     version,
-    description: "Creates a Fuyu v3 plugin project: npm create fuyu-plugin@latest",
+    description: "Creates a Fuyu plugin project: npm create fuyu-plugin@latest",
     keywords: ["fuyu", "plugin", "create"],
     license: "MIT",
     type: "module",
     repository: { type: "git", url: "git+https://github.com/TixXin/fuyu.git", directory: "packages/create-plugin" },
-    homepage: "https://github.com/TixXin/fuyu/tree/main/docs/plugins/v3",
+    homepage: "https://github.com/TixXin/fuyu/tree/main/docs/plugins",
     engines: { node: ">=22.15" },
     bin: { "create-fuyu-plugin": "bin/create-fuyu-plugin.mjs" },
     exports: { ".": { default: "./dist/index.mjs" }, "./package.json": "./package.json" },

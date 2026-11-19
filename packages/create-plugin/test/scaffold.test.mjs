@@ -79,7 +79,7 @@ test("the command line writes the project, refuses a folder that is not empty, a
 });
 
 test("services-and-slots.md documents every service in @fuyu/plugin-services and every slot in @fuyu/plugin-base/protocol", () => {
-  const doc = readFileSync(join(REPO_ROOT, "docs", "plugins", "v3", "services-and-slots.md"), "utf8");
+  const doc = readFileSync(join(REPO_ROOT, "docs", "plugins", "services-and-slots.md"), "utf8");
   for (const service of SERVICES) {
     assert.ok(doc.includes(`\`${service}\``), `missing service ${service} in services-and-slots.md`);
   }
