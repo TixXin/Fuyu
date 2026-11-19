@@ -4,9 +4,11 @@
 
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
 - 市场页的截图换成了新的，更清楚。
+- 补了搜索关键词，在市场里搜「进度」「完成度」也能找到。
 
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
 - New, sharper screenshots on the market page.
+- Search keywords added, so "progress" or "tasks" find it in the market.
 
 ## 1.1.0
 

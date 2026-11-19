@@ -6,12 +6,14 @@
 
 - 收起条不再固定占 120 像素宽，按城市名和时间的长度自动算，只显示时间时更窄。
 - 市场页补上收起条的截图，岛上页面的截图换成了新的，更清楚。
+- 补了搜索关键词，在市场里搜「时区」「时差」也能找到。
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
 
 The collapsed bar fits its content; new screenshots for the market.
 
 - The collapsed bar no longer takes a fixed 120 pixels; its width follows the city name and time, so it is narrower when it shows only the time.
 - The market page gets a screenshot of the collapsed bar, and a new, sharper one of the island page.
+- Search keywords added, so "time zone" or "time difference" find it in the market.
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
 
 ## 1.1.0

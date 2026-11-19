@@ -9,6 +9,7 @@
 - 到点、停止、切到休息或下一轮时都会清掉旧的计时；启动时发现番茄钟以前留下、已经不用的计时也会清掉。
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
 - 市场页的截图换成了新的：岛上页面和收起条。
+- 补了搜索关键词，在市场里搜「专注」「番茄工作法」也能找到。
 
 Only one countdown on the collapsed bar.
 
@@ -17,6 +18,7 @@ Only one countdown on the collapsed bar.
 - Old timers are removed when a round ends, when you stop, and when switching to a break or the next round; leftover pomodoro timers from earlier runs are cleared on start.
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
 - New screenshots on the market page: the island page and the collapsed bar.
+- Search keywords added, so "focus" or "timer" find it in the market.
 
 ## 1.1.0
 
