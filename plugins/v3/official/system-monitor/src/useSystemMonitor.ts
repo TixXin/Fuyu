@@ -4,13 +4,16 @@ import {
   DEFAULT_CONFIG,
   METHODS,
   TOPICS,
-  detectLocale,
+  featuresFor,
   type MonitorConfig,
   type MonitorState,
-} from "./types.ts";
+} from "./protocol.ts";
+import { detectLocale } from "./text.ts";
 
 const INITIAL: MonitorState = {
   config: { ...DEFAULT_CONFIG, locale: detectLocale() },
+  platform: "other",
+  features: featuresFor("other"),
   sample: null,
   sampling: false,
   updatedAt: 0,

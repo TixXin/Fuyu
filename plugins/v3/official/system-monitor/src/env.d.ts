@@ -24,6 +24,7 @@ declare module "node:os" {
   export function uptime(): number;
   export function hostname(): string;
   export function arch(): string;
+  export function platform(): string;
 }
 
 declare module "node:path" {

@@ -1,5 +1,5 @@
 import type { Context } from "@fuyu/plugin-base";
-import { TEXT, formatBytes, formatUptime } from "./types.ts";
+import { TEXT, formatBytes, formatUptime } from "./text.ts";
 import { useSystemMonitor } from "./useSystemMonitor.ts";
 import "./styles.css";
 
