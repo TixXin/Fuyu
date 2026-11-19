@@ -3852,12 +3852,12 @@
       "zh-CN": {
         "group": "用量环",
         "title": "Cursor",
-        "description": "只读本机 Cursor 保存的登录（state.vscdb，不刷新、不改写），最多每 5 分钟一次直连 api2.cursor.sh 查询本计费周期已用的比例（内环本月）。这是未公开的内部接口，随版本可能失效。没装 Cursor、没登录或查不到时不显示这个环。"
+        "description": "只读本机 Cursor 保存的登录（state.vscdb，不刷新、不改写；macOS 上登录是加密的，第一次会弹窗请你允许读取钥匙串里的「Cursor Safe Storage」），最多每 5 分钟一次直连 api2.cursor.sh 查询本计费周期已用的比例（内环本月）。这是未公开的内部接口，随版本可能失效。没装 Cursor、没登录或查不到时不显示这个环。"
       },
       "en": {
         "group": "Usage rings",
         "title": "Cursor",
-        "description": "Reads the login Cursor saved on this computer (state.vscdb, read-only, never refreshed or rewritten) and asks api2.cursor.sh directly, at most every 5 minutes, how much of this billing cycle is used (inner ring: this month). Uses an undocumented internal endpoint that may break across updates. The ring stays hidden when Cursor isn't installed, isn't signed in or has no usage."
+        "description": "Reads the login Cursor saved on this computer (state.vscdb, read-only, never refreshed or rewritten; on macOS the login is encrypted, so the first time macOS asks you to allow reading “Cursor Safe Storage” from the Keychain) and asks api2.cursor.sh directly, at most every 5 minutes, how much of this billing cycle is used (inner ring: this month). Uses an undocumented internal endpoint that may break across updates. The ring stays hidden when Cursor isn't installed, isn't signed in or has no usage."
       }
     },
     {

@@ -63,6 +63,10 @@ rqrr = { version = "0.11", default-features = false }
 rusqlite = { version = "0.42", features = ["bundled"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+aes = "0.9"
+cbc = "0.2"
+pbkdf2 = { version = "0.13", default-features = false, features = ["hmac"] }
+sha1 = "0.11"
 block2 = "0.6"
 dispatch2 = "0.3"
 drag = "2.1"
