@@ -1,5 +1,4 @@
 import { isMacOS } from "../../../lib/platform.ts";
-import { en as pluginViewsEn, zhCN as pluginViewsZh, type PluginSensitivePromptText } from "../pluginViews.ts";
 
 export type SettingsPluginsText = {
   allowThirdParty: string;
@@ -43,14 +42,6 @@ export type SettingsPluginsText = {
   permission: Record<"todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write" | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control" | "shelf:read" | "shelf:write" | "windows", string>;
   needsApproval: string;
   keybindingConflict: (shortcuts: string) => string;
-  sensitive: PluginSensitivePromptText & {
-    title: string;
-    hint: string;
-    allowed: string;
-    denied: string;
-    revoke: string;
-    none: string;
-  };
   notAllowed: string;
   describedOnly: string;
   invalid: string;
@@ -391,15 +382,6 @@ export const zhCN: SettingsPluginsText = {
   },
   needsApproval: "新版本需要更多权限，已暂停。关掉再打开开关即可授权。",
   keybindingConflict: (shortcuts: string) => `快捷键已被其他程序占用：${shortcuts}`,
-  sensitive: {
-    ...pluginViewsZh.sensitivePrompt,
-    title: "需要询问的权限",
-    hint: "插件第一次使用敏感权限、申请可选权限或收到链接时，岛上会询问你。撤销后，下次会再问一次。",
-    allowed: "已允许",
-    denied: "已拒绝",
-    revoke: "撤销",
-    none: "还没有询问过。",
-  },
   notAllowed: "先在上面打开“允许运行第三方插件”。",
   describedOnly: "这个插件没有需要运行的程序。",
   invalid: "无法加载",
@@ -817,15 +799,6 @@ export const en: SettingsPluginsText = {
   },
   needsApproval: "The new version asks for more permissions, so it is paused. Switch it off and on to allow them.",
   keybindingConflict: (shortcuts: string) => `Shortcut already in use by another app: ${shortcuts}`,
-  sensitive: {
-    ...pluginViewsEn.sensitivePrompt,
-    title: "Permissions the island asks about",
-    hint: "The island asks you the first time a plugin uses a sensitive permission, asks for an optional one, or receives a link. After you revoke an answer, it asks again.",
-    allowed: "Allowed",
-    denied: "Denied",
-    revoke: "Revoke",
-    none: "Not asked yet.",
-  },
   notAllowed: "Turn on “Allow third-party plugins” above first.",
   describedOnly: "This plugin has nothing to run.",
   invalid: "Cannot load",
