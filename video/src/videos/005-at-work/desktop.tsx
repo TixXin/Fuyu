@@ -7,7 +7,7 @@ import opencodeIcon from "../../../../src/assets/brands/opencode.png";
 import qwenIcon from "../../../../src/assets/brands/qwen.png";
 import { Taskbar } from "../../stage/desktop/Taskbar";
 import "../../stage/desktop/desktop.css";
-import { stage } from "../../stage/stageState";
+import { FORMAT, SCREEN_HEIGHT, STAGE_WIDTH, stage } from "../../stage/stageState";
 import { useStore } from "../../stage/store";
 import wallpaper from "../003-messages/wallpaper.jpg";
 import { scene } from "./state";
@@ -22,14 +22,17 @@ export const TERMINALS = [
   { id: "copilot", label: "Copilot CLI", icon: copilotIcon },
 ] as const;
 
+const VERTICAL = FORMAT === "vertical";
 const GAP = 14;
 const TOP = 58;
-const WIDTH = (1280 - GAP * 4) / 3;
-const HEIGHT = (720 - 44 - TOP - GAP * 2) / 2;
-const FOCUS = { left: 190, top: 70, width: 900, height: 520 };
+const COLS = VERTICAL ? 2 : 3;
+const ROWS = TERMINALS.length / COLS;
+const WIDTH = (STAGE_WIDTH - GAP * (COLS + 1)) / COLS;
+const HEIGHT = (SCREEN_HEIGHT - 44 - TOP - GAP * ROWS) / ROWS;
+const FOCUS = VERTICAL ? { left: 20, top: 90, width: 680, height: 600 } : { left: 190, top: 70, width: 900, height: 520 };
 
 function rect(index: number) {
-  return { left: GAP + (index % 3) * (WIDTH + GAP), top: TOP + Math.floor(index / 3) * (HEIGHT + GAP), width: WIDTH, height: HEIGHT };
+  return { left: GAP + (index % COLS) * (WIDTH + GAP), top: TOP + Math.floor(index / COLS) * (HEIGHT + GAP), width: WIDTH, height: HEIGHT };
 }
 
 function Terminal({ index }: { index: number }) {
@@ -53,7 +56,7 @@ function Terminal({ index }: { index: number }) {
   );
 }
 
-const ISLAND = { x: 640, y: 22 };
+const ISLAND = { x: STAGE_WIDTH / 2, y: 22 };
 
 function Ghosts() {
   const { gather } = useStore(scene);

@@ -1,6 +1,7 @@
 import { GitMerge, GitPullRequest, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Cursor } from "../../stage/Cursor";
+import { FORMAT } from "../../stage/stageState";
 import { Cover } from "./cover";
 import { useStore } from "../../stage/store";
 import type { Lang } from "../types";
@@ -92,7 +93,9 @@ function PrCard({ copy, state }: { copy: Copy; state: Scene }) {
   );
 }
 
-export const SETTINGS_FRAME = { left: 170, top: 30, width: 1040, height: 600, scale: 0.9 };
+export const SETTINGS_FRAME = FORMAT === "vertical"
+  ? { left: 22, top: 110, width: 1040, height: 1060, scale: 0.65 }
+  : { left: 170, top: 30, width: 1040, height: 600, scale: 0.9 };
 
 function SettingsWindow({ lang, state }: { lang: Lang; state: Scene }) {
   if (state.settings === "hidden") return null;

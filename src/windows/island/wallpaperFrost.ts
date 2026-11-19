@@ -15,9 +15,7 @@ function canvas(width: number, height: number) {
   return Object.assign(document.createElement("canvas"), { width, height });
 }
 
-function padded(image: HTMLImageElement, pad: number) {
-  const width = image.naturalWidth;
-  const height = image.naturalHeight;
+function padded(image: CanvasImageSource, width: number, height: number, pad: number) {
   const out = canvas(width + pad * 2, height + pad * 2);
   const context = out.getContext("2d");
   if (!context) return out;
@@ -36,23 +34,28 @@ function padded(image: HTMLImageElement, pad: number) {
   return out;
 }
 
-export function frostImage(image: HTMLImageElement, source: string, blur: number, saturation: number): Frosted {
-  const width = image.naturalWidth;
-  const height = image.naturalHeight;
-  const pad = Math.ceil(blur * 2);
+export async function frostImage(image: HTMLImageElement, source: string, blur: number, saturation: number): Promise<Frosted> {
+  const scale = Math.min(1, 6 / Math.max(blur, 1));
+  const width = Math.max(1, Math.round(image.naturalWidth * scale));
+  const height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const small = canvas(width, height);
+  small.getContext("2d")?.drawImage(image, 0, 0, width, height);
+  const radius = blur * scale;
+  const pad = Math.ceil(radius * 2);
   const out = canvas(width, height);
   const context = out.getContext("2d");
   if (context) {
-    context.filter = `blur(${blur}px) saturate(${saturation})`;
-    context.drawImage(padded(image, pad), -pad, -pad);
+    context.filter = `blur(${radius}px) saturate(${saturation})`;
+    context.drawImage(padded(small, width, height, pad), -pad, -pad);
   }
   const sampleHeight = Math.max(1, Math.round((height * SAMPLE_WIDTH) / Math.max(width, 1)));
   const sample = canvas(SAMPLE_WIDTH, sampleHeight);
   const sampleContext = sample.getContext("2d", { willReadFrequently: true });
   sampleContext?.drawImage(out, 0, 0, SAMPLE_WIDTH, sampleHeight);
+  const blob = await new Promise<Blob | null>((resolve) => out.toBlob(resolve, "image/jpeg", 0.9));
   return {
     source,
-    url: out.toDataURL("image/jpeg", 0.9),
+    url: blob ? URL.createObjectURL(blob) : out.toDataURL("image/jpeg", 0.9),
     width: SAMPLE_WIDTH,
     height: sampleHeight,
     pixels: sampleContext ? sampleContext.getImageData(0, 0, SAMPLE_WIDTH, sampleHeight).data : null,

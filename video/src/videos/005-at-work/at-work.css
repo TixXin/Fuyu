@@ -597,3 +597,17 @@
 @keyframes settings-in {
   from { opacity: 0; translate: 0 24px; }
 }
+
+.stage-root--vertical .caption__kicker {
+  display: none;
+}
+
+.stage-root--vertical .phone {
+  right: 50%;
+  bottom: 140px;
+  margin-right: -135px;
+}
+
+.stage-root--vertical .phone--hidden {
+  transform: translateY(820px) rotate(4deg);
+}

@@ -30,6 +30,41 @@ test("rims are an outer and an inner path cut out with evenodd", () => {
   }
 });
 
+const xs = (shape, { width, fillet }) => {
+  const value = (expression) => {
+    const numeric = expression
+      .replaceAll("var(--island-top-fillet)", String(fillet))
+      .replaceAll(/var\(--island-corner-k, ([\d.]+)\)/g, "$1")
+      .replaceAll(/var\(--island-rim-width, ([\d.]+)px\)/g, "$1")
+      .replaceAll(/var\(--island-shell-(top|bottom)-corner\)/g, "16")
+      .replaceAll("100%", String(width))
+      .replaceAll("px", "")
+      .replaceAll("calc", "");
+    assert.match(numeric, /^[\d.+\-*/() ]+$/, expression);
+    return Function(`return ${numeric}`)();
+  };
+  const firstCalc = (start) => {
+    let depth = 0;
+    for (let index = start; index < shape.length; index += 1) {
+      depth += shape[index] === "(" ? 1 : shape[index] === ")" ? -1 : 0;
+      if (depth === 0 && shape[index] === ")") return shape.slice(start, index + 1);
+    }
+    throw new Error(`unbalanced at ${start}`);
+  };
+  const starts = [...shape.matchAll(/(?:from|to|with|\/) (?=calc\()/g)].map((match) => match.index + match[0].length);
+  assert.ok(starts.length > 10, "no points parsed");
+  return starts.map((start) => value(firstCalc(start)));
+};
+
+test("the free pill rim stays on the island body inside the ::after box that is widened by a fillet on each side", () => {
+  const width = 400;
+  const fillet = 14;
+  const box = width + 2 * fillet;
+  const all = xs(ISLAND_OUTLINE_STYLE["--island-outline-rim-free"], { width: box, fillet });
+  assert.ok(Math.abs(Math.min(...all) - fillet) < 0.01, `leftmost x ${Math.min(...all)} should be ${fillet}`);
+  assert.ok(Math.abs(Math.max(...all) - (box - fillet)) < 0.01, `rightmost x ${Math.max(...all)} should be ${box - fillet}`);
+});
+
 test("fillets bend into the screen edge: ccw on top and right, cw on the mirrored bottom and left", () => {
   const sweep = { top: "ccw", right: "ccw", bottom: "cw", left: "cw" };
   for (const edge of EDGES) {
