@@ -42,6 +42,29 @@
       "en": "Look up English words in Quick translate even when you're offline, or find the English for a Chinese word."
     },
     "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/lookup.png",
+        "caption": {
+          "zh-CN": "在快捷翻译里查英文单词：音标和各词性的中文释义",
+          "en": "Looking up an English word in Quick translate: phonetics and meanings by part of speech"
+        }
+      },
+      {
+        "path": "screenshots/inflection.png",
+        "caption": {
+          "zh-CN": "变形词先还原成原形再查",
+          "en": "Inflected forms are traced back to the base word"
+        }
+      },
+      {
+        "path": "screenshots/reverse.png",
+        "caption": {
+          "zh-CN": "输入中文，反查对应的英文词条",
+          "en": "Type Chinese to find the matching English entries"
+        }
+      }
+    ],
     "categories": [
       "utilities",
       "productivity"

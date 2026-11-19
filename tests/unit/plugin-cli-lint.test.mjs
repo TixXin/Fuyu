@@ -8,9 +8,6 @@ import { check, lintListing, run } from "../../packages/plugin-cli/src/index.mjs
 
 const HELLO = fileURLToPath(new URL("../../packages/plugin-cli/test/fixtures/hello", import.meta.url));
 const OFFICIAL_ROOT = fileURLToPath(new URL("../../plugins/v3/official", import.meta.url));
-const PENDING = {
-  "listing:screenshots": ["ecdict", "todo-digest"],
-};
 
 const scratch = mkdtempSync(join(tmpdir(), "plugin-cli-lint-"));
 after(() => rmSync(scratch, { recursive: true, force: true }));
@@ -70,7 +67,7 @@ test("a plugin without a screenshot gets a warning from check, an error with --s
   assert.deepEqual(codes(clean.warnings), []);
 });
 
-test("official plugins pass the listing checks, except the ones still waiting for E77.6", () => {
+test("every official plugin passes the listing checks", () => {
   const found = {};
   for (const slug of readdirSync(OFFICIAL_ROOT).sort()) {
     const dir = join(OFFICIAL_ROOT, slug);
@@ -80,7 +77,7 @@ test("official plugins pass the listing checks, except the ones still waiting fo
       if (!slugs.includes(slug)) slugs.push(slug);
     }
   }
-  assert.deepEqual(found, PENDING);
+  assert.deepEqual(found, {});
 });
 
 test("a description longer than the two lines of a market card is flagged per language, one that fits is not", () => {
