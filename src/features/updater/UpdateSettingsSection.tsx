@@ -8,7 +8,6 @@ import { useLocale, useTranslation } from "../../i18n";
 import { CHECK_INTERVAL_HOURS } from "./storage";
 import { getUpdateState, installUpdate, setAutoCheck, setAutoUpdate, setCheckInterval, setReminderMode, subscribeToUpdate } from "./updaterController";
 import { UpdateChannelRow } from "./UpdateChannelRow";
-import { UpdatePanel } from "./UpdatePanel";
 
 export function UpdateSettingsSection() {
   const t = useTranslation();
@@ -34,15 +33,16 @@ export function UpdateSettingsSection() {
       : state.checkFailures > 0 ? text.retryCheck(time(nextCheckAt)) : text.nextCheck(time(nextCheckAt));
   }
 
+  if (stage === "disabled") return null;
+
   return (
-    <SettingsGroup title={t.settings.project.versionTitle} footer={stage === "disabled" ? undefined : (
+    <SettingsGroup title={t.settings.project.updateSettingsTitle} footer={(
       <span className="update-schedule" aria-live="polite">
         <span>{lastChecked}</span>
         {schedule && <span>{schedule}</span>}
         {autoCheck && reminderMode === "notification" && state.notificationUnavailable && <span>{text.notificationUnavailable}</span>}
       </span>
     )}>
-      <div className="about-update"><UpdatePanel /></div>
       {state.backupFailed !== null && state.backupFailed === state.nextVersion && (stage === "ready" || stage === "available") && (
         <SettingsRow title={t.settings.backup.updates.installAnyway} description={t.settings.backup.updates.installAnywayHint} control={
           <SettingsLinkButton onClick={() => void installUpdate(state.nextVersion, state.channel, { skipBackup: true })}>
@@ -50,7 +50,7 @@ export function UpdateSettingsSection() {
           </SettingsLinkButton>
         } />
       )}
-      {stage !== "disabled" && <>
+      <>
         <UpdateChannelRow channel={state.channel} disabled={["checking", "downloading", "installing", "done"].includes(stage)} />
         <SettingsToggleRow title={text.autoCheck} description={text.autoCheckHint} checked={autoCheck} onChange={setAutoCheck} />
         {autoCheck && <>
@@ -71,7 +71,7 @@ export function UpdateSettingsSection() {
             ]} ariaLabel={text.autoUpdate} onChange={setAutoUpdate} />
           } />
         </>}
-      </>}
+      </>
     </SettingsGroup>
   );
 }

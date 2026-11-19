@@ -286,10 +286,10 @@ if (!automated) {
     check(texts(".settings-tabs__tab") === "概览|更新日志|帮助" && aboutTab() === "about", "About starts on the overview, with the changelog and help as tabs beside it");
     const hero = element(".about-hero");
     check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && hero.getBoundingClientRect().height >= hero.scrollHeight - 1, "The overview shows the app's card, not clipped");
-    check(document.querySelectorAll(".about-links .project-link").length === 4 && texts(".settings-group__title").includes("重置与退出") && !document.querySelector(".version-history__row"),
-      "The overview holds the links and reset and quit, and leaves the changelog to its tab");
+    check(document.querySelectorAll(".about-hero__links .about-hero__link").length === 4 && !document.querySelector(".about-logo-pill") && texts(".settings-group__title").includes("重置与退出") && !document.querySelector(".version-history__row"),
+      "The overview card holds the four links, the title has no logo pill, reset and quit stay on the overview, and the changelog has its own tab");
     await click(".settings-tabs__tab[data-tab='aboutChangelog']");
-    check(document.querySelector(".version-history__row") && localStorage.getItem("fuyu-about-tab") === "changelog", "The changelog tab lists the releases and is remembered");
+    check(document.querySelector(".version-history__row") && document.querySelectorAll(".version-history__item--open").length === 1 && localStorage.getItem("fuyu-about-tab") === "changelog", "The changelog tab lists the releases with one open, and is remembered");
     await openPage("general");
     await click(".settings-sidebar__item[data-category='about']");
     check(aboutTab() === "aboutChangelog", "Coming back to About from the sidebar reopens the last tab");

@@ -3,7 +3,7 @@ export type SettingsProjectText = {
   appName: string;
   versionChip: (version: string) => string;
   description: string;
-  versionTitle: string;
+  updateSettingsTitle: string;
   linksTitle: string;
   helpTitle: string;
   systemTitle: string;
@@ -22,8 +22,6 @@ export type SettingsProjectText = {
     done: string;
     error: string;
     installError: string;
-    greet: string;
-    greetings: readonly string[];
   };
   guide: string;
   guideHint: string;
@@ -40,8 +38,7 @@ export type SettingsProjectText = {
   website: string;
   websiteHint: string;
   logoCall: string;
-  logoCredit: string;
-  logoOpen: string;
+  logoCallLink: string;
   logoCallUrl: string;
   releases: string;
   releasesHint: string;
@@ -83,6 +80,7 @@ export type SettingsProjectText = {
     notesShow: string;
     notesHide: string;
     unavailable: string;
+    manualOnly: string;
     channel: string;
     channelStable: string;
     channelBeta: string;
@@ -132,7 +130,7 @@ export const zhCN: SettingsProjectText = {
   appName: "浮屿",
   versionChip: (version) => `v${version}`,
   description: "在屏幕顶部集中待办、剪贴板、音乐、快捷翻译、AI 状态和消息提醒。",
-  versionTitle: "版本",
+  updateSettingsTitle: "更新设置",
   linksTitle: "链接",
   helpTitle: "帮助",
   systemTitle: "重置与退出",
@@ -151,8 +149,6 @@ export const zhCN: SettingsProjectText = {
     done: "更新完成，重启后生效",
     error: "检查更新失败",
     installError: "安装更新失败",
-    greet: "和小岛打个招呼",
-    greetings: ["谢谢你，赛博养岛人", "辛苦了，爱你老己，明天见", "有脑洞就去社区许愿，包的", "再戳，我可要红温了"],
   },
   guide: "新手引导",
   guideHint: "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。",
@@ -169,8 +165,7 @@ export const zhCN: SettingsProjectText = {
   website: "官网",
   websiteHint: "fuyu.ing：功能介绍和下载",
   logoCall: "Logo 征集中，被采用的设计者署名在这里",
-  logoCredit: "Logo 设计：",
-  logoOpen: "征集中，来画一个 →",
+  logoCallLink: "Logo 征集中，来画一个 →",
   logoCallUrl: "https://fuyu.ing/logo/",
   releases: "版本历史",
   releasesHint: "在官网查看每个版本的更新说明和下载",
@@ -213,6 +208,7 @@ export const zhCN: SettingsProjectText = {
     notesShow: "展开",
     notesHide: "收起",
     unavailable: "这里不能应用内更新，请到 Release 页手动下载。",
+    manualOnly: "需要手动更新",
     channel: "更新通道",
     channelStable: "稳定版",
     channelBeta: "测试版（beta）",
@@ -262,7 +258,7 @@ export const en: SettingsProjectText = {
   appName: "Fuyu",
   versionChip: (version) => `v${version}`,
   description: "Todos, clipboard, music, quick translation, AI status, and message alerts, gathered at the top of the screen.",
-  versionTitle: "Version",
+  updateSettingsTitle: "Update settings",
   linksTitle: "Links",
   helpTitle: "Help",
   systemTitle: "Reset and quit",
@@ -281,8 +277,6 @@ export const en: SettingsProjectText = {
     done: "Updated, restart to finish",
     error: "Update check failed",
     installError: "Update install failed",
-    greet: "Say hello to the island",
-    greetings: ["Thanks for having me. Big W.", "You locked in today. Now rest.", "Got ideas? Drop them our way", "Poke again and I lose aura"],
   },
   guide: "Welcome guide",
   guideHint: "The window shown on first start: language, appearance, modules and a few common choices.",
@@ -299,8 +293,7 @@ export const en: SettingsProjectText = {
   website: "Website",
   websiteHint: "fuyu.ing: features and downloads",
   logoCall: "Logo call is open: the chosen designer is credited here",
-  logoCredit: "Logo by",
-  logoOpen: "open call, draw one →",
+  logoCallLink: "Logo call is open, draw one →",
   logoCallUrl: "https://fuyu.ing/en/logo/",
   releases: "Version history",
   releasesHint: "Every version's notes and downloads on the website",
@@ -343,6 +336,7 @@ export const en: SettingsProjectText = {
     notesShow: "Show",
     notesHide: "Hide",
     unavailable: "In-app updates aren't available here. Grab new versions from the release page.",
+    manualOnly: "Manual updates only",
     channel: "Update channel",
     channelStable: "Stable",
     channelBeta: "Beta",

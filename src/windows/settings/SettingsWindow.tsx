@@ -25,7 +25,6 @@ import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { categorySlot } from "./slots/categorySlot";
 import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
 import { focusSection } from "../../lib/settings/sectionFocus";
-import { AboutLogoCallLink } from "../../features/updater/AboutHero";
 import { PluginMarketHeaderActions } from "./PluginMarketHeaderActions";
 import { PluginPageActions } from "./PluginPageActions";
 import { requestPluginDetail } from "./pluginPageHandoff";
@@ -146,8 +145,6 @@ export function SettingsWindow() {
             ? <ResetAppearanceButton onReset={resetAppearance} />
             : category === "appearance" || category === "appearanceCollapsed"
             ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
-            : category === "about"
-            ? <AboutLogoCallLink />
             : category === "pluginsV3"
             ? <PluginPageActions onOpenPage={setCategory} />
             : category === "pluginMarket"

@@ -82,13 +82,14 @@ async function runChecks() {
     const install = [...document.querySelectorAll<HTMLButtonElement>("#settings button")].find((button) => button.textContent?.includes("下载并安装"));
     check(install && !install.disabled, "设置的关于页给出「下载并安装」");
     const status = document.querySelector<HTMLElement>("#settings .update-status")!;
-    check(status.querySelector(".update-status__copy strong")?.textContent === "发现新版本 v0.3.4" && status.querySelector(".update-status__copy span")?.textContent === "当前版本 v0.3.3",
-      "版本组第一块是状态卡：发现的版本和当前版本");
-    const notes = status.querySelector<HTMLButtonElement>(".update-notes__toggle")!;
-    check(notes.getAttribute("aria-expanded") === "true" && status.querySelectorAll(".update-notes__item").length === 3 && !status.querySelector(".update-notes__heading"),
-      "更新内容默认展开，不重复标题，不列安装包");
+    check(Boolean(status.closest(".about-hero")) && status.querySelector(".update-status__headline")?.textContent === "发现新版本 v0.3.4" && status.querySelector(".update-status__sub span")?.textContent === "当前版本 v0.3.3",
+      "名片里的状态胶囊写发现的版本，下面一行是当前版本");
+    const whatsNew = document.querySelector<HTMLElement>("#settings .about-whats-new")!;
+    const notes = whatsNew.querySelector<HTMLButtonElement>(".update-notes__toggle")!;
+    check(Boolean(whatsNew.previousElementSibling?.matches(".about-hero")) && notes.getAttribute("aria-expanded") === "true" && whatsNew.querySelectorAll(".update-notes__item").length === 3 && !whatsNew.querySelector(".update-notes__heading"),
+      "有新版本时名片下面展开更新内容：默认展开，不重复标题，不列安装包");
     await update(() => notes.click());
-    check(notes.getAttribute("aria-expanded") === "false" && !status.querySelector(".update-notes__body"), "更新内容可以收起");
+    check(notes.getAttribute("aria-expanded") === "false" && !whatsNew.querySelector(".update-notes__body"), "更新内容可以收起");
     const channels = [...document.querySelectorAll<HTMLButtonElement>("#settings .settings-row .settings-choice__option")];
     check(channels.map((option) => option.getAttribute("aria-pressed")).join() === "true,false" && channels.every((option) => !option.disabled),
       "更新通道是一行分段选择，当前是稳定版");
@@ -104,25 +105,22 @@ async function runChecks() {
     await update(() => setReminderMode("notification"));
     const saved = JSON.parse(localStorage.getItem(UPDATE_PREFERENCES_KEY) ?? "{}") as { checkIntervalHours?: number; reminderMode?: string };
     check(saved.checkIntervalHours === 24 && saved.reminderMode === "notification", "检查频率和提醒方式写进偏好");
-    const heroIsland = document.querySelector<HTMLButtonElement>("#settings .about-hero__island")!;
-    const headline = () => document.querySelector("#settings .update-status__copy strong")?.textContent;
-    const statusButton = () => document.querySelector<HTMLButtonElement>("#settings .update-status__actions .update-status__button")?.textContent;
+    const headline = () => document.querySelector("#settings .update-status__headline")?.textContent;
+    const statusButton = () => document.querySelector<HTMLButtonElement>("#settings .update-status__row .update-status__button")?.textContent;
     failNextUpdaterCall("install");
     await update(() => installUpdate(undefined, undefined, { skipBackup: true }));
-    check(headline() === "安装更新失败" && heroIsland.textContent === "安装更新失败" && statusButton() === "重新检查",
-      "下载或安装出错时关于页和小岛写「安装更新失败」，按钮是「重新检查」");
+    check(headline() === "安装更新失败" && statusButton() === "重新检查",
+      "下载或安装出错时关于页写「安装更新失败」，按钮是「重新检查」");
     failNextUpdaterCall("check");
     await update(() => checkForUpdate());
-    check(headline() === "检查更新失败" && heroIsland.textContent === "检查更新失败" && statusButton() === "重试", "检查出错时仍写「检查更新失败」，按钮是「重试」");
+    check(headline() === "检查更新失败" && statusButton() === "重试", "检查出错时仍写「检查更新失败」，按钮是「重试」");
     await update(() => checkForUpdate());
-    check(heroIsland.textContent === "有新版本 v0.3.4" && !document.querySelector("#settings .about-hero__status") && Boolean(document.querySelector("#settings .about-hero__emblem")),
-      "关于页横幅左侧是微缩岛屿徽章、右侧小岛直接写更新状态，不再另有状态胶囊");
-    await update(() => heroIsland.click());
-    check(heroIsland.textContent === "谢谢你，赛博养岛人" && document.querySelector("#settings .about-hero--greeting"), "点小岛，它会打个招呼");
-    check(document.querySelector("#settings .about-colophon")?.textContent === "浮屿 v0.3.3 · 以 AGPL-3.0 开源 · 用 Tauri 和 React 构建",
-      "关于页最下面是落款");
-    check(Boolean(document.querySelector("#settings .about-workbench")) && Boolean(document.querySelector("#settings .about-danger .settings-row")),
-      "关于页双栏工作台右栏底部是单独的危险区");
+    check(headline() === "发现新版本 v0.3.4" && Boolean(document.querySelector("#settings .about-hero__emblem")) && !document.querySelector("#settings .about-hero button.about-hero__emblem"),
+      "名片是素的：Logo 位不能点，更新状态只在胶囊里");
+    check(document.querySelector("#settings .about-colophon")?.textContent === "浮屿 v0.3.3 · 以 AGPL-3.0 开源 · 用 Tauri 和 React 构建 · Logo 征集中，来画一个 →",
+      "关于页最下面是落款，Logo 征集挪到落款里");
+    check(document.querySelector("#settings .about-page > .about-danger:nth-last-child(2) .settings-row") !== null,
+      "重置与退出在概览最底下、落款上面");
     const version = getUpdateState().nextVersion;
     await update(() => skipVersion(version));
     check(!document.querySelector("#collapsed .island-update-badge"), "跳过这个版本后收起条不再提醒");
