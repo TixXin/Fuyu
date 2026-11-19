@@ -27,10 +27,11 @@ type ThemeSectionProps = {
   onEditingChange: (tone: ThemeTone | null) => void;
 };
 
-function BuiltinSection({ settings, onSettingsChange, onEditingChange: setEditing }: ThemeSectionProps) {
+function BuiltinSection({ settings, shown, onSettingsChange, onEditingChange: setEditing }: ThemeSectionProps) {
   return (
     <BuiltinThemesSection
       settings={settings}
+      shown={shown}
       onApply={(next) => {
         setEditing(null);
         onSettingsChange(next);
@@ -82,10 +83,10 @@ function PresetsSection({ presets }: ThemeSectionProps) {
 
 const sections = settingsSections<ThemeSectionProps, ThemeTab>();
 
-sections.add({ id: "theme.mode", category: "theme", order: 10, component: ThemeModeSection });
-sections.add({ id: "theme.builtin", category: "theme", order: 20, component: BuiltinSection });
-sections.add({ id: "theme.colors", category: "theme", order: 30, component: ColorsSection });
-sections.add({ id: "theme.presets", category: "theme", order: 50, component: PresetsSection });
+sections.add({ id: "theme.mode", category: "theme", order: 40, component: ThemeModeSection });
+sections.add({ id: "theme.builtin", category: "theme", order: 10, component: BuiltinSection });
+sections.add({ id: "theme.colors", category: "theme", order: 50, component: ColorsSection });
+sections.add({ id: "theme.presets", category: "theme", order: 20, component: PresetsSection });
 sections.add({ id: "themeStyle.style", category: "themeStyle", order: 10, component: StyleSection });
 sections.add({ id: "themeStyle.idleDim", category: "themeStyle", order: 15, component: IdleDimSection });
 sections.add({ id: "themeStyle.glass", category: "themeStyle", order: 20, component: GlassSection });

@@ -1,7 +1,14 @@
 import { act } from "react";
 
-export async function checkThemeMarket(check: (condition: unknown, message: string) => void) {
-  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 30)); });
+
+export async function checkThemeMarket(check: (condition: unknown, message: string) => void, openOverview: () => Promise<void>) {
+  const titles = [...document.querySelectorAll(".editor-panel .settings-group__title")].map((title) => title.textContent);
+  check(titles.slice(0, 3).join("|") === "主题|样式预设|主题市场", "The theme page starts with the themes, the style presets and the theme market");
+  const moreRow = [...document.querySelectorAll<HTMLElement>(".theme-market .settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "更多主题");
+  check(moreRow && !document.querySelector(".theme-market__item"), "The market is one More themes row and loads nothing until asked");
+  await act(async () => { moreRow!.querySelector<HTMLButtonElement>("button")!.click(); });
+  await settle();
   const card = (id: string) => document.querySelector<HTMLElement>(`.theme-market__item[data-theme-id="${id}"]`)!;
   const cardButton = (id: string, label: string) => [...card(id).querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === label);
   const previewFill = (id: string) => card(id).querySelector<HTMLElement>(".island-preview__island--collapsed")?.style.getPropertyValue("--preview-fill") ?? "";
@@ -40,4 +47,30 @@ export async function checkThemeMarket(check: (condition: unknown, message: stri
   await act(async () => { cardButton("fuyu.midnight", "保存到我的主题")!.click(); });
   check(cardButton("fuyu.midnight", "已保存")?.disabled && (localStorage.getItem("fuyu-setting-presets") ?? "").includes("午夜蓝"),
     "Save adds the theme to the saved themes");
+
+  const themeCards = () => [...document.querySelectorAll<HTMLElement>(".settings-cards__card")].filter((card) => card.closest(".settings-group")?.querySelector(".settings-group__title")?.textContent === "主题");
+  const activeCard = () => themeCards().find((card) => card.getAttribute("aria-pressed") === "true")?.querySelector(".settings-cards__label")?.textContent;
+  const themeCard = (label: string) => themeCards().find((found) => found.querySelector(".settings-cards__label")?.textContent === label)!;
+  await act(async () => { themeCard("灰白").click(); });
+  check(activeCard() === "灰白" && themeCards().length === 8 && getComputedStyle(themeCards()[0].parentElement!).gridTemplateColumns.split(" ").length === 4,
+    "The themes are the 3 built-in sets and the 5 liquid glass looks, 4 to a row, and a picked set is selected");
+  await act(async () => { themeCard("Win11 Mica").click(); });
+  const glassStored = JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { appearanceMode?: string; glassBlur?: number };
+  check(glassStored.appearanceMode === "liquidGlass" && glassStored.glassBlur === 60 && activeCard() === "Win11 Mica", "A liquid glass theme card switches to liquid glass with that look and is selected");
+  await act(async () => { themeCard("灰白").click(); });
+  await act(async () => { cardButton("someone.dusk", "应用")!.click(); });
+  check(activeCard() === "自定义" && themeCards().length === 9, "Colors that match no theme card add a selected Custom card");
+
+  const scrolled: Element[] = [];
+  const scrollIntoView = Element.prototype.scrollIntoView;
+  Element.prototype.scrollIntoView = function (this: Element) { scrolled.push(this); };
+  try {
+    await openOverview();
+    await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-overview__next-tile")].find((tile) => tile.textContent?.includes("换一套主题"))!.click(); });
+    await settle();
+  } finally {
+    Element.prototype.scrollIntoView = scrollIntoView;
+  }
+  check(document.querySelector<HTMLElement>(".settings-tabs__tab--active")?.dataset.tab === "theme" && scrolled.some((found) => found.classList.contains("theme-market")) && document.querySelector(".theme-market__item"),
+    "The overview's theme market link opens the theme page, scrolled to the open market");
 }

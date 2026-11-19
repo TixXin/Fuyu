@@ -107,8 +107,11 @@ export function SettingsWindow() {
   }, [setSettings]);
 
   const openShortcuts = () => setCategory("shortcuts");
-  const changeCategory = (next: typeof category) => {
-    setCategory(next);
+  const changeCategory = (next: string) => {
+    const target = settingsCategoryFor(next);
+    if (!target) return;
+    setCategory(target);
+    if (target !== next) focusSection(next);
   };
   useMacWindowKeys();
 

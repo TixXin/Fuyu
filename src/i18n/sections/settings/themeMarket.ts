@@ -1,4 +1,8 @@
 export type SettingsThemeMarketText = {
+  title: string;
+  more: string;
+  moreHint: string;
+  browse: string;
   status: (count: number) => string;
   refreshing: string;
   refresh: string;
@@ -25,6 +29,10 @@ export type SettingsThemeMarketText = {
 };
 
 export const zhCN: SettingsThemeMarketText = {
+  title: "主题市场",
+  more: "更多主题",
+  moreHint: "看看别人分享的主题，先预览深浅两色再应用，也能存进「样式预设」。",
+  browse: "浏览主题市场",
   status: (count) => `共 ${count} 个主题`,
   refreshing: "正在刷新主题列表…",
   refresh: "刷新",
@@ -51,6 +59,10 @@ export const zhCN: SettingsThemeMarketText = {
 };
 
 export const en: SettingsThemeMarketText = {
+  title: "Theme market",
+  more: "More themes",
+  moreHint: "See themes others have shared, preview the dark and light versions, then apply one or keep it in Style presets.",
+  browse: "Browse the market",
   status: (count) => `${count} ${count === 1 ? "theme" : "themes"}`,
   refreshing: "Refreshing the themes…",
   refresh: "Refresh",
