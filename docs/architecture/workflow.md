@@ -263,6 +263,13 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 
 凭据是分开的（F39.2）：开发版的邮箱、日历、翻译、套餐用量、Bark 和插件凭据存在带 `lane-<n>` 的服务名下，第一次启动时从正式版复制一份，之后在开发版里删改不影响正式版；正式版后来新加的账号不会自动过来（把 `dev-copy.json` 里的 `credentials` 改成 `false` 再启动会补上没有的）。Mac 上不复制，要重新输入。
 
+Mac 上开发版的签名（G1.34）：钥匙串条目的「始终允许」认的是读它的程序的签名。链接器给 `target/debug/fuyu` 的是 ad-hoc 签名，指定要求是 `cdhash`，每次重编都变，日历、Bark、套餐用量、Claude Code 凭据这些钥匙串条目就每次重编后都弹授权框。所以 `tauri.macos.conf.json` 的 `build.runner` 指向 `scripts/macos/dev-cargo.sh`：tauri 调它代替 cargo（`tauri dev` 传 `run …`，`tauri build` 传 `build …`），debug 的 `run` 先编译、用固定的开发证书重签 `target/debug/fuyu`（标识 `com.tixxin.fuyu.dev`，指定要求 `identifier "com.tixxin.fuyu.dev" and certificate leaf = H"…"`，重编后不变），再交给 `cargo run`；debug 的 `build` 编译后重签；release 原样交给 cargo，不重签，`pnpm build:exe` 和发布的签名照旧。
+
+- 开发证书第一次用时自动生成，和它专用的钥匙串文件、两个随机密码一起放在 `~/.tauri/fuyu/macos-dev/`，和发布用的自签名证书（`~/.tauri/fuyu/macos/`）分开；不导入登录钥匙串，不改钥匙串搜索列表，证书不用设为受信任，全程不弹框。删掉这个目录会生成一张新证书，钥匙串条目要再点一次「始终允许」。
+- 已经是这张证书签的（cargo 没重新链接）就跳过；任何一步失败只打一行 `[dev-signing]` 警告，保留 ad-hoc 签名照常启动。
+- 换到这套签名后，每个钥匙串条目第一次被读时还会弹一次（ACL 里记的是旧的 cdhash），点「始终允许」，之后重编不再弹。
+- `cargo test`、Windows 上的 `tauri dev` / `tauri build` 都不经过它。
+
 Agent 状态从正式数据目录只读地读（F39.3）：钩子脚本把状态写在自己所在的目录，也就是正式数据目录；开发版读那里的 `agent-status.json`、运行标记、通知和会话记录，所以看得到「运行中」「等你确认」，但不在那里建目录、不删文件。开发版里「清除状态」、改开机自启、搬数据目录都会拒绝。「安装/修复」可以点（B65，2026-11-16 起，用户要求）：装的是正式版的钩子，脚本写进正式数据目录，Claude Code 审批钩子用正式版 `agent-approval.json` 的端口和 token，和正式版自己点的结果一字不差，开发版关掉后钩子照样能用。开发版也不注册 `fuyu://` 链接，启动时不自动升级 `~/.claude` 里已装的回复标记规则（在设置里手动开关回复标记仍然会改那份文件）。开发版自己记的东西（见过的会话、定位日志、远程主机）在它自己的目录。
 
 怎么认出开发版（F39.1）：收起的岛左上角、展开面板顶部中间、设置窗口顶部各有一个灰色的「DEV」，托盘提示是「Fuyu 开发版」。贴边收成细条时没有地方放字，看托盘。开发版不检查也不安装更新（装的会是正式版的安装包），开机自启的开关是禁用的。

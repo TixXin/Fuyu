@@ -1,5 +1,6 @@
 {
   "build": {
+    "runner": "../scripts/macos/dev-cargo.sh",
     "beforeDevCommand": "node scripts/stop-running-island.mjs && node scripts/macos/mediaremote-adapter.mjs && pnpm dev",
     "beforeBuildCommand": "node scripts/macos/mediaremote-adapter.mjs && pnpm build"
   },
