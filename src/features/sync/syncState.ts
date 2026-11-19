@@ -24,7 +24,6 @@ export const OPTIONAL_GROUP_ITEMS: readonly OptionalSyncGroup[] = [
   "agentPushDelivery",
   "qqMail",
   "collapsedItems",
-  "pluginPages",
   "updateChannel",
 ];
 
