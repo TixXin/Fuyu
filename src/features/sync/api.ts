@@ -11,7 +11,6 @@ export const OPTIONAL_SYNC_GROUPS = [
   "agentPushDelivery",
   "agentSoundOutput",
   "collapsedItems",
-  "pluginPages",
   "qqMail",
   "screenshotCapture",
   "translationProvider",

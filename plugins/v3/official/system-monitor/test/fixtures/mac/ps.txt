@@ -1,0 +1,18 @@
+    1   0.1  21264 /sbin/launchd
+  408  38.8 110288 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  604   0.0 105104 /Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge
+11433   0.9  98784 /Applications/M-fM-1M-=M-fM-0M-4M-iM^_M-3M-dM-9M^P.app/Contents/MacOS/M-fM-1M-=M-fM-0M-4M-iM^_M-3M-dM-9M^P
+11570   0.0  33952 /Applications/M-fM-1M-=M-fM-0M-4M-iM^_M-3M-dM-9M^P.app/Contents/Frameworks/M-fM-1M-=M-fM-0M-4M-iM^_M-3M-dM-9M^P Helper (GPU).app/Contents/MacOS/M-fM-1M-=M-fM-0M-4M-iM^_M-3M-dM-9M^P Helper (GPU)
+11614  11.2 112560 /Applications/M-fM-1M-=M-fM-0M-4M-iM^_M-3M-dM-9M^P.app/Contents/Frameworks/M-fM-1M-=M-fM-0M-4M-iM^_M-3M-dM-9M^P Helper (Renderer).app/Contents/MacOS/M-fM-1M-=M-fM-0M-4M-iM^_M-3M-dM-9M^P Helper (Renderer)
+13070   0.0  18464 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacOS/Claude Helper (Renderer)
+25060   0.0  21040 /Applications/QQ.app/Contents/Frameworks/QQ Helper (Renderer).app/Contents/MacOS/QQ Helper (Renderer)
+30521   0.0  90464 /Applications/QQ.app/Contents/Frameworks/QQ Helper (Renderer).app/Contents/MacOS/QQ Helper (Renderer)
+30556   0.0  27632 /Applications/QQ.app/Contents/Frameworks/QQ Helper (Renderer).app/Contents/MacOS/QQ Helper (Renderer)
+  300   0.0   7344 /usr/libexec/gamed
+  335   0.3  19744 /usr/libexec/logd
+  338   0.0   4512 /usr/libexec/UserEventAgent
+  349   0.0   3024 /usr/libexec/configd
+  352   0.0    560 /usr/libexec/IOMFB_bics_daemon
+  356   0.0    320 /usr/libexec/remoted
+  362   0.0   1136 /usr/libexec/watchdogd
+  367   0.0    592 /usr/libexec/kernelmanagerd

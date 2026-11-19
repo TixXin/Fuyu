@@ -11,6 +11,7 @@ import {
   verifyVersionSignature,
 } from "../../../../packages/plugin-market/src/index.mjs";
 import { PACKAGES_SUBDIR } from "../../../../packages/plugin-cli/src/installer.mjs";
+import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
 
 export const STATE_FILE = "market-state.json";
 export const INDEX_FILE = "index.v3.json";
@@ -113,6 +114,7 @@ export function readInstalledPackages(pluginsDir) {
           displayName: fuyu.displayName,
           description: fuyu.description,
           replaces: yml?.replaces?.length ? yml.replaces : Array.isArray(fuyu.replaces) ? fuyu.replaces : [],
+          capabilities: capabilitiesOf(fuyu),
         });
       } catch {
         continue;
@@ -234,6 +236,7 @@ export function candidateView(item, official, extra = {}, confirmExtra = {}) {
     publishedAt: entry.publishedAt,
     ...extra,
     ...(confirmExtra.trustChange ? { trustChange: confirmExtra.trustChange } : {}),
+    ...(confirmExtra.newCapabilities ? { newCapabilities: confirmExtra.newCapabilities } : {}),
     confirmation: confirmationFromManifest(entry.manifest, {
       unreviewed: false,
       official,
@@ -253,7 +256,7 @@ export function decodeBase64(base64) {
 
 export function readState(dataDir) {
   const statePath = join(dataDir, STATE_FILE);
-  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, updatedAt: null, lastError: null });
+  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, updatedAt: null, lastError: null, revocationWarning: null });
   if (!existsSync(statePath)) return empty();
   try {
     const raw = JSON.parse(readFileSync(statePath, "utf8"));
@@ -264,6 +267,7 @@ export function readState(dataDir) {
       trustedAuthors: normalizeTrustedAuthors(raw?.trustedAuthors),
       updatedAt: typeof raw?.updatedAt === "number" ? raw.updatedAt : null,
       lastError: typeof raw?.lastError === "string" ? raw.lastError : null,
+      revocationWarning: typeof raw?.revocationWarning === "string" ? raw.revocationWarning : null,
     };
   } catch {
     return empty();
@@ -303,6 +307,11 @@ export function blockedView(plugin, selected, installed) {
   return null;
 }
 
+export function revocationView(revocations, name, version) {
+  const rev = version ? revocationOf(revocations, name, version) : null;
+  return rev ? { level: rev.level, reasons: rev.entries.map((entry) => entry.reason) } : null;
+}
+
 export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform, trust, now }) {
   const state = readState(dataDir);
   const installedRaw = readInstalledPackages(pluginsDir);
@@ -317,15 +326,17 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
       if (!item?.entry) return {};
       const isUpgrade = Boolean(inst) && compareVersions(item.entry.version, inst.version) > 0;
       const trustChange = isUpgrade ? detectTrustChange(plugin, item.entry, pin) : null;
+      const added = isUpgrade ? newCapabilities(inst.capabilities, item.entry.manifest) : null;
       const depPlan = planRequiredDependencies({ doc, rootName: plugin.name, rootEntry: item.entry, installedById, appVersion, platform, now, revocations: state.revocations });
-      return { trustChange, requiredPlugins: depPlan.map((dep) => dep.name) };
+      return { trustChange, newCapabilities: added, requiredPlugins: depPlan.map((dep) => dep.name) };
     };
     const installMeta = metaFor(selected.install);
     const manualMeta = metaFor(selected.manual);
     const autoMeta = metaFor(selected.autoUpdate);
     const primaryEntry = selected.install?.entry ?? selected.manual?.entry ?? plugin.versions?.[0];
     const manifest = isObject(primaryEntry?.manifest) ? primaryEntry.manifest : {};
-    const instRevoked = inst ? revocationOf(state.revocations, plugin.name, inst.version)?.level === "disable" : false;
+    const revocation = inst ? revocationView(state.revocations, plugin.name, inst.version) : null;
+    const instRevoked = revocation?.level === "disable";
     const allRevoked = !inst && Array.isArray(plugin.versions) && plugin.versions.length > 0 && selected.skipped.length === plugin.versions.length && selected.skipped.some((item) => item.reason === "revoked");
     return {
       name: plugin.name,
@@ -338,10 +349,14 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
       enabled: inst ? inst.enabled : false,
       source: inst?.source ?? null,
       revoked: Boolean(instRevoked || allRevoked),
+      revocation,
       blocked: blockedView(plugin, selected, inst),
       install: candidateView(selected.install, official, selected.install ? { fresh: selected.install.fresh } : {}, installMeta),
       manual: candidateView(selected.manual, official, selected.manual ? { cooled: selected.manual.cooled, fresh: !selected.manual.cooled, warned: selected.manual.warned } : {}, manualMeta),
-      autoUpdate: selected.autoUpdate && !autoMeta.trustChange ? candidateView(selected.autoUpdate, official, { urgent: selected.autoUpdate.urgent }, autoMeta) : null,
+      autoUpdate: selected.autoUpdate && !autoMeta.trustChange && !autoMeta.newCapabilities ? candidateView(selected.autoUpdate, official, { urgent: selected.autoUpdate.urgent }, autoMeta) : null,
+      autoUpdateHeld: selected.autoUpdate && !autoMeta.trustChange && autoMeta.newCapabilities
+        ? { version: selected.autoUpdate.entry.version, reason: "new-capabilities", newCapabilities: autoMeta.newCapabilities }
+        : null,
     };
   });
   const installed = installedRaw.map(({ id, version, source, enabled, displayName, description }) => ({
@@ -349,8 +364,16 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
     version,
     source,
     enabled,
+    revocation: revocationView(state.revocations, id, version),
     ...(displayName !== undefined ? { displayName } : {}),
     ...(description !== undefined ? { description } : {}),
   }));
-  return { plugins, installed, updatedAt: state.updatedAt, manualAllowed: state.manualAllowed === true, error: indexError ?? state.lastError ?? null };
+  return {
+    plugins,
+    installed,
+    updatedAt: state.updatedAt,
+    manualAllowed: state.manualAllowed === true,
+    error: indexError ?? state.lastError ?? null,
+    revocationWarning: state.revocationWarning ?? null,
+  };
 }

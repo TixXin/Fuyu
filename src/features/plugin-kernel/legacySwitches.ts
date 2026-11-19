@@ -39,7 +39,7 @@ export function withSwitches<S extends Switches>(settings: S, plugins: readonly 
 }
 
 export interface MigratedLegacySwitches {
-  switch: [string, boolean][];
+  switch: { field: LegacySwitch; id: string; on: boolean }[];
   migrated: LegacySwitch[];
 }
 
@@ -55,8 +55,38 @@ export function migrateLegacySwitches(
     const id = LEGACY_SWITCHES[field];
     const plugin = plugins.find((item) => item.id === id);
     if (typeof stored !== "boolean" || !plugin) continue;
-    result.migrated.push(field);
-    if (!stored && plugin.enabled) result.switch.push([id, false]);
+    if (!stored && plugin.enabled) result.switch.push({ field, id, on: false });
+    else result.migrated.push(field);
   }
   return result;
+}
+
+export interface LegacyMigrationStore {
+  load: () => ReadonlySet<string>;
+  save: (fields: Iterable<string>) => void;
+  switchPlugin: (id: string, on: boolean) => Promise<unknown>;
+  onError?: (id: string, error: unknown) => void;
+}
+
+export async function runLegacyMigration(
+  settings: Partial<Record<LegacySwitch, boolean>>,
+  plugins: readonly BuiltinPlugin[],
+  store: LegacyMigrationStore,
+  tried: Set<string>,
+): Promise<void> {
+  const result = migrateLegacySwitches(settings, plugins, store.load());
+  const mark = (fields: readonly string[]) => store.save([...store.load(), ...fields]);
+  if (result.migrated.length > 0) mark(result.migrated);
+  const pending = result.switch.filter(({ field }) => !tried.has(field));
+  for (const { field } of pending) tried.add(field);
+  await Promise.all(
+    pending.map(async ({ field, id, on }) => {
+      try {
+        await store.switchPlugin(id, on);
+        mark([field]);
+      } catch (error) {
+        store.onError?.(id, error);
+      }
+    }),
+  );
 }

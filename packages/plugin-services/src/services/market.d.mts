@@ -21,6 +21,18 @@ export type PluginInstallConfirmation = {
   requiredPlugins?: string[];
 };
 
+export type MarketCapabilitySet = {
+  nodeApis: string[];
+  network: string[];
+  replaces: string[];
+};
+
+export type MarketAutoUpdateHeld = {
+  version: string;
+  reason: "new-capabilities";
+  newCapabilities: MarketCapabilitySet;
+};
+
 export type MarketVersionCandidate = {
   version: string;
   sha256: string;
@@ -31,7 +43,13 @@ export type MarketVersionCandidate = {
   warned?: boolean;
   urgent?: boolean;
   trustChange?: MarketTrustChange;
+  newCapabilities?: MarketCapabilitySet;
   confirmation: PluginInstallConfirmation;
+};
+
+export type MarketRevocation = {
+  level: "disable" | "warn";
+  reasons: MarketLocalizedText[];
 };
 
 export type MarketCatalogPlugin = {
@@ -45,10 +63,12 @@ export type MarketCatalogPlugin = {
   enabled: boolean;
   source: "market" | "manual" | null;
   revoked: boolean;
+  revocation?: MarketRevocation | null;
   blocked?: { reason: "engines" | "platform"; range?: string } | null;
   install: MarketVersionCandidate | null;
   manual: MarketVersionCandidate | null;
   autoUpdate: MarketVersionCandidate | null;
+  autoUpdateHeld?: MarketAutoUpdateHeld | null;
 };
 
 export type InstalledMarketPlugin = {
@@ -56,9 +76,12 @@ export type InstalledMarketPlugin = {
   version: string;
   source: "market" | "manual";
   enabled: boolean;
+  revocation?: MarketRevocation | null;
   displayName?: MarketLocalizedText | string;
   description?: MarketLocalizedText | string;
 };
+
+export type MarketRevocationWarning = "network" | "bad-signature" | "bad-trust" | "invalid" | "older-serial" | "expired" | "behind";
 
 export type MarketCatalogSnapshot = {
   plugins: MarketCatalogPlugin[];
@@ -66,6 +89,7 @@ export type MarketCatalogSnapshot = {
   updatedAt: number | null;
   manualAllowed: boolean;
   error: string | null;
+  revocationWarning?: MarketRevocationWarning | null;
 };
 
 export type MarketInspectedPackage = {

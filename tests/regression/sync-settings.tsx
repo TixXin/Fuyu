@@ -91,8 +91,8 @@ try {
   const optGroup = groupByTitle(wide, zh.optional.groupTitle)!;
   const optSwitches = [...optGroup.querySelectorAll<HTMLInputElement>("input[role='switch']")];
   const optDescs = [...optGroup.querySelectorAll<HTMLElement>(".settings-row__description")].map((el) => el.textContent ?? "");
-  check(optSwitches.length === 8 && optSwitches.every((input) => !input.checked) && optDescs.every((desc) => desc.startsWith("默认关闭：")),
-    "All eight optional sync groups start off and explain why");
+  check(optSwitches.length === 7 && optSwitches.every((input) => !input.checked) && optDescs.every((desc) => desc.startsWith("默认关闭：")),
+    "All seven optional sync groups start off and explain why");
 
   const webdavChoice = [...wide.querySelectorAll<HTMLButtonElement>(".settings-choice__option")].find((btn) => btn.textContent === zh.backend.methods.webdav)!;
   await act(async () => { webdavChoice.click(); });

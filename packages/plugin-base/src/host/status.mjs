@@ -94,8 +94,6 @@ export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, u
       if (last) extra.lastError = last;
       const undeclared = undeclaredOf(entry, provided, windows, undeclaredCommands, undeclaredNetwork);
       if (undeclared) extra.undeclared = undeclared;
-      const disabledServices = Array.isArray(entry.options.disabledServices) ? entry.options.disabledServices.filter((s) => typeof s === "string") : [];
-      if (disabledServices.length > 0) extra.disabledServices = disabledServices;
       const declaredProvides = entry.options[SOURCE]?.provides ?? entry.options[SOURCE]?.declared?.provides ?? [];
       if (declaredProvides.length > 0) extra.provides = declaredProvides;
       const replacedServices = declaredProvides
@@ -106,6 +104,9 @@ export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, u
         })
         .filter(Boolean);
       if (replacedServices.length > 0) extra.replacedServices = replacedServices;
+      const written = Array.isArray(entry.options.disabledServices) ? entry.options.disabledServices.filter((s) => typeof s === "string") : [];
+      const disabledServices = [...new Set([...written, ...replacedServices.map((item) => item.service)])];
+      if (disabledServices.length > 0) extra.disabledServices = disabledServices;
       return { ...status, ...extra };
     });
 }

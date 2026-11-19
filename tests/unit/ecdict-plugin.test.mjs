@@ -92,6 +92,7 @@ test("@fuyu/ecdict passes check, pack, review, registers ecdict on translator/v1
   const installed = installPackage(packed.file, {
     dir: hostDir,
     source: "market",
+    official: true,
     expectedSha256: packed.sha256,
   });
   assert.equal(installed.id, PLUGIN_ID);

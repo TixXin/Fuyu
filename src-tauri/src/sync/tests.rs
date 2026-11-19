@@ -136,3 +136,14 @@ fn a_damaged_device_file_is_set_aside_and_replaced() {
     let names: Vec<String> = fs::read_dir(&dir).expect("list").flatten().map(|entry| entry.file_name().to_string_lossy().into_owned()).collect();
     assert!(names.iter().any(|name| name.contains("damaged")), "{names:?}");
 }
+
+#[test]
+fn an_old_config_with_the_removed_plugin_pages_group_still_loads() {
+    let dir = temp_dir("removed-group");
+    let old = r#"{"version":1,"folder":"/Users/demo/Sync","categories":["settings","todos"],"optionalGroups":["pluginPages","qqMail"]}"#;
+    fs::write(dir.join(super::config::FILE_NAME), old).expect("old config");
+    let loaded = super::config::load(&dir);
+    assert_eq!(loaded.folder.as_deref(), Some("/Users/demo/Sync"));
+    assert_eq!(loaded.categories.len(), 2);
+    assert_eq!(loaded.optional_groups, vec!["qqMail".to_string()]);
+}
