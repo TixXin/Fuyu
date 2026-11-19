@@ -2,6 +2,8 @@
 
 岛接了十九家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）、Droid（B58）、pi（B71）和 Cursor（编辑器 Agent），另支持通用的第三方代理文件与会话目录接入（`third_party.rs`，B71）。后十三家与通用第三方各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
+各家要声明哪些东西、以后怎么改成描述文件，见 [Agent 接入协议](harness-protocol.md)（B76）。Qoder、CodeBuddy、Qwen Code 已经只有描述文件 `src-tauri/src/agent_status/harnesses/<id>.json`，由 `build.rs` 生成模块（B77）。
+
 核对日期：2026-11-17（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
 ## 形态和数据位置
@@ -60,7 +62,7 @@ Claude Code 和 Codex 是最早接的，很多地方曾把「代理」写死成�
 
 ## Claude Code 兼容的三家（B48）
 
-Qoder（含 Qoder CN）、CodeBuddy Code、Qwen Code 的钩子格式和会话目录都照抄 Claude Code，所以走一个声明层 `claude_compat.rs`：每家的模块（`qoder.rs`、`codebuddy.rs`、`qwen.rs`）只填一份 `Compat`（id、名字、配置目录和环境变量、会话子目录、记录格式、全局提示词文件、等授权用哪个事件），钩子安装和状态、会话列表、标题、等你、审批都由声明层做。再接一家这样的 CLI：写一份声明，再在 `HARNESSES`、三份钩子脚本、审批的 `Agent` 枚举和前端 `AGENTS` 里各加一项。三家都还没在真机上跑过（#179）。
+Qoder（含 Qoder CN）、CodeBuddy Code、Qwen Code 的钩子格式和会话目录都照抄 Claude Code，所以走一个声明层 `claude_compat.rs`：每家只有一份描述文件 `src-tauri/src/agent_status/harnesses/<id>.json`（B77，格式见 [Agent 接入协议](harness-protocol.md)），`build.rs` 由它生成原来 `qoder.rs` 这类模块里的 `Compat`（id、名字、配置目录和环境变量、会话子目录、记录格式、全局提示词文件、等授权用哪个事件）和 `HARNESS`，钩子安装和状态、会话列表、标题、等你、审批都由声明层做。再接一家这样的 CLI：加一份描述文件，再在 `HARNESSES`、`claude_compat.rs` 的 `SPECS`、`reply_marker.rs` 的 `PROMPT_FILES`、三份钩子脚本、审批的 `Agent` 枚举和前端 `AGENTS` 里各加一项。三家都还没在真机上跑过（#179）。
 
 B56 起声明多了三项，给钩子格式相近、外壳不同的几家用（Grok CLI、Copilot CLI、Droid 用上了）：
 

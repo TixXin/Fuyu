@@ -1,0 +1,54 @@
+{
+  "$schema": "../../../../../docs/architecture/agent/protocol/harness.schema.json",
+  "protocol": 1,
+  "id": "codebuddy",
+  "name": "CodeBuddy",
+  "icon": "codebuddy.svg",
+  "forms": {
+    "cli": {
+      "home": [
+        {
+          "path": "~/.codebuddy",
+          "env": "CODEBUDDY_CONFIG_DIR"
+        }
+      ]
+    }
+  },
+  "sessions": {
+    "format": "codebuddy-jsonl",
+    "dirs": [
+      "projects"
+    ]
+  },
+  "hooks": {
+    "format": "claude-compatible",
+    "file": "settings.json",
+    "events": {
+      "start": "UserPromptSubmit",
+      "activity": [
+        "PreToolUse"
+      ],
+      "stop": "Stop",
+      "failed": "StopFailure",
+      "waiting": "Notification",
+      "approval": "PermissionRequest"
+    },
+    "waitingKind": "permissionPrompt"
+  },
+  "approval": {
+    "reply": "permissionRequest"
+  },
+  "signals": {
+    "running": "hook",
+    "done": "hook",
+    "waiting": "hook",
+    "replyMarker": true,
+    "exited": "hook"
+  },
+  "replyMarker": {
+    "promptFiles": [
+      "CODEBUDDY.md"
+    ]
+  },
+  "ccConnect": null
+}

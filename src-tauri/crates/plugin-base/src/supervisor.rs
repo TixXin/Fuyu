@@ -114,14 +114,14 @@ impl Inner {
         (self.on_event)(Event::State(state));
     }
 
-    fn pause(&self, duration: Duration) -> bool {
+    fn pause(&self, duration: Duration, poke_wakes: bool) -> bool {
         let deadline = Instant::now() + duration;
         let mut control = lock(&self.control);
         loop {
             if control.stop || control.restart {
                 return control.stop;
             }
-            if std::mem::take(&mut control.poke) {
+            if std::mem::take(&mut control.poke) && poke_wakes {
                 return false;
             }
             let left = deadline.saturating_duration_since(Instant::now());
@@ -339,7 +339,7 @@ fn wait_ready(inner: &Inner, running: &mut Running, timing: &Timing) -> Result<V
 
 fn watch(inner: &Inner, running: &mut Running, timing: &Timing) -> Option<String> {
     loop {
-        if inner.pause(timing.ping_every) {
+        if inner.pause(timing.ping_every, true) {
             return None;
         }
         if inner.take_restart() {
@@ -416,7 +416,7 @@ fn supervise(inner: &Arc<Inner>, mut spec_for: impl FnMut(u32) -> HostSpec, cont
         failures += 1;
         let retry_in = timing.backoff(failures - 1);
         inner.set(HostState::Down { generation, reason, retry_in });
-        if inner.pause(retry_in) {
+        if inner.pause(retry_in, false) {
             break;
         }
     }

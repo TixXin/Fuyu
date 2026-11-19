@@ -124,13 +124,19 @@ fn a_host_that_stops_answering_heartbeats_is_replaced() {
 fn a_host_that_keeps_failing_waits_longer_each_time() {
     let watched = start("exit-at-once", fast());
     let mut waits = Vec::new();
+    let mut downs = Vec::new();
     while waits.len() < 4 {
         if let HostState::Down { retry_in, reason, .. } = wait_for(&watched.states, |state| matches!(state, HostState::Down { .. }), Duration::from_secs(20)) {
             assert!(reason.contains("before it was ready"), "{reason}");
             waits.push(retry_in.as_millis());
+            downs.push(Instant::now());
         }
     }
     assert_eq!(waits, [0, 100, 200, 400]);
+    for (index, pair) in downs.windows(2).enumerate() {
+        let waited = pair[1].duration_since(pair[0]).as_millis();
+        assert!(waited >= waits[index], "down #{} came {waited} ms after the previous one, which announced {} ms", index + 2, waits[index]);
+    }
     watched.supervisor.stop();
 }
 
