@@ -6,6 +6,7 @@ npm 包 `fuyu-plugin`（SDK、命令行工具、测试宿主）和 `create-fuyu-
 
 ## 下一版
 
+- `create-fuyu-plugin` 建的新项目带一份 `AGENTS.md`：给 AI 编程代理的规则（各部分在哪运行、名字去哪查、声明要和代码对得上、停用时要撤干净、做完要报告插件读写了什么）。配套的教程见 [从零做一个插件](first-plugin.md)。
 - 新接口 `ctx.island.open(page?)` 和 `ctx.island.collapse()`：打开本插件的岛页面（岛在托盘或贴边时先唤出），在本插件的页面上时收起岛。`open` 窗口代码和宿主代码都能调，宿主代码要在 `inject` 里写 `island`；`collapse` 只给窗口代码。见 [服务、接缝与插槽参考](services-and-slots.md)「五、打开自己的岛页面、收起岛」。
 - 新接口 `ctx.settings.open()`：打开设置窗口，落到本插件详情弹窗的「设置」标签，窗口代码和宿主代码都能调，宿主代码要在 `inject` 里写 `settings`。见 [服务、接缝与插槽参考](services-and-slots.md)「四、打开自己的设置」。
 - npm 包页的 README 和 `homepage` 链到 [插件文档](README.md)（之前指向已经挪走的 `docs/plugins/v3/`）。

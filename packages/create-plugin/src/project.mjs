@@ -56,6 +56,9 @@ It has the three parts a plugin usually has:
 | \`src/island.tsx\` | the island | A page in the slot \`island.page/v1\`: start a countdown, see the timers |
 | \`src/settings.tsx\` | the settings window | A section in the slot \`settings.section/v1\`: how many timers, dismiss the finished ones |
 
+\`AGENTS.md\` tells AI coding agents how to work on this plugin: what must be declared, where the reference is, and
+what to check before calling it done.
+
 \`fuyu.client\` in \`package.json\` tells Fuyu which window loads which built file. \`src/timers.ts\` is shared
 by both sides; \`src/styles.css\` is added to the windows by the build.
 

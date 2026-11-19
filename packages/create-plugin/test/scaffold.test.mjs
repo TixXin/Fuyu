@@ -36,7 +36,7 @@ test("every placeholder is filled, and display names are escaped inside the code
   for (const [path, text] of files) assert.doesNotMatch(text, /\{\{\w+\}\}/, path);
   assert.match(files.get("src/text.ts"), /title: "Say \\"hi\\" \\\\ now"/);
   assert.match(files.get("src/styles.css"), /^\.fuyu-pomodoro \{/);
-  assert.deepEqual([...files.keys()], [".gitignore", "assets/icon.svg", "eslint.config.mjs", "LICENSE", "package.json", "README.md", "src/host.ts", "src/island.tsx", "src/settings.tsx", "src/styles.css", "src/text.ts", "src/timers.ts", "src/useTimers.ts", "tsconfig.json"]);
+  assert.deepEqual([...files.keys()], [".gitignore", "AGENTS.md", "assets/icon.svg", "eslint.config.mjs", "LICENSE", "package.json", "README.md", "src/host.ts", "src/island.tsx", "src/settings.tsx", "src/styles.css", "src/text.ts", "src/timers.ts", "src/useTimers.ts", "tsconfig.json"]);
 });
 
 test("a new project starts with an icon in the official style, in a colour no official plugin uses", async () => {

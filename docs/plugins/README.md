@@ -19,12 +19,13 @@
 npm create fuyu-plugin@latest
 ```
 
-脚手架（npm 上的 `create-fuyu-plugin`）生成一个 TypeScript 项目，命令行 `fuyu-plugin`（npm 上的 `fuyu-plugin`）负责开发联调、构建、打包、检查和签名。开发时在插件文件夹里跑 `fuyu-plugin dev`，它把插件登记进正在运行的浮屿，改了自动重新构建，见[命令行](cli.md)。
+脚手架（npm 上的 `create-fuyu-plugin`）生成一个 TypeScript 项目，命令行 `fuyu-plugin`（npm 上的 `fuyu-plugin`）负责开发联调、构建、打包、检查和签名。开发时在插件文件夹里跑 `fuyu-plugin dev`，它把插件登记进正在运行的浮屿，改了自动重新构建，见[命令行](cli.md)。第一次写，跟着[从零做一个插件](first-plugin.md)做一遍；想让 AI 代写，浮屿 设置 → 关于 → 插件系统 里能复制一段提示词。
 
 ## 读哪一篇
 
 | 文档 | 内容 |
 |---|---|
+| [从零做一个插件](first-plugin.md) | 教程：建项目，写宿主部分和岛上的一页，改清单，自查；也讲怎么让 AI 代写 |
 | [清单和安装包](package.md) | `package.json` 的字段、`.fuyu` 包里有什么、有哪些限制、三种装法 |
 | [命令行](cli.md) | `fuyu-plugin`：源码怎么放、开发联调（`dev`）、构建、打包、检查、图标、截图、市场预览、比较版本、签名 |
 | [截图和封面](screenshots.md) | `fuyu-plugin shots`：示例数据怎么写，岛上页面和收起条怎么截，封面怎么合成 |
@@ -36,7 +37,7 @@ npm create fuyu-plugin@latest
 | [官方插件标准](official-quality.md) | 官方插件上架前要做到的：设置齐全、岛上默认克制、中英文和两个平台、名字统一、图标风格 |
 | [SDK 更新日志](changelog.md) | npm 包 `fuyu-plugin`、`create-fuyu-plugin` 每个版本的变化 |
 
-还没有的：从零做一个插件的教程、从类型声明生成的参考。
+还没有的：从类型声明生成的参考。
 
 ## 想了解内部设计
 
