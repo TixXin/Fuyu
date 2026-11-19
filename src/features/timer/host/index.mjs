@@ -3,7 +3,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { timersV1 } from "@fuyu/plugin-services";
 import { nextDueIn } from "../timers.ts";
 import { DATA_FILE, readTimers, writeTimers } from "./dataFile.mjs";
-import { adoptTimers, changeTimer, dismissRung, idOf, ringDue, startTimer } from "./rules.mjs";
+import { adoptTimers, changeTimer, dismissRung, removeTimer, ringDue, startTimer } from "./rules.mjs";
 
 export const name = "timer";
 export const RECHECK_MS = 60_000;
@@ -57,9 +57,9 @@ export function apply(ctx) {
     return id;
   }
 
-  function change(method, params) {
+  function change(method, params, caller) {
     const now = Date.now();
-    const next = changeTimer(timers, method, params, now);
+    const next = changeTimer(timers, method, params, now, caller?.plugin);
     if (next.timers !== timers) commit(next.timers, now);
     return { timer: next.timer };
   }
@@ -72,18 +72,17 @@ export function apply(ctx) {
       commit(next.timers, now);
       return { timer: next.timer };
     },
-    pause: (params) => change("pause", params),
-    resume: (params) => change("resume", params),
-    extend: (params) => change("extend", params),
-    remove: (params) => {
-      const id = idOf(params, "remove");
-      const next = timers.filter((timer) => timer.id !== id);
+    pause: (params, caller) => change("pause", params, caller),
+    resume: (params, caller) => change("resume", params, caller),
+    extend: (params, caller) => change("extend", params, caller),
+    remove: (params, caller) => {
+      const next = removeTimer(timers, params, caller?.plugin);
       if (next.length === timers.length) return { removed: false };
       commit(next, Date.now());
       return { removed: true };
     },
-    dismissRinging: () => {
-      const next = dismissRung(timers);
+    dismissRinging: (params, caller) => {
+      const next = dismissRung(timers, caller?.plugin);
       const removed = timers.length - next.length;
       if (removed > 0) commit(next, Date.now());
       return { removed };

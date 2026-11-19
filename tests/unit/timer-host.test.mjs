@@ -21,11 +21,11 @@ export function apply(ctx) {
 }
 `;
 
-const STARTER = `import { timersV1 } from ${JSON.stringify(SERVICES)};
-export const name = "timer-starter";
+const starterSource = (name, key) => `import { timersV1 } from ${JSON.stringify(SERVICES)};
+export const name = "${name}";
 export const inject = ["timers/v1"];
 export function apply(ctx) {
-  globalThis.timerStarter = ctx.services.get(timersV1);
+  globalThis.${key} = ctx.services.get(timersV1);
 }
 `;
 
@@ -37,7 +37,8 @@ after(async () => {
 function space() {
   const dir = mkdtempSync(join(tmpdir(), "timer-host-"));
   writeFileSync(join(dir, "listener.mjs"), LISTENER);
-  writeFileSync(join(dir, "starter.mjs"), STARTER);
+  writeFileSync(join(dir, "starter.mjs"), starterSource("timer-starter", "timerStarter"));
+  writeFileSync(join(dir, "other.mjs"), starterSource("timer-other", "timerOther"));
   cleanup.push(() => rmSync(dir, { recursive: true, force: true }));
   return dir;
 }
@@ -45,10 +46,11 @@ function space() {
 const dataFile = (dir) => join(dir, "data", "timer", "timers.json");
 const readData = (dir) => JSON.parse(readFileSync(dataFile(dir), "utf8"));
 
-async function open(dir, { listener = false, disabled = false, starter = false } = {}) {
+async function open(dir, { listener = false, disabled = false, starter = false, other = false } = {}) {
   const entries = disabled ? ["- id: timer\n  disabled: true\n"] : [];
   if (listener) entries.push("- id: timer-listener\n  name: ./listener.mjs\n");
   if (starter) entries.push("- id: timer-starter\n  name: ./starter.mjs\n");
+  if (other) entries.push("- id: timer-other\n  name: ./other.mjs\n");
   writeFileSync(join(dir, "plugins.yml"), entries.length ? entries.join("") : "[]\n");
   const host = await startHost({ dir, builtins: BUILTINS });
   cleanup.push(() => host.stop());
@@ -316,4 +318,74 @@ test("adopt ignores owner and hidden in what it is given and gives the caller's 
   assert.deepEqual(fromWindow.timers.map((timer) => [timer.id, timer.owner ?? null, timer.hidden ?? false]), [["legacy", null, false]]);
   const fromPlugin = await globalThis.timerStarter.adopt({ timers: [forged("plugin-kept")] });
   assert.deepEqual(fromPlugin.timers.at(-1), { id: "plugin-kept", kind: "stopwatch", durationMs: 0, elapsedMs: 0, runningSince: now, alerted: false, owner: "timer-starter" });
+});
+
+async function twoPlugins(dir) {
+  globalThis.timerStarter = null;
+  globalThis.timerOther = null;
+  const host = await open(dir, { starter: true, other: true });
+  assert.ok(await until(() => globalThis.timerStarter !== null && globalThis.timerOther !== null));
+  return { host, win: window(host), mine: globalThis.timerStarter, theirs: globalThis.timerOther };
+}
+
+test("a plugin cannot pause, resume, extend or remove timers it did not start", async () => {
+  const dir = space();
+  const { win, mine, theirs } = await twoPlugins(dir);
+  const user = (await win.call("start", { kind: "countdown", durationMs: 30 * MINUTE })).timer;
+  const own = (await mine.start({ kind: "countdown", durationMs: 30 * MINUTE })).timer;
+  const hidden = (await mine.start({ kind: "stopwatch", hidden: true })).timer;
+  const before = (await win.call("list")).timers;
+  const saved = readFileSync(dataFile(dir), "utf8");
+  for (const target of [user, own, hidden]) {
+    for (const method of ["pause", "resume", "extend"]) {
+      await assert.rejects(theirs[method]({ id: target.id }), (error) => error.code === "not-found" && error.message === `there is no timer ${target.id}`);
+    }
+    assert.deepEqual(await theirs.remove({ id: target.id }), { removed: false });
+  }
+  assert.deepEqual((await win.call("list")).timers, before);
+  assert.equal(readFileSync(dataFile(dir), "utf8"), saved);
+
+  assert.equal((await mine.pause({ id: own.id })).timer.runningSince, null);
+  assert.ok((await mine.resume({ id: own.id })).timer.runningSince !== null);
+  const stretched = (await mine.extend({ id: own.id, byMs: MINUTE })).timer;
+  assert.equal(stretched.durationMs - stretched.elapsedMs, MINUTE);
+  await assert.rejects(mine.pause({ id: user.id }), { code: "not-found" });
+  assert.deepEqual(await mine.remove({ id: hidden.id }), { removed: true });
+
+  assert.equal((await win.call("pause", { id: own.id })).timer.runningSince, null);
+  const byUser = (await win.call("extend", { id: own.id })).timer;
+  assert.equal(byUser.durationMs - byUser.elapsedMs, 5 * MINUTE);
+  assert.deepEqual(await win.call("remove", { id: own.id }), { removed: true });
+  assert.deepEqual((await win.call("list")).timers.map((timer) => timer.id), [user.id]);
+});
+
+test("dismissRinging from a plugin removes only its own ringing timers", async () => {
+  const dir = space();
+  const { win, mine, theirs } = await twoPlugins(dir);
+  const user = (await win.call("start", { kind: "countdown", durationMs: 1000 })).timer;
+  const ownShown = (await mine.start({ kind: "countdown", durationMs: 1000 })).timer;
+  const ownHidden = (await mine.start({ kind: "countdown", durationMs: 1000, hidden: true })).timer;
+  const other = (await theirs.start({ kind: "countdown", durationMs: 1000 })).timer;
+  const quiet = (await theirs.start({ kind: "countdown", durationMs: 30 * MINUTE })).timer;
+  assert.ok(await until(() => win.events("due").length === 4, 3000), "the four countdowns did not all ring");
+  const ids = async () => (await win.call("list")).timers.map((timer) => timer.id);
+  assert.deepEqual(await theirs.dismissRinging(), { removed: 1 });
+  assert.deepEqual(await ids(), [user.id, ownShown.id, ownHidden.id, quiet.id]);
+  assert.deepEqual(await mine.dismissRinging(), { removed: 2 });
+  assert.deepEqual(await ids(), [user.id, quiet.id]);
+  assert.deepEqual(await mine.dismissRinging(), { removed: 0 });
+  assert.deepEqual(await win.call("dismissRinging"), { removed: 1 });
+  assert.deepEqual(await ids(), [quiet.id]);
+  assert.equal(other.owner, "timer-other");
+});
+
+test("adopt from a plugin cannot take over a timer that is already there", async () => {
+  const dir = space();
+  const { win, mine, theirs } = await twoPlugins(dir);
+  const own = (await mine.start({ kind: "stopwatch" })).timer;
+  const user = (await win.call("start", { kind: "stopwatch" })).timer;
+  const result = await theirs.adopt({ timers: [{ ...own, owner: "timer-other" }, { ...user, elapsedMs: 5 * MINUTE }] });
+  assert.equal(result.added, 0);
+  assert.deepEqual((await win.call("list")).timers, [own, user]);
+  await assert.rejects(theirs.pause({ id: own.id }), { code: "not-found" });
 });
