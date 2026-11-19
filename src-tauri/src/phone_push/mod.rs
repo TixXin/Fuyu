@@ -4,8 +4,6 @@ use keyring::{Entry, Error as KeyringError};
 use serde_json::{json, Value};
 
 use crate::user_error::{credential, UserError};
-#[cfg(windows)]
-use crate::win32::session_notifications;
 
 const CREDENTIAL_SERVICE: &str = "com.tixxin.fuyu.bark";
 const CREDENTIAL_USER: &str = "device-key";
@@ -99,28 +97,14 @@ pub async fn send_bark_push(server: String, title: String, body: String, group: 
     })
 }
 
-#[cfg(windows)]
 #[tauri::command]
 pub fn get_user_idle_seconds() -> Option<u32> {
-    session_notifications::idle_millis().map(|millis| millis / 1000)
+    crate::platform::session::idle_seconds()
 }
 
-#[cfg(target_os = "macos")]
-#[tauri::command]
-pub fn get_user_idle_seconds() -> Option<u32> {
-    crate::macos::session::idle_seconds()
-}
-
-#[cfg(windows)]
 #[tauri::command]
 pub fn is_session_locked() -> bool {
-    session_notifications::is_locked()
-}
-
-#[cfg(target_os = "macos")]
-#[tauri::command]
-pub fn is_session_locked() -> bool {
-    crate::macos::session::is_locked()
+    crate::platform::session::is_locked()
 }
 
 macro_rules! tauri_commands {

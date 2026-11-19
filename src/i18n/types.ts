@@ -20,7 +20,6 @@ import type { ClipboardPrivacyText } from "./sections/clipboardPrivacy";
 import type { FileShelfText } from "./sections/fileShelf";
 import type { ScreenshotText } from "./sections/screenshot";
 import type { TimerText } from "./sections/timer";
-import type { PluginViewsText } from "./sections/pluginViews";
 import type { SettingsText } from "./sections/settings/index";
 import type { OnboardingText } from "./sections/onboarding";
 import type { ErrorsText } from "./sections/errors";
@@ -66,7 +65,6 @@ export type Translations = {
   screenshot: ScreenshotText;
   timer: TimerText;
 
-  pluginViews: PluginViewsText;
   settings: SettingsText;
   onboarding: OnboardingText;
   errors: ErrorsText;

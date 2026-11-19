@@ -63,7 +63,7 @@ pub(crate) use shortcut::{parse_shortcut_binding, ShortcutBinding};
 #[cfg(target_os = "macos")]
 pub(crate) use shortcut_macos::{mac_label, to_hotkey};
 pub(crate) use capture_pause::paused as clipboard_capture_paused;
-pub(crate) use plugin_view::{local_api_history, plugin_history, plugin_item};
+pub(crate) use plugin_view::local_api_history;
 pub(crate) use links::{links_for_sync, replace_links_from_sync};
 pub(crate) use links_order::key_between as link_key_between;
 pub(crate) use snippets::{replace_snippets_from_sync, snippets_for_sync};

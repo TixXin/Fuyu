@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
 import { IslandApp } from "../../src/windows/island/IslandApp";
-import { PluginPermissionPrompt } from "../../src/features/plugins/PluginPermissionPrompt";
 import { TranslationWindow } from "../../src/windows/translation/TranslationWindow";
 import { SettingsWindow } from "../../src/windows/settings/SettingsWindow";
 import { I18nProvider, LOCALE_STORAGE_KEY, preloadI18n, TRANSLATIONS, useLocale } from "../../src/i18n";
@@ -45,7 +44,6 @@ mockIPC((command, payload) => {
     case "get_default_todo_save_directory": return "";
     case "get_clipboard_history": return { settings: { enabled: true, captureImages: true, maxItems: 100, shortcut: "Ctrl+X", shortcutEnabled: true }, items: [] };
     case "list_agent_sessions": return [];
-    case "list_plugin_views": return { views: [], status: [] };
     case "get_agent_status": return { codex: { phase: "idle", updatedAt: 0 }, claudeCode: { phase: "idle", updatedAt: 0 }, updatedAt: 0, statusPath: "" };
     case "get_media_state": return { available: false, audioActive: false, audioPeak: 0, playbackStatus: "unavailable", title: null, artist: null, album: null, thumbnail: null, positionMs: 0, durationMs: 0, canSeek: false, canNext: false, canPrevious: false, shuffleActive: null, canShuffle: false, repeatMode: "unknown", canRepeat: false, volume: -1, sourceApp: null, activeSessionId: null, sessions: [], updatedAt: 0 };
     case "get_audio_level": return { active: false, peak: 0, updatedAt: 0 };
@@ -71,10 +69,10 @@ mockIPC((command, payload) => {
 mockWindows(translation ? "translation" : "main");
 
 let changeLocale: ReturnType<typeof useLocale>["setLocale"];
-let toggleExtraUi: (next: { settings: boolean; prompt: boolean }) => void;
+let toggleExtraUi: (next: { settings: boolean }) => void;
 function Fixture() {
   const { setLocale } = useLocale();
-  const [extra, setExtra] = useState({ settings: !automated, prompt: false });
+  const [extra, setExtra] = useState({ settings: !automated });
   toggleExtraUi = setExtra;
   changeLocale = setLocale;
   return translation ? (
@@ -82,14 +80,6 @@ function Fixture() {
   ) : (
     <>
       <IslandApp />
-      {extra.prompt && (
-        <PluginPermissionPrompt
-          prompts={{
-            current: { requestId: 1, pluginId: "demo.plugin", pluginName: { "zh-CN": "演示插件", en: "Demo plugin" }, permission: "clipboard:read", timeoutMs: 30_000 },
-            answer: () => {},
-          }}
-        />
-      )}
       {extra.settings && <SettingsWindow />}
     </>
   );
@@ -129,14 +119,13 @@ else {
     await preloadI18n("zh-CN", null);
     v2MigrationIslandPending = true;
     await act(async () => { mount(); });
-    await act(async () => { toggleExtraUi({ settings: false, prompt: true }); await new Promise((resolve) => setTimeout(resolve, 40)); });
+    await act(async () => { toggleExtraUi({ settings: false }); await new Promise((resolve) => setTimeout(resolve, 40)); });
     check(document.querySelector(".island") !== null, "Main island mounts with only core and onboarding i18n slices");
     check(document.querySelector(".first-hint__text")?.textContent?.includes("检测到 1 个旧第 2 版插件") === true, "Island v2 migration notice renders without settings slice");
-    check(document.querySelector(".plugin-permission-prompt__text")?.textContent === "演示插件 想读取剪贴板历史", "Island permission prompt renders without settings slice");
     await click(".first-hint__action:last-child");
     v2MigrationIslandPending = false;
     await preloadI18n("zh-CN", "settings");
-    await act(async () => { toggleExtraUi({ settings: true, prompt: false }); });
+    await act(async () => { toggleExtraUi({ settings: true }); });
     await click(".island__open-button");
     check(document.querySelector(LANGUAGE_TRIGGER)?.getAttribute("aria-label") === "界面语言", "Chinese language control is reachable");
     const dataKeys = ["fuyu-todos", "fuyu-daily-note", "fuyu-archives", "fuyu-settings", "fuyu-setting-presets"];

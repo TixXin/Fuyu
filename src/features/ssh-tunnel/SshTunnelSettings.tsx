@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Check, Copy } from "lucide-react";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
@@ -5,9 +6,10 @@ import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton
 import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
+import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
-import { setBuiltinConfig } from "../plugin-kernel/builtinSwitches";
+import { setBuiltinConfig, switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
 import { useBuiltinConfig } from "../plugin-kernel/useBuiltinPlugins";
 import { OWNER } from "./plugin/owner.ts";
 import { SshTunnelHosts } from "./SshTunnelHosts";
@@ -22,6 +24,7 @@ export function SshTunnelSettings() {
   const localProxy = localProxySetting(config);
   const customPort = customPortSetting(config);
   const proxy = useSshTunnelProxy(true);
+  const switchId = useId();
   const [copied, flashCopied] = useFlash<"proxy">();
   const [failure, flashFailure] = useFlash<string>();
 
@@ -45,7 +48,11 @@ export function SshTunnelSettings() {
 
   return (
     <>
-      <SettingsGroup title={t.group} footer={failure ? <span className="ssh-tunnel__error">{failure}</span> : <SettingsFootnote text={t.groupHint} />}>
+      <SettingsGroup
+        title={t.group}
+        action={<SettingsSwitch id={switchId} ariaLabel={t.group} checked onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch((reason: unknown) => flashFailure(errorText(reason)))} />}
+        footer={failure ? <span className="ssh-tunnel__error">{failure}</span> : <SettingsFootnote text={t.groupHint} />}
+      >
         <SettingsRow
           title={t.localProxy}
           description={t.localProxyHint}

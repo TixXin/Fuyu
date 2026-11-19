@@ -23,7 +23,7 @@ function tempDir() {
   return dir;
 }
 
-function makeBuiltPackage({ name = "@ann/hello", version = "1.0.0", replaces = [] } = {}) {
+function makeBuiltPackage({ name = "@ann/hello", version = "1.0.0", replaces = [], engines = ">=0.4.0 <1.0.0" } = {}) {
   const manifest = {
     name,
     version,
@@ -32,7 +32,7 @@ function makeBuiltPackage({ name = "@ann/hello", version = "1.0.0", replaces = [
     license: "MIT",
     author: "ann",
     repository: "github:ann/hello",
-    engines: { fuyu: ">=0.4.0 <1.0.0" },
+    engines: { fuyu: engines },
     fuyu: {
       manifest: 1,
       displayName: { "zh-CN": "你好", en: "Hello" },
@@ -59,6 +59,16 @@ test("manual installation is refused by default and allowed when allowManual is 
   assert.equal(inspected.id, "@ann/hello");
   assert.equal(inspected.confirmation.unreviewed, true);
   assert.deepEqual(inspected.confirmation.nodeApis, ["os"]);
+});
+
+test("a beta app build installs a package whose engine range is older", () => {
+  const { zip } = makeBuiltPackage({ engines: ">=0.3.10" });
+  const inspected = inspectPackage(zip, { source: "manual", allowManual: true, appVersion: "0.3.11-beta.4" });
+  assert.equal(inspected.id, "@ann/hello");
+  assert.throws(
+    () => inspectPackage(zip, { source: "manual", allowManual: true, appVersion: "0.3.10-beta.1" }),
+    { code: "bad-manifest" },
+  );
 });
 
 test("installPackage unpacks into packages/<scope>/<name>, writes plugins.yml, and uninstallPackage removes it", () => {

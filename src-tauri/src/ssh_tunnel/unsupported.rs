@@ -15,6 +15,8 @@ pub(super) fn start(_settings: &Map<String, Value>) -> Result<(), String> {
 
 pub(super) fn stop() {}
 
+pub(crate) fn shutdown() {}
+
 pub(super) fn running() -> bool {
     false
 }

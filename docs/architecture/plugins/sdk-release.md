@@ -39,6 +39,6 @@ npm 包 `fuyu-plugin`（SDK、命令行工具、模拟宿主）和 `create-fuyu-
 4. 工作流识别 `sdk-v2.*` 标签后，会核对 `packages/plugin-cli` 与 `packages/create-plugin` 的版本号、运行全部 v3 包单测与独立临时目录端到端单测，调用 `pack-npm-sdk.mjs` 生成 `/tmp/npm-sdk/fuyu-plugin` 与 `/tmp/npm-sdk/create-fuyu-plugin`，并通过 `npm publish --access public --provenance` 发布（已存在的版本自动跳过）。
 5. 发布后用 `npm view fuyu-plugin version` 与 `npm view create-fuyu-plugin version` 确认 provenance；随后在 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 更新 `market/v3/tools.json`（及市场校验依赖）并提 PR 合入。
 
-## 旧第 2 版补丁（`0.x` / `1.x`）
+## 旧第 2 版（`0.x`）
 
-旧第 2 版目录 `packages/fuyu-plugin` 与 `packages/create-fuyu-plugin` 已冻结（只修严重安全问题）。若需发 `sdk-v0.*` / `sdk-v1.*` 补丁，工作流仍保留旧分支：同步两处 `package.json` 版本号、运行 `pnpm sdk:build`、通过 `scripts/plugins/check-sdk-release.mjs` 与单测后发布。PowerShell 模块 `Fuyu.Plugin` 已随第 2 版冻结。
+第 2 版的 `packages/fuyu-plugin`、`packages/create-fuyu-plugin` 和 PowerShell 模块 `Fuyu.Plugin` 已在 E36.6.6 删除，npm 上停在 0.7.0，不再发补丁。工作流收到 `sdk-v0.*`、`sdk-v1.*` 标签时直接报错退出。

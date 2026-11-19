@@ -1,5 +1,4 @@
 import { isMacOS } from "../../../lib/platform.ts";
-import { en as pluginViewsEn, zhCN as pluginViewsZh, type PluginSensitivePromptText } from "../pluginViews.ts";
 
 export type SettingsPluginsText = {
   allowThirdParty: string;
@@ -43,14 +42,6 @@ export type SettingsPluginsText = {
   permission: Record<"todos:read" | "todos:write" | "notes:read" | "notes:write" | "agent-status:read" | "agent-status:write" | "island:notify" | "secrets" | "clipboard:read" | "messages:read" | "media:read" | "media:control" | "shelf:read" | "shelf:write" | "windows", string>;
   needsApproval: string;
   keybindingConflict: (shortcuts: string) => string;
-  sensitive: PluginSensitivePromptText & {
-    title: string;
-    hint: string;
-    allowed: string;
-    denied: string;
-    revoke: string;
-    none: string;
-  };
   notAllowed: string;
   describedOnly: string;
   invalid: string;
@@ -391,15 +382,6 @@ export const zhCN: SettingsPluginsText = {
   },
   needsApproval: "新版本需要更多权限，已暂停。关掉再打开开关即可授权。",
   keybindingConflict: (shortcuts: string) => `快捷键已被其他程序占用：${shortcuts}`,
-  sensitive: {
-    ...pluginViewsZh.sensitivePrompt,
-    title: "需要询问的权限",
-    hint: "插件第一次使用敏感权限、申请可选权限或收到链接时，岛上会询问你。撤销后，下次会再问一次。",
-    allowed: "已允许",
-    denied: "已拒绝",
-    revoke: "撤销",
-    none: "还没有询问过。",
-  },
   notAllowed: "先在上面打开“允许运行第三方插件”。",
   describedOnly: "这个插件没有需要运行的程序。",
   invalid: "无法加载",
@@ -688,7 +670,7 @@ export const zhCN: SettingsPluginsText = {
     group: "SSH 代理隧道",
     groupHint: "把这台电脑的代理借给 SSH 服务器：为下面打开的每台主机常驻一条 ssh 反向隧道（服务器上的 127.0.0.1:端口 → 这里的本地代理），服务器上设好 http_proxy 就能经这里上网。只用密钥登录，断开后自动重连；在 设置 → 插件（第 3 版）里关掉内置插件「SSH 代理隧道」或退出岛屿时，隧道一起结束。",
     localProxy: "本地代理",
-    localProxyHint: "自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和 Windows 系统代理，再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。",
+    localProxyHint: "自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和系统代理（Windows 的 Internet 设置、Mac 的网络代理），再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。",
     localProxyOptions: {
       auto: "自动检测",
       "clash-verge": "Clash Verge（默认 7897）",
@@ -723,7 +705,7 @@ export const zhCN: SettingsPluginsText = {
       found: {
         clashVerge: "端口来自 Clash Verge 的设置",
         v2rayN: "端口来自 v2rayN 的设置",
-        systemProxy: "端口来自 Windows 系统代理",
+        systemProxy: "端口来自系统代理",
         clashVergeDefault: "Clash Verge 的默认端口",
         v2rayNDefault: "v2rayN 的默认端口",
         custom: "自定义端口",
@@ -817,15 +799,6 @@ export const en: SettingsPluginsText = {
   },
   needsApproval: "The new version asks for more permissions, so it is paused. Switch it off and on to allow them.",
   keybindingConflict: (shortcuts: string) => `Shortcut already in use by another app: ${shortcuts}`,
-  sensitive: {
-    ...pluginViewsEn.sensitivePrompt,
-    title: "Permissions the island asks about",
-    hint: "The island asks you the first time a plugin uses a sensitive permission, asks for an optional one, or receives a link. After you revoke an answer, it asks again.",
-    allowed: "Allowed",
-    denied: "Denied",
-    revoke: "Revoke",
-    none: "Not asked yet.",
-  },
   notAllowed: "Turn on “Allow third-party plugins” above first.",
   describedOnly: "This plugin has nothing to run.",
   invalid: "Cannot load",
@@ -1114,7 +1087,7 @@ export const en: SettingsPluginsText = {
     group: "SSH proxy tunnel",
     groupHint: "Lends this computer's proxy to SSH servers: for each host switched on below, a resident ssh reverse tunnel (127.0.0.1:port on the server to the local proxy here), so the server reaches the internet through here once http_proxy is set there. Key login only, and it reconnects after a drop; switching off the built-in plugin \"SSH proxy tunnel\" under Settings → Plugins (v3) or quitting the island ends the tunnels.",
     localProxy: "Local proxy",
-    localProxyHint: "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the Windows system proxy, then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none.",
+    localProxyHint: "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the system proxy (Internet settings on Windows, network proxies on a Mac), then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none.",
     localProxyOptions: {
       auto: "Auto",
       "clash-verge": "Clash Verge (7897 by default)",
@@ -1149,7 +1122,7 @@ export const en: SettingsPluginsText = {
       found: {
         clashVerge: "Port from Clash Verge's settings",
         v2rayN: "Port from v2rayN's settings",
-        systemProxy: "Port from the Windows system proxy",
+        systemProxy: "Port from the system proxy",
         clashVergeDefault: "Clash Verge's default port",
         v2rayNDefault: "v2rayN's default port",
         custom: "Custom port",

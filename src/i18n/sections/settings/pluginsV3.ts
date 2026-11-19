@@ -80,6 +80,7 @@ export type SettingsPluginsV3Text = {
   devMode: string;
   plugins: string;
   empty: string;
+  browseMarket: string;
   waitingHost: string;
   states: Record<PluginV3State, string>;
   kinds: { essential: string; builtin: string; "third-party": string };
@@ -226,7 +227,7 @@ export const zhCN: SettingsPluginsV3Text = {
   searchPlaceholder: "搜索插件名称、ID 或说明…",
   noMatches: "没有匹配的插件。",
   tabs: {
-    plugins: (count) => `功能与插件 (${count})`,
+    plugins: (count) => `已安装 (${count})`,
     market: "插件市场",
     diagnostics: "宿主与运行诊断",
   },
@@ -305,7 +306,7 @@ export const zhCN: SettingsPluginsV3Text = {
   builtinNotes: { clipboard: "关掉期间打码的密钥条目不按时清理，下次打开时清扫", messages: "关掉后，第 2 版插件在岛上的通知也不显示", "claude-usage": "设置在 AI Agent → 用量环；AI Agent 插件关着时设置组一并隐藏", "cc-connect": "设置在 AI Agent → 提醒；关掉后手机推送的 cc-connect 通道也停用", "ssh-tunnel": "设置在 AI Agent → SSH 远程；只支持 Windows，关掉后反向隧道结束", "session-ring": "设置在 AI Agent → 会话环；读 AI Agent 插件的会话列表", "local-api": "设置在 通用 → 本机接口；转给待办、AI Agent、剪贴板的请求，那个插件关着时回 503", "center-pattern": "设置在 外观 → 中心图案；悬岛和宠物读 AI Agent 插件的会话状态" },
   essentialNote: "浮屿必需，不能关",
   hostOff: "宿主没开",
-  hostOffNote: "插件宿主默认启动；当前由环境变量 FUYU_PLUGINS_V3=0 关掉，去掉后重启浮屿恢复。内置插件的开关照样生效。",
+  hostOffNote: "插件宿主默认启动；当前由环境变量 FUYU_PLUGINS_V3=0 关掉，去掉后重启浮屿即可运行已安装插件。",
   node: {
     downloading: "正在下载 Node",
     downloadingNote: "插件宿主要用 Node，这台电脑上没找到合适的版本。浮屿把它下载到自己的数据目录，只下一次。",
@@ -342,8 +343,9 @@ export const zhCN: SettingsPluginsV3Text = {
   leaveSafeMode: "退出安全模式",
   devMode: "开发模式（热重载）",
   plugins: "插件",
-  empty: "plugins.yml 里还没有插件。",
-  waitingHost: "等宿主连上后显示插件。",
+  empty: "暂未安装任何插件。可前往「插件市场」浏览安装官方或第三方插件。",
+  browseMarket: "前往插件市场",
+  waitingHost: "等宿主连上后显示已安装插件。",
   states: {
     running: "运行中",
     waiting: "等待中",
@@ -500,7 +502,7 @@ export const en: SettingsPluginsV3Text = {
   searchPlaceholder: "Search plugin name, ID or notes…",
   noMatches: "No matching plugins.",
   tabs: {
-    plugins: (count) => `Features & plugins (${count})`,
+    plugins: (count) => `Installed (${count})`,
     market: "Plugin market",
     diagnostics: "Host & diagnostics",
   },
@@ -579,7 +581,7 @@ export const en: SettingsPluginsV3Text = {
   builtinNotes: { clipboard: "While off, masked secret items are not purged on timer until the clipboard is turned back on", messages: "Off also hides version 2 plugins' island notices", "claude-usage": "Settings are under AI Agent → Usage ring; hidden while the AI Agent plugin is off", "cc-connect": "Settings are under AI Agent → Alerts; off also stops the phone push's cc-connect channel", "ssh-tunnel": "Settings are under AI Agent → SSH remote; Windows only, off ends the reverse tunnels", "session-ring": "Settings are under AI Agent → Session ring; reads the AI Agent plugin's session list", "local-api": "Settings are under General → Local API; requests for todos, AI Agent or the clipboard answer 503 while that plugin is off", "center-pattern": "Settings are under Appearance → Center pattern; the island mark and pets read the AI Agent plugin's session states" },
   essentialNote: "Fuyu needs it; always on",
   hostOff: "Host not running",
-  hostOffNote: "The plugin host starts by default and is turned off by FUYU_PLUGINS_V3=0; remove it and restart Fuyu to start it again. Built-in plugin switches work either way.",
+  hostOffNote: "The plugin host starts by default and is turned off by FUYU_PLUGINS_V3=0; remove it and restart Fuyu to run installed plugins.",
   node: {
     downloading: "Downloading Node",
     downloadingNote: "The plugin host needs Node, and no suitable version was found on this computer. Fuyu downloads it once into its own data folder.",
@@ -616,8 +618,9 @@ export const en: SettingsPluginsV3Text = {
   leaveSafeMode: "Leave safe mode",
   devMode: "Dev mode (hot reload)",
   plugins: "Plugins",
-  empty: "No plugins in plugins.yml yet.",
-  waitingHost: "Plugins show up once the host is connected.",
+  empty: "No plugins installed yet. Open the Plugin market to install official or community plugins.",
+  browseMarket: "Browse Plugin market",
+  waitingHost: "Installed plugins show up once the host is connected.",
   states: {
     running: "Running",
     waiting: "Waiting",

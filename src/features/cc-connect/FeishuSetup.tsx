@@ -32,11 +32,11 @@ export function FeishuSetup({ onEnd }: { onEnd: () => void }) {
         {state?.qr ? <img src={state.qr} alt={t.feishuQr} width={180} height={180} /> : <p className="settings-section__hint">{t.feishuWaiting}</p>}
         <div className="cc-connect-setup__actions">
           {state?.url ? (
-            <button className="plugin-card__button plugin-card__button--quiet" type="button" onClick={() => void openCcConnectLink(state.url ?? "")}>
+            <button className="settings-button settings-button--quiet" type="button" onClick={() => void openCcConnectLink(state.url ?? "")}>
               {t.feishuOpen}
             </button>
           ) : null}
-          <button className="plugin-card__button" type="button" onClick={() => void cancelCcConnectFeishuSetup().finally(onEnd)}>
+          <button className="settings-button" type="button" onClick={() => void cancelCcConnectFeishuSetup().finally(onEnd)}>
             {t.feishuCancel}
           </button>
         </div>
@@ -53,7 +53,7 @@ export function FeishuSetup({ onEnd }: { onEnd: () => void }) {
   return (
     <div className="cc-connect-setup__actions">
       <p className="plugin-card__error">{state?.error ? errorText(state.error) : null}</p>
-      <button className="plugin-card__button" type="button" onClick={onEnd}>
+      <button className="settings-button" type="button" onClick={onEnd}>
         {t.feishuRetry}
       </button>
     </div>

@@ -1,6 +1,6 @@
 use plugin_base::{host_service, ServeError};
 
-use super::{add_paths, notify_island, plugin_view::MAX_PATHS, service, FileShelfSnapshot};
+use super::{add_paths, notify_island, service, FileShelfSnapshot, MAX_PATHS};
 
 #[host_service("fileShelf.list")]
 fn list_for_host() -> Result<FileShelfSnapshot, String> {

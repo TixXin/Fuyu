@@ -131,12 +131,6 @@ fn status() -> Result<LocalApiStatus, String> {
     })
 }
 
-pub(crate) fn call_island(app: &AppHandle, method: &'static str, params: serde_json::Value) -> Result<serde_json::Value, (u16, String)> {
-    switches::check(method).map_err(|error| (error.status, error.message))?;
-    let call = routes::ApiCall { method, params, writes: false };
-    bridge::dispatch(app, call).map_err(|error| (error.status, error.message))
-}
-
 #[tauri::command]
 pub fn answer_local_api_request(id: u64, response: BridgeResponse) {
     bridge::complete(id, response);

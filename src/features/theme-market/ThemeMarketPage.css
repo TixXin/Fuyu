@@ -57,7 +57,7 @@
   white-space: nowrap;
 }
 
-.theme-market .plugin-card__button {
+.theme-market .settings-button {
   height: 26px;
   display: inline-flex;
   align-items: center;
@@ -72,7 +72,7 @@
   font-weight: 800;
 }
 
-.theme-market .plugin-card__button:hover {
+.theme-market .settings-button:hover {
   background: var(--color-white-a10);
 }
 

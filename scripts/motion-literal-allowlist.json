@@ -21,10 +21,6 @@
       "count": 1,
       "reason": "别的会话正在搬这个文件，搬完再并进档位"
     },
-    "src/features/plugins/PluginDock.css": {
-      "count": 1,
-      "reason": "插件坞图标的回弹，旧插件系统冻结"
-    },
     "src/windows/island/IslandGlass.css": {
       "count": 2,
       "reason": "玻璃 bloom 跟岛外壳开合一起由 islandMotion 管"

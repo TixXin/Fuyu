@@ -21,7 +21,12 @@ import type { MailSnapshot } from "../../src/features/messages/mail/api";
 import type { MessageSource } from "../../src/features/messages/messagePreview";
 import { usePluginNotifications } from "../../src/features/messages/island/usePluginNotifications";
 import "../../src/features/messages/plugin/services";
-import { PluginNoticesRunner } from "../../src/features/plugins/plugin/runners";
+import { deliverNotice } from "../../src/features/messages/plugin/notices";
+import { islandNoticesV1 } from "../../src/lib/island-notices/service";
+import { windowServices } from "../../src/features/plugin-kernel/services";
+
+const noticeActions: { pluginId: string; action: string }[] = [];
+windowServices.get(islandNoticesV1).on("action", (event) => noticeActions.push(event));
 import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -140,8 +145,8 @@ async function notify(source: "qq" | "wechat" | "qqMail" | "plugin", title = "�
       mail = { ...mail, revision: ++revision, unreadCount: 1, items: [{ id: `mail-${revision}`, uid: revision, sender: title, subject: "本周项目进度已更新", unread: true, receivedAt }] };
       await emit("qq-mail-changed", { snapshot: mail, newestId: `mail-${revision}`, windowVisible: true });
     }
-    if (source === "plugin") await emit("plugin-notification", {
-      pluginId: "dev.test.build", pluginName: "构建", title, body: "main 分支构建通过", durationMs: 5000, actions: [{ id: "open", title: "查看" }, { id: "rerun", title: "重跑" }],
+    if (source === "plugin") deliverNotice({
+      pluginId: "dev.test.build", pluginName: { "zh-CN": "构建", en: "Build" }, title, body: "main 分支构建通过", durationMs: 5000, actions: [{ id: "open", title: "查看" }, { id: "rerun", title: "重跑" }],
     });
   });
   await wait(30);
@@ -197,7 +202,7 @@ async function runChecks() {
     check(list.bottom <= island.bottom - 8 && island.bottom - list.bottom < 40, `岛的高度正好装下这几行（行底 ${Math.round(list.bottom)}，岛底 ${Math.round(island.bottom)}）`);
 
     await act(async () => actions[1].click());
-    check(commands.some((entry) => entry.command === "run_plugin_notification_action" && entry.args.id === "dev.test.build" && entry.args.action === "rerun"), "点插件按钮运行动作");
+    check(noticeActions.some((event) => event.pluginId === "dev.test.build" && event.action === "rerun"), "点插件按钮运行动作");
     check(rows().length === 3 && senders()[0] === "微信", "运行后那一行移走");
 
     await emit("island-hover-changed", true);
@@ -277,10 +282,10 @@ async function runChecks() {
     await act(async () => setUserMode("collapsed"));
     await wait(30);
     const playerIcon = "data:image/png;base64,iVBORw0KGgo=";
-    await update(() => emit("plugin-notification", {
-      pluginId: "dev.focusd.now-playing", pluginName: "正在播放", title: "倒数", body: "G.E.M.邓紫棋", durationMs: 6000, actions: [],
+    await update(() => { deliverNotice({
+      pluginId: "dev.focusd.now-playing", pluginName: { "zh-CN": "正在播放", en: "Now playing" }, title: "倒数", body: "G.E.M.邓紫棋", durationMs: 6000, actions: [],
       icon: "media", layout: "inline", iconUrl: playerIcon,
-    }));
+    }); });
     await waitFor(() => rows().length === 1, "一体成型的插件提示弹出");
     check(document.querySelector(".message-arrivals--inline") && !document.querySelector(".message-arrivals__top"), "只有一条 inline 提示时没有「新消息」标题行");
     check(rows()[0].querySelector<HTMLImageElement>(".message-brand-icon--app")?.src === playerIcon, "图标换成音乐软件的图标");
@@ -294,10 +299,10 @@ async function runChecks() {
 
     await act(async () => setUserMode("collapsed"));
     await wait(30);
-    const nowPlaying = (title: string) => update(() => emit("plugin-notification", {
-      pluginId: "dev.focusd.now-playing", pluginName: "正在播放", title, body: "宋冬野", durationMs: 6000, actions: [],
+    const nowPlaying = (title: string) => update(() => { deliverNotice({
+      pluginId: "dev.focusd.now-playing", pluginName: { "zh-CN": "正在播放", en: "Now playing" }, title, body: "宋冬野", durationMs: 6000, actions: [],
       icon: "media", layout: "inline", controls: "media", iconUrl: playerIcon,
-    }));
+    }); });
     await nowPlaying("安和桥");
     await waitFor(() => rows().length === 1, "带播放按钮的提示弹出");
     const mediaButtons = () => [...document.querySelectorAll<HTMLButtonElement>(".message-arrivals__media-button")];
@@ -376,7 +381,7 @@ async function runChecks() {
   }
 }
 
-await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><PluginNoticesRunner /><Fixture /></StrictMode>); });
+await act(async () => { createRoot(document.getElementById("fixture")!).render(<StrictMode><Fixture /></StrictMode>); });
 if (automated) await runChecks();
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });

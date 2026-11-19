@@ -4,16 +4,9 @@ import {
   resolveLegacyPluginTitle,
   shouldShowSettingsMigrationCard,
 } from "../../features/plugin-kernel/v2Migration";
-import type { SettingsCategory } from "./categories";
 import "./V2PluginMigrationCard.css";
 
-export function V2PluginMigrationCard({
-  onOpenMarketTab,
-  onOpenPage,
-}: {
-  onOpenMarketTab?: () => void;
-  onOpenPage?: (page: SettingsCategory) => void;
-}) {
+export function V2PluginMigrationCard({ onOpenMarketTab }: { onOpenMarketTab?: () => void }) {
   const copy = useTranslation().settings.pluginsV3.v2Migration;
   const { locale } = useLocale();
   const { snapshot, dismiss } = useV2PluginMigration();
@@ -94,12 +87,12 @@ export function V2PluginMigrationCard({
       ) : null}
 
       <div className="plugins-v3__migration-actions">
-        {(onOpenMarketTab || onOpenPage) && needsMarketInstall ? (
+        {onOpenMarketTab && needsMarketInstall ? (
           <button
             type="button"
             className="plugins-v3__migration-btn plugins-v3__migration-btn--primary"
             data-action="migration-open-market"
-            onClick={() => (onOpenMarketTab ? onOpenMarketTab() : onOpenPage?.("market"))}
+            onClick={onOpenMarketTab}
           >
             {copy.openMarket}
           </button>

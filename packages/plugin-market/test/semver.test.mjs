@@ -62,3 +62,9 @@ test("bad ranges are not valid and satisfy nothing", () => {
     assert.equal(satisfies("1.0.0", bad), false);
   }
 });
+
+test("a prerelease only matches a range that names a prerelease, unless the caller includes them", () => {
+  assert.equal(satisfies("0.3.11-beta.4", ">=0.3.10"), false);
+  assert.equal(satisfies("0.3.11-beta.4", ">=0.3.10", { includePrerelease: true }), true);
+  assert.equal(satisfies("0.4.0-beta.1", "^0.3.10", { includePrerelease: true }), false);
+});

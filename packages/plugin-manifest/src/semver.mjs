@@ -104,13 +104,14 @@ function test(comparator, version) {
 
 const sameTuple = (a, b) => a.major === b.major && a.minor === b.minor && a.patch === b.patch;
 
-export function satisfies(versionText, rangeText) {
+export function satisfies(versionText, rangeText, options = {}) {
   const version = parseVersion(versionText);
   const range = parseRange(rangeText);
   if (!version || !range) return false;
+  const includePrerelease = options?.includePrerelease === true;
   return range.some((set) => {
     if (!set.every((comparator) => test(comparator, version))) return false;
-    if (!version.pre.length) return true;
+    if (!version.pre.length || includePrerelease) return true;
     return set.some((comparator) => !comparator.version.synthetic && comparator.version.pre.length > 0 && sameTuple(comparator.version, version));
   });
 }

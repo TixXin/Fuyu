@@ -6,7 +6,7 @@
 - 修改 `src-tauri/` 时还须遵守 [src-tauri/AGENTS.md](src-tauri/AGENTS.md)（Rust / Tauri 规则）。
 - 目标架构见 [docs/architecture/overview.md](docs/architecture/overview.md)，结构重构的分步记录、验证结果与待人工验收项见 [docs/architecture/history/refactor-plan.md](docs/architecture/history/refactor-plan.md)。
 
-- **插件平台第 3 版（万物皆插件）正在进行**（2026-11-14 起）。做它的会话开工先读 [docs/architecture/plugins/v3-progress.md](docs/architecture/plugins/v3-progress.md)（做到哪了），再读 [v3-workflow.md](docs/architecture/plugins/v3-workflow.md)（怎么协作：不开分支、子代理和两台机器的规则）和 [v3-everything-plugin.md](docs/architecture/plugins/v3-everything-plugin.md)（方案）。不做它的会话要知道一条：旧的插件系统（`src-tauri/src/plugin_host/`、`src/features/plugins/`、`src/features/plugin-views/`、`packages/fuyu-plugin`、`plugins/`）已冻结，只修 bug 和安全问题，不加新接口。
+- **插件平台第 3 版（万物皆插件）正在进行**（2026-11-14 起）。做它的会话开工先读 [docs/architecture/plugins/v3-progress.md](docs/architecture/plugins/v3-progress.md)（做到哪了），再读 [v3-workflow.md](docs/architecture/plugins/v3-workflow.md)（怎么协作：不开分支、子代理和两台机器的规则）和 [v3-everything-plugin.md](docs/architecture/plugins/v3-everything-plugin.md)（方案）。第 2 版插件宿主（`src-tauri/src/plugin_host/`、`src/features/plugins/`、`src/features/plugin-views/`、`src-tauri/src/plugin_kernel/v2_builtins.rs`）已随 E36.6.5 删除，只剩 `plugin_kernel/v2_migration.rs` 读取旧数据帮老用户迁移；第 2 版 SDK、脚手架、旧示例和旧名兼容（`packages/fuyu-plugin`、`packages/create-fuyu-plugin`、`packages/powershell`、`plugins/examples/dev.focusd.*`）等 E36.6.6 删。
 
 - 做 `docs/tasks` 里的任务或处理 issue：先读 [docs/tasks/README.md](docs/tasks/README.md)；Claude Code 会话先加载 `fuyu-task` skill（从认领到关 issue 的顺序）。
 

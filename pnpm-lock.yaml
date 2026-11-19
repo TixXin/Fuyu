@@ -83,8 +83,6 @@ importers:
         specifier: ^7.3.7
         version: 7.3.7(yaml@2.9.1)
 
-  packages/create-fuyu-plugin: {}
-
   packages/create-plugin:
     dependencies:
       '@fuyu/plugin-manifest':
@@ -112,8 +110,6 @@ importers:
       typescript-eslint:
         specifier: ^8.72.1
         version: 8.72.1(eslint@10.14.0)(typescript@5.8.3)
-
-  packages/fuyu-plugin: {}
 
   packages/plugin-base:
     dependencies:

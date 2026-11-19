@@ -204,7 +204,7 @@ export function CcConnectSetup({ cc }: { cc: ReturnType<typeof useCcConnect> }) 
                   {bot.senders.map((sender) => (
                     <button
                       key={sender.id}
-                      className="plugin-card__button cc-connect-setup__sender"
+                      className="settings-button cc-connect-setup__sender"
                       type="button"
                       aria-pressed={ids.includes(sender.id)}
                       onClick={() => toggleSender(sender.id)}

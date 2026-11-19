@@ -1,6 +1,6 @@
 # 各家 AI 代理的接入现状
 
-岛接了十八家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）、Droid（B58）和 pi（B71），另支持通用的第三方代理文件与会话目录接入（`third_party.rs`，B71）。后十二家与通用第三方各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了十九家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）、Droid（B58）、pi（B71）和 Cursor（编辑器 Agent），另支持通用的第三方代理文件与会话目录接入（`third_party.rs`，B71）。后十三家与通用第三方各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
 各家要声明哪些东西、以后怎么改成描述文件，见 [Agent 接入协议](harness-protocol.md)（B76）。Qoder、CodeBuddy、Qwen Code 已经只有描述文件 `src-tauri/src/agent_status/harnesses/<id>.json`，由 `build.rs` 生成模块（B77）。
 
@@ -227,6 +227,25 @@ Factory 的 Droid CLI，id `droid`。代码在 `droid.rs`（会话）和 `droid_
 | 判断会话已退出 | ✓ 靠扩展写的 `agent-sessions/<id>.json`（`endedAt` 或记录的 `pid` 已不在） |
 | 点会话跳过去 | ✓ 有进程记录时按进程链找终端；否则 `PiDeck` / `PiCove` 桌面版在跑就到对应窗口，不然按目录和标题找终端 |
 | 用量环、SSH 远程、cc-connect | ✗ / ✓（拉取 `.pi/agent/sessions/*/*.jsonl`）/ — |
+
+## Cursor（编辑器 Agent）
+
+Cursor 的 Agent（Composer），id `cursor`。代码在 `cursor.rs`。本机编辑器可测；`agent` CLI 的 `store.db` 没样本，不读。云端 Background Agent 不加载用户级 `~/.cursor/hooks.json`，不接。
+
+没走 Claude Code 兼容层：钩子文件是整份共享的 `~/.cursor/hooks.json`，事件名是驼峰，回包是 `{permission}`，会话转录没有时间戳和标题。
+
+| 层 | Cursor |
+|---|---|
+| 配置 | `~/.cursor` 在才装；「安装/修复」合并进 `~/.cursor/hooks.json`（补 `version: 1`，只增删 `command` 里含 `fuyu-agent-` 的条目，别人的钩子保留）；Cursor 保存后会自己重载 |
+| 钩子 | `sessionStart`、`beforeSubmitPrompt` 记运行中，`stop` 记完成，`sessionEnd` 记空闲；`beforeShellExecution`、`beforeMCPExecution` 走岛上审批，超时 150 秒。脚本缺失或岛没在听时回 `{"permission":"ask"}`，交给 Cursor 自己的确认框，避免空输出被当成拒绝 |
+| 会话 | `~/.cursor/projects/<工作区>/agent-transcripts/<id>/<id>.jsonl`（只认主转录，跳过子目录里的子代理和压缩记录）。标题先读 `conversation-search.db` 的 `conversations`，再被 `~/.cursor/ai-tracking/ai-code-tracking.db` 的 `conversation_summaries` 盖过；都没有时用第一句提问。模型和推理档读 `state.vscdb` 的 `cursorDiskKV` 里 `composerData:<id>` 的 `modelConfig`（`modelName` 为 `default` 的不算），上下文 token 读 `contextTokensUsed`。工作区目录名按真实路径逐段对上。阶段看转录末尾：`turn_ended` 的 `error` 算失败，其余 `turn_ended` 算完成，最后一条是用户或工具调用算运行中；`composerHeaders` 或 `composerData` 里有 `unfinishedRunAt` 时仍算运行中 |
+| 状态灯 | ✓ `agent-cursor-running.flag` |
+| 等你 | ✗ 没有等你事件。岛上审批挂起时算等你 |
+| 岛上审批 | ✓ `/cursor/permission`。允许回 `{"permission":"allow"}`，拒绝带回 `user_message` / `agent_message`，交回终端回 `ask`。`preToolUse` 的 `ask` 官方不强制，所以不拦读文件和普通工具；写文件没有可挂起的 before 钩子 |
+| 回复标记 | ✗ 没有确认过可以独占、又不会盖住用户规则的用户级规则文件 |
+| 点会话跳过去 | ◐ 优先激活 Cursor 窗口，再按项目文件夹名挑；到不了具体对话 |
+| 用量环、SSH 远程、cc-connect | ✗ 没有官方个人额度接口 / ✗ Remote-SSH 的钩子在远端执行，CLI 会话格式未核实 / — |
+| 不读 | `state.vscdb` 里 `composerData` 以外的键（`agentKv` 这类大块）、超过 1MB 的 `composerData`、`hasBlockingPendingActions`（进行中的会话也会是 true，不能当成等你）、`~/.cursor/chats/**/store.db`（CLI，本机没有样本） |
 
 ## 通用第三方代理接入（B71）
 

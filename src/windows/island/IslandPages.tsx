@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "../../i18n";
-import { PluginViewPage } from "../../features/plugin-views/PluginViewPage";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import type { IslandSettings } from "../../lib/settings/types";
@@ -8,7 +7,6 @@ import { islandMotionTiming } from "../../lib/theme/islandMotion";
 import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 import type { useIslandFeatures } from "./useIslandFeatures";
 import type { useIslandNavigation } from "./useIslandNavigation";
-import type { usePluginPages } from "./usePluginPages";
 import { openSettingsWindow } from "../settings/api";
 import { useIslandShellPreparing, useIslandShellPrewarmed } from "./IslandShell";
 import { getTodoScrollStartRows } from "./layout";
@@ -27,7 +25,6 @@ export type IslandPagesProps = {
   mode: ReturnType<typeof useIslandNavigation>["mode"];
   settings: IslandSettings;
   features: ReturnType<typeof useIslandFeatures>["features"];
-  pluginPages: ReturnType<typeof usePluginPages>;
 };
 
 export type IslandPageProps = IslandPagesProps & {
@@ -77,7 +74,7 @@ function usePanelAwake(
 }
 
 export function IslandPages(props: IslandPagesProps): ReactNode {
-  const { page, mode, pluginPages, features, settings } = props;
+  const { page, mode, features, settings } = props;
   const t = useTranslation();
   const entries = useSlotEntries(pageSlot);
   const reducedMotion = useReducedMotion();
@@ -105,7 +102,6 @@ export function IslandPages(props: IslandPagesProps): ReactNode {
   return (
     <>
       <SlotView slot={pageSlot} props={pageProps} select={(items) => items.filter((item) => item.id === page)} />
-      {pluginPages.entry && <PluginViewPage entry={pluginPages.entry} isOpen={mode === "expanded"} />}
     </>
   );
 }

@@ -2,10 +2,8 @@ import { useMemo } from "react";
 import { ArrowDown, ArrowLeftRight, ArrowUp } from "lucide-react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsSwitch } from "../../../components/settings/SettingsSwitch";
-import { useLocale, useTranslation } from "../../../i18n";
+import { useTranslation } from "../../../i18n";
 import { HOVER_ONLY_ITEM_ID, needsHoverOnlyGauge, shownUsageProviders, usageItemId } from "../../../features/claude-usage/usageRing";
-import { pluginStatusItemId } from "../../../features/plugin-views/usePluginStatusItems";
-import { usePluginStatusItemList } from "../../../features/plugin-views/usePluginViews";
 import { OWNER as CLAUDE_USAGE } from "../../../features/claude-usage/plugin/owner";
 import { builtinConfigBoolean, disabledBuiltinIds, isBuiltinEnabled } from "../../../features/plugin-kernel/builtinSwitches";
 import { useBuiltinConfig, useBuiltinPlugins } from "../../../features/plugin-kernel/useBuiltinPlugins";
@@ -19,19 +17,16 @@ import {
   type CollapsedZone,
 } from "../../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../../lib/settings/useCollapsedPlacements";
-import "../../../features/plugin-views/PluginIslandPagesSection.css";
 import "./CollapsedItemsSection.css";
 
 export function CollapsedItemsSection() {
   const t = useTranslation();
-  const { locale } = useLocale();
   const text = t.settings.collapsedItems;
   const hoverOnlyItemName = t.claudeUsage.hoverOnlyItemName;
   const { placements: saved, save } = useCollapsedPlacements();
   const plugins = useBuiltinPlugins();
   const usageOn = isBuiltinEnabled(plugins, CLAUDE_USAGE);
   const usageConfig = useBuiltinConfig(CLAUDE_USAGE);
-  const declared = usePluginStatusItemList();
 
   const names = useMemo(() => {
     const disabled = disabledBuiltinIds(plugins);
@@ -41,11 +36,6 @@ export function CollapsedItemsSection() {
       ["mail", text.item.mail],
       ["update", text.item.update],
     ];
-    for (const item of declared) {
-      const several = declared.filter((other) => other.pluginId === item.pluginId).length > 1;
-      const plugin = item.pluginName[locale];
-      entries.push([pluginStatusItemId(item.pluginId, item.itemId), several ? `${plugin} · ${item.itemId}` : plugin]);
-    }
     entries.push(["device-use", text.item.deviceUse], ["shelf", text.item.shelf], ["music", text.item.music]);
     if (usageOn) {
       for (const provider of shownUsageProviders(usageConfig)) entries.push([usageItemId(provider), text.item.usage(provider.name)]);
@@ -53,7 +43,7 @@ export function CollapsedItemsSection() {
     }
     entries.push(["session-count", text.item.sessionCount]);
     return new Map(filterCollapsedItemEntries(entries, disabled, mailOn));
-  }, [declared, hoverOnlyItemName, locale, plugins, text, usageOn, usageConfig]);
+  }, [hoverOnlyItemName, plugins, text, usageOn, usageConfig]);
 
   const listed = useMemo(() => [...names.keys()], [names]);
   const placements = useMemo(() => arrangeCollapsedItems(listed, saved), [listed, saved]);
@@ -73,14 +63,14 @@ export function CollapsedItemsSection() {
               <li className="plugin-pages__row collapsed-items__row" key={placement.id}>
                 <span className="collapsed-items__number" aria-hidden="true">{index + 1}</span>
                 <label className="plugin-pages__name" htmlFor={switchId}><strong>{label}</strong></label>
-                <button className="plugin-card__button" type="button" disabled={index === 0} aria-label={text.moveUp(label)} onClick={() => change(moveCollapsedItem(placements, placement.id, -1, listed))}>
+                <button className="collapsed-items__button" type="button" disabled={index === 0} aria-label={text.moveUp(label)} onClick={() => change(moveCollapsedItem(placements, placement.id, -1, listed))}>
                   <ArrowUp size={12} strokeWidth={2.4} />
                 </button>
-                <button className="plugin-card__button" type="button" disabled={index === rows.length - 1} aria-label={text.moveDown(label)} onClick={() => change(moveCollapsedItem(placements, placement.id, 1, listed))}>
+                <button className="collapsed-items__button" type="button" disabled={index === rows.length - 1} aria-label={text.moveDown(label)} onClick={() => change(moveCollapsedItem(placements, placement.id, 1, listed))}>
                   <ArrowDown size={12} strokeWidth={2.4} />
                 </button>
                 <button
-                  className="plugin-card__button"
+                  className="collapsed-items__button"
                   type="button"
                   aria-label={name === "left" ? text.toRight(label) : text.toLeft(label)}
                   onClick={() => change(setCollapsedItemZone(placements, placement.id, name === "left" ? "right" : "left"))}
@@ -103,7 +93,7 @@ export function CollapsedItemsSection() {
           {zone("left")}
           {zone("right")}
         </div>
-        <button className="plugin-card__button collapsed-items__reset" type="button" disabled={saved.length === 0} onClick={() => save([])}>
+        <button className="collapsed-items__button collapsed-items__reset" type="button" disabled={saved.length === 0} onClick={() => save([])}>
           {text.reset}
         </button>
       </div>

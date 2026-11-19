@@ -167,7 +167,7 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 | 东西 | 在哪 | 说明 |
 |---|---|---|
 | updater 签名私钥 | `~/.tauri/fuyu/`，两台都有 | [updater.md](../features/updater.md)「签名密钥」 |
-| 插件签名私钥 | 只在 Windows | [plugins/drafts/README.md](../../plugins/drafts/README.md) |
+| 第 2 版市场的签名私钥 | 只在 Windows | [market-ops.md](plugins/market-ops.md)「插件签名私钥」 |
 | 机器名和别名 | 本地 git 配置 `fuyu.machine`、`fuyu.machineAlias` | 上一节 |
 | `gh` 登录 | 每台各 `gh auth login` 一次 | land、`pnpm issue` 都靠它 |
 | Claude 的项目记忆、`~/.claude/rules`、用户目录下的 skill | `~/.claude/` | 只在本机生效；属于项目的规则写进 `AGENTS.md` 或 `.claude/skills/` |

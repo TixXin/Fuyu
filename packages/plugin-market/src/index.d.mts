@@ -83,7 +83,7 @@ export declare function isValidVersion(text: unknown): boolean;
 export declare function isPrerelease(text: unknown): boolean;
 export declare function compareVersions(a: string, b: string): -1 | 0 | 1;
 export declare function isValidRange(text: unknown): boolean;
-export declare function satisfies(version: string, range: string): boolean;
+export declare function satisfies(version: string, range: string, options?: { readonly includePrerelease?: boolean }): boolean;
 
 export declare function signedBytes(text: string): Uint8Array;
 export declare function keyIdOf(raw: Uint8Array): string;

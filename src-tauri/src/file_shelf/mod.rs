@@ -1,6 +1,5 @@
 mod availability;
 mod host;
-mod plugin_view;
 mod store;
 #[cfg(test)]
 mod tests;
@@ -26,19 +25,16 @@ use availability::{Availability, Presence};
 use store::*;
 use thumbnail::Thumbnails;
 
-pub(crate) use plugin_view::{plugin_shelf_add, plugin_shelf_list, plugin_shelf_remove};
-
+#[cfg(test)]
 pub(crate) const PLUGIN_ID: &str = "file-shelf";
+const CHANGED_EVENT: &str = "file-shelf-changed";
+pub(super) const MAX_PATHS: usize = 20;
 
 static FILE_SHELF: OnceLock<FileShelfService> = OnceLock::new();
 
 type Notify = Box<dyn Fn() + Send + Sync>;
 
-type Announce = Box<dyn Fn(usize) + Send + Sync>;
-
 static NOTIFY_ISLAND: OnceLock<Notify> = OnceLock::new();
-
-static ANNOUNCE_CHANGE: OnceLock<Announce> = OnceLock::new();
 
 static NEXT_ID: AtomicU64 = AtomicU64::new(0);
 
@@ -131,7 +127,6 @@ impl FileShelfService {
         if next != *items {
             save_items(&self.path, &next)?;
             *items = next.clone();
-            announce_change(items.len());
         }
         drop(guard);
         Ok(snapshot_of(&next, presence))
@@ -200,20 +195,11 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
             let _ = shelf.items().get_mut(&shelf.path);
         }
     });
-    let _ = ANNOUNCE_CHANGE.set(Box::new(|count| {
-        crate::plugin_host::publish_event("shelf.changed", serde_json::json!({ "count": count }));
-    }));
     let island = app.clone();
     let _ = NOTIFY_ISLAND.set(Box::new(move || {
-        let _ = island.emit_to(crate::island::WINDOW_LABEL, plugin_view::CHANGED_EVENT, ());
+        let _ = island.emit_to(crate::island::WINDOW_LABEL, CHANGED_EVENT, ());
     }));
     Ok(())
-}
-
-fn announce_change(count: usize) {
-    if let Some(announce) = ANNOUNCE_CHANGE.get() {
-        announce(count);
-    }
 }
 
 fn notify_island() {
@@ -271,10 +257,6 @@ pub async fn set_file_shelf_options(
     let service = service()?;
     *service.options.lock().unwrap_or_else(PoisonError::into_inner) = options.normalized();
     service.update(|items| items)
-}
-
-pub(crate) fn is_enabled() -> bool {
-    crate::plugin_kernel::builtins::is_enabled(PLUGIN_ID)
 }
 
 fn add_paths(paths: &[String]) -> Result<FileShelfSnapshot, String> {

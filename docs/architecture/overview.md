@@ -20,7 +20,6 @@
 │           ssh_tunnel（内置插件：每台主机一条常驻 ssh -R，把本机代理借给服务器）      │
 │           cc_connect（内置插件：找 cc-connect、读它的会话列表，经它把推送发到手机）  │
 │           local_api（127.0.0.1 HTTP，内置插件 local-api）                            │
-│           plugin_host（插件子进程，stdio JSON-RPC，市场与签名，独立 WebView2 页面）  │
 │           mail · qq_notifications · wechat_reminders · translation · settings_window │
 │           device_use · system_levels · device_events · system · rename_migration     │
 │  后台服务：IMAP IDLE 收信、剪贴板监听、通知监听、微信窗口闪烁检测、鼠标穿透循环        │
@@ -30,7 +29,7 @@
    macOS（适配中，G1）：平台层 macos/；暂不支持的模块编译成 unsupported 空实现
 ```
 
-插件平台第 3 版（E36）：开发版、测试版和正式版均默认启动宿主，设 `FUYU_PLUGINS_V3=0` 关掉（E54）；正式版用安装包资源目录里的 `plugins-v3/host` 和 `plugins-v3/builtins`，开发版和 `pnpm build:exe` 用仓库里的源码。Rust 的 `plugin_kernel` 用基座 crate `src-tauri/crates/plugin-base` 找电脑上的 Node（没有就下载到数据目录的 `runtime/`，下载进度和失败显示在设置的插件页，失败了在那里重试），拉起没有界面的宿主进程（`packages/plugin-base` 的 host，跑 `vendor/cordis` 内核），标准输入输出上走 JSON-RPC、心跳、退避重启，用作业对象 / 进程组管住它。窗口经本机 WebSocket（令牌、来源核对、快照和序号）连宿主，插件的界面文件和 React 转接模块由自定义协议 `fuyu-plugin` 提供，前端一侧在 `src/features/plugin-kernel/`。协议和边界见 [v3-boundary.md](plugins/v3-boundary.md)，进度见 [v3-progress.md](plugins/v3-progress.md)。旧的 `plugin_host` 冻结，只修 bug。
+插件平台第 3 版（E36）：开发版、测试版和正式版均默认启动宿主，设 `FUYU_PLUGINS_V3=0` 关掉（E54）；正式版用安装包资源目录里的 `plugins-v3/host` 和 `plugins-v3/builtins`，开发版和 `pnpm build:exe` 用仓库里的源码。Rust 的 `plugin_kernel` 用基座 crate `src-tauri/crates/plugin-base` 找电脑上的 Node（没有就下载到数据目录的 `runtime/`，下载进度和失败显示在设置的插件页，失败了在那里重试），拉起没有界面的宿主进程（`packages/plugin-base` 的 host，跑 `vendor/cordis` 内核），标准输入输出上走 JSON-RPC、心跳、退避重启，用作业对象 / 进程组管住它。窗口经本机 WebSocket（令牌、来源核对、快照和序号）连宿主，插件的界面文件和 React 转接模块由自定义协议 `fuyu-plugin` 提供，前端一侧在 `src/features/plugin-kernel/`。协议和边界见 [v3-boundary.md](plugins/v3-boundary.md)，进度见 [v3-progress.md](plugins/v3-progress.md)。第 2 版插件宿主（`plugin_host`）已删除，只剩 `plugin_kernel/v2_migration.rs` 读旧数据帮老用户迁移。
 
 岛和设置窗口的界面经插槽拼装（E36.2，第 2 阶段）：`src/features/plugin-kernel/slots.ts` 给每个窗口一份不依赖宿主的注册表，设置窗口的部分（E36.3.26 起）在各功能的 `features/<领域>/plugin/settings.tsx`（分类、分节、快捷键页的分节和 `settings.runner/v1` 的接线），由 `windows/settings/slots/categories.tsx` 用 glob 收进来，窗口自己的页面留在那里；岛上的部分（E36.3.25 起）在各功能的 `features/<领域>/plugin/island.tsx`（展开页、页头按钮、收起条、刘海提醒、提示）和 `runners.tsx`（不画界面的接线），由 `windows/island/slots/pluginFiles.ts` 用 glob 收进来（窗口 import 的是 `slots/builtins.ts`：它先载外壳的样式，再载 `pluginFiles.ts`，插件里同优先级的规则才压得过外壳），外壳自己的项（状态灯、重置位置、最小化、设置按钮、第一次提示）留在 `windows/island/slots/`；岛的形状（收起条主行和宽度、贴边保持、弹出、侧边岛的行、提醒）由各功能的 runner 往 `plugin-kernel/islandContributions.ts` 的贡献表里交，外壳只读汇总，不 import 功能（E36.3.51，规则见 [v3-boundary.md](plugins/v3-boundary.md)「岛的贡献表」）；功能只从 `features/plugin-kernel/`（`slots.ts`、`settingsSlots.ts`、`settingsCategories.ts`）拿句柄，不 import 窗口（`tests/unit/feature-boundaries.test.mjs` 检查）；由 `SlotView` 渲染（内置项不加外层，第三方插件的项包 `.plugin-slot`，每项有自己的错误边界）。不设 `FUYU_PLUGINS_V3` 时也走这条路。插槽的名单和规则在 `@fuyu/plugin-base/protocol` 的 `SLOTS`，见 [v3-boundary.md](plugins/v3-boundary.md)「插槽」。
 
@@ -63,16 +62,13 @@ main.tsx → windows/ → features/ → components/、lib/、utils/、i18n/、st
 - `vendor/`：拷进仓库的第三方代码。`cordis/` 是插件平台第 3 版的内核（Cordis 的 6 个包，npm 构建产物）。不受行数和「不写注释」的约束；版本、上游提交和本地改动记在 [vendor/README.md](../../vendor/README.md)。
 - `packages/`：不进入岛屿的发布产物。
   - `plugin-base`：插件平台第 3 版的基座（宿主、插件接口、协议）；不能 import `src/`，有测试检查。
-  - 插件开发者工具（pnpm workspace）：`fuyu-plugin`（Node SDK、CLI、模拟宿主）、`create-fuyu-plugin`（脚手架）、`powershell/Fuyu.Plugin`。
+  - 插件开发者工具（pnpm workspace，第 3 版）：`plugin-cli`（命令行，npm 上发成 `fuyu-plugin` 2.x）、`create-plugin`（脚手架，发成 `create-fuyu-plugin` 2.x）、`plugin-manifest`、`plugin-market`、`plugin-review`、`plugin-services`。第 2 版的 SDK、脚手架和 PowerShell 模块已在 E36.6.6 删除。
   - `vscode-extension`：切到会话终端的 VS Code 扩展，不在 workspace 里，`pnpm dlx @vscode/vsce package --no-dependencies` 打包。
 - `plugins/`：插件市场，不进入发布产物。
-  - `examples/` 示例插件源码（PowerShell，含 `lib/focusd.ps1`）。
-  - `drafts/` 写好了、还没打包签名的官方插件（签名私钥只在 Windows 那台机器上，说明见 [plugins/drafts/README.md](../../plugins/drafts/README.md)）。
-  - `schema/` 协议描述；`market/` 每个市场插件的元数据（发布者、分类，生成索引用）；`sdk/` 单文件 SDK（`pnpm sdk:build` 从 `packages/` 生成）；`packages/` 打包好的 zip。
-  - `index.json` 与 `index.json.sig`：给切换前的旧版岛屿的市场索引（`pnpm plugins:index` 生成；新版岛屿读 `TixXin/fuyu-plugins`）。
-  - `signing-keys.json` 可信公钥（编译进岛屿），`revoked.json` 与 `revoked.json.sig` 撤销名单，`author-key.json` 官方作者签名公钥。
+  - `v3/official/` 第 3 版的官方插件。
+  - 冻结的第 2 版市场，只给切换到 `TixXin/fuyu-plugins` 之前发布的旧岛屿读，内容不再改（E36.6.6）：`index.json` 与 `index.json.sig` 索引，`revoked.json` 与 `revoked.json.sig` 撤销名单，`packages/` 已签名的 zip；`signing-keys.json`（旧岛屿编译进去的可信公钥）、`legacy-index-key.json`（给索引签名的旧密钥）、`author-key.json`（官方作者公钥）。紧急撤销时用 `pnpm plugins:resign` 重签，见 [market-ops.md](plugins/market-ops.md)。第 2 版的示例插件、草稿、单文件 SDK 和协议描述已删除。
 - `scripts/`：
-  - `release/` 发布、签名与 `latest.json` 生成；`readme/` 生成仓库首页 README 用的 SVG；`plugins/` 插件索引、签名与 SDK 生成。
+  - `release/` 发布、签名与 `latest.json` 生成；`readme/` 生成仓库首页 README 用的 SVG；`plugins/` 冻结的第 2 版市场的重签；`plugins-v3/` 第 3 版的内置插件构建、宿主打包和 npm SDK 打包。
   - `mq/` 攒批开 PR 合入（`pnpm mq:*` 和 pre-push 检查）；`island-lab/` 岛屿实验台（`pnpm lab`）；`progress/` 进度汇总（`pnpm progress`）。
   - 根目录放开发流程脚本：合并队列的检查（`land-check.mjs`）、门禁钩子（`gate/`，Claude Code 的 PreToolUse 钩子，登记在 `.claude/settings.json`：第一次改 `src/`、`src-tauri/`、各家 AI 代理的接入点等之前拦一次，要求先读规则文件或加载 skill，见 [workflow.md](workflow.md)「门禁钩子」）、行数检查、浏览器回归页运行器（`run-regression.mjs`）、dev 前停止运行中的岛屿。
 - `video/`：宣传视频。真的前端加假后端在浏览器里跑，按时间表逐帧渲染成 MP4；自带 `package.json`，不在 workspace 里（用法见 [video/README.md](../../video/README.md)）；成片不进仓库。

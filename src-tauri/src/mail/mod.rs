@@ -4,7 +4,6 @@ mod send;
 mod client_id;
 mod content;
 mod credentials;
-mod plugin_view;
 mod service;
 mod session;
 mod supervisor;
@@ -18,8 +17,6 @@ use std::{sync::mpsc, time::Instant};
 use tauri::AppHandle;
 
 use content::parse_message_id;
-
-pub(crate) use plugin_view::plugin_messages;
 use credentials::{delete_secret, normalize_email, read_secret, resolve_host};
 use service::{MailService, Work};
 

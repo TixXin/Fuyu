@@ -12,19 +12,14 @@ mod cache;
 mod events;
 mod host;
 mod players;
-mod plugin_view;
 #[cfg_attr(target_os = "macos", path = "service_macos.rs")]
 mod service;
 #[cfg(windows)]
 mod session;
-#[cfg_attr(target_os = "macos", path = "source_icon_macos.rs")]
-mod source_icon;
 mod state;
 mod timeline_clock;
 
 pub use players::CustomMediaPlayer;
-pub(crate) use plugin_view::{now_playing_key, plugin_cover, plugin_media_command, plugin_now_playing};
-pub(crate) use source_icon::current_source_icon;
 
 pub(crate) const PLUGIN_ID: &str = "music";
 

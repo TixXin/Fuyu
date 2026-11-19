@@ -4,7 +4,7 @@ import { useTranslation } from "../../i18n";
 import type { BuiltinPluginName } from "../../i18n/sections/settings/pluginsV3";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { exitPluginSafeMode, type BuiltinPlugin } from "../../features/plugin-kernel/api";
-import { BUILTIN_ICONS, matchesPluginQuery, milliseconds, stateOf, TONES } from "./BuiltinPluginsGroup";
+import { BUILTIN_ICONS, isOfficialMarketPlugin, matchesPluginQuery, milliseconds, stateOf, TONES } from "./BuiltinPluginsGroup";
 import { PluginHostNodeRow } from "./PluginHostNodeRow";
 import type { PluginHostView, PluginStatusV3 } from "./usePluginHostStatus";
 
@@ -40,7 +40,17 @@ function SafeModeBanner({ view, mode }: { view: PluginHostView; mode: "third-par
   );
 }
 
-export function HostSummaryBar({ view, runningCount, onOpenDiagnostics }: { view: PluginHostView; runningCount: number; onOpenDiagnostics: () => void }) {
+export function HostSummaryBar({
+  view,
+  runningCount,
+  showRunning = true,
+  onOpenDiagnostics,
+}: {
+  view: PluginHostView;
+  runningCount: number;
+  showRunning?: boolean;
+  onOpenDiagnostics: () => void;
+}) {
   const text = useTranslation().settings.pluginsV3;
   const { host, connection, memory } = view;
   const measured = memory && host && memory.pid === host.pid ? memory : null;
@@ -58,7 +68,7 @@ export function HostSummaryBar({ view, runningCount, onOpenDiagnostics }: { view
                 {text.memoryTitles[memoryKey]}{" "}
                 <strong className="plugins-v3__value" data-measure={memoryKey}>{megabytes(measured ? measured.bytes : host.rssBytes)}</strong>
               </span>
-              <span className="plugins-v3__host-meta">{text.runningSummary(runningCount)}</span>
+              {showRunning ? <span className="plugins-v3__host-meta">{text.runningSummary(runningCount)}</span> : null}
               {host.dev ? <span className="plugins-v3__badge plugins-v3__badge--dev">{text.devMode}</span> : null}
               <span className="plugins-v3__sr-only">{text.memoryNotes[memoryKey]}</span>
             </>
@@ -98,7 +108,7 @@ export function PluginDiagnosticsTab({
   const extras = (hostPlugins ?? []).filter((p) => !builtinIds.has(p.id));
 
   const rows = [
-    ...extras.map((p) => ({ id: p.id, name: p.id, extra: p.name, kind: p.kind, state: stateOf(p), usage: p.usage, icon: Blocks })),
+    ...extras.map((p) => ({ id: p.id, name: p.id, extra: p.name, kind: p.kind, official: isOfficialMarketPlugin(p), state: stateOf(p), usage: p.usage, icon: Blocks })),
     ...(builtins ?? []).map((b) => {
       const id = b.id as BuiltinPluginName;
       const hp = hostById.get(b.id);
@@ -107,6 +117,7 @@ export function PluginDiagnosticsTab({
         name: (text.builtinNames as Record<string, string | undefined>)[id] ?? b.id,
         extra: "",
         kind: b.kind,
+        official: false,
         state: hp ? stateOf(hp) : b.enabled ? ("running" as const) : ("disabled" as const),
         usage: hp?.usage,
         icon: (BUILTIN_ICONS as Record<string, LucideIcon | undefined>)[id] ?? Blocks,
@@ -179,7 +190,7 @@ export function PluginDiagnosticsTab({
                       ].filter(Boolean)
                     : [];
                   return (
-                    <tr key={row.id} onClick={() => onSelectPlugin(row.id)}>
+                    <tr key={row.id} data-diag-row={row.id} onClick={() => onSelectPlugin(row.id)}>
                       <td>
                         <div className="plugins-v3__diag-plugin">
                           <span className={`plugins-v3__icon plugins-v3__icon--sm plugins-v3__icon--${tone}`} aria-hidden="true">
@@ -189,7 +200,11 @@ export function PluginDiagnosticsTab({
                           <div className="plugins-v3__title-col">
                             <div className="plugins-v3__title-line">
                               <span className="plugins-v3__plugin-name">{row.name}</span>
-                              {row.kind && row.kind !== "builtin" ? <span className="plugins-v3__kind">{text.kinds[row.kind]}</span> : null}
+                              {row.official ? (
+                                <span className="plugins-v3__pill plugins-v3__pill--official">{text.market.officialBadge}</span>
+                              ) : row.kind ? (
+                                <span className="plugins-v3__kind">{text.kinds[row.kind]}</span>
+                              ) : null}
                             </div>
                             <span className="plugins-v3__id">{row.id}</span>
                           </div>

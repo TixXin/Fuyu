@@ -315,28 +315,6 @@ pub(crate) fn friendly_app_label(id: &str) -> String {
     friendly_app_label_with_custom(id, &custom_players_snapshot())
 }
 
-#[cfg(any(windows, test))]
-pub(crate) fn packaged_executable_candidates(source_app: &str) -> Vec<&'static str> {
-    let lowered = source_app.to_lowercase();
-    if lowered.contains("spotify") {
-        vec!["Spotify.exe"]
-    } else if lowered.contains("applemusic") || lowered.contains("apple.music") {
-        vec!["AppleMusic.exe", "Music.UI.exe"]
-    } else if lowered.contains("itunes") {
-        vec!["iTunes.exe"]
-    } else if lowered.contains("tidal") {
-        vec!["TIDAL.exe"]
-    } else if lowered.contains("deezer") {
-        vec!["Deezer.exe"]
-    } else if lowered.contains("qobuz") {
-        vec!["Qobuz.exe"]
-    } else if lowered.contains("zune") || lowered.contains("groove") {
-        vec!["Music.UI.exe"]
-    } else {
-        Vec::new()
-    }
-}
-
 pub(crate) fn is_browser_executable(exe_or_id: &str) -> bool {
     let lowered = exe_or_id.to_lowercase();
     let stem = lowered

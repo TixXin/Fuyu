@@ -16,7 +16,7 @@ import { useSettingsPositionReset } from "./useSettingsPositionReset";
 import { createExternalResizeTracker, createSingleFlightFrameQueue } from "./windowSync";
 
 const SHOW_RETRY_DELAYS_MS = [0, 300, 1000, 3000];
-const SYNC_WAIT_BEFORE_SHOW_MS = 1500;
+const SYNC_WAIT_BEFORE_SHOW_MS = 200;
 const RESIZING_CLASS = "island-resizing";
 
 function wait(ms: number) {

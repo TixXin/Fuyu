@@ -1,5 +1,7 @@
 # 插件 API 参考
 
+> **第 2 版插件已下线（2026-11，E36.6）**：岛屿不再运行第 2 版插件，第 2 版的 SDK、脚手架、PowerShell 模块和示例插件已从仓库删除（npm 上的 `fuyu-plugin` / `create-fuyu-plugin` 0.x 停在 0.7.0），文中指向它们的链接已失效。本文只留作参考；写新插件看[第 3 版的文档](v3/README.md)。
+
 > 由 `pnpm sdk:build` 根据 [`plugins/schema/rpc.json`](../../plugins/schema/rpc.json) 生成，不要手改。各项的说明直接取自这份协议文件，是英文；用法和例子见 [岛上界面](ui.md)、[运行与通信](runtime.md) 和 [权限与安全](permissions.md)。
 
 插件和岛屿通过 stdin / stdout 交换 JSON-RPC 2.0 消息，每行一条。本页按插件 API 第 2 版写（清单 `"apiVersion": 2`）。还在用第 1 版的插件能调用的方法只有：`host.info`、`settings.get`、`ui.setInfo`、`todos.list`、`todos.add`、`todos.update`、`todos.remove`、`note.get`、`note.set`、`agentStatus.report`、`agentStatus.clear`，见 [运行与通信](runtime.md#第-1-版插件)。

@@ -132,6 +132,17 @@ test("an installed package fails with a reason when it is missing, misnamed or n
   assert.match(reasons.odd.reason, /source/);
 });
 
+test("a beta app build runs an installed plugin whose engine range is older", async () => {
+  const made = space({
+    "data/plugins.yml": '- id: "@ann/beta"\n  source: market\n',
+    "data/packages/@ann/beta/package.json": manifest("@ann/beta", { host: "host.mjs" }, { engines: { fuyu: ">=0.3.10" } }),
+    "data/packages/@ann/beta/host.mjs": HOST("beta"),
+  });
+  const host = await open(made, { appVersion: "0.3.11-beta.4" });
+  const status = byId(host, "@ann/beta");
+  assert.equal(status.state, "running", JSON.stringify(status));
+});
+
 test("a development folder outside the data folder serves its windows under dev/<id>/", async () => {
   const made = space({
     "data/plugins.yml": "- id: clock\n  source: dev\n  path: ../app/clock\n",
