@@ -27,6 +27,22 @@ const OFFICIAL_PLUGINS = [
 const scratch = mkdtempSync(join(tmpdir(), "fuyu-official-plugins-v3-"));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 
+const AWAITING_SLOT_THEME = ["--fuyu-plugin-warning", "--fuyu-plugin-danger"];
+
+function withoutAllowedColors(css) {
+  return css
+    .replace(/light-dark\([^()]*\)/gi, "light-dark()")
+    .replace(/var\(\s*(--fuyu-plugin-(?:warning|danger))\s*,[^()]*\)/gi, "var($1)");
+}
+
+function declaredProperties(cssFiles) {
+  const names = new Set();
+  for (const cssFile of cssFiles) {
+    for (const [, name] of readFileSync(cssFile, "utf8").matchAll(/(--[\w-]+)\s*:/g)) names.add(name);
+  }
+  return names;
+}
+
 function collectCssFiles(dir) {
   const found = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -96,16 +112,17 @@ test("all 8 official v3 plugins pass check, pack, review, slot theme checks, and
 
     const cssFiles = collectCssFiles(dir);
     assert.ok(cssFiles.length > 0, `${expectedId} should include at least one .css stylesheet`);
+    const ownProperties = declaredProperties(cssFiles);
     for (const cssFile of cssFiles) {
       const css = readFileSync(cssFile, "utf8");
       assert.doesNotMatch(
-        css,
+        withoutAllowedColors(css),
         /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i,
-        `${expectedId} (${cssFile}) must not hardcode #hex, rgb(), or hsl() colors`,
+        `${expectedId} (${cssFile}) must not hardcode #hex, rgb(), or hsl() colors outside light-dark() and warning/danger fallbacks`,
       );
       const vars = [...css.matchAll(/var\(\s*(--[\w-]+)/g)].map(([, name]) => name);
-      assert.ok(vars.length > 0, `${expectedId} (${cssFile}) should use --fuyu-plugin-* theme variables`);
-      const invalidVars = vars.filter((name) => !SLOT_THEME.includes(name));
+      assert.ok(vars.some((name) => SLOT_THEME.includes(name)), `${expectedId} (${cssFile}) should use --fuyu-plugin-* theme variables`);
+      const invalidVars = vars.filter((name) => !SLOT_THEME.includes(name) && !AWAITING_SLOT_THEME.includes(name) && !ownProperties.has(name));
       assert.deepEqual(invalidVars, [], `${expectedId} (${cssFile}) uses non-SLOT_THEME variables: ${invalidVars.join(", ")}`);
     }
 

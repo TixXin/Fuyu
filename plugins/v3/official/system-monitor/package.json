@@ -1,8 +1,8 @@
 {
   "name": "@fuyu/system-monitor",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "Cross-platform CPU, per-core load, memory usage and system uptime monitor on the island page and collapsed bar.",
+  "description": "CPU, GPU, memory, network, battery and the busiest programs on the island, with 5-minute charts and a collapsed bar that turns yellow or red when readings run high.",
   "license": "MIT",
   "author": "TixXin",
   "repository": "https://github.com/TixXin/fuyu",
@@ -24,8 +24,8 @@
       "en": "System monitor"
     },
     "description": {
-      "zh-CN": "基于 Node 原生接口跨平台显示 CPU 总体与每核负载、内存占用和系统运行时间，支持岛展开页与收起条指标。",
-      "en": "Shows cross-platform overall and per-core CPU load, memory usage, and system uptime on the island page and collapsed bar."
+      "zh-CN": "在岛上看 CPU、GPU、内存、网速、电池和最占资源的程序，带 5 分钟曲线；收起条读数偏高变黄、过高变红。会运行系统自带的程序取数（Windows 上是 PowerShell，Mac 上是 vm_stat、ps 等），不联网。",
+      "en": "CPU, GPU, memory, network, battery and the busiest programs on the island, with 5-minute charts; the collapsed bar turns yellow or red when readings run high. Runs built-in system programs to read them (PowerShell on Windows; vm_stat, ps and others on Mac), with no network access."
     },
     "icon": "assets/icon.svg",
     "categories": [
