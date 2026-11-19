@@ -57,6 +57,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   showTitle: false,
   showCollapsedText: true,
   collapsedOverflowMore: true,
+  notchWingMax: 100,
   showIdleTodoCount: true,
   carryOverIncompleteTodos: false,
   enableTodoReorder: false,

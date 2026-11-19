@@ -35,6 +35,10 @@
   justify-self: start;
 }
 
+.collapsed-items__button[aria-pressed="true"] {
+  color: var(--color-accent);
+}
+
 .plugin-pages {
   display: grid;
   gap: var(--space-sm);

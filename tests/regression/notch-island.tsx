@@ -55,24 +55,24 @@ function addClocks() {
   return () => removers.forEach((remove) => remove());
 }
 
-type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean; stack: AgentNoticeNotch | null; card: NoticeCard; more: boolean };
+type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean; stack: AgentNoticeNotch | null; card: NoticeCard; more: boolean; wing: number };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: Boolean(demoStack), level: null, device: null, preview: null, popup: Boolean(demoStack), stack: demoStack, card: demoCard, more: true });
+  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: Boolean(demoStack), level: null, device: null, preview: null, popup: Boolean(demoStack), stack: demoStack, card: demoCard, more: true, wing: Number(params.get("wing")) || 100 });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
   const fitWidth = useSyncExternalStore(collapsedFit.subscribe, collapsedFit.total);
-  const width = notchFittedWidth(Math.min(520, 300 + fitWidth), state.notch, 1, Boolean(state.level || state.device));
+  const width = notchFittedWidth(Math.min(520, 300 + fitWidth), state.notch, 1, Boolean(state.level || state.device), state.wing);
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: state.preview }, agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, barText: !state.notch, todoTitle: "写周报和整理会议记录", translationPeek: state.peek, levelPopup: state.level, deviceAlert: state.device });
   return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${state.popup ? notchPanelWidth(400, state.notch, 1, true) : notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
     <IslandShell
       mode={state.expanded ? "expanded" : "collapsed"} page={state.popup ? "agents" : "todo"} popup={state.popup} isTucked={state.tucked} isDetached={false} showTitle={false}
       showCollapsedText={!state.notch} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
-      onOpenPage={(page) => openedPages.push(page)} overflowMore={state.more}
+      onOpenPage={(page) => openedPages.push(page)} overflowMore={state.more} notchWingMax={state.wing}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       {state.stack ? <NoticeStack notch={state.stack} card={state.card} /> : <span>待办清单</span>}
@@ -188,10 +188,11 @@ async function runChecks() {
     const clockWing = () => bar().querySelector<HTMLElement>(".island__notch-wing--right")!;
     const clocksShown = () => [...bar().querySelectorAll<HTMLElement>(".test-clock-chip")];
     const chip = () => bar().querySelector<HTMLButtonElement>(".island__more-chip");
+    const whole = (clock: HTMLElement) => Math.abs(box(clock.closest(".island__collapsed-fit")!).width - 44) < 1.5 && box(clock).left >= box(clockWing()).left - 0.5 && box(clock).right <= box(clockWing()).right + 0.5;
     const shownCities = clocksShown().map((clock) => clock.textContent);
     check(shownCities.length >= 1 && shownCities.length < 5 && shownCities.join() === ["TYO", "LON", "NYC", "SYD", "PAR"].slice(0, shownCities.length).join(), "两翼放不下五个时钟时，按清单顺序留下前面的");
     check(chip()?.textContent === `+${5 - shownCities.length}`, "其余的收进「+N」，N 是收起来的个数");
-    check(clocksShown().every((clock) => box(clock).left >= box(clockWing()).left - 0.5 && box(clock).right <= box(clockWing()).right + 0.5 && Math.abs(box(clock).width - 44) < 1), "留下的项目完整显示在右翼里，没有被挤扁");
+    check(clocksShown().every(whole) && !bar().querySelector(".island__collapsed-fit[data-clipped]"), "留下的项目完整显示在右翼里，没有被挤扁");
     const gapBox = box(bar().querySelector(".island__notch-gap")!);
     check(box(chip()!).right <= gapBox.left + 0.5 || box(chip()!).left >= gapBox.right - 0.5, "「+N」不压刘海");
     check(box(chip()!).left >= box(island()).left && box(chip()!).right <= box(island()).right && chip() === hit(chip()!), "「+N」在岛上看得见、点得到");
@@ -212,6 +213,41 @@ async function runChecks() {
     await set({ more: true });
     await settleTransitions();
     check(chip()?.textContent === `+${5 - shownCities.length}`, "再打开设置，「+N」回来");
+    await set({ wing: 170 });
+    await settleTransitions();
+    const wideShown = clocksShown().length;
+    check(wideShown > shownCities.length && chip()?.textContent === (wideShown === 5 ? undefined : `+${5 - wideShown}`) && clocksShown().every(whole) && !bar().querySelector(".island__collapsed-fit[data-clipped]"), "两翼最宽调到 170 后能多放几个，留下的仍然完整");
+    check(JSON.parse(localStorage.getItem("fuyu-collapsed-overflow") ?? "[]").length === 5 - wideShown, "放不下的项目记给设置窗口，清单里好标出来");
+    await set({ wing: 100 });
+    await settleTransitions();
+    const { arrangeCollapsedItems, saveCollapsedPlacements, setCollapsedItemShelf } = await import("../../src/lib/settings/collapsedItems");
+    const keepInPanel = (id: string | null) => act(async () => {
+      const offered = ["status-light", "clock-1", "clock-2", "clock-3", "clock-4", "clock-5"];
+      saveCollapsedPlacements(id ? setCollapsedItemShelf(arrangeCollapsedItems(offered, []), id, true) : []);
+      window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-collapsed-items" }));
+    });
+    await keepInPanel("clock-1");
+    await settleTransitions();
+    await act(async () => { chip()!.click(); });
+    check(clocksShown()[0]?.textContent === "LON" && rowNames()[0] === "时钟 TYO" && rowNames().length === 5 - clocksShown().length, "清单里收进小面板的项目不上岛，排在小面板里它原来的位置");
+    await act(async () => { chip()!.click(); });
+    await act(async () => { removeClocks(); });
+    await settleTransitions();
+    check(!document.querySelector(".island__more-chip"), "收进小面板的项目不在了，「+N」也不留");
+    await keepInPanel(null);
+    await act(async () => { removeClocks = addClocks(); });
+    await settleTransitions();
+    await keepInPanel("clock-2");
+    await set({ notch: null });
+    await settleTransitions();
+    const endChip = bar().querySelector<HTMLButtonElement>(".island__more-chip");
+    check(endChip?.textContent === "+1" && clocksShown().map((clock) => clock.textContent).join() === "TYO,NYC,SYD,PAR" && box(endChip!).left >= box(clocksShown()[3]).right - 0.5 && box(endChip!).right <= box(island()).right, "没有刘海时，收进小面板的项目也有「+N」，排在最右");
+    await act(async () => { endChip!.click(); });
+    check(rowNames().join() === "时钟 LON" && box(panel()!).top >= box(island()).bottom, "没有刘海时点「+N」同样在岛下面出小面板");
+    await act(async () => { endChip!.click(); });
+    await keepInPanel(null);
+    await set({ notch: NOTCH });
+    await settleTransitions();
     await act(async () => { removeClocks(); });
     await settleTransitions();
     check(!document.querySelector(".island__more-chip, .island__bar-unit") && Math.abs(box(island()).height - NOTCH.height) < 1, "项目少了以后「+N」消失，收起条回到原来的结构");

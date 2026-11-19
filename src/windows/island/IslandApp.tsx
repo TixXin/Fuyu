@@ -103,7 +103,7 @@ export function IslandApp() {
     growWidth: grow?.width ?? 0,
   });
   const collapsedIslandHeight = grownCollapsedHeight(grow?.height ?? COLLAPSED_ISLAND_HEIGHT);
-  const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
+  const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0, settings.notchWingMax);
   useIslandTucking({ settings, navigation });
 
 
@@ -229,6 +229,7 @@ export function IslandApp() {
         showTitle={settings.showTitle}
         showCollapsedText={barText}
         overflowMore={settings.collapsedOverflowMore}
+        notchWingMax={settings.notchWingMax}
         features={features}
         onOpenPage={openEnabledPage}
         onWindowDragStart={startIslandDrag}

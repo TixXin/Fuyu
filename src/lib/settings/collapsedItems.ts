@@ -1,7 +1,8 @@
 export type CollapsedZone = "left" | "right";
-export type CollapsedPlacement = { id: string; zone: CollapsedZone; hidden?: boolean };
+export type CollapsedPlacement = { id: string; zone: CollapsedZone; hidden?: boolean; shelf?: boolean };
 
 export const COLLAPSED_ITEMS_KEY = "fuyu-collapsed-items";
+export const COLLAPSED_OVERFLOW_KEY = "fuyu-collapsed-overflow";
 const LAYOUT_VERSION = 1;
 
 const DEFAULT_ORDER: readonly { id: string; zone: CollapsedZone }[] = [
@@ -57,7 +58,7 @@ export function loadCollapsedPlacements(): CollapsedPlacement[] {
     if (!Array.isArray(items)) return [];
     const seen = new Set<string>();
     return items.filter(isPlacement).filter(({ id }) => !seen.has(id) && Boolean(seen.add(id)))
-      .map(({ id, zone, hidden }) => (hidden ? { id, zone, hidden: true } : { id, zone }));
+      .map(({ id, zone, hidden, shelf }) => ({ id, zone, ...(hidden ? { hidden: true } : {}), ...(shelf === true ? { shelf: true } : {}) }));
   } catch {
     return [];
   }
@@ -90,11 +91,20 @@ export function arrangeCollapsedItems(offered: readonly string[], saved: readonl
 
 export function zoneIds(placements: readonly CollapsedPlacement[], zone: CollapsedZone, offered: readonly string[]) {
   const present = new Set(offered);
-  return placements.filter((placement) => placement.zone === zone && !placement.hidden && present.has(placement.id)).map(({ id }) => id);
+  return placements.filter((placement) => placement.zone === zone && !placement.hidden && !placement.shelf && present.has(placement.id)).map(({ id }) => id);
+}
+
+export function shelfIds(placements: readonly CollapsedPlacement[], offered: readonly string[]) {
+  const present = new Set(offered);
+  return placements.filter((placement) => placement.shelf && !placement.hidden && present.has(placement.id)).map(({ id }) => id);
 }
 
 export function isCollapsedItemHidden(placements: readonly CollapsedPlacement[], id: string) {
   return placements.some((placement) => placement.id === id && placement.hidden);
+}
+
+export function isCollapsedItemOffBar(placements: readonly CollapsedPlacement[], id: string) {
+  return placements.some((placement) => placement.id === id && (placement.hidden === true || placement.shelf === true));
 }
 
 export function moveCollapsedItem(placements: readonly CollapsedPlacement[], id: string, step: -1 | 1, listed: readonly string[]) {
@@ -121,5 +131,25 @@ export function setCollapsedItemZone(placements: readonly CollapsedPlacement[], 
 }
 
 export function setCollapsedItemHidden(placements: readonly CollapsedPlacement[], id: string, hidden: boolean) {
-  return placements.map((placement) => (placement.id !== id ? placement : hidden ? { ...placement, hidden: true } : { id: placement.id, zone: placement.zone }));
+  return placements.map((placement) => (placement.id !== id ? placement : hidden ? { ...placement, hidden: true } : { id: placement.id, zone: placement.zone, ...(placement.shelf ? { shelf: true } : {}) }));
+}
+
+export function setCollapsedItemShelf(placements: readonly CollapsedPlacement[], id: string, shelf: boolean) {
+  return placements.map((placement) => (placement.id !== id ? placement : shelf ? { ...placement, shelf: true } : { id: placement.id, zone: placement.zone, ...(placement.hidden ? { hidden: true } : {}) }));
+}
+
+export function loadCollapsedOverflow(): string[] {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem(COLLAPSED_OVERFLOW_KEY) ?? "null");
+    return Array.isArray(value) ? value.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCollapsedOverflow(ids: readonly string[]) {
+  const next = ids.length === 0 ? null : JSON.stringify(ids);
+  if (localStorage.getItem(COLLAPSED_OVERFLOW_KEY) === next) return;
+  if (next === null) localStorage.removeItem(COLLAPSED_OVERFLOW_KEY);
+  else localStorage.setItem(COLLAPSED_OVERFLOW_KEY, next);
 }

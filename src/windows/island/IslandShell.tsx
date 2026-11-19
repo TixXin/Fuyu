@@ -47,6 +47,7 @@ type IslandShellProps = {
   showTitle: boolean;
   showCollapsedText: boolean;
   overflowMore?: boolean;
+  notchWingMax?: number;
   features: IslandFeatures;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
@@ -140,6 +141,7 @@ export function IslandShell({
   showTitle,
   showCollapsedText,
   overflowMore = true,
+  notchWingMax,
   features,
   onOpenPage,
   onWindowDragStart,
@@ -257,6 +259,7 @@ export function IslandShell({
             showTitle={showTitle}
             showCollapsedText={showCollapsedText}
             overflowMore={overflowMore}
+            notchWingMax={notchWingMax}
             collapsedLabel={collapsedLabel}
             agentVisualState={agentVisualState}
             onOpenPage={onOpenPage}
