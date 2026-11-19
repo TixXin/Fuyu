@@ -48,7 +48,7 @@ const reveal = (session: AgentSessionSummary) => ({ key: sessionKey(session), ki
 
 const approvals = (request: AgentApprovalRequest): AgentApprovals => ({ current: request, queued: 1, decide: () => {}, cardHeight: 0, measure: () => {} });
 
-const permission: AgentApprovalRequest = {
+export const permission: AgentApprovalRequest = {
   id: 1, kind: "permission", agent: "codex", sessionId: "n-needs", cwd: "/Users/me/projects/Fuyu", toolName: "Bash",
   toolInput: { command: "rm -rf src-tauri/target/agents/debug/incremental/fuyu-3k2j9/", description: "清理增量缓存" }, permissionSuggestions: null, receivedAt: 0,
 };

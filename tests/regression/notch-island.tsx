@@ -17,12 +17,16 @@ import { useFixtureLines } from "./islandLines";
 import type { AgentNoticeNotch } from "../../src/features/agent-status/agentSettings";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
 import { sessionKey } from "../../src/features/agent-status/unseen";
-import { SESSIONS } from "./agentNoticeGallery";
+import type { AgentSessionSummary } from "../../src/features/agent-status/api";
+import type { AgentApprovals } from "../../src/features/agent-status/approvals/useAgentApprovals";
+import { permission, SESSIONS } from "./agentNoticeGallery";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const params = new URLSearchParams(location.search);
 const automated = params.has("test");
 const demoStack = automated ? null : (params.get("stack") as AgentNoticeNotch | null);
+type NoticeCard = "session" | "approval" | "pile";
+const demoCard = (params.get("card") as NoticeCard | null) ?? "session";
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 const NOTCH: IslandNotch = { width: 200, height: 32 };
 mockIPC((command) => {
@@ -30,11 +34,11 @@ mockIPC((command) => {
   if (command === "get_qq_mail_state") return [];
 }, { shouldMockEvents: true });
 
-type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean; stack: AgentNoticeNotch | null };
+type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean; stack: AgentNoticeNotch | null; card: NoticeCard };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: Boolean(demoStack), level: null, device: null, preview: null, popup: Boolean(demoStack), stack: demoStack });
+  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: Boolean(demoStack), level: null, device: null, preview: null, popup: Boolean(demoStack), stack: demoStack, card: demoCard });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
@@ -49,13 +53,18 @@ function Fixture() {
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
-      {state.stack ? <NoticeStack notch={state.stack} /> : <span>待办清单</span>}
+      {state.stack ? <NoticeStack notch={state.stack} card={state.card} /> : <span>待办清单</span>}
     </IslandShell>
   </div>;
 }
 
-const REVEAL = { key: sessionKey(SESSIONS.needs), kind: "completed" as const, session: SESSIONS.needs, rowHeight: 78, measure: () => {} };
-function NoticeStack({ notch }: { notch: AgentNoticeNotch }) {
+const noticeOf = (session: AgentSessionSummary) => ({ key: sessionKey(session), kind: "completed" as const, session });
+const REVEAL = { ...noticeOf(SESSIONS.needs), rowHeight: 78, measure: () => {} };
+const PILED = [SESSIONS.needs, SESSIONS.working, SESSIONS.yourTurn, SESSIONS.done, SESSIONS.failed];
+const APPROVAL: AgentApprovals = { current: permission, queued: 0, decide: () => {}, cardHeight: 0, measure: () => {} };
+function NoticeStack({ notch, card }: { notch: AgentNoticeNotch; card: NoticeCard }) {
+  if (card === "approval") return <AgentSessionsPanel sessions={[SESSIONS.needs]} hostDisplay="off" approvals={APPROVAL} notch={notch} />;
+  if (card === "pile") return <AgentSessionsPanel sessions={PILED} hostDisplay="off" reveal={REVEAL} stack={PILED.map(noticeOf)} stackMode="wings" notch={notch} />;
   return <AgentSessionsPanel sessions={[SESSIONS.needs]} hostDisplay="off" reveal={REVEAL} notch={notch} />;
 }
 
@@ -128,7 +137,22 @@ async function runChecks() {
     check(wings.contains(hit(wings.querySelector(".agent-provider-icon")!)) && wings.contains(hit(bandRight.querySelector(".agent-notice-stack__state")!)), "两翼在真面板里看得见，没被面板或列表裁掉");
     check(getComputedStyle(document.querySelector(".agent-notice__icon")!).display === "none", "卡片里不再重复图标");
     check(box(document.querySelector(".agent-notice")!).top >= box(island()).top + NOTCH.height - 0.5, "卡片在刘海下面");
-    await set({ stack: "below" });
+    await set({ card: "approval" });
+    await settleTransitions();
+    const approvalWings = document.querySelector<HTMLElement>(".agent-notice-stack__notch")!;
+    const approvalState = approvalWings.querySelector<HTMLElement>(".agent-notice-stack__state")!;
+    check(document.querySelector(".agent-approval") && Math.abs(box(approvalWings).top - box(island()).top) < 1, "审批卡：刘海两边同样有两翼标题带");
+    check(approvalWings.contains(hit(approvalWings.querySelector(".agent-provider-icon")!)) && approvalState.textContent === "等你确认" && approvalWings.contains(hit(approvalState)), "审批卡的两翼看得见：左边是发起审批的 Agent 图标，右边是「等你确认」");
+    check(box(document.querySelector(".agent-approval")!).top >= box(island()).top + NOTCH.height - 0.5, "审批卡在刘海下面");
+    await set({ card: "pile" });
+    await settleTransitions();
+    const pileWing = document.querySelector<HTMLElement>(".agent-notice-stack__notch .agent-notice-stack__wing--left")!;
+    const piled = [...pileWing.querySelectorAll<HTMLElement>(".agent-provider-icon")];
+    const extra = pileWing.querySelector<HTMLElement>(".agent-notice-stack__extra");
+    check(piled.length === 3 && extra?.textContent === "+2", "图标堆：五个会话时左翼叠三个图标，写 +2");
+    check(box(extra!).right <= popupNotchLeft + 0.5, "图标堆不压刘海");
+    check(piled.every((icon) => pileWing.contains(hit(icon))) && pileWing.contains(hit(extra!)), "图标堆的每个图标和 +2 都看得见");
+    await set({ card: "session", stack: "below" });
     await settleTransitions();
     check(!document.querySelector(".agent-notice-stack__notch") && getComputedStyle(document.querySelector(".island__notch-band")!).display !== "none", "Agent 通知（卡片在刘海下面）：刘海那一条照旧");
     check(getComputedStyle(document.querySelector(".agent-notice__icon")!).display !== "none" && box(document.querySelector(".agent-notice")!).top >= box(island()).top + NOTCH.height - 0.5, "卡片整个在刘海下面，带着自己的图标");
