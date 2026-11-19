@@ -18,7 +18,7 @@ export interface MarketCardHandlers {
   onOpenOnIsland?: (plugin: MarketCatalogPlugin) => void;
 }
 
-export function PluginMarketCardAction({ plugin, onInstall, onManage, onGoUpdate, canOpenOnIsland, onOpenOnIsland }: Omit<MarketCardHandlers, "onOpen"> & { plugin: MarketCatalogPlugin }) {
+export function PluginMarketCardAction({ plugin, compact = false, onInstall, onManage, onGoUpdate, canOpenOnIsland, onOpenOnIsland }: Omit<MarketCardHandlers, "onOpen"> & { plugin: MarketCatalogPlugin; compact?: boolean }) {
   const { locale } = useLocale();
   const text = useTranslation().settings.pluginsV3.marketPage.card;
   const stop = (event: MouseEvent, run: () => void) => {
@@ -41,7 +41,7 @@ export function PluginMarketCardAction({ plugin, onInstall, onManage, onGoUpdate
   if (plugin.installedVersion) {
     return (
       <>
-        <span className="market-card__installed"><Check size={13} strokeWidth={2.4} aria-hidden="true" />{text.installed}</span>
+        {compact ? null : <span className="market-card__installed"><Check size={13} strokeWidth={2.4} aria-hidden="true" />{text.installed}</span>}
         {onManage ? <button className="plugin-btn plugin-btn--sm" type="button" data-action="market-manage" onClick={(event) => stop(event, () => onManage(plugin))}>{text.manage}</button> : null}
         {onOpenOnIsland && canOpenOnIsland?.(plugin) ? (
           <button className="plugin-btn plugin-btn--sm market-card__island" type="button" data-action="market-open-on-island" title={text.openOnIslandTitle(localized(plugin.displayName, locale, plugin.name))} aria-label={text.openOnIsland} onClick={(event) => stop(event, () => onOpenOnIsland(plugin))}>

@@ -21,6 +21,11 @@ export type SettingsPluginMarketText = {
     updates: (count: number) => string;
     results: (count: number) => string;
     count: (count: number) => string;
+    fresh: string;
+    installed: (count: number) => string;
+    showInstalled: string;
+    hideInstalled: string;
+    allInstalled: string;
   };
   trustLine: string;
   loading: string;
@@ -139,6 +144,11 @@ export const zhCN: SettingsPluginMarketText = {
     updates: (count) => `可更新 (${count})`,
     results: (count) => `找到 ${count} 个`,
     count: (count) => `${count} 个`,
+    fresh: "还没装的",
+    installed: (count) => `已安装 (${count})`,
+    showInstalled: "展开",
+    hideInstalled: "收起",
+    allInstalled: "市场上的插件你都装了。有新插件上架时会出现在这里。",
   },
   trustLine: "市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。",
   loading: "正在读取市场目录…",
@@ -282,6 +292,11 @@ export const en: SettingsPluginMarketText = {
     updates: (count) => `Updates (${count})`,
     results: (count) => `${count} result${count === 1 ? "" : "s"}`,
     count: (count) => `${count}`,
+    fresh: "Not installed",
+    installed: (count) => `Installed (${count})`,
+    showInstalled: "Show",
+    hideInstalled: "Hide",
+    allInstalled: "You have every plugin in the market. New ones will show up here.",
   },
   trustLine: "Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.",
   loading: "Loading the market…",

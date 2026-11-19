@@ -27,6 +27,7 @@ export const RSS_SHOTS = [
   { url: shot("#fb923c", "Feeds"), caption: loc("展开后的文章列表", "Article list when expanded") },
   { url: shot("#fdba74", "OPML") },
 ];
+export const SUMMARY_SHOTS = [{ url: shot("#a78bfa", "TL;DR"), caption: loc("岛上的三句话摘要", "A three-sentence summary on the island") }];
 export const WEATHER_SHOTS = [{ url: shot("#38bdf8", "18°"), caption: loc("岛上的天气页", "The weather page on the island") }];
 
 const installed = (version: string): Partial<MarketCatalogPlugin> => ({ installedVersion: version, enabled: true, source: "market" });
@@ -39,7 +40,7 @@ export const MARKET_PLUGINS: MarketCatalogPlugin[] = [
   plugin("@fuyu/github-notify", ["GitHub 通知", "GitHub notifications"], ["有人提到你、请你审查或 CI 失败时，在岛上弹一条提醒", "Pops an island alert when you're mentioned, asked to review, or CI fails"], ["developer"],
     { ...installed("2.0.1"), install: candidate("2.1.0", "2026-11-17"), autoUpdate: candidate("2.1.0", "2026-11-17", { urgent: true }, { official: true, network: ["api.github.com", "gist.github.com"], slots: ["notice/v1"] }) }),
   plugin("@fuyu/page-summary", ["网页摘要", "Page summary"], ["复制一个链接，岛上给出三句话的摘要，可以存进笔记", "Copy a link and the island gives a three-sentence summary you can save to notes"], ["ai", "productivity"],
-    { icon: REMOTE_ICON, install: candidate("0.9.3", "2026-11-10", {}, { official: true, network: ["api.openai.com"] }) }),
+    { icon: REMOTE_ICON, screenshots: SUMMARY_SHOTS, install: candidate("0.9.3", "2026-11-10", {}, { official: true, network: ["api.openai.com"] }) }),
   plugin("@lin-dev/pomo-stats", ["专注统计", "Focus stats"], ["统计每天的番茄钟和专注时长，周日给你一份小结", "Tracks daily pomodoros and focus time, with a recap every Sunday"], ["productivity", "todos"],
     { ...installed("0.4.2"), manual: candidate("0.5.0", "2026-11-15", { trustChange: "unendorsed-key" }, { trustChange: "unendorsed-key", provides: ["focus-stats/v1"] }) }),
   plugin("@ryo/clip-sync", ["剪贴板跨设备", "Clipboard sync"], ["在两台电脑之间同步剪贴板，端到端加密", "Syncs the clipboard between two computers, end-to-end encrypted"], ["productivity"],

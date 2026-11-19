@@ -2,7 +2,7 @@
   <div id="gallery">
     <section class="gallery__stage settings-stage" data-stage="browse">
       <h2 class="gallery__title">
-        浏览：可更新 + 全部
+        浏览：可更新、还没装的、已安装
       </h2>
       <div>
         <div class="plugin-page market-page" data-market-page="true">
@@ -124,11 +124,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -173,55 +173,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -244,6 +196,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -484,6 +439,48 @@
               </article>
             </div>
           </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id2_" aria-expanded="true" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span class="market-owned__hint">
+                收起
+              </span>
+            </button>
+            <div class="plugin-card market-updates market-owned__list" id="_id2_">
+              <div class="market-update market-owned__row" data-market-plugin="@fuyu/weather">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="天气" type="button">
+                      天气
+                    </button>
+                    <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                  </div>
+                  <span>
+                    v1.2.0 · 资讯
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                  <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="market-card__island-label">
+                      在岛上打开
+                    </span>
+                  </button>
+                </span>
+              </div>
+            </div>
+          </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
             市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
@@ -563,7 +560,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id2_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id3_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -616,11 +613,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -665,55 +662,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -736,6 +685,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -979,6 +931,22 @@
               </article>
             </div>
           </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id4_" aria-expanded="false" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span aria-hidden="true" class="market-owned__peek">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+              </span>
+              <span class="market-owned__hint">
+                展开
+              </span>
+            </button>
+          </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
             市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
@@ -1058,7 +1026,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id3_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id5_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -1111,11 +1079,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -1160,55 +1128,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -1231,6 +1151,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -1471,6 +1394,354 @@
               </article>
             </div>
           </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id6_" aria-expanded="true" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span class="market-owned__hint">
+                收起
+              </span>
+            </button>
+            <div class="plugin-card market-updates market-owned__list" id="_id6_">
+              <div class="market-update market-owned__row" data-market-plugin="@fuyu/weather">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="天气" type="button">
+                      天气
+                    </button>
+                    <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                  </div>
+                  <span>
+                    v1.2.0 · 资讯
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                  <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="market-card__island-label">
+                      在岛上打开
+                    </span>
+                  </button>
+                </span>
+              </div>
+            </div>
+          </section>
+          <p class="plugin-foot market-trust">
+            <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage" data-stage="browse-all-installed">
+      <h2 class="gallery__title">
+        浏览：全都装了
+      </h2>
+      <div>
+        <div class="plugin-page market-page" data-market-page="true">
+          <div class="plugin-page__summary market-meta">
+            <b>
+              共 9 个插件
+            </b>
+            <span>
+              索引更新于 11/18 20:14
+            </span>
+            <button class="plugin-link" data-action="market-installed" type="button">
+              已装 3 个 ›
+            </button>
+          </div>
+          <div class="market-toolbar">
+            <div class="market-toolbar__search">
+              <label class="plugin-search">
+                <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                <input aria-label="搜索插件，比如 天气、GitHub、番茄钟" placeholder="搜索插件，比如 天气、GitHub、番茄钟" type="search" value="">
+              </label>
+            </div>
+            <div class="market-toolbar__row">
+              <div aria-label="分类" class="market-toolbar__cats" role="group">
+                <button aria-pressed="true" class="plugin-chip" data-market-category="all" type="button">
+                  全部
+                  <span class="plugin-chip__count">
+                    9
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="information" type="button">
+                  资讯
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="developer" type="button">
+                  开发
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="productivity" type="button">
+                  效率
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="ai" type="button">
+                  AI
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="appearance" type="button">
+                  外观
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="utilities" type="button">
+                  工具
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+              </div>
+              <div class="settings-select">
+                <div class="select-control">
+                  <button aria-controls="_id7_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                    <span>
+                      推荐
+                    </span>
+                    <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-market-allset="true">
+            市场上的插件你都装了。有新插件上架时会出现在这里。
+          </p>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id8_" aria-expanded="true" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (9)
+              </span>
+              <span class="market-owned__hint">
+                收起
+              </span>
+            </button>
+            <div class="plugin-card market-updates market-owned__list" id="_id8_">
+              <div class="market-update market-owned__row" data-market-plugin="@fuyu/rss">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm plugin-icon--img">
+                  <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="RSS 订阅" type="button">
+                      RSS 订阅
+                    </button>
+                    <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                  </div>
+                  <span>
+                    v1.5.0 · 资讯
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                </span>
+              </div>
+              <div class="market-update market-owned__row" data-market-plugin="@fuyu/weather">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="天气" type="button">
+                      天气
+                    </button>
+                    <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                  </div>
+                  <span>
+                    v1.2.0 · 资讯
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                  <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span class="market-card__island-label">
+                      在岛上打开
+                    </span>
+                  </button>
+                </span>
+              </div>
+              <div class="market-update market-owned__row" data-market-plugin="@fuyu/github-notify">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  G
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="GitHub 通知" type="button">
+                      GitHub 通知
+                    </button>
+                    <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                  </div>
+                  <span>
+                    v2.1.0 · 开发
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                </span>
+              </div>
+              <div class="market-update market-owned__row" data-market-plugin="@fuyu/page-summary">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm plugin-icon--img">
+                  <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="网页摘要" type="button">
+                      网页摘要
+                    </button>
+                    <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                  </div>
+                  <span>
+                    v0.9.3 · AI
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                </span>
+              </div>
+              <div class="market-update market-owned__row" data-market-plugin="@ryo/clip-sync">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  剪
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="剪贴板跨设备" type="button">
+                      剪贴板跨设备
+                    </button>
+                  </div>
+                  <span>
+                    v1.1.0 · ryo · 效率
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                </span>
+              </div>
+              <div class="market-update market-owned__row" data-market-plugin="@tara/linear">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  L
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="Linear 任务" type="button">
+                      Linear 任务
+                    </button>
+                  </div>
+                  <span>
+                    v0.6.0 · tara · 开发
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                </span>
+              </div>
+              <div class="market-update market-owned__row" data-market-plugin="@nori/focus-sounds">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  白
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="白噪音" type="button">
+                      白噪音
+                    </button>
+                  </div>
+                  <span>
+                    v1.3.2 · nori · 效率
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                </span>
+              </div>
+              <div class="market-update market-owned__row" data-market-plugin="@moe/pet-skins">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  宠
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="宠物皮肤包" type="button">
+                      宠物皮肤包
+                    </button>
+                  </div>
+                  <span>
+                    v0.2.0 · moe · 外观
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                </span>
+              </div>
+              <div class="market-update market-owned__row" data-market-plugin="@fuyu/devices">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  设
+                </span>
+                <div class="market-update__text">
+                  <div class="market-card__line">
+                    <button class="market-card__name" title="设备配对" type="button">
+                      设备配对
+                    </button>
+                    <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                  </div>
+                  <span>
+                    v1.0.0 · 工具
+                  </span>
+                </div>
+                <span class="market-card__action">
+                  <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                    管理
+                  </button>
+                </span>
+              </div>
+            </div>
+          </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
             市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
@@ -1553,7 +1824,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id4_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id9_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -1781,7 +2052,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id5_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id10_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -1914,7 +2185,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id11_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -1929,7 +2200,7 @@
               找到 5 个
             </h3>
             <div class="market-grid">
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -1952,6 +2223,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -2171,7 +2445,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id7_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id12_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -2224,11 +2498,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -2273,55 +2547,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -2344,6 +2570,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -2583,6 +2812,22 @@
                 </div>
               </article>
             </div>
+          </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id13_" aria-expanded="false" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span aria-hidden="true" class="market-owned__peek">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+              </span>
+              <span class="market-owned__hint">
+                展开
+              </span>
+            </button>
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -2860,7 +3105,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id8_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id14_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -2913,11 +3158,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -2962,55 +3207,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -3033,6 +3230,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -3272,6 +3472,22 @@
                 </div>
               </article>
             </div>
+          </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id15_" aria-expanded="false" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span aria-hidden="true" class="market-owned__peek">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+              </span>
+              <span class="market-owned__hint">
+                展开
+              </span>
+            </button>
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -3549,7 +3765,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id9_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id16_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -3602,11 +3818,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -3651,55 +3867,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -3722,6 +3890,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -3961,6 +4132,22 @@
                 </div>
               </article>
             </div>
+          </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id17_" aria-expanded="false" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span aria-hidden="true" class="market-owned__peek">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+              </span>
+              <span class="market-owned__hint">
+                展开
+              </span>
+            </button>
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -4097,7 +4284,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id10_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id18_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -4150,11 +4337,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -4199,55 +4386,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -4270,6 +4409,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -4509,6 +4651,22 @@
                 </div>
               </article>
             </div>
+          </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id19_" aria-expanded="false" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span aria-hidden="true" class="market-owned__peek">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+              </span>
+              <span class="market-owned__hint">
+                展开
+              </span>
+            </button>
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -4645,7 +4803,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id11_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id20_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -4698,11 +4856,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -4747,55 +4905,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -4818,6 +4928,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -5057,6 +5170,22 @@
                 </div>
               </article>
             </div>
+          </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id21_" aria-expanded="false" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span aria-hidden="true" class="market-owned__peek">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+              </span>
+              <span class="market-owned__hint">
+                展开
+              </span>
+            </button>
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -5177,7 +5306,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id12_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id22_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -5230,11 +5359,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -5279,55 +5408,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -5350,6 +5431,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -5589,6 +5673,22 @@
                 </div>
               </article>
             </div>
+          </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id23_" aria-expanded="false" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span aria-hidden="true" class="market-owned__peek">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+              </span>
+              <span class="market-owned__hint">
+                展开
+              </span>
+            </button>
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -5719,7 +5819,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id13_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id24_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -5772,11 +5872,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -5821,55 +5921,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -5892,6 +5944,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -6132,6 +6187,22 @@
               </article>
             </div>
           </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id25_" aria-expanded="false" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span aria-hidden="true" class="market-owned__peek">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+              </span>
+              <span class="market-owned__hint">
+                展开
+              </span>
+            </button>
+          </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
             市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
@@ -6242,7 +6313,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id14_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" disabled="" role="combobox" type="button">
+                  <button aria-controls="_id26_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" disabled="" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -6412,7 +6483,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id15_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id27_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -6465,11 +6536,11 @@
               </div>
             </div>
           </section>
-          <section class="market-section" data-market-section="all">
+          <section class="market-section" data-market-section="fresh">
             <h3 class="plugin-page__heading">
-              全部
+              还没装的
               <span class="plugin-page__heading-meta">
-                10 个
+                9 个
               </span>
             </h3>
             <div class="market-grid">
@@ -6514,55 +6585,7 @@
                   </span>
                 </div>
               </article>
-              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/weather">
-                <div class="market-card__main">
-                  <div class="market-card__head">
-                    <span aria-hidden="true" class="plugin-icon">
-                      天
-                    </span>
-                    <div class="market-card__title">
-                      <div class="market-card__line">
-                        <button class="market-card__name" title="天气" type="button">
-                          天气
-                        </button>
-                        <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
-                          <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
-                        </span>
-                      </div>
-                      <span class="market-card__sub">
-                        资讯 · v1.2.0
-                      </span>
-                    </div>
-                  </div>
-                  <p class="market-card__desc">
-                    收起条上显示当前天气，下雨前半小时提醒你带伞
-                  </p>
-                </div>
-                <div class="market-card__thumb" data-market-thumb="1">
-                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3E18%C2%B0%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
-                </div>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                    <button aria-label="在岛上打开" class="plugin-btn plugin-btn--sm market-card__island" data-action="market-open-on-island" title="展开岛，切到「天气」" type="button">
-                      <svg aria-hidden="true" class="lucide lucide-arrow-up-right" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      <span class="market-card__island-label">
-                        在岛上打开
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+              <article class="market-card market-card--thumbed" data-market-plugin="@fuyu/page-summary">
                 <div class="market-card__main">
                   <div class="market-card__head">
                     <span aria-hidden="true" class="plugin-icon plugin-icon--img">
@@ -6585,6 +6608,9 @@
                   <p class="market-card__desc">
                     复制一个链接，岛上给出三句话的摘要，可以存进笔记
                   </p>
+                </div>
+                <div class="market-card__thumb" data-market-thumb="1">
+                  <img alt="" draggable="false" loading="lazy" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20200%22%3E%3Crect%20width%3D%22320%22%20height%3D%22200%22%20fill%3D%22%23a78bfa%22%2F%3E%3Crect%20x%3D%2260%22%20y%3D%2224%22%20width%3D%22200%22%20height%3D%2234%22%20rx%3D%2217%22%20fill%3D%22%23111%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2247%22%20font-size%3D%2216%22%20text-anchor%3D%22middle%22%20fill%3D%22%23fff%22%20font-family%3D%22sans-serif%22%3ETL%3BDR%3C%2Ftext%3E%3Crect%20x%3D%2240%22%20y%3D%2280%22%20width%3D%22240%22%20height%3D%2296%22%20rx%3D%2214%22%20fill%3D%22%23fff%22%20opacity%3D%220.85%22%2F%3E%3C%2Fsvg%3E">
                 </div>
                 <div class="market-card__foot">
                   <span class="market-card__facts">
@@ -6824,6 +6850,22 @@
                 </div>
               </article>
             </div>
+          </section>
+          <section class="market-section market-owned" data-market-section="installed">
+            <button aria-controls="_id28_" aria-expanded="false" class="market-owned__toggle" data-action="market-toggle-installed" type="button">
+              <svg aria-hidden="true" class="lucide lucide-chevron-right market-owned__chevron" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="market-owned__label">
+                已安装 (1)
+              </span>
+              <span aria-hidden="true" class="market-owned__peek">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  天
+                </span>
+              </span>
+              <span class="market-owned__hint">
+                展开
+              </span>
+            </button>
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>

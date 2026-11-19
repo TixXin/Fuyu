@@ -73,11 +73,16 @@ market.details["@fuyu/rss"] = RSS_DETAILS;
 market.media[REMOTE_ICON] = ICON_SVG;
 
 try {
-  const browse = await view("browse", zh ? "浏览：可更新 + 全部" : "Browse: updates and all plugins");
+  const browse = await view("browse", zh ? "浏览：可更新、还没装的、已安装" : "Browse: updates, not installed, installed");
   const { stage } = browse;
   check(!/v3|第 3 版/i.test(stage.textContent!), "The market page never mentions the plugin platform's version");
   check(stage.querySelector("[data-market-update='@fuyu/github-notify']") && stage.querySelector("[data-market-update='@lin-dev/pomo-stats']") && !card(stage, "@fuyu/github-notify"), "Plugins with an update are listed once, in the updates section");
-  check(cards(stage, "all").length === 10 && !stage.querySelector("[data-market-section^='group:']"), "With All selected the rest is one flat list, not grouped by category");
+  check(cards(stage, "fresh").length === 9 && !stage.querySelector("[data-market-section^='group:']"), "Plugins that are not installed come first as one flat list, not grouped by category");
+  const ownedToggle = stage.querySelector<HTMLElement>("[data-market-section='installed'] [data-action='market-toggle-installed']")!;
+  check(ownedToggle.getAttribute("aria-expanded") === "false" && ownedToggle.textContent!.includes(text.sections.installed(1)) && !card(stage, "@fuyu/weather"), "Installed plugins are folded into one line that says how many there are, not shown as cards again");
+  check(stage.querySelector("[data-market-section='updates']")?.compareDocumentPosition(stage.querySelector("[data-market-section='fresh']")!) === Node.DOCUMENT_POSITION_FOLLOWING && stage.querySelector("[data-market-section='fresh']")?.compareDocumentPosition(stage.querySelector("[data-market-section='installed']")!) === Node.DOCUMENT_POSITION_FOLLOWING, "Updates come first, then what is not installed, and the installed line sits at the bottom");
+  await click(ownedToggle);
+  check(ownedToggle.getAttribute("aria-expanded") === "true" && card(stage, "@fuyu/weather")?.classList.contains("market-owned__row") && !card(stage, "@fuyu/weather")?.querySelector(".market-card__thumb, .market-card__desc"), "Unfolding it lists installed plugins one to a row");
   const grid = getComputedStyle(stage.querySelector(".market-grid")!).gridTemplateColumns.split(" ").length;
   check(grid === 2, `Cards sit two to a row (got ${grid})`);
   check(card(stage, "@fuyu/rss")?.querySelector("[data-official]")?.getAttribute("title") === text.card.officialTitle && !card(stage, "@fuyu/rss")?.querySelector(".plugin-badge"), "Official plugins carry a check mark that says the Fuyu team published them, not an Official badge");
@@ -97,7 +102,7 @@ try {
   check(ipc.calls.includes(`emit:island-open-plugin-page:{"pluginId":"@fuyu/weather"}`) && !document.querySelector("[data-market-detail-modal]"), "Open on island asks the island to expand on that plugin's page, without opening the detail");
   const rssCard = card(stage, "@fuyu/rss")!;
   check(rssCard.querySelector("[data-market-thumb='3'] img") && rssCard.querySelector(".market-card__thumb-count")?.textContent === text.card.shotCount(3), "A card with screenshots shows the first one on the right and how many there are");
-  check(card(stage, "@fuyu/weather")?.querySelector("[data-market-thumb='1']") && !card(stage, "@fuyu/weather")?.querySelector(".market-card__thumb-count"), "With a single screenshot there is no count");
+  check(card(stage, "@fuyu/page-summary")?.querySelector("[data-market-thumb='1']") && !card(stage, "@fuyu/page-summary")?.querySelector(".market-card__thumb-count"), "With a single screenshot there is no count");
   check(!card(stage, "@fuyu/devices")?.querySelector(".market-card__thumb") && !card(stage, "@fuyu/devices")?.classList.contains("market-card--thumbed"), "A card without screenshots leaves no space for one");
   const thumbBox = rssCard.querySelector(".market-card__thumb")!.getBoundingClientRect();
   const mainBox = rssCard.querySelector(".market-card__main")!.getBoundingClientRect();
@@ -105,7 +110,6 @@ try {
   const chips = [...stage.querySelectorAll(".market-toolbar [data-market-category]")].map((chip) => ({ id: chip.getAttribute("data-market-category"), count: Number(chip.querySelector(".plugin-chip__count")?.textContent) }));
   const chipSum = chips.filter((chip) => chip.id !== "all").reduce((sum, chip) => sum + chip.count, 0);
   check(chips[0].id === "all" && chips[0].count === MARKET_PLUGINS.length && chipSum === MARKET_PLUGINS.length, `Each plugin counts once, under its first category, so the categories add up to All (${chipSum} of ${MARKET_PLUGINS.length})`);
-  check(stage.querySelector("[data-market-section='updates']")?.compareDocumentPosition(stage.querySelector("[data-market-section='all']")!) === Node.DOCUMENT_POSITION_FOLLOWING, "Updates come before the full list");
 
   const DAY = 24 * 60 * 60 * 1000;
   const ago = (days: number) => new Date(Date.now() - days * DAY).toISOString();
@@ -117,8 +121,14 @@ try {
 
   const narrow = await view("browse-narrow", zh ? "浏览（窄窗口）" : "Browse (narrow window)", {}, true);
   check(getComputedStyle(narrow.stage.querySelector(".market-grid")!).gridTemplateColumns.split(" ").length === 1, "A narrow window has one card per row");
-  const narrowFoot = card(narrow.stage, "@fuyu/weather")!.querySelector<HTMLElement>(".market-card__foot")!;
-  check(narrowFoot.scrollWidth <= narrowFoot.clientWidth && card(narrow.stage, "@fuyu/rss")?.querySelector(".market-card__thumb"), "In a narrow window the thumbnail stays and Installed, Manage and Open on island fit on one line");
+  await click(narrow.stage.querySelector("[data-action='market-toggle-installed']"));
+  const narrowRow = card(narrow.stage, "@fuyu/weather")!;
+  check(narrowRow.scrollWidth <= narrowRow.clientWidth && narrowRow.querySelector("[data-action='market-manage']") && narrowRow.querySelector("[data-action='market-open-on-island']") && card(narrow.stage, "@fuyu/rss")?.querySelector(".market-card__thumb"), "In a narrow window the thumbnail stays and an installed row still fits Manage and Open on island");
+
+  const allOwned = await view("browse-all-installed", zh ? "浏览：全都装了" : "Browse: everything installed", {
+    snapshot: marketFixture({ plugins: MARKET_PLUGINS.filter((item) => item.install && !item.blocked).map((item) => ({ ...item, installedVersion: item.install!.version, enabled: true, source: "market" as const, autoUpdate: null, manual: null })) }),
+  });
+  check(allOwned.stage.querySelector("[data-market-allset]") && !allOwned.stage.querySelector("[data-market-section='fresh']") && allOwned.stage.querySelector("[data-action='market-toggle-installed']")?.getAttribute("aria-expanded") === "true" && !allOwned.stage.querySelector(".market-card"), "With everything installed the market says so and lists the installed rows unfolded, with no cards");
 
   const search = await view("search", zh ? "搜索" : "Search", { initialQuery: "sync" });
   check(cards(search.stage, "results").sort().join() === "@fuyu/devices,@mio/focus-sync,@ryo/clip-sync,@tara/linear", "Searching matches names and descriptions and lists only those plugins under a result count");
@@ -223,6 +233,7 @@ try {
   check(cards(live.stage, "results").join() === "@someone/clock", "Searching the live market narrows the cards");
   await click(live.stage.querySelector(".plugin-search__clear"));
 
+  await click(live.stage.querySelector("[data-action='market-toggle-installed']"));
   await click(card(live.stage, "@fuyu/weather"));
   const weather = await modal("[data-market-detail-modal='@fuyu/weather']");
   await press(weather, "Escape");
@@ -239,6 +250,7 @@ try {
   check(market.calls.includes("install:@someone/stocks@1.0.0") && card(live.stage, "@someone/stocks")?.querySelector("[data-action='market-manage']"), "Confirming installs it and the card switches to Manage");
 
   await click(live.stage.querySelector(".plugin-search__clear"));
+  check(card(live.stage, "@fuyu/weather")?.classList.contains("market-owned__row"), "The installed list stays unfolded after a search");
   await click(card(live.stage, "@fuyu/weather")?.querySelector("[data-action='market-manage']"));
   check(opened.includes("market:pluginsV3"), "Manage goes to the plugin page");
   await live.unmount();

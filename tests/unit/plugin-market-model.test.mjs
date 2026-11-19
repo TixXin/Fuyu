@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { MAX_SCREENSHOTS } from "../../packages/plugin-market/src/index.mjs";
-import { MAX_MARKET_SCREENSHOTS, browseList, capabilityItems, categoryCounts, categoryNameMap, hasUpdate, inCategory, isFirstFromPublisher, matchesQuery, newListings, primaryCategory, sortPlugins } from "../../src/windows/settings/pluginMarketModel.ts";
+import { MAX_MARKET_SCREENSHOTS, browseSections, capabilityItems, categoryCounts, categoryNameMap, hasUpdate, inCategory, isFirstFromPublisher, matchesQuery, newListings, primaryCategory, sortPlugins } from "../../src/windows/settings/pluginMarketModel.ts";
 
 const caps = (more = {}) => ({ unreviewed: false, network: [], nodeApis: [], provides: [], replaces: [], slots: [], ...more });
 const candidate = (version, more = {}) => ({ version, sha256: "a", size: 1, publishedAt: "2026-11-10T00:00:00Z", confirmation: caps(), ...more });
@@ -44,14 +44,17 @@ test("an update is only offered when the market has a different version the plug
   assert.equal(hasUpdate(plugin("@a/x")), false);
 });
 
-test("browsing all lists every plugin once in one flat list, leaving updates to their own section", () => {
+test("browsing splits the market into updates, what is not installed and what is, each plugin in exactly one", () => {
   const plugins = [
-    plugin("@a/one", { categories: ["productivity", "utilities"] }),
+    plugin("@a/owned", { categories: ["productivity", "utilities"], installedVersion: "1.0.0" }),
     plugin("@a/two", { categories: ["productivity"] }),
     plugin("@a/updating", { categories: ["productivity"], installedVersion: "1.0.0", autoUpdate: candidate("2.0.0") }),
     plugin("@a/plain", { categories: [] }),
   ];
-  assert.deepEqual(browseList(plugins, "recommended").map((item) => item.name), ["@a/one", "@a/two", "@a/plain"]);
+  const sections = browseSections(plugins, "recommended");
+  assert.deepEqual(sections.updates.map((item) => item.name), ["@a/updating"]);
+  assert.deepEqual(sections.fresh.map((item) => item.name), ["@a/two", "@a/plain"]);
+  assert.deepEqual(sections.owned.map((item) => item.name), ["@a/owned"]);
   assert.deepEqual(categoryCounts(plugins), [{ id: "productivity", count: 3 }]);
 });
 
@@ -73,10 +76,13 @@ test("a plugin counts once, under its first category; the chips add up to the pl
   assert.equal(matchesQuery(plugins[2], "消息", names), true);
 });
 
-test("recommended order puts installable official plugins first and ones that cannot be installed last; recent sorts by release date", () => {
+test("recommended order puts installable official plugins first, then third-party, then what is already installed, and ones that cannot be installed last; recent sorts by release date", () => {
   const blocked = plugin("@a/old", { install: null, blocked: { reason: "engines" } });
   const third = plugin("@a/third", { install: candidate("1.0.0", { publishedAt: "2026-11-18T00:00:00Z" }) });
   const official = plugin("@fuyu/official", { install: candidate("1.0.0", { publishedAt: "2026-10-01T00:00:00Z" }) });
+  const owned = plugin("@fuyu/owned", { installedVersion: "1.0.0" });
+  const updating = plugin("@fuyu/updating", { installedVersion: "1.0.0", autoUpdate: candidate("2.0.0") });
+  assert.deepEqual(sortPlugins([blocked, owned, third, updating, official], "recommended").map((item) => item.name), ["@fuyu/updating", "@fuyu/official", "@a/third", "@fuyu/owned", "@a/old"]);
   assert.deepEqual(sortPlugins([blocked, third, official], "recommended").map((item) => item.name), ["@fuyu/official", "@a/third", "@a/old"]);
   assert.deepEqual(sortPlugins([official, blocked, third], "recent").map((item) => item.name), ["@a/third", "@fuyu/official", "@a/old"]);
 });
