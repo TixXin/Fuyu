@@ -1,0 +1,24 @@
+{
+  "$schema": "../../host.schema.json",
+  "protocol": 1,
+  "id": "zed",
+  "name": "Zed",
+  "kind": "editor",
+  "process": {
+    "windows": [
+      "zed.exe"
+    ],
+    "macos": [
+      "zed"
+    ]
+  },
+  "cli": {
+    "windows": "zed.exe",
+    "macos": "zed"
+  },
+  "focus": [
+    "processChain",
+    "windowTitle",
+    "openFolder"
+  ]
+}

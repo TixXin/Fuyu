@@ -2,6 +2,8 @@
 
 岛接了十八家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）、Droid（B58）和 pi（B71），另支持通用的第三方代理文件与会话目录接入（`third_party.rs`，B71）。后十二家与通用第三方各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
 
+各家要声明哪些东西、以后怎么改成描述文件，见 [Agent 接入协议](harness-protocol.md)（B76）。
+
 核对日期：2026-11-17（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
 ## 形态和数据位置
