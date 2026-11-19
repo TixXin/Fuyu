@@ -16,11 +16,16 @@ export function markMounted() {
   sessionStorage.removeItem(ATTEMPTS);
 }
 
+export function markCrashed() {
+  if (!import.meta.hot) return;
+  delete document.documentElement.dataset[MOUNTED];
+}
+
 export const devRootOptions: RootOptions = import.meta.hot
   ? {
       onUncaughtError(error, info) {
         console.error("The window crashed and will reload on the next code change", error, info.componentStack);
-        delete document.documentElement.dataset[MOUNTED];
+        markCrashed();
       },
     }
   : {};

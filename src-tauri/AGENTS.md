@@ -57,7 +57,7 @@ src-tauri/src/
 ├── emit_diagnostics.rs      # 只在调试和测试构建编译，设 FUYU_EMIT_DIAGNOSTICS=1 才开：统计各事件发了多少次、多少次载荷没变，排查事件发得太频繁（docs/investigations/emit-frequency-audit.md）
 ├── settings_file.rs         # 数据目录里的 settings.json（D30.2）：BACKUP_KEYS 设置的文件镜像，格式同设置备份；命令 read_settings_file / write_settings_file
 ├── shortcut_capture.rs      # 设置窗口录快捷键期间（命令 set_shortcut_capture）：浮屿自己的全局快捷键被按下不执行，改发 shortcut-captured 给录制按钮；Mac 在 macos/hotkeys.rs 的分发里拦，Windows 在各模块的 WM_HOTKEY 里拦
-├── home_dir.rs              # 家目录（#50，D30）：浮屿的数据目录只从这里取 fuyu_home(app.path())，不要直接调 app_data_dir()；FUYU_HOME → home.json 指针 → ~/.fuyu；home_dir/migration.rs 为升级时复制旧数据、重装钩子、复制待办 Markdown，见 docs/features/data-home.md
+├── home_dir.rs              # 家目录（#50，D30）：浮屿的数据目录只从这里取 fuyu_home(app.path())，不要直接调 app_data_dir()；FUYU_HOME → home.json 指针 → ~/.fuyu；home_dir/migration.rs 为升级时复制旧数据、重装钩子、复制待办 Markdown，见 docs/features/data-home.md；home_dir/frontend_log.rs 是命令 report_frontend_error，把窗口界面的错误记进 frontend-errors.log
 ├── fs_write.rs              # 整份替换应用数据目录里的文件：先写旁边的 .tmp 再改名；别的程序暂时占着（拒绝访问、共享冲突）时稍等重试
 ├── dev_lane.rs              # 开发版的独立身份（F38、F39）：调试构建默认是 `com.tixxin.fuyu.lane-1`（`FUYU_DEV_LANE` 换编号，`FUYU_DEV_SHARED_IDENTITY=1` 用回正式身份），岛的默认位置，凭据服务名（`service`），不改用户的链接和自启，「安装/修复」装的是正式版的 hook（脚本进正式数据目录，审批用正式版的端口和 token，agent_approval 的 `hook_url`）；dev_lane/seed.rs 在启动时复制一次正式版的凭据和数据（记在 dev-copy.json），dev_lane/data_copy.rs 是复制数据的清单和设置里要关掉的提醒
 ├── messenger_activation.rs

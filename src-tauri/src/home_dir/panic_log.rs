@@ -58,7 +58,7 @@ pub(crate) fn append_capped(path: &Path, line: &str) {
 }
 
 pub(crate) fn latest_crash_log(home: &Path) -> Option<PathBuf> {
-    let candidates = [home.join(FILE_NAME), home.join(crate::webview_recovery::FILE_NAME)];
+    let candidates = [home.join(FILE_NAME), home.join(crate::webview_recovery::FILE_NAME), home.join(super::frontend_log::FILE_NAME)];
     let mut chosen: Option<(PathBuf, Option<SystemTime>)> = None;
     for candidate in candidates {
         let Ok(metadata) = fs::metadata(&candidate) else { continue };
@@ -87,7 +87,7 @@ fn payload_summary(payload: &(dyn Any + Send)) -> &str {
     }
 }
 
-fn sanitize_single_line(raw: &str, max_chars: usize) -> String {
+pub(super) fn sanitize_single_line(raw: &str, max_chars: usize) -> String {
     let mut out = String::new();
     let mut count = 0usize;
     let mut pending_space = false;
@@ -215,6 +215,16 @@ mod tests {
             .set_modified(SystemTime::UNIX_EPOCH + Duration::from_secs(200))
             .unwrap();
         assert_eq!(latest_crash_log(&dir), Some(crash));
+
+        let frontend = dir.join(crate::home_dir::frontend_log::FILE_NAME);
+        fs::write(&frontend, "render\n").unwrap();
+        OpenOptions::new()
+            .write(true)
+            .open(&frontend)
+            .unwrap()
+            .set_modified(SystemTime::UNIX_EPOCH + Duration::from_secs(300))
+            .unwrap();
+        assert_eq!(latest_crash_log(&dir), Some(frontend));
         fs::remove_dir_all(&dir).unwrap();
     }
 }

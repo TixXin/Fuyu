@@ -6,7 +6,7 @@
 
 ```text
 src/
-├── main.tsx                 # 唯一入口：按 ?window= 动态加载 windows/ 下对应的根组件，每个窗口只加载自己的代码（不要改回静态导入）
+├── main.tsx                 # 唯一入口：按 ?window= 动态加载 windows/ 下对应的根组件，每个窗口只加载自己的代码（不要改回静态导入）；每个窗口的内容都包在同一个错误边界里（components/window-crash/），新窗口不用另加
 ├── windows/                 # 每个 Tauri 窗口一个目录，只负责组合与窗口级行为
 │   ├── island/              # 主窗口：IslandApp（只做组装）、IslandShell、展开后的页面面板（IslandPages）、岛自己的接线 hook（useIslandTucking / Hover、窗口尺寸/拖拽/贴边、自动化）；外壳不 import 功能（plugin-kernel 除外，边界测试查）：功能的界面在 `features/<领域>/plugin/` 里注册插槽项，接线写进它的 runner，影响岛形状的往贡献表里交（规则见 `docs/architecture/plugins/v3-boundary.md`「岛的贡献表」）；slots/ 是外壳自己的插槽项和插槽句柄，builtins.ts 先载外壳样式再经 pluginFiles.ts 收各功能的插件文件；first-hints/ 是岛上的「第一次」提示
 │   ├── clipboard/           # 剪贴板独立窗口（列表在 features/clipboard/ClipboardPopup.tsx，弹出、定位和粘贴在 src-tauri/src/clipboard_history/popup.rs）
@@ -43,8 +43,8 @@ src/
 │   ├── voice-input/         # 第 3 版内置插件 voice-input：收起条上的录音和识别结果（存待办、追加笔记、复制）、设置页（下载语音模型、快捷键）
 │   ├── sync/                # 跨设备同步的设置：后端（文件夹、WebDAV）、同步哪些类别、端到端加密、设备列表和状态；页面入口是 windows/settings/SyncSettingsPage.tsx
 │   └── updater/             # 自动更新
-├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览）
-├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写；settings/ 是岛屿设置（fuyu-settings）的模型：范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayoutSettings.ts、normalizeBehaviorSettings.ts，日历、歌词、Agent 会话列表和提醒的设置字段与默认值在 calendarSettings.ts、lyricsSettings.ts、agentSettings.ts，待办项目列表在 lib/todo-projects/，新设置加在这几个文件里，settings.ts 只做入口；theme/ 是主题、强调色、玻璃配色和动效（含 useReducedMotion）；shortcut/ 是快捷键的通用工具和录制（剪贴板专用的在 features/clipboard/shortcut.ts）；settings-backup/ 是设置文件、导出和恢复（只含 BACKUP_KEYS 列出的设置 key，并经 registerBackupSwitches 桥接内置插件开关）、升级前的备份；system-permissions/ 是系统权限的查询
+├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览；window-crash/ 是每个窗口根上的错误边界和兜底界面）
+├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写；settings/ 是岛屿设置（fuyu-settings）的模型：范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayoutSettings.ts、normalizeBehaviorSettings.ts，日历、歌词、Agent 会话列表和提醒的设置字段与默认值在 calendarSettings.ts、lyricsSettings.ts、agentSettings.ts，待办项目列表在 lib/todo-projects/，新设置加在这几个文件里，settings.ts 只做入口；theme/ 是主题、强调色、玻璃配色和动效（含 useReducedMotion）；shortcut/ 是快捷键的通用工具和录制（剪贴板专用的在 features/clipboard/shortcut.ts）；settings-backup/ 是设置文件、导出和恢复（只含 BACKUP_KEYS 列出的设置 key，并经 registerBackupSwitches 桥接内置插件开关）、升级前的备份；system-permissions/ 是系统权限的查询；crash-report/ 是窗口出错时的上报（写数据目录的 frontend-errors.log）和「先重载一次还是显示兜底界面」的判断
 ├── utils/                   # 无副作用的纯函数（文本测量、颜色、日期、数值）
 ├── i18n/                    # 类型化多语言字典与 Provider；sections/ 按分区放文案（settings/ 再按设置页分），types.ts 与 locales/ 只做汇总
 ├── styles/                  # 全局 CSS：变量、基础样式、字体
