@@ -14,7 +14,7 @@ For release users and source builds, use the in-app installer:
 
 1. Open Fuyu.
 2. Expand the island and open Settings.
-3. Open **AI Agent** (its first tab, 岛上显示). The **AI Agent 状态灯** card is at the top; click **安装/修复**. Since 2026-11-16 (B67, #678) the card is on this page on both Windows and macOS; it used to be on the 连接 tab, which macOS hid, so on a Mac hooks could not be installed at all. The 连接 tab now holds only the reply status marker and the editor extension, and shows on macOS too. SSH 远程 stays hidden on macOS (`agentRemote` is still unsupported there): its code is the same on both systems, but it has not been tried on a Mac.
+3. Open **AI Agent** (its first tab, 岛上显示). The **AI Agent 状态灯** card is at the top; click **安装/修复**. Since 2026-11-16 (B67, #678) the card is on this page on both Windows and macOS; it used to be on the 连接 tab, which macOS hid, so on a Mac hooks could not be installed at all. The 连接 tab now holds only the reply status marker and the editor extension, and shows on macOS too. SSH 远程 shows on macOS too since 2026-11-18 (B64), after a test against a Debian OpenSSH container: adding a host, 安装/修复 on the remote, remote sessions on the island, 移除钩子 and the SSH proxy tunnel all work (移除钩子 was run through the same Rust function, not a click).
 4. Restart Codex and any VSCode terminal running Claude Code.
 5. For Codex, review and trust the new hooks when Codex prompts you, or use `/hooks`.
 
