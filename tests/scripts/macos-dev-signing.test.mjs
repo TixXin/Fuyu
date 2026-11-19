@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { planInvocation } from "../../scripts/macos/dev-cargo.mjs";
-import { cargoOriginal, DEV_IDENTIFIER, DEV_IDENTITY, devSigningDir, parseSha1Fingerprint, signedByDevIdentity } from "../../scripts/macos/dev-signing.mjs";
+import { cargoOriginal, replaceWithCopy, DEV_IDENTIFIER, DEV_IDENTITY, devSigningDir, parseSha1Fingerprint, signedByDevIdentity } from "../../scripts/macos/dev-signing.mjs";
 import { IDENTITY } from "../../scripts/macos/self-signed-cert.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -67,6 +67,21 @@ test("the original that cargo copies the binary from is found in deps, so the co
   assert.equal(cargoOriginal(binary), path.join(debug, "deps", "fuyu-fedcba9876543210"));
   writeFileSync(binary, "other!");
   assert.equal(cargoOriginal(binary), null);
+});
+
+test("the signed copy replaces the binary as a new file, so macOS does not reuse a cached signature", { skip: process.platform === "win32" }, () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "fuyu-replace-"));
+  const source = path.join(dir, "original");
+  const target = path.join(dir, "fuyu");
+  writeFileSync(source, "signed");
+  chmodSync(source, 0o755);
+  writeFileSync(target, "old");
+  const before = statSync(target).ino;
+  replaceWithCopy(source, target);
+  assert.notEqual(statSync(target).ino, before);
+  assert.equal(readFileSync(target, "utf8"), "signed");
+  assert.equal(statSync(target).mode & 0o777, 0o755);
+  assert.deepEqual(readdirSync(dir).sort(), ["fuyu", "original"]);
 });
 
 test("the runner builds before run, then hands over to cargo run, and passes exit codes back", { skip: process.platform === "win32" }, () => {
