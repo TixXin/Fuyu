@@ -47,6 +47,7 @@ export const PAGES = [
   "builtins-off.html",
   "todos-off.html",
   "plugin-slot.html",
+  "plugin-detail-settings.html",
   "plugin-island-page.html",
   "settings.html?test=1",
   "settings-sidebar.html",

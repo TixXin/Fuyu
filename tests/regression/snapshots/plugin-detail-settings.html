@@ -1,0 +1,87 @@
+<body>
+  <section class="settings-stage" id="stage">
+    <div></div>
+    <div class="plugin-dialog__backdrop">
+      <div aria-label="世界时钟" aria-modal="true" class="plugin-dialog" data-plugin-detail="@someone/clock" role="dialog">
+        <div class="plugin-dialog__head">
+          <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
+            世
+            <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+          </span>
+          <div class="plugin-dialog__heading">
+            <div class="plugin-row__line plugin-row__line--wrap">
+              <span class="plugin-dialog__title">
+                世界时钟
+              </span>
+            </div>
+            <span class="plugin-dialog__sub">
+              someone · v1.0.0 · 运行中
+            </span>
+          </div>
+          <div class="plugin-dialog__head-actions">
+            <span class="plugin-row__switch">
+              <span class="settings-switch">
+                <input aria-label="启用「世界时钟」" checked="" id="_id1_" role="switch" type="checkbox">
+                <span aria-hidden="true" class="settings-switch__track"></span>
+              </span>
+            </span>
+            <button aria-label="关闭" class="plugin-icon-btn" title="关闭" type="button">
+              <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+            </button>
+          </div>
+        </div>
+        <div class="plugin-tabs" role="tablist">
+          <button aria-selected="false" class="plugin-tabs__tab" data-tab="overview" role="tab" tabindex="-1" type="button">
+            概览
+          </button>
+          <button aria-selected="true" class="plugin-tabs__tab" data-tab="settings" role="tab" tabindex="0" type="button">
+            设置
+          </button>
+          <button aria-selected="false" class="plugin-tabs__tab" data-tab="commands" role="tab" tabindex="-1" type="button">
+            命令与快捷键
+          </button>
+          <button aria-selected="false" class="plugin-tabs__tab" data-tab="permissions" role="tab" tabindex="-1" type="button">
+            权限
+          </button>
+          <button aria-selected="false" class="plugin-tabs__tab" data-tab="activity" role="tab" tabindex="-1" type="button">
+            运行情况
+          </button>
+        </div>
+        <div class="plugin-dialog__body" data-panel="settings" role="tabpanel">
+          <div class="plugin-detail__settings">
+            <div class="plugin-detail__sections" data-plugin-sections="@someone/clock">
+              <div class="plugin-slot" data-slot="settings.section/v1">
+                <section class="demo-clock" data-demo-section="clock">
+                  <h3>
+                    世界时钟
+                  </h3>
+                  <label>
+                    <input type="checkbox">
+                    <span>
+                      收起条上显示：关
+                    </span>
+                  </label>
+                </section>
+              </div>
+              <div class="plugin-slot" data-slot="settings.section/v1">
+                <p data-demo-section="clock-extra">
+                  时区列表
+                </p>
+              </div>
+            </div>
+            <p class="plugin-callout plugin-detail__no-settings">
+              这个插件没有可以改的设置。
+            </p>
+          </div>
+        </div>
+        <div class="plugin-dialog__foot">
+          <span class="plugin-dialog__grow"></span>
+          <button class="plugin-btn plugin-btn--sm plugin-btn--danger" data-action="uninstall-plugin" type="button">
+            <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            卸载
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>

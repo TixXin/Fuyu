@@ -3,34 +3,38 @@ import { Copy, Database, Globe, LayoutPanelTop, Package, Repeat, RotateCcw, Term
 import { commandsV1, type CommandItem, type MarketPluginDetails } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
 import { windowServices } from "../../features/plugin-kernel/services";
-import { shortcutLabel } from "../../lib/shortcut/shortcut";
 import type { InstalledEntry } from "./pluginEntries";
 import { milliseconds } from "./pluginDisplay";
 import { marketClient } from "./pluginMarketActions";
+import { PluginCommandRow, type RunBlock } from "./PluginCommandRow";
 import { PluginSchemaForm } from "./PluginSchemaForm";
+import { PluginSettingsSections } from "./PluginSettingsSections";
+import { stateOf } from "./pluginServiceStatus";
 import { PluginWindowRulesGroup } from "./PluginWindowRulesGroup";
 
 const commandsClient = windowServices.get(commandsV1);
 const SENSITIVE_NODE_APIS = new Set(["child_process", "fs", "fs/promises", "worker_threads", "cluster", "vm"]);
 
-function pick(map: Record<string, string> | null | undefined, locale: string, fallback: string): string {
-  if (!map) return fallback;
-  return (locale === "en" ? map.en : map["zh-CN"]) ?? map["zh-CN"] ?? map.en ?? fallback;
-}
-
 export function PluginSettingsTab({ entry }: { entry: InstalledEntry }) {
   const text = useTranslation().settings.pluginsV3.page.detail;
+  const running = stateOf(entry.plugin) === "running";
   return (
     <div className="plugin-detail__settings">
+      <PluginSettingsSections pluginId={entry.id} />
       <PluginSchemaForm pluginId={entry.id} />
-      <p className="plugin-callout plugin-detail__no-settings">{text.noSettings}</p>
+      {running ? <p className="plugin-callout plugin-detail__no-settings">{text.noSettings}</p> : <p className="plugin-callout" data-settings-off>{text.settingsOff}</p>}
     </div>
   );
 }
 
-export function PluginCommandsTab({ entry, onOpenShortcuts }: { entry: InstalledEntry; onOpenShortcuts?: () => void }) {
+function runBlock(entry: InstalledEntry, stale: boolean): RunBlock | null {
+  if (stale) return "offline";
+  if (!entry.enabled) return "off";
+  return stateOf(entry.plugin) === "running" ? null : "notRunning";
+}
+
+export function PluginCommandsTab({ entry, stale, onOpenShortcuts }: { entry: InstalledEntry; stale: boolean; onOpenShortcuts?: () => void }) {
   const text = useTranslation().settings.pluginsV3.page.detail;
-  const { locale } = useLocale();
   const [items, setItems] = useState<CommandItem[] | null>(null);
   useEffect(() => {
     let live = true;
@@ -46,25 +50,12 @@ export function PluginCommandsTab({ entry, onOpenShortcuts }: { entry: Installed
   }, []);
   const mine = (items ?? []).filter((item) => item.pluginId === entry.id);
   if (mine.length === 0) return <p className="plugin-callout">{text.commandsEmpty}</p>;
+  const block = runBlock(entry, stale);
   return (
     <>
+      {block ? <p className="plugin-callout" data-run-blocked={block}>{text.runBlocked[block]}</p> : null}
       <div className="plugin-card plugin-detail__rows">
-        {mine.map((item) => {
-          const conflict = Boolean(item.keybinding) && item.conflicts.length > 0;
-          return (
-            <div key={item.id} className="plugin-detail__row" data-command={item.id}>
-              <span className="plugin-detail__row-title">{pick(item.title, locale, item.id)}</span>
-              <span className="plugin-detail__row-sub">
-                {item.id}
-                {conflict ? <span className="plugin-detail__conflict"> · {text.conflict}</span> : null}
-              </span>
-              <span className="plugin-detail__row-control">
-                {item.keybinding ? <kbd className={conflict ? "plugin-kbd plugin-kbd--warn" : "plugin-kbd"}>{shortcutLabel(item.keybinding)}</kbd> : <span className="plugin-detail__muted">{text.noShortcut}</span>}
-                {onOpenShortcuts ? <button className="plugin-btn plugin-btn--sm" type="button" onClick={onOpenShortcuts}>{item.keybinding ? text.change : text.set}</button> : null}
-              </span>
-            </div>
-          );
-        })}
+        {mine.map((item) => <PluginCommandRow key={item.id} item={item} block={block} onOpenShortcuts={onOpenShortcuts} />)}
       </div>
       {onOpenShortcuts ? (
         <p className="plugin-foot">
