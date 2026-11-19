@@ -245,6 +245,7 @@ fn apply(root: &Path, host: &str, replies: Vec<Reply>) -> (HashMap<String, Mirro
             }
             Reply::Changed { path, file, head, tail } => {
                 let Some(target) = mirror_path(root, &path) else { continue };
+                let known = previous.remove(&path);
                 let checkpoint = super::remote_fetch::is_whole_file(&path) && tail.len() as u64 == file.size;
                 let whole = checkpoint || file.size <= TAIL_BYTES;
                 let head = if checkpoint {
@@ -252,7 +253,7 @@ fn apply(root: &Path, host: &str, replies: Vec<Reply>) -> (HashMap<String, Mirro
                 } else if whole {
                     first_lines(&tail)
                 } else if head.is_empty() {
-                    previous.remove(&path).map(|known| known.head).unwrap_or_default()
+                    known.map(|known| known.head).unwrap_or_default()
                 } else {
                     head
                 };
@@ -377,6 +378,24 @@ mod tests {
         let (files, registry) = apply(&root, "test-host-a", Vec::new());
         assert!(files.is_empty() && registry.is_none());
         assert!(!target.exists());
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_known_file_that_grows_stays_in_the_mirror() {
+        let root = std::env::temp_dir().join(format!("fuyu-remote-grow-{}", std::process::id()));
+        let path = ".claude/projects/p/g.jsonl".to_string();
+        let changed = |body: &[u8], mtime| Reply::Changed {
+            path: path.clone(),
+            file: RemoteFile { size: body.len() as u64, mtime },
+            head: Vec::new(),
+            tail: body.to_vec(),
+        };
+        let (files, _) = apply(&root, "test-host-grow", vec![changed(b"{}\n", 1_700_000_000)]);
+        HOSTS.lock().unwrap().get_or_insert_with(HashMap::new).insert("test-host-grow".into(), HostState { files, ..HostState::default() });
+        let (files, _) = apply(&root, "test-host-grow", vec![changed(b"{}\n{}\n", 1_700_000_060)]);
+        assert_eq!(fs::read(root.join(&path)).unwrap(), b"{}\n{}\n");
+        assert_eq!(files[&path].remote.size, 6);
         let _ = fs::remove_dir_all(&root);
     }
 }
