@@ -8,6 +8,7 @@ import { leadLine, shownLine, visibleLines } from "../../features/plugin-kernel/
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 import { lineSlot, type CollapsedLineContext } from "./slots/line";
 import type { CollapsedSlots, IslandPage } from "./types";
+import { useCollapsedContextMenu } from "./useCollapsedContextMenu";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { hasNotchDrop, useIslandNotch } from "./notch";
 import { AlertPopup, NotchAlertLeading, NotchAlertTrailing, useActiveAlert } from "./NotchAlert";
@@ -86,7 +87,8 @@ export function IslandCollapsedBar({
   const lineView = (id: string) => <SlotView key={id} slot={lineSlot} props={lineContext} select={(items) => items.filter((item) => item.id === id)} />;
   const showCenter = Boolean(slots.center) && !preview && !peekLine && !notice
     && !(showCollapsedText && (showTitle || lines.some((candidate) => candidate.reserve !== true && candidate.measure !== undefined)));
-  const { placements: saved } = useCollapsedPlacements();
+  const { placements: saved, save: savePlacements } = useCollapsedPlacements();
+  const openItemsMenu = useCollapsedContextMenu(!isExpanded && !isTucked, savePlacements);
   const items = useCollapsedBarItems({
     t,
     statusLight: slots.statusLight
@@ -173,6 +175,7 @@ export function IslandCollapsedBar({
       className="island__collapsed"
       aria-hidden={isExpanded}
       inert={isExpanded}
+      onContextMenu={openItemsMenu}
       onClick={(event) => {
         if (event.target === event.currentTarget || (event.target instanceof Element && event.target.hasAttribute(OPENS_BAR))) {
           if (peekLine && !preview) openPeek();

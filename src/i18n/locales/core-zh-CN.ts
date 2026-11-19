@@ -23,6 +23,7 @@ import { zhCN as qq } from "../sections/qq.ts";
 import { zhCN as screenshot } from "../sections/screenshot.ts";
 import { zhCN as sessionRing } from "../sections/sessionRing.ts";
 import { zhCN as settingsCalendar } from "../sections/settings/calendar.ts";
+import { zhCN as collapsedItems } from "../sections/settings/collapsedItems.ts";
 import { zhCN as devBuild } from "../sections/settings/devBuild.ts";
 import { zhCN as presets } from "../sections/settings/presets.ts";
 import { zhCN as project } from "../sections/settings/project.ts";
@@ -38,6 +39,7 @@ const coreSettings = {
   title: "设置",
   devBuild,
   calendar: settingsCalendar,
+  collapsedItems,
   project,
   presets,
 } as SettingsText;

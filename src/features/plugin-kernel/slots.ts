@@ -59,6 +59,7 @@ export interface IslandCollapsedMeta<Context = unknown> {
   hideable?: boolean;
   shown?: (context: Context) => boolean;
   opens?: string;
+  label?: SlotTitle | ((t: Translations) => string);
 }
 
 export interface IslandCollapsedCenterMeta<Context = unknown> {

@@ -23,6 +23,7 @@ import { en as qq } from "../sections/qq.ts";
 import { en as screenshot } from "../sections/screenshot.ts";
 import { en as sessionRing } from "../sections/sessionRing.ts";
 import { en as settingsCalendar } from "../sections/settings/calendar.ts";
+import { en as collapsedItems } from "../sections/settings/collapsedItems.ts";
 import { en as devBuild } from "../sections/settings/devBuild.ts";
 import { en as presets } from "../sections/settings/presets.ts";
 import { en as project } from "../sections/settings/project.ts";
@@ -38,6 +39,7 @@ const coreSettings = {
   title: "Settings",
   devBuild,
   calendar: settingsCalendar,
+  collapsedItems,
   project,
   presets,
 } as SettingsText;
