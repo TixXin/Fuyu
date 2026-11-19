@@ -31,6 +31,7 @@ type InteractionSnapshot = {
   collapsedWidth: number;
   isTucked: boolean;
   isDimmed: boolean;
+  gamePassthrough: boolean;
   backgroundColor?: string;
 };
 
@@ -38,6 +39,7 @@ type IslandWindowOptions = {
   mode: IslandMode;
   isTucked: boolean;
   isDimmed?: boolean;
+  gamePassthrough?: boolean;
   settings: IslandSettings;
   setSettings: (settings: IslandSettings) => void;
   backgroundColor?: string;
@@ -52,6 +54,7 @@ export function useIslandWindow({
   mode,
   isTucked,
   isDimmed = false,
+  gamePassthrough = false,
   settings,
   setSettings,
   backgroundColor,
@@ -78,6 +81,7 @@ export function useIslandWindow({
       collapsedWidth,
       isTucked: nextIsTucked,
       isDimmed: nextIsDimmed,
+      gamePassthrough: nextGamePassthrough,
       backgroundColor: nextBackgroundColor,
     }: InteractionSnapshot) => {
       const glassEnabled = nextSettings.appearanceMode === "liquidGlass";
@@ -107,6 +111,7 @@ export function useIslandWindow({
           cornerShape: nextSettings.islandCornerShape,
           monitorFollow: nextSettings.islandMonitor,
           tuckStyle: nextSettings.tuckStyle,
+          gamePassthrough: nextGamePassthrough,
         });
         setNativeGlassState(glassState);
       } catch (error) {
@@ -225,6 +230,7 @@ export function useIslandWindow({
       collapsedWidth: collapsedIslandWidth,
       isTucked,
       isDimmed,
+      gamePassthrough,
       backgroundColor,
     });
     if (!didShowInitialWindow.current) {
@@ -240,6 +246,7 @@ export function useIslandWindow({
     collapsedIslandWidth,
     isTucked,
     isDimmed,
+    gamePassthrough,
     mode,
     marginY,
     glassEnabled,

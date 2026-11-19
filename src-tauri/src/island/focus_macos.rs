@@ -106,6 +106,22 @@ pub(crate) fn island_mode_synced(window: &WebviewWindow, expanded: bool) {
     });
 }
 
+pub(crate) fn hand_focus_to_game(window: &WebviewWindow) {
+    let remembered = FOCUS_SLOTS
+        .take_expanded()
+        .or_else(|| FOCUS_SLOTS.take_hover())
+        .and_then(|pid| i32::try_from(pid).ok());
+    let app = window.app_handle().clone();
+    let _ = window.run_on_main_thread(move || {
+        if !island_has_real_key(&app) {
+            return;
+        }
+        if let Some(pid) = remembered.or_else(other_frontmost_app) {
+            island_panel::hand_key_back(&app, WINDOW_LABEL, pid);
+        }
+    });
+}
+
 pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), String> {
     let app = window.app_handle().clone();
     follow_hover(&app);

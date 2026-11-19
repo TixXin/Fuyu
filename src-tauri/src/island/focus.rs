@@ -97,6 +97,22 @@ pub(crate) fn set_click_activation(window: &WebviewWindow, activates: bool) {
     }
 }
 
+pub(crate) fn hand_focus_to_game(_window: &WebviewWindow) {
+    let own = std::process::id();
+    let foreground = win32::window::foreground_window();
+    if foreground.is_invalid() || win32::window::process_id(foreground) != own {
+        return;
+    }
+    let remembered = FOCUS_SLOTS
+        .take_expanded()
+        .or_else(|| FOCUS_SLOTS.take_hover())
+        .map(|target| HWND(target as *mut _))
+        .filter(|target| win32::window::is_visible(*target) && win32::window::process_id(*target) != own);
+    if let Some(target) = remembered.or_else(|| win32::window::topmost_fullscreen_window(own)) {
+        win32::window::force_foreground(target);
+    }
+}
+
 pub(crate) fn island_mode_synced(window: &WebviewWindow, expanded: bool) {
     super::watch::note_interaction_ready();
     set_click_activation(window, expanded);

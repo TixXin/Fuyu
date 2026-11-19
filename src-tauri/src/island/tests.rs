@@ -505,6 +505,43 @@ fn dimmed_passthrough_ignores_island_clicks_only_while_collapsed_and_untucked() 
 }
 
 #[test]
+fn game_passthrough_lets_clicks_through_only_the_tucked_strip() {
+    let mut strip = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+    strip.is_tucked = true;
+    assert!(!should_ignore_cursor(strip, true, false));
+    assert!(hover_inside(strip, true));
+
+    strip.game_passthrough = true;
+    assert!(strip.game_strip_passthrough());
+    assert!(should_ignore_cursor(strip, true, false));
+    assert!(should_ignore_cursor(strip, true, true));
+    assert!(!hover_inside(strip, true));
+
+    let mut untucked = strip;
+    untucked.is_tucked = false;
+    assert!(!untucked.game_strip_passthrough());
+    assert!(!should_ignore_cursor(untucked, true, false));
+    assert!(hover_inside(untucked, true));
+
+    let mut expanded = strip;
+    expanded.mode = IslandMode::Expanded;
+    assert!(!expanded.game_strip_passthrough());
+    assert!(!should_ignore_cursor(expanded, true, false));
+    assert!(hover_inside(expanded, true));
+
+    let mut dragging = strip;
+    dragging.is_dragging = true;
+    assert!(!dragging.game_strip_passthrough());
+    assert!(!should_ignore_cursor(dragging, true, false));
+
+    let mut left_game = strip;
+    left_game.game_passthrough = false;
+    assert!(!should_ignore_cursor(left_game, true, false));
+    assert!(hover_inside(left_game, true));
+    assert!(should_ignore_cursor(left_game, false, false));
+}
+
+#[test]
 fn cursor_near_island_and_dim_wake_tracker_handle_approach_and_parked_cursor() {
     for scale in [1.0, 1.25, 1.5, 2.0] {
         let stage_width = (STAGE_WINDOW_WIDTH * scale).round();
