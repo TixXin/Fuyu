@@ -28,15 +28,35 @@ export function foldScreenshotsIntoClipboard(features: IslandFeatures): IslandFe
   return { ...features, screenshots: false, clipboardScreenshots: true };
 }
 
-const byShortcut = <Item extends { shortcutOrder?: number }>(items: readonly Item[]) =>
-  [...items].sort((a, b) => (a.shortcutOrder ?? Number.MAX_SAFE_INTEGER) - (b.shortcutOrder ?? Number.MAX_SAFE_INTEGER));
+type Orderable = { shortcutOrder?: number; headerDot?: boolean; external?: boolean };
+
+const LAST = Number.MAX_SAFE_INTEGER;
+
+export const isHeaderDot = (item: Orderable) => (item.external === true ? item.headerDot !== false : item.headerDot === true);
+
+function byShortcut<Item extends Orderable>(items: readonly Item[]): Item[] {
+  const dotsEnd = Math.max(0, ...items.filter((item) => item.external !== true && item.headerDot === true).map((item) => item.shortcutOrder ?? 0));
+  const rank = (item: Item): [number, number, number] =>
+    item.external === true ? [dotsEnd, 1, item.shortcutOrder ?? LAST] : [item.shortcutOrder ?? LAST, 0, 0];
+  return [...items].sort((a, b) => {
+    const [x, y] = [rank(a), rank(b)];
+    return x[0] - y[0] || x[1] - y[1] || x[2] - y[2];
+  });
+}
 
 type PageSwitch = { enabled?: (features: IslandFeatures) => boolean };
 
-const itemEnabled = (item: PageSwitch, features: IslandFeatures) => item.enabled === undefined || item.enabled(features) === true;
+const itemEnabled = (item: PageSwitch, features: IslandFeatures) => {
+  if (item.enabled === undefined) return true;
+  try {
+    return item.enabled(features) === true;
+  } catch {
+    return false;
+  }
+};
 
-export function headerDotPages<Item extends PageSwitch & { headerDot?: boolean; shortcutOrder?: number }>(items: readonly Item[], features: IslandFeatures): Item[] {
-  return byShortcut(items.filter((item) => item.headerDot === true && itemEnabled(item, features)));
+export function headerDotPages<Item extends PageSwitch & Orderable>(items: readonly Item[], features: IslandFeatures): Item[] {
+  return byShortcut(items.filter((item) => isHeaderDot(item) && itemEnabled(item, features)));
 }
 
 const pageItem = (page: IslandPage) => pageSlot.items().find((item) => item.id === page);

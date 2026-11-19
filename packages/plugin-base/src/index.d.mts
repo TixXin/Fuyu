@@ -113,6 +113,13 @@ declare module "cordis" {
        * (`island.*` in the island), or the plugin fails with `no-slot`. An item with the id of an existing one
        * replaces it until this plugin stops. Extra fields are the slot's metadata (see `SLOTS` in
        * `@fuyu/plugin-base/protocol`). Experimental until phase 5: the props a slot passes to the component.
+       *
+       * An `island.page/v1` page gets a button in the island's header, after the built-in pages: give it
+       * `title` (a string, or `{ "zh-CN": "…", en: "…" }` picked by the interface language) and `icon` (a
+       * component that takes `size` and `strokeWidth`). Without `title` the button uses the plugin's
+       * `displayName`; without `icon`, the first letter of the title. `headerDot: false` keeps the page out of
+       * the header, so only `Alt+number` and the page cycle reach it. `shortcutOrder` orders a plugin's pages
+       * among plugin pages only; they always come after the built-in ones.
        */
       add(name: SlotName, item: { id: string; order?: number; component: unknown; [meta: string]: unknown }): () => Promise<void>;
     };

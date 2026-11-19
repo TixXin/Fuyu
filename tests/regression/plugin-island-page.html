@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+  <meta charset="UTF-8" />
+  <title>插件的岛页面与收起项</title>
+  <style>
+    * { box-sizing: border-box; }
+    html body { height: auto; min-height: 100%; margin: 0; overflow: auto; background: #c5cfcc; font: 14px "Segoe UI", "Microsoft YaHei", sans-serif; }
+    #expanded { position: relative; height: 380px; }
+    #expanded .stage { width: 100%; height: 360px; padding-top: 12px; --expanded-island-width: 560px; }
+    #collapsed { position: relative; height: 120px; }
+    #collapsed .stage { width: 100%; height: 100px; padding-top: 36px; }
+    #results { max-width: 760px; margin: 24px auto; padding: 0 24px; color: #1b302a; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
+  </style>
+  <div id="expanded"></div>
+  <div id="collapsed"></div>
+  <pre id="results" role="status">准备检查…</pre>
+  <script type="module" src="./plugin-island-page.tsx"></script>
+</html>

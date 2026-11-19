@@ -244,7 +244,7 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 
 | 插槽 | 位置 | 种类 | 每插件上限 | 最多显示 | 元数据 |
 |---|---|---|---|---|---|
-| `island.page/v1` | 展开页 | list | 2 | 不限，页头圆点另有上限 | `icon`、`shortcutOrder`（Alt+数字的顺序）、`headerDot`（在页头出圆点）、`enabled(features)`、`fallback(features)`（这页关掉时回退到哪页）、`fold`（`{ into, when(features), label(t) }`：条件成立时这页不单独出现，作为 `into` 那页里的一个子视图，组件多拿一个 `embedded: true`；现在只有截图历史折进剪贴板） |
+| `island.page/v1` | 展开页 | list | 2 | 不限，页头圆点另有上限 | `title`（插件页面的标题，见 `docs/plugins/services-and-slots.md`「插件的岛页面」）、`icon`、`shortcutOrder`（Alt+数字的顺序）、`headerDot`（在页头出圆点；插件的页面默认出，写 `false` 不出）、`enabled(features)`、`fallback(features)`（这页关掉时回退到哪页）、`fold`（`{ into, when(features), label(t) }`：条件成立时这页不单独出现，作为 `into` 那页里的一个子视图，组件多拿一个 `embedded: true`；现在只有截图历史折进剪贴板） |
 | `island.header/v1` | 页头右侧的按钮 | list | 1 | 不限 | `enabled(features)` |
 | `island.collapsed/v1` | 收起条 | list | 2 | 不限，用户的「收起条布局」照旧覆盖 | `group`（`gauges`：相邻的合进一个量表框，侧栏也显示）、`width`（收起条要加的宽度）、`hideable`（用户在布局里藏起来后整项撤掉，也不算宽度）、`shown(context)`（现在出不出现，不写就一直出现） |
 | `island.collapsed-center/v1` | 收起条的中心图案 | single | 1 | 1 | `width`、`shown(context)` |

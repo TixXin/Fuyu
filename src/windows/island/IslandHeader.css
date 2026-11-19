@@ -74,8 +74,16 @@
   justify-self: start;
   gap: 2px;
   min-width: 96px;
+  max-width: 100%;
   height: 34px;
   padding-left: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.editor-dots::-webkit-scrollbar {
+  display: none;
 }
 
 .island__collapse-target {

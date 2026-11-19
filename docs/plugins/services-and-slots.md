@@ -50,7 +50,7 @@
 
 | 插槽名 | 所在窗口 | 类型 | 每插件上限 | 元数据字段（`meta`） | 用途 |
 |---|---|---|---|---|---|
-| `island.page/v1` | `island` | `list` | 2 | `icon`, `shortcutOrder`, `headerDot`, `enabled`, `fallback`, `fold` | 悬浮岛展开态的独立页面 |
+| `island.page/v1` | `island` | `list` | 2 | `title`, `icon`, `shortcutOrder`, `headerDot`, `enabled`, `fallback`, `fold` | 悬浮岛展开态的独立页面，插件的页面在页头有按钮（见下面「插件的岛页面」） |
 | `island.header/v1` | `island` | `list` | 1 | `enabled` | 悬浮岛展开态顶栏右侧操作按钮 |
 | `island.collapsed/v1` | `island` | `list` | 2 | `group`, `width`, `hideable`, `shown` | 悬浮岛收起条左翼 / 右翼状态项 |
 | `island.collapsed-center/v1` | `island` | `single` | 1 | `width`, `shown` | 悬浮岛收起条正中央图案 / 宠物 |
@@ -65,6 +65,24 @@
 | `settings.section/v1` | `settings` | `list` | 4 | `category`（按 `category` 分组） | 设置窗口某个分类页内的配置分组卡片 |
 | `settings.runner/v1` | `settings` | `list` | 1 | 无 | 设置窗口无界面挂钩 |
 | `plugin-window.view/v1` | `plugin-window` | `list` | 8 | `windowId`, `title` | 实验性独立插件窗口（需声明 `fuyu.experimental: ["windows/v1"]`）的内容视图插槽 |
+
+### 插件的岛页面（`island.page/v1`）
+
+```ts
+ctx.slots.add("island.page/v1", {
+  id: "world-clock",
+  title: { "zh-CN": "世界时钟", en: "World Clock" },
+  icon: GlobeIcon,
+  component: WorldClockPage,
+});
+```
+
+- 插件注册的页面在岛的页头有一个按钮，排在内置页面后面、按注册顺序；按钮的提示是标题加 `Alt+数字`，点它或按 `Alt+数字` 打开这页，`Ctrl+Tab` 切页也会经过它。
+- `title`：字符串，或按语言给的 `{ "zh-CN": "…", en: "…" }`（按界面语言取，缺哪种用另一种）。不写时用插件 `package.json` 里 `fuyu.displayName`，再没有就用包名去掉作用域的部分。
+- `icon`：接受 `size`、`strokeWidth` 的组件（lucide 图标或自己的 SVG）。不写或渲染出错时显示标题的第一个字，页头照常显示。
+- `headerDot: false`：不进页头，只能用 `Alt+数字` 和切页到达。
+- `shortcutOrder`：只在插件页面之间排序，插件页面总在内置页面之后。
+- 收起条上的 `island.collapsed/v1` 项：现在 `width` 只对 `group: "gauges"` 的项计入岛宽，插件的收起项不写 `group` 时声明的 `width` 不起作用，空间不够时可能被压短；按实际渲染宽度算岛宽是 E60.8 的事。
 
 ### 插槽主题变量（`SLOT_THEME`）
 
