@@ -166,6 +166,8 @@ npm create fuyu-plugin@latest
 - **自己写**：用上面的命令生成一个项目，在项目里 `npm run dev` 就把它装进正在运行的岛屿，改了自动重新构建；完整说明见[插件文档](docs/plugins/README.md)和[命令行](docs/plugins/cli.md)。
 - **分享给别人**：把提交号交给[插件市场](https://github.com/TixXin/fuyu-plugins)，市场从源码构建、每个版本审核后上架；或者打成 `.fuyu` 文件自己发给别人。步骤见[发布](docs/plugins/publish.md)。
 
+这套插件平台的底座单独开源了，叫 [tauri-cordis](https://github.com/TixXin/tauri-cordis)（MIT）：宿主进程的看管、带版本的服务、界面插槽、打包和市场的工具都在里面，别的 Tauri 应用可以用它做出同样的插件体系。它的内核是 [Cordis](https://github.com/cordiverse/cordis)。
+
 ## 从源码构建
 
 - **Windows**：需要 Windows 10/11、Node.js、pnpm、Rust、Visual Studio C++ Build Tools 和 WebView2 Runtime。
