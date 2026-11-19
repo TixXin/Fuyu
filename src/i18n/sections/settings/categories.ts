@@ -9,13 +9,13 @@ export type SettingsCategoriesText = {
   collapse: (group: string) => string;
   backTo: (page: string) => string;
   keywords: Record<
-    | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "shortcuts" | "todos" | "todosReminders" | "todosArchive" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
     | "pluginsV3" | "pluginMarket" | "pluginDiagnostics" | "about" | "aboutChangelog" | "aboutPlugins" | "aboutHelp",
     string
   >;
-  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string; about: string };
-  tabs: Record<"general" | "generalData" | "generalSync" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "about" | "aboutChangelog" | "aboutPlugins" | "aboutHelp", string>;
+  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; todos: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string; about: string };
+  tabs: Record<"general" | "generalData" | "generalSync" | "todos" | "todosReminders" | "todosArchive" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "about" | "aboutChangelog" | "aboutPlugins" | "aboutHelp", string>;
   groups: {
     basics: string;
     features: string;
@@ -33,6 +33,8 @@ export type SettingsCategoriesText = {
   timerAlerts: string;
   shortcutsIsland: string;
   shortcutsReference: string;
+  todosReminders: string;
+  todosArchive: string;
   musicLyrics: string;
   musicLyricsStyle: string;
   clipboardHistory: string;
@@ -105,7 +107,9 @@ export const zhCN: SettingsCategoriesText = {
     theme: "主题 颜色 背景 浅色 深色 配色 强调色 亮点 文字 我的主题 预设 样式 导入 导出 保存 主题市场 皮肤 下载 应用 分享",
     themeStyle: "风格 经典 像素 透明 不透明度 整体不透明度 闲置 变淡 鼠标穿透 点击穿透 字体 圆角 超椭圆 液态玻璃 折射 流光 模糊 高光",
     shortcuts: "按键 组合键 热键 全局 上下层 置顶 最前 退到后面",
-    todos: "任务 笔记 归档 待办 项目 标签 保存路径 文件夹 导出 Markdown",
+    todos: "任务 待办 项目 标签 排序 录入 优先级 专注 快捷键",
+    todosReminders: "待办 提醒 到点 到期 提前 收尾 音效",
+    todosArchive: "待办 笔记 归档 跨天 顺延 保存路径 文件夹 导出 Markdown 本周小结",
     calendar: "日程 会议 倒计时 提醒 CalDAV ICS 订阅 节假日 日历来源",
     music: "歌词 媒体 播放 波形 酷狗 网易云",
     translation: "翻译服务 模型 密钥 API 语言",
@@ -139,6 +143,7 @@ export const zhCN: SettingsCategoriesText = {
     behaviorAlerts: "计时与提醒",
     appearance: "外观",
     shortcuts: "快捷键",
+    todos: "待办",
     music: "音乐",
     clipboard: "剪贴板",
     screenshot: "截图",
@@ -152,6 +157,9 @@ export const zhCN: SettingsCategoriesText = {
     general: "启动与托盘",
     generalData: "数据与备份",
     generalSync: "跨设备同步",
+    todos: "任务",
+    todosReminders: "提醒",
+    todosArchive: "归档与保存",
     music: "岛上显示",
     musicLyrics: "歌词来源",
     musicLyricsStyle: "歌词样式",
@@ -204,6 +212,8 @@ export const zhCN: SettingsCategoriesText = {
   timerAlerts: "计时与休息",
   shortcutsIsland: "岛上按键",
   shortcutsReference: "按键速查表",
+  todosReminders: "提醒",
+  todosArchive: "归档与保存",
   musicLyrics: "歌词来源",
   musicLyricsStyle: "歌词样式",
   clipboardHistory: "记录与链接",
@@ -276,7 +286,9 @@ export const en: SettingsCategoriesText = {
     theme: "themes colour color background light dark tone accent pulse ink my themes preset style import export save theme market skins download apply share",
     themeStyle: "style classic pixel opacity island opacity idle dim fade click through passthrough transparency font corner squircle liquid glass refraction flow blur specular",
     shortcuts: "keys hotkey keyboard global layer topmost front back",
-    todos: "tasks notes archive todos projects tags save folder export markdown",
+    todos: "tasks todos projects tags sorting entry priority focus shortcut",
+    todosReminders: "todos reminders timed due ahead end of day sound",
+    todosArchive: "todos notes archive day change carry over save folder export markdown week summary",
     calendar: "events meeting countdown reminder caldav ics subscription holidays calendar sources",
     music: "lyrics media playback waveform kugou netease",
     translation: "service model key api language",
@@ -310,6 +322,7 @@ export const en: SettingsCategoriesText = {
     behaviorAlerts: "Timer & alerts",
     appearance: "Appearance",
     shortcuts: "Shortcuts",
+    todos: "Todos",
     music: "Music",
     clipboard: "Clipboard",
     screenshot: "Screenshots",
@@ -323,6 +336,9 @@ export const en: SettingsCategoriesText = {
     general: "Startup and tray",
     generalData: "Data and backup",
     generalSync: "Cross-device sync",
+    todos: "Tasks",
+    todosReminders: "Reminders",
+    todosArchive: "Archive and saving",
     music: "On the island",
     musicLyrics: "Lyrics sources",
     musicLyricsStyle: "Lyrics style",
@@ -375,6 +391,8 @@ export const en: SettingsCategoriesText = {
   timerAlerts: "Timer and breaks",
   shortcutsIsland: "Island keys",
   shortcutsReference: "Key reference",
+  todosReminders: "Reminders",
+  todosArchive: "Archive and saving",
   musicLyrics: "Lyrics sources",
   musicLyricsStyle: "Lyrics style",
   clipboardHistory: "Records and links",

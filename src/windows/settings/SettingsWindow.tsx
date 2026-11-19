@@ -58,7 +58,7 @@ export function SettingsWindow() {
     if (request?.plugin) requestPluginDetail(request.plugin, "settings");
     if (request?.bundle) requestMarketView({ bundle: request.bundle });
     if (section === "savePath") {
-      setCategory("todos");
+      setCategory("todosArchive");
       focusSection(section);
     }
     if (section === "updates") {

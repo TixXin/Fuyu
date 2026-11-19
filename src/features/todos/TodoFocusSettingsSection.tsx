@@ -7,7 +7,6 @@ import { useTranslation } from "../../i18n";
 import { switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
 import { useBuiltinEnabled } from "../plugin-kernel/useBuiltinPlugins";
 import { MAX_FOCUS_TIMER_MINUTES, MIN_FOCUS_TIMER_MINUTES } from "./todoPrefs.ts";
-import { TodoReminderSettingsRows } from "./TodoReminderSettingsRows";
 import { useTodoPrefs } from "./useTodoPrefs";
 
 export function TodoFocusSettingsSection() {
@@ -46,7 +45,6 @@ export function TodoFocusSettingsSection() {
           }
         />
       )}
-      <TodoReminderSettingsRows />
       <SettingsToggleRow
         title={text.autoCompleteFromSubtasks}
         description={text.autoCompleteFromSubtasksHint}

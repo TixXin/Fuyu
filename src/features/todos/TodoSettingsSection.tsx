@@ -7,7 +7,7 @@ import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import type { IslandSettings } from "../../lib/settings/types";
 import { TodoNewTaskSettingsRows } from "./TodoNewTaskSettingsRows";
-import type { TodoInsertPosition, TodoSortBy } from "./todoPrefs.ts";
+import type { TodoDoneDisplay, TodoInsertPosition, TodoSortBy } from "./todoPrefs.ts";
 import { useTodoPrefs } from "./useTodoPrefs";
 
 export function TodoSettingsSection({ settings, onSettingsChange }: {
@@ -22,6 +22,12 @@ export function TodoSettingsSection({ settings, onSettingsChange }: {
     { value: "manual", label: text.sortOptions.manual },
     { value: "priority", label: text.sortOptions.priority },
     { value: "createdDesc", label: text.sortOptions.createdDesc },
+  ];
+
+  const doneDisplayOptions: readonly { value: TodoDoneDisplay; label: string }[] = [
+    { value: "fold", label: text.doneDisplayOptions.fold },
+    { value: "inline", label: text.doneDisplayOptions.inline },
+    { value: "hide", label: text.doneDisplayOptions.hide },
   ];
 
   const insertOptions: readonly { value: TodoInsertPosition; label: string }[] = [
@@ -74,6 +80,17 @@ export function TodoSettingsSection({ settings, onSettingsChange }: {
           checked={settings.enableTodoReorder}
           disabled={prefs.sortBy === "createdDesc"}
           onChange={(enableTodoReorder) => onSettingsChange({ ...settings, enableTodoReorder })}
+        />
+        <SettingsRow
+          title={text.doneDisplay}
+          control={
+            <SettingsSelect
+              value={prefs.doneDisplay}
+              options={doneDisplayOptions}
+              ariaLabel={text.doneDisplay}
+              onChange={(doneDisplay) => setPrefs((current) => ({ ...current, doneDisplay }))}
+            />
+          }
         />
       </SettingsGroup>
 

@@ -25,6 +25,9 @@ export type SettingsTodoText = {
   focusTimerPluginOff: string;
   enableTimerPlugin: string;
   focusTimerMinutes: string;
+  reminderGroup: string;
+  wrapUpGroup: string;
+  soundGroup: string;
   timedReminder: string;
   timedReminderHint: string;
   timedReminderLead: string;
@@ -39,6 +42,8 @@ export type SettingsTodoText = {
   autoCompleteFromSubtasks: string;
   autoCompleteFromSubtasksHint: string;
   rolloverGroup: string;
+  markdownGroup: string;
+  archiveGroup: string;
   completionSound: string;
   dayStartHour: string;
   dayStartHourHint: string;
@@ -102,7 +107,10 @@ export const zhCN: SettingsTodoText = {
     medium: "中",
     high: "高",
   },
-  focusGroup: "专注联动与提醒",
+  focusGroup: "专注与子任务",
+  reminderGroup: "到点和到期",
+  wrapUpGroup: "每天收尾",
+  soundGroup: "声音",
   focusTimer: "开始任务时启动专注倒计时",
   focusTimerHint: "点击待办的「开始」时自动拉起倒计时，到点后自动累加到该待办的专注时长。",
   focusTimerPluginOffHint: "内置「计时器」插件当前未开启，启用后即可联动专注倒计时与准点提醒。",
@@ -127,7 +135,9 @@ export const zhCN: SettingsTodoText = {
   wrapUpReminderTime: "提醒时间",
   autoCompleteFromSubtasks: "子任务全部勾选后自动完成主待办",
   autoCompleteFromSubtasksHint: "当至少有一项子步骤且最后一项被勾选完成时，自动将主待办标记为已完成。",
-  rolloverGroup: "反馈与跨天归档",
+  rolloverGroup: "跨天",
+  markdownGroup: "Markdown",
+  archiveGroup: "归档",
   completionSound: "勾选完成时播放轻音效",
   dayStartHour: "新一天开始时间",
   dayStartHourHint: "到这个时间才把前一天归档并开启新清单，避免熬夜过零点提前翻篇。",
@@ -206,7 +216,10 @@ export const en: SettingsTodoText = {
     medium: "Medium",
     high: "High",
   },
-  focusGroup: "Focus timer & reminders",
+  focusGroup: "Focus & subtasks",
+  reminderGroup: "Timed and due",
+  wrapUpGroup: "End of day",
+  soundGroup: "Sound",
   focusTimer: "Start focus timer when starting a task",
   focusTimerHint: "Starts a countdown via the built-in timer when you click Start on a task, and credits focus minutes when due.",
   focusTimerPluginOffHint: "The built-in Timer plugin is currently off; enable it to use focus countdowns and timed reminders.",
@@ -231,7 +244,9 @@ export const en: SettingsTodoText = {
   wrapUpReminderTime: "Remind at",
   autoCompleteFromSubtasks: "Complete main task when all subtasks are checked",
   autoCompleteFromSubtasksHint: "Automatically marks the parent task done once its last remaining subtask is checked off.",
-  rolloverGroup: "Feedback & daily rollover",
+  rolloverGroup: "Day change",
+  markdownGroup: "Markdown",
+  archiveGroup: "Archive",
   completionSound: "Play subtle sound on completion",
   dayStartHour: "New day starts at",
   dayStartHourHint: "Waits until this hour before archiving yesterday's list, so late-night work stays on today.",
