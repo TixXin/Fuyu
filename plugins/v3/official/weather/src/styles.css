@@ -1,5 +1,4 @@
-.fuyu-weather,
-.fuyu-weather-settings {
+.fuyu-weather {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -8,12 +7,6 @@
   font-family: var(--fuyu-plugin-font);
   font-size: 13px;
   color: var(--fuyu-plugin-text);
-}
-
-.fuyu-weather-settings {
-  border: 1px solid var(--fuyu-plugin-border);
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
 }
 
 .fuyu-weather__top {
@@ -43,15 +36,46 @@
 .fuyu-weather__sub {
   font-size: 12px;
   color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.fuyu-weather__sub.is-stale {
+  color: var(--fuyu-plugin-warning);
+}
+
+.fuyu-weather__icon-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  cursor: pointer;
+}
+
+.fuyu-weather__icon-button:hover:not(:disabled) {
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-weather__icon-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .fuyu-weather__empty {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: flex-start;
+  gap: 6px;
   padding: 12px;
   border-radius: var(--fuyu-plugin-radius);
   background: var(--fuyu-plugin-surface);
@@ -110,11 +134,24 @@
   gap: 4px;
 }
 
+.fuyu-weather__hours.is-scroll {
+  display: flex;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.fuyu-weather__hours.is-scroll .fuyu-weather__hour {
+  flex: 0 0 46px;
+}
+
 .fuyu-weather__hour {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
+  color: var(--fuyu-plugin-text-secondary);
   padding: 6px 4px;
   border-radius: var(--fuyu-plugin-radius);
   background: var(--fuyu-plugin-surface);
@@ -122,19 +159,24 @@
 }
 
 .fuyu-weather__hour-time {
-  color: var(--fuyu-plugin-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.fuyu-weather__hour-cond {
   max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--fuyu-plugin-text-muted);
+  font-variant-numeric: tabular-nums;
+  text-overflow: clip;
   white-space: nowrap;
-  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-weather__hour-pop,
+.fuyu-weather__day-pop {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fuyu-plugin-accent);
 }
 
 .fuyu-weather__hour-temp {
+  color: var(--fuyu-plugin-text);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -165,6 +207,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+.fuyu-weather__day-icon,
+.fuyu-weather__hero-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
 .fuyu-weather__day-cond {
   flex: 1;
   min-width: 0;
@@ -193,12 +242,6 @@
   white-space: nowrap;
 }
 
-.fuyu-weather__button--secondary {
-  border: 1px solid var(--fuyu-plugin-border);
-  color: var(--fuyu-plugin-text);
-  background: var(--fuyu-plugin-surface-hover);
-}
-
 .fuyu-weather__button:disabled {
   color: var(--fuyu-plugin-text-muted);
   background: var(--fuyu-plugin-surface-hover);
@@ -219,7 +262,8 @@
 .fuyu-weather-bar {
   display: inline-flex;
   align-items: center;
-  max-width: 96px;
+  gap: 4px;
+  max-width: 120px;
   padding: 1px 6px;
   border-radius: var(--fuyu-plugin-radius);
   background: var(--fuyu-plugin-surface);
@@ -232,45 +276,7 @@
   white-space: nowrap;
 }
 
-.fuyu-weather-settings__field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.fuyu-weather-settings__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.fuyu-weather-settings__label {
-  font-size: 12px;
-  color: var(--fuyu-plugin-text-secondary);
-}
-
-.fuyu-weather-settings__input {
-  min-width: 0;
-  padding: 6px 8px;
-  border: 1px solid var(--fuyu-plugin-border);
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface-hover);
-  color: var(--fuyu-plugin-text);
-  font: inherit;
-}
-
-.fuyu-weather-settings__check {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.fuyu-weather-settings__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+.fuyu-weather-bar__cond {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

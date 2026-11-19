@@ -1,8 +1,8 @@
 {
   "name": "@fuyu/weather",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "Current weather, hourly and 7-day forecast from Open-Meteo, with island collapsed bar status and rain alerts.",
+  "description": "Current weather and the next few days' forecast on the island, with a heads-up before it rains.",
   "license": "MIT",
   "author": "TixXin",
   "repository": "https://github.com/TixXin/fuyu",
@@ -24,10 +24,19 @@
       "en": "Weather"
     },
     "description": {
-      "zh-CN": "在岛展开页与收起条显示所选城市的实时天气与未来预报，即将下雨时在岛上提醒；未填写城市时不发起任何网络请求。",
-      "en": "Shows current weather and forecasts on the island page and collapsed bar, with rain alerts; stays offline until a city is set."
+      "zh-CN": "在岛上看现在的天气和未来几天的预报，快下雨时提醒你带伞。",
+      "en": "Current weather and the next few days' forecast on the island, with a heads-up before it rains."
     },
     "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/page.png",
+        "caption": {
+          "zh-CN": "岛上页面：现在、逐小时和 7 天",
+          "en": "Island page: now, hourly and 7 days"
+        }
+      }
+    ],
     "categories": [
       "information"
     ],
@@ -42,6 +51,7 @@
     },
     "inject": {
       "required": [
+        "commands",
         "messages/v1"
       ]
     },
@@ -54,8 +64,8 @@
       {
         "id": "refresh",
         "title": {
-          "zh-CN": "立即刷新",
-          "en": "Refresh now"
+          "zh-CN": "立即刷新天气",
+          "en": "Refresh weather now"
         }
       }
     ],
