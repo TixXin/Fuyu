@@ -112,12 +112,6 @@
     background: inherit !important;
   }
 
-  .stage .island.island--side.island--appearance-liquidGlass[data-glass-wallpaper]::before {
-    background-position:
-      0 0,
-      var(--glass-wallpaper-x) calc(var(--glass-wallpaper-y) + var(--island-top-fillet)) !important;
-  }
-
   .island::after {
     z-index: 1;
     opacity: var(--island-rim-opacity) !important;
