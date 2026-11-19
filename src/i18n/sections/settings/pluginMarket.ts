@@ -170,7 +170,7 @@ export const zhCN: SettingsPluginMarketText = {
   },
   noResult: {
     title: (query) => `没找到「${query}」`,
-    body: "换个说法试试，或者用英文名、作者名搜；也可以按分类看看。",
+    body: "换个说法试试，拼音、英文名、作者名都能搜；也可以按分类看看。",
     fromFile: "有 .fuyu 文件？从文件安装",
     buildOwn: "自己做一个插件",
   },

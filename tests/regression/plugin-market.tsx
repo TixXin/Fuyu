@@ -138,6 +138,14 @@ try {
   const search = await view("search", zh ? "搜索" : "Search", { initialQuery: "sync" });
   check(cards(search.stage, "results").sort().join() === "@fuyu/devices,@mio/focus-sync,@ryo/clip-sync,@tara/linear", "Searching matches names and descriptions and lists only those plugins under a result count");
 
+  const pinyin = await view("search-pinyin", zh ? "搜索：拼音和关键词" : "Search: pinyin and keywords", { initialQuery: "hjy" });
+  const input = pinyin.stage.querySelector<HTMLInputElement>(".market-toolbar input")!;
+  const found = (query: string, expected: string) => type(input, query).then(() => waitFor(() => cards(pinyin.stage, "results").join() === expected, `"${query}" to find ${expected}`));
+  check(await found("tianqi", "@fuyu/weather") && await found("tq", "@fuyu/weather"), "Searching by full pinyin or by initials finds a plugin by its Chinese name");
+  check(await found("forecast", "@fuyu/weather") && await found("环境音", "@nori/focus-sounds") && await found("hjy", "@nori/focus-sounds"), "Searching a manifest keyword, or its pinyin, finds the plugin even though the name and description do not say it");
+  check(await found("天气预报怎么看", "@fuyu/weather"), "A longer query that contains the plugin's name still finds it");
+  await found("tianqi", "@fuyu/weather");
+
   const none = await view("noresult", zh ? "搜索无结果" : "No results", { initialQuery: zh ? "股票行情" : "stock ticker" });
   check(none.stage.querySelector("[data-market-empty='no-result']") && none.stage.querySelector("[data-market-empty] [data-action='market-install-file']") && none.stage.querySelector("[data-market-empty] [data-market-category='productivity']"), "No results suggests categories, installing from a file and making your own");
 

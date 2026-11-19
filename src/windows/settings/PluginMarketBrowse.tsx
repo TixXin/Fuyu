@@ -3,13 +3,15 @@ import { ExternalLink, Search, Upload } from "lucide-react";
 import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
 import type { PluginMarketSort } from "../../i18n/sections/settings/pluginMarket";
 import { useLocale, useTranslation } from "../../i18n";
+import { usePinyin } from "../../lib/pinyin/usePinyin";
 import { iconSources } from "./pluginIconSources";
 import { PluginLogo } from "./PluginLogo";
 import { PluginMarketCard, type MarketCardHandlers } from "./PluginMarketCard";
 import { PluginMarketEmpty } from "./PluginMarketEmpty";
 import { openPluginDocs } from "./pluginMarketActions";
 import { PluginMarketInstalled } from "./PluginMarketInstalled";
-import { browseSections, categoryCounts, categoryNameMap, inCategory, localized, matchesQuery, sortPlugins } from "./pluginMarketModel";
+import { browseSections, categoryCounts, categoryNameMap, inCategory, localized, sortPlugins } from "./pluginMarketModel";
+import { queryWantsPinyin, searchMarket } from "./marketSearch";
 import { marketActionCandidate } from "./pluginRowStatus";
 
 export function PluginMarketBrowse({ plugins, newNames, query, category, sort, categoryName, handlers, onCategory, onInstallFile }: {
@@ -26,6 +28,7 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
   const text = useTranslation().settings.pluginsV3.marketPage;
   const { locale } = useLocale();
   const [ownedOpen, setOwnedOpen] = useState<boolean | null>(null);
+  const pinyin = usePinyin(queryWantsPinyin(query));
   const grid = (list: readonly MarketCatalogPlugin[]) => (
     <div className="market-grid">
       {list.map((plugin) => <PluginMarketCard key={plugin.name} plugin={plugin} categoryName={categoryName} isNew={newNames.has(plugin.name)} {...handlers} />)}
@@ -34,7 +37,7 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
 
   if (query.trim()) {
     const names = categoryNameMap(plugins, categoryName);
-    const found = sortPlugins(plugins.filter((plugin) => matchesQuery(plugin, query, names)), sort);
+    const found = searchMarket(sortPlugins(plugins, sort), query, names, pinyin);
     if (found.length === 0) {
       return (
         <PluginMarketEmpty kind="no-result" icon={<Search size={22} strokeWidth={1.8} />} title={text.noResult.title(query.trim())} body={text.noResult.body}>

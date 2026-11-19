@@ -6,7 +6,7 @@ const candidate = (version: string, publishedAt: string, more: Partial<MarketVer
   version, sha256: "c".repeat(64), size: 86_016, publishedAt: `${publishedAt}T08:00:00Z`, ...more, confirmation: caps(confirmation),
 });
 
-const plugin = (name: string, names: [string, string], descriptions: [string, string], categories: string[], more: Partial<MarketCatalogPlugin> = {}): MarketCatalogPlugin => {
+const plugin = (name: string, names: [string, string], descriptions: [string, string], categories: string[], more: Partial<MarketCatalogPlugin> & { keywords?: string[] } = {}): MarketCatalogPlugin => {
   const official = name.startsWith("@fuyu/");
   return {
     name, official, publisher: { github: official ? "TixXin" : name.split("/")[0].slice(1), official },
@@ -36,7 +36,7 @@ export const MARKET_PLUGINS: MarketCatalogPlugin[] = [
   plugin("@fuyu/rss", ["RSS 订阅", "RSS reader"], ["订阅博客和新闻，有新文章时在收起条上滚动标题，点一下打开", "Follow blogs and news; new headlines scroll on the collapsed bar, click to open"], ["information"],
     { icon: ICON_SVG, screenshots: RSS_SHOTS, install: candidate("1.5.0", "2026-11-12", {}, { official: true, network: ["*"], slots: ["collapsed.center/v1", "island.page/v1"] }) }),
   plugin("@fuyu/weather", ["天气", "Weather"], ["收起条上显示当前天气，下雨前半小时提醒你带伞", "Shows the weather on the collapsed bar and reminds you to take an umbrella before rain"], ["information"],
-    { ...installed("1.2.0"), icon: BROKEN_ICON, screenshots: WEATHER_SHOTS, install: candidate("1.2.0", "2026-11-02", {}, { official: true, network: ["api.open-meteo.com"] }) }),
+    { ...installed("1.2.0"), icon: BROKEN_ICON, screenshots: WEATHER_SHOTS, keywords: ["天气预报", "气温", "forecast"], install: candidate("1.2.0", "2026-11-02", {}, { official: true, network: ["api.open-meteo.com"] }) }),
   plugin("@fuyu/github-notify", ["GitHub 通知", "GitHub notifications"], ["有人提到你、请你审查或 CI 失败时，在岛上弹一条提醒", "Pops an island alert when you're mentioned, asked to review, or CI fails"], ["developer"],
     { ...installed("2.0.1"), install: candidate("2.1.0", "2026-11-17"), autoUpdate: candidate("2.1.0", "2026-11-17", { urgent: true }, { official: true, network: ["api.github.com", "gist.github.com"], slots: ["notice/v1"] }) }),
   plugin("@fuyu/page-summary", ["网页摘要", "Page summary"], ["复制一个链接，岛上给出三句话的摘要，可以存进笔记", "Copy a link and the island gives a three-sentence summary you can save to notes"], ["ai", "productivity"],
@@ -48,7 +48,7 @@ export const MARKET_PLUGINS: MarketCatalogPlugin[] = [
   plugin("@tara/linear", ["Linear 任务", "Linear issues"], ["把分给你的 Linear 任务同步进待办，状态变了在岛上提醒", "Syncs Linear issues assigned to you into to-dos and alerts you on status changes"], ["developer", "todos"],
     { install: candidate("0.6.0", "2026-11-05", {}, { network: ["api.linear.app"], provides: ["linear/v1"] }) }),
   plugin("@nori/focus-sounds", ["白噪音", "Focus sounds"], ["雨声、咖啡馆、篝火，专注时在岛上点一下就放", "Rain, café and campfire sounds, one click on the island while you focus"], ["productivity", "media"],
-    { install: candidate("1.3.2", "2026-11-01") }),
+    { keywords: ["白噪声", "环境音", "ambient"], install: candidate("1.3.2", "2026-11-01") }),
   plugin("@moe/pet-skins", ["宠物皮肤包", "Pet skins"], ["给收起条中间的小宠物换 12 套新造型", "Twelve new looks for the pet in the middle of the collapsed bar"], ["appearance"],
     { install: candidate("0.2.0", "2026-11-18", { fresh: true }, { slots: [] }) }),
   plugin("@kai/vscode-status", ["VS Code 状态", "VS Code status"], ["在岛上显示 VS Code 里正在调试、正在跑测试的状态", "Shows what VS Code is debugging or testing right on the island"], ["developer"],

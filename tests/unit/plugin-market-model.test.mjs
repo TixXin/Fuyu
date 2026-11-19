@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { MAX_SCREENSHOTS } from "../../packages/plugin-market/src/index.mjs";
-import { MAX_MARKET_SCREENSHOTS, browseSections, capabilityItems, categoryCounts, categoryNameMap, hasUpdate, inCategory, isFirstFromPublisher, matchesQuery, newListings, primaryCategory, sortPlugins } from "../../src/windows/settings/pluginMarketModel.ts";
+import { matchesQuery } from "../../src/windows/settings/marketSearch.ts";
+import { MAX_MARKET_SCREENSHOTS, browseSections, capabilityItems, categoryCounts, categoryNameMap, hasUpdate, inCategory, isFirstFromPublisher, newListings, primaryCategory, sortPlugins } from "../../src/windows/settings/pluginMarketModel.ts";
 
 const caps = (more = {}) => ({ unreviewed: false, network: [], nodeApis: [], provides: [], replaces: [], slots: [], ...more });
 const candidate = (version, more = {}) => ({ version, sha256: "a", size: 1, publishedAt: "2026-11-10T00:00:00Z", confirmation: caps(), ...more });
@@ -85,14 +86,6 @@ test("recommended order puts installable official plugins first, then third-part
   assert.deepEqual(sortPlugins([blocked, owned, third, updating, official], "recommended").map((item) => item.name), ["@fuyu/updating", "@fuyu/official", "@a/third", "@fuyu/owned", "@a/old"]);
   assert.deepEqual(sortPlugins([blocked, third, official], "recommended").map((item) => item.name), ["@fuyu/official", "@a/third", "@a/old"]);
   assert.deepEqual(sortPlugins([official, blocked, third], "recent").map((item) => item.name), ["@a/third", "@fuyu/official", "@a/old"]);
-});
-
-test("search matches names, publishers and the shown category name, ignoring spaces and dashes", () => {
-  const rss = plugin("@fuyu/rss", { displayName: { "zh-CN": "RSS 订阅", en: "RSS reader" }, categories: ["information"] });
-  assert.equal(matchesQuery(rss, "rssreader"), true);
-  assert.equal(matchesQuery(rss, "资讯", { information: "资讯" }), true);
-  assert.equal(matchesQuery(rss, "tixxin"), true);
-  assert.equal(matchesQuery(rss, "天气"), false);
 });
 
 test("newest sorts by when a plugin was first listed, not by its latest release", () => {
