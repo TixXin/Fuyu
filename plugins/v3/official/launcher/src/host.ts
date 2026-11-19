@@ -17,7 +17,7 @@ import { MAX_EXTRA_DIRS, normalizeSettings, type LauncherSettings } from "./sett
 import { defaultAppRoots, expandHome, launchApplication, scanApplications } from "./scanner.ts";
 
 export const name = "@fuyu/launcher";
-export const inject = ["clients", "commands"];
+export const inject = { clients: null, commands: null, island: { required: false } };
 
 const STATE_FILE = "launcher.json";
 const PAGE_ID = "@fuyu/launcher";

@@ -165,6 +165,11 @@ test(
       });
       const own = (await commands.list()).items.filter((item) => item.pluginId === "@fuyu/launcher");
       assert.deepEqual(own.map((item) => item.id), ["open", "rescan"]);
+      assert.equal(host.status().find((item) => item.id === "@fuyu/launcher")?.state, "running");
+      await assert.rejects(commands.run({ plugin: "@fuyu/launcher", command: "open" }), (error) => {
+        assert.match(String(error?.code ?? error?.message), /not-ready/);
+        return true;
+      });
       make(appsDir, "Calendar");
       const rescanned = await commands.run({ plugin: "@fuyu/launcher", command: "rescan" });
       assert.ok(rescanned.apps.some((app) => app.name === "Calendar"));

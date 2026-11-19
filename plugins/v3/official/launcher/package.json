@@ -50,6 +50,11 @@
       "island": "dist/island.js",
       "settings": "dist/settings.js"
     },
+    "inject": {
+      "optional": [
+        "island"
+      ]
+    },
     "slots": [
       "island.page/v1",
       "settings.section/v1"
