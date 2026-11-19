@@ -86,7 +86,7 @@ export function useTranslationRequest({
     setError("");
     setDidCopy(false);
     setIsLoading(false);
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   };
 
   return { submit, handleInputKeyDown, copyResult, clearSource };
