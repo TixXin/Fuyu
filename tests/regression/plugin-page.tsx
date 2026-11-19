@@ -1,13 +1,14 @@
-import { act, StrictMode } from "react";
+import { act, StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "../../src/styles/tokens.css";
 import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
 import "../../src/windows/settings/SettingsWindow.css";
-import { ipc, locale, market, configCalls, PLUGIN, NORMAL, HOST, MB, REASON, held } from "./pluginPageMocks";
+import { marketV1 } from "@fuyu/plugin-services";
+import { ipc, locale, market, configCalls, windowServices, PLUGIN, NORMAL, HOST, MB, REASON, held } from "./pluginPageMocks";
 import { I18nProvider, TRANSLATIONS } from "../../src/i18n";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
-import type { PluginHostView } from "../../src/windows/settings/usePluginHostStatus";
+import type { PluginHostView, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
 import type { PluginDetailRequest } from "../../src/windows/settings/pluginPageHandoff";
 
 const { PluginsV3View } = await import("../../src/windows/settings/PluginsV3SettingsPage");
@@ -22,6 +23,10 @@ Object.assign(market.installed, { "@someone/sketchy": "0.5.0", "@someone/transla
 const REVOCATION = [...NORMAL, PLUGIN.shady, PLUGIN.sketchy, PLUGIN.translator];
 const open = (plugins: PluginHostView["plugins"], more: Partial<PluginHostView> = {}): PluginHostView => ({ connection: "open", plugins, host: HOST, memory: null, safeMode: null, ...more });
 const safeHost = { ...HOST, safe: "third-party" as const };
+const SETUP_HINT = { "zh-CN": "选一个城市", en: "Pick a city" };
+const COUNTDOWN_HINT = { "zh-CN": "添加一个日子", en: "Add a date" };
+const NEEDS_SETUP: PluginStatusV3[] = [{ ...PLUGIN.weather, setup: { hint: SETUP_HINT } }, { ...PLUGIN.local, setup: {} }, PLUGIN.clock, { ...PLUGIN.gadget, setup: { hint: "off" } }];
+const COUNTDOWN: PluginStatusV3 = { id: "@fuyu/countdown", name: "Countdown", state: "running", kind: "third-party", source: "market" };
 
 interface Stage { key: string; title: string; view: PluginHostView; node?: HostNodeStatus | null; hostOff?: boolean; detail?: PluginDetailRequest; migration?: boolean; narrow?: boolean; head?: boolean }
 const STAGES: Stage[] = [
@@ -45,6 +50,8 @@ const STAGES: Stage[] = [
   { key: "narrow-error", title: "窄窗口 / Narrow", view: open([...NORMAL, PLUGIN.feeds, PLUGIN.flaky]), narrow: true },
   { key: "narrow-attention", title: "窄窗口 / Narrow", view: open([...NORMAL, PLUGIN.todoSync, PLUGIN.shady, PLUGIN.pomodoro]), narrow: true },
   { key: "narrow-revocation", title: "窄窗口 / Narrow", view: open(REVOCATION), narrow: true },
+  { key: "setup", title: "待设置 / Needs setup", view: open(NEEDS_SETUP) },
+  { key: "narrow-setup", title: "窄窗口 / Narrow", view: open(NEEDS_SETUP), narrow: true },
 ];
 
 const opened: string[] = [];
@@ -73,6 +80,16 @@ const openRowMenu = async (key: string, id: string) => {
 };
 const results = document.getElementById("results")!;
 
+const liveViews = new Map<string, (view: PluginHostView) => void>();
+function LiveStage({ item }: { item: Stage }) {
+  const [view, setView] = useState(item.view);
+  useEffect(() => {
+    liveViews.set(item.key, setView);
+  }, [item.key]);
+  return <PluginsV3View view={view} hostOff={item.hostOff} node={item.node ?? null} builtins={ipc.builtins} initialDetail={item.detail ?? null} onOpenPage={(page) => opened.push(`${item.key}:${page}`)} />;
+}
+const showView = (key: string, view: PluginHostView) => act(async () => liveViews.get(key)!(view));
+
 async function mount(item: Stage) {
   const host = document.createElement("section");
   host.className = `gallery__stage settings-stage${item.narrow ? " gallery__stage--narrow" : ""}`;
@@ -89,7 +106,7 @@ async function mount(item: Stage) {
       <StrictMode>
         <I18nProvider>
           {item.head ? <div className="gallery__head"><PluginPageActions onOpenPage={(page) => opened.push(`head:${page}`)} /></div> : null}
-          <PluginsV3View view={item.view} hostOff={item.hostOff} node={item.node ?? null} builtins={ipc.builtins} initialDetail={item.detail ?? null} onOpenPage={(page) => opened.push(`${item.key}:${page}`)} />
+          <LiveStage item={item} />
         </I18nProvider>
       </StrictMode>,
     );
@@ -308,6 +325,43 @@ try {
   check(within("offline", "[data-banner='offline']") && within("offline", ".plugin-list--stale") && all("offline", ".plugin-row input").every((input) => (input as HTMLInputElement).disabled), "Offline: the last list stays dimmed and its switches are locked");
   check(within("hostOff", "[data-banner='host-off']") && !within("hostOff", ".plugin-row") && !within("hostOff", "[data-empty]"), "Plugins off: one banner explains it and no list is shown");
   check(within("loading", ".plugin-list[aria-busy='true']") && !within("loading", ".plugin-banner"), "Loading: a skeleton list and no banner");
+
+  const setupWeather = row("setup", "@fuyu/weather")!;
+  check(setupWeather.querySelector("[data-badge='setup']")?.textContent === t.badges.setup && setupWeather.querySelector("[data-note='setup']")?.textContent!.includes(SETUP_HINT[locale]), "Setup: a plugin that reports it still needs setup carries a mark and says what is missing");
+  check(row("setup", "my-local-tool")?.querySelector("[data-note='setup']")?.textContent!.includes(t.setup.note(null)) && within("setup", "[data-summary-setup]")?.textContent === t.summary.setup(2), "One that gives no hint gets the general line, and the summary counts both");
+  check(!row("setup", "@someone/clock")?.querySelector("[data-badge='setup'], [data-note='setup']") && !row("setup", "@me/gadget")?.querySelector("[data-badge='setup'], [data-note='setup']") && !stage("normal").querySelector("[data-badge='setup'], [data-note='setup'], [data-summary-setup]") && !within("setup", ".plugin-banner"), "Plugins that never report it, and one that is switched off, look as before; no banner is raised");
+  await click(setupWeather.querySelector("[data-row-action='setup']"));
+  await settle();
+  const setupDetails = [...document.querySelectorAll<HTMLElement>("[data-plugin-detail='@fuyu/weather']")];
+  const setupDetail = setupDetails[setupDetails.length - 1];
+  check(setupDetails.length === 2 && setupDetail.querySelector("[data-tab='settings']")?.getAttribute("aria-selected") === "true", "Set up opens the plugin's detail on its settings tab");
+  await click(setupDetail.querySelector("[data-tab='overview']"));
+  check(setupDetail.querySelector("[data-note='setup']")?.textContent!.includes(SETUP_HINT[locale]), "and the overview carries the same line");
+  await press(setupDetail, "Escape");
+  await click(setupWeather.querySelector("[data-badge='setup']"));
+  await settle();
+  check(dialog("@fuyu/weather")?.querySelector("[data-tab='settings']")?.getAttribute("aria-selected") === "true" && document.querySelectorAll("[data-plugin-detail='@fuyu/weather']").length === 2, "The mark itself is a button to the same place");
+  await press([...document.querySelectorAll<HTMLElement>("[data-plugin-detail='@fuyu/weather']")].pop()!, "Escape");
+
+  const countdownName = within("setup", "[data-suggest='@fuyu/countdown'] b")!.textContent!;
+  await click(within("setup", "[data-suggest='@fuyu/countdown'] [data-action='install-suggested']"));
+  await settle();
+  await click(document.querySelector("[data-install-modal='@fuyu/countdown'] [data-action='confirm-install']"));
+  await settle();
+  const toast = () => within("setup", "[data-installed-toast='@fuyu/countdown']");
+  check(market.calls.some((call) => call.startsWith("install:@fuyu/countdown@")) && toast()?.textContent!.includes(t.installed.done(countdownName)) && !toast()?.querySelector("[data-action='toast-setup']"), "After an install a notice confirms it, with no set-up button while the plugin has not asked for one");
+  await showView("setup", open([...NEEDS_SETUP, { ...COUNTDOWN, setup: { hint: COUNTDOWN_HINT } }]));
+  check(toast()?.dataset.setup === "needed" && toast()?.textContent!.includes(COUNTDOWN_HINT[locale]) && toast()?.querySelector("[data-action='toast-setup']")?.textContent === t.setup.go, "Once the new plugin says it needs setup, the notice says what is missing and offers Set up");
+  await click(toast()?.querySelector("[data-action='toast-setup']"));
+  await settle();
+  check(!toast() && dialog("@fuyu/countdown")?.querySelector("[data-tab='settings']")?.getAttribute("aria-selected") === "true", "which closes the notice and opens that plugin's settings");
+  await press(dialog("@fuyu/countdown")!, "Escape");
+  await showView("setup", open([PLUGIN.weather, { ...PLUGIN.local, setup: {} }, PLUGIN.clock, PLUGIN.gadget, COUNTDOWN]));
+  check(!row("setup", "@fuyu/weather")?.querySelector("[data-badge='setup'], [data-note='setup']") && !row("setup", "@fuyu/countdown")?.querySelector("[data-badge='setup']") && within("setup", "[data-summary-setup]")?.textContent === t.summary.setup(1), "The mark goes away as soon as the plugin reports it is set up");
+  await showView("setup", open(NEEDS_SETUP));
+  delete market.installed["@fuyu/countdown"];
+  await act(async () => { await windowServices.get(marketV1).setManualAllowed({ allowed: market.manualAllowed }); });
+  await settle();
 
   const spills = [...gallery.querySelectorAll<HTMLElement>(".gallery__stage--narrow :is(.plugin-row, .plugin-banner, .plugin-page__toolbar, .plugin-note, .plugin-page__summary, .plugin-row__facts, .plugin-suggest__grid, .plugin-suggest__card)")].filter((element) => element.scrollWidth > element.clientWidth + 1);
   check(spills.length === 0, spills.length ? `Narrow: ${spills.map((element) => element.className).join(", ")} spill out sideways at 340 px` : "Narrow: nothing spills out sideways at 340 px");

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent }
 import { createPortal } from "react-dom";
 import { Info, Store, Trash2, X } from "lucide-react";
 import { useErrorText, useTranslation } from "../../i18n";
-import { PluginEnableSwitch, PluginRowNote, useVersionText, type RowAction } from "./InstalledPluginRow";
+import { PluginEnableSwitch, PluginRowNote, PluginSetupNote, useVersionText, type RowAction } from "./InstalledPluginRow";
 import { OfficialMark } from "./OfficialMark";
 import { PluginLogo } from "./PluginLogo";
 import { PluginActivityTab, PluginCommandsTab, PluginOverviewExtras, PluginSettingsTab } from "./PluginDetailTabs";
@@ -125,6 +125,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
         <div className="plugin-dialog__body" role="tabpanel" data-panel={tab}>
           {tab === "overview" ? (
             <>
+              {entry.setup ? <PluginSetupNote setup={entry.setup} onOpenSettings={() => setTab("settings")} full /> : null}
               {status.note ? <PluginRowNote note={status.note} onAction={onAction} full /> : null}
               {entry.description ? <p className="plugin-dialog__desc">{entry.description}</p> : null}
               <PluginWhereLine entry={entry} stale={stale} onOpenSettings={() => setTab("settings")} />

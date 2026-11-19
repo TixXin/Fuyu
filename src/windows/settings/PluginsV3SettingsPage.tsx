@@ -71,10 +71,13 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
   const watched = usePluginHostNode(!hostOff && givenNode === undefined && view.connection !== "open");
   const node = givenNode === undefined ? watched.node : givenNode;
   const catalog = usePluginMarketCatalog(live);
-  const install = usePluginInstallFlow(catalog.reload);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<InstalledFilter>("all");
   const [detail, setDetail] = useState<OpenDetail | null>(initialDetail ? { ...initialDetail, uninstall: false, request: initialDetail } : null);
+  const install = usePluginInstallFlow(catalog.reload, undefined, {
+    plugins: hostOff ? null : view.plugins,
+    onOpenSettings: (id) => setDetail({ id, tab: "settings", uninstall: false }),
+  });
   useEffect(() => {
     if (initialDetail) setDetail((current) => (current?.request === initialDetail ? current : { ...initialDetail, uninstall: false, request: initialDetail, nonce: (current?.nonce ?? 0) + 1 }));
   }, [initialDetail]);

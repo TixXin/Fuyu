@@ -4,6 +4,7 @@ import type { ServiceEntry } from "@fuyu/plugin-base/services";
 import { getPluginHostConnection, getPluginHostMemory, type HostMemory, type HostSafeMode } from "../../features/plugin-kernel/api";
 import { windowServices } from "../../features/plugin-kernel/services";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
+import { publishPluginStatuses } from "./pluginSetupStore";
 
 export type PluginKindV3 = "essential" | "builtin" | "third-party";
 
@@ -35,6 +36,7 @@ export interface PluginStatusV3 {
   blocked?: { by: "errors"; errors: number; windowMs: number } | { by: "safe-mode"; mode: "third-party" | "minimal" };
   lastError?: { at: number; text: string };
   usage?: PluginUsageV3;
+  setup?: { hint?: string | { "zh-CN"?: string; en?: string } | null };
 }
 
 export interface HostInfoV3 {
@@ -123,11 +125,15 @@ export function usePluginHostStatus(connect: PluginHostConnector = connectSettin
     const connection = connect({
       onSnapshot: (snapshot, info) => {
         setView((current) => ({ ...current, plugins: snapshot.plugins ?? [], host: snapshot.host ?? null }));
+        publishPluginStatuses(snapshot.plugins ?? []);
         if (snapshot.services) proxy.update(snapshot.services);
         if (info?.fresh && callRef) void proxy.resubscribe();
       },
       onEvent: (name, data) => {
-        if (name === "plugins") setView((current) => ({ ...current, plugins: data as PluginStatusV3[] }));
+        if (name === "plugins") {
+          setView((current) => ({ ...current, plugins: data as PluginStatusV3[] }));
+          publishPluginStatuses(data as PluginStatusV3[]);
+        }
         if (name === "host") setView((current) => ({ ...current, host: data as HostInfoV3 }));
         if (name === "service") proxy.deliver(data as ServiceEventMessage);
         if (name === "services") proxy.update(data as ServiceEntry[]);

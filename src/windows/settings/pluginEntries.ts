@@ -3,6 +3,7 @@ import { isExternalPlugin } from "./pluginDisplay.ts";
 import { iconSources, packageIconUrl } from "./pluginIconSources.ts";
 import { newestMarketVersion, pluginPlaces, pluginSettingsKnown, type PluginPlace } from "./pluginReach.ts";
 import { pluginRowStatus, type RowContext, type RowStatus } from "./pluginRowStatus.ts";
+import { pluginSetupNeed, type PluginSetupNeed } from "./pluginSetupStore.ts";
 import { stateOf } from "./pluginServiceStatus.ts";
 import type { PluginStatusV3 } from "./usePluginHostStatus";
 
@@ -27,6 +28,7 @@ export interface InstalledEntry {
   marketVersion: string | null;
   settings: boolean | null;
   places: PluginPlace[];
+  setup?: PluginSetupNeed | null;
 }
 
 export type InstalledFilter = "all" | "on" | "off" | "attention";
@@ -90,6 +92,7 @@ export function installedEntries(
         marketVersion: newestMarketVersion(market),
         settings,
         places: pluginPlaces(reach, settings),
+        setup: pluginSetupNeed(plugin, context.live, locale),
       };
     })
     .sort((a, b) => a.title.localeCompare(b.title, locale));

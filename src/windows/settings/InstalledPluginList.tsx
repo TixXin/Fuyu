@@ -31,12 +31,14 @@ export function InstalledPluginList({ entries, stale, query, filter, onQuery, on
   const filters = visibleFilters(counts);
   const shown = entries.filter((entry) => matchesEntry(entry, active, searchable ? query : ""));
   const running = entries.filter((entry) => entry.status.dot === "ok").length;
+  const needSetup = entries.filter((entry) => entry.setup).length;
   return (
     <>
       <div className="plugin-page__summary" data-summary>
         <b>{text.summary.installed(counts.all)}</b>
         {stale ? null : <span><i className="plugin-page__dot plugin-page__dot--ok" />{text.summary.running(running)}</span>}
         {counts.off > 0 ? <span><i className="plugin-page__dot plugin-page__dot--off" />{text.summary.off(counts.off)}</span> : null}
+        {needSetup > 0 ? <span data-summary-setup><i className="plugin-page__dot plugin-page__dot--setup" />{text.summary.setup(needSetup)}</span> : null}
         {counts.attention > 0 ? <span className="plugin-page__summary-warn"><i className="plugin-page__dot plugin-page__dot--warn" />{text.summary.attention(counts.attention)}</span> : null}
       </div>
       {searchable || filters.length > 0 ? (

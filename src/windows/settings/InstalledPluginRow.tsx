@@ -1,5 +1,5 @@
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
-import { Activity, AlertCircle, Download, Info, KeyRound, RotateCcw, Settings, ShieldAlert, Store, Trash2 } from "lucide-react";
+import { Activity, AlertCircle, Download, Info, KeyRound, RotateCcw, Settings, ShieldAlert, SlidersHorizontal, Store, Trash2 } from "lucide-react";
 import type { MarketLocalizedText } from "@fuyu/plugin-services";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import type { SettingsPluginPageText } from "../../i18n/sections/settings/pluginPage";
@@ -13,6 +13,7 @@ import { PluginMenu, type PluginMenuItem } from "./PluginMenu";
 import { PluginPlaceTags } from "./PluginPlaceTags";
 import { versionStanding } from "./pluginReach";
 import type { RowNote } from "./pluginRowStatus";
+import type { PluginSetupNeed } from "./pluginSetupStore";
 
 export type RowAction = "restart" | "log" | "turnOnProvider" | "uninstall" | "review" | "update" | "whatsNew";
 
@@ -90,6 +91,21 @@ export function PluginRowNote({ note, onAction, full = false }: { note: RowNote;
           {parts.details.map((line) => <li key={line}>{line}</li>)}
         </ul>
       ) : null}
+    </div>
+  );
+}
+
+export function PluginSetupNote({ setup, onOpenSettings, full = false }: { setup: PluginSetupNeed; onOpenSettings: () => void; full?: boolean }) {
+  const text = useTranslation().settings.pluginsV3.page.setup;
+  return (
+    <div className={`plugin-note plugin-note--info${full ? " plugin-note--full" : ""}`} data-note="setup">
+      <span className="plugin-note__text">
+        <span className="plugin-note__icon" aria-hidden="true"><SlidersHorizontal size={13} strokeWidth={2.2} /></span>
+        <span>{text.note(setup.hint)}</span>
+      </span>
+      <span className="plugin-note__actions">
+        <button className="plugin-btn plugin-btn--sm plugin-btn--primary" type="button" data-row-action="setup" onClick={onOpenSettings}>{text.go}</button>
+      </span>
     </div>
   );
 }
@@ -172,6 +188,7 @@ export function InstalledPluginRow({ entry, stale, onOpen, onAction }: {
           <button className="plugin-row__name" type="button" title={entry.title} onClick={() => onOpen()}>{entry.title}</button>
           {entry.source === "official" ? <OfficialMark /> : null}
           {entry.source === "manual" ? <span className="plugin-badge plugin-badge--warn">{text.badges.unreviewed}</span> : null}
+          {entry.setup ? <button className="plugin-badge plugin-badge--setup" type="button" data-badge="setup" title={text.setup.badgeTitle} onClick={() => onOpen("settings")}>{text.badges.setup}</button> : null}
           {version ? <span className={`plugin-row__version${version.strong ? " plugin-row__version--strong" : ""}`} title={version.text}>{version.text}</span> : null}
           {status.label ? <span className={`plugin-row__state${labelTone}`}>· {text.labels[status.label]}</span> : null}
         </div>
@@ -182,6 +199,7 @@ export function InstalledPluginRow({ entry, stale, onOpen, onAction }: {
             {origin ? <span className={`plugin-row__origin${origin.warn ? " plugin-row__origin--warn" : ""}`} data-origin={entry.source}>{entry.places.length > 0 ? "· " : ""}{origin.text}</span> : null}
           </div>
         ) : null}
+        {entry.setup ? <PluginSetupNote setup={entry.setup} onOpenSettings={() => onOpen("settings")} /> : null}
         {status.note ? <PluginRowNote note={status.note} onAction={onAction} /> : null}
       </div>
       <div className="plugin-row__aside">

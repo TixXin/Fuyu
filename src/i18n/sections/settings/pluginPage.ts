@@ -21,6 +21,7 @@ export type SettingsPluginPageText = {
     running: (count: number) => string;
     off: (count: number) => string;
     attention: (count: number) => string;
+    setup: (count: number) => string;
   };
   search: string;
   clearSearch: string;
@@ -31,7 +32,18 @@ export type SettingsPluginPageText = {
   loading: string;
   footnote: { before: string; link: string; after: string };
   empty: { title: string; body: string; popular: string; install: string };
-  badges: { unreviewed: string };
+  badges: { unreviewed: string; setup: string };
+  setup: {
+    note: (hint: string | null) => string;
+    go: string;
+    badgeTitle: string;
+  };
+  installed: {
+    done: (name: string) => string;
+    updated: (name: string, version: string) => string;
+    setup: (hint: string | null) => string;
+    dismiss: string;
+  };
   sources: { market: string; official: string; manual: string; local: string };
   places: Record<PluginPagePlace, string>;
   placesLabel: string;
@@ -212,6 +224,7 @@ export const zhCN: SettingsPluginPageText = {
     running: (count) => `${count} 个在运行`,
     off: (count) => `${count} 个已停用`,
     attention: (count) => `${count} 个要处理`,
+    setup: (count) => `${count} 个待设置`,
   },
   search: "搜索已装的插件",
   clearSearch: "清除搜索",
@@ -227,7 +240,18 @@ export const zhCN: SettingsPluginPageText = {
     popular: "大家都在装",
     install: "安装",
   },
-  badges: { unreviewed: "未经审核" },
+  badges: { unreviewed: "未经审核", setup: "待设置" },
+  setup: {
+    note: (hint) => (hint ? `还差一步：${hint}` : "还差一步：设置好才能用"),
+    go: "去设置",
+    badgeTitle: "这个插件还差一步设置，点这里去设置",
+  },
+  installed: {
+    done: (name) => `已安装「${name}」`,
+    updated: (name, version) => `「${name}」已更新到 v${version}`,
+    setup: (hint) => (hint ? `还差一步：${hint}` : "还差一步：设置好才能用"),
+    dismiss: "关闭提示",
+  },
   sources: { market: "插件市场", official: "插件市场", manual: "从文件安装", local: "从文件夹加载" },
   places: { page: "岛上页面", bar: "收起条", alerts: "岛上提醒", translate: "快捷翻译里", settings: "有设置" },
   placesLabel: "在岛上的位置",
@@ -419,6 +443,7 @@ export const en: SettingsPluginPageText = {
     running: (count) => `${count} running`,
     off: (count) => `${count} off`,
     attention: (count) => `${count} need${count === 1 ? "s" : ""} you`,
+    setup: (count) => `${count} need${count === 1 ? "s" : ""} setup`,
   },
   search: "Search installed plugins",
   clearSearch: "Clear search",
@@ -434,7 +459,18 @@ export const en: SettingsPluginPageText = {
     popular: "Popular",
     install: "Install",
   },
-  badges: { unreviewed: "Unreviewed" },
+  badges: { unreviewed: "Unreviewed", setup: "Needs setup" },
+  setup: {
+    note: (hint) => (hint ? `One more step: ${hint}` : "One more step: it needs setting up before it works"),
+    go: "Set up",
+    badgeTitle: "This plugin still needs one setting. Click to set it up",
+  },
+  installed: {
+    done: (name) => `Installed ${name}`,
+    updated: (name, version) => `${name} updated to v${version}`,
+    setup: (hint) => (hint ? `One more step: ${hint}` : "One more step: it needs setting up before it works"),
+    dismiss: "Dismiss",
+  },
   sources: { market: "Plugin market", official: "Plugin market", manual: "Installed from a file", local: "Loaded from a folder" },
   places: { page: "Island page", bar: "Collapsed bar", alerts: "Island alerts", translate: "In Quick translate", settings: "Has settings" },
   placesLabel: "Where it shows up on the island",
