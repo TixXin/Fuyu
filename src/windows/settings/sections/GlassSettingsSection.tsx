@@ -1,3 +1,4 @@
+import { SettingsAdvanced } from "../../../components/settings/SettingsAdvanced";
 import { SettingsChoice } from "../../../components/settings/SettingsChoice";
 import { SettingsColor } from "../../../components/settings/SettingsColor";
 import { SettingsFootnote } from "../../../components/settings/SettingsFootnote";
@@ -116,46 +117,6 @@ export function GlassSettingsSection({
             />
           }
         />
-        {settings.glassBackdrop === "wallpaper" && (
-          <>
-            <SettingsSliderRow
-              title={text.blur}
-              value={settings.glassBlur}
-              min={0}
-              max={60}
-              step={1}
-              format={(value) => `${value} px`}
-              defaultValue={DEFAULT_GLASS_SETTINGS.glassBlur}
-              resetLabel={resetLabel}
-              indent
-              onChange={(glassBlur) => set({ glassBlur })}
-            />
-            <SettingsSliderRow
-              title={text.saturation}
-              value={settings.glassSaturation}
-              min={100}
-              max={250}
-              step={5}
-              format={percent}
-              defaultValue={DEFAULT_GLASS_SETTINGS.glassSaturation}
-              resetLabel={resetLabel}
-              indent
-              onChange={(glassSaturation) => set({ glassSaturation })}
-            />
-            <SettingsSliderRow
-              title={text.noise}
-              value={settings.glassNoise}
-              min={0}
-              max={12}
-              step={1}
-              format={percent}
-              defaultValue={DEFAULT_GLASS_SETTINGS.glassNoise}
-              resetLabel={resetLabel}
-              indent
-              onChange={(glassNoise) => set({ glassNoise })}
-            />
-          </>
-        )}
         <SettingsRow
           title={text.colorSource}
           description={settings.glassColorSource === "cover" ? text.coverHint : undefined}
@@ -193,6 +154,43 @@ export function GlassSettingsSection({
           resetLabel={resetLabel}
           onChange={(glassColorStrength) => set({ glassColorStrength })}
         />
+        {settings.glassBackdrop === "wallpaper" && (
+          <SettingsAdvanced>
+            <SettingsSliderRow
+              title={text.blur}
+              value={settings.glassBlur}
+              min={0}
+              max={60}
+              step={1}
+              format={(value) => `${value} px`}
+              defaultValue={DEFAULT_GLASS_SETTINGS.glassBlur}
+              resetLabel={resetLabel}
+              onChange={(glassBlur) => set({ glassBlur })}
+            />
+            <SettingsSliderRow
+              title={text.saturation}
+              value={settings.glassSaturation}
+              min={100}
+              max={250}
+              step={5}
+              format={percent}
+              defaultValue={DEFAULT_GLASS_SETTINGS.glassSaturation}
+              resetLabel={resetLabel}
+              onChange={(glassSaturation) => set({ glassSaturation })}
+            />
+            <SettingsSliderRow
+              title={text.noise}
+              value={settings.glassNoise}
+              min={0}
+              max={12}
+              step={1}
+              format={percent}
+              defaultValue={DEFAULT_GLASS_SETTINGS.glassNoise}
+              resetLabel={resetLabel}
+              onChange={(glassNoise) => set({ glassNoise })}
+            />
+          </SettingsAdvanced>
+        )}
       </SettingsGroup>
 
       <SettingsGroup title={text.detailsTitle} footer={<SettingsFootnote text={text.pauseHint} />}>
@@ -207,50 +205,6 @@ export function GlassSettingsSection({
           resetLabel={resetLabel}
           onChange={(glassFlowSpeed) => set({ glassFlowSpeed })}
         />
-        <SettingsSliderRow
-          title={text.blobScale}
-          value={settings.glassBlobScale}
-          min={60}
-          max={160}
-          step={5}
-          format={percent}
-          defaultValue={DEFAULT_GLASS_SETTINGS.glassBlobScale}
-          resetLabel={resetLabel}
-          onChange={(glassBlobScale) => set({ glassBlobScale })}
-        />
-        <SettingsRow
-          title={text.flowWhen}
-          control={
-            <SettingsChoice
-              value={settings.glassFlowWhen}
-              options={GLASS_FLOW_WHEN.map((value) => ({ value, label: text.flowWhens[value] }))}
-              ariaLabel={text.flowWhen}
-              onChange={(glassFlowWhen) => set({ glassFlowWhen })}
-            />
-          }
-        />
-        <SettingsToggleRow title={text.rim} checked={settings.glassRim} onChange={(glassRim) => set({ glassRim })} />
-        {settings.glassRim && (
-          <SettingsSliderRow
-            title={text.rimWidth}
-            value={settings.glassRimWidth}
-            min={1}
-            max={3}
-            step={0.5}
-            format={(value) => `${value} px`}
-            defaultValue={DEFAULT_GLASS_SETTINGS.glassRimWidth}
-            resetLabel={resetLabel}
-            indent
-            onChange={(glassRimWidth) => set({ glassRimWidth })}
-          />
-        )}
-        <SettingsToggleRow title={text.sheen} checked={settings.glassSheen} onChange={(glassSheen) => set({ glassSheen })} />
-        <SettingsToggleRow
-          title={text.specular}
-          description={text.specularHint}
-          checked={settings.glassSpecular}
-          onChange={(glassSpecular) => set({ glassSpecular })}
-        />
         <SettingsRow
           title={text.morph}
           control={
@@ -262,12 +216,58 @@ export function GlassSettingsSection({
             />
           }
         />
-        <SettingsToggleRow
-          title={text.contrastGuard}
-          description={settings.glassContrastGuard ? text.contrastGuardHint : text.contrastGuardOff}
-          checked={settings.glassContrastGuard}
-          onChange={(glassContrastGuard) => set({ glassContrastGuard })}
-        />
+        <SettingsAdvanced>
+          <SettingsSliderRow
+            title={text.blobScale}
+            value={settings.glassBlobScale}
+            min={60}
+            max={160}
+            step={5}
+            format={percent}
+            defaultValue={DEFAULT_GLASS_SETTINGS.glassBlobScale}
+            resetLabel={resetLabel}
+            onChange={(glassBlobScale) => set({ glassBlobScale })}
+          />
+          <SettingsRow
+            title={text.flowWhen}
+            control={
+              <SettingsChoice
+                value={settings.glassFlowWhen}
+                options={GLASS_FLOW_WHEN.map((value) => ({ value, label: text.flowWhens[value] }))}
+                ariaLabel={text.flowWhen}
+                onChange={(glassFlowWhen) => set({ glassFlowWhen })}
+              />
+            }
+          />
+          <SettingsToggleRow title={text.rim} checked={settings.glassRim} onChange={(glassRim) => set({ glassRim })} />
+          {settings.glassRim && (
+            <SettingsSliderRow
+              title={text.rimWidth}
+              value={settings.glassRimWidth}
+              min={1}
+              max={3}
+              step={0.5}
+              format={(value) => `${value} px`}
+              defaultValue={DEFAULT_GLASS_SETTINGS.glassRimWidth}
+              resetLabel={resetLabel}
+              indent
+              onChange={(glassRimWidth) => set({ glassRimWidth })}
+            />
+          )}
+          <SettingsToggleRow title={text.sheen} checked={settings.glassSheen} onChange={(glassSheen) => set({ glassSheen })} />
+          <SettingsToggleRow
+            title={text.specular}
+            description={text.specularHint}
+            checked={settings.glassSpecular}
+            onChange={(glassSpecular) => set({ glassSpecular })}
+          />
+          <SettingsToggleRow
+            title={text.contrastGuard}
+            description={settings.glassContrastGuard ? text.contrastGuardHint : text.contrastGuardOff}
+            checked={settings.glassContrastGuard}
+            onChange={(glassContrastGuard) => set({ glassContrastGuard })}
+          />
+        </SettingsAdvanced>
       </SettingsGroup>
     </>
   );

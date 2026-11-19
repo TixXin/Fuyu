@@ -77,8 +77,18 @@ struct HostFiles {
 
 fn host_files(resources: Option<&std::path::Path>, development: bool) -> HostFiles {
     match resources.filter(|_| !development) {
-        Some(dir) if dir.join(BUNDLED_HOST).is_file() => HostFiles { script: dir.join(BUNDLED_HOST), builtins: dir.join(BUNDLED_BUILTINS) },
+        Some(dir) if dir.join(BUNDLED_HOST).is_file() => {
+            let dir = without_verbatim_prefix(dir);
+            HostFiles { script: dir.join(BUNDLED_HOST), builtins: dir.join(BUNDLED_BUILTINS) }
+        }
         _ => HostFiles { script: host_script(), builtins: builtins_dir() },
+    }
+}
+
+fn without_verbatim_prefix(path: &std::path::Path) -> PathBuf {
+    match path.to_str().and_then(|text| text.strip_prefix(r"\\?\")) {
+        Some(rest) if rest.as_bytes().get(1) == Some(&b':') => PathBuf::from(rest),
+        _ => path.to_path_buf(),
     }
 }
 

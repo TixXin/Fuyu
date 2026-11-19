@@ -1,0 +1,12 @@
+{
+  "$schema": "../../quota.schema.json",
+  "protocol": 1,
+  "id": "glm",
+  "name": "GLM",
+  "display": "ring",
+  "windows": ["fiveHour", "models"],
+  "auth": { "kind": "credential", "entry": "glm" },
+  "adapter": "glm-plan-usage",
+  "refreshSeconds": 60,
+  "color": "--usage-glm"
+}
