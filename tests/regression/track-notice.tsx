@@ -1,5 +1,6 @@
 import { act, StrictMode, useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { messagesV1 } from "@fuyu/plugin-services";
 import "../../src/styles/tokens.css";
 import "../../src/windows/island/IslandApp";
 import { MessageArrivalsPanel } from "../../src/features/messages/arrivals/MessageArrivalsPanel";
@@ -8,6 +9,8 @@ import { useIslandMessagePanel } from "../../src/features/messages/island/useIsl
 import { useLatestMessagePreview } from "../../src/features/messages/island/useLatestMessagePreview";
 import { usePluginNotifications } from "../../src/features/messages/island/usePluginNotifications";
 import { deliverNotice } from "../../src/features/messages/plugin/notices";
+import "../../src/features/messages/plugin/services";
+import { windowServices } from "../../src/features/plugin-kernel/services";
 import { updatePluginNames } from "../../src/features/plugin-kernel/pluginNames";
 import { useIslandAction } from "../../src/features/plugin-kernel/useIslandContributions";
 import type { IslandNotice } from "../../src/lib/island-notices/service";
@@ -96,6 +99,7 @@ async function deliver(notice: IslandNotice) {
   await act(async () => { shown = deliverNotice(notice); });
   return shown;
 }
+const messagesV1Client = windowServices.get(messagesV1);
 const results = document.getElementById("results")!;
 
 async function runChecks() {
@@ -145,6 +149,27 @@ async function runChecks() {
     alarmRow.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
     await act(async () => alarmRow.click());
     await waitFor(() => rows().length === 0 && state.mode === "collapsed", "点一下收起");
+
+    const MUTES = "fuyu-plugin-notice-mutes";
+    const notify = async (id: string, title: string) => {
+      let shown = false;
+      await act(async () => { shown = (await messagesV1Client.notify({ source: id, pluginId: id, title, body: "", durationMs: TRACK_MS, layout: "inline" })).shown; });
+      return shown;
+    };
+    localStorage.setItem(MUTES, JSON.stringify(["@fuyu/alarm"]));
+    check(!(await notify("@fuyu/alarm", "起床")), "被静音的插件发提醒，如实回答没显示");
+    await wait(120);
+    check(rows().length === 0 && state.mode === "collapsed", "被静音的插件的提醒不在岛上弹");
+    check(await notify("@fuyu/now-playing", "安和桥"), "别的插件的提醒照常显示");
+    await waitFor(() => rows().length === 1, "别的插件的卡片弹出");
+    await waitFor(() => rows().length === 0, "卡片自己收起", PANEL_MS);
+    localStorage.setItem(MUTES, "[]");
+    check(await notify("@fuyu/alarm", "起床"), "取消静音后马上又能弹，不用重启");
+    await waitFor(() => rows().length === 1, "取消静音后卡片弹出");
+    await waitFor(() => rows().length === 0 && state.mode === "collapsed", "卡片自己收起", PANEL_MS);
+    check(["@fuyu/alarm", "@fuyu/now-playing"].every((id) => (JSON.parse(localStorage.getItem("fuyu-plugin-notice-senders") ?? "[]") as string[]).includes(id)), "发过提醒的插件被记下来，插件页据此显示开关");
+    localStorage.removeItem(MUTES);
+    localStorage.removeItem("fuyu-plugin-notice-senders");
 
     results.textContent = messages.join("\n");
     results.dataset.result = "passed";

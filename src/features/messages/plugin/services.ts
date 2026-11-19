@@ -1,5 +1,6 @@
 import { messagesV1 } from "@fuyu/plugin-services";
 import { islandNoticesV1, type IslandNotice } from "../../../lib/island-notices/service";
+import { isPluginNoticeMuted, rememberNoticeSender } from "../../../lib/plugin-notice-mutes/storage.ts";
 import { sendIslandNoticeAction, setLocalIslandNotices } from "../../plugin-kernel/islandControl";
 import { windowServices } from "../../plugin-kernel/services";
 import {
@@ -34,6 +35,11 @@ function arrivalNotice(notice: NormalizedArrivalNotice): IslandNotice {
   };
 }
 
+function deliverPluginNotice(notice: IslandNotice): boolean {
+  rememberNoticeSender(notice.pluginId);
+  return isPluginNoticeMuted(notice.pluginId) ? false : deliverNotice(notice);
+}
+
 const fromHost = new Set<string>();
 
 if (new URLSearchParams(window.location.search).get("window") === null) {
@@ -53,14 +59,14 @@ if (new URLSearchParams(window.location.search).get("window") === null) {
 
   setMessageArrivalHandler((notice) => {
     fromHost.delete(notice.pluginId);
-    const shown = deliverNotice(arrivalNotice(notice));
+    const shown = deliverPluginNotice(arrivalNotice(notice));
     messagesProvider.emit("arrived", notice);
     return shown;
   });
 
   setLocalIslandNotices((raw) => {
     const notice = normalizeArrivalNotice(raw);
-    const shown = deliverNotice(arrivalNotice(notice));
+    const shown = deliverPluginNotice(arrivalNotice(notice));
     if (shown) fromHost.add(notice.pluginId);
     return shown;
   });

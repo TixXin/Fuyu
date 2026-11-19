@@ -62,6 +62,7 @@ export type SettingsPluginPageText = {
   sources: { market: string; official: string; manual: string; local: string };
   places: Record<PluginPagePlace, string>;
   placesLabel: string;
+  notices: { label: string; on: string; off: string; aria: (name: string) => string; mutedTag: string; mutedTitle: string };
   openPageTitle: (name: string) => string;
   pageOffTitle: string;
   openSettingsTitle: string;
@@ -291,6 +292,14 @@ export const zhCN: SettingsPluginPageText = {
   sources: { market: "插件市场", official: "插件市场", manual: "从文件安装", local: "从文件夹加载" },
   places: { page: "岛上页面", bar: "收起条", alerts: "岛上提醒", translate: "快捷翻译里", settings: "有设置" },
   placesLabel: "在岛上的位置",
+  notices: {
+    label: "岛上提醒",
+    on: "它的提醒会在岛上弹出。关掉后只是不弹，插件照常运行，别的插件不受影响。",
+    off: "已静音：它的提醒不在岛上弹出，插件照常运行，别的插件不受影响。",
+    aria: (name) => `${name} 的岛上提醒`,
+    mutedTag: "提醒已静音",
+    mutedTitle: "它的岛上提醒关掉了，在插件详情里可以打开",
+  },
   openPageTitle: (name) => `展开岛，切到「${name}」这一页`,
   pageOffTitle: "插件开着时才能在岛上打开",
   openSettingsTitle: "打开这个插件的设置",
@@ -531,6 +540,14 @@ export const en: SettingsPluginPageText = {
   sources: { market: "Plugin market", official: "Plugin market", manual: "Installed from a file", local: "Loaded from a folder" },
   places: { page: "Island page", bar: "Collapsed bar", alerts: "Island alerts", translate: "In Quick translate", settings: "Has settings" },
   placesLabel: "Where it shows up on the island",
+  notices: {
+    label: "Island alerts",
+    on: "Its alerts pop up on the island. Turning this off only stops the pop-ups: the plugin keeps running and other plugins aren't affected.",
+    off: "Muted: its alerts don't pop up on the island. The plugin keeps running and other plugins aren't affected.",
+    aria: (name) => `Island alerts from ${name}`,
+    mutedTag: "Alerts muted",
+    mutedTitle: "Its island alerts are off. Turn them back on in the plugin's details.",
+  },
   openPageTitle: (name) => `Expand the island and switch to “${name}”`,
   pageOffTitle: "Turn the plugin on to open it on the island",
   openSettingsTitle: "Open this plugin's settings",

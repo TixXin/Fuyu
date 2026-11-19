@@ -20,6 +20,7 @@ export const BACKUP_KEYS = [
   "fuyu-update-preferences",
   "fuyu-agent-sounds",
   "fuyu-agent-session-filters",
+  "fuyu-plugin-notice-mutes",
   "fuyu-agent-approval",
   "fuyu-agent-push",
   "fuyu-lyrics-offsets",

@@ -240,6 +240,7 @@
       }
     },
     "fuyu-agent-session-filters": "sync",
+    "fuyu-plugin-notice-mutes": "sync",
     "fuyu-agent-approval": {
       "fields": {
         "onIsland": "sync",

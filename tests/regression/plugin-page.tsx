@@ -178,6 +178,7 @@ try {
   await settle();
   const clockDetail = dialog("@someone/clock")!;
   check(clockDetail && !clockDetail.querySelector("[data-tab='settings']") && clockDetail.querySelector("[data-where] [data-place='bar']"), "Its detail has no settings tab and lists where it shows up");
+  check(!clockDetail.querySelector("[data-notice-switch]"), "A plugin that sends no island alerts has no alerts switch");
   await press(clockDetail, "Escape");
   await click(gadgetRow.querySelector(".plugin-row__name"));
   await settle();
@@ -192,6 +193,15 @@ try {
   await click(weatherDetail.querySelector("[data-tab='overview']"));
   await click(weatherDetail.querySelector("[data-action='open-on-island']"));
   check(ipc.calls.filter((call) => call.startsWith("emit:island-open-plugin-page")).length === 2, "The detail's Open on the island does the same");
+  const alertsSwitch = () => weatherDetail.querySelector<HTMLInputElement>("[data-notice-switch='@fuyu/weather'] input");
+  const alertsTag = () => weatherRow.querySelector<HTMLElement>("[data-place='alerts']");
+  check(alertsSwitch()?.checked === true && alertsTag()?.textContent === t.places.alerts, "A plugin that sends island alerts has an alerts switch in its detail, on by default");
+  await click(alertsSwitch());
+  check(localStorage.getItem("fuyu-plugin-notice-mutes") === '["@fuyu/weather"]' && alertsSwitch()?.checked === false, "Turning it off stores that plugin's id, and only that one, in the mute list");
+  check(alertsTag()?.dataset.muted === "true" && alertsTag()?.textContent === t.notices.mutedTag && !row("normal", "@me/gadget")?.querySelector("[data-muted]"), "Its row then says the alerts are muted; other plugins' rows do not");
+  await click(alertsSwitch());
+  check(localStorage.getItem("fuyu-plugin-notice-mutes") === "[]" && alertsSwitch()?.checked === true && !alertsTag()?.dataset.muted, "Turning it back on takes it out of the list");
+  localStorage.removeItem("fuyu-plugin-notice-mutes");
   await press(weatherDetail, "Escape");
 
   check(all("normal", "[data-suggest]").map((item) => item.dataset.suggest).join() === "@fuyu/countdown,@someone/stocks,@someone/notes" && within("normal", "[data-suggestions] [data-action='browse-market']"), "Below the list: three plugins not installed yet, official first, then a card to the market");

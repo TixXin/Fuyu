@@ -83,7 +83,12 @@ button.plugin-place { cursor: pointer; transition: color var(--motion-fast) var(
 button.plugin-place:hover { color: var(--text-1); border-color: var(--color-white-a16); }
 .plugin-place--go { color: var(--info-text, var(--color-accent)); }
 .plugin-where { min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 12px; background: var(--color-white-a04); border: 1px solid var(--color-white-a06); border-radius: 10px; }
+.plugin-place--muted { color: var(--text-3); background: none; border-style: dashed; }
 .plugin-where__label { color: var(--text-3); font-size: 12px; }
+.plugin-notice-switch { min-width: 0; display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--color-white-a04); border: 1px solid var(--color-white-a06); border-radius: 10px; }
+.plugin-notice-switch__copy { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.plugin-notice-switch__label { color: var(--text-1); font-size: 13px; }
+.plugin-notice-switch__hint { color: var(--text-3); font-size: 12px; line-height: 1.5; }
 
 .plugin-suggest { min-width: 0; display: grid; gap: 10px; }
 .plugin-suggest__all { font-size: 12px; }

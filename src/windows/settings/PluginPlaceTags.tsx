@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 import { requestIslandPluginPage } from "../../features/plugin-kernel/api";
 import { useTranslation } from "../../i18n";
+import { usePluginNoticeMutes } from "../../lib/plugin-notice-mutes/usePluginNoticeMutes";
 import type { InstalledEntry } from "./pluginEntries";
 
 export function canOpenOnIsland(entry: InstalledEntry, stale: boolean): boolean {
@@ -13,8 +14,10 @@ export function openOnIsland(entry: InstalledEntry) {
 
 export function PluginPlaceTags({ entry, stale, onOpenSettings }: { entry: InstalledEntry; stale: boolean; onOpenSettings: () => void }) {
   const text = useTranslation().settings.pluginsV3.page;
+  const { mutes } = usePluginNoticeMutes();
   if (entry.places.length === 0) return null;
   const canOpen = canOpenOnIsland(entry, stale);
+  const muted = mutes.includes(entry.id);
   return (
     <span className="plugin-places" role="group" aria-label={text.placesLabel}>
       {entry.places.map((place) => {
@@ -34,6 +37,9 @@ export function PluginPlaceTags({ entry, stale, onOpenSettings }: { entry: Insta
               {text.places.settings}
             </button>
           );
+        }
+        if (place === "alerts" && muted) {
+          return <span key={place} className="plugin-place plugin-place--muted" data-place={place} data-muted="true" title={text.notices.mutedTitle}>{text.notices.mutedTag}</span>;
         }
         return <span key={place} className="plugin-place" data-place={place}>{text.places[place]}</span>;
       })}

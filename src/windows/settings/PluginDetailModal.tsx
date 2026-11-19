@@ -5,6 +5,7 @@ import { useErrorText, useTranslation } from "../../i18n";
 import { PluginEnableSwitch, PluginRowNote, PluginSetupNote, useVersionText, type RowAction } from "./InstalledPluginRow";
 import { OfficialMark } from "./OfficialMark";
 import { PluginLogo } from "./PluginLogo";
+import { PluginNoticeSwitch } from "./PluginNoticeSwitch";
 import { PluginActivityTab, PluginCommandsTab, PluginOverviewExtras, PluginSettingsTab } from "./PluginDetailTabs";
 import type { InstalledEntry } from "./pluginEntries";
 import { marketClient } from "./pluginMarketActions";
@@ -129,6 +130,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
               {status.note ? <PluginRowNote note={status.note} onAction={onAction} full /> : null}
               {entry.description ? <p className="plugin-dialog__desc">{entry.description}</p> : null}
               <PluginWhereLine entry={entry} stale={stale} onOpenSettings={() => setTab("settings")} />
+              <PluginNoticeSwitch entry={entry} />
               <div className="plugin-facts">
                 {facts.map(([label, value]) => (
                   <div key={label}><span>{label}</span><b title={value}>{value}</b></div>
