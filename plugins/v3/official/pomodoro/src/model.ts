@@ -87,6 +87,7 @@ export type PomodoroSnapshot = {
   breakDue: BreakKind | null;
   openTodos: OpenTodoItem[];
   settings: PomodoroSettings;
+  timersHidden: boolean;
 };
 
 export const EMPTY_SNAPSHOT: PomodoroSnapshot = {
@@ -99,6 +100,7 @@ export const EMPTY_SNAPSHOT: PomodoroSnapshot = {
   breakDue: null,
   openTodos: [],
   settings: DEFAULT_SETTINGS,
+  timersHidden: false,
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null;

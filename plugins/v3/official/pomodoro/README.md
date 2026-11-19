@@ -7,7 +7,7 @@
 ## 装好后在哪里
 
 - **岛的展开页**：多出「番茄钟」一页，显示倒计时、进度条、现在是专注还是休息，以及今天完成的轮数。
-- **收起条**：番茄钟运行时，浮屿内置计时器的收起项显示剩余时间。插件自己也有一个收起项（默认关），休息时前面写「休息」，暂停时变灰，点一下打开番茄钟页。
+- **收起条**：番茄钟运行时显示剩余时间，休息时前面写「休息」，暂停时变灰；点一下打开番茄钟页。
 - **设置 → 插件 → 番茄钟**：时长、自动开始、提示音、每日目标等全部设置。
 
 ## 怎么用
@@ -41,7 +41,7 @@
 
 **收起条**
 
-- **收起条显示**：默认关。内置计时器的收起条已经显示番茄钟的倒计时；打开后多一个番茄钟自己的收起项。
+- **在收起条显示倒计时**：默认开。番茄钟的计时不进浮屿内置的计时器，收起条上只有这一个倒计时，到点的提醒和提示音也都由番茄钟自己出。较早的浮屿不支持这样计时，那时番茄钟的倒计时显示在内置计时器的收起项里，这一项默认关，免得同一个倒计时出现两遍。
 
 改了马上生效；正在走的这一轮按开始时的时长走完，下一轮用新时长。从 1.0.0 升级的，今天的轮数和正在走的那一轮都保留，新设置取上面的默认值。
 
@@ -63,7 +63,7 @@ Pick a to-do and focus; the island counts down, tells you when to take a break, 
 ### Where it shows up
 
 - **Island page**: a new "Pomodoro" page with the countdown, a progress bar, whether you are focusing or on a break, and today's rounds.
-- **Collapsed bar**: while it runs, Fuyu's built-in timer item shows the time left. The plugin also has its own item (off by default) that shows "Break" during a break, greys out while paused, and opens the Pomodoro page when clicked.
+- **Collapsed bar**: the time left while it runs, with "Break" in front during a break and greyed out while paused; click it to open the Pomodoro page.
 - **Settings → Plugins → Pomodoro**: lengths, auto-start, sound, daily goal and every other setting.
 
 ### How to use it
@@ -97,7 +97,7 @@ You can also use it without opening the page: press **Ctrl+Alt+P** to start a ro
 
 **Collapsed bar**
 
-- **Show my own countdown on the collapsed bar**: off by default. The built-in timer on the collapsed bar already shows the pomodoro countdown; turn this on for the plugin's own item as well.
+- **Show the countdown on the collapsed bar**: on by default. The pomodoro keeps its timer out of Fuyu's built-in timer, so the collapsed bar shows a single countdown and the pomodoro gives its own reminder and sound. Older Fuyu versions cannot keep a timer out; there the countdown shows in the built-in timer item and this setting is off by default so it does not appear twice.
 
 Changes apply right away; a round already running finishes at the length it started with, and the next one uses the new length. Coming from 1.0.0, today's rounds and a running round carry over and the new settings start at the defaults above.
 

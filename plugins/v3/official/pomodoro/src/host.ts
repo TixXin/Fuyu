@@ -29,7 +29,6 @@ export const inject = ["clients", "commands", "timers/v1", "todos/v1", "messages
 
 const T = text.notice;
 
-const ASK_HIDDEN = false;
 
 function readStored(file: string): StoredPomodoro {
   try {
@@ -50,6 +49,7 @@ export function apply(ctx: Context) {
   let openTodos: OpenTodoItem[] = [];
   let stopTick: (() => Promise<void>) | null = null;
   let completing = false;
+  let starting = 0;
 
   function rollDay() {
     const today = todayKey();
@@ -80,6 +80,7 @@ export function apply(ctx: Context) {
       breakDue: stored.breakDue,
       openTodos,
       settings: settingsOf(stored),
+      timersHidden: stored.timersHidden,
     };
   }
 
@@ -142,8 +143,14 @@ export function apply(ctx: Context) {
     rollDay();
     const todo = phase === "focus" ? await findTodo(todoId) : null;
     const durationMs = phaseMinutes(phase, stored) * 60_000;
-    const started = await timers.start(ASK_HIDDEN ? ({ kind: "countdown", durationMs, hidden: true } as { kind: "countdown"; durationMs: number }) : { kind: "countdown", durationMs });
-    if (ASK_HIDDEN) stored.timersHidden = (started.timer as Timer & { hidden?: unknown }).hidden === true;
+    starting += 1;
+    let started: { timer: Timer };
+    try {
+      started = await timers.start({ kind: "countdown", durationMs, hidden: true });
+    } finally {
+      starting -= 1;
+    }
+    stored.timersHidden = started.timer.hidden === true;
     stored.phase = phase;
     stored.activeTimerId = started.timer.id;
     stored.activeTodoId = todo?.id ?? null;
@@ -231,7 +238,17 @@ export function apply(ctx: Context) {
     }
   }
 
+  function sweepOrphans(list: Timer[]) {
+    if (starting > 0) return;
+    for (const timer of list) {
+      if (timer.hidden === true && timer.owner === name && timer.id !== stored.activeTimerId) {
+        void timers.remove({ id: timer.id }).catch(() => {});
+      }
+    }
+  }
+
   function handleTimers(list: { timers: Timer[]; at: number }) {
+    sweepOrphans(list.timers);
     if (!stored.activeTimerId) {
       activeTimer = null;
       publish(list.at);

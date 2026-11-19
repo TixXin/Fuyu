@@ -46,8 +46,8 @@ const en = {
     displayTitle: "Island page",
     todosExpanded: "Show the todo list expanded",
     barTitle: "Collapsed bar",
-    showInBar: "Show my own countdown on the collapsed bar",
-    barHint: "The built-in timer on the collapsed bar already shows the pomodoro countdown.",
+    showInBar: "Show the countdown on the collapsed bar",
+    barHint: "This version of Fuyu also shows the pomodoro countdown in the built-in timer on the collapsed bar.",
   },
 };
 
@@ -97,8 +97,8 @@ const zhCN: typeof en = {
     displayTitle: "岛上页面",
     todosExpanded: "待办列表默认展开",
     barTitle: "收起条",
-    showInBar: "收起条显示",
-    barHint: "内置计时器的收起条已经显示番茄钟的倒计时。",
+    showInBar: "在收起条显示倒计时",
+    barHint: "这一版浮屿的内置计时器也会在收起条显示番茄钟的倒计时。",
   },
 };
 
