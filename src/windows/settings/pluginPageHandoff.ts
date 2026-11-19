@@ -6,7 +6,7 @@ export interface OpenedPluginPackage {
   base64: string;
 }
 
-export type PluginDetailTab = "overview" | "settings" | "commands" | "permissions" | "activity";
+export type PluginDetailTab = "overview" | "settings" | "commands" | "activity";
 
 export interface PluginDetailRequest {
   id: string;
