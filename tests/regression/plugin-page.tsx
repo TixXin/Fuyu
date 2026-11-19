@@ -9,6 +9,8 @@ import { ipc, locale, market, configCalls, windowServices, PLUGIN, NORMAL, HOST,
 import { I18nProvider, TRANSLATIONS } from "../../src/i18n";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { PluginHostView, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
+import type { BarUsageView } from "../../src/windows/settings/usePluginBarUsage";
+import { BAR, BAR_OPEN, ON_BAR, checkBarUsage } from "./pluginPageBar";
 import type { PluginDetailRequest } from "../../src/windows/settings/pluginPageHandoff";
 
 const { PluginsV3View } = await import("../../src/windows/settings/PluginsV3SettingsPage");
@@ -18,6 +20,7 @@ const { takeMarketViewRequest } = await import("../../src/windows/settings/plugi
 const t = TRANSLATIONS[locale].settings.pluginsV3.page;
 market.revocationCases = true;
 market.reach = true;
+localStorage.removeItem("fuyu-collapsed-items");
 market.manualInstalled["@me/gadget"] = "0.2.0";
 Object.assign(market.installed, { "@someone/sketchy": "0.5.0", "@someone/translator": "1.0.0" });
 const REVOCATION = [...NORMAL, PLUGIN.shady, PLUGIN.sketchy, PLUGIN.translator];
@@ -28,7 +31,7 @@ const COUNTDOWN_HINT = { "zh-CN": "添加一个日子", en: "Add a date" };
 const NEEDS_SETUP: PluginStatusV3[] = [{ ...PLUGIN.weather, setup: { hint: SETUP_HINT } }, { ...PLUGIN.local, setup: {} }, PLUGIN.clock, { ...PLUGIN.gadget, setup: { hint: "off" } }];
 const COUNTDOWN: PluginStatusV3 = { id: "@fuyu/countdown", name: "Countdown", state: "running", kind: "third-party", source: "market" };
 
-interface Stage { key: string; title: string; view: PluginHostView; node?: HostNodeStatus | null; hostOff?: boolean; detail?: PluginDetailRequest; migration?: boolean; narrow?: boolean; head?: boolean }
+interface Stage { key: string; title: string; view: PluginHostView; node?: HostNodeStatus | null; hostOff?: boolean; detail?: PluginDetailRequest; migration?: boolean; narrow?: boolean; head?: boolean; bar?: BarUsageView }
 const STAGES: Stage[] = [
   { key: "settings", title: "插件设置 / Plugin settings", view: open(NORMAL), detail: { id: "@fuyu/weather", tab: "settings" } },
   { key: "normal", title: "已安装若干 / Installed", view: open([...NORMAL, PLUGIN.hello]), head: true },
@@ -52,6 +55,9 @@ const STAGES: Stage[] = [
   { key: "narrow-revocation", title: "窄窗口 / Narrow", view: open(REVOCATION), narrow: true },
   { key: "setup", title: "待设置 / Needs setup", view: open(NEEDS_SETUP) },
   { key: "narrow-setup", title: "窄窗口 / Narrow", view: open(NEEDS_SETUP), narrow: true },
+  { key: "bar", title: "收起条占用 / Bar usage", view: open(ON_BAR), bar: BAR },
+  { key: "bar-open", title: "岛展开着 / Island open", view: open(ON_BAR), bar: BAR_OPEN },
+  { key: "narrow-bar", title: "窄窗口 / Narrow", view: open(ON_BAR), bar: BAR, narrow: true },
 ];
 
 const opened: string[] = [];
@@ -86,7 +92,7 @@ function LiveStage({ item }: { item: Stage }) {
   useEffect(() => {
     liveViews.set(item.key, setView);
   }, [item.key]);
-  return <PluginsV3View view={view} hostOff={item.hostOff} node={item.node ?? null} builtins={ipc.builtins} initialDetail={item.detail ?? null} onOpenPage={(page) => opened.push(`${item.key}:${page}`)} />;
+  return <PluginsV3View view={view} hostOff={item.hostOff} node={item.node ?? null} builtins={ipc.builtins} initialDetail={item.detail ?? null} barUsage={item.bar} onBarChanged={() => opened.push(`${item.key}:bar-changed`)} onOpenPage={(page) => opened.push(`${item.key}:${page}`)} />;
 }
 const showView = (key: string, view: PluginHostView) => act(async () => liveViews.get(key)!(view));
 
@@ -363,7 +369,9 @@ try {
   await act(async () => { await windowServices.get(marketV1).setManualAllowed({ allowed: market.manualAllowed }); });
   await settle();
 
-  const spills = [...gallery.querySelectorAll<HTMLElement>(".gallery__stage--narrow :is(.plugin-row, .plugin-banner, .plugin-page__toolbar, .plugin-note, .plugin-page__summary, .plugin-row__facts, .plugin-suggest__grid, .plugin-suggest__card)")].filter((element) => element.scrollWidth > element.clientWidth + 1);
+  await checkBarUsage({ check, click, press, settle, within, all, dialog, opened, text: t.bar, plain: STAGES.filter((item) => !item.bar).map((item) => item.key) });
+
+  const spills = [...gallery.querySelectorAll<HTMLElement>(".gallery__stage--narrow :is(.plugin-bar, .plugin-bar__row, .plugin-bar__actions, .plugin-row, .plugin-banner, .plugin-page__toolbar, .plugin-note, .plugin-page__summary, .plugin-row__facts, .plugin-suggest__grid, .plugin-suggest__card)")].filter((element) => element.scrollWidth > element.clientWidth + 1);
   check(spills.length === 0, spills.length ? `Narrow: ${spills.map((element) => element.className).join(", ")} spill out sideways at 340 px` : "Narrow: nothing spills out sideways at 340 px");
 
   results.textContent = messages.join("\n");

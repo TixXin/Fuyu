@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>插件页的收起条占用一览（E77.3）</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 28px 32px 60px; background: #0c0d0f; color: #e9e7e1; font: 14px/1.6 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  h1 { margin: 0 0 6px; font-size: 22px; }
+  h2 { margin: 44px 0 4px; font-size: 17px; }
+  h2 small { margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: #1f6f43; color: #d6ffe6; font-size: 12px; font-weight: 600; vertical-align: 2px; }
+  p { margin: 6px 0; max-width: 920px; color: #b9b6ae; }
+  p b, li b { color: #e9e7e1; }
+  ul { margin: 6px 0; padding-left: 20px; max-width: 920px; color: #b9b6ae; }
+  table { margin: 12px 0; border-collapse: collapse; max-width: 980px; font-size: 13px; }
+  th, td { padding: 7px 12px; border: 1px solid #2a2c31; text-align: left; vertical-align: top; }
+  th { background: #17181b; color: #e9e7e1; font-weight: 600; }
+  td { color: #b9b6ae; }
+  code { padding: 1px 5px; border-radius: 4px; background: #1c1d21; font-size: 12.5px; }
+
+  .row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 18px; margin-top: 12px; }
+  .stage { padding: 14px 18px 18px; border-radius: 12px; background: var(--bg); }
+  .stage > h3 { margin: 0 0 10px; font-size: 12px; font-weight: 600; color: var(--t3); }
+  .stage.wide { width: 620px; }
+  .stage.narrow { width: 340px; }
+  .dark { --bg: #131417; --card: rgba(255,255,255,.04); --line: rgba(255,255,255,.08); --t1: rgba(248,246,240,.96); --t2: rgba(248,246,240,.68); --t3: rgba(248,246,240,.54); --accent: #74d6ff; --warn: #ffd166; --island: #000; --base: rgba(255,255,255,.10); }
+  .light { --bg: #eceef2; --card: #fff; --line: rgba(0,0,0,.09); --t1: rgba(24,24,30,.94); --t2: rgba(24,24,30,.7); --t3: rgba(24,24,30,.56); --accent: #0a7fd1; --warn: #9a6400; --island: #1b1c20; --base: rgba(255,255,255,.14); }
+
+  .use { padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; color: var(--t2); font-size: 12.5px; }
+  .use__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 10px; }
+  .use__head b { color: var(--t1); font-size: 13px; }
+  .use__head span { color: var(--t3); }
+  .use__head .warn { color: var(--warn); }
+
+  .map { position: relative; height: 30px; border-radius: 15px; background: var(--island); overflow: hidden; }
+  .map > i { position: absolute; top: 6px; bottom: 6px; border-radius: 6px; }
+  .map .base { background: var(--base); }
+  .map .seg { cursor: pointer; }
+  .map .clip { background-image: repeating-linear-gradient(135deg, transparent 0 4px, rgba(0,0,0,.55) 4px 7px); outline: 1px dashed var(--warn); outline-offset: 1px; }
+  .map .sel { outline: 2px solid #fff; outline-offset: 1px; }
+  .scale { display: flex; justify-content: space-between; margin-top: 4px; color: var(--t3); font-size: 11px; }
+
+  .budget { display: flex; height: 16px; border-radius: 8px; overflow: hidden; background: var(--line); }
+  .budget > i { height: 100%; }
+  .budget .over { background-image: repeating-linear-gradient(135deg, #ff9aa9 0 4px, #c9546a 4px 7px); }
+  .cap { position: relative; height: 14px; color: var(--t3); font-size: 11px; }
+  .cap > span { position: absolute; top: 2px; translate: -100% 0; padding-right: 4px; border-right: 1px solid var(--t3); }
+
+  .items { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+  .items li { min-width: 0; display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 7px; cursor: pointer; }
+  .items li:hover, .items li.on { background: var(--line); }
+  .items .dot { width: 10px; height: 10px; border-radius: 3px; }
+  .items .name { min-width: 0; overflow: hidden; color: var(--t1); text-overflow: ellipsis; white-space: nowrap; }
+  .items .name small { margin-left: 6px; color: var(--t3); font-size: 11.5px; }
+  .items .name small.warn { color: var(--warn); }
+  .items .w { color: var(--t3); font-variant-numeric: tabular-nums; }
+  .items .bar { grid-column: 2 / 4; height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .items .bar > i { display: block; height: 100%; border-radius: 3px; }
+  .act { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--line); }
+  .act span { margin-right: auto; color: var(--t1); }
+  .act button { height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--t1); font: inherit; font-size: 11.5px; }
+  .why { margin: 8px 0 0; color: var(--t3); font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>插件页的收起条占用一览（E77.3）</h1>
+<p>12 个官方插件里 8 个要占收起条，用户看不到谁占了多宽、为什么有的没显示。插件页加一块小图回答三个问题：<b>现在谁在收起条上、各占多宽、谁没显示以及为什么</b>。点一项能调它的先后、换到另一侧，或者不让它上收起条。</p>
+<p>数字从哪来：岛按内容量出每个插件项的宽度（<code>docs/plugins/services-and-slots.md</code> 的 <code>island.collapsed/v1</code>），收起条最宽 520px，放不下时插件项在右端被裁掉。设置窗口向岛要一份当前的量法结果，所以图上是真实宽度，不是估的。下面的数据是示意。</p>
+
+<h2>做法 A：按比例的收起条小图 + 列表<small>推荐</small></h2>
+<p>上面一条就是收起条本身，按真实比例画：灰色是浮屿自己的内容（状态灯、文字、内置项），彩色是各插件项，位置和宽度都是量出来的；被裁掉的画斜纹。下面的列表按从左到右的顺序列出每一项，没显示的排在最后并写明原因。点图上的一段或列表的一行，展开操作。</p>
+<div class="row">
+  <div class="stage dark wide"><h3>深色 · 宽窗口</h3><div data-a></div></div>
+  <div class="stage light narrow"><h3>浅色 · 窄窗口 340px</h3><div data-a></div></div>
+</div>
+
+<h2>做法 B：预算条</h2>
+<p>不画位置，只画「520px 的额度被谁用掉了」：一条从 0 到上限的条，浮屿自己的内容加各插件项依次堆上去，超出上限的那段画红。一眼能看出超没超，但看不出谁在左谁在右，也看不出被裁的是哪一个（实际被裁的是最右边的项，不是堆在最后的项）。</p>
+<div class="row">
+  <div class="stage dark wide"><h3>深色</h3><div data-b></div></div>
+</div>
+
+<h2>做法 C：只有列表</h2>
+<p>不画图，每个插件一行，宽度画成行内的小条。最省地方，和插件列表的样子一致；但「收起条现在长什么样」要靠用户自己拼。</p>
+<div class="row">
+  <div class="stage dark narrow"><h3>深色</h3><div data-c></div></div>
+</div>
+
+<h2>对比和推荐</h2>
+<table>
+  <tr><th></th><th>A 小图 + 列表</th><th>B 预算条</th><th>C 只有列表</th></tr>
+  <tr><td>谁占了多宽</td><td>图和数字都有</td><td>有</td><td>有</td></tr>
+  <tr><td>现在的顺序和位置</td><td>有，和真岛一致</td><td>没有</td><td>只有先后</td></tr>
+  <tr><td>哪一个被裁掉</td><td>直接标在那一段上</td><td>只知道超了多少</td><td>靠文字</td></tr>
+  <tr><td>占的高度</td><td>约 30px 的图加每项一行</td><td>约 30px</td><td>每项一行</td></tr>
+</table>
+<p><b>推荐 A。</b>任务要的是「按现在的顺序画出每个插件占的位置和宽度」，只有按比例的小图同时给出位置、宽度和被裁的是谁；列表兼作图例和操作入口。按 A 实现，细节：</p>
+<ul>
+  <li>放在已装插件列表下面、推荐插件上面，标题「收起条上的插件」；没有任何插件往收起条放东西时整块不出现。</li>
+  <li>标题右侧一句总数：「3 个插件共占 184 px，收起条现在 412 px，最宽 520 px」；有被裁的换成警告色的「有 1 项放不下」。</li>
+  <li>没显示的原因分四种写清：你把它从收起条上拿掉了；放不下，右端被裁掉 N px；插件现在没有要显示的内容；插件关着。</li>
+  <li>点一项展开操作：往前、往后、换到左侧 / 右侧、不在收起条上显示（写的是外观页「收起条项目」用的同一份布局）、打开这个插件的设置。</li>
+  <li>岛展开着或还没连上时，图用最近一次量到的结果并注明；一次都没量到就只列出声明了收起条的插件。</li>
+</ul>
+
+<script>
+const COLORS = ["#74d6ff", "#7ee2b8", "#ffd166", "#c7a6ff", "#ff9aa9"];
+const BAR = 520;
+const ITEMS = [
+  { name: "天气", item: "温度", x: 300, w: 56, wanted: 56, note: "" },
+  { name: "番茄钟", item: "倒计时", x: 364, w: 64, wanted: 64, note: "" },
+  { name: "系统监控", item: "CPU 和内存", x: 436, w: 60, wanted: 96, note: "放不下，右端被裁掉 36 px", warn: true },
+  { name: "世界时钟", item: "时间", x: null, w: 0, wanted: 72, note: "你把它从收起条上拿掉了" },
+  { name: "GitHub Issue", item: "未读数", x: null, w: 0, wanted: 0, note: "现在没有要显示的内容" },
+];
+const pct = (n) => `${(n / BAR) * 100}%`;
+function mapA(selected) {
+  const segs = ITEMS.filter((it) => it.x !== null).map((it, i) => `<i class="seg${it.warn ? " clip" : ""}${i === selected ? " sel" : ""}" style="left:${pct(it.x)};width:${pct(it.w)};background-color:${COLORS[i]}"></i>`).join("");
+  return `<div class="map"><i class="base" style="left:${pct(10)};width:${pct(20)}"></i><i class="base" style="left:${pct(40)};width:${pct(170)}"></i><i class="base" style="left:${pct(220)};width:${pct(70)}"></i>${segs}</div><div class="scale"><span>0</span><span>收起条现在 520 px（已到最宽）</span></div>`;
+}
+function list(selected, withBars) {
+  return `<ul class="items">${ITEMS.map((it, i) => `<li class="${i === selected ? "on" : ""}"><i class="dot" style="background:${it.x === null ? "transparent" : COLORS[i]};${it.x === null ? "border:1px dashed var(--t3)" : ""}"></i><span class="name">${it.name}<small class="${it.warn ? "warn" : ""}">${it.note || it.item}</small></span><span class="w">${it.x === null ? "—" : `${it.w} px`}</span>${withBars && it.x !== null ? `<span class="bar"><i style="width:${(it.w / 120) * 100}%;background:${COLORS[i]}"></i></span>` : ""}</li>`).join("")}</ul>`;
+}
+const head = `<div class="use__head"><b>收起条上的插件</b><span class="warn">有 1 项放不下</span><span>3 个插件共占 216 px，最宽 520 px</span></div>`;
+for (const host of document.querySelectorAll("[data-a]")) {
+  host.innerHTML = `<div class="use">${head}${mapA(2)}${list(2, false)}<div class="act"><span>系统监控 · CPU 和内存</span><button>往前</button><button>往后</button><button>换到左侧</button><button>不在收起条上显示</button><button>打开设置</button></div><p class="why">放不下时浮屿先压自己的文字，插件项最后在右端裁掉。把它往前挪，或者拿掉一个不常看的。</p></div>`;
+}
+for (const host of document.querySelectorAll("[data-b]")) {
+  const used = [["浮屿自己的内容", 300, "var(--base)"], ...ITEMS.filter((it) => it.x !== null).map((it, i) => [it.name, it.wanted, COLORS[i]])];
+  const total = used.reduce((sum, [, w]) => sum + w, 0);
+  host.innerHTML = `<div class="use">${head}<div class="budget">${used.map(([, w, c]) => `<i style="width:${(w / total) * 100}%;background:${c}"></i>`).join("")}</div><div class="cap"><span style="left:${(BAR / total) * 100}%">最宽 520 px</span></div><p class="why">一共想占 ${total} px，超出 ${total - BAR} px。</p></div>`;
+}
+for (const host of document.querySelectorAll("[data-c]")) host.innerHTML = `<div class="use">${head}${list(-1, true)}</div>`;
+</script>
+</body>
+</html>

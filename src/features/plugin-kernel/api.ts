@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, emitTo, listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { PLUGIN_BAR_USAGE_REPORT, PLUGIN_BAR_USAGE_REQUEST, readBarUsageReport, type BarUsageReport } from "./barUsage.ts";
 import { ISLAND_PLUGIN_PAGE_EVENT, islandPluginPageRequest, readIslandPluginPageRequest, type IslandPluginPageRequest } from "./islandPageRequest.ts";
 import {
   normalizeV2MigrationSnapshot,
@@ -148,6 +149,27 @@ export function takePendingPluginPackage(): Promise<PendingPluginPackage | null>
 
 export function onPluginPackageOpen(listener: () => void): Promise<UnlistenFn> {
   return listen(PLUGIN_PACKAGE_OPEN, () => listener());
+}
+
+export function requestPluginBarUsage(id: number): Promise<void> {
+  return emitTo("main", PLUGIN_BAR_USAGE_REQUEST, { id });
+}
+
+export function onPluginBarUsageRequest(handler: (id: number) => void): Promise<UnlistenFn> {
+  return listen<{ id?: unknown }>(PLUGIN_BAR_USAGE_REQUEST, ({ payload }) => {
+    if (typeof payload?.id === "number") handler(payload.id);
+  });
+}
+
+export function reportPluginBarUsage(report: BarUsageReport): Promise<void> {
+  return emitTo("settings", PLUGIN_BAR_USAGE_REPORT, report);
+}
+
+export function onPluginBarUsageReport(handler: (report: BarUsageReport) => void): Promise<UnlistenFn> {
+  return listen<unknown>(PLUGIN_BAR_USAGE_REPORT, ({ payload }) => {
+    const report = readBarUsageReport(payload);
+    if (report) handler(report);
+  });
 }
 
 export function requestIslandPluginPage(pluginId: string, page?: string): Promise<void> {
