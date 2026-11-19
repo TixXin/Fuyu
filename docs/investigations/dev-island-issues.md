@@ -125,6 +125,45 @@ D71 第一次复现时脚本把空运行号传了进去，诊断副本没拿到�
 - **旧的开发版数据目录还留着：** `%LOCALAPPDATA%` 和 `%APPDATA%` 下有 `com.tixxin.fuyu.lane-5/6/7/20/36/37`、`com.tixxin.fuyu.v3spike`、`com.tixxin.fuyu.lane-1.before-copy-1794684861186`，每个都带一份 `EBWebView`。lane 已经在 F32 去掉了，`pnpm prune:target` 只清 `src-tauri/target`，不清这些目录。不算正在用的 `lane-1`，这些目录在 `%LOCALAPPDATA%` 下一共约 570 MB（`before-copy` 134 MB，`lane-7` 108 MB，`lane-6` 100 MB，`lane-37` 76 MB，`v3spike` 54 MB，`lane-20` 44 MB，`lane-5` 41 MB，`lane-36` 12 MB），`%APPDATA%` 下约 11 MB。用户 2026-11-15 定：直接删掉，不另开任务；由用户自己删（会话里的删除命令被自动模式拦下）。
 - **托盘「显示」显示出空白岛**（见第 3 节）。
 
+## 5. 开发版启动就 panic（WebView2 0x800700AA）
+
+2026-11-18 记录，用户机器上实际遇到，重启电脑也没用。
+
+**现象**：`pnpm tauri dev` 编译完，一运行 `target\debug\fuyu.exe` 就退出（exit code 101）：
+
+```
+Failed to setup app: runtime error: failed to create webview: WebView2 error: WindowsError(Error { code: HRESULT(0x800700AA), message: "请求的资源在使用中。" })
+```
+
+换一个开发版编号（`FUYU_DEV_LANE=2`）启动，报的是 `could not copy the installed app's data … 拒绝访问。 (os error 5)` 和 `Failed to setup app: 拒绝访问。 (os error 5)`。安装的正式版启动正常。
+
+**原因**：工作区根目录被沙箱（VibeDev / DSH 的 Windows 沙箱）加了强制完整性标记 `Mandatory Label\Low Mandatory Level:(OI)(CI)(NW)`，工作区里所有文件夹和文件都继承了它。Windows 从带 Low 标记的 exe 启动进程时，会让进程以低完整性运行；低完整性进程写不了 `%APPDATA%`、`%LOCALAPPDATA%`。于是开发版建不了自己的数据目录，WebView2 打不开 `%LOCALAPPDATA%\com.tixxin.fuyu.lane-1\EBWebView`，报出的就是 `0x800700AA`（`ERROR_BUSY`），和有没有别的进程占着无关。标记存在文件夹的权限里，所以重启没用。旁证：`%APPDATA%\com.tixxin.fuyu.lane-1` 和 `EBWebView` 从出问题起就再没被写过。
+
+**确认**（一分钟）：
+
+```powershell
+icacls src-tauri\target\debug\fuyu.exe | Select-String Mandatory
+# 出现 Low Mandatory Level 就是它
+```
+
+或者把 `C:\Windows\System32\cmd.exe` 复制到工作区里，用这个副本运行 `mkdir %APPDATA%\probe`：报“拒绝访问”就是它；复制到工作区外再运行能建成。
+
+**修法**：
+
+```powershell
+icacls src-tauri\target\debug /setintegritylevel "(OI)(CI)M"
+```
+
+只改 `target\debug` 这一个目录：里面已有的文件跟着继承成 Medium，以后编译出的文件也是 Medium。不动文件内容、所有者和其他权限项。
+
+**已自动处理**：`pnpm tauri dev` 的 `beforeDevCommand` 里，`scripts/stop-running-island.mjs` 会调用 `scripts/dev-integrity.mjs`（只在 Windows 上）。发现 `target\debug` 是 Low 就改成 Medium，并打印一行说明；改不动时只打印警告和上面的命令，不挡住启动。所以平时不用手动修，看到终端里有 `Raised … from Low to Medium integrity` 就是它刚修过一次。
+
+**注意**：
+
+- 工作区根目录的 Low 标记不要动：受限模式下，沙箱里的低完整性进程要靠它才能写工作区。
+- `target\release`（`pnpm build:exe` 的产物）有同样的问题，从那里直接运行的 `fuyu.exe` 也会这样崩；需要时对它执行同一条 `icacls` 命令。脚本不自动改它，因为受限模式下的代理要往那里写，改成 Medium 后它们就写不进去了。代理的 Rust 构建用 `target\agents`，同样不改。
+- 沙箱以后可能会把标记重新加回去，上面的自动处理每次启动都会再检查。
+
 ## 要用户提供的信息
 
 1. 截图那次在做什么：刚启动、刚展开 / 收起、刚切页面，还是放着没动？当时是不是别的会话正在改代码？
