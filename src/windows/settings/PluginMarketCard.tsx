@@ -3,15 +3,7 @@ import { Blocks } from "lucide-react";
 import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
 import { resolvePluginText } from "./PluginInstallConfirmModal";
-
-export function marketActionCandidate(plugin: MarketCatalogPlugin) {
-  if (!plugin.installedVersion) {
-    const candidate = plugin.install ?? plugin.manual;
-    return candidate ? { candidate, isUpdate: false } : null;
-  }
-  const candidate = plugin.autoUpdate ?? plugin.manual;
-  return candidate ? { candidate, isUpdate: true } : null;
-}
+import { marketActionCandidate } from "./pluginRowStatus";
 
 function blockedLabel(plugin: MarketCatalogPlugin, copy: { needsFuyu: (range: string) => string; needsNewerFuyu: string; unsupportedPlatform: string }): string | null {
   const blocked = plugin.blocked;
@@ -24,10 +16,12 @@ export function PluginMarketCard({
   plugin,
   onOpenDetail,
   onChooseMarketInstall,
+  onManage,
 }: {
   plugin: MarketCatalogPlugin;
   onOpenDetail: (plugin: MarketCatalogPlugin) => void;
   onChooseMarketInstall: (plugin: MarketCatalogPlugin, version: string, isUpdate: boolean) => void;
+  onManage?: (plugin: MarketCatalogPlugin) => void;
 }) {
   const { locale } = useLocale();
   const copy = useTranslation().settings.pluginsV3.market;
@@ -106,6 +100,18 @@ export function PluginMarketCard({
               }}
             >
               {copy.updateBtn(updateCandidate.version)}
+            </button>
+          ) : plugin.installedVersion && onManage ? (
+            <button
+              className="plugins-v3__btn"
+              type="button"
+              data-action="market-manage"
+              onClick={(event) => {
+                event.stopPropagation();
+                onManage(plugin);
+              }}
+            >
+              {copy.manageBtn}
             </button>
           ) : plugin.installedVersion ? (
             <button className="plugins-v3__btn" type="button" disabled>

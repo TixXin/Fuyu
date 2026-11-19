@@ -575,7 +575,7 @@ export const zhCN: SettingsPluginsText = {
   },
   ccConnect: {
     group: "cc-connect 手机连接",
-    groupHint: "让手机推送经 cc-connect 的机器人发到 Telegram、Discord 或飞书：Agent 等你时把问题、计划或回复连同接管命令发到手机，在手机上回 /cd、/switch 就能接着这个会话答。没装 cc-connect 也行：这里可以下载它、一步步建好机器人，并由岛让它一直运行。在 设置 → 插件（第 3 版）里关掉内置插件「cc-connect 手机连接」，这一节和推送的 cc-connect 通道一起停用。",
+    groupHint: "让手机推送经 cc-connect 的机器人发到 Telegram、Discord 或飞书：Agent 等你时把问题、计划或回复连同接管命令发到手机，在手机上回 /cd、/switch 就能接着这个会话答。没装 cc-connect 也行：这里可以下载它、一步步建好机器人，并由岛让它一直运行。关掉这一节的开关，推送的 cc-connect 通道一起停用。",
     path: "cc-connect 程序路径",
     pathHint: isMacOS
       ? "留空自动找：正在运行的 cc-connect、PATH（npm i -g cc-connect 装在这里）、这里下载的那份，再看 ~/.local/bin、/opt/homebrew/bin、/usr/local/bin 和登录 shell 的 PATH。不搜全盘。"
@@ -668,7 +668,7 @@ export const zhCN: SettingsPluginsText = {
   },
   sshTunnel: {
     group: "SSH 代理隧道",
-    groupHint: "把这台电脑的代理借给 SSH 服务器：为下面打开的每台主机常驻一条 ssh 反向隧道（服务器上的 127.0.0.1:端口 → 这里的本地代理），服务器上设好 http_proxy 就能经这里上网。只用密钥登录，断开后自动重连；在 设置 → 插件（第 3 版）里关掉内置插件「SSH 代理隧道」或退出岛屿时，隧道一起结束。",
+    groupHint: "把这台电脑的代理借给 SSH 服务器：为下面打开的每台主机常驻一条 ssh 反向隧道（服务器上的 127.0.0.1:端口 → 这里的本地代理），服务器上设好 http_proxy 就能经这里上网。只用密钥登录，断开后自动重连；关掉这一节的开关或退出岛屿时，隧道一起结束。",
     localProxy: "本地代理",
     localProxyHint: "自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和系统代理（Windows 的 Internet 设置、Mac 的网络代理），再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。",
     localProxyOptions: {
@@ -716,7 +716,7 @@ export const zhCN: SettingsPluginsText = {
   },
   centerPattern: {
     group: "中心图案",
-    groupHint: "收起的岛上没有文字时，在中间显示一个小动画（只有剩余待办数时排在待办数前面）；显示 Agent 标题时，宠物或悬岛标志站在标题前代替 Agent 图标。在 设置 → 插件（第 3 版）里关掉内置插件「中心图案」可停用。",
+    groupHint: "收起的岛上没有文字时，在中间显示一个小动画（只有剩余待办数时排在待办数前面）；显示 Agent 标题时，宠物或悬岛标志站在标题前代替 Agent 图标。关掉这一节的开关可停用。",
     pattern: "图案",
     patterns: {
       eyes: "眼睛",
@@ -992,7 +992,7 @@ export const en: SettingsPluginsText = {
   },
   ccConnect: {
     group: "cc-connect phone link",
-    groupHint: "Sends the phone push through cc-connect's bots on Telegram, Discord or Feishu: when an agent waits for you, its question, plan or reply goes to your phone with the commands to take the session over there (/cd, /switch). No cc-connect yet? Download it here, set a bot up step by step, and the island keeps it running. Switching off the built-in plugin \"cc-connect phone link\" under Settings → Plugins (v3) turns this section and the push's cc-connect channel off.",
+    groupHint: "Sends the phone push through cc-connect's bots on Telegram, Discord or Feishu: when an agent waits for you, its question, plan or reply goes to your phone with the commands to take the session over there (/cd, /switch). No cc-connect yet? Download it here, set a bot up step by step, and the island keeps it running. Switching this group off turns the push's cc-connect channel off too.",
     path: "cc-connect program",
     pathHint: isMacOS
       ? "Leave empty to find it: the running cc-connect, PATH (where npm i -g cc-connect puts it), the one downloaded here, then ~/.local/bin, /opt/homebrew/bin, /usr/local/bin and a login shell's PATH. The disk is not searched."
@@ -1085,7 +1085,7 @@ export const en: SettingsPluginsText = {
   },
   sshTunnel: {
     group: "SSH proxy tunnel",
-    groupHint: "Lends this computer's proxy to SSH servers: for each host switched on below, a resident ssh reverse tunnel (127.0.0.1:port on the server to the local proxy here), so the server reaches the internet through here once http_proxy is set there. Key login only, and it reconnects after a drop; switching off the built-in plugin \"SSH proxy tunnel\" under Settings → Plugins (v3) or quitting the island ends the tunnels.",
+    groupHint: "Lends this computer's proxy to SSH servers: for each host switched on below, a resident ssh reverse tunnel (127.0.0.1:port on the server to the local proxy here), so the server reaches the internet through here once http_proxy is set there. Key login only, and it reconnects after a drop; switching this group off or quitting the island ends the tunnels.",
     localProxy: "Local proxy",
     localProxyHint: "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the system proxy (Internet settings on Windows, network proxies on a Mac), then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none.",
     localProxyOptions: {
@@ -1133,7 +1133,7 @@ export const en: SettingsPluginsText = {
   },
   centerPattern: {
     group: "Center pattern",
-    groupHint: "When the collapsed island shows no text, a small animation sits in its middle (ahead of an idle to-do count when that is all there is); while an agent title shows, the pet or the island mark stands before it in place of the agent icon. Switch off the built-in plugin \"Center pattern\" under Settings → Plugins (v3) to turn this off.",
+    groupHint: "When the collapsed island shows no text, a small animation sits in its middle (ahead of an idle to-do count when that is all there is); while an agent title shows, the pet or the island mark stands before it in place of the agent icon. Switch this group off to turn it off.",
     pattern: "Pattern",
     patterns: {
       eyes: "Eyes",

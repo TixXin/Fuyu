@@ -86,7 +86,7 @@
 }
 
 .plugins-v3__btn--primary {
-  color: var(--color-accent);
+  color: var(--info-text, var(--color-accent));
   border-color: color-mix(in srgb, var(--color-accent) 36%, transparent);
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
@@ -255,7 +255,7 @@
 
 .plugins-v3__manual summary {
   width: fit-content;
-  color: var(--color-accent);
+  color: var(--info-text, var(--color-accent));
   font-weight: 600;
   cursor: pointer;
 }

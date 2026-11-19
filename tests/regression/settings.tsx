@@ -102,7 +102,7 @@ if (!automated) {
       check(item.getAttribute("aria-current") === "page" && (!entryOf(category as SettingsCategory) || element(".settings-tabs__tab--active").dataset.tab === category),
         `${category}: the sidebar marks the open page, and its tab is selected`);
       check(element(".settings-page__title").textContent === item.textContent, `${category}: the page title matches the sidebar`);
-      check(panel.querySelector(".settings-group, .settings-section"), `${category}: the page has content`);
+      check(panel.querySelector(".settings-group, .settings-section, .plugin-page"), `${category}: the page has content`);
       check(panel.scrollWidth <= panel.clientWidth, `${category}: nothing overflows horizontally`);
     }
 

@@ -99,7 +99,7 @@ export const zhCN: IslandText = {
     gotIt: "知道了",
   },
   v2Migration: {
-    notice: (count) => `检测到 ${count} 个旧第 2 版插件，官方插件已升级至 @fuyu/*`,
+    notice: (count) => `检测到 ${count} 个旧版插件，官方插件已换成新版 @fuyu/*`,
     viewGuide: "查看迁移说明",
     gotIt: "知道了",
   },
@@ -154,7 +154,7 @@ export const en: IslandText = {
     gotIt: "Got it",
   },
   v2Migration: {
-    notice: (count) => `${count} legacy v2 ${count === 1 ? "plugin" : "plugins"} found; official plugins moved to @fuyu/*`,
+    notice: (count) => `${count} old ${count === 1 ? "plugin" : "plugins"} found; official plugins moved to @fuyu/*`,
     viewGuide: "View upgrade guide",
     gotIt: "Got it",
   },

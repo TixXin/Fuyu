@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Bell, Bot, Brush, CalendarDays, ClipboardList, Compass, Crop, FlaskConical, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Server, ShieldCheck, SlidersHorizontal, Sparkles, Timer, Volume2 } from "lucide-react";
+import { Activity, Bell, Blocks, Bot, Brush, CalendarDays, ClipboardList, Compass, Crop, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { defineSlot, type SettingsCategoryMeta } from "./slots.ts";
 
@@ -58,7 +58,9 @@ export const BUILTIN_CATEGORIES = [
   { id: "sounds", icon: Volume2, feature: "agents" },
   { id: "agentPush", icon: Bell, feature: "agents" },
   { id: "agentRemote", icon: Server, group: "agents", aliases: ["agentTunnel"], feature: "agents", available: supports("agentRemote") },
-  { id: "pluginsV3", icon: FlaskConical, group: "extensions" },
+  { id: "pluginsV3", icon: Blocks, group: "extensions" },
+  { id: "pluginDiagnostics", icon: Activity, parent: "pluginsV3" },
+  { id: "pluginMarket", icon: Store, group: "extensions" },
   { id: "about", icon: Info, group: null, aliases: ["updates", "aboutHistory", "aboutHelp"] },
 ] as const satisfies readonly BuiltinCategory[];
 

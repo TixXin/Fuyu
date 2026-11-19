@@ -1,110 +1,88 @@
+import { useState } from "react";
+import { ArrowLeftRight, Check, Store } from "lucide-react";
 import { useLocale, useTranslation } from "../../i18n";
 import { useV2PluginMigration } from "../../features/plugin-kernel/useV2PluginMigration";
-import {
-  resolveLegacyPluginTitle,
-  shouldShowSettingsMigrationCard,
-} from "../../features/plugin-kernel/v2Migration";
-import "./V2PluginMigrationCard.css";
+import { resolveLegacyPluginTitle, shouldShowSettingsMigrationCard } from "../../features/plugin-kernel/v2Migration";
+import { PluginBanner } from "./PluginPageBanners";
 
-export function V2PluginMigrationCard({ onOpenMarketTab }: { onOpenMarketTab?: () => void }) {
-  const copy = useTranslation().settings.pluginsV3.v2Migration;
+export function V2PluginMigrationCard({ onOpenMarket }: { onOpenMarket?: (detail?: string) => void }) {
+  const copy = useTranslation().settings.pluginsV3.page.migration;
   const { locale } = useLocale();
   const { snapshot, dismiss } = useV2PluginMigration();
+  const [open, setOpen] = useState(true);
 
-  if (!shouldShowSettingsMigrationCard(snapshot)) {
-    return null;
-  }
+  if (!shouldShowSettingsMigrationCard(snapshot)) return null;
 
-  const needsMarketInstall = snapshot.official.some((item) => !item.installedInV3);
-
+  const count = snapshot.official.length + snapshot.other.length;
   return (
-    <section className="plugins-v3__migration settings-group" aria-label={copy.title}>
-      <div className="plugins-v3__migration-head">
-        <h3 className="plugins-v3__migration-title">{copy.title}</h3>
-        <p className="plugins-v3__migration-note">{copy.summary}</p>
-      </div>
-
-      {snapshot.official.length > 0 ? (
-        <div className="plugins-v3__migration-section">
-          <p className="plugins-v3__migration-subtitle">{copy.officialHeading}</p>
-          <ul className="plugins-v3__migration-list">
-            {snapshot.official.map((item) => {
-              const title = resolveLegacyPluginTitle(item.title, item.v3Id, locale);
-              const activeInV3 = item.installedInV3 && item.registeredInYml;
-              return (
-                <li
-                  key={item.v2Id}
-                  className="plugins-v3__migration-item"
-                  data-v2-official={item.v2Id}
-                >
-                  <div className="plugins-v3__migration-main">
-                    <span className="plugins-v3__migration-name">{title}</span>
-                    <span className="plugins-v3__migration-map">{`${item.v2Id} → ${item.v3Id}`}</span>
-                  </div>
-                  <div className="plugins-v3__migration-badges">
-                    {item.configMigrated ? (
-                      <span className="plugins-v3__migration-pill">{copy.configCarried}</span>
-                    ) : null}
-                    <span
-                      className={`plugins-v3__migration-pill ${
-                        activeInV3 ? "plugins-v3__migration-pill--mint" : "plugins-v3__migration-pill--info"
-                      }`}
-                    >
-                      {activeInV3 ? copy.switchedToV3 : copy.installInMarket}
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : null}
-
-      {snapshot.other.length > 0 ? (
-        <div className="plugins-v3__migration-section">
-          <p className="plugins-v3__migration-subtitle">{copy.otherHeading}</p>
-          <p className="plugins-v3__migration-note">{copy.otherNote}</p>
-          <ul className="plugins-v3__migration-list">
-            {snapshot.other.map((item) => {
-              const title = resolveLegacyPluginTitle(item.title, item.id, locale);
-              return (
-                <li
-                  key={item.id}
-                  className="plugins-v3__migration-item"
-                  data-v2-other={item.id}
-                >
-                  <div className="plugins-v3__migration-main">
-                    <span className="plugins-v3__migration-name">{title}</span>
-                    {title !== item.id ? (
-                      <span className="plugins-v3__migration-map">{item.id}</span>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : null}
-
-      <div className="plugins-v3__migration-actions">
-        {onOpenMarketTab && needsMarketInstall ? (
-          <button
-            type="button"
-            className="plugins-v3__migration-btn plugins-v3__migration-btn--primary"
-            data-action="migration-open-market"
-            onClick={onOpenMarketTab}
-          >
-            {copy.openMarket}
+    <PluginBanner
+      name="migration"
+      tone="info"
+      icon={<ArrowLeftRight size={16} strokeWidth={2.2} />}
+      title={
+        <>
+          <span>{copy.title}</span>
+          <button className="plugin-link" type="button" aria-expanded={open} data-action="migration-toggle" onClick={() => setOpen((value) => !value)}>
+            {open ? copy.collapse : copy.expand(count)}
           </button>
-        ) : null}
-        <button
-          type="button"
-          className="plugins-v3__migration-btn plugins-v3__migration-dismiss"
-          onClick={() => dismiss("settings")}
-        >
-          {copy.dismiss}
-        </button>
-      </div>
-    </section>
+        </>
+      }
+      extra={
+        open ? (
+          <ul className="plugin-migration">
+            {snapshot.official.map((item) => {
+              const active = item.installedInV3 && item.registeredInYml;
+              return (
+                <li key={item.v2Id} data-v2-official={item.v2Id}>
+                  <span className="plugin-migration__name">
+                    {resolveLegacyPluginTitle(item.title, item.v3Id, locale)}
+                    <small>{copy.oldPlugin}</small>
+                  </span>
+                  {active ? (
+                    <span className="plugin-migration__state plugin-migration__state--ok">
+                      <Check size={13} strokeWidth={2.4} aria-hidden="true" />
+                      {item.configMigrated ? copy.switchedKept : copy.switched}
+                    </span>
+                  ) : (
+                    <>
+                      <span className="plugin-migration__state">{item.configMigrated ? copy.readyKept : copy.ready}</span>
+                      {onOpenMarket ? (
+                        <button className="plugin-btn plugin-btn--sm plugin-btn--primary" type="button" data-action="migration-get" onClick={() => onOpenMarket(item.v3Id)}>
+                          {copy.getIt}
+                        </button>
+                      ) : null}
+                    </>
+                  )}
+                </li>
+              );
+            })}
+            {snapshot.other.map((item) => (
+              <li key={item.id} data-v2-other={item.id}>
+                <span className="plugin-migration__name">
+                  {resolveLegacyPluginTitle(item.title, item.id, locale)}
+                  <small>{copy.oldPlugin}</small>
+                </span>
+                <span className="plugin-migration__state">{copy.unavailable}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null
+      }
+      actions={
+        <>
+          {onOpenMarket ? (
+            <button className="plugin-btn" type="button" data-action="migration-open-market" onClick={() => onOpenMarket()}>
+              <Store size={13} strokeWidth={2.2} aria-hidden="true" />
+              {copy.openMarket}
+            </button>
+          ) : null}
+          <button className="plugin-btn plugin-btn--ghost plugin-migration__dismiss" type="button" onClick={() => dismiss("settings")}>
+            {copy.dismiss}
+          </button>
+        </>
+      }
+    >
+      {copy.summary}
+    </PluginBanner>
   );
 }
