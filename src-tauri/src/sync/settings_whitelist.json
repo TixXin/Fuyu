@@ -104,6 +104,7 @@
         "pageDigitModifiers": "local",
         "pageNextShortcut": "local",
         "pagePreviousShortcut": "local",
+        "islandLayerShortcut": "local",
         "todoEnabled": "firstMergeOnly",
         "musicEnabled": "firstMergeOnly",
         "agentStatusEnabled": "firstMergeOnly",

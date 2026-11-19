@@ -17,6 +17,7 @@ export function useShortcutOwners(settings: IslandSettings) {
   const digitModifiers = normalizePageDigitModifiers(settings.pageDigitModifiers);
   const owners: ShortcutOwner[] = [
     ...reported.owners,
+    ...(settings.islandLayerShortcut ? [{ id: "islandLayer", label: t.settings.shortcuts.islandLayerToggle, shortcut: settings.islandLayerShortcut, home: "shortcuts" }] : []),
     { id: "next", label: t.settings.pageShortcuts.nextPage, shortcut: normalizePageCycleShortcut(settings.pageNextShortcut, DEFAULT_PAGE_NEXT_SHORTCUT), home: "shortcutsIsland" },
     { id: "previous", label: t.settings.pageShortcuts.previousPage, shortcut: normalizePageCycleShortcut(settings.pagePreviousShortcut, DEFAULT_PAGE_PREVIOUS_SHORTCUT), home: "shortcutsIsland" },
     ...Array.from({ length: 9 }, (_, index) => ({
