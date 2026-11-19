@@ -38,6 +38,13 @@ export interface PluginWindowEvent {
   [key: string]: unknown;
 }
 
+export type PluginSetupHint = string | { "zh-CN"?: string; en?: string };
+
+export interface PluginSetupState {
+  needed: boolean;
+  hint?: PluginSetupHint | null;
+}
+
 export type HttpInput = string | { readonly href: string } | { readonly url: string };
 
 export interface HttpResponseLike {
@@ -88,6 +95,18 @@ declare module "cordis" {
      */
     settings: {
       open(): Promise<void>;
+      /**
+       * Tells Fuyu whether this plugin still needs a setting before it is of any use (weather without a city, an
+       * issue list without a repository). While `needed` is `true` and the plugin runs, its row on the plugin page
+       * carries a "Needs setup" mark with a button that opens its settings, and the notice shown right after
+       * installing it offers the same button. `hint` is one short line saying what is missing, as a string or per
+       * language (`{ "zh-CN": "选一个城市", en: "Pick a city" }`); it is cut at 80 characters. Call it again with
+       * `needed: false` once the setting is filled in, and the mark goes away. Call it on start and whenever the
+       * setting changes: the last call wins, from host code or from any window, and the state is dropped when the
+       * plugin stops. Host code lists `settings` in `inject`. Older versions of Fuyu have no `setup`, so call it
+       * as `ctx.settings.setup?.(...)`.
+       */
+      setup(state: PluginSetupState): Promise<void>;
     };
     /**
      * Fuyu's island, as far as this plugin's own `island.page/v1` pages go. Fuyu fills in the plugin id, so a plugin

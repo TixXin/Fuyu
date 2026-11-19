@@ -129,6 +129,32 @@ export function apply(ctx) {
 - 返回 `Promise<void>`。宿主代码里调用时，宿主转给岛窗口去打开；岛窗口没连上宿主时失败，错误码 `not-ready`。
 - 插件没有设置项、或还没在运行时，弹窗照常落到「设置」标签，显示对应的提示（「这个插件没有可以改的设置」或「插件运行时，这里才会显示它自己的设置」）。
 
+### 还差一步设置（`ctx.settings.setup()`）
+
+有的插件装完不设置就是空的：天气要选城市，GitHub Issue 要填仓库。插件告诉浮屿「我还差一步」，浮屿就在设置窗口的插件页给它那一行挂「待设置」标记和「去设置」按钮，装完的提示里也带「去设置」；设好后再说一声，标记自己消失。
+
+```ts
+// 宿主代码：代码的 inject 和 package.json 的 fuyu.inject 里写 "settings"
+export const inject = ["clients", "settings"];
+export function apply(ctx) {
+  const report = () =>
+    ctx.settings.setup?.({ needed: config.city === "", hint: { "zh-CN": "选一个城市", en: "Pick a city" } });
+  report();                 // 启动时说一次
+  onConfigSaved(report);    // 设置变了再说一次
+}
+
+// 窗口代码（岛上、设置窗口都能调），没有宿主部分的插件用它
+void ctx.settings.setup?.({ needed: repos.length === 0, hint: "Add a repository" });
+```
+
+- `needed`：`true` 是还差一步，其余都当作设好了。只有插件自己知道设没设好：设置存在它自己手里（自己的文件、`fuyu.config` 的表单都一样），浮屿不替它判断，清单里也不用声明。
+- `hint`：一句话说差什么，会接在「还差一步：」后面，所以写成「选一个城市」这样的短语。字符串，或按语言给的 `{ "zh-CN": "…", en: "…" }`（缺哪种用另一种）；超过 80 个字符的部分截掉，换行当空格。不写时显示通用的一句。
+- 启动时和设置变化时各调一次：后一次覆盖前一次，宿主代码和各窗口的代码报的是同一个状态。插件停用、卸载或出错停下时状态清掉，下次启动再报。
+- 标记只在插件运行时显示；关着的插件不显示。不调这个方法的插件和以前完全一样。
+- 返回 `Promise<void>`，不用等它。窗口代码里宿主没连上时失败，错误码 `not-ready`。
+- 老版本的浮屿没有 `setup`，所以写成 `ctx.settings.setup?.(…)`；宿主代码里 `settings` 写成必需的会让插件在更老的版本上停在「等待」，要兼容就写成可选的（写法同下面 `ctx.island` 的最后一条）。
+- 「去设置」打开的是插件详情弹窗的「设置」标签，和 `ctx.settings.open()` 是同一个地方，所以插件要有设置（`fuyu.config` 或 `settings.section/v1`）。
+
 ## 五、打开自己的岛页面、收起岛（`ctx.island`）
 
 插件用 `island.page/v1` 注册了岛页面后，可以自己把岛切到这一页，在用户用完时把岛收起来。例如应用启动台：点收起条上的按钮打开启动台页，启动一个应用后收起岛。

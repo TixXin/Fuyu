@@ -92,6 +92,7 @@ export function createLoader(options: {
   bridge?: Bridge;
   base: string;
   openSettings?: ((plugin: string) => Promise<void> | void) | null;
+  reportSetup?: ((plugin: string, state: { needed: boolean; hint?: unknown }) => Promise<unknown> | void) | null;
   island?: IslandControl | null;
   importModule?: (url: string) => Promise<any>;
   checkFile?: (url: string) => Promise<void>;

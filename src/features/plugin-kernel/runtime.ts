@@ -48,7 +48,8 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
   let connection: Connection | null = null;
   const bridge = createBridge((method, params) => connection?.call(method, params) ?? Promise.reject(new Error("the plugin host is not connected")));
   const callHost = (method: string, params?: unknown) => connection?.call(method, params) ?? Promise.reject(new HostCallError("not-ready", "the plugin host is not connected"));
-  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge, openSettings: openPluginSettings, island: islandControlFor(window, callHost) });
+  const reportSetup = (plugin: string, state: { needed: boolean; hint?: unknown }) => callHost("settings.setup", { plugin, ...state });
+  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge, openSettings: openPluginSettings, reportSetup, island: islandControlFor(window, callHost) });
   if (window === "island") attachIslandHost(callHost);
   const services = createServiceProxy((method, params, options) => connection?.call(method, params, options) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
   windowServices.attach(services);

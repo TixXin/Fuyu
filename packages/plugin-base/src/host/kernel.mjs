@@ -32,6 +32,7 @@ export const PLUGINS_FILE = new URL("./plugins-file.mjs", import.meta.url).href;
 export const HMR = import.meta.resolve("@cordisjs/hmr");
 const REREAD_AFTER_MS = [50, 400];
 const ACTIVE = 2;
+const SETUP_KEPT_STATES = ["loading", "waiting"];
 
 async function watchConfig(ctx, id) {
   const include = [...ctx.loader.entries()].find((entry) => entry.id === id)?.subtree;
@@ -122,7 +123,13 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     unreachableClients: () => ctx.clients.unreachable(),
     undeclaredCommands: (plugin) => commands.undeclaredOf(plugin),
     undeclaredNetwork: (plugin) => http.undeclaredOf(plugin),
+    setup: (plugin, state) => {
+      if (state === "running") return settings.setupOf(plugin);
+      if (!SETUP_KEPT_STATES.includes(state)) settings.forget(plugin);
+      return null;
+    },
     subscribe: (listener) => [
+      settings.watch(listener),
       services.watch(listener),
       ctx.clients.watch(listener),
       commands.watch(listener),

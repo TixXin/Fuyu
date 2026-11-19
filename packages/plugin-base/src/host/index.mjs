@@ -4,7 +4,7 @@ export { openWindowSocket } from "./sockets.mjs";
 export { shareModules } from "./share.mjs";
 export { FAULT_LIMIT, KINDS, SAFE_MODES, kindOf } from "./gate.mjs";
 export { serviceError } from "./services.mjs";
-export { SETTINGS_OPEN_EVENT, SETTINGS_OPENER_WINDOW } from "./settings.mjs";
+export { SETTINGS_OPEN_EVENT, SETTINGS_OPENER_WINDOW, SETUP_HINT_MAX, setupHint } from "./settings.mjs";
 export { ISLAND_NOTICE_TIMEOUT_MS, ISLAND_REQUEST_EVENT, ISLAND_TIMEOUT_MS, ISLAND_WINDOW } from "./island.mjs";
 export { RUST_TIMEOUT_MS, RustBridge, rustError } from "./rust.mjs";
 export { BUILTINS_FILE, BUILTINS_FORMAT, BUILTIN_PREFIX, readBuiltins } from "./builtins.mjs";
