@@ -1,4 +1,6 @@
 import type { Context } from "@fuyu/plugin-base";
+import { useState } from "react";
+import { CitySearch } from "./citySearch.tsx";
 import {
   dateText,
   diffText,
@@ -10,8 +12,8 @@ import {
   uses12Hour,
   zoneInfo,
 } from "./clock.ts";
-import { GlobeIcon, MoonIcon, SunIcon } from "./icons.tsx";
-import { cityLabel, primaryCity, type WorldCity, type WorldClockSettings } from "./model.ts";
+import { GlobeIcon, MoonIcon, PlusIcon, SunIcon, XIcon } from "./icons.tsx";
+import { MAX_CITIES, METHODS, TOPICS, cityLabel, primaryCity, type WorldCity, type WorldClockSettings, type WorldClockSnapshot } from "./model.ts";
 import { PAGE_TITLE, lang, text } from "./text.ts";
 import { useNow, useWorldClock } from "./useWorldClock.ts";
 import "./styles.css";
@@ -32,7 +34,7 @@ function rowsFor(cities: readonly WorldCity[], settings: WorldClockSettings): Ro
   return rows;
 }
 
-function ClockRow({ row, now, settings }: { row: Row; now: number; settings: WorldClockSettings }) {
+function ClockRow({ row, now, settings, onRemove }: { row: Row; now: number; settings: WorldClockSettings; onRemove?: () => void }) {
   const info = zoneInfo(now, row.timeZone);
   const time = formatTime(info.parts, uses12Hour(settings.timeFormat, SYSTEM_12), settings.showSeconds, lang);
   const subs = [
@@ -57,15 +59,21 @@ function ClockRow({ row, now, settings }: { row: Row; now: number; settings: Wor
         {time.time}
         {time.period && lang === "en" && <small className="fuyu-world-clock__period">{time.period}</small>}
       </span>
+      {onRemove && (
+        <button type="button" className="fuyu-world-clock__remove" title={text.remove} aria-label={`${text.remove} ${row.label}`} onClick={onRemove}>
+          <XIcon size={13} />
+        </button>
+      )}
     </li>
   );
 }
 
 export default function apply(ctx: Context) {
   function WorldClockPage() {
-    const { state, error } = useWorldClock(ctx);
+    const { state, error, invoke } = useWorldClock(ctx);
     const { settings } = state;
     const now = useNow(settings.showSeconds);
+    const [adding, setAdding] = useState(false);
     const rows = rowsFor(state.cities, settings);
     return (
       <div className="fuyu-world-clock">
@@ -74,9 +82,25 @@ export default function apply(ctx: Context) {
         ) : (
           <ul className="fuyu-world-clock__list">
             {rows.map((row) => (
-              <ClockRow key={row.key} row={row} now={now} settings={settings} />
+              <ClockRow
+                key={row.key}
+                row={row}
+                now={now}
+                settings={settings}
+                onRemove={row.local ? undefined : () => invoke(METHODS.remove, { id: row.key })}
+              />
             ))}
           </ul>
+        )}
+        {adding ? (
+          <CitySearch cities={state.cities} invoke={invoke} inline autoFocus onClose={() => setAdding(false)} />
+        ) : (
+          state.cities.length < MAX_CITIES && (
+            <button type="button" className="fuyu-world-clock__add" onClick={() => setAdding(true)}>
+              <PlusIcon size={13} />
+              {text.addCity}
+            </button>
+          )
         )}
         {error && <p className="fuyu-world-clock__note">{error}</p>}
       </div>
@@ -101,7 +125,19 @@ export default function apply(ctx: Context) {
     );
   }
 
-  ctx.slots.add("island.page/v1", { id: PAGE_ID, title: PAGE_TITLE, component: WorldClockPage, icon: GlobeIcon });
+  let removePage: (() => Promise<void>) | null = null;
+  const syncPage = (show: boolean) => {
+    if (show && !removePage) {
+      removePage = ctx.slots.add("island.page/v1", { id: PAGE_ID, title: PAGE_TITLE, component: WorldClockPage, icon: GlobeIcon });
+    } else if (!show && removePage) {
+      void removePage();
+      removePage = null;
+    }
+  };
+  syncPage(true);
+  const follow = (snapshot: WorldClockSnapshot) => syncPage(snapshot.settings.showPage);
+  ctx.host.on(TOPICS.snapshot, follow);
+  ctx.host.call<WorldClockSnapshot>(METHODS.snapshot).then(follow, () => {});
   ctx.slots.add("island.collapsed/v1", {
     id: "world-clock-bar",
     width: 120,

@@ -14,7 +14,7 @@
 
 1. 打开设置里的世界时钟，在搜索框输入城市名（中文、英文、三字码都行）或时区名（如 `Europe/Berlin`），点结果添加。
 2. 拖动左边的把手调整顺序；点铅笔改显示名（留空恢复原名）；点 ★ 设为关注城市；点 ✕ 删除。
-3. 展开岛切到「世界时钟」页，每个城市显示当地时间，按设置标出明天 / 昨天、与本机的时差和白天 / 夜晚。
+3. 展开岛切到「世界时钟」页，每个城市显示当地时间，按设置标出明天 / 昨天、与本机的时差和白天 / 夜晚。页面底部点「添加城市」也能搜索添加；鼠标移到一行上点 ✕ 删除。
 
 ## 设置
 
@@ -25,6 +25,7 @@
 
 **显示**
 
+- **在岛上显示世界时钟页面**：默认开；关掉后岛上没有这一页，收起条照常显示。
 - **时间格式**：跟随系统（默认）/ 24 小时 / 12 小时。
 - **显示秒**：默认关；打开后每秒刷新。
 - **日期**：只标明天 / 昨天（默认）/ 总是显示（如「11月20日 周四」）/ 不显示。
@@ -60,7 +61,7 @@ See the local time in several cities at once, whether it is day or night there, 
 
 1. Open World Clock in the settings and type a city (Chinese or English name, or its code) or a time zone such as `Europe/Berlin` in the search box, then click a result to add it.
 2. Drag the handle on the left to reorder; click the pencil to rename (leave it empty for the original name); click ★ to star a city; click ✕ to remove it.
-3. Expand the island and open the "World Clock" page: each city shows its local time and, depending on the settings, Tomorrow / Yesterday, the offset from your computer, and day or night.
+3. Expand the island and open the "World Clock" page: each city shows its local time and, depending on the settings, Tomorrow / Yesterday, the offset from your computer, and day or night. "Add city" at the bottom of the page also searches and adds; hover a row and click ✕ to remove it.
 
 ### Settings
 
@@ -71,6 +72,7 @@ See the local time in several cities at once, whether it is day or night there, 
 
 **Display**
 
+- **Show the World Clock page on the island**: on by default; when off the page is hidden and the collapsed bar keeps working.
 - **Time format**: system (default), 24-hour, or 12-hour.
 - **Show seconds**: off by default; when on, the page updates every second.
 - **Date**: only Tomorrow / Yesterday (default), always (such as "Thu, Nov 20"), or hidden.

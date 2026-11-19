@@ -185,6 +185,8 @@ test("E65 world clock: 1.0.0 data still reads, new settings take defaults", () =
   assert.equal(fresh.timeFormat, "system");
   assert.equal(fresh.showTimeZone, false);
   assert.equal(fresh.barStyle, "name");
+  assert.equal(fresh.showPage, true);
+  assert.equal(normalizeStored({ cities: [], showPage: false }).showPage, false);
 
   const tweaked = normalizeStored({ cities: [], timeFormat: "12", barStyle: "weird", showSeconds: "yes", showLocal: true });
   assert.equal(tweaked.timeFormat, "12");

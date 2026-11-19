@@ -8,7 +8,7 @@ import "./settings.css";
 
 type Patch = (patch: Partial<WorldClockSettings>) => void;
 type ChoiceKey = "timeFormat" | "dateMode" | "diffMode" | "barStyle";
-type FlagKey = "showSeconds" | "showDayNight" | "showTimeZone" | "showLocal" | "showInBar";
+type FlagKey = "showPage" | "showSeconds" | "showDayNight" | "showTimeZone" | "showLocal" | "showInBar";
 
 const OPTIONS: Record<ChoiceKey, [string, string][]> = {
   timeFormat: [
@@ -87,6 +87,7 @@ export default function apply(ctx: Context) {
           <Flag name="showLocal" label={text.showLocal} settings={settings} patch={patch} />
         </Group>
         <Group title={text.displayTitle}>
+          <Flag name="showPage" label={text.showPage} settings={settings} patch={patch} />
           <Choice name="timeFormat" label={text.timeFormat} settings={settings} patch={patch} />
           <Choice name="dateMode" label={text.dateMode} settings={settings} patch={patch} />
           <Choice name="diffMode" label={text.diffMode} settings={settings} patch={patch} />

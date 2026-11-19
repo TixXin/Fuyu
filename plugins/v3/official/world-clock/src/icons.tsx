@@ -82,3 +82,11 @@ export function PencilIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function PlusIcon(props: IconProps) {
+  return (
+    <Svg size={14} {...props}>
+      <path d="M12 5v14M5 12h14" />
+    </Svg>
+  );
+}

@@ -3,7 +3,10 @@ import { currentLocale } from "./locale.ts";
 const en = {
   isZh: false,
   title: "World Clock",
-  empty: "Add cities in Settings → Plugins → World Clock.",
+  empty: "No cities yet.",
+  addCity: "Add city",
+  cancel: "Cancel",
+  showPage: "Show the World Clock page on the island",
   local: "Local time",
   same: "Same as local",
   ahead: (h: number) => `${h}h ahead`,
@@ -52,7 +55,10 @@ const en = {
 const zhCN: typeof en = {
   isZh: true,
   title: "世界时钟",
-  empty: "在 设置 → 插件 → 世界时钟 里添加城市。",
+  empty: "还没有城市。",
+  addCity: "添加城市",
+  cancel: "取消",
+  showPage: "在岛上显示世界时钟页面",
   local: "本机",
   same: "与本机相同",
   ahead: (h: number) => `快 ${h} 小时`,

@@ -16,6 +16,7 @@ export type DiffMode = "long" | "short" | "none";
 export type BarStyle = "name" | "code" | "time";
 
 export type WorldClockSettings = {
+  showPage: boolean;
   timeFormat: TimeFormat;
   showSeconds: boolean;
   dateMode: DateMode;
@@ -53,6 +54,7 @@ export const METHODS = {
 } as const;
 
 export const DEFAULT_SETTINGS: WorldClockSettings = {
+  showPage: true,
   timeFormat: "system",
   showSeconds: false,
   dateMode: "relative",
@@ -77,7 +79,7 @@ const CHOICES = {
   barStyle: ["name", "code", "time"],
 } as const;
 
-const FLAGS = ["showSeconds", "showDayNight", "showTimeZone", "showLocal", "showInBar"] as const;
+const FLAGS = ["showPage", "showSeconds", "showDayNight", "showTimeZone", "showLocal", "showInBar"] as const;
 
 export function isValidTimeZone(tz: string): boolean {
   if (!tz || tz.length > 64) return false;

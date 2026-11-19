@@ -1,0 +1,93 @@
+.fuyu-world-clock-search {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-world-clock-search__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 9px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+}
+
+.fuyu-world-clock-search__input:focus {
+  outline: none;
+  border-color: var(--fuyu-plugin-accent);
+}
+
+.fuyu-world-clock-search__hint {
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-world-clock-search__results {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  overflow-y: auto;
+  max-height: 240px;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  list-style: none;
+}
+
+.fuyu-world-clock-search--inline .fuyu-world-clock-search__results {
+  position: static;
+  max-height: 180px;
+}
+
+.fuyu-world-clock-search__result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fuyu-world-clock-search__result:hover:not(:disabled) {
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-world-clock-search__result:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.fuyu-world-clock-search__name,
+.fuyu-world-clock-search__zone {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-world-clock-search__zone {
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+}

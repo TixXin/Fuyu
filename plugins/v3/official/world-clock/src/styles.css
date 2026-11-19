@@ -82,6 +82,53 @@
   color: var(--fuyu-plugin-text-secondary);
 }
 
+.fuyu-world-clock__remove {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: -4px;
+  padding: 0;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-muted);
+  cursor: pointer;
+  opacity: 0;
+}
+
+.fuyu-world-clock__row:hover .fuyu-world-clock__remove,
+.fuyu-world-clock__remove:focus-visible {
+  opacity: 1;
+}
+
+.fuyu-world-clock__remove:hover {
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-world-clock__add {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px dashed var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.fuyu-world-clock__add:hover {
+  border-color: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-text);
+}
+
 .fuyu-world-clock__note {
   margin: 0;
   font-size: 12px;

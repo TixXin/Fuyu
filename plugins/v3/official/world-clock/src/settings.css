@@ -27,13 +27,6 @@
   color: var(--fuyu-plugin-text-muted);
 }
 
-.fuyu-world-clock-set__search {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .fuyu-world-clock-set__input {
   box-sizing: border-box;
   width: 100%;
@@ -51,52 +44,6 @@
   border-color: var(--fuyu-plugin-accent);
 }
 
-.fuyu-world-clock-set__results {
-  position: absolute;
-  z-index: 2;
-  top: calc(100% + 4px);
-  right: 0;
-  left: 0;
-  overflow-y: auto;
-  max-height: 240px;
-  margin: 0;
-  padding: 4px;
-  border: 1px solid var(--fuyu-plugin-border);
-  border-radius: var(--fuyu-plugin-radius);
-  background: var(--fuyu-plugin-surface);
-  list-style: none;
-}
-
-.fuyu-world-clock-set__results > .fuyu-world-clock-set__hint {
-  padding: 6px 8px;
-}
-
-.fuyu-world-clock-set__result {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  padding: 5px 8px;
-  border: none;
-  border-radius: var(--fuyu-plugin-radius);
-  background: transparent;
-  color: var(--fuyu-plugin-text);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-
-.fuyu-world-clock-set__result:hover:not(:disabled) {
-  background: var(--fuyu-plugin-surface-hover);
-}
-
-.fuyu-world-clock-set__result:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-
-.fuyu-world-clock-set__result-name,
 .fuyu-world-clock-set__name {
   overflow: hidden;
   min-width: 0;
