@@ -1,0 +1,32 @@
+.agent-notice-stack__notch {
+  display: none;
+}
+
+:root[data-island-notch="on"] .agent-notice-stack__notch {
+  display: grid;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr) calc(var(--island-notch-width) / var(--island-expanded-scale, 1) + 16px) minmax(0, 1fr);
+  align-items: center;
+  height: calc(var(--island-notch-height) / var(--island-expanded-scale, 1));
+  margin: 0 0 8px;
+}
+
+.agent-notice-stack__wing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.agent-notice-stack__wing--right {
+  justify-content: flex-end;
+}
+
+.agent-notice-stack__wing--right .agent-notice-stack__state {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
