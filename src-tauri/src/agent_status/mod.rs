@@ -53,6 +53,7 @@ mod window_focus;
 mod workbuddy;
 mod antigravity;
 mod antigravity_focus;
+mod workbuddy_focus;
 mod antigravity_remote;
 mod dsh;
 mod dsh_hooks;
@@ -518,12 +519,16 @@ pub async fn focus_agent_window(
             });
             let _ = app.emit_to(crate::island::WINDOW_LABEL, FOCUS_WINDOW_ONLY_EVENT, payload);
         }
+    } else if let Some(missing) = focused.missing.filter(|_| !session_for_event.is_empty()) {
+        let payload = json!({ "provider": provider_for_event, "sessionId": session_for_event, "reason": missing.reason() });
+        let _ = app.emit_to(crate::island::WINDOW_LABEL, FOCUS_NOT_FOUND_EVENT, payload);
     }
     Ok(focused.found)
 }
 
 const EDITOR_EXTENSION_MISSING_EVENT: &str = "agent-editor-extension-missing";
 const FOCUS_WINDOW_ONLY_EVENT: &str = "agent-focus-window-only";
+const FOCUS_NOT_FOUND_EVENT: &str = "agent-focus-not-found";
 
 #[tauri::command]
 pub async fn get_editor_extension_states() -> Vec<editor_extension::EditorExtensionState> {
