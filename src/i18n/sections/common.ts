@@ -18,6 +18,7 @@ export type CommonText = {
   showSecret: string;
   hideSecret: string;
   advanced: string;
+  crash: { island: string; window: string; detail: string; reload: string };
 };
 
 export const zhCN: CommonText = {
@@ -40,6 +41,7 @@ export const zhCN: CommonText = {
   showSecret: "显示密钥",
   hideSecret: "隐藏密钥",
   advanced: "高级",
+  crash: { island: "浮屿出了点问题", window: "这个窗口出了点问题", detail: "错误已记到数据文件夹的 frontend-errors.log。重新加载通常就能恢复。", reload: "重新加载" },
 };
 
 export const en: CommonText = {
@@ -62,4 +64,5 @@ export const en: CommonText = {
   showSecret: "Show key",
   hideSecret: "Hide key",
   advanced: "Advanced",
+  crash: { island: "Fuyu ran into a problem", window: "This window ran into a problem", detail: "The error was saved to frontend-errors.log in the data folder. Reloading usually fixes it.", reload: "Reload" },
 };

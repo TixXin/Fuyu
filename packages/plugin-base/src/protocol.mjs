@@ -43,7 +43,7 @@ export const HOST_SHARED_MODULES = ["@fuyu/plugin-base", "fuyu-plugin", "@fuyu/p
 export const SLOTS = {
   "island.page/v1": { kind: "list", perPlugin: 2, meta: ["title", "icon", "shortcutOrder", "headerDot", "enabled", "fallback", "fold"] },
   "island.header/v1": { kind: "list", perPlugin: 1, meta: ["enabled"] },
-  "island.collapsed/v1": { kind: "list", perPlugin: 2, meta: ["group", "width", "hideable", "shown", "opens"] },
+  "island.collapsed/v1": { kind: "list", perPlugin: 2, meta: ["group", "width", "hideable", "shown", "opens", "label"] },
   "island.collapsed-center/v1": { kind: "single", perPlugin: 1, meta: ["width", "shown"] },
   "island.alert/v1": { kind: "list", perPlugin: 1, meta: ["trailing", "popup"] },
   "island.notice/v1": { kind: "list", perPlugin: 1, meta: ["active", "actions"] },

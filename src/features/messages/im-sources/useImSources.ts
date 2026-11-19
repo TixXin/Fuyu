@@ -1,9 +1,7 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useErrorText, useTranslation } from "../../../i18n";
-import { useBuiltinConfig } from "../../plugin-kernel/useBuiltinPlugins";
-import { OWNER } from "../plugin/owner.ts";
-import { setImAutoClearEnabled, setSourceEnabled } from "../plugin/useSourceSwitches";
+import { setSourceEnabled, useMessageAutoClear } from "../plugin/useSourceSwitches";
 import type { QQPreviewTiming } from "../qqNotificationTiming";
 import { hasRequestedQQNotificationAccess, markQQNotificationAccessRequested } from "../qq-notifications/storage";
 import {
@@ -19,7 +17,6 @@ import {
   createEmptyImSnapshots,
   createInitialImRevisions,
   IM_SOURCE_IDS,
-  isImAutoClearEnabled,
   isImSource,
   nextImPreviewState,
   type ImNotificationItem,
@@ -35,31 +32,13 @@ export type ImActivePreview = {
   replacedId: string | null;
 };
 
-function useImAutoClearMap() {
-  const config = useBuiltinConfig(OWNER);
-  const autoClearMap = useMemo(
-    () => Object.fromEntries(IM_SOURCE_IDS.map((id) => [id, isImAutoClearEnabled(config, id)])) as Record<ImSourceId, boolean>,
-    [config],
-  );
-  const syncedRef = useRef<Partial<Record<ImSourceId, boolean>>>({});
+function useImAutoClear() {
+  const autoClear = useMessageAutoClear();
 
   useEffect(() => {
     if (!isTauri()) return;
-    for (const id of IM_SOURCE_IDS) {
-      const desired = autoClearMap[id];
-      if (syncedRef.current[id] === desired) continue;
-      syncedRef.current[id] = desired;
-      void setImSourceAutoClear(id, desired).catch(() => undefined);
-    }
-  }, [autoClearMap]);
-
-  const setAutoClear = useCallback((source: ImSourceId, enabled: boolean) => {
-    syncedRef.current[source] = enabled;
-    void setImAutoClearEnabled(source, enabled);
-    if (isTauri()) void setImSourceAutoClear(source, enabled).catch(() => undefined);
-  }, []);
-
-  return { autoClearMap, setAutoClear };
+    for (const id of IM_SOURCE_IDS) void setImSourceAutoClear(id, autoClear).catch(() => undefined);
+  }, [autoClear]);
 }
 
 function usePreviewExpiry(
@@ -103,7 +82,7 @@ export function useImSources(canPreview: boolean) {
   const revisionsRef = useRef(createInitialImRevisions());
   const timingsRef = useRef<Partial<Record<ImSourceId, QQPreviewTiming>>>({});
   const pendingRef = useRef(new Set<ImSourceId>());
-  const { autoClearMap, setAutoClear } = useImAutoClearMap();
+  useImAutoClear();
 
   useLayoutEffect(() => {
     canPreviewRef.current = canPreview;
@@ -265,8 +244,8 @@ export function useImSources(canPreview: boolean) {
   }, [canPreview, localizedSnapshots, previewWindows]);
 
   return {
-    snapshots: localizedSnapshots, autoClearMap, actionErrors, busySource, previews,
-    setEnabled, setAutoClear, requestAccess, openSettings, refresh, clear, clearAll,
+    snapshots: localizedSnapshots, actionErrors, busySource, previews,
+    setEnabled, requestAccess, openSettings, refresh, clear, clearAll,
     openSource, dismissPreview, dismissAllPreviews,
   };
 }

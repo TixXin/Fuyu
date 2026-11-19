@@ -10,7 +10,9 @@
 4. **兜底**：名字表不认识的，Mac 上取应用包自己的名字（`汽水音乐.app` → 汽水音乐），由命令 `get_media_source_app` 给出；再没有就显示标识本身。
 5. **图标**：同一个命令按标识找到应用再取它的图标。Mac 按包名找（找不到再按应用名找正在运行的），Windows 按进程名找正在运行的进程。找不到时卡片上用专辑封面或音符。
 
-换歌提示插件（`plugins/v3/official/now-playing`）的「只提示选中的」列表在插件自己的设置页里，读不到浮屿的名字表，所以在 `src/model.ts` 里另有一张只含下面这些平台的小表。加平台时两处都要加。
+Windows 上「按进程名找」的规则（`source_app.rs`，E66.15）：从来源标识里取一个词，进程名要和它相等，或者两者一个是另一个的开头且不少于 5 个字。商店版应用的标识形如 `包名_发布者!应用`，`!` 后面是 `App` 这类通用词时改用包名的最后一段（`AppleInc.AppleMusicWin_…!App` → `applemusicwin`，能对上 `AppleMusic.exe`）。对不上就没有图标，也不算「在最前面」，不会拿别的程序顶替。
+
+换歌提示插件（`plugins/v3/official/now-playing`）的「只提示选中的」列表在插件自己的设置页里，读不到浮屿的名字表，所以在 `src/model.ts` 里另有一张小表：下面两类主流平台，加上有中文名的几个第三方客户端。给一个平台加中英文名时两处都要加。
 
 ## 核对过的平台
 
@@ -56,6 +58,44 @@ Windows 的进程名和应用标识是按各平台的安装包和已有的名字
 - Mac 上浮屿自己播放提示音时，系统的「正在播放」曾被它占走：读到的来源变成 `com.apple.WebKit.GPU`、歌名是「Fuyu」，音乐页和换歌提示暂时读不到歌名。原因是提示音用音频元素播放，WebKit 把它登记成「正在播放」。G1.36 把 Agent 音效和计时器到点改用 Web Audio（`src/lib/sound/playSound.ts`）后不再发生；以后在 WebView 里加会响的东西都用它，不用 `new Audio()`。
 - 岛屿实验台的「插件通知」按钮发的是没有人接的旧事件，点了岛上不会出现提示（2026-11-19 发现，没有修）。
 
+### 本地播放器（E66.17）
+
+| 播放器 | 名字 | Windows 标识 | Mac 包名 | Mac 包名的来源 |
+|---|---|---|---|---|
+| foobar2000 | foobar2000 | `foobar2000.exe` | `com.foobar2000.mac` | Homebrew 清单 |
+| MusicBee | MusicBee | `MusicBee.exe` | 无 | |
+| AIMP | AIMP | `AIMP.exe` | 无 | |
+| VLC | VLC | `vlc.exe` | `org.videolan.vlc` | Homebrew 清单 |
+| IINA | IINA | 无 | `com.colliderli.iina` | Homebrew 清单 |
+| PotPlayer | PotPlayer | `PotPlayerMini64.exe` | 无 | |
+| Windows Media Player | Windows Media Player | `wmplayer.exe` | 无 | |
+| Groove 音乐 | Groove 音乐 / Groove Music | 标识里带 `zune` 或 `groove` | 无 | |
+| Swinsian | Swinsian | 无 | `com.swinsian.Swinsian` | Homebrew 清单 |
+| Audirvana | Audirvana | 没核对 | `com.audirvana.Audirvana` | Homebrew 清单 |
+| VOX | VOX | 无 | `com.coppertino.Vox` | Homebrew 清单 |
+| Clementine | Clementine | 没核对 | `org.clementine-player.clementine` | Homebrew 清单 |
+| DeaDBeeF | DeaDBeeF | 没核对 | `com.deadbeef.deadbeef` | Homebrew 清单 |
+| Doppler、Cog、Pine Player | 同名 | 无 | 没查到 | 认不出时靠兜底取应用名 |
+
+### 第三方和自建曲库客户端（E66.17）
+
+| 播放器 | 中文 / 英文名 | Windows 标识 | Mac 包名 | Mac 包名的来源 |
+|---|---|---|---|---|
+| 洛雪音乐 | 洛雪音乐 / LX Music | `lx-music-desktop.exe` | `cn.toside.music.desktop` | 项目的打包配置，没在真机上核对 |
+| YesPlayMusic | YesPlayMusic | `YesPlayMusic.exe` | `com.electron.yesplaymusic` | Homebrew 清单 |
+| Listen 1 | Listen 1 | `Listen1.exe` | `com.listen1.listen1` | Homebrew 清单 |
+| Plexamp | Plexamp | `Plexamp.exe` | `tv.plex.plexamp` | Homebrew 清单 |
+| Roon | Roon | `Roon.exe` | `com.roon.Roon` | Homebrew 清单 |
+| 椒盐音乐 | 椒盐音乐 / Salt Player | `SaltPlayer.exe` | 无 | |
+| 海贝音乐 | 海贝音乐 / HiBy Music | `HiByMusic.exe` | 无 | |
+| 音流 | 音流 / Stream Music | `streammusic.exe` | 没查到 | |
+| 铜钟 | 铜钟 / Tongzhong | `tongzhong.exe` | 没查到 | |
+| 飞牛音乐 | 飞牛音乐 | `xtMusic.exe`、`fnmusic.exe` | 没查到 | |
+| Feishin、Cider、MusicFree、SPlayer、Supersonic、Sonixd、Aonsoku、Spotube | 同名 | 进程名同名 | 没查到 | 认不出时靠兜底取应用名 |
+
+Mac 包名「没查到」的是 Homebrew 清单里没有、也没有装在本机的。它们的包名里只要带名字表里的词就能认出，否则走兜底。
+
 ## 还没做的
 
-本地播放器（foobar2000、MusicBee、AIMP、VLC、IINA、PotPlayer 等）和第三方、自建曲库客户端（洛雪音乐、YesPlayMusic、Feishin、Plexamp 等）在名字表里，但没有按这份清单逐个核对，也没有中英文名对照。
+- 名字表里其余的播放器（Winamp、MediaMonkey、Strawberry、Tauon 等）没有逐个核对。
+- 换歌提示插件设置里的软件列表靠插件自己的小表，表里没有的取包名里靠后的一段（跳过 mac、desktop 这类通用词），所以 `org.videolan.vlc` 显示成 vlc。要和岛上一样，得让浮屿把名字随播放信息一起给插件，还没做。

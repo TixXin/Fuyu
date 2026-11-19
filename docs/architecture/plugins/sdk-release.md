@@ -22,6 +22,8 @@ npm 包 `fuyu-plugin`（SDK、命令行工具、模拟宿主）和 `create-fuyu-
 
 从 `2.0.0` 起，`fuyu-plugin` 与 `create-fuyu-plugin` 面向现在的插件（2026-11 之前的旧版插件只到 0.x），由 [`scripts/plugins-v3/pack-npm-sdk.mjs`](../../../scripts/plugins-v3/pack-npm-sdk.mjs) 从工作区内的 `@fuyu/plugin-base`、`@fuyu/plugin-services`、`@fuyu/plugin-cli`、`@fuyu/plugin-manifest`、`@fuyu/plugin-market`、`@fuyu/plugin-review` 与 `@fuyu/create-plugin` 组装为零 `workspace:*` 依赖、带完整 `.d.mts` 类型声明的自包含发布目录：
 
+`fuyu-plugin` 运行时的依赖只有 `esbuild`、`ws`、`react`、`react-dom`（后两个给 `shots` 渲染组件用，插件项目里装了就用项目的）。打进包里的第三方数据是 lucide 的图标路径（`icon` 命令用），它的 ISC 许可证从 `packages/plugin-cli/src/icon/LUCIDE-LICENSE` 复制成包里的 `LICENSE-lucide`；`tests/scripts/pack-npm-sdk.test.mjs` 用打好的包跑一遍 `icon`、`preview` 和 `shots` 的依赖查找。
+
 1. 把 `packages/plugin-cli/package.json` 和 `packages/create-plugin/package.json` 的 `version` 改成同一个新版本号（保持 `"private": true`），在 [`docs/plugins/changelog.md`](../../plugins/changelog.md) 最前面加一节，标题是 npm 包的版本号，写明插件作者能感到的变化（新命令、新导出、改了默认行为的地方）。这份更新日志只记 `2.0.0` 起的 SDK；两个包不各带 CHANGELOG，npm 包页的 README 链到插件文档。
 2. 本地验证组装与端到端测试：
 

@@ -26,7 +26,7 @@ npm create fuyu-plugin@latest
 | 文档 | 内容 |
 |---|---|
 | [清单和安装包](package.md) | `package.json` 的字段、`.fuyu` 包里有什么、有哪些限制、三种装法 |
-| [命令行](cli.md) | `fuyu-plugin`：源码怎么放、开发联调（`dev`）、构建、打包、检查、图标、截图、比较版本、签名 |
+| [命令行](cli.md) | `fuyu-plugin`：源码怎么放、开发联调（`dev`）、构建、打包、检查、图标、截图、市场预览、比较版本、签名 |
 | [截图和封面](screenshots.md) | `fuyu-plugin shots`：示例数据怎么写，岛上页面和收起条怎么截，封面怎么合成 |
 | [服务、接缝与插槽参考](services-and-slots.md) | 公开服务、扩展接缝与界面插槽的完整参考 |
 | [发布](publish.md) | 签名、提交文件、市场怎么构建和上架、手动分发 |

@@ -12,6 +12,7 @@ export function arrivalsHeading(
   names: ReadonlyMap<string, unknown>,
   locale: string,
   trackChange: string,
+  icons: ReadonlyMap<string, string> = new Map(),
 ): ArrivalsHeading | null {
   if (!arrivals || arrivals.length !== 1 || arrivals[0].source !== "plugin") return null;
   const [only] = arrivals;
@@ -19,5 +20,7 @@ export function arrivalsHeading(
     return { label: art?.sourceLabel ?? trackChange, icon: "music", ...(art?.sourceIcon ? { iconUrl: art.sourceIcon } : {}) };
   }
   const name = only.pluginId ? localizedTitle(names.get(only.pluginId), locale) : null;
-  return name ? { label: name, icon: "bell" } : null;
+  if (!name) return null;
+  const iconUrl = only.pluginId ? icons.get(only.pluginId) : undefined;
+  return { label: name, icon: "bell", ...(iconUrl ? { iconUrl } : {}) };
 }

@@ -77,7 +77,7 @@ function undeclaredOf(entry, services, clients, commands, network) {
   return listed.length ? Object.fromEntries(listed) : null;
 }
 
-export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork } = {}) {
+export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, setup } = {}) {
   const report = usage?.();
   const provided = services?.() ?? [];
   const windows = clients?.() ?? [];
@@ -90,6 +90,8 @@ export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, u
       const extra = { kind: kindOf(entry.options), source: entry.options[SOURCE]?.source ?? "file" };
       const displayName = entry.options[SOURCE]?.displayName;
       if (displayName) extra.displayName = displayName;
+      const icon = entry.options[SOURCE]?.icon;
+      if (icon) extra.icon = icon;
       if (report) extra.usage = report(status.id);
       const last = gate?.report(status.id).last;
       if (last) extra.lastError = last;
@@ -110,12 +112,14 @@ export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, u
       const written = Array.isArray(entry.options.disabledServices) ? entry.options.disabledServices.filter((s) => typeof s === "string") : [];
       const disabledServices = [...new Set([...written, ...replacedServices.map((item) => item.service)])];
       if (disabledServices.length > 0) extra.disabledServices = disabledServices;
+      const pending = setup?.(status.id, status.state);
+      if (pending) extra.setup = pending;
       return { ...status, ...extra };
     });
 }
 
-export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, subscribe } = {}) {
-  const read = () => pluginStatus(ctx, logs, { gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork });
+export function watchStatus(ctx, logs, onChange, { delayMs = 20, tickMs = 0, gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, setup, subscribe } = {}) {
+  const read = () => pluginStatus(ctx, logs, { gate, usage, services, clients, unreachableClients, undeclaredCommands, undeclaredNetwork, setup });
   let last = JSON.stringify(read());
   let timer = null;
   const check = () => {

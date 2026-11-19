@@ -77,6 +77,7 @@ test("an installed package loads from plugins-v3/packages/<name>/ by its package
   assert.equal(status.source, "market");
   assert.equal(status.kind, "third-party");
   assert.deepEqual(status.displayName, { "zh-CN": "示例", en: "Example" }, "the status carries the display name, so the island can label a page that has no title");
+  assert.equal(status.icon, "icon.png", "the status carries the icon path, so the island can head a notice with the plugin's own icon");
   assert.equal(globalThis.sourceProbe.weather, join(made.data, "data", "@ann", "weather"));
   assert.deepEqual(host.clients("island").map((entry) => [entry.plugin, entry.path]), [["@ann/weather", "packages/@ann/weather/dist/island.js"]]);
 });

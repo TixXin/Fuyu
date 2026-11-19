@@ -11,6 +11,7 @@ import { searchGlyphs } from "./icon/glyphs.mjs";
 import { KEY_ENV, generateSigningKey, loadSigningKey } from "./keys.mjs";
 import { pack } from "./pack.mjs";
 import { reviewSources } from "./review.mjs";
+import { preview } from "./preview.mjs";
 import { shots } from "./shots.mjs";
 import { signCommitAt, signPackageFile } from "./sign.mjs";
 
@@ -38,6 +39,13 @@ Commands:
     --color <#rrggbb>    the plugin's colour
     --out <file>         write somewhere else (default: the manifest's icon, else assets/icon.svg)
     --search <word>      list lucide icon names that contain the word, then exit
+  preview [folder]     Draw the market card and the detail page of this plugin, dark and light,
+                       in one HTML file
+    --out <file>         where the page goes (default: build/preview.html)
+    --theme <dark|light> --locale <zh-CN|en>
+                         only this theme or language (default: both)
+    --png                also save each view as a PNG, in a headless Chrome or Edge
+    --open               open the page in the browser
   shots [folder]       Screenshot the island page and the collapsed item with the sample in
                        shots/sample.ts, in a headless Chrome or Edge, and compose a cover
     --out <folder>       where the images go (default: screenshots/)
@@ -79,6 +87,7 @@ const OPTIONS = {
   pack: { ...BUILD, out: { type: "string" }, sign: { type: "boolean" }, key: { type: "string" } },
   check: { ...BUILD, market: { type: "boolean" }, strict: { type: "boolean" }, json: { type: "boolean" } },
   icon: { glyph: { type: "string" }, color: { type: "string" }, out: { type: "string" }, search: { type: "string" } },
+  preview: { out: { type: "string" }, theme: { type: "string" }, locale: { type: "string" }, png: { type: "boolean" }, open: { type: "boolean" } },
   shots: { out: { type: "string" }, sample: { type: "string" }, theme: { type: "string" }, locale: { type: "string" }, color: { type: "string" }, "no-cover": { type: "boolean" }, scale: { type: "string" } },
   review: {
     repo: { type: "string" },
@@ -174,6 +183,21 @@ const commands = {
     const result = await icon(dir, { glyph, color: values.color, out: values.out ? resolve(io.cwd, values.out) : undefined });
     result.notes.forEach(out.warn);
     out.out(`${result.replaced ? "replaced" : "wrote"} ${out.show(result.file)} (${result.glyph}, ${result.color})`);
+    return 0;
+  },
+
+  async preview({ values, positionals }, io, out) {
+    const result = await preview(resolve(io.cwd, positionals[0] ?? "."), {
+      out: values.out ? resolve(io.cwd, values.out) : undefined,
+      theme: values.theme,
+      locale: values.locale,
+      png: values.png,
+      open: values.open,
+      env: io.env,
+    });
+    [...result.warnings, ...result.listing].forEach(out.warn);
+    out.out(`wrote ${out.show(result.file)} (${result.stages.map((stage) => `${stage.theme} ${stage.locale}`).join(", ")})`);
+    for (const image of result.images) out.out(`wrote ${out.show(image.file)}`);
     return 0;
   },
 

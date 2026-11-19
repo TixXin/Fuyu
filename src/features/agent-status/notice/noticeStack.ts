@@ -13,6 +13,7 @@ export type AgentNoticeStackItem = {
 };
 
 export const PILE_ICONS = 3;
+export const WING_PILE_ICONS = 2;
 export const PEEK_SLIVERS = 2;
 
 export function activeIndex(items: readonly AgentNoticeStackItem[], activeKey: string | null) {
@@ -31,10 +32,10 @@ export function peekSlivers(items: readonly AgentNoticeStackItem[], index: numbe
   return items.filter((_, at) => at !== index).slice(0, PEEK_SLIVERS);
 }
 
-export function pileOf(items: readonly AgentNoticeStackItem[], index: number) {
+export function pileOf(items: readonly AgentNoticeStackItem[], index: number, limit = PILE_ICONS) {
   const active = items[index];
   const ordered = active ? [active, ...items.filter((_, at) => at !== index)] : [...items];
-  return { shown: ordered.slice(0, PILE_ICONS), extra: Math.max(0, ordered.length - PILE_ICONS) };
+  return { shown: ordered.slice(0, limit), extra: Math.max(0, ordered.length - limit) };
 }
 
 export function stackItemOf(key: string, session: AgentSessionSummary, states: Readonly<Record<AgentNoticeTone, string>>): AgentNoticeStackItem {

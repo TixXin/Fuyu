@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>岛上内容的排列预览：清单、放不下、小面板、刘海下一行</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 32px 60px; background: #111214; color: #e8e8ea; font: 14px/1.6 "Segoe UI Variable Text", "Segoe UI", -apple-system, "PingFang SC", "Microsoft YaHei UI", sans-serif; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 30px 0 6px; }
+  p.note { color: #9a9aa0; margin: 0 0 12px; max-width: 1100px; }
+  table { border-collapse: collapse; max-width: 1100px; margin: 6px 0 12px; }
+  th, td { border: 1px solid #2c2d32; padding: 6px 10px; text-align: left; vertical-align: top; color: #c8c8cc; }
+  th { background: #1b1c1f; color: #e8e8ea; font-weight: 600; white-space: nowrap; }
+  td b { color: #9fe3ff; font-weight: 600; }
+  .controls { display: flex; flex-direction: column; gap: 8px; background: #1b1c1f; padding: 12px 16px; border-radius: 10px; margin: 10px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px 26px; align-items: center; }
+  .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .group > span { color: #9a9aa0; margin-right: 2px; }
+  .group.off { opacity: .35; pointer-events: none; }
+  button.seg, button.act { font: inherit; cursor: pointer; border-radius: 6px; padding: 2px 10px; }
+  button.seg { background: #2a2b30; color: #ddd; border: 1px solid #3a3b40; }
+  button.seg.on { background: #3b4d74; border-color: #5a7ab8; color: #fff; }
+  button.seg.rec::after { content: " ★"; color: #ffd166; font-size: 11px; }
+  button.act { background: #24304a; color: #cfe2ff; border: 1px solid #3a4f7a; }
+  button:focus-visible, select:focus-visible { outline: 2px solid #74d6ff; outline-offset: 1px; }
+  .status { margin: 8px 0 0; color: #9a9aa0; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .status b { color: #ffd166; font-weight: 600; }
+
+  .wrap { position: relative; overflow: hidden; border-radius: 12px; max-width: 1470px; }
+  .desk { position: relative; width: 1470px; height: 450px; transform-origin: 0 0; user-select: none; isolation: isolate; overflow: hidden;
+    background: radial-gradient(260px 180px at 46% 4%, #ff7ab855, transparent 70%), radial-gradient(300px 200px at 58% 8%, #4fd1ff55, transparent 70%), radial-gradient(120% 140% at 20% 0%, #3b4d74 0%, #1d2233 45%, #0c0d12 100%); }
+  .win { position: absolute; left: 330px; top: 70px; width: 810px; height: 420px; border-radius: 10px; background: #1e1f24ee; box-shadow: 0 20px 60px #0007; }
+  .win::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 38px; border-bottom: 1px solid #ffffff10; }
+  .win b { position: absolute; top: 9px; height: 20px; border-radius: 6px; background: #ffffff14; }
+  .mb { position: absolute; left: 0; right: 0; top: 0; height: 34px; display: none; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 13px; background: #1b1d2699; color: #e8e8eacc; backdrop-filter: blur(20px); z-index: 1; white-space: nowrap; }
+  .desk.mac .mb { display: flex; }
+  .mb .l, .mb .r { display: flex; gap: 18px; align-items: center; }
+  .mb .l b { font-weight: 700; }
+  .mb .r i { width: 16px; height: 12px; border-radius: 3px; background: #e8e8ea88; }
+  .cam { position: absolute; top: 0; left: 50%; width: 185px; height: 34px; margin-left: -92.5px; background: #000; border-radius: 0 0 10px 10px; z-index: 30; display: none; pointer-events: none; }
+  .cam::after { content: ""; position: absolute; left: 50%; top: 12px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #1d2a44, #05070b 70%); }
+  .desk.mac .cam { display: block; }
+
+  .isl { position: absolute; z-index: 10; background: #000; color: rgba(248, 246, 240, .94); overflow: hidden; cursor: default;
+    transition: left 420ms cubic-bezier(0.22, 1, 0.36, 1), width 420ms cubic-bezier(0.22, 1, 0.36, 1), height 320ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .isl.notch { top: 0; border-radius: 0 0 14px 14px; }
+  .isl.pill { top: 10px; height: 38px; border-radius: 19px; display: flex; align-items: center; gap: 8px; padding: 0 12px; box-shadow: 0 6px 24px #0008; }
+  .nrow { display: flex; align-items: center; height: 34px; padding: 0 12px; }
+  .wing { display: flex; flex: 1 1 0; align-items: center; gap: 8px; min-width: 0; height: 100%; }
+  .wing.l { padding-right: 8px; }
+  .wing.r { padding-left: 8px; justify-content: flex-end; }
+  .ngap { flex: 0 0 185px; }
+  .drop { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 16px 4px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; justify-content: center; }
+  .zone { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .txt { display: flex; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0; font-size: 12.5px; white-space: nowrap; }
+  .txt span { overflow: hidden; text-overflow: ellipsis; }
+  .txt svg, .drop svg { flex: 0 0 auto; opacity: .8; }
+
+  .g { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 3px; height: 24px; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .g svg { opacity: .85; }
+  .g-mark { position: relative; width: 30px; height: 14px; border-radius: 7px; background: #f4f2ec; }
+  .g-mark::before { content: ""; position: absolute; left: 4px; top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #34c759; box-shadow: 0 0 6px #34c759; }
+  .g-mark::after { content: ""; position: absolute; left: 13px; top: 6px; width: 11px; height: 2px; border-radius: 1px; background: #1c1c1e; }
+  .g-wave { display: inline-flex; align-items: center; gap: 3px; height: 14px; }
+  .g-wave i { width: 3px; border-radius: 2px; background: #e5484d; animation: wave 1.1s ease-in-out infinite alternate; }
+  .g-wave i:nth-child(1) { height: 8px; } .g-wave i:nth-child(2) { height: 12px; animation-delay: -.3s; } .g-wave i:nth-child(3) { height: 9px; animation-delay: -.6s; }
+  .g-wave i:nth-child(4) { height: 13px; animation-delay: -.2s; } .g-wave i:nth-child(5) { height: 7px; animation-delay: -.8s; }
+  @keyframes wave { from { transform: scaleY(.55); } to { transform: scaleY(1); } }
+  .g-count { width: 22px; height: 22px; border-radius: 50%; background: #1f4b8f; box-shadow: 0 0 8px #2f6fd088; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+  .g-ring { width: 20px; height: 20px; border-radius: 50%; background: conic-gradient(var(--c) calc(var(--p) * 1%), #ffffff29 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.2px), #000 calc(100% - 2.6px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3.2px), #000 calc(100% - 2.6px)); }
+  .g-badge { position: relative; display: inline-flex; }
+  .g-badge em { position: absolute; right: -5px; top: -4px; min-width: 11px; height: 11px; padding: 0 2px; border-radius: 6px; background: #ff9f0a; color: #000; font-size: 8px; font-style: normal; line-height: 11px; text-align: center; }
+  .chip { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; min-width: 28px; height: 20px; padding: 0 6px; border-radius: 10px; border: 0; background: #ffffff24; color: inherit; font: 600 10.5px/1 inherit; font-family: inherit; cursor: pointer; }
+  .chip:hover { background: #ffffff3a; }
+
+  .glance { position: absolute; z-index: 9; width: 330px; padding: 10px 12px; border-radius: 14px; background: #0b0b0d; border: 1px solid #ffffff14; box-shadow: 0 14px 40px #000a; color: rgba(248, 246, 240, .94);
+    opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity 140ms ease, transform 140ms ease, top 320ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .glance.on { opacity: 1; transform: none; pointer-events: auto; }
+  .glance h4 { margin: 0 0 4px; font-size: 11px; font-weight: 500; color: #9a9aa0; }
+  .glance .gl-line { display: flex; align-items: center; gap: 8px; height: 26px; font-size: 12.5px; white-space: nowrap; }
+  .glance .gl-line span { overflow: hidden; text-overflow: ellipsis; }
+  .glance .gl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .glance .gl-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 32px; padding: 0 9px; border-radius: 9px; background: #ffffff12; font-size: 12px; }
+  .glance .gl-item small { color: #9a9aa0; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .glance hr { border: 0; border-top: 1px solid #ffffff12; margin: 8px 0; }
+
+  .ctx { position: absolute; z-index: 40; min-width: 200px; padding: 5px; border-radius: 10px; background: #26272cf2; border: 1px solid #ffffff1a; box-shadow: 0 12px 34px #000a; backdrop-filter: blur(20px); display: none; font-size: 13px; }
+  .ctx.on { display: block; }
+  .ctx button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px 9px; border: 0; border-radius: 6px; background: none; color: #e8e8ea; font: inherit; text-align: left; cursor: pointer; }
+  .ctx button:hover { background: #3b6fd6; }
+  .ctx button i { width: 14px; font-style: normal; color: #9fe3ff; }
+  .ctx button small { margin-left: auto; color: #9a9aa0; }
+  .ctx hr { border: 0; border-top: 1px solid #ffffff14; margin: 4px 6px; }
+  #measure { position: absolute; left: -9999px; top: 0; display: flex; gap: 20px; color: #fff; font-size: 12.5px; white-space: nowrap; }
+
+  .editor { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .ecol { background: #1b1c1f; border-radius: 10px; padding: 10px 10px 8px; min-width: 0; }
+  .ecol h3 { margin: 0; font-size: 13px; }
+  .ecol p { margin: 0 0 6px; color: #9a9aa0; font-size: 12px; }
+  .ecol ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .erow { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 8px; background: #232428; min-width: 0; }
+  .erow.over { box-shadow: inset 0 0 0 1px #ffd16666; }
+  .eprev { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; min-width: 34px; height: 26px; padding: 0 6px; border-radius: 13px; background: #000; color: rgba(248, 246, 240, .94); }
+  .ename { flex: 1 1 0; min-width: 0; font-size: 12.5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ename small { display: block; color: #9a9aa0; font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
+  .ename small.warn { color: #ffd166; }
+  .erow button { flex: 0 0 auto; width: 22px; height: 22px; padding: 0; border-radius: 5px; border: 1px solid #3a3b40; background: #2a2b30; color: #ddd; font: inherit; line-height: 1; cursor: pointer; }
+  .erow button:disabled { opacity: .3; cursor: default; }
+  .erow select { flex: 0 0 auto; max-width: 90px; height: 22px; border-radius: 5px; border: 1px solid #3a3b40; background: #2a2b30; color: #ddd; font: 12px/1 inherit; font-family: inherit; }
+  .empty { color: #6f6f76; font-size: 12px; padding: 4px 6px; }
+  @media (max-width: 1100px) { .editor { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (prefers-reduced-motion: reduce) { .g-wave i { animation: none; } .isl, .glance { transition: none; } }
+</style>
+</head>
+<body>
+<h1>岛上内容的排列预览</h1>
+<p class="note">方案见 <a href="island-items-plan.md" style="color:#9fe3ff">island-items-plan.md</a>。上面的岛按下面的清单实时排；带 ★ 的是我建议的选项。能试的：切换各选项、在清单里改位置和上下移、停在岛上的「+N」（刘海旁边）看小面板、<b style="color:#e8e8ea">右键岛</b>弹快捷清单。桌面按 MacBook Air 的 1470 宽等比画，图标宽度是示意。</p>
+
+<div class="controls">
+  <div class="row">
+    <div class="group" data-k="form"><span>形态</span><button class="seg" data-v="notch">刘海</button><button class="seg" data-v="pill">没有刘海（外接屏 / Windows）</button></div>
+    <div class="group" data-k="many"><span>插件</span><button class="seg" data-v="few">只有内置的</button><button class="seg" data-v="many">装了很多</button></div>
+  </div>
+  <div class="row">
+    <div class="group" data-k="overflow"><span>A 放不下时</span><button class="seg" data-v="silent">直接不显示（现状）</button><button class="seg rec" data-v="chip">收进小面板，留「+N」</button></div>
+    <div class="group" data-k="wing" id="wingGroup"><span>两翼最宽</span><button class="seg" data-v="100">100（现状）</button><button class="seg" data-v="130">130</button><button class="seg" data-v="170">170</button></div>
+  </div>
+  <div class="row">
+    <div class="group" data-k="text" id="textGroup"><span>B 刘海屏的文字</span><button class="seg" data-v="none">不显示（现状）</button><button class="seg" data-v="row">刘海下常驻一行</button><button class="seg" data-v="flash">有变化时出现 4 秒</button><button class="seg rec" data-v="panel">只在小面板</button></div>
+    <div class="group" id="flashGroup"><button class="act" data-flash="text:agent">模拟 Agent 跑完一轮</button><button class="act" data-flash="text:lyrics">模拟切歌</button></div>
+  </div>
+  <div class="row">
+    <div class="group"><span>小面板</span><button class="seg" id="pin">一直开着</button></div>
+    <div class="group"><button class="act" id="reset">恢复默认排列</button></div>
+  </div>
+</div>
+
+<div class="wrap" id="wrap">
+  <div class="desk mac" id="desk">
+    <div class="win"><b style="left:84px;width:150px"></b><b style="left:240px;width:150px"></b><b style="left:396px;width:150px"></b></div>
+    <div class="mb">
+      <div class="l"><b>Chrome</b><span>文件</span><span>编辑</span><span>显示</span><span>历史记录</span><span>书签</span><span>个人资料</span><span>标签页</span><span>窗口</span><span>帮助</span></div>
+      <div class="r"><i></i><i></i><i></i><i></i><i></i><span>11月19日 周四 14:32</span></div>
+    </div>
+    <div class="cam"></div>
+    <div class="isl" id="isl"></div>
+    <div class="glance" id="glance"></div>
+    <div class="ctx" id="ctx"></div>
+  </div>
+</div>
+<p class="status" id="status"></p>
+
+<h2>清单（设置里「收起条上的项目」的样子）</h2>
+<p class="note">每个项目选「放哪」，同一组里上下移。黄框是此刻这个形态下放不下的。左侧放不下时从最后一个开始收，右侧从第一个（最靠近刘海的）开始收：最靠屏幕外侧的最后才动。</p>
+<div class="editor" id="editor"></div>
+
+<h2>要你定的</h2>
+<table>
+  <tr><th>编号</th><th>问题</th><th>选项</th><th>我的建议</th></tr>
+  <tr><td>A</td><td>放不下时怎么办</td><td>直接不显示 / 收进小面板留「+N」</td><td><b>收进小面板</b>。「+N」放在更空的一侧、靠刘海那头，默认布局下在左边，不占右边的位置。两翼最宽另外做成滑块（默认 100 不变）：调宽在 Chrome 这类菜单多的应用里会盖住「窗口」「帮助」，切到 170 能看到</td></tr>
+  <tr><td>B</td><td>刘海屏上歌词、Agent 标题、待办放哪</td><td>不显示 / 刘海下常驻一行 / 有变化时出现 4 秒 / 只在小面板</td><td>默认<b>只在小面板</b>，另外三种做成每个项目自己选。常驻一行会一直盖住窗口的标签栏（切过去看下面那个窗口）</td></tr>
+  <tr><td>C</td><td>快捷入口</td><td>右键岛弹勾选清单 / 只在设置里</td><td><b>右键清单</b>，底部「排列…」进设置；岛上直接拖动排序先不做</td></tr>
+  <tr><td>D</td><td>文字位的先后能不能自己排</td><td>写死（现状）/ 和图标一样可排</td><td><b>可排，但放最后做</b>。会推翻 11-09「不做通用排序」，清单里「文字位」那一组就是它的样子</td></tr>
+  <tr><td>E</td><td>刘海和没有刘海要不要各存一套</td><td>一份顺序各自截断 / 两套</td><td><b>一份</b>。切一下「形态」，同一份清单两边都合理</td></tr>
+</table>
+
+<div id="measure"></div>
+
+<script>
+const ICON = {
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  cpu: '<rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  terminal: '<path d="M4 17l6-6-6-6M12 19h8"/>',
+  todo: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  issue: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="1.5"/>',
+  timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4M10 2h4"/>',
+  focus: '<circle cx="12" cy="13" r="8"/><path d="M12 5c0-2 1.5-3 3-3"/>',
+};
+const svg = (name, size = 13) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name]}</svg>`;
+
+const ITEMS = [
+  { id: "status-light", name: "状态灯", from: "内置", kind: "icon", where: "left", html: '<span class="g-mark"></span>' },
+  { id: "mail", name: "新邮件", from: "内置", kind: "icon", where: "right", html: `<span class="g-badge">${svg("mail", 15)}<em>2</em></span>` },
+  { id: "weather", name: "天气", from: "插件", kind: "icon", where: "right", many: true, html: `${svg("sun")}23°` },
+  { id: "world-clock", name: "世界时钟", from: "插件", kind: "icon", where: "right", many: true, html: `${svg("clock")}06:32` },
+  { id: "system-monitor", name: "系统监控", from: "插件", kind: "icon", where: "right", many: true, html: `${svg("cpu")}37%` },
+  { id: "pomodoro", name: "番茄钟", from: "插件", kind: "icon", where: "right", many: true, html: `<span style="color:#ff8a7a;display:inline-flex;gap:3px;align-items:center">${svg("focus")}18:24</span>` },
+  { id: "github-issues", name: "GitHub Issues", from: "插件", kind: "icon", where: "right", many: true, html: `${svg("issue")}3` },
+  { id: "shelf", name: "文件中转", from: "内置", kind: "icon", where: "right", html: `<span class="g-badge">${svg("folder", 15)}<em>4</em></span>` },
+  { id: "timer", name: "计时器", from: "内置插件", kind: "icon", where: "right", many: true, html: `${svg("timer")}12:30` },
+  { id: "music", name: "音乐波形", from: "内置", kind: "icon", where: "right", html: '<span class="g-wave"><i></i><i></i><i></i><i></i><i></i></span>' },
+  { id: "usage:claude", name: "用量环 Claude Code", from: "内置插件", kind: "icon", where: "right", html: '<span class="g-ring" style="--c:#ffb27a;--p:62"></span>' },
+  { id: "usage:codex", name: "用量环 Codex", from: "内置插件", kind: "icon", where: "right", many: true, html: '<span class="g-ring" style="--c:#e6e6eb;--p:28"></span>' },
+  { id: "session-count", name: "会话数", from: "内置", kind: "icon", where: "right", html: '<span class="g-count">8</span>' },
+  { id: "text:lyrics", name: "歌词", from: "音乐", kind: "text", where: "text", icon: "music", sample: "夜空中最亮的星 能否听清" },
+  { id: "text:agent", name: "Agent 标题", from: "AI Agent", kind: "text", where: "text", icon: "terminal", sample: "修复设置页的搜索" },
+  { id: "text:todo", name: "待办", from: "待办", kind: "text", where: "text", icon: "todo", sample: "剩余 3 个待办" },
+];
+const LYRICS = ["夜空中最亮的星 能否听清", "那仰望的人", "心底的孤独和叹息", "夜空中最亮的星 能否记起"];
+const FLASH_TEXT = { "text:agent": "完成 · 修复设置页的搜索", "text:lyrics": "夜空中最亮的星 - 逃跑计划" };
+const byId = Object.fromEntries(ITEMS.map((item) => [item.id, item]));
+const NOTCH = 185, GAP = 8, CHIP_W = 28, DESK_W = 1470;
+const WHERE_NAME = { left: "左侧", right: "右侧", text: "文字位", panel: "小面板", hidden: "不显示" };
+const el = (id) => document.getElementById(id);
+
+const fresh = () => ({ order: ITEMS.map((item) => item.id), place: Object.fromEntries(ITEMS.map((item) => [item.id, item.where])), back: {} });
+const state = { form: "notch", many: "many", overflow: "chip", wing: "100", text: "panel", pin: false, flash: null, ...fresh() };
+const widths = {};
+let lyric = 0, glanceOpen = false, closeTimer = 0, flashTimer = 0, scale = 1;
+
+const on = (id) => state.many === "many" || !byId[id].many;
+const inZone = (where) => state.order.filter((id) => on(id) && state.place[id] === where);
+const textOf = (id) => (id === "text:lyrics" ? LYRICS[lyric] : byId[id].sample);
+const glyph = (id) => `<span class="g" data-id="${id}">${byId[id].html}</span>`;
+const line = (id, text) => `${svg(byId[id].icon, 14)}<span${id === "text:lyrics" && !text ? " data-lyric" : ""}>${text ?? textOf(id)}</span>`;
+const clamp = (low, value, high) => Math.min(high, Math.max(low, value));
+
+function measure() {
+  const box = el("measure");
+  box.innerHTML = ITEMS.map((item) => (item.kind === "icon" ? glyph(item.id) : `<span data-id="${item.id}">${item.id === "text:lyrics" ? LYRICS[0] : item.sample}</span>`)).join("");
+  for (const node of box.children) widths[node.dataset.id] = Math.ceil(node.getBoundingClientRect().width) + (byId[node.dataset.id].kind === "text" ? 22 : 0);
+}
+
+function compute() {
+  const notch = state.form === "notch";
+  const keptL = inZone("left"), keptR = inZone("right"), texts = inZone("text"), shelf = inZone("panel");
+  const over = [];
+  const span = (ids) => ids.reduce((sum, id) => sum + widths[id], 0) + Math.max(0, ids.length - 1) * GAP;
+  const panelTexts = [...(notch && state.text === "panel" ? texts : []), ...shelf.filter((id) => byId[id].kind === "text")];
+  const panelIcons = () => [...shelf.filter((id) => byId[id].kind === "icon"), ...(state.overflow === "chip" ? over : [])].sort((a, b) => state.order.indexOf(a) - state.order.indexOf(b));
+  const hasPanel = () => panelTexts.length + panelIcons().length > 0;
+  const chipRoom = () => (hasPanel() ? CHIP_W + GAP : 0);
+  let width = 0, wing = 0, textWidth = 0, cap = 0, chipSide = "r";
+  if (notch) {
+    const wingMax = Number(state.wing);
+    cap = wingMax - 20;
+    while (keptL.length > 1 && span(keptL) > cap) over.push(keptL.pop());
+    while (keptR.length > 1 && span(keptR) > cap) over.push(keptR.shift());
+    if (hasPanel()) {
+      chipSide = span(keptL) <= span(keptR) ? "l" : "r";
+      if (chipSide === "l") while (keptL.length > 1 && span(keptL) + chipRoom() > cap) over.push(keptL.pop());
+      else while (keptR.length > 1 && span(keptR) + chipRoom() > cap) over.push(keptR.shift());
+    }
+    wing = clamp(56, Math.max(span(keptL) + (chipSide === "l" ? chipRoom() : 0), span(keptR) + (chipSide === "r" ? chipRoom() : 0)) + 20, wingMax);
+    width = NOTCH + 2 * wing;
+  } else {
+    const top = texts[0];
+    const fixed = () => span(keptL) + span(keptR) + chipRoom() + (top ? 2 * GAP : GAP) + 24;
+    cap = 520;
+    while (fixed() + (top ? 72 : 0) > cap && (keptR.length > 1 || keptL.length > 1)) over.push(keptR.length > 1 ? keptR.shift() : keptL.pop());
+    textWidth = top ? Math.min(widths[top], cap - fixed()) : 0;
+    width = clamp(200, fixed() + textWidth, cap);
+  }
+  return { notch, keptL, keptR, texts, over, panelTexts, panelIcons: panelIcons(), chip: hasPanel(), chipSide, width, wing, cap, textWidth };
+}
+
+function dropLine(view) {
+  if (!view.notch) return "";
+  if (state.flash && state.place[state.flash] === "text") return line(state.flash, FLASH_TEXT[state.flash]);
+  return state.text === "row" && view.texts[0] ? line(view.texts[0]) : "";
+}
+
+function render() {
+  const view = compute();
+  const desk = el("desk"), isl = el("isl"), glance = el("glance");
+  desk.classList.toggle("mac", view.notch);
+  const chip = view.chip ? `<button class="chip" type="button" aria-label="小面板">${view.panelIcons.length ? `+${view.panelIcons.length}` : "···"}</button>` : "";
+  const drop = dropLine(view);
+  isl.className = `isl ${view.notch ? "notch" : "pill"}`;
+  isl.style.width = `${view.width}px`;
+  isl.style.left = `${(DESK_W - view.width) / 2}px`;
+  isl.style.height = view.notch ? `${drop ? 64 : 34}px` : "";
+  isl.innerHTML = view.notch
+    ? `<div class="nrow"><div class="wing l">${view.keptL.map(glyph).join("")}${view.chipSide === "l" ? chip : ""}</div><span class="ngap"></span><div class="wing r">${view.chipSide === "r" ? chip : ""}${view.keptR.map(glyph).join("")}</div></div>${drop ? `<div class="drop">${drop}</div>` : ""}`
+    : `<div class="zone">${view.keptL.map(glyph).join("")}</div><div class="txt">${view.texts[0] ? line(view.texts[0]) : ""}</div><div class="zone">${view.keptR.map(glyph).join("")}${chip}</div>`;
+
+  const lines = view.panelTexts.map((id) => `<div class="gl-line">${line(id)}</div>`).join("");
+  const grid = view.panelIcons.map((id) => `<div class="gl-item"><small>${byId[id].name}</small>${glyph(id)}</div>`).join("");
+  glance.innerHTML = `${lines ? `<h4>文字</h4>${lines}` : ""}${lines && grid ? "<hr />" : ""}${grid ? `<h4>收进来的</h4><div class="gl-grid">${grid}</div>` : ""}`;
+  glance.style.left = `${(DESK_W - 330) / 2}px`;
+  glance.style.top = `${(view.notch ? (drop ? 64 : 34) : 48) + 8}px`;
+  glance.classList.toggle("on", view.chip && (state.pin || glanceOpen));
+
+  for (const group of document.querySelectorAll(".group[data-k]")) {
+    for (const button of group.querySelectorAll(".seg")) button.classList.toggle("on", state[group.dataset.k] === button.dataset.v);
+  }
+  el("pin").classList.toggle("on", state.pin);
+  el("textGroup").classList.toggle("off", !view.notch);
+  el("wingGroup").classList.toggle("off", !view.notch);
+  el("flashGroup").classList.toggle("off", !view.notch || state.text !== "flash");
+
+  const lost = state.overflow === "chip" ? 0 : view.over.length;
+  const head = view.notch ? `刘海形态：每侧 ${view.wing} 宽（上限 ${view.cap + 20}，可用 ${view.cap}），岛共 ${view.width}。` : `没有刘海：岛宽 ${view.width}（上限 520），文字留 ${Math.round(view.textWidth)}。`;
+  el("status").innerHTML = `${head}岛上 ${view.keptL.length + view.keptR.length} 个，${state.overflow === "chip" ? `收进小面板 ${view.panelIcons.length} 个。` : `小面板 ${view.panelIcons.length} 个。`}${lost ? `<b>有 ${lost} 个放不下、哪里都看不到。</b>` : ""}`;
+  renderEditor(view);
+}
+
+function renderEditor(view) {
+  const over = new Set(view.over);
+  const options = (item) => (item.kind === "icon" ? ["left", "right", "panel", "hidden"] : ["text", "panel", "hidden"])
+    .map((where) => `<option value="${where}"${state.place[item.id] === where ? " selected" : ""}>${WHERE_NAME[where]}</option>`).join("");
+  const row = (id, index, ids) => {
+    const item = byId[id];
+    const preview = item.kind === "icon" ? glyph(id) : svg(item.icon, 14);
+    const note = over.has(id) ? `<small class="warn">放不下${state.overflow === "chip" ? " → 小面板" : "，看不到"}</small>` : `<small>${item.from}${state.place[id] === "hidden" ? " · 不显示" : ""}</small>`;
+    return `<li class="erow${over.has(id) ? " over" : ""}"><span class="eprev">${preview}</span><span class="ename">${item.name}${note}</span>`
+      + `<button type="button" data-move="-1" data-id="${id}" aria-label="上移 ${item.name}"${index === 0 ? " disabled" : ""}>↑</button>`
+      + `<button type="button" data-move="1" data-id="${id}" aria-label="下移 ${item.name}"${index === ids.length - 1 ? " disabled" : ""}>↓</button>`
+      + `<select data-id="${id}" aria-label="${item.name} 放哪">${options(item)}</select></li>`;
+  };
+  const column = (title, hint, ids) => `<div class="ecol"><h3>${title}</h3><p>${hint}</p><ul>${ids.length ? ids.map(row).join("") : '<li class="empty">空</li>'}</ul></div>`;
+  el("editor").innerHTML = column("左侧", "从左到右", inZone("left"))
+    + column("右侧", "从左到右，最后一个最靠屏幕边缘", inZone("right"))
+    + column("文字位", "排前面的先显示（待定 D）", inZone("text"))
+    + column("小面板 / 不显示", "不占岛上的位置", [...inZone("panel"), ...inZone("hidden")]);
+}
+
+function move(id, step) {
+  const group = inZone(state.place[id]);
+  const other = group[group.indexOf(id) + step];
+  if (!other) return;
+  const a = state.order.indexOf(id), b = state.order.indexOf(other);
+  [state.order[a], state.order[b]] = [state.order[b], state.order[a]];
+}
+
+function openMenu(event) {
+  event.preventDefault();
+  const rect = el("desk").getBoundingClientRect();
+  const rows = state.order.filter(on).map((id) => {
+    const shown = state.place[id] !== "hidden";
+    return `<button type="button" role="menuitemcheckbox" aria-checked="${shown}" data-toggle="${id}"><i>${shown ? "✓" : ""}</i>${byId[id].name}<small>${shown ? WHERE_NAME[state.place[id]] : ""}</small></button>`;
+  }).join("");
+  const menu = el("ctx");
+  menu.innerHTML = `${rows}<hr /><button type="button" data-arrange><i></i>排列…</button>`;
+  menu.classList.add("on");
+  const x = (event.clientX - rect.left) / scale, y = (event.clientY - rect.top) / scale;
+  menu.style.left = `${clamp(8, x, DESK_W - menu.offsetWidth - 8)}px`;
+  menu.style.top = `${Math.max(8, y)}px`;
+  fit();
+}
+
+function fit() {
+  const wrap = el("wrap"), desk = el("desk");
+  scale = Math.min(1, wrap.clientWidth / DESK_W);
+  const menu = el("ctx");
+  const tall = menu.classList.contains("on") ? menu.offsetTop + menu.offsetHeight + 12 : 0;
+  desk.style.height = `${Math.max(450, tall)}px`;
+  desk.style.transform = `scale(${scale})`;
+  wrap.style.height = `${desk.offsetHeight * scale}px`;
+}
+
+function closeMenu() {
+  if (!el("ctx").classList.contains("on")) return;
+  el("ctx").classList.remove("on");
+  fit();
+}
+
+document.querySelector(".controls").addEventListener("click", (event) => {
+  const seg = event.target.closest(".group[data-k] .seg");
+  if (seg) {
+    state[seg.parentElement.dataset.k] = seg.dataset.v;
+    render();
+    return;
+  }
+  const flash = event.target.closest("[data-flash]");
+  if (flash) {
+    state.flash = flash.dataset.flash;
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => { state.flash = null; render(); }, 4000);
+    render();
+  }
+});
+el("pin").addEventListener("click", () => { state.pin = !state.pin; render(); });
+el("reset").addEventListener("click", () => { Object.assign(state, fresh()); render(); });
+
+el("editor").addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-move]");
+  if (!button) return;
+  move(button.dataset.id, Number(button.dataset.move));
+  render();
+});
+el("editor").addEventListener("change", (event) => {
+  const select = event.target.closest("select[data-id]");
+  if (!select) return;
+  state.place[select.dataset.id] = select.value;
+  render();
+});
+
+const showGlance = (open) => {
+  clearTimeout(closeTimer);
+  if (open) { glanceOpen = true; el("glance").classList.toggle("on", el("isl").querySelector(".chip") !== null); return; }
+  closeTimer = setTimeout(() => { glanceOpen = false; el("glance").classList.toggle("on", state.pin && el("isl").querySelector(".chip") !== null); }, 180);
+};
+el("isl").addEventListener("mouseover", (event) => { if (event.target.closest(".chip")) showGlance(true); });
+el("isl").addEventListener("mouseout", (event) => { if (event.target.closest(".chip")) showGlance(false); });
+el("isl").addEventListener("focusin", (event) => { if (event.target.closest(".chip")) showGlance(true); });
+el("isl").addEventListener("focusout", (event) => { if (event.target.closest(".chip")) showGlance(false); });
+el("glance").addEventListener("mouseenter", () => showGlance(true));
+el("glance").addEventListener("mouseleave", () => showGlance(false));
+el("isl").addEventListener("contextmenu", openMenu);
+
+el("ctx").addEventListener("click", (event) => {
+  const toggle = event.target.closest("[data-toggle]");
+  if (toggle) {
+    const id = toggle.dataset.toggle;
+    if (state.place[id] === "hidden") state.place[id] = state.back[id] ?? byId[id].where;
+    else { state.back[id] = state.place[id]; state.place[id] = "hidden"; }
+    closeMenu();
+    render();
+  } else if (event.target.closest("[data-arrange]")) {
+    closeMenu();
+    el("editor").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+});
+document.addEventListener("pointerdown", (event) => { if (!event.target.closest("#ctx")) closeMenu(); });
+document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMenu(); });
+window.addEventListener("resize", fit);
+
+setInterval(() => {
+  lyric = (lyric + 1) % LYRICS.length;
+  for (const node of document.querySelectorAll("[data-lyric]")) node.textContent = LYRICS[lyric];
+}, 3200);
+
+const query = new URLSearchParams(location.search);
+for (const key of ["form", "many", "overflow", "wing", "text"]) {
+  const value = query.get(key);
+  if (value && document.querySelector(`.group[data-k="${key}"] .seg[data-v="${value}"]`)) state[key] = value;
+}
+state.pin = query.get("pin") === "1";
+
+measure();
+render();
+fit();
+</script>
+</body>
+</html>

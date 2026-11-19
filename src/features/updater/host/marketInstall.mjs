@@ -68,7 +68,7 @@ export function createMarketInstaller({ pluginsDir, appVersion, platform, downlo
     const installedList = readInstalledPackages(pluginsDir);
     const installedById = new Map(installedList.map((item) => [item.id, item]));
     let nextTrusted = { ...trustedAuthors };
-    let upgradedCount = 0;
+    const upgraded = [];
 
     for (const inst of installedList) {
       if (inst.source !== "market" || !inst.enabled) continue;
@@ -97,6 +97,10 @@ export function createMarketInstaller({ pluginsDir, appVersion, platform, downlo
         });
         nextTrusted = res.trustedAuthors;
         for (const step of steps) {
+          const from = installedById.get(step.pluginEntry.name)?.version;
+          if (from && from !== step.versionEntry.version) {
+            upgraded.push({ name: step.pluginEntry.name, displayName: step.versionEntry.manifest?.displayName, from, to: step.versionEntry.version });
+          }
           installedById.set(step.pluginEntry.name, {
             id: step.pluginEntry.name,
             version: step.versionEntry.version,
@@ -105,12 +109,11 @@ export function createMarketInstaller({ pluginsDir, appVersion, platform, downlo
             capabilities: capabilitiesOf(step.versionEntry.manifest),
           });
         }
-        upgradedCount += 1;
       } catch {
         continue;
       }
     }
-    return { upgradedCount, trustedAuthors: nextTrusted };
+    return { upgraded, trustedAuthors: nextTrusted };
   };
 
   return { verifyMarketStep, downloadAndInstallSteps, runSilentAutoUpdates };

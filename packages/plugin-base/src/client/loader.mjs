@@ -4,9 +4,9 @@ import { PluginIsland } from "./island-service.mjs";
 import { PluginSettings } from "./settings-service.mjs";
 import { Slots } from "./slot-service.mjs";
 
-export function createLoader({ registry, base, bridge, openSettings = null, island = null, importModule = (url) => import(/* @vite-ignore */ url), checkFile = defaultCheck, onStatus }) {
+export function createLoader({ registry, base, bridge, openSettings = null, reportSetup = null, island = null, importModule = (url) => import(/* @vite-ignore */ url), checkFile = defaultCheck, onStatus }) {
   const root = new Context();
-  const ready = Promise.all([root.plugin(Slots, registry), root.plugin(PluginSettings, { open: openSettings }), root.plugin(PluginIsland, { control: island }), bridge ? root.plugin(HostBridge, bridge) : null]);
+  const ready = Promise.all([root.plugin(Slots, registry), root.plugin(PluginSettings, { open: openSettings, setup: reportSetup }), root.plugin(PluginIsland, { control: island }), bridge ? root.plugin(HostBridge, bridge) : null]);
   const inject = bridge ? ["slots", "settings", "island", "host"] : ["slots", "settings", "island"];
   const loaded = new Map();
   const status = new Map();

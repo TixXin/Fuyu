@@ -21,6 +21,7 @@ export type SettingsPluginPageText = {
     running: (count: number) => string;
     off: (count: number) => string;
     attention: (count: number) => string;
+    setup: (count: number) => string;
   };
   search: string;
   clearSearch: string;
@@ -31,7 +32,33 @@ export type SettingsPluginPageText = {
   loading: string;
   footnote: { before: string; link: string; after: string };
   empty: { title: string; body: string; popular: string; install: string };
-  badges: { unreviewed: string };
+  badges: { unreviewed: string; setup: string };
+  setup: {
+    note: (hint: string | null) => string;
+    go: string;
+    badgeTitle: string;
+  };
+  installed: {
+    done: (name: string) => string;
+    updated: (name: string, version: string) => string;
+    setup: (hint: string | null) => string;
+    dismiss: string;
+  };
+  bar: {
+    title: string;
+    summary: (plugins: number, used: number, bar: number) => string;
+    clipped: (count: number) => string;
+    none: string;
+    map: string;
+    stale: string;
+    expanded: string;
+    unmeasured: string;
+    cap: (max: number) => string;
+    width: (px: number) => string;
+    state: { clipped: (px: number) => string; hidden: string; idle: string; off: string; unmeasured: string };
+    side: { left: string; right: string };
+    actions: { left: string; right: string; toLeft: string; toRight: string; hide: string; show: string; settings: string };
+  };
   sources: { market: string; official: string; manual: string; local: string };
   places: Record<PluginPagePlace, string>;
   placesLabel: string;
@@ -99,6 +126,13 @@ export type SettingsPluginPageText = {
     howToTurnOn: string;
     updates: (count: number) => string;
     updatesBody: (names: string) => string;
+    autoUpdated: (count: number) => string;
+    autoUpdatedBody: (names: string, time: string) => string;
+    autoUpdatedShow: string;
+    autoUpdatedHide: string;
+    autoUpdatedDismiss: string;
+    autoUpdatedLoading: string;
+    autoUpdatedNoChanges: string;
     problems: (count: number) => string;
     problemsBody: string;
     attention: (count: number) => string;
@@ -205,6 +239,7 @@ export const zhCN: SettingsPluginPageText = {
     running: (count) => `${count} 个在运行`,
     off: (count) => `${count} 个已停用`,
     attention: (count) => `${count} 个要处理`,
+    setup: (count) => `${count} 个待设置`,
   },
   search: "搜索已装的插件",
   clearSearch: "清除搜索",
@@ -220,7 +255,39 @@ export const zhCN: SettingsPluginPageText = {
     popular: "大家都在装",
     install: "安装",
   },
-  badges: { unreviewed: "未经审核" },
+  badges: { unreviewed: "未经审核", setup: "待设置" },
+  setup: {
+    note: (hint) => (hint ? `还差一步：${hint}` : "还差一步：设置好才能用"),
+    go: "去设置",
+    badgeTitle: "这个插件还差一步设置，点这里去设置",
+  },
+  installed: {
+    done: (name) => `已安装「${name}」`,
+    updated: (name, version) => `「${name}」已更新到 v${version}`,
+    setup: (hint) => (hint ? `还差一步：${hint}` : "还差一步：设置好才能用"),
+    dismiss: "关闭提示",
+  },
+  bar: {
+    title: "收起条上的插件",
+    summary: (plugins, used, bar) => `${plugins} 个插件共占 ${used} px，收起条现在 ${bar} px`,
+    clipped: (count) => `有 ${count} 项放不下`,
+    none: "现在没有插件显示在收起条上",
+    map: "收起条示意图，按实际比例",
+    stale: "岛现在展开着，图上是它上次收起时量到的。",
+    expanded: "岛现在展开着，收起后这里会画出每一项的位置和宽度。",
+    unmeasured: "还没从岛那里拿到数据，下面只列出要用收起条的插件。",
+    cap: (max) => `收起条最宽 ${max} px。浮屿自己的内容先占位置，剩下的不够时，插件项的右端会被裁掉。可以把不常看的拿下来，或者在插件自己的设置里让它显示得短一些。`,
+    width: (px) => `${px} px`,
+    state: {
+      clipped: (px) => `放不下，右端被裁掉 ${px} px`,
+      hidden: "你把它从收起条上拿掉了",
+      idle: "插件现在没有要显示的内容",
+      off: "插件没在运行",
+      unmeasured: "还没量到",
+    },
+    side: { left: "左侧", right: "右侧" },
+    actions: { left: "往左移", right: "往右移", toLeft: "换到左侧", toRight: "换到右侧", hide: "不在收起条上显示", show: "放回收起条", settings: "打开设置" },
+  },
   sources: { market: "插件市场", official: "插件市场", manual: "从文件安装", local: "从文件夹加载" },
   places: { page: "岛上页面", bar: "收起条", alerts: "岛上提醒", translate: "快捷翻译里", settings: "有设置" },
   placesLabel: "在岛上的位置",
@@ -299,6 +366,13 @@ export const zhCN: SettingsPluginPageText = {
     howToTurnOn: "怎么打开？",
     updates: (count) => `${count} 个插件有新版本`,
     updatesBody: (names) => `${names}。官方插件平时会自动更新，刚上架的版本等 3 天。`,
+    autoUpdated: (count) => `已自动更新 ${count} 个插件`,
+    autoUpdatedBody: (names, time) => `${names}。更新于 ${time}。`,
+    autoUpdatedShow: "看看改了什么",
+    autoUpdatedHide: "收起",
+    autoUpdatedDismiss: "知道了",
+    autoUpdatedLoading: "正在读取更新记录…",
+    autoUpdatedNoChanges: "这几版没有写更新记录。",
     problems: (count) => `${count} 个插件出了问题`,
     problemsBody: "每个插件的处理按钮在下面那一行上。",
     attention: (count) => `${count} 个插件等你处理`,
@@ -405,6 +479,7 @@ export const en: SettingsPluginPageText = {
     running: (count) => `${count} running`,
     off: (count) => `${count} off`,
     attention: (count) => `${count} need${count === 1 ? "s" : ""} you`,
+    setup: (count) => `${count} need${count === 1 ? "s" : ""} setup`,
   },
   search: "Search installed plugins",
   clearSearch: "Clear search",
@@ -420,7 +495,39 @@ export const en: SettingsPluginPageText = {
     popular: "Popular",
     install: "Install",
   },
-  badges: { unreviewed: "Unreviewed" },
+  badges: { unreviewed: "Unreviewed", setup: "Needs setup" },
+  setup: {
+    note: (hint) => (hint ? `One more step: ${hint}` : "One more step: it needs setting up before it works"),
+    go: "Set up",
+    badgeTitle: "This plugin still needs one setting. Click to set it up",
+  },
+  installed: {
+    done: (name) => `Installed ${name}`,
+    updated: (name, version) => `${name} updated to v${version}`,
+    setup: (hint) => (hint ? `One more step: ${hint}` : "One more step: it needs setting up before it works"),
+    dismiss: "Dismiss",
+  },
+  bar: {
+    title: "Plugins on the collapsed bar",
+    summary: (plugins, used, bar) => `${plugins} plugin${plugins === 1 ? "" : "s"} take${plugins === 1 ? "s" : ""} ${used} px of a ${bar} px bar`,
+    clipped: (count) => `${count} item${count === 1 ? " doesn't" : "s don't"} fit`,
+    none: "No plugin is showing on the collapsed bar right now",
+    map: "The collapsed bar, drawn to scale",
+    stale: "The island is open, so this is what it measured when it was last collapsed.",
+    expanded: "The island is open. Once it collapses, each item's position and width are drawn here.",
+    unmeasured: "The island hasn't answered yet, so this only lists the plugins that use the collapsed bar.",
+    cap: (max) => `The collapsed bar is at most ${max} px wide. Fuyu's own content takes its room first; when the rest isn't enough, plugin items are cut off on the right. Take off the ones you rarely read, or make a plugin show less in its own settings.`,
+    width: (px) => `${px} px`,
+    state: {
+      clipped: (px) => `Doesn't fit: ${px} px cut off on the right`,
+      hidden: "You took it off the collapsed bar",
+      idle: "The plugin has nothing to show right now",
+      off: "The plugin isn't running",
+      unmeasured: "Not measured yet",
+    },
+    side: { left: "Left side", right: "Right side" },
+    actions: { left: "Move left", right: "Move right", toLeft: "Move to the left side", toRight: "Move to the right side", hide: "Don't show on the bar", show: "Put back on the bar", settings: "Open settings" },
+  },
   sources: { market: "Plugin market", official: "Plugin market", manual: "Installed from a file", local: "Loaded from a folder" },
   places: { page: "Island page", bar: "Collapsed bar", alerts: "Island alerts", translate: "In Quick translate", settings: "Has settings" },
   placesLabel: "Where it shows up on the island",
@@ -499,6 +606,13 @@ export const en: SettingsPluginPageText = {
     howToTurnOn: "How to turn it back on?",
     updates: (count) => `${count} ${count === 1 ? "plugin has an update" : "plugins have updates"}`,
     updatesBody: (names) => `${names}. Official plugins update automatically; brand-new versions wait 3 days.`,
+    autoUpdated: (count) => `${count} ${count === 1 ? "plugin was" : "plugins were"} updated automatically`,
+    autoUpdatedBody: (names, time) => `${names}. Updated ${time}.`,
+    autoUpdatedShow: "What changed",
+    autoUpdatedHide: "Hide",
+    autoUpdatedDismiss: "Got it",
+    autoUpdatedLoading: "Loading the changelog…",
+    autoUpdatedNoChanges: "No changelog for these versions.",
     problems: (count) => `${count} ${count === 1 ? "plugin ran" : "plugins ran"} into problems`,
     problemsBody: "Fix buttons are on each row below.",
     attention: (count) => `${count} ${count === 1 ? "plugin needs" : "plugins need"} you`,

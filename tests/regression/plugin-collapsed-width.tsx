@@ -9,6 +9,7 @@ import { useCollapsedWidth } from "../../src/windows/island/useCollapsedWidth";
 import { MAX_FITTED_COLLAPSED_WIDTH } from "../../src/windows/island/layout";
 import type { IslandFeatures } from "../../src/windows/island/features";
 import { windowSlots } from "../../src/features/plugin-kernel/slots";
+import { measureBarUsage } from "../../src/features/plugin-kernel/barMeasure";
 import { useFixtureLines } from "./islandLines";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -98,6 +99,8 @@ async function runChecks() {
     seen.add(width);
   }
   check(seen.size <= 2 && whole(".test-monitor-chip"), `读数每秒变化时岛宽最多涨一次，不来回变（${[...seen].join(" / ")}px）`);
+  const fitting = measureBarUsage(0).items.find((item) => item.id === "monitor-bar")?.box ?? null;
+  check(fitting !== null && !fitting.clipped && fitting.wanted === fitting.width && fitting.width === bar().querySelector<HTMLElement>(".test-monitor-chip")!.offsetWidth, `bar usage: an item that fits is measured at its content width (${fitting?.width}px)`);
 
   const removeLong = await act(async () => registry.add("island.collapsed/v1", { id: "long-bar", component: LongChip }, "@test/long", external));
   await settle(() => width === MAX_FITTED_COLLAPSED_WIDTH, "cap");
@@ -106,6 +109,10 @@ async function runChecks() {
   const quiet = bar().querySelector<HTMLElement>(".island__quiet-button")!.getBoundingClientRect();
   check(width === MAX_FITTED_COLLAPSED_WIDTH && quiet.right <= shell.right + 0.5 && quiet.width > 0, `超过上限时岛宽停在 ${MAX_FITTED_COLLAPSED_WIDTH}px，右边的收起按钮还在岛里`);
   check(bar().querySelector(".test-long-chip")!.closest(".island__collapsed-fit")!.hasAttribute("data-clipped"), "放不下的插件收起项在右端淡出裁掉");
+  const usage = measureBarUsage(1);
+  const [monitorBox, longBox] = ["monitor-bar", "long-bar"].map((id) => usage.items.find((item) => item.id === id)?.box ?? null);
+  check(usage.collapsed && usage.barWidth === bar().offsetWidth && usage.items.map((item) => item.owner).join() === "@test/system-monitor,@test/long", `bar usage: the island reports the bar width (${usage.barWidth}px) and whose item each one is`);
+  check(monitorBox !== null && longBox !== null && [monitorBox, longBox].every((box) => box.clipped && box.wanted > box.width && box.left >= 0 && box.left + box.width <= usage.barWidth!) && longBox.left >= monitorBox.left + monitorBox.width, `bar usage: over the cap every plugin item is cut, and each reports its place, its width and the width it wanted (${monitorBox?.width}/${monitorBox?.wanted}px, ${longBox?.width}/${longBox?.wanted}px)`);
 
   await act(async () => {
     removeLong();

@@ -10,12 +10,12 @@ export type SettingsCategoriesText = {
   backTo: (page: string) => string;
   keywords: Record<
     | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
-    | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
+    | "shelf" | "screenshot" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
     | "pluginsV3" | "pluginMarket" | "pluginDiagnostics" | "about" | "aboutChangelog" | "aboutHelp",
     string
   >;
   entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string; about: string };
-  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "about" | "aboutChangelog" | "aboutHelp", string>;
+  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "about" | "aboutChangelog" | "aboutHelp", string>;
   groups: {
     basics: string;
     features: string;
@@ -45,7 +45,6 @@ export type SettingsCategoriesText = {
   shortcuts: string;
   messages: string;
   messagesIm: string;
-  messagesMail: string;
   mail: string;
   todos: string;
   music: string;
@@ -114,8 +113,7 @@ export const zhCN: SettingsCategoriesText = {
     screenshot: "截屏 截图 快捷键 选区 放大镜 取色 全屏",
     voiceInput: "语音 说话 听写 麦克风 转文字 识别 模型",
     messages: "消息 提醒方式 横幅 面板 预览",
-    messagesIm: "QQ 微信 通知 聊天",
-    messagesMail: "邮箱 邮件 IMAP 授权码",
+    messagesIm: "来源 QQ 微信 邮箱 邮件 IMAP 授权码 通知 聊天",
     agents: "Claude Code Codex 钩子 hook 安装 修复 状态灯 启用 代理 提供方 Cursor Gemini OpenCode WorkBuddy Antigravity DeepSeek Qoder CodeBuddy Qwen TRAE ZCode Kimi MiMo Grok Copilot Droid pi",
     agentAppearance: "会话标题 状态灯 收起条 岛上显示 外观",
     agentSessions: "会话 卡片 列表 隐藏会话 筛选 子会话",
@@ -173,8 +171,7 @@ export const zhCN: SettingsCategoriesText = {
     appearance: "位置与尺寸",
     appearanceCollapsed: "收起条项目",
     messages: "提醒方式",
-    messagesIm: "QQ 与微信",
-    messagesMail: "邮箱",
+    messagesIm: "来源",
     agents: "钩子与代理",
     agentConnect: "连接与扩展",
     agentApprovals: "审批",
@@ -216,8 +213,7 @@ export const zhCN: SettingsCategoriesText = {
   themeStyle: "材质与圆角",
   shortcuts: "快捷键",
   messages: "消息",
-  messagesIm: "QQ 与微信",
-  messagesMail: "邮箱",
+  messagesIm: "来源",
   mail: "邮箱",
   todos: "待办",
   music: "音乐",
@@ -286,8 +282,7 @@ export const en: SettingsCategoriesText = {
     screenshot: "screen capture snip region magnifier colour picker fullscreen",
     voiceInput: "voice speech dictation microphone speech to text model",
     messages: "messages notice style banner panel preview",
-    messagesIm: "qq wechat notifications chat",
-    messagesMail: "mail email imap",
+    messagesIm: "sources qq wechat mail email imap notifications chat",
     agents: "claude code codex hooks install repair status light enable agents providers cursor gemini opencode workbuddy antigravity deepseek qoder codebuddy qwen trae zcode kimi mimo grok copilot droid pi",
     agentAppearance: "session title status light collapsed bar on the island appearance",
     agentSessions: "sessions cards list hide filter subagent",
@@ -345,8 +340,7 @@ export const en: SettingsCategoriesText = {
     appearance: "Position and size",
     appearanceCollapsed: "Collapsed bar",
     messages: "Notice style",
-    messagesIm: "QQ and WeChat",
-    messagesMail: "Mail",
+    messagesIm: "Sources",
     agents: "Hooks and agents",
     agentConnect: "Connection",
     agentApprovals: "Approvals",
@@ -388,8 +382,7 @@ export const en: SettingsCategoriesText = {
   themeStyle: "Material and corners",
   shortcuts: "Shortcuts",
   messages: "Messages",
-  messagesIm: "QQ and WeChat",
-  messagesMail: "Mail",
+  messagesIm: "Sources",
   mail: "Mail",
   todos: "Todos",
   music: "Music",

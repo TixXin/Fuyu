@@ -114,6 +114,7 @@ export interface CheckOptions extends BuildOptions {
 }
 
 export declare function check(dir: string, options?: CheckOptions): Promise<CheckResult>;
+export * from "./preview.mjs";
 export interface IconOptions {
   /** A lucide icon name (or one of its older names), or the path of an .svg file with your own line drawing. */
   glyph: string;

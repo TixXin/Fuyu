@@ -108,6 +108,8 @@ npx fuyu-plugin pack
 - \`fuyu-plugin/host\`: \`startHost\` for integration testing plugins in Node.js
 
 Documentation: <https://github.com/TixXin/fuyu/tree/main/docs/plugins>
+
+The \`icon\` command draws with icon shapes from [Lucide](https://lucide.dev), which are included under the ISC license (see \`LICENSE-lucide\`).
 `;
 
 const CREATE_FUYU_PLUGIN_README = `# create-fuyu-plugin
@@ -267,8 +269,8 @@ function fuyuPluginManifest(version) {
       "./host": { types: "./types/host.d.mts", default: "./dist/host.mjs" },
       "./package.json": "./package.json",
     },
-    files: ["bin", "dist", "types", "README.md", "LICENSE"],
-    dependencies: { esbuild: "0.28.1", ws: "^8.18.0" },
+    files: ["bin", "dist", "types", "README.md", "LICENSE", "LICENSE-lucide"],
+    dependencies: { esbuild: "0.28.1", react: "^19.1.0", "react-dom": "^19.1.0", ws: "^8.18.0" },
   };
 }
 
@@ -299,6 +301,7 @@ export async function packNpmSdk({ outDir = DEFAULT_OUT_DIR, version = DEFAULT_V
 
   writeText(join(fuyuDir, "package.json"), `${JSON.stringify(fuyuPluginManifest(version), null, 2)}\n`);
   writeText(join(fuyuDir, "LICENSE"), MIT_LICENSE);
+  cpSync(join(ROOT, "packages", "plugin-cli", "src", "icon", "LUCIDE-LICENSE"), join(fuyuDir, "LICENSE-lucide"));
   writeText(join(fuyuDir, "README.md"), FUYU_PLUGIN_README);
 
   const fuyuBin = join(fuyuDir, "bin", "fuyu-plugin.mjs");

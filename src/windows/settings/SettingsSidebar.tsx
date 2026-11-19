@@ -4,7 +4,11 @@ import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { entryOf, entryPages, isCategoryAvailable, isEntry, searchCategories, settingsGroups, sidebarItemOf, subPagesOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
+import type { SearchablePlugin } from "./marketSearch";
+import { requestMarketView } from "./pluginPageHandoff";
+import { SettingsMarketHits } from "./SettingsMarketHits";
 import { rememberedAboutPage } from "./storage";
+import { useMarketSuggestions } from "./useMarketSuggestions";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
 import { BUILTIN_CATEGORIES, categorySlot } from "./slots/categorySlot";
 import "./SettingsSidebar.css";
@@ -96,6 +100,11 @@ export function SettingsSidebar({
   };
   const matches = searchCategories(query, describe);
   const hits = onRowOpen && searching ? searchSettingsRows(query, searchEntries, locale, LOCALE_CODES, describe) : [];
+  const marketHits = useMarketSuggestions(query, matches.length + hits.length);
+  const openMarketHit = (plugin: SearchablePlugin) => {
+    requestMarketView({ detail: plugin.name });
+    onCategoryChange("pluginMarket");
+  };
   const available = (page: SettingsCategory) => isCategoryAvailable(page, unsupported, isMacOS);
   const pagesOf = (item: SettingsCategory) => entryPages(item).filter(available);
   const subsOf = (item: SettingsCategory) => subPagesOf(item).filter(available);
@@ -114,6 +123,7 @@ export function SettingsSidebar({
     if (isTitleHit(hits[0], query)) openHit(hits[0]);
     else if (matches.length > 0) onCategoryChange(matches[0]);
     else if (hits.length > 0) openHit(hits[0]);
+    else if (marketHits.length > 0) openMarketHit(marketHits[0]);
   };
   const itemHits = (item: SettingsCategory) => {
     const tabbed = entryPages(item).length > 1;
@@ -241,6 +251,7 @@ export function SettingsSidebar({
           return items.length > 0 ? <ul className="settings-sidebar__top" key={items.join()}>{items.map((entry) => item(entry))}</ul> : null;
         })}
         {searching && matches.length === 0 && hits.length === 0 && <p className="settings-sidebar__empty">{text.search.empty}</p>}
+        {marketHits.length > 0 && <SettingsMarketHits plugins={marketHits} onOpen={openMarketHit} />}
       </div>
       {footer.length > 0 && (
         <div className="settings-sidebar__footer">

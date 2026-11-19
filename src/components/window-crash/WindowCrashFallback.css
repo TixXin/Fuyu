@@ -1,0 +1,114 @@
+.window-crash {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  font-family: var(--font-ui);
+  color: var(--text-1);
+  pointer-events: none;
+}
+
+.window-crash--island {
+  align-items: flex-start;
+}
+
+:root[data-island-edge="bottom"] .window-crash--island {
+  align-items: flex-end;
+}
+
+:root[data-island-notch] .window-crash--island {
+  padding-top: var(--island-notch-height, 0px);
+}
+
+.window-crash--window {
+  align-items: center;
+}
+
+.window-crash__pill,
+.window-crash__card {
+  box-sizing: border-box;
+  border: 1px solid var(--color-white-a12);
+  background: var(--island-background-color, #2f2f37);
+  pointer-events: auto;
+}
+
+.window-crash__pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(340px, calc(100% - 16px));
+  height: 36px;
+  padding: 0 5px 0 14px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+}
+
+.window-crash__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.window-crash__card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(320px, calc(100% - 32px));
+  padding: 18px;
+  border-radius: var(--radius-xl);
+}
+
+.window-crash__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.window-crash__detail {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.window-crash__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.window-crash__button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-white-a12);
+  color: var(--text-1);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.window-crash__button:hover {
+  background: var(--color-white-a18);
+}
+
+.window-crash__button--primary,
+.window-crash__button--primary:hover {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.window-crash__button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}

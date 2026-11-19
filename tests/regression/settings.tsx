@@ -10,7 +10,7 @@ import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { checkGlassLooks } from "./settings-glass-looks";
 import { checkIdleDimSettings } from "./settings-idle-dim";
 import { checkAgentNoticeSettings } from "./settings-agent-notice";
-import { checkImMessageSources } from "./settings-im-sources";
+import { checkMessageNotice, checkMessageSources } from "./settings-im-sources";
 import { checkThemeMarket } from "./settings-theme-market";
 import { commandsV1 } from "@fuyu/plugin-services";
 import { windowServices } from "../../src/features/plugin-kernel/services";
@@ -95,7 +95,7 @@ if (!automated) {
     await act(async () => { mount(); });
     check(categories().length > 0, "The sidebar lists the settings pages");
 
-    const pages = [...categories(), "generalData", "generalSync", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "behaviorTuck", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "messagesMail", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote"];
+    const pages = [...categories(), "generalData", "generalSync", "generalApi", "theme", "themeStyle", "appearance", "appearanceCollapsed", "behaviorTuck", "shortcutsIsland", "shortcutsReference", "musicLyrics", "musicLyricsStyle", "clipboardHistory", "clipboardSnippets", "timerAlerts", "behaviorAlerts", "messagesIm", "agentConnect", "agentApprovals", "agentAppearance", "agentSessions", "agentRings", "agentAlerts", "sounds", "agentPush", "agentRemote"];
     for (const category of pages) {
       await openPage(category as SettingsCategory);
       const item = element(`.settings-sidebar__item[data-category='${sidebarItemOf(category as SettingsCategory)}']`);
@@ -216,8 +216,7 @@ if (!automated) {
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 1_500)); });
     check(document.querySelector(".save-path-panel .save-path-saved"), "The saved confirmation stays long enough to notice");
 
-    await checkImMessageSources(check, openPage);
-    await openPage("messagesMail");
+    await checkMessageSources(check, openPage);
     const rows = () => [...document.querySelectorAll<HTMLElement>(".mail-settings__account")];
     check(rows().length === 2 && rows()[0].textContent?.includes("demo@qq.com"), "The mail page lists every mailbox");
     const rowButton = (row: number, text: string) => [...rows()[row].querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent?.includes(text));
@@ -233,6 +232,8 @@ if (!automated) {
       "Confirming disconnects and removes the mailbox");
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((link) => link.textContent === "添加邮箱")!.click(); }); await type(formEmail(), "new@example.edu.cn");
     await type(element<HTMLInputElement>(".mail-settings__form input[type='password']"), "code");
+    check(!document.querySelector(".mail-settings__form input[type='text']"), "The server field stays out of the way until it is asked for");
+    await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".mail-settings__form button")].find((button) => button.textContent === "自己填服务器")!.click(); });
     await type(element<HTMLInputElement>(".mail-settings__form input[type='text']"), "imap.example.edu.cn");
     await act(async () => { element<HTMLButtonElement>(".mail-settings__form button[type='submit']").click(); });
     check(mailCalls.some((call) => call.command === "connect_qq_mail" && call.args.host === "imap.example.edu.cn") && rows().length === 2,
@@ -240,6 +241,7 @@ if (!automated) {
     const saved = JSON.parse(localStorage.getItem("fuyu-qq-mail-settings") ?? "{}") as { accounts?: { email: string; host: string }[] };
     check(saved.accounts?.some((account) => account.email === "new@example.edu.cn" && account.host === "imap.example.edu.cn"),
       "The typed server is saved with the mailbox");
+    await checkMessageNotice(check, openPage);
 
     await openPage("agentConnect");
     check(texts(".settings-tabs__tab") === "钩子与代理|连接与扩展|审批" && texts(".settings-page__title") === "Agent"

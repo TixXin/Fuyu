@@ -47,8 +47,10 @@ export function connectHost({ resolve, window, onSnapshot, onEvent, onState, ope
     if (message.type === "welcome" || message.type === "snapshot") {
       seq = message.seq;
       attempt = 0;
-      onSnapshot?.(message.snapshot, { seq, fresh: message.type === "welcome" });
-      if (message.type === "welcome") setState("open");
+      const fresh = message.type === "welcome";
+      if (fresh) state = "open";
+      onSnapshot?.(message.snapshot, { seq, fresh });
+      if (fresh) onState?.("open");
     } else if (message.type === "event") {
       if (message.seq !== seq + 1) {
         socket.send(JSON.stringify({ type: "snapshot" }));

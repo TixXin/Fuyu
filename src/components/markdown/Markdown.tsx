@@ -33,6 +33,21 @@ export function Markdown({ text, onOpenLink, className }: { text: string; onOpen
           case "quote": return <blockquote key={index}>{renderInline(block.content, onOpenLink)}</blockquote>;
           case "code": return <pre key={index}><code>{block.text}</code></pre>;
           case "rule": return <hr key={index} />;
+          case "table":
+            return (
+              <div key={index} className="markdown__table">
+                <table>
+                  <thead>
+                    <tr>{block.head.map((cell, column) => <th key={column} data-align={block.align[column] ?? undefined}>{renderInline(cell, onOpenLink)}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {block.rows.map((row, rowIndex) => (
+                      <tr key={rowIndex}>{row.map((cell, column) => <td key={column} data-align={block.align[column] ?? undefined}>{renderInline(cell, onOpenLink)}</td>)}</tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
           case "list": {
             const items = block.items.map((item, itemIndex) => <li key={itemIndex}>{renderInline(item, onOpenLink)}</li>);
             return block.ordered ? <ol key={index}>{items}</ol> : <ul key={index}>{items}</ul>;

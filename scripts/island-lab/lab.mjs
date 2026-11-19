@@ -1,5 +1,5 @@
 import {
-  NOTCHES, PAGES, agentStatus, deviceAlert, levelChange, permissionRequest, pluginNotification, qqMessage, questionRequest, wechatMessage,
+  NOTCHES, PAGES, agentStatus, deviceAlert, levelChange, permissionRequest, pluginNotification, qqMessage, questionRequest, trackNotification, wechatMessage,
 } from "./actions.mjs";
 import { sweep } from "./builtins.mjs";
 
@@ -96,6 +96,7 @@ const GROUPS = [
     ["微信消息", () => emit(wechatMessage(now()))],
     ["插件通知（一行）", () => emit(pluginNotification("inline"))],
     ["插件通知（卡片）", () => emit(pluginNotification("card"))],
+    ["换歌提示", () => emit(trackNotification())],
   ]],
   ["系统", [
     ["音量 45%", () => emit(levelChange("volume", 0.45))],

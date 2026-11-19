@@ -1,4 +1,5 @@
 pub(crate) mod commands;
+pub(crate) mod frontend_log;
 mod lock;
 mod migration;
 pub(crate) mod panic_log;
@@ -149,6 +150,7 @@ macro_rules! tauri_commands {
         $next!([$($done)*
             crate::home_dir::commands::get_data_home,
             crate::home_dir::commands::set_data_home,
+            crate::home_dir::frontend_log::report_frontend_error,
         ] $($rest)*)
     };
 }

@@ -6,7 +6,7 @@
 
 ```text
 src/
-├── main.tsx                 # 唯一入口：按 ?window= 动态加载 windows/ 下对应的根组件，每个窗口只加载自己的代码（不要改回静态导入）
+├── main.tsx                 # 唯一入口：按 ?window= 动态加载 windows/ 下对应的根组件，每个窗口只加载自己的代码（不要改回静态导入）；每个窗口的内容都包在同一个错误边界里（components/window-crash/），新窗口不用另加
 ├── windows/                 # 每个 Tauri 窗口一个目录，只负责组合与窗口级行为
 │   ├── island/              # 主窗口：IslandApp（只做组装）、IslandShell、展开后的页面面板（IslandPages）、岛自己的接线 hook（useIslandTucking / Hover、窗口尺寸/拖拽/贴边、自动化）；外壳不 import 功能（plugin-kernel 除外，边界测试查）：功能的界面在 `features/<领域>/plugin/` 里注册插槽项，接线写进它的 runner，影响岛形状的往贡献表里交（规则见 `docs/architecture/plugins/v3-boundary.md`「岛的贡献表」）；slots/ 是外壳自己的插槽项和插槽句柄，builtins.ts 先载外壳样式再经 pluginFiles.ts 收各功能的插件文件；first-hints/ 是岛上的「第一次」提示
 │   ├── clipboard/           # 剪贴板独立窗口（列表在 features/clipboard/ClipboardPopup.tsx，弹出、定位和粘贴在 src-tauri/src/clipboard_history/popup.rs）
@@ -31,7 +31,7 @@ src/
 │   ├── island-bridge/       # 不是插件：Rust 转给岛的请求（local-api-request）的桥，方法分发、待办经 todos/v1，开发版另有岛屿实验台的动作；runner 拥有者 builtin，本机接口和岛屿实验台共用，关掉本机接口不撤它
 │   ├── local-api/           # 第 3 版内置插件 local-api（本机接口）：设置是 通用 里的一节（LocalApiSettings.tsx：允许修改、地址、复制令牌、重新生成令牌，令牌只由 Rust 复制）。岛上接 Rust 转来的请求（local-api-request）的桥不在这里，在 island-bridge/
 │   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件（runtime.ts，宿主默认启动，设 FUYU_PLUGINS_V3=0 关掉）；插槽：每个窗口一份注册表和各插槽的类型化句柄（slots.ts，名单和规则在 @fuyu/plugin-base/protocol 的 SLOTS）、渲染（SlotView.tsx）、订阅（useSlotEntries.ts），宿主关着时内置功能也经它们注册和渲染
-│   ├── messages/            # 消息导航与预览；mail/、qq-notifications/、wechat/ 子目录；banner/ 为岛下方的新消息横幅（分组与计时）；arrivals/ 为新消息自动展开的面板（只列这次到达的消息）；island/ 是它们在岛上的接线：读 QQ、微信、邮箱和插件通知（useIslandNotices）、收起条预览、横幅（useIslandBanner）、到达面板（useIslandMessagePanel）、未读时的贴边保持
+│   ├── messages/            # 消息导航与预览；mail/、qq-notifications/、wechat/ 子目录；banner/ 为岛下方的新消息横幅（分组与计时）；arrivals/ 为新消息自动展开的面板（只列这次到达的消息）；settings/ 是设置页的两个标签（来源列表、提醒方式和它的演示）；island/ 是它们在岛上的接线：读 QQ、微信、邮箱和插件通知（useIslandNotices）、收起条预览、横幅（useIslandBanner）、到达面板（useIslandMessagePanel）、未读时的贴边保持
 │   ├── agent-status/        # AI 代理状态；sounds/ 为 Agent 音效：内置音效播放、设置 → 声音页、导入音效包；push/ 为手机推送（Bark 或 cc-connect，排队到离开电脑再发）
 │   ├── cc-connect/          # 第 3 版内置插件 cc-connect：设置是 AI Agent → 提醒 里的一节（CcConnectSettings.tsx 是程序路径和由岛启动，下面是找到的程序、找不到时下载、是否在运行、各项目聊过的会话）；CcConnectSetup.tsx 为新建机器人向导，FeishuSetup.tsx 为飞书扫码；plugin/services.ts 提供窗口服务 cc-connect/v1（定义在 lib/cc-connect/），手机推送经它发送和列目标
 │   ├── claude-usage/        # 收起条上的 Agent 用量双环（内置插件 claude-usage）：Claude Code、Codex 的用量经 agents/v1 取，GLM、Kimi 的用量和 Key 是自己的命令（api.ts）；阈值配色与悬停卡片文案（usageRing.ts），配置在 plugins.yml（usageConfig.ts、useUsageConfig.ts），设置在 AI Agent 页的「用量环」分组；用量的共用类型和工具在 lib/agent-usage/
@@ -43,8 +43,8 @@ src/
 │   ├── voice-input/         # 第 3 版内置插件 voice-input：收起条上的录音和识别结果（存待办、追加笔记、复制）、设置页（下载语音模型、快捷键）
 │   ├── sync/                # 跨设备同步的设置：后端（文件夹、WebDAV）、同步哪些类别、端到端加密、设备列表和状态；页面入口是 windows/settings/SyncSettingsPage.tsx
 │   └── updater/             # 自动更新
-├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览）
-├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写；settings/ 是岛屿设置（fuyu-settings）的模型：范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayoutSettings.ts、normalizeBehaviorSettings.ts，日历、歌词、Agent 会话列表和提醒的设置字段与默认值在 calendarSettings.ts、lyricsSettings.ts、agentSettings.ts，待办项目列表在 lib/todo-projects/，新设置加在这几个文件里，settings.ts 只做入口；theme/ 是主题、强调色、玻璃配色和动效（含 useReducedMotion）；shortcut/ 是快捷键的通用工具和录制（剪贴板专用的在 features/clipboard/shortcut.ts）；settings-backup/ 是设置文件、导出和恢复（只含 BACKUP_KEYS 列出的设置 key，并经 registerBackupSwitches 桥接内置插件开关）、升级前的备份；system-permissions/ 是系统权限的查询
+├── components/              # 与领域无关的通用 UI（controls/ 开关、数字输入、下拉等控件，插件页和岛上还在用；settings/ 设置窗口的分组列表：组、行、开关行、滑块行、数字行、颜色、输入框、分段选择、下拉、文字链接，设置页都用它；list/ 岛上列表通用样式、行操作菜单与相对时间；markdown/ 把外部 Markdown 渲染成元素，不插入 HTML；island-preview/ 是设置和主题市场共用的岛预览；window-crash/ 是每个窗口根上的错误边界和兜底界面）
+├── lib/                     # 有副作用的通用基础设施，例如 localStorage 安全读写；settings/ 是岛屿设置（fuyu-settings）的模型：范围在 settingsLimits.ts、首次启动值在 settingsDefaults.ts、读取按领域在 normalizeLayoutSettings.ts、normalizeBehaviorSettings.ts，日历、歌词、Agent 会话列表和提醒的设置字段与默认值在 calendarSettings.ts、lyricsSettings.ts、agentSettings.ts，待办项目列表在 lib/todo-projects/，新设置加在这几个文件里，settings.ts 只做入口；theme/ 是主题、强调色、玻璃配色和动效（含 useReducedMotion）；shortcut/ 是快捷键的通用工具和录制（剪贴板专用的在 features/clipboard/shortcut.ts）；settings-backup/ 是设置文件、导出和恢复（只含 BACKUP_KEYS 列出的设置 key，并经 registerBackupSwitches 桥接内置插件开关）、升级前的备份；system-permissions/ 是系统权限的查询；crash-report/ 是窗口出错时的上报（写数据目录的 frontend-errors.log）和「先重载一次还是显示兜底界面」的判断
 ├── utils/                   # 无副作用的纯函数（文本测量、颜色、日期、数值）
 ├── i18n/                    # 类型化多语言字典与 Provider；sections/ 按分区放文案（settings/ 再按设置页分），types.ts 与 locales/ 只做汇总
 ├── styles/                  # 全局 CSS：变量、基础样式、字体

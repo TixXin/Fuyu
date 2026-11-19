@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { useTranslation, type Translations } from "../../../i18n";
 import type { IslandNotice } from "../../../lib/island-notices/service";
 import { ISLAND_SIDE_ROW_HEIGHT, type IslandContribution } from "../../plugin-kernel/islandContributions";
-import { useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
+import { runIslandAction, useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { imUnreadTotal, isImSource } from "../im-sources/imSourcesState";
 import { messagePreviewText } from "../messagePreview";
 import type { SummaryGrow } from "../island/summaryFit";
@@ -56,6 +56,7 @@ function openPreview({ preview, plugin, mail, qq, wechat, im, open }: MessagesIs
   const source = preview.source;
   if (source === "plugin") {
     plugin.dismiss();
+    if (preview.mediaControls) runIslandAction("media.open-page");
     return;
   }
   if (source === "qqMail" && mail.preview) {

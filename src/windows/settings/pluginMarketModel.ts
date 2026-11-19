@@ -72,23 +72,6 @@ export function isFirstFromPublisher(plugin: MarketCatalogPlugin, plugins: reado
   return !plugins.some((other) => other.name !== plugin.name && other.installedVersion && other.publisher.github.toLowerCase() === publisher);
 }
 
-const squash = (value: string) => value.toLowerCase().replace(/[\s_-]+/g, "");
-
-export function matchesQuery(plugin: MarketCatalogPlugin, query: string, categoryNames: Readonly<Record<string, string>> = {}): boolean {
-  const q = squash(query.trim());
-  if (!q) return true;
-  const haystack = [
-    plugin.name,
-    plugin.publisher.github,
-    plugin.displayName["zh-CN"],
-    plugin.displayName.en,
-    plugin.description["zh-CN"],
-    plugin.description.en,
-    ...plugin.categories.map((id) => categoryNames[id] ?? id),
-  ];
-  return squash(haystack.filter(Boolean).join(" ")).includes(q);
-}
-
 export function primaryCategory(plugin: MarketCatalogPlugin): string | null {
   return plugin.categories[0] ?? null;
 }

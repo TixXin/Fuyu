@@ -82,6 +82,7 @@
 .market-empty__detail { color: var(--text-3); font-size: 12px; overflow-wrap: anywhere; }
 
 .market-dialog { container-type: inline-size; }
+.market-dialog .plugin-dialog__body { grid-auto-rows: max-content; }
 .market-dialog--wide { width: min(860px, 100%); }
 .market-dialog--small { width: min(540px, 100%); }
 .market-dialog__title { white-space: normal; }
@@ -90,7 +91,7 @@
 .market-shots { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
 .market-shot { flex: none; width: 220px; margin: 0; display: grid; gap: 6px; }
 .market-shot__open { display: block; padding: 0; background: transparent; border: 0; border-radius: var(--radius-lg); cursor: zoom-in; }
-.market-shot img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: var(--color-white-a06); border: 1px solid var(--color-white-a08); border-radius: var(--radius-lg); }
+.market-shot img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: contain; background: var(--color-white-a06); border: 1px solid var(--color-white-a08); border-radius: var(--radius-lg); }
 .market-shot figcaption { overflow: hidden; color: var(--text-3); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 
 .market-detail { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 210px; align-items: start; gap: 18px; }

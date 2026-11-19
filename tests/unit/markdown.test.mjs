@@ -27,3 +27,30 @@ test("inline: code, bold, italics and only http(s) links", () => {
 test("HTML stays text", () => {
   assert.deepEqual(parseMarkdown("<script>alert(1)</script>"), [{ type: "paragraph", content: [{ type: "text", text: "<script>alert(1)</script>" }] }]);
 });
+
+test("tables: a header row, a delimiter row and body rows, with alignment", () => {
+  const blocks = parseMarkdown(["前一段", "| 平台 | 程序 | 次数 |", "|:---|:---:|---:|", "| Windows | `powershell.exe` | 1 |", "| Mac | **ps** |", "", "后一段"].join("\r\n"));
+  assert.deepEqual(blocks.map((block) => block.type), ["paragraph", "table", "paragraph"]);
+  assert.deepEqual(blocks[1], {
+    type: "table",
+    align: ["left", "center", "right"],
+    head: [[{ type: "text", text: "平台" }], [{ type: "text", text: "程序" }], [{ type: "text", text: "次数" }]],
+    rows: [
+      [[{ type: "text", text: "Windows" }], [{ type: "code", text: "powershell.exe" }], [{ type: "text", text: "1" }]],
+      [[{ type: "text", text: "Mac" }], [{ type: "strong", text: "ps" }], []],
+    ],
+  });
+});
+
+test("tables: no outer pipes, escaped pipes, and lines with pipes that are not a table", () => {
+  const bare = parseMarkdown("a | b\n--- | ---\n1 \\| 2 | 3 | extra");
+  assert.deepEqual(bare, [{
+    type: "table",
+    align: [null, null],
+    head: [[{ type: "text", text: "a" }], [{ type: "text", text: "b" }]],
+    rows: [[[{ type: "text", text: "1 | 2" }], [{ type: "text", text: "3" }]]],
+  }]);
+  assert.deepEqual(parseMarkdown("a | b\nc | d").map((block) => block.type), ["paragraph"], "no delimiter row");
+  assert.deepEqual(parseMarkdown("| a | b |\n|---|\n| 1 | 2 |").map((block) => block.type), ["paragraph"], "the delimiter row has a different number of columns");
+  assert.deepEqual(parseMarkdown("| a |\n|---|\n- item").map((block) => block.type), ["table", "list"], "the table ends where another block starts");
+});

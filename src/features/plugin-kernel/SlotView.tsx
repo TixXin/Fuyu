@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { SlotItems } from "@fuyu/plugin-base/client/react";
 import type { SlotItem } from "@fuyu/plugin-base/client/slots";
+import { reportCrash } from "../../lib/crash-report/crashReporter";
 import { reportSlotError, type SlotEntry, type SlotFailure, type SlotHandle } from "./slots";
 import "./PluginSlot.css";
 
@@ -13,7 +14,16 @@ type SlotViewProps<Props extends object, Meta extends object> = PropsField<Props
   onError?: (failure: SlotFailure) => void;
 };
 
-export function SlotView<Props extends object, Meta extends object>({ slot, group, select, onError = reportSlotError, ...rest }: SlotViewProps<Props, Meta>) {
+function reportAndLog(failure: SlotFailure) {
+  reportSlotError(failure);
+  const cause = failure.error instanceof Error ? failure.error : new Error(String(failure.error));
+  const error = new Error(`[slot ${failure.slot}] ${failure.id} from ${failure.owner}: ${cause.name}: ${cause.message}`);
+  error.name = "SlotItemError";
+  error.stack = cause.stack;
+  void reportCrash("slot", error);
+}
+
+export function SlotView<Props extends object, Meta extends object>({ slot, group, select, onError = reportAndLog, ...rest }: SlotViewProps<Props, Meta>) {
   const wrap = (item: SlotItem, node: ReactNode) =>
     item.external ? (
       <div className="plugin-slot" data-slot={slot.name}>

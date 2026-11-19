@@ -77,6 +77,43 @@
   white-space: pre;
 }
 
+.markdown__table {
+  margin: 6px 0;
+  overflow-x: auto;
+}
+
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-wrap: break-word;
+}
+
+.markdown th,
+.markdown td {
+  padding: 4px 10px 4px 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-white-a08);
+}
+
+.markdown th {
+  color: var(--color-text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.markdown tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.markdown :is(th, td)[data-align="center"] {
+  text-align: center;
+}
+
+.markdown :is(th, td)[data-align="right"] {
+  text-align: right;
+}
+
 .markdown hr {
   margin: 10px 0;
   border: 0;

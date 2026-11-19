@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   IM_SOURCE_IDS,
+  imAutoClearKey,
   imSourceEnabled,
   isImAutoClearEnabled,
+  mergedAutoClear,
   MESSAGE_SOURCES,
   migrateSources,
   sourceSwitch,
@@ -46,4 +48,21 @@ test("only a boolean in messages.config counts as a source switch", () => {
   assert.equal(sourceSwitch({ mail: false }, "mail"), false);
   assert.equal(sourceSwitch({ qq: "false" }, "qq"), undefined);
   assert.equal(sourceSwitch({}, "wechat"), undefined);
+});
+
+test("the merged remove-once-seen switch stays on when no source had it off", () => {
+  assert.equal(mergedAutoClear({}, { qq: true, wechat: true }), true);
+  assert.equal(mergedAutoClear({ telegram: true, [imAutoClearKey("telegram")]: true }, { qq: true, wechat: true }), true);
+});
+
+test("one source that had remove-once-seen off turns the merged switch off", () => {
+  assert.equal(mergedAutoClear({}, { qq: false, wechat: true }), false);
+  assert.equal(mergedAutoClear({}, { qq: true, wechat: false }), false);
+  assert.equal(mergedAutoClear({ [imAutoClearKey("feishu")]: false }, { qq: true, wechat: true }), false);
+});
+
+test("once the merged switch is saved, the per-source values no longer count", () => {
+  assert.equal(mergedAutoClear({ autoClear: true, [imAutoClearKey("feishu")]: false }, { qq: false, wechat: false }), true);
+  assert.equal(mergedAutoClear({ autoClear: false }, { qq: true, wechat: true }), false);
+  assert.equal(mergedAutoClear({ autoClear: "false" }, { qq: true, wechat: true }), true);
 });

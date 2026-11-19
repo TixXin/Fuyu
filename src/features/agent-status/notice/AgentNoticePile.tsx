@@ -2,8 +2,8 @@ import { AgentNoticeRing } from "./AgentNoticeRing";
 import { pileOf, type AgentNoticeStackItem } from "./noticeStack.ts";
 import "./AgentNoticeStack.css";
 
-export function AgentNoticePile({ items, index, label, onOpen }: { items: readonly AgentNoticeStackItem[]; index: number; label: string | null; onOpen: (() => void) | null }) {
-  const { shown, extra } = pileOf(items, index);
+export function AgentNoticePile({ items, index, label, onOpen, limit }: { items: readonly AgentNoticeStackItem[]; index: number; label: string | null; onOpen: (() => void) | null; limit?: number }) {
+  const { shown, extra } = pileOf(items, index, limit);
   const rings = (
     <>
       {shown.map((item) => <AgentNoticeRing key={item.key} item={item} size={16} />)}

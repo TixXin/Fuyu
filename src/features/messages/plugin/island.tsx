@@ -41,6 +41,7 @@ function MessagesPage({ features, onOpenSettings }: MessagesPageProps) {
           playing,
           cover: art?.cover ?? null,
           sourceIcon: art?.sourceIcon ?? null,
+          sourceLabel: art?.sourceLabel ?? null,
           onPrevious: () => void runIslandAction("media.previous"),
           onPlayPause: () => void runIslandAction("media.play-pause"),
           onNext: () => void runIslandAction("media.next"),

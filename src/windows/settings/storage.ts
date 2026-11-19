@@ -2,9 +2,9 @@ import { readString, writeJson, writeString } from "../../lib/storage.ts";
 
 export const SETTINGS_FOCUS_STORAGE_KEY = "fuyu-settings-focus";
 
-export type SettingsFocusSection = "savePath" | "translation" | "music" | "calendar" | "mail" | "updates" | "agentConnect" | "general" | "voiceInput" | "pluginsV3";
+export type SettingsFocusSection = "savePath" | "translation" | "music" | "calendar" | "mail" | "updates" | "agentConnect" | "general" | "voiceInput" | "pluginsV3" | "appearanceCollapsed";
 
-const FOCUS_SECTIONS: readonly SettingsFocusSection[] = ["savePath", "translation", "music", "calendar", "mail", "updates", "agentConnect", "general", "voiceInput", "pluginsV3"];
+const FOCUS_SECTIONS: readonly SettingsFocusSection[] = ["savePath", "translation", "music", "calendar", "mail", "updates", "agentConnect", "general", "voiceInput", "pluginsV3", "appearanceCollapsed"];
 
 export const FOCUS_REQUEST_MAX_AGE_MS = 10_000;
 

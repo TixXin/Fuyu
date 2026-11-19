@@ -11,8 +11,6 @@ export type ImSourceText = {
   allowLabel: (name: string) => string;
   retryLabel: (name: string) => string;
   openNotification: (name: string, title: string) => string;
-  autoClearDescription: (name: string) => string;
-  autoClearDescriptionMac: (name: string) => string;
   flashBody: string;
 };
 
@@ -53,6 +51,8 @@ export type MessagesText = {
   copyText: string;
   copied: string;
   copyCode: (code: string) => string;
+  sampleTitle: string;
+  sampleBody: string;
   banner: {
     more: (count: number) => string;
     close: string;
@@ -113,8 +113,6 @@ export const zhCN: MessagesText = {
     allowLabel: (name) => zhJoin("允许", name, "通知访问"),
     retryLabel: (name) => zhJoin("重试", name, "通知授权"),
     openNotification: (name, title) => `${zhJoin("打开", name)}：${title}`,
-    autoClearDescription: (name) => `${zhJoin("", name, "被切到前台")}、或${zhJoin("在岛上点开", name, "后")}，去掉在那之前到的消息；之后到的留着。`,
-    autoClearDescriptionMac: (name) => `${zhJoin("", name, "被切到前台")}、程序坞上的未读角标消失、或${zhJoin("在岛上点开", name, "后")}，去掉在那之前到的消息；之后到的留着。`,
     flashBody: "收到任务栏闪烁提醒；在软件设置内开启系统通知后可显示发送人和消息内容。",
   },
   collapsedTask: (title) => `待办：${title}`,
@@ -126,6 +124,8 @@ export const zhCN: MessagesText = {
   copyText: "复制内容",
   copied: "已复制",
   copyCode: (code) => `复制 ${code}`,
+  sampleTitle: "示例消息",
+  sampleBody: "新消息会像这样出现在岛上",
   banner: {
     more: (count) => `另有 ${count} 条`,
     close: "关闭通知",
@@ -180,8 +180,6 @@ export const en: MessagesText = {
     allowLabel: (name) => `Allow access to ${name} notifications`,
     retryLabel: (name) => `Retry ${name} notification authorization`,
     openNotification: (name, title) => `Open ${name}: ${title}`,
-    autoClearDescription: (name) => `When ${name} comes to the front or you open it from the island, messages that arrived before then are removed; later ones stay.`,
-    autoClearDescriptionMac: (name) => `When ${name} comes to the front, its unread badge in the Dock disappears, or you open it from the island, messages that arrived before then are removed; later ones stay.`,
     flashBody: "Taskbar flash detected; turn on system notifications in the app's settings to show the sender and message.",
   },
   collapsedTask: (title) => `Task: ${title}`,
@@ -193,6 +191,8 @@ export const en: MessagesText = {
   copyText: "Copy message",
   copied: "Copied",
   copyCode: (code) => `Copy ${code}`,
+  sampleTitle: "Sample message",
+  sampleBody: "New messages will show up on the island like this",
   banner: {
     more: (count) => `${count} more`,
     close: "Dismiss notification",

@@ -134,6 +134,9 @@ try {
     check(hits("agentSessions").includes("隐藏已退出的会话"), "A word of a setting's description finds it");
     await type("zzqxjv");
     check(document.querySelector(".settings-sidebar__empty"), "Nothing found says so");
+    await type("天气插件");
+    await wait(200);
+    check(document.querySelector(".settings-sidebar__empty") && !document.querySelector("[data-market-hits]"), "With the plugin host not connected there is no market group, only the empty message");
     await type("hide sessions");
     check(hits("agentSessions").includes("隐藏已退出的会话"), "English words find a setting in the Chinese interface, shown in Chinese");
     await type("");

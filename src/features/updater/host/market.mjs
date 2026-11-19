@@ -4,6 +4,7 @@ import { compareVersions, selectVersions } from "../../../../packages/plugin-mar
 import { DATA_DIR, dataDirOf } from "../../../../packages/plugin-base/src/host/data.mjs";
 import { applyRevocationsToDir, inspectPackage as inspectFuyuPackage, installPackage, removeInstalledFromYml, uninstallPackage, writeInstalledToYml } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { marketV1 } from "../../../../packages/plugin-services/src/services/market.mjs";
+import { dismissAutoUpdated, mergeAutoUpdated } from "./marketAutoUpdated.mjs";
 import { getMarketPluginDetails } from "./marketDetails.mjs";
 import { fetchVerifiedIndex } from "./marketIndex.mjs";
 import { createMarketInstaller } from "./marketInstall.mjs";
@@ -66,9 +67,9 @@ export function createMarketService(options = {}) {
       const now = nowFn();
       const { doc } = readVerifiedCachedIndex(dataDir, trust, now);
       if (!doc) return snapshot();
-      const { upgradedCount, trustedAuthors } = await runSilentAutoUpdates({ doc, revocations: state.revocations, trustedAuthors: state.trustedAuthors, now });
-      if (upgradedCount > 0) {
-        writeState(dataDir, { ...state, trustedAuthors });
+      const { upgraded, trustedAuthors } = await runSilentAutoUpdates({ doc, revocations: state.revocations, trustedAuthors: state.trustedAuthors, now });
+      if (upgraded.length > 0) {
+        writeState(dataDir, { ...state, trustedAuthors, autoUpdated: mergeAutoUpdated(readState(dataDir).autoUpdated, upgraded, toTimestamp(now)) });
         if (onConfigChanged) await onConfigChanged();
         notifyChanged();
       }
@@ -92,10 +93,10 @@ export function createMarketService(options = {}) {
       writeFileSync(join(dataDir, INDEX_SIG_FILE), `${JSON.stringify(indexSig, null, 2)}\n`, "utf8");
 
       let nextTrustedAuthors = state.trustedAuthors;
-      let upgradedCount = 0;
+      let upgraded = [];
       if (shouldAutoUpdate) {
         const autoRes = await runSilentAutoUpdates({ doc: opened.doc, revocations: nextRevocations, trustedAuthors: nextTrustedAuthors, now });
-        upgradedCount = autoRes.upgradedCount;
+        upgraded = autoRes.upgraded;
         nextTrustedAuthors = autoRes.trustedAuthors;
       }
 
@@ -113,8 +114,9 @@ export function createMarketService(options = {}) {
         lastError: null,
         revocationWarning: revoked.warning,
         lastSource: downloader.last() ?? state.lastSource,
+        autoUpdated: mergeAutoUpdated(readState(dataDir).autoUpdated, upgraded, toTimestamp(now)),
       });
-      if ((disabledCount > 0 || upgradedCount > 0) && onConfigChanged) await onConfigChanged();
+      if ((disabledCount > 0 || upgraded.length > 0) && onConfigChanged) await onConfigChanged();
       notifyChanged();
       const next = snapshot();
       void media.refreshed(opened.doc, next.plugins);
@@ -205,6 +207,14 @@ export function createMarketService(options = {}) {
       };
     },
 
+    dismissAutoUpdated: async (params) => {
+      if (!isObject(params) || typeof params.at !== "number") throw marketError("bad-params", "dismissAutoUpdated expects { at: number }");
+      const state = readState(dataDir);
+      writeState(dataDir, { ...state, autoUpdated: dismissAutoUpdated(state.autoUpdated, params.at) });
+      notifyChanged();
+      return { dismissed: true };
+    },
+
     setManualAllowed: async (params) => {
       if (!isObject(params) || typeof params.allowed !== "boolean") {
         throw marketError("bad-params", "setManualAllowed expects { allowed: boolean }");
@@ -258,7 +268,7 @@ export function createMarketService(options = {}) {
 }
 
 export const SETTINGS_WINDOW = "settings";
-export const SETTINGS_ONLY_METHODS = Object.freeze(["refresh", "installMarket", "installFile", "setManualAllowed", "setEnabled", "uninstall"]);
+export const SETTINGS_ONLY_METHODS = Object.freeze(["refresh", "installMarket", "installFile", "setManualAllowed", "setEnabled", "uninstall", "dismissAutoUpdated"]);
 
 export function assertSettingsWindow(method, caller) {
   if (caller?.window === SETTINGS_WINDOW && caller.plugin === undefined) return;

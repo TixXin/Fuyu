@@ -67,6 +67,39 @@ fn names_the_mainstream_platforms_from_their_windows_and_mac_identifiers() {
 }
 
 #[test]
+fn names_local_players_and_third_party_clients_from_their_identifiers() {
+    let cases = [
+        ("foobar2000.exe", "foobar2000"),
+        ("com.foobar2000.mac", "foobar2000"),
+        ("MusicBee.exe", "MusicBee"),
+        ("AIMP.exe", "AIMP"),
+        ("vlc.exe", "VLC"),
+        ("org.videolan.vlc", "VLC"),
+        ("com.colliderli.iina", "IINA"),
+        ("PotPlayerMini64.exe", "PotPlayer"),
+        ("wmplayer.exe", "Windows Media Player"),
+        ("com.swinsian.Swinsian", "Swinsian"),
+        ("lx-music-desktop.exe", "LX Music"),
+        ("cn.toside.music.desktop", "LX Music"),
+        ("YesPlayMusic.exe", "YesPlayMusic"),
+        ("com.electron.yesplaymusic", "YesPlayMusic"),
+        ("com.listen1.listen1", "Listen 1"),
+        ("tv.plex.plexamp", "Plexamp"),
+        ("com.roon.Roon", "Roon"),
+        ("com.audirvana.Audirvana", "Audirvana"),
+        ("com.coppertino.Vox", "VOX"),
+        ("org.clementine-player.clementine", "Clementine"),
+        ("com.deadbeef.deadbeef", "DeaDBeeF"),
+        ("Feishin.exe", "Feishin"),
+        ("Cider.exe", "Cider"),
+        ("MusicFree.exe", "MusicFree"),
+    ];
+    for (id, name) in cases {
+        assert_eq!(friendly_app_label_with_custom(id, &[]), name, "{id}");
+    }
+}
+
+#[test]
 fn a_web_player_keeps_its_first_word_as_the_id() {
     for player in KNOWN_PLAYERS.iter().filter(|player| player.label == "YouTube Music" || player.label == "汽水音乐" || player.label == "Amazon Music") {
         assert!(!player.needles[0].contains(['.', ' ']), "{}", player.label);

@@ -1,19 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { isTauri } from "@tauri-apps/api/core";
+import { useMessageAutoClear } from "../plugin/useSourceSwitches";
 import { setQQAutoClear } from "./api";
-import { isQQAutoClearEnabled, saveQQAutoClearEnabled } from "./storage";
 
 export function useQQAutoClear() {
-  const [autoClear, setAutoClearState] = useState(isQQAutoClearEnabled);
+  const autoClear = useMessageAutoClear();
 
   useEffect(() => {
     if (isTauri()) void setQQAutoClear(autoClear).catch(() => undefined);
   }, [autoClear]);
-
-  const setAutoClear = useCallback((enabled: boolean) => {
-    saveQQAutoClearEnabled(enabled);
-    setAutoClearState(enabled);
-  }, []);
-
-  return { autoClear, setAutoClear };
 }

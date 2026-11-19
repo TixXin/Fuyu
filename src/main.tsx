@@ -1,13 +1,16 @@
 import "./lib/copyRenamedKeys";
-import { devRootOptions, markMounted } from "./devReload";
+import { devRootOptions, markCrashed, markMounted } from "./devReload";
 import { blockBrowserDefaults } from "./lib/browserDefaults";
 import { isMacOS } from "./lib/platform";
 import React, { type ReactNode } from "react";
-import ReactDOM from "react-dom/client";
+import ReactDOM, { type RootOptions } from "react-dom/client";
 import "./styles/tokens.css";
 import "./styles/fonts.css";
 import "./styles/base.css";
 import { I18nProvider, loadLocale, preloadI18n } from "./i18n/runtime";
+import { WindowCrashBoundary } from "./components/window-crash/WindowCrashBoundary";
+import { closeWindow, handleCrash, installCrashReporting, reloadWindow } from "./lib/crash-report/crashReporter";
+import { CRASH_RELOAD_WINDOW_MS, crashVariant } from "./lib/crash-report/recovery";
 import { loadSettingsFile } from "./lib/settings-backup/loadSettingsFile";
 import { serviceFeaturesForWindow } from "./windowServicesMap";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
@@ -17,6 +20,7 @@ import { setPluginSettingsOpener } from "./features/plugin-kernel/settingsOpener
 import { openPluginSettingsWindow } from "./windows/settings/api";
 
 blockBrowserDefaults({ mac: isMacOS, dev: import.meta.env.DEV });
+installCrashReporting();
 const serviceModules = import.meta.glob("./features/*/plugin/services.ts");
 
 async function loadWindowServices(kind: string | null): Promise<void> {
@@ -112,16 +116,49 @@ async function loadWindow(): Promise<ReactNode> {
   }
 }
 
+const rootOptions: RootOptions = import.meta.hot
+  ? devRootOptions
+  : {
+      onUncaughtError(error, info) {
+        handleCrash("uncaught", error, info.componentStack);
+      },
+    };
+
+function onWindowCrash(error: unknown, componentStack: string | null) {
+  markCrashed();
+  return handleCrash("render", error, componentStack);
+}
+
+function renderWindow(content: ReactNode, failed: boolean) {
+  ReactDOM.createRoot(document.getElementById("root") as HTMLElement, rootOptions).render(
+    <React.StrictMode>
+      <I18nProvider>
+        <WindowCrashBoundary
+          variant={crashVariant(windowKind)}
+          initialStep={failed ? "fallback" : undefined}
+          retryAfterMs={CRASH_RELOAD_WINDOW_MS}
+          onCrash={onWindowCrash}
+          onReload={reloadWindow}
+          onClose={closeWindow}
+        >
+          {content}
+        </WindowCrashBoundary>
+      </I18nProvider>
+    </React.StrictMode>,
+  );
+}
+
 void Promise.all([
   loadWindowServices(windowKind),
   loadWindow(),
   loadSettingsFile(),
   preloadI18n(loadLocale(), windowKind),
 ]).then(([, content]) => {
-  ReactDOM.createRoot(document.getElementById("root") as HTMLElement, devRootOptions).render(
-    <React.StrictMode>
-      <I18nProvider>{content}</I18nProvider>
-    </React.StrictMode>,
-  );
+  renderWindow(content, false);
   markMounted();
-}).catch((error: unknown) => console.error("Failed to start the window", error));
+}).catch(async (error: unknown) => {
+  console.error("Failed to start the window", error);
+  if (handleCrash("startup", error) !== "fallback") return;
+  await preloadI18n(loadLocale(), windowKind);
+  renderWindow(null, true);
+}).catch((error: unknown) => console.error("Failed to show the startup failure", error));

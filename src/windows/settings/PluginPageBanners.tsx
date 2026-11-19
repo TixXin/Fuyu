@@ -1,10 +1,15 @@
-import { useState, type ReactNode } from "react";
-import { Activity, AlertCircle, Download, ExternalLink, LoaderCircle, Power, RefreshCw, ShieldAlert, Unplug } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Activity, AlertCircle, CircleCheck, Download, ExternalLink, LoaderCircle, Power, RefreshCw, ShieldAlert, Unplug } from "lucide-react";
+import type { MarketAutoUpdatedPlugin } from "@fuyu/plugin-services";
+import { Markdown } from "../../components/markdown/Markdown";
 import { useLocale, useTranslation } from "../../i18n";
 import { exitPluginSafeMode, type HostNodeStatus } from "../../features/plugin-kernel/api";
+import { changelogBetween } from "./marketAutoUpdated";
 import type { InstalledEntry } from "./pluginEntries";
-import { openPluginDocs } from "./pluginMarketActions";
+import { marketClient, openHttpUrl, openPluginDocs } from "./pluginMarketActions";
+import { formatMarketTime, localized } from "./pluginMarketModel";
 import type { PluginHostView } from "./usePluginHostStatus";
+import { usePluginMarketCatalog } from "./usePluginMarketCatalog";
 
 export type BannerTone = "info" | "warn" | "bad";
 
@@ -117,6 +122,72 @@ export function SafeBanner({ view, onFindCulprit }: { view: PluginHostView; onFi
   );
 }
 
+function AutoUpdatedChanges({ item, title }: { item: MarketAutoUpdatedPlugin; title: string }) {
+  const text = useTranslation().settings.pluginsV3.page.banners;
+  const { locale } = useLocale();
+  const [changes, setChanges] = useState<{ body: string | null } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void marketClient
+      .details({ name: item.name, locale })
+      .then((details) => (cancelled ? undefined : setChanges({ body: changelogBetween(details.changelog, item.from, item.to) })))
+      .catch(() => (cancelled ? undefined : setChanges({ body: null })));
+    return () => {
+      cancelled = true;
+    };
+  }, [item.name, item.from, item.to, locale]);
+  return (
+    <div className="plugin-banner__update" data-auto-updated={item.name}>
+      <div className="plugin-banner__update-head">
+        <b>{title}</b>
+        <span>{item.from} → {item.to}</span>
+      </div>
+      {changes === null ? (
+        <p className="plugin-banner__update-note">{text.autoUpdatedLoading}</p>
+      ) : changes.body ? (
+        <Markdown className="plugin-banner__changes" text={changes.body} onOpenLink={openHttpUrl} />
+      ) : (
+        <p className="plugin-banner__update-note">{text.autoUpdatedNoChanges}</p>
+      )}
+    </div>
+  );
+}
+
+export function AutoUpdatedBanner() {
+  const text = useTranslation().settings.pluginsV3.page.banners;
+  const { locale } = useLocale();
+  const { snapshot } = usePluginMarketCatalog(true);
+  const [open, setOpen] = useState(false);
+  const [dismissedAt, setDismissedAt] = useState<number | null>(null);
+  const batch = snapshot?.autoUpdated ?? null;
+  if (!batch || batch.plugins.length === 0 || (dismissedAt !== null && batch.at <= dismissedAt)) return null;
+  const titleOf = (item: MarketAutoUpdatedPlugin) => localized(item.displayName ?? snapshot?.installed.find((plugin) => plugin.id === item.name)?.displayName, locale, item.name);
+  const names = batch.plugins.map((item) => `${titleOf(item)} ${item.from} → ${item.to}`).join(locale === "en" ? ", " : "、");
+  const dismiss = () => {
+    setDismissedAt(batch.at);
+    void marketClient.dismissAutoUpdated({ at: batch.at }).catch(() => setDismissedAt(null));
+  };
+  return (
+    <PluginBanner
+      name="auto-updated"
+      tone="info"
+      icon={<CircleCheck size={16} strokeWidth={2.2} />}
+      title={text.autoUpdated(batch.plugins.length)}
+      extra={open ? <div className="plugin-banner__updates">{batch.plugins.map((item) => <AutoUpdatedChanges key={item.name} item={item} title={titleOf(item)} />)}</div> : null}
+      actions={
+        <>
+          <button className="plugin-btn" type="button" data-action="auto-updated-changes" aria-expanded={open} onClick={() => setOpen((value) => !value)}>
+            {open ? text.autoUpdatedHide : text.autoUpdatedShow}
+          </button>
+          <button className="plugin-btn plugin-btn--ghost" type="button" data-action="auto-updated-dismiss" onClick={dismiss}>{text.autoUpdatedDismiss}</button>
+        </>
+      }
+    >
+      {text.autoUpdatedBody(names, formatMarketTime(batch.at, locale))}
+    </PluginBanner>
+  );
+}
+
 export function PluginPageBanners({ view, hostOff, node, onRetryNode, entries, onOpenDiagnostics, onOnlyAttention }: {
   view: PluginHostView;
   hostOff: boolean;
@@ -201,5 +272,6 @@ export function PluginPageBanners({ view, hostOff, node, onRetryNode, entries, o
       </PluginBanner>,
     );
   }
+  if (live) banners.push(<AutoUpdatedBanner key="auto-updated" />);
   return <>{banners}</>;
 }

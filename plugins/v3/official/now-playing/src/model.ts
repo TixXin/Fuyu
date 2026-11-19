@@ -167,7 +167,12 @@ const PLAYERS: readonly [words: readonly string[], zh: string, en: string][] = [
   [["tidal"], "TIDAL", "TIDAL"],
   [["deezer"], "Deezer", "Deezer"],
   [["qobuz"], "Qobuz", "Qobuz"],
+  [["lx-music", "lxmusic", "toside.music", "洛雪音乐"], "洛雪音乐", "LX Music"],
+  [["saltplayer", "椒盐音乐"], "椒盐音乐", "Salt Player"],
+  [["hibymusic", "海贝音乐"], "海贝音乐", "HiBy Music"],
 ];
+
+const GENERIC_PARTS = new Set(["mac", "macos", "desktop", "client", "app", "player", "music", "win", "windows"]);
 
 export function appLabel(sourceApp: string, locale = "en"): string {
   const lowered = sourceApp.trim().toLowerCase();
@@ -177,7 +182,11 @@ export function appLabel(sourceApp: string, locale = "en"): string {
   const bang = name.lastIndexOf("!");
   if (bang >= 0) name = name.slice(bang + 1);
   name = name.replace(/\.exe$/i, "");
-  if (/^[\w-]+(\.[\w-]+)+$/.test(name)) name = name.slice(name.lastIndexOf(".") + 1);
+  if (/^[\w-]+(\.[\w-]+)+$/.test(name)) {
+    const parts = name.split(".");
+    while (parts.length > 2 && GENERIC_PARTS.has(parts[parts.length - 1].toLowerCase())) parts.pop();
+    name = parts[parts.length - 1];
+  }
   return name || sourceApp;
 }
 

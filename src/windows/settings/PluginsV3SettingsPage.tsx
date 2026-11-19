@@ -8,6 +8,7 @@ import type { RowAction } from "./InstalledPluginRow";
 import { InstalledPluginList } from "./InstalledPluginList";
 import { InstalledPluginSuggestions } from "./InstalledPluginSuggestions";
 import { InstalledPluginsEmpty } from "./InstalledPluginsEmpty";
+import { PluginBarUsage } from "./PluginBarUsage";
 import { PluginDetailModal } from "./PluginDetailModal";
 import { installedEntries, type InstalledEntry, type InstalledFilter } from "./pluginEntries";
 import { restartPlugin } from "./pluginMarketActions";
@@ -15,6 +16,7 @@ import { PluginPageBanners } from "./PluginPageBanners";
 import { usePluginSectionOwners } from "./PluginSettingsSections";
 import { usePluginFilePicker } from "./PluginPageActions";
 import { onPluginDetailRequest, pullPendingPackage, requestMarketView, takePluginDetailRequest, type PluginDetailRequest, type PluginDetailTab } from "./pluginPageHandoff";
+import { usePluginBarUsage, type BarUsageView } from "./usePluginBarUsage";
 import { usePluginHostNode } from "./usePluginHostNode";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector, type PluginHostView } from "./usePluginHostStatus";
 import { usePluginInstallFlow } from "./usePluginInstallFlow";
@@ -55,9 +57,11 @@ function usePackageRedirect(onOpenPage?: (page: SettingsCategory) => void) {
   }, [errorText, onOpenPage]);
 }
 
-export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins: givenBuiltins, initialDetail = null, onOpenPage }: {
+export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins: givenBuiltins, initialDetail = null, barUsage, onBarChanged, onOpenPage }: {
   view: PluginHostView;
   hostOff?: boolean;
+  barUsage?: BarUsageView;
+  onBarChanged?: () => void;
   initialDetail?: PluginDetailRequest | null;
   node?: HostNodeStatus | null;
   builtins?: readonly BuiltinPlugin[] | null;
@@ -71,10 +75,13 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
   const watched = usePluginHostNode(!hostOff && givenNode === undefined && view.connection !== "open");
   const node = givenNode === undefined ? watched.node : givenNode;
   const catalog = usePluginMarketCatalog(live);
-  const install = usePluginInstallFlow(catalog.reload);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<InstalledFilter>("all");
   const [detail, setDetail] = useState<OpenDetail | null>(initialDetail ? { ...initialDetail, uninstall: false, request: initialDetail } : null);
+  const install = usePluginInstallFlow(catalog.reload, undefined, {
+    plugins: hostOff ? null : view.plugins,
+    onOpenSettings: (id) => setDetail({ id, tab: "settings", uninstall: false }),
+  });
   useEffect(() => {
     if (initialDetail) setDetail((current) => (current?.request === initialDetail ? current : { ...initialDetail, uninstall: false, request: initialDetail, nonce: (current?.nonce ?? 0) + 1 }));
   }, [initialDetail]);
@@ -161,6 +168,7 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
           onAction={act}
           onSearchMarket={() => openMarket({ query })}
           />
+          <PluginBarUsage entries={entries} usage={stale ? undefined : barUsage} onOpenSettings={(id) => setDetail({ id, tab: "settings", uninstall: false })} onChanged={onBarChanged} />
           <InstalledPluginSuggestions snapshot={catalog.snapshot} onBrowse={() => openMarket()} onInstall={install.offer} />
         </>
       ) : null}
@@ -189,7 +197,8 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
 
 function HostConnectedPage({ connect, initialDetail, onOpenPage }: { connect?: PluginHostConnector; initialDetail: PluginDetailRequest | null; onOpenPage?: (page: SettingsCategory) => void }) {
   const view = usePluginHostStatus(connect);
-  return <PluginsV3View view={view} initialDetail={initialDetail} onOpenPage={onOpenPage} />;
+  const bar = usePluginBarUsage(view.connection === "open");
+  return <PluginsV3View view={view} initialDetail={initialDetail} barUsage={bar.usage} onBarChanged={bar.refresh} onOpenPage={onOpenPage} />;
 }
 
 export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {

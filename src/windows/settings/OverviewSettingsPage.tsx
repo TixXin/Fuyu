@@ -115,7 +115,7 @@ export function OverviewSettingsPage({
             <FeatureCard key={feature} feature={feature} state={features[feature]} watch={watch(feature)} onOpen={() => onOpenPage(FEATURE_PAGES[feature][0])} />
           ))}
           <TimerCard on={timerOn} watch={watch("behaviorAlerts")} onOpen={() => onOpenPage("behaviorAlerts")} />
-          <MessagesCard watch={watch("messages")} onOpen={() => onOpenPage("messages")} />
+          <MessagesCard watch={watch("messages")} onOpen={() => onOpenPage("messagesIm")} />
         </ul>
         <div className="settings-group__footer">
           <p>{text.featuresFooter}</p>

@@ -26,6 +26,7 @@ let nextPackageSeq = 0;
 let detailRequest: PluginDetailRequest | null = null;
 const detailListeners = new Set<() => void>();
 let marketRequest: MarketViewRequest | null = null;
+const marketListeners = new Set<() => void>();
 
 export function offerPluginPackage(fileName: string, base64: string): OpenedPluginPackage {
   nextPackageSeq += 1;
@@ -69,6 +70,12 @@ export function takePluginDetailRequest(): PluginDetailRequest | null {
 
 export function requestMarketView(request: MarketViewRequest) {
   marketRequest = request;
+  for (const listener of [...marketListeners]) listener();
+}
+
+export function onMarketViewRequest(listener: () => void): () => void {
+  marketListeners.add(listener);
+  return () => marketListeners.delete(listener);
 }
 
 export function takeMarketViewRequest(): MarketViewRequest | null {

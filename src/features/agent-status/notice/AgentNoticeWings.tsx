@@ -1,7 +1,7 @@
 import type { AgentNoticeNotch, AgentNoticeStack as StackMode } from "../agentSettings";
 import { AgentNoticePile } from "./AgentNoticePile";
 import { AgentNoticeRing } from "./AgentNoticeRing";
-import { activeIndex, type AgentNoticeStackItem } from "./noticeStack.ts";
+import { activeIndex, WING_PILE_ICONS, type AgentNoticeStackItem } from "./noticeStack.ts";
 import "./AgentNoticeStack.css";
 import "./AgentNoticeWings.css";
 
@@ -17,7 +17,7 @@ export function AgentNoticeWings({ mode, notch, items, activeKey }: {
   return (
     <div className="agent-notice-stack__notch" data-island-notch-band="" aria-hidden="true">
       <span className="agent-notice-stack__wing agent-notice-stack__wing--left">
-        {mode === "wings" && items.length > 1 ? <AgentNoticePile items={items} index={index} label={null} onOpen={null} /> : <AgentNoticeRing item={active} size={16} />}
+        {mode === "wings" && items.length > 1 ? <AgentNoticePile items={items} index={index} label={null} onOpen={null} limit={WING_PILE_ICONS} /> : <AgentNoticeRing item={active} size={16} />}
       </span>
       <span className="agent-notice-stack__camera" />
       <span className={`agent-notice-stack__wing agent-notice-stack__wing--right agent-notice-stack--tone-${active.tone}`}>

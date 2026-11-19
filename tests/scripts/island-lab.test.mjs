@@ -3,7 +3,7 @@ import path from "node:path";
 import test from "node:test";
 import { configDirs, forwardTarget, threadCount } from "../../scripts/island-lab/server.mjs";
 import { residueOf, sweep, switchable, threadsLine } from "../../scripts/island-lab/builtins.mjs";
-import { agentStatus, permissionRequest, qqMessage, questionRequest, wechatMessage } from "../../scripts/island-lab/actions.mjs";
+import { agentStatus, permissionRequest, pluginNotification, qqMessage, questionRequest, trackNotification, wechatMessage } from "../../scripts/island-lab/actions.mjs";
 
 test("the lab forwards only its own routes to the island", () => {
   assert.deepEqual(forwardTarget("island/emit", "POST"), { kind: "local", path: "/v1/dev/island/emit" });
@@ -34,6 +34,18 @@ test("message payloads carry a fresh revision and show while the island is visib
   const wechat = wechatMessage(43);
   assert.equal(wechat.payload.snapshot.status, "listening");
   assert.equal(wechat.payload.snapshot.message, wechat.payload.snapshot.items[0].message);
+});
+
+test("plugin notices go out as the notice the island takes, a track notice with media controls", () => {
+  const card = pluginNotification("card");
+  assert.equal(card.event, "plugin-notification");
+  assert.deepEqual(Object.keys(card.payload.pluginName), ["zh-CN", "en"]);
+  assert.equal(card.payload.layout, "card");
+  assert.equal(card.payload.actions.length, 1);
+  const track = trackNotification("安和桥", "宋冬野");
+  assert.equal(track.event, "plugin-notification");
+  assert.deepEqual([track.payload.title, track.payload.body, track.payload.controls, track.payload.layout], ["安和桥", "宋冬野", "media", "inline"]);
+  assert.equal(typeof track.payload.durationMs, "number");
 });
 
 test("agent and approval bodies match what the island expects", () => {

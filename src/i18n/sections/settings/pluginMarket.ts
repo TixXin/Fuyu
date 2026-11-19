@@ -28,6 +28,7 @@ export type SettingsPluginMarketText = {
     allInstalled: string;
   };
   trustLine: string;
+  settingsSearch: { heading: string; installed: string; open: (name: string) => string };
   loading: string;
   offline: { title: string; body: string; openPlugins: string };
   error: { cachedTitle: string; cachedBody: (time: string | null) => string; retry: string; title: string; body: string };
@@ -151,6 +152,7 @@ export const zhCN: SettingsPluginMarketText = {
     allInstalled: "市场上的插件你都装了。有新插件上架时会出现在这里。",
   },
   trustLine: "市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。",
+  settingsSearch: { heading: "插件市场里有", installed: "已安装", open: (name) => `在插件市场查看「${name}」` },
   loading: "正在读取市场目录…",
   offline: {
     title: "插件功能没在运行",
@@ -170,7 +172,7 @@ export const zhCN: SettingsPluginMarketText = {
   },
   noResult: {
     title: (query) => `没找到「${query}」`,
-    body: "换个说法试试，或者用英文名、作者名搜；也可以按分类看看。",
+    body: "换个说法试试，拼音、英文名、作者名都能搜；也可以按分类看看。",
     fromFile: "有 .fuyu 文件？从文件安装",
     buildOwn: "自己做一个插件",
   },
@@ -299,6 +301,7 @@ export const en: SettingsPluginMarketText = {
     allInstalled: "You have every plugin in the market. New ones will show up here.",
   },
   trustLine: "Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.",
+  settingsSearch: { heading: "In the plugin market", installed: "Installed", open: (name) => `See ${name} in the plugin market` },
   loading: "Loading the market…",
   offline: {
     title: "Plugins aren't running",

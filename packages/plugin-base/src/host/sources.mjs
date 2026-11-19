@@ -85,6 +85,7 @@ export function readManifest(root, options) {
     package: pkg.name,
     version: pkg.version,
     displayName: app.displayName ?? null,
+    icon: typeof app.icon === "string" && app.icon !== "" ? app.icon : null,
     host,
     clients,
     commands: app.commands ?? [],

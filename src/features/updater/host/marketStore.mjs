@@ -11,7 +11,7 @@ import {
 } from "../../../../packages/plugin-market/src/index.mjs";
 import { PACKAGES_SUBDIR } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
-import { firstPublishedAt, marketSince, packageIcon, packageReach, pluginIcon, pluginScreenshots } from "./marketListing.mjs";
+import { firstPublishedAt, marketSince, packageIcon, packageReach, pluginIcon, pluginKeywords, pluginScreenshots } from "./marketListing.mjs";
 import { readState } from "./marketState.mjs";
 
 export { STATE_FILE, normalizeTrustedAuthors, readState, writeState } from "./marketState.mjs";
@@ -320,6 +320,7 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
       displayName: isObject(manifest.displayName) ? manifest.displayName : { "zh-CN": plugin.name, en: plugin.name },
       description: isObject(manifest.description) ? manifest.description : { "zh-CN": "", en: "" },
       categories: Array.isArray(manifest.categories) ? [...manifest.categories] : [],
+      keywords: pluginKeywords(manifest.keywords ?? primaryEntry?.keywords),
       icon: pluginIcon(plugin, primaryEntry),
       screenshots: pluginScreenshots(plugin, primaryEntry),
       firstPublishedAt: firstPublishedAt(plugin),
@@ -357,5 +358,6 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
     error: indexError ?? state.lastError ?? null,
     revocationWarning: state.revocationWarning ?? null,
     lastSource: lastSource ?? state.lastSource ?? null,
+    autoUpdated: state.autoUpdated ?? null,
   };
 }

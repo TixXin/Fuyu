@@ -15,6 +15,8 @@ const { PluginMarketView } = await import("../../src/windows/settings/PluginMark
 const { PluginMarketHeaderActions } = await import("../../src/windows/settings/PluginMarketHeaderActions");
 const { PluginsV3SettingsPage } = await import("../../src/windows/settings/PluginsV3SettingsPage");
 const { requestMarketView, requestPluginDetail } = await import("../../src/windows/settings/pluginPageHandoff");
+const { SettingsSidebar } = await import("../../src/windows/settings/SettingsSidebar");
+await import("../../src/windows/settings/slots/categories");
 
 const text = TRANSLATIONS[locale].settings.pluginsV3.marketPage;
 const zh = locale === "zh-CN";
@@ -64,7 +66,7 @@ async function mount(key: string, title: string, node: ReactNode, narrow = false
   return { stage: host, unmount: async () => { await act(async () => root.unmount()); host.remove(); } };
 }
 const view = (key: string, title: string, props: Partial<PluginMarketViewProps> = {}, narrow = false) =>
-  mount(key, title, <PluginMarketView host="open" snapshot={marketFixture()} onRefresh={() => market.calls.push("view-refresh")} onOpenPage={(page) => opened.push(`view:${page}`)} {...props} />, narrow);
+  mount(key, title, <PluginMarketView host="open" followRequests={false} snapshot={marketFixture()} onRefresh={() => market.calls.push("view-refresh")} onOpenPage={(page) => opened.push(`view:${page}`)} {...props} />, narrow);
 const card = (stage: ParentNode, name: string) => stage.querySelector<HTMLElement>(`[data-market-plugin='${name}']`);
 const modal = (selector: string) => waitFor(() => document.querySelector<HTMLElement>(selector), selector);
 const cards = (stage: ParentNode, section: string) => [...stage.querySelectorAll(`[data-market-section='${section}'] [data-market-plugin]`)].map((item) => item.getAttribute("data-market-plugin"));
@@ -137,6 +139,14 @@ try {
 
   const search = await view("search", zh ? "搜索" : "Search", { initialQuery: "sync" });
   check(cards(search.stage, "results").sort().join() === "@fuyu/devices,@mio/focus-sync,@ryo/clip-sync,@tara/linear", "Searching matches names and descriptions and lists only those plugins under a result count");
+
+  const pinyin = await view("search-pinyin", zh ? "搜索：拼音和关键词" : "Search: pinyin and keywords", { initialQuery: "hjy" });
+  const input = pinyin.stage.querySelector<HTMLInputElement>(".market-toolbar input")!;
+  const found = (query: string, expected: string) => type(input, query).then(() => waitFor(() => cards(pinyin.stage, "results").join() === expected, `"${query}" to find ${expected}`));
+  check(await found("tianqi", "@fuyu/weather") && await found("tq", "@fuyu/weather"), "Searching by full pinyin or by initials finds a plugin by its Chinese name");
+  check(await found("forecast", "@fuyu/weather") && await found("环境音", "@nori/focus-sounds") && await found("hjy", "@nori/focus-sounds"), "Searching a manifest keyword, or its pinyin, finds the plugin even though the name and description do not say it");
+  check(await found("天气预报怎么看", "@fuyu/weather"), "A longer query that contains the plugin's name still finds it");
+  await found("tianqi", "@fuyu/weather");
 
   const none = await view("noresult", zh ? "搜索无结果" : "No results", { initialQuery: zh ? "股票行情" : "stock ticker" });
   check(none.stage.querySelector("[data-market-empty='no-result']") && none.stage.querySelector("[data-market-empty] [data-action='market-install-file']") && none.stage.querySelector("[data-market-empty] [data-market-category='productivity']"), "No results suggests categories, installing from a file and making your own");
@@ -269,6 +279,17 @@ try {
   const handed = await mount("handed", "handed", <PluginMarketPage connect={connect} />);
   check(handed.stage.querySelector<HTMLInputElement>(".market-toolbar input")?.value === "notes" && cards(handed.stage, "results").length === 1, "A search handed over from the plugin page is filled in");
   await handed.unmount();
+
+  const side = await mount("settings-search", "settings-search", <><div style={{ width: 212 }}><SettingsSidebar category="general" onCategoryChange={(page) => opened.push(`sidebar:${page}`)} onRowOpen={() => undefined} /></div><PluginMarketPage connect={connect} /></>);
+  const sideInput = side.stage.querySelector<HTMLInputElement>(".settings-sidebar__search input")!;
+  const marketHits = () => [...side.stage.querySelectorAll<HTMLElement>("[data-market-hits] [data-market-hit]")].map((hit) => hit.dataset.marketHit);
+  const sideFinds = (query: string, expected: string) => type(sideInput, query).then(() => waitFor(() => marketHits().join() === expected, `the settings search to offer ${expected} for "${query}"`));
+  check(await sideFinds("tianqi", "@fuyu/weather") && side.stage.querySelector(".settings-sidebar__empty") && side.stage.querySelector("[data-market-hits]")?.textContent!.includes(text.settingsSearch.heading), "When no setting matches, the settings search offers the market plugin the words find, by pinyin too");
+  check(side.stage.querySelector("[data-market-hit='@fuyu/weather'] .settings-sidebar__hit-tag")?.textContent === text.settingsSearch.installed, "…and says when that plugin is already installed");
+  check(await sideFinds(zh ? "便签" : "sticky", "@someone/notes") && !side.stage.querySelector("[data-market-hit] .settings-sidebar__hit-tag"), "A plugin that is not installed is offered without the tag");
+  await click(side.stage.querySelector("[data-market-hit='@someone/notes']"));
+  check(opened.includes("sidebar:pluginMarket") && await modal("[data-stage='settings-search'] [data-market-detail-modal='@someone/notes']"), "Clicking it goes to the market page and opens that plugin's detail, even when the market page is already showing");
+  await side.unmount();
 
   results.textContent = messages.join("\n");
   document.documentElement.dataset.testResult = "passed";

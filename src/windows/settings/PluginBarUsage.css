@@ -1,0 +1,89 @@
+.plugin-bar { min-width: 0; display: grid; gap: 8px; }
+.plugin-bar__warn { margin-right: 10px; color: var(--warning-text, #ffd166); font-weight: 600; }
+.plugin-bar__track { min-width: 0; }
+.plugin-bar__map {
+  position: relative;
+  box-sizing: border-box;
+  height: 28px;
+  overflow: hidden;
+  background: var(--color-white-a06);
+  border: 1px solid var(--color-white-a10);
+  border-radius: var(--radius-pill);
+}
+.plugin-bar__seg {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  box-sizing: border-box;
+  min-width: 14px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--info-text, var(--color-accent));
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+}
+.plugin-bar__seg:hover { background: color-mix(in srgb, var(--color-accent) 34%, transparent); }
+.plugin-bar__seg[aria-pressed="true"] { background: color-mix(in srgb, var(--color-accent) 42%, transparent); border-color: var(--color-accent); }
+.plugin-bar__seg:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.plugin-bar__seg--clipped {
+  color: var(--warning-text, #ffd166);
+  border-color: color-mix(in srgb, var(--warning-text, #ffd166) 60%, transparent);
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--warning-text, #ffd166) 26%, transparent) 0 5px, color-mix(in srgb, var(--warning-text, #ffd166) 10%, transparent) 5px 10px);
+}
+.plugin-bar__seg--clipped:hover { border-color: var(--warning-text, #ffd166); }
+.plugin-bar__seg--clipped[aria-pressed="true"] { border-color: var(--warning-text, #ffd166); }
+.plugin-bar__note { margin: 0; padding: 0 4px; color: var(--text-3); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.plugin-bar__list { min-width: 0; margin: 0; padding: 0; list-style: none; display: grid; background: var(--color-white-a04); border: 1px solid var(--color-white-a08); border-radius: var(--radius-lg); }
+.plugin-bar__item { min-width: 0; }
+.plugin-bar__item + .plugin-bar__item { border-top: 1px solid var(--color-white-a06); }
+.plugin-bar__row {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 9px;
+  padding: 7px 11px;
+  color: var(--text-2);
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+}
+.plugin-bar__row:disabled { cursor: default; }
+.plugin-bar__row:hover:not(:disabled) { background: var(--color-white-a04); }
+.plugin-bar__row:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+.plugin-bar__row b { min-width: 0; color: var(--text-1); font-weight: 600; overflow-wrap: anywhere; }
+.plugin-bar__num {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  background: var(--color-white-a06);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+.plugin-bar__item:is([data-state="shown"], [data-state="clipped"]) .plugin-bar__num { color: var(--info-text, var(--color-accent)); background: color-mix(in srgb, var(--color-accent) 22%, transparent); }
+.plugin-bar__item[data-state="clipped"] .plugin-bar__num { color: var(--warning-text, #ffd166); background: color-mix(in srgb, var(--warning-text, #ffd166) 20%, transparent); }
+.plugin-bar__state { min-width: 0; flex: 1 1 140px; color: var(--text-3); text-align: right; overflow-wrap: anywhere; }
+.plugin-bar__item[data-state="clipped"] .plugin-bar__state { color: var(--warning-text, #ffd166); }
+.plugin-bar__item:not([data-state="shown"], [data-state="clipped"]) .plugin-bar__row b { color: var(--text-2); }
+.plugin-bar__actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 11px 9px 38px; }

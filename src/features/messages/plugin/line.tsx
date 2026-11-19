@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
+import { useTrackArt } from "../../../lib/now-playing/trackArt";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { PluginNotificationActions } from "../island/PluginNotificationActions";
 import { CollapsedMessageContent } from "../CollapsedMessageContent";
 import { NotchMessageLeading, NotchMessageTrailing } from "../island/NotchMessage";
+import { withTrackArt } from "../island/trackPreview.ts";
 import { messagesIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 
@@ -11,18 +13,22 @@ type SummaryContext = { enabled: boolean; bodyOnly: boolean; grow?: boolean; chi
 const summarySlot = defineSlot<SummaryContext>("island.line/v1");
 const lineSlot = defineSlot<object>("island.line/v1");
 
+function usePreview() {
+  return withTrackArt(messagesIsland.use()?.preview ?? null, useTrackArt());
+}
+
 function MessageSummary({ enabled, bodyOnly, grow = false, children }: SummaryContext) {
-  const preview = messagesIsland.use()?.preview ?? null;
+  const preview = usePreview();
   return <CollapsedMessageContent preview={preview} enabled={enabled} bodyOnly={bodyOnly} grow={grow}>{children}</CollapsedMessageContent>;
 }
 
 function MessageLeading() {
-  const preview = messagesIsland.use()?.preview;
+  const preview = usePreview();
   return preview ? <NotchMessageLeading preview={preview} /> : null;
 }
 
 function MessageTrailing() {
-  const preview = messagesIsland.use()?.preview;
+  const preview = usePreview();
   return preview ? <NotchMessageTrailing preview={preview} /> : null;
 }
 

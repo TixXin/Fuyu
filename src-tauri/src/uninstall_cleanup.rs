@@ -13,6 +13,7 @@ const MANAGED_HOME_ITEMS: &[&str] = &[
     "webview-crashes.log",
     "panic.log",
     "crash.log",
+    "frontend-errors.log",
     "window-open-trace.log",
     "clipboard-open-trace.log",
     "clipboard-history.json",

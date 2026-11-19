@@ -178,6 +178,11 @@ color: #101013;
   filter: brightness(1.08);
 }
 
+.mail-settings__button--quiet {
+  margin-right: auto;
+  color: var(--color-text-subtle);
+}
+
 .mail-settings__button--danger {
 color: var(--error-text, #ff9aa9);
   background: transparent;

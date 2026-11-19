@@ -1,0 +1,220 @@
+.notice-stage {
+  --notice-stage-fill: #0b0b0d;
+  --notice-stage-ink: #f8f6f0;
+  --notice-stage-ink-soft: rgba(248, 246, 240, 0.6);
+  --notice-stage-chip: rgba(255, 255, 255, 0.12);
+  --notice-stage-rule: rgba(255, 255, 255, 0.1);
+  min-width: 0;
+  display: grid;
+  gap: var(--space-lg);
+  padding: var(--space-xl) 16px;
+}
+
+.island-light .notice-stage {
+  --notice-stage-fill: #ffffff;
+  --notice-stage-ink: #18181e;
+  --notice-stage-ink-soft: rgba(24, 24, 30, 0.6);
+  --notice-stage-chip: rgba(24, 24, 30, 0.08);
+  --notice-stage-rule: rgba(24, 24, 30, 0.1);
+  --notice-stage-dot: #1f8a5b;
+}
+
+.notice-stage__scene {
+  position: relative;
+  height: 138px;
+  overflow: hidden;
+  background: var(--color-white-a04);
+  border: 1px solid var(--color-white-a06);
+  border-top: 2px solid var(--color-white-a16);
+  border-radius: var(--radius-lg);
+}
+
+.notice-stage__shell,
+.notice-stage__line,
+.notice-stage__banner,
+.notice-stage__panel {
+  position: absolute;
+  left: 50%;
+  max-width: calc(100% - 24px);
+  translate: -50% 0;
+}
+
+.notice-stage__shell {
+  top: 10px;
+  width: 132px;
+  height: 30px;
+  background: var(--notice-stage-fill);
+  border-radius: 15px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.island-light .notice-stage__shell,
+.island-light .notice-stage__banner {
+  box-shadow: 0 0 0 1px rgba(24, 24, 30, 0.1), 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+[data-notice="banner"] > .notice-stage__shell::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: 13px;
+  width: 6px;
+  height: 6px;
+  background: var(--notice-stage-dot, #35e985);
+  border-radius: var(--radius-circle);
+}
+
+[data-notice="line"] > .notice-stage__shell {
+  width: 264px;
+  animation: notice-stage-widen var(--motion-slow) var(--motion-ease-out) backwards;
+}
+
+[data-notice="panel"] > .notice-stage__shell {
+  width: 340px;
+  height: 108px;
+  border-radius: 18px;
+  animation: notice-stage-open var(--motion-slow) var(--motion-ease-out) backwards;
+}
+
+.notice-stage__line,
+.notice-stage__banner,
+.notice-stage__panel {
+  color: var(--notice-stage-ink);
+  font-size: 12px;
+  line-height: 1.4;
+  animation: notice-stage-fade var(--motion-medium) var(--motion-ease-out) var(--motion-medium) backwards;
+}
+
+.notice-stage__line {
+  top: 10px;
+  width: 264px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0 12px;
+}
+
+.notice-stage__line b,
+.notice-stage__text b {
+  flex: none;
+  font-weight: 600;
+}
+
+.notice-stage__line > span:last-child,
+.notice-stage__text > span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--notice-stage-ink-soft);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notice-stage__banner {
+  top: 48px;
+  width: 340px;
+  background: var(--notice-stage-fill);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.notice-stage__banner,
+.notice-stage__panel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 9px 12px;
+}
+
+.notice-stage__text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.notice-stage__time {
+  flex: none;
+  align-self: flex-start;
+  color: var(--notice-stage-ink-soft);
+  font-size: 11px;
+}
+
+.notice-stage__copy {
+  flex: none;
+  padding: 3px 9px;
+  background: var(--notice-stage-chip);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.notice-stage__panel {
+  top: 10px;
+  width: 340px;
+  height: 108px;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 10px 2px 0;
+}
+
+.notice-stage__panel-title {
+  padding: 0 12px 6px;
+  color: var(--notice-stage-ink-soft);
+  font-size: 11px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--notice-stage-rule);
+}
+
+.notice-stage__caption {
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.notice-stage__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md) var(--space-xl);
+}
+
+.notice-stage__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md) var(--space-xl);
+}
+
+@keyframes notice-stage-widen {
+  from {
+    width: 132px;
+  }
+}
+
+@keyframes notice-stage-open {
+  from {
+    width: 132px;
+    height: 30px;
+    border-radius: 15px;
+  }
+}
+
+@keyframes notice-stage-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice-stage__shell,
+  .notice-stage__line,
+  .notice-stage__banner,
+  .notice-stage__panel {
+    animation: none;
+  }
+}

@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { emptyRevocations } from "../../../../packages/plugin-market/src/index.mjs";
+import { normalizeAutoUpdated } from "./marketAutoUpdated.mjs";
 
 export const STATE_FILE = "market-state.json";
 
@@ -22,7 +23,7 @@ export function normalizeLastSource(raw) {
 
 export function readState(dataDir) {
   const statePath = join(dataDir, STATE_FILE);
-  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, updatedAt: null, lastError: null, revocationWarning: null, lastSource: null });
+  const empty = () => ({ manualAllowed: false, lastIndexSerial: null, revocations: emptyRevocations(), trustedAuthors: {}, updatedAt: null, lastError: null, revocationWarning: null, lastSource: null, autoUpdated: null });
   if (!existsSync(statePath)) return empty();
   try {
     const raw = JSON.parse(readFileSync(statePath, "utf8"));
@@ -35,6 +36,7 @@ export function readState(dataDir) {
       lastError: typeof raw?.lastError === "string" ? raw.lastError : null,
       revocationWarning: typeof raw?.revocationWarning === "string" ? raw.revocationWarning : null,
       lastSource: normalizeLastSource(raw?.lastSource),
+      autoUpdated: normalizeAutoUpdated(raw?.autoUpdated),
     };
   } catch {
     return empty();

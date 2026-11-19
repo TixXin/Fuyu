@@ -12,6 +12,7 @@ export const marketV1 = defineService("market/v1", {
     setManualAllowed: true,
     setEnabled: true,
     uninstall: true,
+    dismissAutoUpdated: true,
   },
   events: { changed: true },
 });

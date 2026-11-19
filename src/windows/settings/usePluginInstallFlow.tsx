@@ -1,17 +1,35 @@
-import { useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import type { MarketCatalogPlugin, MarketInspectedPackage } from "@fuyu/plugin-services";
-import { useErrorText } from "../../i18n";
+import { useErrorText, useLocale } from "../../i18n";
+import { openPluginSettingsWindow } from "./api";
 import { PluginInstallConfirmModal, type PendingPluginInstall } from "./PluginInstallConfirmModal";
+import { PluginInstalledToast, type InstalledNotice } from "./PluginInstalledToast";
 import { marketClient } from "./pluginMarketActions";
-import { isFirstFromPublisher } from "./pluginMarketModel";
+import { isFirstFromPublisher, localized } from "./pluginMarketModel";
 import { marketActionCandidate } from "./pluginRowStatus";
+import { latestPluginStatuses, pluginSetupNeed, subscribePluginStatuses } from "./pluginSetupStore";
+import type { PluginStatusV3 } from "./usePluginHostStatus";
 
 type PendingAction =
-  | { kind: "market"; name: string; modal: PendingPluginInstall }
-  | { kind: "file"; base64: string; modal: PendingPluginInstall };
+  | { kind: "market"; name: string; title: string; modal: PendingPluginInstall }
+  | { kind: "file"; base64: string; title: string; modal: PendingPluginInstall };
 
-export function usePluginInstallFlow(onInstalled?: () => void, catalog?: { plugins: readonly MarketCatalogPlugin[]; manualAllowed: boolean } | null) {
+export interface PluginInstallFlowOptions {
+  plugins?: readonly PluginStatusV3[] | null;
+  onOpenSettings?: (id: string) => void;
+}
+
+function openSettingsOf(id: string) {
+  void openPluginSettingsWindow(id).catch((error: unknown) => console.error(`Failed to open the settings of ${id}`, error));
+}
+
+export function usePluginInstallFlow(onInstalled?: () => void, catalog?: { plugins: readonly MarketCatalogPlugin[]; manualAllowed: boolean } | null, options: PluginInstallFlowOptions = {}) {
   const errorText = useErrorText();
+  const { locale } = useLocale();
+  const seen = useSyncExternalStore(subscribePluginStatuses, latestPluginStatuses);
+  const statuses = options.plugins === undefined ? seen : options.plugins;
+  const [notice, setNotice] = useState<InstalledNotice | null>(null);
+  const dismiss = useCallback(() => setNotice(null), []);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,9 +39,11 @@ export function usePluginInstallFlow(onInstalled?: () => void, catalog?: { plugi
     if (!action) return;
     const { candidate, isUpdate } = action;
     setError(null);
+    setNotice(null);
     setPending({
       kind: "market",
       name: plugin.name,
+      title: localized(candidate.confirmation.displayName, locale, "") || localized(plugin.displayName, locale, plugin.name),
       modal: {
         id: plugin.name,
         version: candidate.version,
@@ -41,6 +61,7 @@ export function usePluginInstallFlow(onInstalled?: () => void, catalog?: { plugi
     setPending({
       kind: "file",
       base64,
+      title: localized(inspected.confirmation.displayName, locale, inspected.id),
       modal: { id: inspected.id, version: inspected.version, kind: "file", confirmation: inspected.confirmation, fileName, sha256: inspected.sha256, manualAllowed: catalog?.manualAllowed ?? false },
     });
   };
@@ -60,6 +81,8 @@ export function usePluginInstallFlow(onInstalled?: () => void, catalog?: { plugi
     setError(null);
     void run(pending)
       .then(() => {
+        const { id, version, kind } = pending.modal;
+        setNotice({ id, version, updated: kind === "update", name: pending.title });
         setPending(null);
         onInstalled?.();
       })
@@ -67,7 +90,20 @@ export function usePluginInstallFlow(onInstalled?: () => void, catalog?: { plugi
       .finally(() => setBusy(false));
   };
 
-  const modal = pending ? (
+  const setup = notice ? pluginSetupNeed(statuses?.find((plugin) => plugin.id === notice.id), true, locale) : null;
+  const toast = notice ? (
+    <PluginInstalledToast
+      notice={notice}
+      setup={setup}
+      onDismiss={dismiss}
+      onOpenSettings={() => {
+        setNotice(null);
+        (options.onOpenSettings ?? openSettingsOf)(notice.id);
+      }}
+    />
+  ) : null;
+
+  const confirmModal = pending ? (
     <PluginInstallConfirmModal
       pending={pending.modal}
       busy={busy}
@@ -78,6 +114,8 @@ export function usePluginInstallFlow(onInstalled?: () => void, catalog?: { plugi
       }}
     />
   ) : null;
+
+  const modal = confirmModal || toast ? <>{confirmModal}{toast}</> : null;
 
   return { offer, offerFile, modal };
 }
