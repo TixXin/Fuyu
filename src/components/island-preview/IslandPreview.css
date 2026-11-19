@@ -141,12 +141,6 @@
   font-size: 11px;
 }
 
-@media (max-width: 620px) {
-  .island-preview {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
 .island-preview--compact {
   grid-template-columns: minmax(0, 1fr);
 }

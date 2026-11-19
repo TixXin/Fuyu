@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Activity, Bell, Blocks, Bot, Brush, CalendarDays, ClipboardList, Compass, Crop, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
+import { Activity, Bell, Blocks, Bot, CalendarDays, ClipboardList, Compass, Crop, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { defineSlot, type SettingsCategoryMeta } from "./slots.ts";
 
@@ -20,11 +20,10 @@ export const BUILTIN_CATEGORIES = [
   { id: "generalData", icon: SlidersHorizontal },
   { id: "generalSync", icon: FolderSync, aliases: ["sync"] },
   { id: "generalApi", icon: SlidersHorizontal },
-  { id: "appearance", icon: LayoutTemplate, group: "basics", tabs: ["theme", "themeStyle", "appearance", "appearanceCollapsed", "themeMarket"] },
-  { id: "theme", icon: Palette, aliases: ["themePresets"] },
+  { id: "appearance", icon: LayoutTemplate, group: "basics", tabs: ["theme", "themeStyle", "appearance", "appearanceCollapsed"] },
+  { id: "theme", icon: Palette, aliases: ["themePresets", "themeMarket"] },
   { id: "themeStyle", icon: Sparkles, aliases: ["themeGlass"] },
   { id: "appearanceCollapsed", icon: LayoutTemplate },
-  { id: "themeMarket", icon: Brush },
   { id: "behavior", icon: MousePointerClick, group: "basics", tabs: ["behavior", "behaviorTuck"], aliases: ["behaviorQuiet"] },
   { id: "behaviorTuck", icon: MousePointerClick },
   { id: "shortcuts", icon: Keyboard, group: "basics", tabs: ["shortcuts", "shortcutsIsland", "shortcutsReference"] },
@@ -68,6 +67,7 @@ type Builtin = (typeof BUILTIN_CATEGORIES)[number];
 type WithTabs = Extract<Builtin, { tabs: readonly string[] }>;
 
 export type SettingsCategory = Builtin["id"];
+export type SettingsLink = SettingsCategory | "themeMarket";
 export type SettingsEntry = WithTabs["id"];
 export type TabbedCategory = WithTabs["tabs"][number];
 export type SettingsFeature = Extract<Builtin, { feature: string }>["feature"];
