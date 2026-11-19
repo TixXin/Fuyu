@@ -27,6 +27,22 @@
       "en": "Pick a to-do and focus; the island counts down, tells you when to take a break, and counts today's rounds."
     },
     "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/page.png",
+        "caption": {
+          "zh-CN": "岛上页面：倒计时和今天的轮数",
+          "en": "Island page: countdown and today's rounds"
+        }
+      },
+      {
+        "path": "screenshots/bar.png",
+        "caption": {
+          "zh-CN": "收起条：剩余时间",
+          "en": "Collapsed bar: time left"
+        }
+      }
+    ],
     "categories": [
       "productivity",
       "todos"
