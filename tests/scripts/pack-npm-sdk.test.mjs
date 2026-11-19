@@ -20,8 +20,8 @@ function linkDir(source, target) {
   symlinkSync(realpathSync(source), target, "junction");
 }
 
-function runNode(cwd, script, args = []) {
-  const res = spawnSync(process.execPath, [script, ...args], { cwd, encoding: "utf8" });
+function runNode(cwd, script, args = [], env = {}) {
+  const res = spawnSync(process.execPath, [script, ...args], { cwd, encoding: "utf8", env: { ...process.env, ...env } });
   return { status: res.status, stdout: res.stdout, stderr: res.stderr, output: `${res.stdout}${res.stderr}` };
 }
 
@@ -143,7 +143,9 @@ test("packNpmSdk builds standalone fuyu-plugin and create-fuyu-plugin 2.0.0 that
     url: "git+https://github.com/TixXin/fuyu.git",
     directory: "packages/create-plugin",
   });
-  assert.deepEqual(Object.keys(fuyuPkg.dependencies).sort(), ["esbuild", "ws"]);
+  assert.deepEqual(Object.keys(fuyuPkg.dependencies).sort(), ["esbuild", "react", "react-dom", "ws"]);
+  assert.ok(fuyuPkg.files.includes("LICENSE-lucide"));
+  assert.match(readFileSync(join(packed.fuyuDir, "LICENSE-lucide"), "utf8"), /^ISC License\s+Copyright \(c\) \d+ Lucide Icons and Contributors/);
   assert.equal(createPkg.dependencies, undefined);
   assert.ok(existsSync(join(packed.fuyuDir, "LICENSE")));
   assert.ok(existsSync(join(packed.fuyuDir, "README.md")));
@@ -227,6 +229,24 @@ test("packNpmSdk builds standalone fuyu-plugin and create-fuyu-plugin 2.0.0 that
   assert.ok(existsSync(join(projectDir, "build", "someone-ext-timer-0.1.0.fuyu")));
   const builtManifest = JSON.parse(readFileSync(join(projectDir, "build", "package", "package.json"), "utf8"));
   assert.equal(builtManifest.fuyu.builtWith, "2.0.0");
+
+  const iconRes = runNode(projectDir, cliBin, ["icon", "--glyph", "rocket", "--color", "#c76be0", "--out", "build/icon-probe.svg"]);
+  assert.equal(iconRes.status, 0, iconRes.output);
+  assert.match(readFileSync(join(projectDir, "build", "icon-probe.svg"), "utf8"), /stroke="#c76be0"[^>]*><path d="/);
+
+  const previewRes = runNode(projectDir, cliBin, ["preview"]);
+  assert.equal(previewRes.status, 0, previewRes.output);
+  const previewHtml = readFileSync(join(projectDir, "build", "preview.html"), "utf8");
+  assert.ok(previewHtml.includes(".market-card {") && previewHtml.includes('<button class="market-card__name"'), "the preview carries the market styles and the card");
+
+  const noBrowser = { CHROME_PATH: join(scratch, "no-such-browser") };
+  const shotsBare = runNode(projectDir, cliBin, ["shots"], noBrowser);
+  assert.equal(shotsBare.status, 1);
+  assert.match(shotsBare.output, /needs react and react-dom/);
+  for (const dep of ["react", "react-dom"]) linkDir(join(REPO_ROOT, "node_modules", dep), join(projectDir, "node_modules", "fuyu-plugin", "node_modules", dep));
+  const shotsOwn = runNode(projectDir, cliBin, ["shots"], noBrowser);
+  assert.equal(shotsOwn.status, 1);
+  assert.match(shotsOwn.output, /CHROME_PATH points to .*no-such-browser/, shotsOwn.output);
 
   const hostDir = join(scratch, "host-data");
   mkdirSync(hostDir, { recursive: true });
