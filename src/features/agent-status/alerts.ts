@@ -12,16 +12,32 @@ export type AgentAlertKinds = Record<Exclude<AgentAlertKind, "started">, boolean
 
 type Phase = AgentSessionSummary["phase"];
 
-export type SessionPhases = { phases: ReadonlyMap<string, Phase>; worked: ReadonlySet<string> };
+type Turn = { startedAt: number | null; endedAt: number; reply: string | null };
+
+export type SessionPhases = { phases: ReadonlyMap<string, Phase>; worked: ReadonlySet<string>; turns: ReadonlyMap<string, Turn> };
+
+export const RECENT_COMPLETION_MS = 15_000;
 
 const isWorking = (phase: Phase) => phase === "running" || phase === "waiting" || phase === "stale";
 
-export function phasesOf(sessions: AgentSessionSummary[], previous: SessionPhases | null = null): SessionPhases {
+const turnOf = (session: AgentSessionSummary): Turn => ({ startedAt: session.turnStartedAt, endedAt: session.updatedAt, reply: session.lastMessage });
+
+export function endedBetweenLooks(before: Turn | undefined, session: AgentSessionSummary, now: number) {
+  if (session.phase !== "completed" || !Number.isFinite(session.updatedAt)) return false;
+  if (!before) return Math.abs(now - session.updatedAt) <= RECENT_COMPLETION_MS;
+  if (session.turnStartedAt != null && before.startedAt != null) return session.turnStartedAt > before.startedAt;
+  return session.updatedAt > before.endedAt && session.lastMessage !== before.reply;
+}
+
+export function phasesOf(sessions: AgentSessionSummary[], previous: SessionPhases | null = null, now = Date.now()): SessionPhases {
   const worked = new Set(previous?.worked);
+  const turns = new Map(previous?.turns);
   for (const session of sessions) {
-    if (!previous || isWorking(session.phase)) worked.add(sessionKey(session));
+    const key = sessionKey(session);
+    if (!previous || isWorking(session.phase) || endedBetweenLooks(previous.turns.get(key), session, now)) worked.add(key);
+    turns.set(key, turnOf(session));
   }
-  return { phases: new Map(sessions.map((session) => [sessionKey(session), rememberedPhase(session)])), worked };
+  return { phases: new Map(sessions.map((session) => [sessionKey(session), rememberedPhase(session)])), worked, turns };
 }
 
 export function alertKindsOf(settings: Pick<IslandSettings, "agentAlertStarted" | "agentAlertCompleted" | "agentAlertFailed" | "agentAlertWaiting">): AgentAlertKinds {
@@ -43,14 +59,16 @@ export function detectAlerts(
   previous: SessionPhases | null,
   sessions: AgentSessionSummary[],
   kinds: AgentAlertKinds,
+  now = Date.now(),
 ): AgentAlert[] {
-  if (!previous) return [];
   return sessions.flatMap((session) => {
     const key = sessionKey(session);
-    const kind = alertKind(previous.phases.get(key), session.phase, replyEnding(session));
+    const ended = endedBetweenLooks(previous?.turns.get(key), session, now);
+    if (!previous && !ended) return [];
+    const kind = alertKind(ended ? "running" : previous?.phases.get(key), session.phase, replyEnding(session));
     if (!kind) return [];
     const on = kind === "started"
-      ? kinds.started === "everyTurn" || (kinds.started === "newSession" && !previous.worked.has(key))
+      ? kinds.started === "everyTurn" || (kinds.started === "newSession" && !previous?.worked.has(key))
       : kinds[kind];
     return on ? [{ kind, session }] : [];
   });
