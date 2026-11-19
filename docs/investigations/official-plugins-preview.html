@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>官方插件完善</title>
+<style>
+:root { --page:#f3f3f5; --ink:#1d1d1f; --muted:#6e6e73; --line:#dcdce1; --card:#fff; --accent:#0a84ff; --island:#111214; --itext:#f2f2f2; --add:#1e7a3c; --addbg:#e3f6e8; --off:#8a5a00; --offbg:#fbf0d9; --ask:#7a2bb8; --askbg:#f1e6fb; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --page:#1b1b1d; --ink:#ececf0; --muted:#9a9aa2; --line:#33333a; --card:#252528; --addbg:#173322; --add:#7ed69a; --offbg:#3a2e14; --off:#f0c46a; --askbg:#2f1f3d; --ask:#d3a6ff; } }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--page); color:var(--ink); font:14px/1.55 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+main { max-width:1180px; margin:0 auto; padding:28px 16px 60px; }
+h1 { font-size:22px; margin:0 0 4px; }
+.lead { color:var(--muted); margin:0 0 14px; }
+nav { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 24px; position:sticky; top:0; background:var(--page); padding:8px 0; z-index:2; }
+nav a { text-decoration:none; color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:2px 11px; font-size:12.5px; }
+nav a b { color:var(--muted); font-weight:500; margin-left:4px; }
+section.p { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:22px; scroll-margin-top:52px; }
+.head { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.head h2 { margin:0; font-size:17px; }
+.chip { font-size:11.5px; padding:0 8px; border-radius:999px; background:var(--page); color:var(--muted); border:1px solid var(--line); }
+.cmp { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr)); gap:14px; }
+.cmp h4 { margin:0 0 6px; font-size:12.5px; color:var(--muted); font-weight:600; }
+.island { background:var(--island); color:var(--itext); border-radius:18px; padding:12px 14px; font-size:12.5px; font-variant-numeric:tabular-nums; min-height:150px; }
+.island .row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.07); }
+.island .row:last-child { border-bottom:0; }
+.island .big { font-size:26px; font-weight:600; letter-spacing:-.5px; }
+.island .dim { opacity:.55; }
+.island .btn { font-size:11px; padding:1px 7px; border-radius:6px; background:rgba(255,255,255,.12); white-space:nowrap; }
+.island .btn.pri { background:#0a84ff; }
+.island .form { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:6px; }
+.island .form span { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:6px; padding:1px 7px; font-size:11px; }
+.island .x { outline:1.5px dashed rgba(255,120,120,.75); outline-offset:1px; border-radius:6px; }
+.island .bar { height:5px; border-radius:3px; background:rgba(255,255,255,.12); position:relative; margin:6px 0; }
+.island .bar i { position:absolute; inset:0 auto 0 0; width:42%; border-radius:3px; background:#ff6b5b; }
+.collapsed { display:inline-flex; gap:8px; align-items:center; height:28px; padding:0 14px; border-radius:14px; background:var(--island); color:var(--itext); font-size:12px; margin-top:8px; }
+.collapsed.none { background:transparent; color:var(--muted); border:1px dashed var(--line); }
+ul.list { margin:10px 0 0; padding-left:18px; }
+ul.list li { margin:2px 0; }
+.t { font-size:11px; padding:0 6px; border-radius:4px; margin-right:6px; white-space:nowrap; }
+.t.add { background:var(--addbg); color:var(--add); }
+.t.off { background:var(--offbg); color:var(--off); }
+.t.ask { background:var(--askbg); color:var(--ask); }
+.legend { display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--muted); margin-bottom:6px; }
+.note { font-size:12px; color:var(--muted); margin-top:8px; }
+.ring { width:58px; height:58px; border-radius:50%; background:conic-gradient(#34c759 0 60%, rgba(255,255,255,.12) 60% 100%); display:grid; place-items:center; flex:none; }
+.ring span { width:44px; height:44px; border-radius:50%; background:var(--island); display:grid; place-items:center; font-weight:600; font-size:13px; }
+.common { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin-bottom:22px; }
+.common h3 { margin:0 0 6px; font-size:15px; }
+</style>
+</head>
+<body>
+<main>
+<h1>官方插件完善：9 个插件改什么</h1>
+<p class="lead">示意图，数字是假的。左边是现在，右边是建议；红色虚线框是建议从岛上拿掉（挪进设置）的东西。全文见 <code>docs/investigations/official-plugins-audit.md</code>，标准见 <code>docs/plugins/official-quality.md</code>。</p>
+<div class="legend"><span><span class="t add">补</span>新增的设置或功能</span><span><span class="t off">默认关</span>默认值改成关（老用户不变）</span><span><span class="t ask">要你定</span>需要你拍板</span></div>
+
+<div class="common">
+  <h3>所有插件一起做</h3>
+  <ul class="list">
+    <li>岛页补中英文标题；收起项点了打开自己的页（等平台 E60.9）。</li>
+    <li>7 个插件的命令现在按「运行」和快捷键都没反应，补上处理函数。</li>
+    <li>设置改了就生效，不用点「保存」；升 1.1.0、写更新记录、描述改成一句话。</li>
+    <li>文案跟浮屿的界面语言走（要平台先给插件这个接口）。</li>
+  </ul>
+</div>
+
+<nav id="nav"></nav>
+<div id="plugins"></div>
+</main>
+<script>
+const P = [
+ { id:"pomodoro", name:"番茄钟", batch:"第一批", size:"大",
+   now:`<div class="row"><div><div class="big">25:00</div><div class="dim">准备开始</div></div><span class="dim">今日已完成 3 轮</span></div><div class="bar"><i></i></div><div class="row"><span class="btn pri">开始 25:00</span></div><div class="x" style="margin-top:6px"><div class="dim">今日未完成待办</div><div>◉ 写周报</div><div>○ 改设计稿</div><div>○ 回邮件</div><div>○ 不关联待办直接专注</div></div>`,
+   next:`<div class="row"><div><div class="big">18:42</div><div class="dim">专注 · 第 3 轮 · 写周报</div></div><span class="dim">今日 3/8</span></div><div class="bar"><i></i></div><div class="row"><span><span class="btn pri">暂停</span> <span class="btn">停止</span></span><span class="dim">选一条待办 ›</span></div>`,
+   barNow:"⏱ 12:34（运行时）", barNext:"⏱ 12:34 · 暂停时变灰 · 休息时「休息 04:20」",
+   items:[["add","专注 / 短休息 / 长休息时长（25 / 5 / 15 分钟），几轮后长休息（4）"],["add","休息阶段、暂停 / 继续"],["add","到点后自动开始休息、下一轮（都关）；提示音（关）"],["add","每日目标轮数；通知上「再来一轮 / 休息一下」"],["off","待办列表折成一行，点开才出"]] },
+ { id:"todo-ring", name:"待办进度环", batch:"第一批", size:"小到中",
+   now:`<div class="row" style="border:0"><div class="ring"><span>60%</span></div><div style="flex:1;margin-left:10px"><div class="row"><b>今日待办</b><span class="btn x">↻</span></div><div class="dim x">3 / 7 已完成</div><div>· 写周报 <span class="dim">（点一下就完成）</span></div><div>· 改设计稿</div><div>· 回邮件</div><div>· 买菜</div></div></div>`,
+   next:`<div class="row" style="border:0"><div class="ring"><span>60%</span></div><div style="flex:1;margin-left:10px"><div class="dim">还剩 4 条</div><div>· 写周报</div><div>· 改设计稿</div><div>· 回邮件</div></div></div>`,
+   barNow:"◔ 3/7", barNext:"◔ 3/7 · 全部完成后只剩绿色圆环",
+   items:[["add","显示几条待办（3，0 = 只显示圆环）"],["off","点待办直接完成：改成默认关（防误触）"],["add","统计范围：今天 / 今天加逾期"],["add","收起条样式；全部完成变完成色"],["off","刷新按钮、重复的「X / N 已完成」"]] },
+ { id:"countdown", name:"倒数日", batch:"第一批", size:"中到大",
+   now:`<div class="row"><div><b>生日</b> <span class="dim x">2026-12-01</span></div><span class="big">12 天</span></div><div class="form x"><span>事件名称</span><span>2026-11-26</span><span>添加</span></div><div class="row"><span>春节 · 还有 75 天</span><span class="x"><span class="btn">置顶</span> <span class="btn">背景图</span> <span class="btn">去背景</span> <span class="btn">删除</span></span></div><div class="row"><span>考试 · 还有 30 天</span><span class="x"><span class="btn">置顶</span> <span class="btn">背景图</span> <span class="btn">去背景</span> <span class="btn">删除</span></span></div>`,
+   next:`<div class="row"><b>生日</b><span class="big">12 天</span></div><div class="row"><span>考试</span><span class="dim">还有 30 天</span></div><div class="row"><span>春节</span><span class="dim">还有 75 天</span></div><div class="row"><span>在一起</span><span class="dim">第 1024 天</span></div><div class="row"><span></span><span class="dim">管理 ›</span></div>`,
+   barNow:"📅 12天", barNext:"12天（不带图标；当天「今天」，已过「已过 3 天」）",
+   items:[["add","日期管理搬进设置：增删、编辑、排序、置顶、背景图"],["add","类型：倒数 / 纪念日（第 N 天）；每年重复"],["add","当天提醒（开）、提前 N 天提醒（关）"],["add","过期的显示：已过 N 天 / 隐藏 / 变灰"],["ask","英文名 Countdown 改成 Day Counter（容易被当成计时器）"]] },
+ { id:"alarm", name:"闹钟", batch:"第一批", size:"中",
+   now:`<div class="form x"><span>07:30</span><span>备注</span><span>柔和风铃 ▾</span><span>试听</span><span>添加</span></div><div class="form x"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div class="row"><div><div class="big">07:30</div><div class="dim">起床 · 工作日 · 柔和风铃</div></div><span><span class="btn">开</span> <span class="btn">删除</span></span></div>`,
+   next:`<div class="form"><span>07:30</span><span>备注</span><span>添加</span></div><div class="dim" style="margin-bottom:6px">周一至周五 · 柔和风铃 ▸</div><div class="row"><div><div class="big">07:30</div><div class="dim">起床 · 工作日</div></div><span class="btn">开</span></div><div class="row"><div><div class="big">13:00</div><div class="dim">午休 · 每天</div></div><span class="btn">开</span></div>`,
+   barNow:"⏰ 07:30（常驻）", barNext:"平时不显示；响铃时「⏰ 07:30」",
+   items:[["add","编辑已有闹钟（现在只能删了重建）"],["add","贪睡时长（5 分钟）、多久自动停（30 秒）、音量（70%）、渐强（关）"],["add","时间格式、一周起始日（跟随系统）；错过的闹钟开机后补报"],["off","收起条平时不显示，只在响铃时出现"],["off","重复和铃声折成一行；试听挪进设置"]] },
+ { id:"launcher", name:"应用启动台", batch:"第二批", size:"中",
+   now:`<div class="form"><span style="flex:1">搜索应用…</span><span class="x">重新扫描</span></div><div class="row"><span>A　Adobe Photoshop <span class="dim x">/Applications · 最近 · 3 次</span></span></div><div class="row"><span>A　App Store <span class="dim x">/System/Applications</span></span></div><div class="row"><span>B　Books <span class="dim x">/System/Applications</span></span></div><div class="dim x">…共 186 个应用　↑↓ 选择 · Enter 启动 · Esc 清空</div>`,
+   next:`<div class="form"><span style="flex:1">搜索应用…</span></div><div class="dim">最近使用</div><div class="row"><span>C　Cursor</span><span class="dim">↵</span></div><div class="row"><span>F　Figma</span></div><div class="row"><span>S　Safari</span></div><div class="row"><span>W　微信</span></div>`,
+   barNow:"（无）", barNext:"（无）",
+   items:[["add","空搜索时只显示最近使用（8 个）"],["add","启动后岛自动收起（开）；排除的应用；额外扫描的文件夹"],["add","新命令「打开启动台」，可以绑快捷键"],["off","文件夹名、次数徽标、按键提示、重新扫描按钮"],["ask","Windows 商店应用和真图标放到以后另开任务"]] },
+ { id:"todo-digest", name:"待办摘要", batch:"第二批", size:"小到中",
+   now:`<div class="dim">岛上没有页面，也不在收起条上。<br/>设置里：今日 7 条、未完成 4 条、「写入摘要」按钮、5 条预览。</div>`,
+   next:`<div class="dim">岛上照旧什么都不放。<br/>设置分成「写入」「自动」「预览」三节。</div>`,
+   barNow:"（无）", barNext:"（无）",
+   items:[["add","每天定时自动写入（关，默认 22:00）"],["add","写入范围；条目格式（列表 / 复选框）"],["add","重复写入时替换当天上一份（现在会一直追加）"],["add","全部完成时也写一句；写完弹通知（开）"]] },
+ { id:"github-issues", name:"GitHub Issue", batch:"第二批", size:"中",
+   now:`<div class="form x"><span style="flex:1">筛选标题、编号、作者</span><span>立即刷新</span></div><div class="row"><b>TixXin/fuyu</b><span class="dim">3 条未关闭</span></div><div class="row"><span>插件页齿轮打不开设置<br/><span class="dim">#937 · <span class="x">TixXin · 2026-11-18</span></span></span><span class="dim">💬 4</span></div><div class="row"><span>收起条宽度截断<br/><span class="dim">#945 · <span class="x">TixXin · 2026-11-19</span></span></span><span class="dim">💬 1</span></div><div class="dim">…每个仓库最多 30 条</div>`,
+   next:`<div class="row"><b>TixXin/fuyu</b><span class="dim">↻</span></div><div class="row"><span>插件页齿轮打不开设置<br/><span class="dim">#937 · 1 天前</span></span><span class="dim">💬 4</span></div><div class="row"><span>收起条宽度截断<br/><span class="dim">#945 · 3 小时前</span></span><span class="dim">💬 1</span></div><div class="dim">还有 20 条 ›</div>`,
+   barNow:"（无）", barNext:"（无；设置里可开「未关闭总数」徽标）",
+   items:[["add","仓库改成列表（添加、删除、校验）"],["add","每个仓库显示几条（10）、排序、按标签筛选、是否显示 PR（关）"],["add","每行显示作者（关）、相对时间（开）、评论数（开）"],["off","作者和绝对日期；筛选框多于约 10 条才出"],["ask","GitHub 登录（私有仓库、更高限额）放到以后另开任务"]] },
+ { id:"now-playing", name:"正在播放", batch:"第二批", size:"小",
+   now:`<div class="dim">岛上没有页面，也不在收起条上。<br/>设置里：当前曲目、「换歌时自动提示」（默认关）、「立即显示正在播放」按钮。<br/>开了以后每 2.5 秒查一次。</div>`,
+   next:`<div class="dim">改名「换歌提示」，岛上照旧不放常驻内容。<br/>换歌时弹一条：歌名 · 歌手 + ⏮ ⏯ ⏭。</div>`,
+   barNow:"（无）", barNext:"（无）",
+   items:[["ask","改名「换歌提示 / Track change notice」，只做通知，不做第二个音乐页"],["add","提示停留时长（6 秒）；显示内容；显示控制键（开）"],["add","只对某些音乐软件提示；岛展开时不弹；连切歌只提示最后一首"],["add","去掉常驻轮询，只靠事件"]] },
+ { id:"weather", name:"天气", batch:"第二批", size:"大（拆两步）",
+   now:`<div class="row"><span><b>杭州</b> <span class="dim">浙江</span></span><span class="btn x">立即刷新</span></div><div class="row"><div><span class="big">18°</span> 多云<div class="dim">体感 17° · <span class="x">湿度 62% · 风速 11 km/h</span></div></div></div><div class="dim">未来数小时　15:00 多云 18° · 16:00 阴 17° …</div><div class="dim">未来 7 天　今天 多云 12/19 · 11-20 小雨 10/15 …</div>`,
+   next:`<div class="row"><span><b>杭州</b> <span class="dim">更新于 14:30</span></span><span class="dim">↻</span></div><div class="row"><div><span class="big">18°</span> 多云<div class="dim">体感 17° · 降水 20%</div></div></div><div class="dim">☁ 15:00 18° · ☁ 16:00 17° · 🌧 17:00 16° …</div><div class="dim">周五 🌧 10° / 15° · 周六 ☀ 9° / 17° …</div>`,
+   barNow:"多云 18°（默认开）", barNext:"默认不显示；打开后「☁ 18°」",
+   items:[["off","收起条默认关；下雨提醒默认关（第 2 版两项都默认关）"],["add","风速单位、时间格式（跟随系统）、逐小时格数"],["add","岛页显示项勾选（体感开，湿度、风速关，降水概率开）"],["add","「更新于 14:30」、离线时「显示的是上次的结果」；7 天带周几"],["ask","城市候选选择、极端天气提醒放到下一轮"]] },
+];
+const label = { add:"补", off:"默认关", ask:"要你定" };
+document.getElementById("nav").innerHTML = P.map(p=>`<a href="#${p.id}">${p.name}<b>${p.batch}</b></a>`).join("");
+document.getElementById("plugins").innerHTML = P.map(p=>`<section class="p" id="${p.id}">
+  <div class="head"><h2>${p.name}</h2><span class="chip">${p.batch}</span><span class="chip">工作量 ${p.size}</span></div>
+  <div class="cmp">
+    <div><h4>现在 1.0.0</h4><div class="island">${p.now}</div><div class="collapsed ${p.barNow==="（无）"?"none":""}">收起条：${p.barNow}</div></div>
+    <div><h4>建议 1.1.0</h4><div class="island">${p.next}</div><div class="collapsed ${p.barNext.startsWith("（无")?"none":""}">收起条：${p.barNext}</div></div>
+  </div>
+  <ul class="list">${p.items.map(([k,t])=>`<li><span class="t ${k}">${label[k]}</span>${t}</li>`).join("")}</ul>
+</section>`).join("");
+</script>
+</body>
+</html>
