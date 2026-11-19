@@ -1,16 +1,19 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { arch, cpus, freemem, hostname, totalmem, uptime } from "node:os";
+import { arch, cpus, freemem, hostname, platform, totalmem, uptime } from "node:os";
 import { join } from "node:path";
 import type { Context } from "@fuyu/plugin-base";
 import {
   DEFAULT_CONFIG,
   METHODS,
   TOPICS,
+  featuresFor,
   type Locale,
   type MonitorConfig,
   type MonitorSample,
   type MonitorState,
-} from "./types.ts";
+  type Platform,
+} from "./protocol.ts";
+import { mergeConfig, normalizeLocale, parseConfigFile } from "./host/config.ts";
 
 export const name = "@fuyu/system-monitor";
 export const inject = ["clients"];
@@ -20,16 +23,6 @@ const CONFIG_FILE = "config.json";
 interface CpuTick {
   idle: number;
   total: number;
-}
-
-function normalizeLocale(value: unknown): Locale {
-  return value === "en" ? "en" : "zh-CN";
-}
-
-function normalizeInterval(value: unknown): number {
-  const n = typeof value === "number" ? Math.round(value) : Number(value);
-  if (!Number.isFinite(n)) return DEFAULT_CONFIG.intervalMs;
-  return Math.max(1000, Math.min(10000, n));
 }
 
 function clampPercent(value: number): number {
@@ -42,21 +35,17 @@ function round1(value: number): number {
 }
 
 function loadConfig(dir: string): MonitorConfig {
+  const file = join(dir, CONFIG_FILE);
+  if (!existsSync(file)) return { ...DEFAULT_CONFIG };
   try {
-    const file = join(dir, CONFIG_FILE);
-    if (!existsSync(file)) return { ...DEFAULT_CONFIG };
-    const raw = JSON.parse(readFileSync(file, "utf8")) as Partial<MonitorConfig>;
-    return {
-      intervalMs: normalizeInterval(raw.intervalMs),
-      showOnBar: typeof raw.showOnBar === "boolean" ? raw.showOnBar : DEFAULT_CONFIG.showOnBar,
-      barCpu: typeof raw.barCpu === "boolean" ? raw.barCpu : DEFAULT_CONFIG.barCpu,
-      barMemory: typeof raw.barMemory === "boolean" ? raw.barMemory : DEFAULT_CONFIG.barMemory,
-      locale: normalizeLocale(raw.locale),
-    };
+    return parseConfigFile(readFileSync(file, "utf8"));
   } catch {
     return { ...DEFAULT_CONFIG };
   }
 }
+
+const PLATFORM: Platform =
+  platform() === "win32" ? "windows" : platform() === "darwin" ? "macos" : "other";
 
 function saveConfig(dir: string, config: MonitorConfig): void {
   mkdirSync(dir, { recursive: true });
@@ -128,7 +117,15 @@ export function apply(ctx: Context) {
     const memUsed = Math.max(0, memTotal - memFree);
     const memPct = memTotal > 0 ? round1(clampPercent((memUsed / memTotal) * 100)) : 0;
 
+    const later = { status: "pending" } as const;
     latestSample = {
+      takenAt: Date.now(),
+      platform: PLATFORM,
+      cpuTemperatureC: later,
+      gpu: later,
+      network: later,
+      battery: later,
+      programs: later,
       cpuPercent: lastCpu,
       cores: lastCores,
       cpuModel: rawCpus[0]?.model?.trim() ?? "",
@@ -147,6 +144,8 @@ export function apply(ctx: Context) {
 
   const snapshot = (): MonitorState => ({
     config,
+    platform: PLATFORM,
+    features: featuresFor(PLATFORM),
     sample: latestSample ?? readSample(),
     sampling: stopTimer !== null,
     updatedAt: Date.now(),
@@ -212,14 +211,7 @@ export function apply(ctx: Context) {
   );
 
   ctx.clients.handle(METHODS.setConfig, async (params?: Partial<MonitorConfig>) => {
-    config = {
-      intervalMs:
-        params?.intervalMs !== undefined ? normalizeInterval(params.intervalMs) : config.intervalMs,
-      showOnBar: typeof params?.showOnBar === "boolean" ? params.showOnBar : config.showOnBar,
-      barCpu: typeof params?.barCpu === "boolean" ? params.barCpu : config.barCpu,
-      barMemory: typeof params?.barMemory === "boolean" ? params.barMemory : config.barMemory,
-      locale: params?.locale ? normalizeLocale(params.locale) : config.locale,
-    };
+    config = mergeConfig(config, params);
     saveConfig(ctx.dataDir, config);
     readSample();
     syncSampler();

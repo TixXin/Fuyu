@@ -1,6 +1,7 @@
 import type { Context } from "@fuyu/plugin-base";
 import { useEffect, useState } from "react";
-import { INTERVAL_OPTIONS, TEXT, formatBytes, formatUptime } from "./types.ts";
+import { INTERVAL_OPTIONS } from "./protocol.ts";
+import { TEXT, formatBytes, formatUptime } from "./text.ts";
 import { useSystemMonitor } from "./useSystemMonitor.ts";
 import "./styles.css";
 
