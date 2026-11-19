@@ -1,0 +1,13 @@
+{"id":1,"ok":true,"data":{"pong":true}}
+{"id":2,"ok":true,"data":{"sent":1520331,"received":98234117}}
+{"id":3,"ok":true,"data":{"present":true,"status":2,"percent":87}}
+{"id":4,"ok":true,"data":{"present":false}}
+{"id":5,"ok":true,"data":{"values":[3082,3132]}}
+{"id":6,"ok":true,"data":{"values":[]}}
+{"id":7,"ok":true,"data":{"rows":[[4,"System",1953125000,155648],[1234,"chrome.exe",250000000,209715200],[1240,"chrome.exe",50000000,104857600],[2048,"Code.exe",120000000,314572800],[3000,"svchost.exe",10000000,20971520]]}}
+{"id":8,"ok":true,"data":{"rows":[[4,"System",1963125000,155648],[1234,"chrome.exe",252000000,209715200],[1240,"chrome.exe",51000000,104857600],[2048,"Code.exe",120000000,314572800],[3000,"svchost.exe",10000000,20971520],[3100,"notepad.exe",100000,8388608]]}}
+{"id":9,"ok":true,"data":{"name":"NVIDIA GeForce RTX 3060","engines":{"luid_0x00000000_0x0000D1A5_phys_0_eng_0_engtype_3D":42,"luid_0x00000000_0x0000D1A5_phys_0_eng_1_engtype_Copy":3,"luid_0x00000000_0x0000D1A5_phys_0_eng_3_engtype_VideoDecode":12,"luid_0x00000000_0x0000D1A5_phys_0_eng_5_engtype_VideoEncode":0,"luid_0x00000000_0x0000D1A5_phys_0_eng_7_engtype_Compute_1":7,"luid_0x00000000_0x0000E2C1_phys_0_eng_0_engtype_3D":91},"memory":{"luid_0x00000000_0x0000D1A5_phys_0":2252341248,"luid_0x00000000_0x0000E2C1_phys_0":0}}}
+{"id":10,"ok":true,"data":{"pending":true}}
+{"id":11,"ok":true,"data":{"name":null,"failed":true}}
+{"id":12,"ok":false,"data":null,"error":"Invalid class \"Win32_PerfFormattedData_Counters_ThermalZoneInformation\""}
+{"id":13,"ok":true,"data":{"rows":{"value":[[4,"System",1,2]],"Count":1}}}

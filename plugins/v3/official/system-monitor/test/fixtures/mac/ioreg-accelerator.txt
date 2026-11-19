@@ -1,0 +1,4 @@
++-o AGXAcceleratorG16G  <class AGXAcceleratorG16G, id 0x10000038e, registered, matched, active, busy 0 (21756 ms), retain 108>
+      "PerformanceStatistics" = {"In use system memory (driver)"=0,"Alloc system memory"=3995713536,"Tiler Utilization %"=51,"recoveryCount"=0,"lastRecoveryTime"=0,"Renderer Utilization %"=50,"TiledSceneBytes"=491520,"Device Utilization %"=51,"SplitSceneCount"=0,"Allocated PB Size"=96075776,"In use system memory"=709558272}
+      "model" = "Apple M4"
+      "IOClass" = "AGXAcceleratorG16G"
