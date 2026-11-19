@@ -62,6 +62,11 @@ function appHtml(source) {
       if (block.type === "quote") return `<blockquote>${inline(block.content)}</blockquote>`;
       if (block.type === "code") return `<pre><code>${escapeHtml(block.text)}</code></pre>`;
       if (block.type === "rule") return "<hr>";
+      if (block.type === "table") {
+        const cell = (tag, content, column) => `<${tag}${block.align[column] ? ` data-align="${block.align[column]}"` : ""}>${inline(content)}</${tag}>`;
+        const rows = block.rows.map((row) => `<tr>${row.map((content, column) => cell("td", content, column)).join("")}</tr>`).join("");
+        return `<div class="markdown__table"><table><thead><tr>${block.head.map((content, column) => cell("th", content, column)).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
+      }
       const tag = block.ordered ? "ol" : "ul";
       return `<${tag}>${block.items.map((item) => `<li>${inline(item)}</li>`).join("")}</${tag}>`;
     })
@@ -72,12 +77,13 @@ test("the README is drawn by the same rules as the market's detail page", () => 
   const readme = [
     "# 你好 · Hello", "", "Says **hi** to `you`, _really_. <script>alert(1)</script>", "second line", "",
     "## Where", "", "- one [site](https://example.com/a?b=1&c=2)", "- two [local](./docs/x.md) ![shot](screenshots/page.png)", "  continued", "",
-    "1. first", "2) second", "", "> quoted", "> more", "", "| a | b |", "|---|---|", "| 1 | 2 |", "", "```ts", "const a = \"<b>\";", "```", "", "---", "###### deep", "[x](javascript:alert(1))",
+    "1. first", "2) second", "", "> quoted", "> more", "", "| a | b <i> | c |", "|---|:---:|---:|", "| 1 | `2` \\| two |", "not | a table", "", "x | y", "", "```ts", "const a = \"<b>\";", "```", "", "---", "###### deep", "[x](javascript:alert(1))",
   ].join("\r\n");
   const drawn = markdownHtml(readme);
   assert.equal(drawn, appHtml(readme));
   assert.match(drawn, /^<h3>你好 · Hello<\/h3>/);
-  assert.ok(!drawn.includes("<script>") && !drawn.includes("<table") && !drawn.includes("<img") && !drawn.includes("javascript:"));
+  assert.ok(drawn.includes('<th data-align="center">b &lt;i&gt;</th>') && drawn.includes('<td data-align="center"><code>2</code> | two</td><td data-align="right"></td>'), drawn);
+  assert.ok(!drawn.includes("<script>") && !drawn.includes("<i>") && !drawn.includes("<img") && !drawn.includes("javascript:"));
 });
 
 test("the styles in the package are the ones the app has now", () => {

@@ -220,7 +220,7 @@ fuyu-plugin preview [文件夹] [--out <文件>] [--theme dark|light] [--locale 
 
 ### 和真的市场差在哪
 
-样式是浮屿自己的：市场卡片、详情页、按钮、Markdown 用到的 CSS 规则和主题变量由 `packages/plugin-cli/scripts/gen-preview-styles.mjs` 从 `src/` 抽成 `packages/plugin-cli/src/preview/app-styles.json`，随命令行一起带。README 的渲染规则也和详情页一样（标题从三级开始；表格、图片、HTML 不渲染，图片只留说明文字；只有 `http(s)` 链接能点），所以 README 里写了表格，在这里和在市场里都是一串竖线。
+样式是浮屿自己的：市场卡片、详情页、按钮、Markdown 用到的 CSS 规则和主题变量由 `packages/plugin-cli/scripts/gen-preview-styles.mjs` 从 `src/` 抽成 `packages/plugin-cli/src/preview/app-styles.json`，随命令行一起带。README 的渲染规则也和详情页一样：标题从三级开始；表格能渲染（表头一行、`|---|` 分隔行、数据行，支持 `:---:` 对齐）；图片和 HTML 不渲染，图片只留说明文字；只有 `http(s)` 链接能点。
 
 照着画的是结构（HTML），和真的有这些差别：
 

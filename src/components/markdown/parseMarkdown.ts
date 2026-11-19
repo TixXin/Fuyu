@@ -11,7 +11,10 @@ export type Block =
   | { type: "list"; ordered: boolean; items: Inline[][] }
   | { type: "quote"; content: Inline[] }
   | { type: "code"; text: string }
+  | { type: "table"; align: TableAlign[]; head: Inline[][]; rows: Inline[][][] }
   | { type: "rule" };
+
+export type TableAlign = "left" | "center" | "right" | null;
 
 const INLINE = /(`[^`]+`)|(\*\*[^*]+\*\*|__[^_]+__)|(\*[^*\s][^*]*\*|_[^_\s][^_]*_)|(!?\[[^\]]*\]\([^)\s]+\))/g;
 
@@ -43,6 +46,34 @@ export function parseInline(text: string): Inline[] {
 }
 
 const LIST_ITEM = /^\s*(?:([-*+])|(\d+)[.)])\s+(.*)$/;
+const TABLE_DELIMITER = /^:?-+:?$/;
+const BLOCK_START = /^(?:```|#{1,6}\s|>)/;
+
+function tableCells(line: string): string[] {
+  const cells: string[] = [];
+  let cell = "";
+  for (let index = 0; index < line.length; index += 1) {
+    const char = line[index];
+    if (char === "\\" && line[index + 1] === "|") {
+      cell += "|";
+      index += 1;
+    } else if (char === "|") {
+      cells.push(cell.trim());
+      cell = "";
+    } else cell += char;
+  }
+  cells.push(cell.trim());
+  if (cells[0] === "") cells.shift();
+  if (cells.length > 0 && cells[cells.length - 1] === "") cells.pop();
+  return cells;
+}
+
+function tableAlign(line: string, columns: number): TableAlign[] | null {
+  if (!line.includes("-")) return null;
+  const cells = tableCells(line);
+  if (cells.length !== columns || !cells.every((cell) => TABLE_DELIMITER.test(cell))) return null;
+  return cells.map((cell) => (cell.startsWith(":") && cell.endsWith(":") ? "center" : cell.endsWith(":") ? "right" : cell.startsWith(":") ? "left" : null));
+}
 
 export function parseMarkdown(source: string): Block[] {
   const lines = source.replace(/\r\n?/g, "\n").split("\n");
@@ -77,6 +108,23 @@ export function parseMarkdown(source: string): Block[] {
       index -= 1;
       blocks.push({ type: "quote", content: parseInline(quote.join(" ")) });
       continue;
+    }
+    if (trimmed.includes("|") && index + 1 < lines.length) {
+      const head = tableCells(trimmed);
+      const align = tableAlign(lines[index + 1].trim(), head.length);
+      if (align) {
+        flush();
+        const rows: string[][] = [];
+        for (index += 2; index < lines.length; index += 1) {
+          const row = lines[index].trim();
+          if (!row.includes("|") || BLOCK_START.test(row) || LIST_ITEM.test(lines[index])) break;
+          const cells = tableCells(row).slice(0, head.length);
+          rows.push([...cells, ...Array<string>(head.length - cells.length).fill("")]);
+        }
+        index -= 1;
+        blocks.push({ type: "table", align, head: head.map(parseInline), rows: rows.map((row) => row.map(parseInline)) });
+        continue;
+      }
     }
     const item = LIST_ITEM.exec(line);
     if (item) {
