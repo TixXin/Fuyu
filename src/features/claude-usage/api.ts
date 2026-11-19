@@ -15,6 +15,10 @@ export function getAntigravityUsage(refresh = false) {
   return invoke<AgentUsage>("get_antigravity_usage", { refresh });
 }
 
+export function getCursorUsage(refresh = false) {
+  return invoke<AgentUsage>("get_cursor_usage", { refresh });
+}
+
 export type HoverProviderId = "workbuddy" | "dsh";
 
 export type WorkbuddyCredits = {

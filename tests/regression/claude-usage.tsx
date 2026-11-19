@@ -53,6 +53,7 @@ const others: Record<string, AgentUsage> = {
   }),
   glm: snapshot({ source: "glm", plan: "GLM Coding Pro", fiveHour: { name: "", used: 35, resetsAt: at(90.5) }, sevenDay: { name: "", used: 52, resetsAt: at(2 * 1440 + 18 * 60 - 0.5) }, models: [{ name: "mcpMonth", used: 8, resetsAt: null }] }),
   kimi: snapshot({ source: "kimi", fiveHour: { name: "", used: 60, resetsAt: at(45) }, sevenDay: null, models: [{ name: "month", used: 30, resetsAt: at(20000) }] }),
+  cursor: snapshot({ source: "cursor", plan: "Pro", fiveHour: null, sevenDay: null, models: [{ name: "month", used: 64, resetsAt: at(9 * 1440 - 0.5) }, { name: "cursorAuto", used: 20, resetsAt: null }] }),
 };
 const hoverData: Record<string, HoverUsage> = {
   workbuddy: {
@@ -78,6 +79,7 @@ let reads = 0;
 let refreshes = 0;
 const planReads: string[] = [];
 const antigravityReads: boolean[] = [];
+const cursorReads: boolean[] = [];
 const hoverReads: string[] = [];
 const keyWrites: string[] = [];
 const savedKeys = new Set<string>();
@@ -95,6 +97,10 @@ mockIPC((command, payload) => {
     const { refresh } = payload as { refresh: boolean };
     antigravityReads.push(refresh);
     return others.antigravity;
+  }
+  if (command === "get_cursor_usage") {
+    cursorReads.push((payload as { refresh: boolean }).refresh);
+    return others.cursor;
   }
   if (command === "get_hover_usage") {
     const { provider, refresh } = payload as { provider: string; refresh: boolean };
@@ -240,15 +246,21 @@ async function runChecks() {
     check(!card(), "失去焦点后卡片消失");
 
     const all = [...document.querySelectorAll<HTMLButtonElement>(".stage--all .claude-usage-gauge")];
-    check(all.map((gauge) => gauge.dataset.provider).join() === "claudeCode,codex,antigravity,glm,kimi", "五个环按 Claude Code、Codex、Antigravity、GLM、Kimi 排列");
+    check(all.map((gauge) => gauge.dataset.provider).join() === "claudeCode,codex,antigravity,glm,kimi,cursor", "六个环按 Claude Code、Codex、Antigravity、GLM、Kimi、Cursor 排列");
     const colorsOf = (gauge: HTMLElement) => [...gauge.querySelectorAll(".mini-ring__arc")].map((arc) => (arc as SVGElement).style.stroke);
     await until(() => all.slice(1).every((gauge) => colorsOf(gauge).length > 0));
-    check(USAGE_PROVIDERS.slice(1).every((provider, index) => colorsOf(all[index + 1]).every((color) => color === provider.color)), "Codex、Antigravity、GLM、Kimi 各用自己的颜色");
+    check(USAGE_PROVIDERS.slice(1).every((provider, index) => colorsOf(all[index + 1]).every((color) => color === provider.color)), "Codex、Antigravity、GLM、Kimi、Cursor 各用自己的颜色");
     const allIsland = document.querySelector(".stage--all .island")!.getBoundingClientRect();
     const boxes = all.map((gauge) => gauge.getBoundingClientRect());
     check(boxes.every((box) => box.width === 24 && box.height === 24), "用量环 24px，和会话环的分段环一样大");
-    check(boxes.every((box, index) => box.right <= allIsland.right && (index === 0 || box.left >= boxes[index - 1].right)), "五个环都在胶囊里，互不重叠");
-    check(antigravityReads.includes(false) && planReads.includes("glm:false") && planReads.includes("kimi:false"), "Antigravity、GLM 和 Kimi 的环按各自接口读用量");
+    check(boxes.every((box, index) => box.right <= allIsland.right && (index === 0 || box.left >= boxes[index - 1].right)), "六个环都在胶囊里，互不重叠");
+    check(antigravityReads.includes(false) && planReads.includes("glm:false") && planReads.includes("kimi:false") && cursorReads.includes(false), "Antigravity、GLM、Kimi 和 Cursor 的环按各自接口读用量");
+
+    const cursorAnchor = all[5].parentElement!;
+    await act(async () => { cursorAnchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
+    await shownCard();
+    check(cardLines().join(" / ").startsWith("Cursor · Pro / 本月 64% · 9 天 0 小时后重置 / Auto 本月 20%"), `Cursor 卡片：${cardLines().join(" / ")}`);
+    await act(async () => { cursorAnchor.dispatchEvent(new PointerEvent("pointerout", { bubbles: true, relatedTarget: document.body })); });
 
     const agyAnchor = all[2].parentElement!;
     await act(async () => { agyAnchor.dispatchEvent(new PointerEvent("pointerover", { bubbles: true })); });
