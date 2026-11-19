@@ -720,19 +720,21 @@
       "zh-CN": {
         "group": "背景折射与色彩",
         "title": "玻璃背后",
-        "description": "透出岛正后方的壁纸并磨砂，「玻璃强度」决定盖在上面的底色有多浓。背后有窗口挡着时仍显示壁纸；系统关掉「透明效果」或读不到壁纸时照旧用纯色玻璃。",
+        "description": "实时磨砂岛正后方的窗口与桌面，只在岛露出来时采集，全屏游戏和贴边隐藏时停下；采不到时退回只透壁纸，再不行用纯色玻璃。",
         "options": [
           "无",
-          "桌面壁纸"
+          "只透壁纸",
+          "透出窗口"
         ]
       },
       "en": {
         "group": "Refraction and colours",
         "title": "Behind the glass",
-        "description": "Shows the wallpaper right behind the island, frosted; glass strength sets how thick the tint over it is. Windows behind the island are not shown; with Transparency effects off or no wallpaper to read, the glass stays solid.",
+        "description": "Blurs live windows and the desktop behind the island. Capture runs only while the island is visible and stops for full-screen games and when tucked away; if it cannot capture, it falls back to wallpaper only, then to solid glass.",
         "options": [
-          "Nothing",
-          "Desktop wallpaper"
+          "None",
+          "Wallpaper only",
+          "Live windows"
         ]
       }
     },

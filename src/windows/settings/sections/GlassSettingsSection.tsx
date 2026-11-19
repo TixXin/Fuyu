@@ -49,14 +49,12 @@ export function GlassSettingsSection({
 
   const look = glassLookOf(settings) ?? "custom";
   const lookOptions = [...GLASS_LOOKS, ...(look === "custom" ? ["custom" as const] : [])].map((value) => ({ value, label: text.looks[value] }));
-  const backdropValues = isMacOS || settings.glassBackdrop === "native"
-    ? GLASS_BACKDROPS
-    : (["none", "wallpaper"] as const);
   const backdropDescription = settings.glassBackdrop === "wallpaper"
     ? text.backdropHint
     : settings.glassBackdrop === "native"
-      ? text.nativeHint
+      ? isMacOS ? text.nativeHintMac : text.nativeHintWindows
       : undefined;
+  const showFrostControls = settings.glassBackdrop === "wallpaper" || (settings.glassBackdrop === "native" && !isMacOS);
 
   return (
     <>
@@ -111,7 +109,7 @@ export function GlassSettingsSection({
           control={
             <SettingsChoice
               value={settings.glassBackdrop}
-              options={backdropValues.map((value) => ({ value, label: text.backdrops[value] }))}
+              options={GLASS_BACKDROPS.map((value) => ({ value, label: text.backdrops[value] }))}
               ariaLabel={text.backdrop}
               onChange={(glassBackdrop) => set(glassBackdrop !== "none" ? { glassBackdrop, glassIntensity: Math.min(settings.glassIntensity, 40) } : { glassBackdrop })}
             />
@@ -154,7 +152,7 @@ export function GlassSettingsSection({
           resetLabel={resetLabel}
           onChange={(glassColorStrength) => set({ glassColorStrength })}
         />
-        {settings.glassBackdrop === "wallpaper" && (
+        {showFrostControls && (
           <SettingsAdvanced>
             <SettingsSliderRow
               title={text.blur}

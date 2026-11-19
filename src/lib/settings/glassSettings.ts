@@ -74,7 +74,7 @@ export const DEFAULT_GLASS_SETTINGS: GlassSettingValues = {
   glassSpecular: true,
   glassMorph: "smooth",
   glassContrastGuard: true,
-  glassBackdrop: "wallpaper",
+  glassBackdrop: "native",
   glassBlur: 24,
   glassSaturation: 180,
   glassNoise: 3,
