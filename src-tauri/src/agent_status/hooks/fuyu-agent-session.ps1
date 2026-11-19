@@ -10,6 +10,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($Provider -eq "claudeCode" -and $env:CURSOR_VERSION) { exit 0 }
+
 function Get-StatusDirectory {
   if ($env:FOCUSD_AGENT_STATUS_DIR) { return $env:FOCUSD_AGENT_STATUS_DIR }
   return $PSScriptRoot

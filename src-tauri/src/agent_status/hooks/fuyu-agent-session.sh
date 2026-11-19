@@ -3,6 +3,7 @@ provider=$1
 event=$2
 case "$provider" in codex|claudeCode) ;; *) exit 0 ;; esac
 case "$event" in start|end) ;; *) exit 0 ;; esac
+[ "$provider" = claudeCode ] && [ -n "$CURSOR_VERSION" ] && exit 0
 
 dir=${FOCUSD_AGENT_STATUS_DIR:-$(cd "$(dirname "$0")" && pwd)}/agent-sessions
 mkdir -p "$dir" 2>/dev/null || exit 0

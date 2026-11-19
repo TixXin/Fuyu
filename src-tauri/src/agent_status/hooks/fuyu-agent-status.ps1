@@ -19,6 +19,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($Provider -eq "claudeCode" -and $env:CURSOR_VERSION) { exit 0 }
+
 function New-AgentTaskStatus {
   param(
     [string]$Phase = "idle",
