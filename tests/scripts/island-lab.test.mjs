@@ -86,3 +86,21 @@ test("the sweep switches each plugin off, reads it twice and always switches it 
   assert.deepEqual(rows, [{ id: "timer", left: [], threads: "40 → 38（少 2）" }]);
   assert.deepEqual(calls, ["GET builtins", "GET builtins", "PUT builtins/timer false", "GET builtins", "GET builtins", "PUT builtins/timer true"]);
 });
+
+test("the sweep leaves alone a plugin the user switched off while it was still waiting its turn", async () => {
+  const on = { timer: true, "session-ring": true };
+  const calls = [];
+  const call = async (method, route, body) => {
+    calls.push(`${method} ${route}${body ? ` ${body.enabled}` : ""}`);
+    if (method === "PUT") {
+      const id = route.slice("builtins/".length);
+      on[id] = body.enabled;
+      if (id === "timer" && body.enabled === false) on["session-ring"] = false;
+    }
+    return { rust: Object.entries(on).map(([id, enabled]) => ({ id, kind: "builtin", enabled, background: [] })), windows: [] };
+  };
+  const rows = await sweep(call, { pause: async () => {} });
+  assert.deepEqual(rows.map((row) => row.id), ["timer"]);
+  assert.equal(on["session-ring"], false);
+  assert.ok(!calls.some((line) => line.startsWith("PUT builtins/session-ring")));
+});

@@ -43,6 +43,7 @@ export async function sweep(call, { settleMs = 1200, watchMs = 3000, onRow = () 
   const rows = [];
   for (const id of switchable(start)) {
     const before = await call("GET", "builtins");
+    if (!switchable(before).includes(id)) continue;
     await call("PUT", `builtins/${id}`, { enabled: false });
     try {
       await pause(settleMs);
