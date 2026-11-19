@@ -140,8 +140,8 @@ node scripts/plugins-v3/build-builtins.mjs --minify --out <目录> --source <清
 | 路径 | 对应 | 状态 |
 |---|---|---|
 | `__shared/react.js`、`__shared/react-jsx-runtime.js` | 程序自带的转接模块（`protocol` 的 `SHARED_MODULES`） | 已有 |
-| `builtin/<id>/<相对 root 的路径>` | 内置插件 `<id>` 的 `root` 下的文件 | **宿主已按这个登记**（`ctx.clients.add` 收到 `root` 里的文件时）；Rust 一侧的映射（读同一份清单，按 id 找 `root`，解析后不出 `root`）等插槽接入内置插件的界面时做 |
-| `dev/<id>/<相对路径>` | 数据目录外的开发文件夹（[v3-sources.md](v3-sources.md)） | 宿主已按这个登记，Rust 一侧的映射同上 |
+| `builtin/<id>/<相对 root 的路径>` | 内置插件 `<id>` 的 `root` 下的文件 | 宿主按这个登记（`ctx.clients.add` 收到 `root` 里的文件时），**Rust 一侧不做映射，一律 404**（E63.9 定）：内置插件的界面和程序一起打包，由程序自己的前端加载，不经 `fuyu-plugin://` |
+| `dev/<id>/<相对路径>` | 数据目录外的开发文件夹（[v3-sources.md](v3-sources.md)） | 已有（2026-11-19 起，E63.9）：宿主在 `clients` 通知里带上 `roots`（每个用到的前缀对应的开发文件夹），Rust 按它取文件，放行规则见 [v3-boundary.md](v3-boundary.md)「窗口能读的文件」 |
 | 其余 | 数据目录 `plugins-v3/` 下的文件，只放行白名单（E36.3.22，[v3-boundary.md](v3-boundary.md)「窗口能读的文件」）：已安装的包在 `packages/@作用域/名字/`（[v3-sources.md](v3-sources.md)），数据目录里的开发文件夹和直接写模块的插件要宿主登记过界面文件；`data/`、`plugins.yml*`、`safe-mode.json`、`bisect.json` 一律 404 | 已有 |
 
 - `builtin/`、`dev/` 不会和数据目录里的东西撞：数据目录里只有 `plugins.yml`、`safe-mode.json`、`data/`、`packages/`，不放叫 `builtin`、`dev` 的东西。

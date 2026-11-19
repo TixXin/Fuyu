@@ -2,7 +2,7 @@ use plugin_base::{Event, HostState};
 use serde_json::json;
 use tauri::http::{Method, Request, Response, StatusCode};
 
-use super::{client_paths, observe, registered, serve, Allowed, CSP};
+use super::{client_paths, observe, registered, serve, Allowed, Listed, CSP};
 
 fn get(root: Option<&std::path::Path>, allowed: &Allowed, path: &str, method: Method) -> Response<Vec<u8>> {
     let request = Request::builder().method(method).uri(format!("fuyu-plugin://localhost{path}")).body(Vec::new()).unwrap();
@@ -164,13 +164,23 @@ fn the_host_hands_over_its_window_code_and_a_restart_forgets_it() {
     observe(&clients(json!(["hello/island.js"])));
     observe(&Event::State(HostState::Stopped));
     assert_eq!(registered(), Allowed::default());
+    let (data, project) = dev_space("dev-observe");
+    let notify = |params: serde_json::Value| Event::Notification { method: "clients".into(), params };
+    observe(&notify(json!({ "paths": ["dev/clock/dist/island.js"], "roots": [{ "prefix": "dev/clock", "dir": project.to_str().unwrap() }] })));
+    assert_eq!(get(Some(&data), &registered(), "/dev/clock/dist/island.js", Method::GET).status(), StatusCode::OK);
+    observe(&notify(json!({ "paths": ["dev/clock/dist/island.js"] })));
+    assert_eq!(get(Some(&data), &registered(), "/dev/clock/dist/island.js", Method::GET).status(), StatusCode::NOT_FOUND, "each notification replaces the roots");
+    observe(&notify(json!({ "paths": ["dev/clock/dist/island.js"], "roots": [{ "prefix": "dev/clock", "dir": project.to_str().unwrap() }] })));
+    observe(&Event::State(HostState::Stopped));
+    assert_eq!(registered(), Allowed::default());
+    clear(&[&data, &project]);
 }
 
 #[test]
 fn private_files_stay_closed_even_when_the_list_names_them() {
     let dir = scratch("untrusted");
     let names = |items: &[&str]| items.iter().map(|item| (*item).to_owned()).collect();
-    let forged = Allowed { dirs: names(&["data", "Data", "hello"]), files: names(&["plugins.yml", "plugins.yml.bak", "safe-mode.json", "bisect.json"]) };
+    let forged = Allowed { listed: Listed { dirs: names(&["data", "Data", "hello"]), files: names(&["plugins.yml", "plugins.yml.bak", "safe-mode.json", "bisect.json"]) }, mounts: Default::default() };
     for path in ["/data/timer/timers.json", "/Data/timer/timers.json", "/plugins.yml", "/plugins.yml.bak", "/safe-mode.json", "/bisect.json"] {
         assert_eq!(status(&dir, &forged, path), StatusCode::NOT_FOUND, "{path}");
     }
@@ -247,4 +257,126 @@ fn every_plugin_protocol_response_sets_strict_csp_and_nosniff_headers() {
         assert!(scripts.contains(&"'self'") && scripts.contains(&"fuyu-plugin:") && scripts.contains(&"http://fuyu-plugin.localhost"));
     }
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+fn dev_space(name: &str) -> (std::path::PathBuf, std::path::PathBuf) {
+    let data = scratch(name);
+    let project = data.with_extension("project");
+    let _ = std::fs::remove_dir_all(&project);
+    for folder in ["dist/assets", "src", "node_modules/left-pad"] {
+        std::fs::create_dir_all(project.join(folder)).unwrap();
+    }
+    for (file, text) in [
+        ("dist/island.js", "export default 5;"),
+        ("dist/assets/chunk.js", "export const chunk = 1;"),
+        ("package.json", "{}"),
+        (".env", "TOKEN=secret"),
+        ("src/island.tsx", "source"),
+        ("node_modules/left-pad/index.js", "dependency"),
+    ] {
+        std::fs::write(project.join(file), text).unwrap();
+    }
+    (data, project)
+}
+
+fn dev_allowed(prefix: &str, project: &std::path::Path, paths: &[&str]) -> Allowed {
+    client_paths(&json!({ "roots": [{ "prefix": prefix, "dir": project.to_str().unwrap() }], "paths": paths }))
+}
+
+fn clear(dirs: &[&std::path::Path]) {
+    for dir in dirs {
+        let _ = std::fs::remove_dir_all(dir);
+    }
+}
+
+#[test]
+fn a_development_folder_outside_the_data_folder_serves_the_window_code_the_host_registered() {
+    let (data, project) = dev_space("dev-served");
+    let allowed = dev_allowed("dev/clock", &project, &["dev/clock/dist/island.js", "hello/island.js"]);
+    let ok = get(Some(&data), &allowed, "/dev/clock/dist/island.js", Method::GET);
+    assert_eq!(ok.status(), StatusCode::OK);
+    assert_eq!(ok.headers()["content-type"], "text/javascript; charset=utf-8");
+    assert_eq!(ok.body(), b"export default 5;");
+    assert_eq!(status(&data, &allowed, "/dev/clock/dist/assets/chunk.js"), StatusCode::OK, "the rest of the registered folder loads too");
+    assert_eq!(status(&data, &allowed, "/hello/island.js"), StatusCode::OK, "the data folder still works next to it");
+    let head = get(Some(&data), &allowed, "/dev/clock/dist/island.js", Method::HEAD);
+    assert_eq!((head.status(), head.body().len()), (StatusCode::OK, 0));
+    for path in ["/dev/clock/package.json", "/dev/clock/.env", "/dev/clock/src/island.tsx", "/dev/clock/node_modules/left-pad/index.js", "/dev/other/dist/island.js", "/dev/clock", "/dev/clock/", "/dev/clock/dist/missing.js"] {
+        assert_eq!(status(&data, &allowed, path), StatusCode::NOT_FOUND, "{path}");
+    }
+    assert_eq!(status(&data, &Allowed::default(), "/dev/clock/dist/island.js"), StatusCode::NOT_FOUND, "nothing is served before the host registers it");
+    assert_eq!(status(&data, &dev_allowed("dev/clock", &project, &[]), "/dev/clock/dist/island.js"), StatusCode::NOT_FOUND, "a folder with no registered file serves nothing");
+    let scoped = dev_allowed("dev/@ann/clock", &project, &["dev/@ann/clock/dist/island.js"]);
+    assert_eq!(status(&data, &scoped, "/dev/@ann/clock/dist/island.js"), StatusCode::OK);
+    assert_eq!(status(&data, &scoped, "/dev/%40ann/clock/dist/assets/chunk.js"), StatusCode::OK);
+    clear(&[&data, &project]);
+}
+
+#[test]
+fn development_paths_that_climb_out_of_their_folder_are_refused() {
+    let (data, project) = dev_space("dev-climb");
+    std::fs::write(project.with_extension("secret"), "secret").unwrap();
+    let allowed = dev_allowed("dev/clock", &project, &["dev/clock/dist/island.js"]);
+    for path in [
+        "/dev/clock/dist/..%2F.env",
+        "/dev/clock/dist/..%2F..%2Fsecret",
+        "/dev/clock/../clock/.env",
+        "/dev/clock/dist%5C..%5C.env",
+        "/dev/clock/dist/..%5C..%5Csecret",
+        "/dev/clock/C:%2FWindows%2Fwin.ini",
+        "/dev/clock/dist/C:/Windows/win.ini",
+        "/dev/clock//server/share/island.js",
+        "/dev/clock/%2F%2Fserver%2Fshare%2Fisland.js",
+        "/dev/clock/%5C%5Cserver%5Cshare%5Cisland.js",
+    ] {
+        assert_eq!(status(&data, &allowed, path), StatusCode::NOT_FOUND, "{path}");
+    }
+    clear(&[&data, &project]);
+    let _ = std::fs::remove_file(project.with_extension("secret"));
+}
+
+#[cfg(unix)]
+#[test]
+fn development_folder_links_are_checked_where_they_land() {
+    let (data, project) = dev_space("dev-links");
+    let outside = project.with_extension("outside");
+    std::fs::create_dir_all(&outside).unwrap();
+    std::fs::write(outside.join("island.js"), "outside").unwrap();
+    std::os::unix::fs::symlink(&outside, project.join("dist/out")).unwrap();
+    std::os::unix::fs::symlink(project.join(".env"), project.join("dist/env.js")).unwrap();
+    std::os::unix::fs::symlink(data.join("hello"), project.join("dist/hello")).unwrap();
+    std::os::unix::fs::symlink(project.join("dist/island.js"), project.join("dist/linked.js")).unwrap();
+    let allowed = dev_allowed("dev/clock", &project, &["dev/clock/dist/island.js"]);
+    assert_eq!(status(&data, &allowed, "/dev/clock/dist/out/island.js"), StatusCode::NOT_FOUND, "a link out of the folder");
+    assert_eq!(status(&data, &allowed, "/dev/clock/dist/env.js"), StatusCode::NOT_FOUND, "a link to an unregistered file");
+    assert_eq!(status(&data, &allowed, "/dev/clock/dist/hello/island.js"), StatusCode::NOT_FOUND, "a link into the data folder");
+    assert_eq!(status(&data, &allowed, "/dev/clock/dist/linked.js"), StatusCode::OK, "a link to other registered code");
+    clear(&[&data, &project, &outside]);
+}
+
+#[test]
+fn only_development_roots_with_a_dev_prefix_and_an_absolute_folder_are_kept() {
+    let (data, project) = dev_space("dev-roots");
+    let dir = project.to_str().unwrap();
+    let roots = json!([
+        { "prefix": "dev", "dir": dir },
+        { "prefix": "dev/a/b/c", "dir": dir },
+        { "prefix": "builtin/timer", "dir": dir },
+        { "prefix": "packages/x", "dir": dir },
+        { "prefix": "dev/../x", "dir": dir },
+        { "prefix": "dev/C:", "dir": dir },
+        { "prefix": "dev/relative", "dir": "relative/folder" },
+        { "prefix": "dev/nodir" },
+        { "dir": dir },
+        "dev/clock",
+    ]);
+    let paths = json!(["dev/a/b/c/dist/island.js", "builtin/timer/dist/island.js", "packages/x/dist/island.js", "dev/relative/dist/island.js", "dev/nodir/dist/island.js"]);
+    let allowed = client_paths(&json!({ "roots": roots, "paths": paths }));
+    assert!(allowed.mounts.is_empty(), "{:?}", allowed.mounts.keys().collect::<Vec<_>>());
+    assert_eq!(allowed.listed, Listed::default());
+    assert_eq!(client_paths(&json!({ "roots": "dev/clock", "paths": ["dev/clock/dist/island.js"] })), Allowed::default());
+    for path in ["/builtin/timer/dist/island.js", "/dev/relative/dist/island.js"] {
+        assert_eq!(status(&data, &allowed, path), StatusCode::NOT_FOUND, "{path}");
+    }
+    clear(&[&data, &project]);
 }
