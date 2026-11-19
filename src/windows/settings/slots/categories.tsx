@@ -10,7 +10,9 @@ import { AboutSettingsPage } from "../AboutSettingsPage";
 import { PluginsV3SettingsPage } from "../PluginsV3SettingsPage";
 import { PluginMarketPage } from "../PluginMarketPage";
 import { PluginDiagnosticsPage } from "../PluginDiagnosticsPage";
-import { addSettingsCategory, type SettingsCategory, type SettingsPageProps } from "./categorySlot";
+import { SlotView } from "../../../features/plugin-kernel/SlotView";
+import { addSettingsCategory, type SettingsCategory, type SettingsLink, type SettingsPageProps } from "./categorySlot";
+import { settingsSections } from "./sectionSlot";
 import "./builtinModuleSwitches";
 import "./featureSettings";
 
@@ -56,6 +58,8 @@ const about = (tab: ComponentProps<typeof AboutSettingsPage>["tab"]): Page =>
     return <AboutSettingsPage tab={tab} onSettingsChange={onSettingsChange} />;
   };
 
+const localApiSections = settingsSections<{ onOpenPage: (page: SettingsLink) => void }, "generalApi">();
+
 const PAGES: Partial<Record<SettingsCategory, Page>> = {
   overview: ({ settings, locale, features, unsupported, onLocaleChange, onSettingsChange, onOpenPage }) => (
     <OverviewSettingsPage
@@ -71,7 +75,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   general: general("general"),
   generalData: general("generalData"),
   generalSync: () => <SyncSettingsPage />,
-  generalApi: general("generalApi"),
+  generalApi: ({ onOpenPage }) => <SlotView slot={localApiSections} group="generalApi" props={{ onOpenPage }} />,
   behavior: behavior("behavior"),
   behaviorTuck: behavior("behaviorTuck"),
   behaviorAlerts: behavior("behaviorAlerts"),

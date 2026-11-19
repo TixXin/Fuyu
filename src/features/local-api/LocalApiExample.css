@@ -1,0 +1,22 @@
+.local-api-example {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.local-api-example__code {
+  min-width: 0;
+  margin: 0;
+  padding: 8px 10px;
+  overflow-x: auto;
+  color: var(--color-text);
+  background: var(--color-white-a08);
+  border: 1px solid var(--color-white-a10);
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  line-height: 1.7;
+  white-space: pre;
+  user-select: text;
+}

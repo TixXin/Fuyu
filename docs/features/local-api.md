@@ -6,12 +6,15 @@
 
 本地接口是一个**内置插件**（`local-api`，2026-11-16 起，E36.3.43；以前是旧版插件平台的 `focusd.local-api`）：它随岛屿一起安装，不需要下载。
 
-1. 设置 → 插件，打开 **本机接口**。关掉时 HTTP 服务停止监听。
-2. 设置 → 通用 → **本机接口**（插件关着时这一节不显示）：
-   - 需要添加、修改或删除时，打开 **允许修改待办、笔记和 Agent 状态**。关闭时只能读取，写请求返回 403。
-   - **地址** 旁边点「复制」。
-   - **访问令牌** 不在界面上显示，点「复制」由岛直接写进剪贴板（不进系统和浮屿的剪贴板历史），粘贴到脚本里。
-   - 点 **重新生成令牌** 会换一个新令牌，使用旧令牌的脚本会立即失效。
+1. 设置 → 本机接口，打开页面上的开关（或者在 设置 → 插件 里打开 **本机接口**，是同一个开关）。关掉时 HTTP 服务停止监听。
+2. 设置 → **本机接口**（侧栏「扩展」组里单独的一页，2026-11-19 起，C141；以前是「通用」里的一个标签。侧栏里这一项一直在，不随接口开关隐藏；接口关着时页面上只有一张带开关的卡片，在这里打开和在插件页打开是一回事）。打开后页面有三组：
+   - **本机接口**：
+     - **地址** 旁边点「复制」。
+     - **访问令牌** 不在界面上显示，点「复制」由岛直接写进剪贴板（不进系统和浮屿的剪贴板历史），粘贴到脚本里。
+     - 点 **重新生成令牌** 会换一个新令牌，使用旧令牌的脚本会立即失效。
+     - **配置文件** 一行显示 `local-api.json` 的位置，能在文件夹里打开。
+   - **权限**：需要添加、修改或删除时，打开 **允许修改待办、笔记和 Agent 状态**，关闭时只能读取，写请求返回 403。下面列出现在开放的三样（待办和每日笔记、AI Agent 状态灯、剪贴板历史）各自能不能用：对应的功能关着时写明请求会回 503，并给一个去那一页的链接；剪贴板历史另有自己的开关，这一行只指路，不显示那个开关现在的状态。
+   - **试一下**：一段能直接复制的示例，调 `/v1/health`，令牌从配置文件里读（Windows 给 PowerShell，Mac 给 `sed` 加 `curl`）；右上角的链接打开这份文档。接口没在运行时不显示这一组。
 
 默认关闭。地址只监听 `127.0.0.1`，优先使用端口 `39271`，被占用时自动换一个空闲端口。
 
@@ -145,4 +148,4 @@ AI Agent 状态由 Rust 直接处理（`src-tauri/src/agent_status/external.rs`�
 
 界面会实时刷新，修改也会和手动操作一样被保存。待办插件关着时这些路由回 503（见上面「功能关着时」）。
 
-HTTP 服务是内置插件 `local-api` 的后台 `server`（`src-tauri/src/local_api/background.rs`），由插件开关表起停；「功能关着时」的规则在 `local_api/switches.rs`；设置页的命令（`get_local_api_info`、`reset_local_api_token`、`copy_local_api_token`）在 `local_api/settings.rs`，令牌只由 Rust 写进剪贴板，不回窗口。岛上接 `local-api-request` 的桥在 `src/features/island-bridge/`（不是插件，runner 的拥有者是 `builtin`）：这座桥还给旧版插件的待办调用和岛屿实验台用，所以不归本机接口，关掉本机接口不撤它。
+HTTP 服务是内置插件 `local-api` 的后台 `server`（`src-tauri/src/local_api/background.rs`），由插件开关表起停；「功能关着时」的规则在 `local_api/switches.rs`；设置页的命令（`get_local_api_info`、`reset_local_api_token`、`copy_local_api_token`）在 `local_api/settings.rs`，页面在 `src/features/local-api/`（`LocalApiSettings.tsx` 组装三组，`LocalApiAccess.tsx` 是权限，`LocalApiExample.tsx` 和 `example.ts` 是示例），令牌只由 Rust 写进剪贴板，不回窗口。岛上接 `local-api-request` 的桥在 `src/features/island-bridge/`（不是插件，runner 的拥有者是 `builtin`）：这座桥还给旧版插件的待办调用和岛屿实验台用，所以不归本机接口，关掉本机接口不撤它。

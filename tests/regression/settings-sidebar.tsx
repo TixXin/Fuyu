@@ -63,8 +63,8 @@ try {
   check(groupRows().map((row) => row.dataset.group).join() === "basics,features,agents,extensions"
     && groupRows().every((row) => row.getAttribute("aria-expanded") === "true"),
     "Every group is a row that folds, and all start unfolded");
-  check(listed().join() === "overview,general,appearance,behavior,shortcuts,todos,calendar,music,translation,clipboard,shelf,screenshot,voiceInput,behaviorAlerts,messages,agents,agentAppearance,agentAlerts,agentRemote,pluginsV3,pluginMarket,about",
-    "Every sidebar item is listed at first: the overview on top, Appearance and the four AI Agent items in their groups, and Plugins and the plugin market in Extensions");
+  check(listed().join() === "overview,general,appearance,behavior,shortcuts,todos,calendar,music,translation,clipboard,shelf,screenshot,voiceInput,behaviorAlerts,messages,agents,agentAppearance,agentAlerts,agentRemote,pluginsV3,pluginMarket,generalApi,about",
+    "Every sidebar item is listed at first: the overview on top, Appearance and the four AI Agent items in their groups, and Plugins, the plugin market and the local API in Extensions");
   check(host.querySelector(".settings-sidebar__footer [data-category='about']"), "About is pinned below the page list");
   check(element(".settings-sidebar__item--active").dataset.category === "general", "The open page is marked");
 
@@ -89,7 +89,7 @@ try {
   check(search().value === "" && group("features").getAttribute("aria-expanded") === "false", "Escape clears the search; folded groups stay folded");
   await act(async () => { group("features").click(); });
   await act(async () => { group("basics").click(); });
-  check(listed().length === 22, "Unfolding shows the pages again");
+  check(listed().length === 23, "Unfolding shows the pages again");
   check(!host.querySelector(".settings-sidebar__more"), "With every feature on there is no link to turn more on");
 
   const off = new Set<SettingsCategory>([...FEATURE_PAGES.music, ...FEATURE_PAGES.agents]);

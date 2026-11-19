@@ -308,58 +308,6 @@
       }
     },
     {
-      "page": "generalApi",
-      "zh-CN": {
-        "group": "本机接口",
-        "title": "允许修改待办、笔记和 Agent 状态",
-        "description": "关闭时只能读取，写请求回 403。"
-      },
-      "en": {
-        "group": "Local API",
-        "title": "Allow changes to todos, notes and agent status",
-        "description": "When off, it can only read; writes answer 403."
-      }
-    },
-    {
-      "page": "generalApi",
-      "zh-CN": {
-        "group": "本机接口",
-        "title": "地址",
-        "description": "http://127.0.0.1:39271/v1"
-      },
-      "en": {
-        "group": "Local API",
-        "title": "Address",
-        "description": "http://127.0.0.1:39271/v1"
-      }
-    },
-    {
-      "page": "generalApi",
-      "zh-CN": {
-        "group": "本机接口",
-        "title": "访问令牌",
-        "description": "令牌不在这里显示，复制后粘贴到脚本里。"
-      },
-      "en": {
-        "group": "Local API",
-        "title": "Access token",
-        "description": "The token is not shown here; copy it and paste it into your script."
-      }
-    },
-    {
-      "page": "generalApi",
-      "zh-CN": {
-        "group": "本机接口",
-        "title": "重新生成令牌",
-        "description": "换一个新令牌，用旧令牌的脚本立即失效。"
-      },
-      "en": {
-        "group": "Local API",
-        "title": "Regenerate token",
-        "description": "Switches to a new token; scripts using the old one stop working at once."
-      }
-    },
-    {
       "page": "theme",
       "zh-CN": {
         "group": "主题",
@@ -4609,6 +4557,58 @@
         "group": "SSH proxy tunnel",
         "title": "Local proxy",
         "description": "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the system proxy (Internet settings on Windows, network proxies on a Mac), then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none."
+      }
+    },
+    {
+      "page": "generalApi",
+      "zh-CN": {
+        "group": "本机接口",
+        "title": "地址",
+        "description": "http://127.0.0.1:39271/v1"
+      },
+      "en": {
+        "group": "Local API",
+        "title": "Address",
+        "description": "http://127.0.0.1:39271/v1"
+      }
+    },
+    {
+      "page": "generalApi",
+      "zh-CN": {
+        "group": "本机接口",
+        "title": "访问令牌",
+        "description": "令牌不在这里显示，复制后粘贴到脚本里。"
+      },
+      "en": {
+        "group": "Local API",
+        "title": "Access token",
+        "description": "The token is not shown here; copy it and paste it into your script."
+      }
+    },
+    {
+      "page": "generalApi",
+      "zh-CN": {
+        "group": "本机接口",
+        "title": "重新生成令牌",
+        "description": "换一个新令牌，用旧令牌的脚本立即失效。"
+      },
+      "en": {
+        "group": "Local API",
+        "title": "Regenerate token",
+        "description": "Switches to a new token; scripts using the old one stop working at once."
+      }
+    },
+    {
+      "page": "generalApi",
+      "zh-CN": {
+        "group": "权限",
+        "title": "允许修改待办、笔记和 Agent 状态",
+        "description": "关闭时只能读取，写请求回 403。"
+      },
+      "en": {
+        "group": "Access",
+        "title": "Allow changes to todos, notes and agent status",
+        "description": "When off, it can only read; writes answer 403."
       }
     },
     {

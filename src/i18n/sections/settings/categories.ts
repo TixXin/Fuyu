@@ -11,11 +11,11 @@ export type SettingsCategoriesText = {
   keywords: Record<
     | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
-    | "pluginsV3" | "pluginMarket" | "pluginDiagnostics" | "about" | "aboutChangelog" | "aboutHelp",
+    | "pluginsV3" | "pluginMarket" | "pluginDiagnostics" | "about" | "aboutChangelog" | "aboutPlugins" | "aboutHelp",
     string
   >;
   entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string; about: string };
-  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "about" | "aboutChangelog" | "aboutHelp", string>;
+  tabs: Record<"general" | "generalData" | "generalSync" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "messages" | "messagesIm" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "about" | "aboutChangelog" | "aboutPlugins" | "aboutHelp", string>;
   groups: {
     basics: string;
     features: string;
@@ -69,6 +69,7 @@ export type SettingsCategoriesText = {
   pluginDiagnostics: string;
   about: string;
   aboutChangelog: string;
+  aboutPlugins: string;
   aboutHelp: string;
 };
 
@@ -87,7 +88,7 @@ export const zhCN: SettingsCategoriesText = {
     general: "开机 自启 登录 语言 托盘 菜单栏 权限",
     generalData: "数据 文件夹 备份 恢复 导出 导入 迁移",
     generalSync: "跨设备 同步 云盘 网盘 OneDrive iCloud 坚果云 Syncthing NAS 设备 合并",
-    generalApi: "本机接口 Local API 令牌 端口 HTTP",
+    generalApi: "本机接口 本地接口 Local API 令牌 端口 HTTP 脚本 开发者 curl",
     behavior: "展开 悬停 收起 动画 切换页面 全屏 游戏 勿扰 免打扰",
     behaviorTuck: "贴边 隐藏 露出 最小化 托盘 菜单栏",
     behaviorAlerts: "系统提示 音量 亮度 耳机 蓝牙 电量 电源 充电 摄像头 麦克风 隐私",
@@ -129,7 +130,8 @@ export const zhCN: SettingsCategoriesText = {
     pluginDiagnostics: "运行诊断 插件进程 内存 CPU 占用 出错 安全模式 运行环境 Node 排查 二分 卡顿",
     about: "版本 更新 检查更新 测试版 通道 官网 反馈 Star 重置 退出",
     aboutChangelog: "更新日志 版本历史 发行说明 新功能",
-    aboutHelp: "帮助 新手引导 诊断",
+    aboutPlugins: "插件系统 插件怎么运行 内置功能 安全 权限 签名 沙箱 安全模式 开发插件 写插件 脚手架 tauri-cordis",
+    aboutHelp: "帮助 新手引导 诊断 交流群 微信群 QQ群 用户群",
   },
   entries: {
     general: "通用",
@@ -150,7 +152,6 @@ export const zhCN: SettingsCategoriesText = {
     general: "启动与托盘",
     generalData: "数据与备份",
     generalSync: "跨设备同步",
-    generalApi: "本机接口",
     music: "岛上显示",
     musicLyrics: "歌词来源",
     musicLyricsStyle: "歌词样式",
@@ -183,7 +184,8 @@ export const zhCN: SettingsCategoriesText = {
     agentPush: "推送与机器人",
     about: "概览",
     aboutChangelog: "更新日志",
-    aboutHelp: "帮助",
+    aboutPlugins: "插件系统",
+    aboutHelp: "帮助和交流群",
   },
   groups: {
     basics: "基础",
@@ -238,7 +240,8 @@ export const zhCN: SettingsCategoriesText = {
   pluginDiagnostics: "运行诊断",
   about: "关于",
   aboutChangelog: "更新日志",
-  aboutHelp: "帮助",
+  aboutPlugins: "插件系统",
+  aboutHelp: "帮助和交流群",
 };
 
 export const en: SettingsCategoriesText = {
@@ -256,7 +259,7 @@ export const en: SettingsCategoriesText = {
     general: "startup launch login language tray menu bar permissions",
     generalData: "data folder backup restore export import move",
     generalSync: "cross-device sync cloud drive onedrive icloud nutstore syncthing nas devices merge",
-    generalApi: "local api token port http",
+    generalApi: "local api token port http scripts developer curl",
     behavior: "expand hover collapse animation motion switch page fullscreen game quiet do not disturb",
     behaviorTuck: "tuck hide reveal minimise minimize tray menu bar",
     behaviorAlerts: "system alerts volume brightness headphones bluetooth battery charger power camera microphone privacy",
@@ -298,7 +301,8 @@ export const en: SettingsCategoriesText = {
     pluginDiagnostics: "diagnostics plugin process memory cpu usage errors safe mode runtime node troubleshoot bisect slow",
     about: "version updates check beta channel website feedback star reset quit",
     aboutChangelog: "changelog version history release notes what's new",
-    aboutHelp: "help onboarding guide diagnostics",
+    aboutPlugins: "plugin system how plugins work built-in features safety permissions signing sandbox safe mode write a plugin develop scaffold tauri-cordis",
+    aboutHelp: "help onboarding guide diagnostics community group wechat qq",
   },
   entries: {
     general: "General",
@@ -319,7 +323,6 @@ export const en: SettingsCategoriesText = {
     general: "Startup and tray",
     generalData: "Data and backup",
     generalSync: "Cross-device sync",
-    generalApi: "Local API",
     music: "On the island",
     musicLyrics: "Lyrics sources",
     musicLyricsStyle: "Lyrics style",
@@ -352,7 +355,8 @@ export const en: SettingsCategoriesText = {
     agentPush: "Push and bots",
     about: "Overview",
     aboutChangelog: "Changelog",
-    aboutHelp: "Help",
+    aboutPlugins: "Plugin system",
+    aboutHelp: "Help & community",
   },
   groups: {
     basics: "Basics",
@@ -407,5 +411,6 @@ export const en: SettingsCategoriesText = {
   pluginDiagnostics: "Diagnostics",
   about: "About",
   aboutChangelog: "Changelog",
-  aboutHelp: "Help",
+  aboutPlugins: "Plugin system",
+  aboutHelp: "Help & community",
 };

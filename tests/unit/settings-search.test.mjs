@@ -96,7 +96,9 @@ test("Appearance has 4 tabs, AI Agent is a group of 4 items, and every page is r
   assert.equal(sidebarItemOf("agentRings"), "agentAppearance");
   assert.equal(settingsCategoryFor("themeMarket"), "theme");
   assert.equal(sidebarItemOf("music"), "music");
-  assert.deepEqual(entryPages("general"), ["general", "generalData", "generalSync", "generalApi"]);
+  assert.deepEqual(entryPages("general"), ["general", "generalData", "generalSync"]);
+  assert.deepEqual(SETTINGS_GROUPS.find((group) => group.label === "extensions")?.categories, ["pluginsV3", "pluginMarket", "generalApi"]);
+  assert.equal(sidebarItemOf("generalApi"), "generalApi");
   assert.equal(settingsCategoryFor("sync"), "generalSync");
   const listed = SETTINGS_GROUPS.flatMap((group) => group.categories);
   assert.equal(new Set(listed).size, listed.length);

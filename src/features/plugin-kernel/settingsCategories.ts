@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Activity, Bell, Blocks, Bot, CalendarDays, ClipboardList, Compass, Crop, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
+import { Activity, Bell, Blocks, Bot, Cable, CalendarDays, ClipboardList, Compass, Crop, FolderSync, Gauge, Inbox, Info, Keyboard, Languages, LayoutTemplate, ListTodo, MessageCircle, MessagesSquare, Mic, MousePointerClick, Music, Palette, Plug, Server, ShieldCheck, SlidersHorizontal, Sparkles, Store, Timer, Volume2 } from "lucide-react";
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { defineSlot, type SettingsCategoryMeta } from "./slots.ts";
 
@@ -16,10 +16,9 @@ const supports = (feature: PlatformFeature) => ({ unsupported }: CategoryContext
 
 export const BUILTIN_CATEGORIES = [
   { id: "overview", icon: Compass, group: null },
-  { id: "general", icon: SlidersHorizontal, group: "basics", tabs: ["general", "generalData", "generalSync", "generalApi"] },
+  { id: "general", icon: SlidersHorizontal, group: "basics", tabs: ["general", "generalData", "generalSync"] },
   { id: "generalData", icon: SlidersHorizontal },
   { id: "generalSync", icon: FolderSync, aliases: ["sync"] },
-  { id: "generalApi", icon: SlidersHorizontal },
   { id: "appearance", icon: LayoutTemplate, group: "basics", tabs: ["theme", "themeStyle", "appearance", "appearanceCollapsed"] },
   { id: "theme", icon: Palette, aliases: ["themePresets", "themeMarket"] },
   { id: "themeStyle", icon: Sparkles, aliases: ["themeGlass"] },
@@ -59,8 +58,10 @@ export const BUILTIN_CATEGORIES = [
   { id: "pluginsV3", icon: Blocks, group: "extensions" },
   { id: "pluginDiagnostics", icon: Activity, parent: "pluginsV3" },
   { id: "pluginMarket", icon: Store, group: "extensions" },
-  { id: "about", icon: Info, group: null, tabs: ["about", "aboutChangelog", "aboutHelp"], aliases: ["updates"] },
+  { id: "generalApi", icon: Cable, group: "extensions" },
+  { id: "about", icon: Info, group: null, tabs: ["about", "aboutChangelog", "aboutPlugins", "aboutHelp"], aliases: ["updates"] },
   { id: "aboutChangelog", icon: Info, aliases: ["aboutHistory"] },
+  { id: "aboutPlugins", icon: Blocks },
   { id: "aboutHelp", icon: Info },
 ] as const satisfies readonly BuiltinCategory[];
 
