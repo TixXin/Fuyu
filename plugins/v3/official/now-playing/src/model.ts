@@ -42,6 +42,8 @@ export const DURATIONS = [3, 6, 10, 15];
 export const CONTENT_MODES: ContentMode[] = ["title-artist", "title", "title-artist-album"];
 export const POLL_MS = 2500;
 export const POLL_IDLE_MS = 30_000;
+export const POLL_FALLBACK_MS = 15_000;
+export const REREAD_MS = 1500;
 export const LAST_ONLY_WAIT_MS = 1200;
 export const MAX_SEEN_APPS = 12;
 export const HEARD_GRACE_MS = 8000;
@@ -107,6 +109,11 @@ export function trackKey(track: Partial<NowPlaying> | null | undefined): string 
   if (!title) return null;
   const artist = typeof track?.artist === "string" ? track.artist.trim() : "";
   return `${title}\n${artist}`;
+}
+
+export function pollDelay(readFailed: boolean, eventsSeen: boolean): number {
+  if (readFailed) return POLL_IDLE_MS;
+  return eventsSeen ? POLL_FALLBACK_MS : POLL_MS;
 }
 
 export function isHeard(track: Pick<NowPlaying, "playing">, lastHeardAt: number, now: number): boolean {

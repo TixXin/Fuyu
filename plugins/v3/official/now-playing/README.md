@@ -30,7 +30,7 @@
 ## 开销和数据来源
 
 - 读取系统里正在播放的歌曲信息（歌名、歌手、专辑、播放软件），和浮屿自带的媒体控制用的是同一份。
-- 等浮屿发「换歌」事件；现在的浮屿还没有这个事件，所以开着「换歌时提示」时每 2.5 秒看一次当前播放，读不到时放慢到 30 秒。浮屿以后发了事件，插件收到第一次就不再轮询。
+- 靠浮屿发的「换歌」事件知道换了歌。收到事件后还会每 15 秒看一次当前播放兜底，防止漏掉一次事件；切歌那一刻读不到歌名时，1.5 秒后再看一次。浮屿还不发这个事件时（旧版本），开着「换歌时提示」就每 2.5 秒看一次；读不到播放信息时放慢到 30 秒。
 - 设置和见过的音乐软件名只保存在本机的插件数据目录里。
 - 不联网。
 
@@ -68,7 +68,7 @@ Under Settings → Plugins → Track change notice; changes take effect right aw
 ### Cost and data
 
 - Reads the song information your system reports (title, artist, album, player app), the same information Fuyu's built-in media controls use.
-- Waits for Fuyu's "track changed" event. Current Fuyu versions do not send it yet, so while "Notify on track change" is on the plugin checks what is playing every 2.5 seconds, slowing to 30 seconds while nothing can be read. Once Fuyu sends the event, the plugin stops polling after the first one.
+- Learns about track changes from Fuyu's "track changed" event. After that it still checks what is playing every 15 seconds in case an event is missed, and looks again 1.5 seconds later when the title cannot be read right at the change. On older Fuyu versions without the event it checks every 2.5 seconds while "Notify on track change" is on, slowing to 30 seconds while nothing can be read.
 - The settings and the names of music apps it has seen are stored only in the plugin's data folder on your computer.
 - No network access.
 
