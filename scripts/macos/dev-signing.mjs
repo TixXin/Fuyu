@@ -29,8 +29,19 @@ export function parseSha1Fingerprint(text) {
   return match[1].replaceAll(":", "").toUpperCase();
 }
 
-export function signedByDevIdentity(codesignDetails) {
-  return codesignDetails.includes(`Authority=${DEV_IDENTITY}`) && codesignDetails.includes(`Identifier=${DEV_IDENTIFIER}`);
+export const APPLE_DEVELOPMENT = "Apple Development:";
+export const NO_TEAM_WARNING = "no Apple Development certificate, so the keychain still asks after every rebuild; set one up as described in docs/architecture/workflow.md (开发版和正式版同时开)";
+
+export function pickAppleDevelopment(findIdentityOutput) {
+  for (const line of findIdentityOutput.split("\n")) {
+    const match = /^\s*\d+\)\s+([0-9A-F]{40})\s+"(.+)"\s*$/.exec(line);
+    if (match && match[2].startsWith(APPLE_DEVELOPMENT)) return { sha1: match[1], name: match[2] };
+  }
+  return null;
+}
+
+export function signedBy(codesignDetails, authority) {
+  return codesignDetails.includes(`Identifier=${DEV_IDENTIFIER}\n`) && codesignDetails.includes(`Authority=${authority}\n`);
 }
 
 function createKeychain(files, certificate) {
@@ -91,12 +102,22 @@ export function replaceWithCopy(source, target) {
   }
 }
 
+function appleDevelopmentIdentity() {
+  const result = spawnSync("security", ["find-identity", "-v", "-p", "codesigning"], { encoding: "utf8" });
+  return result.status === 0 ? pickAppleDevelopment(result.stdout) : null;
+}
+
 export function signDevBinary(binary, dir = devSigningDir()) {
   if (!existsSync(binary)) return { signed: false, message: `${binary} is missing` };
-  if (signedByDevIdentity(codesignDetails(binary))) return { signed: false, message: "already signed" };
-  const { keychain, sha1 } = ensureDevIdentity(dir);
+  const apple = appleDevelopmentIdentity();
+  if (signedBy(codesignDetails(binary), apple ? apple.name : DEV_IDENTITY)) return { signed: false, message: "already signed" };
+  const signer = apple ? ["--sign", apple.sha1] : (({ keychain, sha1 }) => ["--sign", sha1, "--keychain", keychain])(ensureDevIdentity(dir));
   const original = cargoOriginal(binary);
-  run("codesign", ["--force", "--sign", sha1, "--keychain", keychain, "--identifier", DEV_IDENTIFIER, original ?? binary]);
+  run("codesign", ["--force", ...signer, "--identifier", DEV_IDENTIFIER, original ?? binary]);
   if (original) replaceWithCopy(original, binary);
-  return { signed: true, message: `signed ${binary} as ${DEV_IDENTIFIER}` };
+  return {
+    signed: true,
+    message: `signed ${binary} as ${DEV_IDENTIFIER} with ${apple ? apple.name : DEV_IDENTITY}`,
+    warning: apple ? null : NO_TEAM_WARNING,
+  };
 }
