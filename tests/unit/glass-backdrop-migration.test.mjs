@@ -77,3 +77,16 @@ test("both one-time migrations run together on an old settings blob", () => {
     assert.equal(values.get(GLASS_BACKDROP_DEFAULT_MIGRATION_KEY), "1");
   });
 });
+
+test("the settings note shows only when the island draws less than what was picked", async () => {
+  const { glassFallbackNote } = await import("../../src/windows/settings/sections/glassFallbackNote.ts");
+  assert.equal(glassFallbackNote("native", null), null);
+  assert.equal(glassFallbackNote("native", { backdrop: "live" }), null);
+  assert.deepEqual(glassFallbackNote("native", { backdrop: "wallpaper", reason: "no-d3d" }), { shown: "wallpaper", reason: "no-d3d" });
+  assert.deepEqual(glassFallbackNote("native", { backdrop: "css", reason: "remote" }), { shown: "css", reason: "remote" });
+  assert.deepEqual(glassFallbackNote("wallpaper", { backdrop: "css", reason: "no-wallpaper" }), { shown: "css", reason: "no-wallpaper" });
+  assert.deepEqual(glassFallbackNote("wallpaper", { backdrop: "css", reason: "transparency-off" }), { shown: "css", reason: "transparency-off" });
+  assert.equal(glassFallbackNote("wallpaper", { backdrop: "wallpaper", reason: "unsupported" }), null);
+  assert.equal(glassFallbackNote("none", { backdrop: "css", reason: "transparency-off" }), null);
+  assert.equal(glassFallbackNote("native", { backdrop: "off" }), null);
+});

@@ -22,6 +22,8 @@ import {
   type GlassSettingValues,
 } from "../../../lib/settings/glassSettings";
 import { DEFAULT_SETTINGS } from "../../../lib/settings/settings";
+import { glassFallbackNote } from "./glassFallbackNote";
+import { useIslandGlassStatus } from "./useIslandGlassStatus";
 import type { IslandSettings } from "../../../lib/settings/types";
 
 const percent = (value: number) => `${Math.round(value)}%`;
@@ -37,6 +39,7 @@ export function GlassSettingsSection({
   const t = useTranslation();
   const text = t.settings.appearance.glass;
   const resetLabel = t.settings.layout.resetToDefault;
+  const glassStatus = useIslandGlassStatus();
   if (settings.appearanceMode !== "liquidGlass") return null;
 
   const set = (patch: Partial<GlassSettingValues> & Partial<Pick<IslandSettings, "glassIntensity">>) => onSettingsChange({ ...settings, ...patch });
@@ -54,6 +57,7 @@ export function GlassSettingsSection({
     : settings.glassBackdrop === "native"
       ? isMacOS ? text.nativeHintMac : text.nativeHintWindows
       : undefined;
+  const fallback = glassFallbackNote(settings.glassBackdrop, glassStatus);
   const showFrostControls = settings.glassBackdrop === "wallpaper" || (settings.glassBackdrop === "native" && !isMacOS);
 
   return (
@@ -114,7 +118,13 @@ export function GlassSettingsSection({
               onChange={(glassBackdrop) => set(glassBackdrop !== "none" ? { glassBackdrop, glassIntensity: Math.min(settings.glassIntensity, 40) } : { glassBackdrop })}
             />
           }
-        />
+        >
+          {fallback && (
+            <span className="settings-row__description" role="status">
+              {text.fallbackShown[fallback.shown]}{text.fallbackReasons[fallback.reason]}
+            </span>
+          )}
+        </SettingsRow>
         <SettingsRow
           title={text.colorSource}
           description={settings.glassColorSource === "cover" ? text.coverHint : undefined}

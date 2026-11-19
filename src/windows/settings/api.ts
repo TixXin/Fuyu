@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { emit, listen } from "@tauri-apps/api/event";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { ISLAND_GLASS_STATUS_EVENT, ISLAND_GLASS_STATUS_REQUEST_EVENT, type IslandGlassStatus } from "../island/glassStatus";
 import { requestSettingsFocus, type SettingsFocusSection } from "./storage";
 
 export function settingsWindowOpening(section?: SettingsFocusSection): Promise<void> {
@@ -76,4 +77,12 @@ export function readCrashLogsHome() {
 
 export function revealCrashLogPath(path: string) {
   return revealItemInDir(path);
+}
+
+export function listenIslandGlassStatus(onStatus: (status: IslandGlassStatus) => void) {
+  return listen<IslandGlassStatus>(ISLAND_GLASS_STATUS_EVENT, ({ payload }) => onStatus(payload));
+}
+
+export function requestIslandGlassStatus() {
+  return emit(ISLAND_GLASS_STATUS_REQUEST_EVENT);
 }
