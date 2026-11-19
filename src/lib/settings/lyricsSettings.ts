@@ -84,7 +84,7 @@ export type KaraokeLook = { fill: LyricsKaraokeFill; lit: string; dim: string; g
 
 export function karaokeLook(settings: LyricsSettingValues, ink = "var(--task-text-color, #fff)"): KaraokeLook {
   const chosen = settings.lyricsKaraokeColor === "accent" ? "var(--color-accent, #74d6ff)" : settings.lyricsKaraokeColor === "custom" ? settings.lyricsKaraokeCustomColor : ink;
-  const lit = settings.lyricsCoverColor ? `var(--cover-accent, ${chosen})` : chosen;
+  const lit = settings.lyricsCoverColor && settings.lyricsKaraokeColor !== "custom" ? `var(--cover-accent, ${chosen})` : chosen;
   return {
     fill: settings.lyricsKaraokeFill,
     lit,

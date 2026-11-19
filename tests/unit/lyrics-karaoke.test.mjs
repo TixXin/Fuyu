@@ -50,3 +50,19 @@ test("the look follows the colour choice; the unsung part is always the island's
   assert.match(karaokeLook({ ...base, lyricsKaraokeColor: "accent" }).lit, /--color-accent/);
   assert.equal(karaokeLook({ ...base, lyricsKaraokeColor: "custom", lyricsKaraokeCustomColor: "#ff0000" }).lit, "#ff0000");
 });
+
+test("following the cover colour tints the text and accent highlights, but never overrides a custom colour", () => {
+  const base = normalizeSettings({});
+  const cases = [
+    ["ink", false, "#ffffff"],
+    ["accent", false, "var(--color-accent, #74d6ff)"],
+    ["custom", false, "#ff0000"],
+    ["ink", true, "var(--cover-accent, #ffffff)"],
+    ["accent", true, "var(--cover-accent, var(--color-accent, #74d6ff))"],
+    ["custom", true, "#ff0000"],
+  ];
+  for (const [lyricsKaraokeColor, lyricsCoverColor, lit] of cases) {
+    const settings = { ...base, lyricsKaraokeColor, lyricsCoverColor, lyricsKaraokeCustomColor: "#ff0000" };
+    assert.equal(karaokeLook(settings, "#ffffff").lit, lit, `${lyricsKaraokeColor} with cover ${lyricsCoverColor}`);
+  }
+});
