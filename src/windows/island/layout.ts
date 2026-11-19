@@ -15,6 +15,13 @@ export function maxExpandedIslandWidth(scale: number) {
   return Math.max(EXPANDED_ISLAND_WIDTH, Math.floor((STAGE_WINDOW_WIDTH - 4) / scale) - 2 * MAX_TOP_FILLET_RADIUS);
 }
 
+export const MAX_FITTED_COLLAPSED_WIDTH = 520;
+
+export function maxCollapsedIslandWidth(scale: number) {
+  const stage = scale > 0 ? Math.floor((STAGE_WINDOW_WIDTH - 4) / scale) - 2 * MAX_TOP_FILLET_RADIUS : MAX_FITTED_COLLAPSED_WIDTH;
+  return Math.min(MAX_FITTED_COLLAPSED_WIDTH, stage);
+}
+
 export function panelIslandWidth(panelWidth: number, scale: number) {
   return Math.min(panelWidth, maxExpandedIslandWidth(scale));
 }
@@ -57,6 +64,7 @@ export function alignCollapsedIslandWidth(
   stageWidth: number,
   devicePixelRatio: number,
   widthExtra = 0,
+  maxWidth = MAX_COLLAPSED_ISLAND_WIDTH + widthExtra,
 ) {
   const isAligned = (candidate: number) => {
     const left = ((stageWidth - candidate) / 2) * devicePixelRatio;
@@ -67,7 +75,7 @@ export function alignCollapsedIslandWidth(
     for (const candidate of [width - nudge, width + nudge]) {
       if (
         candidate >= MIN_COLLAPSED_ISLAND_WIDTH + widthExtra &&
-        candidate <= MAX_COLLAPSED_ISLAND_WIDTH + widthExtra &&
+        candidate <= maxWidth &&
         isAligned(candidate)
       ) {
         return candidate;

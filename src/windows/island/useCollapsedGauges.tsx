@@ -9,6 +9,8 @@ import type { CollapsedSlots } from "./types";
 import "./slots/builtins";
 import { listenIslandHover } from "./api";
 import { collapsedGaugeSlot, slotWidth, type CollapsedGaugeContext } from "./slots/collapsed";
+import { CollapsedFit } from "./CollapsedFit";
+import { fitFloor } from "./collapsedFitStore";
 
 const EMPTY: CollapsedSlots = {};
 
@@ -29,12 +31,12 @@ export function useCollapsedGauges(paused: boolean): CollapsedSlots {
   return useMemo(() => {
     if (gauges.length === 0) return EMPTY;
     const slots: CollapsedSlots = {
-      gauges: gauges.map(({ id }) => ({
-        id,
-        node: <SlotView key={id} slot={collapsedGaugeSlot} props={gaugeContext} select={(items) => items.filter((item) => item.id === id)} />,
-      })),
+      gauges: gauges.map(({ id, external, width }) => {
+        const view = <SlotView key={id} slot={collapsedGaugeSlot} props={gaugeContext} select={(items) => items.filter((item) => item.id === id)} />;
+        return { id, node: external ? <CollapsedFit key={id} id={id} floor={fitFloor(width, gaugeContext)}>{view}</CollapsedFit> : view };
+      }),
     };
-    const sideWidth = gauges.reduce((sum, entry) => sum + slotWidth(entry.width, gaugeContext), 0);
+    const sideWidth = gauges.reduce((sum, entry) => sum + (entry.external ? 0 : slotWidth(entry.width, gaugeContext)), 0);
     if (sideWidth > 0) slots.sideWidth = sideWidth;
     return slots;
   }, [gauges, gaugeContext]);
