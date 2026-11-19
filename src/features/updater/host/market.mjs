@@ -336,12 +336,23 @@ export function createMarketService(options = {}) {
       if (!isObject(params) || typeof params.id !== "string" || !params.id) {
         throw marketError("bad-params", "uninstall expects { id: string, removeData?: boolean }");
       }
-      const res = uninstallPackage(pluginsDir, params.id, { removeData: params.removeData === true });
+      const found = readInstalledPackages(pluginsDir).find((item) => item.id === params.id);
+      if (!found) throw marketError("not-found", `Installed plugin ${params.id} was not found`);
+      const res = uninstallPackage(pluginsDir, found.id, { removeData: params.removeData === true });
       if (onConfigChanged) await onConfigChanged();
       notifyChanged();
       return { id: res.id, removed: true };
     },
   };
+}
+
+export const SETTINGS_WINDOW = "settings";
+export const SETTINGS_ONLY_METHODS = Object.freeze(["refresh", "installMarket", "installFile", "setManualAllowed", "setEnabled", "uninstall"]);
+
+export function assertSettingsWindow(method, caller) {
+  if (caller?.window === SETTINGS_WINDOW && caller.plugin === undefined) return;
+  const who = typeof caller?.plugin === "string" ? `plugin ${caller.plugin}` : typeof caller?.window === "string" ? `window "${caller.window}"` : "an unknown caller";
+  throw marketError("forbidden", `market/v1 ${method} only answers the settings window, not ${who}`);
 }
 
 export function provideMarketService(ctx, options = {}) {
@@ -354,14 +365,12 @@ export function provideMarketService(ctx, options = {}) {
   const service = createMarketService({ dataDir: ctx.dataDir, onConfigChanged: reloadConfig, ...options });
   const provider = ctx.services.provide(marketV1, {
     catalog: () => service.catalog(),
-    refresh: (params) => service.refresh(params),
     details: (params) => service.details(params),
     inspectPackage: (params) => service.inspectPackage(params),
-    installMarket: (params) => service.installMarket(params),
-    installFile: (params) => service.installFile(params),
-    setManualAllowed: (params) => service.setManualAllowed(params),
-    setEnabled: (params) => service.setEnabled(params),
-    uninstall: (params) => service.uninstall(params),
+    ...Object.fromEntries(SETTINGS_ONLY_METHODS.map((method) => [method, (params, caller) => {
+      assertSettingsWindow(method, caller);
+      return service[method](params);
+    }])),
   });
   const off = service.subscribe((payload) => provider.emit("changed", payload));
   if (typeof ctx.effect === "function") ctx.effect(() => off, "market.v1.changed");
