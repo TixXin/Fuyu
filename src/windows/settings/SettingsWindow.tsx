@@ -65,7 +65,9 @@ export function SettingsWindow() {
       return;
     }
     const target = section && settingsCategoryFor(section);
-    if (target) setCategory(target);
+    if (!target) return;
+    setCategory(target);
+    if (target !== section) focusSection(section);
   }, []);
 
   useEffect(() => {

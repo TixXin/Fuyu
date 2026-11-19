@@ -28,7 +28,7 @@ export function useQQNotifications(canPreview: boolean) {
   const revisionRef = useRef(-1);
   const timingRef = useRef<QQPreviewTiming | null>(null);
   const actionPending = useRef(false);
-  const autoClear = useQQAutoClear();
+  useQQAutoClear();
 
   useLayoutEffect(() => {
     canPreviewRef.current = canPreview;
@@ -147,7 +147,7 @@ export function useQQNotifications(canPreview: boolean) {
   );
 
   return {
-    snapshot: localizedSnapshot, busy, actionError, setEnabled, requestAccess, openSettings, refresh, clear, openQQ, dismissPreview, ...autoClear,
+    snapshot: localizedSnapshot, busy, actionError, setEnabled, requestAccess, openSettings, refresh, clear, openQQ, dismissPreview,
     previewReceivedAt: canPreview ? previewWindow?.receivedAt ?? null : null,
     preview: canPreview && previewWindow
       ? snapshot.items.find((item) => item.id === previewWindow.id) ?? null

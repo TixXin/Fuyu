@@ -17,6 +17,12 @@ export function sourceSwitch(config: SourceConfig, source: string): boolean | un
   return typeof value === "boolean" ? value : undefined;
 }
 
+export function mergedAutoClear(config: SourceConfig, legacy: { qq: boolean; wechat: boolean }): boolean {
+  const merged = sourceSwitch(config, "autoClear");
+  if (merged !== undefined) return merged;
+  return legacy.qq && legacy.wechat && IM_SOURCE_IDS.every((source) => isImAutoClearEnabled(config, source));
+}
+
 export function imSourceEnabled(config: SourceConfig, source: ImSourceId): boolean {
   return sourceSwitch(config, source) ?? false;
 }

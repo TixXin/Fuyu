@@ -9,6 +9,7 @@ import { useIslandBanner } from "../island/useIslandBanner";
 import { useIslandMessagePanel } from "../island/useIslandMessagePanel";
 import { useIslandNotices } from "../island/useIslandNotices";
 import { useMailSwitch, useSourceFallback } from "../island/useMessageSwitches";
+import { useMessageSample } from "../island/useMessageSample";
 import { useMessageView } from "../island/useMessageView";
 import { useHeldPreview } from "../island/useHeldPreview";
 import { useSummaryGrow } from "../island/useSummaryFit";
@@ -37,6 +38,7 @@ function MessagesRunner({ settings, mode, page, isTucked, quiet, host, openIslan
   const notices = useIslandNotices({ mode, isTucked, quiet, revealOnMessage: settings.revealOnMessage });
   const { qqNotifications, wechatReminders, qqMail, pluginNotifications, imSources, hasMessagePreview } = notices;
   const { messageSource, setMessageSource, openMessages } = useMessageView(qqMail.closeReader, openIslandPage);
+  useMessageSample(pluginNotifications.post);
   const banner = useIslandBanner({ messageNotice: settings.messageNotice, notices, mode, isTucked, quiet, onOpenMessages: openMessages, host });
   const panel = useIslandMessagePanel({
     enabled: settings.messageNotice !== "line" && !quiet,

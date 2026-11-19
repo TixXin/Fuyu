@@ -27,7 +27,7 @@ export function useWeChatReminders(canPreview: boolean) {
   const attentionRef = useRef<number | null>(null);
   const messageAtRef = useRef<number | null>(null);
   const actionPending = useRef(false);
-  const autoClear = useWeChatAutoClear();
+  useWeChatAutoClear();
 
   useLayoutEffect(() => {
     canPreviewRef.current = canPreview;
@@ -143,7 +143,7 @@ export function useWeChatReminders(canPreview: boolean) {
 
   const showing = canPreview && snapshot.pending && previewReceivedAt !== null;
   return {
-    snapshot: localizedSnapshot, busy, actionError, setEnabled, setExposeUi, setHideTaskbarButton, openWeChat, clear, dismissPreview, ...autoClear,
+    snapshot: localizedSnapshot, busy, actionError, setEnabled, setExposeUi, setHideTaskbarButton, openWeChat, clear, dismissPreview,
     previewReceivedAt: showing ? previewReceivedAt : null,
     previewMessage: showing ? previewMessage : null,
   };

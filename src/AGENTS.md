@@ -31,7 +31,7 @@ src/
 │   ├── island-bridge/       # 不是插件：Rust 转给岛的请求（local-api-request）的桥，方法分发、待办经 todos/v1，开发版另有岛屿实验台的动作；runner 拥有者 builtin，本机接口和岛屿实验台共用，关掉本机接口不撤它
 │   ├── local-api/           # 第 3 版内置插件 local-api（本机接口）：设置是 通用 里的一节（LocalApiSettings.tsx：允许修改、地址、复制令牌、重新生成令牌，令牌只由 Rust 复制）。岛上接 Rust 转来的请求（local-api-request）的桥不在这里，在 island-bridge/
 │   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件（runtime.ts，宿主默认启动，设 FUYU_PLUGINS_V3=0 关掉）；插槽：每个窗口一份注册表和各插槽的类型化句柄（slots.ts，名单和规则在 @fuyu/plugin-base/protocol 的 SLOTS）、渲染（SlotView.tsx）、订阅（useSlotEntries.ts），宿主关着时内置功能也经它们注册和渲染
-│   ├── messages/            # 消息导航与预览；mail/、qq-notifications/、wechat/ 子目录；banner/ 为岛下方的新消息横幅（分组与计时）；arrivals/ 为新消息自动展开的面板（只列这次到达的消息）；island/ 是它们在岛上的接线：读 QQ、微信、邮箱和插件通知（useIslandNotices）、收起条预览、横幅（useIslandBanner）、到达面板（useIslandMessagePanel）、未读时的贴边保持
+│   ├── messages/            # 消息导航与预览；mail/、qq-notifications/、wechat/ 子目录；banner/ 为岛下方的新消息横幅（分组与计时）；arrivals/ 为新消息自动展开的面板（只列这次到达的消息）；settings/ 是设置页的两个标签（来源列表、提醒方式和它的演示）；island/ 是它们在岛上的接线：读 QQ、微信、邮箱和插件通知（useIslandNotices）、收起条预览、横幅（useIslandBanner）、到达面板（useIslandMessagePanel）、未读时的贴边保持
 │   ├── agent-status/        # AI 代理状态；sounds/ 为 Agent 音效：内置音效播放、设置 → 声音页、导入音效包；push/ 为手机推送（Bark 或 cc-connect，排队到离开电脑再发）
 │   ├── cc-connect/          # 第 3 版内置插件 cc-connect：设置是 AI Agent → 提醒 里的一节（CcConnectSettings.tsx 是程序路径和由岛启动，下面是找到的程序、找不到时下载、是否在运行、各项目聊过的会话）；CcConnectSetup.tsx 为新建机器人向导，FeishuSetup.tsx 为飞书扫码；plugin/services.ts 提供窗口服务 cc-connect/v1（定义在 lib/cc-connect/），手机推送经它发送和列目标
 │   ├── claude-usage/        # 收起条上的 Agent 用量双环（内置插件 claude-usage）：Claude Code、Codex 的用量经 agents/v1 取，GLM、Kimi 的用量和 Key 是自己的命令（api.ts）；阈值配色与悬停卡片文案（usageRing.ts），配置在 plugins.yml（usageConfig.ts、useUsageConfig.ts），设置在 AI Agent 页的「用量环」分组；用量的共用类型和工具在 lib/agent-usage/

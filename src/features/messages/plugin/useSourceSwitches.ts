@@ -1,13 +1,12 @@
 import { useEffect } from "react";
 import { setBuiltinConfig } from "../../plugin-kernel/builtinSwitches";
 import { useBuiltinConfig, useBuiltinPlugins } from "../../plugin-kernel/useBuiltinPlugins";
-import { isQQNotificationsEnabled } from "../qq-notifications/storage";
-import { isWeChatRemindersEnabled } from "../wechat/storage";
+import { isQQAutoClearEnabled, isQQNotificationsEnabled } from "../qq-notifications/storage";
+import { isWeChatAutoClearEnabled, isWeChatRemindersEnabled } from "../wechat/storage";
 import { OWNER } from "./owner.ts";
 import {
-  imAutoClearKey,
   imSourceEnabled,
-  isImAutoClearEnabled,
+  mergedAutoClear,
   MESSAGE_SOURCES,
   migrateSources,
   sourceSwitch,
@@ -19,13 +18,13 @@ export async function setSourceEnabled(source: MessageSource, on: boolean): Prom
   await setBuiltinConfig(OWNER, source, on);
 }
 
-export async function setImAutoClearEnabled(source: ImSourceId, on: boolean): Promise<void> {
-  await setBuiltinConfig(OWNER, imAutoClearKey(source), on);
+export function useMessageAutoClear(): boolean {
+  const config = useBuiltinConfig(OWNER);
+  return mergedAutoClear(config, { qq: isQQAutoClearEnabled(), wechat: isWeChatAutoClearEnabled() });
 }
 
-export function useImSourceAutoClear(source: ImSourceId): boolean {
-  const config = useBuiltinConfig(OWNER);
-  return isImAutoClearEnabled(config, source);
+export async function setMessageAutoClearEnabled(on: boolean): Promise<void> {
+  await setBuiltinConfig(OWNER, "autoClear", on);
 }
 
 export function useImSourceEnabled(source: ImSourceId): boolean {

@@ -22,8 +22,9 @@ export function MailConnectForm({ reauthorizing, busy, onConnect, onHelp, onCanc
   const [email, setEmail] = useState(reauthorizing ?? "");
   const [authorizationCode, setAuthorizationCode] = useState("");
   const [host, setHost] = useState("");
+  const [customHost, setCustomHost] = useState(false);
 
-  useEffect(() => { setEmail(reauthorizing ?? ""); setAuthorizationCode(""); setHost(""); }, [reauthorizing]);
+  useEffect(() => { setEmail(reauthorizing ?? ""); setAuthorizationCode(""); setHost(""); setCustomHost(false); }, [reauthorizing]);
 
   return (
     <form className="mail-settings__form" onSubmit={(event) => {
@@ -60,7 +61,7 @@ export function MailConnectForm({ reauthorizing, busy, onConnect, onHelp, onCanc
         <span>{t.mail.authorizationCode}</span>
         <input type="password" autoComplete="off" placeholder={t.mail.authorizationPlaceholder} required maxLength={256} value={authorizationCode} disabled={busy} onChange={(event) => setAuthorizationCode(event.currentTarget.value)} />
       </label>
-      {reauthorizing === null && (
+      {reauthorizing === null && customHost && (
         <label className="mail-settings__row">
           <span>{t.mail.imapHost}</span>
           <input type="text" autoComplete="off" spellCheck={false} placeholder={t.mail.imapHostPlaceholder} maxLength={253} value={host} disabled={busy} onChange={(event) => setHost(event.currentTarget.value)} />
@@ -71,6 +72,9 @@ export function MailConnectForm({ reauthorizing, busy, onConnect, onHelp, onCanc
           <button className="mail-settings__button" type="button" aria-label={t.mail.helpLabel} onClick={onHelp}>
             <CircleHelp size={13} strokeWidth={2} aria-hidden="true" />{t.mail.help}
           </button>
+        )}
+        {reauthorizing === null && !customHost && (
+          <button className="mail-settings__button mail-settings__button--quiet" type="button" disabled={busy} onClick={() => setCustomHost(true)}>{t.mail.customHost}</button>
         )}
         {onCancel && <button className="mail-settings__button" type="button" disabled={busy} onClick={onCancel}>{t.mail.cancel}</button>}
         <button className="mail-settings__button mail-settings__button--primary" type="submit" disabled={busy || !email.trim() || !authorizationCode.trim()}>

@@ -56,8 +56,8 @@ export type MailText = {
   authorizationPlaceholder: string;
   imapHost: string;
   imapHostPlaceholder: string;
+  customHost: string;
   accounts: string;
-  accountsTitle: string;
   accountsHint: string;
   accountsHintMac: string;
   addTitle: string;
@@ -149,8 +149,8 @@ export const zhCN: MailText = {
   authorizationPlaceholder: "邮箱授权码",
   imapHost: "IMAP 服务器",
   imapHostPlaceholder: "可留空，默认 imap.域名；需要时加端口，如 :9993",
+  customHost: "自己填服务器",
   accounts: "邮箱账户",
-  accountsTitle: "邮箱账户",
   accountsHint: "每个邮箱有独立的后台连接，岛上的邮箱面板按标签切换。授权码保存在 Windows 凭据管理器，断开时一并删除。",
   accountsHintMac: "每个邮箱有独立的后台连接，岛上的邮箱面板按标签切换。授权码保存在钥匙串里，断开时一并删除。",
   addTitle: "添加邮箱",
@@ -242,8 +242,8 @@ export const en: MailText = {
   authorizationPlaceholder: "Mail authorization code",
   imapHost: "IMAP server",
   imapHostPlaceholder: "Optional, imap.<domain>; add :port if needed",
+  customHost: "Set the server myself",
   accounts: "Mailboxes",
-  accountsTitle: "Mailboxes",
   accountsHint: "Each mailbox has its own background connection; the island's mail panel shows one tab each. Authorization codes are kept in Windows Credential Manager and removed on disconnect.",
   accountsHintMac: "Each mailbox has its own background connection; the island's mail panel shows one tab each. Authorization codes are kept in the keychain and removed on disconnect.",
   addTitle: "Add a mailbox",
