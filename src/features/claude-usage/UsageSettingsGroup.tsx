@@ -66,6 +66,7 @@ export function UsageSettingsGroup() {
     antigravity: text.antigravityHint,
     glm: isMacOS ? text.glmHintMac : text.glmHint,
     kimi: isMacOS ? text.kimiHintMac : text.kimiHint,
+    cursor: text.cursorHint,
     workbuddy: text.workbuddyHint,
     dsh: text.dshHint,
   };

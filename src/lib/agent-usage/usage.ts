@@ -35,7 +35,9 @@ export function usageSourceLines(usage: AgentUsage, now: number, text: ClaudeUsa
         ? text.planErrors
         : usage.source === "antigravity" || usage.source === "antigravityCloud"
           ? text.antigravityErrors
-          : text.errors;
+          : usage.source === "cursor"
+            ? text.cursorErrors
+            : text.errors;
     lines.push({ text: table[usage.error.kind] });
   }
   if (usage.updatedAt !== null) {
@@ -49,6 +51,7 @@ export function usageSourceLines(usage: AgentUsage, now: number, text: ClaudeUsa
       kimi: text.fromKimi,
       antigravity: text.fromAntigravity,
       antigravityCloud: text.fromAntigravityCloud,
+      cursor: text.fromCursor,
     }[kind];
     const ago = formatAge(Math.max(0, now - usage.updatedAt), text.ago);
     if (isStale(usage, now)) {
