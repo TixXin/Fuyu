@@ -1,0 +1,247 @@
+.fuyu-world-clock-set {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-world-clock-set__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-world-clock-set__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fuyu-world-clock-set__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-world-clock-set__search {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fuyu-world-clock-set__input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 9px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+}
+
+.fuyu-world-clock-set__input:focus {
+  outline: none;
+  border-color: var(--fuyu-plugin-accent);
+}
+
+.fuyu-world-clock-set__results {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  overflow-y: auto;
+  max-height: 240px;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  list-style: none;
+}
+
+.fuyu-world-clock-set__results > .fuyu-world-clock-set__hint {
+  padding: 6px 8px;
+}
+
+.fuyu-world-clock-set__result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fuyu-world-clock-set__result:hover:not(:disabled) {
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-world-clock-set__result:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.fuyu-world-clock-set__result-name,
+.fuyu-world-clock-set__name {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-world-clock-set__zone {
+  overflow: hidden;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--fuyu-plugin-text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-world-clock-set__cities {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fuyu-world-clock-set__city {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, auto) auto auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-world-clock-set__city.is-dragging {
+  border-color: var(--fuyu-plugin-accent);
+  background: var(--fuyu-plugin-surface-hover);
+}
+
+.fuyu-world-clock-set__grip {
+  display: inline-flex;
+  padding: 2px;
+  color: var(--fuyu-plugin-text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.fuyu-world-clock-set__city.is-dragging .fuyu-world-clock-set__grip {
+  cursor: grabbing;
+}
+
+.fuyu-world-clock-set__rename {
+  padding: 2px 6px;
+}
+
+.fuyu-world-clock-set__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  cursor: pointer;
+}
+
+.fuyu-world-clock-set__icon:hover {
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-world-clock-set__star.is-on {
+  color: var(--fuyu-plugin-accent);
+}
+
+.fuyu-world-clock-set__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-width: 0;
+}
+
+.fuyu-world-clock-set__label {
+  min-width: 0;
+}
+
+.fuyu-world-clock-set__seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
+  padding: 2px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-world-clock-set__seg-item {
+  padding: 3px 10px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fuyu-world-clock-set__seg-item.is-on {
+  background: var(--fuyu-plugin-accent);
+  color: var(--fuyu-plugin-on-accent);
+}
+
+.fuyu-world-clock-set__seg-item:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.fuyu-world-clock-set__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.fuyu-world-clock-set__check input {
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--fuyu-plugin-accent);
+}
+
+@media (max-width: 420px) {
+  .fuyu-world-clock-set__city {
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  }
+
+  .fuyu-world-clock-set__city > .fuyu-world-clock-set__zone {
+    display: none;
+  }
+}

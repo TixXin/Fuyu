@@ -1,119 +1,83 @@
 import type { Context } from "@fuyu/plugin-base";
-import { useState } from "react";
-import { METHODS, PRESET_CITIES, formatZoneClock, isValidTimeZone, primaryCity, type WorldCity } from "./model.ts";
-import { text } from "./text.ts";
-import { useWorldClock } from "./useWorldClock.ts";
+import {
+  dateText,
+  diffText,
+  formatTime,
+  formatUtcOffset,
+  joinTime,
+  localTimeZone,
+  systemUses12Hour,
+  uses12Hour,
+  zoneInfo,
+} from "./clock.ts";
+import { GlobeIcon, MoonIcon, SunIcon } from "./icons.tsx";
+import { cityLabel, primaryCity, type WorldCity, type WorldClockSettings } from "./model.ts";
+import { PAGE_TITLE, lang, text } from "./text.ts";
+import { useNow, useWorldClock } from "./useWorldClock.ts";
 import "./styles.css";
 
-function GlobeIcon({ size = 16 }: { size?: number | string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-    </svg>
-  );
+const PAGE_ID = "world-clock";
+const SYSTEM_12 = systemUses12Hour();
+
+type Row = { key: string; label: string; timeZone: string; local: boolean };
+
+function rowsFor(cities: readonly WorldCity[], settings: WorldClockSettings): Row[] {
+  const rows: Row[] = cities.map((city) => ({
+    key: city.id,
+    label: cityLabel(city, text.isZh),
+    timeZone: city.timeZone,
+    local: false,
+  }));
+  if (settings.showLocal) rows.unshift({ key: "local", label: text.local, timeZone: localTimeZone(), local: true });
+  return rows;
 }
 
-function cityName(city: WorldCity): string {
-  return text.isZh ? city.labelZh : city.labelEn;
+function ClockRow({ row, now, settings }: { row: Row; now: number; settings: WorldClockSettings }) {
+  const info = zoneInfo(now, row.timeZone);
+  const time = formatTime(info.parts, uses12Hour(settings.timeFormat, SYSTEM_12), settings.showSeconds, lang);
+  const subs = [
+    dateText(now, row.timeZone, info, settings.dateMode, lang, text),
+    row.local ? "" : diffText(info.offsetHours, settings.diffMode, text),
+    settings.showTimeZone ? `${row.timeZone} · ${formatUtcOffset(info.utcOffsetMinutes)}` : "",
+  ].filter(Boolean);
+  const className = row.local ? "fuyu-world-clock__row fuyu-world-clock__row--local" : "fuyu-world-clock__row";
+  return (
+    <li className={className}>
+      {settings.showDayNight && (
+        <span className="fuyu-world-clock__daynight" title={info.isDaytime ? text.day : text.night}>
+          {info.isDaytime ? <SunIcon /> : <MoonIcon />}
+        </span>
+      )}
+      <div className="fuyu-world-clock__city">
+        <span className="fuyu-world-clock__name">{row.label}</span>
+        {subs.length > 0 && <span className="fuyu-world-clock__sub">{subs.join(" · ")}</span>}
+      </div>
+      <span className="fuyu-world-clock__time">
+        {time.period && lang === "zh" && <small className="fuyu-world-clock__period">{time.period}</small>}
+        {time.time}
+        {time.period && lang === "en" && <small className="fuyu-world-clock__period">{time.period}</small>}
+      </span>
+    </li>
+  );
 }
 
 export default function apply(ctx: Context) {
   function WorldClockPage() {
-    const { state, error, setError, invoke } = useWorldClock(ctx);
-    const [selectedZone, setSelectedZone] = useState(PRESET_CITIES[0].timeZone);
-    const [customZone, setCustomZone] = useState("");
-    const at = state.at || Date.now();
-
-    function handleAdd() {
-      const zone = customZone.trim() || selectedZone;
-      if (!isValidTimeZone(zone)) {
-        setError(text.invalidZone);
-        return;
-      }
-      invoke(METHODS.add, { timeZone: zone });
-      setCustomZone("");
-    }
-
+    const { state, error } = useWorldClock(ctx);
+    const { settings } = state;
+    const now = useNow(settings.showSeconds);
+    const rows = rowsFor(state.cities, settings);
     return (
       <div className="fuyu-world-clock">
-        <div className="fuyu-world-clock__form">
-          <select
-            className="fuyu-world-clock__select"
-            value={selectedZone}
-            onChange={(e) => setSelectedZone(e.target.value)}
-          >
-            {PRESET_CITIES.map((preset) => (
-              <option key={preset.timeZone} value={preset.timeZone}>
-                {text.isZh ? preset.labelZh : preset.labelEn} ({preset.shortCode})
-              </option>
-            ))}
-          </select>
-          <input
-            type="text"
-            className="fuyu-world-clock__input"
-            placeholder={text.customPlaceholder}
-            value={customZone}
-            onChange={(e) => setCustomZone(e.target.value)}
-          />
-          <button type="button" className="fuyu-world-clock__button" onClick={handleAdd}>
-            {text.add}
-          </button>
-        </div>
-
-        {state.cities.length === 0 ? (
+        {rows.length === 0 ? (
           <p className="fuyu-world-clock__note">{text.empty}</p>
         ) : (
           <ul className="fuyu-world-clock__list">
-            {state.cities.map((city) => {
-              const info = formatZoneClock(at, city.timeZone);
-              const dayText = info.dayDiff === 1 ? text.tomorrow : info.dayDiff === -1 ? text.yesterday : text.today;
-              const diffText =
-                info.offsetHours === 0
-                  ? text.sameZone
-                  : info.offsetHours > 0
-                    ? text.ahead(info.offsetHours)
-                    : text.behind(info.offsetHours);
-
-              return (
-                <li key={city.id} className="fuyu-world-clock__row">
-                  <div className="fuyu-world-clock__city">
-                    <span className="fuyu-world-clock__name">
-                      {cityName(city)} <span className="fuyu-world-clock__badge">{info.isDaytime ? text.day : text.night}</span>
-                    </span>
-                    <span className="fuyu-world-clock__sub">
-                      {dayText} · {diffText}
-                    </span>
-                  </div>
-                  <div className="fuyu-world-clock__right">
-                    <span className="fuyu-world-clock__time">{info.hhmm}</span>
-                    <button
-                      type="button"
-                      className={city.pinned ? "fuyu-world-clock__mini fuyu-world-clock__mini--active" : "fuyu-world-clock__mini"}
-                      onClick={() => invoke(METHODS.pin, { id: city.id })}
-                    >
-                      {city.pinned ? text.pinned : text.pin}
-                    </button>
-                    <button type="button" className="fuyu-world-clock__mini" onClick={() => invoke(METHODS.remove, { id: city.id })}>
-                      {text.remove}
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
+            {rows.map((row) => (
+              <ClockRow key={row.key} row={row} now={now} settings={settings} />
+            ))}
           </ul>
         )}
-
         {error && <p className="fuyu-world-clock__note">{error}</p>}
       </div>
     );
@@ -121,18 +85,28 @@ export default function apply(ctx: Context) {
 
   function WorldClockCollapsed() {
     const { state } = useWorldClock(ctx);
-    if (!state.showInBar) return null;
+    const { settings } = state;
+    const now = useNow(settings.showSeconds);
     const city = primaryCity(state.cities);
-    if (!city) return null;
-    const info = formatZoneClock(state.at || Date.now(), city.timeZone);
+    if (!settings.showInBar || !city) return null;
+    const info = zoneInfo(now, city.timeZone);
+    const time = joinTime(formatTime(info.parts, uses12Hour(settings.timeFormat, SYSTEM_12), settings.showSeconds, lang), lang);
+    const label = cityLabel(city, text.isZh);
+    const lead = settings.barStyle === "name" ? label : settings.barStyle === "code" ? city.shortCode : "";
     return (
-      <span className="fuyu-world-clock-chip" title={`${cityName(city)} (${city.timeZone})`}>
-        <span className="fuyu-world-clock-chip__code">{city.shortCode}</span>
-        <span className="fuyu-world-clock-chip__time">{info.hhmm}</span>
+      <span className="fuyu-world-clock-chip" title={`${label} ${time}`}>
+        {lead && <span className="fuyu-world-clock-chip__lead">{lead}</span>}
+        <span className="fuyu-world-clock-chip__time">{time}</span>
       </span>
     );
   }
 
-  ctx.slots.add("island.page/v1", { id: "world-clock", component: WorldClockPage, icon: GlobeIcon });
-  ctx.slots.add("island.collapsed/v1", { id: "world-clock-bar", width: 66, hideable: true, component: WorldClockCollapsed });
+  ctx.slots.add("island.page/v1", { id: PAGE_ID, title: PAGE_TITLE, component: WorldClockPage, icon: GlobeIcon });
+  ctx.slots.add("island.collapsed/v1", {
+    id: "world-clock-bar",
+    width: 120,
+    hideable: true,
+    opens: PAGE_ID,
+    component: WorldClockCollapsed,
+  });
 }
