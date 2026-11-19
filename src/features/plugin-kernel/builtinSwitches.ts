@@ -86,6 +86,7 @@ export function builtinPlugins(): readonly BuiltinPlugin[] | null {
 export function subscribeBuiltinPlugins(listener: Listener): () => void {
   startBuiltinSwitches();
   listeners.add(listener);
+  if (current) listener(current);
   return () => {
     listeners.delete(listener);
   };
