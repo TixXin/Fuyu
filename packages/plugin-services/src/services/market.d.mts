@@ -21,6 +21,18 @@ export type PluginInstallConfirmation = {
   requiredPlugins?: string[];
 };
 
+export type MarketPermissionSet = {
+  nodeApis: string[];
+  network: string[];
+  replaces: string[];
+};
+
+export type MarketAutoUpdateHeld = {
+  version: string;
+  reason: "permissions";
+  addedPermissions: MarketPermissionSet;
+};
+
 export type MarketVersionCandidate = {
   version: string;
   sha256: string;
@@ -31,6 +43,7 @@ export type MarketVersionCandidate = {
   warned?: boolean;
   urgent?: boolean;
   trustChange?: MarketTrustChange;
+  addedPermissions?: MarketPermissionSet;
   confirmation: PluginInstallConfirmation;
 };
 
@@ -49,6 +62,7 @@ export type MarketCatalogPlugin = {
   install: MarketVersionCandidate | null;
   manual: MarketVersionCandidate | null;
   autoUpdate: MarketVersionCandidate | null;
+  autoUpdateHeld?: MarketAutoUpdateHeld | null;
 };
 
 export type InstalledMarketPlugin = {

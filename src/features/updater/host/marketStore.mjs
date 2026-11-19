@@ -11,6 +11,7 @@ import {
   verifyVersionSignature,
 } from "../../../../packages/plugin-market/src/index.mjs";
 import { PACKAGES_SUBDIR } from "../../../../packages/plugin-cli/src/installer.mjs";
+import { addedPermissions, permissionsOf } from "./marketPermissions.mjs";
 
 export const STATE_FILE = "market-state.json";
 export const INDEX_FILE = "index.v3.json";
@@ -113,6 +114,7 @@ export function readInstalledPackages(pluginsDir) {
           displayName: fuyu.displayName,
           description: fuyu.description,
           replaces: yml?.replaces?.length ? yml.replaces : Array.isArray(fuyu.replaces) ? fuyu.replaces : [],
+          permissions: permissionsOf(fuyu),
         });
       } catch {
         continue;
@@ -234,6 +236,7 @@ export function candidateView(item, official, extra = {}, confirmExtra = {}) {
     publishedAt: entry.publishedAt,
     ...extra,
     ...(confirmExtra.trustChange ? { trustChange: confirmExtra.trustChange } : {}),
+    ...(confirmExtra.addedPermissions ? { addedPermissions: confirmExtra.addedPermissions } : {}),
     confirmation: confirmationFromManifest(entry.manifest, {
       unreviewed: false,
       official,
@@ -318,8 +321,9 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
       if (!item?.entry) return {};
       const isUpgrade = Boolean(inst) && compareVersions(item.entry.version, inst.version) > 0;
       const trustChange = isUpgrade ? detectTrustChange(plugin, item.entry, pin) : null;
+      const added = isUpgrade ? addedPermissions(inst.permissions, item.entry.manifest) : null;
       const depPlan = planRequiredDependencies({ doc, rootName: plugin.name, rootEntry: item.entry, installedById, appVersion, platform, now, revocations: state.revocations });
-      return { trustChange, requiredPlugins: depPlan.map((dep) => dep.name) };
+      return { trustChange, addedPermissions: added, requiredPlugins: depPlan.map((dep) => dep.name) };
     };
     const installMeta = metaFor(selected.install);
     const manualMeta = metaFor(selected.manual);
@@ -342,7 +346,10 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
       blocked: blockedView(plugin, selected, inst),
       install: candidateView(selected.install, official, selected.install ? { fresh: selected.install.fresh } : {}, installMeta),
       manual: candidateView(selected.manual, official, selected.manual ? { cooled: selected.manual.cooled, fresh: !selected.manual.cooled, warned: selected.manual.warned } : {}, manualMeta),
-      autoUpdate: selected.autoUpdate && !autoMeta.trustChange ? candidateView(selected.autoUpdate, official, { urgent: selected.autoUpdate.urgent }, autoMeta) : null,
+      autoUpdate: selected.autoUpdate && !autoMeta.trustChange && !autoMeta.addedPermissions ? candidateView(selected.autoUpdate, official, { urgent: selected.autoUpdate.urgent }, autoMeta) : null,
+      autoUpdateHeld: selected.autoUpdate && !autoMeta.trustChange && autoMeta.addedPermissions
+        ? { version: selected.autoUpdate.entry.version, reason: "permissions", addedPermissions: autoMeta.addedPermissions }
+        : null,
     };
   });
   const installed = installedRaw.map(({ id, version, source, enabled, displayName, description }) => ({
