@@ -14,7 +14,7 @@
 
 - 在岛上或别处增删、完成待办，圆环马上跟着变；过了零点自动换到新的一天。
 - 全部做完后圆环变成完成色。
-- 想在页面上直接勾掉待办：在设置里打开「点待办勾选完成」。打开后点一条就标为完成，下面会出现「撤销」，几秒内点它可以改回来。
+- 想在页面上直接勾掉待办：在设置里打开「点待办勾选完成」。打开后点一条就标为完成，下面会出现「撤销」，几秒内点它可以改回来。没打开时点一条，会提示去哪里打开，新版浮屿上还有「去设置」按钮。
 
 ## 设置
 
@@ -57,7 +57,7 @@ A ring shows how much of today's to-do list is done, with what's next listed bes
 
 - Adding, removing or finishing to-dos anywhere updates the ring right away; after midnight it moves on to the new day by itself.
 - When everything is done the ring turns the done color.
-- To tick to-dos off on the page itself, turn on "Click a to-do to mark it done" in the settings. A click then marks the to-do done and shows "Undo" for a few seconds in case it was a mistake.
+- To tick to-dos off on the page itself, turn on "Click a to-do to mark it done" in the settings. A click then marks the to-do done and shows "Undo" for a few seconds in case it was a mistake. While it is off, clicking a to-do tells you where to turn it on, with a Settings button on newer Fuyu versions.
 
 ### Settings
 

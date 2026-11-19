@@ -39,7 +39,19 @@ function Arc({ percent, r, box, className }: { percent: number; r: number; box: 
   );
 }
 
-function TodoRow({ todo, clickable, onComplete }: { todo: UpcomingTodo; clickable: boolean; onComplete: (todo: UpcomingTodo) => void }) {
+type Opener = { settings?: { open?: () => Promise<void> } };
+
+function TodoRow({
+  todo,
+  clickable,
+  onComplete,
+  onLocked,
+}: {
+  todo: UpcomingTodo;
+  clickable: boolean;
+  onComplete: (todo: UpcomingTodo) => void;
+  onLocked: () => void;
+}) {
   const body = (
     <>
       <span className={todo.overdueFrom ? "fuyu-todo-ring__dot is-overdue" : "fuyu-todo-ring__dot"} aria-hidden="true" />
@@ -54,10 +66,17 @@ function TodoRow({ todo, clickable, onComplete }: { todo: UpcomingTodo; clickabl
       </button>
     );
   }
+  if (todo.overdueFrom) {
+    return (
+      <span className="fuyu-todo-ring__item" title={`${todo.title} · ${text.overdueHint}`}>
+        {body}
+      </span>
+    );
+  }
   return (
-    <span className="fuyu-todo-ring__item" title={todo.overdueFrom ? `${todo.title} · ${text.overdueHint}` : todo.title}>
+    <button type="button" className="fuyu-todo-ring__item" title={todo.title} onClick={onLocked}>
       {body}
-    </span>
+    </button>
   );
 }
 
@@ -66,6 +85,14 @@ export default function apply(ctx: Context) {
     const { state, failed, invoke } = useRing(ctx);
     const { settings } = state;
     const [undo, setUndo] = useState<UpcomingTodo | null>(null);
+    const [locked, setLocked] = useState(false);
+    const openSettings = (ctx as unknown as Opener).settings?.open;
+
+    useEffect(() => {
+      if (!locked) return;
+      const timer = setTimeout(() => setLocked(false), UNDO_MS);
+      return () => clearTimeout(timer);
+    }, [locked]);
 
     useEffect(() => {
       if (!undo) return;
@@ -114,7 +141,7 @@ export default function apply(ctx: Context) {
             <ul className="fuyu-todo-ring__list">
               {shown.map((todo) => (
                 <li key={todo.id}>
-                  <TodoRow todo={todo} clickable={settings.clickToComplete} onComplete={complete} />
+                  <TodoRow todo={todo} clickable={settings.clickToComplete} onComplete={complete} onLocked={() => setLocked(true)} />
                 </li>
               ))}
             </ul>
@@ -133,6 +160,16 @@ export default function apply(ctx: Context) {
               <button type="button" className="fuyu-todo-ring__undo-btn" onClick={() => reopen(undo)}>
                 {text.undo}
               </button>
+            </p>
+          )}
+          {locked && !settings.clickToComplete && (
+            <p className="fuyu-todo-ring__undo">
+              <span className="fuyu-todo-ring__hint">{openSettings ? text.lockedHint : text.lockedWhere}</span>
+              {openSettings && (
+                <button type="button" className="fuyu-todo-ring__undo-btn" onClick={() => void openSettings().catch(() => {})}>
+                  {text.openSettings}
+                </button>
+              )}
             </p>
           )}
           {failed && <p className="fuyu-todo-ring__note is-error">{failed}</p>}
