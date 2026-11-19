@@ -1,0 +1,36 @@
+.settings-advanced__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 40px;
+  padding: 0 16px;
+  color: var(--color-text-subtle);
+  font-size: 12px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  border-radius: var(--radius-xl);
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+
+.settings-advanced__toggle::-webkit-details-marker {
+  display: none;
+}
+
+.settings-advanced__toggle:hover {
+  color: var(--color-text);
+}
+
+.settings-advanced__toggle:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+}
+
+.settings-advanced__chevron {
+  flex: none;
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.settings-advanced[open] > .settings-advanced__toggle .settings-advanced__chevron {
+  transform: rotate(90deg);
+}

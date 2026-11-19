@@ -16,6 +16,12 @@ export async function checkGlassLooks(check: (condition: unknown, message: strin
   check(glassStored().islandBackgroundColor === colorsBefore.background && glassStored().accentColor === colorsBefore.accent && glassStored().islandCornerRadius === colorsBefore.corner,
     "A glass preset leaves the colours and corners alone");
   const sheen = [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "扫光");
+  const folds = [...document.querySelectorAll<HTMLDetailsElement>(".editor-panel details.settings-advanced")];
+  check(folds.length === 2 && folds.every((fold) => !fold.open), "The fine glass settings start folded under Advanced in two groups");
+  const sheenFold = sheen?.closest<HTMLDetailsElement>("details.settings-advanced");
+  check(sheenFold && sheen && !sheen.checkVisibility(), "Sheen sits in a folded Advanced group and is hidden");
+  await act(async () => { sheenFold!.querySelector("summary")!.click(); });
+  check(sheenFold?.open && sheen?.checkVisibility(), "Clicking Advanced unfolds it and shows Sheen");
   await act(async () => { sheen!.querySelector<HTMLElement>("[role='switch'], input")!.click(); });
   check(glassStored().glassSheen === true && lookButton()?.textContent?.includes("自定义"), "Changing one glass setting turns the preset into Custom");
   await act(async () => { [...document.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "恢复液态玻璃默认")!.click(); });

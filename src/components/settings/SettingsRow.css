@@ -26,21 +26,21 @@
   margin-left: 70px;
 }
 
-.settings-group__card > .settings-row--indent::before {
+:is(.settings-group__card, .settings-advanced__body) > .settings-row--indent::before {
   right: 14px;
   left: 14px;
 }
 
-.settings-group__card > :not(.settings-row--indent) + .settings-row--indent::before {
+:is(.settings-group__card, .settings-advanced__body) > :not(.settings-row--indent) + .settings-row--indent::before {
   display: none;
 }
 
-.settings-group__card > :not(.settings-row--indent) + .settings-row--indent {
+:is(.settings-group__card, .settings-advanced__body) > :not(.settings-row--indent) + .settings-row--indent {
   border-top-right-radius: var(--radius-lg);
 }
 
-.settings-group__card > .settings-row--indent:has(+ :not(.settings-row--indent)),
-.settings-group__card > .settings-row--indent:last-child {
+:is(.settings-group__card, .settings-advanced__body) > .settings-row--indent:has(+ :not(.settings-row--indent)),
+:is(.settings-group__card, .settings-advanced__body) > .settings-row--indent:last-child {
   margin-bottom: 12px;
   border-bottom-right-radius: var(--radius-lg);
 }

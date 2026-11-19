@@ -25,6 +25,8 @@ export function useFoundRow(found: FoundRow | null, category: SettingsCategory, 
         return;
       }
       marked = row;
+      const fold = row.closest("details");
+      if (fold) fold.open = true;
       row.classList.remove(FOUND_CLASS);
       void row.offsetWidth;
       row.classList.add(FOUND_CLASS);

@@ -740,39 +740,6 @@
       "page": "themeStyle",
       "zh-CN": {
         "group": "背景折射与色彩",
-        "title": "模糊"
-      },
-      "en": {
-        "group": "Refraction and colours",
-        "title": "Blur"
-      }
-    },
-    {
-      "page": "themeStyle",
-      "zh-CN": {
-        "group": "背景折射与色彩",
-        "title": "饱和度"
-      },
-      "en": {
-        "group": "Refraction and colours",
-        "title": "Saturation"
-      }
-    },
-    {
-      "page": "themeStyle",
-      "zh-CN": {
-        "group": "背景折射与色彩",
-        "title": "噪点"
-      },
-      "en": {
-        "group": "Refraction and colours",
-        "title": "Grain"
-      }
-    },
-    {
-      "page": "themeStyle",
-      "zh-CN": {
-        "group": "背景折射与色彩",
         "title": "颜色来源",
         "options": [
           "主题色",
@@ -837,12 +804,66 @@
     {
       "page": "themeStyle",
       "zh-CN": {
+        "group": "背景折射与色彩",
+        "title": "模糊"
+      },
+      "en": {
+        "group": "Refraction and colours",
+        "title": "Blur"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "背景折射与色彩",
+        "title": "饱和度"
+      },
+      "en": {
+        "group": "Refraction and colours",
+        "title": "Saturation"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "背景折射与色彩",
+        "title": "噪点"
+      },
+      "en": {
+        "group": "Refraction and colours",
+        "title": "Grain"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
         "group": "流光与高光细节",
         "title": "流动速度"
       },
       "en": {
         "group": "Flow and highlights",
         "title": "Flow speed"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "流光与高光细节",
+        "title": "展开收起",
+        "options": [
+          "平滑",
+          "轻弹",
+          "液体"
+        ]
+      },
+      "en": {
+        "group": "Flow and highlights",
+        "title": "Expand and collapse",
+        "options": [
+          "Smooth",
+          "Soft bounce",
+          "Liquid"
+        ]
       }
     },
     {
@@ -919,27 +940,6 @@
         "group": "Flow and highlights",
         "title": "Specular highlight",
         "description": "The highlight follows the pointer."
-      }
-    },
-    {
-      "page": "themeStyle",
-      "zh-CN": {
-        "group": "流光与高光细节",
-        "title": "展开收起",
-        "options": [
-          "平滑",
-          "轻弹",
-          "液体"
-        ]
-      },
-      "en": {
-        "group": "Flow and highlights",
-        "title": "Expand and collapse",
-        "options": [
-          "Smooth",
-          "Soft bounce",
-          "Liquid"
-        ]
       }
     },
     {

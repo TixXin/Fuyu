@@ -36,11 +36,12 @@
     border-color var(--motion-medium) var(--motion-ease);
 }
 
-.settings-group__card > * {
+:is(.settings-group__card, .settings-advanced__body) > * {
   position: relative;
 }
 
-.settings-group__card > * + *::before {
+.settings-group__card > * + *::before,
+.settings-advanced__body > *::before {
   content: "";
   position: absolute;
   top: 0;
