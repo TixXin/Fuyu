@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { MarketPluginScreenshot } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
+import { MarketImage } from "./MarketImage";
 import { localized } from "./pluginMarketModel";
 
 function ShotViewer({ shots, index, title, host, onIndex, onClose }: {
@@ -57,7 +58,7 @@ function ShotViewer({ shots, index, title, host, onIndex, onClose }: {
             <ChevronLeft size={18} strokeWidth={2.2} aria-hidden="true" />
           </button>
         ) : <span />}
-        <img src={shot.url} alt={caption || title} draggable={false} />
+        <MarketImage url={shot.url} alt={caption || title} draggable={false} />
         {many ? (
           <button className="market-viewer__btn" type="button" aria-label={text.next} title={text.next} disabled={index === shots.length - 1} data-viewer-step="next" onClick={() => onIndex(index + 1)}>
             <ChevronRight size={18} strokeWidth={2.2} aria-hidden="true" />
@@ -88,7 +89,7 @@ export function PluginMarketShots({ shots, title }: { shots: readonly MarketPlug
         return (
           <figure key={`${shot.url}-${index}`} className="market-shot">
             <button className="market-shot__open" type="button" aria-label={copy.zoomShot(index + 1, shots.length)} data-shot={index} onClick={(event) => setOpen({ index, host: event.currentTarget.closest<HTMLElement>(".settings-stage") ?? document.body })}>
-              <img src={shot.url} alt={caption || title} loading="lazy" draggable={false} />
+              <MarketImage url={shot.url} lazy alt={caption || title} draggable={false} />
             </button>
             {caption ? <figcaption>{caption}</figcaption> : null}
           </figure>

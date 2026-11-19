@@ -5,7 +5,7 @@ import "../../src/styles/fonts.css";
 import "../../src/styles/base.css";
 import "../../src/windows/settings/SettingsWindow.css";
 import { ipc, locale, market, NORMAL, HOST } from "./pluginPageMocks";
-import { ICON_SVG, MARKET_PLUGINS, marketFixture, RSS_DETAILS, TOOLBOX_PACKAGE } from "./pluginMarketFixtures";
+import { ICON_SVG, MARKET_PLUGINS, marketFixture, REMOTE_ICON, RSS_DETAILS, TOOLBOX_PACKAGE } from "./pluginMarketFixtures";
 import { I18nProvider, TRANSLATIONS } from "../../src/i18n";
 import type { PluginHostConnector } from "../../src/windows/settings/usePluginHostStatus";
 import type { PluginMarketViewProps } from "../../src/windows/settings/PluginMarketView";
@@ -70,6 +70,7 @@ const modal = (selector: string) => waitFor(() => document.querySelector<HTMLEle
 const cards = (stage: ParentNode, section: string) => [...stage.querySelectorAll(`[data-market-section='${section}'] [data-market-plugin]`)].map((item) => item.getAttribute("data-market-plugin"));
 
 market.details["@fuyu/rss"] = RSS_DETAILS;
+market.media[REMOTE_ICON] = ICON_SVG;
 
 try {
   const browse = await view("browse", zh ? "浏览：可更新 + 全部" : "Browse: updates and all plugins");
@@ -83,6 +84,7 @@ try {
   check(!card(stage, "@ryo/clip-sync")?.querySelector("[data-official]") && card(stage, "@ryo/clip-sync")?.querySelector(".market-card__sub")?.textContent!.startsWith("ryo"), "Third-party plugins have no check mark and name their publisher");
   check(!stage.querySelector("[data-new]"), "Before the market has been open a month no plugin is marked new");
   check(card(stage, "@fuyu/rss")?.querySelector<HTMLImageElement>(".plugin-icon__img")?.getAttribute("src") === ICON_SVG, "A plugin with an icon shows its own icon");
+  await waitFor(() => card(stage, "@fuyu/page-summary")?.querySelector<HTMLImageElement>(".plugin-icon__img")?.getAttribute("src") === ICON_SVG, "an icon at a market address to come from the local copy, not the network");
   await waitFor(() => !card(stage, "@fuyu/weather")?.querySelector(".plugin-icon__img"), "the broken weather icon to fall back");
   check(card(stage, "@fuyu/weather")?.querySelector(".plugin-icon")?.textContent === (zh ? "天" : "W") && card(stage, "@ryo/clip-sync")?.querySelector(".plugin-icon")?.textContent === (zh ? "剪" : "C"), "A plugin whose icon fails to load, or that has none, shows its first letter");
   check(card(stage, "@fuyu/rss")?.querySelector(".market-card__facts")?.textContent === text.card.network && !/权限|permission/i.test(stage.querySelector(".market-grid")?.textContent ?? ""), "Cards say whether the plugin uses the network and never count permissions");
