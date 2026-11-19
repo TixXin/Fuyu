@@ -47,6 +47,26 @@
 
 官方插件的核对：`GET /repos/TixXin/fuyu/rules/branches/main` 里要有 `pull_request` 和 `non_fast_forward` 两条规则，`GET /repos/TixXin/fuyu/compare/<提交>...main` 的 `status` 是 `ahead` 或 `identical`。只查提交存在不够：GitHub 会通过父仓库的地址提供 fork 里的提交。
 
+## 套装
+
+套装是几个已上架的插件，岛屿的市场页确认一次就全部装上（格式见 [v3-market.md](v3-market.md)「套装」，E77.8）。市场仓库里一个套装一个文件 `bundles/<id>.json`，内容就是索引里的一条：
+
+```json
+{
+  "id": "pomodoro-flow",
+  "displayName": { "zh-CN": "番茄工作法", "en": "Pomodoro flow" },
+  "description": { "zh-CN": "…", "en": "…" },
+  "plugins": ["@fuyu/pomodoro", "@fuyu/todo-ring", "@fuyu/todo-digest"],
+  "onboarding": true
+}
+```
+
+- **谁能改**：只有维护者；成员目前只能是 `@fuyu/*` 官方插件，不收第三方提交（放开时改 `scripts/v3/lib/bundles.mjs` 的那一条）。
+- **PR 检查**（`v3-plan`，`scripts/v3/plan.mjs`）：把这个套装放进一份替身索引，用钉住的 `@fuyu/plugin-market` 的 `validateIndex` 查，所以格式规则和岛屿是同一份；成员必须已经在 **base 分支**的 `index.v3.json` 里，PR 自己改索引不算数，所以插件和套装不能在同一个 PR 里一起上；文件名去掉 `.json` 等于 `id`；不认识的字段报错。删除只在报告里记一笔。
+- **进索引**：`assembleIndex` 收到 `bundles/` 的全部文件，成员都在这次索引里的才放进顶层 `bundles`（按 `id` 排序）；一个都没有时索引里没有这个字段，和加套装之前逐字节一样。合入后的发布和每天的重签走同一条 `release.mjs`，都带上。`publish-v3.yml` 的 `paths` 有 `bundles/**`，只改套装的 PR 合入后也会重出索引。
+- **套装出问题不拖垮索引**：发布时某个套装的成员已经下架、或文件坏了，这个套装不进索引，问题记进 `release.json` 的 `failed`，这次运行报红，索引照常签名、推送。整次失败的话每天的重签也跟着停，7 天后所有岛屿的索引过期，代价比少一个套装大得多。看到红了就修那个套装文件或删掉它。
+- **旧岛屿**：0.3.10 及以前的 `validateIndex` 不认识 `bundles`，当成不认识的字段放过，索引照常打开（2026-11-19 用 `v0.3.10` 标签上的 `@fuyu/plugin-market` 打开带套装的索引核对过）。
+
 ## 工作流
 
 都在 `TixXin/fuyu-plugins/.github/workflows/`，Actions 都按提交号固定。
@@ -80,7 +100,7 @@
 
 ### 工具从哪来
 
-不发 npm 包：`market/v3/tools.json` 写 `TixXin/fuyu` 的固定提交号（现在是 `b418d1ff`）和 pnpm 版本。`scripts/v3/fetch-tools.mjs` 稀疏检出这个提交：只要 `@fuyu/plugin-market`、`@fuyu/plugin-manifest`、`@fuyu/plugin-review`（只用 Node 内置模块）时直接检出，要 `@fuyu/plugin-cli` 时再 `pnpm install --frozen-lockfile --ignore-scripts --filter "@fuyu/plugin-cli..."`。换工具版本就改那个提交号，走一次 PR。
+不发 npm 包：`market/v3/tools.json` 写 `TixXin/fuyu` 的固定提交号（2026-11-19 起是 `498ce7cd`，第一个带套装校验的提交）和 pnpm 版本。`scripts/v3/fetch-tools.mjs` 稀疏检出这个提交：只要 `@fuyu/plugin-market`、`@fuyu/plugin-manifest`、`@fuyu/plugin-review`（只用 Node 内置模块）时直接检出，要 `@fuyu/plugin-cli` 时再 `pnpm install --frozen-lockfile --ignore-scripts --filter "@fuyu/plugin-cli..."`。换工具版本就改那个提交号，走一次 PR。
 
 ## 时间
 
