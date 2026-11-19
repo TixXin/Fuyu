@@ -10,4 +10,10 @@ export default class PluginsFile extends Include {
     const context = { dir: this.config.dir, appVersion: this.config.appVersion ?? undefined };
     this.root.update = (entries) => apply(withSources(withBuiltins(entries, builtinEntries(this.config.builtins), warn), context));
   }
+
+  async reapply() {
+    await this.refresh();
+    this._scheduleApply();
+    await this.flush();
+  }
 }

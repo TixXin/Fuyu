@@ -153,10 +153,12 @@ pub(super) struct FocusSteps {
     pub(super) mac_tab: Option<bool>,
     pub(super) wt_selected: bool,
     pub(super) editor_sent: bool,
+    pub(super) app_link_sent: bool,
 }
 
 pub(super) fn is_exact_focus(app: &str, steps: &FocusSteps) -> bool {
     steps.orca_switched
+        || steps.app_link_sent
         || steps.wezterm_selected
         || steps.wt_selected
         || steps.editor_sent
@@ -185,11 +187,21 @@ pub(super) struct Focused {
     pub(super) missing: Option<Missing>,
 }
 
-fn wake_workbuddy(hints: &SessionHints, prefer_apps: &[String], log: &mut Attempt) -> Option<window_focus::FocusedWindow> {
+fn open_workbuddy_session(session_id: Option<&str>, log: &mut Attempt) -> bool {
+    let home_dir = windows_home_dir().ok();
+    let Some(link) = session_id.zip(home_dir).and_then(|(id, home)| workbuddy_focus::session_link(&home, id)) else {
+        return false;
+    };
+    let sent = workbuddy_focus::open_session(&link);
+    log.note(if sent { "app-link=sent" } else { "app-link=failed" });
+    sent
+}
+
+fn wake_workbuddy(hints: &SessionHints, prefer_apps: &[String], link_sent: bool, log: &mut Attempt) -> Option<window_focus::FocusedWindow> {
     let mut sent = false;
     let found = workbuddy_focus::wake_and_find(
         || {
-            sent = workbuddy_focus::wake_main_window();
+            sent = link_sent || workbuddy_focus::wake_main_window();
             sent
         },
         || window_focus::focus_session_window(hints, &[], prefer_apps),
@@ -240,7 +252,9 @@ pub(super) fn focus_session(
     }
     let (folder, ancestors) = cwd.map(folder_names).unwrap_or_default();
     let hints = SessionHints { folder: folder.as_deref(), ancestors: &ancestors, title, is_codex };
-    let mut steps = FocusSteps { has_chain: !chain.is_empty(), ..FocusSteps::default() };
+    let is_workbuddy = provider == workbuddy::PROVIDER;
+    let app_link_sent = is_workbuddy && open_workbuddy_session(session_id, &mut log);
+    let mut steps = FocusSteps { has_chain: !chain.is_empty(), app_link_sent, ..FocusSteps::default() };
     let focused = window_focus::focus_session_window(&hints, &chain, &prefer_apps).or_else(|| {
         steps.wezterm_selected = wezterm::activate_pane(None, tty.as_deref(), title);
         steps.wezterm_selected.then(|| window_focus::focus_session_window(&hints, &chain, &wezterm::prefer_apps()))?
@@ -248,9 +262,12 @@ pub(super) fn focus_session(
     if steps.wezterm_selected {
         log.note("wezterm-tab=selected");
     }
-    let is_workbuddy = provider == workbuddy::PROVIDER;
-    let focused = focused.or_else(|| is_workbuddy.then(|| wake_workbuddy(&hints, &prefer_apps, &mut log))?);
+    let focused = focused.or_else(|| is_workbuddy.then(|| wake_workbuddy(&hints, &prefer_apps, app_link_sent, &mut log))?);
     let Some(focused) = focused else {
+        if app_link_sent {
+            log.finish(app_dir, "app link sent, window not up yet");
+            return Focused { found: true, exact: true, focused_app: None, missing_extension: None, missing: None };
+        }
         let missing = is_workbuddy.then(|| Missing::of(workbuddy::app_running()));
         if let Some(missing) = missing {
             log.note(format!("missing={}", missing.reason()));
@@ -374,6 +391,7 @@ mod tests {
         assert!(is_exact_focus("wezterm", &FocusSteps { wezterm_selected: true, ..FocusSteps::default() }));
         assert!(is_exact_focus("windowsterminal", &FocusSteps { wt_selected: true, ..FocusSteps::default() }));
         assert!(is_exact_focus("cursor", &FocusSteps { editor_sent: true, ..FocusSteps::default() }));
+        assert!(is_exact_focus("workbuddy ai", &FocusSteps { app_link_sent: true, ..FocusSteps::default() }));
         assert!(is_exact_focus("pwsh", &FocusSteps { has_chain: true, ..FocusSteps::default() }));
         assert!(!is_exact_focus("pwsh", &FocusSteps::default()));
     }

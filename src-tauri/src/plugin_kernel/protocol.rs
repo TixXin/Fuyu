@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Mutex, PoisonError};
 
@@ -11,6 +11,8 @@ pub(crate) const CSP: &str = "default-src 'none'; script-src 'self' fuyu-plugin:
 const CLIENTS: &str = "clients";
 const PACKAGES: &str = "packages";
 const PRIVATE_DIR: &str = "data";
+const DEV_DIR: &str = "dev";
+const DEV_ID_SEGMENTS: [usize; 2] = [1, 2];
 const RESERVED_DIRS: [&str; 5] = ["data", "packages", "__shared", "dev", "builtin"];
 const PRIVATE_FILES: [&str; 3] = ["plugins.yml", "safe-mode.json", "bisect.json"];
 
@@ -58,7 +60,7 @@ fn relative_path(uri_path: &str) -> Option<String> {
 
 fn clean(path: String) -> Option<String> {
     let parts = Path::new(&path).components().collect::<Vec<_>>();
-    if path.is_empty() || path.contains('\\') || parts.iter().any(|part| !matches!(part, Component::Normal(_))) {
+    if path.is_empty() || path.contains('\\') || path.contains(':') || path.split('/').any(str::is_empty) || parts.iter().any(|part| !matches!(part, Component::Normal(_))) {
         return None;
     }
     Some(path)
@@ -81,28 +83,101 @@ fn denied(relative: &str) -> bool {
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
-struct Allowed {
+struct Listed {
     dirs: BTreeSet<String>,
     files: BTreeSet<String>,
 }
 
-impl Allowed {
+impl Listed {
     const EMPTY: Self = Self { dirs: BTreeSet::new(), files: BTreeSet::new() };
 
+    fn add(&mut self, path: &str) {
+        match path.split_once('/') {
+            None => {
+                self.files.insert(path.to_owned());
+            }
+            Some((dir, _)) => {
+                self.dirs.insert(dir.to_owned());
+            }
+        }
+    }
+
+    fn contains(&self, relative: &str) -> bool {
+        match relative.split_once('/') {
+            None => self.files.contains(relative),
+            Some((dir, _)) => self.dirs.contains(dir),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct Mount {
+    root: PathBuf,
+    listed: Listed,
+}
+
+impl Mount {
+    fn permits(&self, inner: &str) -> bool {
+        !denied(inner) && self.listed.contains(inner)
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq)]
+struct Allowed {
+    listed: Listed,
+    mounts: BTreeMap<String, Mount>,
+}
+
+fn dev_prefix(prefix: &str) -> Option<String> {
+    let prefix = clean(prefix.to_owned())?;
+    let id = prefix.strip_prefix(DEV_DIR)?.strip_prefix('/')?;
+    DEV_ID_SEGMENTS.contains(&id.split('/').count()).then_some(prefix)
+}
+
+fn inner_of<'a>(relative: &'a str, prefix: &str) -> Option<&'a str> {
+    relative.strip_prefix(prefix)?.strip_prefix('/').filter(|inner| !inner.is_empty())
+}
+
+impl Allowed {
+    const EMPTY: Self = Self { listed: Listed::EMPTY, mounts: BTreeMap::new() };
+
+    #[cfg(test)]
     fn from_paths<'a>(paths: impl IntoIterator<Item = &'a str>) -> Self {
+        Self::from_parts([], paths)
+    }
+
+    fn from_parts<'a>(roots: impl IntoIterator<Item = (&'a str, &'a str)>, paths: impl IntoIterator<Item = &'a str>) -> Self {
         let mut allowed = Self::default();
+        for (prefix, dir) in roots {
+            if let (Some(prefix), true) = (dev_prefix(prefix), Path::new(dir).is_absolute()) {
+                allowed.mounts.insert(prefix, Mount { root: PathBuf::from(dir), listed: Listed::default() });
+            }
+        }
         for path in paths.into_iter().filter_map(|path| clean(path.to_owned())).filter(|path| !denied(path)) {
+            if let Some((prefix, inner)) = allowed.mount_key(&path) {
+                if let Some(mount) = allowed.mounts.get_mut(&prefix) {
+                    mount.listed.add(&inner);
+                }
+                continue;
+            }
             match path.split_once('/') {
-                None => {
-                    allowed.files.insert(path);
-                }
-                Some((dir, _)) if !reserved_dir(dir) => {
-                    allowed.dirs.insert(dir.to_owned());
-                }
-                _ => {}
+                Some((dir, _)) if reserved_dir(dir) => {}
+                _ => allowed.listed.add(&path),
             }
         }
         allowed
+    }
+
+    fn mount_key(&self, relative: &str) -> Option<(String, String)> {
+        self.mounts
+            .keys()
+            .filter_map(|prefix| Some((prefix.clone(), inner_of(relative, prefix)?.to_owned())))
+            .max_by_key(|(prefix, _)| prefix.len())
+    }
+
+    fn mount(&self, relative: &str) -> Option<(&Mount, String)> {
+        let (prefix, inner) = self.mount_key(relative)?;
+        Some((self.mounts.get(&prefix)?, inner))
     }
 
     fn permits(&self, relative: &str) -> bool {
@@ -110,8 +185,8 @@ impl Allowed {
             return false;
         }
         match relative.split_once('/') {
-            None => self.files.contains(relative),
-            Some((dir, _)) => dir == PACKAGES || self.dirs.contains(dir),
+            None => self.listed.contains(relative),
+            Some((dir, _)) => dir == PACKAGES || self.listed.contains(relative),
         }
     }
 }
@@ -127,7 +202,8 @@ fn register(allowed: Allowed) {
 }
 
 fn client_paths(params: &Value) -> Allowed {
-    Allowed::from_paths(params["paths"].as_array().into_iter().flatten().filter_map(Value::as_str))
+    let roots = params["roots"].as_array().into_iter().flatten().filter_map(|root| Some((root["prefix"].as_str()?, root["dir"].as_str()?)));
+    Allowed::from_parts(roots, params["paths"].as_array().into_iter().flatten().filter_map(Value::as_str))
 }
 
 pub(crate) fn observe(event: &Event) {
@@ -151,6 +227,19 @@ fn locate(root: &Path, relative: &str, allowed: &Allowed) -> Option<PathBuf> {
     let file = std::fs::canonicalize(root.join(relative)).ok()?;
     let real = inside(&root, &file)?;
     (allowed.permits(&real) && file.is_file()).then_some(file)
+}
+
+fn locate_mounted(data_root: &Path, mount: &Mount, inner: &str) -> Option<PathBuf> {
+    if !mount.permits(inner) {
+        return None;
+    }
+    let root = std::fs::canonicalize(&mount.root).ok()?;
+    let file = std::fs::canonicalize(root.join(inner)).ok()?;
+    let real = inside(&root, &file)?;
+    if std::fs::canonicalize(data_root).is_ok_and(|data| file.starts_with(data)) {
+        return None;
+    }
+    (mount.permits(&real) && file.is_file()).then_some(file)
 }
 
 fn respond_with(status: StatusCode, content_type: &'static str, body: Vec<u8>, head: bool) -> Response<Vec<u8>> {
@@ -187,7 +276,11 @@ fn serve(root: Option<&Path>, allowed: &Allowed, request: &Request<Vec<u8>>) -> 
     if let Some((_, text)) = SHIMS.iter().find(|(path, _)| *path == relative) {
         return respond_with(StatusCode::OK, mime(&relative), text.as_bytes().to_vec(), head);
     }
-    match locate(root, &relative, allowed).map(std::fs::read) {
+    let found = match allowed.mount(&relative) {
+        Some((mount, inner)) => locate_mounted(root, mount, &inner),
+        None => locate(root, &relative, allowed),
+    };
+    match found.map(std::fs::read) {
         Some(Ok(bytes)) => respond_with(StatusCode::OK, mime(&relative), bytes, head),
         _ => missing(head),
     }
