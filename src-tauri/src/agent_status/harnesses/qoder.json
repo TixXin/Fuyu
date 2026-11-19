@@ -1,0 +1,58 @@
+{
+  "$schema": "../../../../../docs/architecture/agent/protocol/harness.schema.json",
+  "protocol": 1,
+  "id": "qoder",
+  "name": "Qoder",
+  "icon": "qoder.png",
+  "forms": {
+    "cli": {
+      "home": [
+        {
+          "path": "~/.qoder",
+          "env": "QODER_CONFIG_DIR"
+        },
+        {
+          "path": "~/.qoder-cn",
+          "env": "QODERCN_CONFIG_DIR"
+        }
+      ]
+    }
+  },
+  "sessions": {
+    "format": "claude-jsonl",
+    "dirs": [
+      "projects"
+    ]
+  },
+  "hooks": {
+    "format": "claude-compatible",
+    "file": "settings.json",
+    "events": {
+      "start": "UserPromptSubmit",
+      "activity": [
+        "PreToolUse"
+      ],
+      "stop": "Stop",
+      "failed": "StopFailure",
+      "waiting": "PermissionRequest",
+      "approval": "PermissionRequest"
+    },
+    "waitingKind": "permissionRequest"
+  },
+  "approval": {
+    "reply": "permissionRequest"
+  },
+  "signals": {
+    "running": "hook",
+    "done": "hook",
+    "waiting": "hook",
+    "replyMarker": true,
+    "exited": "hook"
+  },
+  "replyMarker": {
+    "promptFiles": [
+      "AGENTS.md"
+    ]
+  },
+  "ccConnect": null
+}

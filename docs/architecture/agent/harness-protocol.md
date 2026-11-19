@@ -2,7 +2,7 @@
 
 这份文档规定岛怎么描述一家 AI 代理（harness）、一个额度来源和一个跳转宿主。目的有两个：接一家新代理时有一份清单可以照着填，不用在十来个文件里找要改的地方；第三方不改浮屿源码也能接入。
 
-状态：**第 0 步**（B76，#883）。协议和 schema 已经定下来，代码还是按现状写，没有改成读描述文件。各项字段对应现在的哪段代码，见文末「和现有代码的对照」。后面几步见「分步迁移」。
+状态：**第 1 步**（B77，#884）。协议和 schema 定下来了（B76，#883）；Qoder、CodeBuddy、Qwen Code 三家已经只剩描述文件（`src-tauri/src/agent_status/harnesses/<id>.json`），其余家还按现状写在代码里。各项字段对应现在的哪段代码，见文末「和现有代码的对照」。后面几步见「分步迁移」。
 
 Schema 和示例在 [protocol/](protocol/)：
 
@@ -75,7 +75,7 @@ Schema 和示例在 [protocol/](protocol/)：
 | `format` | `claude-compatible`（照抄 Claude Code 的 `hooks` 结构）、`codex`（`config.toml`）或 `adapter` |
 | `adapter` | `format` 是 `adapter` 时必填。DSH（生成 Cordis 插件）、opencode 1.x（生成 JS 插件）、Antigravity（`hooks.json` 自有格式）都是这种 |
 | `file` | 钩子配置文件，相对 `home` |
-| `events` | 岛的事件对应这家的哪个事件名：`start`、`activity`、`stop`、`waiting`、`approval`。没有的写 `null` |
+| `events` | 岛的事件对应这家的哪个事件名：`start`、`activity`、`stop`、`failed`、`waiting`、`approval`。没有的写 `null`。`claude-compatible` 的几家装的是固定的一组：`UserPromptSubmit`、`PreToolUse`、`Stop`、`StopFailure`，等授权是 `PermissionRequest`（`waitingKind` 为 `permissionRequest`）或带 `permission_prompt` 匹配的 `Notification`，审批是 `PermissionRequest`；`build.rs` 会核对描述文件写的和这组一致 |
 | `waitingKind` | `permissionRequest`（有单独的等授权事件）或 `permissionPrompt`（从 `Notification` 一类事件里认），对应 `Compat.waiting` |
 | `inputAliases` | 钩子输入的字段和 Claude Code 不同名时的对照，对应 `Compat.aliases` |
 | `restartRequired` | 改完配置要不要彻底退出再开才生效（WorkBuddy 要） |
@@ -266,8 +266,11 @@ harness 的 `focus.apps` 里写的 App（WorkBuddy、DSH 桌面版）也是跳�
 
 ## 分步迁移
 
-1. **第 0 步（本文）**：协议、schema、示例。
-2. **照抄 Claude Code 钩子的几家改成只有 JSON**：`claude_compat.rs` 的 `SPECS` 里 qoder、codebuddy、qwen 先做，grok、copilot、droid 有各自的额外代码，只把 `Compat` 部分挪进 JSON。Rust 在编译时读这些 JSON，生成现在的 `Compat` 和 `Harness`；前端的 `AGENTS` 从同一批 JSON 生成。这一步用来检验 schema 够不够用。
+1. **第 0 步（B76，已完成）**：协议、schema、示例。
+2. **照抄 Claude Code 钩子的几家改成只有 JSON**：
+   - **已完成（B77）**：qoder、codebuddy、qwen。描述文件在 `src-tauri/src/agent_status/harnesses/<id>.json`；`src-tauri/build.rs` 编译时读它们，在 `OUT_DIR/compat_harnesses.rs` 里给每家生成一行 `claude_compat::compat_harness!(…)`，宏（`claude_compat.rs`）展开成和原来 `qwen.rs` 一样的模块（`PROVIDER`、`SPEC`、`HARNESS`、`prompt_files`），`agent_status/mod.rs` 用 `include!` 引入，所以 `harness.rs`、`reply_marker.rs` 这些引用的地方不用改。描述文件写错（缺字段、取值不认识、事件名和实际装的不一致、`id` 和文件名不同）时编译失败，报出文件和字段。这一步只读协议里生成 `Compat` 用得到的字段，`signals`、`icon`、`ccConnect` 等先只是记录。
+   - **还没做**：grok、copilot、droid 有各自的额外代码，只把 `Compat` 部分挪进 JSON，`Reply::PreToolUse` 的工具匹配要先在生成里支持；前端的 `AGENTS` 从同一批 JSON 生成（现在前端还是手写的一行）。
+   - **接一家新的照抄 Claude Code 的代理**：加一份 `harnesses/<id>.json`，再在 `harness.rs` 的 `HARNESSES`、`claude_compat.rs` 的 `SPECS`、`reply_marker.rs` 的 `PROMPT_FILES`、三份钩子脚本、审批的 `Agent` 枚举、前端 `AGENTS` 和图标里各加一项（照 `fuyu-agent-harness` skill，第 3 步之前还是手写）。
 3. **其余家挪声明**：路径、进程名、提示词文件、远程、cc-connect 挪进 JSON，解析代码原地不动，JSON 里写 `adapter` 指向它。审批的 `Agent` 枚举改成按 id 路由。
 4. **额度来源和跳转宿主**：`USAGE_PROVIDERS`、`KNOWN_HOSTS`、`provider_apps` 改成读描述；拿 WorkBuddy（#862 / #852）和 Zed 的跳转作为第一批验收。
 5. **第三方接入**：本机这一层（兼容 B71 的旧文件），插件清单的 `fuyu.agents`；`fuyu-agent-harness` skill 精简成指向本文。

@@ -146,6 +146,9 @@
             "stop": {
               "$ref": "#/definitions/eventName"
             },
+            "failed": {
+              "$ref": "#/definitions/eventName"
+            },
             "waiting": {
               "$ref": "#/definitions/eventName"
             },

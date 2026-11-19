@@ -3,28 +3,53 @@
   "protocol": 1,
   "id": "qwen",
   "name": "Qwen Code",
-  "icon": "qwen.svg",
+  "icon": "qwen.png",
   "forms": {
     "cli": {
-      "home": [{ "path": "~/.qwen", "env": "QWEN_HOME" }],
-      "linux": { "runs": true }
+      "home": [
+        {
+          "path": "~/.qwen",
+          "env": "QWEN_HOME"
+        }
+      ]
     }
   },
-  "sessions": { "format": "qwen-jsonl", "dirs": ["projects"], "chats": "chats" },
+  "sessions": {
+    "format": "qwen-jsonl",
+    "dirs": [
+      "projects"
+    ],
+    "chats": "chats"
+  },
   "hooks": {
     "format": "claude-compatible",
     "file": "settings.json",
     "events": {
       "start": "UserPromptSubmit",
-      "activity": ["PostToolUse", "PostToolUseFailure", "PermissionDenied", "Stop", "SubagentStop", "UserPromptSubmit"],
+      "activity": [
+        "PreToolUse"
+      ],
       "stop": "Stop",
+      "failed": "StopFailure",
       "waiting": "PermissionRequest",
       "approval": "PermissionRequest"
     },
     "waitingKind": "permissionRequest"
   },
-  "approval": { "reply": "permissionRequest" },
-  "signals": { "running": "hook", "done": "hook", "waiting": "hook", "replyMarker": true, "exited": "hook" },
-  "replyMarker": { "promptFiles": ["QWEN.md"] },
+  "approval": {
+    "reply": "permissionRequest"
+  },
+  "signals": {
+    "running": "hook",
+    "done": "hook",
+    "waiting": "hook",
+    "replyMarker": true,
+    "exited": "hook"
+  },
+  "replyMarker": {
+    "promptFiles": [
+      "QWEN.md"
+    ]
+  },
   "ccConnect": null
 }
