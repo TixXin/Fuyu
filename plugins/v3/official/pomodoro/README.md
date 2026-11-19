@@ -2,7 +2,7 @@
 
 `@fuyu/pomodoro` · 浮屿官方插件 · Windows / macOS
 
-按轮专注、轮间休息，可以挑一条今天的待办来做，到点在岛上提醒，并记下今天完成了几轮。
+挑一条待办开始专注，岛上倒计时，到点提醒你休息，记下今天完成了几轮。可以暂停，休息时长和每天的目标都能在设置里改。
 
 ## 装好后在哪里
 
@@ -58,7 +58,7 @@
 
 `@fuyu/pomodoro` · Official Fuyu plugin · Windows / macOS
 
-Focus in rounds with breaks in between, optionally on one of today's todos. The island tells you when time is up and keeps count of today's rounds.
+Pick a to-do and focus; the island counts down, tells you when to take a break, and counts today's rounds. You can pause, and set the break lengths and a daily goal in the settings.
 
 ### Where it shows up
 
