@@ -155,11 +155,11 @@ async function runChecks() {
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 500)); });
     for (const island of islands()) {
       const tone = island.closest<HTMLElement>(".stage")!.dataset.tone;
-      check(island.style.getPropertyValue("--glass-wallpaper").startsWith('url("data:image/jpeg'), `${tone}：选了壁纸后岛的底子换成磨砂过的壁纸`);
+      check(island.style.getPropertyValue("--glass-wallpaper").startsWith('url("blob:'), `${tone}：选了壁纸后岛的底子换成磨砂过的壁纸`);
       check(getComputedStyle(island).backdropFilter === "none", `${tone}：选了壁纸后关闭主壳实时 backdrop-filter`);
-      check(getComputedStyle(island).backgroundImage.includes("data:image/jpeg"), `${tone}：岛本体（含贴顶圆角继承的背景）画出壁纸`);
+      check(getComputedStyle(island).backgroundImage.includes("blob:"), `${tone}：岛本体（含贴顶圆角继承的背景）画出壁纸`);
       check(island.querySelector(".island__glass-noise"), `${tone}：加了噪点层`);
-      check(getComputedStyle(island, "::before").backgroundImage.includes("data:image/jpeg"), `${tone}：贴顶圆角继承同一块磨砂壁纸`);
+      check(getComputedStyle(island, "::before").backgroundImage.includes("blob:") && getComputedStyle(island).backgroundAttachment.includes("fixed") && getComputedStyle(island, "::before").backgroundAttachment === getComputedStyle(island).backgroundAttachment, `${tone}：贴顶圆角继承同一块磨砂壁纸，按窗口定位不随岛的尺寸重算`);
       const boost = Number(island.style.getPropertyValue("--glass-backdrop-boost"));
       check(tone === "dark" ? boost > 0 : boost === 0, `${tone}：白壁纸上${tone === "dark" ? "加深" : "不加深"}底色（${boost}）`);
     }
