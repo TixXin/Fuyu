@@ -2,7 +2,7 @@
   "name": "@fuyu/world-clock",
   "version": "1.1.0",
   "type": "module",
-  "description": "Multi-timezone world clock with relative hour offsets, day/night state, and collapsed-bar city clock",
+  "description": "See the time and offset in several cities at once, so scheduling across time zones takes no maths.",
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",
@@ -20,13 +20,22 @@
     "manifest": 1,
     "displayName": {
       "zh-CN": "世界时钟",
-      "en": "World Clock"
+      "en": "World clock"
     },
     "description": {
-      "zh-CN": "查看全球多个城市与时区的实时时间、昼夜状态及与本机的时差，支持将关注城市显示在收起条。",
-      "en": "View live times, day/night state, and hour offsets across world cities and IANA time zones, with an optional collapsed-bar clock."
+      "zh-CN": "同时看几个城市的时间和时差，跨时区约会议不用再算。",
+      "en": "See the time and offset in several cities at once, so scheduling across time zones takes no maths."
     },
     "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/page.png",
+        "caption": {
+          "zh-CN": "岛上页面：几个城市的时间和时差",
+          "en": "Island page: times and offsets in several cities"
+        }
+      }
+    ],
     "categories": [
       "utilities",
       "information"

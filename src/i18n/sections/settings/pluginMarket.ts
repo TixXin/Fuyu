@@ -1,4 +1,4 @@
-export type PluginMarketSort = "recommended" | "recent";
+export type PluginMarketSort = "recommended" | "newest" | "recent";
 export type PluginMarketDetailTab = "readme" | "changelog" | "versions";
 export type PluginCapabilityKind = "replaces" | "network" | "runPrograms" | "files" | "nodeSensitive" | "nodeApis";
 
@@ -29,9 +29,10 @@ export type SettingsPluginMarketText = {
   emptyIndex: { title: string; body: string };
   noResult: { title: (query: string) => string; body: string; fromFile: string; buildOwn: string };
   card: {
-    official: string;
+    officialTitle: string;
+    isNew: string;
+    isNewTitle: string;
     fresh: string;
-    freshTitle: string;
     revoked: string;
     network: string;
     noNetwork: string;
@@ -117,7 +118,7 @@ export const zhCN: SettingsPluginMarketText = {
   categoriesLabel: "分类",
   allCategories: "全部",
   sortLabel: "排序",
-  sort: { recommended: "推荐", recent: "最近更新" },
+  sort: { recommended: "推荐", newest: "最新上架", recent: "最近更新" },
   categories: {
     productivity: "效率",
     utilities: "工具",
@@ -134,7 +135,7 @@ export const zhCN: SettingsPluginMarketText = {
     results: (count) => `找到 ${count} 个`,
     count: (count) => `${count} 个`,
   },
-  trustLine: "市场里的插件都经过签名校验；官方插件由浮屿团队发布。",
+  trustLine: "市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。",
   loading: "正在读取市场目录…",
   offline: {
     title: "插件功能没在运行",
@@ -159,9 +160,10 @@ export const zhCN: SettingsPluginMarketText = {
     buildOwn: "自己做一个插件",
   },
   card: {
-    official: "官方",
+    officialTitle: "浮屿团队发布",
+    isNew: "新",
+    isNewTitle: "上架不到 14 天",
     fresh: "刚上架",
-    freshTitle: "上架不到 3 天，浮屿平时等 3 天再自动推送",
     revoked: "已撤销",
     network: "联网",
     noNetwork: "不联网",
@@ -190,7 +192,7 @@ export const zhCN: SettingsPluginMarketText = {
     current: "已装",
     info: { version: "版本", size: "大小", updated: "更新于", requires: "需要", platforms: "平台", license: "协议" },
     requiresFuyu: (range) => `浮屿 ${range}`,
-    official: "浮屿团队 · 官方",
+    official: "浮屿团队",
     likes: (count) => `👍 ${count}`,
     links: { repository: "源码仓库", homepage: "主页", bugs: "反馈问题", funding: "赞助" },
     commands: "命令与快捷键",
@@ -254,7 +256,7 @@ export const en: SettingsPluginMarketText = {
   categoriesLabel: "Categories",
   allCategories: "All",
   sortLabel: "Sort",
-  sort: { recommended: "Recommended", recent: "Recently updated" },
+  sort: { recommended: "Recommended", newest: "Newest", recent: "Recently updated" },
   categories: {
     productivity: "Productivity",
     utilities: "Utilities",
@@ -271,7 +273,7 @@ export const en: SettingsPluginMarketText = {
     results: (count) => `${count} result${count === 1 ? "" : "s"}`,
     count: (count) => `${count}`,
   },
-  trustLine: "Every plugin in the market is signature-checked; official plugins are published by the Fuyu team.",
+  trustLine: "Every plugin in the market is signature-checked; a check mark next to the name means it's an official plugin from the Fuyu team.",
   loading: "Loading the market…",
   offline: {
     title: "Plugins aren't running",
@@ -296,9 +298,10 @@ export const en: SettingsPluginMarketText = {
     buildOwn: "Build your own plugin",
   },
   card: {
-    official: "Official",
-    fresh: "New",
-    freshTitle: "Listed less than 3 days ago; Fuyu normally waits 3 days before pushing it",
+    officialTitle: "Published by the Fuyu team",
+    isNew: "New",
+    isNewTitle: "Listed in the last 14 days",
+    fresh: "Just listed",
     revoked: "Revoked",
     network: "Network",
     noNetwork: "Offline",
@@ -327,7 +330,7 @@ export const en: SettingsPluginMarketText = {
     current: "Installed",
     info: { version: "Version", size: "Size", updated: "Updated", requires: "Requires", platforms: "Platforms", license: "License" },
     requiresFuyu: (range) => `Fuyu ${range}`,
-    official: "Fuyu team · Official",
+    official: "Fuyu team",
     likes: (count) => `👍 ${count}`,
     links: { repository: "Source", homepage: "Homepage", bugs: "Report an issue", funding: "Sponsor" },
     commands: "Commands & shortcuts",

@@ -2361,12 +2361,12 @@
       "zh-CN": {
         "group": "岛上的歌词样式",
         "title": "跟随封面颜色",
-        "description": "从当前歌曲的封面取主色，给收起岛的波形、卡拉 OK 高亮和音乐页的光晕上色，换歌时渐变。颜色会调到在深色、浅色岛上都看得清；没有封面时用强调色。"
+        "description": "从当前歌曲的封面取主色，给收起岛的波形、卡拉 OK 高亮和音乐页的光晕上色，换歌时渐变。颜色会调到在深色、浅色岛上都看得清；没有封面时用强调色。高亮颜色选了「自定义」时，歌词高亮用你选的颜色，封面色只管波形和光晕。"
       },
       "en": {
         "group": "Lyrics on the island",
         "title": "Match album art",
-        "description": "Takes the main colour of the current cover for the collapsed island's waveform, the karaoke highlight and the glow on the music page, fading between songs. It is adjusted to stay readable on dark and light islands; without a cover the accent colour is used."
+        "description": "Takes the main colour of the current cover for the collapsed island's waveform, the karaoke highlight and the glow on the music page, fading between songs. It is adjusted to stay readable on dark and light islands; without a cover the accent colour is used. When the highlight colour is set to Custom, the lyrics use your colour and the cover colour only tints the waveform and the glow."
       }
     },
     {

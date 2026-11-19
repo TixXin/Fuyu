@@ -128,3 +128,14 @@ QQ 音乐、网易 yrc 是在线接口，Mac 上就能测。
 - **A（推荐）**：保持现有设置（默认打码，可选不记录 / 照常），只补识别规则：GLM 的 `<hex>.<key>` 格式和几家国内厂商的前缀，并加测试。改动小，不会误伤 git 提交号。
 - **B**：在 A 的基础上，把 32 位以上的纯 hex 也算作密钥。能多认出一些 key，但 git 提交号、哈希值都会被打码。
 - **C**：在 A 的基础上，把默认从「打码」改成「不记录」。更保险，但这些 key 就没法再从历史里粘贴了。
+
+## 第 3 轮：C136 歌词高亮颜色不跟设置走（2026-11-19，插队到 C124、C133 前面）
+
+功能总控转来，用户在 Mac 开发版上反馈（#989）。原因：`src/lib/settings/lyricsSettings.ts` 的 `karaokeLook` 在开着「跟随封面颜色」时把高亮色写成 `var(--cover-accent, <选的颜色>)`，封面色盖过自定义色；设置页预览没有封面色，显示的是自定义色。和 C127、C4c 无关。
+
+**用户定：自定义优先。** 高亮颜色选「自定义」时一律用自定义色；「跟随封面颜色」只在高亮颜色选「文字色」或「主题色」时接管歌词高亮，波形和音乐页光晕照旧跟封面。设置页写明规则。
+
+一个会话 `[C136] 歌词高亮颜色自定义优先`：
+- `--scope`：`src/lib/settings/lyricsSettings.ts,src/features/media/lyrics/LyricsKaraokeSettingsSection.tsx,src/i18n/sections/settings/lyrics.ts,tests/unit/lyrics-karaoke.test.mjs,tests/regression/music-lyrics.tsx,tests/regression/snapshots/music-lyrics.html`
+- 顺带确认设置窗口改了以后岛上即时生效（跨窗口同步），不生效就一起修。
+- 验证：`pnpm check`、`pnpm build`、`pnpm test:regression music settings-search`（改了文案就先 `pnpm settings:index`）。纯前端，不用 Windows CI。

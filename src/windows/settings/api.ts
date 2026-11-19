@@ -18,6 +18,11 @@ export function openSettingsWindow(section?: SettingsFocusSection) {
   void settingsWindowOpening(section);
 }
 
+export function openPluginSettingsWindow(plugin: string): Promise<void> {
+  requestSettingsFocus("pluginsV3", plugin);
+  return invoke<void>("open_settings_window");
+}
+
 export function showSettingsWindow() {
   return invoke("show_settings_window");
 }

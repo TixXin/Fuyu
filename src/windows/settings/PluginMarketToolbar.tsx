@@ -4,7 +4,7 @@ import { useTranslation } from "../../i18n";
 import type { CategoryCount } from "./pluginMarketModel";
 import { PluginSearchInput } from "./PluginSearchInput";
 
-const SORTS: readonly PluginMarketSort[] = ["recommended", "recent"];
+const SORTS: readonly PluginMarketSort[] = ["recommended", "newest", "recent"];
 
 export function PluginMarketToolbar({ query, category, sort, total, categories, categoryName, disabled = false, onQuery, onCategory, onSort }: {
   query: string;

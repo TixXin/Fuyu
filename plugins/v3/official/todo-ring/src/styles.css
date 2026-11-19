@@ -1,4 +1,6 @@
 .fuyu-todo-ring {
+  --fuyu-todo-ring-done: light-dark(#1f9d55, #4ade80);
+  --fuyu-todo-ring-color: var(--fuyu-plugin-accent);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
@@ -8,6 +10,26 @@
   font-family: var(--fuyu-plugin-font);
   font-size: 13px;
   color: var(--fuyu-plugin-text);
+}
+
+.fuyu-todo-ring.is-ring-only {
+  grid-template-columns: auto;
+  justify-content: center;
+  justify-items: center;
+}
+
+.fuyu-todo-ring.is-ring-only .fuyu-todo-ring__side {
+  align-items: center;
+  text-align: center;
+}
+
+.fuyu-todo-ring.is-done {
+  --fuyu-todo-ring-color: var(--fuyu-todo-ring-done);
+}
+
+.fuyu-todo-ring.is-done .fuyu-todo-ring__percent,
+.fuyu-todo-ring.is-done .fuyu-todo-ring__sub {
+  color: var(--fuyu-todo-ring-done);
 }
 
 .fuyu-todo-ring__dial {
@@ -31,7 +53,7 @@
 
 .fuyu-todo-ring__value {
   fill: none;
-  stroke: var(--fuyu-plugin-accent);
+  stroke: var(--fuyu-todo-ring-color);
   stroke-width: 10;
   stroke-linecap: round;
 }
@@ -65,52 +87,10 @@
   min-width: 0;
 }
 
-.fuyu-todo-ring__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
 .fuyu-todo-ring__label {
   margin: 0;
   font-size: 12px;
   color: var(--fuyu-plugin-text-muted);
-}
-
-.fuyu-todo-ring__refresh {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: var(--fuyu-plugin-radius);
-  background: transparent;
-  color: var(--fuyu-plugin-text-muted);
-  cursor: pointer;
-}
-
-.fuyu-todo-ring__refresh:hover {
-  background: var(--fuyu-plugin-surface-hover);
-  color: var(--fuyu-plugin-text);
-}
-
-.fuyu-todo-ring__counts {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin: 0;
-  color: var(--fuyu-plugin-text-secondary);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.fuyu-todo-ring__done {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--fuyu-plugin-text);
 }
 
 .fuyu-todo-ring__list {
@@ -123,6 +103,7 @@
 }
 
 .fuyu-todo-ring__item {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -135,10 +116,13 @@
   text-align: left;
   color: var(--fuyu-plugin-text);
   background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-todo-ring__item.is-clickable {
   cursor: pointer;
 }
 
-.fuyu-todo-ring__item:hover {
+.fuyu-todo-ring__item.is-clickable:hover {
   background: var(--fuyu-plugin-surface-hover);
 }
 
@@ -148,6 +132,17 @@
   height: 8px;
   border: 1.5px solid var(--fuyu-plugin-accent);
   border-radius: 50%;
+}
+
+.fuyu-todo-ring__dot.is-overdue {
+  border-color: var(--fuyu-plugin-warning, light-dark(#b7791f, #f6c453));
+}
+
+.fuyu-todo-ring__when {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--fuyu-plugin-warning, light-dark(#b7791f, #f6c453));
 }
 
 .fuyu-todo-ring__title {
@@ -163,7 +158,38 @@
   color: var(--fuyu-plugin-text-muted);
 }
 
+.fuyu-todo-ring__note.is-error {
+  color: var(--fuyu-plugin-danger, light-dark(#c0392b, #ff8a80));
+}
+
+.fuyu-todo-ring__undo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-todo-ring__undo-btn {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: transparent;
+  color: var(--fuyu-plugin-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.fuyu-todo-ring__undo-btn:hover {
+  background: var(--fuyu-plugin-surface-hover);
+}
+
 .fuyu-todo-ring-bar {
+  --fuyu-todo-ring-done: light-dark(#1f9d55, #4ade80);
+  --fuyu-todo-ring-color: var(--fuyu-plugin-accent);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -188,11 +214,15 @@
 
 .fuyu-todo-ring-bar__value {
   fill: none;
-  stroke: var(--fuyu-plugin-accent);
+  stroke: var(--fuyu-todo-ring-color);
   stroke-width: 2.5;
   stroke-linecap: round;
 }
 
 .fuyu-todo-ring-bar__text {
   font-variant-numeric: tabular-nums;
+}
+
+.fuyu-todo-ring-bar.is-done {
+  --fuyu-todo-ring-color: var(--fuyu-todo-ring-done);
 }

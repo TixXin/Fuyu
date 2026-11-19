@@ -2,32 +2,55 @@
 
 `@fuyu/alarm` · 浮屿官方插件 · Windows / macOS
 
-设置多个单次或按星期重复的闹钟，到点在岛上弹出提醒并响铃。
+设置单次或按星期重复的闹钟，到点在岛上提醒并响铃。
 
 ## 装好后在哪里
 
-- **岛的展开页**：多出「闹钟」一页，在这里添加、开关和删除闹钟。
-- **收起条**：显示下一次闹钟的时间。
-- **设置 → 插件**：闹钟的设置。
+- **岛的展开页**：多出「闹钟」一页，在这里添加闹钟、开关闹钟，点一个闹钟可以编辑。
+- **收起条**：默认只在响铃时出现，显示响铃的闹钟时间；点一下打开闹钟页。
+- **设置 → 插件 → 闹钟**：管理闹钟和全部设置。
 
 ## 怎么用
 
 1. 展开岛，切到「闹钟」页，选好时间、写个备注，点「添加」。
-2. 想每周重复就勾上星期几（全选就是「每天」）；什么都不勾是只响一次的单次闹钟。
-3. 添加时可以给这个闹钟单独选铃声；已有的闹钟可以随时关掉或删除。
-4. 到点后岛上弹出提醒并播放铃声，可以「关闭响铃」或「贪睡 5 分钟」。30 秒没有处理会自动停止响铃。
+2. 表单下面那一行（如「周一至周五 · 柔和风铃 ▸」）点开，可以改重复的星期和铃声；星期都不选就是只响一次的单次闹钟。
+3. 点列表里的闹钟可以改时间、备注、重复和铃声，或者删除；右边的开关临时关掉它。
+4. 到点后岛上弹出提醒并响铃，可以「关闭响铃」或「贪睡」。没人处理时按设置的时长自动停。
 
-插件还带一个命令「停止闹钟响铃」，可以在「设置 → 插件」的插件详情里给它设快捷键。
+插件带两个命令「停止闹钟响铃」和「闹钟贪睡」，可以在「设置 → 插件」的插件详情里给它们设快捷键。
 
 ## 设置
 
-- **默认铃声**：柔和风铃、清脆钟声、电子脉冲或静音提醒，旁边的「试听铃声」可以先听一下。
-- **在收起条显示下一次闹钟**：默认开启。
+**闹钟**
+
+- 全部闹钟的列表：开关、编辑、删除。最多 40 个。
+
+**响铃**
+
+- **默认铃声**：柔和风铃（默认）/ 清脆钟声 / 电子脉冲 / 静音提醒；新闹钟默认用它。旁边的「试听」按当前音量放一遍。
+- **音量**：默认 70%。
+- **渐强**：默认关；打开后从小声开始，慢慢变到设定的音量。
+- **贪睡时长**：默认 5 分钟，可选 1–30 分钟。
+- **响铃多久自动停**：默认 30 秒，可选 15 秒到 5 分钟。
+- **单次闹钟响过后**：保留并关掉（默认）/ 自动删除。
+- **错过的闹钟回来后提醒**：默认开；电脑关机或睡眠时错过的闹钟，回来后弹一条提醒（不补响铃）。
+
+**显示**
+
+- **时间格式**：跟随系统（默认）/ 24 小时 / 12 小时。
+- **一周从哪天开始**：跟随系统（默认）/ 周一 / 周日 / 周六；影响星期按钮和重复说明的顺序。
+
+**收起条**
+
+- **收起条显示**：只在响铃时显示（默认）/ 常驻显示下一次闹钟。想完全不显示，在浮屿的收起条设置里隐藏它。从 1.0.0 升级、原来开着「在收起条显示下一次闹钟」的，保持常驻。
+
+贪睡中的闹钟会写进数据文件，浮屿重启后照样到点再响。
 
 ## 它会用到什么
 
 - 在岛上弹出提醒，并记入提醒列表。
-- 闹钟只保存在本机的插件数据目录里。
+- 铃声由插件自己合成，不读取音频文件。
+- 闹钟只保存在本机的插件数据目录里；插件每分钟记一次「最后在运行的时间」，用来判断有没有错过闹钟。
 - 不联网，不读取你的其他数据。
 
 ---
@@ -36,39 +59,62 @@
 
 `@fuyu/alarm` · Official Fuyu plugin · Windows / macOS
 
-Set one-time or weekly alarms. When one goes off, the island shows a notification and plays a chime.
+Set one-time or weekly alarms that remind you on the island and ring.
 
 ### Where it shows up
 
-- **Island page**: a new "Alarm" page where you add, switch on and off, and delete alarms.
-- **Collapsed bar**: the time of the next alarm.
-- **Settings → Plugins**: the plugin's settings.
+- **Island page**: a new "Alarm" page where you add alarms and switch them on and off; click an alarm to edit it.
+- **Collapsed bar**: by default it shows up only while an alarm rings, with the alarm's time; click it to open the Alarm page.
+- **Settings → Plugins → Alarm**: manage alarms and every setting.
 
 ### How to use it
 
 1. Expand the island, open the "Alarm" page, pick a time, add a label and click "Add".
-2. Tick weekdays to repeat it every week (all of them means "Every day"); with none ticked it rings once.
-3. You can pick a sound for each alarm when you add it, and switch alarms off or delete them at any time.
-4. When it rings, choose "Dismiss" or "Snooze 5m". The sound stops by itself after 30 seconds.
+2. Click the line under the form (like "Weekdays · Warm chime ▸") to pick the days to repeat and the sound; with no day picked the alarm rings once.
+3. Click an alarm in the list to change its time, label, days and sound, or delete it; the switch on the right turns it off for now.
+4. When it rings, the island shows a notification and plays the sound. Choose "Dismiss" or "Snooze". If nobody does, it stops after the time set in the settings.
 
-The plugin also has a "Dismiss ringing alarm" command; give it a shortcut in the plugin's details under Settings → Plugins.
+The plugin has two commands, "Dismiss ringing alarm" and "Snooze ringing alarm"; give them shortcuts in the plugin's details under Settings → Plugins.
 
 ### Settings
 
-- **Default ringtone**: Warm chime, Crystal bell, Digital pulse or Silent; "Test sound" plays it.
-- **Show next alarm on collapsed bar**: on by default.
+**Alarms**
+
+- The list of all alarms: switch on or off, edit, delete. Up to 40.
+
+**Ringing**
+
+- **Default sound**: Warm chime (default), Crystal bell, Digital pulse or Silent; new alarms use it. "Test sound" plays it at the current volume.
+- **Volume**: 70% by default.
+- **Start quiet and get louder**: off by default.
+- **Snooze length**: 5 minutes by default, 1 to 30 minutes.
+- **Stop ringing after**: 30 seconds by default, 15 seconds to 5 minutes.
+- **After a one-time alarm rings**: keep it, switched off (default), or delete it.
+- **Tell me about missed alarms**: on by default. Alarms missed while the computer was off or asleep show up as one notification when it is back (without ringing).
+
+**Display**
+
+- **Time format**: System (default), 24-hour or 12-hour.
+- **First day of the week**: System (default), Monday, Sunday or Saturday; sets the order of the day buttons and day summaries.
+
+**Collapsed bar**
+
+- **Show on the collapsed bar**: only while ringing (default), or always show the next alarm. To hide it completely, use Fuyu's collapsed bar settings. If you upgrade from 1.0.0 with "Show next alarm on collapsed bar" on, it stays on "always".
+
+A snoozed alarm is saved to the data file, so it still rings on time after Fuyu restarts.
 
 ### What it uses
 
 - Shows notifications on the island and adds them to the reminder list.
-- Alarms are stored only in the plugin's data folder on your computer.
+- The sounds are generated by the plugin; it reads no audio files.
+- Alarms are stored only in the plugin's data folder on your computer. Once a minute the plugin notes when it was last running, to tell whether an alarm was missed.
 - No network access, and it doesn't read any of your other data.
 
 ---
 
 ## 给开发者 · For developers
 
-- 服务：`messages/v1`（必需）、`reminders/v1`（可选）
+- 服务：`commands`、`messages/v1`（必需）、`reminders/v1`（可选）
 - 插槽：`island.page/v1`、`island.collapsed/v1`、`island.runner/v1`、`settings.section/v1`
-- 命令：`dismiss`
+- 命令：`dismiss`、`snooze`
 - 在本目录 `pnpm build` 构建、`pnpm dev` 调试；写插件看[插件文档](https://github.com/TixXin/fuyu/blob/main/docs/plugins/README.md)。

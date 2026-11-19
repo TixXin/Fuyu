@@ -1,5 +1,6 @@
 import type { InstalledMarketPlugin, MarketCatalogPlugin, MarketCatalogSnapshot, MarketLocalizedText, MarketRevocation } from "@fuyu/plugin-services";
 import { isExternalPlugin } from "./pluginDisplay.ts";
+import { iconSources, packageIconUrl } from "./pluginIconSources.ts";
 import { pluginRowStatus, type RowContext, type RowStatus } from "./pluginRowStatus.ts";
 import { stateOf } from "./pluginServiceStatus.ts";
 import type { PluginStatusV3 } from "./usePluginHostStatus";
@@ -11,6 +12,7 @@ export interface InstalledEntry {
   plugin: PluginStatusV3;
   market?: MarketCatalogPlugin;
   title: string;
+  icons: string[];
   description: string | null;
   version: string | null;
   publisher: string | null;
@@ -66,6 +68,7 @@ export function installedEntries(
         plugin,
         market,
         title: titleOf(plugin, market, installed, locale),
+        icons: iconSources(packageIconUrl(plugin.id, installed?.icon), market?.icon),
         description: localized(market?.description, locale) ?? localized(installed?.description, locale),
         version: installed?.version ?? market?.installedVersion ?? null,
         publisher: source === "official" ? null : market?.publisher.github ?? (plugin.id.includes("/") ? plugin.id.split("/")[0].replace(/^@/, "") : null),

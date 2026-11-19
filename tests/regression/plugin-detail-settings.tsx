@@ -88,7 +88,7 @@ registry.add("settings.section/v1", { id: "world-clock.builtin", category: "plug
 
 const plugin = (id: string, state: string): PluginStatusV3 => ({ id, name: id, state, kind: "third-party", source: "market" });
 const entry = (id: string, title: string, state: string): InstalledEntry => ({
-  id, title, plugin: plugin(id, state), description: null, version: "1.0.0", publisher: "someone", source: "market", managed: true, removable: true,
+  id, title, icons: [], plugin: plugin(id, state), description: null, version: "1.0.0", publisher: "someone", source: "market", managed: true, removable: true,
   enabled: state !== "disabled", status: { dot: state === "running" ? "ok" : state === "disabled" ? "off" : "wait", label: state === "running" ? null : state === "disabled" ? "off" : "waiting", note: null, attention: false },
 });
 const clock = entry(CLOCK, "世界时钟", "running");

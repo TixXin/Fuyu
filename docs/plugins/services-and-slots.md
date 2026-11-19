@@ -88,7 +88,11 @@ ctx.slots.add("island.page/v1", {
   ctx.slots.add("island.collapsed/v1", { id: "world-clock-bar", opens: "world-clock", component: WorldClockChip });
   ```
 
-- 收起条上的 `island.collapsed/v1` 项：现在 `width` 只对 `group: "gauges"` 的项计入岛宽，插件的收起项不写 `group` 时声明的 `width` 不起作用，空间不够时可能被压短；按实际渲染宽度算岛宽是 E60.8 的事。
+- 收起条上的 `island.collapsed/v1` 项按实际渲染出来的宽度算进岛宽（写不写 `group` 都一样）：宿主把项放进一个不压缩内容的容器，量它的宽度，加在岛自己的宽度上。所以内容会变的项（读数、时间、倒计时）不用写 `width`，也不会被截断。
+  - `width`（像素数，或按收起条上下文算的函数）是下限：内容更窄时也按它留位置，量到之前也先按它算。只在想给变化的内容预留固定位置时写。写成非正数、非数字或函数出错时当作没写。
+  - 防抖：项变宽时岛马上跟着变宽（按 8px 取整）；变窄要窄出 32px 以上才收回。所以每秒刷新的读数只会让岛涨一次，不会来回改窗口大小；不用自己补空格或固定位数。
+  - 上限：收起条最宽 520px，和原生窗口的上限一致，也不超过当前收起缩放下舞台窗口放得下的宽度；收起条上的长消息（C124）用的是同一个上限。放不下时先压岛自己的文字，插件项最后在右端淡出裁掉，所以重要的读数放在前面。
+  - 项内不要写 `width: 100%`、`flex: 1` 这类撑满剩余空间的样式，容器按内容的 `max-content` 量，撑满写法会量不准；要省略号自己用 `max-width` 限定。
 
 ### 插槽主题变量（`SLOT_THEME`）
 
@@ -101,3 +105,24 @@ ctx.slots.add("island.page/v1", {
 - 字体与圆角：`--fuyu-plugin-font`、`--fuyu-plugin-radius`
 
 主题容器还设了 `color-scheme`：深色岛是 `dark`，浅色岛是 `light`，插件的元素会继承它（容器是 `display: contents`，不影响布局，继承照常）。所以插件可以直接写 `light-dark(浅色岛的值, 深色岛的值)`，跟着岛的深浅变；岛上、设置窗口和插件独立窗口里都一样。
+
+---
+
+## 四、打开自己的设置（`ctx.settings.open()`）
+
+插件在 `package.json` 里写了 `fuyu.config`，或在设置窗口注册了 `settings.section/v1`，它的设置就在插件详情弹窗的「设置」标签里（插件行上 ⚙ 打开的那一页）。`ctx.settings.open()` 打开设置窗口（已经开着就拉到前面），落到本插件详情弹窗的「设置」标签。适合空状态里的「去设置」按钮（天气没填城市、GitHub Issue 没填仓库），或点一条「缺少设置」的通知时调用。
+
+```ts
+// 窗口代码（岛上、设置窗口、插件独立窗口都能调）
+<button type="button" onClick={() => void ctx.settings.open()}>去设置</button>
+
+// 宿主代码：和 config、windows 一样，代码的 inject 和 package.json 的 fuyu.inject 里写 "settings"
+export const inject = ["clients", "settings"];
+export function apply(ctx) {
+  ctx.commands.register("configure", () => ctx.settings.open());
+}
+```
+
+- 不带参数，只能打开自己的设置：插件 id 由窗口的加载器（窗口代码）或宿主（宿主代码）按调用方填，传进去的参数一概忽略。
+- 返回 `Promise<void>`。宿主代码里调用时，宿主转给岛窗口去打开；岛窗口没连上宿主时失败，错误码 `not-ready`。
+- 插件没有设置项、或还没在运行时，弹窗照常落到「设置」标签，显示对应的提示（「这个插件没有可以改的设置」或「插件运行时，这里才会显示它自己的设置」）。

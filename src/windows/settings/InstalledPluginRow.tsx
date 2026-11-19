@@ -7,6 +7,8 @@ import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import type { InstalledEntry } from "./pluginEntries";
 import { marketClient } from "./pluginMarketActions";
 import { capabilityItems, localized } from "./pluginMarketModel";
+import { OfficialMark } from "./OfficialMark";
+import { PluginLogo } from "./PluginLogo";
 import { PluginMenu, type PluginMenuItem } from "./PluginMenu";
 import type { RowNote } from "./pluginRowStatus";
 
@@ -17,10 +19,6 @@ const INTERACTIVE = "button, input, label, a, .settings-switch";
 const NOTE_TONES: Record<RowNote["kind"], "bad" | "warn" | "info"> = {
   failed: "bad", paused: "bad", waiting: "info", unreachable: "bad", revoked: "bad", warned: "warn", trust: "warn", held: "info", update: "info",
 };
-
-export function pluginInitial(title: string): string {
-  return (Array.from(title.replace(/^@[^/]+\//, "").trim())[0] ?? "?").toUpperCase();
-}
 
 function reasonTexts(reasons: readonly (MarketLocalizedText | string)[], locale: string): string[] {
   return reasons.map((reason) => localized(reason, locale, "")).filter(Boolean);
@@ -149,14 +147,13 @@ export function InstalledPluginRow({ entry, stale, onOpen, onAction }: {
   const labelTone = status.dot === "bad" ? " plugin-row__state--bad" : status.dot === "wait" ? " plugin-row__state--wait" : "";
   return (
     <div className={`plugin-row${entry.enabled ? "" : " plugin-row--off"}`} data-plugin={entry.id} data-dot={status.dot} onClick={open}>
-      <span className={`plugin-icon${status.dot === "ok" ? "" : " plugin-icon--dim"}`} aria-hidden="true">
-        {pluginInitial(entry.title)}
+      <PluginLogo sources={entry.icons} title={entry.title} dim={status.dot !== "ok"}>
         <span className={`plugin-icon__dot plugin-icon__dot--${status.dot}`} />
-      </span>
+      </PluginLogo>
       <div className="plugin-row__main">
         <div className="plugin-row__line">
           <button className="plugin-row__name" type="button" title={entry.title} onClick={() => onOpen()}>{entry.title}</button>
-          {entry.source === "official" ? <span className="plugin-badge plugin-badge--official">{text.badges.official}</span> : null}
+          {entry.source === "official" ? <OfficialMark /> : null}
           {entry.source === "manual" ? <span className="plugin-badge plugin-badge--warn">{text.badges.unreviewed}</span> : null}
           {entry.version ? <span className="plugin-row__version">v{entry.version}</span> : null}
           {status.label ? <span className={`plugin-row__state${labelTone}`}>· {text.labels[status.label]}</span> : null}

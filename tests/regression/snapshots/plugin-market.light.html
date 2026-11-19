@@ -146,16 +146,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS 订阅" type="button">
                         RSS 订阅
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -187,8 +187,8 @@
                       <button class="market-card__name" title="天气" type="button">
                         天气
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -224,8 +224,8 @@
                       <button class="market-card__name" title="网页摘要" type="button">
                         网页摘要
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -257,8 +257,8 @@
                       <button class="market-card__name" title="设备配对" type="button">
                         设备配对
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -290,9 +290,6 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · 效率 · v1.1.0
@@ -383,9 +380,6 @@
                       <button class="market-card__name" title="宠物皮肤包" type="button">
                         宠物皮肤包
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · 外观 · v0.2.0
@@ -469,15 +463,15 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>
       </div>
     </section>
-    <section class="gallery__stage settings-stage gallery__stage--narrow settings-stage--light" data-stage="browse-narrow">
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="browse-month">
       <h2 class="gallery__title">
-        浏览（窄窗口）
+        浏览：市场上线一个多月后
       </h2>
       <div>
         <div class="plugin-page market-page" data-market-page="true">
@@ -621,16 +615,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS 订阅" type="button">
                         RSS 订阅
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -662,8 +656,8 @@
                       <button class="market-card__name" title="天气" type="button">
                         天气
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -699,8 +693,8 @@
                       <button class="market-card__name" title="网页摘要" type="button">
                         网页摘要
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -732,8 +726,8 @@
                       <button class="market-card__name" title="设备配对" type="button">
                         设备配对
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -765,8 +759,8 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
+                      <span class="plugin-badge plugin-badge--new" data-new="true" title="上架不到 14 天">
+                        新
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -858,9 +852,6 @@
                       <button class="market-card__name" title="宠物皮肤包" type="button">
                         宠物皮肤包
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · 外观 · v0.2.0
@@ -944,7 +935,476 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage gallery__stage--narrow settings-stage--light" data-stage="browse-narrow">
+      <h2 class="gallery__title">
+        浏览（窄窗口）
+      </h2>
+      <div>
+        <div class="plugin-page market-page" data-market-page="true">
+          <div class="plugin-page__summary market-meta">
+            <b>
+              共 12 个插件
+            </b>
+            <span>
+              索引更新于 11/18 20:14
+            </span>
+            <button class="plugin-link" data-action="market-installed" type="button">
+              已装 3 个 ›
+            </button>
+          </div>
+          <div class="market-toolbar">
+            <div class="market-toolbar__search">
+              <label class="plugin-search">
+                <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                <input aria-label="搜索插件，比如 天气、GitHub、番茄钟" placeholder="搜索插件，比如 天气、GitHub、番茄钟" type="search" value="">
+              </label>
+            </div>
+            <div class="market-toolbar__row">
+              <div aria-label="分类" class="market-toolbar__cats" role="group">
+                <button aria-pressed="true" class="plugin-chip" data-market-category="all" type="button">
+                  全部
+                  <span class="plugin-chip__count">
+                    12
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="productivity" type="button">
+                  效率
+                  <span class="plugin-chip__count">
+                    5
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="developer" type="button">
+                  开发
+                  <span class="plugin-chip__count">
+                    3
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="information" type="button">
+                  资讯
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="todos" type="button">
+                  待办
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="ai" type="button">
+                  AI
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="media" type="button">
+                  媒体
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="appearance" type="button">
+                  外观
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="utilities" type="button">
+                  工具
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+              </div>
+              <div class="settings-select">
+                <div class="select-control">
+                  <button aria-controls="_id3_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                    <span>
+                      推荐
+                    </span>
+                    <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <section class="market-section" data-market-section="updates">
+            <h3 class="plugin-page__heading">
+              可更新 (2)
+            </h3>
+            <div class="plugin-card market-updates">
+              <div class="market-update" data-market-update="@fuyu/github-notify">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  G
+                </span>
+                <div class="market-update__text">
+                  <button class="market-card__name" type="button">
+                    GitHub 通知
+                  </button>
+                  <span>
+                    v2.0.1 → v2.1.0
+                    ·
+                    <span class="market-card__warn">
+                      紧急修复
+                    </span>
+                  </span>
+                </div>
+                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
+                  查看并更新
+                </button>
+              </div>
+              <div class="market-update" data-market-update="@lin-dev/pomo-stats">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  专
+                </span>
+                <div class="market-update__text">
+                  <button class="market-card__name" type="button">
+                    专注统计
+                  </button>
+                  <span>
+                    v0.4.2 → v0.5.0
+                  </span>
+                </div>
+                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
+                  查看并更新
+                </button>
+              </div>
+            </div>
+          </section>
+          <section class="market-section" data-market-section="all">
+            <h3 class="plugin-page__heading">
+              全部
+              <span class="plugin-page__heading-meta">
+                10 个
+              </span>
+            </h3>
+            <div class="market-grid">
+              <article class="market-card" data-market-plugin="@fuyu/rss">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="RSS 订阅" type="button">
+                        RSS 订阅
+                      </button>
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      资讯 · v1.5.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  订阅博客和新闻，有新文章时在收起条上滚动标题，点一下打开
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/weather">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    天
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="天气" type="button">
+                        天气
+                      </button>
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      资讯 · v1.2.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  收起条上显示当前天气，下雨前半小时提醒你带伞
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    联网
+                  </span>
+                  <span class="market-card__action">
+                    <span class="market-card__installed">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                      已安装
+                    </span>
+                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                      管理
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    网
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="网页摘要" type="button">
+                        网页摘要
+                      </button>
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      AI · v0.9.3
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  复制一个链接，岛上给出三句话的摘要，可以存进笔记
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/devices">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    设
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="设备配对" type="button">
+                        设备配对
+                      </button>
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      工具 · v1.0.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  让两台装了浮屿的电脑互相认出来，给同步类插件用
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    不联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@ryo/clip-sync">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    剪
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="剪贴板跨设备" type="button">
+                        剪贴板跨设备
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      ryo · 效率 · v1.1.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  在两台电脑之间同步剪贴板，端到端加密
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@tara/linear">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    L
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Linear 任务" type="button">
+                        Linear 任务
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      tara · 开发 · v0.6.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  把分给你的 Linear 任务同步进待办，状态变了在岛上提醒
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@nori/focus-sounds">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    白
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="白噪音" type="button">
+                        白噪音
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      nori · 效率 · v1.3.2
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  雨声、咖啡馆、篝火，专注时在岛上点一下就放
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    不联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@moe/pet-skins">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    宠
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="宠物皮肤包" type="button">
+                        宠物皮肤包
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      moe · 外观 · v0.2.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  给收起条中间的小宠物换 12 套新造型
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    不联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@kai/vscode-status">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    V
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="VS Code 状态" type="button">
+                        VS Code 状态
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      kai · 开发
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  在岛上显示 VS Code 里正在调试、正在跑测试的状态
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts"></span>
+                  <span class="market-card__action">
+                    <span class="market-card__blocked">
+                      需要浮屿 &gt;=0.40.0
+                    </span>
+                    <button class="plugin-btn plugin-btn--sm" data-action="market-go-update" type="button">
+                      去更新
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@mio/focus-sync">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    专
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="专注模式同步" type="button">
+                        专注模式同步
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      mio · 效率
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  系统专注模式打开时，岛上自动免打扰
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts"></span>
+                  <span class="market-card__action">
+                    <span class="market-card__blocked">
+                      不支持当前系统
+                    </span>
+                  </span>
+                </div>
+              </article>
+            </div>
+          </section>
+          <p class="plugin-foot market-trust">
+            <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>
@@ -1036,7 +1496,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id3_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id4_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -1061,8 +1521,8 @@
                       <button class="market-card__name" title="设备配对" type="button">
                         设备配对
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1094,9 +1554,6 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · 效率 · v1.1.0
@@ -1179,7 +1636,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>
@@ -1271,7 +1728,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id4_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id5_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -1330,7 +1787,7 @@
           </div>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>
@@ -1419,7 +1876,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id5_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -1447,8 +1904,8 @@
                       <button class="market-card__name" title="网页摘要" type="button">
                         网页摘要
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1510,9 +1967,6 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · 效率 · v1.1.0
@@ -1595,7 +2049,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>
@@ -1684,7 +2138,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id6_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id7_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -1747,16 +2201,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS 订阅" type="button">
                         RSS 订阅
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1788,8 +2242,8 @@
                       <button class="market-card__name" title="天气" type="button">
                         天气
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1825,8 +2279,8 @@
                       <button class="market-card__name" title="网页摘要" type="button">
                         网页摘要
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1858,8 +2312,8 @@
                       <button class="market-card__name" title="设备配对" type="button">
                         设备配对
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -1891,9 +2345,6 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · 效率 · v1.1.0
@@ -1984,9 +2435,6 @@
                       <button class="market-card__name" title="宠物皮肤包" type="button">
                         宠物皮肤包
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · 外观 · v0.2.0
@@ -2070,7 +2518,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
@@ -2079,20 +2527,20 @@
       <div class="plugin-dialog__backdrop">
         <div aria-label="RSS 订阅" aria-modal="true" class="plugin-dialog market-dialog market-dialog--wide" data-market-detail-modal="@fuyu/rss" role="dialog">
           <div class="plugin-dialog__head">
-            <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
-              R
+            <span aria-hidden="true" class="plugin-icon plugin-icon--lg plugin-icon--img">
+              <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
             </span>
             <div class="plugin-dialog__heading">
               <div class="market-card__line">
                 <span class="plugin-dialog__title">
                   RSS 订阅
                 </span>
-                <span class="plugin-badge plugin-badge--official">
-                  官方
+                <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                  <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                 </span>
               </div>
               <span class="plugin-dialog__sub" title="@fuyu/rss">
-                浮屿团队 · 官方 · 👍 212 · 资讯
+                浮屿团队 · 👍 212 · 资讯
               </span>
             </div>
             <div class="plugin-dialog__head-actions">
@@ -2350,7 +2798,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id7_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id8_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -2413,16 +2861,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS 订阅" type="button">
                         RSS 订阅
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -2454,8 +2902,8 @@
                       <button class="market-card__name" title="天气" type="button">
                         天气
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -2491,8 +2939,8 @@
                       <button class="market-card__name" title="网页摘要" type="button">
                         网页摘要
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -2524,8 +2972,8 @@
                       <button class="market-card__name" title="设备配对" type="button">
                         设备配对
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -2557,9 +3005,6 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · 效率 · v1.1.0
@@ -2650,9 +3095,6 @@
                       <button class="market-card__name" title="宠物皮肤包" type="button">
                         宠物皮肤包
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · 外观 · v0.2.0
@@ -2736,7 +3178,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
@@ -2745,20 +3187,20 @@
       <div class="plugin-dialog__backdrop">
         <div aria-label="RSS 订阅" aria-modal="true" class="plugin-dialog market-dialog market-dialog--wide" data-market-detail-modal="@fuyu/rss" role="dialog">
           <div class="plugin-dialog__head">
-            <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
-              R
+            <span aria-hidden="true" class="plugin-icon plugin-icon--lg plugin-icon--img">
+              <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
             </span>
             <div class="plugin-dialog__heading">
               <div class="market-card__line">
                 <span class="plugin-dialog__title">
                   RSS 订阅
                 </span>
-                <span class="plugin-badge plugin-badge--official">
-                  官方
+                <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                  <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                 </span>
               </div>
               <span class="plugin-dialog__sub" title="@fuyu/rss">
-                浮屿团队 · 官方 · 👍 212 · 资讯
+                浮屿团队 · 👍 212 · 资讯
               </span>
             </div>
             <div class="plugin-dialog__head-actions">
@@ -3016,7 +3458,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id8_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id9_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -3079,16 +3521,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS 订阅" type="button">
                         RSS 订阅
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3120,8 +3562,8 @@
                       <button class="market-card__name" title="天气" type="button">
                         天气
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3157,8 +3599,8 @@
                       <button class="market-card__name" title="网页摘要" type="button">
                         网页摘要
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3190,8 +3632,8 @@
                       <button class="market-card__name" title="设备配对" type="button">
                         设备配对
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3223,9 +3665,6 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · 效率 · v1.1.0
@@ -3316,9 +3755,6 @@
                       <button class="market-card__name" title="宠物皮肤包" type="button">
                         宠物皮肤包
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · 外观 · v0.2.0
@@ -3402,7 +3838,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
@@ -3547,7 +3983,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id9_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id10_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -3610,16 +4046,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS 订阅" type="button">
                         RSS 订阅
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3651,8 +4087,8 @@
                       <button class="market-card__name" title="天气" type="button">
                         天气
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3688,8 +4124,8 @@
                       <button class="market-card__name" title="网页摘要" type="button">
                         网页摘要
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3721,8 +4157,8 @@
                       <button class="market-card__name" title="设备配对" type="button">
                         设备配对
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -3754,9 +4190,6 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · 效率 · v1.1.0
@@ -3847,9 +4280,6 @@
                       <button class="market-card__name" title="宠物皮肤包" type="button">
                         宠物皮肤包
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · 外观 · v0.2.0
@@ -3933,7 +4363,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
@@ -4078,521 +4508,6 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id10_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
-                    <span>
-                      推荐
-                    </span>
-                    <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <section class="market-section" data-market-section="updates">
-            <h3 class="plugin-page__heading">
-              可更新 (2)
-            </h3>
-            <div class="plugin-card market-updates">
-              <div class="market-update" data-market-update="@fuyu/github-notify">
-                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
-                  G
-                </span>
-                <div class="market-update__text">
-                  <button class="market-card__name" type="button">
-                    GitHub 通知
-                  </button>
-                  <span>
-                    v2.0.1 → v2.1.0
-                    ·
-                    <span class="market-card__warn">
-                      紧急修复
-                    </span>
-                  </span>
-                </div>
-                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
-                  查看并更新
-                </button>
-              </div>
-              <div class="market-update" data-market-update="@lin-dev/pomo-stats">
-                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
-                  专
-                </span>
-                <div class="market-update__text">
-                  <button class="market-card__name" type="button">
-                    专注统计
-                  </button>
-                  <span>
-                    v0.4.2 → v0.5.0
-                  </span>
-                </div>
-                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
-                  查看并更新
-                </button>
-              </div>
-            </div>
-          </section>
-          <section class="market-section" data-market-section="all">
-            <h3 class="plugin-page__heading">
-              全部
-              <span class="plugin-page__heading-meta">
-                10 个
-              </span>
-            </h3>
-            <div class="market-grid">
-              <article class="market-card" data-market-plugin="@fuyu/rss">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="RSS 订阅" type="button">
-                        RSS 订阅
-                      </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      资讯 · v1.5.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  订阅博客和新闻，有新文章时在收起条上滚动标题，点一下打开
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      安装
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/weather">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    天
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="天气" type="button">
-                        天气
-                      </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      资讯 · v1.2.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  收起条上显示当前天气，下雨前半小时提醒你带伞
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <span class="market-card__installed">
-                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                      已安装
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
-                      管理
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/page-summary">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    网
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="网页摘要" type="button">
-                        网页摘要
-                      </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      AI · v0.9.3
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  复制一个链接，岛上给出三句话的摘要，可以存进笔记
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      安装
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@fuyu/devices">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    设
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="设备配对" type="button">
-                        设备配对
-                      </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      工具 · v1.0.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  让两台装了浮屿的电脑互相认出来，给同步类插件用
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    不联网
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      安装
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@ryo/clip-sync">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    剪
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="剪贴板跨设备" type="button">
-                        剪贴板跨设备
-                      </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      ryo · 效率 · v1.1.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  在两台电脑之间同步剪贴板，端到端加密
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      安装
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@tara/linear">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    L
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="Linear 任务" type="button">
-                        Linear 任务
-                      </button>
-                    </div>
-                    <span class="market-card__sub">
-                      tara · 开发 · v0.6.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  把分给你的 Linear 任务同步进待办，状态变了在岛上提醒
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    联网
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      安装
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@nori/focus-sounds">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    白
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="白噪音" type="button">
-                        白噪音
-                      </button>
-                    </div>
-                    <span class="market-card__sub">
-                      nori · 效率 · v1.3.2
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  雨声、咖啡馆、篝火，专注时在岛上点一下就放
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    不联网
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      安装
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@moe/pet-skins">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    宠
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="宠物皮肤包" type="button">
-                        宠物皮肤包
-                      </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
-                    </div>
-                    <span class="market-card__sub">
-                      moe · 外观 · v0.2.0
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  给收起条中间的小宠物换 12 套新造型
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts">
-                    不联网
-                  </span>
-                  <span class="market-card__action">
-                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
-                      安装
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@kai/vscode-status">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    V
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="VS Code 状态" type="button">
-                        VS Code 状态
-                      </button>
-                    </div>
-                    <span class="market-card__sub">
-                      kai · 开发
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  在岛上显示 VS Code 里正在调试、正在跑测试的状态
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts"></span>
-                  <span class="market-card__action">
-                    <span class="market-card__blocked">
-                      需要浮屿 &gt;=0.40.0
-                    </span>
-                    <button class="plugin-btn plugin-btn--sm" data-action="market-go-update" type="button">
-                      去更新
-                    </button>
-                  </span>
-                </div>
-              </article>
-              <article class="market-card" data-market-plugin="@mio/focus-sync">
-                <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    专
-                  </span>
-                  <div class="market-card__title">
-                    <div class="market-card__line">
-                      <button class="market-card__name" title="专注模式同步" type="button">
-                        专注模式同步
-                      </button>
-                    </div>
-                    <span class="market-card__sub">
-                      mio · 效率
-                    </span>
-                  </div>
-                </div>
-                <p class="market-card__desc">
-                  系统专注模式打开时，岛上自动免打扰
-                </p>
-                <div class="market-card__foot">
-                  <span class="market-card__facts"></span>
-                  <span class="market-card__action">
-                    <span class="market-card__blocked">
-                      不支持当前系统
-                    </span>
-                  </span>
-                </div>
-              </article>
-            </div>
-          </section>
-          <p class="plugin-foot market-trust">
-            <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
-          </p>
-          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
-          <span hidden=""></span>
-        </div>
-      </div>
-      <div class="plugin-dialog__backdrop">
-        <div aria-label="更新「GitHub 通知」到 v2.1.0？" aria-modal="true" class="plugin-dialog market-dialog market-dialog--small" data-install-kind="update" data-install-modal="@fuyu/github-notify" role="dialog">
-          <div class="plugin-dialog__head">
-            <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
-              G
-            </span>
-            <div class="plugin-dialog__heading">
-              <span class="plugin-dialog__title market-dialog__title">
-                更新「GitHub 通知」到 v2.1.0？
-              </span>
-              <span class="plugin-dialog__sub">
-                浮屿团队 · 官方 · @fuyu/github-notify
-              </span>
-            </div>
-            <div class="plugin-dialog__head-actions">
-              <button aria-label="关闭" class="plugin-icon-btn" title="关闭" type="button">
-                <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-              </button>
-            </div>
-          </div>
-          <div class="plugin-dialog__body">
-            <p class="plugin-dialog__desc">
-              有人提到你、请你审查或 CI 失败时，在岛上弹一条提醒
-            </p>
-            <p class="plugin-foot" data-install-note="true">
-              插件能做浮屿能做的事，比如读写文件、联网、运行程序，浮屿不会替你拦。只装你信任的插件。
-            </p>
-          </div>
-          <div class="plugin-dialog__foot">
-            <span class="plugin-dialog__grow"></span>
-            <button class="plugin-btn" data-autofocus="true" type="button">
-              暂不更新
-            </button>
-            <button class="plugin-btn plugin-btn--primary" data-action="confirm-install" type="button">
-              更新
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-    <section class="gallery__stage settings-stage settings-stage--light" data-stage="trust">
-      <h2 class="gallery__title">
-        更新确认（换了签名密钥）
-      </h2>
-      <div>
-        <div class="plugin-page market-page" data-market-page="true">
-          <div class="plugin-page__summary market-meta">
-            <b>
-              共 12 个插件
-            </b>
-            <span>
-              索引更新于 11/18 20:14
-            </span>
-            <button class="plugin-link" data-action="market-installed" type="button">
-              已装 3 个 ›
-            </button>
-          </div>
-          <div class="market-toolbar">
-            <div class="market-toolbar__search">
-              <label class="plugin-search">
-                <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-                <input aria-label="搜索插件，比如 天气、GitHub、番茄钟" placeholder="搜索插件，比如 天气、GitHub、番茄钟" type="search" value="">
-              </label>
-            </div>
-            <div class="market-toolbar__row">
-              <div aria-label="分类" class="market-toolbar__cats" role="group">
-                <button aria-pressed="true" class="plugin-chip" data-market-category="all" type="button">
-                  全部
-                  <span class="plugin-chip__count">
-                    12
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="productivity" type="button">
-                  效率
-                  <span class="plugin-chip__count">
-                    5
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="developer" type="button">
-                  开发
-                  <span class="plugin-chip__count">
-                    3
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="information" type="button">
-                  资讯
-                  <span class="plugin-chip__count">
-                    2
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="todos" type="button">
-                  待办
-                  <span class="plugin-chip__count">
-                    2
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="ai" type="button">
-                  AI
-                  <span class="plugin-chip__count">
-                    1
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="media" type="button">
-                  媒体
-                  <span class="plugin-chip__count">
-                    1
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="appearance" type="button">
-                  外观
-                  <span class="plugin-chip__count">
-                    1
-                  </span>
-                </button>
-                <button aria-pressed="false" class="plugin-chip" data-market-category="utilities" type="button">
-                  工具
-                  <span class="plugin-chip__count">
-                    1
-                  </span>
-                </button>
-              </div>
-              <div class="settings-select">
-                <div class="select-control">
                   <button aria-controls="_id11_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
@@ -4656,16 +4571,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS 订阅" type="button">
                         RSS 订阅
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -4697,8 +4612,8 @@
                       <button class="market-card__name" title="天气" type="button">
                         天气
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -4734,8 +4649,8 @@
                       <button class="market-card__name" title="网页摘要" type="button">
                         网页摘要
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -4767,8 +4682,8 @@
                       <button class="market-card__name" title="设备配对" type="button">
                         设备配对
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -4800,9 +4715,6 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · 效率 · v1.1.0
@@ -4893,9 +4805,6 @@
                       <button class="market-card__name" title="宠物皮肤包" type="button">
                         宠物皮肤包
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · 外观 · v0.2.0
@@ -4979,24 +4888,24 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
         </div>
       </div>
       <div class="plugin-dialog__backdrop">
-        <div aria-label="更新「专注统计」到 v0.5.0？" aria-modal="true" class="plugin-dialog market-dialog market-dialog--small" data-install-kind="update" data-install-modal="@lin-dev/pomo-stats" role="dialog">
+        <div aria-label="更新「GitHub 通知」到 v2.1.0？" aria-modal="true" class="plugin-dialog market-dialog market-dialog--small" data-install-kind="update" data-install-modal="@fuyu/github-notify" role="dialog">
           <div class="plugin-dialog__head">
             <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
-              专
+              G
             </span>
             <div class="plugin-dialog__heading">
               <span class="plugin-dialog__title market-dialog__title">
-                更新「专注统计」到 v0.5.0？
+                更新「GitHub 通知」到 v2.1.0？
               </span>
               <span class="plugin-dialog__sub">
-                lin-dev · @lin-dev/pomo-stats
+                浮屿团队 · 官方 · @fuyu/github-notify
               </span>
             </div>
             <div class="plugin-dialog__head-actions">
@@ -5007,18 +4916,8 @@
           </div>
           <div class="plugin-dialog__body">
             <p class="plugin-dialog__desc">
-              统计每天的番茄钟和专注时长，周日给你一份小结
+              有人提到你、请你审查或 CI 失败时，在岛上弹一条提醒
             </p>
-            <div class="plugin-callout plugin-callout--warn" data-callout="key" data-trust-change="unendorsed-key">
-              <svg aria-hidden="true" class="lucide lucide-key-round" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
-              <div>
-                <b>
-                  作者换了签名密钥
-                </b>
-                <br>
-                新版本用的签名和你装的版本不一样。如果不确定是不是作者本人，可以先不更新，旧版本照常运行。
-              </div>
-            </div>
             <p class="plugin-foot" data-install-note="true">
               插件能做浮屿能做的事，比如读写文件、联网、运行程序，浮屿不会替你拦。只装你信任的插件。
             </p>
@@ -5029,15 +4928,15 @@
               暂不更新
             </button>
             <button class="plugin-btn plugin-btn--primary" data-action="confirm-install" type="button">
-              确认是作者本人，更新
+              更新
             </button>
           </div>
         </div>
       </div>
     </section>
-    <section class="gallery__stage settings-stage settings-stage--light" data-stage="file">
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="trust">
       <h2 class="gallery__title">
-        从 .fuyu 文件安装
+        更新确认（换了签名密钥）
       </h2>
       <div>
         <div class="plugin-page market-page" data-market-page="true">
@@ -5181,16 +5080,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS 订阅" type="button">
                         RSS 订阅
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5222,8 +5121,8 @@
                       <button class="market-card__name" title="天气" type="button">
                         天气
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5259,8 +5158,8 @@
                       <button class="market-card__name" title="网页摘要" type="button">
                         网页摘要
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5292,8 +5191,8 @@
                       <button class="market-card__name" title="设备配对" type="button">
                         设备配对
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5325,9 +5224,6 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · 效率 · v1.1.0
@@ -5418,9 +5314,6 @@
                       <button class="market-card__name" title="宠物皮肤包" type="button">
                         宠物皮肤包
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · 外观 · v0.2.0
@@ -5504,7 +5397,526 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+          <span hidden=""></span>
+        </div>
+      </div>
+      <div class="plugin-dialog__backdrop">
+        <div aria-label="更新「专注统计」到 v0.5.0？" aria-modal="true" class="plugin-dialog market-dialog market-dialog--small" data-install-kind="update" data-install-modal="@lin-dev/pomo-stats" role="dialog">
+          <div class="plugin-dialog__head">
+            <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
+              专
+            </span>
+            <div class="plugin-dialog__heading">
+              <span class="plugin-dialog__title market-dialog__title">
+                更新「专注统计」到 v0.5.0？
+              </span>
+              <span class="plugin-dialog__sub">
+                lin-dev · @lin-dev/pomo-stats
+              </span>
+            </div>
+            <div class="plugin-dialog__head-actions">
+              <button aria-label="关闭" class="plugin-icon-btn" title="关闭" type="button">
+                <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-dialog__body">
+            <p class="plugin-dialog__desc">
+              统计每天的番茄钟和专注时长，周日给你一份小结
+            </p>
+            <div class="plugin-callout plugin-callout--warn" data-callout="key" data-trust-change="unendorsed-key">
+              <svg aria-hidden="true" class="lucide lucide-key-round" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+              <div>
+                <b>
+                  作者换了签名密钥
+                </b>
+                <br>
+                新版本用的签名和你装的版本不一样。如果不确定是不是作者本人，可以先不更新，旧版本照常运行。
+              </div>
+            </div>
+            <p class="plugin-foot" data-install-note="true">
+              插件能做浮屿能做的事，比如读写文件、联网、运行程序，浮屿不会替你拦。只装你信任的插件。
+            </p>
+          </div>
+          <div class="plugin-dialog__foot">
+            <span class="plugin-dialog__grow"></span>
+            <button class="plugin-btn" data-autofocus="true" type="button">
+              暂不更新
+            </button>
+            <button class="plugin-btn plugin-btn--primary" data-action="confirm-install" type="button">
+              确认是作者本人，更新
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="file">
+      <h2 class="gallery__title">
+        从 .fuyu 文件安装
+      </h2>
+      <div>
+        <div class="plugin-page market-page" data-market-page="true">
+          <div class="plugin-page__summary market-meta">
+            <b>
+              共 12 个插件
+            </b>
+            <span>
+              索引更新于 11/18 20:14
+            </span>
+            <button class="plugin-link" data-action="market-installed" type="button">
+              已装 3 个 ›
+            </button>
+          </div>
+          <div class="market-toolbar">
+            <div class="market-toolbar__search">
+              <label class="plugin-search">
+                <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                <input aria-label="搜索插件，比如 天气、GitHub、番茄钟" placeholder="搜索插件，比如 天气、GitHub、番茄钟" type="search" value="">
+              </label>
+            </div>
+            <div class="market-toolbar__row">
+              <div aria-label="分类" class="market-toolbar__cats" role="group">
+                <button aria-pressed="true" class="plugin-chip" data-market-category="all" type="button">
+                  全部
+                  <span class="plugin-chip__count">
+                    12
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="productivity" type="button">
+                  效率
+                  <span class="plugin-chip__count">
+                    5
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="developer" type="button">
+                  开发
+                  <span class="plugin-chip__count">
+                    3
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="information" type="button">
+                  资讯
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="todos" type="button">
+                  待办
+                  <span class="plugin-chip__count">
+                    2
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="ai" type="button">
+                  AI
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="media" type="button">
+                  媒体
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="appearance" type="button">
+                  外观
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+                <button aria-pressed="false" class="plugin-chip" data-market-category="utilities" type="button">
+                  工具
+                  <span class="plugin-chip__count">
+                    1
+                  </span>
+                </button>
+              </div>
+              <div class="settings-select">
+                <div class="select-control">
+                  <button aria-controls="_id13_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                    <span>
+                      推荐
+                    </span>
+                    <svg aria-hidden="true" class="lucide lucide-chevron-down select-control__chevron" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <section class="market-section" data-market-section="updates">
+            <h3 class="plugin-page__heading">
+              可更新 (2)
+            </h3>
+            <div class="plugin-card market-updates">
+              <div class="market-update" data-market-update="@fuyu/github-notify">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  G
+                </span>
+                <div class="market-update__text">
+                  <button class="market-card__name" type="button">
+                    GitHub 通知
+                  </button>
+                  <span>
+                    v2.0.1 → v2.1.0
+                    ·
+                    <span class="market-card__warn">
+                      紧急修复
+                    </span>
+                  </span>
+                </div>
+                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
+                  查看并更新
+                </button>
+              </div>
+              <div class="market-update" data-market-update="@lin-dev/pomo-stats">
+                <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                  专
+                </span>
+                <div class="market-update__text">
+                  <button class="market-card__name" type="button">
+                    专注统计
+                  </button>
+                  <span>
+                    v0.4.2 → v0.5.0
+                  </span>
+                </div>
+                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-update" type="button">
+                  查看并更新
+                </button>
+              </div>
+            </div>
+          </section>
+          <section class="market-section" data-market-section="all">
+            <h3 class="plugin-page__heading">
+              全部
+              <span class="plugin-page__heading-meta">
+                10 个
+              </span>
+            </h3>
+            <div class="market-grid">
+              <article class="market-card" data-market-plugin="@fuyu/rss">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="RSS 订阅" type="button">
+                        RSS 订阅
+                      </button>
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      资讯 · v1.5.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  订阅博客和新闻，有新文章时在收起条上滚动标题，点一下打开
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/weather">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    天
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="天气" type="button">
+                        天气
+                      </button>
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      资讯 · v1.2.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  收起条上显示当前天气，下雨前半小时提醒你带伞
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    联网
+                  </span>
+                  <span class="market-card__action">
+                    <span class="market-card__installed">
+                      <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                      已安装
+                    </span>
+                    <button class="plugin-btn plugin-btn--sm" data-action="market-manage" type="button">
+                      管理
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/page-summary">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    网
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="网页摘要" type="button">
+                        网页摘要
+                      </button>
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      AI · v0.9.3
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  复制一个链接，岛上给出三句话的摘要，可以存进笔记
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@fuyu/devices">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    设
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="设备配对" type="button">
+                        设备配对
+                      </button>
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
+                      </span>
+                    </div>
+                    <span class="market-card__sub">
+                      工具 · v1.0.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  让两台装了浮屿的电脑互相认出来，给同步类插件用
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    不联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@ryo/clip-sync">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    剪
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="剪贴板跨设备" type="button">
+                        剪贴板跨设备
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      ryo · 效率 · v1.1.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  在两台电脑之间同步剪贴板，端到端加密
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@tara/linear">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    L
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="Linear 任务" type="button">
+                        Linear 任务
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      tara · 开发 · v0.6.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  把分给你的 Linear 任务同步进待办，状态变了在岛上提醒
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@nori/focus-sounds">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    白
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="白噪音" type="button">
+                        白噪音
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      nori · 效率 · v1.3.2
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  雨声、咖啡馆、篝火，专注时在岛上点一下就放
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    不联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@moe/pet-skins">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    宠
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="宠物皮肤包" type="button">
+                        宠物皮肤包
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      moe · 外观 · v0.2.0
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  给收起条中间的小宠物换 12 套新造型
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts">
+                    不联网
+                  </span>
+                  <span class="market-card__action">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="market-install" type="button">
+                      安装
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@kai/vscode-status">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    V
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="VS Code 状态" type="button">
+                        VS Code 状态
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      kai · 开发
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  在岛上显示 VS Code 里正在调试、正在跑测试的状态
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts"></span>
+                  <span class="market-card__action">
+                    <span class="market-card__blocked">
+                      需要浮屿 &gt;=0.40.0
+                    </span>
+                    <button class="plugin-btn plugin-btn--sm" data-action="market-go-update" type="button">
+                      去更新
+                    </button>
+                  </span>
+                </div>
+              </article>
+              <article class="market-card" data-market-plugin="@mio/focus-sync">
+                <div class="market-card__head">
+                  <span aria-hidden="true" class="plugin-icon">
+                    专
+                  </span>
+                  <div class="market-card__title">
+                    <div class="market-card__line">
+                      <button class="market-card__name" title="专注模式同步" type="button">
+                        专注模式同步
+                      </button>
+                    </div>
+                    <span class="market-card__sub">
+                      mio · 效率
+                    </span>
+                  </div>
+                </div>
+                <p class="market-card__desc">
+                  系统专注模式打开时，岛上自动免打扰
+                </p>
+                <div class="market-card__foot">
+                  <span class="market-card__facts"></span>
+                  <span class="market-card__action">
+                    <span class="market-card__blocked">
+                      不支持当前系统
+                    </span>
+                  </span>
+                </div>
+              </article>
+            </div>
+          </section>
+          <p class="plugin-foot market-trust">
+            <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
           <span hidden=""></span>
@@ -5612,7 +6024,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id13_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" disabled="" role="combobox" type="button">
+                  <button aria-controls="_id14_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" disabled="" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -5794,7 +6206,7 @@
               </div>
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id14_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id15_" aria-expanded="false" aria-haspopup="listbox" aria-label="排序" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       推荐
                     </span>
@@ -5857,16 +6269,16 @@
             <div class="market-grid">
               <article class="market-card" data-market-plugin="@fuyu/rss">
                 <div class="market-card__head">
-                  <span aria-hidden="true" class="plugin-icon">
-                    R
+                  <span aria-hidden="true" class="plugin-icon plugin-icon--img">
+                    <img alt="" class="plugin-icon__img" draggable="false" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%2210%22%20fill%3D%22%23f59e0b%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2226%22%20r%3D%223%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M11%2018a11%2011%200%200%201%2011%2011M11%2011a18%2018%200%200%201%2018%2018%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
                   </span>
                   <div class="market-card__title">
                     <div class="market-card__line">
                       <button class="market-card__name" title="RSS 订阅" type="button">
                         RSS 订阅
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5898,8 +6310,8 @@
                       <button class="market-card__name" title="天气" type="button">
                         天气
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5935,8 +6347,8 @@
                       <button class="market-card__name" title="网页摘要" type="button">
                         网页摘要
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -5968,8 +6380,8 @@
                       <button class="market-card__name" title="设备配对" type="button">
                         设备配对
                       </button>
-                      <span class="plugin-badge plugin-badge--official">
-                        官方
+                      <span aria-label="浮屿团队发布" class="plugin-verified" data-official="true" role="img" title="浮屿团队发布">
+                        <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2" viewBox="0 0 24 24" width="10" xmlns="http://www.w3.org/2000/svg"></svg>
                       </span>
                     </div>
                     <span class="market-card__sub">
@@ -6001,9 +6413,6 @@
                       <button class="market-card__name" title="剪贴板跨设备" type="button">
                         剪贴板跨设备
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       ryo · 效率 · v1.1.0
@@ -6094,9 +6503,6 @@
                       <button class="market-card__name" title="宠物皮肤包" type="button">
                         宠物皮肤包
                       </button>
-                      <span class="plugin-badge" title="上架不到 3 天，浮屿平时等 3 天再自动推送">
-                        刚上架
-                      </span>
                     </div>
                     <span class="market-card__sub">
                       moe · 外观 · v0.2.0
@@ -6180,7 +6586,7 @@
           </section>
           <p class="plugin-foot market-trust">
             <svg aria-hidden="true" class="lucide lucide-shield-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
-            市场里的插件都经过签名校验；官方插件由浮屿团队发布。
+            市场里的插件都经过签名校验；名字旁带对勾的是浮屿团队发布的官方插件。
           </p>
           <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
         </div>

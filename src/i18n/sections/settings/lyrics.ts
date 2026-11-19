@@ -146,7 +146,7 @@ export const zhCN: SettingsLyricsText = {
     follow: "长句跟着滚动",
     followHint: "一句比岛宽时，唱到右边缘附近整句往左移，正在唱的字一直看得见。关掉则在末尾用省略号截断。",
     coverColor: "跟随封面颜色",
-    coverColorHint: "从当前歌曲的封面取主色，给收起岛的波形、卡拉 OK 高亮和音乐页的光晕上色，换歌时渐变。颜色会调到在深色、浅色岛上都看得清；没有封面时用强调色。",
+    coverColorHint: "从当前歌曲的封面取主色，给收起岛的波形、卡拉 OK 高亮和音乐页的光晕上色，换歌时渐变。颜色会调到在深色、浅色岛上都看得清；没有封面时用强调色。高亮颜色选了「自定义」时，歌词高亮用你选的颜色，封面色只管波形和光晕。",
   },
 };
 
@@ -222,6 +222,6 @@ export const en: SettingsLyricsText = {
     follow: "Scroll long lines",
     followHint: "A line wider than the island slides left as the singing nears the edge, so the word being sung stays in view. Off, it ends in an ellipsis.",
     coverColor: "Match album art",
-    coverColorHint: "Takes the main colour of the current cover for the collapsed island's waveform, the karaoke highlight and the glow on the music page, fading between songs. It is adjusted to stay readable on dark and light islands; without a cover the accent colour is used.",
+    coverColorHint: "Takes the main colour of the current cover for the collapsed island's waveform, the karaoke highlight and the glow on the music page, fading between songs. It is adjusted to stay readable on dark and light islands; without a cover the accent colour is used. When the highlight colour is set to Custom, the lyrics use your colour and the cover colour only tints the waveform and the glow.",
   },
 };

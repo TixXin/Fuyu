@@ -1,7 +1,7 @@
 import { Info, KeyRound, LoaderCircle, ShieldCheck, TriangleAlert, X } from "lucide-react";
 import type { PluginInstallConfirmation } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
-import { pluginInitial } from "./InstalledPluginRow";
+import { pluginInitial } from "./pluginIconSources";
 import { PluginMarketDialog } from "./PluginMarketDialog";
 import { localized } from "./pluginMarketModel";
 import "./PluginPage.css";

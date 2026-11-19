@@ -8,7 +8,12 @@ const FOCUS_SECTIONS: readonly SettingsFocusSection[] = ["savePath", "translatio
 
 export const FOCUS_REQUEST_MAX_AGE_MS = 10_000;
 
-export function takeFocusRequest(): SettingsFocusSection | null {
+export interface SettingsFocusRequest {
+  section: SettingsFocusSection;
+  plugin: string | null;
+}
+
+export function takeFocusRequest(): SettingsFocusRequest | null {
   const stored = window.localStorage.getItem(SETTINGS_FOCUS_STORAGE_KEY);
 
   if (stored === null) {
@@ -21,23 +26,24 @@ export function takeFocusRequest(): SettingsFocusSection | null {
     const request = JSON.parse(stored) as {
       section?: unknown;
       requestedAt?: unknown;
+      plugin?: unknown;
     };
 
     const section = FOCUS_SECTIONS.find((known) => known === request.section);
-    return section !== undefined &&
-      typeof request.requestedAt === "number" &&
-      Date.now() - request.requestedAt < FOCUS_REQUEST_MAX_AGE_MS
-      ? section
-      : null;
+    if (section === undefined || typeof request.requestedAt !== "number" || Date.now() - request.requestedAt >= FOCUS_REQUEST_MAX_AGE_MS) {
+      return null;
+    }
+    const plugin = section === "pluginsV3" && typeof request.plugin === "string" && request.plugin !== "" ? request.plugin : null;
+    return { section, plugin };
   } catch {
     return null;
   }
 }
 
-export function requestSettingsFocus(section: SettingsFocusSection) {
+export function requestSettingsFocus(section: SettingsFocusSection, plugin?: string) {
   window.localStorage.setItem(
     SETTINGS_FOCUS_STORAGE_KEY,
-    JSON.stringify({ section, requestedAt: Date.now() }),
+    JSON.stringify(plugin ? { section, requestedAt: Date.now(), plugin } : { section, requestedAt: Date.now() }),
   );
 }
 

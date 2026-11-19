@@ -28,6 +28,7 @@ function KaraokePreview({ settings, line }: { settings: IslandSettings; line: st
   const look = karaokeLook(settings, settings.taskTextColor);
   const style = {
     "--task-text-color": settings.taskTextColor,
+    ...(settings.lyricsCoverColor ? { "--cover-accent": "var(--color-accent)" } : {}),
     background: settings.islandBackgroundColor,
     color: settings.lyricsCoverColor ? "var(--color-accent)" : settings.taskTextColor,
   } as CSSProperties;

@@ -15,9 +15,71 @@
   justify-content: space-between;
   gap: 8px;
   padding: 8px 10px;
+  border: 1px solid var(--fuyu-plugin-warning, light-dark(#b7791f, #f6c453));
+  border-radius: var(--fuyu-plugin-radius);
+  background: color-mix(in srgb, var(--fuyu-plugin-warning, light-dark(#b7791f, #f6c453)) 14%, var(--fuyu-plugin-surface));
+}
+
+.fuyu-alarm__ring-info strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-alarm__snoozed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-alarm__summary {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--fuyu-plugin-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fuyu-alarm__summary:hover {
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-alarm__options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.fuyu-alarm__editor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
   border: 1px solid var(--fuyu-plugin-accent);
   border-radius: var(--fuyu-plugin-radius);
-  background: color-mix(in srgb, var(--fuyu-plugin-accent) 16%, var(--fuyu-plugin-surface));
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-alarm__editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fuyu-alarm__spacer {
+  flex: 1;
 }
 
 .fuyu-alarm__ring-info {
@@ -60,11 +122,12 @@
 
 .fuyu-alarm__input {
   flex: 1;
-  min-width: 90px;
+  min-width: 70px;
 }
 
 .fuyu-alarm__days {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
 }
 
@@ -112,6 +175,16 @@
   color: var(--fuyu-plugin-text);
 }
 
+.fuyu-alarm__mini--danger:hover {
+  border-color: var(--fuyu-plugin-danger, light-dark(#c0392b, #ff8a80));
+  color: var(--fuyu-plugin-danger, light-dark(#c0392b, #ff8a80));
+}
+
+.fuyu-alarm__button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
 .fuyu-alarm__list {
   display: flex;
   flex-direction: column;
@@ -137,9 +210,24 @@
 
 .fuyu-alarm__row-main {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  align-items: flex-start;
   gap: 2px;
   min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fuyu-alarm__switch {
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--fuyu-plugin-accent);
 }
 
 .fuyu-alarm__row-time {
@@ -149,6 +237,7 @@
 }
 
 .fuyu-alarm__row-meta {
+  max-width: 100%;
   font-size: 12px;
   color: var(--fuyu-plugin-text-secondary);
   overflow: hidden;
@@ -156,32 +245,9 @@
   white-space: nowrap;
 }
 
-.fuyu-alarm__row-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
 
-.fuyu-alarm__settings-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
 
-.fuyu-alarm__section-title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-}
 
-.fuyu-alarm__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-}
 
 .fuyu-alarm__note {
   margin: 0;
@@ -202,4 +268,8 @@
 .fuyu-alarm-chip__time {
   font-variant-numeric: tabular-nums;
   color: var(--fuyu-plugin-text);
+}
+
+.fuyu-alarm-chip--ringing {
+  color: var(--fuyu-plugin-warning, light-dark(#b7791f, #f6c453));
 }

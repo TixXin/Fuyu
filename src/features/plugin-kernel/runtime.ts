@@ -9,6 +9,7 @@ import { isMacOS } from "../../lib/platform";
 import { islandNoticesV1 } from "../../lib/island-notices/service";
 import { getPluginHostConnection } from "./api";
 import { updatePluginNames, type PluginNameInput } from "./pluginNames.ts";
+import { openPluginSettings } from "./settingsOpener.ts";
 import { windowServices } from "./services.ts";
 import { windowSlots, type SlotWindow } from "./slots";
 import { createWaitingMonitor, type WaitingPluginInput } from "./waitingMonitor.ts";
@@ -31,6 +32,12 @@ async function target() {
   return connection.port !== null && connection.token !== null ? { port: connection.port, token: connection.token } : null;
 }
 
+function openFromHost(data: unknown) {
+  const plugin = (data as { plugin?: unknown } | null)?.plugin;
+  if (typeof plugin !== "string" || plugin === "") return;
+  void openPluginSettings(plugin).catch((error: unknown) => console.error(`Failed to open the settings of ${plugin}`, error));
+}
+
 async function start(window: SlotWindow): Promise<PluginRuntime | null> {
   const first = await getPluginHostConnection();
   if (!first.enabled) return null;
@@ -39,7 +46,7 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
   const registry = windowSlots(window);
   let connection: Connection | null = null;
   const bridge = createBridge((method, params) => connection?.call(method, params) ?? Promise.reject(new Error("the plugin host is not connected")));
-  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge });
+  const loader = createLoader({ registry, base: PLUGIN_BASE, bridge, openSettings: openPluginSettings });
   const services = createServiceProxy((method, params, options) => connection?.call(method, params, options) ?? Promise.reject(new HostCallError("peer-gone", "the plugin host is not connected")));
   windowServices.attach(services);
   const waitingMonitor = window === "island"
@@ -82,6 +89,7 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
       if (name === "plugin") bridge.deliver(data as PluginMessage);
       if (name === "service") services.deliver(data as ServiceEventMessage);
       if (name === "services") services.update(data as ServiceEntry[]);
+      if (name === "settings.open" && window === "island") openFromHost(data);
       if (name === "plugins" && Array.isArray(data)) {
         waitingMonitor?.update(data as WaitingPluginInput[]);
         updatePluginNames(data as PluginNameInput[]);

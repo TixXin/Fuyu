@@ -24,6 +24,7 @@ let bufferedPackage: OpenedPluginPackage | null = null;
 let inFlightPackage: Promise<PendingResult> | null = null;
 let nextPackageSeq = 0;
 let detailRequest: PluginDetailRequest | null = null;
+const detailListeners = new Set<() => void>();
 let marketRequest: MarketViewRequest | null = null;
 
 export function offerPluginPackage(fileName: string, base64: string): OpenedPluginPackage {
@@ -52,6 +53,12 @@ export function pullPendingPackage(formatError: (error: unknown) => string): Pro
 
 export function requestPluginDetail(id: string, tab: PluginDetailTab = "overview") {
   detailRequest = { id, tab };
+  for (const listener of detailListeners) listener();
+}
+
+export function onPluginDetailRequest(listener: () => void): () => void {
+  detailListeners.add(listener);
+  return () => detailListeners.delete(listener);
 }
 
 export function takePluginDetailRequest(): PluginDetailRequest | null {

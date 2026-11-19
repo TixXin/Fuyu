@@ -27,8 +27,9 @@
 
 ## 4. 名字和描述统一
 
-- `fuyu.displayName` 的中英文、岛页 `title`、设置分节的标题、README 的标题用同一个名字。
-- `fuyu.description` 一两句话，中文写这个插件让用户做什么，不罗列技术名词；英文和中文意思一致。`package.json` 顶层的 `description` 和英文描述相同。
+- `fuyu.displayName` 的中英文、岛页 `title`、设置分节的标题、README 的标题、市场和插件页上用同一个名字（统一后的名字见 [插件页预览](../investigations/plugin-pages-preview.html) 的「名字」表）。
+- `fuyu.description` 一句话说对用户有什么用，不写实现方式（不写「基于 Node 原生接口」「免 API Key」「在设置中配置 owner/repo」这类）；市场卡片上最多显示两行，要放得下。英文和中文意思一致，`package.json` 顶层的 `description` 和英文描述相同。示例见插件页预览「说明」一节。
+- 有界面的插件写 1 到 3 张截图进 `fuyu.screenshots`（`path` 指向包里的 png / jpg / webp，`caption` 中英文一句话）。以深色岛为主，第一张最能说明用处（市场卡片的缩略图用它），后面是收起条、提醒或设置；顺序参考插件页预览的「截图」一节。截图在真岛上截，不用 CSS 画的示意图。
 - README 按「怎么用 / 设置 / 开销和数据来源 / 用到的系统程序（有的话）」写，中英文各一份。
 
 ## 5. 接上平台

@@ -12,6 +12,7 @@ import {
 } from "../../../../packages/plugin-market/src/index.mjs";
 import { PACKAGES_SUBDIR } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
+import { firstPublishedAt, marketSince, packageIcon, pluginIcon } from "./marketListing.mjs";
 
 export const STATE_FILE = "market-state.json";
 export const INDEX_FILE = "index.v3.json";
@@ -119,6 +120,7 @@ export function readInstalledPackages(pluginsDir) {
           enabled: yml ? !yml.disabled : false,
           displayName: fuyu.displayName,
           description: fuyu.description,
+          icon: packageIcon(fuyu.icon),
           replaces: yml?.replaces?.length ? yml.replaces : Array.isArray(fuyu.replaces) ? fuyu.replaces : [],
           capabilities: capabilitiesOf(fuyu),
         });
@@ -351,6 +353,8 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
       displayName: isObject(manifest.displayName) ? manifest.displayName : { "zh-CN": plugin.name, en: plugin.name },
       description: isObject(manifest.description) ? manifest.description : { "zh-CN": "", en: "" },
       categories: Array.isArray(manifest.categories) ? [...manifest.categories] : [],
+      icon: pluginIcon(plugin, primaryEntry),
+      firstPublishedAt: firstPublishedAt(plugin),
       installedVersion: inst?.version ?? null,
       enabled: inst ? inst.enabled : false,
       source: inst?.source ?? null,
@@ -365,7 +369,7 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
         : null,
     };
   });
-  const installed = installedRaw.map(({ id, version, source, enabled, displayName, description }) => ({
+  const installed = installedRaw.map(({ id, version, source, enabled, displayName, description, icon }) => ({
     id,
     version,
     source,
@@ -373,10 +377,12 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
     revocation: revocationView(state.revocations, id, version),
     ...(displayName !== undefined ? { displayName } : {}),
     ...(description !== undefined ? { description } : {}),
+    ...(icon !== undefined ? { icon } : {}),
   }));
   return {
     plugins,
     installed,
+    marketSince: marketSince(doc),
     updatedAt: state.updatedAt,
     manualAllowed: state.manualAllowed === true,
     error: indexError ?? state.lastError ?? null,

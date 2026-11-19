@@ -1,4 +1,4 @@
-# 世界时钟 · World Clock
+# 世界时钟 · World clock
 
 `@fuyu/world-clock` · 浮屿官方插件 · Windows / macOS
 
@@ -53,15 +53,15 @@ See the local time in several cities at once, whether it is day or night there, 
 
 ### Where it shows up
 
-- **Island page**: a new "World Clock" page listing your cities and their local times.
-- **Collapsed bar**: the time in your starred (★) city; click it to open the World Clock page.
-- **Settings → Plugins → World Clock**: manage cities and every setting.
+- **Island page**: a new "World clock" page listing your cities and their local times.
+- **Collapsed bar**: the time in your starred (★) city; click it to open the World clock page.
+- **Settings → Plugins → World clock**: manage cities and every setting.
 
 ### How to use it
 
-1. Open World Clock in the settings and type a city (Chinese or English name, or its code) or a time zone such as `Europe/Berlin` in the search box, then click a result to add it.
+1. Open World clock in the settings and type a city (Chinese or English name, or its code) or a time zone such as `Europe/Berlin` in the search box, then click a result to add it.
 2. Drag the handle on the left to reorder; click the pencil to rename (leave it empty for the original name); click ★ to star a city; click ✕ to remove it.
-3. Expand the island and open the "World Clock" page: each city shows its local time and, depending on the settings, Tomorrow / Yesterday, the offset from your computer, and day or night. "Add city" at the bottom of the page also searches and adds; hover a row and click ✕ to remove it.
+3. Expand the island and open the "World clock" page: each city shows its local time and, depending on the settings, Tomorrow / Yesterday, the offset from your computer, and day or night. "Add city" at the bottom of the page also searches and adds; hover a row and click ✕ to remove it.
 
 ### Settings
 
@@ -72,7 +72,7 @@ See the local time in several cities at once, whether it is day or night there, 
 
 **Display**
 
-- **Show the World Clock page on the island**: on by default; when off the page is hidden and the collapsed bar keeps working.
+- **Show the World clock page on the island**: on by default; when off the page is hidden and the collapsed bar keeps working.
 - **Time format**: system (default), 24-hour, or 12-hour.
 - **Show seconds**: off by default; when on, the page updates every second.
 - **Date**: only Tomorrow / Yesterday (default), always (such as "Thu, Nov 20"), or hidden.

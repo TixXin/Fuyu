@@ -138,6 +138,11 @@ export interface HostOptions {
   fetchImpl?: (input: any, init?: any) => Promise<any>;
 }
 
+export interface SettingsOpener {
+  attachWindows(windows: { connected(): string[]; publish(name: string, data: unknown): void }): () => void;
+  open(plugin: string): Promise<void>;
+}
+
 export interface Host {
   ctx: Context;
   logs: LogEntry[];
@@ -152,6 +157,7 @@ export interface Host {
   rustListeners(): Record<string, number>;
   watchClients(onChange: (clients: ClientEntry[]) => void): () => void;
   serviceHub: ServiceHub;
+  settingsOpener: SettingsOpener;
   services(): ServiceEntry[];
   watchServices(onChange: (services: ServiceEntry[]) => void): () => void;
   settle(): Promise<unknown>;
@@ -159,6 +165,8 @@ export interface Host {
 }
 
 export function startHost(options: HostOptions): Promise<Host>;
+export const SETTINGS_OPEN_EVENT: "settings.open";
+export const SETTINGS_OPENER_WINDOW: "island";
 export function pluginStatus(ctx: Context, logs?: LogEntry[]): PluginStatus[];
 export const FAULT_LIMIT: FaultLimit;
 export const KINDS: readonly PluginKind[];

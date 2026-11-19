@@ -78,6 +78,17 @@ declare module "cordis" {
       reset<T extends Record<string, any> = Record<string, Json>>(): Promise<T>;
       onChange<T extends Record<string, any> = Record<string, Json>>(listener: (values: T) => void): () => Promise<void>;
     };
+    /**
+     * The plugin's own page in Fuyu's settings. `open()` opens the settings window (or brings it to the front) on
+     * this plugin's detail dialog, on its settings tab: the same place the gear on the plugin's row goes to. It
+     * takes no arguments, because a plugin opens only its own settings; Fuyu fills in the plugin id. Window code
+     * can call it in any window. Host code lists `settings` in `inject` and fails with `not-ready` while the island
+     * window is not connected. Use it for a "Go to settings" button in an empty state, or when a notification
+     * about a missing setting is clicked.
+     */
+    settings: {
+      open(): Promise<void>;
+    };
     http: {
       fetch: HttpFetch;
     };
@@ -125,6 +136,14 @@ declare module "cordis" {
        * has focus and Enter or Space is pressed; the host makes the whole item one focusable button. The id must
        * be one of this plugin's own `island.page/v1` pages: an id of another plugin's page or a built-in page is
        * ignored with a warning in the console. Clicks on the item's own buttons and links still go to them.
+       *
+       * An `island.collapsed/v1` item widens the collapsed island by the width it actually renders at, so
+       * readings that change need no `width`. `width` (pixels, or a function of the bar's context) is a floor,
+       * used until the item is measured. The island grows at once and shrinks only when the item is 32px
+       * narrower, so a reading that changes every second does not resize the window back and forth. The bar is
+       * at most 520px wide; past that the island's own text gives way first, then the item is faded out at its
+       * right edge. Do not stretch the item with `width: 100%` or `flex: 1`: it is measured at its max-content
+       * width.
        */
       add(name: SlotName, item: { id: string; order?: number; component: unknown; [meta: string]: unknown }): () => Promise<void>;
     };

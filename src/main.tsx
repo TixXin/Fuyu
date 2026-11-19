@@ -13,6 +13,8 @@ import { serviceFeaturesForWindow } from "./windowServicesMap";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
 import { trackIslandNotch } from "./windows/island/notch";
 import { trackAutoIslandForm } from "./windows/island/autoIslandForm";
+import { setPluginSettingsOpener } from "./features/plugin-kernel/settingsOpener";
+import { openPluginSettingsWindow } from "./windows/settings/api";
 
 blockBrowserDefaults({ mac: isMacOS, dev: import.meta.env.DEV });
 const serviceModules = import.meta.glob("./features/*/plugin/services.ts");
@@ -28,6 +30,7 @@ async function loadWindowServices(kind: string | null): Promise<void> {
 }
 
 const windowKind = new URLSearchParams(window.location.search).get("window");
+setPluginSettingsOpener(openPluginSettingsWindow);
 
 if (windowKind === null) {
   trackIslandTopEdge();
