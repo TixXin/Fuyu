@@ -54,6 +54,7 @@ mod workbuddy;
 mod antigravity;
 mod antigravity_focus;
 mod cursor_focus;
+mod claude_desktop_focus;
 mod workbuddy_focus;
 mod antigravity_remote;
 mod dsh;

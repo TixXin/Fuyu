@@ -11,7 +11,7 @@ use super::tmux;
 use super::wezterm;
 use super::window_focus::{self, app_name, SessionHints};
 use super::workbuddy_focus::{self, Missing};
-use super::{antigravity, antigravity_focus, cursor, cursor_focus, dsh, opencode, pi, trae, workbuddy};
+use super::{antigravity, antigravity_focus, claude_code, claude_desktop_focus, cursor, cursor_focus, dsh, opencode, pi, trae, workbuddy};
 use crate::system::windows_home_dir;
 use crate::platform;
 
@@ -206,6 +206,16 @@ fn open_cursor_session(has_terminal: bool, session_id: Option<&str>, log: &mut A
     sent
 }
 
+fn open_claude_desktop_session(session_id: Option<&str>, log: &mut Attempt) -> bool {
+    let home_dir = windows_home_dir().ok();
+    let Some(link) = session_id.zip(home_dir).and_then(|(id, home)| claude_desktop_focus::link_for(&home, id)) else {
+        return false;
+    };
+    let sent = workbuddy_focus::open_session(&link);
+    log.note(if sent { "app-link=sent" } else { "app-link=failed" });
+    sent
+}
+
 fn wake_workbuddy(hints: &SessionHints, prefer_apps: &[String], link_sent: bool, log: &mut Attempt) -> Option<window_focus::FocusedWindow> {
     let mut sent = false;
     let found = workbuddy_focus::wake_and_find(
@@ -266,7 +276,8 @@ pub(super) fn focus_session(
     let (folder, ancestors) = cwd.map(folder_names).unwrap_or_default();
     let hints = SessionHints { folder: folder.as_deref(), ancestors: &ancestors, title, is_codex };
     let is_workbuddy = provider == workbuddy::PROVIDER;
-    let app_link_sent = is_workbuddy && open_workbuddy_session(session_id, &mut log);
+    let app_link_sent = (is_workbuddy && open_workbuddy_session(session_id, &mut log))
+        || (provider == claude_code::PROVIDER && open_claude_desktop_session(session_id, &mut log));
     let mut steps = FocusSteps { has_chain: !chain.is_empty(), app_link_sent, ..FocusSteps::default() };
     let focused = window_focus::focus_session_window(&hints, &chain, &prefer_apps).or_else(|| {
         steps.wezterm_selected = wezterm::activate_pane(None, tty.as_deref(), title);
