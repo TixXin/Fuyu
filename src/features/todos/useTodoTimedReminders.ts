@@ -50,19 +50,27 @@ export function timedTodoReminderKey(date: string, todoId: string, timeKey: stri
   return `${TIMED_TODO_REMINDER_SOURCE}:${date}:${todoId}:${timeKey}`;
 }
 
+export type TimedReminderLead = {
+  leadMinutes?: number;
+  aheadText?: (minutes: number) => string;
+};
+
 export function collectDueTimedTodoReminders({
   date,
   todos,
   nowMs,
   bootedAtMs,
   seen,
+  leadMinutes = 0,
+  aheadText,
 }: {
   date: string;
   todos: readonly Pick<TodoItem, "id" | "title" | "completed">[];
   nowMs: number;
   bootedAtMs: number;
   seen: Set<string>;
-}): Reminder[] {
+} & TimedReminderLead): Reminder[] {
+  const leadMs = Math.max(0, leadMinutes) * 60_000;
   const due: Reminder[] = [];
   for (const todo of todos) {
     if (todo.completed) continue;
@@ -76,13 +84,15 @@ export function collectDueTimedTodoReminders({
       seen.add(key);
       continue;
     }
-    if (nowMs >= scheduledMs && nowMs < scheduledMs + TIMED_REMINDER_WINDOW_MS) {
+    if (nowMs >= scheduledMs - leadMs && nowMs < scheduledMs + TIMED_REMINDER_WINDOW_MS) {
       seen.add(key);
+      const minutesAhead = Math.ceil((scheduledMs - nowMs) / 60_000);
       due.push({
         id: key,
         source: TIMED_TODO_REMINDER_SOURCE,
         icon: "bell",
         title: todo.title,
+        ...(minutesAhead > 0 && aheadText ? { detail: aheadText(minutesAhead) } : {}),
         snoozable: true,
       });
     }
@@ -97,6 +107,8 @@ export function dispatchTimedTodoReminders({
   nowMs = Date.now(),
   bootedAtMs,
   seen = remindedTimedTodos,
+  leadMinutes,
+  aheadText,
 }: {
   services?: Pick<WindowServices, "get" | "has">;
   date: string;
@@ -104,9 +116,9 @@ export function dispatchTimedTodoReminders({
   nowMs?: number;
   bootedAtMs: number;
   seen?: Set<string>;
-}): Reminder[] {
+} & TimedReminderLead): Reminder[] {
   if (!services.has(remindersV1.name)) return [];
-  const due = collectDueTimedTodoReminders({ date, todos, nowMs, bootedAtMs, seen });
+  const due = collectDueTimedTodoReminders({ date, todos, nowMs, bootedAtMs, seen, leadMinutes, aheadText });
   for (const reminder of due) {
     void services.get(remindersV1).push(reminder).catch(() => undefined);
   }
@@ -117,11 +129,13 @@ export function useTodoTimedReminders({
   enabled,
   date,
   todos,
+  leadMinutes = 0,
+  aheadText,
 }: {
   enabled: boolean;
   date: string;
   todos: readonly TodoItem[];
-}) {
+} & TimedReminderLead) {
   const bootedAtRef = useRef<number | null>(null);
   if (bootedAtRef.current === null) {
     bootedAtRef.current = Date.now();
@@ -131,7 +145,7 @@ export function useTodoTimedReminders({
     if (!enabled) return;
     const bootedAtMs = bootedAtRef.current ?? Date.now();
     const check = () => {
-      dispatchTimedTodoReminders({ date, todos, nowMs: Date.now(), bootedAtMs });
+      dispatchTimedTodoReminders({ date, todos, nowMs: Date.now(), bootedAtMs, leadMinutes, aheadText });
     };
     check();
     const unwatch = windowServices.watch(check);
@@ -142,5 +156,5 @@ export function useTodoTimedReminders({
       window.clearInterval(interval);
       window.removeEventListener("focus", check);
     };
-  }, [date, enabled, todos]);
+  }, [aheadText, date, enabled, leadMinutes, todos]);
 }

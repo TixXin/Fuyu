@@ -47,6 +47,11 @@ export type TodoIslandText = {
     recurrence: Record<TodoRecurrenceKind, string>;
     noRecurrence: string;
     dueTitle: string;
+    dueTitleAny: string;
+  };
+  reminders: {
+    ahead: (minutes: number) => string;
+    wrapUp: (openCount: number) => string;
   };
 };
 
@@ -103,6 +108,11 @@ export const zhCN: TodoIslandText = {
     recurrence: { daily: "每天重复", workdays: "法定工作日重复", weekly: "每周重复", monthly: "每月重复" },
     noRecurrence: "取消重复",
     dueTitle: "高优先级待办今天到期",
+    dueTitleAny: "已安排的待办今天到期",
+  },
+  reminders: {
+    ahead: (minutes) => `${minutes} 分钟后`,
+    wrapUp: (openCount) => `今天还有 ${openCount} 件没做完`,
   },
 };
 
@@ -159,5 +169,10 @@ export const en: TodoIslandText = {
     recurrence: { daily: "Repeat daily", workdays: "Repeat on workdays", weekly: "Repeat weekly", monthly: "Repeat monthly" },
     noRecurrence: "Do not repeat",
     dueTitle: "High-priority task due today",
+    dueTitleAny: "Scheduled task due today",
+  },
+  reminders: {
+    ahead: (minutes) => `In ${minutes} min`,
+    wrapUp: (openCount) => (openCount === 1 ? "1 task still open today" : `${openCount} tasks still open today`),
   },
 };

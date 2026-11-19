@@ -1877,6 +1877,43 @@
       "page": "todos",
       "zh-CN": {
         "group": "专注联动与提醒",
+        "title": "提前提醒"
+      },
+      "en": {
+        "group": "Focus timer & reminders",
+        "title": "Remind ahead"
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "专注联动与提醒",
+        "title": "到期提醒哪些待办",
+        "description": "已安排的待办到了那天、并进今天的列表时，在岛上提醒一次。"
+      },
+      "en": {
+        "group": "Focus timer & reminders",
+        "title": "Remind when scheduled tasks are due",
+        "description": "Shows one island reminder when a scheduled task reaches its day and joins today's list."
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "专注联动与提醒",
+        "title": "每天收尾提醒",
+        "description": "到点还有没做完的待办时，在岛上提醒一次。都做完了不提醒。"
+      },
+      "en": {
+        "group": "Focus timer & reminders",
+        "title": "End-of-day reminder",
+        "description": "Shows one island reminder at the set time if tasks are still open. Stays quiet when everything is done."
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "专注联动与提醒",
         "title": "子任务全部勾选后自动完成主待办",
         "description": "当至少有一项子步骤且最后一项被勾选完成时，自动将主待办标记为已完成。"
       },

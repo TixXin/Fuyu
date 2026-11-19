@@ -9,6 +9,7 @@ import { useHolidayMarks } from "./useHolidayMarks";
 import { useScheduledTodos } from "./useScheduledTodos";
 import { useTodoApiHandlers } from "./useTodoApiHandlers";
 import { useTodoArchives } from "./useTodoArchives";
+import { useTodoDayReminders } from "./useTodoDayReminders";
 import { useTodoFileField } from "./useTodoFileField";
 import { useTodoFocusTimer } from "./useTodoFocusTimer";
 import { useTodoList } from "./useTodoList";
@@ -16,7 +17,6 @@ import { useTodoPrefs } from "./useTodoPrefs";
 import { useTodoProjectSync } from "./useTodoProjectSync";
 import { useTodoRollover } from "./useTodoRollover";
 import { useTodoSaving } from "./useTodoSaving";
-import { useTodoTimedReminders } from "./useTodoTimedReminders";
 
 type TodosOptions = {
   carryOverIncompleteTodos: boolean;
@@ -54,18 +54,14 @@ export function useTodos({
   const [dailyNote, setDailyNote] = useState(loadDailyNote);
   useTodoFileField("dailyNote", setDailyNote);
   const [currentTodoDate, setCurrentTodoDate] = useState<string>(() => loadCurrentTodoDate(prefs.dayStartHour));
-  useTodoTimedReminders({
-    enabled: prefs.timedReminderEnabled,
-    date: currentTodoDate,
-    todos,
-  });
+  useTodoDayReminders(prefs, currentTodoDate, todos);
   const { archives, setArchives, upsertArchive } = useTodoArchives(prefs.archiveRetentionDays);
   const visibleArchives = useMemo(
     () => filterArchivesByRetention(archives, currentTodoDate, prefs.archiveRetentionDays),
     [archives, currentTodoDate, prefs.archiveRetentionDays],
   );
   const { scheduledTodos, setScheduledTodos, scheduleTodo, deleteScheduledTodo, tagScheduledTodo } =
-    useScheduledTodos(currentTodoDate, setTodos, prefs.dayStartHour);
+    useScheduledTodos(currentTodoDate, setTodos, prefs.dayStartHour, prefs.dueReminderScope);
   completedRef.current = (todo: TodoItem) => {
     if (!todo.recurrence) return;
     if (hasPendingRecurringSchedule(scheduledTodos, todo.title, todo.project, todo.recurrence, currentTodoDate)) return;
