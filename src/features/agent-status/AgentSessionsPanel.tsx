@@ -25,6 +25,8 @@ import { AgentApprovalCard } from "./approvals/AgentApprovalCard";
 import { AgentQuestionCard } from "./approvals/AgentQuestionCard";
 import type { AgentApprovals } from "./approvals/useAgentApprovals";
 import { AgentSessionRow } from "./AgentSessionRow";
+import { AgentSessionNotice } from "./notice/AgentSessionNotice";
+import { DEFAULT_AGENT_NOTICE_OPTIONS, type AgentNoticeOptions } from "./notice/noticeOptions";
 import { AgentSessionRowMenu } from "./AgentSessionRowMenu";
 import { AgentSessionHoverCard } from "./AgentSessionHoverCard";
 import { useSessionKeyboard } from "./useSessionKeyboard";
@@ -58,6 +60,8 @@ export function AgentSessionsPanel({
   showUsage: usageOn = false,
   usages,
   approvals,
+  notice = DEFAULT_AGENT_NOTICE_OPTIONS,
+  onOpenAgentPage,
 }: {
   sessions: AgentSessionSummary[];
   view?: AgentSessionView;
@@ -76,6 +80,8 @@ export function AgentSessionsPanel({
   showUsage?: boolean;
   usages?: AgentUsages;
   approvals?: AgentApprovals;
+  notice?: AgentNoticeOptions;
+  onOpenAgentPage?: () => void;
 }) {
   const t = useTranslation();
   const sessions = reveal ? [listed.find((session) => sessionKey(session) === reveal.key) ?? reveal.session] : listed;
@@ -188,10 +194,29 @@ export function AgentSessionsPanel({
     return (
       <section className="agent-sessions" aria-label={t.agent.sessions.title}>
         {approvals.current.kind === "question" ? (
-          <AgentQuestionCard approvals={approvals} sessions={listed} />
+          <AgentQuestionCard approvals={approvals} sessions={listed} options={notice} />
         ) : (
-          <AgentApprovalCard approvals={approvals} sessions={listed} />
+          <AgentApprovalCard approvals={approvals} sessions={listed} options={notice} />
         )}
+      </section>
+    );
+  }
+
+  if (reveal && sessions[0]) {
+    const session = sessions[0];
+    return (
+      <section className="agent-sessions agent-sessions--notice" aria-label={t.agent.sessions.title}>
+        <ul ref={list.ref} className="agent-sessions__list agent-sessions__list--notice">
+          <li ref={cardRef} data-session-key={reveal.key}>
+            <AgentSessionNotice
+              session={session}
+              options={notice}
+              model={showModel ? modelLabel(session.model, shownEffort(session.provider, session.effort, effortLabels)) : null}
+              onOpen={() => focus(session)}
+              onOpenAgentPage={onOpenAgentPage}
+            />
+          </li>
+        </ul>
       </section>
     );
   }

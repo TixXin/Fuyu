@@ -1,0 +1,123 @@
+.agent-notice-message {
+  position: relative;
+  min-width: 0;
+  --notice-fade-top: 0px;
+  --notice-fade-bottom: 0px;
+}
+
+.agent-notice-message__text {
+  max-height: calc(var(--notice-lines, 6) * 1.5em);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  color: rgba(var(--agent-ink), 0.68);
+  font-size: 12.5px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.agent-notice-message__text::-webkit-scrollbar {
+  display: none;
+}
+
+.agent-notice:hover .agent-notice-message__text,
+.agent-notice:focus-within .agent-notice-message__text {
+  max-height: calc(16 * 1.5em);
+}
+
+.agent-notice-message__text[data-fade-top] {
+  --notice-fade-top: 12px;
+}
+
+.agent-notice-message__text[data-fade-bottom] {
+  --notice-fade-bottom: 20px;
+}
+
+.agent-notice-message__text:is([data-fade-top], [data-fade-bottom]) {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 var(--notice-fade-top),
+    #000 calc(100% - var(--notice-fade-bottom)),
+    transparent
+  );
+}
+
+.agent-notice-message__plain {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.agent-notice-message__markdown {
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.agent-notice-message__markdown p,
+.agent-notice-message__markdown blockquote {
+  margin: 0 0 4px;
+}
+
+.agent-notice-message__markdown ul,
+.agent-notice-message__markdown ol {
+  margin: 2px 0 5px;
+}
+
+.agent-notice-message__markdown pre {
+  margin: 4px 0 6px;
+  padding: 5px 8px;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.agent-notice-message__markdown pre code {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.agent-notice-message__markdown strong {
+  color: rgba(var(--agent-ink), 0.96);
+  font-weight: 600;
+}
+
+.agent-notice-message__thumb {
+  position: absolute;
+  top: 0;
+  right: -9px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--notice-thumb, rgba(255, 255, 255, 0.42));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--motion-medium) var(--motion-ease),
+    width var(--motion-fast) var(--motion-ease),
+    right var(--motion-fast) var(--motion-ease);
+}
+
+.agent-notice-message--scrolls .agent-notice-message__thumb {
+  pointer-events: auto;
+}
+
+.agent-notice:hover .agent-notice-message__thumb,
+.agent-notice--scrollbar-always .agent-notice-message__thumb {
+  opacity: 0.45;
+}
+
+.agent-notice .agent-notice-message__thumb--on {
+  opacity: 1;
+  transition-duration: var(--motion-fast), var(--motion-fast), var(--motion-fast);
+}
+
+.agent-notice .agent-notice-message__thumb:hover,
+.agent-notice .agent-notice-message__thumb--drag {
+  right: -10px;
+  width: 5px;
+  opacity: 1;
+}
+
+.island-light .agent-notice-message__thumb {
+  background: var(--notice-thumb, rgba(0, 0, 0, 0.34));
+}

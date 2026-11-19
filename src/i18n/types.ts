@@ -6,6 +6,7 @@ import type { MailText } from "./sections/mail";
 import type { TranslatorText } from "./sections/translator";
 import type { IslandText } from "./sections/island";
 import type { AgentText } from "./sections/agent";
+import type { AgentNoticeText } from "./sections/agentNotice";
 import type { ClaudeUsageText } from "./sections/claudeUsage";
 import type { SessionRingText } from "./sections/sessionRing";
 import type { NotebookText } from "./sections/notebook";
@@ -43,6 +44,7 @@ export type Translations = {
   island: IslandText;
 
   agent: AgentText;
+  agentNotice: AgentNoticeText;
   claudeUsage: ClaudeUsageText;
   sessionRing: SessionRingText;
 

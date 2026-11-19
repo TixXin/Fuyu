@@ -6,8 +6,6 @@
     "src/components/controls/ToggleControl.css": 2,
     "src/components/island-preview/IslandPreview.css": 3,
     "src/features/agent-status/AgentSessionCard.css": 1,
-    "src/features/agent-status/approvals/AgentApprovalCard.css": 5,
-    "src/features/agent-status/approvals/AgentQuestionCard.css": 3,
     "src/features/calendar/CalendarMonth.css": 1,
     "src/features/calendar/CalendarSourcesSection.css": 2,
     "src/features/cc-connect/CcConnectSetup.css": 3,

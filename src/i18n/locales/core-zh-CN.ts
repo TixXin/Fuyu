@@ -3,6 +3,7 @@ import type { SettingsText } from "../sections/settings/index";
 import type { SyncText } from "../sections/sync";
 import type { Translations } from "../types";
 import { zhCN as agent } from "../sections/agent.ts";
+import { zhCN as agentNotice } from "../sections/agentNotice.ts";
 import { zhCN as archive } from "../sections/archive.ts";
 import { zhCN as calendar } from "../sections/calendar.ts";
 import { zhCN as claudeUsage } from "../sections/claudeUsage.ts";
@@ -51,6 +52,7 @@ export const coreZhCN: Translations = {
   translator,
   island,
   agent,
+  agentNotice,
   claudeUsage,
   sessionRing,
   notebook,

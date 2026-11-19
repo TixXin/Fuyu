@@ -1,0 +1,75 @@
+.agent-notice__meta {
+  display: flex;
+  gap: 0 6px;
+  min-width: 0;
+  margin: 0 0 4px;
+  overflow: hidden;
+  color: rgba(var(--agent-ink), 0.58);
+  font-size: 11.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.agent-notice__meta > * {
+  flex: none;
+  min-width: 0;
+}
+
+.agent-notice__meta > :last-child {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-notice__meta > * + *::before {
+  content: "·";
+  margin-right: 6px;
+}
+
+.agent-notice__wants {
+  margin-bottom: 3px;
+  color: rgba(var(--agent-ink), 0.68);
+  font-size: 12px;
+}
+
+.agent-notice__tool {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.agent-notice__tool-name {
+  flex: none;
+  margin-top: 3px;
+  padding: 0 5px;
+  color: var(--info-text, #6cb6ff);
+  background: var(--notice-chip);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.agent-notice__command {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--notice-command-lines, 3);
+  flex: 1 1 auto;
+  min-width: 0;
+  max-height: calc(var(--notice-command-lines, 3) * 17px + 8px);
+  padding: 4px 7px;
+  overflow: hidden;
+  color: rgba(var(--agent-ink), 0.68);
+  background: var(--notice-chip);
+  border-radius: var(--radius-sm);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 12px;
+  line-height: 17px;
+  word-break: break-all;
+}
+
+.agent-notice:hover .agent-notice__command {
+  -webkit-line-clamp: var(--notice-command-hover, 8);
+  max-height: calc(var(--notice-command-hover, 8) * 17px + 8px);
+}

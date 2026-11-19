@@ -11,6 +11,8 @@ import { useIslandAgentAlerts } from "../../src/features/agent-status/useIslandA
 import { islandHost } from "../../src/windows/island/islandHost";
 import type { IslandPage } from "../../src/windows/island/types";
 import { until } from "./pollUntil";
+import { NoticeGallery, STYLES } from "./agentNoticeGallery";
+import "../../src/styles/tokens.css";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 localStorage.setItem(AGENT_APPROVAL_STORAGE_KEY, JSON.stringify({ onIsland: true, whenInFront: false }));
@@ -106,6 +108,53 @@ try {
   await act(async () => { await emit("agent-approval-closed", { id: 3, reason: "handedBack" }); });
   await until(() => decide === null);
   check(island.mode === "expanded", "点了卡片以外的地方（接管了岛屿），卡片结束后不替你收起");
+
+  await act(async () => { createRoot(document.getElementById("notices")!).render(<NoticeGallery />); });
+  const $ = (frame: string, selector: string) => document.querySelector<HTMLElement>(`#${frame} ${selector}`);
+  const $$ = (frame: string, selector: string) => [...document.querySelectorAll<HTMLElement>(`#${frame} ${selector}`)];
+  const shown = (element: Element | null) => Boolean(element) && getComputedStyle(element!).display !== "none";
+  await until(() => $("status-done", ".agent-notice-message__thumb"));
+  for (const style of STYLES) {
+    const tones = ["working", "needs", "yourTurn", "done", "failed"].filter((tone) => $(`${style}-${tone}`, `.agent-notice--${style}.agent-notice--tone-${tone}`));
+    check(tones.length === 5, `${style} 样式下五种状态都画成同一种通知卡（${tones.join("、")}）`);
+    check($(`${style}-approval`, `.agent-approval.agent-notice--${style}.agent-notice--tone-needs`) && $(`${style}-question`, `.agent-question.agent-notice--${style}`), `${style} 样式下审批卡和提问卡也用同一套外框`);
+  }
+  check($("status-done", ".agent-notice__headline")?.textContent === "这一轮完成了" && $("status-needs", ".agent-notice__headline")?.textContent === "等你确认 · Bash", "状态优先样式大字写状态句，带工具名");
+  check($("compact-yourTurn", ".agent-notice__state")?.textContent === "等你回复", "精简两行样式右上角写状态字");
+  check(!shown($("wings-working", ".agent-notice__drop")) && shown($("wings-done", ".agent-notice__drop")), "两翼样式运行中只有两翼，其余状态往下长出正文");
+
+  const text = $("status-done", ".agent-notice-message__text")!;
+  const lineHeight = parseFloat(getComputedStyle(text).lineHeight);
+  check(Math.abs(text.clientHeight - 6 * lineHeight) < 2 && text.scrollHeight > text.clientHeight + lineHeight, `长消息按设置显示 6 行（${text.clientHeight}px），超出在卡片里滚动`);
+  const compactText = $("compact-done", ".agent-notice-message__text")!;
+  check(Math.abs(compactText.clientHeight - 4 * lineHeight) < 2, `消息行数设成 4 时只显示 4 行（${compactText.clientHeight}px）`);
+  check(text.hasAttribute("data-fade-bottom") && !text.hasAttribute("data-fade-top"), "下面还有内容时底部渐隐，顶部不渐隐");
+  check($("status-done", ".agent-notice-message__markdown ol") && $("status-done", ".agent-notice-message__markdown pre"), "消息按 Markdown 显示列表和代码块");
+  check(getComputedStyle($("status-done", ".agent-notice-message__thumb")!).opacity === "0", "滚动条平时不显示");
+  let leaked = false;
+  const outer = () => { leaked = true; };
+  document.getElementById("notices")!.addEventListener("wheel", outer);
+  const wheel = new WheelEvent("wheel", { deltaY: 30, deltaMode: 0, bubbles: true, cancelable: true });
+  await act(async () => { text.dispatchEvent(wheel); });
+  await until(() => text.hasAttribute("data-fade-top"));
+  check(wheel.defaultPrevented && !leaked && text.scrollTop > 0 && text.hasAttribute("data-fade-top"), "滚轮在正文里滚动，不传给岛；滚下去后顶部渐隐");
+  check($("status-done", ".agent-notice-message__thumb--on"), "滚动时滚动条完全显示");
+  await until(() => !$("status-done", ".agent-notice-message__thumb--on"), 3000);
+  check(!$("status-done", ".agent-notice-message__thumb--on"), "停下后滚动条淡出");
+  document.getElementById("notices")!.removeEventListener("wheel", outer);
+
+  check($("plain-inline", ".agent-notice-message__plain") && !$("plain-inline", "pre"), "关掉 Markdown 时按纯文字显示");
+  check($("plain-inline", ".agent-notice__meta")?.textContent?.includes("Opus 5.5") && $("plain-inline", ".agent-notice__meta")?.textContent?.includes("你："), "元信息设成通知里也显示时，模型和「你：」出现在正文上面");
+  check(!$("status-done", ".agent-notice__meta"), "元信息默认只在悬停卡里");
+  check(getComputedStyle($("plain-inline", ".agent-notice-message__thumb")!).opacity !== "0", "滚动条设成一直显示时平时也看得到");
+
+  const ids = (frame: string) => $$(frame, ".agent-notice__button").map((button) => button.className.match(/agent-notice__button--(\w+)/)?.[1]);
+  check(ids("status-approval").join() === "deny,terminal,allow" && $("status-approval", ".agent-notice__button--allow.agent-notice__button--primary"), "审批按钮默认「拒绝 · 到终端 · 允许」，允许是主按钮");
+  check(ids("allow-first").join() === "allow,terminal,deny" && !$("allow-first", ".agent-notice__key"), "按钮顺序可以对调，可以不显示快捷键");
+  check(shown($("status-approval", ".agent-notice__key")), "宽岛上按钮显示快捷键");
+  check(!shown($("compact-narrow", ".agent-notice__button--terminal")) && !shown($("compact-narrow", ".agent-notice__key")), "精简两行窄于 300 时收起「到终端」和快捷键");
+  check(!shown($("status-narrow", ".agent-notice__label")) && shown($("status-narrow", ".agent-notice__button-icon")), "状态优先窄于 300 时按钮只剩图标");
+  check([...document.querySelectorAll<HTMLElement>("#notices .agent-notice")].every((card) => card.scrollWidth <= card.clientWidth + 1), "卡片里没有横向溢出");
 
   results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
   results.dataset.result = "passed";

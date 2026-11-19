@@ -196,8 +196,8 @@ try {
   check(rows().length === 3, "平时 Agent 页列出全部会话");
   await act(async () => panel.render(<AgentSessionsPanel sessions={listed} hostDisplay="off" showUsage reveal={card("c", listed[2])} />));
   check(rows().join() === "claudeCode:c" && !document.querySelector("#panel .agent-usage"), "弹出提醒时只显示触发的那一个会话，不显示用量");
-  const reply = document.querySelector<HTMLElement>("#panel .agent-session__message--card");
-  check(reply?.textContent === SUMMARY && getComputedStyle(reply).getPropertyValue("-webkit-line-clamp") === "3", "完成的会话在卡片上显示最后的回复，最多 3 行");
+  const reply = document.querySelector<HTMLElement>("#panel .agent-notice-message__text");
+  check(reply?.textContent === SUMMARY && reply.parentElement?.style.getPropertyValue("--notice-lines") === "6", "完成的会话在通知卡上显示最后的回复，默认最多 6 行");
   const row = document.querySelector<HTMLElement>("#panel .agent-sessions__list > li")!;
   check(measured > 36 && measured === row.offsetHeight, `卡片把这一行的实际高度交给岛屿（${measured}px）`);
   await act(async () => panel.render(<AgentSessionsPanel sessions={listed} hostDisplay="off" />));

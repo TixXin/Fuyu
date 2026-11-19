@@ -8,27 +8,28 @@
     </li>
   </ul>
   <div id="panel">
-    <section aria-label="Agent 会话" class="agent-sessions">
-      <ul class="agent-sessions__list">
+    <section aria-label="Agent 会话" class="agent-sessions agent-sessions--notice">
+      <ul class="agent-sessions__list agent-sessions__list--notice">
         <li data-session-key="claudeCode:d">
-          <button class="agent-session agent-session--completed agent-session--light-done agent-session--compact" type="button">
-            <span aria-label="已完成" class="agent-session__dot" role="img" title="已完成"></span>
-            <span class="agent-session__main">
-              <span class="agent-session__heading">
-                <span class="agent-session__title">
-                  d
+          <span class="island-hover-card__anchor agent-notice-hover">
+            <section aria-label="d · 这一轮完成了" class="agent-notice agent-notice--status agent-notice--tone-done agent-notice--opens" role="group" tabindex="0">
+              <div class="agent-notice__main">
+                <span class="agent-notice__icon" style="--notice-icon: 26px">
+                  <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="26" src="/src/assets/brands/claude-code.png" width="26">
                 </span>
-                <span class="agent-session__agent">
-                  <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="14" src="/src/assets/brands/claude-code.png" width="14">
-                </span>
-                <span class="agent-session__time">
-                  <span class="agent-session__age">
-                    20772d
+                <div class="agent-notice__content">
+                  <div class="agent-notice__row">
+                    <span class="agent-notice__headline">
+                      这一轮完成了
+                    </span>
+                  </div>
+                  <span class="agent-notice__title" title="d">
+                    d
                   </span>
-                </span>
-              </span>
-            </span>
-          </button>
+                </div>
+              </div>
+            </section>
+          </span>
         </li>
       </ul>
     </section>
