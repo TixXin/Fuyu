@@ -4,7 +4,7 @@ phase=$2
 task=$(printf '%s' "${3:-}" | tr -cd 'A-Za-z0-9_.:-')
 minimum_visible_ms=800
 
-providers="codex claudeCode workbuddy antigravity dsh qoder codebuddy qwen trae traeCn zcode kimiCode grok copilot droid pi"
+providers="codex claudeCode workbuddy antigravity dsh qoder codebuddy qwen trae traeCn zcode kimiCode grok copilot droid pi cursor"
 case "$provider" in
   updatedAt|statusPath|others|"") exit 2 ;;
   [A-Za-z]*)

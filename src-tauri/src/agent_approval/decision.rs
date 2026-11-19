@@ -22,6 +22,7 @@ pub enum Agent {
     Copilot,
     Droid,
     Pi,
+    Cursor,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -34,7 +35,7 @@ pub enum Kind {
 pub(super) const QUESTION_PATH: &str = "/claude/ask-user-question";
 pub(super) const ACTIVITY_PATH: &str = "/claude/activity";
 
-const AGENTS: [Agent; 16] = [
+const AGENTS: [Agent; 17] = [
     Agent::ClaudeCode,
     Agent::Codex,
     Agent::Workbuddy,
@@ -51,6 +52,7 @@ const AGENTS: [Agent; 16] = [
     Agent::Copilot,
     Agent::Droid,
     Agent::Pi,
+    Agent::Cursor,
 ];
 
 pub(super) fn route(path: &str) -> Option<(Agent, Kind)> {
@@ -85,6 +87,7 @@ impl Agent {
             Self::TraeCn => "/traeCn/pre-tool-use",
             Self::Copilot => "/copilot/permission-request",
             Self::Droid => "/droid/pre-tool-use",
+            Self::Cursor => "/cursor/permission",
         }
     }
 
@@ -106,11 +109,12 @@ impl Agent {
             Self::TraeCn => "traeCn",
             Self::Copilot => "copilot",
             Self::Droid => "droid",
+            Self::Cursor => "cursor",
         }
     }
 
     pub(super) fn lacks_waiting_event(self) -> bool {
-        matches!(self, Self::Antigravity | Self::Dsh | Self::Trae | Self::TraeCn | Self::Droid)
+        matches!(self, Self::Antigravity | Self::Dsh | Self::Trae | Self::TraeCn | Self::Droid | Self::Cursor)
     }
 }
 
@@ -148,6 +152,7 @@ impl HookInput {
         match agent {
             Agent::Antigravity => {}
             Agent::Opencode | Agent::Mimo | Agent::Pi => return super::opencode::plugin_input(body),
+            Agent::Cursor => return cursor_input(body),
             Agent::Trae | Agent::TraeCn => {
                 let mut input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
                 if let Some(fields) = input.as_object_mut() {
@@ -303,7 +308,47 @@ pub(super) fn permission_response(
         },
         Agent::Trae | Agent::TraeCn | Agent::Droid => pre_tool_use_response(decision, reason()),
         Agent::Copilot => behavior_response(decision, reason()),
+        Agent::Cursor => cursor_permission(decision, reason()),
         Agent::Opencode | Agent::Mimo | Agent::Pi => super::opencode::plugin_response(decision, message),
+    }
+}
+
+fn cursor_input(body: &[u8]) -> Result<HookInput, &'static str> {
+    let input: Value = serde_json::from_slice(body).map_err(|_| "The body is not JSON.")?;
+    let session_id = text_field(&input, "conversation_id")
+        .or_else(|| text_field(&input, "session_id"))
+        .ok_or("No conversation_id.")?;
+    let cwd = text_field(&input, "cwd").or_else(|| {
+        input["workspace_roots"]
+            .as_array()
+            .and_then(|paths| paths.iter().find_map(|path| path.as_str().map(str::to_string)))
+    });
+    let command = text_field(&input, "command");
+    let tool_name = text_field(&input, "tool_name").or_else(|| command.as_ref().map(|_| "Shell".to_string())).ok_or("No tool_name.")?;
+    Ok(HookInput {
+        session_id,
+        cwd,
+        tool_name,
+        tool_input: cursor_tool_input(&input, command),
+        permission_suggestions: None,
+        agent_id: None,
+        remote_host: None,
+    })
+}
+
+fn cursor_tool_input(input: &Value, command: Option<String>) -> Value {
+    match &input["tool_input"] {
+        Value::Object(_) => input["tool_input"].clone(),
+        Value::String(text) => serde_json::from_str(text).unwrap_or_else(|_| json!({ "input": text })),
+        _ => command.map(|command| json!({ "command": command })).unwrap_or(Value::Null),
+    }
+}
+
+fn cursor_permission(decision: Option<Decision>, reason: &str) -> String {
+    match decision {
+        Some(Decision::Allow | Decision::AllowAlways) => json!({ "permission": "allow" }).to_string(),
+        Some(Decision::Deny) => json!({ "permission": "deny", "user_message": reason, "agent_message": reason }).to_string(),
+        None | Some(Decision::Terminal | Decision::Answer) => json!({ "permission": "ask" }).to_string(),
     }
 }
 

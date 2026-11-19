@@ -19,6 +19,7 @@ export const AGENTS = {
   copilot: { label: "GitHub Copilot CLI", statusLight: true, remote: false },
   droid: { label: "Droid", statusLight: true, remote: false },
   pi: { label: "pi", statusLight: true, remote: true },
+  cursor: { label: "Cursor", statusLight: true, remote: false },
 } as const satisfies Record<string, AgentInfo>;
 
 export type SessionProvider = keyof typeof AGENTS;
