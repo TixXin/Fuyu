@@ -12,7 +12,7 @@ export type UsageReport = {
   error: string | null;
 };
 
-const SOURCES = new Set(["hud", "api", "magpie", "codex", "glm", "kimi", "antigravity", "antigravityCloud"]);
+const SOURCES = new Set(["hud", "api", "magpie", "codex", "glm", "kimi", "antigravity", "antigravityCloud", "cursor"]);
 const ERRORS = new Set([
   "noCredentials",
   "tokenExpired",

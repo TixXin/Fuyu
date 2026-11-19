@@ -3781,6 +3781,19 @@
       "page": "agentRings",
       "zh-CN": {
         "group": "用量环",
+        "title": "Cursor",
+        "description": "只读本机 Cursor 保存的登录（state.vscdb，不刷新、不改写），最多每 5 分钟一次直连 api2.cursor.sh 查询本计费周期已用的比例（内环本月）。这是未公开的内部接口，随版本可能失效。没装 Cursor、没登录或查不到时不显示这个环。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Cursor",
+        "description": "Reads the login Cursor saved on this computer (state.vscdb, read-only, never refreshed or rewritten) and asks api2.cursor.sh directly, at most every 5 minutes, how much of this billing cycle is used (inner ring: this month). Uses an undocumented internal endpoint that may break across updates. The ring stays hidden when Cursor isn't installed, isn't signed in or has no usage."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "用量环",
         "title": "WorkBuddy",
         "description": "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分。"
       },

@@ -20,7 +20,7 @@ export const USAGE_COLORS = {
   stale: "var(--usage-stale)",
 } as const;
 
-export type UsageProviderId = "claudeCode" | "codex" | "antigravity" | "glm" | "kimi";
+export type UsageProviderId = "claudeCode" | "codex" | "antigravity" | "glm" | "kimi" | "cursor";
 export type AllUsageProviderId = UsageProviderId | HoverProviderId;
 
 export const USAGE_PROVIDERS: readonly { id: UsageProviderId; name: string; color: string; defaultOn: boolean }[] = [
@@ -29,7 +29,14 @@ export const USAGE_PROVIDERS: readonly { id: UsageProviderId; name: string; colo
   { id: "antigravity", name: "Antigravity", color: "var(--usage-antigravity)", defaultOn: false },
   { id: "glm", name: "GLM", color: "var(--usage-glm)", defaultOn: false },
   { id: "kimi", name: "Kimi", color: "var(--usage-kimi)", defaultOn: false },
+  { id: "cursor", name: "Cursor", color: "var(--usage-cursor)", defaultOn: false },
 ];
+
+export const HIDDEN_WITHOUT_NUMBERS: ReadonlySet<UsageProviderId> = new Set(["cursor"]);
+
+export function hasUsageNumbers(usage: AgentUsage | null) {
+  return Boolean(usage && (usage.fiveHour || usage.sevenDay || usage.models.length > 0));
+}
 
 export const HOVER_USAGE_PROVIDERS: readonly { id: HoverProviderId; name: string; color: string; defaultOn: boolean }[] = [
   { id: "workbuddy", name: "WorkBuddy", color: "var(--usage-workbuddy)", defaultOn: false },

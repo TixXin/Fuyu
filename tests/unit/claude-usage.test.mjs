@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { USAGE_STALE_MS } from "../../src/lib/agent-usage/usage.ts";
 import {
+  HIDDEN_WITHOUT_NUMBERS,
   HOVER_USAGE_PROVIDERS,
+  hasUsageNumbers,
   USAGE_COLORS,
   USAGE_PROVIDERS,
   hoverProviderLines,
@@ -155,6 +157,7 @@ test("with a provider the card starts with its name and plan in its colour", () 
     assert.ok(zhCN.antigravityErrors[kind] && en.antigravityErrors[kind], kind);
     assert.ok(zhCN.workbuddyErrors[kind] && en.workbuddyErrors[kind], kind);
     assert.ok(zhCN.dshErrors[kind] && en.dshErrors[kind], kind);
+    assert.ok(zhCN.cursorErrors[kind] && en.cursorErrors[kind], kind);
   }
 });
 
@@ -195,6 +198,39 @@ test("Antigravity renders Gemini and Claude/GPT windows, and reports endpointCha
   assert.equal(brokenLines[0], "Antigravity");
   assert.ok(brokenLines.some((line) => line.includes("接口失效")));
   assert.ok(brokenLines.every((line) => !line.includes("0%")));
+});
+
+test("Cursor fills the inner ring with its billing month, names Auto and API, and hides without numbers", () => {
+  const cursor = provider("cursor");
+  assert.equal(cursor.defaultOn, false);
+  assert.ok(HIDDEN_WITHOUT_NUMBERS.has("cursor"));
+  const live = usage({
+    source: "cursor",
+    plan: "Pro",
+    fiveHour: null,
+    sevenDay: null,
+    models: [
+      { name: "month", used: 60, resetsAt: NOW + (12 * 1440) * MINUTE },
+      { name: "cursorAuto", used: 12.5, resetsAt: null },
+      { name: "cursorApi", used: 47.5, resetsAt: null },
+    ],
+  });
+  assert.equal(hasUsageNumbers(live), true);
+  assert.deepEqual(usageRings(live, NOW, false, cursor.color), [
+    { value: 0, color: USAGE_COLORS.stale },
+    { value: 0.6, color: cursor.color },
+  ]);
+  assert.deepEqual(texts(usageCardLines(live, NOW, zhCN, false, cursor)), [
+    "Cursor · Pro",
+    "本月 60% · 12 天 0 小时后重置",
+    "Auto 本月 13%",
+    "指定模型本月 48%",
+    "1 分钟前更新 · 来自 Cursor",
+  ]);
+  const signedOut = usage({ source: "cursor", fiveHour: null, sevenDay: null, updatedAt: null, plan: null, error: { kind: "loginRequired", message: "" } });
+  assert.equal(hasUsageNumbers(signedOut), false);
+  assert.equal(hasUsageNumbers(null), false);
+  assert.deepEqual(texts(usageCardLines(signedOut, NOW, en, false, cursor)), ["Cursor", en.noUsage.cursor, en.cursorErrors.loginRequired]);
 });
 
 test("WorkBuddy and DSH format hover-only credits and wallet balances, and explain failures without showing 0", () => {
@@ -269,7 +305,7 @@ test("WorkBuddy and DSH format hover-only credits and wallet balances, and expla
 test("the usage rings' config falls back to its defaults and keeps the interval in range", async () => {
   const { storedValue, usageConfig } = await import("../../src/features/claude-usage/usageConfig.ts");
   assert.deepEqual(usageConfig({}), {
-    providers: { claudeCode: true, codex: false, antigravity: false, glm: false, kimi: false, workbuddy: false, dsh: false },
+    providers: { claudeCode: true, codex: false, antigravity: false, glm: false, kimi: false, cursor: false, workbuddy: false, dsh: false },
     show: "used",
     askAnthropic: false,
     proxy: "",
@@ -277,7 +313,7 @@ test("the usage rings' config falls back to its defaults and keeps the interval 
   });
   const set = usageConfig({ claudeCode: false, antigravity: true, dsh: true, kimi: true, show: "remaining", askAnthropic: true, proxy: "http://127.0.0.1:7890", intervalMinutes: 500 });
   assert.deepEqual(set, {
-    providers: { claudeCode: false, codex: false, antigravity: true, glm: false, kimi: true, workbuddy: false, dsh: true },
+    providers: { claudeCode: false, codex: false, antigravity: true, glm: false, kimi: true, cursor: false, workbuddy: false, dsh: true },
     show: "remaining",
     askAnthropic: true,
     proxy: "http://127.0.0.1:7890",

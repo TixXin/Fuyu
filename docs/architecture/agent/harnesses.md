@@ -244,8 +244,9 @@ Cursor 的 Agent（Composer），id `cursor`。代码在 `cursor.rs`。本机编
 | 岛上审批 | ✓ `/cursor/permission`。允许回 `{"permission":"allow"}`，拒绝带回 `user_message` / `agent_message`，交回终端回 `ask`。`preToolUse` 的 `ask` 官方不强制，所以不拦读文件和普通工具；写文件没有可挂起的 before 钩子 |
 | 回复标记 | ✗ 没有确认过可以独占、又不会盖住用户规则的用户级规则文件 |
 | 点会话跳过去 | ◐ 优先激活 Cursor 窗口，再按项目文件夹名挑；到不了具体对话 |
-| 用量环、SSH 远程、cc-connect | ✗ 没有官方个人额度接口 / ✗ Remote-SSH 的钩子在远端执行，CLI 会话格式未核实 / — |
-| 不读 | `state.vscdb` 里 `composerData` 以外的键（`agentKv` 这类大块）、超过 1MB 的 `composerData`、`hasBlockingPendingActions`（进行中的会话也会是 true，不能当成等你）、`~/.cursor/chats/**/store.db`（CLI，本机没有样本） |
+| 用量环 | ◐ 默认关（B78）：只读 `state.vscdb` 的 `ItemTable` 里 `cursorAuth/accessToken` 和 `cursorAuth/stripeMembershipType`，带 `x-cursor-checksum` 请求头（算法照上游 fly-island 1e278b32）向 `api2.cursor.sh` 的 `DashboardService/GetCurrentPeriodUsage` 查本计费周期已用比例，内环是本月，悬停附带 Auto 和指定模型的比例；这是未公开接口，最多 5 分钟一次。没装、没登录或查不到时环不出现。两个平台都没用真账号实测（#896） |
+| SSH 远程、cc-connect | ✗ Remote-SSH 的钩子在远端执行，CLI 会话格式未核实 / — |
+| 不读 | `state.vscdb` 里 `composerData` 和用量环那两个 `cursorAuth/` 键以外的键（`agentKv` 这类大块）、超过 1MB 的 `composerData`、`hasBlockingPendingActions`（进行中的会话也会是 true，不能当成等你）、`~/.cursor/chats/**/store.db`（CLI，本机没有样本） |
 
 ## 通用第三方代理接入（B71）
 

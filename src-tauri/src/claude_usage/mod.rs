@@ -1,5 +1,6 @@
 mod antigravity;
 mod background;
+mod cursor;
 mod dsh;
 mod dsh_credentials;
 mod plan;
@@ -295,6 +296,11 @@ pub async fn get_antigravity_usage(refresh: bool) -> Result<crate::agent_status:
 }
 
 #[tauri::command]
+pub async fn get_cursor_usage(refresh: bool) -> Result<crate::agent_status::usage::AgentUsage, String> {
+    Ok(cursor::read(refresh).await)
+}
+
+#[tauri::command]
 pub async fn get_hover_usage(provider: String, refresh: bool) -> Result<HoverUsage, String> {
     match provider.as_str() {
         "workbuddy" => Ok(workbuddy::read(refresh).await),
@@ -325,6 +331,7 @@ macro_rules! tauri_commands {
             crate::claude_usage::refresh_claude_usage,
             crate::claude_usage::get_plan_usage,
             crate::claude_usage::get_antigravity_usage,
+            crate::claude_usage::get_cursor_usage,
             crate::claude_usage::get_hover_usage,
             crate::claude_usage::set_plan_key,
             crate::claude_usage::has_plan_key,
