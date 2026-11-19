@@ -27,6 +27,8 @@ type AgentsPageProps = {
     agentShowActivity: Panel["showActivity"];
     agentShowUsage: Panel["showUsage"];
     agentExpandChildren: Panel["expandChildren"];
+    agentNoticeStack: Panel["stackMode"];
+    agentNoticeNotch: Panel["notch"];
   } & AgentNoticeSettings;
 };
 
@@ -35,7 +37,7 @@ const pageSlot = defineSlot<AgentsPageProps, IslandPageMeta<Readonly<Record<stri
 function AgentsPage({ settings }: AgentsPageProps) {
   const agents = agentPage.use();
   if (!agents) return null;
-  return <AgentSessionsPanel sessions={agents.sessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} expandChildren={settings.agentExpandChildren} unseen={agents.unseen} removal={agents.removal} reveal={agents.alerted} onOpenAgentPage={agents.alerted?.openAgentPage} showUsage={settings.agentShowUsage} usages={agents.usages} approvals={agents.approvals} notice={noticeOptionsOf(settings)} />;
+  return <AgentSessionsPanel sessions={agents.sessions} view={settings.agentSessionView} sort={settings.agentSessionSort} group={settings.agentSessionGroup} archiveMotion={settings.agentArchiveMotion} cardEffects={settings.agentCardEffects} hostDisplay={settings.agentHostDisplay} showElapsed={settings.agentShowElapsed} showModel={settings.agentShowModel} showActivity={settings.agentShowActivity} expandChildren={settings.agentExpandChildren} unseen={agents.unseen} removal={agents.removal} reveal={agents.alerted} stack={agents.alertedStack} stackMode={settings.agentNoticeStack} notch={settings.agentNoticeNotch} onOpenAgentPage={agents.alerted?.openAgentPage} showUsage={settings.agentShowUsage} usages={agents.usages} approvals={agents.approvals} notice={noticeOptionsOf(settings)} />;
 }
 
 pageSlot.add({ ...islandPage, component: AgentsPage }, OWNER);

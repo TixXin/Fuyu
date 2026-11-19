@@ -14,9 +14,16 @@ import type { LevelChange } from "../../src/features/system-levels/api";
 import type { DeviceAlert } from "../../src/features/device-events/api";
 import type { MessagePreview } from "../../src/features/messages/messagePreview";
 import { useFixtureLines } from "./islandLines";
+import type { AgentNoticeNotch } from "../../src/features/agent-status/agentSettings";
+import { AgentNoticeStack } from "../../src/features/agent-status/notice/AgentNoticeStack";
+import { AgentSessionNotice } from "../../src/features/agent-status/notice/AgentSessionNotice";
+import { DEFAULT_AGENT_NOTICE_OPTIONS } from "../../src/features/agent-status/notice/noticeOptions";
+import { SESSIONS } from "./agentNoticeGallery";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
-const automated = new URLSearchParams(location.search).has("test");
+const params = new URLSearchParams(location.search);
+const automated = params.has("test");
+const demoStack = automated ? null : (params.get("stack") as AgentNoticeNotch | null);
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 const NOTCH: IslandNotch = { width: 200, height: 32 };
 mockIPC((command) => {
@@ -24,11 +31,11 @@ mockIPC((command) => {
   if (command === "get_qq_mail_state") return [];
 }, { shouldMockEvents: true });
 
-type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean };
+type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean; stack: AgentNoticeNotch | null };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: false, level: null, device: null, preview: null, popup: false });
+  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: Boolean(demoStack), level: null, device: null, preview: null, popup: Boolean(demoStack), stack: demoStack });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
@@ -43,9 +50,18 @@ function Fixture() {
       onOpenPage={() => {}}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
-      <span>待办清单</span>
+      {state.stack ? <NoticeStack notch={state.stack} /> : <span>待办清单</span>}
     </IslandShell>
   </div>;
+}
+
+const NEEDS = { key: "codex:n-needs", provider: SESSIONS.needs.provider, tone: "needs" as const, title: SESSIONS.needs.title ?? "", state: "等你确认" };
+function NoticeStack({ notch }: { notch: AgentNoticeNotch }) {
+  return (
+    <AgentNoticeStack mode="peek" notch={notch} items={[NEEDS]} activeKey={NEEDS.key} onSelect={() => {}}>
+      {({ count }) => <AgentSessionNotice session={SESSIONS.needs} options={DEFAULT_AGENT_NOTICE_OPTIONS} model={null} count={count} onOpen={() => {}} />}
+    </AgentNoticeStack>
+  );
 }
 
 const messages: string[] = [];
@@ -103,7 +119,23 @@ async function runChecks() {
     check(label?.textContent === "AI Agent" && label.scrollWidth <= label.clientWidth + 1 && box(label).right <= popupNotchLeft + 0.5, "刘海左边写着是哪类弹出，放得下、不压刘海");
     check(close && box(close).left >= popupNotchLeft + NOTCH.width - 0.5 && box(close).right <= box(island()).right, "刘海右边是关闭按钮");
     check(!document.querySelector(".island--popup .island__header") || getComputedStyle(document.querySelector(".island--popup .island__header")!).display === "none", "弹出时不显示页面标签栏");
-    await set({ popup: false, expanded: false });
+    await set({ stack: "band" });
+    await settleTransitions();
+    const wings = document.querySelector<HTMLElement>(".agent-notice-stack__notch")!;
+    const bandLeft = box(wings.querySelector(".agent-notice-stack__wing--left")!);
+    const bandRight = wings.querySelector<HTMLElement>(".agent-notice-stack__wing--right")!;
+    check(Math.abs(box(wings).top - box(island()).top) < 1 && Math.abs(box(wings).height - NOTCH.height) < 1, "Agent 通知（两翼标题带）：刘海两边那一条和刘海一样高");
+    check(getComputedStyle(document.querySelector(".island__notch-band")!).display === "none", "两翼标题带接管刘海那一条，不再画「AI Agent」和关闭按钮");
+    check(wings.querySelector(".agent-notice-stack__wing--left .agent-provider-icon") && bandLeft.right <= popupNotchLeft + 0.5, "左翼是会话图标和状态环，不压刘海");
+    check(bandRight.textContent === "等你确认" && box(bandRight).left >= popupNotchLeft + NOTCH.width - 0.5 && box(bandRight).right <= box(island()).right, "右翼是状态字，不压刘海、不出岛");
+    check(!wings.querySelector(".agent-notice-stack__camera")?.childElementCount, "摄像头那一段不放东西");
+    check(getComputedStyle(document.querySelector(".agent-notice__icon")!).display === "none", "卡片里不再重复图标");
+    check(box(document.querySelector(".agent-notice")!).top >= box(island()).top + NOTCH.height - 0.5, "卡片在刘海下面");
+    await set({ stack: "below" });
+    await settleTransitions();
+    check(!document.querySelector(".agent-notice-stack__notch") && getComputedStyle(document.querySelector(".island__notch-band")!).display !== "none", "Agent 通知（卡片在刘海下面）：刘海那一条照旧");
+    check(getComputedStyle(document.querySelector(".agent-notice__icon")!).display !== "none" && box(document.querySelector(".agent-notice")!).top >= box(island()).top + NOTCH.height - 0.5, "卡片整个在刘海下面，带着自己的图标");
+    await set({ stack: null, popup: false, expanded: false });
     await settleTransitions();
 
     await set({ peek: "notch 刘海" });

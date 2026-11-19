@@ -1,4 +1,4 @@
-import type { CSSProperties, Ref } from "react";
+import type { CSSProperties, ReactNode, Ref } from "react";
 import { useTranslation } from "../../../i18n";
 import type { AgentSessionSummary } from "../api";
 import { sessionHoverLines } from "../focusHint";
@@ -31,6 +31,7 @@ export function AgentSessionNotice({
   options,
   model,
   count,
+  icon,
   onOpen,
   onOpenAgentPage,
   cardRef,
@@ -39,6 +40,7 @@ export function AgentSessionNotice({
   options: AgentNoticeOptions;
   model: string | null;
   count?: string | null;
+  icon?: ReactNode;
   onOpen: () => void;
   onOpenAgentPage?: (() => void) | null;
   cardRef?: Ref<HTMLElement>;
@@ -93,6 +95,7 @@ export function AgentSessionNotice({
       titlePrefix={session.remoteHost ?? null}
       scrollbar={options.scrollbar}
       count={count}
+      icon={icon}
       meta={meta}
       body={body}
       hoverLines={hoverLines}

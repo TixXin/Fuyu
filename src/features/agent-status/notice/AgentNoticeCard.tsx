@@ -21,6 +21,7 @@ export type AgentNoticeCardProps = {
   titlePrefix?: string | null;
   scrollbar: AgentNoticeScrollbar;
   count?: string | null;
+  icon?: ReactNode;
   meta?: ReactNode;
   body?: ReactNode;
   actions?: ReactNode;
@@ -34,7 +35,7 @@ export type AgentNoticeCardProps = {
 };
 
 export function AgentNoticeCard(props: AgentNoticeCardProps) {
-  const { noticeStyle, tone, provider, headline, state, title, titlePrefix, scrollbar, count, meta, body, actions, hoverLines, onOpen, corner, role = "group", ariaLabel, cardRef, className } = props;
+  const { noticeStyle, tone, provider, headline, state, title, titlePrefix, scrollbar, count, icon: iconOverride, meta, body, actions, hoverLines, onOpen, corner, role = "group", ariaLabel, cardRef, className } = props;
   const open = (event: MouseEvent<HTMLElement>) => {
     if (!onOpen || (event.target instanceof Element && event.target.closest(INTERACTIVE))) return;
     onOpen();
@@ -57,7 +58,7 @@ export function AgentNoticeCard(props: AgentNoticeCardProps) {
     </button>
   ) : null;
   const stateText = <span className="agent-notice__state">{state}</span>;
-  const icon = (size: number) => (
+  const icon = (size: number) => iconOverride ?? (
     <span className="agent-notice__icon" style={{ "--notice-icon": `${size}px` } as CSSProperties}>
       <AgentProviderIcon provider={provider} size={size} />
     </span>

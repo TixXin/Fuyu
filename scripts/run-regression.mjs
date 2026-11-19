@@ -11,6 +11,7 @@ import { captureSnapshot, prepareSnapshotBrowser, settledSnapshot } from "./regr
 
 export const PAGES = [
   "agent-alert-card.html",
+  "agent-notice-stack.html?test=1",
   "agent-alerts.html",
   "agent-approvals.html",
   "agent-sessions.html?test=1",

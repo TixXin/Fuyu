@@ -11,25 +11,40 @@
     <section aria-label="Agent 会话" class="agent-sessions agent-sessions--notice">
       <ul class="agent-sessions__list agent-sessions__list--notice">
         <li data-session-key="claudeCode:d">
-          <span class="island-hover-card__anchor agent-notice-hover">
-            <section aria-label="d · 这一轮完成了" class="agent-notice agent-notice--status agent-notice--tone-done agent-notice--opens" role="group" tabindex="0">
-              <div class="agent-notice__main">
-                <span class="agent-notice__icon" style="--notice-icon: 26px">
-                  <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="26" src="/src/assets/brands/claude-code.png" width="26">
+          <div class="agent-notice-stack agent-notice-stack--peek agent-notice-stack--notch-band" data-island-notch-band="">
+            <div aria-hidden="true" class="agent-notice-stack__notch">
+              <span class="agent-notice-stack__wing agent-notice-stack__wing--left">
+                <span class="agent-notice-stack__ring agent-notice-stack--tone-done" style="--stack-icon: 16px">
+                  <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="16" src="/src/assets/brands/claude-code.png" width="16">
                 </span>
-                <div class="agent-notice__content">
-                  <div class="agent-notice__row">
-                    <span class="agent-notice__headline">
-                      这一轮完成了
+              </span>
+              <span class="agent-notice-stack__camera"></span>
+              <span class="agent-notice-stack__wing agent-notice-stack__wing--right agent-notice-stack--tone-done">
+                <span class="agent-notice-stack__state">
+                  完成
+                </span>
+              </span>
+            </div>
+            <span class="island-hover-card__anchor agent-notice-hover">
+              <section aria-label="d · 这一轮完成了" class="agent-notice agent-notice--status agent-notice--tone-done agent-notice--opens" role="group" tabindex="0">
+                <div class="agent-notice__main">
+                  <span class="agent-notice__icon" style="--notice-icon: 26px">
+                    <img alt="" aria-hidden="true" class="agent-provider-icon agent-provider-icon--claudeCode" draggable="false" height="26" src="/src/assets/brands/claude-code.png" width="26">
+                  </span>
+                  <div class="agent-notice__content">
+                    <div class="agent-notice__row">
+                      <span class="agent-notice__headline">
+                        这一轮完成了
+                      </span>
+                    </div>
+                    <span class="agent-notice__title" title="d">
+                      d
                     </span>
                   </div>
-                  <span class="agent-notice__title" title="d">
-                    d
-                  </span>
                 </div>
-              </div>
-            </section>
-          </span>
+              </section>
+            </span>
+          </div>
         </li>
       </ul>
     </section>

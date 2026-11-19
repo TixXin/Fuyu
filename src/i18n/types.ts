@@ -7,6 +7,7 @@ import type { TranslatorText } from "./sections/translator";
 import type { IslandText } from "./sections/island";
 import type { AgentText } from "./sections/agent";
 import type { AgentNoticeText } from "./sections/agentNotice";
+import type { AgentNoticeStackText } from "./sections/agentNoticeStack";
 import type { ClaudeUsageText } from "./sections/claudeUsage";
 import type { SessionRingText } from "./sections/sessionRing";
 import type { NotebookText } from "./sections/notebook";
@@ -45,6 +46,7 @@ export type Translations = {
 
   agent: AgentText;
   agentNotice: AgentNoticeText;
+  agentNoticeStack: AgentNoticeStackText;
   claudeUsage: ClaudeUsageText;
   sessionRing: SessionRingText;
 
