@@ -35,11 +35,21 @@ export function wechatMessage(now, chat = "产品群", contact = "李四", previ
   };
 }
 
+export function trackNotification(title = "安和桥", artist = "宋冬野") {
+  return {
+    event: "plugin-notification",
+    payload: {
+      pluginId: "@fuyu/now-playing", pluginName: null, title, body: artist,
+      durationMs: 3000, actions: [], layout: "inline", controls: "media",
+    },
+  };
+}
+
 export function pluginNotification(layout = "inline") {
   return {
     event: "plugin-notification",
     payload: {
-      pluginId: "dev.lab", pluginName: { zh: "实验台", en: "Lab" }, title: "构建完成",
+      pluginId: "dev.lab", pluginName: { "zh-CN": "实验台", en: "Lab" }, title: "构建完成",
       body: layout === "card" ? "main 分支的 CI 跑完了，34 个回归页全部通过。" : "CI 全部通过",
       durationMs: 6000, actions: layout === "card" ? [{ id: "open", title: "查看" }] : [], icon: "plugin", layout,
     },

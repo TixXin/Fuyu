@@ -30,12 +30,15 @@ const opened: string[] = [];
 let state = { mode: "collapsed" as IslandMode, page: "todo" as IslandPage };
 let setBlocked: (blocked: boolean) => void;
 let collapse: () => void;
+let setBand: (band: boolean) => void;
 
 function Fixture() {
   const [mode, setMode] = useState<IslandMode>("collapsed");
   const [page, setPage] = useState<IslandPage>("todo");
   const [panelOpen, setPanelOpen] = useState(false);
   const [blocked, setBlockedState] = useState(false);
+  const [band, setBandState] = useState(true);
+  setBand = setBandState;
   state = { mode, page };
   setBlocked = setBlockedState;
   const plugins = usePluginNotifications(mode === "collapsed" || panelOpen, blocked);
@@ -54,11 +57,11 @@ function Fixture() {
   const art = useTrackArt();
   return <div className="stage" data-mode={mode} data-page={page}>
     {panel.arrivals && (
-      <div className="island island--expanded">
-        <NotchPopupBand page="qq" heading={heading ?? undefined} agentVisualState="idle" onCollapse={collapseIsland} />
+      <div className="island__expanded">
+        {band && <NotchPopupBand page="qq" heading={heading ?? undefined} agentVisualState="idle" onCollapse={collapseIsland} />}
         <div className="message-panel">
           <MessageArrivalsPanel arrivals={panel.arrivals} onOpen={panel.open} onAction={panel.runAction} onMeasure={panel.measure} onShowAll={panel.showAll} onClearAll={panel.clearAll} media={{
-            playing: true, cover: art?.cover ?? null, sourceIcon: art?.sourceIcon ?? null, onPrevious: () => {}, onPlayPause: () => {}, onNext: () => {},
+            playing: true, cover: art?.cover ?? null, sourceIcon: art?.sourceIcon ?? null, sourceLabel: art?.sourceLabel ?? null, onPrevious: () => {}, onPlayPause: () => {}, onNext: () => {},
           }} />
         </div>
       </div>
@@ -97,7 +100,7 @@ const results = document.getElementById("results")!;
 
 async function runChecks() {
   try {
-    updatePluginNames([{ id: "@fuyu/alarm", displayName: { "zh-CN": "闹钟", en: "Alarm" } }]);
+    updatePluginNames([{ id: "@fuyu/alarm", displayName: { "zh-CN": "闹钟", en: "Alarm" }, icon: "assets/icon.svg" }]);
 
     check(await deliver(track("安和桥")), "换歌提示在收起的岛上显示");
     await waitFor(() => rows().length === 1, "卡片弹出");
@@ -109,6 +112,11 @@ async function runChecks() {
     check(document.querySelector<HTMLImageElement>(".island__notch-band-logo")?.src === LOGO, "标题前是播放软件的图标");
     check(rows()[0].querySelector<HTMLImageElement>(".message-arrivals__art-main")?.src === COVER, "左边是专辑封面");
     check(rows()[0].querySelector<HTMLImageElement>(".message-arrivals__art-badge")?.src === LOGO, "封面角上是播放软件的图标");
+    const from = () => rows()[0].querySelector<HTMLElement>(".message-arrivals__from");
+    check(from()?.textContent === " · 汽水音乐" && getComputedStyle(from()!).display === "none", "有刘海下的标题带时，歌手后面不重复写软件名");
+    await act(async () => setBand(false));
+    check(getComputedStyle(from()!).display !== "none" && rows()[0].querySelector(".message-arrivals__body")?.textContent === "宋冬野 · 汽水音乐", "没有标题带的岛上，软件名接在歌手后面");
+    await act(async () => setBand(true));
 
     const shownAt = performance.now();
     await waitFor(() => rows().length === 0, "卡片按提示自己的时长收起", PANEL_MS - 500);
@@ -131,7 +139,8 @@ async function runChecks() {
     await wait(30);
     check(await deliver(alarm), "收起后别的插件提示照常显示");
     await waitFor(() => rows().length === 1 && label() === "闹钟", "别的插件的提示标题是插件自己的名字");
-    check(!document.querySelector(".island__notch-band-logo") && !rows()[0].querySelector(".message-arrivals__art"), "别的插件不借用播放软件的图标和封面");
+    const bandLogo = document.querySelector<HTMLImageElement>(".island__notch-band-logo")?.getAttribute("src") ?? "";
+    check(bandLogo.endsWith("/packages/@fuyu/alarm/assets/icon.svg") && !rows()[0].querySelector(".message-arrivals__art"), "别的插件用自己的图标，不借用播放软件的图标和封面");
     const alarmRow = rows()[0].querySelector<HTMLButtonElement>(".message-arrivals__row")!;
     alarmRow.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
     await act(async () => alarmRow.click());

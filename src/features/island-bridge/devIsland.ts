@@ -1,8 +1,10 @@
 import { emit } from "@tauri-apps/api/event";
+import { runIslandAction } from "../plugin-kernel/useIslandContributions";
 import { DEV_ISLAND_ACTION_EVENT } from "./api";
 import type { LocalApiHandlers } from "./dispatch";
 
 const ACTIONS = new Set(["open", "collapse", "tuck", "reveal"]);
+const PLUGIN_NOTICE_EVENT = "plugin-notification";
 
 function record(params: unknown): Record<string, unknown> {
   return params && typeof params === "object" ? (params as Record<string, unknown>) : {};
@@ -13,6 +15,10 @@ export const devIslandHandlers: LocalApiHandlers = {
     const { event, payload } = record(params);
     if (typeof event !== "string" || event.length === 0) {
       return { ok: false, status: 400, error: "Give the event name in \"event\"." };
+    }
+    if (event === PLUGIN_NOTICE_EVENT) {
+      if (runIslandAction("notify", payload)) return { ok: true, data: { emitted: event } };
+      return { ok: false, status: 503, error: "The island is not taking plugin notices right now." };
     }
     await emit(event, payload ?? null);
     return { ok: true, data: { emitted: event } };

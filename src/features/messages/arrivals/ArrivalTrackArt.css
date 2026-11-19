@@ -30,3 +30,7 @@
 .message-arrivals--inline .message-arrivals__art-main {
   border-radius: 8px;
 }
+
+:root:not([data-island-notch="simulated"]) .island__expanded:has(> .island__notch-band) .message-arrivals__from {
+  display: none;
+}

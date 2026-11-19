@@ -250,6 +250,7 @@ export interface PluginPackage {
   package: string;
   version: string;
   displayName: Record<string, string> | null;
+  icon: string | null;
   host: string | null;
   clients: PluginWindowFile[];
   commands: Array<{ id: string; title: Record<string, string>; keybinding?: string }>;

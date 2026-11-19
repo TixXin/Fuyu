@@ -27,3 +27,11 @@ test("the Messages heading stays for chat messages, mixed lists and unnamed plug
   assert.equal(arrivalsHeading([track, { source: "qq" }], ART, NAMES, "zh-CN", "切歌"), null);
   assert.equal(arrivalsHeading([{ source: "plugin", pluginId: "dev.unknown" }], ART, NAMES, "zh-CN", "切歌"), null);
 });
+
+test("another plugin's notice carries that plugin's own icon when the island knows it", () => {
+  const alarm = { source: "plugin", pluginId: "@fuyu/alarm" };
+  const icons = new Map([["@fuyu/alarm", "fuyu-plugin://localhost/packages/@fuyu/alarm/assets/icon.svg"]]);
+  assert.deepEqual(arrivalsHeading([alarm], ART, NAMES, "zh-CN", "切歌", icons), { label: "闹钟", icon: "bell", iconUrl: icons.get("@fuyu/alarm") });
+  assert.deepEqual(arrivalsHeading([alarm], ART, NAMES, "zh-CN", "切歌", new Map()), { label: "闹钟", icon: "bell" });
+  assert.deepEqual(arrivalsHeading([track], ART, NAMES, "zh-CN", "切歌", icons), { label: "汽水音乐", icon: "music", iconUrl: ART.sourceIcon });
+});

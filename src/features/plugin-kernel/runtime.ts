@@ -5,10 +5,10 @@ import type { ServiceEntry } from "@fuyu/plugin-base/services";
 import { installShared } from "@fuyu/plugin-base/client/react";
 import type { SlotRegistry } from "@fuyu/plugin-base/client/slots";
 import { FALLBACK_LOCALE, getLoadedI18n, loadLocale } from "../../i18n";
-import { isMacOS } from "../../lib/platform";
 import { islandNoticesV1 } from "../../lib/island-notices/service";
 import { getPluginHostConnection } from "./api";
 import { answerIslandRequest, attachIslandHost, islandControlFor } from "./islandControl.ts";
+import { PLUGIN_BASE } from "./pluginBase.ts";
 import { updatePluginNames, type PluginNameInput } from "./pluginNames.ts";
 import { openPluginSettings } from "./settingsOpener.ts";
 import { windowServices } from "./services.ts";
@@ -21,7 +21,6 @@ export interface PluginRuntime {
   connection: Connection;
 }
 
-const PLUGIN_BASE = isMacOS ? "fuyu-plugin://localhost" : "http://fuyu-plugin.localhost";
 const runtimes = new Map<SlotWindow, Promise<PluginRuntime | null>>();
 
 function waitingText() {

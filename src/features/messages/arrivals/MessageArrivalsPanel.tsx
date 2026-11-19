@@ -74,6 +74,7 @@ export function MessageArrivalsPanel({
               : message.source === "qqMail" ? message.body.trim() || t.newMail
                 : message.source === "plugin" ? message.body.trim() : message.body.trim() || t.newMessage;
           const controls = message.mediaControls && media ? media : null;
+          const from = controls?.sourceLabel?.trim() || null;
           const key = arrivalKey(message);
           const copyable = plainWeChat || isFlash || isBadge ? "" : notificationCopyableText(message.title, message.body);
           const copied = copiedKey === key;
@@ -104,7 +105,12 @@ export function MessageArrivalsPanel({
                       ? <span className="message-arrivals__copied">{t.copied}</span>
                       : <time className="message-arrivals__time" dateTime={new Date(message.receivedAt).toISOString()}>{bannerClock(message.receivedAt)}</time>)}
                   </span>
-                  {body && <span className="message-arrivals__body">{body}</span>}
+                  {(body || from) && (
+                    <span className="message-arrivals__body">
+                      {body}
+                      {from && <span className="message-arrivals__from">{body ? ` · ${from}` : from}</span>}
+                    </span>
+                  )}
                 </span>
               </button>
               {controls && <ArrivalMediaControls media={controls} />}

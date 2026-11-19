@@ -6,6 +6,7 @@ export type ArrivalMedia = {
   playing: boolean;
   cover?: string | null;
   sourceIcon?: string | null;
+  sourceLabel?: string | null;
   onPrevious: () => void;
   onPlayPause: () => void;
   onNext: () => void;
