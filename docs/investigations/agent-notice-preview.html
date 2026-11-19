@@ -82,6 +82,20 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .msgwrap.can:hover .sb{opacity:.45}
 .msgwrap .sb.on{opacity:1;transition-duration:var(--motion-fast)}
 .msgwrap .sb:hover,.msgwrap .sb.drag{opacity:1;width:5px;right:-10px}
+.sb-always .msgwrap.can .sb{opacity:.45}
+.metal{font-size:11.5px;color:var(--fg3);margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nokeys kbd{display:none}
+.setwrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:14px;align-items:start}
+@media (max-width:1000px){.setwrap{grid-template-columns:1fr}}
+.setp{background:var(--pg2);border:1px solid var(--rule);border-radius:12px;padding:6px 14px 12px}
+.setp h4{margin:12px 0 4px;font-size:12px;color:var(--ink3);font-weight:600;letter-spacing:.04em}
+.sr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.sr:last-child{border-bottom:0}
+.sr>span{color:var(--ink);min-width:0}
+.sr small{display:block;color:var(--ink3);font-size:11.5px}
+.sr select{font:inherit;font-size:12.5px;max-width:52%;padding:3px 6px;border-radius:7px;border:1px solid var(--rule);background:var(--pg);color:var(--ink)}
+.sr .def{font-size:11px;color:var(--acc);margin-left:4px}
+.livep{position:sticky;top:60px}
 .isl.dark{--sbc:rgba(255,255,255,.42)}.isl.light{--sbc:rgba(0,0,0,.34)}
 body.rm .sb{transition:none}
 @media (prefers-reduced-motion:reduce){.sb{transition:none}}
@@ -280,32 +294,27 @@ td:first-child{white-space:nowrap;color:var(--ink);font-weight:500}
 <p class="sub">固定 280px，左右分别是中文和英文，用「等你确认」和「等你回复」举例。规则：A 窄于 340 去掉快捷键字、窄于 300 把「到终端」收起；B 窄于 300 按钮只剩 ✕ &gt;_ ✓ 图标；C 窄时中间标题先让位。</p>
 <div class="cols" data-sec="narrow"></div>
 
-<h2>推荐</h2>
-<div class="rec">
-<p><b style="color:var(--ink)">推荐 B（状态优先）为主体，借 C 的两条：Mac 刘海用两翼标题带；开始新一轮不弹出。</b></p>
-<ul>
-<li>现在的问题根子是第一行塞了五样东西、谁都不是主角。B 让「现在要你做什么」成为最大的字，标题降到第二行独占整行，模型、用时、「你：」进悬停卡，剩下的高度都给 Agent 的消息：平时 6 行，按 Markdown 显示，超出在卡片里滚动，悬停展开全文。</li>
-<li>审批、等你回复、出错、完成都是同一个结构（图标 + 状态句 + 标题 + 正文 + 按钮），从运行中变成等你确认时只是状态句换色、按钮那行长出来，不再整张卡片跳变。</li>
-<li>叠放的边能看出后面还有几个、什么状态，比 A 的「+2」直观，又不像 C 那样把运行中的信息全藏起来。</li>
-<li>A 改动最小；C 在 Mac 刘海上最自然但两翼占掉一行，消息比 B 少两行，Windows 上也太空。</li>
-</ul>
+<h2>10 · 设置项（用户已定：三套都做成设置，默认按推荐）</h2>
+<p class="sub">设置 → AI Agent → 通知。左边每一项都能改，右边实时预览；带「默认」字样的是出厂值，也就是上面推荐的组合。「等你确认」始终留到你处理，不做成设置；原有的「完成时停留几秒」和「没处理时再提醒」保留。</p>
+<div class="setwrap">
+ <div class="setp" id="setp"></div>
+ <div class="livep"><div class="ctrl" id="scen"></div><div id="live"></div><div class="ctrl" style="margin-top:6px"><button id="setreset">恢复默认</button></div></div>
 </div>
 
-<h2>已定（第二版）</h2>
-<ul class="qs">
-<li><b>颜色</b>（原问题 2）：橙色只给「等你确认」，只用在状态字和图标的环上；主按钮用强调色；「等你回复」用安静的灰蓝；出错红色。</li>
-<li><b>元信息</b>（原问题 4）：模型、用时、「你：」收进悬停卡片，把空间让给消息正文。</li>
+<h2>结论（用户 2026-11-19 定）</h2>
+<div class="rec">
+<p><b style="color:var(--ink)">三套都做，做成设置让用户自己选；默认值按推荐：B 状态优先，Mac 刘海用两翼标题带，开始新一轮不弹出。</b>各项和默认值见上面第 10 节。</p>
+<ul>
+<li><b>颜色</b>：橙色只给「等你确认」，只用在状态字和图标的环上；主按钮用 <code>--color-accent</code>；「等你回复」用安静的灰蓝；出错红色。（不做成设置）</li>
+<li><b>消息</b>：默认 6 行，按 Markdown 显示，超出在卡片里用叠加式细滚动条滚动，悬停展开全文；运行中命令默认 3 行。</li>
+<li><b>元信息</b>：模型、用时、「你：」默认只在悬停卡片里，可以改成通知里也显示。</li>
+<li><b>停留</b>：等你确认留到处理（固定）；等你回复、出错默认留到看过；完成默认 5 秒；鼠标停在岛上暂停。</li>
+<li><b>点通知</b>：默认切到会话所在的窗口，右上角 ↗ 打开 Agent 页；可以对调。</li>
+<li><b>多会话</b>：默认叠放露边，可选一次一条加 +n、左翼图标堆。</li>
+<li><b>审批按钮</b>：默认「拒绝 · 到终端 · 允许」，允许在最右用强调色；可以对调，可以不显示快捷键。</li>
 </ul>
-
-<h2>还要你定的问题（每条带推荐）</h2>
-<ol class="qs">
-<li value="1"><b>选哪套</b>：A 精简两行、B 状态优先、C 两翼加下拉，或组合。<b>推荐</b>：B 为主体，Mac 刘海用 C 的两翼标题带，开始新一轮按 C 的做法不弹。</li>
-<li value="3"><b>开始新一轮还弹不弹</b>：现在每开一轮都展开 5 秒。<b>推荐</b>：不弹，只在收起条上显示标题几秒，需要你的时候（等你确认、等你回复、出错、完成）才弹。</li>
-<li value="5"><b>停留多久</b>：等你回复、出错是「留到你看过」（悬停过或切到那个窗口）还是定时收起？<b>推荐</b>：等你确认和等你回复留到处理或看过，出错留到看过，完成仍按设置的 5 秒；鼠标停在岛上一律暂停。</li>
-<li value="6"><b>点通知去哪</b>：现在点了打开 Agent 页。<b>推荐</b>：点本体直接切到会话所在的终端 / 编辑器窗口，右上角留一个小「↗」打开 Agent 页。</li>
-<li value="7"><b>多个会话怎么叠</b>：叠放露边（B）、一次一条加「+n」（A）、左翼图标堆（C）。<b>推荐</b>：B 的叠放露边，最紧急的在前，悬停展开成列表。</li>
-<li value="8"><b>审批按钮</b>：顺序「拒绝 / 到终端 / 允许」，「允许」在最右并用强调色填满；「始终允许」仍放在点开命令后的展开区里。<b>推荐</b>：就这样。</li>
-</ol>
+<p>下一步：由组长按这页写实现计划（按文件切分，验证 <code>pnpm check</code>、<code>pnpm build</code>、<code>pnpm test:regression</code>），再派会话做。</p>
+</div>
 </main>
 
 <script>
@@ -393,11 +402,15 @@ function sessions(lang){const ss=sessions0(lang);const m=MSG[lang];['yourTurn','
 function longTitle(lang){return lang==='zh'?'[任务] Agent 通知重设计：从信息层级、截断、状态、叠放、动效各方面考虑，先出预览页给用户挑方向':'[Task] Redesign the agent notice: hierarchy, truncation, states, stacking and motion, preview page first'}
 const key=(o,k)=>o.plat==='mac'?'⌃⌥'+k:'Ctrl+Alt+'+k;
 const cmd=t=>`<span class="tool"><b class="chip">${esc(t.name)}</b><span class="cmd"><span class="h">${esc(t.h)}</span><span class="t">${esc(t.t)}</span></span></span>`;
-const acts=(o,t)=>`<div class="acts"><button><span class="lab">${t.deny}</span><span class="ico">✕</span><kbd>${key(o,'N')}</kbd></button><button class="term"><span class="lab">${t.term}</span><span class="ico" style="font-family:ui-monospace,Menlo,monospace;font-size:12px">&gt;_</span><kbd>${key(o,'T')}</kbd></button><button class="pri"><span class="lab">${t.allow}</span><span class="ico">✓</span><kbd>${key(o,'Y')}</kbd></button></div>`;
+const acts=(o,t)=>{const b=[`<button><span class="lab">${t.deny}</span><span class="ico">✕</span><kbd>${key(o,'N')}</kbd></button>`,`<button class="term"><span class="lab">${t.term}</span><span class="ico" style="font-family:ui-monospace,Menlo,monospace;font-size:12px">&gt;_</span><kbd>${key(o,'T')}</kbd></button>`,`<button class="pri"><span class="lab">${t.allow}</span><span class="ico">✓</span><kbd>${key(o,'Y')}</kbd></button>`];if(o.allowLeft)b.reverse();return `<div class="acts${o.noKeys?' nokeys':''}">${b.join('')}</div>`};
 function bodyOf(s,t,n,o){
+ n=Object.assign({},n);if(o&&o.msgLines)n.msg=o.msgLines==='all'?40:+o.msgLines;if(o&&o.cmdLines)n.cmd=+o.cmdLines;
+ const meta=o&&o.metaInline?`<div class="metal">${esc([s.model,s.effort,s.mode,s.elapsed].filter(Boolean).join(' · '))} · ${t.you}${esc(s.prompt)}</div>`:'';
+ return meta+bodyOf0(s,t,n,o)}
+function bodyOf0(s,t,n,o){
  if(s.light==='working')return `<div class="tool2"><b class="chip">${esc(s.tool.name)}</b><div class="mbox"><div class="txt mono" style="--n:${o&&o.hover?8:n.cmd}">${esc(s.tool.h+s.tool.t)}</div></div></div>`;
  if(s.light==='needs')return `<div class="lbl">${t.wants(s.tool.name)}</div><div class="mbox"><div class="txt mono" style="--n:${o&&o.hover?8:n.cmd+1}">${esc(s.tool.h+s.tool.t)}</div></div>`;
- return `<div class="msgwrap"><div class="msg${o&&o.hover?' full':''}" style="--n:${n.msg}">${md(s.text)}</div><i class="sb" aria-hidden="true"></i></div>`;
+ return `<div class="msgwrap"><div class="msg${o&&o.hover?' full':''}" style="--n:${n.msg}">${o&&o.plain?esc(s.text).replace(/\n/g,'<br>'):md(s.text)}</div><i class="sb" aria-hidden="true"></i></div>`;
 }
 function hoverCard(s,o,t){
  const pill=[s.model,s.effort,s.mode].filter(Boolean).join(' · ');
@@ -442,7 +455,7 @@ function parts(sc,s,o){
  let band='';
  if(mac)band=`<div class="band"><div class="wl">${r.bl}</div><div class="notch"></div><div class="wr">${r.br}</div></div>`;
  else if(r.wing)band=`<div class="band win"><div class="wl">${r.bl}</div><div class="wc">${r.bc}</div><div class="wr">${r.br}</div></div>`;
- return {cls:`isl ${o.theme} ${o.plat} sc-${sc} l-${s.light}`,inner:band+r.body,after:r.after||''};
+ return {cls:`isl ${o.theme} ${o.plat} sc-${sc} l-${s.light}${o.sbAlways?' sb-always':''}`,inner:band+r.body,after:r.after||''};
 }
 function island(sc,s,o){
  o=Object.assign({},S,o);const p=parts(sc,s,o);
@@ -520,12 +533,60 @@ function render(){
  document.querySelectorAll('[data-sec]').forEach(el=>{const k=el.dataset.sec;el.innerHTML=['A','B','C'].map(sc=>col(sc,SEC[k](sc),NOTES[k][sc])).join('')});
  document.querySelectorAll('[data-stage]').forEach(initStage);
  renderScrollGrid();
+ renderSettings();
  initScrollers(document);
 }
 
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 function renderScrollGrid(){const ss=sessions(S.lang);document.getElementById('scrollgrid').innerHTML=[['dark','win','深色 · Windows'],['light','win','浅色 · Windows'],['dark','mac','深色 · Mac 刘海'],['light','mac','浅色 · Mac 刘海']].map(([th,pl,cap])=>scr(island('B',ss.long,{theme:th,plat:pl,width:Math.min(S.width,360)}),cap)).join('');initScrollers(document.getElementById('scrollgrid'))}
 async function demoScroll(){const ms=[...document.querySelectorAll('#scrollgrid .msg')];for(const y of [60,140,9999,0]){ms.forEach(m=>{const mx=m.scrollHeight-m.clientHeight;const t=Math.min(mx,y);if(reduced()){m.scrollTop=t;return}const go=()=>{const d=t-m.scrollTop;if(Math.abs(d)<0.5){m.scrollTop=t;return}m.scrollTop+=d*0.2;requestAnimationFrame(go)};go()});await wait(1100)}}
+const SETS=[
+ ['外观'],
+ ['style','通知样式',[['B','状态优先'],['A','精简两行'],['C','两翼 + 下拉']],'B','三套方案任选'],
+ ['notch','Mac 刘海时',[['band','刘海两边放标题带'],['below','整条放在刘海下面']],'band','只在 Mac 有刘海时出现'],
+ ['msgLines','消息正文最多显示',[['4','4 行'],['6','6 行'],['8','8 行'],['12','12 行'],['all','随内容长高']],'6','超出在卡片里滚动；「随内容长高」到岛的最大高度为止'],
+ ['cmdLines','运行中的命令最多显示',[['1','1 行'],['2','2 行'],['3','3 行'],['5','5 行']],'3',''],
+ ['markdown','消息按 Markdown 显示',[['on','开'],['off','关（纯文字）']],'on','列表、代码块、行内代码'],
+ ['meta','模型、用时、「你：」',[['hover','只在悬停卡片里'],['inline','通知里也显示']],'hover',''],
+ ['sb','滚动条',[['auto','滚动时出现'],['always','一直显示']],'auto',''],
+ ['行为'],
+ ['newTurn','开始新一轮时',[['title','只在收起条显示标题'],['pop','弹出通知'],['none','不显示']],'title',''],
+ ['yourTurn','等你回复的通知',[['seen','留到看过'],['15','15 秒后收起'],['30','30 秒后收起']],'seen','看过 = 悬停过它，或切到了那个窗口'],
+ ['failed','出错的通知',[['seen','留到看过'],['10','10 秒后收起'],['30','30 秒后收起']],'seen',''],
+ ['done','完成的通知停留',[['3','3 秒'],['5','5 秒'],['10','10 秒'],['30','30 秒']],'5','现有设置，3–30 秒'],
+ ['hoverHold','鼠标停在岛上时暂停倒计时',[['on','开'],['off','关']],'on',''],
+ ['click','点通知',[['window','切到会话所在的窗口'],['page','打开 Agent 页']],'window','另一个去处放在右上角的小按钮'],
+ ['stack','多个会话同时来',[['B','叠放，露出后面的边'],['A','一次一条，右上角 +n'],['C','左翼图标堆']],'B','悬停都能展开成列表'],
+ ['审批'],
+ ['order','按钮顺序',[['right','拒绝 · 到终端 · 允许'],['left','允许 · 到终端 · 拒绝']],'right',''],
+ ['keys','按钮上显示快捷键',[['on','显示'],['off','不显示']],'on','窄岛上会自动隐藏']
+];
+const DEF=Object.fromEntries(SETS.filter(x=>x.length>1).map(x=>[x[0],x[3]]));
+let SET=Object.assign({},DEF);try{Object.assign(SET,JSON.parse(localStorage.getItem('c137-settings')||'{}'))}catch(e){}
+const SCEN=[['working','运行中'],['needs','等你确认'],['yourTurn','等你回复'],['long','长消息'],['failed','出错'],['stack','多个会话']];
+let scen='needs';
+function renderSettings(){
+ document.getElementById('setp').innerHTML=SETS.map(x=>x.length===1?`<h4>${x[0]}</h4>`:`<label class="sr"><span>${x[1]}${x[4]?`<small>${x[4]}</small>`:''}</span><select data-set="${x[0]}">${x[2].map(([v,l])=>`<option value="${v}"${SET[x[0]]===v?' selected':''}>${l}${v===x[3]?'（默认）':''}</option>`).join('')}</select></label>`).join('');
+ document.getElementById('scen').innerHTML=SCEN.map(([k,l])=>`<button class="${k===scen?'go':''}" data-scen="${k}">${l}</button>`).join('');
+ renderLive();
+}
+function renderLive(){
+ const ss=sessions(S.lang);
+ const o={msgLines:SET.msgLines,cmdLines:SET.cmdLines,plain:SET.markdown==='off',metaInline:SET.meta==='inline',sbAlways:SET.sb==='always',allowLeft:SET.order==='left',noKeys:SET.keys==='off'};
+ if(S.plat==='mac'&&SET.notch==='below')o.plat='win';
+ let html,cap;
+ if(scen==='stack'){html=island(SET.stack,ss.needs,Object.assign(o,{stack:[ss.needs,ss.failed,ss.working]}));cap='多个会话（按「多个会话同时来」的选项画）'}
+ else{const s=ss[scen];html=island(SET.style,s,o);cap=SCEN.find(x=>x[0]===scen)[1]}
+ const notes=[];
+ if(scen==='working'&&SET.newTurn!=='pop')notes.push(SET.newTurn==='title'?'按当前设置，开始新一轮不弹出，只在收起条显示标题；这里画的是悬停或点开时的样子。':'按当前设置，开始新一轮什么都不显示；这里画的是悬停或点开时的样子。');
+ if(S.plat==='mac'&&SET.notch==='below')notes.push('「整条放在刘海下面」：刘海那一段留黑，通知从刘海下沿开始（预览里按无刘海画）。');
+ const dw={yourTurn:SET.yourTurn==='seen'?'留到看过':SET.yourTurn+' 秒后收起',failed:SET.failed==='seen'?'留到看过':SET.failed+' 秒后收起',needs:'留到处理',long:SET.done+' 秒后收起',working:'—',stack:'按最前面那条'}[scen];
+ notes.push(`停留：${dw}${SET.hoverHold==='on'?'，鼠标停在岛上暂停':''}；点通知：${SET.click==='window'?'切到会话窗口（右上角 ↗ 开 Agent 页）':'打开 Agent 页（右上角 ↗ 切到会话窗口）'}。`);
+ document.getElementById('live').innerHTML=scr(html,cap)+`<p class="sub" style="margin-top:6px">${notes.join('<br>')}</p>`;
+ initScrollers(document.getElementById('live'));
+}
+document.addEventListener('change',e=>{const k=e.target.dataset&&e.target.dataset.set;if(!k)return;SET[k]=e.target.value;try{localStorage.setItem('c137-settings',JSON.stringify(SET))}catch(x){}renderLive()});
+document.addEventListener('click',e=>{const k=e.target.dataset&&e.target.dataset.scen;if(k){scen=k;renderSettings();return}if(e.target.id==='setreset'){SET=Object.assign({},DEF);try{localStorage.removeItem('c137-settings')}catch(x){}renderSettings()}});
 function initStage(el){
  const sc=el.dataset.stage;const shell=el.querySelector('.shell');const log=el.querySelector('.log');
  let cur=null,run=0;
