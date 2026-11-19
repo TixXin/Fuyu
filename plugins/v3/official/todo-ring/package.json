@@ -1,8 +1,8 @@
 {
   "name": "@fuyu/todo-ring",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "Draws today's todo completion ring and upcoming items on the island page and collapsed bar",
+  "description": "See how much of today's todo list is done at a glance, with the next few todos beside the ring.",
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",
@@ -20,11 +20,11 @@
     "manifest": 1,
     "displayName": {
       "zh-CN": "待办进度环",
-      "en": "Todo progress ring"
+      "en": "Todo Progress Ring"
     },
     "description": {
-      "zh-CN": "在岛展开页显示今日待办完成进度圆环与接下来的待办，在收起条显示小圆环与「完成数/总数」，随待办变化实时更新。",
-      "en": "Shows today's todo completion progress ring and upcoming items on the island page, plus a compact ring with done/total on the collapsed bar."
+      "zh-CN": "用一个圆环看今天的待办完成了多少，旁边列出接下来要做的几条。",
+      "en": "See how much of today's todo list is done at a glance, with the next few todos beside the ring."
     },
     "icon": "assets/icon.svg",
     "categories": [
@@ -37,7 +37,8 @@
     ],
     "host": "dist/host.js",
     "client": {
-      "island": "dist/island.js"
+      "island": "dist/island.js",
+      "settings": "dist/settings.js"
     },
     "inject": {
       "required": [
@@ -46,7 +47,8 @@
     },
     "slots": [
       "island.page/v1",
-      "island.collapsed/v1"
+      "island.collapsed/v1",
+      "settings.section/v1"
     ]
   }
 }
