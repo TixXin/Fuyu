@@ -9,6 +9,7 @@ import type { InstalledEntry } from "./pluginEntries";
 import { marketClient, openHttpUrl, openPluginDocs } from "./pluginMarketActions";
 import { formatMarketTime, localized } from "./pluginMarketModel";
 import type { PluginHostView } from "./usePluginHostStatus";
+import { PluginRosterBanners } from "./PluginRosterBanners";
 import { usePluginMarketCatalog } from "./usePluginMarketCatalog";
 
 export type BannerTone = "info" | "warn" | "bad";
@@ -188,7 +189,7 @@ export function AutoUpdatedBanner() {
   );
 }
 
-export function PluginPageBanners({ view, hostOff, node, onRetryNode, entries, onOpenDiagnostics, onOnlyAttention }: {
+export function PluginPageBanners({ view, hostOff, node, onRetryNode, entries, onOpenDiagnostics, onOnlyAttention, onOpenMarket }: {
   view: PluginHostView;
   hostOff: boolean;
   node: HostNodeStatus | null;
@@ -196,6 +197,7 @@ export function PluginPageBanners({ view, hostOff, node, onRetryNode, entries, o
   entries: readonly InstalledEntry[];
   onOpenDiagnostics: () => void;
   onOnlyAttention: () => void;
+  onOpenMarket?: (name: string) => void;
 }) {
   const text = useTranslation().settings.pluginsV3.page.banners;
   const { locale } = useLocale();
@@ -273,5 +275,6 @@ export function PluginPageBanners({ view, hostOff, node, onRetryNode, entries, o
     );
   }
   if (live) banners.push(<AutoUpdatedBanner key="auto-updated" />);
+  if (live) banners.push(<PluginRosterBanners key="roster" onOpenMarket={onOpenMarket} />);
   return <>{banners}</>;
 }

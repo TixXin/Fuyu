@@ -1,5 +1,6 @@
 import { act } from "react";
-import { commands, islandNotch } from "./settingsMocks";
+import { emit } from "@tauri-apps/api/event";
+import { commands, emittedTo, islandNotch } from "./settingsMocks";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -20,6 +21,9 @@ export async function checkAgentNoticeSettings(check: (condition: unknown, messa
   const desk = () => document.querySelector<HTMLElement>(".agent-reminder-stage__desk");
   const deskButton = (label: string) => [...(desk()?.querySelectorAll("button") ?? [])].find((button) => button.textContent?.startsWith(label));
   const play = () => document.querySelector<HTMLButtonElement>(".agent-reminder-stage__play");
+  const tryOnIsland = () => document.querySelector<HTMLButtonElement>(".agent-reminder-stage__try");
+  const stageNote = () => document.querySelector(".agent-reminder-stage__note")?.textContent ?? "";
+  const tests = () => emittedTo.filter((sent) => sent.event === "agent-test-notice").map((sent) => ({ label: sent.label, ...(sent.payload as { id: number; event: string; sessions: unknown[]; request: unknown }) }));
   const toggle = (key: string) => document.querySelector<HTMLInputElement>(`#agent-reminder-${key}`);
   const rowTitles = () => [...document.querySelectorAll(".agent-reminder .settings-row__title")].map((title) => title.textContent);
   const resetButton = () =>
@@ -58,8 +62,9 @@ export async function checkAgentNoticeSettings(check: (condition: unknown, messa
   await click(toggle("agentAlertCompleted"));
   check(stored().agentAlertCompleted === false && shown() === "done" && desk()?.querySelector(".agent-reminder-pill") && !desk()?.querySelector(".agent-reminder-frame"),
     "Turning off the pop-up for finished sessions saves it, and the preview shows the collapsed island instead of a card");
+  check(tryOnIsland()?.disabled === true, "A kind of notice that is turned off cannot be tried on the island");
   await click(toggle("agentAlertCompleted"));
-  check(stored().agentAlertCompleted === true && desk()?.querySelector(".agent-reminder-frame"), "Turning it back on brings the card back");
+  check(stored().agentAlertCompleted === true && desk()?.querySelector(".agent-reminder-frame") && tryOnIsland()?.disabled === false, "Turning it back on brings the card back");
 
   await click(chip("approval"));
   await click(play());
@@ -67,6 +72,21 @@ export async function checkAgentNoticeSettings(check: (condition: unknown, messa
   check(await until(() => desk()?.querySelector(".agent-reminder-stage__drop--in") && deskButton("允许")?.disabled === false), "…then the approval card drops in and waits");
   await click(deskButton("允许"));
   check(await until(() => play()?.textContent === "播放") && deskButton("允许"), "Answering it ends the playback and the preview is back");
+
+  const idle = stageNote();
+  await click(tryOnIsland());
+  const asked = tests()[0];
+  check(tests().length === 1 && asked.label === "main" && asked.event === "approval" && asked.sessions.length === 1 && asked.request,
+    "「在岛上试一下」 asks the island window for a test of the notice the preview shows, with its sample session and request");
+  await act(async () => { await emit("agent-test-notice-result", { id: asked.id, outcome: "busy" }); });
+  check(await until(() => stageNote() === "岛上正有真的提醒，等它收起后再试") && tryOnIsland()?.disabled === false, "When the island answers that a real notice is up, the stage says so");
+  await click(chip("stack"));
+  check(stageNote() !== "岛上正有真的提醒，等它收起后再试", "Choosing another kind of notice clears that answer");
+  await click(tryOnIsland());
+  check(tests().length === 2 && tests()[1].event === "stack" && tests()[1].sessions.length === 3 && tests()[1].request === null, "Trying several sessions sends all three");
+  check(await until(() => stageNote() === "岛没有回应，确认岛在运行后再试"), "When the island does not answer, the stage says so instead of waiting forever");
+  await click(chip("approval"));
+  check(stageNote() === idle, "…and the usual note about this notice is back");
 
   await click(resetButton());
   check(stored().agentNoticeStyle === "status" && stored().agentAlertStarted === "off" && stored().agentNoticeButtonOrder === "allowRight"

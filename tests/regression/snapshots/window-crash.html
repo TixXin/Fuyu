@@ -19,13 +19,16 @@
     <div class="host host--island">
       <div>
         <div class="window-crash window-crash--island" role="alert">
-          <div class="window-crash__pill">
+          <div class="window-crash__pill" title="TypeError: the shell lost its settings">
             <span class="window-crash__text">
               浮屿出了点问题
             </span>
-            <button class="window-crash__button window-crash__button--primary" type="button">
+            <button class="window-crash__button window-crash__button--primary" disabled="" type="button">
               <svg aria-hidden="true" class="lucide lucide-rotate-cw" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
-              重新加载
+              正在重新加载…
+            </button>
+            <button aria-label="查看日志" class="window-crash__button window-crash__button--icon" title="查看日志" type="button">
+              <svg aria-hidden="true" class="lucide lucide-file-text" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
             </button>
           </div>
         </div>
@@ -37,7 +40,28 @@
     <div class="host host--island">
       <div>
         <div class="window-crash window-crash--island" role="alert">
-          <div class="window-crash__pill">
+          <div class="window-crash__pill" title="TypeError: the shell lost its settings">
+            <span class="window-crash__text">
+              重新加载后仍然出错
+            </span>
+            <button class="window-crash__button window-crash__button--primary" disabled="" type="button">
+              <svg aria-hidden="true" class="lucide lucide-power" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
+              正在重启…
+            </button>
+            <button aria-label="查看日志" class="window-crash__button window-crash__button--icon" title="查看日志" type="button">
+              <svg aria-hidden="true" class="lucide lucide-file-text" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <span class="host__label">
+        岛：重新加载后还是出错
+      </span>
+    </div>
+    <div class="host host--island">
+      <div>
+        <div class="window-crash window-crash--island" role="alert">
+          <div class="window-crash__pill" title="TypeError: the shell lost its settings">
             <span class="window-crash__text">
               浮屿出了点问题
             </span>
@@ -45,11 +69,35 @@
               <svg aria-hidden="true" class="lucide lucide-rotate-cw" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
               重新加载
             </button>
+            <button aria-label="查看日志" class="window-crash__button window-crash__button--icon" title="查看日志" type="button">
+              <svg aria-hidden="true" class="lucide lucide-file-text" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            </button>
           </div>
         </div>
       </div>
       <span class="host__label">
         岛：到时间自动再试
+      </span>
+    </div>
+    <div class="host host--island">
+      <div>
+        <div class="window-crash window-crash--island" role="alert">
+          <div class="window-crash__pill" title="TypeError: the shell lost its settings">
+            <span class="window-crash__text">
+              界面出错，改好代码后自动恢复
+            </span>
+            <button class="window-crash__button window-crash__button--primary" type="button">
+              <svg aria-hidden="true" class="lucide lucide-rotate-cw" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
+              重新加载
+            </button>
+            <button aria-label="查看日志" class="window-crash__button window-crash__button--icon" title="查看日志" type="button">
+              <svg aria-hidden="true" class="lucide lucide-file-text" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <span class="host__label">
+        岛：开发版
       </span>
     </div>
     <div class="host host--window">
@@ -62,13 +110,20 @@
             <p class="window-crash__detail">
               错误已记到数据文件夹的 frontend-errors.log。重新加载通常就能恢复。
             </p>
+            <code class="window-crash__error">
+              TypeError: the shell lost its settings
+            </code>
             <div class="window-crash__actions">
+              <button class="window-crash__button window-crash__button--link" type="button">
+                <svg aria-hidden="true" class="lucide lucide-file-text" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
+                查看日志
+              </button>
               <button class="window-crash__button" type="button">
                 关闭
               </button>
-              <button class="window-crash__button window-crash__button--primary" type="button">
+              <button class="window-crash__button window-crash__button--primary" disabled="" type="button">
                 <svg aria-hidden="true" class="lucide lucide-rotate-cw" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
-                重新加载
+                正在重新加载…
               </button>
             </div>
           </div>
@@ -76,6 +131,39 @@
       </div>
       <span class="host__label">
         普通窗口：再次出错
+      </span>
+    </div>
+    <div class="host host--window">
+      <div>
+        <div class="window-crash window-crash--window" role="alert">
+          <div class="window-crash__card">
+            <p class="window-crash__title">
+              这个窗口出了点问题
+            </p>
+            <p class="window-crash__detail">
+              重新加载后仍然出错。可以重启浮屿；问题还在的话，把日志发给我们。
+            </p>
+            <code class="window-crash__error">
+              TypeError: the shell lost its settings
+            </code>
+            <div class="window-crash__actions">
+              <button class="window-crash__button window-crash__button--link" type="button">
+                <svg aria-hidden="true" class="lucide lucide-file-text" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
+                查看日志
+              </button>
+              <button class="window-crash__button" type="button">
+                关闭
+              </button>
+              <button class="window-crash__button window-crash__button--primary" type="button">
+                <svg aria-hidden="true" class="lucide lucide-power" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
+                重启浮屿
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span class="host__label">
+        普通窗口：重新加载后还是出错
       </span>
     </div>
     <div class="host host--silent">
@@ -94,7 +182,14 @@
             <p class="window-crash__detail">
               错误已记到数据文件夹的 frontend-errors.log。重新加载通常就能恢复。
             </p>
+            <code class="window-crash__error">
+              TypeError: Importing a module script failed.
+            </code>
             <div class="window-crash__actions">
+              <button class="window-crash__button window-crash__button--link" type="button">
+                <svg aria-hidden="true" class="lucide lucide-file-text" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
+                查看日志
+              </button>
               <button class="window-crash__button" type="button">
                 关闭
               </button>

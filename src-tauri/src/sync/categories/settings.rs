@@ -24,7 +24,7 @@ pub(crate) struct Local {
 const SCRUBBED_KEYS: [&str; 1] = ["fuyu-qq-mail-settings"];
 const SECRET_WORDS: [&str; 7] = ["password", "passwd", "token", "secret", "authcode", "apikey", "credential"];
 
-fn scrub(value: &mut Value) {
+pub(super) fn scrub(value: &mut Value) {
     match value {
         Value::Object(object) => {
             object.retain(|field, _| {
@@ -137,7 +137,11 @@ fn put_record(doc: &mut Doc, whitelist: &Whitelist, local: &Local, spot: &Record
     let mut order = Vec::new();
     for item in &items {
         let Some(id) = item.get("id").and_then(Value::as_str).filter(|id| !id.is_empty()) else { continue };
-        let value = if name == PRESETS_KEY { settings_meta::syncable_preset(whitelist, item) } else { item.clone() };
+        let value = match name.as_str() {
+            PRESETS_KEY => settings_meta::syncable_preset(whitelist, item),
+            super::plugin_roster::KEY => super::plugin_roster::syncable(item),
+            _ => item.clone(),
+        };
         let updated_at = stamps.items.get(id).cloned().unwrap_or_else(|| zero(device));
         doc.tombstones.remove(&format!("{}{id}", item_prefix(&name)));
         doc.put(format!("{}{id}", item_prefix(&name)), value, updated_at);
@@ -215,7 +219,11 @@ fn rebuild_record(merged: &Doc, local: &Local, spot: &RecordSpot) -> (Option<Val
         .map(|(value, _)| {
             let id = value.get("id").and_then(Value::as_str);
             let kept = local_items.iter().find(|item| item.get("id").and_then(Value::as_str) == id);
-            if name == PRESETS_KEY { overlay_preset(kept, value) } else { (*value).clone() }
+            match name.as_str() {
+                PRESETS_KEY => overlay_preset(kept, value),
+                super::plugin_roster::KEY => super::plugin_roster::syncable(value),
+                _ => (*value).clone(),
+            }
         })
         .collect();
     let stamps = RecordStamps {

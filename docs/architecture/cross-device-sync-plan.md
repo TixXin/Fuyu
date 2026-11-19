@@ -155,7 +155,7 @@ C91.1 ──▶ C91.2 ┐
 | 整个 key | 取值 |
 |---|---|
 | sync | `fuyu-settings`（按字段，见下）、`fuyu-locale`、`fuyu-translation-settings`（按字段，见下）、`fuyu-qq-mail-remote-images`、`fuyu-plugin-market-favorites`（E63.4 改成 `local`，E71 删掉）、`fuyu-screenshot-annotation`、`fuyu-screenshot-settings`（按字段，见下）、`fuyu-agent-sounds`（按字段，见下）、`fuyu-agent-session-filters`、`fuyu-agent-approval`（按字段，见下）、`fuyu-agent-push`（按字段，见下）、`fuyu-lyrics-offsets` |
-| byId | `fuyu-setting-presets` |
+| byId | `fuyu-setting-presets`、`fuyu-market-plugins`（E77.5，见文末「市场插件的名单」） |
 | local | `fuyu-music-sources`、`fuyu-qq-notifications-enabled`、`fuyu-wechat-reminders-enabled`、`fuyu-wechat-expose-ui`、`fuyu-wechat-hide-taskbar-button`、`fuyu-qq-mail-settings`、`fuyu-collapsed-items`、`fuyu-plugin-pages`（E71 删掉）、`fuyu-save-directory`、`fuyu-update-channel`、`fuyu-update-preferences` |
 
 | 对象设置 | sync | firstMergeOnly | byId | local |
@@ -197,3 +197,16 @@ C91.1 ──▶ C91.2 ┐
 | `updateChannel` | `fuyu-update-channel` |
 
 - 拆分：白名单、`settings_meta.rs` 的 `optional`、引擎按组过滤、本机配置和 `api.ts` 类型归 C92.1；设置页里每组一个开关（默认关，中英文说明各自为什么默认不同步）归 C92.2。
+
+## 市场插件的名单（E77.5，2026-11-19）
+
+换电脑后市场插件要重装、重配，所以把「装了哪些市场插件、是否启用、插件的设置」放进设置里一起走（issue #1034）。格式和逐条规则在 [contracts.md](contracts.md)「市场插件的名单」，这里只记决定：
+
+- **放在哪**：一个新的设置 key `fuyu-market-plugins`，进 `BACKUP_KEYS`。这样设置导出、`settings.json`、升级前的备份和跨设备同步都不用另开一条路。同步白名单里是 `byId`，每个插件一条，两台设备各装各的不会互相覆盖。
+- **同步来的名单不执行任何东西**：不安装、不启停、不改插件设置。缺的插件在设置 → 插件页提示「另一台设备上还装了 N 个插件」，用户点了才从市场装（签名和 SHA-256 校验照旧）；设置不一样的提示「用那边的设置 / 保留本机的」。岛窗口只做只读调用，`market/v1` 的安装和启停本来就只应答设置窗口。
+- **不带什么**：字段名像密钥的设置字段；超过 16 KB 的设置（那个插件只带名单，横幅里说明）；插件的数据文件；从文件安装的插件包（只带名字，另一台设备上提示要自己再装）。
+- **启用状态**：只在从横幅安装时照名单设一次。两台都装着的插件各自开关，不跟着同步变，和内置功能开关的 `firstMergeOnly` 是一个意思。
+- **谁的设置算数**：名单里每个插件一条，后写的赢。本机状态相对上次看到的变了才改写自己那条，所以两台设置不同的设备不会来回覆盖；差异留给用户在插件页选。
+- **卸载**：在本机卸载会删掉名单里那一条，本机不再提示它；别的设备还装着的话会把它补回名单。
+
+只能在两台设备上测的见任务 E77.5 的实测清单。

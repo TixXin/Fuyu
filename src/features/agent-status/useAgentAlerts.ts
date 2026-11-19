@@ -3,6 +3,7 @@ import { visibilityInterval } from "../../lib/useVisibilityInterval";
 import { detectAlerts, phasesOf, takeDueReminders, trackWaiting, type AgentAlert, type AgentAlertKinds, type SessionPhases, type WaitingReminders } from "./alerts";
 import { agentSessionsInFront, type AgentSessionSummary } from "./api";
 import { addNotices, hoverNotices, pruneNotices, sameNotices, sortNotices, type AlertedNotice, type NoticeDwell, type NoticeEntry } from "./noticeDwell";
+import { isTestSession, testNoticeBlock, testNotices, type TestNoticeOutcome } from "./testNotice";
 
 export { alertKindsOf } from "./alerts";
 export type { AlertedNotice, NoticeDwell } from "./noticeDwell";
@@ -16,12 +17,18 @@ export type AlertedSession = AlertedNotice & {
   openAgentPage?: () => void;
 };
 
-export type AgentAlerts = { alerted: AlertedSession | null; stack: readonly AlertedNotice[] };
+export type AgentAlerts = {
+  alerted: AlertedSession | null;
+  stack: readonly AlertedNotice[];
+  showTest: (alerts: readonly AgentAlert[]) => TestNoticeOutcome;
+  dismissTest: () => void;
+};
 
 const DEFAULT_ROW_HEIGHT = 78;
 const NO_NOTICES: NoticeEntry[] = [];
 const notHovered = () => false;
 const notLooked = () => false;
+const isRealNotice = (entry: NoticeEntry) => !isTestSession(entry.session);
 
 type AgentAlertOptions = {
   sessions: AgentSessionSummary[];
@@ -65,7 +72,9 @@ export function useAgentAlerts({ sessions, kinds, dwell, canAlert, isOpenOnAgent
   useEffect(() => {
     const keepOpen = (event: PointerEvent) => {
       stopAuto();
-      if (!(event.target instanceof Element && event.target.closest(".agent-sessions__list"))) commit(NO_NOTICES);
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest(".agent-sessions__list")) return;
+      commit(target?.closest(".agent-approval") ? noticesRef.current.filter((entry) => !isRealNotice(entry)) : NO_NOTICES);
     };
     window.addEventListener("pointerdown", keepOpen, true);
     return () => window.removeEventListener("pointerdown", keepOpen, true);
@@ -120,7 +129,7 @@ export function useAgentAlerts({ sessions, kinds, dwell, canAlert, isOpenOnAgent
         if (shown.length === 0 || !current.canAlert) return;
         onShown?.(shown);
         if (!(current.isCollapsed || openedByAlertRef.current)) return;
-        const base = openedByAlertRef.current ? noticesRef.current : NO_NOTICES;
+        const base = openedByAlertRef.current ? noticesRef.current.filter(isRealNotice) : NO_NOTICES;
         commit(addNotices(base, shown, current.dwell, Date.now()));
         openedByAlertRef.current = true;
         setTicking(true);
@@ -156,9 +165,23 @@ export function useAgentAlerts({ sessions, kinds, dwell, canAlert, isOpenOnAgent
     commit(NO_NOTICES);
   }, [commit, stopAuto]);
 
+  const showTest = useCallback((alerts: readonly AgentAlert[]): TestNoticeOutcome => {
+    const current = latest.current;
+    const blocked = testNoticeBlock(noticesRef.current, current.canAlert, current.isCollapsed);
+    if (blocked) return blocked;
+    commit(testNotices(alerts, current.dwell, Date.now()));
+    openedByAlertRef.current = true;
+    setTicking(true);
+    current.onOpen();
+    return "shown";
+  }, [commit]);
+  const dismissTest = useCallback(() => {
+    if (noticesRef.current.some((entry) => !isRealNotice(entry))) refresh(noticesRef.current.filter(isRealNotice), Date.now());
+  }, [refresh]);
+
   return useMemo(() => {
     const stack = sortNotices(notices).map(({ key, kind, session }): AlertedNotice => ({ key, kind, session }));
     const top = stack[0];
-    return { alerted: top ? { ...top, rowHeight, measure: setRowHeight, openAgentPage } : null, stack };
-  }, [notices, rowHeight, openAgentPage]);
+    return { alerted: top ? { ...top, rowHeight, measure: setRowHeight, openAgentPage } : null, stack, showTest, dismissTest };
+  }, [notices, rowHeight, openAgentPage, showTest, dismissTest]);
 }

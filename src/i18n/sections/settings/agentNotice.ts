@@ -51,6 +51,10 @@ export type SettingsAgentNoticeText = {
     events: Record<"approval" | "question" | "yourTurn" | "done" | "failed" | "started" | "stack", string>;
     play: string;
     stop: string;
+    tryOnIsland: string;
+    tryHint: string;
+    tryOff: string;
+    tryResult: Record<"shown" | "shownCard" | "busy" | "expanded" | "muted" | "noReply", string>;
     shrunk: (percent: number) => string;
     hidden: Record<"waiting" | "completed" | "failed" | "title" | "none", string>;
     stay: (stay: string) => string;
@@ -142,6 +146,17 @@ export const zhCN: SettingsAgentNoticeText = {
     events: { approval: "等你确认", question: "提问", yourTurn: "等你回复", done: "完成", failed: "出错", started: "开始新一轮", stack: "多个会话" },
     play: "播放",
     stop: "停止",
+    tryOnIsland: "在岛上试一下",
+    tryHint: "让岛按现在的设置弹一条测试通知并响一声，不会回复任何 Agent",
+    tryOff: "这种通知现在不弹出，打开对应的开关后再试",
+    tryResult: {
+      shown: "测试通知已弹到岛上：不进会话列表，不推送到手机",
+      shownCard: "测试通知已弹到岛上：点岛上任意按钮收起，不会回复任何 Agent，不点 30 秒后自己收起",
+      busy: "岛上正有真的提醒，等它收起后再试",
+      expanded: "岛展开着，收起后再试",
+      muted: "岛现在不弹 Agent 提醒：游戏模式勿扰中，或 Agent 功能已关",
+      noReply: "岛没有回应，确认岛在运行后再试",
+    },
     shrunk: (percent) => `缩小到 ${percent}%`,
     hidden: {
       waiting: "「等待你确认或回答时」已关，这种情况不弹出",
@@ -239,6 +254,17 @@ export const en: SettingsAgentNoticeText = {
     events: { approval: "Approval", question: "Question", yourTurn: "Your turn", done: "Finished", failed: "Failed", started: "New turn", stack: "Several" },
     play: "Play",
     stop: "Stop",
+    tryOnIsland: "Try on the island",
+    tryHint: "The island pops a test notice with the current settings and plays its sound; no agent gets an answer",
+    tryOff: "This kind of notice is off; turn its switch on to try it",
+    tryResult: {
+      shown: "Test notice sent to the island: it stays out of the session list and off your phone",
+      shownCard: "Test notice sent to the island: any button on it closes it, no agent gets an answer, and it closes by itself after 30 s",
+      busy: "The island is showing a real notice; try again once it closes",
+      expanded: "The island is open; collapse it and try again",
+      muted: "The island is not showing agent notices now: game mode keeps it quiet, or agents are turned off",
+      noReply: "The island did not answer; check that it is running and try again",
+    },
     shrunk: (percent) => `Shown at ${percent}%`,
     hidden: {
       waiting: "\"When it waits for your approval or answer\" is off, so nothing pops up here",

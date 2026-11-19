@@ -39,7 +39,7 @@ export function AgentApprovalCard({
   if (!request) return null;
   const labels = t.agent.approval;
   const copy = t.agentNotice;
-  const session = sessions.find((item) => item.provider === request.agent && item.sessionId === request.sessionId);
+  const session = approvals.sample ?? sessions.find((item) => item.provider === request.agent && item.sessionId === request.sessionId);
   const cwd = session?.cwd ?? request.cwd;
   const project = sessionProject(cwd);
   const title = session?.title ?? project ?? AGENT_PROVIDER_LABELS[request.agent];
@@ -49,7 +49,7 @@ export function AgentApprovalCard({
 
   const toTerminal = () => {
     approvals.decide("terminal");
-    if (inPreview) return;
+    if (inPreview || approvals.sample) return;
     void focusAgentWindow(request.agent, cwd, session?.title ?? null, request.remoteHost ? "" : request.sessionId).catch((error: unknown) =>
       console.error("Failed to focus the agent window", error),
     );

@@ -9,8 +9,9 @@ import "./styles/fonts.css";
 import "./styles/base.css";
 import { I18nProvider, loadLocale, preloadI18n } from "./i18n/runtime";
 import { WindowCrashBoundary } from "./components/window-crash/WindowCrashBoundary";
-import { closeWindow, handleCrash, installCrashReporting, reloadWindow } from "./lib/crash-report/crashReporter";
-import { CRASH_RELOAD_WINDOW_MS, crashVariant } from "./lib/crash-report/recovery";
+import { closeWindow, crashOutcome, handleCrash, installCrashReporting, openCrashLog, reloadWindow, restartFuyu, retryWindow } from "./lib/crash-report/crashReporter";
+import { summarizeError } from "./lib/crash-report/errorSummary";
+import { CRASH_RELOAD_WINDOW_MS, crashVariant, type CrashOutcome } from "./lib/crash-report/recovery";
 import { loadSettingsFile } from "./lib/settings-backup/loadSettingsFile";
 import { serviceFeaturesForWindow } from "./windowServicesMap";
 import { trackIslandTopEdge } from "./windows/island/topEdge";
@@ -21,6 +22,7 @@ import { openPluginSettingsWindow } from "./windows/settings/api";
 
 blockBrowserDefaults({ mac: isMacOS, dev: import.meta.env.DEV });
 installCrashReporting();
+if (import.meta.hot) void import("./devCompileError");
 const serviceModules = import.meta.glob("./features/*/plugin/services.ts");
 
 async function loadWindowServices(kind: string | null): Promise<void> {
@@ -126,20 +128,22 @@ const rootOptions: RootOptions = import.meta.hot
 
 function onWindowCrash(error: unknown, componentStack: string | null) {
   markCrashed();
-  return handleCrash("render", error, componentStack);
+  return crashOutcome("render", error, componentStack);
 }
 
-function renderWindow(content: ReactNode, failed: boolean) {
+const crashActions = { reload: retryWindow, autoReload: reloadWindow, restart: restartFuyu, openLog: openCrashLog, close: closeWindow };
+
+function renderWindow(content: ReactNode, failure?: CrashOutcome & { message: string }) {
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement, rootOptions).render(
     <React.StrictMode>
       <I18nProvider>
         <WindowCrashBoundary
           variant={crashVariant(windowKind)}
-          initialStep={failed ? "fallback" : undefined}
+          initial={failure}
+          dev={Boolean(import.meta.hot)}
           retryAfterMs={CRASH_RELOAD_WINDOW_MS}
           onCrash={onWindowCrash}
-          onReload={reloadWindow}
-          onClose={closeWindow}
+          actions={crashActions}
         >
           {content}
         </WindowCrashBoundary>
@@ -154,11 +158,12 @@ void Promise.all([
   loadSettingsFile(),
   preloadI18n(loadLocale(), windowKind),
 ]).then(([, content]) => {
-  renderWindow(content, false);
+  renderWindow(content);
   markMounted();
 }).catch(async (error: unknown) => {
   console.error("Failed to start the window", error);
-  if (handleCrash("startup", error) !== "fallback") return;
+  const outcome = crashOutcome("startup", error);
+  if (outcome.step !== "fallback") return;
   await preloadI18n(loadLocale(), windowKind);
-  renderWindow(null, true);
+  renderWindow(null, { ...outcome, message: summarizeError(error).message });
 }).catch((error: unknown) => console.error("Failed to show the startup failure", error));

@@ -18,7 +18,7 @@ export type CommonText = {
   showSecret: string;
   hideSecret: string;
   advanced: string;
-  crash: { island: string; window: string; detail: string; reload: string };
+  crash: { island: string; islandRetried: string; window: string; detail: string; detailRetried: string; devHint: string; reload: string; reloading: string; restart: string; restarting: string; openLog: string };
 };
 
 export const zhCN: CommonText = {
@@ -41,7 +41,7 @@ export const zhCN: CommonText = {
   showSecret: "显示密钥",
   hideSecret: "隐藏密钥",
   advanced: "高级",
-  crash: { island: "浮屿出了点问题", window: "这个窗口出了点问题", detail: "错误已记到数据文件夹的 frontend-errors.log。重新加载通常就能恢复。", reload: "重新加载" },
+  crash: { island: "浮屿出了点问题", islandRetried: "重新加载后仍然出错", window: "这个窗口出了点问题", detail: "错误已记到数据文件夹的 frontend-errors.log。重新加载通常就能恢复。", detailRetried: "重新加载后仍然出错。可以重启浮屿；问题还在的话，把日志发给我们。", devHint: "界面出错，改好代码后自动恢复", reload: "重新加载", reloading: "正在重新加载…", restart: "重启浮屿", restarting: "正在重启…", openLog: "查看日志" },
 };
 
 export const en: CommonText = {
@@ -64,5 +64,5 @@ export const en: CommonText = {
   showSecret: "Show key",
   hideSecret: "Hide key",
   advanced: "Advanced",
-  crash: { island: "Fuyu ran into a problem", window: "This window ran into a problem", detail: "The error was saved to frontend-errors.log in the data folder. Reloading usually fixes it.", reload: "Reload" },
+  crash: { island: "Fuyu ran into a problem", islandRetried: "Still failing after a reload", window: "This window ran into a problem", detail: "The error was saved to frontend-errors.log in the data folder. Reloading usually fixes it.", detailRetried: "Still failing after a reload. Restart Fuyu; if it keeps happening, send us the log.", devHint: "Render error; recovers once the code is fixed", reload: "Reload", reloading: "Reloading…", restart: "Restart Fuyu", restarting: "Restarting…", openLog: "Show log" },
 };

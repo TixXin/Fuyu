@@ -247,3 +247,13 @@ mockIPC((command, payload) => {
   }
 }, { shouldMockEvents: true });
 mockWindows("settings");
+
+export const emittedTo: { label: string; event: string; payload: unknown }[] = [];
+type Invoke = (command: string, args?: unknown, options?: unknown) => Promise<unknown>;
+const internals = (window as unknown as { __TAURI_INTERNALS__: { invoke: Invoke } }).__TAURI_INTERNALS__;
+const mockedInvoke = internals.invoke;
+internals.invoke = (command, args, options) => {
+  const sent = (args ?? {}) as { target?: { label?: string }; event?: unknown; payload?: unknown };
+  if (command === "plugin:event|emit_to") emittedTo.push({ label: sent.target?.label ?? "", event: String(sent.event), payload: sent.payload });
+  return mockedInvoke(command, args, options);
+};

@@ -134,6 +134,24 @@ export type SettingsPluginPageText = {
     autoUpdatedDismiss: string;
     autoUpdatedLoading: string;
     autoUpdatedNoChanges: string;
+    roster: {
+      missing: (count: number) => string;
+      installBody: (names: string) => string;
+      installAll: (count: number) => string;
+      installing: (current: number, total: number) => string;
+      review: (names: string) => string;
+      openMarket: string;
+      unavailable: (names: string) => string;
+      manual: (names: string) => string;
+      tooLarge: (names: string) => string;
+      dismiss: string;
+      failed: (detail: string) => string;
+      settings: (count: number) => string;
+      settingsBody: (names: string) => string;
+      useTheirs: string;
+      keepMine: string;
+      applying: string;
+    };
     problems: (count: number) => string;
     problemsBody: string;
     attention: (count: number) => string;
@@ -382,6 +400,24 @@ export const zhCN: SettingsPluginPageText = {
     autoUpdatedDismiss: "知道了",
     autoUpdatedLoading: "正在读取更新记录…",
     autoUpdatedNoChanges: "这几版没有写更新记录。",
+    roster: {
+      missing: (count) => `另一台设备上还装了 ${count} 个插件`,
+      installBody: (names) => `${names} 可以从市场装上，装好后设置和开关跟那边一样。`,
+      installAll: (count) => (count === 1 ? "装上" : `全部装上（${count}）`),
+      installing: (current, total) => `正在安装 ${current}/${total}…`,
+      review: (names) => `${names} 要先看过它的权限再装。`,
+      openMarket: "去市场看看",
+      unavailable: (names) => `${names} 在市场里找不到，或者这台设备装不了。`,
+      manual: (names) => `${names} 是从文件安装的，不会同步，要用安装包自己再装一次。`,
+      tooLarge: (names) => `${names} 的设置太大，没有带过来，装好后要重新设置。`,
+      dismiss: "不用了",
+      failed: (detail) => `没装上或没改成：${detail}`,
+      settings: (count) => `${count} 个插件的设置和另一台设备上的不一样`,
+      settingsBody: (names) => `${names}。可以换成那边的设置，也可以保留这台设备上的；换设置时有的插件会重启一次。`,
+      useTheirs: "用那边的设置",
+      keepMine: "保留本机的",
+      applying: "正在应用…",
+    },
     problems: (count) => `${count} 个插件出了问题`,
     problemsBody: "每个插件的处理按钮在下面那一行上。",
     attention: (count) => `${count} 个插件等你处理`,
@@ -630,6 +666,24 @@ export const en: SettingsPluginPageText = {
     autoUpdatedDismiss: "Got it",
     autoUpdatedLoading: "Loading the changelog…",
     autoUpdatedNoChanges: "No changelog for these versions.",
+    roster: {
+      missing: (count) => `${count} more ${count === 1 ? "plugin is" : "plugins are"} installed on another device`,
+      installBody: (names) => `${names} can be installed from the market, with the same settings and on/off state as over there.`,
+      installAll: (count) => (count === 1 ? "Install" : `Install all (${count})`),
+      installing: (current, total) => `Installing ${current}/${total}…`,
+      review: (names) => `${names}: review what it can do before installing.`,
+      openMarket: "Open in the market",
+      unavailable: (names) => `${names}: not in the market, or can't be installed on this device.`,
+      manual: (names) => `${names}: installed from a file, so it doesn't sync. Install it again from its package.`,
+      tooLarge: (names) => `${names}: the settings were too large to bring over, so set it up again after installing.`,
+      dismiss: "No thanks",
+      failed: (detail) => `Didn't go through: ${detail}`,
+      settings: (count) => `${count} ${count === 1 ? "plugin has" : "plugins have"} different settings on another device`,
+      settingsBody: (names) => `${names}. Take the settings from over there or keep the ones on this device; some plugins restart once when their settings are replaced.`,
+      useTheirs: "Use those settings",
+      keepMine: "Keep mine",
+      applying: "Applying…",
+    },
     problems: (count) => `${count} ${count === 1 ? "plugin ran" : "plugins ran"} into problems`,
     problemsBody: "Fix buttons are on each row below.",
     attention: (count) => `${count} ${count === 1 ? "plugin needs" : "plugins need"} you`,

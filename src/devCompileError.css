@@ -1,0 +1,65 @@
+.dev-compile-error {
+  position: fixed;
+  left: 50%;
+  z-index: 2147483000;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  box-sizing: border-box;
+  transform: translateX(-50%);
+  border: 1px solid var(--error-text, #ff8f8f);
+  background: var(--island-background-color, #2f2f37);
+  color: var(--text-2);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.dev-compile-error--island {
+  top: 0;
+  max-width: min(340px, calc(100% - 16px));
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+:root[data-island-edge="bottom"] .dev-compile-error--island {
+  top: auto;
+  bottom: 0;
+}
+
+:root[data-island-notch] .dev-compile-error--island {
+  top: var(--island-notch-height, 0px);
+}
+
+.dev-compile-error--window {
+  bottom: 12px;
+  width: max-content;
+  max-width: min(640px, calc(100% - 24px));
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+}
+
+.dev-compile-error__where {
+  flex: none;
+  color: var(--error-text, #ff8f8f);
+  font-weight: 600;
+}
+
+.dev-compile-error__message {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dev-compile-error--window .dev-compile-error__message {
+  display: -webkit-box;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+:root[data-dev-compile-error] .window-crash {
+  display: none;
+}

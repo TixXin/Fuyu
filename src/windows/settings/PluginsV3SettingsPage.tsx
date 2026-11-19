@@ -136,6 +136,7 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
         entries={entries}
         onOpenDiagnostics={() => onOpenPage?.("pluginDiagnostics")}
         onOnlyAttention={() => setFilter("attention")}
+        onOpenMarket={onOpenPage ? (name) => openMarket({ detail: name }) : undefined}
       />
       {actionError ? <p className="plugin-callout plugin-callout--bad" role="alert">{actionError}</p> : null}
       {loading && runtime === "failed" ? null : loading ? (

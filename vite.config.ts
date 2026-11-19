@@ -14,13 +14,10 @@ export default defineConfig(async () => ({
     port: 1420,
     strictPort: true,
     host: host || false,
-    hmr: host
-      ? {
-          protocol: "ws",
-          host,
-          port: 1421,
-        }
-      : undefined,
+    hmr: {
+      overlay: false,
+      ...(host ? { protocol: "ws", host, port: 1421 } : {}),
+    },
     watch: {
       ignored: [createWatchIgnored()],
     },
