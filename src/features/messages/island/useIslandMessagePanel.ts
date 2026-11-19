@@ -11,6 +11,7 @@ import { runNoticeAction } from "../plugin/notices";
 import { useMessageOtpCopyEnabled } from "../plugin/useSourceSwitches";
 import type { useIslandNotices } from "./useIslandNotices";
 import { HOVER_HOLD_RETRY_MS } from "../../plugin-kernel/hoverHold";
+import { runIslandAction } from "../../plugin-kernel/useIslandContributions";
 import { useHoverHold } from "../../plugin-kernel/useHoverHold";
 import { useOutsideClick } from "../../plugin-kernel/useOutsideClick";
 import type { IslandHost } from "../../plugin-kernel/islandHost";
@@ -23,6 +24,7 @@ type PanelNotices = Pick<ReturnType<typeof useIslandNotices>, "preview" | "qqNot
 
 type MessagePanelOptions = {
   enabled: boolean;
+  mediaOnly?: boolean;
   durationMs: number;
   notices: PanelNotices;
   mode: string;
@@ -33,7 +35,7 @@ type MessagePanelOptions = {
   host: IslandHost;
 };
 
-export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page, openIslandPage, collapseIsland, onOpenMessages, host }: MessagePanelOptions) {
+export function useIslandMessagePanel({ enabled, mediaOnly = false, durationMs, notices, mode, page, openIslandPage, collapseIsland, onOpenMessages, host }: MessagePanelOptions) {
   const { preview, qqNotifications, wechatReminders, qqMail, pluginNotifications, imSources, setMessagePanelOpen } = notices;
   const t = useTranslation().messages;
   const otpEnabled = useMessageOtpCopyEnabled();
@@ -42,6 +44,7 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   const autoOpenedRef = useRef(false);
   const pendingOpenRef = useRef(false);
   const closeTimerRef = useRef<number | undefined>(undefined);
+  const closeAtRef = useRef(0);
   const handledKeyRef = useRef<string | null>(null);
   const isOnMessages = mode === "expanded" && page === "qq";
   const holdsOpen = useHoverHold(host);
@@ -65,7 +68,7 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     if (wasOpen) latest.current.collapseIsland();
   }, [end]);
 
-  const incoming = enabled && preview ? toArrival(preview, notices, otpEnabled, t.copyCode) : null;
+  const incoming = enabled && preview && (!mediaOnly || preview.mediaControls === true) ? toArrival(preview, notices, otpEnabled, t.copyCode) : null;
   const incomingKey = incoming ? `${arrivalKey(incoming)}:${incoming.receivedAt}` : null;
   const incomingActionsKey = incoming ? incoming.actions.map((item) => `${item.id}:${item.title}`).join("|") : "";
   const incomingRef = useRef(incoming);
@@ -78,6 +81,8 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
     if (current.mode !== "collapsed" && !autoOpenedRef.current) return;
     setArrivals((list) => addArrival((list ?? []).filter((item) => !(message.mediaControls && item.mediaControls && item.pluginId === message.pluginId)), message));
     setMessagePanelOpen(true);
+    const until = Date.now() + (message.durationMs ?? current.durationMs);
+    closeAtRef.current = autoOpenedRef.current ? Math.max(closeAtRef.current, until) : until;
     autoOpenedRef.current = true;
     if (current.mode === "collapsed") pendingOpenRef.current = true;
     const closeLater = (heldSince: number) => {
@@ -89,7 +94,7 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
       close();
     };
     window.clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = window.setTimeout(() => closeLater(Date.now()), current.durationMs);
+    closeTimerRef.current = window.setTimeout(() => closeLater(Date.now()), Math.max(0, closeAtRef.current - Date.now()));
   }, [incomingKey, close, setMessagePanelOpen]);
 
   const showing = arrivals !== null;
@@ -142,6 +147,12 @@ export function useIslandMessagePanel({ enabled, durationMs, notices, mode, page
   useOutsideClick(showing && isOnMessages, close, host);
 
   const open = useCallback((message: PanelArrival) => {
+    if (message.source === "plugin" && message.mediaControls) {
+      pluginNotifications.dismiss();
+      end();
+      if (!runIslandAction("media.open-page")) latest.current.collapseIsland();
+      return;
+    }
     if (message.source === "plugin") {
       pluginNotifications.dismiss();
       const rest = removeArrival(arrivals ?? [], arrivalKey(message));
@@ -228,7 +239,7 @@ function toArrival(
   const { qqMail, pluginNotifications } = notices;
   const notification = pluginNotifications.notification;
   if (preview.source === "plugin" && notification) {
-    return { ...preview, actions: notification.actions, pluginId: notification.pluginId };
+    return { ...preview, actions: notification.actions, pluginId: notification.pluginId, durationMs: notification.durationMs };
   }
   const richIm = preview.source !== "plugin" && isImSource(preview.source) && preview.kind !== "flash" && preview.kind !== "badge";
   const otp = !otpEnabled ? null

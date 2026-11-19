@@ -146,7 +146,7 @@ async function notify(source: "qq" | "wechat" | "qqMail" | "plugin", title = "�
       await emit("qq-mail-changed", { snapshot: mail, newestId: `mail-${revision}`, windowVisible: true });
     }
     if (source === "plugin") deliverNotice({
-      pluginId: "dev.test.build", pluginName: { "zh-CN": "构建", en: "Build" }, title, body: "main 分支构建通过", durationMs: 5000, actions: [{ id: "open", title: "查看" }, { id: "rerun", title: "重跑" }],
+      pluginId: "dev.test.build", pluginName: { "zh-CN": "构建", en: "Build" }, title, body: "main 分支构建通过", durationMs: DURATION_MS, actions: [{ id: "open", title: "查看" }, { id: "rerun", title: "重跑" }],
     });
   });
   await wait(30);
@@ -283,7 +283,7 @@ async function runChecks() {
     await wait(30);
     const playerIcon = "data:image/png;base64,iVBORw0KGgo=";
     await update(() => { deliverNotice({
-      pluginId: "dev.focusd.now-playing", pluginName: { "zh-CN": "正在播放", en: "Now playing" }, title: "倒数", body: "G.E.M.邓紫棋", durationMs: 6000, actions: [],
+      pluginId: "dev.focusd.now-playing", pluginName: { "zh-CN": "正在播放", en: "Now playing" }, title: "倒数", body: "G.E.M.邓紫棋", durationMs: DURATION_MS, actions: [],
       icon: "media", layout: "inline", iconUrl: playerIcon,
     }); });
     await waitFor(() => rows().length === 1, "一体成型的插件提示弹出");
@@ -300,7 +300,7 @@ async function runChecks() {
     await act(async () => setUserMode("collapsed"));
     await wait(30);
     const nowPlaying = (title: string) => update(() => { deliverNotice({
-      pluginId: "dev.focusd.now-playing", pluginName: { "zh-CN": "正在播放", en: "Now playing" }, title, body: "宋冬野", durationMs: 6000, actions: [],
+      pluginId: "dev.focusd.now-playing", pluginName: { "zh-CN": "正在播放", en: "Now playing" }, title, body: "宋冬野", durationMs: DURATION_MS, actions: [],
       icon: "media", layout: "inline", controls: "media", iconUrl: playerIcon,
     }); });
     await nowPlaying("安和桥");

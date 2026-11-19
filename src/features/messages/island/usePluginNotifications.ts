@@ -11,10 +11,12 @@ export type PluginNotificationsController = {
   post: (notification: IslandNotice) => void;
 };
 
-export function usePluginNotifications(enabled: boolean): PluginNotificationsController {
+export function usePluginNotifications(enabled: boolean, mediaBlocked = false): PluginNotificationsController {
   const [notification, setNotification] = useState<ShownPluginNotification | null>(null);
   const enabledRef = useRef(enabled);
   enabledRef.current = enabled;
+  const mediaBlockedRef = useRef(mediaBlocked);
+  mediaBlockedRef.current = mediaBlocked;
 
   useEffect(() => {
     if (!enabled) setNotification(null);
@@ -22,6 +24,7 @@ export function usePluginNotifications(enabled: boolean): PluginNotificationsCon
 
   useEffect(() => onNotice((next) => {
     if (!enabledRef.current) return false;
+    if (next.controls === "media" && mediaBlockedRef.current) return false;
     setNotification({ ...next, receivedAt: Date.now() });
     return true;
   }), []);

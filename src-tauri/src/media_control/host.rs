@@ -14,6 +14,7 @@ pub(crate) struct NowPlaying {
     artist: Option<String>,
     album: Option<String>,
     source_app: Option<String>,
+    source_frontmost: bool,
     #[cfg_attr(test, ts(type = "number"))]
     position_ms: i64,
     #[cfg_attr(test, ts(type = "number"))]
@@ -34,6 +35,7 @@ impl From<MediaState> for NowPlaying {
             title: state.title,
             artist: state.artist,
             album: state.album,
+            source_frontmost: false,
             source_app: state.source_app,
             position_ms: state.position_ms,
             duration_ms: state.duration_ms,
@@ -53,8 +55,14 @@ fn switched_on() -> Result<(), ServeError> {
     }
 }
 
+fn with_frontmost(state: MediaState) -> NowPlaying {
+    let mut now = NowPlaying::from(state);
+    now.source_frontmost = now.source_app.as_deref().is_some_and(super::source_app::is_frontmost);
+    now
+}
+
 fn answer(state: Result<MediaState, String>) -> Result<NowPlaying, ServeError> {
-    state.map(NowPlaying::from).map_err(|error| ServeError::new("failed", error))
+    state.map(with_frontmost).map_err(|error| ServeError::new("failed", error))
 }
 
 fn command(command: MediaCommand) -> Result<NowPlaying, ServeError> {

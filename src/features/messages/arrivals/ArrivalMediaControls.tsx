@@ -4,6 +4,8 @@ import "./ArrivalMediaControls.css";
 
 export type ArrivalMedia = {
   playing: boolean;
+  cover?: string | null;
+  sourceIcon?: string | null;
   onPrevious: () => void;
   onPlayPause: () => void;
   onNext: () => void;

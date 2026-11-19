@@ -303,7 +303,7 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 | `hold` | `reason`（只给诊断看） | 贴边收起时保持露出 |
 | `side` | `item`（`island.side/v1` 项的 id）、`height` | 侧边岛的行：按插槽 `order` 排，按 `height` 算放得下几行 |
 | `status` | `state`、`label` | 状态灯 |
-| `popup` | `page`、`height`、`saving`、`open` | 弹出态和展开高度 |
+| `popup` | `page`、`height`、`saving`、`open`、`label`、`icon`（`music` / `bell`）、`iconUrl` | 弹出态和展开高度；`label` 有值时刘海下的标题带写它（配 `iconUrl` 的图或 `icon` 的线条图标），没有就写页面自己的标题（E66.12） |
 | `style` | `vars`、`className`、`tint` | 合进舞台的 CSS 变量、class 和玻璃取色 |
 | `busy` | 无 | 收起条被占着，第一次提示让路 |
 | `hint` | `key` | 一个开关量，外壳和别的插槽项的 `shown` / `enabled` 读它（`agents.busy`、`update.reminder`、`shelf.count`、`timer.chip` 这类） |

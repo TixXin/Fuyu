@@ -35,7 +35,7 @@ export function useIslandBanner({ messageNotice, notices, mode, isTucked, quiet,
   const t = useTranslation().messages;
   const otpEnabled = useMessageOtpCopyEnabled();
   const usesBanner = messageNotice === "banner";
-  const incoming = usesBanner && preview ? bannerMessage(preview, notices, otpEnabled, t.copyCode) : null;
+  const incoming = usesBanner && preview && !preview.mediaControls ? bannerMessage(preview, notices, otpEnabled, t.copyCode) : null;
   const [hovered, setHovered] = useState(false);
   const { banner, close } = useMessageBanner(usesBanner && !quiet && mode === "collapsed" && !isTucked, incoming, hovered);
   const bannerRef = useRef<HTMLDivElement | null>(null);

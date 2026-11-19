@@ -4,6 +4,7 @@ import type { IslandSettings } from "../../../lib/settings/types";
 import type { IslandHost } from "../../plugin-kernel/islandHost";
 import { defineSlot } from "../../plugin-kernel/slots";
 import { IM_SOURCE_IDS } from "../im-sources/imSourcesState";
+import { useArrivalsHeading } from "../island/useArrivalsHeading";
 import { useIslandBanner } from "../island/useIslandBanner";
 import { useIslandMessagePanel } from "../island/useIslandMessagePanel";
 import { useIslandNotices } from "../island/useIslandNotices";
@@ -38,7 +39,8 @@ function MessagesRunner({ settings, mode, page, isTucked, quiet, host, openIslan
   const { messageSource, setMessageSource, openMessages } = useMessageView(qqMail.closeReader, openIslandPage);
   const banner = useIslandBanner({ messageNotice: settings.messageNotice, notices, mode, isTucked, quiet, onOpenMessages: openMessages, host });
   const panel = useIslandMessagePanel({
-    enabled: settings.messageNotice === "panel" && !quiet,
+    enabled: settings.messageNotice !== "line" && !quiet,
+    mediaOnly: settings.messageNotice === "banner",
     durationMs: settings.messagePanelSeconds * 1000,
     notices, mode, page, openIslandPage, collapseIsland, onOpenMessages: openMessages, host,
   });
@@ -66,6 +68,7 @@ function MessagesRunner({ settings, mode, page, isTucked, quiet, host, openIslan
   const { banner: shown, bannerRef, open, close, runAction } = banner;
   const barPreview = useHeldPreview(banner.barPreview, mode === "collapsed" && !isTucked && !quiet, host);
   const grow = useSummaryGrow();
+  const arrivalsHeading = useArrivalsHeading(panel.arrivals);
   const bannerView = useMemo(() => shown && { banner: shown, bannerRef, onOpen: open, onClose: close, onAction: runAction }, [shown, bannerRef, open, close, runAction]);
   useMessagesIsland({
     qq: qqNotifications,
@@ -84,6 +87,7 @@ function MessagesRunner({ settings, mode, page, isTucked, quiet, host, openIslan
     grow,
     hold,
     arrivalsHeight: panel.arrivals ? panel.height : null,
+    arrivalsHeading,
     maxPanelHeight: settings.maxPanelHeight,
     pages: { qq: qq || anyImEnabled, wechat },
   });

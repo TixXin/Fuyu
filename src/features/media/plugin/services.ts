@@ -1,7 +1,7 @@
 import { lyricsV1, mediaV1 } from "@fuyu/plugin-services";
 import { windowServices } from "../../plugin-kernel/services";
 import { isNativeError } from "../../../i18n/nativeError";
-import { getMediaState, seekMedia, sendMediaCommand, type MediaCommand } from "../api";
+import { getMediaState, isMediaSourceFrontmost, seekMedia, sendMediaCommand, type MediaCommand, type MediaState } from "../api";
 import { getLyrics } from "../lyrics/api";
 import { fromRust, positionOf, serviceNowPlaying } from "../host/index.mjs";
 import { getLyricsSources, lookupLyricsWithSources, subscribeLyricsSources } from "../host/lyricsSources.mjs";
@@ -12,14 +12,20 @@ function failed(error: unknown): never {
   throw fromRust({ code: error.code, message: error.message, data: { args: error.args, detail: error.detail } });
 }
 
-const command = async (name: MediaCommand) => serviceNowPlaying(await sendMediaCommand(name, undefined).catch(failed));
+async function nowPlayingOf(state: MediaState) {
+  const now = serviceNowPlaying(state);
+  if (!now.sourceApp) return now;
+  return { ...now, sourceFrontmost: await isMediaSourceFrontmost(now.sourceApp).catch(() => false) };
+}
+
+const command = async (name: MediaCommand) => nowPlayingOf(await sendMediaCommand(name, undefined).catch(failed));
 
 windowServices.provide(mediaV1, {
-  nowPlaying: async () => serviceNowPlaying(await getMediaState(undefined).catch(failed)),
+  nowPlaying: async () => nowPlayingOf(await getMediaState(undefined).catch(failed)),
   playPause: () => command("media_play_pause"),
   next: () => command("media_next"),
   previous: () => command("media_previous"),
-  seek: async (params) => serviceNowPlaying(await seekMedia(positionOf(params), undefined).catch(failed)),
+  seek: async (params) => nowPlayingOf(await seekMedia(positionOf(params), undefined).catch(failed)),
 }, { owner: OWNER });
 
 const lyricsProvider = windowServices.provide(lyricsV1, {

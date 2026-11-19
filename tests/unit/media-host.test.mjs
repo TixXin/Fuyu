@@ -84,6 +84,7 @@ const PLAYING = {
   artist: "Singer",
   album: null,
   sourceApp: "Spotify.exe",
+  sourceFrontmost: false,
   positionMs: 42_000,
   durationMs: 214_000,
   canSeek: true,
@@ -219,6 +220,7 @@ test("the window's media state and the host's answer turn into the same shape", 
   };
   assert.deepEqual(serviceNowPlaying(windowState), PLAYING);
   assert.deepEqual(serviceNowPlaying({ ...PLAYING, extra: 1 }), PLAYING);
+  assert.equal(serviceNowPlaying({ ...PLAYING, sourceFrontmost: true }).sourceFrontmost, true);
   assert.deepEqual(serviceNowPlaying(null), { ...PLAYING, available: false, playing: false, audible: false, title: null, artist: null, sourceApp: null, positionMs: 0, durationMs: 0, canSeek: false, canNext: false, canPrevious: false, updatedAt: 0 });
   assert.equal(positionOf({ positionMs: 0 }), 0);
   assert.throws(() => positionOf(undefined), { code: "bad-params" });

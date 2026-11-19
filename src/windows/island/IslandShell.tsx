@@ -269,7 +269,7 @@ export function IslandShell({
             inert={!isExpanded}
           >
             <DevWatermark place="panel" />
-            {popup && notch && <NotchPopupBand page={page} agentVisualState={agentVisualState} onCollapse={onCollapse} />}
+            {popup && notch && <NotchPopupBand page={page} heading={contributed.popups.get(page)} agentVisualState={agentVisualState} onCollapse={onCollapse} />}
             <IslandHeader
               page={page}
               features={features}

@@ -40,7 +40,7 @@ export type FileShelfSnapshot = { items: Array<FileShelfEntry>, };
 
 export type JsonValue = number | string | boolean | Array<JsonValue> | { [key in string]: JsonValue } | null;
 
-export type NowPlaying = { available: boolean, playing: boolean, audible: boolean, title: string | null, artist: string | null, album: string | null, sourceApp: string | null, positionMs: number, durationMs: number, canSeek: boolean, canNext: boolean, canPrevious: boolean, updatedAt: number, };
+export type NowPlaying = { available: boolean, playing: boolean, audible: boolean, title: string | null, artist: string | null, album: string | null, sourceApp: string | null, sourceFrontmost: boolean, positionMs: number, durationMs: number, canSeek: boolean, canNext: boolean, canPrevious: boolean, updatedAt: number, };
 
 export type PlatformSupport = { os: string, unsupported: Array<string>, devBuild: boolean, };
 
