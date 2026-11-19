@@ -10,10 +10,10 @@ import { localApiExample } from "./example.ts";
 import { LocalApiCopyButton } from "./LocalApiCopyButton";
 import "./LocalApiExample.css";
 
-export function LocalApiExample({ info }: { info: LocalApiInfo }) {
+export function LocalApiExample({ info, notify }: { info: LocalApiInfo; notify: boolean }) {
   const t = useTranslation().settings.localApi;
   const [copied, flashCopied] = useFlash<true>();
-  const example = localApiExample({ url: info.url, configPath: info.configPath, windows: !isMacOS });
+  const example = localApiExample({ url: info.url, configPath: info.configPath, windows: !isMacOS, notify });
   const openDocs = () => void openLocalApiDocs().catch((error: unknown) => console.error("Could not open the local API docs", error));
   const copy = () => void navigator.clipboard.writeText(example).then(() => flashCopied(true), () => flashCopied(null));
 
@@ -25,7 +25,7 @@ export function LocalApiExample({ info }: { info: LocalApiInfo }) {
           {t.docs} <ExternalLink size={12} strokeWidth={2.2} aria-hidden="true" />
         </SettingsLinkButton>
       }
-      footer={<SettingsFootnote text={t.tryHint} />}
+      footer={<SettingsFootnote text={notify ? t.tryNotifyHint : t.tryHint} />}
     >
       <div className="local-api-example" data-search="off">
         <pre className="local-api-example__code">{example}</pre>

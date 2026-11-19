@@ -28,8 +28,8 @@ src/
 │   ├── file-shelf/          # 文件中转：拖到岛上的文件（只存路径）、拖出、复制、打开
 │   ├── screenshot/          # 截图（C41）：选区的纯计算（selection.ts，物理像素和 CSS 像素的换算）、放大镜、api.ts
 │   ├── center-pattern/      # 第 3 版内置插件 center-pattern（中心图案）：SVG 动画（眼睛跟随光标）、Codex Pets 宠物 sprite、宠物随 Agent 状态的 mood（经 agents/v1 读），配置在 plugins.yml，设置在 外观 的「中心图案」分组
-│   ├── island-bridge/       # 不是插件：Rust 转给岛的请求（local-api-request）的桥，方法分发、待办经 todos/v1，开发版另有岛屿实验台的动作；runner 拥有者 builtin，本机接口和岛屿实验台共用，关掉本机接口不撤它
-│   ├── local-api/           # 第 3 版内置插件 local-api（本机接口）：设置是侧栏「扩展」组里单独的一页（页名 generalApi；LocalApiSettings.tsx 组装三组：地址、复制令牌、重新生成令牌，令牌只由 Rust 复制；LocalApiAccess.tsx 是「允许修改」和现在开放了哪些能力；LocalApiExample.tsx 和 example.ts 是可复制的示例）。岛上接 Rust 转来的请求（local-api-request）的桥不在这里，在 island-bridge/
+│   ├── island-bridge/       # 不是插件：Rust 转给岛的请求（local-api-request）的桥，方法分发、待办经 todos/v1，本机接口弹的消息经 island-notices/v1（notice.ts，先查来源有没有被静音），开发版另有岛屿实验台的动作；runner 拥有者 builtin，本机接口和岛屿实验台共用，关掉本机接口不撤它
+│   ├── local-api/           # 第 3 版内置插件 local-api（本机接口）：设置是侧栏「扩展」组里单独的一页（页名 generalApi；LocalApiSettings.tsx 组装各组：地址、复制令牌、重新生成令牌，令牌只由 Rust 复制；LocalApiAccess.tsx 是「允许修改」「允许弹消息」和现在开放了哪些能力；LocalApiSenders.tsx 和 senders.ts 是弹过消息的来源和各自的静音开关；LocalApiExample.tsx 和 example.ts 是可复制的示例）。岛上接 Rust 转来的请求（local-api-request）的桥不在这里，在 island-bridge/
 │   ├── plugin-kernel/       # 插件平台第 3 版的窗口一侧：向 Rust 要宿主的地址（api.ts）、连宿主并按宿主登记的界面文件加载插件（runtime.ts，宿主默认启动，设 FUYU_PLUGINS_V3=0 关掉）；插槽：每个窗口一份注册表和各插槽的类型化句柄（slots.ts，名单和规则在 @fuyu/plugin-base/protocol 的 SLOTS）、渲染（SlotView.tsx）、订阅（useSlotEntries.ts），宿主关着时内置功能也经它们注册和渲染
 │   ├── messages/            # 消息导航与预览；mail/、qq-notifications/、wechat/ 子目录；banner/ 为岛下方的新消息横幅（分组与计时）；arrivals/ 为新消息自动展开的面板（只列这次到达的消息）；settings/ 是设置页的两个标签（来源列表、提醒方式和它的演示）；island/ 是它们在岛上的接线：读 QQ、微信、邮箱和插件通知（useIslandNotices）、收起条预览、横幅（useIslandBanner）、到达面板（useIslandMessagePanel）、未读时的贴边保持
 │   ├── agent-status/        # AI 代理状态；sounds/ 为 Agent 音效：内置音效播放、设置 → 声音页、导入音效包；push/ 为手机推送（Bark 或 cc-connect，排队到离开电脑再发）

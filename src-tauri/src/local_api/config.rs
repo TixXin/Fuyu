@@ -12,6 +12,8 @@ pub(super) struct LocalApiConfig {
     pub enabled: bool,
     #[serde(default)]
     pub allow_write: bool,
+    #[serde(default)]
+    pub allow_notify: bool,
     #[serde(default = "preferred_port")]
     pub port: u16,
     #[serde(default)]
@@ -27,6 +29,7 @@ impl Default for LocalApiConfig {
         Self {
             enabled: false,
             allow_write: false,
+            allow_notify: false,
             port: PREFERRED_PORT,
             token: String::new(),
         }

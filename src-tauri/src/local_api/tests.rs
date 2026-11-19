@@ -92,7 +92,7 @@ fn config_fills_in_a_token_and_keeps_saved_values() {
     assert_eq!(config.port, PREFERRED_PORT);
     assert!(is_valid_token(&config.token));
 
-    let saved = LocalApiConfig { enabled: true, allow_write: true, port: 40000, token: TOKEN.into() };
+    let saved = LocalApiConfig { enabled: true, allow_write: true, allow_notify: true, port: 40000, token: TOKEN.into() };
     std::fs::write(&path, serde_json::to_string(&saved).expect("json")).expect("write");
     assert_eq!(load_config(&path).expect("load"), (saved, false));
 
@@ -132,8 +132,8 @@ fn island_lab_serves_only_dev_island_and_agent_status() {
 #[test]
 fn routes_to_a_switched_off_feature_answer_503() {
     use super::switches::check_with;
-    let off = |plugin: &str| plugin != "todos" && plugin != "agents" && plugin != "clipboard";
-    for method in ["todos.list", "todos.add", "note.get", "note.set", "agentStatus.report", "agentStatus.clear", "clipboard.list"] {
+    let off = |plugin: &str| plugin != "todos" && plugin != "agents" && plugin != "clipboard" && plugin != "messages";
+    for method in ["todos.list", "todos.add", "note.get", "note.set", "agentStatus.report", "agentStatus.clear", "clipboard.list", "notify"] {
         let error = check_with(method, off).expect_err(method);
         assert_eq!(error.status, 503, "{method}");
         assert!(error.message.contains("switched off"), "{method}");
@@ -160,4 +160,93 @@ fn allow_write_reads_only_a_boolean() {
     assert!(allow_write(&config(json!({ "allowWrite": true }))));
     assert!(!allow_write(&config(json!({ "allowWrite": "true" }))));
     assert!(!allow_write(&config(json!({}))));
+}
+
+#[test]
+fn notify_is_a_route_of_its_own_that_does_not_need_the_write_switch() {
+    let call = route("POST", "/v1/notify", br#"{"source":"ci","title":"Build passed"}"#).expect("notify");
+    assert_eq!((call.method, call.writes), ("notify", false));
+    assert_eq!(call.params, json!({ "source": "ci", "title": "Build passed" }));
+    assert_eq!(route("GET", "/v1/notify", b"").map_err(|error| error.status), Err(405));
+    assert_eq!(route("POST", "/v1/notify", b"[]").map_err(|error| error.status), Err(400));
+}
+
+#[test]
+fn a_message_needs_a_source_and_a_title_and_stays_within_its_limits() {
+    use super::notify::{island_params, parse};
+    let status = |body: serde_json::Value| parse(&body).map_err(|error| error.status);
+
+    let notice = parse(&json!({ "source": "ci", "title": "  Build passed  ", "body": "main is green", "name": "CI", "durationMs": 8000 })).expect("notice");
+    assert_eq!((notice.source.as_str(), notice.title.as_str(), notice.body.as_str(), notice.name.as_deref(), notice.duration_ms), ("ci", "Build passed", "main is green", Some("CI"), 8000));
+    assert_eq!(
+        island_params("local-api", &notice, "CI"),
+        json!({ "source": "local-api/ci", "name": "CI", "title": "Build passed", "body": "main is green", "durationMs": 8000 })
+    );
+
+    let plain = parse(&json!({ "source": "ci", "title": "Done" })).expect("plain");
+    assert_eq!((plain.body.as_str(), plain.name, plain.duration_ms), ("", None, 5000));
+
+    assert_eq!(status(json!({ "title": "No source" })), Err(400));
+    assert_eq!(status(json!({ "source": "Bad Source", "title": "x" })), Err(400));
+    assert_eq!(status(json!({ "source": "ci" })), Err(400));
+    assert_eq!(status(json!({ "source": "ci", "title": "   " })), Err(400));
+    assert_eq!(status(json!({ "source": "ci", "title": 5 })), Err(400));
+    assert_eq!(status(json!({ "source": "ci", "title": "字".repeat(120) })).map(|notice| notice.title.chars().count()), Ok(120));
+    assert_eq!(status(json!({ "source": "ci", "title": "字".repeat(121) })), Err(400));
+    assert_eq!(status(json!({ "source": "ci", "title": "x", "body": "字".repeat(501) })), Err(400));
+    assert_eq!(status(json!({ "source": "ci", "title": "x", "name": "n".repeat(41) })), Err(400));
+    assert_eq!(status(json!({ "source": "ci", "title": "x", "durationMs": 999 })), Err(400));
+    assert_eq!(status(json!({ "source": "ci", "title": "x", "durationMs": 30001 })), Err(400));
+    assert_eq!(status(json!({ "source": "ci", "title": "x", "durationMs": "5000" })), Err(400));
+
+    let unknown = parse(&json!({ "source": "ci", "title": "x", "actions": ["Open"] })).expect_err("actions are not taken yet");
+    assert_eq!(unknown.status, 400);
+    assert!(unknown.message.contains("actions"));
+    let icon = parse(&json!({ "source": "ci", "title": "x", "iconUrl": "https://example.com/a.png" })).expect_err("no remote icons");
+    assert_eq!(icon.status, 400);
+}
+
+#[test]
+fn a_source_is_held_to_ten_messages_a_minute_and_keeps_its_name() {
+    use super::notify::{Senders, MAX_PER_WINDOW, WINDOW};
+    use std::time::{Duration, Instant};
+    let start = Instant::now();
+    let mut senders = Senders::default();
+
+    assert_eq!(senders.admit("ci", None, start).expect("first"), "ci");
+    assert_eq!(senders.admit("ci", Some("CI"), start).expect("named"), "CI");
+    assert_eq!(senders.admit("ci", None, start).expect("name is kept"), "CI");
+    for _ in 3..MAX_PER_WINDOW {
+        senders.admit("ci", None, start).expect("within the limit");
+    }
+    assert_eq!(senders.admit("ci", None, start + Duration::from_secs(30)).map_err(|error| error.status), Err(429));
+    assert_eq!(senders.admit("deploy", None, start + Duration::from_secs(30)).expect("another source is not held back"), "deploy");
+    assert_eq!(senders.admit("ci", None, start + WINDOW).expect("a minute later"), "CI");
+}
+
+#[test]
+fn only_sixteen_sources_send_at_once_and_a_quiet_one_makes_room() {
+    use super::notify::{Senders, MAX_SOURCES, WINDOW};
+    use std::time::{Duration, Instant};
+    let start = Instant::now();
+    let mut senders = Senders::default();
+    for index in 0..MAX_SOURCES {
+        senders.admit(&format!("s{index}"), None, start + Duration::from_secs(index as u64)).expect("room");
+    }
+    let busy = start + Duration::from_secs(30);
+    assert_eq!(senders.admit("late", None, busy).map_err(|error| error.status), Err(429));
+    senders.admit("s3", None, busy).expect("a known source still sends");
+
+    let later = start + WINDOW + Duration::from_secs(1);
+    senders.admit("late", None, later).expect("s0 and s1 went quiet, so there is room");
+    assert_eq!(senders.admit("s0", None, later).expect("s0 was dropped first and comes back as new"), "s0");
+}
+
+#[test]
+fn allow_notify_reads_only_a_boolean() {
+    use super::background::allow_notify;
+    let config = |value: serde_json::Value| value.as_object().cloned().unwrap_or_default();
+    assert!(allow_notify(&config(json!({ "allowNotify": true }))));
+    assert!(!allow_notify(&config(json!({ "allowNotify": 1 }))));
+    assert!(!allow_notify(&config(json!({ "allowWrite": true }))));
 }

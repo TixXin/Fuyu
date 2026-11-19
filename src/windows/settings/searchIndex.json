@@ -4612,6 +4612,19 @@
       }
     },
     {
+      "page": "generalApi",
+      "zh-CN": {
+        "group": "权限",
+        "title": "允许弹消息",
+        "description": "打开后脚本和其他程序能在岛上弹一条消息。和「允许修改」分开，关闭时回 403。"
+      },
+      "en": {
+        "group": "Access",
+        "title": "Allow messages",
+        "description": "Lets scripts and other programs pop a message on the island. Separate from “Allow changes”; when off, it answers 403."
+      }
+    },
+    {
       "page": "about",
       "zh-CN": {
         "group": "重置与退出",

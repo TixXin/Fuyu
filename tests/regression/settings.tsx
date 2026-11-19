@@ -9,6 +9,7 @@ import { entryOf, settingsCategoryFor, sidebarItemOf, type SettingsCategory } fr
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { checkGlassLooks } from "./settings-glass-looks";
 import { checkIdleDimSettings } from "./settings-idle-dim";
+import { checkLocalApiNotify } from "./settings-local-api";
 import { checkNotchPreview } from "./settings-notch-preview";
 import { checkAgentNoticeSettings } from "./settings-agent-notice";
 import { checkMessageNotice, checkMessageSources } from "./settings-im-sources";
@@ -151,6 +152,7 @@ if (!automated) {
     const example = element(".local-api-example__code").textContent ?? "";
     check(example.includes("local-api.json") && example.includes("http://127.0.0.1:39271/v1/health") && !/[0-9a-f]{64}/.test(element(".editor-panel").textContent ?? ""),
       "The example reads the token from the config file and calls the health route; the page never shows the token");
+    await checkLocalApiNotify(check);
 
     const storedSettings = () => JSON.parse(localStorage.getItem("fuyu-settings") ?? "{}") as { opacity?: number; carryOverIncompleteTodos?: boolean; autoTuckHoldMusic?: boolean; autoTuckHoldMessages?: boolean };
     check(!document.querySelector(".appearance-reset"), "Reset appearance is not offered outside the theme page");

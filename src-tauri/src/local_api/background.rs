@@ -7,16 +7,22 @@ use crate::plugin_kernel::builtins::{self, Background};
 pub(crate) const PLUGIN_ID: &str = "local-api";
 pub(crate) const SERVER: &str = "server";
 pub(crate) const ALLOW_WRITE: &str = "allowWrite";
+pub(crate) const ALLOW_NOTIFY: &str = "allowNotify";
 
 pub(super) fn allow_write(config: &Map<String, Value>) -> bool {
     config.get(ALLOW_WRITE).and_then(Value::as_bool).unwrap_or(false)
+}
+
+pub(super) fn allow_notify(config: &Map<String, Value>) -> bool {
+    config.get(ALLOW_NOTIFY).and_then(Value::as_bool).unwrap_or(false)
 }
 
 struct Server;
 
 impl Background for Server {
     fn start(&self) -> Result<(), String> {
-        super::start(allow_write(&builtins::config(PLUGIN_ID))).map(|_| ())
+        let config = builtins::config(PLUGIN_ID);
+        super::start(allow_write(&config), allow_notify(&config)).map(|_| ())
     }
 
     fn stop(&self) {
@@ -30,7 +36,7 @@ impl Background for Server {
     }
 
     fn configure(&self, config: &Map<String, Value>) {
-        if let Err(error) = super::set_allow_write(allow_write(config)) {
+        if let Err(error) = super::set_allowed(allow_write(config), allow_notify(config)) {
             eprintln!("the local API did not take the new settings: {error}");
         }
     }

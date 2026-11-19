@@ -16,6 +16,7 @@ import { copyLocalApiToken } from "./api";
 import { LocalApiAccess } from "./LocalApiAccess";
 import { LocalApiCopyButton } from "./LocalApiCopyButton";
 import { LocalApiExample } from "./LocalApiExample";
+import { LocalApiSenders } from "./LocalApiSenders";
 import { OWNER } from "./plugin/owner.ts";
 import { useLocalApiInfo } from "./useLocalApiInfo";
 
@@ -28,13 +29,13 @@ export function LocalApiSettings({ onOpenPage }: LocalApiSettingsProps) {
   const t = settingsText.localApi;
   const dataHome = settingsText.dataHome;
   const errorText = useErrorText();
-  const { info, error, allowWrite, resetToken } = useLocalApiInfo();
+  const { info, error, allowWrite, allowNotify, resetToken } = useLocalApiInfo();
   const switchId = useId();
   const [copied, flashCopied] = useFlash<Copied>();
   const [failure, flashFailure] = useFlash<string>();
 
-  const saveAllowWrite = (next: boolean) => {
-    void setBuiltinConfig(OWNER, "allowWrite", next || null).catch((reason: unknown) => flashFailure(errorText(reason)));
+  const saveSwitch = (key: "allowWrite" | "allowNotify") => (next: boolean) => {
+    void setBuiltinConfig(OWNER, key, next || null).catch((reason: unknown) => flashFailure(errorText(reason)));
   };
   const copy = (what: Copied, write: () => Promise<void>) => {
     void write().then(() => flashCopied(what), (reason: unknown) => flashFailure(errorText(reason)));
@@ -79,8 +80,15 @@ export function LocalApiSettings({ onOpenPage }: LocalApiSettingsProps) {
           ) : null}
         />
       </SettingsGroup>
-      <LocalApiAccess allowWrite={allowWrite} onAllowWriteChange={saveAllowWrite} onOpenPage={onOpenPage} />
-      {info?.running ? <LocalApiExample info={info} /> : null}
+      <LocalApiAccess
+        allowWrite={allowWrite}
+        allowNotify={allowNotify}
+        onAllowWriteChange={saveSwitch("allowWrite")}
+        onAllowNotifyChange={saveSwitch("allowNotify")}
+        onOpenPage={onOpenPage}
+      />
+      <LocalApiSenders />
+      {info?.running ? <LocalApiExample info={info} notify={allowNotify} /> : null}
     </>
   );
 }
