@@ -399,3 +399,18 @@ fn source_errors_carry_stable_error_codes() {
     assert_eq!(shell_hub::source_user_error(SourceError::CreateReceiver("x".into())).code(), "shellAttention.createReceiver");
     assert_eq!(shell_hub::source_user_error(SourceError::Listen("x".into())).code(), "shellAttention.listen");
 }
+
+#[test]
+fn a_chat_row_is_clicked_only_after_two_matching_sightings() {
+    use chats::{settled, Sighting};
+    assert_eq!(settled(None, Sighting::At(10, 20)), None);
+    assert_eq!(settled(Some(Sighting::At(10, 20)), Sighting::At(10, 20)), Some((10, 20)));
+    assert_eq!(settled(Some(Sighting::At(10, 20)), Sighting::At(10, 64)), None);
+    for previous in [Sighting::Unreadable, Sighting::Missing, Sighting::OutOfView] {
+        assert_eq!(settled(Some(previous), Sighting::At(10, 20)), None);
+        assert_eq!(settled(Some(Sighting::At(10, 20)), previous), None);
+    }
+    assert_eq!(Sighting::Unreadable.reason(), "the chat list is not readable");
+    assert_eq!(Sighting::Missing.reason(), "the chat is not in the list");
+    assert_eq!(Sighting::OutOfView.reason(), "the chat is scrolled out of view");
+}
