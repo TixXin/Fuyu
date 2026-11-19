@@ -40,6 +40,11 @@ export type SettingsPluginPageText = {
     waitingNobody: string;
     unreachable: (windows: string) => string;
     revoked: string;
+    warned: string;
+    held: (version: string) => string;
+    heldItem: (what: string, list: string) => string;
+    revokedSwitch: string;
+    revokedError: (reasons: string) => string;
     trust: (version: string) => string;
     update: (version: string) => string;
     updateFresh: (version: string) => string;
@@ -52,6 +57,7 @@ export type SettingsPluginPageText = {
     updateNow: string;
     whatsNew: string;
     review: string;
+    reviewUpdate: string;
     turnOn: (name: string) => string;
     uninstall: string;
     settings: string;
@@ -215,7 +221,12 @@ export const zhCN: SettingsPluginPageText = {
     waitingStarting: (name) => `在等「${name}」准备好`,
     waitingNobody: "要用另一个插件提供的功能，现在还没有插件提供它",
     unreachable: (windows) => `界面文件（${windows}）不在浮屿能读的文件夹里，这部分界面不会显示`,
-    revoked: "市场撤销了这个插件，建议卸载",
+    revoked: "市场撤销了这个版本，它不能再打开，建议卸载",
+    warned: "市场对这个版本发出了提醒，插件照常运行",
+    held: (version) => `新版本 v${version} 会做更多事，需要你确认后再更新`,
+    heldItem: (what, list) => `${what}：${list}`,
+    revokedSwitch: "市场撤销了这个版本，不能打开",
+    revokedError: (reasons) => `市场撤销了这个版本，不能打开：${reasons}`,
     trust: (version) => `作者换了签名密钥，新版本 v${version} 要你确认是本人后才更新`,
     update: (version) => `有新版本 v${version}`,
     updateFresh: (version) => `v${version} 刚上架，3 天后自动更新`,
@@ -228,6 +239,7 @@ export const zhCN: SettingsPluginPageText = {
     updateNow: "现在更新",
     whatsNew: "看更新内容",
     review: "查看",
+    reviewUpdate: "看看再更新",
     turnOn: (name) => `打开「${name}」`,
     uninstall: "卸载…",
     settings: "设置",
@@ -391,7 +403,12 @@ export const en: SettingsPluginPageText = {
     waitingStarting: (name) => `Waiting for ${name} to be ready`,
     waitingNobody: "Needs a feature from another plugin, and no plugin offers it yet",
     unreachable: (windows) => `Its window files (${windows}) are outside the folders Fuyu can read, so those parts won't show`,
-    revoked: "The market revoked this plugin; uninstalling is recommended",
+    revoked: "The market revoked this version; it can't be turned on again, and uninstalling is recommended",
+    warned: "The market flagged this version; the plugin keeps running",
+    held: (version) => `v${version} does more than this version, so it waits for you to confirm the update`,
+    heldItem: (what, list) => `${what}: ${list}`,
+    revokedSwitch: "The market revoked this version, so it can't be turned on",
+    revokedError: (reasons) => `The market revoked this version, so it can't be turned on: ${reasons}`,
     trust: (version) => `The author changed their signing key; confirm it's really them before v${version} installs`,
     update: (version) => `v${version} is available`,
     updateFresh: (version) => `v${version} just landed; it auto-updates in 3 days`,
@@ -404,6 +421,7 @@ export const en: SettingsPluginPageText = {
     updateNow: "Update now",
     whatsNew: "What's new",
     review: "Review",
+    reviewUpdate: "Review update",
     turnOn: (name) => `Turn on ${name}`,
     uninstall: "Uninstall…",
     settings: "Settings",

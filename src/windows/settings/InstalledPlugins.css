@@ -86,6 +86,7 @@
 .plugin-note--full .plugin-note__text > span:last-child { display: block; }
 .plugin-note__icon { flex: none; display: inline-grid; margin-top: 2px; }
 .plugin-note__actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.plugin-note__list { min-width: 0; flex: 1 0 100%; margin: 0; padding: 0 0 0 19px; color: var(--text-2); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; list-style: disc; }
 .plugin-note--info { border-left-color: var(--color-accent); }
 .plugin-note--info .plugin-note__icon { color: var(--color-accent); }
 .plugin-note--warn { border-left-color: var(--warning-text, #ffd166); background: color-mix(in srgb, var(--warning-text, #ffd166) 9%, transparent); }

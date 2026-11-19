@@ -1,10 +1,12 @@
 import { useId, useState, type MouseEvent, type ReactNode } from "react";
 import { Activity, AlertCircle, Download, Info, KeyRound, RotateCcw, Settings, ShieldAlert, Store, Trash2 } from "lucide-react";
-import { useErrorText, useTranslation } from "../../i18n";
+import type { MarketLocalizedText } from "@fuyu/plugin-services";
+import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import type { SettingsPluginPageText } from "../../i18n/sections/settings/pluginPage";
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import type { InstalledEntry } from "./pluginEntries";
 import { marketClient } from "./pluginMarketActions";
+import { capabilityItems, localized } from "./pluginMarketModel";
 import { PluginMenu, type PluginMenuItem } from "./PluginMenu";
 import type { RowNote } from "./pluginRowStatus";
 
@@ -13,15 +15,26 @@ export type RowAction = "restart" | "log" | "turnOnProvider" | "uninstall" | "re
 const INTERACTIVE = "button, input, label, a, .settings-switch";
 
 const NOTE_TONES: Record<RowNote["kind"], "bad" | "warn" | "info"> = {
-  failed: "bad", paused: "bad", waiting: "info", unreachable: "bad", revoked: "bad", trust: "warn", update: "info",
+  failed: "bad", paused: "bad", waiting: "info", unreachable: "bad", revoked: "bad", warned: "warn", trust: "warn", held: "info", update: "info",
 };
 
 export function pluginInitial(title: string): string {
   return (Array.from(title.replace(/^@[^/]+\//, "").trim())[0] ?? "?").toUpperCase();
 }
 
-export function useNoteParts(note: RowNote): { text: string; icon: ReactNode; actions: [RowAction, string, boolean][] } {
+function reasonTexts(reasons: readonly (MarketLocalizedText | string)[], locale: string): string[] {
+  return reasons.map((reason) => localized(reason, locale, "")).filter(Boolean);
+}
+
+function revokedReasons(failure: unknown): (MarketLocalizedText | string)[] | null {
+  if (!failure || typeof failure !== "object" || (failure as { code?: unknown }).code !== "revoked") return null;
+  const reasons = (failure as { data?: { reasons?: unknown } }).data?.reasons;
+  return Array.isArray(reasons) ? reasons : [];
+}
+
+export function useNoteParts(note: RowNote): { text: string; icon: ReactNode; details?: string[]; actions: [RowAction, string, boolean][] } {
   const t = useTranslation().settings.pluginsV3;
+  const { locale } = useLocale();
   const page = t.page;
   const providerName = note.kind === "waiting" && note.provider ? t.builtinNames[note.provider] : null;
   switch (note.kind) {
@@ -38,7 +51,14 @@ export function useNoteParts(note: RowNote): { text: string; icon: ReactNode; ac
     case "unreachable":
       return { text: page.notes.unreachable(note.windows.join(", ")), icon: <AlertCircle size={13} strokeWidth={2.2} />, actions: [] };
     case "revoked":
-      return { text: page.notes.revoked, icon: <ShieldAlert size={13} strokeWidth={2.2} />, actions: [["uninstall", page.actions.uninstall, false]] };
+      return { text: page.notes.revoked, icon: <ShieldAlert size={13} strokeWidth={2.2} />, details: reasonTexts(note.reasons, locale), actions: [["uninstall", page.actions.uninstall, false]] };
+    case "warned":
+      return { text: page.notes.warned, icon: <ShieldAlert size={13} strokeWidth={2.2} />, details: reasonTexts(note.reasons, locale), actions: note.update ? [["update", page.actions.update, false]] : [] };
+    case "held": {
+      const join = (list: readonly string[]) => list.join(locale === "en" ? ", " : "、");
+      const details = capabilityItems(note.added).map((item) => page.notes.heldItem(t.marketPage.capabilities.titles[item.kind], join(item.detail)));
+      return { text: page.notes.held(note.version), icon: <Download size={13} strokeWidth={2.2} />, details, actions: [["update", page.actions.reviewUpdate, true], ["whatsNew", page.actions.whatsNew, false]] };
+    }
     case "trust":
       return { text: page.notes.trust(note.version), icon: <KeyRound size={13} strokeWidth={2.2} />, actions: [["review", page.actions.review, false]] };
     case "update":
@@ -65,28 +85,41 @@ export function PluginRowNote({ note, onAction, full = false }: { note: RowNote;
           ))}
         </span>
       ) : null}
+      {parts.details?.length ? (
+        <ul className="plugin-note__list">
+          {parts.details.map((line) => <li key={line}>{line}</li>)}
+        </ul>
+      ) : null}
     </div>
   );
 }
 
 export function PluginEnableSwitch({ entry, stale }: { entry: InstalledEntry; stale: boolean }) {
   const text = useTranslation().settings.pluginsV3.page;
+  const { locale } = useLocale();
   const errorText = useErrorText();
   const id = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   if (!entry.managed) return null;
+  const locked = entry.revocation?.level === "disable" && !entry.enabled;
+  const explain = (failure: unknown) => {
+    const reasons = revokedReasons(failure);
+    if (!reasons) return errorText(failure);
+    const texts = reasonTexts(reasons, locale);
+    return texts.length > 0 ? text.notes.revokedError(texts.join(locale === "en" ? "; " : "；")) : text.notes.revokedSwitch;
+  };
   const toggle = (enabled: boolean) => {
     setBusy(true);
     setError(null);
     void marketClient
       .setEnabled({ id: entry.id, enabled })
-      .catch((failure: unknown) => setError(errorText(failure)))
+      .catch((failure: unknown) => setError(explain(failure)))
       .finally(() => setBusy(false));
   };
   return (
-    <span className="plugin-row__switch" title={error ?? undefined} data-error={error ? "true" : undefined}>
-      <SettingsSwitch id={id} checked={entry.enabled} disabled={busy || stale} ariaLabel={text.actions.enabled(entry.title)} onChange={toggle} />
+    <span className="plugin-row__switch" title={error ?? (locked ? text.notes.revokedSwitch : undefined)} data-error={error ? "true" : undefined} data-locked={locked ? "true" : undefined}>
+      <SettingsSwitch id={id} checked={entry.enabled} disabled={busy || stale || locked} ariaLabel={text.actions.enabled(entry.title)} onChange={toggle} />
     </span>
   );
 }
