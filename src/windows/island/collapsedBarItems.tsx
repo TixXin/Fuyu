@@ -10,7 +10,7 @@ import { pageSlot } from "./slots/pageSlot";
 import type { IslandPage } from "./types";
 import "./slots/builtins";
 
-export type CollapsedBarItem = { id: string; node: ReactNode; group?: "gauges" };
+export type CollapsedBarItem = { id: string; node: ReactNode; group?: "gauges"; page?: IslandPage | null };
 
 const INTERACTIVE = "button, a[href], input, select, textarea, [role='button'], [contenteditable='true']";
 
@@ -48,7 +48,7 @@ export function useCollapsedBarItems(input: Omit<CollapsedBarContext, "onOpenSet
       const node = entry.external ? <CollapsedFit id={entry.id} floor={fitFloor(entry.width, context)}>{view}</CollapsedFit> : view;
       const { page, warning } = collapsedOpensTarget(entry, pages);
       warnCollapsedOpens(warning);
-      items.push({ id: entry.id, node: page === null ? node : <OpensPage page={page} onOpenPage={context.onOpenPage}>{node}</OpensPage> });
+      items.push({ id: entry.id, page, node: page === null ? node : <OpensPage page={page} onOpenPage={context.onOpenPage}>{node}</OpensPage> });
     }
   }
   return items;

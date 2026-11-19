@@ -11,7 +11,7 @@ import { openSettingsWindow } from "../settings/api";
 import { collapsedItemName, collapsedMenuRows, toggleCollapsedMenuItem, type CollapsedNameSources } from "./collapsedMenu";
 import { collapsedBarSlot } from "./slots/collapsed";
 
-function builtinNames(t: Translations): Record<string, string> {
+export function builtinNames(t: Translations): Record<string, string> {
   const item = t.settings.collapsedItems.item;
   return {
     "status-light": item.statusLight,
@@ -25,7 +25,7 @@ function builtinNames(t: Translations): Record<string, string> {
   };
 }
 
-function entryLabel(entry: Pick<IslandCollapsedMeta, "label"> & { id: string; external: boolean }, t: Translations, locale: string): string | null {
+export function entryLabel(entry: Pick<IslandCollapsedMeta, "label"> & { id: string; external: boolean }, t: Translations, locale: string): string | null {
   if (typeof entry.label !== "function") return localizedTitle(entry.label, locale);
   if (entry.external) return null;
   try {

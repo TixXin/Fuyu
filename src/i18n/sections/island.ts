@@ -25,6 +25,8 @@ export type IslandText = {
   calendar: string;
   shelfCount: (count: number) => string;
   sideMore: (count: number) => string;
+  overflowMore: (count: number) => string;
+  overflowPanel: string;
   deviceInUse: Record<"camera" | "microphone", (apps: string) => string>;
   deviceAppSeparator: string;
   levelPopup: { volume: (percent: number) => string; brightness: (percent: number) => string; muted: string; mutedShort: string };
@@ -79,6 +81,8 @@ export const zhCN: IslandText = {
   calendar: "日历",
   shelfCount: (count) => `文件中转里有 ${count} 个文件`,
   sideMore: (count) => `还有 ${count} 项，展开查看`,
+  overflowMore: (count) => `还有 ${count} 项放不下，点开查看`,
+  overflowPanel: "放不下的项目",
   deviceInUse: {
     camera: (apps) => (apps ? `${apps} 正在使用摄像头，点击打开隐私设置` : "摄像头正在使用，点击打开隐私设置"),
     microphone: (apps) => (apps ? `${apps} 正在使用麦克风，点击打开隐私设置` : "麦克风正在使用，点击打开隐私设置"),
@@ -139,6 +143,8 @@ export const en: IslandText = {
   calendar: "Calendar",
   shelfCount: (count) => (count === 1 ? "1 file on the shelf" : `${count} files on the shelf`),
   sideMore: (count) => `${count} more, open the island to see them`,
+  overflowMore: (count) => (count === 1 ? "1 more item that did not fit" : `${count} more items that did not fit`),
+  overflowPanel: "Items that did not fit",
   deviceInUse: {
     camera: (apps) => (apps ? `${apps} using the camera; click for privacy settings` : "Camera in use; click for privacy settings"),
     microphone: (apps) => (apps ? `${apps} using the microphone; click for privacy settings` : "Microphone in use; click for privacy settings"),

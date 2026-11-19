@@ -283,7 +283,7 @@ fn the_island_follows_only_when_asked_and_only_while_collapsed() {
 
 #[test]
 fn banner_rect_takes_its_own_area_only() {
-    use super::banner_hit::{banner_rect, set_island_banner_rect, BannerRect};
+    use super::banner_hit::{banner_rect, set_island_banner_rect, set_island_overflow_rect, BannerRect};
 
     let rect = BannerRect { x: 250.0, y: 42.0, width: 320.0, height: 72.0 };
     assert!(rect.contains(250.0, 42.0));
@@ -300,6 +300,17 @@ fn banner_rect_takes_its_own_area_only() {
     assert_eq!(banner_rect(), None);
     set_island_banner_rect(Some(rect));
     set_island_banner_rect(None);
+    assert_eq!(banner_rect(), None);
+
+    let panel = BannerRect { x: 300.0, y: 40.0, width: 140.0, height: 90.0 };
+    set_island_overflow_rect(Some(panel));
+    assert_eq!(banner_rect(), Some(panel));
+    set_island_banner_rect(Some(rect));
+    assert_eq!(banner_rect(), Some(panel));
+    set_island_overflow_rect(Some(BannerRect { height: 0.0, ..panel }));
+    assert_eq!(banner_rect(), Some(rect));
+    set_island_banner_rect(None);
+    set_island_overflow_rect(None);
     assert_eq!(banner_rect(), None);
 }
 

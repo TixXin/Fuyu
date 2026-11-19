@@ -56,6 +56,7 @@ export const DEFAULT_SETTINGS: IslandSettings = {
   inkColor: "",
   showTitle: false,
   showCollapsedText: true,
+  collapsedOverflowMore: true,
   showIdleTodoCount: true,
   carryOverIncompleteTodos: false,
   enableTodoReorder: false,

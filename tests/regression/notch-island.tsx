@@ -1,4 +1,4 @@
-import { act, StrictMode, useState, type CSSProperties } from "react";
+import { act, StrictMode, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import "../../src/styles/tokens.css";
@@ -20,6 +20,9 @@ import { sessionKey } from "../../src/features/agent-status/unseen";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import type { AgentApprovals } from "../../src/features/agent-status/approvals/useAgentApprovals";
 import { permission, SESSIONS } from "./agentNoticeGallery";
+import { windowSlots } from "../../src/features/plugin-kernel/slots";
+import { collapsedFit } from "../../src/windows/island/collapsedFitStore";
+import type { IslandPage } from "../../src/windows/island/types";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const params = new URLSearchParams(location.search);
@@ -29,28 +32,47 @@ type NoticeCard = "session" | "approval" | "pile";
 const demoCard = (params.get("card") as NoticeCard | null) ?? "session";
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 const NOTCH: IslandNotch = { width: 200, height: 32 };
-mockIPC((command) => {
+const overflowRects: unknown[] = [];
+const openedPages: IslandPage[] = [];
+const last = <T,>(list: readonly T[]) => list[list.length - 1];
+mockIPC((command, payload) => {
   if (command === "list_plugin_views") return { views: [], status: [] };
   if (command === "get_qq_mail_state") return [];
+  if (command === "set_island_overflow_rect") overflowRects.push((payload as { rect: unknown }).rect);
 }, { shouldMockEvents: true });
 
-type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean; stack: AgentNoticeNotch | null; card: NoticeCard };
+const registry = windowSlots("island");
+const ClocksPage = () => <div>clocks page</div>;
+const clockChip = (city: string) => () => <span className="test-clock-chip" style={{ display: "inline-block", width: 44, whiteSpace: "nowrap", fontSize: 12 }}>{city}</span>;
+function addClocks() {
+  const removers: (() => void)[] = [];
+  for (const [index, city] of ["TYO", "LON", "NYC", "SYD", "PAR"].entries()) {
+    const owner = `@test/clock-${city.toLowerCase()}`;
+    const page = index === 4 ? undefined : `clock-page-${city}`;
+    if (page) removers.push(registry.add("island.page/v1", { id: page, component: ClocksPage, title: city }, owner, { external: true }));
+    removers.push(registry.add("island.collapsed/v1", { id: `clock-${index + 1}`, opens: page, label: { "zh-CN": `时钟 ${city}`, en: `Clock ${city}` }, component: clockChip(city) }, owner, { external: true }));
+  }
+  return () => removers.forEach((remove) => remove());
+}
+
+type State = { notch: IslandNotch | null; tucked: boolean; peek: string | null; expanded: boolean; level: LevelChange | null; device: DeviceAlert | null; preview: MessagePreview | null; popup: boolean; stack: AgentNoticeNotch | null; card: NoticeCard; more: boolean };
 let change: (next: Partial<State>) => void;
 
 function Fixture() {
-  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: Boolean(demoStack), level: null, device: null, preview: null, popup: Boolean(demoStack), stack: demoStack, card: demoCard });
+  const [state, setState] = useState<State>({ notch: NOTCH, tucked: false, peek: null, expanded: Boolean(demoStack), level: null, device: null, preview: null, popup: Boolean(demoStack), stack: demoStack, card: demoCard, more: true });
   change = (next) => setState((current) => ({ ...current, ...next }));
   const qq = useQQNotifications(true);
   const wechat = useWeChatReminders(true);
   const qqMail = useMail(true);
-  const width = notchFittedWidth(300, state.notch, 1, Boolean(state.level || state.device));
+  const fitWidth = useSyncExternalStore(collapsedFit.subscribe, collapsedFit.total);
+  const width = notchFittedWidth(Math.min(520, 300 + fitWidth), state.notch, 1, Boolean(state.level || state.device));
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: state.preview }, agents: 0, status: { state: "idle", label: "AI Agent 空闲或已完成" }, barText: !state.notch, todoTitle: "写周报和整理会议记录", translationPeek: state.peek, levelPopup: state.level, deviceAlert: state.device });
   return <div className="stage" style={{ "--collapsed-island-width": `${width}px`, "--island-scale": 1, "--island-collapsed-scale": 1, "--island-expanded-scale": 1, "--expanded-island-width": `${state.popup ? notchPanelWidth(400, state.notch, 1, true) : notchPanelWidth(560, state.notch, 1, false)}px`, "--expanded-island-height": "306px" } as CSSProperties}>
     <IslandShell
       mode={state.expanded ? "expanded" : "collapsed"} page={state.popup ? "agents" : "todo"} popup={state.popup} isTucked={state.tucked} isDetached={false} showTitle={false}
       showCollapsedText={!state.notch} appearanceMode="classic" nativeGlassState="disabled"
       features={{ todo: true, music: true, clipboard: true, shelf: true, qq: true, wechat: true, qqMail: true, agents: true, translation: true, calendar: true, screenshots: true } as never}
-      onOpenPage={() => {}}
+      onOpenPage={(page) => openedPages.push(page)} overflowMore={state.more}
       onPageChange={() => {}} onWindowDragStart={() => {}} onCollapse={() => {}}
       onResetPosition={() => {}} minimizesToTray onMinimize={() => {}} onOpenSettings={() => {}} onOpenTranslator={() => {}} onTuck={() => {}} onReveal={() => {}} pageDigitModifiers="Alt" hoverSwitchPage={false} hoverSwitchDelayMs={0}>
       {state.stack ? <NoticeStack notch={state.stack} card={state.card} /> : <span>待办清单</span>}
@@ -159,6 +181,41 @@ async function runChecks() {
     await set({ stack: null, popup: false, expanded: false });
     await settleTransitions();
 
+    check(!document.querySelector(".island__more-chip, .island__bar-unit"), "项目都放得下时没有「+N」，收起条的结构和原来一样");
+    let removeClocks = () => {};
+    await act(async () => { removeClocks = addClocks(); });
+    await settleTransitions();
+    const clockWing = () => bar().querySelector<HTMLElement>(".island__notch-wing--right")!;
+    const clocksShown = () => [...bar().querySelectorAll<HTMLElement>(".test-clock-chip")];
+    const chip = () => bar().querySelector<HTMLButtonElement>(".island__more-chip");
+    const shownCities = clocksShown().map((clock) => clock.textContent);
+    check(shownCities.length >= 1 && shownCities.length < 5 && shownCities.join() === ["TYO", "LON", "NYC", "SYD", "PAR"].slice(0, shownCities.length).join(), "两翼放不下五个时钟时，按清单顺序留下前面的");
+    check(chip()?.textContent === `+${5 - shownCities.length}`, "其余的收进「+N」，N 是收起来的个数");
+    check(clocksShown().every((clock) => box(clock).left >= box(clockWing()).left - 0.5 && box(clock).right <= box(clockWing()).right + 0.5 && Math.abs(box(clock).width - 44) < 1), "留下的项目完整显示在右翼里，没有被挤扁");
+    const gapBox = box(bar().querySelector(".island__notch-gap")!);
+    check(box(chip()!).right <= gapBox.left + 0.5 || box(chip()!).left >= gapBox.right - 0.5, "「+N」不压刘海");
+    check(box(chip()!).left >= box(island()).left && box(chip()!).right <= box(island()).right && chip() === hit(chip()!), "「+N」在岛上看得见、点得到");
+    await act(async () => { chip()!.click(); });
+    const panel = () => document.querySelector<HTMLElement>(".island-more-panel");
+    const rowNames = () => [...(panel()?.querySelectorAll(".island-more-panel__row") ?? [])].map((row) => row.textContent);
+    check(panel() && box(panel()!).top >= box(island()).bottom && rowNames().join() === ["TYO", "LON", "NYC", "SYD", "PAR"].slice(shownCities.length).map((city) => `时钟 ${city}`).join(), "点「+N」在岛下面出小面板，按顺序列出收起来的项目的名字");
+    check(chip()?.getAttribute("aria-expanded") === "true" && last(overflowRects) !== null && (last(overflowRects) as { width: number }).width > 0, "小面板的位置报给原生层，算进可点击区域");
+    check(panel()!.querySelector("span.island-more-panel__row")?.textContent === "时钟 PAR", "没有页面的项目只列名字，不做成按钮");
+    await act(async () => { panel()!.querySelector<HTMLButtonElement>("button.island-more-panel__row")!.click(); });
+    check(last(openedPages) === `clock-page-${["TYO", "LON", "NYC", "SYD", "PAR"][shownCities.length]}` && !panel() && last(overflowRects) === null, "点一项打开它的页面，小面板收起，点击区域撤掉");
+    await act(async () => { chip()!.click(); });
+    await act(async () => { panel()!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+    check(!panel() && document.activeElement === chip(), "Esc 收起小面板，焦点回到「+N」");
+    await set({ more: false });
+    await settleTransitions();
+    check(!chip() && !document.querySelector(".island__bar-unit") && clocksShown().length === 5, "设置里关掉后不收进「+N」，回到原来的排法");
+    await set({ more: true });
+    await settleTransitions();
+    check(chip()?.textContent === `+${5 - shownCities.length}`, "再打开设置，「+N」回来");
+    await act(async () => { removeClocks(); });
+    await settleTransitions();
+    check(!document.querySelector(".island__more-chip, .island__bar-unit") && Math.abs(box(island()).height - NOTCH.height) < 1, "项目少了以后「+N」消失，收起条回到原来的结构");
+
     await set({ peek: "notch 刘海" });
     await settleTransitions();
     const drop = bar().querySelector<HTMLElement>(".island__notch-drop");
@@ -216,5 +273,6 @@ await act(async () => { createRoot(document.getElementById("fixture")!).render(<
 if (automated) await runChecks();
 else {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
+  if (params.has("clocks")) addClocks();
   results.textContent = "演示：贴合刘海的收起岛（刘海 200×32）。加 ?test=1 运行检查。";
 }

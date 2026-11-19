@@ -228,6 +228,7 @@ export function IslandApp() {
         side={side}
         showTitle={settings.showTitle}
         showCollapsedText={barText}
+        overflowMore={settings.collapsedOverflowMore}
         features={features}
         onOpenPage={openEnabledPage}
         onWindowDragStart={startIslandDrag}

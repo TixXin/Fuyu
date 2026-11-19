@@ -1131,6 +1131,19 @@
     {
       "page": "appearanceCollapsed",
       "zh-CN": {
+        "group": "显示内容",
+        "title": "放不下的项目收进「+N」",
+        "description": "贴合刘海时两侧位置有限：按下面清单的顺序先放，放不下的收进「+N」，停在或点它查看。关掉后放不下的项目不显示。"
+      },
+      "en": {
+        "group": "Display",
+        "title": "Put items that do not fit behind +N",
+        "description": "Beside the notch there is little room: items are placed in the order of the list below, and the rest go behind +N. Hover or click it to see them. When off, items that do not fit are not shown."
+      }
+    },
+    {
+      "page": "appearanceCollapsed",
+      "zh-CN": {
         "group": "中心图案",
         "title": "图案"
       },
