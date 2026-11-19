@@ -2,7 +2,19 @@
 
 起因（用户，2026-11-19）：「待办的设置项需要更完善，增加功能。」
 
-状态：**等你挑**。预览页：[todo-settings-preview.html](todo-settings-preview.html)（能切两种排法、只看新增项，下面有岛上的样子）。还没建任务，定了再建。
+状态：**已定**（用户 2026-11-19：「按建议定」），分四步做，任务 C140。预览页：[todo-settings-preview.html](todo-settings-preview.html)（能切两种排法、只看新增项，下面有岛上的样子）。
+
+## 定下来的
+
+| 问题 | 结果 |
+|---|---|
+| 设置页怎么排 | 排法 A：任务、提醒、归档与保存三个标签 |
+| 做哪几步 | 四步都做，顺序 1 → 2 → 3 → 4（C140.1 到 C140.4） |
+| 每天收尾提醒 | 默认关 |
+| 文件名格式 | 待定：方案里是可选项，没有建议，做到第 2 步时再问 |
+| 旧版本会丢截止日 | 按接受处理，发版说明写一句；第 3 步动手前再确认一次 |
+
+第 1 步先于分标签做，所以它的新设置先放进现有的「专注联动与提醒」组，第 2 步分标签时再挪到「提醒」标签。
 
 ## 结论
 
@@ -121,23 +133,15 @@
 - 「今晚」分段（调研里提过）：要加一种新的列表分组，收益不如截止日。
 - 按项目单独设置排序或提醒：先看有没有人要。
 
-## 要你定的
-
-1. 设置页用排法 A（三个标签）还是 B（一页到底）。
-2. 四步都做，还是去掉哪步；顺序按 1 → 2 → 3 → 4 行不行。
-3. 每天收尾提醒默认关，行不行。
-4. 文件名格式要不要做。
-5. 第 3 步里旧版本会丢截止日这件事能不能接受，还是先给旧版本发一个只保留未知字段的小版本。
-
 ## 任务怎么拆
 
-定了以后在 C 组建一个总任务和四个子任务，一步一个，各自能单独验证和合入：
+总任务 C140，四个子任务一步一个，各自能单独验证和合入：
 
 | 子任务 | 范围 | 验证 |
 |---|---|---|
-| 提醒 | `src/features/todos/`（偏好、两个提醒钩子、设置分节、文案） | `pnpm check`、`pnpm build`、单元测试补提前量和范围的用例、`pnpm test:regression` |
-| 分标签和小项 | `src/features/todos/`、`src/i18n/`、`src-tauri/src/system/todo_export.rs`（只有做文件名格式时） | 同上；做文件名格式时加 `cargo test` 和 `pnpm build:exe` |
-| 截止日和顺延天数 | `src/features/todos/`、`src-tauri/src/todos/`、`packages/plugin-services/`、`docs/architecture/contracts.md` | `pnpm check`、`cargo test`、`pnpm build:exe`、双机同步的用例 |
-| 本周小结 | `src/features/todos/island/` | `pnpm check`、`pnpm build`、`pnpm test:regression` |
+| C140.1 提醒 | `src/features/todos/`（偏好、两个提醒钩子、设置分节、文案） | `pnpm check`、`pnpm build`、单元测试补提前量和范围的用例、`pnpm test:regression` |
+| C140.2 分标签和小项 | `src/features/todos/`、`src/i18n/`、`src-tauri/src/system/todo_export.rs`（只有做文件名格式时） | 同上；做文件名格式时加 `cargo test` 和 `pnpm build:exe` |
+| C140.3 截止日和顺延天数 | `src/features/todos/`、`src-tauri/src/todos/`、`packages/plugin-services/`、`docs/architecture/contracts.md` | `pnpm check`、`cargo test`、`pnpm build:exe`、双机同步的用例 |
+| C140.4 本周小结 | `src/features/todos/island/` | `pnpm check`、`pnpm build`、`pnpm test:regression` |
 
 每步做完都要 `pnpm settings:index` 重写设置搜索索引，并把定下来的界面约定写进 [design/todos.md](../design/todos.md)。
