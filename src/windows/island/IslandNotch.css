@@ -195,7 +195,8 @@
   align-items: center;
 }
 
-:root[data-island-notch="simulated"] .island__notch-band {
+:root[data-island-notch="simulated"] .island__notch-band,
+.island__expanded:has([data-island-notch-band]) .island__notch-band {
   display: none;
 }
 

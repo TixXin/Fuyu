@@ -65,7 +65,7 @@ function workspace(skills = []) {
 }
 
 test("the table has the eight rows and each one names when it applies, what it needs and a hint", () => {
-  assert.deepEqual(RULES.map((entry) => entry.id), ["fuyu-agent-harness", "src-rules", "src-tauri-rules", "fuyu-release", "fuyu-video", "fuyu-lead", "fuyu-task", "fuyu-skill-writing"]);
+  assert.deepEqual(RULES.map((entry) => entry.id), ["fuyu-agent-harness", "src-rules", "src-tauri-rules", "fuyu-release", "fuyu-video", "fuyu-task", "fuyu-skill-writing"]);
   for (const entry of RULES) {
     assert.ok(entry.when.paths || entry.when.commands || entry.when.tool, entry.id);
     assert.ok(Boolean(entry.require.skill) !== Boolean(entry.require.read), entry.id);
@@ -245,25 +245,6 @@ test("command rows match the command that is run, not text that mentions it", ()
   assert.equal(task("pnpm task:claim F42 --as gate-table --scope scripts/gate/"), "pnpm task:claim");
   assert.equal(task("pnpm -s tasks add F50 --title x --issue 5 --claim --as me --scope docs/"), "pnpm tasks add --claim");
   assert.equal(task("pnpm tasks add F50 --title x --issue 5; pnpm tasks show F42; pnpm tasks note F42 \"pnpm task:claim 之后\""), null);
-});
-
-test("the lead row stops the first session a session starts on request, once", () => {
-  const space = workspace(["fuyu-lead"]);
-  try {
-    const start = (initiation = "user_asked") => space.input({ tool_name: "mcp__ccd_session__start_session", tool_input: { initiation, title: "x" }, tool_use_id: "a" });
-    const options = { root: space.root, temp: space.temp, env: {} };
-    assert.equal(touches(rule("fuyu-lead"), start("own_initiative"), space.root), null);
-    assert.equal(touches(rule("fuyu-lead"), start("offer"), space.root), null);
-    assert.equal(run(start("own_initiative"), options), null);
-    const blocked = run(start(), options);
-    assert.match(blocked, /fuyu-lead/);
-    assert.match(blocked, /组长/);
-    assert.equal(run(start(), options), null);
-    writeFileSync(space.transcript, '{"name":"Skill","input":{"skill":"fuyu-lead"}}');
-    assert.equal(run(space.input(start(), { session_id: "s2" }), options), null);
-  } finally {
-    space.done();
-  }
 });
 
 test("a row whose skill is not in the repo yet stays off", () => {

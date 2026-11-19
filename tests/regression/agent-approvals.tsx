@@ -6,7 +6,9 @@ import type { AgentSessionSummary } from "../../src/features/agent-status/api";
 import type { AgentApprovalRequest } from "../../src/features/agent-status/approvals/api";
 import { useAgentApprovals, type AgentApprovals } from "../../src/features/agent-status/approvals/useAgentApprovals";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
+import { DEFAULT_AGENT_NOTICE_OPTIONS } from "../../src/features/agent-status/notice/noticeOptions";
 import { until } from "./pollUntil";
+import "../../src/styles/tokens.css";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -72,7 +74,7 @@ function Harness() {
     onOpen: () => changeIsland({ mode: "expanded", page: "agents" }),
     onClose: () => changeIsland((current) => ({ ...current, mode: "collapsed" })),
   });
-  return isOpenOnAgents ? <AgentSessionsPanel sessions={sessions} hostDisplay="off" approvals={approvals} /> : null;
+  return isOpenOnAgents ? <AgentSessionsPanel sessions={sessions} hostDisplay="off" approvals={approvals} notice={{ ...DEFAULT_AGENT_NOTICE_OPTIONS, commandLines: 1 }} /> : null;
 }
 
 const last = (items: string[]) => items[items.length - 1];
@@ -81,7 +83,7 @@ const wait = (ms: number) => act(async () => { await new Promise((resolve) => se
 const send = (item: AgentApprovalRequest) => act(async () => { await emit("agent-approval-requested", item); });
 const close = (name: string, reason: string) => act(async () => { await emit("agent-approval-closed", { id: idOf(name), reason }); });
 const button = (name: string) =>
-  [...document.querySelectorAll<HTMLButtonElement>("#fixture .agent-approval__button")].find((item) => item.querySelector(".agent-approval__label")?.textContent === name);
+  [...document.querySelectorAll<HTMLButtonElement>("#fixture .agent-notice__button")].find((item) => item.querySelector(".agent-notice__label")?.textContent === name);
 const click = (target: HTMLElement | undefined) => act(async () => { target?.click(); });
 const messages: string[] = [];
 function check(condition: unknown, label: string) {
@@ -97,8 +99,8 @@ try {
   check(endpointEnabled, "岛上审批开着时通知端点挂起请求");
   pending = [];
   const preview = document.querySelector<HTMLElement>("#fixture .agent-approval__preview")!;
-  check(preview.textContent === COMMAND && getComputedStyle(preview).getPropertyValue("-webkit-line-clamp") === "2", "卡片显示完整命令，默认折成两行");
-  check(document.querySelector("#fixture .agent-approval__title")?.textContent?.includes("岛上审批"), "卡片用会话列表里的标题");
+  check(preview.textContent === COMMAND && getComputedStyle(preview).getPropertyValue("-webkit-line-clamp") === "2", "卡片显示完整命令，命令行数设成 1 时审批卡折成两行");
+  check(document.querySelector("#fixture .agent-notice__title")?.textContent?.includes("岛上审批"), "卡片用会话列表里的标题");
   check(document.querySelector("#fixture .agent-approval__note")?.textContent === "跑回归页并查看改动", "显示 Agent 对命令的说明");
   check(button("始终允许")?.title.includes("Bash(pnpm test:regression:*)"), "有建议规则时显示「始终允许」，提示里写出规则");
   const collapsedHeight = approvals!.cardHeight;
@@ -115,8 +117,8 @@ try {
 
   await send(request("q1", "s1"));
   await send(request("q2", "s2", { agent: "codex", toolInput: { command: ["git", "push"] } }));
-  await until(() => current() === "q1" && Boolean(document.querySelector("#fixture .agent-approval__meta")?.textContent?.includes("还有 1 个")));
-  check(current() === "q1" && document.querySelector("#fixture .agent-approval__meta")?.textContent?.includes("还有 1 个"), "多个请求排队，卡片上显示还有几个");
+  await until(() => current() === "q1" && Boolean(document.querySelector("#fixture .agent-notice__count")?.textContent?.includes("还有 1 个")));
+  check(current() === "q1" && document.querySelector("#fixture .agent-notice__count")?.textContent?.includes("还有 1 个"), "多个请求排队，卡片上显示还有几个");
   check(!button("始终允许"), "没有建议规则时不显示「始终允许」");
   await until(() => !button("拒绝")?.disabled);
   await click(button("拒绝"));

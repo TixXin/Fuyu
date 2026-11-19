@@ -63,7 +63,7 @@ test("host code asks the island window to open its page and gets the island's re
       'export const name = "opener";',
       'export const inject = ["island"];',
       "export function apply(ctx) {",
-      "  globalThis.islandProbe = { open: (...args) => ctx.island.open(...args), collapse: ctx.island.collapse };",
+      "  globalThis.islandProbe = { open: (...args) => ctx.island.open(...args), collapse: ctx.island.collapse, notify: ctx.island.notify, onNoticeAction: ctx.island.onNoticeAction };",
       "}",
     ].join("\n"),
   });
@@ -73,6 +73,8 @@ test("host code asks the island window to open its page and gets the island's re
   await host.settle();
   assert.equal(host.status().find((item) => item.id === "opener")?.state, "running");
   assert.equal(globalThis.islandProbe.collapse, undefined);
+  assert.equal(globalThis.islandProbe.notify, undefined);
+  assert.equal(globalThis.islandProbe.onNoticeAction, undefined);
 
   await assert.rejects(globalThis.islandProbe.open(), { code: "not-ready" });
 
@@ -110,4 +112,61 @@ test("windows other than the island go through the host, and a silent island tim
   assert.equal(await collapsing, false);
   await assert.rejects(host.islandControl.request("open", ""), { code: "bad-params" });
   await assert.rejects(host.islandControl.request("open", "@fuyu/launchpad"), { code: "timeout" });
+});
+
+test("a host notice goes to the island once and comes back with the island's shown, or false when the island cannot answer", async () => {
+  const made = workspace({ "data/plugins.yml": "[]\n" });
+  cleanup.push(made.remove);
+  const host = await startHost({ dir: join(made.dir, "data") });
+  cleanup.push(() => host.stop());
+  await host.settle();
+  const control = host.islandControl;
+  control.noticeTimeoutMs = 20;
+  const notice = { source: "alarm", pluginId: "@fuyu/alarm", title: "Wake up", body: "7:00", actions: ["snooze"] };
+
+  assert.equal(await control.notify(notice), false);
+  const published = [];
+  let connected = ["settings"];
+  const detach = control.attachWindows({ connected: () => connected, publish: (name, data) => published.push([name, data]) });
+  assert.equal(await control.notify(notice), false);
+  assert.deepEqual(published, []);
+
+  connected = ["island", "settings"];
+  const shown = control.notify(notice);
+  assert.deepEqual(published, [[ISLAND_REQUEST_EVENT, { id: published[0]?.[1].id, action: "notify", plugin: "@fuyu/alarm", notice }]]);
+  control.settle({ id: published[0][1].id, value: true }, "island");
+  assert.equal(await shown, true);
+
+  const hidden = control.notify(notice);
+  control.settle({ id: published[1][1].id, value: false }, "island");
+  assert.equal(await hidden, false);
+
+  const refused = control.notify(notice);
+  control.settle({ id: published[2][1].id, error: { code: "not-ready", message: "the island cannot show notices yet" } }, "island");
+  assert.equal(await refused, false);
+
+  assert.equal(await control.notify(notice), false);
+  assert.equal(published.length, 4);
+
+  const leaving = control.notify(notice);
+  detach();
+  assert.equal(await leaving, false);
+  assert.equal(await control.notify({ title: "no plugin id" }), false);
+  assert.equal(published.length, 5);
+});
+
+test("notice actions come only from the island window and reach every listener until it stops listening", async () => {
+  const made = workspace({ "data/plugins.yml": "[]\n" });
+  cleanup.push(made.remove);
+  const host = await startHost({ dir: join(made.dir, "data") });
+  cleanup.push(() => host.stop());
+  await host.settle();
+  const heard = [];
+  const off = host.islandControl.onNoticeAction((data) => heard.push(data));
+  assert.throws(() => host.islandControl.noticeAction({ pluginId: "@fuyu/pomodoro", action: "skip" }, "settings"), { code: "bad-params" });
+  assert.throws(() => host.islandControl.noticeAction({ pluginId: "@fuyu/pomodoro" }, "island"), { code: "bad-params" });
+  assert.equal(host.islandControl.noticeAction({ pluginId: "@fuyu/pomodoro", action: "skip" }, "island"), true);
+  off();
+  host.islandControl.noticeAction({ pluginId: "@fuyu/pomodoro", action: "again" }, "island");
+  assert.deepEqual(heard, [{ pluginId: "@fuyu/pomodoro", action: "skip" }]);
 });

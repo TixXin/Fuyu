@@ -13,6 +13,7 @@ import {
   appAllowed,
   appLabel,
   isHeard,
+  pollDelay,
   buildNotice,
   normalizeConfig,
   readStoredConfig,
@@ -106,13 +107,17 @@ test("track change notice content, apps and icon", () => {
   assert.equal(isHeard({ playing: true }, 0, 100_000), true);
   assert.equal(isHeard({ playing: false }, 95_000, 100_000), true);
   assert.equal(isHeard({ playing: false }, 80_000, 100_000), false);
+
+  assert.equal(pollDelay(false, false), 2500);
+  assert.equal(pollDelay(false, true), 15_000);
+  assert.equal(pollDelay(true, true), 30_000);
 });
 
 async function startWithPlugin(name, { config, emits }) {
   const result = await check(PLUGIN_DIR, { official: true, allowExperimental: false });
   assert.deepEqual(result.errors, []);
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, `${name}-built`), packDir: join(scratch, `${name}-packed`) });
-  assert.equal(packed.manifest.version, "1.1.0");
+  assert.equal(packed.manifest.version, "1.1.1");
   assert.equal(packed.manifest.fuyu.displayName.en, "Track change notice");
 
   const hostDir = join(scratch, name);
@@ -248,6 +253,19 @@ test("track change notice host: a saved off stays off; polling notifies, skips p
     assert.equal(saved.autoNotify, true);
     assert.deepEqual(saved.apps, ["Spotify.exe"]);
     assert.deepEqual(saved.seenApps, ["com.spotify.client"]);
+  } finally {
+    await run.stop();
+  }
+});
+
+test("track change notice host: an untitled reading from changed is read again 1.5 s later", { skip: !HOST_HAS_CHANGED && "media/v1 does not declare changed yet" }, async () => {
+  const run = await startWithPlugin("reread", { emits: true });
+  try {
+    await run.call("getState");
+    run.change(track(null, null, { sourceApp: "汽水音乐" }));
+    run.state.now = track("Arrived late", "H");
+    assert.ok(await until(() => run.state.notices.length === 1, 4000));
+    assert.equal(run.state.notices[0].title, "Arrived late");
   } finally {
     await run.stop();
   }

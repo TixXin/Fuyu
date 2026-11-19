@@ -98,6 +98,7 @@ try {
       if (method === "plugin.call") return host.ctx.clients.call(params?.plugin, params?.method, params?.params, window);
       if (method === "island.open" || method === "island.collapse") return host.islandControl.request(method.slice("island.".length), params?.plugin, params?.page);
       if (method === "island.result") return host.islandControl.settle(params, window);
+      if (method === "island.noticeAction") return host.islandControl.noticeAction(params, window);
       if (SERVICE_CALLS.includes(method)) return host.serviceHub.windowCall(method, params, window);
       throw Object.assign(new Error(`no method ${method}`), { code: "no-method" });
     },

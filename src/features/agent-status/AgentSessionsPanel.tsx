@@ -25,6 +25,12 @@ import { AgentApprovalCard } from "./approvals/AgentApprovalCard";
 import { AgentQuestionCard } from "./approvals/AgentQuestionCard";
 import type { AgentApprovals } from "./approvals/useAgentApprovals";
 import { AgentSessionRow } from "./AgentSessionRow";
+import { AgentSessionNotice } from "./notice/AgentSessionNotice";
+import { DEFAULT_AGENT_NOTICE_OPTIONS, type AgentNoticeOptions } from "./notice/noticeOptions";
+import { AgentNoticeStack } from "./notice/AgentNoticeStack";
+import { stackItemOf } from "./notice/noticeStack";
+import type { AlertedNotice } from "./useAgentAlerts";
+import type { AgentNoticeNotch, AgentNoticeStack as NoticeStackMode } from "./agentSettings";
 import { AgentSessionRowMenu } from "./AgentSessionRowMenu";
 import { AgentSessionHoverCard } from "./AgentSessionHoverCard";
 import { useSessionKeyboard } from "./useSessionKeyboard";
@@ -55,9 +61,14 @@ export function AgentSessionsPanel({
   unseen,
   removal,
   reveal,
+  stack = [],
+  stackMode = "peek",
+  notch = "band",
   showUsage: usageOn = false,
   usages,
   approvals,
+  notice = DEFAULT_AGENT_NOTICE_OPTIONS,
+  onOpenAgentPage,
 }: {
   sessions: AgentSessionSummary[];
   view?: AgentSessionView;
@@ -73,12 +84,19 @@ export function AgentSessionsPanel({
   unseen?: UnseenSessions;
   removal?: SessionRemoval;
   reveal?: AlertedSession | null;
+  stack?: readonly AlertedNotice[];
+  stackMode?: NoticeStackMode;
+  notch?: AgentNoticeNotch;
   showUsage?: boolean;
   usages?: AgentUsages;
   approvals?: AgentApprovals;
+  notice?: AgentNoticeOptions;
+  onOpenAgentPage?: () => void;
 }) {
   const t = useTranslation();
-  const sessions = reveal ? [listed.find((session) => sessionKey(session) === reveal.key) ?? reveal.session] : listed;
+  const [pickedKey, setPickedKey] = useState<string | null>(null);
+  const shown = (reveal && stack.find((entry) => entry.key === pickedKey)) || reveal;
+  const sessions = shown ? [listed.find((session) => sessionKey(session) === shown.key) ?? shown.session] : listed;
   const showUsage = usageOn && !reveal;
   const [now, setNow] = useState(() => Date.now());
   const effortLabels = useEffortLabels();
@@ -114,7 +132,7 @@ export function AgentSessionsPanel({
   );
   const cardRef = useRef<HTMLLIElement>(null);
   const measure = reveal?.measure;
-  const cardKey = reveal?.key;
+  const cardKey = shown?.key;
 
   useLayoutEffect(() => {
     const row = cardRef.current;
@@ -187,11 +205,40 @@ export function AgentSessionsPanel({
   if (approvals?.current) {
     return (
       <section className="agent-sessions" aria-label={t.agent.sessions.title}>
-        {approvals.current.kind === "question" ? (
-          <AgentQuestionCard approvals={approvals} sessions={listed} />
-        ) : (
-          <AgentApprovalCard approvals={approvals} sessions={listed} />
-        )}
+        <AgentNoticeStack mode={stackMode} notch={notch} items={[{ key: "approval", provider: approvals.current.agent, tone: "needs", title: "", state: t.agentNotice.state[approvals.current.kind === "question" ? "question" : "needs"] }]} activeKey="approval" onSelect={() => {}}>
+          {() => approvals.current?.kind === "question" ? (
+            <AgentQuestionCard approvals={approvals} sessions={listed} options={notice} />
+          ) : (
+            <AgentApprovalCard approvals={approvals} sessions={listed} options={notice} />
+          )}
+        </AgentNoticeStack>
+      </section>
+    );
+  }
+
+  if (shown && sessions[0]) {
+    const session = sessions[0];
+    const entries = stack.length > 0 ? stack : [shown];
+    const items = entries.map((entry) => stackItemOf(entry.key, listed.find((listedSession) => sessionKey(listedSession) === entry.key) ?? entry.session, t.agentNotice.state));
+    return (
+      <section className="agent-sessions agent-sessions--notice" aria-label={t.agent.sessions.title}>
+        <ul ref={list.ref} className="agent-sessions__list agent-sessions__list--notice">
+          <li ref={cardRef} data-session-key={shown.key}>
+            <AgentNoticeStack mode={stackMode} notch={notch} items={items} activeKey={shown.key} onSelect={setPickedKey}>
+              {({ count, icon }) => (
+                <AgentSessionNotice
+                  session={session}
+                  options={notice}
+                  model={showModel ? modelLabel(session.model, shownEffort(session.provider, session.effort, effortLabels)) : null}
+                  count={count}
+                  icon={icon}
+                  onOpen={() => focus(session)}
+                  onOpenAgentPage={onOpenAgentPage}
+                />
+              )}
+            </AgentNoticeStack>
+          </li>
+        </ul>
       </section>
     );
   }

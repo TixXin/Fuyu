@@ -6,7 +6,7 @@ import { createInterface } from "node:readline";
 import { PassThrough } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { after, test } from "node:test";
-import { startHost } from "@fuyu/plugin-base/host";
+import { ISLAND_REQUEST_EVENT, startHost } from "@fuyu/plugin-base/host";
 import { messagesV1 } from "@fuyu/plugin-services";
 import { connect } from "../../packages/plugin-base/src/host/rpc.mjs";
 import {
@@ -55,6 +55,11 @@ async function open(pluginsYml = "[]\n") {
   let messages;
   await host.ctx.plugin({ name: "asker", apply: (ctx) => void (messages = ctx.services.get(messagesV1)) });
   return { host, messages };
+}
+
+async function waitFor(check) {
+  for (let tries = 0; tries < 100 && !check(); tries += 1) await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.ok(check());
 }
 
 const ALL_BUILTIN_IDS = [
@@ -161,7 +166,7 @@ test("plugins can register new message sources, replace built-in sources by id, 
     receivedAt: 1700000000000,
     actions: ["查看"],
   });
-  assert.deepEqual(sent, { shown: true, receivedAt: 1700000000000 });
+  assert.deepEqual(sent, { shown: false, receivedAt: 1700000000000 });
   assert.equal(arrived.length, 1);
   assert.equal(arrived[0].source, "matrix");
   assert.equal(arrived[0].title, "张工");
@@ -179,6 +184,46 @@ test("plugins can register new message sources, replace built-in sources by id, 
   );
   assert.equal(afterDispose.find((item) => item.id === "qqMail").replacedBy, undefined);
   assert.equal(afterDispose.find((item) => item.id === "feishu").enabled, false);
+});
+
+test("a host plugin's notice is shown by the island window once and returns the island's own shown", async () => {
+  const { host, messages } = await open();
+  const arrived = [];
+  const actions = [];
+  cleanup.push(messages.on("arrived", (notice) => arrived.push(notice)));
+  cleanup.push(messages.on("action", (data) => actions.push(data)));
+  host.islandControl.noticeTimeoutMs = 20;
+  const published = [];
+  const detach = host.islandControl.attachWindows({ connected: () => ["island"], publish: (name, data) => published.push({ name, data }) });
+  const notice = { source: "alarm", pluginId: "@fuyu/alarm", title: "起床", body: "7:00", receivedAt: 1700000000000, actions: ["snooze"] };
+
+  const shown = messages.notify(notice);
+  await waitFor(() => published.length === 1);
+  assert.equal(published[0].name, ISLAND_REQUEST_EVENT);
+  assert.equal(published[0].data.action, "notify");
+  assert.equal(published[0].data.plugin, "@fuyu/alarm");
+  assert.deepEqual({ title: published[0].data.notice.title, body: published[0].data.notice.body, actions: published[0].data.notice.actions }, { title: "起床", body: "7:00", actions: ["snooze"] });
+  host.islandControl.settle({ id: published[0].data.id, value: true }, "island");
+  assert.deepEqual(await shown, { shown: true, receivedAt: 1700000000000 });
+  assert.equal(published.length, 1);
+  assert.equal(arrived.length, 1);
+
+  const expanded = messages.notify(notice);
+  await waitFor(() => published.length === 2);
+  host.islandControl.settle({ id: published[1].data.id, value: false }, "island");
+  assert.equal((await expanded).shown, false);
+
+  assert.equal((await messages.notify(notice)).shown, false);
+
+  host.islandControl.noticeAction({ pluginId: "@fuyu/alarm", action: "snooze" }, "island");
+  assert.deepEqual(actions, [{ pluginId: "@fuyu/alarm", source: "@fuyu/alarm", action: "snooze" }]);
+
+  const leaving = messages.notify(notice);
+  await waitFor(() => published.length === 4);
+  detach();
+  assert.equal((await leaving).shown, false);
+  assert.equal((await messages.notify(notice)).shown, false);
+  assert.equal(published.length, 4);
 });
 
 test("window message source helpers validate notices and restore built-in sources", async () => {

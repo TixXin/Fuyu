@@ -3,6 +3,8 @@ import type { SettingsText } from "../sections/settings/index";
 import type { SyncText } from "../sections/sync";
 import type { Translations } from "../types";
 import { en as agent } from "../sections/agent.ts";
+import { en as agentNotice } from "../sections/agentNotice.ts";
+import { en as agentNoticeStack } from "../sections/agentNoticeStack.ts";
 import { en as archive } from "../sections/archive.ts";
 import { en as calendar } from "../sections/calendar.ts";
 import { en as claudeUsage } from "../sections/claudeUsage.ts";
@@ -51,6 +53,8 @@ export const coreEn: Translations = {
   translator,
   island,
   agent,
+  agentNotice,
+  agentNoticeStack,
   claudeUsage,
   sessionRing,
   notebook,

@@ -215,7 +215,7 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 - **同一个构建目录一条道**（2026-11-15 起）：cargo 给每个构建目录加锁，两个任务编同一个目录时后一个只能干等，还白占一个名额。所以 heavy 按构建目录分道：同一道同时只跑一个，排在它后面的同道任务不挡别的道。`build:exe` 是 `target:release`，`verify` 是 `target:agents`；`pnpm heavy -- cargo …` 没写 `--target-dir` 和 `CARGO_TARGET_DIR` 时默认补成 `src-tauri/target/agents`（并按 `--release` 自动认道，例如默认的 `cargo test` 是 `target:agents`），别的命令要分道时写 `--lane <名字>`。
 - **钩子**：`scripts/heavy/gate.mjs` 登记在 `.claude/settings.json`，拦下三种命令：没经过排队的 `cargo build/test/check/clippy/run` 和 `tauri build`；把 `CARGO_TARGET_DIR` 设成 `agents`、`debug`、`release` 以外的目录；`cd` 进临时目录里的仓库副本再编译（副本没有 `rust-toolchain.toml`，也用不上缓存，每份都从零编译）。别的会话没提交的改动让检查报错时，在主工作区照样跑，交接里写明哪些失败不是自己造成的。确实要绕过时，用户可以在会话环境里设 `FUYU_HEAVY_GATE=off`。
 - **整批 land 一次只跑一个**：`pnpm mq:land` 在 `.git/fuyu-land.lock` 里记下自己。已经有一个整批 land 在跑时，后来的直接退出（退出码 0），提示它开始前的提交会一起带上去；`--only` 不受影响。
-- **会话数**：每个主 agent 同时最多跑 2 个要编译的子会话；全机器同时改代码的会话控制在 6 个左右，超过就让后面的排队（调研、写文档、只读代码的不算；fuyu-lead skill 里也写了）。编译名额只有 2 个，写代码的会话再多也只是在排队，没提交的文件反而越积越多（F41）。
+- **会话数**：每个主 agent 同时最多跑 2 个要编译的子会话；全机器同时改代码的会话控制在 6 个左右，超过就让后面的排队（调研、写文档、只读代码的不算）。编译名额只有 2 个，写代码的会话再多也只是在排队，没提交的文件反而越积越多（F41）。
 - `land-check`、`pnpm verify`、`pnpm build:exe` 以「低于正常」优先级运行，cargo 并行数默认是逻辑 CPU 的一半（`scripts/build-load.mjs`；Mac 上默认等于能效核个数）。环境里已设 `CARGO_BUILD_JOBS` 时以它为准。
 - Mac 上验证 Rust 改动：`cargo clippy --all-targets -- -D warnings` 和 `cargo test`，再交叉检查 Windows：`cargo clippy --all-targets --target x86_64-pc-windows-gnu -- -D warnings`。
 - Rust 版本固定在 `rust-toolchain.toml`，CI 的 `ci.yml` 写同一个版本，改时一起改。
@@ -231,7 +231,6 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 | `src-tauri-rules` | 写 `src-tauri/`（不含 `target/`、`gen/`） | 读过 `src-tauri/AGENTS.md` |
 | `fuyu-release` | 跑 `pnpm release`、`release:version`、`release:prebuild`，或直接跑 `scripts/release/` 下的脚本 | 加载过这个 skill |
 | `fuyu-video` | 写 `video/` | 加载过这个 skill |
-| `fuyu-lead` | 一个会话第一次用 `start_session` 按用户要求派出会话 | 加载过这个 skill |
 | `fuyu-task` | `pnpm task:claim`、`pnpm tasks add … --claim` | 加载过这个 skill |
 | `fuyu-skill-writing` | 写 `.claude/skills/` | 加载过这个 skill |
 

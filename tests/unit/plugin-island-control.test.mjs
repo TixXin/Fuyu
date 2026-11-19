@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { answerIslandRequest, islandControlFor, islandRefusal, setLocalIslandControl } from "../../src/features/plugin-kernel/islandControl.ts";
+import {
+  answerIslandRequest,
+  attachIslandHost,
+  islandControlFor,
+  islandRefusal,
+  sendIslandNoticeAction,
+  setLocalIslandControl,
+  setLocalIslandNotices,
+} from "../../src/features/plugin-kernel/islandControl.ts";
 import { ownIslandPage, showsOwnIslandPage } from "../../src/features/plugin-kernel/islandPageRequest.ts";
 
 const pages = [
@@ -72,4 +80,38 @@ test("other windows send island calls to the plugin host with the caller's id", 
     ["island.open", { plugin: "@fuyu/launchpad", page: "launchpad-recent" }],
     ["island.collapse", { plugin: "@fuyu/launchpad" }],
   ]);
+});
+
+test("the island shows a host notice through its notice handler and answers with what it showed", async () => {
+  const calls = [];
+  const call = async (method, params) => void calls.push([method, params]);
+  const notice = { source: "alarm", pluginId: "@fuyu/alarm", title: "Wake up", body: "7:00", actions: [] };
+  await answerIslandRequest({ id: 1, action: "notify", plugin: "@fuyu/alarm", notice }, call);
+  const seen = [];
+  let showing = true;
+  const stop = setLocalIslandNotices((next) => {
+    seen.push(next);
+    return showing;
+  });
+  await answerIslandRequest({ id: 2, action: "notify", plugin: "@fuyu/alarm", notice }, call);
+  showing = false;
+  await answerIslandRequest({ id: 3, action: "notify", plugin: "@fuyu/alarm", notice }, call);
+  await answerIslandRequest({ id: 4, action: "notify", plugin: "@fuyu/alarm", notice: "Wake up" }, call);
+  stop();
+  assert.deepEqual(seen, [notice, notice]);
+  assert.deepEqual(calls.map(([method, params]) => [method, params.id, params.value ?? null, params.error?.code ?? null]), [
+    ["island.result", 1, null, "not-ready"],
+    ["island.result", 2, true, null],
+    ["island.result", 3, false, null],
+  ]);
+});
+
+test("a click on a host notice goes back to the plugin host, and fails plainly when the host is gone", async () => {
+  await assert.rejects(sendIslandNoticeAction("@fuyu/pomodoro", "skip"), { code: "not-ready" });
+  const calls = [];
+  const detach = attachIslandHost(async (method, params) => void calls.push([method, params]));
+  await sendIslandNoticeAction("@fuyu/pomodoro", "skip");
+  detach();
+  await assert.rejects(sendIslandNoticeAction("@fuyu/pomodoro", "again"), { code: "not-ready" });
+  assert.deepEqual(calls, [["island.noticeAction", { pluginId: "@fuyu/pomodoro", action: "skip" }]]);
 });

@@ -11,7 +11,7 @@ import { playAgentSound } from "./sounds/player";
 import { useAgentSoundSettings } from "./sounds/useAgentSoundSettings";
 import type { IslandSettings } from "../../lib/settings/types";
 import type { IslandHost } from "../plugin-kernel/islandHost";
-import { useHoverHold } from "../plugin-kernel/useHoverHold";
+import { useIslandHovered } from "../plugin-kernel/useHoverHold";
 import { useOutsideClick } from "../plugin-kernel/useOutsideClick";
 
 type IslandAgentAlertsOptions = {
@@ -67,16 +67,21 @@ export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode
 
   useAgentSounds(sessions, enabled, unseen);
   useAgentPush(sessions, settings.agentStatusEnabled, unseen);
-  const holdsOpen = useHoverHold(host);
+  const isHovered = useIslandHovered(host);
   const [soundSettings] = useAgentSoundSettings();
   const remind = (reminded: AgentSessionSummary[]) => {
     const event = reminderSound(reminded[reminded.length - 1]);
     if (soundSettings.enabled && soundSettings.events[event]) playAgentSound(event, soundSettings);
   };
-  const alertedSession = useAgentAlerts({
+  const { alerted: alertedSession, stack: alertedStack } = useAgentAlerts({
     sessions,
     kinds: alertKindsOf(settings),
-    durationMs: settings.agentAlertSeconds * 1000,
+    dwell: {
+      completedMs: settings.agentAlertSeconds * 1000,
+      yourTurnMs: settings.agentNoticeYourTurnSeconds * 1000,
+      failedMs: settings.agentNoticeFailedSeconds * 1000,
+      hoverHold: settings.agentNoticeHoverHold,
+    },
     canAlert: enabled,
     isOpenOnAgents,
     isCollapsed: mode === "collapsed",
@@ -87,10 +92,11 @@ export function useIslandAgentAlerts({ sessions, unseen, settings, enabled, mode
     remindAfterMs: settings.agentRemindSeconds * 1000,
     onRemind: remind,
     looked: (session) => !unseen.has(sessionKey(session)),
-    holdsOpen,
+    isHovered,
   });
-  useOutsideClick(alertedSession !== null && !waiting && isOpenOnAgents, collapseIsland, host);
+  const mustHandle = alertedSession?.session.phase === "waiting";
+  useOutsideClick(alertedSession !== null && !mustHandle && !waiting && isOpenOnAgents, collapseIsland, host);
   const agentCardHeight = approvals.current ? approvals.cardHeight : alertedSession?.rowHeight;
   const alertPopup = alertedSession !== null && !approvals.current && isOpenOnAgents;
-  return { alertedSession, approvals, agentCardHeight, alertPopup };
+  return { alertedSession, alertedStack, approvals, agentCardHeight, alertPopup };
 }

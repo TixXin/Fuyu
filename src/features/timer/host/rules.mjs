@@ -39,10 +39,14 @@ function changer(method, params) {
   };
 }
 
-export function changeTimer(timers, method, params, now) {
+export function reachable(timer, plugin) {
+  return plugin === undefined || timer.owner === plugin;
+}
+
+export function changeTimer(timers, method, params, now, plugin) {
   const id = idOf(params, method);
   const change = changer(method, params);
-  const index = timers.findIndex((timer) => timer.id === id);
+  const index = timers.findIndex((timer) => timer.id === id && reachable(timer, plugin));
   if (index < 0) throw timersError("not-found", `there is no timer ${id}`);
   const timer = change(timers[index], now);
   if (timer === timers[index]) return { timers, timer };
@@ -56,8 +60,14 @@ export function ringDue(timers, now) {
   return { timers: next, due: next.filter((timer) => due.has(timer.id)) };
 }
 
-export function dismissRung(timers) {
-  return timers.filter((timer) => !timer.alerted || !isShown(timer));
+export function removeTimer(timers, params, plugin) {
+  const id = idOf(params, "remove");
+  return timers.filter((timer) => timer.id !== id || !reachable(timer, plugin));
+}
+
+export function dismissRung(timers, plugin) {
+  if (plugin === undefined) return timers.filter((timer) => !timer.alerted || !isShown(timer));
+  return timers.filter((timer) => !timer.alerted || timer.owner !== plugin);
 }
 
 export function adoptTimers(timers, params, now, owner) {

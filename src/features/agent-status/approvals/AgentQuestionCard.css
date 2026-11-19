@@ -7,6 +7,10 @@
   border: 0;
 }
 
+.agent-question__item + .agent-question__item {
+  margin-top: 8px;
+}
+
 .agent-question__text {
   padding: 0;
   color: rgba(var(--agent-ink), 0.92);
@@ -59,8 +63,8 @@
 
 .agent-question__option--chosen,
 .agent-question__option--chosen:hover:not(:disabled) {
-  color: #fff;
-  background: rgb(31, 158, 122);
+  color: var(--color-on-accent);
+  background: var(--color-accent);
 }
 
 .agent-question__option:disabled {
@@ -75,7 +79,8 @@
 }
 
 .agent-question__option--chosen .agent-question__key {
-  color: rgba(255, 255, 255, 0.75);
+  color: inherit;
+  opacity: 0.75;
 }
 
 .agent-question__other {

@@ -7,7 +7,7 @@
 - **能做到**。Claude 桌面版注册了 `claude://` 协议，`claude://claude.ai/epitaxy/local_<id>` 打开那条 Code 会话。这是 Claude 自己给会话生成的链接（Code 页会话的 `get_session` 返回的 `link` 就是这个格式），开源工具 claude-island、session-room、fulcra-tools 也都用它。
 - id 对得上，不用猜：钩子拿到的 `session_id` 就是桌面版记录里的 `cliSessionId`，同一份记录的 `sessionId` 字段（也是文件名 `local_<uuid>.json`）就是链接要的 `local_<id>`。`claude_desktop.rs` 已经把它读进 `DesktopSession.local_id`。
 - Mac 上实测通过：两条不同的会话之间来回切，每次都切到链接里那一条（见下面「Mac 实测」）。
-- 打算的做法（等 #1015 合入后实现）：点 `claudeCode` 会话时，如果桌面版记录里有这条会话（按 `cliSessionId` 找到 `local_id`），先发 `epitaxy` 链接，再照旧把 Claude 窗口切到前台；链接发出去就算精确跳转。`local_id` 只放行 `local_` 加字母、数字和 `-`，最长 64 个字符，不合格或找不到记录就退回现在的只切窗口。在终端里跑的 Claude Code 会话不在桌面版记录里，不受影响。
+- A20 的做法（`claude_desktop_focus.rs`）：点 `claudeCode` 会话或在岛上回话时，如果桌面版记录里有这条会话（按 `cliSessionId` 找到 `local_id`），先发 `epitaxy` 链接，再照旧把 Claude 窗口切到前台；链接发出去就算精确跳转。`local_id` 只放行 `local_` 加字母、数字和 `-`，最长 64 个字符，不合格或找不到记录就退回现在的只切窗口。在终端里跑的 Claude Code 会话不在桌面版记录里，不受影响。
 - 另一条路 `claude://code/continue?session=local_<id>` 本机也能切，但它在旧版本里被开关挡住过（日志 `code entry deep link gated off`，2.37337.1 才放开），`epitaxy` 没有这个历史，所以用 `epitaxy`。
 - Windows 没实测：官方文档给出的 Windows 打开方式是 `start "" "claude://…"`，协议同样由桌面版注册；岛上点会话的整条路和 Windows 的链接都列进 A19。
 
@@ -53,7 +53,7 @@
 2. `open "claude://code/continue?session=local_364f5b8e-…"`：变成 `local_364f5b8e-…`。
 3. `open "claude://claude.ai/epitaxy/local_c53b7eb2-…"`（切回测试前看着的那条）：变成 `local_c53b7eb2-…`。
 
-没测：桌面版没开时发链接、链接里的会话已归档或不存在、没登录。岛上点会话的整条路在实现后进 A19 的实测清单。
+没测：桌面版没开时发链接、链接里的会话已归档或不存在、没登录。岛上点会话的整条路和 Windows 列在 A19 第 8–10 条。
 
 ## 来源
 

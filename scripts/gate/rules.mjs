@@ -57,12 +57,6 @@ export const RULES = [
     hint: "改 {target} 是在做宣传视频",
   },
   {
-    id: "fuyu-lead",
-    when: { tool: "mcp__ccd_session__start_session", input: { initiation: "user_asked" } },
-    require: { skill: "fuyu-lead" },
-    hint: "派会话前先看统筹规则：任务会话只由 [任务] 组长派，总控不直接派",
-  },
-  {
     id: "fuyu-task",
     when: { commands: ["pnpm task:claim", "pnpm tasks add --claim"] },
     require: { skill: "fuyu-task" },

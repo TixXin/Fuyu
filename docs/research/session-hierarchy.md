@@ -1,5 +1,7 @@
 # 会话的层级、分组和命名
 
+> **已停用（2026-11-19，用户定）**：总控 → 组长 → 任务会话的分层太费额度，一件事要经四五个会话转手，每转一次都重读一遍长上下文。`fuyu-lead` skill 和它的门禁已删除；现在直接跟一个会话说事，大事由它开任务会话，最多两层。本文只留作记录。
+
 > 日期：2026-11-15。问题：一个主会话开「任务主 agent」，主 agent 再派子会话，这样形成三层会话，侧边栏里第三层没法展开收起；会话名字也乱。用户想要 5～10 个只用来聊天的主会话，由它们按要求开任务主 agent、再派子会话，不同层级的会话名字也要能区分开。该怎么组织？
 > 范围：Claude Code 官方文档（desktop、agent teams）、anthropics/claude-code 的 GitHub issue、同类工具（Conductor、Claude Squad、Vibe Kanban、Cursor subagents）和多 agent 层级的实践文章；本机 app 自带的侧边栏和会话工具（`list_sections`、`move_sessions`、`start_session`）。关键词：nested sessions sidebar、session groups、agent teams lead、orchestrator worker depth。
 

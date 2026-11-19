@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
-import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import type { AgentEffortLabels } from "./effortLabels";
 
 import type { AgentProvider, RemoteProvider, SessionProvider } from "./agents.ts";
@@ -289,4 +289,8 @@ const PLUGIN_HOST_EVENT = "plugin-host-event";
 
 export function emitAgentStatusHostEvent(payload: Record<string, unknown>) {
   return emit(PLUGIN_HOST_EVENT, { name: "agentStatus.changed", payload });
+}
+
+export function openAgentLink(url: string) {
+  if (/^https?:\/\//i.test(url.trim())) void openUrl(url.trim()).catch((error: unknown) => console.error("Failed to open the link", error));
 }

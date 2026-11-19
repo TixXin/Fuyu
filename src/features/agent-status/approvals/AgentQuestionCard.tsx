@@ -1,22 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
-import { MessageCircleQuestion } from "lucide-react";
+import { Send, SquareTerminal } from "lucide-react";
 import { useTranslation } from "../../../i18n";
-import { AgentProviderIcon } from "../AgentProviderIcon";
 import { focusAgentWindow, type AgentSessionSummary } from "../api";
 import { sessionProject } from "../sessionList";
 import { AGENT_PROVIDER_LABELS } from "../status";
 import { APPROVAL_HOTKEYS } from "./api";
 import type { AgentApprovals } from "./useAgentApprovals";
-import { ApprovalShortcut, ApprovalShortcutModifiers } from "./ApprovalShortcut";
-import { ariaShortcut, shortcutTitle } from "./approvalShortcutText";
+import { AgentNoticeCard } from "../notice/AgentNoticeCard";
+import { NoticeActions, type NoticeAction } from "../notice/NoticeActions";
+import { DEFAULT_AGENT_NOTICE_OPTIONS, type AgentNoticeOptions } from "../notice/noticeOptions";
 import { useApprovalCard } from "./useApprovalCard";
 import { answerOf, answersFor, answersOnPick, EMPTY_PICK, parseQuestions, togglePick, type QuestionPick } from "./questions";
-import "./AgentApprovalCard.css";
 import "./AgentQuestionCard.css";
 
 const QUESTION_HOTKEYS = APPROVAL_HOTKEYS.filter((hotkey) => hotkey.action === "terminal");
 
-export function AgentQuestionCard({ approvals, sessions }: { approvals: AgentApprovals; sessions: AgentSessionSummary[] }) {
+export function AgentQuestionCard({
+  approvals,
+  sessions,
+  options = DEFAULT_AGENT_NOTICE_OPTIONS,
+}: {
+  approvals: AgentApprovals;
+  sessions: AgentSessionSummary[];
+  options?: AgentNoticeOptions;
+}) {
   const t = useTranslation();
   const request = approvals.current;
   const id = request?.id;
@@ -78,23 +85,32 @@ export function AgentQuestionCard({ approvals, sessions }: { approvals: AgentApp
   const labels = t.agent.question;
   const project = sessionProject(cwd);
   const title = session?.title ?? project ?? AGENT_PROVIDER_LABELS[request.agent];
+  const prefix = [request.remoteHost, project && project !== title ? project : null].filter(Boolean).join(" · ") || null;
+  const terminalKey = options.showKeys ? QUESTION_HOTKEYS[0]?.shortcut : undefined;
+  const actions: NoticeAction[] = [
+    { id: "terminal", label: t.agent.approval.terminal, icon: SquareTerminal, disabled: !armed, shortcut: terminalKey, hint: t.agent.approval.terminalHint, onClick: toTerminal },
+    ...(!instant || picks.some((item) => item?.text.trim())
+      ? [{ id: "submit", label: labels.submit, icon: Send, disabled: !armed || !answers, primary: true, onClick: submit }]
+      : []),
+  ];
 
   return (
-    <section ref={cardRef} className="agent-approval agent-question" role="alertdialog" aria-label={`${title} · ${labels.label}`} key={request.id}>
-      <header className="agent-approval__heading">
-        <MessageCircleQuestion className="agent-approval__icon" size={14} strokeWidth={2.3} aria-hidden="true" />
-        <span className="agent-approval__title">
-          {request.remoteHost ? <span className="agent-approval__project">{request.remoteHost} · </span> : null}
-          {project && project !== title ? <span className="agent-approval__project">{project} · </span> : null}
-          {title}
-        </span>
-        <span className="agent-approval__meta">
-          {labels.label}
-          {approvals.queued > 0 && ` · ${t.agent.approval.more(approvals.queued)}`}
-        </span>
-        <AgentProviderIcon provider={request.agent} size={14} />
-      </header>
-      {questions.map((question, index) => {
+    <AgentNoticeCard
+      key={request.id}
+      className="agent-approval agent-question"
+      noticeStyle={options.style}
+      tone="yourTurn"
+      provider={request.agent}
+      headline={t.agentNotice.headline.question}
+      state={t.agentNotice.state.question}
+      title={title}
+      titlePrefix={prefix}
+      scrollbar={options.scrollbar}
+      count={approvals.queued > 0 ? t.agent.approval.more(approvals.queued) : null}
+      role="alertdialog"
+      ariaLabel={`${title} · ${labels.label}`}
+      cardRef={cardRef}
+      body={questions.map((question, index) => {
         const current = picks[index] ?? EMPTY_PICK;
         return (
           <fieldset key={question.question} className="agent-question__item">
@@ -136,25 +152,7 @@ export function AgentQuestionCard({ approvals, sessions }: { approvals: AgentApp
           </fieldset>
         );
       })}
-      <div className="agent-approval__actions">
-        <ApprovalShortcutModifiers shortcut={QUESTION_HOTKEYS[0]?.shortcut} />
-        <button
-          className="agent-approval__button agent-approval__button--terminal"
-          type="button"
-          disabled={!armed}
-          title={`${t.agent.approval.terminalHint} (${shortcutTitle(QUESTION_HOTKEYS[0]?.shortcut)})`}
-          aria-keyshortcuts={ariaShortcut(QUESTION_HOTKEYS[0]?.shortcut)}
-          onClick={toTerminal}
-        >
-          <span className="agent-approval__label">{t.agent.approval.terminal}</span>
-          <ApprovalShortcut shortcut={QUESTION_HOTKEYS[0]?.shortcut} />
-        </button>
-        {(!instant || picks.some((item) => item?.text.trim())) && (
-          <button className="agent-approval__button agent-approval__button--allow" type="button" disabled={!armed || !answers} onClick={submit}>
-            <span className="agent-approval__label">{labels.submit}</span>
-          </button>
-        )}
-      </div>
-    </section>
+      actions={<NoticeActions actions={actions} order={options.buttonOrder} showKeys={options.showKeys} />}
+    />
   );
 }

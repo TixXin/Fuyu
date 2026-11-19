@@ -6,13 +6,13 @@ import { currentLocale } from "./locale.ts";
 import {
   LAST_ONLY_WAIT_MS,
   METHODS,
-  POLL_IDLE_MS,
-  POLL_MS,
+  REREAD_MS,
   TOPICS,
   appAllowed,
   buildNotice,
   isHeard,
   normalizeConfig,
+  pollDelay,
   readStoredConfig,
   rememberApp,
   trackKey,
@@ -56,6 +56,7 @@ export function apply(ctx: Context) {
   let eventsSeen = false;
   let stopPoll: (() => Promise<void>) | null = null;
   let stopWait: (() => Promise<void>) | null = null;
+  let stopReread: (() => Promise<void>) | null = null;
 
   const text = () => TEXT[currentLocale()];
   const snapshot = (): NoticeState => ({ config, current, note, updatedAt: Date.now() });
@@ -121,11 +122,19 @@ export function apply(ctx: Context) {
   function schedulePoll() {
     if (stopPoll) void stopPoll();
     stopPoll = null;
-    if (!config.autoNotify || eventsSeen) return;
+    if (!config.autoNotify) return;
     stopPoll = ctx.setTimeout(() => {
       stopPoll = null;
       void tick().finally(schedulePoll);
-    }, readFailed ? POLL_IDLE_MS : POLL_MS);
+    }, pollDelay(readFailed, eventsSeen));
+  }
+
+  function scheduleReread() {
+    if (stopReread) void stopReread();
+    stopReread = ctx.setTimeout(() => {
+      stopReread = null;
+      void tick();
+    }, REREAD_MS);
   }
 
   async function prime() {
@@ -137,11 +146,11 @@ export function apply(ctx: Context) {
 
   try {
     (media as unknown as MediaEvents).on("changed", () => {
-      if (!eventsSeen) {
-        eventsSeen = true;
-        schedulePoll();
-      }
-      void tick();
+      eventsSeen = true;
+      schedulePoll();
+      void tick().then(() => {
+        if (current?.playing && !trackKey(current)) scheduleReread();
+      });
     });
   } catch {
     eventsSeen = false;
