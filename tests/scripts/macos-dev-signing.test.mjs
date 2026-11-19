@@ -17,7 +17,7 @@ test("tauri dev's run and a debug build are signed, the binary found in cargo's 
   const dev = planInvocation(["run", "--no-default-features", "--color", "always", "--", "--flag"], mac);
   assert.equal(dev.mode, "run");
   assert.deepEqual(dev.buildArgs, ["build", "--no-default-features", "--color", "always"]);
-  assert.equal(dev.binary, "/repo/src-tauri/target/debug/fuyu");
+  assert.equal(dev.binary, path.resolve(cwd, "target/debug/fuyu"));
   assert.equal(planInvocation(["build", "--features", "x"], mac).mode, "build");
   assert.equal(planInvocation(["build", "--profile", "dev"], mac).mode, "build");
   assert.equal(planInvocation(["run", "--", "--release"], mac).mode, "run", "arguments for the app are not cargo's");
@@ -42,9 +42,9 @@ test("release builds, other profiles, other binaries and other platforms pass st
 });
 
 test("the binary path follows --target-dir, CARGO_TARGET_DIR and --target", () => {
-  assert.equal(planInvocation(["build", "--target-dir", "/t"], mac).binary, "/t/debug/fuyu");
-  assert.equal(planInvocation(["build"], { ...mac, env: { CARGO_TARGET_DIR: "target/agents" } }).binary, "/repo/src-tauri/target/agents/debug/fuyu");
-  assert.equal(planInvocation(["build", "--target", "aarch64-apple-darwin"], mac).binary, "/repo/src-tauri/target/aarch64-apple-darwin/debug/fuyu");
+  assert.equal(planInvocation(["build", "--target-dir", "/t"], mac).binary, path.resolve("/t/debug/fuyu"));
+  assert.equal(planInvocation(["build"], { ...mac, env: { CARGO_TARGET_DIR: "target/agents" } }).binary, path.resolve(cwd, "target/agents/debug/fuyu"));
+  assert.equal(planInvocation(["build", "--target", "aarch64-apple-darwin"], mac).binary, path.resolve(cwd, "target/aarch64-apple-darwin/debug/fuyu"));
 });
 
 test("the development identity is its own certificate, apart from the release one", () => {
