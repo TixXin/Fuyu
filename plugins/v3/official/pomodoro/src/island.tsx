@@ -128,5 +128,5 @@ export default function apply(ctx: Context) {
 
   ctx.host.on(TOPICS.chime, () => playChime());
   ctx.slots.add("island.page/v1", { id: PAGE_ID, title: PAGE_TITLE, component: PomodoroPage, icon: PomodoroIcon });
-  ctx.slots.add("island.collapsed/v1", { id: "pomodoro-bar", width: 72, hideable: true, opens: PAGE_ID, component: PomodoroCollapsed });
+  ctx.slots.add("island.collapsed/v1", { id: "pomodoro-bar", hideable: true, opens: PAGE_ID, component: PomodoroCollapsed });
 }
