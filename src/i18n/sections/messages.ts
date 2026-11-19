@@ -60,6 +60,7 @@ export type MessagesText = {
   };
   arrivals: {
     title: string;
+    trackChange: string;
     showAll: string;
     clearAll: string;
     clearAllHint: string;
@@ -132,6 +133,7 @@ export const zhCN: MessagesText = {
   },
   arrivals: {
     title: "新消息",
+    trackChange: "切歌",
     showAll: "全部消息",
     clearAll: "清除提醒",
     clearAllHint: "清除岛上的所有提醒，不打开应用；这里列出的邮件会在邮箱里标为已读，微信、QQ 等聊天应用里的消息不变",
@@ -198,6 +200,7 @@ export const en: MessagesText = {
   },
   arrivals: {
     title: "New messages",
+    trackChange: "Track change",
     showAll: "All messages",
     clearAll: "Clear reminders",
     clearAllHint: "Clears every reminder on the island without opening an app; the mails listed here are marked read in the mailbox, chat apps are left as they are",

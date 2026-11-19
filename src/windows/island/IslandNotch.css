@@ -226,6 +226,14 @@
   color: var(--color-accent);
 }
 
+.island__notch-band-logo {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
 .island__notch-band-label {
   overflow: hidden;
   text-overflow: ellipsis;

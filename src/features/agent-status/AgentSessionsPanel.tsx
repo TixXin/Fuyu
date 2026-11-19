@@ -28,6 +28,7 @@ import { AgentSessionRow } from "./AgentSessionRow";
 import { AgentSessionNotice } from "./notice/AgentSessionNotice";
 import { DEFAULT_AGENT_NOTICE_OPTIONS, type AgentNoticeOptions } from "./notice/noticeOptions";
 import { AgentNoticeStack } from "./notice/AgentNoticeStack";
+import { AgentNoticeWings } from "./notice/AgentNoticeWings";
 import { stackItemOf } from "./notice/noticeStack";
 import type { AlertedNotice } from "./useAgentAlerts";
 import type { AgentNoticeNotch, AgentNoticeStack as NoticeStackMode } from "./agentSettings";
@@ -203,9 +204,11 @@ export function AgentSessionsPanel({
   };
 
   if (approvals?.current) {
+    const items = [{ key: "approval", provider: approvals.current.agent, tone: "needs" as const, title: "", state: t.agentNotice.state[approvals.current.kind === "question" ? "question" : "needs"] }];
     return (
       <section className="agent-sessions" aria-label={t.agent.sessions.title}>
-        <AgentNoticeStack mode={stackMode} notch={notch} items={[{ key: "approval", provider: approvals.current.agent, tone: "needs", title: "", state: t.agentNotice.state[approvals.current.kind === "question" ? "question" : "needs"] }]} activeKey="approval" onSelect={() => {}}>
+        <AgentNoticeWings mode={stackMode} notch={notch} items={items} activeKey="approval" />
+        <AgentNoticeStack mode={stackMode} notch={notch} items={items} activeKey="approval" onSelect={() => {}}>
           {() => approvals.current?.kind === "question" ? (
             <AgentQuestionCard approvals={approvals} sessions={listed} options={notice} />
           ) : (
@@ -222,6 +225,7 @@ export function AgentSessionsPanel({
     const items = entries.map((entry) => stackItemOf(entry.key, listed.find((listedSession) => sessionKey(listedSession) === entry.key) ?? entry.session, t.agentNotice.state));
     return (
       <section className="agent-sessions agent-sessions--notice" aria-label={t.agent.sessions.title}>
+        <AgentNoticeWings mode={stackMode} notch={notch} items={items} activeKey={shown.key} />
         <ul ref={list.ref} className="agent-sessions__list agent-sessions__list--notice">
           <li ref={cardRef} data-session-key={shown.key}>
             <AgentNoticeStack mode={stackMode} notch={notch} items={items} activeKey={shown.key} onSelect={setPickedKey}>

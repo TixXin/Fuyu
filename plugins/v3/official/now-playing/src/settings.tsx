@@ -6,7 +6,7 @@ import { TEXT } from "./text.ts";
 import "./styles.css";
 
 type Patch = (patch: Partial<NoticeConfig>) => void;
-type FlagKey = "autoNotify" | "lastOnly" | "showControls";
+type FlagKey = "autoNotify" | "lastOnly" | "showControls" | "skipFrontmost" | "browsers";
 
 const INITIAL: NoticeState = { config: DEFAULT_CONFIG, current: null, note: null, updatedAt: 0 };
 
@@ -104,6 +104,7 @@ export default function apply(ctx: Context) {
         <Group title={copy.noticeTitle} hint={copy.noticeHint}>
           <Flag name="autoNotify" label={copy.autoNotify} config={config} patch={patch} />
           <Flag name="lastOnly" label={copy.lastOnly} config={config} patch={patch} disabled={off} />
+          <Flag name="skipFrontmost" label={copy.skipFrontmost} config={config} patch={patch} disabled={off} />
           <div className="fuyu-track-notice__actions">
             <button type="button" className="fuyu-track-notice__button" disabled={busy} onClick={showNow}>
               {copy.showNow}
@@ -134,6 +135,7 @@ export default function apply(ctx: Context) {
             onPick={(appMode) => patch({ appMode })}
             disabled={off}
           />
+          {config.appMode === "all" && <Flag name="browsers" label={copy.browsers} config={config} patch={patch} disabled={off} />}
           {config.appMode === "some" && (
             <div className="fuyu-track-notice__apps">
               {config.seenApps.length === 0 && <p className="fuyu-track-notice__hint">{copy.appsEmpty}</p>}

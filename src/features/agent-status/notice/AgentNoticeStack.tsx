@@ -2,36 +2,13 @@ import { useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type
 import { useTranslation } from "../../../i18n";
 import { AgentProviderIcon } from "../AgentProviderIcon";
 import type { AgentNoticeNotch, AgentNoticeStack as StackMode } from "../agentSettings";
-import { activeIndex, peekSlivers, pileOf, stackCount, type AgentNoticeStackItem } from "./noticeStack.ts";
+import { AgentNoticePile } from "./AgentNoticePile";
+import { activeIndex, peekSlivers, stackCount, type AgentNoticeStackItem } from "./noticeStack.ts";
 import "./AgentNoticeStack.css";
 
 const COUNT_CHIP = ".agent-notice__count";
 
 export type AgentNoticeStackSlot = { count: string | null; icon: ReactNode | null };
-
-function Ring({ item, size }: { item: AgentNoticeStackItem; size: number }) {
-  return (
-    <span className={`agent-notice-stack__ring agent-notice-stack--tone-${item.tone}`} style={{ "--stack-icon": `${size}px` } as CSSProperties}>
-      <AgentProviderIcon provider={item.provider} size={size} />
-    </span>
-  );
-}
-
-function Pile({ items, index, label, onOpen }: { items: readonly AgentNoticeStackItem[]; index: number; label: string | null; onOpen: (() => void) | null }) {
-  const { shown, extra } = pileOf(items, index);
-  const rings = (
-    <>
-      {shown.map((item) => <Ring key={item.key} item={item} size={16} />)}
-      {extra > 0 && <span className="agent-notice-stack__extra">+{extra}</span>}
-    </>
-  );
-  if (!onOpen || !label) return <span className="agent-notice-stack__pile">{rings}</span>;
-  return (
-    <button className="agent-notice-stack__pile" type="button" aria-label={label} title={label} onPointerEnter={onOpen} onClick={onOpen}>
-      {rings}
-    </button>
-  );
-}
 
 export function AgentNoticeStack({
   mode,
@@ -59,7 +36,7 @@ export function AgentNoticeStack({
   const show = () => setListOpen(true);
   const hide = () => setListOpen(false);
   const showAll = copy.showAll(items.length - 1);
-  const pile = mode === "wings" && many ? <Pile items={items} index={index} label={showAll} onOpen={show} /> : null;
+  const pile = mode === "wings" && many ? <AgentNoticePile items={items} index={index} label={showAll} onOpen={show} /> : null;
 
   const overChip = (event: PointerEvent<HTMLDivElement>) => {
     if (mode === "count" && many && event.target instanceof Element && event.target.closest(COUNT_CHIP)) show();
@@ -83,23 +60,11 @@ export function AgentNoticeStack({
     <div
       ref={stackRef}
       className={`agent-notice-stack agent-notice-stack--${mode} agent-notice-stack--notch-${notch}${open ? " agent-notice-stack--open" : ""}`}
-      data-island-notch-band={notch === "band" && active ? "" : undefined}
       onPointerOver={overChip}
       onPointerLeave={hide}
       onClickCapture={clickChip}
       onKeyDown={closeOnEscape}
     >
-      {notch === "band" && active && (
-        <div className="agent-notice-stack__notch" aria-hidden="true">
-          <span className="agent-notice-stack__wing agent-notice-stack__wing--left">
-            {mode === "wings" && many ? <Pile items={items} index={index} label={null} onOpen={null} /> : <Ring item={active} size={16} />}
-          </span>
-          <span className="agent-notice-stack__camera" />
-          <span className={`agent-notice-stack__wing agent-notice-stack__wing--right agent-notice-stack--tone-${active.tone}`}>
-            <span className="agent-notice-stack__state">{active.state}</span>
-          </span>
-        </div>
-      )}
       {children({ count: stackCount(mode, items.length, index), icon: pile })}
       {mode === "peek" && many && !open && (
         <button className="agent-notice-stack__slivers" type="button" aria-label={showAll} title={showAll} onPointerEnter={show} onClick={show}>

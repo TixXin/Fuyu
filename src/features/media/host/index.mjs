@@ -33,6 +33,7 @@ export function serviceNowPlaying(state) {
     artist: text(read.artist),
     album: text(read.album),
     sourceApp: text(read.sourceApp),
+    sourceFrontmost: read.sourceFrontmost === true,
     positionMs: number(read.positionMs),
     durationMs: number(read.durationMs),
     canSeek: read.canSeek === true,

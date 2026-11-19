@@ -83,6 +83,16 @@ export function listMediaPlayerCandidates() {
   return invoke<CustomMediaPlayer[]>("list_media_player_candidates");
 }
 
+export type MediaSourceApp = { icon: string | null; name: string | null };
+
+export function getMediaSourceApp(source: string) {
+  return invoke<MediaSourceApp>("get_media_source_app", { source });
+}
+
+export function isMediaSourceFrontmost(source: string) {
+  return invoke<boolean>("is_media_source_frontmost", { source });
+}
+
 export const MEDIA_SESSION_CHANGED_EVENT = "media-session-changed";
 
 export type MediaSessionChange = {

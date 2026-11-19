@@ -16,6 +16,7 @@ export type MessagesIslandFlags = {
   grow?: SummaryGrow | null;
   hold: boolean;
   arrivalsHeight: number | null;
+  arrivalsHeading?: { label: string; icon: "music" | "bell"; iconUrl?: string } | null;
   maxPanelHeight: number;
   pages: { qq: boolean; wechat: boolean };
 };
@@ -45,7 +46,7 @@ export function messagesContributions(state: MessagesIsland, flags: MessagesIsla
   }
   if (mail.preview !== null) list.push({ kind: "side", item: "mail", height: ISLAND_SIDE_ROW_HEIGHT }, { kind: "hint", key: "messages.mail" });
   if (flags.hold) list.push({ kind: "hold", reason: "messages" });
-  if (flags.arrivalsHeight !== null) list.push({ kind: "popup", page: "qq", height: messageArrivalsPanelHeight(flags.arrivalsHeight, flags.maxPanelHeight), open: true });
+  if (flags.arrivalsHeight !== null) list.push({ kind: "popup", page: "qq", height: messageArrivalsPanelHeight(flags.arrivalsHeight, flags.maxPanelHeight), open: true, ...flags.arrivalsHeading });
   list.push({ kind: "page", page: "qq", enabled: flags.pages.qq }, { kind: "page", page: "wechat", enabled: flags.pages.wechat });
   return list;
 }

@@ -5,6 +5,7 @@ import { copyMessageText } from "../../../lib/api";
 import { notificationCopyableText } from "../messageCopy";
 import { MessageSourceIcon } from "../MessageSourceIcon";
 import { ArrivalMediaControls, type ArrivalMedia } from "./ArrivalMediaControls";
+import { ArrivalTrackArt } from "./ArrivalTrackArt";
 import { messagePreviewText } from "../messagePreview";
 import { bannerClock } from "../banner/bannerMessages";
 import { arrivalKey, type ArrivalMessage } from "./messageArrivals";
@@ -93,7 +94,9 @@ export function MessageArrivalsPanel({
                   }).catch(() => undefined);
                 }}
               >
-                <MessageSourceIcon source={message.source} size={inline ? 32 : 20} account={message.account} iconUrl={message.iconUrl} />
+                {controls && (controls.cover || controls.sourceIcon)
+                  ? <ArrivalTrackArt cover={controls.cover ?? null} sourceIcon={controls.sourceIcon ?? null} size={inline ? 32 : 20} />
+                  : <MessageSourceIcon source={message.source} size={inline ? 32 : 20} account={message.account} iconUrl={message.iconUrl} />}
                 <span className="message-arrivals__text">
                   <span className="message-arrivals__head">
                     <strong className="message-arrivals__sender">{title}</strong>

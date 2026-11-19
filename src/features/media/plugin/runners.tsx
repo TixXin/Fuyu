@@ -9,6 +9,7 @@ import { useAudioLevel } from "../useAudioLevel";
 import { coverAccentVariables, useCoverColor } from "../useCoverColor";
 import { useIslandLyrics } from "../useIslandLyrics";
 import { useMediaState } from "../useMediaState";
+import { usePublishTrackArt } from "../usePublishTrackArt";
 import { demoMediaState } from "./demo";
 import { mediaIsland } from "./islandState";
 import { lyricLineContribution } from "./lyricLine";
@@ -24,11 +25,12 @@ type RunnerProps = {
   demo: { active: boolean; startedAt: number };
   background: string;
   accent: string | null;
+  openIslandPage: (page: "music") => void;
 };
 
 const runnerSlot = defineSlot<RunnerProps>("island.runner/v1");
 
-function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, background, accent }: RunnerProps) {
+function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, background, accent, openIslandPage }: RunnerProps) {
   const t = useTranslation();
   const live = useMediaState(settings.musicEnabled);
   const demoState = useMemo(() => (demo.active ? demoMediaState(t.onboarding.demo, demo.startedAt) : null), [demo.active, demo.startedAt, t]);
@@ -46,10 +48,12 @@ function MediaRunner({ mode, isTucked, page, barText, settings, features, demo, 
   const glassCover = settings.appearanceMode === "liquidGlass" && settings.musicEnabled && settings.glassColorSource === "cover";
   const coverColor = useCoverColor(mediaState.thumbnail, coverOn || glassCover);
   const sideCover = settings.sideMusicCover;
+  usePublishTrackArt(live.mediaState, settings.musicEnabled);
   mediaIsland.useProvide(useMemo(() => ({ media, lyrics, lyricLine, sideCover }), [media, lyrics, lyricLine, sideCover]));
   useIslandAction("media.previous", () => void runMediaCommand("media_previous"));
   useIslandAction("media.play-pause", () => void runMediaCommand("media_play_pause"));
   useIslandAction("media.next", () => void runMediaCommand("media_next"));
+  useIslandAction("media.open-page", () => openIslandPage("music"));
   const list: IslandContribution[] = [];
   const line = lyricLineContribution(lyricLine, settings.lyricsIslandPriority === "lyrics", t);
   if (line) list.push(line);

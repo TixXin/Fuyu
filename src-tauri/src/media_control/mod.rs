@@ -16,6 +16,7 @@ mod players;
 mod service;
 #[cfg(windows)]
 mod session;
+mod source_app;
 mod state;
 mod timeline_clock;
 
@@ -153,6 +154,26 @@ async fn run_media_command(
         .map_err(|error| format!("Failed to join the media command task: {error}"))?
 }
 
+#[tauri::command]
+pub async fn get_media_source_app(source: String) -> Result<source_app::MediaSourceApp, String> {
+    if !is_enabled() {
+        return Ok(source_app::MediaSourceApp::default());
+    }
+    tauri::async_runtime::spawn_blocking(move || source_app::describe(&source))
+        .await
+        .map_err(|error| format!("Failed to join the media source app task: {error}"))
+}
+
+#[tauri::command]
+pub async fn is_media_source_frontmost(source: String) -> Result<bool, String> {
+    if !is_enabled() {
+        return Ok(false);
+    }
+    tauri::async_runtime::spawn_blocking(move || source_app::is_frontmost(source.trim()))
+        .await
+        .map_err(|error| format!("Failed to join the media source frontmost task: {error}"))
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
@@ -169,6 +190,8 @@ macro_rules! tauri_commands {
             crate::media_control::add_custom_media_player,
             crate::media_control::remove_custom_media_player,
             crate::media_control::list_media_player_candidates,
+            crate::media_control::get_media_source_app,
+            crate::media_control::is_media_source_frontmost,
         ] $($rest)*)
     };
 }

@@ -4,6 +4,7 @@ export const MAX_ARRIVALS = 6;
 
 export type ArrivalMessage = MessagePreview & {
   actions: { id: string; title: string }[];
+  durationMs?: number;
 };
 
 export function arrivalKey(message: MessagePreview): string {

@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import { Bell } from "lucide-react";
 import { useTranslation, type Translations } from "../../../i18n";
+import { useTrackArt } from "../../../lib/now-playing/trackArt";
 import { defineSlot, type IslandCollapsedMeta, type IslandHeaderMeta, type IslandPageMeta } from "../../plugin-kernel/slots";
 import { runIslandAction, useIslandContributed } from "../../plugin-kernel/useIslandContributions";
 import { MessageArrivalsPanel } from "../arrivals/MessageArrivalsPanel";
@@ -29,6 +30,7 @@ const pageSlot = defineSlot<MessagesPageProps, IslandPageMeta<Readonly<Record<st
 
 function MessagesPage({ features, onOpenSettings }: MessagesPageProps) {
   const playing = useIslandContributed().hints.has("media.playing");
+  const art = useTrackArt();
   const messages = messagesIsland.use();
   if (!messages) return null;
   const { mail: qqMail, qq: qqNotifications, wechat: wechatReminders, im: imSources, enabledSources, source: messageSource, panel: messagePanel, open: openMessages } = messages;
@@ -37,6 +39,8 @@ function MessagesPage({ features, onOpenSettings }: MessagesPageProps) {
       {messagePanel?.arrivals ? (
         <MessageArrivalsPanel arrivals={messagePanel.arrivals} onOpen={messagePanel.open} onAction={messagePanel.runAction} onMeasure={messagePanel.measure} onShowAll={messagePanel.showAll} onClearAll={messagePanel.clearAll} media={{
           playing,
+          cover: art?.cover ?? null,
+          sourceIcon: art?.sourceIcon ?? null,
           onPrevious: () => void runIslandAction("media.previous"),
           onPlayPause: () => void runIslandAction("media.play-pause"),
           onNext: () => void runIslandAction("media.next"),

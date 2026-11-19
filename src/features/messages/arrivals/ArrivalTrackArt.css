@@ -1,0 +1,32 @@
+.message-arrivals__art {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.message-arrivals__art-main {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.message-arrivals__art--cover .message-arrivals__art-main {
+  object-fit: cover;
+}
+
+.message-arrivals__art-badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  object-fit: contain;
+  box-shadow: 0 0 0 1.5px var(--island-background-color);
+}
+
+.message-arrivals--inline .message-arrivals__art-main {
+  border-radius: 8px;
+}

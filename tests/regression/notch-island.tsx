@@ -15,9 +15,8 @@ import type { DeviceAlert } from "../../src/features/device-events/api";
 import type { MessagePreview } from "../../src/features/messages/messagePreview";
 import { useFixtureLines } from "./islandLines";
 import type { AgentNoticeNotch } from "../../src/features/agent-status/agentSettings";
-import { AgentNoticeStack } from "../../src/features/agent-status/notice/AgentNoticeStack";
-import { AgentSessionNotice } from "../../src/features/agent-status/notice/AgentSessionNotice";
-import { DEFAULT_AGENT_NOTICE_OPTIONS } from "../../src/features/agent-status/notice/noticeOptions";
+import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
+import { sessionKey } from "../../src/features/agent-status/unseen";
 import { SESSIONS } from "./agentNoticeGallery";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
@@ -55,13 +54,9 @@ function Fixture() {
   </div>;
 }
 
-const NEEDS = { key: "codex:n-needs", provider: SESSIONS.needs.provider, tone: "needs" as const, title: SESSIONS.needs.title ?? "", state: "等你确认" };
+const REVEAL = { key: sessionKey(SESSIONS.needs), kind: "completed" as const, session: SESSIONS.needs, rowHeight: 78, measure: () => {} };
 function NoticeStack({ notch }: { notch: AgentNoticeNotch }) {
-  return (
-    <AgentNoticeStack mode="peek" notch={notch} items={[NEEDS]} activeKey={NEEDS.key} onSelect={() => {}}>
-      {({ count }) => <AgentSessionNotice session={SESSIONS.needs} options={DEFAULT_AGENT_NOTICE_OPTIONS} model={null} count={count} onOpen={() => {}} />}
-    </AgentNoticeStack>
-  );
+  return <AgentSessionsPanel sessions={[SESSIONS.needs]} hostDisplay="off" reveal={REVEAL} notch={notch} />;
 }
 
 const messages: string[] = [];
@@ -72,6 +67,7 @@ function check(condition: unknown, label: string) {
 const island = () => document.querySelector<HTMLElement>(".island")!;
 const bar = () => document.querySelector<HTMLElement>(".island__collapsed")!;
 const box = (element: Element) => element.getBoundingClientRect();
+const hit = (element: Element) => document.elementFromPoint(box(element).left + box(element).width / 2, box(element).top + box(element).height / 2);
 const set = (next: Partial<State>) => act(async () => {
   if (next.notch !== undefined) applyIslandNotch(next.notch);
   change(next);
@@ -129,6 +125,7 @@ async function runChecks() {
     check(wings.querySelector(".agent-notice-stack__wing--left .agent-provider-icon") && bandLeft.right <= popupNotchLeft + 0.5, "左翼是会话图标和状态环，不压刘海");
     check(bandRight.textContent === "等你确认" && box(bandRight).left >= popupNotchLeft + NOTCH.width - 0.5 && box(bandRight).right <= box(island()).right, "右翼是状态字，不压刘海、不出岛");
     check(!wings.querySelector(".agent-notice-stack__camera")?.childElementCount, "摄像头那一段不放东西");
+    check(wings.contains(hit(wings.querySelector(".agent-provider-icon")!)) && wings.contains(hit(bandRight.querySelector(".agent-notice-stack__state")!)), "两翼在真面板里看得见，没被面板或列表裁掉");
     check(getComputedStyle(document.querySelector(".agent-notice__icon")!).display === "none", "卡片里不再重复图标");
     check(box(document.querySelector(".agent-notice")!).top >= box(island()).top + NOTCH.height - 0.5, "卡片在刘海下面");
     await set({ stack: "below" });
