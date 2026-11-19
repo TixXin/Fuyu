@@ -261,6 +261,7 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 
 | 日期 | 改了什么 | 为什么 | 谁定的 |
 |---|---|---|---|
+| 2026-11-19 | 第 6 阶段的三项取舍：第 2 版市场文件（`plugins/index.json`、`revoked.json`、`plugins/packages/`）留着冻结，E36.6.6 不删；`fuyu://` 链接（网页一键装插件）随第 2 版宿主删掉，第 3 版另开任务接手，这次只清掉还写着旧链接的文档和 `Info.plist`；`plugin-cli` 认旧私钥位置（`~/.fly-island-plugin/`、`FLY_ISLAND_PLUGIN_SIGNING_KEY`）的兼容先留着 | 旧版岛屿还在读市场文件，删了老用户的插件市场打不开；`fuyu://` 链接不挡第 6 阶段收口；Windows 那台的旧私钥还没确认迁走 | 用户 |
 | 2026-11-18 | 内置模块不算插件：设置里「插件（第 3 版）」的已安装页只列官方市场、第三方和本地导入的插件，22 个内置模块移到「宿主与运行诊断」；`local-api`、`center-pattern`、`claude-usage`、`session-ring`、`cc-connect`、`ssh-tunnel` 的开关归位到各自设置页 | 内置模块是浮屿自带的功能，不该作为插件出现（与概览、系统提示的开关重复）；这 6 个模块关掉时原本连设置分节一起消失，用户找不到重新打开的地方 | 用户（选「各自归位」） |
 | 2026-11-17 | 对外创建公开仓库 [`TixXin/tauri-cordis`](https://github.com/TixXin/tauri-cordis)（MIT，E46，#855），拆出独立 monorepo 与自动发包工作流 | 四项公开条件全部满足，用户确认对外发布开源基座 | 用户 |
 | 2026-11-17 | 第 4 阶段（E36.4 接缝）按 [v3-phase4-plan.md](v3-phase4-plan.md) 做：① 7 个接缝同时支持「整体替换服务」与「往内置功能里多加一个来源/动作」；② 替换内置插件的某项服务时只停用冲突的那项服务（`disabledServices`），不关掉整个内置插件；③ 邮箱、QQ、微信保持在 `messages` 插件下作为 `messages/v1` 的三个内置来源，不拆成 3 个独立内置插件；④ `tauri-cordis` 等第 3 阶段收口或第 4 阶段做完后对外建仓 | 计划「要你定的事」4 条全部按推荐 | 用户 |
