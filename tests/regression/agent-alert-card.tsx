@@ -155,6 +155,19 @@ try {
   check(!shown($("compact-narrow", ".agent-notice__button--terminal")) && !shown($("compact-narrow", ".agent-notice__key")), "精简两行窄于 300 时收起「到终端」和快捷键");
   check(!shown($("status-narrow", ".agent-notice__label")) && shown($("status-narrow", ".agent-notice__button-icon")), "状态优先窄于 300 时按钮只剩图标");
   check([...document.querySelectorAll<HTMLElement>("#notices .agent-notice")].every((card) => card.scrollWidth <= card.clientWidth + 1), "卡片里没有横向溢出");
+  const thumbs = [...document.querySelectorAll<HTMLElement>("#notices .agent-notice-message__thumb")];
+  const fits = thumbs.every((thumb) => {
+    const track = thumb.parentElement!.querySelector<HTMLElement>(".agent-notice-message__text")!;
+    const ratio = track.clientHeight / track.scrollHeight;
+    const height = thumb.getBoundingClientRect().height;
+    const offset = thumb.getBoundingClientRect().top - track.getBoundingClientRect().top;
+    return Math.abs(height - Math.max(18, track.clientHeight * ratio)) < 1 && offset >= -0.5 && offset + height <= track.clientHeight + 0.5;
+  });
+  check(thumbs.length > 0 && fits, `滚动条长度按可见比例算、不超出正文（${thumbs.length} 条）`);
+  const scrolled = $("status-done", ".agent-notice-message__text")!;
+  const thumbTop = $("status-done", ".agent-notice-message__thumb")!.getBoundingClientRect().top - scrolled.getBoundingClientRect().top;
+  check(thumbTop > 0, "滚下去以后滚动条跟着往下移");
+  for (const thumb of thumbs) thumb.removeAttribute("style");
 
   results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
   results.dataset.result = "passed";

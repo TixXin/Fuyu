@@ -38,7 +38,7 @@ export const SESSIONS: Record<"working" | "needs" | "yourTurn" | "done" | "faile
   working: base,
   needs: { ...base, provider: "codex", sessionId: "n-needs", title: "修复剪贴板图片粘贴失败", phase: "waiting", currentTool: { name: "Bash", detail: "rm -rf src-tauri/target/agents/debug/incremental/fuyu-3k2j9/" } },
   yourTurn: { ...base, sessionId: "n-turn", title: "Mac 刘海形态的弹出卡片", phase: "completed", replyMarker: "yourTurn", currentTool: null,
-    lastMessage: "两种做法，选一个：\n1. **刘海两边放图标和状态**\n2. **整条往下弹**，两翼空着\n你选哪种？" },
+    lastMessage: "两种做法：**刘海两边放图标和状态**，或者**整条往下弹**。你选哪种？" },
   done: { ...base, provider: "cursor", sessionId: "n-done", title: "Agent 通知：消息尽量显示全", phase: "completed", currentTool: null, lastMessage: LONG_REPLY },
   failed: { ...base, provider: "kimiCode", sessionId: "n-failed", title: "发布 0.3.11 候选版", phase: "failed", currentTool: null,
     lastMessage: "`pnpm release` 在上传前失败：\n```\nError: TAURI_SIGNING_PRIVATE_KEY is empty\n```\n安装包**没有上传**。" },
