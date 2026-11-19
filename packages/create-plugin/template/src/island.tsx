@@ -38,5 +38,10 @@ export default function apply(ctx: Context) {
     );
   }
 
-  ctx.slots.add("island.page/v1", { id: "{{name}}", component: Page, icon: TimerIcon });
+  ctx.slots.add("island.page/v1", {
+    id: "{{name}}",
+    title: { "zh-CN": "{{displayNameZh}}", en: "{{displayNameEn}}" },
+    component: Page,
+    icon: TimerIcon,
+  });
 }
