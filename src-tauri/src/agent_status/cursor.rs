@@ -169,9 +169,12 @@ fn merge_hooks(config: &mut Value, entries: &[(&'static str, Value)]) -> Result<
                 continue;
             };
             let kept = unmanaged(hooks.get(&event));
+            if kept.len() == original {
+                continue;
+            }
             if kept.is_empty() {
                 hooks.remove(&event);
-            } else if kept.len() != original {
+            } else {
                 hooks.insert(event, Value::Array(kept));
             }
         }

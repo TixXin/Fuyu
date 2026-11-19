@@ -41,6 +41,19 @@ fn install_keeps_other_hooks_and_uninstall_removes_only_ours() {
 }
 
 #[test]
+fn uninstall_leaves_a_file_without_our_hooks_untouched() {
+    let home = temp_dir("untouched");
+    let cursor = home.join(".cursor");
+    fs::create_dir_all(&cursor).unwrap();
+    let original = "{\n  \"version\": 1,\n  \"hooks\": { \"stop\": [] }\n}\n";
+    fs::write(cursor.join("hooks.json"), original).unwrap();
+    let (running, status) = script_paths(&home);
+    let env = HookEnv { home_dir: &home, running_script: &running, status_script: &status };
+    uninstall(&env).unwrap();
+    assert_eq!(fs::read_to_string(cursor.join("hooks.json")).unwrap(), original);
+}
+
+#[test]
 fn missing_cursor_directory_is_absent_and_uninstall_does_not_create_it() {
     let home = temp_dir("absent");
     let (running, status) = script_paths(&home);
