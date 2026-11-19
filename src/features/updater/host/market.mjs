@@ -9,7 +9,7 @@ import { refreshRevocations } from "./marketRevocations.mjs";
 import {
   INDEX_FILE, INDEX_SIG_FILE, buildMarketSnapshot, confirmationFromManifest, decodeBase64, detectTrustChange, isObject,
   marketError, parseAppVersionFromArgv, planRequiredDependencies, readInstalledPackages, readState, readVerifiedCachedIndex,
-  resolvePinnedAuthor, toTimestamp, writeState,
+  resolvePinnedAuthor, revocationView, toTimestamp, writeState,
 } from "./marketStore.mjs";
 
 export { parseAppVersionFromArgv };
@@ -317,6 +317,10 @@ export function createMarketService(options = {}) {
       }
       const found = readInstalledPackages(pluginsDir).find((item) => item.id === params.id);
       if (!found) throw marketError("not-found", `Installed plugin ${params.id} was not found`);
+      const revocation = params.enabled ? revocationView(readState(dataDir).revocations, found.id, found.version) : null;
+      if (revocation?.level === "disable") {
+        throw marketError("revoked", `${found.id}@${found.version} has been revoked and cannot be turned on`, { reasons: revocation.reasons });
+      }
       writeInstalledToYml(join(pluginsDir, "plugins.yml"), {
         id: found.id,
         source: found.source,
