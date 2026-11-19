@@ -1,8 +1,9 @@
 import type { Context } from "@fuyu/plugin-base";
 import { useCallback, useEffect, useState } from "react";
 import { METHODS, TOPICS, type AlarmSnapshot } from "./model.ts";
+import { DEFAULT_SETTINGS } from "./settingsModel.ts";
 
-const EMPTY: AlarmSnapshot = { alarms: [], ringing: null, defaultTone: "chime", showInBar: true, at: 0 };
+const EMPTY: AlarmSnapshot = { alarms: [], ringing: null, snoozed: null, settings: DEFAULT_SETTINGS, at: 0 };
 const errorText = (reason: unknown) => (reason instanceof Error ? reason.message : String(reason));
 
 export function useAlarm(ctx: Context) {

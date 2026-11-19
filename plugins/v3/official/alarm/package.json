@@ -1,8 +1,8 @@
 {
   "name": "@fuyu/alarm",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "Alarms with weekday schedules, Web Audio chimes, snooze, and island notifications",
+  "description": "Set one-time or weekly alarms that remind you on the island and ring, with snooze and adjustable volume and ring length.",
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",
@@ -23,8 +23,8 @@
       "en": "Alarm"
     },
     "description": {
-      "zh-CN": "设置多组定时与按周重复闹钟，到点在岛上弹出提醒并播放可选铃声，支持贪睡与收起条预览。",
-      "en": "Set one-time or recurring weekday alarms that notify on the island and play selectable chimes, with snooze and collapsed-bar preview."
+      "zh-CN": "设置单次或按星期重复的闹钟，到点在岛上提醒并响铃，可以贪睡、调音量和响铃时长。",
+      "en": "Set one-time or weekly alarms that remind you on the island and ring, with snooze and adjustable volume and ring length."
     },
     "icon": "assets/icon.svg",
     "categories": [
@@ -42,6 +42,7 @@
     },
     "inject": {
       "required": [
+        "commands",
         "messages/v1"
       ],
       "optional": [
@@ -60,6 +61,13 @@
         "title": {
           "zh-CN": "停止闹钟响铃",
           "en": "Dismiss ringing alarm"
+        }
+      },
+      {
+        "id": "snooze",
+        "title": {
+          "zh-CN": "闹钟贪睡",
+          "en": "Snooze ringing alarm"
         }
       }
     ]
