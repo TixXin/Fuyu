@@ -12,7 +12,7 @@ import {
 } from "../../../../packages/plugin-market/src/index.mjs";
 import { PACKAGES_SUBDIR } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
-import { firstPublishedAt, marketSince, packageIcon, packageReach, pluginIcon } from "./marketListing.mjs";
+import { firstPublishedAt, marketSince, packageIcon, packageReach, pluginIcon, pluginScreenshots } from "./marketListing.mjs";
 
 export const STATE_FILE = "market-state.json";
 export const INDEX_FILE = "index.v3.json";
@@ -355,6 +355,7 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
       description: isObject(manifest.description) ? manifest.description : { "zh-CN": "", en: "" },
       categories: Array.isArray(manifest.categories) ? [...manifest.categories] : [],
       icon: pluginIcon(plugin, primaryEntry),
+      screenshots: pluginScreenshots(plugin, primaryEntry),
       firstPublishedAt: firstPublishedAt(plugin),
       installedVersion: inst?.version ?? null,
       enabled: inst ? inst.enabled : false,

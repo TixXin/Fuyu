@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { browseList, capabilityItems, categoryCounts, hasUpdate, isFirstFromPublisher, matchesQuery, newListings, sortPlugins } from "../../src/windows/settings/pluginMarketModel.ts";
+import { MAX_SCREENSHOTS } from "../../packages/plugin-market/src/index.mjs";
+import { MAX_MARKET_SCREENSHOTS, browseList, capabilityItems, categoryCounts, categoryNameMap, hasUpdate, inCategory, isFirstFromPublisher, matchesQuery, newListings, primaryCategory, sortPlugins } from "../../src/windows/settings/pluginMarketModel.ts";
 
 const caps = (more = {}) => ({ unreviewed: false, network: [], nodeApis: [], provides: [], replaces: [], slots: [], ...more });
 const candidate = (version, more = {}) => ({ version, sha256: "a", size: 1, publishedAt: "2026-11-10T00:00:00Z", confirmation: caps(), ...more });
@@ -51,7 +52,25 @@ test("browsing all lists every plugin once in one flat list, leaving updates to 
     plugin("@a/plain", { categories: [] }),
   ];
   assert.deepEqual(browseList(plugins, "recommended").map((item) => item.name), ["@a/one", "@a/two", "@a/plain"]);
-  assert.deepEqual(categoryCounts(plugins), [{ id: "productivity", count: 3 }, { id: "utilities", count: 1 }]);
+  assert.deepEqual(categoryCounts(plugins), [{ id: "productivity", count: 3 }]);
+});
+
+test("a plugin counts once, under its first category; the chips add up to the plugin count and search still sees every category", () => {
+  const plugins = [
+    plugin("@fuyu/ecdict", { categories: ["utilities", "productivity"] }),
+    plugin("@fuyu/pomodoro", { categories: ["productivity", "utilities"] }),
+    plugin("@fuyu/github", { categories: ["developer", "messages"] }),
+    plugin("@fuyu/weather", { categories: ["information"] }),
+  ];
+  const counts = categoryCounts(plugins);
+  assert.equal(counts.reduce((sum, item) => sum + item.count, 0), plugins.length);
+  assert.deepEqual(counts.map((item) => item.id), ["utilities", "productivity", "developer", "information"]);
+  assert.equal(primaryCategory(plugins[0]), "utilities");
+  assert.equal(primaryCategory(plugin("@a/none", { categories: [] })), null);
+  assert.deepEqual(plugins.filter((item) => inCategory(item, "productivity")).map((item) => item.name), ["@fuyu/pomodoro"]);
+  const names = categoryNameMap(plugins, (id) => ({ messages: "消息" })[id] ?? id);
+  assert.equal(names.messages, "消息");
+  assert.equal(matchesQuery(plugins[2], "消息", names), true);
 });
 
 test("recommended order puts installable official plugins first and ones that cannot be installed last; recent sorts by release date", () => {
@@ -99,4 +118,8 @@ test("after the first month only plugins first listed in the last 14 days are ne
     listedDaysAgo("@a/future", -2),
   ];
   assert.deepEqual([...newListings(plugins, since, now)], ["@a/fresh"]);
+});
+
+test("the market detail shows as many screenshots as the index allows", () => {
+  assert.equal(MAX_MARKET_SCREENSHOTS, MAX_SCREENSHOTS);
 });

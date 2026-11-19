@@ -60,6 +60,7 @@ export type MarketCatalogPlugin = {
   description: MarketLocalizedText;
   categories: string[];
   icon?: string | null;
+  screenshots?: MarketPluginScreenshot[];
   firstPublishedAt?: string | null;
   installedVersion: string | null;
   enabled: boolean;

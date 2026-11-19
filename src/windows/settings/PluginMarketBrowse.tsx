@@ -7,7 +7,7 @@ import { PluginLogo } from "./PluginLogo";
 import { PluginMarketCard, type MarketCardHandlers } from "./PluginMarketCard";
 import { PluginMarketEmpty } from "./PluginMarketEmpty";
 import { openPluginDocs } from "./pluginMarketActions";
-import { browseList, categoryCounts, hasUpdate, localized, matchesQuery, sortPlugins } from "./pluginMarketModel";
+import { browseList, categoryCounts, categoryNameMap, hasUpdate, inCategory, localized, matchesQuery, sortPlugins } from "./pluginMarketModel";
 import { marketActionCandidate } from "./pluginRowStatus";
 
 export function PluginMarketBrowse({ plugins, newNames, query, category, sort, categoryName, handlers, onCategory, onInstallFile }: {
@@ -30,7 +30,7 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
   );
 
   if (query.trim()) {
-    const names = Object.fromEntries(categoryCounts(plugins).map(({ id }) => [id, categoryName(id)]));
+    const names = categoryNameMap(plugins, categoryName);
     const found = sortPlugins(plugins.filter((plugin) => matchesQuery(plugin, query, names)), sort);
     if (found.length === 0) {
       return (
@@ -60,7 +60,7 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
   }
 
   if (category) {
-    const list = sortPlugins(plugins.filter((plugin) => plugin.categories.includes(category)), sort);
+    const list = sortPlugins(plugins.filter((plugin) => inCategory(plugin, category)), sort);
     return (
       <section className="market-section" data-market-section={`category:${category}`}>
         <h3 className="plugin-page__heading">{categoryName(category)}<span className="plugin-page__heading-meta">{text.sections.count(list.length)}</span></h3>
