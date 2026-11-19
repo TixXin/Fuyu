@@ -10,6 +10,7 @@ const zhCN = {
   emptyBody: "填好城市后才会联网获取天气。",
   emptyNoButton: "在 设置 → 插件 → 天气 里填写城市后才会联网获取天气。",
   goSettings: "去设置",
+  setupHint: "选一个城市",
   feels: "体感",
   humidity: "湿度",
   wind: "风",
@@ -72,6 +73,7 @@ const en: typeof zhCN = {
   emptyBody: "Weather is fetched only after you set a city.",
   emptyNoButton: "Set a city in Settings → Plugins → Weather; nothing is fetched until then.",
   goSettings: "Open settings",
+  setupHint: "Pick a city",
   feels: "Feels",
   humidity: "Humidity",
   wind: "Wind",
@@ -132,6 +134,8 @@ export function textFor(locale: Locale = currentLocale()): typeof zhCN {
 }
 
 export const PAGE_TITLE = { "zh-CN": zhCN.title, en: en.title };
+
+export const SETUP_HINT = { "zh-CN": zhCN.setupHint, en: en.setupHint };
 
 export function problemText(problem: WeatherProblem | null, copy: typeof zhCN): string | null {
   if (!problem) return null;

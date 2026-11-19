@@ -194,6 +194,24 @@ test("countdown host: backgrounds are fetched on demand, not broadcast; full lis
   assert.throws(() => call(METHODS.add, { title: "One too many", date: "2027-01-01" }), /At most/);
 });
 
+test("countdown setup: a fresh install needs a date, and stops needing one once a date is there", () => {
+  const dataDir = join(scratch, "setup");
+  mkdirSync(dataDir, { recursive: true });
+  const { ctx, call } = fakeContext(dataDir, []);
+  const reports = [];
+  ctx.settings = { setup: async (state) => void reports.push(state) };
+  apply(ctx);
+
+  assert.equal(reports.at(-1)?.needed, true, "no dates on start");
+  assert.equal(Boolean(reports.at(-1).hint["zh-CN"] && reports.at(-1).hint.en), true);
+
+  const added = call(METHODS.add, { title: "Trip", date: "2026-12-01" });
+  assert.equal(reports.at(-1).needed, false, "a date was added");
+
+  call(METHODS.remove, { id: added.items[0].id });
+  assert.equal(reports.at(-1).needed, true, "the last date was deleted");
+});
+
 test("countdown manifest: Day counter in English, same id, check passes", async () => {
   const manifest = JSON.parse(readFileSync(join(PLUGIN_DIR, "package.json"), "utf8"));
   assert.equal(manifest.name, "@fuyu/countdown");

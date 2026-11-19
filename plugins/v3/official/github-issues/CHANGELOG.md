@@ -16,6 +16,7 @@
 - 新 issue 提醒只提醒编号比已见过的都大的 issue，按更新时间排序时老 issue 被更新不会误报。
 - 岛的页头按钮有了中英文标题。
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
+- 还没添加仓库时，浮屿的插件页会标出「待设置」，并带一个去设置的按钮（需要较新的浮屿）。
 
 Named GitHub Issues in both languages; repositories are managed as a list in the settings, and each row on the island keeps just the title, number, last update and comment count.
 
@@ -31,6 +32,7 @@ Named GitHub Issues in both languages; repositories are managed as a list in the
 - New-issue notifications only fire for issue numbers higher than any seen before, so an old issue getting updated no longer counts as new.
 - The island header button has a title in Chinese and English.
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
+- Until you add a repository, Fuyu's plugin page marks the plugin as "Needs setup" with a button that opens its settings (needs a newer Fuyu).
 
 ## 1.0.0
 

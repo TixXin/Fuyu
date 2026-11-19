@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Context } from "@fuyu/plugin-base";
+import type { Context, PluginSetupState } from "@fuyu/plugin-base";
 import { messagesV1 } from "@fuyu/plugin-services";
 import { fetchRepoInfo, fetchRepoIssues, type RateInfo } from "./github.ts";
 import {
@@ -21,10 +21,10 @@ import {
   type IssuesState,
   type RepoError,
 } from "./model.ts";
-import { hostText } from "./text.ts";
+import { SETUP_HINT, hostText } from "./text.ts";
 
 export const name = "@fuyu/github-issues";
-export const inject = ["clients", "commands", "messages/v1"];
+export const inject = { clients: null, commands: null, "messages/v1": null, settings: { required: false } };
 
 const CONFIG_FILE = "config.json";
 const ANONYMOUS_BUDGET_PER_HOUR = 50;
@@ -59,6 +59,16 @@ function isRateLimited(status: number, rate: RateInfo | null): boolean {
   return (status === 403 || status === 429) && Boolean(rate && rate.remaining <= 0);
 }
 
+type SetupApi = { settings?: { setup?: (state: PluginSetupState) => Promise<void> | void } };
+
+function reportSetup(ctx: Context, state: PluginSetupState): void {
+  try {
+    void Promise.resolve((ctx as unknown as SetupApi).settings?.setup?.(state)).catch(() => {});
+  } catch {
+    return;
+  }
+}
+
 export function apply(ctx: Context) {
   const messages = ctx.services.get(messagesV1);
 
@@ -91,7 +101,12 @@ export function apply(ctx: Context) {
 
   const publish = () => ctx.clients.publish(TOPICS.state, snapshot());
 
-  const persist = () => saveSettings(ctx.dataDir, settings);
+  const reportRepos = () => reportSetup(ctx, { needed: settings.repos.length === 0, hint: SETUP_HINT });
+
+  const persist = () => {
+    saveSettings(ctx.dataDir, settings);
+    reportRepos();
+  };
 
   function renameRepo(from: string, to: string): string {
     if (from === to) return from;
@@ -220,6 +235,7 @@ export function apply(ctx: Context) {
   }
 
   syncSchedule();
+  reportRepos();
   if (settings.repos.length > 0) void refreshAll();
 
   ctx.clients.handle(METHODS.getState, async () => snapshot());

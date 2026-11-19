@@ -1,17 +1,17 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Context } from "@fuyu/plugin-base";
+import type { Context, PluginSetupState } from "@fuyu/plugin-base";
 import { messagesV1 } from "@fuyu/plugin-services";
 import { configFromStored, normalizeConfig, type TemperatureUnit, type WeatherConfig } from "./config.ts";
 import { clockOfIso, formatClock, systemUses12Hour, uses12Hour } from "./format.ts";
 import { currentLocale } from "./locale.ts";
 import { fetchForecast, findPlace } from "./openMeteo.ts";
 import { RAIN_QUIET_MS, RAINING_QUIET_MS, rainDecision } from "./rain.ts";
-import { textFor } from "./text.ts";
+import { SETUP_HINT, textFor } from "./text.ts";
 import { METHODS, TOPICS, type WeatherForecast, type WeatherPlace, type WeatherProblem, type WeatherState } from "./types.ts";
 
 export const name = "@fuyu/weather";
-export const inject = ["clients", "commands", "messages/v1"];
+export const inject = { clients: null, commands: null, "messages/v1": null, settings: { required: false } };
 
 const CONFIG_FILE = "config.json";
 const CACHE_FILE = "cache.json";
@@ -38,6 +38,16 @@ function readJson<T>(file: string): T | null {
 function writeJson(dir: string, filename: string, value: unknown): void {
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, filename), `${JSON.stringify(value, null, 2)}\n`, "utf8");
+}
+
+type SetupApi = { settings?: { setup?: (state: PluginSetupState) => Promise<void> | void } };
+
+function reportSetup(ctx: Context, state: PluginSetupState): void {
+  try {
+    void Promise.resolve((ctx as unknown as SetupApi).settings?.setup?.(state)).catch(() => {});
+  } catch {
+    return;
+  }
 }
 
 export function apply(ctx: Context) {
@@ -152,13 +162,17 @@ export function apply(ctx: Context) {
     }, intervalMinutes() * 60_000);
   }
 
+  const reportCity = () => reportSetup(ctx, { needed: config.city === "", hint: SETUP_HINT });
+
   syncSchedule();
+  reportCity();
   if (config.city !== "") void updateWeather(false);
 
   async function setConfig(patch: Partial<WeatherConfig> | undefined): Promise<WeatherState> {
     const prev = config;
     config = normalizeConfig((patch ?? {}) as Record<string, unknown>, config);
     writeJson(ctx.dataDir, CONFIG_FILE, config);
+    reportCity();
     if (config.refreshMinutes !== prev.refreshMinutes || config.rainAlert !== prev.rainAlert || config.city !== prev.city) {
       syncSchedule();
     }

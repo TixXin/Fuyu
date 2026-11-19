@@ -65,6 +65,9 @@
       "required": [
         "commands",
         "messages/v1"
+      ],
+      "optional": [
+        "settings"
       ]
     },
     "slots": [
