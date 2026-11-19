@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>系统监控对比</title>
+<style>
+:root {
+  --page: #f3f3f5; --ink: #1d1d1f; --muted: #6e6e73; --line: #d9d9de;
+  --island: #111214; --island-text: #f2f2f2;
+  --cpu: #4da3ff; --gpu: #34c759; --mem: #5ac8fa; --down: #64d2ff; --up: #ff9f0a;
+  --warm: #e5c890; --hot: #e78284;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.5 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+main { max-width: 1240px; margin: 0 auto; padding: 28px 16px 60px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h2 { font-size: 16px; margin: 36px 0 10px; }
+.lead { color: var(--muted); margin: 0 0 8px; }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 640px), 1fr)); gap: 20px; align-items: start; }
+.col h3 { font-size: 14px; margin: 0 0 6px; }
+.col p { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; }
+.tag { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 4px; background: #e4e4e8; color: var(--muted); margin-left: 6px; vertical-align: 1px; }
+.tag--new { background: #d7f5df; color: #1e7a3c; }
+
+.island { container-type: inline-size; background: var(--island); color: var(--island-text); border-radius: 22px; padding: 14px 16px; font-variant-numeric: tabular-nums; overflow: hidden; }
+.island.light { --island: #fbfbfd; --island-text: #1d1d1f; --cpu: #1a73e8; --gpu: #1e9e4a; --mem: #0a84c6; --down: #0a84c6; --up: #c76a00; --warm: #a8741a; --hot: #c4413f; border: 1px solid var(--line); }
+.island .muted { opacity: .55; }
+.wide { width: 100%; max-width: 760px; height: 320px; }
+.narrow { width: 100%; max-width: 480px; height: 400px; }
+
+.mon { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 22px; }
+.narrow .mon { grid-template-columns: 1fr; grid-template-rows: auto minmax(0,1fr); gap: 10px; }
+.stats { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; flex: 1; min-height: 0; }
+.pair.solo { grid-template-columns: 1fr; }
+.unit { display: grid; grid-template-rows: auto 1fr 30px; gap: 6px; min-height: 0; }
+.narrow .unit { grid-template-rows: auto 34px 22px; }
+.gauge { display: flex; align-items: center; gap: 8px; }
+.val { font-size: 19px; font-weight: 600; line-height: 1.1; }
+.val small { font-size: 11px; font-weight: 500; opacity: .6; margin-left: 4px; }
+.sub { font-size: 11px; opacity: .55; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+svg.spark { width: 100%; height: 100%; display: block; }
+.bars { display: flex; gap: 2px; align-items: flex-end; height: 100%; }
+.bars span { flex: 1; max-width: 14px; background: color-mix(in srgb, currentColor 10%, transparent); border-radius: 2px; position: relative; height: 100%; }
+.bars span i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 2px; background: var(--cpu); }
+.engines { display: flex; gap: 6px; height: 100%; }
+.engines div { flex: 1; display: grid; grid-template-rows: 1fr auto; gap: 2px; }
+.engines b { background: color-mix(in srgb, currentColor 10%, transparent); border-radius: 2px; position: relative; }
+.engines b i { position: absolute; left: 0; right: 0; bottom: 0; background: var(--gpu); border-radius: 2px; }
+.engines em { font-style: normal; font-size: 9px; opacity: .5; text-align: center; }
+.line { display: flex; align-items: center; gap: 8px; font-size: 12.5px; min-height: 22px; }
+.meter { flex: 1; height: 5px; border-radius: 3px; background: color-mix(in srgb, currentColor 10%, transparent); position: relative; }
+.meter i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--mem); }
+.net { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.net span { display: grid; grid-template-columns: auto auto 1fr; gap: 6px; align-items: center; font-size: 12.5px; }
+.net svg { height: 16px; }
+.procs { display: flex; flex-direction: column; min-height: 0; font-size: 12px; }
+.procs__head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.procs__head .t { flex: 1; opacity: .6; font-size: 11.5px; }
+.toggle { display: inline-flex; border-radius: 6px; background: color-mix(in srgb, currentColor 8%, transparent); padding: 1px; }
+.toggle button { all: unset; font-size: 10.5px; padding: 1px 7px; border-radius: 5px; opacity: .6; }
+.toggle button.on { background: color-mix(in srgb, currentColor 14%, transparent); opacity: 1; }
+.open { width: 18px; height: 18px; display: grid; place-items: center; opacity: .6; }
+.procs ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; overflow: hidden; }
+.procs li { display: grid; grid-template-columns: 16px minmax(0,1fr) auto; gap: 7px; align-items: center; padding: 2px 4px; border-radius: 5px; }
+.procs li:first-child { background: color-mix(in srgb, currentColor 6%, transparent); }
+.ico { width: 16px; height: 16px; border-radius: 4px; font-size: 9px; display: grid; place-items: center; font-weight: 700; color: #fff; }
+.procs .pn { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.procs .pn small { opacity: .45; margin-left: 3px; }
+.narrow .procs ol { grid-template-columns: 1fr 1fr; column-gap: 12px; }
+
+.cards { display: grid; gap: 8px; font-size: 12px; }
+.cards .top { display: flex; justify-content: space-between; align-items: center; }
+.cards .btn { font-size: 11px; padding: 2px 9px; border-radius: 6px; background: rgba(255,255,255,.1); }
+.cards .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 8px 10px; display: grid; gap: 4px; }
+.card .r { display: flex; justify-content: space-between; }
+.card .tr { height: 5px; border-radius: 3px; background: rgba(255,255,255,.1); }
+.card .tr i { display: block; height: 100%; border-radius: 3px; background: var(--fill, #8ab4ff); }
+.coregrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px 10px; }
+.coregrid div { display: grid; gap: 2px; font-size: 10.5px; }
+
+.bar { display: inline-flex; align-items: center; gap: 12px; height: 34px; padding: 0 18px; border-radius: 17px; background: var(--island); color: var(--island-text); font-size: 12px; font-variant-numeric: tabular-nums; }
+.bar .cell { display: grid; line-height: 1.05; text-align: center; }
+.bar .cell b { font-size: 12.5px; }
+.bar .cell em { font-style: normal; font-size: 9px; opacity: .55; }
+.warm b { color: var(--warm); } .hot b { color: var(--hot); }
+.bar .cut { opacity: .9; }
+.bars-row { display: grid; gap: 10px; }
+.bars-row div { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.bars-row .lbl { width: 130px; font-size: 12.5px; color: var(--muted); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; border-radius: 10px; overflow: hidden; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #ececf0; vertical-align: top; }
+th { background: #f7f7f9; font-weight: 600; }
+.y { color: #1e7a3c; } .n { color: #b3261e; } .p { color: #a8741a; }
+@container (max-width: 599px) {
+  .mon { grid-template-columns: 1fr; grid-template-rows: auto minmax(0,1fr); gap: 10px; }
+  .unit { grid-template-rows: auto 34px 22px; }
+  .procs ol { grid-template-columns: 1fr 1fr; column-gap: 12px; }
+}
+@media (max-width: 700px) { .wide { height: 420px; } .bars-row .lbl { width: 100%; } }
+</style>
+</head>
+<body>
+<main>
+<h1>系统监控：第 2 版 → 计划的第 3 版</h1>
+<p class="lead">示意图，数字是假的。计划全文见 <code>docs/investigations/system-monitor-plan.md</code>。</p>
+
+<h2>1. 宽面板（两栏）</h2>
+<div class="row">
+  <div class="col">
+    <h3>现在的第 3 版 1.0.0</h3>
+    <div class="island wide"><div class="cards" id="current"></div></div>
+    <p>一块块卡片；只有处理器、每核、内存、运行时间。</p>
+  </div>
+  <div class="col">
+    <h3>第 2 版 1.3.1（只支持 Windows）</h3>
+    <div class="island wide" data-mon="win"></div>
+    <p>不画卡片。CPU 和 GPU 各一个环、曲线、核心柱 / 引擎；内存；网速；电池；右边最占资源的程序。</p>
+  </div>
+</div>
+<div class="row" style="margin-top:20px">
+  <div class="col">
+    <h3>计划的第 3 版 1.1.0 · Windows <span class="tag tag--new">补回</span></h3>
+    <div class="island wide" data-mon="win"></div>
+    <p>版式照第 2 版；数据由插件宿主读（Windows 上常驻一个 PowerShell 助手，页面关掉 60 秒后退出）。</p>
+  </div>
+  <div class="col">
+    <h3>计划的第 3 版 1.1.0 · Mac（Apple 芯片） <span class="tag tag--new">新</span></h3>
+    <div class="island wide" data-mon="mac"></div>
+    <p>没有 CPU 温度、GPU 温度和功耗、GPU 各引擎（要 root）；GPU 只有占用和已用内存；程序没有图标，显示首字；按钮打开活动监视器。</p>
+  </div>
+</div>
+
+<h2>2. 窄面板（自动排成一栏）和浅色岛</h2>
+<div class="row">
+  <div class="col">
+    <h3>计划的第 3 版 · 默认面板 480 宽</h3>
+    <div class="island narrow" data-mon="win"></div>
+    <p>不到 600 像素时一栏，程序列表在下面分两列；面板高了程序就多显示几个（最多 10 个）。设置里可固定一栏或两栏。</p>
+  </div>
+  <div class="col">
+    <h3>计划的第 3 版 · 浅色岛</h3>
+    <div class="island narrow light" data-mon="mac"></div>
+    <p>颜色跟着岛的深浅换一套（平台会在外层设 color-scheme 并加警告色变量，见计划「平台能力」第 2 条）。</p>
+  </div>
+</div>
+
+<h2>3. 收起条</h2>
+<div class="bars-row">
+  <div><span class="lbl">现在的第 3 版</span><span class="bar"><span class="cut">CPU 86% ·</span></span><span style="font-size:12px;color:var(--muted)">内存被截掉（E60.8 平台修）</span></div>
+  <div><span class="lbl">第 2 版 / 计划 Windows</span><span class="bar"><span class="cell warm"><b>78%</b><em>CPU</em></span><span class="cell"><b>61%</b><em>RAM</em></span><span class="cell hot"><b>91°</b><em>CPU</em></span><span class="cell"><b>64°</b><em>GPU</em></span></span><span style="font-size:12px;color:var(--muted)">四项各自勾选；偏高变黄、过高变红</span></div>
+  <div><span class="lbl">计划 Mac</span><span class="bar"><span class="cell"><b>34%</b><em>CPU</em></span><span class="cell hot"><b>93%</b><em>RAM</em></span></span><span style="font-size:12px;color:var(--muted)">只有 CPU 和内存</span></div>
+</div>
+
+<h2>4. 逐项对照</h2>
+<table>
+<thead><tr><th>功能</th><th>第 2 版</th><th>现在第 3 版</th><th>计划 Windows</th><th>计划 Mac</th></tr></thead>
+<tbody>
+<tr><td>CPU 总占用、每核</td><td class="y">有</td><td class="y">有</td><td class="y">有</td><td class="y">有</td></tr>
+<tr><td>CPU 环 + 5 分钟曲线</td><td class="y">有</td><td class="n">无</td><td class="y">补</td><td class="y">补</td></tr>
+<tr><td>CPU 温度</td><td class="y">ACPI，很多台式机没有</td><td class="n">无</td><td class="y">补（同第 2 版）</td><td class="n">不做（要 root）</td></tr>
+<tr><td>GPU 占用、各引擎</td><td class="y">任何显卡</td><td class="n">无</td><td class="y">补</td><td class="p">只有占用（Apple 芯片，ioreg）</td></tr>
+<tr><td>GPU 温度、显存、功耗</td><td class="y">NVIDIA</td><td class="n">无</td><td class="y">补（nvidia-smi）</td><td class="n">不做</td></tr>
+<tr><td>内存环</td><td class="y">有</td><td class="p">进度条</td><td class="y">补</td><td class="y">补，并改用 vm_stat 修正读数偏高</td></tr>
+<tr><td>上下行网速 + 曲线</td><td class="y">有</td><td class="n">无</td><td class="y">补</td><td class="y">补（netstat -ib）</td></tr>
+<tr><td>电池</td><td class="y">有</td><td class="n">无</td><td class="y">补</td><td class="y">补（pmset）</td></tr>
+<tr><td>最占资源的程序</td><td class="y">合并同名、排序、图标</td><td class="n">无</td><td class="y">补（含图标）</td><td class="p">补（ps，无图标）</td></tr>
+<tr><td>打开任务管理器</td><td class="y">有</td><td class="n">无</td><td class="y">补</td><td class="y">打开活动监视器</td></tr>
+<tr><td>一栏 / 两栏</td><td class="y">有</td><td class="n">无</td><td class="y">补</td><td class="y">补</td></tr>
+<tr><td>后台记录曲线</td><td class="y">有</td><td class="n">无</td><td class="y">补</td><td class="y">补</td></tr>
+<tr><td>收起条读数 + 变色</td><td class="y">4 项</td><td class="p">CPU、内存文字</td><td class="y">4 项</td><td class="p">CPU、内存</td></tr>
+<tr><td>不画卡片</td><td class="y">是</td><td class="n">卡片</td><td class="y">改</td><td class="y">改</td></tr>
+</tbody>
+</table>
+</main>
+<script>
+function rnd(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280;};}
+function spark(color, seed, base, amp, h=40){const r=rnd(seed);let pts=[];for(let i=0;i<=60;i++){pts.push([i*2,Math.max(2,Math.min(h-1,h-(base+(r()-.5)*amp+Math.sin(i/7)*amp/3)*h/100))]);}
+const d=pts.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1].toFixed(1)).join(' ');
+return `<svg class="spark" viewBox="0 0 120 ${h}" preserveAspectRatio="none"><path d="${d} L120 ${h} L0 ${h}Z" fill="${color}" opacity=".16"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.4" vector-effect="non-scaling-stroke"/></svg>`;}
+function ring(pct,color){const c=2*Math.PI*11;return `<svg width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="11" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-width="3"/><circle cx="14" cy="14" r="11" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-dasharray="${c*pct/100} ${c}" transform="rotate(-90 14 14)"/></svg>`;}
+function cores(n,seed){const r=rnd(seed);return '<div class="bars">'+Array.from({length:n},()=>`<span><i style="height:${8+r()*70}%"></i></span>`).join('')+'</div>';}
+const progs={win:[["Code",14.2,"#3b82f6",3],["chrome",9.8,"#eab308",22],["Fuyu",3.1,"#06b6d4",2],["Discord",2.4,"#6366f1",6],["explorer",1.2,"#f59e0b",1],["MsMpEng",0.9,"#64748b",1],["WeChat",0.6,"#22c55e",4],["node",0.5,"#16a34a",3]],
+ mac:[["Google Chrome",12.6,"#9ca3af",19],["Code",8.1,"#9ca3af",4],["WindowServer",5.0,"#9ca3af",1],["Fuyu",2.2,"#9ca3af",2],["Claude",1.9,"#9ca3af",5],["kernel_task",1.4,"#9ca3af",1],["Finder",0.4,"#9ca3af",1],["Music",0.3,"#9ca3af",1]]};
+function monitor(kind){const win=kind==='win';
+ const gpu=win?`<div class="unit"><div class="gauge">${ring(23,'var(--gpu)')}<div><div class="val">23%<small>64°C · 112 W</small></div><div class="sub">NVIDIA GeForce RTX 4070 · 显存 3.1 / 12 GB</div></div></div>${spark('var(--gpu)',7,25,30)}<div class="engines">${['3D','Copy','Decode','Encode'].map((e,i)=>`<div><b><i style="height:${[34,6,48,2][i]}%"></i></b><em>${e}</em></div>`).join('')}</div></div>`
+ :`<div class="unit"><div class="gauge">${ring(18,'var(--gpu)')}<div><div class="val">18%</div><div class="sub">Apple M2 · 已用 1.4 GB</div></div></div>${spark('var(--gpu)',7,18,24)}<div class="sub" style="align-self:center">Mac 上没有各引擎、温度和功耗</div></div>`;
+ const cpu=`<div class="unit"><div class="gauge">${ring(win?78:34,win?'var(--warm)':'var(--cpu)')}<div><div class="val">${win?'78%':'34%'}<small>${win?'91°C':''}</small></div><div class="sub">${win?'AMD Ryzen 7 7840HS':'Apple M2 · 8 核'}</div></div></div>${spark('var(--cpu)',3,win?62:30,40)}${cores(win?16:8,win?5:9)}</div>`;
+ const list=progs[kind].map(([n,c,col,k])=>`<li><span class="ico" style="background:${col}">${n[0].toUpperCase()}</span><span class="pn">${n}${k>1?`<small>×${k}</small>`:''}</span><span>${c.toFixed(1)}%</span></li>`).join('');
+ return `<div class="mon"><div class="stats"><div class="pair">${cpu}${gpu}</div>
+ <div class="line">${ring(win?61:93,win?'var(--mem)':'var(--hot)')}<span>${win?'19.5 / 32 GB':'15.0 / 16 GB'}</span><span class="meter"><i style="width:${win?61:93}%;${win?'':'background:var(--hot)'}"></i></span><span>${win?61:93}%</span></div>
+ <div class="net"><span><b style="color:var(--down)">↓</b>2.4 MB/s${spark('var(--down)',11,40,60,18)}</span><span><b style="color:var(--up)">↑</b>180 KB/s${spark('var(--up)',13,20,30,18)}</span></div>
+ <div class="line muted">🔋 ${win?'82% · 充电中':'64% · 使用电池'}</div></div>
+ <div class="procs"><div class="procs__head"><span class="t">最占 CPU 的程序</span><span class="open" title="${win?'打开任务管理器':'打开活动监视器'}">↗</span><span class="toggle"><button class="on">CPU</button><button>内存</button></span></div><ol>${list}</ol></div></div>`;}
+document.querySelectorAll('[data-mon]').forEach(el=>el.innerHTML=monitor(el.dataset.mon));
+const r=rnd(4);document.getElementById('current').innerHTML=`<div class="top"><div><b>系统监控</b> <span class="muted" style="font-size:11px">my-pc · x64</span></div><span class="btn">刷新</span></div>
+<div class="two"><div class="card"><div class="r"><span class="muted">处理器</span><b>78.0%</b></div><div class="tr"><i style="width:78%"></i></div><span class="muted" style="font-size:10.5px">AMD Ryzen 7 7840HS</span></div><div class="card"><div class="r"><span class="muted">内存</span><b>61.0%</b></div><div class="tr"><i style="width:61%"></i></div><span class="muted" style="font-size:10.5px">19.5 GB / 32.0 GB</span></div></div>
+<div class="card"><span class="muted">每核负载（16 核）</span><div class="coregrid">${Array.from({length:12},(_,i)=>{const p=Math.round(r()*90);return `<div><span class="muted">#${i+1} ${p}%</span><div class="tr"><i style="width:${p}%"></i></div></div>`}).join('')}</div></div>
+<div class="muted" style="font-size:11px;display:flex;justify-content:space-between"><span>主机: my-pc (x64)</span><span>已运行: 3天 4小时 12分</span></div>`;
+</script>
+</body>
+</html>
