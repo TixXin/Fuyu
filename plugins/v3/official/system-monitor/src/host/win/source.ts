@@ -79,6 +79,7 @@ export function createWindowsSource({ exec, helper, now, cores }: WindowsSourceD
 
   return {
     platform: "windows",
+    cheapBackground: false,
     async memoryUsedBytes() {
       return null;
     },

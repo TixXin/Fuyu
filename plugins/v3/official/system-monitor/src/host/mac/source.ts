@@ -24,6 +24,7 @@ export function createMacSource(exec: Exec, cores: () => number): Source {
 
   return {
     platform: "macos",
+    cheapBackground: true,
     async memoryUsedBytes() {
       try {
         return parseVmStat(await run("vmStat"))?.usedBytes ?? null;
