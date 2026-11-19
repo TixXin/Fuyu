@@ -1,0 +1,28 @@
+@keyframes plugin-spotlight {
+  0%,
+  100% {
+    outline: 1.5px solid transparent;
+    outline-offset: 1px;
+  }
+
+  50% {
+    outline: 1.5px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+}
+
+.island--collapsed:not(.island--tucked) :is(.island__collapsed-fit, .island__more-chip)[data-spotlight],
+.island--expanded .dot-button[data-spotlight] {
+  animation: plugin-spotlight var(--motion-slow) var(--motion-ease-in-out) 2 backwards;
+}
+
+.island--collapsed:not(.island--tucked) .island__collapsed-fit[data-spotlight] {
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island--collapsed:not(.island--tucked) :is(.island__collapsed-fit, .island__more-chip)[data-spotlight],
+  .island--expanded .dot-button[data-spotlight] {
+    animation: none;
+  }
+}

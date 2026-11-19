@@ -13,6 +13,7 @@ import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
 import type { HeaderDotPage, IslandPage } from "./types";
 import { usePageHoverSwitch } from "./usePageHoverSwitch";
+import { useHeaderSpotlight } from "./usePluginSpotlight";
 import "./IslandHeader.css";
 
 type IslandHeaderProps = {
@@ -57,6 +58,7 @@ export function IslandHeader({
   const pluginNames = usePluginNames();
   const { hints } = useIslandContributed();
   const hoverSwitch = usePageHoverSwitch(hoverSwitchPage, hoverSwitchDelayMs, page, onPageChange);
+  const spotlightOf = useHeaderSpotlight();
   const pages = useSlotEntries(pageSlot);
   const dots = headerDotPages(pages, features);
   const dotsRef = useRef<HTMLDivElement>(null);
@@ -143,6 +145,7 @@ export function IslandHeader({
               className={`dot-button ${kind}${page === target ? " dot-button--active" : ""}`}
               type="button"
               data-page={item.external ? target : undefined}
+              {...spotlightOf(item)}
               aria-label={withShortcut(buttons, label, target)}
               aria-pressed={page === target}
               {...hoverSwitch(target)}

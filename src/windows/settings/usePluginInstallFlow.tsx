@@ -1,5 +1,7 @@
 import { useCallback, useState, useSyncExternalStore } from "react";
 import type { MarketCatalogPlugin, MarketInspectedPackage } from "@fuyu/plugin-services";
+import { requestIslandPluginSpotlight } from "../../features/plugin-kernel/api";
+import { showsOnIsland } from "../../features/plugin-kernel/islandSpotlight";
 import { useErrorText, useLocale } from "../../i18n";
 import { openPluginSettingsWindow } from "./api";
 import { PluginInstallConfirmModal, type PendingPluginInstall } from "./PluginInstallConfirmModal";
@@ -81,8 +83,11 @@ export function usePluginInstallFlow(onInstalled?: () => void, catalog?: { plugi
     setError(null);
     void run(pending)
       .then(() => {
-        const { id, version, kind } = pending.modal;
+        const { id, version, kind, confirmation } = pending.modal;
         setNotice({ id, version, updated: kind === "update", name: pending.title });
+        if (kind !== "update" && showsOnIsland(confirmation.slots)) {
+          void requestIslandPluginSpotlight(id).catch((error: unknown) => console.error(`Failed to point out ${id} on the island`, error));
+        }
         setPending(null);
         onInstalled?.();
       })

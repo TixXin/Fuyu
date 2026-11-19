@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { collapsedFit } from "./collapsedFitStore";
+import { useCollapsedSpotlight } from "./usePluginSpotlight";
 
 const CLIPPED = "data-clipped";
 
@@ -7,6 +8,7 @@ export function CollapsedFit({ id, floor, children }: { id: string; floor: numbe
   const outerRef = useRef<HTMLSpanElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
   const floorRef = useRef(floor);
+  const spotlight = useCollapsedSpotlight([id]);
   useLayoutEffect(() => {
     floorRef.current = floor;
   });
@@ -37,7 +39,7 @@ export function CollapsedFit({ id, floor, children }: { id: string; floor: numbe
   }, [id, floor]);
 
   return (
-    <span ref={outerRef} className="island__collapsed-fit" data-fit-item={id}>
+    <span ref={outerRef} className="island__collapsed-fit" data-fit-item={id} {...spotlight}>
       <span ref={innerRef} className="island__collapsed-fit-inner">{children}</span>
     </span>
   );

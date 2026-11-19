@@ -4,6 +4,7 @@ import { useTranslation } from "../../i18n";
 import { setIslandOverflowRect } from "./api";
 import { collapsedFit } from "./collapsedFitStore";
 import { MORE_CHIP_CLASS } from "./useCollapsedOverflow";
+import { useCollapsedSpotlight } from "./usePluginSpotlight";
 import type { IslandPage } from "./types";
 import "./CollapsedMore.css";
 
@@ -25,6 +26,7 @@ export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: rea
   const timerRef = useRef<number | undefined>(undefined);
   const [place, setPlace] = useState<Place | null>(null);
   const open = place !== null;
+  const spotlight = useCollapsedSpotlight(rows.map((row) => row.id));
 
   const cancel = () => window.clearTimeout(timerRef.current);
   const show = useCallback(() => {
@@ -120,6 +122,7 @@ export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: rea
           else show();
         }}
         onKeyDown={onChipKey}
+        {...spotlight}
       >
         +{rows.length}
       </button>
