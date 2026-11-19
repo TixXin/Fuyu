@@ -25,6 +25,7 @@ export interface PluginStatusV3 {
   kind?: PluginKindV3;
   source?: string;
   undeclared?: { provides?: string[]; client?: string[] };
+  unreachableClients?: string[];
   waitingFor?: string[];
   provides?: string[];
   disabledServices?: string[];

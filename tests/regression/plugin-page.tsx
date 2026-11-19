@@ -24,7 +24,7 @@ const STAGES: Stage[] = [
   { key: "normal", title: "已安装若干 / Installed", view: open(NORMAL), head: true },
   { key: "empty", title: "空状态 / Empty", view: open([PLUGIN.counter]) },
   { key: "update", title: "有可更新 / Update", view: open([...NORMAL, PLUGIN.pomodoro]) },
-  { key: "error", title: "出错 / Error", view: open([...NORMAL, PLUGIN.feeds, PLUGIN.flaky]) },
+  { key: "error", title: "出错 / Error", view: open([...NORMAL, PLUGIN.feeds, PLUGIN.flaky, PLUGIN.linked]) },
   { key: "attention", title: "等依赖 / Attention", view: open([...NORMAL, PLUGIN.todoSync, PLUGIN.shady]) },
   { key: "migration", title: "旧插件迁移 / Migration", view: open(NORMAL), migration: true },
   { key: "nodeDl", title: "运行环境下载中 / Runtime downloading", view: { ...open(null), connection: "connecting", host: null }, node: { state: "downloading", downloaded: 12 * MB, total: 30 * MB } },
@@ -171,6 +171,8 @@ try {
   const feedsNote = row("error", "@someone/feeds")?.querySelector<HTMLElement>("[data-note='failed']");
   check(feedsNote?.textContent!.includes("Cannot read properties") && !feedsNote.textContent!.includes("at parse"), "The row shows only the first line of the error");
   check(row("error", "@someone/flaky-plugin-with-a-really-long-identifier-that-should-not-overflow")?.querySelector("[data-note='paused']"), "A plugin paused for repeated errors says so");
+  const linkedNote = row("error", "@me/linked")?.querySelector<HTMLElement>("[data-note='unreachable']");
+  check(row("error", "@me/linked")?.dataset.dot === "bad" && Boolean(linkedNote?.textContent!.includes("island, settings")), "A plugin whose window files Fuyu cannot read names those windows");
   await click(rowAction("error", "@someone/feeds", "restart"));
   await settle();
   check(market.calls.indexOf("enabled:@someone/feeds=false") >= 0 && market.calls.indexOf("enabled:@someone/feeds=true") > market.calls.indexOf("enabled:@someone/feeds=false"), "Restart switches the plugin off and on again");

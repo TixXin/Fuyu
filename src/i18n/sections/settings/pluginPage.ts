@@ -38,6 +38,7 @@ export type SettingsPluginPageText = {
     waitingOff: (name: string) => string;
     waitingStarting: (name: string) => string;
     waitingNobody: string;
+    unreachable: (windows: string) => string;
     revoked: string;
     trust: (version: string) => string;
     update: (version: string) => string;
@@ -213,6 +214,7 @@ export const zhCN: SettingsPluginPageText = {
     waitingOff: (name) => `要用「${name}」，但它现在关着`,
     waitingStarting: (name) => `在等「${name}」准备好`,
     waitingNobody: "要用另一个插件提供的功能，现在还没有插件提供它",
+    unreachable: (windows) => `界面文件（${windows}）不在浮屿能读的文件夹里，这部分界面不会显示`,
     revoked: "市场撤销了这个插件，建议卸载",
     trust: (version) => `作者换了签名密钥，新版本 v${version} 要你确认是本人后才更新`,
     update: (version) => `有新版本 v${version}`,
@@ -388,6 +390,7 @@ export const en: SettingsPluginPageText = {
     waitingOff: (name) => `Needs ${name}, which is turned off`,
     waitingStarting: (name) => `Waiting for ${name} to be ready`,
     waitingNobody: "Needs a feature from another plugin, and no plugin offers it yet",
+    unreachable: (windows) => `Its window files (${windows}) are outside the folders Fuyu can read, so those parts won't show`,
     revoked: "The market revoked this plugin; uninstalling is recommended",
     trust: (version) => `The author changed their signing key; confirm it's really them before v${version} installs`,
     update: (version) => `v${version} is available`,

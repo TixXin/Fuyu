@@ -75,3 +75,10 @@ test("the market offers install before install and update after", () => {
   assert.equal(marketActionCandidate(market()), null);
   assert.equal(firstLine("  \n  only line \n"), "only line");
 });
+
+test("a running plugin whose window files Fuyu cannot read names those windows and needs the user", () => {
+  const status = pluginRowStatus(plugin({ unreachableClients: ["island", "settings"] }), market(), live);
+  assert.deepEqual([status.dot, status.label, status.note], ["bad", null, { kind: "unreachable", windows: ["island", "settings"] }]);
+  assert.ok(status.attention);
+  assert.equal(pluginRowStatus(plugin({ state: "disabled", unreachableClients: ["island"] }), undefined, live).note, null);
+});
