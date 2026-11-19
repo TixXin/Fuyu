@@ -740,39 +740,6 @@
       "page": "themeStyle",
       "zh-CN": {
         "group": "背景折射与色彩",
-        "title": "模糊"
-      },
-      "en": {
-        "group": "Refraction and colours",
-        "title": "Blur"
-      }
-    },
-    {
-      "page": "themeStyle",
-      "zh-CN": {
-        "group": "背景折射与色彩",
-        "title": "饱和度"
-      },
-      "en": {
-        "group": "Refraction and colours",
-        "title": "Saturation"
-      }
-    },
-    {
-      "page": "themeStyle",
-      "zh-CN": {
-        "group": "背景折射与色彩",
-        "title": "噪点"
-      },
-      "en": {
-        "group": "Refraction and colours",
-        "title": "Grain"
-      }
-    },
-    {
-      "page": "themeStyle",
-      "zh-CN": {
-        "group": "背景折射与色彩",
         "title": "颜色来源",
         "options": [
           "主题色",
@@ -837,12 +804,66 @@
     {
       "page": "themeStyle",
       "zh-CN": {
+        "group": "背景折射与色彩",
+        "title": "模糊"
+      },
+      "en": {
+        "group": "Refraction and colours",
+        "title": "Blur"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "背景折射与色彩",
+        "title": "饱和度"
+      },
+      "en": {
+        "group": "Refraction and colours",
+        "title": "Saturation"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "背景折射与色彩",
+        "title": "噪点"
+      },
+      "en": {
+        "group": "Refraction and colours",
+        "title": "Grain"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
         "group": "流光与高光细节",
         "title": "流动速度"
       },
       "en": {
         "group": "Flow and highlights",
         "title": "Flow speed"
+      }
+    },
+    {
+      "page": "themeStyle",
+      "zh-CN": {
+        "group": "流光与高光细节",
+        "title": "展开收起",
+        "options": [
+          "平滑",
+          "轻弹",
+          "液体"
+        ]
+      },
+      "en": {
+        "group": "Flow and highlights",
+        "title": "Expand and collapse",
+        "options": [
+          "Smooth",
+          "Soft bounce",
+          "Liquid"
+        ]
       }
     },
     {
@@ -919,27 +940,6 @@
         "group": "Flow and highlights",
         "title": "Specular highlight",
         "description": "The highlight follows the pointer."
-      }
-    },
-    {
-      "page": "themeStyle",
-      "zh-CN": {
-        "group": "流光与高光细节",
-        "title": "展开收起",
-        "options": [
-          "平滑",
-          "轻弹",
-          "液体"
-        ]
-      },
-      "en": {
-        "group": "Flow and highlights",
-        "title": "Expand and collapse",
-        "options": [
-          "Smooth",
-          "Soft bounce",
-          "Liquid"
-        ]
       }
     },
     {
@@ -2238,13 +2238,13 @@
       "page": "musicLyrics",
       "zh-CN": {
         "group": "歌词",
-        "title": "也查酷狗和网易云",
-        "description": "中文歌收录多，有翻译。这两个是非官方接口，可能随时失效；会把歌名、歌手和时长发给它们。装了网易云的 InfLink 插件时按歌曲直接查，更准。"
+        "title": "也查酷狗、QQ 音乐和网易云",
+        "description": "中文歌收录多，有翻译，多数能逐字跟唱；几个来源里有逐字歌词的先用。这些是非官方接口，可能随时失效；会把歌名、歌手和时长发给它们。装了酷狗客户端时先读它本机缓存的歌词（只读）；装了网易云的 InfLink 插件时按歌曲直接查，更准。"
       },
       "en": {
         "group": "Lyrics",
-        "title": "Also ask Kugou and NetEase",
-        "description": "Many more Chinese songs, with translations. These are unofficial interfaces that may stop working at any time; the title, artist and length are sent to them. With NetEase's InfLink plugin the song is looked up by its id, which is more exact."
+        "title": "Also ask Kugou, QQ Music and NetEase",
+        "description": "Many more Chinese songs, with translations, mostly timed word by word; word-timed lyrics are preferred when any of them has some. These are unofficial interfaces that may stop working at any time; the title, artist and length are sent to them. With the Kugou app installed, its cached lyrics on this computer are read first (read only). With NetEase's InfLink plugin the song is looked up by its id, which is more exact."
       }
     },
     {
@@ -2278,12 +2278,12 @@
       "zh-CN": {
         "group": "岛上的歌词样式",
         "title": "逐字高亮",
-        "description": "正在唱的那一句从左到右变亮。酷狗歌词和带逐字时间的本地 .lrc 按每个字的时间走。"
+        "description": "正在唱的那一句从左到右变亮。酷狗、QQ 音乐、部分网易云歌词和带逐字时间的本地 .lrc 按每个字的时间走。"
       },
       "en": {
         "group": "Lyrics on the island",
         "title": "Light up as sung",
-        "description": "The line being sung lights up from left to right. Kugou lyrics and local .lrc files with word times follow each word."
+        "description": "The line being sung lights up from left to right. Kugou, QQ Music, some NetEase lyrics and local .lrc files with word times follow each word."
       }
     },
     {
@@ -2304,7 +2304,7 @@
       "zh-CN": {
         "group": "岛上的歌词样式",
         "title": "没有逐字时间的歌",
-        "description": "LRCLIB 和网易云的歌词只有每句的时间。按整句填充：在这一句的时间里匀速变亮（最长 8 秒），和歌声大致对得上。",
+        "description": "LRCLIB 和部分网易云歌词只有每句的时间。按整句填充：在这一句的时间里匀速变亮（最长 8 秒），和歌声大致对得上。",
         "options": [
           "按整句填充",
           "不填充"
@@ -2313,7 +2313,7 @@
       "en": {
         "group": "Lyrics on the island",
         "title": "Songs without word times",
-        "description": "LRCLIB and NetEase lyrics only time each line. Fill the line: it lights evenly over the line's time (at most 8 s), roughly with the singing.",
+        "description": "LRCLIB and some NetEase lyrics only time each line. Fill the line: it lights evenly over the line's time (at most 8 s), roughly with the singing.",
         "options": [
           "Fill the line",
           "Do not fill"
@@ -3781,6 +3781,19 @@
       "page": "agentRings",
       "zh-CN": {
         "group": "用量环",
+        "title": "Cursor",
+        "description": "只读本机 Cursor 保存的登录（state.vscdb，不刷新、不改写），最多每 5 分钟一次直连 api2.cursor.sh 查询本计费周期已用的比例（内环本月）。这是未公开的内部接口，随版本可能失效。没装 Cursor、没登录或查不到时不显示这个环。"
+      },
+      "en": {
+        "group": "Usage rings",
+        "title": "Cursor",
+        "description": "Reads the login Cursor saved on this computer (state.vscdb, read-only, never refreshed or rewritten) and asks api2.cursor.sh directly, at most every 5 minutes, how much of this billing cycle is used (inner ring: this month). Uses an undocumented internal endpoint that may break across updates. The ring stays hidden when Cursor isn't installed, isn't signed in or has no usage."
+      }
+    },
+    {
+      "page": "agentRings",
+      "zh-CN": {
+        "group": "用量环",
         "title": "WorkBuddy",
         "description": "只读本机 ~/.workbuddy 与 ~/.workbuddy-ai 会话记录中的积分消耗（不联网、不进圆环），在用量环悬停卡片中显示今日、近 7 天与累计已用积分。"
       },
@@ -4321,34 +4334,12 @@
       "zh-CN": {
         "group": "SSH 代理隧道",
         "title": "本地代理",
-        "description": "自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和 Windows 系统代理，再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。"
+        "description": "自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和系统代理（Windows 的 Internet 设置、Mac 的网络代理），再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。"
       },
       "en": {
         "group": "SSH proxy tunnel",
         "title": "Local proxy",
-        "description": "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the Windows system proxy, then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none."
-      }
-    },
-    {
-      "page": "plugins",
-      "zh-CN": {
-        "group": "",
-        "title": "允许运行第三方插件"
-      },
-      "en": {
-        "group": "",
-        "title": "Allow third-party plugins"
-      }
-    },
-    {
-      "page": "plugins",
-      "zh-CN": {
-        "group": "",
-        "title": "插件目录"
-      },
-      "en": {
-        "group": "",
-        "title": "Plugins folder"
+        "description": "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the system proxy (Internet settings on Windows, network proxies on a Mac), then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none."
       }
     },
     {

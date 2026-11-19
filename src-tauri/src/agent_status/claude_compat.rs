@@ -88,6 +88,57 @@ pub(crate) fn compat_input(provider: &str, input: &mut Value) {
     }
 }
 
+macro_rules! compat_harness {
+    ($module:ident, $id:literal, $spec:expr) => {
+        mod $module {
+            use std::path::{Path, PathBuf};
+
+            use super::claude_compat::{self, Compat};
+            use super::harness::{Harness, HookEnv, Hooks, ScanRoots, StatusLight};
+            use super::hooks_state::HookInstallState;
+            use super::sessions::AgentSessionSummary;
+
+            pub(super) const PROVIDER: &str = $id;
+
+            pub(super) const SPEC: Compat = $spec;
+
+            pub(super) const HARNESS: Harness = Harness {
+                id: PROVIDER,
+                hooks: Some(Hooks { install, check, uninstall }),
+                status_light: Some(StatusLight {
+                    running_marker: concat!("agent-", $id, "-running.flag"),
+                    running_hold: concat!("agent-", $id, "-running-hold.flag"),
+                    saved_inputs: &[],
+                }),
+                sessions: Some(sessions),
+                remote: None,
+            };
+
+            fn install(env: &HookEnv) -> Result<(), String> {
+                claude_compat::install_hooks(&SPEC, env)
+            }
+
+            fn check(env: &HookEnv) -> HookInstallState {
+                claude_compat::hooks_state(&SPEC, env)
+            }
+
+            fn uninstall(env: &HookEnv) -> Result<(), String> {
+                claude_compat::uninstall_hooks(&SPEC, env)
+            }
+
+            fn sessions(roots: &ScanRoots, now: i64, window_ms: i64) -> Vec<AgentSessionSummary> {
+                claude_compat::sessions(&SPEC, roots, now, window_ms)
+            }
+
+            pub(super) fn prompt_files(home_dir: &Path) -> Vec<PathBuf> {
+                claude_compat::prompt_files(&SPEC, home_dir)
+            }
+        }
+    };
+}
+
+pub(super) use compat_harness;
+
 fn alias_input(spec: &Compat, input: &mut Value) {
     let Some(fields) = input.as_object_mut() else {
         return;

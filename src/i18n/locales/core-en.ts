@@ -17,7 +17,6 @@ import { en as mail } from "../sections/mail.ts";
 import { en as messages } from "../sections/messages.ts";
 import { en as music } from "../sections/music.ts";
 import { en as notebook } from "../sections/notebook.ts";
-import { en as pluginViews } from "../sections/pluginViews.ts";
 import { en as qq } from "../sections/qq.ts";
 import { en as screenshot } from "../sections/screenshot.ts";
 import { en as sessionRing } from "../sections/sessionRing.ts";
@@ -66,7 +65,6 @@ export const coreEn: Translations = {
   fileShelf,
   screenshot,
   timer,
-  pluginViews,
   settings: coreSettings,
   onboarding: {} as OnboardingText,
   errors,

@@ -117,6 +117,54 @@ test("without a marker, a finished reply that asks something alerts as waiting",
   assert.deepEqual(alerts.map(({ kind, session }) => `${kind}:${session.sessionId}`), ["waiting:a", "completed:b", "completed:c"]);
 });
 
+const NOW = 1_800_000_000_000;
+const done = (sessionId, turnStartedAt, updatedAt, lastMessage = "ok", extra = {}) => ({
+  ...session(sessionId, "completed"), turnStartedAt, updatedAt, lastMessage, ...extra,
+});
+const look = (previous, sessions, kinds = ALL) =>
+  detectAlerts(previous, sessions, kinds, NOW).map(({ kind, session }) => `${kind}:${session.sessionId}`);
+
+test("a whole turn between two looks alerts once, by its newer turn start", () => {
+  const first = [done("a", NOW - 60_000, NOW - 50_000)];
+  const seen = phasesOf(first, null, NOW);
+  const next = [done("a", NOW - 8000, NOW - 2000, "ok")];
+  assert.deepEqual(look(seen, next), ["completed:a"]);
+  const after = phasesOf(next, seen, NOW);
+  assert.deepEqual(look(after, next), [], "same turn again");
+  assert.deepEqual(look(after, [done("a", NOW - 8000, NOW - 500, "renamed", { title: "renamed" })]), [], "same turn, newer write");
+  assert.deepEqual(look(after, [done("a", NOW - 8000, NOW - 2000)], { ...ALL, completed: false }), []);
+});
+
+test("without a turn start, a newer write with a new reply counts as a finished turn", () => {
+  const seen = phasesOf([done("a", null, NOW - 60_000, "first")], null, NOW);
+  assert.deepEqual(look(seen, [done("a", null, NOW - 1000, "second")]), ["completed:a"]);
+  assert.deepEqual(look(seen, [done("a", null, NOW - 1000, "first")]), [], "only the write time moved");
+  assert.deepEqual(look(seen, [done("a", null, NOW - 60_000, "second")]), [], "not newer");
+});
+
+test("on the first look only turns finished in the last 15 seconds alert", () => {
+  const sessions = [
+    done("fresh", NOW - 9000, NOW - 5000),
+    done("old", NOW - 90_000, NOW - 60_000),
+    session("busy", "running"),
+    session("asks", "waiting"),
+  ];
+  assert.deepEqual(look(null, sessions), ["completed:fresh"]);
+  assert.deepEqual(look(phasesOf(sessions, null, NOW), sessions), []);
+  const known = phasesOf([session("x", "running")], null, NOW);
+  assert.deepEqual(look(known, [session("x", "running"), done("new", NOW - 4000, NOW - 1000), done("stale", NOW - 40_000, NOW - 30_000)]), ["completed:new"]);
+});
+
+test("a turn finished between looks keeps its ending marker", () => {
+  const seen = phasesOf([done("a", NOW - 60_000, NOW - 50_000), done("b", NOW - 60_000, NOW - 50_000)], null, NOW);
+  const next = [
+    done("a", NOW - 5000, NOW - 1000, "ok", { replyMarker: "yourTurn" }),
+    done("b", NOW - 5000, NOW - 1000, "ok", { replyMarker: "background" }),
+  ];
+  assert.deepEqual(look(seen, next), ["waiting:a"]);
+  assert.deepEqual(look(null, next), ["waiting:a"]);
+});
+
 test("reminders: once per wait, after the delay, for sessions still waiting on the user", async () => {
   const { isWaitingOnUser, takeDueReminders } = await import("../../src/features/agent-status/alerts.ts");
   const { reminderSound } = await import("../../src/features/agent-status/sounds/events.ts");

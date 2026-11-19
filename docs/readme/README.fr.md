@@ -158,15 +158,15 @@ Méthode de mesure et données complètes : [idle-usage.md](../investigations/i
 
 ## Plugins
 
-S'il manque quelque chose à l'île, vous pouvez l'ajouter vous-même. Un plugin est un dossier : un manifeste et un programme que l'île lance (un script PowerShell, un exe ou un script Node.js). Les plugins n'envoient que des données ; l'île dessine les pages, la barre repliée et les réglages à partir de modèles, si bien qu'ils ont le même style que le reste de l'île.
+S'il manque quelque chose à l'île, vous pouvez l'ajouter vous-même. Les plugins s'écrivent en TypeScript ou en JavaScript : la logique d'arrière-plan tourne dans un processus Node lancé par l'île, et l'interface est en React, placée dans des emplacements prévus sur l'île et dans la fenêtre des réglages, si bien qu'elle s'intègre au reste de l'île. Le manifeste est simplement `package.json`, et un plugin se distribue sous la forme d'un seul fichier `.fuyu`.
 
 ```sh
 npm create fuyu-plugin@latest
 ```
 
 - **Installez-en un tout prêt** : depuis Paramètres → Marché de plugins dans l'île, ou jetez d'abord un œil au [marché de plugins du site web](https://fuyu.ing/plugins/).
-- **Écrivez le vôtre** : le [démarrage rapide](../plugins/quickstart.md) vous mène de zéro à un plugin fonctionnel en une heure environ ; la [documentation des plugins](../plugins/README.md) couvre tout le reste (en chinois).
-- **Partagez-le** : publiez-le sur le [marché de plugins](https://github.com/TixXin/fuyu-plugins) ou gardez-le pour votre propre ordinateur ; les étapes sont dans [publier](../plugins/publish.md) (en chinois).
+- **Écrivez le vôtre** : générez un projet avec la commande ci-dessus, puis lancez `npm run dev` dedans pour le charger dans l'île en cours d'exécution et le reconstruire à chaque modification ; la [documentation des plugins](../plugins/README.md) et la [ligne de commande](../plugins/cli.md) couvrent le reste (en chinois).
+- **Partagez-le** : confiez un commit au [marché de plugins](https://github.com/TixXin/fuyu-plugins), qui le construit à partir des sources et relit chaque version avant de la publier ; ou empaquetez un fichier `.fuyu` et envoyez-le vous-même. Les étapes sont dans [publier](../plugins/publish.md) (en chinois).
 
 ## Compiler depuis les sources
 

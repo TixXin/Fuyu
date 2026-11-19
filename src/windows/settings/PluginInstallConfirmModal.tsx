@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { Blocks, X } from "lucide-react";
 import type { MarketLocalizedText, PluginInstallConfirmation } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
+import "./PluginsV3SettingsPage.css";
+import "./PluginMarketV3Tab.css";
 
 export interface PendingPluginInstall {
   id: string;
@@ -146,15 +148,15 @@ export function PluginInstallConfirmModal({
           </p>
         ) : null}
 
-        <dl className="plugins-v3__caps">
-          <CapabilityRow label={copy.networkLabel} items={confirmation.network} emptyText={copy.networkNone} />
-          <CapabilityRow label={copy.nodeApisLabel} items={confirmation.nodeApis} emptyText={copy.nodeApisNone} />
-          <CapabilityRow label={copy.providesLabel} items={confirmation.provides} emptyText={copy.capabilityNone} />
-          {confirmation.replaces.length > 0 ? (
-            <CapabilityRow label={copy.replacesLabel} items={confirmation.replaces} emptyText={copy.capabilityNone} />
-          ) : null}
-          <CapabilityRow label={copy.slotsLabel} items={confirmation.slots} emptyText={copy.capabilityNone} />
-        </dl>
+        {confirmation.network.length + confirmation.nodeApis.length + confirmation.provides.length + confirmation.replaces.length + confirmation.slots.length > 0 ? (
+          <dl className="plugins-v3__caps">
+            {confirmation.network.length > 0 ? <CapabilityRow label={copy.networkLabel} items={confirmation.network} emptyText={copy.networkNone} /> : null}
+            {confirmation.nodeApis.length > 0 ? <CapabilityRow label={copy.nodeApisLabel} items={confirmation.nodeApis} emptyText={copy.nodeApisNone} /> : null}
+            {confirmation.provides.length > 0 ? <CapabilityRow label={copy.providesLabel} items={confirmation.provides} emptyText={copy.capabilityNone} /> : null}
+            {confirmation.replaces.length > 0 ? <CapabilityRow label={copy.replacesLabel} items={confirmation.replaces} emptyText={copy.capabilityNone} /> : null}
+            {confirmation.slots.length > 0 ? <CapabilityRow label={copy.slotsLabel} items={confirmation.slots} emptyText={copy.capabilityNone} /> : null}
+          </dl>
+        ) : null}
 
         <p className="plugins-v3__security-note">{copy.hostSecurityNote}</p>
         {error ? <p className="plugins-v3__error-banner">{error}</p> : null}

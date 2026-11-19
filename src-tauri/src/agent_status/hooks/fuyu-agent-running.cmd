@@ -13,27 +13,30 @@ if /I "%PROVIDER%"=="grok" goto known
 if /I "%PROVIDER%"=="copilot" goto known
 if /I "%PROVIDER%"=="droid" goto known
 if /I "%PROVIDER%"=="pi" goto known
+if /I "%PROVIDER%"=="cursor" goto known
 if /I "%PROVIDER%"=="codebuddy" goto known
 if /I "%PROVIDER%"=="qwen" goto known
 if /I "%PROVIDER%"=="antigravity" (
-  if /I not "%~2"=="start" if /I not "%~2"=="running" if /I not "%~2"=="stop" exit /b 2
+  if /I not "%~2"=="start" if /I not "%~2"=="running" if /I not "%~2"=="stop" exit /b 1
   goto known
 )
 if /I "%PROVIDER%"=="trae" goto trae
 if /I "%PROVIDER%"=="traeCn" goto trae
-if /I "%PROVIDER%"=="" exit /b 2
-if /I "%PROVIDER%"=="updatedAt" exit /b 2
-if /I "%PROVIDER%"=="statusPath" exit /b 2
-if /I "%PROVIDER%"=="others" exit /b 2
+if /I "%PROVIDER%"=="" exit /b 1
+if /I "%PROVIDER%"=="updatedAt" exit /b 1
+if /I "%PROVIDER%"=="statusPath" exit /b 1
+if /I "%PROVIDER%"=="others" exit /b 1
 echo(%PROVIDER%| findstr /R "^[A-Za-z][A-Za-z0-9_-]*$" >nul
-if errorlevel 1 exit /b 2
+if errorlevel 1 exit /b 1
 goto known
 
 :trae
-if /I not "%~2"=="running" if /I not "%~2"=="stop" if /I not "%~2"=="notification" exit /b 2
+if /I not "%~2"=="running" if /I not "%~2"=="stop" if /I not "%~2"=="notification" exit /b 1
 goto known
 
 :known
+if /I "%PROVIDER%"=="claudeCode" if defined CURSOR_VERSION exit /b 0
+if /I "%~2"=="activity" goto activity
 set "MARKER=agent-%PROVIDER%-running.flag"
 set "HOLD=agent-%PROVIDER%-running-hold.flag"
 
@@ -94,4 +97,8 @@ set "TERMINALS_DIR=%STATUS_DIR%\agent-terminals"
 if not exist "%TERMINALS_DIR%" mkdir "%TERMINALS_DIR%" >nul 2>nul
 findstr "^" > "%TERMINALS_DIR%\%ORCA_TERMINAL_HANDLE%.tmp" 2>nul
 move /y "%TERMINALS_DIR%\%ORCA_TERMINAL_HANDLE%.tmp" "%TERMINALS_DIR%\%ORCA_TERMINAL_HANDLE%.json" >nul 2>nul
+exit /b 0
+
+:activity
+curl.exe -s -o NUL --connect-timeout 1 -m 5 -H "Authorization: Bearer %~4" -H "Content-Type: application/json" -H "X-Fuyu-Hook: fuyu-agent-activity" --data-binary @- "%~3" >nul 2>nul
 exit /b 0

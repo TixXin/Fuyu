@@ -10,7 +10,8 @@ use super::session_records::{self, SessionRecord};
 use super::tmux;
 use super::wezterm;
 use super::window_focus::{self, app_name, SessionHints};
-use super::{antigravity, antigravity_focus, dsh, opencode, pi, trae, workbuddy};
+use super::workbuddy_focus::{self, Missing};
+use super::{antigravity, antigravity_focus, cursor, dsh, opencode, pi, trae, workbuddy};
 use crate::system::windows_home_dir;
 use crate::platform;
 
@@ -128,11 +129,12 @@ fn provider_apps(provider: &str, app_dir: Option<&Path>, session_id: Option<&str
             }
             antigravity_focus::apps_for(product)
         }
+        workbuddy::PROVIDER => workbuddy_focus::apps(workbuddy::running_app()),
         _ => match provider {
-            workbuddy::PROVIDER => workbuddy::running_app(),
             dsh::PROVIDER => dsh::running_app(),
             opencode::PROVIDER => opencode::running_app(),
             pi::PROVIDER => pi::running_app(),
+            cursor::PROVIDER => Some("cursor".to_string()),
             trae::PROVIDER => Some(trae::APP.to_string()),
             trae::CN_PROVIDER => Some(trae::CN_APP.to_string()),
             _ => None,
@@ -180,6 +182,23 @@ pub(super) struct Focused {
     pub(super) exact: bool,
     pub(super) focused_app: Option<(String, String)>,
     pub(super) missing_extension: Option<String>,
+    pub(super) missing: Option<Missing>,
+}
+
+fn wake_workbuddy(hints: &SessionHints, prefer_apps: &[String], log: &mut Attempt) -> Option<window_focus::FocusedWindow> {
+    let mut sent = false;
+    let found = workbuddy_focus::wake_and_find(
+        || {
+            sent = workbuddy_focus::wake_main_window();
+            sent
+        },
+        || window_focus::focus_session_window(hints, &[], prefer_apps),
+        workbuddy_focus::wait_for_window,
+    );
+    if sent {
+        log.note(if found.is_some() { "wake=shown" } else { "wake=no-window" });
+    }
+    found
 }
 
 pub(super) fn focus_session(
@@ -229,9 +248,15 @@ pub(super) fn focus_session(
     if steps.wezterm_selected {
         log.note("wezterm-tab=selected");
     }
+    let is_workbuddy = provider == workbuddy::PROVIDER;
+    let focused = focused.or_else(|| is_workbuddy.then(|| wake_workbuddy(&hints, &prefer_apps, &mut log))?);
     let Some(focused) = focused else {
+        let missing = is_workbuddy.then(|| Missing::of(workbuddy::app_running()));
+        if let Some(missing) = missing {
+            log.note(format!("missing={}", missing.reason()));
+        }
         log.finish(app_dir, "not found");
-        return Focused { found: false, exact: false, focused_app: None, missing_extension: None };
+        return Focused { found: false, exact: false, focused_app: None, missing_extension: None, missing };
     };
     log.note(format!("window={}", focused.app));
     #[cfg(target_os = "macos")]
@@ -292,6 +317,7 @@ pub(super) fn focus_session(
         exact,
         focused_app: Some((focused.app, display_name)),
         missing_extension,
+        missing: None,
     }
 }
 

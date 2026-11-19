@@ -542,6 +542,14 @@ fn new_agents_have_their_own_routes_and_answers() {
     assert_eq!(copilot(Some(Decision::Allow)), json!({"behavior": "allow"}));
     assert_eq!(copilot(Some(Decision::Deny)), json!({"behavior": "deny", "message": "不行", "interrupt": false}));
     assert_eq!(copilot(None), json!({}));
+    assert_eq!(route("/cursor/permission"), Some((Agent::Cursor, Kind::Permission)));
+    assert!(Agent::Cursor.lacks_waiting_event());
+    let cursor = |decision| serde_json::from_str::<Value>(&permission_response(Agent::Cursor, decision, Some("不行"), None)).unwrap();
+    assert_eq!(cursor(Some(Decision::Allow)), json!({ "permission": "allow" }));
+    assert_eq!(cursor(Some(Decision::Deny))["permission"], "deny");
+    assert_eq!(cursor(Some(Decision::Terminal)), json!({ "permission": "ask" }));
+    let shell = HookInput::parse_for(Agent::Cursor, br#"{"conversation_id":"c1","command":"ls","cwd":"/repo","workspace_roots":["/repo"]}"#).unwrap();
+    assert_eq!((shell.session_id.as_str(), shell.tool_name.as_str(), shell.cwd.as_deref()), ("c1", "Shell", Some("/repo")));
     let camel = HookInput::parse_for(Agent::Copilot, br#"{"sessionId":"c1","toolName":"bash","toolArgs":{"command":"ls"}}"#).unwrap();
     assert_eq!((camel.session_id.as_str(), camel.tool_name.as_str(), &camel.tool_input), ("c1", "bash", &json!({"command": "ls"})));
     for (agent, id) in [(Agent::Trae, "trae"), (Agent::TraeCn, "traeCn"), (Agent::Droid, "droid")] {

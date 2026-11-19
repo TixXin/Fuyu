@@ -1,0 +1,102 @@
+{
+  "$schema": "../../harness.schema.json",
+  "protocol": 1,
+  "id": "antigravity",
+  "name": "Antigravity",
+  "icon": "antigravity.svg",
+  "forms": {
+    "cli": {
+      "home": [
+        {
+          "path": "~/.gemini"
+        }
+      ],
+      "linux": {
+        "runs": true,
+        "musl": true
+      }
+    },
+    "app": {
+      "sharesWith": "cli",
+      "process": {
+        "windows": [
+          "Antigravity.exe"
+        ],
+        "macos": [
+          "Antigravity"
+        ]
+      }
+    },
+    "ideExtension": {
+      "sharesWith": "cli",
+      "process": {
+        "windows": [
+          "Antigravity IDE.exe"
+        ],
+        "macos": [
+          "Antigravity IDE"
+        ]
+      }
+    }
+  },
+  "sessions": {
+    "format": "adapter",
+    "adapter": "antigravity-transcript"
+  },
+  "hooks": {
+    "format": "adapter",
+    "adapter": "antigravity-hooks",
+    "file": "config/hooks.json"
+  },
+  "approval": {
+    "reply": "adapter",
+    "tools": [
+      "run_command"
+    ]
+  },
+  "signals": {
+    "running": "hook",
+    "done": "hook",
+    "waiting": "approval",
+    "replyMarker": true,
+    "exited": "timeout"
+  },
+  "replyMarker": {
+    "promptFiles": [
+      "GEMINI.md"
+    ]
+  },
+  "quota": [
+    "antigravity"
+  ],
+  "remote": {
+    "form": "cli",
+    "pull": {
+      "find": [
+        "for j in $(find .fuyu/agent-antigravity -maxdepth 1 -type f -name '*.json' -mmin -\"$W\" 2>/dev/null); do echo \"$j\"; c=${j##*/}; c=${c#*-}; c=${c%.json}; f=\".gemini/antigravity-cli/annotations/$c.pbtxt\"; [ -f \"$f\" ] && echo \"$f\"; done"
+      ],
+      "checkpointDirs": [
+        ".fuyu/agent-antigravity/",
+        ".gemini/antigravity-cli/annotations/"
+      ]
+    },
+    "extract": null,
+    "hooks": true,
+    "approval": "reverseForward",
+    "replyMarker": true
+  },
+  "focus": {
+    "apps": {
+      "app": [
+        "antigravity"
+      ],
+      "ideExtension": [
+        "antigravity ide",
+        "antigravity-ide"
+      ]
+    },
+    "adapter": "antigravity-product",
+    "exact": "window"
+  },
+  "ccConnect": null
+}

@@ -16,7 +16,6 @@ import { useWindowAccent } from "../../lib/theme/useWindowAccent";
 import { ResetAppearanceButton } from "./sections/ResetAppearanceButton";
 import { useSettingPresets } from "../../lib/settings/useSettingPresets";
 import { useSettingsWithBuiltinSwitches } from "../../features/plugin-kernel/useLegacySwitches";
-import { useMarketInstallRequest } from "../../features/plugins/market-link/useMarketInstallRequest";
 import { useLocale, useTranslation } from "../../i18n";
 import { activeTone } from "../../lib/theme/themeMode";
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
@@ -27,6 +26,7 @@ import { categorySlot } from "./slots/categorySlot";
 import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
 import { focusSection } from "../../lib/settings/sectionFocus";
 import { AboutLogoCallLink } from "../../features/updater/AboutHero";
+import { PluginPageActions } from "./PluginPageActions";
 import "./SettingsWindow.css";
 
 const SETTINGS_DARK_FILL = "#131417";
@@ -106,17 +106,9 @@ export function SettingsWindow() {
   }, [setSettings]);
 
   const openShortcuts = () => setCategory("shortcuts");
-  const [managedPluginId, setManagedPluginId] = useState<string | null>(null);
   const changeCategory = (next: typeof category) => {
-    setManagedPluginId(null);
     setCategory(next);
   };
-  const managePlugin = (id: string) => {
-    setManagedPluginId(id);
-    setCategory("plugins");
-  };
-  const showMarket = useCallback(() => setCategory("market"), []);
-  const marketRequest = useMarketInstallRequest(showMarket);
   useMacWindowKeys();
 
   const light = activeTone(settings.themeMode, systemDark) === "light";
@@ -142,6 +134,8 @@ export function SettingsWindow() {
             ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
             : category === "about"
             ? <AboutLogoCallLink />
+            : category === "pluginsV3"
+            ? <PluginPageActions onOpenPage={setCategory} />
             : null
         }
       >
@@ -160,14 +154,11 @@ export function SettingsWindow() {
             unsupported,
             features: features.switches,
             presets,
-            managedPluginId,
-            marketRequest,
             onLocaleChange: setLocale,
             onSettingsChange: setSettings,
             onOpenPage: changeCategory,
             onShowPage: setCategory,
             onOpenShortcuts: openShortcuts,
-            onManagePlugin: managePlugin,
           }}
           select={(items) => items.filter((item) => item.id === page)}
         />

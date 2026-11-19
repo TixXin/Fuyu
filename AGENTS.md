@@ -6,7 +6,7 @@
 - 修改 `src-tauri/` 时还须遵守 [src-tauri/AGENTS.md](src-tauri/AGENTS.md)（Rust / Tauri 规则）。
 - 目标架构见 [docs/architecture/overview.md](docs/architecture/overview.md)，结构重构的分步记录、验证结果与待人工验收项见 [docs/architecture/history/refactor-plan.md](docs/architecture/history/refactor-plan.md)。
 
-- **插件平台第 3 版（万物皆插件）正在进行**（2026-11-14 起）。做它的会话开工先读 [docs/architecture/plugins/v3-progress.md](docs/architecture/plugins/v3-progress.md)（做到哪了），再读 [v3-workflow.md](docs/architecture/plugins/v3-workflow.md)（怎么协作：不开分支、子代理和两台机器的规则）和 [v3-everything-plugin.md](docs/architecture/plugins/v3-everything-plugin.md)（方案）。不做它的会话要知道一条：旧的插件系统（`src-tauri/src/plugin_host/`、`src/features/plugins/`、`src/features/plugin-views/`、`packages/fuyu-plugin`、`plugins/`）已冻结，只修 bug 和安全问题，不加新接口。
+- **插件平台第 3 版（万物皆插件）**的代码已做完，等真岛验收后结束。做它的会话开工先读 [docs/architecture/plugins/v3-progress.md](docs/architecture/plugins/v3-progress.md)（做到哪了），再读 [v3-workflow.md](docs/architecture/plugins/v3-workflow.md)（怎么协作：不开分支、子代理和两台机器的规则）和 [v3-everything-plugin.md](docs/architecture/plugins/v3-everything-plugin.md)（方案）。第 2 版的宿主、前端模块、SDK、脚手架和旧示例都已删除（E36.6.5、E36.6.6），只剩 `src-tauri/src/plugin_kernel/v2_migration.rs` 读取旧数据帮老用户迁移；`plugins/` 里冻结的第 2 版市场文件只给旧岛屿读，内容不再改。
 
 - 做 `docs/tasks` 里的任务或处理 issue：先读 [docs/tasks/README.md](docs/tasks/README.md)；Claude Code 会话先加载 `fuyu-task` skill（从认领到关 issue 的顺序）。
 
@@ -54,7 +54,7 @@
 ├── tests/               # unit/ 前端单元测试、scripts/ 脚本测试（node:test，*.test.mjs）；regression/ 浏览器回归页（*.html + *.tsx）
 ├── vendor/              # 拷进仓库的第三方代码（cordis/ 是插件平台第 3 版的内核），不受行数和「不写注释」的约束
 ├── packages/            # plugin-base（插件平台第 3 版的基座，不能 import src/）和插件开发者工具；不进入发布产物
-├── plugins/             # 插件市场：示例、待签名的官方插件、索引与签名公钥；不进入发布产物
+├── plugins/             # 插件市场：v3/official/ 是第 3 版的官方插件，其余是冻结的第 2 版索引、包和公钥；不进入发布产物
 ├── scripts/             # 发布、插件索引、合并队列（mq/）、门禁钩子（gate/）、各项检查和开发流程脚本
 ├── video/               # 宣传视频（自带 package.json，不在 workspace 里）
 ├── .githooks/           # pre-push、pre-commit（main 上提交必须写文件名）、commit-msg（拒绝 Claude 署名行）
@@ -81,11 +81,13 @@
 | 动效检查 | `pnpm check:motion`（CSS 里写死的曲线和不在档位上的时长要换成 `--motion-*` token；存量记在 `scripts/motion-literal-allowlist.json`，只减不增，规则见 `docs/design/motion.md`） |
 | 密钥字段检查 | `pnpm check:secrets`（Rust 里带 `Serialize`、字段名像密钥、类型是字符串的字段要登记在 `scripts/secret-fields-allowlist.json` 并写理由，规则见 `src-tauri/AGENTS.md`） |
 | 回归页类型检查 | `pnpm check:tests-types`（`tests/tsconfig.json`，检查 `tests/regression/*.tsx`） |
+| Rust 方法的生成类型 | `pnpm check:rust-types`（不编译，核对 `#[host_service]` 方法名和 `packages/plugin-services/src/generated/` 的清单一致）；加、改这类方法后 `pnpm gen:rust-types` 重写生成文件（见 `docs/architecture/plugins/v3-services.md`「Rust 那条路」） |
 | 浏览器回归页 | `pnpm test:regression [页面名中的词] [--update-snapshots]`（跑 `tests/regression/` 的回归页并比对 DOM 快照；界面本该变时加 `--update-snapshots`，快照随提交带上；细节见 workflow.md「验证」） |
 | 岛屿实验台 | `pnpm lab`（打开 http://127.0.0.1:5199/，点按钮让正在跑的 `pnpm tauri dev` 的岛弹消息、展开收起、模拟刘海、发起 Agent 审批；不用开本地接口，见 `docs/features/island-lab.md`） |
 | README 的 SVG | `pnpm readme:assets`（重新生成 `docs/assets/readme/` 里的小岛和下载按钮；改它们改 `scripts/readme/assets.mjs`，不直接改 SVG） |
 | 设置搜索索引 | `pnpm settings:index`（新增、删除或改名设置项后运行，重写 `src/windows/settings/searchIndex.json`；漏跑时 `settings-search` 回归页会失败） |
-| 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 颜色检查 + 动效检查 + 任务检查 + 单元测试） |
+| 提交前总检查 | `pnpm check`（类型检查 + 回归页类型检查 + packages 类型检查 + lint + 行数检查 + 颜色检查 + 动效检查 + 密钥字段检查 + Rust 生成类型检查 + 任务检查 + 单元测试） |
+| 本机先验一遍 | `pnpm verify`（`pnpm check`，改到 `src-tauri/` 或 `plugins/` 时再加 Rust 单元测试；自带排队，同一棵代码树通过过就不重跑） |
 | Rust 单元测试 | `cargo test --manifest-path src-tauri/Cargo.toml` |
 | 仅生成 release 可执行文件 | `pnpm build:exe`（写到 `src-tauri/target/release`，岛屿在运行也不用关；Mac 上打成 `Fuyu.app`） |
 | 重任务排队 | `pnpm heavy [--label <名字>] -- <命令…>`（全机器限量排队，见 workflow.md「Rust 构建」） |
@@ -123,7 +125,7 @@
 
 - `localStorage` key（`fuyu-*`，完整清单见 [contracts.md](docs/architecture/contracts.md)）及其存储的数据格式
 - Tauri 命令名（即 Rust 函数名）、参数名，以及事件名
-- 窗口 label（`main` / `translation` / `clipboard` / `settings`）和 `?window=` 参数值
+- 窗口 label（`tauri.conf.json` 里的 `main` / `translation` / `clipboard` / `clipboard-preview` / `settings` / `onboarding` / `tray-menu` / `drag-grid`，以及 `screenshot-<n>`、`pin-<n>`、`plugin-window-<n>` 的前缀）和 `?window=` 参数值
 - 应用标识 `com.tixxin.fuyu`、开机自启注册表值 `Fuyu`、凭据管理器条目、应用数据目录下的文件名（如 `agent-status.json`）
 - 更新端点和 `latest.json` 格式
 - 读改名前旧名字（FocuSD / fly-island）的兼容代码：清单和删除时间见 [contracts.md](docs/architecture/contracts.md)「改名兼容（D17）」，到时间前不删；新代码和文档只用新名字

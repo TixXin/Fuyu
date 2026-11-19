@@ -77,6 +77,7 @@ export interface SettingsCategoryMeta<Context = unknown, Group extends string = 
   group?: Group | null;
   icon?: SlotIcon;
   tabs?: readonly Category[];
+  parent?: Category;
   available?: (context: Context) => boolean;
   feature?: string;
   aliases?: readonly string[];

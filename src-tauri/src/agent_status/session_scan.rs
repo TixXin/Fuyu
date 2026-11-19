@@ -8,6 +8,7 @@ use std::{
 };
 
 use super::claude_desktop;
+use super::codex;
 use super::codex_threads::{self, Thread};
 use super::markers::AGENT_RUNNING_STALE_AFTER_MS;
 use super::notifications::{compacting_sessions, is_waiting, SavedNotifications, WaitingNotifications};
@@ -90,7 +91,8 @@ fn scan(
                     _ => {}
                 }
                 let asked_user = is_waiting(waiting, &summary.session_id, summary.updated_at);
-                summary.closed = has_ended(app_dir, &summary.session_id).unwrap_or_else(|| match summary.provider {
+                let ended = has_ended(app_dir, &summary.session_id);
+                summary.closed = ended.unwrap_or_else(|| match summary.provider {
                     "claudeCode" => left_registry(&[home_dir.join(".claude")], &summary, now, &mut live_claude),
                     workbuddy::PROVIDER => {
                         left_registry(&workbuddy::data_dirs(home_dir), &summary, now, &mut live_workbuddy)
@@ -98,7 +100,7 @@ fn scan(
                     }
                     _ => false,
                 });
-                settle(&mut summary, state, asked_user, compacting, now);
+                settle(&mut summary, state, asked_user, compacting, now, ended == Some(false));
                 sessions.push(summary);
             }
         }
@@ -116,9 +118,10 @@ fn scan(
         );
         summary.title = title;
         summary.title_source = title_source;
-        summary.closed = has_ended(app_dir, &summary.session_id).unwrap_or(false);
+        let ended = has_ended(app_dir, &summary.session_id);
+        summary.closed = ended.unwrap_or(false);
         let asked_user = is_waiting(waiting, &summary.session_id, summary.updated_at);
-        settle(&mut summary, state, asked_user, compacting, now);
+        settle(&mut summary, state, asked_user, compacting, now, ended == Some(false));
         sessions.push(summary);
     }
     let roots = ScanRoots { home_dir, local_app_dir: app_dir };
@@ -140,7 +143,13 @@ fn settle(
     asked_user: bool,
     compacting: &HashMap<String, i64>,
     now: i64,
+    process_alive: bool,
 ) {
+    let stale_after_ms = if summary.provider == codex::PROVIDER && process_alive {
+        i64::MAX
+    } else {
+        AGENT_RUNNING_STALE_AFTER_MS
+    };
     let ended = matches!(state, TurnState::Working | TurnState::AwaitingUser) && summary.closed;
     summary.compacting = compacting.contains_key(&summary.session_id) && !ended;
     summary.phase = if ended {
@@ -150,7 +159,7 @@ fn settle(
     } else if state == TurnState::Working && asked_user {
         "waiting"
     } else {
-        session_phase(state, now - summary.updated_at, AGENT_RUNNING_STALE_AFTER_MS)
+        session_phase(state, now - summary.updated_at, stale_after_ms)
     };
 }
 

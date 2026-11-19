@@ -5,14 +5,9 @@
     linear-gradient(var(--island-shell-fill), var(--island-shell-fill)) 0 0 / 100% 100% no-repeat,
     var(--glass-wallpaper) var(--glass-wallpaper-x) var(--glass-wallpaper-y) / var(--glass-wallpaper-size) no-repeat,
     var(--glass-wallpaper-color);
+  background-attachment: scroll, fixed, scroll;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-}
-
-.stage .island.island--appearance-liquidGlass[data-glass-wallpaper]::before {
-  background-position:
-    0 0,
-    calc(var(--glass-wallpaper-x) + var(--island-top-fillet)) var(--glass-wallpaper-y);
 }
 
 .island__glass-noise {

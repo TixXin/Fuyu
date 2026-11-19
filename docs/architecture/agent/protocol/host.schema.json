@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/TixXin/fuyu/blob/main/docs/architecture/agent/protocol/host.schema.json",
+  "title": "Fuyu session host",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "id",
+    "name",
+    "kind",
+    "process",
+    "focus"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "protocol": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9 ._-]*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "terminal",
+        "editor",
+        "app"
+      ]
+    },
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "windows": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "macos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "focus": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "processChain",
+          "windowTitle",
+          "windowsTerminalTab",
+          "weztermPane",
+          "tmuxPane",
+          "orcaTerminal",
+          "editorExtension",
+          "macTerminalTab",
+          "openFolder"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "cli": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "The host's own command line, used by openFolder and editorExtension",
+      "properties": {
+        "windows": {
+          "type": "string",
+          "minLength": 1
+        },
+        "macos": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "focus": {
+            "contains": {
+              "enum": [
+                "openFolder",
+                "editorExtension"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "cli"
+        ]
+      }
+    }
+  ]
+}

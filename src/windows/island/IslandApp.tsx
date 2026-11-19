@@ -1,7 +1,4 @@
 import { useMemo } from "react";
-import { PluginPermissionPrompt } from "../../features/plugins/PluginPermissionPrompt";
-import { usePluginPermissionPrompts } from "../../features/plugins/usePluginPermissionPrompts";
-import { PluginContextMenus } from "../../features/plugins/PluginContextMenu";
 import { IslandPages } from "./IslandPages";
 import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
@@ -19,11 +16,8 @@ import { useGameMode } from "./useGameMode";
 import { useIslandKeyboard } from "./useIslandKeyboard";
 import { useIslandFeatures } from "./useIslandFeatures";
 import { useIslandNavigation } from "./useIslandNavigation";
-import { usePluginHostEvents } from "./usePluginHostEvents";
-import { usePluginKeybindings } from "./usePluginKeybindings";
 import { useIslandTucking } from "./useIslandTucking";
 import { useIslandHover } from "./useIslandHover";
-import { usePluginPages } from "./usePluginPages";
 import { useIslandPopup } from "./useIslandPopup";
 import { panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
@@ -34,7 +28,6 @@ import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 import { useIslandGlass } from "./useIslandGlass";
 import { useAccentColor } from "../../lib/theme/useAccentColor";
 import { isLightIsland } from "../../utils/color";
-import { PluginPageButtons } from "./PluginPageButtons";
 import { useCollapsedGauges } from "./useCollapsedGauges";
 import { mergeIslandDecor, useIslandDecor } from "../../features/plugin-kernel/islandDecor";
 import { useTrayLanguage } from "./useTrayLanguage";
@@ -52,7 +45,7 @@ import { hasNotchDrop, notchExpandedExtra, notchFittedWidth, notchLook, notchPan
 import "./IslandApp.css";
 import { PluginSlot } from "../../features/plugin-kernel/PluginSlot";
 import { LINE_PRIORITY, leadLine } from "../../features/plugin-kernel/islandContributions";
-import { runIslandAction, useIslandContributed, useIslandContributions, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
+import { runIslandAction, useIslandContributed, useSettleIslandContributions } from "../../features/plugin-kernel/useIslandContributions";
 import { useCollapsedWidth } from "./useCollapsedWidth";
 import { effectiveIslandOpacity } from "./idleDim";
 import { useIdleDim } from "./useIdleDim";
@@ -70,19 +63,16 @@ export function IslandApp() {
   useSettingsFileSync();
   const navigation = useIslandNavigation();
   const { mode, isTucked, page, setPage, collapseIsland, tuckIsland, revealIsland, minimizeToEdge, openIslandPage } = navigation;
-  const pluginPages = usePluginPages(page);
   const side = useIslandSide();
   const [storedSettings, setSettings] = useIslandSettings();
   useMigrateLegacySwitches(storedSettings);
   const settings = useResolvedTheme(useSettingsWithBuiltinSwitches(storedSettings));
   const game = useGameMode(settings, { mode, isTucked, collapseIsland, tuckIsland, revealIsland });
-  const permissionPrompts = usePluginPermissionPrompts();
   useFirstRunGuide();
   const demo = useOnboardingDemo();
   const decor = useIslandDecor();
   const gauges = useCollapsedGauges(mode !== "collapsed" || isTucked || game.quiet);
   const collapsedSlots = useMemo(() => mergeIslandDecor([decor, gauges]), [decor, gauges]);
-  usePluginHostEvents({ mode });
 
   const firstHints = useIslandFirstHints({
     mode,
@@ -99,8 +89,7 @@ export function IslandApp() {
   const notch = useIslandNotch();
   const autoForm = useAutoIslandForm();
   const barText = settings.showCollapsedText && !notch;
-  const { lines: contributedLines, alerts, popups, style, settled, hints, preview: contributedPreview, reveal: contributedReveal, status: contributedStatus } = useIslandContributed();
-  usePluginKeybindings({ mode, page, hasActiveTodo: hints.has("todos.active") });
+  const { lines: contributedLines, alerts, popups, style, settled, preview: contributedPreview, reveal: contributedReveal, status: contributedStatus } = useIslandContributed();
   const textWidth = useCollapsedWidth({
     barText,
     noticeText: v2Upgrade.text ?? (firstHints.current ? t.island.firstHint[firstHints.current] : null),
@@ -110,7 +99,6 @@ export function IslandApp() {
     slots: collapsedSlots,
   });
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
-  useIslandContributions("shell", "plugin-prompt", permissionPrompts.current ? [{ kind: "reveal", reveal: "always" }, { kind: "busy" }] : []);
   useIslandTucking({ settings, navigation });
 
 
@@ -119,7 +107,6 @@ export function IslandApp() {
     page,
     setPage,
     openIslandPage,
-    pluginPages: pluginPages.pageIds,
   });
   const hasOpenPopup = [...popups.values()].some((entry) => entry.open === true);
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
@@ -140,7 +127,6 @@ export function IslandApp() {
     isTucked,
     resizing: resizing !== null,
     demoActive: demo.active,
-    hasPrompt: permissionPrompts.current !== null,
     hasNotice: islandNotice !== null,
     hasPreview: contributedPreview !== null,
     hasAlert: alerts.size > 0,
@@ -177,6 +163,7 @@ export function IslandApp() {
     mode,
     isTucked,
     isDimmed,
+    gamePassthrough: game.passthrough,
     settings,
     setSettings,
     backgroundColor: look.islandBackgroundColor,
@@ -248,11 +235,7 @@ export function IslandApp() {
         hoverSwitchPage={settings.hoverSwitchPage}
         hoverSwitchDelayMs={settings.hoverSwitchDelayMs}
         notice={islandNotice}
-        overlay={permissionPrompts.current ? <PluginPermissionPrompt prompts={permissionPrompts} /> : null}
-        pluginViews={pluginPages.views}
-        onOpenPluginPage={openEnabledPage}
         collapsedSlots={collapsedSlots}
-        pluginPageButtons={<PluginPageButtons views={pluginPages.views} page={page} features={features} modifiers={settings.pageDigitModifiers} hoverSwitchPage={settings.hoverSwitchPage} hoverSwitchDelayMs={settings.hoverSwitchDelayMs} onOpen={setPage} />}
       >
         <PluginSlot window="island" name="island.dev/v1" />
         <IslandPages
@@ -260,11 +243,9 @@ export function IslandApp() {
           mode={mode}
           settings={settings}
           features={features}
-          pluginPages={pluginPages}
         />
       </IslandShell>
       <SlotView slot={overlaySlot} props={{}} />
-      <PluginContextMenus />
     </main>
   );
 }

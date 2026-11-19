@@ -17,6 +17,7 @@ export type CommonText = {
   openFolderMac: string;
   showSecret: string;
   hideSecret: string;
+  advanced: string;
 };
 
 export const zhCN: CommonText = {
@@ -38,6 +39,7 @@ export const zhCN: CommonText = {
   openFolderMac: "在访达中打开",
   showSecret: "显示密钥",
   hideSecret: "隐藏密钥",
+  advanced: "高级",
 };
 
 export const en: CommonText = {
@@ -59,4 +61,5 @@ export const en: CommonText = {
   openFolderMac: "Open in Finder",
   showSecret: "Show key",
   hideSecret: "Hide key",
+  advanced: "Advanced",
 };

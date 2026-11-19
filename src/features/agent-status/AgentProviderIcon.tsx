@@ -4,6 +4,7 @@ import claudeCodeIcon from "../../assets/brands/claude-code.png";
 import codebuddyIcon from "../../assets/brands/codebuddy.svg";
 import codexIcon from "../../assets/brands/codex.webp";
 import copilotIcon from "../../assets/brands/copilot.png";
+import cursorIcon from "../../assets/brands/cursor.png";
 import droidIcon from "../../assets/brands/droid.png";
 import dshIcon from "../../assets/brands/dsh.png";
 import kimiCodeIcon from "../../assets/brands/kimi-code.png";
@@ -36,6 +37,7 @@ const PROVIDER_ICONS: Record<SessionProvider, string> = {
   mimo: mimoIcon,
   grok: grokIcon,
   copilot: copilotIcon,
+  cursor: cursorIcon,
   droid: droidIcon,
   pi: piIcon,
 };

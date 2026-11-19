@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/TixXin/fuyu/blob/main/docs/architecture/agent/protocol/quota.schema.json",
+  "title": "Fuyu usage quota source",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "id", "name", "display", "windows", "auth", "adapter"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "protocol": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]{0,31}$" },
+    "name": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["zh-CN", "en"],
+          "properties": { "zh-CN": { "type": "string", "minLength": 1 }, "en": { "type": "string", "minLength": 1 } }
+        }
+      ]
+    },
+    "display": { "enum": ["ring", "hover"] },
+    "windows": {
+      "type": "array",
+      "items": { "enum": ["fiveHour", "sevenDay", "models", "balance"] },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "auth": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "entry"],
+          "properties": { "kind": { "const": "credential" }, "entry": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "path"],
+          "properties": { "kind": { "const": "file" }, "path": { "type": "string", "pattern": "^~/" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "none" } }
+        }
+      ]
+    },
+    "adapter": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,47}$" },
+    "refreshSeconds": { "type": "integer", "minimum": 10 },
+    "color": { "type": "string", "pattern": "^--[a-z0-9-]+$" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "display": { "const": "ring" } } },
+      "then": { "properties": { "windows": { "not": { "const": ["balance"] } } } }
+    }
+  ]
+}

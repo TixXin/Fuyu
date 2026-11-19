@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInput } from "../../components/settings/SettingsInput";
 import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
+import { switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
+import { OWNER } from "./plugin/owner.ts";
 import { isPlan, PlanKeyField } from "./PlanKeyFields";
 import { USAGE_INTERVAL, type UsageShow } from "./usageConfig.ts";
 import { HOVER_USAGE_PROVIDERS, USAGE_PROVIDERS } from "./usageRing";
@@ -54,6 +57,7 @@ function ProxyRow({ proxy, onChange }: { proxy: string; onChange: (proxy: string
 }
 
 export function UsageSettingsGroup() {
+  const switchId = useId();
   const t = useTranslation();
   const text = t.claudeUsage.settings;
   const [config, update] = useUsageConfig();
@@ -62,12 +66,17 @@ export function UsageSettingsGroup() {
     antigravity: text.antigravityHint,
     glm: isMacOS ? text.glmHintMac : text.glmHint,
     kimi: isMacOS ? text.kimiHintMac : text.kimiHint,
+    cursor: text.cursorHint,
     workbuddy: text.workbuddyHint,
     dsh: text.dshHint,
   };
   return (
     <>
-      <SettingsGroup title={text.title} footer={<SettingsFootnote text={text.footer} />}>
+      <SettingsGroup
+        title={text.title}
+        action={<SettingsSwitch id={switchId} ariaLabel={text.title} checked onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch(() => undefined)} />}
+        footer={<SettingsFootnote text={text.footer} />}
+      >
         {USAGE_PROVIDERS.map((provider) => (
           <div key={provider.id} data-usage-provider={provider.id}>
             <SettingsToggleRow

@@ -19,6 +19,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($Provider -eq "claudeCode" -and $env:CURSOR_VERSION) { exit 0 }
+
 function New-AgentTaskStatus {
   param(
     [string]$Phase = "idle",
@@ -76,7 +78,7 @@ function Get-DefaultStatusPath {
   return Join-Path $PSScriptRoot "agent-status.json"
 }
 
-$Providers = @("codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid", "pi")
+$Providers = @("codex", "claudeCode", "workbuddy", "antigravity", "dsh", "qoder", "codebuddy", "qwen", "trae", "traeCn", "zcode", "kimiCode", "grok", "copilot", "droid", "pi", "cursor")
 
 function Get-AgentMarkerNames {
   param(

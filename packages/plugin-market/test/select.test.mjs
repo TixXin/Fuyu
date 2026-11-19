@@ -89,3 +89,11 @@ test("versions sort by semver, not by list order", () => {
   const result = pick([v("1.10.0"), v("1.9.0"), v("1.2.0")]);
   assert.equal(ver(result.install), "1.10.0");
 });
+
+test("a beta island installs the versions its ordering allows", () => {
+  const versions = [v("1.0.0", { engines: ">=0.3.10" }), v("1.1.0", { engines: ">=0.4.0" })];
+  const result = pick(versions, { fuyuVersion: "0.3.11-beta.4" });
+  assert.equal(ver(result.install), "1.0.0");
+  assert.equal(ver(result.manual), "1.0.0");
+  assert.deepEqual(result.skipped, [{ version: "1.1.0", reason: "engines" }]);
+});

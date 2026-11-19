@@ -1,0 +1,3355 @@
+<body>
+  <div id="gallery">
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="settings">
+      <h2 class="gallery__title">
+        插件设置 / Plugin settings
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 4 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              3 个在运行
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  4
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  3
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="attention" disabled="" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  0
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon">
+                世
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="世界时钟" type="button">
+                    世界时钟
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  收起时显示另一个时区的时间
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「世界时钟」" checked="" id="_id1_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon">
+                天
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="天气" type="button">
+                    天气
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  在岛上看实时气温和逐小时预报
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「天气」" checked="" id="_id2_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    未经审核
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    已停用
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · 本地文件（未经审核）
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Gadget」" id="_id3_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                </div>
+                <div class="plugin-row__facts">
+                  本地开发
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+      <div class="plugin-dialog__backdrop">
+        <div aria-label="天气" aria-modal="true" class="plugin-dialog" data-plugin-detail="@fuyu/weather" role="dialog">
+          <div class="plugin-dialog__head">
+            <span aria-hidden="true" class="plugin-icon plugin-icon--lg">
+              天
+              <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+            </span>
+            <div class="plugin-dialog__heading">
+              <div class="plugin-row__line plugin-row__line--wrap">
+                <span class="plugin-dialog__title">
+                  天气
+                </span>
+                <span class="plugin-badge plugin-badge--official">
+                  官方
+                </span>
+              </div>
+              <span class="plugin-dialog__sub">
+                v1.2.0 · 运行中
+              </span>
+            </div>
+            <div class="plugin-dialog__head-actions">
+              <span class="plugin-row__switch">
+                <span class="settings-switch">
+                  <input aria-label="启用「天气」" checked="" id="_id4_" role="switch" type="checkbox">
+                  <span aria-hidden="true" class="settings-switch__track"></span>
+                </span>
+              </span>
+              <button aria-label="关闭" class="plugin-icon-btn" title="关闭" type="button">
+                <svg aria-hidden="true" class="lucide lucide-x" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-tabs" role="tablist">
+            <button aria-selected="false" class="plugin-tabs__tab" data-tab="overview" role="tab" tabindex="-1" type="button">
+              概览
+            </button>
+            <button aria-selected="true" class="plugin-tabs__tab" data-tab="settings" role="tab" tabindex="0" type="button">
+              设置
+            </button>
+            <button aria-selected="false" class="plugin-tabs__tab" data-tab="commands" role="tab" tabindex="-1" type="button">
+              命令与快捷键
+            </button>
+            <button aria-selected="false" class="plugin-tabs__tab" data-tab="permissions" role="tab" tabindex="-1" type="button">
+              权限
+            </button>
+            <button aria-selected="false" class="plugin-tabs__tab" data-tab="activity" role="tab" tabindex="-1" type="button">
+              运行情况
+            </button>
+          </div>
+          <div class="plugin-dialog__body" data-panel="settings" role="tabpanel">
+            <div class="plugin-detail__settings">
+              <section class="plugins-v3__schema-form" data-plugin-schema-form="@fuyu/weather">
+                <div class="plugins-v3__subhead">
+                  <h4 class="plugins-v3__subheading">
+                    插件设置
+                  </h4>
+                  <button class="plugins-v3__btn" data-action="reset-plugin-config" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-rotate-ccw" fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"></svg>
+                    <span>
+                      恢复默认设置
+                    </span>
+                  </button>
+                </div>
+                <div class="plugins-v3__schema-list">
+                  <div class="plugins-v3__schema-row" data-schema-field="autoRefresh">
+                    <div class="plugins-v3__schema-copy">
+                      <label class="plugins-v3__schema-label" for="_id5_-autoRefresh">
+                        自动刷新
+                      </label>
+                    </div>
+                    <div class="plugins-v3__schema-control">
+                      <span class="settings-switch">
+                        <input id="_id5_-autoRefresh" role="switch" type="checkbox">
+                        <span aria-hidden="true" class="settings-switch__track"></span>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="plugins-v3__schema-row" data-schema-field="unit">
+                    <div class="plugins-v3__schema-copy">
+                      <label class="plugins-v3__schema-label" for="_id5_-unit">
+                        单位
+                      </label>
+                    </div>
+                    <div class="plugins-v3__schema-control">
+                      <select class="plugins-v3__schema-select" id="_id5_-unit">
+                        <option value="celsius">
+                          celsius
+                        </option>
+                        <option value="fahrenheit">
+                          fahrenheit
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <p class="plugin-callout plugin-detail__no-settings">
+                这个插件没有可以改的设置。
+              </p>
+            </div>
+          </div>
+          <div class="plugin-dialog__foot">
+            <button class="plugin-btn plugin-btn--sm plugin-btn--ghost" data-action="view-in-market" type="button">
+              <svg aria-hidden="true" class="lucide lucide-store" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              在市场查看
+            </button>
+            <span class="plugin-dialog__grow"></span>
+            <button class="plugin-btn plugin-btn--sm plugin-btn--danger" data-action="uninstall-plugin" type="button">
+              <svg aria-hidden="true" class="lucide lucide-trash2 lucide-trash-2" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              卸载
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="normal">
+      <h2 class="gallery__title">
+        已安装若干 / Installed
+      </h2>
+      <div>
+        <div class="gallery__head">
+          <div class="plugin-page__actions">
+            <button class="plugin-btn" data-action="open-market" title="浏览插件市场" type="button">
+              <svg aria-hidden="true" class="lucide lucide-store" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+              <span class="plugin-page__action-label">
+                浏览插件市场
+              </span>
+            </button>
+            <div class="plugin-menu">
+              <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn plugin-icon-btn--outlined" title="更多操作" type="button">
+                <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+              </button>
+            </div>
+            <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+          </div>
+        </div>
+        <div class="plugin-page" data-plugin-page="open">
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 4 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              3 个在运行
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  4
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  3
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="attention" disabled="" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  0
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon">
+                世
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="世界时钟" type="button">
+                    世界时钟
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  收起时显示另一个时区的时间
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「世界时钟」" checked="" id="_id6_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon">
+                天
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="天气" type="button">
+                    天气
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  在岛上看实时气温和逐小时预报
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「天气」" checked="" id="_id7_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    未经审核
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    已停用
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · 本地文件（未经审核）
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Gadget」" id="_id8_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                </div>
+                <div class="plugin-row__facts">
+                  本地开发
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="empty">
+      <h2 class="gallery__title">
+        空状态 / Empty
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <div class="plugin-card plugin-empty" data-empty="true">
+            <span aria-hidden="true" class="plugin-empty__icon">
+              <svg aria-hidden="true" class="lucide lucide-blocks" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <h3 class="plugin-empty__title">
+              还没有装插件
+            </h3>
+            <p>
+              插件给岛加新本事：看天气、收 GitHub 提醒、订阅新闻……都在插件市场里，点一下就装。
+            </p>
+            <div class="plugin-empty__actions">
+              <button class="plugin-btn plugin-btn--primary" data-action="browse-market" type="button">
+                <svg aria-hidden="true" class="lucide lucide-store" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                浏览插件市场
+              </button>
+              <button class="plugin-btn" data-action="install-file" type="button">
+                <svg aria-hidden="true" class="lucide lucide-upload" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
+                从文件安装…
+              </button>
+            </div>
+          </div>
+          <h3 class="plugin-page__heading">
+            大家都在装
+          </h3>
+          <div class="plugin-mini-grid">
+            <div class="plugin-mini" data-popular="@fuyu/countdown">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                倒
+              </span>
+              <div class="plugin-mini__text">
+                <b>
+                  倒数日
+                </b>
+                <span>
+                  离重要的日子还有几天
+                </span>
+              </div>
+              <button class="plugin-btn plugin-btn--sm plugin-btn--primary" type="button">
+                安装
+              </button>
+            </div>
+            <div class="plugin-mini" data-popular="@someone/stocks">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                股
+              </span>
+              <div class="plugin-mini__text">
+                <b>
+                  股票行情
+                </b>
+                <span>
+                  自选股涨跌一眼看到
+                </span>
+              </div>
+              <button class="plugin-btn plugin-btn--sm plugin-btn--primary" type="button">
+                安装
+              </button>
+            </div>
+            <div class="plugin-mini" data-popular="@someone/notes">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--sm">
+                便
+              </span>
+              <div class="plugin-mini__text">
+                <b>
+                  便签
+                </b>
+                <span>
+                  随手记一句
+                </span>
+              </div>
+              <button class="plugin-btn plugin-btn--sm plugin-btn--primary" type="button">
+                安装
+              </button>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="update">
+      <h2 class="gallery__title">
+        有可更新 / Update
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <section class="plugin-banner plugin-banner--info" data-banner="updates">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              1 个插件有新版本
+            </div>
+            <div class="plugin-banner__body">
+              番茄钟 v1.1.0。官方插件平时会自动更新，刚上架的版本等 3 天。
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 5 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              4 个在运行
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  5
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  4
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="attention" disabled="" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  0
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/pomodoro">
+              <span aria-hidden="true" class="plugin-icon">
+                番
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="番茄钟" type="button">
+                    番茄钟
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  专注 25 分钟，休息 5 分钟
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+                <div class="plugin-note plugin-note--info" data-note="update">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      有新版本 v1.1.0
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-row-action="update" type="button">
+                      更新
+                    </button>
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="whatsNew" type="button">
+                      看更新内容
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「番茄钟」" checked="" id="_id9_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon">
+                世
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="世界时钟" type="button">
+                    世界时钟
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  收起时显示另一个时区的时间
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「世界时钟」" checked="" id="_id10_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon">
+                天
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="天气" type="button">
+                    天气
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  在岛上看实时气温和逐小时预报
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「天气」" checked="" id="_id11_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    未经审核
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    已停用
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · 本地文件（未经审核）
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Gadget」" id="_id12_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                </div>
+                <div class="plugin-row__facts">
+                  本地开发
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="error">
+      <h2 class="gallery__title">
+        出错 / Error
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <section class="plugin-banner plugin-banner--bad" data-banner="problems">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              2 个插件出了问题
+            </div>
+            <div class="plugin-banner__body">
+              每个插件的处理按钮在下面那一行上。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn" data-action="open-diagnostics" type="button">
+                <svg aria-hidden="true" class="lucide lucide-activity" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                查看运行诊断
+              </button>
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 6 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              3 个在运行
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+            <span class="plugin-page__summary-warn">
+              <i class="plugin-page__dot plugin-page__dot--warn"></i>
+              2 个要处理
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  6
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  5
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip plugin-chip--warn" data-filter="attention" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  2
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon">
+                世
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="世界时钟" type="button">
+                    世界时钟
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  收起时显示另一个时区的时间
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「世界时钟」" checked="" id="_id13_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon">
+                天
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="天气" type="button">
+                    天气
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  在岛上看实时气温和逐小时预报
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「天气」" checked="" id="_id14_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="bad" data-plugin="@someone/flaky-plugin-with-a-really-long-identifier-that-should-not-overflow">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                F
+                <span class="plugin-icon__dot plugin-icon__dot--bad"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Flaky" type="button">
+                    Flaky
+                  </button>
+                  <span class="plugin-row__state plugin-row__state--bad">
+                    ·
+                    已暂停
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+                <div class="plugin-note plugin-note--bad" data-note="paused">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      60 秒内出错 5 次，先停到下次启动浮屿
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="restart" type="button">
+                      重新启用
+                    </button>
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="log" type="button">
+                      查看日志
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Flaky」" checked="" id="_id15_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    未经审核
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    已停用
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · 本地文件（未经审核）
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Gadget」" id="_id16_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                </div>
+                <div class="plugin-row__facts">
+                  本地开发
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="bad" data-plugin="@someone/feeds">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                R
+                <span class="plugin-icon__dot plugin-icon__dot--bad"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="RSS feeds" type="button">
+                    RSS feeds
+                  </button>
+                  <span class="plugin-row__state plugin-row__state--bad">
+                    ·
+                    启动失败
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+                <div class="plugin-note plugin-note--bad" data-note="failed">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      TypeError: Cannot read properties of undefined (reading 'items')
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="restart" type="button">
+                      重启
+                    </button>
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="log" type="button">
+                      查看日志
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「RSS feeds」" checked="" id="_id17_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="attention">
+      <h2 class="gallery__title">
+        等依赖 / Attention
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <section class="plugin-banner plugin-banner--warn" data-banner="attention">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              2 个插件等你处理
+            </div>
+            <div class="plugin-banner__body">
+              要你确认的更新、在等别的功能、被市场撤销的插件，处理按钮都在各自那一行上。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn" data-action="only-attention" type="button">
+                只看需处理的
+              </button>
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 6 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              4 个在运行
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+            <span class="plugin-page__summary-warn">
+              <i class="plugin-page__dot plugin-page__dot--warn"></i>
+              2 个要处理
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="false" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  6
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  5
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="true" class="plugin-chip plugin-chip--warn" data-filter="attention" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  2
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/shady">
+              <span aria-hidden="true" class="plugin-icon">
+                可
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="可疑插件" type="button">
+                    可疑插件
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    0.3.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  已被市场撤下
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+                <div class="plugin-note plugin-note--bad" data-note="revoked">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      市场撤销了这个插件，建议卸载
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="uninstall" type="button">
+                      卸载…
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「可疑插件」" checked="" id="_id18_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="wait" data-plugin="@someone/todo-sync">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                T
+                <span class="plugin-icon__dot plugin-icon__dot--wait"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Todo sync" type="button">
+                    Todo sync
+                  </button>
+                  <span class="plugin-row__state plugin-row__state--wait">
+                    ·
+                    等待中
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+                <div class="plugin-note plugin-note--info" data-note="waiting">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-info" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      要用「待办」，但它现在关着
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="turnOnProvider" type="button">
+                      打开「待办」
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Todo sync」" checked="" id="_id19_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="migration">
+      <h2 class="gallery__title">
+        旧插件迁移 / Migration
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <section class="plugin-banner plugin-banner--info" data-banner="migration">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-arrow-left-right" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              <span>
+                旧插件要换成新版
+              </span>
+              <button aria-expanded="true" class="plugin-link" data-action="migration-toggle" type="button">
+                收起
+              </button>
+            </div>
+            <div class="plugin-banner__body">
+              浮屿换了一套新的插件系统，旧插件不会再运行。官方插件都出了新版，原来的设置已经带过来了。
+            </div>
+            <ul class="plugin-migration">
+              <li data-v2-official="dev.focusd.weather">
+                <span class="plugin-migration__name">
+                  天气
+                  <small>
+                    旧版插件
+                  </small>
+                </span>
+                <span class="plugin-migration__state plugin-migration__state--ok">
+                  <svg aria-hidden="true" class="lucide lucide-check" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                  已换成新版，原来的设置带过来了
+                </span>
+              </li>
+              <li data-v2-official="dev.focusd.countdown">
+                <span class="plugin-migration__name">
+                  倒数日
+                  <small>
+                    旧版插件
+                  </small>
+                </span>
+                <span class="plugin-migration__state">
+                  新版在市场里
+                </span>
+                <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-action="migration-get" type="button">
+                  去安装
+                </button>
+              </li>
+              <li data-v2-other="com.example.custom">
+                <span class="plugin-migration__name">
+                  自定义小插件
+                  <small>
+                    旧版插件
+                  </small>
+                </span>
+                <span class="plugin-migration__state">
+                  作者还没出新版，暂时用不了
+                </span>
+              </li>
+            </ul>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn" data-action="migration-open-market" type="button">
+                <svg aria-hidden="true" class="lucide lucide-store" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                去插件市场
+              </button>
+              <button class="plugin-btn plugin-btn--ghost plugin-migration__dismiss" type="button">
+                知道了，不再提示
+              </button>
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 4 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              3 个在运行
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  4
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  3
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="attention" disabled="" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  0
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon">
+                世
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="世界时钟" type="button">
+                    世界时钟
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  收起时显示另一个时区的时间
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「世界时钟」" checked="" id="_id20_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon">
+                天
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="天气" type="button">
+                    天气
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  在岛上看实时气温和逐小时预报
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「天气」" checked="" id="_id21_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    未经审核
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    已停用
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · 本地文件（未经审核）
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Gadget」" id="_id22_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                </div>
+                <div class="plugin-row__facts">
+                  本地开发
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="nodeDl">
+      <h2 class="gallery__title">
+        运行环境下载中 / Runtime downloading
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="connecting">
+          <section class="plugin-banner plugin-banner--info" data-banner="runtime-downloading">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              正在准备插件运行环境
+            </div>
+            <div class="plugin-banner__body">
+              这台电脑上没有合适的 Node.js，浮屿把它下载到自己的数据目录，只下一次。下完插件会自动启动。
+            </div>
+            <div aria-valuemax="100" aria-valuemin="0" aria-valuenow="40" class="plugin-banner__progress" role="progressbar">
+              <i style="width: 40%"></i>
+            </div>
+            <div class="plugin-banner__meta">
+              <span>
+                Node.js
+              </span>
+              <span>
+                12.0 / 30.0 MB
+              </span>
+            </div>
+          </section>
+          <div class="plugin-page__summary">
+            <svg aria-hidden="true" class="lucide lucide-loader-circle plugin-spin" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            正在读取已装的插件…
+          </div>
+          <div aria-busy="true" class="plugin-list">
+            <div class="plugin-row plugin-row--skeleton">
+              <span class="plugin-icon"></span>
+              <div class="plugin-row__main">
+                <span class="plugin-skeleton" style="width: 28%"></span>
+                <span class="plugin-skeleton plugin-skeleton--thin" style="width: 53%"></span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--skeleton">
+              <span class="plugin-icon"></span>
+              <div class="plugin-row__main">
+                <span class="plugin-skeleton" style="width: 36%"></span>
+                <span class="plugin-skeleton plugin-skeleton--thin" style="width: 61%"></span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--skeleton">
+              <span class="plugin-icon"></span>
+              <div class="plugin-row__main">
+                <span class="plugin-skeleton" style="width: 22%"></span>
+                <span class="plugin-skeleton plugin-skeleton--thin" style="width: 47%"></span>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="nodeFail">
+      <h2 class="gallery__title">
+        运行环境下载失败 / Runtime failed
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="connecting">
+          <section class="plugin-banner plugin-banner--bad" data-banner="runtime-failed">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              没能下载插件运行环境
+            </div>
+            <div class="plugin-banner__body">
+              <span class="plugin-banner__error">
+                Node 22.15 or newer was not found; all 3 download sources failed
+              </span>
+              下载走系统代理；网络好了点「重试」，不用重启浮屿。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn plugin-btn--primary" data-action="runtime-retry" type="button">
+                <svg aria-hidden="true" class="lucide lucide-refresh-cw" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                重试
+              </button>
+            </div>
+          </section>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="safe">
+      <h2 class="gallery__title">
+        安全模式 / Safe mode
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <section class="plugin-banner plugin-banner--warn" data-banner="safe-mode">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              安全模式：你装的插件这次没有启动
+            </div>
+            <div class="plugin-banner__body">
+              插件连续 2 次没能正常跑满 1 分钟，浮屿这次先不启动你装的插件。安全模式下正常运行 1 分钟后，下次启动就恢复。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn" data-action="leave-safe-mode" disabled="" type="button">
+                退出安全模式
+              </button>
+              <button class="plugin-btn plugin-btn--ghost" data-action="find-culprit" type="button">
+                找出是哪个插件
+              </button>
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 4 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              0 个在运行
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  4
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  3
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="attention" disabled="" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  0
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="off" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                世
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="世界时钟" type="button">
+                    世界时钟
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    安全模式下没启动
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  收起时显示另一个时区的时间
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「世界时钟」" checked="" id="_id23_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="off" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                天
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="天气" type="button">
+                    天气
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    安全模式下没启动
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  在岛上看实时气温和逐小时预报
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「天气」" checked="" id="_id24_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    未经审核
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    已停用
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · 本地文件（未经审核）
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Gadget」" id="_id25_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="off" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                  <span class="plugin-row__state">
+                    ·
+                    安全模式下没启动
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  本地开发
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="safeVar">
+      <h2 class="gallery__title">
+        安全模式（启动参数）/ Safe mode (variable)
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <section class="plugin-banner plugin-banner--warn" data-banner="safe-mode">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              安全模式：你装的插件这次没有启动
+            </div>
+            <div class="plugin-banner__body">
+              这次是用启动参数打开的安全模式，要去掉那个参数再重启浮屿才会退出。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn plugin-btn--ghost" type="button">
+                <svg aria-hidden="true" class="lucide lucide-external-link" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                怎么去掉启动参数？
+              </button>
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 4 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              0 个在运行
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  4
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  3
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="attention" disabled="" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  0
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="off" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                世
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="世界时钟" type="button">
+                    世界时钟
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    安全模式下没启动
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  收起时显示另一个时区的时间
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「世界时钟」" checked="" id="_id26_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="off" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                天
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="天气" type="button">
+                    天气
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    安全模式下没启动
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  在岛上看实时气温和逐小时预报
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「天气」" checked="" id="_id27_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    未经审核
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    已停用
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · 本地文件（未经审核）
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Gadget」" id="_id28_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="off" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                  <span class="plugin-row__state">
+                    ·
+                    安全模式下没启动
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  本地开发
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="offline">
+      <h2 class="gallery__title">
+        插件进程连不上 / Offline
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="reconnecting">
+          <section class="plugin-banner plugin-banner--bad" data-banner="offline">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-loader-circle plugin-spin" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              插件进程连不上，正在重连…
+            </div>
+            <div class="plugin-banner__body">
+              下面是上次看到的状态，开关暂时不能用。重连一直不成功的话，重启浮屿试试。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn" data-action="open-diagnostics" type="button">
+                <svg aria-hidden="true" class="lucide lucide-activity" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                查看运行诊断
+              </button>
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 4 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  4
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  3
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="attention" disabled="" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  0
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list plugin-list--stale">
+            <div class="plugin-row" data-dot="off" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                C
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Clock" type="button">
+                    Clock
+                  </button>
+                  <span class="plugin-row__state">
+                    ·
+                    状态未知
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Clock」" checked="" disabled="" id="_id29_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    未经审核
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    已停用
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · 本地文件（未经审核）
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Gadget」" disabled="" id="_id30_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="off" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                  <span class="plugin-row__state">
+                    ·
+                    状态未知
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  本地开发
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="off" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                W
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Weather" type="button">
+                    Weather
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    状态未知
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Weather」" checked="" disabled="" id="_id31_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="hostOff">
+      <h2 class="gallery__title">
+        插件功能被关掉 / Plugins off
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="off">
+          <section class="plugin-banner plugin-banner--warn" data-banner="host-off">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-power" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              插件功能被启动参数关掉了
+            </div>
+            <div class="plugin-banner__body">
+              你装的插件这次都不会运行，设置和数据都还在。去掉那个启动参数、重启浮屿就恢复。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn plugin-btn--ghost" type="button">
+                <svg aria-hidden="true" class="lucide lucide-external-link" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                怎么打开？
+              </button>
+            </div>
+          </section>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="loading">
+      <h2 class="gallery__title">
+        加载中 / Loading
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="connecting">
+          <div class="plugin-page__summary">
+            <svg aria-hidden="true" class="lucide lucide-loader-circle plugin-spin" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+            正在读取已装的插件…
+          </div>
+          <div aria-busy="true" class="plugin-list">
+            <div class="plugin-row plugin-row--skeleton">
+              <span class="plugin-icon"></span>
+              <div class="plugin-row__main">
+                <span class="plugin-skeleton" style="width: 28%"></span>
+                <span class="plugin-skeleton plugin-skeleton--thin" style="width: 53%"></span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--skeleton">
+              <span class="plugin-icon"></span>
+              <div class="plugin-row__main">
+                <span class="plugin-skeleton" style="width: 36%"></span>
+                <span class="plugin-skeleton plugin-skeleton--thin" style="width: 61%"></span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--skeleton">
+              <span class="plugin-icon"></span>
+              <div class="plugin-row__main">
+                <span class="plugin-skeleton" style="width: 22%"></span>
+                <span class="plugin-skeleton plugin-skeleton--thin" style="width: 47%"></span>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage gallery__stage--narrow settings-stage--light" data-stage="narrow-error">
+      <h2 class="gallery__title">
+        窄窗口 / Narrow
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <section class="plugin-banner plugin-banner--bad" data-banner="problems">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              2 个插件出了问题
+            </div>
+            <div class="plugin-banner__body">
+              每个插件的处理按钮在下面那一行上。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn" data-action="open-diagnostics" type="button">
+                <svg aria-hidden="true" class="lucide lucide-activity" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                查看运行诊断
+              </button>
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 6 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              3 个在运行
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+            <span class="plugin-page__summary-warn">
+              <i class="plugin-page__dot plugin-page__dot--warn"></i>
+              2 个要处理
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  6
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  5
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip plugin-chip--warn" data-filter="attention" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  2
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon">
+                世
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="世界时钟" type="button">
+                    世界时钟
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  收起时显示另一个时区的时间
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「世界时钟」" checked="" id="_id32_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon">
+                天
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="天气" type="button">
+                    天气
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  在岛上看实时气温和逐小时预报
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「天气」" checked="" id="_id33_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="bad" data-plugin="@someone/flaky-plugin-with-a-really-long-identifier-that-should-not-overflow">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                F
+                <span class="plugin-icon__dot plugin-icon__dot--bad"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Flaky" type="button">
+                    Flaky
+                  </button>
+                  <span class="plugin-row__state plugin-row__state--bad">
+                    ·
+                    已暂停
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+                <div class="plugin-note plugin-note--bad" data-note="paused">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      60 秒内出错 5 次，先停到下次启动浮屿
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="restart" type="button">
+                      重新启用
+                    </button>
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="log" type="button">
+                      查看日志
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Flaky」" checked="" id="_id34_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    未经审核
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    已停用
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · 本地文件（未经审核）
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Gadget」" id="_id35_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                </div>
+                <div class="plugin-row__facts">
+                  本地开发
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="bad" data-plugin="@someone/feeds">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                R
+                <span class="plugin-icon__dot plugin-icon__dot--bad"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="RSS feeds" type="button">
+                    RSS feeds
+                  </button>
+                  <span class="plugin-row__state plugin-row__state--bad">
+                    ·
+                    启动失败
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+                <div class="plugin-note plugin-note--bad" data-note="failed">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-circle-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      TypeError: Cannot read properties of undefined (reading 'items')
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="restart" type="button">
+                      重启
+                    </button>
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="log" type="button">
+                      查看日志
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「RSS feeds」" checked="" id="_id36_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage gallery__stage--narrow settings-stage--light" data-stage="narrow-attention">
+      <h2 class="gallery__title">
+        窄窗口 / Narrow
+      </h2>
+      <div>
+        <div class="plugin-page" data-plugin-page="open">
+          <section class="plugin-banner plugin-banner--warn" data-banner="attention">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              2 个插件等你处理
+            </div>
+            <div class="plugin-banner__body">
+              要你确认的更新、在等别的功能、被市场撤销的插件，处理按钮都在各自那一行上。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn" data-action="only-attention" type="button">
+                只看需处理的
+              </button>
+            </div>
+          </section>
+          <section class="plugin-banner plugin-banner--info" data-banner="updates">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              1 个插件有新版本
+            </div>
+            <div class="plugin-banner__body">
+              番茄钟 v1.1.0。官方插件平时会自动更新，刚上架的版本等 3 天。
+            </div>
+          </section>
+          <div class="plugin-page__summary" data-summary="true">
+            <b>
+              装了 7 个插件
+            </b>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--ok"></i>
+              5 个在运行
+            </span>
+            <span>
+              <i class="plugin-page__dot plugin-page__dot--off"></i>
+              1 个已停用
+            </span>
+            <span class="plugin-page__summary-warn">
+              <i class="plugin-page__dot plugin-page__dot--warn"></i>
+              2 个要处理
+            </span>
+          </div>
+          <div class="plugin-page__toolbar">
+            <label class="plugin-search">
+              <svg aria-hidden="true" class="lucide lucide-search" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+              <input aria-label="搜索已装的插件" placeholder="搜索已装的插件" type="search" value="">
+            </label>
+            <div aria-label="筛选" class="plugin-page__filters" role="group">
+              <button aria-pressed="true" class="plugin-chip" data-filter="all" type="button">
+                全部
+                <span class="plugin-chip__count">
+                  7
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="on" type="button">
+                已启用
+                <span class="plugin-chip__count">
+                  6
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip" data-filter="off" type="button">
+                已停用
+                <span class="plugin-chip__count">
+                  1
+                </span>
+              </button>
+              <button aria-pressed="false" class="plugin-chip plugin-chip--warn" data-filter="attention" type="button">
+                需处理
+                <span class="plugin-chip__count">
+                  2
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="plugin-list">
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/pomodoro">
+              <span aria-hidden="true" class="plugin-icon">
+                番
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="番茄钟" type="button">
+                    番茄钟
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  专注 25 分钟，休息 5 分钟
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+                <div class="plugin-note plugin-note--info" data-note="update">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-download" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      有新版本 v1.1.0
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm plugin-btn--primary" data-row-action="update" type="button">
+                      更新
+                    </button>
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="whatsNew" type="button">
+                      看更新内容
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「番茄钟」" checked="" id="_id37_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/shady">
+              <span aria-hidden="true" class="plugin-icon">
+                可
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="可疑插件" type="button">
+                    可疑插件
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    0.3.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  已被市场撤下
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+                <div class="plugin-note plugin-note--bad" data-note="revoked">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      市场撤销了这个插件，建议卸载
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="uninstall" type="button">
+                      卸载…
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「可疑插件」" checked="" id="_id38_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@someone/clock">
+              <span aria-hidden="true" class="plugin-icon">
+                世
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="世界时钟" type="button">
+                    世界时钟
+                  </button>
+                  <span class="plugin-row__version">
+                    v
+                    2.0.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  收起时显示另一个时区的时间
+                </p>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「世界时钟」" checked="" id="_id39_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="@fuyu/weather">
+              <span aria-hidden="true" class="plugin-icon">
+                天
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="天气" type="button">
+                    天气
+                  </button>
+                  <span class="plugin-badge plugin-badge--official">
+                    官方
+                  </span>
+                  <span class="plugin-row__version">
+                    v
+                    1.2.0
+                  </span>
+                </div>
+                <p class="plugin-row__desc">
+                  在岛上看实时气温和逐小时预报
+                </p>
+                <div class="plugin-row__facts">
+                  插件市场 · 官方
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「天气」" checked="" id="_id40_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row plugin-row--off" data-dot="off" data-plugin="@me/gadget">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                G
+                <span class="plugin-icon__dot plugin-icon__dot--off"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Gadget" type="button">
+                    Gadget
+                  </button>
+                  <span class="plugin-badge plugin-badge--warn">
+                    未经审核
+                  </span>
+                  <span class="plugin-row__state">
+                    ·
+                    已停用
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  me · 本地文件（未经审核）
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Gadget」" id="_id41_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="ok" data-plugin="my-local-tool">
+              <span aria-hidden="true" class="plugin-icon">
+                M
+                <span class="plugin-icon__dot plugin-icon__dot--ok"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="my-local-tool" type="button">
+                    my-local-tool
+                  </button>
+                </div>
+                <div class="plugin-row__facts">
+                  本地开发
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="plugin-row" data-dot="wait" data-plugin="@someone/todo-sync">
+              <span aria-hidden="true" class="plugin-icon plugin-icon--dim">
+                T
+                <span class="plugin-icon__dot plugin-icon__dot--wait"></span>
+              </span>
+              <div class="plugin-row__main">
+                <div class="plugin-row__line">
+                  <button class="plugin-row__name" title="Todo sync" type="button">
+                    Todo sync
+                  </button>
+                  <span class="plugin-row__state plugin-row__state--wait">
+                    ·
+                    等待中
+                  </span>
+                </div>
+                <div class="plugin-row__facts">
+                  someone · 插件市场
+                </div>
+                <div class="plugin-note plugin-note--info" data-note="waiting">
+                  <span class="plugin-note__text">
+                    <span aria-hidden="true" class="plugin-note__icon">
+                      <svg aria-hidden="true" class="lucide lucide-info" fill="none" height="13" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="13" xmlns="http://www.w3.org/2000/svg"></svg>
+                    </span>
+                    <span>
+                      要用「待办」，但它现在关着
+                    </span>
+                  </span>
+                  <span class="plugin-note__actions">
+                    <button class="plugin-btn plugin-btn--sm" data-row-action="turnOnProvider" type="button">
+                      打开「待办」
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div class="plugin-row__aside">
+                <button aria-label="设置" class="plugin-icon-btn" data-action="open-settings" title="设置" type="button">
+                  <svg aria-hidden="true" class="lucide lucide-settings" fill="none" height="15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="15" xmlns="http://www.w3.org/2000/svg"></svg>
+                </button>
+                <div class="plugin-menu">
+                  <button aria-expanded="false" aria-haspopup="menu" aria-label="更多操作" class="plugin-icon-btn" title="更多操作" type="button">
+                    <svg aria-hidden="true" class="lucide lucide-ellipsis" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+                  </button>
+                </div>
+                <span class="plugin-row__switch">
+                  <span class="settings-switch">
+                    <input aria-label="启用「Todo sync」" checked="" id="_id42_" role="switch" type="checkbox">
+                    <span aria-hidden="true" class="settings-switch__track"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <p class="plugin-foot" data-footnote="true">
+            浮屿自带的功能（待办、音乐、剪贴板……）不算插件，在
+            <button class="plugin-link" data-action="open-overview" type="button">
+              「概览」
+            </button>
+            里开关。
+          </p>
+          <input accept=".fuyu" aria-hidden="true" class="plugin-file-input" data-testid="plugin-file-input" tabindex="-1" type="file">
+        </div>
+      </div>
+    </section>
+  </div>
+</body>

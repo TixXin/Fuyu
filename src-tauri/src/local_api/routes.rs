@@ -101,14 +101,7 @@ pub(super) fn route(method: &str, url: &str, body: &[u8]) -> Result<ApiCall, Api
             params.insert("source".into(), Value::String((*source).to_string()));
             Ok(call("agentStatus.clear", Value::Object(params), true))
         }
-        ("POST", ["v1", "dev", "plugins"]) => Ok(call("dev.load", body_object(body)?, true)),
-        ("POST", ["v1", "dev", "plugins", id, "reload"]) => Ok(call("dev.reload", json!({ "id": id }), true)),
-        ("DELETE", ["v1", "dev", "plugins", id]) => Ok(call("dev.unload", json!({ "id": id }), true)),
-        ("GET", ["v1", "dev", "plugins", id, "log"]) => Ok(call("dev.log", json!({ "id": id, "after": query_number(url, "after") }), false)),
-        (_, ["v1", "dev", "plugins"] | ["v1", "dev", "plugins", _] | ["v1", "dev", "plugins", _, "reload" | "log"]) => {
-            Err(ApiError::new(405, "Method not allowed for this path."))
-        }
-        (_, ["v1", "health"] | ["v1", "todos"] | ["v1", "todos", _] | ["v1", "note"] | ["v1", "agent-status", _]) => {
+        (_, ["v1", "health"] | ["v1", "todos"] | ["v1", "todos", _] | ["v1", "note"] | ["v1", "clipboard"] | ["v1", "agent-status", _]) => {
             Err(ApiError::new(405, "Method not allowed for this path."))
         }
         _ => Err(ApiError::new(404, "Unknown path.")),

@@ -38,8 +38,8 @@ fn uninstall_on_empty_home_creates_no_files() {
 }
 
 #[test]
-fn all_eighteen_harnesses_uninstall_cleanly_while_keeping_user_configs() {
-    let root = temp_root("all-18");
+fn all_harnesses_uninstall_cleanly_while_keeping_user_configs() {
+    let root = temp_root("all-harnesses");
     let home = root.join("home");
     let app_dir = root.join("fuyu");
     fs::create_dir_all(&app_dir).unwrap();
@@ -140,12 +140,19 @@ fn all_eighteen_harnesses_uninstall_cleanly_while_keeping_user_configs() {
     fs::create_dir_all(home.join(".pi/agent/extensions")).unwrap();
     fs::write(home.join(".pi/agent/extensions/keep.js"), "export default () => {};\n").unwrap();
 
+    fs::create_dir_all(home.join(".cursor")).unwrap();
+    fs::write(
+        home.join(".cursor/hooks.json"),
+        r#"{"version":1,"hooks":{"beforeShellExecution":[{"command":"./mine.sh"}]}}"#,
+    )
+    .unwrap();
+
     let running = app_dir.join(AGENT_RUNNING_SCRIPT_FILE_NAME);
     let status = app_dir.join(AGENT_STATUS_SCRIPT_FILE_NAME);
     let env = make_env(&home, &running, &status);
 
     let harnesses: Vec<_> = harness::with_hooks().collect();
-    assert_eq!(harnesses.len(), 18);
+    assert_eq!(harnesses.len(), 19);
     for (id, hooks) in &harnesses {
         (hooks.install)(&env).unwrap_or_else(|err| panic!("install {id}: {err}"));
     }
@@ -237,6 +244,9 @@ fn all_eighteen_harnesses_uninstall_cleanly_while_keeping_user_configs() {
     assert!(home.join(".copilot/hooks/other.json").is_file());
     assert!(!home.join(".pi/agent/extensions/fuyu-island.js").exists());
     assert!(home.join(".pi/agent/extensions/keep.js").is_file());
+    let cursor_json: Value =
+        serde_json::from_str(&fs::read_to_string(home.join(".cursor/hooks.json")).unwrap()).unwrap();
+    assert_eq!(cursor_json, json!({"version": 1, "hooks": {"beforeShellExecution": [{"command": "./mine.sh"}]}}));
 
     let droid_json: Value =
         serde_json::from_str(&fs::read_to_string(home.join(".factory/settings.json")).unwrap()).unwrap();
@@ -480,27 +490,17 @@ fn fail_open_commands_exit_zero_when_scripts_are_missing_and_run_when_present() 
     }
 
     let claude_entry = crate::agent_status::claude_hooks::claude_code_running_hook_entry(&missing_running);
-    let claude_args: Vec<String> = claude_entry["hooks"][0]["args"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|arg| arg.as_str().unwrap().to_string())
-        .collect();
-    let out = Command::new("/bin/sh").args(&claude_args).output().unwrap();
+    let claude_command = claude_entry["hooks"][0]["command"].as_str().unwrap();
+    let out = Command::new("/bin/sh").arg("-c").arg(claude_command).output().unwrap();
     assert!(out.status.success());
     assert!(out.stdout.is_empty() && out.stderr.is_empty());
 
     let real_script = root.join("fuyu-agent-running.sh");
     fs::write(&real_script, "#!/bin/sh\nread line\nprintf '%s:%s' \"$1\" \"$line\"\n").unwrap();
     let real_entry = crate::agent_status::claude_hooks::claude_code_running_hook_entry(&real_script);
-    let real_args: Vec<String> = real_entry["hooks"][0]["args"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|arg| arg.as_str().unwrap().to_string())
-        .collect();
     let mut child = Command::new("/bin/sh")
-        .args(&real_args)
+        .arg("-c")
+        .arg(real_entry["hooks"][0]["command"].as_str().unwrap())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()

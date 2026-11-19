@@ -43,6 +43,7 @@ import type { SettingsSoundsText } from "./sounds";
 import type { SettingsVersionHistoryText } from "./versionHistory";
 import * as fileShelf from "./fileShelf.ts";
 import * as screenshot from "./screenshot.ts";
+import * as plugins from "./plugins.ts";
 import * as modules from "./modules.ts";
 import * as overview from "./overview.ts";
 import * as messageSources from "./messageSources.ts";
@@ -81,7 +82,6 @@ import * as clipboard from "./clipboard.ts";
 import * as colors from "./colors.ts";
 import * as presets from "./presets.ts";
 import * as save from "./save.ts";
-import * as plugins from "./plugins.ts";
 import * as sounds from "./sounds.ts";
 import * as versionHistory from "./versionHistory.ts";
 

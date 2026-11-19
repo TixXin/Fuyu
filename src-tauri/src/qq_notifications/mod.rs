@@ -1,7 +1,6 @@
 mod history;
 mod launcher;
 mod listener;
-mod plugin_view;
 
 #[cfg(test)]
 mod tests;
@@ -24,8 +23,6 @@ use listener::{handle_poll, QQ_APP_ID};
 use crate::messages_plugin::{self, SourceSwitch};
 use crate::toast_notifications::{self, Subscription, ToastMatcher};
 use crate::user_error::UserError;
-
-pub(crate) use plugin_view::plugin_messages;
 
 const EVENT_NAME: &str = "qq-notifications-changed";
 
@@ -331,7 +328,6 @@ fn publish(
     newest_id: Option<String>,
 ) {
     let newest_id = newest_id.filter(|_| crate::coexist::banner_visible(true));
-    plugin_view::publish_received(&snapshot, newest_id.as_deref());
     let window_visible = crate::coexist::banner_visible(
         service
             .app

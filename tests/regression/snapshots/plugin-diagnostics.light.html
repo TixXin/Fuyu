@@ -1,0 +1,1219 @@
+<body>
+  <div id="gallery">
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="safe">
+      <h2 class="gallery__title">
+        安全模式 / Safe mode
+      </h2>
+      <div>
+        <div class="plugin-page plugin-diag">
+          <section class="plugin-banner plugin-banner--warn" data-banner="safe-mode">
+            <span aria-hidden="true" class="plugin-banner__icon">
+              <svg aria-hidden="true" class="lucide lucide-shield-alert" fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg"></svg>
+            </span>
+            <div class="plugin-banner__title">
+              安全模式：你装的插件这次没有启动
+            </div>
+            <div class="plugin-banner__body">
+              启动时按住了 Shift，这次先不启动你装的插件。下次正常启动就恢复。
+            </div>
+            <div class="plugin-banner__actions">
+              <button class="plugin-btn" data-action="leave-safe-mode" type="button">
+                退出安全模式
+              </button>
+              <button class="plugin-btn plugin-btn--ghost" data-action="find-culprit" type="button">
+                找出是哪个插件
+              </button>
+            </div>
+          </section>
+          <h3 class="plugin-page__heading">
+            插件进程
+            <span class="plugin-page__heading-meta">
+              你装的插件都跑在这个进程里
+            </span>
+          </h3>
+          <div class="plugin-card plugin-card--pad" data-process="open">
+            <div class="plugin-diag__line">
+              <span class="plugin-diag__state plugin-diag__state--ok">
+                正常运行
+              </span>
+              <span>
+                进程 4242 · Node 22.15.0
+              </span>
+            </div>
+            <div class="plugin-metrics">
+              <div class="plugin-metric" title="和任务管理器「内存」一栏同一个口径，不含和别的进程共享的页。">
+                <span>
+                  内存（私有工作集）
+                </span>
+                <b data-measure="private-working-set">
+                  25.2 MB
+                </b>
+              </div>
+              <div class="plugin-metric">
+                <span>
+                  累计 CPU
+                </span>
+                <b>
+                  830 ms
+                </b>
+              </div>
+              <div class="plugin-metric">
+                <span>
+                  已运行
+                </span>
+                <b>
+                  1m 5s
+                </b>
+              </div>
+            </div>
+          </div>
+          <h3 class="plugin-page__heading">
+            找出出问题的插件
+          </h3>
+          <div class="plugin-card plugin-card--pad" data-bisect-phase="idle">
+            <p class="plugin-diag__intro">
+              浮屿变卡或出错，又不知道是哪个插件？一步步临时停用一半你装的插件，几步就能找到。排查期间不改你的设置。
+            </p>
+            <button class="plugin-btn plugin-btn--sm" data-action="bisect-start" type="button">
+              开始排查
+            </button>
+          </div>
+          <h3 class="plugin-page__heading">
+            全部模块
+            <span class="plugin-page__heading-meta">
+              你装的 6 个插件 + 浮屿自带的 22 个模块
+            </span>
+          </h3>
+          <div class="plugin-card">
+            <div class="plugin-diag__scroll">
+              <table class="plugin-diag__table">
+                <thead>
+                  <tr>
+                    <th>
+                      名称
+                    </th>
+                    <th>
+                      状态
+                    </th>
+                    <th class="plugin-diag__num">
+                      CPU
+                    </th>
+                    <th class="plugin-diag__num">
+                      启动耗时
+                    </th>
+                    <th class="plugin-diag__num">
+                      活跃资源
+                    </th>
+                    <th class="plugin-diag__num">
+                      出错
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-diag-row="@someone/flaky-plugin-with-a-really-long-identifier-that-should-not-overflow" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--bad"></span>
+                        Flaky
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      已暂停
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num plugin-diag__err">
+                      5
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@someone/feeds" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--bad"></span>
+                        RSS feeds
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      启动失败
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num plugin-diag__err">
+                      1
+                    </td>
+                  </tr>
+                  <tr data-diag-row="agents" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        AI 代理
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num" title="300 次回调">
+                      900 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      1.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      7
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@fuyu/weather" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        Weather
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num" title="40 次回调">
+                      12.5 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@someone/clock" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        Clock
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="my-local-tool" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        my-local-tool
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@me/gadget" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        Gadget
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      已停用
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                  <tr data-diag-row="todos" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        待办
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      已停用
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="plugin-diag__more">
+              <button class="plugin-link" data-action="diag-show-all" type="button">
+                显示全部 28 个
+              </button>
+            </div>
+          </div>
+          <p class="plugin-foot">
+            CPU 是近似值：只算登记过的回调（事件、定时器、启动）的同步部分。点一行打开那个插件；内置模块的开关在各自的设置页。
+          </p>
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="running">
+      <h2 class="gallery__title">
+        正常 / Running
+      </h2>
+      <div>
+        <div class="plugin-page plugin-diag">
+          <h3 class="plugin-page__heading">
+            插件进程
+            <span class="plugin-page__heading-meta">
+              你装的插件都跑在这个进程里
+            </span>
+          </h3>
+          <div class="plugin-card plugin-card--pad" data-process="open">
+            <div class="plugin-diag__line">
+              <span class="plugin-diag__state plugin-diag__state--ok">
+                正常运行
+              </span>
+              <span>
+                进程 4242 · Node 22.15.0
+              </span>
+            </div>
+            <div class="plugin-metrics">
+              <div class="plugin-metric" title="插件进程自己报的常驻内存，含共享页，比实际占用大。">
+                <span>
+                  内存（工作集）
+                </span>
+                <b data-measure="rss">
+                  42.0 MB
+                </b>
+              </div>
+              <div class="plugin-metric">
+                <span>
+                  累计 CPU
+                </span>
+                <b>
+                  830 ms
+                </b>
+              </div>
+              <div class="plugin-metric">
+                <span>
+                  已运行
+                </span>
+                <b>
+                  1m 5s
+                </b>
+              </div>
+            </div>
+          </div>
+          <h3 class="plugin-page__heading">
+            找出出问题的插件
+          </h3>
+          <div class="plugin-card plugin-card--pad" data-bisect-phase="idle">
+            <p class="plugin-diag__intro">
+              浮屿变卡或出错，又不知道是哪个插件？一步步临时停用一半你装的插件，几步就能找到。排查期间不改你的设置。
+            </p>
+            <button class="plugin-btn plugin-btn--sm" data-action="bisect-start" type="button">
+              开始排查
+            </button>
+          </div>
+          <h3 class="plugin-page__heading">
+            全部模块
+            <span class="plugin-page__heading-meta">
+              你装的 6 个插件 + 浮屿自带的 22 个模块
+            </span>
+          </h3>
+          <div class="plugin-card">
+            <div class="plugin-diag__scroll">
+              <table class="plugin-diag__table">
+                <thead>
+                  <tr>
+                    <th>
+                      名称
+                    </th>
+                    <th>
+                      状态
+                    </th>
+                    <th class="plugin-diag__num">
+                      CPU
+                    </th>
+                    <th class="plugin-diag__num">
+                      启动耗时
+                    </th>
+                    <th class="plugin-diag__num">
+                      活跃资源
+                    </th>
+                    <th class="plugin-diag__num">
+                      出错
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-diag-row="@someone/flaky-plugin-with-a-really-long-identifier-that-should-not-overflow" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--bad"></span>
+                        Flaky
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      已暂停
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num plugin-diag__err">
+                      5
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@someone/feeds" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--bad"></span>
+                        RSS feeds
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      启动失败
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num plugin-diag__err">
+                      1
+                    </td>
+                  </tr>
+                  <tr data-diag-row="agents" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        AI 代理
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num" title="300 次回调">
+                      900 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      1.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      7
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@fuyu/weather" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        Weather
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num" title="40 次回调">
+                      12.5 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@someone/clock" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        Clock
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="my-local-tool" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        my-local-tool
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@me/gadget" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        Gadget
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      已停用
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                  <tr data-diag-row="todos" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        待办
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      已停用
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="plugin-diag__more">
+              <button class="plugin-link" data-action="diag-show-all" type="button">
+                显示全部 28 个
+              </button>
+            </div>
+          </div>
+          <p class="plugin-foot">
+            CPU 是近似值：只算登记过的回调（事件、定时器、启动）的同步部分。点一行打开那个插件；内置模块的开关在各自的设置页。
+          </p>
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="offline">
+      <h2 class="gallery__title">
+        连不上 / Offline
+      </h2>
+      <div>
+        <div class="plugin-page plugin-diag">
+          <h3 class="plugin-page__heading">
+            插件进程
+            <span class="plugin-page__heading-meta">
+              你装的插件都跑在这个进程里
+            </span>
+          </h3>
+          <div class="plugin-card plugin-card--pad" data-process="reconnecting">
+            <div class="plugin-diag__line">
+              <span class="plugin-diag__state plugin-diag__state--bad">
+                重连中
+              </span>
+            </div>
+          </div>
+          <h3 class="plugin-page__heading">
+            找出出问题的插件
+          </h3>
+          <div class="plugin-card plugin-card--pad" data-bisect-phase="idle">
+            <p class="plugin-diag__intro">
+              浮屿变卡或出错，又不知道是哪个插件？一步步临时停用一半你装的插件，几步就能找到。排查期间不改你的设置。
+            </p>
+            <button class="plugin-btn plugin-btn--sm" data-action="bisect-start" disabled="" type="button">
+              开始排查
+            </button>
+          </div>
+          <h3 class="plugin-page__heading">
+            全部模块
+            <span class="plugin-page__heading-meta">
+              你装的 6 个插件 + 浮屿自带的 22 个模块
+            </span>
+          </h3>
+          <div class="plugin-card">
+            <div class="plugin-diag__scroll">
+              <table class="plugin-diag__table">
+                <thead>
+                  <tr>
+                    <th>
+                      名称
+                    </th>
+                    <th>
+                      状态
+                    </th>
+                    <th class="plugin-diag__num">
+                      CPU
+                    </th>
+                    <th class="plugin-diag__num">
+                      启动耗时
+                    </th>
+                    <th class="plugin-diag__num">
+                      活跃资源
+                    </th>
+                    <th class="plugin-diag__num">
+                      出错
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-diag-row="@someone/flaky-plugin-with-a-really-long-identifier-that-should-not-overflow" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        Flaky
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      状态未知
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num plugin-diag__err">
+                      5
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@someone/feeds" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        RSS feeds
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      状态未知
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num plugin-diag__err">
+                      1
+                    </td>
+                  </tr>
+                  <tr data-diag-row="agents" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        AI 代理
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num" title="300 次回调">
+                      900 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      1.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      7
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@fuyu/weather" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        Weather
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      状态未知
+                    </td>
+                    <td class="plugin-diag__num" title="40 次回调">
+                      12.5 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@someone/clock" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        Clock
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      状态未知
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="my-local-tool" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        my-local-tool
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      状态未知
+                    </td>
+                    <td class="plugin-diag__num" title="12 次回调">
+                      4.20 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      0.40 ms
+                    </td>
+                    <td class="plugin-diag__num">
+                      4
+                    </td>
+                    <td class="plugin-diag__num">
+                      0
+                    </td>
+                  </tr>
+                  <tr data-diag-row="@me/gadget" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        Gadget
+                        <span class="plugin-diag__kind">
+                          插件
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      已停用
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                  <tr data-diag-row="todos" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        待办
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      已停用
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="plugin-diag__more">
+              <button class="plugin-link" data-action="diag-show-all" type="button">
+                显示全部 28 个
+              </button>
+            </div>
+          </div>
+          <p class="plugin-foot">
+            CPU 是近似值：只算登记过的回调（事件、定时器、启动）的同步部分。点一行打开那个插件；内置模块的开关在各自的设置页。
+          </p>
+        </div>
+      </div>
+    </section>
+    <section class="gallery__stage settings-stage settings-stage--light" data-stage="hostOff">
+      <h2 class="gallery__title">
+        插件功能被关掉 / Plugins off
+      </h2>
+      <div>
+        <div class="plugin-page plugin-diag">
+          <h3 class="plugin-page__heading">
+            插件进程
+            <span class="plugin-page__heading-meta">
+              你装的插件都跑在这个进程里
+            </span>
+          </h3>
+          <div class="plugin-card plugin-card--pad">
+            <p class="plugin-diag__intro">
+              插件功能被启动参数关掉了，这次没有插件进程。
+            </p>
+          </div>
+          <h3 class="plugin-page__heading">
+            找出出问题的插件
+          </h3>
+          <div class="plugin-card plugin-card--pad" data-bisect-phase="idle">
+            <p class="plugin-diag__intro">
+              装了插件才能排查。
+            </p>
+            <button class="plugin-btn plugin-btn--sm" data-action="bisect-start" disabled="" type="button">
+              开始排查
+            </button>
+          </div>
+          <h3 class="plugin-page__heading">
+            全部模块
+            <span class="plugin-page__heading-meta">
+              你装的 0 个插件 + 浮屿自带的 22 个模块
+            </span>
+          </h3>
+          <div class="plugin-card">
+            <div class="plugin-diag__scroll">
+              <table class="plugin-diag__table">
+                <thead>
+                  <tr>
+                    <th>
+                      名称
+                    </th>
+                    <th>
+                      状态
+                    </th>
+                    <th class="plugin-diag__num">
+                      CPU
+                    </th>
+                    <th class="plugin-diag__num">
+                      启动耗时
+                    </th>
+                    <th class="plugin-diag__num">
+                      活跃资源
+                    </th>
+                    <th class="plugin-diag__num">
+                      出错
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-diag-row="todos" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--off"></span>
+                        待办
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      已停用
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                  <tr data-diag-row="calendar" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        日历
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                  <tr data-diag-row="music" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        音乐和歌词
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                  <tr data-diag-row="clipboard" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        剪贴板
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                  <tr data-diag-row="screenshot" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        截图和录屏
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                  <tr data-diag-row="file-shelf" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        文件中转
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                  <tr data-diag-row="translation" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        快捷翻译
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                  <tr data-diag-row="voice-input" tabindex="0">
+                    <td>
+                      <span class="plugin-diag__name">
+                        <span aria-hidden="true" class="plugin-diag__dot plugin-icon__dot--ok"></span>
+                        语音输入
+                        <span class="plugin-diag__kind">
+                          内置
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      运行中
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                    <td class="plugin-diag__num">
+                      –
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="plugin-diag__more">
+              <button class="plugin-link" data-action="diag-show-all" type="button">
+                显示全部 22 个
+              </button>
+            </div>
+          </div>
+          <p class="plugin-foot">
+            CPU 是近似值：只算登记过的回调（事件、定时器、启动）的同步部分。点一行打开那个插件；内置模块的开关在各自的设置页。
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>

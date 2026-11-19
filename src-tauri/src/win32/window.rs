@@ -2,7 +2,7 @@ use windows::{
     core::BOOL,
     Win32::{
         Foundation::{HWND, LPARAM, POINT, RECT, WPARAM},
-        Graphics::Gdi::{MonitorFromWindow, MONITOR_DEFAULTTONEAREST},
+        Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST},
         System::Threading::{AttachThreadInput, GetCurrentThreadId},
         UI::{
             Input::KeyboardAndMouse::IsWindowEnabled,
@@ -14,7 +14,7 @@ use windows::{
                 GetWindowRect, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindowVisible, SendMessageTimeoutW,
                 SetForegroundWindow, SetWindowDisplayAffinity, SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, WDA_EXCLUDEFROMCAPTURE, WDA_NONE, GW_OWNER, SMTO_ABORTIFHUNG,
                 SMTO_BLOCK, SMTO_ERRORONEXIT, SW_HIDE, SW_RESTORE, SW_SHOWNOACTIVATE, WINDOWPLACEMENT, WM_NULL,
-                WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+                WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW, WS_EX_TRANSPARENT,
             },
         },
     },
@@ -69,6 +69,50 @@ pub(crate) fn is_visible(window: HWND) -> bool {
 
 pub(crate) fn is_minimized(window: HWND) -> bool {
     unsafe { IsIconic(window) }.as_bool()
+}
+
+pub(crate) fn process_id(window: HWND) -> u32 {
+    let mut process_id = 0;
+    unsafe { GetWindowThreadProcessId(window, Some(&mut process_id)) };
+    process_id
+}
+
+fn covers_its_monitor(window: HWND) -> bool {
+    let Some(rect) = window_rect(window) else {
+        return false;
+    };
+    let mut info = MONITORINFO { cbSize: std::mem::size_of::<MONITORINFO>() as u32, ..Default::default() };
+    let monitor = unsafe { MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST) };
+    unsafe { GetMonitorInfoW(monitor, &mut info) }.as_bool()
+        && rect.left <= info.rcMonitor.left
+        && rect.top <= info.rcMonitor.top
+        && rect.right >= info.rcMonitor.right
+        && rect.bottom >= info.rcMonitor.bottom
+}
+
+fn is_overlay_or_desktop(window: HWND) -> bool {
+    let style = unsafe { GetWindowLongPtrW(window, GWL_EXSTYLE) } as u32;
+    style & (WS_EX_NOACTIVATE.0 | WS_EX_TOOLWINDOW.0 | WS_EX_TRANSPARENT.0) != 0
+        || matches!(class_name(window).as_str(), "Progman" | "WorkerW")
+}
+
+pub(crate) fn topmost_fullscreen_window(skip_process: u32) -> Option<HWND> {
+    let mut found = None;
+    let _ = for_each_top_level_window(|window| {
+        if found.is_some()
+            || !is_visible(window)
+            || is_minimized(window)
+            || has_owner(window)
+            || process_id(window) == skip_process
+            || is_overlay_or_desktop(window)
+        {
+            return;
+        }
+        if covers_its_monitor(window) {
+            found = Some(window);
+        }
+    });
+    found
 }
 
 pub(crate) fn foreground_window() -> HWND {

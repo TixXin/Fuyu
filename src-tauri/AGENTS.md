@@ -11,17 +11,22 @@ src-tauri/src/
 ├── tray.rs                  # 托盘图标与事件：左键、右键都开关托盘卡片（tray_menu/），卡片窗口打不开时才弹原生精简菜单（显示 / 隐藏岛屿、设置、退出），文字跟随岛屿语言（命令 set_tray_language）
 ├── tray_menu/               # 托盘卡片（C99.2）：窗口 tray-menu 的创建、显示、失焦关闭（window.rs），弹出位置的纯函数（place.rs），命令 tray_menu_state / tray_menu_action / tray_menu_resize；Mac 上的面板在 macos/tray_panel.rs
 ├── tray_mark.rs             # 只在 macOS 上编译：菜单栏用的单色模板图，按 mark.svg 的胶囊在代码里画
+├── tray_visibility.rs       # 托盘 / 菜单栏图标显示与否（tray-icon.json，建托盘时页面还没加载所以放原生侧）；隐藏后再次打开浮屿时显示岛并打开设置
 ├── island/                  # 主窗口：命令、窗口状态、几何计算、毛玻璃、鼠标穿透（banner_hit.rs：新消息横幅的可点区域）、贴边动画
+├── wallpaper/               # 读各显示器的桌面壁纸给岛的背景用（get_wallpapers，thumbnail.rs 缩成 JPEG），变了发 wallpaper-changed；Mac 上是 unsupported.rs
 ├── todos/                   # 待办与每日笔记：todos.json 持久化、从旧版 localStorage 迁移、命令与插件/本地接口读写
 ├── agent_approval/          # 在岛上审批（B6 第 2 期）：127.0.0.1 上的审批端点（标准库 TcpListener，挂起时能发现 Agent 断开）、按会话排队、等待上限、agent-approval.json；监听可以停下再绑回（`pause` / `resume`），开发版可以在正式版的端口上用它的 token 多开一路（`serve_for_release`，F39.5）
 ├── agent_status/            # AI 代理状态：快照、运行标记、Codex / Claude Code hook 安装；hooks/ 为编入二进制的 hook 脚本；sound_packs.rs 为导入的音效包（应用数据目录的 sound-packs/）
 │                            #   reply_marker.rs：可选的回复状态标记（B9），增删 CLAUDE.md 里岛屿自己的那段说明、识别回复末行的标记
-├── phone_push.rs            # 手机推送（Bark）：设备 Key 凭据存取、发送推送、锁屏与空闲时间查询命令
+├── phone_push/              # 手机推送（Bark）：设备 Key 凭据存取、发送推送、锁屏与空闲时间查询命令
 ├── claude_usage/            # 用量环（内置插件 claude-usage）：可选的「直接向 Anthropic 查询」只读 Claude Code 凭据、经 http(s) 代理（插件配置 → HTTPS_PROXY → Windows 系统代理，从不直连）请求 oauth/usage，后台轮询与退避（background.rs 把轮询登记成插件的后台 poller，关掉插件就停）；结果由 agent_status 的 get_agent_usage 合并（source.rs 为取数与解析）；plan.rs 是 GLM、Kimi 的用量和 Key（命令 get_plan_usage、set_plan_key、has_plan_key）
 ├── ssh_tunnel/              # SSH 代理隧道（第 3 版内置插件 ssh-tunnel，background.rs 把本地代理探测和反向隧道登记成后台 tunnels，关掉插件就停）：ssh-tunnels.json（config.rs），每台主机一条常驻 ssh -R、作业对象、退避重连（tunnel.rs），服务器端口占用检查，本地代理端口自动检测（local_proxy.rs）
 ├── cc_connect/              # cc-connect 手机连接（第 3 版内置插件 cc-connect，background.rs 把看护线程登记成后台 runner，关掉插件就停）：找程序（插件设置 → 正在运行 → PATH → 岛下载的 → C/D 盘 Program Files，locate.rs）、下载并核对发布包（install.rs）、只读会话列表（chats.rs）、检查机器人 token（bots.rs）、往 config.toml 追加项目（config_file.rs）、飞书扫码（feishu.rs）、看护岛启动的 cc-connect（runner.rs）、经 cc-connect send 发消息
 ├── system/                  # 开机自启（注册表）、更新代理与配置、待办 Markdown 导出；update_runtime.rs 为跨窗口更新状态与互斥，update_notifications.rs 为更新系统通知与白名单诊断
+├── sync/                    # 跨设备同步：每台设备只写自己的远端目录、读全部再在本地逐条合并（engine.rs、merge.rs、clock.rs 的 HLC），后端是文件夹（backend_folder.rs）和 WebDAV（webdav/），端到端加密（crypto/），各类数据在 categories/（待办、设置、片段、链接、剪贴板收藏）；数据文件见 docs/architecture/data-storage.md
+├── theme_market.rs          # 设置 → 主题市场：经下载镜像读 TixXin/fuyu-plugins 的 themes.json（命令 get_theme_market）
 ├── rename_migration/        # 改名迁移（D17）：首次启动时把改名前的数据目录、凭据、开机自启、hook 迁移到 com.tixxin.fuyu，并静默卸载旧安装；各处旧名兼容的清单见 docs/architecture/contracts.md「改名兼容（D17）」
+├── uninstall_cleanup.rs     # 卸载前清理：带卸载参数启动时 lib.rs 先走这里（maybe_run_from_args），同步移除 Agent 钩子、凭据和受管的数据文件后直接退出，不建 WebView、不占单实例锁
 ├── clipboard_history/
 ├── coexist/                 # 开发版和正式版抢系统资源时谁让谁（F39.4）：state.rs 纯判断，mod.rs 轮询对方在不在（开发版探测单实例互斥量，正式版探测开发版持有的 dev-first 互斥量，放手后持有 release-yielded；正式版只在本机有开发版数据目录时才起线程）、`yielding()`、命令 get_dev_priority / set_dev_priority、状态翻转时让五处快捷键重新注册、让审批服务停下或接管（F39.5）；让出时提醒不弹横幅（`banner_visible`）；Mac 上是 unsupported.rs
 ├── file_shelf/              # 文件中转：路径列表（file-shelf.json）与命令；拖出调用 win32/ole.rs
@@ -30,21 +35,26 @@ src-tauri/src/
 ├── pets/                    # Codex Pets（petdex）：只读列出 ~/.codex/pets 与 <app data>/pets，校验后以 data URL 返回图集
 ├── local_api/               # 本地接口（第 3 版内置插件 local-api，background.rs 把 HTTP 服务登记成后台 server，关掉插件就停）：127.0.0.1 HTTP（tiny_http）、鉴权与路由、转给 main 窗口的桥、local-api.json；switches.rs 让转给待办、Agent、剪贴板的请求在那个插件关着时回 503；settings.rs 是设置页的命令（令牌只由 Rust 复制）
 ├── plugin_kernel/           # 插件平台第 3 版的宿主：默认启动（设 FUYU_PLUGINS_V3=0 关掉），正式安装包用资源目录里的宿主；找 Node（找下载的状态和重试在 node_status.rs）、在数据目录的 plugins-v3/ 下拉起 packages/plugin-base 的宿主，用 platform::job 管住它（containment.rs）；keybindings.rs 同步第 3 版插件全局热键，plugin_windows.rs 管理实验独立窗口（plugin-window-<n>）。看管宿主的通用部分在 crates/plugin-base
-├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、插件自己的窗口（windows/，实验接口，E34）、内置插件（builtin.rs，已全部迁到第 3 版）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）
 ├── media_control/
 ├── calendar/                # 日历：CalDAV（caldav.rs）和 ICS 订阅链接，iCalendar 解析和重复日程展开（ics.rs，rrule），会议链接识别（meeting_link.rs），来源配置与凭据（sources.rs）
 ├── lyrics/                  # 音乐页歌词：本地 .lrc 文件夹（local.rs）、LRCLIB（lrclib.rs，用户开启才联网）、按歌名歌手时长匹配（matching.rs），在线结果缓存在 lyrics-cache/
 ├── system_levels/           # 音量、亮度变化提示：后台线程读默认输出的音量和静音、笔记本屏幕亮度（win32/brightness.rs，WMI），变化时发 system-level-changed 事件
 ├── device_events/           # 设备提示：后台线程列出在用的耳机和蓝牙音频输出（win32/audio_outputs.rs）、读蓝牙电量（win32/devnode.rs）和电源（win32/power.rs），变化时发 device-alert 事件；判断规则在 tracker.rs
-├── device_use.rs            # 摄像头、麦克风正在被哪些程序使用（读注册表 CapabilityAccessManager\ConsentStore），打开系统隐私设置
+├── device_use/              # 摄像头、麦克风正在被哪些程序使用（读注册表 CapabilityAccessManager\ConsentStore），打开系统隐私设置；Mac 上整个模块换成 device_use/macos.rs
 ├── mail/                    # 邮箱（命令名仍为 *_qq_mail）：附件（attachments.rs）、命令、每个邮箱一个后台服务（accounts.rs）及其崩溃后重启（supervisor.rs）、IMAP 会话、正文与内嵌图片解析、凭据
 ├── qq_notifications/        # QQ 通知监听；repair-qq-notification-registration.ps1 编入二进制，也可手动运行
 ├── wechat_reminders/        # 提醒服务与命令；source.rs 为托盘闪烁监听（examples 通过 #[path] 复用）
+├── messages_plugin.rs       # 内置插件 messages：各消息来源的名字、从插件配置读开关（source_on），把每个来源的后台 worker 登记到插件内核
+├── im_sources/              # 7 款聊天软件（Telegram、Discord、WhatsApp、TIM、飞书、钉钉、企业微信）的消息提醒：来源表（specs.rs）、快照（state.rs），Windows 读系统通知和任务栏闪烁（windows.rs），Mac 读程序坞角标（macos.rs），变化发 im-sources-changed
+├── toast_notifications/     # Windows 系统通知的共用读取：单线程轮询 UserNotificationListener（poller.rs）、按通知缓存来源应用（cache.rs）、分给订阅的来源（router.rs）
 ├── translation/             # 快捷翻译：窗口、全局快捷键、凭据与翻译请求（mod.rs）
+├── voice_input/             # 语音输入：快捷键、录音（capture.rs）、下载识别组件和模型并核对 SHA-256（download.rs、packs.rs）、经 crates/sherpa-runtime 离线识别（engine.rs）；Mac 上换成 `*_macos.rs`
+├── timer/                   # 内置插件 timer 的全局快捷键（默认 Ctrl+Alt+K，配置在 plugins.yml），按下时打开岛的计时器页；Mac 上是 hotkey_macos.rs
 ├── settings_window/         # 设置窗口：按需创建与显示（mod.rs）
 ├── onboarding_window/       # 新手引导：按需创建的透明遮罩，铺满岛所在屏幕的工作区（mod.rs）；跟着真岛发位置、只在卡片上接住鼠标（overlay.rs）
 ├── webview_recovery.rs      # 窗口的 WebView2 渲染进程崩溃或无响应后自动重载（D66）：on_page_load 时给每个 WebView 挂一次，同一窗口 1 分钟内崩 3 次后停在崩溃页，记 webview-crashes.log；Mac 上是 webview_recovery_unsupported.rs
 ├── webview_memory.rs        # 隐藏的翻译、剪贴板、截图选区窗口把 WebView2 的 MemoryUsageTargetLevel 设成 Low、显示前改回 Normal（D48，默认关，设 FUYU_WEBVIEW_LOW_MEMORY=1 才生效）；Mac 上是 webview_memory_unsupported.rs
+├── emit_diagnostics.rs      # 只在调试和测试构建编译，设 FUYU_EMIT_DIAGNOSTICS=1 才开：统计各事件发了多少次、多少次载荷没变，排查事件发得太频繁（docs/investigations/emit-frequency-audit.md）
 ├── settings_file.rs         # 数据目录里的 settings.json（D30.2）：BACKUP_KEYS 设置的文件镜像，格式同设置备份；命令 read_settings_file / write_settings_file
 ├── shortcut_capture.rs      # 设置窗口录快捷键期间（命令 set_shortcut_capture）：浮屿自己的全局快捷键被按下不执行，改发 shortcut-captured 给录制按钮；Mac 在 macos/hotkeys.rs 的分发里拦，Windows 在各模块的 WM_HOTKEY 里拦
 ├── home_dir.rs              # 家目录（#50，D30）：浮屿的数据目录只从这里取 fuyu_home(app.path())，不要直接调 app_data_dir()；FUYU_HOME → home.json 指针 → ~/.fuyu；home_dir/migration.rs 为升级时复制旧数据、重装钩子、复制待办 Markdown，见 docs/features/data-home.md
@@ -54,18 +64,18 @@ src-tauri/src/
 ├── notification_diagnostics.rs
 ├── user_error.rs            # 用户看到的错误：错误码、文案参数和外部原话（D15），前端按界面语言显示；凭据管理器的通用错误；
 │                            #   Mac 上的 unsupported()（错误码 platform.unsupported）和批量生成「暂不支持」命令的 unsupported_commands!
+├── user_error_codes.json    # 全部错误码的清单：新 code 要加进来；Rust 测试核对它和代码里 UserError::new 用到的一致（code 只能写字面量），tests/unit/native-error.test.mjs 核对它和 errors.ts 的文案一致
 ├── platform_support.rs      # 命令 get_platform_support：当前系统和它还不支持的功能，前端据此在设置和岛上隐藏
-├── platform.rs              # 两个平台都有的平台层模块（icon、job、process、process_env、process_times、process_tree）：Windows 上取 win32/，macOS 上取 macos/
-├── macos/                   # macOS 平台层（G1，决定 M10），和 win32/ 一样是允许 unsafe 的地方；第 0 步只有和 win32/ 同名同签名的空实现
+├── platform.rs              # 两个平台都有的平台层模块（icon、job、process、process_env、process_times、process_tree、session）：Windows 上取 win32/，macOS 上取 macos/
+├── macos/                   # macOS 平台层（G1，决定 M10），和 win32/ 一样是允许 unsafe 的地方：和 win32/ 同名同签名的平台模块（process、session、icon、job 等），以及 Mac 独有的实现（岛和托盘的 NSPanel、刘海、毛玻璃、程序坞角标、辅助功能、热键、截屏、OCR 等），各功能在 Mac 上的支持情况见 docs/architecture/platforms.md
 └── win32/                   # Win32 / COM 的安全封装，和 macos/ 一起是 crate 中允许 unsafe 的地方：window（窗口查询、枚举、前台切换）、
                              # message_window（隐藏消息窗口与安全的窗口过程）、named_mutex（探测、持有命名互斥量）、hotkey、win_key_hook、clipboard、shell_hook、input、
                              # com（COM / WinRT 初始化守卫）、audio、ole（文件拖出）、process / process_times / process_env /
                              # process_memory / process_tree、registry、credentials、dwm、icon、ocr、chinese、screen_capture、
-                             # capture_targets、taskbar、uia_list / uia_tabs、url_protocol、brightness、
-                             # notification_state（前台是否有全屏程序）、webview_page（插件自定义界面的独立 WebView2 页面，P8）、webview_crash（订阅 WebView2 的 ProcessFailed，D66）、webview_memory（MemoryUsageTargetLevel，D48）、
-                             # plugin_window（插件窗口：不经过 Tauri 的顶层窗口、标题条、层级、透明、小组件不拿焦点、屏幕列表，E34）、
-                             # job（插件进程的作业对象与挂起启动）、known_folder（下载文件夹等已知文件夹）、
-                             # session_notifications（锁屏、睡眠唤醒通知与键鼠空闲时间）、audio_outputs（在用的音频输出及类型）、
+                             # capture_targets、taskbar、uia_list / uia_tabs、brightness、
+                             # notification_state（前台是否有全屏程序）、webview_crash（订阅 WebView2 的 ProcessFailed，D66）、webview_memory（MemoryUsageTargetLevel，D48）、
+                             # job（插件宿主进程的作业对象与挂起启动）、known_folder（下载文件夹等已知文件夹）、
+                             # session（是否锁屏与键鼠空闲时间，和 macos/session.rs 同签名）、audio_outputs（在用的音频输出及类型）、
                              # devnode（设备节点属性：容器、蓝牙电量）、power（电源与电池）、graphics_capture（D3D11 设备与 WGC 显示器采集，帧留在 GPU）、
                              # video_writer（Media Foundation Sink Writer：硬件 H.264 写 MP4，失败换软件；可带 AAC 声音）、
                              # audio_capture（WASAPI 录系统声音和麦克风，系统声音同时开一路静音播放流，防止没声音时断包）
@@ -102,7 +112,6 @@ src-tauri/src/
 - 事件名定义为模块内的 `const`，向特定窗口发事件时使用窗口 label 常量（例如 `settings_window::WINDOW_LABEL`），不写字面量。
 - **命令和事件不返回密钥明文**（E36.3.7）：返回值和事件里不放密码、令牌、API 密钥、授权码，前端只拿 `has_xxx → bool` 这类状态；要用密钥的请求在 Rust 里拼好发出去。带密钥的网址发请求时，错误里去掉网址（reqwest 错误先 `without_url()`，或 `redact`）再 `.detail`。`pnpm check:secrets`（`scripts/check-secret-fields.mjs`）扫带 `Serialize` 的结构体，字段名像密钥、类型是字符串或 `Value` 的会报错；只写文件、不交给窗口的配置和例外登记在 `scripts/secret-fields-allowlist.json`，每条写理由，新增要在 PR 正文说明。规则和例外名单见 [v3-secrets.md](../docs/architecture/plugins/v3-secrets.md)。
 - 新增命令后，同步更新前端对应的 `api.ts`；用到插件权限时更新 `capabilities/default.json`。新窗口的 label 必须加入 capabilities 的 `windows` 列表。
-- **插件 API 的新能力先进实验通道**（2026-11-14 起，用户定，E30）：新方法、事件、贡献点或给已有方法加的行为，先放进 `plugin_host/dev.rs` 的 `EXPERIMENTAL_APIS`，只给开发模式的插件用；满足 [v2-platform.md](../docs/architecture/plugins/v2-platform.md) 3.1 节的转正条件后才进 `initialize.capabilities`。给已有方法加一个旧插件不会传的可选字段，不算新能力。
 
 ## 错误处理
 
@@ -149,6 +158,6 @@ src-tauri/src/
 
 - 修改 `tauri.conf.json` 中的窗口配置时，同步检查 `capabilities/default.json`、前端 `main.tsx` 的窗口分发，以及 Rust 中的 label 常量。
 - `agent_status/hooks/fuyu-agent-*.{cmd,ps1}` 和 `qq_notifications/repair-qq-notification-registration.ps1` 通过 `include_str!` 编入二进制，修改后需要完整的 Rust 验证。
-- clippy lint 在 `Cargo.toml` 的 `[lints.clippy]` 中声明（`undocumented_unsafe_blocks`、`unwrap_used`、`expect_used` 为 deny），测试代码的放行写在 `clippy.toml`；不要在源文件中用 `#![warn]` / `#[allow]` 重复声明这些 lint。`cargo clippy --all-targets` 保持 0 告警；个别确实无法消除的默认 lint（例如参数即 IPC 契约的命令触发 `too_many_arguments`）在该项上用带 `reason` 的 `#[expect(...)]`。
+- clippy lint 在 `Cargo.toml` 的 `[lints.clippy]` 中声明（`unwrap_used`、`expect_used` 为 deny），测试代码的放行写在 `clippy.toml`；不要在源文件中用 `#![warn]` / `#[allow]` 重复声明这些 lint。`cargo clippy --all-targets` 保持 0 告警；个别确实无法消除的默认 lint（例如参数即 IPC 契约的命令触发 `too_many_arguments`）在该项上用带 `reason` 的 `#[expect(...)]`。
 - 验证：`cargo test --manifest-path src-tauri/Cargo.toml` + `pnpm build:exe`。涉及窗口、托盘、注册表行为的改动，在风险需要时请用户在 `pnpm tauri dev` 里手动检查折叠态、展开态、贴边收起和托盘隐藏。
 - 成功生成 release 可执行文件后，桌面快捷方式按根目录规则处理（默认不动）。

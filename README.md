@@ -59,7 +59,7 @@
   <p>
     <a href="docs/assets/promo-001-one-island.mp4"><img src="docs/assets/readme/tour-zh.gif" alt="浮屿演示：桌面上散着的窗口收进屏幕顶部的岛，依次展开待办、音乐与歌词、新消息、剪贴板、翻译和 AI Agent 审批，最后自己收回去" width="800" height="450"></a>
     <br>
-    <sub>43 秒看一圈。画面里的岛就是真的前端，不是录屏（<a href="video/README.md">怎么做的</a>）· <a href="docs/assets/promo-001-one-island.mp4">看带声音的完整视频</a> · <a href="docs/assets/promo-004-one-day.mp4">《浮屿的一天》（41 秒，带旁白）</a></sub>
+    <sub>43 秒看一圈。画面里的岛就是真的前端，不是录屏（<a href="video/README.md">怎么做的</a>）· <a href="docs/assets/promo-001-one-island.mp4">看带声音的完整视频</a> · <a href="docs/assets/promo-004-one-day.mp4">《浮屿的一天》（41 秒，带旁白）</a> · <a href="docs/assets/promo-005-at-work.mp4">《用浮屿开发浮屿》（2 分钟，带旁白）</a></sub>
   </p>
 </div>
 
@@ -156,15 +156,15 @@
 
 ## 插件
 
-岛上缺什么，可以自己加。一个插件就是一个文件夹：一份清单，加一个由岛屿启动的程序（PowerShell 脚本、exe 或 Node.js 脚本）。插件只发数据，页面、收起条和设置页由岛屿按模板画，所以和岛上其他内容风格一致。
+岛上缺什么，可以自己加。插件用 TypeScript 或 JavaScript 写：后台逻辑跑在岛屿启动的 Node 进程里，界面用 React 写，放进岛上和设置窗口预留的位置。清单就是 `package.json`，安装包是一个 `.fuyu` 文件。
 
 ```sh
 npm create fuyu-plugin@latest
 ```
 
 - **装现成的**：在岛屿的「设置 → 插件市场」里安装，也可以先在[官网的插件市场](https://fuyu.ing/zh/plugins/)看看有哪些。
-- **自己写**：跟着[快速开始](docs/plugins/quickstart.md)从零做出一个插件，大约一小时；完整说明见[插件文档](docs/plugins/README.md)。
-- **分享给别人**：放进[插件市场](https://github.com/TixXin/fuyu-plugins)，或者只在自己的电脑上用，步骤见[发布](docs/plugins/publish.md)。
+- **自己写**：用上面的命令生成一个项目，在项目里 `npm run dev` 就把它装进正在运行的岛屿，改了自动重新构建；完整说明见[插件文档](docs/plugins/README.md)和[命令行](docs/plugins/cli.md)。
+- **分享给别人**：把提交号交给[插件市场](https://github.com/TixXin/fuyu-plugins)，市场从源码构建、每个版本审核后上架；或者打成 `.fuyu` 文件自己发给别人。步骤见[发布](docs/plugins/publish.md)。
 
 ## 从源码构建
 

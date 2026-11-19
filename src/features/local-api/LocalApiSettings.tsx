@@ -1,15 +1,17 @@
+import { useId } from "react";
 import { Check, Copy, FolderOpen } from "lucide-react";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsInlineConfirm } from "../../components/settings/SettingsInlineConfirm";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
 import { isMacOS } from "../../lib/platform";
 import { revealFolder } from "../../lib/settings-backup/api";
-import { setBuiltinConfig } from "../plugin-kernel/builtinSwitches";
+import { setBuiltinConfig, switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
 import { copyLocalApiToken } from "./api";
 import { OWNER } from "./plugin/owner.ts";
 import { useLocalApiInfo } from "./useLocalApiInfo";
@@ -30,6 +32,7 @@ export function LocalApiSettings() {
   const dataHome = settingsText.dataHome;
   const errorText = useErrorText();
   const { info, error, allowWrite, resetToken } = useLocalApiInfo();
+  const switchId = useId();
   const [copied, flashCopied] = useFlash<Copied>();
   const [failure, flashFailure] = useFlash<string>();
 
@@ -42,7 +45,11 @@ export function LocalApiSettings() {
   const address = info?.running ? info.url : t.notRunning;
 
   return (
-    <SettingsGroup title={t.title} footer={<SettingsFootnote text={failure ?? error ?? t.hint} />}>
+    <SettingsGroup
+      title={t.title}
+      action={<SettingsSwitch id={switchId} ariaLabel={t.title} checked onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch((reason: unknown) => flashFailure(errorText(reason)))} />}
+      footer={<SettingsFootnote text={failure ?? error ?? t.hint} />}
+    >
       <SettingsToggleRow title={t.allowWrite} description={t.allowWriteHint} checked={allowWrite} onChange={saveAllowWrite} />
       <SettingsRow
         title={t.address}

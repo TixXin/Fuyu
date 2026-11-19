@@ -1,0 +1,106 @@
+{
+  "$schema": "../../harness.schema.json",
+  "protocol": 1,
+  "id": "dsh",
+  "name": "DeepSeek Harness",
+  "icon": "dsh.svg",
+  "forms": {
+    "cli": {
+      "home": [
+        {
+          "path": "~/.dsh",
+          "env": "DSH_HOME"
+        },
+        {
+          "path": "~/.dsh-beta"
+        }
+      ],
+      "linux": {
+        "runs": true
+      }
+    },
+    "app": {
+      "home": [
+        {
+          "env": "DSH_DESKTOP_NEXT_HOME"
+        },
+        {
+          "path": "%APPDATA%/dsh-desktop/harness"
+        },
+        {
+          "path": "<AppData>/dshed/dsh"
+        }
+      ],
+      "process": {
+        "windows": [
+          "DeepSeek Harness.exe",
+          "DSH Desktop.exe",
+          "dsh-desktop.exe",
+          "DSH Desktop Beta.exe",
+          "DSH NEXT.exe",
+          "dsh-desktop-next.exe"
+        ]
+      }
+    }
+  },
+  "sessions": {
+    "format": "adapter",
+    "adapter": "dsh-checkpoint"
+  },
+  "hooks": {
+    "format": "adapter",
+    "adapter": "dsh-cordis-plugin"
+  },
+  "approval": {
+    "reply": "adapter"
+  },
+  "signals": {
+    "running": "hook",
+    "done": "hook",
+    "waiting": "adapter",
+    "replyMarker": true,
+    "exited": "timeout"
+  },
+  "replyMarker": {
+    "promptFiles": [
+      "AGENTS.md"
+    ]
+  },
+  "quota": [
+    "dsh"
+  ],
+  "remote": {
+    "form": "cli",
+    "pull": {
+      "find": [
+        "dshc() { find \"$1/storages/session_projcache/sessions\" -maxdepth 1 -type f -name '*.json' -mmin -\"$W\" 2>/dev/null | while IFS= read -r f; do i=${f##*/}; i=${i%.json}; for l in \"$1\"/sessions/*/\"$i\"/session.v[34].jsonl.zstd; do [ -f \"$l\" ] && { printf '%s\t%s\n' \"$f\" \"$2/storages/session_projcache/sessions/${f##*/}\"; break; }; done; done; }",
+        "dshc .dsh .dsh",
+        "dshc .dsh-beta .dsh-beta",
+        "case \"$DSH_HOME\" in /*) [ \"$DSH_HOME\" = \"$HOME/.dsh\" ] || [ \"$DSH_HOME\" = \"$HOME/.dsh-beta\" ] || dshc \"$DSH_HOME\" .dsh-home ;; esac"
+      ],
+      "checkpointDirs": [
+        ".dsh/storages/session_projcache/sessions/",
+        ".dsh-beta/storages/session_projcache/sessions/",
+        ".dsh-home/storages/session_projcache/sessions/"
+      ]
+    },
+    "extract": null,
+    "hooks": false,
+    "approval": null,
+    "replyMarker": true
+  },
+  "focus": {
+    "apps": {
+      "app": [
+        "deepseek harness",
+        "dsh desktop",
+        "dsh-desktop",
+        "dsh desktop beta",
+        "dsh next",
+        "dsh-desktop-next"
+      ]
+    },
+    "exact": "window"
+  },
+  "ccConnect": null
+}

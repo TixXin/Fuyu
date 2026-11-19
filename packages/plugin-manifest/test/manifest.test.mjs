@@ -39,6 +39,13 @@ test("engines.fuyu is required, must be a range and can be checked against the a
   assert.equal(validateManifest(samplePackage(), { appVersion: "0.5.0" }).ok, true);
 });
 
+test("a beta app build is compared by its ordering, so a newer beta fits an older range", () => {
+  const needs0310 = { ...samplePackage(), engines: { fuyu: ">=0.3.10" } };
+  assert.equal(validateManifest(needs0310, { appVersion: "0.3.11-beta.4" }).ok, true);
+  fails(needs0310, "engines.fuyu:engine", { appVersion: "0.3.10-beta.1" });
+  fails({ ...samplePackage(), engines: { fuyu: ">=0.3.11" } }, "engines.fuyu:engine", { appVersion: "0.3.11-beta.4" });
+});
+
 test("third-party names are @<repository owner>/<name>, compared without case", () => {
   fails({ ...samplePackage(), name: "fuyu-weather" }, "name:name-unscoped");
   fails({ ...samplePackage(), name: "@other/weather" }, "name:name-owner");

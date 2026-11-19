@@ -98,7 +98,6 @@ fn refresh_owners() {
     crate::translation::coexist_refresh();
     crate::screenshot::coexist_refresh();
     crate::agent_status::approval_hotkeys::coexist_refresh();
-    crate::plugin_host::coexist_refresh();
     crate::timer::coexist_refresh();
     crate::todos::coexist_refresh();
     crate::calendar::coexist_refresh();

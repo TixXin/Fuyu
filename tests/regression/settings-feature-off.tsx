@@ -124,6 +124,13 @@ try {
   check(pluginOn("agents") === true && pluginOn("todos") === true && listed().includes("agents") && listed().includes("todos"), "Turning them back on lists them again");
   await openPage("sounds");
   check(!document.querySelector(".feature-off") && document.querySelector(".editor-panel .settings-group__card"), "A feature turned back on shows its settings again");
+  await openPage("generalApi");
+  await click(".settings-group__header input[role='switch']");
+  await wait(40);
+  check(pluginOn("local-api") === false && tabs().includes("generalApi") && Boolean(document.querySelector(".editor-panel input[role='switch']")), "Turning local-api off keeps the Local API tab under General with an enable switch");
+  await click(".editor-panel input[role='switch']");
+  await wait(40);
+  check(pluginOn("local-api") === true && Boolean(document.querySelector(".settings-group__header input[role='switch']")), "Turning local-api back on in General → Local API restores its full settings");
   await openPage("todos");
   check(!document.querySelector(".feature-off") && document.querySelector(".feature-header") && !document.querySelector(".feature-header input"), "The todos page is back, still without a switch");
 

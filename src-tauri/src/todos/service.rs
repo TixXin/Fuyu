@@ -15,17 +15,13 @@ use super::{
     stamps,
     store::{self, LoadError},
 };
-use crate::{island, plugin_host, sync::clock};
+use crate::{island, sync::clock};
 
 const CHANGED_EVENT: &str = "todos-changed";
 
 type Announce = Box<dyn Fn(Value) + Send + Sync>;
 
-type Publish = Box<dyn Fn(&'static str, Value) + Send + Sync>;
-
 static ANNOUNCE: OnceLock<Announce> = OnceLock::new();
-
-static PUBLISH: OnceLock<Publish> = OnceLock::new();
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub(crate) struct OutsideChanges {
@@ -90,7 +86,6 @@ pub(crate) fn init(app: &AppHandle) -> Result<(), String> {
     let _ = ANNOUNCE.set(Box::new(move |payload| {
         let _ = handle.emit_to(island::WINDOW_LABEL, CHANGED_EVENT, payload);
     }));
-    let _ = PUBLISH.set(Box::new(plugin_host::publish_event));
     HOST.get_or_init(|| TodosHost {
         dir,
         app_version: app.package_info().version.to_string(),
@@ -260,8 +255,7 @@ pub(crate) fn apply(change: &TodosChange) -> Result<AppliedTodosChange, String> 
     if data != loaded.file.data {
         let next = TodosFile { revision: loaded.file.revision + 1, data, ..loaded.file.clone() };
         store::save(&host.dir.join(FILE_NAME), &next)?;
-        let old = std::mem::replace(&mut loaded.file, next);
-        publish_plugin_events(&old.data, &loaded.file.data);
+        loaded.file = next;
         crate::sync::notify_local_change();
     }
     let data = (!conflicts.is_empty()).then(|| loaded.file.data.clone());
@@ -299,7 +293,6 @@ fn announce_outside_change(loaded: &mut Loaded, next: TodosFile) {
     if let Some(announce) = ANNOUNCE.get() {
         announce(json!({ "revision": loaded.file.revision, "data": loaded.file.data, "fields": fields, "reason": reason }));
     }
-    publish_plugin_events(&old.data, &loaded.file.data);
 }
 
 pub(crate) fn for_sync() -> Option<(u64, TodosData)> {
@@ -326,16 +319,6 @@ pub(crate) fn replace_from_sync(revision: u64, data: TodosData) -> Result<(), St
     store::save(&host.dir.join(FILE_NAME), &next)?;
     announce_outside_change(loaded, next);
     Ok(())
-}
-
-fn publish_plugin_events(old: &TodosData, new: &TodosData) {
-    let Some(publish) = PUBLISH.get() else { return };
-    if let Some(reason) = todos_reason(old, new) {
-        publish("todos.changed", json!({ "date": new.date, "reason": reason }));
-    }
-    if old.daily_note != new.daily_note || old.date != new.date {
-        publish("note.changed", json!({ "date": new.date }));
-    }
 }
 
 fn now_ms() -> u64 {

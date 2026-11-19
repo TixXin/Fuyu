@@ -59,7 +59,7 @@
   <p>
     <a href="../assets/promo-001-one-island-en.mp4"><img src="../assets/readme/tour-en.gif" alt="Fuyu tour: the windows scattered over a desktop fold into the island at the top of the screen, which then opens todos, music with lyrics, new messages, the clipboard, translation and an AI agent approval before tucking itself away" width="800" height="450"></a>
     <br>
-    <sub>The whole tour in 43 seconds. The island on screen is the real frontend, not a screen recording (<a href="../../video/README.md">how it is made</a>, in Chinese) · <a href="../assets/promo-001-one-island-en.mp4">Watch the full video with sound</a> · <a href="../assets/promo-004-one-day-en.mp4">A day with Fuyu (46 seconds, narrated)</a></sub>
+    <sub>The whole tour in 43 seconds. The island on screen is the real frontend, not a screen recording (<a href="../../video/README.md">how it is made</a>, in Chinese) · <a href="../assets/promo-001-one-island-en.mp4">Watch the full video with sound</a> · <a href="../assets/promo-004-one-day-en.mp4">A day with Fuyu (46 seconds, narrated)</a> · <a href="../assets/promo-005-at-work-en.mp4">Building Fuyu with Fuyu (2 minutes, narrated)</a></sub>
   </p>
 </div>
 
@@ -156,15 +156,15 @@ How it was measured, with the numbers: [idle-usage.md](../investigations/idle-us
 
 ## Plugins
 
-If the island is missing something, add it yourself. A plugin is a folder: a manifest plus a program the island starts (a PowerShell script, an exe, or a Node.js script). Plugins only send data; the island draws pages, the collapsed bar and settings from templates, so a plugin looks like the rest of the island.
+If the island is missing something, add it yourself. Plugins are written in TypeScript or JavaScript: the background logic runs in a Node process the island starts, and the UI is React, placed in slots on the island and in the settings window, so it sits right alongside everything else. The manifest is just `package.json`, and a plugin ships as a single `.fuyu` file.
 
 ```sh
 npm create fuyu-plugin@latest
 ```
 
 - **Install one**: from Settings → Plugin market on the island, or browse the [plugin market on the website](https://fuyu.ing/plugins/) first.
-- **Write one**: the [quick start](../plugins/quickstart.md) takes you from nothing to a working plugin in about an hour, and the [plugin docs](../plugins/README.md) cover the rest (both in Chinese).
-- **Share one**: add it to the [plugin market](https://github.com/TixXin/fuyu-plugins), or keep it on your own computer; see [publishing](../plugins/publish.md) (in Chinese).
+- **Write one**: generate a project with the command above, then run `npm run dev` in it to load it into the running island and rebuild on every change; the [plugin docs](../plugins/README.md) and the [command line](../plugins/cli.md) cover the rest (both in Chinese).
+- **Share one**: hand a commit to the [plugin market](https://github.com/TixXin/fuyu-plugins), which builds it from source and reviews every version before it goes live; or pack a `.fuyu` file and send it yourself. See [publishing](../plugins/publish.md) (in Chinese).
 
 ## Build from source
 

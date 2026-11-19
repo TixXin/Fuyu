@@ -1,6 +1,8 @@
 use std::{fs, path::Path};
 
+use super::codex;
 use super::harness;
+use super::session_records;
 
 use super::snapshot::{
     current_unix_millis, system_time_to_unix_millis, AgentStatusSnapshot, AgentTaskStatus,
@@ -32,18 +34,36 @@ pub(super) fn apply_agent_running_markers(app_dir: &Path, snapshot: &mut AgentSt
         let Some(status) = snapshot.agents.get_mut(id) else {
             continue;
         };
-        if let Some(marker_status) = active_agent_running_marker_status(
+        if let Some(mut marker_status) = active_agent_running_marker_status(
             app_dir,
             status,
             light.running_marker,
             light.running_hold,
             now,
         ) {
+            if marker_status.phase == "stale" && id == codex::PROVIDER && has_live_session(app_dir, id) {
+                marker_status.phase = "running".to_string();
+            }
             status.phase = marker_status.phase;
             status.updated_at = marker_status.updated_at;
         }
     }
     super::third_party::apply_running_markers(app_dir, snapshot, now);
+}
+
+fn has_live_session(app_dir: &Path, provider: &str) -> bool {
+    fs::read_dir(app_dir.join(session_records::DIR_NAME))
+        .map(|entries| {
+            entries.flatten().any(|entry| {
+                fs::read_to_string(entry.path())
+                    .ok()
+                    .and_then(|text| session_records::parse(&text))
+                    .is_some_and(|record| {
+                        record.provider.as_deref() == Some(provider) && !record.has_ended() && record.live_pid().is_some()
+                    })
+            })
+        })
+        .unwrap_or(false)
 }
 
 pub(super) fn active_agent_running_marker_status(

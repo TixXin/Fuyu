@@ -10,8 +10,6 @@ import type { PluginNotificationsController } from "../../src/features/messages/
 const NO_PLUGIN_NOTIFICATIONS: PluginNotificationsController = { notification: null, dismiss: () => {}, runAction: () => {}, post: () => {} };
 import type { CollapsedSlots } from "../../src/windows/island/types";
 import { MiniRing } from "../../src/components/MiniRing";
-import { emit } from "@tauri-apps/api/event";
-import type { PluginStatusEntry } from "../../src/features/plugin-views/api";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
 import { useWeChatReminders } from "../../src/features/messages/wechat/WeChatReminders";
 import { useMail } from "../../src/features/messages/mail/MailPanel";
@@ -29,23 +27,19 @@ keys.forEach((key) => localStorage.removeItem(key));
 window.addEventListener("beforeunload", () => {
   keys.forEach((key, index) => originals[index] === null ? localStorage.removeItem(key) : localStorage.setItem(key, originals[index]!));
 });
-let pluginStatus: PluginStatusEntry[] = [];
 mockIPC((command) => {
-  if (command === "list_plugin_views") return { views: [], status: pluginStatus };
   if (command === "get_qq_mail_state") return [{
     revision: 0, email: "", configured: false, enabled: false, syncing: false,
     status: "disabled", unreadCount: 0, items: [], lastSyncedAt: null, error: null,
   }];
 }, { shouldMockEvents: true });
 
-type State = { slots?: CollapsedSlots; task: string | null; todoCount?: number | null; agents: boolean; count: number; agentTitle?: string; lyric?: string; karaoke?: KaraokeLine; status?: PluginStatusEntry[] };
-const STATUS: PluginStatusEntry = { pluginId: "dev.test.monitor", itemId: "bar", priority: 0, text: "CPU 23% · 内存 61%", tooltip: null, tone: "neutral" };
+type State = { slots?: CollapsedSlots; task: string | null; todoCount?: number | null; agents: boolean; count: number; agentTitle?: string; lyric?: string; karaoke?: KaraokeLine };
 const usageRing = <MiniRing rings={[{ value: 0.62, color: "#7ccfff" }, { value: 0.28, color: "#b9a6ff" }]} ariaLabel="5 小时 62%，7 天 28%" title="5 小时 62%，7 天 28%" />;
 const sessionRing = <MiniRing segments={[{ value: 0.5, color: "#5ad19a" }, { value: 0.25, color: "#f5c46b" }, { value: 0.25, color: "#ff8a80" }]} size={22} label="4" ariaLabel="4 个会话" title="4 个会话：2 运行，1 等待，1 出错" />;
 const DEMO: State = {
   slots: { center: <span style={{ color: "var(--text-2)", fontSize: 13 }}>· · ·</span>, gauges: [{ id: "usage:claudeCode", node: usageRing }], agentCount: sessionRing },
   task: null, agents: true, count: 4,
-  status: [{ ...STATUS, ring: 0.23, cells: [{ label: "CPU", value: "23%", tone: "neutral" }, { label: "GPU", value: "81°", tone: "warning" }] }],
 };
 let change: (next: Partial<State>) => void;
 let openedPage: string | null = null;
@@ -80,11 +74,6 @@ function check(condition: unknown, label: string) {
 const bar = () => document.querySelector<HTMLElement>(".island__collapsed")!;
 const set = (next: Partial<State>) => act(async () => {
   change(next);
-  if (next.status !== undefined) {
-    pluginStatus = next.status;
-    await emit("plugin-view-changed", { kind: "status", pluginId: STATUS.pluginId, itemId: STATUS.itemId, status: null });
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  }
 });
 async function settle() {
   const deadline = performance.now() + 1500;
@@ -132,8 +121,10 @@ async function runChecks() {
     await set({ task: null, agents: true, count: 2, slots: { center: <span className="test-center">中</span>, gauges: [{ id: "usage:claudeCode", node: <span className="test-gauge" style={{ display: "block", width: 42, height: 20 }} /> }] } });
     const box = (selector: string) => bar().querySelector(selector)!.getBoundingClientRect();
     const [pattern, slot, light, gauges] = [box(".test-center"), box(".island__center-slot"), box(".island__pulse"), box(".island__gauge-slot")];
-    check(Math.abs(pattern.left + pattern.width / 2 - (slot.left + slot.width / 2)) < 1
-      && Math.abs(pattern.top + pattern.height / 2 - (bar().getBoundingClientRect().top + 19)) < 1, "摘要为空时中心图案在剩余空间居中");
+    const shell = bar().getBoundingClientRect();
+    check(light.right - shell.left !== shell.right - gauges.left
+      && Math.abs(pattern.left + pattern.width / 2 - (shell.left + shell.width / 2)) < 1
+      && Math.abs(pattern.top + pattern.height / 2 - (shell.top + 19)) < 1, "摘要为空时中心图案对准岛的中线，不随左右两侧的宽度偏移");
     check(slot.left >= light.right && slot.right <= gauges.left, "中心槽位在状态灯与右侧元素之间，不压住仪表");
     openedPage = null;
     await act(async () => bar().querySelector<HTMLElement>(".test-center")!.click());
@@ -212,41 +203,6 @@ async function runChecks() {
     await act(async () => { await new Promise(requestAnimationFrame); });
     check(bar().querySelector(".island__lyric .karaoke__track--moving"), "放不下的长句会跟着往左移");
     await set({ agentTitle: undefined, lyric: undefined, karaoke: undefined, task: null });
-
-    const chip = () => bar().querySelector<HTMLElement>(".plugin-status-chip")!;
-    await set({ task: "剩余3个待办", slots: {}, status: [STATUS] });
-    check(chip().textContent === STATUS.text && !chip().querySelector(".mini-ring, .plugin-status-chip__cell"), "插件状态只有文字时照旧显示文字");
-    const cells = [{ label: "CPU", value: "23%", tone: "neutral" }, { label: "内存", value: "61%", tone: "warning" }, { label: "CPU", value: "71°", tone: "neutral" }, { label: "GPU", value: "88°", tone: "danger" }] as const;
-    await set({ status: [{ ...STATUS, cells: [...cells], ring: 0.23 }] });
-    const columns = [...chip().querySelectorAll<HTMLElement>(".plugin-status-chip__cell")];
-    check(columns.length === 4 && columns[1].textContent === "内存61%" && columns[3].classList.contains("plugin-status-chip__cell--danger"), "插件状态的列按顺序显示标签、数值和色调");
-    check(chip().getAttribute("aria-label") === STATUS.text && chip().querySelector(".mini-ring__arc"), "有列时文字作读屏名称，前面画进度环");
-    check(getComputedStyle(columns[3].querySelector(".plugin-status-chip__value")!).color !== getComputedStyle(columns[0].querySelector(".plugin-status-chip__value")!).color, "danger 列的数值换色");
-    const barBox = bar().getBoundingClientRect();
-    check(chip().getBoundingClientRect().right <= barBox.right && bar().scrollWidth <= bar().clientWidth + 1, "四列加进度环不撑出收起条");
-    const levels = [{ level: 1, tone: "neutral" }, { level: 0.3, tone: "neutral" }, { level: 0.15, tone: "warning" }, { level: 0, tone: "danger" }] as const;
-    await set({ status: [{ ...STATUS, cells: [...cells], batteries: [...levels], tooltip: "PC 100% / 耳机 30%" }] });
-    const batteries = [...chip().querySelectorAll<HTMLElement>(".plugin-status-chip__battery")];
-    const charge = (index: number) => batteries[index].querySelector<HTMLElement>(".plugin-status-chip__charge")!.getBoundingClientRect().height;
-    check(batteries.length === 4 && !chip().querySelector(".plugin-status-chip__cell, .plugin-status-chip__text"), "有电池时画并排立着的电池，不显示文字和列");
-    check(batteries.every((battery) => battery.getBoundingClientRect().height > battery.getBoundingClientRect().width), "电池是立着的");
-    check(charge(0) > charge(1) * 2 && charge(1) > charge(2) && charge(3) >= 1, "电池里的电量按比例填充，空电池也留一条");
-    check(new Set(batteries.map((battery) => getComputedStyle(battery).color)).size === 4, "相邻的电池颜色不同，电量低的是黄色和红色");
-    check(chip().getAttribute("aria-label") === `${STATUS.text} · PC 100% / 耳机 30%` && chip().title === "PC 100% / 耳机 30%", "电池的读屏名称和悬停提示来自文字和 tooltip");
-    check(chip().getBoundingClientRect().right <= bar().getBoundingClientRect().right && bar().scrollWidth <= bar().clientWidth + 1, "四个电池不撑出收起条");
-    const slices = [{ value: 6, tone: "neutral" }, { value: 2, tone: "neutral" }, { value: 0, tone: "neutral" }, { value: 1, tone: "danger" }] as const;
-    await set({ status: [{ ...STATUS, cells: [...cells], pie: [...slices], tooltip: "R 6 · PD 2 · CG 0 · 其他 1" }] });
-    const pie = chip().querySelector<SVGSVGElement>(".plugin-status-chip__pie");
-    const wedges = [...chip().querySelectorAll<SVGPathElement>(".plugin-status-chip__slice")];
-    check(pie !== null && !chip().querySelector(".plugin-status-chip__cell, .plugin-status-chip__text, .plugin-status-chip__battery"), "有饼图时画饼，不显示文字、列和电池");
-    check(wedges.length === 4 && wedges[2].getAttribute("d") === "" && wedges[0].getBBox().width > wedges[3].getBBox().width, "饼的每块按数值占比，0 的那块不画但保留位置");
-    check(new Set([wedges[0], wedges[1], wedges[3]].map((wedge) => getComputedStyle(wedge).color)).size === 3, "饼的各块颜色不同，danger 是红色");
-    check(Math.abs(pie!.getBoundingClientRect().height - 16) < 1 && chip().title === "R 6 · PD 2 · CG 0 · 其他 1", "饼和进度环一样大，悬停提示来自 tooltip");
-    await set({ status: [{ ...STATUS, pie: [{ value: 0, tone: "neutral" }] }] });
-    check(chip().querySelector(".plugin-status-chip__pie-empty") !== null && !chip().querySelector(".plugin-status-chip__slice"), "全为 0 时画一个空灰圈");
-    await set({ status: [{ ...STATUS, pie: [...slices], batteries: [...levels] }] });
-    check(chip().querySelectorAll(".plugin-status-chip__battery").length === 4 && !chip().querySelector(".plugin-status-chip__pie"), "同时给电池和饼时画电池");
-    await set({ status: [], task: null });
 
     await act(async () => createRoot(rings).render(<>
       <MiniRing rings={[{ value: 0.5, color: "red" }, { value: 0, color: "blue" }]} ariaLabel="两圈" title="两圈提示" />

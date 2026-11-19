@@ -233,6 +233,18 @@ export function listenAgentFocusWindowOnly(onWindowOnly: (focused: AgentFocusWin
   return listen<AgentFocusWindowOnly>(FOCUS_WINDOW_ONLY_EVENT, (event) => onWindowOnly(event.payload));
 }
 
+const FOCUS_NOT_FOUND_EVENT = "agent-focus-not-found";
+
+export type AgentFocusNotFound = {
+  provider: SessionProvider;
+  sessionId: string;
+  reason: "notRunning" | "hidden";
+};
+
+export function listenAgentFocusNotFound(onNotFound: (missing: AgentFocusNotFound) => void) {
+  return listen<AgentFocusNotFound>(FOCUS_NOT_FOUND_EVENT, (event) => onNotFound(event.payload));
+}
+
 export function agentSessionsInFront(sessions: Pick<AgentSessionSummary, "provider" | "sessionId">[]) {
   return invoke<string[]>("agent_sessions_in_front", {
     sessions: sessions.map(({ provider, sessionId }) => ({ provider, sessionId })),

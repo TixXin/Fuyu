@@ -1,6 +1,8 @@
 # 各家 AI 代理的接入现状
 
-岛接了十八家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）、Droid（B58）和 pi（B71），另支持通用的第三方代理文件与会话目录接入（`third_party.rs`，B71）。后十二家与通用第三方各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+岛接了十九家 AI 代理（harness）：Claude Code、Codex、WorkBuddy（国内版和 WorkBuddy AI）、Antigravity、DeepSeek Harness（DSH）、opencode，钩子照抄 Claude Code 的三家 Qoder、CodeBuddy Code、Qwen Code（B48），TRAE、TRAE CN（B29），ZCode（B53）、Kimi Code（B52）、MiMo Code（B54）、Grok CLI（B57）、GitHub Copilot CLI（B55）、Droid（B58）、pi（B71）和 Cursor（编辑器 Agent），另支持通用的第三方代理文件与会话目录接入（`third_party.rs`，B71）。后十三家与通用第三方各有一节在文末。这张表记每家有哪些形态、数据在哪，以及每项功能做到哪一步。改了哪家的哪一项，就在同一个提交里改这里。接入新的一家或给已有功能扩一家，按 `.claude/skills/fuyu-agent-harness/SKILL.md` 的清单走。
+
+各家要声明哪些东西、以后怎么改成描述文件，见 [Agent 接入协议](harness-protocol.md)（B76）。Qoder、CodeBuddy、Qwen Code 已经只有描述文件 `src-tauri/src/agent_status/harnesses/<id>.json`，由 `build.rs` 生成模块（B77）。
 
 核对日期：2026-11-17（按 `main` 上的代码）。各家的调研和来源见 [agent-harnesses.md](../../research/agent-harnesses.md)，用户可见的行为见 [agent-status-hooks.md](../../features/agent-status-hooks.md)。标「未实测」的项都列在实测清单 #179 里。
 
@@ -38,7 +40,7 @@
 | 会话卡片：当前工具 | ✓ | ✓ | ✓ | ✓（#397） | ◐ 只有工具名，存档不带参数 | ✓ 未实测（#179） |
 | 会话卡片：上下文 token | ✓ | ✓ | ✗ 只见到积分，要 Windows 样本 | ✓（#397） | ✓ | ✓ 未实测（#179） |
 | 判断会话已退出 | ✓ | ✓ | ✓ Windows 认 `WorkBuddy.exe`、`WorkBuddyAI.exe`，Mac 按 bundle id `com.workbuddy.workbuddy-ai`；国内版 Mac 版的 bundle id 不知道，认不出 | ✗ | ✗ | ◐ 只有 2.x：`service.json` 的 pid 不在了就记为已退出；1.x 只靠 10 分钟超时 |
-| 点会话跳过去 | ✓ 终端（含 Ghostty、WezTerm、`tmux`） / 编辑器标签；Claude 桌面版 Code 页只到窗口并提示 | ✓ 终端 / 编辑器标签；Codex 桌面版只到窗口并提示 | ◐ 只到 App 窗口（行内提示手动选会话，A12） | ◐ 只到窗口并提示（A12）：程序名认 `antigravity`、`antigravity ide`、`antigravity-ide`，按钩子的 `transcriptPath` 先找 IDE 或 2.0（CLI 走终端匹配），同一程序多个窗口按文件夹名挑（A10，#646）；钩子不记进程号，没有进程链 | ◐ 只到窗口并提示 | ◐ 桌面版在跑就到 OpenCode 窗口并提示，否则按目录 / 标题找终端 |
+| 点会话跳过去 | ✓ 终端（含 Ghostty、WezTerm、`tmux`） / 编辑器标签；Claude 桌面版 Code 页只到窗口并提示 | ✓ 终端 / 编辑器标签；Codex 桌面版只到窗口并提示 | ◐ 只到 App 窗口（行内提示手动选会话，A12）：程序名认 `workbuddy`、`workbuddyai`、`workbuddy ai`；Windows 上收在托盘时再启动一次 `WorkBuddy.exe` 唤出窗口，找不到时提示没打开或收在托盘（A16，#862，Windows 未实测） | ◐ 只到窗口并提示（A12）：程序名认 `antigravity`、`antigravity ide`、`antigravity-ide`，按钩子的 `transcriptPath` 先找 IDE 或 2.0（CLI 走终端匹配），同一程序多个窗口按文件夹名挑（A10，#646）；钩子不记进程号，没有进程链 | ◐ 只到窗口并提示 | ◐ 桌面版在跑就到 OpenCode 窗口并提示，否则按目录 / 标题找终端 |
 | 回复标记 | ✓ 本机和远程都写 `CLAUDE.md`，远程未在服务器实测（#179） | ✓ 本机和远程，远程未实测（#179） | ✓ 未实测（#179） | ✓ 未实测（#179）；远程只有 CLI（远端有 `~/.gemini/antigravity-cli` 时），未实测（#179） | ✓ 本机和远程，远程未实测（#179） | ✓ 未实测（#179）；远程 ✗ |
 | 用量环 | ✓ | ✓ | ◐ 悬停显示已用积分（不画圆环，B25） | ✓ 同心双环（Gemini 5h / 7d，悬停附带 3p 5h / 7d；内部接口失效时提示，B25） | ◐ 悬停显示钱包余额（不画圆环，B25） | ✗ 只有 OpenCode Go 订阅有额度窗口，未接（#170） |
 | SSH 远程会话 | ✓ 含远程钩子 | ◐ 只读会话 | — 只有桌面版 | ✓ CLI 的会话、运行中 / 完成、岛上审批（远程「安装/修复」装钩子，`run_command` 审批经 SSH 反向转发），未在服务器实测（#179）；远程会话不显示「等你」 | ✓ 会话和三态，没有钩子和审批，未在服务器实测（#179） | ✓ 会话和三态（远端用 `sqlite3` 或 `python3` 把时间窗内的会话抽成小库再拉回），没有插件、审批和回复标记，未在服务器实测（#179） |
@@ -60,7 +62,7 @@ Claude Code 和 Codex 是最早接的，很多地方曾把「代理」写死成�
 
 ## Claude Code 兼容的三家（B48）
 
-Qoder（含 Qoder CN）、CodeBuddy Code、Qwen Code 的钩子格式和会话目录都照抄 Claude Code，所以走一个声明层 `claude_compat.rs`：每家的模块（`qoder.rs`、`codebuddy.rs`、`qwen.rs`）只填一份 `Compat`（id、名字、配置目录和环境变量、会话子目录、记录格式、全局提示词文件、等授权用哪个事件），钩子安装和状态、会话列表、标题、等你、审批都由声明层做。再接一家这样的 CLI：写一份声明，再在 `HARNESSES`、三份钩子脚本、审批的 `Agent` 枚举和前端 `AGENTS` 里各加一项。三家都还没在真机上跑过（#179）。
+Qoder（含 Qoder CN）、CodeBuddy Code、Qwen Code 的钩子格式和会话目录都照抄 Claude Code，所以走一个声明层 `claude_compat.rs`：每家只有一份描述文件 `src-tauri/src/agent_status/harnesses/<id>.json`（B77，格式见 [Agent 接入协议](harness-protocol.md)），`build.rs` 由它生成原来 `qoder.rs` 这类模块里的 `Compat`（id、名字、配置目录和环境变量、会话子目录、记录格式、全局提示词文件、等授权用哪个事件）和 `HARNESS`，钩子安装和状态、会话列表、标题、等你、审批都由声明层做。再接一家这样的 CLI：加一份描述文件，再在 `HARNESSES`、`claude_compat.rs` 的 `SPECS`、`reply_marker.rs` 的 `PROMPT_FILES`、三份钩子脚本、审批的 `Agent` 枚举和前端 `AGENTS` 里各加一项。三家都还没在真机上跑过（#179）。
 
 B56 起声明多了三项，给钩子格式相近、外壳不同的几家用（Grok CLI、Copilot CLI、Droid 用上了）：
 
@@ -225,6 +227,26 @@ Factory 的 Droid CLI，id `droid`。代码在 `droid.rs`（会话）和 `droid_
 | 判断会话已退出 | ✓ 靠扩展写的 `agent-sessions/<id>.json`（`endedAt` 或记录的 `pid` 已不在） |
 | 点会话跳过去 | ✓ 有进程记录时按进程链找终端；否则 `PiDeck` / `PiCove` 桌面版在跑就到对应窗口，不然按目录和标题找终端 |
 | 用量环、SSH 远程、cc-connect | ✗ / ✓（拉取 `.pi/agent/sessions/*/*.jsonl`）/ — |
+
+## Cursor（编辑器 Agent）
+
+Cursor 的 Agent（Composer），id `cursor`。代码在 `cursor.rs`。本机编辑器可测；`agent` CLI 的 `store.db` 没样本，不读。云端 Background Agent 不加载用户级 `~/.cursor/hooks.json`，不接。
+
+没走 Claude Code 兼容层：钩子文件是整份共享的 `~/.cursor/hooks.json`，事件名是驼峰，回包是 `{permission}`，会话转录没有时间戳和标题。
+
+| 层 | Cursor |
+|---|---|
+| 配置 | `~/.cursor` 在才装；「安装/修复」合并进 `~/.cursor/hooks.json`（补 `version: 1`，只增删 `command` 里含 `fuyu-agent-` 的条目，别人的钩子保留）；Cursor 保存后会自己重载 |
+| 钩子 | `sessionStart`、`beforeSubmitPrompt` 记运行中，`stop` 记完成，`sessionEnd` 记空闲；`beforeShellExecution`、`beforeMCPExecution` 走岛上审批，超时 150 秒。脚本缺失或岛没在听时回 `{"permission":"ask"}`，交给 Cursor 自己的确认框，避免空输出被当成拒绝 |
+| 会话 | `~/.cursor/projects/<工作区>/agent-transcripts/<id>/<id>.jsonl`（只认主转录，跳过子目录里的子代理和压缩记录）。标题先读 `conversation-search.db` 的 `conversations`，再被 `~/.cursor/ai-tracking/ai-code-tracking.db` 的 `conversation_summaries` 盖过；都没有时用第一句提问。模型和推理档读 `state.vscdb` 的 `cursorDiskKV` 里 `composerData:<id>` 的 `modelConfig`（`modelName` 为 `default` 的不算），上下文 token 读 `contextTokensUsed`。工作区目录名按真实路径逐段对上。阶段看转录末尾：`turn_ended` 的 `error` 算失败，其余 `turn_ended` 算完成，最后一条是用户或工具调用算运行中；`composerHeaders` 或 `composerData` 里有 `unfinishedRunAt` 时仍算运行中 |
+| 状态灯 | ✓ `agent-cursor-running.flag` |
+| 等你 | ✗ 没有等你事件。岛上审批挂起时算等你 |
+| 岛上审批 | ✓ `/cursor/permission`。允许回 `{"permission":"allow"}`，拒绝带回 `user_message` / `agent_message`，交回终端回 `ask`。`preToolUse` 的 `ask` 官方不强制，所以不拦读文件和普通工具；写文件没有可挂起的 before 钩子 |
+| 回复标记 | ✗ 没有确认过可以独占、又不会盖住用户规则的用户级规则文件 |
+| 点会话跳过去 | ◐ 优先激活 Cursor 窗口，再按项目文件夹名挑；到不了具体对话 |
+| 用量环 | ◐ 默认关（B78）：只读 `state.vscdb` 的 `ItemTable` 里 `cursorAuth/accessToken` 和 `cursorAuth/stripeMembershipType`，带 `x-cursor-checksum` 请求头（算法照上游 fly-island 1e278b32）向 `api2.cursor.sh` 的 `DashboardService/GetCurrentPeriodUsage` 查本计费周期已用比例，内环是本月，悬停附带 Auto 和指定模型的比例；这是未公开接口，最多 5 分钟一次。没装、没登录或查不到时环不出现。两个平台都没用真账号实测（#896） |
+| SSH 远程、cc-connect | ✗ Remote-SSH 的钩子在远端执行，CLI 会话格式未核实 / — |
+| 不读 | `state.vscdb` 里 `composerData` 和用量环那两个 `cursorAuth/` 键以外的键（`agentKv` 这类大块）、超过 1MB 的 `composerData`、`hasBlockingPendingActions`（进行中的会话也会是 true，不能当成等你）、`~/.cursor/chats/**/store.db`（CLI，本机没有样本） |
 
 ## 通用第三方代理接入（B71）
 

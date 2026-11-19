@@ -53,14 +53,13 @@ mod window_focus;
 mod workbuddy;
 mod antigravity;
 mod antigravity_focus;
+mod workbuddy_focus;
 mod antigravity_remote;
 mod dsh;
 mod dsh_hooks;
 mod opencode;
 mod claude_compat;
-mod qoder;
-mod codebuddy;
-mod qwen;
+include!(concat!(env!("OUT_DIR"), "/compat_harnesses.rs"));
 mod trae;
 mod zcode;
 mod kimi_code;
@@ -72,6 +71,7 @@ mod droid_hooks;
 mod kimi_hooks;
 mod mimo;
 mod pi;
+mod cursor;
 mod third_party;
 mod uninstall;
 
@@ -267,6 +267,9 @@ pub fn init() {
             ) {
                 if let Err(error) = restore_hooks_after_reinstall(&app_dir, &home_dir) {
                     eprintln!("failed to restore hooks after reinstall: {error}");
+                }
+                if let Err(error) = claude_code::upgrade_exec_form_hooks(&app_dir, &home_dir) {
+                    eprintln!("failed to rewrite the Claude Code hooks: {error}");
                 }
             }
             reply_marker::upgrade_installed();
@@ -517,12 +520,16 @@ pub async fn focus_agent_window(
             });
             let _ = app.emit_to(crate::island::WINDOW_LABEL, FOCUS_WINDOW_ONLY_EVENT, payload);
         }
+    } else if let Some(missing) = focused.missing.filter(|_| !session_for_event.is_empty()) {
+        let payload = json!({ "provider": provider_for_event, "sessionId": session_for_event, "reason": missing.reason() });
+        let _ = app.emit_to(crate::island::WINDOW_LABEL, FOCUS_NOT_FOUND_EVENT, payload);
     }
     Ok(focused.found)
 }
 
 const EDITOR_EXTENSION_MISSING_EVENT: &str = "agent-editor-extension-missing";
 const FOCUS_WINDOW_ONLY_EVENT: &str = "agent-focus-window-only";
+const FOCUS_NOT_FOUND_EVENT: &str = "agent-focus-not-found";
 
 #[tauri::command]
 pub async fn get_editor_extension_states() -> Vec<editor_extension::EditorExtensionState> {
@@ -683,6 +690,11 @@ pub(super) fn normalize_windows_line_endings(content: &str) -> String {
     content.replace("\r\n", "\n").replace('\n', "\r\n")
 }
 
+#[tauri::command]
+pub fn list_agent_effort_labels() -> Result<std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>>, String> {
+    Ok(std::collections::BTreeMap::new())
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
@@ -697,6 +709,7 @@ macro_rules! tauri_commands {
             crate::agent_status::agent_sessions_in_front,
             crate::agent_status::get_agent_host_icon,
             crate::agent_status::list_agent_sessions,
+            crate::agent_status::list_agent_effort_labels,
             crate::agent_status::get_agent_push_detail,
             crate::agent_status::list_ssh_hosts,
             crate::agent_status::get_agent_remote_hosts,

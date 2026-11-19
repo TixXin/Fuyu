@@ -1,6 +1,6 @@
-# create-fuyu-plugin 2.0 (in development)
+# create-fuyu-plugin
 
-Creates a TypeScript plugin for [Fuyu](https://github.com/TixXin/fuyu)'s plugin platform v3:
+Creates a TypeScript plugin for [Fuyu](https://github.com/TixXin/fuyu):
 
 ```sh
 npm create fuyu-plugin@latest [folder] -- --owner <github-user> --name <name>
@@ -13,14 +13,15 @@ in `fuyu.experimental`, so it loads only from a development folder until the int
 
 ## Names
 
-| | Now | On npm |
+| | In this repository | On npm |
 |---|---|---|
-| This package | `@fuyu/create-plugin` (private, `packages/create-plugin`) | `create-fuyu-plugin` 2.0, so `npm create fuyu-plugin@latest` gives v3 |
-| The command line it sets up | `@fuyu/plugin-cli` | `fuyu-plugin` 2.0 |
-| Plugin platform v2 | `create-fuyu-plugin` 0.x (`packages/create-fuyu-plugin`) | stays at 0.x, no longer updated |
+| This package | `@fuyu/create-plugin` (private, `packages/create-plugin`) | `create-fuyu-plugin` 2.0 and later |
+| The command line it sets up | `@fuyu/plugin-cli` | `fuyu-plugin` 2.0 and later |
+| The old plugin system (before 2026-11) | removed in E36.6.6 | `create-fuyu-plugin` and `fuyu-plugin` 0.x, stopped at 0.7.0 |
 
-Until those are published, run it from a checkout of this repository. The project's `devDependencies`
-link `@fuyu/plugin-base`, `@fuyu/plugin-services` and `@fuyu/plugin-cli` from that checkout (`file:`):
+From npm the project depends on `fuyu-plugin`. To try changes that are not published yet, run it from a
+checkout of this repository: the project's `devDependencies` then link `@fuyu/plugin-base`,
+`@fuyu/plugin-services` and `@fuyu/plugin-cli` from that checkout (`file:`):
 
 ```sh
 node packages/create-plugin/bin/create-fuyu-plugin.mjs ~/my-plugin --owner you --name my-plugin
@@ -28,4 +29,5 @@ node packages/create-plugin/bin/create-fuyu-plugin.mjs ~/my-plugin --owner you -
 
 `--fuyu <folder>` links from another checkout. `--help` lists the other options.
 
-Design and the command line: [docs/architecture/plugins/v3-cli.md](https://github.com/TixXin/fuyu/blob/main/docs/architecture/plugins/v3-cli.md).
+Guide for plugin authors: [docs/plugins](https://github.com/TixXin/fuyu/tree/main/docs/plugins). Design of the
+command line: [docs/architecture/plugins/v3-cli.md](https://github.com/TixXin/fuyu/blob/main/docs/architecture/plugins/v3-cli.md).

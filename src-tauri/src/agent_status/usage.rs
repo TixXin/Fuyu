@@ -43,6 +43,7 @@ pub enum UsageSource {
     Kimi,
     Antigravity,
     AntigravityCloud,
+    Cursor,
 }
 
 pub(super) fn snapshot_path(claude_dir: &Path, home_dir: &Path) -> Option<PathBuf> {

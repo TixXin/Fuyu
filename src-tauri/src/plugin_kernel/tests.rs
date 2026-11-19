@@ -6,7 +6,16 @@ use std::{
 use plugin_base::{find_node, Event, HostSpec, HostState, NodeSearch, Supervisor, Timing, MINIMUM_NODE};
 use serde_json::Value;
 
-use super::{bisect, containment, node_status::{NodeGate, NodeStatus}, safe_mode::{self, Cause, Tracker}, enabled, host_args, on_by_default, host_env, host_files, host_origins, host_script, memory_of, window_origins, HostFiles, HostMode, MEMORY_MEASURE};
+use super::{bisect, containment, node_status::{NodeGate, NodeStatus}, safe_mode::{self, Cause, Tracker}, enabled, host_args, on_by_default, host_env, host_files, host_origins, host_script, memory_of, window_origins, without_verbatim_prefix, HostFiles, HostMode, MEMORY_MEASURE};
+
+#[test]
+fn node_gets_the_installed_host_path_without_the_verbatim_prefix_it_cannot_resolve() {
+    let plain = |text: &str| without_verbatim_prefix(std::path::Path::new(text)).to_string_lossy().into_owned();
+    assert_eq!(plain(r"\\?\C:\Users\me\AppData\Local\Fuyu"), r"C:\Users\me\AppData\Local\Fuyu");
+    assert_eq!(plain(r"C:\Users\me\AppData\Local\Fuyu"), r"C:\Users\me\AppData\Local\Fuyu");
+    assert_eq!(plain(r"\\?\UNC\server\share\Fuyu"), r"\\?\UNC\server\share\Fuyu");
+    assert_eq!(plain("/Applications/Fuyu.app/Contents/Resources"), "/Applications/Fuyu.app/Contents/Resources");
+}
 
 #[test]
 fn on_windows_the_host_gets_a_smaller_threadpool_unless_the_user_already_chose_one() {
