@@ -149,9 +149,9 @@ async function runChecks() {
     const pileWing = document.querySelector<HTMLElement>(".agent-notice-stack__notch .agent-notice-stack__wing--left")!;
     const piled = [...pileWing.querySelectorAll<HTMLElement>(".agent-provider-icon")];
     const extra = pileWing.querySelector<HTMLElement>(".agent-notice-stack__extra");
-    check(piled.length === 3 && extra?.textContent === "+2", "图标堆：五个会话时左翼叠三个图标，写 +2");
-    check(box(extra!).right <= popupNotchLeft + 0.5, "图标堆不压刘海");
-    check(piled.every((icon) => pileWing.contains(hit(icon))) && pileWing.contains(hit(extra!)), "图标堆的每个图标和 +2 都看得见");
+    check(piled.length === 2 && extra?.textContent === "+3", "图标堆：五个会话时左翼只叠两个图标，其余写成 +3");
+    check(pileWing.scrollWidth <= pileWing.clientWidth + 1 && box(extra!).right <= popupNotchLeft + 0.5, "图标堆在左翼里放得下，不压刘海");
+    check(piled.every((icon) => pileWing.contains(hit(icon))) && pileWing.contains(hit(extra!)), "图标堆的每个图标和 +3 都看得见");
     await set({ card: "session", stack: "below" });
     await settleTransitions();
     check(!document.querySelector(".agent-notice-stack__notch") && getComputedStyle(document.querySelector(".island__notch-band")!).display !== "none", "Agent 通知（卡片在刘海下面）：刘海那一条照旧");
