@@ -140,7 +140,9 @@ try {
   await click(row("normal", "my-local-tool")?.querySelector("[data-action='open-settings']"));
   await settle();
   const local = dialog("my-local-tool")!;
-  check(local && !local.querySelector("[data-action='uninstall-plugin']") && local.querySelector("[data-tab='settings']")?.getAttribute("aria-selected") === "true", "The gear opens settings; a plugin loaded from a folder has no uninstall button");
+  check(local && local.querySelector("[data-action='uninstall-plugin']")?.textContent === t.detail.remove && local.querySelector("[data-tab='settings']")?.getAttribute("aria-selected") === "true", "The gear opens settings; a plugin listed by file path offers remove from Fuyu");
+  await click(local.querySelector("[data-action='uninstall-plugin']"));
+  check(local.querySelector("[data-uninstall-confirm]")?.textContent!.includes(t.detail.removeNoteFile), "and its confirmation says only the plugins.yml entry goes");
   await press(local, "Escape");
   check(!dialog("my-local-tool"), "Escape closes the detail dialog");
   const helloRow = row("normal", "hello");

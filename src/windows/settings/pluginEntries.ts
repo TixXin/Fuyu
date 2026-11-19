@@ -69,7 +69,7 @@ export function installedEntries(
         publisher: source === "official" ? null : market?.publisher.github ?? (plugin.id.includes("/") ? plugin.id.split("/")[0].replace(/^@/, "") : null),
         source,
         managed: plugin.source === "market" || plugin.source === "manual",
-        removable: plugin.source === "market" || plugin.source === "manual" || plugin.source === "dev",
+        removable: plugin.source === "market" || plugin.source === "manual" || plugin.source === "dev" || plugin.source === "file",
         enabled: stateOf(plugin) !== "disabled",
         status: pluginRowStatus(plugin, market, context),
       };

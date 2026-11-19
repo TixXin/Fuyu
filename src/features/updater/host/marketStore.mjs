@@ -59,7 +59,7 @@ export function readYmlEntries(ymlFile) {
   for (const line of lines) {
     if (line.startsWith("- ")) {
       const idMatch = /^-\s+id:\s*(.+)$/.exec(line.trim());
-      current = idMatch ? { id: unquoteYamlScalar(idMatch[1]), source: "market", disabled: false, replaces: [] } : null;
+      current = idMatch ? { id: unquoteYamlScalar(idMatch[1]), source: null, name: null, disabled: false, replaces: [] } : null;
       inReplaces = false;
       if (current?.id) entries.set(current.id, current);
       continue;
@@ -81,6 +81,11 @@ export function readYmlEntries(ymlFile) {
     if (sourceMatch) {
       const source = unquoteYamlScalar(sourceMatch[1]);
       current.source = source === "manual" || source === "dev" ? source : "market";
+      continue;
+    }
+    const nameMatch = /^\s{2}name:\s*(.+)$/.exec(line);
+    if (nameMatch) {
+      current.name = unquoteYamlScalar(nameMatch[1]);
       continue;
     }
     const disabledMatch = /^\s{2}disabled:\s*(true|false)\s*$/.exec(line);

@@ -155,6 +155,7 @@ export type SettingsPluginPageText = {
     remove: string;
     removePrompt: (name: string) => string;
     removeNote: string;
+    removeNoteFile: string;
     confirmRemove: string;
     removing: string;
   };
@@ -348,6 +349,7 @@ export const zhCN: SettingsPluginPageText = {
     remove: "从浮屿移除",
     removePrompt: (name) => `从浮屿移除「${name}」？`,
     removeNote: "只删掉这条登记，不会删除插件文件夹；再次运行 fuyu-plugin dev 会重新出现。",
+    removeNoteFile: "只从 plugins.yml 删掉这条登记，不会删除插件文件夹。",
     confirmRemove: "移除",
     removing: "正在移除…",
   },
@@ -541,6 +543,7 @@ export const en: SettingsPluginPageText = {
     remove: "Remove from Fuyu",
     removePrompt: (name) => `Remove “${name}” from Fuyu?`,
     removeNote: "Only its registration is removed; the plugin folder stays. Running fuyu-plugin dev again brings it back.",
+    removeNoteFile: "Only its entry in plugins.yml is removed; the plugin folder stays.",
     confirmRemove: "Remove",
     removing: "Removing…",
   },

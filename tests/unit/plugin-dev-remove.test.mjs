@@ -78,7 +78,29 @@ test("a dev plugin is removable on the plugin page but not managed", () => {
     { id: "@someone/clock", name: "Clock", state: "running", kind: "third-party", source: "market" },
     { id: "@me/gadget", name: "Gadget", state: "running", kind: "third-party", source: "manual" },
     { id: "my-local-tool", name: "./my-local-tool/index.mjs", state: "running", kind: "third-party" },
+    { id: "loose", name: "./loose.mjs", state: "running", kind: "third-party", source: "file" },
   ], new Set(), null, context, "en");
   const byId = Object.fromEntries(entries.map((entry) => [entry.id, [entry.managed, entry.removable]]));
-  assert.deepEqual(byId, { hello: [false, true], "@someone/clock": [true, true], "@me/gadget": [true, true], "my-local-tool": [false, false] });
+  assert.deepEqual(byId, { hello: [false, true], "@someone/clock": [true, true], "@me/gadget": [true, true], "my-local-tool": [false, false], loose: [false, true] });
+});
+
+test("a plugin listed by file path is removed the same way, but a built-in's settings entry is not", async () => {
+  const root = mkdtempSync(join(tmpdir(), "fuyu-dev-remove-"));
+  try {
+    const folder = join(root, "hello");
+    mkdirSync(folder, { recursive: true });
+    writeFileSync(join(folder, "host.mjs"), "export const name = 'hello';\n");
+    const yml = join(root, "plugins.yml");
+    writeFileSync(yml, "- id: hello\n  name: ./hello/host.mjs\n- id: claude-usage\n  disabled: true\n");
+    mkdirSync(join(root, "data", "hello"), { recursive: true });
+    const market = createMarketService({ dataDir: join(root, "data", "updater"), pluginsDir: root });
+    await market.uninstall({ id: "hello", removeData: true });
+    assert.equal(readFileSync(yml, "utf8"), "- id: claude-usage\n  disabled: true\n");
+    assert.ok(existsSync(join(folder, "host.mjs")));
+    assert.equal(existsSync(join(root, "data", "hello")), false);
+    await assert.rejects(market.uninstall({ id: "claude-usage" }), { code: "not-found" });
+    assert.equal(readFileSync(yml, "utf8"), "- id: claude-usage\n  disabled: true\n");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });

@@ -338,7 +338,8 @@ export function createMarketService(options = {}) {
         throw marketError("bad-params", "uninstall expects { id: string, removeData?: boolean }");
       }
       const ymlFile = join(pluginsDir, "plugins.yml");
-      if (readYmlEntries(ymlFile).get(params.id)?.source === "dev") {
+      const registered = readYmlEntries(ymlFile).get(params.id);
+      if (registered?.source === "dev" || (registered && registered.source === null && registered.name)) {
         removeInstalledFromYml(ymlFile, params.id);
         if (params.removeData === true) rmSync(dataDirOf(join(pluginsDir, DATA_DIR), params.id), { recursive: true, force: true });
       } else {

@@ -142,7 +142,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
             <div className="plugin-callout plugin-callout--bad plugin-dialog__confirm" data-uninstall-confirm>
               <Trash2 size={15} strokeWidth={2.2} aria-hidden="true" />
               <div>
-                <b>{dev ? text.detail.removePrompt(entry.title) : text.detail.uninstallPrompt(entry.title)}</b> {dev ? text.detail.removeNote : text.detail.uninstallNote}
+                <b>{dev ? text.detail.removePrompt(entry.title) : text.detail.uninstallPrompt(entry.title)}</b> {dev ? (entry.plugin.source === "dev" ? text.detail.removeNote : text.detail.removeNoteFile) : text.detail.uninstallNote}
                 <label className="plugin-check">
                   <input type="checkbox" checked={removeData} disabled={busy} onChange={(event) => setRemoveData(event.currentTarget.checked)} />
                   <span>{text.detail.removeData}</span>
