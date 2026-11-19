@@ -66,9 +66,9 @@ function signDoc(doc, privateKey) {
 }
 
 export const textRes = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, text: async () => body });
-const binRes = (buf) => ({ ok: true, status: 200, arrayBuffer: async () => buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) });
+export const binRes = (buf) => ({ ok: true, status: 200, arrayBuffer: async () => buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) });
 
-export function createMarketWorld(prefix) {
+export function createMarketWorld(prefix, { indexUrl = INDEX_URL, revokedUrl = REVOKED_URL, packageBase = "https://market.example/" } = {}) {
   const root = mkdtempSync(join(tmpdir(), prefix));
   const dataDir = join(root, "data", "updater");
   const indexKey = makeKey();
@@ -81,20 +81,22 @@ export function createMarketWorld(prefix) {
     if (!handler) return { ok: false, status: 404, text: async () => "not found", arrayBuffer: async () => new ArrayBuffer(0) };
     return handler();
   };
-  const market = createMarketService({
+  const options = {
     dataDir,
     pluginsDir: root,
     appVersion: "0.3.11",
     platform: "macos",
     trust: { index: [indexKey.entry], revocation: [revokeKey.entry] },
-    fetchImpl,
-    indexUrl: INDEX_URL,
-    revokedUrl: REVOKED_URL,
+    fetchImpl: (url, init) => fetchImpl(url, init),
+    indexUrl,
+    revokedUrl,
     now: () => clock.now,
-  });
+  };
+  const market = createMarketService(options);
   const version = ({ name = "@someone/clock", version: v, daysAgo = 10, commitSeed, ...zipOptions }) => {
     const zipInfo = makeFuyuZip({ name, version: v, ...zipOptions });
     const entry = makeIndexVersion({ name, version: v, author, zipInfo, publishedAt: iso(clock.now - daysAgo * DAY), commitSeed: commitSeed ?? v.replace(/\D/g, "") });
+    entry.url = entry.url.replace("https://market.example/", packageBase);
     routes.set(entry.url, () => binRes(zipInfo.zip));
     return entry;
   };
@@ -103,19 +105,19 @@ export function createMarketWorld(prefix) {
       format: 3, serial, generatedAt: iso(clock.now - 60_000), expires: iso(clock.now + 6 * DAY), ...extra,
       plugins: plugins.map(({ name, versions }) => ({ name, publisher: { github: name.slice(1).split("/")[0], official: false }, authorKeys: [author.entry], versions })),
     }, indexKey.privateKey);
-    routes.set(INDEX_URL, () => textRes(signed.text));
-    routes.set(`${INDEX_URL}.sig`, () => textRes(signed.sigText));
+    routes.set(indexUrl, () => textRes(signed.text));
+    routes.set(`${indexUrl}.sig`, () => textRes(signed.sigText));
   };
   const putRevoked = (serial, entries, { generatedAt = clock.now - DAY, expires = clock.now + 30 * DAY, signer = revokeKey } = {}) => {
     const signed = signDoc({ format: 3, serial, generatedAt: iso(generatedAt), expires: iso(expires), entries, withdrawn: [] }, signer.privateKey);
-    routes.set(REVOKED_URL, () => textRes(signed.text));
-    routes.set(`${REVOKED_URL}.sig`, () => textRes(signed.sigText));
+    routes.set(revokedUrl, () => textRes(signed.text));
+    routes.set(`${revokedUrl}.sig`, () => textRes(signed.sigText));
   };
   const failRevoked = (status = 503) => {
-    routes.set(REVOKED_URL, () => textRes("", status));
+    routes.set(revokedUrl, () => textRes("", status));
   };
   return {
-    root, dataDir, market, routes, clock, version, putIndex, putRevoked, failRevoked, otherKey: makeKey,
+    root, dataDir, market, options, routes, clock, version, putIndex, putRevoked, failRevoked, otherKey: makeKey,
     cleanup: () => rmSync(root, { recursive: true, force: true }),
   };
 }
