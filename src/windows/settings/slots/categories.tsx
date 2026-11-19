@@ -75,7 +75,7 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   shortcuts: shortcuts("shortcuts"),
   shortcutsIsland: shortcuts("shortcutsIsland"),
   shortcutsReference: shortcuts("shortcutsReference"),
-  pluginsV3: ({ onShowPage }) => <PluginsV3SettingsPage onOpenPage={onShowPage} />,
+  pluginsV3: ({ onOpenPage }) => <PluginsV3SettingsPage onOpenPage={onOpenPage} />,
   about: ({ onSettingsChange }) => <AboutSettingsPage onSettingsChange={onSettingsChange} />,
 };
 

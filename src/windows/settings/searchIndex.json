@@ -375,6 +375,32 @@
     {
       "page": "theme",
       "zh-CN": {
+        "group": "主题",
+        "title": "一键换配色",
+        "description": "前三套同时换掉深色、浅色两套颜色和透明度，配色是深色时切到浅色；磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。后面几套是液态玻璃，只换材质，颜色不变。之后还可以在下面接着调。"
+      },
+      "en": {
+        "group": "Themes",
+        "title": "Color sets",
+        "description": "The first three replace both the dark and light colors and the opacity; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. The rest are liquid glass: they change the material and keep your colors. You can keep adjusting below."
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
+        "group": "主题市场",
+        "title": "更多主题",
+        "description": "看看别人分享的主题，先预览深浅两色再应用，也能存进「样式预设」。"
+      },
+      "en": {
+        "group": "Theme market",
+        "title": "More themes",
+        "description": "See themes others have shared, preview the dark and light versions, then apply one or keep it in Style presets."
+      }
+    },
+    {
+      "page": "theme",
+      "zh-CN": {
         "group": "浅色和深色",
         "title": "配色",
         "description": "深色、浅色各有一套颜色；跟随系统按 Windows 的深色 / 浅色模式在两套之间自动切换。"
@@ -429,19 +455,6 @@
           "Windows",
           "Pick"
         ]
-      }
-    },
-    {
-      "page": "theme",
-      "zh-CN": {
-        "group": "内置配色",
-        "title": "一键换配色",
-        "description": "同时换掉深色、浅色两套颜色和透明度；配色是深色时切到浅色。磨砂是半透明的底色加一层浅色调和细描边，不会模糊桌面。之后还可以在下面接着调。"
-      },
-      "en": {
-        "group": "Built-in colors",
-        "title": "Color sets",
-        "description": "Replaces both the dark and light colors and the opacity; dark colors switch to light. Frosted means a see-through tinted fill with a thin outline; it does not blur the desktop. You can keep adjusting below."
       }
     },
     {

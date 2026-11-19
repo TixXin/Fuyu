@@ -1,8 +1,8 @@
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { normalizeSearchText, searchWords } from "./settingsSearch.ts";
-import { BUILTIN_CATEGORIES, categorySlot, type SettingsCategory, type SettingsEntry, type SettingsFeature, type SettingsGroup, type TabbedCategory } from "./slots/categorySlot.ts";
+import { BUILTIN_CATEGORIES, categorySlot, type SettingsCategory, type SettingsLink, type SettingsEntry, type SettingsFeature, type SettingsGroup, type TabbedCategory } from "./slots/categorySlot.ts";
 
-export type { SettingsCategory, SettingsEntry, SettingsFeature, SettingsGroup, TabbedCategory };
+export type { SettingsCategory, SettingsLink, SettingsEntry, SettingsFeature, SettingsGroup, TabbedCategory };
 
 type Category = ReturnType<typeof categorySlot.items>[number];
 type Categories = readonly Category[];

@@ -10,7 +10,7 @@ import { en as enPluginsV3, zhCN as zhPluginsV3, type BuiltinPluginName, type Pl
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { windowServices } from "../../features/plugin-kernel/services";
-import type { SettingsCategory } from "./categories";
+import type { SettingsLink } from "./categories";
 import { detailText, stateOf } from "./pluginServiceStatus";
 import type { PluginStatusV3 } from "./usePluginHostStatus";
 import "./PluginMarketV3Tab.css";
@@ -42,7 +42,7 @@ export const BUILTIN_ICONS: Record<BuiltinPluginName, LucideIcon> = {
   "system-levels": Volume2, "device-use": Camera, "theme-market": Store, updater: RefreshCw,
 };
 
-export const BUILTIN_PAGES: Record<BuiltinPluginName, SettingsCategory> = {
+export const BUILTIN_PAGES: Record<BuiltinPluginName, SettingsLink> = {
   todos: "todos", calendar: "calendar", music: "music", clipboard: "clipboard", screenshot: "screenshot",
   "file-shelf": "shelf", translation: "translation", "voice-input": "voiceInput", timer: "timerAlerts", messages: "messages",
   agents: "agents", "session-ring": "agentRings", "claude-usage": "agentRings", "cc-connect": "agentPush",

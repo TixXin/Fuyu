@@ -4,7 +4,7 @@ import { useErrorText, useTranslation } from "../../i18n";
 import { onPluginPackageOpen, takePendingPluginPackage, type BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { BuiltinPluginsGroup, isExternalPlugin, stateOf } from "./BuiltinPluginsGroup";
-import type { SettingsCategory } from "./categories";
+import type { SettingsLink } from "./categories";
 import { PluginBisectBar } from "./PluginBisectBar";
 import { PluginDetailModal } from "./PluginDetailModal";
 import { HostSummaryBar, megabytes, PluginDiagnosticsTab } from "./PluginDiagnosticsTab";
@@ -73,7 +73,7 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
   view: PluginHostView;
   now?: number;
   builtins?: readonly BuiltinPlugin[] | null;
-  onOpenPage?: (page: SettingsCategory) => void;
+  onOpenPage?: (page: SettingsLink) => void;
 }) {
   const text = useTranslation().settings.pluginsV3;
   const errorText = useErrorText();
@@ -205,12 +205,12 @@ export function PluginsV3View({ view, now = Date.now(), builtins: givenBuiltins,
   );
 }
 
-function HostConnectedPage({ connect, builtins, onOpenPage }: { connect?: PluginHostConnector; builtins: readonly BuiltinPlugin[] | null; onOpenPage?: (page: SettingsCategory) => void }) {
+function HostConnectedPage({ connect, builtins, onOpenPage }: { connect?: PluginHostConnector; builtins: readonly BuiltinPlugin[] | null; onOpenPage?: (page: SettingsLink) => void }) {
   const view = usePluginHostStatus(connect);
   return <PluginsV3View view={view} builtins={builtins} onOpenPage={onOpenPage} />;
 }
 
-export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
+export function PluginsV3SettingsPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsLink) => void }) {
   const text = useTranslation().settings.pluginsV3;
   const hostEnabled = usePluginHostEnabled();
   const builtins = useBuiltinPlugins();

@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BadgeCheck, Check, Moon, RefreshCcw, Search, Sun } from "lucide-react";
 import { IslandPreview } from "../../components/island-preview/IslandPreview";
 import { SettingsChoice } from "../../components/settings/SettingsChoice";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
+import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
+import { SettingsRow } from "../../components/settings/SettingsRow";
+import { takePendingSection } from "../../lib/settings/sectionFocus";
 import { activeTone, resolveThemeColors, type ThemeTone } from "../../lib/theme/themeMode";
 import { useSystemDark } from "../../lib/theme/useResolvedTheme";
 import type { IslandSettings } from "../../lib/settings/types";
@@ -12,6 +15,7 @@ import { isDualMarketTheme, isThemeInUse, readMarketThemes, withMarketTheme, typ
 import "./ThemeMarketPage.css";
 
 const OFFICIAL = "TixXin";
+const SECTION = "themeMarket";
 
 let lastThemes: MarketTheme[] | null = null;
 
@@ -34,6 +38,9 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
   const [previewTones, setPreviewTones] = useState<Readonly<Record<string, ThemeTone>>>({});
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [open, setOpen] = useState(lastThemes !== null);
+  const [jumped, setJumped] = useState(false);
+  const section = useRef<HTMLElement>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -48,7 +55,13 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
       setLoading(false);
     }
   }, []);
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    if (!takePendingSection(SECTION)) return;
+    setOpen(true);
+    setJumped(true);
+  }, []);
+  useEffect(() => { if (open) void refresh(); }, [open, refresh]);
+  useEffect(() => { if (jumped) section.current?.scrollIntoView({ block: "start" }); }, [jumped]);
 
   const looks = useMemo(() => (themes ?? []).map((theme) => ({ theme, dual: isDualMarketTheme(theme), applied: withMarketTheme(settings, theme) })), [themes, settings]);
   const shownLooks = useMemo(() => {
@@ -63,8 +76,20 @@ export function ThemeMarketPage({ settings, onSettingsChange, onSave }: {
   }, [looks, query, filter]);
   const status = loading ? text.refreshing : themes ? text.status(themes.length) : "";
 
+  if (!open) {
+    return (
+      <section ref={section} className="settings-group plugins-panel theme-market">
+        <div className="settings-group__header"><h2 className="settings-group__title">{text.title}</h2></div>
+        <div className="settings-group__card">
+          <SettingsRow title={text.more} description={text.moreHint} control={<SettingsLinkButton onClick={() => setOpen(true)}>{text.browse}</SettingsLinkButton>} />
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="settings-section settings-section--list plugins-panel theme-market">
+    <section ref={section} className="settings-group plugins-panel theme-market">
+      <div className="settings-group__header"><h2 className="settings-group__title">{text.title}</h2></div>
       <div className="plugin-market__header">
         <span className="plugin-market__status" aria-live="polite">{status}</span>
         <div className="theme-market__toolbar">

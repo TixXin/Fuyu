@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Check } from "lucide-react";
 import "./SettingsChoiceCards.css";
 
@@ -16,7 +16,7 @@ export function SettingsChoiceCards<T extends string>({
   onChange: (value: T) => void;
 }) {
   return (
-    <div className="settings-cards" role="group" aria-label={ariaLabel}>
+    <div className="settings-cards" role="group" aria-label={ariaLabel} style={{ "--cards-columns": Math.min(options.length, 4) } as CSSProperties}>
       {options.map((option) => {
         const active = option.value === value;
         return (

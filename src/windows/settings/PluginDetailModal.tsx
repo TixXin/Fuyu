@@ -9,7 +9,7 @@ import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import type { BuiltinPlugin } from "../../features/plugin-kernel/api";
 import { windowServices } from "../../features/plugin-kernel/services";
-import type { SettingsCategory } from "./categories";
+import type { SettingsLink } from "./categories";
 import {
   BUILTIN_ICONS,
   BUILTIN_PAGES,
@@ -41,7 +41,7 @@ export function PluginDetailModal({
   hostPlugins?: readonly PluginStatusV3[] | null;
   builtins?: readonly BuiltinPlugin[] | null;
   onClose: () => void;
-  onOpenPage?: (page: SettingsCategory) => void;
+  onOpenPage?: (page: SettingsLink) => void;
 }) {
   const settingsText = useTranslation().settings;
   const text = settingsText.pluginsV3;

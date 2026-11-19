@@ -23,6 +23,11 @@
   box-shadow: inset 0 0 0 1px rgba(var(--builtin-ink), 0.1), 0 3px 10px rgba(0, 0, 0, 0.18);
 }
 
+.builtin-theme-art--glass .builtin-theme-art__island {
+  backdrop-filter: blur(var(--builtin-blur, 0px)) saturate(160%);
+  box-shadow: inset 0 0 0 1px rgba(var(--overlay-rgb, 255, 255, 255), 0.45), 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
 .builtin-theme-art__island i {
   width: 5px;
   height: 5px;

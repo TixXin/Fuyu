@@ -11,7 +11,7 @@ import { openOnboardingWindow } from "../onboarding/api";
 import { switchBuiltinPlugin } from "../../features/plugin-kernel/builtinSwitches";
 import { useBuiltinEnabled } from "../../features/plugin-kernel/useBuiltinPlugins";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
-import { FEATURE_PAGES, isCategoryAvailable, SETTINGS_FEATURES, type SettingsCategory, type SettingsFeature } from "./categories";
+import { FEATURE_PAGES, isCategoryAvailable, SETTINGS_FEATURES, type SettingsFeature, type SettingsLink } from "./categories";
 import { categorySlot } from "./slots/categorySlot";
 import { OverviewStage, type StageFeature } from "./OverviewStage";
 import { CATEGORY_ICONS } from "./SettingsSidebar";
@@ -36,7 +36,7 @@ export function OverviewSettingsPage({
   unsupported: ReadonlySet<PlatformFeature>;
   onLocaleChange: (locale: LocaleCode) => void;
   onSettingsChange: (settings: IslandSettings) => void;
-  onOpenPage: (page: SettingsCategory) => void;
+  onOpenPage: (page: SettingsLink) => void;
 }) {
   const t = useTranslation();
   const text = t.settings.overview;
@@ -47,6 +47,7 @@ export function OverviewSettingsPage({
   useSlotEntries(categorySlot);
   const offered = SETTINGS_FEATURES.filter((feature) => isCategoryAvailable(FEATURE_PAGES[feature][0], unsupported));
   const timerOn = useBuiltinEnabled("timer");
+  const marketOn = useBuiltinEnabled("theme-market");
 
   const switchedOn = offered.filter((feature) => features[feature].on);
   const onTotal = switchedOn.length + (timerOn ? 1 : 0);
@@ -60,7 +61,7 @@ export function OverviewSettingsPage({
   });
   const next: [LucideIcon, string, string, () => void][] = [
     [SlidersHorizontal, text.look, text.lookHint, () => onOpenPage("appearance")],
-    ...(isCategoryAvailable("themeMarket", unsupported)
+    ...(marketOn
       ? [[Palette, text.themes, text.themesHint, () => onOpenPage("themeMarket")] as [LucideIcon, string, string, () => void]]
       : []),
     [Keyboard, text.shortcuts, text.shortcutsHint, () => onOpenPage("shortcuts")],

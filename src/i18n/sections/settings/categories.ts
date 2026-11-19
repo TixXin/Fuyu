@@ -8,13 +8,13 @@ export type SettingsCategoriesText = {
   expand: (group: string) => string;
   collapse: (group: string) => string;
   keywords: Record<
-    | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
     | "pluginsV3" | "about",
     string
   >;
   entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string };
-  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect", string>;
+  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect", string>;
   groups: {
     basics: string;
     features: string;
@@ -41,7 +41,6 @@ export type SettingsCategoriesText = {
   appearanceCollapsed: string;
   theme: string;
   themeStyle: string;
-  themeMarket: string;
   shortcuts: string;
   messages: string;
   messagesIm: string;
@@ -97,9 +96,8 @@ export const zhCN: SettingsCategoriesText = {
     shortcutsReference: "速查 Esc 拖动 调整大小 审批",
     appearance: "位置 显示器 屏幕 尺寸 大小 缩放 面板高度 形态 刘海",
     appearanceCollapsed: "显示内容 收起条 项目 排序 中心图案 宠物 眼睛",
-    theme: "颜色 背景 浅色 深色 配色 强调色 亮点 文字 我的主题 预设 样式 导入 导出 保存",
+    theme: "主题 颜色 背景 浅色 深色 配色 强调色 亮点 文字 我的主题 预设 样式 导入 导出 保存 主题市场 皮肤 下载 应用 分享",
     themeStyle: "风格 经典 像素 透明 不透明度 整体不透明度 闲置 变淡 鼠标穿透 点击穿透 字体 圆角 超椭圆 液态玻璃 折射 流光 模糊 高光",
-    themeMarket: "主题 皮肤 配色 下载 应用 分享",
     shortcuts: "按键 组合键 热键 全局",
     todos: "任务 笔记 归档 待办 项目 标签 保存路径 文件夹 导出 Markdown",
     calendar: "日程 会议 倒计时 提醒 CalDAV ICS 订阅 节假日 日历来源",
@@ -163,7 +161,6 @@ export const zhCN: SettingsCategoriesText = {
     themeStyle: "材质与圆角",
     appearance: "位置与尺寸",
     appearanceCollapsed: "收起条项目",
-    themeMarket: "主题市场",
     messages: "提醒方式",
     messagesIm: "QQ 与微信",
     messagesMail: "邮箱",
@@ -203,7 +200,6 @@ export const zhCN: SettingsCategoriesText = {
   appearanceCollapsed: "收起条项目",
   theme: "主题与配色",
   themeStyle: "材质与圆角",
-  themeMarket: "主题市场",
   shortcuts: "快捷键",
   messages: "消息",
   messagesIm: "QQ 与微信",
@@ -259,9 +255,8 @@ export const en: SettingsCategoriesText = {
     shortcutsReference: "reference sheet esc drag resize approval",
     appearance: "position display monitor screen size scale panel height form notch",
     appearanceCollapsed: "display collapsed bar items order center pattern pet eyes",
-    theme: "colour color background light dark tone accent pulse ink my themes preset style import export save",
+    theme: "themes colour color background light dark tone accent pulse ink my themes preset style import export save theme market skins download apply share",
     themeStyle: "style classic pixel opacity island opacity idle dim fade click through passthrough transparency font corner squircle liquid glass refraction flow blur specular",
-    themeMarket: "themes skins colours colors download apply share",
     shortcuts: "keys hotkey keyboard global",
     todos: "tasks notes archive todos projects tags save folder export markdown",
     calendar: "events meeting countdown reminder caldav ics subscription holidays calendar sources",
@@ -325,7 +320,6 @@ export const en: SettingsCategoriesText = {
     themeStyle: "Material and corners",
     appearance: "Position and size",
     appearanceCollapsed: "Collapsed bar",
-    themeMarket: "Theme market",
     messages: "Notice style",
     messagesIm: "QQ and WeChat",
     messagesMail: "Mail",
@@ -365,7 +359,6 @@ export const en: SettingsCategoriesText = {
   appearanceCollapsed: "Collapsed bar",
   theme: "Theme and colors",
   themeStyle: "Material and corners",
-  themeMarket: "Theme market",
   shortcuts: "Shortcuts",
   messages: "Messages",
   messagesIm: "QQ and WeChat",
