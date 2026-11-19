@@ -47,13 +47,14 @@ const elsewhere = { active: true, onIslandMonitor: false };
 const both = { gameDoNotDisturb: true, gameAutoTuck: true };
 
 test("game mode only acts while a full-screen app is in front", () => {
-  assert.deepEqual(gameModeEffects({ active: false, onIslandMonitor: false }, both), { quiet: false, tuck: false });
-  assert.deepEqual(gameModeEffects(here, { gameDoNotDisturb: true, gameAutoTuck: false }), { quiet: true, tuck: false });
-  assert.deepEqual(gameModeEffects(here, { gameDoNotDisturb: false, gameAutoTuck: true }), { quiet: false, tuck: true });
+  assert.deepEqual(gameModeEffects({ active: false, onIslandMonitor: false }, both), { quiet: false, tuck: false, passthrough: false });
+  assert.deepEqual(gameModeEffects(here, { gameDoNotDisturb: true, gameAutoTuck: false }), { quiet: true, tuck: false, passthrough: true });
+  assert.deepEqual(gameModeEffects(here, { gameDoNotDisturb: false, gameAutoTuck: true }), { quiet: false, tuck: true, passthrough: true });
+  assert.deepEqual(gameModeEffects(here, { gameDoNotDisturb: false, gameAutoTuck: false }), { quiet: false, tuck: false, passthrough: false });
 });
 
 test("a game on another monitor keeps the island quiet but not tucked", () => {
-  assert.deepEqual(gameModeEffects(elsewhere, both), { quiet: true, tuck: false });
+  assert.deepEqual(gameModeEffects(elsewhere, both), { quiet: true, tuck: false, passthrough: true });
 });
 
 test("an auto-opened popup stays only while the cursor is on the island", () => {
