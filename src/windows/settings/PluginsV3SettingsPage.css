@@ -89,4 +89,4 @@
 .plugins-v3__modal-close):focus-visible,
 .plugins-v3__modal :is(.plugins-v3__tab,
 .plugins-v3__modal-close):focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
-.settings-stage--light :is(.plugins-v3__card { background: var(--settings-card, var(--color-white)); border-color: var(--settings-card-line, var(--color-white-a08)); }
+.settings-stage--light :is(.plugins-v3__card) { background: var(--settings-card, var(--color-white)); border-color: var(--settings-card-line, var(--color-white-a08)); }
