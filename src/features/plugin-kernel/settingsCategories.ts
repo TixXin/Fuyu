@@ -60,7 +60,9 @@ export const BUILTIN_CATEGORIES = [
   { id: "pluginsV3", icon: Blocks, group: "extensions" },
   { id: "pluginDiagnostics", icon: Activity, parent: "pluginsV3" },
   { id: "pluginMarket", icon: Store, group: "extensions" },
-  { id: "about", icon: Info, group: null, aliases: ["updates", "aboutHistory", "aboutHelp"] },
+  { id: "about", icon: Info, group: null, tabs: ["about", "aboutChangelog", "aboutHelp"], aliases: ["updates"] },
+  { id: "aboutChangelog", icon: Info, aliases: ["aboutHistory"] },
+  { id: "aboutHelp", icon: Info },
 ] as const satisfies readonly BuiltinCategory[];
 
 type Builtin = (typeof BUILTIN_CATEGORIES)[number];

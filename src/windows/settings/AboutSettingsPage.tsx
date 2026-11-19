@@ -18,6 +18,8 @@ const CONFIRM_TIMEOUT_MS = 4_000;
 
 type AboutSectionProps = { onSettingsChange: (settings: IslandSettings) => void };
 
+type AboutTabPage = "about" | "aboutChangelog" | "aboutHelp";
+
 function HelpSection() {
   const text = useTranslation().settings.project;
   return (
@@ -73,25 +75,23 @@ function SystemSection({ onSettingsChange }: AboutSectionProps) {
   );
 }
 
-const sections = settingsSections<AboutSectionProps, "about">();
+const sections = settingsSections<AboutSectionProps, AboutTabPage>();
 
-export function AboutSettingsPage(props: AboutSectionProps) {
+export function AboutSettingsPage({ tab, ...props }: AboutSectionProps & { tab: AboutTabPage }) {
   const text = useTranslation().settings.project;
   const version = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
 
   return (
     <>
-      <AboutHero />
-      <div className="about-workbench">
-        <div className="about-workbench__col">
-          <SlotView slot={sections} group="about" props={props} />
-        </div>
-        <div className="about-workbench__col">
+      {tab === "about" && <AboutHero />}
+      <SlotView slot={sections} group={tab} props={props} />
+      {tab === "about" && (
+        <>
           <ProjectLinksSection />
-          <HelpSection />
           <SystemSection onSettingsChange={props.onSettingsChange} />
-        </div>
-      </div>
+        </>
+      )}
+      {tab === "aboutHelp" && <HelpSection />}
       <p className="about-colophon">{text.colophon(version)}</p>
     </>
   );

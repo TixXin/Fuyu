@@ -4577,32 +4577,6 @@
     {
       "page": "about",
       "zh-CN": {
-        "group": "帮助",
-        "title": "新手引导",
-        "description": "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。"
-      },
-      "en": {
-        "group": "Help",
-        "title": "Welcome guide",
-        "description": "The window shown on first start: language, appearance, modules and a few common choices."
-      }
-    },
-    {
-      "page": "about",
-      "zh-CN": {
-        "group": "帮助",
-        "title": "诊断信息",
-        "description": "预览并复制应用版本、系统和更新状态，便于反馈问题。"
-      },
-      "en": {
-        "group": "Help",
-        "title": "Diagnostics",
-        "description": "Preview and copy the app version, system and update status for a bug report."
-      }
-    },
-    {
-      "page": "about",
-      "zh-CN": {
         "group": "重置与退出",
         "title": "重置所有设置",
         "description": "外观、行为和各功能的设置恢复默认。待办、笔记、邮箱、插件、密钥、样式预设和界面语言都保留。"
@@ -4624,6 +4598,32 @@
         "group": "Reset and quit",
         "title": "Quit the island",
         "description": "Same as Quit in the tray menu; start it again from the Start menu or a desktop shortcut."
+      }
+    },
+    {
+      "page": "aboutHelp",
+      "zh-CN": {
+        "group": "帮助",
+        "title": "新手引导",
+        "description": "第一次启动时打开的那个窗口：语言、外观、功能开关和几个常用选项。"
+      },
+      "en": {
+        "group": "Help",
+        "title": "Welcome guide",
+        "description": "The window shown on first start: language, appearance, modules and a few common choices."
+      }
+    },
+    {
+      "page": "aboutHelp",
+      "zh-CN": {
+        "group": "帮助",
+        "title": "诊断信息",
+        "description": "预览并复制应用版本、系统和更新状态，便于反馈问题。"
+      },
+      "en": {
+        "group": "Help",
+        "title": "Diagnostics",
+        "description": "Preview and copy the app version, system and update status for a bug report."
       }
     },
     {
