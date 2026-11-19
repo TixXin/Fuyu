@@ -26,6 +26,7 @@ import { surfaceThemeColors } from "../../lib/theme/themeMode";
 import { islandMotionVariables } from "../../lib/theme/islandMotion";
 import { useReducedMotion } from "../../lib/theme/useReducedMotion";
 import { useIslandGlass } from "./useIslandGlass";
+import { useIslandGlassStatus } from "./useIslandGlassStatus";
 import { useAccentColor } from "../../lib/theme/useAccentColor";
 import { isLightIsland } from "../../utils/color";
 import { useCollapsedGauges } from "./useCollapsedGauges";
@@ -141,7 +142,7 @@ export function IslandApp() {
   const accent = useAccentColor(settings);
   const devicePixelRatio = useDevicePixelRatio();
   const reducedMotion = useReducedMotion();
-  const { glass, glassStyle } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: style.tint, mode, isTucked, quiet: game.quiet, reducedMotion });
+  const { glass, glassStyle, layerState } = useIslandGlass({ settings, background: look.islandBackgroundColor, accent, cover: style.tint, mode, isTucked, quiet: game.quiet, reducedMotion });
   const stageStyle = useMemo(
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
@@ -176,6 +177,7 @@ export function IslandApp() {
   });
 
   useNativeGlassSync(settings.appearanceMode === "liquidGlass" && settings.glassBackdrop === "native");
+  useIslandGlassStatus({ settings, nativeGlassState, layer: layerState });
 
   useNotchDropSync(notch !== null && mode === "collapsed" && !isTucked && hasNotchDrop({
     preview: contributedPreview, notice: islandNotice !== null, peek: contributedLines.some((line) => line.drop === true),
@@ -212,7 +214,7 @@ export function IslandApp() {
         resizeLabel={resizing === "collapsed" ? `${collapsedIslandWidth} px` : resizing ? `${expandedIslandWidth} × ${settings.maxPanelHeight}` : null}
         appearanceMode={settings.appearanceMode}
         nativeGlassState={nativeGlassState}
-        glass={glass}
+        glass={{ ...glass, nativeState: nativeGlassState }}
         isTucked={isTucked}
         isDimmed={isDimmed}
         tuckStyle={settings.tuckStyle}

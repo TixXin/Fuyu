@@ -1,0 +1,46 @@
+.stage .island.island--appearance-liquidGlass[data-glass-live] {
+  --glass-frost-alpha: min(0.95, calc(var(--glass-intensity, 0.25) + var(--glass-live-boost, 0)));
+  --island-shell-fill: color-mix(in srgb, var(--island-background-color) calc(var(--glass-frost-alpha) * 100%), transparent);
+  background: var(--island-shell-fill);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-island-notch] .stage .island.island--appearance-liquidGlass.island--collapsed[data-glass-live] {
+  --island-shell-fill: var(--color-black, #000);
+  background: var(--island-shell-fill);
+}
+
+.island__glass-live {
+  position: absolute;
+  z-index: -1;
+  top: var(--glass-live-y, 0px);
+  left: var(--glass-live-x, 0px);
+  display: none;
+  width: var(--glass-live-width, 100%);
+  height: var(--glass-live-height, 100%);
+  pointer-events: none;
+}
+
+.island[data-glass-live] .island__glass-live {
+  display: block;
+}
+
+.island__glass-live canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.island__glass-live::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--island-shell-fill);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .island[data-glass-live] .island__glass-live {
+    display: none;
+  }
+}

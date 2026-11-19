@@ -1,9 +1,10 @@
-import { invoke } from "@tauri-apps/api/core";
-import { listen, type EventCallback, type UnlistenFn } from "@tauri-apps/api/event";
+import { invoke, type Channel } from "@tauri-apps/api/core";
+import { emit, listen, type EventCallback, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { IslandCornerShape, IslandMonitor, TuckStyle } from "../../lib/settings/types";
 import type { IslandPosition } from "./storage";
 import type { IslandMode, NativeGlassState } from "./types";
+import { ISLAND_GLASS_STATUS_EVENT, ISLAND_GLASS_STATUS_REQUEST_EVENT, type GlassFallbackReason, type IslandGlassStatus } from "./glassStatus";
 
 export const TOP_ATTACHMENT_CHANGED_EVENT = "island-top-attachment-changed";
 
@@ -163,6 +164,28 @@ export function setIslandInteraction(interaction: IslandInteraction) {
 
 export function syncIslandGlassFrame(frame: IslandGlassFrame) {
   return invoke<void>("sync_island_glass_frame", { frame });
+}
+
+export type GlassCaptureStart = { started: boolean; reason: GlassFallbackReason | null };
+
+export function startGlassCapture(onFrame: Channel<ArrayBuffer | number[]>, blur: number, saturation: number) {
+  return invoke<GlassCaptureStart>("start_glass_capture", { onFrame, blur, saturation });
+}
+
+export function setGlassCaptureOptions(blur: number, saturation: number) {
+  return invoke<void>("set_glass_capture_options", { blur, saturation });
+}
+
+export function stopGlassCapture() {
+  return invoke<void>("stop_glass_capture");
+}
+
+export function emitIslandGlassStatus(status: IslandGlassStatus) {
+  return emit(ISLAND_GLASS_STATUS_EVENT, status);
+}
+
+export function listenIslandGlassStatusRequest(handler: () => void): Promise<UnlistenFn> {
+  return listen(ISLAND_GLASS_STATUS_REQUEST_EVENT, () => handler());
 }
 
 export function showReadyIsland() {

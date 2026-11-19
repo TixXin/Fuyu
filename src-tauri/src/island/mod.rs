@@ -25,6 +25,8 @@ pub(crate) mod side;
 #[cfg_attr(target_os = "macos", path = "glass_macos.rs")]
 #[cfg_attr(not(any(windows, target_os = "macos")), path = "glass_unsupported.rs")]
 pub(crate) mod glass;
+#[cfg(windows)]
+pub(crate) mod glass_capture;
 #[cfg_attr(not(windows), path = "modifier_unsupported.rs")]
 pub(crate) mod modifier;
 #[cfg_attr(not(windows), path = "outside_click_unsupported.rs")]
@@ -486,6 +488,9 @@ macro_rules! tauri_commands {
             crate::island::set_island_layout,
             crate::island::set_island_interaction,
             crate::island::glass::sync_island_glass_frame,
+            crate::island::glass::start_glass_capture,
+            crate::island::glass::set_glass_capture_options,
+            crate::island::glass::stop_glass_capture,
             crate::island::start_island_drag,
             crate::island::start_island_modifier_drag,
             crate::island::reset_island_position,

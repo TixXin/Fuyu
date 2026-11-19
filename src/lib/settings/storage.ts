@@ -7,13 +7,36 @@ import type { IslandPreset, IslandSettings } from "./types";
 export const STORAGE_KEY = ISLAND_SETTINGS_KEY;
 export const COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY =
   "fuyu-collapsed-text-default-v1";
+export const GLASS_BACKDROP_DEFAULT_MIGRATION_KEY =
+  "fuyu-glass-backdrop-default-v1";
 export const SETTINGS_PRESETS_STORAGE_KEY = "fuyu-setting-presets";
+
+const ONE_TIME_MIGRATIONS: {
+  key: string;
+  apply: (settings: IslandSettings) => IslandSettings;
+}[] = [
+  {
+    key: COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY,
+    apply: (settings) => ({ ...settings, showCollapsedText: true }),
+  },
+  {
+    key: GLASS_BACKDROP_DEFAULT_MIGRATION_KEY,
+    apply: (settings) =>
+      settings.glassBackdrop === "wallpaper"
+        ? { ...settings, glassBackdrop: "native" }
+        : settings,
+  },
+];
+
+function markMigrated(keys: string[]) {
+  for (const key of keys) window.localStorage.setItem(key, "1");
+}
 
 export function loadSettings(): IslandSettings {
   const stored = window.localStorage.getItem(STORAGE_KEY);
 
   if (!stored) {
-    window.localStorage.setItem(COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY, "1");
+    markMigrated(ONE_TIME_MIGRATIONS.map(({ key }) => key));
     return DEFAULT_SETTINGS;
   }
 
@@ -22,17 +45,21 @@ export function loadSettings(): IslandSettings {
       margin?: number;
     };
     const normalized = normalizeSettings(parsed);
+    const pending = ONE_TIME_MIGRATIONS.filter(
+      ({ key }) => window.localStorage.getItem(key) !== "1",
+    );
 
-    if (
-      window.localStorage.getItem(COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY) !== "1"
-    ) {
-      const migrated = { ...normalized, showCollapsedText: true };
+    if (pending.length === 0) return normalized;
+
+    const migrated = pending.reduce(
+      (settings, { apply }) => apply(settings),
+      normalized,
+    );
+    if (migrated !== normalized) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-      window.localStorage.setItem(COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY, "1");
-      return migrated;
     }
-
-    return normalized;
+    markMigrated(pending.map(({ key }) => key));
+    return migrated;
   } catch {
     return DEFAULT_SETTINGS;
   }

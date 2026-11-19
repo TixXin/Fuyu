@@ -1,4 +1,5 @@
 import { act } from "react";
+import { emit } from "@tauri-apps/api/event";
 
 export async function checkGlassLooks(check: (condition: unknown, message: string) => void) {
   check(!document.querySelector(".island-preview__island--glass"), "The island preview starts classic");
@@ -26,4 +27,12 @@ export async function checkGlassLooks(check: (condition: unknown, message: strin
   check(glassStored().glassSheen === true && lookButton()?.textContent?.includes("自定义"), "Changing one glass setting turns the preset into Custom");
   await act(async () => { [...document.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent === "恢复液态玻璃默认")!.click(); });
   check(lookButton()?.textContent?.includes("流彩毛玻璃"), "Restoring the liquid glass defaults shows Frosted flow again");
+  const backdropRow = () => [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === "玻璃背后");
+  const backdropLabels = [...(backdropRow()?.querySelectorAll<HTMLElement>("[role='radio'], button") ?? [])].map((option) => option.textContent?.trim());
+  check(["无", "只透壁纸", "透出窗口"].every((label) => backdropLabels.includes(label)), "Behind the glass offers None, Wallpaper only and Live windows");
+  check(glassStored().glassBackdrop === "native" && !backdropRow()?.querySelector("[role='status']"), "Live windows is the default and shows no fallback note while nothing is known");
+  await act(async () => { await emit("island-glass-status", { backdrop: "wallpaper", reason: "no-d3d" }); });
+  check(backdropRow()?.querySelector("[role='status']")?.textContent === "现在只透出壁纸：显卡不支持 Direct3D 11。", "A fallback to wallpaper shows its reason under Behind the glass");
+  await act(async () => { await emit("island-glass-status", { backdrop: "live" }); });
+  check(!backdropRow()?.querySelector("[role='status']"), "The note goes away once the island shows live windows");
 }

@@ -1,4 +1,4 @@
-import { isMacOS } from "../../lib/platform";
+import { isMacOS } from "../../lib/platform.ts";
 
 const PACKAGE_BASE = `${isMacOS ? "fuyu-plugin://localhost" : "http://fuyu-plugin.localhost"}/packages`;
 

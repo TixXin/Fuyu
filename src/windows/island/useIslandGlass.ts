@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { glassClassNames, glassPalette, glassPaused, glassVariables, type GlassPalette } from "../../lib/theme/glassPalette";
 import { isLightIsland } from "../../utils/color";
 import type { IslandSettings } from "../../lib/settings/types";
 import { usePageHidden } from "../../lib/usePageHidden";
-import type { IslandMode } from "./types";
+import type { IslandMode, NativeGlassState } from "./types";
+import { INITIAL_GLASS_LAYER, sameGlassLayer, type GlassBackdropChoice, type GlassLayerState } from "./glassStatus";
 
 export type IslandGlassView = {
   className: string;
@@ -13,11 +14,13 @@ export type IslandGlassView = {
   specular: boolean;
   paused: boolean;
   strength: number;
-  backdrop: boolean;
+  choice: GlassBackdropChoice;
   blur: number;
   saturation: number;
   contrastGuard: boolean;
   light: boolean;
+  onLayerState?: (state: GlassLayerState) => void;
+  nativeState?: NativeGlassState;
 };
 
 export function useIslandGlass({
@@ -40,6 +43,11 @@ export function useIslandGlass({
   reducedMotion: boolean;
 }) {
   const hidden = usePageHidden();
+  const [layerState, setLayerState] = useState<GlassLayerState>(INITIAL_GLASS_LAYER);
+  const onLayerState = useCallback(
+    (next: GlassLayerState) => setLayerState((current) => (sameGlassLayer(current, next) ? current : next)),
+    [],
+  );
   const { glassColorSource, glassColor1, glassColor2, glassColor3, glassBackdrop } = settings;
   const glassContrastGuard = settings.glassContrastGuard && glassBackdrop === "none";
   const palette = useMemo(
@@ -64,11 +72,12 @@ export function useIslandGlass({
     specular: settings.glassSpecular,
     paused,
     strength: glassColorStrength / 100,
-    backdrop: settings.glassBackdrop === "wallpaper",
+    choice: glassBackdrop,
     blur: glassBlur,
     saturation: glassSaturation,
     contrastGuard: settings.glassContrastGuard,
     light: isLightIsland(background),
+    onLayerState,
   };
-  return { glass, glassStyle };
+  return { glass, glassStyle, layerState };
 }

@@ -1,14 +1,15 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { compareVersions, openIndex, selectVersions, verifyVersionSignature } from "../../../../packages/plugin-market/src/index.mjs";
-import { applyRevocationsToDir, commitStaged, discardStaged, inspectPackage as inspectFuyuPackage, installPackage, stagePackage, uninstallPackage, writeInstalledToYml } from "../../../../packages/plugin-cli/src/installer.mjs";
+import { DATA_DIR, dataDirOf } from "../../../../packages/plugin-base/src/host/data.mjs";
+import { applyRevocationsToDir, commitStaged, discardStaged, inspectPackage as inspectFuyuPackage, installPackage, removeInstalledFromYml, stagePackage, uninstallPackage, writeInstalledToYml } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { marketV1 } from "../../../../packages/plugin-services/src/services/market.mjs";
 import { getMarketPluginDetails } from "./marketDetails.mjs";
 import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
 import { refreshRevocations } from "./marketRevocations.mjs";
 import {
   INDEX_FILE, INDEX_SIG_FILE, buildMarketSnapshot, confirmationFromManifest, decodeBase64, detectTrustChange, isObject,
-  marketError, parseAppVersionFromArgv, planRequiredDependencies, readInstalledPackages, readState, readVerifiedCachedIndex,
+  marketError, parseAppVersionFromArgv, planRequiredDependencies, readInstalledPackages, readState, readYmlEntries, readVerifiedCachedIndex,
   resolvePinnedAuthor, revocationView, toTimestamp, writeState,
 } from "./marketStore.mjs";
 
@@ -336,12 +337,19 @@ export function createMarketService(options = {}) {
       if (!isObject(params) || typeof params.id !== "string" || !params.id) {
         throw marketError("bad-params", "uninstall expects { id: string, removeData?: boolean }");
       }
-      const found = readInstalledPackages(pluginsDir).find((item) => item.id === params.id);
-      if (!found) throw marketError("not-found", `Installed plugin ${params.id} was not found`);
-      const res = uninstallPackage(pluginsDir, found.id, { removeData: params.removeData === true });
+      const ymlFile = join(pluginsDir, "plugins.yml");
+      const registered = readYmlEntries(ymlFile).get(params.id);
+      if (registered?.source === "dev" || (registered && registered.source === null && registered.name)) {
+        removeInstalledFromYml(ymlFile, params.id);
+        if (params.removeData === true) rmSync(dataDirOf(join(pluginsDir, DATA_DIR), params.id), { recursive: true, force: true });
+      } else {
+        const found = readInstalledPackages(pluginsDir).find((item) => item.id === params.id);
+        if (!found) throw marketError("not-found", `Installed plugin ${params.id} was not found`);
+        uninstallPackage(pluginsDir, found.id, { removeData: params.removeData === true });
+      }
       if (onConfigChanged) await onConfigChanged();
       notifyChanged();
-      return { id: res.id, removed: true };
+      return { id: params.id, removed: true };
     },
   };
 }

@@ -139,7 +139,7 @@ test("reading stops zip bombs: total size, file count and lying sizes", () => {
   rejects(() => readPackage(corrupt), "zip");
 });
 
-test("packDirectory packs a folder and refuses symbolic links", () => {
+test("packDirectory packs a folder and refuses symbolic links", (t) => {
   const dir = mkdtempSync(join(tmpdir(), "plugin-manifest-"));
   try {
     mkdirSync(join(dir, "dist"));
@@ -148,7 +148,13 @@ test("packDirectory packs a folder and refuses symbolic links", () => {
     const packed = packDirectory(dir);
     assert.deepEqual(packed.files.map((file) => file.path), ["dist/host.js", "package.json"]);
     assert.equal(packed.files[0].data.toString(), "export default {};\n");
-    symlinkSync(join(dir, "package.json"), join(dir, "dist", "link.json"));
+    try {
+      symlinkSync(join(dir, "package.json"), join(dir, "dist", "link.json"));
+    } catch (error) {
+      if (error.code !== "EPERM") throw error;
+      t.skip("creating symbolic links needs Developer Mode or admin rights");
+      return;
+    }
     rejects(() => packDirectory(dir), "symlink");
   } finally {
     rmSync(dir, { recursive: true, force: true });
