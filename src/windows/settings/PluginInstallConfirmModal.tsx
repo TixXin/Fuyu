@@ -1,182 +1,115 @@
-import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { createPortal } from "react-dom";
-import { Blocks, X } from "lucide-react";
-import type { MarketLocalizedText, PluginInstallConfirmation } from "@fuyu/plugin-services";
+import { Info, KeyRound, LoaderCircle, ShieldCheck, TriangleAlert, X } from "lucide-react";
+import type { PluginInstallConfirmation } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
-import "./PluginsV3SettingsPage.css";
-import "./PluginMarketV3Tab.css";
+import { pluginInitial } from "./InstalledPluginRow";
+import { PluginMarketDialog } from "./PluginMarketDialog";
+import { PluginMarketPermissions } from "./PluginMarketPermissions";
+import { localized, permissionItems } from "./pluginMarketModel";
+import "./PluginPage.css";
 
 export interface PendingPluginInstall {
   id: string;
   version: string;
-  isUpdate?: boolean;
-  fresh?: boolean;
+  kind: "install" | "update" | "file";
   confirmation: PluginInstallConfirmation;
+  fresh?: boolean;
+  publisher?: string;
+  firstFromPublisher?: boolean;
+  fileName?: string;
+  sha256?: string;
+  manualAllowed?: boolean;
 }
 
-const FOCUSABLE = "button:not(:disabled), input:not(:disabled), [tabindex]:not([tabindex='-1'])";
+const shortHash = (hash: string) => (hash.length > 12 ? `${hash.slice(0, 4)}…${hash.slice(-4)}` : hash);
 
-export function resolvePluginText(value: MarketLocalizedText | string | undefined, locale: string, fallback: string): string {
-  if (!value) return fallback;
-  if (typeof value === "string") return value || fallback;
-  return (locale === "en" ? value.en : value["zh-CN"]) || value["zh-CN"] || value.en || fallback;
-}
-
-function CapabilityRow({ label, items, emptyText }: { label: string; items: readonly string[]; emptyText: string }) {
-  return (
-    <div className="plugins-v3__cap-row">
-      <dt>{label}</dt>
-      <dd>
-        {items.length > 0 ? items.join(", ") : <span className="plugins-v3__cap-empty">{emptyText}</span>}
-      </dd>
-    </div>
-  );
-}
-
-export function PluginInstallConfirmModal({
-  pending,
-  busy,
-  error,
-  onConfirm,
-  onCancel,
-}: {
+export function PluginInstallConfirmModal({ pending, busy, error, nameOf, onConfirm, onCancel }: {
   pending: PendingPluginInstall;
   busy: boolean;
   error: string | null;
+  nameOf?: (id: string) => string;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
   const { locale } = useLocale();
-  const text = useTranslation().settings.pluginsV3;
-  const copy = text.market.confirmModal;
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const cancelRef = useRef<HTMLButtonElement>(null);
+  const text = useTranslation().settings.pluginsV3.marketPage;
+  const copy = text.confirm;
+  const { id, version, kind, confirmation } = pending;
+  const name = localized(confirmation.displayName, locale, id);
+  const description = localized(confirmation.description, locale, "");
+  const keyChanged = kind === "update" && Boolean(confirmation.trustChange);
+  const firstTime = kind === "install" && Boolean(pending.firstFromPublisher) && !confirmation.official;
+  const title = kind === "file" ? copy.file(name) : kind === "update" ? copy.update(name, version) : copy.install(name);
+  const source = confirmation.official ? copy.official : kind === "file" ? copy.localFile : pending.publisher || copy.localFile;
+  const confirmLabel = kind === "file" ? copy.confirmFile : keyChanged ? copy.confirmKey : kind === "update" ? copy.confirmUpdate : firstTime ? copy.confirmTrust : copy.confirmInstall;
 
-  useEffect(() => {
-    const before = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    cancelRef.current?.focus();
-    return () => before?.focus();
-  }, []);
-
-  const { id, version, isUpdate, fresh, confirmation } = pending;
-  const displayName = resolvePluginText(confirmation.displayName, locale, id);
-  const description = resolvePluginText(confirmation.description, locale, "");
-  const title = isUpdate ? copy.titleUpdate : copy.titleInstall;
-
-  const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Escape") {
-      if (!busy) {
-        event.stopPropagation();
-        onCancel();
-      }
-      return;
-    }
-    if (event.key !== "Tab") return;
-    const items = [...(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])].filter((el) => el.offsetParent !== null);
-    if (items.length === 0) return;
-    const [first, last] = [items[0], items[items.length - 1]];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
-
-  return createPortal(
-    <div
-      className="plugins-v3__modal-backdrop"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget && !busy) onCancel();
-      }}
-    >
-      <div
-        ref={dialogRef}
-        className="plugins-v3__modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        data-install-modal={id}
-        onKeyDown={onKeyDown}
-      >
-        <div className="plugins-v3__modal-head">
-          <span className="plugins-v3__icon plugins-v3__icon--lg plugins-v3__icon--info" aria-hidden="true">
-            <Blocks size={18} strokeWidth={2} />
-            <span className="plugins-v3__dot" />
-          </span>
-          <div className="plugins-v3__title-col">
-            <div className="plugins-v3__title-line">
-              <strong className="plugins-v3__modal-title">{displayName}</strong>
-              <span className="plugins-v3__pill">{`v${version}`}</span>
-              {confirmation.official ? (
-                <span className="plugins-v3__pill plugins-v3__pill--official">{copy.sourceOfficial}</span>
-              ) : !confirmation.unreviewed ? (
-                <span className="plugins-v3__pill plugins-v3__pill--mint">{copy.sourceMarket}</span>
-              ) : null}
-            </div>
-            <span className="plugins-v3__id">{id}</span>
-          </div>
-          <button
-            ref={cancelRef}
-            className="plugins-v3__modal-close"
-            type="button"
-            disabled={busy}
-            aria-label={text.closeDetail}
-            title={text.closeDetail}
-            onClick={onCancel}
-          >
+  return (
+    <PluginMarketDialog label={title} size="small" busy={busy} onClose={onCancel} data={{ "data-install-modal": id, "data-install-kind": kind }}>
+      <div className="plugin-dialog__head">
+        <span className="plugin-icon plugin-icon--lg" aria-hidden="true">{pluginInitial(name)}</span>
+        <div className="plugin-dialog__heading">
+          <span className="plugin-dialog__title market-dialog__title">{title}</span>
+          <span className="plugin-dialog__sub">{`${source} · ${id}`}</span>
+        </div>
+        <div className="plugin-dialog__head-actions">
+          <button className="plugin-icon-btn" type="button" disabled={busy} aria-label={text.detail.close} title={text.detail.close} onClick={onCancel}>
             <X size={15} strokeWidth={2.2} aria-hidden="true" />
           </button>
         </div>
-
-        {confirmation.unreviewed ? <p className="plugins-v3__warn-banner">{copy.sourceManualWarn}</p> : null}
-        {confirmation.trustChange ? (
-          <p className="plugins-v3__warn-banner" data-trust-change={confirmation.trustChange}>
-            {copy.trustChangeWarn}
-          </p>
-        ) : null}
-        {description ? <p className="plugins-v3__note">{description}</p> : null}
-        {fresh ? (
-          <p className="plugins-v3__detail" data-cooldown-note="">
-            {isUpdate ? copy.cooldownUpdateNote : copy.cooldownInstallNote}
-          </p>
-        ) : null}
-        {confirmation.requiredPlugins && confirmation.requiredPlugins.length > 0 ? (
-          <p className="plugins-v3__detail plugins-v3__detail--info" data-required-plugins={confirmation.requiredPlugins.join(",")}>
-            {copy.requiresNote(confirmation.requiredPlugins.join(", "))}
-          </p>
-        ) : null}
-
-        {confirmation.network.length + confirmation.nodeApis.length + confirmation.provides.length + confirmation.replaces.length + confirmation.slots.length > 0 ? (
-          <dl className="plugins-v3__caps">
-            {confirmation.network.length > 0 ? <CapabilityRow label={copy.networkLabel} items={confirmation.network} emptyText={copy.networkNone} /> : null}
-            {confirmation.nodeApis.length > 0 ? <CapabilityRow label={copy.nodeApisLabel} items={confirmation.nodeApis} emptyText={copy.nodeApisNone} /> : null}
-            {confirmation.provides.length > 0 ? <CapabilityRow label={copy.providesLabel} items={confirmation.provides} emptyText={copy.capabilityNone} /> : null}
-            {confirmation.replaces.length > 0 ? <CapabilityRow label={copy.replacesLabel} items={confirmation.replaces} emptyText={copy.capabilityNone} /> : null}
-            {confirmation.slots.length > 0 ? <CapabilityRow label={copy.slotsLabel} items={confirmation.slots} emptyText={copy.capabilityNone} /> : null}
-          </dl>
-        ) : null}
-
-        <p className="plugins-v3__security-note">{copy.hostSecurityNote}</p>
-        {error ? <p className="plugins-v3__error-banner">{error}</p> : null}
-
-        <div className="plugins-v3__modal-actions">
-          <button className="plugins-v3__btn" type="button" disabled={busy} onClick={onCancel}>
-            {copy.cancelBtn}
-          </button>
-          <button
-            className="plugins-v3__btn plugins-v3__btn--primary"
-            type="button"
-            disabled={busy}
-            data-action="confirm-install"
-            onClick={onConfirm}
-          >
-            {busy ? text.market.installingBtn : copy.confirmBtn}
-          </button>
-        </div>
       </div>
-    </div>,
-    document.querySelector(".settings-stage") ?? document.getElementById("page") ?? document.body,
+      <div className="plugin-dialog__body">
+        {description ? <p className="plugin-dialog__desc">{description}</p> : null}
+        {kind === "file" ? (
+          <>
+            <div className="plugin-callout plugin-callout--warn" data-callout="unreviewed">
+              <TriangleAlert size={15} strokeWidth={2.2} aria-hidden="true" />
+              <div><b>{copy.fileTitle}</b><br />{pending.fileName ? copy.fileBody(pending.fileName) : copy.fileBodyUnknown}</div>
+            </div>
+            <div className="plugin-facts">
+              <div><span>{copy.facts.version}</span><b>{`v${version}`}</b></div>
+              {pending.sha256 ? <div><span>{copy.facts.sha256}</span><b className="market-mono" title={pending.sha256}>{shortHash(pending.sha256)}</b></div> : null}
+            </div>
+            <p className="plugin-callout" data-callout="manual">
+              <Info size={15} strokeWidth={2.2} aria-hidden="true" />
+              <span>{pending.manualAllowed ? copy.manualOn : copy.manualOff}</span>
+            </p>
+          </>
+        ) : null}
+        {keyChanged ? (
+          <div className="plugin-callout plugin-callout--warn" data-callout="key" data-trust-change={confirmation.trustChange}>
+            <KeyRound size={15} strokeWidth={2.2} aria-hidden="true" />
+            <div><b>{copy.keyTitle}</b><br />{copy.keyBody}</div>
+          </div>
+        ) : null}
+        {firstTime ? (
+          <div className="plugin-callout plugin-callout--info" data-callout="first">
+            <ShieldCheck size={15} strokeWidth={2.2} aria-hidden="true" />
+            <div><b>{copy.firstTitle(pending.publisher ?? id)}</b><br />{copy.firstBody}</div>
+          </div>
+        ) : null}
+        {pending.fresh && kind !== "file" ? (
+          <p className="plugin-callout" data-callout="fresh">
+            <Info size={15} strokeWidth={2.2} aria-hidden="true" />
+            <span>{kind === "update" ? copy.freshUpdate : copy.freshInstall}</span>
+          </p>
+        ) : null}
+        <h3 className="plugin-page__heading">
+          {kind === "update" ? text.perms.newVersionCan : text.perms.itCan}
+          {kind === "update" ? <span className="plugin-page__heading-meta">{copy.updateNote}</span> : null}
+        </h3>
+        <PluginMarketPermissions items={permissionItems(confirmation)} nameOf={nameOf} />
+        <p className="plugin-foot">{copy.securityNote}</p>
+        {error ? <p className="plugin-callout plugin-callout--bad" role="alert">{error}</p> : null}
+      </div>
+      <div className="plugin-dialog__foot">
+        <span className="plugin-dialog__grow" />
+        <button className="plugin-btn" type="button" disabled={busy} data-autofocus onClick={onCancel}>
+          {kind === "update" ? copy.notNow : copy.cancel}
+        </button>
+        <button className="plugin-btn plugin-btn--primary" type="button" disabled={busy} data-action="confirm-install" onClick={onConfirm}>
+          {busy ? <LoaderCircle className="plugin-spin" size={13} strokeWidth={2.2} aria-hidden="true" /> : null}
+          {busy ? copy.installing : confirmLabel}
+        </button>
+      </div>
+    </PluginMarketDialog>
   );
 }

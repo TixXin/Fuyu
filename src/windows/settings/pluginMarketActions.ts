@@ -27,3 +27,11 @@ export const PLUGIN_DOCS_URL = "https://github.com/TixXin/fuyu/blob/main/docs/pl
 export function openPluginDocs() {
   void openUrl(PLUGIN_DOCS_URL).catch(() => undefined);
 }
+
+export function isHttpUrl(url: string | null | undefined): url is string {
+  return typeof url === "string" && /^https?:\/\//i.test(url.trim());
+}
+
+export function openHttpUrl(url: string) {
+  if (isHttpUrl(url)) void openUrl(url.trim()).catch(() => undefined);
+}

@@ -42,6 +42,7 @@ export const PAGES = [
   "plugin-page.html",
   "plugin-page-en.html",
   "plugin-market.html",
+  "plugin-market-en.html",
   "plugin-diagnostics.html",
   "builtins-off.html",
   "todos-off.html",

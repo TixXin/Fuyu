@@ -1,4 +1,5 @@
 import { en as enPage, zhCN as zhPage, type SettingsPluginPageText } from "./pluginPage.ts";
+import { en as enMarket, zhCN as zhMarket, type SettingsPluginMarketText } from "./pluginMarket.ts";
 
 export type PluginV3State = "running" | "waiting" | "failed" | "disabled" | "auto-disabled" | "safe-mode" | "bisect" | "loading" | "stopped" | "unloading";
 
@@ -30,6 +31,7 @@ export type BuiltinPluginName =
 
 export type SettingsPluginsV3Text = {
   page: SettingsPluginPageText;
+  marketPage: SettingsPluginMarketText;
   searchPlaceholder: string;
   noMatches: string;
   closeDetail: string;
@@ -87,93 +89,11 @@ export type SettingsPluginsV3Text = {
     hideAll: string;
     hideAllHint: string;
   };
-  market: {
-    title: string;
-    count: (count: number) => string;
-    empty: string;
-    loading: string;
-    hostDisconnected: string;
-    updatedAt: (time: string) => string;
-    refresh: string;
-    refreshing: string;
-    manualAllow: string;
-    installFromFile: string;
-    officialBadge: string;
-    reviewedBadge: string;
-    cooldownBadge: string;
-    cooldownTitle: string;
-    cooldownHint: string;
-    revokedBadge: string;
-    installedBadge: (version: string) => string;
-    installBtn: string;
-    installingBtn: string;
-    updateBtn: (version: string) => string;
-    installedBtn: string;
-    manageBtn: string;
-    unavailableBtn: string;
-    needsFuyu: (range: string) => string;
-    needsNewerFuyu: string;
-    unsupportedPlatform: string;
-    uninstallBtn: string;
-    uninstallPrompt: (id: string) => string;
-    uninstallRemoveData: string;
-    uninstallConfirmBtn: string;
-    uninstallingBtn: string;
-    cancelBtn: string;
-    confirmModal: {
-      titleInstall: string;
-      titleUpdate: string;
-      sourceOfficial: string;
-      sourceMarket: string;
-      sourceManualWarn: string;
-      trustChangeWarn: string;
-      requiresNote: (plugins: string) => string;
-      cooldownInstallNote: string;
-      cooldownUpdateNote: string;
-      networkLabel: string;
-      networkNone: string;
-      nodeApisLabel: string;
-      nodeApisNone: string;
-      providesLabel: string;
-      replacesLabel: string;
-      slotsLabel: string;
-      capabilityNone: string;
-      hostSecurityNote: string;
-      confirmBtn: string;
-      cancelBtn: string;
-    };
-    detailModal: {
-      loading: string;
-      previewBadge: string;
-      likesCount: (count: number) => string;
-      publisherBy: (name: string) => string;
-      licenseLabel: (spdx: string) => string;
-      platformsLabel: (list: string) => string;
-      links: {
-        repository: string;
-        homepage: string;
-        bugs: string;
-        funding: string;
-      };
-      screenshotsHeading: string;
-      tabs: {
-        readme: string;
-        changelog: string;
-        capabilities: string;
-      };
-      noReadme: string;
-      noChangelog: string;
-      versionsHeading: string;
-      noVersions: string;
-      urgentBadge: string;
-      commandsLabel: string;
-      requiresLabel: string;
-    };
-  };
 };
 
 export const zhCN: SettingsPluginsV3Text = {
   page: zhPage,
+  marketPage: zhMarket,
   searchPlaceholder: "搜索插件名称、ID 或说明…",
   noMatches: "没有匹配的插件。",
   closeDetail: "关闭",
@@ -292,93 +212,11 @@ export const zhCN: SettingsPluginsV3Text = {
     hideAll: "隐藏全部窗口",
     hideAllHint: "立即隐藏并阻止显示此插件的全部独立窗口",
   },
-  market: {
-    title: "插件市场",
-    count: (count) => `共 ${count} 个上架插件`,
-    empty: "暂无上架插件。可点击「刷新索引」拉取最新市场目录，或开启手动安装后从本地导入 .fuyu 包。",
-    loading: "正在读取市场目录…",
-    hostDisconnected: "插件还没准备好，好了以后就能浏览市场、安装 .fuyu 插件包。",
-    updatedAt: (time) => `上次同步：${time}`,
-    refresh: "刷新索引",
-    refreshing: "正在刷新…",
-    manualAllow: "允许手动安装 .fuyu 包",
-    installFromFile: "从文件安装 .fuyu…",
-    officialBadge: "官方",
-    reviewedBadge: "市场已审核",
-    cooldownBadge: "刚上架",
-    cooldownTitle: "上架未满 3 天",
-    cooldownHint: "未满 3 天，暂缓自动更新",
-    revokedBadge: "已撤销",
-    installedBadge: (version) => `已安装 v${version}`,
-    installBtn: "安装",
-    installingBtn: "安装中…",
-    updateBtn: (version) => `更新至 v${version}`,
-    installedBtn: "已安装",
-    manageBtn: "管理",
-    unavailableBtn: "当前不可安装",
-    needsFuyu: (range) => `需要浮屿 ${range}`,
-    needsNewerFuyu: "需要更新浮屿后才能安装",
-    unsupportedPlatform: "不支持当前系统",
-    uninstallBtn: "卸载插件",
-    uninstallPrompt: (id) => `确定要卸载 ${id} 吗？卸载后插件代码与注册项会立即移除。`,
-    uninstallRemoveData: "同时删除本插件的数据目录",
-    uninstallConfirmBtn: "确认卸载",
-    uninstallingBtn: "卸载中…",
-    cancelBtn: "取消",
-    confirmModal: {
-      titleInstall: "确认安装插件",
-      titleUpdate: "确认更新插件",
-      sourceOfficial: "官方插件（@fuyu/*）",
-      sourceMarket: "市场已审核",
-      sourceManualWarn: "未经市场审核：来自本地 .fuyu 文件，请确认插件作者与来源可信后再安装。",
-      trustChangeWarn: "该插件更换了签名密钥或源码仓库，请确认作者身份后再更新。",
-      requiresNote: (plugins) => `将一并安装依赖插件：${plugins}`,
-      cooldownInstallNote: "该版本上架未满 3 天冷静期，确认后立即安装。",
-      cooldownUpdateNote: "该版本上架未满 3 天冷静期，尚未自动推送，确认后立即更新。",
-      networkLabel: "联网域名",
-      networkNone: "不联网",
-      nodeApisLabel: "Node 内置模块",
-      nodeApisNone: "无",
-      providesLabel: "提供服务",
-      replacesLabel: "接管服务",
-      slotsLabel: "界面插槽",
-      capabilityNone: "无",
-      hostSecurityNote: "插件在这台电脑上运行，能读写自己的数据文件夹，也能用系统的凭据管理器。",
-      confirmBtn: "确认安装",
-      cancelBtn: "取消",
-    },
-    detailModal: {
-      loading: "正在读取插件详情…",
-      previewBadge: "预览版",
-      likesCount: (count) => `${count} 赞`,
-      publisherBy: (name) => `发布者：${name}`,
-      licenseLabel: (spdx) => `协议：${spdx}`,
-      platformsLabel: (list) => `平台：${list}`,
-      links: {
-        repository: "源码仓库",
-        homepage: "主页",
-        bugs: "反馈问题",
-        funding: "赞助支持",
-      },
-      screenshotsHeading: "截图预览",
-      tabs: {
-        readme: "说明",
-        changelog: "更新日志",
-        capabilities: "能力声明",
-      },
-      noReadme: "暂无详细说明。",
-      noChangelog: "暂无更新日志。",
-      versionsHeading: "历史版本",
-      noVersions: "暂无版本记录。",
-      urgentBadge: "紧急修复",
-      commandsLabel: "命令与快捷键",
-      requiresLabel: "依赖插件",
-    },
-  },
 };
 
 export const en: SettingsPluginsV3Text = {
   page: enPage,
+  marketPage: enMarket,
   searchPlaceholder: "Search plugin name, ID or notes…",
   noMatches: "No matching plugins.",
   closeDetail: "Close",
@@ -496,88 +334,5 @@ export const en: SettingsPluginsV3Text = {
     disallowClickThroughHint: "Prevent this plugin from making windows ignore mouse clicks",
     hideAll: "Hide all windows",
     hideAllHint: "Immediately hide and keep all windows from this plugin hidden",
-  },
-  market: {
-    title: "Plugin market",
-    count: (count) => `${count} listed ${count === 1 ? "plugin" : "plugins"}`,
-    empty: "No plugins listed yet. Click Refresh index to fetch the market catalog, or turn on manual installation to import a local .fuyu package.",
-    loading: "Loading market catalog…",
-    hostDisconnected: "Plugins aren't ready yet. Once they are, you can browse the market and install .fuyu packages.",
-    updatedAt: (time) => `Synced: ${time}`,
-    refresh: "Refresh index",
-    refreshing: "Refreshing…",
-    manualAllow: "Allow manual .fuyu installation",
-    installFromFile: "Install .fuyu from file…",
-    officialBadge: "Official",
-    reviewedBadge: "Market reviewed",
-    cooldownBadge: "New",
-    cooldownTitle: "Published within the last 3 days",
-    cooldownHint: "Within 3d cooldown · manual update",
-    revokedBadge: "Revoked",
-    installedBadge: (version) => `Installed v${version}`,
-    installBtn: "Install",
-    installingBtn: "Installing…",
-    updateBtn: (version) => `Update to v${version}`,
-    installedBtn: "Installed",
-    manageBtn: "Manage",
-    unavailableBtn: "Unavailable",
-    needsFuyu: (range) => `Needs Fuyu ${range}`,
-    needsNewerFuyu: "Update Fuyu before installing",
-    unsupportedPlatform: "Not available on this system",
-    uninstallBtn: "Uninstall",
-    uninstallPrompt: (id) => `Uninstall ${id}? Its unpacked files and registration will be removed immediately.`,
-    uninstallRemoveData: "Also delete this plugin's data folder",
-    uninstallConfirmBtn: "Confirm uninstall",
-    uninstallingBtn: "Uninstalling…",
-    cancelBtn: "Cancel",
-    confirmModal: {
-      titleInstall: "Confirm plugin installation",
-      titleUpdate: "Confirm plugin update",
-      sourceOfficial: "Official plugin (@fuyu/*)",
-      sourceMarket: "Reviewed in market",
-      sourceManualWarn: "Unreviewed package: imported from a local .fuyu file. Only install if you trust the author.",
-      trustChangeWarn: "This plugin changed its signing key or source repository. Verify the author's identity before updating.",
-      requiresNote: (plugins) => `Will also install required plugins: ${plugins}`,
-      cooldownInstallNote: "Published within the 3-day cooldown; confirming installs it right away.",
-      cooldownUpdateNote: "Published within the 3-day cooldown (auto-update waits); confirming updates right away.",
-      networkLabel: "Network domains",
-      networkNone: "No network access",
-      nodeApisLabel: "Node built-in modules",
-      nodeApisNone: "None",
-      providesLabel: "Provides services",
-      replacesLabel: "Replaces services",
-      slotsLabel: "UI slots",
-      capabilityNone: "None",
-      hostSecurityNote: "Plugins run on this computer, can read and write their own data folder and can use the system credential manager.",
-      confirmBtn: "Install",
-      cancelBtn: "Cancel",
-    },
-    detailModal: {
-      loading: "Loading plugin details…",
-      previewBadge: "Preview",
-      likesCount: (count) => `${count} ${count === 1 ? "like" : "likes"}`,
-      publisherBy: (name) => `By ${name}`,
-      licenseLabel: (spdx) => `License: ${spdx}`,
-      platformsLabel: (list) => `Platforms: ${list}`,
-      links: {
-        repository: "Repository",
-        homepage: "Homepage",
-        bugs: "Report issue",
-        funding: "Sponsor",
-      },
-      screenshotsHeading: "Screenshots",
-      tabs: {
-        readme: "README",
-        changelog: "Changelog",
-        capabilities: "Capabilities",
-      },
-      noReadme: "No README provided.",
-      noChangelog: "No changelog provided.",
-      versionsHeading: "Versions",
-      noVersions: "No version history.",
-      urgentBadge: "Urgent",
-      commandsLabel: "Commands",
-      requiresLabel: "Required plugins",
-    },
   },
 };
