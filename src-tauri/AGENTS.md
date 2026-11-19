@@ -30,7 +30,6 @@ src-tauri/src/
 ├── pets/                    # Codex Pets（petdex）：只读列出 ~/.codex/pets 与 <app data>/pets，校验后以 data URL 返回图集
 ├── local_api/               # 本地接口（第 3 版内置插件 local-api，background.rs 把 HTTP 服务登记成后台 server，关掉插件就停）：127.0.0.1 HTTP（tiny_http）、鉴权与路由、转给 main 窗口的桥、local-api.json；switches.rs 让转给待办、Agent、剪贴板的请求在那个插件关着时回 503；settings.rs 是设置页的命令（令牌只由 Rust 复制）
 ├── plugin_kernel/           # 插件平台第 3 版的宿主：默认启动（设 FUYU_PLUGINS_V3=0 关掉），正式安装包用资源目录里的宿主；找 Node（找下载的状态和重试在 node_status.rs）、在数据目录的 plugins-v3/ 下拉起 packages/plugin-base 的宿主，用 platform::job 管住它（containment.rs）；keybindings.rs 同步第 3 版插件全局热键，plugin_windows.rs 管理实验独立窗口（plugin-window-<n>）。看管宿主的通用部分在 crates/plugin-base
-├── plugin_host/             # 插件：清单校验、plugins.json、子进程监督与 stdio JSON-RPC、权限表、设置页、市场与签名、撤销名单（revocations.rs）、后台检查与自动更新（updates.rs）、自定义界面页面（webviews.rs）、插件自己的窗口（windows/，实验接口，E34）、内置插件（builtin.rs，已全部迁到第 3 版）、按需启动与资源（activation.rs、lifecycle.rs）、开发模式（dev.rs）、清单里的 Agent 强度名称（effort_labels.rs）
 ├── media_control/
 ├── calendar/                # 日历：CalDAV（caldav.rs）和 ICS 订阅链接，iCalendar 解析和重复日程展开（ics.rs，rrule），会议链接识别（meeting_link.rs），来源配置与凭据（sources.rs）
 ├── lyrics/                  # 音乐页歌词：本地 .lrc 文件夹（local.rs）、LRCLIB（lrclib.rs，用户开启才联网）、按歌名歌手时长匹配（matching.rs），在线结果缓存在 lyrics-cache/
@@ -55,17 +54,16 @@ src-tauri/src/
 ├── user_error.rs            # 用户看到的错误：错误码、文案参数和外部原话（D15），前端按界面语言显示；凭据管理器的通用错误；
 │                            #   Mac 上的 unsupported()（错误码 platform.unsupported）和批量生成「暂不支持」命令的 unsupported_commands!
 ├── platform_support.rs      # 命令 get_platform_support：当前系统和它还不支持的功能，前端据此在设置和岛上隐藏
-├── platform.rs              # 两个平台都有的平台层模块（icon、job、process、process_env、process_times、process_tree）：Windows 上取 win32/，macOS 上取 macos/
+├── platform.rs              # 两个平台都有的平台层模块（icon、job、process、process_env、process_times、process_tree、session）：Windows 上取 win32/，macOS 上取 macos/
 ├── macos/                   # macOS 平台层（G1，决定 M10），和 win32/ 一样是允许 unsafe 的地方；第 0 步只有和 win32/ 同名同签名的空实现
 └── win32/                   # Win32 / COM 的安全封装，和 macos/ 一起是 crate 中允许 unsafe 的地方：window（窗口查询、枚举、前台切换）、
                              # message_window（隐藏消息窗口与安全的窗口过程）、named_mutex（探测、持有命名互斥量）、hotkey、win_key_hook、clipboard、shell_hook、input、
                              # com（COM / WinRT 初始化守卫）、audio、ole（文件拖出）、process / process_times / process_env /
                              # process_memory / process_tree、registry、credentials、dwm、icon、ocr、chinese、screen_capture、
-                             # capture_targets、taskbar、uia_list / uia_tabs、url_protocol、brightness、
-                             # notification_state（前台是否有全屏程序）、webview_page（插件自定义界面的独立 WebView2 页面，P8）、webview_crash（订阅 WebView2 的 ProcessFailed，D66）、webview_memory（MemoryUsageTargetLevel，D48）、
-                             # plugin_window（插件窗口：不经过 Tauri 的顶层窗口、标题条、层级、透明、小组件不拿焦点、屏幕列表，E34）、
-                             # job（插件进程的作业对象与挂起启动）、known_folder（下载文件夹等已知文件夹）、
-                             # session_notifications（锁屏、睡眠唤醒通知与键鼠空闲时间）、audio_outputs（在用的音频输出及类型）、
+                             # capture_targets、taskbar、uia_list / uia_tabs、brightness、
+                             # notification_state（前台是否有全屏程序）、webview_crash（订阅 WebView2 的 ProcessFailed，D66）、webview_memory（MemoryUsageTargetLevel，D48）、
+                             # job（插件宿主进程的作业对象与挂起启动）、known_folder（下载文件夹等已知文件夹）、
+                             # session（是否锁屏与键鼠空闲时间，和 macos/session.rs 同签名）、audio_outputs（在用的音频输出及类型）、
                              # devnode（设备节点属性：容器、蓝牙电量）、power（电源与电池）、graphics_capture（D3D11 设备与 WGC 显示器采集，帧留在 GPU）、
                              # video_writer（Media Foundation Sink Writer：硬件 H.264 写 MP4，失败换软件；可带 AAC 声音）、
                              # audio_capture（WASAPI 录系统声音和麦克风，系统声音同时开一路静音播放流，防止没声音时断包）
@@ -102,7 +100,6 @@ src-tauri/src/
 - 事件名定义为模块内的 `const`，向特定窗口发事件时使用窗口 label 常量（例如 `settings_window::WINDOW_LABEL`），不写字面量。
 - **命令和事件不返回密钥明文**（E36.3.7）：返回值和事件里不放密码、令牌、API 密钥、授权码，前端只拿 `has_xxx → bool` 这类状态；要用密钥的请求在 Rust 里拼好发出去。带密钥的网址发请求时，错误里去掉网址（reqwest 错误先 `without_url()`，或 `redact`）再 `.detail`。`pnpm check:secrets`（`scripts/check-secret-fields.mjs`）扫带 `Serialize` 的结构体，字段名像密钥、类型是字符串或 `Value` 的会报错；只写文件、不交给窗口的配置和例外登记在 `scripts/secret-fields-allowlist.json`，每条写理由，新增要在 PR 正文说明。规则和例外名单见 [v3-secrets.md](../docs/architecture/plugins/v3-secrets.md)。
 - 新增命令后，同步更新前端对应的 `api.ts`；用到插件权限时更新 `capabilities/default.json`。新窗口的 label 必须加入 capabilities 的 `windows` 列表。
-- **插件 API 的新能力先进实验通道**（2026-11-14 起，用户定，E30）：新方法、事件、贡献点或给已有方法加的行为，先放进 `plugin_host/dev.rs` 的 `EXPERIMENTAL_APIS`，只给开发模式的插件用；满足 [v2-platform.md](../docs/architecture/plugins/v2-platform.md) 3.1 节的转正条件后才进 `initialize.capabilities`。给已有方法加一个旧插件不会传的可选字段，不算新能力。
 
 ## 错误处理
 

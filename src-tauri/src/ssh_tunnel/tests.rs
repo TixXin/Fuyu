@@ -3,7 +3,7 @@ use std::{fs, path::Path, time::Duration};
 use serde_json::{json, Map, Value};
 
 use super::config::{self, HostTunnel, FILE_NAME};
-use super::local_proxy::{choice, loopback_port, pick, v2rayn_config_port, yaml_port, Choice, Found, LocalProxy};
+use super::local_proxy::{choice, loopback_port, pick, scutil_http_port, v2rayn_config_port, yaml_port, Choice, Found, LocalProxy};
 use super::tunnel::{backoff, hear, port_listening, ssh_args, Heard};
 
 fn temp_dir(tag: &str) -> std::path::PathBuf {
@@ -52,6 +52,15 @@ fn the_system_proxy_counts_only_when_it_is_on_this_computer() {
     assert_eq!(loopback_port("socks=127.0.0.1:7898"), None);
     assert_eq!(loopback_port("proxy.corp.example:8080"), None);
     assert_eq!(loopback_port(""), None);
+}
+
+#[test]
+fn the_mac_system_proxy_is_read_from_scutil() {
+    let on = "<dictionary> {\n  ExceptionsList : <array> {\n    0 : 127.0.0.1\n  }\n  HTTPEnable : 1\n  HTTPPort : 7890\n  HTTPProxy : 127.0.0.1\n  HTTPSEnable : 1\n}\n";
+    assert_eq!(scutil_http_port(on), Some(7890));
+    assert_eq!(scutil_http_port(&on.replace("HTTPEnable : 1", "HTTPEnable : 0")), None);
+    assert_eq!(scutil_http_port(&on.replace("HTTPProxy : 127.0.0.1", "HTTPProxy : proxy.corp.example")), None);
+    assert_eq!(scutil_http_port("<dictionary> {\n  HTTPEnable : 0\n  SOCKSEnable : 0\n}\n"), None);
 }
 
 #[test]
@@ -194,6 +203,7 @@ fn a_tunnel_says_why_it_failed_and_ends_its_ssh_when_stopped() {
     println!("stopped in {:?}", stopping.elapsed());
     assert!(stopping.elapsed() < Duration::from_secs(2));
     assert_eq!(*status.lock().unwrap(), Status::Connecting);
+    assert_eq!(super::tunnel::live(), 0, "a stopped supervisor no longer counts as live");
 
     let _ = fs::remove_file(dir.join("ssh").join("tunnel-nowhere.conf"));
     let _ = fs::remove_dir(dir.join("ssh"));

@@ -338,8 +338,7 @@ pub(crate) fn init(app: &AppHandle) {
     let _ = APP.set(app.clone());
     let home = fuyu_home(app);
     let file = home.as_deref().map(|home| home.join(DIR).join(FILE));
-    if let (Some(home), Some(file)) = (home.as_deref(), file.as_deref()) {
-        super::v2_builtins::migrate(home, file);
+    if let Some(home) = home.as_deref() {
         let _ = super::v2_migration::migrate_and_scan(home);
     }
     let disabled = file.as_deref().map(read_disabled).unwrap_or_default();

@@ -7,9 +7,7 @@ export type BuiltinPage = "todo" | "calendar" | "music" | "clipboard" | "shelf" 
 
 export type HeaderDotPage = Extract<BuiltinPage, "todo" | "calendar" | "music" | "clipboard" | "shelf" | "screenshots" | "timer">;
 
-export type PluginPageId = `plugin:${string}`;
-
-export type IslandPage = BuiltinPage | PluginPageId;
+export type IslandPage = BuiltinPage;
 
 export type NativeGlassState = "active" | "css-fallback" | "disabled";
 

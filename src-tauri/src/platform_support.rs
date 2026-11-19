@@ -12,7 +12,7 @@ pub struct PlatformSupport {
 #[cfg(target_os = "macos")]
 const SUPPORT: PlatformSupport = PlatformSupport {
     os: "macos",
-    unsupported: &["agentRemote"],
+    unsupported: &[],
     dev_build: false,
 };
 

@@ -11,7 +11,9 @@ import { checkGlassLooks } from "./settings-glass-looks";
 import { checkIdleDimSettings } from "./settings-idle-dim";
 import { checkImMessageSources } from "./settings-im-sources";
 import { checkThemeMarket } from "./settings-theme-market";
-import { commands, keybindingCalls, mailCalls, marketInstalls, openedUrls, REPLY_MARKER, replyMarkerCalls, revokedPermissions } from "./settingsMocks";
+import { commandsV1 } from "@fuyu/plugin-services";
+import { windowServices } from "../../src/features/plugin-kernel/services";
+import { commands, mailCalls, REPLY_MARKER, replyMarkerCalls } from "./settingsMocks";
 
 const query = new URLSearchParams(location.search);
 const automated = query.has("test");
@@ -31,6 +33,19 @@ else localStorage.removeItem("fuyu-settings");
 localStorage.setItem("fuyu-save-directory", "");
 localStorage.setItem("fuyu-qq-notification-access-requested", "true");
 
+
+const commandItems = [
+  { pluginId: "dev.example.todo-sync", pluginName: { "zh-CN": "待办同步示例", en: "Todo sync example" }, id: "sync-now", title: { "zh-CN": "立即同步", en: "Sync now" }, defaultKeybinding: "Ctrl+Alt+S", keybinding: "Ctrl+Alt+S", active: true, conflicts: [] },
+];
+const commandKeybindingCalls: { plugin: string; command: string; keybinding: string | null }[] = [];
+windowServices.provide(commandsV1, {
+  list: () => ({ items: commandItems.map((item) => ({ ...item })) }),
+  run: () => null,
+  setKeybinding: (params) => {
+    commandKeybindingCalls.push(params);
+    return { items: commandItems.map((item) => ({ ...item, keybinding: params.keybinding === "" ? null : params.keybinding })) };
+  },
+}, { owner: "settings-regression" });
 
 const root = createRoot(document.getElementById("root")!);
 const mount = () => root.render(<StrictMode><I18nProvider><SettingsWindow /></I18nProvider></StrictMode>);
@@ -54,9 +69,6 @@ const type = async (input: HTMLInputElement, value: string) => {
 };
 const texts = (selector: string) => [...document.querySelectorAll(selector)].map((found) => found.textContent ?? "").join("|");
 const settingRow = (title: string) => [...document.querySelectorAll<HTMLElement>(".settings-row")].find((row) => row.querySelector(".settings-row__title")?.textContent === title);
-const backButton = () => document.querySelector<HTMLButtonElement>(".plugin-dialog__close");
-const onPluginPage = () => Boolean(backButton());
-const backToList = () => act(async () => { backButton()?.click(); });
 const openPage = async (category: SettingsCategory) => {
   await click(`.settings-sidebar__item[data-category='${sidebarItemOf(category)}']`);
   if (entryOf(category)) await click(`.settings-tabs__tab[data-tab='${category}']`);
@@ -94,102 +106,6 @@ if (!automated) {
       check(panel.scrollWidth <= panel.clientWidth, `${category}: nothing overflows horizontally`);
     }
 
-    await openPage("plugins");
-    check(element(".plugin-card__error[role=alert]")?.textContent?.includes("plugins.broken-20261114-101500.json") && /^第三方（\d+）\|内置（\d+）$/.test(texts(".plugins-list__title")), "A broken plugins.json is reported with its backup (E22); installed plugins are grouped, third-party first");
-    const cardNames = () => texts(".plugins-list__grid .plugin-card__title strong");
-    check(texts(".plugins-toolbar__filter .plugin-chip__count") === "3|2|0|1" && element<HTMLButtonElement>(".plugins-toolbar__filter[data-filter='updates']").disabled, "The installed list counts all, running, updates and plugins that need attention");
-    await click(".plugins-toolbar__filter[data-filter='attention']");
-    check(cardNames() === "broken.plugin" && document.querySelectorAll(".plugin-card--error").length === 1, "Needs attention shows just the broken plugin, marked as an error");
-    await click(".plugins-toolbar__filter[data-filter='attention']");
-    await type(element<HTMLInputElement>(".plugins-toolbar input"), "local api");
-    check(cardNames() === "本地接口" && texts(".plugins-list__title") === "内置（1）", "Search finds installed plugins by their name in either language");
-    await type(element<HTMLInputElement>(".plugins-toolbar input"), "");
-    await act(async () => { document.querySelector<HTMLElement>(".plugins-list__grid .plugin-card--openable .plugin-card__title")?.click(); });
-    const pluginModal = document.querySelector<HTMLElement>(".plugin-dialog[role='dialog'][aria-modal='true']");
-    check(onPluginPage() && pluginModal && document.activeElement === pluginModal.querySelector(".plugin-dialog__close") && Boolean(pluginModal.querySelector(".plugin-card__switch input")), "Clicking a plugin's card opens its modal dialog with focus on Close and its switch in the header");
-    await act(async () => { pluginModal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); }); check(!onPluginPage(), "Esc closes the plugin dialog");
-    const runLine = [...document.querySelectorAll<HTMLElement>(".plugin-card__facts")].find((hint) => hint.textContent?.startsWith("内存"));
-    check(runLine?.textContent?.split(" · ")[0] === "内存 4.0 MB", "A plugin's card shows only the plugin's own memory, without the runtime");
-    check(runLine && !runLine.hasAttribute("title"), "The run line has no hover tooltip");
-    check(runLine?.textContent === "内存 4.0 MB · 按需启动 · 有预发布版 v1.1.0-beta.1" && texts(".plugins-list__grid .plugin-card__alert") === "需要 Node.js" && texts(".plugin-runtime-banner p") === "这台电脑上没有找到 Node.js，1 个插件装好它之后才能运行。", "A card's facts sit on one line, and a missing runtime is one banner above the list plus a short strip on the card");
-    const syncCard = [...document.querySelectorAll<HTMLElement>(".plugin-card")].find((card) => card.textContent?.includes("待办同步示例"));
-    await act(async () => { [...(syncCard?.querySelectorAll<HTMLButtonElement>(".plugin-card__button") ?? [])].find((button) => button.textContent === "设置")?.click(); });
-    const sensitiveRows = [...document.querySelectorAll<HTMLElement>(".plugin-detail__sensitive li")];
-    const linkRow = sensitiveRows.find((row) => row.textContent?.includes("fuyu:// 链接"));
-    check(sensitiveRows.length === 2 && linkRow?.querySelector("em")?.textContent === "已允许", "A plugin that lists onUri shows the remembered answer for links next to its sensitive permissions");
-    await act(async () => { linkRow?.querySelector("button")?.click(); });
-    check(revokedPermissions.includes("uri"), "Revoking the link answer forgets it like a sensitive permission");
-    await backToList();
-
-    await openPage("market");
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
-    const groupTitles = () => texts(".plugin-market__group-title");
-    check(groupTitles() === "可更新（1）|可安装（1）", "Updates come first, then plugins that can be installed");
-    check(document.querySelector(".plugin-market__header button")?.getAttribute("aria-label") === "刷新", "Refresh is a small icon button next to the status line");
-    const marketItem = [...document.querySelectorAll<HTMLElement>(".plugin-market__item")].find((item) => item.textContent?.includes("待办同步示例"));
-    const detailsButton = [...(marketItem?.querySelectorAll<HTMLButtonElement>("button[aria-expanded]") ?? [])][0];
-    await act(async () => { detailsButton?.click(); });
-    check(marketItem?.querySelector(".plugin-market__doc h3")?.textContent === "待办同步"
-      && marketItem.querySelector(".plugin-market__doc strong")?.textContent === "5 分钟"
-      && marketItem.querySelector(".plugin-market__doc a")?.getAttribute("href") === "https://example.com/docs"
-      && marketItem.querySelectorAll(".plugin-market__doc li").length === 2,
-      "The market details render the plugin's README");
-    check(marketItem?.querySelector(".plugin-market__history summary")?.textContent === "版本历史"
-      && marketItem.querySelector(".plugin-market__history h4")?.textContent === "1.1.0",
-      "The market details show the plugin's version history");
-    const tags = [...(marketItem?.querySelectorAll<HTMLElement>(".plugin-market__tag--signed") ?? [])];
-    check(tags.length === 1 && tags[0].textContent === "作者已签名", "A plugin signed by its author is tagged in the market");
-    check(marketItem?.querySelector(".plugin-card__hint--warn")?.textContent?.includes("签名密钥变了"), "An update on another author key says so");
-    const marketButton = (label: string) => [...(marketItem?.querySelectorAll<HTMLButtonElement>(".plugin-market__action button") ?? [])].find((item) => item.textContent === label);
-    await act(async () => { marketButton("仍然更新")?.click(); });
-    check(marketInstalls.length === 0 && marketButton("确认更新") && marketButton("取消"), "Updating on another author key first asks to confirm");
-    await act(async () => { marketButton("确认更新")?.click(); });
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
-    check(marketInstalls.length === 1 && marketInstalls[0].id === "dev.example.todo-sync" && marketInstalls[0].acceptKeyChange === true, "Confirming installs the update and accepts the new key");
-    const verifiedBadges = [...document.querySelectorAll<HTMLElement>(".plugin-market__badge:not(.plugin-market__badge--official)")];
-    check(verifiedBadges.length === 1 && verifiedBadges[0].textContent === "已验证"
-      && verifiedBadges[0].closest(".plugin-market__item")?.textContent?.includes("新插件"),
-      "A verified publisher gets a small mark; the official one keeps its own label");
-    check(document.querySelectorAll("[title]").length === 0, "No hover tooltips anywhere in Settings");
-    const verifiedItem = verifiedBadges[0]?.closest<HTMLElement>(".plugin-market__item");
-    check(verifiedItem && verifiedItem.scrollWidth <= verifiedItem.clientWidth, "The verified mark does not make the market overflow");
-    check(groupTitles() === "可安装（1）|已安装（1）" && !document.querySelector(".plugin-market__toggle")
-      && document.querySelectorAll(".plugin-market__grid").length === 2, "Installed plugins are listed at once, last, cards in a grid (issue #16)");
-    const categoryButton = (label: string) => [...document.querySelectorAll<HTMLButtonElement>(".plugin-market__category")].find((item) => item.textContent?.startsWith(label));
-    await act(async () => { categoryButton("收藏")?.click(); });
-    check(groupTitles() === "" && document.body.textContent?.includes("还没有收藏的插件"), "Starred with nothing starred says how to star");
-    await act(async () => { categoryButton("全部")?.click(); });
-    const star = document.querySelector<HTMLButtonElement>(".plugin-market__favorite[aria-pressed='false']");
-    const starredName = star?.closest(".plugin-market__item")?.querySelector(".plugin-market__title strong")?.textContent ?? "";
-    await act(async () => { star?.click(); });
-    check(star?.getAttribute("aria-pressed") === "true" && star.getAttribute("aria-label") === `取消收藏 ${starredName}`
-      && JSON.parse(localStorage.getItem("fuyu-plugin-market-favorites") ?? "[]").length === 1, "The star on a card saves the plugin on this computer");
-    await act(async () => { categoryButton("收藏")?.click(); });
-    check(categoryButton("收藏")?.textContent === "收藏 1" && document.querySelectorAll(".plugin-market__item").length === 1
-      && document.querySelector(".plugin-market__title strong")?.textContent === starredName, "Starred shows just the starred plugin, with the count on the button");
-    await act(async () => { document.querySelector<HTMLButtonElement>(".plugin-market__favorite")?.click(); });
-    await act(async () => { categoryButton("全部")?.click(); });
-    check(localStorage.getItem("fuyu-plugin-market-favorites") === null, "Unstarring the last plugin clears the saved list");
-    const likeButtons = [...document.querySelectorAll<HTMLButtonElement>(".plugin-market__like")];
-    check(likeButtons.map((button) => button.textContent).sort().join("|") === "12|3" && likeButtons.some((button) => button.getAttribute("aria-label") === "新插件：12 个赞，在 GitHub 上点赞")
-      && document.querySelector(".plugin-market__sort"), "Cards show the likes from GitHub, and a sort menu appears with them (E14)");
-    const opensBefore = openedUrls.length;
-    await act(async () => { likeButtons.find((button) => button.textContent === "12")?.click(); });
-    check(openedUrls.length === opensBefore + 1 && openedUrls[openedUrls.length - 1] === "https://github.com/TixXin/fuyu-plugins/discussions/9", "The like button opens the plugin's discussion");
-    check(document.querySelector(".plugin-market__status")?.textContent?.startsWith("共 ") && !document.querySelector(".plugin-market__header > span:only-child"), "A status line with the plugin count takes the place of a second Plugin market title");
-    const officialBadges = document.querySelectorAll(".plugin-market__badge--official");
-    check(officialBadges.length > 0 && [...document.querySelectorAll(".plugin-market__meta")].every((meta) => !meta.textContent?.includes("· 官方")), "Official plugins carry one small mark instead of a publisher line");
-    check([...document.querySelectorAll<HTMLElement>(".plugin-market__icon")].every((icon) => icon.textContent?.length === 1), "Every market card has a one-letter icon");
-    const installedItem = document.querySelector<HTMLElement>(".plugin-market__installed")?.closest<HTMLElement>(".plugin-market__item");
-    const manage = [...(installedItem?.querySelectorAll<HTMLButtonElement>(".plugin-market__action button") ?? [])].find((button) => button.textContent === "管理");
-    const managedName = installedItem?.querySelector(".plugin-market__title strong")?.textContent ?? "";
-    await act(async () => { manage?.click(); });
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
-    check(Boolean(manage) && onPluginPage()
-      && document.body.textContent?.includes(managedName),
-      "An installed plugin shows Installed with Manage, which opens it on the plugins page");
-    await backToList();
-
     await openPage("shortcuts");
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
     const pluginRows = [...document.querySelectorAll<HTMLElement>(".shortcut-row")].filter((row) => row.textContent?.includes(" · "));
@@ -198,7 +114,7 @@ if (!automated) {
     check(syncRow?.querySelector(".shortcut-control__meta strong")?.textContent === "Ctrl+Alt+S" && !tokenRow, "Settings > Shortcuts lists the commands of third-party plugins that are on, with the manifest's shortcut; built-in ones are left out");
     await act(async () => { syncRow?.querySelector<HTMLButtonElement>("button[aria-label^='关闭这个快捷键']")?.click(); });
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 20)); });
-    check(keybindingCalls.length === 1 && keybindingCalls[0].id === "dev.example.todo-sync" && keybindingCalls[0].command === "sync-now" && keybindingCalls[0].keybinding === "",
+    check(commandKeybindingCalls.length === 1 && commandKeybindingCalls[0].plugin === "dev.example.todo-sync" && commandKeybindingCalls[0].command === "sync-now" && commandKeybindingCalls[0].keybinding === "",
       "Turning a plugin shortcut off saves an empty shortcut for that command");
     const finder = element<HTMLButtonElement>("button[aria-label='按键查询']");
     await act(async () => { finder.click(); });
@@ -244,8 +160,8 @@ if (!automated) {
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
     const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean }[] } | null;
-    check(zoneRows("左侧").join("|") === "Agent 状态灯" && zoneRows("右侧")[0] === "新邮件提醒" && zoneRows("右侧").includes("待办同步示例")
-      && zoneRows("右侧")[zoneRows("右侧").length - 1] === "会话数 / 会话环" && savedItems() === null, "The collapsed bar items list the default layout, plugin status items included, without saving anything");
+    check(zoneRows("左侧").join("|") === "Agent 状态灯" && zoneRows("右侧")[0] === "新邮件提醒"
+      && zoneRows("右侧")[zoneRows("右侧").length - 1] === "会话数 / 会话环" && savedItems() === null, "The collapsed bar items list the default layout without saving anything");
     await act(async () => { itemButton("移到左侧：会话数 / 会话环")!.click(); });
     await act(async () => { itemButton("上移：会话数 / 会话环")!.click(); });
     check(zoneRows("左侧").join("|") === "会话数 / 会话环|Agent 状态灯" && savedItems()?.items[0].id === "session-count", "An item moves to the other side and up, and the order is saved");

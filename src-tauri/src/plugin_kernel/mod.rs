@@ -11,7 +11,6 @@ pub(crate) mod package_open;
 pub(crate) mod plugin_windows;
 pub(crate) mod protocol;
 mod safe_mode;
-mod v2_builtins;
 pub(crate) mod v2_migration;
 pub(crate) mod worker;
 

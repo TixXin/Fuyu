@@ -8,13 +8,13 @@ export type SettingsCategoriesText = {
   expand: (group: string) => string;
   collapse: (group: string) => string;
   keywords: Record<
-    | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
+    | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "themeMarket" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
-    | "plugins" | "pluginsV3" | "market" | "about",
+    | "pluginsV3" | "about",
     string
   >;
-  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; plugins: string; agents: string; agentAppearance: string; agentAlerts: string };
-  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "plugins" | "pluginsPages" | "pluginsUpdates" | "pluginsDev" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect", string>;
+  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string };
+  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "themeMarket" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect", string>;
   groups: {
     basics: string;
     features: string;
@@ -32,9 +32,6 @@ export type SettingsCategoriesText = {
   timerAlerts: string;
   shortcutsIsland: string;
   shortcutsReference: string;
-  pluginsPages: string;
-  pluginsUpdates: string;
-  pluginsDev: string;
   musicLyrics: string;
   musicLyricsStyle: string;
   clipboardHistory: string;
@@ -68,9 +65,7 @@ export type SettingsCategoriesText = {
   agentPush: string;
   agentApprovals: string;
   agentConnect: string;
-  plugins: string;
   pluginsV3: string;
-  market: string;
   about: string;
 };
 
@@ -98,9 +93,6 @@ export const zhCN: SettingsCategoriesText = {
     clipboardHistory: "记录 图片 文件 密码 密钥 排除 条数 清理 OCR 导入 导出 备份 迁移 链接 书签 网址 网站 图标",
     clipboardSnippets: "常用语 短语 提示词 AI",
     screenshotRecord: "录屏 录制 GIF MP4 帧率 画质 声音 麦克风",
-    pluginsPages: "岛上页面 顺序 隐藏 插件快捷键 命令",
-    pluginsUpdates: "自动更新 检查更新 受信任 发布者 信任",
-    pluginsDev: "开发者 开发模式 从文件夹加载 调试 JSON-RPC",
     shortcutsIsland: "岛上 按键 翻页 页面切换",
     shortcutsReference: "速查 Esc 拖动 调整大小 审批",
     appearance: "位置 显示器 屏幕 尺寸 大小 缩放 面板高度 形态 刘海",
@@ -130,9 +122,7 @@ export const zhCN: SettingsCategoriesText = {
     agentPush: "手机推送 Bark cc-connect 机器人 飞书",
     agentApprovals: "批准 允许 拒绝 权限 提问 回答 审批",
     agentConnect: "回复状态标记 编辑器扩展 VS Code Cursor 连接",
-    plugins: "扩展 已安装 插件目录 开发者 更新 岛屿页面",
     pluginsV3: "插件 第 3 版 内核 宿主 状态 占用 CPU 出错 停用 安全模式 开发中",
-    market: "扩展 插件 下载 安装 搜索",
     about: "版本 更新 检查更新 测试版 通道 更新日志 版本历史 发行说明 帮助 新手引导 诊断 重置 退出 反馈 Star",
   },
   entries: {
@@ -145,7 +135,6 @@ export const zhCN: SettingsCategoriesText = {
     clipboard: "剪贴板",
     screenshot: "截图",
     messages: "消息",
-    plugins: "插件",
     agents: "Agent",
     agentAppearance: "外观",
     agentAlerts: "提醒",
@@ -155,10 +144,6 @@ export const zhCN: SettingsCategoriesText = {
     generalData: "数据与备份",
     generalSync: "跨设备同步",
     generalApi: "本机接口",
-    plugins: "已安装",
-    pluginsPages: "页面与快捷键",
-    pluginsUpdates: "更新与信任",
-    pluginsDev: "开发者",
     music: "岛上显示",
     musicLyrics: "歌词来源",
     musicLyricsStyle: "歌词样式",
@@ -209,9 +194,6 @@ export const zhCN: SettingsCategoriesText = {
   timerAlerts: "计时与休息",
   shortcutsIsland: "岛上按键",
   shortcutsReference: "按键速查表",
-  pluginsPages: "插件页面与快捷键",
-  pluginsUpdates: "插件更新与信任",
-  pluginsDev: "插件开发者",
   musicLyrics: "歌词来源",
   musicLyricsStyle: "歌词样式",
   clipboardHistory: "记录与链接",
@@ -245,9 +227,7 @@ export const zhCN: SettingsCategoriesText = {
   agentPush: "推送与机器人",
   agentApprovals: "审批",
   agentConnect: "连接与扩展",
-  plugins: "插件",
   pluginsV3: "插件（第 3 版）",
-  market: "插件市场",
   about: "关于",
 };
 
@@ -275,9 +255,6 @@ export const en: SettingsCategoriesText = {
     clipboardHistory: "record images files passwords secrets exclude limit cleanup ocr import export backup move links bookmarks url website favicon",
     clipboardSnippets: "snippets phrases prompts ai",
     screenshotRecord: "screen recording record gif mp4 frame rate quality sound microphone",
-    pluginsPages: "island pages order hide plugin shortcuts commands",
-    pluginsUpdates: "automatic updates check trusted publishers trust",
-    pluginsDev: "developer dev mode load from folder debug json-rpc",
     shortcutsIsland: "island keys page switch",
     shortcutsReference: "reference sheet esc drag resize approval",
     appearance: "position display monitor screen size scale panel height form notch",
@@ -307,9 +284,7 @@ export const en: SettingsCategoriesText = {
     agentPush: "mobile push bark cc-connect bot feishu",
     agentApprovals: "approve allow deny permission questions answer",
     agentConnect: "reply status marker editor extension vs code cursor connection",
-    plugins: "extensions installed folder developer updates island pages",
     pluginsV3: "plugins v3 kernel host status usage cpu errors disabled safe mode preview",
-    market: "extensions plugins download install browse",
     about: "version updates check beta channel changelog version history release notes help onboarding guide diagnostics reset quit feedback star",
   },
   entries: {
@@ -322,7 +297,6 @@ export const en: SettingsCategoriesText = {
     clipboard: "Clipboard",
     screenshot: "Screenshots",
     messages: "Messages",
-    plugins: "Plugins",
     agents: "Agent",
     agentAppearance: "Appearance",
     agentAlerts: "Alerts",
@@ -332,10 +306,6 @@ export const en: SettingsCategoriesText = {
     generalData: "Data and backup",
     generalSync: "Cross-device sync",
     generalApi: "Local API",
-    plugins: "Installed",
-    pluginsPages: "Pages and shortcuts",
-    pluginsUpdates: "Updates and trust",
-    pluginsDev: "Developer",
     music: "On the island",
     musicLyrics: "Lyrics sources",
     musicLyricsStyle: "Lyrics style",
@@ -386,9 +356,6 @@ export const en: SettingsCategoriesText = {
   timerAlerts: "Timer and breaks",
   shortcutsIsland: "Island keys",
   shortcutsReference: "Key reference",
-  pluginsPages: "Plugin pages and shortcuts",
-  pluginsUpdates: "Plugin updates and trust",
-  pluginsDev: "Plugin developer",
   musicLyrics: "Lyrics sources",
   musicLyricsStyle: "Lyrics style",
   clipboardHistory: "Records and links",
@@ -422,8 +389,6 @@ export const en: SettingsCategoriesText = {
   agentPush: "Push and bots",
   agentApprovals: "Approvals",
   agentConnect: "Connection",
-  plugins: "Plugins",
   pluginsV3: "Plugins (v3)",
-  market: "Plugin market",
   about: "About",
 };

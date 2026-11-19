@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-**第 1–5 阶段及全部外围能力（E33、E43–E54）均已完成，正式版与测试版均已默认开启第 3 版宿主（E54，`FUYU_PLUGINS_V3=0` 可关闭），全部 12 个官方 `@fuyu/*` 插件已上架 `TixXin/fuyu-plugins` 正式签名索引 `index.v3.json`，开源基座 `tauri-cordis` `v0.1.0` 已发布至 npm 与 crates.io；仅剩两台机器真岛验收、Windows 测量以及第 6 阶段最后一步删除旧第 2 版代码（E36.6.5–E36.6.6，等完整发版周期后确认执行）。**
+**第 1–5 阶段及全部外围能力（E33、E43–E54）均已完成，正式版与测试版均已默认开启第 3 版宿主（E54，`FUYU_PLUGINS_V3=0` 可关闭），全部 12 个官方 `@fuyu/*` 插件已上架 `TixXin/fuyu-plugins` 正式签名索引 `index.v3.json`，开源基座 `tauri-cordis` `v0.1.0` 已发布至 npm 与 crates.io；第 2 版插件宿主与前端模块已删除（E36.6.5），仅剩两台机器真岛验收、Windows 测量，以及第 6 阶段的 E36.6.6（删第 2 版 SDK、脚手架、旧示例与旧名兼容）。**
 
 - 第 1 阶段（E36.1，#291）2026-11-15 完成：两个系统的测量和真岛验收都过了，细节在归档的任务文件里。
 - 第 2 阶段（E36.2，#292）2026-11-15 完成：岛的展开页、页头按钮、收起条、刘海提醒，设置窗口的分类、分节，都经插槽注册，`features.ts`、`categories.ts` 里写死的列表去掉了；回归页 53 页、105 份 DOM 快照和改动前逐字一致。各块在哪注册、和计划不一样的地方、留给后面阶段的事，见 [v3-phase2-plan.md](v3-phase2-plan.md)「收口」。真岛验收列在下面「待人工验收」。
@@ -44,7 +44,7 @@
 | 3 | 内置功能插件化（4–6 周） | E36.3（#293） | 已完成 | 2026-11-15 | 2026-11-17 | E36.3.1–E36.3.53 全部完成：22 个内置功能全部迁成第 3 版内置插件（`updater` 为 `essential`，其余 21 个在 Rust、宿主、窗口三层均通过 `builtins-off` 无残留检查），功能间只经服务与事件通信、`feature-boundary-allowlist.json` 清零，密钥不回 JS 守门就位，旧开关运行时双向镜像已移除（保留一次性升级迁移与设置备份桥接），测试通道与开发版默认开宿主，macOS 第 3 阶段后实测已填表（打包态 22 内置插件宿主 `phys_footprint` 35.0 MB、冷启动 0.58 秒）；等双系统真岛验收与 Windows 补测 |
 | 4 | 接缝（2–3 周） | E36.4（#294） | 已完成 | 2026-11-17 | 2026-11-17 | E36.4.1–E36.4.9 全部完成：服务替换与冲突让出（`disabledServices`）、`waiting` 3 种原因说明与 10 秒超时提醒，以及翻译引擎、歌词来源（`lyrics/v1`）、日历来源、AI 代理接入、剪贴板动作、截图后动作、消息来源（`messages/v1`）7 个接缝全部落地并经端到端测试通过；真岛验收列在下面「待人工验收」 |
 | 5 | 第三方插件（4–5 周） | E36.5（#295） | 已完成 | 2026-11-15 | 2026-11-18 | 地基 E36.5.1–E36.5.7、后半部分 E36.5.8–E36.5.12，以及外围闭环 E43（`market/v1` 服务与设置页界面）、E44（独立离线撤销密钥 `63fd60abfbf525be`）、E45 + E33（全部 12 个 `@fuyu/*` 官方插件含 `@fuyu/launcher` 上架 `index.v3.json`）、E47（`.fuyu` 系统文件关联）、E48（冷静期静默更新、换钥重确认与 `requires` 连带安装）、E49（`fuyu-plugin check` 插槽/服务名校验与合并 `executableKind`）、E50（`fuyu.commands` 与双端热键）、E51（`fuyu.config` JSON Schema 自动设置表单）、E52（受控 `ctx.http`、严格 CSP 与市场富详情页）、E53（实验窗口 `windows/v1`）、E54（正式版默认开宿主）全部完成 |
-| 6 | 下线第 2 版（2–3 周） | E36.6（#296） | 第一批与迁移引导已完成 | 2026-11-17 | | 计划见 [v3-phase6-plan.md](v3-phase6-plan.md)。第一批 E36.6.1–E36.6.3（7 个官方插件 v3 重写）及 E36.6.4（旧第 2 版已装插件迁移引导与一次性提示）已完成；仅剩 E36.6.5–E36.6.6（删第 2 版代码与旧名兼容）等用户确认后执行 |
+| 6 | 下线第 2 版（2–3 周） | E36.6（#296） | 第一批、迁移引导与删第 2 版代码已完成 | 2026-11-17 | 2026-11-18 | 计划见 [v3-phase6-plan.md](v3-phase6-plan.md)。第一批 E36.6.1–E36.6.3（7 个官方插件 v3 重写）、E36.6.4（迁移引导）与 E36.6.5（删 `plugin_host`、`features/plugins`、`features/plugin-views`、`v2_builtins.rs` 与旧设置页）已完成；仅剩 E36.6.6（删第 2 版 SDK、脚手架、旧示例与旧名兼容） |
 | — | 基座公开发布 | E36.3.49（#597）、E46（#855），条件见方案「基座做成开源项目」 | 已完成 | 2026-11-17 | 2026-11-18 | 公开仓库 [`TixXin/tauri-cordis`](https://github.com/TixXin/tauri-cordis)（MIT）已发布 `v0.1.0`：6 个 npm 包（`tauri-cordis`、`@tauri-cordis/manifest`、`@tauri-cordis/market`、`@tauri-cordis/review`、`@tauri-cordis/cli`、`create-tauri-cordis-plugin`）与 2 个 Rust crate（`tauri-cordis`、`tauri-cordis-macros`）全部上架，三平台 CI 全绿，crates.io OIDC 免密钥发布已绑定 |
 
 ## 开工前的准备
@@ -261,6 +261,7 @@ Windows 的测法：同上面 Windows 的构建和身份；`Process.Start` 拉�
 
 | 日期 | 改了什么 | 为什么 | 谁定的 |
 |---|---|---|---|
+| 2026-11-18 | 内置模块不算插件：设置里「插件（第 3 版）」的已安装页只列官方市场、第三方和本地导入的插件，22 个内置模块移到「宿主与运行诊断」；`local-api`、`center-pattern`、`claude-usage`、`session-ring`、`cc-connect`、`ssh-tunnel` 的开关归位到各自设置页 | 内置模块是浮屿自带的功能，不该作为插件出现（与概览、系统提示的开关重复）；这 6 个模块关掉时原本连设置分节一起消失，用户找不到重新打开的地方 | 用户（选「各自归位」） |
 | 2026-11-17 | 对外创建公开仓库 [`TixXin/tauri-cordis`](https://github.com/TixXin/tauri-cordis)（MIT，E46，#855），拆出独立 monorepo 与自动发包工作流 | 四项公开条件全部满足，用户确认对外发布开源基座 | 用户 |
 | 2026-11-17 | 第 4 阶段（E36.4 接缝）按 [v3-phase4-plan.md](v3-phase4-plan.md) 做：① 7 个接缝同时支持「整体替换服务」与「往内置功能里多加一个来源/动作」；② 替换内置插件的某项服务时只停用冲突的那项服务（`disabledServices`），不关掉整个内置插件；③ 邮箱、QQ、微信保持在 `messages` 插件下作为 `messages/v1` 的三个内置来源，不拆成 3 个独立内置插件；④ `tauri-cordis` 等第 3 阶段收口或第 4 阶段做完后对外建仓 | 计划「要你定的事」4 条全部按推荐 | 用户 |
 | 2026-11-17 | 开源基座名字定为 `tauri-cordis`（许可证 MIT，E36.3.49） | 直白表达「Tauri 上的 Cordis 万物皆插件基座」，搜 Tauri 或 Cordis 一眼看懂且不带 AI 歧义；npm 顶层包、`@tauri-cordis/*`、`create-tauri-cordis-plugin`、crates.io 与 GitHub 全平台空闲 | 用户 |

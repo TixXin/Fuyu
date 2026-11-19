@@ -573,8 +573,6 @@ impl ClipboardHistoryService {
 
     pub(super) fn emit_changed(&self) {
         let _ = self.app.emit(HISTORY_CHANGED_EVENT, ());
-        let enabled = self.state.lock().map(|state| state.settings.enabled).unwrap_or(false);
-        super::plugin_view::publish_changed(enabled);
     }
 
     pub(super) fn emit_shortcut(&self) {

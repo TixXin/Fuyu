@@ -4,7 +4,6 @@ import type { Dispatch, SetStateAction } from "react";
 import type { PlatformFeature } from "../../../lib/platform.ts";
 import type { IslandSettings } from "../../../lib/settings/types.ts";
 import type { useSettingPresets } from "../../../lib/settings/useSettingPresets.ts";
-import type { useMarketInstallRequest } from "../../../features/plugins/market-link/useMarketInstallRequest.ts";
 import type { LocaleCode } from "../../../i18n/index.ts";
 import type { FeatureSwitches } from "../useFeatureSwitches.ts";
 
@@ -17,14 +16,11 @@ export interface SettingsPageProps {
   unsupported: ReadonlySet<PlatformFeature>;
   features: FeatureSwitches;
   presets: ReturnType<typeof useSettingPresets>;
-  managedPluginId: string | null;
-  marketRequest: ReturnType<typeof useMarketInstallRequest>;
   onLocaleChange: (locale: LocaleCode) => void;
   onSettingsChange: Dispatch<SetStateAction<IslandSettings>>;
   onOpenPage: (page: SettingsCategory) => void;
   onShowPage: (page: SettingsCategory) => void;
   onOpenShortcuts: () => void;
-  onManagePlugin: (id: string) => void;
 }
 
 export const categorySlot = defineSlot<SettingsPageProps, CategoryMeta>("settings.category/v1");

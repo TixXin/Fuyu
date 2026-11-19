@@ -1,9 +1,13 @@
+import { useId } from "react";
 import { SettingsChoiceCards } from "../../components/settings/SettingsChoiceCards";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsRow } from "../../components/settings/SettingsRow";
+import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { SettingsToggleRow } from "../../components/settings/SettingsToggleRow";
 import { useTranslation } from "../../i18n";
+import { switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
+import { OWNER } from "./plugin/owner.ts";
 import { SESSION_RING_STYLES, type SessionRingStyle } from "./ringConfig.ts";
 import { useRingConfig } from "./useRingConfig";
 import "./RingSettingsGroup.css";
@@ -74,10 +78,15 @@ function RingStyleArt({ style }: { style: SessionRingStyle }) {
 }
 
 export function RingSettingsGroup() {
+  const switchId = useId();
   const text = useTranslation().sessionRing.settings;
   const [config, update] = useRingConfig();
   return (
-    <SettingsGroup title={text.title} footer={<SettingsFootnote text={text.footer} />}>
+    <SettingsGroup
+      title={text.title}
+      action={<SettingsSwitch id={switchId} ariaLabel={text.title} checked onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch(() => undefined)} />}
+      footer={<SettingsFootnote text={text.footer} />}
+    >
       <SettingsRow title={text.style}>
         <SettingsChoiceCards<SessionRingStyle>
           value={config.style}

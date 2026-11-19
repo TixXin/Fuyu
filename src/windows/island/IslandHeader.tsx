@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { Bot } from "lucide-react";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
@@ -29,7 +28,6 @@ type IslandHeaderProps = {
   pageDigitModifiers: string;
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
-  pluginPageButtons?: ReactNode;
 };
 
 export function IslandHeader({
@@ -49,7 +47,6 @@ export function IslandHeader({
   pageDigitModifiers,
   hoverSwitchPage,
   hoverSwitchDelayMs,
-  pluginPageButtons,
 }: IslandHeaderProps) {
   const t = useTranslation();
   const { hints } = useIslandContributed();
@@ -135,7 +132,6 @@ export function IslandHeader({
             </button>
           );
         })}
-        {pluginPageButtons}
       </div>
       </div>
 

@@ -8,10 +8,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 use tauri::{ipc::Response, AppHandle, Manager};
 
-use crate::{
-    plugin_host::{plugin_sound_packs, PluginSoundPack},
-    user_error::UserError,
-};
+use crate::user_error::UserError;
 
 const PACKS_DIR: &str = "sound-packs";
 const MANIFEST: &str = "pack.json";
@@ -37,24 +34,6 @@ pub struct SoundPack {
 }
 
 const PLUGIN_PACK_PREFIX: &str = "plugin:";
-
-fn plugin_pack(pack: PluginSoundPack) -> (SoundPack, PathBuf) {
-    let sound_pack = SoundPack {
-        id: format!("{PLUGIN_PACK_PREFIX}{}", pack.id),
-        name: clean_text(&pack.name_zh),
-        author: clean_text(&pack.author),
-        license: clean_text(&pack.license),
-        sounds: pack.files,
-        name_en: Some(clean_text(&pack.name_en)),
-        from_plugin: true,
-    };
-    (sound_pack, pack.dir)
-}
-
-fn find_plugin_pack(id: &str) -> Option<(SoundPack, PathBuf)> {
-    let plugin_id = id.strip_prefix(PLUGIN_PACK_PREFIX)?;
-    plugin_sound_packs().into_iter().find(|pack| pack.id == plugin_id).map(plugin_pack)
-}
 
 #[derive(Deserialize)]
 pub struct SoundPackImport {
@@ -154,9 +133,7 @@ fn read_pack(dir: &Path) -> Option<SoundPack> {
 
 fn resolve_pack(app: &AppHandle, id: &str) -> Result<(SoundPack, PathBuf), UserError> {
     if id.starts_with(PLUGIN_PACK_PREFIX) {
-        find_plugin_pack(id).ok_or_else(|| {
-            UserError::new("soundPack.pluginGone", "This sound pack was not found; the plugin may be disabled or uninstalled.")
-        })
+        Err(UserError::new("soundPack.pluginGone", "This sound pack was not found; the plugin may be disabled or uninstalled."))
     } else if is_valid_id(id) {
         let dir = packs_dir(app)?.join(id);
         let pack = read_pack(&dir).ok_or_else(|| UserError::new("soundPack.notFound", "This sound pack was not found."))?;
@@ -173,7 +150,6 @@ pub async fn list_sound_packs(app: AppHandle) -> Result<Vec<SoundPack>, UserErro
         let mut packs: Vec<SoundPack> = fs::read_dir(&dir)
             .map(|entries| entries.flatten().filter_map(|entry| read_pack(&entry.path())).collect())
             .unwrap_or_default();
-        packs.extend(plugin_sound_packs().into_iter().map(|pack| plugin_pack(pack).0));
         packs.sort_by_key(|pack| pack.name.to_lowercase());
         Ok(packs)
     })

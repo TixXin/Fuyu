@@ -65,6 +65,7 @@ mockIPC((command, payload) => {
 const { SettingsSidebar } = await import("../../src/windows/settings/SettingsSidebar");
 await import("../../src/windows/settings/slots/categories");
 const { PluginsV3SettingsPage } = await import("../../src/windows/settings/PluginsV3SettingsPage");
+const { switchBuiltinPlugin } = await import("../../src/features/plugin-kernel/builtinSwitches");
 const { windowServices } = await import("../../src/features/plugin-kernel/services");
 const { windowSlots } = await import("../../src/features/plugin-kernel/slots");
 const { NODE_EVERY_MS } = await import("../../src/windows/settings/usePluginHostNode");
@@ -195,21 +196,16 @@ try {
   await settle();
 
   check(document.querySelector(".settings-sidebar__item[data-category='pluginsV3']"), "The sidebar always lists the Plugins (v3) page");
-  const builtinRow = (id: string) => page.querySelector<HTMLElement>(`.plugins-v3__builtin[data-builtin='${id}']`);
-  const builtinSwitch = (id: string) => builtinRow(id)?.querySelector<HTMLInputElement>("input");
-  check(page.querySelectorAll(".plugins-v3__builtin").length === 22 && catalog.plugins.every(({ id }) => builtinRow(id)?.textContent?.includes(text.builtinNames[id as keyof typeof text.builtinNames])), "The page lists all 22 built-in plugins by name, before the host has answered");
-  check(builtinRow("clipboard")?.dataset.enabled === "false" && builtinSwitch("clipboard")?.checked === false && builtinSwitch("timer")?.checked === true, "Each switch shows what plugins.yml says");
-  check(builtinSwitch("updater")?.disabled && builtinRow("updater")!.textContent!.includes(text.essentialNote), "The updater is essential: its switch cannot be turned off");
-  check(windowSlots("settings").disabledOwners().join() === "clipboard" && windowSlots("island").disabledOwners().join() === "clipboard", "Both windows hide the slot items of a switched-off plugin");
-  await act(async () => builtinSwitch("timer")!.click());
+  check(page.querySelectorAll(".plugins-v3__builtin").length === 0 && page.querySelector("[data-tab='plugins']")?.textContent === text.tabs.plugins(0), "Built-in feature modules are not displayed as plugin cards on the Installed tab");
+  check(windowSlots("settings").disabledOwners().join() === "clipboard" && windowSlots("island").disabledOwners().join() === "clipboard", "Both windows hide the slot items of a switched-off built-in module");
+  await act(async () => { await switchBuiltinPlugin("timer", false); });
   await settle();
-  check(switchCalls[switchCalls.length - 1]?.id === "timer" && switchCalls[switchCalls.length - 1]?.enabled === false && builtinSwitch("timer")?.checked === false, "Switching a plugin off asks Rust and shows the new state");
-  check(windowSlots("island").disabledOwners().sort().join() === "clipboard,timer", "and its slot items drop out");
-  await act(async () => builtinSwitch("timer")!.click());
+  check(switchCalls[switchCalls.length - 1]?.id === "timer" && switchCalls[switchCalls.length - 1]?.enabled === false && windowSlots("island").disabledOwners().sort().join() === "clipboard,timer", "Switching a built-in module off asks Rust and drops its slot items");
+  await act(async () => { await switchBuiltinPlugin("timer", true); });
   await settle();
-  check(builtinSwitch("timer")?.checked === true && windowSlots("island").disabledOwners().join() === "clipboard", "Switching it back on brings them back");
+  check(windowSlots("island").disabledOwners().join() === "clipboard", "Switching it back on brings its slot items back");
   check(page.querySelector("[data-connection='connecting']")?.textContent === text.connection.connecting, "Before the host answers the page says it is connecting");
-  check(page.textContent?.includes(text.waitingHost), "and that plugins show up once it is connected");
+  check(page.textContent?.includes(text.waitingHost), "and that installed plugins show up once it is connected");
   const nodeRow = () => page.querySelector<HTMLElement>(".plugins-v3__node");
   check(!nodeRow(), "With Node found there is no download row");
   nodeReply = { state: "downloading", downloaded: 12 * MB, total: 30 * MB };
@@ -228,15 +224,15 @@ try {
     given.onState("open");
     given.onSnapshot({ plugins: PLUGINS, host: HOST });
   });
-  check(page.querySelector("[data-connection='open']")?.textContent === text.connection.open, "Once connected it says so");
+  check(page.querySelector("[data-connection='open']")?.textContent === text.connection.open, "In safe mode the host bar shows the connection and safe mode notice");
   nodeReply = { state: "ready" };
   check(!nodeRow(), "and the download row is gone");
   await settle();
   const memoryValue = () => page.querySelector<HTMLElement>(".plugins-v3__value[data-measure]");
-  check(page.textContent?.includes(text.hostDetail(4242, "26.12.0")), "The host row shows its process and Node version");
+  check(page.textContent?.includes(text.hostDetail(4242, "26.12.0")), "The safe mode host row shows its process and Node version");
   check(memoryValue()?.textContent === "25.2 MB" && memoryValue()?.dataset.measure === "private-working-set" && !page.textContent?.includes("42.0 MB"), "Memory is the private working set Fuyu reads from the host process, not the host's own resident size");
   check(page.textContent?.includes(text.memoryTitles["private-working-set"]) && page.textContent?.includes(text.memoryNotes["private-working-set"]), "and the label says which measure it is");
-  check(page.textContent?.includes(text.safeModes["third-party"]) && page.textContent?.includes(text.devMode), "Safe mode and dev mode are shown when the host runs in them");
+  check(page.textContent?.includes(text.safeModes["third-party"]) && page.textContent?.includes(text.devMode), "Safe mode and dev mode are shown when the host runs in safe mode");
   const leaveButton = () => page.querySelector<HTMLButtonElement>(".plugins-v3__leave");
   check(page.textContent?.includes(text.safeCauses.failures(2)), "The safe mode row says it came from two failed starts in a row");
   check(leaveButton()?.textContent === text.leaveSafeMode, "and offers to leave safe mode");
@@ -244,21 +240,16 @@ try {
   await settle();
   check(leaveCalls === 1 && leaveButton()?.disabled, "Leaving asks Fuyu once and the button waits for the host to restart");
 
-  check(stateText("counter") === text.states.running && card("counter")!.textContent!.includes("12.5 ms"), "A running plugin shows its state and CPU");
-  const counterUsage = [...card("counter")!.querySelectorAll("dd")].map((value) => value.textContent);
-  check(counterUsage.join("|") === "12.5 ms|0.40 ms|2|3|1|1|0", "and its start time, timers, listeners, services, UI files and errors");
-  check(stateText("reader") === text.states.waiting && card("reader")!.textContent!.includes(text.waitingFor("store, todos")), "A waiting plugin names the services it waits for");
-  check(card("reader")!.textContent!.includes("–"), "A plugin that has not started shows no start time");
+  check(!card("counter") && !card("reader") && page.querySelectorAll(".plugins-v3__plugin").length === 5 && page.querySelector("[data-tab='plugins']")?.textContent === text.tabs.plugins(5), "Only external plugins appear on the Installed tab (built-in and essential host entries stay in Diagnostics)");
   check(stateText("broken") === text.states.failed && card("broken")!.textContent!.includes("broken on purpose"), "A failed plugin shows why");
   check(stateText("off") === text.states.disabled && !card("off")!.querySelector(".plugins-v3__usage"), "A plugin switched off in plugins.yml shows as off");
   const flaky = card("flaky-plugin-with-a-really-long-identifier-that-should-not-overflow")!;
   check(flaky.dataset.state === "auto-disabled" && flaky.textContent!.includes(text.autoDisabled(5, 60)) && flaky.querySelector(".plugins-v3__last-error"), "A plugin the host turned off says why in the window's language, with its last error at hand");
   check(stateText("held") === text.states["safe-mode"] && card("held")!.textContent!.includes(text.heldBySafeMode(text.safeModes["third-party"])), "A plugin held back by safe mode says so");
-  check(card("noisy")!.querySelector(".plugins-v3__last-error") && card("noisy")!.textContent!.includes("1.50 s"), "A running plugin that erred keeps its last error within reach");
-  check(card("broken")!.querySelector(".plugins-v3__kind")?.textContent === text.kinds["third-party"] && card("counter")!.querySelector(".plugins-v3__kind")?.textContent === text.kinds.builtin, "Each plugin says what kind it is");
+  check(card("noisy")!.querySelector(".plugins-v3__last-error"), "A running plugin that erred keeps its last error within reach");
+  check(card("broken")!.querySelector(".plugins-v3__kind")?.textContent === text.kinds["third-party"], "Community plugins show the third-party badge");
 
   await send((given) => given.onEvent("plugins", PLUGINS.map((plugin) => (plugin.id === "counter" ? { ...plugin, usage: usage({ cpuMs: 20, timers: 1 }) } : plugin))));
-  check(card("counter")!.textContent!.includes("20.0 ms"), "A plugins event updates the numbers in place");
   memoryReply = null;
   safeReply = { mode: "third-party", cause: "shift", failures: 0 };
   await send((given) => given.onEvent("host", { ...HOST, pid: 4343, rssBytes: 50 * MB }));
@@ -279,10 +270,7 @@ try {
     given.onState("open");
     given.onSnapshot({ plugins: [PLUGINS[0]], host: { ...HOST, pid: 5151, safe: null, dev: false } });
   });
-  check(page.textContent?.includes(text.hostDetail(5151, "26.12.0")) && page.querySelectorAll(".plugins-v3__plugin").length === 1, "After the restart the new snapshot replaces everything it showed");
-  check(!page.textContent?.includes(text.safeMode), "A host out of safe mode no longer shows it");
-  await send((given) => given.onSnapshot({ plugins: [], host: HOST }));
-  check(page.textContent?.includes(text.empty), "With no plugins configured it says so");
+  check(!page.querySelector(".plugins-v3__host-bar") && !page.textContent?.includes(text.safeMode) && page.querySelectorAll(".plugins-v3__plugin").length === 0 && page.textContent?.includes(text.empty) && Boolean(page.querySelector("[data-action='open-market-tab']")), "Out of safe mode with only built-in modules running, the Installed tab hides host telemetry and shows the empty state with a link to the market");
 
   const narrow = document.getElementById("narrow")!;
   check(main.fake.open === 1 && side.fake.open === 1, "Each page keeps exactly one connection to the host open");
@@ -292,28 +280,27 @@ try {
     narrowHandlers.onSnapshot({ plugins: PLUGINS, host: HOST });
   });
   const overflowing = [...narrow.querySelectorAll<HTMLElement>(".plugins-v3__plugin, .plugins-v3__plugin-head, .plugins-v3__migration-item, .settings-row")].filter((element) => element.scrollWidth > element.clientWidth + 1);
-  check(narrow.querySelectorAll(".plugins-v3__plugin").length > 0 && overflowing.length === 0, "In a 300 px wide window nothing spills out sideways");
+  check(narrow.querySelectorAll(".plugins-v3__plugin").length === 5 && overflowing.length === 0, "In a 300 px wide window nothing spills out sideways");
   await act(async () => narrowRoot.unmount());
   check(side.fake.open === 0, "Leaving the page closes its connection");
   await send((given) => given.onSnapshot({ plugins: PLUGINS, host: HOST }));
 
-  await act(async () => card("counter")!.click());
-  const modal = page.querySelector<HTMLElement>("[role='dialog']");
-  check(modal?.textContent?.includes("counter") && document.activeElement === modal.querySelector(".plugins-v3__modal-close"), "Clicking a plugin card opens its detail dialog and focuses the close button");
-  await act(async () => { modal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
-  check(!page.querySelector("[role='dialog']"), "and Escape dismisses the dialog");
-
+  await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='diagnostics']")!.click());
+  check(page.querySelectorAll(".plugins-v3__diag-table tbody tr").length === 29, "The diagnostics tab lists all 22 built-in modules and 7 host entries in a comparison table");
   const searchInput = page.querySelector<HTMLInputElement>(".plugins-v3__search input")!;
   const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
   await act(async () => { valueSetter.call(searchInput, "local api"); searchInput.dispatchEvent(new Event("input", { bubbles: true })); });
-  check(page.querySelectorAll(".plugins-v3__builtin").length === 1 && Boolean(builtinRow("local-api")), "Search finds built-in plugins by name across languages and ignores spaces or hyphens");
+  check(page.querySelectorAll(".plugins-v3__diag-table tbody tr").length === 1 && Boolean(page.querySelector("[data-diag-row='local-api']")), "Diagnostics search finds built-in modules by name across languages and ignores spaces or hyphens");
   await act(async () => page.querySelector<HTMLButtonElement>(".plugins-v3__search-clear")!.click());
-  check(page.querySelectorAll(".plugins-v3__builtin").length === 22, "Clearing the search brings back all 22 built-in plugins");
-
-  await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='diagnostics']")!.click());
-  check(page.querySelectorAll(".plugins-v3__diag-table tbody tr").length === 29, "The diagnostics tab lists all built-in and host plugins in a comparison table");
+  check(page.querySelectorAll(".plugins-v3__diag-table tbody tr").length === 29, "Clearing search restores all 29 diagnostics rows");
+  await act(async () => page.querySelector<HTMLElement>("[data-diag-row='counter']")!.click());
+  const modal = page.querySelector<HTMLElement>("[role='dialog']");
+  const counterUsage = [...(modal?.querySelectorAll(".plugins-v3__usage dd") ?? [])].map((value) => value.textContent);
+  check(modal?.textContent?.includes("counter") && counterUsage.join("|") === "12.5 ms|0.40 ms|2|3|1|1|0" && document.activeElement === modal.querySelector(".plugins-v3__modal-close"), "Clicking a diagnostics row opens the detail dialog with runtime metrics and focuses close");
+  await act(async () => { modal!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+  check(!page.querySelector("[role='dialog']"), "and Escape dismisses the dialog");
   await act(async () => page.querySelector<HTMLButtonElement>("[data-tab='plugins']")!.click());
-  check(page.querySelectorAll(".plugins-v3__builtin").length === 22, "Switching back to the plugins tab restores the grouped card grid");
+  check(page.querySelectorAll(".plugins-v3__plugin").length === 5 && page.querySelectorAll(".plugins-v3__builtin").length === 0, "Switching back to the Installed tab shows only external plugins");
 
   const migrationCard = page.querySelector<HTMLElement>(".plugins-v3__migration");
   check(
@@ -371,7 +358,7 @@ try {
   await settle();
   await act(async () => card("@fuyu/weather")!.querySelector<HTMLInputElement>("input")!.click());
   await settle();
-  check(marketCalls.includes("setEnabled:@fuyu/weather=false"), "Toggling a market-installed plugin card calls market/v1 setEnabled");
+  check(marketCalls.includes("setEnabled:@fuyu/weather=false") && card("@fuyu/weather")!.textContent!.includes(text.market.officialBadge), "Official @fuyu/* market plugins show the Official badge and toggling calls market/v1 setEnabled");
   await act(async () => card("@fuyu/weather")!.click());
   await settle();
   await act(async () => page.querySelector<HTMLElement>("[data-schema-field='autoRefresh'] input")!.click());

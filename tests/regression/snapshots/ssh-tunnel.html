@@ -5,6 +5,10 @@
         <h2 class="settings-group__title">
           SSH 代理隧道
         </h2>
+        <span class="settings-switch">
+          <input aria-label="SSH 代理隧道" checked="" id="_id1_" role="switch" type="checkbox">
+          <span aria-hidden="true" class="settings-switch__track"></span>
+        </span>
       </div>
       <div class="settings-group__card">
         <div class="settings-row">
@@ -14,13 +18,13 @@
                 本地代理
               </span>
               <span class="settings-row__description">
-                自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和 Windows 系统代理，再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。
+                自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和系统代理（Windows 的 Internet 设置、Mac 的网络代理），再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。
               </span>
             </div>
             <div class="settings-row__control">
               <div class="settings-select">
                 <div class="select-control">
-                  <button aria-controls="_id1_" aria-expanded="false" aria-haspopup="listbox" aria-label="本地代理" class="select-control__trigger" role="combobox" type="button">
+                  <button aria-controls="_id2_" aria-expanded="false" aria-haspopup="listbox" aria-label="本地代理" class="select-control__trigger" role="combobox" type="button">
                     <span>
                       自定义端口
                     </span>
@@ -34,12 +38,12 @@
         <div class="settings-row settings-row--indent">
           <div class="settings-row__main">
             <div class="settings-row__text">
-              <label class="settings-row__title" for="_id2_">
+              <label class="settings-row__title" for="_id3_">
                 本地端口
               </label>
             </div>
             <div class="settings-row__control">
-              <input class="settings-input settings-input--number" id="_id2_" inputmode="numeric" max="65535" min="1" spellcheck="false" type="number" value="7897">
+              <input class="settings-input settings-input--number" id="_id3_" inputmode="numeric" max="65535" min="1" spellcheck="false" type="number" value="7897">
             </div>
           </div>
         </div>
@@ -89,12 +93,12 @@
       <div class="settings-group__card">
         <div class="ssh-tunnel__host">
           <div class="ssh-tunnel__head">
-            <label for="_id3_">
+            <label for="_id4_">
               zcm6
             </label>
             <input aria-invalid="false" aria-label="zcm6 服务器端口" class="settings-input ssh-tunnel__port" inputmode="numeric" placeholder="服务器端口" spellcheck="false" value="10089">
             <span class="settings-switch">
-              <input checked="" id="_id3_" role="switch" type="checkbox">
+              <input checked="" id="_id4_" role="switch" type="checkbox">
               <span aria-hidden="true" class="settings-switch__track"></span>
             </span>
           </div>
@@ -113,12 +117,12 @@
         </div>
         <div class="ssh-tunnel__host">
           <div class="ssh-tunnel__head">
-            <label for="_id4_">
+            <label for="_id5_">
               a6
             </label>
             <input aria-invalid="false" aria-label="a6 服务器端口" class="settings-input ssh-tunnel__port" inputmode="numeric" placeholder="服务器端口" spellcheck="false" value="40404">
             <span class="settings-switch">
-              <input id="_id4_" role="switch" type="checkbox">
+              <input id="_id5_" role="switch" type="checkbox">
               <span aria-hidden="true" class="settings-switch__track"></span>
             </span>
           </div>
@@ -128,12 +132,12 @@
         </div>
         <div class="ssh-tunnel__host">
           <div class="ssh-tunnel__head">
-            <label for="_id5_">
+            <label for="_id6_">
               lab
             </label>
             <input aria-invalid="false" aria-label="lab 服务器端口" class="settings-input ssh-tunnel__port" inputmode="numeric" placeholder="服务器端口" spellcheck="false" value="10089">
             <span class="settings-switch">
-              <input id="_id5_" role="switch" type="checkbox">
+              <input id="_id6_" role="switch" type="checkbox">
               <span aria-hidden="true" class="settings-switch__track"></span>
             </span>
           </div>
@@ -152,12 +156,12 @@
         </div>
         <div class="ssh-tunnel__host">
           <div class="ssh-tunnel__head">
-            <label for="_id6_">
+            <label for="_id7_">
               nas
             </label>
             <input aria-invalid="false" aria-label="nas 服务器端口" class="settings-input ssh-tunnel__port" inputmode="numeric" placeholder="服务器端口" spellcheck="false" value="30089">
             <span class="settings-switch">
-              <input checked="" id="_id6_" role="switch" type="checkbox">
+              <input checked="" id="_id7_" role="switch" type="checkbox">
               <span aria-hidden="true" class="settings-switch__track"></span>
             </span>
           </div>
@@ -179,12 +183,12 @@
         </div>
         <div class="ssh-tunnel__host">
           <div class="ssh-tunnel__head">
-            <label for="_id7_">
+            <label for="_id8_">
               gpu
             </label>
             <input aria-invalid="false" aria-label="gpu 服务器端口" class="settings-input ssh-tunnel__port" inputmode="numeric" placeholder="服务器端口" spellcheck="false" value="37897">
             <span class="settings-switch">
-              <input checked="" id="_id7_" role="switch" type="checkbox">
+              <input checked="" id="_id8_" role="switch" type="checkbox">
               <span aria-hidden="true" class="settings-switch__track"></span>
             </span>
           </div>
@@ -203,12 +207,12 @@
         </div>
         <div class="ssh-tunnel__host">
           <div class="ssh-tunnel__head">
-            <label for="_id8_">
+            <label for="_id9_">
               old
             </label>
             <input aria-invalid="false" aria-label="old 服务器端口" class="settings-input ssh-tunnel__port" inputmode="numeric" placeholder="服务器端口" spellcheck="false" value="40089">
             <span class="settings-switch">
-              <input checked="" id="_id8_" role="switch" type="checkbox">
+              <input checked="" id="_id9_" role="switch" type="checkbox">
               <span aria-hidden="true" class="settings-switch__track"></span>
             </span>
           </div>

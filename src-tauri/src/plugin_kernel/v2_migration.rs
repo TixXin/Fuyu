@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use tauri::{AppHandle, Emitter};
 
-use super::{builtins_file, v2_builtins};
+use super::builtins_file;
 use crate::user_error::UserError;
 
 pub(crate) const CHANGED_EVENT: &str = "v2-plugin-migration-changed";
@@ -160,8 +160,34 @@ struct DiscoveredV2 {
     title: Option<LocalizedTitle>,
 }
 
+const V2_BUILTIN_IDS: &[&str] = &[
+    "focusd.timer",
+    "focusd.claude-usage",
+    "focusd.cc-connect",
+    "focusd.session-ring",
+    "focusd.local-api",
+    "focusd.ssh-proxy-tunnel",
+    "focusd.center-pattern",
+];
+
+#[derive(Debug, Default, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct LegacyGrant {
+    #[serde(default)]
+    enabled: bool,
+    #[serde(default)]
+    settings: Map<String, Value>,
+}
+
+fn read_v2_grants(text: &str) -> Map<String, Value> {
+    serde_json::from_str::<Value>(text)
+        .ok()
+        .and_then(|state| state.get("plugins").and_then(Value::as_object).cloned())
+        .unwrap_or_default()
+}
+
 fn is_v2_builtin(id: &str) -> bool {
-    v2_builtins::MIGRATIONS.iter().any(|item| item.v2 == id)
+    V2_BUILTIN_IDS.contains(&id)
 }
 
 fn find_official(v2_id: &str) -> Option<&'static OfficialMapping> {
@@ -291,12 +317,12 @@ fn read_manifest_meta(dir: &Path) -> Option<(String, Option<LocalizedTitle>)> {
 fn discover_v2_plugins(home: &Path) -> BTreeMap<String, DiscoveredV2> {
     let mut found: BTreeMap<String, DiscoveredV2> = BTreeMap::new();
     if let Ok(text) = std::fs::read_to_string(home.join(V2_STATE_FILE)) {
-        for (id, raw_grant) in v2_builtins::grants(&text) {
+        for (id, raw_grant) in read_v2_grants(&text) {
             let trimmed = id.trim();
             if trimmed.is_empty() || is_v2_builtin(trimmed) {
                 continue;
             }
-            if let Ok(grant) = serde_json::from_value::<v2_builtins::Grant>(raw_grant) {
+            if let Ok(grant) = serde_json::from_value::<LegacyGrant>(raw_grant) {
                 found.insert(
                     trimmed.to_owned(),
                     DiscoveredV2 { enabled: grant.enabled, settings: grant.settings, title: None },

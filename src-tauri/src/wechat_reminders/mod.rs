@@ -1,7 +1,6 @@
 mod button;
 mod chats;
 mod gate;
-mod plugin_view;
 mod reader;
 mod shell_hub;
 mod source;
@@ -21,7 +20,6 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager};
 use windows::Win32::Foundation::HWND;
 
-pub(crate) use plugin_view::plugin_messages;
 #[allow(unused_imports)]
 pub(crate) use shell_hub::{
     is_running as is_shell_attention_running, subscribe as subscribe_shell_attention,
@@ -282,7 +280,6 @@ fn unavailable() -> UserError {
 }
 
 fn publish(service: &ReminderService, snapshot: ReminderSnapshot) {
-    plugin_view::publish_received(&snapshot);
     let visible = crate::coexist::banner_visible(
         service
             .app

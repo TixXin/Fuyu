@@ -10,6 +10,7 @@ use serde_json::{Map, Value};
 const CLASH_VERGE_PORT: u16 = 7897;
 const V2RAYN_PORT: u16 = 10808;
 const CONNECT_TIMEOUT: Duration = Duration::from_millis(300);
+#[cfg(windows)]
 const INTERNET_SETTINGS: &str = r"Software\Microsoft\Windows\CurrentVersion\Internet Settings";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -103,7 +104,7 @@ fn listening(port: u16) -> bool {
 }
 
 fn clash_verge_port() -> Option<u16> {
-    let dir = PathBuf::from(std::env::var_os("APPDATA")?).join("io.github.clash-verge-rev.clash-verge-rev");
+    let dir = app_data_dir()?.join("io.github.clash-verge-rev.clash-verge-rev");
     let read = |file: &str, key: &str| std::fs::read_to_string(dir.join(file)).ok().and_then(|text| yaml_port(&text, key));
     read("clash-verge.yaml", "mixed-port").or_else(|| read("verge.yaml", "verge_mixed_port"))
 }
@@ -116,10 +117,21 @@ pub(super) fn yaml_port(text: &str, key: &str) -> Option<u16> {
     })
 }
 
+#[cfg(windows)]
+fn app_data_dir() -> Option<PathBuf> {
+    std::env::var_os("APPDATA").map(PathBuf::from)
+}
+
+#[cfg(target_os = "macos")]
+fn app_data_dir() -> Option<PathBuf> {
+    Some(crate::system::windows_home_dir().ok()?.join("Library").join("Application Support"))
+}
+
 fn v2rayn_port() -> Option<u16> {
-    let exe = crate::win32::process::running_executable(&["v2rayN.exe"])?;
-    let config = Path::new(&exe).parent()?.join("guiConfigs").join("guiNConfig.json");
-    v2rayn_config_port(&std::fs::read_to_string(config).ok()?)
+    let exe = crate::platform::process::running_executable(&["v2rayN.exe", "v2rayN"])?;
+    let beside = Path::new(&exe).parent()?.join("guiConfigs");
+    let dirs = [Some(beside), app_data_dir().map(|dir| dir.join("v2rayN").join("guiConfigs"))];
+    dirs.into_iter().flatten().find_map(|dir| v2rayn_config_port(&std::fs::read_to_string(dir.join("guiNConfig.json")).ok()?))
 }
 
 pub(super) fn v2rayn_config_port(text: &str) -> Option<u16> {
@@ -128,11 +140,32 @@ pub(super) fn v2rayn_config_port(text: &str) -> Option<u16> {
     u16::try_from(port).ok().filter(|&port| port > 0)
 }
 
+#[cfg(windows)]
 fn system_proxy_port() -> Option<u16> {
     use windows::Win32::System::Registry::HKEY_CURRENT_USER;
     let enabled = crate::win32::registry::read_u32(HKEY_CURRENT_USER, INTERNET_SETTINGS, "ProxyEnable")?;
     let server = crate::win32::registry::read_string(HKEY_CURRENT_USER, INTERNET_SETTINGS, "ProxyServer")?;
     (enabled != 0).then(|| loopback_port(&server)).flatten()
+}
+
+#[cfg(target_os = "macos")]
+fn system_proxy_port() -> Option<u16> {
+    let output = std::process::Command::new("/usr/sbin/scutil").arg("--proxy").stdin(std::process::Stdio::null()).output().ok()?;
+    scutil_http_port(&String::from_utf8_lossy(&output.stdout))
+}
+
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+pub(super) fn scutil_http_port(text: &str) -> Option<u16> {
+    let field = |key: &str| {
+        text.lines().find_map(|line| {
+            let (name, value) = line.split_once(':')?;
+            (name.trim() == key).then(|| value.trim().to_string())
+        })
+    };
+    if field("HTTPEnable")? != "1" {
+        return None;
+    }
+    loopback_port(&format!("{}:{}", field("HTTPProxy")?, field("HTTPPort")?))
 }
 
 pub(super) fn loopback_port(server: &str) -> Option<u16> {

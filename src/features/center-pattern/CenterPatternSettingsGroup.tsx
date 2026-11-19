@@ -1,12 +1,13 @@
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { SettingsFootnote } from "../../components/settings/SettingsFootnote";
 import { SettingsGroup } from "../../components/settings/SettingsGroup";
 import { SettingsNumberRow } from "../../components/settings/SettingsNumberRow";
 import { SettingsRow } from "../../components/settings/SettingsRow";
 import { SettingsSelect } from "../../components/settings/SettingsSelect";
+import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { useFlash } from "../../components/settings/useFlash";
 import { useErrorText, useTranslation } from "../../i18n";
-import { setBuiltinConfig } from "../plugin-kernel/builtinSwitches";
+import { setBuiltinConfig, switchBuiltinPlugin } from "../plugin-kernel/builtinSwitches";
 import { useBuiltinConfig } from "../plugin-kernel/useBuiltinPlugins";
 import { CenterPattern } from "./CenterPattern";
 import {
@@ -29,6 +30,7 @@ export function CenterPatternSettingsGroup() {
   const config = useMemo(() => centerConfig(raw), [raw]);
   const pets = usePetChoices(true) ?? "loading";
   const choices = petChoices(pets, config.pet, text.pets);
+  const switchId = useId();
   const [failure, flashFailure] = useFlash<string>();
 
   const save = (key: CenterConfigKey, value: string | number) => {
@@ -36,7 +38,11 @@ export function CenterPatternSettingsGroup() {
   };
 
   return (
-    <SettingsGroup title={text.group} footer={failure ? <span className="plugin-card__error">{failure}</span> : <SettingsFootnote text={text.groupHint} />}>
+    <SettingsGroup
+      title={text.group}
+      action={<SettingsSwitch id={switchId} ariaLabel={text.group} checked onChange={(on) => void switchBuiltinPlugin(OWNER, on).catch((reason: unknown) => flashFailure(errorText(reason)))} />}
+      footer={failure ? <span className="plugin-card__error">{failure}</span> : <SettingsFootnote text={text.groupHint} />}
+    >
       <SettingsRow
         title={text.pattern}
         control={

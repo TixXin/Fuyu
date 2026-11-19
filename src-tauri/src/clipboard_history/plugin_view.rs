@@ -19,22 +19,6 @@ pub(crate) struct ClipboardText {
     favorite: bool,
 }
 
-pub(crate) fn plugin_history(params: &Value) -> Result<Value, (u16, String)> {
-    let limit = match params.get("limit") {
-        None | Some(Value::Null) => DEFAULT_LIMIT,
-        Some(value) => value
-            .as_u64()
-            .and_then(|limit| usize::try_from(limit).ok())
-            .filter(|limit| (1..=MAX_LIMIT).contains(limit))
-            .ok_or_else(|| (400, format!("\"limit\" must be a whole number from 1 to {MAX_LIMIT}.")))?,
-    };
-    let snapshot = service().map_err(|error| (503, error))?.snapshot().map_err(|error| (500, error))?;
-    if !snapshot.settings.enabled {
-        return Err((409, "Clipboard history is switched off.".into()));
-    }
-    Ok(json!({ "items": text_items(&snapshot.items, limit, false) }))
-}
-
 pub(crate) fn local_api_history(params: &Value) -> Result<Value, (u16, String)> {
     let snapshot = service().map_err(|error| (503, error))?.snapshot().map_err(|error| (500, error))?;
     if !snapshot.settings.local_api_read {
@@ -74,25 +58,6 @@ pub(super) fn text_items(items: &[ClipboardHistoryItem], limit: usize, hide_mask
         .take(limit)
         .map(|item| format_text_item(item, hide_masked))
         .collect()
-}
-
-pub(crate) fn plugin_item(id: &str) -> Option<Value> {
-    let snapshot = service().ok()?.snapshot().ok()?;
-    if !snapshot.settings.enabled {
-        return None;
-    }
-    snapshot
-        .items
-        .iter()
-        .find(|item| item.id == id && item.kind == ClipboardHistoryItemKind::Text && item.text.is_some())
-        .map(|item| format_text_item(item, false))
-        .and_then(|item| serde_json::to_value(item).ok())
-}
-
-pub(super) fn publish_changed(enabled: bool) {
-    if enabled {
-        crate::plugin_host::publish_event("clipboard.changed", json!({}));
-    }
 }
 
 #[cfg(test)]

@@ -129,20 +129,19 @@ test("Alt+number follows the header from left to right and skips modules that ar
   assert.equal(pageCycleDirection({ ...down, key: "Tab", code: "Tab" }, "Ctrl+Tab", "Ctrl+Shift+Tab"), null);
 });
 
-test("page shortcuts go through every page in the header's order, plugin pages before the bell", async () => {
+test("page shortcuts go through every page in the header's order, from the header dots to the bell", async () => {
   const { pageShortcutOrder, cycleShortcutPage, headerDotPages } = await import("../../src/windows/island/features.ts");
   const { pageSlot } = await import("../../src/windows/island/slots/pageSlot.ts");
-  const every = { agents: true, todo: true, calendar: true, music: true, clipboard: true, shelf: true, screenshots: true, timer: true, qq: true, wechat: false, qqMail: false, translation: true, pluginPages: ["plugin:a", "plugin:b"] };
+  const every = { agents: true, todo: true, calendar: true, music: true, clipboard: true, shelf: true, screenshots: true, timer: true, qq: true, wechat: false, qqMail: false, translation: true };
   const dots = (features) => headerDotPages(pageSlot.items(), features).map((item) => item.id);
-  assert.deepEqual(pageShortcutOrder(every), ["agents", ...dots(every), "plugin:a", "plugin:b", "qq", "translation"]);
+  assert.deepEqual(pageShortcutOrder(every), ["agents", ...dots(every), "qq", "translation"]);
   assert.deepEqual(dots(every), ["todo", "music", "calendar", "clipboard", "shelf", "screenshots", "timer"]);
   assert.deepEqual(dots({ ...every, music: false, timer: false }), ["todo", "calendar", "clipboard", "shelf", "screenshots"]);
   assert.equal(cycleShortcutPage(every, "music", 1), "calendar");
   assert.equal(cycleShortcutPage(every, "screenshots", 1), "timer");
-  assert.equal(cycleShortcutPage(every, "timer", 1), "plugin:a");
-  assert.equal(cycleShortcutPage(every, "plugin:b", 1), "qq");
+  assert.equal(cycleShortcutPage(every, "timer", 1), "qq");
   assert.equal(cycleShortcutPage(every, "agents", -1), "translation");
-  const mac = { ...every, music: false, clipboard: false, timer: false, qq: false, translation: false, pluginPages: [] };
+  const mac = { ...every, music: false, clipboard: false, timer: false, qq: false, translation: false };
   assert.deepEqual(pageShortcutOrder(mac), ["agents", "todo", "calendar", "shelf", "screenshots"]);
 });
 
@@ -246,6 +245,39 @@ test("single-flight frame queue coalesces bursts, trails in-flight work, and flu
   assert.equal(frames.length, 0);
   assert.deepEqual(sent, ["b", "d"]);
   resolvers.shift()();
+});
+
+test("a hidden window flushes the frame queue on a timeout and goes back to animation frames once shown", async () => {
+  const { createSingleFlightFrameQueue } = await import("../../src/windows/island/windowSync.ts");
+  let hidden = true;
+  const frames = [];
+  const sent = [];
+  const queue = createSingleFlightFrameQueue(
+    (item) => {
+      sent.push(item);
+      return Promise.resolve();
+    },
+    {
+      requestFrame: (callback) => {
+        frames.push(callback);
+        return frames.length;
+      },
+      cancelFrame: () => undefined,
+      isHidden: () => hidden,
+    },
+  );
+
+  await queue.schedule("while hidden");
+  assert.deepEqual(sent, ["while hidden"]);
+  assert.equal(frames.length, 0, "a hidden window never waits for an animation frame");
+
+  hidden = false;
+  const shown = queue.schedule("once shown");
+  assert.equal(frames.length, 1, "a visible window waits for the animation frame again");
+  frames.shift()();
+  await shown;
+  assert.deepEqual(sent, ["while hidden", "once shown"]);
+  queue.dispose();
 });
 
 test("external resize tracker enters resizing mode only on rapid geometry StorageEvents and settles cleanly", async () => {

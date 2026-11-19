@@ -2,8 +2,6 @@ import { Fragment, type ReactNode } from "react";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
 import { arrangeCollapsedItems, zoneIds, type CollapsedZone } from "../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
-import type { PluginViewEntry } from "../../features/plugin-views/api";
-import { usePluginStatusItems } from "../../features/plugin-views/usePluginStatusItems";
 import { useTranslation } from "../../i18n";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { leadLine, shownLine, visibleLines } from "../../features/plugin-kernel/islandContributions";
@@ -29,15 +27,11 @@ type IslandCollapsedBarProps = {
   notice?: { content: ReactNode; actions: ReactNode } | null;
   onWindowDragStart: () => void;
   onTuck: () => void;
-  pluginViews?: readonly PluginViewEntry[];
-  onOpenPluginPage?: (page: `plugin:${string}`) => void;
   slots?: CollapsedSlots;
 };
 
 const NO_SLOTS: CollapsedSlots = {};
 const NO_SOURCES = {};
-const NO_VIEWS: readonly PluginViewEntry[] = [];
-const ignorePage = () => {};
 const OPENS_BAR = "data-opens-bar";
 
 function renderZone(items: readonly CollapsedBarItem[]) {
@@ -67,8 +61,6 @@ export function IslandCollapsedBar({
   notice = null,
   onWindowDragStart,
   onTuck,
-  pluginViews = NO_VIEWS,
-  onOpenPluginPage = ignorePage,
   slots = NO_SLOTS,
 }: IslandCollapsedBarProps) {
   const t = useTranslation();
@@ -94,7 +86,6 @@ export function IslandCollapsedBar({
   const lineView = (id: string) => <SlotView key={id} slot={lineSlot} props={lineContext} select={(items) => items.filter((item) => item.id === id)} />;
   const showCenter = Boolean(slots.center) && !preview && !peekLine && !notice
     && !(showCollapsedText && (showTitle || lines.some((candidate) => candidate.reserve !== true && candidate.measure !== undefined)));
-  const pluginStatus = usePluginStatusItems(pluginViews, onOpenPluginPage);
   const { placements: saved } = useCollapsedPlacements();
   const items = useCollapsedBarItems({
     t,
@@ -104,7 +95,7 @@ export function IslandCollapsedBar({
     hints: contributed.hints,
     slots,
     onOpenPage,
-  }, showCollapsedText && !preview && !notice && !peekLine && !activeAlert ? pluginStatus : []);
+  });
   const offered = items.map(({ id }) => id);
   const placements = arrangeCollapsedItems(offered, saved);
   const byId = new Map(items.map((item) => [item.id, item]));

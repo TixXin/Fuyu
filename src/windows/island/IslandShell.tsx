@@ -3,13 +3,12 @@ import type { AppearanceMode, TuckStyle } from "../../lib/settings/types";
 import { useTranslation } from "../../i18n";
 import { labelLine, leadLine } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
-import { isPluginPage, type IslandFeatures } from "./features";
+import type { IslandFeatures } from "./features";
 import { IslandCollapsedBar } from "./IslandCollapsedBar";
 import { useIslandNotch } from "./notch";
 import { NotchPopupBand } from "./NotchPopupBand";
 import { IslandHeader } from "./IslandHeader";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
-import type { PluginViewEntry } from "../../features/plugin-views/api";
 import type { CollapsedSlots, IslandMode, IslandPage, NativeGlassState } from "./types";
 import { useGlassPointer } from "./useGlassPointer";
 import { PREWARM_HOLD_MS, PREWARM_LEAVE_MS } from "./panelAwake";
@@ -62,9 +61,6 @@ type IslandShellProps = {
   hoverSwitchPage: boolean;
   hoverSwitchDelayMs: number;
   overlay?: ReactNode;
-  pluginPageButtons?: ReactNode;
-  pluginViews?: readonly PluginViewEntry[];
-  onOpenPluginPage?: (page: `plugin:${string}`) => void;
   collapsedSlots?: CollapsedSlots;
   children: ReactNode;
 };
@@ -156,9 +152,6 @@ export function IslandShell({
   hoverSwitchPage,
   hoverSwitchDelayMs,
   overlay,
-  pluginPageButtons,
-  pluginViews,
-  onOpenPluginPage,
   collapsedSlots,
   children,
 }: IslandShellProps) {
@@ -186,7 +179,7 @@ export function IslandShell({
   const className = [
     "island",
     `island--${mode}`,
-    isPluginPage(page) ? "island--plugin" : `island--${page}`,
+    `island--${page}`,
     `island--appearance-${appearanceMode}`,
     isPreparing && !isExpanded ? "island--preparing" : "",
     isDetached ? "island--detached" : "island--docked",
@@ -250,8 +243,6 @@ export function IslandShell({
           />
         )}
         <IslandCollapsedBar
-          pluginViews={pluginViews}
-          onOpenPluginPage={onOpenPluginPage}
           slots={collapsedSlots}
           page={page}
           isExpanded={isExpanded}
@@ -291,7 +282,6 @@ export function IslandShell({
             pageDigitModifiers={pageDigitModifiers}
             hoverSwitchPage={hoverSwitchPage}
             hoverSwitchDelayMs={hoverSwitchDelayMs}
-            pluginPageButtons={pluginPageButtons}
           />
           <div ref={contentRef} className="island__content">
             <IslandPreparingContext.Provider value={preparingContext}>{children}</IslandPreparingContext.Provider>
