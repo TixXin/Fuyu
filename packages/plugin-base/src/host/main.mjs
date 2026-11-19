@@ -109,6 +109,7 @@ try {
   });
   host.watchServices((services) => windows.publish("services", services));
   host.serviceHub.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
+  host.settingsOpener.attachWindows({ connected: () => windows.windows(), publish: (name, data) => windows.publish(name, data) });
   host.ctx.clients.onMessage((message) => windows.publish("plugin", message));
   tellRust(host.clients());
   rpc.notify("ready", {
