@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/alarm",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "description": "Rings on the island at the time you set, repeats on the weekdays you pick, and lets you snooze.",
   "author": "TixXin",

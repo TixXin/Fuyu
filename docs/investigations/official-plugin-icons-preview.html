@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>官方插件图标预览</title>
+<style>
+  body { margin: 0; font: 13px/1.5 system-ui, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  h1 { margin: 0; padding: 18px 24px 4px; font-size: 16px; }
+  p { margin: 0; padding: 0 24px 14px; opacity: 0.7; }
+  section { padding: 8px 0 20px; }
+  .dark { color: #e6e7ea; background: #1b1d22; }
+  .light { color: #1f2328; background: #f4f5f7; }
+  .grid { display: flex; flex-wrap: wrap; gap: 18px; padding: 6px 24px; }
+  .item { width: 96px; display: grid; gap: 8px; justify-items: center; text-align: center; }
+  .sizes { display: flex; align-items: end; gap: 8px; }
+  img { display: block; }
+  .s52 { width: 52px; height: 52px; border-radius: 13px; }
+  .s40 { width: 40px; height: 40px; border-radius: 10px; }
+  .s28 { width: 28px; height: 28px; border-radius: 7px; }
+</style>
+<body>
+<script>
+  const PLUGINS = [
+    ["alarm", "闹钟"], ["countdown", "倒数日"], ["ecdict", "ECDICT 离线词典"], ["github-issues", "GitHub Issue"],
+    ["launcher", "应用启动台"], ["now-playing", "换歌提示"], ["pomodoro", "番茄钟"], ["system-monitor", "系统监控"],
+    ["todo-digest", "待办摘要"], ["todo-ring", "待办进度环"], ["weather", "天气"], ["world-clock", "世界时钟"],
+  ];
+  for (const [theme, title] of [["dark", "深色"], ["light", "浅色"]]) {
+    const section = document.createElement("section");
+    section.className = theme;
+    section.innerHTML = `<h1>官方插件图标 · ${title}</h1><p>每个插件三个尺寸：详情页 52、列表和市场卡片 40、小列表 28。规则见 docs/plugins/official-quality.md「图标」。</p>`;
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    for (const [dir, name] of PLUGINS) {
+      const src = `../../plugins/v3/official/${dir}/assets/icon.svg`;
+      const item = document.createElement("div");
+      item.className = "item";
+      item.innerHTML = `<img class="s52" src="${src}" alt=""><div class="sizes"><img class="s40" src="${src}" alt=""><img class="s28" src="${src}" alt=""></div><span>${name}</span>`;
+      grid.append(item);
+    }
+    section.append(grid);
+    document.body.append(section);
+  }
+</script>
+</body>
+</html>

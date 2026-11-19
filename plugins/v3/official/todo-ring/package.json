@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/todo-ring",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "description": "A ring shows how much of today's to-do list is done, with what's next listed beside it.",
   "author": "TixXin",

@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/system-monitor",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "description": "CPU, GPU, memory, network, battery and the busiest programs on the island, with 5-minute charts and a collapsed bar that turns yellow or red when readings run high.",
   "license": "MIT",

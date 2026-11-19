@@ -2,6 +2,7 @@ import { useState, type MouseEvent } from "react";
 import { ArrowUpRight, Check } from "lucide-react";
 import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
+import { MarketImage } from "./MarketImage";
 import { OfficialMark } from "./OfficialMark";
 import { iconSources } from "./pluginIconSources";
 import { PluginLogo } from "./PluginLogo";
@@ -61,7 +62,7 @@ function MarketCardThumb({ plugin, onFail }: { plugin: MarketCatalogPlugin; onFa
   const shots = plugin.screenshots ?? [];
   return (
     <div className="market-card__thumb" data-market-thumb={shots.length}>
-      <img src={shots[0].url} alt="" loading="lazy" draggable={false} onError={onFail} />
+      <MarketImage url={shots[0].url} lazy alt="" draggable={false} onError={onFail} />
       {shots.length > 1 ? <span className="market-card__thumb-count">{text.shotCount(shots.length)}</span> : null}
     </div>
   );

@@ -5,6 +5,7 @@ import { DATA_DIR, dataDirOf } from "../../../../packages/plugin-base/src/host/d
 import { applyRevocationsToDir, commitStaged, discardStaged, inspectPackage as inspectFuyuPackage, installPackage, removeInstalledFromYml, stagePackage, uninstallPackage, writeInstalledToYml } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { marketV1 } from "../../../../packages/plugin-services/src/services/market.mjs";
 import { getMarketPluginDetails } from "./marketDetails.mjs";
+import { createMarketMedia } from "./marketMedia.mjs";
 import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
 import { refreshRevocations } from "./marketRevocations.mjs";
 import {
@@ -41,6 +42,7 @@ export function createMarketService(options = {}) {
     for (const fn of [...listeners]) fn({});
   };
   const snapshot = () => buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform, trust, now: nowFn() });
+  const media = createMarketMedia({ dataDir, fetchImpl, readDoc: () => readVerifiedCachedIndex(dataDir, trust, nowFn()).doc });
 
   const verifyMarketStep = (pluginEntry, versionEntry) => {
     if (!versionEntry.platforms?.includes(platform)) {
@@ -150,6 +152,8 @@ export function createMarketService(options = {}) {
 
     details: (params) => getMarketPluginDetails(params, { dataDir, pluginsDir, appVersion, platform, trust, fetchImpl, now: nowFn() }),
 
+    media: (params) => media.get(params),
+
     autoUpdate: async () => {
       const state = readState(dataDir);
       const now = nowFn();
@@ -215,7 +219,9 @@ export function createMarketService(options = {}) {
       });
       if ((disabledCount > 0 || upgradedCount > 0) && onConfigChanged) await onConfigChanged();
       notifyChanged();
-      return snapshot();
+      const next = snapshot();
+      void media.refreshed(opened.doc, next.plugins);
+      return next;
     },
 
     inspectPackage: async (params) => {
@@ -376,6 +382,7 @@ export function provideMarketService(ctx, options = {}) {
   const provider = ctx.services.provide(marketV1, {
     catalog: () => service.catalog(),
     details: (params) => service.details(params),
+    media: (params) => service.media(params),
     inspectPackage: (params) => service.inspectPackage(params),
     ...Object.fromEntries(SETTINGS_ONLY_METHODS.map((method) => [method, (params, caller) => {
       assertSettingsWindow(method, caller);

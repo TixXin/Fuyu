@@ -30,7 +30,7 @@ npm create fuyu-plugin@latest
 | [市场规则](market-rules.md) | 上架即同意：代码、名字、开源、作者签名、换人换密钥、所有权转移、下架和撤销、报告安全问题 |
 | [审核看什么](review.md) | 绿、黄、红三档各自的条件，维护者批准，冷静期，提交前自查 |
 | [从旧版插件迁移](migrate-from-v2.md) | 2026-11 下线的旧版插件要改什么 |
-| [官方插件标准](official-quality.md) | 官方插件上架前要做到的：设置齐全、岛上默认克制、中英文和两个平台、名字统一 |
+| [官方插件标准](official-quality.md) | 官方插件上架前要做到的：设置齐全、岛上默认克制、中英文和两个平台、名字统一、图标风格 |
 | [SDK 更新日志](changelog.md) | npm 包 `fuyu-plugin`、`create-fuyu-plugin` 每个版本的变化 |
 
 还没有的：从零做一个插件的教程、从类型声明生成的参考。

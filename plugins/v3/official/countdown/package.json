@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/countdown",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "description": "Keeps track of birthdays, anniversaries and deadlines year after year, with the days left on the collapsed bar.",
   "author": "TixXin",

@@ -1,5 +1,11 @@
 # 更新记录 · Changelog
 
+## 1.1.1
+
+- 图标换成和浮屿设置一致的风格：浅底色加同色线条。
+
+- New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
+
 ## 1.1.0
 
 补回第 2 版系统监控的功能，Windows 和 Mac 都能用。

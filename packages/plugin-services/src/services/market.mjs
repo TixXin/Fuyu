@@ -5,6 +5,7 @@ export const marketV1 = defineService("market/v1", {
     catalog: true,
     refresh: true,
     details: true,
+    media: true,
     inspectPackage: true,
     installMarket: true,
     installFile: true,

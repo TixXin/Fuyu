@@ -171,10 +171,16 @@ export type MarketPluginDetails = {
   versions: MarketPluginVersionSummary[];
 };
 
+export type MarketMedia = {
+  url: string;
+  data: string | null;
+};
+
 export type MarketMethods = {
   catalog(): MarketCatalogSnapshot;
   refresh(): MarketCatalogSnapshot;
   details(params: { name: string; locale?: string }): MarketPluginDetails;
+  media(params: { url: string }): MarketMedia;
   inspectPackage(params: { base64: string }): MarketInspectedPackage;
   installMarket(params: { name: string; version?: string }): MarketInstallResult;
   installFile(params: { base64: string; expectedSha256?: string }): MarketInstallResult;

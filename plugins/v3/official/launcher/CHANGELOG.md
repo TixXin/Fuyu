@@ -12,6 +12,7 @@
 - 名字相同、位置不同的两个应用不再被合成一个。
 - 名字统一为「应用启动台 / App launcher」，岛的页头按钮有了中英文标题；补了截图和新的说明。
 - 原来的最近启动记录照旧保留；新设置取默认值。
+- 图标换成和浮屿设置一致的风格：浅底色加同色线条。
 
 Fuller settings; the island page keeps just the search box and the results.
 
@@ -23,6 +24,7 @@ Fuller settings; the island page keeps just the search box and the results.
 - Two apps with the same name in different places are no longer merged into one.
 - The name is now "应用启动台 / App launcher" everywhere, the island header button has a title in Chinese and English, and there are screenshots and a new description.
 - Your recent history carries over; new settings start at their defaults.
+- New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
 
 ## 1.0.0
 

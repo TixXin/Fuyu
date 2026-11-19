@@ -14,6 +14,7 @@
 - 命令「立即刷新天气」接上了，可以在插件详情里设快捷键。
 - 中文城市名改用中文查，英文城市名用英文查，不再因为界面语言找不到城市；错误提示跟着界面语言。
 - 岛的页头有了中英文标题；说明和截图更新。
+- 图标换成和浮屿设置一致的风格：浅底色加同色线条。
 
 Fuller settings; quieter on the island by default.
 
@@ -27,6 +28,7 @@ Fuller settings; quieter on the island by default.
 - The "Refresh weather now" command now works and can get a shortcut in the plugin's details.
 - City names in Chinese are looked up in Chinese and others in English, so a city is no longer missed because of the interface language; error messages follow the interface language.
 - The island header has a title in Chinese and English; the description and screenshots are updated.
+- New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
 
 ## 1.0.0
 

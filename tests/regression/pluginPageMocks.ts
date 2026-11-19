@@ -88,6 +88,7 @@ export const market = {
   revokeOnEnable: null as string | null,
   revocationCases: false,
   details: {} as Record<string, MarketPluginDetails>,
+  media: {} as Record<string, string>,
   inspected: null as MarketInspectedPackage | null,
   reach: false,
   manualInstalled: {} as Record<string, string>,
@@ -146,6 +147,7 @@ const marketProvider = windowServices.provide(marketV1, {
     slots: ["island.page/v1"], provides: [], replaces: [], network: ["api.open-meteo.com"], nodeApis: ["node:fs"], requires: {},
     versions: [{ version: "1.2.0", publishedAt: "2026-11-18T00:00:00Z", size: 2048, reviewed: true, urgent: false, enginesFuyu: ">=0.9.0" }],
   }),
+  media: ({ url }) => ({ url, data: market.media[url] ?? null }),
   inspectPackage: () => (market.calls.push("inspect"), market.inspected ?? { id: "@me/gadget", version: "0.1.0", sha256: "b".repeat(64), source: "manual" as const, confirmation: { ...candidate("0.1.0", false).confirmation, unreviewed: true, displayName: loc("小工具", "Gadget") } }),
   installMarket: ({ name, version }) => {
     market.calls.push(`install:${name}@${version ?? ""}`);
