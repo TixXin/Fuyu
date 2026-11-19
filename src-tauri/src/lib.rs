@@ -39,7 +39,7 @@ mod screenshot;
 mod settings_file;
 mod settings_window;
 mod shortcut_capture;
-#[cfg_attr(not(windows), path = "ssh_tunnel/unsupported.rs")]
+#[cfg_attr(not(any(windows, target_os = "macos")), path = "ssh_tunnel/unsupported.rs")]
 mod ssh_tunnel;
 mod sync;
 mod system;
@@ -303,6 +303,7 @@ pub fn run() {
             app.run(|_app, event| match event {
                 tauri::RunEvent::Exit => {
                     plugin_kernel::shutdown();
+                    ssh_tunnel::shutdown();
                     agent_approval::shutdown();
                     clipboard_history::shutdown();
                     home_dir::before_exit();

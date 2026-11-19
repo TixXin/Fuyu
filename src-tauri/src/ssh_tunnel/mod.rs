@@ -10,7 +10,7 @@ use std::{
     path::PathBuf,
     sync::{mpsc, Arc, Mutex, MutexGuard, OnceLock, PoisonError},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use serde::Serialize;
@@ -25,6 +25,7 @@ use local_proxy::{Choice, LocalProxy};
 use tunnel::{Spec, Status};
 
 const WATCH_EVERY: Duration = Duration::from_secs(15);
+const SHUTDOWN_WAIT: Duration = Duration::from_secs(2);
 
 static APP_DIR: OnceLock<PathBuf> = OnceLock::new();
 
@@ -92,6 +93,14 @@ pub(super) fn stop() {
     state.proxy = None;
     state.watcher = None;
     state.tunnels.clear();
+}
+
+pub(crate) fn shutdown() {
+    stop();
+    let deadline = Instant::now() + SHUTDOWN_WAIT;
+    while tunnel::live() > 0 && Instant::now() < deadline {
+        thread::sleep(Duration::from_millis(50));
+    }
 }
 
 pub(super) fn running() -> bool {

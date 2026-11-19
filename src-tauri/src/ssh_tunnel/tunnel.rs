@@ -3,16 +3,19 @@ use std::{
     io::{BufRead, BufReader},
     path::Path,
     process::{Command, Stdio},
-    sync::{mpsc, Arc, Mutex, PoisonError},
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        mpsc, Arc, Mutex, PoisonError,
+    },
     thread,
     time::{Duration, Instant},
 };
 
 use crate::{
     agent_status::{remote_fetch::write_island_config, remote_hosts::SshTarget},
+    platform::job::{self, Job},
     system::CREATE_NO_WINDOW,
     user_error::UserError,
-    win32::job::{self, Job},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -105,7 +108,29 @@ fn set(status: &Mutex<Status>, next: Status) {
     *status.lock().unwrap_or_else(PoisonError::into_inner) = next;
 }
 
+static LIVE: AtomicUsize = AtomicUsize::new(0);
+
+struct Live;
+
+impl Live {
+    fn new() -> Self {
+        LIVE.fetch_add(1, Ordering::SeqCst);
+        Self
+    }
+}
+
+impl Drop for Live {
+    fn drop(&mut self) {
+        LIVE.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
+pub(super) fn live() -> usize {
+    LIVE.load(Ordering::SeqCst)
+}
+
 pub(super) fn supervise(app_dir: &Path, spec: &Spec, status: &Mutex<Status>, stop: &mpsc::Receiver<()>) {
+    let _live = Live::new();
     let mut failures = 0u32;
     loop {
         set(status, Status::Connecting);
@@ -128,16 +153,18 @@ fn run_once(app_dir: &Path, spec: &Spec, status: &Mutex<Status>, stop: &mpsc::Re
         Ok(config) => config,
         Err(error) => return failed(error),
     };
-    let mut child = match Command::new("ssh")
+    let mut command = Command::new("ssh");
+    command
         .arg("-F")
         .arg(&config)
         .args(ssh_args(spec.remote_port, spec.local_port, &spec.target.destination))
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
-        .creation_flags(CREATE_NO_WINDOW | job::START_SUSPENDED)
-        .spawn()
-    {
+        .creation_flags(CREATE_NO_WINDOW | job::START_SUSPENDED);
+    #[cfg(unix)]
+    std::os::unix::process::CommandExt::process_group(&mut command, 0);
+    let mut child = match command.spawn() {
         Ok(child) => child,
         Err(error) => return failed(format!("Failed to start ssh: {error}")),
     };

@@ -688,7 +688,7 @@ export const zhCN: SettingsPluginsText = {
     group: "SSH 代理隧道",
     groupHint: "把这台电脑的代理借给 SSH 服务器：为下面打开的每台主机常驻一条 ssh 反向隧道（服务器上的 127.0.0.1:端口 → 这里的本地代理），服务器上设好 http_proxy 就能经这里上网。只用密钥登录，断开后自动重连；在 设置 → 插件（第 3 版）里关掉内置插件「SSH 代理隧道」或退出岛屿时，隧道一起结束。",
     localProxy: "本地代理",
-    localProxyHint: "自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和 Windows 系统代理，再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。",
+    localProxyHint: "自动检测依次看 Clash Verge 的设置、正在运行的 v2rayN 的设置和系统代理（Windows 的 Internet 设置、Mac 的网络代理），再试两者的默认端口，用第一个真有程序在监听的；之后每 15 秒再看一次，端口变了隧道跟着换。选 Clash Verge 或 v2rayN 时也先读它们的设置，读不到才用默认端口（7897、10808）。",
     localProxyOptions: {
       auto: "自动检测",
       "clash-verge": "Clash Verge（默认 7897）",
@@ -723,7 +723,7 @@ export const zhCN: SettingsPluginsText = {
       found: {
         clashVerge: "端口来自 Clash Verge 的设置",
         v2rayN: "端口来自 v2rayN 的设置",
-        systemProxy: "端口来自 Windows 系统代理",
+        systemProxy: "端口来自系统代理",
         clashVergeDefault: "Clash Verge 的默认端口",
         v2rayNDefault: "v2rayN 的默认端口",
         custom: "自定义端口",
@@ -1114,7 +1114,7 @@ export const en: SettingsPluginsText = {
     group: "SSH proxy tunnel",
     groupHint: "Lends this computer's proxy to SSH servers: for each host switched on below, a resident ssh reverse tunnel (127.0.0.1:port on the server to the local proxy here), so the server reaches the internet through here once http_proxy is set there. Key login only, and it reconnects after a drop; switching off the built-in plugin \"SSH proxy tunnel\" under Settings → Plugins (v3) or quitting the island ends the tunnels.",
     localProxy: "Local proxy",
-    localProxyHint: "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the Windows system proxy, then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none.",
+    localProxyHint: "Auto looks in turn at Clash Verge's settings, a running v2rayN's settings and the system proxy (Internet settings on Windows, network proxies on a Mac), then tries both apps' default ports, and takes the first one something listens on; it looks again every 15 seconds and moves the tunnels when the port changes. Clash Verge and v2rayN also read the app's settings first, and use the default port (7897, 10808) only when there are none.",
     localProxyOptions: {
       auto: "Auto",
       "clash-verge": "Clash Verge (7897 by default)",
@@ -1149,7 +1149,7 @@ export const en: SettingsPluginsText = {
       found: {
         clashVerge: "Port from Clash Verge's settings",
         v2rayN: "Port from v2rayN's settings",
-        systemProxy: "Port from the Windows system proxy",
+        systemProxy: "Port from the system proxy",
         clashVergeDefault: "Clash Verge's default port",
         v2rayNDefault: "v2rayN's default port",
         custom: "Custom port",
