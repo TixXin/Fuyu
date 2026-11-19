@@ -4,9 +4,11 @@ const QUERY_KEYS = new Set(["title", "artist", "album", "durationMs", "folder", 
 
 export const BUILTIN_LYRICS_SOURCES = Object.freeze([
   Object.freeze({ id: "local", label: { zh: "本地 LRC 文件夹", en: "Local LRC Folder" }, builtin: true, order: 10 }),
+  Object.freeze({ id: "kugou-local", label: { zh: "酷狗客户端缓存", en: "KuGou App Cache" }, builtin: true, order: 15 }),
   Object.freeze({ id: "netease", label: { zh: "网易云音乐", en: "NetEase Cloud Music" }, builtin: true, order: 20 }),
   Object.freeze({ id: "lrclib", label: { zh: "LRCLIB", en: "LRCLIB" }, builtin: true, order: 30 }),
   Object.freeze({ id: "kugou", label: { zh: "酷狗歌词", en: "KuGou Lyrics" }, builtin: true, order: 40 }),
+  Object.freeze({ id: "qq", label: { zh: "QQ 音乐", en: "QQ Music" }, builtin: true, order: 45 }),
 ]);
 
 function lyricsError(code, message) {
