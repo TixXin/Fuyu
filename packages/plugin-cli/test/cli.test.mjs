@@ -233,7 +233,7 @@ test("check requires experimental windows/v1 for plugin-window.view/v1 slot and 
 });
 
 test("host and window code resolve fuyu-plugin/services while bare fuyu-plugin runtime imports stay blocked in windows", async () => {
-  assert.equal(VERSION, "2.0.0");
+  assert.equal(VERSION, "2.1.0");
   const dir = copyFixture("hello", (root) => {
     writeFiles(root, {
       "src/host.ts": 'import type { Context } from "fuyu-plugin";\nimport { timersV1 } from "fuyu-plugin/services";\nexport const inject = ["clients", "timers/v1"];\nexport function apply(ctx: Context) {\n  ctx.services.get(timersV1);\n  ctx.clients.add("island", new URL("./island.js", import.meta.url).href);\n}\n',

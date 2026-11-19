@@ -96,14 +96,14 @@ test("services-and-slots.md documents every service in @fuyu/plugin-services and
 });
 
 test("standalone npm mode depends on fuyu-plugin and rewrites @fuyu/* imports in source files", () => {
-  assert.equal(SDK_VERSION, "^2.0.0");
+  assert.equal(SDK_VERSION, "^2.1.0");
   assert.equal(findCheckout(undefined, { standalone: true }), null);
-  assert.deepEqual(devDependencies(null), Object.fromEntries([["fuyu-plugin", "^2.0.0"], ...Object.entries(TOOLS)].sort(([a], [b]) => a.localeCompare(b))));
+  assert.deepEqual(devDependencies(null), Object.fromEntries([["fuyu-plugin", "^2.1.0"], ...Object.entries(TOOLS)].sort(([a], [b]) => a.localeCompare(b))));
   const options = normalizeOptions({ ...OPTIONS, standalone: true, dir: "x" });
   assert.equal(options.checkout, null);
   const files = projectFiles(options);
   const pkg = JSON.parse(files.get("package.json"));
-  assert.equal(pkg.devDependencies["fuyu-plugin"], "^2.0.0");
+  assert.equal(pkg.devDependencies["fuyu-plugin"], "^2.1.0");
   for (const name of Object.keys(FUYU_PACKAGES)) assert.equal(pkg.devDependencies[name], undefined);
   for (const [path, text] of files) {
     if (!path.startsWith("src/")) continue;
