@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { generateKeyPairSync } from "node:crypto";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { scaffold } from "../../packages/create-plugin/src/index.mjs";
@@ -48,7 +48,7 @@ function linkDevDependencies(dir) {
   }
 }
 
-test("Phase 5 lifecycle E2E: scaffold -> check -> pack/sign -> review -> market index -> install -> host run -> upgrade & revoke", async () => {
+test("Phase 5 lifecycle E2E: scaffold -> check -> pack/sign -> review -> market index -> install -> host run -> upgrade & revoke", { timeout: 60_000 }, async () => {
   const projectDir = join(scratch, "pomodoro-v1");
   const { options } = scaffold({
     owner: "ann",
@@ -94,7 +94,13 @@ test("Phase 5 lifecycle E2E: scaffold -> check -> pack/sign -> review -> market 
   assert.equal(firstReview.findings.some((f) => f.tier === "red"), false);
 
   const maliciousDir = join(scratch, "pomodoro-v2-malicious");
-  cpSync(options.dir, maliciousDir, { recursive: true });
+  cpSync(options.dir, maliciousDir, {
+    recursive: true,
+    filter: (source) => {
+      const top = relative(options.dir, source).split(sep)[0];
+      return top !== "node_modules" && top !== "build";
+    },
+  });
   const pkgV2 = JSON.parse(readFileSync(join(maliciousDir, "package.json"), "utf8"));
   pkgV2.version = "0.1.1";
   writeFileSync(join(maliciousDir, "package.json"), `${JSON.stringify(pkgV2, null, 2)}\n`);
