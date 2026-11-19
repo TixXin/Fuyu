@@ -132,8 +132,8 @@ test("@fuyu/ecdict passes check, pack, review, registers ecdict on translator/v1
       engine: "ecdict",
       hasSecret: true,
       label: {
-        "zh-CN": "ECDICT 离线词典",
-        en: "ECDICT Offline Dictionary",
+        "zh-CN": "离线词典",
+        en: "Offline dictionary",
       },
       defaultModel: "offline",
     });

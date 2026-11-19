@@ -1,8 +1,8 @@
 {
   "name": "@fuyu/ecdict",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
-  "description": "Zero-configuration offline English-Chinese dictionary engine powered by ECDICT, requiring no API key or network access.",
+  "description": "Look up English words in Quick translate even when you're offline, or find the English for a Chinese word.",
   "license": "MIT",
   "author": "TixXin",
   "repository": "https://github.com/TixXin/fuyu",
@@ -26,17 +26,17 @@
   "fuyu": {
     "manifest": 1,
     "displayName": {
-      "zh-CN": "ECDICT 离线词典",
-      "en": "ECDICT Offline Dictionary"
+      "zh-CN": "离线词典",
+      "en": "Offline dictionary"
     },
     "description": {
-      "zh-CN": "基于开源 ECDICT 的零配置离线英汉词典引擎，免 API Key 支持英查中、词形还原与简明中查英。",
-      "en": "Zero-configuration offline English-Chinese dictionary engine powered by ECDICT, with word lemmatization and reverse Chinese lookup."
+      "zh-CN": "在快捷翻译里查英文单词，不联网也能查，也能用中文反查英文。",
+      "en": "Look up English words in Quick translate even when you're offline, or find the English for a Chinese word."
     },
     "icon": "assets/icon.svg",
     "categories": [
-      "productivity",
-      "utilities"
+      "utilities",
+      "productivity"
     ],
     "platforms": [
       "windows",

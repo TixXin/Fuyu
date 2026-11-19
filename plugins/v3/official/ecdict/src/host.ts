@@ -6,8 +6,8 @@ export const inject = ["translator.engines"];
 
 export const ENGINE_ID = "ecdict";
 export const ENGINE_LABEL = {
-  "zh-CN": "ECDICT 离线词典",
-  en: "ECDICT Offline Dictionary",
+  "zh-CN": "离线词典",
+  en: "Offline dictionary",
 } as const;
 export const DEFAULT_MODEL = "offline";
 

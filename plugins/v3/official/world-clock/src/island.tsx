@@ -140,7 +140,6 @@ export default function apply(ctx: Context) {
   ctx.host.call<WorldClockSnapshot>(METHODS.snapshot).then(follow, () => {});
   ctx.slots.add("island.collapsed/v1", {
     id: "world-clock-bar",
-    width: 120,
     hideable: true,
     opens: PAGE_ID,
     component: WorldClockCollapsed,

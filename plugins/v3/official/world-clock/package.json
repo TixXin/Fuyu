@@ -1,6 +1,6 @@
 {
   "name": "@fuyu/world-clock",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "description": "See the time and offset in several cities at once, so scheduling across time zones takes no maths.",
   "author": "TixXin",
