@@ -1,7 +1,5 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { useEffect, useSyncExternalStore } from "react";
-import type { IslandSettings } from "../../lib/settings/types";
-import { themeColors } from "../../lib/theme/themeMode";
 import { getIslandNotch, listenIslandNotch, setIslandNotchDrop, type IslandNotch } from "./api.ts";
 import { MIN_COLLAPSED_ISLAND_WIDTH } from "./layout.ts";
 import "./IslandNotch.css";
@@ -81,9 +79,7 @@ export function notchPanelWidth(width: number, notch: IslandNotch | null, expand
   return Math.max(width, Math.ceil(gap + 2 * (popup ? NOTCH_POPUP_SIDE : NOTCH_HEADER_SIDE) + EXPANDED_SIDE_PADDING));
 }
 
-export function notchLook(settings: IslandSettings): IslandSettings {
-  return { ...settings, ...themeColors(settings, "dark"), islandBackgroundColor: "#000000", opacity: 100 };
-}
+export { notchLook } from "../../lib/theme/themeMode.ts";
 
 export type NotchDropSources = {
   preview: unknown;
