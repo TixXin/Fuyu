@@ -15,6 +15,7 @@ export type AgentPage = {
   removal: Agents["agentRemoval"];
   usages: Agents["agentUsages"];
   alerted: Alerts["alertedSession"];
+  alertedStack: Alerts["alertedStack"];
   approvals: Alerts["approvals"];
 };
 

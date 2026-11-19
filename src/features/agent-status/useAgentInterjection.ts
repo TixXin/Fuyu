@@ -5,10 +5,11 @@ import type { AgentSessionSummary } from "./api";
 import { AGENT_INTERJECTION_MS, interjectingSession, remindingSession } from "./interjection.ts";
 import { sessionName, type AgentSession } from "./session.ts";
 import { sessionKey } from "./unseen.ts";
+import type { AgentAlertStarted } from "./agentSettings";
 
 const REMIND_CHECK_MS = 1000;
 
-export function useAgentInterjection(sessions: AgentSessionSummary[], enabled: boolean, remindAfterMs = 0): AgentSession | null {
+export function useAgentInterjection(sessions: AgentSessionSummary[], enabled: boolean, remindAfterMs = 0, started: AgentAlertStarted = "off"): AgentSession | null {
   const previous = useRef<SessionPhases | null>(null);
   const reminders = useRef<WaitingReminders>({ since: new Map(), reminded: new Set() });
   const latest = useRef(sessions);
@@ -22,10 +23,10 @@ export function useAgentInterjection(sessions: AgentSessionSummary[], enabled: b
       return;
     }
     trackWaiting(reminders.current, sessions, Date.now());
-    const changed = interjectingSession(previous.current, sessions);
+    const changed = interjectingSession(previous.current, sessions, started);
     previous.current = phasesOf(sessions, previous.current);
     if (changed) setFlash({ key: sessionKey(changed), until: Date.now() + AGENT_INTERJECTION_MS });
-  }, [enabled, sessions]);
+  }, [enabled, sessions, started]);
 
   useEffect(() => {
     if (!waiting) return;

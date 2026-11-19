@@ -1,30 +1,32 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { visibilityInterval } from "../../lib/useVisibilityInterval";
-import { detectAlerts, phasesOf, takeDueReminders, trackWaiting, type AgentAlert, type AgentAlertKind, type AgentAlertKinds, type SessionPhases, type WaitingReminders } from "./alerts";
+import { detectAlerts, phasesOf, takeDueReminders, trackWaiting, type AgentAlert, type AgentAlertKinds, type SessionPhases, type WaitingReminders } from "./alerts";
 import { agentSessionsInFront, type AgentSessionSummary } from "./api";
-import { sessionKey } from "./unseen";
+import { addNotices, hoverNotices, pruneNotices, sameNotices, sortNotices, type AlertedNotice, type NoticeDwell, type NoticeEntry } from "./noticeDwell";
 
 export { alertKindsOf } from "./alerts";
+export type { AlertedNotice, NoticeDwell } from "./noticeDwell";
 
-const HOVER_RETRY_MS = 1000;
+const NOTICE_TICK_MS = 200;
 const REMIND_CHECK_MS = 5000;
 
-export type AlertedSession = {
-  key: string;
-  kind: AgentAlertKind;
-  session: AgentSessionSummary;
+export type AlertedSession = AlertedNotice & {
   rowHeight: number;
   measure: (rowHeight: number) => void;
+  openAgentPage?: () => void;
 };
 
-const DEFAULT_ROW_HEIGHT = 78;
+export type AgentAlerts = { alerted: AlertedSession | null; stack: readonly AlertedNotice[] };
 
-const neverHold = () => false;
+const DEFAULT_ROW_HEIGHT = 78;
+const NO_NOTICES: NoticeEntry[] = [];
+const notHovered = () => false;
+const notLooked = () => false;
 
 type AgentAlertOptions = {
   sessions: AgentSessionSummary[];
   kinds: AgentAlertKinds;
-  durationMs: number;
+  dwell: NoticeDwell;
   canAlert: boolean;
   isOpenOnAgents: boolean;
   isCollapsed: boolean;
@@ -33,59 +35,75 @@ type AgentAlertOptions = {
   remindAfterMs?: number;
   onRemind?: (sessions: AgentSessionSummary[]) => void;
   looked?: (session: AgentSessionSummary) => boolean;
-  holdsOpen?: (heldSince: number) => boolean;
+  isHovered?: () => boolean;
 };
 
-export function useAgentAlerts({ sessions, kinds, durationMs, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, remindAfterMs = 0, onRemind, looked, holdsOpen = neverHold }: AgentAlertOptions) {
-  const [alerted, setAlerted] = useState<Pick<AlertedSession, "key" | "kind" | "session"> | null>(null);
+export function useAgentAlerts({ sessions, kinds, dwell, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, remindAfterMs = 0, onRemind, looked = notLooked, isHovered = notHovered }: AgentAlertOptions): AgentAlerts {
+  const [notices, setNotices] = useState<NoticeEntry[]>(NO_NOTICES);
   const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT);
+  const noticesRef = useRef<NoticeEntry[]>(NO_NOTICES);
   const phasesRef = useRef<SessionPhases | null>(null);
   const openedByAlertRef = useRef(false);
-  const closeTimerRef = useRef<number | undefined>(undefined);
-  const latest = useRef({ durationMs, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, onRemind, looked, holdsOpen });
+  const [ticking, setTicking] = useState(false);
+  const sessionsRef = useRef(sessions);
+  const latest = useRef({ dwell, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, onRemind, looked, isHovered });
   useLayoutEffect(() => {
-    latest.current = { durationMs, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, onRemind, looked, holdsOpen };
+    latest.current = { dwell, canAlert, isOpenOnAgents, isCollapsed, onOpen, onClose, onRemind, looked, isHovered };
+    sessionsRef.current = sessions;
   });
 
-  useEffect(() => {
-    const keepOpen = (event: PointerEvent) => {
-      openedByAlertRef.current = false;
-      window.clearTimeout(closeTimerRef.current);
-      if (!(event.target instanceof Element && event.target.closest(".agent-sessions__list"))) setAlerted(null);
-    };
-    window.addEventListener("pointerdown", keepOpen, true);
-    return () => {
-      window.removeEventListener("pointerdown", keepOpen, true);
-      window.clearTimeout(closeTimerRef.current);
-    };
+  const commit = useCallback((next: NoticeEntry[]) => {
+    if (sameNotices(next, noticesRef.current)) return;
+    noticesRef.current = next;
+    setNotices(next);
+  }, []);
+  const stopAuto = useCallback(() => {
+    openedByAlertRef.current = false;
+    setTicking(false);
   }, []);
 
   useEffect(() => {
-    if (isCollapsed) {
-      openedByAlertRef.current = false;
-      window.clearTimeout(closeTimerRef.current);
-    }
-  }, [isCollapsed]);
+    const keepOpen = (event: PointerEvent) => {
+      stopAuto();
+      if (!(event.target instanceof Element && event.target.closest(".agent-sessions__list"))) commit(NO_NOTICES);
+    };
+    window.addEventListener("pointerdown", keepOpen, true);
+    return () => window.removeEventListener("pointerdown", keepOpen, true);
+  }, [commit, stopAuto]);
 
   const leftAgentPage = !isCollapsed && !isOpenOnAgents;
   const wasExpandedRef = useRef(!isCollapsed);
   useEffect(() => {
     const collapsedNow = isCollapsed && wasExpandedRef.current;
     wasExpandedRef.current = !isCollapsed;
-    if (collapsedNow || leftAgentPage) setAlerted(null);
-  }, [isCollapsed, leftAgentPage]);
+    if (isCollapsed) stopAuto();
+    if (collapsedNow || leftAgentPage) commit(NO_NOTICES);
+  }, [isCollapsed, leftAgentPage, commit, stopAuto]);
+
+  useEffect(() => {
+    if (!ticking) return;
+    let hovered = false;
+    const tick = () => {
+      const current = latest.current;
+      const now = Date.now();
+      let next = noticesRef.current;
+      const hoveredNow = current.isHovered();
+      if (hoveredNow !== hovered) {
+        hovered = hoveredNow;
+        next = hoverNotices(next, hovered, now, current.dwell);
+      }
+      next = pruneNotices(next, sessionsRef.current, (session) => !current.looked(session), now);
+      commit(next);
+      if (next.length > 0) return;
+      stopAuto();
+      if (current.isOpenOnAgents) current.onClose();
+    };
+    tick();
+    const timer = window.setInterval(tick, NOTICE_TICK_MS);
+    return () => window.clearInterval(timer);
+  }, [ticking, commit, stopAuto]);
 
   const popUpRef = useRef((alerts: AgentAlert[], onShown?: (shown: AgentAlert[]) => void) => {
-    const close = (heldSince: number) => {
-      if (!openedByAlertRef.current) return;
-      if (latest.current.holdsOpen(heldSince)) {
-        closeTimerRef.current = window.setTimeout(() => close(heldSince), HOVER_RETRY_MS);
-        return;
-      }
-      openedByAlertRef.current = false;
-      if (latest.current.isOpenOnAgents) latest.current.onClose();
-    };
-
     void agentSessionsInFront(alerts.map((alert) => alert.session))
       .catch((error: unknown) => {
         console.error("Failed to check which agent windows are in front", error);
@@ -97,12 +115,11 @@ export function useAgentAlerts({ sessions, kinds, durationMs, canAlert, isOpenOn
         if (shown.length === 0 || !current.canAlert) return;
         onShown?.(shown);
         if (!(current.isCollapsed || openedByAlertRef.current)) return;
-        const newest = shown[shown.length - 1];
-        setAlerted({ key: sessionKey(newest.session), kind: newest.kind, session: newest.session });
+        const base = openedByAlertRef.current ? noticesRef.current : NO_NOTICES;
+        commit(addNotices(base, shown, current.dwell, Date.now()));
         openedByAlertRef.current = true;
+        setTicking(true);
         current.onOpen();
-        window.clearTimeout(closeTimerRef.current);
-        closeTimerRef.current = window.setTimeout(() => close(Date.now()), current.durationMs);
       });
   });
 
@@ -114,10 +131,6 @@ export function useAgentAlerts({ sessions, kinds, durationMs, canAlert, isOpenOn
   }, [sessions, started, completed, failed, waiting]);
 
   const remindersRef = useRef<WaitingReminders>({ since: new Map(), reminded: new Set() });
-  const sessionsRef = useRef(sessions);
-  useLayoutEffect(() => {
-    sessionsRef.current = sessions;
-  });
   useEffect(() => {
     if (remindAfterMs > 0) trackWaiting(remindersRef.current, sessions, Date.now());
   }, [sessions, remindAfterMs]);
@@ -133,8 +146,14 @@ export function useAgentAlerts({ sessions, kinds, durationMs, canAlert, isOpenOn
     return visibilityInterval(check, Math.min(REMIND_CHECK_MS, Math.max(50, remindAfterMs / 4)));
   }, [remindAfterMs, waiting]);
 
-  return useMemo(
-    () => (alerted ? { ...alerted, rowHeight, measure: setRowHeight } : null),
-    [alerted, rowHeight],
-  );
+  const openAgentPage = useCallback(() => {
+    stopAuto();
+    commit(NO_NOTICES);
+  }, [commit, stopAuto]);
+
+  return useMemo(() => {
+    const stack = sortNotices(notices).map(({ key, kind, session }): AlertedNotice => ({ key, kind, session }));
+    const top = stack[0];
+    return { alerted: top ? { ...top, rowHeight, measure: setRowHeight, openAgentPage } : null, stack };
+  }, [notices, rowHeight, openAgentPage]);
 }

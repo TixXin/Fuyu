@@ -46,7 +46,7 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
     quiet,
     canPopUp: !quiet && mode === "collapsed" && !isTucked,
   });
-  const { alertedSession, approvals, agentCardHeight, alertPopup } = useIslandAgentAlerts({
+  const { alertedSession, alertedStack, approvals, agentCardHeight, alertPopup } = useIslandAgentAlerts({
     sessions: agentSessions,
     unseen: unseenAgentSessions.keys,
     settings,
@@ -70,8 +70,8 @@ function AgentRunner({ mode, isTucked, quiet, page, settings, setSettings, featu
   agentFeed.useProvide(feed);
   useEffect(() => announceAgentsChanged(feed.sessions.length), [feed]);
   agentPage.useProvide(useMemo(
-    () => ({ sessions: listedAgentSessions, unseen: unseenAgentSessions, removal: agentRemoval, usages: agentUsages, alerted: alertedSession, approvals }),
-    [listedAgentSessions, unseenAgentSessions, agentRemoval, agentUsages, alertedSession, approvals],
+    () => ({ sessions: listedAgentSessions, unseen: unseenAgentSessions, removal: agentRemoval, usages: agentUsages, alerted: alertedSession, alertedStack, approvals }),
+    [listedAgentSessions, unseenAgentSessions, agentRemoval, agentUsages, alertedSession, alertedStack, approvals],
   ));
   quotaAlertState.useProvide(quotaAlert);
   const arrangeChange = useCallback<AgentArrange["onChange"]>((patch) => setSettings((current) => ({ ...current, ...patch })), [setSettings]);

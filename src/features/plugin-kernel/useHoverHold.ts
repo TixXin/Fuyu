@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { holdsOpen, type HoldsOpen } from "./hoverHold";
 import type { IslandHost } from "./islandHost";
 
-export function useHoverHold(host: Pick<IslandHost, "listenHover">): HoldsOpen {
+export function useIslandHovered(host: Pick<IslandHost, "listenHover">): () => boolean {
   const hoveredRef = useRef(false);
 
   useEffect(() => {
@@ -22,5 +22,10 @@ export function useHoverHold(host: Pick<IslandHost, "listenHover">): HoldsOpen {
     };
   }, [host]);
 
-  return useCallback((heldSince: number) => holdsOpen(hoveredRef.current, heldSince, Date.now()), []);
+  return useCallback(() => hoveredRef.current, []);
+}
+
+export function useHoverHold(host: Pick<IslandHost, "listenHover">): HoldsOpen {
+  const hovered = useIslandHovered(host);
+  return useCallback((heldSince: number) => holdsOpen(hovered(), heldSince, Date.now()), [hovered]);
 }

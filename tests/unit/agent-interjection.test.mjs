@@ -16,6 +16,14 @@ test("lyrics give way for a moment when a session starts, finishes or fails", ()
   assert.equal(interjectingSession(before, [session("a", "running"), session("b", "completed"), session("c", "running", 9)])?.sessionId, "c");
 });
 
+test("start alerts set to hidden keep a new session's title off the collapsed bar, but not its finish", () => {
+  const before = phasesOf([session("a", "running"), session("b", "completed")]);
+  const started = [session("a", "running"), session("b", "completed"), session("c", "running", 9)];
+  assert.equal(interjectingSession(before, started, "off")?.sessionId, "c");
+  assert.equal(interjectingSession(before, started, "hidden"), null);
+  assert.equal(interjectingSession(before, [session("a", "completed", 5)], "hidden")?.sessionId, "a");
+});
+
 test("nothing interrupts the lyrics while sessions just carry on", () => {
   const before = phasesOf([session("a", "running"), session("b", "completed")]);
   assert.equal(interjectingSession(before, [session("a", "running", 5), session("b", "completed")]), null);

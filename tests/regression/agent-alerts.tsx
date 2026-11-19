@@ -2,7 +2,8 @@ import { act, StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import type { AgentSessionSummary } from "../../src/features/agent-status/api";
-import { useAgentAlerts, type AlertedSession } from "../../src/features/agent-status/useAgentAlerts";
+import { useAgentAlerts, type AlertedNotice, type AlertedSession, type NoticeDwell } from "../../src/features/agent-status/useAgentAlerts";
+import { DEFAULT_AGENT_NOTICE_OPTIONS } from "../../src/features/agent-status/notice/noticeOptions";
 import { AgentSessionsPanel } from "../../src/features/agent-status/AgentSessionsPanel";
 import type { AgentAlertStarted } from "../../src/features/agent-status/agentSettings";
 import { until } from "./pollUntil";
@@ -11,22 +12,34 @@ Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const DURATION_MS = 300;
 const SUMMARY = "修好了，已合入 main。完成提醒现在显示最后的回复，Markdown 符号已经去掉，卡片最多三行，高度按内容。";
 let inFront: string[] = [];
-mockIPC((command) => (command === "agent_sessions_in_front" ? inFront : null));
+let focused: string[] = [];
+mockIPC((command, args) => {
+  if (command === "agent_sessions_in_front") return inFront;
+  if (command === "focus_agent_window") {
+    focused = [...focused, String((args as { sessionId?: string }).sessionId)];
+    return true;
+  }
+  return null;
+});
 let hovering = false;
+const looked = new Set<string>();
+const TIMED: NoticeDwell = { completedMs: DURATION_MS, yourTurnMs: DURATION_MS, failedMs: DURATION_MS, hoverHold: true };
 
-const session = (sessionId: string, phase: AgentSessionSummary["phase"]): AgentSessionSummary => ({
+const session = (sessionId: string, phase: AgentSessionSummary["phase"], extra: Partial<AgentSessionSummary> = {}): AgentSessionSummary => ({
   provider: "claudeCode", sessionId, cwd: null, title: sessionId, model: null, effort: null,
-  phase, lastMessage: null, updatedAt: 0, host: null, turnStartedAt: null,
+  phase, lastMessage: null, updatedAt: 0, host: null, turnStartedAt: null, ...extra,
 });
 
 type Island = { mode: "collapsed" | "expanded"; page: string };
 let island: Island = { mode: "collapsed", page: "todo" };
 let alerted: AlertedSession | null = null;
+let stack: readonly AlertedNotice[] = [];
 let setSessions: (sessions: AgentSessionSummary[]) => void;
 let setIsland: (island: Island) => void;
 let setCanAlert: (value: boolean) => void;
 let setStarted: (value: AgentAlertStarted) => void;
 let setRemindAfter: (ms: number) => void;
+let setDwell: (dwell: NoticeDwell) => void;
 let reminded: string[] = [];
 let opens = 0;
 let closes = 0;
@@ -37,16 +50,18 @@ function Harness() {
   const [canAlert, changeCanAlert] = useState(true);
   const [started, changeStarted] = useState<AgentAlertStarted>("off");
   const [remindAfterMs, changeRemindAfter] = useState(0);
+  const [dwell, changeDwell] = useState(TIMED);
   setRemindAfter = changeRemindAfter;
+  setDwell = changeDwell;
   setStarted = changeStarted;
   setSessions = changeSessions;
   setIsland = changeIsland;
   setCanAlert = changeCanAlert;
   island = state;
-  alerted = useAgentAlerts({
+  ({ alerted, stack } = useAgentAlerts({
     sessions,
     kinds: { started, completed: true, failed: true, waiting: true },
-    durationMs: DURATION_MS,
+    dwell,
     canAlert,
     isOpenOnAgents: state.mode === "expanded" && state.page === "agents",
     isCollapsed: state.mode === "collapsed",
@@ -54,8 +69,9 @@ function Harness() {
     onClose: () => { closes += 1; changeIsland((current) => ({ ...current, mode: "collapsed" })); },
     remindAfterMs,
     onRemind: (sessions) => { reminded = [...reminded, ...sessions.map((one) => one.sessionId)]; },
-    holdsOpen: () => hovering,
-  });
+    looked: (one) => looked.has(one.sessionId),
+    isHovered: () => hovering,
+  }));
   return null;
 }
 
@@ -103,11 +119,13 @@ try {
   await act(async () => setSessions([session("a", "completed"), session("b", "running")]));
   await until(() => island.mode === "expanded");
   hovering = true;
-  await wait(DURATION_MS + 100);
-  check(island.mode === "expanded", "鼠标停在岛上时不收起");
+  await wait(DURATION_MS + 300);
+  check(island.mode === "expanded", "鼠标停在岛上时倒计时停住，不收起");
   hovering = false;
-  await until(() => island.mode === "collapsed");
-  check(island.mode === "collapsed", "鼠标离开后再收起");
+  await wait(1500);
+  check(island.mode === "expanded", "鼠标离开后至少再留 2 秒");
+  await until(() => island.mode === "collapsed", 3000);
+  check(island.mode === "collapsed", "鼠标离开 2 秒后收起");
 
   await act(async () => setSessions([session("a", "running"), session("b", "running")]));
   await act(async () => setSessions([session("a", "completed"), session("b", "running")]));
@@ -164,14 +182,17 @@ try {
   await wait(50);
   check(island.mode === "expanded" && latestAlert()?.key === "claudeCode:w" && opens === opensBefore + 1 && reminded.length === 0, "开始等你确认时先弹一次，这时还不算补提醒");
   await settle(DURATION_MS + 100);
-  check(island.mode === "collapsed", "停留时间到了收起");
+  check(island.mode === "expanded" && latestAlert()?.key === "claudeCode:w", "等你确认不按停留时间收起，留到处理");
+  await act(async () => setIsland({ mode: "collapsed", page: "agents" }));
+  check(latestAlert() === null, "你自己收起岛后不再记着这条");
   opensBefore = opens;
   await settle(REMIND_MS + 400);
   check(reminded.join() === "w" && opens === opensBefore + 1, `过了设定时间还在等，再弹一次并通知补提醒（放提示音）（${reminded.join()}，弹出 ${opens - opensBefore} 次）`);
   await settle(REMIND_MS + DURATION_MS + 400);
-  check(island.mode === "collapsed" && reminded.length === 1 && opens === opensBefore + 1, `同一次等待只补提醒一次（${island.mode}，${reminded.join()}，弹出 ${opens - opensBefore}，收起 ${closes}，${latestAlert()?.kind}）`);
+  check(island.mode === "expanded" && reminded.length === 1 && opens === opensBefore + 1, `同一次等待只补提醒一次（${island.mode}，${reminded.join()}，弹出 ${opens - opensBefore}，收起 ${closes}，${latestAlert()?.kind}）`);
   await waitFor([...done, session("w", "running")]);
-  await wait(50);
+  await until(() => island.mode === "collapsed" && latestAlert() === null);
+  check(island.mode === "collapsed" && latestAlert() === null, "处理完（不再等你确认）就收起");
   await waitFor([...done, session("w", "waiting")]);
   await settle(REMIND_MS + DURATION_MS + 600);
   check(reminded.join() === "w,w", `回答后再次等待，又会补提醒一次（${reminded.join()}）`);
@@ -184,6 +205,47 @@ try {
   inFront = [];
   await act(async () => setRemindAfter(0));
   await settle(DURATION_MS + 100);
+
+  const ids = () => stack.map((one) => one.session.sessionId).join();
+  await act(async () => setDwell({ ...TIMED, yourTurnMs: 0, failedMs: 0 }));
+  await waitFor([session("a", "running"), session("b", "running"), session("c", "running"), session("d", "running")]);
+  await wait(50);
+  await waitFor([session("a", "completed"), session("b", "failed"), session("c", "completed", { replyMarker: "yourTurn" }), session("d", "waiting")]);
+  await until(() => stack.length === 4);
+  check(ids() === "d,b,c,a" && latestAlert()?.key === "claudeCode:d", `同时来几条时按紧急程度排：等你确认、出错、等你回复、完成，第一条就是显示的那条（${ids()}）`);
+  await settle(DURATION_MS + 300);
+  check(ids() === "d,b,c", `完成按停留时间走掉，等你回复、出错默认留着（${ids()}）`);
+  await waitFor([session("a", "completed"), session("b", "failed"), session("c", "completed", { replyMarker: "yourTurn" }), session("d", "running")]);
+  await until(() => latestAlert()?.key === "claudeCode:b");
+  check(ids() === "b,c", `等你确认处理掉以后，下一条顶上来（${ids()}）`);
+  looked.add("b");
+  await until(() => latestAlert()?.key === "claudeCode:c");
+  check(ids() === "c", "出错留到看过：切到那个窗口后走掉");
+  hovering = true;
+  await wait(DURATION_MS);
+  hovering = false;
+  await wait(1000);
+  check(island.mode === "expanded" && ids() === "c", "等你回复留到看过：悬停过，移开后还留一会");
+  await until(() => island.mode === "collapsed", 3000);
+  check(island.mode === "collapsed" && ids() === "", "悬停过的那条移开 2 秒后走掉，全走完就收起");
+
+  await act(async () => setDwell({ ...TIMED, hoverHold: false }));
+  await waitFor([session("a", "running")]);
+  await waitFor([session("a", "completed")]);
+  await until(() => island.mode === "expanded");
+  hovering = true;
+  await until(() => island.mode === "collapsed");
+  check(island.mode === "collapsed", "关掉悬停暂停后，鼠标停在上面也按时收起");
+  hovering = false;
+
+  await act(async () => setDwell(TIMED));
+  await waitFor([session("a", "running")]);
+  await waitFor([session("a", "completed")]);
+  await until(() => island.mode === "expanded");
+  await act(async () => latestAlert()?.openAgentPage?.());
+  await wait(DURATION_MS + 300);
+  check(island.mode === "expanded" && island.page === "agents" && latestAlert() === null && stack.length === 0, "打开 Agent 页：结束弹出，留在完整列表，不再自动收起");
+  await act(async () => setIsland({ mode: "collapsed", page: "agents" }));
 
   const panel = createRoot(document.getElementById("panel")!);
   const listed = [session("a", "completed"), session("b", "running"), { ...session("c", "completed"), lastMessage: SUMMARY }];
@@ -202,6 +264,20 @@ try {
   check(measured > 36 && measured === row.offsetHeight, `卡片把这一行的实际高度交给岛屿（${measured}px）`);
   await act(async () => panel.render(<AgentSessionsPanel sessions={listed} hostDisplay="off" />));
   check(!document.querySelector("#panel .agent-session--completed .agent-session__message"), "平时 Agent 页里结束的会话仍折叠成一行");
+  let pageOpens = 0;
+  const toPage = () => { pageOpens += 1; };
+  const click = (selector: string) => act(async () => { document.querySelector<HTMLElement>(`#panel ${selector}`)?.click(); });
+  focused = [];
+  await act(async () => panel.render(<AgentSessionsPanel sessions={listed} hostDisplay="off" reveal={card("c", listed[2])} onOpenAgentPage={toPage} />));
+  await click(".agent-notice__title");
+  check(focused.join() === "c" && pageOpens === 0, "默认点通知本体切到会话所在的窗口");
+  await click(".agent-notice__corner");
+  check(pageOpens === 1, "右上角 ↗ 打开 Agent 页");
+  await act(async () => panel.render(<AgentSessionsPanel sessions={listed} hostDisplay="off" reveal={card("c", listed[2])} onOpenAgentPage={toPage} notice={{ ...DEFAULT_AGENT_NOTICE_OPTIONS, click: "page" }} />));
+  await click(".agent-notice__title");
+  check(pageOpens === 2 && focused.join() === "c", "设成打开 Agent 页后，点本体打开 Agent 页");
+  await click(".agent-notice__corner");
+  check(focused.join() === "c,c", "这时右上角换成切到会话窗口");
   const gone = session("d", "completed");
   await act(async () => panel.render(<AgentSessionsPanel sessions={listed} hostDisplay="off" reveal={card("d", gone)} />));
   check(rows().join() === "claudeCode:d", "列表里没有这个会话（只列运行中的）时，按提醒时的样子显示它");

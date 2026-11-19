@@ -21,6 +21,7 @@ export function useIslandAgents(settings: IslandSettings, demoSessions: AgentSes
     sessions.agentSessions,
     titlesOn && (!whileRunning || (settings.musicEnabled && settings.lyricsOnIsland && settings.lyricsIslandPriority === "lyrics")),
     settings.agentRemindSeconds * 1000,
+    settings.agentAlertStarted,
   );
   const agentActivity = useMemo(
     () => [...sessions.agentSessions, ...(others ?? [])],
