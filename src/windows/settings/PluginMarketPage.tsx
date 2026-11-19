@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { useErrorText, useTranslation } from "../../i18n";
+import { useErrorText } from "../../i18n";
 import { onPluginPackageOpen } from "../../features/plugin-kernel/api";
 import type { SettingsCategory } from "./categories";
-import { PluginMarketV3Tab } from "./PluginMarketV3Tab";
-import { consumeBufferedPackage, pullPendingPackage, requestPluginDetail, takeMarketViewRequest, type OpenedPluginPackage } from "./pluginPageHandoff";
-import { PluginSearchInput } from "./PluginSearchInput";
+import { onMarketPackage, onMarketRefreshRequest, setMarketRefreshing } from "./pluginMarketBus";
+import { PluginMarketView, type PluginMarketHost } from "./PluginMarketView";
+import { consumeBufferedPackage, pullPendingPackage, takeMarketViewRequest, type OpenedPluginPackage } from "./pluginPageHandoff";
 import { usePluginHostEnabled, usePluginHostStatus, type PluginHostConnector } from "./usePluginHostStatus";
-import "./PluginPage.css";
-import "./PluginsV3SettingsPage.css";
+import { usePluginMarketCatalog } from "./usePluginMarketCatalog";
 
 function useOpenedPackage() {
   const errorText = useErrorText();
@@ -25,11 +24,13 @@ function useOpenedPackage() {
         } else if (error) setOpenedError(error);
       });
     sync();
+    const offOffer = onMarketPackage(sync);
     void onPluginPackageOpen(sync)
       .then((unlisten) => (cancelled ? unlisten() : (stop = unlisten)))
       .catch(() => undefined);
     return () => {
       cancelled = true;
+      offOffer();
       stop?.();
     };
   }, [errorText]);
@@ -40,43 +41,41 @@ function useOpenedPackage() {
   return { openedPackage, openedError, consume };
 }
 
-export function PluginMarketView({ connected, onOpenPage }: { connected: boolean; onOpenPage?: (page: SettingsCategory) => void }) {
-  const text = useTranslation().settings.pluginsV3;
+function ConnectedMarket({ host, onOpenPage }: { host: PluginMarketHost; onOpenPage?: (page: SettingsCategory) => void }) {
   const [request] = useState(takeMarketViewRequest);
-  const [query, setQuery] = useState(request?.query ?? "");
+  const catalog = usePluginMarketCatalog(host === "open");
   const opened = useOpenedPackage();
+  const { refresh } = catalog;
+  useEffect(() => onMarketRefreshRequest(refresh), [refresh]);
+  useEffect(() => {
+    setMarketRefreshing(catalog.refreshing);
+  }, [catalog.refreshing]);
+  useEffect(() => () => setMarketRefreshing(false), []);
   return (
-    <div className="plugin-page plugins-v3" data-market-page>
-      <div className="plugin-page__toolbar">
-        <PluginSearchInput query={query} placeholder={text.searchPlaceholder} clearLabel={text.clearSearch} onChange={setQuery} />
-      </div>
-      <PluginMarketV3Tab
-        connected={connected}
-        query={query}
-        openedPackage={opened.openedPackage}
-        openedError={opened.openedError}
-        onConsumeOpenedPackage={opened.consume}
-        initialDetail={request?.detail ?? null}
-        onManage={
-          onOpenPage
-            ? (name) => {
-                requestPluginDetail(name);
-                onOpenPage("pluginsV3");
-              }
-            : undefined
-        }
-      />
-    </div>
+    <PluginMarketView
+      host={host}
+      snapshot={catalog.snapshot}
+      failure={catalog.failure}
+      refreshing={catalog.refreshing}
+      onRefresh={refresh}
+      onReload={catalog.reload}
+      onOpenPage={onOpenPage}
+      initialQuery={request?.query}
+      initialDetail={request?.detail ?? null}
+      openedPackage={opened.openedPackage}
+      openedError={opened.openedError}
+      onConsumePackage={opened.consume}
+    />
   );
 }
 
-function ConnectedMarket({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
+function HostMarket({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
   const view = usePluginHostStatus(connect);
-  return <PluginMarketView connected={view.connection === "open"} onOpenPage={onOpenPage} />;
+  return <ConnectedMarket host={view.connection === "open" ? "open" : view.connection === "closed" ? "off" : "connecting"} onOpenPage={onOpenPage} />;
 }
 
 export function PluginMarketPage({ connect, onOpenPage }: { connect?: PluginHostConnector; onOpenPage?: (page: SettingsCategory) => void }) {
   const hostEnabled = usePluginHostEnabled();
   if (hostEnabled === null) return null;
-  return hostEnabled ? <ConnectedMarket connect={connect} onOpenPage={onOpenPage} /> : <PluginMarketView connected={false} onOpenPage={onOpenPage} />;
+  return hostEnabled ? <HostMarket connect={connect} onOpenPage={onOpenPage} /> : <ConnectedMarket host="off" onOpenPage={onOpenPage} />;
 }

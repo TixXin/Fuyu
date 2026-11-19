@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS } from "../../lib/settings/settings";
 import { STORAGE_KEY, readSettingsText } from "../../lib/settings/storage";
 import type { IslandSettings } from "../../lib/settings/types";
 import { isMacOS } from "../../lib/platform";
+import { useIslandLayerShortcut } from "../../lib/island-layer/useIslandLayerShortcut";
 import * as islandApi from "./api";
 import { islandMarginY } from "./islandForm";
 import { clearIslandPosition } from "./storage";
@@ -65,6 +66,7 @@ export function useIslandWindow({
   onCollapse,
 }: IslandWindowOptions) {
   const syncNativeLayout = useNativeLayout(settings);
+  useIslandLayerShortcut(settings.islandLayerShortcut);
   const { isPositionDetached, setIsPositionDetached, islandPositionRef, startIslandDrag } = useIslandPosition();
   const [reducedMotion, setReducedMotion] = useState(
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,

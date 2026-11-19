@@ -53,6 +53,13 @@ export type SettingsShortcutsText = {
   calendarJoinMeetingHint: (suggested: string) => string;
   shortcutProblem: Record<"invalid" | "taken", string>;
   shortcutInvalidMac: string;
+  islandLayerTitle: string;
+  islandLayerToggle: string;
+  islandLayerHint: string;
+  islandLayerHintMac: string;
+  islandLayerOff: string;
+  islandLayerSet: string;
+  islandLayerTurnOff: string;
 };
 
 export const zhCN: SettingsShortcutsText = {
@@ -110,6 +117,13 @@ export const zhCN: SettingsShortcutsText = {
   calendarJoinMeetingHint: (suggested) => `当前有即将开始或正在进行的会议且含会议链接时，不展开岛即可直接打开链接入会（推荐 ${suggested}）；没有会议时不打扰。`,
   shortcutProblem: { invalid: "这个快捷键用不了，换一个带修饰键的组合。", taken: "这个快捷键被别的程序占用了，换一个。" },
   shortcutInvalidMac: "这个快捷键在 Mac 上用不了，换一个带 Control、Option 或 Command 的组合。",
+  islandLayerTitle: "岛屿",
+  islandLayerToggle: "切换岛的上下层",
+  islandLayerHint: "按一次，岛退到所有窗口下面，不再挡住浏览器标签页、工具栏；再按一次回到最前。只改前后层，位置和贴边不变；重启浮屿后回到最前。",
+  islandLayerHintMac: "按一次，岛退到所有窗口下面，不再挡住菜单栏和窗口顶部；再按一次回到最前。只改前后层，位置和贴边不变；重启浮屿后回到最前。",
+  islandLayerOff: "未设置",
+  islandLayerSet: "设置快捷键",
+  islandLayerTurnOff: "关掉这个快捷键",
 };
 
 export const en: SettingsShortcutsText = {
@@ -167,4 +181,11 @@ export const en: SettingsShortcutsText = {
   calendarJoinMeetingHint: (suggested) => `When an upcoming or ongoing meeting has a link, opens it right away without expanding the island (try ${suggested}); does nothing when there is no meeting.`,
   shortcutProblem: { invalid: "This shortcut cannot be used; pick one with a modifier key.", taken: "Another app is using this shortcut; pick another." },
   shortcutInvalidMac: "This shortcut cannot be used on a Mac; pick one with Control, Option or Command.",
+  islandLayerTitle: "Island",
+  islandLayerToggle: "Send the island back / bring it to front",
+  islandLayerHint: "Press once to put the island behind every window so it no longer covers browser tabs or toolbars; press again to bring it back to the front. Only the stacking order changes, not the position or tuck; Fuyu starts in front again after a restart.",
+  islandLayerHintMac: "Press once to put the island behind every window so it no longer covers the menu bar or window tops; press again to bring it back to the front. Only the stacking order changes, not the position or tuck; Fuyu starts in front again after a restart.",
+  islandLayerOff: "Not set",
+  islandLayerSet: "Set shortcut",
+  islandLayerTurnOff: "Turn off this shortcut",
 };

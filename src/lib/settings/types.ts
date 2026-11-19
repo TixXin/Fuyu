@@ -21,6 +21,8 @@ export type ExpandTrigger = "click" | "hover";
 export type MinimizeAction = "tray" | "tuck";
 export type TuckedHoverAction = "reveal" | "expand";
 export type TuckStyle = "edge" | "line" | "hidden";
+export type TuckHintStyle = "none" | "dot" | "glow";
+export type TuckHintColor = "contrast" | "island" | "custom";
 
 export type MessageNotice = "line" | "banner" | "panel";
 export type IslandMotion = "spring" | "smooth" | "fast" | "bouncy" | "none";
@@ -97,9 +99,14 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   minimizeAction: MinimizeAction;
   tuckedHoverAction: TuckedHoverAction;
   tuckStyle: TuckStyle;
+  tuckHintStyle: TuckHintStyle;
+  tuckHintColor: TuckHintColor;
+  tuckHintCustomColor: string;
+  tuckHintBreathe: boolean;
   pageDigitModifiers: string;
   pageNextShortcut: string;
   pagePreviousShortcut: string;
+  islandLayerShortcut: string;
   todoEnabled: boolean;
   musicEnabled: boolean;
   agentStatusEnabled: boolean;

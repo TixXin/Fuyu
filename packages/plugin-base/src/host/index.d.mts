@@ -39,6 +39,7 @@ export interface PluginStatus {
   lastError?: { at: number; text: string };
   usage?: PluginUsage;
   source?: PluginSource;
+  displayName?: Record<string, string>;
   undeclared?: { provides?: string[]; client?: string[]; slots?: string[]; commands?: string[]; network?: string[] };
   disabledServices?: string[];
   provides?: string[];

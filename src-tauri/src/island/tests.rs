@@ -624,3 +624,30 @@ fn ordinary_open_and_close_skip_stage_geometry_until_stage_inputs_change() {
     side_expanded.mode = IslandMode::Expanded;
     assert!(stage_geometry_inputs_changed(&side_collapsed, &side_expanded));
 }
+
+#[test]
+fn a_hidden_side_handle_only_catches_the_edge_strip() {
+    for scale in [1.0, 1.5, 2.0] {
+        let stage_width = (STAGE_WINDOW_WIDTH * scale).round();
+        let stage_height = (STAGE_WINDOW_HEIGHT * scale).round();
+        let handle_height = SIDE_HANDLE_HEIGHT * scale;
+        let middle = handle_height / 2.0;
+        for edge in [Edge::Left, Edge::Right] {
+            let mut side = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+            side.attached_edge = Some(edge);
+            side.is_tucked = true;
+            let x_at = |depth: f64| if edge == Edge::Left { depth } else { stage_width - depth };
+            let on = |state: IslandWindowState, depth: f64, y: f64| cursor_on_island(0.0, 0.0, stage_width, stage_height, x_at(depth), y, state);
+
+            side.tuck_style = TuckStyle::Edge;
+            assert!(on(side, 8.0 * scale, middle));
+
+            side.tuck_style = TuckStyle::Hidden;
+            assert!(on(side, 0.5, middle));
+            assert!(on(side, 2.0 * scale, middle));
+            assert!(!on(side, 3.0 * scale, middle));
+            assert!(!on(side, 8.0 * scale, middle));
+            assert!(!on(side, 1.0, handle_height + 1.0));
+        }
+    }
+}

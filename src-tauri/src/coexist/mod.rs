@@ -101,6 +101,7 @@ fn refresh_owners() {
     crate::timer::coexist_refresh();
     crate::todos::coexist_refresh();
     crate::calendar::coexist_refresh();
+    crate::island::layer::coexist_refresh();
 }
 
 fn refresh_again_later() {

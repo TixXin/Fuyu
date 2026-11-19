@@ -618,6 +618,10 @@ pub(super) fn cursor_on_island(
             Edge::Right => island_left + island_width - local_x,
             _ => local_x - island_left,
         };
+        if state.is_side_handle() && state.tuck_style == TuckStyle::Hidden && state.notch.is_none() {
+            let hotzone = TUCKED_HIDDEN_HOTZONE_HEIGHT * physical_scale;
+            return depth >= 0.0 && depth <= hotzone && local_y >= island_top && local_y <= island_top + island_height;
+        }
         return point_in_notch(local_y, depth, 0.0, 0.0, island_height, island_width, radius, 0.0, state.corner_shape);
     }
 

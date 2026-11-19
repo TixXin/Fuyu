@@ -7,6 +7,7 @@ import type { SlotRegistry } from "@fuyu/plugin-base/client/slots";
 import { isMacOS } from "../../lib/platform";
 import { islandNoticesV1 } from "../../lib/island-notices/service";
 import { getPluginHostConnection } from "./api";
+import { updatePluginNames, type PluginNameInput } from "./pluginNames.ts";
 import { windowServices } from "./services.ts";
 import { windowSlots, type SlotWindow } from "./slots";
 import { createWaitingMonitor, type WaitingPluginInput } from "./waitingMonitor.ts";
@@ -63,7 +64,10 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
     onSnapshot: (snapshot, { fresh }) => {
       clients = snapshot.clients ?? [];
       services.update(snapshot.services ?? []);
-      if (snapshot.plugins) waitingMonitor?.update(snapshot.plugins);
+      if (snapshot.plugins) {
+        waitingMonitor?.update(snapshot.plugins);
+        updatePluginNames(snapshot.plugins);
+      }
       if (fresh) void services.resubscribe();
       sync();
     },
@@ -71,7 +75,10 @@ async function start(window: SlotWindow): Promise<PluginRuntime | null> {
       if (name === "plugin") bridge.deliver(data as PluginMessage);
       if (name === "service") services.deliver(data as ServiceEventMessage);
       if (name === "services") services.update(data as ServiceEntry[]);
-      if (name === "plugins" && Array.isArray(data)) waitingMonitor?.update(data as WaitingPluginInput[]);
+      if (name === "plugins" && Array.isArray(data)) {
+        waitingMonitor?.update(data as WaitingPluginInput[]);
+        updatePluginNames(data as PluginNameInput[]);
+      }
       if (name !== "clients") return;
       clients = data as ClientEntry[];
       sync();
