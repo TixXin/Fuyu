@@ -320,6 +320,10 @@ export function setIslandSideBubbleRect(rect: IslandBannerRect | null) {
   return invoke<void>("set_island_side_bubble_rect", { rect });
 }
 
+export function setIslandOverflowRect(rect: IslandBannerRect | null) {
+  return invoke<void>("set_island_overflow_rect", { rect });
+}
+
 export function listenIslandDragEdgeHint(handler: (hint: DragEdgeHint | null) => void): Promise<UnlistenFn> {
   return listen<DragEdgeHint | null>(ISLAND_DRAG_EDGE_HINT_EVENT, ({ payload }) => handler(payload));
 }

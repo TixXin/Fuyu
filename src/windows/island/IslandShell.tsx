@@ -46,6 +46,7 @@ type IslandShellProps = {
   side?: IslandSide | null;
   showTitle: boolean;
   showCollapsedText: boolean;
+  overflowMore?: boolean;
   features: IslandFeatures;
   onOpenPage: (page: IslandPage) => void;
   onWindowDragStart: () => void;
@@ -138,6 +139,7 @@ export function IslandShell({
   side = null,
   showTitle,
   showCollapsedText,
+  overflowMore = true,
   features,
   onOpenPage,
   onWindowDragStart,
@@ -254,6 +256,7 @@ export function IslandShell({
             isTucked={isTucked}
             showTitle={showTitle}
             showCollapsedText={showCollapsedText}
+            overflowMore={overflowMore}
             collapsedLabel={collapsedLabel}
             agentVisualState={agentVisualState}
             onOpenPage={onOpenPage}

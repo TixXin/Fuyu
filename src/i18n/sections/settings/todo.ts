@@ -1,4 +1,4 @@
-import type { TodoDoneDisplay, TodoInsertPosition, TodoSortBy } from "../../../features/todos/todoPrefs";
+import type { TodoDoneDisplay, TodoDueReminderScope, TodoInsertPosition, TodoSortBy } from "../../../features/todos/todoPrefs";
 
 export type SettingsTodoText = {
   title: string;
@@ -21,6 +21,15 @@ export type SettingsTodoText = {
   focusTimerMinutes: string;
   timedReminder: string;
   timedReminderHint: string;
+  timedReminderLead: string;
+  timedReminderLeadOnTime: string;
+  timedReminderLeadMinutes: (minutes: number) => string;
+  dueReminderScope: string;
+  dueReminderScopeHint: string;
+  dueReminderScopeOptions: Record<TodoDueReminderScope, string>;
+  wrapUpReminder: string;
+  wrapUpReminderHint: string;
+  wrapUpReminderTime: string;
   autoCompleteFromSubtasks: string;
   autoCompleteFromSubtasksHint: string;
   rolloverGroup: string;
@@ -78,6 +87,20 @@ export const zhCN: SettingsTodoText = {
   focusTimerMinutes: "专注时长（分钟）",
   timedReminder: "带时刻（HH:mm）的待办到点提醒",
   timedReminderHint: "今日标题以时刻开头（如 15:00 回电话）且未完成的待办，到点弹出岛屿提醒横幅并支持推迟。",
+  timedReminderLead: "提前提醒",
+  timedReminderLeadOnTime: "准点",
+  timedReminderLeadMinutes: (minutes) => `提前 ${minutes} 分钟`,
+  dueReminderScope: "到期提醒哪些待办",
+  dueReminderScopeHint: "已安排的待办到了那天、并进今天的列表时，在岛上提醒一次。",
+  dueReminderScopeOptions: {
+    off: "不提醒",
+    high: "只高优先级",
+    highMedium: "高和中优先级",
+    all: "全部",
+  },
+  wrapUpReminder: "每天收尾提醒",
+  wrapUpReminderHint: "到点还有没做完的待办时，在岛上提醒一次。都做完了不提醒。",
+  wrapUpReminderTime: "提醒时间",
   autoCompleteFromSubtasks: "子任务全部勾选后自动完成主待办",
   autoCompleteFromSubtasksHint: "当至少有一项子步骤且最后一项被勾选完成时，自动将主待办标记为已完成。",
   rolloverGroup: "反馈与跨天归档",
@@ -147,6 +170,20 @@ export const en: SettingsTodoText = {
   focusTimerMinutes: "Focus duration (minutes)",
   timedReminder: "Remind at scheduled time (HH:mm)",
   timedReminderHint: "Shows an island reminder banner with snooze when an unfinished task starting with HH:mm reaches its time.",
+  timedReminderLead: "Remind ahead",
+  timedReminderLeadOnTime: "On time",
+  timedReminderLeadMinutes: (minutes) => `${minutes} min before`,
+  dueReminderScope: "Remind when scheduled tasks are due",
+  dueReminderScopeHint: "Shows one island reminder when a scheduled task reaches its day and joins today's list.",
+  dueReminderScopeOptions: {
+    off: "Never",
+    high: "High priority only",
+    highMedium: "High and medium",
+    all: "All",
+  },
+  wrapUpReminder: "End-of-day reminder",
+  wrapUpReminderHint: "Shows one island reminder at the set time if tasks are still open. Stays quiet when everything is done.",
+  wrapUpReminderTime: "Remind at",
   autoCompleteFromSubtasks: "Complete main task when all subtasks are checked",
   autoCompleteFromSubtasksHint: "Automatically marks the parent task done once its last remaining subtask is checked off.",
   rolloverGroup: "Feedback & daily rollover",

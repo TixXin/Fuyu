@@ -73,6 +73,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   islandBackgroundColor: string;
   showTitle: boolean;
   showCollapsedText: boolean;
+  collapsedOverflowMore: boolean;
   showIdleTodoCount: boolean;
   carryOverIncompleteTodos: boolean;
   enableTodoReorder: boolean;

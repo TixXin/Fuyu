@@ -112,8 +112,29 @@ export type MarketAutoUpdated = {
   plugins: MarketAutoUpdatedPlugin[];
 };
 
+export type MarketBundleMember = {
+  name: string;
+  state: "installed" | "disabled" | "available" | "unavailable";
+  reason?: "missing" | "revoked" | "engines" | "platform" | "warned" | "other";
+};
+
+export type MarketCatalogBundle = {
+  id: string;
+  displayName: MarketLocalizedText;
+  description: MarketLocalizedText;
+  onboarding: boolean;
+  members: MarketBundleMember[];
+};
+
+export type MarketBundleInstallResult = {
+  id: string;
+  installed: { name: string; version: string }[];
+  failed: { name: string; code: string; message: string }[];
+};
+
 export type MarketCatalogSnapshot = {
   plugins: MarketCatalogPlugin[];
+  bundles?: MarketCatalogBundle[];
   installed: InstalledMarketPlugin[];
   marketSince?: string | null;
   updatedAt: number | null;
@@ -203,6 +224,7 @@ export type MarketMethods = {
   media(params: { url: string }): MarketMedia;
   inspectPackage(params: { base64: string }): MarketInspectedPackage;
   installMarket(params: { name: string; version?: string }): MarketInstallResult;
+  installBundle(params: { id: string }): MarketBundleInstallResult;
   installFile(params: { base64: string; expectedSha256?: string }): MarketInstallResult;
   setManualAllowed(params: { allowed: boolean }): { manualAllowed: boolean };
   setEnabled(params: { id: string; enabled: boolean }): { id: string; enabled: boolean };

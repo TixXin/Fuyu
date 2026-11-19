@@ -1131,6 +1131,19 @@
     {
       "page": "appearanceCollapsed",
       "zh-CN": {
+        "group": "显示内容",
+        "title": "放不下的项目收进「+N」",
+        "description": "贴合刘海时两侧位置有限：按下面清单的顺序先放，放不下的收进「+N」，停在或点它查看。关掉后放不下的项目不显示。"
+      },
+      "en": {
+        "group": "Display",
+        "title": "Put items that do not fit behind +N",
+        "description": "Beside the notch there is little room: items are placed in the order of the list below, and the rest go behind +N. Hover or click it to see them. When off, items that do not fit are not shown."
+      }
+    },
+    {
+      "page": "appearanceCollapsed",
+      "zh-CN": {
         "group": "中心图案",
         "title": "图案"
       },
@@ -1858,6 +1871,43 @@
         "group": "Focus timer & reminders",
         "title": "Remind at scheduled time (HH:mm)",
         "description": "Shows an island reminder banner with snooze when an unfinished task starting with HH:mm reaches its time."
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "专注联动与提醒",
+        "title": "提前提醒"
+      },
+      "en": {
+        "group": "Focus timer & reminders",
+        "title": "Remind ahead"
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "专注联动与提醒",
+        "title": "到期提醒哪些待办",
+        "description": "已安排的待办到了那天、并进今天的列表时，在岛上提醒一次。"
+      },
+      "en": {
+        "group": "Focus timer & reminders",
+        "title": "Remind when scheduled tasks are due",
+        "description": "Shows one island reminder when a scheduled task reaches its day and joins today's list."
+      }
+    },
+    {
+      "page": "todos",
+      "zh-CN": {
+        "group": "专注联动与提醒",
+        "title": "每天收尾提醒",
+        "description": "到点还有没做完的待办时，在岛上提醒一次。都做完了不提醒。"
+      },
+      "en": {
+        "group": "Focus timer & reminders",
+        "title": "End-of-day reminder",
+        "description": "Shows one island reminder at the set time if tasks are still open. Stays quiet when everything is done."
       }
     },
     {

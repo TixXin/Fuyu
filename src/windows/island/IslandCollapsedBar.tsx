@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useRef, type ReactNode } from "react";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
 import { arrangeCollapsedItems, zoneIds, type CollapsedZone } from "../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
@@ -11,6 +11,9 @@ import type { CollapsedSlots, IslandPage } from "./types";
 import { useCollapsedContextMenu } from "./useCollapsedContextMenu";
 import { useWindowDragGesture } from "./useWindowDragGesture";
 import { hasNotchDrop, useIslandNotch } from "./notch";
+import { CollapsedMore } from "./CollapsedMore";
+import { BAR_UNIT, useCollapsedOverflow, type CollapsedOverflowState } from "./useCollapsedOverflow";
+import { useCollapsedItemNames } from "./useCollapsedItemNames";
 import { AlertPopup, NotchAlertLeading, NotchAlertTrailing, useActiveAlert } from "./NotchAlert";
 import { IslandSummary } from "./IslandSummary";
 import { DevWatermark } from "../../components/DevWatermark";
@@ -29,25 +32,35 @@ type IslandCollapsedBarProps = {
   onWindowDragStart: () => void;
   onTuck: () => void;
   slots?: CollapsedSlots;
+  overflowMore?: boolean;
 };
 
 const NO_SLOTS: CollapsedSlots = {};
 const NO_SOURCES = {};
 const OPENS_BAR = "data-opens-bar";
 
-function renderZone(items: readonly CollapsedBarItem[]) {
-  const out: ReactNode[] = [];
+type BarUnit = { key: string; ids: string[]; node: ReactNode };
+
+function barUnits(items: readonly CollapsedBarItem[]): BarUnit[] {
+  const units: BarUnit[] = [];
   for (let index = 0; index < items.length; index += 1) {
     const item = items[index];
     if (!item.group) {
-      out.push(<Fragment key={item.id}>{item.node}</Fragment>);
+      units.push({ key: item.id, ids: [item.id], node: item.node });
       continue;
     }
     const group = [item];
     while (items[index + 1]?.group === item.group) group.push(items[(index += 1)]);
-    out.push(<div key={group[0].id} className="island__gauge-slot">{group.map((member) => <Fragment key={member.id}>{member.node}</Fragment>)}</div>);
+    units.push({ key: group[0].id, ids: group.map((member) => member.id), node: <div className="island__gauge-slot">{group.map((member) => <Fragment key={member.id}>{member.node}</Fragment>)}</div> });
   }
-  return out;
+  return units;
+}
+
+function renderUnits(units: readonly BarUnit[], overflow: CollapsedOverflowState) {
+  if (!overflow.fitting) return units.map((unit) => <Fragment key={unit.key}>{unit.node}</Fragment>);
+  return units
+    .filter((unit) => !unit.ids.every((id) => overflow.shelved.has(id)))
+    .map((unit) => <span key={unit.key} className="island__bar-unit" {...{ [BAR_UNIT]: unit.key }}>{unit.node}</span>);
 }
 
 export function IslandCollapsedBar({
@@ -63,6 +76,7 @@ export function IslandCollapsedBar({
   onWindowDragStart,
   onTuck,
   slots = NO_SLOTS,
+  overflowMore = true,
 }: IslandCollapsedBarProps) {
   const t = useTranslation();
   const notch = useIslandNotch();
@@ -103,7 +117,29 @@ export function IslandCollapsedBar({
   const byId = new Map(items.map((item) => [item.id, item]));
   const zone = (name: CollapsedZone) => zoneIds(placements, name, offered).flatMap((id) => byId.get(id) ?? []);
 
-  const left = renderZone(zone("left"));
+  const alerted = notch !== null && activeAlert !== null;
+  const dropped = notch !== null && hasNotchDrop({ preview, notice, peek: peekLine });
+  const messaged = notch !== null && !alerted && !notice && preview !== null;
+  const wings = alerted ? "alert" : messaged ? `message:${preview?.key}` : dropped ? "dropped" : "idle";
+  const leftWingRef = useRef<HTMLDivElement>(null);
+  const rightWingRef = useRef<HTMLDivElement>(null);
+  const leftItems = zone("left");
+  const rightItems = zone("right");
+  const leftUnits = barUnits(leftItems);
+  const rightUnits = barUnits(rightItems);
+  const overflow = useCollapsedOverflow(
+    overflowMore && notch !== null,
+    !isExpanded && !isTucked && (wings === "idle" || wings === "dropped"),
+    { left: leftUnits, right: rightUnits },
+    { left: leftWingRef, right: rightWingRef },
+  );
+  const nameOf = useCollapsedItemNames();
+  const moreRows = overflow.chip
+    ? [...leftItems, ...rightItems].filter((item) => overflow.shelved.has(item.id)).map((item) => ({ id: item.id, name: nameOf(item.id), page: item.page ?? null }))
+    : [];
+  const more = (side: "left" | "right") => overflow.chip === side && moreRows.length > 0 && <CollapsedMore rows={moreRows} onOpenPage={onOpenPage} />;
+
+  const left = <>{renderUnits(leftUnits, overflow)}{more("left")}</>;
   const message = (
     <>
         <button
@@ -150,7 +186,7 @@ export function IslandCollapsedBar({
   );
   const right = (
     <>
-        {renderZone(zone("right"))}
+        {renderUnits(rightUnits, overflow)}
         {!contributed.hints.has("agents.count") && (
           <button
             className="island__quiet-button"
@@ -165,11 +201,6 @@ export function IslandCollapsedBar({
         )}
     </>
   );
-  const alerted = notch !== null && activeAlert !== null;
-  const dropped = notch !== null && hasNotchDrop({ preview, notice, peek: peekLine });
-  const messaged = notch !== null && !alerted && !notice && preview !== null;
-  const wings = alerted ? "alert" : messaged ? `message:${preview?.key}` : dropped ? "dropped" : "idle";
-
   return (
     <div
       className="island__collapsed"
@@ -187,9 +218,9 @@ export function IslandCollapsedBar({
       {notch ? (
         <>
           <div className="island__notch-row">
-            <div key={`left:${wings}`} className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{alerted && activeAlert ? <NotchAlertLeading alert={activeAlert} sources={alertSources} /> : messaged && preview ? lineView(`${preview.item}.leading`) : left}</div>
+            <div key={`left:${wings}`} ref={leftWingRef} className="island__notch-wing island__notch-wing--left" {...{ [OPENS_BAR]: "" }}>{alerted && activeAlert ? <NotchAlertLeading alert={activeAlert} sources={alertSources} /> : messaged && preview ? lineView(`${preview.item}.leading`) : left}</div>
             <span className="island__notch-gap" aria-hidden="true" {...{ [OPENS_BAR]: "" }} />
-            <div key={`right:${wings}`} className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{alerted && activeAlert ? <NotchAlertTrailing alert={activeAlert} sources={alertSources} /> : messaged && preview ? lineView(`${preview.item}.trailing`) : dropped ? right : <>{message}{right}</>}</div>
+            <div key={`right:${wings}`} ref={rightWingRef} className="island__notch-wing island__notch-wing--right" {...{ [OPENS_BAR]: "" }}>{alerted && activeAlert ? <NotchAlertTrailing alert={activeAlert} sources={alertSources} /> : messaged && preview ? lineView(`${preview.item}.trailing`) : dropped ? <>{more("right")}{right}</> : <>{more("right")}{message}{right}</>}</div>
           </div>
           {dropped && <div className="island__notch-drop">{message}</div>}
         </>

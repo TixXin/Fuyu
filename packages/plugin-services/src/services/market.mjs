@@ -8,6 +8,7 @@ export const marketV1 = defineService("market/v1", {
     media: true,
     inspectPackage: true,
     installMarket: true,
+    installBundle: true,
     installFile: true,
     setManualAllowed: true,
     setEnabled: true,

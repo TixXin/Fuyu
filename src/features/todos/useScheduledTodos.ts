@@ -6,7 +6,7 @@ import { DUE_REMINDER_SOURCE, dueReminderId, pickDueReminders } from "./dueRemin
 import { sortScheduledTodos, splitDueTodos, toTodoItems } from "./schedule.ts";
 import { createTodoId, loadScheduledTodos, saveScheduledTodos } from "./storage.ts";
 import { readTags, withTags, type TodoTags } from "./tags.ts";
-import { getLogicalTodoDate } from "./todoPrefs.ts";
+import { getLogicalTodoDate, type TodoDueReminderScope } from "./todoPrefs.ts";
 import type { ScheduledTodo, TodoItem } from "./types.ts";
 import { useTodoFileField } from "./useTodoFileField";
 
@@ -16,8 +16,9 @@ export function useScheduledTodos(
   currentTodoDate: string,
   setTodos: Dispatch<SetStateAction<TodoItem[]>>,
   dayStartHour = 0,
+  dueReminderScope: TodoDueReminderScope = "high",
 ) {
-  const dueTitle = useTranslation().todoIsland.tags.dueTitle;
+  const { dueTitle, dueTitleAny } = useTranslation().todoIsland.tags;
   const [scheduledTodos, setScheduledTodos] = useState<ScheduledTodo[]>(loadScheduledTodos);
   useTodoFileField("scheduled", setScheduledTodos);
 
@@ -38,10 +39,11 @@ export function useScheduledTodos(
       ...toTodoItems(due).filter((todo) => !currentTodos.some((item) => item.id === todo.id)),
       ...currentTodos,
     ]);
-    for (const todo of pickDueReminders(due, remindedDue)) {
-      void windowServices.get(remindersV1).push({ id: dueReminderId(todo), source: DUE_REMINDER_SOURCE, icon: "flag", title: dueTitle, detail: todo.title }).catch(() => undefined);
+    for (const todo of pickDueReminders(due, remindedDue, dueReminderScope)) {
+      const title = todo.priority === "high" ? dueTitle : dueTitleAny;
+      void windowServices.get(remindersV1).push({ id: dueReminderId(todo), source: DUE_REMINDER_SOURCE, icon: "flag", title, detail: todo.title }).catch(() => undefined);
     }
-  }, [currentTodoDate, dayStartHour, dueTitle, scheduledTodos, setTodos]);
+  }, [currentTodoDate, dayStartHour, dueReminderScope, dueTitle, dueTitleAny, scheduledTodos, setTodos]);
 
   const scheduleTodo = useCallback((title: string, date: string, project?: string, tags?: TodoTags): ScheduledTodo => {
     const todo: ScheduledTodo = {

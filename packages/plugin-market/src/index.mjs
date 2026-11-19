@@ -13,6 +13,7 @@ export {
   verifyVersionSignature,
 } from "./author.mjs";
 export { DEFAULT_MARKET, DOC_NAME, FORMAT, MAX_DOCS, MAX_KEYWORDS, MAX_SCREENSHOTS, PLATFORMS, parseName, validateIndex } from "./index-format.mjs";
+export { MAX_BUNDLE_PLUGINS, MIN_BUNDLE_PLUGINS } from "./bundles.mjs";
 export { LEVELS, activeRevocations, emptyRevocations, mergeRevoked, revocationOf, validateRevoked } from "./revoked.mjs";
 export {
   INDEX_LIFETIME_DAYS,

@@ -10,6 +10,7 @@ import {
   verifyVersionSignature,
 } from "../../../../packages/plugin-market/src/index.mjs";
 import { PACKAGES_SUBDIR } from "../../../../packages/plugin-cli/src/installer.mjs";
+import { bundleViews } from "./marketBundles.mjs";
 import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
 import { firstPublishedAt, marketSince, packageIcon, packageReach, pluginIcon, pluginKeywords, pluginScreenshots } from "./marketListing.mjs";
 import { readState } from "./marketState.mjs";
@@ -351,6 +352,7 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
   }));
   return {
     plugins,
+    bundles: bundleViews(doc, plugins),
     installed,
     marketSince: marketSince(doc),
     updatedAt: state.updatedAt,

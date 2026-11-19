@@ -1,3 +1,4 @@
+import { checkBundles } from "./bundles.mjs";
 import { isPublicKeyEntry, isSignatureObject } from "./keys.mjs";
 import { isValidRange, isValidVersion } from "./semver.mjs";
 import {
@@ -170,5 +171,6 @@ export function validateIndex(doc, options = {}) {
   if (!report.check(Array.isArray(doc.plugins), "plugins", "must be a list")) return report.list;
   doc.plugins.forEach((plugin, i) => checkPlugin(report, plugin, `plugins[${i}]`, settings));
   checkUnique(report, doc.plugins, (plugin) => plugin?.name, "plugins", "name");
+  checkBundles(report, doc, parseName);
   return report.list;
 }

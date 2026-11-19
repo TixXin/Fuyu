@@ -64,7 +64,15 @@ export type PluginEntry = {
 
 type Header = { readonly format: 3; readonly serial: number; readonly generatedAt: Time; readonly expires: Time };
 
-export type IndexV3 = Header & { readonly revokedSerial?: number; readonly plugins: readonly PluginEntry[] };
+export type BundleEntry = {
+  readonly id: string;
+  readonly displayName: Localized;
+  readonly description: Localized;
+  readonly plugins: readonly string[];
+  readonly onboarding?: boolean;
+};
+
+export type IndexV3 = Header & { readonly revokedSerial?: number; readonly plugins: readonly PluginEntry[]; readonly bundles?: readonly BundleEntry[] };
 
 export type RevocationLevel = "warn" | "disable";
 export type RevocationEntry = {
@@ -124,6 +132,8 @@ export declare const MAX_SCREENSHOTS: number;
 export declare const MAX_KEYWORDS: number;
 export declare const MAX_DOCS: number;
 export declare const DOC_NAME: RegExp;
+export declare const MIN_BUNDLE_PLUGINS: number;
+export declare const MAX_BUNDLE_PLUGINS: number;
 export declare const DEFAULT_MARKET: Required<MarketOptions>;
 export declare function parseName(name: unknown): { scope: string; name: string } | null;
 export declare function validateIndex(doc: unknown, options?: MarketOptions): Problem[];

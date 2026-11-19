@@ -513,6 +513,7 @@ macro_rules! tauri_commands {
             crate::island::passthrough::set_island_cursor_tracking,
             crate::island::modifier::set_island_panel_resizable,
             crate::island::banner_hit::set_island_banner_rect,
+            crate::island::banner_hit::set_island_overflow_rect,
             crate::island::outside_click::set_island_outside_click_watch,
             crate::island::drag_grid_window::get_drag_grid_state,
             crate::island::layer::set_island_layer_shortcut,

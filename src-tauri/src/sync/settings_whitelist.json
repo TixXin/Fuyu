@@ -29,6 +29,7 @@
         "islandMotion": "sync",
         "maxPanelHeight": "local",
         "panelWidth": "local",
+        "collapsedOverflowMore": "sync",
         "collapsedWidthExtra": "local",
         "dragGrid": "sync",
         "agentHostDisplay": "sync",

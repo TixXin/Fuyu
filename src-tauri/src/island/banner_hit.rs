@@ -25,6 +25,7 @@ impl BannerRect {
 
 static BANNER_RECT: Mutex<Option<BannerRect>> = Mutex::new(None);
 static SIDE_BUBBLE_RECT: Mutex<Option<BannerRect>> = Mutex::new(None);
+static OVERFLOW_RECT: Mutex<Option<BannerRect>> = Mutex::new(None);
 
 #[tauri::command]
 pub fn set_island_banner_rect(rect: Option<BannerRect>) {
@@ -36,7 +37,13 @@ pub fn set_island_side_bubble_rect(rect: Option<BannerRect>) {
     *SIDE_BUBBLE_RECT.lock().unwrap_or_else(PoisonError::into_inner) = rect.filter(|rect| rect.is_usable());
 }
 
+#[tauri::command]
+pub fn set_island_overflow_rect(rect: Option<BannerRect>) {
+    *OVERFLOW_RECT.lock().unwrap_or_else(PoisonError::into_inner) = rect.filter(|rect| rect.is_usable());
+}
+
 pub(super) fn banner_rect() -> Option<BannerRect> {
     let side_bubble = *SIDE_BUBBLE_RECT.lock().unwrap_or_else(PoisonError::into_inner);
-    side_bubble.or(*BANNER_RECT.lock().unwrap_or_else(PoisonError::into_inner))
+    let overflow = *OVERFLOW_RECT.lock().unwrap_or_else(PoisonError::into_inner);
+    side_bubble.or(overflow).or(*BANNER_RECT.lock().unwrap_or_else(PoisonError::into_inner))
 }

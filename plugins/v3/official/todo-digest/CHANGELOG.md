@@ -15,6 +15,8 @@
 - 名字统一成「待办摘要 / To-do digest」，说明改成一句话。
 - 原来没有设置项，升级后全部取默认值。
 - 图标换成和浮屿设置一致的风格：浅底色加同色线条。
+- 市场页补上截图：设置里的预览、全部设置项和写完后岛上的提示。
+- 补了搜索关键词，在市场里搜「日报」「总结」「收工」也能找到。
 
 Settings at last: write on a schedule, and writing again on the same day replaces the earlier digest instead of piling up.
 
@@ -29,6 +31,8 @@ Settings at last: write on a schedule, and writing again on the same day replace
 - The name is now "To-do digest" everywhere and the description is one sentence.
 - 1.0.0 had no settings, so everything starts at the defaults.
 - New icon in the same style as Fuyu's settings: a tinted tile with a line glyph in the same color.
+- The market page gets screenshots: the preview in the settings, all the settings, and the notice on the island after writing.
+- Search keywords added, so "summary" or "journal" find it in the market.
 
 ## 1.0.0
 

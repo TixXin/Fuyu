@@ -41,6 +41,29 @@
       "en": "Writes your unfinished to-dos into today's note in one click or at a set time, a quick wrap-up before you stop for the day."
     },
     "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/preview.png",
+        "caption": {
+          "zh-CN": "预览将要写进今日笔记的内容，点一下就写入",
+          "en": "Preview what goes into today's note, then write it with one click"
+        }
+      },
+      {
+        "path": "screenshots/settings.png",
+        "caption": {
+          "zh-CN": "设置：写入范围、条目格式、定时写入和提示",
+          "en": "Settings: what to write, item style, daily schedule and notification"
+        }
+      },
+      {
+        "path": "screenshots/notice.png",
+        "caption": {
+          "zh-CN": "写完后岛上的提示",
+          "en": "The notice on the island after writing"
+        }
+      }
+    ],
     "categories": [
       "todos",
       "productivity"

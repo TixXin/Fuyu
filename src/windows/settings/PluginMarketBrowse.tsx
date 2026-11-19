@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { ExternalLink, Search, Upload } from "lucide-react";
-import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
+import type { MarketCatalogBundle, MarketCatalogPlugin } from "@fuyu/plugin-services";
 import type { PluginMarketSort } from "../../i18n/sections/settings/pluginMarket";
 import { useLocale, useTranslation } from "../../i18n";
 import { usePinyin } from "../../lib/pinyin/usePinyin";
+import { visibleBundles } from "./pluginBundles";
 import { iconSources } from "./pluginIconSources";
 import { PluginLogo } from "./PluginLogo";
+import { PluginMarketBundles } from "./PluginMarketBundles";
 import { PluginMarketCard, type MarketCardHandlers } from "./PluginMarketCard";
 import { PluginMarketEmpty } from "./PluginMarketEmpty";
 import { openPluginDocs } from "./pluginMarketActions";
@@ -14,8 +16,9 @@ import { browseSections, categoryCounts, categoryNameMap, inCategory, localized,
 import { queryWantsPinyin, searchMarket } from "./marketSearch";
 import { marketActionCandidate } from "./pluginRowStatus";
 
-export function PluginMarketBrowse({ plugins, newNames, query, category, sort, categoryName, handlers, onCategory, onInstallFile }: {
+export function PluginMarketBrowse({ plugins, bundles, newNames, query, category, sort, categoryName, handlers, onCategory, onInstallFile, onOpenBundle }: {
   plugins: readonly MarketCatalogPlugin[];
+  bundles: readonly MarketCatalogBundle[];
   newNames: ReadonlySet<string>;
   query: string;
   category: string | null;
@@ -24,11 +27,14 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
   handlers: MarketCardHandlers;
   onCategory: (id: string | null) => void;
   onInstallFile: () => void;
+  onOpenBundle: (id: string) => void;
 }) {
   const text = useTranslation().settings.pluginsV3.marketPage;
   const { locale } = useLocale();
   const [ownedOpen, setOwnedOpen] = useState<boolean | null>(null);
   const pinyin = usePinyin(queryWantsPinyin(query));
+  const shownBundles = visibleBundles(bundles, query, category);
+  const bundleRow = <PluginMarketBundles bundles={shownBundles} plugins={plugins} onOpen={onOpenBundle} />;
   const grid = (list: readonly MarketCatalogPlugin[]) => (
     <div className="market-grid">
       {list.map((plugin) => <PluginMarketCard key={plugin.name} plugin={plugin} categoryName={categoryName} isNew={newNames.has(plugin.name)} {...handlers} />)}
@@ -38,7 +44,7 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
   if (query.trim()) {
     const names = categoryNameMap(plugins, categoryName);
     const found = searchMarket(sortPlugins(plugins, sort), query, names, pinyin);
-    if (found.length === 0) {
+    if (found.length === 0 && shownBundles.length === 0) {
       return (
         <PluginMarketEmpty kind="no-result" icon={<Search size={22} strokeWidth={1.8} />} title={text.noResult.title(query.trim())} body={text.noResult.body}>
           <div className="market-empty__cats">
@@ -58,10 +64,15 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
       );
     }
     return (
-      <section className="market-section" data-market-section="results">
-        <h3 className="plugin-page__heading">{text.sections.results(found.length)}</h3>
-        {grid(found)}
-      </section>
+      <>
+        {bundleRow}
+        {found.length > 0 ? (
+          <section className="market-section" data-market-section="results">
+            <h3 className="plugin-page__heading">{text.sections.results(found.length)}</h3>
+            {grid(found)}
+          </section>
+        ) : null}
+      </>
     );
   }
 
@@ -103,9 +114,10 @@ export function PluginMarketBrowse({ plugins, newNames, query, category, sort, c
           </div>
         </section>
       ) : null}
+      {bundleRow}
       {fresh.length > 0 ? (
         <section className="market-section" data-market-section="fresh">
-          {updates.length > 0 || owned.length > 0 ? <h3 className="plugin-page__heading">{text.sections.fresh}<span className="plugin-page__heading-meta">{text.sections.count(fresh.length)}</span></h3> : null}
+          {updates.length > 0 || owned.length > 0 || shownBundles.length > 0 ? <h3 className="plugin-page__heading">{text.sections.fresh}<span className="plugin-page__heading-meta">{text.sections.count(fresh.length)}</span></h3> : null}
           {grid(fresh)}
         </section>
       ) : (

@@ -106,6 +106,7 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
       typeof settings?.showCollapsedText === "boolean"
         ? settings.showCollapsedText
         : DEFAULT_SETTINGS.showCollapsedText,
+    collapsedOverflowMore: settings?.collapsedOverflowMore !== false,
   } satisfies Partial<IslandSettings>;
 }
 

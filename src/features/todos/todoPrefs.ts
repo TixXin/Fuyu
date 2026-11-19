@@ -7,6 +7,8 @@ export type TodoInsertPosition = "bottom" | "top";
 export type TodoDayStartHour = 0 | 2 | 3 | 4 | 5 | 6;
 export type TodoDoneDisplay = "fold" | "inline" | "hide";
 export type TodoArchiveRetentionDays = 0 | 90 | 180 | 365;
+export type TodoReminderLeadMinutes = 0 | 5 | 10 | 15 | 30;
+export type TodoDueReminderScope = "off" | "high" | "highMedium" | "all";
 
 export type TodoPrefs = {
   showElapsed: boolean;
@@ -23,6 +25,10 @@ export type TodoPrefs = {
   focusTimerEnabled: boolean;
   focusTimerMinutes: number;
   timedReminderEnabled: boolean;
+  timedReminderLeadMinutes: TodoReminderLeadMinutes;
+  dueReminderScope: TodoDueReminderScope;
+  wrapUpReminderEnabled: boolean;
+  wrapUpReminderTime: string;
 };
 
 export const TODO_SORT_MODES: readonly TodoSortBy[] = ["manual", "priority", "createdDesc"];
@@ -30,6 +36,9 @@ export const TODO_INSERT_POSITIONS: readonly TodoInsertPosition[] = ["bottom", "
 export const TODO_DAY_START_HOURS: readonly TodoDayStartHour[] = [0, 2, 3, 4, 5, 6];
 export const TODO_DONE_DISPLAYS: readonly TodoDoneDisplay[] = ["fold", "inline", "hide"];
 export const TODO_ARCHIVE_RETENTION_DAYS: readonly TodoArchiveRetentionDays[] = [0, 90, 180, 365];
+export const TODO_REMINDER_LEAD_MINUTES: readonly TodoReminderLeadMinutes[] = [0, 5, 10, 15, 30];
+export const TODO_DUE_REMINDER_SCOPES: readonly TodoDueReminderScope[] = ["off", "high", "highMedium", "all"];
+export const DEFAULT_WRAP_UP_REMINDER_TIME = "18:00";
 export const MIN_FOCUS_TIMER_MINUTES = 5;
 export const MAX_FOCUS_TIMER_MINUTES = 120;
 
@@ -48,6 +57,10 @@ export const DEFAULT_TODO_PREFS: TodoPrefs = {
   focusTimerEnabled: false,
   focusTimerMinutes: 25,
   timedReminderEnabled: true,
+  timedReminderLeadMinutes: 0,
+  dueReminderScope: "high",
+  wrapUpReminderEnabled: false,
+  wrapUpReminderTime: DEFAULT_WRAP_UP_REMINDER_TIME,
 };
 
 const MIN_REAL_TIMESTAMP_MS = 946_684_800_000;
@@ -63,6 +76,16 @@ function pickBoolean(value: unknown, fallback: boolean): boolean {
 function pickFocusMinutes(value: unknown, fallback: number): number {
   if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
   return Math.max(MIN_FOCUS_TIMER_MINUTES, Math.min(MAX_FOCUS_TIMER_MINUTES, Math.round(value)));
+}
+
+export function parseClockTime(value: unknown): { hours: number; minutes: number } | null {
+  if (typeof value !== "string") return null;
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/u.exec(value);
+  return match ? { hours: Number(match[1]), minutes: Number(match[2]) } : null;
+}
+
+function pickClockTime(value: unknown, fallback: string): string {
+  return parseClockTime(value) ? (value as string) : fallback;
 }
 
 export function normalizeTodoPrefs(value: unknown): TodoPrefs {
@@ -82,6 +105,10 @@ export function normalizeTodoPrefs(value: unknown): TodoPrefs {
     focusTimerEnabled: pickBoolean(saved.focusTimerEnabled, DEFAULT_TODO_PREFS.focusTimerEnabled),
     focusTimerMinutes: pickFocusMinutes(saved.focusTimerMinutes, DEFAULT_TODO_PREFS.focusTimerMinutes),
     timedReminderEnabled: pickBoolean(saved.timedReminderEnabled, DEFAULT_TODO_PREFS.timedReminderEnabled),
+    timedReminderLeadMinutes: pickOne(TODO_REMINDER_LEAD_MINUTES, saved.timedReminderLeadMinutes, DEFAULT_TODO_PREFS.timedReminderLeadMinutes),
+    dueReminderScope: pickOne(TODO_DUE_REMINDER_SCOPES, saved.dueReminderScope, DEFAULT_TODO_PREFS.dueReminderScope),
+    wrapUpReminderEnabled: pickBoolean(saved.wrapUpReminderEnabled, DEFAULT_TODO_PREFS.wrapUpReminderEnabled),
+    wrapUpReminderTime: pickClockTime(saved.wrapUpReminderTime, DEFAULT_TODO_PREFS.wrapUpReminderTime),
   };
 }
 

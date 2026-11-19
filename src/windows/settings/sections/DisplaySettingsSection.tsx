@@ -24,6 +24,12 @@ export function DisplaySettingsSection({
         checked={settings.showTitle}
         onChange={(showTitle) => onSettingsChange({ ...settings, showTitle })}
       />
+      <SettingsToggleRow
+        title={t.settings.layout.collapsedOverflowMore}
+        description={t.settings.layout.collapsedOverflowMoreHint}
+        checked={settings.collapsedOverflowMore}
+        onChange={(collapsedOverflowMore) => onSettingsChange({ ...settings, collapsedOverflowMore })}
+      />
     </SettingsGroup>
   );
 }

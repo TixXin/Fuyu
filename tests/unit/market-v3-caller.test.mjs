@@ -70,12 +70,13 @@ async function withHost(run) {
 }
 
 test("market/v1 refuses every disk-changing method unless the settings window calls it", async () => {
-  assert.deepEqual([...SETTINGS_ONLY_METHODS].sort(), ["dismissAutoUpdated", "installFile", "installMarket", "refresh", "setEnabled", "setManualAllowed", "uninstall"]);
+  assert.deepEqual([...SETTINGS_ONLY_METHODS].sort(), ["dismissAutoUpdated", "installBundle", "installFile", "installMarket", "refresh", "setEnabled", "setManualAllowed", "uninstall"]);
   await withHost(async ({ root, fromWindow, fromPlugin }) => {
     const base64 = manualZip().toString("base64");
     const params = {
       refresh: {},
       installMarket: { name: "@localdev/notes-helper" },
+      installBundle: { id: "starter" },
       installFile: { base64 },
       setManualAllowed: { allowed: true },
       setEnabled: { id: "@localdev/notes-helper", enabled: false },

@@ -1,0 +1,27 @@
+.market-card.market-bundle { grid-template-rows: minmax(0, 1fr) auto; border-color: color-mix(in srgb, var(--color-accent) 30%, transparent); }
+.market-card.market-bundle:hover { border-color: color-mix(in srgb, var(--color-accent) 48%, transparent); }
+.market-bundle .market-card__main { justify-items: start; }
+.market-bundle__icons { min-width: 0; display: flex; align-items: center; gap: 5px; }
+.market-bundle__icons .plugin-icon { flex: none; }
+.market-bundle__more { color: var(--text-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.market-bundle__members { margin: 0; padding: 0; list-style: none; overflow: hidden; }
+.market-bundle__member { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; padding: 9px 14px; }
+.market-bundle__member + .market-bundle__member { border-top: 1px solid var(--color-white-a06); }
+.market-bundle__member-text { min-width: 0; display: grid; gap: 1px; }
+.market-bundle__member-name { min-width: 0; display: flex; align-items: center; gap: 6px; color: var(--text-1); font-size: 13px; font-weight: 600; }
+.market-bundle__member-name > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.market-bundle__member-sub { overflow: hidden; color: var(--text-3); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.market-bundle__state { color: var(--text-3); font-size: 12px; text-align: right; }
+.market-bundle__state--available { color: var(--info-text, var(--color-accent)); }
+.market-bundle__state--installed { color: var(--mint-text, #7ee2b8); }
+.market-bundle__state--failed { color: var(--error-text, #ff9aa9); }
+.market-bundle__member-error { grid-column: 1 / -1; margin: 0; color: var(--error-text, #ff9aa9); font-size: 12px; overflow-wrap: anywhere; }
+
+.settings-stage--light .market-card.market-bundle { border-color: color-mix(in srgb, var(--color-accent) 40%, transparent); }
+.settings-stage--light .market-card.market-bundle:hover { border-color: color-mix(in srgb, var(--color-accent) 58%, transparent); }
+
+@container (max-width: 420px) {
+  .market-bundle__member { grid-template-columns: auto minmax(0, 1fr); }
+  .market-bundle__state { grid-column: 2; text-align: left; }
+}
