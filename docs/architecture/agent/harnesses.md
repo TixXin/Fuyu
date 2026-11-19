@@ -40,7 +40,7 @@
 | 会话卡片：当前工具 | ✓ | ✓ | ✓ | ✓（#397） | ◐ 只有工具名，存档不带参数 | ✓ 未实测（#179） |
 | 会话卡片：上下文 token | ✓ | ✓ | ✗ 只见到积分，要 Windows 样本 | ✓（#397） | ✓ | ✓ 未实测（#179） |
 | 判断会话已退出 | ✓ | ✓ | ✓ Windows 认 `WorkBuddy.exe`、`WorkBuddyAI.exe`，Mac 按 bundle id `com.workbuddy.workbuddy-ai`；国内版 Mac 版的 bundle id 不知道，认不出 | ✗ | ✗ | ◐ 只有 2.x：`service.json` 的 pid 不在了就记为已退出；1.x 只靠 10 分钟超时 |
-| 点会话跳过去 | ✓ 终端（含 Ghostty、WezTerm、`tmux`） / 编辑器标签；Claude 桌面版 Code 页只到窗口并提示 | ✓ 终端 / 编辑器标签；Codex 桌面版只到窗口并提示 | ✓ 打开那条会话（A17，#963）：发 `workbuddy://`（国内版）或 `workbuddy-ai://chat/<会话 id>`，再找窗口切到前台，程序名认 `workbuddy`、`workbuddyai`、`workbuddy ai`；没有会话文件或链接打不开时退回只到窗口：Windows 上收在托盘时再启动一次 `WorkBuddy.exe` 唤出窗口，找不到时提示没打开或收在托盘（A16，#862）。Mac 上 WorkBuddy AI 实测过，Windows 和国内版未实测（A19） | ◐ 只到窗口并提示（A12）：程序名认 `antigravity`、`antigravity ide`、`antigravity-ide`，按钩子的 `transcriptPath` 先找 IDE 或 2.0（CLI 走终端匹配），同一程序多个窗口按文件夹名挑（A10，#646）；钩子不记进程号，没有进程链 | ◐ 只到窗口并提示 | ◐ 桌面版在跑就到 OpenCode 窗口并提示，否则按目录 / 标题找终端 |
+| 点会话跳过去 | ✓ 终端（含 Ghostty、WezTerm、`tmux`） / 编辑器标签；Claude 桌面版 Code 页只到窗口并提示 | ✓ 终端 / 编辑器标签；Codex 桌面版只到窗口并提示 | ✓ 打开那条会话（A17，#963）：发 `workbuddy://`（国内版）或 `workbuddy-ai://chat/<会话 id>`，再找窗口切到前台，程序名认 `workbuddy`、`workbuddyai`、`workbuddy ai`；没有会话文件或链接打不开时退回只到窗口：Windows 上收在托盘时再启动一次 `WorkBuddy.exe` 唤出窗口，找不到时提示没打开或收在托盘（A16，#862）。Mac 上 WorkBuddy AI 实测过，Windows 和国内版未实测（A19） | ◐ 只到窗口并提示（A12；2.33.0 的 `antigravity://` 链接到不了某条对话，A18 查实）：程序名认 `antigravity`、`antigravity ide`、`antigravity-ide`，按钩子的 `transcriptPath` 先找 IDE 或 2.0（CLI 走终端匹配），同一程序多个窗口按文件夹名挑（A10，#646）；钩子不记进程号，没有进程链 | ◐ 只到窗口并提示 | ◐ 桌面版在跑就到 OpenCode 窗口并提示，否则按目录 / 标题找终端 |
 | 回复标记 | ✓ 本机和远程都写 `CLAUDE.md`，远程未在服务器实测（#179） | ✓ 本机和远程，远程未实测（#179） | ✓ 未实测（#179） | ✓ 未实测（#179）；远程只有 CLI（远端有 `~/.gemini/antigravity-cli` 时），未实测（#179） | ✓ 本机和远程，远程未实测（#179） | ✓ 未实测（#179）；远程 ✗ |
 | 用量环 | ✓ | ✓ | ◐ 悬停显示已用积分（不画圆环，B25） | ✓ 同心双环（Gemini 5h / 7d，悬停附带 3p 5h / 7d；内部接口失效时提示，B25） | ◐ 悬停显示钱包余额（不画圆环，B25） | ✗ 只有 OpenCode Go 订阅有额度窗口，未接（#170） |
 | SSH 远程会话 | ✓ 含远程钩子 | ◐ 只读会话 | — 只有桌面版 | ✓ CLI 的会话、运行中 / 完成、岛上审批（远程「安装/修复」装钩子，`run_command` 审批经 SSH 反向转发），未在服务器实测（#179）；远程会话不显示「等你」 | ✓ 会话和三态，没有钩子和审批，未在服务器实测（#179） | ✓ 会话和三态（远端用 `sqlite3` 或 `python3` 把时间窗内的会话抽成小库再拉回），没有插件、审批和回复标记，未在服务器实测（#179） |
@@ -243,8 +243,8 @@ Cursor 的 Agent（Composer），id `cursor`。代码在 `cursor.rs`。本机编
 | 等你 | ✗ 没有等你事件。岛上审批挂起时算等你 |
 | 岛上审批 | ✓ `/cursor/permission`。允许回 `{"permission":"allow"}`，拒绝带回 `user_message` / `agent_message`，交回终端回 `ask`。`preToolUse` 的 `ask` 官方不强制，所以不拦读文件和普通工具；写文件没有可挂起的 before 钩子 |
 | 回复标记 | ✗ 没有确认过可以独占、又不会盖住用户规则的用户级规则文件 |
-| 点会话跳过去 | ◐ 优先激活 Cursor 窗口，再按项目文件夹名挑；到不了具体对话 |
-| 用量环 | ◐ 默认关（B78）：只读 `state.vscdb` 的 `ItemTable` 里 `cursorAuth/accessToken` 和 `cursorAuth/stripeMembershipType`，带 `x-cursor-checksum` 请求头（算法照上游 fly-island 1e278b32）向 `api2.cursor.sh` 的 `DashboardService/GetCurrentPeriodUsage` 查本计费周期已用比例，内环是本月，悬停附带 Auto 和指定模型的比例；这是未公开接口，最多 5 分钟一次。没装、没登录或查不到时环不出现。两个平台都没用真账号实测（#896） |
+| 点会话跳过去 | ✓ 编辑器和 Agents 窗口里的会话（找不到终端进程）发 `cursor://anysphere.cursor-deeplink/agent?id=<会话 id>`，Cursor 打开 Agents 窗口并选中那一条（A18，#967；Mac 上用 `open` 发链接实测过，岛上点和 Windows 未实测，A19）；在终端里跑的照旧找终端；会话 id 不合格时退回激活 Cursor 窗口、按项目文件夹名挑 |
+| 用量环 | ◐ 默认关（B78）：只读 `state.vscdb` 的 `ItemTable` 里 `cursorAuth/accessToken` 和 `cursorAuth/stripeMembershipType`，新版 Cursor 在 macOS 上把 Token 存成 `cursor-safe-storage:v1:` 加 Chromium Safe Storage 密文，用钥匙串里 `Cursor Safe Storage`（账户 `Cursor Key` 或 `Cursor`）的密码解密（PBKDF2-SHA1 + AES-128-CBC，第一次系统会问是否允许）；用 Bearer 向 `api2.cursor.sh` 的 `DashboardService/GetCurrentPeriodUsage` 查本计费周期已用比例（不用 checksum），内环是本月，悬停附带 Auto 和指定模型的比例；这是未公开接口，最多 5 分钟一次。没装、没登录或解不开时环不出现。macOS 2026-11-19 用真账号实测通过；Windows 上加密的 Token 还解不开，未实测（#896）。做法的出处见 [cursor-usage-api.md](../../research/cursor-usage-api.md) |
 | SSH 远程、cc-connect | ✗ Remote-SSH 的钩子在远端执行，CLI 会话格式未核实 / — |
 | 不读 | `state.vscdb` 里 `composerData` 和用量环那两个 `cursorAuth/` 键以外的键（`agentKv` 这类大块）、超过 1MB 的 `composerData`、`hasBlockingPendingActions`（进行中的会话也会是 true，不能当成等你）、`~/.cursor/chats/**/store.db`（CLI，本机没有样本） |
 

@@ -16,6 +16,12 @@ export function maxExpandedIslandWidth(scale: number) {
 }
 
 export const MAX_FITTED_COLLAPSED_WIDTH = 520;
+export const COLLAPSED_ISLAND_HEIGHT = 38;
+export const MAX_GROWN_COLLAPSED_HEIGHT = 140;
+
+export function grownCollapsedHeight(height: number) {
+  return Number.isFinite(height) ? clamp(Math.ceil(height), COLLAPSED_ISLAND_HEIGHT, MAX_GROWN_COLLAPSED_HEIGHT) : COLLAPSED_ISLAND_HEIGHT;
+}
 
 export function maxCollapsedIslandWidth(scale: number) {
   const stage = scale > 0 ? Math.floor((STAGE_WINDOW_WIDTH - 4) / scale) - 2 * MAX_TOP_FILLET_RADIUS : MAX_FITTED_COLLAPSED_WIDTH;

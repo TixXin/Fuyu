@@ -53,6 +53,7 @@ mod window_focus;
 mod workbuddy;
 mod antigravity;
 mod antigravity_focus;
+mod cursor_focus;
 mod workbuddy_focus;
 mod antigravity_remote;
 mod dsh;

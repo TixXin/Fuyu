@@ -19,7 +19,7 @@ import { useIslandNavigation } from "./useIslandNavigation";
 import { useIslandTucking } from "./useIslandTucking";
 import { useIslandHover } from "./useIslandHover";
 import { useIslandPopup } from "./useIslandPopup";
-import { panelIslandWidth } from "./layout";
+import { COLLAPSED_ISLAND_HEIGHT, grownCollapsedHeight, panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../lib/theme/useResolvedTheme";
 import { surfaceThemeColors } from "../../lib/theme/themeMode";
@@ -90,7 +90,8 @@ export function IslandApp() {
   const notch = useIslandNotch();
   const autoForm = useAutoIslandForm();
   const barText = settings.showCollapsedText && !notch;
-  const { lines: contributedLines, alerts, popups, style, settled, preview: contributedPreview, reveal: contributedReveal, status: contributedStatus } = useIslandContributed();
+  const { lines: contributedLines, alerts, popups, style, settled, preview: contributedPreview, reveal: contributedReveal, status: contributedStatus, summaryGrow } = useIslandContributed();
+  const grow = mode === "collapsed" && !isTucked && notch === null && side === null ? summaryGrow : null;
   const textWidth = useCollapsedWidth({
     barText,
     noticeText: v2Upgrade.text ?? (firstHints.current ? t.island.firstHint[firstHints.current] : null),
@@ -99,7 +100,9 @@ export function IslandApp() {
     peeking: contributedPreview !== null || contributedLines.some((line) => line.drop === true),
     slots: collapsedSlots,
     collapsedScale: settings.collapsedScale,
+    growWidth: grow?.width ?? 0,
   });
+  const collapsedIslandHeight = grownCollapsedHeight(grow?.height ?? COLLAPSED_ISLAND_HEIGHT);
   const collapsedIslandWidth = notchFittedWidth(textWidth, notch, settings.collapsedScale, alerts.size > 0);
   useIslandTucking({ settings, navigation });
 
@@ -147,12 +150,13 @@ export function IslandApp() {
     () => ({
       ...getIslandStageStyle(look, mode, collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, accent, devicePixelRatio),
       ...islandMotionVariables(settings.islandMotion, mode === "collapsed" ? "close" : "open", reducedMotion),
+      ...(collapsedIslandHeight !== COLLAPSED_ISLAND_HEIGHT ? { "--collapsed-island-height": `${collapsedIslandHeight}px` } : {}),
       ...(islandOpacity < 1 ? { "--island-opacity": String(islandOpacity) } : {}),
       ...(settings.islandMotion === "none" ? { "--island-opacity-duration": "0ms" } : {}),
       ...style.vars,
       ...glassStyle,
     }),
-    [collapsedIslandWidth, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, islandOpacity, style.vars, glassStyle],
+    [collapsedIslandWidth, collapsedIslandHeight, expandedIslandHeight, expandedIslandWidth, mode, look, accent, devicePixelRatio, settings.islandMotion, reducedMotion, islandOpacity, style.vars, glassStyle],
   );
 
   const {
@@ -172,6 +176,7 @@ export function IslandApp() {
     expandedIslandHeight,
     expandedIslandWidth,
     collapsedIslandWidth,
+    collapsedIslandHeight,
     ready: settled,
     onCollapse: collapseIsland,
   });

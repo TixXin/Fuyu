@@ -4,16 +4,15 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use base64::{
-    engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD},
-    Engine,
-};
-use reqwest::header::{HeaderValue, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::header::{HeaderValue, ACCEPT, AUTHORIZATION, CONTENT_TYPE, USER_AGENT};
 use rusqlite::{Connection, OpenFlags, OptionalExtension};
 use serde_json::Value;
 
-use super::{UsageError, UsageErrorKind};
-use crate::agent_status::usage::{AgentUsage, UsageSource, UsageWindow};
+use super::{cursor_token, UsageError, UsageErrorKind};
+use crate::agent_status::{
+    parse_timestamp_ms,
+    usage::{AgentUsage, UsageSource, UsageWindow},
+};
 
 const USAGE_URL: &str = "https://api2.cursor.sh/aiserver.v1.DashboardService/GetCurrentPeriodUsage";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
@@ -85,7 +84,7 @@ async fn fetch(now: i64) -> Result<AgentUsage, UsageError> {
     let login = tauri::async_runtime::spawn_blocking(read_login)
         .await
         .map_err(|_| error(UsageErrorKind::NoCredentials, "Could not inspect the Cursor login."))??;
-    let body = request(&login.token, now).await?;
+    let body = request(&login.token).await?;
     let value: Value = serde_json::from_str(&body)
         .map_err(|_| error(UsageErrorKind::InvalidResponse, "Cursor's usage answer is not JSON."))?;
     let models = parse_usage(&value)
@@ -101,9 +100,8 @@ async fn fetch(now: i64) -> Result<AgentUsage, UsageError> {
     })
 }
 
-async fn request(token: &str, now: i64) -> Result<String, UsageError> {
+async fn request(token: &str) -> Result<String, UsageError> {
     let network = |message: String| error(UsageErrorKind::Network, message);
-    let request_id = request_id().map_err(network)?;
     let mut bearer = HeaderValue::from_str(&format!("Bearer {token}"))
         .map_err(|_| error(UsageErrorKind::LoginRequired, "The saved Cursor login is not a usable token."))?;
     bearer.set_sensitive(true);
@@ -118,9 +116,7 @@ async fn request(token: &str, now: i64) -> Result<String, UsageError> {
         .header(CONTENT_TYPE, "application/json")
         .header(ACCEPT, "application/json")
         .header("Connect-Protocol-Version", "1")
-        .header("x-cursor-checksum", checksum(&request_id, now))
-        .header("x-request-id", &request_id)
-        .header("x-ghost-mode", "true")
+        .header(USER_AGENT, concat!("Fuyu/", env!("CARGO_PKG_VERSION")))
         .body("{}")
         .send()
         .await
@@ -146,37 +142,6 @@ pub(super) fn status_error(status: u16) -> Option<UsageError> {
     }
 }
 
-fn request_id() -> Result<String, String> {
-    let mut bytes = [0u8; 16];
-    getrandom::fill(&mut bytes).map_err(|failure| format!("Could not make a request id: {failure}"))?;
-    Ok(uuid_text(bytes))
-}
-
-pub(super) fn uuid_text(mut bytes: [u8; 16]) -> String {
-    bytes[6] = (bytes[6] & 0x0f) | 0x40;
-    bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
-    format!("{}-{}-{}-{}-{}", &hex[..8], &hex[8..12], &hex[12..16], &hex[16..20], &hex[20..])
-}
-
-pub(super) fn checksum(machine: &str, now_ms: i64) -> String {
-    let stamp = (now_ms / 1_000_000) as u32;
-    let mut bytes = [
-        (stamp >> 8) as u8,
-        stamp as u8,
-        (stamp >> 24) as u8,
-        (stamp >> 16) as u8,
-        (stamp >> 8) as u8,
-        stamp as u8,
-    ];
-    let mut previous = 165u8;
-    for (index, byte) in bytes.iter_mut().enumerate() {
-        *byte = (*byte ^ previous).wrapping_add(index as u8);
-        previous = *byte;
-    }
-    format!("{}{machine}", URL_SAFE_NO_PAD.encode(bytes))
-}
-
 fn state_db() -> Option<PathBuf> {
     let home = super::home_dir()?;
     #[cfg(target_os = "macos")]
@@ -198,8 +163,11 @@ fn read_login() -> Result<Login, UsageError> {
     let missing = || error(UsageErrorKind::NoCredentials, "Cursor is not installed or not signed in.");
     let path = state_db().filter(|path| path.is_file()).ok_or_else(missing)?;
     let conn = open_read_only(&path).ok_or_else(missing)?;
-    let token = item(&conn, TOKEN_KEY).and_then(|raw| clean_token(&raw)).ok_or_else(missing)?;
+    let stored = item(&conn, TOKEN_KEY).and_then(|raw| cursor_token::classify(&raw)).ok_or_else(missing)?;
     let plan = item(&conn, MEMBERSHIP_KEY).and_then(|raw| plan_label(&raw));
+    drop(conn);
+    let token = cursor_token::reveal(stored)
+        .ok_or_else(|| error(UsageErrorKind::NoCredentials, "Could not unlock the Cursor login saved in Safe Storage."))?;
     Ok(Login { token, plan })
 }
 
@@ -215,29 +183,6 @@ fn item(conn: &Connection, key: &str) -> Option<String> {
         .optional()
         .ok()
         .flatten()
-}
-
-pub(super) fn clean_token(raw: &str) -> Option<String> {
-    let raw = raw.trim();
-    let unquoted = serde_json::from_str::<String>(raw).unwrap_or_else(|_| raw.to_string());
-    let mut token = unquoted.trim();
-    if let Some((_, value)) = token.strip_prefix("scoped:v1:").and_then(|scoped| scoped.split_once(':')) {
-        token = value.trim();
-    }
-    if token.is_empty() {
-        return None;
-    }
-    if token.matches('.').count() != 2 {
-        if let Some(decoded) = STANDARD
-            .decode(token)
-            .ok()
-            .and_then(|bytes| String::from_utf8(bytes).ok())
-            .filter(|text| text.matches('.').count() == 2)
-        {
-            return Some(decoded.trim().to_string());
-        }
-    }
-    token.bytes().all(|byte| (0x21..=0x7e).contains(&byte)).then(|| token.to_string())
 }
 
 pub(super) fn plan_label(raw: &str) -> Option<String> {
@@ -264,6 +209,9 @@ fn number(value: &Value) -> Option<f64> {
 }
 
 fn reset_ms(value: &Value) -> Option<i64> {
+    if let Some(at) = value.as_str().filter(|text| text.trim().parse::<f64>().is_err()).and_then(parse_timestamp_ms) {
+        return Some(at);
+    }
     let number = number(value).filter(|number| *number > 0.0)?;
     let ms = if number < 10_000_000_000.0 { number * 1000.0 } else { number };
     Some(ms as i64)
@@ -284,7 +232,10 @@ pub(super) fn parse_usage(value: &Value) -> Option<Vec<UsageWindow>> {
     let resets_at = reset_ms(&value["billingCycleEnd"]);
     let total = number(&plan["totalPercentUsed"]).or_else(|| {
         let limit = number(&plan["limit"]).filter(|limit| *limit > 0.0)?;
-        let spent = number(&plan["includedSpend"]).or_else(|| number(&plan["totalSpend"]))?;
+        let spent = ["used", "includedSpend", "totalSpend"]
+            .into_iter()
+            .find_map(|key| number(&plan[key]))
+            .or_else(|| number(&plan["remaining"]).map(|remaining| limit - remaining))?;
         Some(spent / limit * 100.0)
     })?;
     let mut windows = vec![window(MONTH, total, resets_at)];

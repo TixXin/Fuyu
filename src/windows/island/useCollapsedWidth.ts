@@ -14,9 +14,10 @@ type CollapsedWidthInput = {
   peeking: boolean;
   slots: CollapsedSlots;
   collapsedScale?: number;
+  growWidth?: number;
 };
 
-export function useCollapsedWidth({ barText, noticeText, showTitle, widthExtra, peeking, slots, collapsedScale = 1 }: CollapsedWidthInput) {
+export function useCollapsedWidth({ barText, noticeText, showTitle, widthExtra, peeking, slots, collapsedScale = 1, growWidth = 0 }: CollapsedWidthInput) {
   const t = useTranslation();
   const { lines } = useIslandContributed();
   const fitWidth = useSyncExternalStore(collapsedFit.subscribe, collapsedFit.total);
@@ -30,9 +31,9 @@ export function useCollapsedWidth({ barText, noticeText, showTitle, widthExtra, 
     center: Boolean(slots.center),
     centerWidth: slots.centerWidth ?? 0,
     sideWidth: slots.sideWidth ?? 0,
-    fitWidth,
+    fitWidth: fitWidth + Math.max(0, growWidth),
     collapsedScale,
     viewportWidth: window.innerWidth,
     devicePixelRatio: window.devicePixelRatio,
-  }), [lines, barText, noticeText, t, showTitle, widthExtra, peeking, slots, fitWidth, collapsedScale]);
+  }), [lines, barText, noticeText, t, showTitle, widthExtra, peeking, slots, fitWidth, collapsedScale, growWidth]);
 }

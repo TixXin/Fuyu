@@ -89,7 +89,7 @@
 
 .island--collapsed {
   --island-shell-width: calc(var(--collapsed-island-width) * var(--island-scale, 1));
-  --island-shell-height: calc(38px * var(--island-scale, 1));
+  --island-shell-height: calc(var(--collapsed-island-height, 38px) * var(--island-scale, 1));
   --island-shell-top-corner: 0px;
   --island-shell-bottom-corner: var(--island-shell-radius-collapsed);
   cursor: default;
@@ -133,7 +133,7 @@
   --layer-width: var(--collapsed-island-width);
   --layer-zoom: var(--island-collapsed-scale, 1);
   width: var(--collapsed-island-width);
-  height: 38px;
+  height: var(--collapsed-island-height, 38px);
   zoom: var(--island-collapsed-scale, 1);
   display: flex;
   align-items: center;

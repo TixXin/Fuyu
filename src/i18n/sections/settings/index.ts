@@ -34,6 +34,7 @@ import type { SettingsAppearanceText } from "./appearance";
 import type { SettingsLayoutText } from "./layout";
 import type { SettingsTodoText } from "./todo";
 import type { SettingsAgentText } from "./agent";
+import type { SettingsAgentNoticeText } from "./agentNotice";
 import type { SettingsClipboardText } from "./clipboard";
 import type { SettingsColorsText } from "./colors";
 import type { SettingsPresetsText } from "./presets";
@@ -78,6 +79,7 @@ import * as appearance from "./appearance.ts";
 import * as layout from "./layout.ts";
 import * as todo from "./todo.ts";
 import * as agent from "./agent.ts";
+import * as agentNotice from "./agentNotice.ts";
 import * as clipboard from "./clipboard.ts";
 import * as colors from "./colors.ts";
 import * as presets from "./presets.ts";
@@ -138,6 +140,7 @@ export type SettingsText = {
   todo: SettingsTodoText;
 
   agent: SettingsAgentText;
+  agentNotice: SettingsAgentNoticeText;
 
   clipboard: SettingsClipboardText;
 
@@ -204,6 +207,7 @@ export const zhCN: SettingsText = {
   todo: todo.zhCN,
 
   agent: agent.zhCN,
+  agentNotice: agentNotice.zhCN,
 
   clipboard: clipboard.zhCN,
 
@@ -270,6 +274,7 @@ export const en: SettingsText = {
   todo: todo.en,
 
   agent: agent.en,
+  agentNotice: agentNotice.en,
 
   clipboard: clipboard.en,
 

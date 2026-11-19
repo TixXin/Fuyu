@@ -1,7 +1,7 @@
 const KEY_PREFIXES: &[&str] = &[
     "sk-", "sk_live_", "sk_test_", "rk_live_", "pk_live_", "ghp_", "gho_", "ghu_", "ghs_", "ghr_",
     "github_pat_", "glpat-", "xoxb-", "xoxp-", "xoxa-", "xoxs-", "AKIA", "ASIA", "AIza", "hf_",
-    "npm_", "pypi-", "dop_v1_", "shpat_", "SG.",
+    "npm_", "pypi-", "dop_v1_", "shpat_", "SG.", "LTAI", "AKID", "AKLT", "bce-v3/ALTAK-",
 ];
 
 const MIN_TOKEN_LENGTH: usize = 32;
@@ -27,6 +27,9 @@ pub(crate) fn looks_like_secret(text: &str) -> bool {
     if text.starts_with("eyJ") && text.split('.').count() == 3 && text.len() >= 40 {
         return true;
     }
+    if looks_like_zhipu_key(text) {
+        return true;
+    }
     let letters = text.chars().filter(char::is_ascii_alphabetic).count();
     let digits = text.chars().filter(char::is_ascii_digit).count();
     let upper = text.chars().filter(char::is_ascii_uppercase).count();
@@ -38,6 +41,16 @@ pub(crate) fn looks_like_secret(text: &str) -> bool {
         && letters >= 8
         && upper >= 2
         && lower >= 2
+}
+
+fn looks_like_zhipu_key(text: &str) -> bool {
+    let Some((id, secret)) = text.split_once('.') else {
+        return false;
+    };
+    id.len() == 32
+        && id.chars().all(|c| c.is_ascii_hexdigit())
+        && secret.len() == 16
+        && secret.chars().all(|c| c.is_ascii_alphanumeric())
 }
 
 pub(crate) fn looks_like_card_number(text: &str) -> bool {
@@ -98,6 +111,37 @@ mod tests {
         assert!(!looks_like_secret("C:/Users/tixxin/Projects/Fuyu/src-tauri/src/main.rs"));
         assert!(!looks_like_secret("0f22a9b6c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6"));
         assert!(!looks_like_secret("sk-short"));
+    }
+
+    fn sample(parts: &[&str]) -> String {
+        parts.concat()
+    }
+
+    #[test]
+    fn zhipu_keys_count_but_plain_hex_does_not() {
+        let hex = "0f22a9b6c1d2e3f4";
+        let id = sample(&[hex, hex]);
+        assert!(looks_like_secret(&sample(&[&id, ".", "xyzABC", "0123456789"])));
+        assert!(looks_like_secret(&sample(&[&id, ".", "abcdefgh", "ijklmnop"])));
+        assert!(!looks_like_secret(&id));
+        assert!(!looks_like_secret(&sample(&[&id, ".", "abcdefgh", "ijklmno"])));
+        assert!(!looks_like_secret(&sample(&[&id[..30], ".", "abcdefgh", "ijklmnop"])));
+        assert!(!looks_like_secret(&sample(&[&id, ".", "abcdefgh", "-jklmnop"])));
+        assert!(!looks_like_secret("report-final-version.abcdefghijklmnop"));
+    }
+
+    #[test]
+    fn chinese_cloud_keys_count_as_secrets() {
+        let body = "q7Wm2Xp9Rk4Tz8Lb";
+        assert!(looks_like_secret(&sample(&["sk-", body, body])));
+        assert!(looks_like_secret(&sample(&["LTAI", body, "Vc3e"])));
+        assert!(looks_like_secret(&sample(&["AKID", body, body])));
+        assert!(looks_like_secret(&sample(&["AKLT", body, body, body])));
+        assert!(looks_like_secret(&sample(&["bce-v3/", "ALTAK-", body, "/", body, body])));
+        assert!(!looks_like_secret("LTAI"));
+        assert!(!looks_like_secret(&sample(&["AKID", "-short"])));
+        assert!(!looks_like_secret(&sample(&["AKLT", " is a prefix"])));
+        assert!(!looks_like_secret(&sample(&["bce-v3/", "ALTAK-"])));
     }
 
     #[test]

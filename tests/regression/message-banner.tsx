@@ -24,6 +24,7 @@ import { windowServices } from "../../src/features/plugin-kernel/services";
 const noticeActions: { pluginId: string; action: string }[] = [];
 windowServices.get(islandNoticesV1).on("action", (event) => noticeActions.push(event));
 import { useFixtureLines } from "./islandLines";
+import { useIslandContributed } from "../../src/features/plugin-kernel/useIslandContributions";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
@@ -86,7 +87,12 @@ function Fixture() {
     host: islandHost,
   });
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: plugins, im: imSources, preview: banner.barPreview, open: (source) => { openedSource = source; } }, agents: null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: "剩余3个待办" });
-  return <div className="stage" style={{ "--collapsed-island-width": "300px" } as CSSProperties}>
+  const grow = useIslandContributed((state) => state.summaryGrow);
+  const stage = {
+    "--collapsed-island-width": `${Math.min(520, 300 + (grow?.width ?? 0))}px`,
+    ...(grow && grow.height > 38 ? { "--collapsed-island-height": `${grow.height}px` } : {}),
+  } as CSSProperties;
+  return <div className="stage" style={stage}>
     <IslandShell
       mode="collapsed" page="todo" isTucked={false} isDetached={true} showTitle={false}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"

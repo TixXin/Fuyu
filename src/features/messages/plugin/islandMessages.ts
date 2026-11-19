@@ -5,6 +5,7 @@ import { ISLAND_SIDE_ROW_HEIGHT, type IslandContribution } from "../../plugin-ke
 import { useIslandAction, useIslandContributions } from "../../plugin-kernel/useIslandContributions";
 import { imUnreadTotal, isImSource } from "../im-sources/imSourcesState";
 import { messagePreviewText } from "../messagePreview";
+import type { SummaryGrow } from "../island/summaryFit";
 import { messagesIsland, type MessagesIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 
@@ -12,6 +13,7 @@ const MESSAGE_ARRIVALS_CHROME_HEIGHT = 86;
 
 export type MessagesIslandFlags = {
   showsMessage: boolean;
+  grow?: SummaryGrow | null;
   hold: boolean;
   arrivalsHeight: number | null;
   maxPanelHeight: number;
@@ -25,7 +27,7 @@ export function messageArrivalsPanelHeight(listHeight: number, maxPanelHeight: n
 export function messagesContributions(state: MessagesIsland, flags: MessagesIslandFlags, t: Translations): IslandContribution[] {
   const { qq, wechat, mail, im, preview } = state;
   const extraUnread = im ? imUnreadTotal(im.snapshots) : 0;
-  const list: IslandContribution[] = [{ kind: "summary", item: "messages.summary" }];
+  const list: IslandContribution[] = [{ kind: "summary", item: "messages.summary", ...(flags.grow && { grow: { width: flags.grow.width, height: flags.grow.height } }) }];
   if (flags.showsMessage) list.push({ kind: "reveal", reveal: "always", pauseIdle: true, pauseHover: true }, { kind: "busy" }, { kind: "hint", key: "message" });
   if (preview) {
     list.push({

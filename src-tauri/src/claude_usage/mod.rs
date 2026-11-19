@@ -1,6 +1,7 @@
 mod antigravity;
 mod background;
 mod cursor;
+mod cursor_token;
 mod dsh;
 mod dsh_credentials;
 mod plan;

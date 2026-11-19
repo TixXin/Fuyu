@@ -81,8 +81,9 @@ test("the island corner radius is rounded, clamped, and defaults to 30 for older
   assert.equal(normalizeSettings({ islandCornerRadius: 99 }).islandCornerRadius, 40);
 });
 
-test("session starts alert every turn unless new sessions only or off was chosen", () => {
-  assert.equal(DEFAULT_SETTINGS.agentAlertStarted, "everyTurn");
+test("session starts stay quiet for new users and keep alerting every turn for older settings", () => {
+  assert.equal(DEFAULT_SETTINGS.agentAlertStarted, "off");
+  assert.equal(normalizeSettings({ agentAlertStarted: "hidden" }).agentAlertStarted, "hidden");
   assert.equal(normalizeSettings({}).agentAlertStarted, "everyTurn");
   assert.equal(normalizeSettings({ agentAlertStarted: "newSession" }).agentAlertStarted, "newSession");
   assert.equal(normalizeSettings({ agentAlertStarted: "off" }).agentAlertStarted, "off");

@@ -113,6 +113,7 @@ pub(crate) struct IslandWindowState {
     pub(super) margin_y: f64,
     pub(super) under_menu_bar: bool,
     pub(super) collapsed_width: f64,
+    pub(super) collapsed_height: f64,
     pub(super) expanded_width: f64,
     pub(super) expanded_height: f64,
     pub(super) custom_position: Option<IslandPosition>,
@@ -175,6 +176,9 @@ impl IslandWindowState {
         }
         if let (IslandMode::Collapsed, Some(notch)) = (self.mode, self.notch) {
             return super::notch::collapsed_size(self.collapsed_width, self.collapsed_scale, notch, self.is_tucked, self.notch_drop);
+        }
+        if matches!(self.mode, IslandMode::Collapsed) && !self.is_tucked {
+            return (self.collapsed_width, self.collapsed_height);
         }
         self.mode.base_size(self.collapsed_width, self.expanded_width, self.expanded_height)
     }
@@ -266,6 +270,7 @@ impl Default for IslandWindowState {
             margin_y: DEFAULT_MARGIN_Y,
             under_menu_bar: false,
             collapsed_width: COLLAPSED_ISLAND_WIDTH,
+            collapsed_height: COLLAPSED_ISLAND_HEIGHT,
             expanded_width: EXPANDED_ISLAND_WIDTH,
             expanded_height: DEFAULT_EXPANDED_ISLAND_HEIGHT,
             custom_position: None,

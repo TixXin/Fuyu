@@ -11,7 +11,7 @@ use super::tmux;
 use super::wezterm;
 use super::window_focus::{self, app_name, SessionHints};
 use super::workbuddy_focus::{self, Missing};
-use super::{antigravity, antigravity_focus, cursor, dsh, opencode, pi, trae, workbuddy};
+use super::{antigravity, antigravity_focus, cursor, cursor_focus, dsh, opencode, pi, trae, workbuddy};
 use crate::system::windows_home_dir;
 use crate::platform;
 
@@ -197,6 +197,15 @@ fn open_workbuddy_session(session_id: Option<&str>, log: &mut Attempt) -> bool {
     sent
 }
 
+fn open_cursor_session(has_terminal: bool, session_id: Option<&str>, log: &mut Attempt) -> bool {
+    let Some(link) = cursor_focus::link_for(has_terminal, session_id) else {
+        return false;
+    };
+    let sent = workbuddy_focus::open_session(&link);
+    log.note(if sent { "app-link=sent" } else { "app-link=failed" });
+    sent
+}
+
 fn wake_workbuddy(hints: &SessionHints, prefer_apps: &[String], link_sent: bool, log: &mut Attempt) -> Option<window_focus::FocusedWindow> {
     let mut sent = false;
     let found = workbuddy_focus::wake_and_find(
@@ -241,6 +250,10 @@ pub(super) fn focus_session(
     let tty = session_tty(&chain, tmux_target.as_ref());
     let lookup = Lookup { app_dir, record: record.as_ref(), is_codex, session_id, cwd, title };
     let handle = orca_handle(&lookup, &chain, seen.as_ref(), &mut log);
+    if provider == cursor::PROVIDER && open_cursor_session(!chain.is_empty() || handle.is_some(), session_id, &mut log) {
+        log.finish(app_dir, "app link sent");
+        return Focused { found: true, exact: true, focused_app: None, missing_extension: None, missing: None };
+    }
 
     let remembered_app = seen.as_ref().and_then(|seen| seen.host_exe.as_deref()).map(app_name);
     let prefer_apps: Vec<String> = match if handle.is_some() { Some(orca::ORCA_APP.to_string()) } else { remembered_app } {

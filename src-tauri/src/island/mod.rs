@@ -55,8 +55,8 @@ use std::{
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 use geometry::{
-    max_expanded_width, monitor_for_island_position, out_at_top_after, should_apply_stage_geometry,
-    stage_geometry_synced, DEFAULT_EXPANDED_ISLAND_HEIGHT, EXPANDED_ISLAND_HEIGHT_RANGE,
+    grown_collapsed_height, max_expanded_width, monitor_for_island_position, out_at_top_after, should_apply_stage_geometry,
+    stage_geometry_synced, COLLAPSED_ISLAND_HEIGHT, DEFAULT_EXPANDED_ISLAND_HEIGHT, EXPANDED_ISLAND_HEIGHT_RANGE,
     MAX_ADJUSTED_COLLAPSED_WIDTH, MAX_CORNER_RADIUS, MIN_ADJUSTED_COLLAPSED_WIDTH,
     MIN_COLLAPSED_ISLAND_WIDTH, MIN_CORNER_RADIUS, MIN_EXPANDED_ISLAND_HEIGHT,
     POSITION_ANIMATION_GENERATION,
@@ -164,6 +164,7 @@ pub fn set_island_interaction(
     monitor_follow: Option<String>,
     tuck_style: Option<String>,
     game_passthrough: Option<bool>,
+    collapsed_height: Option<f64>,
 ) -> Result<String, String> {
     let window = main_window(&app)?;
     let mode = IslandMode::from_value(&mode)?;
@@ -205,6 +206,7 @@ pub fn set_island_interaction(
             state.collapsed_width =
                 collapsed_width.clamp(MIN_ADJUSTED_COLLAPSED_WIDTH, MAX_ADJUSTED_COLLAPSED_WIDTH);
         }
+        state.collapsed_height = grown_collapsed_height(collapsed_height.unwrap_or(COLLAPSED_ISLAND_HEIGHT));
         if state.custom_position.is_none() {
             state.custom_position = restored_custom_position;
         }

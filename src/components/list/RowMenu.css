@@ -6,6 +6,8 @@
   gap: 1px;
   padding: 5px;
   box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   color: rgba(var(--row-ink), 0.88);
   background: var(--row-menu-fill, #000);
   border-radius: 12px;

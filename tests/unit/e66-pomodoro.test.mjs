@@ -100,6 +100,7 @@ test("E66.1 pomodoro break order, durations, and timer states", () => {
 });
 
 function fakeTimers() {
+  const startParams = [];
   const items = new Map();
   let seq = 0;
   let provider = null;
@@ -110,6 +111,8 @@ function fakeTimers() {
     start: async (params) => {
       seq += 1;
       const timer = { id: `t-${seq}`, kind: "countdown", durationMs: params.durationMs, elapsedMs: 0, runningSince: Date.now(), alerted: false };
+      if (params.hidden === true) Object.assign(timer, { hidden: true, owner: "@fuyu/pomodoro" });
+      startParams.push(params);
       items.set(timer.id, timer);
       queueMicrotask(changed);
       return { timer };
@@ -137,6 +140,7 @@ function fakeTimers() {
     adopt: async () => list(),
   };
   return {
+    startParams,
     items,
     impl,
     bind(next) {
@@ -161,7 +165,7 @@ async function until(check, ms = 3000) {
 
 test("E66.1 pomodoro commands, breaks, pause, and notification buttons in startHost", async () => {
   const packed = await pack(PLUGIN_DIR, { official: true, allowExperimental: false, outDir: join(scratch, "built"), packDir: join(scratch, "packed") });
-  assert.equal(packed.manifest.version, "1.1.0");
+  assert.equal(packed.manifest.version, "1.1.1");
   assert.deepEqual(packed.manifest.fuyu.commands.map((item) => item.id), ["start", "stop", "pause"]);
   const hostDir = join(scratch, "host");
   mkdirSync(hostDir, { recursive: true });
@@ -172,6 +176,10 @@ test("E66.1 pomodoro commands, breaks, pause, and notification buttons in startH
   let messagesProvider = null;
   const host = await startHost({ dir: hostDir, appVersion: "0.4.0" });
   try {
+    const base = { kind: "countdown", durationMs: 60_000, elapsedMs: 0, runningSince: Date.now(), alerted: false };
+    timers.items.set("orphan", { ...base, id: "orphan", hidden: true, owner: "@fuyu/pomodoro" });
+    timers.items.set("someone-else", { ...base, id: "someone-else", hidden: true, owner: "@ann/other" });
+    timers.items.set("user-timer", { ...base, id: "user-timer" });
     timers.bind(host.ctx.services.provide(timersV1, timers.impl));
     host.ctx.services.provide(todosV1, {
       list: async () => ({ date: "2026-11-19", todos: [{ id: "todo-1", title: "Write report", completed: false }] }),
@@ -206,7 +214,16 @@ test("E66.1 pomodoro commands, breaks, pause, and notification buttons in startH
     assert.deepEqual(own.map((item) => item.active), [true, true, true]);
     assert.equal(own.find((item) => item.id === "pause").title.en, "Pause or resume pomodoro");
 
+    assert.ok(await until(() => !timers.items.has("orphan")), "the pomodoro's own leftover hidden timer is removed");
+    assert.equal(timers.items.has("someone-else"), true);
+    assert.equal(timers.items.has("user-timer"), true);
+    timers.items.delete("someone-else");
+    timers.items.delete("user-timer");
+
     const started = await run("start", { todoId: "todo-1" });
+    assert.equal(timers.startParams.at(-1).hidden, true);
+    assert.equal(started.timer.hidden, true);
+    assert.equal(started.settings.showInBar, true);
     assert.equal(started.phase, "focus");
     assert.equal(started.activeLabel, "Write report");
     assert.equal(started.timer.durationMs, 25 * 60_000);

@@ -6,6 +6,7 @@ import { isMacOS } from "../../lib/platform";
 import { useIslandLayerShortcut } from "../../lib/island-layer/useIslandLayerShortcut";
 import * as islandApi from "./api";
 import { islandMarginY } from "./islandForm";
+import { COLLAPSED_ISLAND_HEIGHT } from "./layout";
 import { clearIslandPosition } from "./storage";
 import type { IslandMode, NativeGlassState } from "./types";
 import { useClickFocus } from "./useClickFocus";
@@ -30,6 +31,7 @@ type InteractionSnapshot = {
   expandedHeight: number;
   expandedWidth: number;
   collapsedWidth: number;
+  collapsedHeight: number;
   isTucked: boolean;
   isDimmed: boolean;
   gamePassthrough: boolean;
@@ -47,6 +49,7 @@ type IslandWindowOptions = {
   expandedIslandHeight: number;
   expandedIslandWidth: number;
   collapsedIslandWidth: number;
+  collapsedIslandHeight?: number;
   ready: boolean;
   onCollapse: () => void;
 };
@@ -62,6 +65,7 @@ export function useIslandWindow({
   expandedIslandHeight,
   expandedIslandWidth,
   collapsedIslandWidth,
+  collapsedIslandHeight = COLLAPSED_ISLAND_HEIGHT,
   ready,
   onCollapse,
 }: IslandWindowOptions) {
@@ -81,6 +85,7 @@ export function useIslandWindow({
       expandedHeight,
       expandedWidth,
       collapsedWidth,
+      collapsedHeight,
       isTucked: nextIsTucked,
       isDimmed: nextIsDimmed,
       gamePassthrough: nextGamePassthrough,
@@ -114,6 +119,7 @@ export function useIslandWindow({
           monitorFollow: nextSettings.islandMonitor,
           tuckStyle: nextSettings.tuckStyle,
           gamePassthrough: nextGamePassthrough,
+          collapsedHeight,
         });
         setNativeGlassState(glassState);
       } catch (error) {
@@ -230,6 +236,7 @@ export function useIslandWindow({
       expandedHeight: expandedIslandHeight,
       expandedWidth: expandedIslandWidth,
       collapsedWidth: collapsedIslandWidth,
+      collapsedHeight: collapsedIslandHeight,
       isTucked,
       isDimmed,
       gamePassthrough,
@@ -246,6 +253,7 @@ export function useIslandWindow({
     expandedIslandHeight,
     expandedIslandWidth,
     collapsedIslandWidth,
+    collapsedIslandHeight,
     isTucked,
     isDimmed,
     gamePassthrough,

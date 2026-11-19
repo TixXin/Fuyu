@@ -9,6 +9,8 @@ import { useIslandMessagePanel } from "../island/useIslandMessagePanel";
 import { useIslandNotices } from "../island/useIslandNotices";
 import { useMailSwitch, useSourceFallback } from "../island/useMessageSwitches";
 import { useMessageView } from "../island/useMessageView";
+import { useHeldPreview } from "../island/useHeldPreview";
+import { useSummaryGrow } from "../island/useSummaryFit";
 import { useTuckHold } from "../island/useTuckHold";
 import type { MessageSource } from "../messagePreview";
 import { useMessagesIsland } from "./islandMessages";
@@ -62,6 +64,8 @@ function MessagesRunner({ settings, mode, page, isTucked, quiet, host, openIslan
   useSourceFallback(messageSource, enabledSources, setMessageSource);
   useBuiltinSourcesSync({ qqNotifications, wechatReminders, qqMail, imSources, enabledSources });
   const { banner: shown, bannerRef, open, close, runAction } = banner;
+  const barPreview = useHeldPreview(banner.barPreview, mode === "collapsed" && !isTucked && !quiet, host);
+  const grow = useSummaryGrow();
   const bannerView = useMemo(() => shown && { banner: shown, bannerRef, onOpen: open, onClose: close, onAction: runAction }, [shown, bannerRef, open, close, runAction]);
   useMessagesIsland({
     qq: qqNotifications,
@@ -70,13 +74,14 @@ function MessagesRunner({ settings, mode, page, isTucked, quiet, host, openIslan
     plugin: pluginNotifications,
     im: imSources,
     enabledSources,
-    preview: banner.barPreview,
+    preview: barPreview,
     source: messageSource,
     open: openMessages,
     panel,
     banner: bannerView,
   }, {
-    showsMessage: hasMessagePreview || banner.showing,
+    showsMessage: hasMessagePreview || banner.showing || barPreview !== null,
+    grow,
     hold,
     arrivalsHeight: panel.arrivals ? panel.height : null,
     maxPanelHeight: settings.maxPanelHeight,

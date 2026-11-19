@@ -22,7 +22,8 @@ export type IslandTrailContribution = { kind: "trail"; item: string };
 export type IslandAlertContribution = { kind: "alert"; item: string };
 export type IslandNoticeContribution = { kind: "notice"; item: string; measure?: string };
 export type IslandPreviewContribution = { kind: "preview"; item: string; key?: string; label?: string; hot?: string; action?: string; open?: string };
-export type IslandSummaryContribution = { kind: "summary"; item: string };
+export type IslandSummaryGrow = { width: number; height: number };
+export type IslandSummaryContribution = { kind: "summary"; item: string; grow?: IslandSummaryGrow };
 export type IslandRevealContribution = { kind: "reveal"; reveal?: "always" | "allowed"; pauseIdle?: boolean; pauseHover?: boolean };
 export type IslandHoldContribution = { kind: "hold"; reason: string };
 export type IslandSideContribution = { kind: "side"; item: string; height: number };
@@ -59,6 +60,7 @@ export type IslandContributed = {
   notices: ReadonlyMap<string, IslandNoticeContribution>;
   preview: IslandPreviewContribution | null;
   summary: string | null;
+  summaryGrow: IslandSummaryGrow | null;
   reveal: { always: boolean; allowed: boolean; pauseIdle: boolean; pauseHover: boolean };
   hold: boolean;
   side: ReadonlyMap<string, IslandSideContribution>;
@@ -143,6 +145,7 @@ export function aggregateContributions(
   const reveal = { always: false, allowed: false, pauseIdle: false, pauseHover: false };
   let preview: IslandPreviewContribution | null = null;
   let summary: string | null = null;
+  let summaryGrow: IslandSummaryGrow | null = null;
   let status: IslandStatusContribution | null = null;
   let tint: string | null = null;
   let hold = false;
@@ -155,7 +158,12 @@ export function aggregateContributions(
         case "alert": alerts.add(item.item); break;
         case "notice": notices.set(item.item, item); break;
         case "preview": preview ??= item; break;
-        case "summary": summary ??= item.item; break;
+        case "summary":
+          if (summary === null) {
+            summary = item.item;
+            summaryGrow = item.grow ?? null;
+          }
+          break;
         case "reveal":
           if (item.reveal === "always") reveal.always = true;
           if (item.reveal === "allowed") reveal.allowed = true;
@@ -180,7 +188,7 @@ export function aggregateContributions(
   }
   lines.sort((a, b) => b.priority - a.priority);
   if (!prev) {
-    return { lines, trails, alerts, notices, preview, summary, reveal, hold, side, status, popups, style: { vars, classNames, tint }, busy, hints, pages, badges, settled };
+    return { lines, trails, alerts, notices, preview, summary, summaryGrow, reveal, hold, side, status, popups, style: { vars, classNames, tint }, busy, hints, pages, badges, settled };
   }
   const nextLines = sameArray(lines, prev.lines, sameRecord) ? prev.lines : lines;
   const nextTrails = sameArray(trails, prev.trails) ? prev.trails : trails;
@@ -193,6 +201,7 @@ export function aggregateContributions(
   const nextPages = sameRecord(pages, prev.pages) ? prev.pages : pages;
   const nextReveal = sameRecord(reveal, prev.reveal) ? prev.reveal : reveal;
   const nextPreview = preview && prev.preview && sameRecord(preview, prev.preview) ? prev.preview : preview;
+  const nextSummaryGrow = summaryGrow && prev.summaryGrow && sameRecord(summaryGrow, prev.summaryGrow) ? prev.summaryGrow : summaryGrow;
   const nextStatus = status && prev.status && sameRecord(status, prev.status) ? prev.status : status;
   const nextVars = sameRecord(vars, prev.style.vars) ? prev.style.vars : vars;
   const nextClassNames = sameArray(classNames, prev.style.classNames) ? prev.style.classNames : classNames;
@@ -206,6 +215,7 @@ export function aggregateContributions(
     notices: nextNotices,
     preview: nextPreview,
     summary,
+    summaryGrow: nextSummaryGrow,
     reveal: nextReveal,
     hold,
     side: nextSide,

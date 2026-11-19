@@ -1,5 +1,19 @@
 # 更新记录 · Changelog
 
+## 1.1.1
+
+收起条上只剩一个倒计时。
+
+- 番茄钟的计时不再进浮屿内置的计时器：内置计时器的页面和收起条都不列它，到点也不由内置计时器响铃，提醒由番茄钟自己出，「到点播放提示音」打开时响番茄钟自己的提示音。
+- 插件自己的收起项因此默认打开，收起条上只有一个倒计时；在设置里关过的保持关。较早的浮屿不支持这样计时，那时照旧由内置计时器显示，番茄钟自己的收起项默认关。
+- 到点、停止、切到休息或下一轮时都会清掉旧的计时；启动时发现番茄钟以前留下、已经不用的计时也会清掉。
+
+Only one countdown on the collapsed bar.
+
+- The pomodoro's timer no longer goes into Fuyu's built-in timer: the built-in timer page and collapsed bar leave it out and do not ring for it. The pomodoro shows its own reminder, and plays its own sound when "Play a sound when time is up" is on.
+- So the plugin's own collapsed bar item is now on by default and the bar shows a single countdown; if you turned it off, it stays off. Older Fuyu versions cannot keep a timer out of the built-in timer; there the built-in timer still shows it and the plugin's own item stays off by default.
+- Old timers are removed when a round ends, when you stop, and when switching to a break or the next round; leftover pomodoro timers from earlier runs are cleared on start.
+
 ## 1.1.0
 
 能调时长、有休息和暂停，岛上更清爽。

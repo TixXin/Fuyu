@@ -1,7 +1,8 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { isImSource } from "./im-sources/imSourcesState";
 import { MessageSourceIcon } from "./MessageSourceIcon";
 import { messagePreviewText, type MessagePreview } from "./messagePreview";
+import { useSummaryFit } from "./island/useSummaryFit";
 import { useTranslation } from "../../i18n";
 import "./CollapsedMessageContent.css";
 
@@ -40,11 +41,13 @@ export function CollapsedMessageContent({
   preview,
   enabled,
   bodyOnly = false,
+  grow = false,
   children,
 }: {
   preview: MessagePreview | null;
   enabled: boolean;
   bodyOnly?: boolean;
+  grow?: boolean;
   children: ReactNode;
 }) {
   const t = useTranslation();
@@ -59,6 +62,8 @@ export function CollapsedMessageContent({
     });
   }
 
+  const rowRef = useRef<HTMLSpanElement>(null);
+  const wrap = useSummaryFit(rowRef, current ? key : null, grow && !bodyOnly && current !== null);
   const { previous, version } = transition;
   const moving = previous !== undefined;
   const settle = () => setTransition((state) => state.version === version && state.previous !== undefined
@@ -91,7 +96,7 @@ export function CollapsedMessageContent({
         </span>
       )}
       <span key={version} className={`island__summary-layer${moving ? " island__summary-layer--incoming" : ""}`}>
-        <span className={`island__summary-row${transition.animated ? " island__summary-row--animated" : ""}${current ? " island-message-preview" : ""}`}
+        <span ref={rowRef} className={`island__summary-row${transition.animated ? " island__summary-row--animated" : ""}${current ? " island-message-preview" : ""}${wrap ? " island-message-preview--wrap" : ""}`}
           onAnimationEnd={(event) => { if (event.target === event.currentTarget) settle(); }}>
           {row(current)}
         </span>
