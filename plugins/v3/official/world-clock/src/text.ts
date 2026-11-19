@@ -1,7 +1,9 @@
+import { currentLocale } from "./locale.ts";
+
 const en = {
   isZh: false,
   title: "World Clock",
-  empty: "No cities yet. Add them in Settings → Plugins → World Clock.",
+  empty: "Add cities in Settings → Plugins → World Clock.",
   local: "Local time",
   same: "Same as local",
   ahead: (h: number) => `${h}h ahead`,
@@ -50,7 +52,7 @@ const en = {
 const zhCN: typeof en = {
   isZh: true,
   title: "世界时钟",
-  empty: "还没有城市，到 设置 → 插件 → 世界时钟 里添加。",
+  empty: "在 设置 → 插件 → 世界时钟 里添加城市。",
   local: "本机",
   same: "与本机相同",
   ahead: (h: number) => `快 ${h} 小时`,
@@ -96,7 +98,7 @@ const zhCN: typeof en = {
   barTime: "只有时间",
 };
 
-const isZh = typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("zh");
+const isZh = currentLocale() === "zh-CN";
 
 export const text = isZh ? zhCN : en;
 
