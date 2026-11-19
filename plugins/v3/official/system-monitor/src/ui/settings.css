@@ -1,0 +1,109 @@
+.fuyu-sysmon-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+  color: var(--fuyu-plugin-text);
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+}
+
+.fuyu-sysmon-settings__top {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-width: 0;
+}
+
+.fuyu-sysmon-settings__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fuyu-sysmon-settings__sub,
+.fuyu-sysmon-settings__hint,
+.fuyu-sysmon-settings__note {
+  color: var(--fuyu-plugin-text-muted);
+  font-size: 12px;
+}
+
+.fuyu-sysmon-settings__sub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-sysmon-settings__note {
+  margin: 0;
+}
+
+.fuyu-sysmon-settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fuyu-sysmon-settings__label {
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-sysmon-settings__input {
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface-hover);
+  color: var(--fuyu-plugin-text);
+  font: inherit;
+}
+
+.fuyu-sysmon-settings__check {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.fuyu-sysmon-settings__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fuyu-sysmon-settings__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fuyu-sysmon-settings__button {
+  max-width: 100%;
+  padding: 5px 12px;
+  border: none;
+  border-radius: var(--fuyu-plugin-radius);
+  color: var(--fuyu-plugin-on-accent);
+  background: var(--fuyu-plugin-accent);
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fuyu-sysmon-settings__button--secondary {
+  border: 1px solid var(--fuyu-plugin-border);
+  color: var(--fuyu-plugin-text);
+  background: var(--fuyu-plugin-surface-hover);
+}
