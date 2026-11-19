@@ -4,6 +4,7 @@ import type { ImSourcesController } from "../../src/features/messages/im-sources
 import type { useIslandMessagePanel } from "../../src/features/messages/island/useIslandMessagePanel";
 import type { MailController } from "../../src/features/messages/mail/MailPanel";
 import type { MessagePreview, MessageSource } from "../../src/features/messages/messagePreview";
+import { useSummaryGrow } from "../../src/features/messages/island/useSummaryFit";
 import { useMessagesIsland } from "../../src/features/messages/plugin/islandMessages";
 import type { QQNotificationsController } from "../../src/features/messages/qq-notifications/QQNotifications";
 import type { WeChatRemindersController } from "../../src/features/messages/wechat/WeChatReminders";
@@ -39,5 +40,6 @@ export function useFixtureMessages(messages: FixtureMessages | null) {
     panel: messages.panel ?? null,
     banner: messages.banner ?? null,
   };
-  useMessagesIsland(state, { ...FLAGS, pages: messages ? { qq: messages.qq.snapshot.enabled, wechat: messages.wechat.snapshot.enabled } : NO_PAGES });
+  const grow = useSummaryGrow();
+  useMessagesIsland(state, { ...FLAGS, grow, pages: messages ? { qq: messages.qq.snapshot.enabled, wechat: messages.wechat.snapshot.enabled } : NO_PAGES });
 }

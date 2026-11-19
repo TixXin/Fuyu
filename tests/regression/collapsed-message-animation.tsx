@@ -21,6 +21,7 @@ import type { CollapsedMeeting } from "../../src/features/calendar/upcoming";
 import type { LevelChange } from "../../src/features/system-levels/api";
 import type { DeviceAlert } from "../../src/features/device-events/api";
 import { useFixtureLines } from "./islandLines";
+import { useIslandContributed } from "../../src/features/plugin-kernel/useIslandContributions";
 
 Object.assign(globalThis, { isTauri: true, IS_REACT_ACT_ENVIRONMENT: true });
 const automated = new URLSearchParams(location.search).has("test");
@@ -100,7 +101,13 @@ function Fixture() {
   changeMode = setMode; changeTucked = setTucked; changeCount = setCount; changeTask = setTask;
   changeWidth = setWidth; changeTitle = setTitle; changeFont = setPixel; changeAgent = setAgent;
   useFixtureLines({ messages: { qq: qq, wechat: wechat, mail: qqMail, plugin: NO_PLUGIN_NOTIFICATIONS, preview: preview, open: (source) => { openedPage = source; } }, agents: agentsEnabled ? agentCount : null, status: { state: "idle", label: "AI Agent 空闲或已完成" }, todoTitle: task ?? `剩余${count}个待办`, agentSession: agent, meeting: meeting, levelPopup: level, deviceAlert, deviceUse });
-  return <div className={`stage${pixel ? " stage--font-pixel" : ""}`} style={{ "--collapsed-island-width": `${width}px` } as CSSProperties}>
+  const summaryGrow = useIslandContributed((state) => state.summaryGrow);
+  const grow = mode === "collapsed" && !tucked ? summaryGrow : null;
+  const stageStyle = {
+    "--collapsed-island-width": `${Math.min(520, width + (grow?.width ?? 0))}px`,
+    ...(grow && grow.height > 38 ? { "--collapsed-island-height": `${grow.height}px` } : {}),
+  } as CSSProperties;
+  return <div className={`stage${pixel ? " stage--font-pixel" : ""}`} style={stageStyle}>
     <IslandShell
       mode={mode} page="todo" isTucked={tucked} isDetached={true} showTitle={title}
       showCollapsedText={true} appearanceMode="classic" nativeGlassState="disabled"
@@ -113,6 +120,10 @@ function Fixture() {
   </div>;
 }
 
+const MEDIUM_QQ = { title: "小林", body: "明天下午三点一起讨论新项目的设计方案" };
+const HUGE_QQ = { title: "这是一位名字特别特别长的好友", body: "明天下午三点一起讨论新项目的设计方案，记得带上之前整理的资料。会议室改到三楼东侧，投影仪已经借好了，需要提前十分钟到场调试。另外请把上周的评审意见汇总成一页，方便大家对照着看。散会后还要和市场部确认发布时间，再把定下来的日期同步到群里，顺便提醒设计组周五之前交终稿，测试组下周一开始回归，有问题随时在群里说。" };
+let nextQQ: { title: string; body: string } | null = null;
+
 async function notify(source: MessageSource, long = false, visible = true) {
   const receivedAt = Date.now();
   await update(async () => {
@@ -120,7 +131,7 @@ async function notify(source: MessageSource, long = false, visible = true) {
       snapshot: { revision: ++revision, enabled: true, status: "listening", pending: true, lastAttentionAt: revision, error: null, message: null }, windowVisible: visible,
     });
     if (source === "qq") await emit("qq-notifications-changed", {
-      snapshot: { revision: ++revision, enabled: true, status: "listening", items: [{ id: `qq-${revision}`, title: long ? "这是一位名字特别特别长的好友" : "小林", body: long ? "明天下午三点一起讨论新项目的设计方案，记得带上之前整理的资料。" : "下午一起开会吗？", createdAt: receivedAt }], error: null }, newestId: `qq-${revision}`, windowVisible: visible,
+      snapshot: { revision: ++revision, enabled: true, status: "listening", items: [{ id: `qq-${revision}`, title: nextQQ?.title ?? (long ? "这是一位名字特别特别长的好友" : "小林"), body: nextQQ?.body ?? (long ? "明天下午三点一起讨论新项目的设计方案，记得带上之前整理的资料。" : "下午一起开会吗？"), createdAt: receivedAt }], error: null }, newestId: `qq-${revision}`, windowVisible: visible,
     });
     if (source === "qqMail") {
       mail = { ...mail, revision: ++revision, unreadCount: 1, items: [{ id: `mail-${revision}`, uid: revision, sender: "项目组", subject: long ? "本周项目进度和下阶段设计评审安排，请查收附件中的完整说明" : "本周项目进度已更新", unread: true, receivedAt }] };
@@ -130,6 +141,10 @@ async function notify(source: MessageSource, long = false, visible = true) {
 }
 
 const summary = () => document.querySelector<HTMLElement>(".island__summary")!;
+const bar = () => document.querySelector<HTMLElement>(".island__collapsed")!.getBoundingClientRect();
+const wrapped = () => summary().querySelector<HTMLElement>(".island-message-preview--wrap .island-message-preview__text");
+const clipped = () => [...summary().querySelectorAll<HTMLElement>(".island-message-preview__sender, .island-message-preview__body")]
+  .some((element) => element.scrollWidth > element.clientWidth + 1);
 const incoming = () => summary().lastElementChild as HTMLElement;
 const button = () => document.querySelector<HTMLButtonElement>(".island__open-button")!;
 const messages: string[] = [];
@@ -159,17 +174,21 @@ async function runChecks() {
     check(summary().children.length === 2 && summary().firstElementChild?.textContent?.includes("剩余3个待办"), "待办退场时保留原文字");
     check(button().getAttribute("aria-label")?.includes("名字特别特别长"), "QQ 完整好友名与消息保留在无障碍标签中");
     await settle();
-    const sender = summary().querySelector<HTMLElement>(".island-message-preview__sender")!;
-    const body = summary().querySelector<HTMLElement>(".island-message-preview__body")!;
-    check(sender.scrollWidth > sender.clientWidth && body.scrollWidth > body.clientWidth && body.clientWidth > 40, "280px 岛屿内长好友名与长消息分别省略");
+    await waitFor(() => Boolean(wrapped()) && bar().height > 38, "放不下一行的消息换行");
+    const twoLines = wrapped()!;
+    check(bar().width === 520 && bar().height > 50 && bar().height < 92 && twoLines.scrollHeight <= twoLines.clientHeight + 1,
+      `加宽到上限仍放不下时换行，岛按两行长高、不滚动（${bar().width} × ${bar().height}）`);
+    check(!clipped(), "换行后好友名和正文不再省略");
     const messageStyle = getComputedStyle(summary().querySelector(".island-message-preview")!);
     check(Number.parseFloat(messageStyle.fontSize) >= 13 && Number(messageStyle.fontWeight) >= 600, "消息使用更清晰的字号和中粗字重");
-    check(document.querySelector(".island")!.getBoundingClientRect().width === width, "消息不会撑宽岛屿");
     const sameRow = incoming();
     await act(async () => changeCount(2));
     check(incoming() === sameRow && summary().children.length === 1, "无关状态更新不重播消息动画");
     await notify("wechat");
     check(incoming().textContent === "你收到了一条消息" && incoming().querySelector(".message-brand-icon--wechat"), "微信仅显示图标和简洁提醒");
+    await waitFor(() => bar().width === 280 && bar().height === 38 && !wrapped(), "短消息回到原来的宽高");
+    await waitFor(() => Math.abs(document.querySelector(".island")!.getBoundingClientRect().width - width) < 1, "岛的外形收回原来的宽度");
+    check(!incoming().querySelector(".island-message-preview--wrap") && bar().height === 38, "短消息外观不变：不加宽、不长高");
     const enteringWeChat = incoming();
     const entrance = enteringWeChat.firstElementChild!.getAnimations()[0];
     await notify("qqMail");
@@ -316,6 +335,23 @@ async function runChecks() {
     await act(async () => changeMeeting(null));
     await settle();
     check(!document.querySelector(".island-meeting") && !join(), "没有会议时恢复原来的文字");
+    nextQQ = MEDIUM_QQ;
+    await notify("qq");
+    await settle();
+    await waitFor(() => bar().width > 280 && !clipped(), "长消息加宽到放得下");
+    check(bar().width < 520 && bar().height === 38 && !wrapped(), `长消息先加宽、仍是一行（${bar().width}px）`);
+    nextQQ = HUGE_QQ;
+    await notify("qq");
+    await settle();
+    await waitFor(() => Boolean(wrapped()) && bar().height === 92, "超长消息长到高度上限");
+    const scroller = wrapped()!;
+    check(bar().width === 520 && scroller.scrollHeight > scroller.clientHeight + 10 && getComputedStyle(scroller).overflowY === "auto"
+      && getComputedStyle(scroller).pointerEvents === "auto", "超长消息到宽高上限后在框内滚动");
+    nextQQ = null;
+    await act(async () => button().click());
+    await settle();
+    await waitFor(() => bar().width === 280 && bar().height === 38, "消息结束后岛回到原来的宽高");
+    check(!summary().querySelector(".island-message-preview"), "消息结束后恢复原来的文字和尺寸");
     await act(async () => { changeAgentsEnabled(true); changeAgentCount(0); changeWidth(280); });
     results.textContent = `${messages.join("\n")}\n\n全部 ${messages.length} 项检查通过。`;
     results.dataset.result = "passed";
@@ -333,7 +369,8 @@ await act(async () => { createRoot(document.getElementById("fixture")!).render(<
 if (!automated) Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: false });
 for (const [label, action] of [
   ["微信消息", () => notify("wechat")], ["QQ 消息", () => notify("qq")], ["邮箱消息", () => notify("qqMail")],
-  ["长 QQ 消息", () => notify("qq", true)], ["340px", () => update(async () => changeWidth(340))],
+  ["长 QQ 消息", () => notify("qq", true)], ["加宽的 QQ 消息", () => { nextQQ = MEDIUM_QQ; return notify("qq").finally(() => { nextQQ = null; }); }],
+  ["超长 QQ 消息", () => { nextQQ = HUGE_QQ; return notify("qq").finally(() => { nextQQ = null; }); }], ["340px", () => update(async () => changeWidth(340))],
   ["像素主题", () => update(async () => changeFont(true))], ["系统主题", () => update(async () => changeFont(false))],
   ["280px", () => update(async () => changeWidth(280))], ["Agent 标题", () => update(async () => changeAgent({ provider: "claudeCode", label: "Claude Code", title: "设置界面完善思路" }))], ["清除 Agent", () => update(async () => changeAgent(null))], ["2 个会话", () => update(async () => changeAgentCount(2))], ["自动检查", () => { location.search = "?test=1"; }],
 ] as const) {

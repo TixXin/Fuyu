@@ -296,7 +296,7 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 |---|---|---|
 | `line` | `item`（`island.line/v1` 项的 id）、`priority`（`LINE_PRIORITY`，大的先）、`measure`（量宽用的文字）、`extra`（额外宽度）、`page`、`lead`（悬停时领头切到 `page`）、`handle`（侧边把手点了去 `page`）、`action`（点它调的 action）、`label`（读屏文字）、`center`（中心图案嵌在这一行）、`shareable`（上面的行可以和它轮流）、`drop`（速览，盖住别的行，点了调 `action`）、`always`（收起条不显示文字时也显示）、`bare`（不套外壳的文字容器）、`reserve`（占着宽度先不显示） | 收起条主行取 `priority` 最高的一条；收起宽度、点击和悬停的去向跟着它 |
 | `trail` | `item` | 主行右边的尾巴（会议的加入按钮），没有提示和预览时显示 |
-| `summary` | `item` | 消息预览那一行由哪个 `island.line/v1` 项来画，外壳只管过渡的外层 |
+| `summary` | `item`、`grow`（可选，`{ width, height }`：要多加的宽度和要长到的收起高度，未缩放的 px） | 消息预览那一行由哪个 `island.line/v1` 项来画，外壳只管过渡的外层；`grow` 只在普通收起条上生效（刘海、侧边岛、贴边、展开时不管），宽度加在收起宽度上、不超过上限，高度随 `set_island_interaction` 的 `collapsedHeight` 交给原生算点击区域 |
 | `preview` | `item`、`key`、`label`、`hot`（侧边岛标热哪一行）、`action`（点它）、`open`（点侧边气泡） | 收起条上的消息预览，盖在主行上 |
 | `alert` / `notice` | `item`（`island.alert/v1` / `island.notice/v1` 项的 id）、`measure` | 提醒和提示：按插槽的 `order` 取第一个有贡献的项 |
 | `reveal` | `reveal`（`always` / `allowed`）、`pauseIdle`、`pauseHover` | 贴边时探出来、暂停闲置收起和悬停展开 |

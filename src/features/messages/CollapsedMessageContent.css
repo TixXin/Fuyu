@@ -98,3 +98,38 @@
     visibility: hidden;
   }
 }
+
+.island-message-preview--wrap {
+  align-items: flex-start;
+  padding: 4px 0;
+}
+
+.island-message-preview--wrap > .message-brand-icon {
+  margin-top: 1px;
+}
+
+.island-message-preview--wrap > .island-message-preview__text,
+.island-message-preview--wrap > .island-message-preview__body {
+  display: block;
+  align-self: stretch;
+  overflow-x: hidden;
+  overflow-y: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--overlay-rgb, 255, 255, 255), .24) transparent;
+}
+
+.island-message-preview--wrap .island-message-preview__sender,
+.island-message-preview--wrap > .island-message-preview__text > .island-message-preview__body {
+  display: inline;
+  max-width: none;
+  overflow: visible;
+  white-space: normal;
+}
+
+.island-message-preview--wrap .island-message-preview__separator {
+  margin: 0 5px;
+}

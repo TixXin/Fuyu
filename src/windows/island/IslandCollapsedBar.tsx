@@ -129,7 +129,7 @@ export function IslandCollapsedBar({
             }
           }}
         >
-          <IslandSummary item={contributed.summary} enabled={!isExpanded && !isTucked} bodyOnly={notch !== null}>
+          <IslandSummary item={contributed.summary} enabled={!isExpanded && !isTucked} bodyOnly={notch !== null} grow={notch === null}>
             {notice ? notice.content : activeAlert ? (
               <AlertPopup alert={activeAlert} sources={alertSources} />
             ) : line?.bare ? lineView(line.item) : <>

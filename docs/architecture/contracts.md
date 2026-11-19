@@ -328,6 +328,7 @@ key 的前缀是 `fuyu-`。2026-11-10（D17 第 3 步）之前用旧前缀，前
 - 插件信息项的密值不回窗口（E36.3.11，2026-11-15 起，安全修复）：`PluginsSnapshot.plugins[].info` 里 `secret: true` 的项，`value` 一律是空串，多了 `hasValue`（布尔，有没有值；所有项都有这个字段）。返回 `PluginsSnapshot` 的命令（`list_plugins`、`set_plugin_enabled`、`set_plugin_setting` 等）都一样。新命令 `copy_plugin_info`（`id`、`index`：信息项在 `info` 里的下标）：Rust 从运行中的插件取这一项的值写进剪贴板，项不存在、不能复制或没有值时返回错误字符串；`secret` 项写入时带「不进剪贴板历史」的标记（Windows 是 `ExcludeClipboardContentFromMonitorProcessing`，macOS 是 `org.nspasteboard.ConcealedType`）。设置里不再有「显示」按钮。本机接口的令牌仍然明文写在 `local-api.json` 里给脚本读。第三方插件经 `status.info` 送来的 `secret` 项同样处理，插件的写法不变。见 [v3-secrets.md](plugins/v3-secrets.md)。
 - 更新代理不回窗口（E36.3.13，2026-11-15 起，安全修复）：去掉 Tauri 命令 `get_updater_proxy`（原来把 `HTTPS_PROXY` 等环境变量或 Windows 系统代理的地址原样返回，地址里可能写着账号密码）；`updater_check` 只剩参数 `channel`，代理由 Rust 每次检查时自己读，下载和安装沿用检查时的代理。兼容：旧调用方照样传 `proxy` 不报错（Tauri 按参数名逐个取值，多余的键忽略），传来的值不再使用；调 `get_updater_proxy` 会得到「命令不存在」，旧前端本来就 `.catch(() => null)`，按没有代理处理。前端不再知道代理地址，也不知道有没有代理（原来就不显示）。错误码 `net.proxy`（代理地址解析不了，检查更新、歌词、日历、cc-connect、换源下载共用）不再带参数 `proxy`，`message` 和 `detail` 里也没有地址。见 [v3-secrets.md](plugins/v3-secrets.md)。
 - 游戏模式露边条点穿（C126，2026-11-18 起）：`set_island_interaction` 新增可选参数 `gamePassthrough`（布尔，缺省 `false`，老前端不传照旧）。为 `true` 且岛贴边露出、折叠、没在拖动时，露边条点穿、不发 `island-hover-changed`；由 `false` 变 `true` 时，浮屿的窗口在前台就把焦点还给原来的窗口或最上面的全屏窗口。
+- 收起条长消息长高（C124，2026-11-19 起）：`set_island_interaction` 新增可选参数 `collapsedHeight`（未缩放的 px，夹在 38–140，缺省或不是数时按 38，老前端不传照旧）。折叠且没贴边收起时，原生按这个高度算岛的点击区域；展开、贴边收起、侧边岛和刘海模式下不用它。
 
 ## 改名兼容（D17）
 

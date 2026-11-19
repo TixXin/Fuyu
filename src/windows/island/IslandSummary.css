@@ -7,7 +7,7 @@
   display: block;
   flex: 1;
   min-width: 0;
-  height: 28px;
+  height: calc(var(--collapsed-island-height, 38px) - 10px);
   overflow: hidden;
   pointer-events: none;
 }

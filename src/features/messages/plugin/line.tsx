@@ -6,14 +6,14 @@ import { NotchMessageLeading, NotchMessageTrailing } from "../island/NotchMessag
 import { messagesIsland } from "./islandState";
 import { OWNER } from "./owner.ts";
 
-type SummaryContext = { enabled: boolean; bodyOnly: boolean; children: ReactNode };
+type SummaryContext = { enabled: boolean; bodyOnly: boolean; grow?: boolean; children: ReactNode };
 
 const summarySlot = defineSlot<SummaryContext>("island.line/v1");
 const lineSlot = defineSlot<object>("island.line/v1");
 
-function MessageSummary({ enabled, bodyOnly, children }: SummaryContext) {
+function MessageSummary({ enabled, bodyOnly, grow = false, children }: SummaryContext) {
   const preview = messagesIsland.use()?.preview ?? null;
-  return <CollapsedMessageContent preview={preview} enabled={enabled} bodyOnly={bodyOnly}>{children}</CollapsedMessageContent>;
+  return <CollapsedMessageContent preview={preview} enabled={enabled} bodyOnly={bodyOnly} grow={grow}>{children}</CollapsedMessageContent>;
 }
 
 function MessageLeading() {

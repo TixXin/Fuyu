@@ -10,6 +10,7 @@ export type CollapsedLineContext = {
 export type IslandSummaryContext = {
   enabled: boolean;
   bodyOnly: boolean;
+  grow?: boolean;
   children: ReactNode;
 };
 

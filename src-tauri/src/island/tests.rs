@@ -651,3 +651,37 @@ fn a_hidden_side_handle_only_catches_the_edge_strip() {
         }
     }
 }
+
+#[test]
+fn a_grown_message_preview_takes_clicks_on_its_whole_height() {
+    let mut grown = state(IslandMode::Collapsed, 1.0, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+    grown.collapsed_width = 480.0;
+    grown.collapsed_height = 96.0;
+    let center_x = STAGE_WINDOW_WIDTH / 2.0;
+    let on = |state: IslandWindowState, x: f64, y: f64| cursor_on_island(0.0, 0.0, STAGE_WINDOW_WIDTH, 460.0, x, y, state);
+    assert_eq!(grown.base_size(), (480.0, 96.0));
+    assert!(on(grown, center_x, 90.0));
+    assert!(!on(grown, center_x, 100.0));
+    assert!(on(grown, center_x - 230.0, 40.0));
+    assert!(!on(grown, center_x - 250.0, 40.0));
+
+    let mut bottom = grown;
+    bottom.attached_edge = Some(Edge::Bottom);
+    assert!(on(bottom, center_x, 460.0 - 90.0));
+    assert!(!on(bottom, center_x, 460.0 - 100.0));
+
+    let mut tucked = grown;
+    tucked.is_tucked = true;
+    assert_eq!(tucked.base_size().1, COLLAPSED_ISLAND_HEIGHT);
+    let mut expanded = grown;
+    expanded.mode = IslandMode::Expanded;
+    assert_eq!(expanded.base_size().1, DEFAULT_EXPANDED_ISLAND_HEIGHT);
+}
+
+#[test]
+fn the_collapsed_height_stays_between_the_bar_and_its_ceiling() {
+    assert_eq!(grown_collapsed_height(10.0), COLLAPSED_ISLAND_HEIGHT);
+    assert_eq!(grown_collapsed_height(96.0), 96.0);
+    assert_eq!(grown_collapsed_height(1000.0), MAX_GROWN_COLLAPSED_HEIGHT);
+    assert_eq!(grown_collapsed_height(f64::NAN), COLLAPSED_ISLAND_HEIGHT);
+}

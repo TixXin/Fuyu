@@ -152,6 +152,7 @@ export type IslandInteraction = {
   tuckStyle?: TuckStyle;
   isDimmed?: boolean;
   gamePassthrough?: boolean;
+  collapsedHeight?: number;
 };
 
 export function setIslandLayout(layout: IslandLayout) {
