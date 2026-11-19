@@ -80,28 +80,33 @@ export function useAgentAlerts({ sessions, kinds, dwell, canAlert, isOpenOnAgent
     if (collapsedNow || leftAgentPage) commit(NO_NOTICES);
   }, [isCollapsed, leftAgentPage, commit, stopAuto]);
 
+  const refresh = useCallback((entries: NoticeEntry[], now: number) => {
+    const current = latest.current;
+    const next = pruneNotices(entries, sessionsRef.current, (session) => !current.looked(session), now);
+    commit(next);
+    if (next.length > 0) return;
+    stopAuto();
+    if (current.isOpenOnAgents) current.onClose();
+  }, [commit, stopAuto]);
+
   useEffect(() => {
     if (!ticking) return;
     let hovered = false;
     const tick = () => {
-      const current = latest.current;
       const now = Date.now();
-      let next = noticesRef.current;
-      const hoveredNow = current.isHovered();
-      if (hoveredNow !== hovered) {
-        hovered = hoveredNow;
-        next = hoverNotices(next, hovered, now, current.dwell);
-      }
-      next = pruneNotices(next, sessionsRef.current, (session) => !current.looked(session), now);
-      commit(next);
-      if (next.length > 0) return;
-      stopAuto();
-      if (current.isOpenOnAgents) current.onClose();
+      const hoveredNow = latest.current.isHovered();
+      if (hoveredNow === hovered) return refresh(noticesRef.current, now);
+      hovered = hoveredNow;
+      refresh(hoverNotices(noticesRef.current, hovered, now, latest.current.dwell), now);
     };
     tick();
     const timer = window.setInterval(tick, NOTICE_TICK_MS);
     return () => window.clearInterval(timer);
-  }, [ticking, commit, stopAuto]);
+  }, [ticking, refresh]);
+
+  useEffect(() => {
+    if (openedByAlertRef.current) refresh(noticesRef.current, Date.now());
+  }, [sessions, refresh]);
 
   const popUpRef = useRef((alerts: AgentAlert[], onShown?: (shown: AgentAlert[]) => void) => {
     void agentSessionsInFront(alerts.map((alert) => alert.session))
