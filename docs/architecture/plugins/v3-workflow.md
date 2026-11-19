@@ -61,7 +61,7 @@
 | D47–D52 | 内存和性能 | **照常做** | 和第 3 版互不依赖；D47 的测量结果就是第 3 版的基线，D49（`emit` 泄漏）第 3 版也受益 |
 | 天气插件（待上架） | 等签名 | 照常上架 | 同 E33 |
 
-冻结期间的规则：旧插件系统（`src-tauri/src/plugin_host/`、`src/features/plugins/`、`src/features/plugin-views/`、`packages/fuyu-plugin` 1.x、`plugins/`）只接受 bug 和安全修复，不加新的方法、事件、模板、权限。E30 定的「新能力先进实验通道」对第 2 版不再有意义，它的精神搬到了第 3 版的「接口分层」。
+冻结期间的规则：旧插件系统（`src-tauri/src/plugin_host/`、`src/features/plugins/`、`src/features/plugin-views/`、`packages/fuyu-plugin` 1.x、`plugins/`）只接受 bug 和安全修复，不加新的方法、事件、模板、权限。E30 定的「新能力先进实验通道」对第 2 版不再有意义，它的精神搬到了第 3 版的「接口分层」。2026-11-18 起第 2 版已删除（E36.6.5、E36.6.6），这条规则不再适用。
 
 ## 任务和 issue
 
@@ -99,7 +99,7 @@
 | 基座的 TypeScript 包（内核包装、宿主入口、插槽、命令行工具） | `packages/` 下新建的包 | 不能 import `src/` 里的任何东西，lint 检查 |
 | 基座的 Rust 部分（看管宿主、管道、「标记即服务」的宏） | 独立的 crate，和 `src-tauri` 组成一个 Cargo 工作区 | 不能依赖 `src-tauri` 里的领域模块；`unsafe` 的规则照旧 |
 | 浮屿自己的内置插件 | `src/` 下，按现有的 `features/` 逐个改造 | 遵守 `src/AGENTS.md`；第 3 阶段开头更新它的目录地图和分层规则 |
-| 第 2 版的 SDK `packages/fuyu-plugin` 1.x | 原地不动 | 冻结；新的 2.0 在新的包里开发，第 6 阶段替换 |
+| 第 2 版的 SDK `packages/fuyu-plugin` 0.x | 已删除（E36.6.6，2026-11-18） | 新的 2.0 在 `packages/plugin-cli` 里，npm 上发成 `fuyu-plugin` |
 | 第 0 阶段的临时代码 | 仓库之外 | 不合入 |
 
 ## 每个阶段怎么走

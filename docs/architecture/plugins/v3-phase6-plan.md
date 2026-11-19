@@ -78,10 +78,16 @@
 - **验收**：`cargo test`、`pnpm check`、`pnpm build` 与回归页全部通过。
 - **结果**：Rust 侧 `plugin_host`、`v2_builtins.rs` 与各功能的 v2 `plugin_view.rs` 全部删除，`v2_migration.rs` 改为直接读旧数据；主题市场从旧宿主抽到 `src-tauri/src/theme_market.rs`。前端删掉 `features/plugins`、`features/plugin-views`、`features/plugin-dev`、第 2 版设置页与侧栏里的「插件」「插件市场」入口，插件命令快捷键由第 3 版的 `fuyu.commands` 接管，岛上的插件页面、收起条状态、权限提示和右键菜单随旧宿主一起撤掉。回归页 `plugin-info`、`plugin-menus`、`plugin-views` 删除，其余页面按第 3 版插槽重写。
 
-### E36.6.6：删除第 2 版 SDK/模板/旧示例与旧名兼容并收口 E36（等用户确认下线第 2 版后执行）
+### E36.6.6：删除第 2 版 SDK/模板/旧示例与旧名兼容并收口 E36（已完成，2026-11-18）
 - **范围**：`packages/fuyu-plugin`、`packages/create-fuyu-plugin`、`packages/powershell`、`plugins/`（旧 v2 文件）、`scripts/plugins/`、`packages/plugin-cli/src/keys.mjs`、`docs/architecture/contracts.md`、`docs/architecture/plugins/v3-progress.md`
 - **内容**：
   1. 删除 `packages/fuyu-plugin`、`packages/create-fuyu-plugin`、`packages/powershell`、`plugins/examples/dev.focusd.*`、`plugins/drafts/`、`plugins/sdk/`、`plugins/schema/`、`plugins/index.json*`、`plugins/revoked.json*`。
   2. 清理 `D81` C 类旧名兼容（`Focusd` PowerShell 别名、`FOCUSD_*` 脚本变量）以及 `packages/plugin-cli` 的 `~/.fly-island-plugin/` 旧私钥位置兼容（先确认 Windows 私钥已迁新位置）。
   3. 从 `contracts.md` 移除第 2 版插件契约，更新 `v3-progress.md`，归档 `E36.6` 与 `E36`。
-- **验收**：全仓无第 2 版插件残留与 `dev.focusd.*` 插件 ID，`pnpm check` 与 `cargo test` 全部通过。
+- **验收**：除迁移代码（`plugin_kernel/v2_migration.rs` 和 `tests/unit/v2-plugin-migration.test.mjs`）、冻结的第 2 版市场文件、`video/` 和归档文档外，全仓没有第 2 版插件代码和 `dev.focusd.*` 插件 ID；`pnpm check`、`pnpm build` 通过（不碰 Rust）。2026-11-18 用户定第 2 版市场文件留着冻结，所以第 1 条里的 `plugins/index.json*`、`plugins/revoked.json*` 不删，验收照此放宽。
+- **结果**：
+  - 删了 `packages/fuyu-plugin`、`packages/create-fuyu-plugin`（都是 0.7.0）、`packages/powershell`（含 `*-Focusd*` 别名）、`plugins/examples/`、`plugins/drafts/`、`plugins/sdk/`、`plugins/schema/`、`plugins/market/`、第 2 版的任务板岛屿插件 `scripts/tasks/island-plugin`（`pnpm tasks:plugin`），以及只测它们的 `tests/scripts/*-plugin.test.mjs`、`plugin-sdk`、`sdk-release` 测试；`pnpm-workspace.yaml`、`packages/tsconfig.json`、`.gitattributes`、根 `package.json`（`sdk:build`、`tasks:plugin`）里的引用一起去掉。`.github/workflows/publish-sdk.yml` 收到 `sdk-v0.*`、`sdk-v1.*` 标签时直接报错。npm 上第 3 版的 `fuyu-plugin`、`create-fuyu-plugin` 2.x 由 `packages/plugin-cli`、`packages/create-plugin` 打包，不受影响。
+  - 第 2 版市场冻结：`scripts/plugins/` 只剩重签用的 `plugin-signing.mjs`、`package-signing.mjs`（从第 2 版 SDK 搬来的包签名，域串不变）和 `resign-market.mjs`（`pnpm plugins:resign`，按原样重签索引和撤销名单，不再从示例重建，取代 `pnpm plugins:index`）；`build-plugin-index.mjs`、`build-plugin-sdk.mjs`、`check-sdk-release.mjs`、`plugin-api-doc.mjs` 删除。签名脚本的 `FOCUSD_PLUGIN_SIGNING_KEY`、`FOCUSD_PLUGIN_AUTHOR_KEY`、`FOCUSD_DPAPI_INPUT` 改名为 `FUYU_*`。测试 `tests/scripts/plugin-market-v2.test.mjs` 守住冻结文件的签名和哈希。
+  - `pnpm lab`（`scripts/island-lab/server.mjs`）原来借第 2 版 SDK 找岛屿的家目录，改成自己找。
+  - `docs/plugins/` 下第 2 版的作者文档（也显示在官网）这次不删，每篇顶上加了「已下线、只留作参考」；换成第 3 版另开任务。`docs/features/local-api.md` 的 MCP 命令改成 `npx -y fuyu-plugin@0.7.0 mcp`（npm 上 2.0 是第 3 版命令行，没有 `mcp`），开发模式路径一节标为已删除。
+  - **没做**：`packages/plugin-cli/src/keys.mjs` 的 `~/.fly-island-plugin/` 旧私钥位置兼容，等用户确认 Windows 那台的旧私钥已迁走后删，挂在跟进任务里。

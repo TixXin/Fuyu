@@ -69,17 +69,7 @@ jobs:
               done
               ;;
             *)
-              node scripts/plugins/check-sdk-release.mjs "${GITHUB_REF_NAME}"
-              pnpm --filter fuyu-plugin test
-              pnpm --filter create-fuyu-plugin test
-              for dir in packages/fuyu-plugin packages/create-fuyu-plugin; do
-                name=$(node -p "require('./$dir/package.json').name")
-                version=$(node -p "require('./$dir/package.json').version")
-                if npm view "$name@$version" version >/dev/null 2>&1; then
-                  echo "$name@$version is already on npm; skipped."
-                else
-                  (cd "$dir" && npm publish --access public --provenance)
-                fi
-              done
+              echo "error: ${GITHUB_REF_NAME} is not a v3 SDK tag (sdk-v2.0.0 or later); the v2 SDK packages were removed in E36.6.6" >&2
+              exit 1
               ;;
           esac
