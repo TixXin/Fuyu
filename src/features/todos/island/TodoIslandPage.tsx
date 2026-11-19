@@ -2,6 +2,7 @@ import { useTranslation } from "../../../i18n";
 import { ScheduledTodoList } from "../ScheduledTodoList";
 import { TodoDataNotice } from "../TodoDataNotice";
 import type { TodoPageProps } from "../types";
+import { useTodoPrefs } from "../useTodoPrefs";
 import { TodoIslandArchive } from "./TodoIslandArchive";
 import { TodoIslandHeader } from "./TodoIslandHeader";
 import { TodoIslandTasks } from "./TodoIslandTasks";
@@ -11,6 +12,7 @@ import "./TodoIslandRow.css";
 
 export function TodoIslandPage(props: TodoPageProps) {
   const t = useTranslation();
+  const [prefs] = useTodoPrefs();
   const { pageMode, todos, selectedArchive } = props;
   const isReview = pageMode === "review";
   const shown = isReview ? selectedArchive?.todos ?? [] : todos;
@@ -70,7 +72,7 @@ export function TodoIslandPage(props: TodoPageProps) {
         />
       )}
       {pageMode === "upcoming" && <ScheduledTodoList todos={props.scheduledTodos} onDelete={props.onDeleteScheduledTodo} onTag={props.onTagScheduledTodo} />}
-      {pageMode === "archive" && <TodoIslandArchive archives={props.archives} todos={props.todos} currentDate={props.currentDate} onSelect={props.onSelectArchive} />}
+      {pageMode === "archive" && <TodoIslandArchive archives={props.archives} todos={props.todos} currentDate={props.currentDate} showWeekSummary={prefs.showWeekSummary} onSelect={props.onSelectArchive} />}
       <TodoDataNotice />
     </section>
   );

@@ -37,6 +37,7 @@ export type TodoPrefs = {
   defaultPriority: TodoDefaultPriority;
   recurrenceHolidayAware: boolean;
   noteTemplate: string;
+  showWeekSummary: boolean;
 };
 
 export const TODO_SORT_MODES: readonly TodoSortBy[] = ["manual", "priority", "createdDesc"];
@@ -79,6 +80,7 @@ export const DEFAULT_TODO_PREFS: TodoPrefs = {
   defaultPriority: "none",
   recurrenceHolidayAware: true,
   noteTemplate: "",
+  showWeekSummary: true,
 };
 
 const MIN_REAL_TIMESTAMP_MS = 946_684_800_000;
@@ -138,6 +140,7 @@ export function normalizeTodoPrefs(value: unknown): TodoPrefs {
     defaultPriority: pickOne(TODO_DEFAULT_PRIORITIES, saved.defaultPriority, DEFAULT_TODO_PREFS.defaultPriority),
     recurrenceHolidayAware: pickBoolean(saved.recurrenceHolidayAware, DEFAULT_TODO_PREFS.recurrenceHolidayAware),
     noteTemplate: pickText(saved.noteTemplate, MAX_NOTE_TEMPLATE_LENGTH),
+    showWeekSummary: pickBoolean(saved.showWeekSummary, DEFAULT_TODO_PREFS.showWeekSummary),
   };
 }
 

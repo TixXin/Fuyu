@@ -144,6 +144,12 @@ export function TodoRolloverSettingsSection({ settings, onSettingsChange }: {
           />
         }
       />
+      <SettingsToggleRow
+        title={text.showWeekSummary}
+        description={text.showWeekSummaryHint}
+        checked={prefs.showWeekSummary}
+        onChange={(showWeekSummary) => setPrefs((current) => ({ ...current, showWeekSummary }))}
+      />
     </SettingsGroup>
   );
 }

@@ -50,6 +50,8 @@ export type SettingsTodoText = {
   archiveRetention: string;
   archiveRetentionHint: string;
   archiveRetentionOptions: { forever: string; days90: string; days180: string; days365: string };
+  showWeekSummary: string;
+  showWeekSummaryHint: string;
   carryOverIncomplete: string;
   recurrenceHolidayAware: string;
   recurrenceHolidayAwareHint: string;
@@ -152,6 +154,8 @@ export const zhCN: SettingsTodoText = {
     days180: "180 天",
     days365: "1 年",
   },
+  showWeekSummary: "归档页显示本周小结",
+  showWeekSummaryHint: "归档页最上面的一张卡：本周完成几件、每天一根小柱、专注时长最多的项目。",
   carryOverIncomplete: "自动将未完成任务写入下一天",
   recurrenceHolidayAware: "「工作日」重复按调休算",
   recurrenceHolidayAwareHint: "补班日照常出现，法定假日不出现。要日历里有节假日数据；关掉后只按周一到周五算。",
@@ -254,6 +258,8 @@ export const en: SettingsTodoText = {
     days180: "180 days",
     days365: "1 year",
   },
+  showWeekSummary: "Show the week summary on the archive page",
+  showWeekSummaryHint: "A card at the top of the archive: tasks done this week, a bar per day and the projects with the most focus time.",
   carryOverIncomplete: "Carry unfinished tasks to next day",
   recurrenceHolidayAware: "Weekday repeats follow public holidays",
   recurrenceHolidayAwareHint: "Shows up on make-up workdays and skips public holidays. Needs holiday data in the calendar; when off, only Monday to Friday counts.",

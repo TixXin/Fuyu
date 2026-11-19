@@ -23,6 +23,7 @@ test("the new todo prefs default to what the app did before and drop values it c
   assert.equal(fromOldVersion.defaultPriority, "none");
   assert.equal(fromOldVersion.recurrenceHolidayAware, true);
   assert.equal(fromOldVersion.noteTemplate, "");
+  assert.equal(fromOldVersion.showWeekSummary, true);
   assert.equal(fromOldVersion.markdownProject, true);
   assert.equal(fromOldVersion.markdownSubtasks, true);
   assert.equal(fromOldVersion.markdownNote, true);
@@ -42,6 +43,7 @@ test("the new todo prefs default to what the app did before and drop values it c
   assert.equal(saved.defaultPriority, "medium");
   assert.equal(saved.recurrenceHolidayAware, false);
   assert.equal(saved.noteTemplate, "今天最重要的三件事\n1. ");
+  assert.equal(normalizeTodoPrefs({ showWeekSummary: false }).showWeekSummary, false);
   assert.equal(saved.markdownProject, false);
   assert.equal(saved.markdownSubtasks, false);
   assert.equal(saved.markdownNote, false);
