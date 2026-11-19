@@ -1,73 +1,103 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Context } from "@fuyu/plugin-base";
+import { islandApi } from "./island-api.ts";
 import {
   METHODS,
   TOPICS,
   normalizeUsageMap,
   rankApps,
   recordAppLaunch,
+  trimUsage,
   type AppEntry,
   type AppUsageMap,
   type LauncherState,
 } from "./model.ts";
-import { launchApplication, scanApplications } from "./scanner.ts";
+import { MAX_EXTRA_DIRS, normalizeSettings, type LauncherSettings } from "./settingsModel.ts";
+import { defaultAppRoots, expandHome, launchApplication, scanApplications } from "./scanner.ts";
 
 export const name = "@fuyu/launcher";
-export const inject = ["clients"];
+export const inject = ["clients", "commands"];
 
 const STATE_FILE = "launcher.json";
-const RESCAN_TTL_MS = 5 * 60 * 1000;
+const PAGE_ID = "@fuyu/launcher";
+const COMMAND_TITLES = {
+  open: { "zh-CN": "打开应用启动台", en: "Open App launcher" },
+  rescan: { "zh-CN": "重新扫描应用", en: "Rescan apps" },
+};
 
-interface StoredFile {
-  usage?: unknown;
+interface Stored {
+  usage: AppUsageMap;
+  settings: LauncherSettings;
 }
 
-function readUsageFile(dataDir: string): AppUsageMap {
+function readStored(dataDir: string): Stored {
   try {
     const file = join(dataDir, STATE_FILE);
-    if (!existsSync(file)) return {};
-    const parsed = JSON.parse(readFileSync(file, "utf8")) as StoredFile;
-    if (parsed && typeof parsed === "object" && "usage" in parsed) {
-      return normalizeUsageMap(parsed.usage);
+    if (!existsSync(file)) return { usage: {}, settings: normalizeSettings(null) };
+    const parsed = JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown> | null;
+    if (parsed && typeof parsed === "object" && ("usage" in parsed || "settings" in parsed)) {
+      return { usage: normalizeUsageMap(parsed.usage), settings: normalizeSettings(parsed.settings) };
     }
-    return normalizeUsageMap(parsed);
+    return { usage: normalizeUsageMap(parsed), settings: normalizeSettings(null) };
   } catch {
-    return {};
+    return { usage: {}, settings: normalizeSettings(null) };
   }
 }
 
-function writeUsageFile(dataDir: string, usage: AppUsageMap): void {
-  mkdirSync(dataDir, { recursive: true });
-  writeFileSync(join(dataDir, STATE_FILE), `${JSON.stringify({ usage }, null, 2)}\n`, "utf8");
+function isDirectory(dir: string): boolean {
+  try {
+    readdirSync(dir, { withFileTypes: true });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function apply(ctx: Context) {
-  let usage: AppUsageMap = readUsageFile(ctx.dataDir);
+  const stored = readStored(ctx.dataDir);
   let scannedApps: AppEntry[] = [];
   let scannedAt = 0;
 
-  function ensureScanned(force = false): void {
-    const now = Date.now();
-    if (!force && scannedAt > 0 && now - scannedAt < RESCAN_TTL_MS) {
-      return;
-    }
-    scannedApps = scanApplications();
-    scannedAt = now;
+  function save(): void {
+    try {
+      mkdirSync(ctx.dataDir, { recursive: true });
+      writeFileSync(join(ctx.dataDir, STATE_FILE), `${JSON.stringify(stored, null, 2)}\n`, "utf8");
+    } catch {}
+  }
+
+  function scan(): void {
+    const extra = stored.settings.extraDirs.map((dir) => expandHome(dir));
+    scannedApps = scanApplications(defaultAppRoots(), process.platform, extra);
+    scannedAt = Date.now();
+  }
+
+  function ensureScanned(): void {
+    const minutes = stored.settings.rescanMinutes;
+    if (scannedAt > 0 && (minutes === 0 || Date.now() - scannedAt < minutes * 60_000)) return;
+    scan();
   }
 
   function snapshot(): LauncherState {
-    const ranked = rankApps(scannedApps, usage);
+    const excluded = new Set(stored.settings.excluded);
+    const visible = scannedApps.filter((app) => !excluded.has(app.path));
+    const ranked = rankApps(visible, stored.settings.recordRecent ? stored.usage : {});
     let recentCount = 0;
     for (const item of ranked) {
       if (item.recent) recentCount += 1;
     }
+    const byPath = new Map(scannedApps.map((app) => [app.path, app.name]));
     return {
       apps: ranked,
+      excludedApps: stored.settings.excluded.map((path) => ({
+        path,
+        name: byPath.get(path) ?? path.split(/[\\/]/).pop()?.replace(/\.(app|lnk|url|exe)$/i, "") ?? path,
+      })),
       totalCount: ranked.length,
       recentCount,
       scannedAt,
       updatedAt: Date.now(),
+      settings: stored.settings,
     };
   }
 
@@ -77,27 +107,28 @@ export function apply(ctx: Context) {
     return next;
   }
 
-  ensureScanned(true);
+  function rescan(): LauncherState {
+    scan();
+    return publish();
+  }
+
+  scan();
 
   ctx.clients.handle(METHODS.getState, async () => {
-    ensureScanned(false);
+    ensureScanned();
     return snapshot();
   });
 
-  ctx.clients.handle(METHODS.rescan, async () => {
-    ensureScanned(true);
-    return publish();
-  });
+  ctx.clients.handle(METHODS.rescan, async () => rescan());
 
   ctx.clients.handle(METHODS.launch, async (params?: { path?: string }) => {
     const targetPath = typeof params?.path === "string" ? params.path.trim() : "";
     if (!targetPath) {
       throw new Error("Application path is required");
     }
-    ensureScanned(false);
     let target = scannedApps.find((entry) => entry.path === targetPath);
     if (!target) {
-      ensureScanned(true);
+      scan();
       target = scannedApps.find((entry) => entry.path === targetPath);
     }
     if (!target) {
@@ -106,15 +137,45 @@ export function apply(ctx: Context) {
     if (process.env.FUYU_LAUNCHER_DRY_RUN !== "1") {
       launchApplication(target.path);
     }
-    const knownPaths = new Set(scannedApps.map((entry) => entry.path));
-    usage = recordAppLaunch(usage, target.path, Date.now(), knownPaths);
-    writeUsageFile(ctx.dataDir, usage);
+    if (stored.settings.recordRecent) {
+      const knownPaths = new Set(scannedApps.map((entry) => entry.path));
+      stored.usage = recordAppLaunch(stored.usage, target.path, Date.now(), knownPaths, stored.settings.historyLimit);
+      save();
+    }
     return publish();
   });
 
   ctx.clients.handle(METHODS.clearRecent, async () => {
-    usage = {};
-    writeUsageFile(ctx.dataDir, usage);
+    stored.usage = {};
+    save();
     return publish();
   });
+
+  ctx.clients.handle(METHODS.setSettings, async (params?: Partial<LauncherSettings>) => {
+    const prev = stored.settings;
+    stored.settings = normalizeSettings({ ...prev, ...(params ?? {}) }, prev);
+    stored.usage = trimUsage(stored.usage, stored.settings.historyLimit);
+    save();
+    if (prev.extraDirs.join("\n") !== stored.settings.extraDirs.join("\n")) scan();
+    return publish();
+  });
+
+  ctx.clients.handle(METHODS.addExtraDir, async (params?: { dir?: string }) => {
+    const dir = typeof params?.dir === "string" ? params.dir.trim() : "";
+    if (!dir || !isDirectory(expandHome(dir))) throw new Error("missing-dir");
+    if (!stored.settings.extraDirs.includes(dir) && stored.settings.extraDirs.length < MAX_EXTRA_DIRS) {
+      stored.settings = { ...stored.settings, extraDirs: [...stored.settings.extraDirs, dir] };
+      save();
+      scan();
+    }
+    return publish();
+  });
+
+  ctx.commands.register("rescan", () => rescan(), { title: COMMAND_TITLES.rescan });
+
+  const island = islandApi(ctx);
+  if (island?.open) {
+    const open = island.open.bind(island);
+    ctx.commands.register("open", () => open(PAGE_ID), { title: COMMAND_TITLES.open });
+  }
 }

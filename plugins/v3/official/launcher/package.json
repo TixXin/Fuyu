@@ -1,8 +1,8 @@
 {
   "name": "@fuyu/launcher",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "Search and launch installed desktop applications from the island, with acronym matching, keyboard navigation, and recent-apps ranking.",
+  "description": "Type a few letters on the island to open any app on your computer; the ones you use most come first.",
   "license": "MIT",
   "author": "TixXin",
   "repository": "https://github.com/TixXin/fuyu",
@@ -21,13 +21,22 @@
     "manifest": 1,
     "displayName": {
       "zh-CN": "应用启动台",
-      "en": "App Launcher"
+      "en": "App launcher"
     },
     "description": {
-      "zh-CN": "在岛上搜索并快速启动本机应用，支持大小写不敏感子串与首字母缩写过滤、键盘上下选择与最近启动置顶。",
-      "en": "Search and launch installed apps from the island with case-insensitive substring and acronym matching, keyboard navigation, and recent-apps ranking."
+      "zh-CN": "在岛上输入几个字母就能打开电脑上的应用，常用的排在前面。",
+      "en": "Type a few letters on the island to open any app on your computer; the ones you use most come first."
     },
     "icon": "assets/icon.svg",
+    "screenshots": [
+      {
+        "path": "screenshots/recent.png",
+        "caption": {
+          "zh-CN": "最近用过的应用排在最前，回车就能打开",
+          "en": "Recently used apps come first; press Enter to open"
+        }
+      }
+    ],
     "categories": [
       "productivity",
       "utilities"
@@ -47,10 +56,17 @@
     ],
     "commands": [
       {
+        "id": "open",
+        "title": {
+          "zh-CN": "打开应用启动台",
+          "en": "Open App launcher"
+        }
+      },
+      {
         "id": "rescan",
         "title": {
           "zh-CN": "重新扫描应用",
-          "en": "Rescan applications"
+          "en": "Rescan apps"
         }
       }
     ]

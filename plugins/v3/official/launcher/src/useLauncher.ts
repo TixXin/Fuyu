@@ -1,19 +1,13 @@
 import type { Context } from "@fuyu/plugin-base";
 import { useCallback, useEffect, useState } from "react";
-import {
-  EMPTY_STATE,
-  METHODS,
-  TOPICS,
-  detectLocale,
-  type LauncherState,
-} from "./model.ts";
+import { EMPTY_STATE, METHODS, TOPICS, type LauncherState } from "./model.ts";
+import type { LauncherSettings } from "./settingsModel.ts";
 
 function errorText(reason: unknown): string {
   return reason instanceof Error ? reason.message : String(reason);
 }
 
 export function useLauncher(ctx: Context) {
-  const locale = detectLocale();
   const [state, setState] = useState<LauncherState>(EMPTY_STATE);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,11 +25,12 @@ export function useLauncher(ctx: Context) {
     };
   }, [ctx]);
 
-  const launch = useCallback(
-    (appPath: string) => {
+  const invoke = useCallback(
+    (method: string, params?: unknown, quiet = false): Promise<LauncherState | null> => {
       setError(null);
+      if (!quiet) setBusy(true);
       return ctx.host
-        .call<LauncherState>(METHODS.launch, { path: appPath })
+        .call<LauncherState>(method, params)
         .then((next) => {
           setState(next);
           return next;
@@ -43,46 +38,21 @@ export function useLauncher(ctx: Context) {
         .catch((reason: unknown) => {
           setError(errorText(reason));
           return null;
+        })
+        .finally(() => {
+          if (!quiet) setBusy(false);
         });
     },
     [ctx],
   );
 
-  const rescan = useCallback(() => {
-    setError(null);
-    setBusy(true);
-    return ctx.host
-      .call<LauncherState>(METHODS.rescan)
-      .then((next) => {
-        setState(next);
-        return next;
-      })
-      .catch((reason: unknown) => {
-        setError(errorText(reason));
-        return null;
-      })
-      .finally(() => {
-        setBusy(false);
-      });
-  }, [ctx]);
+  const launch = useCallback((appPath: string) => invoke(METHODS.launch, { path: appPath }, true), [invoke]);
+  const rescan = useCallback(() => invoke(METHODS.rescan), [invoke]);
+  const clearRecent = useCallback(() => invoke(METHODS.clearRecent), [invoke]);
+  const setSettings = useCallback(
+    (patch: Partial<LauncherSettings>) => invoke(METHODS.setSettings, patch, true),
+    [invoke],
+  );
 
-  const clearRecent = useCallback(() => {
-    setError(null);
-    setBusy(true);
-    return ctx.host
-      .call<LauncherState>(METHODS.clearRecent)
-      .then((next) => {
-        setState(next);
-        return next;
-      })
-      .catch((reason: unknown) => {
-        setError(errorText(reason));
-        return null;
-      })
-      .finally(() => {
-        setBusy(false);
-      });
-  }, [ctx]);
-
-  return { state, locale, busy, error, launch, rescan, clearRecent };
+  return { state, busy, error, setError, invoke, launch, rescan, clearRecent, setSettings };
 }
