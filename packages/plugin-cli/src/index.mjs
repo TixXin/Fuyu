@@ -19,6 +19,7 @@ export { compareDeclarations } from "./declarations.mjs";
 export { OUTPUT_DIR, SOURCE_DIR, SOURCE_EXTENSIONS, planEntries, sourceFor } from "./entries.mjs";
 export { BuildError } from "./errors.mjs";
 export { DEFAULT_FILES, selectFiles } from "./files.mjs";
+export { lintListing } from "./lint.mjs";
 export { KEY_ENV, LEGACY_KEY_ENV, defaultKeyFile, generateSigningKey, loadSigningKey } from "./keys.mjs";
 export { DEFAULT_PACK_DIR, pack } from "./pack.mjs";
 export { reviewSources } from "./review.mjs";

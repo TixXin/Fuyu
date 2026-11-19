@@ -29,7 +29,9 @@
 
 - `fuyu.displayName` 的中英文、岛页 `title`、设置分节的标题、README 的标题、市场和插件页上用同一个名字（统一后的名字见 [插件页预览](../investigations/plugin-pages-preview.html) 的「名字」表）。
 - `fuyu.description` 一句话说对用户有什么用，不写实现方式（不写「基于 Node 原生接口」「免 API Key」「在设置中配置 owner/repo」这类）；市场卡片上最多显示两行，要放得下。英文和中文意思一致，`package.json` 顶层的 `description` 和英文描述相同。示例见插件页预览「说明」一节。
-- 有界面的插件写 1 到 3 张截图进 `fuyu.screenshots`（`path` 指向包里的 png / jpg / webp，`caption` 中英文一句话）。以深色岛为主，第一张最能说明用处（市场卡片的缩略图用它），后面是收起条、提醒或设置；顺序参考插件页预览的「截图」一节。截图在真岛上截，不用 CSS 画的示意图。
+- **至少一张截图**（2026-11-19 用户定）：每个官方插件写 1 到 3 张截图进 `fuyu.screenshots`（`path` 指向包里的 png / jpg / webp，`caption` 中英文一句话）。没有自己界面的插件截它起作用的地方，例如词典截翻译窗口里的查词结果。以深色岛为主，第一张最能说明用处（市场卡片的缩略图用它），后面是收起条、提醒或设置；顺序参考插件页预览的「截图」一节。截图是真界面，不用 CSS 画的示意图。
+  - 一张都没有时 `fuyu-plugin check` 给警告 `listing:screenshots`，第三方插件不会因此被拒；加 `--strict` 当错误。
+  - 官方插件由 `tests/unit/plugin-cli-lint.test.mjs` 拦住：除了文件开头 `PENDING` 里登记的几个（等 E77.6 补图），有一个没截图测试就失败。`PENDING` 只减不增，补完一个删一个。
 - README 按「怎么用 / 设置 / 开销和数据来源 / 用到的系统程序（有的话）」写，中英文各一份。
 
 ## 5. 图标
