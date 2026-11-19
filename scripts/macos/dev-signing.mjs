@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { signingDir } from "../signing-dir.mjs";
 import { createCertificate } from "./self-signed-cert.mjs";
@@ -64,10 +64,29 @@ function codesignDetails(binary) {
   return result.status === 0 ? `${result.stdout}${result.stderr}` : "";
 }
 
+export function cargoOriginal(binary) {
+  const deps = path.join(path.dirname(binary), "deps");
+  if (!existsSync(deps)) return null;
+  const { size } = statSync(binary);
+  const pattern = new RegExp(`^${path.basename(binary)}-[0-9a-f]{16}$`);
+  const candidates = readdirSync(deps)
+    .filter((name) => pattern.test(name))
+    .map((name) => path.join(deps, name))
+    .filter((file) => statSync(file).size === size);
+  if (candidates.length === 0) return null;
+  const content = readFileSync(binary);
+  return candidates.find((file) => readFileSync(file).equals(content)) ?? null;
+}
+
 export function signDevBinary(binary, dir = devSigningDir()) {
   if (!existsSync(binary)) return { signed: false, message: `${binary} is missing` };
   if (signedByDevIdentity(codesignDetails(binary))) return { signed: false, message: "already signed" };
   const { keychain, sha1 } = ensureDevIdentity(dir);
-  run("codesign", ["--force", "--sign", sha1, "--keychain", keychain, "--identifier", DEV_IDENTIFIER, binary]);
+  const original = cargoOriginal(binary);
+  run("codesign", ["--force", "--sign", sha1, "--keychain", keychain, "--identifier", DEV_IDENTIFIER, original ?? binary]);
+  if (original) {
+    copyFileSync(original, binary);
+    chmodSync(binary, statSync(original).mode);
+  }
   return { signed: true, message: `signed ${binary} as ${DEV_IDENTIFIER}` };
 }
