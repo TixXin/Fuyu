@@ -3,6 +3,7 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { validateManifest } from "@fuyu/plugin-manifest";
 import { dataDirOf } from "./data.mjs";
+import { versionedUrl } from "./versioned.mjs";
 
 export const PACKAGES_DIR = "packages";
 export const DEV_PREFIX = "dev";
@@ -131,11 +132,17 @@ export function sourceOf(options, { dir, appVersion }) {
   return { source, root, ...manifest };
 }
 
+function hostUrl(meta) {
+  if (!meta.host) return CLIENT_ONLY;
+  if (!INSTALLED_SOURCES.includes(meta.source)) return pathToFileURL(meta.host).href;
+  return versionedUrl(meta.root, meta.host, meta.version);
+}
+
 export function withSource(options, context) {
   const { kind: _kind, ...rest } = options;
   try {
     const meta = sourceOf(options, context);
-    return { ...rest, name: meta.host ? pathToFileURL(meta.host).href : CLIENT_ONLY, [SOURCE]: meta };
+    return { ...rest, name: hostUrl(meta), [SOURCE]: meta };
   } catch (error) {
     return { ...rest, name: CLIENT_ONLY, [SOURCE]: { source: options.source, rejected: { reason: error.message, errors: error.errors ?? [] } } };
   }
