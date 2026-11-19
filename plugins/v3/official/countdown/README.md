@@ -1,4 +1,4 @@
-# 倒数日 · Day Counter
+# 倒数日 · Day counter
 
 `@fuyu/countdown` · 浮屿官方插件 · Windows / macOS
 
@@ -60,13 +60,13 @@ Keep birthdays, holidays, deadlines and anniversaries in one place: upcoming dat
 
 ### Where it shows up
 
-- **Island page**: a new "Day Counter" page with a large card for your starred (★) date and up to 5 more dates below it.
-- **Collapsed bar**: the day count for the starred date, such as "12d"; click it to open the Day Counter page.
-- **Settings → Plugins → Day Counter**: add, edit and order dates, and every setting.
+- **Island page**: a new "Day counter" page with a large card for your starred (★) date and up to 5 more dates below it.
+- **Collapsed bar**: the day count for the starred date, such as "12d"; click it to open the Day counter page.
+- **Settings → Plugins → Day counter**: add, edit and order dates, and every setting.
 
 ### How to use it
 
-1. Open Day Counter in the settings, enter a name, pick a date and a type (countdown or anniversary), tick "Repeat every year" for things like birthdays, and click "Add".
+1. Open Day counter in the settings, enter a name, pick a date and a type (countdown or anniversary), tick "Repeat every year" for things like birthdays, and click "Add".
 2. Click ★ to put a date on the large card and the collapsed bar; without a star the nearest upcoming date is shown.
 3. Click the pencil to edit the name, date, type and yearly repeat, or to pick a picture from your computer as the card background (up to 500 KB) or remove it.
 4. Click ✕ to delete. With the order set to Manual, drag the handle on the left to reorder the island page.

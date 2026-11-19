@@ -194,11 +194,11 @@ test("countdown host: backgrounds are fetched on demand, not broadcast; full lis
   assert.throws(() => call(METHODS.add, { title: "One too many", date: "2027-01-01" }), /At most/);
 });
 
-test("countdown manifest: Day Counter in English, same id, check passes", async () => {
+test("countdown manifest: Day counter in English, same id, check passes", async () => {
   const manifest = JSON.parse(readFileSync(join(PLUGIN_DIR, "package.json"), "utf8"));
   assert.equal(manifest.name, "@fuyu/countdown");
   assert.equal(manifest.version, "1.1.0");
-  assert.equal(manifest.fuyu.displayName.en, "Day Counter");
+  assert.equal(manifest.fuyu.displayName.en, "Day counter");
   assert.equal(manifest.fuyu.displayName["zh-CN"], "倒数日");
   assert.equal(manifest.description, manifest.fuyu.description.en);
   const result = await check(PLUGIN_DIR, { official: true, allowExperimental: false });

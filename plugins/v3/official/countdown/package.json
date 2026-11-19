@@ -2,7 +2,7 @@
   "name": "@fuyu/countdown",
   "version": "1.1.0",
   "type": "module",
-  "description": "Count the days to birthdays, holidays and deadlines, or the days since an anniversary, with reminders and a day count on the collapsed bar.",
+  "description": "Keeps track of birthdays, anniversaries and deadlines year after year, with the days left on the collapsed bar.",
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",
@@ -20,11 +20,11 @@
     "manifest": 1,
     "displayName": {
       "zh-CN": "倒数日",
-      "en": "Day Counter"
+      "en": "Day counter"
     },
     "description": {
-      "zh-CN": "记下生日、节日、截止日和纪念日，看还有几天或已经第几天，到日子提醒你，收起条上显示天数。",
-      "en": "Count the days to birthdays, holidays and deadlines, or the days since an anniversary, with reminders and a day count on the collapsed bar."
+      "zh-CN": "记着生日、纪念日和截止日，每年自动续上，收起条上一眼看到还剩几天。",
+      "en": "Keeps track of birthdays, anniversaries and deadlines year after year, with the days left on the collapsed bar."
     },
     "icon": "assets/icon.svg",
     "categories": [

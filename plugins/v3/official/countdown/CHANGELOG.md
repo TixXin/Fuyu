@@ -2,7 +2,7 @@
 
 ## 1.1.0
 
-英文名改为 Day Counter；日期管理搬进设置，岛上只看天数。
+英文名改为 Day counter；日期管理搬进设置，岛上只看天数。
 
 - 岛上的页面去掉添加表单、每行的置顶 / 背景图 / 删除按钮和卡片上的日期：只有置顶项的大卡片和最多 5 行（行数可设）。
 - 设置里管理日期：添加、编辑（名称、日期、类型、每年重复、背景图）、删除、拖动排序、★ 置顶。
@@ -15,14 +15,14 @@
 - 岛的页头按钮有了中英文标题。
 - 原来的日期、置顶、背景图和「在收起条显示」照旧保留，新设置取默认值。
 
-Renamed to Day Counter in English; dates are managed in the settings and the island just shows the counts.
+Renamed to Day counter in English; dates are managed in the settings and the island just shows the counts.
 
 - The island page drops the add form, the Pin / Background / Delete buttons on every row and the date on the card: it shows the starred date on a large card and up to 5 more rows (adjustable).
 - Manage dates in the settings: add, edit (name, date, type, yearly repeat, background picture), delete, drag to reorder, ★ star.
 - New type "Anniversary" counts from that day ("Day N"); new option "Repeat every year" moves birthdays and anniversaries on to next year once they pass.
 - Reminders: on the day (on by default) and 1, 3 or 7 days ahead (off by default), popping up on the island after 9:00.
 - New display settings: order (by date or manual), rows on the island page, dates that have passed (N days ago, hide or dim), and showing the date on the island.
-- Collapsed bar: just "12d" by default with no icon; optional "icon + 12d" or "name + 12d", the starred or the nearest date, and a switch to turn it off. Clicking it opens the Day Counter page (when Fuyu supports it).
+- Collapsed bar: just "12d" by default with no icon; optional "icon + 12d" or "name + 12d", the starred or the nearest date, and a switch to turn it off. Clicking it opens the Day counter page (when Fuyu supports it).
 - Background pictures are no longer broadcast with every minute's update; they are read only when the island shows the card.
 - Up to 200 dates, with a notice when the list is full; before, dates past the 50th were silently dropped after a restart.
 - The island header button has a title in Chinese and English.

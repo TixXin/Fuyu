@@ -2,8 +2,8 @@ import { currentLocale } from "./locale.ts";
 
 const en = {
   isZh: false,
-  title: "Day Counter",
-  empty: "No dates yet. Add them in Settings → Plugins → Day Counter.",
+  title: "Day counter",
+  empty: "No dates yet. Add them in Settings → Plugins → Day counter.",
   manage: "Manage",
   more: (count: number) => `${count} more`,
   today: "Today",
