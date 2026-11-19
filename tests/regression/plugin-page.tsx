@@ -24,7 +24,7 @@ const safeHost = { ...HOST, safe: "third-party" as const };
 interface Stage { key: string; title: string; view: PluginHostView; node?: HostNodeStatus | null; hostOff?: boolean; detail?: PluginDetailRequest; migration?: boolean; narrow?: boolean; head?: boolean }
 const STAGES: Stage[] = [
   { key: "settings", title: "插件设置 / Plugin settings", view: open(NORMAL), detail: { id: "@fuyu/weather", tab: "settings" } },
-  { key: "normal", title: "已安装若干 / Installed", view: open(NORMAL), head: true },
+  { key: "normal", title: "已安装若干 / Installed", view: open([...NORMAL, PLUGIN.hello]), head: true },
   { key: "empty", title: "空状态 / Empty", view: open([PLUGIN.counter]) },
   { key: "update", title: "有可更新 / Update", view: open([...NORMAL, PLUGIN.pomodoro]) },
   { key: "error", title: "出错 / Error", view: open([...NORMAL, PLUGIN.feeds, PLUGIN.flaky, PLUGIN.linked]) },
@@ -117,12 +117,12 @@ try {
   await click(weather.querySelector("[data-tab='settings']"));
   await settle();
 
-  check(all("normal", ".plugin-row").length === 4 && !gallery.querySelector("[data-stage='normal'] .plugin-banner"), "Normal: four installed plugins and no banner");
+  check(all("normal", ".plugin-row").length === 5 && !gallery.querySelector("[data-stage='normal'] .plugin-banner"), "Normal: five installed plugins and no banner");
   const titles = all("normal", ".plugin-row__name").map((element) => element.textContent!.trim());
   check(titles.join("|") === [...titles].sort((a, b) => a.localeCompare(b, locale)).join("|"), "Rows are sorted by name");
   check(row("normal", "@fuyu/weather")?.querySelector("[data-official]") && row("normal", "@fuyu/weather")?.querySelector(".plugin-icon__img") && !row("normal", "@me/gadget")?.querySelector("[data-official]") && row("normal", "@me/gadget")?.querySelector(".plugin-badge--warn") && row("normal", "@me/gadget")?.classList.contains("plugin-row--off"), "Official plugins carry a check mark, file installs carry an unreviewed badge, and a switched-off plugin is dimmed");
   const chip = (filter: string) => within("normal", `[data-filter='${filter}']`) as HTMLButtonElement;
-  check(chip("all").textContent!.includes("4") && chip("on").textContent!.includes("3") && chip("off").textContent!.includes("1") && chip("attention").disabled, "Filter chips count all, on and off, and the attention chip is disabled at zero");
+  check(chip("all").textContent!.includes("5") && chip("on").textContent!.includes("4") && chip("off").textContent!.includes("1") && chip("attention").disabled, "Filter chips count all, on and off, and the attention chip is disabled at zero");
   await click(chip("off"));
   check(all("normal", ".plugin-row").length === 1 && chip("off").getAttribute("aria-pressed") === "true", "The off chip leaves only the switched-off plugin");
   await click(chip("all"));
@@ -131,7 +131,7 @@ try {
   await click(within("normal", "[data-action='search-market']"));
   check(opened.includes("normal:pluginMarket") && takeMarketViewRequest()?.query === "zzz", "and offers to search the market for the same words");
   await click(within("normal", ".plugin-search__clear"));
-  check(all("normal", ".plugin-row").length === 4, "Clearing the search brings every row back");
+  check(all("normal", ".plugin-row").length === 5, "Clearing the search brings every row back");
   await click(row("normal", "@someone/clock")?.querySelector("input[role='switch'], .settings-switch input"));
   await settle();
   check(market.calls.includes("enabled:@someone/clock=false"), "A row's switch turns the plugin off through the market service");
@@ -147,9 +147,29 @@ try {
   await click(row("normal", "my-local-tool")?.querySelector("[data-action='open-settings']"));
   await settle();
   const local = dialog("my-local-tool")!;
-  check(local && !local.querySelector("[data-action='uninstall-plugin']") && local.querySelector("[data-tab='settings']")?.getAttribute("aria-selected") === "true", "The gear opens settings; a plugin loaded from a folder has no uninstall button");
+  check(local && local.querySelector("[data-action='uninstall-plugin']")?.textContent === t.detail.remove && local.querySelector("[data-tab='settings']")?.getAttribute("aria-selected") === "true", "The gear opens settings; a plugin listed by file path offers remove from Fuyu");
+  await click(local.querySelector("[data-action='uninstall-plugin']"));
+  check(local.querySelector("[data-uninstall-confirm]")?.textContent!.includes(t.detail.removeNoteFile), "and its confirmation says only the plugins.yml entry goes");
   await press(local, "Escape");
   check(!dialog("my-local-tool"), "Escape closes the detail dialog");
+  const helloRow = row("normal", "hello");
+  check(helloRow?.querySelector(".plugin-row__facts")?.textContent === t.sources.local && !helloRow.querySelector(".plugin-row__switch"), "A plugin from fuyu-plugin dev is labelled local development and has no switch");
+  await click(helloRow!.querySelector(".plugin-row__name"));
+  await settle();
+  const helloFoot = dialog("hello")?.querySelector("[data-action='uninstall-plugin']");
+  check(helloFoot?.textContent === t.detail.remove, "Its detail dialog offers remove from Fuyu instead of uninstall");
+  await press(dialog("hello")!, "Escape");
+  const helloMenu = await openRowMenu("normal", "hello");
+  const helloRemove = helloMenu.find((item) => item.dataset.menuItem === "uninstall");
+  check(helloMenu.map((item) => item.dataset.menuItem).join() === "restart,log,uninstall" && helloRemove?.textContent === t.actions.remove && helloMenu[0].hasAttribute("disabled"), "Its row menu keeps restart off and offers remove from Fuyu");
+  await click(helloRemove);
+  await settle();
+  const hello = dialog("hello")!;
+  check(hello.querySelector("[data-uninstall-confirm]")?.textContent!.includes(t.detail.removeNote) && hello.querySelector("[data-action='confirm-uninstall-plugin']")?.textContent === t.detail.confirmRemove, "The confirmation says the plugin folder stays and fuyu-plugin dev brings it back");
+  await click(hello.querySelector(".plugin-check input"));
+  await click(hello.querySelector("[data-action='confirm-uninstall-plugin']"));
+  await settle();
+  check(market.calls.includes("uninstall:hello:true") && !dialog("hello"), "Confirming removes it with its data when ticked and closes the dialog");
   await click(within("normal", "[data-action='open-overview']"));
   check(opened.includes("normal:overview"), "The footnote links to the overview page");
   await click(within("normal", "[data-action='open-market']"));

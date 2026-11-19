@@ -110,6 +110,7 @@ fn grid_window(app: &AppHandle) -> Result<WebviewWindow, String> {
         .build()
         .map_err(|error| format!("Could not create the drag grid window: {error}"))?;
     let _ = window.set_ignore_cursor_events(true);
+    super::glass::exclude_from_backdrop(&window);
     #[cfg(target_os = "macos")]
     crate::macos::drag_grid::make_grid_panel(&window)?;
     *PLACED.lock().unwrap_or_else(PoisonError::into_inner) = None;

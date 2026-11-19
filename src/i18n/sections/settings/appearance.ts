@@ -49,7 +49,10 @@ export type SettingsAppearanceText = {
     backdrop: string;
     backdrops: { none: string; wallpaper: string; native: string };
     backdropHint: string;
-    nativeHint: string;
+    nativeHintWindows: string;
+    nativeHintMac: string;
+    fallbackShown: { wallpaper: string; css: string };
+    fallbackReasons: { unsupported: string; "no-d3d": string; remote: string; failed: string; "transparency-off": string; "no-wallpaper": string };
     blur: string;
     saturation: string;
     noise: string;
@@ -115,9 +118,12 @@ export const zhCN: SettingsAppearanceText = {
     contrastGuardHint: "自动压暗或提亮色块，让文字始终看得清。",
     contrastGuardOff: "关掉后，颜色亮的地方文字可能看不清。",
     backdrop: "玻璃背后",
-    backdrops: { none: "无", wallpaper: "桌面壁纸", native: "原生透出（实验）" },
-    backdropHint: "透出岛正后方的壁纸并磨砂，「玻璃强度」决定盖在上面的底色有多浓。背后有窗口挡着时仍显示壁纸；系统关掉「透明效果」或读不到壁纸时照旧用纯色玻璃。",
-    nativeHint: "由 macOS 原生玻璃实时磨砂岛正后方的窗口与桌面（macOS 26 用系统液态玻璃，旧版用毛玻璃）；刘海形态折叠时保持纯黑，开启系统「降低透明度」时自动退回纯色玻璃。",
+    backdrops: { none: "无", wallpaper: "只透壁纸", native: "透出窗口" },
+    backdropHint: "只透出岛正后方的壁纸并磨砂，背后的窗口不显示，比透出窗口省电；「玻璃强度」决定盖在上面的底色有多浓。系统关掉「透明效果」或读不到壁纸时用纯色玻璃。",
+    nativeHintWindows: "实时磨砂岛正后方的窗口与桌面，只在岛露出来时采集，全屏游戏和贴边隐藏时停下；采不到时退回只透壁纸，再不行用纯色玻璃。",
+    nativeHintMac: "由 macOS 原生玻璃实时磨砂岛正后方的窗口与桌面（macOS 26 用系统液态玻璃，旧版用毛玻璃）；刘海形态折叠时保持纯黑，开启系统「降低透明度」时自动退回纯色玻璃。",
+    fallbackShown: { wallpaper: "现在只透出壁纸：", css: "现在用纯色玻璃：" },
+    fallbackReasons: { unsupported: "这个系统透不出窗口。", "no-d3d": "显卡不支持 Direct3D 11。", remote: "远程桌面里采不到画面。", failed: "连续几次采集失败。", "transparency-off": "系统关掉了透明效果。", "no-wallpaper": "读不到桌面壁纸。" },
     blur: "模糊",
     saturation: "饱和度",
     noise: "噪点",
@@ -183,9 +189,12 @@ export const en: SettingsAppearanceText = {
     contrastGuardHint: "Darkens or lightens the colours so text always stays readable.",
     contrastGuardOff: "With this off, text may be hard to read over bright colours.",
     backdrop: "Behind the glass",
-    backdrops: { none: "Nothing", wallpaper: "Desktop wallpaper", native: "Native blur (experimental)" },
-    backdropHint: "Shows the wallpaper right behind the island, frosted; glass strength sets how thick the tint over it is. Windows behind the island are not shown; with Transparency effects off or no wallpaper to read, the glass stays solid.",
-    nativeHint: "Blurs live windows and the desktop behind the island with native macOS glass (system Liquid Glass on macOS 26, vibrancy on older versions). Stays solid black when collapsed into the notch, and falls back to solid glass when Reduce transparency is on.",
+    backdrops: { none: "None", wallpaper: "Wallpaper only", native: "Live windows" },
+    backdropHint: "Shows only the wallpaper right behind the island, frosted; windows behind it are not shown, which saves power over live windows. Glass strength sets how thick the tint over it is. With Transparency effects off or no wallpaper to read, the glass stays solid.",
+    nativeHintWindows: "Blurs live windows and the desktop behind the island. Capture runs only while the island is visible and stops for full-screen games and when tucked away; if it cannot capture, it falls back to wallpaper only, then to solid glass.",
+    nativeHintMac: "Blurs live windows and the desktop behind the island with native macOS glass (system Liquid Glass on macOS 26, vibrancy on older versions). Stays solid black when collapsed into the notch, and falls back to solid glass when Reduce transparency is on.",
+    fallbackShown: { wallpaper: "Showing wallpaper only: ", css: "Showing solid glass: " },
+    fallbackReasons: { unsupported: "this system can't show live windows.", "no-d3d": "the graphics card has no Direct3D 11.", remote: "capture isn't available over Remote Desktop.", failed: "capture failed several times in a row.", "transparency-off": "transparency effects are off in system settings.", "no-wallpaper": "the wallpaper can't be read." },
     blur: "Blur",
     saturation: "Saturation",
     noise: "Grain",

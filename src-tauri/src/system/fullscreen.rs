@@ -17,6 +17,13 @@ pub struct ForegroundFullscreen {
     on_island_monitor: bool,
 }
 
+#[cfg(windows)]
+impl ForegroundFullscreen {
+    pub(crate) fn covers_island(&self) -> bool {
+        self.active && self.on_island_monitor
+    }
+}
+
 static STATE: Mutex<ForegroundFullscreen> = Mutex::new(ForegroundFullscreen {
     active: false,
     on_island_monitor: false,

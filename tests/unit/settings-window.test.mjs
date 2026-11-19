@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DEFAULT_SETTINGS, normalizeSettings } from "../../src/lib/settings/settings.ts";
-import { COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY, STORAGE_KEY } from "../../src/lib/settings/storage.ts";
+import { COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY, GLASS_BACKDROP_DEFAULT_MIGRATION_KEY, STORAGE_KEY } from "../../src/lib/settings/storage.ts";
 import { createSettingsSyncController } from "../../src/lib/settings/useIslandSettings.ts";
 import {
   PANEL_PREVIEW_STORAGE_KEY,
@@ -89,6 +89,7 @@ test("external StorageEvent updates state without writing back to localStorage o
     {
       [STORAGE_KEY]: JSON.stringify(base),
       [COLLAPSED_TEXT_DEFAULT_MIGRATION_KEY]: "1",
+      [GLASS_BACKDROP_DEFAULT_MIGRATION_KEY]: "1",
     },
     ({ store, writes }) => {
       const frames = [];

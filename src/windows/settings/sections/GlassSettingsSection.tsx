@@ -22,6 +22,8 @@ import {
   type GlassSettingValues,
 } from "../../../lib/settings/glassSettings";
 import { DEFAULT_SETTINGS } from "../../../lib/settings/settings";
+import { glassFallbackNote } from "./glassFallbackNote";
+import { useIslandGlassStatus } from "./useIslandGlassStatus";
 import type { IslandSettings } from "../../../lib/settings/types";
 
 const percent = (value: number) => `${Math.round(value)}%`;
@@ -37,6 +39,7 @@ export function GlassSettingsSection({
   const t = useTranslation();
   const text = t.settings.appearance.glass;
   const resetLabel = t.settings.layout.resetToDefault;
+  const glassStatus = useIslandGlassStatus();
   if (settings.appearanceMode !== "liquidGlass") return null;
 
   const set = (patch: Partial<GlassSettingValues> & Partial<Pick<IslandSettings, "glassIntensity">>) => onSettingsChange({ ...settings, ...patch });
@@ -49,14 +52,13 @@ export function GlassSettingsSection({
 
   const look = glassLookOf(settings) ?? "custom";
   const lookOptions = [...GLASS_LOOKS, ...(look === "custom" ? ["custom" as const] : [])].map((value) => ({ value, label: text.looks[value] }));
-  const backdropValues = isMacOS || settings.glassBackdrop === "native"
-    ? GLASS_BACKDROPS
-    : (["none", "wallpaper"] as const);
   const backdropDescription = settings.glassBackdrop === "wallpaper"
     ? text.backdropHint
     : settings.glassBackdrop === "native"
-      ? text.nativeHint
+      ? isMacOS ? text.nativeHintMac : text.nativeHintWindows
       : undefined;
+  const fallback = glassFallbackNote(settings.glassBackdrop, glassStatus);
+  const showFrostControls = settings.glassBackdrop === "wallpaper" || (settings.glassBackdrop === "native" && !isMacOS);
 
   return (
     <>
@@ -111,12 +113,18 @@ export function GlassSettingsSection({
           control={
             <SettingsChoice
               value={settings.glassBackdrop}
-              options={backdropValues.map((value) => ({ value, label: text.backdrops[value] }))}
+              options={GLASS_BACKDROPS.map((value) => ({ value, label: text.backdrops[value] }))}
               ariaLabel={text.backdrop}
               onChange={(glassBackdrop) => set(glassBackdrop !== "none" ? { glassBackdrop, glassIntensity: Math.min(settings.glassIntensity, 40) } : { glassBackdrop })}
             />
           }
-        />
+        >
+          {fallback && (
+            <span className="settings-row__description" role="status">
+              {text.fallbackShown[fallback.shown]}{text.fallbackReasons[fallback.reason]}
+            </span>
+          )}
+        </SettingsRow>
         <SettingsRow
           title={text.colorSource}
           description={settings.glassColorSource === "cover" ? text.coverHint : undefined}
@@ -154,7 +162,7 @@ export function GlassSettingsSection({
           resetLabel={resetLabel}
           onChange={(glassColorStrength) => set({ glassColorStrength })}
         />
-        {settings.glassBackdrop === "wallpaper" && (
+        {showFrostControls && (
           <SettingsAdvanced>
             <SettingsSliderRow
               title={text.blur}

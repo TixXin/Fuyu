@@ -8,6 +8,7 @@ import { IslandShell } from "../../src/windows/island/IslandShell";
 import { useIslandGlass } from "../../src/windows/island/useIslandGlass";
 import { maxExpandedIslandWidth } from "../../src/windows/island/layout";
 import { DEFAULT_SETTINGS } from "../../src/lib/settings/settingsDefaults";
+import { isMacOS } from "../../src/lib/platform";
 import type { IslandSettings } from "../../src/lib/settings/types";
 import type { PluginNotificationsController } from "../../src/features/messages/island/usePluginNotifications";
 import { useQQNotifications } from "../../src/features/messages/qq-notifications/QQNotifications";
@@ -26,11 +27,13 @@ const whiteWallpaper = (() => {
   return canvas.toDataURL("image/png");
 })();
 let demoWallpaper: string | null = null;
+let captureStart: { started: boolean; reason: string | null } = { started: true, reason: null };
 mockIPC((command) => {
   if (command === "list_plugin_views") return { views: [], status: [] };
   if (command === "get_wallpapers") return { fit: "fill", color: "#000000", monitors: [{ x: 0, y: 0, width: demoWallpaper ? innerWidth * devicePixelRatio : 3840, height: demoWallpaper ? innerHeight * devicePixelRatio : 2160, image: demoWallpaper ?? whiteWallpaper }] };
   if (command === "plugin:window|inner_position") return { x: 0, y: 0 };
   if (command === "get_qq_mail_state") return [];
+  if (command === "start_glass_capture") return captureStart;
 }, { shouldMockEvents: true });
 mockWindows("main");
 
@@ -74,6 +77,10 @@ function check(condition: unknown, label: string) {
 }
 const set = (next: Partial<State>) => act(async () => { changes.forEach((change) => change(next)); });
 const islands = () => [...document.querySelectorAll<HTMLElement>(".island")];
+const wallpaperShown = () => islands().every((island) => island.style.getPropertyValue("--glass-wallpaper").startsWith('url("blob:'));
+async function settle(ready: () => boolean, ms = 5000) {
+  for (let waited = 0; waited < ms && !ready(); waited += 50) await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+}
 const playState = (island: HTMLElement) => getComputedStyle(island.querySelector(".island__glass-flow i")!).animationPlayState;
 const rgb = (value: string) => {
   const parts = value.match(/[\d.]+/g)!.map(Number);
@@ -152,7 +159,7 @@ async function runChecks() {
     check(islands().every((island) => playState(island) === "paused"), "静态风格不动");
 
     await set({ settings: { glassBackdrop: "wallpaper", glassBlur: 20, glassSaturation: 150 } });
-    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 500)); });
+    await settle(wallpaperShown);
     for (const island of islands()) {
       const tone = island.closest<HTMLElement>(".stage")!.dataset.tone;
       check(island.style.getPropertyValue("--glass-wallpaper").startsWith('url("blob:'), `${tone}：选了壁纸后岛的底子换成磨砂过的壁纸`);
@@ -179,6 +186,16 @@ async function runChecks() {
       check(cs.backgroundColor === "rgb(0, 0, 0)" && cs.backgroundImage === "none", `原生透出在刘海折叠时仍保持纯黑 (${cs.backgroundColor} | ${cs.backgroundImage})`);
     }
     delete document.documentElement.dataset.islandNotch;
+
+    if (!isMacOS) {
+      check(islands().every((island) => island.querySelector(".island__glass-live canvas") && !("glassLive" in island.dataset)), "透出窗口在第一帧到之前画布不显示");
+      captureStart = { started: false, reason: "no-d3d" };
+      await set({ expanded: true, nativeGlassState: "css-fallback", settings: { glassBackdrop: "wallpaper" } });
+      await set({ settings: { glassBackdrop: "native" } });
+      await settle(() => islands().every((island) => "glassWallpaper" in island.dataset) && wallpaperShown());
+      check(islands().every((island) => "glassWallpaper" in island.dataset && island.style.getPropertyValue("--glass-wallpaper").startsWith('url("blob:')), "采不到桌面时退回只透壁纸");
+      captureStart = { started: true, reason: null };
+    }
 
     await set({ expanded: true, nativeGlassState: "css-fallback", settings: { glassStyle: "static", glassBackdrop: "none", glassIntensity: DEFAULT_SETTINGS.glassIntensity } });
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 600)); });

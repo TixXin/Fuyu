@@ -29,7 +29,7 @@ function packageDirFor(basePackagesDir, id) {
   return join(basePackagesDir, `@${parsed.scope.toLowerCase()}`, parsed.name);
 }
 
-function stripEntryBlock(lines, id) {
+export function stripEntryBlock(lines, id) {
   const result = [];
   const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const pattern = new RegExp(`^-\\s+id:\\s*(?:${escaped}|"${escaped}"|'${escaped}')\\s*$`);
