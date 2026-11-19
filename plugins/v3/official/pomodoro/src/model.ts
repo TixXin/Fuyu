@@ -31,6 +31,8 @@ export type PomodoroSettings = {
   showInBar: boolean;
 };
 
+type Timing = Pick<PomodoroSettings, "focusMinutes" | "shortBreakMinutes" | "longBreakMinutes" | "roundsBeforeLong">;
+
 export const DEFAULT_SETTINGS: PomodoroSettings = {
   focusMinutes: 25,
   shortBreakMinutes: 5,
@@ -56,7 +58,9 @@ type NumberKey = keyof typeof LIMITS;
 const NUMBER_KEYS = Object.keys(LIMITS) as NumberKey[];
 const FLAG_KEYS = ["autoStartBreak", "autoStartFocus", "sound", "todosExpanded", "showInBar"] as const;
 
-export type StoredPomodoro = PomodoroSettings & {
+export type StoredPomodoro = Omit<PomodoroSettings, "showInBar"> & {
+  showInBar: boolean | null;
+  timersHidden: boolean;
   date: string;
   rounds: number;
   streak: number;
@@ -138,6 +142,8 @@ export function normalizeStored(raw: unknown, today = todayKey()): StoredPomodor
     activeLabel: activeTimerId && typeof source.activeLabel === "string" ? source.activeLabel : "",
     breakDue: sameDay && isBreak(source.breakDue) ? source.breakDue : null,
     lastTodoId: stringOrNull(source.lastTodoId),
+    showInBar: typeof source.showInBar === "boolean" ? source.showInBar : null,
+    timersHidden: source.timersHidden === true,
   };
 }
 
@@ -146,14 +152,21 @@ export function settingsOf(stored: StoredPomodoro): PomodoroSettings {
   for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof PomodoroSettings)[]) {
     (settings as Record<string, unknown>)[key] = stored[key];
   }
+  settings.showInBar = stored.showInBar ?? stored.timersHidden;
   return settings;
 }
 
-export function nextBreak(streak: number, settings: PomodoroSettings): BreakKind {
+export function applySettings(stored: StoredPomodoro, patch: unknown): StoredPomodoro {
+  const next = normalizeSettings(patch, settingsOf(stored));
+  const explicit = isRecord(patch) && typeof patch.showInBar === "boolean" ? patch.showInBar : stored.showInBar;
+  return { ...stored, ...next, showInBar: explicit };
+}
+
+export function nextBreak(streak: number, settings: Timing): BreakKind {
   return streak > 0 && streak % settings.roundsBeforeLong === 0 ? "long" : "short";
 }
 
-export function phaseMinutes(phase: Phase, settings: PomodoroSettings): number {
+export function phaseMinutes(phase: Phase, settings: Timing): number {
   if (phase === "short") return settings.shortBreakMinutes;
   if (phase === "long") return settings.longBreakMinutes;
   return settings.focusMinutes;

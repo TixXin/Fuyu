@@ -10,6 +10,7 @@ import { installPackage, pack } from "../../packages/plugin-cli/src/index.mjs";
 import { messagesV1, timersV1, todosV1 } from "../../packages/plugin-services/src/index.mjs";
 import {
   DEFAULT_SETTINGS,
+  applySettings,
   isPaused,
   isTicking,
   msUntilNextDay,
@@ -62,6 +63,20 @@ test("E66.1 pomodoro settings default, clamp, and keep 1.0.0 data", () => {
   assert.equal(yesterday.breakDue, null);
   assert.equal(yesterday.focusMinutes, 50);
   assert.equal(normalizeStored("garbage", "2026-11-19").phase, null);
+});
+
+test("E66.1 pomodoro collapsed item follows hidden timers until the user picks", () => {
+  const fresh = normalizeStored(null, "2026-11-19");
+  assert.equal(fresh.showInBar, null);
+  assert.equal(settingsOf(fresh).showInBar, false);
+  assert.equal(settingsOf({ ...fresh, timersHidden: true }).showInBar, true);
+  const chosen = applySettings({ ...fresh, timersHidden: true }, { showInBar: false });
+  assert.equal(chosen.showInBar, false);
+  assert.equal(settingsOf(chosen).showInBar, false);
+  const other = applySettings(fresh, { focusMinutes: 30 });
+  assert.equal(other.showInBar, null);
+  assert.equal(other.focusMinutes, 30);
+  assert.equal(normalizeStored({ showInBar: true, timersHidden: true }, "2026-11-19").showInBar, true);
 });
 
 test("E66.1 pomodoro break order, durations, and timer states", () => {
