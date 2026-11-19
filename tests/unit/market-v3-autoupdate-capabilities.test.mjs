@@ -6,8 +6,8 @@ import { createMarketWorld } from "./market-v3-fixtures.mjs";
 
 const versionOnDisk = (world, name) => JSON.parse(readFileSync(join(world.root, "packages", ...name.split("/"), "package.json"), "utf8")).version;
 
-test("an update that asks for more permissions is held back from silent auto-update and flagged", async () => {
-  const world = createMarketWorld("fuyu-market-perms-");
+test("an update that would do more (new Node modules, sites or replaced services) waits for the user instead of installing silently", async () => {
+  const world = createMarketWorld("fuyu-market-caps-");
   try {
     const v100 = world.version({ name: "@someone/clock", version: "1.0.0", daysAgo: 20, nodeApis: ["node:os"], network: ["api.example.com"] });
     world.putIndex(1, [{ name: "@someone/clock", versions: [v100] }]);
@@ -29,10 +29,10 @@ test("an update that asks for more permissions is held back from silent auto-upd
     assert.equal(plugin.autoUpdate, null);
     assert.deepEqual(plugin.autoUpdateHeld, {
       version: "2.0.0",
-      reason: "permissions",
-      addedPermissions: { nodeApis: ["node:child_process"], network: ["api.example.com"], replaces: ["lyrics/v1"] },
+      reason: "new-capabilities",
+      newCapabilities: { nodeApis: ["node:child_process"], network: ["api.example.com"], replaces: ["lyrics/v1"] },
     });
-    assert.deepEqual(plugin.manual.addedPermissions, plugin.autoUpdateHeld.addedPermissions);
+    assert.deepEqual(plugin.manual.newCapabilities, plugin.autoUpdateHeld.newCapabilities);
     assert.deepEqual((await world.market.autoUpdate()).plugins[0].installedVersion, "1.1.0");
 
     const manual = await world.market.installMarket({ name: "@someone/clock", version: "2.0.0" });
@@ -44,8 +44,8 @@ test("an update that asks for more permissions is held back from silent auto-upd
   }
 });
 
-test("the package's own permissions are checked too, not only what the index says", async () => {
-  const world = createMarketWorld("fuyu-market-perms-pkg-");
+test("the package's own manifest is compared too, not only what the index says", async () => {
+  const world = createMarketWorld("fuyu-market-caps-pkg-");
   try {
     const v100 = world.version({ name: "@someone/clock", version: "1.0.0", daysAgo: 20 });
     world.putIndex(1, [{ name: "@someone/clock", versions: [v100] }]);
