@@ -106,6 +106,7 @@ pub(crate) struct IslandWindowState {
     pub(super) mode: IslandMode,
     pub(super) is_tucked: bool,
     pub(super) is_dimmed: bool,
+    pub(super) game_passthrough: bool,
     pub(super) tuck_style: TuckStyle,
     pub(super) collapsed_scale: f64,
     pub(super) expanded_scale: f64,
@@ -199,6 +200,17 @@ impl IslandWindowState {
             && !self.is_tucked
             && !self.is_dragging
     }
+
+    pub(super) fn game_strip_passthrough(self) -> bool {
+        self.game_passthrough
+            && self.is_tucked
+            && matches!(self.mode, IslandMode::Collapsed)
+            && !self.is_dragging
+    }
+
+    pub(super) fn pointer_passthrough(self) -> bool {
+        self.dimmed_passthrough() || self.game_strip_passthrough()
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
@@ -247,6 +259,7 @@ impl Default for IslandWindowState {
             mode: IslandMode::Collapsed,
             is_tucked: false,
             is_dimmed: false,
+            game_passthrough: false,
             tuck_style: TuckStyle::Edge,
             collapsed_scale: DEFAULT_COLLAPSED_SCALE,
             expanded_scale: DEFAULT_EXPANDED_SCALE,

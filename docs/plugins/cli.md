@@ -1,16 +1,17 @@
 # 命令行
 
-> 第 3 版，实验。第 3 版的命令行是 `fuyu-plugin` 2.0（[#483](https://github.com/TixXin/fuyu/issues/483)），命令和参数在第 5 阶段转正前还可能改。第 2 版的插件继续用 `fuyu-plugin` 1.x，见[第 2 版的文档](../README.md)。内部设计见 [v3-cli.md](../../architecture/plugins/v3-cli.md)。
+> 命令行是 npm 上的 `fuyu-plugin`（2.0 起，[#483](https://github.com/TixXin/fuyu/issues/483)）。2026-11 下线的旧版插件用的是 1.x，已停止更新。内部设计见[命令行的设计](../architecture/plugins/v3-cli.md)。
 
 ## 怎么运行
 
-2.0 还没发到 npm。现在在浮屿仓库（[`TixXin/fuyu`](https://github.com/TixXin/fuyu)）里跑，要 Node 22.15 或更新，先在仓库根目录 `pnpm install` 装好依赖：
+要 Node 22.15 或更新。脚手架 `npm create fuyu-plugin@latest` 生成的项目已经把 `fuyu-plugin` 装成开发依赖，在项目里用 `npx fuyu-plugin` 运行；也可以全局装：
 
 ```bash
-node packages/plugin-cli/bin/fuyu-plugin.mjs <命令> [插件文件夹] [选项]
+npm install -g fuyu-plugin
+fuyu-plugin <命令> [插件文件夹] [选项]
 ```
 
-插件文件夹不写就是当前文件夹。下文把这一串简写成 `fuyu-plugin`。发到 npm 后的包名和安装方式到时补上。
+插件文件夹不写就是当前文件夹。
 
 | 命令 | 作用 |
 |---|---|
@@ -21,11 +22,12 @@ node packages/plugin-cli/bin/fuyu-plugin.mjs <命令> [插件文件夹] [选项]
 | [`keygen`](#keygen) | 生成作者签名密钥（只做一次），打印要登记给市场的公钥 |
 | [`sign [文件夹]`](#sign) | 给提交号签名，输出市场提交要的内容 |
 | [`sign <文件.fuyu>`](#sign) | 给包加作者签名 |
+| [`dev [文件夹]`](#dev) | 构建并登记进浮屿的开发模式，改了自动重新构建 |
 | `version`、`help` | 版本号、帮助；每个命令都能加 `-h` |
 
 **退出码**：0 完成；1 有错误（`review` 是红档时也是 1）；2 参数不对。错误和告警写到标准错误，结果写到标准输出。
 
-还没有的：`publish`（一条命令签名并开市场 PR；现在按[发布](publish.md)手动开 PR）、`dev`（开发模式从文件夹加载、改了自动重载）、换密钥。
+还没有的：`publish`（一条命令签名并开市场 PR；现在按[发布](publish.md)手动开 PR）、换密钥。
 
 ## 源码怎么放
 
@@ -159,6 +161,18 @@ fuyu-plugin review <旧> <新> [--repo <文件夹>] [--path <文件夹>] [--old-
 
 例如和上一个上架的版本比：`fuyu-plugin review v1.2.0 HEAD`。红档时退出码是 1，绿档和黄档是 0。
 
+## dev
+
+```bash
+fuyu-plugin dev [文件夹] [--data-dir <文件夹>] [--out <文件夹>] [--once] [--clean]
+```
+
+开发时用：先构建（允许实验接口），再把构建产物登记进浮屿的插件列表 `plugins.yml`（标成 `source: dev`），然后盯着 `src/` 和清单，改了自动重新构建。正在运行的浮屿读到 `plugins.yml` 的变化就加载它。脚手架生成的项目里 `npm run dev` 就是它。
+
+- `plugins.yml` 默认在 `~/.fuyu/plugins-v3/`；浮屿的家目录不在默认位置时，用 `--data-dir` 或环境变量 `FUYU_PLUGINS_V3_DIR` 指过去。
+- `--once`：构建、登记一次就退出，不盯改动。
+- `--clean`：从 `plugins.yml` 里去掉这个插件的开发登记，不构建。
+
 ## 密钥
 
 签名用 Ed25519。命令按这个顺序找私钥：
@@ -167,7 +181,7 @@ fuyu-plugin review <旧> <新> [--repo <文件夹>] [--path <文件夹>] [--old-
 2. 环境变量 `FUYU_PLUGIN_SIGNING_KEY`，值是 PEM 原文（在 CI 里用；旧名 `FLY_ISLAND_PLUGIN_SIGNING_KEY` 也认）；
 3. `~/.fuyu-plugin/signing.key`（没有它而有 `~/.fly-island-plugin/signing.key` 时用后者）。
 
-**和第 2 版是同一个文件、同样的格式**，第 2 版作者已有的密钥不用重新生成。Windows 上密钥文件用 DPAPI 按当前 Windows 用户加密，只有这个用户能解开；其他系统存 PEM，权限 `0600`。
+**和旧版插件的 `fuyu-plugin` 1.x 是同一个文件、同样的格式**，以前生成过的密钥不用重新生成。Windows 上密钥文件用 DPAPI 按当前 Windows 用户加密，只有这个用户能解开；其他系统存 PEM，权限 `0600`。
 
 备份好密钥文件。丢了只能换新密钥，而换密钥当作重新上架，已经装了的用户要重新确认（见[市场规则](market-rules.md#换密钥换人换仓库)）。私钥不要放进仓库。
 
@@ -224,11 +238,10 @@ const packed = await pack("path/to/plugin", { signingKey });
 const { ok, errors, warnings } = await check("path/to/plugin", { allowExperimental: false });
 ```
 
-构建出错时抛 `BuildError`，它的 `issues` 是 `{ code, message, path?, file?, line?, column? }` 的列表。`@fuyu/plugin-cli` 是开发期的名字，发到 npm 时会改。
+构建出错时抛 `BuildError`，它的 `issues` 是 `{ code, message, path?, file?, line?, column? }` 的列表。在浮屿仓库里它叫 `@fuyu/plugin-cli`；npm 上的 `fuyu-plugin` 包从根入口导出同样的函数（`import { build, check, pack, dev } from "fuyu-plugin"`）。
 
 ## 待补
 
-- 发到 npm 后的包名、安装方式。
 - `publish`：一条命令完成签名、改提交文件、开市场 PR。
-- `dev`：接上正在运行的浮屿，从文件夹加载、改了自动重载、看占用。
-- 换密钥：用旧密钥给新密钥签证明（第 2 版是 `keys rotate`）。
+- `dev`：看插件的占用。
+- 换密钥：用旧密钥给新密钥签证明（旧版 1.x 是 `keys rotate`）。

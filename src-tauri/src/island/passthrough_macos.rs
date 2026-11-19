@@ -10,7 +10,7 @@ use super::{
     banner_hit::{banner_rect, ISLAND_BANNER_HOVER_CHANGED_EVENT},
     geometry::{
         cursor_near_island, cursor_near_stage, cursor_on_island, gaze_cursor_point, island_rect,
-        passthrough_sleep_duration, should_ignore_cursor, stage_point, DimWakeTracker, IslandOnScreen,
+        hover_inside, passthrough_sleep_duration, should_ignore_cursor, stage_point, DimWakeTracker, IslandOnScreen,
     },
     state::{mutate_window_state, read_window_state, IslandMode},
     ISLAND_DIM_WAKE_EVENT,
@@ -163,7 +163,7 @@ pub(crate) fn start_cursor_passthrough_loop(window: WebviewWindow) {
                 });
                 let _ = window.emit(ISLAND_DIM_WAKE_EVENT, ());
             }
-            let is_inside = raw_inside && !state.dimmed_passthrough();
+            let is_inside = hover_inside(state, raw_inside);
             let is_on_banner = pointer.is_some_and(on_banner);
             let should_ignore = should_ignore_cursor(state, raw_inside, is_on_banner);
 

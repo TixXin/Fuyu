@@ -1,6 +1,6 @@
 import type { ServiceDefinition } from "../define.mjs";
 
-export type LyricsSourceKind = "local" | "lrclib" | "kugou" | "netease" | (string & {});
+export type LyricsSourceKind = "local" | "lrclib" | "kugou" | "kugou-local" | "netease" | "qq" | (string & {});
 
 export type LyricsResult = {
   source: LyricsSourceKind;

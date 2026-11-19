@@ -114,6 +114,9 @@ impl DimWakeTracker {
 }
 
 pub(super) fn should_ignore_cursor(state: IslandWindowState, is_inside: bool, is_on_banner: bool) -> bool {
+    if state.game_strip_passthrough() {
+        return true;
+    }
     if is_on_banner {
         return false;
     }
@@ -121,6 +124,10 @@ pub(super) fn should_ignore_cursor(state: IslandWindowState, is_inside: bool, is
         return true;
     }
     !is_inside
+}
+
+pub(super) fn hover_inside(state: IslandWindowState, raw_inside: bool) -> bool {
+    raw_inside && !state.pointer_passthrough()
 }
 
 pub(super) fn cursor_near_stage(

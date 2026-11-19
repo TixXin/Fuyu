@@ -263,6 +263,19 @@ Mac 和 Windows 各有一份本地 `main`，只通过 `origin/main` 看到对方
 
 凭据是分开的（F39.2）：开发版的邮箱、日历、翻译、套餐用量、Bark 和插件凭据存在带 `lane-<n>` 的服务名下，第一次启动时从正式版复制一份，之后在开发版里删改不影响正式版；正式版后来新加的账号不会自动过来（把 `dev-copy.json` 里的 `credentials` 改成 `false` 再启动会补上没有的）。Mac 上不复制，要重新输入。
 
+Mac 上开发版的签名（G1.34）：钥匙串条目的「始终允许」认的是读它的程序的签名。链接器给 `target/debug/fuyu` 的是 ad-hoc 签名，每次重编都变，日历、Bark、套餐用量、Claude Code 凭据这些钥匙串条目就每次重编后都弹授权框。光换成固定的指定要求还不够：条目的分区列表（partition_id）在签名带 Team ID 时记 `teamid:<团队>`，没有 Team ID 时记的是 `cdhash`，自签名证书没有 Team ID，重编后照样对不上。所以开发版要用一张带 Team ID 的 Apple Development 证书签，免费的就行。
+
+做法：`tauri.macos.conf.json` 的 `build.runner` 指向 `scripts/macos/dev-cargo.sh`，tauri 调它代替 cargo（`tauri dev` 传 `run …`，`tauri build` 传 `build …`）。debug 的 `run` 先编译、重签 `target/debug/fuyu`（标识 `com.tixxin.fuyu.dev`），再交给 `cargo run`；debug 的 `build` 编译后重签；release 原样交给 cargo，不重签，`pnpm build:exe` 和发布的签名照旧。
+
+- 用哪张证书：`security find-identity -v -p codesigning` 里第一个名字以 `Apple Development:` 开头的有效身份（不写死），在登录钥匙串里，签出来是 `identifier "com.tixxin.fuyu.dev" and anchor apple generic and certificate leaf[subject.CN] = "Apple Development: …"`，`codesign -dv` 能看到 `TeamIdentifier`。没有这样的证书时退回自签名开发证书，并打一行 `[dev-signing] no Apple Development certificate …` 警告：这时钥匙串仍会在每次重编后要求授权。
+- 建一张免费的 Apple Development 证书：Xcode → Settings → Apple Accounts，用自己的 Apple 账号登录（不用付费的开发者计划），选中个人团队（Personal Team）→ Manage Certificates → 左下角 + → Apple Development。建好后跑 `security find-identity -v -p codesigning`，应该列出 `Apple Development: <账号> (<编号>)`。
+- 列不出来、或 `codesign` 报 `unable to build chain to self-signed root`：缺 Apple 的中间证书 WWDR G3。到 https://www.apple.com/certificateauthority/ 下载 `AppleWWDRCAG3.cer`，双击装进登录钥匙串（或 `security import AppleWWDRCAG3.cer -k ~/Library/Keychains/login.keychain-db`），再查一次。
+- 自签名开发证书第一次需要时自动生成，和它专用的钥匙串文件、两个随机密码一起放在 `~/.tauri/fuyu/macos-dev/`，和发布用的自签名证书（`~/.tauri/fuyu/macos/`）分开；不导入登录钥匙串，不改钥匙串搜索列表。
+- 签的是 cargo 的原件 `target/debug/deps/fuyu-<hash>`，再复制成 `target/debug/fuyu`（先写旁边的临时文件再改名：系统按文件缓存签名，原地改写上次跑过的文件，下次启动会被杀掉）。cargo 每次编译或 `cargo run` 都会从 deps 重新复制一份盖过它，只签外面那份会被冲掉。
+- 已经是「现在会用的那张证书」签的（cargo 没重新链接）就跳过；后来才建好 Apple Development 证书时，下次启动会换签。任何一步失败只打一行 `[dev-signing]` 警告，保留 ad-hoc 签名照常启动。
+- 换到 Apple Development 签名后，每个钥匙串条目第一次被读时还会弹一次（ACL 和分区列表记的还是旧签名），点「始终允许」，之后重编不再弹。
+- `cargo test`、Windows 上的 `tauri dev` / `tauri build` 都不经过它。
+
 Agent 状态从正式数据目录只读地读（F39.3）：钩子脚本把状态写在自己所在的目录，也就是正式数据目录；开发版读那里的 `agent-status.json`、运行标记、通知和会话记录，所以看得到「运行中」「等你确认」，但不在那里建目录、不删文件。开发版里「清除状态」、改开机自启、搬数据目录都会拒绝。「安装/修复」可以点（B65，2026-11-16 起，用户要求）：装的是正式版的钩子，脚本写进正式数据目录，Claude Code 审批钩子用正式版 `agent-approval.json` 的端口和 token，和正式版自己点的结果一字不差，开发版关掉后钩子照样能用。开发版也不注册 `fuyu://` 链接，启动时不自动升级 `~/.claude` 里已装的回复标记规则（在设置里手动开关回复标记仍然会改那份文件）。开发版自己记的东西（见过的会话、定位日志、远程主机）在它自己的目录。
 
 怎么认出开发版（F39.1）：收起的岛左上角、展开面板顶部中间、设置窗口顶部各有一个灰色的「DEV」，托盘提示是「Fuyu 开发版」。贴边收成细条时没有地方放字，看托盘。开发版不检查也不安装更新（装的会是正式版的安装包），开机自启的开关是禁用的。

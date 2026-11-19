@@ -158,6 +158,7 @@ pub fn set_island_interaction(
     corner_shape: Option<String>,
     monitor_follow: Option<String>,
     tuck_style: Option<String>,
+    game_passthrough: Option<bool>,
 ) -> Result<String, String> {
     let window = main_window(&app)?;
     let mode = IslandMode::from_value(&mode)?;
@@ -178,6 +179,7 @@ pub fn set_island_interaction(
             && matches!(state.mode, IslandMode::Collapsed)
             && !state.is_tucked
             && !state.is_dragging;
+        state.game_passthrough = game_passthrough.unwrap_or(false);
         state.out_at_top = out_at_top_after(state.out_at_top, was_tucked, was_expanded, state.is_tucked, mode);
         state.collapsed_scale = collapsed_scale.clamp(0.75, 1.4);
         state.expanded_scale = expanded_scale.clamp(0.75, 1.4);
@@ -243,6 +245,9 @@ pub fn set_island_interaction(
     }
     if !state.is_dragging {
         focus::island_mode_synced(&window, matches!(state.mode, IslandMode::Expanded));
+    }
+    if state.game_passthrough && !previous_state.game_passthrough {
+        focus::hand_focus_to_game(&window);
     }
     apply_glass_material(&window, state, glass_frame)
 }

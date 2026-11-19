@@ -6,7 +6,7 @@ export function openLyricsLink(url: string) {
 }
 
 export type Lyrics = {
-  source: "local" | "lrclib" | "kugou" | "netease";
+  source: "local" | "lrclib" | "kugou" | "kugou-local" | "netease" | "qq";
   lrc: string;
   translation?: string | null;
 };

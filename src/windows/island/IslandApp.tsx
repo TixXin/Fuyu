@@ -163,6 +163,7 @@ export function IslandApp() {
     mode,
     isTucked,
     isDimmed,
+    gamePassthrough: game.passthrough,
     settings,
     setSettings,
     backgroundColor: look.islandBackgroundColor,

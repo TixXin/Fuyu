@@ -51,7 +51,7 @@ export const zhCN: MusicText = {
     unsure: "岛屿没看到这首歌开头，歌词可能没对齐：点正在唱的那句",
     inflink: "装 InfLink-rs 精确同步",
   },
-  lyricsChineseHint: { text: "没找到歌词 · 试试酷狗和网易云", label: "这首歌没找到歌词。打开设置，开启「也查酷狗和网易云」" },
+  lyricsChineseHint: { text: "没找到歌词 · 试试中文歌词来源", label: "这首歌没找到歌词。打开设置，开启「也查酷狗、QQ 音乐和网易云」" },
   lyricsOffset: {
     label: "这首歌的歌词快慢",
     earlier: "歌词提前 0.5 秒",
@@ -101,7 +101,7 @@ export const en: MusicText = {
     unsure: "The island missed the start of this song, so the lyrics may be off: pick the line being sung",
     inflink: "Install InfLink-rs for exact sync",
   },
-  lyricsChineseHint: { text: "No lyrics · try Kugou and NetEase", label: "No lyrics found for this song. Open settings to also ask Kugou and NetEase" },
+  lyricsChineseHint: { text: "No lyrics · try Chinese sources", label: "No lyrics found for this song. Open settings to also ask Kugou, QQ Music and NetEase" },
   lyricsOffset: {
     label: "Lyrics timing for this song",
     earlier: "Lyrics 0.5 s earlier",

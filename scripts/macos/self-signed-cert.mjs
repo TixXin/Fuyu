@@ -26,7 +26,7 @@ function run(command, args, options = {}) {
   return result.stdout;
 }
 
-export function createCertificate(dir) {
+export function createCertificate(dir, identity = IDENTITY) {
   const files = certificateFiles(dir);
   if (existsSync(files.p12) && existsSync(files.password)) return { files, created: false };
   mkdirSync(dir, { recursive: true, mode: 0o700 });
@@ -35,7 +35,7 @@ export function createCertificate(dir) {
   run("openssl", [
     "req", "-x509", "-newkey", "rsa:3072", "-nodes", "-sha256",
     "-days", String(YEARS * 365),
-    "-subj", `/CN=${IDENTITY}`,
+    "-subj", `/CN=${identity}`,
     "-addext", "basicConstraints=critical,CA:false",
     "-addext", "keyUsage=critical,digitalSignature",
     "-addext", "extendedKeyUsage=critical,codeSigning",
@@ -43,7 +43,7 @@ export function createCertificate(dir) {
   ]);
   chmodSync(files.key, 0o600);
   run("openssl", [
-    "pkcs12", "-export", "-name", IDENTITY,
+    "pkcs12", "-export", "-name", identity,
     "-inkey", files.key, "-in", files.pem, "-out", files.p12,
     "-passout", `pass:${password}`,
   ]);

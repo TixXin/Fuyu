@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { attributedCommits, checksFor, docsOnly, needsRust, recordPass, releaseBumpOnly, versionMismatch, versionOnlyChange } from "../../scripts/land-check.mjs";
 
-test("a landing of Markdown docs alone runs the doc checks, except generated docs", () => {
+test("a landing of Markdown docs alone runs the doc checks, except docs a test checks against the code", () => {
   assert.equal(docsOnly(["docs/tasks/F1.md", "AGENTS.md"]), true);
-  assert.equal(docsOnly(["docs/plugins/api.md"]), false);
+  assert.equal(docsOnly(["docs/plugins/services-and-slots.md"]), false);
+  assert.equal(docsOnly(["docs/plugins/README.md"]), true);
   assert.equal(docsOnly(["docs/a.md", "scripts/x.mjs"]), false);
   assert.equal(docsOnly([]), false);
   assert.deepEqual(checksFor(["docs/tasks/F1.md"]), { frontend: "docs", rust: false });

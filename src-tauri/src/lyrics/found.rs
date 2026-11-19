@@ -15,10 +15,17 @@ const CREDIT_WORDS: &[&str] = &[
     "producer", "written by",
 ];
 
+const CREDIT_PARTS: &[&str] = &[
+    "作词", "作曲", "编曲", "录音", "混音", "母带", "制作", "监制", "和声", "吉他", "贝斯", "键盘", "弦乐", "出品", "发行", "版权",
+    "统筹", "策划", "企划", "鸣谢", "配唱", "人声",
+];
+const MAX_CREDIT_HEADING_CHARS: usize = 8;
+
 pub(super) fn is_credit(text: &str, title: &str) -> bool {
     let text = fold(text);
     if let Some((head, _)) = text.split_once([':', '：']) {
-        if CREDIT_WORDS.contains(&head.trim()) {
+        let head = head.trim();
+        if CREDIT_WORDS.contains(&head) || (head.chars().count() <= MAX_CREDIT_HEADING_CHARS && CREDIT_PARTS.iter().any(|part| head.contains(part))) {
             return true;
         }
     }
@@ -48,6 +55,10 @@ pub(super) fn plain_text(text: &str) -> String {
     }
     plain.push_str(rest);
     plain
+}
+
+pub(super) fn has_word_times(lrc: &str) -> bool {
+    lrc.lines().any(|line| plain_text(line).len() < line.len())
 }
 
 fn timestamp(ms: u64) -> String {
@@ -107,6 +118,9 @@ mod tests {
         assert!(!is_credit("Yesterday - all my troubles seemed so far away", "Something"));
         assert!(!is_credit("划一根火柴 将慵倦的夜点亮", "余香"));
         assert!(!is_credit("时间：慢慢调养", "余香"));
+        assert!(is_credit("录音助理：刘勇志", "晴天"));
+        assert!(is_credit("词版权管理方：某某传媒", "晴天"));
+        assert!(!is_credit("我在录音棚里唱了一整夜的歌：你听", "晴天"));
     }
 
     #[test]
@@ -121,6 +135,8 @@ mod tests {
         assert_eq!(from_lines(&timed, None, "余香").unwrap().lrc, "[00:03.00]<00:03.00>划一根<00:04.00>
 ");
         assert_eq!(plain_text("<00:03.00>a<b> <x>c<00:04.00>"), "a<b> <x>c");
+        assert!(has_word_times("[00:01.00]x\n[00:03.00]<00:03.00>a<00:04.00>\n"));
+        assert!(!has_word_times("[00:01.00]a<b>\n"));
         assert_eq!(lrc_lines("[00:31.440]划一根\n[01:02.5]x\nno tag"), [(31_440, "划一根".to_string()), (62_500, "x".to_string())]);
     }
 }

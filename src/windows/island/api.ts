@@ -150,6 +150,7 @@ export type IslandInteraction = {
   monitorFollow: IslandMonitor;
   tuckStyle?: TuckStyle;
   isDimmed?: boolean;
+  gamePassthrough?: boolean;
 };
 
 export function setIslandLayout(layout: IslandLayout) {
