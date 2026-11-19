@@ -109,11 +109,18 @@ export type SettingsPluginPageText = {
     facts: { version: string; source: string; publisher: string; state: string; id: string };
     technical: string;
     noSettings: string;
+    settingsOff: string;
     commandsEmpty: string;
     noShortcut: string;
     change: string;
     set: string;
     conflict: string;
+    run: string;
+    running: string;
+    ran: string;
+    runFailed: (reason: string) => string;
+    runNotHandled: string;
+    runBlocked: Record<"offline" | "off" | "notRunning", string>;
     shortcutsBefore: string;
     shortcutsLink: string;
     shortcutsAfter: string;
@@ -289,11 +296,18 @@ export const zhCN: SettingsPluginPageText = {
     facts: { version: "版本", source: "来源", publisher: "发布者", state: "状态", id: "标识" },
     technical: "细节",
     noSettings: "这个插件没有可以改的设置。",
+    settingsOff: "插件运行时，这里才会显示它自己的设置（如果有的话）。",
     commandsEmpty: "这个插件没有登记命令。",
     noShortcut: "没设快捷键",
     change: "改",
     set: "设置",
     conflict: "和别的快捷键冲突",
+    run: "运行",
+    running: "正在运行…",
+    ran: "已运行",
+    runFailed: (reason) => `没运行成功：${reason}`,
+    runNotHandled: "插件没有接上这个命令，要等插件更新",
+    runBlocked: { offline: "插件进程没连上，暂时不能运行命令。", off: "插件关着，打开它才能运行命令。", notRunning: "插件现在没在运行，等它运行起来才能运行命令。" },
     shortcutsBefore: "所有插件的快捷键也在",
     shortcutsLink: "「快捷键」",
     shortcutsAfter: "页里。",
@@ -469,11 +483,18 @@ export const en: SettingsPluginPageText = {
     facts: { version: "Version", source: "Source", publisher: "Publisher", state: "State", id: "ID" },
     technical: "Details",
     noSettings: "This plugin has no settings.",
+    settingsOff: "Its own settings show up here while the plugin is running, if it has any.",
     commandsEmpty: "This plugin has no commands.",
     noShortcut: "No shortcut",
     change: "Change",
     set: "Set",
     conflict: "Conflicts with another shortcut",
+    run: "Run",
+    running: "Running…",
+    ran: "Done",
+    runFailed: (reason) => `Couldn't run: ${reason}`,
+    runNotHandled: "the plugin doesn't handle this command yet; it needs an update",
+    runBlocked: { offline: "The plugin process isn't connected, so commands can't run right now.", off: "The plugin is off. Turn it on to run its commands.", notRunning: "The plugin isn't running right now. Commands can run once it starts." },
     shortcutsBefore: "All plugin shortcuts are also on the ",
     shortcutsLink: "Shortcuts",
     shortcutsAfter: " page.",

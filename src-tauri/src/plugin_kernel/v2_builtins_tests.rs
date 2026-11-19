@@ -1,5 +1,4 @@
 use super::*;
-use crate::plugin_kernel::builtins::{read_config, read_disabled};
 use serde_json::json;
 
 const DEFAULT_OFF: [&str; 6] = ["cc-connect", "center-pattern", "claude-usage", "local-api", "session-ring", "ssh-tunnel"];
@@ -254,4 +253,17 @@ fn a_beta_install_that_already_migrated_is_not_touched() {
     migrate(&home, &file);
     assert_eq!(std::fs::read_to_string(&file).unwrap(), yml);
     assert_eq!(std::fs::read_to_string(dir.join(MARKER)).unwrap(), marker);
+}
+
+#[test]
+fn a_dev_build_without_a_marker_keeps_a_built_in_already_switched_on_in_v3() {
+    let home = scratch("dev-no-marker");
+    let file = home.join("plugins-v3").join("plugins.yml");
+    let yml = "- id: cc-connect\n  config:\n    path: \"D:\\\\cc-connect.exe\"\n";
+    std::fs::write(&file, yml).unwrap();
+    migrate(&home, &file);
+    assert_eq!(read_disabled(&file), ids(&["center-pattern", "claude-usage", "local-api", "session-ring", "ssh-tunnel"]));
+    assert_eq!(Value::Object(read_config(&file)["cc-connect"].clone()), json!({ "path": "D:\\cc-connect.exe" }));
+    assert!(std::fs::read_to_string(&file).unwrap().starts_with(yml));
+    assert_eq!(marker_of(&home), json!({ "format": 1, "migrated": ALL_MIGRATED }));
 }

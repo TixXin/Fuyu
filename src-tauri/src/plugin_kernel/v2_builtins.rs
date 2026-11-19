@@ -3,7 +3,7 @@ use std::{collections::BTreeSet, path::Path};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
-use super::builtins::{catalog, write_config, write_switch, Builtin};
+use super::builtins::{catalog, read_config, read_disabled, write_config, write_switch, Builtin};
 
 const V2_STATE: &str = "plugins.json";
 const MARKER: &str = "v2-migrated.json";
@@ -173,8 +173,10 @@ pub(crate) fn migrate(home: &Path, plugins_file: &Path) {
     };
     let grants = with_old_local_api(grants, std::fs::read_to_string(home.join(LOCAL_API_FILE)).ok().as_deref());
     let catalog = catalog();
+    let mut touched = read_disabled(plugins_file);
+    touched.extend(read_config(plugins_file).into_keys());
     for migration in pending {
-        if let Some(plan) = plan(migration, &grants, off_without_grant(&catalog, migration)) {
+        if let Some(plan) = plan(migration, &grants, off_without_grant(&catalog, migration) && !touched.contains(migration.v3)) {
             if let Err(error) = apply(&plan, plugins_file) {
                 eprintln!("[plugins-v3] could not carry {} over from the old plugin settings: {error}", migration.v2);
                 continue;
