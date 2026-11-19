@@ -9,6 +9,8 @@ import {
 import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { windowServices } from "../../features/plugin-kernel/services";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
+import "./PluginsV3SettingsPage.css";
+import "./PluginMarketV3Tab.css";
 
 const pluginConfigClient = windowServices.get(pluginConfigV1);
 

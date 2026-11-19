@@ -121,7 +121,7 @@ else {
     await act(async () => { mount(); });
     await act(async () => { toggleExtraUi({ settings: false }); await new Promise((resolve) => setTimeout(resolve, 40)); });
     check(document.querySelector(".island") !== null, "Main island mounts with only core and onboarding i18n slices");
-    check(document.querySelector(".first-hint__text")?.textContent?.includes("检测到 1 个旧第 2 版插件") === true, "Island v2 migration notice renders without settings slice");
+    check(document.querySelector(".first-hint__text")?.textContent?.includes("检测到 1 个旧版插件") === true, "Island old-plugin migration notice renders without settings slice");
     await click(".first-hint__action:last-child");
     v2MigrationIslandPending = false;
     await preloadI18n("zh-CN", "settings");

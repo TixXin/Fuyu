@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { Blocks, X } from "lucide-react";
 import type { MarketLocalizedText, PluginInstallConfirmation } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
+import "./PluginsV3SettingsPage.css";
+import "./PluginMarketV3Tab.css";
 
 export interface PendingPluginInstall {
   id: string;

@@ -7,7 +7,8 @@ import { Markdown } from "../../components/markdown/Markdown";
 import { windowServices } from "../../features/plugin-kernel/services";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { resolvePluginText } from "./PluginInstallConfirmModal";
-import { marketActionCandidate } from "./PluginMarketCard";
+import { marketActionCandidate } from "./pluginRowStatus";
+import "./PluginsV3SettingsPage.css";
 
 type DetailTab = "readme" | "changelog" | "capabilities";
 

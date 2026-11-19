@@ -4,6 +4,7 @@ import { SettingsSwitch } from "../../components/settings/SettingsSwitch";
 import { windowServices } from "../../features/plugin-kernel/services";
 import { useErrorText, useTranslation } from "../../i18n";
 import type { PluginStatusV3 } from "./usePluginHostStatus";
+import "./PluginsV3SettingsPage.css";
 
 const pluginWindowsClient = windowServices.get(pluginWindowsV1);
 

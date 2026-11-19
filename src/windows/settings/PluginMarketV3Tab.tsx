@@ -7,13 +7,10 @@ import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { PluginInstallConfirmModal, type PendingPluginInstall } from "./PluginInstallConfirmModal";
 import { PluginMarketCard } from "./PluginMarketCard";
 import { PluginMarketDetailModal } from "./PluginMarketDetailModal";
+import type { OpenedPluginPackage } from "./pluginPageHandoff";
 import "./PluginMarketV3Tab.css";
 
-export interface OpenedPluginPackage {
-  seq: number;
-  fileName: string;
-  base64: string;
-}
+export type { OpenedPluginPackage };
 
 type PendingAction =
   | { kind: "market"; name: string; version: string; modal: PendingPluginInstall }
@@ -95,12 +92,16 @@ export function PluginMarketV3Tab({
   openedPackage,
   openedError,
   onConsumeOpenedPackage,
+  initialDetail = null,
+  onManage,
 }: {
   connected: boolean;
   query: string;
   openedPackage?: OpenedPluginPackage | null;
   openedError?: string | null;
   onConsumeOpenedPackage?: (seq: number) => void;
+  initialDetail?: string | null;
+  onManage?: (name: string) => void;
 }) {
   const text = useTranslation().settings.pluginsV3;
   const copy = text.market;
@@ -114,7 +115,7 @@ export function PluginMarketV3Tab({
   const [togglingManual, setTogglingManual] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
-  const [detailName, setDetailName] = useState<string | null>(null);
+  const [detailName, setDetailName] = useState<string | null>(initialDetail);
   const [installing, setInstalling] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
@@ -253,7 +254,7 @@ export function PluginMarketV3Tab({
 
   return (
     <div className="plugins-v3__market">
-      <section className="plugins-v3__market-bar settings-group" aria-label={text.tabs.market}>
+      <section className="plugins-v3__market-bar settings-group" aria-label={copy.title}>
         <div className="plugins-v3__market-bar-row">
           <div className="plugins-v3__market-meta">
             <strong>{copy.count(plugins.length)}</strong>
@@ -327,6 +328,7 @@ export function PluginMarketV3Tab({
               plugin={plugin}
               onOpenDetail={(picked) => setDetailName(picked.name)}
               onChooseMarketInstall={chooseMarketInstall}
+              onManage={onManage ? (picked) => onManage(picked.name) : undefined}
             />
           ))}
         </div>
