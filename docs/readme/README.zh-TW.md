@@ -157,15 +157,15 @@
 
 ## 外掛
 
-島上缺什麼，可以自己加。一個外掛就是一個資料夾：一份清單，加上一個由島嶼啟動的程式（PowerShell 指令碼、exe 或 Node.js 指令碼）。外掛只負責送出資料，頁面、收起列和設定頁由島嶼依範本繪製，因此和島上其他內容的風格一致。
+島上缺什麼，可以自己加。外掛用 TypeScript 或 JavaScript 撰寫：背景邏輯在島嶼啟動的 Node 程序裡執行，介面用 React 撰寫，放進島上和設定視窗預留的位置。清單就是 `package.json`，安裝包是一個 `.fuyu` 檔案。
 
 ```sh
 npm create fuyu-plugin@latest
 ```
 
 - **安裝現成的**：在島嶼的「設定 → 外掛市集」裡安裝，也可以先到[官網的外掛市集](https://fuyu.ing/zh/plugins/)看看有哪些。
-- **自己寫**：跟著[快速入門](../plugins/quickstart.md)從零做出一個外掛，大約一小時；完整說明請見[外掛文件](../plugins/README.md)。
-- **分享給別人**：上架到[外掛市集](https://github.com/TixXin/fuyu-plugins)，或者只在自己的電腦上使用，步驟請見[發佈](../plugins/publish.md)。
+- **自己寫**：用上面的指令產生一個專案，在專案裡執行 `npm run dev` 就會把它裝進正在執行的島嶼，修改後自動重新建置；完整說明請見[外掛文件](../plugins/README.md)和[命令列](../plugins/cli.md)。
+- **分享給別人**：把提交號碼交給[外掛市集](https://github.com/TixXin/fuyu-plugins)，市集會從原始碼建置，每個版本審核後上架；或者打包成 `.fuyu` 檔案自己傳給別人。步驟請見[發佈](../plugins/publish.md)。
 
 ## 從原始碼建置
 

@@ -1,6 +1,6 @@
 # 审核看什么
 
-> 第 3 版，实验。分档的条件和审核分析器 [`packages/plugin-review`](../../../packages/plugin-review/README.md) 的实现一致，分析器改了这一页跟着改。市场 CI 在 `TixXin/fuyu-plugins` 的草稿 PR [#25](https://github.com/TixXin/fuyu-plugins/pull/25) 上，市场还没开放上架，提交流程见[发布](publish.md)。
+> 分档的条件和审核分析器 [`packages/plugin-review`](../../packages/plugin-review/README.md) 的实现一致，分析器改了这一页跟着改。市场 CI 在 `TixXin/fuyu-plugins`（[#25](https://github.com/TixXin/fuyu-plugins/pull/25) 合入），提交流程见[发布](publish.md)。
 
 ## 每个版本都审
 

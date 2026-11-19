@@ -158,15 +158,15 @@ Como foi medido e os dados completos: [idle-usage.md](../investigations/idle-usa
 
 ## Plugins
 
-Se falta algo na ilha, você mesmo pode adicionar. Um plugin é uma pasta: um manifesto e um programa que a ilha inicia (um script de PowerShell, um exe ou um script de Node.js). Os plugins só enviam dados; a ilha desenha as páginas, a barra recolhida e as configurações a partir de modelos, então eles combinam com o resto da ilha.
+Se falta algo na ilha, você mesmo pode adicionar. Os plugins são escritos em TypeScript ou JavaScript: a lógica em segundo plano roda num processo Node que a ilha inicia, e a interface é em React, colocada em espaços reservados na ilha e na janela de configurações, então fica junto de todo o resto. O manifesto é simplesmente o `package.json`, e um plugin é distribuído como um único arquivo `.fuyu`.
 
 ```sh
 npm create fuyu-plugin@latest
 ```
 
 - **Instale um pronto**: em Configurações → Loja de plugins na ilha, ou dê antes uma olhada na [loja de plugins do site](https://fuyu.ing/plugins/).
-- **Crie o seu**: o [início rápido](../plugins/quickstart.md) leva você do zero a um plugin funcionando em cerca de uma hora; a [documentação de plugins](../plugins/README.md) cobre todo o resto (ambos em chinês).
-- **Compartilhe**: publique na [loja de plugins](https://github.com/TixXin/fuyu-plugins) ou use só no seu computador; os passos estão em [publicar](../plugins/publish.md) (em chinês).
+- **Crie o seu**: gere um projeto com o comando acima e rode `npm run dev` dentro dele para carregá-lo na ilha em execução e reconstruí-lo a cada mudança; a [documentação de plugins](../plugins/README.md) e a [linha de comando](../plugins/cli.md) cobrem o resto (em chinês).
+- **Compartilhe**: entregue um commit à [loja de plugins](https://github.com/TixXin/fuyu-plugins), que o constrói a partir do código-fonte e revisa cada versão antes de publicá-la; ou empacote um arquivo `.fuyu` e envie você mesmo. Os passos estão em [publicar](../plugins/publish.md) (em chinês).
 
 ## Compilar a partir do código-fonte
 

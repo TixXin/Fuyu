@@ -158,15 +158,15 @@ Wie gemessen wurde und alle Daten: [idle-usage.md](../investigations/idle-usage.
 
 ## Plugins
 
-Fehlt der Insel etwas, kannst du es selbst ergänzen. Ein Plugin ist ein Ordner: ein Manifest und ein Programm, das die Insel startet (ein PowerShell-Skript, eine exe oder ein Node.js-Skript). Plugins liefern nur Daten; Seiten, die eingeklappte Leiste und die Einstellungen zeichnet die Insel anhand von Vorlagen, deshalb sehen sie aus wie der Rest der Insel.
+Fehlt der Insel etwas, kannst du es selbst ergänzen. Plugins schreibst du in TypeScript oder JavaScript: Die Hintergrundlogik läuft in einem Node-Prozess, den die Insel startet, und die Oberfläche ist React, eingesetzt in vorgesehene Plätze auf der Insel und im Einstellungsfenster, sodass sie direkt neben allem anderen sitzt. Das Manifest ist einfach die `package.json`, und ein Plugin wird als eine einzige `.fuyu`-Datei verteilt.
 
 ```sh
 npm create fuyu-plugin@latest
 ```
 
 - **Ein fertiges installieren**: über Einstellungen → Plugin-Marktplatz in der Insel, oder schau dich vorher im [Plugin-Marktplatz auf der Website](https://fuyu.ing/plugins/) um.
-- **Ein eigenes schreiben**: Der [Schnellstart](../plugins/quickstart.md) bringt dich in etwa einer Stunde von null zu einem laufenden Plugin; die [Plugin-Dokumentation](../plugins/README.md) deckt alles Weitere ab (beide auf Chinesisch).
-- **Teilen**: Veröffentliche es im [Plugin-Marktplatz](https://github.com/TixXin/fuyu-plugins) oder nutze es nur auf deinem Rechner; die Schritte stehen unter [Veröffentlichen](../plugins/publish.md) (auf Chinesisch).
+- **Ein eigenes schreiben**: Erzeuge mit dem Befehl oben ein Projekt und starte darin `npm run dev` – das lädt es in die laufende Insel und baut es bei jeder Änderung neu; die [Plugin-Dokumentation](../plugins/README.md) und die [Kommandozeile](../plugins/cli.md) decken alles Weitere ab (auf Chinesisch).
+- **Teilen**: Übergib einen Commit an den [Plugin-Marktplatz](https://github.com/TixXin/fuyu-plugins), der es aus dem Quellcode baut und jede Version prüft, bevor sie erscheint; oder pack eine `.fuyu`-Datei und verschick sie selbst. Die Schritte stehen unter [Veröffentlichen](../plugins/publish.md) (auf Chinesisch).
 
 ## Aus dem Quellcode bauen
 
