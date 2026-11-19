@@ -9,6 +9,7 @@ import { entryOf, settingsCategoryFor, sidebarItemOf, type SettingsCategory } fr
 import { I18nProvider, LOCALE_STORAGE_KEY } from "../../src/i18n";
 import { checkGlassLooks } from "./settings-glass-looks";
 import { checkIdleDimSettings } from "./settings-idle-dim";
+import { checkAgentNoticeSettings } from "./settings-agent-notice";
 import { checkImMessageSources } from "./settings-im-sources";
 import { checkThemeMarket } from "./settings-theme-market";
 import { commandsV1 } from "@fuyu/plugin-services";
@@ -156,6 +157,7 @@ if (!automated) {
     await click(".appearance-reset"); await click(".appearance-reset--danger");
     check(storedSettings().opacity === DEFAULT_SETTINGS.opacity && storedSettings().carryOverIncompleteTodos === false, "Confirming resets the appearance and keeps todo settings");
     await openPage("themeStyle"); await checkIdleDimSettings(check); await checkGlassLooks(check);
+    await openPage("agentAlerts"); await checkAgentNoticeSettings(check);
     await openPage("appearanceCollapsed");
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);

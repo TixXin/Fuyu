@@ -28,3 +28,17 @@ test("agent notice settings default to the recommended set and fall back per fie
   assert.equal(saved.agentNoticeFailedSeconds, 10);
   assert.equal(saved.agentNoticeStack, "peek");
 });
+
+test("reset to default covers exactly the 16 notice items and leaves the alert switches alone", async () => {
+  const { AGENT_NOTICE_KEYS, agentNoticeDefaults, isAgentNoticeDefault } = await import("../../src/features/agent-status/agentNoticeDefaults.ts");
+  assert.equal(new Set(AGENT_NOTICE_KEYS).size, 16);
+  const changed = { ...DEFAULT_SETTINGS, agentNoticeStyle: "wings", agentAlertStarted: "everyTurn", agentAlertSeconds: 30, agentAlertCompleted: false, agentRemindSeconds: 120 };
+  assert.equal(isAgentNoticeDefault(changed), false);
+  const reset = { ...changed, ...agentNoticeDefaults() };
+  assert.equal(isAgentNoticeDefault(reset), true);
+  assert.equal(reset.agentNoticeStyle, "status");
+  assert.equal(reset.agentAlertStarted, "off");
+  assert.equal(reset.agentAlertSeconds, DEFAULT_SETTINGS.agentAlertSeconds);
+  assert.equal(reset.agentAlertCompleted, false);
+  assert.equal(reset.agentRemindSeconds, 120);
+});

@@ -3946,27 +3946,6 @@
       "page": "agentAlerts",
       "zh-CN": {
         "group": "弹出提醒",
-        "title": "会话开始时",
-        "options": [
-          "每一轮开始",
-          "只在新会话开始",
-          "不弹"
-        ]
-      },
-      "en": {
-        "group": "Pop-up alerts",
-        "title": "When a session starts",
-        "options": [
-          "Every turn",
-          "New sessions only",
-          "Off"
-        ]
-      }
-    },
-    {
-      "page": "agentAlerts",
-      "zh-CN": {
-        "group": "弹出提醒",
         "title": "等待你确认或回答时"
       },
       "en": {
@@ -4012,12 +3991,195 @@
     {
       "page": "agentAlerts",
       "zh-CN": {
-        "group": "弹出提醒",
-        "title": "停留时间"
+        "group": "通知的样子",
+        "title": "通知样式",
+        "description": "三套样式任选"
       },
       "en": {
-        "group": "Pop-up alerts",
-        "title": "Stays open for"
+        "group": "Notice look",
+        "title": "Notice style",
+        "description": "Pick any of the three"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "Mac 刘海时",
+        "description": "只在 Mac 有刘海时起作用"
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "With a Mac notch",
+        "description": "Title band on both sides of the notch, or the whole notice below it; Mac with a notch only"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "消息正文最多显示",
+        "description": "超出在卡片里滚动；「随内容长高」到岛的最大高度为止"
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Message shows up to",
+        "description": "Longer messages scroll inside the card; \"Fit content\" grows up to the island's maximum height"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "运行中的命令最多显示"
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Running command shows up to"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "消息按 Markdown 显示",
+        "description": "列表、代码块和行内代码；关掉显示纯文字"
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Show messages as Markdown",
+        "description": "Lists, code blocks and inline code; off shows plain text"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "模型、用时、「你：」"
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Model, time and \"You:\""
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的样子",
+        "title": "滚动条"
+      },
+      "en": {
+        "group": "Notice look",
+        "title": "Scroll bar"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的行为",
+        "title": "开始新一轮时"
+      },
+      "en": {
+        "group": "Notice behavior",
+        "title": "When a new turn starts"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的行为",
+        "title": "等你回复的通知",
+        "description": "看过 = 悬停过它，或切到了那个窗口"
+      },
+      "en": {
+        "group": "Notice behavior",
+        "title": "Your-turn notices",
+        "description": "Seen means you hovered it or switched to that window"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的行为",
+        "title": "出错的通知"
+      },
+      "en": {
+        "group": "Notice behavior",
+        "title": "Failure notices"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的行为",
+        "title": "完成的通知停留",
+        "description": "等你确认的通知始终留到你处理"
+      },
+      "en": {
+        "group": "Notice behavior",
+        "title": "Finished notices stay",
+        "description": "Approval requests always stay until you handle them"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的行为",
+        "title": "鼠标停在岛上时暂停倒计时"
+      },
+      "en": {
+        "group": "Notice behavior",
+        "title": "Pause the countdown while the pointer is on the island"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的行为",
+        "title": "点通知",
+        "description": "另一个去处放在右上角的小按钮"
+      },
+      "en": {
+        "group": "Notice behavior",
+        "title": "Clicking a notice",
+        "description": "Switch to the session's window or open the Agent page; the other one is the small button at the top right"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "通知的行为",
+        "title": "多个会话同时来",
+        "description": "悬停都能展开成列表"
+      },
+      "en": {
+        "group": "Notice behavior",
+        "title": "Several sessions at once",
+        "description": "Stacked shows the edges of the ones behind; hovering always expands them into a list"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "审批按钮",
+        "title": "按钮顺序"
+      },
+      "en": {
+        "group": "Approval buttons",
+        "title": "Button order"
+      }
+    },
+    {
+      "page": "agentAlerts",
+      "zh-CN": {
+        "group": "审批按钮",
+        "title": "按钮上显示快捷键",
+        "description": "窄岛上会自动隐藏"
+      },
+      "en": {
+        "group": "Approval buttons",
+        "title": "Show shortcuts on buttons",
+        "description": "Hidden automatically on a narrow island"
       }
     },
     {
