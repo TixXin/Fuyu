@@ -1,8 +1,8 @@
-# 待办进度环 · Todo Progress Ring
+# 待办进度环 · To-do progress ring
 
 `@fuyu/todo-ring` · 浮屿官方插件 · Windows / macOS
 
-用一个圆环看今天的待办完成了多少，旁边列出接下来要做的几条。
+用一个圆环显示今天的待办完成了多少，接下来要做的也列在旁边。
 
 ## 装好后在哪里
 
@@ -45,27 +45,27 @@
 
 `@fuyu/todo-ring` · Official Fuyu plugin · Windows / macOS
 
-See how much of today's todo list is done at a glance, with the next few todos beside the ring.
+A ring shows how much of today's to-do list is done, with what's next listed beside it.
 
 ### Where it shows up
 
-- **Island page**: a new "Todo Progress Ring" page with today's progress on the left and the next open todos on the right.
-- **Collapsed bar**: a small ring with done/total; click it to open the Todo Progress Ring page.
-- **Settings → Plugins → Todo Progress Ring**: every setting.
+- **Island page**: a new "To-do progress ring" page with today's progress on the left and the next open to-dos on the right.
+- **Collapsed bar**: a small ring with done/total; click it to open the To-do progress ring page.
+- **Settings → Plugins → To-do progress ring**: every setting.
 
 ### How to use it
 
-- Adding, removing or finishing todos anywhere updates the ring right away; after midnight it moves on to the new day by itself.
+- Adding, removing or finishing to-dos anywhere updates the ring right away; after midnight it moves on to the new day by itself.
 - When everything is done the ring turns the done color.
-- To tick todos off on the page itself, turn on "Click a todo to mark it done" in the settings. A click then marks the todo done and shows "Undo" for a few seconds in case it was a mistake.
+- To tick to-dos off on the page itself, turn on "Click a to-do to mark it done" in the settings. A click then marks the to-do done and shows "Undo" for a few seconds in case it was a mistake.
 
 ### Settings
 
 **Content**
 
-- **Count**: today (default) or today + overdue. Overdue means unfinished todos from the last 7 days that are not on today's list (with "Carry unfinished tasks to next day" on in the todo settings, carried-over todos are not counted twice). Overdue todos come first, marked with their day, and can only be finished in the todo list.
-- **Todos to list**: ring only, 3 (default), 5, or 8.
-- **Click a todo to mark it done**: off by default so a stray click doesn't tick anything.
+- **Count**: today (default) or today + overdue. Overdue means unfinished to-dos from the last 7 days that are not on today's list (with "Carry unfinished tasks to next day" on in the to-do settings, carried-over to-dos are not counted twice). Overdue to-dos come first, marked with their day, and can only be finished in the to-do list.
+- **To-dos to list**: ring only, 3 (default), 5, or 8.
+- **Click a to-do to mark it done**: off by default so a stray click doesn't tick anything.
 
 **Display**
 
@@ -73,13 +73,13 @@ See how much of today's todo list is done at a glance, with the next few todos b
 
 **Collapsed bar**
 
-- **Show on the collapsed bar**: on by default. Nothing shows there on a day with no todos.
+- **Show on the collapsed bar**: on by default. Nothing shows there on a day with no to-dos.
 - **Style**: ring + 3/7 (default), ring only, or "4 left".
 
 ### Cost and data
 
-- Reads only Fuyu's own todo list and updates when it changes; no polling, no network access.
-- With "Click a todo to mark it done" on, a click marks the todo done (Undo marks it open again).
+- Reads only Fuyu's own to-do list and updates when it changes; no polling, no network access.
+- With "Click a to-do to mark it done" on, a click marks the to-do done (Undo marks it open again).
 - Settings are kept in the plugin's data folder on this computer.
 
 ---
