@@ -68,6 +68,7 @@
 - [ ] **G1.3 悬浮岛窗口。** Tauri 升到 ≥ 2.12.1（单独提交，M9）；主窗口用 `tauri-nspanel` 转成非激活 NSPanel，`collectionBehavior` 设所有桌面、全屏辅助、不进 Cmd+Tab；`ActivationPolicy::Accessory`；鼠标穿透沿用「轮询 + 整窗开关」；定位改用逻辑坐标，避开多显示器缩放比不同时的坐标 bug（tauri#7890、tao#816）；顶部正中形态（M4；默认压在菜单栏上，设置里可改成贴在菜单栏下面，M5），全屏应用时照常显示还是隐藏做成设置（M6），界面约定见 [design/macos.md](../design/macos.md)。新手引导遮罩和截图选区窗口在 Mac 上可用。验收：Retina 内屏 + 1x 外接屏下定位正确；两种菜单栏设置下位置都正确；全屏应用时两种设置的行为都正确；点岛不抢前台焦点；打成 dmg 后透明窗口不变白（tauri#13415）。
 - [x] **G1.4 系统集成。** 菜单栏图标（模板图）；开机自启用 SMAppService；凭据换 Keychain（`keyring` 的 apple-native）；全局快捷键（2026-11-13 挪到 G1.6：用它的功能在 Mac 上都还没做，随剪贴板一起做）；`fuyu://` 用 Info.plist 声明；单实例；数据目录与家目录在 Mac 上的位置写进 contracts.md 和 data-storage.md。
 - [x] **G1.5 Mac 上的开发流程。** `pnpm dev:lane`、`build:exe`（Mac 上改成把 `.app` 放进 `~/Applications`）、停止运行中岛屿的脚本、`run-regression.mjs` 找浏览器、`prune:target` 等在 Mac 上可用；AGENTS.md 和 lanes.md 补 Mac 上的命令和验证要求。（2026-11-13 已做：单元测试在 Mac 上全过，市场包按解压后的内容比较；`build:exe` 装 `.app`；停止岛屿、回归页找浏览器、`--fresh` 支持 Mac；lane 预览改进程名，WebView 存储和主工作区分开）
+- [x] **G1.34 开发版的固定签名（M1 的开发版部分）。** `tauri dev` 经 `build.runner`（`scripts/macos/dev-cargo.sh`）编出的 `target/debug/fuyu` 用登录钥匙串里免费的 Apple Development 证书重签，标识 `com.tixxin.fuyu.dev`，带 Team ID，钥匙串的分区列表记 `teamid:`，重编后「始终允许」不再失效；没有这张证书时退回 `~/.tauri/fuyu/macos-dev/` 的自签名证书并警告（自签名没有 Team ID，分区列表记 cdhash，照样每次弹）；release 原样交给 cargo。建证书的步骤见 [workflow.md](workflow.md)「开发版和正式版同时开」。
 - [ ] **G1.6 日常功能。** 全局快捷键的 Mac 平台层（Carbon `RegisterEventHotKey`，不劫持系统组合键，剪贴板默认 ⌘⇧V，从 G1.4 挪来）；剪贴板历史（`changeCount` 轮询，隐私提示按 M14）、文件中转（含拖出到 Finder）、截图（ScreenCaptureKit）和 OCR（Vision）、划词翻译（AX 读选中文字）、音量、摄像头 / 麦克风占用、设备插拔与电源、锁屏与空闲、强调色、网络计费、全屏判断。每项需要的权限在首次使用时引导，设置里能看到授权状态。
 - [ ] **G1.7 AI 代理状态。** hook 安装改用 `~/.claude` 等路径和 sh 脚本，命令里写绝对路径（hook 环境的 PATH 不含 `/opt/homebrew/bin`）；点会话跳转支持 Terminal、iTerm2、VS Code（AppleScript / URL scheme / AX）；用量读取的路径。
 - [ ] **G1.8 插件宿主。** 子进程放进独立进程组，退出时 `killpg`，岛屿崩溃时子进程能自己退出；插件网页视图改用 Tauri 的 webview；PowerShell 插件在没装 pwsh 时给出说明；插件清单加平台字段，市场标出插件支持哪些平台。
@@ -122,6 +123,8 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 | 日期 | 子任务 | 提交 | 改了什么 | 验证 |
 |---|---|---|---|---|
 | 2026-11-17 | G1.28 Mac 本机运行 cc-connect（#569） | （本次提交） | `cc_connect` 本机模块在 Mac 上启用：`install.rs` 下载 `darwin-{arm64,amd64}.tar.gz`、核对 `checksums.txt` 并解出 `0755` 的 `cc-connect`；`locate.rs` 支持 `~/` 展开与 `~/.local/bin`、`/opt/homebrew/bin`、`/usr/local/bin`、登录 shell `PATH` 查找，并向托管子进程注入扩展 `PATH`；`runner.rs` 与 `feishu.rs` 改用 `platform::job::Job` + `process_group(0)`；新手引导「推送到手机」去掉 Mac 本机拦截，并修飞书扫码期间轮询刷新卸掉扫码行的竞态 | Mac：`cc_connect` 59 项单测 + GitHub 真实 `v1.5.2` `darwin-arm64.tar.gz` 下载与运行 `--version` 通过、前端单测与 `onboarding-push` 回归页通过；Windows / Mac CI `check` |
+| 2026-11-19 | G1.34 改用 Apple Development 证书（#891） | （本次提交） | 用户实测自签名后仍弹：没有 Team ID 时钥匙串分区列表记 cdhash。`dev-signing.mjs` 先找 `Apple Development:` 开头的有效身份（取 `find-identity -v` 里第一个），用它签，不带 `--keychain`；找不到退回自签名并警告；「已签过」按现在会用的那张证书判断 | Mac：脚本测试（挑身份、跳过判断）；`target/agents` 经 runner 实签，`codesign -dv` 是 `TeamIdentifier=RDQ7JWUGXY`，`--verify --strict` 通过，之后普通编译签名还在、再跑 runner 跳过；`pnpm build:exe` 签名照旧；Windows CI |
+| 2026-11-18 | G1.34 开发版固定签名（#891） | （本次提交） | `tauri.macos.conf.json` 加 `build.runner`；`scripts/macos/dev-cargo.{sh,mjs}` 判断哪些调用要签（debug 的 `run` / `build`，release、别的 profile、别的 bin 原样透传），`dev-signing.mjs` 生成开发证书和专用钥匙串并重签；`createCertificate` 可传证书名 | Mac：脚本测试（参数判断、假 cargo 走一遍 runner 外壳）；对复制出来的 debug 二进制实签，`codesign -d -r-` 是 `identifier "com.tixxin.fuyu.dev" and certificate leaf = H"…"`，第二次跳过，登录钥匙串搜索列表不变；`pnpm build:exe` 经 runner 后 `.app` 签名和以前一样；Windows CI。没在真的 `tauri dev` 里重编两次看弹框（见待人工验收） |
 | 2026-11-13 | — | — | 4 份调研、本计划、[platforms.md](platforms.md)、任务 G1 | 仅文档 |
 | 2026-11-13 | G1.1 | 3ccc9b6c | 用户拍板 M1–M14，写进决定表；界面形态（M4–M6）写进 [design/macos.md](../design/macos.md) | 仅文档 |
 | 2026-11-13 | G1.13 第一个带 Mac 版的发布 | v0.3.8-beta.2 | Windows 上 `pnpm release` 触发 Mac 构建，草稿里有 dmg、`.app.tar.gz` 和 `.sig`，`latest.json` 有 `darwin-aarch64`；Windows 冒烟测试通过后公开（beta 通道）。随后 README 写上 Mac 版的下载与放行，仓库简介加 macOS、标签去掉 AI 类换成灵动岛相关 | 读回草稿的 `latest.json` 核对 darwin 条目；用户在 Mac 上下载安装、第一次放行、自动更新还没走一遍 |
@@ -244,6 +247,8 @@ Mac 上跳过的测试（依赖 Windows 路径、程序或 API，标了 `#[cfg(w
 - [ ] QQ / 微信（G1.10）：设置里打开 QQ、微信提醒；有人发消息、程序坞图标出现角标时岛上出现「N 条未读」，消息页列出；点条目打开对应应用；没允许辅助功能时显示「需要授权」，按钮打开系统设置
 - [x] ~~`fuyu://` 链接（G1.4）~~：不用验了，链接随第 2 版插件宿主删除，`Info.plist` 也不再声明协议（E36.6.5，2026-11-18）；第 3 版待接手（E56，#893）
 - [ ] 开机自启（G1.4）：打包后的 `.app` 在设置里打开自启，「系统设置 → 通用 → 登录项」里出现浮屿，重新登录后岛自动起来；关掉后登录项消失
+
+- [ ] 开发版签名（G1.34）：`pnpm tauri dev` 启动时有一行 `[dev-signing] signed … with Apple Development: …`；钥匙串条目第一次弹框点「始终允许」后，改一行 Rust 重编两次，不再弹；`codesign -dv src-tauri/target/debug/fuyu` 有 `TeamIdentifier`
 
 ### G1.13 发布（等 G1.12 的证书）
 

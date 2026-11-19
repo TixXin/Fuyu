@@ -181,8 +181,8 @@ try {
     "音乐页直接放在岛上，没有自己的卡片底色和阴影（C17）");
   const hint = () => document.querySelector<HTMLButtonElement>(".music-player__lyrics-hint");
   const panel = document.querySelector(".music-player")!.getBoundingClientRect();
-  check(hint()?.textContent === "没找到歌词 · 试试酷狗和网易云" && hint()!.getBoundingClientRect().left >= panel.left && hint()!.getBoundingClientRect().right <= panel.right,
-    "中文歌只查了 LRCLIB 没找到时，右上角提示可以开启酷狗和网易云");
+  check(hint()?.textContent === "没找到歌词 · 试试中文歌词来源" && hint()!.getBoundingClientRect().left >= panel.left && hint()!.getBoundingClientRect().right <= panel.right,
+    "中文歌只查了 LRCLIB 没找到时，右上角提示可以开启中文歌词来源");
   settingsOpened = 0;
   await act(async () => hint()!.click());
   check(settingsOpened === 1, "点提示打开音乐设置");

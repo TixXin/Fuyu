@@ -158,15 +158,15 @@ Cómo se midió y los datos completos: [idle-usage.md](../investigations/idle-us
 
 ## Plugins
 
-Si a la isla le falta algo, puedes agregarlo tú. Un plugin es una carpeta: un manifiesto y un programa que la isla inicia (un script de PowerShell, un exe o un script de Node.js). Los plugins solo envían datos; la isla dibuja las páginas, la barra recogida y la configuración a partir de plantillas, así que se ven igual que el resto de la isla.
+Si a la isla le falta algo, puedes agregarlo tú. Los plugins se escriben en TypeScript o JavaScript: la lógica de fondo corre en un proceso de Node que inicia la isla, y la interfaz es React, colocada en espacios reservados de la isla y de la ventana de configuración, así que queda junto a todo lo demás. El manifiesto es simplemente `package.json`, y un plugin se distribuye como un único archivo `.fuyu`.
 
 ```sh
 npm create fuyu-plugin@latest
 ```
 
 - **Instala uno ya hecho**: desde Configuración → Mercado de plugins en la isla, o echa antes un vistazo al [mercado de plugins del sitio web](https://fuyu.ing/plugins/).
-- **Escribe el tuyo**: el [inicio rápido](../plugins/quickstart.md) te lleva de cero a un plugin funcionando en aproximadamente una hora; la [documentación de plugins](../plugins/README.md) cubre todo lo demás (ambos en chino).
-- **Compártelo**: publícalo en el [mercado de plugins](https://github.com/TixXin/fuyu-plugins) o úsalo solo en tu computadora; los pasos están en [publicar](../plugins/publish.md) (en chino).
+- **Escribe el tuyo**: genera un proyecto con el comando de arriba y ejecuta `npm run dev` dentro para cargarlo en la isla en marcha y reconstruirlo con cada cambio; la [documentación de plugins](../plugins/README.md) y la [línea de comandos](../plugins/cli.md) cubren el resto (en chino).
+- **Compártelo**: entrega un commit al [mercado de plugins](https://github.com/TixXin/fuyu-plugins), que lo construye desde el código fuente y revisa cada versión antes de publicarla; o empaqueta un archivo `.fuyu` y envíalo tú. Los pasos están en [publicar](../plugins/publish.md) (en chino).
 
 ## Compilar desde el código fuente
 

@@ -178,7 +178,7 @@ test("lyrics/v1 looks up through custom lyrics sources and Rust fallback, and cl
 
   assert.deepEqual(
     (await lyrics.sources()).sources.map((item) => item.id),
-    ["local", "netease", "lrclib", "kugou"],
+    ["local", "kugou-local", "netease", "lrclib", "kugou", "qq"],
   );
   assert.deepEqual(await lyrics.lookup({ title: "Builtin Song" }), {
     source: "lrclib",
@@ -218,7 +218,7 @@ test("lyrics/v1 looks up through custom lyrics sources and Rust fallback, and cl
   assert.ok(changed.length >= 1);
   assert.deepEqual(
     (await lyrics.sources()).sources.map((item) => item.id),
-    ["qq-music", "local", "netease", "lrclib", "kugou", "fallback-lyrics"],
+    ["qq-music", "local", "kugou-local", "netease", "lrclib", "kugou", "qq", "fallback-lyrics"],
   );
   assert.deepEqual(await lyrics.lookup({ title: "Custom First" }), {
     source: "qq-music",
@@ -237,7 +237,7 @@ test("lyrics/v1 looks up through custom lyrics sources and Rust fallback, and cl
   await host.settle();
   assert.deepEqual(
     (await lyrics.sources()).sources.map((item) => item.id),
-    ["local", "netease", "lrclib", "kugou"],
+    ["local", "kugou-local", "netease", "lrclib", "kugou", "qq"],
   );
   assert.equal(await lyrics.lookup({ title: "Fallback Song" }), null);
 });

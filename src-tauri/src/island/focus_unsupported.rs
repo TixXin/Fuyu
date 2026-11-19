@@ -28,6 +28,8 @@ pub(crate) fn island_mode_synced(_window: &WebviewWindow, _expanded: bool) {
     super::watch::note_interaction_ready();
 }
 
+pub(crate) fn hand_focus_to_game(_window: &WebviewWindow) {}
+
 pub(crate) fn show_island_at_startup(window: &WebviewWindow) -> Result<(), String> {
     window.show().map_err(|error| error.to_string())?;
     window.set_focus().map_err(|error| error.to_string())?;

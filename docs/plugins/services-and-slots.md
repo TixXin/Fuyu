@@ -1,6 +1,6 @@
 # 服务、接缝与插槽参考
 
-本文档列出插件平台第 3 版已转正的全部**公开服务（`@fuyu/plugin-services`）**、**7 个扩展接缝（Seam）**与**窗口界面插槽（`@fuyu/plugin-base/protocol` 的 `SLOTS`）**。
+本文档列出插件平台已转正的全部**公开服务（`@fuyu/plugin-services`）**、**7 个扩展接缝（Seam）**与**窗口界面插槽（`@fuyu/plugin-base/protocol` 的 `SLOTS`）**。
 
 ---
 
@@ -16,7 +16,7 @@
 | `commands/v1` | `commandsV1` | 宿主内核 | `list()`、`run({ plugin, command, args? })`、`setKeybinding({ plugin, command, keybinding })` | `changed` | 列出已声明与运行中注册的插件命令、执行命令、修改或恢复全局快捷键及查询冲突状态 |
 | `file-shelf/v1` | `fileShelfV1` | `file-shelf` | `list()`、`add({ paths })` | 无 | 读取文件中转列表、将 1–20 个本地绝对路径加入文件中转 |
 | `lyrics/v1` | `lyricsV1` | `music` | `lookup(query)`、`sources()` | `changed` | 查询当前曲目的 LRC 同步歌词与双语翻译、列出已登记的歌词来源 |
-| `market/v1` | `marketV1` | `updater` | `catalog()`、`refresh()`、`inspectPackage({ base64 })`、`installMarket({ name, version? })`、`installFile({ base64, expectedSha256? })`、`setManualAllowed({ allowed })`、`setEnabled({ id, enabled })`、`uninstall({ id, removeData? })` | `changed` | 第 3 版插件市场索引拉取与验签、3 天冷静期筛选、`.fuyu` 包预检与安装、撤销停用、第三方插件启停与卸载 |
+| `market/v1` | `marketV1` | `updater` | `catalog()`、`refresh()`、`inspectPackage({ base64 })`、`installMarket({ name, version? })`、`installFile({ base64, expectedSha256? })`、`setManualAllowed({ allowed })`、`setEnabled({ id, enabled })`、`uninstall({ id, removeData? })` | `changed` | 插件市场索引拉取与验签、3 天冷静期筛选、`.fuyu` 包预检与安装、撤销停用、第三方插件启停与卸载 |
 | `media/v1` | `mediaV1` | `music` | `nowPlaying()`、`playPause()`、`next()`、`previous()`、`seek({ positionMs })` | 无 | 读取当前系统媒体播放状态与控制播放/上曲/下曲/跳转进度 |
 | `messages/v1` | `messagesV1` | `messages` | `sources()`、`notify(notice)`、`clear({ source? })` | `changed`、`arrived`、`action` | 查询各消息来源未读状态、推送结构化新消息通知（进收起条预览、横幅与到达面板）、清理未读 |
 | `plugin-config/v1` | `pluginConfigV1` | 宿主内核 | `list()`、`get({ id })`、`set({ id, values })`、`reset({ id })` | `changed` | 按插件 `fuyu.config` JSON Schema 读取、校验、持久化与重置插件配置（`<dataDir>/<id>/config.json`） |

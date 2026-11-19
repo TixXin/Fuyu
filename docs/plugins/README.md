@@ -1,73 +1,43 @@
-# 编写浮屿插件
+# 浮屿插件
 
-> **第 2 版插件已下线（2026-11，E36.6）**：岛屿不再运行第 2 版插件，第 2 版的 SDK、脚手架、PowerShell 模块和示例插件已从仓库删除（npm 上的 `fuyu-plugin` / `create-fuyu-plugin` 0.x 停在 0.7.0），文中指向它们的链接已失效。本文只留作参考；写新插件看[第 3 版的文档](v3/README.md)。
+> 插件从 2026-11-18（E54）起默认开启，设环境变量 `FUYU_PLUGINS_V3=0` 可以关掉。[服务、接缝与插槽](services-and-slots.md)、清单和包的格式已经转正，之后只增不改。浮屿能从市场或 `.fuyu` 文件装第三方插件，官方市场 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins) 已经上架了 12 个官方插件。2026-11 之前的旧版插件（清单是 `fuyu-plugin.json` 的那一套）已经下线，旧插件要重写，见[从旧版插件迁移](migrate-from-v2.md)。
 
-插件让你把想要的东西放上岛：一个列表页面、收起条上的一小段状态、一个快捷键、一条岛上提示，或者一组音效。
+## 插件是什么样的
 
-> 现在的插件 API 是**第 2 版**，本文档全部按第 2 版写。新插件在清单里写 `"apiVersion": 2`。第 1 版的插件照常运行，差别集中在 [运行与通信](runtime.md#第-1-版插件)。
+- **只有一种插件：完整插件。** 插件跑在浮屿里，和浮屿同权：能读你的待办、剪贴板，能读写文件、运行程序。没有权限表，也就没有「申请权限、用户同意」这一步。
+- **用 TypeScript 或 JavaScript 写。** 后台逻辑在浮屿启动的一个 Node 进程（宿主）里运行，可以用 Node 的接口；界面用 React 写，放进岛屿、设置窗口上预留的位置（插槽）。插件经 `ctx` 用浮屿提供的服务，也可以提供服务、替换内置功能。
+- **清单就是 `package.json`**，浮屿的字段放在 `fuyu` 下。安装包是 `.fuyu` 文件，内容是 zip，双击打开安装确认。
+- **市场从源码构建。** 作者把一个提交号交给官方市场 [`TixXin/fuyu-plugins`](https://github.com/TixXin/fuyu-plugins)，市场按这个提交的源码构建出 `.fuyu`，用户装的就是市场构建的包。每个版本都要维护者批准才上架，上架 3 天后才自动更新到用户那里。
 
-## 插件是什么
+插件和浮屿同权，所以**市场的审核是唯一真正的防线**，签名、冷静期、撤销都是辅助。每一项管得住什么、管不住什么，见[市场规则](market-rules.md#每项保护管什么不管什么)。
 
-一个插件就是一个文件夹：一份清单 `fuyu-plugin.json`，加上岛屿要启动的程序。
+## 开始写
 
-- **程序**：`.ps1`（Windows 自带的 PowerShell，用户不用装任何东西）、`.exe`，或者用本机 Node.js 运行的 `.js` / `.mjs` / `.cjs`。
-- **通信**：岛屿启动这个程序，双方在 stdin / stdout 上按行收发 JSON-RPC 2.0 消息。任何语言都能写，只要会读写一行 JSON。
-- **界面**：插件不画界面，只发数据。页面、收起条、设置页都由岛屿按模板绘制，所以和岛上其他内容风格一致。模板画不出来的（图表、小工具），可以用插件自己的网页。
-- **权限**：插件只能调用清单里申请、用户同意了的接口。剪贴板、消息这类敏感数据，第一次用时还会在岛上再问一次。
+```bash
+npm create fuyu-plugin@latest
+```
 
-只有清单、不需要程序的插件也可以，例如音效包。
-
-## 能做什么
-
-| 想做的 | 用什么 | 见 |
-|---|---|---|
-| 岛屿展开后的一个页面：列表、详情、表单、倒计时 | `contributes.views` + `view.update` | [岛上界面](ui.md#页面) |
-| 自己画的页面：图表、小工具 | `webview` 模板 | [岛上界面](ui.md#自定义网页) |
-| 收起条上的一小段文字、几列数字、进度环、电池 | `contributes.statusItems` + `status.update` | [岛上界面](ui.md#收起条) |
-| 在岛上弹一条提示，带按钮 | `island.notify` | [岛上界面](ui.md#岛上提示) |
-| 按钮、全局快捷键、待办 / 剪贴板 / 消息的右键菜单 | `contributes.commands`、`menus` | [清单](manifest.md#命令快捷键和菜单) |
-| 设置项，由岛屿画在插件的设置页上 | `contributes.settings` | [清单](manifest.md#设置项) |
-| 读写待办和每日笔记，订阅它们的变化 | `todos.*`、`note.*`、事件 | [API 参考](api.md#待办与每日笔记) |
-| 读剪贴板历史、新消息、正在播放的音乐，控制播放 | `clipboard.*`、`messages.*`、`media.*` | [API 参考](api.md) |
-| 把自己的任务报告成 AI Agent 会话 | `agentStatus.report` | [API 参考](api.md#ai-agent-状态) |
-| 保存自己的数据和令牌 | `storage.*`、`secrets.*` | [运行与通信](runtime.md#存储与秘密) |
-| 接收网页回调（如 OAuth 登录） | `fuyu://plugin/<id>/…` 链接 | [运行与通信](runtime.md#链接) |
-| 换掉 AI Agent 的提示音 | `contributes.sounds` | [清单](manifest.md#音效包) |
-
-做不到的：改岛的布局和样式、替换岛屿自己的页面、读邮件正文、拿到岛屿保存的凭据（邮箱授权码、翻译密钥）。
+脚手架（npm 上的 `create-fuyu-plugin`）生成一个 TypeScript 项目，命令行 `fuyu-plugin`（npm 上的 `fuyu-plugin`）负责开发联调、构建、打包、检查和签名。开发时在插件文件夹里跑 `fuyu-plugin dev`，它把插件登记进正在运行的浮屿，改了自动重新构建，见[命令行](cli.md)。
 
 ## 读哪一篇
 
 | 文档 | 内容 |
 |---|---|
-| [快速开始](quickstart.md) | 用脚手架建一个插件，开发、调试、测试、打包，大约一小时 |
-| [清单](manifest.md) | `fuyu-plugin.json` 的每个字段：运行方式、什么时候启动、命令、快捷键、菜单、设置项、音效包 |
-| [岛上界面](ui.md) | 页面模板、自定义网页、收起条、岛上提示 |
-| [运行与通信](runtime.md) | 协议、启动和停止、按需启动、事件、链接、存储、错误码、第 1 版插件 |
-| [权限与安全](permissions.md) | 每个权限能做什么、敏感权限、可选权限、插件能和不能做到的事 |
-| [发布](publish.md) | 只在自己电脑上用，或者放进插件市场；签名、更新和下架 |
-| [API 参考](api.md) | 全部方法、事件和通知，由协议文件生成 |
-| [更新日志](changelog.md) | 每个岛屿版本给插件带来了什么 |
-| [和 VS Code 的对比](vscode.md) | 和 VS Code 扩展有什么相同、有什么不同 |
+| [清单和安装包](package.md) | `package.json` 的字段、`.fuyu` 包里有什么、有哪些限制、三种装法 |
+| [命令行](cli.md) | `fuyu-plugin`：源码怎么放、开发联调（`dev`）、构建、打包、检查、比较版本、签名 |
+| [服务、接缝与插槽参考](services-and-slots.md) | 公开服务、扩展接缝与界面插槽的完整参考 |
+| [发布](publish.md) | 签名、提交文件、市场怎么构建和上架、手动分发 |
+| [市场规则](market-rules.md) | 上架即同意：代码、名字、开源、作者签名、换人换密钥、所有权转移、下架和撤销、报告安全问题 |
+| [审核看什么](review.md) | 绿、黄、红三档各自的条件，维护者批准，冷静期，提交前自查 |
+| [从旧版插件迁移](migrate-from-v2.md) | 2026-11 下线的旧版插件要改什么 |
+| [SDK 更新日志](changelog.md) | npm 包 `fuyu-plugin`、`create-fuyu-plugin` 每个版本的变化 |
 
-## 不写代码先看看
+还没有的：从零做一个插件的教程、从类型声明生成的参考。
 
-1. 在 **设置 → 插件市场** 装一个官方插件，比如「待办摘要（示例）」。它们的源码都在 [`plugins/examples/`](../../plugins/examples/)。
-2. 到 **设置 → 插件扩展** 打开它，点卡片上的 **设置**：运行信息、设置项、按钮和日志就是岛屿替插件画的设置页。
-3. 想自己动手，接着看 [快速开始](quickstart.md)。也可以让 AI 编程助手按你的一句话写，见 [快速开始 · 让 AI 帮你写](quickstart.md#让-ai-帮你写)。
+## 想了解内部设计
 
-## SDK 和工具
-
-| 名字 | 是什么 |
-|---|---|
-| `create-fuyu-plugin` | 脚手架：`npm create fuyu-plugin@latest` |
-| `fuyu-plugin` | Node.js SDK、命令行工具（`dev`、`test`、`validate`、`pack`、`publish`、`keygen`、`skill`）和模拟宿主 |
-| [`plugins/sdk/node/fuyu.mjs`](../../plugins/sdk/node/fuyu.mjs) | 单文件 Node.js SDK，没有依赖，可以直接复制进插件 |
-| [`plugins/sdk/powershell/fuyu.ps1`](../../plugins/sdk/powershell/fuyu.ps1) | 单文件 PowerShell SDK，Windows PowerShell 5.1 能用 |
-| [`plugins/schema/`](../../plugins/schema/) | 协议的机器可读描述：`manifest.schema.json`（清单）和 `rpc.json`（方法、事件、权限、错误码）。岛屿的测试对照它检查，文档和它不一致时以它为准 |
-
-SDK、脚手架和示例插件都是 MIT 许可，拿来写插件不会给你的插件带来任何许可要求。
-
-## 内置插件
-
-原来的第 2 版内置插件（计时器、本机接口、cc-connect、SSH 代理隧道、用量环、会话环、中心图案）已迁成第 3 版的内置插件（`timer`、`local-api`、`cc-connect`、`ssh-tunnel`、`claude-usage`、`session-ring`、`center-pattern`），开关和配置见 [内置插件](../architecture/plugins/builtins.md)。
+- [方案：万物皆插件](../architecture/plugins/v3-everything-plugin.md)：为什么这样设计、用户定下的决定和细则。
+- [包格式](../architecture/plugins/v3-package.md)：清单和包的完整规则、错误码、摘要和签名格式。
+- [市场](../architecture/plugins/v3-market.md)：市场索引、撤销名单、冷静期和作者密钥固定的判断规则。
+- 审核分析器：[`packages/plugin-review`](../../packages/plugin-review/README.md)。
+- 编译在浮屿里、能单独开关的内置插件：[builtins.md](../architecture/plugins/builtins.md)。
