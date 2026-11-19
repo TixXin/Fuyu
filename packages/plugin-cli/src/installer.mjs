@@ -9,10 +9,23 @@ function installerError(code, message, extra = {}) {
   return Object.assign(new Error(message), { code, ...extra });
 }
 
+const PACKAGE_ID = /^@([a-z0-9-]+)\/([a-z0-9._-]+)$/i;
+const ONLY_DOTS = /^\.+$/;
+
+function parsePackageId(id) {
+  const match = typeof id === "string" ? PACKAGE_ID.exec(id) : null;
+  if (!match || ONLY_DOTS.test(match[1]) || ONLY_DOTS.test(match[2])) return null;
+  return { scope: match[1], name: match[2] };
+}
+
+export function isPackageId(id) {
+  return parsePackageId(id) !== null;
+}
+
 function packageDirFor(basePackagesDir, id) {
-  const match = /^@([a-z0-9-]+)\/([a-z0-9._-]+)$/i.exec(String(id ?? ""));
-  if (!match) throw installerError("bad-name", `${id} is not a scoped plugin package name`);
-  return join(basePackagesDir, `@${match[1].toLowerCase()}`, match[2]);
+  const parsed = parsePackageId(id);
+  if (!parsed) throw installerError("bad-name", `${String(id)} is not a scoped plugin package name`);
+  return join(basePackagesDir, `@${parsed.scope.toLowerCase()}`, parsed.name);
 }
 
 function stripEntryBlock(lines, id) {
@@ -139,12 +152,10 @@ export function installPackage(zipBuffer, options = {}) {
 
 export function uninstallPackage(dir, id, { configFile = "plugins.yml", removeData = false } = {}) {
   const targetRoot = packageDirFor(join(dir, PACKAGES_SUBDIR), id);
+  const dataTarget = packageDirFor(join(dir, "data"), id);
   rmSync(targetRoot, { recursive: true, force: true });
   removeInstalledFromYml(join(dir, configFile), id);
-  if (removeData) {
-    const dataTarget = packageDirFor(join(dir, "data"), id);
-    rmSync(dataTarget, { recursive: true, force: true });
-  }
+  if (removeData) rmSync(dataTarget, { recursive: true, force: true });
   return { id, removed: true };
 }
 
@@ -178,6 +189,7 @@ export function applyRevocationsToDir(dir, revocations, { installed, configFile 
   const ymlFile = join(dir, configFile);
   const items = installed ?? scanInstalledPackages(dir);
   for (const item of items) {
+    if (!isPackageId(item?.id)) continue;
     const rev = revocationOf(revocations, item.id, item.version);
     if (!rev) continue;
     if (rev.level === "disable") {

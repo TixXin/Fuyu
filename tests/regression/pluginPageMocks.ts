@@ -1,5 +1,5 @@
 import { mockIPC } from "@tauri-apps/api/mocks";
-import { commandsV1, marketV1, pluginConfigV1, pluginWindowsV1, type CommandItem, type MarketCatalogPlugin, type MarketVersionCandidate, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
+import { commandsV1, marketV1, pluginConfigV1, pluginWindowsV1, type CommandItem, type MarketCatalogPlugin, type MarketInspectedPackage, type MarketPluginDetails, type MarketVersionCandidate, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
 import { LOCALE_STORAGE_KEY } from "../../src/i18n";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { HostInfoV3, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
@@ -79,6 +79,8 @@ export const market = {
   manualAllowed: false,
   calls: [] as string[],
   installed: { "@fuyu/weather": "1.2.0", "@fuyu/pomodoro": "1.0.0", "@someone/clock": "2.0.0", "@someone/shady": "0.3.0" } as Record<string, string>,
+  details: {} as Record<string, MarketPluginDetails>,
+  inspected: null as MarketInspectedPackage | null,
 };
 const marketPlugins = (): MarketCatalogPlugin[] => {
   const with_ = (plugin: MarketCatalogPlugin) => {
@@ -101,7 +103,7 @@ let emitMarket: () => void = () => {};
 const marketProvider = windowServices.provide(marketV1, {
   catalog: () => marketSnapshot(),
   refresh: () => (market.calls.push("refresh"), marketSnapshot()),
-  details: ({ name }) => ({
+  details: ({ name }) => market.details[name] ?? ({
     name, displayName: loc("天气", "Weather"), description: loc("天气预报", "Forecast"),
     official: name.startsWith("@fuyu/"), publisherName: "TixXin", author: "TixXin", license: "MIT",
     homepage: null, repository: "https://github.com/TixXin/fuyu-plugins", bugs: null, funding: null,
@@ -112,14 +114,14 @@ const marketProvider = windowServices.provide(marketV1, {
     slots: ["island.page/v1"], provides: [], replaces: [], network: ["api.open-meteo.com"], nodeApis: ["node:fs"], requires: {},
     versions: [{ version: "1.2.0", publishedAt: "2026-11-18T00:00:00Z", size: 2048, reviewed: true, urgent: false, enginesFuyu: ">=0.9.0" }],
   }),
-  inspectPackage: () => (market.calls.push("inspect"), { id: "@me/gadget", version: "0.1.0", sha256: "b".repeat(64), source: "manual" as const, confirmation: { ...candidate("0.1.0", false).confirmation, unreviewed: true, displayName: loc("小工具", "Gadget") } }),
+  inspectPackage: () => (market.calls.push("inspect"), market.inspected ?? { id: "@me/gadget", version: "0.1.0", sha256: "b".repeat(64), source: "manual" as const, confirmation: { ...candidate("0.1.0", false).confirmation, unreviewed: true, displayName: loc("小工具", "Gadget") } }),
   installMarket: ({ name, version }) => {
     market.calls.push(`install:${name}@${version ?? ""}`);
     market.installed[name] = version ?? "1.0.0";
     emitMarket();
     return { id: name, version: version ?? "1.0.0", source: "market" as const, sha256: "a".repeat(64), confirmation: candidate("1.0.0", true).confirmation };
   },
-  installFile: () => { throw new Error("unexpected installFile"); },
+  installFile: ({ expectedSha256 }) => (market.calls.push(`installFile:${expectedSha256 ?? ""}`), { id: "@me/gadget", version: "0.1.0", source: "manual" as const, sha256: "b".repeat(64), confirmation: candidate("0.1.0", false).confirmation }),
   setManualAllowed: ({ allowed }) => (market.manualAllowed = allowed, market.calls.push(`manual:${allowed}`), emitMarket(), { manualAllowed: allowed }),
   setEnabled: ({ id, enabled }) => (market.calls.push(`enabled:${id}=${enabled}`), { id, enabled }),
   uninstall: ({ id, removeData }) => (market.calls.push(`uninstall:${id}:${Boolean(removeData)}`), { id, removed: true as const }),

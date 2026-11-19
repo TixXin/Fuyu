@@ -238,3 +238,21 @@ pub(crate) fn hand_key_back<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label:
         running.activateWithOptions(NSApplicationActivationOptions::empty());
     }
 }
+
+pub(crate) fn set_island_front<R: tauri::Runtime>(app: &tauri::AppHandle<R>, label: &str, front: bool) {
+    let Ok(panel) = app.get_webview_panel(label) else {
+        return;
+    };
+    let visible = panel.is_visible();
+    if front {
+        panel.set_level(PanelLevel::MainMenu.value() + LEVELS_ABOVE_MENU_BAR);
+        if visible {
+            panel.order_front_regardless();
+        }
+    } else {
+        panel.set_level(PanelLevel::Normal.value());
+        if visible {
+            panel.as_panel().orderBack(None);
+        }
+    }
+}

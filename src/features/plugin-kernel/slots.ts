@@ -4,6 +4,7 @@ import { SLOTS, type SlotName } from "@fuyu/plugin-base/protocol";
 import type { Translations } from "../../i18n";
 import { disabledBuiltinIds, subscribeBuiltinPlugins } from "./builtinSwitches.ts";
 import { installIpcLedger, type IpcInternals } from "./ipcLedger.ts";
+import type { SlotTitle } from "./slotTitle.ts";
 
 export type { SlotName };
 export type SlotWindow = "island" | "settings" | "plugin-window";
@@ -33,6 +34,7 @@ export type SlotIcon = ComponentType<{ size?: number | string; strokeWidth?: num
 export type SlotWidth<Context = unknown> = number | ((context: Context) => number);
 
 export interface IslandPageMeta<Features = unknown, Page extends string = string> {
+  title?: SlotTitle;
   icon?: SlotIcon;
   shortcutOrder?: number;
   headerDot?: boolean;

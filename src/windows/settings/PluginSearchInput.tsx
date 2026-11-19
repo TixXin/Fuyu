@@ -1,7 +1,8 @@
 import { Search, X } from "lucide-react";
 
-export function PluginSearchInput({ query, placeholder, clearLabel, onChange }: {
+export function PluginSearchInput({ query, placeholder, clearLabel, disabled = false, onChange }: {
   query: string;
+  disabled?: boolean;
   placeholder: string;
   clearLabel: string;
   onChange: (next: string) => void;
@@ -12,6 +13,7 @@ export function PluginSearchInput({ query, placeholder, clearLabel, onChange }: 
       <input
         type="search"
         value={query}
+        disabled={disabled}
         placeholder={placeholder}
         aria-label={placeholder}
         onChange={(event) => onChange(event.currentTarget.value)}

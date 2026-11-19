@@ -1,127 +1,86 @@
 import type { MouseEvent } from "react";
-import { Blocks } from "lucide-react";
+import { Check } from "lucide-react";
 import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
-import { resolvePluginText } from "./PluginInstallConfirmModal";
+import { pluginInitial } from "./InstalledPluginRow";
+import { hasUpdate, localized, offeredCandidate, permissionSummary } from "./pluginMarketModel";
 import { marketActionCandidate } from "./pluginRowStatus";
 
-function blockedLabel(plugin: MarketCatalogPlugin, copy: { needsFuyu: (range: string) => string; needsNewerFuyu: string; unsupportedPlatform: string }): string | null {
-  const blocked = plugin.blocked;
-  if (!blocked) return null;
-  if (blocked.reason === "platform") return copy.unsupportedPlatform;
-  return blocked.range ? copy.needsFuyu(blocked.range) : copy.needsNewerFuyu;
+export interface MarketCardHandlers {
+  onOpen: (plugin: MarketCatalogPlugin) => void;
+  onInstall: (plugin: MarketCatalogPlugin) => void;
+  onManage?: (plugin: MarketCatalogPlugin) => void;
+  onGoUpdate?: () => void;
 }
 
-export function PluginMarketCard({
-  plugin,
-  onOpenDetail,
-  onChooseMarketInstall,
-  onManage,
-}: {
-  plugin: MarketCatalogPlugin;
-  onOpenDetail: (plugin: MarketCatalogPlugin) => void;
-  onChooseMarketInstall: (plugin: MarketCatalogPlugin, version: string, isUpdate: boolean) => void;
-  onManage?: (plugin: MarketCatalogPlugin) => void;
-}) {
-  const { locale } = useLocale();
-  const copy = useTranslation().settings.pluginsV3.market;
-  const title = resolvePluginText(plugin.displayName, locale, plugin.name);
-  const desc = resolvePluginText(plugin.description, locale, "");
-  const action = marketActionCandidate(plugin);
-  const installCandidate = action && !action.isUpdate ? action.candidate : null;
-  const updateCandidate = action?.isUpdate ? action.candidate : null;
-  const activeCandidate = action?.candidate ?? null;
-  const freshInstall = Boolean(installCandidate?.fresh);
-  const freshUpdate = Boolean(updateCandidate?.fresh);
-  const blockedText = blockedLabel(plugin, copy);
-
-  const handleCardClick = (event: MouseEvent<HTMLElement>) => {
-    if ((event.target as Element).closest("button")) return;
-    onOpenDetail(plugin);
+export function PluginMarketCardAction({ plugin, onInstall, onManage, onGoUpdate }: Omit<MarketCardHandlers, "onOpen"> & { plugin: MarketCatalogPlugin }) {
+  const text = useTranslation().settings.pluginsV3.marketPage.card;
+  const stop = (event: MouseEvent, run: () => void) => {
+    event.stopPropagation();
+    run();
   };
+  if (plugin.blocked && !plugin.installedVersion) {
+    if (plugin.blocked.reason === "platform") return <span className="market-card__blocked">{text.platform}</span>;
+    return (
+      <>
+        <span className="market-card__blocked">{plugin.blocked.range ? text.needsFuyu(plugin.blocked.range) : text.needsNewerFuyu}</span>
+        {onGoUpdate ? <button className="plugin-btn plugin-btn--sm" type="button" data-action="market-go-update" onClick={(event) => stop(event, onGoUpdate)}>{text.goUpdate}</button> : null}
+      </>
+    );
+  }
+  const action = marketActionCandidate(plugin);
+  if (hasUpdate(plugin) && action) {
+    return <button className="plugin-btn plugin-btn--sm plugin-btn--primary" type="button" data-action="market-update" onClick={(event) => stop(event, () => onInstall(plugin))}>{text.update(action.candidate.version)}</button>;
+  }
+  if (plugin.installedVersion) {
+    return (
+      <>
+        <span className="market-card__installed"><Check size={13} strokeWidth={2.4} aria-hidden="true" />{text.installed}</span>
+        {onManage ? <button className="plugin-btn plugin-btn--sm" type="button" data-action="market-manage" onClick={(event) => stop(event, () => onManage(plugin))}>{text.manage}</button> : null}
+      </>
+    );
+  }
+  if (plugin.revoked) return <span className="market-card__blocked market-card__blocked--bad">{text.revoked}</span>;
+  if (!action) return <span className="market-card__blocked">{text.unavailable}</span>;
+  return <button className="plugin-btn plugin-btn--sm plugin-btn--primary" type="button" data-action="market-install" onClick={(event) => stop(event, () => onInstall(plugin))}>{text.install}</button>;
+}
 
+export function PluginMarketCard({ plugin, categoryName, ...handlers }: MarketCardHandlers & { plugin: MarketCatalogPlugin; categoryName: (id: string) => string }) {
+  const { locale } = useLocale();
+  const text = useTranslation().settings.pluginsV3.marketPage.card;
+  const title = localized(plugin.displayName, locale, plugin.name);
+  const description = localized(plugin.description, locale, "");
+  const candidate = offeredCandidate(plugin);
+  const version = candidate?.version ?? plugin.installedVersion;
+  const facts = candidate ? permissionSummary(candidate.confirmation) : null;
+  const sub = [plugin.official ? null : plugin.publisher.github, plugin.categories[0] ? categoryName(plugin.categories[0]) : null, version ? `v${version}` : null].filter(Boolean).join(" · ");
+  const fresh = Boolean(candidate?.fresh) && !plugin.installedVersion;
   return (
-    <article className="plugins-v3__card" data-market-plugin={plugin.name} onClick={handleCardClick}>
-      <div className="plugins-v3__plugin-head">
-        <span className="plugins-v3__icon plugins-v3__icon--info" aria-hidden="true">
-          <Blocks size={16} strokeWidth={2} />
-          <span className="plugins-v3__dot" />
-        </span>
-        <div className="plugins-v3__title-col">
-          <div className="plugins-v3__title-line">
-            <span className="plugins-v3__plugin-name" title={title}>{title}</span>
-            {plugin.official ? (
-              <span className="plugins-v3__pill plugins-v3__pill--official">{copy.officialBadge}</span>
-            ) : (
-              <span className="plugins-v3__pill">{copy.reviewedBadge}</span>
-            )}
-            {freshInstall ? (
-              <span className="plugins-v3__pill" title={copy.cooldownTitle}>{copy.cooldownBadge}</span>
-            ) : null}
-            {plugin.revoked ? <span className="plugins-v3__pill plugins-v3__pill--bad">{copy.revokedBadge}</span> : null}
+    <article className="market-card" data-market-plugin={plugin.name} onClick={(event) => !(event.target as Element).closest("button") && handlers.onOpen(plugin)}>
+      <div className="market-card__head">
+        <span className="plugin-icon" aria-hidden="true">{pluginInitial(title)}</span>
+        <div className="market-card__title">
+          <div className="market-card__line">
+            <button className="market-card__name" type="button" title={title} onClick={() => handlers.onOpen(plugin)}>{title}</button>
+            {plugin.official ? <span className="plugin-badge plugin-badge--official">{text.official}</span> : null}
+            {fresh ? <span className="plugin-badge" title={text.freshTitle}>{text.fresh}</span> : null}
+            {plugin.revoked && plugin.installedVersion ? <span className="plugin-badge market-badge--bad">{text.revoked}</span> : null}
           </div>
-          <span className="plugins-v3__id">{plugin.name}</span>
+          {sub ? <span className="market-card__sub">{sub}</span> : null}
         </div>
       </div>
-
-      {desc ? <p className="plugins-v3__note">{desc}</p> : null}
-
-      <div className="plugins-v3__card-foot">
-        <span>
-          {blockedText
-            ? blockedText
-            : plugin.installedVersion
-            ? `${copy.installedBadge(plugin.installedVersion)}${freshUpdate ? ` · ${copy.cooldownHint}` : ""}`
-            : activeCandidate
-            ? `v${activeCandidate.version}`
-            : "–"}
+      {description ? <p className="market-card__desc">{description}</p> : null}
+      <div className="market-card__foot">
+        <span className="market-card__facts">
+          {facts ? (
+            <>
+              {facts.network ? text.network : text.noNetwork}
+              {facts.count > 0 ? <> · <span className={facts.sensitive ? "market-card__warn" : undefined}>{text.permissions(facts.count)}</span></> : null}
+            </>
+          ) : null}
         </span>
-        <span className="plugins-v3__foot-actions">
-          {blockedText ? null : installCandidate ? (
-            <button
-              className="plugins-v3__btn plugins-v3__btn--primary"
-              type="button"
-              data-action="market-install"
-              onClick={(event) => {
-                event.stopPropagation();
-                onChooseMarketInstall(plugin, installCandidate.version, false);
-              }}
-            >
-              {copy.installBtn}
-            </button>
-          ) : updateCandidate ? (
-            <button
-              className="plugins-v3__btn plugins-v3__btn--primary"
-              type="button"
-              data-action="market-update"
-              onClick={(event) => {
-                event.stopPropagation();
-                onChooseMarketInstall(plugin, updateCandidate.version, true);
-              }}
-            >
-              {copy.updateBtn(updateCandidate.version)}
-            </button>
-          ) : plugin.installedVersion && onManage ? (
-            <button
-              className="plugins-v3__btn"
-              type="button"
-              data-action="market-manage"
-              onClick={(event) => {
-                event.stopPropagation();
-                onManage(plugin);
-              }}
-            >
-              {copy.manageBtn}
-            </button>
-          ) : plugin.installedVersion ? (
-            <button className="plugins-v3__btn" type="button" disabled>
-              {copy.installedBtn}
-            </button>
-          ) : (
-            <button className="plugins-v3__btn" type="button" disabled>
-              {copy.unavailableBtn}
-            </button>
-          )}
+        <span className="market-card__action">
+          <PluginMarketCardAction plugin={plugin} onInstall={handlers.onInstall} onManage={handlers.onManage} onGoUpdate={handlers.onGoUpdate} />
         </span>
       </div>
     </article>

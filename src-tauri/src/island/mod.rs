@@ -17,6 +17,9 @@ pub(crate) mod drag_grid_window;
 mod drag_hint;
 mod edge;
 mod geometry;
+pub(crate) mod layer;
+#[cfg_attr(target_os = "macos", path = "layer_hotkey_macos.rs")]
+mod layer_hotkey;
 pub(crate) mod notch;
 pub(crate) mod side;
 #[cfg_attr(target_os = "macos", path = "glass_macos.rs")]
@@ -510,6 +513,10 @@ macro_rules! tauri_commands {
             crate::island::banner_hit::set_island_banner_rect,
             crate::island::outside_click::set_island_outside_click_watch,
             crate::island::drag_grid_window::get_drag_grid_state,
+            crate::island::layer::set_island_layer_shortcut,
+            crate::island::layer::get_island_layer_shortcut_problem,
+            crate::island::layer::get_island_layer,
+            crate::island::layer::toggle_island_layer,
         ] $($rest)*)
     };
 }

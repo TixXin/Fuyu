@@ -87,6 +87,8 @@ export function pluginStatus(ctx, logs = [], { gate, usage, services, clients, u
     .map(({ internal, entry, status }) => {
       if (internal) return status;
       const extra = { kind: kindOf(entry.options), source: entry.options[SOURCE]?.source ?? "file" };
+      const displayName = entry.options[SOURCE]?.displayName;
+      if (displayName) extra.displayName = displayName;
       if (report) extra.usage = report(status.id);
       const last = gate?.report(status.id).last;
       if (last) extra.lastError = last;

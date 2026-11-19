@@ -57,3 +57,7 @@ export function setPlanKey(provider: PlanProvider, key: string) {
 export function hasPlanKey(provider: PlanProvider) {
   return invoke<boolean>("has_plan_key", { provider });
 }
+
+export function hasPlanConfigKey(provider: PlanProvider) {
+  return invoke<boolean>("has_plan_config_key", { provider });
+}

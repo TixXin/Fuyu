@@ -8,6 +8,7 @@ use std::{
 use keyring::{Entry, Error as KeyringError};
 use serde_json::Value;
 
+use super::plan_config::{self, ConfigKey};
 use super::{UsageError, UsageErrorKind};
 use crate::agent_status::parse_timestamp_ms;
 use crate::agent_status::usage::{AgentUsage, UsageSource, UsageWindow};
@@ -165,7 +166,7 @@ pub(super) fn status_error(provider: PlanProvider, status: u16) -> Option<UsageE
     }
 }
 
-async fn fetch(provider: PlanProvider, key: &str) -> Result<PlanWindows, UsageError> {
+async fn fetch(provider: PlanProvider, url: &str, key: &str) -> Result<PlanWindows, UsageError> {
     let client = reqwest::Client::builder()
         .timeout(REQUEST_TIMEOUT)
         .no_proxy()
@@ -173,12 +174,12 @@ async fn fetch(provider: PlanProvider, key: &str) -> Result<PlanWindows, UsageEr
         .build()
         .map_err(|failure| error(UsageErrorKind::Network, format!("Could not set up the request: {failure}")))?;
     let response = client
-        .get(provider.url())
+        .get(url)
         .header(reqwest::header::AUTHORIZATION, provider.authorization(key))
         .header(reqwest::header::ACCEPT, "application/json")
         .send()
         .await
-        .map_err(|failure| error(UsageErrorKind::Network, format!("The request to {} failed: {failure}", provider.url())))?;
+        .map_err(|failure| error(UsageErrorKind::Network, format!("The request to {url} failed: {}", failure.without_url())))?;
     if let Some(failure) = status_error(provider, response.status().as_u16()) {
         return Err(failure);
     }
@@ -223,6 +224,16 @@ pub(super) fn has_key(provider: PlanProvider) -> Result<bool, UserError> {
     read_key(provider).map(|key| key.is_some())
 }
 
+pub(super) fn has_config_key(provider: PlanProvider) -> bool {
+    plan_config::find(provider).is_some()
+}
+
+fn choose(provider: PlanProvider, saved: Option<String>, found: impl FnOnce() -> Option<ConfigKey>) -> Option<(String, &'static str)> {
+    saved
+        .map(|key| (key, provider.url()))
+        .or_else(|| found().map(|found| (found.key, found.url.unwrap_or_else(|| provider.url()))))
+}
+
 fn cache() -> &'static Mutex<HashMap<PlanProvider, (i64, AgentUsage)>> {
     static CACHE: OnceLock<Mutex<HashMap<PlanProvider, (i64, AgentUsage)>>> = OnceLock::new();
     CACHE.get_or_init(|| Mutex::new(HashMap::new()))
@@ -244,10 +255,14 @@ pub(super) async fn read(provider: PlanProvider, refresh: bool) -> AgentUsage {
             return usage.clone();
         }
     }
-    let usage = match read_key(provider) {
-        Ok(None) => AgentUsage { error: Some(error(UsageErrorKind::NoCredentials, "No API key saved.")), ..empty(provider) },
-        Err(message) => AgentUsage { error: Some(error(UsageErrorKind::NoCredentials, message.to_string())), ..empty(provider) },
-        Ok(Some(key)) => match fetch(provider, &key).await {
+    let saved = read_key(provider);
+    let failed = saved.as_ref().err().map(ToString::to_string);
+    let usage = match choose(provider, saved.ok().flatten(), || plan_config::find(provider)) {
+        None => {
+            let message = failed.unwrap_or_else(|| "No API key saved or found in the Claude Code settings.".to_string());
+            AgentUsage { error: Some(error(UsageErrorKind::NoCredentials, message)), ..empty(provider) }
+        }
+        Some((key, url)) => match fetch(provider, url, &key).await {
             Ok(windows) => AgentUsage {
                 updated_at: Some(now),
                 five_hour: windows.five_hour,
@@ -320,5 +335,15 @@ mod tests {
         assert_eq!(PlanProvider::Glm.authorization("id.secret"), "id.secret");
         assert_eq!(PlanProvider::Kimi.authorization("sk-kimi"), "Bearer sk-kimi");
         assert!(PlanProvider::parse("qwen").is_err());
+    }
+
+    #[test]
+    fn a_saved_key_wins_over_the_claude_code_settings() {
+        let found = || Some(ConfigKey { key: "from-settings".into(), url: Some("https://api.z.ai/quota") });
+        assert_eq!(choose(PlanProvider::Glm, Some("saved".into()), found), Some(("saved".into(), PlanProvider::Glm.url())));
+        assert_eq!(choose(PlanProvider::Glm, None, found), Some(("from-settings".into(), "https://api.z.ai/quota")));
+        let kimi = || Some(ConfigKey { key: "sk".into(), url: None });
+        assert_eq!(choose(PlanProvider::Kimi, None, kimi), Some(("sk".into(), PlanProvider::Kimi.url())));
+        assert_eq!(choose(PlanProvider::Kimi, None, || None), None);
     }
 }

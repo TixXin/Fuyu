@@ -1,8 +1,12 @@
+import { useEffect, useRef } from "react";
 import { Bot } from "lucide-react";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
-import { useTranslation } from "../../i18n";
+import { PluginIcon } from "../../features/plugin-kernel/PluginIcon";
+import { usePluginNames } from "../../features/plugin-kernel/pluginNames";
+import { localizedTitle, packageLabel } from "../../features/plugin-kernel/slotTitle";
+import { useLocale, useTranslation } from "../../i18n";
 import { headerDotPages, isPageEnabled, type IslandFeatures } from "./features";
 import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/header";
 import { pageSlot } from "./slots/pageSlot";
@@ -49,10 +53,21 @@ export function IslandHeader({
   hoverSwitchDelayMs,
 }: IslandHeaderProps) {
   const t = useTranslation();
+  const { locale } = useLocale();
+  const pluginNames = usePluginNames();
   const { hints } = useIslandContributed();
   const hoverSwitch = usePageHoverSwitch(hoverSwitchPage, hoverSwitchDelayMs, page, onPageChange);
   const pages = useSlotEntries(pageSlot);
   const dots = headerDotPages(pages, features);
+  const dotsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const row = dotsRef.current;
+    const active = row?.querySelector<HTMLElement>(".dot-button--active");
+    if (!row || !active || row.scrollWidth <= row.clientWidth) return;
+    const left = active.offsetLeft - row.offsetLeft;
+    if (left < row.scrollLeft) row.scrollLeft = left;
+    else if (left + active.offsetWidth > row.scrollLeft + row.clientWidth) row.scrollLeft = left + active.offsetWidth - row.clientWidth;
+  }, [page, dots.length]);
   const buttons: IslandHeaderContext = {
     page,
     features,
@@ -67,7 +82,7 @@ export function IslandHeader({
     withShortcut: (label, target) => withShortcut({ features, pageDigitModifiers }, label, target),
     isPageEnabled: (target) => isPageEnabled(target, features),
   };
-  const pageLabel = (target: HeaderDotPage) => ({
+  const builtinLabels: Record<HeaderDotPage, string> = {
     todo: t.island.todoList,
     music: t.island.music,
     calendar: t.island.calendar,
@@ -75,7 +90,12 @@ export function IslandHeader({
     shelf: t.island.shelf,
     screenshots: t.island.screenshots,
     timer: t.island.timer,
-  })[target];
+  };
+  const pageLabel = (item: (typeof dots)[number]) =>
+    (item.external ? null : builtinLabels[item.id as HeaderDotPage])
+    ?? localizedTitle(item.title, locale)
+    ?? localizedTitle(pluginNames.get(item.owner), locale)
+    ?? packageLabel(item.owner === "builtin" ? item.id : item.owner);
   const agentStatusIconClassName = [
     "island__agent-status-icon",
     `island__agent-status-icon--${agentVisualState}`,
@@ -111,16 +131,19 @@ export function IslandHeader({
         {showTitle && <span>{t.island.appName}</span>}
       </div>
 
-      <div className="editor-dots" aria-label={t.island.editor}>
+      <div ref={dotsRef} className="editor-dots" aria-label={t.island.editor}>
         {dots.map((item) => {
-          const target = item.id as HeaderDotPage;
+          const target: IslandPage = item.id;
           const Icon = item.icon;
+          const label = pageLabel(item);
+          const kind = item.external ? "dot-button--plugin" : `dot-button--${target}`;
           return (
             <button
               key={target}
-              className={`dot-button dot-button--${target}${page === target ? " dot-button--active" : ""}`}
+              className={`dot-button ${kind}${page === target ? " dot-button--active" : ""}`}
               type="button"
-              aria-label={withShortcut(buttons, pageLabel(target), target)}
+              data-page={item.external ? target : undefined}
+              aria-label={withShortcut(buttons, label, target)}
               aria-pressed={page === target}
               {...hoverSwitch(target)}
               onClick={(event) => {
@@ -128,7 +151,9 @@ export function IslandHeader({
                 onPageChange(target);
               }}
             >
-              {Icon && <Icon size={15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
+              {item.external
+                ? <PluginIcon icon={Icon} label={label} size={15} strokeWidth={1.8} owner={item.owner} />
+                : Icon && <Icon size={15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
             </button>
           );
         })}

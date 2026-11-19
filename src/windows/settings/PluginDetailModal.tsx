@@ -129,7 +129,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
           ) : tab === "settings" ? (
             <PluginSettingsTab entry={entry} />
           ) : tab === "commands" ? (
-            <PluginCommandsTab entry={entry} onOpenShortcuts={onOpenShortcuts} />
+            <PluginCommandsTab entry={entry} stale={stale} onOpenShortcuts={onOpenShortcuts} />
           ) : tab === "permissions" ? (
             <PluginPermissionsTab entry={entry} />
           ) : (

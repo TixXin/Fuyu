@@ -4,6 +4,7 @@ mod cursor;
 mod dsh;
 mod dsh_credentials;
 mod plan;
+mod plan_config;
 mod source;
 mod workbuddy;
 #[cfg(test)]
@@ -325,6 +326,14 @@ pub async fn has_plan_key(provider: String) -> Result<bool, crate::user_error::U
         .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))?
 }
 
+#[tauri::command]
+pub async fn has_plan_config_key(provider: String) -> Result<bool, crate::user_error::UserError> {
+    let provider = plan::PlanProvider::parse(&provider)?;
+    tauri::async_runtime::spawn_blocking(move || plan::has_config_key(provider))
+        .await
+        .map_err(|error| crate::user_error::UserError::new("internal", "Something went wrong inside the island.").detail(error))
+}
+
 macro_rules! tauri_commands {
     ($next:ident [$($done:tt)*] $($rest:tt)*) => {
         $next!([$($done)*
@@ -335,6 +344,7 @@ macro_rules! tauri_commands {
             crate::claude_usage::get_hover_usage,
             crate::claude_usage::set_plan_key,
             crate::claude_usage::has_plan_key,
+            crate::claude_usage::has_plan_config_key,
         ] $($rest)*)
     };
 }
