@@ -71,7 +71,7 @@
 | 回复标记旧文件 `rules/focusd-island-reply-marker.md` | `agent_status/reply_marker.rs` | 旧规则文件不再被清掉，提示词里出现两份标记说明 |
 | SSH 远端旧目录 `~/.focusd-island/` | `agent_status/{remote_setup,remote_fetch}.rs` | 没修复 hook 的远端主机的通知读不到 |
 | VS Code 旧扩展 `tixxin.focusd-island` | `agent_status/editor_terminal.rs` | 只装了旧扩展的用户点会话跳不到终端 |
-| 链接协议 `focusd://` | `src-tauri/Info.plist`、`plugin_host/uri.rs`、`plugin_host/mod.rs` | 第三方插件注册过的 OAuth 回调失效（也属 C 类，随 E36.6 一起定） |
+| 链接协议 `focusd://` | 已删除（E36.6.5，2026-11-18：`fuyu://` 一起删了，第 3 版待接手见 E56，#893） | 第三方插件注册过的 OAuth 回调失效（也属 C 类，随 E36.6 一起定） |
 | 旧设置备份和主题文件 `"app": "fly-island"` | `system/settings_backup.rs`、`src/lib/settings-backup/backup.ts`、`src/lib/theme/theme.ts` | 改名前导出的备份导不回来 |
 | 待办迁移命令的旧 key 名 | `todos/migration.rs`、`src/features/todos/{api,normalize,storage}.ts` | `migrate_todos` 的参数就是这几个名字；E36.3.38 正在改待办，等它合入后再看能不能顺手收进新的服务里 |
 | 待办旧默认目录 `Documents\FocuSD` | `home_dir/migration.rs`、`system/todo_export.rs` | 老用户的 Markdown 待办迁不进家目录 |

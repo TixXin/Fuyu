@@ -21,7 +21,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 
 ## 支持情况
 
-更新：2026-11-18（E36.6.5：第 2 版插件宿主删除，「插件（第 2 版）」「`fuyu://` 链接」改成不支持，独立窗口一行改指第 3 版）；2026-11-17（G1.28：Mac 本机支持下载、查找和托管运行 cc-connect 及飞书扫码，新手引导「推送到手机」放开本机）；2026-11-16（B67：「安装/修复」挪到 AI Agent 首页，Mac 上放出「连接」页，钩子和 Antigravity 两行写上 Mac 实测）；2026-11-15（C98：Mac 上修饰键拖动改用 Control；岛的拖动与贴顶、显示在哪块屏、屏幕变化重摆三行和底边、侧边的跟随说明按 G1.23、G1.24 改；AI 代理的几行按 B26–B33 改：WorkBuddy、Antigravity、DSH 的钩子和审批，DSH 的数据目录，SSH 远程，opencode；B34–B37、B46：opencode 1.x 插件、远程回复标记、远程 Antigravity 审批、WorkBuddy 在 Mac 上判断退出、Codex 的 sqlite 和 Claude 桌面 App 的会话；插件平台第 3 版一行补上第 1 阶段的真岛验收和第 2 阶段的插槽（E36.2））；2026-11-13（G1.2：Rust 端在 Mac 上能编译、clippy 与测试通过，`pnpm dev:lane` 能起窗口；功能都还没做，表里的 macOS 状态不变）。
+更新：2026-11-18（E36.6.5：第 2 版插件宿主删除，「插件（第 2 版）」「`fuyu://` 链接」改成不支持，Mac 的 `Info.plist` 不再声明协议，独立窗口一行改指第 3 版）；2026-11-17（G1.28：Mac 本机支持下载、查找和托管运行 cc-connect 及飞书扫码，新手引导「推送到手机」放开本机）；2026-11-16（B67：「安装/修复」挪到 AI Agent 首页，Mac 上放出「连接」页，钩子和 Antigravity 两行写上 Mac 实测）；2026-11-15（C98：Mac 上修饰键拖动改用 Control；岛的拖动与贴顶、显示在哪块屏、屏幕变化重摆三行和底边、侧边的跟随说明按 G1.23、G1.24 改；AI 代理的几行按 B26–B33 改：WorkBuddy、Antigravity、DSH 的钩子和审批，DSH 的数据目录，SSH 远程，opencode；B34–B37、B46：opencode 1.x 插件、远程回复标记、远程 Antigravity 审批、WorkBuddy 在 Mac 上判断退出、Codex 的 sqlite 和 Claude 桌面 App 的会话；插件平台第 3 版一行补上第 1 阶段的真岛验收和第 2 阶段的插槽（E36.2））；2026-11-13（G1.2：Rust 端在 Mac 上能编译、clippy 与测试通过，`pnpm dev:lane` 能起窗口；功能都还没做，表里的 macOS 状态不变）。
 
 | 功能 | 模块 | Windows | macOS | macOS 的做法与权限 | 子任务 | 最后验证（macOS） |
 |---|---|---|---|---|---|---|
@@ -44,7 +44,7 @@ macOS 的计划和决定见 [macos-port-plan.md](macos-port-plan.md)，各功能
 | 跟随系统的强调色 | `system::accent_color` | 已支持 | 开发中 | `NSColor.controlAccentColor` 转成 sRGB（`macos/appearance.rs`）；设置里这一项在 Mac 上叫「跟随系统」。打开设置窗口时读一次，系统里改了不会立刻跟上 | G1.6 | — |
 | 系统权限状态 | `system::permissions` | 不需要 | 开发中 | 设置 → 通用 →「系统权限」和新手引导的「给浮屿开几个权限」共用 `PermissionRows`：辅助功能（`AXIsProcessTrusted`）、屏幕录制（`CGPreflightScreenCaptureAccess`）是否已允许，每 1.5 秒和切回窗口时重新检查；「去允许」调 `request_system_permission`，先让系统弹提示（`AXIsProcessTrustedWithOptions`、`CGRequestScreenCaptureAccess`，浮屿因此出现在系统设置的列表里），没允许就打开对应隐私页；屏幕录制点过后显示「重开浮屿」。QQ / 微信、截图在没授权时各自提示。自动化权限由系统在第一次用到时问 | G1.6 | — |
 | 全局快捷键 | `win32/hotkey` | 已支持 | 部分支持 | `global-hotkey`（Carbon `RegisterEventHotKey`，在主线程注册），不要权限、不接管系统组合键。剪贴板（默认 ⌘⇧V）、翻译、截图在用；审批、插件快捷键也在用。F21–F24 在 Mac 上不能用作全局快捷键 | G1.6 | — |
-| `fuyu://` 链接 | — | 不支持 | 不支持 | 第 2 版插件的链接（`fuyu://plugin/…` 和官网安装按钮的 `fuyu://market/install/…`）随第 2 版插件宿主一起删除（E36.6.5，2026-11-18），Windows 不再注册协议，目前没有处理，第 3 版要不要接手见 E56（#893）。Mac 的 `src-tauri/Info.plist` 还声明着 `fuyu` 和改名前的旧协议，点链接只会把岛拉起来，链接本身被忽略 | E56 | — |
+| `fuyu://` 链接 | — | 不支持 | 不支持 | 第 2 版插件的链接（`fuyu://plugin/…` 和官网安装按钮的 `fuyu://market/install/…`）随第 2 版插件宿主一起删除（E36.6.5，2026-11-18），Windows 不再注册协议，Mac 的 `src-tauri/Info.plist` 也不再声明 `fuyu` 和改名前的旧协议。第 2 版已删，第 3 版待接手（E56，#893） | E56 | — |
 | 单实例 | `tauri-plugin-single-instance` | 已支持 | 已支持 | 同一个 `.app` 系统只开一个；插件在 Mac 上用本地 socket，第二个进程把参数交给第一个后退出；lane 预览标识不同，和用户的岛互不影响 | G1.4 | macOS 27.2，2026-11-13（lane 预览与主工作区并存） |
 | 升级前自动备份与恢复（D58） | `system/update_backup/` | 已支持 | 已支持 | 只读写家目录和 `localStorage`，两边同一份代码；Windows 真机「装更新 → 看到备份 → 恢复」还没走过，Mac 上更新本身还在开发中 | D58 | — |
 | 窗口崩溃后自动重载（D66） | `webview_recovery`、`win32/webview_crash` | 已支持 | 不支持 | WKWebView 没有 WebView2 的 `ProcessFailed`；Mac 上是空实现（`webview_recovery_unsupported.rs`）。WebContent 进程崩溃要用 `webViewWebContentProcessDidTerminate`，以后需要再做 | — | — |
