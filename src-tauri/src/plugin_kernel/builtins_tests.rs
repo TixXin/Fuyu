@@ -38,7 +38,7 @@ fn scratch(name: &str) -> PathBuf {
 }
 
 fn plugin(id: &str, kind: Kind, background: Option<&[&str]>) -> Builtin {
-    Builtin { id: id.into(), kind, background: background.map(|names| names.iter().map(|name| (*name).to_owned()).collect()) }
+    Builtin { id: id.into(), kind, background: background.map(|names| names.iter().map(|name| (*name).to_owned()).collect()), default_off: false }
 }
 
 fn register(table: &mut Table, plugin: &str, name: &str, fake: &Arc<Fake>) {
