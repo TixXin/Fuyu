@@ -26,6 +26,7 @@ import { categorySlot } from "./slots/categorySlot";
 import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
 import { focusSection } from "../../lib/settings/sectionFocus";
 import { AboutLogoCallLink } from "../../features/updater/AboutHero";
+import { PluginMarketHeaderActions } from "./PluginMarketHeaderActions";
 import { PluginPageActions } from "./PluginPageActions";
 import "./SettingsWindow.css";
 
@@ -136,6 +137,8 @@ export function SettingsWindow() {
             ? <AboutLogoCallLink />
             : category === "pluginsV3"
             ? <PluginPageActions onOpenPage={setCategory} />
+            : category === "pluginMarket"
+            ? <PluginMarketHeaderActions />
             : null
         }
       >
