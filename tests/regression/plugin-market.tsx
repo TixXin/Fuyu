@@ -80,7 +80,7 @@ try {
   const grid = getComputedStyle(stage.querySelector(".market-grid")!).gridTemplateColumns.split(" ").length;
   check(grid === 2, `Cards sit two to a row (got ${grid})`);
   check(card(stage, "@fuyu/rss")?.textContent!.includes(text.card.official) && card(stage, "@ryo/clip-sync")?.textContent!.includes(text.card.fresh), "Cards show the official badge and the calm new badge");
-  check(card(stage, "@ryo/clip-sync")?.querySelector(".market-card__warn") && !card(stage, "@fuyu/rss")?.querySelector(".market-card__warn"), "A card warns when the plugin touches files or runs programs");
+  check(card(stage, "@fuyu/rss")?.querySelector(".market-card__facts")?.textContent === text.card.network && !/权限|permission/i.test(stage.querySelector(".market-grid")?.textContent ?? ""), "Cards say whether the plugin uses the network and never count permissions");
   check(card(stage, "@kai/vscode-status")?.textContent!.includes(text.card.needsFuyu(">=0.40.0")) && card(stage, "@kai/vscode-status")?.querySelector("[data-action='market-go-update']") && !card(stage, "@kai/vscode-status")?.querySelector("[data-action='market-install']"), "A plugin this Fuyu cannot run says which version it needs and offers to update Fuyu instead of installing");
   await click(card(stage, "@kai/vscode-status")?.querySelector("[data-action='market-go-update']"));
   check(opened.includes("view:about"), "Updating Fuyu opens the About page");
@@ -105,8 +105,8 @@ try {
     .then((node) => node.closest<HTMLElement>("[data-market-detail-modal]")!);
   check(rss.textContent!.includes(text.detail.likes(212)) && rss.textContent!.includes("MIT") && rss.querySelectorAll(".market-shot").length === 3, "The detail shows likes, license and screenshots");
   check(rss.querySelector("[data-market-link='repository']") && rss.querySelector("[data-action='market-install']"), "and links and an install button");
-  await click(rss.querySelector("[data-detail-tab='permissions']"));
-  check(rss.querySelector("[data-permission='network']") && rss.querySelector("[data-market-commands]"), "The permissions tab lists what the plugin can reach and its commands");
+  check(rss.querySelector("[data-plugin-capabilities] [data-capability='network']") && rss.querySelector("[data-market-commands]") && !rss.querySelector("[data-detail-tab='permissions']"), "The overview lists what the plugin does and its commands, with no permissions tab");
+  check(!/权限|permission/i.test(rss.textContent ?? ""), "and never talks about permissions");
   await click(rss.querySelector("[data-detail-tab='versions']"));
   check(rss.querySelectorAll("[data-market-version]").length === 3, "The versions tab lists every published version");
   await click(rss.querySelector("[data-detail-tab='readme']"));
@@ -117,7 +117,8 @@ try {
   const confirm = await view("confirm", zh ? "安装确认（第一次信任发布者）" : "Install (first plugin from a publisher)");
   await click(card(confirm.stage, "@ryo/clip-sync")?.querySelector("[data-action='market-install']"));
   const first = await modal("[data-install-modal='@ryo/clip-sync']");
-  check(first.querySelector("[data-callout='first']") && first.querySelector("[data-callout='fresh']") && first.querySelector("[data-permission='files'].plugin-perm--sensitive") && first.querySelector("[data-permission='alsoInstalls']"), "Installing a first plugin from a publisher explains the trust, the waiting period, sensitive access and what else gets installed");
+  check(first.querySelector("[data-callout='first']") && first.querySelector("[data-callout='fresh']") && first.querySelector("[data-install-note]") && !first.querySelector("[data-capability]"), "Installing a first plugin from a publisher explains the trust and the waiting period, with one honest line instead of a list of abilities");
+  check(!/权限|permission/i.test(first.textContent ?? ""), "and never talks about permissions");
   check(first.querySelector("[data-action='confirm-install']")?.textContent === text.confirm.confirmTrust, "and the button says you trust the publisher");
 
   const narrowConfirm = await view("confirm-narrow", zh ? "安装确认（窄窗口）" : "Install (narrow window)", {}, true);
@@ -127,7 +128,7 @@ try {
   const update = await view("update", zh ? "更新确认" : "Update");
   await click(update.stage.querySelector("[data-market-update='@fuyu/github-notify'] [data-action='market-update']"));
   const upd = await modal("[data-install-modal='@fuyu/github-notify']");
-  check(upd.dataset.installKind === "update" && upd.textContent!.includes(text.confirm.updateNote) && upd.querySelector("[data-action='confirm-install']")?.textContent === text.confirm.confirmUpdate, "An update lists what the new version can do");
+  check(upd.dataset.installKind === "update" && upd.textContent!.includes(text.confirm.securityNote) && upd.querySelector("[data-action='confirm-install']")?.textContent === text.confirm.confirmUpdate, "An update asks plainly and says what plugins can do");
 
   const trust = await view("trust", zh ? "更新确认（换了签名密钥）" : "Update (signing key changed)");
   await click(trust.stage.querySelector("[data-market-update='@lin-dev/pomo-stats'] [data-action='market-update']"));
@@ -138,7 +139,7 @@ try {
   await view("file", zh ? "从 .fuyu 文件安装" : "Install from a .fuyu file", { openedPackage: { seq: 1, fileName: "my-toolbox.fuyu", base64: "AAAA" }, onConsumePackage: () => undefined });
   const local = await modal("[data-install-modal='my-toolbox']");
   market.inspected = null;
-  check(local.querySelector("[data-callout='unreviewed']") && local.querySelector(`.market-mono[title='${TOOLBOX_PACKAGE.sha256}']`) && local.querySelector("[data-callout='manual']") && local.querySelector("[data-permission='runPrograms']"), "A local file is flagged unreviewed, shows its SHA-256 and says installing turns on manual installs");
+  check(local.querySelector("[data-callout='unreviewed']") && local.querySelector(`.market-mono[title='${TOOLBOX_PACKAGE.sha256}']`) && local.querySelector("[data-callout='manual']"), "A local file is flagged unreviewed, shows its SHA-256 and says installing turns on manual installs");
 
   requestPluginDetail("@fuyu/weather");
   const manage = await mount("manage", "manage", <PluginsV3SettingsPage connect={connect} />);

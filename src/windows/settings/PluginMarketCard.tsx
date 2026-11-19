@@ -3,7 +3,7 @@ import { Check } from "lucide-react";
 import type { MarketCatalogPlugin } from "@fuyu/plugin-services";
 import { useLocale, useTranslation } from "../../i18n";
 import { pluginInitial } from "./InstalledPluginRow";
-import { hasUpdate, localized, offeredCandidate, permissionSummary } from "./pluginMarketModel";
+import { hasUpdate, localized, offeredCandidate } from "./pluginMarketModel";
 import { marketActionCandidate } from "./pluginRowStatus";
 
 export interface MarketCardHandlers {
@@ -52,7 +52,6 @@ export function PluginMarketCard({ plugin, categoryName, ...handlers }: MarketCa
   const description = localized(plugin.description, locale, "");
   const candidate = offeredCandidate(plugin);
   const version = candidate?.version ?? plugin.installedVersion;
-  const facts = candidate ? permissionSummary(candidate.confirmation) : null;
   const sub = [plugin.official ? null : plugin.publisher.github, plugin.categories[0] ? categoryName(plugin.categories[0]) : null, version ? `v${version}` : null].filter(Boolean).join(" · ");
   const fresh = Boolean(candidate?.fresh) && !plugin.installedVersion;
   return (
@@ -72,12 +71,7 @@ export function PluginMarketCard({ plugin, categoryName, ...handlers }: MarketCa
       {description ? <p className="market-card__desc">{description}</p> : null}
       <div className="market-card__foot">
         <span className="market-card__facts">
-          {facts ? (
-            <>
-              {facts.network ? text.network : text.noNetwork}
-              {facts.count > 0 ? <> · <span className={facts.sensitive ? "market-card__warn" : undefined}>{text.permissions(facts.count)}</span></> : null}
-            </>
-          ) : null}
+          {candidate ? (candidate.confirmation.network.length > 0 ? text.network : text.noNetwork) : null}
         </span>
         <span className="market-card__action">
           <PluginMarketCardAction plugin={plugin} onInstall={handlers.onInstall} onManage={handlers.onManage} onGoUpdate={handlers.onGoUpdate} />
