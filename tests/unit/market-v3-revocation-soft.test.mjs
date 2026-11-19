@@ -86,3 +86,40 @@ test("a warning clears on the next good refresh, and an index ahead of the saved
     world.cleanup();
   }
 });
+
+test("a plugin revoked with disable cannot be turned back on, and both levels come with their reasons", async () => {
+  const world = createMarketWorld("fuyu-revoked-levels-");
+  try {
+    const clock = world.version({ name: "@someone/clock", version: "1.0.0" });
+    const timer = world.version({ name: "@someone/timer", version: "1.0.0" });
+    world.putIndex(1, [{ name: "@someone/clock", versions: [clock] }, { name: "@someone/timer", versions: [timer] }]);
+    await world.market.refresh();
+    await world.market.installMarket({ name: "@someone/clock", version: "1.0.0" });
+    await world.market.installMarket({ name: "@someone/timer", version: "1.0.0" });
+
+    world.putRevoked(1, [
+      revocation("rev-clock", "@someone/clock", "1.0.0", "disable", "恶意代码"),
+      revocation("rev-timer", "@someone/timer", "*", "warn", "耗电"),
+    ]);
+    world.putIndex(2, [{ name: "@someone/clock", versions: [clock] }, { name: "@someone/timer", versions: [timer] }]);
+    const snap = await world.market.refresh();
+    const installed = Object.fromEntries(snap.installed.map((item) => [item.id, item]));
+    assert.deepEqual(installed["@someone/clock"].revocation, { level: "disable", reasons: [{ "zh-CN": "恶意代码", en: "恶意代码 (en)" }] });
+    assert.deepEqual(installed["@someone/timer"].revocation, { level: "warn", reasons: [{ "zh-CN": "耗电", en: "耗电 (en)" }] });
+    assert.equal(installed["@someone/clock"].enabled, false);
+    assert.equal(installed["@someone/timer"].enabled, true);
+    const plugins = Object.fromEntries(snap.plugins.map((item) => [item.name, item]));
+    assert.equal(plugins["@someone/clock"].revocation.level, "disable");
+    assert.equal(plugins["@someone/clock"].revoked, true);
+    assert.equal(plugins["@someone/timer"].revocation.level, "warn");
+    assert.equal(plugins["@someone/timer"].revoked, false);
+
+    await assert.rejects(() => world.market.setEnabled({ id: "@someone/clock", enabled: true }), (error) => error.code === "revoked" && error.data.reasons.length === 1);
+    assert.equal((await world.market.catalog()).installed.find((item) => item.id === "@someone/clock").enabled, false);
+    assert.deepEqual(await world.market.setEnabled({ id: "@someone/clock", enabled: false }), { id: "@someone/clock", enabled: false });
+    assert.deepEqual(await world.market.setEnabled({ id: "@someone/timer", enabled: false }), { id: "@someone/timer", enabled: false });
+    assert.deepEqual(await world.market.setEnabled({ id: "@someone/timer", enabled: true }), { id: "@someone/timer", enabled: true });
+  } finally {
+    world.cleanup();
+  }
+});

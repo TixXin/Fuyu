@@ -47,6 +47,11 @@ export type MarketVersionCandidate = {
   confirmation: PluginInstallConfirmation;
 };
 
+export type MarketRevocation = {
+  level: "disable" | "warn";
+  reasons: MarketLocalizedText[];
+};
+
 export type MarketCatalogPlugin = {
   name: string;
   official: boolean;
@@ -58,6 +63,7 @@ export type MarketCatalogPlugin = {
   enabled: boolean;
   source: "market" | "manual" | null;
   revoked: boolean;
+  revocation?: MarketRevocation | null;
   blocked?: { reason: "engines" | "platform"; range?: string } | null;
   install: MarketVersionCandidate | null;
   manual: MarketVersionCandidate | null;
@@ -70,6 +76,7 @@ export type InstalledMarketPlugin = {
   version: string;
   source: "market" | "manual";
   enabled: boolean;
+  revocation?: MarketRevocation | null;
   displayName?: MarketLocalizedText | string;
   description?: MarketLocalizedText | string;
 };

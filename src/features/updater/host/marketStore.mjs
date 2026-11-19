@@ -307,6 +307,11 @@ export function blockedView(plugin, selected, installed) {
   return null;
 }
 
+export function revocationView(revocations, name, version) {
+  const rev = version ? revocationOf(revocations, name, version) : null;
+  return rev ? { level: rev.level, reasons: rev.entries.map((entry) => entry.reason) } : null;
+}
+
 export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform, trust, now }) {
   const state = readState(dataDir);
   const installedRaw = readInstalledPackages(pluginsDir);
@@ -330,7 +335,8 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
     const autoMeta = metaFor(selected.autoUpdate);
     const primaryEntry = selected.install?.entry ?? selected.manual?.entry ?? plugin.versions?.[0];
     const manifest = isObject(primaryEntry?.manifest) ? primaryEntry.manifest : {};
-    const instRevoked = inst ? revocationOf(state.revocations, plugin.name, inst.version)?.level === "disable" : false;
+    const revocation = inst ? revocationView(state.revocations, plugin.name, inst.version) : null;
+    const instRevoked = revocation?.level === "disable";
     const allRevoked = !inst && Array.isArray(plugin.versions) && plugin.versions.length > 0 && selected.skipped.length === plugin.versions.length && selected.skipped.some((item) => item.reason === "revoked");
     return {
       name: plugin.name,
@@ -343,6 +349,7 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
       enabled: inst ? inst.enabled : false,
       source: inst?.source ?? null,
       revoked: Boolean(instRevoked || allRevoked),
+      revocation,
       blocked: blockedView(plugin, selected, inst),
       install: candidateView(selected.install, official, selected.install ? { fresh: selected.install.fresh } : {}, installMeta),
       manual: candidateView(selected.manual, official, selected.manual ? { cooled: selected.manual.cooled, fresh: !selected.manual.cooled, warned: selected.manual.warned } : {}, manualMeta),
@@ -357,6 +364,7 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
     version,
     source,
     enabled,
+    revocation: revocationView(state.revocations, id, version),
     ...(displayName !== undefined ? { displayName } : {}),
     ...(description !== undefined ? { description } : {}),
   }));
