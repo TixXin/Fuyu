@@ -153,3 +153,23 @@ test("package names whose scope or name is only dots are refused before any path
   assert.deepEqual(applied.disabled, []);
   assert.doesNotMatch(readFileSync(join(dir, "plugins.yml"), "utf8"), /@x\/\.\./);
 });
+
+test("dev --clean drops only its own entry, through the same code the host uses", async () => {
+  const { registerDevEntry, unregisterDevEntry } = await import("../src/dev.mjs");
+  const { removeInstalledFromYml, writeInstalledToYml } = await import("../src/installer.mjs");
+  const dir = tempDir();
+  const yml = join(dir, "plugins.yml");
+  const seed = () => {
+    writeFileSync(yml, "[]\n");
+    writeInstalledToYml(yml, { id: "@ann/clock", source: "market", replaces: ["clock/v1"] });
+    registerDevEntry(yml, "hello", join(dir, "hello", "dist"));
+    writeInstalledToYml(yml, { id: "@ann/notes", source: "manual", disabled: true });
+  };
+  seed();
+  assert.equal(unregisterDevEntry(yml, "hello"), true);
+  const viaCli = readFileSync(yml, "utf8");
+  assert.equal(viaCli, '- id: "@ann/clock"\n  source: market\n  replaces:\n    - "clock/v1"\n- id: "@ann/notes"\n  source: manual\n  disabled: true\n');
+  seed();
+  removeInstalledFromYml(yml, "hello");
+  assert.equal(readFileSync(yml, "utf8"), viaCli);
+});

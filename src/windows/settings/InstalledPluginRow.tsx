@@ -95,7 +95,7 @@ function rowMenu(entry: InstalledEntry, stale: boolean, text: SettingsPluginPage
     { key: "log", label: text.actions.viewLog, icon: <Activity size={14} strokeWidth={2} />, onSelect: () => onAction("log") },
   ];
   if (entry.market) items.push({ key: "market", label: text.detail.viewInMarket, icon: <Store size={14} strokeWidth={2} />, onSelect: () => onAction("whatsNew") });
-  if (entry.managed) items.push({ key: "uninstall", label: text.actions.uninstall, icon: <Trash2 size={14} strokeWidth={2} />, danger: true, separatorBefore: true, disabled: stale, onSelect: () => onAction("uninstall") });
+  if (entry.removable) items.push({ key: "uninstall", label: entry.managed ? text.actions.uninstall : text.actions.remove, icon: <Trash2 size={14} strokeWidth={2} />, danger: true, separatorBefore: true, disabled: stale, onSelect: () => onAction("uninstall") });
   return items;
 }
 

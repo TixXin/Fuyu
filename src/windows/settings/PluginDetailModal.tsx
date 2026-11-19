@@ -41,6 +41,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
   }, []);
 
   const { status } = entry;
+  const dev = !entry.managed;
   const technical = detailText(entry.plugin, t);
   const facts: [string, string][] = [
     [text.detail.facts.version, entry.version ? `v${entry.version}` : "–"],
@@ -141,7 +142,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
             <div className="plugin-callout plugin-callout--bad plugin-dialog__confirm" data-uninstall-confirm>
               <Trash2 size={15} strokeWidth={2.2} aria-hidden="true" />
               <div>
-                <b>{text.detail.uninstallPrompt(entry.title)}</b> {text.detail.uninstallNote}
+                <b>{dev ? text.detail.removePrompt(entry.title) : text.detail.uninstallPrompt(entry.title)}</b> {dev ? text.detail.removeNote : text.detail.uninstallNote}
                 <label className="plugin-check">
                   <input type="checkbox" checked={removeData} disabled={busy} onChange={(event) => setRemoveData(event.currentTarget.checked)} />
                   <span>{text.detail.removeData}</span>
@@ -150,7 +151,7 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
                 <div className="plugin-detail__buttons">
                   <button className="plugin-btn plugin-btn--sm" type="button" disabled={busy} onClick={() => setConfirming(false)}>{text.detail.cancel}</button>
                   <button className="plugin-btn plugin-btn--sm plugin-btn--danger-solid" type="button" disabled={busy} data-action="confirm-uninstall-plugin" onClick={uninstall}>
-                    {busy ? text.detail.uninstalling : text.detail.confirmUninstall}
+                    {busy ? (dev ? text.detail.removing : text.detail.uninstalling) : (dev ? text.detail.confirmRemove : text.detail.confirmUninstall)}
                   </button>
                 </div>
               </div>
@@ -164,10 +165,10 @@ export function PluginDetailModal({ entry, initialTab = "overview", startUninsta
                 </button>
               ) : null}
               <span className="plugin-dialog__grow" />
-              {entry.managed ? (
+              {entry.removable ? (
                 <button className="plugin-btn plugin-btn--sm plugin-btn--danger" type="button" data-action="uninstall-plugin" disabled={stale} onClick={() => setConfirming(true)}>
                   <Trash2 size={13} strokeWidth={2.2} aria-hidden="true" />
-                  {text.detail.uninstall}
+                  {dev ? text.detail.remove : text.detail.uninstall}
                 </button>
               ) : null}
             </>

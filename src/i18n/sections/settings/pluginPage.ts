@@ -53,6 +53,7 @@ export type SettingsPluginPageText = {
     review: string;
     turnOn: (name: string) => string;
     uninstall: string;
+    remove: string;
     settings: string;
     enabled: (name: string) => string;
   };
@@ -151,6 +152,11 @@ export type SettingsPluginPageText = {
     cancel: string;
     confirmUninstall: string;
     uninstalling: string;
+    remove: string;
+    removePrompt: (name: string) => string;
+    removeNote: string;
+    confirmRemove: string;
+    removing: string;
   };
   diagnostics: {
     process: string;
@@ -240,6 +246,7 @@ export const zhCN: SettingsPluginPageText = {
     review: "查看",
     turnOn: (name) => `打开「${name}」`,
     uninstall: "卸载…",
+    remove: "从浮屿移除…",
     settings: "设置",
     enabled: (name) => `启用「${name}」`,
   },
@@ -338,6 +345,11 @@ export const zhCN: SettingsPluginPageText = {
     cancel: "取消",
     confirmUninstall: "卸载",
     uninstalling: "正在卸载…",
+    remove: "从浮屿移除",
+    removePrompt: (name) => `从浮屿移除「${name}」？`,
+    removeNote: "只删掉这条登记，不会删除插件文件夹；再次运行 fuyu-plugin dev 会重新出现。",
+    confirmRemove: "移除",
+    removing: "正在移除…",
   },
   diagnostics: {
     process: "插件进程",
@@ -427,6 +439,7 @@ export const en: SettingsPluginPageText = {
     review: "Review",
     turnOn: (name) => `Turn on ${name}`,
     uninstall: "Uninstall…",
+    remove: "Remove from Fuyu…",
     settings: "Settings",
     enabled: (name) => `Enable ${name}`,
   },
@@ -525,6 +538,11 @@ export const en: SettingsPluginPageText = {
     cancel: "Cancel",
     confirmUninstall: "Uninstall",
     uninstalling: "Uninstalling…",
+    remove: "Remove from Fuyu",
+    removePrompt: (name) => `Remove “${name}” from Fuyu?`,
+    removeNote: "Only its registration is removed; the plugin folder stays. Running fuyu-plugin dev again brings it back.",
+    confirmRemove: "Remove",
+    removing: "Removing…",
   },
   diagnostics: {
     process: "Plugin process",

@@ -79,7 +79,8 @@ export function readYmlEntries(ymlFile) {
     }
     const sourceMatch = /^\s{2}source:\s*(.+)$/.exec(line);
     if (sourceMatch) {
-      current.source = unquoteYamlScalar(sourceMatch[1]) === "manual" ? "manual" : "market";
+      const source = unquoteYamlScalar(sourceMatch[1]);
+      current.source = source === "manual" || source === "dev" ? source : "market";
       continue;
     }
     const disabledMatch = /^\s{2}disabled:\s*(true|false)\s*$/.exec(line);

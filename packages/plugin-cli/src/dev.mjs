@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { build, readManifest, realPath } from "./build.mjs";
 import { SOURCE_DIR } from "./entries.mjs";
+import { removeInstalledFromYml, stripEntryBlock } from "./installer.mjs";
 
 export const DEV_DIR_ENV = "FUYU_PLUGINS_V3_DIR";
 
@@ -14,26 +15,13 @@ function escapeYaml(text) {
   return JSON.stringify(String(text));
 }
 
-function stripPluginBlock(lines, id) {
-  const result = [];
-  const idPattern = new RegExp(`^-\\s+id:\\s*(?:${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}|"${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"|'${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}')\\s*$`);
-  let skipping = false;
-  for (const line of lines) {
-    if (line.startsWith("- ")) {
-      skipping = idPattern.test(line.trim());
-    }
-    if (!skipping) result.push(line);
-  }
-  return result;
-}
-
 export function registerDevEntry(ymlFile, id, devOutDir) {
   mkdirSync(dirname(ymlFile), { recursive: true });
   const raw = existsSync(ymlFile) ? readFileSync(ymlFile, "utf8").replace(/\r\n/g, "\n") : "";
   const trimmed = raw.trim();
   const baseLines = !trimmed || trimmed === "[]"
     ? []
-    : stripPluginBlock(raw.split("\n"), id).filter((line, idx, arr) => !(idx === arr.length - 1 && line === ""));
+    : stripEntryBlock(raw.split("\n"), id).filter((line, idx, arr) => !(idx === arr.length - 1 && line === ""));
   const entryLines = [
     `- id: ${escapeYaml(id)}`,
     `  source: dev`,
@@ -45,13 +33,7 @@ export function registerDevEntry(ymlFile, id, devOutDir) {
 }
 
 export function unregisterDevEntry(ymlFile, id) {
-  if (!existsSync(ymlFile)) return false;
-  const raw = readFileSync(ymlFile, "utf8").replace(/\r\n/g, "\n");
-  const trimmed = raw.trim();
-  if (!trimmed || trimmed === "[]") return false;
-  const kept = stripPluginBlock(raw.split("\n"), id).filter((line, idx, arr) => !(idx === arr.length - 1 && line === ""));
-  writeFileSync(ymlFile, kept.length > 0 ? `${kept.join("\n")}\n` : "[]\n", "utf8");
-  return true;
+  return removeInstalledFromYml(ymlFile, id);
 }
 
 export async function dev(dir, options = {}) {

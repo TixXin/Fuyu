@@ -166,6 +166,7 @@ export const PLUGIN = {
   clock: { id: "@someone/clock", name: "Clock", state: "running", kind: "third-party", source: "market", usage: usage() },
   gadget: { id: "@me/gadget", name: "Gadget", state: "disabled", kind: "third-party", source: "manual" },
   local: { id: "my-local-tool", name: "./my-local-tool/index.mjs", state: "running", kind: "third-party", usage: usage() },
+  hello: { id: "hello", name: "hello", state: "running", kind: "third-party", source: "dev", usage: usage() },
   counter: { id: "counter", name: "./counter.mjs", state: "running", kind: "builtin", usage: usage() },
   pomodoro: { id: "@fuyu/pomodoro", name: "Pomodoro", state: "running", kind: "third-party", source: "market", usage: usage() },
   feeds: { id: "@someone/feeds", name: "RSS feeds", state: "failed", kind: "third-party", source: "market", error: "TypeError: Cannot read properties of undefined (reading 'items')\n    at parse (feeds.mjs:42:17)\n    at refresh (feeds.mjs:12:3)", usage: usage({ errors: 1 }) },
