@@ -1,6 +1,6 @@
-import { Fragment, useRef, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, type ReactNode } from "react";
 import { useCollapsedBarItems, type CollapsedBarItem } from "./collapsedBarItems";
-import { arrangeCollapsedItems, zoneIds, type CollapsedZone } from "../../lib/settings/collapsedItems";
+import { arrangeCollapsedItems, saveCollapsedOverflow, shelfIds, zoneIds, type CollapsedZone } from "../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import { useTranslation } from "../../i18n";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
@@ -10,7 +10,7 @@ import { lineSlot, type CollapsedLineContext } from "./slots/line";
 import type { CollapsedSlots, IslandPage } from "./types";
 import { useCollapsedContextMenu } from "./useCollapsedContextMenu";
 import { useWindowDragGesture } from "./useWindowDragGesture";
-import { hasNotchDrop, useIslandNotch } from "./notch";
+import { hasNotchDrop, MAX_NOTCH_WING, useIslandNotch } from "./notch";
 import { CollapsedMore } from "./CollapsedMore";
 import { BAR_UNIT, useCollapsedOverflow, type CollapsedOverflowState } from "./useCollapsedOverflow";
 import { useCollapsedItemNames } from "./useCollapsedItemNames";
@@ -33,6 +33,7 @@ type IslandCollapsedBarProps = {
   onTuck: () => void;
   slots?: CollapsedSlots;
   overflowMore?: boolean;
+  notchWingMax?: number;
 };
 
 const NO_SLOTS: CollapsedSlots = {};
@@ -77,6 +78,7 @@ export function IslandCollapsedBar({
   onTuck,
   slots = NO_SLOTS,
   overflowMore = true,
+  notchWingMax = MAX_NOTCH_WING,
 }: IslandCollapsedBarProps) {
   const t = useTranslation();
   const notch = useIslandNotch();
@@ -127,17 +129,25 @@ export function IslandCollapsedBar({
   const rightItems = zone("right");
   const leftUnits = barUnits(leftItems);
   const rightUnits = barUnits(rightItems);
+  const pinned = new Set(shelfIds(placements, offered));
   const overflow = useCollapsedOverflow(
-    overflowMore && notch !== null,
+    notch !== null && (overflowMore || pinned.size > 0),
     !isExpanded && !isTucked && (wings === "idle" || wings === "dropped"),
     { left: leftUnits, right: rightUnits },
     { left: leftWingRef, right: rightWingRef },
+    { auto: overflowMore, forceChip: pinned.size > 0, maxWing: notchWingMax },
   );
+  const overflowKey = [...overflow.shelved].join("\n");
+  useEffect(() => {
+    saveCollapsedOverflow(overflowKey === "" ? [] : overflowKey.split("\n"));
+  }, [overflowKey]);
   const nameOf = useCollapsedItemNames();
-  const moreRows = overflow.chip
-    ? [...leftItems, ...rightItems].filter((item) => overflow.shelved.has(item.id)).map((item) => ({ id: item.id, name: nameOf(item.id), page: item.page ?? null }))
-    : [];
-  const more = (side: "left" | "right") => overflow.chip === side && moreRows.length > 0 && <CollapsedMore rows={moreRows} onOpenPage={onOpenPage} />;
+  const moreRows = placements
+    .flatMap((placement) => (placement.hidden ? [] : byId.get(placement.id) ?? []))
+    .filter((item) => pinned.has(item.id) || overflow.shelved.has(item.id))
+    .map((item) => ({ id: item.id, name: nameOf(item.id), page: item.page ?? null }));
+  const chipSide = notch !== null ? overflow.chip : pinned.size > 0 ? "end" : null;
+  const more = (side: "left" | "right" | "end") => chipSide === side && moreRows.length > 0 && <CollapsedMore rows={moreRows} onOpenPage={onOpenPage} reserve={side === "end"} />;
 
   const left = <>{renderUnits(leftUnits, overflow)}{more("left")}</>;
   const message = (
@@ -187,6 +197,7 @@ export function IslandCollapsedBar({
   const right = (
     <>
         {renderUnits(rightUnits, overflow)}
+        {more("end")}
         {!contributed.hints.has("agents.count") && (
           <button
             className="island__quiet-button"

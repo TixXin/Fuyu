@@ -6,7 +6,9 @@ import {
   isCollapsedItemHidden,
   moveCollapsedItem,
   setCollapsedItemHidden,
+  setCollapsedItemShelf,
   setCollapsedItemZone,
+  shelfIds,
   zoneIds,
 } from "../../src/lib/settings/collapsedItems.ts";
 
@@ -68,4 +70,22 @@ test("switching a built-in plugin or mail source off filters its collapsed item 
   const whileOff = arrangeCollapsedItems(filtered.map(([id]) => id), saved);
   assert.deepEqual(zoneIds(whileOff, "left", filtered.map(([id]) => id)), ["status-light"]);
   assert.deepEqual(zoneIds(whileOff, "left", entries.map(([id]) => id)), ["music", "status-light"]);
+});
+
+test("an item kept in the panel leaves its zone, keeps its place in the order, and comes back to it", () => {
+  const placements = arrangeCollapsedItems(offered, []);
+  const panel = setCollapsedItemShelf(placements, "music", true);
+  assert.deepEqual(shelfIds(panel, offered), ["music"]);
+  assert.ok(!zoneIds(panel, "right", offered).includes("music"));
+  assert.deepEqual(ids(panel), ids(placements));
+  assert.deepEqual(setCollapsedItemShelf(panel, "music", false), placements);
+});
+
+test("hiding wins over the panel, and showing again keeps the panel choice", () => {
+  const panel = setCollapsedItemShelf(arrangeCollapsedItems(offered, []), "music", true);
+  const hidden = setCollapsedItemHidden(panel, "music", true);
+  assert.deepEqual(shelfIds(hidden, offered), []);
+  assert.deepEqual(shelfIds(setCollapsedItemHidden(hidden, "music", false), offered), ["music"]);
+  assert.deepEqual(shelfIds(setCollapsedItemZone(panel, "music", "left"), offered), ["music"]);
+  assert.deepEqual(shelfIds(panel, offered.filter((id) => id !== "music")), []);
 });

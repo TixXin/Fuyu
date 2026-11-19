@@ -1,5 +1,5 @@
 import { useMemo, type ComponentProps } from "react";
-import { isCollapsedItemHidden } from "../../lib/settings/collapsedItems";
+import { isCollapsedItemOffBar } from "../../lib/settings/collapsedItems";
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import { usePageHidden } from "../../lib/usePageHidden";
 import type { IslandDecor } from "../plugin-kernel/islandDecor";
@@ -34,7 +34,7 @@ function slotWidth<Context>(width: SlotWidth<Context> | undefined, context: Cont
 
 export function useCenterDecor({ paused, agents, markLight, enabled = false, settings = NO_SETTINGS }: CenterDecorOptions): IslandDecor {
   const { placements } = useCollapsedPlacements();
-  const lightShown = markLight && !isCollapsedItemHidden(placements, "status-light");
+  const lightShown = markLight && !isCollapsedItemOffBar(placements, "status-light");
   const mood = usePetMood(agents, enabled || lightShown);
   const choice = useMemo(() => centerPatternChoice(settings), [settings]);
   const size = centerPatternSize(settings);

@@ -50,11 +50,11 @@ export function useIslandNotch(): IslandNotch | null {
 
 export const ALERT_NOTCH_WING = 90;
 
-export function notchFittedWidth(width: number, notch: IslandNotch | null, collapsedScale: number, alerted = false) {
+export function notchFittedWidth(width: number, notch: IslandNotch | null, collapsedScale: number, alerted = false, maxWing = MAX_NOTCH_WING) {
   if (!notch) return width;
   const gap = Math.ceil(notch.width / Math.max(collapsedScale, 0.01));
   const least = alerted ? ALERT_NOTCH_WING : NOTCH_WING;
-  const wing = Math.min(MAX_NOTCH_WING, Math.max(least, NOTCH_WING + width - MIN_COLLAPSED_ISLAND_WIDTH));
+  const wing = Math.min(Math.max(maxWing, MAX_NOTCH_WING), Math.max(least, NOTCH_WING + width - MIN_COLLAPSED_ISLAND_WIDTH));
   return notch.simulated ? Math.max(SIMULATED_NOTCH_WIDTH, gap + 2 * wing) : gap + 2 * wing;
 }
 

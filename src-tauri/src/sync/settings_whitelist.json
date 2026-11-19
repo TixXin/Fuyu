@@ -30,6 +30,7 @@
         "maxPanelHeight": "local",
         "panelWidth": "local",
         "collapsedOverflowMore": "sync",
+        "notchWingMax": "local",
         "collapsedWidthExtra": "local",
         "dragGrid": "sync",
         "agentHostDisplay": "sync",

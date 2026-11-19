@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ArrowDown, ArrowLeftRight, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, Ellipsis } from "lucide-react";
 import { SettingsGroup } from "../../../components/settings/SettingsGroup";
 import { SettingsSwitch } from "../../../components/settings/SettingsSwitch";
 import { useTranslation } from "../../../i18n";
@@ -12,10 +12,12 @@ import {
   filterCollapsedItemEntries,
   moveCollapsedItem,
   setCollapsedItemHidden,
+  setCollapsedItemShelf,
   setCollapsedItemZone,
   type CollapsedPlacement,
   type CollapsedZone,
 } from "../../../lib/settings/collapsedItems";
+import { useCollapsedOverflowIds } from "../../../lib/settings/useCollapsedOverflowIds";
 import { useCollapsedPlacements } from "../../../lib/settings/useCollapsedPlacements";
 import { useCollapsedPluginItems } from "./useCollapsedPluginItems";
 import "./CollapsedItemsSection.css";
@@ -29,6 +31,7 @@ export function CollapsedItemsSection() {
   const usageOn = isBuiltinEnabled(plugins, CLAUDE_USAGE);
   const usageConfig = useBuiltinConfig(CLAUDE_USAGE);
   const pluginItems = useCollapsedPluginItems();
+  const noRoom = useCollapsedOverflowIds();
   const timerName = t.island.timer;
 
   const names = useMemo(() => {
@@ -67,7 +70,12 @@ export function CollapsedItemsSection() {
             return (
               <li className="plugin-pages__row collapsed-items__row" key={placement.id}>
                 <span className="collapsed-items__number" aria-hidden="true">{index + 1}</span>
-                <label className="plugin-pages__name" htmlFor={switchId}><strong>{label}</strong></label>
+                <label className="plugin-pages__name" htmlFor={switchId}>
+                  <strong>{label}</strong>
+                  {!placement.hidden && (placement.shelf || noRoom.has(placement.id)) && (
+                    <small data-badge={placement.shelf ? "panel" : "no-room"}>{placement.shelf ? text.inPanel : text.noRoom}</small>
+                  )}
+                </label>
                 <button className="collapsed-items__button" type="button" disabled={index === 0} aria-label={text.moveUp(label)} onClick={() => change(moveCollapsedItem(placements, placement.id, -1, listed))}>
                   <ArrowUp size={12} strokeWidth={2.4} />
                 </button>
@@ -81,6 +89,15 @@ export function CollapsedItemsSection() {
                   onClick={() => change(setCollapsedItemZone(placements, placement.id, name === "left" ? "right" : "left"))}
                 >
                   <ArrowLeftRight size={12} strokeWidth={2.4} />
+                </button>
+                <button
+                  className="collapsed-items__button"
+                  type="button"
+                  aria-pressed={placement.shelf === true}
+                  aria-label={placement.shelf ? text.fromPanel(label) : text.toPanel(label)}
+                  onClick={() => change(setCollapsedItemShelf(placements, placement.id, !placement.shelf))}
+                >
+                  <Ellipsis size={12} strokeWidth={2.4} />
                 </button>
                 <SettingsSwitch id={switchId} checked={!placement.hidden} onChange={(show) => change(setCollapsedItemHidden(placements, placement.id, !show))} />
               </li>

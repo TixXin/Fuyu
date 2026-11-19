@@ -58,3 +58,27 @@ test("a grouped unit counts as many as it holds", () => {
   const result = fit(zone([9]), zone([60, 44]));
   assert.equal(overflowCount(result, { left: [1], right: [1, 2] }), 2);
 });
+
+test("with an item the user keeps in the panel, the chip is drawn even when everything fits", () => {
+  const result = fitCollapsedZones(zone([9]), zone([24, 20]), GAP, CHIP, { forceChip: true });
+  assert.deepEqual(result.left, [false]);
+  assert.deepEqual(result.right, [false, false]);
+  assert.equal(result.chip, "left");
+  assert.equal(result.used.left, 9 + GAP + CHIP);
+});
+
+test("a forced chip still makes room for itself by putting one more item away", () => {
+  const result = fitCollapsedZones(zone([70]), zone([70]), GAP, CHIP, { forceChip: true });
+  assert.equal(result.chip, "left");
+  assert.deepEqual(result.left, [true]);
+  assert.deepEqual(result.right, [false]);
+});
+
+test("with putting away switched off nothing is put away, and the chip appears only when forced", () => {
+  const off = fitCollapsedZones(zone([9]), zone([50, 50, 50]), GAP, CHIP, { auto: false });
+  assert.deepEqual(off.right, [false, false, false]);
+  assert.equal(off.chip, null);
+  const forced = fitCollapsedZones(zone([9]), zone([50, 50, 50]), GAP, CHIP, { auto: false, forceChip: true });
+  assert.deepEqual(forced.right, [false, false, false]);
+  assert.equal(forced.chip, "left");
+});

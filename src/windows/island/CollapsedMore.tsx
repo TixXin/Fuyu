@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import { createPortal } from "react-dom";
 import { useTranslation } from "../../i18n";
 import { setIslandOverflowRect } from "./api";
+import { collapsedFit } from "./collapsedFitStore";
 import { MORE_CHIP_CLASS } from "./useCollapsedOverflow";
 import type { IslandPage } from "./types";
 import "./CollapsedMore.css";
@@ -12,10 +13,12 @@ const OPEN_DELAY_MS = 150;
 const CLOSE_DELAY_MS = 220;
 const PANEL_OFFSET = 6;
 const EDGE = 8;
+const CHIP_FIT_ID = "overflow:chip";
+const CHIP_FIT_WIDTH = 28;
 
 type Place = { top: number; left: number | null; center: number; root: Element };
 
-export function CollapsedMore({ rows, onOpenPage }: { rows: readonly CollapsedMoreRow[]; onOpenPage: (page: IslandPage) => void }) {
+export function CollapsedMore({ rows, onOpenPage, reserve = false }: { rows: readonly CollapsedMoreRow[]; onOpenPage: (page: IslandPage) => void; reserve?: boolean }) {
   const copy = useTranslation().island;
   const chipRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -41,6 +44,12 @@ export function CollapsedMore({ rows, onOpenPage }: { rows: readonly CollapsedMo
   };
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
+
+  useEffect(() => {
+    if (!reserve) return;
+    collapsedFit.report(CHIP_FIT_ID, CHIP_FIT_WIDTH);
+    return () => collapsedFit.drop(CHIP_FIT_ID);
+  }, [reserve]);
 
   useLayoutEffect(() => {
     const panel = panelRef.current;

@@ -4,6 +4,8 @@ export type SettingsLayoutText = {
   showCollapsedText: string;
   collapsedOverflowMore: string;
   collapsedOverflowMoreHint: string;
+  notchWingMax: string;
+  notchWingMaxHint: string;
   showIdleTodoCount: string;
   title: string;
   sizeTitle: string;
@@ -73,6 +75,8 @@ export const zhCN: SettingsLayoutText = {
   showCollapsedText: "显示折叠岛屿文字",
   collapsedOverflowMore: "放不下的项目收进「+N」",
   collapsedOverflowMoreHint: "贴合刘海时两侧位置有限：按下面清单的顺序先放，放不下的收进「+N」，停在或点它查看。关掉后放不下的项目不显示。",
+  notchWingMax: "刘海两侧最宽",
+  notchWingMaxHint: "贴合刘海时每一侧最多占多宽。调宽能多放几个项目，也会盖住更多菜单栏。",
   showIdleTodoCount: "空闲时显示剩余待办数",
   title: "尺寸与位置",
   sizeTitle: "尺寸",
@@ -146,6 +150,8 @@ export const en: SettingsLayoutText = {
   showCollapsedText: "Show collapsed island text",
   collapsedOverflowMore: "Put items that do not fit behind +N",
   collapsedOverflowMoreHint: "Beside the notch there is little room: items are placed in the order of the list below, and the rest go behind +N. Hover or click it to see them. When off, items that do not fit are not shown.",
+  notchWingMax: "Widest each side of the notch",
+  notchWingMaxHint: "How wide each side may grow when the island sits around the notch. Wider fits more items and covers more of the menu bar.",
   showIdleTodoCount: "Show todo count when idle",
   title: "Size & position",
   sizeTitle: "Size",

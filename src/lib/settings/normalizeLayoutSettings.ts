@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS, LEGACY_FALLBACKS } from "./settingsDefaults.ts";
 import {
   MAX_ISLAND_CORNER_RADIUS, MAX_ISLAND_OPACITY, MAX_MAX_PANEL_HEIGHT, MAX_TOP_FILLET_RADIUS,
   MIN_ISLAND_CORNER_RADIUS, MIN_ISLAND_OPACITY, MIN_MAX_PANEL_HEIGHT, MIN_TOP_FILLET_RADIUS,
-  MAX_PANEL_WIDTH, MIN_PANEL_WIDTH, MAX_COLLAPSED_WIDTH_EXTRA, MIN_COLLAPSED_WIDTH_EXTRA,
+  MAX_PANEL_WIDTH, MIN_PANEL_WIDTH, MAX_COLLAPSED_WIDTH_EXTRA, MIN_COLLAPSED_WIDTH_EXTRA, MAX_NOTCH_WING_MAX, MIN_NOTCH_WING_MAX,
 } from "./settingsLimits.ts";
 import { hasThemeSets, THEME_COLOR_KEYS, THEME_COLORS, THEME_MODES, themeSetsFromSingleColors } from "../theme/themeMode.ts";
 import { oneOf } from "./settingsLimits.ts";
@@ -107,6 +107,9 @@ export function normalizeLayoutSettings(settings: LegacyIslandSettings | null | 
         ? settings.showCollapsedText
         : DEFAULT_SETTINGS.showCollapsedText,
     collapsedOverflowMore: settings?.collapsedOverflowMore !== false,
+    notchWingMax: typeof settings?.notchWingMax === "number" && Number.isFinite(settings.notchWingMax)
+      ? clamp(Math.round(settings.notchWingMax), MIN_NOTCH_WING_MAX, MAX_NOTCH_WING_MAX)
+      : DEFAULT_SETTINGS.notchWingMax,
   } satisfies Partial<IslandSettings>;
 }
 

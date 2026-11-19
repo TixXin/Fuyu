@@ -74,6 +74,7 @@ export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentS
   showTitle: boolean;
   showCollapsedText: boolean;
   collapsedOverflowMore: boolean;
+  notchWingMax: number;
   showIdleTodoCount: boolean;
   carryOverIncompleteTodos: boolean;
   enableTodoReorder: boolean;

@@ -162,7 +162,7 @@ if (!automated) {
     await openPage("appearanceCollapsed");
     const zoneRows = (name: string) => [...(document.querySelector(`.collapsed-items__zone[aria-label="${name}"]`)?.querySelectorAll(".plugin-pages__name") ?? [])].map((row) => row.textContent);
     const itemButton = (label: string) => document.querySelector<HTMLButtonElement>(`.collapsed-items button[aria-label="${label}"]`);
-    const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean }[] } | null;
+    const savedItems = () => JSON.parse(localStorage.getItem("fuyu-collapsed-items") ?? "null") as { items: { id: string; zone: string; hidden?: boolean; shelf?: boolean }[] } | null;
     check(zoneRows("左侧").join("|") === "Agent 状态灯" && zoneRows("右侧")[0] === "新邮件提醒"
       && zoneRows("右侧").slice(-2).join("|") === "会话数 / 会话环|计时器" && savedItems() === null, "The collapsed bar items list the default layout, the timer included, without saving anything");
     await act(async () => { itemButton("移到左侧：会话数 / 会话环")!.click(); });
@@ -172,6 +172,17 @@ if (!automated) {
     check(savedItems()?.items.find((item) => item.id === "status-light")?.hidden === true, "The status light can be hidden");
     await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".collapsed-items__reset")][0].click(); });
     check(savedItems() === null && zoneRows("左侧").join("|") === "Agent 状态灯", "Reset to default clears the saved order");
+    const badge = (kind: string) => document.querySelector(`.collapsed-items small[data-badge="${kind}"]`)?.textContent;
+    await act(async () => { itemButton("收进「+N」小面板：会话数 / 会话环")!.click(); });
+    check(savedItems()?.items.find((item) => item.id === "session-count")?.shelf === true && badge("panel") === "在小面板里" && itemButton("放回岛上：会话数 / 会话环")?.getAttribute("aria-pressed") === "true", "An item can be kept behind +N, and its row says it is in the panel");
+    await act(async () => { itemButton("放回岛上：会话数 / 会话环")!.click(); });
+    localStorage.setItem("fuyu-collapsed-overflow", JSON.stringify(["session-count"]));
+    await act(async () => { window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-collapsed-overflow" })); });
+    check(!savedItems()?.items.find((item) => item.id === "session-count")?.shelf && badge("panel") === undefined && badge("no-room") === "刘海旁放不下", "Taken back out it is on the island again; a row the island could not fit is marked");
+    localStorage.removeItem("fuyu-collapsed-overflow");
+    await act(async () => { window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-collapsed-overflow" })); });
+    await act(async () => { [...document.querySelectorAll<HTMLButtonElement>(".collapsed-items__reset")][0].click(); });
+    check(badge("no-room") === undefined && savedItems() === null, "The mark goes away when the island has room again");
     await act(async () => { await (await import("@tauri-apps/api/event")).emit("plugin-bar-usage-report", { id: 1, collapsed: false, barWidth: null, items: [{ id: "weather", owner: "@fuyu/weather", hideable: true, box: null, name: "天气" }, { id: "ring", owner: "@fuyu/todo-ring", hideable: false, box: null, name: "待办环" }] }); await new Promise((resolve) => setTimeout(resolve, 50)); });
     await act(async () => { itemButton("移到左侧：天气")?.click(); });
     check(zoneRows("左侧").join("|") === "Agent 状态灯|天气" && !zoneRows("右侧").includes("待办环") && savedItems()?.items.find((item) => item.id === "weather")?.zone === "left", "A plugin item the island reports is listed by name and can change sides; one that cannot be hidden is left out"); localStorage.removeItem("fuyu-collapsed-items");
