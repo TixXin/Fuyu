@@ -31,7 +31,7 @@ const repoPath = (path) => relative(ROOT, path).replaceAll("\\", "/");
 const featureOf = (path) => path.match(/^src\/features\/([^/]+)\//)?.[1] ?? null;
 const sharedLayer = (path) => /^src\/(lib|components|utils)\//.test(path);
 const PLATFORM = "plugin-kernel";
-const SHELL_READS = new Set([PLATFORM, "plugins", "plugin-views"]);
+const SHELL_READS = new Set([PLATFORM]);
 const isShell = (path) => path.startsWith("src/windows/island/");
 
 function crossings() {
@@ -82,7 +82,7 @@ test("the allowlist is sorted and has no duplicates", () => {
   }
 });
 
-test("the island shell imports no feature besides the plugin kernel, plugins and plugin-views", () => {
+test("the island shell imports no feature besides the plugin kernel", () => {
   assert.deepEqual(crossings().island, [], "The shell reads what features contribute: register a slot item or a runner in src/features/<feature>/plugin/ instead.");
 });
 
