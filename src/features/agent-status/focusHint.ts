@@ -5,7 +5,6 @@ import type { AgentSessionSummary, SessionProvider } from "./api";
 const PROMPT_CHARS = 240;
 
 const WINDOW_ONLY_PROVIDERS: ReadonlySet<SessionProvider> = new Set([
-  "workbuddy",
   "dsh",
   "trae",
   "traeCn",
@@ -17,7 +16,7 @@ function clip(value: string) {
 }
 
 export function focusesWindowOnly(session: Pick<AgentSessionSummary, "provider" | "host" | "remoteHost">): boolean {
-  if (session.remoteHost) return false;
+  if (session.remoteHost || session.provider === "workbuddy") return false;
   if (WINDOW_ONLY_PROVIDERS.has(session.provider)) return true;
   if (session.host) return session.host.kind === "app";
   return session.provider === "antigravity";

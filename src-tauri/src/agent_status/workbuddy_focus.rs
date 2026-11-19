@@ -1,6 +1,7 @@
-use std::time::Duration;
+use std::{path::Path, time::Duration};
 
 const APPS: [&str; 3] = ["workbuddy", "workbuddyai", "workbuddy ai"];
+const SCHEMES: [(&str, &str); 2] = [(".workbuddy", "workbuddy"), (".workbuddy-ai", "workbuddy-ai")];
 const WAKE_POLLS: usize = 15;
 const WAKE_POLL_INTERVAL: Duration = Duration::from_millis(200);
 
@@ -35,6 +36,29 @@ pub(super) fn apps(running: Option<String>) -> Vec<String> {
         }
     }
     apps
+}
+
+pub(super) fn session_link(home_dir: &Path, session_id: &str) -> Option<String> {
+    if session_id.is_empty() || !session_id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+        return None;
+    }
+    let file = format!("{session_id}.jsonl");
+    SCHEMES
+        .iter()
+        .find(|(dir, _)| {
+            std::fs::read_dir(home_dir.join(dir).join("projects"))
+                .into_iter()
+                .flatten()
+                .flatten()
+                .any(|project| project.path().join(&file).is_file())
+        })
+        .map(|(_, scheme)| format!("{scheme}://chat/{session_id}"))
+}
+
+pub(super) fn open_session(link: &str) -> bool {
+    #[cfg(windows)]
+    crate::win32::window::allow_set_foreground_window(u32::MAX);
+    tauri_plugin_opener::open_url(link, None::<&str>).is_ok()
 }
 
 pub(super) fn wake_and_find<T>(wake: impl FnOnce() -> bool, mut find: impl FnMut() -> Option<T>, mut wait: impl FnMut()) -> Option<T> {
@@ -108,6 +132,23 @@ mod tests {
         assert_eq!(polls, 0);
         assert_eq!(wake_and_find(|| true, || -> Option<()> { polls += 1; None }, || {}), None);
         assert_eq!(polls, WAKE_POLLS);
+    }
+
+    #[test]
+    fn links_a_session_to_the_edition_whose_folder_holds_it() {
+        let home = std::env::temp_dir().join(format!("fuyu-workbuddy-link-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&home);
+        let project = |dir: &str| home.join(dir).join("projects").join("Users-me-shop");
+        std::fs::create_dir_all(project(".workbuddy")).unwrap();
+        std::fs::create_dir_all(project(".workbuddy-ai")).unwrap();
+        std::fs::write(project(".workbuddy").join("cn-1.jsonl"), "").unwrap();
+        std::fs::write(project(".workbuddy-ai").join("ac1de220-1ff3.jsonl"), "").unwrap();
+        assert_eq!(session_link(&home, "cn-1").as_deref(), Some("workbuddy://chat/cn-1"));
+        assert_eq!(session_link(&home, "ac1de220-1ff3").as_deref(), Some("workbuddy-ai://chat/ac1de220-1ff3"));
+        assert_eq!(session_link(&home, "gone"), None);
+        assert_eq!(session_link(&home, ""), None);
+        assert_eq!(session_link(&home, "../x?y"), None);
+        let _ = std::fs::remove_dir_all(&home);
     }
 
     #[test]
