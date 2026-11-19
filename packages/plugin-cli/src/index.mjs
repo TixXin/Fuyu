@@ -6,9 +6,12 @@ export { DEV_DIR_ENV, defaultDataDir, dev, registerDevEntry, unregisterDevEntry 
 export {
   PACKAGES_SUBDIR,
   applyRevocationsToDir,
+  commitStaged,
+  discardStaged,
   inspectPackage,
   installPackage,
   removeInstalledFromYml,
+  stagePackage,
   uninstallPackage,
   writeInstalledToYml,
 } from "./installer.mjs";

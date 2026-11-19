@@ -63,6 +63,7 @@ test("E37 official plugins: check, pack, review, install, and run in host", asyn
     const installed = installPackage(packed.file, {
       dir: hostDir,
       source: "market",
+      official: true,
       expectedSha256: packed.sha256,
     });
     assert.equal(installed.id, entry.id);

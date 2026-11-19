@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { dirname, join } from "node:path";
 import { readPackage, sha256Hex, validateManifest } from "@fuyu/plugin-manifest";
 import { revocationOf } from "@fuyu/plugin-market";
+import { discardStaged, recoverStaging, swapStaged, writeStaged } from "./staging.mjs";
 
 export const PACKAGES_SUBDIR = "packages";
 
@@ -80,11 +81,17 @@ export function inspectPackage(zipBuffer, options = {}) {
     throw installerError("bad-sha256", `Package SHA-256 mismatch: expected ${options.expectedSha256}, got ${sha256}`);
   }
   const pkg = readPackage(buf);
+  if (typeof options.expectedName === "string" && pkg.manifest?.name !== options.expectedName) {
+    throw installerError("name-mismatch", `Package is named ${String(pkg.manifest?.name)}, expected ${options.expectedName}`);
+  }
+  if (typeof options.expectedVersion === "string" && pkg.manifest?.version !== options.expectedVersion) {
+    throw installerError("version-mismatch", `Package version is ${String(pkg.manifest?.version)}, expected ${options.expectedVersion}`);
+  }
   const check = validateManifest(pkg.manifest, {
     stage: "built",
     allowExperimental: false,
     appVersion: options.appVersion,
-    official: source === "market" || options.official === true,
+    official: options.official === true,
   });
   if (!check.ok) {
     throw installerError(
@@ -114,9 +121,9 @@ export function inspectPackage(zipBuffer, options = {}) {
   };
 }
 
-export function installPackage(zipBuffer, options = {}) {
+export function stagePackage(zipBuffer, options = {}) {
   if (typeof options.dir !== "string" || !options.dir) {
-    throw installerError("bad-params", "installPackage requires options.dir (the plugins-v3 data directory)");
+    throw installerError("bad-params", "stagePackage requires options.dir (the plugins-v3 data directory)");
   }
   const inspected = inspectPackage(zipBuffer, options);
   if (options.revocations) {
@@ -125,29 +132,54 @@ export function installPackage(zipBuffer, options = {}) {
       throw installerError("revoked", `${inspected.id}@${inspected.version} has been revoked and cannot be installed`, { entries: rev.entries });
     }
   }
-  const targetRoot = packageDirFor(join(options.dir, PACKAGES_SUBDIR), inspected.id);
-  rmSync(targetRoot, { recursive: true, force: true });
-  mkdirSync(targetRoot, { recursive: true });
-  for (const entry of inspected.files) {
-    const dest = join(targetRoot, ...entry.path.split("/"));
-    mkdirSync(dirname(dest), { recursive: true });
-    writeFileSync(dest, entry.data);
-  }
-  writeInstalledToYml(join(options.dir, options.configFile ?? "plugins.yml"), {
-    id: inspected.id,
-    source: inspected.source,
-    disabled: options.disabled === true,
-    replaces: inspected.confirmation.replaces,
-  });
+  const packagesRoot = join(options.dir, PACKAGES_SUBDIR);
+  const target = packageDirFor(packagesRoot, inspected.id);
+  recoverStaging(packagesRoot, (id) => packageDirFor(packagesRoot, id));
+  const dir = writeStaged(packagesRoot, inspected.files);
   return {
     id: inspected.id,
     version: inspected.version,
     source: inspected.source,
-    root: targetRoot,
     digest: inspected.digest,
     sha256: inspected.sha256,
     confirmation: inspected.confirmation,
+    disabled: options.disabled === true,
+    target,
+    dir,
   };
+}
+
+export { discardStaged };
+
+export function commitStaged(dir, staged, { configFile = "plugins.yml" } = {}) {
+  const list = Array.isArray(staged) ? staged : [staged];
+  const ymlFile = join(dir, configFile);
+  swapStaged(join(dir, PACKAGES_SUBDIR), list, {
+    configFile: ymlFile,
+    writeConfig: (item) => writeInstalledToYml(ymlFile, {
+      id: item.id,
+      source: item.source,
+      disabled: item.disabled,
+      replaces: item.confirmation.replaces,
+    }),
+  });
+  return list.map((item) => ({
+    id: item.id,
+    version: item.version,
+    source: item.source,
+    root: item.target,
+    digest: item.digest,
+    sha256: item.sha256,
+    confirmation: item.confirmation,
+  }));
+}
+
+export function installPackage(zipBuffer, options = {}) {
+  if (typeof options.dir !== "string" || !options.dir) {
+    throw installerError("bad-params", "installPackage requires options.dir (the plugins-v3 data directory)");
+  }
+  const staged = stagePackage(zipBuffer, options);
+  return commitStaged(options.dir, [staged], { configFile: options.configFile })[0];
 }
 
 export function uninstallPackage(dir, id, { configFile = "plugins.yml", removeData = false } = {}) {
