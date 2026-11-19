@@ -1,3 +1,5 @@
+import { MAX_SCREENSHOTS } from "../../../../packages/plugin-market/src/index.mjs";
+
 const isObject = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
 
 const timeOf = (value) => {
@@ -18,6 +20,31 @@ export function pluginIcon(plugin, preferred) {
     if (url) return url;
   }
   return null;
+}
+
+const captionOf = (value) => {
+  if (!isObject(value)) return null;
+  const caption = Object.fromEntries(Object.entries(value).filter(([, text]) => typeof text === "string" && text.trim()));
+  return Object.keys(caption).length > 0 ? caption : null;
+};
+
+export function versionScreenshots(entry) {
+  const list = Array.isArray(entry?.screenshots) ? entry.screenshots : [];
+  return list.flatMap((shot) => {
+    if (!isObject(shot) || typeof shot.url !== "string" || !shot.url.startsWith("https://")) return [];
+    const caption = captionOf(shot.caption);
+    return [caption ? { url: shot.url, caption } : { url: shot.url }];
+  }).slice(0, MAX_SCREENSHOTS);
+}
+
+export function pluginScreenshots(plugin, preferred) {
+  const own = versionScreenshots(preferred);
+  if (own.length > 0) return own;
+  for (const entry of Array.isArray(plugin?.versions) ? plugin.versions : []) {
+    const shots = versionScreenshots(entry);
+    if (shots.length > 0) return shots;
+  }
+  return [];
 }
 
 function earliest(entries) {
@@ -45,4 +72,12 @@ export function packageIcon(raw) {
   const parts = text.split("/");
   if (parts.some((part) => !part || part === "." || part === "..")) return undefined;
   return parts.join("/");
+}
+
+const names = (value) => (Array.isArray(value) ? value.filter((item) => typeof item === "string" && item) : []);
+
+export function packageReach(fuyu) {
+  const inject = fuyu?.inject;
+  const services = Array.isArray(inject) ? names(inject) : isObject(inject) ? [...names(inject.required), ...names(inject.optional)] : [];
+  return { slots: names(fuyu?.slots), services, config: fuyu?.config !== undefined && fuyu?.config !== null };
 }

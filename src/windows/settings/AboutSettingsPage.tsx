@@ -5,8 +5,9 @@ import { SettingsRow } from "../../components/settings/SettingsRow";
 import { DEFAULT_SETTINGS } from "../../lib/settings/settings";
 import type { IslandSettings } from "../../lib/settings/types";
 import { AboutHero } from "../../features/updater/AboutHero";
-import { ProjectLinksSection } from "../../features/updater/ProjectSettingsSection";
 import { UpdateDiagnosticsRow } from "../../features/updater/UpdateDiagnosticsRow";
+import { WhatsNew } from "../../features/updater/WhatsNew";
+import { useOpenInBrowser } from "../../features/updater/useOpenInBrowser";
 import { getUpdateState, subscribeToUpdate } from "../../features/updater/updaterController";
 import { useTranslation } from "../../i18n";
 import { openOnboardingWindow } from "../onboarding/api";
@@ -17,6 +18,8 @@ import { settingsSections } from "./slots/sectionSlot";
 const CONFIRM_TIMEOUT_MS = 4_000;
 
 type AboutSectionProps = { onSettingsChange: (settings: IslandSettings) => void };
+
+type AboutTabPage = "about" | "aboutChangelog" | "aboutHelp";
 
 function HelpSection() {
   const text = useTranslation().settings.project;
@@ -73,26 +76,37 @@ function SystemSection({ onSettingsChange }: AboutSectionProps) {
   );
 }
 
-const sections = settingsSections<AboutSectionProps, "about">();
-
-export function AboutSettingsPage(props: AboutSectionProps) {
+function Colophon() {
   const text = useTranslation().settings.project;
   const version = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
-
+  const { failed, onClick } = useOpenInBrowser();
   return (
     <>
-      <AboutHero />
-      <div className="about-workbench">
-        <div className="about-workbench__col">
-          <SlotView slot={sections} group="about" props={props} />
-        </div>
-        <div className="about-workbench__col">
-          <ProjectLinksSection />
-          <HelpSection />
-          <SystemSection onSettingsChange={props.onSettingsChange} />
-        </div>
-      </div>
-      <p className="about-colophon">{text.colophon(version)}</p>
+      <p className="about-colophon">
+        {text.colophon(version)}
+        {" · "}
+        <a href={text.logoCallUrl} target="_blank" rel="noopener noreferrer" title={text.logoCall} onClick={onClick}>{text.logoCallLink}</a>
+      </p>
+      {failed && <p className="project-link-error" role="alert">{text.openFailed}</p>}
     </>
+  );
+}
+
+const sections = settingsSections<AboutSectionProps, AboutTabPage>();
+
+export function AboutSettingsPage({ tab, ...props }: AboutSectionProps & { tab: AboutTabPage }) {
+  return (
+    <div className="about-page">
+      {tab === "about" && (
+        <>
+          <AboutHero />
+          <WhatsNew />
+        </>
+      )}
+      <SlotView slot={sections} group={tab} props={props} />
+      {tab === "about" && <SystemSection onSettingsChange={props.onSettingsChange} />}
+      {tab === "aboutHelp" && <HelpSection />}
+      <Colophon />
+    </div>
   );
 }

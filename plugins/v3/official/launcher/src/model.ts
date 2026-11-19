@@ -1,4 +1,4 @@
-export type Locale = "zh-CN" | "en";
+import { DEFAULT_SETTINGS, type LauncherSettings } from "./settingsModel.ts";
 
 export interface AppEntry {
   id: string;
@@ -20,12 +20,19 @@ export interface RankedApp extends AppEntry {
   recent: boolean;
 }
 
+export interface ExcludedApp {
+  path: string;
+  name: string;
+}
+
 export interface LauncherState {
   apps: RankedApp[];
+  excludedApps: ExcludedApp[];
   totalCount: number;
   recentCount: number;
   scannedAt: number;
   updatedAt: number;
+  settings: LauncherSettings;
 }
 
 export const MAX_RECENT_ENTRIES = 200;
@@ -35,6 +42,8 @@ export const METHODS = {
   rescan: "rescan",
   launch: "launch",
   clearRecent: "clearRecent",
+  setSettings: "setSettings",
+  addExtraDir: "addExtraDir",
 } as const;
 
 export const TOPICS = {
@@ -43,55 +52,13 @@ export const TOPICS = {
 
 export const EMPTY_STATE: LauncherState = {
   apps: [],
+  excludedApps: [],
   totalCount: 0,
   recentCount: 0,
   scannedAt: 0,
   updatedAt: 0,
+  settings: DEFAULT_SETTINGS,
 };
-
-export function detectLocale(): Locale {
-  if (typeof navigator !== "undefined" && typeof navigator.language === "string") {
-    return navigator.language.toLowerCase().startsWith("en") ? "en" : "zh-CN";
-  }
-  return "zh-CN";
-}
-
-export const TEXT = {
-  "zh-CN": {
-    title: "应用启动台",
-    searchPlaceholder: "搜索应用或首字母缩写…",
-    clearSearch: "清空搜索",
-    rescan: "重新扫描本机应用",
-    rescanShort: "重新扫描",
-    clearRecent: "清空最近启动记录",
-    recentBadge: (count: number) => `最近 · ${count} 次`,
-    emptySearch: "没有匹配的应用",
-    emptyApps: "未扫描到可用应用",
-    footerHint: "↑↓ 选择 · Enter 启动 · Esc 清空",
-    appCount: (total: number) => `共 ${total} 个应用`,
-    settingsSummary: (total: number, recent: number) =>
-      `已索引 ${total} 个应用 · ${recent} 条最近启动记录`,
-    rescanDone: (total: number) => `已重新扫描，共找到 ${total} 个应用`,
-    clearedDone: "已清空最近启动记录",
-  },
-  en: {
-    title: "App Launcher",
-    searchPlaceholder: "Search apps or initials…",
-    clearSearch: "Clear search",
-    rescan: "Rescan applications",
-    rescanShort: "Rescan",
-    clearRecent: "Clear recent history",
-    recentBadge: (count: number) => `Recent · ${count}x`,
-    emptySearch: "No matching applications",
-    emptyApps: "No applications found",
-    footerHint: "↑↓ Select · Enter Launch · Esc Clear",
-    appCount: (total: number) => `${total} apps`,
-    settingsSummary: (total: number, recent: number) =>
-      `${total} apps indexed · ${recent} recent entries`,
-    rescanDone: (total: number) => `Rescanned: ${total} applications found`,
-    clearedDone: "Cleared recent launch history",
-  },
-} as const;
 
 export function extractAcronyms(name: string): { word: string; camel: string; words: string[] } {
   const words = name
@@ -168,6 +135,7 @@ export function recordAppLaunch(
   appPath: string,
   at: number,
   knownPaths?: ReadonlySet<string>,
+  limit: number = MAX_RECENT_ENTRIES,
 ): AppUsageMap {
   const entries = Object.entries(usage).filter(
     ([key, val]) => key !== appPath && val.count > 0 && val.lastLaunchedAt > 0 && (!knownPaths || knownPaths.has(key)),
@@ -179,7 +147,27 @@ export function recordAppLaunch(
   };
   entries.push([appPath, updated]);
   entries.sort((a, b) => b[1].lastLaunchedAt - a[1].lastLaunchedAt || b[1].count - a[1].count);
-  return Object.fromEntries(entries.slice(0, MAX_RECENT_ENTRIES));
+  return Object.fromEntries(entries.slice(0, Math.max(1, Math.min(limit, MAX_RECENT_ENTRIES))));
+}
+
+export function trimUsage(usage: AppUsageMap, limit: number): AppUsageMap {
+  const entries = Object.entries(usage).sort((a, b) => b[1].lastLaunchedAt - a[1].lastLaunchedAt || b[1].count - a[1].count);
+  return entries.length <= limit ? usage : Object.fromEntries(entries.slice(0, limit));
+}
+
+export function recentApps(apps: readonly RankedApp[], limit: number): RankedApp[] {
+  return apps.filter((app) => app.recent).slice(0, Math.max(0, limit));
+}
+
+export function sameNameNames(apps: readonly AppEntry[]): Set<string> {
+  const seen = new Set<string>();
+  const dup = new Set<string>();
+  for (const app of apps) {
+    const key = app.name.toLowerCase();
+    if (seen.has(key)) dup.add(key);
+    seen.add(key);
+  }
+  return dup;
 }
 
 export function rankApps(apps: readonly AppEntry[], usage: AppUsageMap): RankedApp[] {

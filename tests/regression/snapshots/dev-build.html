@@ -146,18 +146,23 @@
           </div>
         </div>
       </section>
-      <a class="project-link project-link--release" href="https://fuyu.ing/releases/" rel="noopener noreferrer" target="_blank">
-        <svg aria-hidden="true" class="lucide lucide-download project-link__icon" fill="none" height="18" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg"></svg>
-        <span class="project-link__copy">
-          <strong>
-            查看最新版本
+      <div class="update-status update-status--muted">
+        <div class="update-status__row update-status__row--solo">
+          <span aria-hidden="true" class="update-status__dot"></span>
+          <strong class="update-status__headline" role="status">
+            开发版 · 不自动更新
           </strong>
+        </div>
+        <p class="update-status__sub">
           <span>
             这是开发版，不检查也不安装更新。新版本请在安装的正式版里更新。
           </span>
-        </span>
-        <svg aria-hidden="true" class="lucide lucide-external-link project-link__arrow" fill="none" height="14" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" xmlns="http://www.w3.org/2000/svg"></svg>
-      </a>
+          <a class="update-status__link" href="https://fuyu.ing/releases/" rel="noopener noreferrer" target="_blank">
+            查看最新版本
+            ↗
+          </a>
+        </p>
+      </div>
       <div id="bar" style="position: relative; height: 40px">
         <div class="dev-bar">
           <span aria-hidden="true" class="dev-bar__mark">

@@ -58,6 +58,9 @@ It has the three parts a plugin usually has:
 
 \`fuyu.client\` in \`package.json\` tells Fuyu which window loads which built file. \`src/timers.ts\` is shared
 by both sides; \`src/styles.css\` is added to the windows by the build.
+
+The first entry of \`fuyu.categories\` is the plugin's main category: the market counts and filters by it,
+while search looks at all of them.
 ${checkoutNote}
 ## Develop
 

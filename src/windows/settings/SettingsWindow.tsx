@@ -8,7 +8,7 @@ import { useFeatureSwitches } from "./useFeatureSwitches";
 import { LayoutEditor } from "./LayoutEditor";
 import "./slots/categories";
 import "./slots/runners";
-import { SETTINGS_FOCUS_STORAGE_KEY, takeFocusRequest } from "./storage";
+import { SETTINGS_FOCUS_STORAGE_KEY, aboutTabPage, rememberAboutPage, takeFocusRequest } from "./storage";
 import { listenSettingsWindowReopened, showSettingsWindow } from "./api";
 import { DEFAULT_SETTINGS, withLayoutFrom, withThemeFrom } from "../../lib/settings/settings";
 import { useIslandSettings } from "../../lib/settings/useIslandSettings";
@@ -25,7 +25,6 @@ import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { categorySlot } from "./slots/categorySlot";
 import { settingsRunners } from "../../features/plugin-kernel/settingsSlots";
 import { focusSection } from "../../lib/settings/sectionFocus";
-import { AboutLogoCallLink } from "../../features/updater/AboutHero";
 import { PluginMarketHeaderActions } from "./PluginMarketHeaderActions";
 import { PluginPageActions } from "./PluginPageActions";
 import { requestPluginDetail } from "./pluginPageHandoff";
@@ -49,6 +48,9 @@ export function SettingsWindow() {
   const features = useFeatureSwitches(settings, setSettings);
   const offFeature = features.hiddenPages.has(category) ? featureOf(category) : undefined;
   const page = offFeature ? null : category;
+  useEffect(() => {
+    rememberAboutPage(category);
+  }, [category]);
 
   const focusRequestedSection = useCallback(() => {
     const request = takeFocusRequest();
@@ -57,6 +59,10 @@ export function SettingsWindow() {
     if (section === "savePath") {
       setCategory("todos");
       focusSection(section);
+    }
+    if (section === "updates") {
+      setCategory(aboutTabPage(request?.tab ?? "overview"));
+      return;
     }
     const target = section && settingsCategoryFor(section);
     if (target) setCategory(target);
@@ -139,8 +145,6 @@ export function SettingsWindow() {
             ? <ResetAppearanceButton onReset={resetAppearance} />
             : category === "appearance" || category === "appearanceCollapsed"
             ? <ResetAppearanceButton layout onReset={() => setSettings((current) => withLayoutFrom(current, DEFAULT_SETTINGS))} />
-            : category === "about"
-            ? <AboutLogoCallLink />
             : category === "pluginsV3"
             ? <PluginPageActions onOpenPage={setCategory} />
             : category === "pluginMarket"

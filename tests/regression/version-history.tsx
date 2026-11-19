@@ -70,6 +70,7 @@ try {
   check(rows().every((row) => /^2026-10-\d{2}$/.test(row.querySelector("time")?.textContent ?? "")), "Each version shows its release date");
   check(rows()[1].querySelector(".version-history__meta")?.textContent === zh.betaCount(4), "A release says how many betas it folds in");
 
+  check(rowButton("0.3.9").getAttribute("aria-expanded") === "true" && host.querySelectorAll(".version-history__item--open").length === 1, "The running version starts open, the rest closed");
   rowButton("0.3.8").click();
   await settle();
   check(rowButton("0.3.8").getAttribute("aria-expanded") === "true", "Clicking a version opens it");
@@ -95,7 +96,7 @@ try {
   check(!host.querySelector(".version-history__panel"), "Clicking an open version closes it");
 
   const narrow = document.getElementById("narrow")!;
-  narrow.querySelector<HTMLButtonElement>(".version-history__row")!.click();
+  check(narrow.querySelector(".version-history__row")?.getAttribute("aria-expanded") === "true", "The narrow list also starts with the running version open");
   await settle(300);
   const overflow = [...narrow.querySelectorAll<HTMLElement>("*")].filter((element) => element.scrollWidth > element.clientWidth + 1 && getComputedStyle(element).overflowX !== "hidden" && element.clientWidth > 0);
   check(overflow.length === 0 && narrow.scrollWidth <= 340, "Nothing overflows in a narrow window");

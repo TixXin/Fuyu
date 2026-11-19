@@ -1,120 +1,184 @@
 import type { Context } from "@fuyu/plugin-base";
-import { useEffect, useState } from "react";
-import { TEXT, type TemperatureUnit } from "./types.ts";
+import { useEffect, useState, type ReactNode } from "react";
+import { HOUR_CHOICES, LEAD_CHOICES, REFRESH_CHOICES, type WeatherConfig } from "./config.ts";
+import { problemText, textFor } from "./text.ts";
 import { useWeather } from "./useWeather.ts";
 import "./styles.css";
+import "./settings.css";
+
+type Patch = (patch: Partial<WeatherConfig>) => void;
+type ChoiceKey = "units" | "windUnit" | "timeFormat" | "barStyle";
+type Copy = ReturnType<typeof textFor>;
+
+function options(copy: Copy): Record<ChoiceKey, [string, string][]> {
+  return {
+    units: [
+      ["celsius", copy.celsius],
+      ["fahrenheit", copy.fahrenheit],
+    ],
+    windUnit: [
+      ["kmh", "km/h"],
+      ["ms", "m/s"],
+      ["mph", "mph"],
+      ["bft", copy.windBft],
+    ],
+    timeFormat: [
+      ["system", copy.formatSystem],
+      ["24", copy.format24],
+      ["12", copy.format12],
+    ],
+    barStyle: [
+      ["icon", copy.barIcon],
+      ["text", copy.barText],
+      ["temp", copy.barTemp],
+    ],
+  };
+}
+
+function Group({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  return (
+    <div className="fuyu-weather-set__group">
+      <h3 className="fuyu-weather-set__title">{title}</h3>
+      {hint && <p className="fuyu-weather-set__hint">{hint}</p>}
+      {children}
+    </div>
+  );
+}
+
+function Row({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="fuyu-weather-set__row">
+      <span className="fuyu-weather-set__label">{label}</span>
+      <div className="fuyu-weather-set__control">{children}</div>
+    </div>
+  );
+}
+
+function Choice({ name, label, config, patch, copy }: { name: ChoiceKey; label: string; config: WeatherConfig; patch: Patch; copy: Copy }) {
+  return (
+    <Row label={label}>
+      <div className="fuyu-weather-set__seg" role="radiogroup" aria-label={label}>
+        {options(copy)[name].map(([value, caption]) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={config[name] === value}
+            className={config[name] === value ? "fuyu-weather-set__seg-item is-on" : "fuyu-weather-set__seg-item"}
+            onClick={() => patch({ [name]: value } as Partial<WeatherConfig>)}
+          >
+            {caption}
+          </button>
+        ))}
+      </div>
+    </Row>
+  );
+}
+
+function NumberSelect({ label, value, choices, caption, onPick }: { label: string; value: number; choices: readonly number[]; caption: (n: number) => string; onPick: (n: number) => void }) {
+  const list = choices.includes(value) ? choices : [...choices, value].sort((a, b) => a - b);
+  return (
+    <Row label={label}>
+      <select className="fuyu-weather-set__input" aria-label={label} value={value} onChange={(e) => onPick(Number(e.target.value))}>
+        {list.map((n) => (
+          <option key={n} value={n}>
+            {caption(n)}
+          </option>
+        ))}
+      </select>
+    </Row>
+  );
+}
+
+function Flag({ label, checked, disabled, onChange }: { label: string; checked: boolean; disabled?: boolean; onChange: (value: boolean) => void }) {
+  return (
+    <label className={disabled ? "fuyu-weather-set__check is-off" : "fuyu-weather-set__check"}>
+      <input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
+      <span>{label}</span>
+    </label>
+  );
+}
+
+function CityField({ value, copy, onCommit }: { value: string; copy: Copy; onCommit: (city: string) => void }) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+  const commit = () => {
+    if (draft.trim() !== value) onCommit(draft.trim());
+  };
+  return (
+    <Row label={copy.cityLabel}>
+      <input
+        type="text"
+        className="fuyu-weather-set__input fuyu-weather-set__city"
+        aria-label={copy.cityLabel}
+        value={draft}
+        placeholder={copy.cityPlaceholder}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit();
+        }}
+      />
+    </Row>
+  );
+}
 
 export default function apply(ctx: Context) {
   function WeatherSection() {
-    const { state, locale, error, saveConfig, refresh } = useWeather(ctx);
-    const copy = TEXT[locale];
-
-    const [city, setCity] = useState(state.config.city);
-    const [units, setUnits] = useState<TemperatureUnit>(state.config.units);
-    const [showOnBar, setShowOnBar] = useState(state.config.showOnBar);
-    const [rainAlert, setRainAlert] = useState(state.config.rainAlert);
-    const [minutes, setMinutes] = useState(String(state.config.refreshMinutes));
-
-    useEffect(() => {
-      setCity(state.config.city);
-      setUnits(state.config.units);
-      setShowOnBar(state.config.showOnBar);
-      setRainAlert(state.config.rainAlert);
-      setMinutes(String(state.config.refreshMinutes));
-    }, [
-      state.config.city,
-      state.config.units,
-      state.config.showOnBar,
-      state.config.rainAlert,
-      state.config.refreshMinutes,
-    ]);
-
-    const onSave = () => {
-      void saveConfig({
-        city: city.trim(),
-        units,
-        showOnBar,
-        rainAlert,
-        refreshMinutes: Number(minutes) || 30,
-      });
-    };
-
+    const { state, error, saveConfig } = useWeather(ctx);
+    const { config } = state;
+    const copy = textFor();
+    const patch: Patch = saveConfig;
     return (
-      <section className="fuyu-weather-settings">
-        <h3 className="fuyu-weather__title">{copy.title}</h3>
-
-        <label className="fuyu-weather-settings__field">
-          <span className="fuyu-weather-settings__label">{copy.cityLabel}</span>
-          <input
-            type="text"
-            className="fuyu-weather-settings__input"
-            value={city}
-            placeholder={copy.cityPlaceholder}
-            onChange={(event) => setCity(event.target.value)}
-          />
-        </label>
-
-        <div className="fuyu-weather-settings__grid">
-          <label className="fuyu-weather-settings__field">
-            <span className="fuyu-weather-settings__label">{copy.unitsLabel}</span>
-            <select
-              className="fuyu-weather-settings__input"
-              value={units}
-              onChange={(event) => setUnits(event.target.value as TemperatureUnit)}
-            >
-              <option value="celsius">{copy.celsius}</option>
-              <option value="fahrenheit">{copy.fahrenheit}</option>
-            </select>
-          </label>
-
-          <label className="fuyu-weather-settings__field">
-            <span className="fuyu-weather-settings__label">{copy.refreshMinutes}</span>
-            <input
-              type="number"
-              min={30}
-              max={180}
-              className="fuyu-weather-settings__input"
-              value={minutes}
-              onChange={(event) => setMinutes(event.target.value)}
-            />
-          </label>
-        </div>
-
-        <label className="fuyu-weather-settings__check">
-          <span>{copy.showOnBar}</span>
-          <input
-            type="checkbox"
-            checked={showOnBar}
-            onChange={(event) => setShowOnBar(event.target.checked)}
-          />
-        </label>
-
-        <label className="fuyu-weather-settings__check">
-          <span>{copy.rainAlert}</span>
-          <input
-            type="checkbox"
-            checked={rainAlert}
-            onChange={(event) => setRainAlert(event.target.checked)}
-          />
-        </label>
-
-        <div className="fuyu-weather-settings__actions">
-          <button type="button" className="fuyu-weather__button" onClick={onSave}>
-            {copy.save}
-          </button>
-          <button
-            type="button"
-            className="fuyu-weather__button fuyu-weather__button--secondary"
-            disabled={!state.config.city.trim() || state.loading}
-            onClick={refresh}
-          >
-            {copy.refresh}
-          </button>
-        </div>
-
-        {(state.problem || error) && (
-          <p className="fuyu-weather__note">{state.problem ?? error}</p>
-        )}
+      <section className="fuyu-weather-set">
+        <Group title={copy.placeTitle} hint={copy.placeHint}>
+          <CityField value={config.city} copy={copy} onCommit={(city) => patch({ city })} />
+          <Choice name="units" label={copy.unitsLabel} config={config} patch={patch} copy={copy} />
+          <Choice name="windUnit" label={copy.windLabel} config={config} patch={patch} copy={copy} />
+          <Choice name="timeFormat" label={copy.timeFormat} config={config} patch={patch} copy={copy} />
+          <NumberSelect label={copy.refreshLabel} value={config.refreshMinutes} choices={REFRESH_CHOICES} caption={copy.minutes} onPick={(refreshMinutes) => patch({ refreshMinutes })} />
+        </Group>
+        <Group title={copy.pageTitle}>
+          <Flag label={copy.showFeels} checked={config.showFeels} onChange={(showFeels) => patch({ showFeels })} />
+          <Flag label={copy.showPop} checked={config.showPop} onChange={(showPop) => patch({ showPop })} />
+          <Flag label={copy.showHumidity} checked={config.showHumidity} onChange={(showHumidity) => patch({ showHumidity })} />
+          <Flag label={copy.showWind} checked={config.showWind} onChange={(showWind) => patch({ showWind })} />
+          <NumberSelect label={copy.hoursLabel} value={config.hours} choices={HOUR_CHOICES} caption={copy.hoursCaption} onPick={(hours) => patch({ hours })} />
+        </Group>
+        <Group title={copy.barTitle}>
+          <Flag label={copy.showOnBar} checked={config.showOnBar} onChange={(showOnBar) => patch({ showOnBar })} />
+          {config.showOnBar && <Choice name="barStyle" label={copy.barStyle} config={config} patch={patch} copy={copy} />}
+        </Group>
+        <Group title={copy.rainSection} hint={copy.refreshHint}>
+          <Flag label={copy.rainAlert} checked={config.rainAlert} onChange={(rainAlert) => patch({ rainAlert })} />
+          {config.rainAlert && (
+            <>
+              <NumberSelect label={copy.rainLead} value={config.rainLeadMinutes} choices={LEAD_CHOICES} caption={copy.leadCaption} onPick={(rainLeadMinutes) => patch({ rainLeadMinutes })} />
+              <Flag label={copy.quietHours} checked={config.quietHours} onChange={(quietHours) => patch({ quietHours })} />
+              {config.quietHours && (
+                <div className="fuyu-weather-set__quiet">
+                  <span>{copy.quietFrom}</span>
+                  <input
+                    type="time"
+                    className="fuyu-weather-set__input"
+                    aria-label={`${copy.quietHours} ${copy.quietFrom}`}
+                    value={config.quietStart}
+                    onChange={(e) => e.target.value && patch({ quietStart: e.target.value })}
+                  />
+                  <span>{copy.quietTo}</span>
+                  <input
+                    type="time"
+                    className="fuyu-weather-set__input"
+                    aria-label={`${copy.quietHours} ${copy.quietTo}`}
+                    value={config.quietEnd}
+                    onChange={(e) => e.target.value && patch({ quietEnd: e.target.value })}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </Group>
+        {(state.problem || error) && <p className="fuyu-weather-set__hint">{problemText(state.problem, copy) ?? error}</p>}
       </section>
     );
   }

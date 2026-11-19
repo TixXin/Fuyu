@@ -11,11 +11,11 @@ export type SettingsCategoriesText = {
   keywords: Record<
     | "overview" | "general" | "generalData" | "generalSync" | "generalApi" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcutsIsland" | "shortcutsReference" | "appearance" | "appearanceCollapsed" | "theme" | "themeStyle" | "shortcuts" | "todos" | "calendar" | "music" | "translation" | "clipboard"
     | "shelf" | "screenshot" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentRemote" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "voiceInput"
-    | "pluginsV3" | "pluginMarket" | "pluginDiagnostics" | "about",
+    | "pluginsV3" | "pluginMarket" | "pluginDiagnostics" | "about" | "aboutChangelog" | "aboutHelp",
     string
   >;
-  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string };
-  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect", string>;
+  entries: { general: string; behavior: string; behaviorAlerts: string; appearance: string; shortcuts: string; music: string; clipboard: string; screenshot: string; messages: string; agents: string; agentAppearance: string; agentAlerts: string; about: string };
+  tabs: Record<"general" | "generalData" | "generalSync" | "generalApi" | "music" | "clipboard" | "screenshot" | "musicLyrics" | "musicLyricsStyle" | "clipboardHistory" | "clipboardSnippets" | "screenshotRecord" | "behavior" | "behaviorTuck" | "behaviorAlerts" | "timerAlerts" | "shortcuts" | "shortcutsIsland" | "shortcutsReference" | "theme" | "themeStyle" | "appearance" | "appearanceCollapsed" | "messages" | "messagesIm" | "messagesMail" | "agents" | "agentAppearance" | "agentSessions" | "agentRings" | "agentAlerts" | "sounds" | "agentPush" | "agentApprovals" | "agentConnect" | "about" | "aboutChangelog" | "aboutHelp", string>;
   groups: {
     basics: string;
     features: string;
@@ -69,6 +69,8 @@ export type SettingsCategoriesText = {
   pluginMarket: string;
   pluginDiagnostics: string;
   about: string;
+  aboutChangelog: string;
+  aboutHelp: string;
 };
 
 export const zhCN: SettingsCategoriesText = {
@@ -127,7 +129,9 @@ export const zhCN: SettingsCategoriesText = {
     pluginsV3: "插件 已安装 扩展 启用 停用 卸载 重启 出错 设置 权限 命令 快捷键 更新 从文件安装 .fuyu",
     pluginMarket: "插件市场 扩展 下载 安装 更新 官方 第三方 浏览 .fuyu",
     pluginDiagnostics: "运行诊断 插件进程 内存 CPU 占用 出错 安全模式 运行环境 Node 排查 二分 卡顿",
-    about: "版本 更新 检查更新 测试版 通道 更新日志 版本历史 发行说明 帮助 新手引导 诊断 重置 退出 反馈 Star",
+    about: "版本 更新 检查更新 测试版 通道 官网 反馈 Star 重置 退出",
+    aboutChangelog: "更新日志 版本历史 发行说明 新功能",
+    aboutHelp: "帮助 新手引导 诊断",
   },
   entries: {
     general: "通用",
@@ -142,6 +146,7 @@ export const zhCN: SettingsCategoriesText = {
     agents: "Agent",
     agentAppearance: "外观",
     agentAlerts: "提醒",
+    about: "关于",
   },
   tabs: {
     general: "启动与托盘",
@@ -179,6 +184,9 @@ export const zhCN: SettingsCategoriesText = {
     agentAlerts: "桌面提醒",
     sounds: "声音",
     agentPush: "推送与机器人",
+    about: "概览",
+    aboutChangelog: "更新日志",
+    aboutHelp: "帮助",
   },
   groups: {
     basics: "基础",
@@ -233,6 +241,8 @@ export const zhCN: SettingsCategoriesText = {
   pluginMarket: "插件市场",
   pluginDiagnostics: "运行诊断",
   about: "关于",
+  aboutChangelog: "更新日志",
+  aboutHelp: "帮助",
 };
 
 export const en: SettingsCategoriesText = {
@@ -291,7 +301,9 @@ export const en: SettingsCategoriesText = {
     pluginsV3: "plugins installed extensions enable disable uninstall restart errors settings permissions commands shortcuts updates install from file .fuyu",
     pluginMarket: "plugin market store extensions download install update official browse .fuyu",
     pluginDiagnostics: "diagnostics plugin process memory cpu usage errors safe mode runtime node troubleshoot bisect slow",
-    about: "version updates check beta channel changelog version history release notes help onboarding guide diagnostics reset quit feedback star",
+    about: "version updates check beta channel website feedback star reset quit",
+    aboutChangelog: "changelog version history release notes what's new",
+    aboutHelp: "help onboarding guide diagnostics",
   },
   entries: {
     general: "General",
@@ -306,6 +318,7 @@ export const en: SettingsCategoriesText = {
     agents: "Agent",
     agentAppearance: "Appearance",
     agentAlerts: "Alerts",
+    about: "About",
   },
   tabs: {
     general: "Startup and tray",
@@ -343,6 +356,9 @@ export const en: SettingsCategoriesText = {
     agentAlerts: "Desktop alerts",
     sounds: "Sounds",
     agentPush: "Push and bots",
+    about: "Overview",
+    aboutChangelog: "Changelog",
+    aboutHelp: "Help",
   },
   groups: {
     basics: "Basics",
@@ -397,4 +413,6 @@ export const en: SettingsCategoriesText = {
   pluginMarket: "Plugin market",
   pluginDiagnostics: "Diagnostics",
   about: "About",
+  aboutChangelog: "Changelog",
+  aboutHelp: "Help",
 };

@@ -1,11 +1,9 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { ArrowDownToLine, CircleCheck, Download, LoaderCircle, PackageCheck, RefreshCcw, TriangleAlert } from "lucide-react";
 import { SettingsLinkButton } from "../../components/settings/SettingsLinkButton";
 import { useErrorText, useLocale, useTranslation } from "../../i18n";
 import { useDevBuild } from "../../lib/platform";
-import { ProjectLink } from "./ProjectLink";
 import { websitePage } from "./projectLinks";
-import { UpdateNotes } from "./UpdateNotes";
+import { useOpenInBrowser } from "./useOpenInBrowser";
 import { useRestartStalled } from "./useRestartStalled";
 import { restartIsland } from "../../lib/settings-backup/api";
 import { useDownloadSource } from "./useDownloadSource";
@@ -18,7 +16,6 @@ import {
   subscribeToUpdate,
   type UpdateStage,
 } from "./updaterController";
-import "./ProjectSettingsSection.css";
 import "./UpdatePanel.css";
 
 type Tone = "muted" | "ok" | "new" | "busy" | "error";
@@ -28,14 +25,18 @@ const TONES: Record<Exclude<UpdateStage, "disabled">, Tone> = {
   ready: "new", installing: "busy", done: "ok", error: "error",
 };
 
-function StageIcon({ stage }: { stage: UpdateStage }) {
-  const props = { size: 20, strokeWidth: 1.8, "aria-hidden": true } as const;
-  if (stage === "checking" || stage === "downloading" || stage === "installing") return <LoaderCircle className="update-status__spinner" {...props} />;
-  if (stage === "latest" || stage === "done") return <CircleCheck {...props} />;
-  if (stage === "available") return <ArrowDownToLine {...props} />;
-  if (stage === "ready") return <PackageCheck {...props} />;
-  if (stage === "error") return <TriangleAlert {...props} />;
-  return <RefreshCcw {...props} />;
+function LatestReleaseLink() {
+  const t = useTranslation();
+  const { locale } = useLocale();
+  const { failed, onClick } = useOpenInBrowser();
+  return (
+    <>
+      <a className="update-status__link" href={websitePage(locale, "releases/")} target="_blank" rel="noopener noreferrer" onClick={onClick}>
+        {t.settings.project.latestRelease} ↗
+      </a>
+      {failed && <span className="update-status__error" role="alert">{t.settings.project.openFailed}</span>}
+    </>
+  );
 }
 
 export function UpdatePanel() {
@@ -44,8 +45,7 @@ export function UpdatePanel() {
   const devBuild = useDevBuild();
   const hero = t.settings.project.hero;
   const errorText = useErrorText();
-  const { locale } = useLocale();
-  const { stage, version, channel, nextVersion, notes, downloaded, total, detail, errorKind, skippedVersion, commandError, autoUpdate } = useSyncExternalStore(
+  const { stage, version, channel, nextVersion, downloaded, total, detail, errorKind, skippedVersion, commandError, autoUpdate } = useSyncExternalStore(
     subscribeToUpdate,
     getUpdateState,
   );
@@ -61,13 +61,16 @@ export function UpdatePanel() {
 
   if (stage === "disabled") {
     return (
-      <ProjectLink
-        href={websitePage(locale, "releases/")}
-        tone="release"
-        title={t.settings.project.latestRelease}
-        hint={devBuild ? t.settings.devBuild.updateOff : text.unavailable}
-        icon={<Download className="project-link__icon" size={18} strokeWidth={1.8} aria-hidden="true" />}
-      />
+      <div className="update-status update-status--muted">
+        <div className="update-status__row update-status__row--solo">
+          <span className="update-status__dot" aria-hidden="true" />
+          <strong className="update-status__headline" role="status">{devBuild ? hero.devIsland : text.manualOnly}</strong>
+        </div>
+        <p className="update-status__sub">
+          <span>{devBuild ? t.settings.devBuild.updateOff : text.unavailable}</span>
+          <LatestReleaseLink />
+        </p>
+      </div>
     );
   }
 
@@ -91,39 +94,27 @@ export function UpdatePanel() {
 
   const offersUpdate = stage === "available" || stage === "ready";
   const showsSource = downloadSource !== null && (stage === "downloading" || stage === "ready" || stage === "installing" || stage === "done");
+  const primary = offersUpdate ? (
+    <button className="update-status__button update-status__button--primary" type="button" onClick={install}>
+      {stage === "ready" ? text.installNow : text.download}
+    </button>
+  ) : stage === "idle" || stage === "latest" || stage === "error" || stage === "checking" ? (
+    <button className="update-status__button" type="button" disabled={stage === "checking"} onClick={() => void checkForUpdate()}>
+      {stage === "error" ? (installFailed ? text.recheck : text.retry) : text.title}
+    </button>
+  ) : restartStalled ? (
+    <button className="update-status__button update-status__button--primary" type="button" onClick={() => void restartIsland().catch((error: unknown) => console.error(error))}>
+      {text.restartNow}
+    </button>
+  ) : null;
 
   return (
     <div className={`update-status update-status--${TONES[stage]}`}>
-      <div className="update-status__row">
-        <span className="update-status__icon"><StageIcon stage={stage} /></span>
-        <div className="update-status__copy" role={stage === "error" ? "alert" : "status"}>
-          <strong>{headline}</strong>
-          {sub ? <span>{sub}</span> : null}
-          {showsSource ? <span>{text.downloadSource(downloadSource)}</span> : null}
-        </div>
-        <div className="update-status__actions">
-          {offersUpdate ? (
-            <>
-              <span title={skipped ? undefined : text.skipHint}>
-                <SettingsLinkButton onClick={() => skipVersion(skipped ? null : nextVersion)}>{skipped ? text.unskip : text.skip}</SettingsLinkButton>
-              </span>
-              {stage === "available" ? <SettingsLinkButton onClick={() => void checkForUpdate()}>{text.recheck}</SettingsLinkButton> : null}
-              <button className="update-status__button update-status__button--primary" type="button" onClick={install}>
-                {stage === "ready" ? text.installNow : text.download}
-              </button>
-            </>
-          ) : stage === "idle" || stage === "latest" || stage === "error" || stage === "checking" ? (
-            <button className="update-status__button" type="button" disabled={stage === "checking"} onClick={() => void checkForUpdate()}>
-              {stage === "error" ? (installFailed ? text.recheck : text.retry) : text.title}
-            </button>
-          ) : restartStalled ? (
-            <button className="update-status__button update-status__button--primary" type="button" onClick={() => void restartIsland().catch((error: unknown) => console.error(error))}>
-              {text.restartNow}
-            </button>
-          ) : null}
-        </div>
+      <div className={primary ? "update-status__row" : "update-status__row update-status__row--solo"}>
+        <span className="update-status__dot" aria-hidden="true" />
+        <strong className="update-status__headline" role={stage === "error" ? "alert" : "status"}>{headline}</strong>
+        {primary}
       </div>
-      {commandError !== null && <p className="update-status__error" role="alert">{errorText(commandError)}</p>}
       {(stage === "downloading" || stage === "installing") && (
         <div
           className={percent === null ? "update-status__track update-status__track--unknown" : "update-status__track"}
@@ -135,7 +126,17 @@ export function UpdatePanel() {
           <span className="update-status__fill" style={percent === null ? undefined : { transform: `scaleX(${percent / 100})` }} />
         </div>
       )}
-      {(offersUpdate || stage === "downloading") && <UpdateNotes notes={notes} version={nextVersion} />}
+      <p className="update-status__sub">
+        {sub ? <span>{sub}</span> : null}
+        {showsSource ? <span>{text.downloadSource(downloadSource)}</span> : null}
+        {offersUpdate ? (
+          <span title={skipped ? undefined : text.skipHint}>
+            <SettingsLinkButton onClick={() => skipVersion(skipped ? null : nextVersion)}>{skipped ? text.unskip : text.skip}</SettingsLinkButton>
+          </span>
+        ) : null}
+        {stage === "available" ? <SettingsLinkButton onClick={() => void checkForUpdate()}>{text.recheck}</SettingsLinkButton> : null}
+      </p>
+      {commandError !== null && <p className="update-status__error" role="alert">{errorText(commandError)}</p>}
     </div>
   );
 }

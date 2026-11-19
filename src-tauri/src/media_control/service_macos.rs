@@ -3,7 +3,7 @@ use serde_json::{Map, Value};
 use super::adapter_macos::{self as adapter, Snapshot};
 use super::applescript_macos::{self as applescript, Track};
 use super::players::{
-    custom_players_snapshot, default_player_label, friendly_app_label, is_browser_executable,
+    custom_players_snapshot, default_player_label, friendly_app_label, friendly_app_label_with_custom, is_browser_executable,
     match_music_player, normalize_metadata_track, normalize_player_id, parse_window_track,
     CustomMediaPlayer,
 };
@@ -56,23 +56,47 @@ fn volume() -> f32 {
     audio::default_output().and_then(audio::volume).unwrap_or(-1.0)
 }
 
-fn from_fuyu(info: &Map<String, Value>) -> bool {
-    let Ok(own) = i32::try_from(std::process::id()) else { return false };
-    let own = crate::macos::apps::responsible_pid(own);
+fn adapter_pid(info: &Map<String, Value>) -> Option<i32> {
     info.get("processIdentifier")
         .and_then(Value::as_i64)
         .and_then(|pid| i32::try_from(pid).ok())
-        .is_some_and(|pid| crate::macos::apps::responsible_pid(pid) == own)
+        .filter(|pid| *pid > 0)
 }
 
-fn from_snapshot(snapshot: &Snapshot) -> MediaState {
+fn from_fuyu(info: &Map<String, Value>) -> bool {
+    let Ok(own) = i32::try_from(std::process::id()) else { return false };
+    let own = crate::macos::apps::responsible_pid(own);
+    adapter_pid(info).is_some_and(|pid| crate::macos::apps::responsible_pid(pid) == own)
+}
+
+fn snapshot_source(info: &Map<String, Value>) -> Option<String> {
+    text(info, "parentApplicationBundleIdentifier").or_else(|| text(info, "bundleIdentifier"))
+}
+
+fn adapter_app(snapshot: &Snapshot) -> AdapterApp {
     let info = &snapshot.info;
-    let source = text(info, "parentApplicationBundleIdentifier").or_else(|| text(info, "bundleIdentifier"));
+    let source = snapshot_source(info);
+    let bundle = text(info, "bundleIdentifier");
+    AdapterApp {
+        pid: adapter_pid(info).map(apps::responsible_pid),
+        app_names: [source.as_deref(), bundle.as_deref()]
+            .into_iter()
+            .flatten()
+            .filter_map(apps::path_for_bundle_id)
+            .filter_map(|path| apps::outer_app_name(&path))
+            .collect(),
+        source,
+    }
+}
+
+fn from_snapshot(snapshot: &Snapshot, force_playing: bool) -> MediaState {
+    let info = &snapshot.info;
+    let source = snapshot_source(info);
     let (title, artist) = normalize_metadata_track(text(info, "title"), text(info, "artist"), source.as_deref());
     let Some(title) = title.filter(|_| !from_fuyu(info)) else {
         return MediaState { volume: volume(), ..MediaState::empty() };
     };
-    let playing = info.get("playing").and_then(Value::as_bool).unwrap_or(false);
+    let playing = force_playing || info.get("playing").and_then(Value::as_bool).unwrap_or(false);
     let duration_ms = number(info, "duration").map_or(0, |seconds| (seconds * 1000.0) as i64);
     let track = track_key(Some(&title), artist.as_deref(), text(info, "album").as_deref(), duration_ms);
     let position_ms = timeline_clock::sample(source.as_deref().unwrap_or_default(), &track, published(info, snapshot.received_ms), playing, current_unix_millis());
@@ -156,7 +180,7 @@ pub(crate) fn list_candidates() -> Vec<CustomMediaPlayer> {
     out
 }
 
-fn from_audio_process() -> Option<MediaState> {
+fn from_audio_process() -> Option<AudioPlayer> {
     let pids = audio_devices::playing_pids()?;
     let own = i32::try_from(std::process::id()).ok()?;
     let own = apps::responsible_pid(own);
@@ -167,7 +191,8 @@ fn from_audio_process() -> Option<MediaState> {
         if pid <= 0 || pid == own {
             continue;
         }
-        let Some(name) = apps::display_name(pid).or_else(|| apps::path(pid)) else {
+        let path = apps::path(pid);
+        let Some(name) = apps::display_name(pid).or_else(|| path.clone()) else {
             continue;
         };
         let window_title = accessibility::app_windows(pid)
@@ -183,7 +208,7 @@ fn from_audio_process() -> Option<MediaState> {
             Some((song, singer)) => (Some(song), singer),
             None => (None, None),
         };
-        return Some(MediaState {
+        let state = MediaState {
             available: true,
             audio_active: true,
             audio_peak: PLAYING_PEAK,
@@ -202,27 +227,98 @@ fn from_audio_process() -> Option<MediaState> {
             source_app: Some(id),
             updated_at: current_unix_millis(),
             ..MediaState::empty()
-        });
+        };
+        let label = state.sessions.first().map(|session| session.label.clone()).unwrap_or_default();
+        let names = std::iter::once(name).chain(path.as_deref().and_then(apps::outer_app_name)).collect();
+        return Some(AudioPlayer { pid, names, label, state });
     }
     None
 }
 
-pub(crate) fn get_state(_target: Option<String>) -> Result<MediaState, String> {
-    let primary = if adapter::is_working() {
-        adapter::snapshot().map_or_else(
-            || MediaState { volume: volume(), ..MediaState::empty() },
-            |snapshot| from_snapshot(&snapshot),
-        )
-    } else {
-        from_track(applescript::current())
-    };
+fn fallback_or(primary: MediaState) -> MediaState {
     if primary.playback_status == "playing" {
-        return Ok(primary);
+        return primary;
     }
-    if let Some(fallback) = from_audio_process() {
-        return Ok(fallback);
+    from_audio_process().map_or(primary, |player| player.state)
+}
+
+pub(crate) fn get_state(_target: Option<String>) -> Result<MediaState, String> {
+    if !adapter::is_working() {
+        return Ok(fallback_or(from_track(applescript::current())));
     }
-    Ok(primary)
+    let Some(snapshot) = adapter::snapshot() else {
+        return Ok(fallback_or(MediaState { volume: volume(), ..MediaState::empty() }));
+    };
+    let reports_playing = snapshot.info.get("playing").and_then(Value::as_bool).unwrap_or(false);
+    let custom = custom_players_snapshot();
+    Ok(choose(reports_playing, || adapter_app(&snapshot), &custom, from_audio_process, |force| from_snapshot(&snapshot, force)))
+}
+
+#[derive(Default)]
+pub(super) struct AdapterApp {
+    pub(super) pid: Option<i32>,
+    pub(super) app_names: Vec<String>,
+    pub(super) source: Option<String>,
+}
+
+pub(super) struct AudioPlayer {
+    pub(super) pid: i32,
+    pub(super) names: Vec<String>,
+    pub(super) label: String,
+    pub(super) state: MediaState,
+}
+
+fn same_name(left: &str, right: &str) -> bool {
+    let left = left.trim().trim_end_matches(".app");
+    let right = right.trim().trim_end_matches(".app");
+    !left.is_empty() && left.eq_ignore_ascii_case(right)
+}
+
+pub(super) fn same_app(adapter: &AdapterApp, player: &AudioPlayer, custom: &[CustomMediaPlayer]) -> bool {
+    if adapter.pid.is_some_and(|pid| pid == player.pid) {
+        return true;
+    }
+    if adapter.app_names.iter().any(|name| player.names.iter().any(|other| same_name(name, other))) {
+        return true;
+    }
+    adapter
+        .source
+        .as_deref()
+        .is_some_and(|source| !player.label.is_empty() && friendly_app_label_with_custom(source, custom) == player.label)
+}
+
+pub(super) fn merge(adapter: MediaState, player: MediaState) -> MediaState {
+    MediaState {
+        audio_active: player.audio_active,
+        audio_peak: player.audio_peak,
+        playback_status: player.playback_status,
+        updated_at: player.updated_at.max(adapter.updated_at),
+        ..adapter
+    }
+}
+
+pub(super) fn choose(
+    reports_playing: bool,
+    adapter: impl FnOnce() -> AdapterApp,
+    custom: &[CustomMediaPlayer],
+    find_player: impl FnOnce() -> Option<AudioPlayer>,
+    mut build: impl FnMut(bool) -> MediaState,
+) -> MediaState {
+    let reported = match reports_playing.then(|| build(false)) {
+        Some(state) if state.playback_status == "playing" => return state,
+        other => other,
+    };
+    let Some(player) = find_player() else {
+        return reported.unwrap_or_else(|| build(false));
+    };
+    if !same_app(&adapter(), &player, custom) {
+        return player.state;
+    }
+    let state = build(true);
+    if state.title.is_none() {
+        return player.state;
+    }
+    merge(state, player.state)
 }
 
 pub(crate) fn get_audio_level() -> Result<AudioLevel, String> {
@@ -284,21 +380,5 @@ pub(crate) fn set_volume(level: f32) -> Result<MediaState, String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{published, repeat_label};
-    use serde_json::json;
-
-    #[test]
-    fn the_adapter_payload_becomes_a_published_timeline() {
-        let info = json!({ "elapsedTime": 10.0, "playbackRate": 1.0, "duration": 200.0, "timestamp": "2026-11-13T17:52:33Z" });
-        let timeline = published(info.as_object().unwrap(), 0);
-        assert_eq!(timeline.position_ms, 10_000);
-        assert_eq!(timeline.updated_ms, Some(1_794_592_353_000));
-        assert_eq!(timeline.duration_ms, 200_000);
-        let bare = json!({ "elapsedTime": 3.5 });
-        let timeline = published(bare.as_object().unwrap(), 42);
-        assert_eq!((timeline.position_ms, timeline.updated_ms, timeline.duration_ms), (3_500, Some(42), 0));
-        assert_eq!(repeat_label(Some(3.0)), "list");
-        assert_eq!(repeat_label(None), "unknown");
-    }
-}
+#[path = "service_macos_tests.rs"]
+mod tests;

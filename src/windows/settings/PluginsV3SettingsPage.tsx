@@ -6,11 +6,13 @@ import { useBuiltinPlugins } from "../../features/plugin-kernel/useBuiltinPlugin
 import type { SettingsCategory } from "./categories";
 import type { RowAction } from "./InstalledPluginRow";
 import { InstalledPluginList } from "./InstalledPluginList";
+import { InstalledPluginSuggestions } from "./InstalledPluginSuggestions";
 import { InstalledPluginsEmpty } from "./InstalledPluginsEmpty";
 import { PluginDetailModal } from "./PluginDetailModal";
 import { installedEntries, type InstalledEntry, type InstalledFilter } from "./pluginEntries";
 import { restartPlugin } from "./pluginMarketActions";
 import { PluginPageBanners } from "./PluginPageBanners";
+import { usePluginSectionOwners } from "./PluginSettingsSections";
 import { usePluginFilePicker } from "./PluginPageActions";
 import { onPluginDetailRequest, pullPendingPackage, requestMarketView, takePluginDetailRequest, type PluginDetailRequest, type PluginDetailTab } from "./pluginPageHandoff";
 import { usePluginHostNode } from "./usePluginHostNode";
@@ -82,7 +84,8 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
 
   const runtime = node?.state === "downloading" || node?.state === "checking" ? "downloading" : node?.state === "failed" ? "failed" : "ready";
   const builtinIds = new Set(builtins?.map((item) => item.id) ?? []);
-  const entries = installedEntries(hostOff ? [] : view.plugins, builtinIds, catalog.snapshot, { live, runtime, builtins }, locale);
+  const sectionOwners = usePluginSectionOwners();
+  const entries = installedEntries(hostOff ? [] : view.plugins, builtinIds, catalog.snapshot, { live, runtime, builtins }, locale, sectionOwners);
   const stale = !live;
   const selected = detail ? entries.find((entry) => entry.id === detail.id) ?? null : null;
 
@@ -146,7 +149,8 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
       ) : entries.length === 0 && !hostOff ? (
         <InstalledPluginsEmpty snapshot={catalog.snapshot} onBrowse={() => openMarket()} onInstallFile={file.pick} onInstall={install.offer} />
       ) : entries.length > 0 ? (
-        <InstalledPluginList
+        <>
+          <InstalledPluginList
           entries={entries}
           stale={stale}
           query={query}
@@ -156,7 +160,9 @@ export function PluginsV3View({ view, hostOff = false, node: givenNode, builtins
           onOpen={(entry, tab = "overview") => setDetail({ id: entry.id, tab, uninstall: false })}
           onAction={act}
           onSearchMarket={() => openMarket({ query })}
-        />
+          />
+          <InstalledPluginSuggestions snapshot={catalog.snapshot} onBrowse={() => openMarket()} onInstall={install.offer} />
+        </>
       ) : null}
       <p className="plugin-foot" data-footnote>
         {text.footnote.before}

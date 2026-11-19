@@ -89,6 +89,26 @@ declare module "cordis" {
     settings: {
       open(): Promise<void>;
     };
+    /**
+     * Fuyu's island, as far as this plugin's own `island.page/v1` pages go. Fuyu fills in the plugin id, so a plugin
+     * can only open and close its own pages.
+     *
+     * `open(page?)` shows the island if it is hidden in the tray or tucked at the screen edge, expands it and switches
+     * to one of this plugin's island pages: `page` is the id the plugin registered the page under, and without it the
+     * plugin's first island page opens. It fails with `not-owner` when `page` belongs to another plugin or to Fuyu,
+     * with `not-found` when no island page has that id, and with `no-page` when this plugin has no island page right
+     * now. Window code can call it in any window. Host code lists `island` in `inject`; there `ctx.island` has only
+     * `open`, and it fails with `not-ready` while the island window is not connected.
+     *
+     * `collapse()` collapses the island only when it is expanded on one of this plugin's pages, and resolves `true`.
+     * Otherwise it leaves the island alone and resolves `false`, so a plugin never closes a page the user is reading.
+     * Window code only. Use it after the user picks something on your page, like an app launcher that closes once the
+     * app starts.
+     */
+    island: {
+      open(page?: string): Promise<void>;
+      collapse(): Promise<boolean>;
+    };
     http: {
       fetch: HttpFetch;
     };

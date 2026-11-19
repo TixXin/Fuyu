@@ -47,10 +47,17 @@ export function defaultAppRoots(
   return [];
 }
 
-export function extensionsForPlatform(platform: string = process.platform): readonly string[] {
+export function extensionsForPlatform(platform: string = process.platform, extra = false): readonly string[] {
   if (platform === "darwin") return [".app"];
-  if (platform === "win32") return [".lnk", ".url"];
+  if (platform === "win32") return extra ? [".lnk", ".url", ".exe"] : [".lnk", ".url"];
   return [];
+}
+
+export function expandHome(dir: string, home: string = homedir()): string {
+  const trimmed = dir.trim();
+  if (trimmed === "~") return home;
+  if (trimmed.startsWith("~/") || trimmed.startsWith("~\\")) return join(home, trimmed.slice(2));
+  return trimmed;
 }
 
 function folderLabel(fullPath: string, rootDir: string): string {
@@ -119,33 +126,38 @@ function walkDirectory(
 export function scanApplications(
   roots: readonly string[] = defaultAppRoots(),
   platform: string = process.platform,
+  extraRoots: readonly string[] = [],
 ): AppEntry[] {
-  const extensions = extensionsForPlatform(platform);
-  if (extensions.length === 0) return [];
   const bundleIsDirectory = platform === "darwin";
   const rawFound: AppEntry[] = [];
-
-  for (const rootDir of roots) {
-    if (!rootDir) continue;
-    walkDirectory(rootDir, rootDir, extensions, bundleIsDirectory, 1, rawFound);
-  }
-
-  const seenPaths = new Set<string>();
-  const byLowerName = new Map<string, AppEntry>();
-  for (const item of rawFound) {
-    if (seenPaths.has(item.path)) continue;
-    seenPaths.add(item.path);
-    const key = item.name.toLowerCase();
-    const existing = byLowerName.get(key);
-    if (!existing) {
-      byLowerName.set(key, item);
-    } else if (!existing.folder && item.folder) {
-      byLowerName.set(key, item);
+  const sources: Array<[readonly string[], readonly string[]]> = [
+    [roots, extensionsForPlatform(platform)],
+    [extraRoots, extensionsForPlatform(platform, true)],
+  ];
+  for (const [list, extensions] of sources) {
+    if (extensions.length === 0) continue;
+    for (const rootDir of list) {
+      if (!rootDir) continue;
+      walkDirectory(rootDir, rootDir, extensions, bundleIsDirectory, 1, rawFound);
     }
   }
 
-  return [...byLowerName.values()]
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }))
+  const seenPaths = new Set<string>();
+  const byKey = new Map<string, AppEntry>();
+  for (const item of rawFound) {
+    if (seenPaths.has(item.path)) continue;
+    seenPaths.add(item.path);
+    const key = `${item.name.toLowerCase()}\u0000${item.folder.toLowerCase()}`;
+    if (!byKey.has(key)) byKey.set(key, item);
+  }
+
+  return [...byKey.values()]
+    .sort(
+      (a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }) ||
+        a.folder.localeCompare(b.folder, undefined, { sensitivity: "base" }) ||
+        a.path.localeCompare(b.path),
+    )
     .slice(0, MAX_SCANNED_APPS);
 }
 

@@ -40,6 +40,9 @@ export type SettingsPluginMarketText = {
     update: (version: string) => string;
     installed: string;
     manage: string;
+    openOnIsland: string;
+    openOnIslandTitle: (name: string) => string;
+    shotCount: (count: number) => string;
     needsFuyu: (range: string) => string;
     needsNewerFuyu: string;
     goUpdate: string;
@@ -66,6 +69,8 @@ export type SettingsPluginMarketText = {
     links: { repository: string; homepage: string; bugs: string; funding: string };
     commands: string;
     screenshots: string;
+    zoomShot: (index: number, total: number) => string;
+    viewer: { label: string; prev: string; next: string; close: string; position: (index: number, total: number) => string };
     platforms: Record<string, string>;
     close: string;
   };
@@ -171,6 +176,9 @@ export const zhCN: SettingsPluginMarketText = {
     update: (version) => `更新到 v${version}`,
     installed: "已安装",
     manage: "管理",
+    openOnIsland: "在岛上打开",
+    openOnIslandTitle: (name) => `展开岛，切到「${name}」`,
+    shotCount: (count) => `共 ${count} 张`,
     needsFuyu: (range) => `需要浮屿 ${range}`,
     needsNewerFuyu: "需要更新浮屿",
     goUpdate: "去更新",
@@ -197,6 +205,8 @@ export const zhCN: SettingsPluginMarketText = {
     links: { repository: "源码仓库", homepage: "主页", bugs: "反馈问题", funding: "赞助" },
     commands: "命令与快捷键",
     screenshots: "截图",
+    zoomShot: (index, total) => `放大看第 ${index} 张截图，共 ${total} 张`,
+    viewer: { label: "截图", prev: "上一张", next: "下一张", close: "关闭", position: (index, total) => `${index} / ${total}` },
     platforms: { win32: "Windows", darwin: "macOS", linux: "Linux" },
     close: "关闭",
   },
@@ -309,6 +319,9 @@ export const en: SettingsPluginMarketText = {
     update: (version) => `Update to v${version}`,
     installed: "Installed",
     manage: "Manage",
+    openOnIsland: "Open on island",
+    openOnIslandTitle: (name) => `Expand the island and switch to “${name}”`,
+    shotCount: (count) => `${count} screenshots`,
     needsFuyu: (range) => `Needs Fuyu ${range}`,
     needsNewerFuyu: "Needs a newer Fuyu",
     goUpdate: "Update",
@@ -335,6 +348,8 @@ export const en: SettingsPluginMarketText = {
     links: { repository: "Source", homepage: "Homepage", bugs: "Report an issue", funding: "Sponsor" },
     commands: "Commands & shortcuts",
     screenshots: "Screenshots",
+    zoomShot: (index, total) => `View screenshot ${index} of ${total}`,
+    viewer: { label: "Screenshot", prev: "Previous", next: "Next", close: "Close", position: (index, total) => `${index} / ${total}` },
     platforms: { win32: "Windows", darwin: "macOS", linux: "Linux" },
     close: "Close",
   },

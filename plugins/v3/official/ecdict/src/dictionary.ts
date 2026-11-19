@@ -11,8 +11,8 @@ const POS_PREFIX_RE = /^(?:[a-z]{1,6}\.\s*|\[[^\]]+\]\s*)+/i;
 const PAREN_NOTE_RE = /（[^）]*）|\([^)]*\)/g;
 
 export const LONG_SENTENCE_MESSAGE = [
-  "ECDICT 离线词典仅支持单词、短语与简短词组查询，暂不支持整句或段落翻译。如需长句互译，请在「设置 → 翻译 → 翻译服务」中切换至大模型或在线翻译服务。",
-  "ECDICT Offline Dictionary only supports words and short phrases. For full-sentence or paragraph translation, switch to an LLM or online translation service in Settings → Translation.",
+  "离线词典仅支持单词、短语与简短词组查询，暂不支持整句或段落翻译。如需长句互译，请在「设置 → 翻译 → 翻译服务」中切换至大模型或在线翻译服务。",
+  "The offline dictionary only supports words and short phrases. For full-sentence or paragraph translation, switch to an LLM or online translation service in Settings → Translation.",
 ].join("\n");
 
 interface ReverseItem {

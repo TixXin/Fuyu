@@ -19,6 +19,8 @@ export interface CategoryCount {
   count: number;
 }
 
+export const MAX_MARKET_SCREENSHOTS = 6;
+
 const RUN_PROGRAMS = new Set(["child_process"]);
 const FILES = new Set(["fs", "fs/promises"]);
 const LOW_LEVEL = new Set(["worker_threads", "cluster", "vm"]);
@@ -87,10 +89,25 @@ export function matchesQuery(plugin: MarketCatalogPlugin, query: string, categor
   return squash(haystack.filter(Boolean).join(" ")).includes(q);
 }
 
+export function primaryCategory(plugin: MarketCatalogPlugin): string | null {
+  return plugin.categories[0] ?? null;
+}
+
+export function inCategory(plugin: MarketCatalogPlugin, id: string): boolean {
+  return primaryCategory(plugin) === id;
+}
+
 export function categoryCounts(plugins: readonly MarketCatalogPlugin[]): CategoryCount[] {
   const counts = new Map<string, number>();
-  for (const plugin of plugins) for (const id of new Set(plugin.categories)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  for (const plugin of plugins) {
+    const id = primaryCategory(plugin);
+    if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
   return [...counts].map(([id, count]) => ({ id, count })).sort((a, b) => b.count - a.count);
+}
+
+export function categoryNameMap(plugins: readonly MarketCatalogPlugin[], categoryName: (id: string) => string): Record<string, string> {
+  return Object.fromEntries([...new Set(plugins.flatMap((plugin) => plugin.categories))].map((id) => [id, categoryName(id)]));
 }
 
 function rank(plugin: MarketCatalogPlugin): number {

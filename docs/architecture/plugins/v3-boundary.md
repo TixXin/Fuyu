@@ -208,10 +208,10 @@ Rust 每次拉起宿主（包括自动重启）都重新决定带不带 `--safe`
 |---|---|---|
 | 窗口 → 宿主 | `{ type: "hello", token, protocol, window }` | 第一条。`window` 是窗口的 label |
 | 宿主 → 窗口 | `{ type: "welcome", protocol, seq, snapshot }` | 回答 `hello`。`snapshot` 是当前的全部状态（现在是 `{ plugins, clients, services, host }`，`services` 是当前在提供的服务 `{ name, plugin, methods, events }[]`，`host` 是 `{ pid, node, startedAt, safe, dev, rssBytes, heapUsedBytes, cpuMs }`，宿主进程自己的内存和累计 CPU），`seq` 是最后一个事件的序号 |
-| 宿主 → 窗口 | `{ type: "event", seq, name, data }` | 增量。`seq` 每个事件加 1，所有窗口共用一个序列。现在有 `plugins`（插件状态变了，带完整的列表）、`clients`（插件登记的界面文件变了，带完整的列表：`{ id, plugin, window, path, version }`）、`plugin`（插件的宿主部分推给它窗口部分的消息：`{ plugin, topic, data }`）、`services`（在提供的服务变了，带完整的列表）和 `service`（服务的事件：`{ service, event, data }`，见下面「服务」） |
+| 宿主 → 窗口 | `{ type: "event", seq, name, data }` | 增量。`seq` 每个事件加 1，所有窗口共用一个序列。现在有 `plugins`（插件状态变了，带完整的列表）、`clients`（插件登记的界面文件变了，带完整的列表：`{ id, plugin, window, path, version }`）、`plugin`（插件的宿主部分推给它窗口部分的消息：`{ plugin, topic, data }`）、`services`（在提供的服务变了，带完整的列表）和 `service`（服务的事件：`{ service, event, data }`，见下面「服务」）；`settings.open`（`{ plugin }`，宿主代码调了 `ctx.settings.open()`，岛窗口接，E60.12）和 `island.request`（`{ id, action: "open" \| "collapse", plugin, page? }`，要岛打开或收起这个插件的页面，只有岛窗口接，做完用 `island.result` 回答，E60.16） |
 | 窗口 → 宿主 | `{ type: "snapshot" }` | 窗口发现序号跳了（中间丢了事件），要一份新的快照，不带着缺口往下走 |
 | 宿主 → 窗口 | `{ type: "snapshot", seq, snapshot }` | 回答上一条 |
-| 窗口 → 宿主 | `{ type: "call", id, method, params }` | 调用。现在有 `status`，和 `plugin.call`（`params` 是 `{ plugin, method, params }`，转给那个插件用 `ctx.clients.handle` 登记的方法，回答它的返回值；没登记的回 `no-method`），以及服务的 `service.call`、`service.on`、`service.off`（见下面「服务」） |
+| 窗口 → 宿主 | `{ type: "call", id, method, params }` | 调用。现在有 `status`，和 `plugin.call`（`params` 是 `{ plugin, method, params }`，转给那个插件用 `ctx.clients.handle` 登记的方法，回答它的返回值；没登记的回 `no-method`），以及服务的 `service.call`、`service.on`、`service.off`（见下面「服务」）。2026-11-19 起（E60.16）还有 `island.open`（`{ plugin, page? }`）和 `island.collapse`（`{ plugin }`）：岛以外的窗口里的插件代码调 `ctx.island` 时经它们转给岛窗口，宿主发 `island.request` 后等岛回答，10 秒没回答回 `timeout`，岛窗口没连上回 `not-ready`；`island.result`（`{ id, value }` 或 `{ id, error: { code, message } }`）只有岛窗口能调，回答 `island.request` |
 | 宿主 → 窗口 | `{ type: "result", id, result }` 或 `{ type: "result", id, error: { code, message, data? } }` | 回答调用 |
 
 ### 断开和重连

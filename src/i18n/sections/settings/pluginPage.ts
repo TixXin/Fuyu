@@ -2,6 +2,8 @@ export type PluginPageRowLabel = "off" | "failed" | "paused" | "waiting" | "safe
 
 export type PluginPageDetailTab = "overview" | "settings" | "commands" | "activity";
 
+export type PluginPagePlace = "page" | "bar" | "alerts" | "translate" | "settings";
+
 export type SettingsPluginPageText = {
   browseMarket: string;
   moreActions: string;
@@ -31,6 +33,13 @@ export type SettingsPluginPageText = {
   empty: { title: string; body: string; popular: string; install: string };
   badges: { unreviewed: string };
   sources: { market: string; official: string; manual: string; local: string };
+  places: Record<PluginPagePlace, string>;
+  placesLabel: string;
+  openPageTitle: (name: string) => string;
+  pageOffTitle: string;
+  openSettingsTitle: string;
+  versions: { localNewer: (version: string) => string; local: (version: string) => string };
+  suggest: { title: string; all: (count: number) => string; browse: string; browseHint: string };
   labels: Record<PluginPageRowLabel, string>;
   running: string;
   notes: {
@@ -114,7 +123,10 @@ export type SettingsPluginPageText = {
   detail: {
     tabs: Record<PluginPageDetailTab, string>;
     close: string;
-    facts: { version: string; source: string; publisher: string; state: string; id: string };
+    facts: { version: string; marketVersion: string; source: string; publisher: string; state: string; id: string };
+    where: string;
+    openOnIsland: string;
+    newerThanMarket: (local: string, market: string) => string;
     technical: string;
     noSettings: string;
     settingsOff: string;
@@ -208,7 +220,14 @@ export const zhCN: SettingsPluginPageText = {
     install: "安装",
   },
   badges: { unreviewed: "未经审核" },
-  sources: { market: "插件市场", official: "插件市场 · 官方", manual: "本地文件（未经审核）", local: "本地开发" },
+  sources: { market: "插件市场", official: "插件市场", manual: "从文件安装", local: "从文件夹加载" },
+  places: { page: "岛上页面", bar: "收起条", alerts: "岛上提醒", translate: "快捷翻译里", settings: "有设置" },
+  placesLabel: "在岛上的位置",
+  openPageTitle: (name) => `展开岛，切到「${name}」这一页`,
+  pageOffTitle: "插件开着时才能在岛上打开",
+  openSettingsTitle: "打开这个插件的设置",
+  versions: { localNewer: (version) => `本地版本 v${version}（比市场新）`, local: (version) => `v${version}（本地）` },
+  suggest: { title: "还可以装这些", all: (count) => `全部 ${count} 个 ›`, browse: "浏览插件市场", browseHint: "按分类看全部插件" },
   labels: {
     off: "已停用",
     failed: "启动失败",
@@ -303,7 +322,10 @@ export const zhCN: SettingsPluginPageText = {
   detail: {
     tabs: { overview: "概览", settings: "设置", commands: "命令与快捷键", activity: "运行情况" },
     close: "关闭",
-    facts: { version: "版本", source: "来源", publisher: "发布者", state: "状态", id: "标识" },
+    facts: { version: "版本", marketVersion: "市场上", source: "来源", publisher: "发布者", state: "状态", id: "标识" },
+    where: "出现在",
+    openOnIsland: "在岛上打开",
+    newerThanMarket: (local, market) => `这个版本是从文件装的，比市场上的 v${market} 新。文件没经过市场核对，所以名字旁边没有官方对勾。市场上出了比 v${local} 更新的版本时，插件页这一行会提示你更新。`,
     technical: "细节",
     noSettings: "这个插件没有可以改的设置。",
     settingsOff: "插件运行时，这里才会显示它自己的设置（如果有的话）。",
@@ -397,7 +419,14 @@ export const en: SettingsPluginPageText = {
     install: "Install",
   },
   badges: { unreviewed: "Unreviewed" },
-  sources: { market: "Plugin market", official: "Plugin market · Official", manual: "Local file (unreviewed)", local: "Local development" },
+  sources: { market: "Plugin market", official: "Plugin market", manual: "Installed from a file", local: "Loaded from a folder" },
+  places: { page: "Island page", bar: "Collapsed bar", alerts: "Island alerts", translate: "In Quick translate", settings: "Has settings" },
+  placesLabel: "Where it shows up on the island",
+  openPageTitle: (name) => `Expand the island and switch to “${name}”`,
+  pageOffTitle: "Turn the plugin on to open it on the island",
+  openSettingsTitle: "Open this plugin's settings",
+  versions: { localNewer: (version) => `Local version v${version} (newer than the market)`, local: (version) => `v${version} (local)` },
+  suggest: { title: "More to try", all: (count) => `All ${count} ›`, browse: "Browse the plugin market", browseHint: "See every plugin by category" },
   labels: {
     off: "Off",
     failed: "Failed to start",
@@ -492,7 +521,10 @@ export const en: SettingsPluginPageText = {
   detail: {
     tabs: { overview: "Overview", settings: "Settings", commands: "Commands & shortcuts", activity: "Activity" },
     close: "Close",
-    facts: { version: "Version", source: "Source", publisher: "Publisher", state: "State", id: "ID" },
+    facts: { version: "Version", marketVersion: "In the market", source: "Source", publisher: "Publisher", state: "State", id: "ID" },
+    where: "Shows up in",
+    openOnIsland: "Open on the island",
+    newerThanMarket: (local, market) => `This version was installed from a file and is newer than v${market} in the market. Files aren't checked by the market, so there is no official check mark. When the market has something newer than v${local}, this plugin's row will offer the update.`,
     technical: "Details",
     noSettings: "This plugin has no settings.",
     settingsOff: "Its own settings show up here while the plugin is running, if it has any.",

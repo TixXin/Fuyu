@@ -20,13 +20,21 @@ const plugin = (name: string, names: [string, string], descriptions: [string, st
 export const ICON_SVG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" rx="10" fill="#f59e0b"/><circle cx="14" cy="26" r="3" fill="#fff"/><path d="M11 18a11 11 0 0 1 11 11M11 11a18 18 0 0 1 18 18" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>')}`;
 export const BROKEN_ICON = "data:image/svg+xml,not-an-image";
 
+const shot = (fill: string, label: string) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="${fill}"/><rect x="60" y="24" width="200" height="34" rx="17" fill="#111"/><text x="160" y="47" font-size="16" text-anchor="middle" fill="#fff" font-family="sans-serif">${label}</text><rect x="40" y="80" width="240" height="96" rx="14" fill="#fff" opacity="0.85"/></svg>`)}`;
+export const RSS_SHOTS = [
+  { url: shot("#f59e0b", "RSS"), caption: loc("收起条上滚动的新标题", "Headlines scrolling on the bar") },
+  { url: shot("#fb923c", "Feeds"), caption: loc("展开后的文章列表", "Article list when expanded") },
+  { url: shot("#fdba74", "OPML") },
+];
+export const WEATHER_SHOTS = [{ url: shot("#38bdf8", "18°"), caption: loc("岛上的天气页", "The weather page on the island") }];
+
 const installed = (version: string): Partial<MarketCatalogPlugin> => ({ installedVersion: version, enabled: true, source: "market" });
 
 export const MARKET_PLUGINS: MarketCatalogPlugin[] = [
   plugin("@fuyu/rss", ["RSS 订阅", "RSS reader"], ["订阅博客和新闻，有新文章时在收起条上滚动标题，点一下打开", "Follow blogs and news; new headlines scroll on the collapsed bar, click to open"], ["information"],
-    { icon: ICON_SVG, install: candidate("1.5.0", "2026-11-12", {}, { official: true, network: ["*"], slots: ["collapsed.center/v1", "island.page/v1"] }) }),
+    { icon: ICON_SVG, screenshots: RSS_SHOTS, install: candidate("1.5.0", "2026-11-12", {}, { official: true, network: ["*"], slots: ["collapsed.center/v1", "island.page/v1"] }) }),
   plugin("@fuyu/weather", ["天气", "Weather"], ["收起条上显示当前天气，下雨前半小时提醒你带伞", "Shows the weather on the collapsed bar and reminds you to take an umbrella before rain"], ["information"],
-    { ...installed("1.2.0"), icon: BROKEN_ICON, install: candidate("1.2.0", "2026-11-02", {}, { official: true, network: ["api.open-meteo.com"] }) }),
+    { ...installed("1.2.0"), icon: BROKEN_ICON, screenshots: WEATHER_SHOTS, install: candidate("1.2.0", "2026-11-02", {}, { official: true, network: ["api.open-meteo.com"] }) }),
   plugin("@fuyu/github-notify", ["GitHub 通知", "GitHub notifications"], ["有人提到你、请你审查或 CI 失败时，在岛上弹一条提醒", "Pops an island alert when you're mentioned, asked to review, or CI fails"], ["developer"],
     { ...installed("2.0.1"), install: candidate("2.1.0", "2026-11-17"), autoUpdate: candidate("2.1.0", "2026-11-17", { urgent: true }, { official: true, network: ["api.github.com", "gist.github.com"], slots: ["notice/v1"] }) }),
   plugin("@fuyu/page-summary", ["网页摘要", "Page summary"], ["复制一个链接，岛上给出三句话的摘要，可以存进笔记", "Copy a link and the island gives a three-sentence summary you can save to notes"], ["ai", "productivity"],
@@ -49,10 +57,16 @@ export const MARKET_PLUGINS: MarketCatalogPlugin[] = [
     { install: candidate("1.0.0", "2026-10-20", {}, { official: true, provides: ["devices/v1"], slots: [] }) }),
 ];
 
+export const MARKET_INSTALLED: MarketCatalogSnapshot["installed"] = [
+  { id: "@fuyu/weather", version: "1.2.0", source: "market", enabled: true, reach: { slots: ["island.page/v1", "island.collapsed/v1"], services: [], config: true } },
+  { id: "@fuyu/github-notify", version: "2.0.1", source: "market", enabled: true, reach: { slots: [], services: ["messages/v1"], config: true } },
+  { id: "@lin-dev/pomo-stats", version: "0.4.2", source: "market", enabled: true, reach: { slots: ["island.page/v1"], services: [], config: false } },
+];
+
 export const UPDATED_AT = new Date(2026, 10, 18, 20, 14).getTime();
 
 export const marketFixture = (more: Partial<MarketCatalogSnapshot> = {}): MarketCatalogSnapshot => ({
-  plugins: MARKET_PLUGINS, installed: [], updatedAt: UPDATED_AT, manualAllowed: false, error: null, ...more,
+  plugins: MARKET_PLUGINS, installed: MARKET_INSTALLED, updatedAt: UPDATED_AT, manualAllowed: false, error: null, ...more,
 });
 
 export const RSS_DETAILS: MarketPluginDetails = {

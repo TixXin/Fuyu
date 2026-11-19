@@ -1,18 +1,18 @@
-# ECDICT 离线词典 · ECDICT Offline Dictionary
+# 离线词典 · Offline dictionary
 
 `@fuyu/ecdict` · 浮屿官方插件 · Windows / macOS
 
-给浮屿的快捷翻译加一个离线英汉词典：不用填任何 API Key，不联网，查词几乎是瞬间出结果。
+给浮屿的快捷翻译加一个离线英汉词典：不用填任何 API Key，不联网，查词几乎是瞬间出结果。词库来自开源的 ECDICT。
 
 ## 装好后在哪里
 
-- **设置 → 翻译 → 翻译服务**：下拉框里多出「ECDICT 离线词典」，选它就行。
+- **设置 → 翻译 → 翻译服务**：下拉框里多出「离线词典」，选它就行。
 
 这个插件不在岛上加页面，查词照常用浮屿的快捷翻译窗口。
 
 ## 怎么用
 
-1. 打开「设置 → 翻译」，在「翻译服务」里选「ECDICT 离线词典」。
+1. 打开「设置 → 翻译」，在「翻译服务」里选「离线词典」。
 2. 用快捷翻译查英文单词或短语，会显示原形、音标和多条中文释义。
    - 不分大小写，自动去掉首尾标点。
    - 变形词会还原成原形再查，比如 `studies`、`running`、`went`、`better`。
@@ -38,17 +38,17 @@
 
 `@fuyu/ecdict` · Official Fuyu plugin · Windows / macOS
 
-Adds an offline English–Chinese dictionary to Fuyu's quick translation: no API key, no network, and results appear almost instantly.
+Adds an offline English–Chinese dictionary to Fuyu's quick translation: no API key, no network, and results appear almost instantly. The word list comes from the open-source ECDICT.
 
 ### Where it shows up
 
-- **Settings → Translation → Translation service**: "ECDICT Offline Dictionary" appears in the list; just pick it.
+- **Settings → Translation → Translation service**: "Offline dictionary" appears in the list; just pick it.
 
 It adds no page to the island; look words up in Fuyu's quick translation window as usual.
 
 ### How to use it
 
-1. Open Settings → Translation and choose "ECDICT Offline Dictionary" under "Translation service".
+1. Open Settings → Translation and choose "Offline dictionary" under "Translation service".
 2. Look up an English word or phrase in quick translation to see its base form, phonetics and Chinese meanings.
    - Case doesn't matter, and punctuation around the word is ignored.
    - Inflected forms are traced back to the base word first, for example `studies`, `running`, `went`, `better`.

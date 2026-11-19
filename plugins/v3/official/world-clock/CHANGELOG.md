@@ -1,5 +1,17 @@
 # 更新记录 · Changelog
 
+## 1.1.1
+
+收起条按内容定宽，市场页补截图。
+
+- 收起条不再固定占 120 像素宽，按城市名和时间的长度自动算，只显示时间时更窄。
+- 市场页补上收起条和设置的截图。
+
+The collapsed bar fits its content; more screenshots for the market.
+
+- The collapsed bar no longer takes a fixed 120 pixels; its width follows the city name and time, so it is narrower when it shows only the time.
+- The market page gets screenshots of the collapsed bar and the settings.
+
 ## 1.1.0
 
 设置补完整，岛上只看时间。

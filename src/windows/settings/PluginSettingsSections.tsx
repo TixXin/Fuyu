@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { settingsSections } from "../../features/plugin-kernel/settingsSlots";
 import type { SettingsSectionMeta, SlotEntry } from "../../features/plugin-kernel/slots";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
@@ -7,6 +8,11 @@ type Section = SlotEntry<object, SettingsSectionMeta>;
 
 const sections = settingsSections<object, string>();
 const ownedBy = (pluginId: string) => (items: readonly Section[]) => items.filter((item) => item.external && item.owner === pluginId);
+
+export function usePluginSectionOwners(): ReadonlySet<string> {
+  const entries = useSlotEntries(sections);
+  return useMemo(() => new Set(entries.filter((item) => item.external).map((item) => item.owner)), [entries]);
+}
 
 export function PluginSettingsSections({ pluginId }: { pluginId: string }) {
   const mine = ownedBy(pluginId)(useSlotEntries(sections));

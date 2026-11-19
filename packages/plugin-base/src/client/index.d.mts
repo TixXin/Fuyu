@@ -82,11 +82,17 @@ export interface Bridge {
 
 export function createBridge(call: (method: string, params?: unknown) => Promise<unknown>): Bridge;
 
+export interface IslandControl {
+  open(plugin: string, page?: string): Promise<void>;
+  collapse(plugin: string): Promise<boolean>;
+}
+
 export function createLoader(options: {
   registry: SlotRegistry;
   bridge?: Bridge;
   base: string;
   openSettings?: ((plugin: string) => Promise<void> | void) | null;
+  island?: IslandControl | null;
   importModule?: (url: string) => Promise<any>;
   checkFile?: (url: string) => Promise<void>;
   onStatus?: (status: Map<string, ClientStatus>) => void;

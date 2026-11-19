@@ -9,8 +9,9 @@ import { OfficialMark } from "./OfficialMark";
 import { iconSources } from "./pluginIconSources";
 import { PluginLogo } from "./PluginLogo";
 import { PluginMarketDialog } from "./PluginMarketDialog";
+import { PluginMarketShots } from "./PluginMarketShots";
 import { isHttpUrl, marketClient, openHttpUrl } from "./pluginMarketActions";
-import { formatBytes, localized, offeredCandidate } from "./pluginMarketModel";
+import { MAX_MARKET_SCREENSHOTS, formatBytes, localized, offeredCandidate } from "./pluginMarketModel";
 
 const TABS: readonly PluginMarketDetailTab[] = ["readme", "changelog", "versions"];
 const LINKS = ["repository", "homepage", "bugs", "funding"] as const;
@@ -61,7 +62,7 @@ export function PluginMarketDetailModal({ plugin, isNew = false, categoryName, n
     [copy.info.license, details?.license],
   ];
   const links = LINKS.flatMap((key) => (isHttpUrl(details?.[key]) ? [{ key, url: details[key] as string }] : []));
-  const shots = (details?.screenshots ?? []).filter((shot) => isHttpUrl(shot.url));
+  const shots = (details?.screenshots ?? plugin.screenshots ?? []).filter((shot) => isHttpUrl(shot.url)).slice(0, MAX_MARKET_SCREENSHOTS);
 
   const onTabKey = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -96,19 +97,7 @@ export function PluginMarketDetailModal({ plugin, isNew = false, categoryName, n
       <div className="plugin-dialog__body">
         {error ? <p className="plugin-callout plugin-callout--bad" role="alert">{error}</p> : null}
         {!details && !error ? <div className="plugin-page__summary"><LoaderCircle className="plugin-spin" size={13} strokeWidth={2.2} aria-hidden="true" />{copy.loading}</div> : null}
-        {shots.length > 0 ? (
-          <div className="market-shots" aria-label={copy.screenshots}>
-            {shots.map((shot, index) => {
-              const caption = localized(shot.caption, locale, "");
-              return (
-                <figure key={`${shot.url}-${index}`} className="market-shot">
-                  <img src={shot.url} alt={caption ? "" : title} loading="lazy" />
-                  {caption ? <figcaption>{caption}</figcaption> : null}
-                </figure>
-              );
-            })}
-          </div>
-        ) : null}
+        <PluginMarketShots shots={shots} title={title} />
         {details ? (
           <div className="market-detail">
             <div className="market-detail__main">

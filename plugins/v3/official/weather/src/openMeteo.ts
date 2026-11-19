@@ -1,4 +1,5 @@
-import type { Locale, TemperatureUnit, WeatherForecast, WeatherPlace } from "./types.ts";
+import type { TemperatureUnit } from "./config.ts";
+import type { WeatherForecast, WeatherPlace } from "./types.ts";
 
 interface GeoResult {
   name?: string;
@@ -51,7 +52,11 @@ async function getJson<T>(url: URL): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function findPlace(cityInput: string, locale: Locale): Promise<WeatherPlace | null> {
+export function geocodeLanguage(query: string): "zh" | "en" {
+  return /[\u3400-\u9fff]/.test(query) ? "zh" : "en";
+}
+
+export async function findPlace(cityInput: string): Promise<WeatherPlace | null> {
   const trimmed = cityInput.trim();
   if (!trimmed) return null;
   const parts = trimmed.split(/[,，]/, 2);
@@ -62,7 +67,7 @@ export async function findPlace(cityInput: string, locale: Locale): Promise<Weat
   const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
   url.searchParams.set("count", "10");
   url.searchParams.set("format", "json");
-  url.searchParams.set("language", locale === "zh-CN" ? "zh" : "en");
+  url.searchParams.set("language", geocodeLanguage(queryName));
   url.searchParams.set("name", queryName);
 
   const data = await getJson<{ results?: GeoResult[] }>(url);
@@ -126,7 +131,7 @@ export async function fetchForecast(place: WeatherPlace, units: TemperatureUnit)
   const hTimes = raw.hourly?.time ?? [];
   const firstHour = selectAfter(hTimes, hourStart);
   const hourly = [];
-  for (let i = firstHour; i < Math.min(firstHour + 12, hTimes.length); i += 1) {
+  for (let i = firstHour; i < Math.min(firstHour + 24, hTimes.length); i += 1) {
     hourly.push({
       time: String(hTimes[i]),
       temp: Number(raw.hourly?.temperature_2m?.[i] ?? 0),
@@ -151,7 +156,7 @@ export async function fetchForecast(place: WeatherPlace, units: TemperatureUnit)
   const mTimes = raw.minutely_15?.time ?? [];
   const firstSoon = selectAfter(mTimes, now);
   const soon = [];
-  for (let i = firstSoon; i < Math.min(firstSoon + 4, mTimes.length); i += 1) {
+  for (let i = firstSoon; i < Math.min(firstSoon + 8, mTimes.length); i += 1) {
     soon.push({
       time: String(mTimes[i]),
       mm: Number(raw.minutely_15?.precipitation?.[i] ?? 0),

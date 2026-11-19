@@ -6,6 +6,12 @@ import type { PluginDetailTab } from "./pluginPageHandoff";
 import { PluginSearchInput } from "./PluginSearchInput";
 
 const FILTERS: readonly InstalledFilter[] = ["all", "on", "off", "attention"];
+export const SEARCH_FROM = 6;
+
+export function visibleFilters(counts: Record<InstalledFilter, number>): InstalledFilter[] {
+  if (counts.all < SEARCH_FROM) return counts.attention > 0 ? ["attention"] : [];
+  return FILTERS.filter((key) => key === "all" || counts[key] > 0);
+}
 
 export function InstalledPluginList({ entries, stale, query, filter, onQuery, onFilter, onOpen, onAction, onSearchMarket }: {
   entries: readonly InstalledEntry[];
@@ -21,7 +27,9 @@ export function InstalledPluginList({ entries, stale, query, filter, onQuery, on
   const text = useTranslation().settings.pluginsV3.page;
   const counts = countEntries(entries);
   const active: InstalledFilter = counts[filter] === 0 ? "all" : filter;
-  const shown = entries.filter((entry) => matchesEntry(entry, active, query));
+  const searchable = counts.all >= SEARCH_FROM;
+  const filters = visibleFilters(counts);
+  const shown = entries.filter((entry) => matchesEntry(entry, active, searchable ? query : ""));
   const running = entries.filter((entry) => entry.status.dot === "ok").length;
   return (
     <>
@@ -31,25 +39,26 @@ export function InstalledPluginList({ entries, stale, query, filter, onQuery, on
         {counts.off > 0 ? <span><i className="plugin-page__dot plugin-page__dot--off" />{text.summary.off(counts.off)}</span> : null}
         {counts.attention > 0 ? <span className="plugin-page__summary-warn"><i className="plugin-page__dot plugin-page__dot--warn" />{text.summary.attention(counts.attention)}</span> : null}
       </div>
-      <div className="plugin-page__toolbar">
-        <PluginSearchInput query={query} placeholder={text.search} clearLabel={text.clearSearch} onChange={onQuery} />
-        <div className="plugin-page__filters" role="group" aria-label={text.filtersLabel}>
-          {FILTERS.map((key) => (
-            <button
-              key={key}
-              className={`plugin-chip${key === "attention" && counts.attention > 0 ? " plugin-chip--warn" : ""}`}
-              type="button"
-              aria-pressed={active === key}
-              disabled={key !== "all" && counts[key] === 0}
-              data-filter={key}
-              onClick={() => onFilter(key)}
-            >
-              {text.filters[key]}
-              <span className="plugin-chip__count">{counts[key]}</span>
-            </button>
-          ))}
+      {searchable || filters.length > 0 ? (
+        <div className="plugin-page__toolbar">
+          {searchable ? <PluginSearchInput query={query} placeholder={text.search} clearLabel={text.clearSearch} onChange={onQuery} /> : null}
+          <div className="plugin-page__filters" role="group" aria-label={text.filtersLabel}>
+            {filters.map((key) => (
+              <button
+                key={key}
+                className={`plugin-chip${key === "attention" ? " plugin-chip--warn" : ""}`}
+                type="button"
+                aria-pressed={active === key}
+                data-filter={key}
+                onClick={() => onFilter(active === key && key !== "all" ? "all" : key)}
+              >
+                {text.filters[key]}
+                <span className="plugin-chip__count">{counts[key]}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
       {shown.length > 0 ? (
         <div className={`plugin-list${stale ? " plugin-list--stale" : ""}`}>
           {shown.map((entry) => (

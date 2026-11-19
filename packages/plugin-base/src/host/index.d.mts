@@ -143,6 +143,12 @@ export interface SettingsOpener {
   open(plugin: string): Promise<void>;
 }
 
+export interface IslandControlHub {
+  attachWindows(windows: { connected(): string[]; publish(name: string, data: unknown): void }): () => void;
+  request(action: "open" | "collapse", plugin: string, page?: string | null): Promise<unknown>;
+  settle(params: { id?: unknown; value?: unknown; error?: { code?: unknown; message?: unknown } | null } | null | undefined, window: string): boolean;
+}
+
 export interface Host {
   ctx: Context;
   logs: LogEntry[];
@@ -158,6 +164,7 @@ export interface Host {
   watchClients(onChange: (clients: ClientEntry[]) => void): () => void;
   serviceHub: ServiceHub;
   settingsOpener: SettingsOpener;
+  islandControl: IslandControlHub;
   services(): ServiceEntry[];
   watchServices(onChange: (services: ServiceEntry[]) => void): () => void;
   settle(): Promise<unknown>;
@@ -167,6 +174,9 @@ export interface Host {
 export function startHost(options: HostOptions): Promise<Host>;
 export const SETTINGS_OPEN_EVENT: "settings.open";
 export const SETTINGS_OPENER_WINDOW: "island";
+export const ISLAND_REQUEST_EVENT: "island.request";
+export const ISLAND_WINDOW: "island";
+export const ISLAND_TIMEOUT_MS: number;
 export function pluginStatus(ctx: Context, logs?: LogEntry[]): PluginStatus[];
 export const FAULT_LIMIT: FaultLimit;
 export const KINDS: readonly PluginKind[];

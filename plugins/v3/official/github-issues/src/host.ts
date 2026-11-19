@@ -2,180 +2,185 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Context } from "@fuyu/plugin-base";
 import { messagesV1 } from "@fuyu/plugin-services";
-import { fetchRepoIssues } from "./github.ts";
+import { fetchRepoInfo, fetchRepoIssues, type RateInfo } from "./github.ts";
 import {
-  DEFAULT_CONFIG,
+  DEFAULT_SETTINGS,
+  MAX_REPOS,
   METHODS,
-  TEXT,
+  SOFT_REFRESH_MS,
   TOPICS,
-  parseRepos,
+  effectiveMinutes,
+  normalizeSettings,
+  parseRepo,
+  queryKey,
+  sameRepo,
+  visibleItems,
+  type AddRepoResult,
   type IssueItem,
-  type IssuesConfig,
+  type IssuesSettings,
   type IssuesState,
-  type Locale,
-  type RateInfo,
-  type RepoGroup,
-} from "./types.ts";
+  type RepoError,
+} from "./model.ts";
+import { hostText } from "./text.ts";
 
 export const name = "@fuyu/github-issues";
-export const inject = ["clients", "messages/v1"];
+export const inject = ["clients", "commands", "messages/v1"];
 
 const CONFIG_FILE = "config.json";
 const ANONYMOUS_BUDGET_PER_HOUR = 50;
 
 interface CachedRepo {
+  key: string;
   items: IssueItem[];
+  more: boolean;
   etag: string | null;
-  error: string | null;
+  error: RepoError | null;
   loaded: boolean;
-  knownNumbers: Set<number>;
+  maxNumber: number;
 }
 
-function normalizeLocale(value: unknown): Locale {
-  return value === "en" ? "en" : "zh-CN";
-}
-
-function normalizeMinutes(value: unknown): number {
-  const n = typeof value === "number" ? Math.round(value) : Number(value);
-  if (!Number.isFinite(n)) return 15;
-  return Math.max(5, Math.min(120, n));
-}
-
-function loadConfig(dir: string): IssuesConfig {
+function loadSettings(dir: string): IssuesSettings {
   try {
     const file = join(dir, CONFIG_FILE);
-    if (!existsSync(file)) return { ...DEFAULT_CONFIG };
-    const raw = JSON.parse(readFileSync(file, "utf8")) as Partial<IssuesConfig>;
-    return {
-      reposText: typeof raw.reposText === "string" ? raw.reposText : "",
-      refreshMinutes: normalizeMinutes(raw.refreshMinutes),
-      notifyNew: raw.notifyNew === true,
-      locale: normalizeLocale(raw.locale),
-    };
+    if (!existsSync(file)) return { ...DEFAULT_SETTINGS };
+    return normalizeSettings(JSON.parse(readFileSync(file, "utf8")));
   } catch {
-    return { ...DEFAULT_CONFIG };
+    return { ...DEFAULT_SETTINGS };
   }
 }
 
-function saveConfigFile(dir: string, config: IssuesConfig): void {
+function saveSettings(dir: string, settings: IssuesSettings): void {
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, CONFIG_FILE), `${JSON.stringify(config, null, 2)}\n`, "utf8");
+  const body = { ...settings, reposText: settings.repos.join(", ") };
+  writeFileSync(join(dir, CONFIG_FILE), `${JSON.stringify(body, null, 2)}\n`, "utf8");
 }
 
-function formatClock(unixSeconds: number): string {
-  const date = new Date(unixSeconds * 1000);
-  const hh = String(date.getHours()).padStart(2, "0");
-  const mm = String(date.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
+function isRateLimited(status: number, rate: RateInfo | null): boolean {
+  return (status === 403 || status === 429) && Boolean(rate && rate.remaining <= 0);
 }
 
 export function apply(ctx: Context) {
   const messages = ctx.services.get(messagesV1);
 
-  let config = loadConfig(ctx.dataDir);
+  let settings = loadSettings(ctx.dataDir);
   const cache = new Map<string, CachedRepo>();
   let rate: RateInfo | null = null;
   let loading = false;
+  let running: Promise<IssuesState> | null = null;
+  let lastRefresh = 0;
   let stopTimer: (() => Promise<void>) | null = null;
 
-  const isRateExhausted = (): boolean =>
-    Boolean(rate && rate.remaining <= 0 && rate.resetUnix * 1000 > Date.now());
+  const rateExhausted = (): boolean => Boolean(rate && rate.remaining <= 0 && rate.resetUnix * 1000 > Date.now());
+  const cacheKey = (repo: string) => repo.toLowerCase();
 
-  const effectiveMinutes = (repoCount: number): number => {
-    if (repoCount <= 0) return config.refreshMinutes;
-    return Math.max(config.refreshMinutes, Math.ceil((repoCount * 60) / ANONYMOUS_BUDGET_PER_HOUR));
-  };
-
-  const snapshot = (): IssuesState => {
-    const { repos, invalidRepos } = parseRepos(config.reposText);
-    const groups: RepoGroup[] = repos.map((repo) => {
-      const entry = cache.get(repo);
+  const snapshot = (): IssuesState => ({
+    settings,
+    groups: settings.repos.map((repo) => {
+      const entry = cache.get(cacheKey(repo));
       return {
         repo,
-        items: entry ? entry.items : [],
+        items: entry ? visibleItems(entry.items, settings) : [],
+        more: entry ? entry.more : false,
         error: entry ? entry.error : null,
         loaded: entry ? entry.loaded : false,
       };
-    });
-    return {
-      config,
-      repos,
-      invalidRepos,
-      groups,
-      rate,
-      loading,
-      updatedAt: Date.now(),
-    };
-  };
+    }),
+    loading,
+    at: Date.now(),
+  });
 
   const publish = () => ctx.clients.publish(TOPICS.state, snapshot());
 
+  const persist = () => saveSettings(ctx.dataDir, settings);
+
+  function renameRepo(from: string, to: string): string {
+    if (from === to) return from;
+    const exists = settings.repos.some((repo) => repo !== from && sameRepo(repo, to));
+    const repos = exists
+      ? settings.repos.filter((repo) => repo !== from)
+      : settings.repos.map((repo) => (repo === from ? to : repo));
+    settings = { ...settings, repos };
+    const entry = cache.get(cacheKey(from));
+    cache.delete(cacheKey(from));
+    if (entry && !exists) cache.set(cacheKey(to), entry);
+    persist();
+    return to;
+  }
+
+  async function notifyNew(repo: string, fresh: IssueItem[]) {
+    if (!settings.notifyNew || fresh.length === 0) return;
+    const text = hostText();
+    const newest = fresh[0];
+    await messages.notify({
+      source: name,
+      pluginId: name,
+      title: text.newIssueTitle(repo),
+      body: `#${newest.number} ${newest.title}`,
+      durationMs: 8000,
+    });
+  }
+
   async function refreshRepo(repo: string): Promise<void> {
-    const copy = TEXT[config.locale];
-    let entry = cache.get(repo);
-    if (!entry) {
-      entry = { items: [], etag: null, error: null, loaded: false, knownNumbers: new Set() };
-      cache.set(repo, entry);
+    const key = queryKey(settings);
+    let entry = cache.get(cacheKey(repo));
+    if (!entry || entry.key !== key) {
+      entry = { key, items: [], more: false, etag: null, error: null, loaded: false, maxNumber: entry?.maxNumber ?? 0 };
+      cache.set(cacheKey(repo), entry);
     }
-    if (isRateExhausted() && rate) {
-      entry.error = copy.rateExhausted(formatClock(rate.resetUnix));
+    if (rateExhausted() && rate) {
+      entry.error = { kind: "rate", resetUnix: rate.resetUnix };
       return;
     }
     try {
-      const answer = await fetchRepoIssues(repo, entry.etag);
-      if (answer.rate) {
-        rate = answer.rate;
+      const answer = await fetchRepoIssues(repo, settings.sort, settings.labels, entry.etag);
+      if (answer.rate) rate = answer.rate;
+      let current = repo;
+      if (answer.moved) {
+        let target = answer.movedTo;
+        if (!target) {
+          const info = await fetchRepoInfo(repo);
+          if (info.rate) rate = info.rate;
+          target = info.fullName;
+        }
+        if (target && parseRepo(target)) current = renameRepo(repo, target);
       }
       if (answer.status === 304) {
         entry.error = null;
         return;
       }
       if (answer.status === 200 && answer.items) {
-        const hadLoaded = entry.loaded;
-        const freshItems = hadLoaded
-          ? answer.items.filter((item) => !entry.knownNumbers.has(item.number))
-          : [];
+        const shown = visibleItems(answer.items, settings);
+        const fresh = entry.maxNumber > 0 ? shown.filter((item) => item.number > entry.maxNumber) : [];
         entry.items = answer.items;
+        entry.more = answer.more;
         entry.etag = answer.etag;
         entry.error = null;
         entry.loaded = true;
-        for (const item of answer.items) {
-          entry.knownNumbers.add(item.number);
-        }
-        if (config.notifyNew && freshItems.length > 0) {
-          const newest = freshItems[0];
-          await messages.notify({
-            source: name,
-            pluginId: name,
-            title: copy.newIssueTitle(repo),
-            body: `#${newest.number} ${newest.title}`,
-            durationMs: 8000,
-          });
-        }
+        for (const item of answer.items) entry.maxNumber = Math.max(entry.maxNumber, item.number);
+        await notifyNew(current, fresh);
         return;
       }
       if (answer.status === 404) {
         entry.items = [];
-        entry.error = copy.notFound;
+        entry.error = { kind: "notFound" };
         return;
       }
-      if (isRateExhausted() && rate) {
-        entry.error = copy.rateExhausted(formatClock(rate.resetUnix));
+      if (isRateLimited(answer.status, rate) && rate) {
+        entry.error = { kind: "rate", resetUnix: rate.resetUnix };
         return;
       }
-      entry.error = copy.loadFailed(answer.errorMessage ?? `HTTP ${answer.status}`);
+      entry.error = { kind: "failed", message: answer.errorMessage ?? `HTTP ${answer.status}` };
     } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      entry.error = copy.loadFailed(msg);
+      entry.error = { kind: "failed", message: error instanceof Error ? error.message : String(error) };
     }
   }
 
-  async function refreshAll(): Promise<IssuesState> {
-    const { repos } = parseRepos(config.reposText);
+  async function runRefresh(): Promise<IssuesState> {
+    const keep = new Set(settings.repos.map(cacheKey));
     for (const key of [...cache.keys()]) {
-      if (!repos.includes(key)) cache.delete(key);
+      if (!keep.has(key)) cache.delete(key);
     }
-    if (repos.length === 0) {
+    if (settings.repos.length === 0) {
       loading = false;
       publish();
       return snapshot();
@@ -183,9 +188,10 @@ export function apply(ctx: Context) {
     loading = true;
     publish();
     try {
-      for (const repo of repos) {
+      for (const repo of [...settings.repos]) {
         await refreshRepo(repo);
       }
+      lastRefresh = Date.now();
     } finally {
       loading = false;
       publish();
@@ -193,55 +199,85 @@ export function apply(ctx: Context) {
     return snapshot();
   }
 
+  function refreshAll(soft = false): Promise<IssuesState> {
+    if (running) return running;
+    if (soft && Date.now() - lastRefresh < SOFT_REFRESH_MS) return Promise.resolve(snapshot());
+    running = runRefresh().finally(() => {
+      running = null;
+    });
+    return running;
+  }
+
   function syncSchedule() {
     if (stopTimer) {
       void stopTimer();
       stopTimer = null;
     }
-    const { repos } = parseRepos(config.reposText);
-    if (repos.length === 0) return;
-    const mins = effectiveMinutes(repos.length);
+    if (settings.repos.length === 0) return;
     stopTimer = ctx.setInterval(() => {
       void refreshAll();
-    }, mins * 60_000);
+    }, effectiveMinutes(settings, ANONYMOUS_BUDGET_PER_HOUR) * 60_000);
   }
 
   syncSchedule();
-  if (parseRepos(config.reposText).repos.length > 0) {
-    void refreshAll();
-  }
+  if (settings.repos.length > 0) void refreshAll();
 
-  ctx.clients.handle(METHODS.getState, async (params?: { locale?: Locale }) => {
-    if (params?.locale && params.locale !== config.locale) {
-      config = { ...config, locale: normalizeLocale(params.locale) };
-      saveConfigFile(ctx.dataDir, config);
-    }
-    return snapshot();
-  });
+  ctx.clients.handle(METHODS.getState, async () => snapshot());
 
-  ctx.clients.handle(METHODS.setConfig, async (params?: Partial<IssuesConfig>) => {
-    const prevRepos = config.reposText;
-    config = {
-      reposText: typeof params?.reposText === "string" ? params.reposText.trim() : config.reposText,
-      refreshMinutes:
-        params?.refreshMinutes !== undefined ? normalizeMinutes(params.refreshMinutes) : config.refreshMinutes,
-      notifyNew: typeof params?.notifyNew === "boolean" ? params.notifyNew : config.notifyNew,
-      locale: params?.locale ? normalizeLocale(params.locale) : config.locale,
-    };
-    saveConfigFile(ctx.dataDir, config);
-    syncSchedule();
-    if (config.reposText !== prevRepos) {
-      return refreshAll();
-    }
+  ctx.clients.handle(METHODS.setSettings, async (params?: unknown) => {
+    const patch = params && typeof params === "object" ? { ...(params as Record<string, unknown>) } : {};
+    delete patch.repos;
+    delete patch.reposText;
+    const before = settings;
+    settings = normalizeSettings({ ...settings, ...patch }, settings);
+    persist();
+    if (settings.refreshMinutes !== before.refreshMinutes) syncSchedule();
+    if (queryKey(settings) !== queryKey(before)) return refreshAll();
     publish();
     return snapshot();
   });
 
-  ctx.clients.handle(METHODS.refresh, async (params?: { locale?: Locale }) => {
-    if (params?.locale && params.locale !== config.locale) {
-      config = { ...config, locale: normalizeLocale(params.locale) };
-      saveConfigFile(ctx.dataDir, config);
+  ctx.clients.handle(METHODS.addRepo, async (params?: { repo?: unknown }): Promise<AddRepoResult> => {
+    const parsed = typeof params?.repo === "string" ? parseRepo(params.repo) : null;
+    if (!parsed) return { ok: false, reason: "format" };
+    if (settings.repos.some((repo) => sameRepo(repo, parsed))) return { ok: false, reason: "duplicate" };
+    if (settings.repos.length >= MAX_REPOS) return { ok: false, reason: "full" };
+    let info;
+    try {
+      info = await fetchRepoInfo(parsed);
+    } catch (error) {
+      return { ok: false, reason: "failed", message: error instanceof Error ? error.message : String(error) };
     }
-    return refreshAll();
+    if (info.rate) rate = info.rate;
+    if (info.status === 404) return { ok: false, reason: "notFound" };
+    if (isRateLimited(info.status, rate)) return { ok: false, reason: "rate" };
+    if (info.status !== 200) return { ok: false, reason: "failed", message: info.errorMessage ?? `HTTP ${info.status}` };
+    const repo = info.fullName && parseRepo(info.fullName) ? info.fullName : parsed;
+    if (settings.repos.some((item) => sameRepo(item, repo))) return { ok: false, reason: "duplicate" };
+    settings = { ...settings, repos: [...settings.repos, repo] };
+    persist();
+    syncSchedule();
+    publish();
+    void (async () => {
+      await refreshRepo(repo);
+      publish();
+    })();
+    return { ok: true, repo };
+  });
+
+  ctx.clients.handle(METHODS.removeRepo, async (params?: { repo?: unknown }) => {
+    const target = typeof params?.repo === "string" ? params.repo : "";
+    settings = { ...settings, repos: settings.repos.filter((repo) => repo !== target) };
+    cache.delete(cacheKey(target));
+    persist();
+    syncSchedule();
+    publish();
+    return snapshot();
+  });
+
+  ctx.clients.handle(METHODS.refresh, async (params?: { soft?: unknown }) => refreshAll(params?.soft === true));
+
+  ctx.commands.register("refresh", () => refreshAll(), {
+    title: { "zh-CN": "立即刷新", en: "Refresh now" },
   });
 }

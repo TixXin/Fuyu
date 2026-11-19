@@ -92,7 +92,10 @@ export function VersionHistory({ releases = BUNDLED_RELEASES }: { releases?: rea
   const text = useTranslation().settings.versionHistory;
   const current = useSyncExternalStore(subscribeToUpdate, () => getUpdateState().version);
   const groups = useMemo(() => releaseGroups(releases, current), [releases, current]);
-  const [openBase, setOpenBase] = useState<string | null>(null);
+  const [openBase, setOpenBase] = useState<string | null>(() => {
+    const own = groups.find((group) => [group.stable, ...group.betas].some((entry) => entry?.version === current));
+    return (own ?? groups[0])?.base ?? null;
+  });
   const [selection, setSelection] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<Notes>({});
   const [showAll, setShowAll] = useState(false);

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { firstPublishedAt, marketSince, packageIcon, pluginIcon } from "../../src/features/updater/host/marketListing.mjs";
+import { firstPublishedAt, marketSince, packageIcon, pluginIcon, pluginScreenshots, versionScreenshots } from "../../src/features/updater/host/marketListing.mjs";
 
 const icon = (name) => ({ url: `https://example.com/${name}.svg`, sha256: "a".repeat(64) });
 const version = (v, publishedAt, more = {}) => ({ version: v, publishedAt, ...more });
@@ -34,4 +34,14 @@ test("an installed package's icon path stays inside the package", () => {
   for (const bad of ["../data/secret.svg", "/etc/icon.svg", "C:/icon.svg", "assets\\icon.svg", "assets//icon.svg", "", 42, undefined]) {
     assert.equal(packageIcon(bad), undefined, String(bad));
   }
+});
+
+test("market screenshots come from the offered version, fall back to any version that has some, and stop at six", () => {
+  const shot = (name, caption) => ({ url: `https://example.com/${name}.png`, sha256: "b".repeat(64), ...(caption ? { caption } : {}) });
+  const plugin = { versions: [version("2.0.0", "2026-11-19T00:00:00Z"), version("1.0.0", "2026-11-01T00:00:00Z", { screenshots: [shot("old")] })] };
+  assert.deepEqual(pluginScreenshots(plugin, version("3.0.0", "x", { screenshots: [shot("new", { "zh-CN": "预报", en: "Forecast", fr: 3 })] })), [{ url: "https://example.com/new.png", caption: { "zh-CN": "预报", en: "Forecast" } }]);
+  assert.deepEqual(pluginScreenshots(plugin, plugin.versions[0]), [{ url: "https://example.com/old.png" }]);
+  assert.deepEqual(versionScreenshots({ screenshots: [{ url: "http://insecure.example/a.png" }, "nope", shot("ok")] }), [{ url: "https://example.com/ok.png" }]);
+  assert.equal(versionScreenshots({ screenshots: Array.from({ length: 9 }, (_, i) => shot(`s${i}`)) }).length, 6);
+  assert.deepEqual(pluginScreenshots({}, null), []);
 });

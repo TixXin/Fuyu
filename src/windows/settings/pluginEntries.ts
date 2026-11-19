@@ -1,6 +1,7 @@
-import type { InstalledMarketPlugin, MarketCatalogPlugin, MarketCatalogSnapshot, MarketLocalizedText, MarketRevocation } from "@fuyu/plugin-services";
+import type { InstalledMarketPlugin, InstalledPluginReach, MarketCatalogPlugin, MarketCatalogSnapshot, MarketLocalizedText, MarketRevocation } from "@fuyu/plugin-services";
 import { isExternalPlugin } from "./pluginDisplay.ts";
 import { iconSources, packageIconUrl } from "./pluginIconSources.ts";
+import { newestMarketVersion, pluginPlaces, pluginSettingsKnown, type PluginPlace } from "./pluginReach.ts";
 import { pluginRowStatus, type RowContext, type RowStatus } from "./pluginRowStatus.ts";
 import { stateOf } from "./pluginServiceStatus.ts";
 import type { PluginStatusV3 } from "./usePluginHostStatus";
@@ -22,6 +23,10 @@ export interface InstalledEntry {
   enabled: boolean;
   revocation?: MarketRevocation | null;
   status: RowStatus;
+  reach: InstalledPluginReach | null;
+  marketVersion: string | null;
+  settings: boolean | null;
+  places: PluginPlace[];
 }
 
 export type InstalledFilter = "all" | "on" | "off" | "attention";
@@ -53,6 +58,7 @@ export function installedEntries(
   snapshot: MarketCatalogSnapshot | null,
   context: RowContext,
   locale: string,
+  sectionOwners: ReadonlySet<string> = new Set(),
 ): InstalledEntry[] {
   const marketByName = new Map((snapshot?.plugins ?? []).map((item) => [item.name, item]));
   const installedById = new Map((snapshot?.installed ?? []).map((item) => [item.id, item]));
@@ -63,6 +69,8 @@ export function installedEntries(
       const installed = installedById.get(plugin.id);
       const source = sourceOf(plugin, market);
       const revocation = market?.revocation ?? installed?.revocation ?? null;
+      const reach = installed?.reach ?? null;
+      const settings = pluginSettingsKnown(reach, sectionOwners.has(plugin.id));
       return {
         id: plugin.id,
         plugin,
@@ -78,6 +86,10 @@ export function installedEntries(
         enabled: stateOf(plugin) !== "disabled",
         revocation,
         status: pluginRowStatus(plugin, market, context, revocation),
+        reach,
+        marketVersion: newestMarketVersion(market),
+        settings,
+        places: pluginPlaces(reach, settings),
       };
     })
     .sort((a, b) => a.title.localeCompare(b.title, locale));

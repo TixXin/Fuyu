@@ -12,7 +12,7 @@ import {
 } from "../../../../packages/plugin-market/src/index.mjs";
 import { PACKAGES_SUBDIR } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { newCapabilities, capabilitiesOf } from "./marketCapabilities.mjs";
-import { firstPublishedAt, marketSince, packageIcon, pluginIcon } from "./marketListing.mjs";
+import { firstPublishedAt, marketSince, packageIcon, packageReach, pluginIcon, pluginScreenshots } from "./marketListing.mjs";
 
 export const STATE_FILE = "market-state.json";
 export const INDEX_FILE = "index.v3.json";
@@ -121,6 +121,7 @@ export function readInstalledPackages(pluginsDir) {
           displayName: fuyu.displayName,
           description: fuyu.description,
           icon: packageIcon(fuyu.icon),
+          reach: packageReach(fuyu),
           replaces: yml?.replaces?.length ? yml.replaces : Array.isArray(fuyu.replaces) ? fuyu.replaces : [],
           capabilities: capabilitiesOf(fuyu),
         });
@@ -354,6 +355,7 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
       description: isObject(manifest.description) ? manifest.description : { "zh-CN": "", en: "" },
       categories: Array.isArray(manifest.categories) ? [...manifest.categories] : [],
       icon: pluginIcon(plugin, primaryEntry),
+      screenshots: pluginScreenshots(plugin, primaryEntry),
       firstPublishedAt: firstPublishedAt(plugin),
       installedVersion: inst?.version ?? null,
       enabled: inst ? inst.enabled : false,
@@ -369,7 +371,7 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
         : null,
     };
   });
-  const installed = installedRaw.map(({ id, version, source, enabled, displayName, description, icon }) => ({
+  const installed = installedRaw.map(({ id, version, source, enabled, displayName, description, icon, reach }) => ({
     id,
     version,
     source,
@@ -378,6 +380,7 @@ export function buildMarketSnapshot({ dataDir, pluginsDir, appVersion, platform,
     ...(displayName !== undefined ? { displayName } : {}),
     ...(description !== undefined ? { description } : {}),
     ...(icon !== undefined ? { icon } : {}),
+    ...(reach !== undefined ? { reach } : {}),
   }));
   return {
     plugins,

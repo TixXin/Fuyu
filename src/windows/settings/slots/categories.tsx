@@ -51,6 +51,11 @@ const shortcuts = (tab: ComponentProps<typeof ShortcutsSettingsPage>["tab"]): Pa
     return <ShortcutsSettingsPage tab={tab} settings={settings} onSettingsChange={onSettingsChange} onOpenPage={onOpenPage} />;
   };
 
+const about = (tab: ComponentProps<typeof AboutSettingsPage>["tab"]): Page =>
+  function AboutPage({ onSettingsChange }) {
+    return <AboutSettingsPage tab={tab} onSettingsChange={onSettingsChange} />;
+  };
+
 const PAGES: Partial<Record<SettingsCategory, Page>> = {
   overview: ({ settings, locale, features, unsupported, onLocaleChange, onSettingsChange, onOpenPage }) => (
     <OverviewSettingsPage
@@ -80,7 +85,9 @@ const PAGES: Partial<Record<SettingsCategory, Page>> = {
   pluginsV3: ({ onShowPage }) => <PluginsV3SettingsPage onOpenPage={onShowPage} />,
   pluginDiagnostics: ({ onShowPage }) => <PluginDiagnosticsPage onOpenPage={onShowPage} />,
   pluginMarket: ({ onShowPage }) => <PluginMarketPage onOpenPage={onShowPage} />,
-  about: ({ onSettingsChange }) => <AboutSettingsPage onSettingsChange={onSettingsChange} />,
+  about: about("about"),
+  aboutChangelog: about("aboutChangelog"),
+  aboutHelp: about("aboutHelp"),
 };
 
 for (const [id, page] of Object.entries(PAGES)) addSettingsCategory(id as SettingsCategory, page);

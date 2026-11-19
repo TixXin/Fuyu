@@ -1,4 +1,4 @@
-import { writeJson } from "../../lib/storage.ts";
+import { readString, writeJson, writeString } from "../../lib/storage.ts";
 
 export const SETTINGS_FOCUS_STORAGE_KEY = "fuyu-settings-focus";
 
@@ -11,6 +11,37 @@ export const FOCUS_REQUEST_MAX_AGE_MS = 10_000;
 export interface SettingsFocusRequest {
   section: SettingsFocusSection;
   plugin: string | null;
+  tab: AboutTab | null;
+}
+
+export const ABOUT_TAB_STORAGE_KEY = "fuyu-about-tab";
+
+export type AboutTab = "overview" | "changelog" | "help";
+
+const ABOUT_TAB_PAGES = { overview: "about", changelog: "aboutChangelog", help: "aboutHelp" } as const;
+
+export type AboutPage = (typeof ABOUT_TAB_PAGES)[AboutTab];
+
+const ABOUT_TABS: readonly AboutTab[] = ["overview", "changelog", "help"];
+
+const isAboutTab = (value: unknown): value is AboutTab => ABOUT_TABS.some((tab) => tab === value);
+
+export function aboutTabPage(tab: AboutTab): AboutPage {
+  return ABOUT_TAB_PAGES[tab];
+}
+
+export function aboutTabOf(page: string): AboutTab | null {
+  return ABOUT_TABS.find((tab) => ABOUT_TAB_PAGES[tab] === page) ?? null;
+}
+
+export function rememberedAboutPage(): AboutPage {
+  const stored = readString(ABOUT_TAB_STORAGE_KEY);
+  return aboutTabPage(isAboutTab(stored) ? stored : "overview");
+}
+
+export function rememberAboutPage(page: string) {
+  const tab = aboutTabOf(page);
+  if (tab !== null && readString(ABOUT_TAB_STORAGE_KEY) !== tab) writeString(ABOUT_TAB_STORAGE_KEY, tab);
 }
 
 export function takeFocusRequest(): SettingsFocusRequest | null {
@@ -27,6 +58,7 @@ export function takeFocusRequest(): SettingsFocusRequest | null {
       section?: unknown;
       requestedAt?: unknown;
       plugin?: unknown;
+      tab?: unknown;
     };
 
     const section = FOCUS_SECTIONS.find((known) => known === request.section);
@@ -34,16 +66,17 @@ export function takeFocusRequest(): SettingsFocusRequest | null {
       return null;
     }
     const plugin = section === "pluginsV3" && typeof request.plugin === "string" && request.plugin !== "" ? request.plugin : null;
-    return { section, plugin };
+    const tab = section === "updates" && isAboutTab(request.tab) ? request.tab : null;
+    return { section, plugin, tab };
   } catch {
     return null;
   }
 }
 
-export function requestSettingsFocus(section: SettingsFocusSection, plugin?: string) {
+export function requestSettingsFocus(section: SettingsFocusSection, plugin?: string, tab?: AboutTab) {
   window.localStorage.setItem(
     SETTINGS_FOCUS_STORAGE_KEY,
-    JSON.stringify(plugin ? { section, requestedAt: Date.now(), plugin } : { section, requestedAt: Date.now() }),
+    JSON.stringify({ section, requestedAt: Date.now(), ...(plugin ? { plugin } : {}), ...(tab ? { tab } : {}) }),
   );
 }
 

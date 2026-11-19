@@ -90,6 +90,19 @@ try {
   await click(card(stage, "@kai/vscode-status")?.querySelector("[data-action='market-go-update']"));
   check(opened.includes("view:about"), "Updating Fuyu opens the About page");
   check(card(stage, "@fuyu/weather")?.querySelector("[data-action='market-manage']"), "An installed plugin offers Manage");
+  check(card(stage, "@fuyu/weather")?.querySelector("[data-action='market-open-on-island']")?.textContent === text.card.openOnIsland && !card(stage, "@fuyu/rss")?.querySelector("[data-action='market-open-on-island']"), "An installed plugin with an island page also offers Open on island; one that is not installed does not");
+  await click(card(stage, "@fuyu/weather")?.querySelector("[data-action='market-open-on-island']"));
+  check(ipc.calls.includes(`emit:island-open-plugin-page:{"pluginId":"@fuyu/weather"}`) && !document.querySelector("[data-market-detail-modal]"), "Open on island asks the island to expand on that plugin's page, without opening the detail");
+  const rssCard = card(stage, "@fuyu/rss")!;
+  check(rssCard.querySelector("[data-market-thumb='3'] img") && rssCard.querySelector(".market-card__thumb-count")?.textContent === text.card.shotCount(3), "A card with screenshots shows the first one on the right and how many there are");
+  check(card(stage, "@fuyu/weather")?.querySelector("[data-market-thumb='1']") && !card(stage, "@fuyu/weather")?.querySelector(".market-card__thumb-count"), "With a single screenshot there is no count");
+  check(!card(stage, "@fuyu/devices")?.querySelector(".market-card__thumb") && !card(stage, "@fuyu/devices")?.classList.contains("market-card--thumbed"), "A card without screenshots leaves no space for one");
+  const thumbBox = rssCard.querySelector(".market-card__thumb")!.getBoundingClientRect();
+  const mainBox = rssCard.querySelector(".market-card__main")!.getBoundingClientRect();
+  check(thumbBox.height <= mainBox.height + 1 && thumbBox.width < mainBox.width, `The thumbnail sits beside the title and description without making the card taller (thumb ${thumbBox.height}px, text ${mainBox.height}px)`);
+  const chips = [...stage.querySelectorAll(".market-toolbar [data-market-category]")].map((chip) => ({ id: chip.getAttribute("data-market-category"), count: Number(chip.querySelector(".plugin-chip__count")?.textContent) }));
+  const chipSum = chips.filter((chip) => chip.id !== "all").reduce((sum, chip) => sum + chip.count, 0);
+  check(chips[0].id === "all" && chips[0].count === MARKET_PLUGINS.length && chipSum === MARKET_PLUGINS.length, `Each plugin counts once, under its first category, so the categories add up to All (${chipSum} of ${MARKET_PLUGINS.length})`);
   check(stage.querySelector("[data-market-section='updates']")?.compareDocumentPosition(stage.querySelector("[data-market-section='all']")!) === Node.DOCUMENT_POSITION_FOLLOWING, "Updates come before the full list");
 
   const DAY = 24 * 60 * 60 * 1000;
@@ -102,6 +115,8 @@ try {
 
   const narrow = await view("browse-narrow", zh ? "浏览（窄窗口）" : "Browse (narrow window)", {}, true);
   check(getComputedStyle(narrow.stage.querySelector(".market-grid")!).gridTemplateColumns.split(" ").length === 1, "A narrow window has one card per row");
+  const narrowFoot = card(narrow.stage, "@fuyu/weather")!.querySelector<HTMLElement>(".market-card__foot")!;
+  check(narrowFoot.scrollWidth <= narrowFoot.clientWidth && card(narrow.stage, "@fuyu/rss")?.querySelector(".market-card__thumb"), "In a narrow window the thumbnail stays and Installed, Manage and Open on island fit on one line");
 
   const search = await view("search", zh ? "搜索" : "Search", { initialQuery: "sync" });
   check(cards(search.stage, "results").sort().join() === "@fuyu/devices,@mio/focus-sync,@ryo/clip-sync,@tara/linear", "Searching matches names and descriptions and lists only those plugins under a result count");
@@ -111,7 +126,9 @@ try {
 
   const category = await view("category", zh ? "分类筛选" : "Category filter");
   await click(category.stage.querySelector(".market-toolbar [data-market-category='productivity']"));
-  check(category.stage.querySelector(".market-toolbar [data-market-category='productivity']")?.getAttribute("aria-pressed") === "true" && cards(category.stage, "category:productivity").length === 5, "Picking a category shows all of its plugins");
+  check(category.stage.querySelector(".market-toolbar [data-market-category='productivity']")?.getAttribute("aria-pressed") === "true" && cards(category.stage, "category:productivity").length === 4 && !cards(category.stage, "category:productivity").includes("@fuyu/page-summary"), "Picking a category shows the plugins whose first category it is");
+  await type(category.stage.querySelector<HTMLInputElement>(".market-toolbar input")!, zh ? "效率" : "productivity");
+  check(cards(category.stage, "results").includes("@fuyu/page-summary"), "Searching a category name still finds plugins that list it second");
 
   const detail = await view("detail", zh ? "插件详情" : "Plugin detail", { initialDetail: "@fuyu/rss" });
   const rss = await waitFor(() => detail.stage.querySelector<HTMLElement>("[data-market-detail-modal='@fuyu/rss'] .market-markdown"), "the RSS readme")
@@ -124,6 +141,13 @@ try {
   await click(rss.querySelector("[data-detail-tab='versions']"));
   check(rss.querySelectorAll("[data-market-version]").length === 3, "The versions tab lists every published version");
   await click(rss.querySelector("[data-detail-tab='readme']"));
+  await click(rss.querySelector("[data-shot='1']"));
+  const viewer = await waitFor(() => detail.stage.querySelector<HTMLElement>("[data-market-viewer]"), "the screenshot viewer");
+  check(viewer.dataset.marketViewer === "1" && viewer.textContent!.includes(text.detail.viewer.position(2, 3)) && viewer.querySelector("img")?.getAttribute("src") === RSS_DETAILS.screenshots[1].url, "Clicking a screenshot opens it large, saying which one of how many");
+  await press(viewer, "ArrowRight");
+  check(detail.stage.querySelector<HTMLElement>("[data-market-viewer]")?.dataset.marketViewer === "2" && detail.stage.querySelector("[data-market-viewer] [data-viewer-step='next']")?.hasAttribute("disabled"), "Arrow keys step through the screenshots and stop at the last");
+  await press(detail.stage.querySelector("[data-market-viewer]")!, "Escape");
+  check(!detail.stage.querySelector("[data-market-viewer]") && detail.stage.querySelector("[data-market-detail-modal='@fuyu/rss']"), "Escape closes the large view and leaves the detail open");
 
   const narrowDetail = await view("detail-narrow", zh ? "插件详情（窄窗口）" : "Plugin detail (narrow window)", { initialDetail: "@fuyu/rss" }, true);
   await waitFor(() => narrowDetail.stage.querySelector("[data-market-detail-modal] .market-markdown"), "the narrow readme");

@@ -1,5 +1,5 @@
 import { mockIPC } from "@tauri-apps/api/mocks";
-import { commandsV1, marketV1, pluginConfigV1, pluginWindowsV1, type CommandItem, type MarketCatalogPlugin, type MarketInspectedPackage, type MarketPluginDetails, type MarketVersionCandidate, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
+import { commandsV1, marketV1, pluginConfigV1, pluginWindowsV1, type CommandItem, type InstalledPluginReach, type MarketCatalogPlugin, type MarketInspectedPackage, type MarketPluginDetails, type MarketVersionCandidate, type PluginConfigValues, type PluginWindowRules } from "@fuyu/plugin-services";
 import { LOCALE_STORAGE_KEY } from "../../src/i18n";
 import type { HostNodeStatus } from "../../src/features/plugin-kernel/api";
 import type { HostInfoV3, PluginStatusV3 } from "../../src/windows/settings/usePluginHostStatus";
@@ -55,6 +55,7 @@ mockIPC((command, payload) => {
     return taken;
   }
   if (command === "plugin:opener|open_url") return (ipc.calls.push(`open:${String(args.url)}`), null);
+  if (command === "plugin:event|emit_to") return (ipc.calls.push(`emit:${String(args.event)}:${JSON.stringify(args.payload)}`), null);
   return null;
 });
 
@@ -88,11 +89,26 @@ export const market = {
   revocationCases: false,
   details: {} as Record<string, MarketPluginDetails>,
   inspected: null as MarketInspectedPackage | null,
+  reach: false,
+  manualInstalled: {} as Record<string, string>,
 };
+export const REACH: Record<string, InstalledPluginReach> = {
+  "@fuyu/weather": { slots: ["island.page/v1", "island.collapsed/v1", "settings.section/v1"], services: ["messages/v1"], config: true },
+  "@fuyu/pomodoro": { slots: ["island.page/v1", "island.collapsed/v1"], services: ["timers/v1"], config: false },
+  "@someone/clock": { slots: ["island.collapsed/v1"], services: [], config: false },
+  "@me/gadget": { slots: ["island.page/v1"], services: [], config: true },
+};
+const installedList = () => market.reach
+  ? [
+    ...Object.entries(market.installed).map(([id, version]) => ({ id, version, source: "market" as const, enabled: true })),
+    ...Object.entries(market.manualInstalled).map(([id, version]) => ({ id, version, source: "manual" as const, enabled: false })),
+  ].map((item) => (REACH[item.id] ? { ...item, reach: REACH[item.id] } : item))
+  : [];
 const marketPlugins = (): MarketCatalogPlugin[] => {
   const with_ = (plugin: MarketCatalogPlugin) => {
-    const installedVersion = market.installed[plugin.name] ?? null;
-    return { ...plugin, installedVersion, enabled: Boolean(installedVersion), source: installedVersion ? "market" as const : null };
+    const manual = market.manualInstalled[plugin.name] ?? null;
+    const installedVersion = market.installed[plugin.name] ?? manual;
+    return { ...plugin, installedVersion, enabled: Boolean(installedVersion), source: manual ? "manual" as const : installedVersion ? "market" as const : null };
   };
   const cases = market.revocationCases ? [
     entry("@someone/sketchy", "剪贴板同步", "Clipboard sync", "在几台电脑之间同步剪贴板", "Syncs the clipboard between computers", { install: candidate("0.5.1", false), manual: candidate("0.5.1", false), revocation: { level: "warn", reasons: [REASON.sketchy] } }),
@@ -111,9 +127,10 @@ const marketPlugins = (): MarketCatalogPlugin[] => {
     entry("@someone/notes", "便签", "Sticky notes", "随手记一句", "Jot a line down", { install: candidate("0.9.0", false, true) }),
     { ...entry("@someone/old", "旧插件", "Old plugin", "版本不够", "Too old"), install: null, blocked: { reason: "engines" as const, range: ">=9.0.0" } },
     ...cases,
+    ...(market.manualInstalled["@me/gadget"] ? [entry("@me/gadget", "小工具", "Gadget", "试验用的小工具", "A gadget for trying things", { install: candidate("0.1.0", false) })] : []),
   ].map(with_);
 };
-export const marketSnapshot = () => ({ plugins: marketPlugins(), installed: [], updatedAt: null, manualAllowed: market.manualAllowed, error: null });
+export const marketSnapshot = () => ({ plugins: marketPlugins(), installed: installedList(), updatedAt: null, manualAllowed: market.manualAllowed, error: null });
 let emitMarket: () => void = () => {};
 const marketProvider = windowServices.provide(marketV1, {
   catalog: () => marketSnapshot(),

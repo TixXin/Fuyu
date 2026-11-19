@@ -1,8 +1,8 @@
 {
   "name": "@fuyu/todo-digest",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "Tracks open todos in real time and appends a digest of open items to today's note",
+  "description": "Writes your unfinished to-dos into today's note in one click or at a set time, a quick wrap-up before you stop for the day.",
   "author": "TixXin",
   "license": "MIT",
   "repository": "https://github.com/TixXin/fuyu",
@@ -20,11 +20,11 @@
     "manifest": 1,
     "displayName": {
       "zh-CN": "待办摘要",
-      "en": "Todo digest"
+      "en": "To-do digest"
     },
     "description": {
-      "zh-CN": "监听待办变化实时统计未完成待办数，一键将当前未完成清单追加写入今日笔记并在岛上提示。",
-      "en": "Counts open todos whenever they change and appends a formatted digest of open items to today's daily note with an island notification."
+      "zh-CN": "一键或定时把还没做完的待办写进今天的笔记，收工前顺手做个记录。",
+      "en": "Writes your unfinished to-dos into today's note in one click or at a set time, a quick wrap-up before you stop for the day."
     },
     "icon": "assets/icon.svg",
     "categories": [
@@ -41,7 +41,9 @@
     },
     "inject": {
       "required": [
-        "todos/v1",
+        "todos/v1"
+      ],
+      "optional": [
         "messages/v1"
       ]
     },
@@ -52,8 +54,8 @@
       {
         "id": "write-digest",
         "title": {
-          "zh-CN": "写入摘要",
-          "en": "Write digest"
+          "zh-CN": "写入待办摘要",
+          "en": "Write to-do digest"
         }
       }
     ]

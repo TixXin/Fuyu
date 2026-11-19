@@ -280,12 +280,25 @@ if (!automated) {
     await act(async () => { filterGroup().querySelector<HTMLButtonElement>(".session-filter__remove")!.click(); });
     check(localStorage.getItem("fuyu-agent-session-filters") === "[]" && !filterGroup().querySelector(".session-filter__value"), "Removing the rule clears it");
 
-    await openPage("about");
+    localStorage.removeItem("fuyu-about-tab");
+    await click(".settings-sidebar__item[data-category='about']");
+    const aboutTab = () => document.querySelector(".settings-tabs__tab--active")?.getAttribute("data-tab");
+    check(texts(".settings-tabs__tab") === "概览|更新日志|帮助" && aboutTab() === "about", "About starts on the overview, with the changelog and help as tabs beside it");
     const hero = element(".about-hero");
-    check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && Boolean(hero.querySelector(".about-hero__emblem")) && Boolean(document.querySelector(".about-logo-pill")) && hero.getBoundingClientRect().height >= hero.scrollHeight - 1,
-      "About opens with the app's emblem hero card and logo call pill, not clipped");
-    check(document.querySelectorAll(".about-workbench__col").length === 2 && document.querySelectorAll(".about-links .project-link").length === 4
-      && texts(".settings-group__title").includes("帮助|重置与退出"), "About lays out version and changelog alongside the four link tiles, help, and reset and quit");
+    check(hero.querySelector(".about-hero__name")?.textContent === "浮屿" && hero.getBoundingClientRect().height >= hero.scrollHeight - 1, "The overview shows the app's card, not clipped");
+    check(document.querySelectorAll(".about-hero__links .about-hero__link").length === 4 && !document.querySelector(".about-logo-pill") && texts(".settings-group__title").includes("重置与退出") && !document.querySelector(".version-history__row"),
+      "The overview card holds the four links, the title has no logo pill, reset and quit stay on the overview, and the changelog has its own tab");
+    await click(".settings-tabs__tab[data-tab='aboutChangelog']");
+    check(document.querySelector(".version-history__row") && document.querySelectorAll(".version-history__item--open").length === 1 && localStorage.getItem("fuyu-about-tab") === "changelog", "The changelog tab lists the releases with one open, and is remembered");
+    await openPage("general");
+    await click(".settings-sidebar__item[data-category='about']");
+    check(aboutTab() === "aboutChangelog", "Coming back to About from the sidebar reopens the last tab");
+    localStorage.setItem("fuyu-settings-focus", JSON.stringify({ section: "updates", requestedAt: Date.now(), tab: "help" }));
+    await act(async () => { window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-settings-focus", newValue: "{}" })); });
+    check(aboutTab() === "aboutHelp" && texts(".settings-group__title").includes("帮助") && localStorage.getItem("fuyu-about-tab") === "help", "A jump to updates with a tab opens that tab and remembers it");
+    localStorage.setItem("fuyu-settings-focus", JSON.stringify({ section: "updates", requestedAt: Date.now() }));
+    await act(async () => { window.dispatchEvent(new StorageEvent("storage", { key: "fuyu-settings-focus", newValue: "{}" })); });
+    check(aboutTab() === "about", "A jump to updates without a tab lands on the overview");
     const aboutLink = (label: string) =>
       [...document.querySelectorAll<HTMLButtonElement>(".settings-link-button")].find((button) => button.textContent === label);
     await act(async () => { aboutLink("重置")!.click(); });

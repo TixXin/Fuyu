@@ -2,6 +2,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { CloudOff, LoaderCircle, PowerOff, RefreshCw, ShieldCheck, Store, Upload } from "lucide-react";
 import type { MarketCatalogPlugin, MarketCatalogSnapshot } from "@fuyu/plugin-services";
 import type { PluginMarketSort } from "../../i18n/sections/settings/pluginMarket";
+import { requestIslandPluginPage } from "../../features/plugin-kernel/api";
 import { useLocale, useTranslation } from "../../i18n";
 import type { SettingsCategory } from "./categories";
 import { PluginMarketBrowse } from "./PluginMarketBrowse";
@@ -13,6 +14,7 @@ import { announceMarketPackage } from "./pluginMarketBus";
 import { categoryCounts, formatMarketTime, localized, newListings } from "./pluginMarketModel";
 import { usePluginFilePicker } from "./PluginPageActions";
 import { requestPluginDetail, type OpenedPluginPackage } from "./pluginPageHandoff";
+import { pluginPlaces } from "./pluginReach";
 import { usePluginInstallFlow } from "./usePluginInstallFlow";
 import { usePluginMarketPackage } from "./usePluginMarketPackage";
 import "./PluginPage.css";
@@ -65,6 +67,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
     const found = plugins.find((plugin) => plugin.name === id);
     return found ? localized(found.displayName, locale, id) : id;
   };
+  const islandPages = new Set((snapshot?.installed ?? []).filter((item) => item.enabled && pluginPlaces(item.reach, null).includes("page")).map((item) => item.id));
   const handlers = {
     onOpen: (plugin: MarketCatalogPlugin) => setDetailName(plugin.name),
     onInstall: (plugin: MarketCatalogPlugin) => {
@@ -78,6 +81,8 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
         }
       : undefined,
     onGoUpdate: onOpenPage ? () => onOpenPage("about") : undefined,
+    canOpenOnIsland: (plugin: MarketCatalogPlugin) => plugin.enabled && !plugin.revoked && islandPages.has(plugin.name),
+    onOpenOnIsland: (plugin: MarketCatalogPlugin) => void requestIslandPluginPage(plugin.name).catch((error: unknown) => console.error(`Failed to open ${plugin.name} on the island`, error)),
   };
   const pickCategory = (id: string | null) => {
     setQuery("");
@@ -169,7 +174,7 @@ export function PluginMarketView({ host, snapshot, failure = null, refreshing = 
       {shownError ? <p className="plugin-callout plugin-callout--bad" role="alert">{shownError}</p> : null}
       {body}
       {file.input}
-      {detailPlugin ? <PluginMarketDetailModal plugin={detailPlugin} isNew={newNames.has(detailPlugin.name)} categoryName={categoryName} nameOf={nameOf} onClose={() => setDetailName(null)} onInstall={handlers.onInstall} onManage={handlers.onManage} onGoUpdate={handlers.onGoUpdate} /> : null}
+      {detailPlugin ? <PluginMarketDetailModal plugin={detailPlugin} isNew={newNames.has(detailPlugin.name)} categoryName={categoryName} nameOf={nameOf} onClose={() => setDetailName(null)} onInstall={handlers.onInstall} onManage={handlers.onManage} onGoUpdate={handlers.onGoUpdate} canOpenOnIsland={handlers.canOpenOnIsland} onOpenOnIsland={handlers.onOpenOnIsland} /> : null}
       {flow.modal}
     </div>
   );

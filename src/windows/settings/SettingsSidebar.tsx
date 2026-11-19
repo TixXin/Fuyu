@@ -4,6 +4,7 @@ import { LOCALE_CODES, useLocale, useTranslation } from "../../i18n";
 import { isMacOS, useUnsupportedFeatures } from "../../lib/platform";
 import { useSlotEntries } from "../../features/plugin-kernel/useSlotEntries";
 import { entryOf, entryPages, isCategoryAvailable, isEntry, searchCategories, settingsGroups, sidebarItemOf, subPagesOf, type SettingsCategory, type SettingsGroup, type TabbedCategory } from "./categories";
+import { rememberedAboutPage } from "./storage";
 import { isTitleHit, MAX_HITS_PER_PAGE, searchSettingsRows, type SettingsRowHit, type SettingsSearchEntry } from "./settingsSearch";
 import { BUILTIN_CATEGORIES, categorySlot } from "./slots/categorySlot";
 import "./SettingsSidebar.css";
@@ -105,6 +106,7 @@ export function SettingsSidebar({
   const current = sidebarItemOf(category);
   const openHit = (hit: SettingsRowHit) => onRowOpen?.(hit.page, hit.text.title);
   const openItem = (item: SettingsCategory) => {
+    if (item === "about") return onCategoryChange(rememberedAboutPage());
     const pages = pagesOf(item);
     onCategoryChange(pages.find((page) => !hiddenSet.has(page)) ?? pages[0] ?? item);
   };
@@ -129,7 +131,7 @@ export function SettingsSidebar({
           </li>
         ))}
         {rows.map((hit) => {
-          const path = [itemLabel(item), tabbed || hit.page !== item ? pageLabel(hit.page) : "", hit.text.group, hit.text.title].filter(Boolean).join(" › ");
+          const path = [itemLabel(item), tabbed || hit.page !== item ? pageLabel(hit.page) : "", hit.text.group, hit.text.title].filter((part, index, parts) => part && part !== parts[index - 1]).join(" › ");
           return (
             <li key={`${hit.page}/${hit.text.group}/${hit.text.title}`}>
               <button className="settings-sidebar__hit" type="button" title={path} data-page={hit.page} onClick={() => openHit(hit)}>

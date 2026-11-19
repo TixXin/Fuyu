@@ -15,6 +15,7 @@ import { ControlledHttp } from "./http.mjs";
 import { recordLogs } from "./logs.mjs";
 import { PluginConfig } from "./plugin-config.mjs";
 import { DEV_WATCHED, watchBuiltins } from "./reload.mjs";
+import { IslandControl } from "./island.mjs";
 import { RustBridge } from "./rust.mjs";
 import { Services } from "./services.mjs";
 import { SettingsOpener } from "./settings.mjs";
@@ -94,6 +95,8 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
   pluginConfig.install(ctx);
   const settings = new SettingsOpener();
   settings.install(ctx);
+  const island = new IslandControl();
+  island.install(ctx);
   const http = new ControlledHttp({ fetchImpl });
   http.install(ctx);
   const windows = new PluginWindows({ dir, services, usage });
@@ -142,6 +145,7 @@ export async function startHost({ dir, config = "plugins.yml", builtins = null, 
     watchClients: (onChange) => ctx.clients.watch(onChange),
     serviceHub: services,
     settingsOpener: settings,
+    islandControl: island,
     services: () => services.list(),
     watchServices: (onChange) => services.watch(onChange),
     settle: () => Promise.all(ctx.loader.getTasks()),
