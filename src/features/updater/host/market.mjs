@@ -4,6 +4,7 @@ import { compareVersions, openIndex, selectVersions, verifyVersionSignature } fr
 import { applyRevocationsToDir, commitStaged, discardStaged, inspectPackage as inspectFuyuPackage, installPackage, stagePackage, uninstallPackage, writeInstalledToYml } from "../../../../packages/plugin-cli/src/installer.mjs";
 import { marketV1 } from "../../../../packages/plugin-services/src/services/market.mjs";
 import { getMarketPluginDetails } from "./marketDetails.mjs";
+import { addedPermissions, permissionsOf } from "./marketPermissions.mjs";
 import { refreshRevocations } from "./marketRevocations.mjs";
 import {
   INDEX_FILE, INDEX_SIG_FILE, buildMarketSnapshot, confirmationFromManifest, decodeBase64, detectTrustChange, isObject,
@@ -52,7 +53,7 @@ export function createMarketService(options = {}) {
     return { pluginEntry, versionEntry, official, keyId };
   };
 
-  const downloadAndInstallSteps = async (steps, revocations, trustedAuthors) => {
+  const downloadAndInstallSteps = async (steps, revocations, trustedAuthors, checkStaged = null) => {
     const downloaded = [];
     for (const step of steps) {
       const res = await fetchImpl(step.versionEntry.url);
@@ -72,6 +73,7 @@ export function createMarketService(options = {}) {
           expectedVersion: item.versionEntry.version,
           revocations,
         }));
+        if (checkStaged) checkStaged(staged[staged.length - 1]);
       }
     } catch (error) {
       discardStaged(staged);
@@ -103,20 +105,31 @@ export function createMarketService(options = {}) {
       if (!candidate || compareVersions(candidate.version, inst.version) <= 0) continue;
       const pin = resolvePinnedAuthor(pluginEntry, inst.version, nextTrusted);
       if (detectTrustChange(pluginEntry, candidate, pin) !== null) continue;
+      if (addedPermissions(inst.permissions, candidate.manifest)) continue;
 
       try {
         const depPlan = planRequiredDependencies({ doc, rootName: pluginEntry.name, rootEntry: candidate, installedById, appVersion, platform, now, revocations, strict: true });
         const unsafeDep = depPlan.some((dep) => {
           const depInst = installedById.get(dep.name);
-          if (!depInst) return true;
+          if (!depInst || addedPermissions(depInst.permissions, dep.entry.manifest)) return true;
           return detectTrustChange(dep.plugin, dep.entry, resolvePinnedAuthor(dep.plugin, depInst.version, nextTrusted)) !== null;
         });
         if (unsafeDep) continue;
         const steps = [...depPlan.map((dep) => verifyMarketStep(dep.plugin, dep.entry)), verifyMarketStep(pluginEntry, candidate)];
-        const res = await downloadAndInstallSteps(steps, revocations, nextTrusted);
+        const res = await downloadAndInstallSteps(steps, revocations, nextTrusted, (staged) => {
+          if (addedPermissions(installedById.get(staged.id)?.permissions, staged.confirmation)) {
+            throw marketError("permissions-added", `${staged.id}@${staged.version} asks for more permissions than the installed version`);
+          }
+        });
         nextTrusted = res.trustedAuthors;
         for (const step of steps) {
-          installedById.set(step.pluginEntry.name, { id: step.pluginEntry.name, version: step.versionEntry.version, source: "market", enabled: true });
+          installedById.set(step.pluginEntry.name, {
+            id: step.pluginEntry.name,
+            version: step.versionEntry.version,
+            source: "market",
+            enabled: true,
+            permissions: permissionsOf(step.versionEntry.manifest),
+          });
         }
         upgradedCount += 1;
       } catch {

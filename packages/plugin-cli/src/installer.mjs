@@ -114,6 +114,7 @@ export function inspectPackage(zipBuffer, options = {}) {
       displayName: fuyu.displayName,
       description: fuyu.description,
       nodeApis: Array.isArray(fuyu.nodeApis) ? fuyu.nodeApis : [],
+      network: Array.isArray(fuyu.network) ? fuyu.network : [],
       provides: Array.isArray(fuyu.provides) ? fuyu.provides : [],
       replaces: Array.isArray(fuyu.replaces) ? fuyu.replaces : [],
       slots: Array.isArray(fuyu.slots) ? fuyu.slots : [],

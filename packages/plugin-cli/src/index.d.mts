@@ -176,6 +176,7 @@ export type PackageConfirmation = {
   readonly displayName?: Localized;
   readonly description?: Localized;
   readonly nodeApis: readonly string[];
+  readonly network: readonly string[];
   readonly provides: readonly string[];
   readonly replaces: readonly string[];
   readonly slots: readonly string[];
