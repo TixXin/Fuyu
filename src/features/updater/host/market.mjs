@@ -359,7 +359,9 @@ export function provideMarketService(ctx, options = {}) {
   const reloadConfig = async () => {
     if (!ctx?.loader || typeof ctx.loader.entries !== "function") return;
     for (const entry of ctx.loader.entries()) {
-      if (typeof entry?.subtree?.refresh === "function") await entry.subtree.refresh();
+      const subtree = entry?.subtree;
+      if (typeof subtree?.reapply === "function") await subtree.reapply();
+      else if (typeof subtree?.refresh === "function") await subtree.refresh();
     }
   };
   const service = createMarketService({ dataDir: ctx.dataDir, onConfigChanged: reloadConfig, ...options });
