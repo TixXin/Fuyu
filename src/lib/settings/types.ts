@@ -26,7 +26,7 @@ export type TuckHintStyle = "none" | "dot" | "glow";
 export type TuckHintColor = "contrast" | "island" | "custom";
 
 export type MessageNotice = "line" | "banner" | "panel";
-export type IslandMotion = "spring" | "snappy" | "smooth" | "fast" | "bouncy" | "none";
+export type IslandMotion = "lively" | "spring" | "snappy" | "soft" | "unfold" | "grow" | "smooth" | "fast" | "bouncy" | "none";
 export type ShelfDoubleClick = "open" | "reveal";
 
 export type IslandSettings = CalendarSettingValues & GlassSettingValues & AgentSettingValues & {

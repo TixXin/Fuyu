@@ -1372,10 +1372,14 @@
       "zh-CN": {
         "group": "开合动画",
         "title": "动画曲线",
-        "description": "弹性同官网；利落很快冲到位、略回一下；Q 弹冲出去再轻轻回一下，高度也会弹；平滑和快速收起更快、不回弹",
+        "description": "灵动（默认）快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹",
         "options": [
+          "灵动",
           "弹性（同官网）",
           "利落",
+          "柔弹",
+          "先横后竖",
+          "生长",
           "平滑",
           "快速",
           "Q 弹",
@@ -1385,10 +1389,14 @@
       "en": {
         "group": "Open and close",
         "title": "Animation curve",
-        "description": "Spring moves as the website's island; Snappy shoots out fast and settles with a slight bounce; Bouncy springs out and back, its height bounces too; Smooth and Fast close quicker, without a bounce",
+        "description": "Lively (the default) shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot",
         "options": [
+          "Lively",
           "Spring (as the website)",
           "Snappy",
+          "Soft spring",
+          "Unfold",
+          "Grow",
           "Smooth",
           "Fast",
           "Bouncy",

@@ -44,8 +44,12 @@ export type SettingsExpandText = {
   tuckHintBreatheHint: string;
   motion: string;
   motionHint: string;
+  motionLively: string;
   motionSpring: string;
   motionSnappy: string;
+  motionSoft: string;
+  motionUnfold: string;
+  motionGrow: string;
   motionSmooth: string;
   motionFast: string;
   motionBouncy: string;
@@ -107,9 +111,13 @@ export const zhCN: SettingsExpandText = {
   tuckHintBreathe: "提示呼吸",
   tuckHintBreatheHint: "提示慢慢明暗变化；系统开了减少动画时一直常亮",
   motion: "开合动画",
-  motionHint: "弹性同官网；利落很快冲到位、略回一下；Q 弹冲出去再轻轻回一下，高度也会弹；平滑和快速收起更快、不回弹",
+  motionHint: "灵动（默认）快速冲出去、微微回一下，内容由模糊变清楚；弹性同官网；利落很快到位；柔弹几乎不弹；先横后竖先拉开再落下；生长的内容从岛里长出来；Q 弹会弹几下；平滑和快速不回弹",
+  motionLively: "灵动",
   motionSpring: "弹性（同官网）",
   motionSnappy: "利落",
+  motionSoft: "柔弹",
+  motionUnfold: "先横后竖",
+  motionGrow: "生长",
   motionSmooth: "平滑",
   motionFast: "快速",
   motionBouncy: "Q 弹",
@@ -171,9 +179,13 @@ export const en: SettingsExpandText = {
   tuckHintBreathe: "Breathing hint",
   tuckHintBreatheHint: "The hint slowly fades in and out; it stays steady when the system reduces motion",
   motion: "Open and close",
-  motionHint: "Spring moves as the website's island; Snappy shoots out fast and settles with a slight bounce; Bouncy springs out and back, its height bounces too; Smooth and Fast close quicker, without a bounce",
+  motionHint: "Lively (the default) shoots out, settles with a slight bounce and brings the content from blurred to sharp; Spring moves as the website's island; Snappy arrives fast; Soft spring barely bounces; Unfold opens sideways, then down; Grow lets the content grow out of the island; Bouncy bounces a few times; Smooth and Fast never overshoot",
+  motionLively: "Lively",
   motionSpring: "Spring (as the website)",
   motionSnappy: "Snappy",
+  motionSoft: "Soft spring",
+  motionUnfold: "Unfold",
+  motionGrow: "Grow",
   motionSmooth: "Smooth",
   motionFast: "Fast",
   motionBouncy: "Bouncy",
