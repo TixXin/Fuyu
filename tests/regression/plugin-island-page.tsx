@@ -154,15 +154,15 @@ async function checkPanelEditing() {
 
 async function checkCustomPanel() {
   const dotOf = () => expandedRoot.querySelector<HTMLButtonElement>('.dot-button[data-page="panel:fuyu"]');
-  const first = () => expandedRoot.querySelector<HTMLElement>(".editor-dots .dot-button");
-  check(dotOf() && first() === dotOf() && dotOf()?.querySelector(".panel-text-icon")?.textContent === "Fuyu", "没有 fuyu-custom-panels 时页头第一个也是 Fuyu 页面，按钮是文字 Fuyu");
+  const first = () => expandedRoot.querySelector<HTMLElement>(".island__header-start button");
+  check(dotOf() && first() === dotOf() && dotOf()?.querySelector(".panel-text-icon")?.textContent === "Fuyu", "没有 fuyu-custom-panels 时页头最左边（Agent 按钮前面）也是 Fuyu 页面，按钮是文字 Fuyu");
   await setPanels({ version: 1, panels: [{ id: "desk", name: "工作台", icon: "star", mode: "grid", items: [
     { widget: "todos", size: "l", x: 0, y: 0, w: 31, h: 31 },
     { widget: "next-meeting", size: "m", x: 32, y: 0, w: 31, h: 15 },
     { widget: "gone", size: "s", x: 32, y: 16, w: 15, h: 15 },
   ] }] });
   const dot = dotOf();
-  const allDots = [...expandedRoot.querySelectorAll<HTMLElement>(".editor-dots .dot-button")];
+  const allDots = [...expandedRoot.querySelectorAll<HTMLElement>(".island__header-start .dot-button")];
   const firstPlugin = allDots.findIndex((button) => button.classList.contains("dot-button--plugin"));
   check(dot && /^Fuyu/.test(dot.getAttribute("aria-label") ?? "") && allDots.indexOf(dot) === 0 && allDots.indexOf(dot) < firstPlugin, `Fuyu 页面排在页头第一个，名字是 Fuyu（${dot?.getAttribute("aria-label")}）`);
   await act(async () => dot!.click());

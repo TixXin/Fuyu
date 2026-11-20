@@ -7,7 +7,7 @@ import { PluginIcon } from "../../features/plugin-kernel/PluginIcon";
 import { usePluginNames } from "../../features/plugin-kernel/pluginNames";
 import { localizedTitle, packageLabel } from "../../features/plugin-kernel/slotTitle";
 import { useLocale, useTranslation } from "../../i18n";
-import { headerDotPages, isPageEnabled, isPageShown, type IslandFeatures } from "./features";
+import { headerDotPages, isPageEnabled, isPageShown, pageShortcutOrder, type IslandFeatures } from "./features";
 import { headerSlot, withShortcut, type IslandHeaderContext } from "./slots/header";
 import { pageSlot } from "./slots/pageSlot";
 import "./slots/builtins";
@@ -63,6 +63,13 @@ export function IslandHeader({
   const spotlightOf = useHeaderSpotlight();
   const pages = useSlotEntries(pageSlot);
   const dots = headerDotPages(pages, features);
+  const shortcutOrder = pageShortcutOrder(features);
+  const agentsAt = isPageShown("agents", features) ? shortcutOrder.indexOf("agents") : -1;
+  const leading = dots.filter((item) => {
+    const at = shortcutOrder.indexOf(item.id as IslandPage);
+    return at >= 0 && at < agentsAt;
+  });
+  const trailing = dots.filter((item) => !leading.includes(item));
   const dotsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const row = dotsRef.current;
@@ -101,6 +108,34 @@ export function IslandHeader({
     ?? localizedTitle(item.title, locale)
     ?? localizedTitle(pluginNames.get(item.owner), locale)
     ?? packageLabel(item.owner === "builtin" ? item.id : item.owner);
+  const renderDot = (item: (typeof dots)[number]) => {
+    const target: IslandPage = item.id;
+    const Icon = item.icon;
+    const label = pageLabel(item);
+    const named = item.external || !(target in builtinLabels);
+    const kind = item.external ? "dot-button--plugin" : named ? "dot-button--custom" : `dot-button--${target}`;
+    return (
+      <button
+        key={target}
+        className={`dot-button ${kind}${page === target ? " dot-button--active" : ""}`}
+        type="button"
+        data-page={named ? target : undefined}
+        {...spotlightOf(item)}
+        aria-label={withShortcut(buttons, label, target)}
+        aria-pressed={page === target}
+        {...hoverSwitch(target)}
+        onClick={(event) => {
+          event.stopPropagation();
+          onPageChange(target);
+        }}
+      >
+        {item.external
+          ? <PluginIcon icon={Icon} label={label} size={15} strokeWidth={1.8} owner={item.owner} />
+          : Icon && <Icon size={15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
+      </button>
+    );
+  };
+
   const agentStatusIconClassName = [
     "island__agent-status-icon",
     `island__agent-status-icon--${agentVisualState}`,
@@ -110,6 +145,7 @@ export function IslandHeader({
     <header className="island__header">
       <div className="island__header-start">
       <div className="island__title">
+        {leading.map(renderDot)}
         {isPageShown("agents", features) ? (
           <button
             className={`island__agent-button${page === "agents" ? " island__agent-button--active" : ""}`}
@@ -137,33 +173,7 @@ export function IslandHeader({
       </div>
 
       <div ref={dotsRef} className="editor-dots" aria-label={t.island.editor}>
-        {dots.map((item) => {
-          const target: IslandPage = item.id;
-          const Icon = item.icon;
-          const label = pageLabel(item);
-          const named = item.external || !(target in builtinLabels);
-          const kind = item.external ? "dot-button--plugin" : named ? "dot-button--custom" : `dot-button--${target}`;
-          return (
-            <button
-              key={target}
-              className={`dot-button ${kind}${page === target ? " dot-button--active" : ""}`}
-              type="button"
-              data-page={named ? target : undefined}
-              {...spotlightOf(item)}
-              aria-label={withShortcut(buttons, label, target)}
-              aria-pressed={page === target}
-              {...hoverSwitch(target)}
-              onClick={(event) => {
-                event.stopPropagation();
-                onPageChange(target);
-              }}
-            >
-              {item.external
-                ? <PluginIcon icon={Icon} label={label} size={15} strokeWidth={1.8} owner={item.owner} />
-                : Icon && <Icon size={15} strokeWidth={1.8} absoluteStrokeWidth aria-hidden="true" />}
-            </button>
-          );
-        })}
+        {trailing.map(renderDot)}
       </div>
       </div>
 
