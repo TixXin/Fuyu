@@ -15,6 +15,8 @@ use serde_json::{Map, Value};
 use tauri::{AppHandle, Manager};
 
 const PERL: &str = "/usr/bin/perl";
+const SHELL: &str = "/bin/sh";
+const END_WITH_PARENT: &str = r#""$@" & child=$!; exec >/dev/null; read -r _; kill "$child" 2>/dev/null"#;
 const SCRIPT: &str = "mediaremote-adapter.pl";
 const FRAMEWORK: &str = "MediaRemoteAdapter.framework";
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(3);
@@ -100,11 +102,12 @@ pub(super) fn merge(current: &mut Map<String, Value>, line: &str) -> Option<Chan
 }
 
 fn spawn_stream(paths: &Paths) -> std::io::Result<Child> {
-    Command::new(PERL)
+    Command::new(SHELL)
+        .args(["-c", END_WITH_PARENT, "fuyu-media-adapter", PERL])
         .arg(&paths.script)
         .arg(&paths.framework)
         .arg("stream")
-        .stdin(Stdio::null())
+        .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()
@@ -155,8 +158,7 @@ fn stopping(stopped: &Receiver<()>) -> bool {
 fn keep(mut child: Child, stopped: &Receiver<()>) -> bool {
     let mut slot = CHILD.lock().unwrap_or_else(PoisonError::into_inner);
     if stopping(stopped) {
-        let _ = child.kill();
-        let _ = child.wait();
+        finish(child);
         return false;
     }
     *slot = Some(child);
@@ -165,10 +167,14 @@ fn keep(mut child: Child, stopped: &Receiver<()>) -> bool {
 
 fn end_child() {
     let child = CHILD.lock().unwrap_or_else(PoisonError::into_inner).take();
-    if let Some(mut child) = child {
-        let _ = child.kill();
-        let _ = child.wait();
+    if let Some(child) = child {
+        finish(child);
     }
+}
+
+fn finish(mut child: Child) {
+    drop(child.stdin.take());
+    let _ = child.wait();
 }
 
 fn stream(paths: &Paths, stopped: &Receiver<()>, on_change: impl Fn(Change)) {

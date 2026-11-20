@@ -1,3 +1,4 @@
+use objc2::rc::autoreleasepool;
 use objc2_app_kit::{NSApplicationActivationOptions, NSApplicationActivationPolicy, NSRunningApplication, NSWorkspace};
 use objc2_foundation::NSString;
 
@@ -11,34 +12,40 @@ fn path_of(app: &NSRunningApplication) -> Option<String> {
 }
 
 pub(crate) fn frontmost_pid() -> Option<i32> {
-    Some(NSWorkspace::sharedWorkspace().frontmostApplication()?.processIdentifier())
+    autoreleasepool(|_| Some(NSWorkspace::sharedWorkspace().frontmostApplication()?.processIdentifier()))
 }
 
 pub(crate) fn frontmost_path() -> Option<String> {
-    NSWorkspace::sharedWorkspace().frontmostApplication().as_deref().and_then(path_of)
+    autoreleasepool(|_| NSWorkspace::sharedWorkspace().frontmostApplication().as_deref().and_then(path_of))
 }
 
 pub(crate) fn path_for_bundle_id(id: &str) -> Option<String> {
-    let id = NSString::from_str(id);
-    let running = NSRunningApplication::runningApplicationsWithBundleIdentifier(&id);
-    if let Some(path) = running.iter().find_map(|app| path_of(&app)) {
-        return Some(path);
-    }
-    Some(NSWorkspace::sharedWorkspace().URLForApplicationWithBundleIdentifier(&id)?.path()?.to_string())
+    autoreleasepool(|_| {
+        let id = NSString::from_str(id);
+        let running = NSRunningApplication::runningApplicationsWithBundleIdentifier(&id);
+        if let Some(path) = running.iter().find_map(|app| path_of(&app)) {
+            return Some(path);
+        }
+        Some(NSWorkspace::sharedWorkspace().URLForApplicationWithBundleIdentifier(&id)?.path()?.to_string())
+    })
 }
 
 pub(crate) fn path(pid: i32) -> Option<String> {
-    NSRunningApplication::runningApplicationWithProcessIdentifier(pid).as_deref().and_then(path_of)
+    autoreleasepool(|_| NSRunningApplication::runningApplicationWithProcessIdentifier(pid).as_deref().and_then(path_of))
 }
 
 pub(crate) fn activate(pid: i32) -> bool {
-    NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
-        .is_some_and(|app| app.activateWithOptions(NSApplicationActivationOptions::ActivateAllWindows))
+    autoreleasepool(|_| {
+        NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
+            .is_some_and(|app| app.activateWithOptions(NSApplicationActivationOptions::ActivateAllWindows))
+    })
 }
 
 pub(crate) fn activate_main_window(pid: i32) -> bool {
-    NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
-        .is_some_and(|app| app.activateWithOptions(NSApplicationActivationOptions::empty()))
+    autoreleasepool(|_| {
+        NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
+            .is_some_and(|app| app.activateWithOptions(NSApplicationActivationOptions::empty()))
+    })
 }
 
 fn executable_of(app: &NSRunningApplication) -> Option<String> {
@@ -46,12 +53,14 @@ fn executable_of(app: &NSRunningApplication) -> Option<String> {
 }
 
 pub(crate) fn regular_apps() -> Vec<(u32, String)> {
-    NSWorkspace::sharedWorkspace()
-        .runningApplications()
-        .iter()
-        .filter(|app| app.activationPolicy() == NSApplicationActivationPolicy::Regular)
-        .filter_map(|app| Some((u32::try_from(app.processIdentifier()).ok()?, executable_of(&app)?)))
-        .collect()
+    autoreleasepool(|_| {
+        NSWorkspace::sharedWorkspace()
+            .runningApplications()
+            .iter()
+            .filter(|app| app.activationPolicy() == NSApplicationActivationPolicy::Regular)
+            .filter_map(|app| Some((u32::try_from(app.processIdentifier()).ok()?, executable_of(&app)?)))
+            .collect()
+    })
 }
 
 pub(crate) fn responsible_pid(pid: i32) -> i32 {
@@ -69,9 +78,11 @@ pub(crate) fn outer_app_name(path: &str) -> Option<String> {
 }
 
 pub(crate) fn display_name(pid: i32) -> Option<String> {
-    let app = NSRunningApplication::runningApplicationWithProcessIdentifier(pid);
-    let from_path = app.as_deref().and_then(path_of).as_deref().and_then(outer_app_name);
-    from_path.or_else(|| Some(app?.localizedName()?.to_string()))
+    autoreleasepool(|_| {
+        let app = NSRunningApplication::runningApplicationWithProcessIdentifier(pid);
+        let from_path = app.as_deref().and_then(path_of).as_deref().and_then(outer_app_name);
+        from_path.or_else(|| Some(app?.localizedName()?.to_string()))
+    })
 }
 
 #[cfg(test)]
