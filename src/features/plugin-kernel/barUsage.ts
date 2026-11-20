@@ -16,11 +16,18 @@ export interface BarUsageItem {
   name?: string;
 }
 
+export interface BarUsagePage {
+  id: string;
+  owner: string;
+  name: string;
+}
+
 export interface BarUsageReport {
   id: number;
   collapsed: boolean;
   barWidth: number | null;
   items: BarUsageItem[];
+  pages?: BarUsagePage[];
 }
 
 export type BarUsageCandidate = { id: string; owner: string; external: boolean; group?: unknown; hideable?: unknown; label?: unknown };
@@ -71,7 +78,7 @@ export function barUsageReport(
 
 export function readBarUsageReport(payload: unknown): BarUsageReport | null {
   if (!payload || typeof payload !== "object") return null;
-  const { id, collapsed, barWidth, items } = payload as Record<string, unknown>;
+  const { id, collapsed, barWidth, items, pages } = payload as Record<string, unknown>;
   if (typeof id !== "number" || !Array.isArray(items)) return null;
   const width = px(barWidth);
   const read = items.flatMap((item): BarUsageItem[] => {
@@ -81,5 +88,15 @@ export function readBarUsageReport(payload: unknown): BarUsageReport | null {
     const label = readName(name);
     return [{ id: itemId, owner, hideable: hideable !== false, box: readBox(box), ...(label ? { name: label } : {}) }];
   });
-  return { id, collapsed: collapsed === true && width !== null && width > 0, barWidth: width, items: read };
+  const report: BarUsageReport = { id, collapsed: collapsed === true && width !== null && width > 0, barWidth: width, items: read };
+  return Array.isArray(pages) ? { ...report, pages: readPages(pages) } : report;
+}
+
+function readPages(pages: readonly unknown[]): BarUsagePage[] {
+  return pages.flatMap((page): BarUsagePage[] => {
+    if (!page || typeof page !== "object") return [];
+    const { id, owner, name } = page as Record<string, unknown>;
+    if (typeof id !== "string" || id === "" || typeof owner !== "string" || owner === "") return [];
+    return [{ id, owner, name: readName(name) ?? owner }];
+  });
 }

@@ -1,0 +1,9 @@
+.island-pages__icon {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.island-pages__item[data-off] .plugin-pages__name strong,
+.island-pages__item[data-hidden] .plugin-pages__name strong {
+  color: var(--color-text-muted);
+}

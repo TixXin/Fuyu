@@ -23,7 +23,7 @@ type MessagesPageProps = {
 type HeaderContext = {
   page: string;
   withShortcut: (label: string, target: "qq") => string;
-  isPageEnabled: (target: "qq") => boolean;
+  isPageShown: (target: "qq") => boolean;
 };
 
 const ignoreMeasure = () => {};
@@ -92,7 +92,7 @@ function MessagesButton({ page, withShortcut }: HeaderContext) {
 }
 
 pageSlot.add({ ...islandPage, component: MessagesPage }, OWNER);
-headerSlot.add({ id: "messages", order: 20, enabled: ({ isPageEnabled }) => isPageEnabled("qq"), component: MessagesButton }, OWNER);
+headerSlot.add({ id: "messages", order: 20, enabled: ({ isPageShown }) => isPageShown("qq"), component: MessagesButton }, OWNER);
 
 type CollapsedContext = {
   t: Translations;

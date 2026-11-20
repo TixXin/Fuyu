@@ -1,3 +1,4 @@
+import { orderIslandPages, type IslandPagesLayout } from "../../lib/settings/islandPages.ts";
 import type { PlatformFeature } from "../../lib/platform.ts";
 import { pageSlot } from "./slots/pageSlot.ts";
 import type { BuiltinPage, HeaderDotPage, IslandPage } from "./types";
@@ -8,6 +9,7 @@ type MessageSwitch = "qq" | "wechat" | "qqMail";
 
 export type IslandFeatures = Record<BuiltinPage | MessageSwitch, boolean> & {
   clipboardScreenshots?: boolean;
+  pageLayout?: IslandPagesLayout;
 };
 
 export function withoutUnsupported(features: IslandFeatures, unsupported: ReadonlySet<PlatformFeature>): IslandFeatures {
@@ -28,13 +30,17 @@ export function foldScreenshotsIntoClipboard(features: IslandFeatures): IslandFe
   return { ...features, screenshots: false, clipboardScreenshots: true };
 }
 
+export function withPageLayout(features: IslandFeatures, pageLayout: IslandPagesLayout): IslandFeatures {
+  return pageLayout.order.length === 0 && pageLayout.hidden.length === 0 ? features : { ...features, pageLayout };
+}
+
 type Orderable = { shortcutOrder?: number; headerDot?: boolean; external?: boolean };
 
 const LAST = Number.MAX_SAFE_INTEGER;
 
 export const isHeaderDot = (item: Orderable) => (item.external === true ? item.headerDot !== false : item.headerDot === true);
 
-function byShortcut<Item extends Orderable>(items: readonly Item[]): Item[] {
+export function byShortcut<Item extends Orderable>(items: readonly Item[]): Item[] {
   const dotsEnd = Math.max(0, ...items.filter((item) => item.external !== true && item.headerDot === true).map((item) => item.shortcutOrder ?? 0));
   const rank = (item: Item): [number, number, number] =>
     item.external === true ? [dotsEnd, 1, item.shortcutOrder ?? LAST] : [item.shortcutOrder ?? LAST, 0, 0];
@@ -55,8 +61,8 @@ const itemEnabled = (item: PageSwitch, features: IslandFeatures) => {
   }
 };
 
-export function headerDotPages<Item extends PageSwitch & Orderable>(items: readonly Item[], features: IslandFeatures): Item[] {
-  return byShortcut(items.filter((item) => isHeaderDot(item) && itemEnabled(item, features)));
+export function headerDotPages<Item extends PageSwitch & Orderable & { id: string }>(items: readonly Item[], features: IslandFeatures): Item[] {
+  return orderIslandPages(byShortcut(items.filter((item) => isHeaderDot(item) && itemEnabled(item, features))), features.pageLayout);
 }
 
 const pageItem = (page: IslandPage) => pageSlot.items().find((item) => item.id === page);
@@ -64,6 +70,10 @@ const pageItem = (page: IslandPage) => pageSlot.items().find((item) => item.id =
 export function isPageEnabled(page: IslandPage, features: IslandFeatures): boolean {
   const item = pageItem(page);
   return item !== undefined && itemEnabled(item, features);
+}
+
+export function isPageShown(page: IslandPage, features: IslandFeatures): boolean {
+  return isPageEnabled(page, features) && !(features.pageLayout?.hidden.includes(page) ?? false);
 }
 
 export function resolveIslandPage(page: IslandPage, features: IslandFeatures): IslandPage | null {
@@ -74,7 +84,7 @@ export function resolveIslandPage(page: IslandPage, features: IslandFeatures): I
 }
 
 export function pageShortcutOrder(features: IslandFeatures): IslandPage[] {
-  return byShortcut(pageSlot.items()).map((item) => item.id as IslandPage).filter((page) => isPageEnabled(page, features));
+  return orderIslandPages(byShortcut(pageSlot.items()), features.pageLayout).map((item) => item.id as IslandPage).filter((page) => isPageEnabled(page, features));
 }
 
 export function pageForAltDigit(features: IslandFeatures, digit: number): IslandPage | null {

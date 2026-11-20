@@ -6,7 +6,7 @@
     "agentSoundOutput": ["fuyu-agent-sounds/volume", "fuyu-agent-sounds/pack"],
     "agentPushDelivery": ["fuyu-agent-push/enabled", "fuyu-agent-push/channel"],
     "qqMail": ["fuyu-qq-mail-settings"],
-    "collapsedItems": ["fuyu-collapsed-items"],
+    "collapsedItems": ["fuyu-collapsed-items", "fuyu-island-pages"],
     "updateChannel": ["fuyu-update-channel"]
   },
   "keys": {
@@ -222,6 +222,7 @@
     "fuyu-qq-mail-settings": "optional",
     "fuyu-qq-mail-remote-images": "sync",
     "fuyu-collapsed-items": "optional",
+    "fuyu-island-pages": "optional",
     "fuyu-screenshot-annotation": "sync",
     "fuyu-screenshot-settings": {
       "fields": {

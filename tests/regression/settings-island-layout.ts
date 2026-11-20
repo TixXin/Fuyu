@@ -17,3 +17,19 @@ export async function checkIslandLayout(check: (condition: unknown, message: str
   check(row("center") && titles("center").includes("图案") && titles("todos-count").length === 1, "The middle group holds the center pattern and the todo count");
   check([...document.querySelectorAll(".editor-panel .settings-row__title")].some((title) => title.textContent === "放不下的项目收进「+N」"), "The +N switch is on the island layout page");
 }
+
+const pageIds = () => [...document.querySelectorAll<HTMLElement>(".island-pages__item")].map((item) => item.dataset.page);
+const pageRow = (page: string) => document.querySelector<HTMLElement>(`.island-pages__item[data-page='${page}']`);
+const savedPages = () => JSON.parse(localStorage.getItem("fuyu-island-pages") ?? "null") as { order: string[]; hidden: string[] } | null;
+
+export async function checkIslandPages(check: (condition: unknown, message: string) => void) {
+  localStorage.removeItem("fuyu-island-pages");
+  const before = pageIds();
+  check(before[0] === "agents" && before[1] === "todo" && before.includes("timer") && before.includes("qq"), "The expanded pages section lists the built-in pages in today's order");
+  await act(async () => { pageRow("todo")!.querySelector<HTMLButtonElement>("button[aria-label^='上移']")!.click(); });
+  check(pageIds()[0] === "todo" && savedPages()?.order[0] === "todo", "Moving a page up saves the new order to fuyu-island-pages");
+  await act(async () => { pageRow("music")!.querySelector<HTMLInputElement>("input[role='switch']")!.click(); });
+  check(pageRow("music")?.dataset.hidden !== undefined && savedPages()?.hidden.includes("music"), "Switching a page off hides it without turning the feature off");
+  await act(async () => { document.querySelector<HTMLButtonElement>(".island-pages .collapsed-items__reset")!.click(); });
+  check(savedPages() === null && pageIds()[0] === "agents", "Restoring the default order removes the key");
+}
