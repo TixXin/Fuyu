@@ -173,12 +173,29 @@ export function nextPanelSize(sizes: readonly PanelSize[], current: PanelSize): 
   return order[(order.indexOf(current) + 1) % order.length] ?? null;
 }
 
+const touches = (a: PanelItem, b: PanelItem) => a.x < b.x + b.w + 1 && b.x < a.x + a.w + 1 && a.y < b.y + b.h + 1 && b.y < a.y + a.h + 1;
+
+function pushedAway(items: readonly PanelItem[], widget: string): PanelItem[] {
+  const placed = items.map((item) => ({ ...item }));
+  const queue = placed.filter((item) => item.widget === widget);
+  for (let guard = placed.length * placed.length; queue.length > 0 && guard > 0; guard -= 1) {
+    const blocker = queue.shift();
+    if (!blocker) break;
+    for (const other of placed) {
+      if (other === blocker || other.widget === widget || !touches(blocker, other)) continue;
+      other.y = blocker.y + blocker.h + 1;
+      queue.push(other);
+    }
+  }
+  return placed.map((item, index) => (item.y === items[index].y ? items[index] : item));
+}
+
 export function placeFreeItem(panel: CustomPanel, widget: string, x: number, y: number): CustomPanel {
   const item = panel.items.find((candidate) => candidate.widget === widget);
   if (!item || panel.mode !== "free") return panel;
   const next = { ...item, x: clamp(Math.round(x), 0, FREE_WIDTH_UNITS - item.w), y: Math.max(0, Math.round(y)) };
   if (next.x === item.x && next.y === item.y && panel.items[panel.items.length - 1] === item) return panel;
-  return { ...panel, items: [...panel.items.filter((candidate) => candidate !== item), next] };
+  return { ...panel, items: pushedAway([...panel.items.filter((candidate) => candidate !== item), next], widget) };
 }
 
 export function stretchFreeItem(panel: CustomPanel, widget: string, w: number, h: number): CustomPanel {
@@ -187,7 +204,7 @@ export function stretchFreeItem(panel: CustomPanel, widget: string, w: number, h
   const least = minBox(item.size);
   const next = { ...item, w: clamp(Math.round(w), least.w, FREE_WIDTH_UNITS - item.x), h: Math.max(least.h, Math.round(h)) };
   if (next.w === item.w && next.h === item.h) return panel;
-  return { ...panel, items: panel.items.map((candidate) => (candidate === item ? next : candidate)) };
+  return { ...panel, items: pushedAway(panel.items.map((candidate) => (candidate === item ? next : candidate)), widget) };
 }
 
 export type PanelBox = { left: number; top: number; width: number; height: number };

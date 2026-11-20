@@ -5,12 +5,16 @@
   animation: custom-panel-wiggle 135ms var(--motion-ease-in-out) calc(var(--motion-slow) + var(--wiggle-phase, 0ms)) infinite alternate;
 }
 
-.custom-panel--editing .custom-panel__cell:not([data-dragging], [data-dropped]) {
+.custom-panel--editing .custom-panel__cell:not([data-dragging], [data-settle]) {
   transition:
     left var(--motion-medium) var(--motion-ease),
     top var(--motion-medium) var(--motion-ease),
     width var(--motion-medium) var(--motion-ease),
     height var(--motion-medium) var(--motion-ease);
+}
+
+.custom-panel--editing .custom-panel__cell[data-settle="go"] {
+  transition: transform var(--motion-medium) var(--motion-ease-out);
 }
 
 .custom-panel--editing .custom-panel__cell:hover,

@@ -6,10 +6,10 @@ import { useTranslation } from "../../../i18n";
 import { addPanelItem, boardHeightPx, defaultWidgetSize, dropNewPanelItem, fuyuPanel, fuyuPanels, gridWidthPx, PANEL_MODES, removePanelItem, setPanelMode, type CustomPanel } from "../../../lib/settings/customPanels";
 import { applyPanelTemplate } from "../../../lib/settings/panelTemplates";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
-import { PanelBoard, type IncomingWidget } from "./PanelBoard";
+import { PanelBoard, type HeldWidget, type IncomingWidget } from "./PanelBoard";
 import { editingPanel, startPanelEditing, stopPanelEditing, usePanelEditing } from "./panelEditing";
 import { useIslandWidgets } from "./useIslandWidgets";
-import { useLongPress } from "./useLongPress";
+import { useLongPress, type LongPressStart } from "./useLongPress";
 import { WidgetPicker, type PickerDrag } from "./WidgetPicker";
 import "./CustomPanelPage.css";
 import "./CustomPanelEdit.css";
@@ -68,7 +68,7 @@ function useUndoableRemoval() {
   return { removed, remember: setRemoved, forget: () => setRemoved(null) };
 }
 
-const emptySpace = (target: Element) => !target.closest(".custom-panel__cell, button, a, input");
+const holdable = (target: Element) => !target.closest("button, a, input, textarea, select, [contenteditable], [role='slider']");
 
 export function CustomPanelPage({ panelId }: { panelId: string }) {
   const t = useTranslation().islandWidgets.panel;
@@ -81,8 +81,18 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [incoming, setIncoming] = useState<IncomingWidget | null>(null);
   const { removed, remember, forget } = useUndoableRemoval();
+  const [held, setHeld] = useState<HeldWidget | null>(null);
   const startEditing = useCallback(() => startPanelEditing(panelId), [panelId]);
-  const onPointerDown = useLongPress(startEditing, emptySpace);
+  const hold = useCallback(
+    ({ target, ...point }: LongPressStart) => {
+      startPanelEditing(panelId);
+      const widget = target.closest<HTMLElement>(".custom-panel__cell[data-widget]")?.dataset.widget;
+      if (widget) setHeld({ widget, ...point });
+    },
+    [panelId],
+  );
+  const heldTaken = useCallback(() => setHeld(null), []);
+  const onPointerDown = useLongPress(hold, holdable);
   useEditingLifetime(panelId, editing);
 
   const change = (next: CustomPanel) => save(fuyuPanels(next));
@@ -131,7 +141,7 @@ export function CustomPanelPage({ panelId }: { panelId: string }) {
           </div>
         ) : (
           <div className="custom-panel__zoom" style={{ zoom: scale }}>
-            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} incoming={incoming} gridRef={gridRef} onChange={change} onRemove={remove} />
+            <PanelBoard panel={panel} library={library} editing={editing} scale={scale} incoming={incoming} held={held} onHeldTaken={heldTaken} gridRef={gridRef} onChange={change} onRemove={remove} />
           </div>
         )}
       </div>

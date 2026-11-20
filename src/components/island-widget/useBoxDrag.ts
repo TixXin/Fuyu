@@ -58,7 +58,11 @@ export function useBoxDrag({ scale, onDrop, onTap }: Handlers) {
     start.current = { widget, kind, x: event.clientX, y: event.clientY, pointer: event.pointerId, moved: false };
   }, []);
 
-  return { drag, begin };
+  const beginAt = useCallback((widget: string, kind: BoxDragKind, point: { clientX: number; clientY: number; pointerId: number }) => {
+    start.current = { widget, kind, x: point.clientX, y: point.clientY, pointer: point.pointerId, moved: false };
+  }, []);
+
+  return { drag, begin, beginAt };
 }
 
 export const snapPx = (value: number, unit: number) => Math.round(value / unit) * unit;

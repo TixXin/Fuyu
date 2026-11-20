@@ -108,7 +108,7 @@ test("a free panel keeps hand-placed boxes: 8px steps, inside the four columns, 
   panel = stretchFreeItem(panel, "a", 40, 4);
   assert.deepEqual([panel.items.at(-1).w, panel.items.at(-1).h], [31, 15]);
   panel = stretchFreeItem(panel, "b", 20, 22);
-  assert.deepEqual(panel.items.find((item) => item.widget === "b"), { widget: "b", size: "s", x: 32, y: 0, w: 20, h: 22 });
+  assert.deepEqual(panel.items.find((item) => item.widget === "b"), { widget: "b", size: "s", x: 32, y: 16, w: 20, h: 22 });
   panel = removePanelItem(panel, "c");
   assert.deepEqual(panel.items.map((item) => item.widget), ["b", "a"]);
 });
@@ -160,4 +160,16 @@ test("a widget dragged in from the dock lands where it is dropped", () => {
   const free = dropNewPanelItem(setPanelMode(panel, "free"), "d", "s", 200, 100);
   const dropped = free.items.at(-1);
   assert.deepEqual([dropped.widget, dropped.x, dropped.y], ["d", 18, 5]);
+});
+
+test("in a free panel a widget put down on others pushes them down instead of covering them", () => {
+  let panel = setPanelMode(addPanelItem(addPanelItem(addPanelItem(empty, "a", "s"), "b", "s"), "c", "s"), "free");
+  panel = placeFreeItem(panel, "c", 0, 16);
+  panel = placeFreeItem(panel, "b", 0, 0);
+  const at = (widget) => panel.items.find((item) => item.widget === widget);
+  assert.deepEqual([at("b").x, at("b").y], [0, 0]);
+  assert.deepEqual([at("a").x, at("a").y], [0, 16]);
+  assert.deepEqual([at("c").x, at("c").y], [0, 32]);
+  panel = stretchFreeItem(panel, "b", 31, 40);
+  assert.deepEqual([at("a").y, at("c").y], [41, 57]);
 });

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type Ref } from "react";
+import { useEffect, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type Ref } from "react";
 import { ChevronLeft, ChevronRight, MoveDiagonal2, X } from "lucide-react";
 import { snapPx, useBoxDrag, type BoxDrag, type BoxDragKind } from "../../../components/island-widget/useBoxDrag";
 import { SlotView } from "../../../features/plugin-kernel/SlotView";
@@ -21,21 +21,31 @@ import {
   type CustomPanel,
   type PanelSize,
 } from "../../../lib/settings/customPanels";
+import { MOTION_MEDIUM_MS } from "../../../lib/theme/motionTokens";
 import { widgetSlot } from "../slots/widget";
+import type { LongPressStart } from "./useLongPress";
 
 const CELL_PADDING = 10;
 const WIGGLE_PERIOD_MS = 135;
 
 export type IncomingWidget = { widget: string; name: string; size: PanelSize; x: number; y: number };
+export type HeldWidget = Omit<LongPressStart, "target"> & { widget: string };
+type Settle = { widget: string; x: number; y: number; go: boolean };
 
 function sizeLabel(size: PanelSize) {
   const { cols, rows } = sizeCells(size);
   return `${cols}×${rows}`;
 }
 
-function draggedTo(panel: CustomPanel, drag: Pick<BoxDrag, "widget" | "dx" | "dy">): CustomPanel {
+function draggedTo(panel: CustomPanel, drag: Pick<BoxDrag, "widget" | "kind" | "dx" | "dy">): CustomPanel {
   const item = panel.items.find((candidate) => candidate.widget === drag.widget);
   if (!item) return panel;
+  if (panel.mode === "free") {
+    const dx = Math.round(drag.dx / GRID_UNIT_PX);
+    const dy = Math.round(drag.dy / GRID_UNIT_PX);
+    return drag.kind === "move" ? placeFreeItem(panel, drag.widget, item.x + dx, item.y + dy) : stretchFreeItem(panel, drag.widget, item.w + dx, item.h + dy);
+  }
+  if (drag.kind !== "move") return panel;
   const box = itemBoxPx(panel, item);
   const index = insertIndexAt(panel, box.left + box.width / 2 + drag.dx, box.top + box.height / 2 + drag.dy, drag.widget);
   return movePanelItemTo(panel, drag.widget, index);
@@ -43,8 +53,24 @@ function draggedTo(panel: CustomPanel, drag: Pick<BoxDrag, "widget" | "dx" | "dy
 
 function previewOf(panel: CustomPanel, drag: BoxDrag | null, incoming: IncomingWidget | null): CustomPanel {
   if (incoming) return dropNewPanelItem(panel, incoming.widget, incoming.size, incoming.x, incoming.y);
-  if (drag && drag.kind === "move" && panel.mode === "grid") return draggedTo(panel, drag);
-  return panel;
+  return drag ? draggedTo(panel, drag) : panel;
+}
+
+function useSettle() {
+  const [settle, setSettle] = useState<Settle | null>(null);
+  useEffect(() => {
+    if (!settle?.go) return;
+    const timer = window.setTimeout(() => setSettle(null), MOTION_MEDIUM_MS);
+    return () => window.clearTimeout(timer);
+  }, [settle]);
+  useEffect(() => {
+    if (!settle || settle.go) return;
+    let frame = window.requestAnimationFrame(() => {
+      frame = window.requestAnimationFrame(() => setSettle((current) => (current ? { ...current, go: true } : current)));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [settle]);
+  return [settle, setSettle] as const;
 }
 
 type PanelBoardProps = {
@@ -53,42 +79,53 @@ type PanelBoardProps = {
   editing: boolean;
   scale: number;
   incoming: IncomingWidget | null;
+  held: HeldWidget | null;
+  onHeldTaken: () => void;
   gridRef: Ref<HTMLDivElement>;
   onChange: (panel: CustomPanel) => void;
   onRemove: (widget: string, name: string) => void;
 };
 
-export function PanelBoard({ panel, library, editing, scale, incoming, gridRef, onChange, onRemove }: PanelBoardProps) {
+export function PanelBoard({ panel, library, editing, scale, incoming, held, onHeldTaken, gridRef, onChange, onRemove }: PanelBoardProps) {
   const t = useTranslation().islandWidgets.panel;
   const free = panel.mode === "free";
-  const [dropped, setDropped] = useState<string | null>(null);
+  const [settle, setSettle] = useSettle();
   const cycleSize = (widget: string) => {
     const item = panel.items.find((candidate) => candidate.widget === widget);
     const size = item && !free ? nextPanelSize(library.find(widget)?.sizes ?? [], item.size) : null;
     if (item && size) onChange(resizePanelItem(panel, widget, size));
   };
-  const { drag, begin } = useBoxDrag({
+  const { drag, begin, beginAt } = useBoxDrag({
     scale,
     onDrop: (drop) => {
       const item = panel.items.find((candidate) => candidate.widget === drop.widget);
       if (!item) return;
-      setDropped(drop.widget);
-      const dx = Math.round(drop.dx / GRID_UNIT_PX);
-      const dy = Math.round(drop.dy / GRID_UNIT_PX);
-      if (!free) onChange(draggedTo(panel, drop));
-      else if (drop.kind === "move") onChange(placeFreeItem(panel, drop.widget, item.x + dx, item.y + dy));
-      else onChange(stretchFreeItem(panel, drop.widget, item.w + dx, item.h + dy));
+      const next = draggedTo(panel, drop);
+      const placed = next.items.find((candidate) => candidate.widget === drop.widget);
+      if (drop.kind === "move" && placed) {
+        const from = itemBoxPx(panel, item);
+        const to = itemBoxPx(next, placed);
+        const dx = free ? snapPx(drop.dx, GRID_UNIT_PX) : drop.dx;
+        const dy = free ? snapPx(drop.dy, GRID_UNIT_PX) : drop.dy;
+        setSettle({ widget: drop.widget, x: from.left + dx - to.left, y: from.top + dy - to.top, go: false });
+      }
+      onChange(next);
     },
     onTap: cycleSize,
   });
+  useEffect(() => {
+    if (!editing || !held) return;
+    beginAt(held.widget, "move", held);
+    onHeldTaken();
+  }, [editing, held, beginAt, onHeldTaken]);
   const grab = (widget: string, kind: BoxDragKind) => (event: ReactPointerEvent<HTMLElement>) => {
-    setDropped(null);
+    setSettle(null);
     begin(widget, kind)(event);
   };
   const shift = (index: number, delta: -1 | 1) => {
     const item = panel.items[index];
     if (!item) return;
-    setDropped(null);
+    setSettle(null);
     const before = delta < 0 ? (panel.items[index - 1]?.widget ?? null) : (panel.items[index + 2]?.widget ?? null);
     onChange(reorderPanelItem(panel, item.widget, before));
   };
@@ -100,7 +137,6 @@ export function PanelBoard({ panel, library, editing, scale, incoming, gridRef, 
       {shown.items.map((item, order) => {
         const index = panel.items.findIndex((candidate) => candidate.widget === item.widget);
         const moving = drag?.widget === item.widget ? drag : null;
-        const pending = incoming?.widget === item.widget;
         const original = panel.items[index];
         const box = itemBoxPx(shown, moving && original ? original : item);
         const style = { ...box, zIndex: moving ? shown.items.length + 1 : order + 1, "--wiggle-phase": `${(Math.max(0, index) * 53) % WIGGLE_PERIOD_MS}ms` } as CSSProperties;
@@ -109,7 +145,9 @@ export function PanelBoard({ panel, library, editing, scale, incoming, gridRef, 
           style.width = Math.max(box.width + snapPx(moving.dx, GRID_UNIT_PX), GRID_UNIT_PX * 4);
           style.height = Math.max(box.height + snapPx(moving.dy, GRID_UNIT_PX), GRID_UNIT_PX * 4);
         }
-        if (pending && incoming) {
+        const settling = settle?.widget === item.widget ? settle : null;
+        if (settling && !settling.go) style.transform = `translate(${settling.x}px, ${settling.y}px)`;
+        if (incoming?.widget === item.widget) {
           return (
             <div key={item.widget} className="custom-panel__cell" style={style} data-widget={item.widget} data-size={item.size} data-pending="true">
               <span className="custom-panel__pending-name">{incoming.name}</span>
@@ -127,7 +165,7 @@ export function PanelBoard({ panel, library, editing, scale, incoming, gridRef, 
             data-widget={item.widget}
             data-size={item.size}
             data-dragging={moving ? true : undefined}
-            data-dropped={dropped === item.widget ? true : undefined}
+            data-settle={settling ? (settling.go ? "go" : "hold") : undefined}
           >
             <SlotView
               slot={widgetSlot}

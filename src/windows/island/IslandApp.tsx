@@ -19,7 +19,7 @@ import { useIslandNavigation } from "./useIslandNavigation";
 import { useIslandTucking } from "./useIslandTucking";
 import { useIslandHover } from "./useIslandHover";
 import { useIslandPopup } from "./useIslandPopup";
-import { PANEL_EDIT_GROW, usePanelEditing } from "./custom-panels/panelEditing";
+import { editGrowWidth, PANEL_EDIT_GROW, usePanelEditing } from "./custom-panels/panelEditing";
 import { COLLAPSED_ISLAND_HEIGHT, grownCollapsedHeight, panelIslandWidth } from "./layout";
 import { useIslandResize } from "./useIslandResize";
 import { useResolvedTheme } from "../../lib/theme/useResolvedTheme";
@@ -123,11 +123,12 @@ export function IslandApp() {
   const openPopup = [...popups.values()].find((entry) => entry.open === true);
   const hasOpenPopup = openPopup !== undefined;
   const panelEditing = usePanelEditing() !== null && !hasOpenPopup;
+  const editGrow = panelEditing ? editGrowWidth(panelIslandWidth(settings.panelWidth, settings.expandedScale), settings.expandedScale) : 0;
   const { popup, expandedIslandWidth: popupWidth } = useIslandPopup(
     mode,
     hasOpenPopup,
     null,
-    panelIslandWidth(settings.panelWidth + (panelEditing ? PANEL_EDIT_GROW.width : 0), settings.expandedScale),
+    panelIslandWidth(settings.panelWidth + editGrow, settings.expandedScale),
     openPopup?.wide === true,
   );
   const expandedIslandWidth = notchPanelWidth(popupWidth, notch, settings.expandedScale, popup);
