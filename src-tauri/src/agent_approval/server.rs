@@ -165,7 +165,7 @@ pub(super) fn serve(shared: &Arc<Shared>, preferred_port: u16, fallback: bool, t
                 let token = Arc::clone(&token);
                 let _ = thread::Builder::new()
                     .name("agent-approval-request".into())
-                    .spawn(move || handle(&shared, stream, port, &token));
+                    .spawn(move || handle(shared, stream, port, &token));
             }
         })
         .map_err(|error| format!("Could not start the approval endpoint thread: {error}"))?;
@@ -179,8 +179,8 @@ pub(super) fn listen(preferred_port: u16, token: String, wait_limit: Duration, n
     Ok((shared, port))
 }
 
-fn handle(shared: &Shared, stream: TcpStream, port: u16, token: &str) {
-    let (status, body) = match answer(shared, &stream, port, token) {
+fn handle(shared: Arc<Shared>, stream: TcpStream, port: u16, token: &str) {
+    let (status, body) = match answer(&shared, &stream, port, token) {
         Ok(Some(body)) => (200, body),
         Ok(None) => return,
         Err(error) => (error.status, serde_json::json!({ "error": error.message }).to_string()),
@@ -189,7 +189,7 @@ fn handle(shared: &Shared, stream: TcpStream, port: u16, token: &str) {
     let _ = write_response(&mut &stream, status, &body);
 }
 
-fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result<Option<String>, HttpError> {
+fn answer(shared: &Arc<Shared>, stream: &TcpStream, port: u16, token: &str) -> Result<Option<String>, HttpError> {
     let _ = stream.set_read_timeout(Some(READ_TIMEOUT));
     let request = read_request(&mut BufReader::new(stream))?;
     if request.method != "POST" {
@@ -229,6 +229,10 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
     if shown {
         (shared.notify)(ApprovalEvent::Requested(request.clone()));
     }
+    if agent == Agent::Cursor && kind == Kind::Permission {
+        watch_cursor_card(shared, request.id);
+        return Ok(Some(permission_response(agent, Some(Decision::Terminal), None, suggestions.as_ref())));
+    }
     let (outcome, reason) = wait(shared, Some(stream), request.id, Instant::now() + shared.wait_limit);
     shared.close(request.id, reason);
     if reason == CloseReason::Disconnected {
@@ -245,6 +249,15 @@ fn answer(shared: &Shared, stream: &TcpStream, port: u16, token: &str) -> Result
             question_response(answers, &tool_input)
         }
     }))
+}
+
+fn watch_cursor_card(shared: &Arc<Shared>, id: u64) {
+    let watchdog = Arc::clone(shared);
+    let deadline = Instant::now() + shared.wait_limit;
+    let _ = thread::Builder::new().name("agent-approval-cursor-card".into()).spawn(move || {
+        let (_, reason) = wait(&watchdog, None, id, deadline);
+        watchdog.close(id, reason);
+    });
 }
 
 fn wait(shared: &Shared, stream: Option<&TcpStream>, id: u64, deadline: Instant) -> (Option<Outcome>, CloseReason) {

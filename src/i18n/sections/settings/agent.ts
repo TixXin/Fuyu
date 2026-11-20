@@ -432,8 +432,8 @@ export const zhCN: SettingsAgentText = {
     onIsland: "在岛上允许或拒绝 Agent 的操作",
     whenInFront: "终端在前台时也在岛上弹出",
     whenInFrontHint: "关闭时，会话所在的终端或编辑器窗口在前台，就直接在终端里审批。",
-    hint: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 Ctrl+Alt+Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先在「钩子与代理」里给它装上钩子。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
-    hintMac: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 ⌃⌥Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先在「钩子与代理」里给它装上钩子。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
+    hint: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 Ctrl+Alt+Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先在「钩子与代理」里给它装上钩子。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。Cursor 会同时在岛上和编辑器里弹出：真正运行或跳过在 Cursor 里点，岛上点「去 Cursor」跳过去。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
+    hintMac: "Claude Code 或 Codex 要运行命令、改文件时，岛上弹出卡片，可以允许、拒绝或交回终端（快捷键 ⌃⌥Y / N / T）。卡片显示期间终端里不出审批框；2 分钟没处理、游戏模式勿扰时自动交回终端。需要先在「钩子与代理」里给它装上钩子。Codex 还要在它的 /hooks 里信任新钩子。auto 模式自己批准的操作不会弹出。Cursor 会同时在岛上和编辑器里弹出：真正运行或跳过在 Cursor 里点，岛上点「去 Cursor」跳过去。TRAE / TRAE CN 建议在 IDE 里设为“自动执行”，这样岛上点允许即可直接执行（无需回 TRAE 再点一次），点交回才在 TRAE 弹窗。",
   },
   filters: {
     title: "隐藏会话",
@@ -676,8 +676,8 @@ export const en: SettingsAgentText = {
     onIsland: "Allow or deny agent actions on the island",
     whenInFront: "Also while the terminal is in front",
     whenInFrontHint: "Off, a request from a session whose terminal or editor window is in front is approved in that terminal.",
-    hint: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (Ctrl+Alt+Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Give the agent hooks in Hooks and agents first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
-    hintMac: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (⌃⌥Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Give the agent hooks in Hooks and agents first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
+    hint: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (Ctrl+Alt+Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Give the agent hooks in Hooks and agents first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. Cursor prompts on both the island and in the editor: run or skip in Cursor; Open Cursor on the island jumps there. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
+    hintMac: "When Claude Code or Codex wants to run a command or change a file, a card on the island lets you allow, deny or hand it back to the terminal (⌃⌥Y / N / T). The terminal shows no prompt while the card is up; after 2 minutes, or while game mode keeps the island quiet, it goes back to the terminal. Give the agent hooks in Hooks and agents first, and trust the new hook in Codex's /hooks. Actions auto mode approves by itself don't show up. Cursor prompts on both the island and in the editor: run or skip in Cursor; Open Cursor on the island jumps there. In TRAE / TRAE CN, set tools to Auto Run so allowing on the island runs them without a second prompt in TRAE (handing back still asks in TRAE).",
   },
   filters: {
     title: "Hide sessions",

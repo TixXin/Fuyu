@@ -49,24 +49,34 @@ export function AgentApprovalCard({
   const preview = approvalPreview(request.toolInput);
   const rule = request.agent === "claudeCode" ? alwaysAllowRule(request.permissionSuggestions) : null;
 
-  const toTerminal = () => {
-    approvals.decide("terminal");
+  const cursorDual = request.agent === "cursor";
+  const focusAgent = () => {
     if (inPreview || approvals.sample) return;
     void focusAgentWindow(request.agent, cwd, session?.title ?? null, request.remoteHost ? "" : request.sessionId).catch((error: unknown) =>
       console.error("Failed to focus the agent window", error),
     );
   };
+  const toTerminal = () => {
+    approvals.decide("terminal");
+    focusAgent();
+  };
+  const decideAndFocus = (action: AgentApprovalDecision) => {
+    approvals.decide(action);
+    if (cursorDual) focusAgent();
+  };
   actRef.current = (action) => {
     if (action === "terminal") toTerminal();
-    else if (action !== "allowAlways" || rule) approvals.decide(action);
+    else if (action !== "allowAlways" || rule) decideAndFocus(action);
   };
   const keyOf = (action: AgentApprovalDecision) => (options.showKeys ? APPROVAL_HOTKEYS.find((hotkey) => hotkey.action === action)?.shortcut : undefined);
-  const actions: NoticeAction[] = [
-    { id: "deny", label: labels.deny, icon: X, disabled: !armed, shortcut: keyOf("deny"), onClick: () => approvals.decide("deny") },
-    { id: "terminal", label: labels.terminal, icon: SquareTerminal, disabled: !armed, shortcut: keyOf("terminal"), hint: labels.terminalHint, onClick: toTerminal },
-    ...(rule ? [{ id: "always", label: labels.allowAlways, icon: CheckCheck, disabled: !armed, hint: labels.allowAlwaysHint(rule), onClick: () => approvals.decide("allowAlways") }] : []),
-    { id: "allow", label: labels.allow, icon: Check, disabled: !armed, primary: true, shortcut: keyOf("allow"), onClick: () => approvals.decide("allow") },
-  ];
+  const actions: NoticeAction[] = cursorDual
+    ? [{ id: "terminal", label: labels.toCursor, icon: SquareTerminal, disabled: !armed, primary: true, shortcut: keyOf("terminal"), hint: labels.toCursorHint, onClick: toTerminal }]
+    : [
+      { id: "deny", label: labels.deny, icon: X, disabled: !armed, shortcut: keyOf("deny"), onClick: () => approvals.decide("deny") },
+      { id: "terminal", label: labels.terminal, icon: SquareTerminal, disabled: !armed, shortcut: keyOf("terminal"), hint: labels.terminalHint, onClick: toTerminal },
+      ...(rule ? [{ id: "always", label: labels.allowAlways, icon: CheckCheck, disabled: !armed, hint: labels.allowAlwaysHint(rule), onClick: () => approvals.decide("allowAlways") }] : []),
+      { id: "allow", label: labels.allow, icon: Check, disabled: !armed, primary: true, shortcut: keyOf("allow"), onClick: () => approvals.decide("allow") },
+    ];
 
   return (
     <AgentNoticeCard
