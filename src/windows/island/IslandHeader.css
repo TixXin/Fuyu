@@ -198,15 +198,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--space-md);
+  gap: 2px;
 }
 
 .window-actions--lead {
   justify-content: flex-start;
-  gap: 2px;
 }
 
-.island__header .window-actions--lead .icon-button {
+.island__header .window-actions .icon-button {
   width: 34px;
   height: 26px;
   color: var(--text-2);
@@ -214,21 +213,21 @@
   border-radius: var(--radius-pill);
 }
 
-.island__header .window-actions--lead .icon-button:hover {
+.island__header .window-actions .icon-button:hover {
   color: var(--text-1);
   background: var(--color-white-a08);
 }
 
-.island__header .window-actions--lead .icon-button[aria-pressed="true"] {
+.island__header .window-actions .icon-button[aria-pressed="true"] {
   color: var(--text-1);
   background: var(--color-white-a16);
 }
 
-.window-actions--lead .icon-button > svg {
+.window-actions .icon-button > svg {
   transition: transform var(--motion-base) var(--motion-ease);
 }
 
-.window-actions--lead .icon-button:hover > svg {
+.window-actions .icon-button:hover > svg {
   transform: translateY(-1px) scale(1.12);
 }
 
