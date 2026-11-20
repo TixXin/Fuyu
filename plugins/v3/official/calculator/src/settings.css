@@ -1,0 +1,78 @@
+.fuyu-calc-set {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 13px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-calc-set__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.fuyu-calc-set__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fuyu-calc-set__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fuyu-plugin-text-muted);
+}
+
+.fuyu-calc-set__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-width: 0;
+}
+
+.fuyu-calc-set__tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 6px 12px;
+}
+
+.fuyu-calc-set__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.fuyu-calc-set select,
+.fuyu-calc-set input {
+  font: inherit;
+  color: inherit;
+}
+
+.fuyu-calc-set select,
+.fuyu-calc-set__number input {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--fuyu-plugin-border);
+  border-radius: var(--fuyu-plugin-radius);
+  background: var(--fuyu-plugin-surface);
+}
+
+.fuyu-calc-set__number {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fuyu-plugin-text-secondary);
+}
+
+.fuyu-calc-set__number input {
+  width: 72px;
+  box-sizing: border-box;
+}
