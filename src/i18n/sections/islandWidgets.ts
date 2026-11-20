@@ -2,7 +2,7 @@ import { en as dailyEn, zhCN as dailyZh, type DailyWidgetsText } from "./dailyWi
 
 export type IslandWidgetsText = {
   sizes: { bar: string; s: string; m: string; l: string; w: string };
-  groups: { todos: string; calendar: string; music: string; agents: string; usage: string; clipboard: string; shelf: string; timer: string; daily: string };
+  groups: { todos: string; calendar: string; music: string; agents: string; usage: string; clipboard: string; shelf: string; timer: string; daily: string; messages: string; screenshot: string; translation: string };
   widgets: {
     todos: string;
     nextMeeting: string;
@@ -13,6 +13,11 @@ export type IslandWidgetsText = {
     clipboard: string;
     shelf: string;
     timer: string;
+    monthCalendar: string;
+    stopwatch: string;
+    unread: string;
+    screenshot: string;
+    translate: string;
   };
   daily: DailyWidgetsText;
   panel: {
@@ -57,12 +62,24 @@ export type IslandWidgetsText = {
     image: string;
     files: (count: number) => string;
     usageUnknown: string;
+    eventsToday: (count: number) => string;
+    start: string;
+    pause: string;
+    reset: string;
+    noUnread: string;
+    sources: { qq: string; wechat: string; mail: string; other: string };
+    takeScreenshot: string;
+    copyScreenshot: string;
+    noScreenshots: string;
+    translatePlaceholder: string;
+    translating: string;
+    copyResult: string;
   };
 };
 
 export const zhCN: IslandWidgetsText = {
   sizes: { bar: "条", s: "小", m: "中", l: "大", w: "宽" },
-  groups: { todos: "待办", calendar: "日历", music: "音乐", agents: "AI Agent", usage: "用量", clipboard: "剪贴板", shelf: "文件中转", timer: "计时器", daily: "日常" },
+  groups: { todos: "待办", calendar: "日历", music: "音乐", agents: "AI Agent", usage: "用量", clipboard: "剪贴板", shelf: "文件中转", timer: "计时器", daily: "日常", messages: "消息", screenshot: "截图", translation: "翻译" },
   widgets: {
     todos: "今天的待办",
     nextMeeting: "下一个会议",
@@ -73,6 +90,11 @@ export const zhCN: IslandWidgetsText = {
     clipboard: "最近剪贴板",
     shelf: "文件中转",
     timer: "计时器",
+    monthCalendar: "月历",
+    stopwatch: "秒表",
+    unread: "未读消息",
+    screenshot: "最近截图",
+    translate: "翻译",
   },
   daily: dailyZh,
   panel: {
@@ -117,12 +139,24 @@ export const zhCN: IslandWidgetsText = {
     image: "图片",
     files: (count) => `${count} 个文件`,
     usageUnknown: "还没有用量",
+    eventsToday: (count) => (count ? `今天 ${count} 个日程` : "今天没有日程"),
+    start: "开始",
+    pause: "暂停",
+    reset: "清零",
+    noUnread: "没有未读",
+    sources: { qq: "QQ", wechat: "微信", mail: "邮件", other: "其他" },
+    takeScreenshot: "截图",
+    copyScreenshot: "复制这张截图",
+    noScreenshots: "还没有截图",
+    translatePlaceholder: "输入文字，回车翻译",
+    translating: "翻译中…",
+    copyResult: "复制译文",
   },
 };
 
 export const en: IslandWidgetsText = {
   sizes: { bar: "Bar", s: "S", m: "M", l: "L", w: "Wide" },
-  groups: { todos: "Todos", calendar: "Calendar", music: "Music", agents: "AI Agent", usage: "Usage", clipboard: "Clipboard", shelf: "File shelf", timer: "Timer", daily: "Daily" },
+  groups: { todos: "Todos", calendar: "Calendar", music: "Music", agents: "AI Agent", usage: "Usage", clipboard: "Clipboard", shelf: "File shelf", timer: "Timer", daily: "Daily", messages: "Messages", screenshot: "Screenshot", translation: "Translation" },
   widgets: {
     todos: "Today's todos",
     nextMeeting: "Next meeting",
@@ -133,6 +167,11 @@ export const en: IslandWidgetsText = {
     clipboard: "Recent clipboard",
     shelf: "File shelf",
     timer: "Timer",
+    monthCalendar: "Month",
+    stopwatch: "Stopwatch",
+    unread: "Unread",
+    screenshot: "Latest screenshot",
+    translate: "Translate",
   },
   daily: dailyEn,
   panel: {
@@ -177,5 +216,17 @@ export const en: IslandWidgetsText = {
     image: "Image",
     files: (count) => `${count} ${count === 1 ? "file" : "files"}`,
     usageUnknown: "No usage yet",
+    eventsToday: (count) => (count ? `${count} ${count === 1 ? "event" : "events"} today` : "Nothing today"),
+    start: "Start",
+    pause: "Pause",
+    reset: "Reset",
+    noUnread: "All read",
+    sources: { qq: "QQ", wechat: "WeChat", mail: "Mail", other: "Other" },
+    takeScreenshot: "Take a screenshot",
+    copyScreenshot: "Copy this screenshot",
+    noScreenshots: "No screenshots yet",
+    translatePlaceholder: "Type and press Enter",
+    translating: "Translating…",
+    copyResult: "Copy the translation",
   },
 };

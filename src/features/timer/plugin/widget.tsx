@@ -6,7 +6,8 @@ import { visibilityInterval } from "../../../lib/useVisibilityInterval";
 import { defineSlot, type IslandWidgetMeta, type IslandWidgetProps } from "../../plugin-kernel/slots";
 import { requestTimerPage, useTimers } from "../store";
 import { clockText, shownMs, shownTimer } from "../timers";
-import { TIMER_WIDGET } from "./widgets.ts";
+import { StopwatchWidget } from "./stopwatchWidget";
+import { STOPWATCH_WIDGET, TIMER_WIDGET } from "./widgets.ts";
 import "./widget.css";
 
 const widgetSlot = defineSlot<IslandWidgetProps, IslandWidgetMeta>("island.widget/v1");
@@ -32,3 +33,4 @@ function TimerWidget() {
 }
 
 widgetSlot.add({ ...TIMER_WIDGET, component: TimerWidget }, TIMER_WIDGET.owner);
+widgetSlot.add({ ...STOPWATCH_WIDGET, component: StopwatchWidget }, STOPWATCH_WIDGET.owner);

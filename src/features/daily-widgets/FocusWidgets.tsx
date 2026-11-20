@@ -2,10 +2,10 @@ import { useEffect } from "react";
 import { Flame, Pause, Play, RotateCcw, Target } from "lucide-react";
 import { WidgetFrame } from "../../components/island-widget/WidgetFrame";
 import { useTranslation } from "../../i18n";
-import { clickOnly } from "./clickOnly.ts";
 import { dayKey, focusText, lastDays, streakLength } from "./days.ts";
 import { POMODORO_MS } from "./storage.ts";
 import { pausePomodoro, pomodoroLeft, resetPomodoro, settlePomodoro, startPomodoro, toggleCheckin, useDaily, useNow } from "./store.ts";
+import { clickOnly } from "../../components/island-widget/clickOnly";
 
 const RING_R = 36;
 const RING_LENGTH = 2 * Math.PI * RING_R;

@@ -313,6 +313,7 @@ const DEFAULT_FUYU_ITEMS: readonly (readonly [string, PanelSize])[] = [
   ["session-count", "m"],
   ["focus-stats", "s"],
   ["year-progress", "s"],
+  ["month-calendar", "l"],
   ["note", "m"],
   ["clipboard-recent", "m"],
   ["countdown", "s"],
@@ -320,7 +321,11 @@ const DEFAULT_FUYU_ITEMS: readonly (readonly [string, PanelSize])[] = [
   ["water", "s"],
   ["sun", "s"],
   ["habits", "m"],
+  ["translate", "m"],
+  ["unread", "s"],
   ["shelf", "s"],
+  ["screenshot-recent", "s"],
+  ["stopwatch", "s"],
   ["timer", "s"],
 ];
 

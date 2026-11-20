@@ -4,7 +4,8 @@ import { useTranslation } from "../../../i18n";
 import { defineSlot, type IslandWidgetMeta, type IslandWidgetProps } from "../../plugin-kernel/slots";
 import { clockTime } from "../upcoming";
 import { calendarState } from "./islandState";
-import { NEXT_MEETING_WIDGET } from "./widgets.ts";
+import { MonthWidget } from "./monthWidget";
+import { MONTH_WIDGET, NEXT_MEETING_WIDGET } from "./widgets.ts";
 
 const ROW_PX = 22;
 const FIRST_PX = 62;
@@ -48,3 +49,4 @@ function NextMeetingWidget({ height }: IslandWidgetProps) {
 }
 
 widgetSlot.add({ ...NEXT_MEETING_WIDGET, component: NextMeetingWidget }, NEXT_MEETING_WIDGET.owner);
+widgetSlot.add({ ...MONTH_WIDGET, component: MonthWidget }, MONTH_WIDGET.owner);

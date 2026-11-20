@@ -1,9 +1,9 @@
 import { Droplets, Minus, Plus, Repeat, StickyNote } from "lucide-react";
 import { WidgetFrame } from "../../components/island-widget/WidgetFrame";
 import { useLocale, useTranslation } from "../../i18n";
-import { clickOnly } from "./clickOnly.ts";
 import { dayKey, weekDays } from "./days.ts";
 import { addCup, setNote, toggleHabit, useDaily, useNow } from "./store.ts";
+import { clickOnly } from "../../components/island-widget/clickOnly";
 
 const WATER_GOAL = 8;
 
