@@ -280,3 +280,72 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.fuyu-weather-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--fuyu-plugin-font);
+  font-size: 12px;
+  color: var(--fuyu-plugin-text);
+}
+
+.fuyu-weather-widget.is-empty {
+  align-items: center;
+  justify-content: center;
+  color: var(--fuyu-plugin-text-muted);
+  text-align: center;
+}
+
+.fuyu-weather-widget__place {
+  overflow: hidden;
+  color: var(--fuyu-plugin-text-muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fuyu-weather-widget__now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fuyu-weather-widget__temp {
+  font-size: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.fuyu-weather-widget.is-wide .fuyu-weather-widget__temp {
+  font-size: 30px;
+}
+
+.fuyu-weather-widget__cond {
+  overflow: hidden;
+  color: var(--fuyu-plugin-text-secondary);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fuyu-weather-widget__days {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fuyu-weather-widget__days li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  color: var(--fuyu-plugin-text-secondary);
+  font-variant-numeric: tabular-nums;
+}

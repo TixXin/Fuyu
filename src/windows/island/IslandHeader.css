@@ -195,3 +195,9 @@
     background-color var(--motion-medium) var(--motion-ease),
     box-shadow var(--motion-medium) var(--motion-ease);
 }
+
+.dot-button:has(.panel-text-icon) {
+  width: auto;
+  min-width: 26px;
+  padding: 0 8px;
+}

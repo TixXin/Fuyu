@@ -1,41 +1,30 @@
-import { createElement, useEffect, type FunctionComponent } from "react";
-import { PANEL_ICON_COMPONENTS } from "../../../components/island-widget/panelIcons";
+import { createElement, useEffect } from "react";
+import { FuyuTextIcon } from "../../../components/island-widget/FuyuTextIcon";
 import { useTranslation } from "../../../i18n";
-import { panelPageId } from "../../../lib/settings/customPanels";
-import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
+import { FUYU_PAGE_ID, FUYU_PANEL_ID } from "../../../lib/settings/customPanels";
 import { pageSlot } from "../slots/pageSlot";
 import { CustomPanelPage } from "./CustomPanelPage";
 
-const PANEL_ORDER = 900;
-const PANEL_SHORTCUT_ORDER = 100;
-const pages = new Map<string, FunctionComponent>();
+const FUYU_ORDER = 0;
+const FUYU_SHORTCUT_ORDER = 0;
 
-function panelComponent(id: string): FunctionComponent {
-  let component = pages.get(id);
-  if (!component) {
-    component = function PanelPage() {
-      return createElement(CustomPanelPage, { panelId: id });
-    };
-    pages.set(id, component);
-  }
-  return component;
+function FuyuPage() {
+  return createElement(CustomPanelPage, { panelId: FUYU_PANEL_ID });
 }
 
 export function useCustomPanelPages() {
-  const { panels } = useCustomPanels();
-  const fallbackName = useTranslation().islandWidgets.panel.defaultName;
-  useEffect(() => {
-    const removals = panels.map((panel, index) =>
+  const name = useTranslation().island.appName;
+  useEffect(
+    () =>
       pageSlot.add({
-        id: panelPageId(panel.id),
-        order: PANEL_ORDER + index,
-        shortcutOrder: PANEL_SHORTCUT_ORDER + index,
+        id: FUYU_PAGE_ID,
+        order: FUYU_ORDER,
+        shortcutOrder: FUYU_SHORTCUT_ORDER,
         headerDot: true,
-        title: panel.name || fallbackName,
-        icon: PANEL_ICON_COMPONENTS[panel.icon],
-        component: panelComponent(panel.id),
+        title: name,
+        icon: FuyuTextIcon,
+        component: FuyuPage,
       }),
-    );
-    return () => removals.forEach((remove) => remove());
-  }, [fallbackName, panels]);
+    [name],
+  );
 }

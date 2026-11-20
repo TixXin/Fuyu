@@ -74,7 +74,7 @@ export function IslandLayoutPage({ settings, onSettingsChange }: {
           <DisplaySettingsSection settings={settings} onSettingsChange={onSettingsChange} />
         </>
       ) : (
-        <ExpandedLayout settings={settings} pluginPages={layout.pluginPages} stage={stage} />
+        <ExpandedLayout settings={settings} pluginPages={layout.pluginPages} pluginWidgets={layout.pluginWidgets} stage={stage} />
       )}
     </div>
   );

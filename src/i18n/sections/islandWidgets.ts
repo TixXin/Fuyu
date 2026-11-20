@@ -13,9 +13,21 @@ export type IslandWidgetsText = {
     timer: string;
   };
   panel: {
-    defaultName: string;
     empty: string;
-    openSettings: string;
+    templateHint: string;
+    templates: { workbench: string; fun: string };
+    templateDetail: { workbench: string; fun: string };
+    edit: string;
+    done: string;
+    addWidget: string;
+    removeWidget: (name: string) => string;
+    stretchWidget: (name: string) => string;
+    modes: { grid: string; free: string };
+    mode: string;
+    gridHint: string;
+    freeHint: string;
+    allAdded: string;
+    plugin: string;
   };
   content: {
     todosEmpty: string;
@@ -53,9 +65,21 @@ export const zhCN: IslandWidgetsText = {
     timer: "计时器",
   },
   panel: {
-    defaultName: "新面板",
     empty: "这个面板还没有组件",
-    openSettings: "在设置里添加组件",
+    templateHint: "从模板开始，或者点「编辑」自己加",
+    templates: { workbench: "工作台", fun: "娱乐" },
+    templateDetail: { workbench: "待办 · 会议 · Agent", fun: "音乐 · 歌词 · 天气" },
+    edit: "编辑",
+    done: "完成",
+    addWidget: "添加组件",
+    removeWidget: (name) => `拿掉「${name}」`,
+    stretchWidget: (name) => `拉伸「${name}」`,
+    modes: { grid: "网格", free: "自己摆" },
+    mode: "排版",
+    gridHint: "拖动换顺序，点一下换大小",
+    freeHint: "拖动摆位置，拉右下角改大小",
+    allAdded: "能加的组件都加上了",
+    plugin: "插件",
   },
   content: {
     todosEmpty: "今天没有待办",
@@ -93,9 +117,21 @@ export const en: IslandWidgetsText = {
     timer: "Timer",
   },
   panel: {
-    defaultName: "New panel",
     empty: "This panel has no widgets yet",
-    openSettings: "Add widgets in Settings",
+    templateHint: "Start from a template, or tap Edit to add your own",
+    templates: { workbench: "Workbench", fun: "Leisure" },
+    templateDetail: { workbench: "Todos · Meeting · Agent", fun: "Music · Lyrics · Weather" },
+    edit: "Edit",
+    done: "Done",
+    addWidget: "Add widget",
+    removeWidget: (name) => `Remove ${name}`,
+    stretchWidget: (name) => `Resize ${name}`,
+    modes: { grid: "Grid", free: "Free" },
+    mode: "Layout",
+    gridHint: "Drag to reorder, tap to change size",
+    freeHint: "Drag to move, pull the corner to resize",
+    allAdded: "Every widget is already here",
+    plugin: "Plugin",
   },
   content: {
     todosEmpty: "Nothing to do today",

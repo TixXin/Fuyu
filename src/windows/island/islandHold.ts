@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { listenIslandHold } from "./api";
+import { isPanelEditing } from "./custom-panels/panelEditing";
 
 let held = false;
 
 export function isIslandHeld() {
-  return held;
+  return held || isPanelEditing();
 }
 
 export function useIslandHoldListener() {

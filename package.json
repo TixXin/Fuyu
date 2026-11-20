@@ -37,6 +37,7 @@
     "verify": "node scripts/heavy/heavy.mjs --label verify --lane target:agents -- node scripts/land-check.mjs",
     "test:regression": "node scripts/heavy/heavy.mjs --label test:regression -- node scripts/run-regression.mjs",
     "lab": "node scripts/island-lab/server.mjs",
+    "logo": "node scripts/logo/open.mjs",
     "settings:index": "node scripts/settings-search-index.mjs",
     "check:tests-types": "tsc -p tests/tsconfig.json",
     "lint": "eslint src packages/plugin-base/src/host",

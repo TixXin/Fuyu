@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from "react";
-import type { BarUsagePage } from "../../../features/plugin-kernel/barUsage";
-import { useTranslation } from "../../../i18n";
-import { createPanel, newPanelId, panelPageId, removePanel, updatePanel, type CustomPanel } from "../../../lib/settings/customPanels";
+import type { BarUsagePage, BarUsageWidget } from "../../../features/plugin-kernel/barUsage";
+import { fuyuPanel, fuyuPanels, type CustomPanel } from "../../../lib/settings/customPanels";
 import type { IslandSettings } from "../../../lib/settings/types";
 import { useCustomPanels } from "../../../lib/settings/useCustomPanels";
 import { ExpandedPreview } from "./ExpandedPreview";
@@ -15,40 +14,29 @@ import "./ExpandedLayout.css";
 type ExpandedLayoutProps = {
   settings: IslandSettings;
   pluginPages: readonly BarUsagePage[] | null;
+  pluginWidgets: readonly BarUsageWidget[];
   stage: (preview: ReactNode) => ReactNode;
 };
 
-export function ExpandedLayout({ settings, pluginPages, stage }: ExpandedLayoutProps) {
-  const t = useTranslation();
+export function ExpandedLayout({ settings, pluginPages, pluginWidgets, stage }: ExpandedLayoutProps) {
   const { panels, save: savePanels } = useCustomPanels();
-  const { rows, layout, save, pluginsListed } = useIslandPageRows(settings, pluginPages, panels);
-  const library = useWidgetLibrary();
+  const { rows, layout, save, pluginsListed } = useIslandPageRows(settings, pluginPages);
+  const library = useWidgetLibrary(pluginWidgets);
   const [pageId, setPageId] = useState<string | null>(null);
   const [widgetId, setWidgetId] = useState<string | null>(null);
   const current = rows.find((row) => row.id === pageId) ?? rows.find((row) => !row.hidden && !row.off) ?? rows[0];
-  const panel = current?.panel ? panels.find((candidate) => candidate.id === current.panel) : undefined;
+  const panel = current?.panel ? fuyuPanel(panels) : undefined;
   const selected = (panel?.items.find((item) => item.widget === widgetId) ?? panel?.items[0])?.widget;
 
-  const change = (next: CustomPanel) => savePanels(updatePanel(panels, next.id, () => next));
-  const create = () => {
-    const id = newPanelId(Date.now(), Math.random());
-    savePanels(createPanel(panels, id, t.islandWidgets.panel.defaultName, "layout-grid"));
-    setPageId(panelPageId(id));
-  };
-  const remove = (id: string) => {
-    const page = panelPageId(id);
-    savePanels(removePanel(panels, id));
-    save({ order: layout.order.filter((other) => other !== page), hidden: layout.hidden.filter((other) => other !== page) });
-    setPageId(null);
-  };
+  const change = (next: CustomPanel) => savePanels(fuyuPanels(next));
 
   return (
     <>
-      {stage(<ExpandedPreview rows={rows} current={current} panel={panel} library={library} selected={selected} onPage={setPageId} onWidget={setWidgetId} />)}
-      <PageStrip rows={rows} layout={layout} save={save} current={current?.id} onPick={setPageId} onCreate={create} pluginsListed={pluginsListed} />
+      {stage(<ExpandedPreview rows={rows} current={current} panel={panel} library={library} selected={selected} onPage={setPageId} onWidget={setWidgetId} onPanel={change} />)}
+      <PageStrip rows={rows} layout={layout} save={save} current={current?.id} onPick={setPageId} pluginsListed={pluginsListed} />
       {panel ? (
         <div className="panel-editing" key={panel.id}>
-          <PanelEditor panel={panel} library={library} selected={selected} onSelect={setWidgetId} onChange={change} onRemove={() => remove(panel.id)} />
+          <PanelEditor panel={panel} library={library} selected={selected} onSelect={setWidgetId} onChange={change} />
           <SizePicker panel={panel} library={library} selected={selected} onSelect={setWidgetId} onChange={change} />
         </div>
       ) : null}

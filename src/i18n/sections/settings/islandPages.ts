@@ -13,12 +13,6 @@ export type SettingsIslandPagesText = {
   preview: { builtin: string; off: string; empty: string };
   panels: {
     tag: string;
-    create: string;
-    name: string;
-    icon: string;
-    iconNames: Record<"layout-grid" | "star" | "briefcase" | "coffee" | "music" | "zap" | "heart" | "home" | "gamepad" | "book", string>;
-    remove: string;
-    confirmRemove: string;
     title: string;
     hint: string;
     inPanel: string;
@@ -67,12 +61,6 @@ export const zhCN: SettingsIslandPagesText = {
   },
   panels: {
     tag: "我的",
-    create: "新建面板",
-    name: "面板名字",
-    icon: "图标",
-    iconNames: { "layout-grid": "网格", star: "星星", briefcase: "公文包", coffee: "咖啡", music: "音乐", zap: "闪电", heart: "爱心", home: "房子", gamepad: "手柄", book: "书" },
-    remove: "删除这个面板",
-    confirmRemove: "再点一次删除",
     title: "面板里的组件",
     hint: "点 ＋ 加进来，点 × 拿掉，拖动换顺序。岛上按顺序从左上往右下自动排，最多显示 4 行，再多时在面板里滚动。",
     inPanel: "面板里",
@@ -121,12 +109,6 @@ export const en: SettingsIslandPagesText = {
   },
   panels: {
     tag: "Mine",
-    create: "New panel",
-    name: "Panel name",
-    icon: "Icon",
-    iconNames: { "layout-grid": "Grid", star: "Star", briefcase: "Briefcase", coffee: "Coffee", music: "Music", zap: "Bolt", heart: "Heart", home: "Home", gamepad: "Gamepad", book: "Book" },
-    remove: "Delete this panel",
-    confirmRemove: "Click again to delete",
     title: "Widgets in this panel",
     hint: "Press + to add, × to remove, and drag to reorder. The island lays them out in order from the top left, shows up to 4 rows and scrolls past that.",
     inPanel: "In the panel",

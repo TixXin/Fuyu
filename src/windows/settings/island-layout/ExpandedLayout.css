@@ -240,13 +240,6 @@
   background: var(--color-white-a10);
 }
 
-.layout-chip--create {
-  padding: 0 12px;
-  color: var(--color-text-muted);
-  background: transparent;
-  border-style: dashed;
-}
-
 .layout-chip--add {
   padding-right: 12px;
 }
@@ -297,4 +290,9 @@
   .layout-chip {
     transition: none;
   }
+}
+
+.layout-chip__icon:has(.panel-text-icon) {
+  width: auto;
+  padding: 0 7px;
 }

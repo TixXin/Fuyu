@@ -15,7 +15,8 @@ const MAX_NAME = 40;
 
 export const PANEL_SIZES = ["s", "m", "l", "w"] as const;
 export type PanelSize = (typeof PANEL_SIZES)[number];
-export type PanelMode = "grid" | "free";
+export const PANEL_MODES = ["grid", "free"] as const;
+export type PanelMode = (typeof PANEL_MODES)[number];
 
 export const PANEL_ICONS = ["layout-grid", "star", "briefcase", "coffee", "music", "zap", "heart", "home", "gamepad", "book"] as const;
 export type PanelIcon = (typeof PANEL_ICONS)[number];
@@ -60,7 +61,7 @@ function readItem(value: unknown): PanelItem | null {
   return { widget, size, x: whole(x), y: whole(y), w: typeof w === "number" ? whole(w) || base.w : base.w, h: typeof h === "number" ? whole(h) || base.h : base.h };
 }
 
-export function cleanPanelName(name: unknown): string {
+function cleanPanelName(name: unknown): string {
   return typeof name === "string" ? name.trim().slice(0, MAX_NAME) : "";
 }
 
@@ -126,16 +127,31 @@ export function defaultWidgetSize(sizes: readonly PanelSize[]): PanelSize | null
   return sizes.includes("m") ? "m" : (sizes[0] ?? null);
 }
 
-const reflow = (panel: CustomPanel, items: readonly Pick<PanelItem, "widget" | "size">[]): CustomPanel => ({ ...panel, items: flowPanelItems(items) });
+const reflow = (panel: CustomPanel, items: readonly PanelItem[]): CustomPanel =>
+  panel.mode === "free" ? { ...panel, items: [...items] } : { ...panel, items: flowPanelItems(items) };
+
+export const FREE_WIDTH_UNITS = GRID_COLUMNS * STEP - 1;
+export const freeBottom = (items: readonly PanelItem[]) => items.reduce((bottom, item) => Math.max(bottom, item.y + item.h + 1), 0);
+export const freeHeightPx = (items: readonly PanelItem[]) => Math.max(0, freeBottom(items) - 1) * GRID_UNIT_PX;
+const minBox = (size: PanelSize) => placed("", size, 0, 0);
+const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), Math.max(low, high));
 
 export function addPanelItem(panel: CustomPanel, widget: string, size: PanelSize): CustomPanel {
   if (panel.items.length >= MAX_ITEMS || panel.items.some((item) => item.widget === widget)) return panel;
-  return reflow(panel, [...panel.items, { widget, size }]);
+  const item = placed(widget, size, 0, 0);
+  return reflow(panel, [...panel.items, panel.mode === "free" ? { ...item, y: freeBottom(panel.items) } : item]);
 }
 
 export function resizePanelItem(panel: CustomPanel, widget: string, size: PanelSize): CustomPanel {
   if (!panel.items.some((item) => item.widget === widget && item.size !== size)) return panel;
-  return reflow(panel, panel.items.map((item) => (item.widget === widget ? { widget, size } : item)));
+  return reflow(
+    panel,
+    panel.items.map((item) => {
+      if (item.widget !== widget) return item;
+      const box = minBox(size);
+      return { ...item, size, w: box.w, h: box.h, x: clamp(item.x, 0, FREE_WIDTH_UNITS - box.w) };
+    }),
+  );
 }
 
 export function removePanelItem(panel: CustomPanel, widget: string): CustomPanel {
@@ -151,19 +167,57 @@ export function reorderPanelItem(panel: CustomPanel, widget: string, before: str
   return reflow(panel, [...rest.slice(0, at), moving, ...rest.slice(at)]);
 }
 
-export function createPanel(panels: readonly CustomPanel[], id: string, name: string, icon: PanelIcon): CustomPanel[] {
-  if (panels.length >= MAX_PANELS || panels.some((panel) => panel.id === id)) return [...panels];
-  return [...panels, { id, name: cleanPanelName(name), icon, mode: "grid", items: [] }];
+export function nextPanelSize(sizes: readonly PanelSize[], current: PanelSize): PanelSize | null {
+  const order = PANEL_SIZES.filter((size) => sizes.includes(size));
+  if (order.length < 2) return null;
+  return order[(order.indexOf(current) + 1) % order.length] ?? null;
 }
 
-export function updatePanel(panels: readonly CustomPanel[], id: string, change: (panel: CustomPanel) => CustomPanel): CustomPanel[] {
-  return panels.map((panel) => (panel.id === id ? change(panel) : panel));
+export function placeFreeItem(panel: CustomPanel, widget: string, x: number, y: number): CustomPanel {
+  const item = panel.items.find((candidate) => candidate.widget === widget);
+  if (!item || panel.mode !== "free") return panel;
+  const next = { ...item, x: clamp(Math.round(x), 0, FREE_WIDTH_UNITS - item.w), y: Math.max(0, Math.round(y)) };
+  if (next.x === item.x && next.y === item.y && panel.items[panel.items.length - 1] === item) return panel;
+  return { ...panel, items: [...panel.items.filter((candidate) => candidate !== item), next] };
 }
 
-export function removePanel(panels: readonly CustomPanel[], id: string): CustomPanel[] {
-  return panels.filter((panel) => panel.id !== id);
+export function stretchFreeItem(panel: CustomPanel, widget: string, w: number, h: number): CustomPanel {
+  const item = panel.items.find((candidate) => candidate.widget === widget);
+  if (!item || panel.mode !== "free") return panel;
+  const least = minBox(item.size);
+  const next = { ...item, w: clamp(Math.round(w), least.w, FREE_WIDTH_UNITS - item.x), h: Math.max(least.h, Math.round(h)) };
+  if (next.w === item.w && next.h === item.h) return panel;
+  return { ...panel, items: panel.items.map((candidate) => (candidate === item ? next : candidate)) };
 }
 
-export function newPanelId(now: number, random: number): string {
-  return `${now.toString(36)}${Math.floor(random * 36 ** 4).toString(36).padStart(4, "0")}`;
+export type PanelBox = { left: number; top: number; width: number; height: number };
+
+export function itemBoxPx(panel: CustomPanel, item: PanelItem): PanelBox {
+  if (panel.mode === "free") return { left: item.x * GRID_UNIT_PX, top: item.y * GRID_UNIT_PX, width: item.w * GRID_UNIT_PX, height: item.h * GRID_UNIT_PX };
+  const box = cellBox(item);
+  const step = GRID_CELL_PX + GRID_GAP_PX;
+  return { left: box.col * step, top: box.row * step, width: cellsToPx(box.cols), height: cellsToPx(box.rows) };
+}
+
+export function boardHeightPx(panel: CustomPanel): number {
+  return panel.mode === "free" ? Math.max(freeHeightPx(panel.items), GRID_CELL_PX) : cellsToPx(Math.max(1, gridRows(panel.items)));
+}
+
+export function setPanelMode(panel: CustomPanel, mode: PanelMode): CustomPanel {
+  if (panel.mode === mode) return panel;
+  if (mode === "free") return { ...panel, mode };
+  const ordered = [...panel.items].sort((a, b) => a.y - b.y || a.x - b.x);
+  return { ...panel, mode, items: flowPanelItems(ordered) };
+}
+
+export const FUYU_PANEL_ID = "fuyu";
+export const FUYU_PAGE_ID = `${CUSTOM_PANEL_PAGE_PREFIX}${FUYU_PANEL_ID}`;
+
+export function fuyuPanel(panels: readonly CustomPanel[]): CustomPanel {
+  const found = panels.find((panel) => panel.id === FUYU_PANEL_ID) ?? panels[0];
+  return found ? { ...found, id: FUYU_PANEL_ID } : { id: FUYU_PANEL_ID, name: "", icon: PANEL_ICONS[0], mode: "grid", items: [] };
+}
+
+export function fuyuPanels(panel: CustomPanel): CustomPanel[] {
+  return [{ ...panel, id: FUYU_PANEL_ID }];
 }

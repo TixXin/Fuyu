@@ -1,13 +1,11 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { Puzzle } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "../../../i18n";
-import { cellBox, cellsToPx, GRID_CELL_PX, GRID_GAP_PX, gridRows, gridWidthPx, type CustomPanel } from "../../../lib/settings/customPanels";
+import { gridWidthPx, type CustomPanel } from "../../../lib/settings/customPanels";
+import { PreviewPanel } from "./PreviewPanel";
 import type { IslandPageRow } from "./useIslandPageRows";
 import type { WidgetLibrary } from "./useWidgetLibrary";
 
 const ISLAND_PADDING = 14;
-const VISIBLE_ROWS = 4;
-const STEP = GRID_CELL_PX + GRID_GAP_PX;
 const ISLAND_WIDTH = gridWidthPx + ISLAND_PADDING * 2;
 
 function useFitScale() {
@@ -33,46 +31,10 @@ type ExpandedPreviewProps = {
   selected: string | undefined;
   onPage: (id: string) => void;
   onWidget: (id: string) => void;
+  onPanel: (panel: CustomPanel) => void;
 };
 
-function PanelGrid({ panel, library, selected, onWidget }: { panel: CustomPanel; library: WidgetLibrary; selected: string | undefined; onWidget: (id: string) => void }) {
-  const t = useTranslation();
-  const text = t.settings.islandPages;
-  if (panel.items.length === 0) return <p className="expanded-preview__empty">{text.preview.empty}</p>;
-  const rows = gridRows(panel.items);
-  return (
-    <div className="expanded-preview__scroll" style={{ maxHeight: cellsToPx(VISIBLE_ROWS) }}>
-      <div className="expanded-preview__grid" style={{ width: gridWidthPx, height: cellsToPx(rows) }}>
-        {panel.items.map((item) => {
-          const box = cellBox(item);
-          const widget = library.find(item.widget);
-          const Icon = widget?.icon ?? Puzzle;
-          const name = widget?.name ?? item.widget;
-          const style: CSSProperties = { left: box.col * STEP, top: box.row * STEP, width: cellsToPx(box.cols), height: cellsToPx(box.rows) };
-          return (
-            <button
-              key={item.widget}
-              className="expanded-preview__cell"
-              type="button"
-              style={style}
-              data-widget={item.widget}
-              data-size={item.size}
-              data-off={widget?.available ? undefined : true}
-              aria-pressed={item.widget === selected}
-              onClick={() => onWidget(item.widget)}
-            >
-              <Icon size={box.rows > 1 || box.cols > 1 ? 22 : 18} strokeWidth={1.8} aria-hidden="true" />
-              <strong>{name}</strong>
-              <small>{widget?.available ? t.islandWidgets.sizes[item.size] : text.panels.unavailable}</small>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-export function ExpandedPreview({ rows, current, panel, library, selected, onPage, onWidget }: ExpandedPreviewProps) {
+export function ExpandedPreview({ rows, current, panel, library, selected, onPage, onWidget, onPanel }: ExpandedPreviewProps) {
   const text = useTranslation().settings.islandPages;
   const { ref, scale } = useFitScale();
   const tabs = rows.filter((row) => !row.hidden && !row.off);
@@ -93,7 +55,7 @@ export function ExpandedPreview({ rows, current, panel, library, selected, onPag
           })}
         </div>
         {panel ? (
-          <PanelGrid panel={panel} library={library} selected={selected} onWidget={onWidget} />
+          <PreviewPanel panel={panel} library={library} selected={selected} scale={scale} onWidget={onWidget} onChange={onPanel} />
         ) : current && CurrentIcon ? (
           <div className="expanded-preview__page" data-page={current.id}>
             <CurrentIcon size={24} strokeWidth={1.6} aria-hidden="true" />
