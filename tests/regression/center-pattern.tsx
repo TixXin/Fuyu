@@ -73,7 +73,7 @@ mockWindows("main");
 const { CenterPattern } = await import("../../src/features/center-pattern/CenterPattern");
 const { CenterPatternSettingsGroup } = await import("../../src/features/center-pattern/CenterPatternSettingsGroup");
 const { PetSprite } = await import("../../src/features/center-pattern/PetSprite");
-const { ISLAND_CURSOR_MOVED_EVENT } = await import("../../src/features/center-pattern/api");
+const { ISLAND_CURSOR_MOVED_EVENT } = await import("../../src/lib/island-cursor/api");
 const { CENTER_PATTERNS } = await import("../../src/features/center-pattern/patterns");
 const { useCenterDecor } = await import("../../src/features/center-pattern/useCenterDecor");
 await import("../../src/features/center-pattern/plugin/island");
