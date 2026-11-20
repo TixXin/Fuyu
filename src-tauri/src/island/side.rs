@@ -56,7 +56,7 @@ pub(super) fn placed_on(window: &WebviewWindow, monitor: &Monitor, edge: Edge, a
     placed.attached_edge = Some(edge);
     let stage_width = (STAGE_WINDOW_WIDTH * scale).round() as i32;
     let (x, y) = stage_position(edge, along, screen::monitor_work_rect(monitor), stage_width, island_height(placed, scale));
-    Some(IslandPosition { x, y, edge: Some(edge), along: Some(along) })
+    Some(IslandPosition { x, y, edge: Some(edge), along: Some(along), taskbar: false })
 }
 
 #[tauri::command]
@@ -149,7 +149,7 @@ fn snap_to_side(window: &WebviewWindow, position: IslandPosition, state: IslandW
         return None;
     }
     edge::set_attached(window, Some(edge));
-    Some(IslandPosition { x, y, edge: Some(edge), along: Some(along) })
+    Some(IslandPosition { x, y, edge: Some(edge), along: Some(along), taskbar: false })
 }
 
 fn leave_side(window: &WebviewWindow, position: IslandPosition, state: IslandWindowState) -> IslandPosition {

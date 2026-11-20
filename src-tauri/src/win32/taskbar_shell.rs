@@ -2,6 +2,7 @@ use windows::Win32::{
     Foundation::{HWND, RECT},
     Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST},
     UI::{
+        HiDpi::GetDpiForWindow,
         Shell::{SHAppBarMessage, ABM_GETSTATE, ABS_AUTOHIDE, APPBARDATA},
         WindowsAndMessaging::{
             FindWindowW, GetWindow, GetWindowLongPtrW, SetWindowLongPtrW, SetWindowPos, GWLP_HWNDPARENT,
@@ -12,9 +13,11 @@ use windows::Win32::{
 };
 use windows::core::w;
 
-use super::window;
+use super::{registry, window};
 
 const SECONDARY_CLASS: &str = "Shell_SecondaryTrayWnd";
+const VERSION_KEY: &str = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion";
+const FIRST_WINDOWS_11_BUILD: u32 = 22000;
 
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct TaskbarWindow {
@@ -53,6 +56,19 @@ fn describe(handle: HWND, primary: bool) -> Option<TaskbarWindow> {
         monitor: info.rcMonitor,
         primary,
     })
+}
+
+pub(crate) fn is_windows_11() -> bool {
+    registry::read_string(windows::Win32::System::Registry::HKEY_LOCAL_MACHINE, VERSION_KEY, "CurrentBuild")
+        .and_then(|build| build.trim().parse::<u32>().ok())
+        .is_some_and(|build| build >= FIRST_WINDOWS_11_BUILD)
+}
+
+pub(crate) fn dpi_scale(handle: HWND) -> f64 {
+    match unsafe { GetDpiForWindow(handle) } {
+        0 => 1.0,
+        dpi => f64::from(dpi) / 96.0,
+    }
 }
 
 pub(crate) fn auto_hide_enabled() -> bool {

@@ -630,6 +630,7 @@ fn ordinary_open_and_close_skip_stage_geometry_until_stage_inputs_change() {
         y: 420,
         edge: Some(Edge::Left),
         along: Some(0.5),
+        taskbar: false,
     });
     let mut side_expanded = side_collapsed;
     side_expanded.mode = IslandMode::Expanded;

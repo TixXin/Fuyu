@@ -1,0 +1,24 @@
+:root[data-island-edge="bottom"][data-island-taskbar="placed"] .island--detached.island--collapsed {
+  --island-shell-bottom-corner: var(--island-shell-radius-collapsed);
+}
+
+:root[data-island-edge="bottom"][data-island-taskbar="placed"] .island--detached.island--expanded {
+  --island-shell-bottom-corner: var(--island-shell-radius);
+}
+
+:root[data-island-edge="bottom"][data-island-taskbar="placed"] .island::before,
+:root[data-island-edge="bottom"][data-island-taskbar="placed"] .island::after {
+  opacity: 0;
+}
+
+@supports (clip-path: shape(from 0 0, line to 1px 1px, close)) {
+  :root[data-island-edge="bottom"][data-island-taskbar="placed"] .island {
+    --island-outline-fillets: var(--island-outline-fillets-top);
+    --island-outline-rim: var(--island-outline-rim-free);
+    --island-outline-body: none;
+    --island-surface-overflow: hidden;
+    --island-refraction-visibility: visible;
+    --island-glass-bleed: 0;
+    --island-rim-fade: none;
+  }
+}

@@ -234,6 +234,8 @@ pub struct IslandPosition {
     pub(super) edge: Option<Edge>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(super) along: Option<f64>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(super) taskbar: bool,
 }
 
 #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
@@ -253,7 +255,7 @@ pub struct IslandGlassFrame {
 
 impl IslandPosition {
     pub(super) fn at(x: i32, y: i32) -> Self {
-        Self { x, y, edge: None, along: None }
+        Self { x, y, edge: None, along: None, taskbar: false }
     }
 }
 

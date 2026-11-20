@@ -78,7 +78,7 @@ fn move_to(window: &WebviewWindow, point: (i32, i32)) {
     let current = read_window_state();
     let along = current.custom_position.and_then(side::stored_side).map_or(0.5, |(_, along)| along);
     let placed = monitor_at(window, point).ok().flatten().and_then(|monitor| match current.attached_edge {
-        Some(Edge::Bottom) => Some(bottom_edge::placed_on(&monitor)),
+        Some(Edge::Bottom) => Some(super::taskbar::keep_flag(current.custom_position, bottom_edge::placed_on(&monitor))),
         Some(edge @ (Edge::Left | Edge::Right)) => side::placed_on(window, &monitor, edge, along, current),
         _ => None,
     });

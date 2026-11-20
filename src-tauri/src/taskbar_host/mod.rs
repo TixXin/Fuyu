@@ -6,10 +6,19 @@ use tauri::WebviewWindow;
 
 use crate::{user_error::UserError, win32::taskbar_shell};
 
+pub(crate) use dock::{current, reserve, resize_reserved, undock, DockState, DockStatus};
+pub(crate) use layout::{BarEdge, Rect};
 pub use snapshot::TaskbarLayout;
+
+pub(crate) fn supported() -> bool {
+    taskbar_shell::is_windows_11()
+}
 
 #[tauri::command]
 pub async fn get_taskbar_layout() -> Vec<TaskbarLayout> {
+    if !supported() {
+        return Vec::new();
+    }
     let auto_hide = taskbar_shell::auto_hide_enabled();
     snapshot::read()
         .iter()
@@ -24,7 +33,7 @@ pub async fn taskbar_dock(window: WebviewWindow, width: f64, order: Option<u8>) 
 
 #[tauri::command]
 pub async fn taskbar_undock(window: WebviewWindow) {
-    dock::undock(&window);
+    undock(&window);
 }
 
 macro_rules! tauri_commands {

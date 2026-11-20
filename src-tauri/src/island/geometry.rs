@@ -218,6 +218,11 @@ pub(super) fn stage_geometry_inputs_changed(
         || previous.followed_monitor != next.followed_monitor
         || previous.fit_notch != next.fit_notch
         || previous.auto_form != next.auto_form
+        || (super::taskbar::wanted(*next) && taskbar_inputs(previous) != taskbar_inputs(next))
+}
+
+fn taskbar_inputs(state: &IslandWindowState) -> (u64, u64) {
+    (state.collapsed_width.to_bits(), state.collapsed_height.to_bits())
 }
 
 pub(super) fn should_apply_stage_geometry(
@@ -301,6 +306,8 @@ fn apply_stage_position(
     }
     let side = positioned_state.custom_position.and_then(super::side::stored_side);
     let bottom = positioned_state.custom_position.filter(|position| super::bottom_edge::is_bottom(*position));
+    let stage_size = (physical_width, (stage_height * scale).round() as i32);
+    let on_taskbar = super::taskbar::stage_position(window, &monitor, positioned_state, stage_size);
     let (x, y) = match (side, bottom) {
         (Some((edge, along)), _) => {
             let mut sided = positioned_state;
@@ -313,7 +320,7 @@ fn apply_stage_position(
             super::edge::set_attached(window, Some(Edge::Bottom));
             let tuck_depth = if state.is_tucked { -tucked_top_offset } else { 0 };
             let work = screen::monitor_work_rect(&monitor);
-            (position.x, super::bottom_edge::stage_y(work, (stage_height * scale).round() as i32, tuck_depth))
+            on_taskbar.unwrap_or((position.x, super::bottom_edge::stage_y(work, stage_size.1, tuck_depth)))
         }
         _ => {
             positioned_state.custom_position = shown_custom_position(positioned_state, normal_y);
