@@ -52,7 +52,7 @@
 | **3. 日历来源** | `calendar.sources` | `ctx.calendarSources.register(spec)` | `{ id, name, host?, events({ refresh }) }`，日程与内置 ICS/CalDAV 合并去重，单源抛错隔离进 `problems` |
 | **4. AI 代理接入** | `agents.sources` | `ctx.agentSources.register(spec)` | `{ provider, sessions?, others?, focus?, usage? }`，外部 Agent 会话、窗口聚焦器与额度汇入 `agents/v1` |
 | **5. 剪贴板动作** | `clipboard.actions` | `ctx.clipboardActions.register(spec)` | `{ id, label: { zh, en }, note?, keywords?, group?, match?(item), run(context) }`，出现在剪贴板弹窗 `Ctrl+K` 面板与岛内剪贴板行菜单 |
-| **6. 截图后动作** | `screenshot.actions` | `ctx.screenshotActions.register(spec)` | `{ id, label: { "zh-CN", en }, icon?, order?, keeps?, run({ path, saved, thumbnail, source, locale }) }`，出现在截图完成通知卡与截图历史面板；`source` 是截图开始时前台的 `{ app, title, url }` 或 `null`；`keeps: true` 时交给 `run` 的是复制进 `screenshots/kept/` 的那份（不被历史清理），适合要长期引用图片的动作 |
+| **6. 截图后动作** | `screenshot.actions` | `ctx.screenshotActions.register(spec)` | `{ id, label: { "zh-CN", en }, icon?, order?, keeps?, run({ path, saved, thumbnail, source, locale }) }`，出现在截图完成通知卡与截图历史面板；`source` 是截图开始时前台的 `{ app, title, url }` 或 `null`；`keeps: true` 时交给 `run` 的是复制进 `screenshots/kept/` 的那份（不被历史清理），适合要长期引用图片的动作；例子见官方插件「截图图床」（`plugins/v3/official/image-host/src/host.ts`） |
 | **7. 消息来源** | `messages.sources` | `ctx.messageSources.register(spec)` | `{ id, label, order?, status?, clear?, open? }`，可新增消息来源标签或按同名 `id`（如 `qqMail`）替换单个内置来源 |
 
 ---
@@ -155,6 +155,7 @@ export function apply(ctx) {
 - 值别写进日志、别放进 `ctx.http` 的错误信息里、别交给窗口。浮屿自己不会把值记进日志。
 - 用户在插件市场卸载插件并勾了「同时删除数据」时，它的密钥一起删；没勾时留着，重新装上还能用。卸载浮屿时全部删掉。
 - 这是减损不是沙箱：宿主插件和浮屿同权，技术上能读到同一用户的凭据（见 [v3-secrets.md](../architecture/plugins/v3-secrets.md)「这条规则管什么、不管什么」）。它防的是密钥落在明文文件里、跟着同步和备份走。
+- 完整的例子是官方插件「截图图床」（[`plugins/v3/official/image-host/`](../../plugins/v3/official/image-host/)）：设置分节里的两个密码框离开时经 `ctx.clients.handle` 交给宿主部分存，界面只显示「已保存」；上传时宿主部分 `get` 出来拼 S3 签名，用完就丢。
 
 ---
 

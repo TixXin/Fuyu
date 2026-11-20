@@ -1,4 +1,5 @@
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire, syncBuiltinESMExports } from "node:module";
 import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -20,6 +21,7 @@ const SHOTS = [
   { plugin: "todo-digest", file: "preview.png", page: "shot-todo-digest-settings.html", query: { view: "preview" }, width: 800, height: 900 },
   { plugin: "todo-digest", file: "settings.png", page: "shot-todo-digest-settings.html", query: { view: "dialog" }, width: 800, height: 900 },
   { plugin: "todo-digest", file: "notice.png", page: "shot-todo-digest-notice.html", query: {}, width: 900, height: 360 },
+  { plugin: "image-host", file: "settings.png", page: "shot-image-host-settings.html", query: {}, width: 800, height: 1000 },
 ];
 
 const TODOS = [
@@ -128,6 +130,62 @@ async function todoDigestData() {
   }
 }
 
+const IMAGE_HOST_CONFIG = {
+  endpoint: "https://8c2f61d0e5b94a7f.r2.cloudflarestorage.com",
+  region: "auto",
+  bucket: "shots",
+  prefix: "fuyu/",
+  publicBase: "https://pub-3f9c2a71.r2.dev",
+  copyAs: "url",
+};
+
+async function imageHostData() {
+  Object.defineProperty(globalThis.navigator, "language", { configurable: true, get: () => "zh-CN" });
+  const dataDir = mkdtempSync(path.join(tmpdir(), "fuyu-shot-image-host-"));
+  const crypto = createRequire(import.meta.url)("node:crypto");
+  const randomBytes = crypto.randomBytes;
+  crypto.randomBytes = () => Buffer.from([0xa1, 0xb2, 0xc3]);
+  syncBuiltinESMExports();
+  try {
+    return await withClock(WRITTEN_AT, async () => {
+      const host = await load("plugins/v3/official/image-host/src/host.ts");
+      const { testPicture } = await load("plugins/v3/official/image-host/src/upload.ts");
+      const vault = new Map();
+      const names = () => ({ names: [...vault.keys()].sort() });
+      const secrets = {
+        list: async () => names(),
+        get: async ({ name }) => ({ value: vault.get(name) ?? null }),
+        set: async ({ name, value }) => (vault.set(name, value), names()),
+        remove: async ({ name }) => (vault.delete(name), names()),
+      };
+      const copied = [];
+      const clipboard = { copyText: async ({ text }) => (copied.push(text), { ok: true }) };
+      const sent = [];
+      const handlers = new Map();
+      let action = null;
+      host.apply({
+        dataDir,
+        services: { get: (definition) => (definition.name === "secrets/v1" ? secrets : clipboard) },
+        clients: { handle: (method, handler) => handlers.set(method, handler), publish: () => {} },
+        http: { fetch: async (url, init) => (sent.push({ url, method: init.method }), { ok: true, status: 200, text: async () => "" }) },
+        screenshotActions: { register: (spec) => ((action = spec), () => {}) },
+        settings: { setup: () => {}, open: () => {} },
+      });
+      await handlers.get("setConfig")(IMAGE_HOST_CONFIG);
+      await handlers.get("saveKeys")({ accessKeyId: "sample-access-key", secretAccessKey: "sample-secret-key" });
+      const picture = path.join(dataDir, "Fuyu.png");
+      writeFileSync(picture, testPicture());
+      const result = await action.run({ path: picture, saved: false, thumbnail: null, text: null, source: null, locale: "zh-CN" });
+      if (sent.length !== 1 || copied.length !== 1) throw new Error(`the image-host action sent ${sent.length} uploads and copied ${copied.length} links, expected 1 each`);
+      return { state: await handlers.get("state")(), message: result.message, copied: copied[0] };
+    });
+  } finally {
+    crypto.randomBytes = randomBytes;
+    syncBuiltinESMExports();
+    rmSync(dataDir, { recursive: true, force: true });
+  }
+}
+
 function parseArgs(argv) {
   const filters = [];
   let out = null;
@@ -160,6 +218,7 @@ async function main() {
     now: SHOT_AT,
     ecdict: await ecdictData(SHOTS.filter((shot) => shot.plugin === "ecdict").map((shot) => shot.query.word)),
     todoDigest: await todoDigestData(),
+    imageHost: await imageHostData(),
   };
   const dataPath = path.join(pagesDir, DATA_FILE);
   if (existsSync(dataPath)) throw new Error(`${dataPath} already exists; remove it first`);
