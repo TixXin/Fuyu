@@ -1,11 +1,18 @@
 import { useEffect } from "react";
 import { pageCycleDirection, pageDigitFromEvent } from "../../lib/settings/pageShortcuts";
+import { isPrimaryKey } from "../../lib/shortcut/shortcut";
+import { isMacOS } from "../../lib/platform";
 import { cycleShortcutPage, pageForAltDigit, type IslandFeatures } from "./features";
 import type { IslandMode, IslandPage } from "./types";
 import { isPanelEditing, stopPanelEditing } from "./custom-panels/panelEditing";
 
+export function isOpenSettingsShortcut(event: Pick<KeyboardEvent, "altKey" | "ctrlKey" | "key" | "metaKey" | "shiftKey">, mac = isMacOS) {
+  return event.key === "," && !event.altKey && !event.shiftKey && isPrimaryKey(event, mac);
+}
+
 export function useIslandKeyboard(
   onCollapse: () => void,
+  onOpenSettings: () => void,
   mode: IslandMode,
   features: IslandFeatures,
   page: IslandPage,
@@ -34,6 +41,12 @@ export function useIslandKeyboard(
         return;
       }
 
+      if (mode === "expanded" && isOpenSettingsShortcut(event)) {
+        event.preventDefault();
+        onOpenSettings();
+        return;
+      }
+
       if (event.key === "Escape") {
         if (isPanelEditing()) stopPanelEditing();
         else onCollapse();
@@ -46,6 +59,7 @@ export function useIslandKeyboard(
     features,
     mode,
     onCollapse,
+    onOpenSettings,
     onPageChange,
     page,
     pageDigitModifiers,

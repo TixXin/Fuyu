@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { IslandPages } from "./IslandPages";
 import { useTranslation } from "../../i18n";
 import { openSettingsWindow } from "../settings/api";
@@ -203,8 +203,14 @@ export function IslandApp() {
     openEnabledPage,
   });
 
+  const openSettingsFromPanel = useCallback((section?: "updates") => {
+    openSettingsWindow(section);
+    collapseIsland();
+  }, [collapseIsland]);
+
   useIslandKeyboard(
     collapseIsland,
+    openSettingsFromPanel,
     mode,
     features,
     page,
@@ -249,10 +255,7 @@ export function IslandApp() {
         minimizesToTray={settings.minimizeAction === "tray"}
         onMinimize={settings.minimizeAction === "tray" ? minimizeIsland : minimizeToEdge}
         onOpenTranslator={features.translation ? openTranslator : null}
-        onOpenSettings={(section) => {
-          openSettingsWindow(section);
-          collapseIsland();
-        }}
+        onOpenSettings={openSettingsFromPanel}
         onTuck={tuckIsland}
         onReveal={hoverTucked}
         onPageChange={setPage}
