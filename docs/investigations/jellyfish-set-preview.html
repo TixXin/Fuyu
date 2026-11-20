@@ -286,7 +286,7 @@
 </head>
 <body class="motion" data-bg="light">
 <h1>水母全套动效</h1>
-<p class="note">照 GPT 生成的那一套画成 SVG，每个都是真动画，不要光环。这一版按上次列的问题改过：<b>运行中不再皱眉</b>、<b>按下改回闭眼不压扁</b>、<b>只有「在跑」和「等你」一直循环</b>、<b>时长对齐到 120 / 160 / 240 / 420ms 四档</b>、补了<b>可能中断</b>和<b>压缩上下文</b>两个状态、加了能切换状态的互动台、图标里的水母换成米白并留了新旧对比。</p>
+<p class="note">照 GPT 生成的那一套画成 SVG，每个都是真动画，不要光环。这一版按上次列的问题改过：<b>运行中不再皱眉</b>、<b>按下改回闭眼不压扁</b>、<b>只有「在跑」和「等你」一直循环</b>、<b>时长对齐到 120 / 160 / 240 / 420ms 四档</b>、补了<b>可能中断</b>和<b>压缩上下文</b>两个状态、加了能切换状态的互动台、图标试过把水母换成米白，最后选定蓝色那版。</p>
 <details><summary>参考图（GPT 生成）</summary><img src="assets/jellyfish-set-reference.webp" alt="水母全套参考图" /></details>
 
 <div class="controls">
@@ -340,16 +340,19 @@
 </details>
 
 <h2>6. 应用图标</h2>
-<p class="note">背景还是深海那套炫彩。水母从蓝色换成岛上空闲时的<b>米白</b>：一是不再像同类产品的蓝色圆团，二是图标里那只和岛上那只是同一个颜色，三是蓝色留给「运行中」。32 像素及以下的简化版把四瓣触手并成三瓣大的，波浪边更明显；腮红留着并放大，不然米白底上两只黑眼睛在 16 像素下像骷髅。</p>
+<p class="note"><b>选定：深海背景配蓝色水母。</b>试过把水母换成岛上空闲时的米白（收在下面），没有采用。选蓝色要知道两件事：图标里的蓝和岛上「运行中」的蓝是同一个色系，岛上空闲时是米白，两处的水母颜色不一样；深色炫彩底上的蓝色圆团和 MagIsland 的图标接近，定稿重画时靠触手的波浪边、腮红和黑眼睛拉开。</p>
 <div class="group" id="ctl-icon" style="margin-bottom:12px"><span>背景配色</span></div>
 <div class="cmp">
-  <div><b>新版<span>米白水母，小尺寸三瓣触手</span></b><div class="icons" id="icons-new"></div></div>
-  <div><b>上一版<span>蓝色水母，小尺寸仍是四瓣</span></b><div class="icons" id="icons-old"></div></div>
+  <div><b>选定<span>蓝色水母</span></b><div class="icons" id="icons-old"></div></div>
 </div>
+<details style="margin-top:12px">
+  <summary>没采用的：米白水母，小尺寸三瓣触手、保留腮红</summary>
+  <div class="cmp" style="margin-top:10px"><div><div class="icons" id="icons-new"></div></div></div>
+</details>
 <p class="note" style="margin-top:14px">「真实像素」是把图标按 16、32 像素真的画出来再放大 6 倍，能看到 Windows 任务栏 100% 缩放下每个像素的样子。</p>
 <p class="note" style="margin-top:18px">放在桌面壁纸上：</p>
 <div class="dock" id="dock"></div>
-<p class="note" style="margin-top:18px">Mac 菜单栏的单色模板图（18 像素高），同样换成三瓣：</p>
+<p class="note" style="margin-top:18px">Mac 菜单栏的单色模板图（18 像素高），形状和选定的图标一致：</p>
 <div class="icons" id="menus"></div>
 
 <h2>7. 落地前还要做的</h2>
@@ -359,7 +362,7 @@
   <li><b>重画矢量定稿</b>：这页的 SVG 是照着 GPT 的图近似画的，定稿要认真画一遍，再导出 <code>src-tauri/icons/</code> 的全部尺寸、Mac 菜单栏模板图和 README 里的图。</li>
   <li><b>状态灯的设置项</b>：在「悬岛 / 圆点」之外加「水母」并设为新默认，还是直接替换；老用户已选的保持原样。</li>
   <li><b>issue #281 的署名</b>：造型已经离 ShengLin1001 的原稿很远，想好怎么回复和署名。</li>
-  <li><b>撞脸检查</b>：换成米白后和同类产品拉开了，定稿前仍建议把图标和 MagIsland、Phantom 钱包的图标放在一起再看一次。</li>
+  <li><b>撞脸检查</b>：选定的蓝色水母在深色炫彩底上和 MagIsland 的图标接近，定稿前把两个图标按 16、32、128 像素并排放一次，确认触手、腮红和眼睛足够把它们分开；Phantom 钱包的图标也一起看。</li>
 </ul>
 
 <script>
@@ -538,7 +541,7 @@ function iconSvg(size, { key = "ocean", simple = false, old = false } = {}) {
 
 function monoSvg(color) {
   const n = ++uid;
-  return `<svg viewBox="0 0 64 48"><defs><mask id="m${n}"><rect x="0" y="0" width="64" height="48" fill="#fff"/><ellipse cx="24" cy="25" rx="3.4" ry="4.8" fill="#000"/><ellipse cx="40" cy="25" rx="3.4" ry="4.8" fill="#000"/></mask></defs><g fill="${color}" mask="url(#m${n})">${LOBES3.map((x) => `<circle cx="${x}" cy="38.6" r="8.2"/>`).join("")}<path d="${DOME}"/></g></svg>`;
+  return `<svg viewBox="0 0 64 48"><defs><mask id="m${n}"><rect x="0" y="0" width="64" height="48" fill="#fff"/><ellipse cx="24" cy="25" rx="3.4" ry="4.8" fill="#000"/><ellipse cx="40" cy="25" rx="3.4" ry="4.8" fill="#000"/></mask></defs><g fill="${color}" mask="url(#m${n})">${LOBES.map((x) => `<circle cx="${x}" cy="39" r="${LR}"/>`).join("")}<path d="${DOME}"/></g></svg>`;
 }
 
 function pixelCanvas(host, svg, px) {
@@ -563,7 +566,7 @@ function renderIcons() {
     host.innerHTML = fig(iconSvg(128, { key, old }), "128") + fig(iconSvg(48, { key, old }), "48") + fig(iconSvg(32, { key, old, simple: true }), "32") + fig(iconSvg(16, { key, old, simple: true }), "16") + fig("", "32 真实像素 ×6", ' data-px="32"') + fig("", "16 真实像素 ×6", ' data-px="16"');
     for (const el of host.querySelectorAll("[data-px]")) pixelCanvas(el, iconSvg(Number(el.dataset.px), { key, old, simple: true }), Number(el.dataset.px));
   }
-  document.getElementById("dock").innerHTML = `<figure>${iconSvg(72, { key })}<span>新版</span></figure><figure>${iconSvg(72, { key, old: true })}<span>上一版</span></figure><figure>${iconSvg(36, { key })}<span>新版 · 小</span></figure><figure>${iconSvg(36, { key, old: true })}<span>上一版 · 小</span></figure>`;
+  document.getElementById("dock").innerHTML = `<figure>${iconSvg(72, { key, old: true })}<span>选定</span></figure><figure>${iconSvg(36, { key, old: true })}<span>选定 · 小</span></figure><figure>${iconSvg(72, { key })}<span>没采用</span></figure><figure>${iconSvg(36, { key })}<span>没采用 · 小</span></figure>`;
 }
 
 function ringSvg() {
