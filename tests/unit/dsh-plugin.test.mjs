@@ -259,3 +259,47 @@ test("external JS plugins stay silent and never recreate a deleted FUYU_DIR", as
     await rm(scratchDir, { recursive: true, force: true });
   }
 });
+
+test("fuyu-dsh-plugin skips a refusing or dead release endpoint and asks the development build's lane file", async () => {
+  const fuyuDir = await mkdtemp(join(tmpdir(), "fuyu-dsh-plugin-lane-"));
+  const hits = { release: 0, lane: 0 };
+  const listen = (name, status, body) =>
+    new Promise((resolve) => {
+      const server = createServer((req, res) => {
+        hits[name] += 1;
+        req.resume();
+        req.on("end", () => {
+          res.writeHead(status, { "Content-Type": "application/json" });
+          res.end(body);
+        });
+      });
+      server.listen(0, "127.0.0.1", () => resolve(server));
+    });
+  const release = await listen("release", 401, JSON.stringify({ outcome: "rejected" }));
+  const lane = await listen("lane", 200, JSON.stringify({ outcome: "allowed-once" }));
+  await writeFile(join(fuyuDir, "agent-approval.json"), JSON.stringify({ port: release.address().port, token: "release" }), "utf8");
+  await writeFile(join(fuyuDir, "agent-approval.lane-1.json"), JSON.stringify({ port: lane.address().port, token: "lane", pid: 1 }), "utf8");
+
+  try {
+    const plugin = await loadGeneratedPlugin(fuyuDir);
+    const harness = createMockCordisContext();
+    plugin.apply(harness.ctx);
+    const session = { id: "session-lane", header: { id: "session-lane", cwd: "/work" } };
+    const ask = () => harness.approvalHandler({ agent: { session }, toolName: "shell", reason: "ls" }, async () => "handed-back");
+
+    assert.equal(await ask(), "allowed-once", "a 401 from the release is not its rejection");
+    assert.deepEqual(hits, { release: 1, lane: 1 });
+
+    await new Promise((resolve) => release.close(resolve));
+    assert.equal(await ask(), "allowed-once", "with the release closed the lane answers");
+    assert.equal(hits.lane, 2);
+
+    await new Promise((resolve) => lane.close(resolve));
+    assert.equal(await ask(), "handed-back", "with no island the agent keeps its own prompt");
+    harness.dispose();
+  } finally {
+    release.close();
+    lane.close();
+    await rm(fuyuDir, { recursive: true, force: true });
+  }
+});

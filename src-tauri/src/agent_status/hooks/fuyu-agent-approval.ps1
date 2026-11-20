@@ -30,16 +30,16 @@ function Write-CursorAsk {
   $output.Write($payload, 0, $payload.Length)
   $output.Flush()
 }
-try {
-    $utf8 = New-Object System.Text.UTF8Encoding($false)
-    $body = (New-Object System.IO.StreamReader([Console]::OpenStandardInput(), $utf8)).ReadToEnd()
-    $config = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $PSScriptRoot 'agent-approval.json') | ConvertFrom-Json
+function Send-Approval($config, $body, $utf8) {
     $port = [int]$config.port
-
     $probe = New-Object System.Net.Sockets.TcpClient
-    $connected = $probe.ConnectAsync('127.0.0.1', $port).Wait(300)
+    try {
+        $connected = $probe.ConnectAsync('127.0.0.1', $port).Wait(300)
+    } catch {
+        $connected = $false
+    }
     $probe.Close()
-    if (-not $connected) { Write-CursorAsk; exit 0 }
+    if (-not $connected) { return $null }
 
     [System.Net.ServicePointManager]::Expect100Continue = $false
     $request = [System.Net.HttpWebRequest]::Create("http://127.0.0.1:$port/$route")
@@ -55,17 +55,40 @@ try {
     $stream.Write($bytes, 0, $bytes.Length)
     $stream.Close()
 
-    $response = $request.GetResponse()
+    try {
+        $response = $request.GetResponse()
+    } catch [System.Net.WebException] {
+        if ($_.Exception.Status -eq [System.Net.WebExceptionStatus]::ProtocolError) { return $null }
+        throw
+    }
     $answer = (New-Object System.IO.StreamReader($response.GetResponseStream(), $utf8)).ReadToEnd().Trim()
     $response.Close()
-    if ($answer -and $answer -ne '{}') {
-        $out = [Console]::OpenStandardOutput()
-        $data = $utf8.GetBytes($answer)
-        $out.Write($data, 0, $data.Length)
-        $out.Flush()
-    } else {
-        Write-CursorAsk
+    return [string]$answer
+}
+try {
+    $utf8 = New-Object System.Text.UTF8Encoding($false)
+    $body = (New-Object System.IO.StreamReader([Console]::OpenStandardInput(), $utf8)).ReadToEnd()
+    $files = @(Join-Path $PSScriptRoot 'agent-approval.json') + @(Get-ChildItem -LiteralPath $PSScriptRoot -Filter 'agent-approval.lane-*.json' -File -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName })
+    foreach ($file in $files) {
+        if (-not (Test-Path -LiteralPath $file)) { continue }
+        try {
+            $config = Get-Content -Raw -Encoding UTF8 -LiteralPath $file | ConvertFrom-Json
+        } catch {
+            continue
+        }
+        if (-not $config.port -or -not $config.token) { continue }
+        $answer = Send-Approval $config $body $utf8
+        if ($null -eq $answer) { continue }
+        if ($answer -and $answer -ne '{}') {
+            $out = [Console]::OpenStandardOutput()
+            $data = $utf8.GetBytes($answer)
+            $out.Write($data, 0, $data.Length)
+            $out.Flush()
+            exit 0
+        }
+        break
     }
+    Write-CursorAsk
 } catch {
     Write-CursorAsk
 }
