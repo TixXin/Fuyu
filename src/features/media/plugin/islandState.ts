@@ -10,6 +10,7 @@ export type MediaIsland = {
   lyrics?: PlayingLyrics;
   lyricLine: CurrentLyric | null;
   sideCover: boolean;
+  sideLyric: boolean;
 };
 
 export const mediaIsland = createRunnerStore<MediaIsland | null>(null);

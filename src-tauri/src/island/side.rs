@@ -226,6 +226,14 @@ mod tests {
     }
 
     #[test]
+    fn a_tall_side_column_grows_the_stage() {
+        let mut state = IslandWindowState { attached_edge: Some(Edge::Left), side_column_height: 700.0, collapsed_scale: 1.0, ..Default::default() };
+        assert_eq!(super::super::geometry::stage_height_for(state), 724.0);
+        state.attached_edge = None;
+        assert!(super::super::geometry::stage_height_for(state) < 724.0);
+    }
+
+    #[test]
     fn only_left_and_right_are_stored_sides() {
         let mut position = IslandPosition::at(0, 300);
         assert_eq!(stored_side(position), None);

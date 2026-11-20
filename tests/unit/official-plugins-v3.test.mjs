@@ -22,6 +22,7 @@ const OFFICIAL_PLUGINS = [
   "github-issues",
   "system-monitor",
   "launcher",
+  "calculator",
 ];
 
 const scratch = mkdtempSync(join(tmpdir(), "fuyu-official-plugins-v3-"));
