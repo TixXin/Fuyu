@@ -4,6 +4,7 @@ use crate::user_error::UserError;
 
 pub(crate) const MIRROR_PREFIXES: [&str; 2] = ["https://ghfast.top/", "https://gh-proxy.com/"];
 pub(crate) const DIRECT: &str = "GitHub";
+pub(crate) const SITE: &str = "fuyu.tix.xin";
 const GITHUB_HOSTS: [&str; 5] = [
     "github.com",
     "raw.githubusercontent.com",
@@ -85,12 +86,15 @@ impl Exhausted {
     }
 }
 
-fn is_github(url: &str) -> bool {
+fn https_host(url: &str) -> Option<String> {
     reqwest::Url::parse(url)
         .ok()
         .filter(|parsed| parsed.scheme() == "https")
         .and_then(|parsed| parsed.host_str().map(str::to_ascii_lowercase))
-        .is_some_and(|host| GITHUB_HOSTS.contains(&host.as_str()))
+}
+
+fn is_github(url: &str) -> bool {
+    https_host(url).is_some_and(|host| GITHUB_HOSTS.contains(&host.as_str()))
 }
 
 fn mirror_name(prefix: &str) -> &str {
@@ -98,7 +102,8 @@ fn mirror_name(prefix: &str) -> &str {
 }
 
 pub(crate) fn sources(url: &str) -> Vec<Source> {
-    let mut list = vec![Source { name: DIRECT, url: url.to_string() }];
+    let name = if https_host(url).as_deref() == Some(SITE) { SITE } else { DIRECT };
+    let mut list = vec![Source { name, url: url.to_string() }];
     if is_github(url) {
         list.extend(MIRROR_PREFIXES.iter().map(|prefix| Source { name: mirror_name(prefix), url: format!("{prefix}{url}") }));
     }
@@ -182,9 +187,15 @@ mod tests {
             .iter()
             .filter_map(|value| value.as_str().map(str::to_string))
             .collect();
-        let direct = &endpoints[0];
-        let expected: Vec<String> = sources(direct).into_iter().map(|source| source.url).collect();
-        assert_eq!(endpoints, expected);
+        let github: Vec<String> = endpoints.iter().filter(|url| !url.starts_with("https://fuyu.tix.xin/")).cloned().collect();
+        let expected: Vec<String> = sources(&github[0]).into_iter().map(|source| source.url).collect();
+        assert_eq!(github, expected);
+    }
+
+    #[test]
+    fn site_downloads_stay_direct() {
+        let url = "https://fuyu.tix.xin/files/2820eb98473c6456/Fuyu_0.3.11_x64-setup.exe";
+        assert_eq!(sources(url), vec![Source { name: SITE, url: url.to_string() }]);
     }
 
     #[test]

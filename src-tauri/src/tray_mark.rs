@@ -1,33 +1,87 @@
 use tauri::image::Image;
 
-pub(crate) const WIDTH: u32 = 48;
+pub(crate) const WIDTH: u32 = 52;
 pub(crate) const HEIGHT: u32 = 36;
-const PIXELS_PER_UNIT: f64 = 24.0 / 22.0;
+const VIEW_X: f64 = 3.0;
+const VIEW_Y: f64 = 6.0;
+const VIEW_WIDTH: f64 = 58.0;
+const VIEW_HEIGHT: f64 = 40.5;
 const SAMPLES: u32 = 4;
+const CURVE_STEPS: u32 = 24;
+const LOBES: [f64; 4] = [18.0, 27.3, 36.7, 46.0];
+const LOBE_Y: f64 = 39.0;
+const LOBE_RADIUS: f64 = 6.6;
+const EYES: [f64; 2] = [24.0, 40.0];
+const EYE_Y: f64 = 24.6;
+const EYE_RX: f64 = 3.6;
+const EYE_RY: f64 = 5.0;
 
-fn segment_distance((x, y): (f64, f64), (ax, ay): (f64, f64), (bx, by): (f64, f64)) -> f64 {
-    let (dx, dy) = (bx - ax, by - ay);
-    let length = dx * dx + dy * dy;
-    let t = if length == 0.0 { 0.0 } else { (((x - ax) * dx + (y - ay) * dy) / length).clamp(0.0, 1.0) };
-    (x - (ax + t * dx)).hypot(y - (ay + t * dy))
+type Point = (f64, f64);
+
+fn cubic(points: &mut Vec<Point>, p0: Point, p1: Point, p2: Point, p3: Point) {
+    for step in 1..=CURVE_STEPS {
+        let t = f64::from(step) / f64::from(CURVE_STEPS);
+        let u = 1.0 - t;
+        let (a, b, c, d) = (u * u * u, 3.0 * u * u * t, 3.0 * u * t * t, t * t * t);
+        points.push((
+            a * p0.0 + b * p1.0 + c * p2.0 + d * p3.0,
+            a * p0.1 + b * p1.1 + c * p2.1 + d * p3.1,
+        ));
+    }
 }
 
-fn inside(point: (f64, f64)) -> bool {
-    segment_distance(point, (22.0, 32.0), (42.0, 32.0)) <= 11.0
-        && segment_distance(point, (22.0, 32.0), (22.0, 32.0)) > 4.0
-        && segment_distance(point, (33.0, 32.0), (43.0, 32.0)) > 2.0
+fn bell() -> Vec<Point> {
+    let mut points = vec![(5.0, 30.5)];
+    cubic(&mut points, (5.0, 30.5), (5.0, 16.0), (17.0, 7.0), (32.0, 7.0));
+    cubic(&mut points, (32.0, 7.0), (47.0, 7.0), (59.0, 16.0), (59.0, 30.5));
+    cubic(&mut points, (59.0, 30.5), (59.0, 33.5), (56.6, 36.0), (53.6, 36.0));
+    points.push((10.4, 36.0));
+    cubic(&mut points, (10.4, 36.0), (7.4, 36.0), (5.0, 33.5), (5.0, 30.5));
+    points
 }
 
-fn to_units(pixel: u32, sample: u32, size: u32) -> f64 {
-    let offset = f64::from(pixel) + (f64::from(sample) + 0.5) / f64::from(SAMPLES) - f64::from(size) / 2.0;
-    32.0 + offset / PIXELS_PER_UNIT
+fn in_polygon((x, y): Point, polygon: &[Point]) -> bool {
+    let Some(&last) = polygon.last() else {
+        return false;
+    };
+    let mut inside = false;
+    let mut previous = last;
+    for &(px, py) in polygon {
+        let (qx, qy) = previous;
+        if (py > y) != (qy > y) && x < (qx - px) * (y - py) / (qy - py) + px {
+            inside = !inside;
+        }
+        previous = (px, py);
+    }
+    inside
 }
 
-pub(crate) fn alpha(px: u32, py: u32) -> u8 {
+fn inside(point: Point, bell: &[Point]) -> bool {
+    let (x, y) = point;
+    let body = in_polygon(point, bell) || LOBES.iter().any(|&cx| (x - cx).hypot(y - LOBE_Y) <= LOBE_RADIUS);
+    let eye = EYES.iter().any(|&cx| ((x - cx) / EYE_RX).powi(2) + ((y - EYE_Y) / EYE_RY).powi(2) <= 1.0);
+    body && !eye
+}
+
+fn scale() -> f64 {
+    f64::from(HEIGHT) / VIEW_HEIGHT
+}
+
+fn x_offset() -> f64 {
+    (f64::from(WIDTH) - VIEW_WIDTH * scale()) / 2.0
+}
+
+fn sample_to_units(pixel: u32, sample: u32) -> f64 {
+    f64::from(pixel) + (f64::from(sample) + 0.5) / f64::from(SAMPLES)
+}
+
+pub(crate) fn alpha(bell: &[Point], px: u32, py: u32) -> u8 {
     let mut covered = 0;
     for sy in 0..SAMPLES {
         for sx in 0..SAMPLES {
-            if inside((to_units(px, sx, WIDTH), to_units(py, sy, HEIGHT))) {
+            let x = VIEW_X + (sample_to_units(px, sx) - x_offset()) / scale();
+            let y = VIEW_Y + sample_to_units(py, sy) / scale();
+            if inside((x, y), bell) {
                 covered += 1;
             }
         }
@@ -36,10 +90,11 @@ pub(crate) fn alpha(px: u32, py: u32) -> u8 {
 }
 
 pub(crate) fn image() -> Image<'static> {
+    let bell = bell();
     let mut rgba = Vec::with_capacity((WIDTH * HEIGHT * 4) as usize);
     for py in 0..HEIGHT {
         for px in 0..WIDTH {
-            rgba.extend_from_slice(&[0, 0, 0, alpha(px, py)]);
+            rgba.extend_from_slice(&[0, 0, 0, alpha(&bell, px, py)]);
         }
     }
     Image::new_owned(rgba, WIDTH, HEIGHT)
@@ -47,16 +102,26 @@ pub(crate) fn image() -> Image<'static> {
 
 #[cfg(test)]
 mod tests {
-    use super::{alpha, image, HEIGHT, WIDTH};
+    use super::{alpha, bell, image, scale, x_offset, HEIGHT, VIEW_X, VIEW_Y, WIDTH};
+
+    fn at(x: f64, y: f64) -> u8 {
+        let px = ((x - VIEW_X) * scale() + x_offset()).floor() as u32;
+        let py = ((y - VIEW_Y) * scale()).floor() as u32;
+        alpha(&bell(), px, py)
+    }
 
     #[test]
-    fn the_mark_is_a_solid_capsule_with_the_dot_and_dash_cut_out() {
-        assert_eq!(alpha(0, 0), 0, "corners stay clear");
-        assert_eq!(alpha(WIDTH - 1, HEIGHT / 2), 0, "the capsule stops short of the edge");
-        assert_eq!(alpha(10, 12), 255, "the capsule body is solid");
-        assert_eq!(alpha(12, HEIGHT / 2), 0, "the dot is a hole");
-        assert_eq!(alpha(30, HEIGHT / 2), 0, "the dash is a hole");
-        assert_eq!(alpha(38, 12), 255, "past the dash it is solid again");
+    fn the_mark_is_a_solid_jellyfish_with_the_eyes_cut_out() {
+        let bell = bell();
+        assert_eq!(alpha(&bell, 0, 0), 0, "corners stay clear");
+        assert_eq!(alpha(&bell, WIDTH - 1, 0), 0, "corners stay clear");
+        assert_eq!(at(32.0, 12.0), 255, "the top of the bell is solid");
+        assert_eq!(at(10.0, 31.0), 255, "the rim of the bell is solid");
+        assert_eq!(at(24.0, 24.6), 0, "the left eye is a hole");
+        assert_eq!(at(40.0, 24.6), 0, "the right eye is a hole");
+        assert_eq!(at(32.0, 26.0), 255, "between the eyes it is solid");
+        assert_eq!(at(18.0, 44.0), 255, "a lobe reaches below the bell");
+        assert_eq!(at(22.65, 45.6), 0, "the lobes leave notches between them");
         let mark = image();
         assert_eq!((mark.width(), mark.height()), (WIDTH, HEIGHT));
         assert!(mark.rgba().chunks(4).all(|pixel| pixel[..3] == [0, 0, 0]), "a template image is black, macOS tints it");

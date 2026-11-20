@@ -10,6 +10,8 @@ use tauri_plugin_updater::{Update, UpdaterExt};
 
 const STABLE_MANIFEST: &str = "releases/latest/download/latest.json";
 const BETA_MANIFEST: &str = "releases/download/beta-channel/latest.json";
+const SITE_STABLE_MANIFEST: &str = "/api/update/stable/latest.json";
+const SITE_BETA_MANIFEST: &str = "/api/update/beta/latest.json";
 const CHECK_TIMEOUT: Duration = Duration::from_secs(20);
 const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(600);
 const PROGRESS_EVERY: Duration = Duration::from_millis(100);
@@ -42,10 +44,11 @@ pub(crate) fn channel_endpoints(configured: &[Url], channel: &str) -> Result<Vec
                 .iter()
                 .map(|endpoint| {
                     let url = endpoint.as_str();
-                    let base = url
-                        .strip_suffix(STABLE_MANIFEST)
+                    let beta = [(STABLE_MANIFEST, BETA_MANIFEST), (SITE_STABLE_MANIFEST, SITE_BETA_MANIFEST)]
+                        .iter()
+                        .find_map(|(stable, beta)| url.strip_suffix(stable).map(|base| format!("{base}{beta}")))
                         .ok_or_else(|| format!("Cannot derive the beta channel from {url}"))?;
-                    Url::parse(&format!("{base}{BETA_MANIFEST}")).map_err(|error| error.to_string())
+                    Url::parse(&beta).map_err(|error| error.to_string())
                 })
                 .collect::<Result<Vec<_>, _>>()?;
             endpoints.extend_from_slice(configured);
@@ -298,6 +301,21 @@ mod tests {
     }
 
     #[test]
+    fn beta_derives_the_site_beta_manifest_before_the_github_ones() {
+        let configured = urls(&[
+            "https://fuyu.tix.xin/api/update/stable/latest.json",
+            "https://github.com/o/r/releases/latest/download/latest.json",
+        ]);
+        let beta = urls(&[
+            "https://fuyu.tix.xin/api/update/beta/latest.json",
+            "https://github.com/o/r/releases/download/beta-channel/latest.json",
+            "https://fuyu.tix.xin/api/update/stable/latest.json",
+            "https://github.com/o/r/releases/latest/download/latest.json",
+        ]);
+        assert_eq!(channel_endpoints(&configured, "beta"), Ok(beta));
+    }
+
+    #[test]
     fn unknown_channels_and_unrecognized_endpoints_are_refused() {
         let configured = urls(&["https://example.com/update.json"]);
         assert!(channel_endpoints(&configured, "beta").is_err());
@@ -313,5 +331,7 @@ mod tests {
                 .expect("plugins.updater must deserialize");
         let beta = channel_endpoints(&updater.endpoints, "beta").expect("beta endpoints");
         assert_eq!(beta.len(), 2 * updater.endpoints.len());
+        assert_eq!(beta[0].as_str(), "https://fuyu.tix.xin/api/update/beta/latest.json");
+        assert_eq!(updater.endpoints[0].as_str(), "https://fuyu.tix.xin/api/update/stable/latest.json");
     }
 }

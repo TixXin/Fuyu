@@ -45,6 +45,7 @@ export type SettingsExpandText = {
   motion: string;
   motionHint: string;
   motionSpring: string;
+  motionSnappy: string;
   motionSmooth: string;
   motionFast: string;
   motionBouncy: string;
@@ -106,8 +107,9 @@ export const zhCN: SettingsExpandText = {
   tuckHintBreathe: "提示呼吸",
   tuckHintBreatheHint: "提示慢慢明暗变化；系统开了减少动画时一直常亮",
   motion: "开合动画",
-  motionHint: "弹性同官网；Q 弹冲出去再轻轻回一下，高度也会弹；平滑和快速收起更快、不回弹",
+  motionHint: "弹性同官网；利落很快冲到位、略回一下；Q 弹冲出去再轻轻回一下，高度也会弹；平滑和快速收起更快、不回弹",
   motionSpring: "弹性（同官网）",
+  motionSnappy: "利落",
   motionSmooth: "平滑",
   motionFast: "快速",
   motionBouncy: "Q 弹",
@@ -169,8 +171,9 @@ export const en: SettingsExpandText = {
   tuckHintBreathe: "Breathing hint",
   tuckHintBreatheHint: "The hint slowly fades in and out; it stays steady when the system reduces motion",
   motion: "Open and close",
-  motionHint: "Spring moves as the website's island; Bouncy springs out and back, its height bounces too; Smooth and Fast close quicker, without a bounce",
+  motionHint: "Spring moves as the website's island; Snappy shoots out fast and settles with a slight bounce; Bouncy springs out and back, its height bounces too; Smooth and Fast close quicker, without a bounce",
   motionSpring: "Spring (as the website)",
+  motionSnappy: "Snappy",
   motionSmooth: "Smooth",
   motionFast: "Fast",
   motionBouncy: "Bouncy",
