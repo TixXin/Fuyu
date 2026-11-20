@@ -36,7 +36,7 @@ function blocks(css) {
   return out;
 }
 
-const moving = (body) => /(^|[;\s])animation(-name)?\s*:\s*(?!none\b)[^;]+/.test(body);
+const moving = (body) => /(^|[;\s])animation(-name)?\s*:(?!\s*none\b)\s*[^;]+/.test(body);
 const calmsAnimation = (body) => /(^|[;\s])(animation(-name|-duration|-play-state|-timing-function)?|visibility|display)\s*:/.test(body);
 
 function parseRules(css, media = []) {
@@ -132,6 +132,12 @@ test("nested @-rules and substring selector collisions are caught while no-prefe
         file: "feature.css",
         css: ".badge { animation: pulse 1s infinite; }",
       },
+    ]),
+    [],
+  );
+  assert.deepEqual(
+    missingReducedMotionSelectors([
+      { file: "a.css", css: ".cell[data-dragging] { animation: none; } .cell[data-pending] { animation-name: none; }" },
     ]),
     [],
   );
