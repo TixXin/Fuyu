@@ -1,8 +1,77 @@
 # 内存占用与性能优化
 
-> 日期：2026-11-14。问题：浮屿这类常驻的 Tauri / WebView2 应用，内存占用和性能还能怎么降，别人是怎么做的。范围：Microsoft Learn（WebView2 性能、进程模型、内存 API、EcoQoS、工作集）、Tauri 官方文档与 docs.rs、GitHub issue（tauri-apps/tauri、tauri-apps/wry、MicrosoftEdge/WebView2Feedback、glzr-io/zebar）、同类 Tauri 应用的发布说明、Chromium 文档和几篇博客；关键词 WebView2 memory、MemoryUsageTargetLevel、TrySuspend、Tauri memory multiple windows、lightweight mode、EcoQoS、EmptyWorkingSet、backdrop-filter performance 等。相关任务：D47–D52，见「任务」。
+> 日期：2026-11-14，2026-11-20 追加了一节（在「结论」前面）。问题：浮屿这类常驻的 Tauri / WebView2 应用，内存占用和性能还能怎么降，别人是怎么做的。范围：Microsoft Learn（WebView2 性能、进程模型、内存 API、EcoQoS、工作集）、Tauri 官方文档与 docs.rs、GitHub issue（tauri-apps/tauri、tauri-apps/wry、MicrosoftEdge/WebView2Feedback、glzr-io/zebar）、同类 Tauri 应用的发布说明、Chromium 文档和几篇博客；关键词 WebView2 memory、MemoryUsageTargetLevel、TrySuspend、Tauri memory multiple windows、lightweight mode、EcoQoS、EmptyWorkingSet、backdrop-filter performance 等。相关任务：D47–D52，见「任务」。
 
 本机的实测基线在 [investigations/idle-usage.md](../investigations/idle-usage.md)（2026-11-06：收起闲置时 CPU 约 10% 单核，私有内存约 330 MB，其中 Rust 主进程 16 MB，其余都在 WebView2）和 [investigations/expansion-performance.md](../investigations/expansion-performance.md)（展开掉帧在 GPU 栅格化）。本文只写外部资料和由此得出的建议，没有重新测量。
+
+## 2026-11-20 追加
+
+这一轮补了三样：把 11-14 起做过的内存相关任务对一遍现状；读了 D47 那次 10 小时长跑的数据（之前没人汇总）；实测了 Tauri 隐藏窗口时 WebView2 的状态，找到一个比 D48 更直接的改法（D117）。新搜的关键词：Tauri main process memory leak、Windows Segment Heap manifest、mimalloc Windows RSS、WebView2 IsVisible hidden、WebView2 GPU process memory。
+
+### 现状
+
+| 任务 | 状态 | 说明 |
+|---|---|---|
+| D47 长跑测量 | 进行中 | 「正常使用」一轮跑完（0.3.8，10 小时），数字见下；「放着不动」一轮没跑；汇总记录 `investigations/memory-long-run.md` 还没写 |
+| D48 `MemoryUsageTargetLevel` | 进行中 | 代码默认关（`FUYU_WEBVIEW_LOW_MEMORY=1` 才生效），没量过；被 D117 的结果改写，见下 |
+| D49、D50、D51、D52 | 已完成 | emit 去重、翻译窗口和截图选区按需创建、定时器按可见性停、媒体和音量改事件 |
+| D86 主进程闲置 CPU | 进行中 | 找到插件宿主每秒被拉起约 3 次，已修 |
+| D93 mimalloc | 已完成 | 0.3.11 起用 mimalloc 做全局分配器，没有前后对比数字 |
+| D97 第二轮审计 | 已完成 | 剪贴板预览窗口按需创建、会话缓存淘汰、全局表加上限等 6 个子任务 |
+
+本机 dev 版（0.3.12-beta.1，2026-11-20）的一次快照：WebView2 渲染进程 2 个（0.3.8 是 5–6 个），合计约 222 MB；GPU 进程约 157 MB；插件宿主 node 约 80 MB。dev 版是 debug 构建，主进程的数字不能和正式版比。
+
+### 隐藏窗口的 WebView 其实没隐藏（D117）
+
+- **原因**：Tauri 的 `window.hide()` 只对外层窗口调 `ShowWindow(SW_HIDE)`。tauri-runtime-wry 2.12.3 里 `WindowMessage::Hide` 走 `window.set_visible(false)`（tao 的窗口），只有 `WebviewMessage::Hide`（`Webview::hide`）才走 wry 的 `set_visible`，那里才调 `ICoreWebView2Controller::SetIsVisible(false)`。微软文档说 WebView2 按控制器的 `IsVisible` 判断页面是否可见：设成 false 时 Chromium 节流动画和页面任务、清掉一部分缓存；`TrySuspend` 也要求先设 false（[CoreWebView2Controller.IsVisible](https://learn.microsoft.com/en-us/dotnet/api/microsoft.web.webview2.core.corewebview2controller.isvisible)、[TrySuspendAsync](https://learn.microsoft.com/en-us/dotnet/api/microsoft.web.webview2.core.corewebview2.trysuspendasync)）。没有搜到别人报过 Tauri 的这个行为。
+- **实测**：单窗口的 Tauri 2.12.5 探测程序（WebView2 157，页面画一张 3000×3000 的 canvas 和 2 万个带阴影的 div），每 2 秒采样一次，跑了三轮：
+
+  | 阶段 | `visibilityState` | rAF | 100 ms 定时器 | 渲染进程私有内存 | GPU 进程 |
+  |---|---|---|---|---|---|
+  | 显示中 | visible | 120/s | 10/s | 138–140 MB | 120–136 MB |
+  | 只调 Tauri `hide()` | visible | 120/s | 10/s | 不变 | 不变 |
+  | 再设 `MemoryUsageTargetLevel = Low` | visible | 120/s | 10/s | 约 96 MB | 不变 |
+  | 再设 `SetIsVisible(false)` | hidden | 0 | 1–2/s | 约 94 MB | 一轮降到 97 MB，另一轮不变 |
+  | 再 `TrySuspend` | — | — | — | 只再少 1 MB | — |
+  | `SetIsVisible(true)` 后显示 | visible | 恢复 | 恢复 | — | — |
+
+  显示后 `visibilitychange` 到第一帧 1–2 ms。
+- **含义**：
+  - 隐藏的剪贴板、翻译、托盘卡片窗口里，动画和 rAF 一直按满帧在跑，GPU 也在合成。
+  - D51 用 `document.hidden` 停定时器，在 Windows 的隐藏窗口里不会触发，等于没生效。
+  - D48 的 `Low` 能让出差不多同样多的渲染进程内存，但页面照跑；`SetIsVisible(false)` 两样都管，D48 想要的 `TrySuspend` 多省得很少。
+- **改法**：D117 给每个窗口挂子类，显示前、隐藏后同步 `IsVisible`，不管谁调的 `hide()` / `show()` 都能接住。主岛先不接（只在藏到托盘时隐藏，页面里有提醒和审批逻辑，节流的影响要先核实）。D48 的 `Low` 在 D117 量完真机数字后再决定是删掉还是保留叠加。
+
+### D47 的 10 小时长跑（0.3.8，2026-11-14 20:27 起）
+
+正式版 0.3.8，「正常使用」，每分钟采样一次，`src-tauri/target/perf/normal-use-20261114.csv`，用 `scripts/perf/summarize-memory.mjs` 汇总：
+
+| 进程 | 开始 | 结束 | 每小时 |
+|---|---:|---:|---:|
+| 主进程 fuyu.exe | 30 MB | 321 MB | **+26–29 MB** |
+| 渲染进程（5–6 个） | 203 MB | 234 MB | +2.2 MB |
+| GPU 进程 | 213 MB | 201 MB | +1.9 MB（在 172–339 之间跳） |
+| WebView2 浏览器进程 | 59 MB | 69 MB | +0.1 MB |
+
+- **主进程在线性增长**，半夜没人用时也一样（每半小时约 +10–15 MB），句柄从 945 涨到 1123 后不再涨。这不是碎片（碎片是台阶式），是有东西一直在积累。0.3.8 之后修过两处很像的：远程和多目录的会话缓存永远不淘汰（D97.5，前端每秒扫一次会话）、插件宿主每秒被拉起约 3 次（D86，0.3.11-beta.4）。要在 0.3.12 的正式构建上重跑才知道还剩多少。
+- **WebView2 侧稳定**：渲染进程每小时 2 MB 左右，tauri#12724 的 emit 泄漏在这个量级上看不出来；GDI 对象全程 130–156，没看到 WebView2Feedback#5536 的 GDI 泄漏。
+
+### 分配器和堆
+
+- **mimalloc（D93）没有量过**。Meilisearch 把 mimalloc 换上后又在 Windows 上关掉了，文章没说原因（[Meilisearch 博客](https://www.meilisearch.com/blog/memory-leak-investigation)）；mimalloc 的说明里说 v3 在 Windows 上、尤其有线程池时提交的内存更少（[mimalloc readme](https://raw.githubusercontent.com/microsoft/mimalloc/main/readme.md)）；仓库锁定的 `libmimalloc-sys` 0.1.49 默认已经是 v3（`v2` 是可选 feature）。浮屿主进程里 Windows 线程池很多（D86 看到 7 个），这一点值得量：同一个正式构建开关 mimalloc 各跑 8 小时，比主进程私有内存。
+- **Segment Heap**：在应用清单的 `<windowsSettings>` 里加 `<heapType xmlns="http://schemas.microsoft.com/SMI/2020/WindowsSettings">SegmentHeap</heapType>`，Windows 10 2004 起生效，旧系统忽略。Edge 团队说内存最多少 27%（微软自己的数字，见 [Mozilla bug 1647009](https://bugzilla.mozilla.org/show_bug.cgi?id=1647009)），Chromium 的 [segment_heap.manifest](https://cobalt.googlesource.com/cobalt/+/refs/heads/master/build/win/segment_heap.manifest) 在用；Notepad3 量到的只是「少一点」（[PR #5490](https://gh.r-mj.com/rizonesoft/Notepad3/pull/5490)）。对浮屿：只管主进程（WebView2 子进程用自己的清单），而 Rust 的分配走 mimalloc，不经过系统堆，受影响的只有 COM、WinRT、WebView2Loader 这些系统组件的分配。浮屿已经自己嵌清单（`src-tauri/windows-app-manifest.xml`），改一行就行，但收益要和 mimalloc 一起量。
+- **不要再引入定时 `EmptyWorkingSet`**：上面「不建议做的」照旧。
+
+### 下一步（按收益排）
+
+| # | 做什么 | 任务 |
+|---|---|---|
+| 1 | 隐藏窗口同步 `IsVisible`，装上后量收起闲置的私有内存和 GPU、唤起延迟 | D117 |
+| 2 | 0.3.12 正式构建重跑 8 小时长跑，确认主进程的线性增长还在不在；还在就用带符号的构建 + UMDH 或 mimalloc 统计找来源（[微软：用性能监视器找用户态泄漏](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/using-performance-monitor-to-find-a-user-mode-memory-leak)） | D47 |
+| 3 | 同一构建开关 mimalloc、加不加 Segment Heap，各跑 8 小时对比 | 等 2 的结果再建 |
+| 4 | 主岛藏到托盘时也同步 `IsVisible`：先核对主岛页面里有哪些逻辑在隐藏时还要按时跑（Chromium 对隐藏 5 分钟以上的页面会把连续的定时器压到每分钟一次） | D117 之后 |
+| 5 | D48 的 `Low`：D117 量完后决定删掉还是叠加 | D48 |
+
 
 ## 结论
 

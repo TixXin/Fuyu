@@ -55,6 +55,7 @@ src-tauri/src/
 ├── onboarding_window/       # 新手引导：按需创建的透明遮罩，铺满岛所在屏幕的工作区（mod.rs）；跟着真岛发位置、只在卡片上接住鼠标（overlay.rs）
 ├── webview_recovery.rs      # 窗口的 WebView2 渲染进程崩溃或无响应后自动重载（D66）：on_page_load 时给每个 WebView 挂一次，同一窗口 1 分钟内崩 3 次后停在崩溃页，记 webview-crashes.log；Mac 上是 webview_recovery_unsupported.rs
 ├── webview_memory.rs        # 隐藏的翻译、剪贴板、截图选区窗口把 WebView2 的 MemoryUsageTargetLevel 设成 Low、显示前改回 Normal（D48，默认关，设 FUYU_WEBVIEW_LOW_MEMORY=1 才生效）；Mac 上是 webview_memory_unsupported.rs
+├── webview_visibility.rs    # 窗口隐藏、显示时同步 WebView2 控制器的 IsVisible（D117）：Tauri 的 hide() 不设它，隐藏窗口里的页面一直是 visible，动画帧和定时器照跑、缓存不释放；on_page_load 时给每个 WebView 挂一次（窗口子类在 win32/webview_visibility.rs），主岛 main 不接；Mac 上是 webview_visibility_unsupported.rs
 ├── emit_diagnostics.rs      # 只在调试和测试构建编译，设 FUYU_EMIT_DIAGNOSTICS=1 才开：统计各事件发了多少次、多少次载荷没变，排查事件发得太频繁（docs/investigations/emit-frequency-audit.md）
 ├── settings_file.rs         # 数据目录里的 settings.json（D30.2）：BACKUP_KEYS 设置的文件镜像，格式同设置备份；命令 read_settings_file / write_settings_file
 ├── shortcut_capture.rs      # 设置窗口录快捷键期间（命令 set_shortcut_capture）：浮屿自己的全局快捷键被按下不执行，改发 shortcut-captured 给录制按钮；Mac 在 macos/hotkeys.rs 的分发里拦，Windows 在各模块的 WM_HOTKEY 里拦
@@ -74,7 +75,7 @@ src-tauri/src/
                              # com（COM / WinRT 初始化守卫）、audio、ole（文件拖出）、process / process_times / process_env /
                              # process_memory / process_tree、registry、credentials、dwm、icon、ocr、chinese、screen_capture、
                              # capture_targets、taskbar、taskbar_shell / taskbar_uia（找任务栏、设所有者；UIA 读任务栏按钮和托盘的范围）、uia_list / uia_tabs、brightness、
-                             # notification_state（前台是否有全屏程序）、webview_crash（订阅 WebView2 的 ProcessFailed，D66）、webview_memory（MemoryUsageTargetLevel，D48）、
+                             # notification_state（前台是否有全屏程序）、webview_crash（订阅 WebView2 的 ProcessFailed，D66）、webview_memory（MemoryUsageTargetLevel，D48）、webview_visibility（窗口隐藏、显示时设 IsVisible，D117）、
                              # job（插件宿主进程的作业对象与挂起启动）、known_folder（下载文件夹等已知文件夹）、
                              # session（是否锁屏与键鼠空闲时间，和 macos/session.rs 同签名）、audio_outputs（在用的音频输出及类型）、
                              # devnode（设备节点属性：容器、蓝牙电量）、power（电源与电池）、graphics_capture（D3D11 设备与 WGC 显示器采集，帧留在 GPU）、
