@@ -71,7 +71,7 @@ test("undo and redo step through the history; something new drops what was undon
   history = undoAnnotation(history);
   assert.deepEqual(history.items, [a]);
   assert.deepEqual(redoAnnotation(history).items, [a, b]);
-  assert.deepEqual(addAnnotation(history, b).undone, []);
+  assert.deepEqual(addAnnotation(history, b).future, []);
   assert.equal(undoAnnotation(EMPTY_HISTORY), EMPTY_HISTORY);
   assert.equal(redoAnnotation(EMPTY_HISTORY), EMPTY_HISTORY);
 });

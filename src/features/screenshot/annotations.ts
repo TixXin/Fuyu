@@ -106,20 +106,28 @@ export function arrowGeometry(from: Point, to: Point, width: number) {
   };
 }
 
-export type AnnotationHistory = { items: readonly Annotation[]; undone: readonly Annotation[] };
+export type AnnotationHistory = { items: readonly Annotation[]; past: readonly (readonly Annotation[])[]; future: readonly (readonly Annotation[])[] };
 
-export const EMPTY_HISTORY: AnnotationHistory = { items: [], undone: [] };
+export const EMPTY_HISTORY: AnnotationHistory = { items: [], past: [], future: [] };
+
+export function commitItems(history: AnnotationHistory, items: readonly Annotation[]): AnnotationHistory {
+  return items === history.items ? history : { items, past: [...history.past, history.items], future: [] };
+}
 
 export function addAnnotation(history: AnnotationHistory, annotation: Annotation): AnnotationHistory {
-  return { items: [...history.items, annotation], undone: [] };
+  return commitItems(history, [...history.items, annotation]);
 }
 
 export function addAnnotations(history: AnnotationHistory, annotations: readonly Annotation[]): AnnotationHistory {
-  return annotations.length === 0 ? history : { items: [...history.items, ...annotations], undone: [] };
+  return annotations.length === 0 ? history : commitItems(history, [...history.items, ...annotations]);
 }
 
 export function removeAnnotation(history: AnnotationHistory, annotation: Annotation): AnnotationHistory {
-  return history.items.includes(annotation) ? { items: history.items.filter((item) => item !== annotation), undone: [] } : history;
+  return history.items.includes(annotation) ? commitItems(history, history.items.filter((item) => item !== annotation)) : history;
+}
+
+export function replaceAnnotation(history: AnnotationHistory, annotation: Annotation, next: Annotation): AnnotationHistory {
+  return annotation !== next && history.items.includes(annotation) ? commitItems(history, history.items.map((item) => (item === annotation ? next : item))) : history;
 }
 
 export function autoMosaicAt(items: readonly Annotation[], point: Point): Annotation | null {
@@ -133,13 +141,13 @@ export function autoMosaicAt(items: readonly Annotation[], point: Point): Annota
 }
 
 export function undoAnnotation(history: AnnotationHistory): AnnotationHistory {
-  const last = history.items[history.items.length - 1];
-  return last ? { items: history.items.slice(0, -1), undone: [...history.undone, last] } : history;
+  const previous = history.past[history.past.length - 1];
+  return previous ? { items: previous, past: history.past.slice(0, -1), future: [...history.future, history.items] } : history;
 }
 
 export function redoAnnotation(history: AnnotationHistory): AnnotationHistory {
-  const next = history.undone[history.undone.length - 1];
-  return next ? { items: [...history.items, next], undone: history.undone.slice(0, -1) } : history;
+  const next = history.future[history.future.length - 1];
+  return next ? { items: next, past: [...history.past, history.items], future: history.future.slice(0, -1) } : history;
 }
 
 function grow(rect: PixelRect, by: number): PixelRect {

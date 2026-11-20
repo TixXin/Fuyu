@@ -1,10 +1,11 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { Check, Circle, Download, EyeOff, Grid3x3, Hash, Highlighter, MoveUpRight, Pencil, Pin, Redo2, ScanText, Square, SquareBottomDashedScissors, Type, Undo2, X, type LucideIcon } from "lucide-react";
+import { Check, Circle, Download, EyeOff, Grid3x3, Hash, Highlighter, MoveUpRight, Pencil, Pin, Redo2, ScanText, Square, SquareBottomDashedScissors, Trash2, Type, Undo2, X, type LucideIcon } from "lucide-react";
 import type { ScreenshotAction } from "../../features/screenshot/api";
 import { ANNOTATION_COLORS, ANNOTATION_TOOLS, STROKE_LEVELS, type AnnotationTool } from "../../features/screenshot/annotations";
 import type { PixelRect, Size } from "../../features/screenshot/selection";
 import { useTranslation } from "../../i18n";
 import type { Annotations } from "./useAnnotations";
+import type { AnnotationSelect } from "./useAnnotationSelect";
 import "./ScreenshotToolbar.css";
 import { isMacOS } from "../../lib/platform";
 
@@ -43,6 +44,7 @@ export function ScreenshotToolbar({
   area,
   view,
   annotations,
+  select,
   notice,
   onCancel,
   onFinish,
@@ -51,6 +53,7 @@ export function ScreenshotToolbar({
   area: PixelRect;
   view: Size;
   annotations: Annotations;
+  select: AnnotationSelect;
   notice: string | null;
   onCancel: () => void;
   onFinish: (action: ScreenshotAction) => void;
@@ -68,7 +71,11 @@ export function ScreenshotToolbar({
     return () => observer.disconnect();
   }, []);
   const left = Math.min(Math.max(EDGE, area.x + area.width - width), Math.max(EDGE, view.width - width - EDGE));
-  const space = annotations.tool ? TWO_ROWS : ONE_ROW;
+  const picked = select.selected;
+  const styling = annotations.tool !== null || picked !== null;
+  const space = styling ? TWO_ROWS : ONE_ROW;
+  const activeColor = picked ? picked.color : annotations.style.color;
+  const activeLevel = picked ? select.level : annotations.style.level;
   const place = area.y + area.height + space <= view.height ? { top: area.y + area.height + 8 }
     : area.y >= space ? { bottom: view.height - area.y + 8 }
     : { bottom: view.height - area.y - area.height + 8 };
@@ -89,7 +96,10 @@ export function ScreenshotToolbar({
         {ANNOTATION_TOOLS.map((tool) => {
           const Icon = TOOL_ICONS[tool];
           return (
-            <ToolButton key={tool} label={t.tools[tool]} active={annotations.tool === tool} onClick={() => annotations.chooseTool(tool)}>
+            <ToolButton key={tool} label={t.tools[tool]} active={annotations.tool === tool} onClick={() => {
+              select.clear();
+              annotations.chooseTool(tool);
+            }}>
               <Icon size={18} />
             </ToolButton>
           );
@@ -124,26 +134,34 @@ export function ScreenshotToolbar({
           <Check size={18} />
         </button>
       </div>
-      {annotations.tool && (
+      {styling && (
         <div className="screenshot-overlay__toolbar-row">
           {STROKE_LEVELS.map((level) => (
-            <ToolButton key={level} label={t.sizes[level]} active={annotations.style.level === level} onClick={() => annotations.setLevel(level)}>
+            <ToolButton key={level} label={t.sizes[level]} active={activeLevel === level} onClick={() => (picked ? select.restyle({ level }) : annotations.setLevel(level))}>
               <span className="screenshot-overlay__size-dot" style={{ width: 4 + level * 4, height: 4 + level * 4 }} />
             </ToolButton>
           ))}
-          <span className="screenshot-overlay__separator" />
-          {ANNOTATION_COLORS.map((color) => (
+          {(!picked || select.recolorable) && <span className="screenshot-overlay__separator" />}
+          {(!picked || select.recolorable) && ANNOTATION_COLORS.map((color) => (
             <button
               key={color}
               type="button"
-              className={`screenshot-overlay__swatch${annotations.style.color === color ? " screenshot-overlay__swatch--active" : ""}`}
+              className={`screenshot-overlay__swatch${activeColor === color ? " screenshot-overlay__swatch--active" : ""}`}
               style={{ background: color }}
               aria-label={t.color(color)}
-              aria-pressed={annotations.style.color === color}
+              aria-pressed={activeColor === color}
               title={color}
-              onClick={() => annotations.setColor(color)}
+              onClick={() => (picked ? select.restyle({ color }) : annotations.setColor(color))}
             />
           ))}
+          {picked && (
+            <>
+              <span className="screenshot-overlay__separator" />
+              <ToolButton label={t.deleteAnnotation} onClick={select.remove}>
+                <Trash2 size={18} />
+              </ToolButton>
+            </>
+          )}
         </div>
       )}
       {notice && <div className="screenshot-overlay__notice">{notice}</div>}

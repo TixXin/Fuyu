@@ -127,6 +127,38 @@ async function runChecks() {
     await act(async () => { overlay().dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 150, clientY: 150 })); });
     check(!document.querySelector('.screenshot-overlay__toolbar button[aria-pressed="true"]') && document.querySelector(".screenshot-overlay__selection"), "A right click turns the tool off and keeps the selection");
 
+    const isBlue = ([r, g, b, a]: number[]) => a > 200 && r < 60 && g > 100 && b > 200;
+    const picked = () => document.querySelector(".screenshot-overlay__picked");
+    await pointer("pointerdown", 60, 90);
+    await pointer("pointerup", 60, 90);
+    check(picked() && document.querySelectorAll(".screenshot-overlay__picked-handle").length === 4, "Without a tool, a click on the rectangle's outline selects it and shows its corner handles");
+    check(document.querySelectorAll(".screenshot-overlay__swatch").length === 8 && button("删除这个标注（Delete）"), "…and the toolbar offers its colours, thicknesses and a delete button");
+    check(button("中")?.getAttribute("aria-pressed") === "true", "…with its own thickness marked");
+    await drag([60, 90], [70, 90]);
+    check(!isRed(layerPixel(60, 90)) && isRed(layerPixel(70, 90)), "Dragging it moves the rectangle");
+    check(document.querySelector(".screenshot-overlay__selection")?.getAttribute("style")?.includes("left: 40px"), "…not the selection");
+    await click("颜色 #0A84FF");
+    check(isBlue(layerPixel(70, 90)), "A colour swatch recolours the selected rectangle");
+    await key({ key: "z", ctrlKey: true });
+    check(isRed(layerPixel(70, 90)), "Ctrl+Z undoes the colour change");
+    await key({ key: "z", ctrlKey: true });
+    check(isRed(layerPixel(60, 90)) && !isRed(layerPixel(70, 90)), "…and then the move");
+    await pointer("pointerdown", 210, 70);
+    await pointer("pointerup", 210, 70);
+    await key({ key: "Delete" });
+    check(layerPixel(205, 70)[3] === 0 && !picked() && !last("screenshot_cancel"), "Delete removes the selected badge");
+    await key({ key: "z", ctrlKey: true });
+    check(isRed(layerPixel(205, 70)), "…and Ctrl+Z brings it back");
+    const finishedBefore = calls.filter((call) => call.command === "screenshot_finish").length;
+    await act(async () => { overlay().dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true, clientX: 108, clientY: 162 })); });
+    await wait(10);
+    const again = document.querySelector<HTMLTextAreaElement>(".screenshot-overlay__text-input");
+    check(again?.value === "截图" && calls.filter((call) => call.command === "screenshot_finish").length === finishedBefore, "Double-clicking the text opens it again for editing");
+    await key({ key: "Escape" }, again!);
+    let still = false;
+    for (let x = 100; x < 140 && !still; x += 1) still = isRed(layerPixel(x, 160));
+    check(!document.querySelector(".screenshot-overlay__text-input") && still, "…and Esc leaves it as it was");
+
     await key({ key: "Enter" });
     const annotated = last("screenshot_finish");
     const composed = annotated?.payload as Uint8Array | undefined;

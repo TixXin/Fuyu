@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { Magnifier } from "../../features/screenshot/Magnifier";
 import { annotationArea, autoMosaicAt, textSize } from "../../features/screenshot/annotations";
+import { annotationAt } from "../../features/screenshot/annotationEdit";
 import { cancelScreenshot, findScreenshotWords, finishScreenshot, quickAction, type ScreenshotAction } from "../../features/screenshot/api";
 import { colorAt } from "../../features/screenshot/picture";
 import { newMosaics, redactionRects } from "../../features/screenshot/redact";
@@ -24,6 +25,7 @@ import { saveFolderOf } from "../../features/screenshot/settings";
 import { loadScreenshotSettings } from "../../features/screenshot/storage";
 import { useErrorText, useTranslation } from "../../i18n";
 import { AnnotationLayer } from "./AnnotationLayer";
+import { AnnotationSelectionBox } from "./AnnotationSelectionBox";
 import { AnnotationTextInput } from "./AnnotationTextInput";
 import { IconButtonTooltip } from "../../components/IconButtonTooltip";
 import { LongShotBar } from "./LongShotBar";
@@ -31,6 +33,7 @@ import { MeasureLayer } from "./MeasureLayer";
 import { ScreenshotToolbar } from "./ScreenshotToolbar";
 import { useLongShot } from "./useLongShot";
 import { useAnnotations } from "./useAnnotations";
+import { useAnnotationSelect } from "./useAnnotationSelect";
 import { useMeasure } from "./useMeasure";
 import { useScreenshotFrame } from "./useScreenshotFrame";
 import { capturePointer, GRAB, useSelection, type PointerCoords } from "./useSelection";
@@ -64,6 +67,7 @@ export function ScreenshotOverlay() {
   const sessionId = session?.id;
   const guides = useMemo(() => (sessionId === undefined ? false : loadSettings().screenshotGuides), [sessionId]);
   const annotations = useAnnotations(sessionId, scale);
+  const select = useAnnotationSelect(annotations, scale);
   const long = useLongShot(sessionId, t.saveFolderName);
 
   const pixel = pointer && bounds ? pixelAt(pointer, bounds) : null;
@@ -124,6 +128,12 @@ export function ScreenshotOverlay() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (long.active || event.target instanceof HTMLTextAreaElement || annotations.editing) return;
+      if (select.selected && (event.key === "Delete" || event.key === "Backspace" || event.key === "Escape")) {
+        event.preventDefault();
+        if (event.key === "Escape") select.clear();
+        else select.remove();
+        return;
+      }
       const ctrl = event.ctrlKey || event.metaKey;
       const letter = event.key.toLowerCase();
       if (ctrl && letter === "z") {
@@ -150,7 +160,7 @@ export function ScreenshotOverlay() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [annotations, chosen, color, copy, finish, long.active, quickMode, ready, session, setSelection, t]);
+  }, [annotations, select, chosen, color, copy, finish, long.active, quickMode, ready, session, setSelection, t]);
 
   useEffect(() => {
     setNotice(null);
@@ -165,7 +175,9 @@ export function ScreenshotOverlay() {
   const latestMoveRef = useRef<(coords: PointerCoords) => void>(() => {});
   latestMoveRef.current = (coords: PointerCoords) => {
     onPointerMove(coords);
-    annotations.extend(toPixels({ x: coords.clientX, y: coords.clientY }, scale));
+    const point = toPixels({ x: coords.clientX, y: coords.clientY }, scale);
+    annotations.extend(point);
+    select.move(point);
   };
 
   const flushMove = () => {
@@ -198,6 +210,10 @@ export function ScreenshotOverlay() {
         annotations.remove(spot);
         return;
       }
+      if (select.pick(at(event), grabbedAt(at(event)) === "inside")) {
+        capturePointer(event);
+        return;
+      }
     }
     if (annotations.tool && chosen && event.button === 0) {
       const point = at(event);
@@ -215,7 +231,7 @@ export function ScreenshotOverlay() {
   const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
     if (leaving) return;
     const coords = { clientX: event.clientX, clientY: event.clientY };
-    if (!dragging && !annotations.drafting) {
+    if (!dragging && !annotations.drafting && !select.dragging) {
       latestMoveRef.current(coords);
       return;
     }
@@ -238,7 +254,7 @@ export function ScreenshotOverlay() {
       measure.end();
       return;
     }
-    if (!annotations.finish()) onPointerUp();
+    if (!select.end() && !annotations.finish()) onPointerUp();
   };
 
   const handlePointerLeave = () => {
@@ -249,7 +265,8 @@ export function ScreenshotOverlay() {
   const onContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
     if (annotations.editing) return;
-    if (annotations.tool) annotations.clearTool();
+    if (select.selected) select.clear();
+    else if (annotations.tool) annotations.clearTool();
     else if (selection) setSelection(null);
     else void cancelScreenshot();
   };
@@ -262,8 +279,10 @@ export function ScreenshotOverlay() {
   const outline = !selection && !dragging && target ? toCss(target, scale) : null;
   const grabbed = selection && pointer && !dragging ? hitTest(selection, pointer, GRAB * scale) : null;
   const drawingCursor = annotations.tool === "text" ? "text" : "crosshair";
-  const cursor = measure.active ? "crosshair" : annotations.tool && grabbed === "inside" ? drawingCursor
-    : dragging === "move" || grabbed === "inside" ? "move" : grabbed ? handleCursor(grabbed) : "crosshair";
+  const picking = !annotations.tool && !measure.active && chosen && pointer && !dragging ? select.hover(pointer, grabbed === "inside") : null;
+  const cursor = measure.active ? "crosshair" : picking ?? (annotations.tool && grabbed === "inside" ? drawingCursor
+    : dragging === "move" || grabbed === "inside" ? "move" : grabbed ? handleCursor(grabbed) : "crosshair");
+  const editingItem = annotations.editing?.item;
   const cssPointer = pointer ? { x: pointer.x / scale, y: pointer.y / scale } : null;
   const shown = selection ?? target;
   const lines = [pixel ? `${pixel.x}, ${pixel.y}` : "", shown ? `${shown.width} × ${shown.height}` : "", t.copyColorHint, t.measureHint].filter(Boolean);
@@ -277,12 +296,17 @@ export function ScreenshotOverlay() {
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerLeave}
       onWheel={onWheel}
-      onDoubleClick={() => !annotations.tool && !measure.active && grabbed === "inside" && copy()}
+      onDoubleClick={(event) => {
+        if (annotations.tool || measure.active || grabbed !== "inside") return;
+        const hit = annotationAt(annotations.items, at(event), 4 * scale);
+        if (hit?.kind === "text") annotations.editText(hit);
+        else copy();
+      }}
       onContextMenu={onContextMenu}
     >
       <IconButtonTooltip scope=".screenshot-overlay" delay={200} />
       <canvas ref={canvasRef} className="screenshot-overlay__picture" />
-      {bounds && !long.active && <AnnotationLayer picture={canvasRef} bounds={bounds} items={annotations.items} draft={annotations.draft} selection={chosen} />}
+      {bounds && !long.active && <AnnotationLayer picture={canvasRef} bounds={bounds} items={editingItem ? select.items.filter((item) => item !== editingItem) : select.items} draft={annotations.draft} selection={chosen} />}
       {long.active && !long.mine ? (
         <div className="screenshot-overlay__dim" />
       ) : long.mine && area ? (
@@ -293,7 +317,7 @@ export function ScreenshotOverlay() {
         </div>
       ) : area ? (
         <div className="screenshot-overlay__selection" style={{ left: area.x, top: area.y, width: area.width, height: area.height }}>
-          {!dragging && !annotations.drafting && !leaving && HANDLES.map((handle) => {
+          {!dragging && !annotations.drafting && !select.dragging && !leaving && HANDLES.map((handle) => {
             const spot = handlePosition({ x: 0, y: 0, width: area.width, height: area.height }, handle);
             return <span key={handle} className="screenshot-overlay__handle" style={{ left: spot.x, top: spot.y }} />;
           })}
@@ -312,15 +336,17 @@ export function ScreenshotOverlay() {
       )}
       {!area && !long.active && ready && session?.underPointer && <div className="screenshot-overlay__hint">{quickMode === "record" && gif ? t.recordGifHint : quickMode ? t.quickHints[quickMode] : t.selectHint}</div>}
       {long.mine && area && <LongShotBar area={area} view={view} long={long} />}
-      {area && chosen && !dragging && !annotations.drafting && !quick && !leaving && !long.active && (
-        <ScreenshotToolbar area={area} view={view} annotations={annotations} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} />
+      {select.selected && !leaving && !long.active && select.selected !== editingItem && <AnnotationSelectionBox item={select.selected} scale={scale} showHandles={!select.dragging} />}
+      {area && chosen && !dragging && !annotations.drafting && !select.dragging && !quick && !leaving && !long.active && (
+        <ScreenshotToolbar area={area} view={view} annotations={annotations} select={select} notice={notice} onCancel={() => void cancelScreenshot()} onFinish={finish} onRedact={redact} />
       )}
       {annotations.editing && (
         <AnnotationTextInput
-          key={`${annotations.editing.x},${annotations.editing.y}`}
-          at={{ x: annotations.editing.x / scale, y: annotations.editing.y / scale }}
-          color={annotations.style.color}
-          size={textSize(annotations.style.level, 1)}
+          key={`${annotations.editing.at.x},${annotations.editing.at.y}`}
+          at={{ x: annotations.editing.at.x / scale, y: annotations.editing.at.y / scale }}
+          initial={editingItem?.text}
+          color={editingItem?.color ?? annotations.style.color}
+          size={editingItem ? editingItem.size / scale : textSize(annotations.style.level, 1)}
           placeholder={t.textPlaceholder}
           onCommit={annotations.commitText}
           onCancel={annotations.cancelText}

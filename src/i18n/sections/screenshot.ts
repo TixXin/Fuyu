@@ -48,6 +48,7 @@ export type ScreenshotText = {
   sizes: Record<0 | 1 | 2, string>;
   color: (hex: string) => string;
   textPlaceholder: string;
+  deleteAnnotation: string;
   pinMenu: {
     copy: string;
     save: string;
@@ -176,6 +177,7 @@ export const zhCN: ScreenshotText = {
   sizes: { 0: "细", 1: "中", 2: "粗" },
   color: (hex) => `颜色 ${hex}`,
   textPlaceholder: "输入文字",
+  deleteAnnotation: "删除这个标注（Delete）",
   pinMenu: {
     copy: "复制",
     save: "保存",
@@ -304,6 +306,7 @@ export const en: ScreenshotText = {
   sizes: { 0: "Thin", 1: "Medium", 2: "Thick" },
   color: (hex) => `Colour ${hex}`,
   textPlaceholder: "Type text",
+  deleteAnnotation: "Delete this annotation (Delete)",
   pinMenu: {
     copy: "Copy",
     save: "Save",
