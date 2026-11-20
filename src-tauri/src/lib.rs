@@ -64,6 +64,8 @@ mod voice_input;
 mod wallpaper;
 #[cfg_attr(not(windows), path = "webview_recovery_unsupported.rs")]
 mod webview_recovery;
+#[cfg_attr(not(windows), path = "webview_visibility_unsupported.rs")]
+mod webview_visibility;
 #[cfg_attr(not(windows), path = "webview_memory_unsupported.rs")]
 mod webview_memory;
 #[cfg_attr(target_os = "macos", path = "wechat_reminders/macos.rs")]
@@ -132,6 +134,7 @@ pub fn run() {
         .on_page_load(|webview, _| {
             webview_recovery::attach(webview);
             webview_memory::page_loaded(webview);
+            webview_visibility::attach(webview);
             if let Some(window) = webview.app_handle().get_webview_window(webview.label()) {
                 recording::apply_to_window(&window);
             }
