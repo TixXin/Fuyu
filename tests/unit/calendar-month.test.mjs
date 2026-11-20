@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CHINESE_DAY_NAMES, chineseDay, lunarDate, lunarDayName, solarTerm } from "../../src/features/calendar/lunar.ts";
+import { CHINESE_DAY_NAMES, chineseDay, lunarDate, lunarDayName, solarTerm } from "../../src/utils/lunar.ts";
 import { dayMark, eventsOn, isRead, monthDays, monthStart, namesTheDay, nextSpecialDay } from "../../src/features/calendar/monthView.ts";
 
 const day = (y, m, d) => new Date(y, m - 1, d);

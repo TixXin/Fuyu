@@ -1,7 +1,7 @@
 import { parseHolidayTitleMark } from "../../utils/workday.ts";
 import type { CalendarEvent } from "./api";
 import type { AgendaRange, WeekStartsOn } from "./calendarPrefs.ts";
-import { CHINESE_DAY_NAMES, chineseDay } from "./lunar.ts";
+import { CHINESE_DAY_NAMES, chineseDay } from "../../utils/lunar.ts";
 
 const DAY_MS = 86_400_000;
 

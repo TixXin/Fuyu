@@ -9,7 +9,7 @@ import { CalendarTodoInput } from "./CalendarTodoInput";
 import { prepareCalendarEvents, resolveCalendarColor } from "./calendarPrefs";
 import { nextHolidayBreak } from "./holidayBreaks.ts";
 import { joinCalendarMeeting } from "./joinMeeting";
-import { chineseDay } from "./lunar.ts";
+import { chineseDay } from "../../utils/lunar.ts";
 import { agendaDayStarts, eventsOn, isRead, monthStart, namesTheDay, nextDay, nextSpecialDay, startOfDay } from "./monthView.ts";
 import { SCHEDULED_TODO_UID, scheduledTodoEvents } from "./todoEvents";
 import { clockTime } from "./upcoming";
