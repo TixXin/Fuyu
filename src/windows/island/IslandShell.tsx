@@ -271,6 +271,7 @@ export function IslandShell({
           <IslandCollapsedBar
             slots={collapsedSlots}
             page={page}
+            homePage={homePage}
             isExpanded={isExpanded}
             isTucked={isTucked}
             showTitle={showTitle}

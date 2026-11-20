@@ -4,7 +4,7 @@ import { arrangeCollapsedItems, saveCollapsedOverflow, shelfIds, zoneIds, type C
 import { useCollapsedPlacements } from "../../lib/settings/useCollapsedPlacements";
 import { useTranslation } from "../../i18n";
 import { SlotView } from "../../features/plugin-kernel/SlotView";
-import { leadLine, shownLine, visibleLines } from "../../features/plugin-kernel/islandContributions";
+import { shownLine, visibleLines } from "../../features/plugin-kernel/islandContributions";
 import { runIslandAction, useIslandContributed } from "../../features/plugin-kernel/useIslandContributions";
 import { lineSlot, type CollapsedLineContext } from "./slots/line";
 import type { CollapsedSlots, IslandPage } from "./types";
@@ -21,6 +21,7 @@ import "./IslandCollapsedBar.css";
 
 type IslandCollapsedBarProps = {
   page: IslandPage;
+  homePage?: IslandPage;
   isExpanded: boolean;
   isTucked: boolean;
   showTitle: boolean;
@@ -66,6 +67,7 @@ function renderUnits(units: readonly BarUnit[], overflow: CollapsedOverflowState
 
 export function IslandCollapsedBar({
   page,
+  homePage = page,
   isExpanded,
   isTucked,
   showTitle,
@@ -95,7 +97,7 @@ export function IslandCollapsedBar({
   const lines = visibleLines(contributed.lines, showCollapsedText);
   const line = shownLine(lines);
   const peekLine = line?.drop ? line : null;
-  const openTarget = (line?.page ?? leadLine(contributed.lines)?.page ?? page) as IslandPage;
+  const openTarget = homePage;
   const openPeek = () => {
     if (peekLine?.action) runIslandAction(peekLine.action);
   };
